@@ -1,0 +1,15 @@
+Fachinformatiker Lernplattform
+
+Copyright (c) 2026 Nico H – Alle Rechte vorbehalten
+
+Dieses Programm und seine Inhalte, insbesondere Programmcode, Lerninhalte,
+Texte, Bilder und Programmsymbole, sind urheberrechtlich geschützt.
+
+Die auf der Release-Seite veröffentlichte Version darf heruntergeladen,
+installiert und zur eigenen Prüfungsvorbereitung genutzt werden, auch über
+die Update-Funktion des Programms. Jede andere Nutzung, Vervielfältigung,
+Veränderung und Weitergabe, ganz oder in Teilen, bedarf der vorherigen
+Zustimmung des Rechteinhabers.
+
+Ausgenommen sind die Bestandteile Dritter, die in THIRD_PARTY_NOTICES.txt
+aufgeführt sind. Für sie gelten ausschließlich ihre eigenen Lizenzen.
