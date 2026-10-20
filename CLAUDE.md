@@ -59,4 +59,5 @@
 - Für Phase 2 vorgemerkt: Sammelliste 13 (Texte, s. o.), 14 (Farbregler, W5), 7 (Karteikarten-Ansicht: Zeilenanpassung beim Neubau prüfen). Nächste freie Sammelliste-Nummer: 17.
 - Dashboard rechnet bei jedem erneuten Zeigen neu (`DashboardSeite.Neu`, `Geladen`); der Start ohne Bedienung wartet darauf vor der Layoutprüfung. Fotos lokal: Patch `/mnt/project-files/phase1_csharp/fotos_k10/nur_lokal_fotos_autolauf.diff` (nie einchecken).
 - Hinweiszeile in Meldungsdateien: `Meldung <Nr> liegt auf Fi-Austausch, Commit siehe origin/main` (Regel ab Weisung P1-4); echte sha nur in der Zeile an Nico.
-- Letzte Meldung P2-2 (Bericht W1), nächste P2-3. Log `/mnt/project-files/phase2_csharp/VERBRAUCHSLOG_P2.md`.
+- **W2 (Zweig `phase2-lernen`, Weisung P2-3 5307044):** Schritt A gemeldet (P2-3). Diffs D1 (`.fisisicherung` statt `lernstand.json.gz` in MainView + Kommentar AlterLernstand.cs Z. 12) und D2 (Vorschau in `:memory:` statt Temp-Datei) erst nach Chat-Freigabe pushen. L4/L6 nur mit Python-Texten zeichengleich vorbauen; L5-Texte warten auf Wortlaut (P2-4). Neuer Vergleichswert G22 `lerntexte.json` (G21 = Abgleich). Spielstände zurückholen = Plan E5, nicht Phase 2.
+- Letzte Meldung P2-3 (W2 Schritt A), nächste P2-4. Log `/mnt/project-files/phase2_csharp/VERBRAUCHSLOG_P2.md`.
