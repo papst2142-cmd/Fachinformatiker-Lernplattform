@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Platform.Storage;
@@ -226,6 +227,13 @@ public partial class MainView : UserControl
 
     /// <summary>Alle schon gebauten Seiten (fuer die Layoutpruefung im Start ohne Bedienung).</summary>
     public IReadOnlyDictionary<string, Control> GebauteSeiten => _seiten;
+
+    /// <summary>
+    /// Weisung P1-3: Zustand und Ergebnisfeld der Sicherung haengen genau in der
+    /// gebauten Optionen-Seite (BaueSicherung laeuft nur einmal, die Seite bleibt im Speicher).
+    /// </summary>
+    public bool SicherungInOptionen(Control optionen) =>
+        _zustand.GetLogicalAncestors().Contains(optionen) && _ergebnis.GetLogicalAncestors().Contains(optionen);
 
     private string Geraet()
     {

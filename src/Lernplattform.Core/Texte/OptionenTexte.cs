@@ -61,6 +61,11 @@ public static class SchriftTexte
         + "(Schrift, Knöpfe, Abstände); passt sie nicht mehr ins Fenster, lässt sie sich "
         + "seitlich verschieben. Am Handy kommt die Schriftgröße aus den "
         + "Systemeinstellungen noch hinzu.";
+    /// <summary>
+    /// Angezeigter Hinweis in C# (Weisung P1-3, Frage 2): nur der erste Satz von
+    /// <see cref="Hinweis"/>; der Rest (seitlich verschieben, Systemschrift) stimmt fuer C# nicht.
+    /// </summary>
+    public const string HinweisKurz = "Gilt sofort und nur für dieses Gerät.";
     public const string BeschaeftigtTitel = "Schriftgröße wird angewendet";
     public const string BeschaeftigtText = "Bitte warten, die Oberfläche wird in der neuen Größe aufgebaut …";
 
@@ -98,6 +103,14 @@ public static class TageszielTexte
     public const string HinweisHandy = HinweisAnfang + "erscheint als Hinweis, wenn du die App öffnest oder zurückholst.";
 
     public static string Hinweis(bool pc) => pc ? HinweisPc : HinweisHandy;
+
+    /// <summary>
+    /// Angezeigter Hinweis in C# (Weisung P1-3, Frage 3): nur der erste Satz, ohne die
+    /// Zusage zur Erinnerung (gibt es noch nicht). Gezaehlt wird wie DashboardWerte
+    /// (activity_days): Karteikarten, Quiz, AP1/AP2-Szenarien, Testprojekte, Trainer.
+    /// </summary>
+    public const string HinweisGezaehlt = "Gezählt werden bewertete Karteikarten, Prüfungstrainer-Fragen, "
+        + "Szenarien, Testprojekte und Trainer-Aufgaben.";
 }
 
 /// <summary>

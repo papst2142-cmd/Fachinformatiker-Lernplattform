@@ -120,6 +120,19 @@ public static class AutoMessung
             Messwerte.Notiere("  " + fund);
         }
         funde += layoutFunde.Count;
+
+        // Weisung P1-3: Optionen zweimal oeffnen baut die Seite nicht neu, die
+        // Sicherung (geteilte Felder _zustand, _ergebnis) bleibt an ihrem Platz
+        var optionen = ansicht.GebauteSeiten[Seiten.Optionen];
+        await ansicht.ZeigeAsync(Seiten.Dashboard);
+        await ansicht.ZeigeAsync(Seiten.Optionen);
+        await ansicht.ZeigeAsync(Seiten.Dashboard);
+        await ansicht.ZeigeAsync(Seiten.Optionen);
+        var einmal = ReferenceEquals(optionen, ansicht.GebauteSeiten[Seiten.Optionen]) && ansicht.SicherungInOptionen(optionen);
+        Messwerte.Notiere(einmal
+            ? "Optionen zweimal geoeffnet: dieselbe Seite, Sicherung an ihrem Platz"
+            : "Optionen zweimal geoeffnet: FEHLER (Seite neu gebaut oder Sicherung nicht in Optionen)");
+        funde += einmal ? 0 : 1;
         var zuLang = Messwerte.ErstesOeffnen.Where(e => e.Value > Abbruch).Select(e => e.Key).ToList();
         foreach (var (reihe, ms) in Messwerte.Hoechstwerte().Where(r => r.Value > Abbruch))
         {

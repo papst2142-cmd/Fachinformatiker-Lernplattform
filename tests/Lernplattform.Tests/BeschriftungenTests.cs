@@ -242,6 +242,9 @@ public class BeschriftungenTests
         Gleich(S(s, "beschaeftigt_titel"), SchriftTexte.BeschaeftigtTitel);
         Gleich(S(s, "beschaeftigt_text"), SchriftTexte.BeschaeftigtText);
         Assert.Equal(Liste(s, "pc"), [SchriftTexte.Hinweis]);
+        // Angezeigt wird nur der erste Satz des Python-Hinweises (Weisung P1-3, Frage 2)
+        Assert.StartsWith(SchriftTexte.HinweisKurz + " ", S(s, "hinweis"), StringComparison.Ordinal);
+        Assert.EndsWith(".", SchriftTexte.HinweisKurz, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -258,6 +261,10 @@ public class BeschriftungenTests
         Assert.Equal(Liste(t, "schalter_handy"), TageszielTexte.Schalter.Select(x => x.Text));
         Assert.Equal(Liste(t, "pc"), [TageszielTexte.AufgabenProTag, TageszielTexte.ErinnerungUm, TageszielTexte.Hinweis(true)]);
         Assert.Equal(Liste(t, "handy"), [TageszielTexte.AufgabenProTag, TageszielTexte.ErinnerungUm, TageszielTexte.Hinweis(false)]);
+        // Angezeigt wird nur der erste Satz, PC und Handy gleich (Weisung P1-3, Frage 3)
+        Assert.StartsWith(TageszielTexte.HinweisGezaehlt + " ", Liste(t, "pc")[2], StringComparison.Ordinal);
+        Assert.StartsWith(TageszielTexte.HinweisGezaehlt + " ", Liste(t, "handy")[2], StringComparison.Ordinal);
+        Assert.Single(TageszielTexte.HinweisGezaehlt.Split(". "));
         Gleich(S(t, "erinnerung_hinweis_handy"), TageszielTexte.ErinnerungPlatzhalter);
     }
 

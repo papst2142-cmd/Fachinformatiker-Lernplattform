@@ -128,6 +128,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             if (abschnitt.Id == Optionen.AbschnittSchrift)
             {
                 panel.Children.Add(SchriftWahl());
+                panel.Children.Add(Schrift.Text(SchriftTexte.HinweisKurz, "Klein", FontWeight.Normal, "Pinsel.muted"));
             }
             else if (abschnitt.Id == Optionen.AbschnittFarben)
             {
@@ -358,6 +359,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             },
         });
         panel.Children.Add(Schrift.Text(TageszielTexte.Schalter[2].Text + ": " + Beschriftungen.Platzhalter, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        panel.Children.Add(Schrift.Text(TageszielTexte.HinweisGezaehlt, "Klein", FontWeight.Normal, "Pinsel.muted"));
         return panel;
     }
 
