@@ -121,10 +121,19 @@ public sealed class UebernahmeTeil
         UebernahmeBericht vorschau;
         try
         {
-            (daten, vorschau) = await Task.Run(() =>
+            daten = await Task.Run(() => UebernahmeAblauf.Lesen(inhalt, pfad, ordner));
+            vorschau = await Task.Run(() =>
             {
-                var gelesen = UebernahmeAblauf.Lesen(inhalt, pfad, ordner);
-                return (gelesen, Uebernahme.Vorschau(lernstand, gelesen, Zustand.Umbenennungen));
+                try
+                {
+                    return Uebernahme.Vorschau(lernstand, daten, Zustand.Umbenennungen);
+                }
+                catch (Exception fehler) when (fehler is not UebernahmeAusnahme)
+                {
+                    // Jeder andere Rechenfehler der Vorschau: "Vorschau scheitert" (Wortlaut 5)
+                    Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                    throw new UebernahmeAusnahme(UebernahmeFehler.SchreibenGescheitert);
+                }
             });
         }
         catch (UebernahmeAusnahme fehler)
