@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.4.0 (Paketversion 1.0.0-a.0.4.0) -> A 0.4.1 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.4.1 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.5.0 (Paketversion 1.0.0-a.0.5.0) -> A 0.5.1 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.5.1 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 # Aufruf: werkzeuge/pakete/pakete_und_update.sh <rid> <ausgabeordner>
 #   rid: win-x64 | linux-x64 | osx-arm64 (macOS: nur Pakete, keine Update-Probe)
@@ -42,8 +42,8 @@ baue() { # Stufe Version
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.4.0
-baue A 0.4.1
+baue A 0.5.0
+baue A 0.5.1
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -52,8 +52,8 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.4.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.4.0-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.4.0-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.5.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.5.0-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.5.0-AppImage.tar.gz"
     ;;
 esac
 
@@ -67,7 +67,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.4.0/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.5.0/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -75,7 +75,7 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.4.0/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.5.0/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
     ;;
 esac
@@ -98,14 +98,14 @@ warte_auf() { # Text, der im Bericht stehen muss (Update laeuft nach dem Beenden
 }
 
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.4.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
-starte suchen "$AUS/feed-A-0.4.1"
-warte_auf 1.0.0-a.0.4.1
+grep -q "bericht: Version 1.0.0-a.0.5.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
+starte suchen "$AUS/feed-A-0.5.1"
+warte_auf 1.0.0-a.0.5.1
 starte suchen "$AUS/feed-B-0.1.0"
 warte_auf 1.0.0-b.0.1.0
-starte suchen "$AUS/feed-A-0.4.1"
+starte suchen "$AUS/feed-A-0.5.1"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.4.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.5.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 echo "UPDATE-PROBE GRUEN"
 cat "$LERNPLATTFORM_UPDATE_BERICHT"
