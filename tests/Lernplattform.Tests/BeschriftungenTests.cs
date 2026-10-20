@@ -344,8 +344,9 @@ public class BeschriftungenTests
     [Fact]
     public void PlatzhalterGenauNachVorgabe()
     {
-        Assert.Equal("Kommt in einer spaeteren Ausbaustufe", Beschriftungen.Platzhalter);
-        Assert.Equal(36, Beschriftungen.Platzhalter.Length);
-        Assert.All(Beschriftungen.Platzhalter, c => Assert.True(c < 128));
+        // Weisung P1-4 (N2): im Programm mit a-Umlaut, nur die Weisungen schreiben ASCII
+        Assert.Equal("Kommt in einer sp\u00e4teren Ausbaustufe", Beschriftungen.Platzhalter);
+        Assert.Equal(35, Beschriftungen.Platzhalter.Length);
+        Assert.DoesNotContain("ae", Beschriftungen.Platzhalter, StringComparison.Ordinal);
     }
 }

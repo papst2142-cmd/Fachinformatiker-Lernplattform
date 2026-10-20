@@ -11,7 +11,7 @@ namespace Lernplattform.Core.Texte;
 public static class Beschriftungen
 {
     /// <summary>Text fuer Teile, die erst spaeter gebaut werden (Vorgabe Nico, nicht aus Python).</summary>
-    public const string Platzhalter = "Kommt in einer spaeteren Ausbaustufe";
+    public const string Platzhalter = "Kommt in einer späteren Ausbaustufe";
 
     /// <summary>
     /// Grossbuchstaben wie Python str.upper (Zwischenueberschriften am PC .upper(),

@@ -65,6 +65,15 @@ public sealed record DashboardReinzoom(string Fachbereich, string Titel, IReadOn
 /// <summary>Feste Texte des Dashboards, genau wie Python (fisi_lernen DASH_*, app_gui.DashboardView, mobile DashboardScreen).</summary>
 public static class DashboardTexte
 {
+    /// <summary>
+    /// Karte oben bei <see cref="DashboardZustand.Kaputt"/> (Weisung P1-4, N1; neu in C#,
+    /// Python bricht hier ab). Satz 2 gilt, weil das Dashboard nur lesend oeffnet.
+    /// </summary>
+    public const string LernstandNichtLesbar = "Der Lernstand konnte nicht gelesen werden. Er wurde nicht verändert.";
+
+    /// <summary>Hinweiskarte zum Zustand: nur bei Kaputt, nie bei Fehlt, Leer oder Daten.</summary>
+    public static string? Hinweis(DashboardZustand zustand) => zustand == DashboardZustand.Kaputt ? LernstandNichtLesbar : null;
+
     public const string Gelernt = "%s von %s Karten und Fragen bearbeitet";        // DASH_LEARNED
     public const string Rate = "Prüfungstrainer %d %% richtig";                     // DASH_RATE
     public const string Gesamt = "Gesamtfortschritt";                               // DASH_TOTAL

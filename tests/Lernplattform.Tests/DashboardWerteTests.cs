@@ -347,6 +347,8 @@ public class DashboardWerteTests
         var ist = LiesAlsJson(pfad, leer);
 
         Assert.Equal(erwartet.ToString(), (string?)ist["zustand"]);
+        // Weisung P1-4 (N1): Hinweiskarte nur bei Kaputt, nicht bei Fehlt
+        Assert.Equal(erwartet == DashboardZustand.Kaputt ? DashboardTexte.LernstandNichtLesbar : null, DashboardTexte.Hinweis(erwartet));
         ist["zustand"] = "Leer";
         var fehler = new List<string>();
         Vergleiche(leer.GetProperty("werte"), ist, art, fehler);
@@ -360,6 +362,16 @@ public class DashboardWerteTests
         {
             Assert.Equal(vorher, Sha256(pfad));
         }
+    }
+
+    [Fact]
+    public void HinweisKarteNurBeiKaputt()
+    {
+        foreach (var zustand in Enum.GetValues<DashboardZustand>())
+        {
+            Assert.Equal(zustand == DashboardZustand.Kaputt ? DashboardTexte.LernstandNichtLesbar : null, DashboardTexte.Hinweis(zustand));
+        }
+        Assert.Equal("Der Lernstand konnte nicht gelesen werden. Er wurde nicht ver\u00e4ndert.", DashboardTexte.LernstandNichtLesbar);
     }
 
     [Fact]

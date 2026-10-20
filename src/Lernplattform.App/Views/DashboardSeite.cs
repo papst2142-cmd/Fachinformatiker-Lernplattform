@@ -110,6 +110,10 @@ public sealed class DashboardSeite : UserControl
 
     private void Zeigen(DashboardWerte w)
     {
+        if (DashboardTexte.Hinweis(w.Zustand) is { } hinweis)
+        {
+            _liste.Children.Add(Schrift.Karte(Schrift.Text(hinweis, "Normal", FontWeight.SemiBold, "Pinsel.orange")));
+        }
         // Banner
         var banner = new Border
         {
