@@ -185,12 +185,14 @@ public static partial class Uebernahme
 
         var fremd = new Dictionary<string, object?>(daten.Marken);
         var ungueltig = 0;
+        var ungueltigInDatei = 0;
         foreach (var seite in new[] { lokal, fremd })
         {
             foreach (var k in Loeschmarken.Ungueltige(seite, zone))
             {
                 seite.Remove(k);
                 ungueltig++;
+                ungueltigInDatei += seite == fremd ? 1 : 0;
             }
         }
         // check_future: Marken der Datei mehr als 300 s nach der Geraeteuhr gelten nicht
@@ -357,7 +359,8 @@ public static partial class Uebernahme
             Umbenannt: umbenannt,
             MarkenNachher: markenNachher,
             Tabellen: tabellenZahlen,
-            Sicherungsdatei: null);
+            Sicherungsdatei: null,
+            UngueltigInDatei: ungueltigInDatei);
     }
 
     /// <summary>_delete_before: loescht alles, was nicht nach der Marke liegt. (uids, Anzahl Zeilen).</summary>
