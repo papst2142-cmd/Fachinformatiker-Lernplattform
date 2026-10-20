@@ -23,10 +23,13 @@ public sealed class DashboardSeite : UserControl
     private static readonly bool Handy = OperatingSystem.IsAndroid();
     private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16) };
 
+    private readonly Action _wiederholen;
     private bool _gezeigt;
 
-    public DashboardSeite()
+    /// <param name="wiederholen">"Jetzt wiederholen" (start_review), Phase 2 L4.</param>
+    public DashboardSeite(Action wiederholen)
     {
+        _wiederholen = wiederholen;
         DefektKarte();
         _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Content = new ScrollViewer { Content = _liste };
@@ -140,11 +143,14 @@ public sealed class DashboardSeite : UserControl
             heute.Children.Add(Zeile(Ring(w.Tagesziel.Anteil, w.Tagesziel.RingText, "Pinsel.green"), Schrift.Text(w.Tagesziel.Text)));
         }
         heute.Children.Add(Schrift.Text(w.Faellig.Text));
-        if (!Handy)
+        // Wie Python: PC zeigt den Knopf immer, gesperrt ohne faellige Aufgaben
+        // (set_enabled(plan.count() > 0)); Handy zeigt ihn nur mit faelligen Aufgaben
+        // (visible = plan.count() > 0). Klick auf beiden Geraeten gleich (start_review).
+        if (!Handy || w.Faellig.Wiederholen)
         {
-            // Lernen kommt in Phase 2; am PC gesperrt wie bei Python ohne faellige Aufgaben
-            var knopf = Schrift.Knopf(DashboardTexte.Wiederholen, true);
-            knopf.IsEnabled = false;
+            var knopf = LernTeile.Knopf(DashboardTexte.Wiederholen, true);
+            knopf.IsEnabled = w.Faellig.Wiederholen;
+            knopf.Click += (_, _) => _wiederholen();
             heute.Children.Add(new WrapPanel { Children = { knopf } });
         }
         _liste.Children.Add(Karte(DashboardTexte.HeuteTitel, DashboardTexte.HeuteUnter, heute));

@@ -168,7 +168,7 @@ public partial class MainView : UserControl
         {
             seite = id switch
             {
-                Seiten.Dashboard => new DashboardSeite(),
+                Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync()),
                 Seiten.Optionen => new OptionenSeite(BaueSicherung),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
                 Seiten.Karteikarten => new KarteikartenSeite(),
@@ -224,6 +224,35 @@ public partial class MainView : UserControl
         else
         {
             Messwerte.Reihe("Seitenwechsel (gebaute Seite)", ms);
+        }
+    }
+
+    /// <summary>
+    /// "Jetzt wiederholen" (start_review): erst faellige Karteikarten, dann faellige
+    /// Pruefungstrainer-Fragen; ohne faellige Aufgaben Hinweis "Wiederholung".
+    /// </summary>
+    private async Task WiederholenAsync()
+    {
+        if (await Programm.Zustand.Inhalte is not { } inhalte)
+        {
+            return;
+        }
+        var plan = Core.Lernen.Wiederholungsplan.Aus(Programm.Zustand.BuchLesen(), DateOnly.FromDateTime(DateTime.Now), inhalte);
+        if (plan.ErsteQuelle() is not { } quelle)
+        {
+            await Dialog.Zeigen(Core.Texte.KartenTexte.WiederholungTitel, Core.Texte.KartenTexte.NichtsFaellig, Dialog.Ok);
+            return;
+        }
+        var ziel = quelle == Core.Lernen.Quellen.Karte ? Seiten.Karteikarten : Seiten.Trainer;
+        await ZeigeAsync(ziel);
+        switch (_seiten[ziel])
+        {
+            case KarteikartenSeite karten:
+                karten.Ueben(plan.Sitzung(quelle));
+                break;
+            case TrainerSeite trainer:
+                trainer.Ueben(plan.Sitzung(quelle));
+                break;
         }
     }
 
