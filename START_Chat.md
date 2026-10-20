@@ -17,9 +17,9 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Version | A 0.1.0 auf `main`; A 0.2.0 kommt mit Welle 2 von Phase 1 (kein öffentliches Release, Pakete aus der CI) |
 | Phase | 1 freigegeben (Weisung P1-1_Plan_Freigabe, 125a7f6). Zweig `phase1-kern`: Welle 1 (K1 Lerninhalte, K2 Lernstand-DB, K3 Einstellungen, K4 Fehlerprotokoll) gebaut |
 | Vergleichswerte neu | G10 `fehlerprotokoll.json`, G11 `datenbank.json`, G12 `inhalte_pruefung.json` (Erzeuger in `werkzeuge/vergleich/`) |
-| Letzte Meldung | P1-1 Plan Phase 1; nächste P1-2 Bericht Welle 1 |
-| Offen bei Chat | Lesung Meldung P1-2, danach Freigabe Welle 2 (K5–K9) |
-| Nächster Schritt | Nach Lesung: Welle 2 auf `phase1-kern`, dabei Version A 0.2.0 |
+| Letzte Meldung | P1-2 Bericht Welle 1 (abgenommen, Weisung P1-2_Welle2_Freigabe 5ef901b); nächste P1-3 |
+| Offen bei Chat | nichts; Welle 2 (K5–K9) ist freigegeben |
+| Nächster Schritt | Welle 2 in neuem Thread nach `/mnt/project-files/phase1_csharp/HANDOFF_Welle2.md`, Version A 0.2.0 |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).

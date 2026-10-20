@@ -42,7 +42,7 @@
 
 ## Aktueller Stand
 - Phase 0 abgenommen und gemergt (main 2f9a971). Phase 1 freigegeben (Weisung P1-1_Plan_Freigabe, Fi-Austausch 125a7f6; Plan `weisungen/Plan_Phase1_CSharp.md`). Nico 20.10.: 1a DB wie Python, 2a spätere Bereiche sichtbar mit „Kommt in einer spaeteren Ausbaustufe“, 3 Phase 1 = A 0.2.0 ohne öffentliches Release, 4a „Alte Sicherung pruefen“ wandert unverändert nach Optionen > Sicherung.
-- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) gebaut, Version bleibt bis Welle 2 A 0.1.0 (Auflage P1-1); A 0.2.0 kommt mit Welle 2. Welle 2 (K5–K9) erst nach Meldung P1-2 und Lesung durch Chat.
+- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) abgenommen (Weisung P1-2_Welle2_Freigabe, 5ef901b; Stand 0305328, Lauf 39398978877 grün). Welle 2 (K5–K9) freigegeben, setzt A 0.2.0; Auflagen dort (Einstellungen nach Lesefehler nicht speichern, CI erzeugt G10–G12, K9-Diff und schreibende Lernstand-Änderungen vor Push zu Chat). Übergabe: `/mnt/project-files/phase1_csharp/HANDOFF_Welle2.md`.
   - K1 `Core/Inhalte` (Lerninhalte, Fragenkatalog, InhaltePruefung, Fachbereiche) gegen G12 `inhalte_pruefung.json` (ohne Spielteil).
   - K2 `Core/Daten/Lernstand.cs` gegen G11 `datenbank.json`; Aufbau-Version nur `PRAGMA user_version` (C# 1, Python 0). uid-Nachtrag alter Zeilen und Fragen-Umbenennungen kommen mit der Übernahme (Phase 2).
   - K3 `Core/Daten/Einstellungen.cs` gegen G11; Pflichttests unbekannte Schlüssel, halb geschriebene Datei, 0600.
@@ -52,4 +52,4 @@
 - Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
 - Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
 - Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung, B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht.
-- Nächste Meldung: P1-2 (Bericht Welle 1). Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.
+- Nächste Meldung: P1-3. Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.
