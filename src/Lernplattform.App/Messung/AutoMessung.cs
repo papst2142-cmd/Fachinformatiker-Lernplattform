@@ -99,6 +99,12 @@ public static class AutoMessung
                 foreach (var id in ansicht.GebauteSeiten.Keys.ToList())
                 {
                     await ansicht.ZeigeAsync(id);
+                    if (ansicht.GebauteSeiten[id] is DashboardSeite neuGerechnet)
+                    {
+                        // Dashboard rechnet beim erneuten Zeigen neu: erst die neuen Karten pruefen
+                        await neuGerechnet.Geladen;
+                        await ansicht.BildFertigAsync();
+                    }
                     if (ansicht.GebauteSeiten[id] is IAufklappbar klappbar)
                     {
                         klappbar.AllesAufklappen();

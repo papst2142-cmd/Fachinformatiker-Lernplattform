@@ -23,7 +23,36 @@ public sealed class DashboardSeite : UserControl
     private static readonly bool Handy = OperatingSystem.IsAndroid();
     private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16) };
 
+    private bool _gezeigt;
+
     public DashboardSeite()
+    {
+        DefektKarte();
+        _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        Content = new ScrollViewer { Content = _liste };
+        Geladen = LadenAsync();
+    }
+
+    /// <summary>Erstes Mal fertig gerechnet und gezeigt (fuer die Messung im Start ohne Bedienung).</summary>
+    public TaskCompletionSource Fertig { get; } = new();
+
+    /// <summary>Die zuletzt gestartete Rechnung (erstes Laden oder <see cref="Neu"/>).</summary>
+    public Task Geladen { get; private set; }
+
+    /// <summary>
+    /// Bei jedem erneuten Zeigen neu rechnen wie Python (refresh): Tagesziel-Einstellungen
+    /// oder ein neuer Tag wirken sofort. Die bisherigen Karten bleiben stehen, bis die
+    /// neuen Werte fertig sind.
+    /// </summary>
+    public void Neu()
+    {
+        if (Geladen.IsCompleted)
+        {
+            Geladen = LadenAsync();
+        }
+    }
+
+    private void DefektKarte()
     {
         if (Zustand.DefektHinweis is { } defekt)
         {
@@ -33,13 +62,7 @@ public sealed class DashboardSeite : UserControl
                 Children = { Schrift.Text(defekt.Titel, "Mittel", FontWeight.Bold, "Pinsel.orange"), Schrift.Text(defekt.Text) },
             }));
         }
-        _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
-        Content = new ScrollViewer { Content = _liste };
-        _ = LadenAsync();
     }
-
-    /// <summary>Fertig gerechnet und gezeigt (fuer die Messung im Start ohne Bedienung).</summary>
-    public TaskCompletionSource Fertig { get; } = new();
 
     private async Task LadenAsync()
     {
@@ -60,12 +83,28 @@ public sealed class DashboardSeite : UserControl
         }
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _liste.Children.RemoveAt(_liste.Children.Count - 1);
-            if (werte is not null)
+            try
             {
-                Zeigen(werte);
+                // Neu rechnen ohne Ergebnis: bisherige Karten stehen lassen
+                if (werte is null && _gezeigt)
+                {
+                    return;
+                }
+                _liste.Children.Clear();
+                DefektKarte();
+                if (werte is not null)
+                {
+                    Zeigen(werte);
+                    _gezeigt = true;
+                }
+                Fertig.TrySetResult();
             }
-            Fertig.TrySetResult();
+            catch (Exception fehler)
+            {
+                // Start ohne Bedienung endet dann rot statt zu warten
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                Fertig.TrySetException(fehler);
+            }
         });
     }
 
@@ -183,7 +222,8 @@ public sealed class DashboardSeite : UserControl
             }.Breite(140);
             fach.Children.Add(feld);
         }
-        _liste.Children.Add(Karte(DashboardTexte.FachTitel, DashboardTexte.FachUnter, fach));
+        // Untertitel "Auswahl zeigt die Themen" erst mit dem Reinzoom (Weisung P1-2 3.4: nichts zusagen, was fehlt)
+        _liste.Children.Add(Karte(DashboardTexte.FachTitel, null, fach));
 
         // Aktivitaeten
         var aktiv = new StackPanel { Spacing = 8 };
@@ -262,7 +302,14 @@ public sealed class DashboardSeite : UserControl
         }
     }
 
-    private static Border Karte(string titel, string unter, Control inhalt) =>
+    private static TextBlock Unter(string? unter)
+    {
+        var text = Schrift.Text(unter ?? "", "Klein", FontWeight.Normal, "Pinsel.muted");
+        text.IsVisible = unter is not null;
+        return text;
+    }
+
+    private static Border Karte(string titel, string? unter, Control inhalt) =>
         Schrift.Karte(new StackPanel
         {
             Spacing = 10,
@@ -271,7 +318,7 @@ public sealed class DashboardSeite : UserControl
                 new StackPanel
                 {
                     Spacing = 2,
-                    Children = { Schrift.Text(titel, "Mittel", FontWeight.Bold), Schrift.Text(unter, "Klein", FontWeight.Normal, "Pinsel.muted") },
+                    Children = { Schrift.Text(titel, "Mittel", FontWeight.Bold), Unter(unter) },
                 },
                 inhalt,
             },

@@ -44,6 +44,16 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+        // Datenordner-Probe (Phase 0, Spike D) beim Start wie frueher mit der Startseite,
+        // damit die Android-Update-Probe nicht erst das Oeffnen der Optionen braucht
+        try
+        {
+            Ablage.UpdateProbe(Update.PaketVersion);
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
         _leisten = new Navigationsleisten(id => _ = ZeigeAsync(id));
 
         var suche = Symbolknopf(Symbole.Suche, Seiten.Titel(Seiten.Suche), Seiten.Suche);
@@ -167,7 +177,12 @@ public partial class MainView : UserControl
     private void Zeige(string id)
     {
         AktuelleSeite = id;
+        var gebaut = _seiten.ContainsKey(id);
         _inhalt.Content = Seite(id);
+        if (gebaut && _seiten[id] is DashboardSeite dashboard)
+        {
+            dashboard.Neu();
+        }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
     }

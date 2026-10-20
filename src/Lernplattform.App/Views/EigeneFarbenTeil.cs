@@ -35,6 +35,8 @@ public sealed class EigeneFarbenTeil
 
     private string _darstellung = Farbwelt.Dunkel, _grund = Farbwelt.StandardGrundfarbe, _hinter = Farbwelt.StandardHintergrund;
     private EigeneWerte? _gespeichert;
+    // Hinweis zu den Vorlagen-Kacheln nur bei gespeicherten eigenen Farben (wie Python: if active)
+    private TextBlock? _kachelHinweis;
     private EigeneWerte _werte = EigeneFarben.Start(Farbwelt.Dunkel, Farbwelt.StandardGrundfarbe, Farbwelt.StandardHintergrund);
     private (string Grund, string Hinter)? _welt;
     private bool _setzen;
@@ -49,7 +51,8 @@ public sealed class EigeneFarbenTeil
         var panel = new StackPanel { Spacing = 10 };
         panel.Children.Add(Schrift.Text(EigeneFarben.Titel, "Klein", FontWeight.Bold, "Pinsel.muted"));
         panel.Children.Add(Schrift.Text(EigeneFarben.Hinweis, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
-        panel.Children.Add(Schrift.Text(EigeneFarben.KachelHinweis, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        _kachelHinweis = Schrift.Text(EigeneFarben.KachelHinweis, "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        panel.Children.Add(_kachelHinweis);
         panel.Children.Add(_zustand);
         foreach (var (teil, teilName) in EigeneFarben.Teile)
         {
@@ -156,6 +159,10 @@ public sealed class EigeneFarbenTeil
         (_darstellung, _grund, _hinter) = (Einstellungen.Darstellung(w), Einstellungen.Grundfarbe(w), Einstellungen.Hintergrund(w));
         _gespeichert = EigeneFarben.Gespeichert(w[EigeneFarben.Schluessel]).TryGetValue(_darstellung, out var e) ? e : null;
         _welt = null;
+        if (_kachelHinweis is not null)
+        {
+            _kachelHinweis.IsVisible = _gespeichert is not null;
+        }
         Zeige(_gespeichert ?? EigeneFarben.Start(_darstellung, _grund, _hinter));
         foreach (var (h, name) in Hintergrundnamen)
         {

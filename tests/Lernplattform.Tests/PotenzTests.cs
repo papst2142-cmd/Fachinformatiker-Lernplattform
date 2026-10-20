@@ -90,4 +90,25 @@ public class PotenzTests
         }
         Assert.Equal(liste.GetArrayLength(), geprueft);
     }
+
+    /// <summary>
+    /// Farbwelt.cs (Phase 0, Stoppgrenze) rechnet die Helligkeit mit Math.Pow. Eigene
+    /// Farben nutzen dieselbe Rechnung fuer beliebige Kanalwerte; das ist nur sicher,
+    /// solange Math.Pow fuer alle 256 Kanalwerte jedes Bit wie Python trifft (Gegenpruefung K10).
+    /// </summary>
+    [Fact]
+    public void HelligkeitAllerKanalwerteWiePython()
+    {
+        for (var kanal = 0; kanal < 256; kanal++)
+        {
+            var v = kanal / 255.0;
+            if (v <= 0.03928)
+            {
+                continue;
+            }
+            var basis = (v + 0.055) / 1.055;
+            Assert.True(BitConverter.DoubleToUInt64Bits(PythonPow.Pow(basis, 2.4)) == BitConverter.DoubleToUInt64Bits(Math.Pow(basis, 2.4)),
+                $"Kanal {kanal}: Math.Pow {Math.Pow(basis, 2.4):R}, wie Python {PythonPow.Pow(basis, 2.4):R}");
+        }
+    }
 }
