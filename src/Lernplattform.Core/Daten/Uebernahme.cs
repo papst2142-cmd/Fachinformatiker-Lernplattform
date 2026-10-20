@@ -115,10 +115,12 @@ public sealed record TabellenZahlen(string Tabelle, int Vorher, int Nachher, int
 /// <param name="EntferntDurchLoeschmarke">Vorhandene Eintraege, die eine Loeschmarke entfernt.</param>
 /// <param name="EntferntSonst">Vorhandene oder neue Zeilen, die das Aufraeumen entfernt (geloeschte Spieldurchgaenge, aeltere Fassungen im Abschlussprojekt).</param>
 /// <param name="NichtUebernommen">Eintraege der Datei, die eine Loeschung hier nicht hereinlaesst (Pythons "kept").</param>
+/// <param name="UngueltigeMarken">Ungueltige Marken beider Seiten (wie Python stats.invalid).</param>
+/// <param name="UngueltigInDatei">Davon in der Datei (fuer den Hinweis im Dialog, L5).</param>
 public sealed record UebernahmeBericht(UebernahmeQuelle Quelle, bool Vorschau, int Neu, int Uebernommen, int SchonVorhanden,
     int EntferntDurchLoeschmarke, int EntferntSonst, int NichtUebernommen, int Uebersprungen, int Abgelehnt,
     int UngueltigeMarken, int ZukunftsMarken, int Umbenannt, IReadOnlyDictionary<string, string> MarkenNachher,
-    IReadOnlyList<TabellenZahlen> Tabellen, string? Sicherungsdatei);
+    IReadOnlyList<TabellenZahlen> Tabellen, string? Sicherungsdatei, int UngueltigInDatei = 0);
 
 /// <summary>Korrigierte Fragetexte (inhalte/umbenennungen.json, fisi_core.load_question_renames).</summary>
 public static class Umbenennungen

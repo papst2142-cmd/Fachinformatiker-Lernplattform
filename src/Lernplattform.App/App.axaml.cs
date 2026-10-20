@@ -36,6 +36,8 @@ public partial class App : Application
             {
                 DataContext = new MainViewModel()
             };
+            // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
+            desktop.Exit += (_, _) => Programm.Zustand.Beenden();
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactoryApplicationLifetime)
         {

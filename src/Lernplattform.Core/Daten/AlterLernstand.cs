@@ -9,7 +9,7 @@ namespace Lernplattform.Core.Daten;
 
 /// <summary>
 /// Liest den Lernstand der Python-Linie: die Datenbank fisi_lernplattform.db
-/// und die Sicherungsdatei lernstand.json.gz (Formatversion 1, Abgleich-Format 2).
+/// und die Sicherungsdatei *.fisisicherung (Formatversion 1, Abgleich-Format 2).
 /// Nur lesen, nie schreiben. Grundlage fuer die Pflicht-Uebernahme (E4) in Phase 2.
 /// </summary>
 public static class AlterLernstand

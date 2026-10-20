@@ -35,22 +35,27 @@ public static partial class Uebernahme
         OperatingSystem.IsLinux() || OperatingSystem.IsAndroid() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Vorschau: dieselbe Rechnung auf einer Wegwerf-Kopie der Datenbank (im Temp-Ordner).
-    /// Die eigene Datenbank wird nur gelesen.
+    /// Vorschau: dieselbe Rechnung auf einer Kopie der Datenbank im Arbeitsspeicher
+    /// (keine Datei, auch nicht im Temp-Ordner; Auflage P2-3). Die eigene Datenbank wird nur gelesen.
     /// </summary>
     public static UebernahmeBericht Vorschau(Lernstand ziel, Austausch daten,
         IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null)
     {
         Pruefen(ziel, daten);
-        var kopie = Path.Combine(Path.GetTempPath(), "lernplattform_vorschau_" + Guid.NewGuid().ToString("N") + ".db");
         try
         {
-            using (var quelle = ziel.Verbindung())
-            using (var ziel2 = Oeffnen(kopie))
+            using var db = new SqliteConnection(new SqliteConnectionStringBuilder
             {
-                quelle.BackupDatabase(ziel2);
+                DataSource = ":memory:",
+                Pooling = false,
+            }.ToString());
+            db.Open();
+            // Auch Zwischenergebnisse (Sortieren, Indizes) bleiben im Speicher
+            Ausfuehren(db, null, "PRAGMA temp_store = MEMORY");
+            using (var quelle = ziel.Verbindung())
+            {
+                quelle.BackupDatabase(db);
             }
-            using var db = Oeffnen(kopie);
             using var tx = db.BeginTransaction();
             var bericht = Zusammenfuehren(db, tx, daten, umbenennungen, uhr ?? Uhr.System, true);
             tx.Rollback();
@@ -64,19 +69,6 @@ public static partial class Uebernahme
         catch (Exception e) when (e is FormatException or ArgumentOutOfRangeException or OverflowException)
         {
             throw new UebernahmeAusnahme(UebernahmeFehler.SchreibenGescheitert);
-        }
-        finally
-        {
-            foreach (var datei in new[] { kopie, kopie + "-journal" })
-            {
-                try
-                {
-                    File.Delete(datei);
-                }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-                {
-                }
-            }
         }
     }
 
@@ -193,12 +185,14 @@ public static partial class Uebernahme
 
         var fremd = new Dictionary<string, object?>(daten.Marken);
         var ungueltig = 0;
+        var ungueltigInDatei = 0;
         foreach (var seite in new[] { lokal, fremd })
         {
             foreach (var k in Loeschmarken.Ungueltige(seite, zone))
             {
                 seite.Remove(k);
                 ungueltig++;
+                ungueltigInDatei += seite == fremd ? 1 : 0;
             }
         }
         // check_future: Marken der Datei mehr als 300 s nach der Geraeteuhr gelten nicht
@@ -365,7 +359,8 @@ public static partial class Uebernahme
             Umbenannt: umbenannt,
             MarkenNachher: markenNachher,
             Tabellen: tabellenZahlen,
-            Sicherungsdatei: null);
+            Sicherungsdatei: null,
+            UngueltigInDatei: ungueltigInDatei);
     }
 
     /// <summary>_delete_before: loescht alles, was nicht nach der Marke liegt. (uids, Anzahl Zeilen).</summary>

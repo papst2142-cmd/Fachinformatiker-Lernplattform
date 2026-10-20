@@ -1,0 +1,432 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Threading;
+using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Lernen;
+using Lernplattform.Core.Texte;
+using Lernplattform.Design;
+using Lernplattform.Programm;
+
+namespace Lernplattform.Views;
+
+/// <summary>
+/// Phase 2, L6: Pruefungstrainer wie app_gui.QuizView (PC-Wortlaut, PC und Handy gleich).
+/// Art "Uebung" mit Core.Lernen.Uebung; Art "Prüfung" kommt in Welle 3 (Platzhalter).
+/// Unter dem Ergebnis steht der Hinweis "Übungsprüfung, keine offizielle IHK-Prüfung."
+/// (Weisung P2-4).
+/// </summary>
+public sealed class TrainerSeite : UserControl
+{
+    private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16) };
+    private readonly List<Action<Uebung>> _wartend = [];
+    private readonly DispatcherTimer _takt = new() { Interval = TimeSpan.FromSeconds(1) };
+    private Uebung? _u;
+
+    private Pillen _art = null!;
+    private StackPanel _uebungTeil = null!;
+    private Control _pruefungTeil = null!;
+    private Pillen _bereich = null!;
+    private Pillen _status = null!;
+    private ComboBox _themen = null!;
+    private readonly List<string?> _themenIds = [];
+    private bool _themenSetzen;
+    private TextBlock _anzahl = null!;
+    private Button _starten = null!;
+    private TextBlock _pool = null!;
+    private TextBlock _fortschritt = null!;
+    private TextBlock _punkte = null!;
+    private TextBlock _uhr = null!;
+    private TextBlock _frage = null!;
+    private StackPanel _optionen = null!;
+    private TextBlock _erklaerung = null!;
+    private TextBlock _hinweisKurz = null!;
+    private Button _einreichen = null!;
+    private Button _abbrechen = null!;
+
+    private readonly System.Diagnostics.Stopwatch _messuhr = System.Diagnostics.Stopwatch.StartNew();
+
+    public TrainerSeite()
+    {
+        _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        Content = new ScrollViewer { Content = _liste };
+        _takt.Tick += (_, _) => UhrZeigen();
+        Geladen = LadenAsync();
+    }
+
+    public Task Geladen { get; }
+
+    /// <summary>Zeit vom Bauen der Seite bis die Vorbereitung steht (Messwert).</summary>
+    public double? InhaltMs { get; private set; }
+
+    private async Task LadenAsync()
+    {
+        try
+        {
+            var inhalte = await Zustand.Inhalte;
+            if (inhalte is null)
+            {
+                return;
+            }
+            var gewicht = await Zustand.Gewicht;
+            var uebung = await Task.Run(() => new Uebung(inhalte, Zustand.BuchLesen, Zustand.Schreiber,
+                () => Zustand.NeuReihenfolge(gewicht, Quellen.Quiz)));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _u = uebung;
+                Aufbauen(inhalte);
+                foreach (var schritt in _wartend)
+                {
+                    schritt(uebung);
+                }
+                _wartend.Clear();
+                Vorbereitung();
+                InhaltMs = _messuhr.Elapsed.TotalMilliseconds;
+            });
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
+    }
+
+    private void Mit(Action<Uebung> schritt)
+    {
+        if (_u is { } u)
+        {
+            schritt(u);
+        }
+        else
+        {
+            _wartend.Add(schritt);
+        }
+    }
+
+    /// <summary>on_show: ohne laufende Session den Pool neu rechnen.</summary>
+    public void Gezeigt()
+    {
+        if (_u is { Laeuft: false } u)
+        {
+            u.PoolNeu();
+            Vorbereitung();
+        }
+    }
+
+    /// <summary>practice: gezielte Runde (Jetzt wiederholen), Art "Übung".</summary>
+    public void Ueben(IEnumerable<string> fragen)
+    {
+        var liste = fragen.ToList();
+        Mit(u =>
+        {
+            _art?.Waehle(TrainerTexte.Uebung);
+            ArtZeigen(TrainerTexte.Uebung);
+            if (u.Laeuft)
+            {
+                _takt.Stop();
+                u.Abbrechen();
+            }
+            u.Ueben(liste);
+            if (u.Laeuft)
+            {
+                Begonnen();
+            }
+        });
+    }
+
+    private void Aufbauen(Lerninhalte inhalte)
+    {
+        _liste.Children.Clear();
+        _art = new Pillen(TrainerTexte.Arten, TrainerTexte.Uebung, ArtZeigen);
+        _liste.Children.Add(_art);
+
+        _bereich = new Pillen(Fachbereiche.Alle.Select(f => (f, Fachbereiche.Kurzname[f])).Prepend((KartenTexte.Alle, KartenTexte.Alle)),
+            KartenTexte.Alle, f => Mit(u => { u.SetzeFachbereich(f); Vorbereitung(); }));
+        _status = new Pillen(KartenTexte.StatusReiter, FragenStatus.Alle, s => Mit(u => { u.SetzeStatus(s); Vorbereitung(); }));
+        _themen = LernTeile.Themenliste();
+        _themen.SelectionChanged += (_, _) =>
+        {
+            if (!_themenSetzen && _themen.SelectedIndex >= 0)
+            {
+                var thema = _themenIds[_themen.SelectedIndex] ?? KartenTexte.Alle;
+                Mit(u => { u.SetzeThema(thema); Vorbereitung(); });
+            }
+        };
+        var weniger = Stufenknopf("-", TrainerTexte.Weniger, -1);
+        var mehr = Stufenknopf("+", TrainerTexte.Mehr, 1);
+        _anzahl = Schrift.Text("", "Normal", FontWeight.Bold);
+        _anzahl.TextAlignment = TextAlignment.Center;
+        var anzahlFeld = new Border
+        {
+            Child = _anzahl,
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(8, 6),
+            Margin = new Thickness(6, 0, 6, 8),
+            VerticalAlignment = VerticalAlignment.Center,
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Breite(58);
+        var anzahlText = Schrift.Text(TrainerTexte.Fragenanzahl, "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        anzahlText.VerticalAlignment = VerticalAlignment.Center;
+        anzahlText.Margin = new Thickness(0, 0, 10, 8);
+        _starten = LernTeile.Knopf(TrainerTexte.Starten, true);
+        _starten.Margin = new Thickness(8, 0, 8, 8);
+        _starten.Click += (_, _) => Starten();
+        _pool = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.muted");
+        _uebungTeil = new StackPanel { Spacing = 14 };
+        _uebungTeil.Children.Add(Schrift.Karte(new StackPanel
+        {
+            Spacing = 6,
+            Children =
+            {
+                Schrift.Text(TrainerTexte.SessionTitel, "Mittel", FontWeight.Bold),
+                Schrift.Text(TrainerTexte.Katalog(inhalte.Quizfragen.Count), "Klein", FontWeight.Normal, "Pinsel.muted"),
+                LernTeile.Label(KartenTexte.Fachbereich), _bereich,
+                LernTeile.Label(KartenTexte.Status), _status,
+                LernTeile.Label(KartenTexte.Thema), _themen,
+                new WrapPanel { Margin = new Thickness(0, 8, 0, 0), Children = { anzahlText, weniger, anzahlFeld, mehr, _starten } },
+                _pool,
+            },
+        }));
+
+        _fortschritt = Schrift.Text(TrainerTexte.FortschrittLeer, "Normal", FontWeight.Bold, "Pinsel.text_dim");
+        _punkte = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
+        _punkte.VerticalAlignment = VerticalAlignment.Center;
+        _uhr = Schrift.Text(TrainerTexte.UhrLeer, "Normal", FontWeight.Bold, "Pinsel.accent");
+        var rechts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16, Children = { _punkte, _uhr } };
+        DockPanel.SetDock(rechts, Dock.Right);
+        _uebungTeil.Children.Add(Schrift.Karte(new DockPanel { Children = { rechts, _fortschritt } }));
+
+        _frage = Schrift.Text(TrainerTexte.StartHinweis, "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
+        _optionen = new StackPanel { Spacing = 6 };
+        _erklaerung = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        _hinweisKurz = Schrift.Text(TrainerTexte.HinweisKurz, "Klein", FontWeight.Normal, "Pinsel.muted");
+        _hinweisKurz.IsVisible = false;
+        _uebungTeil.Children.Add(Schrift.Karte(new StackPanel
+        {
+            Spacing = 10,
+            Children = { Schrift.Text(TrainerTexte.AufgabeTitel, "Mittel", FontWeight.Bold), _frage, _hinweisKurz, _optionen, _erklaerung },
+        }));
+
+        _einreichen = LernTeile.Knopf(TrainerTexte.Einreichen, true);
+        _einreichen.IsEnabled = false;
+        _einreichen.Click += (_, _) => Einreichen();
+        _abbrechen = LernTeile.Knopf(TrainerTexte.Abbrechen);
+        _abbrechen.IsEnabled = false;
+        _abbrechen.Click += async (_, _) => await AbbrechenAsync();
+        _uebungTeil.Children.Add(new WrapPanel { Children = { _einreichen, _abbrechen } });
+        _liste.Children.Add(_uebungTeil);
+
+        _pruefungTeil = Schrift.Karte(Schrift.Text(Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        _pruefungTeil.IsVisible = false;
+        _liste.Children.Add(_pruefungTeil);
+    }
+
+    private Button Stufenknopf(string zeichen, string name, int schritte)
+    {
+        var knopf = LernTeile.Knopf(zeichen);
+        knopf.Margin = new Thickness(0, 0, 0, 8);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, name);
+        ToolTip.SetTip(knopf, name);
+        knopf.Click += (_, _) => Mit(u =>
+        {
+            u.AnzahlAendern(schritte);
+            _anzahl.Text = u.Anzahl.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        });
+        return knopf;
+    }
+
+    private void ArtZeigen(string art)
+    {
+        _uebungTeil.IsVisible = art == TrainerTexte.Uebung;
+        _pruefungTeil.IsVisible = art == TrainerTexte.Pruefung;
+    }
+
+    /// <summary>Filter, Pool und Fragenanzahl zeigen (_update_pool).</summary>
+    private void Vorbereitung()
+    {
+        if (_u is not { } u)
+        {
+            return;
+        }
+        _bereich.Waehle(u.Fachbereich);
+        _status.Waehle(u.Status);
+        _themenSetzen = true;
+        var themen = u.Themen;
+        if (_themenIds.Count != themen.Count + 1 || !_themenIds.Skip(1).SequenceEqual(themen.Select(t => (string?)t.Id)))
+        {
+            _themenIds.Clear();
+            _themenIds.Add(null);
+            _themenIds.AddRange(themen.Select(t => (string?)t.Id));
+            _themen.ItemsSource = themen.Select(t => t.Name).Prepend(KartenTexte.Alle).ToList();
+        }
+        _themen.SelectedIndex = Math.Max(0, _themenIds.IndexOf(u.Thema == KartenTexte.Alle ? null : u.Thema));
+        _themenSetzen = false;
+        _anzahl.Text = u.Anzahl.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _pool.Text = u.PoolText;
+    }
+
+    private void Starten()
+    {
+        if (_u is not { } u)
+        {
+            return;
+        }
+        if (u.Starten() is { } hinweis)
+        {
+            _ = Dialog.Zeigen(KartenTexte.HinweisTitel, hinweis, Dialog.Ok);
+            return;
+        }
+        Begonnen();
+    }
+
+    private void Begonnen()
+    {
+        _starten.IsEnabled = false;
+        _abbrechen.IsEnabled = true;
+        _hinweisKurz.IsVisible = false;
+        _takt.Start();
+        UhrZeigen();
+        FrageZeigen();
+    }
+
+    private void UhrZeigen()
+    {
+        if (_u is { } u)
+        {
+            _uhr.Text = u.Uhr;
+        }
+    }
+
+    private void FrageZeigen()
+    {
+        if (_u is not { Frage: not null } u)
+        {
+            return;
+        }
+        _frage.Text = u.FrageText;
+        _erklaerung.Text = "";
+        _optionen.Children.Clear();
+        foreach (var option in u.Optionen)
+        {
+            _optionen.Children.Add(LernTeile.Option(option, "trainer"));
+        }
+        _fortschritt.Text = u.Fortschritt;
+        _punkte.Text = u.RichtigText;
+        ((TextBlock)_einreichen.Content!).Text = TrainerTexte.Einreichen;
+        _einreichen.IsEnabled = true;
+    }
+
+    private void Einreichen()
+    {
+        if (_u is not { Laeuft: true } u)
+        {
+            return;
+        }
+        if (u.Beantwortet)
+        {
+            if (u.Weiter() is { } ergebnis)
+            {
+                Beendet(ergebnis);
+            }
+            else
+            {
+                FrageZeigen();
+            }
+            return;
+        }
+        var auswahl = LernTeile.Gewaehlt(_optionen);
+        var richtigeAntwort = u.Frage?.Antwort;
+        if (u.Einreichen(auswahl) is not { } antwort)
+        {
+            return;
+        }
+        if (antwort.Warnung is { } warnung)
+        {
+            _ = Dialog.Zeigen(KartenTexte.HinweisTitel, warnung, Dialog.Ok);
+            return;
+        }
+        LernTeile.Aufdecken(_optionen, richtigeAntwort);
+        _erklaerung.Text = antwort.Erklaerung;
+        _erklaerung.Farbe(TextBlock.ForegroundProperty, antwort.Richtig ? "Pinsel.green" : "Pinsel.text_dim");
+        _punkte.Text = u.RichtigText;
+        ((TextBlock)_einreichen.Content!).Text = antwort.Knopf;
+    }
+
+    private void Beendet(UebungErgebnis ergebnis)
+    {
+        _takt.Stop();
+        _optionen.Children.Clear();
+        _erklaerung.Text = "";
+        Zurueckgesetzt();
+        _frage.Text = ergebnis.Text;
+        _hinweisKurz.IsVisible = true;
+    }
+
+    private async Task AbbrechenAsync()
+    {
+        if (_u is not { Laeuft: true } u)
+        {
+            return;
+        }
+        if (await Dialog.Zeigen(TrainerTexte.Abbrechen, TrainerTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0 || !u.Laeuft)
+        {
+            return;
+        }
+        _takt.Stop();
+        u.Abbrechen();
+        Zurueckgesetzt();
+        _frage.Text = TrainerTexte.Abgebrochen;
+        _optionen.Children.Clear();
+        _erklaerung.Text = "";
+    }
+
+    /// <summary>
+    /// Nur fuer den Start ohne Bedienung: 0 = Frage mit Antworten und Erklaerung (laengste Frage
+    /// des Katalogs), 1 = Ergebnis mit Hinweis, -1 = zurueck. Speichert nichts.
+    /// </summary>
+    internal void Probe(int art, Lerninhalte inhalte)
+    {
+        if (_u is not { Laeuft: false })
+        {
+            return;
+        }
+        _optionen.Children.Clear();
+        _erklaerung.Text = "";
+        _hinweisKurz.IsVisible = false;
+        if (art < 0)
+        {
+            _frage.Text = TrainerTexte.StartHinweis;
+            _punkte.Text = "";
+            _fortschritt.Text = TrainerTexte.FortschrittLeer;
+            return;
+        }
+        if (art == 0)
+        {
+            var frage = inhalte.Quizfragen.MaxBy(q => (q.Frage ?? "").Length + q.Optionen.Sum(o => o.Length))!;
+            _frage.Text = Beschriftungen.Einsetzen(TrainerTexte.FrageNummer, 50, frage.Frage!);
+            foreach (var option in frage.Optionen)
+            {
+                _optionen.Children.Add(LernTeile.Option(option, "probe"));
+            }
+            LernTeile.Aufdecken(_optionen, frage.Antwort);
+            _erklaerung.Text = Beschriftungen.Einsetzen(TrainerTexte.ErklaerungFalsch, frage.Antwort!) + frage.Text("exp");
+            _fortschritt.Text = Beschriftungen.Einsetzen(TrainerTexte.Fortschritt, 50, 50);
+            _punkte.Text = Beschriftungen.Einsetzen(TrainerTexte.Richtig, 49);
+            return;
+        }
+        var prozent = Trainer.Prozent(49, 50);
+        _frage.Text = new UebungErgebnis(49, 50, prozent, Trainer.Note(prozent), 3599, false).Text;
+        _hinweisKurz.IsVisible = true;
+    }
+
+    // _reset_controls
+    private void Zurueckgesetzt()
+    {
+        _starten.IsEnabled = true;
+        _abbrechen.IsEnabled = false;
+        _einreichen.IsEnabled = false;
+        ((TextBlock)_einreichen.Content!).Text = TrainerTexte.Einreichen;
+        _fortschritt.Text = TrainerTexte.FortschrittLeer;
+        _uhr.Text = TrainerTexte.UhrLeer;
+        Vorbereitung();
+    }
+}

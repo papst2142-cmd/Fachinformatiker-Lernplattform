@@ -84,7 +84,11 @@ public partial class MainView : UserControl
         Grid.SetRow(_leisten.UntereLeiste, 2);
         raster.Children.Add(_leisten.UntereLeiste);
 
-        Content = new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
+        // Ebene fuer Hinweis- und Rueckfragefenster ueber allen Seiten (Phase 2)
+        var ebene = new Panel { IsVisible = false };
+        Dialog.Ebene(ebene);
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), ebene } };
+        Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
 
@@ -164,9 +168,13 @@ public partial class MainView : UserControl
         {
             seite = id switch
             {
-                Seiten.Dashboard => new DashboardSeite(),
+                Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync()),
                 Seiten.Optionen => new OptionenSeite(BaueSicherung),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
+                Seiten.Karteikarten => new KarteikartenSeite(),
+                Seiten.Trainer => new TrainerSeite(),
+                // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
+                _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
             };
             _seiten[id] = seite;
@@ -182,6 +190,21 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is DashboardSeite dashboard)
         {
             dashboard.Neu();
+        }
+        if (_seiten[id] is KarteikartenSeite karten)
+        {
+            if (Core.Inhalte.Fachbereiche.Alle.Contains(id))
+            {
+                karten.SetzeFachbereich(id);      // open_cards(category)
+            }
+            else if (gebaut)
+            {
+                karten.Gezeigt();
+            }
+        }
+        if (gebaut && _seiten[id] is TrainerSeite trainer)
+        {
+            trainer.Gezeigt();
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
@@ -204,6 +227,35 @@ public partial class MainView : UserControl
         }
     }
 
+    /// <summary>
+    /// "Jetzt wiederholen" (start_review): erst faellige Karteikarten, dann faellige
+    /// Pruefungstrainer-Fragen; ohne faellige Aufgaben Hinweis "Wiederholung".
+    /// </summary>
+    private async Task WiederholenAsync()
+    {
+        if (await Programm.Zustand.Inhalte is not { } inhalte)
+        {
+            return;
+        }
+        var plan = Core.Lernen.Wiederholungsplan.Aus(Programm.Zustand.BuchLesen(), DateOnly.FromDateTime(DateTime.Now), inhalte);
+        if (plan.ErsteQuelle() is not { } quelle)
+        {
+            await Dialog.Zeigen(Core.Texte.KartenTexte.WiederholungTitel, Core.Texte.KartenTexte.NichtsFaellig, Dialog.Ok);
+            return;
+        }
+        var ziel = quelle == Core.Lernen.Quellen.Karte ? Seiten.Karteikarten : Seiten.Trainer;
+        await ZeigeAsync(ziel);
+        switch (_seiten[ziel])
+        {
+            case KarteikartenSeite karten:
+                karten.Ueben(plan.Sitzung(quelle));
+                break;
+            case TrainerSeite trainer:
+                trainer.Ueben(plan.Sitzung(quelle));
+                break;
+        }
+    }
+
     private static TextBlock Text(string text, double groesse = 14, FontWeight gewicht = FontWeight.Normal) =>
         new() { Text = text, FontSize = groesse, FontWeight = gewicht, TextWrapping = TextWrapping.Wrap };
 
@@ -215,6 +267,8 @@ public partial class MainView : UserControl
     private Control BaueSicherung()
     {
         var panel = new StackPanel { Spacing = 8 };
+        // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
+        panel.Children.Add(new UebernahmeTeil(panel).Teil);
         panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
@@ -231,7 +285,7 @@ public partial class MainView : UserControl
         sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
         sicherung.Click += async (_, _) => await SicherungPruefenAsync();
         panel.Children.Add(new WrapPanel { Children = { sicherung, kopieren } });
-        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
+        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (.fisisicherung) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
         panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
@@ -290,7 +344,7 @@ public partial class MainView : UserControl
         }
         var auswahl = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Kopie der alten Sicherung (lernstand.json.gz) waehlen",
+            Title = "Kopie der alten Sicherung (.fisisicherung) waehlen",
             AllowMultiple = false,
         });
         if (auswahl.Count == 0)

@@ -4,6 +4,7 @@ using Lernplattform.Core.Dashboard;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Lernen;
 using Lernplattform.Design;
 using Lernplattform.Messung;
 
@@ -31,12 +32,68 @@ public static class Zustand
     /// <summary>Gesamtzahlen und Zuordnungen fuer das Dashboard, nach den Lerninhalten.</summary>
     public static Task<DashboardInhalte?> DashboardInhalte { get; private set; } = Task.FromResult<DashboardInhalte?>(null);
 
+    private static Lernstand? _lernstand;
+    private static LernstandSchreiber? _schreiber;
+
+    /// <summary>Phase 2: gemeinsamer Lernstand (lernplattform.db im Datenordner), beim ersten Gebrauch geoeffnet.</summary>
+    public static Lernstand Lernstand => _lernstand ??= new Lernstand(null, text => Fehlermeldung?.Invoke(text));
+
+    /// <summary>Speichert Antworten in den gemeinsamen Lernstand.</summary>
+    public static LernstandSchreiber Schreiber => _schreiber ??= new LernstandSchreiber(Lernstand);
+
+    /// <summary>Verstaendliche Meldung je Fehlerart des Lernstands (Oberflaeche zeigt "Datenbankfehler").</summary>
+    public static Action<string>? Fehlermeldung { get; set; }
+
+    /// <summary>Beim Beenden des Programms (z. B. Aufgedecktes als angesehen speichern, flush_inputs).</summary>
+    public static event Action? BeimBeenden;
+
+    public static void Beenden() => BeimBeenden?.Invoke();
+
+    private static IReadOnlyList<(string Tabelle, string Alt, string Neu)>? _umbenennungen;
+
+    /// <summary>inhalte/umbenennungen.json (apply_question_renames bei der Uebernahme).</summary>
+    public static IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen =>
+        _umbenennungen ??= Core.Daten.Umbenennungen.Laden(EingebauteDatei);
+
+    /// <summary>StatusBook(db): Antworten neu lesen.</summary>
+    public static StatusBuch BuchLesen() => new(Antwortbuch.Lesen(Lernstand));
+
+    /// <summary>
+    /// Zuordnung zum Rahmenplan (rechnet einige hundert Millisekunden), wie Pythons frp.warm_up
+    /// gleich nach den Lerninhalten im Hintergrund vorbereitet; null wenn die Inhalte fehlen.
+    /// </summary>
+    public static Task<RahmenplanGewicht?> Gewicht { get; private set; } = Task.FromResult<RahmenplanGewicht?>(null);
+
+    /// <summary>fresh_order(quelle): Rahmenplan-Reihenfolge der neuen Inhalte, je Aufruf mit den aktuellen Einstellungen.</summary>
+    public static Func<List<string>, List<string>>? NeuReihenfolge(RahmenplanGewicht? gewicht, string quelle) =>
+        gewicht?.NeuReihenfolge(quelle, RahmenplanWerte.Aus(Werte, gewicht), DateOnly.FromDateTime(DateTime.Now));
+
     public static void Starten()
     {
         DefektHinweis = Einstellungen.DefektHinweis();
         Werte = Einstellungen.Laden();
         DesignAnwenden();
         Inhalte = Task.Run(InhalteLaden);
+        Gewicht = Inhalte.ContinueWith(t =>
+        {
+            if (!t.IsCompletedSuccessfully || t.Result is null)
+            {
+                return null;
+            }
+            try
+            {
+                var uhr = Stopwatch.StartNew();
+                var gewicht = new RahmenplanGewicht(t.Result);
+                Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Rahmenplan-Zuordnung im Hintergrund vorbereitet: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+                return gewicht;
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                return null;
+            }
+        }, TaskScheduler.Default);
         DashboardInhalte = Inhalte.ContinueWith(t =>
         {
             if (!t.IsCompletedSuccessfully || t.Result is null)

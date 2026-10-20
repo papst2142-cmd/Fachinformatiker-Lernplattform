@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Tests;
 
@@ -35,7 +36,7 @@ public class UebernahmeTests
         G20.GetProperty("faelle").EnumerateArray().Single(f => f.GetProperty("name").GetString() == name);
 
     /// <summary>Datenbank aus einem Stand von G20 (Zeilen mit id, sync_meta, sqlite_sequence).</summary>
-    private static string BaueDatenbank(JsonElement stand, string pfad)
+    internal static string BaueDatenbank(JsonElement stand, string pfad)
     {
         _ = new Lernstand(pfad);
         using var db = VergleichsHilfe.Oeffnen(pfad);
@@ -55,7 +56,7 @@ public class UebernahmeTests
         return pfad;
     }
 
-    private static byte[] Gzip(string text)
+    internal static byte[] Gzip(string text)
     {
         using var ausgabe = new MemoryStream();
         using (var gz = new GZipStream(ausgabe, CompressionLevel.Optimal))
@@ -163,6 +164,64 @@ public class UebernahmeTests
         }
     }
 
+    /// <summary>
+    /// Weisung P2-6 A2: Der Ergebnissatz „… übernommen.“ nennt die Einträge, die nach der
+    /// Übernahme wirklich neu im Lernstand stehen (Neu, wie Pythons merge_backup), nicht die
+    /// Rohzahl Uebernommen (merge_into_local zählt auch Zeilen, die das Aufräumen in derselben
+    /// Übernahme wieder entfernt, und die Platz-Zeilen des Spiels).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Faelle))]
+    public void ErgebnisNenntWirklichNeueEintraege(string name)
+    {
+        using var ordner = new TempOrdner();
+        var fall = Fall(name);
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        BaueDatenbank(G20.GetProperty("ziele").GetProperty(fall.GetProperty("ziel").GetString()!), pfad);
+        var quelle = Quelle(fall.GetProperty("quelle").GetString()!, ordner.Pfad);
+        var vorherStand = G20.GetProperty("ziele").GetProperty(fall.GetProperty("ziel").GetString()!);
+        if (fall.GetProperty("start").ValueKind != JsonValueKind.Null)
+        {
+            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            vorherStand = Fall(fall.GetProperty("start").GetString()!).GetProperty("nachher");
+        }
+        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+
+        // Neue Kennungen im Stand nachher (G20 aus Python), ohne Platz-Zeilen des Spiels
+        var vorher = Kennungen(vorherStand);
+        var wirklichNeu = Kennungen(fall.GetProperty("nachher")).Count(k => k.Tabelle != "spiel_plaetze" && !vorher.Contains(k));
+        Assert.Equal(wirklichNeu, bericht.Neu);
+        var ergebnis = UebernahmeTexte.Ergebnis(bericht, null);
+        var kern = bericht.Neu > 0 ? UebernahmeTexte.Eintraege(bericht.Neu) + " übernommen." : null;
+        if (kern is not null)
+        {
+            Assert.Contains(kern, ergebnis, StringComparison.Ordinal);
+        }
+        if (bericht.Uebernommen != bericht.Neu)
+        {
+            Assert.DoesNotContain(UebernahmeTexte.Eintraege(bericht.Uebernommen) + " übernommen.", ergebnis, StringComparison.Ordinal);
+        }
+    }
+
+    private static HashSet<(string Tabelle, string Uid)> Kennungen(JsonElement stand)
+    {
+        var kennungen = new HashSet<(string, string)>();
+        foreach (var tabelle in stand.GetProperty("tabellen").EnumerateObject())
+        {
+            var spalten = tabelle.Value.GetProperty("spalten").EnumerateArray().Select(s => s.GetString()).ToList();
+            var stelle = spalten.IndexOf("uid");
+            if (stelle < 0)
+            {
+                continue;
+            }
+            foreach (var zeile in tabelle.Value.GetProperty("zeilen").EnumerateArray())
+            {
+                kennungen.Add((tabelle.Name, zeile[stelle].ToString()));
+            }
+        }
+        return kennungen;
+    }
+
     [Fact]
     public void FehlerfaelleWiePython()
     {
@@ -213,7 +272,7 @@ public class UebernahmeTests
         return Uebernahme.Tabellen.Sum(t => (long)VergleichsHilfe.Abfrage(db, $"SELECT COUNT(*) FROM {t.Tabelle}")[0][0]!);
     }
 
-    private static string Sha(string pfad) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(pfad)));
+    internal static string Sha(string pfad) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(pfad)));
 
     private static string[] Dateien(string ordner) =>
         Directory.EnumerateFileSystemEntries(ordner, "*", SearchOption.AllDirectories).Select(p => Path.GetRelativePath(ordner, p))
@@ -373,5 +432,104 @@ public class UebernahmeTests
         Assert.Null(Loeschmarken.Ortszeit("2026-1-1 00:00:00\n"));
         Assert.NotNull(Loeschmarken.Ortszeit("2026-1-1 00:00:00"));
         Assert.Null(Loeschmarken.Lesen("2026-10-05 12:00:00+02:00\n")?.Utc);
+    }
+
+    /// <summary>
+    /// Auflage P2-3: Die Vorschau legt keine Datei an, auch nicht im Temp-Ordner, und auch nicht,
+    /// wenn sie mittendrin hart abgebrochen wird. Eigener Prozess mit eigenem, leerem Temp-Ordner.
+    /// </summary>
+    [Fact]
+    public void VorschauLegtKeineTempDateiAn()
+    {
+        using var ordner = new TempOrdner();
+        var daten = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "daten")).FullName;
+        var temp = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "temp")).FullName;
+        var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(daten, Lernstand.DateiName));
+        var abgleich = Path.Combine(ordner.Pfad, "lernstand.json.gz");
+        File.WriteAllBytes(abgleich, Gzip(G20.GetProperty("dateien").GetProperty("d").GetString()!));
+        var vorher = Sha(pfad);
+        var dateien = Dateien(daten);
+        var umgebung = new Dictionary<string, string> { ["TMPDIR"] = temp, ["TMP"] = temp, ["TEMP"] = temp, ["DOTNET_EnableDiagnostics"] = "0" };
+        foreach (var halt in new[] { "", "nach:card_events", "nach:abschlussprojekt" })
+        {
+            AbsturzProbe.Starten(AbsturzProbe.ArtVorschau, [pfad, abgleich, halt], 0, umgebung);
+            Assert.Empty(Dateien(temp));
+            Assert.Equal(vorher, Sha(pfad));
+            Assert.Equal(dateien, Dateien(daten));
+        }
+    }
+
+    /// <summary>
+    /// Beleg Wortlaut L5 "SchreibenGescheitert" (Weisung P2-4): scheitert das Schreiben mitten
+    /// in der Transaktion (SQLite-Fehler), ist die Lerndatenbank bytegleich wie vorher; die
+    /// Kopie im Ordner "sicherungen" liegt vor. In der Vorschau derselbe Fehler = "Vorschau scheitert".
+    /// </summary>
+    [Fact]
+    public void SchreibenGescheitertLaesstLernstandWieVorher()
+    {
+        using var ordner = new TempOrdner();
+        var daten = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "daten")).FullName;
+        var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(daten, Lernstand.DateiName));
+        var quelle = Quelle("d", ordner.Pfad);
+        var vorher = Sha(pfad);
+        var faden = Environment.CurrentManagedThreadId;
+        Uebernahme.Haltepunkt = halt =>
+        {
+            if (Environment.CurrentManagedThreadId == faden && halt == "nach:quiz_answers")
+            {
+                throw new Microsoft.Data.Sqlite.SqliteException("Probe: Platte voll", 13);
+            }
+        };
+        try
+        {
+            Assert.Equal(UebernahmeFehler.SchreibenGescheitert,
+                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+            Assert.Equal(vorher, Sha(pfad));
+            Assert.Single(Directory.GetFiles(Path.Combine(daten, Uebernahme.SicherungsOrdner)));
+            Assert.Equal(UebernahmeFehler.SchreibenGescheitert,
+                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Vorschau(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+            Assert.Equal(vorher, Sha(pfad));
+        }
+        finally
+        {
+            Uebernahme.Haltepunkt = null;
+        }
+        // Ohne Stoerung gelingt es danach normal
+        Assert.True(Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr).Neu > 0);
+        Assert.NotEqual(vorher, Sha(pfad));
+    }
+
+    /// <summary>
+    /// Beleg Wortlaut L5 "ZukunftAbgleich" (V): eine Loeschmarke der Abgleich-Datei mehr als
+    /// 300 s nach der Geraeteuhr wird nicht angewendet; das Ergebnis ist genau das ohne diese Marke.
+    /// </summary>
+    [Fact]
+    public void ZukunftsmarkeDerAbgleichDateiGiltNicht()
+    {
+        var original = G20.GetProperty("dateien").GetProperty("d").GetString()!;
+        var marke = "\"reset_at\":\"2026-10-05 12:00:00+02:00\"";
+        Assert.Contains(marke, original, StringComparison.Ordinal);
+        var stand = new List<List<string>>();
+        var berichte = new List<UebernahmeBericht>();
+        foreach (var ersatz in new[] { "\"reset_at\":\"2026-10-20 12:05:01+02:00\"", "\"reset_at\":\"2026-10-20 12:05:00+02:00\"", "\"x\":\"\"" })
+        {
+            using var ordner = new TempOrdner();
+            var ziel = G20.GetProperty("ziele").GetProperty("gefuellt");
+            var pfad = BaueDatenbank(ziel, Path.Combine(ordner.Pfad, Lernstand.DateiName));
+            var datei = Path.Combine(ordner.Pfad, "lernstand.json.gz");
+            File.WriteAllBytes(datei, Gzip(original.Replace(marke, ersatz, StringComparison.Ordinal)));
+            berichte.Add(Uebernahme.Uebernehmen(new Lernstand(pfad), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, datei), Umbenennungen, Uhr));
+            stand.Add(VergleichsHilfe.Stand(pfad, Fall("d_gefuellt").GetProperty("nachher")));
+        }
+        // 12:05:01 Ortszeit = 10:05:01 UTC (Uhr 10:00 UTC), eine Sekunde ueber der Toleranz: nicht angewendet
+        Assert.Equal(1, berichte[0].ZukunftsMarken);
+        Assert.Equal(stand[2], stand[0]);
+        static object Zahlen(UebernahmeBericht b) => (b.Neu, b.SchonVorhanden, b.EntferntDurchLoeschmarke, b.NichtUebernommen, b.UngueltigInDatei);
+        Assert.Equal(Zahlen(berichte[2]), Zahlen(berichte[0]));
+        Assert.Equal(berichte[2].MarkenNachher, berichte[0].MarkenNachher);
+        Assert.Equal(UebernahmeTexte.ZukunftAbgleich, Assert.Single(UebernahmeTexte.Hinweise(UebernahmeQuelle.AbgleichDatei, 0, berichte[0].ZukunftsMarken)));
+        // Genau an der Grenze gilt die Marke (Kontrolle, dass die Marke sonst wirkt)
+        Assert.Equal(0, berichte[1].ZukunftsMarken);
+        Assert.NotEqual(stand[2], stand[1]);
     }
 }

@@ -91,7 +91,7 @@ public sealed class RahmenplanGewicht
                 ? liste.Select(t => (string)t!).ToHashSet(StringComparer.Ordinal)
                 : null;
             // Python re: Muster auf Kleinschreibung; Gleichheit belegt G16 fuer alle Inhalte
-            return ((string)r["id"]!, themen, new Regex((string)r["stichworte"]!, RegexOptions.CultureInvariant));
+            return ((string)r["id"]!, themen, new Regex((string)r["stichworte"]!, RegexOptions.CultureInvariant | RegexOptions.Compiled));
         }).ToList();
 
         // _compute_item_points: gleicher Fragetext spaeter ueberschreibt frueher (dict wie Python)

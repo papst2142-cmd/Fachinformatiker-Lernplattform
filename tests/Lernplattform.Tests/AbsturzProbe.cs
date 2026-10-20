@@ -14,6 +14,8 @@ internal static class AbsturzProbe
 {
     public const string ArtSpeichern = "speichern";
     public const string ArtUebernahme = "uebernahme";
+    public const string ArtVorschau = "vorschau";
+    public const string Fertig = "FERTIG";
     private const string Variable = "LERNPLATTFORM_ABSTURZPROBE";
     private const string Argumente = "LERNPLATTFORM_ABSTURZPROBE_ARGUMENTE";
     public const string Halt = "HALT";
@@ -58,7 +60,22 @@ internal static class AbsturzProbe
                     };
                     var daten = Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]);
                     Uebernahme.Uebernehmen(new Lernstand(args[0]), daten, Umbenennungen.Laden(Pfade.Inhalte));
-                    Console.Out.WriteLine("FERTIG");
+                    Console.Out.WriteLine(Fertig);
+                    Console.Out.Flush();
+                    break;
+                case ArtVorschau:
+                    Uebernahme.Haltepunkt = punkt =>
+                    {
+                        if (punkt == args[2])
+                        {
+                            Console.Out.WriteLine(Halt);
+                            Console.Out.Flush();
+                            Thread.Sleep(Timeout.Infinite);
+                        }
+                    };
+                    Uebernahme.Vorschau(new Lernstand(args[0]), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]),
+                        Umbenennungen.Laden(Pfade.Inhalte));
+                    Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;
             }
@@ -73,7 +90,7 @@ internal static class AbsturzProbe
     /// Kind starten und hart beenden: bei ArtSpeichern nach mindestens Meldungen, bei ArtUebernahme
     /// sobald es HALT meldet. Rueckgabe: die gemeldeten Kennungen (ArtSpeichern).
     /// </summary>
-    public static List<string> Starten(string art, string[] argumente, int mindestens = 0)
+    public static List<string> Starten(string art, string[] argumente, int mindestens = 0, IReadOnlyDictionary<string, string>? umgebung = null)
     {
         var programm = Environment.ProcessPath!;
         var start = new ProcessStartInfo(programm)
@@ -88,6 +105,10 @@ internal static class AbsturzProbe
         }
         start.Environment[Variable] = art;
         start.Environment[Argumente] = string.Join('\n', argumente);
+        foreach (var (name, wert) in umgebung ?? new Dictionary<string, string>())
+        {
+            start.Environment[name] = wert;
+        }
         using var kind = Process.Start(start)!;
         _ = kind.StandardError.ReadToEndAsync();
         var gemeldet = new List<string>();
@@ -101,7 +122,7 @@ internal static class AbsturzProbe
                 {
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
-                if (art == ArtUebernahme && zeile.Result == Halt)
+                if (art != ArtSpeichern && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
                     break;
                 }
