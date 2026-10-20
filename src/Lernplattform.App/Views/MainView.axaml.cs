@@ -154,7 +154,7 @@ public partial class MainView : UserControl
             seite = id switch
             {
                 Seiten.Dashboard => new DashboardSeite(),
-                Seiten.Optionen => new OptionenSeite(),
+                Seiten.Optionen => new OptionenSeite(BaueSicherung),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
             };
@@ -186,6 +186,42 @@ public partial class MainView : UserControl
         {
             Messwerte.Reihe("Seitenwechsel (gebaute Seite)", ms);
         }
+    }
+
+    private static TextBlock Text(string text, double groesse = 14, FontWeight gewicht = FontWeight.Normal) =>
+        new() { Text = text, FontSize = groesse, FontWeight = gewicht, TextWrapping = TextWrapping.Wrap };
+
+    /// <summary>
+    /// Phase 1, K9: "Alte Sicherung pruefen" und "Ergebnis kopieren" wie auf der frueheren
+    /// Startseite, jetzt in Optionen &gt; Sicherung (Nico, Frage 4a). Knoepfe, Texte und die
+    /// Pruefung selbst (SicherungPruefenAsync, SicherungsPruefung) sind unveraendert.
+    /// </summary>
+    private Control BaueSicherung()
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+
+        var kopieren = new Button { Content = "Ergebnis kopieren" };
+        kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        kopieren.Click += async (_, _) =>
+        {
+            if (TopLevel.GetTopLevel(this)?.Clipboard is { } ablage)
+            {
+                await ablage.SetTextAsync(_ergebnis.Text ?? "");
+                _zustand.Text = "Ergebnis kopiert.";
+            }
+        };
+        var sicherung = new Button { Content = "Alte Sicherung pruefen" };
+        sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        sicherung.Click += async (_, _) => await SicherungPruefenAsync();
+        panel.Children.Add(new WrapPanel { Children = { sicherung, kopieren } });
+        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
+        panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
+        panel.Children.Add(_zustand);
+        _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
+        panel.Children.Add(_ergebnis);
+        _ergebnis.Text = BerichtText();
+        return panel;
     }
 
     /// <summary>Alle schon gebauten Seiten (fuer die Layoutpruefung im Start ohne Bedienung).</summary>
