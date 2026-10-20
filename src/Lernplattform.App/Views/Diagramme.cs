@@ -271,6 +271,15 @@ public sealed class AnteilBalken : DiagrammFlaeche
             return;
         }
         double links = Px(42), rechts = Px(14), oben = Px(40), unten = Px(30);
+        // passt der Hinweis nicht neben die Legende, steht er darunter: dann mehr Platz oben
+        var hinweis = Text(FortschrittTexte.BalkenLegende, Leise);
+        var legendeBreite = Px(4) + Px(34) * 2 + Text(FortschrittTexte.AnteilRichtig, Gedimmt).Width + Text(FortschrittTexte.AnteilFalsch, Gedimmt).Width;
+        var hinweisDaneben = links + legendeBreite + Px(6) + hinweis.Width <= breite - rechts;
+        if (!hinweisDaneben)
+        {
+            hinweis.MaxTextWidth = Math.Max(10, breite - links - rechts);
+            oben += hinweis.Height + Px(4);
+        }
         var (flB, flH) = (breite - links - rechts, hoehe - oben - unten);
         if (flB <= 10 || flH <= 10)
         {
@@ -329,15 +338,13 @@ public sealed class AnteilBalken : DiagrammFlaeche
             Schreibe(dc, text, x + Px(18), yLegende, "w");
             x += Px(34) + text.Width;
         }
-        var hinweis = Text(FortschrittTexte.BalkenLegende, Leise);
-        if (x + Px(6) + hinweis.Width <= breite - rechts)
+        if (hinweisDaneben)
         {
             Schreibe(dc, hinweis, x + Px(6), yLegende, "w");
         }
         else
         {
-            hinweis.MaxTextWidth = Math.Max(10, breite - links - rechts);
-            Schreibe(dc, hinweis, links + Px(4), yLegende + Px(16) + hinweis.Height / 2 - Px(6), "w");
+            dc.DrawText(hinweis, new Point(links + Px(4), yLegende + Px(8)));
         }
     }
 }
