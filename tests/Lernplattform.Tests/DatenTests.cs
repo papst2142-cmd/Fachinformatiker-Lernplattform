@@ -121,8 +121,6 @@ public class DatenTests(ITestOutputHelper ausgabe)
         using var datei = File.OpenRead(Pfade.Vergleich("sicherung_test.json.gz"));
         using var sicherung = AlterLernstand.LeseSicherung(datei);
         Assert.True(AlterLernstand.PruefsummeStimmt(sicherung));
-        var zaehl = AlterLernstand.Zaehlwerte(sicherung);
-        Assert.Equal(24, zaehl["Zusammenfassung lerneintraege"]);
     }
 
     [Fact]

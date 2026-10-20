@@ -98,28 +98,6 @@ public static class AlterLernstand
         return wurzel.TryGetProperty("pruefsumme", out var soll) && soll.GetString() == summe;
     }
 
-    /// <summary>Zaehlwerte ohne Inhalte (Auflage A3): Zeilen je Tabelle und die Zusammenfassung.</summary>
-    public static SortedDictionary<string, int> Zaehlwerte(JsonDocument sicherung)
-    {
-        var wurzel = sicherung.RootElement;
-        var werte = new SortedDictionary<string, int>(StringComparer.Ordinal);
-        foreach (var t in wurzel.GetProperty("daten").GetProperty("tables").EnumerateObject())
-        {
-            werte["Tabelle " + t.Name] = t.Value.GetArrayLength();
-        }
-        if (wurzel.TryGetProperty("zusammenfassung", out var z))
-        {
-            foreach (var e in z.EnumerateObject())
-            {
-                if (e.Value.ValueKind == JsonValueKind.Number)
-                {
-                    werte["Zusammenfassung " + e.Name] = e.Value.GetInt32();
-                }
-            }
-        }
-        return werte;
-    }
-
     private static void SchreibePythonJson(JsonElement e, StringBuilder sb)
     {
         switch (e.ValueKind)

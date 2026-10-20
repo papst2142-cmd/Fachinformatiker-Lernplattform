@@ -7,7 +7,6 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using System.Security.Cryptography;
 using Avalonia.Platform.Storage;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
@@ -212,7 +211,7 @@ public partial class MainView : UserControl
         update.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
         update.Click += async (_, _) => await UpdateAusOrdnerAsync();
         panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung, update } });
-        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Sicherung der alten App (lernstand.json.gz) oder die alte Datenbank (.db) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte."));
+        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
         panel.Children.Add(_ergebnis);
@@ -320,7 +319,11 @@ public partial class MainView : UserControl
         }
     }
 
-    /// <summary>Spike C mit echtem Lernstand (Auflage A3): nur lesen, nur Zaehlwerte und Pruefsummen.</summary>
+    /// <summary>
+    /// Spike C mit echtem Lernstand (Auflage A3, Weisung CC P0-3): die Datei wird nur
+    /// in den Speicher gelesen; ausgegeben wird nur, was SicherungsPruefung liefert.
+    /// Kein Dateiname, kein Pfad, kein Fehlertext.
+    /// </summary>
     private async Task SicherungPruefenAsync()
     {
         var top = TopLevel.GetTopLevel(this);
@@ -330,55 +333,33 @@ public partial class MainView : UserControl
         }
         var auswahl = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Alte Sicherung (lernstand.json.gz) oder alte Datenbank (.db) waehlen",
+            Title = "Kopie der alten Sicherung (lernstand.json.gz) waehlen",
             AllowMultiple = false,
         });
         if (auswahl.Count == 0)
         {
             return;
         }
-        var datei = auswahl[0];
-        var inv = CultureInfo.InvariantCulture;
+        IReadOnlyList<string> zeilen;
         try
         {
-            var uhr = Stopwatch.StartNew();
             using var puffer = new MemoryStream();
-            await using (var lesen = await datei.OpenReadAsync())
+            await using (var lesen = await auswahl[0].OpenReadAsync())
             {
                 await lesen.CopyToAsync(puffer);
             }
-            var hash = Convert.ToHexStringLower(SHA256.HashData(puffer.ToArray()));
-            Messwerte.Notiere(string.Create(inv, $"Alte Datei: {puffer.Length} Bytes, SHA-256 {hash}"));
-            if (datei.Name.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
-            {
-                var pfad = datei.TryGetLocalPath() ?? throw new InvalidOperationException("Datenbank ist keine lokale Datei");
-                foreach (var t in AlterLernstand.LeseDatenbank(pfad))
-                {
-                    Messwerte.Notiere(string.Create(inv, $"  Datenbank Tabelle {t.Name}: {t.Zeilen.Count} Zeilen"));
-                }
-            }
-            else
-            {
-                puffer.Position = 0;
-                using var doc = AlterLernstand.LeseSicherung(puffer);
-                var w = doc.RootElement;
-                Messwerte.Notiere("  Sicherung Formatversion " + w.GetProperty("formatversion").GetInt32()
-                    + ", App " + (w.TryGetProperty("app_version", out var v) ? v.GetString() : "?")
-                    + ", Pruefsumme " + (AlterLernstand.PruefsummeStimmt(doc) ? "stimmt" : "STIMMT NICHT"));
-                foreach (var (name, anzahl) in AlterLernstand.Zaehlwerte(doc))
-                {
-                    Messwerte.Notiere(string.Create(inv, $"  {name}: {anzahl}"));
-                }
-            }
-            Messwerte.Notiere(string.Create(inv, $"  Lesezeit: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
-            _zustand.Text = "Alte Datei gelesen. Jetzt \"Ergebnis kopieren\".";
+            zeilen = SicherungsPruefung.Pruefe(puffer.ToArray());
         }
-        catch (Exception fehler)
+        catch (Exception)
         {
-            // Nur die Fehlerart, kein Text: der koennte Pfad oder Inhalt enthalten (A3).
-            Messwerte.Notiere("Alte Datei: FEHLER " + fehler.GetType().Name);
-            _zustand.Text = "Fehler beim Lesen, steht im Ergebnis.";
+            zeilen = ["FEHLER C0 (Datei nicht lesbar)"];
         }
+        Messwerte.Notiere("ALTE SICHERUNG (nur Zaehlwerte):");
+        foreach (var z in zeilen)
+        {
+            Messwerte.Notiere("  " + z);
+        }
+        _zustand.Text = "Alte Sicherung geprueft. Jetzt \"Ergebnis kopieren\".";
         _ergebnis.Text = BerichtText();
     }
 

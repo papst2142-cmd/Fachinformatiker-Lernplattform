@@ -19,6 +19,19 @@
          ab 1.0 ohne Stufe = Version. So gilt A < B < 1.0 von Anfang an (Entscheidung 5). -->
     <PaketVersion Condition="'$(Stufe)' != ''">1.0.0-$(Stufe.ToLowerInvariant()).$(Version)</PaketVersion>
     <PaketVersion Condition="'$(Stufe)' == ''">$(Version)</PaketVersion>
+    <!-- Android-Versionscode = Stufe*1000000 + Haupt*10000 + Neben*100 + Fix (A=1, B=2, ab 1.0=3); A 0.1.0 = 1000100 -->
+    <StufeCode Condition="'$(Stufe)' == 'A'">1</StufeCode>
+    <StufeCode Condition="'$(Stufe)' == 'B'">2</StufeCode>
+    <StufeCode Condition="'$(Stufe)' == ''">3</StufeCode>
+    <VersionHaupt>$([System.Text.RegularExpressions.Regex]::Replace($(Version), '^(\d+)\.(\d+)\.(\d+).*$', '$1'))</VersionHaupt>
+    <VersionNeben>$([System.Text.RegularExpressions.Regex]::Replace($(Version), '^(\d+)\.(\d+)\.(\d+).*$', '$2'))</VersionNeben>
+    <VersionFix>$([System.Text.RegularExpressions.Regex]::Replace($(Version), '^(\d+)\.(\d+)\.(\d+).*$', '$3'))</VersionFix>
+    <AndroidVersionscode>$([MSBuild]::Multiply($(StufeCode),1000000))</AndroidVersionscode>
+    <AndroidVersionscode>$([MSBuild]::Add($(AndroidVersionscode),$([MSBuild]::Multiply($(VersionHaupt),10000))))</AndroidVersionscode>
+    <AndroidVersionscode>$([MSBuild]::Add($(AndroidVersionscode),$([MSBuild]::Multiply($(VersionNeben),100))))</AndroidVersionscode>
+    <AndroidVersionscode>$([MSBuild]::Add($(AndroidVersionscode),$(VersionFix)))</AndroidVersionscode>
+    <AndroidAnzeige>$(Stufe) $(Version)</AndroidAnzeige>
+    <AndroidAnzeige Condition="'$(Stufe)' == ''">$(Version)</AndroidAnzeige>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyMetadata Include="Stufe" Value="$(Stufe)" />

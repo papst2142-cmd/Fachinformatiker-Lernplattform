@@ -162,8 +162,27 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
+      # Spike D (A4b): zweite APK A 0.1.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.1.0 installierbar.
+      - name: Update-APK A 0.1.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.1.1 -o apk-update
+      - name: Versionscode und Schluessel pruefen
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
+            "$BT/aapt2" dump badging "$a" | head -n 1
+            "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
+          done
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000100'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000101'"
+          test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
           name: lernplattform-android-phase0
           path: apk/*-Signed.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: updateprobe-android-A-0.1.1
+          path: apk-update/*-Signed.apk
           if-no-files-found: error
