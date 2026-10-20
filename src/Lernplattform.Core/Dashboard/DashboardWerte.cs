@@ -455,8 +455,10 @@ public sealed record DashboardWerte(
         {
             return (0.0, 0, 0);
         }
-        var richtig = PyText.Zahl(zeilen[0][1]);
-        return (richtig / gesamt * 100.0, richtig, gesamt);
+        // Weisung P2-8 (Nico 20.10.2026, Sammelliste 22): nie ueber 100 %, auch bei
+        // kaputten Daten (correct > 1); Python kappt nicht. Untere Grenze unveraendert.
+        var richtig = Math.Min(PyText.Zahl(zeilen[0][1]), gesamt);
+        return (Math.Min(100.0, richtig / gesamt * 100.0), richtig, gesamt);
     }
 
     /// <summary>DBManager.activity_days: {tag: bewertete Aufgaben}.</summary>
@@ -560,7 +562,7 @@ public sealed record DashboardWerte(
             var (antworten, richtig) = werte.GetValueOrDefault(fachbereich);
             var detail = antworten != 0
                 ? DashboardTexte.Plural(antworten, "Antwort", "Antworten") + "\n"
-                    + PyText.D(Math.Round(richtig / antworten * 100, MidpointRounding.ToEven)) + " % richtig"
+                    + PyText.D(Math.Round(Math.Min(100.0, richtig / antworten * 100), MidpointRounding.ToEven)) + " % richtig"   // P2-8
                 : DashboardTexte.FachDetailLeer;
             ergebnis.Add(new DashboardFachbereich(fachbereich, Inhalte.Fachbereiche.Kurzname[fachbereich], abdeckung,
                 DashboardTexte.Prozent(Math.Max(0.0, Math.Min(100.0, abdeckung)), true),

@@ -114,6 +114,9 @@ public sealed class KarteikartenSeite : UserControl
         Mit(k => k.Ueben(liste));
     }
 
+    /// <summary>Suche: zur Karte springen (jump_to_question).</summary>
+    public void Springen(string frage) => Mit(k => k.Springen(frage));
+
     /// <summary>on_show: neue Antworten (z. B. nach einer Uebernahme) im Status beruecksichtigen.</summary>
     public void Gezeigt()
     {

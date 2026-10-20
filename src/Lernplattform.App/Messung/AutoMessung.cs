@@ -67,6 +67,8 @@ public static class AutoMessung
             }
         }
 
+        funde += await W3MesspunkteAsync(ansicht, inhalte);
+
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
         for (var runde = 0; runde < 3; runde++)
@@ -125,6 +127,15 @@ public static class AutoMessung
                         await neuGerechnet.Geladen;
                         await ansicht.BildFertigAsync();
                     }
+                    if (ansicht.GebauteSeiten[id] is FortschrittSeite fortschritt)
+                    {
+                        await fortschritt.Geladen;
+                        await ansicht.BildFertigAsync();
+                    }
+                    if (ansicht.GebauteSeiten[id] is SucheSeite suche)
+                    {
+                        await AlleZeilenAsync(ansicht, suche);
+                    }
                     if (ansicht.GebauteSeiten[id] is IAufklappbar klappbar)
                     {
                         klappbar.AllesAufklappen();
@@ -151,6 +162,7 @@ public static class AutoMessung
         Zustand.DesignAnwenden();
 
         Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
+        Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
         Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
@@ -257,6 +269,92 @@ public static class AutoMessung
         ("muted", "card"), ("accent", "card"), ("green", "card"), ("red", "card"), ("yellow", "card"),
     ];
 
+    // Welle 3: Prozent der Abdeckung (rot, orange, gruen) auf Karte und Zeile, Hinweis "aktuelles Lernfeld"
+    private static readonly (string Text, string Flaeche)[] W3Paare =
+    [
+        ("text", "card_alt"), ("muted", "card_alt"), ("red", "card_alt"), ("orange", "card"), ("orange", "card_alt"),
+        ("green", "card_alt"), ("accent", "card_alt"),
+    ];
+
+    /// <summary>Wartet, bis die Suche alle geplanten Zeilen gezeigt hat.</summary>
+    private static async Task AlleZeilenAsync(MainView ansicht, SucheSeite suche)
+    {
+        for (var i = 0; i < 200 && !suche.Fertig; i++)
+        {
+            await ansicht.BildFertigAsync();
+        }
+        await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// Welle 3 (Plan Abschnitt 11): Fortschritt bis Werte und Abdeckung stehen, Suche "Subnetz"
+    /// bis zu den ersten Treffern, Faelligkeit bei 100 000 synthetischen Antworten. Fund ab 1 000 ms.
+    /// </summary>
+    private static async Task<int> W3MesspunkteAsync(MainView ansicht, Lerninhalte? inhalte)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        void Messpunkt(string titel, double? ms)
+        {
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms is null or > Abbruch)
+            {
+                Messwerte.Notiere("  FEHLER: nicht fertig oder ueber 1000 ms");
+                funde++;
+            }
+        }
+        if (ansicht.GebauteSeiten[Seiten.Fortschritt] is FortschrittSeite fortschritt)
+        {
+            await fortschritt.Fertig.Task;
+            Messpunkt("Fortschritt bis Werte und Abdeckung", fortschritt.FertigMs);
+        }
+        await ansicht.ZeigeAsync(Seiten.Suche);
+        if (ansicht.GebauteSeiten[Seiten.Suche] is SucheSeite suche)
+        {
+            await Zustand.Suchtext;
+            var uhr = Stopwatch.StartNew();
+            var ms = await suche.SuchenAsync("Subnetz");
+            await ansicht.BildFertigAsync();
+            Messpunkt("Suche \"Subnetz\" bis zu den ersten Treffern (gezeichnet)", ms is null ? null : uhr.Elapsed.TotalMilliseconds);
+            await AlleZeilenAsync(ansicht, suche);
+        }
+        if (inhalte is not null)
+        {
+            // 100 000 Antworten auf Karteikarten und Pruefungsfragen, feste Zufallsfolge, seit dem 01.10.2026
+            var zufall = new Core.Zufall.PythonZufall(100000);
+            var schluessel = inhalte.Karteikarten.Select(k => (Core.Lernen.Quellen.Karte, k.Frage!))
+                .Concat(inhalte.Quizfragen.Select(q => (Core.Lernen.Quellen.Quiz, q.Frage!))).ToList();
+            var heute = DateOnly.FromDateTime(DateTime.Now);
+            var tage = Math.Max(1, heute.DayNumber - Core.Lernen.Wiederholung.Start.DayNumber + 1);
+            var zeilen = new List<(string Quelle, string Schluessel, string Zeit, bool Richtig)>();
+            for (var i = 0; i < 100000; i++)
+            {
+                var (quelle, frage) = schluessel[(int)zufall.RandRange(schluessel.Count)];
+                var tag = Core.Lernen.Wiederholung.Start.AddDays((int)zufall.RandRange(tage));
+                zeilen.Add((quelle, frage, tag.ToString("yyyy-MM-dd", inv) + " 12:00:00", (int)zufall.RandRange(3) != 0));
+            }
+            zeilen.Sort((a, b) => string.CompareOrdinal(a.Zeit, b.Zeit));
+            var uhr = Stopwatch.StartNew();
+            var buch = new Core.Lernen.Antwortbuch();
+            foreach (var z in zeilen)
+            {
+                buch.Hinzufuegen(z.Quelle, z.Schluessel, z.Zeit, z.Richtig);
+            }
+            var msBuch = uhr.Elapsed.TotalMilliseconds;
+            var plan = Core.Lernen.Wiederholungsplan.Aus(new Core.Lernen.StatusBuch(buch), heute, inhalte);
+            var msPlan = uhr.Elapsed.TotalMilliseconds - msBuch;
+            var quelleErst = plan.ErsteQuelle();
+            if (quelleErst is not null)
+            {
+                _ = plan.Sitzung(quelleErst);
+            }
+            var msGesamt = uhr.Elapsed.TotalMilliseconds;
+            Messpunkt("Faelligkeit bei 100 000 synthetischen Antworten (Buch, Plan, erste Sitzung)", msGesamt);
+            Messwerte.Notiere(string.Create(inv, $"  davon Antworten einlesen {msBuch:F0} ms, Plan {msPlan:F0} ms, erste Sitzung {msGesamt - msBuch - msPlan:F0} ms"));
+        }
+        return funde;
+    }
+
     /// <summary>
     /// Alle 72 Farbwelten (6 Grundfarben x 6 Hintergruende x hell/dunkel): neue Ansichten in der
     /// Groesse wie gerade eingestellt zeigen und pruefen; Kontrast der verwendeten Textfarben auf
@@ -289,7 +387,20 @@ public static class AutoMessung
                             }
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare)
+                    foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
+                    {
+                        await ansicht.ZeigeAsync(seite);
+                        if (ansicht.GebauteSeiten[seite] is FortschrittSeite f)
+                        {
+                            await f.Geladen;
+                            await ansicht.BildFertigAsync();
+                        }
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {seite}: {fund}");
+                        }
+                    }
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -301,7 +412,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Welle 2 geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3 geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)

@@ -202,6 +202,28 @@ public sealed class Karteikarten
         NeueAnzeige();
     }
 
+    /// <summary>
+    /// jump_to_question (Suche, Phase 2 L8): zur Karte springen; steht sie nicht im
+    /// aktuellen Filter, alle Filter auf "Alle" und neu filtern.
+    /// </summary>
+    public void Springen(string frage)
+    {
+        var stelle = Gefiltert.ToList().FindIndex(k => k.Frage == frage);
+        if (stelle < 0)
+        {
+            Fachbereich = KartenTexte.Alle;
+            Status = FragenStatus.Alle;
+            Thema = KartenTexte.Alle;
+            FilterAnwenden();
+            stelle = Gefiltert.ToList().FindIndex(k => k.Frage == frage);
+        }
+        if (stelle >= 0)
+        {
+            Index = stelle;
+        }
+        NeueAnzeige();
+    }
+
     public void Weiter()
     {
         if (Gefiltert.Count > 0)

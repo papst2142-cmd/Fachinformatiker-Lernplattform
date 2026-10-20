@@ -298,11 +298,51 @@ public class DashboardWerteTests
         var ist = LiesAlsJson(pfad, fall);
 
         var fehler = new List<string>();
-        Vergleiche(fall.GetProperty("werte"), ist, name, fehler);
+        Vergleiche(Gekappt(fall.GetProperty("werte"), out _), ist, name, fehler);
         Assert.True(fehler.Count == 0, string.Join("\n", fehler));
         // Nur gelesen: Datei bytegleich, keine weiteren Dateien (Journal o. a.)
         Assert.Equal(vorher, Sha256(pfad));
         Assert.Equal(dateienVorher, Dateien(ordner.Pfad));
+    }
+
+    /// <summary>
+    /// Weisung P2-8 (Sammelliste 22): Python zeigt bei kaputten Daten (correct > 1) eine
+    /// Erfolgsquote ueber 100 %, C# kappt bei 100 %. G13 bleibt unveraendert; nur in
+    /// diesen Faellen wird der Sollwert hier wie die Kappung umgerechnet (Quote 100 %,
+    /// richtig = Antworten, dieselbe Zahl im Banner). Alles andere bleibt exakt Python.
+    /// </summary>
+    private static JsonElement Gekappt(JsonElement werte, out bool gekappt)
+    {
+        var quote = werte.GetProperty("quote");
+        gekappt = quote.GetProperty("wert").GetDouble() > 100.0;
+        if (!gekappt)
+        {
+            return werte;
+        }
+        var knoten = JsonNode.Parse(werte.GetRawText())!.AsObject();
+        var q = knoten["quote"]!.AsObject();
+        var antworten = quote.GetProperty("antworten").GetInt64();
+        var alt = quote.GetProperty("text").GetString()!;
+        var neu = DashboardTexte.Prozent(100.0, false);
+        q["wert"] = 100.0;
+        q["richtig"] = antworten;
+        q["text"] = neu;
+        q["unter"] = DashboardTexte.QuoteText(antworten, antworten);
+        var banner = knoten["banner"]!.AsObject();
+        banner["text_pc"] = banner["text_pc"]!.GetValue<string>().Replace("Prüfungstrainer " + alt, "Prüfungstrainer " + neu, StringComparison.Ordinal);
+        banner["text_handy"] = banner["text_handy"]!.GetValue<string>().Replace("Prüfungstrainer " + alt.Replace(' ', '\u00A0'),
+            "Prüfungstrainer " + neu.Replace(' ', '\u00A0'), StringComparison.Ordinal);
+        return JsonDocument.Parse(knoten.ToJsonString()).RootElement.Clone();
+    }
+
+    [Fact]
+    public void KappungNurInDenFaellenMitKaputtenDaten()
+    {
+        // Genau die drei Faelle der Testdatenbank "voll" (correct 8 und 15) haben in G13 eine Quote ueber 100 %
+        var gekappt = G13.GetProperty("faelle").EnumerateArray()
+            .Where(f => { Gekappt(f.GetProperty("werte"), out var k); return k; })
+            .Select(f => f.GetProperty("name").GetString()!).ToArray();
+        Assert.Equal(["voll_2026-10-01_0", "voll_2026-10-02_1", "voll_2026-09-30_2"], gekappt);
     }
 
     /// <summary>Verhaltenstabelle: Datei fehlt / kaputt -> Zustand, Werte wie leere Datenbank, nichts geschrieben.</summary>
