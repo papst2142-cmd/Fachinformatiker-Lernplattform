@@ -10,6 +10,8 @@ Welle 2 (Oberfläche, Version A 0.3.0, Paket 1.0.0-a.0.3.0, Android 1000300):
 - Karteikarten: Fachbereich, Thema, Status und drei Modi (Freitext, Multiple Choice, Aufdecken) wie in Python; Texte zeichengleich (Vergleichswerte G22), lange Themennamen brechen auch am Handy um.
 - Prüfungstrainer, Art „Übung“: Fragenanzahl, Themen, Zeit, Auswertung mit Hinweis unter dem Ergebnis; Reihenfolge der Antworten wie in Python. Die Art „Prüfung“ kommt in einer späteren Welle.
 - Optionen > Sicherung: „Lernstand übernehmen“ mit Vorschau (rechnet nur auf einer Kopie im Arbeitsspeicher und ändert nichts), Hinweis auf die automatische Kopie im Ordner `sicherungen` und Ergebnis; Wortlaut nach Weisung P2-4.
+- Dashboard: „Jetzt wiederholen“ auf PC und Handy wie in Python. Am PC steht der Knopf immer da und ist ohne fällige Aufgaben gesperrt, am Handy erscheint er nur mit fälligen Aufgaben. Ein Klick übt zuerst die fälligen Karteikarten, dann die fälligen Prüfungstrainer-Fragen; ist nichts fällig, erscheint „Heute ist nichts mehr fällig.“
+- Der Dateiname der Kopie im Ergebnis bricht nur am Handy nach „_“ um; am PC bleibt er unverändert und kopierbar.
 - Die Rahmenplan-Zuordnung wird nach dem Start im Hintergrund vorbereitet, damit die erste Karte schnell erscheint.
 - Start ohne Bedienung prüft zusätzlich die neuen Ansichten (Karteikarten in drei Modi, Prüfungstrainer mit Frage und Ergebnis, Übernahme mit Vorschau, Ergebnis und Fehler, Rückfrage beim Abbrechen) in allen Schriftstufen und Fenstergrößen sowie Layout und Kontrast in allen 72 Farbwelten.
 
