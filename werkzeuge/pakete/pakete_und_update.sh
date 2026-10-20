@@ -11,9 +11,22 @@ RID="$1"
 AUS="$(mkdir -p "$2" && cd "$2" && pwd)"
 WURZEL="$(cd "$(dirname "$0")/../.." && pwd)"
 ID="Fachinformatiker-Lernplattform"
+ASSETS="$WURZEL/src/Lernplattform.App/Assets"
 case "$RID" in
-  win-*) EXE="Lernplattform.exe" ;;
-  *) EXE="Lernplattform" ;;
+  win-*) EXE="Lernplattform.exe"; ICON="$ASSETS/icon.ico" ;;
+  linux-*) EXE="Lernplattform"; ICON="$ASSETS/icon.png" ;;
+  osx-*)
+    EXE="Lernplattform"
+    # vpk braucht unter macOS ein .icns; aus icon.png mit Bordmitteln erzeugen
+    SET="$AUS/icon.iconset"
+    mkdir -p "$SET"
+    for g in 16 32 128 256 512; do
+      sips -z $g $g "$ASSETS/icon.png" --out "$SET/icon_${g}x${g}.png" >/dev/null
+      sips -z $((g*2)) $((g*2)) "$ASSETS/icon.png" --out "$SET/icon_${g}x${g}@2x.png" >/dev/null
+    done
+    iconutil -c icns "$SET" -o "$AUS/icon.icns"
+    ICON="$AUS/icon.icns"
+    ;;
 esac
 
 baue() { # Stufe Version
@@ -23,7 +36,7 @@ baue() { # Stufe Version
   dotnet publish "$WURZEL/src/Lernplattform.Desktop" -c Release -r "$RID" --self-contained \
     -p:Version="$version" -p:Stufe="$stufe" -p:DebugType=none -o "$pub"
   vpk pack -u "$ID" -v "$paket" -p "$pub" -e "$EXE" \
-    -i "$WURZEL/src/Lernplattform.App/Assets/icon.png" --packTitle "Fachinformatiker Lernplattform" \
+    -i "$ICON" --packTitle "Fachinformatiker Lernplattform" \
     -o "$feed"
   rm -rf "$pub"
   echo "gebaut: $stufe $version = $paket"
