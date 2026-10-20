@@ -188,8 +188,7 @@ public sealed class Einstellungen
     public static Tagesziel Ziel(JsonObject werte)
     {
         JsonNode? Wert(string schluessel, JsonNode vorgabe) => werte.ContainsKey(schluessel) ? werte[schluessel] : vorgabe;
-        var anzahl = PythonInt(Wert("ziel_anzahl", ZielVorgabe)) ?? ZielVorgabe;
-        anzahl = Math.Max(ZielMin, Math.Min(ZielMax, anzahl));
+        var anzahl = (int)Math.Max(ZielMin, Math.Min(ZielMax, PythonInt(Wert("ziel_anzahl", ZielVorgabe)) ?? ZielVorgabe));
         var zeit = Uhrzeit(PythonStr(Wert("erinnerung_zeit", ErinnerungVorgabe))) ?? ErinnerungVorgabe;
         return new Tagesziel(PythonBool(Wert("ziel_an", true)), anzahl, PythonBool(Wert("serie_an", true)),
             PythonBool(Wert("erinnerung_an", true)), zeit);
@@ -212,8 +211,12 @@ public sealed class Einstellungen
 
     // -- Nachbildung der Python-Umwandlungen (int(), bool(), str()) --------
 
-    /// <summary>Wie Pythons int(x): Zahl, Wahrheitswert oder Ganzzahl-Text; sonst null.</summary>
-    internal static int? PythonInt(JsonNode? wert)
+    /// <summary>
+    /// Wie Pythons int(x): Zahl, Wahrheitswert oder Ganzzahl-Text; sonst null.
+    /// Sehr grosse Werte werden auf den long-Bereich begrenzt; fuer die
+    /// nachfolgende Begrenzung (Tagesziel 5 bis 100) ergibt das dasselbe wie Python.
+    /// </summary>
+    internal static long? PythonInt(JsonNode? wert)
     {
         if (wert is not JsonValue v)
         {
@@ -226,8 +229,8 @@ public sealed class Einstellungen
             case JsonValueKind.False:
                 return 0;
             case JsonValueKind.Number:
-                var zahl = Zahl(v);
-                return double.IsFinite(zahl) && Math.Abs(zahl) < int.MaxValue ? (int)Math.Truncate(zahl) : null;
+                var zahl = Math.Truncate(Zahl(v));
+                return double.IsNaN(zahl) ? null : zahl >= long.MaxValue ? long.MaxValue : zahl <= long.MinValue ? long.MinValue : (long)zahl;
             case JsonValueKind.String:
                 return PythonIntText(v.GetValue<string>());
             default:
@@ -235,8 +238,12 @@ public sealed class Einstellungen
         }
     }
 
-    /// <summary>Wie Pythons int(text): Leerraum aussen, Vorzeichen, Ziffern (einzelne _ zwischen Ziffern erlaubt).</summary>
-    internal static int? PythonIntText(string text)
+    /// <summary>
+    /// Wie Pythons int(text): Leerraum aussen, Vorzeichen, Dezimalziffern (auch
+    /// Unicode-Ziffern wie "２０"), einzelne _ zwischen Ziffern erlaubt.
+    /// Sehr grosse Werte werden auf den long-Bereich begrenzt.
+    /// </summary>
+    internal static long? PythonIntText(string text)
     {
         text = text.Trim();
         var vorzeichen = 1;
@@ -250,23 +257,25 @@ public sealed class Einstellungen
             return null;
         }
         long wert = 0;
-        foreach (var zeichen in text)
+        var gross = false;
+        foreach (var zeichen in text.EnumerateRunes())
         {
-            if (zeichen == '_')
+            if (zeichen.Value == '_')
             {
                 continue;
             }
-            if (!char.IsAsciiDigit(zeichen))
+            var ziffer = Rune.GetUnicodeCategory(zeichen) == UnicodeCategory.DecimalDigitNumber ? (int)Rune.GetNumericValue(zeichen) : -1;
+            if (ziffer < 0)
             {
                 return null;
             }
-            wert = wert * 10 + (zeichen - '0');
-            if (wert > int.MaxValue)
+            if (!gross && wert > (long.MaxValue - ziffer) / 10)
             {
-                return null;
+                gross = true;
             }
+            wert = gross ? long.MaxValue : wert * 10 + ziffer;
         }
-        return (int)(vorzeichen * wert);
+        return vorzeichen * wert;
     }
 
     /// <summary>Wahrheitswert wie Pythons bool(x).</summary>

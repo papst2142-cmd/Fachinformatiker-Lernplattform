@@ -1509,6 +1509,104 @@
     "erinnerung_an": true,
     "erinnerung_zeit": "18:00"
    }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": 10000000000.0
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 100,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "99999999999999999999999"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 100,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": -1000000000000.0
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "-99999999999"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "２０",
+    "erinnerung_zeit": "０８:３０"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "08:30"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "٣٠",
+    "erinnerung_zeit": "१९:००"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 30,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "19:00"
+   }
   }
  ]
 }

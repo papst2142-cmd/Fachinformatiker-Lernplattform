@@ -40,7 +40,7 @@ public class EinstellungenTests
     public void GeleseneWerteWiePython()
     {
         var faelle = G11.GetProperty("einstellungen").EnumerateArray().ToList();
-        Assert.True(faelle.Count >= 16);
+        Assert.True(faelle.Count >= 22);
         foreach (var fall in faelle)
         {
             using var ordner = new TempOrdner();

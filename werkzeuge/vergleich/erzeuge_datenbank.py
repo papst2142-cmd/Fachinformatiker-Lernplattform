@@ -90,6 +90,13 @@ EINSTELLUNGEN = [
     {"ziel_anzahl": "1_0", "erinnerung_zeit": "1_2:3_0", "serie_an": {}},
     {"ziel_anzahl": -3, "erinnerung_zeit": "ab:cd", "serie_an": {"a": 1}},
     {"ziel_anzahl": "7.5", "erinnerung_zeit": 18, "ziel_an": 0.0},
+    # Grenzfaelle ausserhalb des int-Bereichs und Unicode-Ziffern (Gegenpruefung P1-2)
+    {"ziel_anzahl": 1e10},
+    {"ziel_anzahl": "99999999999999999999999"},
+    {"ziel_anzahl": -1e12},
+    {"ziel_anzahl": "-99999999999"},
+    {"ziel_anzahl": "\uff12\uff10", "erinnerung_zeit": "\uff10\uff18:\uff13\uff10"},
+    {"ziel_anzahl": "\u0663\u0660", "erinnerung_zeit": "\u0967\u096f:\u0966\u0966"},
 ]
 
 

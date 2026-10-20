@@ -130,8 +130,11 @@ public class LernstandTests
         Assert.True(erster.Schreiben("INSERT INTO card_events (timestamp, category, question, mode, correct, uid) VALUES ($t, $c, $q, $m, $k, $u)",
             ("$t", "2026-10-20 10:00:00"), ("$c", "Netzwerk & Protokolle"), ("$q", "Frage?"), ("$m", "karte"), ("$k", 1), ("$u", "u1")));
         var vorher = Aufbau(pfad).ToJsonString();
+        var bytes = SHA256.HashData(File.ReadAllBytes(pfad));
         var zweiter = new Lernstand(pfad);
         Assert.Null(zweiter.NurLesenGrund);
+        // Datei bytegleich (auch Aenderungszaehler im Kopf), wie Python ab 0.63.2
+        Assert.Equal(bytes, SHA256.HashData(File.ReadAllBytes(pfad)));
         Assert.Equal(vorher, Aufbau(pfad).ToJsonString());
         Assert.Single(zweiter.Abfragen("SELECT question FROM card_events"));
     }
@@ -298,7 +301,11 @@ public class LernstandTests
             befehl.CommandText = "BEGIN EXCLUSIVE";
             befehl.ExecuteNonQuery();
         }
+        var uhr = System.Diagnostics.Stopwatch.StartNew();
         Assert.False(lernstand.Schreiben("INSERT INTO sync_meta (key, value) VALUES ('a', 'b')"));
+        // Wartezeit wie Python (5 s), nicht die 30 s von Microsoft.Data.Sqlite
+        Assert.Equal(5, Lernstand.Wartezeit);
+        Assert.InRange(uhr.Elapsed.TotalSeconds, 4, 10);
         Assert.Null(lernstand.NurLesenGrund);
         Assert.Equal(1, lernstand.Fehlerzaehler["gesperrt"]);
         Assert.Equal([Lernstand.Fehlertexte["gesperrt"]], meldungen);

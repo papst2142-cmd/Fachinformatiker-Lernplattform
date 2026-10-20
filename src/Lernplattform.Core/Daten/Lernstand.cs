@@ -24,6 +24,9 @@ public sealed class Lernstand
     /// <summary>Version des Aufbaus (PRAGMA user_version). 1 = Aufbau wie Python v0.63.2.</summary>
     public const int AufbauVersion = 1;
 
+    /// <summary>Wartezeit bei gesperrter Datenbank in Sekunden (wie Python sqlite3.connect, timeout=5).</summary>
+    public const int Wartezeit = 5;
+
     /// <summary>Verstaendliche Texte je Fehlerart, PC und Handy gleich (Python DB_ERROR_TEXTS, Dateiname angepasst).</summary>
     public static readonly IReadOnlyDictionary<string, string> Fehlertexte = new Dictionary<string, string>
     {
@@ -287,6 +290,7 @@ public sealed class Lernstand
         {
             DataSource = Pfad,
             Pooling = false,
+            DefaultTimeout = Wartezeit,
         }.ToString());
         verbindung.Open();
         if (NurLesenGrund is not null)
@@ -419,7 +423,16 @@ public sealed class Lernstand
             }
             Ausfuehren("CREATE TABLE IF NOT EXISTS sync_meta ( key TEXT PRIMARY KEY, value TEXT)");
             Ausfuehren("CREATE INDEX IF NOT EXISTS ix_spiel_ereignisse_lauf ON spiel_ereignisse (lauf)");
-            Ausfuehren($"PRAGMA user_version = {AufbauVersion}");
+            // Nur nachtragen, wenn noetig: eine aktuelle Datei bleibt beim Oeffnen bytegleich (wie Python ab 0.63.2)
+            using (var lesen = verbindung.CreateCommand())
+            {
+                lesen.Transaction = transaktion;
+                lesen.CommandText = "PRAGMA user_version";
+                if ((long)lesen.ExecuteScalar()! < AufbauVersion)
+                {
+                    Ausfuehren($"PRAGMA user_version = {AufbauVersion}");
+                }
+            }
             transaktion.Commit();
         }
         catch (SqliteException fehler)
@@ -448,7 +461,12 @@ public sealed class Lernstand
         List<string> ergebnis;
         try
         {
-            using var verbindung = new SqliteConnection($"Data Source={Pfad};Pooling=False");
+            using var verbindung = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = Pfad,
+                Pooling = false,
+                DefaultTimeout = Wartezeit,
+            }.ToString());
             verbindung.Open();
             using var befehl = verbindung.CreateCommand();
             befehl.CommandText = "PRAGMA quick_check(1)";

@@ -116,6 +116,23 @@ public class FehlerprotokollTests
         Assert.Equal(inhalt.Trim(), Fehlerprotokoll.Anzeigen(pfad).Replace("\r\n", "\n"));
     }
 
+    /// <summary>Windows-Zeilenenden im Fehlertext (Exception.ToString) ergeben keine Leerzeilen.</summary>
+    [Fact]
+    public void ZeilenendenEinheitlich()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, Fehlerprotokoll.DateiName);
+        Fehlerprotokoll.Schreiben("erste\r\nzweite\ndritte", pfad);
+        var roh = File.ReadAllText(pfad, Encoding.UTF8);
+        Assert.DoesNotContain("\r\r", roh);
+        var zeilen = roh.Split(Environment.NewLine);
+        Assert.Equal(["erste", "zweite", "dritte", ""], zeilen[1..]);
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.DoesNotContain("\r", roh);
+        }
+    }
+
     [Fact]
     public void GrosseDateiWirdGekuerzt()
     {

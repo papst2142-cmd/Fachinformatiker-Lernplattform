@@ -63,7 +63,7 @@ public static class Fehlerprotokoll
                 var inhalt = Datenschutz.PfadeAnonymisieren(Datenschutz.Schwaerzen(text.TrimEnd()));
                 var eintrag = $"=== {zeit} | Version {(_version.Length > 0 ? _version : "?")} | {System()} ===\n{inhalt}\n";
                 // Zeilenenden wie Python im Textmodus (Windows \r\n, sonst \n)
-                eintrag = eintrag.Replace("\n", Environment.NewLine, StringComparison.Ordinal);
+                eintrag = eintrag.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
                 File.AppendAllText(pfad, eintrag, new UTF8Encoding(false));
             }
         }
