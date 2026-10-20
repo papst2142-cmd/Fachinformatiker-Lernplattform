@@ -1,5 +1,18 @@
 # Änderungen
 
+## A 0.3.0 (in Arbeit, Phase 2: Lernkern)
+Welle 1 (Kern ohne Oberfläche, ohne Versionssprung, Weisung P2-2):
+- Lernlogik wie in Python: Lernstatus je Karte und Frage, Wiederholungsplan, bevorzugte Reihenfolge nach Rahmenplan und Prüfungstrainer (Vergleichswerte G15, G16, G17).
+- Antworten werden wie in Python gespeichert, mit Uhrzeit und Zeitzone; ein Schreibfehler ändert den Lernstand nicht.
+- Übernahme eines alten Lernstands (Sicherung `.fisisicherung`, Abgleich-Datei `lernstand.json.gz`, alte Datenbank der Python-Version, nur lesend): zusammenführen wie Python, vorher automatische Kopie im Ordner `sicherungen`, beliebig oft wiederholbar (Vergleichswerte G20).
+
+Welle 2 (Oberfläche, Version A 0.3.0, Paket 1.0.0-a.0.3.0, Android 1000300):
+- Karteikarten: Fachbereich, Thema, Status und drei Modi (Freitext, Multiple Choice, Aufdecken) wie in Python; Texte zeichengleich (Vergleichswerte G22), lange Themennamen brechen auch am Handy um.
+- Prüfungstrainer, Art „Übung“: Fragenanzahl, Themen, Zeit, Auswertung mit Hinweis unter dem Ergebnis; Reihenfolge der Antworten wie in Python. Die Art „Prüfung“ kommt in einer späteren Welle.
+- Optionen > Sicherung: „Lernstand übernehmen“ mit Vorschau (rechnet nur auf einer Kopie im Arbeitsspeicher und ändert nichts), Hinweis auf die automatische Kopie im Ordner `sicherungen` und Ergebnis; Wortlaut nach Weisung P2-4.
+- Die Rahmenplan-Zuordnung wird nach dem Start im Hintergrund vorbereitet, damit die erste Karte schnell erscheint.
+- Start ohne Bedienung prüft zusätzlich die neuen Ansichten (Karteikarten in drei Modi, Prüfungstrainer mit Frage und Ergebnis, Übernahme mit Vorschau, Ergebnis und Fehler, Rückfrage beim Abbrechen) in allen Schriftstufen und Fenstergrößen sowie Layout und Kontrast in allen 72 Farbwelten.
+
 ## A 0.2.0 (in Arbeit, Phase 1: Kern und Oberfläche)
 Welle 1 (Kern ohne Oberfläche; die Versionsnummer wird erst mit Welle 2 erhöht, Weisung P1-1):
 - Lerninhalte als Datenmodell: Karteikarten, Quizfragen (mit den 54 automatisch erzeugten Aufgaben), AP2-/AP1-Szenarien, Testprojekte, Themen und Rahmenplan werden wie in Python geladen und geprüft; jeder Inhalt kennt seine Fachrichtung (ohne Angabe: Systemintegration). Geprüft gegen Vergleichswerte G12, ohne den Spielteil.
