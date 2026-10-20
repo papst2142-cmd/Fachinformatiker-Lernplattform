@@ -1,0 +1,86 @@
+# Phase 0: Bauen und Testen auf jedem Push und Pull Request.
+# Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  AVALONIA_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  tests:
+    name: tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Tests
+        run: dotnet test --project tests/Lernplattform.Tests -c Release
+      - name: Desktop bauen
+        run: dotnet build src/Lernplattform.Desktop -c Release
+
+  vergleichswerte:
+    # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
+    # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
+    name: vergleichswerte (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: papst2142-cmd/Fisi-Lernplattform
+          ref: v0.63.2
+          path: python-linie
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Inhalte gleich wie v0.63.2
+        run: diff -r python-linie/inhalte inhalte
+      - name: Zufall und Inhalte neu erzeugen
+        run: |
+          mkdir -p neu
+          python3 -I werkzeuge/vergleich/erzeuge_zufall.py python-linie neu/zufall.json
+          python3 -I werkzeuge/vergleich/erzeuge_daten.py python-linie inhalte neu
+      - name: Vergleich
+        run: |
+          python3 -I - <<'PY'
+          import json
+          for name in ("zufall.json", "inhalte.json", "testdaten.json"):
+              alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
+              neu = json.load(open("neu/" + name, encoding="utf-8"))
+              alt.pop("python", None); neu.pop("python", None)
+              assert alt == neu, name + " weicht ab"
+              print(name, "gleich")
+          PY
+
+  android:
+    name: android (APK, nur arm64-v8a, Testsignatur)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Android-Workload
+        run: dotnet workload install android
+      - name: APK bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -o apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lernplattform-android-phase0
+          path: apk/*-Signed.apk
+          if-no-files-found: error

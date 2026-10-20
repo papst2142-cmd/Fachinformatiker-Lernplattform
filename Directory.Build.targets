@@ -1,0 +1,6 @@
+<Project>
+  <!-- Datenschutz: Avalonia.BuildServices sendet beim Bauen Statistikdaten an
+       avaloniaui.net. Das Ziel wird hier durch ein leeres ersetzt, damit beim
+       Bauen nichts gesendet wird (zusaetzlich AVALONIA_TELEMETRY_OPTOUT=1 in der CI). -->
+  <Target Name="AvaloniaStats" />
+</Project>

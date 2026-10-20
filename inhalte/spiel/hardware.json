@@ -1,0 +1,231 @@
+{
+  "_hinweis": [
+    "Bauteile fuer die Aufgabentypen 'bauteile' (PC zusammensetzen) und 'bestellung'.",
+    "Preise in Euro (Spielgeld). Die Pruefregeln stehen unter 'regeln'.",
+    "Rack-Geraete fuer den Aufgabentyp 'rack' (Serverschrank): HE, Gewicht in kg, Leistungsaufnahme in W, USV mit 'leistung' in W, Switch und Patchpanel mit 'ports'. Grenzwerte unter 'rack_regeln'.",
+    "Ab 0.32: Ersatzteile fuer den Austausch-Schritt der Diagnose ('ersatzteile', Typen unter 'ersatz_typen', Merkmale [feld, Name, Einheit] unter 'ersatz_merkmale'). 'grundbestand' liegt von Anfang an in Rainers Ersatzteilregal. Fehlt ein Teil, wird es nachbestellt ('nachbestellung': Haendler und Lieferzeit in Arbeitstagen)."
+  ],
+  "regeln": {
+    "grundlast_watt": 60,
+    "netzteil_reserve": 1.3
+  },
+  "typen": {
+    "mainboard": "Mainboard",
+    "cpu": "CPU",
+    "ram": "Arbeitsspeicher",
+    "ssd": "SSD",
+    "gpu": "Grafikkarte",
+    "netzteil": "Netzteil",
+    "gehaeuse": "Gehäuse",
+    "notebook": "Notebook"
+  },
+  "formfaktoren": {"ATX": "ATX", "mATX": "Micro-ATX", "ITX": "Mini-ITX"},
+  "haendler": [
+    {"id": "kabelkoenig", "name": "Kabelkönig Versand"},
+    {"id": "bitlager", "name": "Bitlager24"},
+    {"id": "serverhaus", "name": "Serverhaus Nord"}
+  ],
+  "teile": [
+    {"id": "mb_b650_atx", "typ": "mainboard", "name": "Mainboard B650 (ATX)", "preis": 159,
+     "sockel": "AM5", "ram_typ": "DDR5", "formfaktor": "ATX", "ram_slots": 4, "m2": 2},
+    {"id": "mb_a620_matx", "typ": "mainboard", "name": "Mainboard A620M (Micro-ATX)", "preis": 99,
+     "sockel": "AM5", "ram_typ": "DDR5", "formfaktor": "mATX", "ram_slots": 2, "m2": 1},
+    {"id": "mb_b760_matx", "typ": "mainboard", "name": "Mainboard B760M DDR4 (Micro-ATX)", "preis": 119,
+     "sockel": "LGA1700", "ram_typ": "DDR4", "formfaktor": "mATX", "ram_slots": 4, "m2": 1},
+    {"id": "mb_h610_itx", "typ": "mainboard", "name": "Industrie-Mainboard H610 (Mini-ITX, nur SATA)", "preis": 139,
+     "sockel": "LGA1700", "ram_typ": "DDR4", "formfaktor": "ITX", "ram_slots": 2, "m2": 0},
+
+    {"id": "cpu_r5_7600", "typ": "cpu", "name": "AMD Ryzen 5 7600", "preis": 199,
+     "sockel": "AM5", "tdp": 65, "igpu": true},
+    {"id": "cpu_r7_7700x", "typ": "cpu", "name": "AMD Ryzen 7 7700X", "preis": 299,
+     "sockel": "AM5", "tdp": 105, "igpu": true},
+    {"id": "cpu_i5_13400", "typ": "cpu", "name": "Intel Core i5-13400", "preis": 209,
+     "sockel": "LGA1700", "tdp": 65, "igpu": true},
+    {"id": "cpu_i5_13400f", "typ": "cpu", "name": "Intel Core i5-13400F (ohne Grafik)", "preis": 179,
+     "sockel": "LGA1700", "tdp": 65, "igpu": false},
+
+    {"id": "ram_ddr5_2x8", "typ": "ram", "name": "DDR5 16 GB (2 × 8 GB)", "preis": 59,
+     "ram_typ": "DDR5", "groesse": 16, "module": 2},
+    {"id": "ram_ddr5_2x16", "typ": "ram", "name": "DDR5 32 GB (2 × 16 GB)", "preis": 99,
+     "ram_typ": "DDR5", "groesse": 32, "module": 2},
+    {"id": "ram_ddr4_1x8", "typ": "ram", "name": "DDR4 8 GB (1 × 8 GB)", "preis": 24,
+     "ram_typ": "DDR4", "groesse": 8, "module": 1},
+    {"id": "ram_ddr4_2x8", "typ": "ram", "name": "DDR4 16 GB (2 × 8 GB)", "preis": 45,
+     "ram_typ": "DDR4", "groesse": 16, "module": 2},
+    {"id": "ram_ddr4_4x8", "typ": "ram", "name": "DDR4 32 GB (4 × 8 GB)", "preis": 89,
+     "ram_typ": "DDR4", "groesse": 32, "module": 4},
+
+    {"id": "ssd_nvme_500", "typ": "ssd", "name": "NVMe-SSD 500 GB (M.2)", "preis": 45,
+     "anschluss": "m2", "groesse": 500},
+    {"id": "ssd_nvme_1000", "typ": "ssd", "name": "NVMe-SSD 1 TB (M.2)", "preis": 69,
+     "anschluss": "m2", "groesse": 1000},
+    {"id": "ssd_sata_500", "typ": "ssd", "name": "SATA-SSD 500 GB (2,5 Zoll)", "preis": 42,
+     "anschluss": "sata", "groesse": 500},
+    {"id": "ssd_sata_1000", "typ": "ssd", "name": "SATA-SSD 1 TB (2,5 Zoll)", "preis": 65,
+     "anschluss": "sata", "groesse": 1000},
+
+    {"id": "gpu_4060", "typ": "gpu", "name": "Grafikkarte RTX 4060 (115 W)", "preis": 299,
+     "watt": 115},
+    {"id": "gpu_4070", "typ": "gpu", "name": "Grafikkarte RTX 4070 (200 W)", "preis": 579,
+     "watt": 200},
+
+    {"id": "nt_300", "typ": "netzteil", "name": "Netzteil 300 W", "preis": 39, "watt": 300},
+    {"id": "nt_450", "typ": "netzteil", "name": "Netzteil 450 W", "preis": 55, "watt": 450},
+    {"id": "nt_650", "typ": "netzteil", "name": "Netzteil 650 W", "preis": 79, "watt": 650},
+    {"id": "nt_850", "typ": "netzteil", "name": "Netzteil 850 W", "preis": 119, "watt": 850},
+
+    {"id": "geh_atx", "typ": "gehaeuse", "name": "Midi-Tower (ATX, Micro-ATX, Mini-ITX)", "preis": 69,
+     "formfaktoren": ["ATX", "mATX", "ITX"]},
+    {"id": "geh_matx", "typ": "gehaeuse", "name": "Mini-Tower (Micro-ATX, Mini-ITX)", "preis": 49,
+     "formfaktoren": ["mATX", "ITX"]},
+    {"id": "geh_itx", "typ": "gehaeuse", "name": "Mini-Gehäuse (nur Mini-ITX)", "preis": 59,
+     "formfaktoren": ["ITX"]},
+
+    {"id": "nb_14_8", "typ": "notebook", "name": "Notebook 14 Zoll, 8 GB RAM", "preis": 649,
+     "groesse": 8},
+    {"id": "nb_14_16", "typ": "notebook", "name": "Business-Notebook 14 Zoll, 16 GB RAM", "preis": 849,
+     "groesse": 16},
+    {"id": "nb_15_32", "typ": "notebook", "name": "Business-Notebook 15,6 Zoll, 32 GB RAM", "preis": 1199,
+     "groesse": 32},
+    {"id": "nb_conv_13_8", "typ": "notebook", "name": "Convertible 13 Zoll mit Stift, 8 GB RAM", "preis": 649, "groesse": 8, "bauform": "Convertible mit Stift"},
+    {"id": "nb_conv_13_16", "typ": "notebook", "name": "Convertible 13 Zoll mit Stift, 16 GB RAM", "preis": 849, "groesse": 16, "bauform": "Convertible mit Stift"},
+    {"id": "nb_klapp_14_16", "typ": "notebook", "name": "Klapp-Notebook 14 Zoll ohne Stift, 16 GB RAM", "preis": 779, "groesse": 16, "bauform": "Klapp-Notebook"},
+    {"id": "mb_a620_itx", "typ": "mainboard", "name": "Mainboard A620I (Mini-ITX, AM5)", "preis": 135, "sockel": "AM5", "ram_typ": "DDR5", "formfaktor": "ITX", "ram_slots": 2, "m2": 1},
+    {"id": "ram_ddr5_2x32", "typ": "ram", "name": "DDR5 64 GB (2 × 32 GB)", "preis": 179, "ram_typ": "DDR5", "groesse": 64, "module": 2},
+    {"id": "ssd_nvme_2000", "typ": "ssd", "name": "NVMe-SSD 2 TB (M.2)", "preis": 119, "anschluss": "m2", "groesse": 2000},
+    {"id": "ssd_sata_2000", "typ": "ssd", "name": "SATA-SSD 2 TB (2,5 Zoll)", "preis": 125, "anschluss": "sata", "groesse": 2000},
+    {"id": "gpu_lp_70", "typ": "gpu", "name": "Grafikkarte Profi flach (70 W, 4 Ausgänge)", "preis": 239, "watt": 70}
+  ],
+  "rack_regeln": {
+    "_hinweis": "strom_reserve: Anteil der USV-Leistung, der frei bleiben muss. schwer_ab_kg: ab diesem Gewicht muss ein Geraet im unteren Drittel des Schranks beginnen.",
+    "strom_reserve": 0.2,
+    "schwer_ab_kg": 20
+  },
+  "rack_typen": {
+    "usv": "USV",
+    "server": "Server",
+    "storage": "Storage",
+    "switch": "Switch",
+    "patchpanel": "Patchpanel"
+  },
+  "rack_geraete": [
+    {"id": "srv_1he", "typ": "server", "name": "Server 1 HE (Leitstellenrechner)", "he": 1, "gewicht": 16, "watt": 280},
+    {"id": "srv_2he", "typ": "server", "name": "Server 2 HE (Datenbank)", "he": 2, "gewicht": 28, "watt": 450},
+    {"id": "srv_4he", "typ": "server", "name": "Server 4 HE (Altgerät aus dem Keller)", "he": 4, "gewicht": 38, "watt": 650},
+    {"id": "storage_2he", "typ": "storage", "name": "Storage mit 12 Festplatten", "he": 2, "gewicht": 32, "watt": 400},
+
+    {"id": "sw_24", "typ": "switch", "name": "Switch 24 Ports", "he": 1, "gewicht": 4, "watt": 45, "ports": 24},
+    {"id": "sw_48", "typ": "switch", "name": "Switch 48 Ports", "he": 1, "gewicht": 6, "watt": 70, "ports": 48},
+    {"id": "sw_48_poe", "typ": "switch", "name": "Switch 48 Ports mit PoE", "he": 1, "gewicht": 7, "watt": 370, "ports": 48},
+    {"id": "pp_24", "typ": "patchpanel", "name": "Patchpanel 24 Ports", "he": 1, "gewicht": 1, "watt": 0, "ports": 24},
+    {"id": "pp_48", "typ": "patchpanel", "name": "Patchpanel 48 Ports", "he": 1, "gewicht": 2, "watt": 0, "ports": 48},
+
+    {"id": "usv_1000", "typ": "usv", "name": "USV 1000 W", "he": 2, "gewicht": 24, "watt": 0, "leistung": 1000},
+    {"id": "usv_1500", "typ": "usv", "name": "USV 1500 W", "he": 2, "gewicht": 29, "watt": 0, "leistung": 1500},
+    {"id": "usv_3000", "typ": "usv", "name": "USV 3000 W", "he": 3, "gewicht": 48, "watt": 0, "leistung": 3000},
+    {"id": "usv_700", "typ": "usv", "name": "USV 700 W (kompakt)", "he": 1, "gewicht": 13, "watt": 0, "leistung": 700},
+    {"id": "sw_24_poe", "typ": "switch", "name": "Switch 24 Ports mit PoE", "he": 1, "gewicht": 5, "watt": 250, "ports": 24},
+    {"id": "nvr_2he", "typ": "storage", "name": "Videorekorder (NVR) mit 8 Platten", "he": 2, "gewicht": 18, "watt": 160},
+
+    {"id": "host_2he", "typ": "server", "name": "Virtualisierungs-Host", "he": 2, "gewicht": 30, "watt": 650, "schaechte": 12},
+    {"id": "storage_2he_24", "typ": "storage", "name": "Storage-System", "he": 2, "gewicht": 34, "watt": 500, "schaechte": 24},
+    {"id": "sw_48_25g", "typ": "switch", "name": "Switch 48 × 25 GbE", "he": 1, "gewicht": 9, "watt": 350, "ports": 48, "gbit": 25},
+    {"id": "pp_48_lwl", "typ": "patchpanel", "name": "LWL-Patchpanel 48 Fasern", "he": 1, "gewicht": 3, "watt": 0, "ports": 48, "fasern": 48},
+    {"id": "usv_5000", "typ": "usv", "name": "USV 5000 W", "he": 4, "gewicht": 62, "watt": 0, "leistung": 5000}
+  ],
+  "falschlieferung": {
+    "_hinweis": "Zwischenfall nach einer falschen Bestellung: Die Ware kommt trotzdem und muss zurueck. {bestellung} = Titel der Bestellung, {ware} = was geliefert wurde. Die Bestellung kommt erst danach wieder, dann ohne Spar-Bonus. Kosten der Ruecksendung unter 'ruecksendekosten'.",
+    "titel": "Falsche Ware für „{bestellung}“",
+    "auftraggeber": "rainer",
+    "raum": "lager",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "achsen": ["zuverlaessigkeit"],
+    "belohnung": {"geld": 0, "reputation": 2},
+    "ruecksendekosten": 40,
+    "ticket": [
+      "Rainer steht zwischen offenen Kartons: „Die Lieferung für ‚{bestellung}‘ ist da. Gekommen ist: {ware}. Das passt aber nicht zu dem, was gebraucht wird.“",
+      "„Zurückschicken kostet Porto, und der Spar-Bonus für die Bestellung ist damit auch weg. Aber so können wir das nicht einbauen.“"
+    ],
+    "frage": "Wie gehst du mit der falschen Lieferung um?",
+    "optionen": [
+      "Ware prüfen, beim Händler reklamieren, zurückschicken und danach richtig nachbestellen",
+      "Die Ware behalten und trotzdem einbauen, irgendwie wird es schon laufen",
+      "Die Kartons ungeöffnet in den Keller stellen und nichts sagen",
+      "Die Ware entsorgen, dann ist das Lager wieder frei"
+    ],
+    "antwort": "Ware prüfen, beim Händler reklamieren, zurückschicken und danach richtig nachbestellen",
+    "hilfe": [
+      "Falsche Ware gehört nicht ins Lager und schon gar nicht in den Einbau.",
+      "Händler nehmen Ware meist innerhalb einer Frist zurück, wenn sie unbenutzt und originalverpackt ist."
+    ],
+    "erklaerung": [
+      "Falsch bestellte Ware wird geprüft, reklamiert und innerhalb der Rückgabefrist zurückgeschickt. Unter Firmen gibt es kein gesetzliches Widerrufsrecht wie bei Privatkunden, es gelten die Bedingungen des Händlers.",
+      "Danach wird richtig nachbestellt. Einbauen, was nicht passt, gefährdet den Betrieb, und Wegwerfen oder Verstecken verschwendet Geld."
+    ],
+    "suchbegriffe": ["Beschaffung", "Reklamation"]
+  },
+  "ersatz_typen": {
+    "usv_akku": "USV-Akku",
+    "monitor": "Monitor",
+    "patchkabel": "Patchkabel",
+    "luefter": "Lüfter",
+    "toner": "Toner",
+    "sfp": "SFP-Modul",
+    "drucker": "Drucker"
+  },
+  "ersatz_merkmale": {
+    "usv_akku": [["spannung", "Spannung", "V"], ["kapazitaet", "Kapazität", "Ah"], ["anschluss", "Anschluss", ""]],
+    "monitor": [["diagonale", "Diagonale", "Zoll"], ["anschluss", "Anschluss", ""], ["aufloesung", "Auflösung", ""]],
+    "patchkabel": [["kategorie", "Kategorie", ""], ["laenge", "Länge", "m"]],
+    "luefter": [["groesse", "Größe", "mm"], ["anschluss", "Anschluss", ""]],
+    "toner": [["modell", "Passend für", ""], ["farbe", "Farbe", ""]],
+    "sfp": [["standard", "Standard", ""], ["stecker", "Stecker", ""]],
+    "drucker": [["netzwerk", "Anschluss", ""], ["duplex", "Duplex", ""], ["farbe", "Farbdruck", ""]]
+  },
+  "ersatzteile": [
+    {"id": "akku_12v7_f1", "typ": "usv_akku", "name": "USV-Akku 12 V 7 Ah (Steckkontakt F1)", "preis": 24, "spannung": 12, "kapazitaet": 7, "anschluss": "F1 (4,8 mm)"},
+    {"id": "akku_12v7_f2", "typ": "usv_akku", "name": "USV-Akku 12 V 7 Ah (Steckkontakt F2)", "preis": 25, "spannung": 12, "kapazitaet": 7, "anschluss": "F2 (6,3 mm)"},
+    {"id": "akku_12v9_f2", "typ": "usv_akku", "name": "USV-Akku 12 V 9 Ah (Steckkontakt F2)", "preis": 29, "spannung": 12, "kapazitaet": 9, "anschluss": "F2 (6,3 mm)"},
+    {"id": "akku_6v12_f2", "typ": "usv_akku", "name": "USV-Akku 6 V 12 Ah (Steckkontakt F2)", "preis": 27, "spannung": 6, "kapazitaet": 12, "anschluss": "F2 (6,3 mm)"},
+    {"id": "akkusatz_48v9", "typ": "usv_akku", "name": "Akkusatz für Rack-USV (4 × 12 V 9 Ah, Einschub)", "preis": 189, "spannung": 48, "kapazitaet": 9, "anschluss": "Einschub"},
+    {"id": "akkusatz_96v9", "typ": "usv_akku", "name": "Akkusatz für Rack-USV (8 × 12 V 9 Ah, Einschub)", "preis": 359, "spannung": 96, "kapazitaet": 9, "anschluss": "Einschub"},
+    {"id": "mon_22_vga", "typ": "monitor", "name": "Monitor 22 Zoll (VGA)", "preis": 99, "diagonale": 22, "anschluss": "VGA", "aufloesung": "1680 × 1050"},
+    {"id": "mon_24_hdmi", "typ": "monitor", "name": "Monitor 24 Zoll (HDMI)", "preis": 129, "diagonale": 24, "anschluss": "HDMI", "aufloesung": "1920 × 1080"},
+    {"id": "mon_24_dp", "typ": "monitor", "name": "Monitor 24 Zoll (DisplayPort)", "preis": 139, "diagonale": 24, "anschluss": "DisplayPort", "aufloesung": "1920 × 1080"},
+    {"id": "mon_27_dp", "typ": "monitor", "name": "Monitor 27 Zoll (DisplayPort, WQHD)", "preis": 249, "diagonale": 27, "anschluss": "DisplayPort", "aufloesung": "2560 × 1440"},
+    {"id": "mon_32_leit", "typ": "monitor", "name": "Leitstand-Monitor 32 Zoll (DisplayPort, 24/7)", "preis": 489, "diagonale": 32, "anschluss": "DisplayPort", "aufloesung": "3840 × 2160"},
+    {"id": "pk_cat5e_2", "typ": "patchkabel", "name": "Patchkabel Cat 5e, 2 m", "preis": 3, "kategorie": "Cat 5e", "laenge": 2},
+    {"id": "pk_cat6a_1", "typ": "patchkabel", "name": "Patchkabel Cat 6A, 1 m", "preis": 4, "kategorie": "Cat 6A", "laenge": 1},
+    {"id": "pk_cat6a_2", "typ": "patchkabel", "name": "Patchkabel Cat 6A, 2 m", "preis": 5, "kategorie": "Cat 6A", "laenge": 2},
+    {"id": "pk_cat6a_5", "typ": "patchkabel", "name": "Patchkabel Cat 6A, 5 m", "preis": 8, "kategorie": "Cat 6A", "laenge": 5},
+    {"id": "pk_cat6a_10", "typ": "patchkabel", "name": "Patchkabel Cat 6A, 10 m", "preis": 12, "kategorie": "Cat 6A", "laenge": 10},
+    {"id": "pk_lwl_om3_3", "typ": "patchkabel", "name": "LWL-Patchkabel OM3 LC/LC, 3 m", "preis": 14, "kategorie": "LWL OM3", "laenge": 3},
+    {"id": "fan_80_pwm", "typ": "luefter", "name": "Gehäuselüfter 80 mm (4-Pin PWM)", "preis": 9, "groesse": 80, "anschluss": "4-Pin PWM"},
+    {"id": "fan_92_pwm", "typ": "luefter", "name": "CPU-Lüfter 92 mm (4-Pin PWM)", "preis": 15, "groesse": 92, "anschluss": "4-Pin PWM"},
+    {"id": "fan_120_3pin", "typ": "luefter", "name": "Gehäuselüfter 120 mm (3-Pin)", "preis": 10, "groesse": 120, "anschluss": "3-Pin"},
+    {"id": "fan_120_pwm", "typ": "luefter", "name": "Gehäuselüfter 120 mm (4-Pin PWM)", "preis": 12, "groesse": 120, "anschluss": "4-Pin PWM"},
+    {"id": "toner_dw420_s", "typ": "toner", "name": "Toner DW-420 schwarz", "preis": 59, "modell": "Druckwerk LX-420", "farbe": "schwarz"},
+    {"id": "toner_dw420_xl", "typ": "toner", "name": "Toner DW-420 XL schwarz", "preis": 89, "modell": "Druckwerk LX-420", "farbe": "schwarz (XL)"},
+    {"id": "toner_dw560_s", "typ": "toner", "name": "Toner DW-560 schwarz", "preis": 79, "modell": "Druckwerk MX-560", "farbe": "schwarz"},
+    {"id": "toner_dw560_c", "typ": "toner", "name": "Toner DW-560 cyan", "preis": 95, "modell": "Druckwerk MX-560", "farbe": "cyan"},
+    {"id": "sfp_1g_sx", "typ": "sfp", "name": "SFP-Modul 1000BASE-SX (Multimode)", "preis": 29, "standard": "1000BASE-SX", "stecker": "LC"},
+    {"id": "sfp_1g_lx", "typ": "sfp", "name": "SFP-Modul 1000BASE-LX (Singlemode)", "preis": 39, "standard": "1000BASE-LX", "stecker": "LC"},
+    {"id": "sfp_10g_sr", "typ": "sfp", "name": "SFP+-Modul 10GBASE-SR (Multimode)", "preis": 59, "standard": "10GBASE-SR", "stecker": "LC"},
+    {"id": "drucker_lx400", "typ": "drucker", "name": "Laserdrucker Druckwerk LX-400 (LAN, einseitig)", "preis": 229, "netzwerk": "LAN", "duplex": "nein", "farbe": "nein"},
+    {"id": "drucker_lx410", "typ": "drucker", "name": "Laserdrucker Druckwerk LX-410 (USB, Duplex)", "preis": 179, "netzwerk": "USB", "duplex": "ja", "farbe": "nein"},
+    {"id": "drucker_lx420", "typ": "drucker", "name": "Laserdrucker Druckwerk LX-420 (LAN, Duplex)", "preis": 289, "netzwerk": "LAN", "duplex": "ja", "farbe": "nein"},
+    {"id": "drucker_mx560", "typ": "drucker", "name": "Farblaserdrucker Druckwerk MX-560 (LAN, Duplex)", "preis": 549, "netzwerk": "LAN", "duplex": "ja", "farbe": "ja"},
+    {"id": "toner_dw560_m", "typ": "toner", "name": "Toner DW-560 magenta", "preis": 95, "modell": "Druckwerk MX-560", "farbe": "magenta"},
+    {"id": "toner_dw560_y", "typ": "toner", "name": "Toner DW-560 gelb", "preis": 92, "modell": "Druckwerk MX-560", "farbe": "gelb"},
+    {"id": "mon_32_aussen_hdmi", "typ": "monitor", "name": "Außenanzeige 32 Zoll (HDMI, wetterfest, 24/7)", "preis": 689, "diagonale": 32, "anschluss": "HDMI", "aufloesung": "1920 × 1080"},
+    {"id": "pk_cat6a_15", "typ": "patchkabel", "name": "Patchkabel Cat 6A, 15 m", "preis": 15, "kategorie": "Cat 6A", "laenge": 15},
+    {"id": "pk_cat6a_aussen_15", "typ": "patchkabel", "name": "Outdoor-Patchkabel Cat 6A (UV-fest), 15 m", "preis": 24, "kategorie": "Cat 6A outdoor", "laenge": 15},
+    {"id": "sfp_1g_t_rj45", "typ": "sfp", "name": "SFP-Modul 1000BASE-T (Kupfer, RJ45)", "preis": 45, "standard": "1000BASE-T", "stecker": "RJ45"},
+    {"id": "fan_150_230v", "typ": "luefter", "name": "Filterlüfter für Schaltschrank 150 mm (230 V)", "preis": 49, "groesse": 150, "anschluss": "230 V"},
+    {"id": "fan_150_24v", "typ": "luefter", "name": "Filterlüfter für Schaltschrank 150 mm (24 V DC)", "preis": 45, "groesse": 150, "anschluss": "24 V DC"},
+    {"id": "akku_12v18_m5", "typ": "usv_akku", "name": "USV-Akku 12 V 18 Ah (Schraubanschluss M5)", "preis": 49, "spannung": 12, "kapazitaet": 18, "anschluss": "M5-Schraube"}
+  ],
+  "grundbestand": {"akku_12v7_f2": 2, "akku_12v9_f2": 2, "pk_cat6a_2": 3, "pk_cat6a_5": 2, "fan_120_pwm": 2, "mon_24_dp": 1, "toner_dw420_s": 2},
+  "nachbestellung": {"haendler": "kabelkoenig", "lieferzeit": 1}
+}

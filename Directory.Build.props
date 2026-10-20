@@ -1,0 +1,17 @@
+<Project>
+  <!-- Gemeinsame Einstellungen aller Projekte. Version nur hier aendern. -->
+  <PropertyGroup>
+    <!-- Interne Zahlenversion; Anzeige "A 0.1.0" (A = Alphaphase), Tag vA0.1.0 -->
+    <Version>0.1.0</Version>
+    <Stufe>A</Stufe>
+    <Product>Fachinformatiker Lernplattform</Product>
+    <Company>Nico H</Company>
+    <Authors>Nico H</Authors>
+    <Copyright>Copyright (c) 2026 Nico H</Copyright>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lernplattform.Core/Lernplattform.Core.csproj" />
+    <Project Path="src/Lernplattform.App/Lernplattform.App.csproj" />
+    <Project Path="src/Lernplattform.Desktop/Lernplattform.Desktop.csproj" />
+    <Project Path="src/Lernplattform.Android/Lernplattform.Android.csproj">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lernplattform.Tests/Lernplattform.Tests.csproj" />
+  </Folder>
+</Solution>

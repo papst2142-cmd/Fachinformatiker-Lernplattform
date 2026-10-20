@@ -1,0 +1,199 @@
+{
+  "_hinweis": [
+    "Themen je Fachbereich (ab 0.37). Jeder Lerninhalt traegt im Feld 'thema' genau eine dieser Kennungen aus seinem Fachbereich.",
+    "Die Anforderungen der Spielauftraege ('anforderungen') verweisen ebenfalls auf diese Kennungen. Kennungen sind ueber alle Fachbereiche eindeutig und nie gleich einem Fachbereich.",
+    "'name' ist die volle Bezeichnung, 'kurz' die knappe fuer enge Anzeigen (Handy)."
+  ],
+  "themen": {
+    "netzwerk": [
+      {
+        "id": "grundlagen",
+        "name": "Grundlagen & Übertragung",
+        "kurz": "Grundlagen"
+      },
+      {
+        "id": "ipv4",
+        "name": "IPv4 & Subnetting",
+        "kurz": "IPv4"
+      },
+      {
+        "id": "ipv6",
+        "name": "IPv6",
+        "kurz": "IPv6"
+      },
+      {
+        "id": "switching",
+        "name": "Switching & VLAN",
+        "kurz": "Switching"
+      },
+      {
+        "id": "routing",
+        "name": "Routing",
+        "kurz": "Routing"
+      },
+      {
+        "id": "dienste",
+        "name": "Dienste & Protokolle",
+        "kurz": "Dienste"
+      },
+      {
+        "id": "wlan",
+        "name": "WLAN & Funk",
+        "kurz": "WLAN"
+      },
+      {
+        "id": "verkabelung",
+        "name": "Verkabelung & Medien",
+        "kurz": "Verkabelung"
+      },
+      {
+        "id": "wan_vpn",
+        "name": "WAN, Anschluss & VPN",
+        "kurz": "WAN & VPN"
+      },
+      {
+        "id": "fehlersuche",
+        "name": "Fehlersuche & Dokumentation",
+        "kurz": "Fehlersuche"
+      }
+    ],
+    "sicherheit": [
+      {
+        "id": "isms",
+        "name": "ISMS, Risiko & Compliance",
+        "kurz": "ISMS & Risiko"
+      },
+      {
+        "id": "datenschutz",
+        "name": "Datenschutz & DSGVO",
+        "kurz": "Datenschutz"
+      },
+      {
+        "id": "krypto",
+        "name": "Kryptografie & Zertifikate",
+        "kurz": "Kryptografie"
+      },
+      {
+        "id": "zugriff",
+        "name": "Authentifizierung & Rechte",
+        "kurz": "Rechte"
+      },
+      {
+        "id": "angriffe",
+        "name": "Angriffe & Schadsoftware",
+        "kurz": "Angriffe"
+      },
+      {
+        "id": "netzsicherheit",
+        "name": "Netzwerksicherheit",
+        "kurz": "Netzsicherheit"
+      },
+      {
+        "id": "haertung",
+        "name": "Härtung, Schwachstellen & Monitoring",
+        "kurz": "Härtung"
+      },
+      {
+        "id": "notfall",
+        "name": "Datensicherung & Notfall",
+        "kurz": "Notfall"
+      }
+    ],
+    "systeme": [
+      {
+        "id": "hardware",
+        "name": "Hardware & PC-Komponenten",
+        "kurz": "Hardware"
+      },
+      {
+        "id": "zahlen",
+        "name": "Zahlensysteme & Datenmengen",
+        "kurz": "Zahlensysteme"
+      },
+      {
+        "id": "storage",
+        "name": "Storage, RAID & Datensicherung",
+        "kurz": "Storage & RAID"
+      },
+      {
+        "id": "windows",
+        "name": "Windows & Active Directory",
+        "kurz": "Windows & AD"
+      },
+      {
+        "id": "linux",
+        "name": "Linux & Serverdienste",
+        "kurz": "Linux"
+      },
+      {
+        "id": "virtualisierung",
+        "name": "Virtualisierung, Container & Cloud",
+        "kurz": "Virtualisierung"
+      },
+      {
+        "id": "programmierung",
+        "name": "Programmierung & Tabellenkalkulation",
+        "kurz": "Programmierung"
+      },
+      {
+        "id": "it_betrieb",
+        "name": "IT-Betrieb, Energie & Arbeitsplatz",
+        "kurz": "IT-Betrieb"
+      }
+    ],
+    "wirtschaft": [
+      {
+        "id": "kalkulation",
+        "name": "Kalkulation & Rechnungswesen",
+        "kurz": "Kalkulation"
+      },
+      {
+        "id": "recht",
+        "name": "Vertragsrecht & Unternehmensformen",
+        "kurz": "Recht"
+      },
+      {
+        "id": "arbeitswelt",
+        "name": "Arbeitswelt & Wirtschaftsordnung",
+        "kurz": "Arbeitswelt"
+      },
+      {
+        "id": "projekt",
+        "name": "Projektmanagement",
+        "kurz": "Projekte"
+      },
+      {
+        "id": "service",
+        "name": "IT-Service & Qualität",
+        "kurz": "IT-Service"
+      },
+      {
+        "id": "beschaffung",
+        "name": "Beschaffung & Angebotsvergleich",
+        "kurz": "Beschaffung"
+      },
+      {
+        "id": "beratung",
+        "name": "Beratung & Kommunikation",
+        "kurz": "Beratung"
+      }
+    ],
+    "datenbanken": [
+      {
+        "id": "modellierung",
+        "name": "Datenmodellierung & Normalisierung",
+        "kurz": "Modellierung"
+      },
+      {
+        "id": "sql",
+        "name": "SQL-Abfragen",
+        "kurz": "SQL"
+      },
+      {
+        "id": "db_betrieb",
+        "name": "Datenbankbetrieb & -sicherheit",
+        "kurz": "DB-Betrieb"
+      }
+    ]
+  }
+}

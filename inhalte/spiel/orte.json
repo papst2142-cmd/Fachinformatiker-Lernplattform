@@ -1,0 +1,151 @@
+{
+  "_hinweis": [
+    "Weltkarte (ab 0.45): Landschaft, Orte und Gebaeude-Aussenmodelle in Karteneinheiten.",
+    "Ein neuer Ort braucht nur einen Eintrag unter 'orte' (Position, Modell, Ansicht, Freischaltung) - die Kartenlogik bleibt gleich.",
+    "frei: immer | ab_tag | kundenort (ab_tag aus kunden.json) | aufgabe (erledigt) | gruendung_moeglich | gegruendet | stufe_min | filiale_moeglich | filiale_gebaut | serverfarm (ab 0.52: Lokschuppen freigeschaltet).",
+    "ansicht: buero | zuhause | kunde:<ort> | firma | firma:<reiter> | filiale | mitbewerber:<id> | serverfarm.",
+    "Modell-Teile (relativ zum Ort): block (Grundflaeche x/y/w/t, Hoehe h, dach flach/sattel/shed), flaeche, schild, kreis, mast, tor, baum, geruest.",
+    "Bedingungen an Teilen: ab_stufe/bis_stufe (Firmengebaeude), ab_filiale/bis_filiale, raum (Sonderraum gebaut), wohnung [ids], erledigt/offen (Aufgabe), gegruendet (true/false), serverfarm_fertig (true/false). Block mit lichtfarbe: Farbe der beleuchteten Fenster."
+  ],
+  "welt": {
+    "breite": 32,
+    "hoehe": 24,
+    "landschaft": [
+      {"typ": "park", "x": 8.6, "y": 4.6, "w": 7.6, "h": 7.4},
+      {"typ": "park", "x": 0.4, "y": 16.0, "w": 7.0, "h": 7.2},
+      {"typ": "fluss", "punkte": [[0, 13.4], [4, 14.0], [8.6, 16.0], [10.2, 18.6], [11.0, 21.0], [11.6, 24]]},
+      {"typ": "strasse", "punkte": [[0, 20.8], [32, 20.8]]},
+      {"typ": "strasse", "punkte": [[7.5, 0], [7.5, 20.8]]},
+      {"typ": "strasse", "punkte": [[18.4, 11.2], [18.4, 20.8]]},
+      {"typ": "strasse", "punkte": [[29.8, 14.4], [29.8, 20.8]]},
+      {"typ": "strasse", "punkte": [[7.5, 12.6], [18.4, 12.6]]},
+      {"typ": "bahn", "punkte": [[0, 5.95], [5.2, 6.0], [7.5, 6.4], [9.4, 7.7], [10.6, 9.1], [14.4, 9.1],
+                                  [16.4, 9.6], [18.0, 10.2], [18.6, 10.33], [24.9, 10.33], [25.6, 10.05],
+                                  [26.0, 9.4], [26.4, 8.0], [26.9, 6.7], [27.5, 6.1], [28.2, 5.95], [32, 5.95]]},
+      {"typ": "baum", "punkte": [[9.3, 5.4], [10.3, 5.1], [11.4, 5.6], [15.4, 5.6], [9.4, 10.9], [10.6, 11.2],
+                                  [14.2, 10.8], [15.4, 10.3], [9.2, 8.9], [15.6, 8.2], [1.3, 16.9], [2.5, 16.6],
+                                  [3.7, 17.1], [1.1, 18.3], [6.4, 17.4], [1.6, 20.6], [3.0, 21.7], [6.6, 21.9],
+                                  [29.6, 7.4], [31.2, 7.6], [20.4, 22.6], [21.8, 23.1], [12.8, 23.0], [5.3, 19.2]]},
+      {"typ": "ortsname", "text": "LINDENAU", "x": 7.4, "y": 0.8},
+      {"typ": "ortsname", "text": "TALHEIM", "x": 30.0, "y": 23.3},
+      {"typ": "beschriftung", "text": "Talbahn", "x": 5.2, "y": 6.65},
+      {"typ": "gebaeude", "modell": "stellwerk", "x": 16.6, "y": 12.9, "farbe": "#8B93A1"}
+    ]
+  },
+  "orte": [
+    {"id": "zuhause", "name": "Zuhause", "x": 26.0, "y": 18.0, "schild": [27.6, 15.0],
+     "modell": "wohnung", "rolle": "zuhause", "ansicht": "zuhause", "frei": {"immer": true}},
+    {"id": "bitweiche", "name": "Bitweiche", "x": 11.9, "y": 17.4, "schild": [14.9, 20.2],
+     "modell": "bitweiche", "rolle": "bitweiche", "ansicht": "buero", "frei": {"immer": true},
+     "nach_gruendung": {"name": "Bitweiche (Mitbewerber)", "kurz": "Bitweiche",
+                        "rolle": "mitbewerber", "ansicht": "mitbewerber:bitweiche"}},
+    {"id": "talheim", "name": "Bahnhof Talheim", "kurz": "Talheim", "x": 19.4, "y": 7.3,
+     "schild": [21.9, 3.5], "modell": "bahnhof", "rolle": "kunde", "ansicht": "kunde:talheim",
+     "frei": {"kundenort": "talheim"}},
+    {"id": "talheim_nord", "name": "Talheim-Nord", "x": 28.3, "y": 3.0, "schild": [30.1, 0.75],
+     "modell": "bahnhof_neu", "rolle": "kunde", "ansicht": "kunde:talheim_nord",
+     "frei": {"kundenort": "talheim_nord"}},
+    {"id": "betriebswerkstatt", "name": "Betriebswerkstatt", "kurz": "Werkstatt", "x": 26.6, "y": 11.6,
+     "schild": [28.9, 9.95], "modell": "werkstatt", "rolle": "kunde",
+     "ansicht": "kunde:betriebswerkstatt", "frei": {"kundenort": "betriebswerkstatt"}},
+    {"id": "lindenau", "name": "Talbahn-Verwaltung", "kurz": "Verwaltung", "x": 0.9, "y": 9.2,
+     "schild": [3.3, 11.75], "modell": "verwaltung", "rolle": "kunde", "ansicht": "kunde:lindenau",
+     "frei": {"kundenort": "lindenau"}},
+    {"id": "birkenhain", "name": "Birkenhain", "x": 11.4, "y": 8.3, "schild": [12.6, 6.6],
+     "modell": "haltepunkt", "rolle": "kunde", "ansicht": "kunde:birkenhain",
+     "frei": {"kundenort": "birkenhain"}},
+    {"id": "gewerbehof", "name": "Gewerbehof Am Stellwerk", "kurz": "Gewerbehof", "x": 19.4, "y": 13.1,
+     "schild": [22.6, 18.35], "modell": "gewerbehof", "rolle": "firma", "ansicht": "buero",
+     "name_firma": true, "frei": {"gruendung_moeglich": true},
+     "vor_gruendung": {"ansicht": "firma", "hinweis": "Zu vermieten"}},
+    {"id": "filiale", "name": "Filiale Lindenau", "kurz": "Filiale", "x": 1.6, "y": 2.9,
+     "schild": [3.1, 5.0], "modell": "filiale", "rolle": "filiale", "ansicht": "filiale",
+     "name_filiale": true, "frei": {"filiale_moeglich": true},
+     "vor_filiale": {"ansicht": "firma:gebaeude", "hinweis": "Zu vermieten"}},
+    {"id": "lokschuppen", "name": "Rechenzentrum Lokschuppen", "kurz": "Lokschuppen", "x": 9.4, "y": 1.9,
+     "schild": [12.4, 0.45], "modell": "lokschuppen", "rolle": "kunde", "ansicht": "serverfarm",
+     "frei": {"serverfarm": true}}
+  ],
+  "modelle": {
+    "stellwerk": [
+      {"art": "block", "x": 0, "y": 0, "w": 1.3, "t": 1.1, "h": 1.9, "dach": "sattel", "licht": 0.2}
+    ],
+    "bitweiche": [
+      {"art": "block", "x": 0, "y": 0.2, "w": 4.4, "t": 2.2, "h": 1.5, "licht": 0.5},
+      {"art": "block", "x": 4.4, "y": 0.6, "w": 1.6, "t": 1.8, "h": 1.0, "fenster": false},
+      {"art": "tor", "x": 4.7, "y": 1.5, "w": 1.0, "h": 0.9},
+      {"art": "schild", "x": 0.8, "y": 1.2, "w": 2.6}
+    ],
+    "bahnhof": [
+      {"art": "flaeche", "x": -0.4, "y": 2.4, "w": 5.8, "h": 0.35, "farbe": "bahnsteig"},
+      {"art": "flaeche", "x": -0.4, "y": 3.3, "w": 5.8, "h": 0.35, "farbe": "bahnsteig"},
+      {"art": "block", "x": 0, "y": 0, "w": 5.0, "t": 2.0, "h": 1.4, "dach": "sattel", "licht": 0.45},
+      {"art": "block", "x": 1.8, "y": -0.6, "w": 1.4, "t": 1.2, "h": 2.8, "licht": 0.2},
+      {"art": "kreis", "x": 2.5, "y": -2.95, "r": 0.28, "farbe": "#FDE68A"}
+    ],
+    "bahnhof_neu": [
+      {"art": "flaeche", "x": -0.3, "y": 2.2, "w": 4.4, "h": 0.35, "farbe": "bahnsteig"},
+      {"art": "block", "x": 0, "y": 0, "w": 3.8, "t": 1.8, "h": 1.3, "licht": 0.55, "erledigt": "abnahme-talheim-nord"},
+      {"art": "flaeche", "x": 0.2, "y": -1.2, "w": 3.4, "h": 1.4, "farbe": "glas", "erledigt": "abnahme-talheim-nord"},
+      {"art": "block", "x": 0, "y": 0, "w": 3.8, "t": 1.8, "h": 1.3, "licht": 0, "offen": "abnahme-talheim-nord"},
+      {"art": "geruest", "x": -0.15, "y": -1.3, "w": 4.1, "h": 3.1, "offen": "abnahme-talheim-nord"}
+    ],
+    "werkstatt": [
+      {"art": "block", "x": 0, "y": 0, "w": 5.4, "t": 2.4, "h": 1.2, "dach": "shed", "licht": 0.3, "fenster": false},
+      {"art": "tor", "x": 0.4, "y": 1.35, "w": 1.2, "h": 0.95},
+      {"art": "tor", "x": 2.1, "y": 1.35, "w": 1.2, "h": 0.95},
+      {"art": "tor", "x": 3.8, "y": 1.35, "w": 1.2, "h": 0.95}
+    ],
+    "verwaltung": [
+      {"art": "block", "x": 0, "y": 0, "w": 3.4, "t": 2.0, "h": 2.4, "dach": "sattel", "licht": 0.6},
+      {"art": "block", "x": 3.4, "y": 0.6, "w": 1.4, "t": 1.4, "h": 1.5, "dach": "sattel", "licht": 0.4}
+    ],
+    "haltepunkt": [
+      {"art": "flaeche", "x": 0, "y": 0, "w": 2.4, "h": 0.5, "farbe": "bahnsteig"},
+      {"art": "block", "x": 0.5, "y": -0.2, "w": 1.3, "t": 0.6, "h": 0.6, "fenster": false},
+      {"art": "mast", "x": 2.0, "y": -0.05, "h": 0.95}
+    ],
+    "wohnung": [
+      {"art": "baum", "x": -0.6, "y": 1.9, "r": 0.4},
+      {"art": "baum", "x": 3.9, "y": 2.0, "r": 0.4},
+      {"art": "block", "x": 0.2, "y": 0, "w": 2.8, "t": 1.8, "h": 2.6, "licht": 0.35, "wohnung": ["apartment"]},
+      {"art": "block", "x": 0, "y": 0, "w": 3.3, "t": 1.8, "h": 2.0, "dach": "sattel", "licht": 0.45, "wohnung": ["zweizimmer"]},
+      {"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 2.3, "dach": "sattel", "licht": 0.5, "wohnung": ["altbau"]},
+      {"art": "block", "x": 2.3, "y": 0.9, "w": 0.7, "t": 0.9, "h": 1.5, "dach": "sattel", "licht": 0.5, "wohnung": ["altbau"]},
+      {"art": "block", "x": -0.1, "y": 0, "w": 3.6, "t": 1.8, "h": 2.0, "licht": 0.6, "wohnung": ["loft"]},
+      {"art": "flaeche", "x": 0.1, "y": -1.85, "w": 1.6, "h": 1.5, "farbe": "holz", "wohnung": ["loft"]},
+      {"art": "kreis", "x": 0.9, "y": -1.1, "r": 0.4, "farbe": "#F472B6", "wohnung": ["loft"]},
+      {"art": "baum", "x": 2.8, "y": -1.3, "r": 0.25, "wohnung": ["loft"]}
+    ],
+    "gewerbehof": [
+      {"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 1.3, "dach": "sattel", "licht": 0, "gegruendet": false},
+      {"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 1.3, "dach": "sattel", "licht": 0.55, "gegruendet": true},
+      {"art": "schild", "x": 0.6, "y": 0.85, "w": 2.0, "gegruendet": true},
+      {"art": "block", "x": 3.2, "y": 0.3, "w": 2.0, "t": 1.5, "h": 1.3, "licht": 0.5, "ab_stufe": 2},
+      {"art": "flaeche", "x": 3.5, "y": -0.7, "w": 0.55, "h": 0.45, "farbe": "technik", "ab_stufe": 2, "raum": "serverraum"},
+      {"art": "flaeche", "x": 4.3, "y": -0.7, "w": 0.55, "h": 0.45, "farbe": "technik", "ab_stufe": 2, "raum": "serverraum"},
+      {"art": "block", "x": 5.2, "y": 0.5, "w": 1.4, "t": 1.3, "h": 1.0, "licht": 0.5, "ab_stufe": 3},
+      {"art": "block", "x": 0.2, "y": 2.6, "w": 3.3, "t": 1.6, "h": 1.1, "dach": "shed", "licht": 0.4, "ab_stufe": 4},
+      {"art": "flaeche", "x": -0.7, "y": 3.2, "w": 0.7, "h": 0.5, "farbe": "holz", "ab_stufe": 4, "raum": "lager"},
+      {"art": "flaeche", "x": -0.7, "y": 3.8, "w": 0.7, "h": 0.5, "farbe": "holz", "ab_stufe": 4, "raum": "lager"},
+      {"art": "block", "x": 3.6, "y": 2.6, "w": 3.0, "t": 1.6, "h": 1.1, "dach": "shed", "licht": 0.4, "ab_stufe": 5}
+    ],
+    "filiale": [
+      {"art": "block", "x": 0, "y": 0, "w": 3.0, "t": 1.7, "h": 1.9, "dach": "sattel", "licht": 0, "bis_filiale": 0},
+      {"art": "block", "x": 0, "y": 0, "w": 3.0, "t": 1.7, "h": 1.9, "dach": "sattel", "licht": 0.7, "ab_filiale": 1, "bis_filiale": 1},
+      {"art": "block", "x": 0, "y": 0, "w": 3.0, "t": 1.7, "h": 2.8, "dach": "sattel", "licht": 0.7, "ab_filiale": 2},
+      {"art": "schild", "x": 0.5, "y": 1.0, "w": 2.0, "ab_filiale": 1}
+    ],
+    "lokschuppen": [
+      {"art": "block", "x": 0, "y": 0, "w": 5.8, "t": 2.3, "h": 1.3, "dach": "sattel", "farbe": "#B4553C", "licht": 0.15, "serverfarm_fertig": false},
+      {"art": "block", "x": 0, "y": 0, "w": 5.8, "t": 2.3, "h": 1.3, "dach": "sattel", "farbe": "#B4553C", "licht": 0.9, "lichtfarbe": "#22D3EE", "serverfarm_fertig": true},
+      {"art": "tor", "x": 0.45, "y": 1.35, "w": 1.35, "h": 0.95},
+      {"art": "tor", "x": 2.22, "y": 1.35, "w": 1.35, "h": 0.95},
+      {"art": "tor", "x": 4.0, "y": 1.35, "w": 1.35, "h": 0.95},
+      {"art": "kreis", "x": 1.3, "y": -0.45, "r": 0.24, "farbe": "technik"},
+      {"art": "kreis", "x": 2.9, "y": -0.45, "r": 0.24, "farbe": "technik"},
+      {"art": "kreis", "x": 4.5, "y": -0.45, "r": 0.24, "farbe": "technik"},
+      {"art": "block", "x": 6.3, "y": 1.1, "w": 1.4, "t": 1.0, "h": 0.7, "farbe": "#4F7A5A", "fenster": false}
+    ]
+  }
+}

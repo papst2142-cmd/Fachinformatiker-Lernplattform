@@ -1,0 +1,42 @@
+Fachinformatiker Lernplattform - Hinweise zu Fremdbestandteilen
+================================================================
+
+Stand: A 0.1.0, Phase 0 (19./20.10.2026). Diese Liste nennt jeden
+Fremdbestandteil, der mit dem Programm ausgeliefert wird, mit Lizenz und
+Quelle der Lizenzangabe. Vor der ersten Veroeffentlichung entsteht diese
+Datei automatisch beim Bau und enthaelt dann die vollstaendigen
+Lizenztexte (wie in der Python-Version). Bis dahin nie von Hand ergaenzen,
+ohne die Lizenz einzeln zu belegen.
+
+Belegt = Lizenzangabe aus der Paketbeschreibung (.nuspec) des NuGet-Pakets
+in der genannten Version gelesen.
+
+Paket (Version)                               Lizenz        Beleg / Quelle
+---------------------------------------------------------------------------
+Avalonia, Avalonia.Desktop, .Themes.Fluent,   MIT           nuspec, github.com/AvaloniaUI/Avalonia
+  .Fonts.Inter, .Skia, .HarfBuzz, .X11,
+  .Win32, .Native, .FreeDesktop,
+  .FreeDesktop.AtSpi, .Remote.Protocol,
+  .Android (alle 12.1.4)
+Avalonia.Angle.Windows.Natives                BSD-3-Clause  LICENSE-Datei im Paket (ANGLE Project
+  (2.1.27548.20260419)                                      Authors), github.com/AvaloniaUI/angle
+Schrift Inter (in Avalonia.Fonts.Inter)       OFL-1.1       nicht im Paket belegt; Quelle der Schrift
+                                                            github.com/rsms/inter (vor Veroeffentlichung
+                                                            einzeln pruefen)
+SkiaSharp + NativeAssets (3.119.4)            MIT           nuspec (Projektseite laut nuspec:
+                                                            go.microsoft.com/fwlink/?linkid=868515)
+HarfBuzzSharp + NativeAssets (8.3.1.3)        MIT           nuspec (Projektseite laut nuspec:
+                                                            go.microsoft.com/fwlink/?linkid=868515)
+MicroCom.Runtime (0.11.6)                     MIT           nuspec, github.com/kekekeks/MicroCom
+Tmds.DBus.Protocol (0.94.1)                   MIT           nuspec, github.com/tmds/Tmds.DBus
+CommunityToolkit.Mvvm (8.4.2)                 MIT           nuspec, github.com/CommunityToolkit/dotnet
+Microsoft.Data.Sqlite, .Core (10.0.13)        MIT           nuspec, github.com/dotnet/dotnet
+SQLitePCLRaw.bundle_e_sqlite3, .core,         Apache-2.0    nuspec, github.com/ericsink/SQLitePCL.raw
+  .lib.e_sqlite3, .provider.e_sqlite3
+  (2.1.13)
+SQLite (in e_sqlite3)                         gemeinfrei    sqlite.org/copyright.html
+Xamarin.AndroidX.Core.SplashScreen            MIT           nuspec (nur Android, Pruefung mit dem
+  (1.0.1.15)                                                ersten Android-Bau)
+Microsoft.Bcl.AsyncInterfaces (6.0.0)         MIT           nuspec, github.com/dotnet/runtime
+
+Nicht ausgeliefert (nur Tests): xunit.v3 und Microsoft.Testing.Platform.

@@ -1,0 +1,1106 @@
+{
+  "_hinweis": [
+    "Ab 0.52: Kampagne 2 'Großauftrag Serverfarm' (eigene Firma). Freischaltung, Dauer, Fehlerfolgen und Vergütung stehen in balancing.json unter 'serverfarm'.",
+    "Phasen in der Reihenfolge des Ablaufs. 'soll_tag' = letzter Arbeitstag der Phase im Plan (ab Start der Kampagne gezählt), 'team_punkte' = Arbeit des Teams, 'themen' = Themen, mit denen das Team rechnet.",
+    "Aufgaben im Format der Bitweiche-Aufgaben (aufgaben.json), statt 'auftraggeber' mit 'person' (siehe 'personen') und 'phase'. Neu: Typ 'angebot' (Zuschlagskalkulation mit gewähltem Gewinnzuschlag, Werte unter 'angebot') und 'bestueckung' (Server bestücken, Teile unter 'teile').",
+    "Teile der Bestückung: Laufwerke mit 'groesse' in GB und 'art' (ssd/hdd), RAM-Module mit 'groesse' in GB, Prozessoren mit 'kerne', Netzteile mit 'leistung' in W, Netzwerkkarten mit 'gbit'. 'watt' = Leistungsaufnahme je Stück."
+  ],
+  "kunde": {
+    "id": "datenhafen",
+    "name": "Datenhafen Talheim GmbH",
+    "kurz": "Datenhafen",
+    "ort": "lokschuppen",
+    "text": "Ein junger Cloud-Anbieter aus der Region: Hosting für Arztpraxen, Kanzleien und die Stadtwerke. Er baut den alten Lokschuppen der Talbahn zum Rechenzentrum um."
+  },
+  "personen": [
+    {
+      "id": "arendt",
+      "name": "Dr. Selma Arendt",
+      "rolle": "Geschäftsführerin",
+      "aussehen": {
+        "haut": "mittel",
+        "frisur": "zopf",
+        "haarfarbe": "schwarz",
+        "oberteil": "violett"
+      },
+      "text": "Will Termintreue und verhandelt hart."
+    },
+    {
+      "id": "brauer",
+      "name": "Konstantin Brauer",
+      "rolle": "Leiter Rechenzentrum",
+      "aussehen": {
+        "haut": "hell",
+        "frisur": "kurz",
+        "haarfarbe": "blond",
+        "oberteil": "cyan"
+      },
+      "text": "Hat das Lastenheft geschrieben und nimmt am Ende ab."
+    },
+    {
+      "id": "ruppert",
+      "name": "Malte Ruppert",
+      "rolle": "Einkauf",
+      "aussehen": {
+        "haut": "oliv",
+        "frisur": "kurz",
+        "haarfarbe": "braun",
+        "oberteil": "gruen"
+      },
+      "text": "Kümmert sich um Bestellungen, Lieferungen und Rechnungen."
+    }
+  ],
+  "angebot": {
+    "positionen": [
+      {
+        "text": "Projektarbeit (Planung, Einbau, Konfiguration)",
+        "menge": 200,
+        "einheit": "Std.",
+        "preis": 50
+      },
+      {
+        "text": "Hardware laut Lastenheft (Richtpreis)",
+        "menge": 1,
+        "preis": 48000
+      }
+    ],
+    "einkauf_name": "Einzelkosten gesamt"
+  },
+  "phasen": [
+    {
+      "id": "angebot",
+      "name": "Ausschreibung und Angebot",
+      "kurz": "Angebot",
+      "soll_tag": 2,
+      "team_punkte": 0,
+      "themen": [],
+      "text": "Lastenheft lesen, Angebot rechnen, Vertrag klären."
+    },
+    {
+      "id": "planung",
+      "name": "Planung und Bestellung",
+      "kurz": "Planung",
+      "soll_tag": 7,
+      "team_punkte": 50,
+      "themen": [
+        "ipv4",
+        "switching",
+        "storage"
+      ],
+      "text": "IP-Plan, VLANs und RAID planen, die Hardware bestellen."
+    },
+    {
+      "id": "lieferung",
+      "name": "Lieferung",
+      "kurz": "Lieferung",
+      "soll_tag": 10,
+      "team_punkte": 0,
+      "themen": [],
+      "text": "Die Ware ist unterwegs. Wareneingang und Stromversorgung vorbereiten."
+    },
+    {
+      "id": "einbau",
+      "name": "Einbau und Verkabelung",
+      "kurz": "Einbau",
+      "soll_tag": 16,
+      "team_punkte": 100,
+      "themen": [
+        "hardware",
+        "verkabelung"
+      ],
+      "text": "Beide Racks bestücken und verkabeln."
+    },
+    {
+      "id": "konfiguration",
+      "name": "Server bestücken und konfigurieren",
+      "kurz": "Konfiguration",
+      "soll_tag": 22,
+      "team_punkte": 100,
+      "themen": [
+        "linux",
+        "virtualisierung",
+        "netzsicherheit"
+      ],
+      "text": "Server bestücken, Hosts einrichten, Cluster und Zugänge absichern."
+    },
+    {
+      "id": "abnahme",
+      "name": "Abnahme beim Kunden",
+      "kurz": "Abnahme",
+      "soll_tag": 25,
+      "team_punkte": 25,
+      "themen": [
+        "fehlersuche",
+        "service"
+      ],
+      "text": "Abnahmetest, Mängel beheben, Protokoll unterschreiben."
+    }
+  ],
+  "aufgaben": [
+    {
+      "id": "sf-lastenheft",
+      "phase": "angebot",
+      "typ": "auswahl",
+      "person": "brauer",
+      "cat": "wirtschaft",
+      "titel": "Lastenheft und Pflichtenheft",
+      "anforderungen": {
+        "projekt": 30
+      },
+      "ticket": "Konstantin Brauer legt dir einen dicken Ordner auf den Tisch: „Unser Lastenheft. Vier Virtualisierungs-Hosts, ein Storage mit mindestens 60 TB, zwei Racks, alles redundant. Bis wann bekomme ich von Ihnen schriftlich, wie Sie das umsetzen wollen?“",
+      "frage": "Was schickst du Herrn Brauer als Antwort auf sein Lastenheft?",
+      "optionen": [
+        "Ein Pflichtenheft: Wie und womit wir die Anforderungen aus dem Lastenheft umsetzen.",
+        "Ein zweites Lastenheft mit unseren eigenen Wünschen an den Kunden.",
+        "Sofort die Auftragsbestätigung, die Details klären wir beim Einbau.",
+        "Ein Abnahmeprotokoll, damit der Kunde schon einmal unterschreiben kann."
+      ],
+      "antwort": "Ein Pflichtenheft: Wie und womit wir die Anforderungen aus dem Lastenheft umsetzen.",
+      "hilfe": "Das Lastenheft schreibt der Auftraggeber: WAS er will.\nDas Pflichtenheft schreibt der Auftragnehmer: WIE und WOMIT er es umsetzt.",
+      "erklaerung": "Lastenheft = Anforderungen des Kunden (Was?). Pflichtenheft = Umsetzungsplan des Auftragnehmers (Wie und womit?). Das Pflichtenheft wird mit dem Kunden abgestimmt und ist später die Grundlage für die Abnahme.",
+      "suchbegriffe": [
+        "Lastenheft",
+        "Pflichtenheft"
+      ]
+    },
+    {
+      "id": "sf-angebot",
+      "phase": "angebot",
+      "typ": "angebot",
+      "person": "arendt",
+      "cat": "wirtschaft",
+      "titel": "Angebot für die Serverfarm",
+      "anforderungen": {
+        "kalkulation": 35
+      },
+      "ticket": "Dr. Selma Arendt ruft an: „Herr Brauer ist begeistert von Ihrem Pflichtenheft. Jetzt brauche ich den Preis. Rechnen Sie bitte mit Ihrem üblichen Stundensatz und der Hardware laut Lastenheft. Und seien Sie nicht zu gierig, ich vergleiche.“",
+      "frage": "Wähle deinen Gewinnzuschlag und rechne das Angebot durch.",
+      "hilfe": "Einkaufspreis gesamt = Projektarbeit (Stunden × Stundensatz) + Hardware.\nHandlungskosten = Einkaufspreis × Handlungskostenzuschlag. Selbstkosten = Einkaufspreis + Handlungskosten.\nGewinn = Selbstkosten × Gewinnzuschlag. Nettoverkaufspreis = Selbstkosten + Gewinn.\nDr. Arendt akzeptiert höchstens 20 % Gewinnzuschlag. Liegst du darüber, verhandelt sie einmal herunter.",
+      "erklaerung": "Die Zuschlagskalkulation führt vom Einkaufspreis über die Selbstkosten zum Netto- und Bruttoverkaufspreis. Bei großen Aufträgen lohnt sich ein maßvoller Zuschlag: Der Kunde bleibt zufrieden und kommt wieder.",
+      "suchbegriffe": [
+        "Zuschlagskalkulation",
+        "Handlungskosten"
+      ]
+    },
+    {
+      "id": "sf-vertrag",
+      "phase": "angebot",
+      "typ": "auswahl",
+      "person": "arendt",
+      "cat": "wirtschaft",
+      "titel": "Welcher Vertrag passt?",
+      "anforderungen": {
+        "recht": 30
+      },
+      "ticket": "Dr. Arendt schickt den Vertragsentwurf: „Sie liefern, bauen ein, konfigurieren und übergeben uns eine funktionierende Serverfarm. Bezahlt wird nach der Abnahme. Unser Justiziar fragt, welche Vertragsart das ist.“",
+      "frage": "Welche Vertragsart liegt hier vor?",
+      "optionen": [
+        "Werkvertrag: Geschuldet ist der Erfolg, eine funktionierende Serverfarm mit Abnahme.",
+        "Dienstvertrag: Geschuldet ist nur die Arbeitszeit, nicht das Ergebnis.",
+        "Kaufvertrag: Es wird nur Hardware übergeben.",
+        "Mietvertrag: Die Serverfarm bleibt Eigentum deiner Firma."
+      ],
+      "antwort": "Werkvertrag: Geschuldet ist der Erfolg, eine funktionierende Serverfarm mit Abnahme.",
+      "hilfe": "Beim Werkvertrag (§ 631 BGB) schuldet der Auftragnehmer ein Ergebnis, der Kunde nimmt es ab.\nBeim Dienstvertrag (§ 611 BGB) schuldet man nur das Tätigwerden.",
+      "erklaerung": "Wer ein fertiges, funktionierendes Ergebnis zusagt, schließt einen Werkvertrag. Die Abnahme ist dabei entscheidend: Mit ihr wird die Vergütung fällig und die Gewährleistung beginnt.",
+      "suchbegriffe": [
+        "Werkvertrag",
+        "Dienstvertrag"
+      ]
+    },
+    {
+      "id": "sf-ipplan",
+      "phase": "planung",
+      "typ": "formular",
+      "art": "ip_plan",
+      "person": "brauer",
+      "cat": "netzwerk",
+      "titel": "IP-Plan für die Serverfarm",
+      "anforderungen": {
+        "ipv4": 35
+      },
+      "ticket": "Herr Brauer gibt dir das Netz 10.40.0.0/22 für die Serverfarm: „Ich brauche vier Teilnetze ohne Verschwendung: VM-Netz für 400 Geräte, Storage für 100, Management für 50 und Live-Migration für 20. Bitte ohne Lücken und das größte Netz zuerst.“",
+      "frage": "Teile das Netz mit VLSM auf und fülle den IP-Plan aus.",
+      "daten": {
+        "netz": "10.40.0.0/22",
+        "vlsm": true,
+        "teilnetze": [
+          {
+            "name": "VM-Netz",
+            "hosts": 400
+          },
+          {
+            "name": "Storage",
+            "hosts": 100
+          },
+          {
+            "name": "Management",
+            "hosts": 50
+          },
+          {
+            "name": "Live-Migration",
+            "hosts": 20
+          }
+        ]
+      },
+      "felder": [
+        "netz",
+        "praefix",
+        "broadcast"
+      ],
+      "hilfe": "VLSM: Jedes Teilnetz bekommt das kleinste passende Netz, das größte zuerst.\n400 Hosts brauchen /23 (510), 100 Hosts /25 (126), 50 Hosts /26 (62), 20 Hosts /27 (30).\nDie Netze folgen lückenlos aufeinander: Das nächste Netz beginnt direkt nach dem Broadcast des vorigen.",
+      "erklaerung": "Mit VLSM (Variable Length Subnet Masking) bekommt jedes Teilnetz genau die Größe, die es braucht. So bleibt im /22 noch Platz für spätere Erweiterungen.",
+      "suchbegriffe": [
+        "VLSM",
+        "Subnetzmaske"
+      ]
+    },
+    {
+      "id": "sf-vlan",
+      "phase": "planung",
+      "typ": "zuordnung",
+      "person": "brauer",
+      "cat": "netzwerk",
+      "titel": "VLANs der Serverfarm",
+      "anforderungen": {
+        "switching": 35
+      },
+      "ticket": "„Jeder Verkehr bekommt sein eigenes VLAN“, sagt Herr Brauer. „Ich will auf einen Blick sehen, welches VLAN wofür da ist, bevor Sie die Switches konfigurieren.“",
+      "frage": "Ordne jedem VLAN seinen Zweck zu.",
+      "paare": [
+        [
+          "VLAN 10 Management",
+          "Fernwartung der Server (iLO/IPMI) und der Hypervisor"
+        ],
+        [
+          "VLAN 20 Storage",
+          "iSCSI-Verkehr zwischen Hosts und Storage"
+        ],
+        [
+          "VLAN 30 VM-Netz",
+          "Netz der virtuellen Maschinen der Kunden"
+        ],
+        [
+          "VLAN 40 Live-Migration",
+          "Verschieben laufender VMs zwischen den Hosts"
+        ]
+      ],
+      "hilfe": "Management = Verwaltung der Geräte, Storage = Datenverkehr zum Speicher, VM-Netz = Kundendaten, Live-Migration = Umzug laufender VMs.",
+      "erklaerung": "Getrennte VLANs halten den Verkehr auseinander: Speicherzugriffe stören die Kunden nicht, und die Verwaltung ist vom VM-Netz aus nicht erreichbar.",
+      "suchbegriffe": [
+        "VLAN",
+        "iSCSI"
+      ]
+    },
+    {
+      "id": "sf-raid",
+      "phase": "planung",
+      "typ": "formular",
+      "art": "raid",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "RAID für das Storage",
+      "anforderungen": {
+        "storage": 35
+      },
+      "ticket": "„Im Storage sollen erst einmal sechs Festplatten mit je 16 TB als RAID 6 laufen“, sagt Herr Brauer. „Bevor wir bestellen, will ich die Zahlen sehen: Was bleibt nutzbar und wie viele Platten dürfen ausfallen?“",
+      "frage": "Berechne die Werte für das RAID.",
+      "daten": {
+        "level": "RAID 6",
+        "platten": 6,
+        "groesse": 16,
+        "einheit": "TB"
+      },
+      "hilfe": "RAID 6 verteilt doppelte Parität: Nutzkapazität = (Anzahl − 2) × Größe.\nEs dürfen zwei Platten gleichzeitig ausfallen.",
+      "erklaerung": "RAID 6 opfert zwei Platten für die Parität und übersteht dafür zwei gleichzeitige Ausfälle. Bei großen Platten ist das wichtig, weil der Wiederaufbau lange dauert.",
+      "suchbegriffe": [
+        "RAID 6",
+        "Parität"
+      ]
+    },
+    {
+      "id": "sf-bestellung",
+      "phase": "planung",
+      "typ": "bestellung",
+      "person": "ruppert",
+      "cat": "wirtschaft",
+      "titel": "Hardware für die Serverfarm bestellen",
+      "anforderungen": {
+        "beschaffung": 35
+      },
+      "ticket": "Malte Ruppert vom Einkauf schickt drei Angebote: „Bitte bestellen Sie alles, was laut Pflichtenheft in die Racks kommt. Die Ware muss in vier Arbeitstagen da sein, und das Budget von 20.000 € ist hart. USV 3000 W, kleiner Switch und Kupfer-Patchpanel liegen bei Ihnen im Lager.“",
+      "frage": "Stell den Warenkorb zusammen: alles, was gebraucht wird, nichts doppelt, im Budget und rechtzeitig.",
+      "bedarf": [
+        {
+          "text": "Virtualisierungs-Host mit 12 Schächten",
+          "typ": "server",
+          "menge": 4,
+          "min": {
+            "schaechte": 12
+          }
+        },
+        {
+          "text": "Storage-System mit 24 Schächten",
+          "typ": "storage",
+          "menge": 1,
+          "min": {
+            "schaechte": 24
+          }
+        },
+        {
+          "text": "Switch mit 48 × 25 GbE",
+          "typ": "switch",
+          "menge": 2,
+          "min": {
+            "ports": 48,
+            "gbit": 25
+          }
+        },
+        {
+          "text": "USV mit mindestens 5000 W",
+          "typ": "usv",
+          "menge": 1,
+          "min": {
+            "leistung": 5000
+          }
+        },
+        {
+          "text": "LWL-Patchpanel mit 48 Fasern",
+          "typ": "patchpanel",
+          "menge": 2,
+          "min": {
+            "fasern": 48
+          }
+        }
+      ],
+      "angebote": [
+        {
+          "id": "h1",
+          "teil": "host_2he",
+          "haendler": "serverhaus",
+          "preis": 2100,
+          "lieferzeit": 3
+        },
+        {
+          "id": "h2",
+          "teil": "host_2he",
+          "haendler": "bitlager",
+          "preis": 1950,
+          "lieferzeit": 6
+        },
+        {
+          "id": "h3",
+          "teil": "srv_2he",
+          "haendler": "bitlager",
+          "preis": 1400,
+          "lieferzeit": 2
+        },
+        {
+          "id": "s1",
+          "teil": "storage_2he_24",
+          "haendler": "serverhaus",
+          "preis": 2600,
+          "lieferzeit": 4
+        },
+        {
+          "id": "s2",
+          "teil": "storage_2he",
+          "haendler": "bitlager",
+          "preis": 1800,
+          "lieferzeit": 2
+        },
+        {
+          "id": "w1",
+          "teil": "sw_48_25g",
+          "haendler": "kabelkoenig",
+          "preis": 2900,
+          "lieferzeit": 2
+        },
+        {
+          "id": "w2",
+          "teil": "sw_48_25g",
+          "haendler": "bitlager",
+          "preis": 2750,
+          "lieferzeit": 5
+        },
+        {
+          "id": "w3",
+          "teil": "sw_48_poe",
+          "haendler": "bitlager",
+          "preis": 680,
+          "lieferzeit": 1
+        },
+        {
+          "id": "u1",
+          "teil": "usv_5000",
+          "haendler": "serverhaus",
+          "preis": 1900,
+          "lieferzeit": 3
+        },
+        {
+          "id": "u2",
+          "teil": "usv_3000",
+          "haendler": "bitlager",
+          "preis": 890,
+          "lieferzeit": 1
+        },
+        {
+          "id": "p1",
+          "teil": "pp_48_lwl",
+          "haendler": "kabelkoenig",
+          "preis": 140,
+          "lieferzeit": 2
+        },
+        {
+          "id": "p2",
+          "teil": "pp_48",
+          "haendler": "serverhaus",
+          "preis": 75,
+          "lieferzeit": 2
+        }
+      ],
+      "budget": 20000,
+      "frist": 4,
+      "hilfe": "Prüfe jedes Angebot gegen den Bedarf: Schächte, Ports, Geschwindigkeit, Leistung.\nAchte auf die Lieferzeit: Alles muss in 4 Arbeitstagen da sein.\nBei gleicher Ware gewinnt das günstigere Angebot, solange es rechtzeitig kommt.",
+      "erklaerung": "Bei einer Beschaffung zählt nicht nur der Preis: Die Ware muss die Anforderungen erfüllen und rechtzeitig da sein. Ein Datenbank-Server mit wenigen Schächten oder ein Switch mit 1 GbE sieht billig aus, passt aber nicht zum Pflichtenheft.",
+      "suchbegriffe": [
+        "Angebotsvergleich",
+        "Beschaffung"
+      ]
+    },
+    {
+      "id": "sf-wareneingang",
+      "phase": "lieferung",
+      "typ": "auswahl",
+      "person": "ruppert",
+      "cat": "wirtschaft",
+      "titel": "Wareneingang prüfen",
+      "anforderungen": {
+        "beschaffung": 30
+      },
+      "ticket": "Die erste Palette ist da. Beim Abgleich fällt dir auf: Auf einem Karton klebt eine Seriennummer, die nicht auf dem Lieferschein steht, und eine Ecke ist eingedrückt. Der Fahrer will schnell weiter und hält dir den Scanner zum Unterschreiben hin.",
+      "frage": "Wie gehst du richtig vor?",
+      "optionen": [
+        "Schaden auf dem Lieferschein vermerken, nur unter Vorbehalt unterschreiben, Lieferanten sofort informieren.",
+        "Unterschreiben, der Fahrer hat es eilig. Mängel kann man später immer noch melden.",
+        "Die ganze Lieferung ablehnen und zurückschicken.",
+        "Den Karton selbst öffnen und das Gerät reparieren, bevor du unterschreibst."
+      ],
+      "antwort": "Schaden auf dem Lieferschein vermerken, nur unter Vorbehalt unterschreiben, Lieferanten sofort informieren.",
+      "hilfe": "Beim Wareneingang prüfst du Menge, Art und äußerlich erkennbare Schäden.\nOffene Mängel müssen sofort gerügt werden (Rügepflicht beim Handelskauf, § 377 HGB).",
+      "erklaerung": "Wer offensichtliche Mängel ohne Vermerk quittiert, hat später schlechte Karten. Darum: Abweichungen auf dem Lieferschein festhalten, unter Vorbehalt annehmen und unverzüglich schriftlich rügen.",
+      "suchbegriffe": [
+        "Wareneingang",
+        "Mängel"
+      ]
+    },
+    {
+      "id": "sf-usv",
+      "phase": "lieferung",
+      "typ": "auswahl",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "Welche USV für das Rechenzentrum?",
+      "anforderungen": {
+        "it_betrieb": 30
+      },
+      "ticket": "Während ihr auf die Lieferung wartet, fragt Herr Brauer: „Die USV im Rack B soll die Server vor jeder Netzstörung schützen, auch vor Spannungsspitzen und Frequenzschwankungen. Welche Bauart haben Sie eingeplant?“",
+      "frage": "Welche USV-Bauart erfüllt das?",
+      "optionen": [
+        "Eine Online-USV (VFI, Doppelwandler): Die Server hängen immer am Wechselrichter.",
+        "Eine Offline-USV (VFD): Sie schaltet erst bei Stromausfall um.",
+        "Eine Line-Interactive-USV (VI): Sie gleicht nur kleine Spannungsschwankungen aus.",
+        "Eine Steckdosenleiste mit Überspannungsschutz reicht völlig."
+      ],
+      "antwort": "Eine Online-USV (VFI, Doppelwandler): Die Server hängen immer am Wechselrichter.",
+      "hilfe": "VFD (Offline): schaltet erst bei Ausfall um. VI (Line-Interactive): regelt Spannung nach.\nVFI (Online/Doppelwandler): Strom wird immer gleichgerichtet und neu erzeugt, schützt vor allem.",
+      "erklaerung": "Im Rechenzentrum ist die Online-USV (VFI) Standard: Sie trennt die Server dauerhaft vom Netz und schützt vor Ausfall, Spannungs- und Frequenzproblemen, ohne Umschaltzeit.",
+      "suchbegriffe": [
+        "USV",
+        "VFI"
+      ]
+    },
+    {
+      "id": "sf-rack-a",
+      "phase": "einbau",
+      "typ": "rack",
+      "person": "brauer",
+      "cat": "netzwerk",
+      "titel": "Rack A: Netz und Strom",
+      "anforderungen": {
+        "verkabelung": 35
+      },
+      "ticket": "Rack A wird das Herz des Netzes: zwei 25-GbE-Switches mit LWL-Patchpanels, dazu der kleine Management-Switch mit Kupfer-Patchpanel und die USV aus eurem Lager. „Lassen Sie mindestens 20 HE für später frei“, bittet Herr Brauer.",
+      "frage": "Baue die Geräte so ein, dass alle Regeln erfüllt sind.",
+      "schrank": {
+        "he": 42,
+        "traglast": 800,
+        "kuehlung": 2000
+      },
+      "geraete": [
+        "usv_3000",
+        "sw_48_25g",
+        "sw_48_25g",
+        "pp_48_lwl",
+        "pp_48_lwl",
+        "sw_24",
+        "pp_24"
+      ],
+      "vorgaben": {
+        "mindestens": {
+          "usv": 1,
+          "switch": 3,
+          "patchpanel": 3
+        },
+        "frei_min": 20
+      },
+      "hilfe": "Die USV gehört ganz nach unten, schwere Geräte ins untere Drittel.\nJeder Switch braucht ein Patchpanel direkt darüber oder darunter (kurze Patchkabel).\nDie USV muss mit 20 % Reserve alle Geräte versorgen.",
+      "erklaerung": "Ordnung im Rack spart später viel Zeit: schwere Geräte unten (Kippgefahr), Patchpanel direkt am Switch, Strom mit Reserve und Platz für Erweiterungen.",
+      "suchbegriffe": [
+        "Höheneinheit",
+        "Patchfeld"
+      ]
+    },
+    {
+      "id": "sf-rack-b",
+      "phase": "einbau",
+      "typ": "rack",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "Rack B: Server und Storage",
+      "anforderungen": {
+        "hardware": 35
+      },
+      "ticket": "Rack B nimmt die vier Hosts, das Storage-System und die neue USV 5000 W auf. „Die Hosts wiegen je 30 kg, bitte nichts Schweres nach oben. Und auch hier 20 HE frei lassen, wir wollen wachsen.“",
+      "frage": "Baue die Geräte so ein, dass alle Regeln erfüllt sind.",
+      "schrank": {
+        "he": 42,
+        "traglast": 1000,
+        "kuehlung": 4500
+      },
+      "geraete": [
+        "usv_5000",
+        "storage_2he_24",
+        "host_2he",
+        "host_2he",
+        "host_2he",
+        "host_2he"
+      ],
+      "vorgaben": {
+        "mindestens": {
+          "usv": 1,
+          "server": 4,
+          "storage": 1
+        },
+        "frei_min": 20
+      },
+      "hilfe": "Alles ab 20 kg muss im unteren Drittel beginnen (bis HE 14).\nDie USV kommt ganz nach unten, darüber Storage und Hosts dicht an dicht.",
+      "erklaerung": "Schwere Geräte unten senken den Schwerpunkt, der Schrank kann nicht kippen. Dicht gestapelte Geräte halten den Luftstrom der Kühlung sauber.",
+      "suchbegriffe": [
+        "Rack",
+        "Serverschrank"
+      ]
+    },
+    {
+      "id": "sf-kabel",
+      "phase": "einbau",
+      "typ": "zuordnung",
+      "person": "brauer",
+      "cat": "netzwerk",
+      "titel": "Das richtige Kabel für jede Strecke",
+      "anforderungen": {
+        "verkabelung": 35
+      },
+      "ticket": "Die Kabeltrommeln stehen bereit. „Für jede Strecke das passende Medium, bitte“, sagt Herr Brauer. „Ich will keine 15 Meter Kupfer zwischen den Racks sehen.“",
+      "frage": "Ordne jeder Strecke das passende Kabel zu.",
+      "paare": [
+        [
+          "Host zum Switch im Nachbar-Rack, 25 GbE, 3 m",
+          "DAC-Kabel (Direct Attach Copper)"
+        ],
+        [
+          "Rack A zu Rack B über den Kabelkanal, 25 GbE, 15 m",
+          "LWL Multimode OM4 mit SFP28-SR"
+        ],
+        [
+          "Management-Anschlüsse der Server, 1 GbE",
+          "Kupfer Cat 6A mit RJ45"
+        ],
+        [
+          "Anbindung an den Provider, 2 km",
+          "LWL Singlemode OS2"
+        ]
+      ],
+      "hilfe": "DAC: kurze Strecken bis wenige Meter, sehr günstig.\nOM4 (Multimode): bis etwa 100 m bei 25 GbE.\nOS2 (Singlemode): viele Kilometer.\nCat 6A: Kupfer mit RJ45 bis 100 m, für 1 bis 10 GbE.",
+      "erklaerung": "Die Strecke bestimmt das Medium: DAC für kurze Wege im Rack, Multimode-LWL im Gebäude, Singlemode-LWL über Kilometer und Kupfer für einfache 1-GbE-Anschlüsse.",
+      "suchbegriffe": [
+        "Lichtwellenleiter",
+        "DAC"
+      ]
+    },
+    {
+      "id": "sf-bestueckung",
+      "phase": "konfiguration",
+      "typ": "bestueckung",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "Server bestücken",
+      "anforderungen": {
+        "hardware": 40,
+        "storage": 35
+      },
+      "ticket": "Die Gehäuse sind eingebaut, jetzt kommt das Innenleben. Herr Brauer zeigt auf das Lastenheft: „Jeder Host mindestens 768 GB RAM und 48 Kerne, gespiegelte SSDs, 25 GbE und redundante Netzteile. Das Storage mit mindestens 60 TB, und zwei Platten dürfen gleichzeitig ausfallen. Budget: 32.000 €.“",
+      "frage": "Bestücke Host und Storage so, dass das Lastenheft erfüllt ist.",
+      "bestueckung": {
+        "rack": "sf-rack-b",
+        "budget": 30000,
+        "vorlagen": [
+          {
+            "id": "host",
+            "name": "Virtualisierungs-Host",
+            "anzahl": 4,
+            "geraet": "host_2he",
+            "schaechte": 12,
+            "ram_baenke": 24,
+            "sockel": 2,
+            "netzteil_plaetze": 2,
+            "grundlast": 120,
+            "soll": {
+              "ram_min": 768,
+              "kerne_min": 48,
+              "gbit_min": 25,
+              "redundant": true,
+              "netto_min": 1800,
+              "toleranz_min": 1,
+              "art": "ssd",
+              "raid": [
+                "RAID 1",
+                "RAID 10"
+              ]
+            }
+          },
+          {
+            "id": "storage",
+            "name": "Storage-System",
+            "anzahl": 1,
+            "geraet": "storage_2he_24",
+            "schaechte": 24,
+            "ram_baenke": 0,
+            "sockel": 0,
+            "netzteil_plaetze": 2,
+            "grundlast": 90,
+            "soll": {
+              "gbit_min": 25,
+              "redundant": true,
+              "netto_min": 60000,
+              "toleranz_min": 2
+            }
+          }
+        ]
+      },
+      "hilfe": "Rechne für jede Vorlage: RAM = Module × Größe, Kerne = Prozessoren × Kerne.\nRedundante Netzteile: zwei Stück, und jedes muss den Server allein versorgen können.\nRAID: Die Nutzkapazität kommt aus derselben Rechnung wie der RAID-Rechner.\nBehalte Strom (USV mit 20 % Reserve), Kühlung und Budget im Blick.",
+      "erklaerung": "Beim Bestücken zählt das Zusammenspiel: Genug RAM und Kerne für die VMs, ein RAID-Level mit passender Ausfalltoleranz, redundante Netzteile und am Ende ein Rack, das Strom, Kühlung und Budget einhält.",
+      "suchbegriffe": [
+        "RAID",
+        "Arbeitsspeicher"
+      ]
+    },
+    {
+      "id": "sf-konsole",
+      "phase": "konfiguration",
+      "typ": "terminal",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "Host 1 prüfen",
+      "anforderungen": {
+        "linux": 35
+      },
+      "system": "linux",
+      "prompt": "root@host1:~#",
+      "start": [
+        "Debian 12 · Virtualisierungs-Host host1",
+        "Letzte Anmeldung: heute 07:58 aus dem Management-VLAN"
+      ],
+      "schritte": [
+        {
+          "ziel": "Prüfen, ob der Spiegel der beiden System-SSDs sauber läuft",
+          "befehle": [
+            {
+              "befehl": "cat /proc/mdstat",
+              "richtig": true,
+              "ausgabe": [
+                "Personalities : [raid1]",
+                "md0 : active raid1 sdb1[1] sda1[0]",
+                "      1874715648 blocks super 1.2 [2/2] [UU]"
+              ]
+            },
+            {
+              "befehl": "fdisk -l /dev/sda",
+              "ausgabe": [
+                "Disk /dev/sda: 1.75 TiB",
+                "Device     Start        End    Sectors  Size Type",
+                "/dev/sda1   2048 3749431295 3749429248  1.7T Linux RAID"
+              ],
+              "hinweis": "fdisk zeigt die Partitionen, aber nicht, ob der Spiegel synchron ist. Das steht in /proc/mdstat."
+            },
+            {
+              "befehl": "mdadm --zero-superblock /dev/sda1",
+              "gefaehrlich": true,
+              "ausgabe": [
+                "Herr Brauer zieht die Tastatur weg: „Halt! Damit löschen Sie",
+                "die RAID-Kennung der laufenden Systemplatte.“"
+              ],
+              "hinweis": "--zero-superblock löscht die RAID-Metadaten. Auf einer laufenden Platte zerstört das den Spiegel."
+            }
+          ]
+        },
+        {
+          "ziel": "Prüfen, ob die Netzwerkkarte wirklich mit 25 GbE läuft",
+          "befehle": [
+            {
+              "befehl": "ip route",
+              "ausgabe": [
+                "default via 10.40.3.193 dev ens1f0",
+                "10.40.3.192/27 dev ens1f0 proto kernel"
+              ],
+              "hinweis": "ip route zeigt Routen, nicht die Geschwindigkeit der Verbindung."
+            },
+            {
+              "befehl": "ethtool ens1f0",
+              "richtig": true,
+              "ausgabe": [
+                "Settings for ens1f0:",
+                "\tSpeed: 25000Mb/s",
+                "\tDuplex: Full",
+                "\tLink detected: yes"
+              ]
+            },
+            {
+              "befehl": "ip link set ens1f0 down",
+              "ausgabe": [
+                "Die SSH-Verbindung bricht ab. Herr Brauer seufzt und holt",
+                "den Schlüssel für die Konsole im Rack."
+              ],
+              "hinweis": "Damit schaltest du die Schnittstelle ab, über die du gerade angemeldet bist."
+            }
+          ]
+        },
+        {
+          "ziel": "Die Uhrzeit automatisch synchronisieren (wichtig für Cluster und Protokolle)",
+          "befehle": [
+            {
+              "befehl": "date -s \"08:00\"",
+              "ausgabe": [
+                "Do 1. Okt 08:00:00 CEST 2026"
+              ],
+              "hinweis": "Von Hand gestellt läuft die Uhr wieder auseinander. Im Cluster brauchen alle Hosts dieselbe, automatisch abgeglichene Zeit."
+            },
+            {
+              "befehl": "timedatectl set-ntp true",
+              "richtig": true,
+              "ausgabe": [
+                ""
+              ]
+            },
+            {
+              "befehl": "hwclock --systohc",
+              "ausgabe": [
+                ""
+              ],
+              "hinweis": "Das schreibt die Systemzeit nur in die Hardware-Uhr. Synchronisiert wird damit nichts."
+            }
+          ]
+        }
+      ],
+      "hilfe": "Software-RAID unter Linux: Zustand in /proc/mdstat, [UU] heißt beide Platten aktiv.\nethtool zeigt Geschwindigkeit und Link einer Netzwerkkarte.\ntimedatectl set-ntp true schaltet die automatische Zeitsynchronisation (NTP) ein.",
+      "erklaerung": "Vor der Übergabe prüft man die Grundlagen jedes Hosts: läuft der Spiegel, hat die Karte die richtige Geschwindigkeit, stimmt die Zeit. Im Cluster sind falsche Uhren eine häufige Fehlerquelle.",
+      "suchbegriffe": [
+        "RAID-Level",
+        "Linux-Befehl"
+      ]
+    },
+    {
+      "id": "sf-cluster",
+      "phase": "konfiguration",
+      "typ": "auswahl",
+      "person": "brauer",
+      "cat": "systeme",
+      "titel": "Ausfallsicherheit der Hosts",
+      "anforderungen": {
+        "virtualisierung": 35
+      },
+      "ticket": "„Wenn einer der vier Hosts ausfällt, sollen seine VMs nach kurzer Zeit auf den anderen weiterlaufen, ohne dass nachts jemand kommen muss“, sagt Herr Brauer.",
+      "frage": "Was richtest du dafür ein?",
+      "optionen": [
+        "Einen Cluster mit Hochverfügbarkeit (HA), dessen Hosts alle auf das gemeinsame Storage zugreifen.",
+        "Auf jedem Host eine tägliche Sicherung der VMs auf eine USB-Festplatte.",
+        "Jeden Host mit doppelt so viel RAM, dann fällt er nicht aus.",
+        "Ein RAID 0 über die SSDs aller Hosts."
+      ],
+      "antwort": "Einen Cluster mit Hochverfügbarkeit (HA), dessen Hosts alle auf das gemeinsame Storage zugreifen.",
+      "hilfe": "Hochverfügbarkeit (HA) startet VMs eines ausgefallenen Hosts automatisch auf einem anderen neu.\nDafür müssen alle Hosts dieselben VM-Dateien sehen: gemeinsames Storage.",
+      "erklaerung": "Ein HA-Cluster überwacht die Hosts gegenseitig. Fällt einer aus, starten seine VMs auf den anderen neu. Voraussetzung ist ein gemeinsames Storage, eine Sicherung ersetzt das nicht.",
+      "suchbegriffe": [
+        "Hochverfügbarkeit",
+        "Cluster"
+      ]
+    },
+    {
+      "id": "sf-haertung",
+      "phase": "konfiguration",
+      "typ": "auswahl",
+      "person": "arendt",
+      "cat": "sicherheit",
+      "titel": "Management absichern",
+      "anforderungen": {
+        "haertung": 35
+      },
+      "ticket": "Dr. Arendt hat vom Auditor ihres ISO-27001-Zertifikats eine Frage weitergeleitet: „Wie stellen Sie sicher, dass niemand Unbefugtes an die Fernwartung der Server und an die Hypervisor-Oberfläche kommt?“",
+      "frage": "Was ist die richtige Antwort für den Auditor?",
+      "optionen": [
+        "Nur aus dem Management-VLAN erreichbar, mit persönlichen Admin-Konten und Mehr-Faktor-Anmeldung.",
+        "Die Oberflächen sind im VM-Netz erreichbar, aber mit einem langen gemeinsamen Admin-Passwort.",
+        "Wir haben den Standard-Benutzer gelassen, dafür ist die Adresse geheim.",
+        "Die Fernwartung ist aus dem Internet erreichbar, damit wir schneller helfen können."
+      ],
+      "antwort": "Nur aus dem Management-VLAN erreichbar, mit persönlichen Admin-Konten und Mehr-Faktor-Anmeldung.",
+      "hilfe": "Härtung heißt: Angriffsfläche klein halten (getrenntes Netz), Konten nachvollziehbar (persönlich statt gemeinsam) und starke Anmeldung (MFA).",
+      "erklaerung": "Verwaltungszugänge gehören in ein eigenes, abgeschottetes Netz. Persönliche Konten machen nachvollziehbar, wer was getan hat, MFA schützt vor gestohlenen Passwörtern.",
+      "suchbegriffe": [
+        "Härtung",
+        "Zwei-Faktor"
+      ]
+    },
+    {
+      "id": "sf-abnahmetest",
+      "phase": "abnahme",
+      "typ": "diagnose",
+      "person": "brauer",
+      "cat": "netzwerk",
+      "titel": "Abnahmetest: Live-Migration bricht ab",
+      "anforderungen": {
+        "fehlersuche": 40
+      },
+      "ticket": "Beim Abnahmetest verschiebt Herr Brauer eine laufende VM von Host 1 auf Host 2. Nach ein paar Sekunden bricht die Live-Migration ab: „Zeitüberschreitung“. Alles andere läuft. „Das muss vor der Unterschrift laufen“, sagt er.",
+      "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+      "pruefungen": [
+        {
+          "id": "ping",
+          "text": "Host 2 im VLAN 40 normal anpingen",
+          "ergebnis": "64 bytes from 10.40.3.226: icmp_seq=1 ttl=64 time=0.21 ms. Antwortet."
+        },
+        {
+          "id": "jumbo",
+          "text": "Host 2 mit großem Paket anpingen (ping -M do -s 8972)",
+          "entscheidend": true,
+          "ergebnis": "ping: local error: message too long. 100 % Paketverlust bei 9000-Byte-Paketen."
+        },
+        {
+          "id": "switch",
+          "text": "Einstellungen der Switch-Ports im VLAN 40 ansehen",
+          "entscheidend": true,
+          "ergebnis": "Ports 1 bis 8, VLAN 40: MTU 1500. Auf den Hosts ist für die Migration MTU 9000 eingestellt."
+        },
+        {
+          "id": "ram",
+          "text": "Freien Arbeitsspeicher auf Host 2 prüfen",
+          "ergebnis": "612 GB frei. Mehr als genug für die Test-VM."
+        },
+        {
+          "id": "storage",
+          "text": "Zugriff beider Hosts auf das Storage prüfen",
+          "ergebnis": "Beide Hosts sehen alle Datenspeicher, Pfade aktiv."
+        },
+        {
+          "id": "kabel",
+          "text": "Link-LEDs und DAC-Kabel an Host 1 und 2 ansehen",
+          "ergebnis": "Alle Links grün, 25 GbE, keine Fehlerzähler."
+        },
+        {
+          "id": "lizenz",
+          "text": "Lizenz des Hypervisors ansehen",
+          "ergebnis": "Lizenz gültig, Live-Migration ist enthalten."
+        }
+      ],
+      "ziel_pruefungen": 3,
+      "ursachen": [
+        "MTU passt nicht: Die Hosts senden Jumbo Frames (9000), der Switch lässt in VLAN 40 nur 1500 durch.",
+        "Host 2 hat zu wenig Arbeitsspeicher für die VM.",
+        "Ein DAC-Kabel ist defekt.",
+        "Die Lizenz für Live-Migration fehlt."
+      ],
+      "ursache": "MTU passt nicht: Die Hosts senden Jumbo Frames (9000), der Switch lässt in VLAN 40 nur 1500 durch.",
+      "massnahmen": [
+        "Auf den Switch-Ports im VLAN 40 Jumbo Frames (MTU 9000) erlauben und den Test wiederholen",
+        "Alle DAC-Kabel tauschen",
+        "Mehr Arbeitsspeicher in Host 2 einbauen",
+        "Die Firewall zwischen den Hosts abschalten"
+      ],
+      "massnahme": "Auf den Switch-Ports im VLAN 40 Jumbo Frames (MTU 9000) erlauben und den Test wiederholen",
+      "unsicher": [
+        "Die Firewall zwischen den Hosts abschalten"
+      ],
+      "hilfe": "Kleine Pakete gehen durch, große nicht? Dann liegt es fast immer an der MTU.\nping -M do verbietet das Zerlegen: So findest du heraus, welche Paketgröße durchkommt.",
+      "erklaerung": "Jumbo Frames müssen auf dem ganzen Weg erlaubt sein: Hosts UND Switch. Sonst laufen kleine Pakete (ping) problemlos, große Übertragungen wie eine Live-Migration brechen ab.",
+      "suchbegriffe": [
+        "MTU",
+        "Jumbo Frames"
+      ]
+    },
+    {
+      "id": "sf-protokoll",
+      "phase": "abnahme",
+      "typ": "auswahl",
+      "person": "arendt",
+      "cat": "wirtschaft",
+      "titel": "Das Abnahmeprotokoll",
+      "anforderungen": {
+        "service": 30
+      },
+      "ticket": "Alles läuft. Dr. Arendt und Herr Brauer sitzen mit dir im Besprechungsraum des Lokschuppens. „Bevor wir unterschreiben: Was muss in das Abnahmeprotokoll?“",
+      "frage": "Was gehört in ein Abnahmeprotokoll?",
+      "optionen": [
+        "Die geprüften Leistungen, festgestellte Mängel mit Frist zur Behebung, Datum und Unterschriften beider Seiten.",
+        "Nur der Gesamtpreis und die Bankverbindung.",
+        "Eine Liste aller Passwörter der Server.",
+        "Nichts, eine mündliche Abnahme reicht bei so einem Auftrag."
+      ],
+      "antwort": "Die geprüften Leistungen, festgestellte Mängel mit Frist zur Behebung, Datum und Unterschriften beider Seiten.",
+      "hilfe": "Das Abnahmeprotokoll dokumentiert, WAS abgenommen wurde, WELCHE Mängel offen sind und WANN.\nMit der Abnahme werden Vergütung und Gewährleistung wirksam.",
+      "erklaerung": "Das Abnahmeprotokoll ist der Abschluss des Werkvertrags: geprüfte Leistungen, Mängel mit Fristen, Datum und Unterschriften. Passwörter gehören nie hinein.",
+      "suchbegriffe": [
+        "Abnahme",
+        "Abnahmeprotokoll"
+      ]
+    }
+  ],
+  "teile": {
+    "laufwerk": [
+      {
+        "id": "ssd_960",
+        "name": "SSD 960 GB",
+        "art": "ssd",
+        "groesse": 960,
+        "preis": 180,
+        "watt": 6
+      },
+      {
+        "id": "ssd_1920",
+        "name": "SSD 1,92 TB",
+        "art": "ssd",
+        "groesse": 1920,
+        "preis": 290,
+        "watt": 6
+      },
+      {
+        "id": "ssd_3840",
+        "name": "SSD 3,84 TB",
+        "art": "ssd",
+        "groesse": 3840,
+        "preis": 520,
+        "watt": 7
+      },
+      {
+        "id": "hdd_8000",
+        "name": "HDD 8 TB",
+        "art": "hdd",
+        "groesse": 8000,
+        "preis": 230,
+        "watt": 9
+      },
+      {
+        "id": "hdd_16000",
+        "name": "HDD 16 TB",
+        "art": "hdd",
+        "groesse": 16000,
+        "preis": 390,
+        "watt": 10
+      }
+    ],
+    "ram": [
+      {
+        "id": "ram_32",
+        "name": "RAM-Modul 32 GB",
+        "groesse": 32,
+        "preis": 110,
+        "watt": 4
+      },
+      {
+        "id": "ram_64",
+        "name": "RAM-Modul 64 GB",
+        "groesse": 64,
+        "preis": 200,
+        "watt": 5
+      },
+      {
+        "id": "ram_128",
+        "name": "RAM-Modul 128 GB",
+        "groesse": 128,
+        "preis": 430,
+        "watt": 7
+      }
+    ],
+    "cpu": [
+      {
+        "id": "cpu_16",
+        "name": "Prozessor mit 16 Kernen",
+        "kerne": 16,
+        "preis": 900,
+        "watt": 150
+      },
+      {
+        "id": "cpu_24",
+        "name": "Prozessor mit 24 Kernen",
+        "kerne": 24,
+        "preis": 1400,
+        "watt": 185
+      },
+      {
+        "id": "cpu_32",
+        "name": "Prozessor mit 32 Kernen",
+        "kerne": 32,
+        "preis": 2100,
+        "watt": 225
+      }
+    ],
+    "netzteil": [
+      {
+        "id": "nt_800",
+        "name": "Netzteil 800 W",
+        "leistung": 800,
+        "preis": 160,
+        "watt": 0
+      },
+      {
+        "id": "nt_1100",
+        "name": "Netzteil 1100 W",
+        "leistung": 1100,
+        "preis": 220,
+        "watt": 0
+      },
+      {
+        "id": "nt_1600",
+        "name": "Netzteil 1600 W",
+        "leistung": 1600,
+        "preis": 310,
+        "watt": 0
+      }
+    ],
+    "nic": [
+      {
+        "id": "nic_10",
+        "name": "Netzwerkkarte 2 × 10 GbE (RJ45)",
+        "gbit": 10,
+        "preis": 220,
+        "watt": 12
+      },
+      {
+        "id": "nic_25",
+        "name": "Netzwerkkarte 2 × 25 GbE (SFP28)",
+        "gbit": 25,
+        "preis": 380,
+        "watt": 14
+      }
+    ]
+  }
+}

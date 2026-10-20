@@ -1,0 +1,688 @@
+{
+ "_hinweis": "Vergleichswerte Spike C, erzeugt von werkzeuge/vergleich/erzeuge_daten.py",
+ "tabellen": {
+  "abschlussprojekt": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "projekt",
+    "feld",
+    "wert",
+    "uid"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß abschlussprojekt/projekt/0",
+     "Prüfwert äöüß abschlussprojekt/feld/0",
+     "Prüfwert äöüß abschlussprojekt/wert/0",
+     "abschlussprojekt-uid-0"
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß abschlussprojekt/projekt/1",
+     "Prüfwert äöüß abschlussprojekt/feld/1",
+     "Prüfwert äöüß abschlussprojekt/wert/1",
+     "abschlussprojekt-uid-1"
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß abschlussprojekt/projekt/2",
+     "Prüfwert äöüß abschlussprojekt/feld/2",
+     "Prüfwert äöüß abschlussprojekt/wert/2",
+     "abschlussprojekt-uid-2"
+    ]
+   ]
+  },
+  "ap1_events": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "scenario_index",
+    "title",
+    "theme",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     1,
+     "Prüfwert äöüß ap1_events/title/0",
+     "Prüfwert äöüß ap1_events/theme/0",
+     1,
+     "ap1_events-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     8,
+     "Prüfwert äöüß ap1_events/title/1",
+     "Prüfwert äöüß ap1_events/theme/1",
+     8,
+     "ap1_events-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     15,
+     "Prüfwert äöüß ap1_events/title/2",
+     "Prüfwert äöüß ap1_events/theme/2",
+     15,
+     "ap1_events-uid-2",
+     15
+    ]
+   ]
+  },
+  "card_events": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "category",
+    "question",
+    "mode",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß card_events/category/0",
+     "Prüfwert äöüß card_events/question/0",
+     "Prüfwert äöüß card_events/mode/0",
+     1,
+     "card_events-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß card_events/category/1",
+     "Prüfwert äöüß card_events/question/1",
+     "Prüfwert äöüß card_events/mode/1",
+     8,
+     "card_events-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß card_events/category/2",
+     "Prüfwert äöüß card_events/question/2",
+     "Prüfwert äöüß card_events/mode/2",
+     15,
+     "card_events-uid-2",
+     15
+    ]
+   ]
+  },
+  "project_events": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "project_index",
+    "title",
+    "category",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     1,
+     "Prüfwert äöüß project_events/title/0",
+     "Prüfwert äöüß project_events/category/0",
+     1,
+     "project_events-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     8,
+     "Prüfwert äöüß project_events/title/1",
+     "Prüfwert äöüß project_events/category/1",
+     8,
+     "project_events-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     15,
+     "Prüfwert äöüß project_events/title/2",
+     "Prüfwert äöüß project_events/category/2",
+     15,
+     "project_events-uid-2",
+     15
+    ]
+   ]
+  },
+  "pruefungen": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "art",
+    "punkte",
+    "note",
+    "dauer",
+    "daten",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "REAL",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß pruefungen/art/0",
+     0.25,
+     "Prüfwert äöüß pruefungen/note/0",
+     1,
+     "Prüfwert äöüß pruefungen/daten/0",
+     "pruefungen-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß pruefungen/art/1",
+     1.25,
+     "Prüfwert äöüß pruefungen/note/1",
+     8,
+     "Prüfwert äöüß pruefungen/daten/1",
+     "pruefungen-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß pruefungen/art/2",
+     2.25,
+     "Prüfwert äöüß pruefungen/note/2",
+     15,
+     "Prüfwert äöüß pruefungen/daten/2",
+     "pruefungen-uid-2",
+     15
+    ]
+   ]
+  },
+  "quiz_answers": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "category",
+    "question",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß quiz_answers/category/0",
+     "Prüfwert äöüß quiz_answers/question/0",
+     1,
+     "quiz_answers-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß quiz_answers/category/1",
+     "Prüfwert äöüß quiz_answers/question/1",
+     8,
+     "quiz_answers-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß quiz_answers/category/2",
+     "Prüfwert äöüß quiz_answers/question/2",
+     15,
+     "quiz_answers-uid-2",
+     15
+    ]
+   ]
+  },
+  "scenario_events": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "scenario_index",
+    "title",
+    "theme",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     1,
+     "Prüfwert äöüß scenario_events/title/0",
+     "Prüfwert äöüß scenario_events/theme/0",
+     1,
+     "scenario_events-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     8,
+     "Prüfwert äöüß scenario_events/title/1",
+     "Prüfwert äöüß scenario_events/theme/1",
+     8,
+     "scenario_events-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     15,
+     "Prüfwert äöüß scenario_events/title/2",
+     "Prüfwert äöüß scenario_events/theme/2",
+     15,
+     "scenario_events-uid-2",
+     15
+    ]
+   ]
+  },
+  "spiel_bestenliste": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "durchgang",
+    "art",
+    "schluessel",
+    "wert",
+    "daten",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "REAL",
+    "TEXT",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß spiel_bestenliste/durchgang/0",
+     "Prüfwert äöüß spiel_bestenliste/art/0",
+     "Prüfwert äöüß spiel_bestenliste/schluessel/0",
+     0.25,
+     "Prüfwert äöüß spiel_bestenliste/daten/0",
+     "spiel_bestenliste-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß spiel_bestenliste/durchgang/1",
+     "Prüfwert äöüß spiel_bestenliste/art/1",
+     "Prüfwert äöüß spiel_bestenliste/schluessel/1",
+     1.25,
+     "Prüfwert äöüß spiel_bestenliste/daten/1",
+     "spiel_bestenliste-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß spiel_bestenliste/durchgang/2",
+     "Prüfwert äöüß spiel_bestenliste/art/2",
+     "Prüfwert äöüß spiel_bestenliste/schluessel/2",
+     2.25,
+     "Prüfwert äöüß spiel_bestenliste/daten/2",
+     "spiel_bestenliste-uid-2",
+     15
+    ]
+   ]
+  },
+  "spiel_ereignisse": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "typ",
+    "daten",
+    "geraet",
+    "uid",
+    "lauf",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß spiel_ereignisse/typ/0",
+     "Prüfwert äöüß spiel_ereignisse/daten/0",
+     "Prüfwert äöüß spiel_ereignisse/geraet/0",
+     "spiel_ereignisse-uid-0",
+     "Prüfwert äöüß spiel_ereignisse/lauf/0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß spiel_ereignisse/typ/1",
+     "Prüfwert äöüß spiel_ereignisse/daten/1",
+     "Prüfwert äöüß spiel_ereignisse/geraet/1",
+     "spiel_ereignisse-uid-1",
+     "Prüfwert äöüß spiel_ereignisse/lauf/1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß spiel_ereignisse/typ/2",
+     "Prüfwert äöüß spiel_ereignisse/daten/2",
+     "Prüfwert äöüß spiel_ereignisse/geraet/2",
+     "spiel_ereignisse-uid-2",
+     "Prüfwert äöüß spiel_ereignisse/lauf/2",
+     15
+    ]
+   ]
+  },
+  "spiel_plaetze": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "platz",
+    "lauf",
+    "aktion",
+    "daten",
+    "geraet",
+    "uid"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT",
+    "TEXT"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     1,
+     "Prüfwert äöüß spiel_plaetze/lauf/0",
+     "Prüfwert äöüß spiel_plaetze/aktion/0",
+     "Prüfwert äöüß spiel_plaetze/daten/0",
+     "Prüfwert äöüß spiel_plaetze/geraet/0",
+     "spiel_plaetze-uid-0"
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     8,
+     "Prüfwert äöüß spiel_plaetze/lauf/1",
+     "Prüfwert äöüß spiel_plaetze/aktion/1",
+     "Prüfwert äöüß spiel_plaetze/daten/1",
+     "Prüfwert äöüß spiel_plaetze/geraet/1",
+     "spiel_plaetze-uid-1"
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     15,
+     "Prüfwert äöüß spiel_plaetze/lauf/2",
+     "Prüfwert äöüß spiel_plaetze/aktion/2",
+     "Prüfwert äöüß spiel_plaetze/daten/2",
+     "Prüfwert äöüß spiel_plaetze/geraet/2",
+     "spiel_plaetze-uid-2"
+    ]
+   ]
+  },
+  "sync_meta": {
+   "spalten": [
+    "key",
+    "value"
+   ],
+   "typen": [
+    "TEXT",
+    "TEXT"
+   ],
+   "zeilen": [
+    [
+     "testschluessel",
+     "testwert"
+    ]
+   ]
+  },
+  "test_results": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "score",
+    "total",
+    "percentage",
+    "note",
+    "duration_seconds",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "INTEGER",
+    "INTEGER",
+    "REAL",
+    "TEXT",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     1,
+     1,
+     0.25,
+     "Prüfwert äöüß test_results/note/0",
+     1,
+     "test_results-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     8,
+     8,
+     1.25,
+     "Prüfwert äöüß test_results/note/1",
+     8,
+     "test_results-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     15,
+     15,
+     2.25,
+     "Prüfwert äöüß test_results/note/2",
+     15,
+     "test_results-uid-2",
+     15
+    ]
+   ]
+  },
+  "trainer_aufgaben": {
+   "spalten": [
+    "id",
+    "timestamp",
+    "art",
+    "stufe",
+    "correct",
+    "uid",
+    "utc_offset"
+   ],
+   "typen": [
+    "INTEGER",
+    "TEXT",
+    "TEXT",
+    "INTEGER",
+    "INTEGER",
+    "TEXT",
+    "INTEGER"
+   ],
+   "zeilen": [
+    [
+     1,
+     "2026-10-01T08:00:00",
+     "Prüfwert äöüß trainer_aufgaben/art/0",
+     1,
+     1,
+     "trainer_aufgaben-uid-0",
+     1
+    ],
+    [
+     2,
+     "2026-10-01T09:00:00",
+     "Prüfwert äöüß trainer_aufgaben/art/1",
+     8,
+     8,
+     "trainer_aufgaben-uid-1",
+     8
+    ],
+    [
+     3,
+     "2026-10-01T10:00:00",
+     "Prüfwert äöüß trainer_aufgaben/art/2",
+     15,
+     15,
+     "trainer_aufgaben-uid-2",
+     15
+    ]
+   ]
+  }
+ },
+ "sicherung": {
+  "formatversion": 1,
+  "format_abgleich": 2,
+  "zusammenfassung": {
+   "lerneintraege": 24,
+   "spielstaende": 3,
+   "abzeichen": 0,
+   "projekte": 3
+  },
+  "zeilen_je_tabelle": {
+   "test_results": 3,
+   "card_events": 3,
+   "quiz_answers": 3,
+   "scenario_events": 3,
+   "project_events": 3,
+   "ap1_events": 3,
+   "trainer_aufgaben": 3,
+   "pruefungen": 3,
+   "spiel_ereignisse": 3,
+   "spiel_plaetze": 3,
+   "spiel_bestenliste": 3,
+   "abschlussprojekt": 3
+  }
+ }
+}

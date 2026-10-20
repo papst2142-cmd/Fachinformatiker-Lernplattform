@@ -1,0 +1,41 @@
+# Bau-Ausgaben
+bin/
+obj/
+artifacts/
+publish/
+Releases/
+TestResults/
+
+# Entwicklungsumgebungen
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# Schluessel und Zugangsdaten gehoeren nie ins Repo
+*.keystore
+*.jks
+*.pfx
+*.p12
+*.snk
+*.pem
+.env
+
+# Lokale Daten (Lernstand, Sicherungen, Messungen auf Nicos Geraeten)
+*.db
+!tests/Vergleich/testdaten.db
+*.db-journal
+*.db-wal
+*.db-shm
+lernstand*.json.gz
+messung_*.txt
+
+# Python-Hilfsskripte
+__pycache__/
+*.pyc
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
