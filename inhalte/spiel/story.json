@@ -1,0 +1,153 @@
+{
+  "intro": [
+    "Willkommen bei der Bitweiche IT-Service GmbH!",
+    "Wir betreuen die IT der Talbahn Nordlicht AG: Leitstelle, Service-Center, Fahrkartenautomaten und Verwaltung. Dazu kommen die Anliegen deiner Kolleginnen und Kollegen im Haus.",
+    "Jeder Arbeitstag bringt ein paar Tickets. Tippe auf einen Raum, um zu sehen, wer dort etwas von dir braucht. Was du in der Lernplattform lernst, macht dich hier besser."
+  ],
+  "tagesende": [
+    "Feierabend! Das Gehalt für den Tag ist auf deinem Konto.",
+    "Sabine Kranich schaut kurz rein: „Danke für heute. Morgen geht es weiter.“"
+  ],
+  "feierabend": [
+    ["Feierabend! Das Gehalt für den Tag ist auf deinem Konto.", "Sabine Kranich schaut kurz rein: „Danke für heute. Morgen geht es weiter.“ Du gehst nach Hause."],
+    ["Feierabend! Das Gehalt ist überwiesen.", "Jonas ruft dir hinterher: „Schönen Abend! Und nicht mehr an Tickets denken!“ Du denkst auf dem ganzen Heimweg an Tickets."],
+    ["Geschafft für heute. Das Gehalt ist da.", "Im Flur riecht es nach Mehmets Lötkolben. Draußen riecht es nach Feierabend. Du gehst nach Hause."],
+    ["Feierabend! Das Gehalt ist auf dem Konto.", "Ulla sagt den Servern gute Nacht. Du sagst Ulla gute Nacht und fährst mit der Talbahn nach Hause. Pünktlich, fast."],
+    ["Das war's für heute. Gehalt ist da.", "Die Buchhaltung hat schon nachgerechnet: Es stimmt auf den Cent. Du machst dich auf den Heimweg."]
+  ],
+  "schlafen": [
+    ["Du schläfst tief und fest und träumst von grünen Logs. Morgen früh geht es weiter."],
+    ["Gute Nacht! Irgendwo im Traum fragt Tim: „Warum?“ Du schläfst trotzdem gut."],
+    ["Du schläfst ein, noch bevor du bis zum dritten Subnetz gezählt hast."],
+    ["Draußen fährt die letzte Talbahn vorbei. Du bist schon eingeschlafen."]
+  ],
+  "tage": {
+    "12": [
+      "Sabine stellt zwei neue Gesichter vor: „Das ist Tim, unser neuer Azubi. Er fragt viel, also erklär ihm alles gut. Und Karin Albers ist ab jetzt unsere Datenschutzbeauftragte.“",
+      "Dann die große Nachricht: „Die Talbahn baut einen neuen Bahnhof, Talheim-Nord. Und wir statten ihn aus. Von der ersten Bestellung bis zur Eröffnung!“"
+    ],
+    "13": [
+      "Horst Grabowski von der Leitstelle hat angerufen: „Ich hab gehört, ihr macht jetzt Bahnhöfe. Dann will ich mal sehen, ob das mit den Computern da oben auch klappt.“",
+      "Er schickt dir seinen IP-Wunschzettel. Handschriftlich."
+    ],
+    "14": [
+      "Rainer meldet: Die Technik für Talheim-Nord ist im Lager. „Jeder Karton hat einen Namen. Der große heißt USV.“",
+      "Heute wird in Talheim-Nord der Netzwerkschrank eingerichtet. Tim wollte helfen und hat dafür schon mal ein paar Kabel umgesteckt."
+    ],
+    "15": [
+      "Heute ist Eröffnung in Talheim-Nord! Die Talbahn hat Wimpel bestellt, Sabine hat Kekse gebacken.",
+      "Vorher müssen noch der letzte Kassen-PC, die Fahrgastzahlen und die Übergabe fertig werden."
+    ],
+    "16": [
+      "Talheim-Nord läuft. Horst hat eine Postkarte geschickt: „Funktioniert. Hätte ich nicht gedacht.“",
+      "Sabine lächelt: „Wenn das so weitergeht, leitest du irgendwann deine eigene Firma.“"
+    ],
+    "19": [
+      "Tim hat gefragt, warum ein Bahnhof eigentlich eine IP-Adresse braucht. Ulla hat ihn eine Stunde lang mit in den Serverraum genommen. Er kam mit leuchtenden Augen und einem Kabel in der Hand zurück.",
+      "Mehmet hat Tims Kabel sofort wieder einsortiert. Nach Farbe."
+    ],
+    "22": [
+      "Sabine hält einen Vertrag hoch: „Die Talbahn hat uns auch ihre Betriebswerkstatt anvertraut! Diagnose-Laptops, WLAN, Ersatzteil-Datenbank, alles.“",
+      "„Die Chefin dort heißt Marta Kowalczyk. Sie misst Zeit in Zugumläufen. Also sei pünktlich.“"
+    ],
+    "25": [
+      "Rainer hat Kartons mit der Aufschrift „Werkstatt“ gestapelt. Einer davon ist ein Server, einer eine USV, und einer enthält nach eigener Aussage „nur Schaumstoff, aber sehr ordentlichen“."
+    ],
+    "28": [
+      "Marta hat angerufen: Die Ersatzteil-Datenbank läuft. Der Einkauf hat zum ersten Mal seit Jahren gewusst, wie viele Bremsbeläge da sind.",
+      "Ihr Kommentar: „Hat nur 70 Zugumläufe gedauert.“"
+    ],
+    "30": [
+      "Neues Gesicht im Serverraum: Svenja Brück, Netzwerktechnikerin. Bis zur Mittagspause hat sie jedes Kabel an beiden Enden beschriftet.",
+      "Tim fragt, ob sie auch sein Handykabel beschriften kann. Sie hat es schon getan."
+    ],
+    "35": [
+      "Die Betriebswerkstatt läuft rund: WLAN, VLANs, Datenbank mit Sicherung. Marta hat einen Kuchen geschickt. Er ist so groß wie ein Radsatz.",
+      "Beiliegende Karte: „Danke. Kein Zug ist wegen der IT stehen geblieben. Das ist bei uns das höchste Lob.“"
+    ],
+    "36": [
+      "In der Leitstelle Talheim ist es heute sehr still. Horst Grabowski hat es verkündet: „Nach 40 Jahren ist Schluss. Am Tag 48 ziehe ich zum letzten Mal am Hebel.“",
+      "Petra schiebt dir einen Zettel zu: „Wir brauchen eine Übergabe. Und zwar eine, bei der das Wissen nicht mit Horst in den Schrebergarten zieht.“"
+    ],
+    "45": [
+      "Neuer Kunde, neuer Ort: Die Talbahn-Verwaltung in Lindenau wird ab heute von Bitweiche betreut. Sabine: „Dr. Wendt liest jede E-Mail dreimal. Also schreib kurze.“",
+      "In der Leitstelle zählt Horst die Tage. Laut. „Noch drei.“"
+    ],
+    "47": [
+      "Im Service-Center von Talheim hängen Wimpel. Auf dem Tresen steht ein Blech mit Keksen in Hebelform. Alle tun so, als wüsste Horst von nichts.",
+      "Horst weiß natürlich alles. Er tut aber so, als wüsste er nichts. Das ist seine Art, sich zu freuen."
+    ],
+    "48": [
+      "Horsts letzter Arbeitstag. Er zieht ein letztes Mal am Hebel, schraubt ihn ab und legt ihn auf den Tisch für seine Nachfolgerin. „Der kommt mit Garantie. 40 Jahre.“",
+      "Petra flüstert: „Heute Abend kümmern wir uns um seine Konten. Ganz behutsam.“"
+    ],
+    "49": [
+      "Aylin Demir übernimmt die Leitstelle. Als Erstes steckt sie Horsts Hebel in eine Tasse und benutzt ihn als Stifthalter. Als Zweites fragt sie nach einem Dashboard.",
+      "Von Horst kommt eine Postkarte aus dem Schrebergarten: „Tomaten haben keinen Hebel. Trotzdem gut.“"
+    ],
+    "53": [
+      "In Lindenau türmen sich im Archiv die Kisten zum Scannen. Dr. Wendt hat jeder Kiste eine Nummer gegeben. Und jeder Nummer eine Kiste."
+    ],
+    "55": [
+      "Sabine stellt eine neue Azubi vor: „Das ist Lina Hoffmann. Tim, du bist ab heute ihr Pate. Erklär ihr alles. Und zwar richtig.“",
+      "Tim wächst sichtbar um drei Zentimeter. Lina schlägt ihr Notizbuch mit dem Einhorn auf und schreibt: „Tag 1. Tim erklärt. Nachprüfen!“"
+    ],
+    "56": [
+      "In Lindenau ist das Archiv halb gescannt, die Buchhaltung sitzt im neuen Obergeschoss. Dr. Wendt hat entdeckt, dass man eine Datenbank befragen kann. Er fragt viel.",
+      "Im Helpdesk erklärt Tim Lina die Welt. Lina schreibt alles auf und markiert rot, was sie nachprüfen will. Es ist viel Rot."
+    ],
+    "60": [
+      "Ab heute kommen fünf Tickets am Tag. Sabine verteilt Kekse als Ausgleich: „Ihr seid jetzt ein eingespieltes Team. Das merkt man auch am Keksverbrauch.“"
+    ],
+    "66": [
+      "Neuer Ort: der Haltepunkt Birkenhain, ein Gleis, ein Wartehäuschen, viel Grün. Kein Personal, dafür bald Anzeige, Kameras, Automat und eine Funkstrecke zum Stellwerk.",
+      "Petra fährt jeden Tag mit. „Pünktlich wie ein Zug“, sagt sie und kommt zehn Minuten zu spät."
+    ],
+    "70": [
+      "In Birkenhain steht die Funkstrecke zum Stellwerk. Svenja hat die Antenne beschriftet, die Spinne im Technikhäuschen hat einen Namen bekommen: Patchi."
+    ],
+    "73": [
+      "Frank zählt im Büro die Tage bis zur Rente, heimlich, in einer Tabelle. Offiziell rechnet er nur die Bestellung für Birkenhain nach.",
+      "Aylin hat Birkenhain auf ihr Dashboard gelegt. Grün. Meistens."
+    ],
+    "76": [
+      "Die Abnahme von Birkenhain rückt näher. Mehmet hat eine Checkliste geschrieben, Petra einen Termin reserviert und Karin ein Schild für den Parkplatz bestellt."
+    ],
+    "78": [
+      "Frank Heider hat einen Countdown an die Tür der Verwaltung geklebt: „Noch 3 Tage.“ Darunter, kleiner: „Nachgerechnet: stimmt.“",
+      "Lea sammelt heimlich Geld für ein Abschiedsgeschenk. Sie hat eine Tabelle dafür angelegt. Frank darf sie auf keinen Fall sehen, sonst korrigiert er sie."
+    ],
+    "80": [
+      "Franks letzter Arbeitstag. In der Kundenberatung hängen Wimpel, Sabine hat Kekse in Form von Taschenrechnern gebacken. Frank rechnet sie nach: 48 Stück. Stimmt.",
+      "Bei der Rede sagt er nur einen Satz: „Es war mir eine Tabelle.“ Dann weint Lea, und Mehmet sortiert vor Rührung die Schrauben neu."
+    ],
+    "81": [
+      "Paul Adler sitzt an Franks Platz. Auf dem Schreibtisch liegt ein Zettel in Franks Handschrift: „Die Tabellen sind gut. Pass auf sie auf.“",
+      "Paul faltet den Zettel sorgfältig und legt ihn in eine Schublade. Die Tabellen hat er gestern Abend schon in eine Datenbank umgezogen."
+    ],
+    "83": [
+      "Heute ist Abnahme in Birkenhain. Petra hat einen Kuchen dabei, Svenja einen Beschriftungsdrucker. Beide halten das für gleich wichtig.",
+      "Von Frank kommt eine Postkarte: „Der Garten hat 214 Beete. Alle in einer Tabelle. Normalisiert.“"
+    ],
+    "85": [
+      "Birkenhain läuft, Paul hat die erste Woche überstanden, und Lea hat seit zwei Tagen nichts versprochen, was nicht im Angebot steht. Ein Rekord.",
+      "Sabine hängt eine Karte der Talbahn an die Wand. Jeder Standort, den Bitweiche betreut, hat ein grünes Fähnchen. Es sind fünf."
+    ],
+    "86": [
+      "Ulla verkündet die Jahreswartung: „Jeder Standort, jeder Schrank, jede USV. Die Server freuen sich schon.“ Die Server brummen. Ob vor Freude, bleibt offen.",
+      "Karin hat ihr Audit für nächste Woche angekündigt. Tim hat daraufhin sehr gründlich seinen Schreibtisch aufgeräumt."
+    ],
+    "95": [
+      "Karins Audit läuft. Sie hat bisher drei Paragrafen zitiert und zwei Anekdoten erzählt. Beides ist ein gutes Zeichen.",
+      "Lina hat das ganze Jahr im Einhorn-Buch mitgeschrieben. Es ist jetzt dicker als Franks Übergabehandbuch."
+    ],
+    "100": [
+      "Tag 100. Sabine hat alle zusammengerufen, sogar Frank ist zu Besuch da, mit seinem Convertible unter dem Arm. Horst hat Tomaten geschickt.",
+      "„Ein Jahr Bitweiche“, sagt Sabine und sieht dich an. „Und ich habe das Gefühl, das war erst der Anfang.“"
+    ]
+  },
+  "alle_erledigt": [
+    "Alle Tickets sind erledigt. Talheim-Nord, die Betriebswerkstatt, Lindenau und Birkenhain laufen, jeder Standort ist gewartet, Karins Audit ist bestanden. Über hundert Arbeitstage, und kein Zug ist wegen der IT stehen geblieben.",
+    "Sabine lehnt in der Tür: „Du hast mehr gelernt, als in jedes Einhorn-Buch passt. Ruh dich aus. In einem der nächsten Updates reden wir mal darüber, wie es wäre, eine eigene Firma zu gründen.“"
+  ]
+}

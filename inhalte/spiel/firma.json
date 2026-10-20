@@ -1,0 +1,4110 @@
+{
+  "_hinweis": [
+    "Eigenes Unternehmen (ab 0.33). Alle Werte hier aendern, nicht im Code.",
+    "Geld in Euro (Spielgeld) pro Arbeitstag. Werte der Mitarbeiter je Fachbereich 0 bis 100.",
+    "Gehalt eines Mitarbeiters = basis + je_punkt * Summe seiner fuenf Werte (fest ab Einstellung).",
+    "Umsatz eines Mitarbeiters pro Arbeitstag = basis + je_punkt * Summe seiner Werte (nicht waehrend einer Weiterbildung).",
+    "Bewerber werden aus Firmenname, Gruendungstag und Bewerbungsrunde berechnet - auf PC und Handy gleich.",
+    "Ab 0.34: 'kunden' sind die Kunden der eigenen Firma (Anfragen und Kundentickets). 'art' legt fest, wie knapp Bitweiche kalkuliert (angebote.arten).",
+    "Angebote: Bitweiche bietet Selbstkosten x (1 + Zuschlag). Der Zuschlag wird je Anfrage aus der Spanne der Kundenart gewuerfelt (Mitte wahrscheinlicher). Dazu die Laune von Bitweiche: mit laune.kampfpreis.chance ein Kampfpreis (von-bis), mit laune.ausgelastet.chance ein Aufschlag (plus_von-plus_bis). Gewonnen, wenn der eigene Nettopreis nicht hoeher ist; ab vorteil.ab_kundenzufriedenheit darf er vorteil.prozent darueber liegen.",
+    "Kundentickets: Chance in Prozent = chance.basis + chance.je_punkt * (Wert - Anforderung), begrenzt auf chance.min bis chance.max. Anforderung und Honorar je Schwierigkeit in tickets.stufen.",
+    "Ab 0.35: 'mitbewerber.firmen' bieten gegen dich. Pro Anfrage 1 Firma (Chance anfrage_bieter.eins) oder 2, pro Projekt projekt_bieter.von bis .bis Firmen, gezogen nach gewicht. Zuschlag aus von-bis (Mitte wahrscheinlicher, bei gleichmaessig alle gleich wahrscheinlich) plus fach[Fachbereich] bei Projekten; Bitweiche (kundenart) rechnet wie in 0.34. laune.ausgelastet.bietet_nicht: die Firma bietet dann gar nicht. Das guenstigste Angebot gewinnt.",
+    "Projekte: alle abstand_tage eine Ausschreibung aus den 50 Testprojekten (projektarbeiten.json), gilt gilt_tage. Einzelkosten = aufwand * stundensatz + material. Laufende Projekte je Gebaeudestufe in 'laufend'. Tagesleistung je Person = leistung.basis + leistung.je_punkt * Wert im Fachbereich, mit lernbonus Prozent mehr, wenn das Testprojekt im Lernbereich bearbeitet wurde; rueckschlag.chance, wenn der beste Wert im Team unter der Anforderung liegt.",
+    "Ab 0.36: gebaeude.stufen 3 bis 5 (je 2 Arbeitsplaetze mehr). 'sonderraeume.raeume' baut man ab 'ab_stufe' auf der Flaeche 'raum' aus (bis dahin Leerstand). effekt: material_rabatt (Prozent auf Einkauf und Material), anfragen_plus, kundenzufriedenheit_plus (je gewonnenem Auftrag), projekte_plus, rueckschlag_faktor (mal die Rueckschlag-Chance), weiterbildung_rabatt (Prozent), weiterbildung_tage_minus. Nebenkosten des Raums kommen taeglich dazu.",
+    "Ab 0.38: Mitarbeiter haben einen Wert je Thema (themen.json), der Fachbereichswert ist der Durchschnitt seiner Themen (Gehalt und Umsatz rechnen damit). Bewerber: Grundwert je Fachbereich wie bisher, je Thema fest gestreut um +-bewerbung.thema_streuung, dazu bewerbung.staerken Themen mit +staerke_plus. Mitarbeiter aus aelteren Spielstaenden: Themen = alter Fachbereichswert, gestreut um +-lernen.alt_streuung. wechsel.staerken sind die Staerken der Bitweiche-Kollegen.",
+    "Ab 0.38 'lernen': Mitarbeiter lernen durch Arbeit - ticket_erfolg Punkte im Thema eines geschafften Kundentickets (Fehlschlag: nichts), projekt_fertig fuer jedes Teammitglied im Projektthema (projekt_puenktlich extra), alle routine_tage Arbeitstage ohne Weiterbildung und Projekt routine_plus im staerksten Thema. Ab halb_ab nur halb so viel, max ist die Obergrenze.",
+    "Ab 0.40: 'lernen.deckel' ist die Grenze fuer das Lernen durch Arbeit je Thema - darueber (bis max) geht es nur noch mit Weiterbildung. Arbeit lernt langsamer (Ticket 1 Punkt, etwa ein Sechstel einer Themen-Weiterbildung), Weiterbildungen bringen weniger und dauern laenger.",
+    "Ab 0.38 'weiterbildung': preis/tage/plus gelten fuer ein Thema, 'fachbereich' fuer alle Themen eines Fachbereichs (plus je Thema). aufschlag kommt je bisheriger Weiterbildung der Person dazu (beide Arten).",
+    "Ab 0.43 'macken': jede Macke hat plus (Staerke, wirkt immer voll) und minus (Schwaeche, wirkt je nach Stufe mit personal.macken.stufen Prozent). Wirkungen: umsatz/projekt/lernen in Prozent, chance in Prozentpunkten (chance_netzwerk, chance_hardware, chance_talbahn nur bei passenden Tickets), team_projekt (Prozent fuers ganze Projektteam), team_lernen (Punkte fuer die anderen beim Projektabschluss), kz_erfolg/kz_fehlschlag (Kundenzufriedenheit), urlaub/krank/konflikt (Prozent haeufiger), weiterbildung_tage, stimmung_team (Erholung pro Tag fuer alle), stimmung_fehlschlag (Stimmung minus nach verpatztem Ticket). 'kollege' = nur fuer diesen Bitweiche-Wechsler.",
+    "Ab 0.43 'personal': Stimmung je Mitarbeiter (start, erholt sich um erholung pro Feierabend Richtung ziel; unter tief weniger Leistung, unter kritisch nach kuendigung_nach Feierabenden Kuendigung). krankheit.chance und urlaub.chance in Prozent je Mitarbeiter und Feierabend, konflikt.chance je Feierabend fuer die Firma. Macken schwaechen sich alle abschwaechen_tage Arbeitstage und per Coaching um eine Stufe ab (nie unter Stufe 1). urlaub.abstand_firma: so viele Arbeitstage mindestens zwischen zwei Urlaubsanfragen in der ganzen Firma (hoechstens eine pro Feierabend).",
+    "Ab 0.44 'rivalitaet': Mitbewerber reagieren auf deinen Erfolg. rueckhol: Wer vorher bei einem Mitbewerber war (Bitweiche-Wechsler, dazu vorher_anteil Prozent der Bewerber), bekommt ab ab_tagen Arbeitstagen in der Firma gelegentlich ein Rueckhol-Angebot (chance in Prozent je Feierabend, mal Stimmungsfaktor: 1 + (stimmung_ziel - Stimmung) / stimmung_teiler, begrenzt auf faktor_min bis faktor_max). Hoechstens eines pro Feierabend, abstand_firma Tage Ruhe in der Firma, abstand Tage je Person. Gegenhalten: Gehalt +gehalt_plus Prozent (dauerhaft) oder Halteprämie von bonus_tage Tagesgehaeltern; sonst geht die Person beim naechsten Feierabend zurueck.",
+    "gegenwind: Hast du von den letzten fenster Angeboten (Anfragen und Projekte, mindestens mindestens Stueck) ab_quote Prozent gewonnen, bieten alle Mitbewerber zuschlag_minus Punkte guenstiger gegen dich (mindestens mindest_tage Arbeitstage lang, danach bis die Quote wieder darunter liegt), und bei Anfragen bietet mit zweiter_bieter mehr Chance eine zweite Firma mit. Die Staerke ist fest (kein Hochschaukeln). Solange Gegenwind herrscht, zaehlt dein Preisvorteil (Ruf, Zertifizierungen, Werbung) nur mit vorteil_faktor (0.5 = halb, abgerundet).",
+    "Ab 0.44 'markt' (ab Arbeitstag ab_tag, nach der Story): konjunktur.phasen wechseln zufaellig (normale Lage, dann Auf- oder Abschwung, dann wieder normal ...; mit wechsel_chance Prozent folgt auf einen Abschwung ein Aufschwung und umgekehrt), Dauer aus tage. start_text steht am Morgen von ab_tag. Wirkung: anfragen mehr/weniger pro Tag, zuschlag Punkte auf alle Mitbewerber-Zuschlaege (hoehere Marktpreise = mehr Spielraum), umsatz Prozent auf den Routineumsatz. trends: nach erster_nach Tagen der erste Trend, er dauert dauer Tage, dann pause Tage bis zum naechsten (nie zweimal derselbe hintereinander). Waehrend eines Trends kommt mit chance Prozent je Tag eine Trend-Anfrage dazu (Artikel aus dem Trend, Mitbewerber mit zuschlag Punkten mehr, Zertifizierungen des Fachbereichs cat geben ihren Vorteil wie bei Projekten)."
+  ],
+  "gruendung": {
+    "kosten": 15000,
+    "text": [
+      "Sabine setzt sich zu dir, ausnahmsweise ohne Kekse. „Du hast alles geschafft, was wir hier zu tun hatten. Und ich sehe dir an, dass du mehr willst.“",
+      "Sie seufzt. „Wenn du gehst, dann richtig. Aber rechne damit, dass wir uns bei der Talbahn wiedersehen. Als Konkurrenz.“",
+      "Die Gründung kostet %s: Miete für den Gewerbehof, Einrichtung, Anmeldung. Bitweiche zahlt dir danach kein Gehalt mehr, dein Geld verdient ab dann deine Firma."
+    ],
+    "gegruendet": [
+      "Der Schlüssel zum Gewerbehof Am Stellwerk hängt an deinem Bund. Drei Schreibtische, ein leeres Whiteboard und ein Firmenschild mit dem Namen „%s“.",
+      "Noch arbeitest du allein. Unter Firma kannst du Bewerbungen ansehen und die ersten Leute einstellen."
+    ]
+  },
+  "gebaeude": {
+    "name": "Gewerbehof Am Stellwerk",
+    "kurz": "Gewerbehof",
+    "text": "Ein altes Nebengebäude der Talbahn am Stellwerk in Talheim, frisch gestrichen und bereit für deine Firma.",
+    "stufen": [
+      {
+        "stufe": 1,
+        "name": "Startbüro",
+        "preis": 0,
+        "nebenkosten": 40,
+        "text": "Ein Büro mit drei Schreibtischen (einer für dich) und eine Kaffeeecke.",
+        "plaetze": [
+          [
+            5.0,
+            2.75,
+            "grossraum"
+          ],
+          [
+            8.1,
+            2.75,
+            "grossraum"
+          ]
+        ],
+        "gebaeude": {
+          "breite": 16,
+          "hoehe": 7,
+          "flur": {
+            "y": 5,
+            "h": 2,
+            "name": "Eingang",
+            "eingang": {
+              "von": 5.3,
+              "bis": 6.7
+            },
+            "spieler": [
+              1.2,
+              6.0
+            ],
+            "deko": [
+              {
+                "typ": "fussmatte",
+                "x": 0.25,
+                "y": 5.35,
+                "w": 0.7,
+                "h": 1.3
+              },
+              {
+                "typ": "feuerloescher",
+                "x": 9.8,
+                "y": 6.45,
+                "w": 0.4,
+                "h": 0.4
+              }
+            ]
+          },
+          "fenster": [
+            [
+              1.0,
+              0,
+              3.2,
+              0
+            ],
+            [
+              4.2,
+              0,
+              6.4,
+              0
+            ],
+            [
+              7.4,
+              0,
+              9.4,
+              0
+            ],
+            [
+              11.0,
+              0,
+              13.6,
+              0
+            ],
+            [
+              0,
+              1.0,
+              0,
+              3.8
+            ],
+            [
+              16,
+              1.0,
+              16,
+              3.8
+            ]
+          ],
+          "raeume": [
+            {
+              "id": "grossraum",
+              "name": "Büro",
+              "cat": "netzwerk",
+              "x": 0,
+              "y": 0,
+              "w": 10,
+              "h": 5,
+              "tuer": {
+                "von": 4.6,
+                "bis": 5.8
+              },
+              "boden": "teppichboden",
+              "text": "Dein erstes Büro: drei Schreibtische, ein Whiteboard und viel Ehrgeiz.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 3.4,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 0.8,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 3.9,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 7.0,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 9.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 0.3,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "kaffeeecke",
+              "name": "Kaffeeecke",
+              "kurz": "Kaffee",
+              "cat": "wirtschaft",
+              "x": 10,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 11.2,
+                "bis": 12.4
+              },
+              "boden": "fliesen",
+              "text": "Kaffeemaschine, Wasserspender und ein Tisch für die Besprechung mit Kunden.",
+              "deko": [
+                {
+                  "typ": "kaffeemaschine",
+                  "x": 15.2,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 0.6
+                },
+                {
+                  "typ": "wasserspender",
+                  "x": 14.3,
+                  "y": 0.35,
+                  "w": 0.55,
+                  "h": 0.55
+                },
+                {
+                  "typ": "tisch",
+                  "x": 11.6,
+                  "y": 1.4,
+                  "w": 2.4,
+                  "h": 1.2
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 15.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "stufe": 2,
+        "name": "Zweites Büro",
+        "preis": 12000,
+        "nebenkosten": 90,
+        "text": "Ein zweites Büro unter dem Flur: drei weitere Arbeitsplätze und ein Tisch für Testgeräte.",
+        "plaetze": [
+          [
+            5.0,
+            2.75,
+            "grossraum"
+          ],
+          [
+            8.1,
+            2.75,
+            "grossraum"
+          ],
+          [
+            2.1,
+            10.05,
+            "buero2"
+          ],
+          [
+            5.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            12.5,
+            10.05,
+            "buero2"
+          ]
+        ],
+        "gebaeude": {
+          "breite": 16,
+          "hoehe": 12,
+          "flur": {
+            "y": 5,
+            "h": 2,
+            "name": "Eingang",
+            "eingang": {
+              "von": 5.3,
+              "bis": 6.7
+            },
+            "spieler": [
+              1.2,
+              6.0
+            ],
+            "deko": [
+              {
+                "typ": "fussmatte",
+                "x": 0.25,
+                "y": 5.35,
+                "w": 0.7,
+                "h": 1.3
+              },
+              {
+                "typ": "feuerloescher",
+                "x": 9.8,
+                "y": 6.45,
+                "w": 0.4,
+                "h": 0.4
+              }
+            ]
+          },
+          "fenster": [
+            [
+              1.0,
+              0,
+              3.2,
+              0
+            ],
+            [
+              4.2,
+              0,
+              6.4,
+              0
+            ],
+            [
+              7.4,
+              0,
+              9.4,
+              0
+            ],
+            [
+              11.0,
+              0,
+              13.6,
+              0
+            ],
+            [
+              0,
+              1.0,
+              0,
+              3.8
+            ],
+            [
+              16,
+              1.0,
+              16,
+              3.8
+            ],
+            [
+              1.4,
+              12,
+              3.6,
+              12
+            ],
+            [
+              5.0,
+              12,
+              7.2,
+              12
+            ],
+            [
+              11.0,
+              12,
+              13.4,
+              12
+            ],
+            [
+              0,
+              8.0,
+              0,
+              10.8
+            ],
+            [
+              16,
+              8.0,
+              16,
+              10.8
+            ]
+          ],
+          "raeume": [
+            {
+              "id": "grossraum",
+              "name": "Büro",
+              "cat": "netzwerk",
+              "x": 0,
+              "y": 0,
+              "w": 10,
+              "h": 5,
+              "tuer": {
+                "von": 4.6,
+                "bis": 5.8
+              },
+              "boden": "teppichboden",
+              "text": "Dein erstes Büro: drei Schreibtische, ein Whiteboard und viel Ehrgeiz.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 3.4,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 0.8,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 3.9,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 7.0,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 9.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 0.3,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "kaffeeecke",
+              "name": "Kaffeeecke",
+              "kurz": "Kaffee",
+              "cat": "wirtschaft",
+              "x": 10,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 11.2,
+                "bis": 12.4
+              },
+              "boden": "fliesen",
+              "text": "Kaffeemaschine, Wasserspender und ein Tisch für die Besprechung mit Kunden.",
+              "deko": [
+                {
+                  "typ": "kaffeemaschine",
+                  "x": 15.2,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 0.6
+                },
+                {
+                  "typ": "wasserspender",
+                  "x": 14.3,
+                  "y": 0.35,
+                  "w": 0.55,
+                  "h": 0.55
+                },
+                {
+                  "typ": "tisch",
+                  "x": 11.6,
+                  "y": 1.4,
+                  "w": 2.4,
+                  "h": 1.2
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 15.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero2",
+              "name": "Büro 2",
+              "kurz": "Büro 2",
+              "cat": "systeme",
+              "x": 0,
+              "y": 7,
+              "w": 16,
+              "h": 5,
+              "tuer": {
+                "von": 7.4,
+                "bis": 8.6
+              },
+              "boden": "teppichboden",
+              "text": "Der Ausbau: drei weitere Arbeitsplätze und ein Tisch für Testgeräte.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 1.0,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 4.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 11.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "tisch",
+                  "x": 14.0,
+                  "y": 8.2,
+                  "w": 1.6,
+                  "h": 2.6
+                },
+                {
+                  "typ": "regal",
+                  "x": 0.3,
+                  "y": 11.2,
+                  "w": 2.4,
+                  "h": 0.5
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 9.6,
+                  "y": 11.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "stufe": 3,
+        "name": "Anbau Ost",
+        "preis": 20000,
+        "nebenkosten": 130,
+        "text": "Der Anbau riecht noch nach frischer Farbe: ein drittes Büro mit zwei Arbeitsplätzen und zwei leere Flächen für ein Lager und einen Besprechungsraum.",
+        "plaetze": [
+          [
+            5.0,
+            2.75,
+            "grossraum"
+          ],
+          [
+            8.1,
+            2.75,
+            "grossraum"
+          ],
+          [
+            2.1,
+            10.05,
+            "buero2"
+          ],
+          [
+            5.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            12.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            17.7,
+            2.75,
+            "buero3"
+          ],
+          [
+            20.4,
+            2.75,
+            "buero3"
+          ]
+        ],
+        "gebaeude": {
+          "breite": 22,
+          "hoehe": 14,
+          "flur": {
+            "y": 5,
+            "h": 2,
+            "name": "Eingang",
+            "eingang": {
+              "von": 5.3,
+              "bis": 6.7
+            },
+            "spieler": [
+              1.2,
+              6.0
+            ],
+            "deko": [
+              {
+                "typ": "fussmatte",
+                "x": 0.25,
+                "y": 5.35,
+                "w": 0.7,
+                "h": 1.3
+              },
+              {
+                "typ": "feuerloescher",
+                "x": 9.8,
+                "y": 6.45,
+                "w": 0.4,
+                "h": 0.4
+              }
+            ]
+          },
+          "fenster": [
+            [
+              1.0,
+              0,
+              3.2,
+              0
+            ],
+            [
+              4.2,
+              0,
+              6.4,
+              0
+            ],
+            [
+              7.4,
+              0,
+              9.4,
+              0
+            ],
+            [
+              11.0,
+              0,
+              13.6,
+              0
+            ],
+            [
+              17.0,
+              0,
+              21.0,
+              0
+            ],
+            [
+              0,
+              1.0,
+              0,
+              3.8
+            ],
+            [
+              0,
+              8.5,
+              0,
+              12.5
+            ],
+            [
+              1.4,
+              14,
+              3.6,
+              14
+            ],
+            [
+              5.0,
+              14,
+              7.2,
+              14
+            ],
+            [
+              11.0,
+              14,
+              13.4,
+              14
+            ],
+            [
+              16.6,
+              14,
+              18.9,
+              14
+            ],
+            [
+              22,
+              1.0,
+              22,
+              3.8
+            ]
+          ],
+          "raeume": [
+            {
+              "id": "grossraum",
+              "name": "Büro",
+              "cat": "netzwerk",
+              "x": 0,
+              "y": 0,
+              "w": 10,
+              "h": 5,
+              "tuer": {
+                "von": 4.6,
+                "bis": 5.8
+              },
+              "boden": "teppichboden",
+              "text": "Dein erstes Büro: drei Schreibtische, ein Whiteboard und viel Ehrgeiz.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 3.4,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 0.8,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 3.9,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 7.0,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 9.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 0.3,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "kaffeeecke",
+              "name": "Kaffeeecke",
+              "kurz": "Kaffee",
+              "cat": "wirtschaft",
+              "x": 10,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 11.2,
+                "bis": 12.4
+              },
+              "boden": "fliesen",
+              "text": "Kaffeemaschine, Wasserspender und ein Tisch für die Besprechung mit Kunden.",
+              "deko": [
+                {
+                  "typ": "kaffeemaschine",
+                  "x": 15.2,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 0.6
+                },
+                {
+                  "typ": "wasserspender",
+                  "x": 14.3,
+                  "y": 0.35,
+                  "w": 0.55,
+                  "h": 0.55
+                },
+                {
+                  "typ": "tisch",
+                  "x": 11.6,
+                  "y": 1.4,
+                  "w": 2.4,
+                  "h": 1.2
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 15.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero2",
+              "name": "Büro 2",
+              "kurz": "Büro 2",
+              "cat": "systeme",
+              "x": 0,
+              "y": 7,
+              "w": 16,
+              "h": 7,
+              "tuer": {
+                "von": 7.4,
+                "bis": 8.6
+              },
+              "boden": "teppichboden",
+              "text": "Der Ausbau: drei weitere Arbeitsplätze und ein Tisch für Testgeräte.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 1.0,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 4.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 11.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "tisch",
+                  "x": 14.0,
+                  "y": 8.2,
+                  "w": 1.6,
+                  "h": 2.6
+                },
+                {
+                  "typ": "regal",
+                  "x": 0.3,
+                  "y": 13.2,
+                  "w": 2.4,
+                  "h": 0.5
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 9.6,
+                  "y": 13.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero3",
+              "name": "Büro 3",
+              "kurz": "Büro 3",
+              "cat": "datenbanken",
+              "x": 16,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 18.4,
+                "bis": 19.6
+              },
+              "boden": "teppichboden",
+              "text": "Das dritte Büro im Anbau: zwei Arbeitsplätze mit Blick auf die Gleise.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 16.6,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 19.3,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 16.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 21.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "besprechung",
+              "name": "Besprechungsraum",
+              "kurz": "Bespr.",
+              "cat": "wirtschaft",
+              "x": 16,
+              "y": 7,
+              "w": 3.5,
+              "h": 7,
+              "tuer": {
+                "von": 16.9,
+                "bis": 18.1
+              },
+              "boden": "parkett",
+              "text": "Großer Tisch, Whiteboard, gute Stühle: Hier überzeugst du Kunden, bevor Bitweiche anruft.",
+              "deko": [
+                {
+                  "typ": "besprechungstisch",
+                  "x": 17.0,
+                  "y": 8.9,
+                  "w": 1.5,
+                  "h": 3.6
+                },
+                {
+                  "typ": "whiteboard",
+                  "x": 16.35,
+                  "y": 13.55,
+                  "w": 2.8,
+                  "h": 0.22
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 18.6,
+                  "y": 7.3,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "firmenlager",
+              "name": "Lager",
+              "kurz": "Lager",
+              "cat": "systeme",
+              "x": 19.5,
+              "y": 7,
+              "w": 2.5,
+              "h": 7,
+              "tuer": {
+                "von": 19.9,
+                "bis": 21.1
+              },
+              "boden": "beton",
+              "text": "Regale bis unter die Decke. Wer in größeren Mengen einkauft, zahlt weniger.",
+              "deko": [
+                {
+                  "typ": "hochregal",
+                  "x": 21.05,
+                  "y": 8.4,
+                  "w": 0.85,
+                  "h": 5.1
+                },
+                {
+                  "typ": "palette",
+                  "x": 19.7,
+                  "y": 9.0,
+                  "w": 1.2,
+                  "h": 0.8
+                },
+                {
+                  "typ": "kartons",
+                  "x": 19.7,
+                  "y": 11.4,
+                  "w": 1.2,
+                  "h": 0.9
+                },
+                {
+                  "typ": "feuerloescher",
+                  "x": 19.65,
+                  "y": 13.45,
+                  "w": 0.4,
+                  "h": 0.4
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "stufe": 4,
+        "name": "Halle Süd",
+        "preis": 34000,
+        "nebenkosten": 180,
+        "text": "Die alte Halle neben dem Stellwerk wird angebunden: ein viertes Büro mit zwei Arbeitsplätzen und Platz für einen eigenen Serverraum.",
+        "plaetze": [
+          [
+            5.0,
+            2.75,
+            "grossraum"
+          ],
+          [
+            8.1,
+            2.75,
+            "grossraum"
+          ],
+          [
+            2.1,
+            10.05,
+            "buero2"
+          ],
+          [
+            5.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            12.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            17.7,
+            2.75,
+            "buero3"
+          ],
+          [
+            20.4,
+            2.75,
+            "buero3"
+          ],
+          [
+            24.5,
+            9.95,
+            "buero4"
+          ],
+          [
+            24.5,
+            12.85,
+            "buero4"
+          ]
+        ],
+        "gebaeude": {
+          "breite": 26,
+          "hoehe": 14,
+          "flur": {
+            "y": 5,
+            "h": 2,
+            "name": "Eingang",
+            "eingang": {
+              "von": 5.3,
+              "bis": 6.7
+            },
+            "spieler": [
+              1.2,
+              6.0
+            ],
+            "deko": [
+              {
+                "typ": "fussmatte",
+                "x": 0.25,
+                "y": 5.35,
+                "w": 0.7,
+                "h": 1.3
+              },
+              {
+                "typ": "feuerloescher",
+                "x": 9.8,
+                "y": 6.45,
+                "w": 0.4,
+                "h": 0.4
+              }
+            ]
+          },
+          "fenster": [
+            [
+              1.0,
+              0,
+              3.2,
+              0
+            ],
+            [
+              4.2,
+              0,
+              6.4,
+              0
+            ],
+            [
+              7.4,
+              0,
+              9.4,
+              0
+            ],
+            [
+              11.0,
+              0,
+              13.6,
+              0
+            ],
+            [
+              17.0,
+              0,
+              21.0,
+              0
+            ],
+            [
+              0,
+              1.0,
+              0,
+              3.8
+            ],
+            [
+              0,
+              8.5,
+              0,
+              12.5
+            ],
+            [
+              1.4,
+              14,
+              3.6,
+              14
+            ],
+            [
+              5.0,
+              14,
+              7.2,
+              14
+            ],
+            [
+              11.0,
+              14,
+              13.4,
+              14
+            ],
+            [
+              16.6,
+              14,
+              18.9,
+              14
+            ],
+            [
+              23.0,
+              14,
+              25.4,
+              14
+            ],
+            [
+              26,
+              8.5,
+              26,
+              12.5
+            ]
+          ],
+          "raeume": [
+            {
+              "id": "grossraum",
+              "name": "Büro",
+              "cat": "netzwerk",
+              "x": 0,
+              "y": 0,
+              "w": 10,
+              "h": 5,
+              "tuer": {
+                "von": 4.6,
+                "bis": 5.8
+              },
+              "boden": "teppichboden",
+              "text": "Dein erstes Büro: drei Schreibtische, ein Whiteboard und viel Ehrgeiz.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 3.4,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 0.8,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 3.9,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 7.0,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 9.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 0.3,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "kaffeeecke",
+              "name": "Kaffeeecke",
+              "kurz": "Kaffee",
+              "cat": "wirtschaft",
+              "x": 10,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 11.2,
+                "bis": 12.4
+              },
+              "boden": "fliesen",
+              "text": "Kaffeemaschine, Wasserspender und ein Tisch für die Besprechung mit Kunden.",
+              "deko": [
+                {
+                  "typ": "kaffeemaschine",
+                  "x": 15.2,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 0.6
+                },
+                {
+                  "typ": "wasserspender",
+                  "x": 14.3,
+                  "y": 0.35,
+                  "w": 0.55,
+                  "h": 0.55
+                },
+                {
+                  "typ": "tisch",
+                  "x": 11.6,
+                  "y": 1.4,
+                  "w": 2.4,
+                  "h": 1.2
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 15.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero2",
+              "name": "Büro 2",
+              "kurz": "Büro 2",
+              "cat": "systeme",
+              "x": 0,
+              "y": 7,
+              "w": 16,
+              "h": 7,
+              "tuer": {
+                "von": 7.4,
+                "bis": 8.6
+              },
+              "boden": "teppichboden",
+              "text": "Der Ausbau: drei weitere Arbeitsplätze und ein Tisch für Testgeräte.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 1.0,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 4.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 11.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "tisch",
+                  "x": 14.0,
+                  "y": 8.2,
+                  "w": 1.6,
+                  "h": 2.6
+                },
+                {
+                  "typ": "regal",
+                  "x": 0.3,
+                  "y": 13.2,
+                  "w": 2.4,
+                  "h": 0.5
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 9.6,
+                  "y": 13.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero3",
+              "name": "Büro 3",
+              "kurz": "Büro 3",
+              "cat": "datenbanken",
+              "x": 16,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 18.4,
+                "bis": 19.6
+              },
+              "boden": "teppichboden",
+              "text": "Das dritte Büro im Anbau: zwei Arbeitsplätze mit Blick auf die Gleise.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 16.6,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 19.3,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 16.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 21.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "besprechung",
+              "name": "Besprechungsraum",
+              "kurz": "Bespr.",
+              "cat": "wirtschaft",
+              "x": 16,
+              "y": 7,
+              "w": 3.5,
+              "h": 7,
+              "tuer": {
+                "von": 16.9,
+                "bis": 18.1
+              },
+              "boden": "parkett",
+              "text": "Großer Tisch, Whiteboard, gute Stühle: Hier überzeugst du Kunden, bevor Bitweiche anruft.",
+              "deko": [
+                {
+                  "typ": "besprechungstisch",
+                  "x": 17.0,
+                  "y": 8.9,
+                  "w": 1.5,
+                  "h": 3.6
+                },
+                {
+                  "typ": "whiteboard",
+                  "x": 16.35,
+                  "y": 13.55,
+                  "w": 2.8,
+                  "h": 0.22
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 18.6,
+                  "y": 7.3,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "firmenlager",
+              "name": "Lager",
+              "kurz": "Lager",
+              "cat": "systeme",
+              "x": 19.5,
+              "y": 7,
+              "w": 2.5,
+              "h": 7,
+              "tuer": {
+                "von": 19.9,
+                "bis": 21.1
+              },
+              "boden": "beton",
+              "text": "Regale bis unter die Decke. Wer in größeren Mengen einkauft, zahlt weniger.",
+              "deko": [
+                {
+                  "typ": "hochregal",
+                  "x": 21.05,
+                  "y": 8.4,
+                  "w": 0.85,
+                  "h": 5.1
+                },
+                {
+                  "typ": "palette",
+                  "x": 19.7,
+                  "y": 9.0,
+                  "w": 1.2,
+                  "h": 0.8
+                },
+                {
+                  "typ": "kartons",
+                  "x": 19.7,
+                  "y": 11.4,
+                  "w": 1.2,
+                  "h": 0.9
+                },
+                {
+                  "typ": "feuerloescher",
+                  "x": 19.65,
+                  "y": 13.45,
+                  "w": 0.4,
+                  "h": 0.4
+                }
+              ]
+            },
+            {
+              "id": "firmenserver",
+              "name": "Serverraum",
+              "kurz": "Server",
+              "cat": "netzwerk",
+              "x": 22,
+              "y": 0,
+              "w": 4,
+              "h": 5,
+              "tuer": {
+                "von": 22.6,
+                "bis": 23.8
+              },
+              "boden": "doppelboden",
+              "text": "Zwei Serverschränke, Klimagerät und USV: Hier testet dein Team, bevor es beim Kunden ernst wird.",
+              "deko": [
+                {
+                  "typ": "rack",
+                  "x": 22.3,
+                  "y": 0.3,
+                  "w": 1.0,
+                  "h": 2.6
+                },
+                {
+                  "typ": "rack",
+                  "x": 23.5,
+                  "y": 0.3,
+                  "w": 1.0,
+                  "h": 2.6
+                },
+                {
+                  "typ": "klima",
+                  "x": 25.25,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 1.9
+                },
+                {
+                  "typ": "usv",
+                  "x": 24.5,
+                  "y": 3.6,
+                  "w": 1.3,
+                  "h": 1.0
+                }
+              ]
+            },
+            {
+              "id": "buero4",
+              "name": "Büro 4",
+              "kurz": "Büro 4",
+              "cat": "sicherheit",
+              "x": 22,
+              "y": 7,
+              "w": 4,
+              "h": 7,
+              "tuer": {
+                "von": 22.4,
+                "bis": 23.6
+              },
+              "boden": "teppichboden",
+              "text": "Zwei Arbeitsplätze in der Halle Süd, ruhig und hell.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 23.4,
+                  "y": 8.3,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 23.4,
+                  "y": 11.2,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 22.2,
+                  "y": 13.05,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "stufe": 5,
+        "name": "Halle Nord",
+        "preis": 48000,
+        "nebenkosten": 230,
+        "text": "Der letzte freie Teil des Gewerbehofs: ein fünftes Büro mit zwei Arbeitsplätzen und Platz für einen Schulungsraum.",
+        "plaetze": [
+          [
+            5.0,
+            2.75,
+            "grossraum"
+          ],
+          [
+            8.1,
+            2.75,
+            "grossraum"
+          ],
+          [
+            2.1,
+            10.05,
+            "buero2"
+          ],
+          [
+            5.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            12.5,
+            10.05,
+            "buero2"
+          ],
+          [
+            17.7,
+            2.75,
+            "buero3"
+          ],
+          [
+            20.4,
+            2.75,
+            "buero3"
+          ],
+          [
+            24.5,
+            9.95,
+            "buero4"
+          ],
+          [
+            24.5,
+            12.85,
+            "buero4"
+          ],
+          [
+            28.5,
+            9.95,
+            "buero5"
+          ],
+          [
+            28.5,
+            12.85,
+            "buero5"
+          ]
+        ],
+        "gebaeude": {
+          "breite": 30,
+          "hoehe": 14,
+          "flur": {
+            "y": 5,
+            "h": 2,
+            "name": "Eingang",
+            "eingang": {
+              "von": 5.3,
+              "bis": 6.7
+            },
+            "spieler": [
+              1.2,
+              6.0
+            ],
+            "deko": [
+              {
+                "typ": "fussmatte",
+                "x": 0.25,
+                "y": 5.35,
+                "w": 0.7,
+                "h": 1.3
+              },
+              {
+                "typ": "feuerloescher",
+                "x": 9.8,
+                "y": 6.45,
+                "w": 0.4,
+                "h": 0.4
+              }
+            ]
+          },
+          "fenster": [
+            [
+              1.0,
+              0,
+              3.2,
+              0
+            ],
+            [
+              4.2,
+              0,
+              6.4,
+              0
+            ],
+            [
+              7.4,
+              0,
+              9.4,
+              0
+            ],
+            [
+              11.0,
+              0,
+              13.6,
+              0
+            ],
+            [
+              17.0,
+              0,
+              21.0,
+              0
+            ],
+            [
+              26.6,
+              0,
+              29.4,
+              0
+            ],
+            [
+              0,
+              1.0,
+              0,
+              3.8
+            ],
+            [
+              0,
+              8.5,
+              0,
+              12.5
+            ],
+            [
+              1.4,
+              14,
+              3.6,
+              14
+            ],
+            [
+              5.0,
+              14,
+              7.2,
+              14
+            ],
+            [
+              11.0,
+              14,
+              13.4,
+              14
+            ],
+            [
+              16.6,
+              14,
+              18.9,
+              14
+            ],
+            [
+              23.0,
+              14,
+              25.4,
+              14
+            ],
+            [
+              27.0,
+              14,
+              29.4,
+              14
+            ],
+            [
+              30,
+              1.0,
+              30,
+              3.8
+            ],
+            [
+              30,
+              8.5,
+              30,
+              12.5
+            ]
+          ],
+          "raeume": [
+            {
+              "id": "grossraum",
+              "name": "Büro",
+              "cat": "netzwerk",
+              "x": 0,
+              "y": 0,
+              "w": 10,
+              "h": 5,
+              "tuer": {
+                "von": 4.6,
+                "bis": 5.8
+              },
+              "boden": "teppichboden",
+              "text": "Dein erstes Büro: drei Schreibtische, ein Whiteboard und viel Ehrgeiz.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 3.4,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 0.8,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 3.9,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 7.0,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 9.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 0.3,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "kaffeeecke",
+              "name": "Kaffeeecke",
+              "kurz": "Kaffee",
+              "cat": "wirtschaft",
+              "x": 10,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 11.2,
+                "bis": 12.4
+              },
+              "boden": "fliesen",
+              "text": "Kaffeemaschine, Wasserspender und ein Tisch für die Besprechung mit Kunden.",
+              "deko": [
+                {
+                  "typ": "kaffeemaschine",
+                  "x": 15.2,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 0.6
+                },
+                {
+                  "typ": "wasserspender",
+                  "x": 14.3,
+                  "y": 0.35,
+                  "w": 0.55,
+                  "h": 0.55
+                },
+                {
+                  "typ": "tisch",
+                  "x": 11.6,
+                  "y": 1.4,
+                  "w": 2.4,
+                  "h": 1.2
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 15.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero2",
+              "name": "Büro 2",
+              "kurz": "Büro 2",
+              "cat": "systeme",
+              "x": 0,
+              "y": 7,
+              "w": 16,
+              "h": 7,
+              "tuer": {
+                "von": 7.4,
+                "bis": 8.6
+              },
+              "boden": "teppichboden",
+              "text": "Der Ausbau: drei weitere Arbeitsplätze und ein Tisch für Testgeräte.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 1.0,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 4.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 11.4,
+                  "y": 8.4,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "tisch",
+                  "x": 14.0,
+                  "y": 8.2,
+                  "w": 1.6,
+                  "h": 2.6
+                },
+                {
+                  "typ": "regal",
+                  "x": 0.3,
+                  "y": 13.2,
+                  "w": 2.4,
+                  "h": 0.5
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 9.6,
+                  "y": 13.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero3",
+              "name": "Büro 3",
+              "kurz": "Büro 3",
+              "cat": "datenbanken",
+              "x": 16,
+              "y": 0,
+              "w": 6,
+              "h": 5,
+              "tuer": {
+                "von": 18.4,
+                "bis": 19.6
+              },
+              "boden": "teppichboden",
+              "text": "Das dritte Büro im Anbau: zwei Arbeitsplätze mit Blick auf die Gleise.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 16.6,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 19.3,
+                  "y": 1.1,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "aktenregal",
+                  "x": 16.25,
+                  "y": 3.0,
+                  "w": 0.5,
+                  "h": 1.7
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 21.0,
+                  "y": 4.0,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "besprechung",
+              "name": "Besprechungsraum",
+              "kurz": "Bespr.",
+              "cat": "wirtschaft",
+              "x": 16,
+              "y": 7,
+              "w": 3.5,
+              "h": 7,
+              "tuer": {
+                "von": 16.9,
+                "bis": 18.1
+              },
+              "boden": "parkett",
+              "text": "Großer Tisch, Whiteboard, gute Stühle: Hier überzeugst du Kunden, bevor Bitweiche anruft.",
+              "deko": [
+                {
+                  "typ": "besprechungstisch",
+                  "x": 17.0,
+                  "y": 8.9,
+                  "w": 1.5,
+                  "h": 3.6
+                },
+                {
+                  "typ": "whiteboard",
+                  "x": 16.35,
+                  "y": 13.55,
+                  "w": 2.8,
+                  "h": 0.22
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 18.6,
+                  "y": 7.3,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "firmenlager",
+              "name": "Lager",
+              "kurz": "Lager",
+              "cat": "systeme",
+              "x": 19.5,
+              "y": 7,
+              "w": 2.5,
+              "h": 7,
+              "tuer": {
+                "von": 19.9,
+                "bis": 21.1
+              },
+              "boden": "beton",
+              "text": "Regale bis unter die Decke. Wer in größeren Mengen einkauft, zahlt weniger.",
+              "deko": [
+                {
+                  "typ": "hochregal",
+                  "x": 21.05,
+                  "y": 8.4,
+                  "w": 0.85,
+                  "h": 5.1
+                },
+                {
+                  "typ": "palette",
+                  "x": 19.7,
+                  "y": 9.0,
+                  "w": 1.2,
+                  "h": 0.8
+                },
+                {
+                  "typ": "kartons",
+                  "x": 19.7,
+                  "y": 11.4,
+                  "w": 1.2,
+                  "h": 0.9
+                },
+                {
+                  "typ": "feuerloescher",
+                  "x": 19.65,
+                  "y": 13.45,
+                  "w": 0.4,
+                  "h": 0.4
+                }
+              ]
+            },
+            {
+              "id": "firmenserver",
+              "name": "Serverraum",
+              "kurz": "Server",
+              "cat": "netzwerk",
+              "x": 22,
+              "y": 0,
+              "w": 4,
+              "h": 5,
+              "tuer": {
+                "von": 22.6,
+                "bis": 23.8
+              },
+              "boden": "doppelboden",
+              "text": "Zwei Serverschränke, Klimagerät und USV: Hier testet dein Team, bevor es beim Kunden ernst wird.",
+              "deko": [
+                {
+                  "typ": "rack",
+                  "x": 22.3,
+                  "y": 0.3,
+                  "w": 1.0,
+                  "h": 2.6
+                },
+                {
+                  "typ": "rack",
+                  "x": 23.5,
+                  "y": 0.3,
+                  "w": 1.0,
+                  "h": 2.6
+                },
+                {
+                  "typ": "klima",
+                  "x": 25.25,
+                  "y": 0.4,
+                  "w": 0.55,
+                  "h": 1.9
+                },
+                {
+                  "typ": "usv",
+                  "x": 24.5,
+                  "y": 3.6,
+                  "w": 1.3,
+                  "h": 1.0
+                }
+              ]
+            },
+            {
+              "id": "buero4",
+              "name": "Büro 4",
+              "kurz": "Büro 4",
+              "cat": "sicherheit",
+              "x": 22,
+              "y": 7,
+              "w": 4,
+              "h": 7,
+              "tuer": {
+                "von": 22.4,
+                "bis": 23.6
+              },
+              "boden": "teppichboden",
+              "text": "Zwei Arbeitsplätze in der Halle Süd, ruhig und hell.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 23.4,
+                  "y": 8.3,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 23.4,
+                  "y": 11.2,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 22.2,
+                  "y": 13.05,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "schulung",
+              "name": "Schulungsraum",
+              "kurz": "Schule",
+              "cat": "datenbanken",
+              "x": 26,
+              "y": 0,
+              "w": 4,
+              "h": 5,
+              "tuer": {
+                "von": 26.6,
+                "bis": 27.8
+              },
+              "boden": "teppichboden",
+              "text": "Tischreihen und ein Whiteboard: Hier lernt dein Team dazu, ohne weit zu fahren.",
+              "deko": [
+                {
+                  "typ": "whiteboard",
+                  "x": 26.5,
+                  "y": 0.2,
+                  "w": 3.0,
+                  "h": 0.22
+                },
+                {
+                  "typ": "tisch",
+                  "x": 26.6,
+                  "y": 1.1,
+                  "w": 2.8,
+                  "h": 0.8
+                },
+                {
+                  "typ": "tisch",
+                  "x": 26.6,
+                  "y": 2.5,
+                  "w": 2.8,
+                  "h": 0.8
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 29.1,
+                  "y": 4.1,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            },
+            {
+              "id": "buero5",
+              "name": "Büro 5",
+              "kurz": "Büro 5",
+              "cat": "systeme",
+              "x": 26,
+              "y": 7,
+              "w": 4,
+              "h": 7,
+              "tuer": {
+                "von": 26.4,
+                "bis": 27.6
+              },
+              "boden": "teppichboden",
+              "text": "Zwei Arbeitsplätze in der Halle Nord, direkt neben dem Schulungsraum.",
+              "deko": [
+                {
+                  "typ": "schreibtisch",
+                  "x": 27.4,
+                  "y": 8.3,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "schreibtisch",
+                  "x": 27.4,
+                  "y": 11.2,
+                  "w": 2.2,
+                  "h": 1.0,
+                  "blick": "s"
+                },
+                {
+                  "typ": "pflanze",
+                  "x": 26.2,
+                  "y": 13.05,
+                  "w": 0.75,
+                  "h": 0.75
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "bewerbung": {
+    "abstand_tage": 5,
+    "anzahl": 3,
+    "werte_min": 10,
+    "werte_max": 50,
+    "schwerpunkt_plus": 20,
+    "thema_streuung": 10,
+    "staerken": 2,
+    "staerke_plus": 20
+  },
+  "gehalt": {
+    "basis": 60,
+    "je_punkt": 0.8
+  },
+  "umsatz": {
+    "basis": 30,
+    "je_punkt": 1.8
+  },
+  "weiterbildung": {
+    "preis": 600,
+    "aufschlag": 200,
+    "tage": 4,
+    "plus": 6,
+    "max": 90,
+    "fachbereich": {
+      "preis": 1400,
+      "tage": 5,
+      "plus": 3
+    }
+  },
+  "lernen": {
+    "ticket_erfolg": 1,
+    "projekt_fertig": 2,
+    "projekt_puenktlich": 1,
+    "routine_tage": 15,
+    "routine_plus": 1,
+    "halb_ab": 50,
+    "deckel": 70,
+    "max": 90,
+    "alt_streuung": 5
+  },
+  "namen": {
+    "vornamen": [
+      "Anna",
+      "Ben",
+      "Clara",
+      "David",
+      "Elif",
+      "Felix",
+      "Greta",
+      "Hannes",
+      "Ida",
+      "Jan",
+      "Kira",
+      "Leon",
+      "Mara",
+      "Niklas",
+      "Olga",
+      "Pia",
+      "Quentin",
+      "Rosa",
+      "Samir",
+      "Tessa",
+      "Umut",
+      "Vera",
+      "Wiebke",
+      "Yusuf",
+      "Zoe",
+      "Malte",
+      "Nele",
+      "Ole",
+      "Sina",
+      "Timo"
+    ],
+    "nachnamen": [
+      "Albrecht",
+      "Berger",
+      "Claasen",
+      "Dietz",
+      "Engel",
+      "Fink",
+      "Graf",
+      "Hahn",
+      "Iske",
+      "Jung",
+      "Keller",
+      "Lorenz",
+      "Möller",
+      "Neumann",
+      "Otto",
+      "Peters",
+      "Quast",
+      "Riedel",
+      "Schulz",
+      "Thiel",
+      "Ulrich",
+      "Vogt",
+      "Winter",
+      "Yilmaz",
+      "Ziegler",
+      "Brandl",
+      "Kuhn",
+      "Lang",
+      "Marx",
+      "Seidel"
+    ]
+  },
+  "macken": [
+    {
+      "id": "pedantisch",
+      "name": "Pedantisch",
+      "text": "Hat für jedes Kabel eine eigene Farbe und für jede Farbe eine Regel.",
+      "plus": {"chance_netzwerk": 8},
+      "minus": {"umsatz": -10}
+    },
+    {
+      "id": "erklaerbaer",
+      "name": "Erklärbär",
+      "text": "Trinkt nur Tee und erklärt gern, warum.",
+      "plus": {"team_lernen": 1},
+      "minus": {"projekt": -15}
+    },
+    {
+      "id": "dokumentiert",
+      "name": "Dokumentiert alles",
+      "text": "Schreibt Dokumentation, bevor jemand danach fragt.",
+      "plus": {"kz_erfolg": 1, "kz_fehlschlag": 1},
+      "minus": {"projekt": -10}
+    },
+    {
+      "id": "talbahn",
+      "name": "Talbahn-Kenner",
+      "text": "Kennt jeden Bahnhof der Talbahn mit Gleisnummer.",
+      "plus": {"chance_talbahn": 10},
+      "minus": {"urlaub": 60}
+    },
+    {
+      "id": "listenmensch",
+      "name": "Listenmensch",
+      "text": "Startet jeden Morgen mit einer Liste. Und endet mit einer längeren.",
+      "plus": {"projekt": 15},
+      "minus": {"chance": -5}
+    },
+    {
+      "id": "vorbereitet",
+      "name": "Immer vorbereitet",
+      "text": "Hat immer einen Schraubendreher in der Jackentasche.",
+      "plus": {"umsatz": 10, "chance_hardware": 5},
+      "minus": {"weiterbildung_tage": 1}
+    },
+    {
+      "id": "gruendlich",
+      "name": "Langsam, aber gründlich",
+      "text": "Testet alles zweimal, beim dritten Mal nur zur Sicherheit.",
+      "plus": {"chance": 10},
+      "minus": {"umsatz": -15, "projekt": -10}
+    },
+    {
+      "id": "gute_laune",
+      "name": "Gute Laune",
+      "text": "Summt beim Konfigurieren leise vor sich hin.",
+      "plus": {"stimmung_team": 1, "umsatz": 5},
+      "minus": {"konflikt": 100}
+    },
+    {
+      "id": "sammler",
+      "name": "Sammler",
+      "text": "Hat ein Faible für alte Hardware und rettet jedes Netzteil.",
+      "plus": {"lernen_hardware": 100},
+      "minus": {"lernen_andere": -50}
+    },
+    {
+      "id": "whiteboard",
+      "name": "Whiteboard-Fan",
+      "text": "Findet, dass jedes Problem mit einem Whiteboard kleiner wird.",
+      "plus": {"team_projekt": 5},
+      "minus": {"chance": -5}
+    },
+    {
+      "id": "nachteule",
+      "name": "Nachteule",
+      "text": "Arbeitet am liebsten nachts und kommt dafür erst um zehn.",
+      "plus": {"projekt": 10},
+      "minus": {"krank": 50}
+    },
+    {
+      "id": "kundenfluesterer",
+      "name": "Kundenflüsterer",
+      "text": "Kann Kunden am Telefon jede Sorge nehmen, nur nicht die eigene.",
+      "plus": {"kz_erfolg": 1},
+      "minus": {"stimmung_fehlschlag": 3}
+    },
+    {
+      "id": "neugierig",
+      "name": "Neugierig",
+      "text": "Fragt zu allem „Warum?“. Steckt gern Kabel um, „nur zum Testen“.",
+      "plus": {"lernen": 50},
+      "minus": {"chance": -5},
+      "kollege": "tim"
+    },
+    {
+      "id": "ordnung_im_netz",
+      "name": "Ordnung im Netz",
+      "text": "Beschriftet jedes Kabel an beiden Enden. Auch das Ladekabel ihres Handys.",
+      "plus": {"chance_netzwerk": 8, "kz_erfolg": 1},
+      "minus": {"umsatz": -5},
+      "kollege": "svenja"
+    }
+  ],
+  "personal": {
+    "stimmung": {
+      "start": 70,
+      "ziel": 70,
+      "erholung": 1,
+      "tief": 40,
+      "tief_leistung": 10,
+      "tief_chance": 5,
+      "kritisch": 20,
+      "kuendigung_nach": 3
+    },
+    "krankheit": {"chance": 1, "tage_min": 2, "tage_max": 4},
+    "urlaub": {
+      "ab_tagen": 15,
+      "chance": 2,
+      "abstand": 10,
+      "abstand_firma": 4,
+      "vorlauf": 5,
+      "tage_min": 3,
+      "tage_max": 5,
+      "genehmigt": 10,
+      "abgelehnt": -15,
+      "abgelehnt_wieder": -25,
+      "texte": [
+        "„Meine Schwester heiratet an der Küste. Das wäre wichtig.“",
+        "„Ich würde gern mal ein paar Tage raus, bevor ich anfange, mit den Servern zu reden.“",
+        "„Ich hab eine Hütte in den Bergen gefunden. Ohne WLAN. Mit Absicht.“",
+        "„Wir ziehen um, und die Kartons packen sich leider nicht von allein.“",
+        "„Meine Eltern feiern Goldene Hochzeit. Ich soll die Technik machen, natürlich.“",
+        "„Ich möchte endlich den Radweg an der Talbahn entlang fahren. Einmal ganz.“"
+      ],
+      "text_talbahn": "„Die Talbahn fährt eine Sonderfahrt mit der alten Dampflok. Die ganze Strecke! Da muss ich einfach mit.“"
+    },
+    "konflikt": {
+      "ab_mitarbeiter": 3,
+      "chance": 5,
+      "abstand": 8,
+      "schlichten": 5,
+      "partei_plus": 10,
+      "partei_minus": -10,
+      "ignorieren": -5,
+      "verstimmt_tage": 5,
+      "verstimmt_leistung": 10,
+      "verstimmt_chance": 5,
+      "texte": [
+        "{a} und {b} streiten, wer den Kaffee zuletzt leer gemacht hat. Inzwischen redet keiner mehr mit dem anderen.",
+        "{a} hat den Serverschrank umgeräumt, ohne {b} zu fragen. {b} findet jetzt nichts mehr und ist sauer.",
+        "{a} beschwert sich bei dir: {b} schiebt die unbeliebten Tickets immer rüber.",
+        "{b} hat im Kundengespräch die Lösung von {a} als eigene Idee verkauft. {a} kocht.",
+        "Streit um den Fensterplatz: {a} will frische Luft, {b} friert. Die Heizung läuft auf fünf.",
+        "{a} und {b} sind sich uneinig, ob das Netz neu verkabelt oder nur geflickt wird. Seit einer Stunde geht es hin und her.",
+        "{a} findet die Dokumentation von {b} „unlesbar“. {b} findet die von {a} „nicht vorhanden“.",
+        "{b} kam schon wieder zu spät zum Kundentermin. {a} musste allein hin und will das nicht noch einmal."
+      ],
+      "summen": "{a} summt seit dem Morgen vor sich hin. {b} hält es nicht mehr aus und bittet dich, etwas zu unternehmen."
+    },
+    "coaching": {"preis": 800, "tage": 3},
+    "macken": {
+      "stufen": {"1": ["leicht", 30], "2": ["mittel", 60], "3": ["stark", 100]},
+      "abschwaechen_tage": 45
+    }
+  },
+  "wechsel": [
+    {
+      "kollege": "tim",
+      "staerken": ["verkabelung", "hardware"],
+      "nach_tagen": 5,
+      "offen_tage": 15,
+      "werte": {
+        "netzwerk": 35,
+        "sicherheit": 15,
+        "systeme": 25,
+        "wirtschaft": 10,
+        "datenbanken": 15
+      },
+      "text": [
+        "Eine Nachricht von Tim: „Ich hab die Ausbildung fast durch. Bei Bitweiche mache ich seit Wochen nur noch Tabellen für Paul. Bei dir würde ich mehr lernen.“",
+        "Tim steht jetzt in deinen Bewerbungen."
+      ]
+    },
+    {
+      "kollege": "svenja",
+      "staerken": ["routing", "windows"],
+      "nach_tagen": 15,
+      "offen_tage": 15,
+      "werte": {
+        "netzwerk": 60,
+        "sicherheit": 35,
+        "systeme": 50,
+        "wirtschaft": 20,
+        "datenbanken": 25
+      },
+      "text": [
+        "Svenja ruft an, ungewohnt leise: „Sabine will, dass ich nur noch Angebote gegen dich schreibe. Darauf habe ich keine Lust. Hast du Platz für eine Netzwerktechnikerin?“",
+        "Svenja steht jetzt in deinen Bewerbungen."
+      ]
+    }
+  ],
+  "kunden": [
+    {
+      "id": "talbahn_petra",
+      "name": "Talbahn, Bahnhof Talheim",
+      "kontakt": "Petra Lindner",
+      "art": "talbahn",
+      "satz": "Petra schreibt dazu: „Bitweiche hat uns für so etwas bisher immer einen Sonderpreis gemacht.“"
+    },
+    {
+      "id": "talbahn_wendt",
+      "name": "Talbahn-Verwaltung Lindenau",
+      "kontakt": "Dr. Holger Wendt",
+      "art": "talbahn",
+      "ort": "lindenau",
+      "satz": "Dr. Wendt legt jedes Angebot neben den Rahmenvertrag von Bitweiche."
+    },
+    {
+      "id": "talbahn_marta",
+      "name": "Betriebswerkstatt Talheim",
+      "kontakt": "Marta Kowalczyk",
+      "art": "talbahn",
+      "satz": "Marta: „Die Talbahn will sparen. Und Bitweiche weiß das.“"
+    },
+    {
+      "id": "praxis_keller",
+      "name": "Praxis Dr. Keller",
+      "kontakt": "Dr. Johanna Keller",
+      "art": "normal",
+      "satz": "Ihr ist wichtig, dass schnell jemand vor Ort ist. Der Preis soll fair sein."
+    },
+    {
+      "id": "kanzlei",
+      "name": "Kanzlei Rautenberg & Partner",
+      "kontakt": "Stefan Rautenberg",
+      "art": "normal",
+      "satz": "„Wir holen wie immer zwei Angebote ein, eins davon bei Bitweiche.“"
+    },
+    {
+      "id": "schule",
+      "name": "Grundschule am Park",
+      "kontakt": "Frau Yilmaz (Schulleitung)",
+      "art": "normal",
+      "satz": "Die Stadt zahlt als Schulträger. Der Preis muss im üblichen Rahmen bleiben."
+    },
+    {
+      "id": "autohaus",
+      "name": "Autohaus Weber",
+      "kontakt": "Carsten Weber",
+      "art": "normal",
+      "satz": "„Qualität geht vor. Mondpreise zahlen wir aber auch nicht.“"
+    },
+    {
+      "id": "baeckerei",
+      "name": "Bäckerei Hollmann",
+      "kontakt": "Bernd Hollmann",
+      "art": "preisbewusst",
+      "satz": "Herr Hollmann: „Bei drei Filialen und den Mehlpreisen zählt jeder Euro.“"
+    },
+    {
+      "id": "verein",
+      "name": "TSV Talheim 1911",
+      "kontakt": "Uwe Petersen (Kassenwart)",
+      "art": "preisbewusst",
+      "satz": "Der Kassenwart muss jeden Euro zweimal umdrehen."
+    }
+  ],
+  "angebote": {
+    "pro_tag": 2,
+    "handlungskosten": 20,
+    "ust": 19,
+    "zuschlaege": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "vorteil": {
+      "ab_kundenzufriedenheit": 80,
+      "prozent": 3
+    },
+    "kundenzufriedenheit_gewonnen": 2,
+    "lieferzeit": {
+      "von": 3,
+      "bis": 10
+    },
+    "arten": {
+      "preisbewusst": {
+        "name": "preisbewusst",
+        "von": 3,
+        "bis": 16
+      },
+      "normal": {
+        "name": "normal",
+        "von": 6,
+        "bis": 26
+      },
+      "talbahn": {
+        "name": "Talbahn (Großkunde von Bitweiche)",
+        "von": 4,
+        "bis": 20
+      }
+    },
+    "texte": [
+      "{kontakt} schreibt: „Wir brauchen {menge} × {artikel}. Können Sie uns ein Angebot schicken? Lieferung bitte in {lieferzeit} Arbeitstagen.“",
+      "Anfrage von {kontakt}: „Für unsere Erweiterung suchen wir {menge} × {artikel}, geliefert in {lieferzeit} Arbeitstagen. Was würde das bei Ihnen kosten?“",
+      "{kontakt} ruft an: „Wir bräuchten {menge} × {artikel}. Schaffen Sie das in {lieferzeit} Arbeitstagen? Dann schicken Sie mir bitte ein Angebot.“"
+    ],
+    "artikel": [
+      {
+        "name": "Business-Notebook 14 Zoll",
+        "preis": [
+          650,
+          950
+        ],
+        "menge": [
+          3,
+          12
+        ]
+      },
+      {
+        "name": "Dockingstation USB-C",
+        "preis": [
+          140,
+          220
+        ],
+        "menge": [
+          3,
+          12
+        ]
+      },
+      {
+        "name": "Monitor 27 Zoll",
+        "preis": [
+          170,
+          290
+        ],
+        "menge": [
+          4,
+          15
+        ]
+      },
+      {
+        "name": "Büro-PC (Mini-Tower)",
+        "preis": [
+          480,
+          720
+        ],
+        "menge": [
+          3,
+          10
+        ]
+      },
+      {
+        "name": "Thin Client",
+        "preis": [
+          260,
+          380
+        ],
+        "menge": [
+          5,
+          15
+        ]
+      },
+      {
+        "name": "Tastatur-Maus-Set",
+        "preis": [
+          35,
+          65
+        ],
+        "menge": [
+          5,
+          20
+        ]
+      },
+      {
+        "name": "Headset mit Geräuschunterdrückung",
+        "preis": [
+          70,
+          140
+        ],
+        "menge": [
+          4,
+          15
+        ]
+      },
+      {
+        "name": "Managed Switch 24 Port",
+        "preis": [
+          380,
+          620
+        ],
+        "menge": [
+          1,
+          4
+        ]
+      },
+      {
+        "name": "WLAN-Access-Point",
+        "preis": [
+          140,
+          260
+        ],
+        "menge": [
+          3,
+          10
+        ]
+      },
+      {
+        "name": "Firewall-Appliance",
+        "preis": [
+          900,
+          1800
+        ],
+        "menge": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "USV 1500 VA",
+        "preis": [
+          320,
+          520
+        ],
+        "menge": [
+          1,
+          4
+        ]
+      },
+      {
+        "name": "NAS mit vier Festplatten",
+        "preis": [
+          850,
+          1400
+        ],
+        "menge": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Netzwerkdrucker A4 Farbe",
+        "preis": [
+          380,
+          650
+        ],
+        "menge": [
+          1,
+          4
+        ]
+      },
+      {
+        "name": "Multifunktionsgerät A3",
+        "preis": [
+          1200,
+          2100
+        ],
+        "menge": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Etikettendrucker",
+        "preis": [
+          150,
+          260
+        ],
+        "menge": [
+          1,
+          4
+        ]
+      },
+      {
+        "name": "Tablet mit Schutzhülle",
+        "preis": [
+          330,
+          520
+        ],
+        "menge": [
+          3,
+          10
+        ]
+      },
+      {
+        "name": "Diensthandy",
+        "preis": [
+          280,
+          480
+        ],
+        "menge": [
+          3,
+          12
+        ]
+      },
+      {
+        "name": "Server-Festplatte 8 TB",
+        "preis": [
+          190,
+          290
+        ],
+        "menge": [
+          2,
+          8
+        ]
+      },
+      {
+        "name": "Office-Lizenz (1 Jahr)",
+        "preis": [
+          90,
+          140
+        ],
+        "menge": [
+          5,
+          20
+        ]
+      },
+      {
+        "name": "Virenschutz-Lizenz (1 Jahr)",
+        "preis": [
+          25,
+          45
+        ],
+        "menge": [
+          10,
+          30
+        ]
+      },
+      {
+        "name": "Beamer",
+        "preis": [
+          520,
+          900
+        ],
+        "menge": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "Kassenterminal mit Bondrucker",
+        "preis": [
+          700,
+          1100
+        ],
+        "menge": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "Webcam Full HD",
+        "preis": [
+          55,
+          95
+        ],
+        "menge": [
+          4,
+          12
+        ]
+      },
+      {
+        "name": "Patchkabel Cat. 6 (10er-Pack)",
+        "preis": [
+          25,
+          40
+        ],
+        "menge": [
+          3,
+          10
+        ]
+      }
+    ],
+    "hilfe": [
+      "Rechne von oben nach unten: Einkaufspreis gesamt = Menge × Einkaufspreis je Stück.",
+      "Handlungskosten = Einkaufspreis gesamt × Handlungskostenzuschlag. Selbstkosten = Einkaufspreis gesamt + Handlungskosten.",
+      "Gewinn = Selbstkosten × Gewinnzuschlag. Nettoverkaufspreis = Selbstkosten + Gewinn.",
+      "Umsatzsteuer = Nettoverkaufspreis × 19 %. Bruttoverkaufspreis = Nettoverkaufspreis + Umsatzsteuer.",
+      "Bitweiche rechnet mit denselben Selbstkosten, lässt sich aber nicht in die Karten schauen: Meist liegt ihr Zuschlag in der üblichen Spanne des Kunden, manchmal gibt es einen Kampfpreis, manchmal sind sie ausgelastet und teuer. Je knapper dein Zuschlag, desto eher bekommst du den Auftrag, desto weniger bleibt aber hängen."
+    ],
+    "laune": {
+      "kampfpreis": {
+        "chance": 0.12,
+        "von": 0,
+        "bis": 4,
+        "text": "Bitweiche wollte den Auftrag unbedingt und hat einen Kampfpreis gemacht."
+      },
+      "ausgelastet": {
+        "chance": 0.12,
+        "plus_von": 10,
+        "plus_bis": 20,
+        "text": "Bitweiche ist gerade ausgelastet und hat nur ein teures Angebot geschickt."
+      }
+    }
+  },
+  "tickets": {
+    "grundzahl": 1,
+    "je_mitarbeiter": 1,
+    "mindestens": 2,
+    "spieler_max": 2,
+    "mitarbeiter_max": 1,
+    "chance": {
+      "basis": 60,
+      "je_punkt": 1.5,
+      "min": 10,
+      "max": 95
+    },
+    "stufen": {
+      "leicht": {
+        "name": "leicht",
+        "anforderung": 25,
+        "geld": 60
+      },
+      "mittel": {
+        "name": "mittel",
+        "anforderung": 45,
+        "geld": 110
+      },
+      "schwer": {
+        "name": "schwer",
+        "anforderung": 65,
+        "geld": 180
+      }
+    },
+    "erfolg": {
+      "kundenzufriedenheit": 1
+    },
+    "fehlschlag": {
+      "kundenzufriedenheit": -2
+    },
+    "vorlagen": [
+      {
+        "id": "netz-wlan-wartezimmer",
+        "titel": "Gäste-WLAN im Wartezimmer bricht ab",
+        "kunde": "praxis_keller",
+        "cat": "netzwerk",
+        "thema": "wlan",
+        "stufe": "leicht",
+        "text": "„Die Patienten beschweren sich, dass das WLAN im Wartezimmer alle paar Minuten weg ist.“"
+      },
+      {
+        "id": "netz-kasse-drucker",
+        "titel": "Kasse findet den Bondrucker nicht",
+        "kunde": "baeckerei",
+        "cat": "netzwerk",
+        "thema": "fehlersuche",
+        "stufe": "leicht",
+        "text": "„Seit dem Stromausfall druckt die Kasse in der Filiale am Markt keine Bons mehr.“"
+      },
+      {
+        "id": "netz-router-vereinsheim",
+        "titel": "Neuen Router im Vereinsheim einrichten",
+        "kunde": "verein",
+        "cat": "netzwerk",
+        "thema": "dienste",
+        "stufe": "leicht",
+        "text": "„Der neue Router liegt noch im Karton. Das alte Passwort weiß keiner mehr.“"
+      },
+      {
+        "id": "netz-dose-klasse",
+        "titel": "Netzwerkdose in Klasse 3 ist tot",
+        "kunde": "schule",
+        "cat": "netzwerk",
+        "thema": "verkabelung",
+        "stufe": "leicht",
+        "text": "„Das Smartboard in Klasse 3 hat kein Netz. An der Dose leuchtet nichts.“"
+      },
+      {
+        "id": "netz-vpn-homeoffice",
+        "titel": "VPN für zwei Anwälte im Homeoffice",
+        "kunde": "kanzlei",
+        "cat": "netzwerk",
+        "thema": "wan_vpn",
+        "stufe": "mittel",
+        "text": "„Zwei Kollegen sollen von zu Hause sicher auf die Akten zugreifen können.“"
+      },
+      {
+        "id": "netz-vlan-autohaus",
+        "titel": "Werkstatt und Verkauf in getrennte VLANs",
+        "kunde": "autohaus",
+        "cat": "netzwerk",
+        "thema": "switching",
+        "stufe": "mittel",
+        "text": "„Die Werkstattrechner sollen nicht mehr im selben Netz hängen wie die Buchhaltung.“"
+      },
+      {
+        "id": "netz-switch-werkstatt",
+        "titel": "Switch in der Betriebswerkstatt tauschen",
+        "kunde": "talbahn_marta",
+        "cat": "netzwerk",
+        "thema": "switching",
+        "stufe": "mittel",
+        "text": "„Der alte Switch in Halle 2 fällt immer wieder aus. Bitte tauschen und die Ports wie vorher einrichten.“"
+      },
+      {
+        "id": "netz-fahrgast-wlan",
+        "titel": "Fahrgast-WLAN am Bahnhof ausleuchten",
+        "kunde": "talbahn_petra",
+        "cat": "netzwerk",
+        "thema": "wlan",
+        "stufe": "mittel",
+        "text": "„Am Ende von Gleis 2 gibt es kein WLAN. Bitte messen, wo ein Access Point fehlt.“"
+      },
+      {
+        "id": "netz-standort-vpn",
+        "titel": "Standortvernetzung Lindenau per VPN",
+        "kunde": "talbahn_wendt",
+        "cat": "netzwerk",
+        "thema": "wan_vpn",
+        "stufe": "schwer",
+        "text": "„Lindenau soll ohne Umweg über Bitweiche mit dem Bahnhof Talheim verbunden werden.“"
+      },
+      {
+        "id": "netz-dhcp-relay",
+        "titel": "Neues Subnetz mit DHCP-Relay",
+        "kunde": "autohaus",
+        "cat": "netzwerk",
+        "thema": "routing",
+        "stufe": "schwer",
+        "text": "„Die neue Waschstraße bekommt ein eigenes Netz, der DHCP-Server steht aber im Hauptgebäude.“"
+      },
+      {
+        "id": "sich-passwoerter-verein",
+        "titel": "Passwörter der Vereinsrechner erneuern",
+        "kunde": "verein",
+        "cat": "sicherheit",
+        "thema": "zugriff",
+        "stufe": "leicht",
+        "text": "„Auf allen Rechnern im Vereinsbüro ist das Passwort seit Jahren TSV1911.“"
+      },
+      {
+        "id": "sich-rechnungsmail",
+        "titel": "Verdächtige Rechnungs-Mail prüfen",
+        "kunde": "baeckerei",
+        "cat": "sicherheit",
+        "thema": "angriffe",
+        "stufe": "leicht",
+        "text": "„Da kam eine Rechnung vom Mehllieferanten, aber mit einem ZIP-Anhang. Ist die echt?“"
+      },
+      {
+        "id": "sich-bildschirmsperre",
+        "titel": "Bildschirmsperre an der Anmeldung",
+        "kunde": "praxis_keller",
+        "cat": "sicherheit",
+        "thema": "haertung",
+        "stufe": "leicht",
+        "text": "„Patienten können am Empfang auf die Bildschirme schauen, wenn niemand da ist.“"
+      },
+      {
+        "id": "sich-virenschutz-schule",
+        "titel": "Virenschutz der Schülerrechner aktualisieren",
+        "kunde": "schule",
+        "cat": "sicherheit",
+        "thema": "haertung",
+        "stufe": "leicht",
+        "text": "„Auf den Rechnern im Computerraum meldet der Virenschutz, dass er veraltet ist.“"
+      },
+      {
+        "id": "sich-verschluesselung",
+        "titel": "Notebooks verschlüsseln",
+        "kunde": "kanzlei",
+        "cat": "sicherheit",
+        "thema": "krypto",
+        "stufe": "mittel",
+        "text": "„Ein Notebook mit Mandantendaten darf nie wieder unverschlüsselt im Zug liegen bleiben.“"
+      },
+      {
+        "id": "sich-zwei-faktor",
+        "titel": "Zwei-Faktor-Anmeldung für die Praxissoftware",
+        "kunde": "praxis_keller",
+        "cat": "sicherheit",
+        "thema": "zugriff",
+        "stufe": "mittel",
+        "text": "„Die Kassenärztliche Vereinigung verlangt jetzt eine zweite Anmeldestufe.“"
+      },
+      {
+        "id": "sich-firewall-tablets",
+        "titel": "Firewall-Regeln für Werkstatt-Tablets",
+        "kunde": "autohaus",
+        "cat": "sicherheit",
+        "thema": "netzsicherheit",
+        "stufe": "mittel",
+        "text": "„Die Tablets in der Werkstatt sollen nur die Diagnose-Server erreichen, sonst nichts.“"
+      },
+      {
+        "id": "sich-rechte-leitstelle",
+        "titel": "Berechtigungen im Leitstellen-Laufwerk aufräumen",
+        "kunde": "talbahn_petra",
+        "cat": "sicherheit",
+        "thema": "zugriff",
+        "stufe": "mittel",
+        "text": "„Auf das Leitstellen-Laufwerk kommen gefühlt alle drauf, auch Leute, die längst woanders arbeiten.“"
+      },
+      {
+        "id": "sich-mailkonto",
+        "titel": "Einbruch ins Mailkonto untersuchen",
+        "kunde": "kanzlei",
+        "cat": "sicherheit",
+        "thema": "angriffe",
+        "stufe": "schwer",
+        "text": "„Mandanten haben Mails von uns bekommen, die wir nie geschrieben haben.“"
+      },
+      {
+        "id": "sich-notfallplan",
+        "titel": "Notfallplan für Ransomware",
+        "kunde": "talbahn_wendt",
+        "cat": "sicherheit",
+        "thema": "notfall",
+        "stufe": "schwer",
+        "text": "„Der Vorstand will wissen, was wir tun, wenn morgen alle Dateien verschlüsselt sind.“"
+      },
+      {
+        "id": "sys-kassen-pc",
+        "titel": "Neuen Kassen-PC aufstellen",
+        "kunde": "baeckerei",
+        "cat": "systeme",
+        "thema": "hardware",
+        "stufe": "leicht",
+        "text": "„Der neue Kassen-PC für die Filiale am Markt ist da. Bitte anschließen und einrichten.“"
+      },
+      {
+        "id": "sys-drucker-verein",
+        "titel": "Drucker im Vereinsbüro einrichten",
+        "kunde": "verein",
+        "cat": "systeme",
+        "thema": "windows",
+        "stufe": "leicht",
+        "text": "„Wir haben einen gebrauchten Drucker geschenkt bekommen. Er soll an beiden Rechnern gehen.“"
+      },
+      {
+        "id": "sys-beamer-lehrer",
+        "titel": "Beamer im Lehrerzimmer anschließen",
+        "kunde": "schule",
+        "cat": "systeme",
+        "thema": "hardware",
+        "stufe": "leicht",
+        "text": "„Der Beamer zeigt nur ‚Kein Signal‘ an, egal welches Kabel wir nehmen.“"
+      },
+      {
+        "id": "sys-scanner-anmeldung",
+        "titel": "Scanner an der Anmeldung installieren",
+        "kunde": "praxis_keller",
+        "cat": "systeme",
+        "thema": "windows",
+        "stufe": "leicht",
+        "text": "„Versichertenkarten und Überweisungen sollen direkt in die Praxissoftware gescannt werden.“"
+      },
+      {
+        "id": "sys-updates-kanzlei",
+        "titel": "Windows-Updates auf allen Arbeitsplätzen",
+        "kunde": "kanzlei",
+        "cat": "systeme",
+        "thema": "windows",
+        "stufe": "mittel",
+        "text": "„Seit Monaten klickt jeder die Updates weg. Bitte einmal alles auf Stand bringen.“"
+      },
+      {
+        "id": "sys-image-notebooks",
+        "titel": "Zehn Notebooks mit einem Image betanken",
+        "kunde": "autohaus",
+        "cat": "systeme",
+        "thema": "it_betrieb",
+        "stufe": "mittel",
+        "text": "„Die neuen Verkäufer-Notebooks sollen alle gleich eingerichtet sein.“"
+      },
+      {
+        "id": "sys-diagnose-pc",
+        "titel": "Diagnose-PC der Werkstatt startet nicht",
+        "kunde": "talbahn_marta",
+        "cat": "systeme",
+        "thema": "hardware",
+        "stufe": "mittel",
+        "text": "„Der Diagnose-PC an Gleis 4 piept dreimal und bleibt schwarz.“"
+      },
+      {
+        "id": "sys-tablets-mdm",
+        "titel": "Schul-Tablets zentral verwalten",
+        "kunde": "schule",
+        "cat": "systeme",
+        "thema": "it_betrieb",
+        "stufe": "mittel",
+        "text": "„Wir haben 30 Tablets und richten jedes einzeln ein. Das muss einfacher gehen.“"
+      },
+      {
+        "id": "sys-dateiserver-umzug",
+        "titel": "Dateiserver auf neue Hardware umziehen",
+        "kunde": "talbahn_wendt",
+        "cat": "systeme",
+        "thema": "storage",
+        "stufe": "schwer",
+        "text": "„Der Dateiserver in Lindenau ist neun Jahre alt. Umzug bitte ohne Datenverlust und am Wochenende.“"
+      },
+      {
+        "id": "sys-ruecksicherung",
+        "titel": "Backup mit Rücksicherung testen",
+        "kunde": "praxis_keller",
+        "cat": "systeme",
+        "thema": "storage",
+        "stufe": "schwer",
+        "text": "„Wir sichern jeden Tag. Aber ob die Rücksicherung klappt, hat noch nie jemand ausprobiert.“"
+      },
+      {
+        "id": "wi-vergleich-verein",
+        "titel": "Angebote für Vereins-PCs vergleichen",
+        "kunde": "verein",
+        "cat": "wirtschaft",
+        "thema": "beschaffung",
+        "stufe": "leicht",
+        "text": "„Wir haben drei Angebote für neue PCs und verstehen die Unterschiede nicht.“"
+      },
+      {
+        "id": "wi-lizenzen-kasse",
+        "titel": "Lizenzen der Kassensoftware zählen",
+        "kunde": "baeckerei",
+        "cat": "wirtschaft",
+        "thema": "recht",
+        "stufe": "leicht",
+        "text": "„Der Hersteller will für fünf Kassen Lizenzen abrechnen, wir haben aber nur vier.“"
+      },
+      {
+        "id": "wi-inventar-schule",
+        "titel": "Inventarliste der Schulgeräte aktualisieren",
+        "kunde": "schule",
+        "cat": "wirtschaft",
+        "thema": "service",
+        "stufe": "leicht",
+        "text": "„Die Inventarliste ist von 2019. Der Schulträger will eine aktuelle.“"
+      },
+      {
+        "id": "wi-garantie-tablets",
+        "titel": "Garantiefälle der Werkstatt-Tablets abwickeln",
+        "kunde": "autohaus",
+        "cat": "wirtschaft",
+        "thema": "recht",
+        "stufe": "leicht",
+        "text": "„Zwei Tablets haben gesprungene Displays. Zahlt das die Garantie oder wir?“"
+      },
+      {
+        "id": "wi-leasing-drucker",
+        "titel": "Kauf oder Leasing für neue Drucker",
+        "kunde": "kanzlei",
+        "cat": "wirtschaft",
+        "thema": "kalkulation",
+        "stufe": "mittel",
+        "text": "„Rechnen Sie uns bitte aus, ob sich Leasing für die neuen Drucker lohnt.“"
+      },
+      {
+        "id": "wi-wartungsvertrag",
+        "titel": "Wartungsvertrag für die Praxis-IT",
+        "kunde": "praxis_keller",
+        "cat": "wirtschaft",
+        "thema": "service",
+        "stufe": "mittel",
+        "text": "„Wir hätten gern einen festen Wartungsvertrag mit Reaktionszeit. Was müsste da drinstehen?“"
+      },
+      {
+        "id": "wi-ersatzteilbudget",
+        "titel": "Ersatzteilbudget der Werkstatt planen",
+        "kunde": "talbahn_marta",
+        "cat": "wirtschaft",
+        "thema": "kalkulation",
+        "stufe": "mittel",
+        "text": "„Ich muss dem Vorstand sagen, wie viel wir nächstes Jahr für IT-Ersatzteile brauchen.“"
+      },
+      {
+        "id": "wi-abschreibung",
+        "titel": "Abschreibung der neuen Server berechnen",
+        "kunde": "autohaus",
+        "cat": "wirtschaft",
+        "thema": "kalkulation",
+        "stufe": "mittel",
+        "text": "„Der Steuerberater fragt nach der Abschreibung für die neuen Server.“"
+      },
+      {
+        "id": "wi-it-budget",
+        "titel": "IT-Budget für das nächste Jahr",
+        "kunde": "talbahn_wendt",
+        "cat": "wirtschaft",
+        "thema": "kalkulation",
+        "stufe": "schwer",
+        "text": "„Ich brauche ein IT-Budget für alle Standorte, sauber begründet und mit Reserve.“"
+      },
+      {
+        "id": "wi-ausschreibung",
+        "titel": "Ausschreibung für eine neue Telefonanlage",
+        "kunde": "kanzlei",
+        "cat": "wirtschaft",
+        "thema": "beschaffung",
+        "stufe": "schwer",
+        "text": "„Wir wollen die Telefonanlage ausschreiben. Bitte ein Lastenheft vorbereiten.“"
+      },
+      {
+        "id": "db-mitgliederliste",
+        "titel": "Mitgliederliste in die Datenbank übertragen",
+        "kunde": "verein",
+        "cat": "datenbanken",
+        "thema": "modellierung",
+        "stufe": "leicht",
+        "text": "„Unsere 400 Mitglieder stehen in einer Excel-Datei mit fünf Tabellenblättern.“"
+      },
+      {
+        "id": "db-artikelpreise",
+        "titel": "Artikelpreise in der Kassendatenbank ändern",
+        "kunde": "baeckerei",
+        "cat": "datenbanken",
+        "thema": "sql",
+        "stufe": "leicht",
+        "text": "„Ab Montag kosten alle Brötchen zehn Cent mehr. Bitte in allen Kassen ändern.“"
+      },
+      {
+        "id": "db-doppelte-schueler",
+        "titel": "Doppelte Schülereinträge finden",
+        "kunde": "schule",
+        "cat": "datenbanken",
+        "thema": "sql",
+        "stufe": "leicht",
+        "text": "„In der Schülerverwaltung stehen manche Kinder zweimal, mit leicht anderem Namen.“"
+      },
+      {
+        "id": "db-terminbericht",
+        "titel": "Terminliste als Bericht exportieren",
+        "kunde": "praxis_keller",
+        "cat": "datenbanken",
+        "thema": "sql",
+        "stufe": "leicht",
+        "text": "„Ich brauche jeden Freitag eine Liste aller Termine der nächsten Woche.“"
+      },
+      {
+        "id": "db-inspektion",
+        "titel": "Abfrage: Kunden mit fälliger Inspektion",
+        "kunde": "autohaus",
+        "cat": "datenbanken",
+        "thema": "sql",
+        "stufe": "mittel",
+        "text": "„Wir wollen alle Kunden anschreiben, deren Inspektion in den nächsten 30 Tagen fällig ist.“"
+      },
+      {
+        "id": "db-aktensicherung",
+        "titel": "Sicherung der Aktendatenbank einrichten",
+        "kunde": "kanzlei",
+        "cat": "datenbanken",
+        "thema": "db_betrieb",
+        "stufe": "mittel",
+        "text": "„Die Aktendatenbank wird nur gesichert, wenn jemand daran denkt.“"
+      },
+      {
+        "id": "db-stoerungen",
+        "titel": "Störungsmeldungen nach Bahnhof auswerten",
+        "kunde": "talbahn_petra",
+        "cat": "datenbanken",
+        "thema": "sql",
+        "stufe": "mittel",
+        "text": "„Welche Bahnhöfe haben die meisten IT-Störungen? Die Daten liegen alle in der Datenbank.“"
+      },
+      {
+        "id": "db-ersatzteile",
+        "titel": "Ersatzteil-Datenbank aufräumen",
+        "kunde": "talbahn_marta",
+        "cat": "datenbanken",
+        "thema": "modellierung",
+        "stufe": "mittel",
+        "text": "„In unserer Teile-Datenbank steht der Lieferant bei jedem Teil neu, mit drei verschiedenen Schreibweisen.“"
+      },
+      {
+        "id": "db-fahrgastzahlen",
+        "titel": "Fahrgastzahlen-Datenbank migrieren",
+        "kunde": "talbahn_wendt",
+        "cat": "datenbanken",
+        "thema": "db_betrieb",
+        "stufe": "schwer",
+        "text": "„Die Fahrgastzahlen seit 2005 sollen auf den neuen Datenbankserver, ohne dass Auswertungen ausfallen.“"
+      },
+      {
+        "id": "db-langsame-abfragen",
+        "titel": "Langsame Abfragen im Werkstattsystem",
+        "kunde": "autohaus",
+        "cat": "datenbanken",
+        "thema": "db_betrieb",
+        "stufe": "schwer",
+        "text": "„Wenn wir einen Kunden suchen, dauert das inzwischen eine halbe Minute.“"
+      }
+    ]
+  },
+  "feierabend": [
+    "Feierabend! Du schließt den Gewerbehof ab und wirfst noch einen Blick auf das Firmenschild.",
+    "Feierabend! Die Kaffeemaschine ist aus, das Whiteboard voll. Morgen geht es weiter.",
+    "Feierabend! Auf dem Heimweg fährst du an Bitweiche vorbei. Bei denen brennt noch Licht.",
+    "Feierabend! Du löschst das Licht im Büro und rechnest im Kopf schon das nächste Angebot durch.",
+    "Feierabend! Ein Kunde schreibt noch schnell: „Danke für heute!“ Das tut gut."
+  ],
+  "mitbewerber": {
+    "anfrage_bieter": {
+      "eins": 0.6
+    },
+    "projekt_bieter": {
+      "von": 2,
+      "bis": 3
+    },
+    "firmen": [
+      {
+        "id": "bitweiche",
+        "name": "Bitweiche IT-Service GmbH",
+        "kurz": "Bitweiche",
+        "text": "Dein alter Arbeitgeber. Kalkuliert je nach Kunde, mal mit Kampfpreis, mal ausgelastet und teuer.",
+        "gewicht": {
+          "anfrage": 5,
+          "projekt": 4
+        },
+        "kundenart": true
+      },
+      {
+        "id": "kranich",
+        "name": "NetzWerk Kranich GmbH",
+        "kurz": "NetzWerk Kranich",
+        "text": "Netzwerk-Spezialist aus Lindenau. Im Netzwerk sehr günstig, sonst eher teuer.",
+        "gewicht": {
+          "anfrage": 2,
+          "projekt": 2
+        },
+        "von": 10,
+        "bis": 28,
+        "fach": {
+          "netzwerk": -12
+        },
+        "laune": {
+          "kampfpreis": {
+            "chance": 0.08,
+            "von": 1,
+            "bis": 5,
+            "text": "NetzWerk Kranich wollte den Kunden unbedingt gewinnen."
+          }
+        }
+      },
+      {
+        "id": "falkenstein",
+        "name": "Falkenstein IT-Security",
+        "kurz": "Falkenstein",
+        "text": "Kleines Sicherheitsbüro mit Premiumpreisen, bei Sicherheit aber hartnäckig.",
+        "gewicht": {
+          "anfrage": 1,
+          "projekt": 2
+        },
+        "von": 18,
+        "bis": 34,
+        "fach": {
+          "sicherheit": -16
+        }
+      },
+      {
+        "id": "byteschmiede",
+        "name": "Byteschmiede Hartmann & Söhne",
+        "kurz": "Byteschmiede",
+        "text": "Familienbetrieb in Talheim. Oft Kampfpreise, aber häufig ausgelastet.",
+        "gewicht": {
+          "anfrage": 3,
+          "projekt": 2
+        },
+        "von": 6,
+        "bis": 20,
+        "laune": {
+          "kampfpreis": {
+            "chance": 0.25,
+            "von": 0,
+            "bis": 5,
+            "text": "Die Byteschmiede hat mal wieder einen Kampfpreis gemacht."
+          },
+          "ausgelastet": {
+            "chance": 0.3,
+            "bietet_nicht": true,
+            "text": "Die Byteschmiede war ausgelastet und hat gar nicht erst geboten."
+          }
+        }
+      },
+      {
+        "id": "systemhaus",
+        "name": "Talheimer Systemhaus AG",
+        "kurz": "Talheimer Systemhaus",
+        "text": "Großes Systemhaus mit stabilen mittleren Preisen, vor allem bei großen Projekten dabei.",
+        "gewicht": {
+          "anfrage": 1,
+          "projekt": 4
+        },
+        "von": 12,
+        "bis": 24
+      },
+      {
+        "id": "cloudkontor",
+        "name": "CloudKontor Nord GmbH",
+        "kurz": "CloudKontor Nord",
+        "text": "Junges Start-up. Unberechenbar: mal Dumpingpreis, mal völlig überteuert. Stark bei Wirtschaft und Datenbanken.",
+        "gewicht": {
+          "anfrage": 2,
+          "projekt": 2
+        },
+        "von": 0,
+        "bis": 42,
+        "gleichmaessig": true,
+        "fach": {
+          "wirtschaft": -8,
+          "datenbanken": -10
+        }
+      }
+    ]
+  },
+  "projekte": {
+    "abstand_tage": 3,
+    "gilt_tage": 5,
+    "max_offen": 2,
+    "stundensatz": 50,
+    "anzahlung": 30,
+    "laufend": {
+      "1": 1,
+      "2": 2,
+      "4": 3
+    },
+    "stufen": {
+      "Leicht": {
+        "aufwand": 20,
+        "anforderung": 25,
+        "material": [
+          200,
+          500
+        ],
+        "frist": 4
+      },
+      "Mittel": {
+        "aufwand": 35,
+        "anforderung": 40,
+        "material": [
+          400,
+          900
+        ],
+        "frist": 5
+      },
+      "Schwer": {
+        "aufwand": 50,
+        "anforderung": 55,
+        "material": [
+          700,
+          1400
+        ],
+        "frist": 6
+      },
+      "Anspruchsvoll": {
+        "aufwand": 65,
+        "anforderung": 65,
+        "material": [
+          1000,
+          2000
+        ],
+        "frist": 7
+      }
+    },
+    "leistung": {
+      "basis": 2,
+      "je_punkt": 0.1
+    },
+    "lernbonus": 20,
+    "rueckschlag": {
+      "chance": 0.2,
+      "faktor": 0.5
+    },
+    "puenktlich": {
+      "kundenzufriedenheit": 3,
+      "zuverlaessigkeit": 2
+    },
+    "verzug": {
+      "prozent_je_tag": 5,
+      "max_prozent": 30,
+      "kundenzufriedenheit_je_tag": -2
+    },
+    "verloren_kundenzufriedenheit": 0,
+    "phasen": {
+      "netzwerk": [
+        "Ist-Analyse",
+        "Planung",
+        "Beschaffung",
+        "Aufbau und Konfiguration",
+        "Test und Übergabe"
+      ],
+      "sicherheit": [
+        "Bestandsaufnahme",
+        "Risikoanalyse",
+        "Konzept",
+        "Umsetzung",
+        "Schulung und Abnahme"
+      ],
+      "systeme": [
+        "Ist-Analyse",
+        "Konzept",
+        "Beschaffung",
+        "Installation und Migration",
+        "Test und Übergabe"
+      ],
+      "wirtschaft": [
+        "Anforderungen aufnehmen",
+        "Angebote einholen",
+        "Vergleich und Bewertung",
+        "Entscheidungsvorlage",
+        "Präsentation"
+      ],
+      "datenbanken": [
+        "Anforderungen",
+        "Datenmodell",
+        "Umsetzung",
+        "Datenübernahme",
+        "Test und Übergabe"
+      ]
+    },
+    "rueckschlaege": {
+      "netzwerk": [
+        "Der bestellte Switch hat die falsche Portanzahl und muss zurück.",
+        "Im Kabelkanal ist kein Platz mehr, die Leitungen müssen anders verlegt werden.",
+        "Der Provider hat den Anschlusstermin verschoben.",
+        "Das VLAN-Konzept passt nicht zum Grundriss, es muss nachgebessert werden.",
+        "Ein Access Point sitzt an der falschen Stelle, das Signal reicht nicht bis ins Lager.",
+        "Die Messung zeigt eine fehlerhafte Dose, sie muss neu aufgelegt werden.",
+        "Die Firewall-Regeln blockieren das Kassensystem, alles muss noch einmal geprüft werden.",
+        "Der Kunde hat kurzfristig drei Arbeitsplätze mehr eingeplant."
+      ],
+      "sicherheit": [
+        "Die Geschäftsführung will das Konzept noch einmal mit dem Datenschutzbeauftragten besprechen.",
+        "Ein altes System unterstützt die neue Anmeldung nicht und braucht eine Ausnahme.",
+        "Die Hälfte der Belegschaft war bei der Schulung krank.",
+        "Der Lizenzschlüssel für die Sicherheitssoftware kommt erst morgen.",
+        "Beim Test sperrt sich die Buchhaltung selbst aus.",
+        "Der Betriebsrat möchte vor der Einführung beteiligt werden.",
+        "Ein vergessener Admin-Zugang taucht auf und muss erst geklärt werden.",
+        "Die Protokollierung erzeugt viel mehr Daten als geplant."
+      ],
+      "systeme": [
+        "Der neue Server wird mit dem falschen Netzteil geliefert.",
+        "Die Migration dauert länger, weil alte Rechte völlig durcheinander sind.",
+        "Ein Treiber für das alte Spezialgerät fehlt.",
+        "Das Backup vor der Umstellung läuft über Nacht nicht durch.",
+        "Die Fachanwendung braucht eine ältere Version als gedacht.",
+        "Im Serverraum fehlt eine Steckdose an der USV.",
+        "Ein Update bricht mitten in der Installation ab.",
+        "Der Hersteller-Support meldet sich erst nach zwei Tagen zurück."
+      ],
+      "wirtschaft": [
+        "Zwei Anbieter schicken ihre Angebote zu spät.",
+        "Die Geschäftsführung ändert die Anforderungen mitten im Vergleich.",
+        "Ein Angebot ist nicht vergleichbar, weil die Wartung fehlt.",
+        "Die Zahlen aus der Buchhaltung stimmen nicht mit der Inventarliste überein.",
+        "Der Termin für die Präsentation wird verschoben.",
+        "Ein Anbieter zieht sein Angebot zurück.",
+        "Die Gewichtung der Kriterien muss neu abgestimmt werden.",
+        "Die Leasingkonditionen haben sich geändert und müssen neu gerechnet werden."
+      ],
+      "datenbanken": [
+        "In den alten Daten tauchen doppelte Kundennummern auf.",
+        "Das Datenmodell braucht eine zusätzliche Tabelle für Sonderfälle.",
+        "Beim Import gehen Umlaute verloren.",
+        "Der Kunde findet noch eine zweite Excel-Liste mit wichtigen Daten.",
+        "Eine Abfrage ist viel zu langsam und braucht einen Index.",
+        "Die Testdaten sind unvollständig."
+      ]
+    },
+    "buero": [
+      "Ich sitze an „{phase}“ für „{titel}“.",
+      "„{titel}“: Wir sind gerade bei „{phase}“. Läuft!",
+      "Heute ist „{phase}“ dran. {kunde} wartet schon darauf.",
+      "Projekt „{titel}“, Phase „{phase}“. Kaffee ist das Wichtigste."
+    ],
+    "texte": [
+      "Neue Ausschreibung von „{kunde}“: {auftrag}",
+      "„{kunde}“ sucht einen IT-Dienstleister. Der Auftrag: {auftrag}",
+      "Ausschreibung, Kunde „{kunde}“: {auftrag}"
+    ],
+    "hilfe": [
+      "Einzelkosten gesamt = Projektarbeit (Punkte × Satz) + Material und Lizenzen.",
+      "Handlungskosten (Gemeinkosten) = Einzelkosten gesamt × Zuschlagssatz. Selbstkosten = Einzelkosten + Handlungskosten.",
+      "Gewinn = Selbstkosten × Gewinnzuschlag. Nettoverkaufspreis = Selbstkosten + Gewinn.",
+      "Umsatzsteuer = Nettoverkaufspreis × 19 %. Bruttoverkaufspreis = Nettoverkaufspreis + Umsatzsteuer.",
+      "Bei Projekten bieten meist zwei oder drei Firmen mit. Wer wer ist, siehst du erst im Ergebnis. Das günstigste Angebot gewinnt."
+    ]
+  },
+  "sonderraeume": {
+    "leerstand": {
+      "name": "Leerstand",
+      "kurz": "Frei",
+      "farbe": "#8B93A1",
+      "boden": "beton",
+      "text": "Noch leer, nur Estrich und nackte Wände. Hier ist Platz für den Sonderraum „%s“."
+    },
+    "raeume": [
+      {
+        "id": "lager",
+        "raum": "firmenlager",
+        "name": "Lager",
+        "ab_stufe": 3,
+        "preis": 10000,
+        "nebenkosten": 20,
+        "effekt": {
+          "material_rabatt": 15
+        },
+        "vorteil": "Material und Wareneinkauf 15 % günstiger, bei Anfragen und Projekten."
+      },
+      {
+        "id": "besprechung",
+        "raum": "besprechung",
+        "name": "Besprechungsraum",
+        "ab_stufe": 3,
+        "preis": 12000,
+        "nebenkosten": 20,
+        "effekt": {
+          "anfragen_plus": 1,
+          "kundenzufriedenheit_plus": 1
+        },
+        "vorteil": "3 statt 2 Kundenanfragen pro Tag, und jeder gewonnene Auftrag bringt +1 Kundenzufriedenheit extra."
+      },
+      {
+        "id": "serverraum",
+        "raum": "firmenserver",
+        "name": "Serverraum",
+        "ab_stufe": 4,
+        "preis": 22000,
+        "nebenkosten": 40,
+        "effekt": {
+          "projekte_plus": 1,
+          "rueckschlag_faktor": 0.5
+        },
+        "vorteil": "Ein Projekt mehr gleichzeitig, und nur noch halb so viele Rückschläge."
+      },
+      {
+        "id": "schulung",
+        "raum": "schulung",
+        "name": "Schulungsraum",
+        "ab_stufe": 5,
+        "preis": 25000,
+        "nebenkosten": 30,
+        "effekt": {
+          "weiterbildung_rabatt": 30,
+          "weiterbildung_tage_minus": 1
+        },
+        "vorteil": "Weiterbildungen 30 % günstiger und einen Tag kürzer."
+      }
+    ]
+  },
+  "rivalitaet": {
+    "rueckhol": {
+      "vorher_anteil": 50,
+      "ab_tagen": 20,
+      "chance": 1.5,
+      "abstand": 30,
+      "abstand_firma": 6,
+      "stimmung_ziel": 70,
+      "stimmung_teiler": 40,
+      "faktor_min": 0.5,
+      "faktor_max": 2.0,
+      "angebot_plus": [12, 20],
+      "gehalt_plus": 10,
+      "gehalt_stimmung": 10,
+      "bonus_tage": 10,
+      "bonus_stimmung": 5,
+      "texte": [
+        "{firma} hat {name} angerufen: {plus} % mehr Gehalt, wenn {name} zurückkommt. „Wir vermissen dich“, heißt es.",
+        "Beim Mittagessen erzählt {name}, dass {firma} ein Angebot geschickt hat: der alte Platz und {plus} % mehr Geld.",
+        "{name} hat Post von {firma} bekommen. Man würde sich über eine Rückkehr freuen, mit {plus} % mehr Gehalt.",
+        "Ein Headhunter im Auftrag von {firma} hat {name} angesprochen: zurück zum alten Team, {plus} % mehr Gehalt."
+      ],
+      "texte_bitweiche": [
+        "Sabine von Bitweiche hat {name} zum Kaffee eingeladen: „Komm zurück. {plus} % mehr, und keine Tabellen mehr für Paul.“",
+        "Bitweiche will {name} zurück, mit {plus} % mehr Gehalt. Sabine will dir zeigen, dass sie noch mitspielt."
+      ]
+    },
+    "gegenwind": {
+      "fenster": 10,
+      "mindestens": 8,
+      "mindest_tage": 10,
+      "ab_quote": 60,
+      "zuschlag_minus": 3,
+      "zweiter_bieter": 0.2,
+      "vorteil_faktor": 0.5,
+      "text_start": "Die Mitbewerber haben gemerkt, wie oft du gewinnst. Ab jetzt bieten sie gezielt günstiger gegen dich.",
+      "text_ende": "Die Mitbewerber lassen wieder locker und kalkulieren normal."
+    }
+  },
+  "markt": {
+    "ab_tag": 101,
+    "start_text": "Die Geschichte mit Bitweiche ist erzählt, aber der Markt schläft nicht: Ab jetzt wechseln sich gute und schlechte Zeiten ab, und ab und zu sorgt ein Technologietrend für besondere Anfragen.",
+    "konjunktur": {
+      "start_tage": [4, 10],
+    "wechsel_chance": 70,
+      "phasen": {
+        "neutral": {
+          "name": "Normale Lage",
+          "tage": [8, 18],
+          "anfragen": 0,
+          "zuschlag": 0,
+          "umsatz": 0,
+          "text": "Die Wirtschaft hat sich wieder beruhigt. Anfragen und Preise sind normal."
+        },
+        "aufschwung": {
+          "name": "Aufschwung",
+          "tage": [10, 20],
+          "anfragen": 1,
+          "zuschlag": 3,
+          "umsatz": 5,
+          "text": "Aufschwung! Die Firmen in Talheim investieren wieder. Es kommen mehr Anfragen, und die Kunden zahlen besser."
+        },
+        "abschwung": {
+          "name": "Abschwung",
+          "tage": [10, 18],
+          "anfragen": -1,
+          "zuschlag": -3,
+          "umsatz": -5,
+          "text": "Die Wirtschaft schwächelt. Viele Kunden sparen: weniger Anfragen, und alle kalkulieren knapper."
+        }
+      }
+    },
+    "trends": {
+      "erster_nach": [5, 15],
+      "dauer": [10, 15],
+      "pause": [12, 28],
+      "chance": 70,
+      "zuschlag": 4,
+      "liste": [
+        {
+          "id": "cloud",
+          "name": "Cloud-Boom",
+          "cat": "systeme",
+          "start": "In Talheim wollen plötzlich alle in die Cloud. Für eine Weile kommen Anfragen zu Cloud-Umstellungen dazu.",
+          "ende": "Der Cloud-Boom ebbt ab. Die meisten Firmen sind umgezogen.",
+          "satz": "Alle reden von der Cloud, wir wollen nicht die Letzten sein.",
+          "artikel": [
+            {
+              "name": "Microsoft-365-Umstellung (je Nutzer)",
+              "preis": [45, 80],
+              "menge": [10, 30]
+            },
+            {
+              "name": "Hybrid-Cloud-Gateway",
+              "preis": [1400, 2400],
+              "menge": [1, 2]
+            },
+            {
+              "name": "Cloud-Backup-Paket (1 Jahr)",
+              "preis": [300, 600],
+              "menge": [1, 4]
+            }
+          ]
+        },
+        {
+          "id": "ki",
+          "name": "KI-Nachfrage",
+          "cat": "wirtschaft",
+          "start": "KI ist in aller Munde. Kunden fragen nach Rechnern und Lizenzen für KI-Anwendungen.",
+          "ende": "Die erste KI-Welle ist vorbei, die Nachfrage normalisiert sich.",
+          "satz": "Wir wollen KI endlich selbst ausprobieren, aber datenschutzkonform.",
+          "artikel": [
+            {
+              "name": "KI-Workstation mit Grafikkarte",
+              "preis": [2200, 3600],
+              "menge": [1, 3]
+            },
+            {
+              "name": "KI-Assistent Lizenz (1 Jahr, je Nutzer)",
+              "preis": [180, 320],
+              "menge": [5, 20]
+            },
+            {
+              "name": "Edge-Server für lokale KI",
+              "preis": [3500, 5800],
+              "menge": [1, 1]
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "name": "Cybersecurity-Welle",
+          "cat": "sicherheit",
+          "start": "Nach mehreren Hackerangriffen in der Region rüsten viele Firmen bei der Sicherheit nach.",
+          "ende": "Die Cybersecurity-Welle flacht ab. Die meisten haben nachgerüstet.",
+          "satz": "Nach dem Angriff auf die Nachbarfirma wollen wir nichts riskieren.",
+          "artikel": [
+            {
+              "name": "Next-Generation-Firewall",
+              "preis": [1600, 2800],
+              "menge": [1, 2]
+            },
+            {
+              "name": "Endpoint-Schutz (1 Jahr, je Gerät)",
+              "preis": [35, 70],
+              "menge": [10, 40]
+            },
+            {
+              "name": "Hardware-Token für MFA",
+              "preis": [40, 70],
+              "menge": [10, 30]
+            }
+          ]
+        },
+        {
+          "id": "homeoffice",
+          "name": "Homeoffice-Welle",
+          "cat": "netzwerk",
+          "start": "Viele Firmen schicken ihre Leute ins Homeoffice und brauchen dafür Technik und sichere Zugänge.",
+          "ende": "Die Homeoffice-Welle ist durch, die Arbeitsplätze zu Hause stehen.",
+          "satz": "Unser Team arbeitet jetzt öfter von zu Hause und braucht die passende Ausstattung.",
+          "artikel": [
+            {
+              "name": "Homeoffice-Paket (Notebook, Headset, Dock)",
+              "preis": [1000, 1500],
+              "menge": [3, 10]
+            },
+            {
+              "name": "VPN-Router für Außenstellen",
+              "preis": [250, 450],
+              "menge": [2, 8]
+            }
+          ]
+        },
+        {
+          "id": "glasfaser",
+          "name": "Glasfaser-Ausbau",
+          "cat": "netzwerk",
+          "start": "Die Stadtwerke verlegen Glasfaser im Gewerbegebiet. Jetzt wollen alle schnellere Netze im Haus.",
+          "ende": "Der Glasfaser-Ausbau ist abgeschlossen, die Netze sind umgerüstet.",
+          "satz": "Jetzt, wo die Glasfaser liegt, soll auch unser Netz im Haus mithalten.",
+          "artikel": [
+            {
+              "name": "Glasfaser-Switch mit SFP+-Ports",
+              "preis": [900, 1600],
+              "menge": [1, 4]
+            },
+            {
+              "name": "SFP+-Modul (10 GBit)",
+              "preis": [45, 90],
+              "menge": [4, 16]
+            },
+            {
+              "name": "WLAN-6-Access-Point",
+              "preis": [180, 320],
+              "menge": [4, 12]
+            }
+          ]
+        },
+        {
+          "id": "datenschutz",
+          "name": "Datenschutz-Prüfwelle",
+          "cat": "datenbanken",
+          "start": "Die Datenschutzbehörde kündigt Prüfungen an. Viele Firmen wollen ihre Daten jetzt besser schützen.",
+          "ende": "Die Prüfwelle ist vorbei, die meisten Firmen sind gut aufgestellt.",
+          "satz": "Bevor die Prüfer kommen, wollen wir unsere Daten sauber verschlüsselt haben.",
+          "artikel": [
+            {
+              "name": "Verschlüsseltes NAS mit Backup",
+              "preis": [1200, 2000],
+              "menge": [1, 2]
+            },
+            {
+              "name": "Datenbank-Verschlüsselung (Lizenz)",
+              "preis": [600, 1100],
+              "menge": [1, 3]
+            },
+            {
+              "name": "Verschlüsselter USB-Stick",
+              "preis": [40, 80],
+              "menge": [10, 30]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "filiale": {
+    "_hinweis": [
+      "Zweiter Standort (ab 0.45): eigenes Gebaeude in Lindenau, frei ab voraussetzung (Stufe des Gewerbehofs, Mitarbeiter, Firmentage).",
+      "Der Name ist frei waehlbar (name_vorschlag ist nur der Vorschlag). Stufe 1 eroeffnet die Filiale, jede weitere Stufe baut sie aus.",
+      "anfragen_plus: zusaetzliche Kundenanfragen pro Tag. naehe: Kunden mit diesem 'ort' (kunden[].ort) - dein Preisvorteil steigt um vorteil Prozentpunkte."
+    ],
+    "name_vorschlag": "Filiale Lindenau",
+    "name": "Altes Postamt Lindenau",
+    "text": "Das alte Postamt in Lindenau, zwei Straßen von der Talbahn-Verwaltung. Mitten im Revier von NetzWerk Kranich.",
+    "voraussetzung": {"stufe": 4, "mitarbeiter": 6, "firmentage": 40},
+    "anfragen_plus": 1,
+    "naehe": {"orte": ["lindenau"], "vorteil": 3, "text": "Filiale in Lindenau"},
+    "eroeffnet": "Die Schlüssel für „%s“ liegen auf deinem Schreibtisch. Vier Arbeitsplätze, eine Beratungsecke und ein Schaufenster zur Straße. Unter Firma kannst du Leute nach Lindenau versetzen.",
+    "stufen": [
+      {
+        "stufe": 1,
+        "name": "Ladenlokal",
+        "preis": 30000,
+        "nebenkosten": 120,
+        "text": "Das Erdgeschoss mit Büro für vier Leute und einer Ecke für die Kundenberatung.",
+        "plaetze": [[1.35, 2.75, "filialbuero"], [3.5, 2.75, "filialbuero"], [5.65, 2.75, "filialbuero"], [7.8, 2.75, "filialbuero"]],
+        "gebaeude": {
+          "breite": 14, "hoehe": 7,
+          "flur": {"y": 5, "h": 2, "name": "Eingang", "eingang": {"von": 5.3, "bis": 6.7}, "spieler": [1.2, 6.0],
+                   "deko": [{"typ": "fussmatte", "x": 0.25, "y": 5.35, "w": 0.7, "h": 1.3},
+                            {"typ": "feuerloescher", "x": 12.2, "y": 6.45, "w": 0.4, "h": 0.4}]},
+          "fenster": [[0.8, 0, 2.8, 0], [3.8, 0, 5.8, 0], [6.8, 0, 8.4, 0], [10.0, 0, 12.8, 0], [0, 1.0, 0, 3.8], [14, 1.0, 14, 3.8]],
+          "raeume": [
+            {"id": "filialbuero", "name": "Büro", "cat": "systeme", "x": 0, "y": 0, "w": 9, "h": 5,
+             "tuer": {"von": 6.4, "bis": 7.6}, "boden": "teppichboden",
+             "text": "Das Büro der Filiale: vier Schreibtische und ein Blick auf die Straße.",
+             "deko": [{"typ": "schreibtisch", "x": 0.4, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 2.55, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 4.7, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 6.85, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "pflanze", "x": 0.3, "y": 4.0, "w": 0.75, "h": 0.75},
+                      {"typ": "drucker", "x": 4.2, "y": 4.05, "w": 0.9, "h": 0.75}]},
+            {"id": "filialberatung", "name": "Kundenberatung", "kurz": "Beratung", "cat": "wirtschaft",
+             "x": 9, "y": 0, "w": 5, "h": 5, "tuer": {"von": 10.2, "bis": 11.4}, "boden": "parkett",
+             "text": "Hier kommen Kunden aus Lindenau vorbei, ohne erst nach Talheim zu fahren.",
+             "deko": [{"typ": "besprechungstisch", "x": 9.6, "y": 1.3, "w": 3.0, "h": 1.3},
+                      {"typ": "kaffeemaschine", "x": 13.2, "y": 0.4, "w": 0.55, "h": 0.6},
+                      {"typ": "pflanze", "x": 13.0, "y": 4.0, "w": 0.75, "h": 0.75}]}
+          ]
+        }
+      },
+      {
+        "stufe": 2,
+        "name": "Obergeschoss",
+        "preis": 15000,
+        "nebenkosten": 180,
+        "text": "Das Obergeschoss dazu: drei weitere Arbeitsplätze und ein Regal für Ersatzgeräte.",
+        "plaetze": [[1.35, 2.75, "filialbuero"], [3.5, 2.75, "filialbuero"], [5.65, 2.75, "filialbuero"], [7.8, 2.75, "filialbuero"],
+                    [5.5, 10.05, "filialog"], [8.5, 10.05, "filialog"], [11.7, 10.05, "filialog"]],
+        "gebaeude": {
+          "breite": 14, "hoehe": 12,
+          "flur": {"y": 5, "h": 2, "name": "Eingang", "eingang": {"von": 5.3, "bis": 6.7}, "spieler": [1.2, 6.0],
+                   "deko": [{"typ": "fussmatte", "x": 0.25, "y": 5.35, "w": 0.7, "h": 1.3},
+                            {"typ": "feuerloescher", "x": 12.2, "y": 6.45, "w": 0.4, "h": 0.4}]},
+          "fenster": [[0.8, 0, 2.8, 0], [3.8, 0, 5.8, 0], [6.8, 0, 8.4, 0], [10.0, 0, 12.8, 0], [0, 1.0, 0, 3.8], [14, 1.0, 14, 3.8],
+                      [4.2, 12, 6.8, 12], [7.4, 12, 9.6, 12], [10.6, 12, 12.8, 12], [0, 8.0, 0, 10.8], [14, 8.0, 14, 10.8]],
+          "raeume": [
+            {"id": "filialbuero", "name": "Büro", "cat": "systeme", "x": 0, "y": 0, "w": 9, "h": 5,
+             "tuer": {"von": 6.4, "bis": 7.6}, "boden": "teppichboden",
+             "text": "Das Büro der Filiale: vier Schreibtische und ein Blick auf die Straße.",
+             "deko": [{"typ": "schreibtisch", "x": 0.4, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 2.55, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 4.7, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 6.85, "y": 1.1, "w": 1.9, "h": 1.0, "blick": "s"},
+                      {"typ": "pflanze", "x": 0.3, "y": 4.0, "w": 0.75, "h": 0.75},
+                      {"typ": "drucker", "x": 4.2, "y": 4.05, "w": 0.9, "h": 0.75}]},
+            {"id": "filialberatung", "name": "Kundenberatung", "kurz": "Beratung", "cat": "wirtschaft",
+             "x": 9, "y": 0, "w": 5, "h": 5, "tuer": {"von": 10.2, "bis": 11.4}, "boden": "parkett",
+             "text": "Hier kommen Kunden aus Lindenau vorbei, ohne erst nach Talheim zu fahren.",
+             "deko": [{"typ": "besprechungstisch", "x": 9.6, "y": 1.3, "w": 3.0, "h": 1.3},
+                      {"typ": "kaffeemaschine", "x": 13.2, "y": 0.4, "w": 0.55, "h": 0.6},
+                      {"typ": "pflanze", "x": 13.0, "y": 4.0, "w": 0.75, "h": 0.75}]},
+            {"id": "filialog", "name": "Obergeschoss", "kurz": "OG", "cat": "datenbanken",
+             "x": 0, "y": 7, "w": 14, "h": 5, "tuer": {"von": 2.0, "bis": 3.2}, "boden": "teppichboden",
+             "text": "Oben unter dem Dach: drei weitere Arbeitsplätze und ein Regal für Ersatzgeräte.",
+             "deko": [{"typ": "schreibtisch", "x": 4.4, "y": 8.4, "w": 2.2, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 7.4, "y": 8.4, "w": 2.2, "h": 1.0, "blick": "s"},
+                      {"typ": "schreibtisch", "x": 10.6, "y": 8.4, "w": 2.2, "h": 1.0, "blick": "s"},
+                      {"typ": "regal", "x": 0.3, "y": 11.2, "w": 2.4, "h": 0.5},
+                      {"typ": "kartons", "x": 12.5, "y": 10.9, "w": 1.2, "h": 0.8},
+                      {"typ": "pflanze", "x": 0.4, "y": 7.8, "w": 0.75, "h": 0.75}]}
+          ]
+        }
+      }
+    ]
+  }
+}

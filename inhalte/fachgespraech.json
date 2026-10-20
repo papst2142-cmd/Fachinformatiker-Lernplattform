@@ -1,0 +1,368 @@
+{
+ "_hinweis": [
+  "Fragen fuer das Fachgespraech zum Abschlussprojekt (ab 0.51). Neue Fragen nur am Ende anhaengen, die id bleibt fest - an ihr haengt die Selbsteinschaetzung.",
+  "cat: Fachbereich (Kurzname wie in den Lerninhalten) oder null fuer allgemeine Fragen."
+ ],
+ "fragen": [
+  {
+   "id": "a01",
+   "cat": null,
+   "q": "Warum haben Sie sich für genau dieses Projekt entschieden, und welchen Nutzen hat es für den Auftraggeber?",
+   "hinweis": "Ausgangssituation, Problem, messbarer Nutzen (Zeit, Kosten, Sicherheit, Qualität)."
+  },
+  {
+   "id": "a02",
+   "cat": null,
+   "q": "Welche Alternativen haben Sie geprüft und warum haben Sie sich dagegen entschieden?",
+   "hinweis": "Mindestens zwei Alternativen, Entscheidungskriterien (z. B. Nutzwertanalyse), nachvollziehbare Begründung."
+  },
+  {
+   "id": "a03",
+   "cat": null,
+   "q": "Wie sind Sie bei der Ist-Analyse vorgegangen?",
+   "hinweis": "Bestandsaufnahme, Gespräche mit Fachabteilung, Dokumente, Messwerte; Ergebnis als Schwachstellenliste."
+  },
+  {
+   "id": "a04",
+   "cat": null,
+   "q": "Wie haben Sie die Anforderungen an die Lösung ermittelt und festgehalten?",
+   "hinweis": "Gespräche, Lastenheft/Pflichtenheft, Muss- und Kann-Kriterien, Abnahmekriterien."
+  },
+  {
+   "id": "a05",
+   "cat": null,
+   "q": "Erklären Sie den Unterschied zwischen Lastenheft und Pflichtenheft.",
+   "hinweis": "Lastenheft: Was will der Auftraggeber (vom Auftraggeber). Pflichtenheft: Wie wird es umgesetzt (vom Auftragnehmer)."
+  },
+  {
+   "id": "a06",
+   "cat": null,
+   "q": "Wie haben Sie Ihre Zeitplanung erstellt und wo gab es Abweichungen?",
+   "hinweis": "Phasen mit Stunden, Puffer, Soll-Ist-Vergleich, Gründe der Abweichung und Reaktion."
+  },
+  {
+   "id": "a07",
+   "cat": null,
+   "q": "Wie setzen sich die Projektkosten zusammen?",
+   "hinweis": "Personalkosten (Stunden x Stundensatz), Sachkosten (Hardware, Lizenzen), ggf. Gemeinkosten; Gesamtkosten."
+  },
+  {
+   "id": "a08",
+   "cat": null,
+   "q": "Wann amortisiert sich Ihr Projekt und wie haben Sie das berechnet?",
+   "hinweis": "Amortisationsdauer = Projektkosten / monatliche Einsparung (abzüglich laufender Kosten)."
+  },
+  {
+   "id": "a09",
+   "cat": null,
+   "q": "Welche Risiken gab es im Projekt und wie sind Sie damit umgegangen?",
+   "hinweis": "Risiken benennen (Ausfall, Termin, Datenverlust), Eintrittswahrscheinlichkeit, Maßnahmen, Rückfallplan."
+  },
+  {
+   "id": "a10",
+   "cat": null,
+   "q": "Wie haben Sie die Lösung getestet?",
+   "hinweis": "Testplan, Testfälle mit erwartetem Ergebnis, Testprotokoll, Behebung gefundener Fehler, Abnahmetest."
+  },
+  {
+   "id": "a11",
+   "cat": null,
+   "q": "Wie stellen Sie sicher, dass beim Umstieg keine Daten verloren gehen?",
+   "hinweis": "Datensicherung vor der Umstellung, Wiederherstellung getestet, Migrationsplan, Rückfallmöglichkeit."
+  },
+  {
+   "id": "a12",
+   "cat": null,
+   "q": "Welche Aspekte der IT-Sicherheit haben Sie berücksichtigt?",
+   "hinweis": "Schutzziele Vertraulichkeit, Integrität, Verfügbarkeit; Zugriffsrechte, Verschlüsselung, Updates, Protokollierung."
+  },
+  {
+   "id": "a13",
+   "cat": null,
+   "q": "Welche Rolle spielte der Datenschutz in Ihrem Projekt?",
+   "hinweis": "Personenbezogene Daten, DSGVO-Grundsätze, Rechte und Rollen, ggf. Auftragsverarbeitung, Löschkonzept."
+  },
+  {
+   "id": "a14",
+   "cat": null,
+   "q": "Wie haben Sie die Übergabe an den Kunden bzw. die Fachabteilung gestaltet?",
+   "hinweis": "Einweisung/Schulung, Dokumentation für Anwender und Administratoren, Abnahmeprotokoll."
+  },
+  {
+   "id": "a15",
+   "cat": null,
+   "q": "Welche Dokumentation haben Sie für Administratoren und Anwender erstellt?",
+   "hinweis": "Betriebshandbuch, Netzplan, Konfigurationen, Kennwortübergabe getrennt, Kurzanleitung für Anwender."
+  },
+  {
+   "id": "a16",
+   "cat": null,
+   "q": "Was würden Sie beim nächsten Mal anders machen?",
+   "hinweis": "Ehrliche Reflexion: Planung, Puffer, Kommunikation, Tests; was gelernt wurde."
+  },
+  {
+   "id": "a17",
+   "cat": null,
+   "q": "Welche Qualitätsmerkmale hat Ihre Lösung?",
+   "hinweis": "Z. B. Verfügbarkeit, Wartbarkeit, Skalierbarkeit, Benutzerfreundlichkeit; wie geprüft."
+  },
+  {
+   "id": "a18",
+   "cat": null,
+   "q": "Wie haben Sie mit dem Auftraggeber kommuniziert und Entscheidungen abgestimmt?",
+   "hinweis": "Kick-off, regelmäßige Abstimmungen, Protokolle, Freigaben an Meilensteinen."
+  },
+  {
+   "id": "a19",
+   "cat": null,
+   "q": "Was ist ein Meilenstein und welche Meilensteine hatte Ihr Projekt?",
+   "hinweis": "Prüfbarer Zwischenstand ohne Dauer, z. B. Konzept freigegeben, Testsystem läuft, Abnahme."
+  },
+  {
+   "id": "a20",
+   "cat": null,
+   "q": "Wie würde die Lösung wachsen, wenn sich die Anzahl der Nutzer verdoppelt?",
+   "hinweis": "Skalierung: Reserven bei Hardware, Lizenzen, Bandbreite, Speicher; was müsste man erweitern."
+  },
+  {
+   "id": "a21",
+   "cat": null,
+   "q": "Welche Lizenzmodelle kamen in Ihrem Projekt vor?",
+   "hinweis": "Z. B. pro Gerät, pro Nutzer, Abonnement, Open Source (Pflichten der Lizenz beachten)."
+  },
+  {
+   "id": "a22",
+   "cat": null,
+   "q": "Wie überwachen Sie den Betrieb nach der Einführung?",
+   "hinweis": "Monitoring (z. B. SNMP, Agenten), Schwellwerte, Alarmierung, Protokolle, Wartungsplan."
+  },
+  {
+   "id": "a23",
+   "cat": null,
+   "q": "Erklären Sie, wie Sie ein auftretendes Problem systematisch eingrenzen würden.",
+   "hinweis": "Fehlerbild aufnehmen, reproduzieren, Schichtenmodell von unten nach oben, Änderungen prüfen, Lösung dokumentieren."
+  },
+  {
+   "id": "a24",
+   "cat": null,
+   "q": "Was ist der Unterschied zwischen Wartung, Inspektion und Instandsetzung?",
+   "hinweis": "Wartung: Erhalt des Sollzustands; Inspektion: Feststellen des Istzustands; Instandsetzung: Wiederherstellen."
+  },
+  {
+   "id": "a25",
+   "cat": null,
+   "q": "Wie haben Sie Ihre Arbeitsschritte nachvollziehbar dokumentiert?",
+   "hinweis": "Projekttagebuch/Protokoll, Screenshots, Konfigurationsstände, Versionierung."
+  },
+  {
+   "id": "a26",
+   "cat": null,
+   "q": "Was verstehen Sie unter einem Service Level Agreement?",
+   "hinweis": "Vereinbarung über Leistungen und Kennzahlen, z. B. Verfügbarkeit, Reaktionszeit, Wiederherstellungszeit."
+  },
+  {
+   "id": "a27",
+   "cat": null,
+   "q": "Wie unterscheiden sich Datensicherung und Archivierung?",
+   "hinweis": "Sicherung: Wiederherstellung nach Verlust, regelmäßig überschrieben; Archivierung: unveränderbare Langzeitaufbewahrung (Fristen)."
+  },
+  {
+   "id": "a28",
+   "cat": null,
+   "q": "Welche Normen oder Vorgaben waren für Ihr Projekt wichtig?",
+   "hinweis": "Z. B. DSGVO, BSI IT-Grundschutz, ISO 27001, Verkabelungsnormen, Herstellervorgaben."
+  },
+  {
+   "id": "a29",
+   "cat": null,
+   "q": "Wie würden Sie Ihr Projekt einem Laien in zwei Sätzen erklären?",
+   "hinweis": "Kurz, ohne Fachbegriffe: Problem und Ergebnis für den Nutzer."
+  },
+  {
+   "id": "a30",
+   "cat": null,
+   "q": "Welche Teile Ihres Projekts haben Sie selbst umgesetzt und wo hatten Sie Unterstützung?",
+   "hinweis": "Eigenleistung klar abgrenzen, Unterstützung benennen (Prüfer achten darauf)."
+  },
+  {
+   "id": "net01",
+   "cat": "netzwerk",
+   "q": "Erklären Sie Ihr IP-Adresskonzept und wie Sie die Subnetze gebildet haben.",
+   "hinweis": "Netzbereich, Präfixe nach Hostbedarf (VLSM), Reserven, Gateway- und Serveradressen."
+  },
+  {
+   "id": "net02",
+   "cat": "netzwerk",
+   "q": "Warum haben Sie VLANs eingesetzt und wie werden sie verbunden?",
+   "hinweis": "Trennung von Broadcastdomänen und Sicherheit; Tagging (802.1Q) auf Trunks, Routing zwischen VLANs (Layer-3-Switch/Router)."
+  },
+  {
+   "id": "net03",
+   "cat": "netzwerk",
+   "q": "Wie ist der Internetzugang abgesichert?",
+   "hinweis": "Firewall mit Regelwerk (Default deny), NAT, ggf. DMZ, Protokollierung."
+  },
+  {
+   "id": "net04",
+   "cat": "netzwerk",
+   "q": "Wie funktioniert die Redundanz in Ihrem Netz?",
+   "hinweis": "Z. B. zweite Leitung, Link-Aggregation, Spanning Tree, VRRP/HSRP; Ausfall getestet."
+  },
+  {
+   "id": "net05",
+   "cat": "netzwerk",
+   "q": "Welche Verkabelung und welche Kategorie haben Sie gewählt und warum?",
+   "hinweis": "Kategorie nach Bandbreite und Länge (z. B. Cat 6A bis 100 m für 10 Gbit/s), Glasfaser für Backbone."
+  },
+  {
+   "id": "net06",
+   "cat": "netzwerk",
+   "q": "Wie haben Sie das WLAN geplant und abgesichert?",
+   "hinweis": "Ausleuchtung, Kanäle, WPA3/802.1X, Gäste-WLAN getrennt."
+  },
+  {
+   "id": "sic01",
+   "cat": "sicherheit",
+   "q": "Wie haben Sie den Schutzbedarf ermittelt?",
+   "hinweis": "Schutzbedarfsfeststellung (normal, hoch, sehr hoch) für Vertraulichkeit, Integrität, Verfügbarkeit."
+  },
+  {
+   "id": "sic02",
+   "cat": "sicherheit",
+   "q": "Welche Maßnahmen schützen vor Ransomware?",
+   "hinweis": "Offline-/unveränderbare Backups, Updates, Rechte nach Minimalprinzip, E-Mail-Filter, Schulung."
+  },
+  {
+   "id": "sic03",
+   "cat": "sicherheit",
+   "q": "Wie ist die Anmeldung abgesichert?",
+   "hinweis": "Starke Kennwörter, Mehrfaktor-Authentifizierung, Sperre nach Fehlversuchen, zentrale Verwaltung."
+  },
+  {
+   "id": "sic04",
+   "cat": "sicherheit",
+   "q": "Erklären Sie den Unterschied zwischen symmetrischer und asymmetrischer Verschlüsselung.",
+   "hinweis": "Symmetrisch: ein gemeinsamer Schlüssel, schnell; asymmetrisch: öffentlicher und privater Schlüssel, Schlüsselaustausch/Signatur."
+  },
+  {
+   "id": "sic05",
+   "cat": "sicherheit",
+   "q": "Wie würden Sie auf einen Sicherheitsvorfall reagieren?",
+   "hinweis": "Erkennen, eindämmen (isolieren), Beweise sichern, melden (ggf. 72 h DSGVO), beheben, nachbereiten."
+  },
+  {
+   "id": "sic06",
+   "cat": "sicherheit",
+   "q": "Was bedeutet das Prinzip der minimalen Rechte in Ihrem Projekt konkret?",
+   "hinweis": "Jeder bekommt nur die Rechte, die er braucht; Rollen/Gruppen, getrennte Admin-Konten."
+  },
+  {
+   "id": "sys01",
+   "cat": "systeme",
+   "q": "Warum haben Sie dieses RAID-Level gewählt?",
+   "hinweis": "Ausfallsicherheit, Kapazität und Leistung abgewogen; RAID ersetzt keine Datensicherung."
+  },
+  {
+   "id": "sys02",
+   "cat": "systeme",
+   "q": "Wie ist Ihre Datensicherung aufgebaut?",
+   "hinweis": "3-2-1-Regel, Sicherungsart (voll/inkrementell/differenziell), Zeitplan, Wiederherstellung getestet."
+  },
+  {
+   "id": "sys03",
+   "cat": "systeme",
+   "q": "Welche Vorteile bringt die Virtualisierung in Ihrem Projekt?",
+   "hinweis": "Bessere Auslastung, Snapshots, schnelle Bereitstellung, Hochverfügbarkeit; Nachteile: zentraler Ausfallpunkt."
+  },
+  {
+   "id": "sys04",
+   "cat": "systeme",
+   "q": "Wie haben Sie die Hardware dimensioniert?",
+   "hinweis": "Bedarf an CPU, RAM, Speicher und Netz ermittelt, Reserve für Wachstum, Herstellerempfehlungen."
+  },
+  {
+   "id": "sys05",
+   "cat": "systeme",
+   "q": "Wie verteilen Sie Updates auf die Clients?",
+   "hinweis": "Zentrale Verwaltung (z. B. WSUS/Intune/Paketverwaltung), Testgruppe, Wartungsfenster."
+  },
+  {
+   "id": "sys06",
+   "cat": "systeme",
+   "q": "Wie stellen Sie die Stromversorgung bei Ausfall sicher?",
+   "hinweis": "USV mit ausreichender Laufzeit, kontrolliertes Herunterfahren, ggf. redundante Netzteile."
+  },
+  {
+   "id": "wir01",
+   "cat": "wirtschaft",
+   "q": "Wie haben Sie Angebote verglichen und den Lieferanten ausgewählt?",
+   "hinweis": "Quantitativ (Preis, Rabatt, Skonto, Lieferkosten) und qualitativ (Service, Lieferzeit) z. B. per Nutzwertanalyse."
+  },
+  {
+   "id": "wir02",
+   "cat": "wirtschaft",
+   "q": "Wie berechnen Sie den Stundensatz für Ihre Arbeitszeit?",
+   "hinweis": "Kosten des Arbeitsplatzes (Gehalt, Nebenkosten, Gemeinkosten) geteilt durch produktive Stunden."
+  },
+  {
+   "id": "wir03",
+   "cat": "wirtschaft",
+   "q": "Was ist eine Nutzwertanalyse und wie haben Sie sie gewichtet?",
+   "hinweis": "Kriterien mit Gewichtung, Punkte je Alternative, gewichtete Summe; Gewichtung begründen."
+  },
+  {
+   "id": "wir04",
+   "cat": "wirtschaft",
+   "q": "Welcher Vertragstyp liegt bei Ihrem Projekt vor?",
+   "hinweis": "Werkvertrag (Erfolg geschuldet) oder Dienstvertrag (Tätigkeit geschuldet), Kaufvertrag für Hardware."
+  },
+  {
+   "id": "wir05",
+   "cat": "wirtschaft",
+   "q": "Welche laufenden Kosten entstehen nach dem Projekt?",
+   "hinweis": "Lizenzen, Wartung, Strom, Support; in der Wirtschaftlichkeitsbetrachtung berücksichtigt."
+  },
+  {
+   "id": "wir06",
+   "cat": "wirtschaft",
+   "q": "Wie haben Sie den Nutzen gemessen, der sich nicht in Geld ausdrücken lässt?",
+   "hinweis": "Qualitative Ziele: Sicherheit, Zufriedenheit, Ausfallzeiten; messbare Kennzahlen festlegen."
+  },
+  {
+   "id": "dat01",
+   "cat": "datenbanken",
+   "q": "Wie haben Sie das Datenmodell entworfen?",
+   "hinweis": "Entitäten, Beziehungen (ER-Modell), Schlüssel, Normalisierung bis 3. Normalform."
+  },
+  {
+   "id": "dat02",
+   "cat": "datenbanken",
+   "q": "Wie sichern Sie die Datenbank?",
+   "hinweis": "Regelmäßige Sicherung (Dump/Snapshot), Transaktionsprotokolle, Wiederherstellung getestet."
+  },
+  {
+   "id": "dat03",
+   "cat": "datenbanken",
+   "q": "Wie ist der Zugriff auf die Datenbank geregelt?",
+   "hinweis": "Eigene Benutzer und Rollen, minimale Rechte, keine Standardkennwörter, verschlüsselte Verbindung."
+  },
+  {
+   "id": "dat04",
+   "cat": "datenbanken",
+   "q": "Erklären Sie, was eine Transaktion ist.",
+   "hinweis": "Folge von Operationen, die ganz oder gar nicht ausgeführt wird (ACID)."
+  },
+  {
+   "id": "dat05",
+   "cat": "datenbanken",
+   "q": "Wie haben Sie die Daten aus dem Altsystem übernommen?",
+   "hinweis": "Export, Bereinigung, Abbildung der Felder, Import, Prüfung der Vollständigkeit."
+  },
+  {
+   "id": "dat06",
+   "cat": "datenbanken",
+   "q": "Wie würden Sie eine langsame Abfrage untersuchen?",
+   "hinweis": "Ausführungsplan ansehen, Indizes prüfen, Abfrage vereinfachen, Datenmenge begrenzen."
+  }
+ ]
+}

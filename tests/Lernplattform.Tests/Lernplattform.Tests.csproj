@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Lernplattform.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lernplattform.Core\Lernplattform.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Vergleichswerte und Lerninhalte neben die Testdateien kopieren -->
+    <None Include="..\Vergleich\**\*" LinkBase="Vergleich" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\inhalte\**\*" LinkBase="inhalte" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

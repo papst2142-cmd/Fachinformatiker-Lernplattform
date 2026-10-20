@@ -1,0 +1,437 @@
+{
+  "_hinweis": [
+    "Orte beim Kunden (ab 0.30). Aufbau des Grundrisses wie gebaeude.json.",
+    "Personen stehen bei ihrem Ort. Einrichtung mit ab_aufgabe/bis_aufgabe ist erst nach bzw. nur bis zu einem erledigten Auftrag da."
+  ],
+  "orte": [
+    {
+      "id": "talheim",
+      "name": "Bahnhof Talheim",
+      "kurz": "Talheim",
+      "text": "Der Hauptbahnhof der Talbahn Nordlicht AG mit Leitstelle, Service-Center und Technikraum.",
+      "gebaeude": {
+        "breite": 30,
+        "hoehe": 16,
+        "flur": {"y": 6, "h": 2.4, "name": "Bahnhofshalle", "boden": "fliesen",
+                 "eingang": {"von": 6.5, "bis": 7.9},
+                 "spieler": [1.2, 7.2],
+                 "deko": [
+                   {"typ": "fussmatte", "x": 0.25, "y": 6.55, "w": 0.7, "h": 1.3},
+                   {"typ": "pflanze", "x": 13.2, "y": 6.15, "w": 0.7, "h": 0.7},
+                   {"typ": "bank", "x": 18.6, "y": 6.15, "w": 2.2, "h": 0.5},
+                   {"typ": "feuerloescher", "x": 8.4, "y": 7.85, "w": 0.4, "h": 0.4},
+                   {"typ": "kamera", "x": 28.9, "y": 6.2, "w": 0.4, "h": 0.4}
+                 ]},
+        "fenster": [
+          [1.2, 0, 3.2, 0], [7.5, 0, 9.5, 0], [11.5, 0, 13.5, 0], [16.5, 0, 18.5, 0],
+          [20.5, 0, 22.5, 0], [0, 1.5, 0, 4.0]
+        ],
+        "raeume": [
+          {"id": "it_buero", "name": "IT-Büro", "cat": "systeme",
+           "x": 0, "y": 0, "w": 6, "h": 6,
+           "tuer": {"von": 4.2, "bis": 5.4},
+           "boden": "teppichboden",
+           "text": "Petra Lindners Büro. Hier laufen alle IT-Fäden der Talbahn zusammen, und ein paar Kabel auch.",
+           "deko": [
+             {"typ": "schreibtisch", "x": 1.0, "y": 1.3, "w": 2.6, "h": 1.0, "blick": "s"},
+             {"typ": "drucker", "x": 3.9, "y": 0.3, "w": 0.9, "h": 0.75},
+             {"typ": "aktenregal", "x": 5.25, "y": 1.0, "w": 0.5, "h": 2.4},
+             {"typ": "pflanze", "x": 0.3, "y": 4.9, "w": 0.8, "h": 0.8}
+           ]},
+          {"id": "service_center", "name": "Service-Center", "kurz": "Service", "cat": "wirtschaft",
+           "x": 6, "y": 0, "w": 9, "h": 6,
+           "tuer": {"von": 9.8, "bis": 11.0},
+           "boden": "teppichboden",
+           "text": "Fahrkarten, Auskünfte, Fundsachen. Die Kassen-PCs hier stammen aus eurer Werkstatt.",
+           "deko": [
+             {"typ": "whiteboard", "x": 8.5, "y": 0.2, "w": 3.0, "h": 0.22},
+             {"typ": "tresen", "x": 7.2, "y": 1.6, "w": 7.0, "h": 1.1},
+             {"typ": "bank", "x": 6.4, "y": 5.1, "w": 2.2, "h": 0.5},
+             {"typ": "pflanze", "x": 14.1, "y": 4.9, "w": 0.7, "h": 0.7},
+             {"typ": "wimpel", "x": 6.3, "y": 3.4, "w": 8.4, "h": 0.35, "ab_aufgabe": "pc-leitstelle-aylin", "bis_aufgabe": "beamer-abschiedsfeier"}
+           ]},
+          {"id": "leitstelle", "name": "Leitstelle", "cat": "netzwerk",
+           "x": 15, "y": 0, "w": 9, "h": 6,
+           "tuer": {"von": 21.0, "bis": 22.2},
+           "boden": "fliesen",
+           "text": "Von hier aus werden alle Züge der Talbahn überwacht. Kaffee gibt es rund um die Uhr, Ruhe eher nicht.",
+           "deko": [
+             {"typ": "monitorwand", "x": 15.6, "y": 0.25, "w": 7.8, "h": 0.4},
+             {"typ": "leitstand", "x": 16.0, "y": 1.4, "w": 3.2, "h": 1.0},
+             {"typ": "leitstand", "x": 20.2, "y": 1.4, "w": 3.2, "h": 1.0},
+             {"typ": "kaffeemaschine", "x": 23.2, "y": 4.9, "w": 0.55, "h": 0.6},
+             {"typ": "pflanze", "x": 15.3, "y": 5.0, "w": 0.7, "h": 0.7}
+           ]},
+          {"id": "technikraum", "name": "Technikraum", "kurz": "Technik", "cat": "netzwerk",
+           "x": 24, "y": 0, "w": 6, "h": 6,
+           "tuer": {"von": 24.6, "bis": 25.8},
+           "boden": "doppelboden",
+           "text": "Netzwerkschränke, USV und eine Klimaanlage, die lauter ist als jeder Zug.",
+           "deko": [
+             {"typ": "usv", "x": 24.4, "y": 0.4, "w": 1.2, "h": 1.0},
+             {"typ": "rack", "x": 26.6, "y": 0.4, "w": 1.3, "h": 2.8},
+             {"typ": "rack", "x": 28.2, "y": 0.4, "w": 1.3, "h": 2.8},
+             {"typ": "klima", "x": 28.4, "y": 4.2, "w": 1.3, "h": 0.8}
+           ]},
+          {"id": "bahnsteig", "name": "Bahnsteig 1", "kurz": "Gleis 1", "farbe": "#60A5FA",
+           "x": 0, "y": 8.4, "w": 30, "h": 7.6,
+           "tuer": {"von": 2.0, "bis": 28.0, "offen": true},
+           "boden": "beton",
+           "text": "Gleis 1 mit den Fahrkartenautomaten. Der Zug nach Talheim-Nord fährt hier ab.",
+           "deko": [
+             {"typ": "automat", "x": 3.0, "y": 8.8, "w": 1.0, "h": 0.9},
+             {"typ": "automat", "x": 4.4, "y": 8.8, "w": 1.0, "h": 0.9},
+             {"typ": "automat", "x": 5.8, "y": 8.8, "w": 1.0, "h": 0.9},
+             {"typ": "anzeigetafel", "x": 9.5, "y": 8.9, "w": 3.2, "h": 0.7},
+             {"typ": "bank", "x": 14.0, "y": 10.3, "w": 2.4, "h": 0.5},
+             {"typ": "bank", "x": 19.5, "y": 10.3, "w": 2.4, "h": 0.5},
+             {"typ": "kamera", "x": 25.0, "y": 8.8, "w": 0.4, "h": 0.4},
+             {"typ": "markierung", "x": 0.4, "y": 12.4, "w": 29.2, "h": 0.12},
+             {"typ": "gleis", "x": 0.2, "y": 13.0, "w": 29.6, "h": 2.8},
+             {"typ": "zug", "x": 3.0, "y": 13.2, "w": 20.0, "h": 2.4}
+           ]}
+        ]
+      },
+      "personen": [
+        {"id": "petra", "name": "Petra Lindner", "rolle": "IT-Koordinatorin der Talbahn Nordlicht AG", "raum": "it_buero", "extern": true, "macke": "Kommt pünktlich wie ein Zug, der nie Verspätung hat. Also selten.", "platz": [2.3, 2.95], "aussehen": {"haut": "hell", "frisur": "kurz", "haarfarbe": "rot", "oberteil": "orange"},
+         "reaktionen": {"richtig": ["Na also, läuft wieder. Ich sag's der Leitstelle.", "Ihr seid schneller als unser Regionalexpress. Das ist als Lob gemeint.", "Perfekt. Das trage ich gleich als erledigt ein."],
+                        "falsch": ["Hm. Das schauen wir uns besser noch mal an.", "So ganz überzeugt bin ich noch nicht. Ich melde mich wieder.", "Fast. Aber fast fährt kein Zug."]}},
+        {"id": "horst", "name": "Horst Grabowski", "rolle": "Leiter der Leitstelle", "raum": "leitstelle", "extern": true, "bis_tag": 48, "nachfolger": "aylin", "macke": "40 Jahre bei der Bahn. Misstraut allem, was keinen Hebel hat.", "platz": [17.6, 3.2], "aussehen": {"haut": "hell", "frisur": "glatze", "haarfarbe": "grau", "oberteil": "orange"},
+         "reaktionen": {"richtig": ["Hm. Funktioniert. Hätte ich nicht gedacht.", "Gut gemacht. Früher hätten wir dafür drei Hebel und ein Formular gebraucht.", "Das kann bleiben."],
+                        "falsch": ["Genau deshalb traue ich Computern nicht.", "Nee, so nicht. Noch mal von vorn.", "Da ziehe ich lieber wieder am Hebel."]}},
+        {"id": "aylin", "name": "Aylin Demir", "rolle": "Leiterin der Leitstelle", "raum": "leitstelle", "extern": true, "ab_tag": 49, "macke": "Hat Horsts Hebel geerbt und benutzt ihn als Stifthalter. Mag Dashboards mit vielen Farben.", "platz": [17.6, 3.2], "aussehen": {"haut": "mittel", "frisur": "lang", "haarfarbe": "braun", "oberteil": "violett", "extra": "headset"},
+         "reaktionen": {"richtig": ["Top. Das kommt auf mein Dashboard, in Grün.", "Schnell und sauber. So mag die Leitstelle das.", "Danke! Horst hätte gebrummt. Das heißt: gut."],
+                        "falsch": ["Hm, auf meinem Dashboard ist das noch rot.", "Das müssen wir noch mal angehen. Die Züge warten nicht.", "Fast. Aber fast reicht in der Leitstelle nicht."]}}
+      ]
+    },
+    {
+      "id": "talheim_nord",
+      "name": "Bahnhof Talheim-Nord",
+      "kurz": "Talheim-Nord",
+      "ab_tag": 12,
+      "text": "Der neue Bahnhof der Talbahn. Bitweiche stattet ihn aus, von der ersten Bestellung bis zur Eröffnung.",
+      "gebaeude": {
+        "breite": 22,
+        "hoehe": 12,
+        "flur": {"y": 5, "h": 2, "name": "Halle", "boden": "fliesen",
+                 "eingang": {"von": 5.3, "bis": 6.7},
+                 "spieler": [1.2, 6.0],
+                 "deko": [
+                   {"typ": "fussmatte", "x": 0.25, "y": 5.35, "w": 0.7, "h": 1.3},
+                   {"typ": "palette", "x": 12.0, "y": 5.15, "w": 1.6, "h": 1.2, "bis_aufgabe": "abnahme-talheim-nord"},
+                   {"typ": "wimpel", "x": 2.0, "y": 5.05, "w": 18.0, "h": 0.35, "ab_aufgabe": "abnahme-talheim-nord"},
+                   {"typ": "pflanze", "x": 12.4, "y": 5.2, "w": 0.7, "h": 0.7, "ab_aufgabe": "abnahme-talheim-nord"}
+                 ]},
+        "fenster": [[1.2, 0, 3.4, 0], [5.0, 0, 7.4, 0], [16.0, 0, 18.4, 0], [0, 1.2, 0, 3.6]],
+        "raeume": [
+          {"id": "service_point_nord", "name": "Service-Point", "kurz": "Service", "cat": "wirtschaft",
+           "x": 0, "y": 0, "w": 9, "h": 5,
+           "tuer": {"von": 6.8, "bis": 8.0},
+           "boden": "teppichboden",
+           "text": "Hier sollen bald Fahrkarten verkauft werden. Noch riecht alles nach frischer Farbe.",
+           "deko": [
+             {"typ": "kartons", "x": 0.6, "y": 0.5, "w": 1.6, "h": 1.3, "bis_aufgabe": "pc-talheim-nord"},
+             {"typ": "palette", "x": 2.6, "y": 0.5, "w": 1.6, "h": 1.2, "bis_aufgabe": "pc-talheim-nord"},
+             {"typ": "tresen", "x": 1.0, "y": 1.4, "w": 4.2, "h": 1.0, "ab_aufgabe": "pc-talheim-nord"},
+             {"typ": "pflanze", "x": 8.0, "y": 0.4, "w": 0.7, "h": 0.7, "ab_aufgabe": "abnahme-talheim-nord"}
+           ]},
+          {"id": "technik_nord", "name": "Technikraum Nord", "kurz": "Technik", "cat": "netzwerk",
+           "x": 9, "y": 0, "w": 6, "h": 5,
+           "tuer": {"von": 9.6, "bis": 10.8},
+           "boden": "doppelboden",
+           "text": "Ein leerer Schrank, ein Stromanschluss und viel Platz. Noch.",
+           "deko": [
+             {"typ": "klima", "x": 9.4, "y": 0.4, "w": 1.3, "h": 0.8},
+             {"typ": "kartons", "x": 12.8, "y": 0.5, "w": 1.6, "h": 1.4, "bis_aufgabe": "rack-talheim-nord"},
+             {"typ": "rack", "x": 13.1, "y": 0.5, "w": 1.3, "h": 2.8, "ab_aufgabe": "rack-talheim-nord"}
+           ]},
+          {"id": "warteraum_nord", "name": "Warteraum", "cat": "wirtschaft",
+           "x": 15, "y": 0, "w": 7, "h": 5,
+           "tuer": {"von": 16.2, "bis": 17.4},
+           "boden": "fliesen",
+           "text": "Hier warten bald die Fahrgäste. Heute warten hier nur die Bauarbeiter auf ihre Pause.",
+           "deko": [
+             {"typ": "bauzaun", "x": 19.0, "y": 0.5, "w": 0.4, "h": 3.4, "bis_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "kartons", "x": 20.0, "y": 0.5, "w": 1.5, "h": 1.3, "bis_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "bank", "x": 18.4, "y": 0.5, "w": 2.4, "h": 0.5, "ab_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "anzeigetafel", "x": 16.0, "y": 0.3, "w": 2.2, "h": 0.6, "ab_aufgabe": "abnahme-talheim-nord"}
+           ]},
+          {"id": "bahnsteig_nord", "name": "Bahnsteig", "farbe": "#60A5FA",
+           "x": 0, "y": 7, "w": 22, "h": 5,
+           "tuer": {"von": 1.5, "bis": 20.5, "offen": true},
+           "boden": "beton",
+           "text": "Der neue Bahnsteig. Bis zur Eröffnung ist er abgesperrt.",
+           "deko": [
+             {"typ": "absperrband", "x": 1.0, "y": 7.6, "w": 20.0, "h": 0.3, "bis_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "automat", "x": 3.0, "y": 7.3, "w": 1.0, "h": 0.9, "ab_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "automat", "x": 4.4, "y": 7.3, "w": 1.0, "h": 0.9, "ab_aufgabe": "abnahme-talheim-nord"},
+             {"typ": "kamera", "x": 18.0, "y": 7.3, "w": 0.4, "h": 0.4, "ab_aufgabe": "kamera-loeschfrist"},
+             {"typ": "markierung", "x": 0.4, "y": 9.4, "w": 21.2, "h": 0.12},
+             {"typ": "gleis", "x": 0.2, "y": 9.9, "w": 21.6, "h": 1.95}
+           ]}
+        ]
+      },
+      "personen": []
+    },
+    {
+      "id": "betriebswerkstatt",
+      "name": "Betriebswerkstatt Talheim",
+      "kurz": "Werkstatt",
+      "ab_tag": 22,
+      "text": "Hier werden die Züge der Talbahn gewartet. Die Diagnose-Laptops, das WLAN und die Ersatzteil-Datenbank betreut ab jetzt Bitweiche.",
+      "gebaeude": {
+        "breite": 28,
+        "hoehe": 14,
+        "flur": {"y": 5, "h": 2.2, "name": "Gang", "boden": "beton",
+                 "eingang": {"von": 5.4, "bis": 6.8},
+                 "spieler": [1.2, 6.1],
+                 "deko": [
+                   {"typ": "fussmatte", "x": 0.25, "y": 5.45, "w": 0.7, "h": 1.3},
+                   {"typ": "feuerloescher", "x": 14.6, "y": 6.7, "w": 0.4, "h": 0.4},
+                   {"typ": "pflanze", "x": 20.2, "y": 5.15, "w": 0.7, "h": 0.7}
+                 ]},
+        "fenster": [[1.2, 0, 3.4, 0], [9.0, 0, 11.0, 0], [23.0, 0, 25.0, 0], [0, 1.2, 0, 3.6]],
+        "raeume": [
+          {"id": "werkstattbuero", "name": "Werkstattbüro", "kurz": "Büro", "cat": "wirtschaft",
+           "x": 0, "y": 0, "w": 7, "h": 5,
+           "tuer": {"von": 4.8, "bis": 6.0},
+           "boden": "teppichboden",
+           "text": "Marta Kowalczyks Büro. An der Wand hängt ein Plan mit jedem Zug und jeder Schraube.",
+           "deko": [
+             {"typ": "schreibtisch", "x": 1.0, "y": 1.2, "w": 2.6, "h": 1.0, "blick": "s"},
+             {"typ": "drucker", "x": 4.2, "y": 0.3, "w": 0.9, "h": 0.75},
+             {"typ": "aktenregal", "x": 6.3, "y": 0.8, "w": 0.5, "h": 2.4},
+             {"typ": "pflanze", "x": 0.3, "y": 4.0, "w": 0.7, "h": 0.7}
+           ]},
+          {"id": "diagnoseplatz", "name": "Diagnoseplatz", "kurz": "Diagnose", "cat": "systeme",
+           "x": 7, "y": 0, "w": 8, "h": 5,
+           "tuer": {"von": 8.0, "bis": 9.2},
+           "boden": "fliesen",
+           "text": "Hier hängen die Diagnose-Laptops an der Ladestation. Wer einen Zug prüfen will, holt sich einen.",
+           "deko": [
+             {"typ": "werkbank", "x": 8.0, "y": 0.4, "w": 5.0, "h": 1.0},
+             {"typ": "tisch", "x": 9.6, "y": 2.6, "w": 3.0, "h": 1.2},
+             {"typ": "pc", "x": 9.9, "y": 2.75, "w": 0.6, "h": 0.9},
+             {"typ": "regal", "x": 14.3, "y": 0.6, "w": 0.5, "h": 3.4}
+           ]},
+          {"id": "teilelager", "name": "Teilelager", "kurz": "Teile", "cat": "datenbanken",
+           "x": 15, "y": 0, "w": 6, "h": 5,
+           "tuer": {"von": 15.6, "bis": 16.8},
+           "boden": "beton",
+           "text": "Bremsbeläge, Scheibenwischer, Sitzpolster: Tausende Teile, alle in einer Datenbank. Wenn sie läuft.",
+           "deko": [
+             {"typ": "hochregal", "x": 20.0, "y": 0.4, "w": 0.85, "h": 4.0},
+             {"typ": "hochregal", "x": 17.8, "y": 0.4, "w": 0.85, "h": 3.0},
+             {"typ": "palette", "x": 15.5, "y": 0.5, "w": 1.2, "h": 0.8},
+             {"typ": "kartons", "x": 15.5, "y": 1.8, "w": 1.2, "h": 1.0}
+           ]},
+          {"id": "technik_werkstatt", "name": "Technikraum Werkstatt", "kurz": "Technik", "cat": "netzwerk",
+           "x": 21, "y": 0, "w": 7, "h": 5,
+           "tuer": {"von": 21.6, "bis": 22.8},
+           "boden": "doppelboden",
+           "text": "Ein Netzwerkschrank, eine USV und viel Staub von nebenan.",
+           "deko": [
+             {"typ": "usv", "x": 23.3, "y": 0.4, "w": 1.2, "h": 1.0},
+             {"typ": "rack", "x": 25.0, "y": 0.4, "w": 1.3, "h": 2.6},
+             {"typ": "klima", "x": 26.4, "y": 3.6, "w": 1.3, "h": 0.8},
+             {"typ": "rack", "x": 21.3, "y": 0.4, "w": 1.3, "h": 2.6, "ab_aufgabe": "rack-werkstatt"}
+           ]},
+          {"id": "werkhalle", "name": "Werkhalle", "kurz": "Halle", "farbe": "#60A5FA",
+           "x": 0, "y": 7.2, "w": 28, "h": 6.8,
+           "tuer": {"von": 2.0, "bis": 26.0, "offen": true},
+           "boden": "beton",
+           "text": "Gleis 3 der Werkstatt. Hier steht immer ein Zug, der gerade gecheckt wird.",
+           "deko": [
+             {"typ": "regal", "x": 0.4, "y": 7.6, "w": 0.5, "h": 2.4},
+             {"typ": "kartons", "x": 19.4, "y": 7.6, "w": 1.3, "h": 1.0},
+             {"typ": "werkbank", "x": 22.5, "y": 7.6, "w": 4.6, "h": 1.0},
+             {"typ": "feuerloescher", "x": 27.3, "y": 9.4, "w": 0.4, "h": 0.4},
+             {"typ": "markierung", "x": 0.4, "y": 10.4, "w": 27.2, "h": 0.12},
+             {"typ": "gleis", "x": 0.2, "y": 11.0, "w": 27.6, "h": 2.8},
+             {"typ": "zug", "x": 3.0, "y": 11.2, "w": 18.0, "h": 2.4}
+           ]}
+        ]
+      },
+      "personen": [
+        {"id": "marta", "name": "Marta Kowalczyk", "rolle": "Leiterin der Betriebswerkstatt", "raum": "werkstattbuero", "extern": true, "ab_tag": 22, "macke": "Trägt immer Sicherheitsschuhe, auch im Büro. Misst Zeit in Zugumläufen.", "platz": [2.3, 2.85], "aussehen": {"haut": "hell", "frisur": "zopf", "haarfarbe": "blond", "oberteil": "orange", "extra": "kappe"},
+         "reaktionen": {"richtig": ["Passt. Der Zug kann raus.", "Schneller als ein Radwechsel. Respekt.", "Gut. Das schreibe ich mir in den Werkstattplan."],
+                        "falsch": ["So bleibt der Zug in der Halle.", "Nee. Das prüfen wir noch mal, bevor jemand damit fährt.", "Das hält keinen Umlauf lang."]}}
+      ]
+    },
+    {
+      "id": "lindenau",
+      "name": "Talbahn-Verwaltung Lindenau",
+      "kurz": "Lindenau",
+      "ab_tag": 45,
+      "text": "Die Hauptverwaltung der Talbahn in Lindenau: Buchhaltung, Personal und die Leitung. Bitweiche übernimmt hier die IT.",
+      "gebaeude": {
+        "breite": 26,
+        "hoehe": 14,
+        "flur": {"y": 6, "h": 2, "name": "Flur", "boden": "parkett",
+                 "eingang": {"von": 6.3, "bis": 7.7},
+                 "spieler": [1.2, 7.0],
+                 "deko": [
+                   {"typ": "fussmatte", "x": 0.25, "y": 6.35, "w": 0.7, "h": 1.3},
+                   {"typ": "pflanze", "x": 9.1, "y": 6.15, "w": 0.7, "h": 0.7},
+                   {"typ": "feuerloescher", "x": 19.6, "y": 7.5, "w": 0.4, "h": 0.4}
+                 ]},
+        "fenster": [[1.2, 0, 3.2, 0], [8.0, 0, 10.0, 0], [15.8, 0, 17.8, 0], [2.0, 14, 4.0, 14], [12.0, 14, 14.0, 14], [0, 1.4, 0, 4.2]],
+        "raeume": [
+          {"id": "empfang_lindenau", "name": "Empfang", "cat": "wirtschaft",
+           "x": 0, "y": 0, "w": 6, "h": 6,
+           "tuer": {"von": 3.8, "bis": 5.0},
+           "boden": "parkett",
+           "text": "Hier meldet sich jeder Besucher an. Das Besucherbuch ist noch aus Papier.",
+           "deko": [
+             {"typ": "tresen", "x": 0.8, "y": 1.6, "w": 3.6, "h": 1.0},
+             {"typ": "wasserspender", "x": 5.2, "y": 0.4, "w": 0.55, "h": 0.55},
+             {"typ": "pflanze", "x": 0.3, "y": 5.0, "w": 0.7, "h": 0.7},
+             {"typ": "drucker", "x": 4.8, "y": 1.8, "w": 0.9, "h": 0.75, "ab_aufgabe": "drucker-empfang-lindenau"}
+           ]},
+          {"id": "buchhaltung_lindenau", "name": "Buchhaltung", "cat": "wirtschaft",
+           "x": 6, "y": 0, "w": 8, "h": 6,
+           "tuer": {"von": 7.0, "bis": 8.2},
+           "boden": "teppichboden",
+           "text": "Rechnungen, Löhne, Fahrkartenerlöse. Und ein Drucker, der mehr druckt als alle anderen zusammen.",
+           "deko": [
+             {"typ": "schreibtisch", "x": 7.0, "y": 1.2, "w": 2.4, "h": 1.0, "blick": "s"},
+             {"typ": "schreibtisch", "x": 10.4, "y": 1.2, "w": 2.4, "h": 1.0, "blick": "s"},
+             {"typ": "drucker", "x": 12.9, "y": 0.3, "w": 0.9, "h": 0.75},
+             {"typ": "aktenregal", "x": 13.4, "y": 2.2, "w": 0.5, "h": 3.0}
+           ]},
+          {"id": "leitung_lindenau", "name": "Büro der Verwaltungsleitung", "kurz": "Leitung", "cat": "wirtschaft",
+           "x": 14, "y": 0, "w": 6, "h": 6,
+           "tuer": {"von": 15.0, "bis": 16.2},
+           "boden": "parkett",
+           "text": "Dr. Holger Wendts Büro. Auf dem Schreibtisch liegt kein einziges Blatt zu viel.",
+           "deko": [
+             {"typ": "schreibtisch", "x": 15.4, "y": 1.4, "w": 2.6, "h": 1.0, "blick": "s"},
+             {"typ": "aktenregal", "x": 19.3, "y": 1.0, "w": 0.5, "h": 2.6},
+             {"typ": "sessel", "x": 18.6, "y": 4.6, "w": 0.95, "h": 0.95},
+             {"typ": "pflanze", "x": 14.3, "y": 5.0, "w": 0.7, "h": 0.7}
+           ]},
+          {"id": "technik_lindenau", "name": "Technikraum Lindenau", "kurz": "Technik", "cat": "netzwerk",
+           "x": 20, "y": 0, "w": 6, "h": 6,
+           "tuer": {"von": 20.6, "bis": 21.8},
+           "boden": "doppelboden",
+           "text": "Ein Serverschrank, eine USV und ein Schild: „Bitte nicht als Abstellraum benutzen.“",
+           "deko": [
+             {"typ": "usv", "x": 22.6, "y": 0.4, "w": 1.2, "h": 1.0},
+             {"typ": "rack", "x": 24.2, "y": 0.4, "w": 1.3, "h": 2.6},
+             {"typ": "klima", "x": 24.3, "y": 4.6, "w": 1.3, "h": 0.8},
+             {"typ": "rack", "x": 20.3, "y": 0.4, "w": 1.3, "h": 2.6, "ab_aufgabe": "rack-lindenau"},
+             {"typ": "kartons", "x": 20.4, "y": 3.6, "w": 1.2, "h": 0.9, "bis_aufgabe": "rack-lindenau"}
+           ]},
+          {"id": "personal_lindenau", "name": "Personalabteilung", "kurz": "Personal", "cat": "sicherheit",
+           "x": 0, "y": 8, "w": 9, "h": 6,
+           "tuer": {"von": 6.4, "bis": 7.6},
+           "boden": "teppichboden",
+           "text": "Personalakten, Bewerbungen, Urlaubsanträge. Hier ist Datenschutz kein Fremdwort.",
+           "deko": [
+             {"typ": "schreibtisch", "x": 1.0, "y": 11.6, "w": 2.6, "h": 1.0, "blick": "n"},
+             {"typ": "aktenregal", "x": 0.3, "y": 8.4, "w": 0.5, "h": 2.4},
+             {"typ": "pflanze", "x": 8.0, "y": 13.0, "w": 0.7, "h": 0.7}
+           ]},
+          {"id": "besprechung_lindenau", "name": "Besprechungsraum", "kurz": "Besprechung", "cat": "systeme",
+           "x": 9, "y": 8, "w": 9, "h": 6,
+           "tuer": {"von": 10.0, "bis": 11.2},
+           "boden": "parkett",
+           "text": "Ein großer Tisch, ein Beamer an der Decke und Kabel, die niemand zuordnen kann.",
+           "deko": [
+             {"typ": "besprechungstisch", "x": 11.0, "y": 10.2, "w": 4.4, "h": 1.6},
+             {"typ": "whiteboard", "x": 12.0, "y": 13.7, "w": 2.6, "h": 0.22},
+             {"typ": "pflanze", "x": 17.1, "y": 13.1, "w": 0.7, "h": 0.7}
+           ]},
+          {"id": "archiv_lindenau", "name": "Archiv", "cat": "datenbanken",
+           "x": 18, "y": 8, "w": 8, "h": 6,
+           "tuer": {"von": 18.6, "bis": 19.8},
+           "boden": "beton",
+           "text": "Ordner seit 1978. Irgendwann soll alles digital werden.",
+           "deko": [
+             {"typ": "hochregal", "x": 25.0, "y": 8.4, "w": 0.85, "h": 5.2},
+             {"typ": "regal", "x": 21.0, "y": 8.4, "w": 3.0, "h": 0.5},
+             {"typ": "kartons", "x": 21.5, "y": 12.5, "w": 1.5, "h": 1.0, "bis_aufgabe": "archiv-sql-join"},
+             {"typ": "tisch", "x": 18.4, "y": 12.6, "w": 2.2, "h": 1.0},
+             {"typ": "pc", "x": 18.8, "y": 12.65, "w": 0.6, "h": 0.9, "ab_aufgabe": "terminal-archiv-db"}
+           ]}
+        ]
+      },
+      "personen": [
+        {"id": "wendt", "name": "Dr. Holger Wendt", "rolle": "Verwaltungsleiter der Talbahn Nordlicht AG", "raum": "leitung_lindenau", "extern": true, "ab_tag": 45, "macke": "Liest jede Rechnung zweimal und jede E-Mail dreimal. Antwortet trotzdem schnell.", "platz": [16.7, 3.05], "aussehen": {"haut": "dunkel", "frisur": "kurz", "haarfarbe": "grau", "oberteil": "violett", "extra": "brille"},
+         "reaktionen": {"richtig": ["Sehr ordentlich. Das hält auch einer Prüfung stand.", "Danke. So stelle ich mir Zusammenarbeit vor.", "Einwandfrei. Ich lege es gleich ab."],
+                        "falsch": ["Das kann ich so nicht abzeichnen.", "Hier fehlt noch etwas. Bitte noch einmal.", "Das würde der Wirtschaftsprüfer anders sehen."]}}
+      ]
+    },
+    {
+      "id": "birkenhain",
+      "name": "Haltepunkt Birkenhain",
+      "kurz": "Birkenhain",
+      "ab_tag": 66,
+      "text": "Ein kleiner Haltepunkt mitten im Grünen. Kein Personal, dafür Fahrgastinformation, Kameras, ein Automat und eine Funkstrecke zum Stellwerk.",
+      "gebaeude": {
+        "breite": 24,
+        "hoehe": 12,
+        "flur": {"y": 4.5, "h": 2, "name": "Zugang", "boden": "beton",
+                 "eingang": {"von": 4.8, "bis": 6.2},
+                 "spieler": [1.2, 5.5],
+                 "deko": [
+                   {"typ": "pflanze", "x": 11.2, "y": 4.6, "w": 0.7, "h": 0.7},
+                   {"typ": "pflanze", "x": 15.4, "y": 4.6, "w": 0.7, "h": 0.7},
+                   {"typ": "pflanze", "x": 22.8, "y": 5.7, "w": 0.7, "h": 0.7}
+                 ]},
+        "fenster": [[1.5, 0, 4.0, 0], [0, 1.0, 0, 3.2]],
+        "raeume": [
+          {"id": "wartehaus_birkenhain", "name": "Wartehäuschen", "kurz": "Warten", "cat": "wirtschaft",
+           "x": 0, "y": 0, "w": 8, "h": 4.5,
+           "tuer": {"von": 5.6, "bis": 6.8},
+           "boden": "fliesen",
+           "text": "Eine Bank, ein Fahrplan und seit Neuestem ein Bildschirm mit den Abfahrten. Meistens.",
+           "deko": [
+             {"typ": "bank", "x": 0.6, "y": 0.4, "w": 2.6, "h": 0.5},
+             {"typ": "anzeigetafel", "x": 3.8, "y": 0.3, "w": 2.2, "h": 0.6},
+             {"typ": "automat", "x": 0.6, "y": 2.6, "w": 1.0, "h": 0.9},
+             {"typ": "pflanze", "x": 7.0, "y": 0.4, "w": 0.7, "h": 0.7},
+             {"typ": "pc", "x": 6.9, "y": 1.4, "w": 0.6, "h": 0.9, "ab_aufgabe": "anzeige-pc-birkenhain"},
+             {"typ": "wimpel", "x": 0.3, "y": 3.6, "w": 7.4, "h": 0.35, "ab_aufgabe": "poe-birkenhain", "bis_aufgabe": "abnahme-birkenhain"}
+           ]},
+          {"id": "technik_birkenhain", "name": "Technikhäuschen", "kurz": "Technik", "cat": "netzwerk",
+           "x": 8, "y": 0, "w": 6, "h": 4.5,
+           "tuer": {"von": 8.6, "bis": 9.8},
+           "boden": "beton",
+           "text": "Ein Betonhäuschen mit Schaltschrank, Richtfunk-Modem und einer Spinne, die hier Stammgast ist.",
+           "deko": [
+             {"typ": "rack", "x": 12.4, "y": 0.4, "w": 1.3, "h": 2.4},
+             {"typ": "usv", "x": 10.6, "y": 0.4, "w": 1.2, "h": 1.0},
+             {"typ": "klima", "x": 12.4, "y": 3.3, "w": 1.3, "h": 0.8},
+             {"typ": "kartons", "x": 8.3, "y": 0.4, "w": 1.2, "h": 0.9, "bis_aufgabe": "rack-birkenhain"}
+           ]},
+          {"id": "parkplatz_birkenhain", "name": "Park-and-ride", "kurz": "Parkplatz", "cat": "sicherheit",
+           "x": 14, "y": 0, "w": 10, "h": 4.5,
+           "tuer": {"von": 15.0, "bis": 23.0, "offen": true},
+           "boden": "beton",
+           "text": "Zwölf Parkplätze, ein Fahrradständer und ein Mast mit Kamera und Richtfunkantenne.",
+           "deko": [
+             {"typ": "markierung", "x": 14.6, "y": 1.2, "w": 8.8, "h": 0.1},
+             {"typ": "markierung", "x": 14.6, "y": 3.0, "w": 8.8, "h": 0.1},
+             {"typ": "kamera", "x": 23.2, "y": 0.3, "w": 0.4, "h": 0.4},
+             {"typ": "pflanze", "x": 14.3, "y": 0.3, "w": 0.7, "h": 0.7},
+             {"typ": "kamera", "x": 14.4, "y": 3.9, "w": 0.4, "h": 0.4, "ab_aufgabe": "nachtrag-angebot-birkenhain"}
+           ]},
+          {"id": "bahnsteig_birkenhain", "name": "Bahnsteig Birkenhain", "kurz": "Bahnsteig", "farbe": "#60A5FA",
+           "x": 0, "y": 6.5, "w": 24, "h": 5.5,
+           "tuer": {"von": 1.5, "bis": 22.5, "offen": true},
+           "boden": "beton",
+           "text": "Ein Gleis, ein Bahnsteig, viel Grün drumherum. Zweimal pro Stunde hält hier die Talbahn.",
+           "deko": [
+             {"typ": "bank", "x": 6.0, "y": 6.9, "w": 2.4, "h": 0.5},
+             {"typ": "bank", "x": 14.0, "y": 6.9, "w": 2.4, "h": 0.5},
+             {"typ": "kamera", "x": 20.0, "y": 6.8, "w": 0.4, "h": 0.4},
+             {"typ": "markierung", "x": 0.4, "y": 8.9, "w": 23.2, "h": 0.12},
+             {"typ": "gleis", "x": 0.2, "y": 9.4, "w": 23.6, "h": 2.4}
+           ]}
+        ]
+      },
+      "personen": []
+    }
+  ]
+}

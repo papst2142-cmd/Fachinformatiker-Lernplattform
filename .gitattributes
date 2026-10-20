@@ -1,0 +1,17 @@
+# Alle Textdateien mit LF im Repo
+* text=auto eol=lf
+
+# Windows-Skripte brauchen CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binaerdateien
+*.png binary
+*.ico binary
+*.jpg binary
+*.otf binary
+*.ttf binary
+*.gz binary
+*.db binary
+*.nupkg binary

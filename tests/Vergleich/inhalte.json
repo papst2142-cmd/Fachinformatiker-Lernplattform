@@ -1,0 +1,173 @@
+{
+ "_hinweis": "Vergleichswerte G1, erzeugt von werkzeuge/vergleich/erzeuge_daten.py",
+ "dateien": {
+  "fachgespraech.json": {
+   "sha256": "403c51cbd4e86c41f86456f4f0a74ecf54b7a39ebd46db9b245326eaafdc075e",
+   "art": "objekt",
+   "eintraege": 2,
+   "texte": 212,
+   "text_bytes_utf8": 9893
+  },
+  "karteikarten.json": {
+   "sha256": "f26e665baf88f4c2d7c4bb834cf90ffaf6d7ff4fd6f9188c8a38d3fdd5735645",
+   "art": "liste",
+   "eintraege": 1565,
+   "texte": 14446,
+   "text_bytes_utf8": 990824
+  },
+  "projektarbeiten.json": {
+   "sha256": "446598838cc3acdd956ef284fa11bdd210e64cf5868d97a00a3d7871423d5658",
+   "art": "liste",
+   "eintraege": 50,
+   "texte": 1142,
+   "text_bytes_utf8": 236073
+  },
+  "quizfragen.json": {
+   "sha256": "a1ab463d647f20283feb29e54880c71ce940e54eb28878472fe7b16c1aa68065",
+   "art": "liste",
+   "eintraege": 2120,
+   "texte": 19457,
+   "text_bytes_utf8": 991540
+  },
+  "rahmenplan.json": {
+   "sha256": "d05ce2728695d717bf095941635ba6bd4481db949ef23b489e267acfa108d866",
+   "art": "objekt",
+   "eintraege": 4,
+   "texte": 1135,
+   "text_bytes_utf8": 27734
+  },
+  "rahmenplan_zuordnung.json": {
+   "sha256": "6f62e868eecec02b8fcbc9e9bf857fb42ae01f45ed6cf2b85f2e0f9e25b359c4",
+   "art": "objekt",
+   "eintraege": 4,
+   "texte": 809,
+   "text_bytes_utf8": 16202
+  },
+  "spiel/aufgaben.json": {
+   "sha256": "8c005f3dc71cdd20dff577c9dd56e27db86ef64532e1ca6d7846dd246b695aec",
+   "art": "liste",
+   "eintraege": 150,
+   "texte": 5591,
+   "text_bytes_utf8": 267211
+  },
+  "spiel/aufgaben_vorlagen.json": {
+   "sha256": "b5aa00343cf0cb0117c38969eca8f74984c91481b2f8a7d2e6caa2944172c69a",
+   "art": "objekt",
+   "eintraege": 2,
+   "texte": 10173,
+   "text_bytes_utf8": 465698
+  },
+  "spiel/balancing.json": {
+   "sha256": "e82ade0faddfa4db932d5d163f87c2c8388236f31f94a4164903a53262baa577",
+   "art": "objekt",
+   "eintraege": 28,
+   "texte": 235,
+   "text_bytes_utf8": 12443
+  },
+  "spiel/erfolge.json": {
+   "sha256": "e569b465e253e19508289431594f7804132275c197a9e8c1a39f2ddccb1ab564",
+   "art": "objekt",
+   "eintraege": 4,
+   "texte": 501,
+   "text_bytes_utf8": 7829
+  },
+  "spiel/firma.json": {
+   "sha256": "33c213b972ee31a9b087a09e2071b9fdb4c7f7914c1c0caad6d240f313b22d12",
+   "art": "objekt",
+   "eintraege": 22,
+   "texte": 1281,
+   "text_bytes_utf8": 39640
+  },
+  "spiel/gebaeude.json": {
+   "sha256": "518c5a180ea1c521f9ce42bcb0444e96fe212d65220b44cdae333fafddd8b806",
+   "art": "objekt",
+   "eintraege": 8,
+   "texte": 115,
+   "text_bytes_utf8": 1396
+  },
+  "spiel/hardware.json": {
+   "sha256": "0c9555655bc3ab4755bc00dbdeedebebf850c43930c9092d759fb52272edbd3f",
+   "art": "objekt",
+   "eintraege": 15,
+   "texte": 506,
+   "text_bytes_utf8": 8013
+  },
+  "spiel/kollegen.json": {
+   "sha256": "926bf17cfea9967e65cb3c3bc5635aa243ec45febd24fa013329656b31081e90",
+   "art": "liste",
+   "eintraege": 12,
+   "texte": 177,
+   "text_bytes_utf8": 4870
+  },
+  "spiel/kunden.json": {
+   "sha256": "9a0088b06d12e2dc4201f7f1db58a1ab842256426c3496a143ff468b77cb535e",
+   "art": "objekt",
+   "eintraege": 2,
+   "texte": 424,
+   "text_bytes_utf8": 7991
+  },
+  "spiel/orte.json": {
+   "sha256": "97b03c3df5b006bbbbbe912337517d53167b40f57906e86b8f86b96d78746e69",
+   "art": "objekt",
+   "eintraege": 4,
+   "texte": 204,
+   "text_bytes_utf8": 2476
+  },
+  "spiel/serverfarm.json": {
+   "sha256": "828cc562f774bfa5864afdeaae906f4106586e82c8cce9d48148d327b38f060c",
+   "art": "objekt",
+   "eintraege": 7,
+   "texte": 527,
+   "text_bytes_utf8": 22317
+  },
+  "spiel/story.json": {
+   "sha256": "790fb5e3b836ab1167576f4e2da17de4fa2ca3a740046cd21e9c4db6224a38cc",
+   "art": "objekt",
+   "eintraege": 6,
+   "texte": 80,
+   "text_bytes_utf8": 9613
+  },
+  "spiel/wohnungen.json": {
+   "sha256": "7ff196627decf9347f1e8e474150e66bb8c256082038b58653fa3d8e2cd4a459",
+   "art": "objekt",
+   "eintraege": 6,
+   "texte": 251,
+   "text_bytes_utf8": 3897
+  },
+  "spiel/zwischenfaelle.json": {
+   "sha256": "4520b45773822b608bc4190cc627c155bd846dab3157ea6b7f7640a5c1012d2b",
+   "art": "liste",
+   "eintraege": 50,
+   "texte": 1704,
+   "text_bytes_utf8": 77711
+  },
+  "szenarien_ap1.json": {
+   "sha256": "8ca0e848cde3fa5854b67822899198c634e69cc3366176e2e82b236fd58f265f",
+   "art": "liste",
+   "eintraege": 265,
+   "texte": 4254,
+   "text_bytes_utf8": 603107
+  },
+  "szenarien_ap2.json": {
+   "sha256": "83d72f624c1ec3b3019f4086dbe9a092425bbfddd8472198d23867fca3b32444",
+   "art": "liste",
+   "eintraege": 330,
+   "texte": 5710,
+   "text_bytes_utf8": 731210
+  },
+  "themen.json": {
+   "sha256": "d57db651f81bb655c482cf3de036e752e18d202a51c7be1d2b69411a564871f1",
+   "art": "objekt",
+   "eintraege": 2,
+   "texte": 111,
+   "text_bytes_utf8": 1875
+  },
+  "umbenennungen.json": {
+   "sha256": "16a2beccae1e4cba2efb81d8d34a7e3e5032cbeef3beacb27f21c4b449a6e983",
+   "art": "objekt",
+   "eintraege": 3,
+   "texte": 56,
+   "text_bytes_utf8": 5558
+  }
+ }
+}

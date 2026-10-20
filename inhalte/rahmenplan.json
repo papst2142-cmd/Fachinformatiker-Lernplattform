@@ -1,0 +1,2591 @@
+{
+  "_hinweis": [
+    "Ausbildungsrahmenplan Fachinformatiker/in (Anlage zu § 3 Abs. 1 FIAusbV, BGBl. I 2020, S. 260-267) und Lernfelder des KMK-Rahmenlehrplans (13.12.2019). Kennung = Abschnitt + Nr. + Buchstabe. wochen_punkt = Zeitrichtwert der Gruppe geteilt durch die Zahl ihrer Buchstaben. ap1 = prüfungsrelevant für Teil 1 (§ 8), ap2 = Prüfungsbereiche Teil 2 (§§ 20-23). Ab Version 0.55."
+  ],
+  "abschnitte": [
+    {
+      "id": "A",
+      "titel": "Fachrichtungsübergreifend",
+      "optional": false
+    },
+    {
+      "id": "B",
+      "titel": "Anwendungsentwicklung",
+      "optional": true
+    },
+    {
+      "id": "C",
+      "titel": "Systemintegration",
+      "optional": false
+    },
+    {
+      "id": "D",
+      "titel": "Daten- und Prozessanalyse",
+      "optional": true
+    },
+    {
+      "id": "E",
+      "titel": "Digitale Vernetzung",
+      "optional": true
+    },
+    {
+      "id": "F",
+      "titel": "Integrativ (ganze Ausbildung)",
+      "optional": false
+    }
+  ],
+  "punkte": [
+    {
+      "id": "A1a",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Grundsätze und Methoden des Projektmanagements anwenden",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1b",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Auftragsunterlagen und Durchführbarkeit des Auftrags prüfen, insbesondere in Hinblick auf rechtliche, wirtschaftliche und terminliche Vorgaben, und den Auftrag mit den betrieblichen Prozessen und Möglichkeiten abstimmen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1c",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Zeitplan und Reihenfolge der Arbeitsschritte für den eigenen Arbeitsbereich festlegen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1d",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Termine planen und abstimmen sowie Terminüberwachung durchführen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1e",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Probleme analysieren und als Aufgabe definieren sowie Lösungsalternativen entwickeln und beurteilen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1f",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Arbeits- und Organisationsmittel wirtschaftlich und ökologisch unter Berücksichtigung der vorhandenen Ressourcen und der Budgetvorgaben einsetzen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1g",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "Aufgaben im Team sowie mit internen und externen Kunden und Kundinnen planen und abstimmen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1h",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "betriebswirtschaftlich relevante Daten erheben und bewerten und dabei Geschäfts- und Leistungsprozesse berücksichtigen",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A1i",
+      "abschnitt": "A",
+      "nr": 1,
+      "position": "Planen, Vorbereiten und Durchführen von Arbeitsaufgaben in Abstimmung mit den kundenspezifischen Geschäfts- und Leistungsprozessen",
+      "text": "eigene Vorgehensweise sowie die Aufgabendurchführung im Team reflektieren und bei der Verbesserung der Arbeitsprozesse mitwirken",
+      "gruppe": "a–i",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 1.33,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 1",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A2a",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "im Rahmen der Marktbeobachtung Preise, Leistungen und Konditionen von Wettbewerbern vergleichen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.6,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "A2b",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Bedarfe von Kunden und Kundinnen feststellen sowie Zielgruppen unterscheiden",
+      "gruppe": "a–e",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.6,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "A2c",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Kunden und Kundinnen unter Beachtung von Kommunikationsregeln informieren sowie Sachverhalte präsentieren und dabei deutsche und englische Fachbegriffe anwenden",
+      "gruppe": "a–e",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.6,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "A2d",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Maßnahmen für Marketing und Vertrieb unterstützen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.6,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "A2e",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Informationsquellen auch in englischer Sprache aufgabenbezogen auswerten und für die Kundeninformation nutzen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.6,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 3",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A2f",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Gespräche situationsgerecht führen und Kunden und Kundinnen unter Berücksichtigung der Kundeninteressen beraten",
+      "gruppe": "f–h",
+      "wochen_gruppe": 2,
+      "wochen_punkt": 0.67,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 6"
+      ]
+    },
+    {
+      "id": "A2g",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Kundenbeziehungen unter Beachtung rechtlicher Regelungen und betrieblicher Grundsätze gestalten",
+      "gruppe": "f–h",
+      "wochen_gruppe": 2,
+      "wochen_punkt": 0.67,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 6"
+      ]
+    },
+    {
+      "id": "A2h",
+      "abschnitt": "A",
+      "nr": 2,
+      "position": "Informieren und Beraten von Kunden und Kundinnen",
+      "text": "Daten und Sachverhalte interpretieren, multimedial aufbereiten und situationsgerecht unter Nutzung digitaler Werkzeuge und unter Berücksichtigung der betrieblichen Vorgaben präsentieren",
+      "gruppe": "f–h",
+      "wochen_gruppe": 2,
+      "wochen_punkt": 0.67,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 1",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A3a",
+      "abschnitt": "A",
+      "nr": 3,
+      "position": "Beurteilen marktgängiger IT-Systeme und kundenspezifischer Lösungen",
+      "text": "marktgängige IT-Systeme für unterschiedliche Einsatzbereiche hinsichtlich Leistungsfähigkeit, Wirtschaftlichkeit und Barrierefreiheit beurteilen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 10,
+      "wochen_punkt": 5.0,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "A3b",
+      "abschnitt": "A",
+      "nr": 3,
+      "position": "Beurteilen marktgängiger IT-Systeme und kundenspezifischer Lösungen",
+      "text": "Angebote zu IT-Komponenten, IT-Produkten und IT-Dienstleistungen einholen und bewerten sowie Spezifikationen und Konditionen vergleichen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 10,
+      "wochen_punkt": 5.0,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "A3c",
+      "abschnitt": "A",
+      "nr": 3,
+      "position": "Beurteilen marktgängiger IT-Systeme und kundenspezifischer Lösungen",
+      "text": "technologische Entwicklungstrends von IT-Systemen feststellen sowie ihre wirtschaftlichen, sozialen und beruflichen Auswirkungen aufzeigen",
+      "gruppe": "c–d",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A3d",
+      "abschnitt": "A",
+      "nr": 3,
+      "position": "Beurteilen marktgängiger IT-Systeme und kundenspezifischer Lösungen",
+      "text": "Veränderungen von Einsatzfeldern für IT-Systeme aufgrund technischer, wirtschaftlicher und gesellschaftlicher Entwicklungen feststellen",
+      "gruppe": "c–d",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A4a",
+      "abschnitt": "A",
+      "nr": 4,
+      "position": "Entwickeln, Erstellen und Betreuen von IT-Lösungen",
+      "text": "IT-Systeme zur Bearbeitung betrieblicher Fachaufgaben analysieren sowie unter Beachtung insbesondere von Lizenzmodellen, Urheberrechten und Barrierefreiheit konzeptionieren, konfigurieren, testen und dokumentieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 5",
+        "LF 7"
+      ]
+    },
+    {
+      "id": "A4b",
+      "abschnitt": "A",
+      "nr": 4,
+      "position": "Entwickeln, Erstellen und Betreuen von IT-Lösungen",
+      "text": "Programmiersprachen, insbesondere prozedurale und objektorientierte Programmiersprachen, unterscheiden",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5"
+      ]
+    },
+    {
+      "id": "A4c",
+      "abschnitt": "A",
+      "nr": 4,
+      "position": "Entwickeln, Erstellen und Betreuen von IT-Lösungen",
+      "text": "systematisch Fehler erkennen, analysieren und beheben",
+      "gruppe": "c–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5"
+      ]
+    },
+    {
+      "id": "A4d",
+      "abschnitt": "A",
+      "nr": 4,
+      "position": "Entwickeln, Erstellen und Betreuen von IT-Lösungen",
+      "text": "Algorithmen formulieren und Anwendungen in einer Programmiersprache erstellen",
+      "gruppe": "c–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5"
+      ]
+    },
+    {
+      "id": "A4e",
+      "abschnitt": "A",
+      "nr": 4,
+      "position": "Entwickeln, Erstellen und Betreuen von IT-Lösungen",
+      "text": "Datenbankmodelle unterscheiden, Daten organisieren und speichern sowie Abfragen erstellen",
+      "gruppe": "c–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5",
+        "LF 8"
+      ]
+    },
+    {
+      "id": "A5a",
+      "abschnitt": "A",
+      "nr": 5,
+      "position": "Durchführen und Dokumentieren von qualitätssichernden Maßnahmen",
+      "text": "betriebliche Qualitätssicherungssysteme im eigenen Arbeitsbereich anwenden und Qualitätssicherungsmaßnahmen projektbegleitend durchführen und dokumentieren",
+      "gruppe": "a",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 4.0,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A5b",
+      "abschnitt": "A",
+      "nr": 5,
+      "position": "Durchführen und Dokumentieren von qualitätssichernden Maßnahmen",
+      "text": "Ursachen von Qualitätsmängeln systematisch feststellen, beseitigen und dokumentieren",
+      "gruppe": "b–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 4.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 6",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A5c",
+      "abschnitt": "A",
+      "nr": 5,
+      "position": "Durchführen und Dokumentieren von qualitätssichernden Maßnahmen",
+      "text": "im Rahmen eines Verbesserungsprozesses die Zielerreichung kontrollieren, insbesondere einen Soll-Ist-Vergleich durchführen",
+      "gruppe": "b–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 4.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A6a",
+      "abschnitt": "A",
+      "nr": 6,
+      "position": "Umsetzen, Integrieren und Prüfen von Maßnahmen zur IT-Sicherheit und zum Datenschutz",
+      "text": "betriebliche Vorgaben und rechtliche Regelungen zur IT-Sicherheit und zum Datenschutz einhalten",
+      "gruppe": "a–b",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 3.0,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Netzwerke",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 4",
+        "LF 8",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A6b",
+      "abschnitt": "A",
+      "nr": 6,
+      "position": "Umsetzen, Integrieren und Prüfen von Maßnahmen zur IT-Sicherheit und zum Datenschutz",
+      "text": "Sicherheitsanforderungen von IT-Systemen analysieren und Maßnahmen zur IT-Sicherheit ableiten, abstimmen, umsetzen und evaluieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 3.0,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Netzwerke",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 4",
+        "LF 8",
+        "LF 9",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A6c",
+      "abschnitt": "A",
+      "nr": 6,
+      "position": "Umsetzen, Integrieren und Prüfen von Maßnahmen zur IT-Sicherheit und zum Datenschutz",
+      "text": "Bedrohungsszenarien erkennen und Schadenspotenziale unter Berücksichtigung wirtschaftlicher und technischer Kriterien einschätzen",
+      "gruppe": "c–e",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 4",
+        "LF 8",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A6d",
+      "abschnitt": "A",
+      "nr": 6,
+      "position": "Umsetzen, Integrieren und Prüfen von Maßnahmen zur IT-Sicherheit und zum Datenschutz",
+      "text": "Kunden und Kundinnen im Hinblick auf Anforderungen an die IT-Sicherheit und an den Datenschutz beraten",
+      "gruppe": "c–e",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 8",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A6e",
+      "abschnitt": "A",
+      "nr": 6,
+      "position": "Umsetzen, Integrieren und Prüfen von Maßnahmen zur IT-Sicherheit und zum Datenschutz",
+      "text": "Wirksamkeit und Effizienz der umgesetzten Maßnahmen zur IT-Sicherheit und zum Datenschutz prüfen",
+      "gruppe": "c–e",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 4",
+        "LF 8",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A7a",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Leistungen nach betrieblichen und vertraglichen Vorgaben dokumentieren",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A7b",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Leistungserbringung unter Berücksichtigung der organisatorischen und terminlichen Vorgaben mit Kunden und Kundinnen abstimmen und kontrollieren",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A7c",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Veränderungsprozesse begleiten und unterstützen",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A7d",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Kunden und Kundinnen in die Nutzung von Produkten und Dienstleistungen einweisen",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A7e",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Leistungen und Dokumentationen an Kunden und Kundinnen übergeben sowie Abnahmeprotokolle anfertigen",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A7f",
+      "abschnitt": "A",
+      "nr": 7,
+      "position": "Erbringen der Leistungen und Auftragsabschluss",
+      "text": "Kosten für erbrachte Leistungen erfassen sowie im Zeitvergleich und im Soll-Ist-Vergleich bewerten",
+      "gruppe": "a–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.17,
+      "zeitraum": "1.–18.",
+      "ap1": true,
+      "ap2": [
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "A8a",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Netzwerkkonzepte für unterschiedliche Anwendungsgebiete unterscheiden",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A8b",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Datenaustausch von vernetzten Systemen realisieren",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 7",
+        "LF 8",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A8c",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Verfügbarkeit und Ausfallwahrscheinlichkeiten analysieren und Lösungsvorschläge unterbreiten",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "A8d",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Maßnahmen zur präventiven Wartung und zur Störungsvermeidung einleiten und durchführen",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A8e",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Störungsmeldungen aufnehmen und analysieren sowie Maßnahmen zur Störungsbeseitigung ergreifen",
+      "gruppe": "e–f",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 1.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 6"
+      ]
+    },
+    {
+      "id": "A8f",
+      "abschnitt": "A",
+      "nr": 8,
+      "position": "Betreiben von IT-Systemen",
+      "text": "Dokumentationen zielgruppengerecht und barrierefrei anfertigen, bereitstellen und pflegen, insbesondere technische Dokumentationen, System- sowie Benutzerdokumentationen",
+      "gruppe": "e–f",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 1.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke",
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "A9a",
+      "abschnitt": "A",
+      "nr": 9,
+      "position": "Inbetriebnehmen von Speicherlösungen",
+      "text": "Sicherheitsmechanismen, insbesondere Zugriffsmöglichkeiten und -rechte, festlegen und implementieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "A9b",
+      "abschnitt": "A",
+      "nr": 9,
+      "position": "Inbetriebnehmen von Speicherlösungen",
+      "text": "Speicherlösungen, insbesondere Datenbanksysteme, integrieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5",
+        "LF 8",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "A10a",
+      "abschnitt": "A",
+      "nr": 10,
+      "position": "Programmieren von Softwarelösungen",
+      "text": "Programmspezifikationen festlegen, Datenmodelle und Strukturen aus fachlichen Anforderungen ableiten sowie Schnittstellen festlegen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5"
+      ]
+    },
+    {
+      "id": "A10b",
+      "abschnitt": "A",
+      "nr": 10,
+      "position": "Programmieren von Softwarelösungen",
+      "text": "Programmiersprachen auswählen und unterschiedliche Programmiersprachen anwenden",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 5"
+      ]
+    },
+    {
+      "id": "A10c",
+      "abschnitt": "A",
+      "nr": 10,
+      "position": "Programmieren von Softwarelösungen",
+      "text": "Teilaufgaben von IT-Systemen automatisieren",
+      "gruppe": "c",
+      "wochen_gruppe": 10,
+      "wochen_punkt": 10.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C1a",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "Systemlösungen entsprechend den kundenspezifischen Anforderungen unter Berücksichtigung von Sicherheitsaspekten konzipieren",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "C1b",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "IT-Systeme auswählen, installieren und konfigurieren",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 7",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C1c",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "externe IT-Ressourcen bewerten, auswählen und in ein IT-System integrieren",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C1d",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "Kompatibilitätsprobleme von IT-Systemen und Systemkomponenten beurteilen und lösen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 2",
+        "LF 3"
+      ]
+    },
+    {
+      "id": "C1e",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "Testkonzepte erstellen sowie Tests durchführen und dokumentieren",
+      "gruppe": "d–g",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "C1f",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "Systemübergabe planen und mit den beteiligten Organisationseinheiten sowie Kunden und Kundinnen abstimmen und durchführen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "C1g",
+      "abschnitt": "C",
+      "nr": 1,
+      "position": "Konzipieren und Realisieren von IT-Systemen",
+      "text": "Datenübernahmen planen und durchführen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption",
+        "Projekt"
+      ],
+      "lernfelder": [
+        "LF 8"
+      ]
+    },
+    {
+      "id": "C2a",
+      "abschnitt": "C",
+      "nr": 2,
+      "position": "Installieren und Konfigurieren von Netzwerken",
+      "text": "Netzwerkprotokolle und -schnittstellen für unterschiedliche Anwendungsbereiche bewerten und auswählen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "C2b",
+      "abschnitt": "C",
+      "nr": 2,
+      "position": "Installieren und Konfigurieren von Netzwerken",
+      "text": "Netzwerkkomponenten auswählen, installieren und konfigurieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke"
+      ],
+      "lernfelder": [
+        "LF 3",
+        "LF 9"
+      ]
+    },
+    {
+      "id": "C2c",
+      "abschnitt": "C",
+      "nr": 2,
+      "position": "Installieren und Konfigurieren von Netzwerken",
+      "text": "Systeme zur IT-Sicherheit in Netzwerken implementieren und dokumentieren",
+      "gruppe": "c",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 6.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Netzwerke"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "C3a",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Richtlinien zur Nutzung von IT-Systemen erstellen und einführen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9"
+      ]
+    },
+    {
+      "id": "C3b",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Lizenzrechte verwalten und die Einhaltung von Lizenzbestimmungen überwachen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C3c",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Berechtigungskonzepte entwerfen, abstimmen und umsetzen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "C3d",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Systemaktualisierungen evaluieren und durchführen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C3e",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Konzepte zur Datensicherung und -archivierung erstellen und umsetzen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 1.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C3f",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Konzepte zur Daten- und Systemwiederherstellung erstellen und umsetzen",
+      "gruppe": "f–i",
+      "wochen_gruppe": 14,
+      "wochen_punkt": 3.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 11b"
+      ]
+    },
+    {
+      "id": "C3g",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Systemauslastung überwachen und Ressourcen verwalten",
+      "gruppe": "f–i",
+      "wochen_gruppe": 14,
+      "wochen_punkt": 3.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C3h",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Systemverhalten überwachen, bewerten und Maßnahmen ergreifen",
+      "gruppe": "f–i",
+      "wochen_gruppe": 14,
+      "wochen_punkt": 3.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 9",
+        "LF 10b"
+      ]
+    },
+    {
+      "id": "C3i",
+      "abschnitt": "C",
+      "nr": 3,
+      "position": "Administrieren von IT-Systemen",
+      "text": "Benutzeranfragen aufnehmen, analysieren und bearbeiten",
+      "gruppe": "f–i",
+      "wochen_gruppe": 14,
+      "wochen_punkt": 3.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [
+        "Konzeption"
+      ],
+      "lernfelder": [
+        "LF 6"
+      ]
+    },
+    {
+      "id": "F1a",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "wesentliche Inhalte und Bestandteile des Ausbildungsvertrages darstellen, Rechte und Pflichten aus dem Ausbildungsvertrag feststellen und Aufgaben der Beteiligten im dualen System beschreiben",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": []
+    },
+    {
+      "id": "F1b",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "den betrieblichen Ausbildungsplan mit der Ausbildungsordnung vergleichen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": []
+    },
+    {
+      "id": "F1c",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "arbeits-, sozial- und mitbestimmungsrechtliche Vorschriften sowie für den Arbeitsbereich geltende Tarif- und Arbeitszeitregelungen beachten",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": []
+    },
+    {
+      "id": "F1d",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "Positionen der eigenen Entgeltabrechnung erklären",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": []
+    },
+    {
+      "id": "F1e",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "Chancen und Anforderungen des lebensbegleitenden Lernens für die berufliche und persönliche Entwicklung begründen und die eigenen Kompetenzen weiterentwickeln",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F1f",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "Lern- und Arbeitstechniken sowie Methoden des selbstgesteuerten Lernens anwenden und beruflich relevante Informationsquellen nutzen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F1g",
+      "abschnitt": "F",
+      "nr": 1,
+      "position": "Berufsbildung sowie Arbeits- und Tarifrecht",
+      "text": "berufliche Aufstiegs- und Weiterentwicklungsmöglichkeiten darstellen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F2a",
+      "abschnitt": "F",
+      "nr": 2,
+      "position": "Aufbau und Organisation des Ausbildungsbetriebes",
+      "text": "die Rechtsform und den organisatorischen Aufbau des Ausbildungsbetriebes mit seinen Aufgaben und Zuständigkeiten sowie die Zusammenhänge zwischen den Geschäftsprozessen erläutern",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F2b",
+      "abschnitt": "F",
+      "nr": 2,
+      "position": "Aufbau und Organisation des Ausbildungsbetriebes",
+      "text": "Beziehungen des Ausbildungsbetriebes und seiner Beschäftigten zu Wirtschaftsorganisationen, Berufsvertretungen und Gewerkschaften nennen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F2c",
+      "abschnitt": "F",
+      "nr": 2,
+      "position": "Aufbau und Organisation des Ausbildungsbetriebes",
+      "text": "Grundlagen, Aufgaben und Arbeitsweise der betriebsverfassungsrechtlichen Organe des Ausbildungsbetriebes beschreiben",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 1"
+      ]
+    },
+    {
+      "id": "F3a",
+      "abschnitt": "F",
+      "nr": 3,
+      "position": "Sicherheit und Gesundheitsschutz bei der Arbeit",
+      "text": "Gefährdung von Sicherheit und Gesundheit am Arbeitsplatz feststellen und Maßnahmen zur Vermeidung der Gefährdung ergreifen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F3b",
+      "abschnitt": "F",
+      "nr": 3,
+      "position": "Sicherheit und Gesundheitsschutz bei der Arbeit",
+      "text": "berufsbezogene Arbeitsschutz- und Unfallverhütungsvorschriften anwenden",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F3c",
+      "abschnitt": "F",
+      "nr": 3,
+      "position": "Sicherheit und Gesundheitsschutz bei der Arbeit",
+      "text": "Verhaltensweisen bei Unfällen beschreiben sowie erste Maßnahmen einleiten",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F3d",
+      "abschnitt": "F",
+      "nr": 3,
+      "position": "Sicherheit und Gesundheitsschutz bei der Arbeit",
+      "text": "Vorschriften des vorbeugenden Brandschutzes anwenden sowie Verhaltensweisen bei Bränden beschreiben und Maßnahmen zur Brandbekämpfung ergreifen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F4a",
+      "abschnitt": "F",
+      "nr": 4,
+      "position": "Umweltschutz",
+      "text": "mögliche Umweltbelastungen durch den Ausbildungsbetrieb und seinen Beitrag zum Umweltschutz an Beispielen erklären",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F4b",
+      "abschnitt": "F",
+      "nr": 4,
+      "position": "Umweltschutz",
+      "text": "für den Ausbildungsbetrieb geltende Regelungen des Umweltschutzes anwenden",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F4c",
+      "abschnitt": "F",
+      "nr": 4,
+      "position": "Umweltschutz",
+      "text": "Möglichkeiten der wirtschaftlichen und umweltschonenden Energie- und Materialverwendung nutzen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F4d",
+      "abschnitt": "F",
+      "nr": 4,
+      "position": "Umweltschutz",
+      "text": "Abfälle vermeiden sowie Stoffe und Materialien einer umweltschonenden Entsorgung zuführen",
+      "gruppe": null,
+      "wochen_gruppe": 0,
+      "wochen_punkt": 0,
+      "zeitraum": null,
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 2"
+      ]
+    },
+    {
+      "id": "F5a",
+      "abschnitt": "F",
+      "nr": 5,
+      "position": "Vernetztes Zusammenarbeiten unter Nutzung digitaler Medien",
+      "text": "gegenseitige Wertschätzung unter Berücksichtigung gesellschaftlicher Vielfalt bei betrieblichen Abläufen praktizieren",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "F5b",
+      "abschnitt": "F",
+      "nr": 5,
+      "position": "Vernetztes Zusammenarbeiten unter Nutzung digitaler Medien",
+      "text": "Strategien zum verantwortungsvollen Umgang mit digitalen Medien anwenden und im virtuellen Raum unter Wahrung der Persönlichkeitsrechte Dritter zusammenarbeiten",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "F5c",
+      "abschnitt": "F",
+      "nr": 5,
+      "position": "Vernetztes Zusammenarbeiten unter Nutzung digitaler Medien",
+      "text": "insbesondere bei der Speicherung, Darstellung und Weitergabe digitaler Inhalte die Auswirkungen des eigenen Kommunikations- und Informationsverhaltens berücksichtigen",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "F5d",
+      "abschnitt": "F",
+      "nr": 5,
+      "position": "Vernetztes Zusammenarbeiten unter Nutzung digitaler Medien",
+      "text": "bei der Beurteilung, Entwicklung, Umsetzung und Betreuung von IT-Lösungen ethische Aspekte reflektieren",
+      "gruppe": "a–d",
+      "wochen_gruppe": 3,
+      "wochen_punkt": 0.75,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [
+        "WiSo"
+      ],
+      "lernfelder": [
+        "LF 12b"
+      ]
+    },
+    {
+      "id": "B1a",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "Vorgehensmodelle und -methoden sowie Entwicklungsumgebungen und -bibliotheken auswählen und einsetzen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 5.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1b",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "Analyse- und Designverfahren anwenden",
+      "gruppe": "a–c",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 5.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1c",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "Benutzerschnittstellen ergonomisch gestalten und an Kundenanforderungen anpassen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 5.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1d",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "Anwendungslösungen unter Berücksichtigung der bestehenden Systemarchitektur entwerfen und realisieren",
+      "gruppe": "d–g",
+      "wochen_gruppe": 25,
+      "wochen_punkt": 6.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1e",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "bestehende Anwendungslösungen anpassen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 25,
+      "wochen_punkt": 6.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1f",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "Datenaustausch zwischen Systemen realisieren und unterschiedliche Datenquellen nutzen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 25,
+      "wochen_punkt": 6.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B1g",
+      "abschnitt": "B",
+      "nr": 1,
+      "position": "Konzipieren und Umsetzen von kundenspezifischen Softwareanwendungen",
+      "text": "komplexe Abfragen aus unterschiedlichen Datenquellen durchführen und Datenbestandsberichte erstellen",
+      "gruppe": "d–g",
+      "wochen_gruppe": 25,
+      "wochen_punkt": 6.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2a",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Sicherheitsaspekte bei der Entwicklung von Softwareanwendungen berücksichtigen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 1.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2b",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Datenintegrität mithilfe von Werkzeugen sicherstellen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 1.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2c",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Modultests erstellen und durchführen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 1.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2d",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Werkzeuge zur Versionsverwaltung einsetzen",
+      "gruppe": "d–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2e",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Testkonzepte erstellen und Tests durchführen sowie Testergebnisse bewerten und dokumentieren",
+      "gruppe": "d–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "B2f",
+      "abschnitt": "B",
+      "nr": 2,
+      "position": "Sicherstellen der Qualität von Softwareanwendungen",
+      "text": "Daten und Sachverhalte aus Tests multimedial aufbereiten und situationsgerecht unter Nutzung digitaler Werkzeuge und unter Beachtung der betrieblichen Vorgaben präsentieren",
+      "gruppe": "d–f",
+      "wochen_gruppe": 7,
+      "wochen_punkt": 2.33,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D1a",
+      "abschnitt": "D",
+      "nr": 1,
+      "position": "Analysieren von Arbeits- und Geschäftsprozessen",
+      "text": "betriebs- und produktionswirtschaftliche Geschäftsprozesse und ihr Zusammenwirken im Unternehmen analysieren",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D1b",
+      "abschnitt": "D",
+      "nr": 1,
+      "position": "Analysieren von Arbeits- und Geschäftsprozessen",
+      "text": "Anforderungen in einer Prozessdarstellung abbilden",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D1c",
+      "abschnitt": "D",
+      "nr": 1,
+      "position": "Analysieren von Arbeits- und Geschäftsprozessen",
+      "text": "Werkzeuge der Prozessoptimierung vergleichen und vorschlagen",
+      "gruppe": "a–c",
+      "wochen_gruppe": 8,
+      "wochen_punkt": 2.67,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D2a",
+      "abschnitt": "D",
+      "nr": 2,
+      "position": "Analysieren von Datenquellen und Bereitstellen von Daten",
+      "text": "Daten aus heterogenen Datenquellen identifizieren und klassifizieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D2b",
+      "abschnitt": "D",
+      "nr": 2,
+      "position": "Analysieren von Datenquellen und Bereitstellen von Daten",
+      "text": "Berechtigung zur Nutzung und zur Verknüpfung von Daten prüfen sowie entsprechende Maßnahmen ableiten",
+      "gruppe": "a–b",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 2.5,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D2c",
+      "abschnitt": "D",
+      "nr": 2,
+      "position": "Analysieren von Datenquellen und Bereitstellen von Daten",
+      "text": "technische Voraussetzungen zur Übernahme von Daten sicherstellen und Daten bereitstellen",
+      "gruppe": "c",
+      "wochen_gruppe": 5,
+      "wochen_punkt": 5.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3a",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Daten auf Qualität, insbesondere auf Plausibilität, Quantität, Redundanz, Vollständigkeit und Validität prüfen, Ergebnisse dokumentieren und bei Abweichungen vom Sollzustand Maßnahmen, insbesondere zur Verbesserung der Datenqualität, vorschlagen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 3.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3b",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Auffindbarkeit, Zugänglichkeit, Interoperabilität, Wiederverwendbarkeit von Daten sicherstellen",
+      "gruppe": "a–b",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 3.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3c",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "analytische und statistische Verfahren anwenden",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3d",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Programmiersprachen mit integrierten Auswertungsverfahren und Visualisierungswerkzeugen nutzen",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3e",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Ergebnisse der Analyse für unterschiedliche Zielgruppen aufbereiten",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3f",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "mathematische Vorhersagemodelle anwenden",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3g",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Werkzeuge zur Mustererkennung und zur Modellgenerierung nutzen",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3h",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Analyseergebnisse zur Optimierung der betriebs- und produktionswirtschaftlichen Geschäftsprozesse nutzen",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D3i",
+      "abschnitt": "D",
+      "nr": 3,
+      "position": "Nutzen der Daten zur Optimierung von Arbeits- und Geschäftsprozessen sowie zur Optimierung digitaler Geschäftsmodelle",
+      "text": "Kennzahlen ableiten und für ein Monitoringsystem vorschlagen",
+      "gruppe": "c–i",
+      "wochen_gruppe": 21,
+      "wochen_punkt": 3.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D4a",
+      "abschnitt": "D",
+      "nr": 4,
+      "position": "Umsetzen des Datenschutzes und der Schutzziele der Datensicherheit",
+      "text": "mit für Datenschutz zuständigen Personen und Einrichtungen kooperieren",
+      "gruppe": "a",
+      "wochen_gruppe": 1,
+      "wochen_punkt": 1.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D4b",
+      "abschnitt": "D",
+      "nr": 4,
+      "position": "Umsetzen des Datenschutzes und der Schutzziele der Datensicherheit",
+      "text": "Benutzer-, Zugriffs- und Datenhaltungs- sowie Datensicherungskonzepte erstellen und dabei die verschiedenen Datenklassifizierungen berücksichtigen",
+      "gruppe": "b–d",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D4c",
+      "abschnitt": "D",
+      "nr": 4,
+      "position": "Umsetzen des Datenschutzes und der Schutzziele der Datensicherheit",
+      "text": "beim Umgang mit Daten und bei der Erstellung der Konzepte Datensparsamkeit und Datensorgfalt beachten",
+      "gruppe": "b–d",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "D4d",
+      "abschnitt": "D",
+      "nr": 4,
+      "position": "Umsetzen des Datenschutzes und der Schutzziele der Datensicherheit",
+      "text": "Verfahren zur Datenverschlüsselung auswählen und nutzen",
+      "gruppe": "b–d",
+      "wochen_gruppe": 6,
+      "wochen_punkt": 2.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1a",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "das Zusammenwirken der Komponenten cyber-physischer Systeme erfassen und visualisieren",
+      "gruppe": "a–e",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 2.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1b",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "bestehende Vernetzung eingesetzter Software und technischer Schnittstellen analysieren, insbesondere unter Berücksichtigung der bestehenden Netztopologien",
+      "gruppe": "a–e",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 2.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1c",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "bei der Planung Aspekte der IT-Sicherheit und technische Rahmenbedingungen, insbesondere Netzwerkanforderungen, berücksichtigen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 2.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1d",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "Netzwerkkomponenten auswählen, technische Unterlagen erstellen und Kosten kalkulieren",
+      "gruppe": "a–e",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 2.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1e",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "die Lösung zur Vernetzung und zu Änderungen am System kundenbezogen abstimmen",
+      "gruppe": "a–e",
+      "wochen_gruppe": 12,
+      "wochen_punkt": 2.4,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E1f",
+      "abschnitt": "E",
+      "nr": 1,
+      "position": "Analysieren und Planen von Systemen zur Vernetzung von Prozessen und Produkten",
+      "text": "Daten auswerten und Vorschläge zur Optimierung der Interaktion von Systemen entwickeln",
+      "gruppe": "f",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 4.0,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2a",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Systemkomponenten und Netzwerkbetriebssysteme installieren, anpassen und konfigurieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 2.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2b",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Softwarelösungen zur Visualisierung und Optimierung von Prozessabläufen anwenden",
+      "gruppe": "a–b",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 2.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2c",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Programme erstellen und anpassen sowie Signal- und Datenübertragungseinrichtungen konfigurieren",
+      "gruppe": "c–f",
+      "wochen_gruppe": 13,
+      "wochen_punkt": 3.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2d",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Sicherheits- und Datensicherungssysteme berücksichtigen, Gefahrenpotenziale identifizieren und Zugangsberechtigungen festlegen",
+      "gruppe": "c–f",
+      "wochen_gruppe": 13,
+      "wochen_punkt": 3.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2e",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Testkonzepte erstellen, Tests durchführen, Fehler beseitigen sowie Ergebnisse und Änderungen dokumentieren",
+      "gruppe": "c–f",
+      "wochen_gruppe": 13,
+      "wochen_punkt": 3.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E2f",
+      "abschnitt": "E",
+      "nr": 2,
+      "position": "Errichten, Ändern und Prüfen von vernetzten Systemen",
+      "text": "Systeme in Betrieb nehmen, Inbetriebnahmeprotokolle erstellen und Systeme übergeben",
+      "gruppe": "c–f",
+      "wochen_gruppe": 13,
+      "wochen_punkt": 3.25,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3a",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Systemauslastung überwachen und Systemstatus dokumentieren",
+      "gruppe": "a–b",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 2.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3b",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Systemdaten erfassen und im Hinblick auf Vorgabeparameter auswerten und Systemstörungen feststellen und beheben",
+      "gruppe": "a–b",
+      "wochen_gruppe": 4,
+      "wochen_punkt": 2.0,
+      "zeitraum": "1.–18.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3c",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Daten auswerten, um Wartungsintervalle und Prozessabläufe zu optimieren",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3d",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "System-, Diagnose- und Prozessdaten auswerten, Schwachstellen identifizieren und Maßnahmen ableiten",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3e",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Angriffsszenarien in cyber-physischen Systemen unterscheiden und antizipieren",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3f",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Anomalien in vernetzten Systemen feststellen und Schutzmaßnahmen einleiten",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3g",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "bereichsspezifische Sicherheitslösungen implementieren",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    },
+    {
+      "id": "E3h",
+      "abschnitt": "E",
+      "nr": 3,
+      "position": "Betreiben von vernetzten Systemen und Sicherstellung der Systemverfügbarkeit",
+      "text": "Systemaktualisierungen vornehmen und Optimierungen vorschlagen",
+      "gruppe": "c–h",
+      "wochen_gruppe": 15,
+      "wochen_punkt": 2.5,
+      "zeitraum": "19.–36.",
+      "ap1": false,
+      "ap2": [],
+      "lernfelder": []
+    }
+  ],
+  "lernfelder": [
+    {
+      "id": "LF 1",
+      "titel": "Das Unternehmen und die eigene Rolle im Betrieb beschreiben",
+      "stunden": 40,
+      "jahr": 1,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 2",
+      "titel": "Arbeitsplätze nach Kundenwunsch ausstatten",
+      "stunden": 80,
+      "jahr": 1,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 3",
+      "titel": "Clients in Netzwerke einbinden",
+      "stunden": 80,
+      "jahr": 1,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 4",
+      "titel": "Schutzbedarfsanalyse im eigenen Arbeitsbereich durchführen",
+      "stunden": 40,
+      "jahr": 1,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 5",
+      "titel": "Software zur Verwaltung von Daten anpassen",
+      "stunden": 80,
+      "jahr": 1,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 6",
+      "titel": "Serviceanfragen bearbeiten",
+      "stunden": 40,
+      "jahr": 2,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 7",
+      "titel": "Cyber-physische Systeme ergänzen",
+      "stunden": 80,
+      "jahr": 2,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 8",
+      "titel": "Daten systemübergreifend bereitstellen",
+      "stunden": 80,
+      "jahr": 2,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 9",
+      "titel": "Netzwerke und Dienste bereitstellen",
+      "stunden": 80,
+      "jahr": 2,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 10b",
+      "titel": "Serverdienste bereitstellen und Administrationsaufgaben automatisieren",
+      "stunden": 80,
+      "jahr": 3,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 11b",
+      "titel": "Betrieb und Sicherheit vernetzter Systeme gewährleisten",
+      "stunden": 80,
+      "jahr": 3,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 12b",
+      "titel": "Kundenspezifische Systemintegration durchführen",
+      "stunden": 120,
+      "jahr": 3,
+      "abschnitt": ""
+    },
+    {
+      "id": "LF 10a",
+      "titel": "Benutzerschnittstellen gestalten und entwickeln",
+      "stunden": 80,
+      "jahr": 3,
+      "abschnitt": "B"
+    },
+    {
+      "id": "LF 11a",
+      "titel": "Funktionalität in Anwendungen realisieren",
+      "stunden": 80,
+      "jahr": 3,
+      "abschnitt": "B"
+    },
+    {
+      "id": "LF 12a",
+      "titel": "Kundenspezifische Anwendungsentwicklung durchführen",
+      "stunden": 120,
+      "jahr": 3,
+      "abschnitt": "B"
+    }
+  ]
+}

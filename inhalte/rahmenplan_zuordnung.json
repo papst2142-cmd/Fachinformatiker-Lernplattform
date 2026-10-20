@@ -1,0 +1,1465 @@
+{
+  "_hinweis": [
+    "Zuordnung Lerninhalt -> Rahmenplan-Punkt (ab 0.55). Ein Inhalt gehört zu einem Punkt, wenn sein Lernthema in 'themen' steht (null = alle Themen) und ein Stichwort (regulärer Ausdruck, ohne Groß-/Kleinschreibung) in Frage, Antwort oder Erklärung vorkommt. Inhalte ohne Treffer zählen beim Standard-Punkt ihres Lernthemas. Inhalte mit eigenem Feld 'rahmenplan' zählen nur dort."
+  ],
+  "punkte": [
+    {
+      "id": "A1a",
+      "themen": [
+        "projekt"
+      ],
+      "stichworte": "projektmanagement|projektphase|lastenheft|pflichtenheft|meilenstein|projektauftrag|scrum|kanban|wasserfall|v-modell|agil|projektstrukturplan|\\bpsp\\b|stakeholder|smart"
+    },
+    {
+      "id": "A1b",
+      "themen": [
+        "projekt",
+        "recht",
+        "beratung",
+        "beschaffung"
+      ],
+      "stichworte": "machbarkeit|durchf[üu]hrbarkeit|auftragsunterlagen|auftragspr[üu]fung|lastenheft|vertragsart|werkvertrag|dienstvertrag|rahmenbedingung"
+    },
+    {
+      "id": "A1c",
+      "themen": [
+        "projekt"
+      ],
+      "stichworte": "zeitplan|ablaufplan|vorg[aä]nger|reihenfolge|arbeitspaket|netzplan|gantt|balkendiagramm"
+    },
+    {
+      "id": "A1d",
+      "themen": [
+        "projekt"
+      ],
+      "stichworte": "termin|puffer|kritischer pfad|meilenstein|gantt|netzplan|fr[üu]hester|sp[äa]tester"
+    },
+    {
+      "id": "A1e",
+      "themen": [
+        "projekt",
+        "beratung",
+        "fehlersuche",
+        "service"
+      ],
+      "stichworte": "ursache|ishikawa|problemanalyse|l[öo]sungsalternative|nutzwertanalyse|entscheidungsmatrix|brainstorming|swot|5[- ]why"
+    },
+    {
+      "id": "A1f",
+      "themen": [
+        "projekt",
+        "kalkulation",
+        "beschaffung",
+        "it_betrieb"
+      ],
+      "stichworte": "budget|ressource|wirtschaftlich|[öo]kolog|nachhaltig|energieeffizi|green it"
+    },
+    {
+      "id": "A1g",
+      "themen": [
+        "projekt",
+        "beratung",
+        "service"
+      ],
+      "stichworte": "team|kick-?off|besprechung|abstimm|stakeholder|kommunikationsplan|raci|tuckman"
+    },
+    {
+      "id": "A1h",
+      "themen": [
+        "kalkulation",
+        "projekt",
+        "beschaffung"
+      ],
+      "stichworte": "kennzahl|rentabilit|wirtschaftlichkeit|amortisation|deckungsbeitrag|break-?even|gesch[äa]ftsprozess|produktivit"
+    },
+    {
+      "id": "A1i",
+      "themen": [
+        "projekt",
+        "service"
+      ],
+      "stichworte": "reflex|lessons learned|retrospektive|kvp|kontinuierlich|pdca|verbesserung|projektabschluss"
+    },
+    {
+      "id": "A2a",
+      "themen": [
+        "beschaffung",
+        "beratung",
+        "kalkulation",
+        "arbeitswelt"
+      ],
+      "stichworte": "marktbeobacht|wettbewerb|konkurren|marktanalyse|preisvergleich|konditionen"
+    },
+    {
+      "id": "A2b",
+      "themen": [
+        "beratung",
+        "beschaffung",
+        "service"
+      ],
+      "stichworte": "bedarf|zielgruppe|anforderungsanalyse|kundenanforderung|kundenwunsch|kundengespr[äa]ch"
+    },
+    {
+      "id": "A2c",
+      "themen": [
+        "beratung",
+        "projekt"
+      ],
+      "stichworte": "pr[äa]sentation|kommunikationsregel|vier[- ]ohren|sender|empf[äa]nger|aktives zuh[öo]ren|englisch|fachbegriff"
+    },
+    {
+      "id": "A2d",
+      "themen": [
+        "beratung",
+        "arbeitswelt",
+        "kalkulation"
+      ],
+      "stichworte": "marketing|vertrieb|werbung|marketing-?mix|\\b4p\\b|produktpolitik|preispolitik|kommunikationspolitik|distribution"
+    },
+    {
+      "id": "A2e",
+      "themen": null,
+      "stichworte": "englisch|english|datasheet|\\(engl\\.|englischsprachig|release notes|manual\\b"
+    },
+    {
+      "id": "A2f",
+      "themen": [
+        "beratung",
+        "service"
+      ],
+      "stichworte": "gespr[äa]ch|beratung|einwand|fragetechnik|offene frage|geschlossene frage|deeskal|beschwerde"
+    },
+    {
+      "id": "A2g",
+      "themen": [
+        "beratung",
+        "recht",
+        "datenschutz",
+        "service"
+      ],
+      "stichworte": "kundenbeziehung|\\bcrm\\b|kundenbindung|kundenzufrieden|\\bagb\\b|gew[äa]hrleistung|garantie|kundendaten"
+    },
+    {
+      "id": "A2h",
+      "themen": [
+        "beratung",
+        "projekt",
+        "programmierung"
+      ],
+      "stichworte": "pr[äa]sentation|visualisier|diagramm|folie|tabellenkalkulation|multimedia|infografik"
+    },
+    {
+      "id": "A3a",
+      "themen": [
+        "hardware",
+        "beschaffung",
+        "it_betrieb",
+        "virtualisierung",
+        "storage"
+      ],
+      "stichworte": "leistungsf[äa]hig|barrierefrei|\\btco\\b|einsatzbereich|thin client|workstation|benchmark|leistungsmerkmal|datenblatt"
+    },
+    {
+      "id": "A3b",
+      "themen": [
+        "beschaffung",
+        "kalkulation"
+      ],
+      "stichworte": "angebot|anfrage|angebotsvergleich|nutzwertanalyse|bezugskalkulation|skonto|rabatt|spezifikation|konditionen|lieferant"
+    },
+    {
+      "id": "A3c",
+      "themen": [
+        "virtualisierung",
+        "it_betrieb",
+        "hardware",
+        "arbeitswelt"
+      ],
+      "stichworte": "trend|k[üu]nstliche intelligenz|\\bki\\b|cloud|edge|iot|industrie 4|digitalisierung|homeoffice|5g|quanten"
+    },
+    {
+      "id": "A3d",
+      "themen": [
+        "virtualisierung",
+        "it_betrieb",
+        "arbeitswelt"
+      ],
+      "stichworte": "digitalisierung|cloud|saas|paas|iaas|homeoffice|mobiles arbeiten|automatisierung|wandel"
+    },
+    {
+      "id": "A4a",
+      "themen": [
+        "programmierung",
+        "windows",
+        "linux",
+        "recht",
+        "it_betrieb",
+        "virtualisierung"
+      ],
+      "stichworte": "lizenz|urheberrecht|open source|\\bgpl\\b|barrierefrei|nutzungsrecht"
+    },
+    {
+      "id": "A4b",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "programmiersprache|prozedural|objektorient|klasse|objekt|kompil|interpret|python|java|skriptsprache"
+    },
+    {
+      "id": "A4c",
+      "themen": [
+        "programmierung",
+        "fehlersuche",
+        "service"
+      ],
+      "stichworte": "fehler|debug|troubleshoot|ursache|\\blog"
+    },
+    {
+      "id": "A4d",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "algorithm|pseudocode|schleife|verzweigung|struktogramm|programmablaufplan|\\bpap\\b|funktion|variable|array|sortier"
+    },
+    {
+      "id": "A4e",
+      "themen": [
+        "modellierung",
+        "sql",
+        "db_betrieb",
+        "programmierung"
+      ],
+      "stichworte": "datenbank|relational|tabelle|select|\\bsql\\b|normalform|entit|schl[üu]ssel|abfrage|nosql"
+    },
+    {
+      "id": "A5a",
+      "themen": [
+        "service",
+        "projekt"
+      ],
+      "stichworte": "qualit[äa]t|qm|iso 9001|qualit[äa]tssicher|qualit[äa]tsmanagement|pdca|audit|abnahme|test"
+    },
+    {
+      "id": "A5b",
+      "themen": [
+        "service",
+        "projekt",
+        "fehlersuche"
+      ],
+      "stichworte": "qualit[äa]tsm[äa]ngel|ursache|ishikawa|fehleranalyse|root cause|problem management|m[äa]ngel"
+    },
+    {
+      "id": "A5c",
+      "themen": [
+        "service",
+        "projekt",
+        "kalkulation"
+      ],
+      "stichworte": "soll-?ist|zielerreichung|kvp|pdca|kennzahl|kpi|verbesserungsprozess|controlling"
+    },
+    {
+      "id": "A6a",
+      "themen": [
+        "datenschutz",
+        "isms",
+        "zugriff",
+        "krypto"
+      ],
+      "stichworte": "dsgvo|bdsg|datenschutz|it-sicherheitsgesetz|kritis|nis-?2|richtlinie|grundschutz|iso 27001|leitlinie|betriebliche vorgabe"
+    },
+    {
+      "id": "A6b",
+      "themen": [
+        "isms",
+        "haertung",
+        "zugriff",
+        "netzsicherheit",
+        "krypto",
+        "notfall"
+      ],
+      "stichworte": "schutzziel|vertraulich|integrit|verf[üu]gbar|schutzbedarf|ma[ßs]nahme|grundschutz|h[äa]rtung|tom\\b|technische und organisatorische"
+    },
+    {
+      "id": "A6c",
+      "themen": [
+        "angriffe",
+        "isms",
+        "netzsicherheit",
+        "haertung"
+      ],
+      "stichworte": "bedrohung|schaden|risiko|phishing|ransomware|trojaner|ddos|social engineering|angriff|schwachstelle|eintrittswahrscheinlich"
+    },
+    {
+      "id": "A6d",
+      "themen": [
+        "datenschutz",
+        "isms",
+        "beratung",
+        "zugriff"
+      ],
+      "stichworte": "beraten|beratung|sensibilis|schulung|awareness|einwilligung|auftragsverarbeitung|betroffenenrecht"
+    },
+    {
+      "id": "A6e",
+      "themen": [
+        "isms",
+        "haertung",
+        "datenschutz",
+        "netzsicherheit"
+      ],
+      "stichworte": "wirksamkeit|audit|penetrationstest|pentest|schwachstellenscan|monitoring|siem|kontrolle|pr[üu]fung|evaluier"
+    },
+    {
+      "id": "A7a",
+      "themen": [
+        "projekt",
+        "service",
+        "recht",
+        "fehlersuche"
+      ],
+      "stichworte": "dokumentation|leistungsnachweis|arbeitsbericht|protokoll|stundenzettel"
+    },
+    {
+      "id": "A7b",
+      "themen": [
+        "projekt",
+        "service"
+      ],
+      "stichworte": "abstimm|kontroll|leistungserbringung|terminvorgabe|statusbericht|fortschritt|meilenstein"
+    },
+    {
+      "id": "A7c",
+      "themen": [
+        "projekt",
+        "service",
+        "beratung",
+        "arbeitswelt"
+      ],
+      "stichworte": "ver[äa]nderung|change|widerstand|akzeptanz|einf[üu]hrung|umstellung|change management"
+    },
+    {
+      "id": "A7d",
+      "themen": [
+        "beratung",
+        "service",
+        "projekt"
+      ],
+      "stichworte": "einweis|schulung|einf[üu]hrung|benutzerhandbuch|anleitung|nutzereinweisung"
+    },
+    {
+      "id": "A7e",
+      "themen": [
+        "projekt",
+        "recht",
+        "service"
+      ],
+      "stichworte": "abnahme|abnahmeprotokoll|[üu]bergabe|[üu]bergabeprotokoll"
+    },
+    {
+      "id": "A7f",
+      "themen": [
+        "kalkulation",
+        "projekt"
+      ],
+      "stichworte": "kosten|soll-?ist|nachkalkulation|stundensatz|zeitvergleich|abrechnung|rechnung"
+    },
+    {
+      "id": "A8a",
+      "themen": [
+        "grundlagen",
+        "switching",
+        "wlan",
+        "wan_vpn",
+        "verkabelung",
+        "routing"
+      ],
+      "stichworte": "topologie|\\blan\\b|\\bwan\\b|sterntopologie|ringtopologie|\\bbus\\b|netzwerkkonzept|client-?server|peer-to-peer|vlan|\\bsdn\\b|campus"
+    },
+    {
+      "id": "A8b",
+      "themen": [
+        "dienste",
+        "grundlagen",
+        "ipv4",
+        "ipv6",
+        "routing",
+        "windows",
+        "linux"
+      ],
+      "stichworte": "datenaustausch|freigabe|\\bsmb|\\bnfs|ftp|dhcp|\\bdns|http|\\bosi|\\btcp|\\budp|protokoll|schnittstelle"
+    },
+    {
+      "id": "A8c",
+      "themen": [
+        "storage",
+        "notfall",
+        "it_betrieb",
+        "service",
+        "haertung"
+      ],
+      "stichworte": "verf[üu]gbarkeit|ausfall|redundan|mtbf|mttr|hochverf[üu]gbar|cluster|usv|raid|failover|99[,.]9"
+    },
+    {
+      "id": "A8d",
+      "themen": [
+        "it_betrieb",
+        "haertung",
+        "service",
+        "storage",
+        "notfall"
+      ],
+      "stichworte": "wartung|pr[äa]ventiv|patch|update|monitoring|st[öo]rungsvermeid|smart\\b|usv|vorbeug"
+    },
+    {
+      "id": "A8e",
+      "themen": [
+        "service",
+        "fehlersuche",
+        "it_betrieb"
+      ],
+      "stichworte": "st[öo]rung|incident|ticket|service ?desk|help ?desk|first level|second level|sla|eskalation|fehlermeldung"
+    },
+    {
+      "id": "A8f",
+      "themen": [
+        "fehlersuche",
+        "service",
+        "it_betrieb",
+        "projekt"
+      ],
+      "stichworte": "dokumentation|benutzerdokumentation|systemdokumentation|barrierefrei|netzplan|handbuch|wiki"
+    },
+    {
+      "id": "A9a",
+      "themen": [
+        "zugriff",
+        "windows",
+        "linux",
+        "db_betrieb",
+        "storage"
+      ],
+      "stichworte": "zugriffsrecht|berechtigung|ntfs|chmod|acl|rechte|freigabe|rbac|grant|revoke"
+    },
+    {
+      "id": "A9b",
+      "themen": [
+        "storage",
+        "db_betrieb",
+        "sql",
+        "modellierung"
+      ],
+      "stichworte": "datenbanksystem|dbms|speicherl[öo]sung|nas|san|iscsi|datenbank|integrier"
+    },
+    {
+      "id": "A10a",
+      "themen": [
+        "programmierung",
+        "modellierung"
+      ],
+      "stichworte": "spezifikation|datenmodell|schnittstelle|api|uml|klassendiagramm|erm|struktur"
+    },
+    {
+      "id": "A10b",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "programmiersprache|python|java|c#|powershell|bash|javascript|skriptsprache|sql"
+    },
+    {
+      "id": "A10c",
+      "themen": [
+        "programmierung",
+        "linux",
+        "windows",
+        "it_betrieb"
+      ],
+      "stichworte": "automatis|powershell|\\bbash\\b|cron|aufgabenplanung|\\.bat\\b|\\.ps1|ansible|infrastructure as code|shell-?skript|anmeldeskript|skript.{0,40}(automat|regelm|n[äa]chtlich|zeitgesteuert)"
+    },
+    {
+      "id": "C1a",
+      "themen": [
+        "virtualisierung",
+        "windows",
+        "linux",
+        "storage",
+        "hardware",
+        "netzsicherheit"
+      ],
+      "stichworte": "konzept|systeml[öo]sung|anforderung|dimensionier|planung|sicherheitsaspekt"
+    },
+    {
+      "id": "C1b",
+      "themen": [
+        "windows",
+        "linux",
+        "hardware",
+        "virtualisierung"
+      ],
+      "stichworte": "install|konfigur|auswahl|betriebssystem|treiber|bios|uefi|partition|rolle"
+    },
+    {
+      "id": "C1c",
+      "themen": [
+        "virtualisierung",
+        "wan_vpn",
+        "beschaffung"
+      ],
+      "stichworte": "cloud|saas|paas|iaas|hosting|outsourc|rechenzentrum|colocation|externe? (ressource|dienst)"
+    },
+    {
+      "id": "C1d",
+      "themen": [
+        "hardware",
+        "windows",
+        "linux",
+        "virtualisierung",
+        "fehlersuche"
+      ],
+      "stichworte": "kompatib|treiber|inkompatib|abw[äa]rtskompatib|version|migration|hardwarekompat"
+    },
+    {
+      "id": "C1e",
+      "themen": [
+        "projekt",
+        "service",
+        "programmierung",
+        "fehlersuche"
+      ],
+      "stichworte": "test|testkonzept|testfall|testprotokoll|whitebox|blackbox|abnahmetest|integrationstest|unit"
+    },
+    {
+      "id": "C1f",
+      "themen": [
+        "projekt",
+        "service",
+        "beratung"
+      ],
+      "stichworte": "system[üu]bergabe|[üu]bergabe|abnahme|inbetriebnahme|rollout|go-?live"
+    },
+    {
+      "id": "C1g",
+      "themen": [
+        "storage",
+        "db_betrieb",
+        "windows",
+        "linux",
+        "projekt",
+        "virtualisierung"
+      ],
+      "stichworte": "daten[üu]bernahme|migration|import|export|csv|datenmigration|p2v"
+    },
+    {
+      "id": "C2a",
+      "themen": [
+        "grundlagen",
+        "dienste",
+        "ipv4",
+        "ipv6",
+        "routing",
+        "wlan",
+        "verkabelung",
+        "wan_vpn",
+        "switching"
+      ],
+      "stichworte": "protokoll|schnittstelle|\\btcp|\\budp|\\bip\\b|\\bosi|ethernet|802\\.|ospf|\\brip|\\bbgp|dhcp|\\bdns|wlan|\\bsfp|rj45"
+    },
+    {
+      "id": "C2b",
+      "themen": [
+        "switching",
+        "routing",
+        "wlan",
+        "verkabelung",
+        "grundlagen",
+        "ipv4",
+        "ipv6"
+      ],
+      "stichworte": "switch|router|access point|firewall|vlan|konfigur|poe|patch|komponente|subnetz|gateway"
+    },
+    {
+      "id": "C2c",
+      "themen": [
+        "netzsicherheit",
+        "wan_vpn",
+        "krypto",
+        "haertung",
+        "zugriff"
+      ],
+      "stichworte": "firewall|vpn|ipsec|dmz|ids|ips|802\\.1x|radius|wpa|nac|proxy|segmentier|vlan"
+    },
+    {
+      "id": "C3a",
+      "themen": [
+        "isms",
+        "zugriff",
+        "it_betrieb",
+        "datenschutz"
+      ],
+      "stichworte": "richtlinie|nutzungsrichtlinie|policy|gruppenrichtlinie|gpo|passwortrichtlinie|byod|acceptable use"
+    },
+    {
+      "id": "C3b",
+      "themen": [
+        "recht",
+        "windows",
+        "linux",
+        "beschaffung",
+        "programmierung"
+      ],
+      "stichworte": "lizenz|oem|volumenlizenz|subscription|cal\\b|open source|gpl|eula|lizenzmanagement"
+    },
+    {
+      "id": "C3c",
+      "themen": [
+        "zugriff",
+        "windows",
+        "linux",
+        "db_betrieb"
+      ],
+      "stichworte": "berechtigung|rechte|rolle|rbac|ntfs|acl|gruppe|least privilege|minimal|agdlp|chmod"
+    },
+    {
+      "id": "C3d",
+      "themen": [
+        "haertung",
+        "windows",
+        "linux",
+        "it_betrieb"
+      ],
+      "stichworte": "update|patch|aktualisier|wsus|apt|upgrade|release|firmware"
+    },
+    {
+      "id": "C3e",
+      "themen": [
+        "storage",
+        "notfall",
+        "db_betrieb"
+      ],
+      "stichworte": "datensicherung|backup|sicherung|vollsicherung|inkrementell|differenziell|archivier|3-2-1|generationenprinzip|gfs"
+    },
+    {
+      "id": "C3f",
+      "themen": [
+        "notfall",
+        "storage",
+        "virtualisierung",
+        "db_betrieb"
+      ],
+      "stichworte": "wiederherstell|restore|recovery|rto|rpo|notfall|disaster|wiederanlauf|bcm|snapshot"
+    },
+    {
+      "id": "C3g",
+      "themen": [
+        "it_betrieb",
+        "linux",
+        "windows",
+        "virtualisierung",
+        "storage",
+        "haertung"
+      ],
+      "stichworte": "auslastung|ressource|cpu|arbeitsspeicher|ram|speicherplatz|kapazit|monitoring|quota"
+    },
+    {
+      "id": "C3h",
+      "themen": [
+        "haertung",
+        "it_betrieb",
+        "linux",
+        "windows",
+        "service"
+      ],
+      "stichworte": "monitoring|\\blog|protokollier|ereignisanzeige|syslog|nagios|zabbix|snmp|schwellwert|alarm|siem"
+    },
+    {
+      "id": "C3i",
+      "themen": [
+        "service",
+        "fehlersuche",
+        "beratung"
+      ],
+      "stichworte": "benutzeranfrage|ticket|anfrage|service ?desk|help ?desk|support|first level|incident|service request"
+    },
+    {
+      "id": "F1a",
+      "themen": [
+        "arbeitswelt",
+        "recht"
+      ],
+      "stichworte": "ausbildungsvertrag|berufsbildungsgesetz|bbig|duales system|probezeit|ausbilder|berufsschule|ihk|ausbildungsordnung"
+    },
+    {
+      "id": "F1b",
+      "themen": [
+        "arbeitswelt"
+      ],
+      "stichworte": "ausbildungsplan|ausbildungsrahmenplan|ausbildungsordnung|ausbildungsnachweis|berichtsheft"
+    },
+    {
+      "id": "F1c",
+      "themen": [
+        "arbeitswelt",
+        "recht"
+      ],
+      "stichworte": "arbeitsrecht|tarif|arbeitszeit|k[üu]ndigung|mitbestimm|betriebsrat|sozialversicherung|jugendarbeitsschutz|mutterschutz|urlaub|arbeitsvertrag|streik"
+    },
+    {
+      "id": "F1d",
+      "themen": [
+        "arbeitswelt",
+        "kalkulation"
+      ],
+      "stichworte": "entgeltabrechnung|lohnabrechnung|brutto|netto|lohnsteuer|sozialversicherung|solidarit|kirchensteuer|gehaltsabrechnung"
+    },
+    {
+      "id": "F1e",
+      "themen": [
+        "arbeitswelt"
+      ],
+      "stichworte": "lebenslang|lebensbegleitend|weiterbildung|fortbildung|kompetenz"
+    },
+    {
+      "id": "F1f",
+      "themen": [
+        "arbeitswelt",
+        "projekt"
+      ],
+      "stichworte": "lerntechnik|selbstgesteuert|lernmethode|informationsquelle|mindmap|zeitmanagement|eisenhower"
+    },
+    {
+      "id": "F1g",
+      "themen": [
+        "arbeitswelt"
+      ],
+      "stichworte": "aufstieg|weiterbildung|meister|techniker|bachelor|operative professional|fortbildung|karriere"
+    },
+    {
+      "id": "F2a",
+      "themen": [
+        "recht",
+        "arbeitswelt",
+        "kalkulation"
+      ],
+      "stichworte": "rechtsform|gmbh|\\bag\\b|kg\\b|ohg|einzelunternehm|aufbauorganisation|ablauforganisation|organigramm|gesch[äa]ftsprozess|stab|linie|matrix"
+    },
+    {
+      "id": "F2b",
+      "themen": [
+        "arbeitswelt"
+      ],
+      "stichworte": "gewerkschaft|arbeitgeberverband|kammer|ihk|berufsverband|wirtschaftsorganisation|verband"
+    },
+    {
+      "id": "F2c",
+      "themen": [
+        "arbeitswelt",
+        "recht"
+      ],
+      "stichworte": "betriebsrat|betriebsverfassung|jugend- und auszubildendenvertretung|\\bjav\\b|betriebsversammlung|mitbestimmung|betriebsvereinbarung"
+    },
+    {
+      "id": "F3a",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt"
+      ],
+      "stichworte": "gef[äa]hrdung|arbeitsschutz|ergonomi|bildschirmarbeit|arbeitsst[äa]tte|gesundheit"
+    },
+    {
+      "id": "F3b",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt",
+        "hardware"
+      ],
+      "stichworte": "unfallverh[üu]tung|dguv|arbeitsschutz|vde|elektrische sicherheit|esd|pr[üu]fung ortsver[äa]nderlich|ce-kennzeichen|gs-zeichen"
+    },
+    {
+      "id": "F3c",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt"
+      ],
+      "stichworte": "unfall|erste hilfe|ersthelfer|notruf|verbandbuch|stromunfall"
+    },
+    {
+      "id": "F3d",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt",
+        "notfall"
+      ],
+      "stichworte": "brand|feuer|l[öo]sch|co2-l[öo]scher|rauchmelder|fluchtweg|brandschutz"
+    },
+    {
+      "id": "F4a",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt"
+      ],
+      "stichworte": "umwelt|co2|emission|nachhaltig|green it|elektroschrott"
+    },
+    {
+      "id": "F4b",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt",
+        "recht"
+      ],
+      "stichworte": "elektrog|weee|rohs|umweltschutz|kreislaufwirtschaft|batteriegesetz|energieeffizienzgesetz|regelung"
+    },
+    {
+      "id": "F4c",
+      "themen": [
+        "it_betrieb",
+        "hardware",
+        "beschaffung"
+      ],
+      "stichworte": "energie|stromverbrauch|energieeffizi|kwh|watt|pue|blauer engel|energy star|stromkosten|leistungsaufnahme"
+    },
+    {
+      "id": "F4d",
+      "themen": [
+        "it_betrieb",
+        "arbeitswelt"
+      ],
+      "stichworte": "entsorg|recycl|abfall|elektroschrott|wertstoff|elektrog"
+    },
+    {
+      "id": "F5a",
+      "themen": [
+        "arbeitswelt",
+        "beratung"
+      ],
+      "stichworte": "wertsch[äa]tzung|vielfalt|diversit|gleichbehandlung|agg\\b|diskriminier|inklusion"
+    },
+    {
+      "id": "F5b",
+      "themen": [
+        "arbeitswelt",
+        "datenschutz",
+        "beratung"
+      ],
+      "stichworte": "digitale medien|pers[öo]nlichkeitsrecht|videokonferenz|kollaboration|netiquette|recht am eigenen bild|virtuell"
+    },
+    {
+      "id": "F5c",
+      "themen": [
+        "datenschutz",
+        "arbeitswelt",
+        "recht"
+      ],
+      "stichworte": "weitergabe|ver[öo]ffentlich|soziale netzwerke|social media|urheberrecht|recht am eigenen bild|digitale inhalte"
+    },
+    {
+      "id": "F5d",
+      "themen": null,
+      "stichworte": "ethi|moral|verantwortung|k[üu]nstliche intelligenz"
+    },
+    {
+      "id": "B1a",
+      "themen": [
+        "programmierung",
+        "projekt"
+      ],
+      "stichworte": "vorgehensmodell|entwicklungsumgebung|\\bide\\b|bibliothek|framework|scrum|wasserfall|v-modell"
+    },
+    {
+      "id": "B1b",
+      "themen": [
+        "programmierung",
+        "modellierung"
+      ],
+      "stichworte": "uml|klassendiagramm|anwendungsfall|use case|sequenzdiagramm|aktivit[äa]tsdiagramm|entwurfsmuster"
+    },
+    {
+      "id": "B1c",
+      "themen": [
+        "programmierung",
+        "beratung"
+      ],
+      "stichworte": "benutzerschnittstelle|oberfl[äa]che|ergonomi|usability|gui\\b|ux\\b|barrierefrei"
+    },
+    {
+      "id": "B1d",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "architektur|schichtenmodell|client-?server|mvc|microservice"
+    },
+    {
+      "id": "B1e",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "anpass|refactor|wartung"
+    },
+    {
+      "id": "B1f",
+      "themen": [
+        "programmierung",
+        "sql",
+        "db_betrieb"
+      ],
+      "stichworte": "datenaustausch|json|xml|csv|schnittstelle|api|rest"
+    },
+    {
+      "id": "B1g",
+      "themen": [
+        "sql",
+        "modellierung"
+      ],
+      "stichworte": "join|group by|having|unterabfrage|subquery|view|bericht"
+    },
+    {
+      "id": "B2a",
+      "themen": [
+        "programmierung",
+        "angriffe",
+        "haertung"
+      ],
+      "stichworte": "sql-injection|xss|cross-site|eingabevalidier|sichere programmierung|owasp|pufferüberlauf|buffer overflow"
+    },
+    {
+      "id": "B2b",
+      "themen": [
+        "db_betrieb",
+        "sql",
+        "modellierung"
+      ],
+      "stichworte": "integrit|constraint|fremdschl[üu]ssel|transaktion|acid|referenziell"
+    },
+    {
+      "id": "B2c",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "modultest|unit-?test|unittest|testfall"
+    },
+    {
+      "id": "B2d",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "versionsverwaltung|\\bgit\\b|commit|branch|merge|svn"
+    },
+    {
+      "id": "B2e",
+      "themen": [
+        "programmierung",
+        "projekt"
+      ],
+      "stichworte": "testkonzept|testfall|blackbox|whitebox|testprotokoll|regressionstest"
+    },
+    {
+      "id": "B2f",
+      "themen": [
+        "programmierung",
+        "beratung"
+      ],
+      "stichworte": "pr[äa]sentation|visualisier|diagramm"
+    },
+    {
+      "id": "D1a",
+      "themen": [
+        "projekt",
+        "kalkulation",
+        "service"
+      ],
+      "stichworte": "gesch[äa]ftsprozess|wertsch[öo]pfung|prozessanalyse"
+    },
+    {
+      "id": "D1b",
+      "themen": [
+        "projekt",
+        "service"
+      ],
+      "stichworte": "prozessdarstellung|epk|bpmn|ablaufdiagramm|flussdiagramm"
+    },
+    {
+      "id": "D1c",
+      "themen": [
+        "projekt",
+        "service"
+      ],
+      "stichworte": "prozessoptimierung|lean|six sigma|kvp|kaizen"
+    },
+    {
+      "id": "D2a",
+      "themen": [
+        "modellierung",
+        "db_betrieb",
+        "sql",
+        "datenschutz"
+      ],
+      "stichworte": "datenquelle|heterogen|klassifizier|strukturierte daten|unstrukturiert"
+    },
+    {
+      "id": "D2b",
+      "themen": [
+        "datenschutz",
+        "zugriff"
+      ],
+      "stichworte": "zweckbindung|einwilligung|verkn[üu]pfung|rechtsgrundlage|berechtigung zur nutzung"
+    },
+    {
+      "id": "D2c",
+      "themen": [
+        "db_betrieb",
+        "sql",
+        "programmierung"
+      ],
+      "stichworte": "etl|daten[üu]bernahme|import|bereitstell"
+    },
+    {
+      "id": "D3a",
+      "themen": [
+        "modellierung",
+        "db_betrieb",
+        "sql"
+      ],
+      "stichworte": "datenqualit|plausibilit|redundan|vollst[äa]ndig|validit|anomalie"
+    },
+    {
+      "id": "D3b",
+      "themen": [
+        "modellierung",
+        "db_betrieb"
+      ],
+      "stichworte": "fair\\b|interoperab|metadaten|wiederverwend"
+    },
+    {
+      "id": "D3c",
+      "themen": [
+        "programmierung",
+        "kalkulation"
+      ],
+      "stichworte": "statistik|mittelwert|median|standardabweichung|regression|korrelation"
+    },
+    {
+      "id": "D3d",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "pandas|\\br\\b|visualisier|diagramm|tabellenkalkulation"
+    },
+    {
+      "id": "D3e",
+      "themen": [
+        "beratung",
+        "programmierung"
+      ],
+      "stichworte": "zielgruppe|aufbereit|dashboard|bericht"
+    },
+    {
+      "id": "D3f",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "vorhersage|prognose|regression|machine learning|maschinelles lernen"
+    },
+    {
+      "id": "D3g",
+      "themen": [
+        "programmierung"
+      ],
+      "stichworte": "mustererkennung|machine learning|maschinelles lernen|neuronal|klassifikation|cluster"
+    },
+    {
+      "id": "D3h",
+      "themen": [
+        "projekt",
+        "kalkulation"
+      ],
+      "stichworte": "prozessoptimierung|analyseergebnis"
+    },
+    {
+      "id": "D3i",
+      "themen": [
+        "kalkulation",
+        "service",
+        "projekt"
+      ],
+      "stichworte": "kennzahl|kpi|monitoring"
+    },
+    {
+      "id": "D4a",
+      "themen": [
+        "datenschutz"
+      ],
+      "stichworte": "datenschutzbeauftragt|aufsichtsbeh[öo]rde|dsb\\b"
+    },
+    {
+      "id": "D4b",
+      "themen": [
+        "zugriff",
+        "datenschutz",
+        "notfall",
+        "storage"
+      ],
+      "stichworte": "zugriffskonzept|berechtigungskonzept|datensicherungskonzept|datenklassifizier|schutzklasse"
+    },
+    {
+      "id": "D4c",
+      "themen": [
+        "datenschutz"
+      ],
+      "stichworte": "datensparsamkeit|datenminimierung|privacy by design|privacy by default"
+    },
+    {
+      "id": "D4d",
+      "themen": [
+        "krypto"
+      ],
+      "stichworte": "verschl[üu]ssel|aes|rsa|symmetrisch|asymmetrisch|hash"
+    },
+    {
+      "id": "E1a",
+      "themen": [
+        "grundlagen",
+        "it_betrieb",
+        "programmierung"
+      ],
+      "stichworte": "cyber-?physisch|iot|sensor|aktor|industrie 4|embedded|mikrocontroller"
+    },
+    {
+      "id": "E1b",
+      "themen": [
+        "grundlagen",
+        "fehlersuche",
+        "dienste"
+      ],
+      "stichworte": "topologie|schnittstelle|netzplan|bestandsaufnahme"
+    },
+    {
+      "id": "E1c",
+      "themen": [
+        "netzsicherheit",
+        "grundlagen",
+        "isms"
+      ],
+      "stichworte": "netzwerkanforderung|bandbreite|latenz|sicherheitsanforderung"
+    },
+    {
+      "id": "E1d",
+      "themen": [
+        "beschaffung",
+        "kalkulation",
+        "switching",
+        "routing"
+      ],
+      "stichworte": "kalkul|netzwerkkomponente|kosten"
+    },
+    {
+      "id": "E1e",
+      "themen": [
+        "beratung",
+        "projekt"
+      ],
+      "stichworte": "abstimm|kunde"
+    },
+    {
+      "id": "E1f",
+      "themen": [
+        "it_betrieb",
+        "service"
+      ],
+      "stichworte": "auswert|optimier"
+    },
+    {
+      "id": "E2a",
+      "themen": [
+        "windows",
+        "linux",
+        "switching",
+        "routing"
+      ],
+      "stichworte": "install|konfigur|netzwerkbetriebssystem"
+    },
+    {
+      "id": "E2b",
+      "themen": [
+        "programmierung",
+        "it_betrieb"
+      ],
+      "stichworte": "visualisier|scada|prozessablauf"
+    },
+    {
+      "id": "E2c",
+      "themen": [
+        "programmierung",
+        "wlan",
+        "grundlagen"
+      ],
+      "stichworte": "signal|daten[üu]bertragung|programm"
+    },
+    {
+      "id": "E2d",
+      "themen": [
+        "zugriff",
+        "notfall",
+        "angriffe",
+        "isms"
+      ],
+      "stichworte": "zugangsberechtig|gefahrenpotenzial|datensicherung"
+    },
+    {
+      "id": "E2e",
+      "themen": [
+        "projekt",
+        "fehlersuche",
+        "programmierung"
+      ],
+      "stichworte": "testkonzept|test|fehler"
+    },
+    {
+      "id": "E2f",
+      "themen": [
+        "projekt",
+        "service"
+      ],
+      "stichworte": "inbetriebnahme|inbetriebnahmeprotokoll|[üu]bergabe"
+    },
+    {
+      "id": "E3a",
+      "themen": [
+        "it_betrieb",
+        "haertung"
+      ],
+      "stichworte": "auslastung|systemstatus|monitoring"
+    },
+    {
+      "id": "E3b",
+      "themen": [
+        "it_betrieb",
+        "fehlersuche",
+        "haertung"
+      ],
+      "stichworte": "systemdaten|st[öo]rung|parameter|schwellwert"
+    },
+    {
+      "id": "E3c",
+      "themen": [
+        "it_betrieb",
+        "service"
+      ],
+      "stichworte": "wartungsintervall|wartung"
+    },
+    {
+      "id": "E3d",
+      "themen": [
+        "haertung",
+        "it_betrieb"
+      ],
+      "stichworte": "diagnose|schwachstelle|log"
+    },
+    {
+      "id": "E3e",
+      "themen": [
+        "angriffe",
+        "netzsicherheit"
+      ],
+      "stichworte": "angriffsszenario|cyber-?physisch|scada|ot-sicherheit|industrie"
+    },
+    {
+      "id": "E3f",
+      "themen": [
+        "haertung",
+        "netzsicherheit",
+        "angriffe"
+      ],
+      "stichworte": "anomalie|ids|ips|siem"
+    },
+    {
+      "id": "E3g",
+      "themen": [
+        "netzsicherheit",
+        "haertung"
+      ],
+      "stichworte": "sicherheitsl[öo]sung|segmentier|firewall"
+    },
+    {
+      "id": "E3h",
+      "themen": [
+        "haertung",
+        "it_betrieb"
+      ],
+      "stichworte": "update|patch|aktualisier|optimier"
+    }
+  ],
+  "standard_punkt": {
+    "grundlagen": "C2a",
+    "ipv4": "C2a",
+    "ipv6": "C2a",
+    "switching": "C2b",
+    "routing": "C2b",
+    "dienste": "A8b",
+    "wlan": "C2b",
+    "verkabelung": "C2b",
+    "wan_vpn": "C2c",
+    "fehlersuche": "A4c",
+    "isms": "A6b",
+    "datenschutz": "A6a",
+    "krypto": "A6b",
+    "zugriff": "C3c",
+    "angriffe": "A6c",
+    "netzsicherheit": "C2c",
+    "haertung": "A6b",
+    "notfall": "C3e",
+    "hardware": "A3a",
+    "zahlen": "A3a",
+    "storage": "A9b",
+    "windows": "C1b",
+    "linux": "C1b",
+    "virtualisierung": "C1a",
+    "programmierung": "A4d",
+    "it_betrieb": "A8d",
+    "kalkulation": "A3b",
+    "recht": "A1b",
+    "arbeitswelt": "F1c",
+    "projekt": "A1a",
+    "service": "C3i",
+    "beschaffung": "A3b",
+    "beratung": "A2f",
+    "modellierung": "A4e",
+    "sql": "A4e",
+    "db_betrieb": "A9b"
+  },
+  "themen_lernfelder": {
+    "grundlagen": [
+      "LF 3"
+    ],
+    "ipv4": [
+      "LF 3",
+      "LF 9"
+    ],
+    "ipv6": [
+      "LF 9"
+    ],
+    "switching": [
+      "LF 9"
+    ],
+    "routing": [
+      "LF 9"
+    ],
+    "dienste": [
+      "LF 3",
+      "LF 9",
+      "LF 10b"
+    ],
+    "wlan": [
+      "LF 9"
+    ],
+    "verkabelung": [
+      "LF 3"
+    ],
+    "wan_vpn": [
+      "LF 9",
+      "LF 11b"
+    ],
+    "fehlersuche": [
+      "LF 3",
+      "LF 6",
+      "LF 9"
+    ],
+    "isms": [
+      "LF 4",
+      "LF 11b"
+    ],
+    "datenschutz": [
+      "LF 4",
+      "LF 5"
+    ],
+    "krypto": [
+      "LF 11b"
+    ],
+    "zugriff": [
+      "LF 4",
+      "LF 10b"
+    ],
+    "angriffe": [
+      "LF 4",
+      "LF 11b"
+    ],
+    "netzsicherheit": [
+      "LF 11b"
+    ],
+    "haertung": [
+      "LF 10b",
+      "LF 11b"
+    ],
+    "notfall": [
+      "LF 10b",
+      "LF 11b"
+    ],
+    "hardware": [
+      "LF 2"
+    ],
+    "zahlen": [
+      "LF 2",
+      "LF 3"
+    ],
+    "storage": [
+      "LF 2",
+      "LF 10b"
+    ],
+    "windows": [
+      "LF 3",
+      "LF 10b"
+    ],
+    "linux": [
+      "LF 9",
+      "LF 10b"
+    ],
+    "virtualisierung": [
+      "LF 10b"
+    ],
+    "programmierung": [
+      "LF 5",
+      "LF 10b",
+      "LF 10a",
+      "LF 11a"
+    ],
+    "it_betrieb": [
+      "LF 2",
+      "LF 6"
+    ],
+    "kalkulation": [
+      "LF 2",
+      "LF 12b"
+    ],
+    "recht": [
+      "LF 1",
+      "LF 2"
+    ],
+    "arbeitswelt": [
+      "LF 1"
+    ],
+    "projekt": [
+      "LF 12b",
+      "LF 2",
+      "LF 12a"
+    ],
+    "service": [
+      "LF 6"
+    ],
+    "beschaffung": [
+      "LF 2"
+    ],
+    "beratung": [
+      "LF 2",
+      "LF 6"
+    ],
+    "modellierung": [
+      "LF 5",
+      "LF 8",
+      "LF 11a"
+    ],
+    "sql": [
+      "LF 5",
+      "LF 8"
+    ],
+    "db_betrieb": [
+      "LF 8"
+    ]
+  }
+}

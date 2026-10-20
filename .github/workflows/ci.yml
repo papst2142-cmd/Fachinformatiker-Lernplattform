@@ -1,0 +1,168 @@
+# Phase 0: Bauen und Testen auf jedem Push und Pull Request.
+# Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  AVALONIA_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  tests:
+    name: tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Tests
+        run: dotnet test --project tests/Lernplattform.Tests -c Release
+      - name: Desktop bauen
+        run: dotnet build src/Lernplattform.Desktop -c Release
+      # Start ohne Bedienung: Startseite und Testseite oeffnen, Ergebnis schreiben,
+      # beenden. Werte nur zum Lesen, kein Urteil; Absturz = rot.
+      - name: Start ohne Bedienung (Linux, Xvfb)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        env:
+          LERNPLATTFORM_MESSUNG_AUTO: "1"
+          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
+        run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+      - name: Start ohne Bedienung
+        if: runner.os != 'Linux'
+        timeout-minutes: 5
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_AUTO: "1"
+          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
+        run: dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+      - uses: actions/upload-artifact@v7
+        with:
+          name: messung-${{ runner.os }}
+          path: messung_${{ runner.os }}.txt
+
+  pakete:
+    # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
+    # Update-Probe A 0.1.0 -> A 0.1.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    name: pakete (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64 }
+          - { os: ubuntu-latest, rid: linux-x64 }
+          - { os: macos-15, rid: osx-arm64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Werkzeuge
+        shell: bash
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get install -y -q squashfs-tools; fi
+      - name: Pakete bauen und Update pruefen
+        shell: bash
+        run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paket-${{ matrix.rid }}-A-0.1.0
+          path: pakete/feed-A-0.1.0/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: updateprobe-${{ matrix.rid }}-A-0.1.1
+          path: pakete/feed-A-0.1.1/
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Linux'
+        with:
+          name: appimage-linux-x64-A-0.1.0-tar
+          path: pakete/appimage/
+
+  vergleichswerte:
+    # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
+    # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
+    name: vergleichswerte (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: papst2142-cmd/Fisi-Lernplattform
+          ref: v0.63.2
+          path: python-linie
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Inhalte gleich wie v0.63.2
+        run: diff -r python-linie/inhalte inhalte
+      - name: Zufall und Inhalte neu erzeugen
+        run: |
+          mkdir -p neu
+          python3 -I werkzeuge/vergleich/erzeuge_zufall.py python-linie neu/zufall.json
+          python3 -I werkzeuge/vergleich/erzeuge_daten.py python-linie inhalte neu
+          python3 -I werkzeuge/vergleich/erzeuge_farbwelten.py python-linie neu/farbwelten.json
+      - name: Vergleich
+        run: |
+          python3 -I - <<'PY'
+          import json
+          for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json"):
+              alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
+              neu = json.load(open("neu/" + name, encoding="utf-8"))
+              alt.pop("python", None); neu.pop("python", None)
+              assert alt == neu, name + " weicht ab"
+              print(name, "gleich")
+          PY
+
+  android:
+    name: android (APK, nur arm64-v8a, Testsignatur)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Android-Workload
+        run: dotnet workload install android
+      - name: APK bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -o apk
+      # Spike D (A4b): zweite APK A 0.1.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.1.0 installierbar.
+      - name: Update-APK A 0.1.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.1.1 -o apk-update
+      - name: Versionscode und Schluessel pruefen
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
+            "$BT/aapt2" dump badging "$a" | head -n 1
+            "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
+          done
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000100'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000101'"
+          test "$(sort -u zertifikate.txt | wc -l)" -eq 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lernplattform-android-phase0
+          path: apk/*-Signed.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: updateprobe-android-A-0.1.1
+          path: apk-update/*-Signed.apk
+          if-no-files-found: error

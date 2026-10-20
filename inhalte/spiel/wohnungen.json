@@ -1,0 +1,203 @@
+{
+  "_hinweis": [
+    "Wohnungen und Moebel (ab 0.30). Preise in Euro Spielgeld, einmalig bezahlt.",
+    "Grundrisse wie gebaeude.json; Raeume haben statt eines Fachbereichs eine Farbe.",
+    "Feste Einrichtung (Kueche, Bad) steht als deko im Raum, Moebel stellt der Spieler selbst auf.",
+    "texte: kleine Saetze beim Moebel, aktion: lernen oder schlafen."
+  ],
+  "start": "apartment",
+  "start_moebel": {"start-matratze": "matratze"},
+  "rueckkauf": 0.5,
+  "wohnungen": [
+    {
+      "id": "apartment",
+      "name": "Einzimmer-Apartment",
+      "preis": 0,
+      "text": "Klein, aber deins. Die Matratze liegt noch auf dem Boden, der Rest steht in Kartons.",
+      "kartons": [5.8, 3.4, 1.6, 1.4],
+      "einrichtung": {"moebel": {"start-matratze": [0.4, 0.4, 0]}},
+      "gebaeude": {
+        "breite": 13, "hoehe": 10,
+        "flur": {"y": 5.5, "h": 1.5, "name": "Diele", "eingang": {"von": 5.7, "bis": 6.8},
+                 "spieler": [1.1, 6.25], "deko": [{"typ": "fussmatte", "x": 0.25, "y": 5.75, "w": 0.6, "h": 1.0}]},
+        "fenster": [[2.0, 0, 5.0, 0], [10.0, 0, 12.0, 0], [13, 1.5, 13, 4.0], [9.5, 10, 12.0, 10]],
+        "raeume": [
+          {"id": "wohnraum", "name": "Wohn- und Schlafraum", "kurz": "Wohnraum", "farbe": "#A78BFA",
+           "x": 0, "y": 0, "w": 9, "h": 5.5, "tuer": {"von": 1.6, "bis": 2.8}, "boden": "parkett"},
+          {"id": "kueche", "name": "Küche", "farbe": "#FB923C",
+           "x": 9, "y": 0, "w": 4, "h": 5.5, "tuer": {"von": 9.4, "bis": 10.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "kuechenzeile", "x": 9.2, "y": 0.25, "w": 2.6, "h": 1.0},
+             {"typ": "kuehlschrank", "x": 11.9, "y": 0.25, "w": 0.9, "h": 0.9}
+           ]},
+          {"id": "bad", "name": "Bad", "farbe": "#22D3EE",
+           "x": 0, "y": 7, "w": 4.5, "h": 3, "tuer": {"von": 3.0, "bis": 4.0}, "boden": "fliesen",
+           "deko": [
+             {"typ": "wc", "x": 0.3, "y": 7.25, "w": 0.8, "h": 1.0},
+             {"typ": "waschbecken", "x": 1.4, "y": 7.2, "w": 1.0, "h": 0.7},
+             {"typ": "dusche", "x": 3.1, "y": 8.6, "w": 1.2, "h": 1.2}
+           ]},
+          {"id": "abstell", "name": "Abstellkammer", "kurz": "Abstell", "farbe": "#A794C6",
+           "x": 4.5, "y": 7, "w": 3.5, "h": 3, "tuer": {"von": 5.0, "bis": 6.0}, "boden": "teppichboden"},
+          {"id": "balkon", "name": "Balkon", "farbe": "#34D399",
+           "x": 8, "y": 7, "w": 5, "h": 3, "tuer": {"von": 8.6, "bis": 9.8}, "boden": "parkett"}
+        ]
+      }
+    },
+    {
+      "id": "zweizimmer",
+      "name": "Zweizimmer-Wohnung",
+      "preis": 2500,
+      "text": "Endlich ein eigenes Schlafzimmer und ein kleines Arbeitszimmer zum Lernen.",
+      "kartons": [4.5, 3.6, 1.6, 1.4],
+      "gebaeude": {
+        "breite": 16, "hoehe": 11,
+        "flur": {"y": 6, "h": 1.5, "name": "Diele", "eingang": {"von": 6.2, "bis": 7.3},
+                 "spieler": [1.1, 6.75], "deko": [{"typ": "fussmatte", "x": 0.25, "y": 6.25, "w": 0.6, "h": 1.0}]},
+        "fenster": [[1.5, 0, 4.5, 0], [11.0, 0, 14.0, 0], [0, 1.5, 0, 4.5], [16, 1.5, 16, 4.5],
+                    [16, 8.0, 16, 10.0], [1.0, 11, 4.0, 11], [12.0, 11, 15.0, 11]],
+        "raeume": [
+          {"id": "wohnzimmer_2", "name": "Wohnzimmer", "farbe": "#A78BFA",
+           "x": 0, "y": 0, "w": 9, "h": 6, "tuer": {"von": 2.0, "bis": 3.2}, "boden": "parkett"},
+          {"id": "schlafzimmer_2", "name": "Schlafzimmer", "kurz": "Schlafen", "farbe": "#F472B6",
+           "x": 9, "y": 0, "w": 7, "h": 6, "tuer": {"von": 9.6, "bis": 10.8}, "boden": "teppichboden"},
+          {"id": "kueche_2", "name": "Küche", "farbe": "#FB923C",
+           "x": 0, "y": 7.5, "w": 6, "h": 3.5, "tuer": {"von": 3.4, "bis": 4.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "kuechenzeile", "x": 0.3, "y": 9.8, "w": 3.6, "h": 1.0, "dreh": 2},
+             {"typ": "kuehlschrank", "x": 4.3, "y": 9.9, "w": 0.9, "h": 0.9}
+           ]},
+          {"id": "bad_2", "name": "Bad", "farbe": "#22D3EE",
+           "x": 6, "y": 7.5, "w": 5, "h": 3.5, "tuer": {"von": 6.6, "bis": 7.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "waschbecken", "x": 8.6, "y": 7.7, "w": 1.0, "h": 0.7},
+             {"typ": "wc", "x": 10.0, "y": 7.8, "w": 0.8, "h": 1.0},
+             {"typ": "badewanne", "x": 6.3, "y": 9.3, "w": 3.4, "h": 1.5}
+           ]},
+          {"id": "arbeitszimmer_2", "name": "Arbeitszimmer", "kurz": "Arbeit", "farbe": "#34D399",
+           "x": 11, "y": 7.5, "w": 5, "h": 3.5, "tuer": {"von": 11.6, "bis": 12.8}, "boden": "teppichboden"}
+        ]
+      }
+    },
+    {
+      "id": "altbau",
+      "name": "Dreizimmer-Altbau",
+      "preis": 6000,
+      "text": "Hohe Decken, knarzendes Parkett und ein Hobbyraum. Die Nachbarin grüßt sogar zurück.",
+      "kartons": [5.0, 4.2, 1.6, 1.4],
+      "gebaeude": {
+        "breite": 20, "hoehe": 12,
+        "flur": {"y": 6.5, "h": 1.5, "name": "Diele", "boden": "parkett", "eingang": {"von": 6.7, "bis": 7.8},
+                 "spieler": [1.1, 7.25], "deko": [{"typ": "fussmatte", "x": 0.25, "y": 6.75, "w": 0.6, "h": 1.0}]},
+        "fenster": [[1.5, 0, 4.0, 0], [5.5, 0, 8.0, 0], [10.5, 0, 13.5, 0], [16.0, 0, 18.5, 0],
+                    [0, 1.5, 0, 5.0], [20, 1.5, 20, 5.0], [20, 9.0, 20, 11.0], [1.0, 12, 5.0, 12],
+                    [14.0, 12, 18.0, 12]],
+        "raeume": [
+          {"id": "wohnzimmer_3", "name": "Wohnzimmer", "farbe": "#A78BFA",
+           "x": 0, "y": 0, "w": 9, "h": 6.5, "tuer": {"von": 2.2, "bis": 3.4}, "boden": "parkett"},
+          {"id": "schlafzimmer_3", "name": "Schlafzimmer", "kurz": "Schlafen", "farbe": "#F472B6",
+           "x": 9, "y": 0, "w": 6, "h": 6.5, "tuer": {"von": 9.6, "bis": 10.8}, "boden": "teppichboden"},
+          {"id": "arbeitszimmer_3", "name": "Arbeitszimmer", "kurz": "Arbeit", "farbe": "#34D399",
+           "x": 15, "y": 0, "w": 5, "h": 6.5, "tuer": {"von": 15.6, "bis": 16.8}, "boden": "parkett"},
+          {"id": "kueche_3", "name": "Wohnküche", "kurz": "Küche", "farbe": "#FB923C",
+           "x": 0, "y": 8, "w": 7, "h": 4, "tuer": {"von": 3.4, "bis": 4.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "kuechenzeile", "x": 0.3, "y": 10.8, "w": 4.0, "h": 1.0, "dreh": 2},
+             {"typ": "kuehlschrank", "x": 4.6, "y": 10.9, "w": 0.9, "h": 0.9}
+           ]},
+          {"id": "bad_3", "name": "Bad", "farbe": "#22D3EE",
+           "x": 7, "y": 8, "w": 5, "h": 4, "tuer": {"von": 7.6, "bis": 8.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "waschbecken", "x": 9.4, "y": 8.2, "w": 1.0, "h": 0.7},
+             {"typ": "wc", "x": 11.0, "y": 8.2, "w": 0.8, "h": 1.0},
+             {"typ": "badewanne", "x": 8.4, "y": 10.3, "w": 3.4, "h": 1.5}
+           ]},
+          {"id": "hobby_3", "name": "Hobbyraum", "kurz": "Hobby", "farbe": "#FBBF24",
+           "x": 12, "y": 8, "w": 8, "h": 4, "tuer": {"von": 12.6, "bis": 13.8}, "boden": "beton"}
+        ]
+      }
+    },
+    {
+      "id": "loft",
+      "name": "Loft mit Dachterrasse",
+      "preis": 12000,
+      "text": "Offener Wohnbereich, Ankleide und eine Dachterrasse mit Blick über die Gleise der Talbahn.",
+      "kartons": [6.0, 4.6, 1.6, 1.4],
+      "gebaeude": {
+        "breite": 26, "hoehe": 13,
+        "flur": {"y": 7, "h": 1.5, "name": "Eingang", "boden": "beton", "eingang": {"von": 7.2, "bis": 8.3},
+                 "spieler": [1.1, 7.75], "deko": [{"typ": "fussmatte", "x": 0.25, "y": 7.25, "w": 0.6, "h": 1.0}]},
+        "fenster": [[1.0, 0, 5.0, 0], [6.5, 0, 11.5, 0], [14.0, 0, 18.5, 0], [21.0, 0, 25.0, 0],
+                    [0, 1.0, 0, 6.0], [26, 1.0, 26, 6.0], [1.0, 13, 6.5, 13]],
+        "raeume": [
+          {"id": "wohnbereich_4", "name": "Wohnbereich", "farbe": "#A78BFA",
+           "x": 0, "y": 0, "w": 13, "h": 7, "tuer": {"von": 2.2, "bis": 5.2, "offen": true}, "boden": "parkett"},
+          {"id": "schlafzimmer_4", "name": "Schlafzimmer", "kurz": "Schlafen", "farbe": "#F472B6",
+           "x": 13, "y": 0, "w": 7, "h": 7, "tuer": {"von": 13.6, "bis": 14.8}, "boden": "teppichboden"},
+          {"id": "arbeitszimmer_4", "name": "Arbeitszimmer", "kurz": "Arbeit", "farbe": "#34D399",
+           "x": 20, "y": 0, "w": 6, "h": 7, "tuer": {"von": 20.6, "bis": 21.8}, "boden": "parkett"},
+          {"id": "kueche_4", "name": "Küche", "farbe": "#FB923C",
+           "x": 0, "y": 8.5, "w": 8, "h": 4.5, "tuer": {"von": 3.4, "bis": 4.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "kuechenzeile", "x": 0.3, "y": 11.7, "w": 4.6, "h": 1.0, "dreh": 2},
+             {"typ": "kuehlschrank", "x": 5.2, "y": 11.8, "w": 0.9, "h": 0.9}
+           ]},
+          {"id": "bad_4", "name": "Bad", "farbe": "#22D3EE",
+           "x": 8, "y": 8.5, "w": 5, "h": 4.5, "tuer": {"von": 8.6, "bis": 9.6}, "boden": "fliesen",
+           "deko": [
+             {"typ": "wc", "x": 10.3, "y": 8.7, "w": 0.8, "h": 1.0},
+             {"typ": "dusche", "x": 11.6, "y": 8.7, "w": 1.2, "h": 1.2},
+             {"typ": "waschbecken", "x": 8.2, "y": 10.0, "w": 0.7, "h": 1.0, "dreh": 1},
+             {"typ": "badewanne", "x": 9.3, "y": 11.3, "w": 3.4, "h": 1.5}
+           ]},
+          {"id": "ankleide_4", "name": "Ankleide", "farbe": "#A794C6",
+           "x": 13, "y": 8.5, "w": 4, "h": 4.5, "tuer": {"von": 13.6, "bis": 14.6}, "boden": "teppichboden"},
+          {"id": "terrasse_4", "name": "Dachterrasse", "kurz": "Terrasse", "farbe": "#34D399",
+           "x": 17, "y": 8.5, "w": 9, "h": 4.5, "tuer": {"von": 17.6, "bis": 24.4, "offen": true}, "boden": "parkett",
+           "deko": [{"typ": "pflanze", "x": 25.0, "y": 12.0, "w": 0.8, "h": 0.8}]}
+        ]
+      }
+    }
+  ],
+  "moebel": [
+    {"id": "matratze", "name": "Matratze", "typ": "matratze", "w": 1.8, "h": 3.2, "preis": 0, "laden": false, "aktion": "schlafen",
+     "texte": ["Die Matratze liegt direkt auf dem Boden. Studentenfeeling inklusive.", "Hier schläfst du. Ein Bett wäre trotzdem mal eine Idee."]},
+    {"id": "bett_einzel", "name": "Einzelbett", "typ": "bett", "w": 1.8, "h": 3.4, "preis": 150, "aktion": "schlafen",
+     "texte": ["Frisch bezogen. Riecht nach Waschmittel und Feierabend."]},
+    {"id": "bett_doppel", "name": "Doppelbett", "typ": "bett", "w": 3.0, "h": 3.6, "preis": 420, "aktion": "schlafen",
+     "texte": ["So viel Platz. Du könntest quer schlafen, wenn du wolltest.", "Das beste Möbelstück nach einem langen Arbeitstag."]},
+    {"id": "sofa", "name": "Sofa", "typ": "sofa", "w": 3.6, "h": 1.4, "preis": 450,
+     "texte": ["Kurz hinsetzen. Nur fünf Minuten. Wirklich.", "Das Sofa ist gemütlich. Gefährlich gemütlich."]},
+    {"id": "sessel", "name": "Sessel", "typ": "sessel", "w": 1.1, "h": 1.1, "preis": 160},
+    {"id": "sitzsack", "name": "Sitzsack", "typ": "sitzsack", "w": 1.2, "h": 1.2, "preis": 60,
+     "texte": ["Einmal hineinfallen lassen. Aufstehen ist dann eine andere Geschichte."]},
+    {"id": "couchtisch", "name": "Couchtisch", "typ": "couchtisch", "w": 1.8, "h": 1.0, "preis": 90},
+    {"id": "fernseher", "name": "Fernseher mit Lowboard", "typ": "fernseher", "w": 3.0, "h": 0.8, "preis": 520,
+     "texte": ["Im Fernsehen läuft eine Doku über Rechenzentren. Du schaust tatsächlich zu.", "Nachrichten: „Bahnstrecke im Norden bekommt neuen Bahnhof.“ Das kommt dir bekannt vor."]},
+    {"id": "spielkonsole", "name": "Spielkonsole", "typ": "spielkonsole", "w": 0.8, "h": 0.5, "preis": 350,
+     "texte": ["Nur eine Runde. Wirklich nur eine.", "Das Spiel will ein Update mit 40 GB. Deine Leitung seufzt."]},
+    {"id": "esstisch", "name": "Esstisch", "typ": "esstisch", "w": 2.4, "h": 1.2, "preis": 260},
+    {"id": "schreibtisch", "name": "Schreibtisch mit PC", "typ": "schreibtisch", "w": 2.6, "h": 1.1, "preis": 480, "aktion": "lernen",
+     "texte": ["Dein Lernplatz. Die Karteikarten warten schon.", "Hier wird für die Prüfung gelernt. Und manchmal nach Möbeln gesucht."]},
+    {"id": "regal", "name": "Bücherregal", "typ": "regal", "w": 0.5, "h": 2.4, "preis": 110,
+     "texte": ["Oben stehen Fachbücher, unten die Comics. Beides gehört zur Weiterbildung."]},
+    {"id": "kleiderschrank", "name": "Kleiderschrank", "typ": "kleiderschrank", "w": 2.8, "h": 1.0, "preis": 340},
+    {"id": "kommode", "name": "Kommode", "typ": "kommode", "w": 1.8, "h": 0.8, "preis": 140},
+    {"id": "pflanze", "name": "Zimmerpflanze", "typ": "pflanze", "w": 0.8, "h": 0.8, "preis": 35,
+     "texte": ["Die Pflanze sieht durstig aus. Du gießt sie. Sie sieht dankbar aus."]},
+    {"id": "teppich", "name": "Teppich", "typ": "teppich", "w": 3.0, "h": 2.2, "preis": 120},
+    {"id": "stehlampe", "name": "Stehlampe", "typ": "stehlampe", "w": 0.7, "h": 0.7, "preis": 70},
+    {"id": "aquarium", "name": "Aquarium", "typ": "aquarium", "w": 1.8, "h": 0.7, "preis": 290,
+     "texte": ["Die Fische schwimmen im Kreis. Wie Datenpakete in einer Netzwerkschleife.", "Ein Fisch schaut dich an. Du schaust zurück. Unentschieden."]},
+    {"id": "waschmaschine", "name": "Waschmaschine", "typ": "waschmaschine", "w": 1.0, "h": 1.0, "preis": 380,
+     "texte": ["Schleudergang. Klingt fast wie der Serverraum."]},
+    {"id": "liegestuhl", "name": "Liegestuhl", "typ": "liegestuhl", "w": 1.0, "h": 2.0, "preis": 85,
+     "texte": ["Sonne, frische Luft, kein einziges Ticket. Herrlich."]},
+    {"id": "grill", "name": "Grill", "typ": "grill", "w": 1.0, "h": 1.0, "preis": 160,
+     "texte": ["Jonas hat schon gefragt, wann die Grillparty ist."]},
+    {"id": "sonnenschirm", "name": "Sonnenschirm", "typ": "sonnenschirm", "w": 1.6, "h": 1.6, "preis": 95},
+    {"id": "hochbeet", "name": "Hochbeet", "typ": "hochbeet", "w": 2.2, "h": 1.0, "preis": 130,
+     "texte": ["Die Tomaten wachsen. Langsamer als dein Wissensstand, aber immerhin."]},
+    {"id": "bild", "name": "Bild an der Wand", "typ": "bild", "w": 1.4, "h": 0.3, "preis": 60}
+  ]
+}

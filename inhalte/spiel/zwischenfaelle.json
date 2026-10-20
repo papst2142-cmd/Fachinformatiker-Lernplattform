@@ -1,0 +1,2549 @@
+[
+  {
+    "id": "zf-drucker-zeichensalat", "typ": "diagnose",
+    "titel": "Der Drucker druckt Zeichensalat",
+    "auftraggeber": "frank", "raum": "verwaltung", "prioritaet": "hoch", "cat": "systeme",
+    "anforderungen": {"hardware": 20}, "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 40, "reputation": 4}, "ab_tag": 2,
+    "ticket": [
+      "Frank hält dir ein Blatt hin: „%!PS-Adobe-3.0 … und dann 40 Seiten davon. Ich wollte nur die Monatsabrechnung drucken!“",
+      "„Gestern ging es noch. Heute früh hat Windows irgendwas aktualisiert. Ich sage nichts, ich zeige nur auf die Seiten.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {"id": "selbsttest", "text": "Selbsttest-Seite direkt am Drucker ausdrucken", "ergebnis": "Die Testseite ist sauber. Der Drucker selbst funktioniert."},
+      {"id": "treiber", "text": "In der Druckverwaltung nachsehen, welcher Treiber eingestellt ist", "ergebnis": "Treiber: „Universal PostScript“. Laut Typenschild kann der Drucker nur PCL 6.", "entscheidend": true},
+      {"id": "update", "text": "Updateverlauf von Windows ansehen", "ergebnis": "Heute 7:12 Uhr: „Druckertreiber-Update (optional)“ installiert.", "entscheidend": true},
+      {"id": "toner", "text": "Tonerstand prüfen", "ergebnis": "Toner zu 64 % voll."},
+      {"id": "ping", "text": "Drucker im Netz anpingen", "ergebnis": "Antwort von 192.168.10.40: Zeit=2 ms."},
+      {"id": "kabel", "text": "Netzwerkkabel am Drucker kontrollieren", "ergebnis": "Kabel steckt, Link-LED leuchtet."}
+    ],
+    "ziel_pruefungen": 3,
+    "ursachen": [
+      "Nach dem Update ist ein falscher Druckertreiber (PostScript statt PCL) eingestellt.",
+      "Der Toner ist fast leer.",
+      "Die Netzwerkverbindung zum Drucker bricht ab.",
+      "Der Druckerspeicher ist defekt."
+    ],
+    "ursache": "Nach dem Update ist ein falscher Druckertreiber (PostScript statt PCL) eingestellt.",
+    "massnahmen": [
+      "Den passenden PCL-6-Treiber des Herstellers einstellen und eine Testseite drucken",
+      "Einen neuen Drucker bestellen",
+      "Einen Treiber von irgendeiner Download-Seite laden",
+      "Den Toner tauschen"
+    ],
+    "massnahme": "Den passenden PCL-6-Treiber des Herstellers einstellen und eine Testseite drucken",
+    "unsicher": ["Einen Treiber von irgendeiner Download-Seite laden"],
+    "hilfe": [
+      "Druckt der Drucker seine eigene Testseite sauber, ist die Hardware in Ordnung. Dann liegt es am Weg dorthin: Treiber oder Übertragung.",
+      "Seiten voller Befehle wie %!PS heißen: Der PC schickt eine Druckersprache, die der Drucker nicht versteht."
+    ],
+    "erklaerung": [
+      "Das optionale Update hat den PostScript-Treiber eingestellt, der Drucker versteht aber nur PCL 6. Er druckt die Befehle deshalb als Text aus.",
+      "Treiber holt man immer beim Hersteller oder aus der Windows-Treiberverwaltung, nie von fremden Download-Seiten: Dort lauert gern Schadsoftware."
+    ],
+    "suchbegriffe": ["Treiber", "Drucker"]
+  },
+  {
+    "id": "zf-erpresser-meldung", "typ": "auswahl",
+    "titel": "Erpresser-Meldung am Service-Center",
+    "auftraggeber": "jonas", "raum": "helpdesk", "prioritaet": "kritisch", "cat": "sicherheit",
+    "anforderungen": {"angriffe": 25}, "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 50, "reputation": 5}, "ab_tag": 3,
+    "ticket": [
+      "Jonas stürmt herein: „Am Info-PC im Service-Center steht rot auf schwarz: ‚Ihre Dateien wurden verschlüsselt. Zahlen Sie 0,5 Bitcoin.‘ Die Kollegin fragt, ob sie schnell zahlen soll, dann wäre es ja vorbei.“"
+    ],
+    "frage": "Was ist jetzt als Erstes richtig?",
+    "optionen": [
+      "Den PC sofort vom Netzwerk trennen, nicht ausschalten, den Vorfall melden und nicht zahlen",
+      "Schnell zahlen, damit die Dateien wieder da sind",
+      "Den PC neu starten und hoffen, dass die Meldung weg ist",
+      "Die Meldung wegklicken und normal weiterarbeiten"
+    ],
+    "antwort": "Den PC sofort vom Netzwerk trennen, nicht ausschalten, den Vorfall melden und nicht zahlen",
+    "hilfe": [
+      "Ransomware verschlüsselt Daten und versucht, sich im Netz weiter auszubreiten.",
+      "Das Wichtigste zuerst: Ausbreitung stoppen. Den Rechner eingeschaltet zu lassen hilft der Spurensicherung."
+    ],
+    "erklaerung": [
+      "Vom Netz trennen verhindert, dass die Schadsoftware weitere Rechner und Freigaben verschlüsselt. Ausgeschaltet gehen Spuren im Arbeitsspeicher verloren.",
+      "Zahlen ist keine Lösung: Niemand garantiert die Entschlüsselung, und es finanziert die nächsten Angriffe. Wiederhergestellt wird aus dem Backup."
+    ],
+    "suchbegriffe": ["Ransomware", "Schadsoftware"]
+  },
+  {
+    "id": "zf-notebook-sofort", "typ": "auswahl",
+    "titel": "„Ich brauche SOFORT ein Notebook!“",
+    "auftraggeber": "sabine", "raum": "chefbuero", "prioritaet": "hoch", "cat": "systeme",
+    "anforderungen": {"hardware": 20, "zugriff": 20}, "achsen": ["kundenzufriedenheit", "sicherheit"],
+    "belohnung": {"geld": 40, "reputation": 4}, "ab_tag": 4,
+    "ticket": [
+      "Sabine ruft durchs Büro: „Mein Notebook will seit zehn Minuten Updates installieren und ich habe in fünf Minuten eine Präsentation beim Kunden. Ich brauche SOFORT ein anderes!“",
+      "Im Schrank liegt ein Leihgerät, das seit Wochen niemand benutzt hat."
+    ],
+    "frage": "Wie bereitest du das Leihgerät in der kurzen Zeit am besten vor?",
+    "optionen": [
+      "Mit ihrem eigenen Konto anmelden und die Präsentation aus der Firmen-Cloud laden",
+      "Mit dem Admin-Konto anmelden und ihr das Passwort auf einen Zettel schreiben",
+      "Ihr eigenes Notebook ausschalten, während die Updates laufen",
+      "Die Präsentation per privatem Mail-Konto an das Leihgerät schicken"
+    ],
+    "antwort": "Mit ihrem eigenen Konto anmelden und die Präsentation aus der Firmen-Cloud laden",
+    "hilfe": [
+      "Jeder arbeitet mit seinem eigenen Konto, Admin-Rechte bekommt niemand „mal eben“.",
+      "Firmendaten gehören nicht in private Postfächer. Ein ausgeschaltetes Update kann das System beschädigen."
+    ],
+    "erklaerung": [
+      "Mit dem eigenen Konto und der Firmen-Cloud ist Sabine in einer Minute startklar, ohne Rechte zu verschenken oder Daten nach außen zu geben.",
+      "Das Admin-Passwort auf einem Zettel oder ein privates Mail-Konto wären schneller, aber genau solche Abkürzungen sind klassische Sicherheitslücken."
+    ],
+    "suchbegriffe": ["Administrator", "Passwort"]
+  },
+  {
+    "id": "zf-stromausfall", "typ": "auswahl",
+    "titel": "Stromausfall, die USV piept",
+    "auftraggeber": "ulla", "raum": "serverraum", "prioritaet": "kritisch", "cat": "systeme",
+    "anforderungen": {"it_betrieb": 25}, "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 45, "reputation": 5}, "ab_tag": 3,
+    "ticket": [
+      "Plötzlich ist es dunkel im Haus. Nur im Serverraum piept es. Ulla: „Stromausfall im ganzen Viertel. Die USV hält die Server laut Anzeige noch 12 Minuten. Der Netzbetreiber sagt: mindestens eine Stunde.“"
+    ],
+    "frage": "Was machst du jetzt?",
+    "optionen": [
+      "Die Server geordnet herunterfahren, solange die USV noch Strom liefert",
+      "Abwarten, vielleicht ist der Strom gleich wieder da",
+      "Die USV ausschalten, damit das Piepen aufhört",
+      "Alle Stecker ziehen, damit nichts kaputtgeht"
+    ],
+    "antwort": "Die Server geordnet herunterfahren, solange die USV noch Strom liefert",
+    "hilfe": [
+      "Eine USV überbrückt kurze Ausfälle. Dauert der Ausfall länger als der Akku reicht, gewinnt sie nur Zeit.",
+      "Diese Zeit nutzt man, um die Systeme sauber zu beenden."
+    ],
+    "erklaerung": [
+      "12 Minuten Akku reichen nicht für eine Stunde Ausfall. Wer die Server jetzt geordnet herunterfährt, verhindert beschädigte Dateisysteme und Datenbanken.",
+      "Gute USV-Anlagen können das per Signal sogar automatisch auslösen. Abschalten oder Stecker ziehen wäre ein harter Absturz."
+    ],
+    "suchbegriffe": ["USV"]
+  },
+  {
+    "id": "zf-falscher-support", "typ": "auswahl",
+    "titel": "Anruf vom „Microsoft-Support“",
+    "auftraggeber": "frank", "raum": "verwaltung", "prioritaet": "hoch", "cat": "sicherheit",
+    "anforderungen": {"angriffe": 20}, "achsen": ["sicherheit", "kundenzufriedenheit"],
+    "belohnung": {"geld": 40, "reputation": 4}, "ab_tag": 2,
+    "ticket": [
+      "Frank hält den Hörer zu: „Da ist ein freundlicher Herr vom Microsoft-Support. Mein PC hätte einen gefährlichen Virus. Ich soll nur schnell ein Fernwartungsprogramm installieren und ihm die Nummer sagen.“"
+    ],
+    "frage": "Was rätst du Frank?",
+    "optionen": [
+      "Auflegen, nichts installieren und den Anruf an die IT-Sicherheit melden",
+      "Das Programm installieren, aber genau zuschauen, was er macht",
+      "Nach seiner Mitarbeiternummer fragen und dann installieren",
+      "Den PC ausschalten und dem Anrufer sagen, er soll morgen wieder anrufen"
+    ],
+    "antwort": "Auflegen, nichts installieren und den Anruf an die IT-Sicherheit melden",
+    "hilfe": [
+      "Große Softwarehersteller rufen nicht ungefragt bei Firmen an, um Viren zu entfernen.",
+      "Wer Fernzugriff bekommt, kann alles auf dem PC tun, auch unbemerkt."
+    ],
+    "erklaerung": [
+      "Das ist Social Engineering: Der Anrufer baut Druck und Vertrauen auf, um Fernzugriff zu bekommen. Eine Mitarbeiternummer beweist gar nichts, die ist ausgedacht.",
+      "Richtig ist: auflegen und melden, damit auch Kolleginnen und Kollegen gewarnt werden."
+    ],
+    "suchbegriffe": ["Social Engineering"]
+  },
+  {
+    "id": "zf-kaffeemaschine-wlan", "typ": "zuordnung",
+    "titel": "Die Kaffeemaschine will ins Firmennetz",
+    "auftraggeber": "sabine", "raum": "chefbuero", "prioritaet": "normal", "cat": "netzwerk",
+    "anforderungen": {"wlan": 25}, "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 40, "reputation": 4}, "ab_tag": 5,
+    "ticket": [
+      "Sabine strahlt: „Die neue Kaffeemaschine hat eine App! Ich habe sie gleich mit dem Firmen-WLAN verbunden. Jetzt will sie Updates.“",
+      "Ulla ist blass geworden. Ordne jedem Gerät das Netz zu, in das es gehört."
+    ],
+    "frage": "Ordne jedes Gerät dem passenden Netz (VLAN) zu.",
+    "paare": [
+      ["Kaffeemaschine mit App", "IoT-Netz, vom Firmennetz getrennt"],
+      ["Notebook eines Besuchers", "Gäste-WLAN, nur Internet"],
+      ["Arbeitsplatz-PC der Buchhaltung", "Firmennetz"],
+      ["Switch und Server", "Verwaltungsnetz der IT"]
+    ],
+    "hilfe": [
+      "Geräte, denen man wenig vertraut (Gäste, smarte Geräte), kommen in eigene Netze. So kommen sie nicht an Firmendaten heran.",
+      "Getrennt wird mit VLANs und Firewall-Regeln zwischen den Netzen."
+    ],
+    "erklaerung": [
+      "Smarte Geräte bekommen selten Sicherheitsupdates und sind ein beliebtes Einfallstor. Im eigenen IoT-Netz richten sie wenig Schaden an.",
+      "Gäste nur ins Internet, Arbeitsplätze ins Firmennetz, die Verwaltung der Netzwerktechnik in ein eigenes Netz. Das nennt man Netzsegmentierung."
+    ],
+    "suchbegriffe": ["VLAN", "WLAN"]
+  },
+  {
+    "id": "zf-datei-geloescht", "typ": "auswahl",
+    "titel": "Tim hat eine Datei gelöscht",
+    "auftraggeber": "tim", "raum": "helpdesk", "prioritaet": "hoch", "cat": "systeme",
+    "anforderungen": {"storage": 25}, "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 40, "reputation": 4}, "ab_tag": 13,
+    "ticket": [
+      "Tim ist kreidebleich: „Ich wollte im Freigabeordner nur aufräumen. Jetzt ist die Einsatzplanung weg. Also, die ganze Datei. Aus dem Netzlaufwerk. Warum gibt es da keinen Papierkorb?“"
+    ],
+    "frage": "Wie holst du die Datei am schnellsten zurück?",
+    "optionen": [
+      "Über „Vorgängerversionen“ (Schattenkopie) oder aus der nächtlichen Sicherung wiederherstellen",
+      "Ein Datenrettungsprogramm auf dem Dateiserver installieren und laufen lassen",
+      "Die Datei aus dem Gedächtnis neu schreiben",
+      "Tim die Rechte am Freigabeordner entziehen, dann ist das Problem gelöst"
+    ],
+    "antwort": "Über „Vorgängerversionen“ (Schattenkopie) oder aus der nächtlichen Sicherung wiederherstellen",
+    "hilfe": [
+      "Auf Netzlaufwerken landen gelöschte Dateien nicht im Papierkorb des eigenen PCs.",
+      "Dafür gibt es Schattenkopien auf dem Server und natürlich die Datensicherung."
+    ],
+    "erklaerung": [
+      "Schattenkopien (Vorgängerversionen) oder das Backup bringen die Datei in Minuten zurück. Genau dafür macht man Sicherungen.",
+      "Ein Rettungsprogramm auf dem laufenden Server könnte die Daten sogar überschreiben. Und Tim braucht keine Strafe, sondern eine Erklärung."
+    ],
+    "suchbegriffe": ["Backup"]
+  },
+  {
+    "id": "zf-zertifikat-abgelaufen", "typ": "diagnose",
+    "titel": "Browser warnt vor der Fahrplanauskunft",
+    "auftraggeber": "petra", "raum": "it_buero", "prioritaet": "kritisch", "cat": "sicherheit",
+    "anforderungen": {"krypto": 25, "dienste": 20}, "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 50, "reputation": 5}, "ab_tag": 6,
+    "ticket": [
+      "Petra zeigt auf ihren Bildschirm: „Seit heute früh warnt jeder Browser vor unserer Fahrplanauskunft: ‚Diese Verbindung ist nicht sicher.‘ Die Fahrgäste rufen schon an und fragen, ob wir gehackt wurden.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {"id": "zertifikat", "text": "Im Browser die Details des Zertifikats ansehen", "ergebnis": "Gültig bis: gestern, 23:59 Uhr. Aussteller und Name stimmen.", "entscheidend": true},
+      {"id": "ping", "text": "Den Webserver anpingen", "ergebnis": "Antwort in 3 ms. Der Server läuft."},
+      {"id": "dns", "text": "Mit nslookup die Adresse der Fahrplanauskunft auflösen", "ergebnis": "fahrplan.talbahn.example → 203.0.113.20, wie immer."},
+      {"id": "uhr", "text": "Uhrzeit am eigenen PC prüfen", "ergebnis": "Datum und Uhrzeit stimmen."},
+      {"id": "http", "text": "Die Seite ohne HTTPS aufrufen", "ergebnis": "Weiterleitung auf HTTPS, dann wieder die Warnung."},
+      {"id": "log", "text": "Das Protokoll des Webservers ansehen", "ergebnis": "Viele Zugriffe wie immer, keine Fehler, keine fremden Anmeldungen."}
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Das TLS-Zertifikat des Webservers ist abgelaufen.",
+      "Der Webserver wurde gehackt.",
+      "Der DNS-Eintrag zeigt auf einen falschen Server.",
+      "Die Uhr am PC der Fahrgäste geht falsch."
+    ],
+    "ursache": "Das TLS-Zertifikat des Webservers ist abgelaufen.",
+    "massnahmen": [
+      "Ein neues Zertifikat ausstellen lassen, einbinden und die Erneuerung automatisieren",
+      "Den Fahrgästen raten, die Warnung einfach wegzuklicken",
+      "Die Seite wieder nur über HTTP anbieten",
+      "Den Webserver neu installieren"
+    ],
+    "massnahme": "Ein neues Zertifikat ausstellen lassen, einbinden und die Erneuerung automatisieren",
+    "unsicher": ["Den Fahrgästen raten, die Warnung einfach wegzuklicken", "Die Seite wieder nur über HTTP anbieten"],
+    "hilfe": [
+      "Browser prüfen bei HTTPS das Zertifikat: Ist es abgelaufen, vom falschen Namen oder nicht vertrauenswürdig, gibt es eine Warnung.",
+      "Die Details des Zertifikats zeigen, wie lange es gültig ist."
+    ],
+    "erklaerung": [
+      "Das Zertifikat ist gestern abgelaufen, alles andere läuft normal. Ein neues Zertifikat behebt die Warnung, eine automatische Erneuerung verhindert die Wiederholung.",
+      "Warnungen wegklicken zu lassen oder auf HTTP zurückzugehen, würde Fahrgästen beibringen, Sicherheitswarnungen zu ignorieren."
+    ],
+    "suchbegriffe": ["Zertifikat", "HTTPS"]
+  },
+  {
+    "id": "zf-raid-platte", "typ": "auswahl",
+    "titel": "Eine Platte im RAID 5 meldet Fehler",
+    "auftraggeber": "ulla", "raum": "serverraum", "prioritaet": "hoch", "cat": "systeme",
+    "anforderungen": {"storage": 30}, "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 45, "reputation": 5}, "ab_tag": 4,
+    "ticket": [
+      "Am Dateiserver leuchtet eine Platte orange. Ulla: „RAID 5 mit vier Platten, eine ist raus. Der Controller sagt ‚degraded‘. Die Kollegen merken noch nichts.“"
+    ],
+    "frage": "Was ist jetzt richtig?",
+    "optionen": [
+      "Zuerst prüfen, ob das Backup aktuell ist, dann die defekte Platte tauschen und den Rebuild abwarten",
+      "Nichts tun, RAID 5 verträgt doch einen Ausfall",
+      "Die restlichen Platten neu formatieren",
+      "Eine zweite Platte ziehen, um zu testen, ob es wirklich läuft"
+    ],
+    "antwort": "Zuerst prüfen, ob das Backup aktuell ist, dann die defekte Platte tauschen und den Rebuild abwarten",
+    "hilfe": [
+      "RAID 5 übersteht den Ausfall genau einer Platte. Solange sie fehlt, gibt es keine Reserve mehr.",
+      "Beim Rebuild werden alle anderen Platten stark belastet."
+    ],
+    "erklaerung": [
+      "Im Zustand „degraded“ führt ein zweiter Ausfall zum Datenverlust. Also zuerst sicherstellen, dass das Backup aktuell ist, dann schnell tauschen.",
+      "RAID ersetzt keine Datensicherung: Es schützt vor Plattenausfall, nicht vor Löschen, Schadsoftware oder Brand."
+    ],
+    "suchbegriffe": ["RAID 5"]
+  },
+  {
+    "id": "zf-doppelte-rechnung", "typ": "auswahl",
+    "titel": "Rechnungen doppelt bezahlt?",
+    "auftraggeber": "frank", "raum": "verwaltung", "prioritaet": "normal", "cat": "datenbanken",
+    "anforderungen": {"sql": 25}, "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 45, "reputation": 4}, "ab_tag": 6,
+    "ticket": [
+      "Frank hat es zweimal nachgerechnet: „Irgendwo haben wir eine Rechnung doppelt bezahlt. In der Tabelle zahlung stehen rechnung_nr, betrag und datum. Kannst du mir die doppelten Rechnungsnummern heraussuchen?“"
+    ],
+    "frage": "Welche Abfrage liefert die Rechnungsnummern, die mehr als einmal bezahlt wurden?",
+    "optionen": [
+      "SELECT rechnung_nr, COUNT(*) FROM zahlung GROUP BY rechnung_nr HAVING COUNT(*) > 1",
+      "SELECT rechnung_nr FROM zahlung WHERE COUNT(*) > 1",
+      "SELECT DISTINCT rechnung_nr FROM zahlung",
+      "SELECT rechnung_nr, SUM(betrag) FROM zahlung ORDER BY rechnung_nr"
+    ],
+    "antwort": "SELECT rechnung_nr, COUNT(*) FROM zahlung GROUP BY rechnung_nr HAVING COUNT(*) > 1",
+    "hilfe": [
+      "Mehrfach vorkommende Werte findet man, indem man nach dem Wert gruppiert und zählt.",
+      "Bedingungen auf Gruppen (wie COUNT) stehen in HAVING, nicht in WHERE."
+    ],
+    "erklaerung": [
+      "GROUP BY fasst alle Zahlungen je Rechnungsnummer zusammen, HAVING COUNT(*) > 1 lässt nur die mehrfach bezahlten übrig.",
+      "WHERE filtert einzelne Zeilen vor dem Gruppieren und kennt COUNT noch nicht. DISTINCT würde die Doppelten gerade verstecken."
+    ],
+    "suchbegriffe": ["HAVING", "GROUP BY"]
+  },
+  {
+    "id": "zf-drucker-zeichensalat#2",
+    "typ": "diagnose",
+    "titel": "Der Etikettendrucker druckt halbe Etiketten",
+    "auftraggeber": "marta",
+    "raum": "teilelager",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"hardware": 43},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 70, "reputation": 5},
+    "ab_tag": 24,
+    "ticket": [
+      "Marta stapft in Sicherheitsschuhen ins Teilelager: „Der Etikettendrucker druckt jeden Barcode halb auf das eine und halb auf das nächste Etikett. Die Scanner lesen nichts mehr.“",
+      "„Seit dem Rollenwechsel heute Morgen. Wir verlieren pro Zugumlauf zehn Minuten mit Handschrift!“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "rolle",
+        "text": "Aufdruck auf der neuen Etikettenrolle lesen",
+        "ergebnis": "Neue Rolle: 50 × 25 mm, Abstand 3 mm. Die alte Rolle hatte 60 × 30 mm.",
+        "entscheidend": true
+      },
+      {
+        "id": "kalibrierung",
+        "text": "Im Gerätemenü nachsehen, wann der Mediensensor zuletzt kalibriert wurde",
+        "ergebnis": "Letzte Kalibrierung: vor 5 Monaten, mit der alten Rolle.",
+        "entscheidend": true
+      },
+      {
+        "id": "treiber",
+        "text": "Im Treiber die eingestellte Etikettengröße ansehen",
+        "ergebnis": "Eingestellt: 60 × 30 mm.",
+        "entscheidend": true
+      },
+      {
+        "id": "ping",
+        "text": "Den Drucker im Netz anpingen",
+        "ergebnis": "Antwort von 10.22.0.31: Zeit=1 ms."
+      },
+      {
+        "id": "kopf",
+        "text": "Druckkopf auf Verschmutzung prüfen",
+        "ergebnis": "Sauber, das Druckbild ist scharf, nur an der falschen Stelle."
+      },
+      {
+        "id": "firmware",
+        "text": "Firmware-Version abfragen",
+        "ergebnis": "Aktuelle Version, keine Updates verfügbar."
+      }
+    ],
+    "ziel_pruefungen": 3,
+    "ursachen": [
+      "Nach dem Rollenwechsel passen Sensor-Kalibrierung und Etikettengröße nicht zur neuen Rolle.",
+      "Der Druckkopf ist verschlissen.",
+      "Die Netzwerkverbindung bricht beim Druck ab.",
+      "Die Firmware des Druckers ist veraltet."
+    ],
+    "ursache": "Nach dem Rollenwechsel passen Sensor-Kalibrierung und Etikettengröße nicht zur neuen Rolle.",
+    "massnahmen": [
+      "Mediensensor kalibrieren, Etikettengröße 50 × 25 mm einstellen, Testetikett drucken",
+      "Einen neuen Etikettendrucker bestellen",
+      "Die alte Rolle zurückholen und die neuen Rollen entsorgen",
+      "Den Druckkopf austauschen"
+    ],
+    "massnahme": "Mediensensor kalibrieren, Etikettengröße 50 × 25 mm einstellen, Testetikett drucken",
+    "hilfe": [
+      "Druckt ein Etikettendrucker versetzt, weiß er nicht, wo ein Etikett anfängt und aufhört.",
+      "Was hat sich heute Morgen am Gerät geändert, und was muss der Drucker danach neu lernen?"
+    ],
+    "erklaerung": [
+      "Die neue Rolle hat kleinere Etiketten mit anderem Abstand. Der Sensor wurde nach dem Wechsel nicht kalibriert, deshalb rutscht jeder Druck weiter.",
+      "Kalibrieren (Medien-Einmessung) und die Etikettengröße im Treiber anpassen behebt das ohne neue Hardware."
+    ],
+    "suchbegriffe": ["Drucker", "Treiber"],
+    "gruppe": "zf-drucker-zeichensalat"
+  },
+  {
+    "id": "zf-drucker-zeichensalat#3",
+    "typ": "auswahl",
+    "titel": "„MÃ¼ller“ statt „Müller“ im Serienbrief",
+    "auftraggeber": "wendt",
+    "raum": "buchhaltung_lindenau",
+    "prioritaet": "hoch",
+    "cat": "datenbanken",
+    "anforderungen": {"modellierung": 52},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 95, "reputation": 7},
+    "ab_tag": 47,
+    "ticket": [
+      "Dr. Wendt hält dir einen Stapel Mahnungen hin, die er natürlich zweimal gelesen hat: „Frau MÃ¼ller, Herr SchÃ¤fer, GrÃ¼n-StraÃŸe. So geht kein Brief aus diesem Haus.“",
+      "Die Adressen kommen als CSV-Export aus der neuen Buchhaltungssoftware und werden in die Serienbrief-Vorlage importiert."
+    ],
+    "frage": "Was ist die Ursache, und wie behebst du sie?",
+    "optionen": [
+      "Der Drucker hat einen falschen Treiber, PCL-6-Treiber neu installieren",
+      "Die CSV ist UTF-8, der Import liest sie als Windows-1252: beim Import UTF-8 einstellen",
+      "Die Schriftart kennt keine Umlaute: eine andere Schrift wählen",
+      "Alle Umlaute im Export durch ae, oe, ue ersetzen"
+    ],
+    "antwort": "Die CSV ist UTF-8, der Import liest sie als Windows-1252: beim Import UTF-8 einstellen",
+    "hilfe": [
+      "Ein „Ã“ vor jedem Umlaut ist ein typisches Muster: Ein Zeichen wird mit zwei Bytes gespeichert, aber als zwei einzelne Zeichen gelesen.",
+      "Der Drucker gibt nur aus, was er bekommt. Der Fehler passiert früher."
+    ],
+    "erklaerung": [
+      "Die CSV ist in UTF-8 gespeichert (ü = zwei Bytes), der Import liest sie als Windows-1252 und zeigt jedes Byte als eigenes Zeichen.",
+      "Stellt man beim Import die Kodierung UTF-8 ein, stimmen alle Umlaute. Umlaute von Hand zu ersetzen verfälscht die Namen."
+    ],
+    "suchbegriffe": ["UTF-8", "CSV", "Unicode"],
+    "gruppe": "zf-drucker-zeichensalat"
+  },
+  {
+    "id": "zf-drucker-zeichensalat#4",
+    "typ": "diagnose",
+    "titel": "Fahrkarten mit fremden Zeichen am Service-Point",
+    "auftraggeber": "ulla",
+    "ort": "talheim_nord",
+    "raum": "service_point_nord",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"fehlersuche": 58},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 110, "reputation": 8},
+    "ab_tag": 70,
+    "ticket": [
+      "Ulla am Telefon: „Talheim-Nord ruft an. Der Fahrkartendrucker am Service-Point spuckt ab und zu Seiten voller Steuerzeichen aus, und manche Fahrkarten kommen gar nicht an.“",
+      "„Gestern hat die Talbahn dort einen neuen Etikettendrucker für die Fundsachen angeschlossen. Ich sag ja nur.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "arp",
+        "text": "Am Service-PC zweimal hintereinander arp -a für 10.12.0.40 ausführen",
+        "ergebnis": "Erst 00-1b-22-4a-10-07, eine Minute später 00-50-c2-9d-31-e8. Zwei MAC-Adressen für eine IP.",
+        "entscheidend": true
+      },
+      {
+        "id": "etikett",
+        "text": "Netzwerkeinstellungen des neuen Etikettendruckers ansehen",
+        "ergebnis": "Feste IP-Adresse 10.12.0.40, eingetragen vom Lieferanten.",
+        "entscheidend": true
+      },
+      {
+        "id": "ping",
+        "text": "Den Fahrkartendrucker anpingen",
+        "ergebnis": "Antwort von 10.12.0.40, die Zeiten schwanken zwischen 1 und 3 ms."
+      },
+      {
+        "id": "selbsttest",
+        "text": "Selbsttest am Fahrkartendrucker drucken",
+        "ergebnis": "Saubere Testseite."
+      },
+      {
+        "id": "treiber",
+        "text": "Druckertreiber am Service-PC prüfen",
+        "ergebnis": "Richtiger Herstellertreiber, seit Monaten unverändert."
+      },
+      {
+        "id": "papier",
+        "text": "Papierrolle und Papiersensor prüfen",
+        "ergebnis": "Rolle voll, Sensor in Ordnung."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Der neue Etikettendrucker hat dieselbe feste IP-Adresse wie der Fahrkartendrucker.",
+      "Der Druckertreiber am Service-PC ist beschädigt.",
+      "Der Fahrkartendrucker ist defekt.",
+      "Das Netzwerkkabel am Service-PC ist locker."
+    ],
+    "ursache": "Der neue Etikettendrucker hat dieselbe feste IP-Adresse wie der Fahrkartendrucker.",
+    "massnahmen": [
+      "Dem Etikettendrucker eine freie, dokumentierte Adresse geben und im IP-Plan eintragen",
+      "Den Fahrkartendrucker austauschen",
+      "Beide Drucker abwechselnd ausschalten",
+      "Den Treiber am Service-PC neu installieren"
+    ],
+    "massnahme": "Dem Etikettendrucker eine freie, dokumentierte Adresse geben und im IP-Plan eintragen",
+    "hilfe": [
+      "Kommen Druckaufträge mal an und mal nicht, lohnt sich ein Blick darauf, wer im Netz auf die Adresse des Druckers antwortet.",
+      "Die ARP-Tabelle ordnet IP-Adressen den MAC-Adressen zu."
+    ],
+    "erklaerung": [
+      "Der neue Etikettendrucker hat fest dieselbe IP-Adresse wie der Fahrkartendrucker. Je nachdem, wer zuletzt geantwortet hat, landet der Auftrag beim falschen Gerät und wird als Zeichensalat gedruckt.",
+      "Eine eigene, dokumentierte Adresse (Reservierung oder feste IP außerhalb des DHCP-Bereichs) beseitigt den Adresskonflikt."
+    ],
+    "suchbegriffe": ["IP-Adresse", "ARP", "DHCP"],
+    "gruppe": "zf-drucker-zeichensalat"
+  },
+  {
+    "id": "zf-erpresser-meldung#2",
+    "typ": "zuordnung",
+    "titel": "Dateien mit der Endung .locked",
+    "auftraggeber": "marta",
+    "raum": "diagnoseplatz",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"angriffe": 45},
+    "achsen": ["sicherheit", "zuverlaessigkeit"],
+    "belohnung": {"geld": 85, "reputation": 7},
+    "ab_tag": 28,
+    "ticket": [
+      "Marta ruft vom Diagnoseplatz: „Auf dem Werkstatt-Laufwerk heißen plötzlich alle Prüfprotokolle ‚.locked‘. Und auf dem Diagnose-Laptop liegt eine Textdatei ‚LIES_MICH.txt‘.“",
+      "„Ich habe den Laptop noch nicht angefasst. Mit Sicherheitsschuhen tritt man nicht auf Beweise.“"
+    ],
+    "frage": "Ordne jeder Sofortmaßnahme ihren Zweck zu.",
+    "paare": [
+      [
+        "Netzwerkkabel ziehen, WLAN aus",
+        "Die Ausbreitung auf weitere Rechner und Freigaben stoppen"
+      ],
+      ["Laptop eingeschaltet lassen", "Spuren im Arbeitsspeicher für die Analyse erhalten"],
+      [
+        "Vorfall sofort an IT und Leitung melden",
+        "Notfallablauf starten und Meldepflichten prüfen"
+      ],
+      ["Daten aus dem Offline-Backup zurückspielen", "Daten ohne Lösegeld wiederherstellen"]
+    ],
+    "hilfe": [
+      "Bei Ransomware zählt zuerst, dass sie sich nicht weiter ausbreitet.",
+      "Jede Maßnahme hat einen eigenen Grund: Ausbreitung, Spuren, Meldung, Wiederherstellung."
+    ],
+    "erklaerung": [
+      "Vom Netz trennen stoppt die Verschlüsselung weiterer Freigaben, eingeschaltet bleiben Spuren im Arbeitsspeicher erhalten.",
+      "Die Meldung setzt den Notfallablauf in Gang (auch Datenschutz), und aus einem Offline-Backup kommen die Daten ohne Lösegeld zurück."
+    ],
+    "suchbegriffe": ["Ransomware", "Backup"],
+    "gruppe": "zf-erpresser-meldung"
+  },
+  {
+    "id": "zf-erpresser-meldung#3",
+    "typ": "auswahl",
+    "titel": "„Wir haben Ihre Daten“",
+    "auftraggeber": "wendt",
+    "raum": "leitung_lindenau",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"angriffe": 54},
+    "achsen": ["sicherheit", "fachkompetenz"],
+    "belohnung": {"geld": 115, "reputation": 9},
+    "ab_tag": 52,
+    "ticket": [
+      "Dr. Wendt hat die E-Mail dreimal gelesen: „Wir haben 4 GB Personaldaten der Talbahn kopiert. Zahlen Sie 20.000 Euro, sonst veröffentlichen wir alles.“ Angehängt: eine echte Gehaltsliste aus Lindenau.",
+      "„Verschlüsselt ist nichts, alles läuft. Ist das dann überhaupt ein Notfall?“"
+    ],
+    "frage": "Was ist jetzt richtig?",
+    "optionen": [
+      "Nicht zahlen, Vorfall melden, Zugänge und Protokolle prüfen, DSB einbinden, 72-h-Frist beachten",
+      "Nichts tun, solange keine Dateien verschlüsselt sind",
+      "Schnell zahlen, damit die Daten nicht veröffentlicht werden",
+      "Die E-Mail löschen und allen Mitarbeitenden die Passwörter zurücksetzen, sonst nichts"
+    ],
+    "antwort": "Nicht zahlen, Vorfall melden, Zugänge und Protokolle prüfen, DSB einbinden, 72-h-Frist beachten",
+    "hilfe": [
+      "Auch ohne verschlüsselte Dateien kann ein Angriff stattgefunden haben: Die Daten sind womöglich schon draußen.",
+      "Personaldaten sind personenbezogen. Welche Fristen gelten, wenn sie in falsche Hände geraten?"
+    ],
+    "erklaerung": [
+      "Die echte Gehaltsliste zeigt: Es sind wahrscheinlich Daten abgeflossen. Das ist ein Sicherheits- und ein Datenschutzvorfall, der sofort untersucht werden muss.",
+      "Die Datenschutzbeauftragte prüft die Meldung an die Aufsichtsbehörde (72 Stunden). Zahlen verhindert keine Veröffentlichung und finanziert den Täter."
+    ],
+    "suchbegriffe": ["Ransomware", "DSGVO"],
+    "gruppe": "zf-erpresser-meldung"
+  },
+  {
+    "id": "zf-erpresser-meldung#4",
+    "typ": "diagnose",
+    "titel": "Der Dateiserver benennt Dateien um",
+    "auftraggeber": "ulla",
+    "raum": "serverraum",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"angriffe": 61},
+    "achsen": ["sicherheit", "zuverlaessigkeit"],
+    "belohnung": {"geld": 115, "reputation": 8},
+    "ab_tag": 76,
+    "ticket": [
+      "Ulla starrt auf das Monitoring: „Der Dateiserver meldet 3.000 umbenannte Dateien pro Minute. Er sagt, er fühlt sich nicht gut. Ich glaube ihm.“",
+      "„Die Freigabe ‚Einsatzplanung‘ wird gerade Ordner für Ordner unbrauchbar. Schnell, aber mit Verstand!“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "sitzungen",
+        "text": "Offene Sitzungen auf der Freigabe anzeigen",
+        "ergebnis": "Fast alle Schreibzugriffe kommen von HD-PC-07, angemeldet als Konto „helpdesk2“.",
+        "entscheidend": true
+      },
+      {
+        "id": "endungen",
+        "text": "Neue Dateien in der Freigabe ansehen",
+        "ergebnis": "Alle enden auf .crypt, in jedem Ordner liegt eine „ENTSCHLUESSELN.html“.",
+        "entscheidend": true
+      },
+      {
+        "id": "snapshot",
+        "text": "Snapshots des Dateiservers auflisten",
+        "ergebnis": "Unveränderlicher Snapshot von heute 06:00 Uhr, vor dem ersten Alarm.",
+        "entscheidend": true
+      },
+      {
+        "id": "cpu",
+        "text": "CPU-Last des Dateiservers ansehen",
+        "ergebnis": "34 %, etwas höher als sonst."
+      },
+      {
+        "id": "platten",
+        "text": "Zustand der Festplatten prüfen",
+        "ergebnis": "Alle Platten in Ordnung, RAID optimal."
+      },
+      {
+        "id": "internet",
+        "text": "Internetverbindung testen",
+        "ergebnis": "Verbindung stabil, 250 Mbit/s."
+      }
+    ],
+    "ziel_pruefungen": 3,
+    "ursachen": [
+      "Ransomware auf HD-PC-07 verschlüsselt über das Konto helpdesk2 die Freigabe.",
+      "Der Dateiserver hat einen Plattendefekt.",
+      "Ein Update benennt die Dateien um.",
+      "Die Internetleitung ist überlastet."
+    ],
+    "ursache": "Ransomware auf HD-PC-07 verschlüsselt über das Konto helpdesk2 die Freigabe.",
+    "massnahmen": [
+      "HD-PC-07 vom Netz trennen, Konto helpdesk2 sperren, dann aus dem Snapshot von 06:00 wiederherstellen",
+      "Sofort aus dem Snapshot wiederherstellen, die Quelle später suchen",
+      "Den Dateiserver hart ausschalten",
+      "Das Lösegeld zahlen, bevor mehr verschlüsselt ist"
+    ],
+    "massnahme": "HD-PC-07 vom Netz trennen, Konto helpdesk2 sperren, dann aus dem Snapshot von 06:00 wiederherstellen",
+    "unsicher": ["Das Lösegeld zahlen, bevor mehr verschlüsselt ist"],
+    "hilfe": [
+      "Die Verschlüsselung läuft nicht auf dem Server, sondern kommt über das Netz. Von welchem Rechner und mit welchem Konto?",
+      "Bevor du wiederherstellst, muss die Quelle gestoppt sein."
+    ],
+    "erklaerung": [
+      "Die Sitzungsliste zeigt: Der Rechner HD-PC-07 schreibt mit einem Helpdesk-Konto massenhaft Dateien. Dort läuft die Ransomware.",
+      "Erst den Rechner isolieren und das Konto sperren, damit nichts mehr verschlüsselt wird. Dann aus dem unveränderlichen Snapshot wiederherstellen."
+    ],
+    "suchbegriffe": ["Ransomware", "Snapshot", "Monitoring"],
+    "gruppe": "zf-erpresser-meldung"
+  },
+  {
+    "id": "zf-notebook-sofort#2",
+    "typ": "auswahl",
+    "titel": "BitLocker will einen Schlüssel",
+    "auftraggeber": "lea",
+    "raum": "kundenberatung",
+    "prioritaet": "hoch",
+    "cat": "sicherheit",
+    "anforderungen": {"krypto": 47},
+    "achsen": ["sicherheit", "kundenzufriedenheit"],
+    "belohnung": {"geld": 80, "reputation": 6},
+    "ab_tag": 33,
+    "ticket": [
+      "Lea wedelt mit ihrem Notebook: „Nach dem BIOS-Update gestern will das Ding einen 48-stelligen Wiederherstellungsschlüssel! In zwanzig Minuten zeige ich dem Kunden unsere Demo. Ich habe ihm schon eine Überraschung versprochen.“"
+    ],
+    "frage": "Wie hilfst du Lea schnell und sicher?",
+    "optionen": [
+      "Die Festplatte ausbauen und in einen anderen PC stecken, um die Dateien zu kopieren",
+      "Das Notebook neu installieren, die Demo liegt ja in der Cloud",
+      "Identität prüfen und den im Verzeichnisdienst hinterlegten Wiederherstellungsschlüssel geben",
+      "BitLocker auf allen Notebooks abschalten, damit das nicht wieder passiert"
+    ],
+    "antwort": "Identität prüfen und den im Verzeichnisdienst hinterlegten Wiederherstellungsschlüssel geben",
+    "hilfe": [
+      "Die Festplatte ist verschlüsselt. Den Schlüssel hat Lea nicht, aber jemand anderes hat ihn sicher hinterlegt.",
+      "Nach Hardware- oder BIOS-Änderungen fragt BitLocker zur Sicherheit nach dem Wiederherstellungsschlüssel."
+    ],
+    "erklaerung": [
+      "Der Wiederherstellungsschlüssel ist im Verzeichnisdienst hinterlegt. Nach Prüfung, dass wirklich Lea anruft, gibt der Helpdesk ihn heraus.",
+      "Verschlüsselung abzuschalten oder die Platte neu aufzusetzen wäre riskant bzw. würde Daten vernichten."
+    ],
+    "suchbegriffe": ["BitLocker", "Verschlüsselung", "Active Directory"],
+    "gruppe": "zf-notebook-sofort"
+  },
+  {
+    "id": "zf-notebook-sofort#3",
+    "typ": "auswahl",
+    "titel": "Aylin braucht SOFORT den Dienstplan",
+    "auftraggeber": "aylin",
+    "raum": "leitstelle",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"windows": 51},
+    "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 85, "reputation": 6},
+    "ab_tag": 58,
+    "ticket": [
+      "Aylin tippt mit dem geerbten Hebel auf den Monitor: „Zugriff verweigert. Ich leite die Leitstelle und komme nicht an den Dienstplan-Ordner. In zehn Minuten ist Schichtwechsel.“",
+      "Ein Kollege flüstert: „Das Konto vom Vorgänger ist noch aktiv, Passwort steht im Schrank.“"
+    ],
+    "frage": "Was ist die richtige Lösung?",
+    "optionen": [
+      "Mit dem Konto des Vorgängers anmelden, das Passwort liegt ja im Schrank",
+      "Aylins Konto in die AD-Gruppe „Leitstelle-Leitung“ aufnehmen, dann ab- und wieder anmelden",
+      "Den Ordner für „Jeder“ freigeben, bis alles geklärt ist",
+      "Aylin zur Domänen-Administratorin machen, dann klappt alles"
+    ],
+    "antwort": "Aylins Konto in die AD-Gruppe „Leitstelle-Leitung“ aufnehmen, dann ab- und wieder anmelden",
+    "hilfe": [
+      "Rechte hängen an der Rolle, nicht an der Person, die sie früher hatte.",
+      "Nach einer Änderung der Gruppenmitgliedschaft muss sich der Benutzer neu anmelden."
+    ],
+    "erklaerung": [
+      "Aylin gehört als Leitung in die Gruppe, die den Ordner lesen darf. Nach Abmelden und Anmelden gilt die neue Mitgliedschaft.",
+      "Das Konto des Vorgängers ist zu deaktivieren, nicht weiter zu benutzen: Sonst weiß niemand mehr, wer was getan hat."
+    ],
+    "suchbegriffe": ["Active Directory", "Berechtigung"],
+    "gruppe": "zf-notebook-sofort"
+  },
+  {
+    "id": "zf-notebook-sofort#4",
+    "typ": "terminal",
+    "titel": "Ersatz-Laptop für die Werkhalle, aber schnell",
+    "auftraggeber": "marta",
+    "raum": "werkhalle",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"windows": 65},
+    "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 115, "reputation": 8},
+    "ab_tag": 84,
+    "ticket": [
+      "Marta: „Der Diagnose-Laptop für Triebwagen 7 ist runtergefallen. Der Zug muss in zwei Zugumläufen raus. Im Schrank liegt ein Ersatzgerät, das seit Monaten schläft.“",
+      "„Bevor das Ding an meinen Zug darf: Prüf, ob es verschlüsselt, aktuell und sauber eingerichtet ist.“"
+    ],
+    "frage": "Wähle in jedem Schritt den passenden Befehl.",
+    "system": "windows",
+    "prompt": "PS C:\\>",
+    "start": ["Windows PowerShell (Administrator)", "Gerät WS-DIAG-03, zuletzt benutzt vor 5 Monaten"],
+    "schritte": [
+      {
+        "ziel": "Prüfen, ob die Festplatte verschlüsselt ist",
+        "befehle": [
+          {
+            "befehl": "manage-bde -status C:",
+            "ausgabe": [
+              "Volume C: [Windows]",
+              "    Konvertierungsstatus: Vollständig verschlüsselt",
+              "    Schutzstatus:         Der Schutz ist aktiviert"
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "chkdsk C:",
+            "ausgabe": ["Windows hat das Dateisystem überprüft.", "Es wurden keine Probleme festgestellt."],
+            "hinweis": "chkdsk prüft das Dateisystem, nicht die Verschlüsselung."
+          },
+          {
+            "befehl": "manage-bde -off C:",
+            "ausgabe": ["Entschlüsselung wird ausgeführt …", "Marta: „Entschlüsseln? Für die Werkhalle?“"],
+            "gefaehrlich": true,
+            "hinweis": "-off entschlüsselt die Platte. Ein Werkstatt-Laptop muss verschlüsselt bleiben."
+          }
+        ]
+      },
+      {
+        "ziel": "Die aktuellen Gruppenrichtlinien holen",
+        "befehle": [
+          {
+            "befehl": "gpresult /r",
+            "ausgabe": ["Zuletzt angewendet: vor 5 Monaten"],
+            "hinweis": "gpresult zeigt nur, welche Richtlinien gelten. Neu holen macht gpupdate."
+          },
+          {
+            "befehl": "gpupdate /force",
+            "ausgabe": [
+              "Die Richtlinien werden aktualisiert …",
+              "Die Computerrichtlinie wurde aktualisiert.",
+              "Die Benutzerrichtlinie wurde aktualisiert."
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "Restart-Computer -Force",
+            "ausgabe": ["# Neustart. Die Richtlinien sind danach so alt wie vorher."],
+            "hinweis": "Ein Neustart allein holt keine neuen Richtlinien, wenn der Laptop sie nicht vorher abruft."
+          }
+        ]
+      },
+      {
+        "ziel": "Die Virensignaturen aktualisieren",
+        "befehle": [
+          {
+            "befehl": "Set-MpPreference -DisableRealtimeMonitoring $true",
+            "ausgabe": ["# Echtzeitschutz ist jetzt aus."],
+            "gefaehrlich": true,
+            "hinweis": "Das schaltet den Echtzeitschutz ab, statt ihn aufzufrischen."
+          },
+          {
+            "befehl": "Update-MpSignature",
+            "ausgabe": ["# Signaturen werden geladen …", "# fertig."],
+            "richtig": true
+          },
+          {
+            "befehl": "Get-Service WinDefend",
+            "ausgabe": ["Status   Name        DisplayName", "Running  WinDefend   Virenschutzdienst"],
+            "hinweis": "Der Dienst läuft, aber das sagt nichts über das Alter der Signaturen."
+          }
+        ]
+      },
+      {
+        "ziel": "Den Schutzstatus kontrollieren",
+        "befehle": [
+          {
+            "befehl": "Get-MpComputerStatus",
+            "ausgabe": [
+              "AntivirusEnabled          : True",
+              "AntivirusSignatureAge     : 0",
+              "RealTimeProtectionEnabled : True"
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "ipconfig /all",
+            "ausgabe": ["Ethernet-Adapter Ethernet:", "   DHCP aktiviert. . . . . : Ja"],
+            "hinweis": "ipconfig zeigt die Netzwerkeinstellungen, nicht den Virenschutz."
+          }
+        ]
+      }
+    ],
+    "hilfe": [
+      "Ein lange unbenutztes Gerät hat alte Richtlinien und alte Virensignaturen. Beides lässt sich gezielt auffrischen.",
+      "Den Verschlüsselungsstatus zeigt manage-bde, die Gruppenrichtlinien holt gpupdate."
+    ],
+    "erklaerung": [
+      "Richtig: manage-bde -status C: → gpupdate /force → Update-MpSignature → Get-MpComputerStatus.",
+      "So ist der Laptop verschlüsselt, hat die aktuellen Richtlinien der Werkstatt und frische Signaturen, bevor er an den Zug geht."
+    ],
+    "suchbegriffe": ["BitLocker", "Gruppenrichtlinie", "Virenschutz"],
+    "gruppe": "zf-notebook-sofort"
+  },
+  {
+    "id": "zf-stromausfall#2",
+    "typ": "diagnose",
+    "titel": "Die USV in Talheim-Nord schreit „Überlast“",
+    "auftraggeber": "ulla",
+    "ort": "talheim_nord",
+    "raum": "technik_nord",
+    "prioritaet": "kritisch",
+    "cat": "systeme",
+    "anforderungen": {"it_betrieb": 44},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 80, "reputation": 6},
+    "ab_tag": 26,
+    "ticket": [
+      "Ulla: „Die USV in Talheim-Nord piept Dauerton und zeigt ‚OVERLOAD‘. Der Strom ist gar nicht weg! Die Kollegin vor Ort sagt, es sei heute kalt im Technikraum gewesen.“",
+      "„Ich rede mit der USV, aber die hört mir heute nicht zu.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "last",
+        "text": "Ausgangslast an der USV ablesen",
+        "ergebnis": "1620 W von 1500 W, also 108 %.",
+        "entscheidend": true
+      },
+      {
+        "id": "ausgaenge",
+        "text": "Nachsehen, was an den Ausgängen der USV steckt",
+        "ergebnis": "Switch, Server, Router, Firewall und ein Heizlüfter mit 700 W.",
+        "entscheidend": true
+      },
+      {
+        "id": "netz",
+        "text": "Eingangsspannung an der USV ablesen",
+        "ergebnis": "231 V, stabil."
+      },
+      {
+        "id": "akku",
+        "text": "Akkustand und Akkudatum prüfen",
+        "ergebnis": "Akku 100 %, getauscht vor wenigen Tagen."
+      },
+      {"id": "temperatur", "text": "Raumtemperatur messen", "ergebnis": "17 °C, eher kühl."}
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Ein Heizlüfter hängt am USV-Ausgang und treibt die Last über 100 %.",
+      "Der Netzstrom ist ausgefallen.",
+      "Die Akkus der USV sind verbraucht.",
+      "Die USV ist zu warm."
+    ],
+    "ursache": "Ein Heizlüfter hängt am USV-Ausgang und treibt die Last über 100 %.",
+    "massnahmen": [
+      "Den Heizlüfter von der USV trennen und die Last erneut ablesen",
+      "Die USV überbrücken und alles direkt ans Netz hängen",
+      "Den Server abschalten, damit der Heizlüfter weiterlaufen kann",
+      "Eine größere USV bestellen"
+    ],
+    "massnahme": "Den Heizlüfter von der USV trennen und die Last erneut ablesen",
+    "unsicher": ["Die USV überbrücken und alles direkt ans Netz hängen"],
+    "hilfe": [
+      "Eine USV meldet Überlast, wenn angeschlossene Geräte mehr Leistung ziehen, als sie liefern kann.",
+      "Schau, was an den Ausgängen der USV hängt und was davon gar nicht dorthin gehört."
+    ],
+    "erklaerung": [
+      "An der USV hängen 1620 W bei 1500 W Nennleistung, das sind 108 %. Schuld ist der Heizlüfter mit 700 W.",
+      "Ohne ihn sind es 920 W (61 %). An eine USV gehört nur die IT-Last, keine Heizgeräte."
+    ],
+    "suchbegriffe": ["USV", "Überlast"],
+    "gruppe": "zf-stromausfall"
+  },
+  {
+    "id": "zf-stromausfall#3",
+    "typ": "auswahl",
+    "titel": "Stromausfall in der Werkhalle: lohnt sich eine USV?",
+    "auftraggeber": "marta",
+    "raum": "werkstattbuero",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "anforderungen": {"kalkulation": 54},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 100, "reputation": 7},
+    "ab_tag": 50,
+    "ticket": [
+      "Marta nach dem dritten Stromausfall in diesem Jahr: „Jedes Mal stürzt der Prüfstand ab, und wir starten die Diagnose neu. Das kostet uns 650 € pro Ausfall.“",
+      "„Eine USV für den Prüfstand kostet 2.400 €. Rechne mir aus, nach wie vielen Monaten sie sich bezahlt macht, wenn es bei 3 Ausfällen im Jahr bleibt.“"
+    ],
+    "frage": "Nach wie vielen Monaten hat sich die USV amortisiert?",
+    "optionen": [
+      "Nach 3,7 Monaten",
+      "Nach 14,8 Monaten",
+      "Nach 1,2 Monaten",
+      "Nie, eine USV spart kein Geld"
+    ],
+    "antwort": "Nach 14,8 Monaten",
+    "hilfe": [
+      "Rechne zuerst aus, was die Ausfälle pro Jahr kosten, dann pro Monat.",
+      "Amortisationszeit = Anschaffungskosten ÷ Einsparung pro Zeitraum."
+    ],
+    "erklaerung": [
+      "Einsparung: 3 × 650 € = 1.950 € pro Jahr, also 162,50 € pro Monat. 2.400 € ÷ 162,50 € = 14,8 Monate.",
+      "Danach spart die USV nur noch: Sie hält den Prüfstand beim kurzen Ausfall am Laufen oder fährt ihn geordnet herunter."
+    ],
+    "suchbegriffe": ["Amortisation", "USV"],
+    "gruppe": "zf-stromausfall"
+  },
+  {
+    "id": "zf-stromausfall#4",
+    "typ": "auswahl",
+    "titel": "Nach dem Stromausfall sind die VLANs weg",
+    "auftraggeber": "svenja",
+    "raum": "serverraum",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"switching": 62},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 120, "reputation": 8},
+    "ab_tag": 78,
+    "ticket": [
+      "Nach einem kurzen Stromausfall ist Svenja fassungslos: „Der Core-Switch ist wieder da, aber die VLANs 30 und 40 von gestern fehlen. Die Kabel sind alle beschriftet, an denen liegt es nicht!“",
+      "„Gestern Abend lief alles. Ich hab's konfiguriert, getestet und bin nach Hause.“"
+    ],
+    "frage": "Was ist die wahrscheinliche Ursache, und was tust du?",
+    "optionen": [
+      "Der Switch ist defekt und muss getauscht werden",
+      "Der Stromausfall hat die Portbeschriftung gelöscht",
+      "Ein Angreifer hat die VLANs gelöscht",
+      "Nur running-config geändert: VLANs neu einspielen und in die startup-config speichern"
+    ],
+    "antwort": "Nur running-config geändert: VLANs neu einspielen und in die startup-config speichern",
+    "hilfe": [
+      "Ein Switch hat eine laufende Konfiguration im Arbeitsspeicher und eine gespeicherte für den Start.",
+      "Was nur im Arbeitsspeicher steht, ist nach einem Stromausfall weg."
+    ],
+    "erklaerung": [
+      "Die Änderungen standen nur in der running-config (RAM). Beim Neustart lädt der Switch die startup-config ohne die neuen VLANs.",
+      "Konfiguration aus der Sicherung wieder einspielen und in die startup-config speichern. Eine USV für den Core-Switch wäre auch kein Fehler."
+    ],
+    "suchbegriffe": ["Switch", "Konfiguration", "VLAN"],
+    "gruppe": "zf-stromausfall"
+  },
+  {
+    "id": "zf-falscher-support#2",
+    "typ": "auswahl",
+    "titel": "Der Lieferant hat „eine neue Bankverbindung“",
+    "auftraggeber": "marta",
+    "raum": "werkstattbuero",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "anforderungen": {"beschaffung": 46},
+    "achsen": ["sicherheit", "zuverlaessigkeit"],
+    "belohnung": {"geld": 80, "reputation": 6},
+    "ab_tag": 31,
+    "ticket": [
+      "Marta legt eine E-Mail auf den Tisch: „Unser Bremsbelag-Lieferant schreibt, er hat ab sofort ein neues Konto. Die offene Rechnung über 18.400 € sollen wir bitte heute noch dorthin überweisen.“",
+      "„Der Absender sieht echt aus. Aber er hatte es noch nie so eilig. Und ich messe Eile in Zugumläufen.“"
+    ],
+    "frage": "Wie geht die Werkstatt richtig vor?",
+    "optionen": [
+      "Heute überweisen, der Absender stimmt ja",
+      "Auf die E-Mail antworten und um Bestätigung bitten",
+      "Beim Lieferanten unter der bekannten Nummer aus den Stammdaten zurückrufen, erst dann ändern",
+      "Die Hälfte auf das alte, die Hälfte auf das neue Konto überweisen"
+    ],
+    "antwort": "Beim Lieferanten unter der bekannten Nummer aus den Stammdaten zurückrufen, erst dann ändern",
+    "hilfe": [
+      "Betrüger ändern gern die Bankverbindung in echten Geschäftsbeziehungen. Die Rechnung ist echt, nur das Konto nicht.",
+      "Eine Rückfrage an die Nummer aus der E-Mail fragt womöglich den Betrüger."
+    ],
+    "erklaerung": [
+      "Eine geänderte Bankverbindung prüft man über einen bekannten Kanal: Rückruf bei der Nummer aus den Stammdaten, dann Vier-Augen-Prinzip bei der Änderung.",
+      "So fällt der Betrug auf, bevor 18.400 € unwiderruflich weg sind."
+    ],
+    "suchbegriffe": ["Social Engineering", "Phishing"],
+    "gruppe": "zf-falscher-support"
+  },
+  {
+    "id": "zf-falscher-support#3",
+    "typ": "zuordnung",
+    "titel": "Der Kopierer-Techniker ohne Termin",
+    "auftraggeber": "lina",
+    "raum": "helpdesk",
+    "prioritaet": "hoch",
+    "cat": "sicherheit",
+    "anforderungen": {"angriffe": 51},
+    "achsen": ["sicherheit", "fachkompetenz"],
+    "belohnung": {"geld": 80, "reputation": 6},
+    "ab_tag": 57,
+    "ticket": [
+      "Lina blättert aufgeregt im Einhorn-Notizbuch: „Eben stand ein Mann in Warnweste am Empfang. ‚Kopiererservice, muss kurz in den Serverraum.‘ Einen Termin gab es nicht. Ich hab ihn warten lassen.“",
+      "„Karin sagt, das hat einen Namen. Mehrere sogar. Ich will sie alle in mein Buch schreiben.“"
+    ],
+    "frage": "Ordne jeder Masche das passende Beispiel zu.",
+    "paare": [
+      ["Phishing", "E-Mail mit Link zur gefälschten Anmeldeseite"],
+      ["Vishing", "Anruf vom angeblichen Support, der ein Passwort will"],
+      ["Tailgating", "Jemand geht dicht hinter dir durch die gesicherte Tür"],
+      ["Baiting", "Beschrifteter USB-Stick „Gehälter 2026“ auf dem Parkplatz"],
+      ["Pretexting", "Erfundener Wartungstermin, um in den Serverraum zu kommen"]
+    ],
+    "hilfe": [
+      "Social Engineering nutzt Hilfsbereitschaft, Zeitdruck und Autorität aus, nicht technische Lücken.",
+      "Die Begriffe unterscheiden sich im Weg: E-Mail, Telefon, Tür oder Köder."
+    ],
+    "erklaerung": [
+      "Phishing kommt per E-Mail, Vishing per Anruf, Tailgating nutzt eine offene Tür, Baiting einen Köder wie einen gefundenen USB-Stick.",
+      "Pretexting ist die erfundene Geschichte, wie beim „Kopierer-Techniker“. Lina hat richtig gehandelt: warten lassen und nachfragen."
+    ],
+    "suchbegriffe": ["Social Engineering", "Phishing", "Tailgating"],
+    "gruppe": "zf-falscher-support"
+  },
+  {
+    "id": "zf-falscher-support#4",
+    "typ": "diagnose",
+    "titel": "Der Vorstand will Gutscheinkarten",
+    "auftraggeber": "wendt",
+    "raum": "leitung_lindenau",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"angriffe": 64},
+    "achsen": ["sicherheit", "kundenzufriedenheit"],
+    "belohnung": {"geld": 125, "reputation": 9},
+    "ab_tag": 82,
+    "ticket": [
+      "Dr. Wendt hat die E-Mail diesmal viermal gelesen: „Der Vorstand schreibt, ich soll für ein vertrauliches Projekt sofort Gutscheinkarten für 5.000 € kaufen und ihm die Codes schicken. Niemandem etwas sagen.“",
+      "„Er schreibt sonst nie ‚Hallo Holger‘.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "absender",
+        "text": "Die vollständige Absenderadresse ansehen",
+        "ergebnis": "vorstand@talbahn-nordlicht.co statt …@talbahn-nordlicht.example",
+        "entscheidend": true
+      },
+      {
+        "id": "antwort",
+        "text": "Im Kopf der E-Mail das Feld „Antwort an“ prüfen",
+        "ergebnis": "Antworten gehen an eine Freemail-Adresse.",
+        "entscheidend": true
+      },
+      {
+        "id": "spf",
+        "text": "Ergebnis der Absenderprüfung im Mail-Kopf ansehen",
+        "ergebnis": "SPF: fail, der sendende Server gehört nicht zur Talbahn."
+      },
+      {"id": "anhang", "text": "Nach Anhängen suchen", "ergebnis": "Keine Anhänge."},
+      {
+        "id": "kalender",
+        "text": "Im Kalender nachsehen, wo der Vorstand heute ist",
+        "ergebnis": "Laut Kalender auf einer Messe, zufällig. Das beweist nichts."
+      }
+    ],
+    "ziel_pruefungen": 3,
+    "ursachen": [
+      "CEO-Fraud: gefälschter Absender, der mit Druck und Geheimhaltung Geld erschleichen will.",
+      "Eine echte, nur ungewöhnlich formulierte Anweisung des Vorstands.",
+      "Ein Virus im Anhang.",
+      "Ein Fehler des Mailservers."
+    ],
+    "ursache": "CEO-Fraud: gefälschter Absender, der mit Druck und Geheimhaltung Geld erschleichen will.",
+    "massnahmen": [
+      "Nichts kaufen, beim Vorstand über bekannte Nummer nachfragen, Mail der IT melden",
+      "Auf die Mail antworten und fragen, ob sie echt ist",
+      "Die Gutscheinkarten kaufen, aber nur die Hälfte",
+      "Die Mail löschen und niemandem davon erzählen"
+    ],
+    "massnahme": "Nichts kaufen, beim Vorstand über bekannte Nummer nachfragen, Mail der IT melden",
+    "hilfe": [
+      "Echte Anweisungen kommen selten mit Geheimhaltung, Zeitdruck und ungewöhnlichem Zahlungsweg zugleich.",
+      "Wer hat die E-Mail wirklich geschickt, und wohin geht die Antwort?"
+    ],
+    "erklaerung": [
+      "Die Absenderdomäne ist nachgemacht, die Antwort geht an ein fremdes Postfach und die Absenderprüfung schlägt fehl: klassischer CEO-Fraud.",
+      "Nicht antworten, nichts kaufen, beim Vorstand über einen bekannten Weg nachfragen und die Mail der IT melden, damit andere gewarnt werden."
+    ],
+    "suchbegriffe": ["CEO-Fraud", "Spoofing", "SPF"],
+    "gruppe": "zf-falscher-support"
+  },
+  {
+    "id": "zf-kaffeemaschine-wlan#2",
+    "typ": "zuordnung",
+    "titel": "Die Hebebühne will ins Werkstatt-WLAN",
+    "auftraggeber": "svenja",
+    "ort": "betriebswerkstatt",
+    "raum": "technik_werkstatt",
+    "prioritaet": "hoch",
+    "cat": "netzwerk",
+    "anforderungen": {"wlan": 46},
+    "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 75, "reputation": 6},
+    "ab_tag": 30,
+    "ticket": [
+      "Svenja, erster Tag, schon im Einsatz: „In der Werkhalle haben die Hebebühnen jetzt Sensoren mit WLAN. Jemand hat sie ins Netz der Diagnose-Laptops gehängt. Und die Mechaniker laden ihre Handys auch dort.“",
+      "„Ich habe schon alles beschriftet. Jetzt bitte noch richtig trennen.“"
+    ],
+    "frage": "Ordne jedes Gerät dem passenden Netz (VLAN) zu.",
+    "paare": [
+      ["Hebebühnen-Sensor mit WLAN", "IoT-Netz, nur zum Auswerte-Server"],
+      ["Privates Handy eines Mechanikers", "Gäste-WLAN, nur Internet"],
+      ["Diagnose-Laptop für die Züge", "Werkstatt-Netz mit Zugriff auf die Teile-Datenbank"],
+      ["Überwachungskamera in der Werkhalle", "Video-Netz zum Rekorder"]
+    ],
+    "hilfe": [
+      "Wem man wenig vertraut, der kommt in ein eigenes Netz ohne Zugriff auf die Diagnose-Daten.",
+      "Kameras erzeugen viel Verkehr und gehören in ein eigenes Netz."
+    ],
+    "erklaerung": [
+      "Die Diagnose-Laptops reden mit den Zügen und der Ersatzteil-Datenbank, sie bekommen das Werkstatt-Netz. Sensoren sind IoT, Handys Gäste, Kameras Video.",
+      "Firewall-Regeln zwischen den VLANs erlauben nur, was nötig ist, zum Beispiel die Sensordaten zum Auswerte-Server."
+    ],
+    "suchbegriffe": ["VLAN", "IoT", "Netzsegmentierung"],
+    "gruppe": "zf-kaffeemaschine-wlan"
+  },
+  {
+    "id": "zf-kaffeemaschine-wlan#3",
+    "typ": "auswahl",
+    "titel": "Der Smart-TV im Besprechungsraum",
+    "auftraggeber": "wendt",
+    "raum": "besprechung_lindenau",
+    "prioritaet": "hoch",
+    "cat": "netzwerk",
+    "anforderungen": {"switching": 52},
+    "achsen": ["sicherheit", "kundenzufriedenheit"],
+    "belohnung": {"geld": 85, "reputation": 6},
+    "ab_tag": 60,
+    "ticket": [
+      "Dr. Wendt hat die Anleitung des neuen Smart-TV zweimal gelesen: „Damit wir Präsentationen drahtlos zeigen können, muss der Fernseher laut Hersteller ins Verwaltungsnetz. Da liegen auch die Personalakten. Das gefällt mir nicht.“"
+    ],
+    "frage": "Wie bindest du den Fernseher sinnvoll an?",
+    "optionen": [
+      "Den TV ins Verwaltungsnetz hängen, wie der Hersteller es will",
+      "Eigenes VLAN für Medien, Firewall erlaubt nur die Bildschirmfreigabe von den Notebooks",
+      "Den TV ins offene Gäste-WLAN, dort dürfen alle Notebooks mit rein",
+      "Den TV gar nicht anschließen, Präsentationen werden ausgedruckt"
+    ],
+    "antwort": "Eigenes VLAN für Medien, Firewall erlaubt nur die Bildschirmfreigabe von den Notebooks",
+    "hilfe": [
+      "Ein Smart-TV bekommt selten Updates und telefoniert gern nach Hause.",
+      "Er muss nur Bildschirm-Freigaben empfangen, nicht auf Daten zugreifen."
+    ],
+    "erklaerung": [
+      "Im eigenen VLAN kann der Fernseher nichts im Verwaltungsnetz erreichen. Eine enge Firewall-Regel erlaubt nur die Bildschirmfreigabe von den Besprechungs-Notebooks.",
+      "So bleibt der Komfort, und die Personalakten sind trotzdem geschützt."
+    ],
+    "suchbegriffe": ["VLAN", "Firewall", "IoT"],
+    "gruppe": "zf-kaffeemaschine-wlan"
+  },
+  {
+    "id": "zf-kaffeemaschine-wlan#4",
+    "typ": "diagnose",
+    "titel": "Fahrgäste sehen die Drucker des Service-Points",
+    "auftraggeber": "svenja",
+    "ort": "talheim_nord",
+    "raum": "warteraum_nord",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"switching": 68},
+    "achsen": ["sicherheit", "zuverlaessigkeit"],
+    "belohnung": {"geld": 130, "reputation": 9},
+    "ab_tag": 88,
+    "ticket": [
+      "Svenja liest eine Beschwerde vor: „Ich saß im Warteraum in Talheim-Nord, im Fahrgast-WLAN. Mein Laptop wollte mir zwei Drucker und ein Laufwerk ‚SERVICE‘ einrichten. Ist das Absicht?“",
+      "„Absicht ist es nicht. Aber irgendwer hat nach dem Tausch des Access Points gestern nicht beschriftet, was er tut.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "adresse",
+        "text": "Mit einem Test-Laptop ins Fahrgast-WLAN und ipconfig ausführen",
+        "ergebnis": "IPv4-Adresse 10.12.0.87, Gateway 10.12.0.1. Das ist das Service-Netz, nicht das Gäste-Netz 10.12.50.0/24.",
+        "entscheidend": true
+      },
+      {
+        "id": "ap",
+        "text": "Am neuen Access Point die SSID-Einstellungen ansehen",
+        "ergebnis": "SSID „Talbahn-Gast“ → VLAN 10 (Service). Laut Plan: VLAN 50.",
+        "entscheidend": true
+      },
+      {
+        "id": "firewall",
+        "text": "Firewall-Regeln für das Gäste-VLAN ansehen",
+        "ergebnis": "VLAN 50 darf nur ins Internet. Die Regel ist in Ordnung."
+      },
+      {
+        "id": "passwort",
+        "text": "WLAN-Passwort des Fahrgast-Netzes prüfen",
+        "ergebnis": "Wie immer, hängt im Warteraum aus."
+      },
+      {
+        "id": "kanal",
+        "text": "Funkkanäle und Signalstärke messen",
+        "ergebnis": "Kanal 36, gutes Signal im ganzen Warteraum."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Die SSID des Fahrgast-WLANs ist am neuen Access Point dem Service-VLAN zugeordnet.",
+      "Die Firewall-Regel für das Gäste-VLAN ist falsch.",
+      "Das WLAN-Passwort ist bekannt geworden.",
+      "Die Drucker senden zu starke Funksignale."
+    ],
+    "ursache": "Die SSID des Fahrgast-WLANs ist am neuen Access Point dem Service-VLAN zugeordnet.",
+    "massnahmen": [
+      "SSID „Talbahn-Gast“ dem VLAN 50 zuordnen und mit einem Gerät im WLAN gegenprüfen",
+      "Das WLAN-Passwort ändern",
+      "Die Drucker im Service-Point ausschalten",
+      "Das Fahrgast-WLAN dauerhaft abschalten"
+    ],
+    "massnahme": "SSID „Talbahn-Gast“ dem VLAN 50 zuordnen und mit einem Gerät im WLAN gegenprüfen",
+    "hilfe": [
+      "Welche Adresse bekommt ein Gerät im Fahrgast-WLAN? Daran erkennst du, in welchem Netz es landet.",
+      "Eine SSID wird am Access Point einem VLAN zugeordnet."
+    ],
+    "erklaerung": [
+      "Das Test-Gerät im Fahrgast-WLAN bekommt eine Adresse aus dem Service-Netz: Beim Tausch wurde die SSID dem falschen VLAN zugeordnet.",
+      "Die SSID gehört ins Gäste-VLAN 50, das die Firewall nur ins Internet lässt. Danach mit einem Gerät im WLAN gegenprüfen."
+    ],
+    "suchbegriffe": ["SSID", "VLAN", "Gäste-WLAN"],
+    "gruppe": "zf-kaffeemaschine-wlan"
+  },
+  {
+    "id": "zf-datei-geloescht#2",
+    "typ": "auswahl",
+    "titel": "DELETE ohne WHERE in der Teile-Datenbank",
+    "auftraggeber": "marta",
+    "raum": "teilelager",
+    "prioritaet": "kritisch",
+    "cat": "datenbanken",
+    "anforderungen": {"db_betrieb": 48},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 95, "reputation": 7},
+    "ab_tag": 36,
+    "ticket": [
+      "Marta, ungewohnt leise: „Unser Aushilfe wollte in der Ersatzteil-Datenbank einen Bremsschlauch löschen. Er hat DELETE FROM teil abgeschickt. Ohne alles dahinter. Um 10:42 Uhr.“",
+      "„Seitdem ist das Lager laut Computer leer. Die Vollsicherung ist von heute Nacht, das Transaktionsprotokoll wird alle 15 Minuten gesichert.“"
+    ],
+    "frage": "Wie stellst du den Stand von kurz vor dem Fehler wieder her?",
+    "optionen": [
+      "Nur die Vollsicherung von heute Nacht einspielen",
+      "Vollsicherung einspielen und die Protokollsicherungen bis 10:41 Uhr nachfahren",
+      "Mit ROLLBACK zurücknehmen, der Befehl ist ja erst eine Stunde her",
+      "Alle Teile von Hand aus den Lieferscheinen neu erfassen"
+    ],
+    "antwort": "Vollsicherung einspielen und die Protokollsicherungen bis 10:41 Uhr nachfahren",
+    "hilfe": [
+      "Die Vollsicherung allein würde alle Buchungen von heute Morgen verlieren.",
+      "Die Protokollsicherungen enthalten jede Änderung seit der Vollsicherung, auch mit Uhrzeit."
+    ],
+    "erklaerung": [
+      "Vollsicherung einspielen und die Protokollsicherungen bis 10:41 Uhr nachfahren (Point-in-Time-Wiederherstellung). So fehlt nur der fehlerhafte Befehl.",
+      "Ohne WHERE löscht DELETE alle Zeilen einer Tabelle. Vorher mit SELECT und derselben Bedingung prüfen, was getroffen wird."
+    ],
+    "suchbegriffe": ["DELETE", "WHERE", "Transaktion"],
+    "gruppe": "zf-datei-geloescht"
+  },
+  {
+    "id": "zf-datei-geloescht#3",
+    "typ": "terminal",
+    "titel": "Lina hat die Vorlage überschrieben",
+    "auftraggeber": "lina",
+    "raum": "helpdesk",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"storage": 53},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 90, "reputation": 6},
+    "ab_tag": 62,
+    "ticket": [
+      "Lina klappt das Einhorn-Notizbuch zu: „Ich habe die Vorlage ‚Abnahmeprotokoll.odt‘ auf dem Linux-Dateiserver aus Versehen mit meinem Entwurf überschrieben. Alle brauchen sie heute.“",
+      "„Laut meinem Buch macht der Server jede Nacht einen Snapshot. Holst du die Datei da raus?“"
+    ],
+    "frage": "Wähle in jedem Schritt den passenden Befehl.",
+    "system": "linux",
+    "prompt": "root@dateiserver:~#",
+    "start": ["Server dateiserver, Freigabe /srv/vorlagen"],
+    "schritte": [
+      {
+        "ziel": "Die vorhandenen Snapshots anzeigen",
+        "befehle": [
+          {
+            "befehl": "ls /srv/vorlagen/.snapshots",
+            "ausgabe": ["gestern-nacht  vorgestern-nacht  vor-einer-woche"],
+            "richtig": true
+          },
+          {
+            "befehl": "df -h /srv/vorlagen",
+            "ausgabe": ["Dateisystem  Größe Benutzt Verf. Verw%", "/dev/sdb1     2,0T    1,1T  0,9T   55%"],
+            "hinweis": "df zeigt den Füllstand, aber keine Snapshots."
+          },
+          {
+            "befehl": "rm /srv/vorlagen/Abnahmeprotokoll.odt",
+            "ausgabe": ["# Jetzt ist auch Linas Entwurf weg."],
+            "gefaehrlich": true,
+            "hinweis": "Löschen hilft nicht. Erst die alte Fassung finden."
+          }
+        ]
+      },
+      {
+        "ziel": "Die Datei im Snapshot von gestern Nacht finden",
+        "befehle": [
+          {
+            "befehl": "ls -l /srv/vorlagen/.snapshots/gestern-nacht/",
+            "ausgabe": [
+              "-rw-rw---- 1 root vorlagen 48213 Abnahmeprotokoll.odt",
+              "-rw-rw---- 1 root vorlagen 22108 Urlaubsantrag.odt"
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "cat /srv/vorlagen/Abnahmeprotokoll.odt",
+            "ausgabe": ["PK … lauter Binärzeichen"],
+            "hinweis": "Das zeigt Linas überschriebene Fassung, und die auch noch als Binärsalat."
+          }
+        ]
+      },
+      {
+        "ziel": "Die Datei zurückkopieren und Rechte behalten",
+        "befehle": [
+          {
+            "befehl": "rsync -a --delete /srv/vorlagen/.snapshots/gestern-nacht/ /srv/vorlagen/",
+            "ausgabe": ["# Alle Änderungen von heute sind weg,", "# auch die der anderen Kolleginnen."],
+            "gefaehrlich": true,
+            "hinweis": "--delete gleicht die ganze Freigabe auf den alten Stand ab und löscht alles Neue von heute."
+          },
+          {
+            "befehl": "cp -p /srv/vorlagen/.snapshots/gestern-nacht/Abnahmeprotokoll.odt /srv/vorlagen/",
+            "ausgabe": [],
+            "richtig": true
+          },
+          {
+            "befehl": "mv /srv/vorlagen/.snapshots/gestern-nacht/Abnahmeprotokoll.odt /srv/vorlagen/",
+            "ausgabe": ["mv: kann nicht verschieben: Dateisystem ist nur lesbar"],
+            "hinweis": "Snapshots sind schreibgeschützt. Man kopiert aus ihnen heraus."
+          }
+        ]
+      },
+      {
+        "ziel": "Das Ergebnis kontrollieren",
+        "befehle": [
+          {
+            "befehl": "ls -l /srv/vorlagen/Abnahmeprotokoll.odt",
+            "ausgabe": ["-rw-rw---- 1 root vorlagen 48213 Abnahmeprotokoll.odt"],
+            "richtig": true
+          },
+          {
+            "befehl": "chmod 777 /srv/vorlagen/Abnahmeprotokoll.odt",
+            "ausgabe": ["# Jetzt darf jeder alles mit der Datei."],
+            "gefaehrlich": true,
+            "hinweis": "777 gibt allen volle Rechte. Die alten Rechte sind mit cp -p schon richtig."
+          }
+        ]
+      }
+    ],
+    "hilfe": [
+      "Snapshots liegen als schreibgeschützte Ordner neben den Daten. Erst ansehen, dann gezielt kopieren.",
+      "cp -p behält Rechte und Zeitstempel. Befehle, die ganze Verzeichnisse abgleichen oder löschen, haben hier nichts zu suchen."
+    ],
+    "erklaerung": [
+      "Richtig: ls /srv/vorlagen/.snapshots → ls -l …/2026-nachtlauf/ → cp -p aus dem Snapshot → ls -l zur Kontrolle.",
+      "Die Datei kommt einzeln zurück, der Rest der Freigabe bleibt unberührt."
+    ],
+    "suchbegriffe": ["Snapshot", "Datensicherung"],
+    "gruppe": "zf-datei-geloescht"
+  },
+  {
+    "id": "zf-datei-geloescht#4",
+    "typ": "auswahl",
+    "titel": "Die Akte ist seit zehn Tagen weg",
+    "auftraggeber": "wendt",
+    "raum": "archiv_lindenau",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"storage": 69},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 125, "reputation": 8},
+    "ab_tag": 90,
+    "ticket": [
+      "Dr. Wendt: „Die digitalisierte Bauakte Lindenau-Süd fehlt im Archiv. Laut Protokoll gelöscht am 16. März um 11:20 Uhr. Gemerkt haben wir es heute, am 26. März.“",
+      "Gesichert wird nach dem Generationenprinzip: Tagessicherung Montag bis Donnerstag jeweils abends (eine Woche aufbewahrt), Wochensicherung freitags (4 Wochen), Monatssicherung am letzten Freitag im Monat (12 Monate)."
+    ],
+    "frage": "Aus welcher Sicherung holst du die Akte am besten zurück?",
+    "optionen": [
+      "Tagessicherung vom Montag, 16. März abends",
+      "Wochensicherung vom Freitag, 13. März",
+      "Wochensicherung vom Freitag, 20. März",
+      "Monatssicherung vom Freitag, 27. Februar"
+    ],
+    "antwort": "Wochensicherung vom Freitag, 13. März",
+    "hilfe": [
+      "Die Datei wurde am Montag tagsüber gelöscht. Welche Sicherung ist die jüngste, die vorher gelaufen ist?",
+      "Gibt es mehrere Sicherungen mit der Datei, nimmt man die jüngste davon."
+    ],
+    "erklaerung": [
+      "Die Tagessicherung vom Montagabend lief schon nach dem Löschen. Die jüngste Sicherung davor ist die Wochensicherung vom Freitag, 13. März.",
+      "Die Monatssicherung vom 27. Februar enthält die Akte zwar auch, aber in einem älteren Stand."
+    ],
+    "suchbegriffe": ["Generationenprinzip", "Backup"],
+    "gruppe": "zf-datei-geloescht"
+  },
+  {
+    "id": "zf-zertifikat-abgelaufen#2",
+    "typ": "diagnose",
+    "titel": "Kein Notebook kommt mehr ins Firmen-WLAN",
+    "auftraggeber": "svenja",
+    "raum": "serverraum",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"wlan": 47},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 90, "reputation": 7},
+    "ab_tag": 34,
+    "ticket": [
+      "Svenja: „Seit heute früh verbindet sich kein Notebook mehr mit ‚Bitweiche-Intern‘. Das Gäste-WLAN geht. Die Kabel sind es nicht, die habe ich alle beschriftet.“",
+      "„Die Anmeldung läuft über WPA2-Enterprise mit dem RADIUS-Server. Gestern ging noch alles.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "log",
+        "text": "Das Protokoll des RADIUS-Servers ansehen",
+        "ergebnis": "Viele Anfragen, alle mit „TLS handshake failed: certificate expired“.",
+        "entscheidend": true
+      },
+      {
+        "id": "cert",
+        "text": "Das Serverzertifikat des RADIUS-Servers anzeigen",
+        "ergebnis": "Gültig bis: heute, 00:00 Uhr.",
+        "entscheidend": true
+      },
+      {
+        "id": "gast",
+        "text": "Mit einem Notebook ins Gäste-WLAN",
+        "ergebnis": "Verbindung klappt sofort."
+      },
+      {
+        "id": "ap",
+        "text": "Status der Access Points im Controller ansehen",
+        "ergebnis": "Alle 6 Access Points online, keine Fehler."
+      },
+      {
+        "id": "konto",
+        "text": "Ein Benutzerkonto im Verzeichnisdienst prüfen",
+        "ergebnis": "Konto aktiv, Passwort nicht abgelaufen."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Das Serverzertifikat des RADIUS-Servers ist abgelaufen.",
+      "Die Access Points sind ausgefallen.",
+      "Alle Benutzerpasswörter sind abgelaufen.",
+      "Das WLAN-Passwort wurde geändert."
+    ],
+    "ursache": "Das Serverzertifikat des RADIUS-Servers ist abgelaufen.",
+    "massnahmen": [
+      "Neues Serverzertifikat ausstellen, im RADIUS einbinden, Ablauf ins Monitoring aufnehmen",
+      "Auf den Notebooks die Zertifikatsprüfung abschalten",
+      "Alle Mitarbeitenden ins Gäste-WLAN schicken",
+      "Die Access Points neu starten"
+    ],
+    "massnahme": "Neues Serverzertifikat ausstellen, im RADIUS einbinden, Ablauf ins Monitoring aufnehmen",
+    "unsicher": [
+      "Auf den Notebooks die Zertifikatsprüfung abschalten",
+      "Alle Mitarbeitenden ins Gäste-WLAN schicken"
+    ],
+    "hilfe": [
+      "Bei WPA2-Enterprise weist sich der RADIUS-Server mit einem Zertifikat aus. Die Notebooks prüfen es.",
+      "Wenn das Gäste-WLAN mit Passwort funktioniert, sind Funk und Access Points in Ordnung."
+    ],
+    "erklaerung": [
+      "Das Serverzertifikat des RADIUS-Servers ist heute Nacht abgelaufen. Die Notebooks lehnen die Anmeldung zu Recht ab.",
+      "Neues Zertifikat ausstellen, im RADIUS einbinden und Ablaufdaten ins Monitoring aufnehmen. Die Prüfung auf den Clients abzuschalten würde Angreifern die Tür öffnen."
+    ],
+    "suchbegriffe": ["RADIUS", "802.1X", "Zertifikat"],
+    "gruppe": "zf-zertifikat-abgelaufen"
+  },
+  {
+    "id": "zf-zertifikat-abgelaufen#3",
+    "typ": "auswahl",
+    "titel": "Das Intranet in Lindenau „ist nicht sicher“",
+    "auftraggeber": "wendt",
+    "raum": "empfang_lindenau",
+    "prioritaet": "hoch",
+    "cat": "sicherheit",
+    "anforderungen": {"krypto": 51},
+    "achsen": ["fachkompetenz", "sicherheit"],
+    "belohnung": {"geld": 80, "reputation": 6},
+    "ab_tag": 57,
+    "ticket": [
+      "Dr. Wendt hat die Warnung dreimal gelesen: „NET::ERR_CERT_COMMON_NAME_INVALID. Seit wir das Intranet unter intranet.lindenau.talbahn.example aufrufen, warnt der Browser. Unter dem alten Namen ging es.“",
+      "Das Zertifikat ist gültig bis nächstes Jahr und wurde für „srv-web01.talbahn.example“ ausgestellt."
+    ],
+    "frage": "Was ist die Ursache, und was tust du?",
+    "optionen": [
+      "Das Zertifikat ist abgelaufen: einfach verlängern",
+      "Der neue Name fehlt im Zertifikat: neues Zertifikat mit beiden Namen im SAN ausstellen",
+      "Den Mitarbeitenden zeigen, wie man die Warnung wegklickt",
+      "Das Intranet auf HTTP umstellen, intern ist das egal"
+    ],
+    "antwort": "Der neue Name fehlt im Zertifikat: neues Zertifikat mit beiden Namen im SAN ausstellen",
+    "hilfe": [
+      "Der Browser vergleicht den aufgerufenen Namen mit den Namen im Zertifikat.",
+      "Ein Zertifikat kann mehrere Namen enthalten, dafür gibt es ein eigenes Feld."
+    ],
+    "erklaerung": [
+      "Der neue Name steht nicht im Zertifikat. Ein neues Zertifikat mit beiden Namen im Feld Subject Alternative Name (SAN) behebt die Warnung.",
+      "Warnungen wegzuklicken oder HTTP zu verwenden würde den Schutz vor gefälschten Servern aufheben."
+    ],
+    "suchbegriffe": ["Zertifikat", "HTTPS", "TLS"],
+    "gruppe": "zf-zertifikat-abgelaufen"
+  },
+  {
+    "id": "zf-zertifikat-abgelaufen#4",
+    "typ": "terminal",
+    "titel": "Neues Zertifikat, alte Warnung",
+    "auftraggeber": "petra",
+    "raum": "it_buero",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"krypto": 63},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 120, "reputation": 9},
+    "ab_tag": 80,
+    "ticket": [
+      "Petra, heute ausnahmsweise pünktlich: „Das Zertifikat der Fahrplanauskunft läuft morgen ab. Der Erneuerungsdienst hat gestern schon ein neues geholt, sagt das Protokoll. Aber der Browser zeigt immer noch das alte Ablaufdatum!“"
+    ],
+    "frage": "Wähle in jedem Schritt den passenden Befehl.",
+    "system": "linux",
+    "prompt": "root@auskunft:~#",
+    "start": ["Server auskunft, Webserver nginx"],
+    "schritte": [
+      {
+        "ziel": "Prüfen, welches Ablaufdatum der Server ausliefert",
+        "befehle": [
+          {
+            "befehl": "openssl s_client -connect localhost:443 </dev/null | openssl x509 -noout -enddate",
+            "ausgabe": ["notAfter=Sep 30 23:59:59 2026 GMT"],
+            "richtig": true
+          },
+          {
+            "befehl": "ping fahrplan.talbahn.example",
+            "ausgabe": ["64 bytes from 203.0.113.20: time=0.4 ms"],
+            "hinweis": "Ping zeigt nur, dass der Server antwortet, nichts über das Zertifikat."
+          }
+        ]
+      },
+      {
+        "ziel": "Das Ablaufdatum der Zertifikatsdatei auf der Platte prüfen",
+        "befehle": [
+          {
+            "befehl": "openssl x509 -in /etc/ssl/fahrplan/fullchain.pem -noout -enddate",
+            "ausgabe": ["notAfter=Dec 28 23:59:59 2026 GMT"],
+            "richtig": true
+          },
+          {
+            "befehl": "rm /etc/ssl/fahrplan/fullchain.pem",
+            "ausgabe": ["# Das neue Zertifikat ist weg."],
+            "gefaehrlich": true,
+            "hinweis": "Die Datei ist neu und richtig. Löschen macht alles schlimmer."
+          },
+          {
+            "befehl": "cat /etc/ssl/fahrplan/privkey.pem",
+            "ausgabe": [
+              "-----BEGIN PRIVATE KEY-----",
+              "Petra: „Den privaten Schlüssel zeigt man nicht herum!“"
+            ],
+            "gefaehrlich": true,
+            "hinweis": "Der private Schlüssel gehört nicht auf den Bildschirm. Das Ablaufdatum steht im Zertifikat."
+          }
+        ]
+      },
+      {
+        "ziel": "Den Webserver das neue Zertifikat laden lassen",
+        "befehle": [
+          {"befehl": "systemctl reload nginx", "ausgabe": [], "richtig": true},
+          {
+            "befehl": "systemctl stop nginx",
+            "ausgabe": ["# Die Fahrplanauskunft ist jetzt offline."],
+            "hinweis": "stop beendet den Dienst. reload lädt die Zertifikate ohne Ausfall."
+          },
+          {
+            "befehl": "systemctl enable nginx",
+            "ausgabe": ["# nginx war schon im Autostart."],
+            "hinweis": "enable betrifft den Autostart, nicht das Neuladen."
+          }
+        ]
+      },
+      {
+        "ziel": "Kontrollieren, ob jetzt das neue Zertifikat ausgeliefert wird",
+        "befehle": [
+          {
+            "befehl": "openssl s_client -connect localhost:443 </dev/null | openssl x509 -noout -enddate",
+            "ausgabe": ["notAfter=Dec 28 23:59:59 2026 GMT"],
+            "richtig": true
+          },
+          {
+            "befehl": "systemctl status nginx",
+            "ausgabe": ["● nginx.service - A high performance web server", "     Active: active (running)"],
+            "hinweis": "Der Dienst läuft, aber welches Zertifikat er ausliefert, sieht man so nicht."
+          }
+        ]
+      }
+    ],
+    "hilfe": [
+      "Vergleiche, was der Server ausliefert, mit dem, was auf der Platte liegt.",
+      "Ein Webserver liest seine Zertifikate beim Start oder beim Neuladen der Konfiguration."
+    ],
+    "erklaerung": [
+      "Die neue Zertifikatsdatei lag schon auf der Platte, nginx hat aber noch das alte Zertifikat im Speicher. systemctl reload nginx lädt es ohne Unterbrechung.",
+      "Damit das nicht wieder passiert, lädt ein Hook nach jeder Erneuerung den Webserver neu."
+    ],
+    "suchbegriffe": ["Zertifikat", "systemctl", "TLS"],
+    "gruppe": "zf-zertifikat-abgelaufen"
+  },
+  {
+    "id": "zf-raid-platte#2",
+    "typ": "diagnose",
+    "titel": "Das Werkstatt-NAS piept",
+    "auftraggeber": "ulla",
+    "ort": "betriebswerkstatt",
+    "raum": "technik_werkstatt",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"storage": 49},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 85, "reputation": 6},
+    "ab_tag": 38,
+    "ticket": [
+      "Ulla am Telefon aus der Betriebswerkstatt: „Das NAS mit den Prüfprotokollen piept. Zwei Platten im RAID 1. Marta sagt, es piept schon seit ‚ungefähr drei Zugumläufen‘.“",
+      "„Bevor du irgendwas ziehst: erst schauen, dann denken, dann tauschen.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "status",
+        "text": "Status des RAID-Verbunds im NAS ansehen",
+        "ergebnis": "RAID 1 „degraded“: Platte 2 ausgefallen, Platte 1 aktiv.",
+        "entscheidend": true
+      },
+      {
+        "id": "backup",
+        "text": "Datum der letzten erfolgreichen Sicherung prüfen",
+        "ergebnis": "Letzte erfolgreiche Sicherung vor 9 Tagen. Danach: „Ziel nicht erreichbar“.",
+        "entscheidend": true
+      },
+      {
+        "id": "smart",
+        "text": "SMART-Werte von Platte 1 ansehen",
+        "ergebnis": "Keine neu zugewiesenen Sektoren, Temperatur 36 °C. Gesund."
+      },
+      {"id": "luefter", "text": "Lüfter des NAS prüfen", "ergebnis": "Dreht, keine Geräusche."},
+      {
+        "id": "netz",
+        "text": "Netzwerkverbindung des NAS testen",
+        "ergebnis": "Link 1 Gbit/s, Ping in Ordnung."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Platte 2 ist ausgefallen, und die Sicherung ist seit 9 Tagen nicht gelaufen.",
+      "Der Lüfter des NAS ist defekt.",
+      "Das Netzwerk zum NAS ist gestört.",
+      "Platte 1 ist ausgefallen."
+    ],
+    "ursache": "Platte 2 ist ausgefallen, und die Sicherung ist seit 9 Tagen nicht gelaufen.",
+    "massnahmen": [
+      "Zuerst eine aktuelle Sicherung erstellen, dann Platte 2 tauschen und den Rebuild abwarten",
+      "Sofort Platte 2 tauschen, die Sicherung kann warten",
+      "Platte 1 ziehen, um zu testen, ob Platte 2 wirklich tot ist",
+      "Das RAID neu anlegen"
+    ],
+    "massnahme": "Zuerst eine aktuelle Sicherung erstellen, dann Platte 2 tauschen und den Rebuild abwarten",
+    "unsicher": ["Platte 1 ziehen, um zu testen, ob Platte 2 wirklich tot ist", "Das RAID neu anlegen"],
+    "hilfe": [
+      "Im RAID 1 hält eine Platte alles, solange die andere fehlt. Aber wie gut ist diese eine noch, und gibt es eine Sicherung?",
+      "Ein Rebuild liest die gesamte verbleibende Platte."
+    ],
+    "erklaerung": [
+      "Platte 2 ist ausgefallen, und die letzte Sicherung ist neun Tage alt. Stirbt beim Rebuild auch Platte 1, wären neun Tage Prüfprotokolle weg.",
+      "Deshalb zuerst eine aktuelle Sicherung ziehen, dann die Platte tauschen und den Rebuild abwarten. RAID ersetzt keine Datensicherung."
+    ],
+    "suchbegriffe": ["RAID 1", "SMART", "Backup"],
+    "gruppe": "zf-raid-platte"
+  },
+  {
+    "id": "zf-raid-platte#3",
+    "typ": "zuordnung",
+    "titel": "Nach dem zweiten Plattenausfall: neu planen",
+    "auftraggeber": "ulla",
+    "raum": "serverraum",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"storage": 54},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 90, "reputation": 6},
+    "ab_tag": 64,
+    "ticket": [
+      "Ulla streichelt den Dateiserver: „Zweiter Plattenausfall in diesem Jahr. Er tut mir leid. Wir bauen das Array mit 4 neuen Platten zu je 4 TB neu auf.“",
+      "„Bevor wir uns entscheiden: Was bringt uns welches RAID?“"
+    ],
+    "frage": "Ordne jedem RAID-Level mit 4 × 4 TB Kapazität und Ausfallsicherheit zu.",
+    "paare": [
+      ["RAID 0", "16 TB nutzbar, keine Platte darf ausfallen"],
+      ["RAID 5", "12 TB nutzbar, eine Platte darf ausfallen"],
+      ["RAID 6", "8 TB nutzbar, zwei beliebige Platten dürfen ausfallen"],
+      ["RAID 10", "8 TB nutzbar, je Spiegelpaar darf eine Platte ausfallen"]
+    ],
+    "hilfe": [
+      "RAID 5 opfert die Kapazität einer Platte für Parität, RAID 6 die von zwei.",
+      "RAID 10 spiegelt je zwei Platten und verbindet die Spiegel."
+    ],
+    "erklaerung": [
+      "RAID 0: 16 TB, keine Reserve. RAID 5: 12 TB, eine Platte darf ausfallen. RAID 6: 8 TB, zwei beliebige.",
+      "RAID 10: 8 TB, je Spiegelpaar darf eine Platte ausfallen. Nach zwei Ausfällen im Jahr ist RAID 6 die sichere Wahl."
+    ],
+    "suchbegriffe": ["RAID 6", "RAID 10", "RAID"],
+    "gruppe": "zf-raid-platte"
+  },
+  {
+    "id": "zf-raid-platte#4",
+    "typ": "terminal",
+    "titel": "Software-RAID in Talheim: [U_]",
+    "auftraggeber": "petra",
+    "raum": "technikraum",
+    "prioritaet": "hoch",
+    "cat": "systeme",
+    "anforderungen": {"storage": 70},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 125, "reputation": 9},
+    "ab_tag": 92,
+    "ticket": [
+      "Petra: „Der Linux-Server im Technikraum hat ein Software-RAID 1 aus sda und sdb. Die Überwachung meldet ‚degraded‘. Mehmet hat die defekte sdb schon gegen eine neue, gleich große getauscht.“",
+      "„Bring das Array wieder zusammen. Ich bin übrigens schon seit 7 Uhr hier. Nur damit das mal jemand weiß.“"
+    ],
+    "frage": "Wähle in jedem Schritt den passenden Befehl.",
+    "system": "linux",
+    "prompt": "root@technik-tal:~#",
+    "start": ["Neue Platte /dev/sdb eingebaut (leer)"],
+    "schritte": [
+      {
+        "ziel": "Den Zustand des RAID anzeigen",
+        "befehle": [
+          {
+            "befehl": "cat /proc/mdstat",
+            "ausgabe": ["md0 : active raid1 sda1[0]", "      976630464 blocks [2/1] [U_]"],
+            "richtig": true
+          },
+          {
+            "befehl": "free -h",
+            "ausgabe": ["Mem:  15Gi  4,1Gi  9,8Gi"],
+            "hinweis": "free zeigt den Arbeitsspeicher, nicht das RAID."
+          }
+        ]
+      },
+      {
+        "ziel": "Die Partitionstabelle von sda auf die neue sdb übertragen",
+        "befehle": [
+          {
+            "befehl": "dd if=/dev/zero of=/dev/sda bs=1M",
+            "ausgabe": ["Petra reißt die Tastatur weg: „DAS ist die GESUNDE Platte!“"],
+            "gefaehrlich": true,
+            "hinweis": "Das überschreibt die einzige noch funktionierende Platte mit Nullen."
+          },
+          {
+            "befehl": "sfdisk -d /dev/sda | sfdisk /dev/sdb",
+            "ausgabe": [
+              "Checking that no-one is using this disk right now ... OK",
+              "/dev/sdb1 : start=2048, type=fd",
+              "The partition table has been altered."
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "mkfs.ext4 /dev/sdb",
+            "ausgabe": ["# Dateisystem auf der ganzen Platte, ohne Partition."],
+            "hinweis": "Ein RAID-Mitglied bekommt kein eigenes Dateisystem, sondern dieselbe Partition wie sda."
+          }
+        ]
+      },
+      {
+        "ziel": "Die neue Partition dem RAID hinzufügen",
+        "befehle": [
+          {
+            "befehl": "mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda1 /dev/sdb1",
+            "ausgabe": [
+              "mdadm: /dev/sda1 appears to be part of a raid array",
+              "Petra: „Neu anlegen? Mit unseren Daten drauf? Nein!“"
+            ],
+            "gefaehrlich": true,
+            "hinweis": "--create legt ein neues Array an und gefährdet die Daten. Ins bestehende Array fügt man mit --add hinzu."
+          },
+          {
+            "befehl": "mdadm --manage /dev/md0 --add /dev/sdb1",
+            "ausgabe": ["mdadm: added /dev/sdb1"],
+            "richtig": true
+          },
+          {
+            "befehl": "mount /dev/sdb1 /mnt",
+            "ausgabe": ["mount: wrong fs type, bad option, bad superblock"],
+            "hinweis": "Die neue Partition ist leer. Sie wird dem RAID hinzugefügt, nicht eingehängt."
+          }
+        ]
+      },
+      {
+        "ziel": "Den Rebuild beobachten",
+        "befehle": [
+          {
+            "befehl": "cat /proc/mdstat",
+            "ausgabe": [
+              "md0 : active raid1 sdb1[2] sda1[0]",
+              "      [2/1] [U_]  recovery = 12.4% finish=48.2min"
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "reboot",
+            "ausgabe": ["# Der Rebuild fängt nach dem Start von vorne an."],
+            "hinweis": "Ein Neustart unterbricht den Rebuild. Beobachten reicht."
+          }
+        ]
+      }
+    ],
+    "hilfe": [
+      "/proc/mdstat zeigt den Zustand aller Software-RAIDs. [U_] heißt: eine Platte fehlt.",
+      "Die neue Platte braucht dieselbe Partitionierung wie die gesunde, dann wird sie dem Array hinzugefügt."
+    ],
+    "erklaerung": [
+      "Richtig: cat /proc/mdstat → sfdisk -d /dev/sda | sfdisk /dev/sdb → mdadm --manage /dev/md0 --add /dev/sdb1 → cat /proc/mdstat.",
+      "Der Rebuild spiegelt sda1 auf die neue sdb1. mdadm --create oder dd auf sda würde die gesunde Platte zerstören."
+    ],
+    "suchbegriffe": ["RAID 1", "Linux"],
+    "gruppe": "zf-raid-platte"
+  },
+  {
+    "id": "zf-doppelte-rechnung#2",
+    "typ": "auswahl",
+    "titel": "Jeder Bremsschlauch steht doppelt im Lager",
+    "auftraggeber": "marta",
+    "raum": "teilelager",
+    "prioritaet": "hoch",
+    "cat": "datenbanken",
+    "anforderungen": {"modellierung": 50},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 90, "reputation": 7},
+    "ab_tag": 40,
+    "ticket": [
+      "Marta zeigt auf die Liste: „Seit dem Import der Lieferantendaten steht jeder Bremsschlauch zweimal in der Ersatzteil-Datenbank. Gleiche Teilenummer, zwei Zeilen. Welcher Bestand stimmt denn jetzt?“",
+      "„Die Dubletten räumen wir auf. Aber wie verhindern wir, dass das beim nächsten Import wieder passiert?“"
+    ],
+    "frage": "Welche Maßnahme verhindert doppelte Teilenummern dauerhaft?",
+    "optionen": [
+      "Nach jedem Import SELECT DISTINCT auf die Tabelle ausführen",
+      "teil_nr als Primärschlüssel (oder UNIQUE) festlegen, dann lehnt die Datenbank Dubletten ab",
+      "Einen Index ohne Einschränkung auf teil_nr anlegen",
+      "Die Spalte teil_nr als NOT NULL definieren"
+    ],
+    "antwort": "teil_nr als Primärschlüssel (oder UNIQUE) festlegen, dann lehnt die Datenbank Dubletten ab",
+    "hilfe": [
+      "Die Datenbank selbst kann doppelte Werte ablehnen, wenn man es ihr sagt.",
+      "Ein Schlüssel identifiziert jede Zeile eindeutig."
+    ],
+    "erklaerung": [
+      "Mit einem Primärschlüssel (oder UNIQUE-Constraint) auf teil_nr lehnt die Datenbank jede zweite Zeile mit derselben Nummer ab, auch beim Import.",
+      "Regeln im Import-Skript allein helfen nicht, wenn jemand anders importiert. Die Datenbank sichert ihre Integrität selbst."
+    ],
+    "suchbegriffe": ["Primärschlüssel", "UNIQUE", "Integrität"],
+    "gruppe": "zf-doppelte-rechnung"
+  },
+  {
+    "id": "zf-doppelte-rechnung#3",
+    "typ": "auswahl",
+    "titel": "Die doppelte Buchung löschen, aber nur eine",
+    "auftraggeber": "wendt",
+    "raum": "buchhaltung_lindenau",
+    "prioritaet": "hoch",
+    "cat": "datenbanken",
+    "anforderungen": {"sql": 56},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 95, "reputation": 6},
+    "ab_tag": 66,
+    "ticket": [
+      "Dr. Wendt hat es zweimal gelesen: „Die Rechnung R-2026-118 über 2.340 € steht zweimal in der Tabelle zahlung, mit zahlung_id 5819 und 5820. Die zweite ist ein Tippfehler von gestern.“",
+      "„Entfernen Sie bitte die falsche Zeile. Nur die falsche.“"
+    ],
+    "frage": "Welcher Befehl löscht genau die doppelte Buchung?",
+    "optionen": [
+      "DELETE FROM zahlung WHERE rechnung_nr = 'R-2026-118'",
+      "DELETE FROM zahlung",
+      "DELETE FROM zahlung WHERE betrag = 2340",
+      "DELETE FROM zahlung WHERE zahlung_id = 5820"
+    ],
+    "antwort": "DELETE FROM zahlung WHERE zahlung_id = 5820",
+    "hilfe": [
+      "Die Rechnungsnummer ist bei beiden Zeilen gleich. Was unterscheidet sie eindeutig?",
+      "Vor einem DELETE lohnt ein SELECT mit derselben WHERE-Bedingung."
+    ],
+    "erklaerung": [
+      "Nur die zahlung_id ist eindeutig. DELETE … WHERE zahlung_id = 5820 trifft genau die falsche Zeile.",
+      "Mit der Rechnungsnummer als Bedingung wären beide Zahlungen weg, ohne WHERE sogar alle."
+    ],
+    "suchbegriffe": ["DELETE", "WHERE", "Primärschlüssel"],
+    "gruppe": "zf-doppelte-rechnung"
+  },
+  {
+    "id": "zf-doppelte-rechnung#4",
+    "typ": "diagnose",
+    "titel": "Die Rechnung zählt dreifach",
+    "auftraggeber": "paul",
+    "raum": "verwaltung",
+    "prioritaet": "hoch",
+    "cat": "datenbanken",
+    "anforderungen": {"sql": 66},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 120, "reputation": 8},
+    "ab_tag": 86,
+    "ticket": [
+      "Paul runzelt die Stirn über seiner neuen Datenbank: „Die Rechnung R-2026-301 über 2.340,00 € ist laut Auswertung mit 7.020,00 € bezahlt. Dreimal so viel! Haben wir wirklich dreifach überwiesen?“",
+      "Die Auswertung verbindet die Tabellen rechnung, rechnungsposition und zahlung."
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "zahlung",
+        "text": "SELECT * FROM zahlung WHERE rechnung_nr = 'R-2026-301'",
+        "ergebnis": "Genau eine Zeile: 2.340,00 € am 14. des Monats.",
+        "entscheidend": true
+      },
+      {
+        "id": "positionen",
+        "text": "SELECT COUNT(*) FROM rechnungsposition WHERE rechnung_nr = 'R-2026-301'",
+        "ergebnis": "3",
+        "entscheidend": true
+      },
+      {
+        "id": "konto",
+        "text": "Kontoauszug des Monats ansehen",
+        "ergebnis": "Eine Abbuchung über 2.340,00 €."
+      },
+      {
+        "id": "import",
+        "text": "Import-Protokoll der Zahlungen prüfen",
+        "ergebnis": "Keine Fehler, keine doppelten Zeilen."
+      },
+      {
+        "id": "rechnung",
+        "text": "SELECT * FROM rechnung WHERE rechnung_nr = 'R-2026-301'",
+        "ergebnis": "Eine Zeile, Summe 2.340,00 €."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Der JOIN mit rechnungsposition vervielfacht die Zahlung, bevor SUM rechnet.",
+      "Die Zahlung wurde dreimal importiert.",
+      "Die Bank hat dreimal abgebucht.",
+      "Der Primärschlüssel der Tabelle rechnung fehlt."
+    ],
+    "ursache": "Der JOIN mit rechnungsposition vervielfacht die Zahlung, bevor SUM rechnet.",
+    "massnahmen": [
+      "Die Zahlungssumme ohne JOIN auf rechnungsposition bilden (z. B. per Unterabfrage)",
+      "Zwei der drei Zahlungen löschen",
+      "Das Ergebnis in der Auswertung durch 3 teilen",
+      "Die Tabelle rechnungsposition leeren"
+    ],
+    "massnahme": "Die Zahlungssumme ohne JOIN auf rechnungsposition bilden (z. B. per Unterabfrage)",
+    "hilfe": [
+      "Ein JOIN erzeugt für jede passende Kombination eine Zeile. Wie viele Positionen hat die Rechnung?",
+      "Summiert man nach dem Verbinden, zählt jeder Betrag so oft, wie es Kombinationen gibt."
+    ],
+    "erklaerung": [
+      "Die Rechnung hat 3 Positionen. Durch den JOIN steht die eine Zahlung 3-mal im Ergebnis, SUM(betrag) verdreifacht sie.",
+      "Die Zahlungssumme kommt direkt aus der Tabelle zahlung (oder aus einer Unterabfrage), ohne die Positionen dazuzuverbinden."
+    ],
+    "suchbegriffe": ["JOIN", "SUM", "GROUP BY"],
+    "gruppe": "zf-doppelte-rechnung"
+  },
+  {
+    "id": "zf-glasfaser-bagger",
+    "typ": "diagnose",
+    "titel": "Talheim-Nord ist offline",
+    "auftraggeber": "ulla",
+    "ort": "talheim_nord",
+    "raum": "technik_nord",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"wan_vpn": 42},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 75, "reputation": 6},
+    "ab_tag": 20,
+    "ticket": [
+      "Ulla: „Talheim-Nord ist komplett offline. Keine Fahrplananzeige, keine Kasse, kein WLAN. Der Strom ist aber da.“",
+      "„Die Kollegin vor Ort sagt, vor dem Bahnhof buddelt seit heute früh ein Bagger. Sie sagt, er buddelt sehr gründlich.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "port",
+        "text": "Status des Uplink-Ports am Switch ansehen",
+        "ergebnis": "Port 24 (Glasfaser-Uplink): down, seit 08:14 Uhr.",
+        "entscheidend": true
+      },
+      {
+        "id": "licht",
+        "text": "Empfangspegel am Glasfaser-Transceiver auslesen",
+        "ergebnis": "Rx: -40,0 dBm, also gar kein Licht. Sonst -7,5 dBm.",
+        "entscheidend": true
+      },
+      {
+        "id": "intern",
+        "text": "Vom Service-PC den Switch und den Drucker anpingen",
+        "ergebnis": "Beides antwortet sofort. Das interne Netz läuft."
+      },
+      {
+        "id": "strom",
+        "text": "Stromversorgung und USV prüfen",
+        "ergebnis": "Netzbetrieb, USV bei 100 %."
+      },
+      {
+        "id": "lte",
+        "text": "Den LTE-Backup-Router prüfen",
+        "ergebnis": "Eingeschaltet, Empfang gut, aber als Ausweichweg nicht aktiviert."
+      }
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Die Glasfaser zum Bahnhof ist auf der Strecke durchtrennt.",
+      "Der Switch in Talheim-Nord ist defekt.",
+      "Die USV ist ausgefallen.",
+      "Der DHCP-Server hat keine Adressen mehr."
+    ],
+    "ursache": "Die Glasfaser zum Bahnhof ist auf der Strecke durchtrennt.",
+    "massnahmen": [
+      "Störung beim Netzbetreiber melden, Baustelle informieren, bis zur Reparatur über LTE arbeiten",
+      "Den Switch austauschen",
+      "Die Faser selbst mit Isolierband flicken",
+      "Warten, bis der Bagger fertig ist"
+    ],
+    "massnahme": "Störung beim Netzbetreiber melden, Baustelle informieren, bis zur Reparatur über LTE arbeiten",
+    "unsicher": ["Die Faser selbst mit Isolierband flicken"],
+    "hilfe": [
+      "Talheim-Nord ist per Glasfaser angebunden. Ein Transceiver zeigt an, wie viel Licht ankommt.",
+      "Wenn intern alles läuft, aber nach draußen nichts geht, liegt der Fehler auf der Strecke."
+    ],
+    "erklaerung": [
+      "Am Uplink kommt kein Licht mehr an, im Haus funktioniert alles: Die Glasfaser ist auf der Strecke unterbrochen, sehr wahrscheinlich vom Bagger.",
+      "Störung beim Netzbetreiber melden und die Baustelle stoppen lassen, bis dahin läuft der Notbetrieb über den LTE-Router. Spleißen macht eine Fachfirma."
+    ],
+    "suchbegriffe": ["Glasfaser", "LWL", "Redundanz"],
+    "gruppe": "zf-glasfaser-bagger"
+  },
+  {
+    "id": "zf-glasfaser-bagger#2",
+    "typ": "auswahl",
+    "titel": "Wo genau ist die Faser gerissen?",
+    "auftraggeber": "svenja",
+    "ort": "betriebswerkstatt",
+    "raum": "technik_werkstatt",
+    "prioritaet": "kritisch",
+    "cat": "netzwerk",
+    "anforderungen": {"verkabelung": 57},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 105, "reputation": 8},
+    "ab_tag": 68,
+    "ticket": [
+      "Svenja kniet im Technikraum der Betriebswerkstatt, das Messgerät auf dem Knie: „Die Glasfaser zur Werkstatt ist wieder weg. Neue Baustelle, anderer Bagger. Ich finde die Stelle, bevor die ganze Straße aufgerissen wird.“",
+      "„Das OTDR zeigt ein starkes Reflexionsereignis 4,1 µs nach dem Impuls. Brechzahl der Faser: 1,468.“"
+    ],
+    "frage": "Wie weit vom Technikraum liegt die Bruchstelle ungefähr?",
+    "optionen": ["Etwa 837 m", "Etwa 419 m", "Etwa 615 m", "Etwa 1.229 m"],
+    "antwort": "Etwa 419 m",
+    "hilfe": [
+      "Das Licht läuft zur Bruchstelle und wieder zurück.",
+      "In der Faser ist das Licht langsamer als im Vakuum: Lichtgeschwindigkeit geteilt durch die Brechzahl."
+    ],
+    "erklaerung": [
+      "Strecke = c × t ÷ (2 × n) = 299.792.458 m/s × 4,1 µs ÷ (2 × 1,468) ≈ 419 m.",
+      "Das OTDR (optisches Rückstreumessgerät) misst die Laufzeit hin und zurück, deshalb wird durch 2 geteilt."
+    ],
+    "suchbegriffe": ["Glasfaser", "OTDR"],
+    "gruppe": "zf-glasfaser-bagger"
+  },
+  {
+    "id": "zf-serverraum-warm",
+    "typ": "diagnose",
+    "titel": "Der Serverraum wird zur Sauna",
+    "auftraggeber": "svenja",
+    "raum": "serverraum",
+    "prioritaet": "kritisch",
+    "cat": "systeme",
+    "anforderungen": {"it_betrieb": 50},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 100, "reputation": 8},
+    "ab_tag": 42,
+    "ticket": [
+      "Svenja kommt mit roten Wangen aus dem Serverraum: „34 Grad da drin, Tendenz steigend. Das Monitoring schickt eine Mail nach der anderen.“",
+      "Ulla von hinten: „Die Server sagen, es ist ihnen zu warm. Diesmal glaube sogar ich das nicht nur.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "klima",
+        "text": "Anzeige am Klimagerät ablesen",
+        "ergebnis": "Fehler E4: Kondensatwanne voll, Kühlung abgeschaltet.",
+        "entscheidend": true
+      },
+      {
+        "id": "temp",
+        "text": "Temperaturverlauf im Monitoring ansehen",
+        "ergebnis": "Seit 09:10 Uhr von 22 auf 34 °C, etwa 1 °C alle 5 Minuten.",
+        "entscheidend": true
+      },
+      {
+        "id": "server",
+        "text": "Liste der laufenden Server ansehen",
+        "ergebnis": "12 Server, davon 4 Test- und Schulungssysteme."
+      },
+      {
+        "id": "tuer",
+        "text": "Serverraumtür prüfen",
+        "ergebnis": "Geschlossen, wie es sein soll."
+      },
+      {"id": "usv", "text": "USV-Last ablesen", "ergebnis": "58 %, normal."}
+    ],
+    "ziel_pruefungen": 2,
+    "ursachen": [
+      "Das Klimagerät hat wegen voller Kondensatwanne abgeschaltet.",
+      "Die USV ist überlastet.",
+      "Die Server laufen wegen eines Virus auf Volllast.",
+      "Die Tür des Serverraums stand offen."
+    ],
+    "ursache": "Das Klimagerät hat wegen voller Kondensatwanne abgeschaltet.",
+    "massnahmen": [
+      "Test- und Schulungssysteme geordnet herunterfahren, Kältefachfirma rufen, Temperatur beobachten",
+      "Die Tür aufmachen und einen Ventilator davorstellen",
+      "Alle Server sofort hart ausschalten",
+      "Die Temperaturwarnung im Monitoring abschalten"
+    ],
+    "massnahme": "Test- und Schulungssysteme geordnet herunterfahren, Kältefachfirma rufen, Temperatur beobachten",
+    "unsicher": ["Die Temperaturwarnung im Monitoring abschalten"],
+    "hilfe": [
+      "Server erzeugen ständig Wärme. Wird sie nicht abgeführt, steigt die Temperatur schnell.",
+      "Was hat das Klimagerät gemeldet, und was lässt sich tun, bis die Fachfirma da ist?"
+    ],
+    "erklaerung": [
+      "Das Klimagerät hat wegen voller Kondensatwanne abgeschaltet. Bis zur Reparatur hilft nur, weniger Wärme zu erzeugen: Unwichtiges geordnet herunterfahren.",
+      "Tür offen und Ventilator ist keine Lösung: Staub, Sicherheit und warme Flurluft machen es kaum besser."
+    ],
+    "suchbegriffe": ["Serverraum", "Monitoring", "Temperatur"],
+    "gruppe": "zf-serverraum-warm"
+  },
+  {
+    "id": "zf-serverraum-warm#2",
+    "typ": "auswahl",
+    "titel": "Klimagerät für Lindenau: mieten oder kaufen?",
+    "auftraggeber": "wendt",
+    "raum": "technik_lindenau",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "anforderungen": {"kalkulation": 60},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 105, "reputation": 7},
+    "ab_tag": 74,
+    "ticket": [
+      "Dr. Wendt steht mit einem Angebot im warmen Technikraum: „Die Klimaanlage ist defekt, die neue kommt in drei Wochen. Bis dahin brauchen wir ein mobiles Gerät.“",
+      "„Miete: 39 € pro Tag, gebraucht für 21 Tage. Kauf: 1.090 €, danach steht es im Keller. Ich habe beides zweimal gelesen. Was ist wirtschaftlicher?“"
+    ],
+    "frage": "Was empfiehlst du?",
+    "optionen": [
+      "Kaufen: 1.090 € einmal sind günstiger als 1.638 € Miete",
+      "Mieten: 819 € statt 1.090 €, und danach wird das Gerät nicht gebraucht",
+      "Mieten: nur 39 €, da nur der erste Tag zählt",
+      "Weder noch: Die Server halten drei Wochen Hitze aus"
+    ],
+    "antwort": "Mieten: 819 € statt 1.090 €, und danach wird das Gerät nicht gebraucht",
+    "hilfe": [
+      "Rechne die Mietkosten für den ganzen Zeitraum aus und vergleiche mit dem Kaufpreis.",
+      "Braucht man das Gerät danach noch?"
+    ],
+    "erklaerung": [
+      "Miete: 21 × 39 € = 819 €. Kauf: 1.090 €. Mieten ist 271 € günstiger.",
+      "Da das Gerät nur überbrückt und danach nicht gebraucht wird, spricht auch die Nutzung für die Miete."
+    ],
+    "suchbegriffe": ["Wirtschaftlichkeit", "Kosten"],
+    "gruppe": "zf-serverraum-warm"
+  },
+  {
+    "id": "zf-datenbank-voll",
+    "typ": "diagnose",
+    "titel": "Die Teile-Datenbank nimmt nichts mehr an",
+    "auftraggeber": "marta",
+    "raum": "teilelager",
+    "prioritaet": "kritisch",
+    "cat": "datenbanken",
+    "anforderungen": {"db_betrieb": 51},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 105, "reputation": 8},
+    "ab_tag": 44,
+    "ticket": [
+      "Marta hält ihr Tablet hoch: „Keine Buchung geht mehr. Fehler: ‚Das Transaktionsprotokoll der Datenbank ist voll.‘ Ich kann nicht mal einen Keilriemen ausbuchen.“",
+      "„Wenn das bis zum nächsten Zugumlauf nicht läuft, schreibe ich wieder auf Karteikarten. Mit Sicherheitsschuhen.“"
+    ],
+    "frage": "Grenze den Fehler ein: Prüfungen durchführen, dann Ursache und Maßnahme wählen.",
+    "pruefungen": [
+      {
+        "id": "platte",
+        "text": "Freien Speicher auf dem Datenbankserver prüfen",
+        "ergebnis": "Laufwerk L: (Protokolle) 60 GB, davon 0 GB frei.",
+        "entscheidend": true
+      },
+      {
+        "id": "groessen",
+        "text": "Größe von Datendatei und Protokolldatei ansehen",
+        "ergebnis": "Daten: 2,1 GB. Protokoll: 58 GB.",
+        "entscheidend": true
+      },
+      {
+        "id": "logsicherung",
+        "text": "Letzte Protokollsicherung nachsehen",
+        "ergebnis": "Nie. Nur eine nächtliche Vollsicherung ist eingeplant.",
+        "entscheidend": true
+      },
+      {
+        "id": "dienst",
+        "text": "Läuft der Datenbankdienst?",
+        "ergebnis": "Ja, Lesezugriffe funktionieren."
+      },
+      {
+        "id": "netz",
+        "text": "Netzwerk zum Tablet prüfen",
+        "ergebnis": "WLAN stabil, Ping 3 ms."
+      }
+    ],
+    "ziel_pruefungen": 3,
+    "ursachen": [
+      "Das Transaktionsprotokoll wächst, weil nie eine Protokollsicherung läuft.",
+      "Die Datendatei ist zu groß geworden.",
+      "Das WLAN in der Werkhalle ist gestört.",
+      "Der Datenbankdienst ist abgestürzt."
+    ],
+    "ursache": "Das Transaktionsprotokoll wächst, weil nie eine Protokollsicherung läuft.",
+    "massnahmen": [
+      "Protokollsicherung ausführen und künftig regelmäßig einplanen",
+      "Die Protokolldatei im Explorer löschen",
+      "Die ältesten Ersatzteile aus der Datenbank löschen",
+      "Den Datenbankserver neu starten"
+    ],
+    "massnahme": "Protokollsicherung ausführen und künftig regelmäßig einplanen",
+    "unsicher": ["Die Protokolldatei im Explorer löschen"],
+    "hilfe": [
+      "Im vollständigen Wiederherstellungsmodell wächst das Transaktionsprotokoll, bis es gesichert wird.",
+      "Wie groß ist das Protokoll im Vergleich zu den Daten, und wann wurde es zuletzt gesichert?"
+    ],
+    "erklaerung": [
+      "Das Protokoll ist auf 58 GB gewachsen, weil nie eine Protokollsicherung lief. Erst die Sicherung gibt den Platz im Protokoll wieder frei.",
+      "Protokollsicherung jetzt ausführen und regelmäßig einplanen. Die Protokolldatei zu löschen würde die Datenbank beschädigen."
+    ],
+    "suchbegriffe": ["Transaktion", "Datensicherung", "Datenbank"],
+    "gruppe": "zf-datenbank-voll"
+  },
+  {
+    "id": "zf-datenbank-voll#2",
+    "typ": "terminal",
+    "titel": "Die Fahrplan-Datenbank hat keinen Platz mehr",
+    "auftraggeber": "ulla",
+    "raum": "serverraum",
+    "prioritaet": "kritisch",
+    "cat": "datenbanken",
+    "anforderungen": {"db_betrieb": 59},
+    "achsen": ["fachkompetenz", "zuverlaessigkeit"],
+    "belohnung": {"geld": 110, "reputation": 8},
+    "ab_tag": 72,
+    "ticket": [
+      "Ulla: „Die Fahrplan-Datenbank meldet ‚No space left on device‘. Der Server jammert seit einer Stunde. Ich habe ihm versprochen, dass du ihm hilfst.“",
+      "„Jede Nacht wird ein Dump nach /var/backups/fahrplandb geschrieben und zusätzlich aufs Sicherungs-NAS kopiert. Aufgeräumt hat das wohl nie jemand.“"
+    ],
+    "frage": "Wähle in jedem Schritt den passenden Befehl.",
+    "system": "linux",
+    "prompt": "root@fahrplandb:~#",
+    "start": ["Server fahrplandb, Fehler: No space left on device"],
+    "schritte": [
+      {
+        "ziel": "Herausfinden, welches Dateisystem voll ist",
+        "befehle": [
+          {
+            "befehl": "df -h",
+            "ausgabe": [
+              "Dateisystem  Größe Benutzt Verf. Verw% Eingehängt",
+              "/dev/sda2      200G    200G     0  100% /var"
+            ],
+            "richtig": true
+          },
+          {
+            "befehl": "free -h",
+            "ausgabe": ["Mem:  31Gi  12Gi  19Gi"],
+            "hinweis": "free zeigt den Arbeitsspeicher, nicht die Festplatte."
+          }
+        ]
+      },
+      {
+        "ziel": "Den Ordner finden, der den Platz belegt",
+        "befehle": [
+          {
+            "befehl": "du -sh /var/backups/*",
+            "ausgabe": ["162G  /var/backups/fahrplandb", "12M   /var/backups/dpkg"],
+            "richtig": true
+          },
+          {
+            "befehl": "rm -rf /var/lib/fahrplandb/*",
+            "ausgabe": ["Ulla schreit auf: „Das sind die LIVE-DATEN!“"],
+            "gefaehrlich": true,
+            "hinweis": "Das löscht die Datenbank selbst. Aufgeräumt wird bei den alten Sicherungen."
+          },
+          {
+            "befehl": "ls /var/lib/fahrplandb",
+            "ausgabe": ["base  global  pg_wal"],
+            "hinweis": "Das sind die Dateien der laufenden Datenbank. Erst den größten Verbraucher suchen."
+          }
+        ]
+      },
+      {
+        "ziel": "Prüfen, dass die alten Dumps auf dem Sicherungs-NAS liegen",
+        "befehle": [
+          {
+            "befehl": "ls /mnt/nas/fahrplandb | tail -3",
+            "ausgabe": ["dump-2026-09-27.sql.gz", "dump-2026-09-28.sql.gz", "dump-2026-09-29.sql.gz"],
+            "richtig": true
+          },
+          {
+            "befehl": "umount /mnt/nas",
+            "ausgabe": ["# Das NAS ist ausgehängt. Geprüft ist nichts."],
+            "hinweis": "Aushängen prüft nichts. Man schaut nach, ob die Dumps dort liegen."
+          }
+        ]
+      },
+      {
+        "ziel": "Lokale Dumps älter als 14 Tage löschen",
+        "befehle": [
+          {
+            "befehl": "find /var/backups/fahrplandb -name '*.sql.gz' -mtime +14 -delete",
+            "ausgabe": [],
+            "richtig": true
+          },
+          {
+            "befehl": "rm -rf /var/backups/fahrplandb",
+            "ausgabe": [
+              "# Auch der Dump von heute Nacht ist weg,",
+              "# und der Ordner für die nächste Sicherung."
+            ],
+            "gefaehrlich": true,
+            "hinweis": "Das löscht alle lokalen Sicherungen samt Ordner. Nur die alten, schon kopierten Dumps sollen weg."
+          },
+          {
+            "befehl": "gzip -9 /var/backups/fahrplandb/*",
+            "ausgabe": ["gzip: dump-2026-09-29.sql.gz already has .gz suffix"],
+            "hinweis": "Die Dumps sind schon gepackt. Platz schafft nur das Löschen der alten."
+          }
+        ]
+      }
+    ],
+    "hilfe": [
+      "Erst herausfinden, welches Dateisystem voll ist und welcher Ordner den Platz frisst.",
+      "Beim Aufräumen nur löschen, was sicher woanders liegt, und nie die Datenbankdateien selbst."
+    ],
+    "erklaerung": [
+      "Richtig: df -h → du -sh /var/backups/* → prüfen, dass die Dumps auf dem NAS liegen → find … -mtime +14 -delete.",
+      "Die lokalen Dumps älter als 14 Tage sind auf dem NAS gesichert und dürfen weg. Eine Aufbewahrungsregel verhindert das nächste Volllaufen."
+    ],
+    "suchbegriffe": ["Datenbank", "Linux", "Backup"],
+    "gruppe": "zf-datenbank-voll"
+  },
+  {
+    "id": "zf-laptop-verloren",
+    "typ": "auswahl",
+    "titel": "Laptop im Zug vergessen",
+    "auftraggeber": "wendt",
+    "raum": "personal_lindenau",
+    "prioritaet": "kritisch",
+    "cat": "sicherheit",
+    "anforderungen": {"datenschutz": 52},
+    "achsen": ["sicherheit", "zuverlaessigkeit"],
+    "belohnung": {"geld": 105, "reputation": 8},
+    "ab_tag": 46,
+    "ticket": [
+      "Dr. Wendt, ungewohnt blass: „Eine Mitarbeiterin der Personalabteilung hat gestern Abend ihren Dienstlaptop im Zug liegen lassen. Darauf: Personalakten mit Krankmeldungen. Das Fundbüro hat nichts.“",
+      "„Die Festplatte war nicht verschlüsselt, das Gerät ist noch aus der alten Zeit. Was machen wir jetzt, in welcher Reihenfolge?“"
+    ],
+    "frage": "Was ist jetzt richtig?",
+    "optionen": [
+      "Eine Woche abwarten, vielleicht taucht der Laptop wieder auf",
+      "Nur das Passwort der Mitarbeiterin ändern, sonst nichts",
+      "Konten sperren, Fernlöschung, DSB einbinden, binnen 72 h an die Aufsichtsbehörde melden",
+      "Den Vorfall intern halten, damit die Talbahn keinen Ärger bekommt"
+    ],
+    "antwort": "Konten sperren, Fernlöschung, DSB einbinden, binnen 72 h an die Aufsichtsbehörde melden",
+    "hilfe": [
+      "Gesundheitsdaten sind besonders geschützte personenbezogene Daten. Die DSGVO setzt für Meldungen eine Frist.",
+      "Technisch lässt sich noch etwas retten: Zugänge und Gerät aus der Ferne."
+    ],
+    "erklaerung": [
+      "Konten sperren, Fernlöschung auslösen, die Datenschutzbeauftragte einbinden und die Meldung an die Aufsichtsbehörde binnen 72 Stunden nach Bekanntwerden abgeben.",
+      "Bei hohem Risiko (unverschlüsselte Gesundheitsdaten) sind auch die Betroffenen zu benachrichtigen. Abwarten verstreicht die Frist."
+    ],
+    "suchbegriffe": ["DSGVO", "Meldepflicht", "Verschlüsselung"],
+    "gruppe": "zf-laptop-verloren"
+  },
+  {
+    "id": "zf-laptop-verloren#2",
+    "typ": "zuordnung",
+    "titel": "Der Diagnose-Laptop ist weg",
+    "auftraggeber": "marta",
+    "raum": "werkstattbuero",
+    "prioritaet": "hoch",
+    "cat": "sicherheit",
+    "anforderungen": {"datenschutz": 54},
+    "achsen": ["sicherheit", "fachkompetenz"],
+    "belohnung": {"geld": 90, "reputation": 6},
+    "ab_tag": 63,
+    "ticket": [
+      "Marta sucht seit zwei Zugumläufen: „Schon wieder ein Diagnose-Laptop weg, diesmal nach der Nachtschicht. Der letzte kam ja zum Glück zurück. Karin fragt als Erstes: ‚Verschlüsselt? Welche Daten?‘ Und sie hat schon einen Paragrafen parat.“",
+      "Hilf Marta, die Lage einzuordnen."
+    ],
+    "frage": "Ordne jeder Lage die richtige Folge zu.",
+    "paare": [
+      [
+        "Laptop vollständig verschlüsselt, starkes Passwort",
+        "Voraussichtlich kein Risiko: intern dokumentieren"
+      ],
+      ["Unverschlüsselt, mit Schichtplänen und Namen", "Meldung an die Aufsichtsbehörde"],
+      ["Unverschlüsselt, mit Krankmeldungen", "Behörde melden und Betroffene benachrichtigen"],
+      ["Frist für die Meldung an die Behörde", "72 Stunden, nachdem der Vorfall bekannt wurde"]
+    ],
+    "hilfe": [
+      "Entscheidend ist das Risiko für die Betroffenen: Können Fremde die Daten lesen, und wie heikel sind sie?",
+      "Die DSGVO kennt eine Meldung an die Behörde, eine Benachrichtigung der Betroffenen und eine Pflicht zur Dokumentation."
+    ],
+    "erklaerung": [
+      "Voll verschlüsselt mit starkem Passwort: voraussichtlich kein Risiko, intern dokumentieren. Unverschlüsselt mit Personaldaten: Meldung binnen 72 Stunden, bei hohem Risiko auch an die Betroffenen.",
+      "Dokumentiert wird jede Datenschutzverletzung (Art. 33 Abs. 5 DSGVO), auch wenn keine Meldung nötig ist."
+    ],
+    "suchbegriffe": ["Meldepflicht", "DSGVO", "Verschlüsselung"],
+    "gruppe": "zf-laptop-verloren"
+  },
+  {
+    "id": "zf-sla-verletzt",
+    "typ": "auswahl",
+    "titel": "Neun Stunden ohne Internet",
+    "auftraggeber": "wendt",
+    "raum": "leitung_lindenau",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "anforderungen": {"service": 55},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 105, "reputation": 8},
+    "ab_tag": 54,
+    "ticket": [
+      "Dr. Wendt hat den Vertrag des Internetanbieters zweimal gelesen: „Zugesagt sind 99,5 % Verfügbarkeit im Monat. Diesen Monat (30 Tage) waren wir 9 Stunden offline.“",
+      "„Für jeden angefangenen halben Prozentpunkt unter dem Soll gibt es 5 % der Monatsgebühr von 480 € zurück. Was steht uns zu?“"
+    ],
+    "frage": "Welche Aussage stimmt?",
+    "optionen": [
+      "99,5 % Verfügbarkeit, SLA eingehalten",
+      "98,75 % Verfügbarkeit, SLA verfehlt, Gutschrift 24 €",
+      "98,75 % Verfügbarkeit, SLA verfehlt, Gutschrift 48 €",
+      "97,50 % Verfügbarkeit, SLA verfehlt, Gutschrift 72 €"
+    ],
+    "antwort": "98,75 % Verfügbarkeit, SLA verfehlt, Gutschrift 48 €",
+    "hilfe": [
+      "Verfügbarkeit = (Gesamtzeit − Ausfallzeit) ÷ Gesamtzeit × 100 %.",
+      "Zähle, wie viele angefangene halbe Prozentpunkte die Verfügbarkeit unter dem Soll liegt."
+    ],
+    "erklaerung": [
+      "720 h − 9 h = 711 h von 720 h, also 98,75 %. Erlaubt wären 3,6 h Ausfall gewesen.",
+      "Unter Soll: 0,75 Prozentpunkte = 2 angefangene halbe Punkte. Gutschrift: 2 × 5 % × 480 € = 48 €."
+    ],
+    "suchbegriffe": ["SLA", "Verfügbarkeit"],
+    "gruppe": "zf-sla-verletzt"
+  },
+  {
+    "id": "zf-sla-verletzt#2",
+    "typ": "auswahl",
+    "titel": "Bis wann muss der Techniker reagieren?",
+    "auftraggeber": "marta",
+    "raum": "werkstattbuero",
+    "prioritaet": "hoch",
+    "cat": "wirtschaft",
+    "anforderungen": {"service": 63},
+    "achsen": ["fachkompetenz", "kundenzufriedenheit"],
+    "belohnung": {"geld": 110, "reputation": 7},
+    "ab_tag": 79,
+    "ticket": [
+      "Marta, Sicherheitsschuhe auf dem Schreibtisch: „Der Prüfstand ist am Freitag um 16:30 Uhr ausgefallen, sofort gemeldet. Im Wartungsvertrag steht: Reaktionszeit 4 Stunden, Servicezeit Montag bis Freitag 7 bis 17 Uhr.“",
+      "„Wann muss der Dienstleister spätestens reagiert haben? In Zugumläufen gerechnet ist das ein halbes Wochenende.“"
+    ],
+    "frage": "Wann endet die Reaktionszeit?",
+    "optionen": ["Freitag, 20:30 Uhr", "Samstag, 10:30 Uhr", "Montag, 10:30 Uhr", "Montag, 11:00 Uhr"],
+    "antwort": "Montag, 10:30 Uhr",
+    "hilfe": [
+      "Die Reaktionszeit läuft nur innerhalb der vereinbarten Servicezeit.",
+      "Wie viel Zeit bleibt am Freitag noch, und wann geht es danach weiter?"
+    ],
+    "erklaerung": [
+      "Freitag von 16:30 bis 17:00 Uhr läuft eine halbe Stunde, die restlichen 3,5 Stunden ab Montag 7:00 Uhr. Frist: Montag, 10:30 Uhr.",
+      "Wer eine Reaktion am Wochenende braucht, muss eine längere Servicezeit vereinbaren (z. B. 24/7) und bezahlt dafür mehr."
+    ],
+    "suchbegriffe": ["SLA", "Reaktionszeit", "Servicezeit"],
+    "gruppe": "zf-sla-verletzt"
+  }
+]
