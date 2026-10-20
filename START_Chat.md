@@ -15,11 +15,11 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Feld | Wert |
 |---|---|
 | Version | A 0.1.0 auf `main`; **A 0.2.0** auf Zweig `phase1-kern` (kein öffentliches Release, Pakete aus der CI) |
-| Phase | 1, Welle 2 (K5 Design, K6 Navigation, K7 Dashboard, K8 Optionen, K9 Sicherung in Optionen) gebaut; gepusht ohne K9; K9 liegt als Patch `/mnt/project-files/phase1_csharp/K9_Sicherung.patch` (gleich Anlage `P1-3_K9_*.diff`) und wird erst nach Chats OK gepusht |
+| Phase | 1, Welle 2 (K5–K10) fertig und gepusht (Kopf 046004d), Lauf 39412552321 grün 8/8 |
 | Vergleichswerte neu | G6b `eigene_farben.json`, G9 `beschriftungen.json`, G13 `dashboard.json`, G14 `potenz.json` (Erzeuger in `werkzeuge/vergleich/`, CI erzeugt sie neu) |
-| Letzte Meldung | P1-3 (Welle 2, K9 zur Lesung, 5 Fragen); nächste P1-4 |
+| Letzte Meldung | P1-4 (Bericht K10, Abnahme Welle 2, 5 Fragen); nächste P1-5 |
 | Offen bei Chat | K9-Diff lesen, Fragen 2–5 (Hinweistexte Schrift/Tagesziel, Über-Text, defekt.json) |
-| Nächster Schritt | Nach Chats Antwort: K9 pushen, Antworten umsetzen, dann K10 (Gegenprüfung, Fotos PC/Handy für Nico, ein ganzer GitHub-Lauf, Bericht). Übergabe: `/mnt/project-files/phase1_csharp/HANDOFF_Welle2_K10.md` |
+| Nächster Schritt | Chats Abnahme Welle 2 abwarten, Antworten zu P1-4 umsetzen (Hinweiskarte unlesbare DB, Platzhalter-Umlaut), dann Nicos Freigabe. Übergabe: `/mnt/project-files/phase1_csharp/HANDOFF_Welle2_Abnahme.md` |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).

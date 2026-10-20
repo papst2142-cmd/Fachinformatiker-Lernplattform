@@ -42,7 +42,7 @@
 
 ## Aktueller Stand
 - Phase 0 abgenommen und gemergt (main 2f9a971). Phase 1 freigegeben (Weisung P1-1_Plan_Freigabe, Fi-Austausch 125a7f6; Plan `weisungen/Plan_Phase1_CSharp.md`). Nico 20.10.: 1a DB wie Python, 2a spätere Bereiche sichtbar mit „Kommt in einer spaeteren Ausbaustufe“, 3 Phase 1 = A 0.2.0 ohne öffentliches Release, 4a „Alte Sicherung pruefen“ wandert unverändert nach Optionen > Sicherung.
-- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) abgenommen (Weisung P1-2_Welle2_Freigabe, 5ef901b). Welle 2 (K5–K9, **A 0.2.0**) gebaut, Meldung P1-3: gepusht ohne K9; K9 (Sicherung nach Optionen, Patch `/mnt/project-files/phase1_csharp/K9_Sicherung.patch`) liegt bei Chat zur Lesung und wird erst nach OK gepusht. Danach K10 (Gegenprüfung K5/K7/K8/K9, Fotos PC/Handy, ein ganzer GitHub-Lauf, Bericht).
+- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) abgenommen (Weisung P1-2_Welle2_Freigabe, 5ef901b). Welle 2 (K5–K10, **A 0.2.0**) fertig, K9 nach Weisung P1-3_K9_Freigabe (05fa839) gepusht. Bericht K10 = Meldung P1-4 (Kopf 046004d, Lauf 39412552321 grün 8/8, Fotos `Fi-Austausch/anlagen/P1-4_fotos/`). Wartet auf Chats Abnahme, dann Nicos Freigabe; danach Merge-Frage und Welle 3 laut Plan.
   - Core: K1 `Inhalte` (G12), K2 `Daten/Lernstand.cs` (G11, `PRAGMA user_version` 1), K3 `Daten/Einstellungen.cs` (G11; nach Lesefehler `NurAnzeige`, nichts schreiben), K4 `Diagnose` (G10), `Design/EigeneFarben.cs` (G6b), `Texte/*` (G9), `Dashboard/DashboardWerte.cs` (G13, nur lesend), `Mathe/PythonPow.cs` (G14).
   - **Potenz immer mit `PythonPow.Pow`**, nie `Math.Pow`, wo Python `**` rechnet: Math.Pow weicht unter Windows/macOS im letzten Bit ab (Nachbau glibc-pow, ARM Optimized Routines, MIT). Ausnahme Farbwelt.cs (Phase 0, abgenommen, G6 überall grün).
   - App: Schriftstufen über Ressourcen `Schrift.*` (`Design/Schrift.cs`), Farben `Pinsel.*`. Seitenleiste ab `MainView.BreitGrenze` = 720 × Schriftfaktor, darunter Handy-Aufbau. Start ohne Bedienung prüft je Stufe 384×832, Grenze und 1360×880 (Layoutprüfung: Wort im Wort, Knopf aus Karte, Rand), rot ab 1000 ms oder Fund (Rückgabe 3).
@@ -51,4 +51,6 @@
 - Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
 - Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
 - Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung, B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht.
-- Nächste Meldung: P1-4 (nach Antwort auf P1-3). Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.
+- Dashboard rechnet bei jedem erneuten Zeigen neu (`DashboardSeite.Neu`, `Geladen`); der Start ohne Bedienung wartet darauf vor der Layoutprüfung. Fotos lokal: Patch `/mnt/project-files/phase1_csharp/fotos_k10/nur_lokal_fotos_autolauf.diff` (nie einchecken).
+- Hinweiszeile in Meldungsdateien: „Commit siehe origin/main“ (ein Commit, Frage 5 in P1-4); echte sha nur in der Zeile an Nico.
+- Nächste Meldung: P1-5 (nach Antwort auf P1-4). Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.
