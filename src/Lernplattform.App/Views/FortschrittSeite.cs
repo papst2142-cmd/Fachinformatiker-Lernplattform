@@ -99,7 +99,14 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
         {
             Geladen = LadenAsync();
         }
+        else
+        {
+            // laeuft noch eine Rechnung, danach gleich noch einmal (neue Antworten seit ihrem Start)
+            _nochmal = true;
+        }
     }
+
+    private bool _nochmal;
 
     public void AllesAufklappen() => _abdeckung.ErsteAufklappen();
 
@@ -143,7 +150,7 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
             if (parameter is not null && gewicht is not null)
             {
                 var werte = Zustand.Werte;
-                abdeckung = await Task.Run(() => new Abdeckung(parameter, gewicht, Zustand.BuchLesen(), RahmenplanWerte.Aus(werte, gewicht)));
+                abdeckung = await Task.Run(() => new Abdeckung(parameter, gewicht, Auswertung.BuchLesen(Pfad), RahmenplanWerte.Aus(werte, gewicht)));
             }
         }
         catch (Exception fehler)
@@ -164,6 +171,11 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
                 }
                 FertigMs ??= _uhr.Elapsed.TotalMilliseconds;
                 Fertig.TrySetResult();
+                if (_nochmal)
+                {
+                    _nochmal = false;
+                    Dispatcher.UIThread.Post(() => Geladen = LadenAsync());
+                }
             }
             catch (Exception fehler)
             {
@@ -228,7 +240,7 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
         {
             return;
         }
-        await _ueben(JetztUeben.ThemenTeile(inhalte, Zustand.BuchLesen(), JetztUeben.Themen(inhalte, name), NeuerZufall()));
+        await _ueben(JetztUeben.ThemenTeile(inhalte, Auswertung.BuchLesen(Pfad), JetztUeben.Themen(inhalte, name), NeuerZufall()));
     }
 
     private async Task PunktUebenAsync(string id)
@@ -238,7 +250,7 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
             return;
         }
         var (quiz, karte) = abdeckung.PunktInhalte(id);
-        await _ueben(JetztUeben.Teile(Zustand.BuchLesen(), quiz, karte, NeuerZufall()));
+        await _ueben(JetztUeben.Teile(Auswertung.BuchLesen(Pfad), quiz, karte, NeuerZufall()));
     }
 
     // -- Bausteine --

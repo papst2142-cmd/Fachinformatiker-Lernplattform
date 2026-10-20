@@ -553,4 +553,54 @@ public class FortschrittTests
         Assert.Equal(FortschrittTexte.OhneWert, a.Kacheln[2].Wert);
         Assert.Equal(30, a.Reihe(30, new DateOnly(2026, 10, 20), 20).Werte.Count);
     }
+
+    [Fact]
+    public void KappungErgebnisSpalte()
+    {
+        // P2-8: "X von Y" nie X > Y, auch in der Historie ("15 / 1" wird "1 / 1"; Python zeigt 15 / 1)
+        using var ordner = new TempOrdner();
+        var a = KaputteSessions(ordner);
+        Assert.Equal("1 / 1", a.Sitzungen[1].Ergebnis);
+        Assert.Equal("1 / 2", a.Sitzungen[0].Ergebnis);
+    }
+
+    [Fact]
+    public void DoppelteSchluesselWieJsonLoads()
+    {
+        // json.loads: bei doppeltem Schluessel gilt der letzte Wert; der Fortschritt bleibt lesbar
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, "doppelt.db");
+        _ = new Lernstand(pfad);
+        using (var verbindung = new SqliteConnection($"Data Source={pfad};Pooling=False"))
+        {
+            verbindung.Open();
+            using var befehl = verbindung.CreateCommand();
+            befehl.CommandText = "INSERT INTO pruefungen (timestamp, art, punkte, note, dauer, daten) VALUES "
+                + "('2026-10-19T10:00:00', 'netzwerke', 50.0, 'x', 60, '{\"themen\": {\"IT-Sicherheit\": [9, 10], \"Storage & RAID\": [8, 10], \"IT-Sicherheit\": [1, 10]}}')";
+            befehl.ExecuteNonQuery();
+        }
+        var a = Auswertung.Lesen(pfad);
+        Assert.Equal(["IT-Sicherheit"], a.Schwaeche!.Themen);
+        Assert.Single(a.Pruefungen);
+    }
+
+    [Fact]
+    public void BuchNurLesendWieLernstand()
+    {
+        using var ordner = new TempOrdner();
+        var fehlt = Path.Combine(ordner.Pfad, "fehlt.db");
+        Assert.Empty(Auswertung.BuchLesen(fehlt).Antworten.Ergebnisse);
+        Assert.False(File.Exists(fehlt));
+        var pfad = BaueDatenbank("voll", ordner.Pfad);
+        var vorher = File.ReadAllBytes(pfad);
+        var nurLesend = Auswertung.BuchLesen(pfad).Antworten.Ergebnisse;
+        Assert.Equal(vorher, File.ReadAllBytes(pfad));
+        var erwartet = Buch(pfad).Antworten.Ergebnisse;
+        Assert.NotEmpty(erwartet);
+        Assert.Equal(erwartet.Count, nurLesend.Count);
+        foreach (var (kennung, liste) in erwartet)
+        {
+            Assert.Equal(liste, nurLesend[kennung]);
+        }
+    }
 }

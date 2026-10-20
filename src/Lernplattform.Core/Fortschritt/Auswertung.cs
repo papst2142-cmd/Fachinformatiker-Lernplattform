@@ -100,7 +100,8 @@ public sealed class Auswertung
         var kurve = Enumerable.Reverse(ergebnisse).TakeLast(20).ToList();
         var sitzungen = ergebnisse.Select(z => new SitzungZeile(
             PyText.Str(z[0]),
-            Beschriftungen.Einsetzen(FortschrittTexte.ErgebnisMuster, (long)PyText.Zahl(z[1]), (long)PyText.Zahl(z[2])),
+            // P2-8: nie mehr richtige als gestellte Fragen ("15 / 8" wird "8 / 8"), Python kappt hier nicht
+            Beschriftungen.Einsetzen(FortschrittTexte.ErgebnisMuster, Math.Min((long)PyText.Zahl(z[1]), (long)PyText.Zahl(z[2])), (long)PyText.Zahl(z[2])),
             Prozent(PyText.Zahl(z[3])),
             z[4] is null ? "" : PyText.Str(z[4]),
             Dauer(PyText.Zahl(z[5])))).ToList();
@@ -161,12 +162,55 @@ public sealed class Auswertung
         var text = PyText.Wahr(daten) ? PyText.Str(daten) : "{}";
         try
         {
-            return JsonNode.Parse(text);
+            using var dokument = JsonDocument.Parse(text);
+            return Knoten(dokument.RootElement);
         }
         catch (JsonException)
         {
             return new JsonObject();
         }
+    }
+
+    /// <summary>Wie json.loads: bei doppelten Schluesseln gilt der letzte Wert (Stelle des ersten).</summary>
+    private static JsonNode? Knoten(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var objekt = new JsonObject();
+                foreach (var eintrag in element.EnumerateObject())
+                {
+                    objekt[eintrag.Name] = Knoten(eintrag.Value);
+                }
+                return objekt;
+            case JsonValueKind.Array:
+                var liste = new JsonArray();
+                foreach (var wert in element.EnumerateArray())
+                {
+                    liste.Add(Knoten(wert));
+                }
+                return liste;
+            default:
+                return JsonNode.Parse(element.GetRawText());
+        }
+    }
+
+    /// <summary>
+    /// StatusBook(db) fuer Abdeckung und "Jetzt üben", nur lesend wie <see cref="Lesen"/>: eine
+    /// fehlende Datei wird nicht angelegt (leeres Buch), gescheiterte Abfragen zaehlen als leer.
+    /// </summary>
+    public static StatusBuch BuchLesen(string dbPfad)
+    {
+        var buch = new Antwortbuch();
+        using var db = Leser.Oeffnen(dbPfad);
+        foreach (var (quelle, tabelle, spalte) in Antwortbuch.Tabellen)
+        {
+            foreach (var zeile in db.Abfrage($"SELECT timestamp, {spalte}, correct FROM {tabelle} ORDER BY timestamp, id") ?? [])
+            {
+                buch.Hinzufuegen(quelle, zeile[1], zeile[0], zeile[2]);
+            }
+        }
+        return new StatusBuch(buch);
     }
 
     /// <summary>fisi_pruefung.latest_weak fuer die juengste Pruefung.</summary>
