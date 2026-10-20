@@ -150,7 +150,20 @@ public sealed class UebernahmeTeil
 
         try
         {
-            var bericht = await Task.Run(() => Uebernahme.Uebernehmen(lernstand, daten, Zustand.Umbenennungen));
+            var bericht = await Task.Run(() =>
+            {
+                try
+                {
+                    return Uebernahme.Uebernehmen(lernstand, daten, Zustand.Umbenennungen);
+                }
+                catch (Exception fehler) when (fehler is not UebernahmeAusnahme)
+                {
+                    // Jeder andere Fehler kommt vor tx.Commit(): die Transaktion wird
+                    // zurueckgenommen, also "Übernehmen fehlgeschlagen" statt "Datei nicht lesbar"
+                    Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                    throw new UebernahmeAusnahme(UebernahmeFehler.SchreibenGescheitert);
+                }
+            });
             await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? Umbrechbar(Path.GetFileName(datei)) : null));
         }
         catch (UebernahmeAusnahme fehler)
