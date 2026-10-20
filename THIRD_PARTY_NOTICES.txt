@@ -38,5 +38,9 @@ SQLite (in e_sqlite3)                         gemeinfrei    sqlite.org/copyright
 Xamarin.AndroidX.Core.SplashScreen            MIT           nuspec (nur Android, Pruefung mit dem
   (1.0.1.15)                                                ersten Android-Bau)
 Microsoft.Bcl.AsyncInterfaces (6.0.0)         MIT           nuspec, github.com/dotnet/runtime
+Velopack (1.2.161), nur PC                    MIT           nuspec, github.com/velopack/velopack
+  mit Update.exe/UpdateNix aus vpk 1.2.161                    (Rust-Programme; deren eingebaute
+                                                            Fremdbestandteile vor Veroeffentlichung
+                                                            einzeln pruefen)
 
 Nicht ausgeliefert (nur Tests): xunit.v3 und Microsoft.Testing.Platform.

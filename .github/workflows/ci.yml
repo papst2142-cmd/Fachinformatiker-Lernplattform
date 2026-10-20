@@ -80,6 +80,41 @@ jobs:
             paket/
             !paket/*.pdb
 
+  pakete:
+    # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
+    # Update-Probe A 0.1.0 -> A 0.1.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    name: pakete (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64 }
+          - { os: ubuntu-latest, rid: linux-x64 }
+          - { os: macos-15, rid: osx-arm64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Werkzeuge
+        shell: bash
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get install -y -q squashfs-tools; fi
+      - name: Pakete bauen und Update pruefen
+        shell: bash
+        run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paket-${{ matrix.rid }}-A-0.1.0
+          path: pakete/feed-A-0.1.0/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: updateprobe-${{ matrix.rid }}-A-0.1.1
+          path: pakete/feed-A-0.1.1/
+
   vergleichswerte:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
     # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.

@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Design;
+using Update = Lernplattform.Aktualisierung.Aktualisierung;
 using Lernplattform.Messung;
 using Lernplattform.ViewModels;
 
@@ -207,12 +208,15 @@ public partial class MainView : UserControl
         var sicherung = new Button { Content = "Alte Sicherung pruefen" };
         sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
         sicherung.Click += async (_, _) => await SicherungPruefenAsync();
-        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung } });
+        var update = new Button { Content = "Update aus Ordner", IsVisible = Update.AusOrdner is not null };
+        update.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        update.Click += async (_, _) => await UpdateAusOrdnerAsync();
+        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung, update } });
         panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Sicherung der alten App (lernstand.json.gz) oder die alte Datenbank (.db) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
         panel.Children.Add(_ergebnis);
-        _ergebnis.Text = Messwerte.Bericht(Geraet());
+        _ergebnis.Text = BerichtText();
         return new ScrollViewer { Content = panel };
     }
 
@@ -267,12 +271,52 @@ public partial class MainView : UserControl
                 await ZeigeAsync(i % 2 == 0 ? "Start" : "Testseite");
             }
             await ZeigeAsync("Messung");
-            _ergebnis.Text = Messwerte.Bericht(Geraet());
+            _ergebnis.Text = BerichtText();
             _zustand.Text = "Messung fertig. Jetzt \"Ergebnis kopieren\".";
         }
         finally
         {
             _laeuft = false;
+        }
+    }
+
+    private string BerichtText()
+    {
+        string probe;
+        try
+        {
+            probe = Ablage.UpdateProbe(Update.PaketVersion);
+        }
+        catch (Exception fehler)
+        {
+            probe = "nicht lesbar (" + fehler.GetType().Name + ")";
+        }
+        return Messwerte.Bericht(Geraet())
+            + "Version: " + Update.Anzeige + " (Paketversion " + Update.PaketVersion + ")" + Environment.NewLine
+            + "Updater: " + (Update.Zustand?.Invoke() ?? "keiner (Android: Update ueber neue APK)") + Environment.NewLine
+            + "Datenordner-Probe: " + probe + Environment.NewLine;
+    }
+
+    /// <summary>Spike D: Update aus einem Ordner mit Velopack-Paketen (nur PC).</summary>
+    private async Task UpdateAusOrdnerAsync()
+    {
+        var top = TopLevel.GetTopLevel(this);
+        if (top is null || Update.AusOrdner is null)
+        {
+            return;
+        }
+        var auswahl = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Ordner mit dem neuen Paket waehlen" });
+        if (auswahl.Count == 0 || auswahl[0].TryGetLocalPath() is not { } ordner)
+        {
+            return;
+        }
+        try
+        {
+            _zustand.Text = await Update.AusOrdner(ordner);
+        }
+        catch (Exception fehler)
+        {
+            _zustand.Text = "Update-Fehler: " + fehler.GetType().Name;
         }
     }
 
@@ -335,7 +379,7 @@ public partial class MainView : UserControl
             Messwerte.Notiere("Alte Datei: FEHLER " + fehler.GetType().Name);
             _zustand.Text = "Fehler beim Lesen, steht im Ergebnis.";
         }
-        _ergebnis.Text = Messwerte.Bericht(Geraet());
+        _ergebnis.Text = BerichtText();
     }
 
     /// <summary>Ablauf ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
