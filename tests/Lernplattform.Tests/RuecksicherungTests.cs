@@ -231,6 +231,43 @@ public class RuecksicherungTests
         await lauf.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     }
 
+    /// <summary>
+    /// Beleg fuer die CI (R16, A3, A4, F5): drei Sicherungen fuer die alte App in
+    /// beleg_ruecksicherung/ neben den Tests; werkzeuge/vergleich/pruefe_ruecksicherung.py liest
+    /// sie mit Python 0.63.2 ein (read_backup, backup_summary, merge_backup).
+    /// </summary>
+    [Fact]
+    public void BelegDateienFuerPython()
+    {
+        var beleg = Path.Combine(AppContext.BaseDirectory, "beleg_ruecksicherung");
+        Directory.CreateDirectory(beleg);
+        var erstellt = new DateTime(2026, 10, 20, 12, 0, 0);
+        var (ordner, lernstand) = Beispiel();
+        using (ordner)
+        {
+            Ruecksicherung.Speichern(Path.Combine(beleg, "voll.fisisicherung"),
+                Ruecksicherung.Erstellen(lernstand, new JsonObject { ["ziel_anzahl"] = 30 }, "A 0.5.0", "PC Beleg", erstellt));
+        }
+        // Verlauf geleert bzw. alles zurueckgesetzt (Marke mit Zone wie die App sie setzt), danach ein neuer Eintrag
+        foreach (var (name, marke) in new[] { ("verlauf_geleert", "history_cleared_at"), ("zurueckgesetzt", "reset_at") })
+        {
+            using var o = new TempOrdner();
+            var l = new Lernstand(Path.Combine(o.Pfad, Lernstand.DateiName));
+            Assert.True(l.Schreiben("INSERT INTO sync_meta (key, value) VALUES ($k, $v)", ("$k", marke), ("$v", "2026-10-20 12:00:00+02:00")));
+            var schreiber = new LernstandSchreiber(l, SpeichernTests.FesteUhr(() => Zeit.AddMinutes(5)), () => "beleg-" + name,
+                new Uhrabweichung(() => 1.0, null, "p"));
+            schreiber.KarteSpeichern("Netzwerk", "Nach der Marke", "karte", true);
+            var bytes = Ruecksicherung.Erstellen(l, [], "A 0.5.0", "Handy", erstellt);
+            Ruecksicherung.Speichern(Path.Combine(beleg, name + ".fisisicherung"), bytes);
+            Assert.Contains("\"" + marke + "\":\"2026-10-20 12:00:00+02:00\"", Entpacken(bytes), StringComparison.Ordinal);
+        }
+        foreach (var datei in Directory.GetFiles(beleg, "*.fisisicherung"))
+        {
+            Assert.Equal("A 0.5.0", Uebernahme.LeseSicherung(File.ReadAllBytes(datei)).AppVersion);
+        }
+        Assert.Equal(3, Directory.GetFiles(beleg, "*.fisisicherung").Length);
+    }
+
     internal static string Entpacken(byte[] bytes)
     {
         using var ein = new MemoryStream(bytes);

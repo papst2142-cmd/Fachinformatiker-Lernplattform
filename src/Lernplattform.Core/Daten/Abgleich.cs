@@ -168,14 +168,12 @@ public static class Abgleich
             gekappt = lokal.Gekappt || gekappt;
             Haltepunkt?.Invoke("vor_hochladen");
 
-            var eigene = Uids(lokal.Export);
-            var andere = fremd is { Leer: false } ? fremd.Uids : new Dictionary<string, HashSet<string>>();
-            if (fremd is { Leer: false } && UidsGleich(eigene, andere) && MarkenGleich((PyObjekt)lokal.Export["markers"]!, fremd.RoheMarken))
+            var (gleich, gesendet) = Vergleichen(lokal.Export, fremd);
+            if (gleich)
             {
                 ergebnis = new AbgleichErgebnis(erhalten, 0, 0, false, false, sicherungen);
                 break;
             }
-            var gesendet = eigene.Sum(p => p.Value.Count(u => !andere.TryGetValue(p.Key, out var r) || !r.Contains(u)));
             try
             {
                 Hochladen(netz, repo, token, lokal.Export, sha, geraet, uhr);
@@ -427,6 +425,36 @@ public static class Abgleich
 
     // -- Vergleich und Hochladen ----------------------------------------------
 
+    /// <summary>
+    /// Wie sync nach dem Zusammenfuehren: gleich (nichts hochzuladen), wenn es die Datei gibt und
+    /// Kennungen und Marken uebereinstimmen; sonst die Zahl der eigenen Eintraege, die die Datei nicht kennt.
+    /// </summary>
+    private static (bool Gleich, int Gesendet) Vergleichen(PyObjekt export, Fremd? fremd)
+    {
+        var eigene = Uids(export);
+        var andere = fremd is { Leer: false } ? fremd.Uids : new Dictionary<string, HashSet<string>>();
+        if (fremd is { Leer: false } && UidsGleich(eigene, andere) && MarkenGleich((PyObjekt)export["markers"]!, fremd.RoheMarken))
+        {
+            return (true, 0);
+        }
+        return (false, eigene.Sum(p => p.Value.Count(u => !andere.TryGetValue(p.Key, out var r) || !r.Contains(u))));
+    }
+
+    /// <summary>Ergebnis eines Versuchs ohne Netz (Vergleichswerte G21).</summary>
+    internal sealed record VersuchErgebnis(PyObjekt Export, int Erhalten, int Weg, int Ungueltig, bool Gekappt, bool Misch,
+        bool Gleich, int Gesendet);
+
+    /// <summary>Nur fuer Tests (G21): ein Versuch von sync ohne Netz mit gegebener Datei (null = fehlt) und Abweichung.</summary>
+    internal static VersuchErgebnis Versuch(Lernstand lernstand, byte[]? datei, double? dev, Uhr uhr, Uhrabweichung abweichung,
+        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, string sicherungsordner)
+    {
+        var fremd = datei is null ? null : Felder(datei, Uebernahme.LeseAbgleichDatei(datei));
+        var lokal = LokalAbgleichen(lernstand, fremd, dev, false, uhr, abweichung, umbenennungen, sicherungsordner);
+        var (gleich, gesendet) = Vergleichen(lokal.Export, fremd);
+        return new VersuchErgebnis(lokal.Export, lokal.Erhalten, lokal.Weg.Count, lokal.Ungueltig, lokal.Gekappt, lokal.Misch,
+            gleich, gesendet);
+    }
+
     /// <summary>_uids(export_local): Kennungen je Tabelle.</summary>
     private static Dictionary<string, HashSet<string>> Uids(PyObjekt export) =>
         ((PyObjekt)export["tables"]!).ToDictionary(p => p.Key,
@@ -517,9 +545,9 @@ public static class Abgleich
     // -- Lokale Schritte (eine Transaktion je Versuch) -------------------------
 
     private sealed record Lokal(int Erhalten, IReadOnlySet<(string Tabelle, object? Uid)> Weg, int Ungueltig, bool Gekappt,
-        PyObjekt Export, string? Sicherung);
+        bool Misch, PyObjekt Export, string? Sicherung);
 
-    private sealed record Schritt(int Erhalten, IReadOnlySet<(string Tabelle, object? Uid)> Weg, int Ungueltig, bool Gekappt);
+    private sealed record Schritt(int Erhalten, IReadOnlySet<(string Tabelle, object? Uid)> Weg, int Ungueltig, bool Gekappt, bool Misch);
 
     /// <summary>
     /// Alle lokalen Schritte eines Versuchs in einer Transaktion (BEGIN IMMEDIATE). Zuerst als Probe
@@ -568,7 +596,7 @@ public static class Abgleich
             }
             var export = Ruecksicherung.Austausch(db, tx);
             tx.Commit();
-            return new Lokal(schritt.Erhalten, schritt.Weg, schritt.Ungueltig, schritt.Gekappt, export, sicherung);
+            return new Lokal(schritt.Erhalten, schritt.Weg, schritt.Ungueltig, schritt.Gekappt, schritt.Misch, export, sicherung);
         }
         catch (SqliteException e)
         {
@@ -626,9 +654,9 @@ public static class Abgleich
             var weg = new HashSet<(string, object?)>();
             var bericht = Uebernahme.Zusammenfuehren(db, tx, daten, umbenennungen, uhr, false,
                 new AbgleichModus(misch, dev is { } d2 ? uhr.Jetzt() - Sek(d2) : null), weg);
-            return new Schritt(bericht.Uebernommen, weg, bericht.UngueltigeMarken, gekappt);
+            return new Schritt(bericht.Uebernommen, weg, bericht.UngueltigeMarken, gekappt, misch);
         }
-        return new Schritt(0, new HashSet<(string, object?)>(), 0, gekappt);
+        return new Schritt(0, new HashSet<(string, object?)>(), 0, gekappt, misch);
     }
 
     /// <summary>timedelta(seconds=x): auf Mikrosekunden gerundet (halb gerade).</summary>
@@ -838,7 +866,7 @@ public static class Abgleich
                 continue;
             }
             var bekannt = fremdeKappung.TryGetValue(k, out var roh) ? Ruecksicherung.Kappung(roh.ValueKind == JsonValueKind.String
-                ? roh.GetString() : JsonNode.Parse(roh.GetRawText())) : null;
+                ? (object?)roh.GetString() : JsonNode.Parse(roh.GetRawText())) : null;     // Text: als JSON lesen (_clamp_pair)
             var eigen = Ruecksicherung.Kappung(Meta(db, tx, Ruecksicherung.GekapptPraefix + k));
             if (bekannt is not null && eigen is not null && Equals(bekannt[0], eigen[0]) && !Equals(bekannt[1], eigen[1]))
             {
