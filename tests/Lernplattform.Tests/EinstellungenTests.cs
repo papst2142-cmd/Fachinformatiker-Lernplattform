@@ -174,6 +174,78 @@ public class EinstellungenTests
         Assert.Equal(vorher, File.ReadAllText(einstellungen.Pfad));
     }
 
+    /// <summary>
+    /// Auflage 3.1 (Weisung P1-2): Eine vorhandene, aber gesperrte Datei wird nicht
+    /// ueberschrieben. Die Sperre haelt eine zweite Oeffnung ohne Mitbenutzung
+    /// (unter Linux/macOS bildet .NET das mit flock nach), daher auch als root pruefbar.
+    /// </summary>
+    [Fact]
+    public void GesperrteDateiBleibtBytegleich()
+    {
+        using var ordner = new TempOrdner();
+        var einstellungen = new Einstellungen(ordner.Pfad);
+        Assert.True(einstellungen.Setze(Einstellungen.DarstellungSchluessel, "hell"));
+        var vorher = File.ReadAllBytes(einstellungen.Pfad);
+        using (new FileStream(einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            var werte = einstellungen.Laden();
+            Assert.True(einstellungen.NurAnzeige);
+            Assert.Equal("dunkel", Einstellungen.Darstellung(werte));
+            Assert.False(einstellungen.Speichern(werte));
+            Assert.False(einstellungen.Setze(Einstellungen.SchriftSchluessel, "gross"));
+            Assert.Null(einstellungen.DefektHinweis());
+        }
+        Assert.Equal(vorher, File.ReadAllBytes(einstellungen.Pfad));
+        Assert.False(File.Exists(einstellungen.Pfad + ".tmp"));
+        Assert.False(File.Exists(Path.Combine(ordner.Pfad, Einstellungen.DefektName)));
+        // Sperre weg: wieder normal lesbar und speicherbar
+        Assert.Equal("hell", Einstellungen.Darstellung(einstellungen.Laden()));
+        Assert.False(einstellungen.NurAnzeige);
+        Assert.True(einstellungen.Setze(Einstellungen.SchriftSchluessel, "gross"));
+    }
+
+    /// <summary>Auflage 3.1: Datei ohne Leserecht (Linux/macOS, nur ohne root pruefbar) wird nicht ueberschrieben.</summary>
+    [Fact]
+    public void DateiOhneLeserechtBleibtBytegleich()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            // Unter Windows deckt der Sperr-Test oben denselben Weg ab (IOException beim Lesen).
+            return;
+        }
+        using var ordner = new TempOrdner();
+        var einstellungen = new Einstellungen(ordner.Pfad);
+        Assert.True(einstellungen.Setze("a", 1));
+        var vorher = File.ReadAllBytes(einstellungen.Pfad);
+        File.SetUnixFileMode(einstellungen.Pfad, UnixFileMode.None);
+        try
+        {
+            einstellungen.Laden();
+            Assert.True(einstellungen.NurAnzeige);
+            Assert.False(einstellungen.Setze("a", 2));
+        }
+        finally
+        {
+            File.SetUnixFileMode(einstellungen.Pfad, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        Assert.Equal(vorher, File.ReadAllBytes(einstellungen.Pfad));
+    }
+
+    /// <summary>Auflage 3.1: Fehlt die Datei (auch der Ordner), gelten die Vorgaben und Speichern legt sie an.</summary>
+    [Fact]
+    public void FehlendeDateiEntstehtBeimSpeichern()
+    {
+        using var ordner = new TempOrdner();
+        var einstellungen = new Einstellungen(Path.Combine(ordner.Pfad, "neu", "daten"));
+        var werte = einstellungen.Laden();
+        Assert.False(einstellungen.NurAnzeige);
+        Assert.Equal("dunkel", Einstellungen.Darstellung(werte));
+        Assert.False(File.Exists(einstellungen.Pfad));
+        Assert.True(einstellungen.Setze(Einstellungen.DarstellungSchluessel, "hell"));
+        Assert.True(File.Exists(einstellungen.Pfad));
+        Assert.Equal("hell", Einstellungen.Darstellung(einstellungen.Laden()));
+    }
+
     [Theory]
     [InlineData("7:5", "07:05")]
     [InlineData(" 23:59 ", "23:59")]

@@ -14,6 +14,9 @@ namespace Lernplattform.Core.Daten;
 /// <item>Unbekannte Schluessel (z. B. von einem spaeteren Programmstand) bleiben beim Speichern erhalten.</item>
 /// <item>Atomar speichern: erst Hilfsdatei ".tmp", dann ersetzen; unter Linux/macOS nur fuer das eigene Konto lesbar (0600).</item>
 /// <item>Eine beschaedigte Datei wird vor dem naechsten Speichern als "einstellungen.defekt.json" aufgehoben und einmal gemeldet.</item>
+/// <item>Abweichung von Python (Weisung P1-2, 3.1): fehlt die Datei, gelten die Vorgaben und Speichern legt sie an.
+/// Kann eine vorhandene Datei nicht gelesen werden (gesperrt, kein Zugriff), gelten die Vorgaben nur fuer die
+/// Anzeige; Speichern und Setze schreiben dann nicht (Rueckgabe false), die Datei bleibt unveraendert.</item>
 /// </list>
 /// </summary>
 public sealed class Einstellungen
@@ -54,16 +57,19 @@ public sealed class Einstellungen
 
     public string Pfad => _pfad;
 
+    /// <summary>
+    /// true, wenn das letzte Laden die vorhandene Datei nicht lesen konnte (gesperrt, kein Zugriff).
+    /// Die Werte gelten dann nur fuer die Anzeige, gespeichert wird nicht.
+    /// </summary>
+    public bool NurAnzeige { get; private set; }
+
     /// <summary>Die gespeicherten Einstellungen mit Vorgabewerten (wie load_settings).</summary>
     public JsonObject Laden()
     {
         var werte = new JsonObject { [AutoCheckSchluessel] = true };
-        byte[] roh;
-        try
-        {
-            roh = File.ReadAllBytes(_pfad);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        var (roh, gesperrt) = Lesen();
+        NurAnzeige = gesperrt;
+        if (roh is null)
         {
             return werte;
         }
@@ -99,6 +105,12 @@ public sealed class Einstellungen
     /// </summary>
     public bool Speichern(JsonObject werte)
     {
+        if (Lesen().Gesperrt)
+        {
+            // vorhandene Datei nicht lesbar: nicht ueberschreiben (Weisung P1-2, 3.1)
+            NurAnzeige = true;
+            return false;
+        }
         var temp = _pfad + ".tmp";
         try
         {
@@ -138,6 +150,26 @@ public sealed class Einstellungen
             {
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Inhalt der Datei. Fehlt sie (Datei oder Ordner), ist das kein Fehler: (null, false).
+    /// Jeder andere Lesefehler ergibt (null, true).
+    /// </summary>
+    private (byte[]? Roh, bool Gesperrt) Lesen()
+    {
+        try
+        {
+            return (File.ReadAllBytes(_pfad), false);
+        }
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return (null, false);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return (null, true);
         }
     }
 
