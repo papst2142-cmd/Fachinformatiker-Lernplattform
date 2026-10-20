@@ -72,6 +72,7 @@ public static class AutoMessung
         // Startgroesse der Python-Linie (1360 x 880). Ohne Fenster (Handy) nur wie gestartet.
         var fenster = TopLevel.GetTopLevel(ansicht) as Window;
         var layoutFunde = new List<string>();
+        var gepruefteGroessen = new List<string>();
         var groessenJeStufe = 0;
         foreach (var stufe in Einstellungen.Schriftgroessen)
         {
@@ -85,12 +86,16 @@ public static class AutoMessung
             {
                 if (fenster is not null)
                 {
-                    fenster.Width = breite;
-                    fenster.Height = hoehe;
+                    // Nie groesser als der Bildschirm (Windows-CI: 1024 x 768): sonst rechnet
+                    // Avalonia mit der verlangten Breite, das System zeigt aber weniger
+                    var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
+                    fenster.Width = Math.Min(breite, hoechstB);
+                    fenster.Height = Math.Min(hoehe, hoechstH);
                     await ansicht.BildFertigAsync();
                     await ansicht.BildFertigAsync();
                 }
                 var ist = string.Create(inv, $"{name} {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}");
+                gepruefteGroessen.Add(stufe + " " + ist);
                 foreach (var id in ansicht.GebauteSeiten.Keys.ToList())
                 {
                     await ansicht.ZeigeAsync(id);
@@ -109,6 +114,7 @@ public static class AutoMessung
         Zustand.DesignAnwenden();
 
         Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
+        Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
             Messwerte.Notiere("  " + fund);
@@ -125,6 +131,18 @@ public static class AutoMessung
         funde += zuLang.Count;
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
+    }
+
+    // Groesste Innenflaeche des Fensters auf seinem Bildschirm (Arbeitsbereich ohne Rahmen)
+    private static (double Breite, double Hoehe) Hoechstgroesse(Window fenster)
+    {
+        if (fenster.Screens.ScreenFromVisual(fenster) is not { } bildschirm)
+        {
+            return (double.MaxValue, double.MaxValue);
+        }
+        var rahmen = fenster.FrameSize is { } aussen ? aussen - fenster.ClientSize : default;
+        return (Math.Floor(bildschirm.WorkingArea.Width / bildschirm.Scaling - rahmen.Width),
+            Math.Floor(bildschirm.WorkingArea.Height / bildschirm.Scaling - rahmen.Height));
     }
 }
 
