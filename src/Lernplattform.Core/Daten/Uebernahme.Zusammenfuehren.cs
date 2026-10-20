@@ -159,6 +159,7 @@ public static partial class Uebernahme
                 try
                 {
                     File.Delete(datei);     // nur die eben angefangene, unvollstaendige Kopie
+                    File.Delete(datei + "-journal");
                 }
                 catch (Exception f) when (f is IOException or UnauthorizedAccessException)
                 {

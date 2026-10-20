@@ -585,7 +585,7 @@ public static partial class Uebernahme
                 }
                 var da = Abfrage(db, lesen, $"PRAGMA table_info({tabelle})").Select(z => (string)z[1]!).ToHashSet();
                 var optional = Optional.GetValueOrDefault(tabelle, []);
-                if (spalten.Any(s => !da.Contains(s) && !optional.Contains(s)) || !da.Contains("id") || !da.Contains("timestamp"))
+                if (spalten.Any(s => !da.Contains(s) && !optional.Contains(s)) || !da.Contains("id") || !da.Contains("timestamp") || !da.Contains("uid"))
                 {
                     throw new UebernahmeAusnahme(UebernahmeFehler.DatenbankNichtLesbar);
                 }

@@ -350,4 +350,28 @@ public class UebernahmeTests
         Assert.Contains(("card_events", u.GetProperty("karte")[0].GetString()!, u.GetProperty("karte")[1].GetString()!), Umbenennungen);
         Assert.Contains(("quiz_answers", u.GetProperty("quiz")[0].GetString()!, u.GetProperty("quiz")[1].GetString()!), Umbenennungen);
     }
+
+    /// <summary>Alte Datenbank ohne Spalte uid: Fehler statt still uebersprungener Zeilen (Gegenpruefung W1, Fund 6).</summary>
+    [Fact]
+    public void AlteDatenbankOhneUidIstNichtLesbar()
+    {
+        using var ordner = new TempOrdner();
+        var alt = Path.Combine(ordner.Pfad, "fisi_lernplattform.db");
+        using (var db = VergleichsHilfe.Oeffnen(alt))
+        {
+            VergleichsHilfe.Ausfuehren(db, "CREATE TABLE card_events (id INTEGER PRIMARY KEY, timestamp TEXT, category TEXT, question TEXT, mode TEXT, correct INTEGER)");
+            VergleichsHilfe.Ausfuehren(db, "INSERT INTO card_events (timestamp, category, question, mode, correct) VALUES ('2026-10-01 10:00:00', 'a', 'b', 'lernen', 1)");
+        }
+        Assert.Equal(UebernahmeFehler.DatenbankNichtLesbar,
+            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, alt)).Fehler);
+    }
+
+    /// <summary>Zeit mit Zeilenumbruch am Ende ist wie bei Pythons strptime/fromisoformat kein Datum (Gegenpruefung W1, Fund 1).</summary>
+    [Fact]
+    public void ZeitMitZeilenumbruchIstKeinDatum()
+    {
+        Assert.Null(Loeschmarken.Ortszeit("2026-1-1 00:00:00\n"));
+        Assert.NotNull(Loeschmarken.Ortszeit("2026-1-1 00:00:00"));
+        Assert.Null(Loeschmarken.Lesen("2026-10-05 12:00:00+02:00\n")?.Utc);
+    }
 }

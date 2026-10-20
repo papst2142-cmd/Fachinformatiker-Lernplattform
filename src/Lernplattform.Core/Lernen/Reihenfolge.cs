@@ -155,10 +155,10 @@ public sealed class RahmenplanGewicht
     public static DateOnly? Datum(string? text)
     {
         text = (text ?? "").Trim();
-        var m = Regex.Match(text, @"^(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])\.(1[0-2]|0[1-9]|[1-9])\.([0-9]{4})$");
+        var m = Regex.Match(text, @"^(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])\.(1[0-2]|0[1-9]|[1-9])\.([0-9]{4})\z");
         if (!m.Success)
         {
-            m = Regex.Match(text, @"^()([0-9]{4})-(1[0-2]|0[1-9]|[1-9])-(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])$");
+            m = Regex.Match(text, @"^()([0-9]{4})-(1[0-2]|0[1-9]|[1-9])-(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])\z");
             if (!m.Success)
             {
                 return null;

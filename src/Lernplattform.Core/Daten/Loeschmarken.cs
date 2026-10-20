@@ -20,11 +20,11 @@ public static class Loeschmarken
     public const int MischbetriebSekunden = 7 * 86400;        // MIXED_HOLD
     public const int UhrToleranz = 300;                       // CLOCK_TOLERANCE
 
-    private static readonly Regex Muster = new(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(\.\d{1,6})?(?:([+-])(\d{2}):(\d{2}))?$");
+    private static readonly Regex Muster = new(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(\.\d{1,6})?(?:([+-])(\d{2}):(\d{2}))?\z");
 
     // _strptime "%Y-%m-%d %H:%M:%S": Muster wie Pythons _strptime (Leerzeichen = \s+)
     private static readonly Regex Zeitmuster = new(
-        @"^(\d\d\d\d)-(1[0-2]|0[1-9]|[1-9])-(3[01]|[12]\d|0[1-9]|[1-9]| [1-9])\s+(2[0-3]|[0-1]\d|\d):([0-5]\d|\d):(6[0-1]|[0-5]\d|\d)$",
+        @"^(\d\d\d\d)-(1[0-2]|0[1-9]|[1-9])-(3[01]|[12]\d|0[1-9]|[1-9]| [1-9])\s+(2[0-3]|[0-1]\d|\d):([0-5]\d|\d):(6[0-1]|[0-5]\d|\d)\z",
         RegexOptions.IgnoreCase);
 
     /// <summary>Wahrheitswert wie Pythons bool(x) fuer Zellwerte.</summary>
@@ -346,7 +346,7 @@ public static class Loeschmarken
         {
             return null;
         }
-        var m = Regex.Match(text, @"^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?)(Z|[+-]\d{2}:\d{2}(?::\d{2})?)$");
+        var m = Regex.Match(text, @"^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?)(Z|[+-]\d{2}:\d{2}(?::\d{2})?)\z");
         if (!m.Success)
         {
             return null;
