@@ -23,7 +23,7 @@
 - Ein Bildschirm-Aufbau für PC und Handy. Beschriftungen PC = Handy. Farbwelten (72 = 6 × 6 × 2) werden im Core berechnet und müssen exakt den Python-Hexwerten entsprechen (A2).
 
 ## Namen (endgültig, Nico 19.10.2026)
-- Anzeige „Fachinformatiker Lernplattform“; Android `io.github.papst2142cmd.lernplattform`; Datenordner `Fachinformatiker-Lernplattform` (Linux `fachinformatiker-lernplattform`); Datenbank `lernplattform.db`; Programmdatei `Lernplattform.exe` / `lernplattform`.
+- Anzeige „Fachinformatiker Lernplattform“; Android `io.github.papst2142cmd.lernplattform`; Datenordner `Fachinformatiker-Lernplattform` (Linux `fachinformatiker-lernplattform`); Datenbank `lernplattform.db`; Installationskennung (Velopack) `Fachinformatiker-Lernplattform`; Programmdatei `Lernplattform` auf allen Systemen (Windows `Lernplattform.exe`, Linux/macOS `Lernplattform`, Nico 20.10.2026, ersetzt die frühere Kleinschreibung). Kennung und Programmname nach der ersten Auslieferung nie ändern.
 - **Durchgehende Update-Linie:** A, B und 1.0 haben dieselbe Kennung und denselben Datenordner; der Lernstand bleibt bei jedem Update. Kennung und Datenordner nie ändern. Eigene Installation nur gegenüber der Python-Linie (einmalige Übernahme aus `lernstand.json.gz`).
 - Linux nur AppImage mit Velopack-Update; Android-Update über neue APK (gleicher Schlüssel); nur arm64-v8a.
 
@@ -41,9 +41,10 @@
 - Nach jedem Patch: Handoff für einen neuen Chat (`START_Chat.md` aktualisieren) und diese Datei aktuell halten.
 
 ## Aktueller Stand
-- Phase 0 im Bau (Startzeile Nico 20.10.2026), Zweig `phase0-grundlagen`, PR #1 (Merge erst nach Abnahme).
-- Fertig: Grundgerüst, Spike B (Zufall), Spike C (Testdaten, Prüfsumme wie Python, Sicherungsprüfung mit Auflagen Weisung CC P0-3), Farbwelten G6, Spike A Messseite, Spike D (Velopack-Pakete Windows/Linux/macOS, Update-Probe in der CI, Android-Update-APK), Spike E Probeseite.
+- Phase 0 von Chat abgenommen (Weisung CC_P0-5_Abnahme), Bericht = Meldung P0-5. Zweig `phase0-grundlagen`, PR #1 (Entwurf); Squash-Merge nach `main` freigegeben (Nico, Frage 2), Zeitpunkt gibt Chat nach Lesung des Umbaus und grünem Lauf. Version bleibt A 0.1.0, kein Release, kein Tag.
+- Fertig: Grundgerüst, Spike A (Zeiten/Eingabe), B (Zufall), C (Testdaten, Prüfsumme wie Python, Sicherungsprüfung mit Auflagen Weisung CC P0-3), D (Velopack-Pakete Windows/Linux/macOS, Update-Probe in der CI, Android-Update-APK), Farbwelten G6; Spike E gebaut (NVDA-Probe offen).
 - Paketversion für den Updater: `1.0.0-<stufe>.<Version>` (A 0.1.0 = 1.0.0-a.0.1.0), ab 1.0 ohne Zusatz; Android-Versionscode aus Stufe/Version (Directory.Build.props).
-- Messseite, Screenreader-Seite, Sicherungsprüfung und Update-Knopf (`Messung/`, `Views/MainView.axaml.cs`) sind nur für Phase 0 und werden mit dem Phase-0-Bericht entfernt. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0`, `LERNPLATTFORM_SOFTWARE=1`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
+- Messseite, Screenreader-Seite, Dauertest und Update-Knopf sind nach der Abnahme entfernt. Die Startseite trägt „Alte Sicherung prüfen“ und „Ergebnis kopieren“; sie bleiben, bis Nico die Prüfung mit echten Daten genutzt hat (`Views/MainView.axaml.cs`, Ergebniszeilen in `Messung/Messwerte.cs`). Testseite bleibt vorerst. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1` (Start ohne Bedienung, CI), `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO` (Update-Probe CI), `LERNPLATTFORM_DATEN`.
 - Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
-- Offen: Proben Nico (Spike A Messungen, Spike D Installation/Update auf Windows-VM, Ubuntu-VM, S24, Spike E NVDA), echte Sicherung erst nach Chat-Lesung; danach Bericht Phase 0 mit Gegenprüfung.
+- Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung (Nico: wenn die Anzeige der Lerndaten steht), B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht in Releases.
+- Nächste Meldung: P0-6 (Umbau nach Abnahme). Danach Plan Phase 1 erst nach Nicos Startzeile.

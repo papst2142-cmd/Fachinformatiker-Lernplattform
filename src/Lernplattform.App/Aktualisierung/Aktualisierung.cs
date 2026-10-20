@@ -18,9 +18,6 @@ public static class Aktualisierung
     /// <summary>Kurzer Zustand des Updaters (installiert, Version), oder null ohne Updater.</summary>
     public static Func<string>? Zustand { get; set; }
 
-    /// <summary>Sucht im Ordner ein neueres Paket, laedt es und startet neu. Liefert sonst den Grund.</summary>
-    public static Func<string, Task<string>>? AusOrdner { get; set; }
-
     private static string Metadaten(string schluessel) => typeof(Aktualisierung).Assembly
         .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == schluessel)?.Value ?? "";
 }

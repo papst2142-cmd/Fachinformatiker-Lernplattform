@@ -12,3 +12,4 @@
 - Screenreader-Probe (nur Phase 0): Seite mit Knopf, Textfeld, Liste, Kontrollkästchen und Reitern, alle mit Namen für NVDA, Orca und TalkBack.
 - Linux: Startschalter `--software` (Zeichnen ohne Grafikkarte) und `--ohne-eingabemethode` als Ausweich, beschrieben im README und auf der Messseite; Standard bleibt das normale Zeichnen. AppImage zusätzlich als .tar.gz, damit das Ausführungsrecht erhalten bleibt.
 - Messseite: Speicher-Dauertest (20 Durchgänge der ganzen Messung, Speicher nach jedem Durchgang).
+- Nach der Abnahme von Phase 0: Messseite, Screenreader-Probe, Dauertest und Knopf „Update aus Ordner“ entfernt. „Alte Sicherung prüfen“ und „Ergebnis kopieren“ stehen jetzt auf der Startseite, die Prüfung selbst ist unverändert. Die CI startet das Programm weiter einmal ohne Bedienung und prüft das Update ohne Oberfläche.

@@ -6,9 +6,9 @@ using System.Text;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Phase 0, Spike A: sammelt Messwerte (Start, erstes Oeffnen einer Seite,
-/// Farbwechsel, Arbeitsspeicher) und liefert sie als Text zum Kopieren.
-/// Nur fuer Phase 0; wird mit dem Phase-0-Bericht wieder entfernt.
+/// Phase 0: sammelt Ergebniszeilen (Start, erstes Oeffnen einer Seite, Arbeitsspeicher,
+/// Ergebnis "Alte Sicherung pruefen") und liefert sie als Text zum Kopieren.
+/// Bleibt, bis die Sicherungspruefung mit echten Daten genutzt ist (Weisung CC P0-4 Proben).
 /// </summary>
 public static class Messwerte
 {
@@ -36,7 +36,7 @@ public static class Messwerte
         var sb = new StringBuilder();
         using var p = Process.GetCurrentProcess();
         p.Refresh();
-        sb.AppendLine("MESSUNG SPIKE A (Phase 0) - bitte komplett kopieren und senden");
+        sb.AppendLine("ERGEBNIS (Phase 0) - bitte komplett kopieren und senden");
         sb.AppendLine(string.Create(inv, $"Programm: A {typeof(Messwerte).Assembly.GetName().Version?.ToString(3)}"));
         sb.AppendLine("System: " + RuntimeInformation.OSDescription + " / " + RuntimeInformation.OSArchitecture
             + " / .NET " + Environment.Version + " / Kerne " + Environment.ProcessorCount);

@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Automation;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
@@ -10,7 +9,6 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using Lernplattform.Core.Daten;
-using Lernplattform.Core.Design;
 using Lernplattform.Design;
 using Update = Lernplattform.Aktualisierung.Aktualisierung;
 using Lernplattform.Messung;
@@ -19,9 +17,8 @@ using Lernplattform.ViewModels;
 namespace Lernplattform.Views;
 
 /// <summary>
-/// Phase 0: Startseite, Testseite und Messseite (Spike A). Die Seiten werden
-/// beim ersten Oeffnen gebaut und danach wiederverwendet; das erste Oeffnen
-/// und jeder Wechsel werden bis zum fertig gezeichneten Bild gemessen.
+/// Phase 0: Startseite (mit "Alte Sicherung pruefen") und Testseite. Die Seiten werden
+/// beim ersten Oeffnen gebaut und danach wiederverwendet.
 /// </summary>
 public partial class MainView : UserControl
 {
@@ -29,7 +26,6 @@ public partial class MainView : UserControl
     private readonly Dictionary<string, Control> _seiten = new(StringComparer.Ordinal);
     private readonly TextBox _ergebnis = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, MinHeight = 160 };
     private readonly TextBlock _zustand = new() { TextWrapping = TextWrapping.Wrap };
-    private bool _laeuft;
 
     public static bool AutoModus => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_AUTO") == "1";
 
@@ -37,7 +33,7 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
         var navigation = new StackPanel { Spacing = 6, Margin = new Thickness(10) };
-        foreach (var name in (string[])["Start", "Testseite", "Messung", "Screenreader"])
+        foreach (var name in (string[])["Start", "Testseite"])
         {
             var knopf = new Button { Content = name, HorizontalAlignment = HorizontalAlignment.Stretch };
             knopf.Farbe(Button.ForegroundProperty, "Pinsel.text");
@@ -85,8 +81,6 @@ public partial class MainView : UserControl
             seite = name switch
             {
                 "Testseite" => BaueTestseite(),
-                "Messung" => BaueMessseite(),
-                "Screenreader" => BaueScreenreaderSeite(),
                 _ => BaueStart(),
             };
             _seiten[name] = seite;
@@ -121,9 +115,30 @@ public partial class MainView : UserControl
         panel.Children.Add(Text(vm.Titel, 24, FontWeight.SemiBold));
         panel.Children.Add(Text(vm.Version));
         panel.Children.Add(Text(vm.Hinweis));
-        panel.Children.Add(Text("Spike A: links \"Messung\" waehlen und \"Messung starten\" tippen."));
-        return panel;
+
+        var kopieren = new Button { Content = "Ergebnis kopieren" };
+        kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        kopieren.Click += async (_, _) =>
+        {
+            if (TopLevel.GetTopLevel(this)?.Clipboard is { } ablage)
+            {
+                await ablage.SetTextAsync(_ergebnis.Text ?? "");
+                _zustand.Text = "Ergebnis kopiert.";
+            }
+        };
+        var sicherung = new Button { Content = "Alte Sicherung pruefen" };
+        sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        sicherung.Click += async (_, _) => await SicherungPruefenAsync();
+        panel.Children.Add(new WrapPanel { Children = { sicherung, kopieren } });
+        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
+        panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
+        panel.Children.Add(_zustand);
+        _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
+        panel.Children.Add(_ergebnis);
+        _ergebnis.Text = BerichtText();
+        return new ScrollViewer { Content = panel };
     }
+
 
     private static Control BaueTestseite()
     {
@@ -170,113 +185,6 @@ public partial class MainView : UserControl
         return new ScrollViewer { Content = panel };
     }
 
-    /// <summary>
-    /// Phase 0, Spike E: fuenf Bedienelemente mit Namen fuer Screenreader (NVDA, Orca, TalkBack).
-    /// Pruefung: Namen und Zustaende werden vorgelesen, Tab-Reihenfolge von oben nach unten.
-    /// </summary>
-    private static Control BaueScreenreaderSeite()
-    {
-        var panel = new StackPanel { Spacing = 12, Margin = new Thickness(16) };
-        panel.Children.Add(Text("Screenreader-Probe (Spike E)", 20, FontWeight.SemiBold));
-        panel.Children.Add(Text("Mit der Tab-Taste nacheinander anspringen: 1 Knopf, 2 Textfeld, 3 Liste, 4 Kontrollkaestchen, 5 Reiter. Der Screenreader soll jeweils Name und Zustand vorlesen."));
-
-        var knopf = new Button { Content = "Antwort pruefen", TabIndex = 1 };
-        AutomationProperties.SetName(knopf, "Antwort pruefen");
-        AutomationProperties.SetHelpText(knopf, "Prueft die eingegebene Antwort");
-        knopf.Farbe(Button.BackgroundProperty, "Verlauf.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-
-        var feld = new TextBox { PlaceholderText = "Antwort eingeben", MinHeight = 36, TabIndex = 2 };
-        AutomationProperties.SetName(feld, "Antwort eingeben");
-        feld.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card")
-            .Farbe(TextBox.BorderBrushProperty, "Pinsel.field_border");
-
-        var liste = new ListBox { Height = 140, TabIndex = 3, ItemsSource = new[] { "Lernfeld 1: Das Unternehmen", "Lernfeld 2: Arbeitsplaetze", "Lernfeld 3: Netzwerke", "Lernfeld 4: Schutzbedarf" } };
-        AutomationProperties.SetName(liste, "Lernfelder");
-        liste.Farbe(ListBox.BackgroundProperty, "Pinsel.card").Farbe(ListBox.ForegroundProperty, "Pinsel.text");
-
-        var haken = new CheckBox { Content = "Als erledigt markieren", TabIndex = 4 };
-        AutomationProperties.SetName(haken, "Als erledigt markieren");
-        haken.Farbe(CheckBox.ForegroundProperty, "Pinsel.text");
-
-        var reiter = new TabControl
-        {
-            TabIndex = 5,
-            ItemsSource = new[]
-            {
-                new TabItem { Header = "Karteikarten", Content = Text("Inhalt Karteikarten") },
-                new TabItem { Header = "Quiz", Content = Text("Inhalt Quiz") },
-                new TabItem { Header = "Pruefung", Content = Text("Inhalt Pruefung") },
-            },
-        };
-        AutomationProperties.SetName(reiter, "Bereiche");
-        foreach (var t in (IEnumerable<TabItem>)reiter.ItemsSource)
-        {
-            AutomationProperties.SetName(t, (string)t.Header!);
-        }
-        reiter.Farbe(TabControl.ForegroundProperty, "Pinsel.text");
-
-        panel.Children.Add(knopf);
-        panel.Children.Add(feld);
-        panel.Children.Add(liste);
-        panel.Children.Add(haken);
-        panel.Children.Add(reiter);
-        return new ScrollViewer { Content = panel };
-    }
-
-    private Control BaueMessseite()
-    {
-        var panel = new StackPanel { Spacing = 10, Margin = new Thickness(16) };
-        panel.Children.Add(Text("Messung Spike A", 20, FontWeight.SemiBold));
-        panel.Children.Add(Text("\"Messung starten\" wechselt auf der Testseite 10x zwischen Hell und Dunkel, dann durch alle 72 Farbwelten und 10x zwischen den Seiten. Danach \"Ergebnis kopieren\" und den Text an Claude schicken."));
-
-        var darstellung = new ComboBox { ItemsSource = new[] { "Dunkel", "Hell" }, SelectedIndex = FarbenAnwenden.Aktuell.Hell ? 1 : 0, MinWidth = 140 };
-        var grundfarbe = new ComboBox { ItemsSource = Farbwelt.Grundfarben.Select(g => g.Name).ToList(), SelectedIndex = 0, MinWidth = 160 };
-        var hintergrund = new ComboBox { ItemsSource = Farbwelt.Hintergruende.Select(h => h.NameDunkel + " / " + h.NameHell).ToList(), SelectedIndex = 0, MinWidth = 200 };
-        void Waehle(object? s, SelectionChangedEventArgs e)
-        {
-            if (darstellung.SelectedIndex < 0 || grundfarbe.SelectedIndex < 0 || hintergrund.SelectedIndex < 0)
-            {
-                return;
-            }
-            FarbenAnwenden.Anwenden(Farbwelt.Berechne(darstellung.SelectedIndex == 1 ? Farbwelt.Hell : Farbwelt.Dunkel,
-                Farbwelt.Grundfarben[grundfarbe.SelectedIndex].Id, Farbwelt.Hintergruende[hintergrund.SelectedIndex].Id));
-        }
-        darstellung.SelectionChanged += Waehle;
-        grundfarbe.SelectionChanged += Waehle;
-        hintergrund.SelectionChanged += Waehle;
-        panel.Children.Add(new WrapPanel { Children = { darstellung, grundfarbe, hintergrund } });
-
-        var starten = new Button { Content = "Messung starten" };
-        starten.Farbe(Button.BackgroundProperty, "Verlauf.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-        starten.Click += async (_, _) => await MessenAsync();
-        var kopieren = new Button { Content = "Ergebnis kopieren" };
-        kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
-        kopieren.Click += async (_, _) =>
-        {
-            if (TopLevel.GetTopLevel(this)?.Clipboard is { } ablage)
-            {
-                await ablage.SetTextAsync(_ergebnis.Text ?? "");
-                _zustand.Text = "Ergebnis kopiert.";
-            }
-        };
-        var sicherung = new Button { Content = "Alte Sicherung pruefen" };
-        sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
-        sicherung.Click += async (_, _) => await SicherungPruefenAsync();
-        var update = new Button { Content = "Update aus Ordner", IsVisible = Update.AusOrdner is not null };
-        update.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
-        update.Click += async (_, _) => await UpdateAusOrdnerAsync();
-        var dauer = new Button { Content = "Dauertest (20 Durchgaenge)" };
-        dauer.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
-        dauer.Click += async (_, _) => await DauertestAsync(20);
-        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung, update, dauer } });
-        panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
-        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
-        panel.Children.Add(_zustand);
-        _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
-        panel.Children.Add(_ergebnis);
-        _ergebnis.Text = BerichtText();
-        return new ScrollViewer { Content = panel };
-    }
 
     private string Geraet()
     {
@@ -285,58 +193,6 @@ public partial class MainView : UserControl
             $"{top.Bounds.Width:F0}x{top.Bounds.Height:F0} Punkte, Skalierung {top.RenderScaling:F2}");
     }
 
-    private async Task WechselAsync(string reihe, Palette palette)
-    {
-        var uhr = Stopwatch.StartNew();
-        FarbenAnwenden.Anwenden(palette);
-        await BildFertigAsync();
-        Messwerte.Reihe(reihe, uhr.Elapsed.TotalMilliseconds);
-    }
-
-    private async Task MessenAsync()
-    {
-        if (_laeuft)
-        {
-            return;
-        }
-        _laeuft = true;
-        try
-        {
-            var ausgang = FarbenAnwenden.Aktuell;
-            await ZeigeAsync("Testseite");
-            var dunkel = Farbwelt.Berechne(Farbwelt.Dunkel, Farbwelt.StandardGrundfarbe, Farbwelt.StandardHintergrund);
-            var hell = Farbwelt.Berechne(Farbwelt.Hell, Farbwelt.StandardGrundfarbe, Farbwelt.StandardHintergrund);
-            for (var i = 0; i < 10; i++)
-            {
-                await WechselAsync("Wechsel Hell/Dunkel", i % 2 == 0 ? hell : dunkel);
-            }
-            foreach (var d in (string[])[Farbwelt.Dunkel, Farbwelt.Hell])
-            {
-                foreach (var g in Farbwelt.Grundfarben)
-                {
-                    foreach (var h in Farbwelt.Hintergruende)
-                    {
-                        var uhr = Stopwatch.StartNew();
-                        var palette = Farbwelt.Berechne(d, g.Id, h.Id);
-                        Messwerte.Reihe("Farbwelt berechnen (ohne Zeichnen)", uhr.Elapsed.TotalMilliseconds);
-                        await WechselAsync("Wechsel durch alle 72 Farbwelten", palette);
-                    }
-                }
-            }
-            await WechselAsync("Wechsel Hell/Dunkel", ausgang);
-            for (var i = 0; i < 10; i++)
-            {
-                await ZeigeAsync(i % 2 == 0 ? "Start" : "Testseite");
-            }
-            await ZeigeAsync("Messung");
-            _ergebnis.Text = BerichtText();
-            _zustand.Text = "Messung fertig. Jetzt \"Ergebnis kopieren\".";
-        }
-        finally
-        {
-            _laeuft = false;
-        }
-    }
 
     private string BerichtText()
     {
@@ -355,28 +211,6 @@ public partial class MainView : UserControl
             + "Datenordner-Probe: " + probe + Environment.NewLine;
     }
 
-    /// <summary>Spike D: Update aus einem Ordner mit Velopack-Paketen (nur PC).</summary>
-    private async Task UpdateAusOrdnerAsync()
-    {
-        var top = TopLevel.GetTopLevel(this);
-        if (top is null || Update.AusOrdner is null)
-        {
-            return;
-        }
-        var auswahl = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Ordner mit dem neuen Paket waehlen" });
-        if (auswahl.Count == 0 || auswahl[0].TryGetLocalPath() is not { } ordner)
-        {
-            return;
-        }
-        try
-        {
-            _zustand.Text = await Update.AusOrdner(ordner);
-        }
-        catch (Exception fehler)
-        {
-            _zustand.Text = "Update-Fehler: " + fehler.GetType().Name;
-        }
-    }
 
     /// <summary>
     /// Spike C mit echtem Lernstand (Auflage A3, Weisung CC P0-3): die Datei wird nur
@@ -422,53 +256,12 @@ public partial class MainView : UserControl
         _ergebnis.Text = BerichtText();
     }
 
-    /// <summary>
-    /// Speicher-Dauertest (Weisung CC Spike A Ergebnis, Punkt 3): die ganze Messung n-mal
-    /// hintereinander; nach jedem Durchgang wird aufgeraeumt (GC) und der Speicher notiert.
-    /// Waechst er von Durchgang zu Durchgang weiter, haelt das Programm Speicher fest.
-    /// </summary>
-    private async Task DauertestAsync(int durchgaenge)
-    {
-        var inv = CultureInfo.InvariantCulture;
-        var werte = new List<double>();
-        for (var i = 1; i <= durchgaenge; i++)
-        {
-            _zustand.Text = string.Create(inv, $"Dauertest: Durchgang {i} von {durchgaenge} ...");
-            await MessenAsync();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            using var p = Process.GetCurrentProcess();
-            p.Refresh();
-            var mb = p.WorkingSet64 / 1048576.0;
-            werte.Add(mb);
-            Messwerte.Notiere(string.Create(inv,
-                $"Dauertest Durchgang {i}: Arbeitsspeicher {mb:F0} MB, verwaltet {GC.GetTotalMemory(false) / 1048576.0:F0} MB"));
-        }
-        if (werte.Count >= 6)
-        {
-            // Zuwachs zweite gegen erste Haelfte (der erste Durchgang laedt noch Teile nach)
-            double vorne = werte.Skip(1).Take(werte.Count / 2 - 1).Average(), hinten = werte.Skip(werte.Count / 2).Average();
-            Messwerte.Notiere(string.Create(inv,
-                $"Dauertest Ergebnis: {durchgaenge} Durchgaenge, erster {werte[0]:F0} MB, letzter {werte[^1]:F0} MB, Hoechstwert {werte.Max():F0} MB, Zuwachs zweite Haelfte gegen erste {hinten - vorne:F1} MB"));
-        }
-        _ergebnis.Text = BerichtText();
-        _zustand.Text = "Dauertest fertig. Jetzt \"Ergebnis kopieren\".";
-    }
-
-    /// <summary>Ablauf ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
+    /// <summary>Start ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
     private async Task AutoLaufAsync()
     {
-        await ZeigeAsync("Screenreader");
-        await ZeigeAsync("Messung");
-        if (int.TryParse(Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DAUER"), out var n) && n > 0)
-        {
-            await DauertestAsync(n);
-        }
-        else
-        {
-            await MessenAsync();
-        }
+        await ZeigeAsync("Testseite");
+        await ZeigeAsync("Start");
+        _ergebnis.Text = BerichtText();
         var datei = Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DATEI") is { Length: > 0 } d ? d : "messung_auto.txt";
         await File.WriteAllTextAsync(datei, _ergebnis.Text);
         Console.WriteLine(_ergebnis.Text);

@@ -15,12 +15,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Feld | Wert |
 |---|---|
 | Version | A 0.1.0 (in Arbeit, noch nicht veröffentlicht), Paketversion 1.0.0-a.0.1.0 |
-| Phase | 0, im Bau seit 20.10.2026; Zweig `phase0-grundlagen`, PR #1 |
-| Fertig | Grundgerüst, Spikes B, C (mit Auflagen A3), D (Pakete + Update-Probe CI), Farbwelten G6, Probeseiten A und E |
-| Letzte Meldung | P0-4 (Fi-Austausch) |
-| Offen bei Nico | Messungen Spike A, Installation/Update Spike D (Windows-VM, Ubuntu-VM, S24), NVDA Spike E, Sicherungsprüfung nach Chat-Lesung |
-| Offen bei Chat | Lesung Sicherungsprüfung (Auflage 4), Paketversion-Schema (Frage 1 P0-4) |
-| Nächster Schritt | Ergebnisse von Nico einarbeiten, dann Bericht Phase 0 mit Gegenprüfung |
+| Phase | 0 abgenommen (Chat, Weisung CC_P0-5_Abnahme); Zweig `phase0-grundlagen`, PR #1 (Entwurf), Squash-Merge von Nico freigegeben |
+| Fertig | Spikes A, B, C (Testdaten), D, Farbwelten G6; Spike E gebaut; Prüfseiten nach Abnahme entfernt, „Alte Sicherung prüfen“ auf der Startseite |
+| Letzte Meldung | P0-5 Bericht Phase 0 (Fi-Austausch), nächste P0-6 |
+| Offen bei Nico | NVDA, echte Sicherung (später); Merge-OK nach Chats Meldung |
+| Offen bei Chat | Lesung Umbau-Diff (Regel A), danach Zeitpunkt Merge |
+| Nächster Schritt | Nach Lesung: Push, ganzer GitHub-Lauf, Meldung P0-6 mit Gegenprüfung, Merge; dann Plan Phase 1 nach Nicos Startzeile |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).

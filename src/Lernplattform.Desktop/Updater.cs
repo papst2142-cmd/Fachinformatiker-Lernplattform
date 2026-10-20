@@ -10,8 +10,8 @@ namespace Lernplattform.Desktop;
 
 /// <summary>
 /// Phase 0, Spike D: Update ueber Velopack aus einem Ordner (Windows, Linux-AppImage,
-/// macOS). Spaeter kommt die Quelle GitHub-Releases dazu; dafuer braucht es Releases,
-/// die erst nach Freigabe entstehen.
+/// macOS); in Phase 0 nur in der CI ohne Oberflaeche (Auto). Spaeter kommt die Quelle
+/// GitHub-Releases dazu; dafuer braucht es Releases, die erst nach Freigabe entstehen.
 /// </summary>
 internal static class Updater
 {
@@ -30,22 +30,6 @@ internal static class Updater
             {
                 return "Updater-Fehler " + fehler.GetType().Name;
             }
-        };
-        Aktuell.AusOrdner = async ordner =>
-        {
-            var mgr = new UpdateManager(new SimpleFileSource(new DirectoryInfo(ordner)));
-            if (!mgr.IsInstalled)
-            {
-                return "Update geht nur im installierten Programm (Setup bzw. AppImage).";
-            }
-            var neu = await mgr.CheckForUpdatesAsync();
-            if (neu is null)
-            {
-                return "Kein neueres Paket im Ordner (installiert: " + mgr.CurrentVersion + ").";
-            }
-            await mgr.DownloadUpdatesAsync(neu);
-            mgr.ApplyUpdatesAndRestart(neu.TargetFullRelease);
-            return "Update wird eingespielt, Programm startet neu.";
         };
     }
 

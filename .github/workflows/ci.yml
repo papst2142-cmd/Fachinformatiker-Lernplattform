@@ -33,17 +33,16 @@ jobs:
         run: dotnet test --project tests/Lernplattform.Tests -c Release
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
-      # Spike A: Messseite ohne Bedienung. Nur Messwerte zum Lesen, kein Urteil
-      # (Laufzeit auf geteilten Rechnern schwankt); Absturz = rot.
-      - name: Messung Spike A (Linux, Xvfb)
+      # Start ohne Bedienung: Startseite und Testseite oeffnen, Ergebnis schreiben,
+      # beenden. Werte nur zum Lesen, kein Urteil; Absturz = rot.
+      - name: Start ohne Bedienung (Linux, Xvfb)
         if: runner.os == 'Linux'
         timeout-minutes: 5
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
           LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
-          LERNPLATTFORM_MESSUNG_DAUER: "20"
         run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
-      - name: Messung Spike A
+      - name: Start ohne Bedienung
         if: runner.os != 'Linux'
         timeout-minutes: 5
         shell: bash
@@ -55,31 +54,6 @@ jobs:
         with:
           name: messung-${{ runner.os }}
           path: messung_${{ runner.os }}.txt
-
-  messpakete:
-    # Spike A: lauffaehiges Programm zum Herunterladen fuer Nicos Messungen
-    # (Windows-VM, Ubuntu-VM). Ein Ordner, ohne Installation, ohne Signatur.
-    name: messpaket (${{ matrix.rid }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: windows-latest, rid: win-x64 }
-          - { os: ubuntu-latest, rid: linux-x64 }
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
-      - name: Veroeffentlichen
-        run: dotnet publish src/Lernplattform.Desktop -c Release -r ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o paket
-      - uses: actions/upload-artifact@v7
-        with:
-          name: lernplattform-${{ matrix.rid }}
-          path: |
-            paket/
-            !paket/*.pdb
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
