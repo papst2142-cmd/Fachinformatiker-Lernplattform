@@ -203,7 +203,7 @@ jobs:
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
           "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000500'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000401'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000501'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:

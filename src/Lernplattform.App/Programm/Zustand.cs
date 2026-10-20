@@ -78,6 +78,7 @@ public static class Zustand
     {
         DefektHinweis = Einstellungen.DefektHinweis();
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         DesignAnwenden();
         Inhalte = Task.Run(InhalteLaden);
         Gewicht = Inhalte.ContinueWith(t =>
@@ -211,6 +212,7 @@ public static class Zustand
             return false;
         }
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         return true;
     }
 
@@ -225,6 +227,7 @@ public static class Zustand
             return false;
         }
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         return true;
     }
 }

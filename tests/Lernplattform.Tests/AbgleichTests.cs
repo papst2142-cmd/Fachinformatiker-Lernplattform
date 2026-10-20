@@ -373,7 +373,7 @@ public class AbgleichTests
         }.ToJsonString()));
     }
 
-    public static TheoryData<string> Ausloeser() => ["loeschmarke", "geloeschter_durchgang", "projekt_fassung", "fragetext", "uhr_nachtrag"];
+    public static TheoryData<string> Ausloeser() => ["loeschmarke", "geloeschter_durchgang", "projekt_fassung", "fragetext", "uhr_nachtrag", "marke_gekappt"];
 
     /// <summary>Bereitet Geraet und Datei so vor, dass der Abgleich vorhandene Eintraege aendert.</summary>
     private static (IReadOnlyList<(string, string, string)> Umbenennungen, Func<Geraet, bool> Geaendert) Vorbereiten(string fall,
@@ -412,6 +412,11 @@ public class AbgleichTests
                 attrappe.Datum = () => Zeit.AddHours(-1);
                 Datei(attrappe, new JsonObject());
                 return (KeineUmbenennungen, g => g.Zeilen("SELECT utc_offset FROM card_events") is [[180L]]);
+            case "marke_gekappt":
+                // Eigene Loeschmarke in der Zukunft: der Abgleich kappt sie auf jetzt (_clamp_future_markers)
+                pc.Ausfuehren("INSERT INTO sync_meta (key, value) VALUES ('reset_at', '2026-10-25 12:00:00+02:00')");
+                Datei(attrappe, new JsonObject());
+                return (KeineUmbenennungen, g => g.Zeilen("SELECT value FROM sync_meta WHERE key = 'reset_at'") is [[string w]] && w != "2026-10-25 12:00:00+02:00");
             default:
                 throw new ArgumentException(fall);
         }

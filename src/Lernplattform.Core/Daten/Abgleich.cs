@@ -105,6 +105,14 @@ public static class Abgleich
     internal static Action<string>? Haltepunkt { get; set; }
 
     /// <summary>is_configured: Repository und Zugangsschluessel eingetragen.</summary>
+    /// <summary>
+    /// A7: Werte geheimer Schluessel (Zugangsschluessel) fuer den Filter der Fehlerdatei setzen.
+    /// Aufruf nach jedem Laden der Einstellungen (App-Start, nach Aenderungen) und vor jedem Abgleich.
+    /// </summary>
+    public static void GeheimnisseSetzen(JsonObject werte) =>
+        Fehlerprotokoll.GeheimnisseSetzen(werte.Select(p => new KeyValuePair<string, object?>(p.Key, p.Value is JsonValue v
+            && v.TryGetValue<string>(out var s) ? s : null)));
+
     public static bool Eingerichtet(JsonObject werte) =>
         Text(werte[RepoSchluessel]).Trim().Length > 0 && Text(werte[TokenSchluessel]).Trim().Length > 0;
 
@@ -123,8 +131,7 @@ public static class Abgleich
         abweichung ??= Uhrabweichung.System;
         var werte = einstellungen.Laden();
         // A7: den eingetragenen Zugangsschluessel aus jeder Zeile der Fehlerdatei filtern
-        Fehlerprotokoll.GeheimnisseSetzen(werte.Select(p => new KeyValuePair<string, object?>(p.Key, p.Value is JsonValue v
-            && v.TryGetValue<string>(out var s) ? s : null)));
+        GeheimnisseSetzen(werte);
         var repo = Text(werte[RepoSchluessel]).Trim().Trim('/');
         var token = Text(werte[TokenSchluessel]).Trim();
         if (repo.Length == 0 || token.Length == 0)
@@ -611,7 +618,7 @@ public static class Abgleich
         }
     }
 
-    /// <summary>Inhalt aller Zeilen (Tabelle, rowid) als Text mit Art der Werte.</summary>
+    /// <summary>Inhalt aller Zeilen (Tabelle, rowid) und der Loeschmarken als Text mit Art der Werte.</summary>
     private static Dictionary<(string, long), string> Stand(SqliteConnection db, SqliteTransaction tx)
     {
         var stand = new Dictionary<(string, long), string>();
@@ -629,6 +636,15 @@ public static class Abgleich
                     text.Append(Schluessel(leser.IsDBNull(i) ? null : leser.GetValue(i))).Append('\u0001');
                 }
                 stand[(tabelle, leser.GetInt64(0))] = text.ToString();
+            }
+        }
+        // Loeschmarken zaehlen mit (Gegenpruefung W4): das Kappen einer eigenen Marke in der Zukunft
+        // aendert eine bestehende Zeile und loest ebenfalls die Sicherung aus
+        foreach (var k in Loeschmarken.Schluessel)
+        {
+            if (Meta(db, tx, k) is { } wert)
+            {
+                stand[("sync_meta:" + k, 0)] = Schluessel(wert);
             }
         }
         return stand;
