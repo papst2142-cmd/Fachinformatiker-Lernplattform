@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Diagnose;
@@ -28,6 +29,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
     private readonly List<Expander> _klappen = [];
+    private readonly Dictionary<string, (Control Karte, Expander? Klappe)> _bereiche = new(StringComparer.Ordinal);
+    private Expander? _vorlagen;
     private readonly Border _fehler;
     private readonly Func<Control>? _sicherung;
     private readonly List<RadioButton> _schrift = [];
@@ -65,6 +68,36 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }
     }
 
+    /// <summary>
+    /// open_area (Suche, Phase 2 L8): Bereich (und ggf. "Vorlagen") aufklappen und in den
+    /// sichtbaren Bereich holen. Nichts wird danach wieder zugeklappt.
+    /// </summary>
+    public void OeffneBereich(string id, bool vorlagen)
+    {
+        if (!_bereiche.TryGetValue(id, out var bereich))
+        {
+            return;
+        }
+        Control ziel = bereich.Karte;
+        if (bereich.Klappe is { } klappe)
+        {
+            klappe.IsExpanded = true;
+        }
+        if (vorlagen && id == Optionen.Optik && _vorlagen is { } v)
+        {
+            v.IsExpanded = true;
+            ziel = v;
+        }
+        // nach dem Aufklappen messen, dann oben (mit 10 Punkten Abstand) zeigen
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (Content is ScrollViewer rollen && ziel.TranslatePoint(new Point(0, 0), rollen.Content as Visual ?? rollen) is { } punkt)
+            {
+                rollen.Offset = new Vector(rollen.Offset.X, Math.Max(0, punkt.Y - 10));
+            }
+        }, DispatcherPriority.Loaded);
+    }
+
     private Control Bereich(OptionenBereich bereich, Control inhalt)
     {
         var titel = Schrift.Text(bereich.Titel, "Mittel", FontWeight.Bold);
@@ -76,7 +109,9 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }
         if (bereich.Offen)
         {
-            return Schrift.Karte(new StackPanel { Spacing = 12, Children = { kopf, inhalt } });
+            var offen = Schrift.Karte(new StackPanel { Spacing = 12, Children = { kopf, inhalt } });
+            _bereiche[bereich.Id] = (offen, null);
+            return offen;
         }
         var klappe = new Expander
         {
@@ -92,6 +127,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         _klappen.Add(klappe);
         var karte = Schrift.Karte(klappe);
         karte.Padding = new Thickness(0);
+        _bereiche[bereich.Id] = (karte, klappe);
         return karte;
     }
 
@@ -253,6 +289,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         };
         klappe.Farbe(Expander.BackgroundProperty, "Pinsel.card_alt").Farbe(Expander.BorderBrushProperty, "Pinsel.border");
         _klappen.Add(klappe);
+        _vorlagen = klappe;
         panel.Children.Add(klappe);
         panel.Children.Add(_eigene.Bauen());
         return panel;

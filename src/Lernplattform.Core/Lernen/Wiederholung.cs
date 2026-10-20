@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Lernplattform.Core.Dashboard;
@@ -25,8 +26,17 @@ public static class Wiederholung
     public static readonly IReadOnlyList<string> Quellen = [Lernen.Quellen.Karte, Lernen.Quellen.Quiz];   // SR_SOURCES
 
     /// <summary>_date: date.fromisoformat(str(timestamp)[:10]); anderes als JJJJ-MM-TT bricht ab wie in Python.</summary>
-    public static DateOnly Tag(object? zeit) =>
-        PyText.IsoTag(PyText.Teil(PyText.Str(zeit), 0, 10), out var tag) ? tag : throw new FormatException("Zeitstempel");
+    public static DateOnly Tag(object? zeit)
+    {
+        // Phase 2, L7 (Messpunkt Faelligkeit bei 100 000 Antworten): ohne Ersatzzeichen (Surrogate)
+        // in den ersten 10 UTF-16-Einheiten sind das genau die ersten 10 Zeichen wie in Python
+        if (zeit is string s && s.Length >= 10 && !s.AsSpan(0, 10).ContainsAnyInRange('\uD800', '\uDFFF'))
+        {
+            return DateOnly.TryParseExact(s.AsSpan(0, 10), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var schnell)
+                ? schnell : throw new FormatException("Zeitstempel");
+        }
+        return PyText.IsoTag(PyText.Teil(PyText.Str(zeit), 0, 10), out var tag) ? tag : throw new FormatException("Zeitstempel");
+    }
 
     /// <summary>review_state: (Stufe, faellig am) aus den Antworten (aelteste zuerst); null = nie bewertet.</summary>
     public static (int Stufe, DateOnly? Faellig) Zustand(IEnumerable<Antwort> antworten)

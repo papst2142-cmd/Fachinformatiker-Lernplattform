@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
@@ -91,6 +92,15 @@ public partial class MainView : UserControl
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
+        // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
+        AddHandler(KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control) && Dialog.Offen is null)
+            {
+                e.Handled = true;
+                _ = ZeigeAsync(Seiten.Suche);
+            }
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);
         Schrift.Geaendert += SchriftGeaendert;
@@ -173,6 +183,8 @@ public partial class MainView : UserControl
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
                 Seiten.Karteikarten => new KarteikartenSeite(),
                 Seiten.Trainer => new TrainerSeite(),
+                Seiten.Fortschritt => new FortschrittSeite(JetztUebenAsync),
+                Seiten.Suche => new SucheSeite((treffer, anfrage) => _ = TrefferOeffnenAsync(treffer, anfrage)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
@@ -205,6 +217,14 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is TrainerSeite trainer)
         {
             trainer.Gezeigt();
+        }
+        if (gebaut && _seiten[id] is FortschrittSeite fortschritt)
+        {
+            fortschritt.Neu();
+        }
+        if (_seiten[id] is SucheSeite suche)
+        {
+            suche.Fokus();
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
@@ -252,6 +272,75 @@ public partial class MainView : UserControl
                 break;
             case TrainerSeite trainer:
                 trainer.Ueben(plan.Sitzung(quelle));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// "Jetzt üben" (practice_topic, practice_point, _practice_part): ohne Teile Hinweis; erster
+    /// Teil Karteikarten -> Karteikarten ueben; erster Teil Pruefungsfragen -> Pruefungstrainer in
+    /// fester Reihenfolge und nach der Runde Rueckfrage zum naechsten Teil.
+    /// </summary>
+    private async Task JetztUebenAsync(List<(string Quelle, List<string> Schluessel)> teile)
+    {
+        if (teile.Count == 0)
+        {
+            await Dialog.Zeigen(Core.Texte.FortschrittTexte.Ueben, Core.Texte.FortschrittTexte.UebenKeine, Dialog.Ok);
+            return;
+        }
+        var (quelle, schluessel) = teile[0];
+        var rest = teile.Skip(1).ToList();
+        if (quelle == Core.Lernen.Quellen.Karte)
+        {
+            await ZeigeAsync(Seiten.Karteikarten);
+            ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Ueben(schluessel);
+            return;
+        }
+        await ZeigeAsync(Seiten.Trainer);
+        var trainer = (TrainerSeite)_seiten[Seiten.Trainer];
+        Func<Task>? nachher = null;
+        if (rest.Count > 0)
+        {
+            nachher = async () =>
+            {
+                var (naechste, fragen) = rest[0];
+                if (await Dialog.Zeigen(Core.Texte.FortschrittTexte.WeiterTitel, Core.Texte.FortschrittTexte.WeiterText(naechste, fragen.Count),
+                    Core.Texte.TrainerTexte.Ja, Core.Texte.TrainerTexte.Nein) == 0)
+                {
+                    await JetztUebenAsync(rest);
+                }
+            };
+        }
+        trainer.Ueben(schluessel, reihenfolgeBehalten: true, nachher: nachher);
+    }
+
+    /// <summary>open_search_hit: Optionen (Bereich aufklappen), Karteikarte, Pruefungsfrage, Szenarien.</summary>
+    private async Task TrefferOeffnenAsync(Core.Suche.SuchTreffer treffer, string anfrage)
+    {
+        switch (treffer.Art)
+        {
+            case Core.Texte.Optionen.SucheArt:
+                var (bereich, vorlagen) = Core.Suche.GlobaleSuche.Ziel(treffer.Titel, anfrage);
+                if (bereich is not null)
+                {
+                    await ZeigeAsync(Seiten.Optionen);
+                    ((OptionenSeite)_seiten[Seiten.Optionen]).OeffneBereich(bereich, vorlagen);
+                }
+                break;
+            case Core.Texte.SucheTexte.ArtKarte:
+                await ZeigeAsync(Seiten.Karteikarten);
+                ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Springen(treffer.Titel);
+                break;
+            case Core.Texte.SucheTexte.ArtQuiz:
+                await ZeigeAsync(Seiten.Trainer);
+                ((TrainerSeite)_seiten[Seiten.Trainer]).Springen(treffer.Titel);
+                break;
+            case Core.Texte.SucheTexte.ArtAp1:
+                // AP1-Szenarien kommen in einer spaeteren Ausbaustufe (Platzhalter)
+                await ZeigeAsync(Seiten.Ap1Szenarien);
+                break;
+            default:
+                await ZeigeAsync(Seiten.Ap2Szenarien);
                 break;
         }
     }
