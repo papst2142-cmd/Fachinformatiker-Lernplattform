@@ -1,0 +1,1612 @@
+{
+ "quelle": "fisi_core.DBManager, fisi_update, fisi_theme, fisi_lernen (Python v0.63.2)",
+ "schema": {
+  "tabellen": [
+   {
+    "name": "abschlussprojekt",
+    "sql": "CREATE TABLE abschlussprojekt ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, projekt TEXT NOT NULL, feld TEXT NOT NULL, wert TEXT NOT NULL DEFAULT '' , uid TEXT)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "projekt",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "feld",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "wert",
+      "TEXT",
+      1,
+      "''",
+      0
+     ],
+     [
+      5,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_abschlussprojekt_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "ap1_events",
+    "sql": "CREATE TABLE ap1_events ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, scenario_index INTEGER NOT NULL, title TEXT NOT NULL, theme TEXT NOT NULL, correct INTEGER , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "scenario_index",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "title",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "theme",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "correct",
+      "INTEGER",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      7,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_ap1_events_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "card_events",
+    "sql": "CREATE TABLE card_events ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, category TEXT NOT NULL, question TEXT NOT NULL, mode TEXT NOT NULL, correct INTEGER , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "category",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "question",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "mode",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "correct",
+      "INTEGER",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      7,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_card_events_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "project_events",
+    "sql": "CREATE TABLE project_events ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, project_index INTEGER NOT NULL, title TEXT NOT NULL, category TEXT NOT NULL, correct INTEGER , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "project_index",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "title",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "category",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "correct",
+      "INTEGER",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      7,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_project_events_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "pruefungen",
+    "sql": "CREATE TABLE pruefungen ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, art TEXT NOT NULL, punkte REAL NOT NULL, note TEXT NOT NULL, dauer INTEGER NOT NULL, daten TEXT NOT NULL DEFAULT '{}' , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "art",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "punkte",
+      "REAL",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "note",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "dauer",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      6,
+      "daten",
+      "TEXT",
+      1,
+      "'{}'",
+      0
+     ],
+     [
+      7,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      8,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_pruefungen_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "quiz_answers",
+    "sql": "CREATE TABLE quiz_answers ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, category TEXT NOT NULL, question TEXT NOT NULL, correct INTEGER NOT NULL , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "category",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "question",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "correct",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_quiz_answers_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "scenario_events",
+    "sql": "CREATE TABLE scenario_events ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, scenario_index INTEGER NOT NULL, title TEXT NOT NULL, theme TEXT NOT NULL, correct INTEGER , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "scenario_index",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "title",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "theme",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "correct",
+      "INTEGER",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      7,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_scenario_events_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spiel_bestenliste",
+    "sql": "CREATE TABLE spiel_bestenliste ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, durchgang TEXT NOT NULL, art TEXT NOT NULL, schluessel TEXT NOT NULL, wert REAL, daten TEXT NOT NULL DEFAULT '{}', uid TEXT , utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "durchgang",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "art",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "schluessel",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "wert",
+      "REAL",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "daten",
+      "TEXT",
+      1,
+      "'{}'",
+      0
+     ],
+     [
+      7,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      8,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_spiel_bestenliste_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spiel_ereignisse",
+    "sql": "CREATE TABLE spiel_ereignisse ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, typ TEXT NOT NULL, daten TEXT NOT NULL, geraet TEXT NOT NULL DEFAULT '', uid TEXT, lauf TEXT , utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "typ",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "daten",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "geraet",
+      "TEXT",
+      1,
+      "''",
+      0
+     ],
+     [
+      5,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "lauf",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      7,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_spiel_ereignisse_lauf",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "lauf"
+      ]
+     },
+     {
+      "name": "ix_spiel_ereignisse_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spiel_plaetze",
+    "sql": "CREATE TABLE spiel_plaetze ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, platz INTEGER NOT NULL, lauf TEXT NOT NULL, aktion TEXT NOT NULL, daten TEXT NOT NULL DEFAULT '{}', geraet TEXT NOT NULL DEFAULT '', uid TEXT )",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "platz",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "lauf",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "aktion",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "daten",
+      "TEXT",
+      1,
+      "'{}'",
+      0
+     ],
+     [
+      6,
+      "geraet",
+      "TEXT",
+      1,
+      "''",
+      0
+     ],
+     [
+      7,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_spiel_plaetze_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "sqlite_sequence",
+    "sql": "CREATE TABLE sqlite_sequence(name,seq)",
+    "spalten": [
+     [
+      0,
+      "name",
+      "",
+      0,
+      null,
+      0
+     ],
+     [
+      1,
+      "seq",
+      "",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": []
+   },
+   {
+    "name": "sync_meta",
+    "sql": "CREATE TABLE sync_meta ( key TEXT PRIMARY KEY, value TEXT)",
+    "spalten": [
+     [
+      0,
+      "key",
+      "TEXT",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "value",
+      "TEXT",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "sqlite_autoindex_sync_meta_1",
+      "unique": 1,
+      "origin": "pk",
+      "partial": 0,
+      "spalten": [
+       "key"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "test_results",
+    "sql": "CREATE TABLE test_results ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, score INTEGER NOT NULL, total INTEGER NOT NULL, percentage REAL NOT NULL, note TEXT NOT NULL, duration_seconds INTEGER NOT NULL , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "score",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "total",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "percentage",
+      "REAL",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "note",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      6,
+      "duration_seconds",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      7,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      8,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_test_results_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "trainer_aufgaben",
+    "sql": "CREATE TABLE trainer_aufgaben ( id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, art TEXT NOT NULL, stufe INTEGER NOT NULL, correct INTEGER NOT NULL , uid TEXT, utc_offset INTEGER)",
+    "spalten": [
+     [
+      0,
+      "id",
+      "INTEGER",
+      0,
+      null,
+      1
+     ],
+     [
+      1,
+      "timestamp",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      2,
+      "art",
+      "TEXT",
+      1,
+      null,
+      0
+     ],
+     [
+      3,
+      "stufe",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      4,
+      "correct",
+      "INTEGER",
+      1,
+      null,
+      0
+     ],
+     [
+      5,
+      "uid",
+      "TEXT",
+      0,
+      null,
+      0
+     ],
+     [
+      6,
+      "utc_offset",
+      "INTEGER",
+      0,
+      null,
+      0
+     ]
+    ],
+    "indizes": [
+     {
+      "name": "ix_trainer_aufgaben_uid",
+      "unique": 1,
+      "origin": "c",
+      "partial": 0,
+      "spalten": [
+       "uid"
+      ]
+     }
+    ]
+   }
+  ],
+  "index_sql": [
+   [
+    "ix_abschlussprojekt_uid",
+    "abschlussprojekt",
+    "CREATE UNIQUE INDEX ix_abschlussprojekt_uid ON abschlussprojekt (uid)"
+   ],
+   [
+    "ix_ap1_events_uid",
+    "ap1_events",
+    "CREATE UNIQUE INDEX ix_ap1_events_uid ON ap1_events (uid)"
+   ],
+   [
+    "ix_card_events_uid",
+    "card_events",
+    "CREATE UNIQUE INDEX ix_card_events_uid ON card_events (uid)"
+   ],
+   [
+    "ix_project_events_uid",
+    "project_events",
+    "CREATE UNIQUE INDEX ix_project_events_uid ON project_events (uid)"
+   ],
+   [
+    "ix_pruefungen_uid",
+    "pruefungen",
+    "CREATE UNIQUE INDEX ix_pruefungen_uid ON pruefungen (uid)"
+   ],
+   [
+    "ix_quiz_answers_uid",
+    "quiz_answers",
+    "CREATE UNIQUE INDEX ix_quiz_answers_uid ON quiz_answers (uid)"
+   ],
+   [
+    "ix_scenario_events_uid",
+    "scenario_events",
+    "CREATE UNIQUE INDEX ix_scenario_events_uid ON scenario_events (uid)"
+   ],
+   [
+    "ix_spiel_bestenliste_uid",
+    "spiel_bestenliste",
+    "CREATE UNIQUE INDEX ix_spiel_bestenliste_uid ON spiel_bestenliste (uid)"
+   ],
+   [
+    "ix_spiel_ereignisse_lauf",
+    "spiel_ereignisse",
+    "CREATE INDEX ix_spiel_ereignisse_lauf ON spiel_ereignisse (lauf)"
+   ],
+   [
+    "ix_spiel_ereignisse_uid",
+    "spiel_ereignisse",
+    "CREATE UNIQUE INDEX ix_spiel_ereignisse_uid ON spiel_ereignisse (uid)"
+   ],
+   [
+    "ix_spiel_plaetze_uid",
+    "spiel_plaetze",
+    "CREATE UNIQUE INDEX ix_spiel_plaetze_uid ON spiel_plaetze (uid)"
+   ],
+   [
+    "ix_test_results_uid",
+    "test_results",
+    "CREATE UNIQUE INDEX ix_test_results_uid ON test_results (uid)"
+   ],
+   [
+    "ix_trainer_aufgaben_uid",
+    "trainer_aufgaben",
+    "CREATE UNIQUE INDEX ix_trainer_aufgaben_uid ON trainer_aufgaben (uid)"
+   ],
+   [
+    "sqlite_autoindex_sync_meta_1",
+    "sync_meta",
+    null
+   ]
+  ],
+  "user_version": 0
+ },
+ "fehlertexte": {
+  "kaputt": "Die Datenbank mit deinem Lernfortschritt ist beschädigt. Damit sie nicht weiter Schaden nimmt, speichert die App ab jetzt nichts mehr; angezeigte Zahlen können unvollständig sein. Die Datei selbst bleibt unverändert. Den Datenordner findest du unter Optionen > Problem melden.",
+  "schreibschutz": "Dein Lernfortschritt wird nicht gespeichert: Der Datenordner ist schreibgeschützt. Die App läuft weiter, Antworten werden aber nicht gespeichert. Gib dem Datenordner und der Datei fisi_lernplattform.db Schreibrechte und starte die App neu. Den Datenordner findest du unter Optionen > Problem melden.",
+  "nicht_erreichbar": "Dein Lernfortschritt wird nicht gespeichert: Der Datenordner ist nicht erreichbar. Die Datenbank lässt sich nicht öffnen, zum Beispiel weil ein Laufwerk fehlt. Prüfe den Datenordner und starte die App neu.",
+  "voll": "Der Speicherplatz ist voll. Dein Lernfortschritt wird erst wieder gespeichert, wenn Platz frei ist.",
+  "gesperrt": "Die Datenbank ist gerade belegt, zum Beispiel durch ein anderes Programm. Der letzte Schritt wurde vielleicht nicht gespeichert.",
+  "sonstige": "Beim Zugriff auf die Datenbank ist ein Fehler aufgetreten. Einzelheiten stehen im Fehlerprotokoll (Optionen > Problem melden)."
+ },
+ "nur_lesen_zeilen": {
+  "kaputt": "Dein Lernfortschritt wird nicht gespeichert: Die Datenbank ist beschädigt.",
+  "schreibschutz": "Dein Lernfortschritt wird nicht gespeichert: Der Datenordner ist schreibgeschützt.",
+  "nicht_erreichbar": "Dein Lernfortschritt wird nicht gespeichert: Der Datenordner ist nicht erreichbar."
+ },
+ "fehlerarten": [
+  [
+   "attempt to write a readonly database",
+   "schreibschutz"
+  ],
+  [
+   "SQLite Error 8: 'attempt to write a readonly database'.",
+   "schreibschutz"
+  ],
+  [
+   "database disk image is malformed",
+   "kaputt"
+  ],
+  [
+   "file is not a database",
+   "kaputt"
+  ],
+  [
+   "SQLite Error 26: 'file is not a database'.",
+   "kaputt"
+  ],
+  [
+   "unable to open database file",
+   "nicht_erreichbar"
+  ],
+  [
+   "SQLite Error 14: 'unable to open database file'.",
+   "nicht_erreichbar"
+  ],
+  [
+   "database or disk is full",
+   "voll"
+  ],
+  [
+   "database is locked",
+   "gesperrt"
+  ],
+  [
+   "SQLite Error 5: 'database is locked'.",
+   "gesperrt"
+  ],
+  [
+   "database table is locked",
+   "gesperrt"
+  ],
+  [
+   "no such table: x",
+   "sonstige"
+  ],
+  [
+   "Read-Only file system",
+   "schreibschutz"
+  ],
+  [
+   "",
+   "sonstige"
+  ]
+ ],
+ "einstellungen_vorgabe": {
+  "auto_check": true
+ },
+ "schriftgroessen": [
+  [
+   "normal",
+   "Normal",
+   1.0
+  ],
+  [
+   "gross",
+   "Groß",
+   1.15
+  ],
+  [
+   "sehr_gross",
+   "Sehr groß",
+   1.3
+  ],
+  [
+   "extra_gross",
+   "Extra groß",
+   1.6
+  ],
+  [
+   "riesig",
+   "Maximal",
+   2.0
+  ]
+ ],
+ "darstellungen": [
+  "dunkel",
+  "hell"
+ ],
+ "tagesziel_vorgabe": {
+  "ziel_an": true,
+  "ziel_anzahl": 20,
+  "serie_an": true,
+  "erinnerung_an": true,
+  "erinnerung_zeit": "18:00"
+ },
+ "einstellungen": [
+  {
+   "einstellungen": {},
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "darstellung": "hell",
+    "grundfarbe": "gruen_lime",
+    "hintergrund": "schwarz",
+    "schriftgroesse": "riesig"
+   },
+   "darstellung": "hell",
+   "grundfarbe": "gruen_lime",
+   "hintergrund": "schwarz",
+   "schriftgroesse": "riesig",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "darstellung": "HELL",
+    "grundfarbe": "blau",
+    "hintergrund": 3,
+    "schriftgroesse": null
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "darstellung": [
+     "hell"
+    ],
+    "grundfarbe": true,
+    "hintergrund": "",
+    "schriftgroesse": "extra_gross"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "extra_gross",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_an": false,
+    "ziel_anzahl": 35,
+    "serie_an": 0,
+    "erinnerung_an": "",
+    "erinnerung_zeit": "7:5"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": false,
+    "ziel_anzahl": 35,
+    "serie_an": false,
+    "erinnerung_an": false,
+    "erinnerung_zeit": "07:05"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "15",
+    "erinnerung_zeit": " 23:59 "
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 15,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "23:59"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": 1,
+    "erinnerung_zeit": "24:00"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": 1000,
+    "erinnerung_zeit": "12:60"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 100,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "abc",
+    "erinnerung_zeit": "1800"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": null,
+    "erinnerung_zeit": null,
+    "ziel_an": null
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": false,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": 12.9,
+    "erinnerung_zeit": "-0:05",
+    "serie_an": "nein"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 12,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "00:05"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": true,
+    "erinnerung_zeit": "+8:+5",
+    "erinnerung_an": []
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": false,
+    "erinnerung_zeit": "08:05"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": " 40 ",
+    "erinnerung_zeit": "08:00:00",
+    "ziel_an": [
+     1
+    ]
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 40,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "1_0",
+    "erinnerung_zeit": "1_2:3_0",
+    "serie_an": {}
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 10,
+    "serie_an": false,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "12:30"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": -3,
+    "erinnerung_zeit": "ab:cd",
+    "serie_an": {
+     "a": 1
+    }
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "7.5",
+    "erinnerung_zeit": 18,
+    "ziel_an": 0.0
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": false,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": 10000000000.0
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 100,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "99999999999999999999999"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 100,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": -1000000000000.0
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "-99999999999"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 5,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "18:00"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "２０",
+    "erinnerung_zeit": "０８:３０"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 20,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "08:30"
+   }
+  },
+  {
+   "einstellungen": {
+    "ziel_anzahl": "٣٠",
+    "erinnerung_zeit": "१९:००"
+   },
+   "darstellung": "dunkel",
+   "grundfarbe": "cyan_pink",
+   "hintergrund": "violett",
+   "schriftgroesse": "normal",
+   "tagesziel": {
+    "ziel_an": true,
+    "ziel_anzahl": 30,
+    "serie_an": true,
+    "erinnerung_an": true,
+    "erinnerung_zeit": "19:00"
+   }
+  }
+ ]
+}

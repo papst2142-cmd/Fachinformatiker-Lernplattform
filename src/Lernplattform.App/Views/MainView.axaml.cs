@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Platform.Storage;
@@ -17,39 +18,79 @@ using Lernplattform.ViewModels;
 namespace Lernplattform.Views;
 
 /// <summary>
-/// Phase 0: Startseite (mit "Alte Sicherung pruefen") und Testseite. Die Seiten werden
-/// beim ersten Oeffnen gebaut und danach wiederverwendet.
+/// Phase 1, K6: Seitengeruest fuer PC und Handy in einem Aufbau. Breites Fenster:
+/// Seitenleiste wie am PC; schmales Fenster (Handy hoch): untere Leiste mit 6
+/// Eintraegen und Sammelseite "Lernen" wie am Handy. Hilfe und Suche als Symbole
+/// in der Kopfleiste. Die Seiten werden beim ersten Oeffnen gebaut und danach
+/// wiederverwendet; ein Wechsel von breit auf schmal baut nichts neu.
 /// </summary>
 public partial class MainView : UserControl
 {
+    /// <summary>Ab dieser Breite (Punkte) gilt der PC-Aufbau mit Seitenleiste.</summary>
+    public const double BreitAb = 720;
+
     private readonly ContentControl _inhalt = new();
     private readonly Dictionary<string, Control> _seiten = new(StringComparer.Ordinal);
     private readonly TextBox _ergebnis = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, MinHeight = 160 };
     private readonly TextBlock _zustand = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly Navigationsleisten _leisten;
+    private readonly TextBlock _kopfTitel = Schrift.Text("", "Gross", FontWeight.SemiBold);
+    private bool? _breit;
 
     public static bool AutoModus => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_AUTO") == "1";
+
+    public string AktuelleSeite { get; private set; } = Seiten.Dashboard;
 
     public MainView()
     {
         InitializeComponent();
-        var navigation = new StackPanel { Spacing = 6, Margin = new Thickness(10) };
-        foreach (var name in (string[])["Start", "Testseite"])
+        // Datenordner-Probe (Phase 0, Spike D) beim Start wie frueher mit der Startseite,
+        // damit die Android-Update-Probe nicht erst das Oeffnen der Optionen braucht
+        try
         {
-            var knopf = new Button { Content = name, HorizontalAlignment = HorizontalAlignment.Stretch };
-            knopf.Farbe(Button.ForegroundProperty, "Pinsel.text");
-            knopf.Farbe(Button.BackgroundProperty, "Pinsel.card_alt");
-            knopf.Click += async (_, _) => await ZeigeAsync(name);
-            navigation.Children.Add(knopf);
+            Ablage.UpdateProbe(Update.PaketVersion);
         }
-        var leiste = new Border { Child = navigation, Width = 150 }.Farbe(Border.BackgroundProperty, "Pinsel.sidebar");
-        var raster = new DockPanel();
-        DockPanel.SetDock(leiste, Dock.Left);
-        raster.Children.Add(leiste);
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
+        _leisten = new Navigationsleisten(id => _ = ZeigeAsync(id));
+
+        var suche = Symbolknopf(Symbole.Suche, Seiten.Titel(Seiten.Suche), Seiten.Suche);
+        var hilfe = Symbolknopf(Symbole.Hilfe, Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
+        var kopf = new DockPanel { Margin = new Thickness(16, 10, 8, 10) };
+        var symbole = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { suche, hilfe } };
+        DockPanel.SetDock(symbole, Dock.Right);
+        kopf.Children.Add(symbole);
+        _kopfTitel.VerticalAlignment = VerticalAlignment.Center;
+        _kopfTitel.TextWrapping = TextWrapping.Wrap;
+        kopf.Children.Add(_kopfTitel);
+        var kopfleiste = new Border { Child = kopf, BorderThickness = new Thickness(0, 0, 0, 1) }
+            .Farbe(Border.BackgroundProperty, "Pinsel.bg").Farbe(Border.BorderBrushProperty, "Pinsel.border");
+
+        var raster = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            RowDefinitions = new RowDefinitions("Auto,*,Auto"),
+        };
+        Grid.SetRowSpan(_leisten.Seitenleiste, 3);
+        raster.Children.Add(_leisten.Seitenleiste);
+        Grid.SetColumn(kopfleiste, 1);
+        raster.Children.Add(kopfleiste);
+        Grid.SetColumn(_inhalt, 1);
+        Grid.SetRow(_inhalt, 1);
         raster.Children.Add(_inhalt);
+        Grid.SetColumn(_leisten.UntereLeiste, 1);
+        Grid.SetRow(_leisten.UntereLeiste, 2);
+        raster.Children.Add(_leisten.UntereLeiste);
+
         Content = new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
-        _inhalt.Content = Seite("Start");
+        Zeige(Seiten.Dashboard);
 
+        SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);
+        Schrift.Geaendert += SchriftGeaendert;
+        DetachedFromVisualTree += (_, _) => Schrift.Geaendert -= SchriftGeaendert;
         AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ =>
         {
             Messwerte.ErstesBild ??= Messwerte.SeitStart.Elapsed.TotalMilliseconds;
@@ -60,8 +101,51 @@ public partial class MainView : UserControl
         });
     }
 
+    public bool Breit => _breit ?? true;
+
+    private void SchriftGeaendert()
+    {
+        if (Bounds.Width > 0)
+        {
+            AufbauWaehlen(Bounds.Width);
+        }
+    }
+
+    /// <summary>
+    /// Die Seitenleiste braucht mit groesserer Schrift mehr Platz: breit erst ab
+    /// BreitAb x Schriftfaktor (wie Umbruchpunkte in em), darunter der Handy-Aufbau.
+    /// </summary>
+    public static double BreitGrenze => BreitAb * Schrift.Faktor;
+
+    private void AufbauWaehlen(double breite)
+    {
+        var breit = breite >= BreitGrenze;
+        if (_breit == breit)
+        {
+            return;
+        }
+        _breit = breit;
+        _leisten.Seitenleiste.IsVisible = breit;
+        _leisten.UntereLeiste.IsVisible = !breit;
+        _leisten.Markiere(AktuelleSeite);
+    }
+
+    private Button Symbolknopf(Geometry symbol, string name, string ziel)
+    {
+        var knopf = new Button
+        {
+            Content = new PathIcon { Data = symbol, Width = 20, Height = 20 }.Farbe(PathIcon.ForegroundProperty, "Pinsel.text"),
+            Padding = new Thickness(10),
+            Background = Brushes.Transparent,
+        };
+        ToolTip.SetTip(knopf, name);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, name);
+        knopf.Click += async (_, _) => await ZeigeAsync(ziel);
+        return knopf;
+    }
+
     /// <summary>Wartet, bis das naechste Bild fertig gezeichnet ist (zwei Bildaufrufe).</summary>
-    private Task BildFertigAsync()
+    public Task BildFertigAsync()
     {
         var fertig = new TaskCompletionSource();
         var top = TopLevel.GetTopLevel(this);
@@ -74,30 +158,45 @@ public partial class MainView : UserControl
         return fertig.Task;
     }
 
-    private Control Seite(string name)
+    private Control Seite(string id)
     {
-        if (!_seiten.TryGetValue(name, out var seite))
+        if (!_seiten.TryGetValue(id, out var seite))
         {
-            seite = name switch
+            seite = id switch
             {
-                "Testseite" => BaueTestseite(),
-                _ => BaueStart(),
+                Seiten.Dashboard => new DashboardSeite(),
+                Seiten.Optionen => new OptionenSeite(BaueSicherung),
+                Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
+                _ => Platzhalter.Bauen(Seiten.Titel(id)),
             };
-            _seiten[name] = seite;
+            _seiten[id] = seite;
         }
         return seite;
     }
 
-    private async Task ZeigeAsync(string name)
+    private void Zeige(string id)
     {
-        var erstes = !_seiten.ContainsKey(name);
+        AktuelleSeite = id;
+        var gebaut = _seiten.ContainsKey(id);
+        _inhalt.Content = Seite(id);
+        if (gebaut && _seiten[id] is DashboardSeite dashboard)
+        {
+            dashboard.Neu();
+        }
+        _kopfTitel.Text = Seiten.Titel(id);
+        _leisten.Markiere(id);
+    }
+
+    public async Task ZeigeAsync(string id)
+    {
+        var erstes = !_seiten.ContainsKey(id);
         var uhr = Stopwatch.StartNew();
-        _inhalt.Content = Seite(name);
+        Zeige(id);
         await BildFertigAsync();
         var ms = uhr.Elapsed.TotalMilliseconds;
         if (erstes)
         {
-            Messwerte.ErstesOeffnen[name] = ms;
+            Messwerte.ErstesOeffnen[id] = ms;
         }
         else
         {
@@ -108,13 +207,15 @@ public partial class MainView : UserControl
     private static TextBlock Text(string text, double groesse = 14, FontWeight gewicht = FontWeight.Normal) =>
         new() { Text = text, FontSize = groesse, FontWeight = gewicht, TextWrapping = TextWrapping.Wrap };
 
-    private Control BaueStart()
+    /// <summary>
+    /// Phase 1, K9: "Alte Sicherung pruefen" und "Ergebnis kopieren" wie auf der frueheren
+    /// Startseite, jetzt in Optionen &gt; Sicherung (Nico, Frage 4a). Knoepfe, Texte und die
+    /// Pruefung selbst (SicherungPruefenAsync, SicherungsPruefung) sind unveraendert.
+    /// </summary>
+    private Control BaueSicherung()
     {
-        var vm = new MainViewModel();
-        var panel = new StackPanel { Spacing = 8, Margin = new Thickness(24), VerticalAlignment = VerticalAlignment.Center };
-        panel.Children.Add(Text(vm.Titel, 24, FontWeight.SemiBold));
-        panel.Children.Add(Text(vm.Version));
-        panel.Children.Add(Text(vm.Hinweis));
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
         kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
@@ -136,55 +237,18 @@ public partial class MainView : UserControl
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
         panel.Children.Add(_ergebnis);
         _ergebnis.Text = BerichtText();
-        return new ScrollViewer { Content = panel };
+        return panel;
     }
 
+    /// <summary>Alle schon gebauten Seiten (fuer die Layoutpruefung im Start ohne Bedienung).</summary>
+    public IReadOnlyDictionary<string, Control> GebauteSeiten => _seiten;
 
-    private static Control BaueTestseite()
-    {
-        var panel = new StackPanel { Spacing = 12, Margin = new Thickness(16) };
-        var banner = new Border { CornerRadius = new CornerRadius(12), Padding = new Thickness(16), Child = Text("Testseite: 50 Karten, 30 Knoepfe, Eingabefeld, Liste", 18, FontWeight.SemiBold) };
-        banner.Farbe(Border.BackgroundProperty, "Verlauf.hero");
-        ((TextBlock)banner.Child!).Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
-        panel.Children.Add(banner);
-
-        var eingabe = new TextBox { PlaceholderText = "Umlaut-Test: hier ä ö ü ß Ä Ö Ü tippen", MinHeight = 36 };
-        eingabe.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card")
-            .Farbe(TextBox.BorderBrushProperty, "Pinsel.field_border");
-        panel.Children.Add(eingabe);
-
-        var karten = new WrapPanel();
-        for (var i = 1; i <= 50; i++)
-        {
-            var titel = Text($"Karte {i}", 15, FontWeight.SemiBold).Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
-            var unter = Text("Lernfeld " + ((i % 12) + 1), 12).Farbe(TextBlock.ForegroundProperty, "Pinsel.text_dim");
-            var punkt = new Border { Width = 10, Height = 10, CornerRadius = new CornerRadius(5) }
-                .Farbe(Border.BackgroundProperty, (i % 3) switch { 0 => "Pinsel.accent", 1 => "Pinsel.accent2", _ => "Pinsel.green" });
-            var karte = new Border
-            {
-                Width = 160, Margin = new Thickness(4), Padding = new Thickness(10), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1),
-                Child = new StackPanel { Spacing = 4, Children = { punkt, titel, unter } },
-            };
-            karte.Farbe(Border.BackgroundProperty, i % 2 == 0 ? "Pinsel.card" : "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border");
-            karten.Children.Add(karte);
-        }
-        panel.Children.Add(karten);
-
-        var knoepfe = new WrapPanel();
-        for (var i = 1; i <= 30; i++)
-        {
-            var knopf = new Button { Content = $"Knopf {i}", Margin = new Thickness(4), MinWidth = 100 };
-            knopf.Farbe(Button.BackgroundProperty, i % 2 == 0 ? "Verlauf.primary" : "Verlauf.accent").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-            knoepfe.Children.Add(knopf);
-        }
-        panel.Children.Add(knoepfe);
-
-        var liste = new ListBox { Height = 240, ItemsSource = Enumerable.Range(1, 100).Select(i => $"Frage {i}: Beispielzeile in der Liste").ToList() };
-        liste.Farbe(ListBox.BackgroundProperty, "Pinsel.card").Farbe(ListBox.ForegroundProperty, "Pinsel.text");
-        panel.Children.Add(liste);
-        return new ScrollViewer { Content = panel };
-    }
-
+    /// <summary>
+    /// Weisung P1-3: Zustand und Ergebnisfeld der Sicherung haengen genau in der
+    /// gebauten Optionen-Seite (BaueSicherung laeuft nur einmal, die Seite bleibt im Speicher).
+    /// </summary>
+    public bool SicherungInOptionen(Control optionen) =>
+        _zustand.GetLogicalAncestors().Contains(optionen) && _ergebnis.GetLogicalAncestors().Contains(optionen);
 
     private string Geraet()
     {
@@ -259,15 +323,25 @@ public partial class MainView : UserControl
     /// <summary>Start ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
     private async Task AutoLaufAsync()
     {
-        await ZeigeAsync("Testseite");
-        await ZeigeAsync("Start");
+        int fehler;
+        try
+        {
+            fehler = await AutoMessung.LaufAsync(this);
+        }
+        catch (Exception ausnahme)
+        {
+            // Absturz im Start ohne Bedienung: festhalten und rot beenden statt haengen
+            Core.Diagnose.Fehlerprotokoll.Schreiben(ausnahme);
+            Messwerte.Notiere("URTEIL: rot (Ausnahme " + ausnahme.GetType().Name + ": " + ausnahme.Message + ")");
+            fehler = 1;
+        }
         _ergebnis.Text = BerichtText();
         var datei = Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DATEI") is { Length: > 0 } d ? d : "messung_auto.txt";
         await File.WriteAllTextAsync(datei, _ergebnis.Text);
         Console.WriteLine(_ergebnis.Text);
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.Shutdown();
+            desktop.Shutdown(fehler == 0 ? 0 : 3);
         }
     }
 }

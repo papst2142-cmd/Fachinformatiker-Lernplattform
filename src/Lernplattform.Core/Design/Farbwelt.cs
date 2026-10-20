@@ -67,7 +67,7 @@ public static class Farbwelt
     ];
 
     // Feste dunkle Grundwerte (Python: _DARK_FIXED), danach on_accent
-    private static readonly (string, string)[] DunkelFest =
+    internal static readonly (string, string)[] DunkelFest =
     [
         ("text", "#ECE6F8"), ("text_soft", "#CFC6E0"), ("knob", "#ECE6F8"), ("scrollbar", "#2A2A2F"),
         ("scrollbar_hi", "#40404A"), ("cyan", "#22D3EE"), ("pink", "#F472B6"), ("purple", "#A78BFA"),
@@ -75,7 +75,7 @@ public static class Farbwelt
         ("blue", "#60A5FA"), ("red", "#F87171"),
     ];
 
-    private static readonly (string, string)[] HellText =
+    internal static readonly (string, string)[] HellText =
     [
         ("text", "#1B1628"), ("text_soft", "#2F2940"), ("knob", "#FFFFFF"),
         ("scrollbar", "#C9C9D1"), ("scrollbar_hi", "#A9A9B5"),
@@ -84,7 +84,7 @@ public static class Farbwelt
     private static readonly string[] HellAbgedunkelt =
         ["cyan", "pink", "purple", "violet", "green", "yellow", "orange", "blue", "red", "accent", "accent2"];
 
-    private static readonly string[] Flaechen = ["bg", "sidebar", "card", "card_alt", "card_hi"];
+    internal static readonly string[] Flaechen = ["bg", "sidebar", "card", "card_alt", "card_hi"];
 
     /// <summary>Berechnet eine Farbwelt. Unbekannte Kennungen fallen wie in Python auf den Standard.</summary>
     public static Palette Berechne(string darstellung, string grundfarbe, string hintergrund)

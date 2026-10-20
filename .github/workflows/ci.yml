@@ -33,8 +33,9 @@ jobs:
         run: dotnet test --project tests/Lernplattform.Tests -c Release
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
-      # Start ohne Bedienung: Startseite und Testseite oeffnen, Ergebnis schreiben,
-      # beenden. Werte nur zum Lesen, kein Urteil; Absturz = rot.
+      # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen
+      # wechseln, Layoutpruefung breit und schmal (384 x 832). Rot bei Absturz, bei einem
+      # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3).
       - name: Start ohne Bedienung (Linux, Xvfb)
         if: runner.os == 'Linux'
         timeout-minutes: 5
@@ -54,10 +55,11 @@ jobs:
         with:
           name: messung-${{ runner.os }}
           path: messung_${{ runner.os }}.txt
+        if: always()
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.1.0 -> A 0.1.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.2.0 -> A 0.2.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     strategy:
       fail-fast: false
@@ -83,16 +85,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.1.0
-          path: pakete/feed-A-0.1.0/
+          name: paket-${{ matrix.rid }}-A-0.2.0
+          path: pakete/feed-A-0.2.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.1.1
-          path: pakete/feed-A-0.1.1/
+          name: updateprobe-${{ matrix.rid }}-A-0.2.1
+          path: pakete/feed-A-0.2.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.1.0-tar
+          name: appimage-linux-x64-A-0.2.0-tar
           path: pakete/appimage/
 
   vergleichswerte:
@@ -118,11 +120,24 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_zufall.py python-linie neu/zufall.json
           python3 -I werkzeuge/vergleich/erzeuge_daten.py python-linie inhalte neu
           python3 -I werkzeuge/vergleich/erzeuge_farbwelten.py python-linie neu/farbwelten.json
+          # Phase 1 (Weisung P1-2): G10 Fehlerprotokoll, G11 Datenbank/Einstellungen, G12 Inhalte-Pruefung
+          python3 -I werkzeuge/vergleich/erzeuge_fehlerprotokoll.py python-linie neu/fehlerprotokoll.json
+          python3 -I werkzeuge/vergleich/erzeuge_datenbank.py python-linie neu/datenbank.json
+          python3 -I werkzeuge/vergleich/erzeuge_inhalte_pruefung.py python-linie inhalte neu/inhalte_pruefung.json
+          # Welle 2: G6b eigene Farben, G9 Beschriftungen, G13 Dashboard
+          python3 -I werkzeuge/vergleich/erzeuge_eigene_farben.py python-linie neu/eigene_farben.json
+          python3 -I werkzeuge/vergleich/erzeuge_beschriftungen.py python-linie neu/beschriftungen.json
+          python3 -I werkzeuge/vergleich/erzeuge_dashboard.py python-linie tests/Vergleich/testdaten.db neu/dashboard.json
+          # G14 Potenz x ** y wie Python unter Linux (Core/Mathe/PythonPow)
+          python3 -I werkzeuge/vergleich/erzeuge_potenz.py neu/potenz.json
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
           import json
-          for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json"):
+          for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json",
+                       "fehlerprotokoll.json", "datenbank.json", "inhalte_pruefung.json",
+                       "eigene_farben.json", "beschriftungen.json", "dashboard.json",
+                       "potenz.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
@@ -142,10 +157,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.1.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.1.0 installierbar.
-      - name: Update-APK A 0.1.1 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.1.1 -o apk-update
+      # Spike D (A4b): zweite APK A 0.2.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.2.0 installierbar.
+      - name: Update-APK A 0.2.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.2.1 -o apk-update
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
@@ -153,16 +168,16 @@ jobs:
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000100'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000101'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000200'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000201'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-phase0
+          name: lernplattform-android-A-0.2.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.1.1
+          name: updateprobe-android-A-0.2.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error
