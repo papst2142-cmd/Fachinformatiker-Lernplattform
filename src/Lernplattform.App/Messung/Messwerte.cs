@@ -6,7 +6,7 @@ using System.Text;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Phase 0: sammelt Ergebniszeilen (Start, erstes Oeffnen einer Seite, Arbeitsspeicher,
+/// Phase 0/1: sammelt Ergebniszeilen (Start, erstes Oeffnen einer Seite, Arbeitsspeicher,
 /// Ergebnis "Alte Sicherung pruefen") und liefert sie als Text zum Kopieren.
 /// Bleibt, bis die Sicherungspruefung mit echten Daten genutzt ist (Weisung CC P0-4 Proben).
 /// </summary>
@@ -29,6 +29,9 @@ public static class Messwerte
         }
         liste.Add(ms);
     }
+
+    /// <summary>Hoechstwert jeder Messreihe.</summary>
+    public static Dictionary<string, double> Hoechstwerte() => Reihen.ToDictionary(r => r.Key, r => r.Value.Max(), StringComparer.Ordinal);
 
     public static string Bericht(string geraet = "")
     {

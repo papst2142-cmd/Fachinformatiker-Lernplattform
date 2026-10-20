@@ -11,6 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Phase 1: Lerninhalte im Programm selbst (PC und Handy gleich), unveraendert aus inhalte/ -->
+    <EmbeddedResource Include="..\..\inhalte\*.json" LogicalName="inhalte/%(Filename)%(Extension)" Visible="false" />
+    <EmbeddedResource Include="..\..\inhalte\spiel\balancing.json" LogicalName="inhalte/spiel/balancing.json" Visible="false" />
+    <!-- Fuer "Über das Programm": Lizenz und Hinweise zu Fremdbestandteilen -->
+    <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />

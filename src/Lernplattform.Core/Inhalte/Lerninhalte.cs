@@ -120,35 +120,46 @@ public sealed class Lerninhalte
     public JsonObject RahmenplanZuordnung { get; private init; } = [];
 
     /// <summary>Alle Inhalte laden. Ein unbekannter Fachbereich-Kurzname bricht ab (wie Python).</summary>
-    public static Lerninhalte Laden(string ordner)
+    public static Lerninhalte Laden(string ordner) =>
+        Laden(name => File.ReadAllBytes(Path.Combine(ordner, name + ".json")), ordner);
+
+    /// <summary>
+    /// Wie <see cref="Laden(string)"/>, die Dateien liefert aber <paramref name="lesen"/>
+    /// (Name ohne ".json" -> Inhalt). So kann die App die Inhalte aus dem Programm selbst
+    /// lesen (PC und Handy gleich), ohne einen Ordner auf dem Geraet.
+    /// </summary>
+    public static Lerninhalte Laden(Func<string, byte[]> lesen, string ordner = "")
     {
-        var quiz = LadeListe(ordner, "quizfragen");
+        var quiz = LadeListe(lesen, "quizfragen");
         var anzahlDatei = quiz.Count;
-        var themen = LadeThemen(ordner);
+        var themen = LadeThemen(lesen);
         return new Lerninhalte
         {
             Ordner = ordner,
-            Karteikarten = Verpacke(InhaltArt.Karteikarte, LadeListe(ordner, "karteikarten")),
+            Karteikarten = Verpacke(InhaltArt.Karteikarte, LadeListe(lesen, "karteikarten")),
             Quizfragen = Verpacke(InhaltArt.Quizfrage, Fragenkatalog.Aufbauen(quiz)),
             AnzahlQuizfragenDatei = anzahlDatei,
-            Ap2Szenarien = Verpacke(InhaltArt.Ap2Szenario, LadeListe(ordner, "szenarien_ap2")),
-            Ap1Szenarien = Verpacke(InhaltArt.Ap1Szenario, LadeListe(ordner, "szenarien_ap1")),
-            Testprojekte = Verpacke(InhaltArt.Testprojekt, LadeListe(ordner, "projektarbeiten")),
+            Ap2Szenarien = Verpacke(InhaltArt.Ap2Szenario, LadeListe(lesen, "szenarien_ap2")),
+            Ap1Szenarien = Verpacke(InhaltArt.Ap1Szenario, LadeListe(lesen, "szenarien_ap1")),
+            Testprojekte = Verpacke(InhaltArt.Testprojekt, LadeListe(lesen, "projektarbeiten")),
             Themen = themen,
             ThemenReihenfolge = Fachbereiche.Alle
                 .SelectMany(f => themen.TryGetValue(f, out var liste) ? liste : [])
                 .Select(t => t.Id)
                 .ToList(),
             ThemaNach = ThemenNachId(themen),
-            Rahmenplan = LadeObjekt(ordner, "rahmenplan"),
-            RahmenplanZuordnung = LadeObjekt(ordner, "rahmenplan_zuordnung"),
+            Rahmenplan = LadeObjekt(lesen, "rahmenplan"),
+            RahmenplanZuordnung = LadeObjekt(lesen, "rahmenplan_zuordnung"),
         };
     }
 
     /// <summary>inhalte/&lt;name&gt;.json laden und umwandeln wie load_content.</summary>
-    public static List<JsonObject> LadeListe(string ordner, string name)
+    public static List<JsonObject> LadeListe(string ordner, string name) =>
+        LadeListe(n => File.ReadAllBytes(Path.Combine(ordner, n + ".json")), name);
+
+    private static List<JsonObject> LadeListe(Func<string, byte[]> lesen, string name)
     {
-        var liste = JsonNode.Parse(File.ReadAllBytes(Path.Combine(ordner, name + ".json"))) as JsonArray
+        var liste = JsonNode.Parse(lesen(name)) as JsonArray
             ?? throw new InvalidDataException(name + ".json enthaelt keine Liste");
         var ergebnis = new List<JsonObject>(liste.Count);
         foreach (var knoten in liste.ToList())
@@ -173,16 +184,16 @@ public sealed class Lerninhalte
         return ergebnis;
     }
 
-    private static JsonObject LadeObjekt(string ordner, string name) =>
-        JsonNode.Parse(File.ReadAllBytes(Path.Combine(ordner, name + ".json"))) as JsonObject
+    private static JsonObject LadeObjekt(Func<string, byte[]> lesen, string name) =>
+        JsonNode.Parse(lesen(name)) as JsonObject
         ?? throw new InvalidDataException(name + ".json enthaelt kein Objekt");
 
     private static List<Lerninhalt> Verpacke(InhaltArt art, List<JsonObject> liste) =>
         liste.Select((daten, i) => new Lerninhalt(art, i + 1, daten)).ToList();
 
-    private static Dictionary<string, IReadOnlyList<Thema>> LadeThemen(string ordner)
+    private static Dictionary<string, IReadOnlyList<Thema>> LadeThemen(Func<string, byte[]> lesen)
     {
-        var daten = LadeObjekt(ordner, "themen")["themen"] as JsonObject
+        var daten = LadeObjekt(lesen, "themen")["themen"] as JsonObject
             ?? throw new InvalidDataException("themen.json: Feld 'themen' fehlt");
         var ergebnis = new Dictionary<string, IReadOnlyList<Thema>>();
         foreach (var (kurz, eintraege) in daten)

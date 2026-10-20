@@ -1,0 +1,1489 @@
+{
+ "quelle": "app_gui.py und mobile/src/main.py (per ast), fisi_optionen, fisi_theme, fisi_lernen, fisi_core, fisi_hilfe, fisi_diagnose, fisi_rechtliches (Python v0.63.2)",
+ "python": "3.13.16",
+ "navigation_pc": [
+  {
+   "id": "dashboard",
+   "zeichen": "grid",
+   "symbol": "dashboard",
+   "titel": "Dashboard",
+   "unterpunkte": []
+  },
+  {
+   "id": "cards",
+   "zeichen": "cards",
+   "symbol": "style",
+   "titel": "Karteikarten",
+   "unterpunkte": [
+    {
+     "id": "Netzwerk & Protokolle",
+     "zeichen": "node",
+     "symbol": "lan",
+     "titel": "Netzwerk"
+    },
+    {
+     "id": "IT-Sicherheit & Datenschutz",
+     "zeichen": "shield",
+     "symbol": "security",
+     "titel": "Sicherheit"
+    },
+    {
+     "id": "Systeme, RAID & Hardware",
+     "zeichen": "server",
+     "symbol": "dns",
+     "titel": "Systeme"
+    },
+    {
+     "id": "Wirtschaft & Prozesse",
+     "zeichen": "case",
+     "symbol": "euro",
+     "titel": "Wirtschaft"
+    },
+    {
+     "id": "Datenbanken & SQL",
+     "zeichen": "database",
+     "symbol": "storage",
+     "titel": "Datenbanken"
+    }
+   ]
+  },
+  {
+   "id": "quiz",
+   "zeichen": "target",
+   "symbol": "track_changes",
+   "titel": "Prüfungstrainer",
+   "unterpunkte": []
+  },
+  {
+   "id": "ap1scenarios",
+   "zeichen": "layers",
+   "symbol": "layers",
+   "titel": "AP1-Szenarien",
+   "unterpunkte": []
+  },
+  {
+   "id": "scenarios",
+   "zeichen": "diamond",
+   "symbol": "diamond",
+   "titel": "AP2-Szenarien",
+   "unterpunkte": []
+  },
+  {
+   "id": "testproject",
+   "zeichen": "flag",
+   "symbol": "flag",
+   "titel": "Testprojekt",
+   "unterpunkte": []
+  },
+  {
+   "id": "abschluss",
+   "zeichen": "case",
+   "symbol": "workspace_premium",
+   "titel": "Abschlussprojekt",
+   "unterpunkte": []
+  },
+  {
+   "id": "notebook",
+   "zeichen": "notebook",
+   "symbol": "edit_note",
+   "titel": "Notizblock",
+   "unterpunkte": []
+  },
+  {
+   "id": "calc",
+   "zeichen": "calc",
+   "symbol": "calculate",
+   "titel": "Rechner",
+   "unterpunkte": []
+  },
+  {
+   "id": "game",
+   "zeichen": "game",
+   "symbol": "sports_esports",
+   "titel": "Spiel",
+   "unterpunkte": [
+    {
+     "id": "buero",
+     "zeichen": "office",
+     "symbol": "business",
+     "titel": "Büro"
+    },
+    {
+     "id": "kunde",
+     "zeichen": "station",
+     "symbol": "storefront",
+     "titel": "Kunde"
+    },
+    {
+     "id": "zuhause",
+     "zeichen": "home",
+     "symbol": "home",
+     "titel": "Zuhause"
+    },
+    {
+     "id": "firma",
+     "zeichen": "case",
+     "symbol": "work",
+     "titel": "Firma"
+    },
+    {
+     "id": "reise",
+     "zeichen": "journey",
+     "symbol": "route",
+     "titel": "Reise"
+    }
+   ]
+  },
+  {
+   "id": "progress",
+   "zeichen": "chart",
+   "symbol": "insights",
+   "titel": "Fortschritt",
+   "unterpunkte": []
+  },
+  {
+   "id": "help",
+   "zeichen": "help",
+   "symbol": "help_outline",
+   "titel": "Hilfe",
+   "unterpunkte": []
+  },
+  {
+   "id": "settings",
+   "zeichen": "gear",
+   "symbol": "settings",
+   "titel": "Optionen",
+   "unterpunkte": []
+  }
+ ],
+ "seitenleiste_pc": {
+  "logo": "FI",
+  "texte": [
+   "FI",
+   "Lernplattform",
+   "Version %s",
+   "MENÜ",
+   "LERNSTATUS"
+  ]
+ },
+ "kopfleiste_pc": {
+  "titel": [
+   [
+    "dashboard",
+    "DASHBOARD",
+    "HOME"
+   ],
+   [
+    "cards",
+    "LERNEN",
+    "KARTEIKARTEN"
+   ],
+   [
+    "quiz",
+    "LERNEN",
+    "PRÜFUNGSTRAINER"
+   ],
+   [
+    "ap1scenarios",
+    "LERNEN",
+    "AP1-SZENARIEN"
+   ],
+   [
+    "scenarios",
+    "LERNEN",
+    "AP2-SZENARIEN"
+   ],
+   [
+    "testproject",
+    "LERNEN",
+    "TESTPROJEKT"
+   ],
+   [
+    "abschluss",
+    "LERNEN",
+    "ABSCHLUSSPROJEKT"
+   ],
+   [
+    "notebook",
+    "LERNEN",
+    "NOTIZBLOCK"
+   ],
+   [
+    "calc",
+    "WERKZEUGE",
+    "RECHNER"
+   ],
+   [
+    "game",
+    "PRAXIS",
+    "SPIEL"
+   ],
+   [
+    "buero",
+    "SPIEL",
+    "BÜRO"
+   ],
+   [
+    "kunde",
+    "SPIEL",
+    "KUNDE"
+   ],
+   [
+    "zuhause",
+    "SPIEL",
+    "ZUHAUSE"
+   ],
+   [
+    "firma",
+    "SPIEL",
+    "FIRMA"
+   ],
+   [
+    "filiale",
+    "SPIEL",
+    "FILIALE"
+   ],
+   [
+    "serverfarm",
+    "SPIEL",
+    "SERVERFARM"
+   ],
+   [
+    "reise",
+    "SPIEL",
+    "REISE"
+   ],
+   [
+    "progress",
+    "AUSWERTUNG",
+    "FORTSCHRITT"
+   ],
+   [
+    "settings",
+    "SYSTEM",
+    "OPTIONEN"
+   ],
+   [
+    "help",
+    "SYSTEM",
+    "HILFE"
+   ],
+   [
+    "search",
+    "SUCHE",
+    "ERGEBNISSE"
+   ]
+  ],
+  "suche": "Suchen …  (Strg+F)"
+ },
+ "navigation_handy": [
+  {
+   "id": "dashboard",
+   "symbol": "DASHBOARD_OUTLINED",
+   "symbol_aktiv": "DASHBOARD_ROUNDED",
+   "titel": "Start"
+  },
+  {
+   "id": "learn",
+   "symbol": "SCHOOL_OUTLINED",
+   "symbol_aktiv": "SCHOOL_ROUNDED",
+   "titel": "Lernen"
+  },
+  {
+   "id": "calc",
+   "symbol": "CALCULATE_OUTLINED",
+   "symbol_aktiv": "CALCULATE_ROUNDED",
+   "titel": "Rechner"
+  },
+  {
+   "id": "game",
+   "symbol": "SPORTS_ESPORTS_OUTLINED",
+   "symbol_aktiv": "SPORTS_ESPORTS_ROUNDED",
+   "titel": "Spiel"
+  },
+  {
+   "id": "progress",
+   "symbol": "INSIGHTS_OUTLINED",
+   "symbol_aktiv": "INSIGHTS_ROUNDED",
+   "titel": "Fortschritt"
+  },
+  {
+   "id": "settings",
+   "symbol": "SETTINGS_OUTLINED",
+   "symbol_aktiv": "SETTINGS_ROUNDED",
+   "titel": "Optionen"
+  }
+ ],
+ "kopfleiste_handy": {
+  "titel": [
+   [
+    "dashboard",
+    "DASHBOARD",
+    "HOME"
+   ],
+   [
+    "learn",
+    "LERNEN",
+    "ÜBERSICHT"
+   ],
+   [
+    "cards",
+    "LERNEN",
+    "KARTEIKARTEN"
+   ],
+   [
+    "quiz",
+    "LERNEN",
+    "PRÜFUNGSTRAINER"
+   ],
+   [
+    "ap1scenarios",
+    "LERNEN",
+    "AP1-SZENARIEN"
+   ],
+   [
+    "scenarios",
+    "LERNEN",
+    "AP2-SZENARIEN"
+   ],
+   [
+    "testproject",
+    "LERNEN",
+    "TESTPROJEKT"
+   ],
+   [
+    "abschluss",
+    "LERNEN",
+    "ABSCHLUSSPROJEKT"
+   ],
+   [
+    "notebook",
+    "LERNEN",
+    "NOTIZBLOCK"
+   ],
+   [
+    "calc",
+    "WERKZEUGE",
+    "RECHNER"
+   ],
+   [
+    "progress",
+    "AUSWERTUNG",
+    "FORTSCHRITT"
+   ],
+   [
+    "settings",
+    "SYSTEM",
+    "OPTIONEN"
+   ],
+   [
+    "search",
+    "SUCHE",
+    "ERGEBNISSE"
+   ],
+   [
+    "help",
+    "SYSTEM",
+    "HILFE"
+   ]
+  ],
+  "knoepfe": [
+   {
+    "symbol": "HELP_OUTLINE_ROUNDED",
+    "titel": "Hilfe"
+   },
+   {
+    "symbol": "SEARCH_ROUNDED",
+    "titel": "Suchen"
+   }
+  ],
+  "suche": "Suchen"
+ },
+ "lernen": {
+  "kopf": [
+   "LERNEN",
+   "ÜBERSICHT"
+  ],
+  "eintraege": [
+   {
+    "id": "cards",
+    "symbol": "STYLE_ROUNDED",
+    "titel": "Karteikarten",
+    "muster": "%s Karten in %s Fachbereichen",
+    "text": "1.565 Karten in fünf Fachbereichen",
+    "farben": [
+     "accent"
+    ]
+   },
+   {
+    "id": "quiz",
+    "symbol": "TRACK_CHANGES_ROUNDED",
+    "titel": "Prüfungstrainer",
+    "muster": "%s Aufgaben, mit %s",
+    "text": "2.174 Aufgaben, mit Note (Orientierung)",
+    "farben": [
+     "primary"
+    ]
+   },
+   {
+    "id": "ap1scenarios",
+    "symbol": "LAYERS_ROUNDED",
+    "titel": "AP1-Szenarien",
+    "muster": "%d Aufgaben der Grundlagenprüfung",
+    "text": "265 Aufgaben der Grundlagenprüfung",
+    "farben": [
+     "#2563EB",
+     "#22D3EE"
+    ]
+   },
+   {
+    "id": "scenarios",
+    "symbol": "DIAMOND_ROUNDED",
+    "titel": "AP2-Szenarien",
+    "muster": "%d Aufgaben der Abschlussprüfung",
+    "text": "330 Aufgaben der Abschlussprüfung",
+    "farben": [
+     "#DB2777",
+     "#FB923C"
+    ]
+   },
+   {
+    "id": "testproject",
+    "symbol": "FLAG_ROUNDED",
+    "titel": "Testprojekt",
+    "muster": "%d Kundenaufträge zum Üben",
+    "text": "50 Kundenaufträge zum Üben",
+    "farben": [
+     "success"
+    ]
+   },
+   {
+    "id": "abschluss",
+    "symbol": "WORKSPACE_PREMIUM_ROUNDED",
+    "titel": "Abschlussprojekt",
+    "muster": "Dein IHK-Projekt vom Antrag bis zum Fachgespräch",
+    "text": "Dein IHK-Projekt vom Antrag bis zum Fachgespräch",
+    "farben": [
+     "#7C3AED",
+     "#22D3EE"
+    ]
+   },
+   {
+    "id": "notebook",
+    "symbol": "EDIT_NOTE_ROUNDED",
+    "titel": "Notizblock",
+    "muster": "Was du noch üben musst, aus allen Bereichen",
+    "text": "Was du noch üben musst, aus allen Bereichen",
+    "farben": [
+     "#DC2626",
+     "#FBBF24"
+    ]
+   }
+  ],
+  "note_kurz": "Note (Orientierung)",
+  "anzahlen": {
+   "karteikarten": 1565,
+   "fachbereiche": 5,
+   "quizfragen": 2174,
+   "ap1": 265,
+   "ap2": 330,
+   "testprojekte": 50
+  }
+ },
+ "optionen": {
+  "bereiche_pc": [
+   {
+    "id": "updates",
+    "titel": "Updates",
+    "untertitel": "installierte Version %s",
+    "nur_pc": false,
+    "offen": true,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Update",
+     "Version",
+     "aktualisieren",
+     "Desktop-Verknüpfung"
+    ]
+   },
+   {
+    "id": "rundgang",
+    "titel": "Rundgang und Hilfe",
+    "untertitel": "Einführung in 5 Schritten",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Rundgang",
+     "Hilfe",
+     "Name",
+     "Einführung"
+    ]
+   },
+   {
+    "id": "optik",
+    "titel": "Optische Anpassungen",
+    "untertitel": "nur für dieses Gerät",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "schrift",
+      "titel": "Schriftgröße",
+      "nur_pc": false
+     },
+     {
+      "id": "farben",
+      "titel": "Farben",
+      "nur_pc": false
+     }
+    ],
+    "stichwoerter": [
+     "Schrift",
+     "Schriftgröße",
+     "groß",
+     "Sehr groß",
+     "Extra groß",
+     "Maximal",
+     "Farbe",
+     "Darstellung",
+     "Dunkel",
+     "Hell",
+     "Vorlagen",
+     "Grundfarbe",
+     "Hintergrund",
+     "Eigene Farben",
+     "Regler",
+     "Farbton",
+     "Sättigung",
+     "Helligkeit",
+     "Akzent",
+     "Cyan/Pink",
+     "Lila/Magenta",
+     "Blau/Türkis",
+     "Grün/Lime",
+     "Orange/Gelb",
+     "Rot/Pink",
+     "Violett",
+     "Nachtblau",
+     "Tannengrün",
+     "Aubergine",
+     "Anthrazit",
+     "Schwarz",
+     "Flieder",
+     "Hellblau",
+     "Mintgrün",
+     "Rosé",
+     "Hellgrau",
+     "Weiß"
+    ]
+   },
+   {
+    "id": "tagesziel",
+    "titel": "Tagesziel",
+    "untertitel": "nur für dieses Gerät",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Ziel",
+     "Lernserie",
+     "Erinnerung",
+     "Aufgaben pro Tag"
+    ]
+   },
+   {
+    "id": "abgleich",
+    "titel": "Abgleich PC und Handy",
+    "untertitel": "über ein privates GitHub-Repository",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Abgleich",
+     "Repository",
+     "Token",
+     "Zugangsschlüssel",
+     "GitHub"
+    ]
+   },
+   {
+    "id": "sicherung",
+    "titel": "Sicherung",
+    "untertitel": "Lernstand als Datei",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Sicherung",
+     "Backup",
+     "wiederherstellen"
+    ]
+   },
+   {
+    "id": "datenbank",
+    "titel": "Datenbank",
+    "untertitel": null,
+    "nur_pc": true,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Datenbank",
+     "Speicherort",
+     "FISI_DB_PATH"
+    ]
+   },
+   {
+    "id": "lerninhalte",
+    "titel": "Lerninhalte",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "rahmenplan",
+      "titel": "Rahmenplan",
+      "nur_pc": false
+     }
+    ],
+    "stichwoerter": [
+     "Lerninhalte",
+     "Anzahl",
+     "Karteikarten gesamt",
+     "Rahmenplan",
+     "Lernfeld",
+     "Prüfungstermin",
+     "Gewichtung",
+     "AP1",
+     "AP2"
+    ]
+   },
+   {
+    "id": "spiel",
+    "titel": "Spiel",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Spiel",
+     "Wohnungen",
+     "Miete",
+     "Schwierigkeitsgrad"
+    ]
+   },
+   {
+    "id": "loeschen",
+    "titel": "Löschen und zurücksetzen",
+    "untertitel": "Lerndaten, Historie, Spielstand, Bestenliste",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Löschen",
+     "zurücksetzen",
+     "Lerndaten",
+     "Historie",
+     "Spielstand",
+     "Bestenliste"
+    ]
+   },
+   {
+    "id": "diagnose",
+    "titel": "Diagnose und Werkzeuge",
+    "untertitel": "Fehler melden, messen, Hänger finden",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "problem",
+      "titel": "Problem melden",
+      "nur_pc": false
+     },
+     {
+      "id": "leistung",
+      "titel": "Leistungsmessung",
+      "nur_pc": false
+     },
+     {
+      "id": "haenger",
+      "titel": "Hänger-Diagnose",
+      "nur_pc": true
+     }
+    ],
+    "stichwoerter": [
+     "Diagnose",
+     "Werkzeuge",
+     "Problem melden",
+     "Problem",
+     "Fehler",
+     "fehler.log",
+     "Bericht",
+     "melden",
+     "Leistungsmessung",
+     "Leistung",
+     "Messung",
+     "Messdatei",
+     "Hänger-Diagnose",
+     "Hänger",
+     "haenger.log",
+     "hängt"
+    ]
+   },
+   {
+    "id": "ueber",
+    "titel": "Über das Programm",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": true,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Über",
+     "Programm",
+     "Version"
+    ]
+   }
+  ],
+  "bereiche_handy": [
+   {
+    "id": "updates",
+    "titel": "Updates",
+    "untertitel": "installierte Version %s",
+    "nur_pc": false,
+    "offen": true,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Update",
+     "Version",
+     "aktualisieren",
+     "Desktop-Verknüpfung"
+    ]
+   },
+   {
+    "id": "rundgang",
+    "titel": "Rundgang und Hilfe",
+    "untertitel": "Einführung in 5 Schritten",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Rundgang",
+     "Hilfe",
+     "Name",
+     "Einführung"
+    ]
+   },
+   {
+    "id": "optik",
+    "titel": "Optische Anpassungen",
+    "untertitel": "nur für dieses Gerät",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "schrift",
+      "titel": "Schriftgröße",
+      "nur_pc": false
+     },
+     {
+      "id": "farben",
+      "titel": "Farben",
+      "nur_pc": false
+     }
+    ],
+    "stichwoerter": [
+     "Schrift",
+     "Schriftgröße",
+     "groß",
+     "Sehr groß",
+     "Extra groß",
+     "Maximal",
+     "Farbe",
+     "Darstellung",
+     "Dunkel",
+     "Hell",
+     "Vorlagen",
+     "Grundfarbe",
+     "Hintergrund",
+     "Eigene Farben",
+     "Regler",
+     "Farbton",
+     "Sättigung",
+     "Helligkeit",
+     "Akzent",
+     "Cyan/Pink",
+     "Lila/Magenta",
+     "Blau/Türkis",
+     "Grün/Lime",
+     "Orange/Gelb",
+     "Rot/Pink",
+     "Violett",
+     "Nachtblau",
+     "Tannengrün",
+     "Aubergine",
+     "Anthrazit",
+     "Schwarz",
+     "Flieder",
+     "Hellblau",
+     "Mintgrün",
+     "Rosé",
+     "Hellgrau",
+     "Weiß"
+    ]
+   },
+   {
+    "id": "tagesziel",
+    "titel": "Tagesziel",
+    "untertitel": "nur für dieses Gerät",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Ziel",
+     "Lernserie",
+     "Erinnerung",
+     "Aufgaben pro Tag"
+    ]
+   },
+   {
+    "id": "abgleich",
+    "titel": "Abgleich PC und Handy",
+    "untertitel": "privates GitHub-Repository",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Abgleich",
+     "Repository",
+     "Token",
+     "Zugangsschlüssel",
+     "GitHub"
+    ]
+   },
+   {
+    "id": "sicherung",
+    "titel": "Sicherung",
+    "untertitel": "Lernstand als Datei",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Sicherung",
+     "Backup",
+     "wiederherstellen"
+    ]
+   },
+   {
+    "id": "lerninhalte",
+    "titel": "Lerninhalte",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "rahmenplan",
+      "titel": "Rahmenplan",
+      "nur_pc": false
+     }
+    ],
+    "stichwoerter": [
+     "Lerninhalte",
+     "Anzahl",
+     "Karteikarten gesamt",
+     "Rahmenplan",
+     "Lernfeld",
+     "Prüfungstermin",
+     "Gewichtung",
+     "AP1",
+     "AP2"
+    ]
+   },
+   {
+    "id": "spiel",
+    "titel": "Spiel",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Spiel",
+     "Wohnungen",
+     "Miete",
+     "Schwierigkeitsgrad"
+    ]
+   },
+   {
+    "id": "loeschen",
+    "titel": "Löschen und zurücksetzen",
+    "untertitel": "Lerndaten, Historie, Spielstand, Bestenliste",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Löschen",
+     "zurücksetzen",
+     "Lerndaten",
+     "Historie",
+     "Spielstand",
+     "Bestenliste"
+    ]
+   },
+   {
+    "id": "diagnose",
+    "titel": "Diagnose und Werkzeuge",
+    "untertitel": "Fehler melden, messen, Hänger finden",
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": false,
+    "abschnitte": [
+     {
+      "id": "problem",
+      "titel": "Problem melden",
+      "nur_pc": false
+     },
+     {
+      "id": "leistung",
+      "titel": "Leistungsmessung",
+      "nur_pc": false
+     }
+    ],
+    "stichwoerter": [
+     "Diagnose",
+     "Werkzeuge",
+     "Problem melden",
+     "Problem",
+     "Fehler",
+     "fehler.log",
+     "Bericht",
+     "melden",
+     "Leistungsmessung",
+     "Leistung",
+     "Messung",
+     "Messdatei"
+    ]
+   },
+   {
+    "id": "ueber",
+    "titel": "Über das Programm",
+    "untertitel": null,
+    "nur_pc": false,
+    "offen": false,
+    "aufgeklappt": true,
+    "abschnitte": [],
+    "stichwoerter": [
+     "Über",
+     "Programm",
+     "Version"
+    ]
+   }
+  ],
+  "speichern_fehlgeschlagen_titel": "Speichern fehlgeschlagen",
+  "speichern_fehlgeschlagen": "Die Einstellung ließ sich nicht speichern. Ist der Datenordner schreibgeschützt oder die Platte voll? Die bisherige Einstellung gilt weiter.",
+  "suche_art": "Optionen",
+  "updates_pc": [
+   "Nach Updates suchen",
+   "Beim Start automatisch nach Updates suchen"
+  ],
+  "updates_handy": [
+   "Nach Updates suchen",
+   "Beim Start automatisch nach Updates suchen"
+  ]
+ },
+ "klappen": {
+  "auf": "aufklappen",
+  "zu": "zuklappen",
+  "zustand_zu": "zugeklappt",
+  "zustand_auf": "aufgeklappt",
+  "lernen_auf": "aufklappen",
+  "lernen_zu": "zuklappen",
+  "beispiele": [
+   [
+    "Farben",
+    false,
+    "Farben, zugeklappt"
+   ],
+   [
+    "Farben",
+    true,
+    "Farben, aufgeklappt"
+   ],
+   [
+    "Vorlagen",
+    false,
+    "Vorlagen, zugeklappt"
+   ],
+   [
+    "Vorlagen",
+    true,
+    "Vorlagen, aufgeklappt"
+   ]
+  ]
+ },
+ "darstellung": {
+  "modi": [
+   [
+    "dunkel",
+    "Dunkel"
+   ],
+   [
+    "hell",
+    "Hell"
+   ]
+  ],
+  "pc": [
+   "DARSTELLUNG"
+  ],
+  "handy": [
+   "Schriftgröße",
+   "Farben",
+   "Darstellung"
+  ]
+ },
+ "farbwelten": {
+  "grundfarben": [
+   [
+    "cyan_pink",
+    "Cyan/Pink"
+   ],
+   [
+    "lila_magenta",
+    "Lila/Magenta"
+   ],
+   [
+    "blau_tuerkis",
+    "Blau/Türkis"
+   ],
+   [
+    "gruen_lime",
+    "Grün/Lime"
+   ],
+   [
+    "orange_gelb",
+    "Orange/Gelb"
+   ],
+   [
+    "rot_pink",
+    "Rot/Pink"
+   ]
+  ],
+  "hintergruende": [
+   [
+    "violett",
+    "Violett",
+    "Flieder"
+   ],
+   [
+    "nachtblau",
+    "Nachtblau",
+    "Hellblau"
+   ],
+   [
+    "tannengruen",
+    "Tannengrün",
+    "Mintgrün"
+   ],
+   [
+    "aubergine",
+    "Aubergine",
+    "Rosé"
+   ],
+   [
+    "anthrazit",
+    "Anthrazit",
+    "Hellgrau"
+   ],
+   [
+    "schwarz",
+    "Schwarz",
+    "Weiß"
+   ]
+  ],
+  "vorlagen_titel": "Vorlagen",
+  "vorlagen_hinweis": "Ein Klick auf eine Vorlage stellt die Farben ein. Sind eigene Farben gespeichert oder Regler bewegt, setzt er nur die Regler.",
+  "vorlagen_text": "Die Grundfarbe ändert Buttons, Ringe, Balken und Banner, der Hintergrund die Flächen und Karten. Fachbereichsfarben und Erfolg, Fehler, Warnung bleiben gleich (in der hellen Darstellung etwas dunkler, damit sie gut lesbar sind).",
+  "farben_titel": "Farben",
+  "optik_titel": "Optische Anpassungen",
+  "pc": [
+   "GRUNDFARBE",
+   "HINTERGRUND",
+   "Die Grundfarbe ändert Buttons, Ringe, Balken und Banner, der Hintergrund die Flächen und Karten. Fachbereichsfarben und Erfolg, Fehler, Warnung bleiben gleich (in der hellen Darstellung etwas dunkler, damit sie gut lesbar sind)."
+  ],
+  "handy": [
+   "Grundfarbe",
+   "Hintergrund",
+   "Die Grundfarbe ändert Buttons, Ringe, Balken und Banner, der Hintergrund die Flächen und Karten. Fachbereichsfarben und Erfolg, Fehler, Warnung bleiben gleich (in der hellen Darstellung etwas dunkler, damit sie gut lesbar sind)."
+  ],
+  "beschaeftigt_titel": "Farben werden angewendet",
+  "beschaeftigt_text": "Bitte warten, die Oberfläche wird mit den neuen Farben aufgebaut …",
+  "laden_text": "Wird geladen …"
+ },
+ "schrift": {
+  "stufen": [
+   [
+    "normal",
+    "Normal",
+    1.0
+   ],
+   [
+    "gross",
+    "Groß",
+    1.15
+   ],
+   [
+    "sehr_gross",
+    "Sehr groß",
+    1.3
+   ],
+   [
+    "extra_gross",
+    "Extra groß",
+    1.6
+   ],
+   [
+    "riesig",
+    "Maximal",
+    2.0
+   ]
+  ],
+  "titel": "Schriftgröße",
+  "untertitel": "nur für dieses Gerät",
+  "hinweis": "Gilt sofort und nur für dieses Gerät. Am PC wächst die ganze Oberfläche mit (Schrift, Knöpfe, Abstände); passt sie nicht mehr ins Fenster, lässt sie sich seitlich verschieben. Am Handy kommt die Schriftgröße aus den Systemeinstellungen noch hinzu.",
+  "beschaeftigt_titel": "Schriftgröße wird angewendet",
+  "beschaeftigt_text": "Bitte warten, die Oberfläche wird in der neuen Größe aufgebaut …",
+  "pc": [
+   "Gilt sofort und nur für dieses Gerät. Am PC wächst die ganze Oberfläche mit (Schrift, Knöpfe, Abstände); passt sie nicht mehr ins Fenster, lässt sie sich seitlich verschieben. Am Handy kommt die Schriftgröße aus den Systemeinstellungen noch hinzu."
+  ]
+ },
+ "tagesziel": {
+  "vorgabe": 20,
+  "min": 5,
+  "max": 100,
+  "schritt": 5,
+  "erinnerung_vorgabe": "18:00",
+  "schalter_pc": [
+   [
+    "ziel_an",
+    "Tagesziel anzeigen"
+   ],
+   [
+    "serie_an",
+    "Lernserie anzeigen"
+   ],
+   [
+    "erinnerung_an",
+    "An das Tagesziel erinnern"
+   ]
+  ],
+  "pc": [
+   "Aufgaben pro Tag",
+   "Erinnerung um",
+   "Gezählt werden bewertete Karteikarten, Prüfungstrainer-Fragen, Szenarien, Testprojekte und Trainer-Aufgaben. Die Erinnerung erscheint als Hinweis, solange das Programm geöffnet ist."
+  ],
+  "schalter_handy": [
+   "Tagesziel anzeigen",
+   "Lernserie anzeigen",
+   "An das Tagesziel erinnern"
+  ],
+  "handy": [
+   "Aufgaben pro Tag",
+   "Erinnerung um",
+   "Gezählt werden bewertete Karteikarten, Prüfungstrainer-Fragen, Szenarien, Testprojekte und Trainer-Aufgaben. Die Erinnerung erscheint als Hinweis, wenn du die App öffnest oder zurückholst."
+  ],
+  "erinnerung_hinweis_handy": "18:00"
+ },
+ "diagnose": {
+  "titel": "Problem melden",
+  "untertitel": "Angaben für die Fehlersuche",
+  "hilfe": "Zeigt Programmversion, Gerät, Datenordner und das Fehlerprotokoll. Zugangsschlüssel, Passwörter und dein Benutzername in Pfaden werden entfernt. Andere Angaben aus Fehlermeldungen, zum Beispiel der Name deines Rechners, können darin stehen. Sieh dir den Bericht vor dem Weitergeben an. Speichere ihn als Datei (oder kopiere ihn) und gib ihn mit deiner Beschreibung des Problems an die Person weiter, von der du das Programm hast.",
+  "kopieren": "Kopieren",
+  "speichern": "Als Datei speichern",
+  "ordner": "Datenordner öffnen",
+  "kopiert": "Bericht in die Zwischenablage kopiert",
+  "ordner_fehler": "Der Datenordner ließ sich nicht öffnen: %s",
+  "kein_protokoll": "Keine Fehler aufgezeichnet – die Datei fehler.log ist leer oder noch nicht vorhanden. Das ist ein gutes Zeichen.",
+  "gekuerzt": "… (ältere Einträge gekürzt, gezeigt werden die letzten %d KB)",
+  "dateityp": "Textdatei",
+  "bereich_titel": "Diagnose und Werkzeuge",
+  "bereich_untertitel": "Fehler melden, messen, Hänger finden",
+  "pc": [
+   "Kopieren",
+   "Als Datei speichern",
+   "Datenordner öffnen"
+  ],
+  "handy": [
+   "Kopieren",
+   "Als Datei speichern"
+  ]
+ },
+ "ueber": {
+  "titel": "Über das Programm",
+  "programmname": "Fachinformatiker Lernplattform",
+  "plattform_pc": "Umgesetzt mit Python und CustomTkinter. Die Installer für Windows, Linux und macOS bringen alles Nötige mit – es muss nichts zusätzlich installiert werden. Die Handy-App für Android nutzt dieselben Lerninhalte.",
+  "plattform_handy": "Die Handy-App nutzt dieselben Lerninhalte wie die PC-Version und ist mit Python und Flet umgesetzt.",
+  "beispielversion": "A 0.1.0",
+  "text_pc": "Fachinformatiker Lernplattform Version A 0.1.0\nCopyright (c) 2026 Nico H – Alle Rechte vorbehalten\n\nLernprogramm für die Prüfungsvorbereitung zum Fachinformatiker (Schwerpunkt Systemintegration) mit Karteikarten, Prüfungstrainer, AP1-/AP2-Szenarien, Testprojekten und Praxis-Rechnern.\n\nUmgesetzt mit Python und CustomTkinter. Die Installer für Windows, Linux und macOS bringen alles Nötige mit – es muss nichts zusätzlich installiert werden. Die Handy-App für Android nutzt dieselben Lerninhalte.\n\nDie Fachinformatiker Lernplattform ist ein privates Lernprogramm. Sie ist kein Angebot und kein Produkt einer Industrie- und Handelskammer (IHK) oder einer anderen Prüfungsstelle und wird von diesen weder herausgegeben noch geprüft. Die Aufgaben, Szenarien und Testprojekte sind eigene Übungsaufgaben. Sie enthalten keine offiziellen Prüfungsaufgaben. Bezeichnungen wie „AP1“, „AP2“ oder „Note nach IHK-Schlüssel“ beschreiben nur, wofür geübt wird und nach welchem Notenschlüssel die Übung ausgewertet wird.\n\nErstellt mit Hilfe von Claude (Anthropic).",
+  "text_handy": "Fachinformatiker Lernplattform Version A 0.1.0\nCopyright (c) 2026 Nico H – Alle Rechte vorbehalten\n\nLernprogramm für die Prüfungsvorbereitung zum Fachinformatiker (Schwerpunkt Systemintegration) mit Karteikarten, Prüfungstrainer, AP1-/AP2-Szenarien, Testprojekten und Praxis-Rechnern.\n\nDie Handy-App nutzt dieselben Lerninhalte wie die PC-Version und ist mit Python und Flet umgesetzt.\n\nDie Fachinformatiker Lernplattform ist ein privates Lernprogramm. Sie ist kein Angebot und kein Produkt einer Industrie- und Handelskammer (IHK) oder einer anderen Prüfungsstelle und wird von diesen weder herausgegeben noch geprüft. Die Aufgaben, Szenarien und Testprojekte sind eigene Übungsaufgaben. Sie enthalten keine offiziellen Prüfungsaufgaben. Bezeichnungen wie „AP1“, „AP2“ oder „Note nach IHK-Schlüssel“ beschreiben nur, wofür geübt wird und nach welchem Notenschlüssel die Übung ausgewertet wird.\n\nErstellt mit Hilfe von Claude (Anthropic).",
+  "copyright": "Copyright (c) 2026 Nico H – Alle Rechte vorbehalten",
+  "hinweis": "Die Fachinformatiker Lernplattform ist ein privates Lernprogramm. Sie ist kein Angebot und kein Produkt einer Industrie- und Handelskammer (IHK) oder einer anderen Prüfungsstelle und wird von diesen weder herausgegeben noch geprüft. Die Aufgaben, Szenarien und Testprojekte sind eigene Übungsaufgaben. Sie enthalten keine offiziellen Prüfungsaufgaben. Bezeichnungen wie „AP1“, „AP2“ oder „Note nach IHK-Schlüssel“ beschreiben nur, wofür geübt wird und nach welchem Notenschlüssel die Übung ausgewertet wird.",
+  "claude": "Erstellt mit Hilfe von Claude (Anthropic).",
+  "knoepfe": [
+   "Lizenz",
+   "Hinweise zu Fremdbestandteilen"
+  ],
+  "fenster": [
+   "Lizenz",
+   "Hinweise zu Fremdbestandteilen"
+  ]
+ },
+ "gross": [
+  [
+   "AP1-Szenarien",
+   "AP1-SZENARIEN"
+  ],
+  [
+   "AP2-Szenarien",
+   "AP2-SZENARIEN"
+  ],
+  [
+   "Abgleich PC und Handy",
+   "ABGLEICH PC UND HANDY"
+  ],
+  [
+   "Abschlussprojekt",
+   "ABSCHLUSSPROJEKT"
+  ],
+  [
+   "Dashboard",
+   "DASHBOARD"
+  ],
+  [
+   "Datenbank",
+   "DATENBANK"
+  ],
+  [
+   "Diagnose und Werkzeuge",
+   "DIAGNOSE UND WERKZEUGE"
+  ],
+  [
+   "Farben",
+   "FARBEN"
+  ],
+  [
+   "Fortschritt",
+   "FORTSCHRITT"
+  ],
+  [
+   "Hilfe",
+   "HILFE"
+  ],
+  [
+   "Hänger-Diagnose",
+   "HÄNGER-DIAGNOSE"
+  ],
+  [
+   "Karteikarten",
+   "KARTEIKARTEN"
+  ],
+  [
+   "Leistungsmessung",
+   "LEISTUNGSMESSUNG"
+  ],
+  [
+   "Lerninhalte",
+   "LERNINHALTE"
+  ],
+  [
+   "Löschen und zurücksetzen",
+   "LÖSCHEN UND ZURÜCKSETZEN"
+  ],
+  [
+   "Notizblock",
+   "NOTIZBLOCK"
+  ],
+  [
+   "Optionen",
+   "OPTIONEN"
+  ],
+  [
+   "Optische Anpassungen",
+   "OPTISCHE ANPASSUNGEN"
+  ],
+  [
+   "Problem melden",
+   "PROBLEM MELDEN"
+  ],
+  [
+   "Prüfungstrainer",
+   "PRÜFUNGSTRAINER"
+  ],
+  [
+   "Rahmenplan",
+   "RAHMENPLAN"
+  ],
+  [
+   "Rechner",
+   "RECHNER"
+  ],
+  [
+   "Rundgang und Hilfe",
+   "RUNDGANG UND HILFE"
+  ],
+  [
+   "Schriftgröße",
+   "SCHRIFTGRÖSSE"
+  ],
+  [
+   "Sicherung",
+   "SICHERUNG"
+  ],
+  [
+   "Spiel",
+   "SPIEL"
+  ],
+  [
+   "Tagesziel",
+   "TAGESZIEL"
+  ],
+  [
+   "Testprojekt",
+   "TESTPROJEKT"
+  ],
+  [
+   "Updates",
+   "UPDATES"
+  ],
+  [
+   "Vorlagen",
+   "VORLAGEN"
+  ],
+  [
+   "Über das Programm",
+   "ÜBER DAS PROGRAMM"
+  ]
+ ],
+ "zahlwoerter": [
+  [
+   -1,
+   "-1"
+  ],
+  [
+   0,
+   "null"
+  ],
+  [
+   1,
+   "ein"
+  ],
+  [
+   2,
+   "zwei"
+  ],
+  [
+   3,
+   "drei"
+  ],
+  [
+   4,
+   "vier"
+  ],
+  [
+   5,
+   "fünf"
+  ],
+  [
+   6,
+   "sechs"
+  ],
+  [
+   7,
+   "sieben"
+  ],
+  [
+   8,
+   "acht"
+  ],
+  [
+   9,
+   "neun"
+  ],
+  [
+   10,
+   "zehn"
+  ],
+  [
+   11,
+   "elf"
+  ],
+  [
+   12,
+   "zwölf"
+  ],
+  [
+   13,
+   "13"
+  ],
+  [
+   14,
+   "14"
+  ],
+  [
+   15,
+   "15"
+  ]
+ ],
+ "tausender": [
+  [
+   0,
+   "0"
+  ],
+  [
+   7,
+   "7"
+  ],
+  [
+   999,
+   "999"
+  ],
+  [
+   1000,
+   "1.000"
+  ],
+  [
+   1234,
+   "1.234"
+  ],
+  [
+   99999,
+   "99.999"
+  ],
+  [
+   123456,
+   "123.456"
+  ],
+  [
+   1234567,
+   "1.234.567"
+  ]
+ ]
+}

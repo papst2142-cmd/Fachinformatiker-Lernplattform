@@ -3,7 +3,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Lernplattform.Core.Diagnose;
-using Lernplattform.Design;
 using Lernplattform.Messung;
 using Lernplattform.ViewModels;
 using Lernplattform.Views;
@@ -25,7 +24,8 @@ public partial class App : Application
             e.Handled = true;
         };
         AvaloniaXamlLoader.Load(this);
-        FarbenAnwenden.Anwenden(FarbenAnwenden.Aktuell);
+        // Phase 1: Einstellungen lesen, Farbwelt und Schriftstufe anwenden, Inhalte im Hintergrund laden
+        Programm.Zustand.Starten();
     }
 
     public override void OnFrameworkInitializationCompleted()
