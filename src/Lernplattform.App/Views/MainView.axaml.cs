@@ -84,7 +84,11 @@ public partial class MainView : UserControl
         Grid.SetRow(_leisten.UntereLeiste, 2);
         raster.Children.Add(_leisten.UntereLeiste);
 
-        Content = new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
+        // Ebene fuer Hinweis- und Rueckfragefenster ueber allen Seiten (Phase 2)
+        var ebene = new Panel { IsVisible = false };
+        Dialog.Ebene(ebene);
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), ebene } };
+        Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
 
@@ -167,6 +171,10 @@ public partial class MainView : UserControl
                 Seiten.Dashboard => new DashboardSeite(),
                 Seiten.Optionen => new OptionenSeite(BaueSicherung),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
+                Seiten.Karteikarten => new KarteikartenSeite(),
+                Seiten.Trainer => new TrainerSeite(),
+                // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
+                _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
             };
             _seiten[id] = seite;
@@ -182,6 +190,21 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is DashboardSeite dashboard)
         {
             dashboard.Neu();
+        }
+        if (_seiten[id] is KarteikartenSeite karten)
+        {
+            if (Core.Inhalte.Fachbereiche.Alle.Contains(id))
+            {
+                karten.SetzeFachbereich(id);      // open_cards(category)
+            }
+            else if (gebaut)
+            {
+                karten.Gezeigt();
+            }
+        }
+        if (gebaut && _seiten[id] is TrainerSeite trainer)
+        {
+            trainer.Gezeigt();
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
@@ -215,6 +238,8 @@ public partial class MainView : UserControl
     private Control BaueSicherung()
     {
         var panel = new StackPanel { Spacing = 8 };
+        // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
+        panel.Children.Add(new UebernahmeTeil(panel).Teil);
         panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };

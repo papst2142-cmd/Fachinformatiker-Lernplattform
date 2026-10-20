@@ -49,7 +49,7 @@ public class LerntexteTests
                 anzahl++;
             }
         }
-        Assert.Equal(66, anzahl);
+        Assert.Equal(69, anzahl);
     }
 
     [Fact]

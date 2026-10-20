@@ -283,6 +283,9 @@ public sealed class Karteikarten
         Speichern(karte, Modus, richtig);
     }
 
+    /// <summary>on_show: Antworten neu lesen (z. B. nach einer Uebernahme); Auswahl und Karte bleiben.</summary>
+    public void NeuLesen() => Buch = _buchLesen();
+
     /// <summary>Beim Beenden des Programms (flush_inputs): Aufgedecktes als angesehen speichern.</summary>
     public void Beenden() => Flush();
 

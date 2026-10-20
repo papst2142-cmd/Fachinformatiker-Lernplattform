@@ -7,6 +7,8 @@ public static class Seiten
 {
     public const string Dashboard = "dashboard";
     public const string Lernen = "learn";
+    public const string Karteikarten = "cards";
+    public const string Trainer = "quiz";
     public const string Optionen = "settings";
     public const string Hilfe = "help";
     public const string Suche = "search";

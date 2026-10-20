@@ -56,6 +56,7 @@ public static class KartenTexte
     public const string Musterloesung = "Musterlösung";                                              // 2975
     public const string WiederholungTitel = "Wiederholung";                                          // 11025
     public const string NichtsFaellig = "Heute ist nichts mehr fällig.";                             // 11025
+    public const string Datenbankfehler = "Datenbankfehler";                                         // 10666 (_db_error)
 
     /// <summary>count_text (app_gui 479-484): zwei Leerzeichen um den Punkt, geschuetztes Leerzeichen vor der Zahl.</summary>
     public static string ZaehlText(IReadOnlyDictionary<string, int> zahlen) =>
@@ -106,6 +107,8 @@ public static class TrainerTexte
     public const string SessionTitel = "Test-Session";                                                       // 3067
     public const string ImKatalog = "%s Aufgaben im Katalog";                                                // 3068
     public const string Fragenanzahl = "Fragenanzahl";                                                       // 3095
+    public const string Weniger = "Weniger";                                                                 // 161 STEP_LESS (Name fuer Vorlesen)
+    public const string Mehr = "Mehr";                                                                       // 161 STEP_MORE
     public const string Starten = "Session starten";                                                         // 3100
     public const string Verfuegbar = "%s verfügbar  ·  %s";                                                  // 3179
     public const string FrageEinzahl = "Frage";
