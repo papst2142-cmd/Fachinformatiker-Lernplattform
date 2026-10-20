@@ -14,12 +14,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.2.0** auf `main` (f97beeb); auf Zweig `phase2-lernen` **A 0.3.0** (Paket 1.0.0-a.0.3.0, Android 1000300); kein Tag, kein öffentliches Release |
+| Version | **A 0.3.0** auf `main` (858d82d, W2 gemergt, PR #5); auf Zweig `phase2-fortschritt` **A 0.4.0** (Paket 1.0.0-a.0.4.0, Android 1000400); kein Tag, kein öffentliches Release |
 | Phase | 0 und 1 abgenommen und gemergt (Phase 1: PR #2, CI auf main 8/8 grün, Pakete von Nico auf Windows-VM, Ubuntu-VM, S24 getestet). Zweig `phase1-kern` existiert nicht mehr |
-| Jetzt | **Phase 2 (Lernkern) im Bau.** W1 gemergt (main d75f2a5, PR #4). **W2** (L4 Karteikarten, L5 Lernstand übernehmen, L6 Prüfungstrainer Übung) auf Zweig `phase2-lernen`, von Chat abgenommen mit Auflagen (Weisung P2-6, e6d4d97); „Jetzt wiederholen“ für PC und Handy eingebaut; gemeldet mit Meldung P2-5. Merge erst nach Nicos OK (Chat legt den PR an). Danach W3 |
+| Jetzt | **Phase 2 (Lernkern) im Bau.** W1 (PR #4) und W2 (PR #5, main 858d82d) gemergt. **W3** (L7 Fortschritt, L8 Suche, Weisung P2-7, dazu P2-8/P2-9 Quote auf 100 % gekappt) auf Zweig `phase2-fortschritt` gebaut und mit Meldung P2-6 gemeldet. Merge erst nach Abnahme und Nicos OK (Chat legt den PR an). Danach W4 (L9–L10, A 0.5.0; privates Abgleich-Repo vorher von Nico) |
 | Ziel Phase 2 | 5 Wellen: W1 L1–L3 (ohne Versionssprung), W2 L4–L6 = A 0.3.0 (1000300), W3 L7–L8 = A 0.4.0, W4 L9–L10 = A 0.5.0, W5 L11–L13 = A 0.6.0. Karteikarten + Wiederholung, Prüfungstrainer, Fortschritt, Suche, Übernahme (Variante b), Abgleich PC↔Handy (neues privates Repo vor W4) |
-| Vergleichswerte | G1, G2, G6, G6b, G9–G14 bestehen; W1: G15 wiederholung, G16 reihenfolge, G17 trainer, G20 uebernahme, Erzeuger pruefsumme_sonderfall; W2: G22 lerntexte (`werkzeuge/vergleich/erzeuge_lerntexte.py`, 69 Texte). CI erzeugt alle neu |
-| Letzte/nächste Meldung | P2-5 (R3 und Auflagen) / **P2-6** |
+| Vergleichswerte | G1, G2, G6, G6b, G9–G14 bestehen; W1: G15–G17, G20; W2: G22 lerntexte; W3: G18 auswertung (`erzeuge_auswertung.py`), G19 suche (`erzeuge_suche.py`, Kleinschreibung-Tabelle `erzeuge_python_klein.py`). CI erzeugt alle neu |
+| Letzte/nächste Meldung | P2-6 (W3) / **P2-7** |
 | Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Aktueller Stand“ (Regel A) |
 
 ## 4. So arbeitet der neue Chat

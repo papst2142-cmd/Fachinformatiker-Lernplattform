@@ -59,7 +59,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.3.0 -> A 0.3.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.4.0 -> A 0.4.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     strategy:
       fail-fast: false
@@ -85,16 +85,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.3.0
-          path: pakete/feed-A-0.3.0/
+          name: paket-${{ matrix.rid }}-A-0.4.0
+          path: pakete/feed-A-0.4.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.3.1
-          path: pakete/feed-A-0.3.1/
+          name: updateprobe-${{ matrix.rid }}-A-0.4.1
+          path: pakete/feed-A-0.4.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.3.0-tar
+          name: appimage-linux-x64-A-0.4.0-tar
           path: pakete/appimage/
 
   vergleichswerte:
@@ -174,10 +174,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.3.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.3.0 installierbar.
-      - name: Update-APK A 0.3.1 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.3.1 -o apk-update
+      # Spike D (A4b): zweite APK A 0.4.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.4.0 installierbar.
+      - name: Update-APK A 0.4.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.4.1 -o apk-update
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
@@ -185,16 +185,16 @@ jobs:
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000300'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000301'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000400'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000401'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.3.0
+          name: lernplattform-android-A-0.4.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.3.1
+          name: updateprobe-android-A-0.4.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error

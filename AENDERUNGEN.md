@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.4.0 (in Arbeit, Phase 2: Lernkern, Welle 3)
+Version A 0.4.0, Paket 1.0.0-a.0.4.0, Android 1000400 (Weisung P2-7):
+- Fortschritt (nur lesend) wie in Python: Kacheln „Test-Sessions“, „Durchschnitt“, „Bestes Ergebnis“; „Aufgaben pro Tag“ mit Tagesziel als Linie und „Richtig und falsch pro Tag“ für 7 oder 30 Tage; „Ergebnisse im Prüfungstrainer“; „Historie der Prüfungssessions“ und „Prüfungen (Klausursimulation)“ (aus Python übernommene Klausuren nur zur Anzeige); schwache Themen der letzten Prüfung mit „Jetzt üben“. Gerundet wird überall wie Python (Vergleichswerte G18).
+- Rahmenplan-Abdeckung mit Ansicht „Rahmenplan“ (Filter Alle, AP1, Konzeption, Netzwerke, Projekt, WiSo) und „Lernfeld“, Zeilen zum Aufklappen und „Jetzt üben“ je Punkt bzw. Lernthema. „Jetzt üben“ übt erst die Prüfungsfragen in fester Reihenfolge und fragt danach „Weiter üben“ für die Karteikarten zum selben Thema.
+- Suche wie in Python: Optionen, Karteikarten, Prüfungsfragen, AP2- und AP1-Szenarien in dieser Reihenfolge, höchstens 60 Zeilen, Groß-/Kleinschreibung wie Python (Vergleichswerte G19). Der Suchtext wird einmal je Programmstart im Hintergrund vorbereitet; eine neue Suche bricht die alte ab. Ein Treffer in den Optionen klappt den passenden Bereich auf, ein Treffer bei Karteikarten oder Prüfungsfragen springt dorthin. Strg+F öffnet die Suche.
+- Bewusste Abweichung von Python (Weisung P2-8, Sammelliste 22): Erfolgsquote und jede Anzeige „% richtig“ werden bei 100 % gekappt, und „X von Y richtig“ zeigt nie mehr richtige als gestellte Antworten. Python zeigt bei kaputten oder fremden Daten Werte über 100 %; echte Daten sind davon nicht betroffen.
+- Am Handy wird in der Rahmenplan-Abdeckung ein sehr langes Wort bei großer Schrift etwas kleiner gesetzt, damit es nicht mitten im Wort umbricht.
+- Start ohne Bedienung prüft die neuen Seiten in allen Schriftstufen, Fenstergrößen und 72 Farbwelten und misst die Suche „Subnetz“ und die Fälligkeit bei 100 000 Antworten; das Lesen der Antworten für die Fälligkeit ist dafür schneller geworden (gleiches Ergebnis).
+
 ## A 0.3.0 (in Arbeit, Phase 2: Lernkern)
 Welle 1 (Kern ohne Oberfläche, ohne Versionssprung, Weisung P2-2):
 - Lernlogik wie in Python: Lernstatus je Karte und Frage, Wiederholungsplan, bevorzugte Reihenfolge nach Rahmenplan und Prüfungstrainer (Vergleichswerte G15, G16, G17).
