@@ -66,6 +66,14 @@ public static class UebernahmeTexte
     public const string SicherungGescheitert = "Die Kopie deines jetzigen Lernstands ließ sich nicht anlegen. Es wurde nichts übernommen, dein Lernstand ist unverändert. Prüfe den freien Speicherplatz.";
     public const string SchreibenGescheitert = "Das Übernehmen ist fehlgeschlagen. Es wurde nichts übernommen, dein Lernstand ist wie vorher. Die Datenbank ist gerade gesperrt (z. B. von einem anderen Programm), schreibgeschützt oder die Platte ist voll.";
 
+    /// <summary>
+    /// Dateiname der Kopie im Ergebnis (Weisung P2-6 A3): am Handy darf er nach „_“ umbrechen
+    /// (unsichtbares Zeichen U+200B ohne Breite), sonst trennt ein schmaler Bildschirm mit großer
+    /// Schrift ihn mitten in einer Zahl. Am PC unverändert, damit der Name kopierbar bleibt.
+    /// </summary>
+    public static string KopieName(string dateiname, bool handy) =>
+        handy ? dateiname.Replace("_", "_\u200B", StringComparison.Ordinal) : dateiname;
+
     /// <summary>plural(n, "Eintrag", "Einträge") wie Python.</summary>
     public static string Eintraege(int anzahl) => DashboardTexte.Plural(anzahl, "Eintrag", "Einträge");
 

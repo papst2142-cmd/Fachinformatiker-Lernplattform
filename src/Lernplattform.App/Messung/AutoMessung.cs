@@ -218,7 +218,7 @@ public static class AutoMessung
             ("uebernahme/vorschau", () => Dialog.Zeigen(UebernahmeTexte.Titel, UebernahmeTeil.VorschauInhalt(ProbeBericht(), ProbeSicherung()),
                 UebernahmeTexte.Zusammenfuehren, UebernahmeTexte.Abbrechen)),
             ("uebernahme/ergebnis", () => Dialog.Zeigen(UebernahmeTexte.Titel,
-                UebernahmeTexte.Ergebnis(ProbeBericht(), UebernahmeTeil.Umbrechbar("vor_uebernahme_2026-10-20_120000_2.db")), Dialog.Ok)),
+                UebernahmeTexte.Ergebnis(ProbeBericht(), UebernahmeTexte.KopieName("vor_uebernahme_2026-10-20_120000_2.db", !ansicht.Breit)), Dialog.Ok)),
             ("uebernahme/fehler", () => Dialog.Zeigen(UebernahmeTexte.Titel, UebernahmeTexte.SchreibenGescheitert, Dialog.Ok)),
             ("trainer/rueckfrage", () => Dialog.Zeigen(TrainerTexte.Abbrechen, TrainerTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
         };

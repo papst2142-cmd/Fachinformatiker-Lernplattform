@@ -164,19 +164,13 @@ public sealed class UebernahmeTeil
                     throw new UebernahmeAusnahme(UebernahmeFehler.SchreibenGescheitert);
                 }
             });
-            await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? Umbrechbar(Path.GetFileName(datei)) : null));
+            await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? UebernahmeTexte.KopieName(Path.GetFileName(datei), Android) : null));
         }
         catch (UebernahmeAusnahme fehler)
         {
             await Hinweis(UebernahmeTexte.Fehler(fehler.Fehler, fehler.Version, lernstand.NurLesenGrund, false, quelle));
         }
     }
-
-    /// <summary>
-    /// Dateiname der Kopie darf nach "_" umbrechen (unsichtbares Leerzeichen ohne Breite):
-    /// sonst trennt ein schmaler Bildschirm mit grosser Schrift ihn mitten in einer Zahl.
-    /// </summary>
-    public static string Umbrechbar(string dateiname) => dateiname.Replace("_", "_\u200B", StringComparison.Ordinal);
 
     /// <summary>Inhalt des Vorschau-Fensters (Wortlaut Abschnitt 2).</summary>
     public static Control VorschauInhalt(UebernahmeBericht vorschau, byte[]? sicherung)

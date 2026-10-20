@@ -118,6 +118,20 @@ public class UebernahmeAblaufTests
             UebernahmeTexte.Ergebnis(Bericht(UebernahmeQuelle.AlteDatenbank, 0, 7, 0, 0, 1, 1), null));
     }
 
+    /// <summary>Weisung P2-6 A3: unsichtbares Trennzeichen nur am Handy, am PC bleibt der Name kopierbar.</summary>
+    [Fact]
+    public void DateinameDerKopieNurAmHandyMitTrennzeichen()
+    {
+        const string name = "vor_uebernahme_2026-10-20_120000_2.db";
+        Assert.Equal(name, UebernahmeTexte.KopieName(name, handy: false));
+        Assert.DoesNotContain('​', UebernahmeTexte.KopieName(name, handy: false));
+        Assert.Equal("vor_​uebernahme_​2026-10-20_​120000_​2.db", UebernahmeTexte.KopieName(name, handy: true));
+        // Ohne die unsichtbaren Zeichen ist es am Handy derselbe Name
+        Assert.Equal(name, UebernahmeTexte.KopieName(name, handy: true).Replace("​", "", StringComparison.Ordinal));
+        Assert.EndsWith("„sicherungen“: " + name + ".",
+            UebernahmeTexte.Ergebnis(Bericht(UebernahmeQuelle.Sicherung, 3, 0, 0, 0, 0), UebernahmeTexte.KopieName(name, handy: false)), StringComparison.Ordinal);
+    }
+
     [Fact]
     public void FehlertexteJeCode()
     {

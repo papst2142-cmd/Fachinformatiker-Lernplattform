@@ -164,6 +164,64 @@ public class UebernahmeTests
         }
     }
 
+    /// <summary>
+    /// Weisung P2-6 A2: Der Ergebnissatz „… übernommen.“ nennt die Einträge, die nach der
+    /// Übernahme wirklich neu im Lernstand stehen (Neu, wie Pythons merge_backup), nicht die
+    /// Rohzahl Uebernommen (merge_into_local zählt auch Zeilen, die das Aufräumen in derselben
+    /// Übernahme wieder entfernt, und die Platz-Zeilen des Spiels).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Faelle))]
+    public void ErgebnisNenntWirklichNeueEintraege(string name)
+    {
+        using var ordner = new TempOrdner();
+        var fall = Fall(name);
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        BaueDatenbank(G20.GetProperty("ziele").GetProperty(fall.GetProperty("ziel").GetString()!), pfad);
+        var quelle = Quelle(fall.GetProperty("quelle").GetString()!, ordner.Pfad);
+        var vorherStand = G20.GetProperty("ziele").GetProperty(fall.GetProperty("ziel").GetString()!);
+        if (fall.GetProperty("start").ValueKind != JsonValueKind.Null)
+        {
+            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            vorherStand = Fall(fall.GetProperty("start").GetString()!).GetProperty("nachher");
+        }
+        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+
+        // Neue Kennungen im Stand nachher (G20 aus Python), ohne Platz-Zeilen des Spiels
+        var vorher = Kennungen(vorherStand);
+        var wirklichNeu = Kennungen(fall.GetProperty("nachher")).Count(k => k.Tabelle != "spiel_plaetze" && !vorher.Contains(k));
+        Assert.Equal(wirklichNeu, bericht.Neu);
+        var ergebnis = UebernahmeTexte.Ergebnis(bericht, null);
+        var kern = bericht.Neu > 0 ? UebernahmeTexte.Eintraege(bericht.Neu) + " übernommen." : null;
+        if (kern is not null)
+        {
+            Assert.Contains(kern, ergebnis, StringComparison.Ordinal);
+        }
+        if (bericht.Uebernommen != bericht.Neu)
+        {
+            Assert.DoesNotContain(UebernahmeTexte.Eintraege(bericht.Uebernommen) + " übernommen.", ergebnis, StringComparison.Ordinal);
+        }
+    }
+
+    private static HashSet<(string Tabelle, string Uid)> Kennungen(JsonElement stand)
+    {
+        var kennungen = new HashSet<(string, string)>();
+        foreach (var tabelle in stand.GetProperty("tabellen").EnumerateObject())
+        {
+            var spalten = tabelle.Value.GetProperty("spalten").EnumerateArray().Select(s => s.GetString()).ToList();
+            var stelle = spalten.IndexOf("uid");
+            if (stelle < 0)
+            {
+                continue;
+            }
+            foreach (var zeile in tabelle.Value.GetProperty("zeilen").EnumerateArray())
+            {
+                kennungen.Add((tabelle.Name, zeile[stelle].ToString()));
+            }
+        }
+        return kennungen;
+    }
+
     [Fact]
     public void FehlerfaelleWiePython()
     {
