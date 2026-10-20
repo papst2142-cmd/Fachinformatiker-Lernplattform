@@ -42,6 +42,7 @@ public static partial class Uebernahme
         IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null)
     {
         Pruefen(ziel, daten);
+        using var sperre = Vorgaenge.Sperren();   // W4: nicht neben Abgleich oder Ruecksicherung
         try
         {
             using var db = new SqliteConnection(new SqliteConnectionStringBuilder
@@ -82,6 +83,7 @@ public static partial class Uebernahme
     {
         uhr ??= Uhr.System;
         Pruefen(ziel, daten);
+        using var sperre = Vorgaenge.Sperren();   // W4: nicht neben Abgleich oder Ruecksicherung
         var sicherung = SicherungAnlegen(ziel, sicherungsordner ?? Path.Combine(Path.GetDirectoryName(ziel.Pfad)!, SicherungsOrdner), uhr);
         Pruefen(ziel, daten);   // direkt vor dem Schreiben noch einmal (wie Python G-B)
         try
@@ -117,13 +119,22 @@ public static partial class Uebernahme
     }
 
     /// <summary>Kopie der eigenen Datenbank (SQLite-Sicherung), danach quick_check. Pfad oder SicherungGescheitert.</summary>
-    private static string SicherungAnlegen(Lernstand ziel, string ordner, Uhr uhr)
+    private static string SicherungAnlegen(Lernstand ziel, string ordner, Uhr uhr) =>
+        SicherungAnlegen(ziel, ordner, uhr, SicherungsPraefix);
+
+    /// <summary>
+    /// Kopie der Datenbank nach &lt;ordner&gt;/&lt;praefix&gt;JJJJ-MM-TT_HHMMSS.db (vorhandene Dateien nie
+    /// ueberschreiben, sonst Zaehler), danach quick_check. Liest ueber eine eigene Verbindung den
+    /// gespeicherten Stand (W4: auch waehrend der Abgleich seine Schreibsperre haelt). Scheitert
+    /// sie: SicherungGescheitert.
+    /// </summary>
+    internal static string SicherungAnlegen(Lernstand ziel, string ordner, Uhr uhr, string praefix)
     {
         string? datei = null;
         try
         {
             Directory.CreateDirectory(ordner);
-            var name = SicherungsPraefix + uhr.Jetzt().ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
+            var name = praefix + uhr.Jetzt().ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
             datei = Path.Combine(ordner, name + ".db");
             for (var n = 2; File.Exists(datei); n++)
             {
@@ -145,7 +156,8 @@ public static partial class Uebernahme
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or SqliteException or NotSupportedException or ArgumentException)
         {
-            Protokoll(ziel.Pfad, "Sicherung vor der Uebernahme gescheitert, nichts uebernommen: " + e.GetType().Name);
+            Protokoll(ziel.Pfad, (praefix == SicherungsPraefix ? "Sicherung vor der Uebernahme gescheitert, nichts uebernommen: "
+                : "Sicherung vor dem Abgleich gescheitert, nichts geaendert: ") + e.GetType().Name);
             if (datei is not null)
             {
                 try
@@ -166,9 +178,15 @@ public static partial class Uebernahme
         public int Vorher, Nachher, Neu, Vorhanden, EntferntDurchMarke, Uebersprungen, Abgelehnt;
     }
 
-    /// <summary>merge_into_local(check_future=True) und die Zaehlung von merge_backup, in der offenen Transaktion.</summary>
-    private static UebernahmeBericht Zusammenfuehren(SqliteConnection db, SqliteTransaction tx, Austausch daten,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr uhr, bool vorschau)
+    /// <summary>
+    /// merge_into_local(check_future=True) und die Zaehlung von merge_backup, in der offenen Transaktion.
+    /// W4: mit abgleich wie im Abgleich (check_future=False, Mischbetrieb und Uhrzeit von GitHub
+    /// vom Abgleich, bei Gleichstand gilt die Marke der Datei; wegSammeln bekommt die Eintraege von
+    /// Weg, die der Abgleich ueber seine Versuche vereinigt wie Pythons stats.gone).
+    /// </summary>
+    internal static UebernahmeBericht Zusammenfuehren(SqliteConnection db, SqliteTransaction tx, Austausch daten,
+        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr uhr, bool vorschau, AbgleichModus? abgleich = null,
+        HashSet<(string, object?)>? wegSammeln = null)
     {
         // Lokaler Stand wie export_local (Marken, Aufhebungen) und _mixed_recent
         var meta = Abfrage(db, tx, "SELECT key, value FROM sync_meta").Where(z => z[0] is string)
@@ -180,7 +198,8 @@ public static partial class Uebernahme
             .ToDictionary(p => p.Key, p => (object?)p.Value);
         var jetzt = uhr.Jetzt();
         var gesehen = Loeschmarken.IsoUtc(meta.GetValueOrDefault(Loeschmarken.MischbetriebSchluessel));
-        var mischbetrieb = gesehen is { } g2 && (jetzt.UtcDateTime - g2.UtcDateTime).TotalSeconds <= Loeschmarken.MischbetriebSekunden;
+        var mischbetrieb = abgleich?.Mischbetrieb
+            ?? (gesehen is { } g2 && (jetzt.UtcDateTime - g2.UtcDateTime).TotalSeconds <= Loeschmarken.MischbetriebSekunden);
         var zone = daten.MitSchreiber && !mischbetrieb;
 
         var fremd = new Dictionary<string, object?>(daten.Marken);
@@ -198,7 +217,7 @@ public static partial class Uebernahme
         // check_future: Marken der Datei mehr als 300 s nach der Geraeteuhr gelten nicht
         var zukunft = 0;
         var grenze = DateTime.SpecifyKind(jetzt.UtcDateTime.AddSeconds(Loeschmarken.UhrToleranz), DateTimeKind.Unspecified);
-        foreach (var k in Loeschmarken.Schluessel)
+        foreach (var k in abgleich is null ? Loeschmarken.Schluessel : [])
         {
             if (Loeschmarken.Lesen(fremd.GetValueOrDefault(k)) is { Utc: { } utc } && utc > grenze)
             {
@@ -206,10 +225,10 @@ public static partial class Uebernahme
                 zukunft++;
             }
         }
-        var aufhebungen = Loeschmarken.AufhebungenZusammen(lokalAufhebungen, daten.Aufhebungen, zone, jetzt);
+        var aufhebungen = Loeschmarken.AufhebungenZusammen(lokalAufhebungen, daten.Aufhebungen, zone, abgleich is null ? jetzt : abgleich.GitHubJetzt);
         Loeschmarken.AufhebungenAnwenden(lokal, aufhebungen, zone);
         Loeschmarken.AufhebungenAnwenden(fremd, aufhebungen, zone);
-        var marken = Loeschmarken.Zusammen(lokal, fremd, zone, fremdZuerst: false);
+        var marken = Loeschmarken.Zusammen(lokal, fremd, zone, fremdZuerst: abgleich is not null);
         var reset = marken.GetValueOrDefault("reset_at");
         var geleert = Loeschmarken.Spaeter(reset, marken.GetValueOrDefault("history_cleared_at"), zone);
 
@@ -329,6 +348,7 @@ public static partial class Uebernahme
             umbenannt += Ausfuehren(db, tx, $"UPDATE {tabelle} SET question = $0 WHERE question = $1", neu, alt);
         }
 
+        wegSammeln?.UnionWith(weg);
         var nachher = new HashSet<(string, object?)>();
         foreach (var (tabelle, _) in Tabellen)
         {
@@ -360,7 +380,8 @@ public static partial class Uebernahme
             MarkenNachher: markenNachher,
             Tabellen: tabellenZahlen,
             Sicherungsdatei: null,
-            UngueltigInDatei: ungueltigInDatei);
+            UngueltigInDatei: ungueltigInDatei,
+            Weg: weg.Count);
     }
 
     /// <summary>_delete_before: loescht alles, was nicht nach der Marke liegt. (uids, Anzahl Zeilen).</summary>
