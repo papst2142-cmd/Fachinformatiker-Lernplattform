@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Mathe;
 using Microsoft.Data.Sqlite;
 
 namespace Lernplattform.Core.Dashboard;
@@ -821,7 +822,7 @@ public sealed record DashboardWerte(
                 quote *= Math.Min(1.0, juengste.Count / (double)mindest);
             }
             var anteil = Math.Min(1.0, Math.Max(0.0, abdeckung) / voll);
-            ergebnis[thema] = PyText.Runde1(100.0 * quote * Math.Pow(anteil, inhalte.WissenExponent));
+            ergebnis[thema] = PyText.Runde1(100.0 * quote * PythonPow.Pow(anteil, inhalte.WissenExponent));
         }
         return ergebnis;
     }

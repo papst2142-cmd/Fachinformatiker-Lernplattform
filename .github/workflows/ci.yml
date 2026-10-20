@@ -128,13 +128,16 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_eigene_farben.py python-linie neu/eigene_farben.json
           python3 -I werkzeuge/vergleich/erzeuge_beschriftungen.py python-linie neu/beschriftungen.json
           python3 -I werkzeuge/vergleich/erzeuge_dashboard.py python-linie tests/Vergleich/testdaten.db neu/dashboard.json
+          # G14 Potenz x ** y wie Python unter Linux (Core/Mathe/PythonPow)
+          python3 -I werkzeuge/vergleich/erzeuge_potenz.py neu/potenz.json
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
           import json
           for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json",
                        "fehlerprotokoll.json", "datenbank.json", "inhalte_pruefung.json",
-                       "eigene_farben.json", "beschriftungen.json", "dashboard.json"):
+                       "eigene_farben.json", "beschriftungen.json", "dashboard.json",
+                       "potenz.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

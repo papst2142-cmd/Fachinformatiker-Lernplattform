@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Lernplattform.Core.Mathe;
 
 namespace Lernplattform.Core.Design;
 
@@ -578,9 +579,9 @@ public static class EigeneFarben
         static double Linear(double k)
         {
             k /= 255.0;
-            return k <= 0.04045 ? k / 12.92 : Math.Pow((k + 0.055) / 1.055, 2.4);
+            return k <= 0.04045 ? k / 12.92 : PythonPow.Pow((k + 0.055) / 1.055, 2.4);
         }
-        static double F(double v) => v > 0.008856 ? Math.Pow(v, 1.0 / 3.0) : 7.787 * v + 16.0 / 116.0;
+        static double F(double v) => v > 0.008856 ? PythonPow.Pow(v, 1.0 / 3.0) : 7.787 * v + 16.0 / 116.0;
         var (ri, gi, bi) = Farbwelt.HexZuRgb(farbe);
         double r = Linear(ri), g = Linear(gi), b = Linear(bi);
         double x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047;
@@ -594,7 +595,7 @@ public static class EigeneFarben
     {
         var (l1, a1, b1) = Lab(a);
         var (l2, a2, b2) = Lab(b);
-        return Math.Pow(PySumme(Math.Pow(l1 - l2, 2), Math.Pow(a1 - a2, 2), Math.Pow(b1 - b2, 2)), 0.5);
+        return PythonPow.Pow(PySumme(PythonPow.Pow(l1 - l2, 2), PythonPow.Pow(a1 - a2, 2), PythonPow.Pow(b1 - b2, 2)), 0.5);
     }
 
     // Python sum() ueber Gleitkommazahlen ab 3.12: Neumaier-Summe (Startwert 0)
