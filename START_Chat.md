@@ -15,10 +15,11 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Feld | Wert |
 |---|---|
 | Version | A 0.1.0 (in Arbeit, noch nicht veröffentlicht) |
-| Phase | 0, im Bau seit Startzeile Nico 20.10.2026 |
-| Fertig | Grundgerüst (5 Projekte), Spike B Zufall, Spike C mit Testdaten |
-| Offen bei Nico | Ort der Sicherungsdatei (Spike C), Messungen Spike A, Starts/Updates Spike D, NVDA-Probe Spike E, Actions-Rechte nur falls nötig |
-| Nächster Schritt | Spike A (Messfenster mit Farbwelten), Spike D (Pakete und Updates aus der CI) |
+| Phase | 0, im Bau seit Startzeile Nico 20.10.2026; Zweig `phase0-grundlagen`, PR #1 Entwurf |
+| Fertig | Grundgerüst, Spike B Zufall, Spike C Testdaten + Prüfsumme, Farbwelten G6, Spike A Messseite und Messpakete |
+| Letzte Meldung | P0-3 (Fi-Austausch) |
+| Offen bei Nico | Messungen Spike A (Windows-VM, Ubuntu-VM direkt und RDP, S24), Knopf „Alte Sicherung prüfen“, später Starts/Updates Spike D, NVDA-Probe Spike E, Actions-Rechte nur falls nötig |
+| Nächster Schritt | Spike D (Pakete und Updates aus der CI), dann Spike E |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).

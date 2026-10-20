@@ -41,4 +41,7 @@
 - Nach jedem Patch: Handoff für einen neuen Chat (`START_Chat.md` aktualisieren) und diese Datei aktuell halten.
 
 ## Aktueller Stand
-- Phase 0 im Bau (Startzeile Nico 20.10.2026). Fertig: Grundgerüst, Spike B (Zufall), Spike C mit Testdaten. Offen: Spike A (Messung durch Nico), Spike C mit echtem Lernstand (Ort nennt Nico), Spike D (Pakete, Updates), Spike E (NVDA), Farbwelten G6.
+- Phase 0 im Bau (Startzeile Nico 20.10.2026), Zweig `phase0-grundlagen`, PR #1 (Entwurf, Merge erst nach Abnahme).
+- Fertig: Grundgerüst, Spike B (Zufall), Spike C mit Testdaten und Prüfsumme wie Python, Farbwelten G6 (Linux/Windows/macOS gleich), Spike A Messseite + Messpakete (CI-Artefakte `lernplattform-win-x64`, `lernplattform-linux-x64`, `lernplattform-android-phase0`).
+- Messseite (`src/Lernplattform.App/Messung`, `Views/MainView.axaml.cs`) ist nur für Phase 0 und wird mit dem Phase-0-Bericht entfernt. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0`, `LERNPLATTFORM_SOFTWARE=1`.
+- Offen: Messungen Nico (Spike A), echte Sicherung über Knopf „Alte Sicherung prüfen“ auf Nicos Gerät (A3), Spike D (Pakete, Updates), Spike E (NVDA).
