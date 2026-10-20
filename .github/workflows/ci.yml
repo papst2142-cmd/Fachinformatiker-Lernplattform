@@ -130,6 +130,13 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_dashboard.py python-linie tests/Vergleich/testdaten.db neu/dashboard.json
           # G14 Potenz x ** y wie Python unter Linux (Core/Mathe/PythonPow)
           python3 -I werkzeuge/vergleich/erzeuge_potenz.py neu/potenz.json
+          # Phase 2 Welle 1 (Weisung P2-2): G15 Wiederholung, G16 Reihenfolge, G17 Trainer/Speichern,
+          # G20 Uebernahme; Erzeuger fuer den Pruefsummen-Sonderfall (Sammelliste 15)
+          python3 -I werkzeuge/vergleich/erzeuge_wiederholung.py python-linie tests/Vergleich/testdaten.db neu/wiederholung.json
+          python3 -I werkzeuge/vergleich/erzeuge_reihenfolge.py python-linie neu/reihenfolge.json
+          python3 -I werkzeuge/vergleich/erzeuge_trainer.py python-linie neu/trainer.json
+          python3 -I werkzeuge/vergleich/erzeuge_uebernahme.py python-linie neu/uebernahme.json
+          python3 -I werkzeuge/vergleich/erzeuge_pruefsumme_sonderfall.py python-linie neu/pruefsumme_sonderfall.json
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
@@ -137,7 +144,8 @@ jobs:
           for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json",
                        "fehlerprotokoll.json", "datenbank.json", "inhalte_pruefung.json",
                        "eigene_farben.json", "beschriftungen.json", "dashboard.json",
-                       "potenz.json"):
+                       "potenz.json", "wiederholung.json", "reihenfolge.json", "trainer.json",
+                       "uebernahme.json", "pruefsumme_sonderfall.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
