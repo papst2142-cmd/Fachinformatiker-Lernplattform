@@ -69,7 +69,7 @@ public static class DashboardTexte
     /// Karte oben bei <see cref="DashboardZustand.Kaputt"/> (Weisung P1-4, N1; neu in C#,
     /// Python bricht hier ab). Satz 2 gilt, weil das Dashboard nur lesend oeffnet.
     /// </summary>
-    public const string LernstandNichtLesbar = "Der Lernstand konnte nicht gelesen werden. Er wurde nicht verändert.";
+    public const string LernstandNichtLesbar = "Der Lernstand konnte nicht vollständig gelesen werden. Er wurde nicht verändert.";
 
     /// <summary>Hinweiskarte zum Zustand: nur bei Kaputt, nie bei Fehlt, Leer oder Daten.</summary>
     public static string? Hinweis(DashboardZustand zustand) => zustand == DashboardZustand.Kaputt ? LernstandNichtLesbar : null;
@@ -333,7 +333,7 @@ public sealed record DashboardWerte(
     /// "Jetzt einrichten" (leer = "Dein Lernstand").
     /// </summary>
     public static DashboardWerte Lesen(string dbPfad, DateOnly heute, DashboardInhalte inhalte,
-        Einstellungen.Tagesziel ziel, string? nutzername = null)
+        Einstellungen.Tagesziel ziel, string? nutzername = null, string? protokoll = null)
     {
         if (!File.Exists(dbPfad))
         {
@@ -344,9 +344,13 @@ public sealed record DashboardWerte(
             using var leser = Leser.Oeffnen(dbPfad);
             return Rechne(leser, heute, inhalte, ziel, nutzername, null);
         }
-        catch (Exception)
+        catch (Exception fehler)
         {
             // Unlesbare Datei oder unerwartete Werte (Python braeche hier ab): wie leer
+            if (fehler is not SqliteException) // Programmfehler (Weisung P1-5, X2): nur die Art ins fehler.log
+            {
+                Diagnose.Fehlerprotokoll.Schreiben("Dashboard: " + fehler.GetType().Name, protokoll);
+            }
             return Rechne(new Leser(null), heute, inhalte, ziel, nutzername, DashboardZustand.Kaputt);
         }
     }

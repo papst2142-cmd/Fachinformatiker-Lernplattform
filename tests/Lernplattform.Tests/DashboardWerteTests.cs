@@ -371,7 +371,18 @@ public class DashboardWerteTests
         {
             Assert.Equal(zustand == DashboardZustand.Kaputt ? DashboardTexte.LernstandNichtLesbar : null, DashboardTexte.Hinweis(zustand));
         }
-        Assert.Equal("Der Lernstand konnte nicht gelesen werden. Er wurde nicht ver\u00e4ndert.", DashboardTexte.LernstandNichtLesbar);
+        Assert.Equal("Der Lernstand konnte nicht vollst\u00e4ndig gelesen werden. Er wurde nicht ver\u00e4ndert.", DashboardTexte.LernstandNichtLesbar);
+    }
+
+    [Fact]
+    public void ProgrammfehlerInsFehlerprotokoll()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, "lernplattform.db");
+        _ = new Lernstand(pfad);
+        Ausfuehren(pfad, "INSERT INTO card_events (timestamp, category, question, mode, correct) VALUES ('kaputt', 'Netzwerk & Protokolle', 'Was ist ein MPO-Stecker?', 'lernen', 1)");
+        Assert.Equal(DashboardZustand.Kaputt, DashboardWerte.Lesen(pfad, new DateOnly(2026, 10, 20), Inhalte, Einstellungen.Ziel(new JsonObject()), null, Path.Combine(ordner.Pfad, "fehler.log")).Zustand);
+        Assert.Contains("Dashboard: FormatException", File.ReadAllText(Path.Combine(ordner.Pfad, "fehler.log")), StringComparison.Ordinal);
     }
 
     [Fact]
