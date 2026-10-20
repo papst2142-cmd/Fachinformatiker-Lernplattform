@@ -68,6 +68,12 @@ public static class Zustand
     public static Func<List<string>, List<string>>? NeuReihenfolge(RahmenplanGewicht? gewicht, string quelle) =>
         gewicht?.NeuReihenfolge(quelle, RahmenplanWerte.Aus(Werte, gewicht), DateOnly.FromDateTime(DateTime.Now));
 
+    /// <summary>
+    /// Phase 2, L8: Suchtext der Lerninhalte, einmal je Programmlauf im Hintergrund vorbereitet
+    /// (content_search_index); null wenn die Inhalte fehlen.
+    /// </summary>
+    public static Task<Core.Suche.Suchtext?> Suchtext { get; private set; } = Task.FromResult<Core.Suche.Suchtext?>(null);
+
     public static void Starten()
     {
         DefektHinweis = Einstellungen.DefektHinweis();
@@ -87,6 +93,26 @@ public static class Zustand
                 Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                     $"Rahmenplan-Zuordnung im Hintergrund vorbereitet: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
                 return gewicht;
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                return null;
+            }
+        }, TaskScheduler.Default);
+        Suchtext = Inhalte.ContinueWith(t =>
+        {
+            if (!t.IsCompletedSuccessfully || t.Result is null)
+            {
+                return null;
+            }
+            try
+            {
+                var uhr = Stopwatch.StartNew();
+                var text = new Core.Suche.Suchtext(t.Result);
+                Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Suchtext im Hintergrund vorbereitet: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+                return text;
             }
             catch (Exception fehler)
             {

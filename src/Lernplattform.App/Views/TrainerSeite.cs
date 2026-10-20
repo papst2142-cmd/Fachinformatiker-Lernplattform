@@ -23,6 +23,8 @@ public sealed class TrainerSeite : UserControl
     private readonly List<Action<Uebung>> _wartend = [];
     private readonly DispatcherTimer _takt = new() { Interval = TimeSpan.FromSeconds(1) };
     private Uebung? _u;
+    private Func<Task>? _nachher;
+    private Lerninhalte? _inhalte;      // follow_up: zweiter Teil von "Jetzt üben" nach dem Ergebnis
 
     private Pillen _art = null!;
     private StackPanel _uebungTeil = null!;
@@ -114,11 +116,14 @@ public sealed class TrainerSeite : UserControl
     }
 
     /// <summary>practice: gezielte Runde (Jetzt wiederholen), Art "Übung".</summary>
-    public void Ueben(IEnumerable<string> fragen)
+    /// <param name="reihenfolgeBehalten">keep_order (Jetzt üben, Phase 2 L7).</param>
+    /// <param name="nachher">follow_up: nach dem Ergebnis der Runde (Jetzt üben, zweiter Teil).</param>
+    public void Ueben(IEnumerable<string> fragen, bool reihenfolgeBehalten = false, Func<Task>? nachher = null)
     {
         var liste = fragen.ToList();
         Mit(u =>
         {
+            _nachher = null;
             _art?.Waehle(TrainerTexte.Uebung);
             ArtZeigen(TrainerTexte.Uebung);
             if (u.Laeuft)
@@ -126,16 +131,50 @@ public sealed class TrainerSeite : UserControl
                 _takt.Stop();
                 u.Abbrechen();
             }
-            u.Ueben(liste);
+            u.Ueben(liste, reihenfolgeBehalten);
             if (u.Laeuft)
             {
+                _nachher = nachher;
                 Begonnen();
             }
         });
     }
 
+    /// <summary>Laeuft gerade eine Runde (fuer "Jetzt üben": nur dann gibt es einen zweiten Teil)?</summary>
+    public bool Laeuft => _u?.Laeuft ?? false;
+
+    /// <summary>
+    /// jump_to_question (Suche, Phase 2 L8): Art "Übung", laufende Runde beenden (ohne
+    /// Ergebnis), die Frage mit aufgedeckter Antwort und Erklärung zeigen.
+    /// </summary>
+    public void Springen(string frage) => Mit(u =>
+    {
+        _art?.Waehle(TrainerTexte.Uebung);
+        ArtZeigen(TrainerTexte.Uebung);
+        var eintrag = _inhalte?.Quizfragen.FirstOrDefault(q => q.Frage == frage);
+        if (eintrag is null)
+        {
+            return;
+        }
+        _nachher = null;
+        _takt.Stop();
+        u.Abbrechen();
+        Zurueckgesetzt();
+        _frage.Text = eintrag.Frage;
+        _optionen.Children.Clear();
+        foreach (var option in eintrag.Optionen)
+        {
+            _optionen.Children.Add(LernTeile.Option(option, "trainer"));
+        }
+        LernTeile.Aufdecken(_optionen, eintrag.Antwort);
+        _erklaerung.Text = eintrag.Text("exp") ?? "";
+        _erklaerung.Farbe(TextBlock.ForegroundProperty, "Pinsel.text_dim");
+        _einreichen.IsEnabled = false;
+    });
+
     private void Aufbauen(Lerninhalte inhalte)
     {
+        _inhalte = inhalte;
         _liste.Children.Clear();
         _art = new Pillen(TrainerTexte.Arten, TrainerTexte.Uebung, ArtZeigen);
         _liste.Children.Add(_art);
@@ -266,6 +305,7 @@ public sealed class TrainerSeite : UserControl
 
     private void Starten()
     {
+        _nachher = null;
         if (_u is not { } u)
         {
             return;
@@ -359,6 +399,11 @@ public sealed class TrainerSeite : UserControl
         Zurueckgesetzt();
         _frage.Text = ergebnis.Text;
         _hinweisKurz.IsVisible = true;
+        if (_nachher is { } nachher)
+        {
+            _nachher = null;
+            DispatcherTimer.RunOnce(() => _ = nachher(), TimeSpan.FromMilliseconds(300));
+        }
     }
 
     private async Task AbbrechenAsync()
@@ -371,6 +416,7 @@ public sealed class TrainerSeite : UserControl
         {
             return;
         }
+        _nachher = null;
         _takt.Stop();
         u.Abbrechen();
         Zurueckgesetzt();

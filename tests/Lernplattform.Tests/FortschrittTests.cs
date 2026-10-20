@@ -527,6 +527,22 @@ public class FortschrittTests
     }
 
     [Fact]
+    public void JetztUebenBehaeltReihenfolge()
+    {
+        // practice(keys, keep_order=True): die Runde laeuft in der Rangfolge, ohne Mischen
+        using var ordner = new TempOrdner();
+        var buch = Buch(BaueDatenbank("leer", ordner.Pfad));
+        var fragen = Lern.Quizfragen.Take(12).Select(q => q.Frage!).Reverse().ToList();
+        var uebung = new Uebung(Lern, () => buch, null);
+        uebung.Ueben(fragen, reihenfolgeBehalten: true);
+        Assert.Equal(fragen.Take(Uebung.RundeMax), uebung.Runde.Select(q => q.Frage!));
+        // Gegenprobe: ohne keep_order wird gemischt (12 Fragen, gleiche Reihenfolge fast unmoeglich)
+        var gemischt = new Uebung(Lern, () => buch, null, zufall: new Core.Zufall.PythonZufall(7));
+        gemischt.Ueben(fragen);
+        Assert.NotEqual(fragen, gemischt.Runde.Select(q => q.Frage!));
+    }
+
+    [Fact]
     public void FehlendeDateiWieLeerOhneAnlegen()
     {
         using var ordner = new TempOrdner();

@@ -173,7 +173,8 @@ public sealed class Uebung
     }
 
     /// <summary>practice: gezielte Runde (Jetzt wiederholen), gemischt, hoechstens 50.</summary>
-    public void Ueben(IEnumerable<string> fragen)
+    /// <param name="reihenfolgeBehalten">keep_order (Jetzt ueben, Phase 2 L7): nicht mischen.</param>
+    public void Ueben(IEnumerable<string> fragen, bool reihenfolgeBehalten = false)
     {
         var nachFrage = new Dictionary<string, Lerninhalt>(StringComparer.Ordinal);
         foreach (var q in _inhalte.Quizfragen)
@@ -185,7 +186,10 @@ public sealed class Uebung
         {
             return;
         }
-        _zufall.Shuffle(runde);
+        if (!reihenfolgeBehalten)
+        {
+            _zufall.Shuffle(runde);
+        }
         Runde = runde.Take(RundeMax).ToList();
         _pool = [.. Runde];
         Beginnen();
