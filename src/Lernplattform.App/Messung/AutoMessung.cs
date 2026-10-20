@@ -12,8 +12,8 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Phase 1 (Plan Abschnitt 4, Weisung P1-2 3.2/3.3): Start ohne Bedienung misst erstes
 /// Oeffnen jeder Seite, Wechsel Hell/Dunkel und Wechsel der Schriftstufe und prueft
-/// jede Seite in jeder Schriftstufe breit (Fenster wie gestartet) und schmal
-/// (384 x 832 Punkte wie das S24 hochkant) mit der Layoutpruefung.
+/// jede Seite in jeder Schriftstufe schmal (384 x 832 Punkte wie das S24 hochkant), an der
+/// Grenze zum breiten Aufbau und in der PC-Startgroesse 1360 x 880 mit der Layoutpruefung.
 /// Nichts wird gespeichert. Rueckgabe: Anzahl Funde (ueber 1 000 ms oder Layout).
 /// </summary>
 public static class AutoMessung
@@ -22,6 +22,8 @@ public static class AutoMessung
     public const double Geraetegrenze = 400;
     public const double SchmalBreite = 384;
     public const double SchmalHoehe = 832;
+    public const double PcBreite = 1360;
+    public const double PcHoehe = 880;
 
     public static async Task<int> LaufAsync(MainView ansicht)
     {
@@ -65,26 +67,30 @@ public static class AutoMessung
             }
         }
 
-        // Layoutpruefung je Seite und Schriftstufe, breit und schmal
+        // Layoutpruefung je Seite und Schriftstufe in festen Fenstergroessen: schmal (Handy),
+        // an der Grenze zum breiten Aufbau (MainView.BreitGrenze, engster PC-Aufbau) und
+        // Startgroesse der Python-Linie (1360 x 880). Ohne Fenster (Handy) nur wie gestartet.
         var fenster = TopLevel.GetTopLevel(ansicht) as Window;
-        var groessen = new List<(string Name, double? Breite, double? Hoehe)> { ("breit", null, null) };
-        if (fenster is not null)
-        {
-            groessen.Add(("schmal", SchmalBreite, SchmalHoehe));
-        }
         var layoutFunde = new List<string>();
-        foreach (var (name, breite, hoehe) in groessen)
+        var groessenJeStufe = 0;
+        foreach (var stufe in Einstellungen.Schriftgroessen)
         {
-            if (fenster is not null && breite is double b && hoehe is double h)
+            var faktor = Zustand.SchriftFaktor(stufe);
+            Schrift.Anwenden(faktor);
+            var groessen = fenster is null
+                ? new List<(string Name, double Breite, double Hoehe)> { ("wie gestartet", 0, 0) }
+                : [("schmal", SchmalBreite, SchmalHoehe), ("grenze", Math.Ceiling(MainView.BreitGrenze), PcHoehe), ("pc", PcBreite, PcHoehe)];
+            groessenJeStufe = groessen.Count;
+            foreach (var (name, breite, hoehe) in groessen)
             {
-                fenster.Width = b;
-                fenster.Height = h;
-                await ansicht.BildFertigAsync();
-                await ansicht.BildFertigAsync();
-            }
-            foreach (var stufe in Einstellungen.Schriftgroessen)
-            {
-                Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
+                if (fenster is not null)
+                {
+                    fenster.Width = breite;
+                    fenster.Height = hoehe;
+                    await ansicht.BildFertigAsync();
+                    await ansicht.BildFertigAsync();
+                }
+                var ist = string.Create(inv, $"{name} {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}");
                 foreach (var id in ansicht.GebauteSeiten.Keys.ToList())
                 {
                     await ansicht.ZeigeAsync(id);
@@ -95,14 +101,14 @@ public static class AutoMessung
                     }
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
-                        layoutFunde.Add($"{name} {stufe} {id}: {fund}");
+                        layoutFunde.Add($"{ist} {stufe} {id}: {fund}");
                     }
                 }
             }
         }
         Zustand.DesignAnwenden();
 
-        Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessen.Count} Groessen: {layoutFunde.Count} Funde"));
+        Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
             Messwerte.Notiere("  " + fund);

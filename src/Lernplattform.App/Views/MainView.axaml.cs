@@ -78,6 +78,8 @@ public partial class MainView : UserControl
         Zeige(Seiten.Dashboard);
 
         SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);
+        Schrift.Geaendert += SchriftGeaendert;
+        DetachedFromVisualTree += (_, _) => Schrift.Geaendert -= SchriftGeaendert;
         AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ =>
         {
             Messwerte.ErstesBild ??= Messwerte.SeitStart.Elapsed.TotalMilliseconds;
@@ -90,9 +92,23 @@ public partial class MainView : UserControl
 
     public bool Breit => _breit ?? true;
 
+    private void SchriftGeaendert()
+    {
+        if (Bounds.Width > 0)
+        {
+            AufbauWaehlen(Bounds.Width);
+        }
+    }
+
+    /// <summary>
+    /// Die Seitenleiste braucht mit groesserer Schrift mehr Platz: breit erst ab
+    /// BreitAb x Schriftfaktor (wie Umbruchpunkte in em), darunter der Handy-Aufbau.
+    /// </summary>
+    public static double BreitGrenze => BreitAb * Schrift.Faktor;
+
     private void AufbauWaehlen(double breite)
     {
-        var breit = breite >= BreitAb;
+        var breit = breite >= BreitGrenze;
         if (_breit == breit)
         {
             return;

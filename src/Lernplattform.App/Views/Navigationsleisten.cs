@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lernplattform.Design;
@@ -83,7 +82,9 @@ public sealed class Navigationsleisten
 
     private Control BaueUntereLeiste()
     {
-        var raster = new UniformGrid { Rows = 1, Columns = Texte.NavigationHandy.Count };
+        // Grid mit gleich breiten Spalten statt UniformGrid: UniformGrid rundet jede Zelle auf
+        // ganze Punkte und schiebt die letzte bis 2 Punkte ueber den Rand (Layoutpruefung 1360 breit)
+        var raster = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(",", Enumerable.Repeat("*", Texte.NavigationHandy.Count))) };
         foreach (var punkt in Texte.NavigationHandy)
         {
             var beschriftung = new TextBlock
@@ -107,6 +108,7 @@ public sealed class Navigationsleisten
             Avalonia.Automation.AutomationProperties.SetName(knopf, punkt.Titel);
             knopf.Click += (_, _) => _oeffnen(punkt.Id);
             _untenKnoepfe[punkt.Id] = knopf;
+            Grid.SetColumn(knopf, raster.Children.Count);
             raster.Children.Add(knopf);
         }
         var leiste = new Border { Child = raster, BorderThickness = new Thickness(0, 1, 0, 0), IsVisible = false };

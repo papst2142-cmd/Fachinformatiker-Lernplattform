@@ -43,6 +43,9 @@ public static class Schrift
 
     public static double Faktor { get; private set; } = 1.0;
 
+    /// <summary>Nach jedem Wechsel der Schriftstufe (z. B. Aufbau breit/schmal neu waehlen).</summary>
+    public static event Action? Geaendert;
+
     public static void Anwenden(double faktor)
     {
         var app = Application.Current ?? throw new InvalidOperationException("Keine Anwendung");
@@ -55,6 +58,7 @@ public static class Schrift
         // Fluent-Steuerelemente (Knoepfe, Eingabefelder, Klappbereiche) nehmen diese Groesse
         res["ControlContentThemeFontSize"] = Grundgroessen["Normal"] * faktor;
         Faktor = faktor;
+        Geaendert?.Invoke();
     }
 
     /// <summary>Bindet die Schriftgroesse an eine Stufe (wie DynamicResource in XAML).</summary>
