@@ -28,8 +28,9 @@
 - Linux nur AppImage mit Velopack-Update; Android-Update über neue APK (gleicher Schlüssel); nur arm64-v8a.
 
 ## Version
-- Intern `0.1.0`, Anzeige „A 0.1.0“, Tag `vA0.1.0`. Reihenfolge A < B < 1.0. **Bei jedem Update Versionsnummer +1** (in `Directory.Build.props` und Android-Versionscode). Jede Version bekommt einen Abschnitt in `AENDERUNGEN.md`.
-- Android-Versionscode: Stufe × 1 000 000 + Haupt × 10 000 + Neben × 100 + Fix (A=1, B=2, ab 1.0=3); A 0.1.0 = 1000100.
+- Aktuell intern `0.2.0`, Anzeige „A 0.2.0“, Paketversion `1.0.0-a.0.2.0`, Android-Versionscode 1000200 (Stand main f97beeb). Noch kein Tag, kein öffentliches Release. Reihenfolge A < B < 1.0.
+- Schema x.y.z (Nico 20.10.2026): x = 0 in Alpha/Beta, y = neue Funktionen, z = Fixes. **Bei jedem Update Versionsnummer +1** (nur in `Directory.Build.props`; Android-Versionscode wird daraus berechnet), aber erst wenn die Weisung es sagt. Jede Version bekommt einen Abschnitt in `AENDERUNGEN.md`. Reine Dokument-PRs ohne Programmänderung erhöhen die Version nicht.
+- Android-Versionscode: Stufe × 1 000 000 + Haupt × 10 000 + Neben × 100 + Fix (A=1, B=2, ab 1.0=3); A 0.1.0 = 1000100, A 0.2.0 = 1000200. Phase 2 liefert voraussichtlich A 0.3.0 (1000300).
 
 ## Regeln (fest)
 - Commits Deutsch, ASCII, Identität `papst2142-cmd <333448595+papst2142-cmd@users.noreply.github.com>`. Nie private E-Mail, nie Zugangsdaten, keine Schlüssel im Repo.
@@ -41,16 +42,18 @@
 - Nach jedem Patch: Handoff für einen neuen Chat (`START_Chat.md` aktualisieren) und diese Datei aktuell halten.
 
 ## Aktueller Stand
-- Phase 0 abgenommen und gemergt (main 2f9a971). Phase 1 freigegeben (Weisung P1-1_Plan_Freigabe, Fi-Austausch 125a7f6; Plan `weisungen/Plan_Phase1_CSharp.md`). Nico 20.10.: 1a DB wie Python, 2a spätere Bereiche sichtbar mit „Kommt in einer spaeteren Ausbaustufe“, 3 Phase 1 = A 0.2.0 ohne öffentliches Release, 4a „Alte Sicherung pruefen“ wandert unverändert nach Optionen > Sicherung.
-- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) abgenommen (Weisung P1-2_Welle2_Freigabe, 5ef901b). Welle 2 (K5–K10, **A 0.2.0**) fertig, K9 nach Weisung P1-3_K9_Freigabe (05fa839) gepusht. Abgenommen (Weisung P1-4, ec5d9d1); Nachbesserung N1 (Hinweiskarte bei `DashboardZustand.Kaputt`: „Der Lernstand konnte nicht vollständig gelesen werden. Er wurde nicht verändert.“, Programmfehler nur mit Art ins fehler.log) und N2 (Platzhalter mit Umlaut) gepusht, Code a49948c, Lauf 39414992742 grün 8/8. Meldung P1-6; danach gibt Chat Nico die Freigabe (Pakete Windows-VM, Ubuntu-VM, S24).
+- **Phase 0 und Phase 1 abgenommen und gemergt** (Phase 0: main 2f9a971, A 0.1.0; Phase 1: PR #2, Squash **f97beeb**, A 0.2.0, CI auf main 8/8 grün). Nico hat A 0.2.0 auf Windows-VM, Ubuntu-VM und S24 getestet: nichts Nennenswertes. Der Zweig `phase1-kern` existiert nicht mehr; Arbeit immer auf einem neuen Zweig ab `main`.
+- **Phase 2 (Lernkern) in Planung** (Weisung P2-1_Plan, Fi-Austausch d6be822): nur Plan `Fi-Austausch/weisungen/Plan_Phase2_CSharp.md` und Meldung P2-1, **kein Bau** bis zur Folgeweisung „Plan freigegeben“. Arbeitspakete heißen L1, L2, … (nicht K). Inhalt: Karteikarten + Wiederholung, Prüfungstrainer, Fortschritt/Auswertung, Suche, Lernstand-Import aus der Sicherungsdatei (Pflicht), Abgleich PC↔Handy. Kein Release, kein Tag in Phase 2.
+- Phase 1 im Rückblick (Nico 20.10.): 1a DB wie Python, 2a spätere Bereiche sichtbar mit „Kommt in einer spaeteren Ausbaustufe“, 4a „Alte Sicherung pruefen“ unter Optionen > Sicherung. Hinweiskarte bei `DashboardZustand.Kaputt`: „Der Lernstand konnte nicht vollständig gelesen werden. Er wurde nicht verändert.“
   - Core: K1 `Inhalte` (G12), K2 `Daten/Lernstand.cs` (G11, `PRAGMA user_version` 1), K3 `Daten/Einstellungen.cs` (G11; nach Lesefehler `NurAnzeige`, nichts schreiben), K4 `Diagnose` (G10), `Design/EigeneFarben.cs` (G6b), `Texte/*` (G9), `Dashboard/DashboardWerte.cs` (G13, nur lesend), `Mathe/PythonPow.cs` (G14).
   - **Potenz immer mit `PythonPow.Pow`**, nie `Math.Pow`, wo Python `**` rechnet: Math.Pow weicht unter Windows/macOS im letzten Bit ab (Nachbau glibc-pow, ARM Optimized Routines, MIT). Ausnahme Farbwelt.cs (Phase 0, abgenommen, G6 überall grün).
   - App: Schriftstufen über Ressourcen `Schrift.*` (`Design/Schrift.cs`), Farben `Pinsel.*`. Seitenleiste ab `MainView.BreitGrenze` = 720 × Schriftfaktor, darunter Handy-Aufbau. Start ohne Bedienung prüft je Stufe 384×832, Grenze und 1360×880 (Layoutprüfung: Wort im Wort, Knopf aus Karte, Rand), rot ab 1000 ms oder Fund (Rückgabe 3).
-- Stoppgrenze (Regel A): `SicherungsPruefung.cs`, `AlterLernstand.cs`, G1/G2/G6 nicht ändern; schreibende Änderung an `Lernstand.cs` und neue Nutzertexte mit Verhaltenszusage zuerst zu Chat.
+- Stoppgrenze (Regel A, gilt in Phase 2 unverändert): `SicherungsPruefung.cs`, `AlterLernstand.cs`, das Verhalten von `Einstellungen.cs` und G1/G2/G6 nicht ändern ohne Diff zur Lesung durch Chat; Erweiterungen von `DashboardWerte.cs`, `EigeneFarben.cs`, `PythonPow.cs` liest Chat als R3-Diff vollständig; schreibende Änderung an `Lernstand.cs` und neue Nutzertexte mit Verhaltenszusage zuerst zu Chat.
 - Tests mit Schreibschutz (2 in `LernstandTests`, 1 in `EinstellungenTests`) gelingen nur ohne Root; im Container als Benutzer `claude` in einer Kopie prüfen (CI läuft ohne Root).
 - Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
 - Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
 - Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung, B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht.
+- Für Phase 2 vorgemerkt: Sammelliste 13 (PC-/Handy-Texte vereinheitlichen, Nico entscheidet die Wörter), 14 (Farbregler sollen das Farbspektrum zeigen wie in Python), 7 (Karteikarten-Ansicht: Zeilenanpassung beim Neubau prüfen).
 - Dashboard rechnet bei jedem erneuten Zeigen neu (`DashboardSeite.Neu`, `Geladen`); der Start ohne Bedienung wartet darauf vor der Layoutprüfung. Fotos lokal: Patch `/mnt/project-files/phase1_csharp/fotos_k10/nur_lokal_fotos_autolauf.diff` (nie einchecken).
 - Hinweiszeile in Meldungsdateien: `Meldung <Nr> liegt auf Fi-Austausch, Commit siehe origin/main` (Regel ab Weisung P1-4); echte sha nur in der Zeile an Nico.
-- Nächste Meldung: P1-7 (nach Antwort auf P1-6). Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.
+- Nächste Meldung: P2-1 (Plan Phase 2), danach P2-2 usw. Log `/mnt/project-files/phase2_csharp/VERBRAUCHSLOG_P2.md`.
