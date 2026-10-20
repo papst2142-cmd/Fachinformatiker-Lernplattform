@@ -57,8 +57,10 @@ public static class Messwerte
             sb.AppendLine(string.Create(inv,
                 $"{name}: {werte.Count}x, Mittel {mittel:F0} ms, Median {median:F0} ms, Hoechstwert {max:F0} ms"));
         }
+        // macOS liefert keinen Hoechstwert (0), dann "nicht lesbar" statt 0 MB.
+        var spitze = p.PeakWorkingSet64 > 0 ? string.Create(inv, $"{p.PeakWorkingSet64 / 1048576.0:F0} MB") : "nicht lesbar";
         sb.AppendLine(string.Create(inv,
-            $"Arbeitsspeicher: {p.WorkingSet64 / 1048576.0:F0} MB (Hoechstwert {p.PeakWorkingSet64 / 1048576.0:F0} MB), verwalteter Speicher {GC.GetTotalMemory(false) / 1048576.0:F0} MB"));
+            $"Arbeitsspeicher: {p.WorkingSet64 / 1048576.0:F0} MB (Hoechstwert {spitze}), verwalteter Speicher {GC.GetTotalMemory(false) / 1048576.0:F0} MB"));
         foreach (var z in Zeilen)
         {
             sb.AppendLine(z);

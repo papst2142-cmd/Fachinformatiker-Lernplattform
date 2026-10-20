@@ -55,6 +55,31 @@ jobs:
           name: messung-${{ runner.os }}
           path: messung_${{ runner.os }}.txt
 
+  messpakete:
+    # Spike A: lauffaehiges Programm zum Herunterladen fuer Nicos Messungen
+    # (Windows-VM, Ubuntu-VM). Ein Ordner, ohne Installation, ohne Signatur.
+    name: messpaket (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64 }
+          - { os: ubuntu-latest, rid: linux-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Veroeffentlichen
+        run: dotnet publish src/Lernplattform.Desktop -c Release -r ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o paket
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lernplattform-${{ matrix.rid }}
+          path: |
+            paket/
+            !paket/*.pdb
+
   vergleichswerte:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
     # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
