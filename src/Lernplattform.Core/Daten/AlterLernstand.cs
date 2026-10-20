@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
@@ -74,5 +77,143 @@ public static class AlterLernstand
             throw new InvalidDataException($"Sicherung zu neu: Formatversion {version}, Abgleich-Format {abgleich}");
         }
         return dokument;
+    }
+
+    /// <summary>
+    /// Prueft die Pruefsumme der Sicherung wie fisi_sicherung._checksum:
+    /// SHA-256 ueber json.dumps({"daten", "einstellungen"}, sort_keys=True,
+    /// separators=(",", ":"), ensure_ascii=False). Zahlen werden im Originaltext
+    /// uebernommen (die Datei stammt aus Pythons json.dumps).
+    /// </summary>
+    public static bool PruefsummeStimmt(JsonDocument sicherung)
+    {
+        var wurzel = sicherung.RootElement;
+        var sb = new StringBuilder();
+        sb.Append("{\"daten\":");
+        SchreibePythonJson(wurzel.GetProperty("daten"), sb);
+        sb.Append(",\"einstellungen\":");
+        SchreibePythonJson(wurzel.GetProperty("einstellungen"), sb);
+        sb.Append('}');
+        var summe = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString())));
+        return wurzel.TryGetProperty("pruefsumme", out var soll) && soll.GetString() == summe;
+    }
+
+    /// <summary>Zaehlwerte ohne Inhalte (Auflage A3): Zeilen je Tabelle und die Zusammenfassung.</summary>
+    public static SortedDictionary<string, int> Zaehlwerte(JsonDocument sicherung)
+    {
+        var wurzel = sicherung.RootElement;
+        var werte = new SortedDictionary<string, int>(StringComparer.Ordinal);
+        foreach (var t in wurzel.GetProperty("daten").GetProperty("tables").EnumerateObject())
+        {
+            werte["Tabelle " + t.Name] = t.Value.GetArrayLength();
+        }
+        if (wurzel.TryGetProperty("zusammenfassung", out var z))
+        {
+            foreach (var e in z.EnumerateObject())
+            {
+                if (e.Value.ValueKind == JsonValueKind.Number)
+                {
+                    werte["Zusammenfassung " + e.Name] = e.Value.GetInt32();
+                }
+            }
+        }
+        return werte;
+    }
+
+    private static void SchreibePythonJson(JsonElement e, StringBuilder sb)
+    {
+        switch (e.ValueKind)
+        {
+            case JsonValueKind.Object:
+                sb.Append('{');
+                var erstes = true;
+                foreach (var p in e.EnumerateObject().OrderBy(p => p.Name, CodepunktVergleich.Instanz))
+                {
+                    if (!erstes)
+                    {
+                        sb.Append(',');
+                    }
+                    erstes = false;
+                    SchreibeText(p.Name, sb);
+                    sb.Append(':');
+                    SchreibePythonJson(p.Value, sb);
+                }
+                sb.Append('}');
+                break;
+            case JsonValueKind.Array:
+                sb.Append('[');
+                var i = 0;
+                foreach (var x in e.EnumerateArray())
+                {
+                    if (i++ > 0)
+                    {
+                        sb.Append(',');
+                    }
+                    SchreibePythonJson(x, sb);
+                }
+                sb.Append(']');
+                break;
+            case JsonValueKind.String:
+                SchreibeText(e.GetString()!, sb);
+                break;
+            default:
+                sb.Append(e.GetRawText());
+                break;
+        }
+    }
+
+    /// <summary>Text wie Pythons json.dumps mit ensure_ascii=False.</summary>
+    private static void SchreibeText(string text, StringBuilder sb)
+    {
+        sb.Append('"');
+        foreach (var c in text)
+        {
+            switch (c)
+            {
+                case '"': sb.Append("\\\""); break;
+                case '\\': sb.Append("\\\\"); break;
+                case '\n': sb.Append("\\n"); break;
+                case '\r': sb.Append("\\r"); break;
+                case '\t': sb.Append("\\t"); break;
+                case '\b': sb.Append("\\b"); break;
+                case '\f': sb.Append("\\f"); break;
+                default:
+                    if (c < 0x20)
+                    {
+                        sb.Append("\\u").Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                    break;
+            }
+        }
+        sb.Append('"');
+    }
+
+    /// <summary>Sortierung wie Python (Unicode-Codepunkte, nicht UTF-16-Einheiten).</summary>
+    private sealed class CodepunktVergleich : IComparer<string>
+    {
+        public static readonly CodepunktVergleich Instanz = new();
+
+        public int Compare(string? a, string? b)
+        {
+            var ea = a!.EnumerateRunes();
+            var eb = b!.EnumerateRunes();
+            while (true)
+            {
+                bool ha = ea.MoveNext(), hb = eb.MoveNext();
+                if (!ha || !hb)
+                {
+                    return ha.CompareTo(hb);
+                }
+                var d = ea.Current.Value.CompareTo(eb.Current.Value);
+                if (d != 0)
+                {
+                    return d;
+                }
+            }
+        }
     }
 }

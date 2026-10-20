@@ -114,4 +114,24 @@ public class DatenTests(ITestOutputHelper ausgabe)
             Assert.Equal(z.Value.GetInt32(), wurzel.GetProperty("zusammenfassung").GetProperty(z.Name).GetInt32());
         }
     }
+
+    [Fact]
+    public void SicherungPruefsummeWiePython()
+    {
+        using var datei = File.OpenRead(Pfade.Vergleich("sicherung_test.json.gz"));
+        using var sicherung = AlterLernstand.LeseSicherung(datei);
+        Assert.True(AlterLernstand.PruefsummeStimmt(sicherung));
+        var zaehl = AlterLernstand.Zaehlwerte(sicherung);
+        Assert.Equal(24, zaehl["Zusammenfassung lerneintraege"]);
+    }
+
+    [Fact]
+    public void PruefsummeSonderzeichenWiePython()
+    {
+        var text = File.ReadAllText(Pfade.Vergleich("pruefsumme_sonderfall.json"));
+        using var gut = System.Text.Json.JsonDocument.Parse(text);
+        Assert.True(AlterLernstand.PruefsummeStimmt(gut));
+        using var veraendert = System.Text.Json.JsonDocument.Parse(text.Replace("cyan_pink", "cyan_pinK"));
+        Assert.False(AlterLernstand.PruefsummeStimmt(veraendert));
+    }
 }

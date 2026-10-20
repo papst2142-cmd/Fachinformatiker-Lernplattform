@@ -7,6 +7,9 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using System.Security.Cryptography;
+using Avalonia.Platform.Storage;
+using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Design;
 using Lernplattform.Messung;
@@ -201,7 +204,11 @@ public partial class MainView : UserControl
                 _zustand.Text = "Ergebnis kopiert.";
             }
         };
-        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { starten, kopieren } });
+        var sicherung = new Button { Content = "Alte Sicherung pruefen" };
+        sicherung.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        sicherung.Click += async (_, _) => await SicherungPruefenAsync();
+        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung } });
+        panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Sicherung der alten App (lernstand.json.gz) oder die alte Datenbank (.db) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
         panel.Children.Add(_ergebnis);
@@ -267,6 +274,68 @@ public partial class MainView : UserControl
         {
             _laeuft = false;
         }
+    }
+
+    /// <summary>Spike C mit echtem Lernstand (Auflage A3): nur lesen, nur Zaehlwerte und Pruefsummen.</summary>
+    private async Task SicherungPruefenAsync()
+    {
+        var top = TopLevel.GetTopLevel(this);
+        if (top is null)
+        {
+            return;
+        }
+        var auswahl = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Alte Sicherung (lernstand.json.gz) oder alte Datenbank (.db) waehlen",
+            AllowMultiple = false,
+        });
+        if (auswahl.Count == 0)
+        {
+            return;
+        }
+        var datei = auswahl[0];
+        var inv = CultureInfo.InvariantCulture;
+        try
+        {
+            var uhr = Stopwatch.StartNew();
+            using var puffer = new MemoryStream();
+            await using (var lesen = await datei.OpenReadAsync())
+            {
+                await lesen.CopyToAsync(puffer);
+            }
+            var hash = Convert.ToHexStringLower(SHA256.HashData(puffer.ToArray()));
+            Messwerte.Notiere(string.Create(inv, $"Alte Datei: {puffer.Length} Bytes, SHA-256 {hash}"));
+            if (datei.Name.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+            {
+                var pfad = datei.TryGetLocalPath() ?? throw new InvalidOperationException("Datenbank ist keine lokale Datei");
+                foreach (var t in AlterLernstand.LeseDatenbank(pfad))
+                {
+                    Messwerte.Notiere(string.Create(inv, $"  Datenbank Tabelle {t.Name}: {t.Zeilen.Count} Zeilen"));
+                }
+            }
+            else
+            {
+                puffer.Position = 0;
+                using var doc = AlterLernstand.LeseSicherung(puffer);
+                var w = doc.RootElement;
+                Messwerte.Notiere("  Sicherung Formatversion " + w.GetProperty("formatversion").GetInt32()
+                    + ", App " + (w.TryGetProperty("app_version", out var v) ? v.GetString() : "?")
+                    + ", Pruefsumme " + (AlterLernstand.PruefsummeStimmt(doc) ? "stimmt" : "STIMMT NICHT"));
+                foreach (var (name, anzahl) in AlterLernstand.Zaehlwerte(doc))
+                {
+                    Messwerte.Notiere(string.Create(inv, $"  {name}: {anzahl}"));
+                }
+            }
+            Messwerte.Notiere(string.Create(inv, $"  Lesezeit: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+            _zustand.Text = "Alte Datei gelesen. Jetzt \"Ergebnis kopieren\".";
+        }
+        catch (Exception fehler)
+        {
+            // Nur die Fehlerart, kein Text: der koennte Pfad oder Inhalt enthalten (A3).
+            Messwerte.Notiere("Alte Datei: FEHLER " + fehler.GetType().Name);
+            _zustand.Text = "Fehler beim Lesen, steht im Ergebnis.";
+        }
+        _ergebnis.Text = Messwerte.Bericht(Geraet());
     }
 
     /// <summary>Ablauf ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
