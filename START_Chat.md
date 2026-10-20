@@ -14,12 +14,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.3.0** auf `main` (858d82d, W2 gemergt, PR #5); auf Zweig `phase2-fortschritt` **A 0.4.0** (Paket 1.0.0-a.0.4.0, Android 1000400); kein Tag, kein öffentliches Release |
+| Version | **A 0.4.0** auf `main` (eff1521, W3 gemergt, PR #6; Paket 1.0.0-a.0.4.0, Android 1000400); kein Tag, kein öffentliches Release |
 | Phase | 0 und 1 abgenommen und gemergt (Phase 1: PR #2, CI auf main 8/8 grün, Pakete von Nico auf Windows-VM, Ubuntu-VM, S24 getestet). Zweig `phase1-kern` existiert nicht mehr |
-| Jetzt | **Phase 2 (Lernkern) im Bau.** W1 (PR #4) und W2 (PR #5, main 858d82d) gemergt. **W3** (L7 Fortschritt, L8 Suche, Weisung P2-7, dazu P2-8/P2-9 Quote auf 100 % gekappt) auf Zweig `phase2-fortschritt` gebaut und mit Meldung P2-6 gemeldet. Merge erst nach Abnahme und Nicos OK (Chat legt den PR an). Danach W4 (L9–L10, A 0.5.0; privates Abgleich-Repo vorher von Nico) |
+| Jetzt | **Phase 2 (Lernkern) im Bau.** W1 (PR #4), W2 (PR #5) und **W3** (L7 Fortschritt, L8 Suche; abgenommen mit Weisung P2-10, PR #6, main eff1521) gemergt. **Jetzt W4** (L9 Rücksicherung, L10 Abgleich, Ziel A 0.5.0): zuerst Verhaltenstabelle als Meldung P2-8 (Auflage A2), Bau erst nach Weisung; privates Abgleich-Repo legt Nico vorher an |
 | Ziel Phase 2 | 5 Wellen: W1 L1–L3 (ohne Versionssprung), W2 L4–L6 = A 0.3.0 (1000300), W3 L7–L8 = A 0.4.0, W4 L9–L10 = A 0.5.0, W5 L11–L13 = A 0.6.0. Karteikarten + Wiederholung, Prüfungstrainer, Fortschritt, Suche, Übernahme (Variante b), Abgleich PC↔Handy (neues privates Repo vor W4) |
 | Vergleichswerte | G1, G2, G6, G6b, G9–G14 bestehen; W1: G15–G17, G20; W2: G22 lerntexte; W3: G18 auswertung (`erzeuge_auswertung.py`), G19 suche (`erzeuge_suche.py`, Kleinschreibung-Tabelle `erzeuge_python_klein.py`). CI erzeugt alle neu |
 | Letzte/nächste Meldung | P2-6 (W3; P2-7 war die Zwischenmeldung zur Kappung) / **P2-8** |
+| Sammelliste | nächste freie Nummer **24** (23 = WortText, Nico prüft am S24) |
 | Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Aktueller Stand“ (Regel A) |
 
 ## 4. So arbeitet der neue Chat
