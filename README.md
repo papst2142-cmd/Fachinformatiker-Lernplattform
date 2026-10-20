@@ -24,6 +24,12 @@ Erstellt mit Hilfe von Claude (Anthropic).
 | `inhalte/` | Lerninhalte (JSON, aus der Python-Version übernommen) |
 | `werkzeuge/vergleich/` | Python-Skripte, die die Vergleichswerte erzeugen |
 
+## Linux: wenn etwas nicht stimmt
+
+- **Bildfehler im Fenster** (beobachtet nur über eine VNC-Konsole einer virtuellen Maschine, über RDP nicht): das Programm mit dem Schalter `--software` starten, z. B. `./Fachinformatiker-Lernplattform.AppImage --software`. Es zeichnet dann ohne Grafikkarte. Gleiche Wirkung: Umgebungsvariable `LERNPLATTFORM_SOFTWARE=1`. Standard bleibt das normale Zeichnen.
+- **Tippen hängt** (Eingabemethode IBus): mit `--ohne-eingabemethode` starten (oder `LERNPLATTFORM_IME=0`).
+- **AppImage startet nicht per Doppelklick:** Nach dem Herunterladen fehlt oft das Recht „Als Programm ausführen“. Rechtsklick → Eigenschaften → „Als Programm ausführen“ einschalten, oder im Terminal `chmod +x Fachinformatiker-Lernplattform.AppImage`. In Phase 0 liegt das AppImage deshalb zusätzlich als `.tar.gz` bei; beim Entpacken bleibt das Recht erhalten.
+
 ## Bauen und testen
 
 ```

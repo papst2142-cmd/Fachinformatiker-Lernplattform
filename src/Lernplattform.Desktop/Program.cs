@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Lernplattform.Messung;
 using Velopack;
@@ -29,8 +30,10 @@ sealed class Program
         // Phase 0, Spike A: Ausweichschalter, falls Tippen haengt oder das Zeichnen
         // Fehler macht. LERNPLATTFORM_IME=0 schaltet die Eingabemethode (IBus) unter
         // Linux ab, LERNPLATTFORM_SOFTWARE=1 zeichnet ohne Grafikkarte.
-        var imeAus = Environment.GetEnvironmentVariable("LERNPLATTFORM_IME") == "0";
-        var software = Environment.GetEnvironmentVariable("LERNPLATTFORM_SOFTWARE") == "1";
+        // Gleiches geht per Startschalter --ohne-eingabemethode und --software (fuer Verknuepfungen).
+        var args = Environment.GetCommandLineArgs();
+        var imeAus = Environment.GetEnvironmentVariable("LERNPLATTFORM_IME") == "0" || args.Contains("--ohne-eingabemethode");
+        var software = Environment.GetEnvironmentVariable("LERNPLATTFORM_SOFTWARE") == "1" || args.Contains("--software");
         var x11 = new X11PlatformOptions { EnableIme = !imeAus };
         var win32 = new Win32PlatformOptions();
         if (software)

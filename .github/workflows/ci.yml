@@ -41,6 +41,7 @@ jobs:
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
           LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
+          LERNPLATTFORM_MESSUNG_DAUER: "20"
         run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
       - name: Messung Spike A
         if: runner.os != 'Linux'
@@ -114,6 +115,11 @@ jobs:
         with:
           name: updateprobe-${{ matrix.rid }}-A-0.1.1
           path: pakete/feed-A-0.1.1/
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Linux'
+        with:
+          name: appimage-linux-x64-A-0.1.0-tar
+          path: pakete/appimage/
 
   vergleichswerte:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus

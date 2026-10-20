@@ -10,3 +10,5 @@
 - Updates am PC mit Velopack (Windows-Setup, Linux-AppImage, macOS). Die Paketversion ordnet A < B < 1.0 (A 0.1.0 = 1.0.0-a.0.1.0). Ein Rückschritt wird abgelehnt, der Datenordner bleibt bei jedem Update erhalten.
 - Android-Versionscode und Anzeige werden aus Stufe und Version berechnet (A 0.1.0 = 1000100); die CI baut zusätzlich A 0.1.1 mit demselben Testschlüssel für die Update-Probe auf dem Handy.
 - Screenreader-Probe (nur Phase 0): Seite mit Knopf, Textfeld, Liste, Kontrollkästchen und Reitern, alle mit Namen für NVDA, Orca und TalkBack.
+- Linux: Startschalter `--software` (Zeichnen ohne Grafikkarte) und `--ohne-eingabemethode` als Ausweich, beschrieben im README und auf der Messseite; Standard bleibt das normale Zeichnen. AppImage zusätzlich als .tar.gz, damit das Ausführungsrecht erhalten bleibt.
+- Messseite: Speicher-Dauertest (20 Durchgänge der ganzen Messung, Speicher nach jedem Durchgang).

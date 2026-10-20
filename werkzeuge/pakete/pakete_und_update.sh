@@ -47,6 +47,16 @@ baue A 0.1.1
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
+# Linux: Ein ZIP (GitHub-Artefakt, Browser-Download) verliert das Ausfuehrungsrecht.
+# tar behaelt es; beim Entpacken mit der Dateiverwaltung startet das AppImage per Doppelklick.
+case "$RID" in
+  linux-*)
+    mkdir -p "$AUS/appimage"
+    tar -C "$AUS/feed-A-0.1.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.1.0-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.1.0-AppImage.tar.gz"
+    ;;
+esac
+
 case "$RID" in
   osx-*) echo "macOS: nur Pakete (Plan: kein Geraet)"; exit 0 ;;
 esac

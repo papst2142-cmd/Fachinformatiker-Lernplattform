@@ -265,7 +265,11 @@ public partial class MainView : UserControl
         var update = new Button { Content = "Update aus Ordner", IsVisible = Update.AusOrdner is not null };
         update.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
         update.Click += async (_, _) => await UpdateAusOrdnerAsync();
-        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung, update } });
+        var dauer = new Button { Content = "Dauertest (20 Durchgaenge)" };
+        dauer.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        dauer.Click += async (_, _) => await DauertestAsync(20);
+        panel.Children.Add(new WrapPanel { Children = { starten, kopieren, sicherung, update, dauer } });
+        panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
         panel.Children.Add(Text("\"Alte Sicherung pruefen\" liest eine Kopie der Sicherung der alten App (lernstand.json.gz) nur lesend. Die Datei bleibt auf diesem Geraet; im Ergebnis stehen nur Zaehlwerte und Pruefsummen, keine Inhalte, kein Dateiname."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
@@ -418,12 +422,53 @@ public partial class MainView : UserControl
         _ergebnis.Text = BerichtText();
     }
 
+    /// <summary>
+    /// Speicher-Dauertest (Weisung CC Spike A Ergebnis, Punkt 3): die ganze Messung n-mal
+    /// hintereinander; nach jedem Durchgang wird aufgeraeumt (GC) und der Speicher notiert.
+    /// Waechst er von Durchgang zu Durchgang weiter, haelt das Programm Speicher fest.
+    /// </summary>
+    private async Task DauertestAsync(int durchgaenge)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var werte = new List<double>();
+        for (var i = 1; i <= durchgaenge; i++)
+        {
+            _zustand.Text = string.Create(inv, $"Dauertest: Durchgang {i} von {durchgaenge} ...");
+            await MessenAsync();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            using var p = Process.GetCurrentProcess();
+            p.Refresh();
+            var mb = p.WorkingSet64 / 1048576.0;
+            werte.Add(mb);
+            Messwerte.Notiere(string.Create(inv,
+                $"Dauertest Durchgang {i}: Arbeitsspeicher {mb:F0} MB, verwaltet {GC.GetTotalMemory(false) / 1048576.0:F0} MB"));
+        }
+        if (werte.Count >= 6)
+        {
+            // Zuwachs zweite gegen erste Haelfte (der erste Durchgang laedt noch Teile nach)
+            double vorne = werte.Skip(1).Take(werte.Count / 2 - 1).Average(), hinten = werte.Skip(werte.Count / 2).Average();
+            Messwerte.Notiere(string.Create(inv,
+                $"Dauertest Ergebnis: {durchgaenge} Durchgaenge, erster {werte[0]:F0} MB, letzter {werte[^1]:F0} MB, Hoechstwert {werte.Max():F0} MB, Zuwachs zweite Haelfte gegen erste {hinten - vorne:F1} MB"));
+        }
+        _ergebnis.Text = BerichtText();
+        _zustand.Text = "Dauertest fertig. Jetzt \"Ergebnis kopieren\".";
+    }
+
     /// <summary>Ablauf ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
     private async Task AutoLaufAsync()
     {
         await ZeigeAsync("Screenreader");
         await ZeigeAsync("Messung");
-        await MessenAsync();
+        if (int.TryParse(Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DAUER"), out var n) && n > 0)
+        {
+            await DauertestAsync(n);
+        }
+        else
+        {
+            await MessenAsync();
+        }
         var datei = Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DATEI") is { Length: > 0 } d ? d : "messung_auto.txt";
         await File.WriteAllTextAsync(datei, _ergebnis.Text);
         Console.WriteLine(_ergebnis.Text);
