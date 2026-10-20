@@ -33,6 +33,27 @@ jobs:
         run: dotnet test --project tests/Lernplattform.Tests -c Release
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
+      # Spike A: Messseite ohne Bedienung. Nur Messwerte zum Lesen, kein Urteil
+      # (Laufzeit auf geteilten Rechnern schwankt); Absturz = rot.
+      - name: Messung Spike A (Linux, Xvfb)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        env:
+          LERNPLATTFORM_MESSUNG_AUTO: "1"
+          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
+        run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+      - name: Messung Spike A
+        if: runner.os != 'Linux'
+        timeout-minutes: 5
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_AUTO: "1"
+          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
+        run: dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+      - uses: actions/upload-artifact@v7
+        with:
+          name: messung-${{ runner.os }}
+          path: messung_${{ runner.os }}.txt
 
   vergleichswerte:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus

@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Lernplattform.Design;
+using Lernplattform.Messung;
 using Lernplattform.ViewModels;
 using Lernplattform.Views;
 
@@ -10,7 +12,9 @@ public partial class App : Application
 {
     public override void Initialize()
     {
+        _ = Messwerte.SeitStart;
         AvaloniaXamlLoader.Load(this);
+        FarbenAnwenden.Anwenden(FarbenAnwenden.Aktuell);
     }
 
     public override void OnFrameworkInitializationCompleted()
