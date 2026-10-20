@@ -14,12 +14,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | A 0.1.0 (in Arbeit, noch nicht veröffentlicht) |
-| Phase | 0, im Bau seit Startzeile Nico 20.10.2026; Zweig `phase0-grundlagen`, PR #1 Entwurf |
-| Fertig | Grundgerüst, Spike B Zufall, Spike C Testdaten + Prüfsumme, Farbwelten G6, Spike A Messseite und Messpakete |
-| Letzte Meldung | P0-3 (Fi-Austausch) |
-| Offen bei Nico | Messungen Spike A (Windows-VM, Ubuntu-VM direkt und RDP, S24), Knopf „Alte Sicherung prüfen“, später Starts/Updates Spike D, NVDA-Probe Spike E, Actions-Rechte nur falls nötig |
-| Nächster Schritt | Spike D (Pakete und Updates aus der CI), dann Spike E |
+| Version | A 0.1.0 (in Arbeit, noch nicht veröffentlicht), Paketversion 1.0.0-a.0.1.0 |
+| Phase | 0, im Bau seit 20.10.2026; Zweig `phase0-grundlagen`, PR #1 |
+| Fertig | Grundgerüst, Spikes B, C (mit Auflagen A3), D (Pakete + Update-Probe CI), Farbwelten G6, Probeseiten A und E |
+| Letzte Meldung | P0-4 (Fi-Austausch) |
+| Offen bei Nico | Messungen Spike A, Installation/Update Spike D (Windows-VM, Ubuntu-VM, S24), NVDA Spike E, Sicherungsprüfung nach Chat-Lesung |
+| Offen bei Chat | Lesung Sicherungsprüfung (Auflage 4), Paketversion-Schema (Frage 1 P0-4) |
+| Nächster Schritt | Ergebnisse von Nico einarbeiten, dann Bericht Phase 0 mit Gegenprüfung |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).

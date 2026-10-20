@@ -41,7 +41,9 @@
 - Nach jedem Patch: Handoff für einen neuen Chat (`START_Chat.md` aktualisieren) und diese Datei aktuell halten.
 
 ## Aktueller Stand
-- Phase 0 im Bau (Startzeile Nico 20.10.2026), Zweig `phase0-grundlagen`, PR #1 (Entwurf, Merge erst nach Abnahme).
-- Fertig: Grundgerüst, Spike B (Zufall), Spike C mit Testdaten und Prüfsumme wie Python, Farbwelten G6 (Linux/Windows/macOS gleich), Spike A Messseite + Messpakete (CI-Artefakte `lernplattform-win-x64`, `lernplattform-linux-x64`, `lernplattform-android-phase0`).
-- Messseite (`src/Lernplattform.App/Messung`, `Views/MainView.axaml.cs`) ist nur für Phase 0 und wird mit dem Phase-0-Bericht entfernt. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0`, `LERNPLATTFORM_SOFTWARE=1`.
-- Offen: Messungen Nico (Spike A), echte Sicherung über Knopf „Alte Sicherung prüfen“ auf Nicos Gerät (A3), Spike D (Pakete, Updates), Spike E (NVDA).
+- Phase 0 im Bau (Startzeile Nico 20.10.2026), Zweig `phase0-grundlagen`, PR #1 (Merge erst nach Abnahme).
+- Fertig: Grundgerüst, Spike B (Zufall), Spike C (Testdaten, Prüfsumme wie Python, Sicherungsprüfung mit Auflagen Weisung CC P0-3), Farbwelten G6, Spike A Messseite, Spike D (Velopack-Pakete Windows/Linux/macOS, Update-Probe in der CI, Android-Update-APK), Spike E Probeseite.
+- Paketversion für den Updater: `1.0.0-<stufe>.<Version>` (A 0.1.0 = 1.0.0-a.0.1.0), ab 1.0 ohne Zusatz; Android-Versionscode aus Stufe/Version (Directory.Build.props).
+- Messseite, Screenreader-Seite, Sicherungsprüfung und Update-Knopf (`Messung/`, `Views/MainView.axaml.cs`) sind nur für Phase 0 und werden mit dem Phase-0-Bericht entfernt. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0`, `LERNPLATTFORM_SOFTWARE=1`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
+- Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
+- Offen: Proben Nico (Spike A Messungen, Spike D Installation/Update auf Windows-VM, Ubuntu-VM, S24, Spike E NVDA), echte Sicherung erst nach Chat-Lesung; danach Bericht Phase 0 mit Gegenprüfung.
