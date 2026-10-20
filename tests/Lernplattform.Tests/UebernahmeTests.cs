@@ -374,4 +374,29 @@ public class UebernahmeTests
         Assert.NotNull(Loeschmarken.Ortszeit("2026-1-1 00:00:00"));
         Assert.Null(Loeschmarken.Lesen("2026-10-05 12:00:00+02:00\n")?.Utc);
     }
+
+    /// <summary>
+    /// Auflage P2-3: Die Vorschau legt keine Datei an, auch nicht im Temp-Ordner, und auch nicht,
+    /// wenn sie mittendrin hart abgebrochen wird. Eigener Prozess mit eigenem, leerem Temp-Ordner.
+    /// </summary>
+    [Fact]
+    public void VorschauLegtKeineTempDateiAn()
+    {
+        using var ordner = new TempOrdner();
+        var daten = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "daten")).FullName;
+        var temp = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "temp")).FullName;
+        var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(daten, Lernstand.DateiName));
+        var abgleich = Path.Combine(ordner.Pfad, "lernstand.json.gz");
+        File.WriteAllBytes(abgleich, Gzip(G20.GetProperty("dateien").GetProperty("d").GetString()!));
+        var vorher = Sha(pfad);
+        var dateien = Dateien(daten);
+        var umgebung = new Dictionary<string, string> { ["TMPDIR"] = temp, ["TMP"] = temp, ["TEMP"] = temp, ["DOTNET_EnableDiagnostics"] = "0" };
+        foreach (var halt in new[] { "", "nach:card_events", "nach:abschlussprojekt" })
+        {
+            AbsturzProbe.Starten(AbsturzProbe.ArtVorschau, [pfad, abgleich, halt], 0, umgebung);
+            Assert.Empty(Dateien(temp));
+            Assert.Equal(vorher, Sha(pfad));
+            Assert.Equal(dateien, Dateien(daten));
+        }
+    }
 }
