@@ -56,11 +56,12 @@ jobs:
           mkdir -p neu
           python3 -I werkzeuge/vergleich/erzeuge_zufall.py python-linie neu/zufall.json
           python3 -I werkzeuge/vergleich/erzeuge_daten.py python-linie inhalte neu
+          python3 -I werkzeuge/vergleich/erzeuge_farbwelten.py python-linie neu/farbwelten.json
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
           import json
-          for name in ("zufall.json", "inhalte.json", "testdaten.json"):
+          for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
