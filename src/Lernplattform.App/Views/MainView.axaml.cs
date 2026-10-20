@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Automation;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
@@ -36,7 +37,7 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
         var navigation = new StackPanel { Spacing = 6, Margin = new Thickness(10) };
-        foreach (var name in (string[])["Start", "Testseite", "Messung"])
+        foreach (var name in (string[])["Start", "Testseite", "Messung", "Screenreader"])
         {
             var knopf = new Button { Content = name, HorizontalAlignment = HorizontalAlignment.Stretch };
             knopf.Farbe(Button.ForegroundProperty, "Pinsel.text");
@@ -85,6 +86,7 @@ public partial class MainView : UserControl
             {
                 "Testseite" => BaueTestseite(),
                 "Messung" => BaueMessseite(),
+                "Screenreader" => BaueScreenreaderSeite(),
                 _ => BaueStart(),
             };
             _seiten[name] = seite;
@@ -165,6 +167,59 @@ public partial class MainView : UserControl
         var liste = new ListBox { Height = 240, ItemsSource = Enumerable.Range(1, 100).Select(i => $"Frage {i}: Beispielzeile in der Liste").ToList() };
         liste.Farbe(ListBox.BackgroundProperty, "Pinsel.card").Farbe(ListBox.ForegroundProperty, "Pinsel.text");
         panel.Children.Add(liste);
+        return new ScrollViewer { Content = panel };
+    }
+
+    /// <summary>
+    /// Phase 0, Spike E: fuenf Bedienelemente mit Namen fuer Screenreader (NVDA, Orca, TalkBack).
+    /// Pruefung: Namen und Zustaende werden vorgelesen, Tab-Reihenfolge von oben nach unten.
+    /// </summary>
+    private static Control BaueScreenreaderSeite()
+    {
+        var panel = new StackPanel { Spacing = 12, Margin = new Thickness(16) };
+        panel.Children.Add(Text("Screenreader-Probe (Spike E)", 20, FontWeight.SemiBold));
+        panel.Children.Add(Text("Mit der Tab-Taste nacheinander anspringen: 1 Knopf, 2 Textfeld, 3 Liste, 4 Kontrollkaestchen, 5 Reiter. Der Screenreader soll jeweils Name und Zustand vorlesen."));
+
+        var knopf = new Button { Content = "Antwort pruefen", TabIndex = 1 };
+        AutomationProperties.SetName(knopf, "Antwort pruefen");
+        AutomationProperties.SetHelpText(knopf, "Prueft die eingegebene Antwort");
+        knopf.Farbe(Button.BackgroundProperty, "Verlauf.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
+
+        var feld = new TextBox { PlaceholderText = "Antwort eingeben", MinHeight = 36, TabIndex = 2 };
+        AutomationProperties.SetName(feld, "Antwort eingeben");
+        feld.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card")
+            .Farbe(TextBox.BorderBrushProperty, "Pinsel.field_border");
+
+        var liste = new ListBox { Height = 140, TabIndex = 3, ItemsSource = new[] { "Lernfeld 1: Das Unternehmen", "Lernfeld 2: Arbeitsplaetze", "Lernfeld 3: Netzwerke", "Lernfeld 4: Schutzbedarf" } };
+        AutomationProperties.SetName(liste, "Lernfelder");
+        liste.Farbe(ListBox.BackgroundProperty, "Pinsel.card").Farbe(ListBox.ForegroundProperty, "Pinsel.text");
+
+        var haken = new CheckBox { Content = "Als erledigt markieren", TabIndex = 4 };
+        AutomationProperties.SetName(haken, "Als erledigt markieren");
+        haken.Farbe(CheckBox.ForegroundProperty, "Pinsel.text");
+
+        var reiter = new TabControl
+        {
+            TabIndex = 5,
+            ItemsSource = new[]
+            {
+                new TabItem { Header = "Karteikarten", Content = Text("Inhalt Karteikarten") },
+                new TabItem { Header = "Quiz", Content = Text("Inhalt Quiz") },
+                new TabItem { Header = "Pruefung", Content = Text("Inhalt Pruefung") },
+            },
+        };
+        AutomationProperties.SetName(reiter, "Bereiche");
+        foreach (var t in (IEnumerable<TabItem>)reiter.ItemsSource)
+        {
+            AutomationProperties.SetName(t, (string)t.Header!);
+        }
+        reiter.Farbe(TabControl.ForegroundProperty, "Pinsel.text");
+
+        panel.Children.Add(knopf);
+        panel.Children.Add(feld);
+        panel.Children.Add(liste);
+        panel.Children.Add(haken);
+        panel.Children.Add(reiter);
         return new ScrollViewer { Content = panel };
     }
 
@@ -366,6 +421,7 @@ public partial class MainView : UserControl
     /// <summary>Ablauf ohne Bedienung (Umgebungsvariable LERNPLATTFORM_MESSUNG_AUTO=1), fuer Xvfb und CI.</summary>
     private async Task AutoLaufAsync()
     {
+        await ZeigeAsync("Screenreader");
         await ZeigeAsync("Messung");
         await MessenAsync();
         var datei = Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_DATEI") is { Length: > 0 } d ? d : "messung_auto.txt";
