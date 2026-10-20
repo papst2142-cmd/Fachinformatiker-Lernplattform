@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Tests;
 
@@ -196,6 +197,103 @@ public class RuecksicherungTests
         var fehlt = Path.Combine(ordner.Pfad, "gibt_es_nicht", "x.fisisicherung");
         Assert.Equal(RuecksicherungFehler.Unbekannt, Assert.Throws<RuecksicherungAusnahme>(() => Ruecksicherung.Speichern(fehlt, bytes)).Fehler);
         Assert.False(Directory.Exists(Path.GetDirectoryName(fehlt)));
+    }
+
+    /// <summary>Handy (P2-11 A2): atomar im App-Ordner, pruefen, dann an den gewaehlten Ort kopieren; Arbeitsdatei weg.</summary>
+    [Fact]
+    public async Task SpeichernUeberKopie()
+    {
+        var (ordner, lernstand) = Beispiel();
+        using var _ = ordner;
+        var bytes = Ruecksicherung.Erstellen(lernstand, [], "A 0.5.0", "Handy", new DateTime(2026, 10, 20, 12, 0, 0));
+        var arbeit = Path.Combine(ordner.Pfad, "ruecksicherung.fisisicherung");
+        var ziel = new MemoryStream();
+        await Ruecksicherung.SpeichernUeberAsync(arbeit, bytes, () => Task.FromResult<Stream>(new HalteOffen(ziel)), TestContext.Current.CancellationToken);
+        Assert.Equal(bytes, ziel.ToArray());
+        Assert.False(File.Exists(arbeit));
+        Assert.False(File.Exists(arbeit + ".tmp"));
+    }
+
+    /// <summary>Kontrollfehler A5 „Android-Kopie scheitert“: T4 mit Grund, Arbeitsdatei entfernt.</summary>
+    [Fact]
+    public async Task KopieScheitert()
+    {
+        var (ordner, lernstand) = Beispiel();
+        using var _ = ordner;
+        var bytes = Ruecksicherung.Erstellen(lernstand, [], "A 0.5.0", "Handy", new DateTime(2026, 10, 20, 12, 0, 0));
+        var arbeit = Path.Combine(ordner.Pfad, "ruecksicherung.fisisicherung");
+        var abbruch = TestContext.Current.CancellationToken;
+
+        // Ziel laesst sich nicht oeffnen (keine Berechtigung)
+        var a = await Assert.ThrowsAsync<RuecksicherungAusnahme>(() =>
+            Ruecksicherung.SpeichernUeberAsync(arbeit, bytes, () => throw new UnauthorizedAccessException(), abbruch));
+        Assert.Equal(RuecksicherungFehler.KeineBerechtigung, a.Fehler);
+        Assert.False(File.Exists(arbeit));
+
+        // Schreiben bricht mitten ab (Platte voll)
+        var voll = OperatingSystem.IsWindows() ? unchecked((int)0x80070070) : 28;
+        var b = await Assert.ThrowsAsync<RuecksicherungAusnahme>(() =>
+            Ruecksicherung.SpeichernUeberAsync(arbeit, bytes, () => Task.FromResult<Stream>(new Bricht(voll)), abbruch));
+        Assert.Equal(RuecksicherungFehler.KeinPlatz, b.Fehler);
+        Assert.False(File.Exists(arbeit));
+
+        // App-Ordner fehlt: schon der erste Schritt scheitert, das Ziel wird nie geoeffnet
+        var geoeffnet = false;
+        var c = await Assert.ThrowsAsync<RuecksicherungAusnahme>(() => Ruecksicherung.SpeichernUeberAsync(
+            Path.Combine(ordner.Pfad, "fehlt", "r.fisisicherung"), bytes, () => { geoeffnet = true; return Task.FromResult<Stream>(new MemoryStream()); }, abbruch));
+        Assert.Equal(RuecksicherungFehler.Unbekannt, c.Fehler);
+        Assert.False(geoeffnet);
+    }
+
+    [Fact]
+    public void Texte()
+    {
+        Assert.Equal(("Sicherung nicht erstellt", "Der Lernstand kann nicht gelesen werden, deshalb wurde keine Sicherung erstellt. Es wurde nichts verändert."),
+            RuecksicherungTexte.Fehler(RuecksicherungFehler.NichtLesbar));
+        Assert.Equal(("Speichern fehlgeschlagen", "Die Sicherung konnte nicht gespeichert werden: Kein Speicherplatz mehr. Wähle einen anderen Ordner oder schaffe Platz und versuche es noch einmal."),
+            RuecksicherungTexte.Fehler(RuecksicherungFehler.KeinPlatz));
+        Assert.EndsWith(": Keine Berechtigung für diesen Ordner. Wähle einen anderen Ordner oder schaffe Platz und versuche es noch einmal.",
+            RuecksicherungTexte.Fehler(RuecksicherungFehler.KeineBerechtigung).Text);
+        Assert.Contains(": Unbekannter Fehler.", RuecksicherungTexte.Fehler(RuecksicherungFehler.Unbekannt).Text);
+        Assert.Equal("Gespeichert: Lernplattform-Sicherung_2026-10-20_1200.fisisicherung",
+            RuecksicherungTexte.Erfolg(Ruecksicherung.DateiName(new DateTime(2026, 10, 20, 12, 0, 0))));
+        Assert.Equal("Bitte warten \u2013 die Sicherung wird erstellt.", RuecksicherungTexte.Warten);
+        // T4 sagt nichts ueber eine alte Datei, die bleibt (Wortlaut P2-11, auf Android nicht belegbar)
+        Assert.DoesNotContain("bleibt", RuecksicherungTexte.SpeichernText);
+        // T6: keine Zusage „geschützt“, „sicher“, „verschlüsselt“
+        foreach (var wort in new[] { "geschützt", " sicher", "verschlüsselt" })
+        {
+            Assert.DoesNotContain(wort, AbgleichTexte.Zugangsschluessel);
+        }
+        Assert.DoesNotContain("fisi-lernstand", AbgleichTexte.RepositoryBeispiel);
+    }
+
+    private sealed class HalteOffen(MemoryStream innen) : Stream
+    {
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => innen.Length;
+        public override long Position { get => innen.Position; set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => innen.Write(buffer, offset, count);
+    }
+
+    private sealed class Bricht(int code) : Stream
+    {
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => 0;
+        public override long Position { get => 0; set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new IOException("voll", code);
     }
 
     [Fact]

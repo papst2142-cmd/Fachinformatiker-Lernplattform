@@ -404,6 +404,40 @@ public static class Ruecksicherung
         }
     }
 
+    /// <summary>
+    /// Android (Weisung P2-11 A2): zuerst atomar als &lt;arbeitsdatei&gt; im App-Ordner schreiben und
+    /// pruefen (<see cref="Speichern"/>), dann an den gewaehlten Ort kopieren (Strom aus dem
+    /// Speichern-Dialog). Scheitert ein Schritt: RuecksicherungAusnahme mit Grund fuer T4. Die
+    /// Arbeitsdatei wird danach immer entfernt; sie ist nur eine Zwischenstufe.
+    /// </summary>
+    public static async Task SpeichernUeberAsync(string arbeitsdatei, byte[] bytes, Func<Task<Stream>> oeffnen, CancellationToken abbruch = default)
+    {
+        try
+        {
+            Speichern(arbeitsdatei, bytes);
+            await using var ziel = await oeffnen();
+            await using (var quelle = File.OpenRead(arbeitsdatei))
+            {
+                await quelle.CopyToAsync(ziel, abbruch);
+            }
+            await ziel.FlushAsync(abbruch);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
+        {
+            throw new RuecksicherungAusnahme(Fehlerart(e));
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(arbeitsdatei);
+            }
+            catch (Exception f) when (f is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+            }
+        }
+    }
+
     /// <summary>Kurzer Grund fuer T4 (nie ein Pfad): Platz, Berechtigung oder unbekannt.</summary>
     public static RuecksicherungFehler Fehlerart(Exception e)
     {

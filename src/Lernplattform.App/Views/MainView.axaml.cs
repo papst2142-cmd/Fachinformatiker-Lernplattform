@@ -358,6 +358,8 @@ public partial class MainView : UserControl
         var panel = new StackPanel { Spacing = 8 };
         // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
         panel.Children.Add(new UebernahmeTeil(panel).Teil);
+        // Phase 2, L9: Sicherung für die alte App erstellen
+        panel.Children.Add(new RuecksicherungTeil(panel).Teil);
         panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
