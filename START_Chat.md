@@ -15,11 +15,11 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Feld | Wert |
 |---|---|
 | Version | A 0.1.0 auf `main`; **A 0.2.0** auf Zweig `phase1-kern` (kein öffentliches Release, Pakete aus der CI) |
-| Phase | 1, Welle 2 (K5–K10) fertig und gepusht (Kopf 046004d), Lauf 39412552321 grün 8/8 |
+| Phase | 1, Welle 2 (K5–K10) abgenommen, Nachbesserung N1/N2 gepusht (Code a49948c), Lauf 39414992742 grün 8/8 |
 | Vergleichswerte neu | G6b `eigene_farben.json`, G9 `beschriftungen.json`, G13 `dashboard.json`, G14 `potenz.json` (Erzeuger in `werkzeuge/vergleich/`, CI erzeugt sie neu) |
-| Letzte Meldung | P1-4 (Bericht K10, Abnahme Welle 2, 5 Fragen); nächste P1-5 |
+| Letzte Meldung | P1-6 (N1/N2 gepusht, Lauf); nächste P1-7 |
 | Offen bei Chat | K9-Diff lesen, Fragen 2–5 (Hinweistexte Schrift/Tagesziel, Über-Text, defekt.json) |
-| Nächster Schritt | Chats Abnahme Welle 2 abwarten, Antworten zu P1-4 umsetzen (Hinweiskarte unlesbare DB, Platzhalter-Umlaut), dann Nicos Freigabe. Übergabe: `/mnt/project-files/phase1_csharp/HANDOFF_Welle2_Abnahme.md` |
+| Nächster Schritt | Chat prüft Kopf und Lauf, dann Nicos Freigabe (Pakete auf Windows-VM, Ubuntu-VM, S24); danach Merge-Frage und Welle 3 laut Plan. Übergabe: `/mnt/project-files/phase1_csharp/HANDOFF_Welle2_Abnahme.md` |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).
