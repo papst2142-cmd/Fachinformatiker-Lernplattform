@@ -41,10 +41,15 @@
 - Nach jedem Patch: Handoff für einen neuen Chat (`START_Chat.md` aktualisieren) und diese Datei aktuell halten.
 
 ## Aktueller Stand
-- Phase 0 von Chat abgenommen (Weisung CC_P0-5_Abnahme), Bericht = Meldung P0-5. Zweig `phase0-grundlagen`, PR #1 (Entwurf); Squash-Merge nach `main` freigegeben (Nico, Frage 2), Zeitpunkt gibt Chat nach Lesung des Umbaus und grünem Lauf. Version bleibt A 0.1.0, kein Release, kein Tag.
-- Fertig: Grundgerüst, Spike A (Zeiten/Eingabe), B (Zufall), C (Testdaten, Prüfsumme wie Python, Sicherungsprüfung mit Auflagen Weisung CC P0-3), D (Velopack-Pakete Windows/Linux/macOS, Update-Probe in der CI, Android-Update-APK), Farbwelten G6; Spike E gebaut (NVDA-Probe offen).
-- Paketversion für den Updater: `1.0.0-<stufe>.<Version>` (A 0.1.0 = 1.0.0-a.0.1.0), ab 1.0 ohne Zusatz; Android-Versionscode aus Stufe/Version (Directory.Build.props).
-- Messseite, Screenreader-Seite, Dauertest und Update-Knopf sind nach der Abnahme entfernt. Die Startseite trägt „Alte Sicherung prüfen“ und „Ergebnis kopieren“; sie bleiben, bis Nico die Prüfung mit echten Daten genutzt hat (`Views/MainView.axaml.cs`, Ergebniszeilen in `Messung/Messwerte.cs`). Testseite bleibt vorerst. Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1` (Start ohne Bedienung, CI), `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO` (Update-Probe CI), `LERNPLATTFORM_DATEN`.
+- Phase 0 abgenommen und gemergt (main 2f9a971). Phase 1 freigegeben (Weisung P1-1_Plan_Freigabe, Fi-Austausch 125a7f6; Plan `weisungen/Plan_Phase1_CSharp.md`). Nico 20.10.: 1a DB wie Python, 2a spätere Bereiche sichtbar mit „Kommt in einer spaeteren Ausbaustufe“, 3 Phase 1 = A 0.2.0 ohne öffentliches Release, 4a „Alte Sicherung pruefen“ wandert unverändert nach Optionen > Sicherung.
+- Zweig `phase1-kern` (ab main). Welle 1 (K1–K4) gebaut, Version bleibt bis Welle 2 A 0.1.0 (Auflage P1-1); A 0.2.0 kommt mit Welle 2. Welle 2 (K5–K9) erst nach Meldung P1-2 und Lesung durch Chat.
+  - K1 `Core/Inhalte` (Lerninhalte, Fragenkatalog, InhaltePruefung, Fachbereiche) gegen G12 `inhalte_pruefung.json` (ohne Spielteil).
+  - K2 `Core/Daten/Lernstand.cs` gegen G11 `datenbank.json`; Aufbau-Version nur `PRAGMA user_version` (C# 1, Python 0). uid-Nachtrag alter Zeilen und Fragen-Umbenennungen kommen mit der Übernahme (Phase 2).
+  - K3 `Core/Daten/Einstellungen.cs` gegen G11; Pflichttests unbekannte Schlüssel, halb geschriebene Datei, 0600.
+  - K4 `Core/Diagnose` (Fehlerprotokoll, Datenschutz) gegen G10 `fehlerprotokoll.json`; eingehängt in `App.axaml.cs`.
+- Stoppgrenze (Regel A): `SicherungsPruefung.cs`, `AlterLernstand.cs`, G1/G2/G6 nicht ändern.
+- Tests mit Schreibschutz (2 in `LernstandTests`) gelingen nur ohne Root; im Container als Benutzer `claude` in einer Kopie prüfen (CI läuft ohne Root).
 - Sicherungsprüfung (A3): Ausgabe nur Zählwerte/Zusammenfassung/Prüfsumme ja-nein/SHA-256, Fehler nur Code; Markertest `SicherungsPruefungTests` darf nie gelockert werden.
-- Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung (Nico: wenn die Anzeige der Lerndaten steht), B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht in Releases.
-- Nächste Meldung: P0-6 (Umbau nach Abnahme). Danach Plan Phase 1 erst nach Nicos Startzeile.
+- Schalter: `LERNPLATTFORM_MESSUNG_AUTO=1`, `LERNPLATTFORM_IME=0` / `--ohne-eingabemethode`, `LERNPLATTFORM_SOFTWARE=1` / `--software`, `LERNPLATTFORM_UPDATE_AUTO`, `LERNPLATTFORM_DATEN`.
+- Offen (Sammelliste Nr. 9–12): NVDA, echte Sicherung, B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, Lizenzen Inter/AndroidX.SplashScreen/Velopack-Teile vor erster Veröffentlichung, AppImage-Ausführungsrecht.
+- Nächste Meldung: P1-2 (Bericht Welle 1). Log `/mnt/project-files/phase1_csharp/VERBRAUCHSLOG_P1.md`.

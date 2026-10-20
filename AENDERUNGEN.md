@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.2.0 (in Arbeit, Phase 1: Kern und Oberfläche)
+Welle 1 (Kern ohne Oberfläche; die Versionsnummer wird erst mit Welle 2 erhöht, Weisung P1-1):
+- Lerninhalte als Datenmodell: Karteikarten, Quizfragen (mit den 54 automatisch erzeugten Aufgaben), AP2-/AP1-Szenarien, Testprojekte, Themen und Rahmenplan werden wie in Python geladen und geprüft; jeder Inhalt kennt seine Fachrichtung (ohne Angabe: Systemintegration). Geprüft gegen Vergleichswerte G12, ohne den Spielteil.
+- Lernstand-Datenbank `lernplattform.db` mit denselben Tabellen und Spalten wie Python; Aufbau-Version als `PRAGMA user_version = 1`. Beschädigte, schreibgeschützte oder nicht erreichbare Datenbank: nichts wird geändert, eine klare Meldung erscheint. Geprüft gegen Vergleichswerte G11.
+- Einstellungen `einstellungen.json` wie in Python: unbekannte Einträge bleiben erhalten, Speichern atomar, unter Linux/macOS nur für das eigene Konto lesbar (0600), beschädigte Datei wird als `einstellungen.defekt.json` aufgehoben und einmal gemeldet.
+- Fehlerprotokoll `fehler.log` im Datenordner (höchstens 256 KB) ohne Zugangsschlüssel, Passwörter und Benutzernamen in Pfaden; PC und Handy schreiben unbehandelte Fehler hinein. Geprüft gegen Vergleichswerte G10.
+
 ## A 0.1.0 (in Arbeit, Phase 0: Fundament)
 - Neues Projekt in C# (.NET 10, Avalonia 12.1) mit fünf Teilen: Core, App, Desktop, Android, Tests.
 - Zufall exakt wie in der Python-Version (Mersenne Twister mit Text-Startwerten und Spiel-Würfel), geprüft gegen Vergleichswerte.

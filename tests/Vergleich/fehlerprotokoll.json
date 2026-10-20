@@ -1,0 +1,553 @@
+{
+ "quelle": "fisi_core.anonymize_paths, fisi_diagnose.scrub/secrets_of (Python v0.63.2)",
+ "redacted": "[entfernt]",
+ "log_max": 262144,
+ "umgebungen": {
+  "windows": {
+   "env": {
+    "APPDATA": "C:\\Users\\Nico\\AppData\\Roaming",
+    "LOCALAPPDATA": "C:\\Users\\Nico\\AppData\\Local"
+   },
+   "home": "C:\\Users\\Nico"
+  },
+  "linux": {
+   "env": {},
+   "home": "/home/nico"
+  },
+  "ohne": {
+   "env": {},
+   "home": "~"
+  }
+ },
+ "faelle": [
+  {
+   "text": "",
+   "scrub": "",
+   "anonym": {
+    "windows": "",
+    "linux": "",
+    "ohne": ""
+   },
+   "protokoll": {
+    "windows": "",
+    "linux": "",
+    "ohne": ""
+   }
+  },
+  {
+   "text": "Alles in Ordnung, kein Geheimnis hier.",
+   "scrub": "Alles in Ordnung, kein Geheimnis hier.",
+   "anonym": {
+    "windows": "Alles in Ordnung, kein Geheimnis hier.",
+    "linux": "Alles in Ordnung, kein Geheimnis hier.",
+    "ohne": "Alles in Ordnung, kein Geheimnis hier."
+   },
+   "protokoll": {
+    "windows": "Alles in Ordnung, kein Geheimnis hier.",
+    "linux": "Alles in Ordnung, kein Geheimnis hier.",
+    "ohne": "Alles in Ordnung, kein Geheimnis hier."
+   }
+  },
+  {
+   "text": "Fehler beim Abgleich: token=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+   "scrub": "Fehler beim Abgleich: token=[entfernt]",
+   "anonym": {
+    "windows": "Fehler beim Abgleich: token=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "linux": "Fehler beim Abgleich: token=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "ohne": "Fehler beim Abgleich: token=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+   },
+   "protokoll": {
+    "windows": "Fehler beim Abgleich: token=[entfernt]",
+    "linux": "Fehler beim Abgleich: token=[entfernt]",
+    "ohne": "Fehler beim Abgleich: token=[entfernt]"
+   }
+  },
+  {
+   "text": "Zugang github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz gesperrt",
+   "scrub": "Zugang [entfernt] gesperrt",
+   "anonym": {
+    "windows": "Zugang github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz gesperrt",
+    "linux": "Zugang github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz gesperrt",
+    "ohne": "Zugang github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz gesperrt"
+   },
+   "protokoll": {
+    "windows": "Zugang [entfernt] gesperrt",
+    "linux": "Zugang [entfernt] gesperrt",
+    "ohne": "Zugang [entfernt] gesperrt"
+   }
+  },
+  {
+   "text": "Authorization: Bearer abcdef1234567890",
+   "scrub": "Authorization: [entfernt]",
+   "anonym": {
+    "windows": "Authorization: Bearer abcdef1234567890",
+    "linux": "Authorization: Bearer abcdef1234567890",
+    "ohne": "Authorization: Bearer abcdef1234567890"
+   },
+   "protokoll": {
+    "windows": "Authorization: [entfernt]",
+    "linux": "Authorization: [entfernt]",
+    "ohne": "Authorization: [entfernt]"
+   }
+  },
+  {
+   "text": "headers={'Authorization': 'token geheim12345', 'Accept': 'json'}",
+   "scrub": "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+   "anonym": {
+    "windows": "headers={'Authorization': 'token geheim12345', 'Accept': 'json'}",
+    "linux": "headers={'Authorization': 'token geheim12345', 'Accept': 'json'}",
+    "ohne": "headers={'Authorization': 'token geheim12345', 'Accept': 'json'}"
+   },
+   "protokoll": {
+    "windows": "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "linux": "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "ohne": "headers={'Authorization': '[entfernt]', 'Accept': 'json'}"
+   }
+  },
+  {
+   "text": "authorization=Basic dXNlcjpwYXNz",
+   "scrub": "authorization=[entfernt]",
+   "anonym": {
+    "windows": "authorization=Basic dXNlcjpwYXNz",
+    "linux": "authorization=Basic dXNlcjpwYXNz",
+    "ohne": "authorization=Basic dXNlcjpwYXNz"
+   },
+   "protokoll": {
+    "windows": "authorization=[entfernt]",
+    "linux": "authorization=[entfernt]",
+    "ohne": "authorization=[entfernt]"
+   }
+  },
+  {
+   "text": "Anfrage mit bearer AbC.dEf_123-456~789+/= gescheitert",
+   "scrub": "Anfrage mit bearer [entfernt] gescheitert",
+   "anonym": {
+    "windows": "Anfrage mit bearer AbC.dEf_123-456~789+/= gescheitert",
+    "linux": "Anfrage mit bearer AbC.dEf_123-456~789+/= gescheitert",
+    "ohne": "Anfrage mit bearer AbC.dEf_123-456~789+/= gescheitert"
+   },
+   "protokoll": {
+    "windows": "Anfrage mit bearer [entfernt] gescheitert",
+    "linux": "Anfrage mit bearer [entfernt] gescheitert",
+    "ohne": "Anfrage mit bearer [entfernt] gescheitert"
+   }
+  },
+  {
+   "text": "sync_token = 'abc123456' und api_key: \"xyz987654\"",
+   "scrub": "sync_token = [entfernt] und api_key: [entfernt]",
+   "anonym": {
+    "windows": "sync_token = 'abc123456' und api_key: \"xyz987654\"",
+    "linux": "sync_token = 'abc123456' und api_key: \"xyz987654\"",
+    "ohne": "sync_token = 'abc123456' und api_key: \"xyz987654\""
+   },
+   "protokoll": {
+    "windows": "sync_token = [entfernt] und api_key: [entfernt]",
+    "linux": "sync_token = [entfernt] und api_key: [entfernt]",
+    "ohne": "sync_token = [entfernt] und api_key: [entfernt]"
+   }
+  },
+  {
+   "text": "{\"sync_token\": \"geheimerWert1\", \"sync_repo\": \"nico/fisi-lernstand\"}",
+   "scrub": "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+   "anonym": {
+    "windows": "{\"sync_token\": \"geheimerWert1\", \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "linux": "{\"sync_token\": \"geheimerWert1\", \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "ohne": "{\"sync_token\": \"geheimerWert1\", \"sync_repo\": \"nico/fisi-lernstand\"}"
+   },
+   "protokoll": {
+    "windows": "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "linux": "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "ohne": "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}"
+   }
+  },
+  {
+   "text": "passwort=hallo123; kennwort: Welt456, secret=\"s e c r e t\"",
+   "scrub": "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+   "anonym": {
+    "windows": "passwort=hallo123; kennwort: Welt456, secret=\"s e c r e t\"",
+    "linux": "passwort=hallo123; kennwort: Welt456, secret=\"s e c r e t\"",
+    "ohne": "passwort=hallo123; kennwort: Welt456, secret=\"s e c r e t\""
+   },
+   "protokoll": {
+    "windows": "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "linux": "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "ohne": "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]"
+   }
+  },
+  {
+   "text": "Mein-Passwort: abc und passwd=xyz und PASSWORD=Gross1",
+   "scrub": "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]",
+   "anonym": {
+    "windows": "Mein-Passwort: abc und passwd=xyz und PASSWORD=Gross1",
+    "linux": "Mein-Passwort: abc und passwd=xyz und PASSWORD=Gross1",
+    "ohne": "Mein-Passwort: abc und passwd=xyz und PASSWORD=Gross1"
+   },
+   "protokoll": {
+    "windows": "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]",
+    "linux": "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]",
+    "ohne": "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]"
+   }
+  },
+  {
+   "text": "api-key=k1 apikey=k2 API_KEY=k3 x-api-key: k4",
+   "scrub": "api-key=[entfernt] apikey=[entfernt] API_KEY=[entfernt] x-api-key: [entfernt]",
+   "anonym": {
+    "windows": "api-key=k1 apikey=k2 API_KEY=k3 x-api-key: k4",
+    "linux": "api-key=k1 apikey=k2 API_KEY=k3 x-api-key: k4",
+    "ohne": "api-key=k1 apikey=k2 API_KEY=k3 x-api-key: k4"
+   },
+   "protokoll": {
+    "windows": "api-key=[entfernt] apikey=[entfernt] API_KEY=[entfernt] x-api-key: [entfernt]",
+    "linux": "api-key=[entfernt] apikey=[entfernt] API_KEY=[entfernt] x-api-key: [entfernt]",
+    "ohne": "api-key=[entfernt] apikey=[entfernt] API_KEY=[entfernt] x-api-key: [entfernt]"
+   }
+  },
+  {
+   "text": "ein tokenizer=harmlos, mytoken=weg, token_typ=bleibt",
+   "scrub": "ein tokenizer=harmlos, mytoken=[entfernt], token_typ=bleibt",
+   "anonym": {
+    "windows": "ein tokenizer=harmlos, mytoken=weg, token_typ=bleibt",
+    "linux": "ein tokenizer=harmlos, mytoken=weg, token_typ=bleibt",
+    "ohne": "ein tokenizer=harmlos, mytoken=weg, token_typ=bleibt"
+   },
+   "protokoll": {
+    "windows": "ein tokenizer=harmlos, mytoken=[entfernt], token_typ=bleibt",
+    "linux": "ein tokenizer=harmlos, mytoken=[entfernt], token_typ=bleibt",
+    "ohne": "ein tokenizer=harmlos, mytoken=[entfernt], token_typ=bleibt"
+   }
+  },
+  {
+   "text": "https://nico:geheim@github.com/papst/repo.git und http://abc123@host/x",
+   "scrub": "https://[entfernt]@github.com/papst/repo.git und http://[entfernt]@host/x",
+   "anonym": {
+    "windows": "https://nico:geheim@github.com/papst/repo.git und http://abc123@host/x",
+    "linux": "https://nico:geheim@github.com/papst/repo.git und http://abc123@host/x",
+    "ohne": "https://nico:geheim@github.com/papst/repo.git und http://abc123@host/x"
+   },
+   "protokoll": {
+    "windows": "https://[entfernt]@github.com/papst/repo.git und http://[entfernt]@host/x",
+    "linux": "https://[entfernt]@github.com/papst/repo.git und http://[entfernt]@host/x",
+    "ohne": "https://[entfernt]@github.com/papst/repo.git und http://[entfernt]@host/x"
+   }
+  },
+  {
+   "text": "https://github.com/papst/repo ohne Zugang",
+   "scrub": "https://github.com/papst/repo ohne Zugang",
+   "anonym": {
+    "windows": "https://github.com/papst/repo ohne Zugang",
+    "linux": "https://github.com/papst/repo ohne Zugang",
+    "ohne": "https://github.com/papst/repo ohne Zugang"
+   },
+   "protokoll": {
+    "windows": "https://github.com/papst/repo ohne Zugang",
+    "linux": "https://github.com/papst/repo ohne Zugang",
+    "ohne": "https://github.com/papst/repo ohne Zugang"
+   }
+  },
+  {
+   "text": "C:\\Users\\Nico\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log",
+   "scrub": "C:\\Users\\Nico\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log",
+   "anonym": {
+    "windows": "%APPDATA%\\FISI-Lernplattform\\fehler.log",
+    "linux": "C:\\Users\\…\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log",
+    "ohne": "C:\\Users\\…\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log"
+   },
+   "protokoll": {
+    "windows": "%APPDATA%\\FISI-Lernplattform\\fehler.log",
+    "linux": "C:\\Users\\…\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log",
+    "ohne": "C:\\Users\\…\\AppData\\Roaming\\FISI-Lernplattform\\fehler.log"
+   }
+  },
+  {
+   "text": "c:/users/nico/Documents/datei.txt und C:\\Benutzer\\Anna Maria\\x",
+   "scrub": "c:/users/nico/Documents/datei.txt und C:\\Benutzer\\Anna Maria\\x",
+   "anonym": {
+    "windows": "~/Documents/datei.txt und C:\\Benutzer\\…\\x",
+    "linux": "c:/users/…/Documents/datei.txt und C:\\Benutzer\\…\\x",
+    "ohne": "c:/users/…/Documents/datei.txt und C:\\Benutzer\\…\\x"
+   },
+   "protokoll": {
+    "windows": "~/Documents/datei.txt und C:\\Benutzer\\…\\x",
+    "linux": "c:/users/…/Documents/datei.txt und C:\\Benutzer\\…\\x",
+    "ohne": "c:/users/…/Documents/datei.txt und C:\\Benutzer\\…\\x"
+   }
+  },
+  {
+   "text": "D:\\Documents and Settings\\Max\\Desktop\\a.txt",
+   "scrub": "D:\\Documents and Settings\\Max\\Desktop\\a.txt",
+   "anonym": {
+    "windows": "D:\\Documents and Settings\\…\\Desktop\\a.txt",
+    "linux": "D:\\Documents and Settings\\…\\Desktop\\a.txt",
+    "ohne": "D:\\Documents and Settings\\…\\Desktop\\a.txt"
+   },
+   "protokoll": {
+    "windows": "D:\\Documents and Settings\\…\\Desktop\\a.txt",
+    "linux": "D:\\Documents and Settings\\…\\Desktop\\a.txt",
+    "ohne": "D:\\Documents and Settings\\…\\Desktop\\a.txt"
+   }
+  },
+  {
+   "text": "\\Users\\Nico\\Dokumente",
+   "scrub": "\\Users\\Nico\\Dokumente",
+   "anonym": {
+    "windows": "\\Users\\…\\Dokumente",
+    "linux": "\\Users\\…\\Dokumente",
+    "ohne": "\\Users\\…\\Dokumente"
+   },
+   "protokoll": {
+    "windows": "\\Users\\…\\Dokumente",
+    "linux": "\\Users\\…\\Dokumente",
+    "ohne": "\\Users\\…\\Dokumente"
+   }
+  },
+  {
+   "text": "C:\\Users\\Nico\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\Nico\\Bilder",
+   "scrub": "C:\\Users\\Nico\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\Nico\\Bilder",
+   "anonym": {
+    "windows": "%LOCALAPPDATA%\\Temp\\x.tmp; ~\\Bilder",
+    "linux": "C:\\Users\\…\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\…\\Bilder",
+    "ohne": "C:\\Users\\…\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\…\\Bilder"
+   },
+   "protokoll": {
+    "windows": "%LOCALAPPDATA%\\Temp\\x.tmp; ~\\Bilder",
+    "linux": "C:\\Users\\…\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\…\\Bilder",
+    "ohne": "C:\\Users\\…\\AppData\\Local\\Temp\\x.tmp; C:\\Users\\…\\Bilder"
+   }
+  },
+  {
+   "text": "/home/nico/.local/share/fisi-lernplattform/fehler.log",
+   "scrub": "/home/nico/.local/share/fisi-lernplattform/fehler.log",
+   "anonym": {
+    "windows": "/home/…/.local/share/fisi-lernplattform/fehler.log",
+    "linux": "~/.local/share/fisi-lernplattform/fehler.log",
+    "ohne": "/home/…/.local/share/fisi-lernplattform/fehler.log"
+   },
+   "protokoll": {
+    "windows": "/home/…/.local/share/fisi-lernplattform/fehler.log",
+    "linux": "~/.local/share/fisi-lernplattform/fehler.log",
+    "ohne": "/home/…/.local/share/fisi-lernplattform/fehler.log"
+   }
+  },
+  {
+   "text": "/Users/nico/Library/Application Support/x und /home/anna/datei",
+   "scrub": "/Users/nico/Library/Application Support/x und /home/anna/datei",
+   "anonym": {
+    "windows": "/Users/…/Library/Application Support/x und /home/…/datei",
+    "linux": "/Users/…/Library/Application Support/x und /home/…/datei",
+    "ohne": "/Users/…/Library/Application Support/x und /home/…/datei"
+   },
+   "protokoll": {
+    "windows": "/Users/…/Library/Application Support/x und /home/…/datei",
+    "linux": "/Users/…/Library/Application Support/x und /home/…/datei",
+    "ohne": "/Users/…/Library/Application Support/x und /home/…/datei"
+   }
+  },
+  {
+   "text": "Datei \"/home/nico\" fehlt",
+   "scrub": "Datei \"/home/nico\" fehlt",
+   "anonym": {
+    "windows": "Datei \"/home/…\" fehlt",
+    "linux": "Datei \"~\" fehlt",
+    "ohne": "Datei \"/home/…\" fehlt"
+   },
+   "protokoll": {
+    "windows": "Datei \"/home/…\" fehlt",
+    "linux": "Datei \"~\" fehlt",
+    "ohne": "Datei \"/home/…\" fehlt"
+   }
+  },
+  {
+   "text": "Pfad /home/nico: nicht gefunden, /home/nicolas/x bleibt anders",
+   "scrub": "Pfad /home/nico: nicht gefunden, /home/nicolas/x bleibt anders",
+   "anonym": {
+    "windows": "Pfad /home/…: nicht gefunden, /home/…/x bleibt anders",
+    "linux": "Pfad ~: nicht gefunden, /home/…/x bleibt anders",
+    "ohne": "Pfad /home/…: nicht gefunden, /home/…/x bleibt anders"
+   },
+   "protokoll": {
+    "windows": "Pfad /home/…: nicht gefunden, /home/…/x bleibt anders",
+    "linux": "Pfad ~: nicht gefunden, /home/…/x bleibt anders",
+    "ohne": "Pfad /home/…: nicht gefunden, /home/…/x bleibt anders"
+   }
+  },
+  {
+   "text": "C:\\Users\\Nico, C:\\Users\\Nico\\ und C:\\Users\\Nico)",
+   "scrub": "C:\\Users\\Nico, C:\\Users\\Nico\\ und C:\\Users\\Nico)",
+   "anonym": {
+    "windows": "~, ~\\ und ~)",
+    "linux": "C:\\Users\\…, C:\\Users\\…\\ und C:\\Users\\…",
+    "ohne": "C:\\Users\\…, C:\\Users\\…\\ und C:\\Users\\…"
+   },
+   "protokoll": {
+    "windows": "~, ~\\ und ~)",
+    "linux": "C:\\Users\\…, C:\\Users\\…\\ und C:\\Users\\…",
+    "ohne": "C:\\Users\\…, C:\\Users\\…\\ und C:\\Users\\…"
+   }
+  },
+  {
+   "text": "Traceback (most recent call last):\n  File \"C:\\Users\\Nico\\app.py\", line 3\nValueError: token=abcdef123\n\n",
+   "scrub": "Traceback (most recent call last):\n  File \"C:\\Users\\Nico\\app.py\", line 3\nValueError: token=[entfernt]\n\n",
+   "anonym": {
+    "windows": "Traceback (most recent call last):\n  File \"~\\app.py\", line 3\nValueError: token=abcdef123\n\n",
+    "linux": "Traceback (most recent call last):\n  File \"C:\\Users\\…\\app.py\", line 3\nValueError: token=abcdef123\n\n",
+    "ohne": "Traceback (most recent call last):\n  File \"C:\\Users\\…\\app.py\", line 3\nValueError: token=abcdef123\n\n"
+   },
+   "protokoll": {
+    "windows": "Traceback (most recent call last):\n  File \"~\\app.py\", line 3\nValueError: token=[entfernt]",
+    "linux": "Traceback (most recent call last):\n  File \"C:\\Users\\…\\app.py\", line 3\nValueError: token=[entfernt]",
+    "ohne": "Traceback (most recent call last):\n  File \"C:\\Users\\…\\app.py\", line 3\nValueError: token=[entfernt]"
+   }
+  },
+  {
+   "text": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=Über123",
+   "scrub": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=[entfernt]",
+   "anonym": {
+    "windows": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=Über123",
+    "linux": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=Über123",
+    "ohne": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=Über123"
+   },
+   "protokoll": {
+    "windows": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=[entfernt]",
+    "linux": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=[entfernt]",
+    "ohne": "Umlaute äöü ß und Zeichen € bleiben; Größe=12 kennwort=[entfernt]"
+   }
+  },
+  {
+   "text": "/home/nico/x\n/home/nico",
+   "scrub": "/home/nico/x\n/home/nico",
+   "anonym": {
+    "windows": "/home/…/x\n/home/…",
+    "linux": "~/x\n~",
+    "ohne": "/home/…/x\n/home/…"
+   },
+   "protokoll": {
+    "windows": "/home/…/x\n/home/…",
+    "linux": "~/x\n~",
+    "ohne": "/home/…/x\n/home/…"
+   }
+  },
+  {
+   "text": "Schluessel ghp_ABCDEFGHIJKLMNOP und ghp_ABCDEFGHIJKLMNO bleibt",
+   "scrub": "Schluessel [entfernt] und ghp_ABCDEFGHIJKLMNO bleibt",
+   "anonym": {
+    "windows": "Schluessel ghp_ABCDEFGHIJKLMNOP und ghp_ABCDEFGHIJKLMNO bleibt",
+    "linux": "Schluessel ghp_ABCDEFGHIJKLMNOP und ghp_ABCDEFGHIJKLMNO bleibt",
+    "ohne": "Schluessel ghp_ABCDEFGHIJKLMNOP und ghp_ABCDEFGHIJKLMNO bleibt"
+   },
+   "protokoll": {
+    "windows": "Schluessel [entfernt] und ghp_ABCDEFGHIJKLMNO bleibt",
+    "linux": "Schluessel [entfernt] und ghp_ABCDEFGHIJKLMNO bleibt",
+    "ohne": "Schluessel [entfernt] und ghp_ABCDEFGHIJKLMNO bleibt"
+   }
+  },
+  {
+   "text": "github_pat_0123456789abcdef und github_pat_0123456789abcde bleibt",
+   "scrub": "[entfernt] und github_pat_0123456789abcde bleibt",
+   "anonym": {
+    "windows": "github_pat_0123456789abcdef und github_pat_0123456789abcde bleibt",
+    "linux": "github_pat_0123456789abcdef und github_pat_0123456789abcde bleibt",
+    "ohne": "github_pat_0123456789abcdef und github_pat_0123456789abcde bleibt"
+   },
+   "protokoll": {
+    "windows": "[entfernt] und github_pat_0123456789abcde bleibt",
+    "linux": "[entfernt] und github_pat_0123456789abcde bleibt",
+    "ohne": "[entfernt] und github_pat_0123456789abcde bleibt"
+   }
+  }
+ ],
+ "geheimnisse": [
+  {
+   "einstellungen": {
+    "sync_token": "ghp_meinGeheimerToken123",
+    "sync_repo": "nico/x",
+    "ziel_an": true
+   },
+   "geheimnisse": [
+    "ghp_meinGeheimerToken123"
+   ],
+   "scrub": [
+    "",
+    "Alles in Ordnung, kein Geheimnis hier.",
+    "Fehler beim Abgleich: token=[entfernt]",
+    "Zugang [entfernt] gesperrt",
+    "Authorization: [entfernt]",
+    "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "authorization=[entfernt]",
+    "Anfrage mit bearer [entfernt] gescheitert",
+    "sync_token = [entfernt] und api_key: [entfernt]",
+    "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]"
+   ]
+  },
+  {
+   "einstellungen": {
+    "passwort": "kurz",
+    "kennwort": "  langgenug  ",
+    "api-key": "abcdefgh",
+    "zahl": 12345678
+   },
+   "geheimnisse": [
+    "langgenug",
+    "abcdefgh"
+   ],
+   "scrub": [
+    "",
+    "Alles in Ordnung, kein Geheimnis hier.",
+    "Fehler beim Abgleich: token=[entfernt]",
+    "Zugang [entfernt][entfernt]ijklmnopqrstuvwxyz gesperrt",
+    "Authorization: [entfernt]",
+    "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "authorization=[entfernt]",
+    "Anfrage mit bearer [entfernt] gescheitert",
+    "sync_token = [entfernt] und api_key: [entfernt]",
+    "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]"
+   ]
+  },
+  {
+   "einstellungen": {
+    "geheim": "abcdef",
+    "secret": "abcdefghij",
+    "name": "abcdefghijk"
+   },
+   "geheimnisse": [
+    "abcdefghij",
+    "abcdef"
+   ],
+   "scrub": [
+    "",
+    "Alles in Ordnung, kein Geheimnis hier.",
+    "Fehler beim Abgleich: token=[entfernt]",
+    "Zugang [entfernt][entfernt]klmnopqrstuvwxyz gesperrt",
+    "Authorization: [entfernt]",
+    "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "authorization=[entfernt]",
+    "Anfrage mit bearer [entfernt] gescheitert",
+    "sync_token = [entfernt] und api_key: [entfernt]",
+    "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]"
+   ]
+  },
+  {
+   "einstellungen": {},
+   "geheimnisse": [],
+   "scrub": [
+    "",
+    "Alles in Ordnung, kein Geheimnis hier.",
+    "Fehler beim Abgleich: token=[entfernt]",
+    "Zugang [entfernt] gesperrt",
+    "Authorization: [entfernt]",
+    "headers={'Authorization': '[entfernt]', 'Accept': 'json'}",
+    "authorization=[entfernt]",
+    "Anfrage mit bearer [entfernt] gescheitert",
+    "sync_token = [entfernt] und api_key: [entfernt]",
+    "{\"sync_token\": [entfernt], \"sync_repo\": \"nico/fisi-lernstand\"}",
+    "passwort=[entfernt]; kennwort: [entfernt], secret=[entfernt]",
+    "Mein-Passwort: [entfernt] und passwd=[entfernt] und PASSWORD=[entfernt]"
+   ]
+  }
+ ]
+}

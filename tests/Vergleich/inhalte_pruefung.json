@@ -1,0 +1,1345 @@
+{
+ "quelle": "fisi_core.validate_content ohne validate_game_content, build_quiz_database, content_totals/topic_totals/theme_totals/ap1_theme_totals (Python v0.63.2)",
+ "echt": {
+  "mit_spiel": [],
+  "spiel": [],
+  "meldungen": [],
+  "zaehlwerte": {
+   "content_totals": {
+    "Netzwerk & Protokolle": 855,
+    "IT-Sicherheit & Datenschutz": 781,
+    "Systeme, RAID & Hardware": 980,
+    "Wirtschaft & Prozesse": 1015,
+    "Datenbanken & SQL": 108
+   },
+   "topic_totals": {
+    "grundlagen": 88,
+    "ipv4": 113,
+    "ipv6": 74,
+    "switching": 82,
+    "routing": 63,
+    "dienste": 181,
+    "wlan": 60,
+    "verkabelung": 78,
+    "wan_vpn": 50,
+    "fehlersuche": 66,
+    "isms": 112,
+    "datenschutz": 143,
+    "krypto": 123,
+    "zugriff": 90,
+    "angriffe": 92,
+    "netzsicherheit": 79,
+    "haertung": 93,
+    "notfall": 49,
+    "hardware": 115,
+    "zahlen": 81,
+    "storage": 148,
+    "windows": 182,
+    "linux": 153,
+    "virtualisierung": 106,
+    "programmierung": 90,
+    "it_betrieb": 105,
+    "kalkulation": 217,
+    "recht": 153,
+    "arbeitswelt": 246,
+    "projekt": 138,
+    "service": 123,
+    "beschaffung": 64,
+    "beratung": 74,
+    "modellierung": 28,
+    "sql": 41,
+    "db_betrieb": 39
+   },
+   "theme_totals": {
+    "Subnetting & Routing": 45,
+    "IT-Sicherheit": 46,
+    "Storage & RAID": 114,
+    "Netzwerkdesign": 44,
+    "Wirtschaft & Beratung": 81
+   },
+   "ap1_theme_totals": {
+    "Rechnertechnik & Zahlensysteme": 50,
+    "Rechnernetze Grundlagen": 50,
+    "Datenschutz & Sicherheit": 50,
+    "Projektplanung": 65,
+    "Wirtschafts- und Sozialkunde": 50
+   }
+  },
+  "listen": {
+   "KARTEIKARTEN": {
+    "anzahl": 1565,
+    "pruefsumme": "825399cd35063e6b32cb68e71166592169cacb2e2ce754b5e774e172275b5bda"
+   },
+   "QUIZ_QUESTIONS": {
+    "anzahl": 2174,
+    "pruefsumme": "9200fe98a639f48f4026d33220e25c507a37b8fe9ea543a54c3ef29b6c03d955"
+   },
+   "SZENARIEN": {
+    "anzahl": 330,
+    "pruefsumme": "693242f85f62366143e891bf088123e335b89893dc1c8e4709e3afc447f19634"
+   },
+   "AP1_SZENARIEN": {
+    "anzahl": 265,
+    "pruefsumme": "c82ab1b2cb6ccab0164db230af99a8003aeb786d2fcfd29ded42742376f126df"
+   },
+   "PROJEKTARBEITEN": {
+    "anzahl": 50,
+    "pruefsumme": "ea5ebd0bf163579c5d7f0ef6ada8675ca77a3008c7ec6c6a623b508e1fad2ddb"
+   }
+  },
+  "erzeugte_fragen": [
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /24?",
+    "options": [
+     "255.255.255.0",
+     "255.255.255.252",
+     "255.255.255.248",
+     "255.255.255.240"
+    ],
+    "a": "255.255.255.0",
+    "exp": "/24 entspricht der Maske 255.255.255.0."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /24?",
+    "options": [
+     "254",
+     "62",
+     "6",
+     "126"
+    ],
+    "a": "254",
+    "exp": "2^(32 - 24) minus 2 (Netzwerk-Adresse und Broadcast) = 254 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /25?",
+    "options": [
+     "255.255.255.128",
+     "255.255.255.224",
+     "255.255.255.252",
+     "255.255.255.240"
+    ],
+    "a": "255.255.255.128",
+    "exp": "/25 entspricht der Maske 255.255.255.128."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /25?",
+    "options": [
+     "126",
+     "14",
+     "30",
+     "6"
+    ],
+    "a": "126",
+    "exp": "2^(32 - 25) minus 2 (Netzwerk-Adresse und Broadcast) = 126 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /26?",
+    "options": [
+     "255.255.255.192",
+     "255.255.255.224",
+     "255.255.255.240",
+     "255.255.255.248"
+    ],
+    "a": "255.255.255.192",
+    "exp": "/26 entspricht der Maske 255.255.255.192."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /26?",
+    "options": [
+     "62",
+     "30",
+     "2",
+     "14"
+    ],
+    "a": "62",
+    "exp": "2^(32 - 26) minus 2 (Netzwerk-Adresse und Broadcast) = 62 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /27?",
+    "options": [
+     "255.255.255.224",
+     "255.255.255.128",
+     "255.255.255.0",
+     "255.255.255.248"
+    ],
+    "a": "255.255.255.224",
+    "exp": "/27 entspricht der Maske 255.255.255.224."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /27?",
+    "options": [
+     "30",
+     "126",
+     "6",
+     "2"
+    ],
+    "a": "30",
+    "exp": "2^(32 - 27) minus 2 (Netzwerk-Adresse und Broadcast) = 30 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /28?",
+    "options": [
+     "255.255.255.240",
+     "255.255.255.248",
+     "255.255.255.252",
+     "255.255.255.0"
+    ],
+    "a": "255.255.255.240",
+    "exp": "/28 entspricht der Maske 255.255.255.240."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /28?",
+    "options": [
+     "14",
+     "254",
+     "2",
+     "30"
+    ],
+    "a": "14",
+    "exp": "2^(32 - 28) minus 2 (Netzwerk-Adresse und Broadcast) = 14 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /29?",
+    "options": [
+     "255.255.255.248",
+     "255.255.255.0",
+     "255.255.255.128",
+     "255.255.255.192"
+    ],
+    "a": "255.255.255.248",
+    "exp": "/29 entspricht der Maske 255.255.255.248."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /29?",
+    "options": [
+     "6",
+     "62",
+     "2",
+     "30"
+    ],
+    "a": "6",
+    "exp": "2^(32 - 29) minus 2 (Netzwerk-Adresse und Broadcast) = 6 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie lautet die Subnetzmaske für die CIDR-Notation /30?",
+    "options": [
+     "255.255.255.252",
+     "255.255.255.240",
+     "255.255.255.192",
+     "255.255.255.224"
+    ],
+    "a": "255.255.255.252",
+    "exp": "/30 entspricht der Maske 255.255.255.252."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "ipv4",
+    "q": "Wie viele nutzbare Host-IP-Adressen bietet ein Subnetz mit /30?",
+    "options": [
+     "2",
+     "126",
+     "30",
+     "14"
+    ],
+    "a": "2",
+    "exp": "2^(32 - 30) minus 2 (Netzwerk-Adresse und Broadcast) = 2 Hosts."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 20/21?",
+    "options": [
+     "FTP",
+     "SSH / SFTP",
+     "HTTPS",
+     "POP3"
+    ],
+    "a": "FTP",
+    "exp": "Der TCP/UDP-Port 20/21 gehört standardmäßig zu FTP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 22?",
+    "options": [
+     "SSH / SFTP",
+     "SNMP",
+     "NTP",
+     "POP3"
+    ],
+    "a": "SSH / SFTP",
+    "exp": "Der TCP/UDP-Port 22 gehört standardmäßig zu SSH / SFTP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 23?",
+    "options": [
+     "Telnet",
+     "LDAPS",
+     "SMTP",
+     "IMAP"
+    ],
+    "a": "Telnet",
+    "exp": "Der TCP/UDP-Port 23 gehört standardmäßig zu Telnet."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 25?",
+    "options": [
+     "SMTP",
+     "FTP",
+     "DNS",
+     "DHCP"
+    ],
+    "a": "SMTP",
+    "exp": "Der TCP/UDP-Port 25 gehört standardmäßig zu SMTP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 53?",
+    "options": [
+     "DNS",
+     "SMB",
+     "SSH / SFTP",
+     "Telnet"
+    ],
+    "a": "DNS",
+    "exp": "Der TCP/UDP-Port 53 gehört standardmäßig zu DNS."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 67/68?",
+    "options": [
+     "DHCP",
+     "LDAP",
+     "HTTPS",
+     "SMB"
+    ],
+    "a": "DHCP",
+    "exp": "Der TCP/UDP-Port 67/68 gehört standardmäßig zu DHCP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 80?",
+    "options": [
+     "HTTP",
+     "SSH / SFTP",
+     "LDAPS",
+     "SNMP"
+    ],
+    "a": "HTTP",
+    "exp": "Der TCP/UDP-Port 80 gehört standardmäßig zu HTTP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 110?",
+    "options": [
+     "POP3",
+     "NTP",
+     "IMAP",
+     "SSH / SFTP"
+    ],
+    "a": "POP3",
+    "exp": "Der TCP/UDP-Port 110 gehört standardmäßig zu POP3."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 123?",
+    "options": [
+     "NTP",
+     "HTTPS",
+     "SSH / SFTP",
+     "DHCP"
+    ],
+    "a": "NTP",
+    "exp": "Der TCP/UDP-Port 123 gehört standardmäßig zu NTP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 143?",
+    "options": [
+     "IMAP",
+     "Telnet",
+     "LDAPS",
+     "HTTP"
+    ],
+    "a": "IMAP",
+    "exp": "Der TCP/UDP-Port 143 gehört standardmäßig zu IMAP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 161/162?",
+    "options": [
+     "SNMP",
+     "NTP",
+     "RDP",
+     "IMAP"
+    ],
+    "a": "SNMP",
+    "exp": "Der TCP/UDP-Port 161/162 gehört standardmäßig zu SNMP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 389?",
+    "options": [
+     "LDAP",
+     "NTP",
+     "DNS",
+     "LDAPS"
+    ],
+    "a": "LDAP",
+    "exp": "Der TCP/UDP-Port 389 gehört standardmäßig zu LDAP."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 443?",
+    "options": [
+     "HTTPS",
+     "SMTP",
+     "LDAP",
+     "SMB"
+    ],
+    "a": "HTTPS",
+    "exp": "Der TCP/UDP-Port 443 gehört standardmäßig zu HTTPS."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 445?",
+    "options": [
+     "SMB",
+     "DNS",
+     "LDAPS",
+     "SMTP"
+    ],
+    "a": "SMB",
+    "exp": "Der TCP/UDP-Port 445 gehört standardmäßig zu SMB."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 636?",
+    "options": [
+     "LDAPS",
+     "DHCP",
+     "SNMP",
+     "IMAP"
+    ],
+    "a": "LDAPS",
+    "exp": "Der TCP/UDP-Port 636 gehört standardmäßig zu LDAPS."
+   },
+   {
+    "cat": "Netzwerk & Protokolle",
+    "thema": "dienste",
+    "q": "Welcher Standard-Dienst verwendet primär den Port 3389?",
+    "options": [
+     "RDP",
+     "HTTPS",
+     "NTP",
+     "SMTP"
+    ],
+    "a": "RDP",
+    "exp": "Der TCP/UDP-Port 3389 gehört standardmäßig zu RDP."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "netzsicherheit",
+    "q": "Wofür steht die Abkürzung VPN im Sicherheitskontext?",
+    "options": [
+     "Virtual Private Network",
+     "Data Loss Prevention",
+     "Multi-Factor Authentication",
+     "Computer Emergency Response Team"
+    ],
+    "a": "Virtual Private Network",
+    "exp": "VPN steht für Virtual Private Network."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "netzsicherheit",
+    "q": "Wofür steht die Abkürzung IDS im Sicherheitskontext?",
+    "options": [
+     "Intrusion Detection System",
+     "Multi-Factor Authentication",
+     "Security Operations Center",
+     "Computer Emergency Response Team"
+    ],
+    "a": "Intrusion Detection System",
+    "exp": "IDS steht für Intrusion Detection System."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "netzsicherheit",
+    "q": "Wofür steht die Abkürzung IPS im Sicherheitskontext?",
+    "options": [
+     "Intrusion Prevention System",
+     "Multi-Factor Authentication",
+     "Security Operations Center",
+     "Virtual Private Network"
+    ],
+    "a": "Intrusion Prevention System",
+    "exp": "IPS steht für Intrusion Prevention System."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "zugriff",
+    "q": "Wofür steht die Abkürzung MFA im Sicherheitskontext?",
+    "options": [
+     "Multi-Factor Authentication",
+     "Intrusion Detection System",
+     "Security Operations Center",
+     "Intrusion Prevention System"
+    ],
+    "a": "Multi-Factor Authentication",
+    "exp": "MFA steht für Multi-Factor Authentication."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "netzsicherheit",
+    "q": "Wofür steht die Abkürzung WAF im Sicherheitskontext?",
+    "options": [
+     "Web Application Firewall",
+     "Security Operations Center",
+     "Multi-Factor Authentication",
+     "Data Loss Prevention"
+    ],
+    "a": "Web Application Firewall",
+    "exp": "WAF steht für Web Application Firewall."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "datenschutz",
+    "q": "Wofür steht die Abkürzung DLP im Sicherheitskontext?",
+    "options": [
+     "Data Loss Prevention",
+     "Intrusion Prevention System",
+     "Intrusion Detection System",
+     "Web Application Firewall"
+    ],
+    "a": "Data Loss Prevention",
+    "exp": "DLP steht für Data Loss Prevention."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "notfall",
+    "q": "Wofür steht die Abkürzung CERT im Sicherheitskontext?",
+    "options": [
+     "Computer Emergency Response Team",
+     "Intrusion Detection System",
+     "Web Application Firewall",
+     "Security Operations Center"
+    ],
+    "a": "Computer Emergency Response Team",
+    "exp": "CERT steht für Computer Emergency Response Team."
+   },
+   {
+    "cat": "IT-Sicherheit & Datenschutz",
+    "thema": "haertung",
+    "q": "Wofür steht die Abkürzung SOC im Sicherheitskontext?",
+    "options": [
+     "Security Operations Center",
+     "Computer Emergency Response Team",
+     "Multi-Factor Authentication",
+     "Data Loss Prevention"
+    ],
+    "a": "Security Operations Center",
+    "exp": "SOC steht für Security Operations Center."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Welche Eigenschaft beschreibt RAID 0 am besten?",
+    "options": [
+     "Striping ohne Redundanz - maximale Performance, kein Ausfallschutz",
+     "Kombination aus Spiegelung und Striping - hohe Performance und Redundanz",
+     "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+     "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität"
+    ],
+    "a": "Striping ohne Redundanz - maximale Performance, kein Ausfallschutz",
+    "exp": "RAID 0: Striping ohne Redundanz - maximale Performance, kein Ausfallschutz."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Wie viele Festplatten werden für RAID 0 mindestens benötigt?",
+    "options": [
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "a": "2",
+    "exp": "RAID 0 benötigt mindestens 2 Festplatten."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Welche Eigenschaft beschreibt RAID 1 am besten?",
+    "options": [
+     "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität",
+     "Striping mit verteilter einfacher Parität - 1 Plattenausfall verkraftbar",
+     "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+     "Kombination aus Spiegelung und Striping - hohe Performance und Redundanz"
+    ],
+    "a": "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität",
+    "exp": "RAID 1: Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Wie viele Festplatten werden für RAID 1 mindestens benötigt?",
+    "options": [
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "a": "2",
+    "exp": "RAID 1 benötigt mindestens 2 Festplatten."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Welche Eigenschaft beschreibt RAID 5 am besten?",
+    "options": [
+     "Striping mit verteilter einfacher Parität - 1 Plattenausfall verkraftbar",
+     "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+     "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität",
+     "Striping ohne Redundanz - maximale Performance, kein Ausfallschutz"
+    ],
+    "a": "Striping mit verteilter einfacher Parität - 1 Plattenausfall verkraftbar",
+    "exp": "RAID 5: Striping mit verteilter einfacher Parität - 1 Plattenausfall verkraftbar."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Welche Eigenschaft beschreibt RAID 6 am besten?",
+    "options": [
+     "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+     "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität",
+     "Striping ohne Redundanz - maximale Performance, kein Ausfallschutz",
+     "Striping mit verteilter einfacher Parität - 1 Plattenausfall verkraftbar"
+    ],
+    "a": "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+    "exp": "RAID 6: Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Welche Eigenschaft beschreibt RAID 10 am besten?",
+    "options": [
+     "Kombination aus Spiegelung und Striping - hohe Performance und Redundanz",
+     "Striping mit verteilter doppelter Parität - 2 Plattenausfälle verkraftbar",
+     "Spiegelung (Mirroring) - volle Redundanz, halbierte Nutzkapazität",
+     "Striping ohne Redundanz - maximale Performance, kein Ausfallschutz"
+    ],
+    "a": "Kombination aus Spiegelung und Striping - hohe Performance und Redundanz",
+    "exp": "RAID 10: Kombination aus Spiegelung und Striping - hohe Performance und Redundanz."
+   },
+   {
+    "cat": "Systeme, RAID & Hardware",
+    "thema": "storage",
+    "q": "Wie viele Festplatten werden für RAID 10 mindestens benötigt?",
+    "options": [
+     "4",
+     "2",
+     "3",
+     "7"
+    ],
+    "a": "4",
+    "exp": "RAID 10 benötigt mindestens 4 Festplatten."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "kalkulation",
+    "q": "Wofür steht die Abkürzung EBIT im wirtschaftlichen Kontext?",
+    "options": [
+     "Earnings Before Interest and Taxes",
+     "Just in Time",
+     "Minimum Viable Product",
+     "Allgemeine Geschäftsbedingungen"
+    ],
+    "a": "Earnings Before Interest and Taxes",
+    "exp": "EBIT steht für Earnings Before Interest and Taxes."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "kalkulation",
+    "q": "Wofür steht die Abkürzung USt. im wirtschaftlichen Kontext?",
+    "options": [
+     "Umsatzsteuer",
+     "Handelsgesetzbuch",
+     "Work Breakdown Structure",
+     "Allgemeine Geschäftsbedingungen"
+    ],
+    "a": "Umsatzsteuer",
+    "exp": "USt. steht für Umsatzsteuer."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "recht",
+    "q": "Wofür steht die Abkürzung BGB im wirtschaftlichen Kontext?",
+    "options": [
+     "Bürgerliches Gesetzbuch",
+     "Just in Time",
+     "Allgemeine Geschäftsbedingungen",
+     "Minimum Viable Product"
+    ],
+    "a": "Bürgerliches Gesetzbuch",
+    "exp": "BGB steht für Bürgerliches Gesetzbuch."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "recht",
+    "q": "Wofür steht die Abkürzung HGB im wirtschaftlichen Kontext?",
+    "options": [
+     "Handelsgesetzbuch",
+     "Bürgerliches Gesetzbuch",
+     "Just in Time",
+     "Umsatzsteuer"
+    ],
+    "a": "Handelsgesetzbuch",
+    "exp": "HGB steht für Handelsgesetzbuch."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "recht",
+    "q": "Wofür steht die Abkürzung AGB im wirtschaftlichen Kontext?",
+    "options": [
+     "Allgemeine Geschäftsbedingungen",
+     "Just in Time",
+     "Umsatzsteuer",
+     "Minimum Viable Product"
+    ],
+    "a": "Allgemeine Geschäftsbedingungen",
+    "exp": "AGB steht für Allgemeine Geschäftsbedingungen."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "projekt",
+    "q": "Wofür steht die Abkürzung WBS im wirtschaftlichen Kontext?",
+    "options": [
+     "Work Breakdown Structure",
+     "Handelsgesetzbuch",
+     "Minimum Viable Product",
+     "Umsatzsteuer"
+    ],
+    "a": "Work Breakdown Structure",
+    "exp": "WBS steht für Work Breakdown Structure."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "projekt",
+    "q": "Wofür steht die Abkürzung MVP im wirtschaftlichen Kontext?",
+    "options": [
+     "Minimum Viable Product",
+     "Bürgerliches Gesetzbuch",
+     "Earnings Before Interest and Taxes",
+     "Allgemeine Geschäftsbedingungen"
+    ],
+    "a": "Minimum Viable Product",
+    "exp": "MVP steht für Minimum Viable Product."
+   },
+   {
+    "cat": "Wirtschaft & Prozesse",
+    "thema": "beschaffung",
+    "q": "Wofür steht die Abkürzung JIT im wirtschaftlichen Kontext?",
+    "options": [
+     "Just in Time",
+     "Allgemeine Geschäftsbedingungen",
+     "Earnings Before Interest and Taxes",
+     "Bürgerliches Gesetzbuch"
+    ],
+    "a": "Just in Time",
+    "exp": "JIT steht für Just in Time."
+   }
+  ],
+  "anzahl_quizfragen_datei": 2120
+ },
+ "faelle": [
+  {
+   "name": "karte_feld_leer",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      0,
+      "a_full"
+     ],
+     "setze",
+     ""
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 1: Feld 'a_full' fehlt oder ist leer"
+   ]
+  },
+  {
+   "name": "karte_feld_fehlt",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      1,
+      "a_full"
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 2: Feld 'a_full' fehlt oder ist leer"
+   ]
+  },
+  {
+   "name": "karte_drei_antworten",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      2,
+      "options",
+      3
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 3: braucht genau 4 verschiedene Antworten"
+   ]
+  },
+  {
+   "name": "karte_antwort_fehlt",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      3,
+      "a"
+     ],
+     "setze",
+     "gibt es nicht"
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 4: richtige Antwort steht nicht in den Optionen"
+   ]
+  },
+  {
+   "name": "karte_doppelt",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      5,
+      "q"
+     ],
+     "kopiere",
+     [
+      4,
+      "q"
+     ]
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 6: doppelt vorhanden (welches protokoll weist netzwerkgeräten automatisch ip-adres)"
+   ]
+  },
+  {
+   "name": "karte_doppelt_gross",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      7,
+      "q"
+     ],
+     "setze",
+     "  ABC doppelt  "
+    ],
+    [
+     "karteikarten",
+     [
+      8,
+      "q"
+     ],
+     "setze",
+     "abc DOPPELT"
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 9: doppelt vorhanden (abc doppelt)"
+   ]
+  },
+  {
+   "name": "quiz_gleiche_antworten",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      3,
+      "options",
+      1
+     ],
+     "kopiere",
+     [
+      3,
+      "options",
+      0
+     ]
+    ]
+   ],
+   "meldungen": [
+    "Quizfrage Nr. 4: braucht genau 4 verschiedene Antworten"
+   ]
+  },
+  {
+   "name": "quiz_thema_falsch",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      0,
+      "thema"
+     ],
+     "setze",
+     "gibtsnicht"
+    ]
+   ],
+   "meldungen": [
+    "Quizfrage Nr. 1: Thema 'gibtsnicht' fehlt oder gehoert nicht zum Fachbereich (inhalte/themen.json)"
+   ]
+  },
+  {
+   "name": "quiz_thema_fehlt",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      1,
+      "thema"
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "Quizfrage Nr. 2: Thema 'None' fehlt oder gehoert nicht zum Fachbereich (inhalte/themen.json)"
+   ]
+  },
+  {
+   "name": "quiz_erklaerung_liste_leer",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      2,
+      "exp"
+     ],
+     "setze",
+     []
+    ]
+   ],
+   "meldungen": [
+    "Quizfrage Nr. 3: Feld 'exp' fehlt oder ist leer"
+   ]
+  },
+  {
+   "name": "ap2_thema_unbekannt",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      0,
+      "theme"
+     ],
+     "setze",
+     "Unbekannt"
+    ]
+   ],
+   "meldungen": [
+    "AP2-Szenario Nr. 1: unbekanntes Thema 'Unbekannt' (AP2_THEMES oder THEME_BLOCK ergaenzen)"
+   ]
+  },
+  {
+   "name": "ap2_thema_block",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      1,
+      "theme"
+     ],
+     "setze",
+     "Virtualisierung"
+    ]
+   ],
+   "meldungen": []
+  },
+  {
+   "name": "ap1_loesung_leer",
+   "aenderungen": [
+    [
+     "szenarien_ap1",
+     [
+      0,
+      "solution"
+     ],
+     "setze",
+     []
+    ]
+   ],
+   "meldungen": [
+    "AP1-Szenario Nr. 1: Feld 'solution' fehlt oder ist leer"
+   ]
+  },
+  {
+   "name": "ap1_thema_fehlt",
+   "aenderungen": [
+    [
+     "szenarien_ap1",
+     [
+      1,
+      "theme"
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "AP1-Szenario Nr. 2: Feld 'theme' fehlt oder ist leer",
+    "AP1-Szenario Nr. 2: unbekanntes Thema 'None'"
+   ]
+  },
+  {
+   "name": "projekt_hinweis_fehlt",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      0,
+      "hinweise",
+      -1
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "Testprojekt Nr. 1: je Aufgabe wird genau ein Hinweis gebraucht"
+   ]
+  },
+  {
+   "name": "projekt_branche_leer",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      1,
+      "branche"
+     ],
+     "setze",
+     ""
+    ]
+   ],
+   "meldungen": [
+    "Testprojekt Nr. 2: Feld 'branche' fehlt oder ist leer"
+   ]
+  },
+  {
+   "name": "projekt_doppelt",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      2,
+      "title"
+     ],
+     "kopiere",
+     [
+      3,
+      "title"
+     ]
+    ]
+   ],
+   "meldungen": [
+    "Testprojekt Nr. 4: doppelt vorhanden (wirtschaftlichkeitsvergleich: kauf vs. leasing von arbeitspl)"
+   ]
+  },
+  {
+   "name": "rahmenplan_doppelt",
+   "aenderungen": [
+    [
+     "rahmenplan",
+     [
+      "punkte",
+      1,
+      "id"
+     ],
+     "kopiere",
+     [
+      "punkte",
+      0,
+      "id"
+     ]
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan: Punkt A1a doppelt",
+    "Rahmenplan-Zuordnung: unbekannter Punkt A1b",
+    "Rahmenplan-Zuordnung: Standard-Punkt fuer Thema recht fehlt"
+   ]
+  },
+  {
+   "name": "rahmenplan_abschnitt",
+   "aenderungen": [
+    [
+     "rahmenplan",
+     [
+      "punkte",
+      4,
+      "abschnitt"
+     ],
+     "setze",
+     "Z"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan A1e: unbekannter Abschnitt"
+   ]
+  },
+  {
+   "name": "rahmenplan_lernfeld",
+   "aenderungen": [
+    [
+     "rahmenplan",
+     [
+      "punkte",
+      2,
+      "lernfelder"
+     ],
+     "anhaengen",
+     "LF 99"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan A1c: unbekanntes Lernfeld LF 99"
+   ]
+  },
+  {
+   "name": "rahmenplan_pruefungsbereich",
+   "aenderungen": [
+    [
+     "rahmenplan",
+     [
+      "punkte",
+      3,
+      "ap2"
+     ],
+     "anhaengen",
+     "Sport"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan A1d: unbekannter Prüfungsbereich Sport"
+   ]
+  },
+  {
+   "name": "zuordnung_punkt",
+   "aenderungen": [
+    [
+     "rahmenplan_zuordnung",
+     [
+      "punkte",
+      0,
+      "id"
+     ],
+     "setze",
+     "Q9z"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan-Zuordnung: unbekannter Punkt Q9z"
+   ]
+  },
+  {
+   "name": "zuordnung_thema",
+   "aenderungen": [
+    [
+     "rahmenplan_zuordnung",
+     [
+      "punkte",
+      1,
+      "themen"
+     ],
+     "anhaengen",
+     "nix"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan-Zuordnung A1b: unbekanntes Thema nix"
+   ]
+  },
+  {
+   "name": "zuordnung_standard",
+   "aenderungen": [
+    [
+     "rahmenplan_zuordnung",
+     [
+      "standard_punkt",
+      "ipv4"
+     ],
+     "setze",
+     "XX"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan-Zuordnung: Standard-Punkt fuer Thema ipv4 fehlt"
+   ]
+  },
+  {
+   "name": "zuordnung_standard_fehlt",
+   "aenderungen": [
+    [
+     "rahmenplan_zuordnung",
+     [
+      "standard_punkt",
+      "grundlagen"
+     ],
+     "entferne",
+     null
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan-Zuordnung: Standard-Punkt fuer Thema grundlagen fehlt"
+   ]
+  },
+  {
+   "name": "zuordnung_lernfeld",
+   "aenderungen": [
+    [
+     "rahmenplan_zuordnung",
+     [
+      "themen_lernfelder",
+      "ipv4"
+     ],
+     "anhaengen",
+     "LF 0"
+    ]
+   ],
+   "meldungen": [
+    "Rahmenplan-Zuordnung: Thema ipv4 mit unbekanntem Lernfeld LF 0"
+   ]
+  },
+  {
+   "name": "karte_rahmenplan",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      10,
+      "rahmenplan"
+     ],
+     "setze",
+     [
+      "Q9z",
+      "A1a"
+     ]
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 11: unbekannter Rahmenplan-Punkt Q9z"
+   ]
+  },
+  {
+   "name": "mehrere_fehler",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      11,
+      "options"
+     ],
+     "setze",
+     [
+      "a",
+      "b",
+      "c",
+      "d"
+     ]
+    ],
+    [
+     "quizfragen",
+     [
+      12,
+      "q"
+     ],
+     "setze",
+     ""
+    ],
+    [
+     "szenarien_ap2",
+     [
+      2,
+      "text"
+     ],
+     "setze",
+     []
+    ],
+    [
+     "projektarbeiten",
+     [
+      4,
+      "aufgaben"
+     ],
+     "anhaengen",
+     "Zusatz"
+    ]
+   ],
+   "meldungen": [
+    "Karteikarte Nr. 12: richtige Antwort steht nicht in den Optionen",
+    "Quizfrage Nr. 13: Feld 'q' fehlt oder ist leer",
+    "AP2-Szenario Nr. 3: Feld 'text' fehlt oder ist leer",
+    "Testprojekt Nr. 5: je Aufgabe wird genau ein Hinweis gebraucht"
+   ]
+  }
+ ]
+}

@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using Lernplattform.Core.Diagnose;
 using Lernplattform.Design;
 using Lernplattform.Messung;
 using Lernplattform.ViewModels;
@@ -13,6 +15,9 @@ public partial class App : Application
     public override void Initialize()
     {
         _ = Messwerte.SeitStart;
+        // Phase 1, K4: unbehandelte Fehler nach fehler.log im Datenordner (PC und Handy)
+        Fehlerprotokoll.Einrichten(Aktualisierung.Aktualisierung.Anzeige);
+        Dispatcher.UIThread.UnhandledException += (_, e) => Fehlerprotokoll.Schreiben(e.Exception);
         AvaloniaXamlLoader.Load(this);
         FarbenAnwenden.Anwenden(FarbenAnwenden.Aktuell);
     }
