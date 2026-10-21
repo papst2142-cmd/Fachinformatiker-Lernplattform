@@ -94,6 +94,7 @@ internal sealed class VideoKarte
     /// <summary>Uebernahme-Knopf druecken (fuer den Start ohne Bedienung).</summary>
     internal void Uebernehmen()
     {
+        Geaendert();                     // falls ein TextChanged noch aussteht: Felder jetzt vergleichen
         if (_uebernehmen.IsEnabled && _zustand.Video is { } v)
         {
             var (text, einheit, hinweis) = VideoBerichte.Uebernahme(v);
@@ -112,6 +113,9 @@ internal sealed class VideoKarte
         _kompression.Text = kompression;
         Geaendert();
     }
+
+    /// <summary>Nur das Feld Dauer setzen, ohne selbst zu vergleichen (Start ohne Bedienung: TextChanged-Weg).</summary>
+    internal void NurDauerSetzen(string minuten) => _minuten.Text = minuten;
 
     private void Geaendert()
     {

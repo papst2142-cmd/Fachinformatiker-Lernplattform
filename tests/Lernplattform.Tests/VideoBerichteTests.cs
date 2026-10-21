@@ -61,6 +61,11 @@ public partial class VideoBerichteTests
         Assert.Contains("Dauer                 : 1 Minute = 60 Sekunden", VideoBerichte.Bericht("1920", "1080", "24", "25", "1", "1").Text.Split('\n'));
         Assert.Contains("Dauer                 : 0,5 Minuten = 30 Sekunden", VideoBerichte.Bericht("1920", "1080", "24", "25", "0,5", "1").Text.Split('\n'));
         Assert.Contains("Dauer                 : 0,001 Minuten = 0,06 Sekunden", VideoBerichte.Bericht("1920", "1080", "24", "25", "0,001", "1").Text.Split('\n'));
+        // Mehr als 3 Nachkommastellen liest die Leseregel nicht (Gegenpruefung): keine "0 Minuten", keine "1 Minuten"
+        foreach (var m in new[] { "0,0001", "1,0004" })
+        {
+            Assert.StartsWith("Bitte eine Zahl eingeben: Dauer (Minuten).", Assert.Throws<RechnerFehler>(() => VideoBerichte.Bericht("1920", "1080", "24", "25", m, "1")).Message, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

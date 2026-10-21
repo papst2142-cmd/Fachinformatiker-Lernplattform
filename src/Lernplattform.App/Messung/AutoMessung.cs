@@ -453,6 +453,12 @@ public static class AutoMessung
         v.Weg.Zeigen(false);
         v.Eingabe("1920", "1080", "25", "24", "3", "50");
         Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf nach Feldaenderung aktiv");
+        // Weg ueber TextChanged der Oberflaeche (ohne eigenen Vergleich): nur die Dauer aendern
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        v.Rechnen();
+        v.NurDauerSetzen("4");
+        await ansicht.BildFertigAsync();
+        Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf nach Aenderung der Dauer (TextChanged) aktiv");
         v.Eingabe("1920", "1080", "", "24", "2", "50");
         v.Rechnen();
         Pruefe(!v.KnopfAktiv && v.Fehler == RechnerTexte.VideoNeedsFps, "Fehler Dauer ohne Bildrate: Knopf aktiv oder falscher Hinweis");

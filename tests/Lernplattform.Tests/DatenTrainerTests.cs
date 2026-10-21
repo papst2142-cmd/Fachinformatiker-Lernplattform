@@ -210,7 +210,8 @@ public class DatenTrainerTests
     [Fact]
     public void VideoPruefaufgabe7()
     {
-        // Chat, eigene Aufgabe 21.10.2026 (W4_Pruefaufgaben.md Nr. 7) auf dem Weg der Trainer-Schritte
+        // Chat, eigene Aufgabe 21.10.2026 (W4_Pruefaufgaben.md Nr. 7): Rechenweg-Arithmetik der Trainer-Schritte
+        // (Ganzzahl-Reihenfolge wie DatenTrainer.Video); mit Video.Rechnen gerechnet in VideoTests.Pruefaufgabe7
         Assert.Equal("2.764.800", Zahlen.DeZahl(1280 * 720 * 24 / 8, 0));
         Assert.Equal("663,55", Zahlen.DeZahl((double)(1280L * 720 * 24 / 8 * 30 * 8) / 1_000_000));
         Assert.Equal("118,65", Zahlen.DeZahl((double)(1280L * 720 * 24 / 8 * 30 * 1 * 60) / 40 / (1024 * 1024)));
