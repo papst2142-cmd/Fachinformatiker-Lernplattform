@@ -128,6 +128,9 @@ public sealed class Notizblock(Lerninhalte inhalte)
         return text;
     }
 
+    /// <summary>_apply_search: gleiche Anfrage, wenn sie ohne Leerraum an den Raendern gleich ist (query.strip()).</summary>
+    public static bool GleicheAnfrage(string? a, string? b) => PythonZeichen.Strip(a ?? "") == PythonZeichen.Strip(b ?? "");
+
     /// <summary>notebook_search: Eintraege, deren Suchtext das Stichwort enthaelt; leeres Stichwort = alle. Reihenfolge bleibt.</summary>
     public List<NotizEintrag> Suchen(IEnumerable<NotizEintrag> eintraege, string? anfrage)
     {

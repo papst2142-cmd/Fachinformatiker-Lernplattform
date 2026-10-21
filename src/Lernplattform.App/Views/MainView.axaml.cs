@@ -195,6 +195,11 @@ public partial class MainView : UserControl
                 Seiten.Suche => new SucheSeite((treffer, anfrage) => _ = TrefferOeffnenAsync(treffer, anfrage)),
                 // Phase 3, W2: Rechner (der Trainer im Umschalter kommt mit Welle 3)
                 Seiten.Rechner => new RechnerSeite(),
+                // Phase 4, W1: Lernseiten
+                Seiten.Ap1Szenarien => new SzenarioSeite(Core.Lernen.Quellen.Ap1),
+                Seiten.Ap2Szenarien => new SzenarioSeite(Core.Lernen.Quellen.Ap2),
+                Seiten.Testprojekt => new SzenarioSeite(Core.Lernen.Quellen.Projekt),
+                Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
@@ -232,6 +237,14 @@ public partial class MainView : UserControl
         {
             fortschritt.Neu();
         }
+        if (gebaut && _seiten[id] is SzenarioSeite szenarien)
+        {
+            szenarien.Gezeigt();
+        }
+        if (gebaut && _seiten[id] is NotizblockSeite notizblock)
+        {
+            notizblock.Gezeigt();
+        }
         if (_seiten[id] is SucheSeite suche)
         {
             suche.Fokus();
@@ -259,6 +272,12 @@ public partial class MainView : UserControl
                 break;
             case TrainerSeite trainer:
                 trainer.Gezeigt();
+                break;
+            case SzenarioSeite szenarien:
+                szenarien.Gezeigt();
+                break;
+            case NotizblockSeite notizblock:
+                notizblock.Gezeigt();
                 break;
         }
     }
@@ -369,11 +388,43 @@ public partial class MainView : UserControl
                 ((TrainerSeite)_seiten[Seiten.Trainer]).Springen(treffer.Titel);
                 break;
             case Core.Texte.SucheTexte.ArtAp1:
-                // AP1-Szenarien kommen in einer spaeteren Ausbaustufe (Platzhalter)
+                // das erste Szenario mit gleichem Titel (Phase 4, W1)
                 await ZeigeAsync(Seiten.Ap1Szenarien);
+                ((SzenarioSeite)_seiten[Seiten.Ap1Szenarien]).Springen(treffer.Titel);
                 break;
             default:
                 await ZeigeAsync(Seiten.Ap2Szenarien);
+                ((SzenarioSeite)_seiten[Seiten.Ap2Szenarien]).Springen(treffer.Titel);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Notizblock "Üben"/"Jetzt üben" (NotebookView.practice): Karteikarten bzw. Pruefungstrainer
+    /// mit den Fragen der Liste ("Jetzt üben": diese Frage zuerst, Reihenfolge bleibt), Szenarien
+    /// und Testprojekte oeffnen den ersten Eintrag.
+    /// </summary>
+    private async Task NotizblockUebenAsync(string quelle, List<object> schluessel, object? erste)
+    {
+        switch (quelle)
+        {
+            case Core.Lernen.Quellen.Karte:
+                await ZeigeAsync(Seiten.Karteikarten);
+                ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Ueben(schluessel.Cast<string>());
+                break;
+            case Core.Lernen.Quellen.Quiz:
+                await ZeigeAsync(Seiten.Trainer);
+                ((TrainerSeite)_seiten[Seiten.Trainer]).Ueben(schluessel.Cast<string>(), reihenfolgeBehalten: erste is not null);
+                break;
+            default:
+                var ziel = quelle switch
+                {
+                    Core.Lernen.Quellen.Ap1 => Seiten.Ap1Szenarien,
+                    Core.Lernen.Quellen.Ap2 => Seiten.Ap2Szenarien,
+                    _ => Seiten.Testprojekt,
+                };
+                await ZeigeAsync(ziel);
+                ((SzenarioSeite)_seiten[ziel]).Oeffnen((int)Convert.ToInt64(schluessel[0], CultureInfo.InvariantCulture));
                 break;
         }
     }
