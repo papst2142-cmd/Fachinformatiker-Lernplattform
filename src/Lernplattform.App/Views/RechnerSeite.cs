@@ -148,7 +148,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
             },
         };
         Rechenweg(usv, CALC_EXPLAIN_UPS, CALC_EXPLAIN_UPS_HANDY);
-        usv.Children.Add(Abstand(LernTeile.Label(UPS_TASKS_TITLE.ToUpperInvariant()), 8));
+        usv.Children.Add(Abstand(LernTeile.Label(Beschriftungen.Gross(UPS_TASKS_TITLE)), 8));
         usv.Children.Add(new WrapPanel { Children = { naechste, _loesungKnopf } });
         usv.Children.Add(_aufgabeKasten);
 
@@ -165,9 +165,14 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         AufgabeZeigen();
         UsvRechnen("empfehlung", leise: true);
         SizeChanged += (_, _) => AufbauPruefen();
-        AttachedToVisualTree += (_, _) => AufbauPruefen();
         Schrift.Geaendert += AufbauPruefen;
         DetachedFromVisualTree += (_, _) => Schrift.Geaendert -= AufbauPruefen;
+        AttachedToVisualTree += (_, _) =>
+        {
+            Schrift.Geaendert -= AufbauPruefen;
+            Schrift.Geaendert += AufbauPruefen;
+            AufbauPruefen();
+        };
     }
 
     /// <summary>Schmaler Aufbau (unter MainView.BreitGrenze): Handy-Fassung der Rechenwege und Tabellen.</summary>

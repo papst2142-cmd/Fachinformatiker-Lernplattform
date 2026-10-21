@@ -231,7 +231,7 @@ public static class RechnerTeile
     {
         var strich = new Border { Width = 4, Height = 14, CornerRadius = new CornerRadius(2), Margin = new Thickness(0, 0, 9, 0), VerticalAlignment = VerticalAlignment.Center }
             .Farbe(Border.BackgroundProperty, farbe);
-        var titelText = new WortText(titel.ToUpperInvariant(), "Klein", FontWeight.Bold, farbe) { VerticalAlignment = VerticalAlignment.Center };
+        var titelText = new WortText(Lernplattform.Core.Texte.Beschriftungen.Gross(titel), "Klein", FontWeight.Bold, farbe) { VerticalAlignment = VerticalAlignment.Center };
         var kopf = new DockPanel { Children = { strich, titelText } };
         DockPanel.SetDock(strich, Dock.Left);
         unter.Margin = new Thickness(13, 2, 0, 0);

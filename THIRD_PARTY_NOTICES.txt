@@ -1,7 +1,7 @@
 Fachinformatiker Lernplattform - Hinweise zu Fremdbestandteilen
 ================================================================
 
-Stand: A 0.1.0, Phase 0 (19./20.10.2026). Diese Liste nennt jeden
+Stand: A 0.7.0, Phase 3 (21.10.2026; angelegt mit A 0.1.0, Phase 0). Diese Liste nennt jeden
 Fremdbestandteil, der mit dem Programm ausgeliefert wird, mit Lizenz und
 Quelle der Lizenzangabe. Vor der ersten Veroeffentlichung entsteht diese
 Datei automatisch beim Bau und enthaelt dann die vollstaendigen

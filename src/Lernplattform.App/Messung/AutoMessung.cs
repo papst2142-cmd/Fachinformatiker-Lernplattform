@@ -376,7 +376,8 @@ public static class AutoMessung
 
     /// <summary>
     /// Ansichten der Rechner-Seite nacheinander zeigen (je nach dem Zeigen pruefen), alle
-    /// Rechenwege offen. Danach steht die Seite wieder wie nach dem Start (Vorgaben).
+    /// Rechenwege offen. Danach sind die Rechenwege zu und Subnetting zeigt IPv4 Netzdaten;
+    /// die Ergebnisse der letzten Rechnungen bleiben stehen (gespeichert wird nichts).
     /// </summary>
     private static async IAsyncEnumerable<string> RechnerAnsichten(MainView ansicht)
     {

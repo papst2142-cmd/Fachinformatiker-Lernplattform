@@ -338,6 +338,8 @@ internal sealed class SubnetKarte
         private void Gehe(BigInteger seite)
         {
             SeiteNr = BigInteger.Min(BigInteger.Max(seite, 1), _aufteilung!.Seiten);
+            // Hinweis eines falschen "Zur Seite" gilt nur bis zum naechsten Blaettern (Python: Fenster)
+            Fehler.Zeigen(null);
             Anzeigen();
         }
 
