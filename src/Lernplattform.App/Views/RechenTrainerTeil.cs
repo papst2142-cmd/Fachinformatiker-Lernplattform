@@ -218,10 +218,12 @@ public sealed class RechenTrainerTeil : StackPanel
             marke.IsVisible = false;
             _eingaben[schluessel] = feld;
             _marken[schluessel] = marke;
+            var zeile = RechnerTeile.Zeile(beschriftung, feld).HoechstBreite(560);
+            zeile.HorizontalAlignment = HorizontalAlignment.Left;     // nicht mittig in der Karte
             _felder.Children.Add(new StackPanel
             {
                 Spacing = 4,
-                Children = { RechnerTeile.Zeile(beschriftung, feld).HoechstBreite(560), marke },
+                Children = { zeile, marke },
             });
         }
     }
