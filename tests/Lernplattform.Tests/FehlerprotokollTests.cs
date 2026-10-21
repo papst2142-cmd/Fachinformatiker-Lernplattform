@@ -99,6 +99,33 @@ public class FehlerprotokollTests
         Assert.Contains("ghp_", Datenschutz.PfadeAnonymisieren(text, new Dictionary<string, string>(), "/home/nico"));
     }
 
+    /// <summary>
+    /// P2-12 A3: ein leerer oder sehr kurzer Zugangsschluessel (0 bis 3 Zeichen, auch mit Leerzeichen)
+    /// wird nie als Geheimnis genommen; die Fehlerdatei bleibt lesbar.
+    /// </summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("e")]
+    [InlineData("ab")]
+    [InlineData("Feh")]
+    [InlineData("  ler  ")]
+    public void KurzerTokenNieGeheimnis(string token)
+    {
+        Assert.Empty(Datenschutz.Geheimnisse([new("sync_token", token)]));
+        const string text = "Fehler beim Lesen der Datei lernstand.db";
+        Assert.Equal(text, Datenschutz.Schwaerzen(text, Datenschutz.Geheimnisse([new("sync_token", token)])));
+    }
+
+    /// <summary>Kontrollfehler A3: wuerde ein kurzer Wert doch als Geheimnis genommen, waere der Text zerstoert.</summary>
+    [Fact]
+    public void KontrollfehlerKurzerTokenMachtLogUnlesbar()
+    {
+        const string text = "Fehler beim Lesen der Datei lernstand.db";
+        Assert.NotEqual(text, Datenschutz.Schwaerzen(text, ["e"]));
+        Assert.DoesNotContain("Fehler", Datenschutz.Schwaerzen(text, ["e"]));
+    }
+
     [Fact]
     public void SchreibenMitKopfzeileOhneGeheimnisse()
     {

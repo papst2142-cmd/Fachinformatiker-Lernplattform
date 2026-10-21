@@ -36,10 +36,16 @@ public static class Zustand
     private static LernstandSchreiber? _schreiber;
 
     /// <summary>Phase 2: gemeinsamer Lernstand (lernplattform.db im Datenordner), beim ersten Gebrauch geoeffnet.</summary>
-    public static Lernstand Lernstand => _lernstand ??= new Lernstand(null, text => Fehlermeldung?.Invoke(text));
+    public static Lernstand Lernstand => LazyInitializer.EnsureInitialized(ref _lernstand, ref _lernstandSperre,
+        () => new Lernstand(null, text => Fehlermeldung?.Invoke(text)));
+
+    private static object? _lernstandSperre;
 
     /// <summary>Speichert Antworten in den gemeinsamen Lernstand.</summary>
-    public static LernstandSchreiber Schreiber => _schreiber ??= new LernstandSchreiber(Lernstand);
+    public static LernstandSchreiber Schreiber => LazyInitializer.EnsureInitialized(ref _schreiber, ref _schreiberSperre,
+        () => new LernstandSchreiber(Lernstand));
+
+    private static object? _schreiberSperre;
 
     /// <summary>Verstaendliche Meldung je Fehlerart des Lernstands (Oberflaeche zeigt "Datenbankfehler").</summary>
     public static Action<string>? Fehlermeldung { get; set; }
@@ -78,6 +84,7 @@ public static class Zustand
     {
         DefektHinweis = Einstellungen.DefektHinweis();
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         DesignAnwenden();
         Inhalte = Task.Run(InhalteLaden);
         Gewicht = Inhalte.ContinueWith(t =>
@@ -194,6 +201,13 @@ public static class Zustand
         _ => 1.0,
     };
 
+    /// <summary>Einstellungen neu lesen (nach dem Abgleich: sync_last), Geheimnisfilter setzen.</summary>
+    public static void EinstellungenNeuLesen()
+    {
+        Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
+    }
+
     /// <summary>
     /// Mehrere Werte auf einmal aendern (auch Schluessel entfernen) und speichern.
     /// false: nicht gespeichert, die Datei bleibt unveraendert.
@@ -211,6 +225,7 @@ public static class Zustand
             return false;
         }
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         return true;
     }
 
@@ -225,6 +240,7 @@ public static class Zustand
             return false;
         }
         Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         return true;
     }
 }

@@ -19,7 +19,7 @@ namespace Lernplattform.Views;
 /// <summary>
 /// Phase 1, K8: Optionen in der Reihenfolge von fisi_optionen.AREAS. Gebaut sind
 /// Optische Anpassungen (Schriftgroesse, Darstellung, Vorlagen, eigene Farben),
-/// Tagesziel, Diagnose (Fehlerprotokoll anzeigen und kopieren) und "Über das
+/// Tagesziel, Abgleich PC und Handy (Phase 2, L10), Diagnose (Fehlerprotokoll anzeigen und kopieren) und "Über das
 /// Programm". Die uebrigen Bereiche zeigen den Platzhalter. Jede Aenderung wird
 /// sofort gespeichert; geht das nicht, erscheint "Speichern fehlgeschlagen" und
 /// die Anzeige springt auf den gespeicherten Wert zurueck.
@@ -138,6 +138,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Diagnose => Diagnose(bereich),
         Optionen.Ueber => Ueber(),
         Optionen.Sicherung when _sicherung is not null => _sicherung(),
+        Optionen.Abgleich => new AbgleichTeil().Teil,
         _ => Platzhalterzeile(),
     };
 

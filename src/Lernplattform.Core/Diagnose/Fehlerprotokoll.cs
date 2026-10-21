@@ -24,7 +24,18 @@ public static class Fehlerprotokoll
     private static string _version = "";
     private static int _eingerichtet;
 
+    // Phase 2, L10 (Weisung P2-11 A7): bekannte Geheimnisse (der eingetragene Zugangsschluessel)
+    private static IReadOnlyList<string> _geheimnisse = [];
+
     public static string Pfad() => Path.Combine(Ablage.Datenordner(), DateiName);
+
+    /// <summary>
+    /// Phase 2, L10: Werte, die vor jedem Eintrag entfernt werden, bevor die Muster greifen
+    /// (wie fisi_diagnose.scrub mit secrets). Aufruf mit den Einstellungen nach jedem Laden und
+    /// Speichern; uebernommen werden die Werte geheimer Schluessel (Datenschutz.Geheimnisse).
+    /// </summary>
+    public static void GeheimnisseSetzen(IEnumerable<KeyValuePair<string, object?>> einstellungen) =>
+        _geheimnisse = Datenschutz.Geheimnisse(einstellungen);
 
     /// <summary>System wie Pythons sys.platform (win32, linux, darwin; Android: android).</summary>
     public static string System()
@@ -60,7 +71,7 @@ public static class Fehlerprotokoll
                     File.WriteAllText(pfad, rest, new UTF8Encoding(false));
                 }
                 var zeit = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                var inhalt = Datenschutz.PfadeAnonymisieren(Datenschutz.Schwaerzen(text.TrimEnd()));
+                var inhalt = Datenschutz.PfadeAnonymisieren(Datenschutz.Schwaerzen(text.TrimEnd(), _geheimnisse));
                 var eintrag = $"=== {zeit} | Version {(_version.Length > 0 ? _version : "?")} | {System()} ===\n{inhalt}\n";
                 // Zeilenenden wie Python im Textmodus (Windows \r\n, sonst \n)
                 eintrag = eintrag.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);

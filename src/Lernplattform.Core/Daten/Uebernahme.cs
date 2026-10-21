@@ -117,10 +117,17 @@ public sealed record TabellenZahlen(string Tabelle, int Vorher, int Nachher, int
 /// <param name="NichtUebernommen">Eintraege der Datei, die eine Loeschung hier nicht hereinlaesst (Pythons "kept").</param>
 /// <param name="UngueltigeMarken">Ungueltige Marken beider Seiten (wie Python stats.invalid).</param>
 /// <param name="UngueltigInDatei">Davon in der Datei (fuer den Hinweis im Dialog, L5).</param>
+/// <param name="Weg">W4: Eintraege (Tabelle, uid), die eine Loeschmarke entfernt oder nicht hereingelassen hat (Pythons stats.gone, „wegen einer Löschung entfernt“).</param>
 public sealed record UebernahmeBericht(UebernahmeQuelle Quelle, bool Vorschau, int Neu, int Uebernommen, int SchonVorhanden,
     int EntferntDurchLoeschmarke, int EntferntSonst, int NichtUebernommen, int Uebersprungen, int Abgelehnt,
     int UngueltigeMarken, int ZukunftsMarken, int Umbenannt, IReadOnlyDictionary<string, string> MarkenNachher,
-    IReadOnlyList<TabellenZahlen> Tabellen, string? Sicherungsdatei, int UngueltigInDatei = 0);
+    IReadOnlyList<TabellenZahlen> Tabellen, string? Sicherungsdatei, int UngueltigInDatei = 0, int Weg = 0);
+
+/// <summary>
+/// W4: Zusammenfuehren im Abgleich (merge_into_local mit check_future=False). Mischbetrieb wie
+/// _note_mixed; GitHubJetzt = Uhrzeit von GitHub (null ohne Date-Kopf) fuer die Aufhebungen.
+/// </summary>
+internal sealed record AbgleichModus(bool Mischbetrieb, DateTimeOffset? GitHubJetzt);
 
 /// <summary>Korrigierte Fragetexte (inhalte/umbenennungen.json, fisi_core.load_question_renames).</summary>
 public static class Umbenennungen

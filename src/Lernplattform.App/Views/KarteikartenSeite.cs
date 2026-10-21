@@ -76,6 +76,7 @@ public sealed class KarteikartenSeite : UserControl
                 _k = karten;
                 Aufbauen(inhalte);
                 karten.NachSpeichern += () => Nachher();
+                karten.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule)
                 foreach (var schritt in _wartend)
                 {
                     schritt(karten);

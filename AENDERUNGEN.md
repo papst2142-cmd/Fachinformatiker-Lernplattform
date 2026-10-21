@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.5.0 (in Arbeit, Phase 2: Lernkern, Welle 4)
+Version A 0.5.0, Paket 1.0.0-a.0.5.0, Android 1000500 (Weisung P2-11):
+- Optionen > Sicherung: „Sicherung für die alte App erstellen“. Die Datei (`.fisisicherung`) liest die alte Python-Version 0.63.2 über „Sicherung zusammenführen“ ein; der Lernstand hier wird nur gelesen, in einem Zug, sodass alle Teile zum selben Stand gehören. Gespeichert wird über eine Hilfsdatei und eine Probe; am Handy erst im App-Ordner, dann an den gewählten Ort. Wortlaut nach Weisung P2-11 (Vergleichswerte G21, Beleg mit Python in der CI).
+- Kern des Abgleichs PC ↔ Handy über ein privates GitHub-Repository wie in Python (Zusammenführen, Löschmarken, Uhrabweichung, bis zu drei Versuche bei gleichzeitigem Schreiben). Vor jeder Änderung an vorhandenen Einträgen und vor dem ersten Abgleich entsteht eine Kopie `sicherungen/vor_abgleich_<Datum_Uhrzeit>.db`; gelingt sie nicht, wird nichts verändert. Der Zugangsschlüssel erscheint nie in Fehlerdatei, Sicherung oder Meldung.
+- Optionen > „Abgleich PC und Handy“ (Weisung P2-12): Repository und Zugangsschlüssel eintragen, „Speichern und abgleichen“ mit Ergebnis oder Fehler in einer Zeile darunter, Schalter „Automatisch abgleichen (beim Start, nach dem Lernen und beim Verlassen der App)“. Automatisch wird am PC 1,5 s nach dem Start, 60 s nach dem Lernen und beim Beenden abgeglichen, am Handy beim Start, 30 s nach dem Lernen und beim Verlassen der App. Texte wie in Python 0.63.2; ein unerwarteter Fehler zeigt nur „Unerwarteter Fehler beim Abgleich.“
+- Während des Hochladens ist der Lernstand nicht gesperrt: Antworten, die man während eines Abgleichs gibt, werden sofort gespeichert.
+- Läuft gerade ein Abgleich oder eine Übernahme, lehnen „Lernstand übernehmen“ und „Sicherung für die alte App erstellen“ mit einem Hinweis ab, statt zu warten.
+- Übernahme, Abgleich und Sicherung für die alte App laufen nie gleichzeitig.
+
 ## A 0.4.0 (in Arbeit, Phase 2: Lernkern, Welle 3)
 Version A 0.4.0, Paket 1.0.0-a.0.4.0, Android 1000400 (Weisung P2-7):
 - Fortschritt (nur lesend) wie in Python: Kacheln „Test-Sessions“, „Durchschnitt“, „Bestes Ergebnis“; „Aufgaben pro Tag“ mit Tagesziel als Linie und „Richtig und falsch pro Tag“ für 7 oder 30 Tage; „Ergebnisse im Prüfungstrainer“; „Historie der Prüfungssessions“ und „Prüfungen (Klausursimulation)“ (aus Python übernommene Klausuren nur zur Anzeige); schwache Themen der letzten Prüfung mit „Jetzt üben“. Gerundet wird überall wie Python (Vergleichswerte G18).

@@ -5,25 +5,43 @@ namespace Lernplattform.Core.Daten;
 /// Zeitstempel in Ortszeit, utc_offset aus demselben Augenblick, uid = uuid4 als Hex.
 /// Jeder Vorgang ist eine Transaktion (Lernstand.Schreiben): die Zeile steht ganz oder gar nicht.
 /// Wird nichts gespeichert (Lesefehler, Schreibschutz), lehnt Lernstand still ab.
-/// Die von Python nach einem Abgleich eingerechnete Uhrabweichung (sync_meta "uhr_abweichung")
-/// kommt mit dem Abgleich (L10): Nur der Abgleich misst und schreibt sie, die Uebernahme
-/// bringt sie nicht mit.
+/// Die Uhrabweichung (sync_meta "uhr_abweichung") misst und schreibt nur der Abgleich (L10);
+/// die Uebernahme bringt sie nicht mit. Stempel rechnet sie ein wie Python _stamp (W4).
 /// </summary>
-public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Func<string>? kennung = null)
+public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Func<string>? kennung = null, Uhrabweichung? abweichung = null)
 {
     private readonly Uhr _uhr = uhr ?? Uhr.System;
     private readonly Func<string> _kennung = kennung ?? NeueKennung;
+    private readonly Uhrabweichung _abweichung = abweichung ?? Uhrabweichung.System;
 
     public Lernstand Lernstand { get; } = lernstand;
 
     /// <summary>_uid: uuid4().hex (32 Kleinbuchstaben/Ziffern).</summary>
     public static string NeueKennung() => Guid.NewGuid().ToString("N");
 
-    /// <summary>_stamp: (Ortszeit als Text, Abstand zu UTC in Minuten) aus demselben Augenblick.</summary>
+    /// <summary>
+    /// _stamp: (Ortszeit als Text, Abstand zu UTC in Minuten) aus demselben Augenblick. Wich die
+    /// Uhr beim letzten Abgleich um mehr als 300 s von GitHub ab, enthaelt der Abstand diese
+    /// Abweichung (dann ist Ortszeit minus Abstand die echte UTC-Zeit); nicht mehr, sobald die
+    /// Uhr seither richtig gestellt wurde. Ging sie vor und ist ein Sprung seit der Messung nicht
+    /// feststellbar, wird nichts eingerechnet (Python 0.63.2 S-1, Weg b). Die Ortszeit bleibt.
+    /// </summary>
     public (string Zeit, int Abstand) Stempel()
     {
         var jetzt = _uhr.Jetzt();
-        return (Uhr.Text(jetzt), Uhr.AbstandMinuten(jetzt));
+        var abstand = Uhr.AbstandMinuten(jetzt);
+        var wert = Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", Uhrabweichung.Schluessel)) is [var zeile, ..]
+            ? zeile[0] : null;
+        var abweichung = _abweichung.Abweichung(wert, jetzt);
+        if (abweichung > Uhrabweichung.Toleranz && _abweichung.SprungUnbekannt(wert, jetzt))
+        {
+            abweichung = null;
+        }
+        if (abweichung is { } a && Math.Abs(a) > Uhrabweichung.Toleranz)
+        {
+            abstand += (int)Mathe.PythonRunden.Runde(a / 60.0);
+        }
+        return (Uhr.Text(jetzt), abstand);
     }
 
     /// <summary>log_card: richtig null = angesehen, nicht bewertet.</summary>

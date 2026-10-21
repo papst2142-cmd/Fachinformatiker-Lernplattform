@@ -74,6 +74,12 @@ public sealed class UebernahmeTeil
 
     private async Task AblaufInnenAsync(TopLevel top)
     {
+        if (Vorgaenge.Belegt)
+        {
+            // P2-12 A2: nicht warten, solange ein Abgleich oder eine andere Uebernahme laeuft
+            await Hinweis(AbgleichTexte.Belegt);
+            return;
+        }
         var ordner = Ablage.Datenordner();
         UebernahmeAblauf.Aufraeumen(ordner);
         var lernstand = Zustand.Lernstand;

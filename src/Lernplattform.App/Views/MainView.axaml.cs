@@ -92,6 +92,14 @@ public partial class MainView : UserControl
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
+        // L10 (refresh_after_sync): nach einem Abgleich mit neuen oder entfernten Eintraegen die offene Seite neu rechnen
+        Programm.AbgleichDienst.Fertig += (ergebnis, _) =>
+        {
+            if (ergebnis is { } e && (e.Erhalten > 0 || e.Entfernt > 0))
+            {
+                NachAbgleich();
+            }
+        };
         // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
         AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -230,6 +238,29 @@ public partial class MainView : UserControl
         _leisten.Markiere(id);
     }
 
+    private void NachAbgleich()
+    {
+        if (!_seiten.TryGetValue(AktuelleSeite, out var seite))
+        {
+            return;
+        }
+        switch (seite)
+        {
+            case DashboardSeite dashboard:
+                dashboard.Neu();
+                break;
+            case FortschrittSeite fortschritt:
+                fortschritt.Neu();
+                break;
+            case KarteikartenSeite karten:
+                karten.Gezeigt();
+                break;
+            case TrainerSeite trainer:
+                trainer.Gezeigt();
+                break;
+        }
+    }
+
     public async Task ZeigeAsync(string id)
     {
         var erstes = !_seiten.ContainsKey(id);
@@ -358,6 +389,8 @@ public partial class MainView : UserControl
         var panel = new StackPanel { Spacing = 8 };
         // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
         panel.Children.Add(new UebernahmeTeil(panel).Teil);
+        // Phase 2, L9: Sicherung für die alte App erstellen
+        panel.Children.Add(new RuecksicherungTeil(panel).Teil);
         panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
