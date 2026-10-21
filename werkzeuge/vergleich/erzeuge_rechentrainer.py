@@ -17,6 +17,8 @@ Python 3.12 (CI):
                Aufgabe Text und Loesung.
   summen     - trainer_summary(results).
   bereinigen - _clean(text) (Leerraum wie str.split(), Kleinschreibung wie str.lower()).
+  int_basis  - int(text, basis) fuer basis 2, 10, 16 (Grundlage von _base_matcher; auch
+               Eingaben, die _clean vorher schon aendert).
   pruefer    - je Pruefer (_ip_matcher, _int_matcher, _base_matcher,
                _network_matcher, _ipv6_text_matcher, _prefix_matcher,
                _count_matcher) eine Liste Eingabe -> richtig/falsch.
@@ -39,6 +41,10 @@ STARTWERTE = ["%d-%d" % (runde, nummer) for runde in (0, 1, 7, 42, 1000, 1234567
 BEREINIGEN = ["", " ", "AbC", " a b\tc\n", "\x1c1\x1d2\x1e3\x1f4", "\u2003x\u3000y\xa0z\x85", "a\u200bb",
               "\u0130", "K\u212a", "\u03a3\u0391\u03a3", "\u1e9e\xdf", "FE80::1%ETH0", "\u2028\u2029x",
               "\uff21\uff26", "\U0001f600A", "\u0049\u0307", "\u01c5\u01c4"]
+INT_BASIS = ["ff", " ff ", "\x1cff", "ff\x1f", "\u2003ff\u3000", "\xa0ff", "\x85ff", "+ff", "-ff", "0xff", "0XFF",
+             "0x_ff", "0x__ff", "_ff", "ff_", "f_f", "f__f", "0b101", "0B101", "0b_1", "0o17", "0x", "0b", "",
+             " ", "٢٥٥", "0x٢٥", "ｆｆ", "²", "1²", "\x7f1", "1\x7f", "+-1", "--1", "- 1", "1 0", "1\t", "\v1\f",
+             "\r\n1", "10", "١٠", "z", "Z", "g", "0x0x1", "0b0b1", "00ff", "1_000", "\U0001d7ce", "١_٢"]
 RUNDEN = [0, 1, 99, 536870911, (1 << 30) - 1]
 
 PRUEFER = [
@@ -182,6 +188,14 @@ def main():
 
     bereinigen = [[text, fl._clean(text)] for text in BEREINIGEN]
 
+    def int_wert(text, basis):
+        try:
+            return str(int(text, basis))
+        except ValueError:
+            return None
+
+    int_basis = [[text, basis, int_wert(text, basis)] for text in INT_BASIS for basis in (2, 10, 16)]
+
     pruefer = []
     for art, erwartet, eingaben in PRUEFER:
         match = pruefer_bauen(art, erwartet)
@@ -206,6 +220,7 @@ def main():
         "runden": runden,
         "summen": summen,
         "bereinigen": bereinigen,
+        "int_basis": int_basis,
         "pruefer": pruefer,
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:

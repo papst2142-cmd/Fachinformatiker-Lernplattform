@@ -136,6 +136,20 @@ public class RechenTrainerTests
         a.Pruefen(15);
     }
 
+    [Fact]
+    public void IntMitBasisWiePython()
+    {
+        var a = new Abweichungen();
+        foreach (var f in G27.GetProperty("int_basis").EnumerateArray())
+        {
+            var text = f[0].GetString()!;
+            var basis = f[1].GetInt32();
+            var ist = RechenTrainer.PythonInt(text, basis, out var wert) ? wert.ToString(CultureInfo.InvariantCulture) : null;
+            a.Gleich(f[2].ValueKind == JsonValueKind.Null ? null : f[2].GetString(), ist, $"int({JsonSerializer.Serialize(text)}, {basis})");
+        }
+        a.Pruefen(150);
+    }
+
     private static Func<string, bool> Pruefer(string art, string erwartet) => art switch
     {
         "ip" => RechenTrainer.IpPruefer(PythonIp.Adresse(erwartet)!),

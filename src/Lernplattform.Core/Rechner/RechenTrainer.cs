@@ -226,7 +226,8 @@ public static class RechenTrainer
     };
 
     /// <summary>
-    /// int(text, basis) fuer basis 2 bis 36 wie CPython: Unicode-Leerraum aussen, ein Vorzeichen,
+    /// int(text, basis) fuer basis 2 bis 36 wie CPython: Leerraum aussen (ASCII " \t\n\v\f\r",
+    /// Unicode-Leerraum ab U+007F; \x1c bis \x1f nicht, anders als str.split()), ein Vorzeichen,
     /// Praefix 0b/0o/0x passend zur Basis (danach ein "_" erlaubt), Ziffern mit einzelnen "_"
     /// dazwischen; Dezimalziffern jeder Schrift zaehlen als 0 bis 9, Buchstaben nur ASCII.
     /// </summary>
@@ -236,18 +237,20 @@ public static class RechenTrainer
         var zeichen = new List<char>();
         foreach (var rune in text.EnumerateRunes())
         {
+            // _PyUnicode_TransformDecimalAndSpaceToASCII: ASCII bleibt, sonst Leerraum -> " ",
+            // Dezimalziffer -> ASCII-Ziffer, alles andere ungueltig
             var dez = PythonZeichen.Dezimalwert(rune.Value);
-            if (PythonZeichen.IstLeer(rune.Value))
+            if (rune.Value < 127)
+            {
+                zeichen.Add((char)rune.Value);
+            }
+            else if (PythonZeichen.IstLeer(rune.Value))
             {
                 zeichen.Add(' ');
             }
-            else if (dez >= 0)
-            {
-                zeichen.Add((char)('0' + dez));
-            }
             else
             {
-                zeichen.Add(rune.Value < 128 ? (char)rune.Value : '?');
+                zeichen.Add(dez >= 0 ? (char)('0' + dez) : '?');
             }
         }
         var s = new string([.. zeichen]).Trim(' ', '\t', '\n', '\v', '\f', '\r');
