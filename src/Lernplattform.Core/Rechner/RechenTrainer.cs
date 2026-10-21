@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using Lernplattform.Core.Suche;
+using Lernplattform.Core.Texte;
 using Lernplattform.Core.Zufall;
 using static Lernplattform.Core.Texte.RechnerTexte;
 
@@ -144,6 +145,18 @@ public static class RechenTrainer
     /// <summary>trainer_summary(results).</summary>
     public static string Zusammenfassung(IReadOnlyList<bool> ergebnisse) =>
         I($"{ergebnisse.Count(e => e)} von {ergebnisse.Count} Aufgaben richtig");
+
+    /// <summary>
+    /// show_stats (app_gui 5552, main.py 2992): "bisher 12 Aufgaben, 9 richtig" ueber alle Arten,
+    /// ohne geloeste Aufgabe leer. statistik wie LernstandSchreiber.TrainerStatistik.
+    /// </summary>
+    public static string StatistikZeile(IReadOnlyDictionary<string, (long Geloest, double Richtig)> statistik)
+    {
+        // "%d" % sum(...): erst summieren (Python 3.12 sum, Neumaier), dann abschneiden
+        var anzahl = statistik.Values.Sum(s => s.Geloest);
+        var richtig = (long)Math.Truncate(Mathe.PythonSumme.Summe(statistik.Values.Select(s => s.Richtig)));
+        return anzahl == 0 ? "" : Beschriftungen.Einsetzen(Bisher, Zahlen.Mehrzahl(anzahl, RechnerTexte.Aufgabe, RechnerTexte.Aufgaben), richtig);
+    }
 
     // ---------------------------------------------------------------- Pruefer
 

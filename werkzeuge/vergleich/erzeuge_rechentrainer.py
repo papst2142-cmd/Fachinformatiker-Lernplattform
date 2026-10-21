@@ -19,6 +19,11 @@ Python 3.12 (CI):
   bereinigen - _clean(text) (Leerraum wie str.split(), Kleinschreibung wie str.lower()).
   int_basis  - int(text, basis) fuer basis 2, 10, 16 (Grundlage von _base_matcher; auch
                Eingaben, die _clean vorher schon aendert).
+  speichern  - (Paket R5) Zeilen, die DBManager.log_trainer mit festem Zeitpunkt
+               (Zone Europe/Berlin, auch Zeitumstellung) und fester uid schreibt,
+               trainer_stats() danach und die Statistikzeile wie show_stats
+               (app_gui 5552, main.py 2992); dazu die Statistikzeile fuer feste
+               Zaehlwerte.
   pruefer    - je Pruefer (_ip_matcher, _int_matcher, _base_matcher,
                _network_matcher, _ipv6_text_matcher, _prefix_matcher,
                _count_matcher) eine Liste Eingabe -> richtig/falsch.
@@ -29,11 +34,16 @@ in einen leeren Temp-Ordner.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_rechentrainer.py <pfad_fisi_lernplattform> tests/Vergleich/rechentrainer.json
 """
+import datetime
 import ipaddress
 import json
 import os
+import sqlite3
 import sys
 import tempfile
+import time
+
+ZONE = "Europe/Berlin"
 
 # Feste Startwerte je (Art, Stufe); dazu Grenzfaelle des Textes
 STARTWERTE = ["%d-%d" % (runde, nummer) for runde in (0, 1, 7, 42, 1000, 123456789, (1 << 30) - 1)
@@ -107,11 +117,79 @@ PRUEFER = [
 ]
 
 
+SPEICHERN = [
+    # (Art, Stufe, alles richtig, Zeitpunkt UTC)
+    ("ipv4", 1, True, "2026-10-20T08:15:30.000000+00:00"),
+    ("ipv4", 1, False, "2026-10-20T21:59:59.999999+00:00"),
+    ("teilen", 3, True, "2026-10-20T22:00:00.000000+00:00"),
+    ("bedarf", 2, False, "2026-10-25T00:59:59.000000+00:00"),
+    ("zahlen", 3, True, "2026-10-25T01:00:00.000000+00:00"),
+    ("ipv6", 2, True, "2027-03-28T01:00:00.000000+00:00"),
+    ("vlsm", 1, False, "2026-12-31T23:00:00.000000+00:00"),
+    ("ipv4", 3, True, "2026-10-21T10:00:00.000000+00:00"),
+]
+STATISTIK = [{}, {"ipv4": (1, 1)}, {"ipv4": (1, 0)}, {"ipv4": (2, 1), "vlsm": (3, 3)},
+             {"zahlen": (999, 500)}, {"zahlen": (1000, 1000)}, {"a": (1234567, 3), "b": (1, 0)},
+             {"ipv4": (0, 0)}, {"ipv4": (1, 0.5), "vlsm": (1, 0.5)}, {"ipv4": (3, 2), "vlsm": (2, 0.75)},
+             {"a": (1, 0.1), "b": (1, 0.2), "c": (1, 0.7)}]
+
+
+def statistik_zeile(fc, stats):
+    """show_stats ohne Oberflaeche (app_gui 5552-5557, main.py 2992-2997 gleich)."""
+    count = sum(total for total, _right in stats.values())
+    right = sum(right for _total, right in stats.values())
+    return ("bisher %s, %d richtig" % (fc.plural(count, "Aufgabe", "Aufgaben"), right)
+            if count else "")
+
+
+def speichern_werte(tmp):
+    import fisi_core as fc
+    import fisi_lernen as fl
+    jetzt = [None]
+    fc.device_now = lambda: jetzt[0].astimezone()
+    zaehler = [0]
+
+    def uid():
+        zaehler[0] += 1
+        return "rechentrainer-uid-%04d" % zaehler[0]
+
+    fc.DBManager._uid = staticmethod(uid)
+    db = fc.DBManager(os.path.join(tmp, "rechentrainer.db"))
+    vorher = sorted([k, v[0], v[1]] for k, v in db.trainer_stats().items())
+    aufrufe = []
+    for art, stufe, richtig, moment in SPEICHERN:
+        jetzt[0] = datetime.datetime.fromisoformat(moment)
+        aufrufe.append({"art": art, "stufe": stufe, "richtig": richtig, "utc": moment,
+                        "ergebnis": bool(db.log_trainer(art, stufe, richtig))})
+    conn = sqlite3.connect(db.db_path)
+    cur = conn.execute("SELECT * FROM trainer_aufgaben ORDER BY id")
+    spalten = [d[0] for d in cur.description if d[0] != "id"]
+    zeilen = [[w for d, w in zip(cur.description, r) if d[0] != "id"] for r in cur.fetchall()]
+    typen = [list(r) for r in conn.execute("SELECT %s FROM trainer_aufgaben ORDER BY id"
+                                           % ", ".join("typeof(%s)" % s for s in spalten))]
+    conn.close()
+    stats = db.trainer_stats()
+    return {
+        "zone": ZONE,
+        "vorher": vorher,
+        "aufrufe": aufrufe,
+        "spalten": spalten,
+        "zeilen": zeilen,
+        "typen": typen,
+        "statistik": sorted([k, v[0], v[1]] for k, v in stats.items()),
+        "zeile": statistik_zeile(fc, stats),
+        "zeilen_fest": [[sorted([k, v[0], v[1]] for k, v in s.items()), statistik_zeile(fc, s)]
+                        for s in STATISTIK],
+    }
+
+
 def main():
     if len(sys.argv) != 3:
         print(__doc__)
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
+    os.environ["TZ"] = ZONE
+    time.tzset()
     tmp = tempfile.mkdtemp(prefix="vergleich_")
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
@@ -202,6 +280,8 @@ def main():
         pruefer.append({"art": art, "erwartet": erwartet,
                         "faelle": [[eingabe, bool(match(eingabe))] for eingabe in eingaben]})
 
+    speichern = speichern_werte(tmp)
+
     daten = {
         "quelle": "fisi_lernen trainer_task, trainer_round, trainer_summary, TrainerTask.check, "
                   "_ip_matcher, _int_matcher, _base_matcher, _network_matcher, _ipv6_text_matcher, "
@@ -221,6 +301,7 @@ def main():
         "summen": summen,
         "bereinigen": bereinigen,
         "int_basis": int_basis,
+        "speichern": speichern,
         "pruefer": pruefer,
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
