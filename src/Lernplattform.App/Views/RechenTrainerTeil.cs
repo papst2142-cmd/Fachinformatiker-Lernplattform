@@ -19,11 +19,14 @@ namespace Lernplattform.Views;
 /// (<see cref="RechenTrainerAblauf"/>); nach jedem Pruefen wird der Abgleich angestossen (PC und
 /// Handy, P3-12 F1 a). Der Knopf ist ohne Runde auf beiden Geraeten gesperrt. Ein Fehler beim
 /// Speichern laeuft ueber den vorhandenen Weg des Lernstands zum Hinweis "Datenbankfehler".
+/// W4a (Weisung P3-17): Zeile "Bereich" (Netzwerk, Daten) ueber der Aufgabenart; je Bereich eine
+/// eigene Pillenzeile der Arten. Ungueltige Eingabe in Zahlenfeldern zeigt den roten Hinweis.
 /// </summary>
 public sealed class RechenTrainerTeil : StackPanel
 {
     private readonly Func<bool> _schmal;
-    private readonly Pillen _arten;
+    private readonly Pillen _bereich;
+    private readonly Dictionary<string, Pillen> _arten = new(StringComparer.Ordinal);
     private readonly Pillen _stufen;
     private readonly TextBlock _statistik = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
     private readonly TextBlock _kopf = RechnerTeile.Unterschrift("");
@@ -31,6 +34,7 @@ public sealed class RechenTrainerTeil : StackPanel
     private readonly StackPanel _felder = new() { Spacing = 10 };
     private readonly TextBlock _rueckmeldung = Schrift.Text("", "Normal", FontWeight.Bold, "Pinsel.text");
     private readonly Ergebniskasten _rechenweg = new();
+    private readonly Fehlerhinweis _fehler = new();
     private readonly Button _knopf;
     private readonly TextBlock _zaehler = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
     private readonly Dictionary<string, TextBox> _eingaben = new(StringComparer.Ordinal);
@@ -42,7 +46,11 @@ public sealed class RechenTrainerTeil : StackPanel
     {
         _schmal = schmal;
         Spacing = 14;
-        _arten = new Pillen(RechenTrainer.Arten, RechenTrainer.Arten[0].Art, art => _ablauf?.SetzeArt(art));
+        foreach (var (wert, _, arten) in RechenTrainer.Bereiche)
+        {
+            _arten[wert] = new Pillen(arten, arten[0].Art, art => _ablauf?.SetzeArt(art)) { IsVisible = wert == RechenTrainer.Bereiche[0].Wert };
+        }
+        _bereich = new Pillen(RechenTrainer.Bereiche.Select(b => (b.Wert, b.Name)), RechenTrainer.Bereiche[0].Wert, BereichWechseln);
         _stufen = new Pillen(RechenTrainer.Stufen.Select(s => (s.Stufe.ToString(System.Globalization.CultureInfo.InvariantCulture), s.Name)),
             RechenTrainer.Stufen[0].Stufe.ToString(System.Globalization.CultureInfo.InvariantCulture),
             stufe => _ablauf?.SetzeStufe(int.Parse(stufe, System.Globalization.CultureInfo.InvariantCulture)));
@@ -53,7 +61,9 @@ public sealed class RechenTrainerTeil : StackPanel
             Spacing = 8,
             Children =
             {
-                LernTeile.Label(TrainerArt), _arten,
+                LernTeile.Label(TrainerBereich), _bereich,
+                Abstand(LernTeile.Label(TrainerArt), 6),
+                _arten["netzwerk"], _arten["daten"],
                 Abstand(LernTeile.Label(TrainerStufe), 6), _stufen,
                 new WrapPanel { Children = { starten, _statistik } },
             },
@@ -67,7 +77,7 @@ public sealed class RechenTrainerTeil : StackPanel
             Spacing = 12,
             Children =
             {
-                _aufgabe, _felder, _rueckmeldung, _rechenweg,
+                _aufgabe, _felder, _fehler, _rueckmeldung, _rechenweg,
                 new WrapPanel { Children = { _knopf, _zaehler } },
             },
         };
@@ -88,12 +98,35 @@ public sealed class RechenTrainerTeil : StackPanel
         if (_ablauf is null)
         {
             _ablauf = new RechenTrainerAblauf(Zustand.Schreiber);
-            _ablauf.SetzeArt(_arten.Wert);
+            _ablauf.SetzeArt(GewaehlteArt);
             _ablauf.SetzeStufe(int.Parse(_stufen.Wert, System.Globalization.CultureInfo.InvariantCulture));
             _ablauf.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule), PC und Handy
         }
         _ablauf.ErstesZeigen();
         Anzeigen();
+    }
+
+    /// <summary>Art-Pille des sichtbaren Bereichs.</summary>
+    private string GewaehlteArt => _arten[_bereich.Wert].Wert;
+
+    /// <summary>Pille "Bereich": andere Arten-Zeile zeigen und deren Wahl uebernehmen (eine laufende Runde bleibt).</summary>
+    private void BereichWechseln(string bereich)
+    {
+        foreach (var (wert, pillen) in _arten)
+        {
+            pillen.IsVisible = wert == bereich;
+        }
+        _ablauf?.SetzeArt(GewaehlteArt);
+    }
+
+    /// <summary>Bereich und Art waehlen wie mit den Pillen (fuer den Start ohne Bedienung).</summary>
+    internal void Waehle(string art)
+    {
+        var bereich = RechenTrainer.Bereiche.First(b => b.Arten.Any(a => a.Art == art)).Wert;
+        _bereich.Waehle(bereich);
+        BereichWechseln(bereich);
+        _arten[bereich].Waehle(art);
+        _ablauf?.SetzeArt(art);
     }
 
     /// <summary>"Runde starten" (fuer den Start ohne Bedienung auch direkt).</summary>
@@ -138,9 +171,11 @@ public sealed class RechenTrainerTeil : StackPanel
     /// <summary>
     /// Start ohne Bedienung: eine Runde mit festem Startwert OHNE Speichern (Ablauf ohne
     /// Schreiber, kein Abgleich) zeigen, auf Wunsch geprueft (alle Felder leer = falsch, also
-    /// alle "richtig wäre") oder bis zur Auswertung. Der echte Ablauf bleibt unberuehrt.
+    /// alle "richtig wäre"; Zahlenfelder der W4a-Arten bekommen "0", sonst kaeme der
+    /// Eingabefehler) oder bis zur Auswertung. Mit <paramref name="eingabefehler"/> wird einmal
+    /// mit leeren Feldern geprueft (roter Hinweis). Der echte Ablauf bleibt unberuehrt.
     /// </summary>
-    internal void Probe(string art, int stufe, bool pruefen, bool beenden = false)
+    internal void Probe(string art, int stufe, bool pruefen, bool beenden = false, bool eingabefehler = false)
     {
         if (!_probe)
         {
@@ -148,19 +183,38 @@ public sealed class RechenTrainerTeil : StackPanel
             _probe = true;
         }
         _ablauf = new RechenTrainerAblauf(null, () => 4711);
+        Waehle(art);                     // Pillen zeigen die Probe (Bereich, Art, Stufe)
+        _stufen.Waehle(stufe.ToString(System.Globalization.CultureInfo.InvariantCulture));
         _ablauf.SetzeArt(art);
         _ablauf.SetzeStufe(stufe);
         _ablauf.RundeStarten();
         FelderBauen();
-        if (pruefen || beenden)
+        if (eingabefehler)
         {
+            Druecken();
+        }
+        else if (pruefen || beenden)
+        {
+            ProbeFuellen();
             Druecken();
         }
         while (beenden && _ablauf.Zustand != TrainerZustand.Beendet)
         {
+            ProbeFuellen();
             Druecken();
         }
         Anzeigen();
+    }
+
+    private void ProbeFuellen()
+    {
+        if (_ablauf?.Aufgabe is { Zahlenfelder: true } && _ablauf.Zustand == TrainerZustand.Offen)
+        {
+            foreach (var feld in _eingaben.Values)
+            {
+                feld.Text = "0";
+            }
+        }
     }
 
     /// <summary>Probe beenden: der echte Ablauf wird wieder gezeigt (eingetippte Antworten sind dann leer).</summary>
@@ -173,6 +227,9 @@ public sealed class RechenTrainerTeil : StackPanel
         _ablauf = _echt;
         _echt = null;
         _probe = false;
+        // Pillen wieder auf die Wahl des echten Ablaufs (ohne Ablauf: Vorgabe)
+        Waehle(_ablauf?.Art ?? RechenTrainer.Arten[0].Art);
+        _stufen.Waehle((_ablauf?.Stufe ?? RechenTrainer.Stufen[0].Stufe).ToString(System.Globalization.CultureInfo.InvariantCulture));
         FelderBauen();
         if (_ablauf?.Pruefung is { } pruefung)
         {
@@ -246,6 +303,7 @@ public sealed class RechenTrainerTeil : StackPanel
             _ => "Pinsel.text",
         });
         _rechenweg.IsVisible = zustand == TrainerZustand.Geprueft;
+        _fehler.Zeigen(zustand == TrainerZustand.Offen ? a?.Eingabefehler : null);
         if (zustand != TrainerZustand.Offen && zustand != TrainerZustand.Geprueft)
         {
             _felder.Children.Clear();

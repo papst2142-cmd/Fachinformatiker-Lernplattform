@@ -178,6 +178,7 @@ public static class AutoMessung
         Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
         Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
         Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
+        Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -295,6 +296,7 @@ public static class AutoMessung
     private static readonly (string Text, string Flaeche)[] RechnerPaare =
     [
         ("purple", "card"),
+        ("cyan", "card"),      // W4a: Titel der Karte "Übertragungsdauer"
     ];
 
     private static readonly string[] Hostbedarf12 =
@@ -350,6 +352,7 @@ public static class AutoMessung
                 funde++;
             }
         }
+        rechner.Waehle("subnetting");
         s.ModusSetzen("ipv4");
         await ansicht.BildFertigAsync();
         await Messpunkt("Rechner Wechsel IPv4 -> IPv6", () => s.ModusSetzen("ipv6"));
@@ -372,11 +375,42 @@ public static class AutoMessung
         await Messpunkt("Rechner Rechenweg (Hostbedarf) oeffnen", () => s.RechenwegZeigen(true));
         s.RechenwegZeigen(false);
         await ansicht.BildFertigAsync();
+        // W4a (Weisung P3-17): Auswahl-Pillen, Datenmengen und Uebertragung mit Rechenweg
+        var d = rechner.Daten;
+        async Task DatenMesspunkt(string titel, Action schritt, Func<string> fehler)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            var ms = uhr.Elapsed.TotalMilliseconds;
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms > Abbruch || fehler().Length > 0)
+            {
+                Messwerte.Notiere("  FEHLER: " + (fehler().Length > 0 ? fehler() : "ueber 1000 ms"));
+                funde++;
+            }
+        }
+        await DatenMesspunkt("Rechner Auswahl Datenmengen", () => rechner.Waehle("datenmengen"), () => "");
+        d.DatenEingabe("1.000.000.000.000", "TiB");
+        await DatenMesspunkt("Datenmengen 10^12 TiB berechnen", d.DatenRechnen, () => d.DatenFehler);
+        await DatenMesspunkt("Rechenweg (Datenmengen) oeffnen", () => d.DatenWeg.Zeigen(true), () => d.DatenFehler);
+        d.DatenWeg.Zeigen(false);
+        await DatenMesspunkt("Rechner Auswahl Uebertragung", () => rechner.Waehle("uebertragung"), () => "");
+        d.DauerEingabe("1.000.000.000.000", "TiB", "0,001", "kbit/s", "0,1");
+        await DatenMesspunkt("Uebertragung 10^12 TiB mit 0,001 kbit/s bei 0,1 % berechnen", d.DauerRechnen, () => d.DauerFehler);
+        await DatenMesspunkt("Rechenweg (Uebertragung) oeffnen", () => d.DauerWeg.Zeigen(true), () => d.DauerFehler);
+        d.DauerWeg.Zeigen(false);
+        d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        rechner.Waehle("subnetting");
+        await ansicht.BildFertigAsync();
         // W3 (R7): Reiter Trainer (erstes Zeigen liest die Statistik), Runde und Pruefen ohne Speichern
         await Messpunkt("Rechner Reiter Trainer (erstes Zeigen)", () => rechner.Tab("trainer"), ohneFehler: false);
         await Messpunkt("Trainer Runde starten (ohne Speichern)", () => rechner.Trainer.Probe("bedarf", 3, pruefen: false), ohneFehler: false);
         await Messpunkt("Trainer Pruefen (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
         await Messpunkt("Trainer Naechste Aufgabe (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
+        await Messpunkt("Trainer Runde Uebertragungsdauer Schwer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: false), ohneFehler: false);
+        await Messpunkt("Trainer Pruefen Uebertragungsdauer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: true), ohneFehler: false);
         rechner.Trainer.ProbeEnde();
         rechner.Tab("rechner");
         await ansicht.BildFertigAsync();
@@ -396,6 +430,7 @@ public static class AutoMessung
             yield break;
         }
         var s = r.Subnet;
+        r.Waehle("subnetting");
         r.AllesAufklappen();
         s.ModusSetzen("ipv6");
         s.AnsichtSetzen("ipv6", "netzdaten");
@@ -419,10 +454,48 @@ public static class AutoMessung
         s.RechenwegZeigen(true);
         await ansicht.BildFertigAsync();
         yield return "calc/hostbedarf";
+        // W4a: Datenmengen, Uebertragung, Bild und Video (Zwischenstand: Bildschirm-Karte)
+        var d = r.Daten;
+        r.Waehle("datenmengen");
+        d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
+        d.DatenRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/datenmengen";
+        d.DatenEingabe("1.000.000.000.000", "TiB");
+        d.DatenRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/datenmengen-gross";
+        d.DatenEingabe("0,001", "Bit");
+        d.DatenRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/datenmengen-klein";
+        d.DatenEingabe("4,7 GB", "GB");
+        d.DatenRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/datenmengen-fehler";
+        r.Waehle("uebertragung");
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        d.DauerRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/uebertragung";
+        d.DauerEingabe("1.000.000.000.000", "TiB", "0,001", "kbit/s", "0,1");
+        d.DauerRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/uebertragung-lang";
+        d.DauerEingabe("0,001", "Byte", "1.000.000", "Gbit/s", "100");
+        d.DauerRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/uebertragung-kurz";
+        r.Waehle("bild");
+        r.BildRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/bild";
+        r.Waehle("raid");
         r.RaidEingabe("abc", "1000");
         r.RaidRechnen();
         await ansicht.BildFertigAsync();
         yield return "calc/fehler";
+        r.Waehle("usv");
         r.UsvFeld("minuten", "90");
         r.UsvRechnen("empfehlung");
         r.AllesAufklappen();
@@ -432,7 +505,7 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
         yield return "calc/trainer";
         // W3 (R7): Trainer ohne Speichern (Probe): laengste Rechenwege und Rueckmeldungen
-        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3) })
+        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3), ("einheiten", 3), ("dauer", 3) })
         {
             r.Trainer.Probe(art, stufe, pruefen: false);
             await ansicht.BildFertigAsync();
@@ -441,11 +514,18 @@ public static class AutoMessung
             await ansicht.BildFertigAsync();
             yield return $"calc/trainer-{art}-geprueft";
         }
+        r.Trainer.Probe("dauer", 3, pruefen: true, eingabefehler: true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/trainer-dauer-eingabefehler";
         r.Trainer.Probe("vlsm", 3, pruefen: false, beenden: true);
         await ansicht.BildFertigAsync();
         yield return "calc/trainer-auswertung";
         r.Trainer.ProbeEnde();
         r.Tab("rechner");
+        d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
+        d.DatenRechnen();
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        d.DauerRechnen();
         r.RaidEingabe("4", "1000");
         r.RaidRechnen();
         r.UsvFeld("minuten", "15");
@@ -456,6 +536,7 @@ public static class AutoMessung
         }
         s.RechenwegZeigen(false);
         s.AnsichtSetzen("ipv4", "netzdaten");
+        r.Waehle("subnetting");
         await ansicht.BildFertigAsync();
     }
 

@@ -14,8 +14,10 @@ public sealed class TrainerAufgabe
 
     internal TrainerAufgabe(string art, int stufe, string text, IReadOnlyList<(string Schluessel, string Beschriftung)> felder,
         IReadOnlyDictionary<string, string> loesung, IReadOnlyList<string> schritte,
-        IReadOnlyDictionary<string, Func<string, bool>> pruefer, IReadOnlyList<string>? schritteSchmal = null)
+        IReadOnlyDictionary<string, Func<string, bool>> pruefer, IReadOnlyList<string>? schritteSchmal = null,
+        bool zahlenfelder = false)
     {
+        Zahlenfelder = zahlenfelder;
         Art = art;
         Stufe = stufe;
         Text = text;
@@ -51,6 +53,33 @@ public sealed class TrainerAufgabe
     public List<(string Schluessel, bool Richtig)> Pruefen(IReadOnlyDictionary<string, string> antworten) =>
         [.. Felder.Select(f => (f.Schluessel, _pruefer[f.Schluessel](antworten.TryGetValue(f.Schluessel, out var a) ? a ?? "" : "")))];
 
+    /// <summary>
+    /// W4a (Auflage P3-17 4d): Felder erwarten eine Zahl nach der Leseregel. Keine Zahl, leer oder
+    /// mit Einheit ist dann ein Eingabefehler statt einer falschen Antwort.
+    /// </summary>
+    public bool Zahlenfelder { get; }
+
+    /// <summary>Erster Eingabefehler (Text von Zahlen.Lesen mit der Feldbeschriftung) oder null.</summary>
+    public string? EingabeFehler(IReadOnlyDictionary<string, string> antworten)
+    {
+        if (!Zahlenfelder)
+        {
+            return null;
+        }
+        foreach (var (schluessel, beschriftung) in Felder)
+        {
+            try
+            {
+                Zahlen.Lesen(antworten.TryGetValue(schluessel, out var a) ? a ?? "" : "", beschriftung);
+            }
+            catch (RechnerFehler f)
+            {
+                return f.Message;
+            }
+        }
+        return null;
+    }
+
     /// <summary>all_correct(answers).</summary>
     public bool AllesRichtig(IReadOnlyDictionary<string, string> antworten) => Pruefen(antworten).All(p => p.Richtig);
 }
@@ -77,6 +106,23 @@ public static class RechenTrainer
         ("bedarf", "Nach Hostbedarf"),
     ];
 
+    /// <summary>W4a (Weisung P3-17): Aufgabenarten im Bereich "Daten" (nicht in TRAINER_KINDS, G27 bleibt).</summary>
+    public static readonly IReadOnlyList<(string Art, string Name)> DatenArten =
+    [
+        ("einheiten", ArtEinheiten),
+        ("dauer", ArtDauer),
+    ];
+
+    /// <summary>Alle Aufgabenarten (Netzwerk, dann Daten).</summary>
+    public static readonly IReadOnlyList<(string Art, string Name)> AlleArten = [.. Arten, .. DatenArten];
+
+    /// <summary>Bereich-Pillen des Trainers (W4a: Netzwerk, Daten; WiSo ab W4c) mit ihren Arten.</summary>
+    public static readonly IReadOnlyList<(string Wert, string Name, IReadOnlyList<(string Art, string Name)> Arten)> Bereiche =
+    [
+        ("netzwerk", BereichNetzwerk, Arten),
+        ("daten", BereichDaten, DatenArten),
+    ];
+
     /// <summary>TRAINER_LEVELS.</summary>
     public static readonly IReadOnlyList<(int Stufe, string Name)> Stufen = [(1, "Leicht"), (2, "Mittel"), (3, "Schwer")];
 
@@ -99,7 +145,7 @@ public static class RechenTrainer
     public const string LueckeNeu = "(nicht einzeln aufgelistet)";
 
     /// <summary>TRAINER_KIND_NAME.</summary>
-    public static string ArtName(string art) => Arten.First(a => a.Art == art).Name;
+    public static string ArtName(string art) => AlleArten.First(a => a.Art == art).Name;
 
     /// <summary>TRAINER_LEVEL_NAME.</summary>
     public static string StufeName(int stufe) => Stufen.First(s => s.Stufe == stufe).Name;
@@ -124,6 +170,8 @@ public static class RechenTrainer
             "ipv6" => Ipv6(rng, stufe),
             "teilen" => Teilen(rng, stufe),
             "bedarf" => Bedarf(rng, stufe),
+            "einheiten" => DatenTrainer.Einheiten(rng, stufe),
+            "dauer" => DatenTrainer.Dauer(rng, stufe),
             _ => throw new ArgumentOutOfRangeException(nameof(art), art, "unbekannte Aufgabenart"),
         };
     }
