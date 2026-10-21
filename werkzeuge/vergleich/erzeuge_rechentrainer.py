@@ -24,6 +24,9 @@ Python 3.12 (CI):
                trainer_stats() danach und die Statistikzeile wie show_stats
                (app_gui 5552, main.py 2992); dazu die Statistikzeile fuer feste
                Zaehlwerte.
+  gross      - Pruefer mit Eingaben um Pythons Grenze von 4300 Ziffern fuer int() (Python 3.12
+               wirft ValueError, den der Trainer nicht faengt: "ValueError"; C# wertet
+               nach Weisung P3-12 Frage 3 als falsch).
   pruefer    - je Pruefer (_ip_matcher, _int_matcher, _base_matcher,
                _network_matcher, _ipv6_text_matcher, _prefix_matcher,
                _count_matcher) eine Liste Eingabe -> richtig/falsch.
@@ -282,6 +285,20 @@ def main():
 
     speichern = speichern_werte(tmp)
 
+    gross = []
+    for art, erwartet, ziffern in (("int", "62", "62"), ("praefix", "26", "26"), ("anzahl", "1024", "1024"),
+                                   ("anzahl_potenz", "1024", "1024"), ("hex", "255", "ff"), ("bin", "5", "101")):
+        match = pruefer_bauen(art, erwartet)
+        for laenge in (4299, 4300, 4301, 5000):
+            for eingabe in ("0" * (laenge - len(ziffern)) + ziffern,
+                            "/" + "0" * (laenge - len(ziffern)) + ziffern,
+                            "0" * (laenge - len(ziffern) - 1) + "." + ziffern):
+                try:
+                    ergebnis = bool(match(eingabe))
+                except ValueError:
+                    ergebnis = "ValueError"
+                gross.append([art, erwartet, len(eingabe), eingabe, ergebnis])
+
     daten = {
         "quelle": "fisi_lernen trainer_task, trainer_round, trainer_summary, TrainerTask.check, "
                   "_ip_matcher, _int_matcher, _base_matcher, _network_matcher, _ipv6_text_matcher, "
@@ -301,6 +318,7 @@ def main():
         "summen": summen,
         "bereinigen": bereinigen,
         "int_basis": int_basis,
+        "gross": gross,
         "speichern": speichern,
         "pruefer": pruefer,
     }

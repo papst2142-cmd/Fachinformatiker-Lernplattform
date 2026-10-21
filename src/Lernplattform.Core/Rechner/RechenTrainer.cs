@@ -166,7 +166,17 @@ public static class RechenTrainer
     /// <summary>_digits: nicht leer und nur die ASCII-Ziffern 0 bis 9.</summary>
     internal static bool Ziffern(string text) => text.Length > 0 && text.All(c => c is >= '0' and <= '9');
 
+    /// <summary>Pythons Grenze fuer int() mit Basis 10 (sys.get_int_max_str_digits, Python 3.12).</summary>
+    internal const int HoechstensZiffern = 4300;
+
     private static BigInteger Ganz(string ziffern) => BigInteger.Parse(ziffern, NumberStyles.None, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// _digits(text) and int(text) == erwartet. Mehr als 4300 Ziffern: Python wirft dort einen
+    /// ValueError (Pruefen bricht ab); C# wertet bewusst "falsch" (Weisung P3-12 Frage 3, Sammelliste 34).
+    /// </summary>
+    private static bool ZiffernGleich(string text, BigInteger erwartet) =>
+        Ziffern(text) && text.Length <= HoechstensZiffern && Ganz(text) == erwartet;
 
     /// <summary>Gleiche Adresse wie Python: Version, Wert und Zone (scope_id) gleich.</summary>
     private static bool Gleich(IpAdresse a, IpAdresse b) =>
@@ -180,7 +190,7 @@ public static class RechenTrainer
     internal static Func<string, bool> ZahlPruefer(BigInteger erwartet) => text =>
     {
         var wert = Bereinigen(text).Replace(".", "", StringComparison.Ordinal);
-        return Ziffern(wert) && Ganz(wert) == erwartet;
+        return ZiffernGleich(wert, erwartet);
     };
 
     /// <summary>_base_matcher: Praefix "0b" bzw. "0x"/"h" (auch vorn) einmal weg, "_" weg, dann int(wert, basis).</summary>
@@ -217,7 +227,7 @@ public static class RechenTrainer
     {
         var wert = Bereinigen(text);
         wert = wert.StartsWith('/') ? wert[1..] : wert;
-        return Ziffern(wert) && Ganz(wert) == erwartet;
+        return ZiffernGleich(wert, erwartet);
     };
 
     /// <summary>_count_matcher: Tausenderpunkte nur in Dreiergruppen, mit potenz auch "2^n" (hoechstens 6 Zeichen).</summary>
@@ -235,7 +245,7 @@ public static class RechenTrainer
             return false;
         }
         wert = string.Concat(gruppen);
-        return Ziffern(wert) && Ganz(wert) == erwartet;
+        return ZiffernGleich(wert, erwartet);
     };
 
     /// <summary>
