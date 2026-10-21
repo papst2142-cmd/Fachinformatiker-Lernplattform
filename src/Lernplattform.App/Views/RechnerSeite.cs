@@ -26,6 +26,7 @@ namespace Lernplattform.Views;
 /// W4a (Weisung P3-17): Auswahl-Pillen ueber den Karten, immer genau eine Karte sichtbar; neu
 /// "Datenmengen" und "Übertragung" (<see cref="DatenKarten"/>). W4b (Weisung P3-21): Karte
 /// "Bild und Video" (<see cref="VideoKarte"/>) mit Uebernahme in die Uebertragungsdauer.
+/// W4c (Weisung P3-23): Karte "WiSo-Rechner" (<see cref="WisoKarte"/>) als letzte Pille.
 /// </summary>
 public sealed class RechnerSeite : UserControl, IAufklappbar
 {
@@ -35,6 +36,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     private readonly Dictionary<string, Control> _karten = new(StringComparer.Ordinal);
     private readonly DatenKarten _datenKarten;
     private readonly VideoKarte _video;
+    private readonly WisoKarte _wiso;
     private readonly StackPanel _rechner = new() { Spacing = 16 };
     private readonly RechenTrainerTeil _trainer;
     private readonly SubnetKarte _subnet;
@@ -143,6 +145,9 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
             _datenKarten.Uebernehmen(text, einheit, hinweis);
         });
         _rechenwege.Add(_video.Weg);
+        // --- WiSo-Rechner (W4c) ---
+        _wiso = new WisoKarte(() => _schmal);
+        _rechenwege.AddRange(_wiso.Rechenwege);
 
         _karten["subnetting"] = _subnet.Karte;
         _karten["datenmengen"] = _datenKarten.DatenKarte;
@@ -150,6 +155,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         _karten["bild"] = _video.Karte;
         _karten["raid"] = RechnerTeile.Karte(RAID_TITLE, "Pinsel.purple", RechnerTeile.Unterschrift(RAID_SUBTITLE), raid);
         _karten["usv"] = RechnerTeile.Karte(UPS_TITLE, "Pinsel.orange", RechnerTeile.Unterschrift(UPS_SUBTITLE), usv);
+        _karten["wiso"] = _wiso.Karte;
         _auswahl = new Pillen(RechnerAuswahl, RechnerAuswahl[0].Wert, AuswahlWechseln);
         _rechner.Children.Add(_auswahl);
         foreach (var (wert, _) in RechnerAuswahl)
@@ -190,6 +196,9 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     /// <summary>Karte Bild und Video (fuer den Start ohne Bedienung).</summary>
     internal VideoKarte Video => _video;
 
+    /// <summary>Karte WiSo-Rechner (fuer den Start ohne Bedienung).</summary>
+    internal WisoKarte Wiso => _wiso;
+
     /// <summary>Gewaehlte Karte der Auswahl-Pillen.</summary>
     internal string Gewaehlt => _auswahl.Wert;
 
@@ -229,6 +238,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         }
         _subnet.AufbauGeaendert();
         _datenKarten.AufbauGeaendert();
+        _wiso.AufbauGeaendert();
     }
 
     /// <summary>Auswahl-Pille: genau eine Karte sichtbar, oben anfangen.</summary>

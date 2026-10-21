@@ -24,9 +24,11 @@ public class DatenTrainerTests
     public void AufgabenWieG31()
     {
         var aufgaben = G31.GetProperty("aufgaben").EnumerateArray().ToList();
-        // W4a: einheiten, dauer; W4b (Weisung P3-21): video, je 3 Stufen x 40 Startwerte
-        Assert.Equal(360, aufgaben.Count);
-        Assert.Equal(["einheiten", "dauer", "video"], aufgaben.Select(a => a.GetProperty("art").GetString()).Distinct());
+        // W4a: einheiten, dauer; W4b (Weisung P3-21): video; W4c (Weisung P3-23): sechs WiSo-Arten;
+        // je 3 Stufen x 40 Startwerte
+        Assert.Equal(1080, aufgaben.Count);
+        Assert.Equal(["einheiten", "dauer", "video", "bezug", "verkauf", "deckung", "afa", "zinsen", "amort"],
+            aufgaben.Select(a => a.GetProperty("art").GetString()).Distinct());
         Assert.All(aufgaben.GroupBy(a => a.GetProperty("art").GetString()), g => Assert.Equal(120, g.Count()));
         foreach (var soll in aufgaben)
         {
@@ -57,13 +59,20 @@ public class DatenTrainerTests
         Assert.Equal("Datenmengen", RechenTrainer.ArtName("einheiten"));
         Assert.Equal("Übertragungsdauer", RechenTrainer.ArtName("dauer"));
         Assert.Equal("Bild und Video", RechenTrainer.ArtName("video"));
-        Assert.Equal(["netzwerk", "daten"], RechenTrainer.Bereiche.Select(b => b.Wert));
-        Assert.Equal(["Netzwerk", "Daten"], RechenTrainer.Bereiche.Select(b => b.Name));
+        Assert.Equal("Bezugskalkulation", RechenTrainer.ArtName("bezug"));
+        Assert.Equal("Verkaufskalkulation", RechenTrainer.ArtName("verkauf"));
+        Assert.Equal("Deckungsbeitrag", RechenTrainer.ArtName("deckung"));
+        Assert.Equal("Abschreibung", RechenTrainer.ArtName("afa"));
+        Assert.Equal("Zinsen", RechenTrainer.ArtName("zinsen"));
+        Assert.Equal("Amortisation", RechenTrainer.ArtName("amort"));
+        Assert.Equal(["netzwerk", "daten", "wiso"], RechenTrainer.Bereiche.Select(b => b.Wert));
+        Assert.Equal(["Netzwerk", "Daten", "WiSo"], RechenTrainer.Bereiche.Select(b => b.Name));
         Assert.Equal(RechenTrainer.Arten, RechenTrainer.Bereiche[0].Arten);
         Assert.Equal(["einheiten", "dauer", "video"], RechenTrainer.Bereiche[1].Arten.Select(a => a.Art));
+        Assert.Equal(["bezug", "verkauf", "deckung", "afa", "zinsen", "amort"], RechenTrainer.Bereiche[2].Arten.Select(a => a.Art));
         // TRAINER_KINDS (G27) bleibt bei den sechs Netzwerk-Arten
         Assert.Equal(6, RechenTrainer.Arten.Count);
-        Assert.Equal(9, RechenTrainer.AlleArten.Count);
+        Assert.Equal(15, RechenTrainer.AlleArten.Count);
     }
 
     // ---------------------------------------------------------------- Pruefer (F5a)
@@ -73,7 +82,8 @@ public class DatenTrainerTests
     [Fact]
     public void LoesungIstRichtigUndDanebenFalsch()
     {
-        foreach (var art in new[] { "einheiten", "dauer", "video" })
+        // W4c: auch die sechs WiSo-Arten (genau, Geld.Wert)
+        foreach (var art in new[] { "einheiten", "dauer", "video", "bezug", "verkauf", "deckung", "afa", "zinsen", "amort" })
         {
             for (var stufe = 1; stufe <= 3; stufe++)
             {
@@ -293,10 +303,18 @@ public class DatenTrainerTests
         Assert.Single(t.Zeilen());
     }
 
-    [Fact]
-    public void JeGueltigemPruefenGenauEineZeile()
+    [Theory]
+    [InlineData("dauer", 3, "99")]
+    [InlineData("bezug", 1, "-1")]
+    [InlineData("verkauf", 3, "-1")]
+    [InlineData("deckung", 3, "-1")]
+    [InlineData("afa", 2, "-1")]
+    [InlineData("zinsen", 3, "-1")]
+    [InlineData("amort", 3, "-1")]
+    public void JeGueltigemPruefenGenauEineZeile(string art, int stufe, string daneben)
     {
-        using var t = new Aufbau("dauer", 3);
+        // W4c: auch die WiSo-Arten; "daneben" ist nie die Loesung (WiSo-Loesungen sind nie negativ)
+        using var t = new Aufbau(art, stufe);
         var a = t.Ablauf;
         a.RundeStarten();
         var erwartet = new List<string>();
@@ -308,9 +326,9 @@ public class DatenTrainerTests
                 Assert.Null(a.Druecken(new Dictionary<string, string> { [aufgabe.Felder[0].Schluessel] = "abc" }, false));
             }
             var richtig = i % 2 == 0;
-            var pruefung = a.Druecken(richtig ? Loesung(aufgabe) : aufgabe.Felder.ToDictionary(f => f.Schluessel, _ => "99"), i % 2 == 1)!;
+            var pruefung = a.Druecken(richtig ? Loesung(aufgabe) : aufgabe.Felder.ToDictionary(f => f.Schluessel, _ => daneben), i % 2 == 1)!;
             Assert.Equal(richtig, pruefung.AllesRichtig);
-            erwartet.Add($"dauer:3:{(richtig ? 1 : 0)}");
+            erwartet.Add($"{art}:{stufe}:{(richtig ? 1 : 0)}");
             Assert.Equal(erwartet, t.Zeilen());
             a.Druecken(Loesung(aufgabe), false);
         }

@@ -16,7 +16,7 @@ public static partial class RechnerTexte
     public static readonly IReadOnlyList<(string Wert, string Text)> RechnerAuswahl =
     [
         ("subnetting", "Subnetting"), ("datenmengen", "Datenmengen"), ("uebertragung", "Übertragung"),
-        ("bild", "Bild und Video"), ("raid", "RAID"), ("usv", "USV"),
+        ("bild", "Bild und Video"), ("raid", "RAID"), ("usv", "USV"), ("wiso", "WiSo"),
     ];
 
     // -- Trainer-Bereich ---------------------------------------------------------------------

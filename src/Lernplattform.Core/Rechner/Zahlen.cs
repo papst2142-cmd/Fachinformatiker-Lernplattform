@@ -45,6 +45,24 @@ public static partial class Zahlen
     internal static bool Wert(string? text, out double wert, out string grund)
     {
         wert = 0;
+        if (!Bereinigt(text, out var negativ, out var betrag, out grund))
+        {
+            return false;
+        }
+        var zahl = double.Parse(betrag, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+        wert = zahl == 0 ? 0.0 : (negativ ? -zahl : zahl);
+        return true;
+    }
+
+    /// <summary>
+    /// Die Leseregel ohne Umwandlung: Vorzeichen und Betrag als Text mit Punkt als
+    /// Dezimalzeichen ("1200", "0.07"), oder der Grund. W4c (Weisung P3-16 4a): Geld liest
+    /// diesen Text direkt als decimal, nie ueber double.
+    /// </summary>
+    internal static bool Bereinigt(string? text, out bool negativ, out string betrag, out string grund)
+    {
+        negativ = false;
+        betrag = "";
         grund = "";
         var roh = PythonZeichen.Strip(text ?? "");
         if (roh.Length == 0)
@@ -57,7 +75,7 @@ public static partial class Zahlen
             grund = "keine Zahl";
             return false;
         }
-        var negativ = roh.StartsWith('-');
+        negativ = roh.StartsWith('-');
         if (negativ)
         {
             roh = roh[1..];
@@ -133,9 +151,7 @@ public static partial class Zahlen
             grund = "keine Zahl";
             return false;
         }
-        var zahl = double.Parse(ganz + (rest.Length > 0 ? "." + rest : ""), NumberStyles.AllowDecimalPoint,
-            CultureInfo.InvariantCulture);
-        wert = zahl == 0 ? 0.0 : (negativ ? -zahl : zahl);
+        betrag = ganz + (rest.Length > 0 ? "." + rest : "");
         return true;
     }
 
