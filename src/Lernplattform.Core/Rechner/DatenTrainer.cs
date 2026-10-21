@@ -16,6 +16,8 @@ namespace Lernplattform.Core.Rechner;
 /// 5, Minutenueberlauf ab 59,995 s; Auflage P3-17 4c). Eingabe: Zahl nach der vorhandenen Leseregel;
 /// keine Zahl, leer oder mit Einheit ist ein Eingabefehler (roter Hinweis, nichts gespeichert,
 /// Auflage 4d). Pruefung genau; nur die Sekunden in "dauer - Schwer" mit +-0,01 (F5a).
+/// W4b (Weisung P3-21): Art "video" (Bild und Video) nach Wortliste W4b Abschnitt 6, ebenfalls
+/// gegen G31; Pruefung immer genau.
 /// </summary>
 public static class DatenTrainer
 {
@@ -250,6 +252,96 @@ public static class DatenTrainer
         var bit = g * Datenmenge.Faktor(e) * 8;
         var rate = (double)(r * 1_000_000 * p) / 100;
         return new UebertragungErgebnis(UebertragungFehler.Keiner, bit, rate, bit / rate);
+    }
+
+    // ---------------------------------------------------------------- video
+
+    private static readonly (long W, long H)[] Aufloesungen =
+        [(640, 480), (800, 600), (1024, 768), (1280, 720), (1366, 768), (1600, 900), (1920, 1080), (2560, 1440), (3840, 2160)];
+
+    private static readonly long[] Farbtiefen = [8, 16, 24, 32];
+    private static readonly long[] Bildraten = [24, 25, 30, 50, 60];
+    private static readonly long[] Kompressionen = [10, 20, 25, 40, 50, 100, 200];
+
+    /// <summary>
+    /// Art "video": Leicht Byte je Bild, Mittel Datenrate unkomprimiert (Mbit/s), Schwer Videodatei
+    /// mit Kompression (unter 1 GiB in MiB, sonst GiB, P3-21 F4). Neu gezogen wird bei einer 5 in
+    /// der 3. Nachkommastelle. Byte je Bild ist immer ganz (Farbtiefe Vielfaches von 8).
+    /// </summary>
+    internal static TrainerAufgabe Video(PythonZufall rng, int stufe)
+    {
+        long w, h, d, fps = 0, m = 0, y = 0, bytes;
+        double x;
+        var einheit = "Byte";
+        var schritte = new List<string>();
+        string text, loesung;
+        if (stufe == 1)
+        {
+            (w, h) = rng.Choice(Aufloesungen);
+            d = rng.Choice(Farbtiefen);
+            var bit = w * h * d;
+            bytes = bit / 8;
+            loesung = D(bytes);
+            text = Beschriftungen.Einsetzen(AufgabeVideoLeicht, S(w), S(h), S(d));
+            schritte.Add("Bit je Bild: " + S(w) + " x " + S(h) + " x " + S(d) + " = " + D(bit) + " Bit");
+            schritte.Add("Byte je Bild: " + D(bit) + " / 8 = " + loesung + " Byte");
+        }
+        else if (stufe == 2)
+        {
+            while (true)
+            {
+                (w, h) = rng.Choice(Aufloesungen);
+                d = rng.Choice(Farbtiefen);
+                fps = rng.Choice(Bildraten);
+                bytes = w * h * d / 8;
+                x = (double)(bytes * fps * 8) / 1_000_000;
+                if (!DritteStelleFuenf(x))
+                {
+                    break;
+                }
+            }
+            einheit = "Mbit/s";
+            loesung = Zahlen.DeZahl(x);
+            text = Beschriftungen.Einsetzen(AufgabeVideoMittel, S(w), S(h), S(d), S(fps));
+            schritte.Add("Byte je Bild: " + S(w) + " x " + S(h) + " x " + S(d) + " / 8 = " + D(bytes) + " Byte");
+            schritte.Add("Datenrate: " + D(bytes) + " x " + S(fps) + " x 8 / 1.000.000 = " + loesung + " Mbit/s");
+        }
+        else
+        {
+            long unkomp;
+            double komp;
+            string potenz;
+            while (true)
+            {
+                (w, h) = rng.Choice(Aufloesungen);
+                d = rng.Choice(Farbtiefen);
+                fps = rng.Choice(Bildraten);
+                m = rng.RandInt(1, 10);
+                y = rng.Choice(Kompressionen);
+                bytes = w * h * d / 8;
+                unkomp = bytes * fps * m * 60;
+                komp = (double)unkomp / y;
+                (einheit, potenz, x) = komp < 1024.0 * 1024 * 1024
+                    ? ("MiB", "1024^2", komp / (1024 * 1024))
+                    : ("GiB", "1024^3", komp / (1024.0 * 1024 * 1024));
+                if (!DritteStelleFuenf(x))
+                {
+                    break;
+                }
+            }
+            loesung = Zahlen.DeZahl(x);
+            var dauer = m == 1 ? "1 " + Minute : S(m) + " " + Minuten;
+            text = Beschriftungen.Einsetzen(AufgabeVideoSchwer, S(w), S(h), S(d), S(fps), dauer, S(y));
+            var kompText = Datenmenge.GanzOderKurz(komp);
+            schritte.Add("Byte je Bild: " + S(w) + " x " + S(h) + " x " + S(d) + " / 8 = " + D(bytes) + " Byte");
+            schritte.Add("Datenmenge: " + D(bytes) + " x " + S(fps) + " x " + S(m) + " x 60 = " + D(unkomp) + " Byte");
+            schritte.Add("Komprimiert: " + D(unkomp) + " / " + S(y) + " = " + kompText + " Byte");
+            schritte.Add("In " + einheit + ": " + kompText + " / " + potenz + " = " + loesung + " " + einheit);
+        }
+        return new TrainerAufgabe("video", stufe, text, [("ergebnis", Beschriftungen.Einsetzen(FeldErgebnis, einheit))],
+            new Dictionary<string, string>(StringComparer.Ordinal) { ["ergebnis"] = loesung }, schritte,
+            new Dictionary<string, Func<string, bool>>(StringComparer.Ordinal) { ["ergebnis"] = GenauPruefer(loesung) },
+            zahlenfelder: true);
     }
 
     // ---------------------------------------------------------------- Pruefer

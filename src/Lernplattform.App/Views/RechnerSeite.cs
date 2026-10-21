@@ -24,8 +24,8 @@ namespace Lernplattform.Views;
 /// Meldungstext, Ergebniskasten leer, kein Fenster (Weisung P3-4 Frage 2). Die Rechner speichern
 /// nichts; der Reiter "Trainer" (W3, R7, <see cref="RechenTrainerTeil"/>) speichert je Pruefen.
 /// W4a (Weisung P3-17): Auswahl-Pillen ueber den Karten, immer genau eine Karte sichtbar; neu
-/// "Datenmengen" und "Übertragung" (<see cref="DatenKarten"/>), "Bild und Video" zeigt bis W4b
-/// die bisherige Bildschirm-Karte (Zwischenstand).
+/// "Datenmengen" und "Übertragung" (<see cref="DatenKarten"/>). W4b (Weisung P3-21): Karte
+/// "Bild und Video" (<see cref="VideoKarte"/>) mit Uebernahme in die Uebertragungsdauer.
 /// </summary>
 public sealed class RechnerSeite : UserControl, IAufklappbar
 {
@@ -34,6 +34,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     private readonly Pillen _auswahl;
     private readonly Dictionary<string, Control> _karten = new(StringComparer.Ordinal);
     private readonly DatenKarten _datenKarten;
+    private readonly VideoKarte _video;
     private readonly StackPanel _rechner = new() { Spacing = 16 };
     private readonly RechenTrainerTeil _trainer;
     private readonly SubnetKarte _subnet;
@@ -46,14 +47,6 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     private readonly TextBox _groesse;
     private readonly Ergebniskasten _raidKasten = new(NochKeineBerechnung);
     private readonly Fehlerhinweis _raidFehler = new();
-
-    // Bildschirm
-    private readonly TextBox _breite;
-    private readonly TextBox _hoehe;
-    private readonly TextBox _fps;
-    private readonly Pillen _tiefe;
-    private readonly Ergebniskasten _bildKasten = new(NochKeineBerechnung);
-    private readonly Fehlerhinweis _bildFehler = new();
 
     // USV
     private readonly Dictionary<string, TextBox> _usvFelder = new(StringComparer.Ordinal);
@@ -90,25 +83,6 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         };
         Rechenweg(raid, CALC_EXPLAIN_RAID, CALC_EXPLAIN_RAID_HANDY);
         EnterRechnet(RaidRechnen, _platten, _groesse);
-
-        // --- Bildschirm ---
-        _breite = RechnerTeile.Feld("1920", SCREEN_FIELD_WIDTH, zahl: true, breite: 110);
-        _hoehe = RechnerTeile.Feld("1080", SCREEN_FIELD_HEIGHT, zahl: true, breite: 110);
-        _fps = RechnerTeile.Feld("30", SCREEN_FIELD_FPS, zahl: true, breite: 110);
-        _tiefe = new Pillen(COLOR_DEPTHS, COLOR_DEPTHS[2].Item1, _ => { });
-        var bild = new StackPanel
-        {
-            Spacing = 10,
-            Children =
-            {
-                Felder(RechnerTeile.Zeile(SCREEN_FIELD_WIDTH, _breite), RechnerTeile.Zeile(SCREEN_FIELD_HEIGHT, _hoehe),
-                    RechnerTeile.Zeile(SCREEN_FIELD_FPS, _fps)),
-                RechnerTeile.Beschriftung(SCREEN_FIELD_DEPTH), _tiefe,
-                Knopf(Berechnen, BildRechnen), _bildFehler, _bildKasten,
-            },
-        };
-        Rechenweg(bild, CALC_EXPLAIN_SCREEN, CALC_EXPLAIN_SCREEN_HANDY);
-        EnterRechnet(BildRechnen, _breite, _hoehe, _fps);
 
         // --- USV ---
         _usvEinheit = new Pillen(UPS_UNITS, UPS_UNITS[0].Item1, _ => { });
@@ -162,11 +136,18 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         _datenKarten = new DatenKarten(() => _schmal);
         _rechenwege.Add(_datenKarten.DatenWeg);
         _rechenwege.Add(_datenKarten.DauerWeg);
+        // --- Bild und Video (W4b) ---
+        _video = new VideoKarte(() => _schmal, (text, einheit, hinweis) =>
+        {
+            Waehle("uebertragung");
+            _datenKarten.Uebernehmen(text, einheit, hinweis);
+        });
+        _rechenwege.Add(_video.Weg);
 
         _karten["subnetting"] = _subnet.Karte;
         _karten["datenmengen"] = _datenKarten.DatenKarte;
         _karten["uebertragung"] = _datenKarten.DauerKarte;
-        _karten["bild"] = RechnerTeile.Karte(SCREEN_TITLE, "Pinsel.green", RechnerTeile.Unterschrift(SCREEN_SUBTITLE), bild);
+        _karten["bild"] = _video.Karte;
         _karten["raid"] = RechnerTeile.Karte(RAID_TITLE, "Pinsel.purple", RechnerTeile.Unterschrift(RAID_SUBTITLE), raid);
         _karten["usv"] = RechnerTeile.Karte(UPS_TITLE, "Pinsel.orange", RechnerTeile.Unterschrift(UPS_SUBTITLE), usv);
         _auswahl = new Pillen(RechnerAuswahl, RechnerAuswahl[0].Wert, AuswahlWechseln);
@@ -205,6 +186,9 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
 
     /// <summary>Karten Datenmengen und Uebertragung (fuer den Start ohne Bedienung).</summary>
     internal DatenKarten Daten => _datenKarten;
+
+    /// <summary>Karte Bild und Video (fuer den Start ohne Bedienung).</summary>
+    internal VideoKarte Video => _video;
 
     /// <summary>Gewaehlte Karte der Auswahl-Pillen.</summary>
     internal string Gewaehlt => _auswahl.Wert;
@@ -282,13 +266,10 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         TabWechseln(wert);
     }
 
-    // -- RAID und Bildschirm ------------------------------------------------------------------
+    // -- RAID -----------------------------------------------------------------------------------
 
     internal void RaidRechnen() =>
         Ausfuehren(_raidKasten, _raidFehler, () => Raid.Bericht(_raidLevel.Wert, _platten.Text, _groesse.Text));
-
-    internal void BildRechnen() =>
-        Ausfuehren(_bildKasten, _bildFehler, () => Bildschirm.Bericht(_breite.Text, _hoehe.Text, _tiefe.Wert, _fps.Text ?? ""));
 
     /// <summary>Feld der RAID-Karte setzen (fuer den Start ohne Bedienung).</summary>
     internal void RaidEingabe(string platten, string groesse)

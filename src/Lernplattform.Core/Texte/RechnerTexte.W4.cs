@@ -5,6 +5,8 @@ namespace Lernplattform.Core.Texte;
 /// der Trainer-Arten "einheiten"/"dauer", PC und Handy gleich. Wortlaut genau wie die von Chat
 /// freigegebene Wortliste (Fi-Austausch anlagen/P3-16_Wortliste_W4a.md, Aenderungen P3-17
 /// Punkt 3). Kein Python-Vorbild; RechnerTexte.Python.cs (erzeugt) bleibt unveraendert.
+/// W4b (Weisung P3-21): Karte "Bild und Video", Uebernahme und Trainer-Art "video" genau nach der
+/// freigegebenen Wortliste (anlagen/P3-20_Wortliste_W4b.md, Feld "Dauer (Minuten, optional)").
 /// </summary>
 public static partial class RechnerTexte
 {
@@ -116,4 +118,46 @@ public static partial class RechnerTexte
     public const string AufgabeDauerLeicht = "Eine Datei mit %s MB wird mit %s Mbit/s übertragen. Die nutzbare Leistung ist 100 %%. Wie viele Sekunden dauert das?";
     public const string AufgabeDauerMittel = "Eine Datei mit %s GB wird mit %s Mbit/s übertragen. Die nutzbare Leistung ist 100 %%. Wie lange dauert das?";
     public const string AufgabeDauerSchwer = "Eine Datei mit %s %s wird mit %s Mbit/s übertragen. Die nutzbare Leistung ist %s %%. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.";
+
+    // -- Bild und Video (W4b) ----------------------------------------------------------------
+
+    public const string VideoTitle = "Bild und Video";
+    public const string VideoSubtitle = "Pixel, Farbtiefe, Datenrate, Video";
+    public const string VideoFieldMinutes = "Dauer (Minuten, optional)";
+    public const string VideoReadMinutes = "Dauer (Minuten)";
+    public const string VideoFieldCompression = "Kompression (y-fach)";
+    public const string VideoDefaultCompression = "1";
+    public const string VideoMinutesTooSmall = "Die Dauer muss größer als 0 sein.";
+    public const string VideoMinutesTooBig = "Die Dauer ist zu groß (höchstens 10.000 Minuten).";
+    public const string VideoNeedsFps = "Für ein Video bitte eine Bildrate größer als 0 eingeben.";
+    public const string VideoCompressionWrong = "Die Kompression muss mindestens 1 und höchstens 1.000 sein.";
+    public const string VideoHeader = "VIDEO (NUR BILD, OHNE TON)";
+    public const string VideoLineDuration = "Dauer";
+    public const string VideoLinePerSecond = "Byte pro Sekunde";
+    public const string VideoLineRaw = "Unkomprimiert";
+    public const string VideoLineCompression = "Kompression";
+    public const string VideoLineCompressed = "Komprimiert";
+    public const string VideoLineRate = "Datenrate komprimiert";
+    public const string Minute = "Minute";
+    public const string Minuten = "Minuten";
+    public const string Fach = "-fach";
+    public const string VideoTakeOver = "In Übertragungsdauer übernehmen";
+    public const string VideoTakenMiB = "Aus Bild und Video übernommen (auf 3 Nachkommastellen gerundet).";
+    public const string VideoTakenByte = "Aus Bild und Video übernommen (in Byte, aufgerundet).";
+
+    public const string VideoExplainStep5 = "SCHRITT 5: Video (mit den eingegebenen Zahlen)";
+    public static readonly IReadOnlyList<string> VideoExplainWhat =
+    [
+        "   Ein Video ist eine Folge von Bildern. Hier zählt nur das",
+        "   Bild, ohne Ton.",
+    ];
+    public const string VideoExplainPerSecond = "   Byte pro Sekunde = Byte je Bild x Bildrate";
+    public const string VideoExplainAmount = "   Datenmenge = Byte pro Sekunde x Minuten x 60";
+    public const string VideoExplainStep6 = "SCHRITT 6: Kompression";
+    public const string VideoExplainCompression = "   Bei y-facher Kompression wird die Datenmenge durch y geteilt.";
+
+    public const string ArtVideo = "Bild und Video";
+    public const string AufgabeVideoLeicht = "Ein Bild hat %s x %s Pixel und %s Bit Farbtiefe. Wie viele Byte braucht es unkomprimiert?";
+    public const string AufgabeVideoMittel = "Ein Video hat %s x %s Pixel, %s Bit Farbtiefe und %s Bilder pro Sekunde. Wie groß ist die Datenrate unkomprimiert? Runde auf 2 Nachkommastellen.";
+    public const string AufgabeVideoSchwer = "Ein Video hat %s x %s Pixel, %s Bit Farbtiefe und %s Bilder pro Sekunde. Es dauert %s und wird %s-fach komprimiert. Wie groß ist die Datei? Runde auf 2 Nachkommastellen.";
 }

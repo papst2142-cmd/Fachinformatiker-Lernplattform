@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Erzeugt die Vergleichswerte G31 (Rechentrainer, Aufgabenarten "einheiten"
-# und "dauer", Stufen 1-3) fuer Phase 3 / Welle W4. Unabhaengig geschrieben
-# nur aus der Spezifikation "Auftrag 2, Teil B" (ohne C#-Code).
+# Erzeugt die Vergleichswerte G31 (Rechentrainer, Aufgabenarten "einheiten",
+# "dauer" und "video", Stufen 1-3) fuer Phase 3 / Welle W4. Unabhaengig
+# geschrieben nur aus der Spezifikation "Auftrag 2, Teil B" (ohne C#-Code).
+# Herkunft "video" (Welle W4b): Spezifikation "G31-Erweiterung: Trainer-Art
+# video" auf Grundlage der Wortliste W4b Abschnitt 6 (P3-20, freigegeben mit
+# Weisung P3-21: Schwer unter 1 GiB in MiB, sonst GiB), ebenfalls ohne C#-Code.
+# Die Aufgaben von "einheiten" und "dauer" bleiben bytegleich.
 # Python 3.12, nur Standardbibliothek. Aufruf:
 #   python3 -I erzeuge_w4_rechentrainer.py <ziel.json>
 # Ausgabe ist deterministisch (zweimal laufen = bytegleich).
@@ -26,6 +30,19 @@
 #       als echte Zeichen (ensure_ascii=False).
 #  T-f) Die Schleife bei "dauer" Stufe 3 zieht in jedem Durchlauf e, g, r, p
 #       neu (in dieser Reihenfolge) und rechnet t erst danach.
+#  T-h) "video": Breite, Hoehe, Farbtiefe, Bildrate, Minuten und
+#       Kompression stehen in Text und Schritten als str(w) ohne
+#       Tausenderpunkt (Spezifikation "Zahlen im Text"); die Potenz in
+#       Stufe 3 als "1024^2" bzw. "1024^3" wie T-a.
+#  T-i) "video" Stufe 2/3: jede Schleifenrunde zieht alle Werte neu in der
+#       Reihenfolge der Spezifikation (w,h; d; fps; m; y), auch wenn nur
+#       das Ergebnis die Abbruchbedingung verletzt hat (wie T-f).
+#  T-j) "video" Stufe 3: komp = unkomp / y ist immer float (auch wenn die
+#       Teilung aufgeht); ganz_text(komp) zeigt dann trotzdem eine ganze
+#       Zahl ohne Komma. Die Einheitenwahl vergleicht komp < 1024 ** 3
+#       als float gegen int, ohne Rundung.
+#  T-k) "video": "1.000.000" im Schritt der Stufe 2 ist fester Text, keine
+#       Zahl aus de(); "gross" steht im String als \u00df-Escape (T-e).
 
 import json
 import random
@@ -221,22 +238,89 @@ def aufgabe_dauer(stufe, rng):
     return text, felder, loesung, schritte
 
 
+AUFLOESUNGEN = [(640, 480), (800, 600), (1024, 768), (1280, 720), (1366, 768),
+                (1600, 900), (1920, 1080), (2560, 1440), (3840, 2160)]
+FARBTIEFEN = [8, 16, 24, 32]
+BILDRATEN = [24, 25, 30, 50, 60]
+KOMPRESSIONEN = [10, 20, 25, 40, 50, 100, 200]
+GROSS = "gro\u00df"
+
+
+def aufgabe_video(stufe, rng):
+    if stufe == 1:
+        w, h = rng.choice(AUFLOESUNGEN)
+        d = rng.choice(FARBTIEFEN)
+        bit = w * h * d
+        byte = bit // 8
+        text = (f"Ein Bild hat {w} x {h} Pixel und {d} Bit Farbtiefe. "
+                "Wie viele Byte braucht es unkomprimiert?")
+        felder = [["ergebnis", "Ergebnis (Byte)"]]
+        loesung = {"ergebnis": de(byte, 0)}
+        schritte = [f"Bit je Bild: {w} x {h} x {d} = {de(bit, 0)} Bit",
+                    f"Byte je Bild: {de(bit, 0)} / 8 = {de(byte, 0)} Byte"]
+    elif stufe == 2:
+        while True:   # T-i
+            w, h = rng.choice(AUFLOESUNGEN)
+            d = rng.choice(FARBTIEFEN)
+            fps = rng.choice(BILDRATEN)
+            byte = w * h * d // 8
+            rate = byte * fps * 8 / 1000000
+            if not dritte_stelle_5(rate):
+                break
+        text = (f"Ein Video hat {w} x {h} Pixel, {d} Bit Farbtiefe und {fps} Bilder pro Sekunde. "
+                f"Wie {GROSS} ist die Datenrate unkomprimiert? Runde auf 2 Nachkommastellen.")
+        felder = [["ergebnis", "Ergebnis (Mbit/s)"]]
+        loesung = {"ergebnis": de(rate, 2)}
+        schritte = [f"Byte je Bild: {w} x {h} x {d} / 8 = {de(byte, 0)} Byte",
+                    f"Datenrate: {de(byte, 0)} x {fps} x 8 / 1.000.000 = {de(rate, 2)} Mbit/s"]
+    else:
+        while True:   # T-i
+            w, h = rng.choice(AUFLOESUNGEN)
+            d = rng.choice(FARBTIEFEN)
+            fps = rng.choice(BILDRATEN)
+            m = rng.randint(1, 10)
+            y = rng.choice(KOMPRESSIONEN)
+            byte = w * h * d // 8
+            unkomp = byte * fps * m * 60
+            komp = unkomp / y   # T-j
+            if komp < 1024 ** 3:
+                einheit, x, pot = "MiB", komp / 1024 ** 2, "1024^2"
+            else:
+                einheit, x, pot = "GiB", komp / 1024 ** 3, "1024^3"
+            if not dritte_stelle_5(x):
+                break
+        minutenwort = "1 Minute" if m == 1 else f"{m} Minuten"
+        text = (f"Ein Video hat {w} x {h} Pixel, {d} Bit Farbtiefe und {fps} Bilder pro Sekunde. "
+                f"Es dauert {minutenwort} und wird {y}-fach komprimiert. "
+                f"Wie {GROSS} ist die Datei? Runde auf 2 Nachkommastellen.")
+        felder = [["ergebnis", f"Ergebnis ({einheit})"]]
+        loesung = {"ergebnis": de(x, 2)}
+        kt = ganz_text(komp)
+        schritte = [f"Byte je Bild: {w} x {h} x {d} / 8 = {de(byte, 0)} Byte",
+                    f"Datenmenge: {de(byte, 0)} x {fps} x {m} x 60 = {de(unkomp, 0)} Byte",
+                    f"Komprimiert: {de(unkomp, 0)} / {y} = {kt} Byte",
+                    f"In {einheit}: {kt} / {pot} = {de(x, 2)} {einheit}"]
+    return text, felder, loesung, schritte
+
+
 def main():
     if len(sys.argv) != 2:
         print("Aufruf: python3 -I erzeuge_w4_rechentrainer.py <ziel.json>", file=sys.stderr)
         return 2
     aufgaben = []
-    for art in ["einheiten", "dauer"]:
+    bauer = {"einheiten": aufgabe_einheiten, "dauer": aufgabe_dauer, "video": aufgabe_video}
+    for art in ["einheiten", "dauer", "video"]:
         for stufe in [1, 2, 3]:
             for startwert in [f"{s}-{n}" for s in ["0", "1", "4711", "123456789"] for n in range(10)]:
                 rng = random.Random(f"{art}-{stufe}-{startwert}")
-                bau = aufgabe_einheiten if art == "einheiten" else aufgabe_dauer
+                bau = bauer[art]
                 text, felder, loesung, schritte = bau(stufe, rng)
                 aufgaben.append({"art": art, "stufe": stufe, "startwert": startwert,
                                  "text": text, "felder": felder, "loesung": loesung,
                                  "schritte": schritte})
     daten = {
-        "quelle": "Unabhaengig aus der Spezifikation G31 (Auftrag 2, Teil B) geschrieben, ohne C#-Code.",
+        "quelle": "Unabhaengig aus der Spezifikation G31 (Auftrag 2, Teil B) geschrieben, ohne C#-Code."
+                  "; video aus Wortliste W4b Abschnitt 6",
         "python": sys.version.split()[0],
         "aufgaben": aufgaben,
     }

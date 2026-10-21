@@ -179,6 +179,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
         Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
         Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
+        Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -402,6 +403,7 @@ public static class AutoMessung
         d.DauerWeg.Zeigen(false);
         d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
         d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        funde += await VideoMesspunkteAsync(ansicht, rechner, DatenMesspunkt);
         rechner.Waehle("subnetting");
         await ansicht.BildFertigAsync();
         // W3 (R7): Reiter Trainer (erstes Zeigen liest die Statistik), Runde und Pruefen ohne Speichern
@@ -411,8 +413,81 @@ public static class AutoMessung
         await Messpunkt("Trainer Naechste Aufgabe (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
         await Messpunkt("Trainer Runde Uebertragungsdauer Schwer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: false), ohneFehler: false);
         await Messpunkt("Trainer Pruefen Uebertragungsdauer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: true), ohneFehler: false);
+        await Messpunkt("Trainer Runde Bild und Video Schwer (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: false), ohneFehler: false);
+        await Messpunkt("Trainer Pruefen Bild und Video (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: true), ohneFehler: false);
         rechner.Trainer.ProbeEnde();
         rechner.Tab("rechner");
+        await ansicht.BildFertigAsync();
+        return funde;
+    }
+
+    /// <summary>
+    /// Phase 3 W4b (Weisung P3-21, Auflagen a bis c): Karte "Bild und Video" mit Video berechnen,
+    /// Uebernahme (Wechsel auf "Übertragung" und Rechnen) messen und die Zustaende des
+    /// Uebernahme-Knopfs, das Ende-zu-Ende-Beispiel (355,957 MiB bei 16 Mbit/s und 100 %), den
+    /// Grenzfall in Byte und die Uebernahme bei leerer Datenrate in der echten Oberflaeche pruefen.
+    /// Jede Abweichung ist ein Fund. Danach stehen beide Karten wieder auf ihren Vorgaben.
+    /// </summary>
+    private static async Task<int> VideoMesspunkteAsync(MainView ansicht, RechnerSeite rechner,
+        Func<string, Action, Func<string>, Task> messpunkt)
+    {
+        var funde = 0;
+        var v = rechner.Video;
+        var d = rechner.Daten;
+        void Pruefe(bool richtig, string was)
+        {
+            if (!richtig)
+            {
+                Messwerte.Notiere("  FEHLER (Bild und Video): " + was);
+                funde++;
+            }
+        }
+        await messpunkt("Rechner Auswahl Bild und Video", () => rechner.Waehle("bild"), () => "");
+        Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf vor der ersten Berechnung aktiv");
+        v.Rechnen();
+        Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf ohne Dauer aktiv");
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        await messpunkt("Bild und Video mit Video berechnen", v.Rechnen, () => v.Fehler);
+        Pruefe(v.KnopfAktiv, "Uebernahme-Knopf mit Video-Ergebnis gesperrt");
+        await messpunkt("Rechenweg (Bild und Video) oeffnen", () => v.Weg.Zeigen(true), () => v.Fehler);
+        v.Weg.Zeigen(false);
+        v.Eingabe("1920", "1080", "25", "24", "3", "50");
+        Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf nach Feldaenderung aktiv");
+        v.Eingabe("1920", "1080", "", "24", "2", "50");
+        v.Rechnen();
+        Pruefe(!v.KnopfAktiv && v.Fehler == RechnerTexte.VideoNeedsFps, "Fehler Dauer ohne Bildrate: Knopf aktiv oder falscher Hinweis");
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        v.Rechnen();
+        await messpunkt("Uebernahme in Uebertragung (Wechsel und Rechnen)", v.Uebernehmen, () => d.DauerFehler);
+        var f = d.DauerFelder;
+        Pruefe(rechner.Gewaehlt == "uebertragung", "Auswahl nicht auf Uebertragung");
+        Pruefe(f.Groesse == "355,957" && f.Einheit == "MiB", $"Dateigroesse {f.Groesse} {f.Einheit} statt 355,957 MiB");
+        Pruefe(f.Rate == RechnerTexte.TransferDefaultRate && f.RateEinheit == "Mbit/s" && f.Prozent == RechnerTexte.TransferDefaultPercent, "Datenrate oder Leistung geaendert");
+        // Dauer und Aufteilung stehen in zwei Zeilen der Uebertragung (W4a)
+        var dauerZeilen = d.DauerKasten.Roh.Split('\n');
+        Pruefe(dauerZeilen.Any(z => z.EndsWith(": 186,62 Sekunden", StringComparison.Ordinal))
+            && dauerZeilen.Any(z => z.EndsWith(": 0 Std. 3 Min. 6,62 Sek.", StringComparison.Ordinal)), "Ergebnis ohne 186,62 Sekunden = 0 Std. 3 Min. 6,62 Sek.");
+        Pruefe(d.UebernahmeHinweis == RechnerTexte.VideoTakenMiB, "Hinweiszeile MiB fehlt");
+        d.DauerRechnen();
+        Pruefe(d.UebernahmeHinweis.Length == 0, "Hinweiszeile nach normalem Berechnen noch sichtbar");
+        // Grenzfall Byte (winziger Wert)
+        rechner.Waehle("bild");
+        v.Eingabe("1", "1", "1", "8", "0,001", "1000");
+        v.Rechnen();
+        v.Uebernehmen();
+        f = d.DauerFelder;
+        Pruefe(f.Groesse == "1" && f.Einheit == "Byte" && d.UebernahmeHinweis == RechnerTexte.VideoTakenByte, $"Grenzfall Byte: {f.Groesse} {f.Einheit}, Hinweis \"{d.UebernahmeHinweis}\"");
+        // Auflage b: leere Datenrate -> nur der rote Hinweis der Uebertragung
+        rechner.Waehle("bild");
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        v.Rechnen();
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, "", "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        v.Uebernehmen();
+        Pruefe(d.DauerFehler.Length > 0 && d.UebernahmeHinweis.Length == 0, "leere Datenrate: roter Hinweis fehlt oder Hinweiszeile sichtbar");
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        d.DauerRechnen();
+        v.Eingabe("1920", "1080", "30", "24", "", RechnerTexte.VideoDefaultCompression);
+        v.Rechnen();
         await ansicht.BildFertigAsync();
         return funde;
     }
@@ -486,10 +561,33 @@ public static class AutoMessung
         d.DauerRechnen();
         await ansicht.BildFertigAsync();
         yield return "calc/uebertragung-kurz";
+        // W4b: Bild und Video mit Video-Ergebnis, Rechenweg (offen) und aktivem Uebernahme-Knopf
+        var v = r.Video;
         r.Waehle("bild");
-        r.BildRechnen();
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        v.Rechnen();
         await ansicht.BildFertigAsync();
         yield return "calc/bild";
+        v.Eingabe("100000", "100000", "1000", "32", "10000", "1");
+        v.Rechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/bild-gross";
+        v.Eingabe("1920", "1080", "", "24", "2", "50");
+        v.Rechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/bild-fehler";
+        v.Eingabe("1920", "1080", "25", "24", "2", "50");
+        v.Rechnen();
+        d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
+        v.Uebernehmen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/uebernahme";
+        r.Waehle("bild");
+        v.Eingabe("1", "1", "1", "8", "0,001", "1000");
+        v.Rechnen();
+        v.Uebernehmen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/uebernahme-byte";
         r.Waehle("raid");
         r.RaidEingabe("abc", "1000");
         r.RaidRechnen();
@@ -505,7 +603,7 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
         yield return "calc/trainer";
         // W3 (R7): Trainer ohne Speichern (Probe): laengste Rechenwege und Rueckmeldungen
-        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3), ("einheiten", 3), ("dauer", 3) })
+        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3), ("einheiten", 3), ("dauer", 3), ("video", 3) })
         {
             r.Trainer.Probe(art, stufe, pruefen: false);
             await ansicht.BildFertigAsync();
@@ -517,6 +615,9 @@ public static class AutoMessung
         r.Trainer.Probe("dauer", 3, pruefen: true, eingabefehler: true);
         await ansicht.BildFertigAsync();
         yield return "calc/trainer-dauer-eingabefehler";
+        r.Trainer.Probe("video", 3, pruefen: true, eingabefehler: true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/trainer-video-eingabefehler";
         r.Trainer.Probe("vlsm", 3, pruefen: false, beenden: true);
         await ansicht.BildFertigAsync();
         yield return "calc/trainer-auswertung";
@@ -528,6 +629,8 @@ public static class AutoMessung
         d.DauerRechnen();
         r.RaidEingabe("4", "1000");
         r.RaidRechnen();
+        v.Eingabe("1920", "1080", "30", "24", "", RechnerTexte.VideoDefaultCompression);
+        v.Rechnen();
         r.UsvFeld("minuten", "15");
         r.UsvRechnen("empfehlung", leise: true);
         foreach (var weg in r.Rechenwege)
