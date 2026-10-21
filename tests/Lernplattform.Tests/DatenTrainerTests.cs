@@ -6,7 +6,8 @@ using Lernplattform.Core.Texte;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// Phase 3 W4a, D3/D5/D6 (Weisung P3-17): Trainer-Arten "einheiten" und "dauer" gegen die
+/// Phase 3 W4a, D3/D5/D6 (Weisung P3-17), W4b V4 (Weisung P3-21): Trainer-Arten "einheiten",
+/// "dauer" und "video" gegen die
 /// Vergleichswerte G31 (tests/Vergleich/rechentrainer_w4.json aus dem unabhaengigen Skript
 /// werkzeuge/vergleich/erzeuge_w4_rechentrainer.py), Pruefer (genau, nur Sekunden in
 /// "dauer - Schwer" +-0,01), Rundungsgrenzfaelle (Auflage 4c), Eingabefehler ohne Speichern und
@@ -23,7 +24,10 @@ public class DatenTrainerTests
     public void AufgabenWieG31()
     {
         var aufgaben = G31.GetProperty("aufgaben").EnumerateArray().ToList();
-        Assert.Equal(240, aufgaben.Count);
+        // W4a: einheiten, dauer; W4b (Weisung P3-21): video, je 3 Stufen x 40 Startwerte
+        Assert.Equal(360, aufgaben.Count);
+        Assert.Equal(["einheiten", "dauer", "video"], aufgaben.Select(a => a.GetProperty("art").GetString()).Distinct());
+        Assert.All(aufgaben.GroupBy(a => a.GetProperty("art").GetString()), g => Assert.Equal(120, g.Count()));
         foreach (var soll in aufgaben)
         {
             var art = soll.GetProperty("art").GetString()!;
@@ -52,13 +56,14 @@ public class DatenTrainerTests
     {
         Assert.Equal("Datenmengen", RechenTrainer.ArtName("einheiten"));
         Assert.Equal("Übertragungsdauer", RechenTrainer.ArtName("dauer"));
+        Assert.Equal("Bild und Video", RechenTrainer.ArtName("video"));
         Assert.Equal(["netzwerk", "daten"], RechenTrainer.Bereiche.Select(b => b.Wert));
         Assert.Equal(["Netzwerk", "Daten"], RechenTrainer.Bereiche.Select(b => b.Name));
         Assert.Equal(RechenTrainer.Arten, RechenTrainer.Bereiche[0].Arten);
-        Assert.Equal(["einheiten", "dauer"], RechenTrainer.Bereiche[1].Arten.Select(a => a.Art));
+        Assert.Equal(["einheiten", "dauer", "video"], RechenTrainer.Bereiche[1].Arten.Select(a => a.Art));
         // TRAINER_KINDS (G27) bleibt bei den sechs Netzwerk-Arten
         Assert.Equal(6, RechenTrainer.Arten.Count);
-        Assert.Equal(8, RechenTrainer.AlleArten.Count);
+        Assert.Equal(9, RechenTrainer.AlleArten.Count);
     }
 
     // ---------------------------------------------------------------- Pruefer (F5a)
@@ -68,7 +73,7 @@ public class DatenTrainerTests
     [Fact]
     public void LoesungIstRichtigUndDanebenFalsch()
     {
-        foreach (var art in new[] { "einheiten", "dauer" })
+        foreach (var art in new[] { "einheiten", "dauer", "video" })
         {
             for (var stufe = 1; stufe <= 3; stufe++)
             {
@@ -172,6 +177,44 @@ public class DatenTrainerTests
             Assert.True(!DatenTrainer.DritteStelleFuenf(t) && DatenTrainer.OhneMinutenUeberlauf(t), dauer.Text + " " + t.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
             Assert.True(Zahl(dauer.Loesung["sekunden"]) < 60 && int.Parse(dauer.Loesung["minuten"], System.Globalization.CultureInfo.InvariantCulture) < 60, dauer.Text);
         }
+    }
+
+    [Fact]
+    public void VideoKeineAufgabeAnEinerRundungsgrenze()
+    {
+        // Auflage P3-21 3d: 400 Aufgaben je Mittel/Schwer, Wert aus den Rechenschritten nachgerechnet
+        for (var n = 0; n < 400; n++)
+        {
+            var mittel = RechenTrainer.Aufgabe("video", 2, "grenze-" + n);
+            var zeile = mittel.Schritte[1];                          // "Datenrate: B x F x 8 / 1.000.000 = L Mbit/s"
+            var faktoren = zeile["Datenrate: ".Length..zeile.IndexOf(" / ", StringComparison.Ordinal)].Split(" x ");
+            var rate = (double)(long)(Zahl(faktoren[0]) * Zahl(faktoren[1]) * 8) / 1_000_000;
+            Assert.False(DatenTrainer.DritteStelleFuenf(rate), mittel.Text);
+            Assert.Equal(Zahlen.DeZahl(rate), mittel.Loesung["ergebnis"]);
+            Assert.Equal("Ergebnis (Mbit/s)", mittel.Felder[0].Beschriftung);
+
+            var schwer = RechenTrainer.Aufgabe("video", 3, "grenze-" + n);
+            var komp = schwer.Schritte[2];                           // "Komprimiert: U / y = K Byte"
+            var teile = komp["Komprimiert: ".Length..komp.IndexOf(" = ", StringComparison.Ordinal)].Split(" / ");
+            var k = Zahl(teile[0]) / Zahl(teile[1]);
+            var gib = k >= 1024.0 * 1024 * 1024;
+            var x = gib ? k / (1024.0 * 1024 * 1024) : k / (1024 * 1024);
+            Assert.False(DatenTrainer.DritteStelleFuenf(x), schwer.Text);
+            Assert.Equal(Zahlen.DeZahl(x), schwer.Loesung["ergebnis"]);
+            Assert.Equal(gib ? "Ergebnis (GiB)" : "Ergebnis (MiB)", schwer.Felder[0].Beschriftung);
+            // Byte je Bild immer ganz
+            Assert.DoesNotContain(",", schwer.Schritte[0]);
+        }
+    }
+
+    [Fact]
+    public void VideoPruefaufgabe7()
+    {
+        // Chat, eigene Aufgabe 21.10.2026 (W4_Pruefaufgaben.md Nr. 7): Rechenweg-Arithmetik der Trainer-Schritte
+        // (Ganzzahl-Reihenfolge wie DatenTrainer.Video); mit Video.Rechnen gerechnet in VideoTests.Pruefaufgabe7
+        Assert.Equal("2.764.800", Zahlen.DeZahl(1280 * 720 * 24 / 8, 0));
+        Assert.Equal("663,55", Zahlen.DeZahl((double)(1280L * 720 * 24 / 8 * 30 * 8) / 1_000_000));
+        Assert.Equal("118,65", Zahlen.DeZahl((double)(1280L * 720 * 24 / 8 * 30 * 1 * 60) / 40 / (1024 * 1024)));
     }
 
     // ---------------------------------------------------------------- Speichern (Auflage 4d)

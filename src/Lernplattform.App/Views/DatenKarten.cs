@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Lernplattform.Core.Rechner;
+using Lernplattform.Design;
 using static Lernplattform.Core.Texte.RechnerTexte;
 
 namespace Lernplattform.Views;
@@ -12,6 +14,8 @@ namespace Lernplattform.Views;
 /// leer, kein Fenster (wie R6). Der Rechenweg nutzt die Zahlen der letzten gueltigen Berechnung
 /// (vorher die Vorgabewerte, F1a). Wechselt der Aufbau, wird das Ergebnis neu geschrieben (am PC
 /// zwei Spalten nur, wenn sie passen; schmal untereinander mit kurzen Beschriftungen).
+/// W4b (Weisung P3-21): Uebernahme aus "Bild und Video" mit Hinweiszeile ueber dem Ergebnis
+/// (<see cref="UebertragungKarte"/>); bei einem Eingabefehler steht nur der rote Hinweis.
 /// </summary>
 internal sealed class DatenKarten
 {
@@ -32,6 +36,7 @@ internal sealed class DatenKarten
     private readonly TextBox _prozent;
     private readonly Ergebniskasten _dauerKasten = new(NochKeineBerechnung);
     private readonly Fehlerhinweis _dauerFehler = new();
+    private readonly TextBlock _uebernahmeHinweis = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.text_dim");
     private UebertragungEingabe? _dauer;
 
     public DatenKarten(Func<bool> schmal)
@@ -71,10 +76,12 @@ internal sealed class DatenKarten
                 RechnerSeite.Felder(RechnerTeile.Zeile(TransferRate, _rate)),
                 RechnerTeile.Beschriftung(DataUnit), _rateEinheit,
                 RechnerSeite.Felder(RechnerTeile.Zeile(TransferPercent, _prozent)),
-                RechnerSeite.Knopf(Berechnen, DauerRechnen), _dauerFehler, _dauerKasten,
+                RechnerSeite.Knopf(Berechnen, DauerRechnen), _dauerFehler, _uebernahmeHinweis, _dauerKasten,
                 DauerWeg.Knopf, DauerWeg.Kasten,
             },
         };
+        _uebernahmeHinweis.TextWrapping = TextWrapping.Wrap;
+        _uebernahmeHinweis.IsVisible = false;
         RechnerSeite.EnterRechnet(DauerRechnen, _groesse, _rate, _prozent);
         DauerKarte = RechnerTeile.Karte(TransferTitle, "Pinsel.cyan", RechnerTeile.Unterschrift(TransferSubtitle), dauer);
     }
@@ -94,6 +101,13 @@ internal sealed class DatenKarten
     internal string DatenFehler => _datenFehler.Text ?? "";
 
     internal string DauerFehler => _dauerFehler.Text ?? "";
+
+    /// <summary>Hinweiszeile der Uebernahme ("" = keine).</summary>
+    internal string UebernahmeHinweis => _uebernahmeHinweis.IsVisible ? _uebernahmeHinweis.Text ?? "" : "";
+
+    /// <summary>Dateigroesse und Einheit der Uebertragung (fuer den Start ohne Bedienung).</summary>
+    internal (string Groesse, string Einheit, string Rate, string RateEinheit, string Prozent) DauerFelder =>
+        (_groesse.Text ?? "", _groesseEinheit.Wert, _rate.Text ?? "", _rateEinheit.Wert, _prozent.Text ?? "");
 
     private static DatenmengeEingabe Vorgabe() => DatenBerichte.DatenmengeLesen(DataDefault, DataDefaultUnit);
 
@@ -116,20 +130,31 @@ internal sealed class DatenKarten
         DatenWeg.Fassung(_schmal());
     }
 
-    internal void DauerRechnen()
+    internal void DauerRechnen() => DauerRechnen(null);
+
+    private void DauerRechnen(string? hinweis)
     {
-        try
+        var a = UebertragungKarte.Rechnen(_groesse.Text, _groesseEinheit.Wert, _rate.Text, _rateEinheit.Wert, _prozent.Text, _schmal(), hinweis);
+        if (a.Eingabe is not null)
         {
-            _dauer = DatenBerichte.UebertragungLesen(_groesse.Text, _groesseEinheit.Wert, _rate.Text, _rateEinheit.Wert, _prozent.Text);
-            _dauerKasten.Setzen(DatenBerichte.UebertragungBericht(_dauer, _schmal()));
-            _dauerFehler.Zeigen(null);
+            _dauer = a.Eingabe;
         }
-        catch (RechnerFehler f)
-        {
-            _dauerKasten.Setzen("");
-            _dauerFehler.Zeigen(f.Message);
-        }
+        _dauerKasten.Setzen(a.Text);
+        _dauerFehler.Zeigen(a.Fehler.Length > 0 ? a.Fehler : null);
+        _uebernahmeHinweis.Text = a.Hinweis;
+        _uebernahmeHinweis.IsVisible = a.Hinweis.Length > 0;
         DauerWeg.Fassung(_schmal());
+    }
+
+    /// <summary>
+    /// Uebernahme aus "Bild und Video" (V2): Dateigroesse und Einheit setzen, Datenrate und
+    /// Leistung bleiben, sofort rechnen, Hinweiszeile ueber dem Ergebnis.
+    /// </summary>
+    internal void Uebernehmen(string groesse, string einheit, string hinweis)
+    {
+        _groesse.Text = groesse;
+        _groesseEinheit.Waehle(einheit);
+        DauerRechnen(hinweis);
     }
 
     /// <summary>Felder setzen (fuer den Start ohne Bedienung).</summary>

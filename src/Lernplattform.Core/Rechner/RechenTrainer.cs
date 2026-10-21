@@ -106,11 +106,12 @@ public static class RechenTrainer
         ("bedarf", "Nach Hostbedarf"),
     ];
 
-    /// <summary>W4a (Weisung P3-17): Aufgabenarten im Bereich "Daten" (nicht in TRAINER_KINDS, G27 bleibt).</summary>
+    /// <summary>W4a/W4b (Weisungen P3-17, P3-21): Aufgabenarten im Bereich "Daten" (nicht in TRAINER_KINDS, G27 bleibt).</summary>
     public static readonly IReadOnlyList<(string Art, string Name)> DatenArten =
     [
         ("einheiten", ArtEinheiten),
         ("dauer", ArtDauer),
+        ("video", ArtVideo),
     ];
 
     /// <summary>Alle Aufgabenarten (Netzwerk, dann Daten).</summary>
@@ -172,6 +173,7 @@ public static class RechenTrainer
             "bedarf" => Bedarf(rng, stufe),
             "einheiten" => DatenTrainer.Einheiten(rng, stufe),
             "dauer" => DatenTrainer.Dauer(rng, stufe),
+            "video" => DatenTrainer.Video(rng, stufe),
             _ => throw new ArgumentOutOfRangeException(nameof(art), art, "unbekannte Aufgabenart"),
         };
     }
