@@ -168,6 +168,8 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_rechner_zahlen.py python-linie neu/rechner_zahlen.json
           python3 -I werkzeuge/vergleich/erzeuge_subnetting.py python-linie neu/subnetting.json
           python3 -I werkzeuge/vergleich/erzeuge_rechner.py python-linie neu/rechner.json
+          # Phase 3 Welle 3 (Weisung P3-10): G27 Rechen-Trainer
+          python3 -I werkzeuge/vergleich/erzeuge_rechentrainer.py python-linie neu/rechentrainer.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
@@ -183,7 +185,8 @@ jobs:
                        "potenz.json", "wiederholung.json", "reihenfolge.json", "trainer.json",
                        "uebernahme.json", "pruefsumme_sonderfall.json", "lerntexte.json",
                        "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
-                       "rechner_zahlen.json", "subnetting.json", "rechner.json"):
+                       "rechner_zahlen.json", "subnetting.json", "rechner.json",
+                       "rechentrainer.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
