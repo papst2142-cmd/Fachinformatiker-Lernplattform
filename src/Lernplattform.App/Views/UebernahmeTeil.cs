@@ -89,14 +89,11 @@ public sealed class UebernahmeTeil
             return;
         }
         var optionen = new FilePickerOpenOptions { Title = UebernahmeTexte.DateiwahlTitel, AllowMultiple = false };
-        if (!Android)
+        // Android kennt fuer .fisisicherung keinen Dateityp: dort ohne Filter (B10)
+        var filter = Geraetetexte.UebernahmeDateifilter(!Android);
+        if (filter.Count > 0)
         {
-            // Android kennt fuer .fisisicherung keinen Dateityp: dort ohne Filter
-            optionen.FileTypeFilter =
-            [
-                new FilePickerFileType(UebernahmeTexte.FilterSicherung) { Patterns = [UebernahmeTexte.FilterSicherungMuster] },
-                new FilePickerFileType(UebernahmeTexte.FilterAlle) { Patterns = ["*"] },
-            ];
+            optionen.FileTypeFilter = [.. filter.Select(f => new FilePickerFileType(f.Name) { Patterns = [f.Muster] })];
         }
         var auswahl = await top.StorageProvider.OpenFilePickerAsync(optionen);
         if (auswahl.Count == 0)
@@ -170,7 +167,7 @@ public sealed class UebernahmeTeil
                     throw new UebernahmeAusnahme(UebernahmeFehler.SchreibenGescheitert);
                 }
             });
-            await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? UebernahmeTexte.KopieName(Path.GetFileName(datei), Android) : null));
+            await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? Geraetetexte.KopieName(Path.GetFileName(datei), !Android) : null));
         }
         catch (UebernahmeAusnahme fehler)
         {

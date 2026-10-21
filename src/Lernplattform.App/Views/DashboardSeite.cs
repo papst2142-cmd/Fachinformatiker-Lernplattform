@@ -20,7 +20,7 @@ namespace Lernplattform.Views;
 /// </summary>
 public sealed class DashboardSeite : UserControl
 {
-    private static readonly bool Handy = OperatingSystem.IsAndroid();
+    private static readonly bool Pc = !OperatingSystem.IsAndroid();
     private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16) };
 
     private readonly Action _wiederholen;
@@ -128,7 +128,7 @@ public sealed class DashboardSeite : UserControl
                 Children =
                 {
                     Schrift.Text(w.Banner.Titel, "Banner", FontWeight.Bold, "Pinsel.on_accent"),
-                    Schrift.Text(Handy ? w.Banner.TextHandy : w.Banner.TextPc, "Normal", FontWeight.Normal, "Pinsel.on_accent"),
+                    Schrift.Text(Geraetetexte.Banner(w.Banner, Pc), "Normal", FontWeight.Normal, "Pinsel.on_accent"),
                     Schrift.Text(w.Banner.Gross, "Zahl", FontWeight.Bold, "Pinsel.on_accent"),
                     Schrift.Text(w.Banner.GrossUnter, "Klein", FontWeight.Normal, "Pinsel.on_accent"),
                 },
@@ -146,7 +146,7 @@ public sealed class DashboardSeite : UserControl
         // Wie Python: PC zeigt den Knopf immer, gesperrt ohne faellige Aufgaben
         // (set_enabled(plan.count() > 0)); Handy zeigt ihn nur mit faelligen Aufgaben
         // (visible = plan.count() > 0). Klick auf beiden Geraeten gleich (start_review).
-        if (!Handy || w.Faellig.Wiederholen)
+        if (Pc || w.Faellig.Wiederholen)
         {
             var knopf = LernTeile.Knopf(DashboardTexte.Wiederholen, true);
             knopf.IsEnabled = w.Faellig.Wiederholen;
@@ -225,7 +225,7 @@ public sealed class DashboardSeite : UserControl
                 Margin = new Thickness(0, 0, 10, 10),
                 Children =
                 {
-                    Ring(f.Abdeckung / 100.0, Handy ? f.RingTextHandy : f.RingText, "Pinsel.accent2"),
+                    Ring(f.Abdeckung / 100.0, Geraetetexte.Ring(f, Pc), "Pinsel.accent2"),
                     Schrift.Text(f.Kurz, "Normal", FontWeight.SemiBold),
                     Schrift.Text(f.Detail, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
                 },
@@ -239,7 +239,7 @@ public sealed class DashboardSeite : UserControl
         var aktiv = new StackPanel { Spacing = 8 };
         if (w.Aktivitaeten.Count == 0)
         {
-            aktiv.Children.Add(Schrift.Text(Handy ? DashboardTexte.AktivitaetenLeerHandy : DashboardTexte.AktivitaetenLeerPc, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+            aktiv.Children.Add(Schrift.Text(Geraetetexte.AktivitaetenLeer(Pc), "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         }
         foreach (var a in w.Aktivitaeten)
         {
@@ -247,8 +247,8 @@ public sealed class DashboardSeite : UserControl
             {
                 Children =
                 {
-                    Schrift.Text(Handy ? a.Handy1 : a.Pc1),
-                    Schrift.Text(Handy ? a.Handy2 : a.Pc2, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+                    Schrift.Text(Geraetetexte.AktivitaetZeile1(a, Pc)),
+                    Schrift.Text(Geraetetexte.AktivitaetZeile2(a, Pc), "Klein", FontWeight.Normal, "Pinsel.text_dim"),
                 },
             });
         }
