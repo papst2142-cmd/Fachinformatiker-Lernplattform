@@ -115,6 +115,12 @@ public class DatenTrainerTests
         Assert.False(nahe("22,10"));
         Assert.False(nahe("22,14"));
         Assert.False(nahe("22,131"));
+        // Groesste lesbare Zahl (20 Zeichen) ist einfach falsch, kein Absturz (Gegenpruefung W4a);
+        // laengere Eingaben lehnt die Leseregel ab
+        var riesig = new string('9', 20);
+        Assert.False(genau(riesig));
+        Assert.False(nahe(riesig));
+        Assert.False(genau("1" + new string('0', 400)));
         // In den uebrigen Feldern von "dauer - Schwer" gilt genau
         var a = RechenTrainer.Aufgabe("dauer", 3, "0-0");
         Assert.Equal(("4", "26", "7,17"), (a.Loesung["stunden"], a.Loesung["minuten"], a.Loesung["sekunden"]));
@@ -224,6 +230,9 @@ public class DatenTrainerTests
             Assert.Empty(t.Zeilen());
             Assert.Equal(0, t.Anstoesse);
         }
+        // Groesste lesbare Zahl: gueltig, also eine falsche Antwort; 30 Ziffern sind ein Eingabefehler
+        Assert.Null(aufgabe.EingabeFehler(new Dictionary<string, string>(Loesung(aufgabe)) { [erstes.Schluessel] = new string('9', 20) }));
+        Assert.NotNull(aufgabe.EingabeFehler(new Dictionary<string, string>(Loesung(aufgabe)) { [erstes.Schluessel] = "1" + new string('0', 30) }));
         // Fehlendes Feld zaehlt wie leer
         Assert.Null(a.Druecken(new Dictionary<string, string>(), false));
         Assert.Equal("Bitte einen Wert eingeben: " + erstes.Beschriftung + ".", a.Eingabefehler);

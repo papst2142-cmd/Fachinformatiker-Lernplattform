@@ -183,6 +183,8 @@ public sealed class RechenTrainerTeil : StackPanel
             _probe = true;
         }
         _ablauf = new RechenTrainerAblauf(null, () => 4711);
+        Waehle(art);                     // Pillen zeigen die Probe (Bereich, Art, Stufe)
+        _stufen.Waehle(stufe.ToString(System.Globalization.CultureInfo.InvariantCulture));
         _ablauf.SetzeArt(art);
         _ablauf.SetzeStufe(stufe);
         _ablauf.RundeStarten();
@@ -225,6 +227,9 @@ public sealed class RechenTrainerTeil : StackPanel
         _ablauf = _echt;
         _echt = null;
         _probe = false;
+        // Pillen wieder auf die Wahl des echten Ablaufs (ohne Ablauf: Vorgabe)
+        Waehle(_ablauf?.Art ?? RechenTrainer.Arten[0].Art);
+        _stufen.Waehle((_ablauf?.Stufe ?? RechenTrainer.Stufen[0].Stufe).ToString(System.Globalization.CultureInfo.InvariantCulture));
         FelderBauen();
         if (_ablauf?.Pruefung is { } pruefung)
         {

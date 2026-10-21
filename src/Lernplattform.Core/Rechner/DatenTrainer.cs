@@ -253,7 +253,10 @@ public static class DatenTrainer
 
     // ---------------------------------------------------------------- Pruefer
 
-    /// <summary>Wert nach der Leseregel oder null (keine Zahl, leer, mit Einheit).</summary>
+    /// <summary>
+    /// Wert nach der Leseregel oder null (keine Zahl, leer, mit Einheit). Die Leseregel laesst
+    /// hoechstens 20 Zeichen zu (NUMBER_MAX_CHARS), also hoechstens rund 10^20: das passt immer in decimal.
+    /// </summary>
     private static decimal? Wert(string text)
     {
         try
