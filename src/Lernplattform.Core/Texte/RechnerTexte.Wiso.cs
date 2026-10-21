@@ -74,6 +74,7 @@ public static partial class RechnerTexte
     public const string FehlerNull = "Der Betrag muss größer als 0 sein: %s.";
     public const string FehlerBetragGross = "Der Betrag ist zu groß (höchstens 1.000.000.000 €): %s.";
     public const string FehlerProzent100 = "Der Prozentsatz muss kleiner als 100 sein: %s.";
+    public const string FehlerProzentStellen = "Bitte höchstens 2 Nachkommastellen eingeben: %s.";   // Weisung P3-24 Punkt 3
     public const string FehlerProzentHoechst = "Der Prozentsatz darf höchstens 100 sein: %s.";
     public const string FehlerProzentNegativ = "Der Prozentsatz darf nicht negativ sein: %s.";
     public const string FehlerGanz = "Bitte eine ganze Zahl eingeben: %s.";

@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.9.0 (in Arbeit, Phase 3: Rechner, Welle 4)
+Version A 0.9.0, Paket 1.0.0-a.0.9.0, Android 1000900 (Weisung P3-24):
+- Neue Rechner auf der Seite „Rechner“, je mit „Rechenweg anzeigen“ und eigener Aufgabenart im Trainer, gerechnet wie in Python 0.63.2 (Vergleichswerte G28 bis G31):
+  - „Datenmengen“: Datenmengen umrechnen (Trainer „Datenmengen“).
+  - „Übertragung“: Übertragungsdauer aus Datenmenge und Geschwindigkeit (Trainer „Übertragungsdauer“).
+  - „Bild und Video“: Speicherbedarf von Bildern und Videos, Ergebnis lässt sich in „Übertragung“ übernehmen (Trainer „Bild und Video“).
+  - „WiSo“: sechs Rechner (Bezug, Verkauf, Deckungsbeitrag, Abschreibung, Zinsen, Amortisation), Geldbeträge genau auf den Cent (Trainer-Bereich „WiSo“).
+- In allen Prozentfeldern des WiSo-Rechners sind höchstens 2 Nachkommastellen erlaubt; sonst erscheint der rote Hinweis „Bitte höchstens 2 Nachkommastellen eingeben: …“ (Weisung P3-24). Der Trainer bleibt unverändert.
+- Start ohne Bedienung zeigt die neuen Rechner und Trainer-Arten in allen Schriftstufen, Größen und 72 Farbwelten und misst Berechnen, Rechenweg und Übernehmen.
+
 ## A 0.8.0 (in Arbeit, Phase 3: Rechner, Welle 3)
 Version A 0.8.0, Paket 1.0.0-a.0.8.0, Android 1000800 (Weisung P3-12):
 - Der Reiter „Trainer“ der Rechner-Seite (bisher „Kommt in einer späteren Ausbaustufe“) ist gebaut: der Rechen-Trainer wie in Python 0.63.2 mit sechs Aufgabenarten (IPv4-Subnetz, VLSM, Binär/Hex/Dezimal, IPv6-Schreibweise, Netz aufteilen, Nach Hostbedarf), drei Schwierigkeiten und Runden zu 10 Aufgaben. Aufgaben, Lösungen, Rechenwege und die Prüfung der Antworten sind dieselben wie in Python (Vergleichswerte G27).

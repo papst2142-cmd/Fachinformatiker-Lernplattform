@@ -22,6 +22,10 @@ public static class WisoBerichte
     private static readonly HashSet<string> GeldFelder = new(StringComparer.Ordinal)
         { "lep", "bezugskosten", "bp", "preis", "vk", "fix", "ak", "kapital", "investition", "einsparung", "laufend" };
 
+    /// <summary>Weisung P3-24 Punkt 3 (Frage 1 = a): Prozentfelder der Karte hoechstens 2 Nachkommastellen (nur Karte, Kern und Trainer unveraendert).</summary>
+    private static readonly HashSet<string> ProzentFelder = new(StringComparer.Ordinal)
+        { "rabatt", "skonto", "hk", "gewinn", "kskonto", "krabatt", "ust", "zinssatz" };
+
     /// <summary>Grenzen der Laufzeit je Pille (F2): Tage 1-360, Monate 1-600, Jahre 1-50; Tage je Einheit.</summary>
     public static (int Hoechst, int TageJe) Laufzeit(string einheit) => einheit switch
     {
@@ -84,6 +88,7 @@ public static class WisoBerichte
                             ? Beschriftungen.Einsetzen(FehlerGanzBereich, "1", Zahlen.DeGanz(new BigInteger(hoechst)), FeldLaufzeit)
                             : null;
                     (fehler, ergebnis) = Teile(Wiso.Zinsen(w["kapital"], w["zinssatz"], lzFehler is null ? lz * je : 1));
+                    ProzentFormPruefen(rechner, w, fehler);
                     if (fehler is null && lzFehler is not null)
                     {
                         throw new RechnerFehler(lzFehler);
@@ -96,11 +101,31 @@ public static class WisoBerichte
             default:
                 throw new ArgumentException("unbekannter Rechner: " + rechner, nameof(rechner));
         }
+        ProzentFormPruefen(rechner, w, fehler);
         if (fehler is not null)
         {
             throw new RechnerFehler(Fehlertext(rechner, fehler, fehler.Feld is null ? 0 : w[fehler.Feld]));
         }
         return new WisoEingabe(rechner, w, laufzeitEinheit, ergebnis!, hinweis);
+    }
+
+    /// <summary>
+    /// Prozent-Form (Weisung P3-24): mehr als 2 Nachkommastellen ist ein Formfehler des Feldes. Er gewinnt,
+    /// wenn kein Feld weiter oben einen Fehler hat (je Feld Form vor Bereich, rechnerweit zuletzt).
+    /// </summary>
+    private static void ProzentFormPruefen(string rechner, IReadOnlyDictionary<string, decimal> w, WisoFehler? kernFehler)
+    {
+        var felder = WisoFelder[rechner].Select(f => f.Schluessel).ToList();
+        var stelle = felder.FindIndex(f => ProzentFelder.Contains(f) && Geld.MehrAlsCent(w[f]));
+        if (stelle < 0)
+        {
+            return;
+        }
+        var kernStelle = kernFehler?.Feld is { } feld ? felder.IndexOf(feld) : int.MaxValue;
+        if (stelle <= kernStelle)
+        {
+            throw new RechnerFehler(Beschriftungen.Einsetzen(FehlerProzentStellen, Beschriftung(rechner, felder[stelle])));
+        }
     }
 
     private static (WisoFehler?, object?) Teile<T>(WisoErgebnis<T> e) where T : class => (e.Fehler, e.Werte);

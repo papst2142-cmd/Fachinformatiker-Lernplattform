@@ -165,9 +165,9 @@ public class WisoBerichteTests
         // 2 Jahre = 720 Tage: 5.000 x 4,5 x 720 / 36.000 = 450,00
         Assert.Equal("Zinsen                     : 450,00 €", Zeile(WisoBerichte.Bericht(Lesen("zinsen", "jahre", "5000", "4,5", "2"), false), "Zinsen "));
         // Prozentsaetze ohne Nullen am Ende
-        b = WisoBerichte.Bericht(Lesen("bezug", "tage", "100", "2,5", "99,999", "0"), false);
+        b = WisoBerichte.Bericht(Lesen("bezug", "tage", "100", "2,5", "99,99", "0"), false);
         Assert.StartsWith("- Rabatt (2,5 %)", Zeile(b, "- Rabatt"), StringComparison.Ordinal);
-        Assert.StartsWith("- Skonto (99,999 %)", Zeile(b, "- Skonto"), StringComparison.Ordinal);
+        Assert.StartsWith("- Skonto (99,99 %)", Zeile(b, "- Skonto"), StringComparison.Ordinal);
     }
 
     // ---------------------------------------------------------------- Monatsregel (F1), Pruefaufgabe 14
@@ -325,11 +325,11 @@ public class WisoBerichteTests
         // Prozentsaetze
         Assert.Equal("Der Prozentsatz muss kleiner als 100 sein: Rabatt (%).", Fehler("bezug", "tage", "1200", "100", "2", "25"));
         Assert.Equal("Der Prozentsatz muss kleiner als 100 sein: Kundenrabatt (%).", Fehler("verkauf", "tage", "1000", "30", "10", "2", "100", "19"));
-        Assert.Equal("Der Prozentsatz darf höchstens 100 sein: Umsatzsteuer (%).", Fehler("verkauf", "tage", "1000", "30", "10", "2", "10", "100,001"));
+        Assert.Equal("Der Prozentsatz darf höchstens 100 sein: Umsatzsteuer (%).", Fehler("verkauf", "tage", "1000", "30", "10", "2", "10", "100,01"));
         Assert.Equal("Der Prozentsatz darf höchstens 100 sein: Zinssatz (%).", Fehler("zinsen", "tage", "5000", "101", "90"));
         Assert.Equal("Der Prozentsatz darf nicht negativ sein: Gewinn (%).", Fehler("verkauf", "tage", "1000", "30", "-1", "2", "10", "19"));
-        // 99,999 ist erlaubt, 100 bei Umsatzsteuer und Zinssatz auch
-        Lesen("bezug", "tage", "1200", "99,999", "99,999", "25");
+        // 99,99 ist erlaubt (Weisung P3-24: hoechstens 2 Nachkommastellen), 100 bei Umsatzsteuer und Zinssatz auch
+        Lesen("bezug", "tage", "1200", "99,99", "99,99", "25");
         Lesen("verkauf", "tage", "1000", "30", "10", "2", "10", "100");
         Lesen("zinsen", "tage", "5000", "100", "90");
         // ganze Zahlen mit Grenzen
@@ -367,6 +367,44 @@ public class WisoBerichteTests
         Assert.Equal("Der Prozentsatz darf höchstens 100 sein: Zinssatz (%).", Fehler("zinsen", "tage", "5000", "101", "999"));
     }
 
+    [Fact]
+    public void ProzentHoechstensZweiNachkommastellen()
+    {
+        // Weisung P3-24 Punkt 3 (Frage 1 = a): alle Prozentfelder der Karte, Form vor Bereich
+        const string Text = "Bitte höchstens 2 Nachkommastellen eingeben: %s.";
+        Assert.Equal(Text, FehlerProzentStellen);
+        foreach (var (rechner, feld, werte) in new (string, string, string[])[]
+        {
+            ("bezug", "Rabatt (%)", ["1200", "12,345", "2", "25"]),
+            ("bezug", "Skonto (%)", ["1200", "15", "99,999", "25"]),
+            ("verkauf", "Handlungskosten (%)", ["1000", "99,999", "10", "2", "10", "19"]),
+            ("verkauf", "Gewinn (%)", ["1000", "30", "12,345", "2", "10", "19"]),
+            ("verkauf", "Kundenskonto (%)", ["1000", "30", "10", "2,001", "10", "19"]),
+            ("verkauf", "Kundenrabatt (%)", ["1000", "30", "10", "2", "99,999", "19"]),
+            ("verkauf", "Umsatzsteuer (%)", ["1000", "30", "10", "2", "10", "19,005"]),
+            ("zinsen", "Zinssatz (%)", ["5000", "4,555", "90"]),
+        })
+        {
+            Assert.Equal(Beschriftungen.Einsetzen(Text, feld), Fehler(rechner, "tage", werte));
+        }
+        // Form vor Bereich im selben Feld: 100,001 und -1,001
+        Assert.Equal("Bitte höchstens 2 Nachkommastellen eingeben: Rabatt (%).", Fehler("bezug", "tage", "1200", "100,001", "2", "25"));
+        Assert.Equal("Bitte höchstens 2 Nachkommastellen eingeben: Zinssatz (%).", Fehler("zinsen", "tage", "5000", "-1,001", "90"));
+        // ein Feld weiter oben mit Bereichsfehler gewinnt
+        Assert.Equal("Der Betrag darf nicht negativ sein: Listeneinkaufspreis (€).", Fehler("bezug", "tage", "-1", "12,345", "2", "25"));
+        Assert.Equal("Der Prozentsatz muss kleiner als 100 sein: Rabatt (%).", Fehler("bezug", "tage", "1200", "100", "12,345", "25"));
+        // vor der Laufzeit und vor den rechnerweiten Fehlern
+        Assert.Equal("Bitte höchstens 2 Nachkommastellen eingeben: Zinssatz (%).", Fehler("zinsen", "tage", "5000", "4,555", "999"));
+        // Lesefehler eines spaeteren Feldes gewinnt (erst alle Felder lesen)
+        Assert.Equal("Bitte eine Zahl eingeben: Bezugskosten (€). Zum Beispiel 1.000 oder 1,5.", Fehler("bezug", "tage", "1200", "12,345", "2", "x"));
+        // gueltig: 99,99, 0,01, "12,340" (Wert hat 2 Stellen)
+        Lesen("bezug", "tage", "1200", "99,99", "0,01", "25");
+        Lesen("verkauf", "tage", "1000", "12,340", "10", "2", "10", "19");
+        Assert.Equal("Der Prozentsatz muss kleiner als 100 sein: Rabatt (%).", Fehler("bezug", "tage", "1200", "100", "2", "25"));
+        // Trainer und Kern bleiben allgemeiner (nur die Karte prueft die Stellen)
+        Assert.Null(Wiso.Bezug(1200m, 12.345m, 2m, 25m).Fehler);
+    }
+
     // ---------------------------------------------------------------- Zeilen hoechstens 28 (Punkt 3c)
 
     private static void Handybreite(string name, string text)
@@ -383,11 +421,11 @@ public class WisoBerichteTests
     {
         var faelle = new List<(string Rechner, string Einheit, string[] Werte)>
         {
-            ("bezug", "tage", ["999999999,99", "99,999", "99,999", "999999999,99"]),
+            ("bezug", "tage", ["999999999,99", "99,99", "99,99", "999999999,99"]),
             ("bezug", "tage", ["1", "0", "0", "0"]),
-            // Handlungskosten mit 6 Zeichen ("99,999") ergaeben am Handy 29 Zeichen: offen als Frage in Meldung P3-23
-            ("verkauf", "tage", ["999999999,99", "99,99", "99,999", "99,999", "99,999", "100"]),
-            ("verkauf", "tage", ["999999999,99", "9,999", "99,999", "99,999", "99,999", "99,999"]),
+            // Weisung P3-24 Punkt 3: Verkauf mit 99,99 in allen Prozentfeldern (Handy)
+            ("verkauf", "tage", ["999999999,99", "99,99", "99,99", "99,99", "99,99", "99,99"]),
+            ("verkauf", "tage", ["999999999,99", "99,99", "99,99", "99,99", "99,99", "100"]),
             ("verkauf", "tage", ["0", "0", "0", "0", "0", "0"]),
             ("deckung", "tage", ["1000000000", "0", "1000000000", "10000000"]),
             ("deckung", "tage", ["1000000000", "999999999,99", "1000000000", "1"]),
@@ -396,7 +434,7 @@ public class WisoBerichteTests
             ("afa", "tage", ["1000000000", "50", "12"]),
             ("afa", "tage", ["0,01", "1", "1"]),
             ("zinsen", "monate", ["1000000000", "100", "600"]),
-            ("zinsen", "jahre", ["1000000000", "99,999", "50"]),
+            ("zinsen", "jahre", ["1000000000", "99,99", "50"]),
             ("zinsen", "tage", ["0,01", "0", "1"]),
             ("amort", "tage", ["1000000000", "1000000000", "999999999,99"]),
             ("amort", "tage", ["20000", "6000", "500"]),

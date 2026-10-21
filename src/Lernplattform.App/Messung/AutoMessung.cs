@@ -180,7 +180,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
         Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
-        Messwerte.Notiere("  und 26 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 %, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen, Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
+        Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -508,7 +508,7 @@ public static class AutoMessung
     /// <summary>W4c: groesste Werte je Rechner (Laufzeit-Einheit nur bei Zinsen).</summary>
     private static readonly (string Rechner, string[] Werte, string? Einheit)[] WisoGross =
     [
-        ("verkauf", ["999.999.999,99", "99,99", "99,999", "99,999", "99,999", "100"], null),
+        ("verkauf", ["999.999.999,99", "99,99", "99,99", "99,99", "99,99", "100"], null),
         ("deckung", ["1.000.000.000", "0,01", "1.000.000.000", "10.000.000"], null),
         ("afa", ["1.000.000.000", "50", "12"], null),
         ("zinsen", ["1.000.000.000", "100", "600"], "monate"),
@@ -571,6 +571,11 @@ public static class AutoMessung
         w.Rechnen("bezug");
         Pruefe(w.Fehler("bezug") == "Bitte höchstens 2 Nachkommastellen (volle Cent) eingeben: Listeneinkaufspreis (€)." && w.Kasten("bezug").Roh.Length == 0,
             "Fehler zu viele Nachkommastellen fehlt oder Ergebnis nicht leer");
+        w.Waehle("verkauf");
+        w.Eingabe("verkauf", ["1.024,60", "99,999", "10", "2", "10", "19"]);
+        w.Rechnen("verkauf");
+        Pruefe(w.Fehler("verkauf") == "Bitte höchstens 2 Nachkommastellen eingeben: Handlungskosten (%)." && w.Kasten("verkauf").Roh.Length == 0,
+            "Fehler Prozent mit 3 Nachkommastellen fehlt oder Ergebnis nicht leer");
         w.Waehle("zinsen");
         w.Eingabe("zinsen", ["5.000", "4,5", "3"], "monate");
         await messpunkt("WiSo Zinsen 3 Monate berechnen", () => w.Rechnen("zinsen"), () => w.Fehler("zinsen"));
@@ -699,6 +704,11 @@ public static class AutoMessung
         w.Rechnen("bezug");
         await ansicht.BildFertigAsync();
         yield return "calc/wiso-fehler";
+        w.Waehle("verkauf");
+        w.Eingabe("verkauf", ["1.024,60", "99,999", "10", "2", "10", "19"]);
+        w.Rechnen("verkauf");
+        await ansicht.BildFertigAsync();
+        yield return "calc/wiso-fehler-prozent";
         w.Waehle("zinsen");
         w.Eingabe("zinsen", ["5.000", "4,5", "3"], "monate");
         w.Rechnen("zinsen");
