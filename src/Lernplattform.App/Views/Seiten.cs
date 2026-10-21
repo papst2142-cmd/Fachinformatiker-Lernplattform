@@ -15,6 +15,7 @@ public static class Seiten
     public const string Fortschritt = "progress";
     public const string Ap1Szenarien = "ap1scenarios";
     public const string Ap2Szenarien = "scenarios";
+    public const string Rechner = "calc";
 
     /// <summary>Titel einer Seite fuer Kopfleiste und Platzhalter (Beschriftungen aus G9, PC-Namen).</summary>
     public static string Titel(string id)

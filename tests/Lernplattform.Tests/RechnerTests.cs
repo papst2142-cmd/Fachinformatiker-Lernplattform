@@ -156,4 +156,28 @@ public class RechnerTests
         }
         a.Pruefen(10);
     }
+    /// <summary>
+    /// W2 (Weisung P3-4 A3): RechnerTexte.Oberflaeche ist genau die Schnittmenge der Texte von
+    /// PC und Handy aus G26 "oberflaeche" ohne die zwei Namen SUBNET_PAGE_JUMP(_FIELD) (Konstanten,
+    /// stehen schon in RechnerTexte), und die Unterschiede sind genau die bekannten neun.
+    /// </summary>
+    [Fact]
+    public void OberflaecheWiePython()
+    {
+        var o = G26.GetProperty("oberflaeche");
+        HashSet<string> Texte(string geraet) =>
+            o.GetProperty(geraet).EnumerateArray().Select(e => e[1].GetString()!).ToHashSet(StringComparer.Ordinal);
+        var pc = Texte("pc");
+        var handy = Texte("handy");
+        var gleich = pc.Intersect(handy, StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal);
+        Assert.Equal(27, gleich.Count);
+        Assert.True(gleich.Remove("SUBNET_PAGE_JUMP"));
+        Assert.True(gleich.Remove("SUBNET_PAGE_JUMP_FIELD"));
+        Assert.Equal(25, RechnerTexte.Oberflaeche.Count);
+        Assert.Equal(gleich.Order(StringComparer.Ordinal), RechnerTexte.Oberflaeche.Order(StringComparer.Ordinal));
+        Assert.Equal(new HashSet<string>(StringComparer.Ordinal) { "Ungültige Eingabe", "richtig wäre:" }, pc.Except(handy).ToHashSet(StringComparer.Ordinal));
+        Assert.Equal(new HashSet<string>(StringComparer.Ordinal) { "RECHNER", "WERKZEUGE", "\u2060" }, handy.Except(pc).ToHashSet(StringComparer.Ordinal));
+        Assert.Equal(9, o.GetProperty("unterschiede").GetArrayLength());
+        Assert.Equal(new[] { RechnerTexte.TabRechner, RechnerTexte.TabTrainer }, RechnerTexte.CALC_TABS.Select(t => t.Text));
+    }
 }

@@ -70,6 +70,8 @@ public static class AutoMessung
 
         funde += await W3MesspunkteAsync(ansicht, inhalte);
         funde += await FarbreglerAsync(ansicht);
+        funde += Festbreitenschrift();
+        funde += await RechnerMesspunkteAsync(ansicht);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -156,6 +158,14 @@ public static class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 3, W2: Ansichten der Rechner-Seite
+                await foreach (var ansichtName in RechnerAnsichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -166,6 +176,7 @@ public static class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
         Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
         Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
+        Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -277,6 +288,152 @@ public static class AutoMessung
         ("text", "card_alt"), ("muted", "card_alt"), ("red", "card_alt"), ("orange", "card"), ("orange", "card_alt"),
         ("green", "card_alt"), ("accent", "card_alt"),
     ];
+
+    // Phase 3, W2: Titel der RAID-Karte (purple); die uebrigen Farben der Rechner-Seite
+    // (accent, green, orange, red, text_dim auf card_alt, muted auf card_alt) stehen schon oben
+    private static readonly (string Text, string Flaeche)[] RechnerPaare =
+    [
+        ("purple", "card"),
+    ];
+
+    private static readonly string[] Hostbedarf12 =
+    [
+        "Verwaltung 500", "Vertrieb 250", "Lager 120", "Produktion 400", "Entwicklung 200", "Einkauf 60",
+        "Buchhaltung 30", "Empfang 10", "Server 14", "Drucker 6", "WLAN-Gaeste 100", "Technik 2",
+    ];
+
+    /// <summary>
+    /// Phase 3, W2 (Weisung P3-4 A2): die Festbreitenschrift der Ergebniskaesten ist JetBrains
+    /// Mono aus dem Programm (nicht eine Ersatzschrift des Systems), und i, W und 0 sind gleich breit.
+    /// </summary>
+    private static int Festbreitenschrift()
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var familie = Avalonia.Media.FontManager.Current.TryGetGlyphTypeface(new Avalonia.Media.Typeface(Festbreite.Schrift), out var schrift)
+            ? schrift.FamilyName : "(nicht gefunden)";
+        var breiten = new[] { "i", "W", "0" }.Select(z => Festbreite.Breite(z, 14)).ToList();
+        var gleich = breiten.Max() - breiten.Min() < 0.01;
+        var richtig = familie == "JetBrains Mono" && gleich;
+        Messwerte.Notiere(string.Create(inv, $"Festbreitenschrift: {familie}, Breite i/W/0 bei 14 pt: {breiten[0]:F2}/{breiten[1]:F2}/{breiten[2]:F2}{(richtig ? "" : " FEHLER")}"));
+        return richtig ? 0 : 1;
+    }
+
+    /// <summary>
+    /// Phase 3, W2 (Plan Abschnitt 7, Weisung P3-4 A5): Wechsel IPv4 -> IPv6, Aufteilen von
+    /// 2001:db8::/32 in 2^32 und von 2001:db8::/64 in 2^64 Subnetze (erste und letzte Seite),
+    /// Hostbedarf mit 12 Zeilen und Rechenweg, je bis zum fertigen Bild. Fund ab 1 000 ms oder
+    /// wenn die Rechnung einen Fehler zeigt. Das erste Oeffnen der Seite steht bei den Seiten (calc).
+    /// </summary>
+    private static async Task<int> RechnerMesspunkteAsync(MainView ansicht)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        await ansicht.ZeigeAsync(Seiten.Rechner);
+        if (ansicht.GebauteSeiten[Seiten.Rechner] is not RechnerSeite rechner)
+        {
+            Messwerte.Notiere("Rechner: FEHLER, Seite nicht gebaut");
+            return 1;
+        }
+        var s = rechner.Subnet;
+        async Task Messpunkt(string titel, Action schritt, bool ohneFehler = true)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            var ms = uhr.Elapsed.TotalMilliseconds;
+            var fehler = s.Aktuell.Fehler.IsVisible ? s.Aktuell.Fehler.Text : null;
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms > Abbruch || (ohneFehler && fehler is not null))
+            {
+                Messwerte.Notiere("  FEHLER: " + (fehler ?? "ueber 1000 ms"));
+                funde++;
+            }
+        }
+        s.ModusSetzen("ipv4");
+        await ansicht.BildFertigAsync();
+        await Messpunkt("Rechner Wechsel IPv4 -> IPv6", () => s.ModusSetzen("ipv6"));
+        s.AnsichtSetzen("ipv6", "aufteilen");
+        await ansicht.BildFertigAsync();
+        foreach (var (netz, anzahl) in new[] { ("2001:db8::/32", "4294967296"), ("2001:db8::/64", "18446744073709551616") })
+        {
+            s.Aktuell.Netz.Text = netz;
+            s.Aktuell.Zweites!.Text = anzahl;
+            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, erste Seite", s.Aktuell.Rechnen);
+            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, letzte Seite", () => s.Aktuell.Blaettern("last"));
+            Messwerte.Notiere("  " + s.Aktuell.SeiteText);
+        }
+        s.ModusSetzen("ipv4");
+        s.AnsichtSetzen("ipv4", "bedarf");
+        await ansicht.BildFertigAsync();
+        s.Aktuell.Netz.Text = "10.0.0.0/16";
+        s.Aktuell.Zweites!.Text = string.Join("\n", Hostbedarf12);
+        await Messpunkt("Rechner Hostbedarf mit 12 Zeilen", s.Aktuell.Rechnen);
+        await Messpunkt("Rechner Rechenweg (Hostbedarf) oeffnen", () => s.RechenwegZeigen(true));
+        s.RechenwegZeigen(false);
+        await ansicht.BildFertigAsync();
+        return funde;
+    }
+
+    /// <summary>
+    /// Ansichten der Rechner-Seite nacheinander zeigen (je nach dem Zeigen pruefen), alle
+    /// Rechenwege offen. Danach steht die Seite wieder wie nach dem Start (Vorgaben).
+    /// </summary>
+    private static async IAsyncEnumerable<string> RechnerAnsichten(MainView ansicht)
+    {
+        await ansicht.ZeigeAsync(Seiten.Rechner);
+        if (ansicht.GebauteSeiten[Seiten.Rechner] is not RechnerSeite r)
+        {
+            yield break;
+        }
+        var s = r.Subnet;
+        r.AllesAufklappen();
+        s.ModusSetzen("ipv6");
+        s.AnsichtSetzen("ipv6", "netzdaten");
+        s.Aktuell.Rechnen();
+        s.RechenwegZeigen(true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/ipv6";
+        s.AnsichtSetzen("ipv6", "aufteilen");
+        s.Aktuell.Netz.Text = "2001:db8::/32";
+        s.Aktuell.Zweites!.Text = "4294967296";
+        s.Aktuell.Rechnen();
+        s.Aktuell.Blaettern("last");
+        s.RechenwegZeigen(true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/ipv6-aufteilen";
+        s.ModusSetzen("ipv4");
+        s.AnsichtSetzen("ipv4", "bedarf");
+        s.Aktuell.Netz.Text = "10.0.0.0/16";
+        s.Aktuell.Zweites!.Text = string.Join("\n", Hostbedarf12);
+        s.Aktuell.Rechnen();
+        s.RechenwegZeigen(true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/hostbedarf";
+        r.RaidEingabe("abc", "1000");
+        r.RaidRechnen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/fehler";
+        r.UsvFeld("minuten", "90");
+        r.UsvRechnen("empfehlung");
+        r.AllesAufklappen();
+        await ansicht.BildFertigAsync();
+        yield return "calc/usv-zu-klein";
+        r.Tab("trainer");
+        await ansicht.BildFertigAsync();
+        yield return "calc/trainer";
+        r.Tab("rechner");
+        r.RaidEingabe("4", "1000");
+        r.RaidRechnen();
+        r.UsvFeld("minuten", "15");
+        r.UsvRechnen("empfehlung", leise: true);
+        foreach (var weg in r.Rechenwege)
+        {
+            weg.Zeigen(false);
+        }
+        s.RechenwegZeigen(false);
+        s.AnsichtSetzen("ipv4", "netzdaten");
+        await ansicht.BildFertigAsync();
+    }
 
     /// <summary>Wartet, bis die Suche alle geplanten Zeilen gezeigt hat.</summary>
     private static async Task AlleZeilenAsync(MainView ansicht, SucheSeite suche)
@@ -434,6 +591,13 @@ public static class AutoMessung
                             }
                         }
                     }
+                    await foreach (var name in RechnerAnsichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
                     foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
                     {
                         await ansicht.ZeigeAsync(seite);
@@ -447,7 +611,7 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {seite}: {fund}");
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare))
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -459,7 +623,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3 geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3 und der Rechner-Seite geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)
