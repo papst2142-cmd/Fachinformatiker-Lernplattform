@@ -163,7 +163,16 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_abgleich.py python-linie neu/abgleich.json
           # Phase 2 Welle 5 (Weisung P2-14 A5): G23 Reglerspur der eigenen Farben
           python3 -I werkzeuge/vergleich/erzeuge_reglerspur.py python-linie neu/reglerspur.json
+          # Phase 3 Welle 1 (Weisung P3-2): G24 Zahlen und Zeilen, G25 Subnetting, G26 RAID/Bildschirm/USV;
+          # die Tabellen fuer Pythons Textregeln und die Rechner-Texte muessen bytegleich neu entstehen
+          python3 -I werkzeuge/vergleich/erzeuge_rechner_zahlen.py python-linie neu/rechner_zahlen.json
+          python3 -I werkzeuge/vergleich/erzeuge_subnetting.py python-linie neu/subnetting.json
+          python3 -I werkzeuge/vergleich/erzeuge_rechner.py python-linie neu/rechner.json
+          python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
+          python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
+          diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
+          diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
@@ -173,7 +182,8 @@ jobs:
                        "eigene_farben.json", "beschriftungen.json", "dashboard.json",
                        "potenz.json", "wiederholung.json", "reihenfolge.json", "trainer.json",
                        "uebernahme.json", "pruefsumme_sonderfall.json", "lerntexte.json",
-                       "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json"):
+                       "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
+                       "rechner_zahlen.json", "subnetting.json", "rechner.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
