@@ -27,6 +27,12 @@ Python 3.12 (CI):
   gross      - Pruefer mit Eingaben um Pythons Grenze von 4300 Ziffern fuer int() (Python 3.12
                wirft ValueError, den der Trainer nicht faengt: "ValueError"; C# wertet
                nach Weisung P3-12 Frage 3 als falsch).
+  wischen    - (R6-Nachtrag) FIT_HINT aus mobile/src/ui.py (per ast gelesen, Flet wird nicht
+               geladen) und fuer die Rechenwege einiger Aufgaben: fit_lines(text, zeichen,
+               einheitlich) und ob danach eine Zeile laenger als `zeichen` ist (dann zeigt die
+               FitBox "→ wischen").
+  pruefen    - alle Texte in TrainerPanel.check() von app_gui.py und mobile/src/main.py (per ast;
+               G26 "oberflaeche" laesst kleingeschriebene Einzelwoerter wie "richtig" aus).
   pruefer    - je Pruefer (_ip_matcher, _int_matcher, _base_matcher,
                _network_matcher, _ipv6_text_matcher, _prefix_matcher,
                _count_matcher) eine Liste Eingabe -> richtig/falsch.
@@ -37,6 +43,7 @@ in einen leeren Temp-Ordner.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_rechentrainer.py <pfad_fisi_lernplattform> tests/Vergleich/rechentrainer.json
 """
+import ast
 import datetime
 import ipaddress
 import json
@@ -186,6 +193,44 @@ def speichern_werte(tmp):
     }
 
 
+def pruefen_texte(repo):
+    """Texte in TrainerPanel.check() (PC und Handy), in Reihenfolge des Quelltextes."""
+    ergebnis = {}
+    for geraet, datei in (("pc", "app_gui.py"), ("handy", os.path.join("mobile", "src", "main.py"))):
+        with open(os.path.join(repo, datei), encoding="utf-8") as handle:
+            baum = ast.parse(handle.read())
+        klasse = [k for k in baum.body if isinstance(k, ast.ClassDef) and k.name == "TrainerPanel"][0]
+        methode = [m for m in klasse.body if isinstance(m, ast.FunctionDef) and m.name == "check"][0]
+        texte = [k for k in ast.walk(methode) if isinstance(k, ast.Constant) and isinstance(k.value, str)]
+        ergebnis[geraet] = [k.value for k in sorted(texte, key=lambda k: (k.lineno, k.col_offset))]
+    return ergebnis
+
+
+def wischen_werte(repo, aufgaben):
+    """FIT_HINT (mobile/src/ui.py) und die Regel der FitBox (_refit): Hinweis, wenn nach
+    fit_lines eine Zeile laenger als der Kasten ist."""
+    import fisi_core as fc
+    with open(os.path.join(repo, "mobile", "src", "ui.py"), encoding="utf-8") as handle:
+        baum = ast.parse(handle.read())
+    hinweis = [k.value.value for k in baum.body if isinstance(k, ast.Assign) and len(k.targets) == 1
+               and isinstance(k.targets[0], ast.Name) and k.targets[0].id == "FIT_HINT"]
+    texte = []
+    for eintrag in aufgaben:
+        if eintrag["startwert"] == "0-0":
+            # wie TrainerPanel.check: "\n".join(steps_schmal or steps)
+            texte.append("\n".join(eintrag["schritte"]))
+            if eintrag["schritte_schmal"]:
+                texte.append("\n".join(eintrag["schritte_schmal"]))
+    faelle = []
+    for text in texte:
+        for zeichen in (12, 20, 28, 40, 75):
+            for einheitlich in (False, True):
+                gesetzt = fc.fit_lines(text, zeichen, einheitlich=einheitlich)
+                zu_lang = any(len(zeile) > zeichen for zeile in gesetzt.split("\n"))
+                faelle.append([text, zeichen, einheitlich, gesetzt, zu_lang])
+    return {"hinweis": hinweis[0], "faelle": faelle}
+
+
 def main():
     if len(sys.argv) != 3:
         print(__doc__)
@@ -299,6 +344,8 @@ def main():
                     ergebnis = "ValueError"
                 gross.append([art, erwartet, len(eingabe), eingabe, ergebnis])
 
+    wischen = wischen_werte(repo, aufgaben)
+
     daten = {
         "quelle": "fisi_lernen trainer_task, trainer_round, trainer_summary, TrainerTask.check, "
                   "_ip_matcher, _int_matcher, _base_matcher, _network_matcher, _ipv6_text_matcher, "
@@ -320,6 +367,8 @@ def main():
         "int_basis": int_basis,
         "gross": gross,
         "speichern": speichern,
+        "wischen": wischen,
+        "pruefen": pruefen_texte(repo),
         "pruefer": pruefer,
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:

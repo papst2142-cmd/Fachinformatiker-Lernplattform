@@ -177,6 +177,7 @@ public static class AutoMessung
         Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
         Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
         Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
+        Messwerte.Notiere("  und 10 Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -371,6 +372,14 @@ public static class AutoMessung
         await Messpunkt("Rechner Rechenweg (Hostbedarf) oeffnen", () => s.RechenwegZeigen(true));
         s.RechenwegZeigen(false);
         await ansicht.BildFertigAsync();
+        // W3 (R7): Reiter Trainer (erstes Zeigen liest die Statistik), Runde und Pruefen ohne Speichern
+        await Messpunkt("Rechner Reiter Trainer (erstes Zeigen)", () => rechner.Tab("trainer"), ohneFehler: false);
+        await Messpunkt("Trainer Runde starten (ohne Speichern)", () => rechner.Trainer.Probe("bedarf", 3, pruefen: false), ohneFehler: false);
+        await Messpunkt("Trainer Pruefen (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
+        await Messpunkt("Trainer Naechste Aufgabe (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
+        rechner.Trainer.ProbeEnde();
+        rechner.Tab("rechner");
+        await ansicht.BildFertigAsync();
         return funde;
     }
 
@@ -422,6 +431,20 @@ public static class AutoMessung
         r.Tab("trainer");
         await ansicht.BildFertigAsync();
         yield return "calc/trainer";
+        // W3 (R7): Trainer ohne Speichern (Probe): laengste Rechenwege und Rueckmeldungen
+        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3) })
+        {
+            r.Trainer.Probe(art, stufe, pruefen: false);
+            await ansicht.BildFertigAsync();
+            yield return $"calc/trainer-{art}";
+            r.Trainer.Probe(art, stufe, pruefen: true);
+            await ansicht.BildFertigAsync();
+            yield return $"calc/trainer-{art}-geprueft";
+        }
+        r.Trainer.Probe("vlsm", 3, pruefen: false, beenden: true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/trainer-auswertung";
+        r.Trainer.ProbeEnde();
         r.Tab("rechner");
         r.RaidEingabe("4", "1000");
         r.RaidRechnen();

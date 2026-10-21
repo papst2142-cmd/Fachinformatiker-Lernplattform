@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lernplattform.Core.Rechner;
+using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 
 namespace Lernplattform.Views;
@@ -32,17 +33,23 @@ public static class Festbreite
 /// je Zeile folgen aus der Breite des Kastens und der Zeichenbreite der Festbreitenschrift; neu
 /// gesetzt wird nur, wenn sich Rohtext, Zeichenzahl oder "einheitlich" (schmaler Aufbau) aendern.
 /// Tabellen, die nicht umbrechen duerfen, lassen sich seitlich schieben.
+/// W3 (R6-Nachtrag, Weisung P3-12): ist nach fit_lines noch eine Zeile laenger als der Kasten,
+/// steht darunter "→ wischen" wie unter der FitBox am Handy (PC = Handy, Regel
+/// <see cref="Wischhinweis.Noetig"/>).
 /// </summary>
-public sealed class Ergebniskasten : Border
+public sealed class Ergebniskasten : StackPanel
 {
+    private readonly Border _rahmen;
     private readonly SelectableTextBlock _text;
     private readonly ScrollViewer _rollen;
+    private readonly TextBlock _hinweis;
     private string _roh;
     private int? _zeichen;
     private bool _einheitlich;
 
     public Ergebniskasten(string text = "")
     {
+        Spacing = 4;
         _roh = text;
         _text = new SelectableTextBlock { FontFamily = Festbreite.Schrift, TextWrapping = TextWrapping.NoWrap, Text = text }
             .Groesse("Klein");
@@ -53,11 +60,26 @@ public sealed class Ergebniskasten : Border
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
-        Child = _rollen;
-        Padding = new Thickness(12, 10);
-        CornerRadius = new CornerRadius(12);
-        BorderThickness = new Thickness(1);
-        this.Farbe(BackgroundProperty, "Pinsel.card_alt").Farbe(BorderBrushProperty, "Pinsel.border");
+        _rahmen = new Border
+        {
+            Child = _rollen,
+            Padding = new Thickness(12, 10),
+            CornerRadius = new CornerRadius(12),
+            BorderThickness = new Thickness(1),
+        };
+        _rahmen.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border");
+        // Festbreitenschrift wie im Kasten (wie Python: hat den Pfeil sicher), rechtsbuendig
+        _hinweis = new TextBlock
+        {
+            Text = RechnerTexte.Wischen,
+            FontFamily = Festbreite.Schrift,
+            TextAlignment = TextAlignment.Right,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            IsVisible = false,
+        }.Groesse("Klein");
+        _hinweis.Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
+        Children.Add(_rahmen);
+        Children.Add(_hinweis);
         _rollen.SizeChanged += (_, _) => Einpassen();
         _text.PropertyChanged += (_, e) =>
         {
@@ -76,6 +98,9 @@ public sealed class Ergebniskasten : Border
 
     /// <summary>Zeichen je Zeile beim letzten Umbruch (null, solange der Kasten keine Breite hat).</summary>
     public int? Zeichen => _zeichen;
+
+    /// <summary>Steht "→ wischen" unter dem Kasten?</summary>
+    public bool WischHinweis => _hinweis.IsVisible;
 
     /// <summary>Text setzen (Rohtext merken, umbrechen).</summary>
     public void Setzen(string text)
@@ -106,6 +131,7 @@ public sealed class Ergebniskasten : Border
         if (breite <= 1)
         {
             _text.Text = _roh;
+            _hinweis.IsVisible = false;
             return;
         }
         var zeichen = Math.Max(1, (int)Math.Floor((breite + 0.01) / Festbreite.Zeichenbreite(_text.FontSize)));
@@ -115,6 +141,7 @@ public sealed class Ergebniskasten : Border
         }
         _zeichen = zeichen;
         _text.Text = Zeilen.Kasten(_roh, zeichen, _einheitlich);
+        _hinweis.IsVisible = Wischhinweis.Noetig(_text.Text, zeichen);
     }
 }
 
