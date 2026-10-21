@@ -24,7 +24,7 @@ public class SubnettingTests
     private static JsonNode? Gi(int? wert) => wert is { } w ? JsonValue.Create(w.ToString(CultureInfo.InvariantCulture)) : null;
 
     /// <summary>Gleiche Schreibweise fuer Python-JSON und C#-Knoten (Schluessel sortiert).</summary>
-    private static string Kanon(JsonElement e) => e.ValueKind switch
+    internal static string Kanon(JsonElement e) => e.ValueKind switch
     {
         JsonValueKind.Object => "{" + string.Join(",", e.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal)
             .Select(p => JsonSerializer.Serialize(p.Name) + ":" + Kanon(p.Value))) + "}",
@@ -33,7 +33,7 @@ public class SubnettingTests
         _ => e.GetRawText(),
     };
 
-    private static string Kanon(JsonNode? knoten)
+    internal static string Kanon(JsonNode? knoten)
     {
         using var dok = JsonDocument.Parse(knoten?.ToJsonString() ?? "null");
         return Kanon(dok.RootElement);
