@@ -92,6 +92,14 @@ public partial class MainView : UserControl
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
+        // L10 (refresh_after_sync): nach einem Abgleich mit neuen oder entfernten Eintraegen die offene Seite neu rechnen
+        Programm.AbgleichDienst.Fertig += (ergebnis, _) =>
+        {
+            if (ergebnis is { } e && (e.Erhalten > 0 || e.Entfernt > 0))
+            {
+                NachAbgleich();
+            }
+        };
         // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
         AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -228,6 +236,29 @@ public partial class MainView : UserControl
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
+    }
+
+    private void NachAbgleich()
+    {
+        if (!_seiten.TryGetValue(AktuelleSeite, out var seite))
+        {
+            return;
+        }
+        switch (seite)
+        {
+            case DashboardSeite dashboard:
+                dashboard.Neu();
+                break;
+            case FortschrittSeite fortschritt:
+                fortschritt.Neu();
+                break;
+            case KarteikartenSeite karten:
+                karten.Gezeigt();
+                break;
+            case TrainerSeite trainer:
+                trainer.Gezeigt();
+                break;
+        }
     }
 
     public async Task ZeigeAsync(string id)

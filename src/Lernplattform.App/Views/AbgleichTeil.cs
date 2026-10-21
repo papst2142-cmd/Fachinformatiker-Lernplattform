@@ -60,7 +60,18 @@ public sealed class AbgleichTeil
                 Schrift.Text(AbgleichTexte.Hinweis + " " + AbgleichTexte.Zugangsschluessel, "Klein", FontWeight.Normal, "Pinsel.muted"),
             },
         };
-        AbgleichDienst.Fertig += Zeigen;
+        // nur angemeldet, solange der Bereich sichtbar im Fenster haengt (kein Abonnent bleibt zurueck)
+        Teil.AttachedToVisualTree += (_, _) =>
+        {
+            AbgleichDienst.Fertig += Zeigen;
+            Stand();        // was inzwischen (ohne Anzeige) geschah
+        };
+        Teil.DetachedFromVisualTree += (_, _) => AbgleichDienst.Fertig -= Zeigen;
+        Stand();
+    }
+
+    private void Stand()
+    {
         if (AbgleichDienst.Laeuft)
         {
             _knopf.IsEnabled = false;

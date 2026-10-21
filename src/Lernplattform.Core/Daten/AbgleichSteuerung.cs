@@ -77,19 +77,30 @@ public sealed class AbgleichSteuerung : IDisposable
     /// <summary>auto_start: beim Programmstart.</summary>
     public void Starten()
     {
-        if (!AutoAn())
-        {
-            return;
-        }
         if (_zeiten.Start <= TimeSpan.Zero)
         {
-            Abgleichen();
+            if (AutoAn())
+            {
+                Abgleichen();
+            }
             return;
         }
+        // PC: root.after(1500, auto_start) - auto_enabled wird erst nach der Wartezeit geprueft
         lock (_sperre)
         {
             _geplant?.Dispose();
-            _geplant = _planen(_zeiten.Start, Geplant);
+            _geplant = _planen(_zeiten.Start, () =>
+            {
+                lock (_sperre)
+                {
+                    _geplant?.Dispose();
+                    _geplant = null;
+                }
+                if (AutoAn())
+                {
+                    Abgleichen();
+                }
+            });
         }
     }
 
@@ -264,6 +275,6 @@ public sealed class AbgleichSteuerung : IDisposable
             _geplant?.Dispose();
             _geplant = null;
         }
-        _ruhig.Dispose();
+        // _ruhig bleibt bestehen: ein noch laufender Abgleich setzt es danach (kein ObjectDisposedException im Hintergrund)
     }
 }

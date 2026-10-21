@@ -159,10 +159,12 @@ public class AbgleichSteuerungTests
         var a = new Aufbau { AutoAn = false };
         using var s = a.Steuerung(AbgleichSteuerung.Pc);
         s.Starten();
+        // PC prueft wie root.after(1500, auto_start) erst nach der Wartezeit
+        Assert.Single(a.Uhr.Offen).Ausloesen();
         s.NachDemLernen();
         s.Verlassen();
         s.VorDemBeenden();
-        Assert.Empty(a.Uhr.Plaene);
+        Assert.Single(a.Uhr.Plaene);
         Assert.Equal(0, a.Laeufe);
         using var h = a.Steuerung(AbgleichSteuerung.Handy);
         h.Starten();
@@ -227,6 +229,41 @@ public class AbgleichSteuerungTests
         Assert.True(uhr.Elapsed < TimeSpan.FromSeconds(3), "wartete " + uhr.Elapsed);
         Assert.Equal(1, a.Laeufe);  // der letzte Abgleich startete nicht mehr (Frist vorbei)
         frei.Set();
+    }
+
+    /// <summary>Beenden: ein laufender Abgleich endet innerhalb der Frist, danach laeuft noch der letzte.</summary>
+    [Fact]
+    public void BeendenWartetUndGleichtDannAb()
+    {
+        var a = new Aufbau();
+        using var begonnen = new ManualResetEventSlim();
+        a.Arbeit = () =>
+        {
+            if (a.Laeufe == 1)
+            {
+                begonnen.Set();
+                Thread.Sleep(300);
+            }
+            return Leer;
+        };
+        var zeiten = new AbgleichSteuerung.Zeiten(TimeSpan.Zero, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(10));
+        using var s = a.Steuerung(zeiten, synchron: false);
+        s.Abgleichen();
+        Assert.True(begonnen.Wait(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken));
+        s.NachDemLernen();
+        s.VorDemBeenden();
+        Assert.Equal(2, a.Laeufe);
+    }
+
+    [Fact]
+    public void AutomatikNachDemStartAbgeschaltet()
+    {
+        var a = new Aufbau();
+        using var s = a.Steuerung(AbgleichSteuerung.Pc);
+        s.Starten();
+        a.AutoAn = false;           // in den 1,5 s ausgeschaltet
+        Assert.Single(a.Uhr.Offen).Ausloesen();
+        Assert.Equal(0, a.Laeufe);
     }
 
     [Fact]

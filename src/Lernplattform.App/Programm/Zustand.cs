@@ -36,10 +36,16 @@ public static class Zustand
     private static LernstandSchreiber? _schreiber;
 
     /// <summary>Phase 2: gemeinsamer Lernstand (lernplattform.db im Datenordner), beim ersten Gebrauch geoeffnet.</summary>
-    public static Lernstand Lernstand => _lernstand ??= new Lernstand(null, text => Fehlermeldung?.Invoke(text));
+    public static Lernstand Lernstand => LazyInitializer.EnsureInitialized(ref _lernstand, ref _lernstandSperre,
+        () => new Lernstand(null, text => Fehlermeldung?.Invoke(text)));
+
+    private static object? _lernstandSperre;
 
     /// <summary>Speichert Antworten in den gemeinsamen Lernstand.</summary>
-    public static LernstandSchreiber Schreiber => _schreiber ??= new LernstandSchreiber(Lernstand);
+    public static LernstandSchreiber Schreiber => LazyInitializer.EnsureInitialized(ref _schreiber, ref _schreiberSperre,
+        () => new LernstandSchreiber(Lernstand));
+
+    private static object? _schreiberSperre;
 
     /// <summary>Verstaendliche Meldung je Fehlerart des Lernstands (Oberflaeche zeigt "Datenbankfehler").</summary>
     public static Action<string>? Fehlermeldung { get; set; }
