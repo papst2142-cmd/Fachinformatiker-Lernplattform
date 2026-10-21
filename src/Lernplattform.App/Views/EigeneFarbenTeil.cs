@@ -1,9 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Texte;
@@ -123,7 +121,8 @@ public sealed class EigeneFarbenTeil
         zurueck.Click += (_, _) => Zuruecksetzen();
         panel.Children.Add(new WrapPanel { Children = { speichern, zurueck } });
         Neu();
-        panel.Loaded += ErstesLaden;
+        // Weisung P2-16 A1: einzige Aufrufstelle, im selben Durchgang beim Aufbau der Optionen-Seite
+        Vorwaermen();
         return panel;
     }
 
@@ -133,17 +132,10 @@ public sealed class EigeneFarbenTeil
     /// </summary>
     public static bool? VorwaermenUnveraendert { get; private set; }
 
-    // Weisung P2-15: einzige Aufrufstelle des Vorwaermens, nach dem ersten Bild der Ansicht
-    private void ErstesLaden(object? sender, RoutedEventArgs e)
-    {
-        ((Control)sender!).Loaded -= ErstesLaden;
-        Dispatcher.UIThread.Post(Vorwaermen, DispatcherPriority.Background);
-    }
-
     /// <summary>
-    /// Weisung P2-15 A1: Spur und Knopf jedes Reglers einmal unsichtbar neu zeichnen (gleiche
-    /// Werte), damit das erste Ziehen nicht den Kaltstart des Zeichnens traegt. Speichert nichts,
-    /// aendert keinen Wert, setzt keine Vorschau.
+    /// Weisung P2-15 A1, P2-16 A1: Spur und Knopf jedes Reglers einmal unsichtbar neu zeichnen
+    /// (gleiche Werte, beim Aufbau der Optionen-Seite), damit das erste Ziehen nicht den Kaltstart
+    /// des Zeichnens traegt. Speichert nichts, aendert keinen Wert, setzt keine Vorschau.
     /// </summary>
     private void Vorwaermen()
     {

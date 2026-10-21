@@ -7,6 +7,8 @@ namespace Lernplattform.Tests;
 /// zeichnet nur neu. A1: Es setzt keinen Wert, speichert nichts und setzt keine Vorschau
 /// (Quelltext-Pruefung hier, dazu der Laufzeit-Vergleich vorher/nachher im Start ohne Bedienung).
 /// A2: Es gibt genau eine Aufrufstelle, im Aufbau der Ansicht; die Messung ruft es nicht auf.
+/// P2-16 A1: Die Aufrufstelle liegt im selben Durchgang im Aufbau (Bauen), nicht nach dem ersten
+/// Laden und nicht mit niedriger Vorrang (kein Post, kein Loaded).
 /// </summary>
 public partial class FarbreglerVorwaermenTests
 {
@@ -47,9 +49,9 @@ public partial class FarbreglerVorwaermenTests
         {
             funde.AddRange(Verboten.Where(v => rumpf.Contains(v, StringComparison.Ordinal)).Select(v => $"{name}.Vorwaermen enthaelt \"{v}\""));
         }
-        // Aufrufstellen ausserhalb der beiden Definitionen: nur Post(Vorwaermen, ...) nach dem ersten
-        // Laden und spur.Vorwaermen() im Rumpf von EigeneFarbenTeil.Vorwaermen
-        var erlaubt = new[] { "Dispatcher.UIThread.Post(Vorwaermen, DispatcherPriority.Background);", "spur.Vorwaermen();" };
+        // Aufrufstellen ausserhalb der beiden Definitionen: nur Vorwaermen() im Aufbau (Bauen) und
+        // spur.Vorwaermen() im Rumpf von EigeneFarbenTeil.Vorwaermen
+        var erlaubt = new[] { "Vorwaermen();", "spur.Vorwaermen();" };
         foreach (var (datei, text) in dateien)
         {
             var nr = 0;
@@ -75,11 +77,17 @@ public partial class FarbreglerVorwaermenTests
                 funde.Add($"nicht genau einmal: {z}");
             }
         }
-        // Das erste Laden haengt genau einmal im Aufbau (Bauen) am Panel
-        if (Rumpf(teil, "public Control Bauen()").Split('\n').Count(x => x.Trim() == "panel.Loaded += ErstesLaden;") != 1
-            || teil.Split('\n').Count(x => x.Contains("ErstesLaden;", StringComparison.Ordinal)) != 2)
+        // P2-16 A1: der Aufruf steht genau einmal im Aufbau (Bauen), im selben Durchgang
+        if (Rumpf(teil, "public Control Bauen()").Split('\n').Count(x => x.Trim() == "Vorwaermen();") != 1)
         {
-            funde.Add("ErstesLaden nicht genau einmal im Aufbau");
+            funde.Add("Vorwaermen nicht genau einmal im Aufbau");
+        }
+        foreach (var spaeter in (string[])["Dispatcher", "DispatcherPriority", "Loaded +=", "ErstesLaden"])
+        {
+            if (teil.Contains(spaeter, StringComparison.Ordinal))
+            {
+                funde.Add($"Vorwaermen spaeter eingeplant: {spaeter}");
+            }
         }
         return funde;
     }
@@ -122,6 +130,18 @@ public partial class FarbreglerVorwaermenTests
         Assert.Contains(Funde(falsch), f => f.Contains(".Value =", StringComparison.Ordinal));
         falsch = Ersetze(dateien, "Views/EigeneFarbenTeil.cs", "        var vorher = Abbild();\n", "        var vorher = Abbild();\n        _werte = Mit(_werte, EigeneFarben.TeilAkzent1, \"h\", 0);\n");
         Assert.Contains(Funde(falsch), f => f.Contains("_werte =", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Kontrollfehler_VorwaermenNachDemErstenLaden()
+    {
+        // Weisung P2-16 A1: der Stand von P2-15 (nach dem ersten Laden, niedrige Vorrang) ist falsch
+        var dateien = AppDateien();
+        var falsch = Ersetze(dateien, "Views/EigeneFarbenTeil.cs", "        Vorwaermen();\n        return panel;",
+            "        panel.Loaded += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(Vorwaermen, Avalonia.Threading.DispatcherPriority.Background);\n        return panel;");
+        var funde = Funde(falsch);
+        Assert.Contains("Vorwaermen nicht genau einmal im Aufbau", funde);
+        Assert.Contains(funde, f => f.StartsWith("Vorwaermen spaeter eingeplant", StringComparison.Ordinal));
     }
 
     [Fact]
