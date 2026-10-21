@@ -1,7 +1,10 @@
+using System.Globalization;
+
 namespace Lernplattform.Core.Daten;
 
 /// <summary>
-/// Speichert Antworten wie fisi_core.DBManager (log_card, log_quiz_answer, save_test_result):
+/// Speichert Antworten wie fisi_core.DBManager (log_card, log_quiz_answer, save_test_result,
+/// log_trainer; Phase 3 R5 dazu trainer_stats):
 /// Zeitstempel in Ortszeit, utc_offset aus demselben Augenblick, uid = uuid4 als Hex.
 /// Jeder Vorgang ist eine Transaktion (Lernstand.Schreiben): die Zeile steht ganz oder gar nicht.
 /// Wird nichts gespeichert (Lesefehler, Schreibschutz), lehnt Lernstand still ab.
@@ -75,5 +78,33 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
             + " VALUES ($zeit, $abstand, $punkte, $gesamt, $prozent, $note, $dauer, $uid)",
             ("$zeit", zeit), ("$abstand", abstand), ("$punkte", punkte), ("$gesamt", gesamt), ("$prozent", prozent),
             ("$note", note), ("$dauer", dauerSekunden), ("$uid", _kennung()));
+    }
+
+    /// <summary>log_trainer: eine geprüfte Aufgabe des Rechen-Trainers (Art, Stufe, alles richtig).</summary>
+    public bool TrainerSpeichern(string art, int stufe, bool richtig)
+    {
+        var (zeit, abstand) = Stempel();
+        return Lernstand.Schreiben(
+            "INSERT INTO trainer_aufgaben (timestamp, utc_offset, art, stufe, correct, uid)"
+            + " VALUES ($zeit, $abstand, $art, $stufe, $richtig, $uid)",
+            ("$zeit", zeit), ("$abstand", abstand), ("$art", art), ("$stufe", stufe), ("$richtig", richtig ? 1 : 0),
+            ("$uid", _kennung()));
+    }
+
+    /// <summary>
+    /// trainer_stats: je Art (geloest, richtig) ueber alle Trainer-Aufgaben; bei einem Lesefehler
+    /// leer (Python default=[]). Nur lesend, auch wenn nichts gespeichert wird. Richtig bleibt wie
+    /// SQLite SUM es liefert (ganze Zahl oder bei fremden Daten Kommazahl, NULL = 0); abgeschnitten
+    /// wird erst die Summe ueber alle Arten (show_stats "%d").
+    /// </summary>
+    public IReadOnlyDictionary<string, (long Geloest, double Richtig)> TrainerStatistik()
+    {
+        var statistik = new Dictionary<string, (long, double)>(StringComparer.Ordinal);
+        foreach (var zeile in Lernstand.Abfragen("SELECT art, COUNT(*), SUM(correct) FROM trainer_aufgaben GROUP BY art"))
+        {
+            statistik[Convert.ToString(zeile[0], CultureInfo.InvariantCulture) ?? ""] =
+                (Convert.ToInt64(zeile[1] ?? 0L, CultureInfo.InvariantCulture), Convert.ToDouble(zeile[2] ?? 0L, CultureInfo.InvariantCulture));
+        }
+        return statistik;
     }
 }

@@ -21,15 +21,15 @@ namespace Lernplattform.Views;
 /// (Vergleichswerte G24-G26), hier wird nur angezeigt. Ein Aufbau fuer PC und Handy: unter
 /// <see cref="MainView.BreitGrenze"/> gilt die schmale Fassung (Handy-Rechenwege, schmale
 /// Tabellen, fit_lines einheitlich). Fehleingabe auf beiden Geraeten als roter Hinweis mit dem
-/// Meldungstext, Ergebniskasten leer, kein Fenster (Weisung P3-4 Frage 2). Der Trainer kommt
-/// mit Welle 3; bis dahin zeigt der Umschalter den Platzhalter-Hinweis. Gespeichert wird nichts.
+/// Meldungstext, Ergebniskasten leer, kein Fenster (Weisung P3-4 Frage 2). Die Rechner speichern
+/// nichts; der Reiter "Trainer" (W3, R7, <see cref="RechenTrainerTeil"/>) speichert je Pruefen.
 /// </summary>
 public sealed class RechnerSeite : UserControl, IAufklappbar
 {
     private readonly ScrollViewer _rollen;
     private readonly Pillen _tabs;
     private readonly StackPanel _rechner = new() { Spacing = 16 };
-    private readonly Control _trainer;
+    private readonly RechenTrainerTeil _trainer;
     private readonly SubnetKarte _subnet;
     private readonly List<Rechenwegteil> _rechenwege = [];
     private bool _schmal;
@@ -65,7 +65,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     {
         _subnet = new SubnetKarte(this);
         _tabs = new Pillen(CALC_TABS, "rechner", TabWechseln);
-        _trainer = Schrift.Karte(Schrift.Text(Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        _trainer = new RechenTrainerTeil(() => _schmal);
         _trainer.IsVisible = false;
 
         // --- RAID ---
@@ -191,6 +191,9 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
 
     internal IReadOnlyList<Rechenwegteil> Rechenwege => _rechenwege;
 
+    /// <summary>Reiter "Trainer" (fuer den Start ohne Bedienung).</summary>
+    internal RechenTrainerTeil Trainer => _trainer;
+
     // -- Aufbau --------------------------------------------------------------------------------
 
     private void AufbauPruefen()
@@ -221,6 +224,10 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     {
         _trainer.IsVisible = wert == "trainer";
         _rechner.IsVisible = !_trainer.IsVisible;
+        if (_trainer.IsVisible)
+        {
+            _trainer.Gezeigt();
+        }
         _rollen.Offset = default;     // to_top wie Python
     }
 

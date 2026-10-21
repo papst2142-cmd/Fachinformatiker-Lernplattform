@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.8.0 (in Arbeit, Phase 3: Rechner, Welle 3)
+Version A 0.8.0, Paket 1.0.0-a.0.8.0, Android 1000800 (Weisung P3-12):
+- Der Reiter „Trainer“ der Rechner-Seite (bisher „Kommt in einer späteren Ausbaustufe“) ist gebaut: der Rechen-Trainer wie in Python 0.63.2 mit sechs Aufgabenarten (IPv4-Subnetz, VLSM, Binär/Hex/Dezimal, IPv6-Schreibweise, Netz aufteilen, Nach Hostbedarf), drei Schwierigkeiten und Runden zu 10 Aufgaben. Aufgaben, Lösungen, Rechenwege und die Prüfung der Antworten sind dieselben wie in Python (Vergleichswerte G27).
+- Jede geprüfte Aufgabe wird genau einmal gespeichert, auch mit leeren Feldern (dann als falsch). „Nächste Aufgabe“, „Auswertung“ und „Runde starten“ speichern nichts. Unter „Runde starten“ steht „bisher … Aufgaben, … richtig“ über alle Arten; die Zeile wird beim ersten Öffnen des Reiters und am Ende einer Runde neu gelesen. Gelöste Aufgaben zählen wie in Python im Dashboard und im Fortschritt mit.
+- Nach jedem Prüfen wird auf PC und Handy der Abgleich angestoßen (Python stößt ihn nur am Handy an).
+- Bewusste Abweichung von Python: Eine Eingabe mit mehr als 4 300 Ziffern gilt als falsch und wird als falsch gespeichert (Python bricht dort mit einem Fehler ab und speichert nichts).
+- Ohne laufende Runde ist der Knopf „Prüfen“ auf PC und Handy gesperrt (Python blendet ihn am Handy aus). Am schmalen Aufbau (Handy) erscheint der Rechenweg in der schmalen Fassung; wird das Fenster mitten in einer Runde schmaler oder breiter, bleibt die Runde und die nächste Prüfung zeigt den passenden Rechenweg.
+- Passt in einem Ergebniskasten eine Zeile auch nach dem Umbruch nicht, steht darunter „→ wischen“ (wie am Handy in Python, jetzt auf PC und Handy).
+- Start ohne Bedienung zeigt den Trainer in neun weiteren Ansichten (ohne zu speichern) in allen Schriftstufen, Größen und 72 Farbwelten und misst Reiter, „Runde starten“, „Prüfen“ und „Nächste Aufgabe“.
+
 ## A 0.7.0 (in Arbeit, Phase 3: Rechner, Welle 2)
 Version A 0.7.0, Paket 1.0.0-a.0.7.0, Android 1000700 (Weisung P3-4):
 - Welle 1 (ohne Oberfläche, ohne Versionssprung): Rechenkern wie in Python 0.63.2 für Subnetting IPv4 und IPv6 (Netzdaten, Netz aufteilen mit Seiten, Hostbedarf), RAID, Bildschirm-Datenmenge und USV-Kapazität mit Übungsaufgaben und Rechenwegen (Vergleichswerte G24 bis G26).

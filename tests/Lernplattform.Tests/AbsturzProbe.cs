@@ -13,6 +13,7 @@ namespace Lernplattform.Tests;
 internal static class AbsturzProbe
 {
     public const string ArtSpeichern = "speichern";
+    public const string ArtTrainer = "trainer";
     public const string ArtUebernahme = "uebernahme";
     public const string ArtVorschau = "vorschau";
     public const string Fertig = "FERTIG";
@@ -45,6 +46,19 @@ internal static class AbsturzProbe
                         if (schreiber.KarteSpeichern("Fachbereich " + n, "Frage " + n + new string('.', 3000), "lernen", true))
                         {
                             Console.Out.WriteLine("gespeichert probe-" + n);
+                            Console.Out.Flush();
+                        }
+                    }
+                case ArtTrainer:
+                    var nr = "";
+                    var trainer = new LernstandSchreiber(new Lernstand(args[0]), null, () => "probe-" + nr);
+                    while (true)
+                    {
+                        nr = Guid.NewGuid().ToString("N");
+                        // Lange Art, damit ein Schreibvorgang mehrere Seiten der Datei beruehrt
+                        if (trainer.TrainerSpeichern("art " + nr + new string('.', 3000), 3, true))
+                        {
+                            Console.Out.WriteLine("gespeichert probe-" + nr);
                             Console.Out.Flush();
                         }
                     }
@@ -87,7 +101,7 @@ internal static class AbsturzProbe
     }
 
     /// <summary>
-    /// Kind starten und hart beenden: bei ArtSpeichern nach mindestens Meldungen, bei ArtUebernahme
+    /// Kind starten und hart beenden: bei ArtSpeichern/ArtTrainer nach mindestens Meldungen, bei ArtUebernahme
     /// sobald es HALT meldet. Rueckgabe: die gemeldeten Kennungen (ArtSpeichern).
     /// </summary>
     public static List<string> Starten(string art, string[] argumente, int mindestens = 0, IReadOnlyDictionary<string, string>? umgebung = null)
@@ -122,7 +136,7 @@ internal static class AbsturzProbe
                 {
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
-                if (art != ArtSpeichern && (zeile.Result == Halt || zeile.Result == Fertig))
+                if (art != ArtSpeichern && art != ArtTrainer && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
                     break;
                 }

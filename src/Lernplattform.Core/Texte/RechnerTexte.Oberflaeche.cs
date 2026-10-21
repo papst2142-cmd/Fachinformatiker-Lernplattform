@@ -42,6 +42,13 @@ public static partial class RechnerTexte
     public const string ArtUndStufe = "%s · %s";
     public const string AufgabeVon = "Aufgabe %d / %d";
     public const string RichtigWaere = "richtig wäre: %s";
+
+    /// <summary>
+    /// Marke eines richtigen Feldes in TrainerPanel.check() (app_gui 5617, main.py 3043). Nicht in
+    /// <see cref="Oberflaeche"/>: G26 laesst kleingeschriebene Einzelwoerter aus; Pruefung gegen
+    /// G27 "pruefen" (W3, R7).
+    /// </summary>
+    public const string Richtig = "richtig";
     public const string AllesRichtig = "Alles richtig.";
     public const string NochNichtGanz = "Noch nicht ganz - hier der Rechenweg:";
     public const string Auswertung = "Auswertung";
@@ -57,6 +64,12 @@ public static partial class RechnerTexte
         ArtUndStufe, AufgabeVon, RichtigWaere, AllesRichtig, NochNichtGanz, Auswertung, NaechsteAufgabe,
         RundeBeendet, NeueRunde,
     ];
+
+    /// <summary>
+    /// FIT_HINT (mobile/src/ui.py 751): Hinweis unter einem Ergebniskasten, dessen Zeile auch
+    /// nach dem Umbruch nicht passt (W3, R6-Nachtrag; PC = Handy; Pruefung gegen G27 "wischen").
+    /// </summary>
+    public const string Wischen = "\u2192 wischen";
 
     // -- USV-Bild (fisi_widgets UpsDiagram 2054-2078, mobile/src/ui.py UpsPicture 1391-1425) ---
 
