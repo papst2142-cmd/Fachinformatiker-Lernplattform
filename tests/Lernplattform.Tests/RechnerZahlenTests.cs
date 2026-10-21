@@ -39,9 +39,9 @@ internal sealed class Abweichungen
 
     public static string Text(JsonElement e) => e.ValueKind == JsonValueKind.Null ? "<null>" : e.GetString()!;
 
-    public static string Liste(JsonElement e) => string.Join("‖", e.EnumerateArray().Select(Text));
+    public static string Liste(JsonElement e) => string.Join("\u2016", e.EnumerateArray().Select(Text));
 
-    public static string Liste(IEnumerable<string> e) => string.Join("‖", e);
+    public static string Liste(IEnumerable<string> e) => string.Join("\u2016", e);
 
     /// <summary>Ergebnis eines Aufrufs als Text: Wert oder "Fehler: Meldung" (RechnerFehler).</summary>
     public static string Versuch(Func<string> aufruf)
