@@ -2,9 +2,11 @@ namespace Lernplattform.Core.Daten;
 
 /// <summary>
 /// Phase 2, W4 (Weisung P2-11 A1): Uebernahme, Abgleich und Ruecksicherung schliessen sich
-/// gegenseitig aus. Laeuft einer dieser Vorgaenge, wartet der naechste, bis er fertig ist
-/// (kein eigener Text noetig; die Oberflaeche zeigt solange ihren Wartehinweis).
-/// Gilt im ganzen Programm (ein Prozess, eine Sperre).
+/// gegenseitig aus. Laeuft einer dieser Vorgaenge, wartet der naechste, bis er fertig ist.
+/// Gewartet wird nie auf dem Oberflaechen-Faden (alle Aufrufer laufen in Task.Run bzw. im
+/// Hintergrund). Uebernahme und Sicherung fuer die alte App fragen vorher <see cref="Belegt"/>
+/// und lehnen dann mit AbgleichTexte.Belegt ab (Weisung P2-12 A2); der automatische Abgleich
+/// wartet im Hintergrund. Gilt im ganzen Programm (ein Prozess, eine Sperre).
 /// </summary>
 public static class Vorgaenge
 {
@@ -17,8 +19,8 @@ public static class Vorgaenge
         return new Freigabe();
     }
 
-    /// <summary>Nur fuer Tests: laeuft gerade ein Vorgang?</summary>
-    internal static bool Belegt => Sperre.CurrentCount == 0;
+    /// <summary>Laeuft gerade ein Vorgang (Abgleich, Uebernahme, Sicherung fuer die alte App)?</summary>
+    public static bool Belegt => Sperre.CurrentCount == 0;
 
     private sealed class Freigabe : IDisposable
     {

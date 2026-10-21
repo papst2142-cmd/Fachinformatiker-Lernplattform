@@ -16,6 +16,8 @@ Inhalt:
                  anderen Geraete (Text, "fehlt" = noch keine), Uhrabweichung (null = kein
                  Date-Kopf). Ergebnis: Stand nachher, export_local als Text, received,
                  gone, invalid, clamped, mixed, gleich, sent.
+  texte        - SyncResult.message, _http_error, fisi_optionen.sync_mixed_text (Abgleich-Texte)
+  stempel      - DBManager._stamp je Messwert der Uhrabweichung (sync_meta clock): [Wert, Zeit, Abstand]
 
 Uhr: device_now ist fest 2026-10-20 12:00:00 Ortszeit (Europe/Berlin), Laufzeit-Uhr 1000.0,
 Systemstart "start-test", Prozess "prozess-test". Die Uhrzeit von GitHub ist device_now
@@ -275,6 +277,61 @@ def main():
     pfad_gleich = baue_lokal("gleich_quelle")
     fall("schon_gleich", sync.export_local(oeffnen(pfad_gleich)), 0.0)
 
+    # -- Stempel (_stamp) mit gemessener Uhrabweichung (Weisung P2-12 A4) ------------
+    stempel_faelle = []
+    jetzt_iso = "2026-10-20T12:00:00+02:00"
+    for wert in [None, "kein json", messung(0.0, jetzt_iso, LAUF),
+                 messung(200.0, jetzt_iso, LAUF), messung(-200.0, jetzt_iso, LAUF),
+                 messung(301.0, jetzt_iso, LAUF), messung(-301.0, jetzt_iso, LAUF),
+                 messung(3600.0, jetzt_iso, LAUF), messung(-7200.0, jetzt_iso, LAUF),
+                 messung(5430.0, jetzt_iso, LAUF), messung(9030.0, jetzt_iso, LAUF), messung(9090.0, jetzt_iso, LAUF),
+                 messung(-5430.0, jetzt_iso, LAUF), messung(-9090.0, jetzt_iso, LAUF),
+                 messung(3600.0, "2026-10-20T10:00:00+02:00", LAUF - 7200.0),
+                 messung(3600.0, "2026-10-20T11:00:00+02:00", LAUF - 600.0, start="anderer"),
+                 messung(-3600.0, "2026-10-20T11:00:00+02:00", LAUF - 600.0, start="anderer"),
+                 messung(3600.0, "2026-10-20T11:00:00+02:00", LAUF - 3600.0, start=START, prozess=PROZESS)]:
+        pfad = os.path.join(tmp, "stempel_%d.db" % len(stempel_faelle))
+        db = core.DBManager(pfad)
+        if wert is not None:
+            db.set_meta(core.CLOCK_KEY, wert)
+        zeit, abstand = db._stamp()
+        stempel_faelle.append([wert, zeit, abstand])
+
+    # -- Texte des Abgleichs (Weisung P2-12): Ergebnis, HTTP-Fehler, Mischbetrieb-Zeile -------
+    import fisi_optionen as fo
+    ergebnisse = []
+    for received, sent, removed, invalid, clamped in [
+            (0, 0, 0, False, False), (1, 0, 0, False, False), (0, 1, 0, False, False), (0, 0, 1, False, False),
+            (2, 3, 0, False, False), (1234, 1, 2, False, False), (0, 0, 0, True, False), (0, 0, 0, False, True),
+            (5, 0, 1, True, True), (0, 7, 0, False, True)]:
+        stats = sync.MergeStats()
+        stats.invalid = 1 if invalid else 0
+        result = sync.SyncResult(received, sent, removed, stats.notes() + ([sync.MSG_FUTURE_MARKER] if clamped else []))
+        ergebnisse.append([received, sent, removed, invalid, clamped, result.message])
+    http = [[code, sync._http_error(code, "nico/Fi-Lernstand")] for code in (401, 403, 404, 409, 500, 502)]
+
+    class Meta:
+        def __init__(self, wert):
+            self.wert = wert
+
+        def get_meta(self, _key):
+            return self.wert
+
+    jetzt_utc = jetzt.astimezone(datetime.timezone.utc)
+    eingerichtet = {"sync_repo": "nico/Fi-Lernstand", "sync_token": "x" * 20, "sync_auto": True,
+                    "sync_last": "2026-10-20 11:59:00"}
+    mischtexte = []
+    for wert, einstellungen in [
+            (None, eingerichtet), ("", eingerichtet), ("kaputt", eingerichtet),
+            ("2026-10-18T09:00:00+00:00", eingerichtet), ("2026-10-13T10:00:01+00:00", eingerichtet),
+            ("2026-10-13T10:00:00+00:00", eingerichtet), ("2026-10-13T09:59:59+00:00", eingerichtet),
+            ("2026-10-20T23:30:00+00:00", eingerichtet), ("2026-10-18T09:00:00", eingerichtet),
+            ("2026-10-18T09:00:00+00:00", dict(eingerichtet, sync_last="")),
+            ("2026-10-18T09:00:00+00:00", dict(eingerichtet, sync_token=""))]:
+        mischtexte.append([wert, einstellungen["sync_token"] != "", einstellungen["sync_last"],
+                           fo.sync_mixed_text(Meta(wert), jetzt_utc, einstellungen)])
+    texte = {"ergebnisse": ergebnisse, "http": http, "mischbetrieb": mischtexte}
+
     daten = {
         "quelle": "fisi_sync.sync (ein Versuch ohne Netz), export_local, _note_mixed, _correct_own_entries, "
                   "_clamp_future_markers, merge_into_local; fisi_core.clock_measurement; "
@@ -286,6 +343,8 @@ def main():
         "zahlen": zahlen,
         "sicherung": sicherung,
         "faelle": faelle,
+        "stempel": stempel_faelle,
+        "texte": texte,
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(daten, handle, ensure_ascii=False, indent=1)

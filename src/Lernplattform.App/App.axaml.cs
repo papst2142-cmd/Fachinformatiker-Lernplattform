@@ -37,7 +37,12 @@ public partial class App : Application
                 DataContext = new MainViewModel()
             };
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
-            desktop.Exit += (_, _) => Programm.Zustand.Beenden();
+            desktop.Exit += (_, _) =>
+            {
+                Programm.Zustand.Beenden();
+                // L10: letzter Abgleich, wenn seither gelernt wurde (run_before_exit, hoechstens 12 s)
+                Programm.AbgleichDienst.VorDemBeenden();
+            };
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactoryApplicationLifetime)
         {
@@ -50,6 +55,20 @@ public partial class App : Application
                 DataContext = new MainViewModel()
             };
         }
+
+        // L10: Handy gleicht beim Verlassen der App ab (on_leave), wenn seither gelernt wurde
+        if (OperatingSystem.IsAndroid() && this.TryGetFeature<IActivatableLifetime>() is { } leben)
+        {
+            leben.Deactivated += (_, e) =>
+            {
+                if (e.Kind == ActivationKind.Background)
+                {
+                    Programm.AbgleichDienst.Verlassen();
+                }
+            };
+        }
+        // L10: Abgleich beim Start (PC nach 1,5 s, Handy sofort), wenn eingerichtet und an
+        Programm.AbgleichDienst.Starten();
 
         base.OnFrameworkInitializationCompleted();
     }

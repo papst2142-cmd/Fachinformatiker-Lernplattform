@@ -86,6 +86,11 @@ internal sealed class GitHubAttrappe : IDisposable
     /// <summary>Antworten verzoegern (Zeitueberschreitung).</summary>
     public TimeSpan Verzoegerung { get; set; }
 
+    /// <summary>Nur das Hochladen (PUT) verzoegern; PutBegonnen wird gesetzt, sobald es angekommen ist (P2-12 A1).</summary>
+    public TimeSpan PutVerzoegerung { get; set; }
+
+    public ManualResetEventSlim PutBegonnen { get; } = new();
+
     /// <summary>Datei vorgeben (gzip-Bytes), sha wie git (blob).</summary>
     public void Speichern(byte[] roh)
     {
@@ -234,6 +239,11 @@ internal sealed class GitHubAttrappe : IDisposable
         if (Verzoegerung > TimeSpan.Zero)
         {
             Thread.Sleep(Verzoegerung);
+        }
+        if (methode == "PUT" && PutVerzoegerung > TimeSpan.Zero)
+        {
+            PutBegonnen.Set();
+            Thread.Sleep(PutVerzoegerung);
         }
         var (code, inhalt, art, falscheLaenge) = Antwort(methode, pfad, koepfe, koerper, roh.ToString());
         if (code == 0)
@@ -388,5 +398,6 @@ internal sealed class GitHubAttrappe : IDisposable
         _ende = true;
         _lauscher.Stop();
         _faden.Join(TimeSpan.FromSeconds(5));
+        PutBegonnen.Dispose();
     }
 }

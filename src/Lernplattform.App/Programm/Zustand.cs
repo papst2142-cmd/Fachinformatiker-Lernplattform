@@ -195,6 +195,13 @@ public static class Zustand
         _ => 1.0,
     };
 
+    /// <summary>Einstellungen neu lesen (nach dem Abgleich: sync_last), Geheimnisfilter setzen.</summary>
+    public static void EinstellungenNeuLesen()
+    {
+        Werte = Einstellungen.Laden();
+        Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
+    }
+
     /// <summary>
     /// Mehrere Werte auf einmal aendern (auch Schluessel entfernen) und speichern.
     /// false: nicht gespeichert, die Datei bleibt unveraendert.

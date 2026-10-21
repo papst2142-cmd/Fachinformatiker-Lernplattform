@@ -116,6 +116,23 @@ public static class Abgleich
     public static bool Eingerichtet(JsonObject werte) =>
         Text(werte[RepoSchluessel]).Trim().Length > 0 && Text(werte[TokenSchluessel]).Trim().Length > 0;
 
+    /// <summary>auto_enabled: eingerichtet und „Automatisch abgleichen“ an (fehlt der Wert: an, wie SETTING_DEFAULTS).</summary>
+    public static bool AutoAn(JsonObject werte)
+    {
+        if (!Eingerichtet(werte))
+        {
+            return false;
+        }
+        if (!werte.TryGetPropertyValue(AutoSchluessel, out var wert))
+        {
+            return true;
+        }
+        // Wahrheitswert wie Python bool(): false, 0, "" und null sind aus
+        return wert is JsonValue v && (v.TryGetValue<bool>(out var b) ? b
+            : v.TryGetValue<double>(out var d) ? d != 0
+            : v.TryGetValue<string>(out var t) && t.Length > 0);
+    }
+
     private static string Text(JsonNode? wert) =>
         wert is JsonValue v && v.TryGetValue<string>(out var text) ? text : "";
 

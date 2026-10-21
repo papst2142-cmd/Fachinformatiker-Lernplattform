@@ -77,6 +77,7 @@ public sealed class TrainerSeite : UserControl
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _u = uebung;
+                uebung.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule)
                 Aufbauen(inhalte);
                 foreach (var schritt in _wartend)
                 {

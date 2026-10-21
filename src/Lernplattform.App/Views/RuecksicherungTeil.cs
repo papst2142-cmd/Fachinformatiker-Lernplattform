@@ -44,23 +44,6 @@ public sealed class RuecksicherungTeil
 
     public Control Teil { get; }
 
-    /// <summary>Geraet wie SyncController.device(): „PC &lt;Rechnername&gt;“, am Handy „Handy“.</summary>
-    public static string Geraet()
-    {
-        if (Android)
-        {
-            return "Handy";
-        }
-        try
-        {
-            return ("PC " + System.Net.Dns.GetHostName().Trim()).Trim();
-        }
-        catch (System.Net.Sockets.SocketException)
-        {
-            return "PC";
-        }
-    }
-
     private void Zeige(string text)
     {
         _zustand.Text = text;
@@ -103,6 +86,12 @@ public sealed class RuecksicherungTeil
 
     private async Task AblaufInnenAsync(TopLevel top)
     {
+        if (Vorgaenge.Belegt)
+        {
+            // P2-12 A2: nicht warten, solange ein Abgleich oder eine Uebernahme laeuft
+            await Dialog.Zeigen(RuecksicherungTexte.Knopf, AbgleichTexte.Belegt, Dialog.Ok);
+            return;
+        }
         var vorschlag = Ruecksicherung.DateiName(DateTime.Now);
         var datei = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
@@ -118,7 +107,7 @@ public sealed class RuecksicherungTeil
         Zeige(RuecksicherungTexte.Warten);
         var lernstand = Zustand.Lernstand;
         var einstellungen = Zustand.Werte;
-        var geraet = Geraet();
+        var geraet = AbgleichDienst.Geraet();
         var bytes = await Task.Run(() => Ruecksicherung.Erstellen(lernstand, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet, DateTime.Now));
         var pfad = datei.TryGetLocalPath();
         if (!Android && pfad is not null)

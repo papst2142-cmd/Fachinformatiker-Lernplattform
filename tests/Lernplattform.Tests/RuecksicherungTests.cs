@@ -147,9 +147,11 @@ public class RuecksicherungTests
         var (ordner, lernstand) = Beispiel();
         using var _ = ordner;
         Task<bool>? schreiber = null;
+        // nur dieser Faden: andere Tests lesen gleichzeitig (Abgleich, Sicherung) und rufen den Haken auch auf
+        var faden = Environment.CurrentManagedThreadId;
         Ruecksicherung.NachTabelle = tabelle =>
         {
-            if (tabelle == "test_results" && schreiber is null)
+            if (Environment.CurrentManagedThreadId == faden && tabelle == "test_results" && schreiber is null)
             {
                 var zweiter = new Lernstand(lernstand.Pfad);
                 schreiber = Task.Run(() => zweiter.Schreiben(

@@ -17610,5 +17610,275 @@
     ]
    }
   }
- ]
+ ],
+ "stempel": [
+  [
+   null,
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "kein json",
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "{\"s\": 0.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "{\"s\": 200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "{\"s\": -200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "{\"s\": 301.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   125
+  ],
+  [
+   "{\"s\": -301.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   115
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   180
+  ],
+  [
+   "{\"s\": -7200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   0
+  ],
+  [
+   "{\"s\": 5430.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   210
+  ],
+  [
+   "{\"s\": 9030.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   270
+  ],
+  [
+   "{\"s\": 9090.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   272
+  ],
+  [
+   "{\"s\": -5430.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   30
+  ],
+  [
+   "{\"s\": -9090.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   -32
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T10:00:00+02:00\", \"lauf\": -6200.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   180
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": 400.0, \"start\": \"anderer\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   120
+  ],
+  [
+   "{\"s\": -3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": 400.0, \"start\": \"anderer\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00",
+   60
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": -2600.0, \"start\": \"start-test\", \"prozess\": \"prozess-test\"}",
+   "2026-10-20 12:00:00",
+   180
+  ]
+ ],
+ "texte": {
+  "ergebnisse": [
+   [
+    0,
+    0,
+    0,
+    false,
+    false,
+    "Alles auf dem neuesten Stand."
+   ],
+   [
+    1,
+    0,
+    0,
+    false,
+    false,
+    "1 Eintrag von anderen Geräten übernommen."
+   ],
+   [
+    0,
+    1,
+    0,
+    false,
+    false,
+    "1 Eintrag hochgeladen."
+   ],
+   [
+    0,
+    0,
+    1,
+    false,
+    false,
+    "1 Eintrag wegen einer Löschung entfernt."
+   ],
+   [
+    2,
+    3,
+    0,
+    false,
+    false,
+    "2 Einträge von anderen Geräten übernommen, 3 Einträge hochgeladen."
+   ],
+   [
+    1234,
+    1,
+    2,
+    false,
+    false,
+    "1.234 Einträge von anderen Geräten übernommen, 1 Eintrag hochgeladen, 2 Einträge wegen einer Löschung entfernt."
+   ],
+   [
+    0,
+    0,
+    0,
+    true,
+    false,
+    "Alles auf dem neuesten Stand. Die Abgleich-Datei enthält eine ungültige Löschmarke. Sie wurde nicht angewendet."
+   ],
+   [
+    0,
+    0,
+    0,
+    false,
+    true,
+    "Alles auf dem neuesten Stand. Eine Löschmarke lag in der Zukunft (falsche Uhr) und wurde auf die Uhrzeit von GitHub gesetzt."
+   ],
+   [
+    5,
+    0,
+    1,
+    true,
+    true,
+    "5 Einträge von anderen Geräten übernommen, 1 Eintrag wegen einer Löschung entfernt. Die Abgleich-Datei enthält eine ungültige Löschmarke. Sie wurde nicht angewendet. Eine Löschmarke lag in der Zukunft (falsche Uhr) und wurde auf die Uhrzeit von GitHub gesetzt."
+   ],
+   [
+    0,
+    7,
+    0,
+    false,
+    true,
+    "7 Einträge hochgeladen. Eine Löschmarke lag in der Zukunft (falsche Uhr) und wurde auf die Uhrzeit von GitHub gesetzt."
+   ]
+  ],
+  "http": [
+   [
+    401,
+    "Der Zugangsschlüssel (Token) ist ungültig oder abgelaufen."
+   ],
+   [
+    403,
+    "Der Zugangsschlüssel darf das Repository nico/Fi-Lernstand nicht beschreiben. Er braucht die Berechtigung „Contents: Read and write“."
+   ],
+   [
+    404,
+    "Das Repository nico/Fi-Lernstand wurde nicht gefunden oder der Zugangsschlüssel hat keinen Zugriff darauf."
+   ],
+   [
+    409,
+    "GitHub hat die Anfrage abgelehnt (HTTP 409)."
+   ],
+   [
+    500,
+    "GitHub hat die Anfrage abgelehnt (HTTP 500)."
+   ],
+   [
+    502,
+    "GitHub hat die Anfrage abgelehnt (HTTP 502)."
+   ]
+  ],
+  "mischbetrieb": [
+   [
+    null,
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung aktiv."
+   ],
+   [
+    "",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung aktiv."
+   ],
+   [
+    "kaputt",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung aktiv."
+   ],
+   [
+    "2026-10-18T09:00:00+00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung ab 25.10.2026 (ein Gerät mit älterer Version hat zuletzt am 18.10. abgeglichen)."
+   ],
+   [
+    "2026-10-13T10:00:01+00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung ab 20.10.2026 (ein Gerät mit älterer Version hat zuletzt am 13.10. abgeglichen)."
+   ],
+   [
+    "2026-10-13T10:00:00+00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung ab 20.10.2026 (ein Gerät mit älterer Version hat zuletzt am 13.10. abgeglichen)."
+   ],
+   [
+    "2026-10-13T09:59:59+00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung aktiv."
+   ],
+   [
+    "2026-10-20T23:30:00+00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung ab 28.10.2026 (ein Gerät mit älterer Version hat zuletzt am 21.10. abgeglichen)."
+   ],
+   [
+    "2026-10-18T09:00:00",
+    true,
+    "2026-10-20 11:59:00",
+    "Abgleich: volle Schutzwirkung aktiv."
+   ],
+   [
+    "2026-10-18T09:00:00+00:00",
+    true,
+    "",
+    ""
+   ],
+   [
+    "2026-10-18T09:00:00+00:00",
+    false,
+    "2026-10-20 11:59:00",
+    ""
+   ]
+  ]
+ }
 }
