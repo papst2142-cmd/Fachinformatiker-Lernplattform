@@ -280,21 +280,30 @@ public class SubnettingTests
         a.Pruefen(100);
     }
 
-    /// <summary>2^64 Subnetze: Aufteilen, letzte Seite und Rechenweg sofort (nie alle Subnetze aufzaehlen).</summary>
+    /// <summary>
+    /// 2^64 Subnetze: Aufteilen, letzte Seite und Rechenweg sofort (nie alle Subnetze aufzaehlen).
+    /// Die Arbeit laeuft nebenher, damit ein Aufzaehlen den Test rot macht statt ihn anzuhalten.
+    /// </summary>
     [Fact]
-    public void GrosseAufteilungSofort()
+    public async Task GrosseAufteilungSofort()
     {
         var uhr = System.Diagnostics.Stopwatch.StartNew();
-        foreach (var (net, count) in new[] { ("::/0", "18446744073709551616"), ("2001:db8::/32", "18446744073709551617"), ("0.0.0.0/0", "4294967296") })
+        var arbeit = Task.Run(() =>
         {
-            var r = Subnetting.Aufteilen(net, count);
-            foreach (var seite in new[] { BigInteger.One, r.Seiten / 2 + 1, r.Seiten })
+            foreach (var (net, count) in new[] { ("::/0", "18446744073709551616"), ("2001:db8::/32", "18446744073709551617"), ("0.0.0.0/0", "4294967296") })
             {
-                Assert.NotEmpty(Subnetting.AufteilenBericht(r, seite));
-                Assert.NotEmpty(Subnetting.AufteilenBericht(r, seite, schmal: true));
+                var r = Subnetting.Aufteilen(net, count);
+                foreach (var seite in new[] { BigInteger.One, r.Seiten / 2 + 1, r.Seiten })
+                {
+                    Assert.NotEmpty(Subnetting.AufteilenBericht(r, seite));
+                    Assert.NotEmpty(Subnetting.AufteilenBericht(r, seite, schmal: true));
+                }
+                Assert.NotEmpty(Rechenweg.Aufteilen(r));
             }
-            Assert.NotEmpty(Rechenweg.Aufteilen(r));
-        }
+        }, TestContext.Current.CancellationToken);
+        var fertig = await Task.WhenAny(arbeit, Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        Assert.True(fertig == arbeit, "Aufteilen mit 2^64 Subnetzen nach 10 s nicht fertig");
+        await arbeit;
         Assert.True(uhr.ElapsedMilliseconds < 400, $"Aufteilen mit 2^64 Subnetzen dauerte {uhr.ElapsedMilliseconds} ms (Grenze 400 ms)");
     }
 }

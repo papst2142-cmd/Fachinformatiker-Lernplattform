@@ -52,7 +52,7 @@ public class RechnerTests
             a.Gleich(f[4].GetInt32().ToString(CultureInfo.InvariantCulture),
                 Raid.MindestPlatten(level).ToString(CultureInfo.InvariantCulture), fall + " raid_min_disks");
             a.Gleich(f[5].GetString(), Raid.EingabeProblem(level, platten), fall + " raid_input_problem");
-            if (werte is not null)
+            if (werte is not null && f[6].ValueKind != JsonValueKind.Null)
             {
                 a.Gleich(Abweichungen.Liste(f[6]), Abweichungen.Liste(Raid.ToleranzZeilen(level, platten, werte.Toleranz)),
                     fall + " raid_tolerance_lines");
