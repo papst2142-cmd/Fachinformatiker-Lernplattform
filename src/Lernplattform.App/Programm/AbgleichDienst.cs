@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Programm;
 
@@ -27,15 +28,15 @@ public static class AbgleichDienst
     {
         if (Android)
         {
-            return "Handy";
+            return Geraetetexte.Geraet(false, "");
         }
         try
         {
-            return ("PC " + System.Net.Dns.GetHostName().Trim()).Trim();
+            return Geraetetexte.Geraet(true, System.Net.Dns.GetHostName());
         }
         catch (System.Net.Sockets.SocketException)
         {
-            return "PC";
+            return Geraetetexte.Geraet(true, "");
         }
     }
 

@@ -53,7 +53,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         _fehler.IsVisible = false;
         var liste = new StackPanel { Spacing = 12, Margin = new Thickness(16) };
         liste.Children.Add(_fehler);
-        foreach (var bereich in Optionen.BereicheFuer(Pc))
+        foreach (var bereich in Geraetetexte.OptionenBereiche(Pc))
         {
             liste.Children.Add(Bereich(bereich, Inhalt(bereich)));
         }
@@ -102,7 +102,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     {
         var titel = Schrift.Text(bereich.Titel, "Mittel", FontWeight.Bold);
         var kopf = new StackPanel { Spacing = 2, Children = { titel } };
-        if (bereich.Untertitel(Pc) is { } untertitel)
+        if (Geraetetexte.OptionenUntertitel(bereich, Pc) is { } untertitel)
         {
             var text = bereich.Id == Optionen.Updates ? Beschriftungen.Einsetzen(untertitel, Update.Anzeige) : untertitel;
             kopf.Children.Add(Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.muted"));
@@ -159,7 +159,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private Control Optik(OptionenBereich bereich)
     {
         var panel = new StackPanel { Spacing = 10 };
-        foreach (var abschnitt in bereich.AbschnitteFuer(Pc))
+        foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
         {
             panel.Children.Add(Abschnitt(abschnitt.Titel));
             if (abschnitt.Id == Optionen.AbschnittSchrift)
@@ -406,7 +406,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private Control Diagnose(OptionenBereich bereich)
     {
         var panel = new StackPanel { Spacing = 10 };
-        foreach (var abschnitt in bereich.AbschnitteFuer(Pc))
+        foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
         {
             panel.Children.Add(Abschnitt(abschnitt.Titel));
             if (abschnitt.Id != Optionen.AbschnittProblem)

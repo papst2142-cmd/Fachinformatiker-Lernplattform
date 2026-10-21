@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
+using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
@@ -68,6 +69,7 @@ public static class AutoMessung
         }
 
         funde += await W3MesspunkteAsync(ansicht, inhalte);
+        funde += await FarbreglerAsync(ansicht);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -353,6 +355,51 @@ public static class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  davon Antworten einlesen {msBuch:F0} ms, Plan {msPlan:F0} ms, erste Sitzung {msGesamt - msBuch - msPlan:F0} ms"));
         }
         return funde;
+    }
+
+    /// <summary>
+    /// Welle 5, L12 (Weisung P2-14 A4): Farbton-Regler "Akzent 1" einmal ueber die ganze Spur
+    /// ziehen (360 Schritte). Je Schritt Neuzeichnen der Gruppe (3 Spuren mit 360/101/101
+    /// Stuetzfarben, Knoepfe, Vorschau) bis zum fertigen Bild. Fund nach Farbreglerregel
+    /// (Weisung P2-17): Schritt 1 ueber 150 ms oder ein spaeterer Schritt ueber 100 ms.
+    /// Der Regler steht danach wieder auf dem alten Wert; gespeichert wird nichts.
+    /// </summary>
+    private static async Task<int> FarbreglerAsync(MainView ansicht)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        await ansicht.ZeigeAsync(Seiten.Optionen);
+        var optionen = (OptionenSeite)ansicht.GebauteSeiten[Seiten.Optionen];
+        optionen.OeffneBereich(Optionen.Optik, false);
+        await ansicht.BildFertigAsync();
+        var regler = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(optionen).OfType<Slider>().FirstOrDefault();
+        if (regler is null)
+        {
+            Messwerte.Notiere("Farbregler Neuzeichnen: FEHLER, Regler nicht gefunden");
+            return 1;
+        }
+        var alt = regler.Value;
+        var zeiten = new List<double>();
+        for (var wert = 0; wert <= 359; wert++)
+        {
+            var uhr = Stopwatch.StartNew();
+            regler.Value = wert;
+            await ansicht.BildFertigAsync();
+            zeiten.Add(uhr.Elapsed.TotalMilliseconds);
+        }
+        regler.Value = alt;
+        await ansicht.BildFertigAsync();
+        var weitere = zeiten.Skip(1).ToList();
+        Messwerte.Notiere(string.Create(inv, $"Farbregler Neuzeichnen (Farbton Akzent 1, {zeiten.Count} Schritte bis zum Bild): erster Schritt {zeiten[0]:F1} ms (Grenze {Farbreglerregel.GrenzeErsterSchritt:F0} ms); ab Schritt 2: Mittel {weitere.Average():F1} ms, Median {weitere.Order().ElementAt(weitere.Count / 2):F1} ms, Hoechstwert {weitere.Max():F1} ms (Grenze {Farbreglerregel.GrenzeWeitereSchritte:F0} ms)"));
+        var funde = Farbreglerregel.Funde(zeiten);
+        foreach (var fund in funde)
+        {
+            Messwerte.Notiere("  FEHLER: " + fund);
+        }
+        if (funde.Count > 0)
+        {
+            return 1;
+        }
+        return 0;
     }
 
     /// <summary>
