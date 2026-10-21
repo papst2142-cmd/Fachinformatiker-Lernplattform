@@ -16649,7 +16649,7 @@
    "art": "afa",
    "stufe": 3,
    "startwert": "0-0",
-   "text": "Ein Server kostet 43.860,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 22.200,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16657,19 +16657,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "609,17"
+    "ergebnis": "308,33"
    },
    "schritte": [
-    "Jährlich: 43.860,00 / 6 = 7.310,00 €",
+    "Jährlich: 22.200,00 / 6 = 3.700,00 €",
     "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 7.310,00 x 1 / 12 = 609,17 €"
+    "Erstes Jahr: 3.700,00 x 1 / 12 = 308,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-1",
-   "text": "Ein Server kostet 42.900,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 21.700,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16677,19 +16677,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "2.145,00"
+    "ergebnis": "1.085,00"
    },
    "schritte": [
-    "Jährlich: 42.900,00 / 5 = 8.580,00 €",
+    "Jährlich: 21.700,00 / 5 = 4.340,00 €",
     "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 8.580,00 x 3 / 12 = 2.145,00 €"
+    "Erstes Jahr: 4.340,00 x 3 / 12 = 1.085,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-2",
-   "text": "Ein Server kostet 3.990,00 €, Nutzungsdauer 3 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 2.130,00 €, Nutzungsdauer 3 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16697,19 +16697,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "221,67"
+    "ergebnis": "118,33"
    },
    "schritte": [
-    "Jährlich: 3.990,00 / 3 = 1.330,00 €",
+    "Jährlich: 2.130,00 / 3 = 710,00 €",
     "Monate: 13 - 11 = 2",
-    "Erstes Jahr: 1.330,00 x 2 / 12 = 221,67 €"
+    "Erstes Jahr: 710,00 x 2 / 12 = 118,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-3",
-   "text": "Ein Server kostet 49.770,00 €, Nutzungsdauer 7 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 25.200,00 €, Nutzungsdauer 7 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16717,19 +16717,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "5.332,50"
+    "ergebnis": "2.700,00"
    },
    "schritte": [
-    "Jährlich: 49.770,00 / 7 = 7.110,00 €",
+    "Jährlich: 25.200,00 / 7 = 3.600,00 €",
     "Monate: 13 - 4 = 9",
-    "Erstes Jahr: 7.110,00 x 9 / 12 = 5.332,50 €"
+    "Erstes Jahr: 3.600,00 x 9 / 12 = 2.700,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-4",
-   "text": "Ein Server kostet 13.400,00 €, Nutzungsdauer 4 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 6.880,00 €, Nutzungsdauer 4 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16737,19 +16737,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "2.791,67"
+    "ergebnis": "1.433,33"
    },
    "schritte": [
-    "Jährlich: 13.400,00 / 4 = 3.350,00 €",
+    "Jährlich: 6.880,00 / 4 = 1.720,00 €",
     "Monate: 13 - 3 = 10",
-    "Erstes Jahr: 3.350,00 x 10 / 12 = 2.791,67 €"
+    "Erstes Jahr: 1.720,00 x 10 / 12 = 1.433,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-5",
-   "text": "Ein Server kostet 3.650,00 €, Nutzungsdauer 5 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 2.050,00 €, Nutzungsdauer 5 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16757,19 +16757,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "608,33"
+    "ergebnis": "341,67"
    },
    "schritte": [
-    "Jährlich: 3.650,00 / 5 = 730,00 €",
+    "Jährlich: 2.050,00 / 5 = 410,00 €",
     "Monate: 13 - 3 = 10",
-    "Erstes Jahr: 730,00 x 10 / 12 = 608,33 €"
+    "Erstes Jahr: 410,00 x 10 / 12 = 341,67 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-6",
-   "text": "Ein Server kostet 55.600,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Juli. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 28.160,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Juli. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16777,19 +16777,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "3.475,00"
+    "ergebnis": "1.760,00"
    },
    "schritte": [
-    "Jährlich: 55.600,00 / 8 = 6.950,00 €",
+    "Jährlich: 28.160,00 / 8 = 3.520,00 €",
     "Monate: 13 - 7 = 6",
-    "Erstes Jahr: 6.950,00 x 6 / 12 = 3.475,00 €"
+    "Erstes Jahr: 3.520,00 x 6 / 12 = 1.760,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-7",
-   "text": "Ein Server kostet 13.830,00 €, Nutzungsdauer 3 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 7.050,00 €, Nutzungsdauer 3 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16797,19 +16797,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "1.152,50"
+    "ergebnis": "587,50"
    },
    "schritte": [
-    "Jährlich: 13.830,00 / 3 = 4.610,00 €",
+    "Jährlich: 7.050,00 / 3 = 2.350,00 €",
     "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 4.610,00 x 3 / 12 = 1.152,50 €"
+    "Erstes Jahr: 2.350,00 x 3 / 12 = 587,50 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-8",
-   "text": "Ein Server kostet 98.600,00 €, Nutzungsdauer 10 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 49.800,00 €, Nutzungsdauer 10 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16817,19 +16817,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "9.038,33"
+    "ergebnis": "4.565,00"
    },
    "schritte": [
-    "Jährlich: 98.600,00 / 10 = 9.860,00 €",
+    "Jährlich: 49.800,00 / 10 = 4.980,00 €",
     "Monate: 13 - 2 = 11",
-    "Erstes Jahr: 9.860,00 x 11 / 12 = 9.038,33 €"
+    "Erstes Jahr: 4.980,00 x 11 / 12 = 4.565,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "0-9",
-   "text": "Ein Server kostet 27.990,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 14.400,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16837,19 +16837,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "777,50"
+    "ergebnis": "400,00"
    },
    "schritte": [
-    "Jährlich: 27.990,00 / 9 = 3.110,00 €",
+    "Jährlich: 14.400,00 / 9 = 1.600,00 €",
     "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 3.110,00 x 3 / 12 = 777,50 €"
+    "Erstes Jahr: 1.600,00 x 3 / 12 = 400,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-0",
-   "text": "Ein Server kostet 81.360,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 41.130,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16857,19 +16857,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "753,33"
+    "ergebnis": "380,83"
    },
    "schritte": [
-    "Jährlich: 81.360,00 / 9 = 9.040,00 €",
+    "Jährlich: 41.130,00 / 9 = 4.570,00 €",
     "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 9.040,00 x 1 / 12 = 753,33 €"
+    "Erstes Jahr: 4.570,00 x 1 / 12 = 380,83 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-1",
-   "text": "Ein Server kostet 87.600,00 €, Nutzungsdauer 10 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 44.300,00 €, Nutzungsdauer 10 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16877,19 +16877,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "8.030,00"
+    "ergebnis": "4.060,83"
    },
    "schritte": [
-    "Jährlich: 87.600,00 / 10 = 8.760,00 €",
+    "Jährlich: 44.300,00 / 10 = 4.430,00 €",
     "Monate: 13 - 2 = 11",
-    "Erstes Jahr: 8.760,00 x 11 / 12 = 8.030,00 €"
+    "Erstes Jahr: 4.430,00 x 11 / 12 = 4.060,83 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-2",
-   "text": "Ein Server kostet 36.900,00 €, Nutzungsdauer 9 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 18.900,00 €, Nutzungsdauer 9 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16897,19 +16897,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "683,33"
+    "ergebnis": "350,00"
    },
    "schritte": [
-    "Jährlich: 36.900,00 / 9 = 4.100,00 €",
+    "Jährlich: 18.900,00 / 9 = 2.100,00 €",
     "Monate: 13 - 11 = 2",
-    "Erstes Jahr: 4.100,00 x 2 / 12 = 683,33 €"
+    "Erstes Jahr: 2.100,00 x 2 / 12 = 350,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-3",
-   "text": "Ein Server kostet 33.600,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 17.000,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16917,19 +16917,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "5.600,00"
+    "ergebnis": "2.833,33"
    },
    "schritte": [
-    "Jährlich: 33.600,00 / 4 = 8.400,00 €",
+    "Jährlich: 17.000,00 / 4 = 4.250,00 €",
     "Monate: 13 - 5 = 8",
-    "Erstes Jahr: 8.400,00 x 8 / 12 = 5.600,00 €"
+    "Erstes Jahr: 4.250,00 x 8 / 12 = 2.833,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-4",
-   "text": "Ein Server kostet 41.550,00 €, Nutzungsdauer 5 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 21.000,00 €, Nutzungsdauer 5 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16937,19 +16937,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "6.232,50"
+    "ergebnis": "3.150,00"
    },
    "schritte": [
-    "Jährlich: 41.550,00 / 5 = 8.310,00 €",
+    "Jährlich: 21.000,00 / 5 = 4.200,00 €",
     "Monate: 13 - 4 = 9",
-    "Erstes Jahr: 8.310,00 x 9 / 12 = 6.232,50 €"
+    "Erstes Jahr: 4.200,00 x 9 / 12 = 3.150,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-5",
-   "text": "Ein Server kostet 55.120,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 27.920,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16957,19 +16957,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "1.722,50"
+    "ergebnis": "872,50"
    },
    "schritte": [
-    "Jährlich: 55.120,00 / 8 = 6.890,00 €",
+    "Jährlich: 27.920,00 / 8 = 3.490,00 €",
     "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 6.890,00 x 3 / 12 = 1.722,50 €"
+    "Erstes Jahr: 3.490,00 x 3 / 12 = 872,50 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-6",
-   "text": "Ein Server kostet 32.460,00 €, Nutzungsdauer 6 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 16.500,00 €, Nutzungsdauer 6 Jahre, Anschaffung im November. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16977,19 +16977,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "901,67"
+    "ergebnis": "458,33"
    },
    "schritte": [
-    "Jährlich: 32.460,00 / 6 = 5.410,00 €",
+    "Jährlich: 16.500,00 / 6 = 2.750,00 €",
     "Monate: 13 - 11 = 2",
-    "Erstes Jahr: 5.410,00 x 2 / 12 = 901,67 €"
+    "Erstes Jahr: 2.750,00 x 2 / 12 = 458,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-7",
-   "text": "Ein Server kostet 17.350,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Juni. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 8.900,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Juni. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -16997,19 +16997,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "2.024,17"
+    "ergebnis": "1.038,33"
    },
    "schritte": [
-    "Jährlich: 17.350,00 / 5 = 3.470,00 €",
+    "Jährlich: 8.900,00 / 5 = 1.780,00 €",
     "Monate: 13 - 6 = 7",
-    "Erstes Jahr: 3.470,00 x 7 / 12 = 2.024,17 €"
+    "Erstes Jahr: 1.780,00 x 7 / 12 = 1.038,33 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-8",
-   "text": "Ein Server kostet 55.920,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Juni. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 28.320,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Juni. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17017,19 +17017,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "4.077,50"
+    "ergebnis": "2.065,00"
    },
    "schritte": [
-    "Jährlich: 55.920,00 / 8 = 6.990,00 €",
+    "Jährlich: 28.320,00 / 8 = 3.540,00 €",
     "Monate: 13 - 6 = 7",
-    "Erstes Jahr: 6.990,00 x 7 / 12 = 4.077,50 €"
+    "Erstes Jahr: 3.540,00 x 7 / 12 = 2.065,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "1-9",
-   "text": "Ein Server kostet 40.500,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 20.520,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17037,19 +17037,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "6.187,50"
+    "ergebnis": "3.135,00"
    },
    "schritte": [
-    "Jährlich: 40.500,00 / 6 = 6.750,00 €",
+    "Jährlich: 20.520,00 / 6 = 3.420,00 €",
     "Monate: 13 - 2 = 11",
-    "Erstes Jahr: 6.750,00 x 11 / 12 = 6.187,50 €"
+    "Erstes Jahr: 3.420,00 x 11 / 12 = 3.135,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "4711-0",
-   "text": "Ein Server kostet 42.350,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 21.490,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17057,19 +17057,339 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "504,17"
+    "ergebnis": "255,83"
    },
    "schritte": [
-    "Jährlich: 42.350,00 / 7 = 6.050,00 €",
+    "Jährlich: 21.490,00 / 7 = 3.070,00 €",
     "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 6.050,00 x 1 / 12 = 504,17 €"
+    "Erstes Jahr: 3.070,00 x 1 / 12 = 255,83 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "4711-1",
-   "text": "Ein Server kostet 33.110,00 €, Nutzungsdauer 7 Jahre, Anschaffung im September. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 16.870,00 €, Nutzungsdauer 7 Jahre, Anschaffung im September. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "803,33"
+   },
+   "schritte": [
+    "Jährlich: 16.870,00 / 7 = 2.410,00 €",
+    "Monate: 13 - 9 = 4",
+    "Erstes Jahr: 2.410,00 x 4 / 12 = 803,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-2",
+   "text": "Ein Server kostet 2.850,00 €, Nutzungsdauer 5 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "427,50"
+   },
+   "schritte": [
+    "Jährlich: 2.850,00 / 5 = 570,00 €",
+    "Monate: 13 - 4 = 9",
+    "Erstes Jahr: 570,00 x 9 / 12 = 427,50 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-3",
+   "text": "Ein Server kostet 35.280,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "2.940,00"
+   },
+   "schritte": [
+    "Jährlich: 35.280,00 / 8 = 4.410,00 €",
+    "Monate: 13 - 5 = 8",
+    "Erstes Jahr: 4.410,00 x 8 / 12 = 2.940,00 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-4",
+   "text": "Ein Server kostet 25.700,00 €, Nutzungsdauer 10 Jahre, Anschaffung im August. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.070,83"
+   },
+   "schritte": [
+    "Jährlich: 25.700,00 / 10 = 2.570,00 €",
+    "Monate: 13 - 8 = 5",
+    "Erstes Jahr: 2.570,00 x 5 / 12 = 1.070,83 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-5",
+   "text": "Ein Server kostet 12.240,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "2.040,00"
+   },
+   "schritte": [
+    "Jährlich: 12.240,00 / 4 = 3.060,00 €",
+    "Monate: 13 - 5 = 8",
+    "Erstes Jahr: 3.060,00 x 8 / 12 = 2.040,00 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-6",
+   "text": "Ein Server kostet 8.000,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "250,00"
+   },
+   "schritte": [
+    "Jährlich: 8.000,00 / 8 = 1.000,00 €",
+    "Monate: 13 - 10 = 3",
+    "Erstes Jahr: 1.000,00 x 3 / 12 = 250,00 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-7",
+   "text": "Ein Server kostet 11.700,00 €, Nutzungsdauer 9 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.083,33"
+   },
+   "schritte": [
+    "Jährlich: 11.700,00 / 9 = 1.300,00 €",
+    "Monate: 13 - 3 = 10",
+    "Erstes Jahr: 1.300,00 x 10 / 12 = 1.083,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-8",
+   "text": "Ein Server kostet 5.640,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "117,50"
+   },
+   "schritte": [
+    "Jährlich: 5.640,00 / 4 = 1.410,00 €",
+    "Monate: 13 - 12 = 1",
+    "Erstes Jahr: 1.410,00 x 1 / 12 = 117,50 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "4711-9",
+   "text": "Ein Server kostet 15.000,00 €, Nutzungsdauer 3 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "4.583,33"
+   },
+   "schritte": [
+    "Jährlich: 15.000,00 / 3 = 5.000,00 €",
+    "Monate: 13 - 2 = 11",
+    "Erstes Jahr: 5.000,00 x 11 / 12 = 4.583,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-0",
+   "text": "Ein Server kostet 3.640,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "43,33"
+   },
+   "schritte": [
+    "Jährlich: 3.640,00 / 7 = 520,00 €",
+    "Monate: 13 - 12 = 1",
+    "Erstes Jahr: 520,00 x 1 / 12 = 43,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-1",
+   "text": "Ein Server kostet 19.700,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "985,00"
+   },
+   "schritte": [
+    "Jährlich: 19.700,00 / 5 = 3.940,00 €",
+    "Monate: 13 - 10 = 3",
+    "Erstes Jahr: 3.940,00 x 3 / 12 = 985,00 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-2",
+   "text": "Ein Server kostet 19.800,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "183,33"
+   },
+   "schritte": [
+    "Jährlich: 19.800,00 / 9 = 2.200,00 €",
+    "Monate: 13 - 12 = 1",
+    "Erstes Jahr: 2.200,00 x 1 / 12 = 183,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-3",
+   "text": "Ein Server kostet 2.320,00 €, Nutzungsdauer 8 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "241,67"
+   },
+   "schritte": [
+    "Jährlich: 2.320,00 / 8 = 290,00 €",
+    "Monate: 13 - 3 = 10",
+    "Erstes Jahr: 290,00 x 10 / 12 = 241,67 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-4",
+   "text": "Ein Server kostet 9.850,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.313,33"
+   },
+   "schritte": [
+    "Jährlich: 9.850,00 / 5 = 1.970,00 €",
+    "Monate: 13 - 5 = 8",
+    "Erstes Jahr: 1.970,00 x 8 / 12 = 1.313,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-5",
+   "text": "Ein Server kostet 19.320,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "268,33"
+   },
+   "schritte": [
+    "Jährlich: 19.320,00 / 6 = 3.220,00 €",
+    "Monate: 13 - 12 = 1",
+    "Erstes Jahr: 3.220,00 x 1 / 12 = 268,33 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-6",
+   "text": "Ein Server kostet 3.850,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (€)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "137,50"
+   },
+   "schritte": [
+    "Jährlich: 3.850,00 / 7 = 550,00 €",
+    "Monate: 13 - 10 = 3",
+    "Erstes Jahr: 550,00 x 3 / 12 = 137,50 €"
+   ]
+  },
+  {
+   "art": "afa",
+   "stufe": 3,
+   "startwert": "123456789-7",
+   "text": "Ein Server kostet 42.570,00 €, Nutzungsdauer 9 Jahre, Anschaffung im September. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17080,7 +17400,7 @@
     "ergebnis": "1.576,67"
    },
    "schritte": [
-    "Jährlich: 33.110,00 / 7 = 4.730,00 €",
+    "Jährlich: 42.570,00 / 9 = 4.730,00 €",
     "Monate: 13 - 9 = 4",
     "Erstes Jahr: 4.730,00 x 4 / 12 = 1.576,67 €"
    ]
@@ -17088,328 +17408,8 @@
   {
    "art": "afa",
    "stufe": 3,
-   "startwert": "4711-2",
-   "text": "Ein Server kostet 5.200,00 €, Nutzungsdauer 5 Jahre, Anschaffung im April. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "780,00"
-   },
-   "schritte": [
-    "Jährlich: 5.200,00 / 5 = 1.040,00 €",
-    "Monate: 13 - 4 = 9",
-    "Erstes Jahr: 1.040,00 x 9 / 12 = 780,00 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-3",
-   "text": "Ein Server kostet 69.840,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "5.820,00"
-   },
-   "schritte": [
-    "Jährlich: 69.840,00 / 8 = 8.730,00 €",
-    "Monate: 13 - 5 = 8",
-    "Erstes Jahr: 8.730,00 x 8 / 12 = 5.820,00 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-4",
-   "text": "Ein Server kostet 50.500,00 €, Nutzungsdauer 10 Jahre, Anschaffung im August. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "2.104,17"
-   },
-   "schritte": [
-    "Jährlich: 50.500,00 / 10 = 5.050,00 €",
-    "Monate: 13 - 8 = 5",
-    "Erstes Jahr: 5.050,00 x 5 / 12 = 2.104,17 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-5",
-   "text": "Ein Server kostet 24.120,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "4.020,00"
-   },
-   "schritte": [
-    "Jährlich: 24.120,00 / 4 = 6.030,00 €",
-    "Monate: 13 - 5 = 8",
-    "Erstes Jahr: 6.030,00 x 8 / 12 = 4.020,00 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-6",
-   "text": "Ein Server kostet 15.280,00 €, Nutzungsdauer 8 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "477,50"
-   },
-   "schritte": [
-    "Jährlich: 15.280,00 / 8 = 1.910,00 €",
-    "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 1.910,00 x 3 / 12 = 477,50 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-7",
-   "text": "Ein Server kostet 22.590,00 €, Nutzungsdauer 9 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "2.091,67"
-   },
-   "schritte": [
-    "Jährlich: 22.590,00 / 9 = 2.510,00 €",
-    "Monate: 13 - 3 = 10",
-    "Erstes Jahr: 2.510,00 x 10 / 12 = 2.091,67 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-8",
-   "text": "Ein Server kostet 10.880,00 €, Nutzungsdauer 4 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "226,67"
-   },
-   "schritte": [
-    "Jährlich: 10.880,00 / 4 = 2.720,00 €",
-    "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 2.720,00 x 1 / 12 = 226,67 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "4711-9",
-   "text": "Ein Server kostet 29.700,00 €, Nutzungsdauer 3 Jahre, Anschaffung im Februar. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "9.075,00"
-   },
-   "schritte": [
-    "Jährlich: 29.700,00 / 3 = 9.900,00 €",
-    "Monate: 13 - 2 = 11",
-    "Erstes Jahr: 9.900,00 x 11 / 12 = 9.075,00 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-0",
-   "text": "Ein Server kostet 6.580,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "78,33"
-   },
-   "schritte": [
-    "Jährlich: 6.580,00 / 7 = 940,00 €",
-    "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 940,00 x 1 / 12 = 78,33 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-1",
-   "text": "Ein Server kostet 38.950,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "1.947,50"
-   },
-   "schritte": [
-    "Jährlich: 38.950,00 / 5 = 7.790,00 €",
-    "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 7.790,00 x 3 / 12 = 1.947,50 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-2",
-   "text": "Ein Server kostet 38.700,00 €, Nutzungsdauer 9 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "358,33"
-   },
-   "schritte": [
-    "Jährlich: 38.700,00 / 9 = 4.300,00 €",
-    "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 4.300,00 x 1 / 12 = 358,33 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-3",
-   "text": "Ein Server kostet 3.920,00 €, Nutzungsdauer 8 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "408,33"
-   },
-   "schritte": [
-    "Jährlich: 3.920,00 / 8 = 490,00 €",
-    "Monate: 13 - 3 = 10",
-    "Erstes Jahr: 490,00 x 10 / 12 = 408,33 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-4",
-   "text": "Ein Server kostet 19.250,00 €, Nutzungsdauer 5 Jahre, Anschaffung im Mai. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "2.566,67"
-   },
-   "schritte": [
-    "Jährlich: 19.250,00 / 5 = 3.850,00 €",
-    "Monate: 13 - 5 = 8",
-    "Erstes Jahr: 3.850,00 x 8 / 12 = 2.566,67 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-5",
-   "text": "Ein Server kostet 38.040,00 €, Nutzungsdauer 6 Jahre, Anschaffung im Dezember. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "528,33"
-   },
-   "schritte": [
-    "Jährlich: 38.040,00 / 6 = 6.340,00 €",
-    "Monate: 13 - 12 = 1",
-    "Erstes Jahr: 6.340,00 x 1 / 12 = 528,33 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-6",
-   "text": "Ein Server kostet 7.070,00 €, Nutzungsdauer 7 Jahre, Anschaffung im Oktober. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "252,50"
-   },
-   "schritte": [
-    "Jährlich: 7.070,00 / 7 = 1.010,00 €",
-    "Monate: 13 - 10 = 3",
-    "Erstes Jahr: 1.010,00 x 3 / 12 = 252,50 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
-   "startwert": "123456789-7",
-   "text": "Ein Server kostet 84.330,00 €, Nutzungsdauer 9 Jahre, Anschaffung im September. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
-   "felder": [
-    [
-     "ergebnis",
-     "Ergebnis (€)"
-    ]
-   ],
-   "loesung": {
-    "ergebnis": "3.123,33"
-   },
-   "schritte": [
-    "Jährlich: 84.330,00 / 9 = 9.370,00 €",
-    "Monate: 13 - 9 = 4",
-    "Erstes Jahr: 9.370,00 x 4 / 12 = 3.123,33 €"
-   ]
-  },
-  {
-   "art": "afa",
-   "stufe": 3,
    "startwert": "123456789-8",
-   "text": "Ein Server kostet 10.400,00 €, Nutzungsdauer 10 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 5.700,00 €, Nutzungsdauer 10 Jahre, Anschaffung im März. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17417,19 +17417,19 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "866,67"
+    "ergebnis": "475,00"
    },
    "schritte": [
-    "Jährlich: 10.400,00 / 10 = 1.040,00 €",
+    "Jährlich: 5.700,00 / 10 = 570,00 €",
     "Monate: 13 - 3 = 10",
-    "Erstes Jahr: 1.040,00 x 10 / 12 = 866,67 €"
+    "Erstes Jahr: 570,00 x 10 / 12 = 475,00 €"
    ]
   },
   {
    "art": "afa",
    "stufe": 3,
    "startwert": "123456789-9",
-   "text": "Ein Server kostet 19.400,00 €, Nutzungsdauer 10 Jahre, Anschaffung im August. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
+   "text": "Ein Server kostet 10.200,00 €, Nutzungsdauer 10 Jahre, Anschaffung im August. Wie hoch ist die Abschreibung im ersten Jahr (monatsgenau)? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -17437,12 +17437,12 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "808,33"
+    "ergebnis": "425,00"
    },
    "schritte": [
-    "Jährlich: 19.400,00 / 10 = 1.940,00 €",
+    "Jährlich: 10.200,00 / 10 = 1.020,00 €",
     "Monate: 13 - 8 = 5",
-    "Erstes Jahr: 1.940,00 x 5 / 12 = 808,33 €"
+    "Erstes Jahr: 1.020,00 x 5 / 12 = 425,00 €"
    ]
   },
   {
@@ -18969,7 +18969,7 @@
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-0",
-   "text": "Ein Kapital von 15.500,00 € wird 325 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 16.000,00 € wird 325 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -18977,17 +18977,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "489,76"
+    "ergebnis": "505,56"
    },
    "schritte": [
-    "Zinsen: 15.500,00 x 3,5 x 325 / 36.000 = 489,76 €"
+    "Zinsen: 16.000,00 x 3,5 x 325 / 36.000 = 505,56 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-1",
-   "text": "Ein Kapital von 13.750,00 € wird 187 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 14.200,00 € wird 187 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -18995,17 +18995,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "107,14"
+    "ergebnis": "110,64"
    },
    "schritte": [
-    "Zinsen: 13.750,00 x 1,5 x 187 / 36.000 = 107,14 €"
+    "Zinsen: 14.200,00 x 1,5 x 187 / 36.000 = 110,64 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-2",
-   "text": "Ein Kapital von 29.550,00 € wird 180 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 30.000,00 € wird 180 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19013,17 +19013,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "738,75"
+    "ergebnis": "750,00"
    },
    "schritte": [
-    "Zinsen: 29.550,00 x 5 x 180 / 36.000 = 738,75 €"
+    "Zinsen: 30.000,00 x 5 x 180 / 36.000 = 750,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-3",
-   "text": "Ein Kapital von 33.500,00 € wird 315 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 34.000,00 € wird 315 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19031,17 +19031,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "1.172,50"
+    "ergebnis": "1.190,00"
    },
    "schritte": [
-    "Zinsen: 33.500,00 x 4 x 315 / 36.000 = 1.172,50 €"
+    "Zinsen: 34.000,00 x 4 x 315 / 36.000 = 1.190,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-4",
-   "text": "Ein Kapital von 41.650,00 € wird 266 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 42.100,00 € wird 266 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19049,17 +19049,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "307,75"
+    "ergebnis": "311,07"
    },
    "schritte": [
-    "Zinsen: 41.650,00 x 1 x 266 / 36.000 = 307,75 €"
+    "Zinsen: 42.100,00 x 1 x 266 / 36.000 = 311,07 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-5",
-   "text": "Ein Kapital von 34.100,00 € wird 118 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 34.600,00 € wird 118 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19067,17 +19067,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "279,43"
+    "ergebnis": "283,53"
    },
    "schritte": [
-    "Zinsen: 34.100,00 x 2,5 x 118 / 36.000 = 279,43 €"
+    "Zinsen: 34.600,00 x 2,5 x 118 / 36.000 = 283,53 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-6",
-   "text": "Ein Kapital von 23.750,00 € wird 310 Tage lang zu 4,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 24.200,00 € wird 310 Tage lang zu 4,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19085,17 +19085,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "920,31"
+    "ergebnis": "937,75"
    },
    "schritte": [
-    "Zinsen: 23.750,00 x 4,5 x 310 / 36.000 = 920,31 €"
+    "Zinsen: 24.200,00 x 4,5 x 310 / 36.000 = 937,75 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-7",
-   "text": "Ein Kapital von 46.250,00 € wird 169 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 46.700,00 € wird 169 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19103,17 +19103,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "759,91"
+    "ergebnis": "767,31"
    },
    "schritte": [
-    "Zinsen: 46.250,00 x 3,5 x 169 / 36.000 = 759,91 €"
+    "Zinsen: 46.700,00 x 3,5 x 169 / 36.000 = 767,31 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-8",
-   "text": "Ein Kapital von 14.550,00 € wird 175 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 42.300,00 € wird 134 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19121,17 +19121,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "212,19"
+    "ergebnis": "787,25"
    },
    "schritte": [
-    "Zinsen: 14.550,00 x 3 x 175 / 36.000 = 212,19 €"
+    "Zinsen: 42.300,00 x 5 x 134 / 36.000 = 787,25 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "0-9",
-   "text": "Ein Kapital von 34.550,00 € wird 74 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 35.000,00 € wird 74 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19139,17 +19139,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "106,53"
+    "ergebnis": "107,92"
    },
    "schritte": [
-    "Zinsen: 34.550,00 x 1,5 x 74 / 36.000 = 106,53 €"
+    "Zinsen: 35.000,00 x 1,5 x 74 / 36.000 = 107,92 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-0",
-   "text": "Ein Kapital von 25.100,00 € wird 297 Tage lang zu 2 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 25.600,00 € wird 297 Tage lang zu 2 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19157,17 +19157,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "414,15"
+    "ergebnis": "422,40"
    },
    "schritte": [
-    "Zinsen: 25.100,00 x 2 x 297 / 36.000 = 414,15 €"
+    "Zinsen: 25.600,00 x 2 x 297 / 36.000 = 422,40 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-1",
-   "text": "Ein Kapital von 22.050,00 € wird 36 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 22.500,00 € wird 36 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19175,17 +19175,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "66,15"
+    "ergebnis": "67,50"
    },
    "schritte": [
-    "Zinsen: 22.050,00 x 3 x 36 / 36.000 = 66,15 €"
+    "Zinsen: 22.500,00 x 3 x 36 / 36.000 = 67,50 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-2",
-   "text": "Ein Kapital von 6.500,00 € wird 223 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 11.100,00 € wird 255 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19193,17 +19193,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "100,66"
+    "ergebnis": "117,94"
    },
    "schritte": [
-    "Zinsen: 6.500,00 x 2,5 x 223 / 36.000 = 100,66 €"
+    "Zinsen: 11.100,00 x 1,5 x 255 / 36.000 = 117,94 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-3",
-   "text": "Ein Kapital von 10.850,00 € wird 182 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 11.300,00 € wird 182 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19211,17 +19211,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "219,41"
+    "ergebnis": "228,51"
    },
    "schritte": [
-    "Zinsen: 10.850,00 x 4 x 182 / 36.000 = 219,41 €"
+    "Zinsen: 11.300,00 x 4 x 182 / 36.000 = 228,51 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-4",
-   "text": "Ein Kapital von 38.900,00 € wird 56 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 39.400,00 € wird 56 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19229,17 +19229,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "90,77"
+    "ergebnis": "91,93"
    },
    "schritte": [
-    "Zinsen: 38.900,00 x 1,5 x 56 / 36.000 = 90,77 €"
+    "Zinsen: 39.400,00 x 1,5 x 56 / 36.000 = 91,93 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-5",
-   "text": "Ein Kapital von 47.100,00 € wird 285 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 47.600,00 € wird 285 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19247,17 +19247,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "2.237,25"
+    "ergebnis": "2.261,00"
    },
    "schritte": [
-    "Zinsen: 47.100,00 x 6 x 285 / 36.000 = 2.237,25 €"
+    "Zinsen: 47.600,00 x 6 x 285 / 36.000 = 2.261,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-6",
-   "text": "Ein Kapital von 15.850,00 € wird 253 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 16.300,00 € wird 253 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19265,17 +19265,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "111,39"
+    "ergebnis": "114,55"
    },
    "schritte": [
-    "Zinsen: 15.850,00 x 1 x 253 / 36.000 = 111,39 €"
+    "Zinsen: 16.300,00 x 1 x 253 / 36.000 = 114,55 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-7",
-   "text": "Ein Kapital von 38.500,00 € wird 307 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 2.800,00 € wird 182 Tage lang zu 4,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19283,17 +19283,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "984,96"
+    "ergebnis": "63,70"
    },
    "schritte": [
-    "Zinsen: 38.500,00 x 3 x 307 / 36.000 = 984,96 €"
+    "Zinsen: 2.800,00 x 4,5 x 182 / 36.000 = 63,70 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-8",
-   "text": "Ein Kapital von 2.350,00 € wird 150 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 2.800,00 € wird 150 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19301,17 +19301,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "58,75"
+    "ergebnis": "70,00"
    },
    "schritte": [
-    "Zinsen: 2.350,00 x 6 x 150 / 36.000 = 58,75 €"
+    "Zinsen: 2.800,00 x 6 x 150 / 36.000 = 70,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "1-9",
-   "text": "Ein Kapital von 6.350,00 € wird 238 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 6.800,00 € wird 238 Tage lang zu 4 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19319,17 +19319,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "167,92"
+    "ergebnis": "179,82"
    },
    "schritte": [
-    "Zinsen: 6.350,00 x 4 x 238 / 36.000 = 167,92 €"
+    "Zinsen: 6.800,00 x 4 x 238 / 36.000 = 179,82 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-0",
-   "text": "Ein Kapital von 23.700,00 € wird 347 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 36.000,00 € wird 357 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19337,17 +19337,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "1.370,65"
+    "ergebnis": "1.071,00"
    },
    "schritte": [
-    "Zinsen: 23.700,00 x 6 x 347 / 36.000 = 1.370,65 €"
+    "Zinsen: 36.000,00 x 3 x 357 / 36.000 = 1.071,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-1",
-   "text": "Ein Kapital von 15.250,00 € wird 67 Tage lang zu 2 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 15.700,00 € wird 67 Tage lang zu 2 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19355,17 +19355,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "56,76"
+    "ergebnis": "58,44"
    },
    "schritte": [
-    "Zinsen: 15.250,00 x 2 x 67 / 36.000 = 56,76 €"
+    "Zinsen: 15.700,00 x 2 x 67 / 36.000 = 58,44 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-2",
-   "text": "Ein Kapital von 6.700,00 € wird 215 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 7.200,00 € wird 215 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19373,17 +19373,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "40,01"
+    "ergebnis": "43,00"
    },
    "schritte": [
-    "Zinsen: 6.700,00 x 1 x 215 / 36.000 = 40,01 €"
+    "Zinsen: 7.200,00 x 1 x 215 / 36.000 = 43,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-3",
-   "text": "Ein Kapital von 17.000,00 € wird 188 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 17.500,00 € wird 188 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19391,17 +19391,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "443,89"
+    "ergebnis": "456,94"
    },
    "schritte": [
-    "Zinsen: 17.000,00 x 5 x 188 / 36.000 = 443,89 €"
+    "Zinsen: 17.500,00 x 5 x 188 / 36.000 = 456,94 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-4",
-   "text": "Ein Kapital von 33.800,00 € wird 58 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 34.300,00 € wird 58 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19409,17 +19409,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "190,59"
+    "ergebnis": "193,41"
    },
    "schritte": [
-    "Zinsen: 33.800,00 x 3,5 x 58 / 36.000 = 190,59 €"
+    "Zinsen: 34.300,00 x 3,5 x 58 / 36.000 = 193,41 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-5",
-   "text": "Ein Kapital von 13.050,00 € wird 138 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 13.500,00 € wird 138 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19427,17 +19427,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "300,15"
+    "ergebnis": "310,50"
    },
    "schritte": [
-    "Zinsen: 13.050,00 x 6 x 138 / 36.000 = 300,15 €"
+    "Zinsen: 13.500,00 x 6 x 138 / 36.000 = 310,50 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-6",
-   "text": "Ein Kapital von 37.300,00 € wird 33 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 37.800,00 € wird 33 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19445,17 +19445,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "170,96"
+    "ergebnis": "173,25"
    },
    "schritte": [
-    "Zinsen: 37.300,00 x 5 x 33 / 36.000 = 170,96 €"
+    "Zinsen: 37.800,00 x 5 x 33 / 36.000 = 173,25 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-7",
-   "text": "Ein Kapital von 41.050,00 € wird 39 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 21.200,00 € wird 331 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19463,17 +19463,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "133,41"
+    "ergebnis": "1.169,53"
    },
    "schritte": [
-    "Zinsen: 41.050,00 x 3 x 39 / 36.000 = 133,41 €"
+    "Zinsen: 21.200,00 x 6 x 331 / 36.000 = 1.169,53 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-8",
-   "text": "Ein Kapital von 12.700,00 € wird 160 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 13.200,00 € wird 160 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19481,17 +19481,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "282,22"
+    "ergebnis": "293,33"
    },
    "schritte": [
-    "Zinsen: 12.700,00 x 5 x 160 / 36.000 = 282,22 €"
+    "Zinsen: 13.200,00 x 5 x 160 / 36.000 = 293,33 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "4711-9",
-   "text": "Ein Kapital von 20.000,00 € wird 88 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 20.500,00 € wird 88 Tage lang zu 5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19499,17 +19499,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "244,44"
+    "ergebnis": "250,56"
    },
    "schritte": [
-    "Zinsen: 20.000,00 x 5 x 88 / 36.000 = 244,44 €"
+    "Zinsen: 20.500,00 x 5 x 88 / 36.000 = 250,56 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-0",
-   "text": "Ein Kapital von 48.050,00 € wird 257 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 48.500,00 € wird 257 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19517,17 +19517,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "514,54"
+    "ergebnis": "519,35"
    },
    "schritte": [
-    "Zinsen: 48.050,00 x 1,5 x 257 / 36.000 = 514,54 €"
+    "Zinsen: 48.500,00 x 1,5 x 257 / 36.000 = 519,35 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-1",
-   "text": "Ein Kapital von 16.900,00 € wird 207 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 32.900,00 € wird 246 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19535,17 +19535,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "242,94"
+    "ergebnis": "562,04"
    },
    "schritte": [
-    "Zinsen: 16.900,00 x 2,5 x 207 / 36.000 = 242,94 €"
+    "Zinsen: 32.900,00 x 2,5 x 246 / 36.000 = 562,04 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-2",
-   "text": "Ein Kapital von 8.900,00 € wird 207 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 45.600,00 € wird 80 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19553,17 +19553,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "127,94"
+    "ergebnis": "152,00"
    },
    "schritte": [
-    "Zinsen: 8.900,00 x 2,5 x 207 / 36.000 = 127,94 €"
+    "Zinsen: 45.600,00 x 1,5 x 80 / 36.000 = 152,00 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-3",
-   "text": "Ein Kapital von 13.350,00 € wird 281 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 13.800,00 € wird 281 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19571,17 +19571,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "364,71"
+    "ergebnis": "377,01"
    },
    "schritte": [
-    "Zinsen: 13.350,00 x 3,5 x 281 / 36.000 = 364,71 €"
+    "Zinsen: 13.800,00 x 3,5 x 281 / 36.000 = 377,01 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-4",
-   "text": "Ein Kapital von 12.700,00 € wird 103 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 39.000,00 € wird 49 Tage lang zu 6 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19589,17 +19589,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "54,50"
+    "ergebnis": "318,50"
    },
    "schritte": [
-    "Zinsen: 12.700,00 x 1,5 x 103 / 36.000 = 54,50 €"
+    "Zinsen: 39.000,00 x 6 x 49 / 36.000 = 318,50 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-5",
-   "text": "Ein Kapital von 9.750,00 € wird 351 Tage lang zu 4,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 40.900,00 € wird 304 Tage lang zu 3 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19607,17 +19607,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "427,78"
+    "ergebnis": "1.036,13"
    },
    "schritte": [
-    "Zinsen: 9.750,00 x 4,5 x 351 / 36.000 = 427,78 €"
+    "Zinsen: 40.900,00 x 3 x 304 / 36.000 = 1.036,13 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-6",
-   "text": "Ein Kapital von 29.250,00 € wird 153 Tage lang zu 1 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 2.300,00 € wird 307 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19625,17 +19625,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "124,31"
+    "ergebnis": "49,03"
    },
    "schritte": [
-    "Zinsen: 29.250,00 x 1 x 153 / 36.000 = 124,31 €"
+    "Zinsen: 2.300,00 x 2,5 x 307 / 36.000 = 49,03 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-7",
-   "text": "Ein Kapital von 38.750,00 € wird 325 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 39.200,00 € wird 325 Tage lang zu 3,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19643,17 +19643,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "1.224,39"
+    "ergebnis": "1.238,61"
    },
    "schritte": [
-    "Zinsen: 38.750,00 x 3,5 x 325 / 36.000 = 1.224,39 €"
+    "Zinsen: 39.200,00 x 3,5 x 325 / 36.000 = 1.238,61 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-8",
-   "text": "Ein Kapital von 5.600,00 € wird 192 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 6.100,00 € wird 192 Tage lang zu 2,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19661,17 +19661,17 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "74,67"
+    "ergebnis": "81,33"
    },
    "schritte": [
-    "Zinsen: 5.600,00 x 2,5 x 192 / 36.000 = 74,67 €"
+    "Zinsen: 6.100,00 x 2,5 x 192 / 36.000 = 81,33 €"
    ]
   },
   {
    "art": "zinsen",
    "stufe": 3,
    "startwert": "123456789-9",
-   "text": "Ein Kapital von 13.100,00 € wird 322 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
+   "text": "Ein Kapital von 13.600,00 € wird 322 Tage lang zu 1,5 % verzinst. Rechne kaufmännisch (1 Monat = 30 Tage, 1 Jahr = 360 Tage). Wie hoch sind die Zinsen? Runde auf volle Cent.",
    "felder": [
     [
      "ergebnis",
@@ -19679,10 +19679,10 @@
     ]
    ],
    "loesung": {
-    "ergebnis": "175,76"
+    "ergebnis": "182,47"
    },
    "schritte": [
-    "Zinsen: 13.100,00 x 1,5 x 322 / 36.000 = 175,76 €"
+    "Zinsen: 13.600,00 x 1,5 x 322 / 36.000 = 182,47 €"
    ]
   },
   {

@@ -575,7 +575,7 @@ def aufgabe_afa(stufe, rng):
             j = g.randint(10, 500) * 10
             nd = g.randint(3, 10)
             return (Decimal(j), nd, g.randint(1, nd - 1))
-        j = g.randint(10, 1000) * 10
+        j = g.randint(10, 500) * 10
         nd = g.randint(3, 10)
         return (Decimal(j), nd, g.randint(2, 12))
     return ziehe(rng, z, lambda *w: afa_rechnen(stufe, *w), stufe == 3)
@@ -616,7 +616,7 @@ def aufgabe_zinsen(stufe, rng):
             return (Decimal(g.randint(10, 500) * 100), g.choice(P_ZINS), g.randint(1, 5))
         if stufe == 2:
             return (Decimal(g.randint(10, 500) * 100), g.choice(P_ZINS), g.randint(1, 11))
-        return (Decimal(g.randint(10, 1000) * 50), g.choice(P_ZINS), g.randint(10, 359))
+        return (Decimal(g.randint(10, 500) * 100), g.choice(P_ZINS), g.randint(10, 359))
     return ziehe(rng, z, lambda *w: zinsen_rechnen(stufe, *w), stufe != 1)
 
 

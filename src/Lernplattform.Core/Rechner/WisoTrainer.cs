@@ -257,7 +257,7 @@ public static class WisoTrainer
         long nd, n = 0, m = 0;
         while (true)
         {
-            j = rng.RandInt(10, stufe == 3 ? 1000 : 500) * 10;
+            j = rng.RandInt(10, 500) * 10;      // Wortliste W4c Abschnitt 6: jaehrlich 100 bis 5.000 in Zehnern (alle Stufen)
             nd = rng.RandInt(3, 10);
             if (stufe == 2)
             {
@@ -300,7 +300,7 @@ public static class WisoTrainer
         long n = 0, t;
         while (true)
         {
-            k = stufe == 3 ? rng.RandInt(10, 1000) * 50 : rng.RandInt(10, 500) * 100;
+            k = rng.RandInt(10, 500) * 100;      // Wortliste W4c Abschnitt 6: Kapital 1.000 bis 50.000 in Hundertern (alle Stufen)
             p = rng.Choice(Zinssaetze);
             if (stufe == 1)
             {
