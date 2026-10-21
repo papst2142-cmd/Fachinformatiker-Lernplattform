@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.7.0 (in Arbeit, Phase 3: Rechner, Welle 2)
+Version A 0.7.0, Paket 1.0.0-a.0.7.0, Android 1000700 (Weisung P3-4):
+- Welle 1 (ohne Oberfläche, ohne Versionssprung): Rechenkern wie in Python 0.63.2 für Subnetting IPv4 und IPv6 (Netzdaten, Netz aufteilen mit Seiten, Hostbedarf), RAID, Bildschirm-Datenmenge und USV-Kapazität mit Übungsaufgaben und Rechenwegen (Vergleichswerte G24 bis G26).
+- Die Seite „Rechner“ (bisher Platzhalter) ist gebaut: Subnetting mit IPv4/IPv6 und den Ansichten Netzdaten, Netz aufteilen (Blättern, „Zur Seite“) und Hostbedarf, RAID-Kapazität, Bildschirm-Datenmenge und USV-Kapazität mit Bild (Last, USV mit Auslastung, Akku, Laufzeitbalken, Empfehlung). Jede Karte hat „Rechenweg anzeigen“. Der Reiter „Trainer“ zeigt „Kommt in einer späteren Ausbaustufe“ bis Welle 3.
+- Ergebnisse stehen in der Schrift JetBrains Mono 2.304 (im Programm enthalten, auf allen Systemen gleich, Lizenz SIL OFL 1.1 unter „Hinweise zu Fremdbestandteilen“). Zeilen werden wie in Python an die Breite des Kastens angepasst; am Handy gelten die schmalen Fassungen der Berichte und Rechenwege.
+- Eine falsche Eingabe zeigt auf PC und Handy einen roten Hinweis mit dem Text der Meldung unter dem Knopf; der Ergebniskasten wird geleert. Es öffnet sich kein Fenster (Python zeigt am PC ein Fenster „Ungültige Eingabe“).
+- Die Texte der Rechner-Seite stehen als eine gemeinsame Liste für PC und Handy im Programm; ein Test vergleicht sie mit Python.
+- Start ohne Bedienung misst den Wechsel IPv4/IPv6, das Aufteilen in 2^32 und 2^64 Subnetze (erste und letzte Seite), den Hostbedarf mit 12 Zeilen und den Rechenweg, prüft die Schrift (i, W und 0 gleich breit) und die Rechner-Ansichten in allen Schriftstufen, Größen und 72 Farbwelten.
+
 ## A 0.6.0 (in Arbeit, Phase 2: Lernkern, Welle 5)
 Version A 0.6.0, Paket 1.0.0-a.0.6.0, Android 1000600 (Weisung P2-14):
 - PC und Handy zeigen dieselben Wörter (Sammelliste 13, Wortwahl Nico 21.10.): Die Aktivitäten im Dashboard nennen das Datum auf beiden Geräten deutsch („21.10.2026 05:57“) und zeigen den Text ungekürzt; der Untertitel des Abgleichs lautet überall „über ein privates GitHub-Repository“. Unterschiede gibt es nur noch, wo eine Funktion nur auf einem Gerät existiert oder der Aufbau nach Breite wechselt (feste Liste, ein Test wacht darüber).

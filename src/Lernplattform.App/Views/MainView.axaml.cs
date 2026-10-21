@@ -193,6 +193,8 @@ public partial class MainView : UserControl
                 Seiten.Trainer => new TrainerSeite(),
                 Seiten.Fortschritt => new FortschrittSeite(JetztUebenAsync),
                 Seiten.Suche => new SucheSeite((treffer, anfrage) => _ = TrefferOeffnenAsync(treffer, anfrage)),
+                // Phase 3, W2: Rechner (der Trainer im Umschalter kommt mit Welle 3)
+                Seiten.Rechner => new RechnerSeite(),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
                 _ => Platzhalter.Bauen(Seiten.Titel(id)),
