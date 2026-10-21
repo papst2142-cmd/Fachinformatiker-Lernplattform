@@ -161,6 +161,8 @@ jobs:
           python3 -I werkzeuge/tabellen/erzeuge_python_klein.py neu/PythonKlein.Tabelle.cs
           # Phase 2 Welle 4 (Weisung P2-11): G21 Abgleich (ein Versuch ohne Netz) und Sicherung fuer die alte App
           python3 -I werkzeuge/vergleich/erzeuge_abgleich.py python-linie neu/abgleich.json
+          # Phase 2 Welle 5 (Weisung P2-14 A5): G23 Reglerspur der eigenen Farben
+          python3 -I werkzeuge/vergleich/erzeuge_reglerspur.py python-linie neu/reglerspur.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
       - name: Vergleich
         run: |
@@ -171,7 +173,7 @@ jobs:
                        "eigene_farben.json", "beschriftungen.json", "dashboard.json",
                        "potenz.json", "wiederholung.json", "reihenfolge.json", "trainer.json",
                        "uebernahme.json", "pruefsumme_sonderfall.json", "lerntexte.json",
-                       "auswertung.json", "suche.json", "abgleich.json"):
+                       "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

@@ -21,6 +21,7 @@ public sealed class EigeneFarbenTeil
 {
     private readonly Func<bool, bool> _ergebnis;
     private readonly Dictionary<(string Teil, string Kanal), (Slider Regler, TextBlock Wert)> _regler = [];
+    private readonly Dictionary<(string Teil, string Kanal), FarbRegler> _spuren = [];
     private readonly Dictionary<string, Border> _muster = [];
     private readonly TextBlock _zustand = Schrift.Text("", "Normal", FontWeight.SemiBold);
     private readonly TextBlock _warnung = Schrift.Text("", "Klein");
@@ -67,16 +68,10 @@ public sealed class EigeneFarbenTeil
             });
             foreach (var kanal in EigeneFarben.Kanaele)
             {
-                var regler = new Slider
-                {
-                    Minimum = kanal.Min,
-                    Maximum = kanal.Max,
-                    TickFrequency = 1,
-                    IsSnapToTickEnabled = true,
-                    SmallChange = 1,
-                    LargeChange = 10,
-                    MinWidth = 160,
-                };
+                // Phase 2, L12: farbige Spur wie Python (FarbRegler, Core.Design.Reglerspur)
+                var farbRegler = new FarbRegler(kanal);
+                _spuren[(teil, kanal.Id)] = farbRegler;
+                var regler = farbRegler.Regler;
                 var wert = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.text_dim");
                 wert.MinWidth = 48;
                 wert.VerticalAlignment = VerticalAlignment.Center;
@@ -84,10 +79,10 @@ public sealed class EigeneFarbenTeil
                 name.VerticalAlignment = VerticalAlignment.Center;
                 var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 10 };
                 name.MinWidth = 90;
-                Grid.SetColumn(regler, 1);
+                Grid.SetColumn(farbRegler.Teil, 1);
                 Grid.SetColumn(wert, 2);
                 zeile.Children.Add(name);
-                zeile.Children.Add(regler);
+                zeile.Children.Add(farbRegler.Teil);
                 zeile.Children.Add(wert);
                 var (t, k) = (teil, kanal);
                 regler.ValueChanged += (_, e) =>
@@ -197,8 +192,10 @@ public sealed class EigeneFarbenTeil
         {
             var r = Teil(_werte, teil);
             _muster[teil].Background = new SolidColorBrush(Color.Parse(EigeneFarben.HslZuHex(r.H, r.S, r.L)));
+            var spurWerte = Reglerspur.Werte(r);
             foreach (var kanal in EigeneFarben.Kanaele)
             {
+                _spuren[(teil, kanal.Id)].Zeichne(spurWerte);
                 var wert = kanal.Id switch { "h" => r.H, "s" => r.S, _ => r.L };
                 _regler[(teil, kanal.Id)].Wert.Text = EigeneFarben.ReglerText(kanal, wert);
                 Avalonia.Automation.AutomationProperties.SetName(_regler[(teil, kanal.Id)].Regler,
