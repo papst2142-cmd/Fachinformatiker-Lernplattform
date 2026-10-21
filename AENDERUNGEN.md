@@ -8,7 +8,7 @@ Version A 0.8.0, Paket 1.0.0-a.0.8.0, Android 1000800 (Weisung P3-12):
 - Bewusste Abweichung von Python: Eine Eingabe mit mehr als 4 300 Ziffern gilt als falsch und wird als falsch gespeichert (Python bricht dort mit einem Fehler ab und speichert nichts).
 - Ohne laufende Runde ist der Knopf „Prüfen“ auf PC und Handy gesperrt (Python blendet ihn am Handy aus). Am schmalen Aufbau (Handy) erscheint der Rechenweg in der schmalen Fassung; wird das Fenster mitten in einer Runde schmaler oder breiter, bleibt die Runde und die nächste Prüfung zeigt den passenden Rechenweg.
 - Passt in einem Ergebniskasten eine Zeile auch nach dem Umbruch nicht, steht darunter „→ wischen“ (wie am Handy in Python, jetzt auf PC und Handy).
-- Start ohne Bedienung zeigt den Trainer in zehn weiteren Ansichten (ohne zu speichern) in allen Schriftstufen, Größen und 72 Farbwelten und misst Reiter, „Runde starten“, „Prüfen“ und „Nächste Aufgabe“.
+- Start ohne Bedienung zeigt den Trainer in neun weiteren Ansichten (ohne zu speichern) in allen Schriftstufen, Größen und 72 Farbwelten und misst Reiter, „Runde starten“, „Prüfen“ und „Nächste Aufgabe“.
 
 ## A 0.7.0 (in Arbeit, Phase 3: Rechner, Welle 2)
 Version A 0.7.0, Paket 1.0.0-a.0.7.0, Android 1000700 (Weisung P3-4):

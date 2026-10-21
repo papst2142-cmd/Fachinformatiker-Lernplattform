@@ -84,8 +84,11 @@ public sealed class RechenTrainerAblauf
     /// <summary>Wie oft die Statistik gelesen wurde (Beleg Tabellenzeile 1 und 12).</summary>
     public int StatistikLesungen { get; private set; }
 
-    /// <summary>Kopfzeile der Aufgabe "IPv4-Subnetz · Leicht" (subtitle/lbl_head), ohne Runde leer.</summary>
-    public string Kopf => Aufgabe is { } a ? Beschriftungen.Einsetzen(ArtUndStufe, RechenTrainer.ArtName(a.Art), RechenTrainer.StufeName(a.Stufe)) : "";
+    /// <summary>
+    /// Kopfzeile der Aufgabe "IPv4-Subnetz · Leicht" (subtitle/lbl_head): vor der ersten Runde
+    /// leer; nach dem Rundenende bleibt die letzte stehen (advance setzt sie in Python nicht zurueck).
+    /// </summary>
+    public string Kopf { get; private set; } = "";
 
     /// <summary>Aufgabentext (lbl_task): Start-Satz, Aufgabe oder "Runde beendet: …".</summary>
     public string AufgabeText { get; private set; } = Beschriftungen.Einsetzen(TrainerStart, RechenTrainer.Runde);
@@ -206,6 +209,7 @@ public sealed class RechenTrainerAblauf
         Zustand = TrainerZustand.Offen;
         Pruefung = null;
         AufgabeText = _breit[Index].Text;
+        Kopf = Beschriftungen.Einsetzen(ArtUndStufe, RechenTrainer.ArtName(_breit[Index].Art), RechenTrainer.StufeName(_breit[Index].Stufe));
         Rueckmeldung = "";
     }
 

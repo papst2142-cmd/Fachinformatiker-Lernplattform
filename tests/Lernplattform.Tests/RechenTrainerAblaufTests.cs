@@ -166,6 +166,7 @@ public class RechenTrainerAblaufTests
         Assert.Equal("Starte eine neue Runde oder wähle eine andere Aufgabenart.", a.Rueckmeldung);
         Assert.Equal("", a.Zaehler);
         Assert.Null(a.Aufgabe);
+        Assert.Equal("Binär/Hex/Dezimal · Mittel", a.Kopf);     // bleibt wie in Python stehen
         Assert.Equal("bisher 10 Aufgaben, 6 richtig", a.Statistik);
         // Zustand D: wie A
         Assert.Null(a.Druecken(Leer, false));
@@ -202,6 +203,38 @@ public class RechenTrainerAblaufTests
         Assert.Equal(2, a.StatistikLesungen);
     }
 
+    /// <summary>
+    /// Zeile 9: Reiterwechsel (die Seite ruft nur ErstesZeigen) mitten in B und C schreibt nie,
+    /// liest die Statistik nicht neu und laesst Runde, Aufgabe und Pruefung stehen. Blaettern
+    /// (Bildlauf der Seite) erreicht den Ablauf gar nicht.
+    /// </summary>
+    [Fact]
+    public void ReiterwechselSchreibtNie()
+    {
+        using var t = new Aufbau(8);
+        var a = t.Ablauf;
+        a.ErstesZeigen();
+        a.RundeStarten();
+        var text = a.AufgabeText;
+        for (var i = 0; i < 3; i++)
+        {
+            a.ErstesZeigen();
+        }
+        Assert.Equal(TrainerZustand.Offen, a.Zustand);
+        Assert.Equal(text, a.AufgabeText);
+        Assert.Empty(t.Zeilen());
+        var p = a.Druecken(Leer, false);
+        for (var i = 0; i < 3; i++)
+        {
+            a.ErstesZeigen();
+        }
+        Assert.Equal(TrainerZustand.Geprueft, a.Zustand);
+        Assert.Same(p, a.Pruefung);
+        Assert.Single(t.Zeilen());
+        Assert.Equal(1, t.Anstoesse);
+        Assert.Equal(1, a.StatistikLesungen);
+    }
+
     /// <summary>Zeilen 10 und 11: abgelehntes Speichern bleibt still (keine weitere Meldung), die Aufgabe zaehlt in der Runde, Anstoss trotzdem genau einmal.</summary>
     [Fact]
     public void AbgelehntesSpeichernBleibtStill()
@@ -228,6 +261,63 @@ public class RechenTrainerAblaufTests
         Assert.Equal(meldungen, t.Meldungen);
         Assert.Equal("", a.Statistik);
         Assert.Equal(vorher, File.ReadAllBytes(t.Pfad));
+    }
+
+    /// <summary>
+    /// Zeile 10: Datenbankfehler beim Schreiben (Tabelle fehlt): der Lernstand meldet je
+    /// Fehlerart genau einmal (Weg zum Hinweis "Datenbankfehler"), die Aufgaben zaehlen trotzdem
+    /// in der Runde, der Anstoss kommt je Pruefen genau einmal.
+    /// </summary>
+    [Fact]
+    public void DatenbankfehlerBeimSchreibenMeldetEinmal()
+    {
+        using var t = new Aufbau(6);
+        var a = t.Ablauf;
+        a.ErstesZeigen();
+        a.RundeStarten();
+        a.Druecken(Loesung(a.Aufgabe!), false);
+        Assert.Single(t.Zeilen());
+        using (var db = VergleichsHilfe.Oeffnen(t.Pfad))
+        {
+            using var befehl = db.CreateCommand();
+            befehl.CommandText = "DROP TABLE trainer_aufgaben";
+            befehl.ExecuteNonQuery();
+        }
+        var meldungen = t.Meldungen;
+        a.Druecken(Leer, false);
+        a.Druecken(Loesung(a.Aufgabe!), false);
+        a.Druecken(Leer, false);
+        a.Druecken(Loesung(a.Aufgabe!), false);
+        Assert.Equal([true, true, true], a.Ergebnisse);
+        Assert.Equal(3, t.Anstoesse);
+        Assert.Equal(meldungen + 1, t.Meldungen);
+        Assert.Equal(TrainerZustand.Geprueft, a.Zustand);
+    }
+
+    /// <summary>
+    /// Verdrahtung in der App (Quelltext, die App hat keine eigenen Tests): der Trainer-Reiter
+    /// stoesst nach jedem Pruefen den Abgleich an (P3-12 F1 a), sperrt den Knopf nach
+    /// KnopfAktiv (PC und Handy gleich) und liest beim Reiterwechsel nur ErstesZeigen.
+    /// </summary>
+    [Fact]
+    public void AppVerdrahtung()
+    {
+        var ordner = new DirectoryInfo(AppContext.BaseDirectory);
+        while (ordner is not null && !File.Exists(System.IO.Path.Combine(ordner.FullName, "global.json")))
+        {
+            ordner = ordner.Parent;
+        }
+        Assert.NotNull(ordner);
+        var views = System.IO.Path.Combine(ordner.FullName, "src", "Lernplattform.App", "Views");
+        var teil = File.ReadAllText(System.IO.Path.Combine(views, "RechenTrainerTeil.cs"));
+        Assert.Contains("_ablauf.NachSpeichern += AbgleichDienst.NachDemLernen;", teil, StringComparison.Ordinal);
+        Assert.Contains("_knopf.IsEnabled = a?.KnopfAktiv ?? false;", teil, StringComparison.Ordinal);
+        Assert.Contains("new RechenTrainerAblauf(null, () => 4711)", teil, StringComparison.Ordinal);    // Probe ohne Speichern
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(teil, @"new RechenTrainerAblauf\(Zustand\.Schreiber\)"));
+        Assert.DoesNotContain("IsVisible = a?.KnopfAktiv", teil, StringComparison.Ordinal);
+        var seite = File.ReadAllText(System.IO.Path.Combine(views, "RechnerSeite.cs"));
+        Assert.Contains("_trainer.Gezeigt();", seite, StringComparison.Ordinal);
+        Assert.DoesNotContain("Beschriftungen.Platzhalter", seite, StringComparison.Ordinal);
     }
 
     /// <summary>Ohne Schreiber (null): nichts gespeichert, Statistik leer, Ablauf gleich.</summary>
