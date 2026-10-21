@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
+using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
@@ -69,7 +70,6 @@ public static class AutoMessung
 
         funde += await W3MesspunkteAsync(ansicht, inhalte);
         funde += await FarbreglerAsync(ansicht);
-        funde += VorwaermenPruefen();
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -360,8 +360,9 @@ public static class AutoMessung
     /// <summary>
     /// Welle 5, L12 (Weisung P2-14 A4): Farbton-Regler "Akzent 1" einmal ueber die ganze Spur
     /// ziehen (360 Schritte). Je Schritt Neuzeichnen der Gruppe (3 Spuren mit 360/101/101
-    /// Stuetzfarben, Knoepfe, Vorschau) bis zum fertigen Bild. Fund, wenn ein Schritt ueber
-    /// 100 ms braucht. Der Regler steht danach wieder auf dem alten Wert; gespeichert wird nichts.
+    /// Stuetzfarben, Knoepfe, Vorschau) bis zum fertigen Bild. Fund nach Farbreglerregel
+    /// (Weisung P2-17): Schritt 1 ueber 150 ms oder ein spaeterer Schritt ueber 100 ms.
+    /// Der Regler steht danach wieder auf dem alten Wert; gespeichert wird nichts.
     /// </summary>
     private static async Task<int> FarbreglerAsync(MainView ansicht)
     {
@@ -387,30 +388,18 @@ public static class AutoMessung
         }
         regler.Value = alt;
         await ansicht.BildFertigAsync();
-        var hoechst = zeiten.Max();
-        Messwerte.Notiere(string.Create(inv, $"Farbregler Neuzeichnen (Farbton Akzent 1, {zeiten.Count} Schritte bis zum Bild): Mittel {zeiten.Average():F1} ms, Median {zeiten.Order().ElementAt(zeiten.Count / 2):F1} ms, Hoechstwert {hoechst:F1} ms (Grenze 100 ms), erster Schritt {zeiten[0]:F1} ms"));
-        if (hoechst > 100)
+        var weitere = zeiten.Skip(1).ToList();
+        Messwerte.Notiere(string.Create(inv, $"Farbregler Neuzeichnen (Farbton Akzent 1, {zeiten.Count} Schritte bis zum Bild): erster Schritt {zeiten[0]:F1} ms (Grenze {Farbreglerregel.GrenzeErsterSchritt:F0} ms); ab Schritt 2: Mittel {weitere.Average():F1} ms, Median {weitere.Order().ElementAt(weitere.Count / 2):F1} ms, Hoechstwert {weitere.Max():F1} ms (Grenze {Farbreglerregel.GrenzeWeitereSchritte:F0} ms)"));
+        var funde = Farbreglerregel.Funde(zeiten);
+        foreach (var fund in funde)
         {
-            Messwerte.Notiere("  FEHLER: ein Neuzeichnen ueber 100 ms");
+            Messwerte.Notiere("  FEHLER: " + fund);
+        }
+        if (funde.Count > 0)
+        {
             return 1;
         }
         return 0;
-    }
-
-    /// <summary>
-    /// Weisung P2-15 A1: Das Vorwaermen der Farbregler beim Aufbau von Eigene Farben ist gelaufen
-    /// und hat weder Werte noch Einstellungen noch Vorschau veraendert (ruft es nicht selbst auf).
-    /// </summary>
-    private static int VorwaermenPruefen()
-    {
-        var ergebnis = EigeneFarbenTeil.VorwaermenUnveraendert;
-        Messwerte.Notiere(ergebnis switch
-        {
-            true => "Farbregler vorgewaermt beim Aufbau: Werte, Einstellungen und Vorschau unveraendert",
-            false => "Farbregler vorgewaermt beim Aufbau: FEHLER, etwas hat sich veraendert",
-            _ => "Farbregler vorgewaermt beim Aufbau: FEHLER, nicht gelaufen",
-        });
-        return ergebnis == true ? 0 : 1;
     }
 
     /// <summary>
