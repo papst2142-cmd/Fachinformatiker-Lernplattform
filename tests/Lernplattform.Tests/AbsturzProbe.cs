@@ -14,6 +14,7 @@ internal static class AbsturzProbe
 {
     public const string ArtSpeichern = "speichern";
     public const string ArtTrainer = "trainer";
+    public const string ArtProjektfeld = "projektfeld";
     public const string ArtUebernahme = "uebernahme";
     public const string ArtVorschau = "vorschau";
     public const string Fertig = "FERTIG";
@@ -59,6 +60,19 @@ internal static class AbsturzProbe
                         if (trainer.TrainerSpeichern("art " + nr + new string('.', 3000), 3, true))
                         {
                             Console.Out.WriteLine("gespeichert probe-" + nr);
+                            Console.Out.Flush();
+                        }
+                    }
+                case ArtProjektfeld:
+                    var nf = "";
+                    var feld = new LernstandSchreiber(new Lernstand(args[0]), null, () => "probe-" + nf);
+                    for (var runde = 0; ; runde++)
+                    {
+                        nf = Guid.NewGuid().ToString("N");
+                        // Lange Werte, damit INSERT und Aufraeumen mehrere Seiten der Datei beruehren
+                        if (feld.ProjektFeldSpeichern("probe-projekt", "feld " + (runde % 5), "wert " + nf + new string('.', 3000)))
+                        {
+                            Console.Out.WriteLine("gespeichert probe-" + nf);
                             Console.Out.Flush();
                         }
                     }
@@ -136,7 +150,7 @@ internal static class AbsturzProbe
                 {
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
-                if (art != ArtSpeichern && art != ArtTrainer && (zeile.Result == Halt || zeile.Result == Fertig))
+                if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
                     break;
                 }

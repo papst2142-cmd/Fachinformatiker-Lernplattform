@@ -68,7 +68,7 @@ public static class KartenTexte
     public const string FarbeOffen = "offen";
 
     /// <summary>status_label (fisi_core 2395-2410): Text und Farbschluessel einer Frage.</summary>
-    public static (string Text, string Farbe) StatusZeile(StatusBuch buch, string quelle, string schluessel)
+    public static (string Text, string Farbe) StatusZeile(StatusBuch buch, string quelle, object? schluessel)
     {
         var (status, stufe) = buch.Status(quelle, schluessel);
         var folge = buch.Folge(quelle, schluessel);
