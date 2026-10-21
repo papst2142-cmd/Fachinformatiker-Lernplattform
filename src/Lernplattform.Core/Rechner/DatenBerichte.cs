@@ -11,7 +11,9 @@ namespace Lernplattform.Core.Rechner;
 /// Leseregel (<see cref="Zahlen.Lesen"/>, Fehlertexte mit der Feldbeschriftung), danach die
 /// Bereichspruefung. Der Rechenweg nutzt die eingegebenen Zahlen (F1a). Winzige Werte stehen als
 /// "&lt; 0,01" bzw. "&lt; 0,001", im Rechenweg als "weniger als ..." (F2a, P3-17 3b/3c). Den
-/// Umbruch uebernimmt der Ergebniskasten (fit_lines, PC 75 / Handy 28 Zeichen).
+/// Umbruch uebernimmt der Ergebniskasten (fit_lines, PC 75 / Handy 28 Zeichen). In den
+/// Rechenweg-Zeilen steht im Zeilenkern nur Einfachleerzeichen: fit_lines haelt eine Zeile mit
+/// Doppelleerzeichen fuer eine Tabellenspalte und bricht sie nicht um (Weisung P3-19).
 /// </summary>
 public static class DatenBerichte
 {
@@ -109,7 +111,7 @@ public static class DatenBerichte
         zeilen.Add(DataExplainDivide);
         foreach (var ziel in Datenmenge.Dezimal.Concat(Datenmenge.Binaer))
         {
-            zeilen.Add("   " + ziel.PadRight(3) + " = " + byteText + " / " + Potenz(ziel) + " = " + Weniger(e.Anzeige(ziel)) + " " + ziel);
+            zeilen.Add("   " + ziel + " = " + byteText + " / " + Potenz(ziel) + " = " + Weniger(e.Anzeige(ziel)) + " " + ziel);
         }
         zeilen.AddRange(DataExplainMerke);
         return string.Join("\n", zeilen);
@@ -196,17 +198,18 @@ public static class DatenBerichte
         zeilen.AddRange(TransferExplainWhy);
         if (u.Einheit == "Byte")
         {
-            zeilen.Add("   Bit  = " + Datenmenge.GanzOderKurz(u.Groesse) + " x 8 = " + bitText + " Bit");
+            zeilen.Add("   Bit = " + Datenmenge.GanzOderKurz(u.Groesse) + " x 8 = " + bitText + " Bit");
         }
         else
         {
             var byteText = Weniger(ByteText(u));
             zeilen.Add("   Byte = " + Datenmenge.GanzOderKurz(u.Groesse) + " x " + Potenz(u.Einheit) + " = " + byteText + " Byte");
-            zeilen.Add("   Bit  = " + byteText + " x 8 = " + bitText + " Bit");
+            zeilen.Add("   Bit = " + byteText + " x 8 = " + bitText + " Bit");
         }
         var faktor = Zahlen.DeZahl(Uebertragung.RatenFaktor(u.RateEinheit), 0);
         zeilen.Add(TransferExplainStep2);
-        zeilen.Add(Beschriftungen.Einsetzen(TransferExplainDecimal, u.RateEinheit, faktor));
+        zeilen.Add(TransferExplainDecimal);
+        zeilen.Add(Beschriftungen.Einsetzen(TransferExplainDecimalValue, u.RateEinheit, faktor));
         zeilen.Add(TransferExplainFormula);
         zeilen.Add("   " + Datenmenge.GanzOderKurz(u.Datenrate) + " x " + faktor + " x " + Datenmenge.GanzOderKurz(u.Prozent)
             + " / 100 = " + rateText + " bit/s");

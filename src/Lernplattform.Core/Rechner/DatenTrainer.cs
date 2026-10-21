@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Numerics;
+using Lernplattform.Core.Suche;
 using Lernplattform.Core.Texte;
 using Lernplattform.Core.Zufall;
 using static Lernplattform.Core.Texte.RechnerTexte;
@@ -127,7 +128,7 @@ public static class DatenTrainer
             }
             if (nach != "Byte")
             {
-                schritte.Add("Byte -> " + System(nach).ToLowerInvariant() + ": " + D(bytes) + " / " + DatenBerichte.Potenz(nach) + " = " + loesung + " " + nach);
+                schritte.Add("Byte -> " + PythonKlein.Klein(System(nach)) + ": " + D(bytes) + " / " + DatenBerichte.Potenz(nach) + " = " + loesung + " " + nach);
             }
         }
         var feld = Beschriftungen.Einsetzen(FeldErgebnis, nach);

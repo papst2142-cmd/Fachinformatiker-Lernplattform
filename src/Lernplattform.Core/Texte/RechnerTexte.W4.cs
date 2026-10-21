@@ -91,7 +91,10 @@ public static partial class RechnerTexte
         "   Dateigröße zuerst in Bit umgerechnet (1 Byte = 8 Bit).",
     ];
     public const string TransferExplainStep2 = "SCHRITT 2: Wirksame Datenrate ermitteln";
-    public const string TransferExplainDecimal = "   Datenraten sind immer dezimal: 1 %s = %s bit/s.";
+    // P3-19: zwei Zeilen statt "dezimal: 1 ..." - fit_lines liest "Text: Wert" als Beschriftung und
+    // bricht eine zu lange Beschriftung am Handy nicht um (zur Lesung in Meldung P3-19)
+    public const string TransferExplainDecimal = "   Datenraten sind immer dezimal.";
+    public const string TransferExplainDecimalValue = "   1 %s = %s bit/s.";
     public const string TransferExplainFormula = "   Wirksame Datenrate = Datenrate x nutzbare Leistung / 100";
     public const string TransferExplainStep3 = "SCHRITT 3: Dauer berechnen";
     public const string TransferExplainDuration = "   Dauer = Bit / wirksame Datenrate";

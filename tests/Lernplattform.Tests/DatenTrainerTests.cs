@@ -323,7 +323,7 @@ public class DatenTrainerTests
         Assert.Equal("RECHENWEG DATENMENGEN", weg[0]);
         Assert.Contains("   Byte = 4,7 x 1000^3 = 4.700.000.000 Byte", weg);
         Assert.Contains("   Bit = 4.700.000.000 x 8 = 37.600.000.000 Bit", weg);
-        Assert.Contains("   kB  = 4.700.000.000 / 1000^1 = 4.700.000,00 kB", weg);
+        Assert.Contains("   kB = 4.700.000.000 / 1000^1 = 4.700.000,00 kB", weg);
         Assert.Contains("   TiB = 4.700.000.000 / 1024^4 = weniger als 0,01 TiB", weg);
         Assert.DoesNotContain(weg, z => z.Contains("= <", StringComparison.Ordinal));
         Assert.Equal("   deshalb ist die Zahl in KiB kleiner als in kB.", weg[^1]);
@@ -381,9 +381,10 @@ public class DatenTrainerTests
             "   Datenraten zählen Bit pro Sekunde, deshalb wird die",
             "   Dateigröße zuerst in Bit umgerechnet (1 Byte = 8 Bit).",
             "   Byte = 4,7 x 1000^3 = 4.700.000.000 Byte",
-            "   Bit  = 4.700.000.000 x 8 = 37.600.000.000 Bit",
+            "   Bit = 4.700.000.000 x 8 = 37.600.000.000 Bit",
             "SCHRITT 2: Wirksame Datenrate ermitteln",
-            "   Datenraten sind immer dezimal: 1 Mbit/s = 1.000.000 bit/s.",
+            "   Datenraten sind immer dezimal.",
+            "   1 Mbit/s = 1.000.000 bit/s.",
             "   Wirksame Datenrate = Datenrate x nutzbare Leistung / 100",
             "   16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
             "SCHRITT 3: Dauer berechnen",
@@ -416,6 +417,43 @@ public class DatenTrainerTests
         Assert.Equal(RechnerTexte.TransferPercentWrong, Assert.Throws<RechnerFehler>(() => DatenBerichte.UebertragungLesen("1", "GB", "16", "Mbit/s", "0")).Message);
         Assert.Equal(RechnerTexte.TransferPercentWrong, Assert.Throws<RechnerFehler>(() => DatenBerichte.UebertragungLesen("1", "GB", "16", "Mbit/s", "100,001")).Message);
         Assert.Equal("Bitte einen Wert eingeben: Nutzbare Leistung (%).", Assert.Throws<RechnerFehler>(() => DatenBerichte.UebertragungLesen("1", "GB", "16", "Mbit/s", "")).Message);
+    }
+
+    /// <summary>
+    /// Weisung P3-19: Am Handy (fit_lines, 28 Zeichen, einheitlich) ist keine Rechenweg-Zeile laenger
+    /// als 28 Zeichen, ausser ein einzelnes unteilbares Wort. fit_lines bricht Zeilen mit
+    /// Doppelleerzeichen im Kern nicht um (Spalte), deshalb steht dort nur Einfachleerzeichen.
+    /// </summary>
+    [Fact]
+    public void RechenwegeUmbrechenAufHandybreite()
+    {
+        var wege = new List<(string Name, string Text)>();
+        foreach (var (wert, einheit) in new[] { ("4,7", "GB"), ("1", "Bit"), ("0,001", "Bit"), ("1.000.000.000.000", "TiB"), ("5", "Byte") })
+        {
+            wege.Add(($"Datenmengen {wert} {einheit}", DatenBerichte.DatenmengeRechenweg(DatenBerichte.DatenmengeLesen(wert, einheit))));
+        }
+        foreach (var (g, e, r, re, p) in new[]
+        {
+            ("4,7", "GB", "16", "Mbit/s", "100"), ("1", "Byte", "16", "Mbit/s", "100"), ("4.700.000.000", "Byte", "16", "Mbit/s", "100"),
+            ("1.000.000.000.000", "TiB", "0,001", "kbit/s", "0,1"), ("1", "Byte", "1.000.000", "Gbit/s", "100"),
+            ("1", "Byte", "0,001", "kbit/s", "0,001"),
+        })
+        {
+            wege.Add(($"Uebertragung {g} {e} {r} {re} {p}", DatenBerichte.UebertragungRechenweg(DatenBerichte.UebertragungLesen(g, e, r, re, p))));
+        }
+        foreach (var soll in G31.GetProperty("aufgaben").EnumerateArray())
+        {
+            var a = RechenTrainer.Aufgabe(soll.GetProperty("art").GetString()!, soll.GetProperty("stufe").GetInt32(), soll.GetProperty("startwert").GetString()!);
+            wege.Add(($"Trainer {a.Art}-{a.Stufe}-{soll.GetProperty("startwert").GetString()}", string.Join("\n", a.HandySchritte)));
+        }
+        foreach (var (name, text) in wege)
+        {
+            Assert.DoesNotContain("  ", string.Join("\n", text.Split('\n').Select(z => z.TrimStart(' '))));
+            foreach (var zeile in Zeilen.Kasten(text, 28, einheitlich: true).Split('\n'))
+            {
+                Assert.True(zeile.Length <= 28 || !zeile.Trim().Contains(' ', StringComparison.Ordinal), name + ": \"" + zeile + "\"");
+            }
+        }
     }
 
     [Fact]
