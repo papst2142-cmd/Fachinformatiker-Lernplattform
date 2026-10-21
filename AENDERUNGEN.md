@@ -5,7 +5,7 @@ Version A 0.6.0, Paket 1.0.0-a.0.6.0, Android 1000600 (Weisung P2-14):
 - PC und Handy zeigen dieselben Wörter (Sammelliste 13, Wortwahl Nico 21.10.): Die Aktivitäten im Dashboard nennen das Datum auf beiden Geräten deutsch („21.10.2026 05:57“) und zeigen den Text ungekürzt; der Untertitel des Abgleichs lautet überall „über ein privates GitHub-Repository“. Unterschiede gibt es nur noch, wo eine Funktion nur auf einem Gerät existiert oder der Aufbau nach Breite wechselt (feste Liste, ein Test wacht darüber).
 - Optionen > Eigene Farben: Die Regler zeigen wieder eine farbige Spur wie in Python 0.63.2. Die Spur zeigt, welche Farbe beim Schieben entsteht; der Knopf ist hell oder dunkel, je nachdem, was sich an seiner Stelle besser abhebt (Vergleichswerte G23).
 - Neu gegenüber A 0.5.0 (wie Python): Mit der Tastatur läuft der Farbton im Kreis (von 359° weiter auf 0°, von 0° zurück auf 359°). Gespeichert werden weiter nur Werte von 0 bis 359.
-- Start ohne Bedienung misst das Neuzeichnen beim Ziehen eines Farbreglers (Grenze 100 ms je Schritt).
+- Start ohne Bedienung misst das Neuzeichnen beim Ziehen eines Farbreglers (Grenze 150 ms für den ersten Schritt, 100 ms ab dem zweiten).
 
 ## A 0.5.0 (in Arbeit, Phase 2: Lernkern, Welle 4)
 Version A 0.5.0, Paket 1.0.0-a.0.5.0, Android 1000500 (Weisung P2-11):
