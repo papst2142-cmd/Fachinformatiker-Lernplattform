@@ -170,8 +170,10 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_rechner.py python-linie neu/rechner.json
           # Phase 3 Welle 3 (Weisung P3-10): G27 Rechen-Trainer
           python3 -I werkzeuge/vergleich/erzeuge_rechentrainer.py python-linie neu/rechentrainer.json
-          # Phase 3 W4a (Weisung P3-16): G28 Datenmengen und Uebertragungsdauer, unabhaengiges Skript ohne Python-Linie
+          # Phase 3 W4a (Weisungen P3-16/P3-17): G28 Datenmengen und Uebertragungsdauer, G31 Trainer einheiten/dauer,
+          # unabhaengige Skripte ohne Python-Linie
           python3 -I werkzeuge/vergleich/erzeuge_w4_datenmengen.py neu/datenmengen.json
+          python3 -I werkzeuge/vergleich/erzeuge_w4_rechentrainer.py neu/rechentrainer_w4.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
@@ -188,7 +190,7 @@ jobs:
                        "uebernahme.json", "pruefsumme_sonderfall.json", "lerntexte.json",
                        "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
-                       "rechentrainer.json", "datenmengen.json"):
+                       "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

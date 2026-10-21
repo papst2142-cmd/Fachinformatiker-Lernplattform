@@ -69,18 +69,35 @@ public static class Datenmenge
     public static string GanzOderKurz(double wert) =>
         wert == Math.Truncate(wert) ? Zahlen.DeZahl(wert, 0) : Zahlen.DeKurz(wert, 3);
 
-    /// <summary>Zielwert unter 0,01, aber nicht 0 (Anzeige-Merker, Plan 4.1).</summary>
-    public static bool Klein(double wert) => wert > 0 && wert < 0.01;
+    /// <summary>
+    /// Zielwert groesser 0, der gerundet "0,00" ergaebe: Anzeige "&lt; 0,01" (Weisung P3-17 F2a;
+    /// 0,005 wird "0,01", nicht "&lt; 0,01").
+    /// </summary>
+    public static bool Klein(double wert) => wert > 0 && Zahlen.DeZahl(wert) == "0,00";
+
+    /// <summary>
+    /// Bit, Byte oder bit/s groesser 0 und nicht ganz, deren Text nach <see cref="GanzOderKurz"/>
+    /// "0" ergaebe: Anzeige "&lt; 0,001" (Weisung P3-17 F2a).
+    /// </summary>
+    public static bool Klein3(double wert) => wert > 0 && wert != Math.Truncate(wert) && GanzOderKurz(wert) == "0";
 }
 
 /// <summary>Ergebnis von Datenmenge.Rechnen: Byte, Bit und die acht Zielwerte.</summary>
 public sealed record DatenmengeErgebnis(double Byte, double Bit, IReadOnlyDictionary<string, double> Werte)
 {
-    /// <summary>Zahltext eines Zielwerts (2 Nachkommastellen, kaufmaennisch).</summary>
+    /// <summary>Zahltext eines Zielwerts (2 Nachkommastellen, kaufmaennisch), ohne "&lt;"-Regel (G28).</summary>
     public string Text(string einheit) => einheit switch
     {
         "Bit" => Datenmenge.GanzOderKurz(Bit),
         "Byte" => Datenmenge.GanzOderKurz(Byte),
         _ => Zahlen.DeZahl(Werte[einheit]),
+    };
+
+    /// <summary>Anzeigetext: wie <see cref="Text"/>, aber "&lt; 0,01" bzw. "&lt; 0,001" fuer winzige Werte.</summary>
+    public string Anzeige(string einheit) => einheit switch
+    {
+        "Bit" => Datenmenge.Klein3(Bit) ? Texte.RechnerTexte.KleinerAls3 : Datenmenge.GanzOderKurz(Bit),
+        "Byte" => Datenmenge.Klein3(Byte) ? Texte.RechnerTexte.KleinerAls3 : Datenmenge.GanzOderKurz(Byte),
+        _ => Datenmenge.Klein(Werte[einheit]) ? Texte.RechnerTexte.KleinerAls2 : Zahlen.DeZahl(Werte[einheit]),
     };
 }

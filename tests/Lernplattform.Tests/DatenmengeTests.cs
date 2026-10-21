@@ -67,6 +67,10 @@ public class DatenmengeTests
                 Assert.True(fall.GetProperty("werte").GetProperty(ziel).GetString() == PyHex(e.Werte[ziel]), name + " -> " + ziel);
                 Assert.Equal(klein.Contains(ziel), Datenmenge.Klein(e.Werte[ziel]));
             }
+            // Weisung P3-17 F2a: "< 0,001" fuer Bit/Byte, deren Text "0" ergaebe
+            var klein3 = fall.GetProperty("klein3").EnumerateArray().Select(k => k.GetString()).ToList();
+            Assert.True(klein3.Contains("Bit") == Datenmenge.Klein3(e.Bit), name + " klein3 Bit");
+            Assert.True(klein3.Contains("Byte") == Datenmenge.Klein3(e.Byte), name + " klein3 Byte");
             foreach (var ziel in new[] { "Bit", "Byte" }.Concat(Datenmenge.Dezimal).Concat(Datenmenge.Binaer))
             {
                 Assert.True(fall.GetProperty("text").GetProperty(ziel).GetString() == e.Text(ziel), name + " Text " + ziel + ": " + e.Text(ziel));
@@ -102,6 +106,10 @@ public class DatenmengeTests
             Assert.True(text.GetProperty("std").GetRawText() == stunden.ToString(CultureInfo.InvariantCulture), name);
             Assert.True(text.GetProperty("min").GetInt32() == minuten, name);
             Assert.True(text.GetProperty("sek").GetString() == sekunden, name);
+            var klein3 = fall.GetProperty("klein3").EnumerateArray().Select(k => k.GetString()).ToList();
+            Assert.True(klein3.Contains("bit") == Datenmenge.Klein3(e.Bit), name + " klein3 bit");
+            Assert.True(klein3.Contains("rate") == Datenmenge.Klein3(e.Rate), name + " klein3 rate");
+            Assert.True(fall.GetProperty("klein_sekunden").GetBoolean() == Datenmenge.Klein(e.Sekunden), name + " klein_sekunden");
         }
     }
 

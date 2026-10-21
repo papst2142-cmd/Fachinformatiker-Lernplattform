@@ -30,7 +30,8 @@ public sealed record TrainerPruefung(IReadOnlyList<TrainerMarke> Marken, bool Al
 /// Phase 3, W3 (Paket R7, Weisung P3-12): Ablauf des Rechen-Trainers wie TrainerPanel in Python
 /// (app_gui 5490-5757, mobile/src/main.py 2950-3081), fuer PC und Handy gleich (ein Aufbau).
 /// Gespeichert wird genau eine Zeile je "Prüfen" (log_trainer, auch bei leeren Feldern, dann
-/// falsch), danach genau einmal <see cref="NachSpeichern"/> (Abgleich anstossen, P3-12 F1 a,
+/// falsch; nur bei den W4a-Arten mit Zahlenfeldern ist eine ungueltige Eingabe ein
+/// <see cref="Eingabefehler"/> ohne Speichern, Auflage P3-17 4d), danach genau einmal <see cref="NachSpeichern"/> (Abgleich anstossen, P3-12 F1 a,
 /// auf beiden Geraeten). Zweiter Druck, "Nächste Aufgabe", "Auswertung", "Runde starten",
 /// Art/Stufe waehlen schreiben nie. Ein abgelehnter Speicherversuch bleibt still (den Hinweis
 /// zeigt der vorhandene Weg Lernstand -> "Datenbankfehler"); die Aufgabe zaehlt trotzdem in der
@@ -107,13 +108,19 @@ public sealed class RechenTrainerAblauf
     /// <summary>Knopf bedienbar (B, C); ohne Runde gesperrt, auf PC und Handy (P3-12 Punkt 4).</summary>
     public bool KnopfAktiv => Zustand is TrainerZustand.Offen or TrainerZustand.Geprueft;
 
+    /// <summary>
+    /// W4a (Auflage P3-17 4d): roter Hinweis nach einer ungueltigen Eingabe in Zahlenfeldern
+    /// (keine Zahl, leer, mit Einheit); nichts gespeichert, die Aufgabe bleibt offen. Sonst leer.
+    /// </summary>
+    public string Eingabefehler { get; private set; } = "";
+
     /// <summary>Letzte Pruefung der aktuellen Aufgabe (nur in C), sonst null.</summary>
     public TrainerPruefung? Pruefung { get; private set; }
 
     /// <summary>Pille "Aufgabenart": nur die Wahl, eine laufende Runde bleibt.</summary>
     public void SetzeArt(string art)
     {
-        if (RechenTrainer.Arten.Any(a => a.Art == art))
+        if (RechenTrainer.AlleArten.Any(a => a.Art == art))
         {
             Art = art;
         }
@@ -157,7 +164,8 @@ public sealed class RechenTrainerAblauf
         switch (Zustand)
         {
             case TrainerZustand.Offen:
-                return PruefenUndSpeichern(antworten, schmal);
+                Eingabefehler = _breit[Index].EingabeFehler(antworten) ?? "";
+                return Eingabefehler.Length > 0 ? null : PruefenUndSpeichern(antworten, schmal);
             case TrainerZustand.Geprueft:
                 Weiter();
                 return null;
@@ -193,6 +201,7 @@ public sealed class RechenTrainerAblauf
             AufgabeLaden();
             return;
         }
+        Eingabefehler = "";
         var zusammenfassung = RechenTrainer.Zusammenfassung(_ergebnisse);
         _breit = [];
         _schmal = [];
@@ -206,6 +215,7 @@ public sealed class RechenTrainerAblauf
 
     private void AufgabeLaden()
     {
+        Eingabefehler = "";
         Zustand = TrainerZustand.Offen;
         Pruefung = null;
         AufgabeText = _breit[Index].Text;

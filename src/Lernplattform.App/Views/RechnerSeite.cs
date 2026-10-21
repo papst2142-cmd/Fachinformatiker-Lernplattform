@@ -23,11 +23,17 @@ namespace Lernplattform.Views;
 /// Tabellen, fit_lines einheitlich). Fehleingabe auf beiden Geraeten als roter Hinweis mit dem
 /// Meldungstext, Ergebniskasten leer, kein Fenster (Weisung P3-4 Frage 2). Die Rechner speichern
 /// nichts; der Reiter "Trainer" (W3, R7, <see cref="RechenTrainerTeil"/>) speichert je Pruefen.
+/// W4a (Weisung P3-17): Auswahl-Pillen ueber den Karten, immer genau eine Karte sichtbar; neu
+/// "Datenmengen" und "Übertragung" (<see cref="DatenKarten"/>), "Bild und Video" zeigt bis W4b
+/// die bisherige Bildschirm-Karte (Zwischenstand).
 /// </summary>
 public sealed class RechnerSeite : UserControl, IAufklappbar
 {
     private readonly ScrollViewer _rollen;
     private readonly Pillen _tabs;
+    private readonly Pillen _auswahl;
+    private readonly Dictionary<string, Control> _karten = new(StringComparer.Ordinal);
+    private readonly DatenKarten _datenKarten;
     private readonly StackPanel _rechner = new() { Spacing = 16 };
     private readonly RechenTrainerTeil _trainer;
     private readonly SubnetKarte _subnet;
@@ -152,10 +158,24 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         usv.Children.Add(new WrapPanel { Children = { naechste, _loesungKnopf } });
         usv.Children.Add(_aufgabeKasten);
 
-        _rechner.Children.Add(_subnet.Karte);
-        _rechner.Children.Add(RechnerTeile.Karte(RAID_TITLE, "Pinsel.purple", RechnerTeile.Unterschrift(RAID_SUBTITLE), raid));
-        _rechner.Children.Add(RechnerTeile.Karte(SCREEN_TITLE, "Pinsel.green", RechnerTeile.Unterschrift(SCREEN_SUBTITLE), bild));
-        _rechner.Children.Add(RechnerTeile.Karte(UPS_TITLE, "Pinsel.orange", RechnerTeile.Unterschrift(UPS_SUBTITLE), usv));
+        // --- Datenmengen, Uebertragung (W4a) ---
+        _datenKarten = new DatenKarten(() => _schmal);
+        _rechenwege.Add(_datenKarten.DatenWeg);
+        _rechenwege.Add(_datenKarten.DauerWeg);
+
+        _karten["subnetting"] = _subnet.Karte;
+        _karten["datenmengen"] = _datenKarten.DatenKarte;
+        _karten["uebertragung"] = _datenKarten.DauerKarte;
+        _karten["bild"] = RechnerTeile.Karte(SCREEN_TITLE, "Pinsel.green", RechnerTeile.Unterschrift(SCREEN_SUBTITLE), bild);
+        _karten["raid"] = RechnerTeile.Karte(RAID_TITLE, "Pinsel.purple", RechnerTeile.Unterschrift(RAID_SUBTITLE), raid);
+        _karten["usv"] = RechnerTeile.Karte(UPS_TITLE, "Pinsel.orange", RechnerTeile.Unterschrift(UPS_SUBTITLE), usv);
+        _auswahl = new Pillen(RechnerAuswahl, RechnerAuswahl[0].Wert, AuswahlWechseln);
+        _rechner.Children.Add(_auswahl);
+        foreach (var (wert, _) in RechnerAuswahl)
+        {
+            _karten[wert].IsVisible = wert == RechnerAuswahl[0].Wert;
+            _rechner.Children.Add(_karten[wert]);
+        }
 
         _rollen = new ScrollViewer
         {
@@ -182,6 +202,12 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
     internal SubnetKarte Subnet => _subnet;
 
     internal Ergebniskasten RaidKasten => _raidKasten;
+
+    /// <summary>Karten Datenmengen und Uebertragung (fuer den Start ohne Bedienung).</summary>
+    internal DatenKarten Daten => _datenKarten;
+
+    /// <summary>Gewaehlte Karte der Auswahl-Pillen.</summary>
+    internal string Gewaehlt => _auswahl.Wert;
 
     internal Ergebniskasten UsvKasten => _usvKasten;
 
@@ -218,6 +244,24 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
             weg.Fassung(schmal);
         }
         _subnet.AufbauGeaendert();
+        _datenKarten.AufbauGeaendert();
+    }
+
+    /// <summary>Auswahl-Pille: genau eine Karte sichtbar, oben anfangen.</summary>
+    private void AuswahlWechseln(string wert)
+    {
+        foreach (var (schluessel, karte) in _karten)
+        {
+            karte.IsVisible = schluessel == wert;
+        }
+        _rollen.Offset = default;
+    }
+
+    /// <summary>Karte waehlen wie mit der Pille (fuer den Start ohne Bedienung).</summary>
+    internal void Waehle(string wert)
+    {
+        _auswahl.Waehle(wert);
+        AuswahlWechseln(wert);
     }
 
     private void TabWechseln(string wert)
@@ -350,7 +394,7 @@ public sealed class RechnerSeite : UserControl, IAufklappbar
         return knopf;
     }
 
-    private static Control Felder(params Control[] zeilen)
+    internal static Control Felder(params Control[] zeilen)
     {
         var panel = new StackPanel { Spacing = 8 };
         foreach (var z in zeilen)

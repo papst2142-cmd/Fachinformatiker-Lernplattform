@@ -1,0 +1,5329 @@
+{
+ "quelle": "Unabhaengig aus der Spezifikation G31 (Auftrag 2, Teil B) geschrieben, ohne C#-Code.",
+ "python": "3.12.3",
+ "aufgaben": [
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-0",
+   "text": "Wie viele Byte sind 7.936 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "992"
+   },
+   "schritte": [
+    "Bit -> Byte: 7.936 / 8 = 992 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-1",
+   "text": "Rechne 896.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "896"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 896.000 x 1000^2 = 896.000.000.000 Byte",
+    "Byte -> dezimal: 896.000.000.000 / 1000^3 = 896 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-2",
+   "text": "Wie viele Byte sind 30.360 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "3.795"
+   },
+   "schritte": [
+    "Bit -> Byte: 30.360 / 8 = 3.795 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-3",
+   "text": "Rechne 960.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "960"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 960.000 x 1000^2 = 960.000.000.000 Byte",
+    "Byte -> dezimal: 960.000.000.000 / 1000^3 = 960 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-4",
+   "text": "Rechne 469 kB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "469.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 469 x 1000^1 = 469.000 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-5",
+   "text": "Rechne 454.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "454"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 454.000 x 1000^2 = 454.000.000.000 Byte",
+    "Byte -> dezimal: 454.000.000.000 / 1000^3 = 454 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-6",
+   "text": "Wie viele Byte sind 9.024 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.128"
+   },
+   "schritte": [
+    "Bit -> Byte: 9.024 / 8 = 1.128 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-7",
+   "text": "Rechne 239.000 Byte in kB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (kB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "239"
+   },
+   "schritte": [
+    "Byte -> dezimal: 239.000 / 1000^1 = 239 kB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-8",
+   "text": "Wie viele Bit sind 2.132 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "17.056"
+   },
+   "schritte": [
+    "Byte -> Bit: 2.132 x 8 = 17.056 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "0-9",
+   "text": "Rechne 966.000 GB in TB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "966"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 966.000 x 1000^3 = 966.000.000.000.000 Byte",
+    "Byte -> dezimal: 966.000.000.000.000 / 1000^4 = 966 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-0",
+   "text": "Wie viele Byte sind 1.224 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "153"
+   },
+   "schritte": [
+    "Bit -> Byte: 1.224 / 8 = 153 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-1",
+   "text": "Wie viele Byte sind 13.880 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.735"
+   },
+   "schritte": [
+    "Bit -> Byte: 13.880 / 8 = 1.735 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-2",
+   "text": "Wie viele Byte sind 17.952 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "2.244"
+   },
+   "schritte": [
+    "Bit -> Byte: 17.952 / 8 = 2.244 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-3",
+   "text": "Wie viele Bit sind 3.558 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "28.464"
+   },
+   "schritte": [
+    "Byte -> Bit: 3.558 x 8 = 28.464 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-4",
+   "text": "Wie viele Bit sind 1.222 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "9.776"
+   },
+   "schritte": [
+    "Byte -> Bit: 1.222 x 8 = 9.776 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-5",
+   "text": "Wie viele Bit sind 465 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "3.720"
+   },
+   "schritte": [
+    "Byte -> Bit: 465 x 8 = 3.720 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-6",
+   "text": "Wie viele Byte sind 28.904 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "3.613"
+   },
+   "schritte": [
+    "Bit -> Byte: 28.904 / 8 = 3.613 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-7",
+   "text": "Rechne 11 kB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "11.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 11 x 1000^1 = 11.000 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-8",
+   "text": "Rechne 757 TB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "757.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 757 x 1000^4 = 757.000.000.000.000 Byte",
+    "Byte -> dezimal: 757.000.000.000.000 / 1000^3 = 757.000 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "1-9",
+   "text": "Rechne 945.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "945"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 945.000 x 1000^2 = 945.000.000.000 Byte",
+    "Byte -> dezimal: 945.000.000.000 / 1000^3 = 945 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-0",
+   "text": "Rechne 357.000 GB in TB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "357"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 357.000 x 1000^3 = 357.000.000.000.000 Byte",
+    "Byte -> dezimal: 357.000.000.000.000 / 1000^4 = 357 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-1",
+   "text": "Rechne 715 GB in MB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "715.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 715 x 1000^3 = 715.000.000.000 Byte",
+    "Byte -> dezimal: 715.000.000.000 / 1000^2 = 715.000 MB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-2",
+   "text": "Rechne 26 MB in kB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (kB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "26.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 26 x 1000^2 = 26.000.000 Byte",
+    "Byte -> dezimal: 26.000.000 / 1000^1 = 26.000 kB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-3",
+   "text": "Wie viele Byte sind 15.824 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.978"
+   },
+   "schritte": [
+    "Bit -> Byte: 15.824 / 8 = 1.978 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-4",
+   "text": "Wie viele Byte sind 3.008 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "376"
+   },
+   "schritte": [
+    "Bit -> Byte: 3.008 / 8 = 376 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-5",
+   "text": "Wie viele Bit sind 1.416 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "11.328"
+   },
+   "schritte": [
+    "Byte -> Bit: 1.416 x 8 = 11.328 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-6",
+   "text": "Rechne 799.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "799"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 799.000 x 1000^2 = 799.000.000.000 Byte",
+    "Byte -> dezimal: 799.000.000.000 / 1000^3 = 799 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-7",
+   "text": "Rechne 179.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "179"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 179.000 x 1000^2 = 179.000.000.000 Byte",
+    "Byte -> dezimal: 179.000.000.000 / 1000^3 = 179 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-8",
+   "text": "Wie viele Bit sind 2.027 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "16.216"
+   },
+   "schritte": [
+    "Byte -> Bit: 2.027 x 8 = 16.216 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "4711-9",
+   "text": "Rechne 907.000 Byte in kB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (kB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "907"
+   },
+   "schritte": [
+    "Byte -> dezimal: 907.000 / 1000^1 = 907 kB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-0",
+   "text": "Rechne 545 GB in MB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "545.000"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 545 x 1000^3 = 545.000.000.000 Byte",
+    "Byte -> dezimal: 545.000.000.000 / 1000^2 = 545.000 MB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-1",
+   "text": "Rechne 925.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "925"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 925.000 x 1000^2 = 925.000.000.000 Byte",
+    "Byte -> dezimal: 925.000.000.000 / 1000^3 = 925 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-2",
+   "text": "Wie viele Bit sind 537 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "4.296"
+   },
+   "schritte": [
+    "Byte -> Bit: 537 x 8 = 4.296 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-3",
+   "text": "Wie viele Byte sind 1.528 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "191"
+   },
+   "schritte": [
+    "Bit -> Byte: 1.528 / 8 = 191 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-4",
+   "text": "Wie viele Bit sind 119 Byte?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Bit)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "952"
+   },
+   "schritte": [
+    "Byte -> Bit: 119 x 8 = 952 Bit"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-5",
+   "text": "Rechne 990.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "990"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 990.000 x 1000^2 = 990.000.000.000 Byte",
+    "Byte -> dezimal: 990.000.000.000 / 1000^3 = 990 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-6",
+   "text": "Rechne 78.000 Byte in kB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (kB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "78"
+   },
+   "schritte": [
+    "Byte -> dezimal: 78.000 / 1000^1 = 78 kB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-7",
+   "text": "Wie viele Byte sind 26.152 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "3.269"
+   },
+   "schritte": [
+    "Bit -> Byte: 26.152 / 8 = 3.269 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-8",
+   "text": "Rechne 478.000 MB in GB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "478"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 478.000 x 1000^2 = 478.000.000.000 Byte",
+    "Byte -> dezimal: 478.000.000.000 / 1000^3 = 478 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 1,
+   "startwert": "123456789-9",
+   "text": "Wie viele Byte sind 30.464 Bit?",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "3.808"
+   },
+   "schritte": [
+    "Bit -> Byte: 30.464 / 8 = 3.808 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-0",
+   "text": "Rechne 62 KiB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "63.488"
+   },
+   "schritte": [
+    "Binär -> Byte: 62 x 1024^1 = 63.488 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-1",
+   "text": "Rechne 48.128 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "47"
+   },
+   "schritte": [
+    "Binär -> Byte: 48.128 x 1024^3 = 51.677.046.505.472 Byte",
+    "Byte -> binär: 51.677.046.505.472 / 1024^4 = 47 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-2",
+   "text": "Rechne 6.144 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "6"
+   },
+   "schritte": [
+    "Binär -> Byte: 6.144 x 1024^3 = 6.597.069.766.656 Byte",
+    "Byte -> binär: 6.597.069.766.656 / 1024^4 = 6 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-3",
+   "text": "Rechne 16.384 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "16"
+   },
+   "schritte": [
+    "Binär -> Byte: 16.384 x 1024^3 = 17.592.186.044.416 Byte",
+    "Byte -> binär: 17.592.186.044.416 / 1024^4 = 16 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-4",
+   "text": "Rechne 2 TiB in GiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "2.048"
+   },
+   "schritte": [
+    "Binär -> Byte: 2 x 1024^4 = 2.199.023.255.552 Byte",
+    "Byte -> binär: 2.199.023.255.552 / 1024^3 = 2.048 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-5",
+   "text": "Rechne 63 KiB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "64.512"
+   },
+   "schritte": [
+    "Binär -> Byte: 63 x 1024^1 = 64.512 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-6",
+   "text": "Rechne 7 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "7.340.032"
+   },
+   "schritte": [
+    "Binär -> Byte: 7 x 1024^4 = 7.696.581.394.432 Byte",
+    "Byte -> binär: 7.696.581.394.432 / 1024^2 = 7.340.032 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-7",
+   "text": "Rechne 9.216 MiB in GiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "9"
+   },
+   "schritte": [
+    "Binär -> Byte: 9.216 x 1024^2 = 9.663.676.416 Byte",
+    "Byte -> binär: 9.663.676.416 / 1024^3 = 9 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-8",
+   "text": "Rechne 15.360 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "15"
+   },
+   "schritte": [
+    "Byte -> binär: 15.360 / 1024^1 = 15 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "0-9",
+   "text": "Rechne 62.464 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "61"
+   },
+   "schritte": [
+    "Byte -> binär: 62.464 / 1024^1 = 61 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-0",
+   "text": "Rechne 63 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "66.060.288"
+   },
+   "schritte": [
+    "Binär -> Byte: 63 x 1024^4 = 69.269.232.549.888 Byte",
+    "Byte -> binär: 69.269.232.549.888 / 1024^2 = 66.060.288 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-1",
+   "text": "Rechne 33 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "34.603.008"
+   },
+   "schritte": [
+    "Binär -> Byte: 33 x 1024^4 = 36.283.883.716.608 Byte",
+    "Byte -> binär: 36.283.883.716.608 / 1024^2 = 34.603.008 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-2",
+   "text": "Rechne 59.392 MiB in GiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "58"
+   },
+   "schritte": [
+    "Binär -> Byte: 59.392 x 1024^2 = 62.277.025.792 Byte",
+    "Byte -> binär: 62.277.025.792 / 1024^3 = 58 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-3",
+   "text": "Rechne 31 GiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "31.744"
+   },
+   "schritte": [
+    "Binär -> Byte: 31 x 1024^3 = 33.285.996.544 Byte",
+    "Byte -> binär: 33.285.996.544 / 1024^2 = 31.744 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-4",
+   "text": "Rechne 26.624 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "26"
+   },
+   "schritte": [
+    "Byte -> binär: 26.624 / 1024^1 = 26 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-5",
+   "text": "Rechne 32.768 KiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "32"
+   },
+   "schritte": [
+    "Binär -> Byte: 32.768 x 1024^1 = 33.554.432 Byte",
+    "Byte -> binär: 33.554.432 / 1024^2 = 32 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-6",
+   "text": "Rechne 63 MiB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "66.060.288"
+   },
+   "schritte": [
+    "Binär -> Byte: 63 x 1024^2 = 66.060.288 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-7",
+   "text": "Rechne 54.272 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "53"
+   },
+   "schritte": [
+    "Byte -> binär: 54.272 / 1024^1 = 53 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-8",
+   "text": "Rechne 39.936 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "39"
+   },
+   "schritte": [
+    "Binär -> Byte: 39.936 x 1024^3 = 42.880.953.483.264 Byte",
+    "Byte -> binär: 42.880.953.483.264 / 1024^4 = 39 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "1-9",
+   "text": "Rechne 31 GiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "31.744"
+   },
+   "schritte": [
+    "Binär -> Byte: 31 x 1024^3 = 33.285.996.544 Byte",
+    "Byte -> binär: 33.285.996.544 / 1024^2 = 31.744 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-0",
+   "text": "Rechne 60.416 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "59"
+   },
+   "schritte": [
+    "Binär -> Byte: 60.416 x 1024^3 = 64.871.186.038.784 Byte",
+    "Byte -> binär: 64.871.186.038.784 / 1024^4 = 59 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-1",
+   "text": "Rechne 54.272 KiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "53"
+   },
+   "schritte": [
+    "Binär -> Byte: 54.272 x 1024^1 = 55.574.528 Byte",
+    "Byte -> binär: 55.574.528 / 1024^2 = 53 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-2",
+   "text": "Rechne 36 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "37.748.736"
+   },
+   "schritte": [
+    "Binär -> Byte: 36 x 1024^4 = 39.582.418.599.936 Byte",
+    "Byte -> binär: 39.582.418.599.936 / 1024^2 = 37.748.736 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-3",
+   "text": "Rechne 37.888 MiB in GiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "37"
+   },
+   "schritte": [
+    "Binär -> Byte: 37.888 x 1024^2 = 39.728.447.488 Byte",
+    "Byte -> binär: 39.728.447.488 / 1024^3 = 37 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-4",
+   "text": "Rechne 50.176 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "49"
+   },
+   "schritte": [
+    "Byte -> binär: 50.176 / 1024^1 = 49 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-5",
+   "text": "Rechne 18 GiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "18.432"
+   },
+   "schritte": [
+    "Binär -> Byte: 18 x 1024^3 = 19.327.352.832 Byte",
+    "Byte -> binär: 19.327.352.832 / 1024^2 = 18.432 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-6",
+   "text": "Rechne 4.096 GiB in TiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "4"
+   },
+   "schritte": [
+    "Binär -> Byte: 4.096 x 1024^3 = 4.398.046.511.104 Byte",
+    "Byte -> binär: 4.398.046.511.104 / 1024^4 = 4 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-7",
+   "text": "Rechne 54 GiB in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "56.623.104"
+   },
+   "schritte": [
+    "Binär -> Byte: 54 x 1024^3 = 57.982.058.496 Byte",
+    "Byte -> binär: 57.982.058.496 / 1024^1 = 56.623.104 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-8",
+   "text": "Rechne 44 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "46.137.344"
+   },
+   "schritte": [
+    "Binär -> Byte: 44 x 1024^4 = 48.378.511.622.144 Byte",
+    "Byte -> binär: 48.378.511.622.144 / 1024^2 = 46.137.344 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "4711-9",
+   "text": "Rechne 50 MiB in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "51.200"
+   },
+   "schritte": [
+    "Binär -> Byte: 50 x 1024^2 = 52.428.800 Byte",
+    "Byte -> binär: 52.428.800 / 1024^1 = 51.200 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-0",
+   "text": "Rechne 65.536 KiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "64"
+   },
+   "schritte": [
+    "Binär -> Byte: 65.536 x 1024^1 = 67.108.864 Byte",
+    "Byte -> binär: 67.108.864 / 1024^2 = 64 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-1",
+   "text": "Rechne 22 GiB in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "23.068.672"
+   },
+   "schritte": [
+    "Binär -> Byte: 22 x 1024^3 = 23.622.320.128 Byte",
+    "Byte -> binär: 23.622.320.128 / 1024^1 = 23.068.672 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-2",
+   "text": "Rechne 4.096 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "4"
+   },
+   "schritte": [
+    "Byte -> binär: 4.096 / 1024^1 = 4 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-3",
+   "text": "Rechne 21 TiB in GiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "21.504"
+   },
+   "schritte": [
+    "Binär -> Byte: 21 x 1024^4 = 23.089.744.183.296 Byte",
+    "Byte -> binär: 23.089.744.183.296 / 1024^3 = 21.504 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-4",
+   "text": "Rechne 41.984 Byte in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "41"
+   },
+   "schritte": [
+    "Byte -> binär: 41.984 / 1024^1 = 41 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-5",
+   "text": "Rechne 51 GiB in KiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (KiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "53.477.376"
+   },
+   "schritte": [
+    "Binär -> Byte: 51 x 1024^3 = 54.760.833.024 Byte",
+    "Byte -> binär: 54.760.833.024 / 1024^1 = 53.477.376 KiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-6",
+   "text": "Rechne 9 MiB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "9.437.184"
+   },
+   "schritte": [
+    "Binär -> Byte: 9 x 1024^2 = 9.437.184 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-7",
+   "text": "Rechne 25 TiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "26.214.400"
+   },
+   "schritte": [
+    "Binär -> Byte: 25 x 1024^4 = 27.487.790.694.400 Byte",
+    "Byte -> binär: 27.487.790.694.400 / 1024^2 = 26.214.400 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-8",
+   "text": "Rechne 58 GiB in MiB um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "59.392"
+   },
+   "schritte": [
+    "Binär -> Byte: 58 x 1024^3 = 62.277.025.792 Byte",
+    "Byte -> binär: 62.277.025.792 / 1024^2 = 59.392 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 2,
+   "startwert": "123456789-9",
+   "text": "Rechne 10 MiB in Byte um.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (Byte)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "10.485.760"
+   },
+   "schritte": [
+    "Binär -> Byte: 10 x 1024^2 = 10.485.760 Byte"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-0",
+   "text": "Rechne 564 TiB in TB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "620,12"
+   },
+   "schritte": [
+    "Binär -> Byte: 564 x 1024^4 = 620.124.558.065.664 Byte",
+    "Byte -> dezimal: 620.124.558.065.664 / 1000^4 = 620,12 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-1",
+   "text": "Rechne 244 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "227.242,71"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 244 x 1000^4 = 244.000.000.000.000 Byte",
+    "Byte -> binär: 244.000.000.000.000 / 1024^3 = 227.242,71 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-2",
+   "text": "Rechne 1.568 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.683,63"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.568 x 1024^3 = 1.683.627.180.032 Byte",
+    "Byte -> dezimal: 1.683.627.180.032 / 1000^3 = 1.683,63 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-3",
+   "text": "Rechne 1.522 TB in TiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.384,25"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.522 x 1000^4 = 1.522.000.000.000.000 Byte",
+    "Byte -> binär: 1.522.000.000.000.000 / 1024^4 = 1.384,25 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-4",
+   "text": "Rechne 1.242 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.333,59"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.242 x 1024^3 = 1.333.587.345.408 Byte",
+    "Byte -> dezimal: 1.333.587.345.408 / 1000^3 = 1.333,59 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-5",
+   "text": "Rechne 367 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "341.795,38"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 367 x 1000^4 = 367.000.000.000.000 Byte",
+    "Byte -> binär: 367.000.000.000.000 / 1024^3 = 341.795,38 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-6",
+   "text": "Rechne 191 TiB in TB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "210,01"
+   },
+   "schritte": [
+    "Binär -> Byte: 191 x 1024^4 = 210.006.720.905.216 Byte",
+    "Byte -> dezimal: 210.006.720.905.216 / 1000^4 = 210,01 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-7",
+   "text": "Rechne 46 GB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "42,84"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 46 x 1000^3 = 46.000.000.000 Byte",
+    "Byte -> binär: 46.000.000.000 / 1024^3 = 42,84 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-8",
+   "text": "Rechne 1.737 MiB in MB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.821,38"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.737 x 1024^2 = 1.821.376.512 Byte",
+    "Byte -> dezimal: 1.821.376.512 / 1000^2 = 1.821,38 MB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "0-9",
+   "text": "Rechne 193 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "207,23"
+   },
+   "schritte": [
+    "Binär -> Byte: 193 x 1024^3 = 207.232.172.032 Byte",
+    "Byte -> dezimal: 207.232.172.032 / 1000^3 = 207,23 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-0",
+   "text": "Rechne 791 MB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "754,36"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 791 x 1000^2 = 791.000.000 Byte",
+    "Byte -> binär: 791.000.000 / 1024^2 = 754,36 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-1",
+   "text": "Rechne 1.159 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.105.308,53"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.159 x 1000^3 = 1.159.000.000.000 Byte",
+    "Byte -> binär: 1.159.000.000.000 / 1024^2 = 1.105.308,53 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-2",
+   "text": "Rechne 1.019 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.094,14"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.019 x 1024^3 = 1.094.142.918.656 Byte",
+    "Byte -> dezimal: 1.094.142.918.656 / 1000^3 = 1.094,14 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-3",
+   "text": "Rechne 1.235 TiB in TB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.357,90"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.235 x 1024^4 = 1.357.896.860.303.360 Byte",
+    "Byte -> dezimal: 1.357.896.860.303.360 / 1000^4 = 1.357,90 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-4",
+   "text": "Rechne 1.171 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.116.752,62"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.171 x 1000^3 = 1.171.000.000.000 Byte",
+    "Byte -> binär: 1.171.000.000.000 / 1024^2 = 1.116.752,62 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-5",
+   "text": "Rechne 1.115 TB in TiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.014,09"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.115 x 1000^4 = 1.115.000.000.000.000 Byte",
+    "Byte -> binär: 1.115.000.000.000.000 / 1024^4 = 1.014,09 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-6",
+   "text": "Rechne 675 MiB in MB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "707,79"
+   },
+   "schritte": [
+    "Binär -> Byte: 675 x 1024^2 = 707.788.800 Byte",
+    "Byte -> dezimal: 707.788.800 / 1000^2 = 707,79 MB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-7",
+   "text": "Rechne 889 MB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "847,82"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 889 x 1000^2 = 889.000.000 Byte",
+    "Byte -> binär: 889.000.000 / 1024^2 = 847,82 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-8",
+   "text": "Rechne 144 GB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "134,11"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 144 x 1000^3 = 144.000.000.000 Byte",
+    "Byte -> binär: 144.000.000.000 / 1024^3 = 134,11 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "1-9",
+   "text": "Rechne 488 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "454.485,42"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 488 x 1000^4 = 488.000.000.000.000 Byte",
+    "Byte -> binär: 488.000.000.000.000 / 1024^3 = 454.485,42 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-0",
+   "text": "Rechne 120 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "111.758,71"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 120 x 1000^4 = 120.000.000.000.000 Byte",
+    "Byte -> binär: 120.000.000.000.000 / 1024^3 = 111.758,71 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-1",
+   "text": "Rechne 486 TB in TiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "442,01"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 486 x 1000^4 = 486.000.000.000.000 Byte",
+    "Byte -> binär: 486.000.000.000.000 / 1024^4 = 442,01 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-2",
+   "text": "Rechne 1.955 MiB in MB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "2.049,97"
+   },
+   "schritte": [
+    "Binär -> Byte: 1.955 x 1024^2 = 2.049.966.080 Byte",
+    "Byte -> dezimal: 2.049.966.080 / 1000^2 = 2.049,97 MB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-3",
+   "text": "Rechne 1.172 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.091.510,06"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.172 x 1000^4 = 1.172.000.000.000.000 Byte",
+    "Byte -> binär: 1.172.000.000.000.000 / 1024^3 = 1.091.510,06 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-4",
+   "text": "Rechne 759 TB in TiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "690,31"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 759 x 1000^4 = 759.000.000.000.000 Byte",
+    "Byte -> binär: 759.000.000.000.000 / 1024^4 = 690,31 TiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-5",
+   "text": "Rechne 1.236 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.151.114,70"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.236 x 1000^4 = 1.236.000.000.000.000 Byte",
+    "Byte -> binär: 1.236.000.000.000.000 / 1024^3 = 1.151.114,70 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-6",
+   "text": "Rechne 1.246 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.188.278,20"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.246 x 1000^3 = 1.246.000.000.000 Byte",
+    "Byte -> binär: 1.246.000.000.000 / 1024^2 = 1.188.278,20 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-7",
+   "text": "Rechne 165 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "157.356,26"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 165 x 1000^3 = 165.000.000.000 Byte",
+    "Byte -> binär: 165.000.000.000 / 1024^2 = 157.356,26 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-8",
+   "text": "Rechne 57 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "53.085,39"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 57 x 1000^4 = 57.000.000.000.000 Byte",
+    "Byte -> binär: 57.000.000.000.000 / 1024^3 = 53.085,39 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "4711-9",
+   "text": "Rechne 590 TiB in TB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "648,71"
+   },
+   "schritte": [
+    "Binär -> Byte: 590 x 1024^4 = 648.711.860.387.840 Byte",
+    "Byte -> dezimal: 648.711.860.387.840 / 1000^4 = 648,71 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-0",
+   "text": "Rechne 1.070 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.020.431,52"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.070 x 1000^3 = 1.070.000.000.000 Byte",
+    "Byte -> binär: 1.070.000.000.000 / 1024^2 = 1.020.431,52 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-1",
+   "text": "Rechne 855 TiB in TB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (TB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "940,08"
+   },
+   "schritte": [
+    "Binär -> Byte: 855 x 1024^4 = 940.082.441.748.480 Byte",
+    "Byte -> dezimal: 940.082.441.748.480 / 1000^4 = 940,08 TB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-2",
+   "text": "Rechne 1.650 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.536.682,25"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.650 x 1000^4 = 1.650.000.000.000.000 Byte",
+    "Byte -> binär: 1.650.000.000.000.000 / 1024^3 = 1.536.682,25 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-3",
+   "text": "Rechne 1.911 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.779.757,44"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.911 x 1000^4 = 1.911.000.000.000.000 Byte",
+    "Byte -> binär: 1.911.000.000.000.000 / 1024^3 = 1.779.757,44 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-4",
+   "text": "Rechne 1.575 GB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.466,83"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.575 x 1000^3 = 1.575.000.000.000 Byte",
+    "Byte -> binär: 1.575.000.000.000 / 1024^3 = 1.466,83 GiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-5",
+   "text": "Rechne 395 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "424,13"
+   },
+   "schritte": [
+    "Binär -> Byte: 395 x 1024^3 = 424.128.020.480 Byte",
+    "Byte -> dezimal: 424.128.020.480 / 1000^3 = 424,13 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-6",
+   "text": "Rechne 58 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "62,28"
+   },
+   "schritte": [
+    "Binär -> Byte: 58 x 1024^3 = 62.277.025.792 Byte",
+    "Byte -> dezimal: 62.277.025.792 / 1000^3 = 62,28 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-7",
+   "text": "Rechne 986 GiB in GB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.058,71"
+   },
+   "schritte": [
+    "Binär -> Byte: 986 x 1024^3 = 1.058.709.438.464 Byte",
+    "Byte -> dezimal: 1.058.709.438.464 / 1000^3 = 1.058,71 GB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-8",
+   "text": "Rechne 1.957 GB in MiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (MiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.866.340,64"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.957 x 1000^3 = 1.957.000.000.000 Byte",
+    "Byte -> binär: 1.957.000.000.000 / 1024^2 = 1.866.340,64 MiB"
+   ]
+  },
+  {
+   "art": "einheiten",
+   "stufe": 3,
+   "startwert": "123456789-9",
+   "text": "Rechne 1.098 TB in GiB um. Runde auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "ergebnis",
+     "Ergebnis (GiB)"
+    ]
+   ],
+   "loesung": {
+    "ergebnis": "1.022.592,19"
+   },
+   "schritte": [
+    "Dezimal -> Byte: 1.098 x 1000^4 = 1.098.000.000.000.000 Byte",
+    "Byte -> binär: 1.098.000.000.000.000 / 1024^3 = 1.022.592,19 GiB"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-0",
+   "text": "Eine Datei mit 1.275 MB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "204"
+   },
+   "schritte": [
+    "Bit: 1.275 x 1000^2 x 8 = 10.200.000.000 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 100 / 100 = 50.000.000 bit/s",
+    "Dauer: 10.200.000.000 / 50.000.000 = 204,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-1",
+   "text": "Eine Datei mit 142 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "142"
+   },
+   "schritte": [
+    "Bit: 142 x 1000^2 x 8 = 1.136.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 1.136.000.000 / 8.000.000 = 142,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-2",
+   "text": "Eine Datei mit 2.100 MB wird mit 20 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "840"
+   },
+   "schritte": [
+    "Bit: 2.100 x 1000^2 x 8 = 16.800.000.000 Bit",
+    "Wirksame Datenrate: 20 x 1.000.000 x 100 / 100 = 20.000.000 bit/s",
+    "Dauer: 16.800.000.000 / 20.000.000 = 840,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-3",
+   "text": "Eine Datei mit 154 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "154"
+   },
+   "schritte": [
+    "Bit: 154 x 1000^2 x 8 = 1.232.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 1.232.000.000 / 8.000.000 = 154,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-4",
+   "text": "Eine Datei mit 536 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "268"
+   },
+   "schritte": [
+    "Bit: 536 x 1000^2 x 8 = 4.288.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 4.288.000.000 / 16.000.000 = 268,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-5",
+   "text": "Eine Datei mit 775 MB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "248"
+   },
+   "schritte": [
+    "Bit: 775 x 1000^2 x 8 = 6.200.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 100 / 100 = 25.000.000 bit/s",
+    "Dauer: 6.200.000.000 / 25.000.000 = 248,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-6",
+   "text": "Eine Datei mit 770 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "770"
+   },
+   "schritte": [
+    "Bit: 770 x 1000^2 x 8 = 6.160.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 6.160.000.000 / 8.000.000 = 770,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-7",
+   "text": "Eine Datei mit 934 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "467"
+   },
+   "schritte": [
+    "Bit: 934 x 1000^2 x 8 = 7.472.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 7.472.000.000 / 16.000.000 = 467,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-8",
+   "text": "Eine Datei mit 1.568 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "784"
+   },
+   "schritte": [
+    "Bit: 1.568 x 1000^2 x 8 = 12.544.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 12.544.000.000 / 16.000.000 = 784,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "0-9",
+   "text": "Eine Datei mit 9.850 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "788"
+   },
+   "schritte": [
+    "Bit: 9.850 x 1000^2 x 8 = 78.800.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 78.800.000.000 / 100.000.000 = 788,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-0",
+   "text": "Eine Datei mit 171 MB wird mit 2 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "684"
+   },
+   "schritte": [
+    "Bit: 171 x 1000^2 x 8 = 1.368.000.000 Bit",
+    "Wirksame Datenrate: 2 x 1.000.000 x 100 / 100 = 2.000.000 bit/s",
+    "Dauer: 1.368.000.000 / 2.000.000 = 684,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-1",
+   "text": "Eine Datei mit 244 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "244"
+   },
+   "schritte": [
+    "Bit: 244 x 1000^2 x 8 = 1.952.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 1.952.000.000 / 8.000.000 = 244,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-2",
+   "text": "Eine Datei mit 411 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "411"
+   },
+   "schritte": [
+    "Bit: 411 x 1000^2 x 8 = 3.288.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 3.288.000.000 / 8.000.000 = 411,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-3",
+   "text": "Eine Datei mit 175 MB wird mit 5 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "280"
+   },
+   "schritte": [
+    "Bit: 175 x 1000^2 x 8 = 1.400.000.000 Bit",
+    "Wirksame Datenrate: 5 x 1.000.000 x 100 / 100 = 5.000.000 bit/s",
+    "Dauer: 1.400.000.000 / 5.000.000 = 280,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-4",
+   "text": "Eine Datei mit 75 MB wird mit 10 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "60"
+   },
+   "schritte": [
+    "Bit: 75 x 1000^2 x 8 = 600.000.000 Bit",
+    "Wirksame Datenrate: 10 x 1.000.000 x 100 / 100 = 10.000.000 bit/s",
+    "Dauer: 600.000.000 / 10.000.000 = 60,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-5",
+   "text": "Eine Datei mit 1.635 MB wird mit 20 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "654"
+   },
+   "schritte": [
+    "Bit: 1.635 x 1000^2 x 8 = 13.080.000.000 Bit",
+    "Wirksame Datenrate: 20 x 1.000.000 x 100 / 100 = 20.000.000 bit/s",
+    "Dauer: 13.080.000.000 / 20.000.000 = 654,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-6",
+   "text": "Eine Datei mit 130 MB wird mit 2 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "520"
+   },
+   "schritte": [
+    "Bit: 130 x 1000^2 x 8 = 1.040.000.000 Bit",
+    "Wirksame Datenrate: 2 x 1.000.000 x 100 / 100 = 2.000.000 bit/s",
+    "Dauer: 1.040.000.000 / 2.000.000 = 520,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-7",
+   "text": "Eine Datei mit 89 MB wird mit 4 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "178"
+   },
+   "schritte": [
+    "Bit: 89 x 1000^2 x 8 = 712.000.000 Bit",
+    "Wirksame Datenrate: 4 x 1.000.000 x 100 / 100 = 4.000.000 bit/s",
+    "Dauer: 712.000.000 / 4.000.000 = 178,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-8",
+   "text": "Eine Datei mit 33 MB wird mit 2 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "132"
+   },
+   "schritte": [
+    "Bit: 33 x 1000^2 x 8 = 264.000.000 Bit",
+    "Wirksame Datenrate: 2 x 1.000.000 x 100 / 100 = 2.000.000 bit/s",
+    "Dauer: 264.000.000 / 2.000.000 = 132,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "1-9",
+   "text": "Eine Datei mit 610 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "305"
+   },
+   "schritte": [
+    "Bit: 610 x 1000^2 x 8 = 4.880.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 4.880.000.000 / 16.000.000 = 305,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-0",
+   "text": "Eine Datei mit 994 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "497"
+   },
+   "schritte": [
+    "Bit: 994 x 1000^2 x 8 = 7.952.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 7.952.000.000 / 16.000.000 = 497,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-1",
+   "text": "Eine Datei mit 732 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "732"
+   },
+   "schritte": [
+    "Bit: 732 x 1000^2 x 8 = 5.856.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 5.856.000.000 / 8.000.000 = 732,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-2",
+   "text": "Eine Datei mit 4.350 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "348"
+   },
+   "schritte": [
+    "Bit: 4.350 x 1000^2 x 8 = 34.800.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 34.800.000.000 / 100.000.000 = 348,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-3",
+   "text": "Eine Datei mit 189 MB wird mit 4 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "378"
+   },
+   "schritte": [
+    "Bit: 189 x 1000^2 x 8 = 1.512.000.000 Bit",
+    "Wirksame Datenrate: 4 x 1.000.000 x 100 / 100 = 4.000.000 bit/s",
+    "Dauer: 1.512.000.000 / 4.000.000 = 378,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-4",
+   "text": "Eine Datei mit 671 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "671"
+   },
+   "schritte": [
+    "Bit: 671 x 1000^2 x 8 = 5.368.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 5.368.000.000 / 8.000.000 = 671,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-5",
+   "text": "Eine Datei mit 5.250 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "420"
+   },
+   "schritte": [
+    "Bit: 5.250 x 1000^2 x 8 = 42.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 42.000.000.000 / 100.000.000 = 420,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-6",
+   "text": "Eine Datei mit 381 MB wird mit 4 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "762"
+   },
+   "schritte": [
+    "Bit: 381 x 1000^2 x 8 = 3.048.000.000 Bit",
+    "Wirksame Datenrate: 4 x 1.000.000 x 100 / 100 = 4.000.000 bit/s",
+    "Dauer: 3.048.000.000 / 4.000.000 = 762,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-7",
+   "text": "Eine Datei mit 675 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "54"
+   },
+   "schritte": [
+    "Bit: 675 x 1000^2 x 8 = 5.400.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 5.400.000.000 / 100.000.000 = 54,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-8",
+   "text": "Eine Datei mit 250 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "125"
+   },
+   "schritte": [
+    "Bit: 250 x 1000^2 x 8 = 2.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 2.000.000.000 / 16.000.000 = 125,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "4711-9",
+   "text": "Eine Datei mit 2.180 MB wird mit 20 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "872"
+   },
+   "schritte": [
+    "Bit: 2.180 x 1000^2 x 8 = 17.440.000.000 Bit",
+    "Wirksame Datenrate: 20 x 1.000.000 x 100 / 100 = 20.000.000 bit/s",
+    "Dauer: 17.440.000.000 / 20.000.000 = 872,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-0",
+   "text": "Eine Datei mit 1.062 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "531"
+   },
+   "schritte": [
+    "Bit: 1.062 x 1000^2 x 8 = 8.496.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 8.496.000.000 / 16.000.000 = 531,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-1",
+   "text": "Eine Datei mit 541 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "541"
+   },
+   "schritte": [
+    "Bit: 541 x 1000^2 x 8 = 4.328.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 4.328.000.000 / 8.000.000 = 541,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-2",
+   "text": "Eine Datei mit 410 MB wird mit 5 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "656"
+   },
+   "schritte": [
+    "Bit: 410 x 1000^2 x 8 = 3.280.000.000 Bit",
+    "Wirksame Datenrate: 5 x 1.000.000 x 100 / 100 = 5.000.000 bit/s",
+    "Dauer: 3.280.000.000 / 5.000.000 = 656,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-3",
+   "text": "Eine Datei mit 76 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "76"
+   },
+   "schritte": [
+    "Bit: 76 x 1000^2 x 8 = 608.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 608.000.000 / 8.000.000 = 76,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-4",
+   "text": "Eine Datei mit 443 MB wird mit 8 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "443"
+   },
+   "schritte": [
+    "Bit: 443 x 1000^2 x 8 = 3.544.000.000 Bit",
+    "Wirksame Datenrate: 8 x 1.000.000 x 100 / 100 = 8.000.000 bit/s",
+    "Dauer: 3.544.000.000 / 8.000.000 = 443,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-5",
+   "text": "Eine Datei mit 300 MB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "96"
+   },
+   "schritte": [
+    "Bit: 300 x 1000^2 x 8 = 2.400.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 100 / 100 = 25.000.000 bit/s",
+    "Dauer: 2.400.000.000 / 25.000.000 = 96,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-6",
+   "text": "Eine Datei mit 8.375 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "670"
+   },
+   "schritte": [
+    "Bit: 8.375 x 1000^2 x 8 = 67.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 67.000.000.000 / 100.000.000 = 670,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-7",
+   "text": "Eine Datei mit 1.440 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "720"
+   },
+   "schritte": [
+    "Bit: 1.440 x 1000^2 x 8 = 11.520.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 11.520.000.000 / 16.000.000 = 720,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-8",
+   "text": "Eine Datei mit 5.275 MB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "422"
+   },
+   "schritte": [
+    "Bit: 5.275 x 1000^2 x 8 = 42.200.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 42.200.000.000 / 100.000.000 = 422,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 1,
+   "startwert": "123456789-9",
+   "text": "Eine Datei mit 24 MB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie viele Sekunden dauert das?",
+   "felder": [
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "sekunden": "12"
+   },
+   "schritte": [
+    "Bit: 24 x 1000^2 x 8 = 192.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 192.000.000 / 16.000.000 = 12,00 Sekunden"
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-0",
+   "text": "Eine Datei mit 7 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "9",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 7 x 1000^3 x 8 = 56.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 56.000.000.000 / 100.000.000 = 560,00 Sekunden",
+    "Aufteilen: 560,00 Sek. = 0 Std. 9 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-1",
+   "text": "Eine Datei mit 10 GB wird mit 80 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "16",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 10 x 1000^3 x 8 = 80.000.000.000 Bit",
+    "Wirksame Datenrate: 80 x 1.000.000 x 100 / 100 = 80.000.000 bit/s",
+    "Dauer: 80.000.000.000 / 80.000.000 = 1.000,00 Sekunden",
+    "Aufteilen: 1.000,00 Sek. = 0 Std. 16 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-2",
+   "text": "Eine Datei mit 15 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "20",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 15 x 1000^3 x 8 = 120.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 120.000.000.000 / 100.000.000 = 1.200,00 Sekunden",
+    "Aufteilen: 1.200,00 Sek. = 0 Std. 20 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-3",
+   "text": "Eine Datei mit 13 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "8",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 13 x 1000^3 x 8 = 104.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 104.000.000.000 / 200.000.000 = 520,00 Sekunden",
+    "Aufteilen: 520,00 Sek. = 0 Std. 8 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-4",
+   "text": "Eine Datei mit 23 GB wird mit 80 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "38",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 23 x 1000^3 x 8 = 184.000.000.000 Bit",
+    "Wirksame Datenrate: 80 x 1.000.000 x 100 / 100 = 80.000.000 bit/s",
+    "Dauer: 184.000.000.000 / 80.000.000 = 2.300,00 Sekunden",
+    "Aufteilen: 2.300,00 Sek. = 0 Std. 38 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-5",
+   "text": "Eine Datei mit 50 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "13",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 50 x 1000^3 x 8 = 400.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 100 / 100 = 500.000.000 bit/s",
+    "Dauer: 400.000.000.000 / 500.000.000 = 800,00 Sekunden",
+    "Aufteilen: 800,00 Sek. = 0 Std. 13 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-6",
+   "text": "Eine Datei mit 41 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "54",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 41 x 1000^3 x 8 = 328.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 328.000.000.000 / 100.000.000 = 3.280,00 Sekunden",
+    "Aufteilen: 3.280,00 Sek. = 0 Std. 54 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-7",
+   "text": "Eine Datei mit 23 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "15",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 23 x 1000^3 x 8 = 184.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 184.000.000.000 / 200.000.000 = 920,00 Sekunden",
+    "Aufteilen: 920,00 Sek. = 0 Std. 15 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-8",
+   "text": "Eine Datei mit 31 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "8",
+    "sekunden": "16"
+   },
+   "schritte": [
+    "Bit: 31 x 1000^3 x 8 = 248.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 100 / 100 = 500.000.000 bit/s",
+    "Dauer: 248.000.000.000 / 500.000.000 = 496,00 Sekunden",
+    "Aufteilen: 496,00 Sek. = 0 Std. 8 Min. 16,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "0-9",
+   "text": "Eine Datei mit 9 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "12",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 9 x 1000^3 x 8 = 72.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 72.000.000.000 / 100.000.000 = 720,00 Sekunden",
+    "Aufteilen: 720,00 Sek. = 0 Std. 12 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-0",
+   "text": "Eine Datei mit 24 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "16",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 24 x 1000^3 x 8 = 192.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 192.000.000.000 / 200.000.000 = 960,00 Sekunden",
+    "Aufteilen: 960,00 Sek. = 0 Std. 16 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-1",
+   "text": "Eine Datei mit 20 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "26",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 20 x 1000^3 x 8 = 160.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 160.000.000.000 / 100.000.000 = 1.600,00 Sekunden",
+    "Aufteilen: 1.600,00 Sek. = 0 Std. 26 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-2",
+   "text": "Eine Datei mit 13 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "8",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 13 x 1000^3 x 8 = 104.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 104.000.000.000 / 200.000.000 = 520,00 Sekunden",
+    "Aufteilen: 520,00 Sek. = 0 Std. 8 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-3",
+   "text": "Eine Datei mit 24 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "12",
+    "sekunden": "48"
+   },
+   "schritte": [
+    "Bit: 24 x 1000^3 x 8 = 192.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 192.000.000.000 / 250.000.000 = 768,00 Sekunden",
+    "Aufteilen: 768,00 Sek. = 0 Std. 12 Min. 48,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-4",
+   "text": "Eine Datei mit 25 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "13",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 25 x 1000^3 x 8 = 200.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 200.000.000.000 / 250.000.000 = 800,00 Sekunden",
+    "Aufteilen: 800,00 Sek. = 0 Std. 13 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-5",
+   "text": "Eine Datei mit 49 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "13",
+    "sekunden": "4"
+   },
+   "schritte": [
+    "Bit: 49 x 1000^3 x 8 = 392.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 100 / 100 = 500.000.000 bit/s",
+    "Dauer: 392.000.000.000 / 500.000.000 = 784,00 Sekunden",
+    "Aufteilen: 784,00 Sek. = 0 Std. 13 Min. 4,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-6",
+   "text": "Eine Datei mit 7 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "58",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 7 x 1000^3 x 8 = 56.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 100 / 100 = 16.000.000 bit/s",
+    "Dauer: 56.000.000.000 / 16.000.000 = 3.500,00 Sekunden",
+    "Aufteilen: 3.500,00 Sek. = 0 Std. 58 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-7",
+   "text": "Eine Datei mit 28 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "14",
+    "sekunden": "56"
+   },
+   "schritte": [
+    "Bit: 28 x 1000^3 x 8 = 224.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 224.000.000.000 / 250.000.000 = 896,00 Sekunden",
+    "Aufteilen: 896,00 Sek. = 0 Std. 14 Min. 56,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-8",
+   "text": "Eine Datei mit 13 GB wird mit 40 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "43",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 13 x 1000^3 x 8 = 104.000.000.000 Bit",
+    "Wirksame Datenrate: 40 x 1.000.000 x 100 / 100 = 40.000.000 bit/s",
+    "Dauer: 104.000.000.000 / 40.000.000 = 2.600,00 Sekunden",
+    "Aufteilen: 2.600,00 Sek. = 0 Std. 43 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "1-9",
+   "text": "Eine Datei mit 18 GB wird mit 80 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "30",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 18 x 1000^3 x 8 = 144.000.000.000 Bit",
+    "Wirksame Datenrate: 80 x 1.000.000 x 100 / 100 = 80.000.000 bit/s",
+    "Dauer: 144.000.000.000 / 80.000.000 = 1.800,00 Sekunden",
+    "Aufteilen: 1.800,00 Sek. = 0 Std. 30 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-0",
+   "text": "Eine Datei mit 34 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "22",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 34 x 1000^3 x 8 = 272.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 272.000.000.000 / 200.000.000 = 1.360,00 Sekunden",
+    "Aufteilen: 1.360,00 Sek. = 0 Std. 22 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-1",
+   "text": "Eine Datei mit 8 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "10",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 8 x 1000^3 x 8 = 64.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 64.000.000.000 / 100.000.000 = 640,00 Sekunden",
+    "Aufteilen: 640,00 Sek. = 0 Std. 10 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-2",
+   "text": "Eine Datei mit 37 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "9",
+    "sekunden": "52"
+   },
+   "schritte": [
+    "Bit: 37 x 1000^3 x 8 = 296.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 100 / 100 = 500.000.000 bit/s",
+    "Dauer: 296.000.000.000 / 500.000.000 = 592,00 Sekunden",
+    "Aufteilen: 592,00 Sek. = 0 Std. 9 Min. 52,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-3",
+   "text": "Eine Datei mit 42 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "28",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 42 x 1000^3 x 8 = 336.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 336.000.000.000 / 200.000.000 = 1.680,00 Sekunden",
+    "Aufteilen: 1.680,00 Sek. = 0 Std. 28 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-4",
+   "text": "Eine Datei mit 28 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "37",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 28 x 1000^3 x 8 = 224.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 224.000.000.000 / 100.000.000 = 2.240,00 Sekunden",
+    "Aufteilen: 2.240,00 Sek. = 0 Std. 37 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-5",
+   "text": "Eine Datei mit 5 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "2",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 5 x 1000^3 x 8 = 40.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 40.000.000.000 / 250.000.000 = 160,00 Sekunden",
+    "Aufteilen: 160,00 Sek. = 0 Std. 2 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-6",
+   "text": "Eine Datei mit 18 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "24",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 18 x 1000^3 x 8 = 144.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 144.000.000.000 / 100.000.000 = 1.440,00 Sekunden",
+    "Aufteilen: 1.440,00 Sek. = 0 Std. 24 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-7",
+   "text": "Eine Datei mit 42 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "22",
+    "sekunden": "24"
+   },
+   "schritte": [
+    "Bit: 42 x 1000^3 x 8 = 336.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 336.000.000.000 / 250.000.000 = 1.344,00 Sekunden",
+    "Aufteilen: 1.344,00 Sek. = 0 Std. 22 Min. 24,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-8",
+   "text": "Eine Datei mit 4 GB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "21",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 4 x 1000^3 x 8 = 32.000.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 100 / 100 = 25.000.000 bit/s",
+    "Dauer: 32.000.000.000 / 25.000.000 = 1.280,00 Sekunden",
+    "Aufteilen: 1.280,00 Sek. = 0 Std. 21 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "4711-9",
+   "text": "Eine Datei mit 42 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "28",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 42 x 1000^3 x 8 = 336.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 336.000.000.000 / 200.000.000 = 1.680,00 Sekunden",
+    "Aufteilen: 1.680,00 Sek. = 0 Std. 28 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-0",
+   "text": "Eine Datei mit 11 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "2",
+    "sekunden": "56"
+   },
+   "schritte": [
+    "Bit: 11 x 1000^3 x 8 = 88.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 100 / 100 = 500.000.000 bit/s",
+    "Dauer: 88.000.000.000 / 500.000.000 = 176,00 Sekunden",
+    "Aufteilen: 176,00 Sek. = 0 Std. 2 Min. 56,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-1",
+   "text": "Eine Datei mit 28 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "18",
+    "sekunden": "40"
+   },
+   "schritte": [
+    "Bit: 28 x 1000^3 x 8 = 224.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 224.000.000.000 / 200.000.000 = 1.120,00 Sekunden",
+    "Aufteilen: 1.120,00 Sek. = 0 Std. 18 Min. 40,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-2",
+   "text": "Eine Datei mit 14 GB wird mit 200 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "9",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 14 x 1000^3 x 8 = 112.000.000.000 Bit",
+    "Wirksame Datenrate: 200 x 1.000.000 x 100 / 100 = 200.000.000 bit/s",
+    "Dauer: 112.000.000.000 / 200.000.000 = 560,00 Sekunden",
+    "Aufteilen: 560,00 Sek. = 0 Std. 9 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-3",
+   "text": "Eine Datei mit 10 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "5",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 10 x 1000^3 x 8 = 80.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 80.000.000.000 / 250.000.000 = 320,00 Sekunden",
+    "Aufteilen: 320,00 Sek. = 0 Std. 5 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-4",
+   "text": "Eine Datei mit 47 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "25",
+    "sekunden": "4"
+   },
+   "schritte": [
+    "Bit: 47 x 1000^3 x 8 = 376.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 376.000.000.000 / 250.000.000 = 1.504,00 Sekunden",
+    "Aufteilen: 1.504,00 Sek. = 0 Std. 25 Min. 4,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-5",
+   "text": "Eine Datei mit 28 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "37",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 28 x 1000^3 x 8 = 224.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 224.000.000.000 / 100.000.000 = 2.240,00 Sekunden",
+    "Aufteilen: 2.240,00 Sek. = 0 Std. 37 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-6",
+   "text": "Eine Datei mit 6 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "8",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 6 x 1000^3 x 8 = 48.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 100 / 100 = 100.000.000 bit/s",
+    "Dauer: 48.000.000.000 / 100.000.000 = 480,00 Sekunden",
+    "Aufteilen: 480,00 Sek. = 0 Std. 8 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-7",
+   "text": "Eine Datei mit 20 GB wird mit 80 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "33",
+    "sekunden": "20"
+   },
+   "schritte": [
+    "Bit: 20 x 1000^3 x 8 = 160.000.000.000 Bit",
+    "Wirksame Datenrate: 80 x 1.000.000 x 100 / 100 = 80.000.000 bit/s",
+    "Dauer: 160.000.000.000 / 80.000.000 = 2.000,00 Sekunden",
+    "Aufteilen: 2.000,00 Sek. = 0 Std. 33 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-8",
+   "text": "Eine Datei mit 4 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "2",
+    "sekunden": "8"
+   },
+   "schritte": [
+    "Bit: 4 x 1000^3 x 8 = 32.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 32.000.000.000 / 250.000.000 = 128,00 Sekunden",
+    "Aufteilen: 128,00 Sek. = 0 Std. 2 Min. 8,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 2,
+   "startwert": "123456789-9",
+   "text": "Eine Datei mit 45 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 100 %. Wie lange dauert das?",
+   "felder": [
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "minuten": "24",
+    "sekunden": "0"
+   },
+   "schritte": [
+    "Bit: 45 x 1000^3 x 8 = 360.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 100 / 100 = 250.000.000 bit/s",
+    "Dauer: 360.000.000.000 / 250.000.000 = 1.440,00 Sekunden",
+    "Aufteilen: 1.440,00 Sek. = 0 Std. 24 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-0",
+   "text": "Eine Datei mit 79 GiB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 85 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "4",
+    "minuten": "26",
+    "sekunden": "7,17"
+   },
+   "schritte": [
+    "Bit: 79 x 1024^3 x 8 = 678.604.832.768 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 85 / 100 = 42.500.000 bit/s",
+    "Dauer: 678.604.832.768 / 42.500.000 = 15.967,17 Sekunden",
+    "Aufteilen: 15.967,17 Sek. = 4 Std. 26 Min. 7,17 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-1",
+   "text": "Eine Datei mit 58 GB wird mit 1.000 Mbit/s übertragen. Die nutzbare Leistung ist 85 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "9",
+    "sekunden": "5,88"
+   },
+   "schritte": [
+    "Bit: 58 x 1000^3 x 8 = 464.000.000.000 Bit",
+    "Wirksame Datenrate: 1.000 x 1.000.000 x 85 / 100 = 850.000.000 bit/s",
+    "Dauer: 464.000.000.000 / 850.000.000 = 545,88 Sekunden",
+    "Aufteilen: 545,88 Sek. = 0 Std. 9 Min. 5,88 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-2",
+   "text": "Eine Datei mit 66 GB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "11",
+    "minuten": "44",
+    "sekunden": "0,00"
+   },
+   "schritte": [
+    "Bit: 66 x 1000^3 x 8 = 528.000.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 50 / 100 = 12.500.000 bit/s",
+    "Dauer: 528.000.000.000 / 12.500.000 = 42.240,00 Sekunden",
+    "Aufteilen: 42.240,00 Sek. = 11 Std. 44 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-3",
+   "text": "Eine Datei mit 47 GiB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "35",
+    "sekunden": "53,21"
+   },
+   "schritte": [
+    "Bit: 47 x 1024^3 x 8 = 403.726.925.824 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 75 / 100 = 187.500.000 bit/s",
+    "Dauer: 403.726.925.824 / 187.500.000 = 2.153,21 Sekunden",
+    "Aufteilen: 2.153,21 Sek. = 0 Std. 35 Min. 53,21 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-4",
+   "text": "Eine Datei mit 94 GiB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "38",
+    "sekunden": "27,01"
+   },
+   "schritte": [
+    "Bit: 94 x 1024^3 x 8 = 807.453.851.648 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 70 / 100 = 350.000.000 bit/s",
+    "Dauer: 807.453.851.648 / 350.000.000 = 2.307,01 Sekunden",
+    "Aufteilen: 2.307,01 Sek. = 0 Std. 38 Min. 27,01 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-5",
+   "text": "Eine Datei mit 72 GiB wird mit 1.000 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "12",
+    "sekunden": "53,09"
+   },
+   "schritte": [
+    "Bit: 72 x 1024^3 x 8 = 618.475.290.624 Bit",
+    "Wirksame Datenrate: 1.000 x 1.000.000 x 80 / 100 = 800.000.000 bit/s",
+    "Dauer: 618.475.290.624 / 800.000.000 = 773,09 Sekunden",
+    "Aufteilen: 773,09 Sek. = 0 Std. 12 Min. 53,09 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-6",
+   "text": "Eine Datei mit 52 GiB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 95 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "8",
+    "minuten": "9",
+    "sekunden": "46,62"
+   },
+   "schritte": [
+    "Bit: 52 x 1024^3 x 8 = 446.676.598.784 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 95 / 100 = 15.200.000 bit/s",
+    "Dauer: 446.676.598.784 / 15.200.000 = 29.386,62 Sekunden",
+    "Aufteilen: 29.386,62 Sek. = 8 Std. 9 Min. 46,62 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-7",
+   "text": "Eine Datei mit 36 GB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "2",
+    "minuten": "0",
+    "sekunden": "0,00"
+   },
+   "schritte": [
+    "Bit: 36 x 1000^3 x 8 = 288.000.000.000 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 80 / 100 = 40.000.000 bit/s",
+    "Dauer: 288.000.000.000 / 40.000.000 = 7.200,00 Sekunden",
+    "Aufteilen: 7.200,00 Sek. = 2 Std. 0 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-8",
+   "text": "Eine Datei mit 43 GB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "3",
+    "minuten": "49",
+    "sekunden": "20,00"
+   },
+   "schritte": [
+    "Bit: 43 x 1000^3 x 8 = 344.000.000.000 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 50 / 100 = 25.000.000 bit/s",
+    "Dauer: 344.000.000.000 / 25.000.000 = 13.760,00 Sekunden",
+    "Aufteilen: 13.760,00 Sek. = 3 Std. 49 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "0-9",
+   "text": "Eine Datei mit 9 GB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "6",
+    "sekunden": "24,00"
+   },
+   "schritte": [
+    "Bit: 9 x 1000^3 x 8 = 72.000.000.000 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 75 / 100 = 187.500.000 bit/s",
+    "Dauer: 72.000.000.000 / 187.500.000 = 384,00 Sekunden",
+    "Aufteilen: 384,00 Sek. = 0 Std. 6 Min. 24,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-0",
+   "text": "Eine Datei mit 57 GiB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "1",
+    "minuten": "48",
+    "sekunden": "48,35"
+   },
+   "schritte": [
+    "Bit: 57 x 1024^3 x 8 = 489.626.271.744 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 75 / 100 = 75.000.000 bit/s",
+    "Dauer: 489.626.271.744 / 75.000.000 = 6.528,35 Sekunden",
+    "Aufteilen: 6.528,35 Sek. = 1 Std. 48 Min. 48,35 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-1",
+   "text": "Eine Datei mit 49 GB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "5",
+    "minuten": "48",
+    "sekunden": "26,67"
+   },
+   "schritte": [
+    "Bit: 49 x 1000^3 x 8 = 392.000.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 75 / 100 = 18.750.000 bit/s",
+    "Dauer: 392.000.000.000 / 18.750.000 = 20.906,67 Sekunden",
+    "Aufteilen: 20.906,67 Sek. = 5 Std. 48 Min. 26,67 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-2",
+   "text": "Eine Datei mit 23 GiB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "2",
+    "minuten": "11",
+    "sekunden": "42,74"
+   },
+   "schritte": [
+    "Bit: 23 x 1024^3 x 8 = 197.568.495.616 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 50 / 100 = 25.000.000 bit/s",
+    "Dauer: 197.568.495.616 / 25.000.000 = 7.902,74 Sekunden",
+    "Aufteilen: 7.902,74 Sek. = 2 Std. 11 Min. 42,74 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-3",
+   "text": "Eine Datei mit 11 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "3",
+    "minuten": "3",
+    "sekunden": "20,00"
+   },
+   "schritte": [
+    "Bit: 11 x 1000^3 x 8 = 88.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 50 / 100 = 8.000.000 bit/s",
+    "Dauer: 88.000.000.000 / 8.000.000 = 11.000,00 Sekunden",
+    "Aufteilen: 11.000,00 Sek. = 3 Std. 3 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-4",
+   "text": "Eine Datei mit 55 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 95 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "8",
+    "minuten": "2",
+    "sekunden": "27,37"
+   },
+   "schritte": [
+    "Bit: 55 x 1000^3 x 8 = 440.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 95 / 100 = 15.200.000 bit/s",
+    "Dauer: 440.000.000.000 / 15.200.000 = 28.947,37 Sekunden",
+    "Aufteilen: 28.947,37 Sek. = 8 Std. 2 Min. 27,37 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-5",
+   "text": "Eine Datei mit 11 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "4",
+    "sekunden": "11,43"
+   },
+   "schritte": [
+    "Bit: 11 x 1000^3 x 8 = 88.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 70 / 100 = 350.000.000 bit/s",
+    "Dauer: 88.000.000.000 / 350.000.000 = 251,43 Sekunden",
+    "Aufteilen: 251,43 Sek. = 0 Std. 4 Min. 11,43 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-6",
+   "text": "Eine Datei mit 13 GiB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "23",
+    "sekunden": "15,86"
+   },
+   "schritte": [
+    "Bit: 13 x 1024^3 x 8 = 111.669.149.696 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 80 / 100 = 80.000.000 bit/s",
+    "Dauer: 111.669.149.696 / 80.000.000 = 1.395,86 Sekunden",
+    "Aufteilen: 1.395,86 Sek. = 0 Std. 23 Min. 15,86 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-7",
+   "text": "Eine Datei mit 56 GB wird mit 50 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "3",
+    "minuten": "33",
+    "sekunden": "20,00"
+   },
+   "schritte": [
+    "Bit: 56 x 1000^3 x 8 = 448.000.000.000 Bit",
+    "Wirksame Datenrate: 50 x 1.000.000 x 70 / 100 = 35.000.000 bit/s",
+    "Dauer: 448.000.000.000 / 35.000.000 = 12.800,00 Sekunden",
+    "Aufteilen: 12.800,00 Sek. = 3 Std. 33 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-8",
+   "text": "Eine Datei mit 47 GiB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 95 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "4",
+    "minuten": "43",
+    "sekunden": "19,03"
+   },
+   "schritte": [
+    "Bit: 47 x 1024^3 x 8 = 403.726.925.824 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 95 / 100 = 23.750.000 bit/s",
+    "Dauer: 403.726.925.824 / 23.750.000 = 16.999,03 Sekunden",
+    "Aufteilen: 16.999,03 Sek. = 4 Std. 43 Min. 19,03 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "1-9",
+   "text": "Eine Datei mit 59 GiB wird mit 1.000 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "12",
+    "sekunden": "4,01"
+   },
+   "schritte": [
+    "Bit: 59 x 1024^3 x 8 = 506.806.140.928 Bit",
+    "Wirksame Datenrate: 1.000 x 1.000.000 x 70 / 100 = 700.000.000 bit/s",
+    "Dauer: 506.806.140.928 / 700.000.000 = 724,01 Sekunden",
+    "Aufteilen: 724,01 Sek. = 0 Std. 12 Min. 4,01 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-0",
+   "text": "Eine Datei mit 81 GiB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "1",
+    "minuten": "32",
+    "sekunden": "46,28"
+   },
+   "schritte": [
+    "Bit: 81 x 1024^3 x 8 = 695.784.701.952 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 50 / 100 = 125.000.000 bit/s",
+    "Dauer: 695.784.701.952 / 125.000.000 = 5.566,28 Sekunden",
+    "Aufteilen: 5.566,28 Sek. = 1 Std. 32 Min. 46,28 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-1",
+   "text": "Eine Datei mit 84 GB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "9",
+    "minuten": "57",
+    "sekunden": "20,00"
+   },
+   "schritte": [
+    "Bit: 84 x 1000^3 x 8 = 672.000.000.000 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 75 / 100 = 18.750.000 bit/s",
+    "Dauer: 672.000.000.000 / 18.750.000 = 35.840,00 Sekunden",
+    "Aufteilen: 35.840,00 Sek. = 9 Std. 57 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-2",
+   "text": "Eine Datei mit 61 GiB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "23",
+    "sekunden": "17,30"
+   },
+   "schritte": [
+    "Bit: 61 x 1024^3 x 8 = 523.986.010.112 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 75 / 100 = 375.000.000 bit/s",
+    "Dauer: 523.986.010.112 / 375.000.000 = 1.397,30 Sekunden",
+    "Aufteilen: 1.397,30 Sek. = 0 Std. 23 Min. 17,30 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-3",
+   "text": "Eine Datei mit 72 GiB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 60 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "34",
+    "sekunden": "21,58"
+   },
+   "schritte": [
+    "Bit: 72 x 1024^3 x 8 = 618.475.290.624 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 60 / 100 = 300.000.000 bit/s",
+    "Dauer: 618.475.290.624 / 300.000.000 = 2.061,58 Sekunden",
+    "Aufteilen: 2.061,58 Sek. = 0 Std. 34 Min. 21,58 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-4",
+   "text": "Eine Datei mit 33 GiB wird mit 250 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "25",
+    "sekunden": "11,83"
+   },
+   "schritte": [
+    "Bit: 33 x 1024^3 x 8 = 283.467.841.536 Bit",
+    "Wirksame Datenrate: 250 x 1.000.000 x 75 / 100 = 187.500.000 bit/s",
+    "Dauer: 283.467.841.536 / 187.500.000 = 1.511,83 Sekunden",
+    "Aufteilen: 1.511,83 Sek. = 0 Std. 25 Min. 11,83 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-5",
+   "text": "Eine Datei mit 17 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "3",
+    "minuten": "8",
+    "sekunden": "53,33"
+   },
+   "schritte": [
+    "Bit: 17 x 1000^3 x 8 = 136.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 75 / 100 = 12.000.000 bit/s",
+    "Dauer: 136.000.000.000 / 12.000.000 = 11.333,33 Sekunden",
+    "Aufteilen: 11.333,33 Sek. = 3 Std. 8 Min. 53,33 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-6",
+   "text": "Eine Datei mit 73 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "38",
+    "sekunden": "56,00"
+   },
+   "schritte": [
+    "Bit: 73 x 1000^3 x 8 = 584.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 50 / 100 = 250.000.000 bit/s",
+    "Dauer: 584.000.000.000 / 250.000.000 = 2.336,00 Sekunden",
+    "Aufteilen: 2.336,00 Sek. = 0 Std. 38 Min. 56,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-7",
+   "text": "Eine Datei mit 30 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 90 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "44",
+    "sekunden": "26,67"
+   },
+   "schritte": [
+    "Bit: 30 x 1000^3 x 8 = 240.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 90 / 100 = 90.000.000 bit/s",
+    "Dauer: 240.000.000.000 / 90.000.000 = 2.666,67 Sekunden",
+    "Aufteilen: 2.666,67 Sek. = 0 Std. 44 Min. 26,67 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-8",
+   "text": "Eine Datei mit 3 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "1",
+    "sekunden": "0,00"
+   },
+   "schritte": [
+    "Bit: 3 x 1000^3 x 8 = 24.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 80 / 100 = 400.000.000 bit/s",
+    "Dauer: 24.000.000.000 / 400.000.000 = 60,00 Sekunden",
+    "Aufteilen: 60,00 Sek. = 0 Std. 1 Min. 0,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "4711-9",
+   "text": "Eine Datei mit 61 GiB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "12",
+    "minuten": "7",
+    "sekunden": "45,50"
+   },
+   "schritte": [
+    "Bit: 61 x 1024^3 x 8 = 523.986.010.112 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 75 / 100 = 12.000.000 bit/s",
+    "Dauer: 523.986.010.112 / 12.000.000 = 43.665,50 Sekunden",
+    "Aufteilen: 43.665,50 Sek. = 12 Std. 7 Min. 45,50 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-0",
+   "text": "Eine Datei mit 50 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "8",
+    "minuten": "40",
+    "sekunden": "50,00"
+   },
+   "schritte": [
+    "Bit: 50 x 1000^3 x 8 = 400.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 80 / 100 = 12.800.000 bit/s",
+    "Dauer: 400.000.000.000 / 12.800.000 = 31.250,00 Sekunden",
+    "Aufteilen: 31.250,00 Sek. = 8 Std. 40 Min. 50,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-1",
+   "text": "Eine Datei mit 95 GB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 60 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "3",
+    "minuten": "31",
+    "sekunden": "6,67"
+   },
+   "schritte": [
+    "Bit: 95 x 1000^3 x 8 = 760.000.000.000 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 60 / 100 = 60.000.000 bit/s",
+    "Dauer: 760.000.000.000 / 60.000.000 = 12.666,67 Sekunden",
+    "Aufteilen: 12.666,67 Sek. = 3 Std. 31 Min. 6,67 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-2",
+   "text": "Eine Datei mit 12 GiB wird mit 1.000 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "2",
+    "sekunden": "8,85"
+   },
+   "schritte": [
+    "Bit: 12 x 1024^3 x 8 = 103.079.215.104 Bit",
+    "Wirksame Datenrate: 1.000 x 1.000.000 x 80 / 100 = 800.000.000 bit/s",
+    "Dauer: 103.079.215.104 / 800.000.000 = 128,85 Sekunden",
+    "Aufteilen: 128,85 Sek. = 0 Std. 2 Min. 8,85 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-3",
+   "text": "Eine Datei mit 45 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "17",
+    "sekunden": "8,57"
+   },
+   "schritte": [
+    "Bit: 45 x 1000^3 x 8 = 360.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 70 / 100 = 350.000.000 bit/s",
+    "Dauer: 360.000.000.000 / 350.000.000 = 1.028,57 Sekunden",
+    "Aufteilen: 1.028,57 Sek. = 0 Std. 17 Min. 8,57 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-4",
+   "text": "Eine Datei mit 96 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 60 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "22",
+    "minuten": "13",
+    "sekunden": "20,00"
+   },
+   "schritte": [
+    "Bit: 96 x 1000^3 x 8 = 768.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 60 / 100 = 9.600.000 bit/s",
+    "Dauer: 768.000.000.000 / 9.600.000 = 80.000,00 Sekunden",
+    "Aufteilen: 80.000,00 Sek. = 22 Std. 13 Min. 20,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-5",
+   "text": "Eine Datei mit 31 GB wird mit 16 Mbit/s übertragen. Die nutzbare Leistung ist 75 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "5",
+    "minuten": "44",
+    "sekunden": "26,67"
+   },
+   "schritte": [
+    "Bit: 31 x 1000^3 x 8 = 248.000.000.000 Bit",
+    "Wirksame Datenrate: 16 x 1.000.000 x 75 / 100 = 12.000.000 bit/s",
+    "Dauer: 248.000.000.000 / 12.000.000 = 20.666,67 Sekunden",
+    "Aufteilen: 20.666,67 Sek. = 5 Std. 44 Min. 26,67 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-6",
+   "text": "Eine Datei mit 44 GB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 50 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "23",
+    "sekunden": "28,00"
+   },
+   "schritte": [
+    "Bit: 44 x 1000^3 x 8 = 352.000.000.000 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 50 / 100 = 250.000.000 bit/s",
+    "Dauer: 352.000.000.000 / 250.000.000 = 1.408,00 Sekunden",
+    "Aufteilen: 1.408,00 Sek. = 0 Std. 23 Min. 28,00 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-7",
+   "text": "Eine Datei mit 27 GiB wird mit 100 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "48",
+    "sekunden": "19,10"
+   },
+   "schritte": [
+    "Bit: 27 x 1024^3 x 8 = 231.928.233.984 Bit",
+    "Wirksame Datenrate: 100 x 1.000.000 x 80 / 100 = 80.000.000 bit/s",
+    "Dauer: 231.928.233.984 / 80.000.000 = 2.899,10 Sekunden",
+    "Aufteilen: 2.899,10 Sek. = 0 Std. 48 Min. 19,10 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-8",
+   "text": "Eine Datei mit 70 GiB wird mit 25 Mbit/s übertragen. Die nutzbare Leistung ist 70 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "9",
+    "minuten": "32",
+    "sekunden": "39,74"
+   },
+   "schritte": [
+    "Bit: 70 x 1024^3 x 8 = 601.295.421.440 Bit",
+    "Wirksame Datenrate: 25 x 1.000.000 x 70 / 100 = 17.500.000 bit/s",
+    "Dauer: 601.295.421.440 / 17.500.000 = 34.359,74 Sekunden",
+    "Aufteilen: 34.359,74 Sek. = 9 Std. 32 Min. 39,74 Sek."
+   ]
+  },
+  {
+   "art": "dauer",
+   "stufe": 3,
+   "startwert": "123456789-9",
+   "text": "Eine Datei mit 48 GiB wird mit 500 Mbit/s übertragen. Die nutzbare Leistung ist 80 %. Wie lange dauert das? Runde die Sekunden auf 2 Nachkommastellen.",
+   "felder": [
+    [
+     "stunden",
+     "Stunden"
+    ],
+    [
+     "minuten",
+     "Minuten"
+    ],
+    [
+     "sekunden",
+     "Sekunden"
+    ]
+   ],
+   "loesung": {
+    "stunden": "0",
+    "minuten": "17",
+    "sekunden": "10,79"
+   },
+   "schritte": [
+    "Bit: 48 x 1024^3 x 8 = 412.316.860.416 Bit",
+    "Wirksame Datenrate: 500 x 1.000.000 x 80 / 100 = 400.000.000 bit/s",
+    "Dauer: 412.316.860.416 / 400.000.000 = 1.030,79 Sekunden",
+    "Aufteilen: 1.030,79 Sek. = 0 Std. 17 Min. 10,79 Sek."
+   ]
+  }
+ ]
+}

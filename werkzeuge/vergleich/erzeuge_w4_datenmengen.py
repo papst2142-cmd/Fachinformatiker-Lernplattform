@@ -23,6 +23,12 @@
 #       "1000000000000.001" ergibt als float einen Wert > 1e12 -> Fehler.
 #  E-e) Fehlerfall in (a) heisst "bereich"; in (b) "groesse", "rate",
 #       "prozent" in dieser Pruefreihenfolge.
+#  Auftrag 2 (Weisung P3-17): klein = x > 0 und de(x,2) == "0,00";
+#       klein3 je Fall fuer Bit/Byte (a) bzw. bit/rate (b): x > 0, nicht
+#       ganz und Text nach Regel E-c == "0"; klein_sekunden (b): t > 0 und
+#       de(t,2) == "0,00". Texte bleiben unveraendert. Die Schluessel
+#       klein3/klein_sekunden stehen nur in Faellen ohne Fehler (wie die
+#       uebrigen Ergebnisfelder); klein3 ist immer eine Liste (ggf. leer).
 #  E-f) Zufallswerte werden immer im gueltigen Bereich erzeugt (Bereichsfaelle
 #       stehen gesondert); ein erzeugter Wert 0 wird neu gezogen.
 
@@ -68,6 +74,11 @@ def ganz_text(x):
     return s
 
 
+def ist_klein3(x):
+    # x > 0, nicht ganz und Text nach Regel E-c ergibt "0"
+    return x > 0 and x != int(x) and ganz_text(x) == "0"
+
+
 def datenmenge(wert_text, einheit):
     eintrag = {"wert": wert_text, "einheit": einheit, "fehler": None}
     wert = float(wert_text)
@@ -87,7 +98,8 @@ def datenmenge(wert_text, einheit):
     for z in ZIELE:
         text[z] = de(werte[z], 2)   # E-a: kein "< 0,01" im Text
     eintrag["text"] = text
-    eintrag["klein"] = [z for z in ZIELE if 0 < werte[z] < 0.01]
+    eintrag["klein"] = [z for z in ZIELE if werte[z] > 0 and text[z] == "0,00"]
+    eintrag["klein3"] = [n for n, x in (("Bit", bit), ("Byte", byte)) if ist_klein3(x)]
     return eintrag
 
 
@@ -122,6 +134,8 @@ def uebertragung(groesse_text, einheit, rate_text, rate_einheit, prozent_text):
     eintrag["text"] = {"bit": ganz_text(bit), "rate": ganz_text(rate),
                        "sekunden": de(t, 2), "std": std, "min": minute,
                        "sek": f"{sek // 100},{sek % 100:02d}"}
+    eintrag["klein3"] = [n for n, x in (("bit", bit), ("rate", rate)) if ist_klein3(x)]
+    eintrag["klein_sekunden"] = t > 0 and eintrag["text"]["sekunden"] == "0,00"
     return eintrag
 
 
@@ -186,6 +200,13 @@ def faelle_b():
     f += [("100000", "Byte", "0.008", "kbit/s", "100"), ("1", "TB", "1", "Mbit/s", "100"),
           ("10", "TiB", "16", "kbit/s", "12.5"), ("1", "GB", "1", "Gbit/s", "100"),
           ("1", "Byte", "1", "Gbit/s", "100"), ("1", "Byte", "3", "kbit/s", "33.3")]
+    # Auftrag 2: sehr lange Dauer (std riesig, exakt mit Ganzzahlen) und t > 0, gerundet 0,00
+    for e in ["TB", "TiB"]:
+        for p in ["1", "0.1"]:
+            f.append(("1000000000000", e, "0.001", "kbit/s", p))
+    f += [("1", "Byte", "1000000", "Gbit/s", "100"), ("0.001", "Byte", "1000000", "Gbit/s", "100"),
+          ("0.001", "Byte", "0.001", "kbit/s", "1"), ("0.001", "Byte", "999999.999", "Gbit/s", "0.1"),
+          ("1", "Byte", "0.001", "kbit/s", "0.001"), ("1", "Byte", "0.004", "kbit/s", "0.01")]
     rng = random.Random("G28 Uebertragung")
     for _ in range(300):
         g = zahl_text(rng, 9)
