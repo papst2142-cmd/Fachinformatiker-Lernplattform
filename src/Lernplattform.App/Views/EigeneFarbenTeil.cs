@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Texte;
@@ -121,7 +123,52 @@ public sealed class EigeneFarbenTeil
         zurueck.Click += (_, _) => Zuruecksetzen();
         panel.Children.Add(new WrapPanel { Children = { speichern, zurueck } });
         Neu();
+        panel.Loaded += ErstesLaden;
         return panel;
+    }
+
+    /// <summary>
+    /// Weisung P2-15 A1: Ergebnis des Vorwaermens fuer den Start ohne Bedienung (null = noch nicht
+    /// gelaufen, true = Werte, Einstellungen und Vorschau unveraendert).
+    /// </summary>
+    public static bool? VorwaermenUnveraendert { get; private set; }
+
+    // Weisung P2-15: einzige Aufrufstelle des Vorwaermens, nach dem ersten Bild der Ansicht
+    private void ErstesLaden(object? sender, RoutedEventArgs e)
+    {
+        ((Control)sender!).Loaded -= ErstesLaden;
+        Dispatcher.UIThread.Post(Vorwaermen, DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// Weisung P2-15 A1: Spur und Knopf jedes Reglers einmal unsichtbar neu zeichnen (gleiche
+    /// Werte), damit das erste Ziehen nicht den Kaltstart des Zeichnens traegt. Speichert nichts,
+    /// aendert keinen Wert, setzt keine Vorschau.
+    /// </summary>
+    private void Vorwaermen()
+    {
+        var vorher = Abbild();
+        foreach (var spur in _spuren.Values)
+        {
+            spur.Vorwaermen();
+        }
+        VorwaermenUnveraendert = Abbild() == vorher;
+    }
+
+    private string Abbild()
+    {
+        static string F(IBrush? b) => b switch
+        {
+            ISolidColorBrush s => s.Color.ToString(),
+            IGradientBrush g => string.Join(",", g.GradientStops.Select(x => x.Color + "@" + x.Offset)),
+            _ => "-",
+        };
+        var teile = new List<string> { _werte.ToString(), _welt?.ToString() ?? "-", _darstellung, _grund, _hinter, _zustand.Text ?? "", _warnung.Text ?? "",
+            F(_vorschau.Background), F(_vorschauKarte.Background), F(_vorschauKarte.BorderBrush), F(_vTitel.Foreground), F(_vText.Foreground),
+            F(_vNeben.Foreground), F(_vLink.Foreground), F(_vKnopf.Background), F(_vKnopfText.Foreground), Zustand.Werte.ToJsonString() };
+        teile.AddRange(_muster.Values.Select(m => F(m.Background)));
+        teile.AddRange(_regler.Values.Select(r => r.Regler.Value + "/" + r.Wert.Text));
+        return string.Join("|", teile);
     }
 
     private static EigeneWerte Mit(EigeneWerte werte, string teil, string kanal, int wert)

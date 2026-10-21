@@ -69,6 +69,7 @@ public static class AutoMessung
 
         funde += await W3MesspunkteAsync(ansicht, inhalte);
         funde += await FarbreglerAsync(ansicht);
+        funde += VorwaermenPruefen();
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -394,6 +395,22 @@ public static class AutoMessung
             return 1;
         }
         return 0;
+    }
+
+    /// <summary>
+    /// Weisung P2-15 A1: Das Vorwaermen der Farbregler beim Aufbau von Eigene Farben ist gelaufen
+    /// und hat weder Werte noch Einstellungen noch Vorschau veraendert (ruft es nicht selbst auf).
+    /// </summary>
+    private static int VorwaermenPruefen()
+    {
+        var ergebnis = EigeneFarbenTeil.VorwaermenUnveraendert;
+        Messwerte.Notiere(ergebnis switch
+        {
+            true => "Farbregler vorgewaermt beim Aufbau: Werte, Einstellungen und Vorschau unveraendert",
+            false => "Farbregler vorgewaermt beim Aufbau: FEHLER, etwas hat sich veraendert",
+            _ => "Farbregler vorgewaermt beim Aufbau: FEHLER, nicht gelaufen",
+        });
+        return ergebnis == true ? 0 : 1;
     }
 
     /// <summary>

@@ -121,6 +121,19 @@ public sealed class FarbRegler
         _rand.Color = Color.Parse(rand);
     }
 
+    /// <summary>
+    /// Weisung P2-15: Spur und Knopf mit denselben Werten noch einmal zeichnen (neuer Verlauf,
+    /// gleiche Farben). Aendert keinen Wert; nur EigeneFarbenTeil ruft es einmal beim Aufbau auf.
+    /// </summary>
+    public void Vorwaermen()
+    {
+        if (_gezeichnet is { } werte)
+        {
+            _gezeichnet = null;
+            Zeichne(werte);
+        }
+    }
+
     private void Taste(object? sender, KeyEventArgs e)
     {
         var umschalt = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
