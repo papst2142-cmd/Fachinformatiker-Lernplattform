@@ -176,6 +176,8 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_w4_rechentrainer.py neu/rechentrainer_w4.json
           # Phase 3 W4b (Weisung P3-20): G29 Bild und Video mit Uebernahme, unabhaengiges Skript
           python3 -I werkzeuge/vergleich/erzeuge_w4_video.py neu/video.json
+          # Phase 3 W4c (Weisung P3-22): G30 WiSo-Rechner, unabhaengiges Skript
+          python3 -I werkzeuge/vergleich/erzeuge_w4_wiso.py neu/wiso.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
@@ -193,7 +195,7 @@ jobs:
                        "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
-                       "video.json"):
+                       "video.json", "wiso.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
