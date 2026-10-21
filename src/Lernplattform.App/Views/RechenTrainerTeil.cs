@@ -63,7 +63,7 @@ public sealed class RechenTrainerTeil : StackPanel
             {
                 LernTeile.Label(TrainerBereich), _bereich,
                 Abstand(LernTeile.Label(TrainerArt), 6),
-                _arten["netzwerk"], _arten["daten"],
+                _arten["netzwerk"], _arten["daten"], _arten["wiso"],
                 Abstand(LernTeile.Label(TrainerStufe), 6), _stufen,
                 new WrapPanel { Children = { starten, _statistik } },
             },
@@ -175,7 +175,7 @@ public sealed class RechenTrainerTeil : StackPanel
     /// Eingabefehler) oder bis zur Auswertung. Mit <paramref name="eingabefehler"/> wird einmal
     /// mit leeren Feldern geprueft (roter Hinweis). Der echte Ablauf bleibt unberuehrt.
     /// </summary>
-    internal void Probe(string art, int stufe, bool pruefen, bool beenden = false, bool eingabefehler = false)
+    internal void Probe(string art, int stufe, bool pruefen, bool beenden = false, bool eingabefehler = false, bool richtig = false)
     {
         if (!_probe)
         {
@@ -195,7 +195,7 @@ public sealed class RechenTrainerTeil : StackPanel
         }
         else if (pruefen || beenden)
         {
-            ProbeFuellen();
+            ProbeFuellen(richtig);
             Druecken();
         }
         while (beenden && _ablauf.Zustand != TrainerZustand.Beendet)
@@ -206,13 +206,14 @@ public sealed class RechenTrainerTeil : StackPanel
         Anzeigen();
     }
 
-    private void ProbeFuellen()
+    private void ProbeFuellen(bool richtig = false)
     {
-        if (_ablauf?.Aufgabe is { Zahlenfelder: true } && _ablauf.Zustand == TrainerZustand.Offen)
+        if (_ablauf?.Aufgabe is { Zahlenfelder: true } a && _ablauf.Zustand == TrainerZustand.Offen)
         {
-            foreach (var feld in _eingaben.Values)
+            foreach (var (schluessel, feld) in _eingaben)
             {
-                feld.Text = "0";
+                // W4c: "richtig" fuellt die Loesung (Ansicht "richtig geprueft"), sonst "0"
+                feld.Text = richtig ? a.Loesung[schluessel] : "0";
             }
         }
     }

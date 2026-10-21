@@ -180,6 +180,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
         Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
+        Messwerte.Notiere("  und 26 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 %, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen, Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -404,6 +405,7 @@ public static class AutoMessung
         d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
         d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
         funde += await VideoMesspunkteAsync(ansicht, rechner, DatenMesspunkt);
+        funde += await WisoMesspunkteAsync(ansicht, rechner, DatenMesspunkt);
         rechner.Waehle("subnetting");
         await ansicht.BildFertigAsync();
         // W3 (R7): Reiter Trainer (erstes Zeigen liest die Statistik), Runde und Pruefen ohne Speichern
@@ -415,6 +417,11 @@ public static class AutoMessung
         await Messpunkt("Trainer Pruefen Uebertragungsdauer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: true), ohneFehler: false);
         await Messpunkt("Trainer Runde Bild und Video Schwer (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: false), ohneFehler: false);
         await Messpunkt("Trainer Pruefen Bild und Video (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: true), ohneFehler: false);
+        // W4c (Weisung P3-23): Trainer WiSo
+        await Messpunkt("Trainer Runde Verkaufskalkulation Schwer (ohne Speichern)", () => rechner.Trainer.Probe("verkauf", 3, pruefen: false), ohneFehler: false);
+        await Messpunkt("Trainer Pruefen Verkaufskalkulation richtig (ohne Speichern)", () => rechner.Trainer.Probe("verkauf", 3, pruefen: true, richtig: true), ohneFehler: false);
+        await Messpunkt("Trainer Runde Amortisation Schwer (ohne Speichern)", () => rechner.Trainer.Probe("amort", 3, pruefen: false), ohneFehler: false);
+        await Messpunkt("Trainer Pruefen Amortisation falsch (ohne Speichern)", () => rechner.Trainer.Probe("amort", 3, pruefen: true), ohneFehler: false);
         rechner.Trainer.ProbeEnde();
         rechner.Tab("rechner");
         await ansicht.BildFertigAsync();
@@ -494,6 +501,81 @@ public static class AutoMessung
         d.DauerRechnen();
         v.Eingabe("1920", "1080", "30", "24", "", RechnerTexte.VideoDefaultCompression);
         v.Rechnen();
+        await ansicht.BildFertigAsync();
+        return funde;
+    }
+
+    /// <summary>W4c: groesste Werte je Rechner (Laufzeit-Einheit nur bei Zinsen).</summary>
+    private static readonly (string Rechner, string[] Werte, string? Einheit)[] WisoGross =
+    [
+        ("verkauf", ["999.999.999,99", "99,99", "99,999", "99,999", "99,999", "100"], null),
+        ("deckung", ["1.000.000.000", "0,01", "1.000.000.000", "10.000.000"], null),
+        ("afa", ["1.000.000.000", "50", "12"], null),
+        ("zinsen", ["1.000.000.000", "100", "600"], "monate"),
+        ("amort", ["20.000", "6.000", "500"], null),
+    ];
+
+    /// <summary>W4c: alle WiSo-Rechner zurueck auf ihre Vorgaben und Tage, Bezug gewaehlt, Ergebnisse neu.</summary>
+    private static void WisoVorgaben(WisoKarte w)
+    {
+        foreach (var (rechner, _) in RechnerTexte.WisoAuswahl)
+        {
+            w.Eingabe(rechner, [.. RechnerTexte.WisoFelder[rechner].Select(f => f.Vorgabe)], rechner == "zinsen" ? "tage" : null);
+            w.Rechnen(rechner);
+        }
+        w.Waehle("bezug");
+    }
+
+    /// <summary>
+    /// Phase 3 W4c (Weisung P3-23 Punkt 3c): Karte "WiSo-Rechner" waehlen, je Rechner mit den Vorgaben
+    /// rechnen und den Rechenweg oeffnen (Messpunkte wie W4b) und in der echten Oberflaeche die
+    /// Ergebniszeile der Wortliste, den Fehler "zu viele Nachkommastellen" und die Pille Monate
+    /// pruefen. Jede Abweichung ist ein Fund. Danach stehen alle Rechner wieder auf ihren Vorgaben.
+    /// </summary>
+    private static async Task<int> WisoMesspunkteAsync(MainView ansicht, RechnerSeite rechner,
+        Func<string, Action, Func<string>, Task> messpunkt)
+    {
+        var funde = 0;
+        var w = rechner.Wiso;
+        void Pruefe(bool richtig, string was)
+        {
+            if (!richtig)
+            {
+                Messwerte.Notiere("  FEHLER (WiSo-Rechner): " + was);
+                funde++;
+            }
+        }
+        await messpunkt("Rechner Auswahl WiSo", () => rechner.Waehle("wiso"), () => "");
+        Pruefe(rechner.Gewaehlt == "wiso" && w.Gewaehlt == "bezug", "Auswahl nicht WiSo / Bezug");
+        var letzte = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["bezug"] = "= Bezugspreis", ["verkauf"] = "= Bruttoverkaufspreis", ["deckung"] = "Gewinnschwelle",
+            ["afa"] = "Jahr 4 (3 Monate)", ["zinsen"] = "Kapital mit Zinsen", ["amort"] = "In Jahren und Monaten",
+        };
+        var soll = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["bezug"] = "1.024,60 €", ["verkauf"] = "1.976,83 €", ["deckung"] = "400 Stück",
+            ["afa"] = "150,00 €, Restbuchwert 0,00 €", ["zinsen"] = "5.056,25 €", ["amort"] = "3 Jahre",
+        };
+        foreach (var (r, name) in RechnerTexte.WisoAuswahl)
+        {
+            await messpunkt("WiSo Auswahl " + name, () => w.Waehle(r), () => "");
+            await messpunkt("WiSo " + name + " berechnen", () => w.Rechnen(r), () => w.Fehler(r));
+            Pruefe(w.Kasten(r).Roh.Split('\n').Any(z => z.StartsWith(letzte[r], StringComparison.Ordinal) && z.EndsWith(": " + soll[r], StringComparison.Ordinal)),
+                name + ": Ergebnis ohne \"" + letzte[r] + " : " + soll[r] + "\"");
+            await messpunkt("Rechenweg (WiSo " + name + ") oeffnen", () => w.Weg(r).Zeigen(true), () => w.Fehler(r));
+            w.Weg(r).Zeigen(false);
+        }
+        w.Waehle("bezug");
+        w.Eingabe("bezug", ["1.200,001", "15", "2", "25"]);
+        w.Rechnen("bezug");
+        Pruefe(w.Fehler("bezug") == "Bitte höchstens 2 Nachkommastellen (volle Cent) eingeben: Listeneinkaufspreis (€)." && w.Kasten("bezug").Roh.Length == 0,
+            "Fehler zu viele Nachkommastellen fehlt oder Ergebnis nicht leer");
+        w.Waehle("zinsen");
+        w.Eingabe("zinsen", ["5.000", "4,5", "3"], "monate");
+        await messpunkt("WiSo Zinsen 3 Monate berechnen", () => w.Rechnen("zinsen"), () => w.Fehler("zinsen"));
+        Pruefe(w.Kasten("zinsen").Roh.Split('\n').Any(z => z.EndsWith(": 3 Monate = 90 Tage", StringComparison.Ordinal)), "Pille Monate: Laufzeit nicht \"3 Monate = 90 Tage\"");
+        WisoVorgaben(w);
         await ansicht.BildFertigAsync();
         return funde;
     }
@@ -594,6 +676,35 @@ public static class AutoMessung
         v.Uebernehmen();
         await ansicht.BildFertigAsync();
         yield return "calc/uebernahme-byte";
+        // W4c: WiSo-Rechner je Rechner mit Vorgaben (Rechenweg offen), groesste Werte, Fehler, Pille Monate
+        r.Waehle("wiso");
+        var w = r.Wiso;
+        foreach (var (rechner, _) in RechnerTexte.WisoAuswahl)
+        {
+            w.Waehle(rechner);
+            w.Rechnen(rechner);
+            await ansicht.BildFertigAsync();
+            yield return "calc/wiso-" + rechner;
+        }
+        foreach (var (rechner, werte, einheit) in WisoGross)
+        {
+            w.Waehle(rechner);
+            w.Eingabe(rechner, werte, einheit);
+            w.Rechnen(rechner);
+            await ansicht.BildFertigAsync();
+            yield return "calc/wiso-" + rechner + "-gross";
+        }
+        w.Waehle("bezug");
+        w.Eingabe("bezug", ["1.200,001", "15", "2", "25"]);
+        w.Rechnen("bezug");
+        await ansicht.BildFertigAsync();
+        yield return "calc/wiso-fehler";
+        w.Waehle("zinsen");
+        w.Eingabe("zinsen", ["5.000", "4,5", "3"], "monate");
+        w.Rechnen("zinsen");
+        await ansicht.BildFertigAsync();
+        yield return "calc/wiso-zinsen-monate";
+        WisoVorgaben(w);
         r.Waehle("raid");
         r.RaidEingabe("abc", "1000");
         r.RaidRechnen();
@@ -609,7 +720,11 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
         yield return "calc/trainer";
         // W3 (R7): Trainer ohne Speichern (Probe): laengste Rechenwege und Rueckmeldungen
-        foreach (var (art, stufe) in new[] { ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3), ("einheiten", 3), ("dauer", 3), ("video", 3) })
+        foreach (var (art, stufe) in new[]
+        {
+            ("ipv6", 3), ("bedarf", 3), ("teilen", 3), ("ipv4", 3), ("einheiten", 3), ("dauer", 3), ("video", 3),
+            ("bezug", 3), ("verkauf", 3), ("deckung", 3), ("afa", 3), ("zinsen", 3), ("amort", 3),
+        })
         {
             r.Trainer.Probe(art, stufe, pruefen: false);
             await ansicht.BildFertigAsync();
@@ -624,6 +739,9 @@ public static class AutoMessung
         r.Trainer.Probe("video", 3, pruefen: true, eingabefehler: true);
         await ansicht.BildFertigAsync();
         yield return "calc/trainer-video-eingabefehler";
+        r.Trainer.Probe("amort", 3, pruefen: true, eingabefehler: true);
+        await ansicht.BildFertigAsync();
+        yield return "calc/trainer-amort-eingabefehler";
         r.Trainer.Probe("vlsm", 3, pruefen: false, beenden: true);
         await ansicht.BildFertigAsync();
         yield return "calc/trainer-auswertung";
@@ -637,6 +755,7 @@ public static class AutoMessung
         r.RaidRechnen();
         v.Eingabe("1920", "1080", "30", "24", "", RechnerTexte.VideoDefaultCompression);
         v.Rechnen();
+        WisoVorgaben(r.Wiso);
         r.UsvFeld("minuten", "15");
         r.UsvRechnen("empfehlung", leise: true);
         foreach (var weg in r.Rechenwege)

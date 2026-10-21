@@ -178,7 +178,8 @@ public static class Wiso
 
     /// <summary>
     /// Statische Amortisation: Jahre = Investition / (Einsparung - laufende Kosten), auf 2 Stellen.
-    /// Die Aufteilung in Jahre und Monate folgt erst nach der Entscheidung zur Monatsregel (P3-16 4d).
+    /// Monatsregel (F1, Weisung P3-23): Monate gesamt = Investition x 12 / Rueckfluss, exakt ueber
+    /// den Rest auf ganze Monate aufgerundet, nie ueber die gerundete Jahreszahl.
     /// </summary>
     public static WisoErgebnis<AmortWerte> Amortisation(decimal investition, decimal einsparung, decimal laufend)
     {
@@ -192,7 +193,7 @@ public static class Wiso
         {
             return new(new WisoFehler(null, WisoFehlerArt.Nie), null);
         }
-        return new(null, new AmortWerte(rueckfluss, R(investition / rueckfluss)));
+        return new(null, new AmortWerte(rueckfluss, R(investition / rueckfluss), Geld.Aufrunden(investition * 12, rueckfluss)));
     }
 }
 
@@ -226,4 +227,5 @@ public sealed record AfaWerte(decimal Jaehrlich, IReadOnlyList<AfaJahr> Jahre);
 
 public sealed record ZinsenWerte(decimal Zinsen, decimal Endkapital);
 
-public sealed record AmortWerte(decimal Rueckfluss, decimal Jahre);
+/// <summary>Rueckfluss, Jahre (2 Stellen) und Monate gesamt (aufgerundet); Jahre/Monate daraus mit / und % 12.</summary>
+public sealed record AmortWerte(decimal Rueckfluss, decimal Jahre, long Monate);

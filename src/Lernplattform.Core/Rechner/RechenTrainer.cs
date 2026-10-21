@@ -114,14 +114,26 @@ public static class RechenTrainer
         ("video", ArtVideo),
     ];
 
-    /// <summary>Alle Aufgabenarten (Netzwerk, dann Daten).</summary>
-    public static readonly IReadOnlyList<(string Art, string Name)> AlleArten = [.. Arten, .. DatenArten];
+    /// <summary>W4c (Weisung P3-23, Wortliste W4c Abschnitt 6): Aufgabenarten im Bereich "WiSo".</summary>
+    public static readonly IReadOnlyList<(string Art, string Name)> WisoArten =
+    [
+        ("bezug", ArtBezug),
+        ("verkauf", ArtVerkauf),
+        ("deckung", ArtDeckung),
+        ("afa", ArtAfa),
+        ("zinsen", ArtZinsen),
+        ("amort", ArtAmort),
+    ];
+
+    /// <summary>Alle Aufgabenarten (Netzwerk, Daten, dann WiSo).</summary>
+    public static readonly IReadOnlyList<(string Art, string Name)> AlleArten = [.. Arten, .. DatenArten, .. WisoArten];
 
     /// <summary>Bereich-Pillen des Trainers (W4a: Netzwerk, Daten; WiSo ab W4c) mit ihren Arten.</summary>
     public static readonly IReadOnlyList<(string Wert, string Name, IReadOnlyList<(string Art, string Name)> Arten)> Bereiche =
     [
         ("netzwerk", BereichNetzwerk, Arten),
         ("daten", BereichDaten, DatenArten),
+        ("wiso", BereichWiso, WisoArten),
     ];
 
     /// <summary>TRAINER_LEVELS.</summary>
@@ -174,6 +186,12 @@ public static class RechenTrainer
             "einheiten" => DatenTrainer.Einheiten(rng, stufe),
             "dauer" => DatenTrainer.Dauer(rng, stufe),
             "video" => DatenTrainer.Video(rng, stufe),
+            "bezug" => WisoTrainer.Bezug(rng, stufe),
+            "verkauf" => WisoTrainer.Verkauf(rng, stufe),
+            "deckung" => WisoTrainer.Deckung(rng, stufe),
+            "afa" => WisoTrainer.Abschreibung(rng, stufe),
+            "zinsen" => WisoTrainer.Zinsen(rng, stufe),
+            "amort" => WisoTrainer.Amortisation(rng, stufe),
             _ => throw new ArgumentOutOfRangeException(nameof(art), art, "unbekannte Aufgabenart"),
         };
     }
