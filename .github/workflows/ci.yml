@@ -46,6 +46,10 @@ jobs:
       - name: Sicherung fuer die alte App in Python 0.63.2 einlesen
         if: runner.os == 'Linux'
         run: python3 -I werkzeuge/vergleich/pruefe_ruecksicherung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ruecksicherung
+      # Phase 4, W2: C#-Sicherung mit der Fachrichtung (zz-einstellungen) in Python 0.63.2 (+1 Projekt, dokumentiert)
+      - name: Sicherung mit Fachrichtung in Python 0.63.2 einlesen
+        if: runner.os == 'Linux'
+        run: python3 -I werkzeuge/vergleich/pruefe_ausbildung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ausbildung
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen

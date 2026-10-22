@@ -347,6 +347,25 @@ public class AusbildungTests
         Assert.Equal(Neu(sicherungOhne) + 1, Neu(sicherungMit));
     }
 
+    /// <summary>
+    /// Beleg fuer die CI (werkzeuge/vergleich/pruefe_ausbildung.py): C#-Sicherung mit einem Projekt
+    /// und der Zeile; Python 0.63.2 liest sie, zaehlt die Zeile als zweites Projekt (+1, dokumentierte
+    /// Abweichung) und uebernimmt sie beim Zusammenfuehren.
+    /// </summary>
+    [Fact]
+    public void BelegDateiFuerPython()
+    {
+        var beleg = Path.Combine(AppContext.BaseDirectory, "beleg_ausbildung");
+        Directory.CreateDirectory(beleg);
+        using var g = new Geraet("PC Beleg", "beleg");
+        g.Schreiber.KarteSpeichern("Netzwerk", "Frage A", "karte", true);
+        Assert.True(g.Schreiber.ProjektFeldSpeichern("a1b2c3d4e5f6", "titel", "Mein Projekt"));
+        Assert.True(Ausbildung.Waehlen(g.Schreiber, "ae"));
+        var bytes = Sicherung(g);
+        Ruecksicherung.Speichern(Path.Combine(beleg, "ausbildung.fisisicherung"), bytes);
+        Assert.Contains("Zusammenfassung projekte: 1", SicherungsPruefung.Pruefe(bytes));
+    }
+
     // -- Kontrollfehler: die Zeile ist nie ein Projekt der Kachel -----------------------------
 
     [Fact]
