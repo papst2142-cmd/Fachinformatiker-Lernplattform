@@ -119,6 +119,8 @@ public sealed class UebernahmeTeil
             return;
         }
 
+        // W3 (flush_inputs(revealed=False) nach dem Lesen, vor der Vorschau, app_gui 8082, main.py 4720): offene Eingaben im Abschlussprojekt zuerst speichern
+        Zustand.EingabenSpeichern();
         var quelle = UebernahmeAblauf.Erkennen(inhalt);
         Austausch daten;
         UebernahmeBericht vorschau;

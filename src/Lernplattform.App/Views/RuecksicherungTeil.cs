@@ -92,6 +92,8 @@ public sealed class RuecksicherungTeil
             await Dialog.Zeigen(RuecksicherungTexte.Knopf, AbgleichTexte.Belegt, Dialog.Ok);
             return;
         }
+        // W3 (flush_inputs(revealed=False) vor dem Datei-Dialog, app_gui 8043, main.py 4686): offene Eingaben im Abschlussprojekt zuerst speichern
+        Zustand.EingabenSpeichern();
         var vorschlag = Ruecksicherung.DateiName(DateTime.Now);
         var datei = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
