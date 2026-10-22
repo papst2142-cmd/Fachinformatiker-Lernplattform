@@ -180,6 +180,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         foreach (var (wert, text) in PruefungTexte.Fachrichtungen)
         {
             var wahl = Auswahl(text, "fachrichtung", wert == aktuell);
+            wahl.Content = new LernText(text, "Normal", FontWeight.Normal, "Pinsel.text");   // lange Namen nie im Wort trennen
             wahl.Tag = wert;
             wahl.IsCheckedChanged += (_, _) =>
             {

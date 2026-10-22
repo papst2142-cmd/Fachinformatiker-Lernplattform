@@ -150,13 +150,14 @@ public sealed class TrainerSeite : UserControl
         Mit(u =>
         {
             _nachher = null;
-            if (_art.Wert != TrainerTexte.Uebung)
+            var pruefung = _art.Wert != TrainerTexte.Uebung;
+            if (KlausurAblauf.UebungGesperrt(pruefung, pruefung && _klausur!.Laeuft))
             {
-                if (_klausur!.Laeuft)
-                {
-                    _ = Dialog.Zeigen(PruefungTexte.LaeuftTitel, PruefungTexte.LaeuftText, Dialog.Ok);
-                    return;
-                }
+                _ = Dialog.Zeigen(PruefungTexte.LaeuftTitel, PruefungTexte.LaeuftText, Dialog.Ok);
+                return;
+            }
+            if (pruefung)
+            {
                 _art.Waehle(TrainerTexte.Uebung);
                 ArtZeigen(TrainerTexte.Uebung);
             }
@@ -341,6 +342,16 @@ public sealed class TrainerSeite : UserControl
 
     /// <summary>Nur fuer den Start ohne Bedienung und die Tests.</summary>
     internal KlausurTeil? Klausur => _klausur;
+
+    /// <summary>Nur fuer den Start ohne Bedienung: Umschalter "Übung"/"Prüfung" wie ein Klick.</summary>
+    internal void ArtWaehlen(string art)
+    {
+        if (_art.Wert != art)
+        {
+            _art.Waehle(art);
+            ArtZeigen(art);
+        }
+    }
 
     /// <summary>Filter, Pool und Fragenanzahl zeigen (_update_pool).</summary>
     private void Vorbereitung()
