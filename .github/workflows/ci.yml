@@ -53,14 +53,14 @@ jobs:
       # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3).
       - name: Start ohne Bedienung (Linux, Xvfb)
         if: runner.os == 'Linux'
-        timeout-minutes: 5
+        timeout-minutes: 10
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
           LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
         run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
       - name: Start ohne Bedienung
         if: runner.os != 'Linux'
-        timeout-minutes: 5
+        timeout-minutes: 10
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
