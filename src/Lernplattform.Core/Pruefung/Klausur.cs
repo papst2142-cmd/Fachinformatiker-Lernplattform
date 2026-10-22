@@ -142,8 +142,8 @@ public static class Klausur
     /// <summary>EXAM[art] oder null.</summary>
     public static KlausurArt? Art(string? art) => Arten.FirstOrDefault(a => a.Art == art);
 
-    /// <summary>random.Random(None): Startwert aus dem Zufallsgenerator des Systems (os.urandom).</summary>
-    public static PythonZufall Zufall() => new(new BigInteger(RandomNumberGenerator.GetBytes(32), isUnsigned: true));
+    /// <summary>Wie ExamPanel.start: new_exam(..., seed=random.randrange(1 << 30)).</summary>
+    public static PythonZufall Zufall() => new(RandomNumberGenerator.GetInt32(1 << 30));
 
     // -- Bereits gestellt ---------------------------------------------------------------------
 
