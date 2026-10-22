@@ -64,8 +64,8 @@ jobs:
           repository: papst2142-cmd/Fisi-Lernplattform
           ref: v0.63.2
           path: python-linie
+      # Python auf allen Systemen: Urteil des Start-Tests (werkzeuge/starttest/urteil.py, P4-13)
       - uses: actions/setup-python@v7
-        if: runner.os == 'Linux'
         with:
           python-version: "3.12"
       - name: Sicherung fuer die alte App in Python 0.63.2 einlesen
@@ -81,25 +81,25 @@ jobs:
       # wechseln, Layoutpruefung breit und schmal (384 x 832). Rot bei Absturz, bei einem
       # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3). Ueberschreitet ein
       # wiederholbarer Messpunkt seine Grenze, misst der Start-Test ihn bis zu 3 Mal (P4-12 B6).
-      - name: Start ohne Bedienung (Linux, Xvfb)
-        if: runner.os == 'Linux'
+      # Neustart-Regel (Weisung P4-13): Rueckgabe 3 im 1. Lauf -> 2. Lauf in neuem Prozess mit
+      # frischem Datenordner; rot nur, wenn derselbe Messpunkt in beiden Laeufen rot ist.
+      # Absturz (andere Rueckgabe, Ausnahme, keine Messdatei) startet nicht neu und ist rot.
+      - name: Start ohne Bedienung (1. Lauf)
+        id: lauf1
         timeout-minutes: 10
-        env:
-          LERNPLATTFORM_MESSUNG_AUTO: "1"
-          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
-        run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
-      - name: Start ohne Bedienung
-        if: runner.os != 'Linux'
+        shell: bash
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+      - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: steps.lauf1.outputs.rc == '3'
         timeout-minutes: 10
         shell: bash
         env:
-          LERNPLATTFORM_MESSUNG_AUTO: "1"
-          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
-        run: dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
       - uses: actions/upload-artifact@v7
         with:
           name: messung-${{ runner.os }}-${{ github.run_attempt }}
-          path: messung_${{ runner.os }}.txt
+          path: messung_${{ runner.os }}_lauf*_versuch${{ github.run_attempt }}.txt
         if: always()
 
   pakete:
