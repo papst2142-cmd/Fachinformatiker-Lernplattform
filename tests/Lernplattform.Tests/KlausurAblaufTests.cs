@@ -406,26 +406,41 @@ public class KlausurAblaufTests
             var kachel = Gesamtstand.Kachel(f, [], 70);
             texte.AddRange(kachel.Zeilen.Select(z => ("Kachel " + f.Id, z)));
             var voll = Bewertung.Gesamt(f, new Dictionary<string, double> { ["ap1"] = 60, ["projekt"] = 70, ["b1"] = 45, ["b2"] = 40, ["wiso"] = 55 });
-            texte.AddRange(voll.Regeln.Select(r => ("Regel " + f.Id, Gesamtstand.Regel(r))));
+            texte.AddRange(voll.Regeln.Select(r => ("Regelzeile " + f.Id, Gesamtstand.Regel(r))));
             texte.Add(("Ergaenzung " + f.Id, voll.Ergaenzung));
         }
-        var ausnahmen = PruefungTexte.DoppelleerzeichenAusnahmen.Select(a => a.Replace("%s", "", StringComparison.Ordinal)
-            .Replace("%d", "", StringComparison.Ordinal)).ToHashSet();
+        // je Muster genau die eine freigegebene Stelle (Wortliste W2 Abschnitt 4), sonst nichts
+        var stellen = new Dictionary<string, (string Alt, string Neu)>(StringComparer.Ordinal)
+        {
+            [PruefungTexte.Erfuellt] = (":  ", ": "),
+            [PruefungTexte.Offen] = (":  ", ": "),
+            [PruefungTexte.NoteDauer] = ("  ·  ", " · "),
+            [PruefungTexte.Teilaufgabe] = ("  (", " ("),
+        };
         var mitAusnahme = 0;
+        var regelzeilen = 0;
         foreach (var (name, text) in texte)
         {
             var kern = string.Join("\n", text.Split('\n').Select(z => z.TrimStart(' ')));
-            if (PruefungTexte.DoppelleerzeichenAusnahmen.Contains(text) || name.StartsWith("Regel", StringComparison.Ordinal))
+            if (stellen.TryGetValue(text, out var stelle))
             {
                 mitAusnahme++;
-                kern = kern.Replace("  ·  ", " · ", StringComparison.Ordinal).Replace(":  ", ": ", StringComparison.Ordinal)
-                    .Replace(" (%d Punkte)", "", StringComparison.Ordinal).Replace("  (", " (", StringComparison.Ordinal);
+                var i = kern.IndexOf(stelle.Alt, StringComparison.Ordinal);
+                kern = kern[..i] + stelle.Neu + kern[(i + stelle.Alt.Length)..];
+            }
+            else if (name.StartsWith("Regelzeile", StringComparison.Ordinal))
+            {
+                // erfuellt/offen davor (Gesamtstand.Regel): nur dieses Praefix hat zwei Leerzeichen
+                regelzeilen++;
+                var praefix = text.StartsWith(PruefungTexte.Erfuellt, StringComparison.Ordinal) ? PruefungTexte.Erfuellt : PruefungTexte.Offen;
+                Assert.StartsWith(praefix, text, StringComparison.Ordinal);
+                kern = text[praefix.Length..];
             }
             Assert.False(kern.Contains("  ", StringComparison.Ordinal), name + ": Doppelleerzeichen in \"" + text + "\"");
             Assert.DoesNotContain(' ', kern);
         }
-        Assert.True(mitAusnahme >= 4 + 4 * 4);
-        _ = ausnahmen;
+        Assert.Equal(4, mitAusnahme);
+        Assert.True(regelzeilen >= 4 * 4);
         // Kontrollfehler: ohne Ausnahmeliste waeren die vier Muster rot
         Assert.All(PruefungTexte.DoppelleerzeichenAusnahmen, t => Assert.Contains("  ", t, StringComparison.Ordinal));
     }

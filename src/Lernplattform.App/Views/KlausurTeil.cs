@@ -323,7 +323,7 @@ public sealed class KlausurTeil
         var rest = _a.Rest;
         _uhr.Text = Klausur.Zeittext(rest);
         _uhr.Farbe(TextBlock.ForegroundProperty, rest < 300 ? "Pinsel.red" : "Pinsel.accent");
-        if (rest <= 0 && _a.ImLauf && !_a.Probe)
+        if (rest <= 0 && _a.ImLauf && !_a.Probe && !_abgeben)    // offene Rueckfrage: sie gibt danach ab
         {
             _takt.Stop();
             _ = AbgebenAsync(auto: true);
@@ -468,7 +468,9 @@ public sealed class KlausurTeil
 
     private async Task AbbrechenAsync()
     {
-        if (await Dialog.Zeigen(PruefungTexte.AbbrechenTitel, PruefungTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        var zustand = _a.Zustand;
+        if (await Dialog.Zeigen(PruefungTexte.AbbrechenTitel, PruefungTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0
+            || _a.Zustand != zustand || !_a.ImLauf)     // inzwischen abgegeben (Zeit abgelaufen): nichts verwerfen
         {
             return;
         }
@@ -486,11 +488,14 @@ public sealed class KlausurTeil
         _abgeben = true;
         try
         {
-            if (!auto && await Dialog.Zeigen(PruefungTexte.AbgebenTitel, PruefungTexte.AbgebenFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+            var nein = !auto && await Dialog.Zeigen(PruefungTexte.AbgebenTitel, PruefungTexte.AbgebenFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0;
+            if (_a.Zustand != zustand || !_a.ImLauf)
             {
                 return;
             }
-            if (_a.Zustand != zustand || !_a.ImLauf)
+            // Lief die Zeit waehrend der Rueckfrage ab, wird trotzdem abgegeben (keine Pause), mit Hinweis
+            auto = auto || _a.Rest <= 0;
+            if (nein && !auto)
             {
                 return;
             }
