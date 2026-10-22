@@ -333,12 +333,6 @@ public class KlausurTests
         }
     }
 
-    /// <summary>Nr 81 (Wortliste W2): erst mit der Ansicht "Uebersicht" des Abschlussprojekts (W3), bekannte Abweichung.</summary>
-    internal static readonly IReadOnlyDictionary<string, string> BekannteAbweichungen = new Dictionary<string, string>
-    {
-        ["ProjektHinweisW3"] = "Nr 81 erst in W3 (Weisung P4-6, 3a): die Ansicht \"Übersicht\" des Abschlussprojekts fehlt in W2",
-    };
-
     [Fact]
     public void Texte_ZeichengleichZuPython()
     {
@@ -346,17 +340,11 @@ public class KlausurTests
         foreach (var (name, text) in G32["texte"]!.AsObject())
         {
             var feld = typeof(PruefungTexte).GetField(name, BindingFlags.Public | BindingFlags.Static);
-            if (BekannteAbweichungen.ContainsKey(name))
-            {
-                Assert.Null(feld);
-                Assert.Equal(" Die Projektnote schätzt du im Abschlussprojekt unter „Übersicht“.", (string)text!);
-                continue;
-            }
             Assert.True(feld is not null, name + " fehlt in PruefungTexte");
             Assert.Equal((string)text!, (string)feld.GetValue(null)!);
             anzahl++;
         }
-        Assert.Equal(67, anzahl);
+        Assert.Equal(68, anzahl);      // W3: Nr 81 (ProjektHinweisW3) ist jetzt dabei, der Marker entfaellt
         Assert.Equal(TrainerTexte.Arten.Select(a => a.Text), [PruefungTexte.Uebung, PruefungTexte.Pruefung]);
         Assert.Equal("Note nach IHK-Schlüssel (Orientierung, keine amtliche Note)", TrainerTexte.NoteLang);
         // Kurz- und Langnamen der Auswahl (Wortliste Nr 9-13) wie EXAMS, Gesamtergebnis wie AREA_NAME

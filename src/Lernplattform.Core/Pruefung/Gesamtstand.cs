@@ -72,23 +72,9 @@ public static class Gesamtstand
     /// </summary>
     public static double? Projektschaetzung(OrderedDictionary<string, OrderedDictionary<string, string>> felder, string? aktiv)
     {
-        var projekte = felder.Where(p => p.Key != Ausbildung.Zeile
-                && !(p.Value.TryGetValue(GeloeschtFeld, out var weg) && weg == "1"))
-            .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
-        if (projekte.Count == 0)
-        {
-            return null;
-        }
-        var projekt = aktiv is not null && projekte.ContainsKey(aktiv) ? aktiv : projekte.Keys.Order(StringComparer.Ordinal).First();
-        var roh = PythonZeichen.Strip(projekte[projekt].TryGetValue(SchaetzungFeld, out var s) ? s : "");
-        if (roh.Length == 0)
-        {
-            return null;
-        }
-        // to_number: "€" und Leerzeichen weg, Leseregel der Rechner, sonst 0.0
-        var text = PythonZeichen.Strip(roh).Replace("€", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
-        var wert = text.Length > 0 && Zahlen.Wert(text, out var zahl, out _) ? zahl : 0.0;
-        return Math.Max(0.0, Math.Min(100.0, wert));
+        // W3: der Kern des Abschlussprojekts (projects, active_project, estimate); ohne Projekt null
+        var projekte = Projekt.Abschlussprojekt.Projekte(felder);
+        return projekte.Count == 0 ? null : Projekt.Abschlussprojekt.Schaetzung(projekte[Projekt.Abschlussprojekt.AktivesProjekt(projekte, aktiv)]);
     }
 
     /// <summary>overall_card fuer eine Fachrichtung.</summary>
@@ -109,8 +95,13 @@ public static class Gesamtstand
         var ergebnis = Bewertung.Gesamt(fachrichtung, werte);
         if (!ergebnis.Vollstaendig)
         {
-            // Nr 81 (Hinweis auf die Projektnote unter "Übersicht") erst mit W3 (Weisung P4-6, 3a)
-            return new Gesamtkachel(zeilen, Beschriftungen.Einsetzen(PruefungTexte.FehltNoch, string.Join(", ", ergebnis.Fehlend)), ergebnis, null);
+            // Nr 81 (W3): Hinweis auf die Projektnote unter "Übersicht", nur wenn das Projekt fehlt (app_gui 4133)
+            var hinweis = Beschriftungen.Einsetzen(PruefungTexte.FehltNoch, string.Join(", ", ergebnis.Fehlend));
+            if (ergebnis.Fehlend.Contains(fachrichtung.Bereich("projekt").Kurz))
+            {
+                hinweis += PruefungTexte.ProjektHinweisW3;
+            }
+            return new Gesamtkachel(zeilen, hinweis, ergebnis, null);
         }
         return new Gesamtkachel(zeilen, null, ergebnis, Beschriftungen.Einsetzen(PruefungTexte.GesamtZeile, PythonRunden.PunkteText(ergebnis.Gesamt),
             Navigation.NoteKurz, ergebnis.Note, ergebnis.Bestanden ? PruefungTexte.Bestanden : PruefungTexte.NichtBestanden));

@@ -190,9 +190,13 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_fachrichtungen.py inhalte neu/fachrichtungen.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
+          # Phase 4 W3 (Weisung P4-8): Zeichentabelle des PDF-Exports und G34 aus dem unabhaengigen Skript
+          python3 -I werkzeuge/tabellen/erzeuge_pdf_zeichen.py python-linie neu/PdfZeichen.Tabelle.cs
+          python3 -I werkzeuge/vergleich/pruefe_abschlussprojekt.py inhalte neu/abschlussprojekt_skript.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
+          diff src/Lernplattform.Core/Projekt/PdfZeichen.Tabelle.cs neu/PdfZeichen.Tabelle.cs
       - name: Vergleich
         run: |
           python3 -I - <<'PY'
@@ -228,6 +232,14 @@ jobs:
                   assert texte[tuple(f[0])][2] == f[7] and texte[tuple(f[0])][1][2] == f[6], f[0]
           assert [t[1] for t in g32["kriterien"]["teilpunkte"]] == [t[1] for t in g36["teilpunkte"]]
           print("G36 SI gleich G32")
+          # G34 (W3): das Skript nur aus der Spezifikation muss in allen seinen Teilen gleich Python sein
+          g34 = json.load(open("neu/abschlussprojekt.json", encoding="utf-8"))
+          skript = json.load(open("neu/abschlussprojekt_skript.json", encoding="utf-8"))
+          teile = ("zahl", "rechnen", "export", "projekte", "fragen", "rueckfrage", "pdf", "texte", "grenze")
+          assert sorted(skript) == sorted(teile), sorted(skript)
+          for teil in teile:
+              assert skript[teil] == g34[teil], "G34 " + teil + ": Skript weicht von Python ab"
+          print("G34 Skript gleich Python")
           PY
 
   android:
