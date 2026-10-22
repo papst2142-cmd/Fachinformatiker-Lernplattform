@@ -465,4 +465,30 @@ public class ProjektAblaufTests
             }
         }
     }
+
+    /// <summary>
+    /// Absturz mitten im Speichern mit vielen Projektfeldern (6 Projekte x 8 Felder, 3 Runden):
+    /// Datenbank in Ordnung, je Feld genau eine Zeile (die neueste), jede Zeile ganz.
+    /// </summary>
+    [Fact]
+    public void AbsturzBeimSpeichernVielerFelder_JeFeldEineZeile()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        _ = new Lernstand(pfad);
+        for (var runde = 0; runde < 3; runde++)
+        {
+            var gemeldet = AbsturzProbe.Starten(AbsturzProbe.ArtProjektfelderViele, [pfad], 60 + runde * 41);
+            using var db = VergleichsHilfe.Oeffnen(pfad);
+            Assert.Equal("ok", (string)VergleichsHilfe.Abfrage(db, "PRAGMA quick_check")[0][0]!);
+            var zeilen = VergleichsHilfe.Abfrage(db, "SELECT projekt, feld, wert, uid FROM abschlussprojekt");
+            Assert.Equal(zeilen.Count, zeilen.Select(z => ((string)z[0]!, (string)z[1]!)).Distinct().Count());
+            Assert.Equal(48, zeilen.Count);
+            foreach (var z in zeilen)
+            {
+                Assert.Equal("wert " + ((string)z[3]!)["probe-".Length..] + new string('.', 3000), z[2]);
+            }
+            Assert.True(gemeldet.Count >= 60 + runde * 41);
+        }
+    }
 }
