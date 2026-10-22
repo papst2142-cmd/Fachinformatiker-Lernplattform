@@ -18,6 +18,8 @@ Zeitzone fest Europe/Berlin. Teile:
                WiSo-Umbenennungen und Antwortmoeglichkeiten; align_marks
   abschluss  - Zeilen, die finish mit fester Uhr und festen uid in eine Wegwerf-
                Datenbank schreibt (quiz_answers, ap1_events, scenario_events, pruefungen)
+  kontrolle  - Faelle fuer die Kontrollfehler, die das Raster von G36 nicht trifft (Summe,
+               Note aus dem abgerundeten Wert, round(x, 1), Satztrennung mit .NET-Zeichenklassen)
   texte      - feste Texte der Klausur aus app_gui.py und mobile/src/main.py (mit ast
                gelesen: Datei, Zeile, Nummer in der Zeile; C#-Name -> Text)
 
@@ -452,6 +454,30 @@ def abschluss_werte(fp, fc, tmp):
     return {"aufrufe": aufrufe, "tabellen": tabellen}
 
 
+def kontrolle_werte(fp, fc):
+    """Faelle fuer die Kontrollfehler (Spezifikation P4-5 Abschnitt 7), die das Raster von G36 nicht
+    trifft: einfache Summe statt sum(), Note aus dem abgerundeten Wert (Werte mit random.Random(1)
+    gesucht, hier fest), round(x, 1) ueber viele Werte, Satztrennung mit Zeichenklassen von .NET."""
+    rollen = ["ap1", "projekt", fp.KONZEPTION, fp.NETZWERKE, fp.WISO]
+    werte = [[60.87, 56.1, 24.97, 66.91, 5.88], [43.32, 64.64, 40.53, 15.04, 34.59], [71.52, 54.35, 6.57, 61.65, 16.99],
+             [56.39, 16.58, 36.15, 27.31, 40.86], [31.06, 30.69, 5.1, 50.86, 28.47], [9.91, 39.3, 89.63, 86.76, 27.11],
+             [43.85, 38.68, 95.97, 83.97, 26.66], [42.17, 38.23, 32.22, 84.91, 91.72], [70.91, 64.49, 24.55, 92.05, 89.13]]
+    gesamt = []
+    for w in werte:
+        r = fp.overall(dict(zip(rollen, w)))
+        total = sum(v * g for v, g in zip(w, fp.WEIGHTS.values())) / 100.0
+        teil2 = sum(v * fp.WEIGHTS[a] for v, a in zip(w[1:], fp.PART2)) / 80
+        gesamt.append([w, r["gesamt"], r["teil2"], r["note"], r["bestanden"], [ok for _t, ok in r["regeln"]],
+                       repr(total), repr(teil2)])
+    zahlen = [k / 1000 for k in range(0, 20001)] + [k / 8 + 0.05 for k in range(0, 801)] + \
+        [100.0 * r / n for n in range(1, 101) for r in range(0, n + 1)]
+    runden = [[repr(x), round(x, 1)] for x in zahlen]
+    texte = ["\u00b2Z.B. Zwei.", "\u216bZ.B. Zwoelf.", "_Z.B. Strich.", "\u00e9Z.B. Eins.", "1Z.B. Eins.",
+             "Satz eins.\x1fZwei folgt.", "Satz.\u00a0Neu hier.", "Satz.\u2003Neu dort.", "Satz.\x85Neu da.",
+             "Wert 1.5 und \u0661.\u0662 bleiben. Neu.", "\u00b2.3 hoch. Ende."]
+    return {"gesamt": gesamt, "runden": runden, "kriterien": [[t, fp.criteria(t)] for t in texte]}
+
+
 def main():
     repo, ziel = sys.argv[1], sys.argv[2]
     os.environ["TZ"] = ZONE
@@ -483,6 +509,7 @@ def main():
             "gesamt": gesamt_werte(fp, fc),
             "migration": migration_werte(fp, fc),
             "abschluss": abschluss_werte(fp, fc, tmp),
+            "kontrolle": kontrolle_werte(fp, fc),
             "ergaenzung_texte": [fp._supplement_hint({"ap1": 100.0, "projekt": 100.0, "konzeption": 0.0,
                                                       "netzwerke": 0.0, "wiso": 0.0})],
             "texte": texte,
