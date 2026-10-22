@@ -4,7 +4,8 @@ namespace Lernplattform.Core.Daten;
 
 /// <summary>
 /// Speichert Antworten wie fisi_core.DBManager (log_card, log_quiz_answer, save_test_result,
-/// log_trainer; Phase 3 R5 dazu trainer_stats):
+/// log_trainer; Phase 3 R5 dazu trainer_stats; Phase 4 PB1 log_ap1, log_scenario, log_project,
+/// save_exam, save_project_field, project_fields):
 /// Zeitstempel in Ortszeit, utc_offset aus demselben Augenblick, uid = uuid4 als Hex.
 /// Jeder Vorgang ist eine Transaktion (Lernstand.Schreiben): die Zeile steht ganz oder gar nicht.
 /// Wird nichts gespeichert (Lesefehler, Schreibschutz), lehnt Lernstand still ab.
@@ -89,6 +90,101 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
             + " VALUES ($zeit, $abstand, $art, $stufe, $richtig, $uid)",
             ("$zeit", zeit), ("$abstand", abstand), ("$art", art), ("$stufe", stufe), ("$richtig", richtig ? 1 : 0),
             ("$uid", _kennung()));
+    }
+
+    /// <summary>log_ap1: AP1-Szenario (Position in szenarien_ap1.json); richtig null = angesehen, nicht bewertet.</summary>
+    public bool Ap1Speichern(int position, string titel, string thema, bool? richtig) =>
+        SzenarioZeile("ap1_events", "scenario_index", "theme", position, titel, thema, richtig);
+
+    /// <summary>log_scenario: AP2-Szenario (Position in szenarien_ap2.json); richtig null = angesehen.</summary>
+    public bool SzenarioSpeichern(int position, string titel, string thema, bool? richtig) =>
+        SzenarioZeile("scenario_events", "scenario_index", "theme", position, titel, thema, richtig);
+
+    /// <summary>log_project: Testprojekt (Position in projektarbeiten.json, Fachbereich); richtig null = angesehen.</summary>
+    public bool ProjektSpeichern(int position, string titel, string fachbereich, bool? richtig) =>
+        SzenarioZeile("project_events", "project_index", "category", position, titel, fachbereich, richtig);
+
+    // Gemeinsamer Weg von log_ap1, log_scenario und log_project (Tabellen- und Spaltennamen fest, nie vom Nutzer).
+    private bool SzenarioZeile(string tabelle, string spalteIndex, string spalteThema, int position, string titel, string thema, bool? richtig)
+    {
+        var (zeit, abstand) = Stempel();
+        return Lernstand.Schreiben(
+            $"INSERT INTO {tabelle} (timestamp, utc_offset, {spalteIndex}, title, {spalteThema}, correct, uid)"
+            + " VALUES ($zeit, $abstand, $position, $titel, $thema, $richtig, $uid)",
+            ("$zeit", zeit), ("$abstand", abstand), ("$position", position), ("$titel", titel), ("$thema", thema),
+            ("$richtig", richtig is null ? null : richtig.Value ? 1 : 0), ("$uid", _kennung()));
+    }
+
+    /// <summary>
+    /// save_exam: Ergebnis einer Klausursimulation. daten ist der fertige JSON-Text wie Pythons
+    /// json.dumps(data, ensure_ascii=False) (den baut die Klausur in W2); punkte als Kommazahl
+    /// (float(points)), dauer in ganzen Sekunden (int(duration)).
+    /// </summary>
+    public bool PruefungSpeichern(string art, double punkte, string note, int dauerSekunden, string daten)
+    {
+        var (zeit, abstand) = Stempel();
+        return Lernstand.Schreiben(
+            "INSERT INTO pruefungen (timestamp, utc_offset, art, punkte, note, dauer, daten, uid)"
+            + " VALUES ($zeit, $abstand, $art, $punkte, $note, $dauer, $daten, $uid)",
+            ("$zeit", zeit), ("$abstand", abstand), ("$art", art), ("$punkte", punkte), ("$note", note),
+            ("$dauer", dauerSekunden), ("$daten", daten), ("$uid", _kennung()));
+    }
+
+    /// <summary>
+    /// purge_superseded_project_rows (Python v0.63.2 woertlich, dieselben zwei DELETE wie in
+    /// Uebernahme.Zusammenfuehren): erst spaetere nicht leere Fassungen in geloeschten Projekten,
+    /// dann jede Fassung, die eine neuere desselben Feldes hat (gleiche Zeit: groessere uid gilt).
+    /// </summary>
+    public const string ProjektAufraeumen =
+        "DELETE FROM abschlussprojekt WHERE feld != '_geloescht' AND wert != ''"
+        + " AND EXISTS ("
+        + " SELECT 1 FROM abschlussprojekt AS loesch"
+        + " WHERE loesch.projekt = abschlussprojekt.projekt"
+        + " AND loesch.feld = '_geloescht' AND loesch.wert = '1'"
+        + " AND loesch.timestamp < abschlussprojekt.timestamp);"
+        + " DELETE FROM abschlussprojekt WHERE EXISTS ("
+        + " SELECT 1 FROM abschlussprojekt AS neu"
+        + " WHERE neu.projekt = abschlussprojekt.projekt"
+        + " AND neu.feld = abschlussprojekt.feld"
+        + " AND (neu.timestamp > abschlussprojekt.timestamp"
+        + "  OR (neu.timestamp = abschlussprojekt.timestamp"
+        + "      AND neu.uid > abschlussprojekt.uid)))";
+
+    /// <summary>
+    /// save_project_field: anders als alle anderen Wege. Zeit wie _now_fine (Ortszeit mit
+    /// Mikrosekunden, ohne utc_offset, ohne Uhrabweichung), danach in derselben Buchung
+    /// <see cref="ProjektAufraeumen"/>. Wird nichts gespeichert (Lesefehler, Schreibschutz),
+    /// lehnt Lernstand still ab wie bei jedem anderen Weg (Python: query_only laesst das INSERT
+    /// scheitern, ohne refused_writes zu zaehlen; sichtbar ist fuer den Nutzer beides nicht).
+    /// </summary>
+    public bool ProjektFeldSpeichern(string projekt, string feld, string wert)
+    {
+        var zeit = _uhr.Jetzt().ToString("yyyy-MM-dd HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+        return Lernstand.Schreiben(
+            "INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid)"
+            + " VALUES ($zeit, $projekt, $feld, $wert, $uid); " + ProjektAufraeumen,
+            ("$zeit", zeit), ("$projekt", projekt), ("$feld", feld), ("$wert", wert), ("$uid", _kennung()));
+    }
+
+    /// <summary>
+    /// project_fields: {projekt: {feld: wert}}, je Feld die neueste Fassung (ORDER BY timestamp, uid;
+    /// die letzte Zeile gewinnt). Bei einem Lesefehler leer (Python default=[]). Reihenfolge wie
+    /// Python-dict: Projekte und Felder in der Reihenfolge ihres ersten Auftretens.
+    /// </summary>
+    public OrderedDictionary<string, OrderedDictionary<string, string>> ProjektFelder()
+    {
+        var projekte = new OrderedDictionary<string, OrderedDictionary<string, string>>(StringComparer.Ordinal);
+        foreach (var zeile in Lernstand.Abfragen("SELECT projekt, feld, wert FROM abschlussprojekt ORDER BY timestamp, uid"))
+        {
+            var projekt = Convert.ToString(zeile[0], CultureInfo.InvariantCulture) ?? "";
+            if (!projekte.TryGetValue(projekt, out var felder))
+            {
+                projekte[projekt] = felder = new OrderedDictionary<string, string>(StringComparer.Ordinal);
+            }
+            felder[Convert.ToString(zeile[1], CultureInfo.InvariantCulture) ?? ""] =
+                Convert.ToString(zeile[2], CultureInfo.InvariantCulture) ?? "";
+        }
+        return projekte;
     }
 
     /// <summary>

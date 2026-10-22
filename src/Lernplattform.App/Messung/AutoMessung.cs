@@ -72,6 +72,7 @@ public static class AutoMessung
         funde += await FarbreglerAsync(ansicht);
         funde += Festbreitenschrift();
         funde += await RechnerMesspunkteAsync(ansicht);
+        funde += await W1MesspunkteAsync(ansicht, inhalte);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -166,6 +167,14 @@ public static class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 4, W1: Ansichten der Lernseiten
+                await foreach (var ansichtName in W1Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -181,6 +190,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
+        Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -299,6 +309,13 @@ public static class AutoMessung
     [
         ("purple", "card"),
         ("cyan", "card"),      // W4a: Titel der Karte "Übertragungsdauer"
+    ];
+
+    // Phase 4, W1: Bereichsnamen im Notizblock (accent, purple, blue, accent2, orange) und Status auf card_alt
+    private static readonly (string Text, string Flaeche)[] W1Paare =
+    [
+        ("blue", "card_alt"), ("purple", "card_alt"), ("accent2", "card_alt"), ("orange", "card_alt"), ("yellow", "card_alt"),
+        ("text_soft", "card_alt"), ("text", "card_hi"), ("text_dim", "card_hi"),
     ];
 
     private static readonly string[] Hostbedarf12 =
@@ -858,6 +875,130 @@ public static class AutoMessung
     }
 
     /// <summary>
+    /// Phase 4, W1: Ansichten der Lernseiten nacheinander zeigen (je nach dem Zeigen pruefen),
+    /// ohne zu speichern: AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und
+    /// "Wusstest du es?" sowie letzte Seite der Liste; Notizblock mit Status Offen und allen
+    /// Musterantworten, Suche ohne Treffer, Suche "netz". Danach wieder der Anfang.
+    /// </summary>
+    private static async IAsyncEnumerable<string> W1Ansichten(MainView ansicht)
+    {
+        foreach (var id in (string[])[Seiten.Ap1Szenarien, Seiten.Ap2Szenarien, Seiten.Testprojekt])
+        {
+            if (!ansicht.GebauteSeiten.TryGetValue(id, out var gebaut) || gebaut is not SzenarioSeite seite)
+            {
+                continue;
+            }
+            await seite.Geladen;
+            await ansicht.ZeigeAsync(id);
+            foreach (var (art, name) in new[] { (0, "/aufgedeckt"), (1, "/letzte-seite") })
+            {
+                seite.Probe(art);
+                await ansicht.BildFertigAsync();
+                yield return id + name;
+            }
+            seite.Probe(-1);
+        }
+        if (ansicht.GebauteSeiten.TryGetValue(Seiten.Notizblock, out var nb) && nb is NotizblockSeite notiz)
+        {
+            await notiz.Geladen;
+            await ansicht.ZeigeAsync(Seiten.Notizblock);
+            foreach (var (art, name) in new[] { (0, "/offen-alle-antworten"), (1, "/suche-ohne-treffer"), (2, "/suche-netz") })
+            {
+                notiz.Probe(art);
+                await ansicht.BildFertigAsync();
+                yield return Seiten.Notizblock + name;
+            }
+            notiz.Probe(-1);
+        }
+        await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// Phase 4, W1 (Plan Abschnitt 7): erstes Oeffnen der Lernseiten bis der erste Eintrag steht,
+    /// AP2-Liste (330) blaettern, Szenario wechseln, Musterloesung aufdecken (ohne Speichern),
+    /// Notizblock Filter und Suche, dazu Notizblock-Kern mit 100 000 synthetischen Antworten
+    /// (wie test_grosse_datenmengen). Grenze 400 ms, Fund ab 1 000 ms.
+    /// </summary>
+    private static async Task<int> W1MesspunkteAsync(MainView ansicht, Lerninhalte? inhalte)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        void Messpunkt(string titel, double? ms)
+        {
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms is null or > Abbruch)
+            {
+                Messwerte.Notiere("  FEHLER: nicht fertig oder ueber 1000 ms");
+                funde++;
+            }
+        }
+        async Task<double> Bild(Action schritt)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            return uhr.Elapsed.TotalMilliseconds;
+        }
+        foreach (var id in (string[])[Seiten.Ap1Szenarien, Seiten.Ap2Szenarien, Seiten.Testprojekt])
+        {
+            if (ansicht.GebauteSeiten.TryGetValue(id, out var gebaut) && gebaut is SzenarioSeite seite)
+            {
+                await seite.Geladen;
+                Messpunkt(Seiten.Titel(id) + " bis erster Eintrag", seite.InhaltMs);
+            }
+        }
+        if (ansicht.GebauteSeiten.TryGetValue(Seiten.Notizblock, out var nbSeite) && nbSeite is NotizblockSeite notiz)
+        {
+            await notiz.Geladen;
+            Messpunkt("Notizblock bis Liste", notiz.InhaltMs);
+            await ansicht.ZeigeAsync(Seiten.Notizblock);
+            Messpunkt("Notizblock Filter Status Offen mit allen Musterantworten (bis zum Bild)", await Bild(() => notiz.Probe(0)));
+            Messpunkt("Notizblock Suche \"netz\" (bis zum Bild)", await Bild(() => notiz.Probe(2)));
+            notiz.Probe(-1);
+        }
+        if (ansicht.GebauteSeiten.TryGetValue(Seiten.Ap2Szenarien, out var ap2) && ap2 is SzenarioSeite szenarien)
+        {
+            await ansicht.ZeigeAsync(Seiten.Ap2Szenarien);
+            Messpunkt("AP2-Szenarien Liste blaettern (bis zum Bild)", await Bild(() => szenarien.Liste.Blaettern(1)));
+            Messpunkt("AP2-Szenarien Liste letzte Seite (bis zum Bild)", await Bild(() => szenarien.Probe(1)));
+            Messpunkt("AP2-Szenarien Szenario wechseln (bis zum Bild)", await Bild(() => szenarien.Oeffnen(200)));
+            Messpunkt("AP2-Szenarien Musterloesung aufdecken, laengste (ohne Speichern, bis zum Bild)", await Bild(() => szenarien.Probe(0)));
+            szenarien.Probe(-1);
+        }
+        if (inhalte is not null)
+        {
+            // 100 000 Antworten ueber alle fuenf Quellen, feste Zufallsfolge
+            var zufall = new Core.Zufall.PythonZufall(100001);
+            var schluessel = inhalte.Karteikarten.Select(k => (Core.Lernen.Quellen.Karte, (object)k.Frage!))
+                .Concat(inhalte.Quizfragen.Select(q => (Core.Lernen.Quellen.Quiz, (object)q.Frage!)))
+                .Concat(inhalte.Ap1Szenarien.Select((_, i) => (Core.Lernen.Quellen.Ap1, (object)(long)i)))
+                .Concat(inhalte.Ap2Szenarien.Select((_, i) => (Core.Lernen.Quellen.Ap2, (object)(long)i)))
+                .Concat(inhalte.Testprojekte.Select((_, i) => (Core.Lernen.Quellen.Projekt, (object)(long)i))).ToList();
+            var buch = new Core.Lernen.Antwortbuch();
+            for (var i = 0; i < 100000; i++)
+            {
+                var (quelle, frage) = schluessel[(int)zufall.RandRange(schluessel.Count)];
+                buch.Hinzufuegen(quelle, frage, "2026-10-" + (1 + (int)zufall.RandRange(20)).ToString("00", inv) + " 12:00:00", (int)zufall.RandRange(3) != 0);
+            }
+            var status = new Core.Lernen.StatusBuch(buch);
+            var kern = new Core.Lernen.Notizblock(inhalte);
+            var uhr = Stopwatch.StartNew();
+            var eintraege = kern.Eintraege(status);
+            _ = kern.Uebersicht(status);
+            var msFilter = uhr.Elapsed.TotalMilliseconds;
+            Messpunkt(string.Create(inv, $"Notizblock-Kern bei 100 000 Antworten: Eintraege und Uebersicht ({eintraege.Count} zu ueben)"), msFilter);
+            var alle = kern.Eintraege(status, Core.Lernen.FragenStatus.Alle);
+            uhr.Restart();
+            _ = kern.Suchen(alle, "netz");
+            Messpunkt("Notizblock-Kern erste Suche ueber alle Fragen (baut den Suchtext)", uhr.Elapsed.TotalMilliseconds);
+            uhr.Restart();
+            _ = kern.Suchen(alle, "subnetz");
+            Messpunkt("Notizblock-Kern weitere Suche ueber alle Fragen", uhr.Elapsed.TotalMilliseconds);
+        }
+        return funde;
+    }
+
+    /// <summary>
     /// Welle 5, L12 (Weisung P2-14 A4): Farbton-Regler "Akzent 1" einmal ueber die ganze Spur
     /// ziehen (360 Schritte). Je Schritt Neuzeichnen der Gruppe (3 Spuren mit 360/101/101
     /// Stuetzfarben, Knoepfe, Vorschau) bis zum fertigen Bild. Fund nach Farbreglerregel
@@ -941,6 +1082,13 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
+                    await foreach (var name in W1Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
                     foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
                     {
                         await ansicht.ZeigeAsync(seite);
@@ -954,7 +1102,7 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {seite}: {fund}");
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare))
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -966,7 +1114,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3 und der Rechner-Seite geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite und der Lernseiten (Phase 4, W1) geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)

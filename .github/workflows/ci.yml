@@ -53,14 +53,14 @@ jobs:
       # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3).
       - name: Start ohne Bedienung (Linux, Xvfb)
         if: runner.os == 'Linux'
-        timeout-minutes: 5
+        timeout-minutes: 10
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
           LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
         run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
       - name: Start ohne Bedienung
         if: runner.os != 'Linux'
-        timeout-minutes: 5
+        timeout-minutes: 10
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_AUTO: "1"
@@ -178,6 +178,9 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_w4_video.py neu/video.json
           # Phase 3 W4c (Weisung P3-22): G30 WiSo-Rechner, unabhaengiges Skript
           python3 -I werkzeuge/vergleich/erzeuge_w4_wiso.py neu/wiso.json
+          # Phase 4 W1 (Weisung P4-3): G33 Notizblock und Listen, G34 Abschlussprojekt (Teil speichern)
+          python3 -I werkzeuge/vergleich/erzeuge_notizblock.py python-linie tests/Vergleich/testdaten.db neu/notizblock.json
+          python3 -I werkzeuge/vergleich/erzeuge_abschlussprojekt.py python-linie neu/abschlussprojekt.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
@@ -195,7 +198,7 @@ jobs:
                        "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
-                       "video.json", "wiso.json"):
+                       "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
