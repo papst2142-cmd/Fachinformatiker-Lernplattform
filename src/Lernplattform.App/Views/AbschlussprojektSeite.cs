@@ -278,7 +278,11 @@ public sealed class AbschlussprojektSeite : UserControl
                 _a.FachbereichSetzen(wert);
             }
         };
-        eckdaten.Children.Add(Zeile(ProjektTexte.Fachbereich, fachbereich));
+        // die Auswahl ist mindestens 260 breit (Themenliste): reicht der Platz daneben nicht, steht sie darunter
+        eckdaten.Children.Add(new Formzeile(340, 260)
+        {
+            Children = { Schrift.Text(ProjektTexte.Fachbereich, "Klein", FontWeight.Normal, "Pinsel.text_dim"), fachbereich },
+        });
 
         var fortschritt = Schrift.Text("", "Normal", FontWeight.Bold);
         var offen = Hinweis("");
