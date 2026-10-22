@@ -114,7 +114,7 @@ public partial class MainView : UserControl
         // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
         AddHandler(KeyDownEvent, (_, e) =>
         {
-            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control) && Dialog.Offen is null)
+            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control) && Dialog.Offen is null && RundgangEbene.Offen is null)
             {
                 e.Handled = true;
                 _ = ZeigeAsync(Seiten.Suche);

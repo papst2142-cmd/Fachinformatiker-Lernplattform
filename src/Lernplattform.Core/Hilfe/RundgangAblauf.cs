@@ -96,6 +96,7 @@ public sealed class RundgangAblauf
             return false;
         }
         Index++;
+        FehlerWeg();
         return true;
     }
 
@@ -106,11 +107,23 @@ public sealed class RundgangAblauf
             return false;
         }
         Index--;
+        FehlerWeg();
         return true;
     }
 
     /// <summary>Seite direkt zeigen (Start ohne Bedienung, Bilder).</summary>
-    public void Springen(int index) => Index = Math.Clamp(index, 0, Anzahl - 1);
+    public void Springen(int index)
+    {
+        Index = Math.Clamp(index, 0, Anzahl - 1);
+        FehlerWeg();
+    }
+
+    /// <summary>Ein Fehler gilt nur fuer die Seite 5, auf der er entstand (Gegenpruefung W4 F1).</summary>
+    private void FehlerWeg()
+    {
+        Fehler = null;
+        FehlerFeld = null;
+    }
 
     /// <summary>
     /// "Speichern und loslegen" (finish): auf Seiten 1-4 wie Weiter (null). Auf Seite 5 die Aenderung fuer einen

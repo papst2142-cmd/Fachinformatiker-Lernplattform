@@ -352,6 +352,10 @@ public sealed class RundgangEbene
             _fehler.Text = _ablauf.Fehler ?? "";
             _fehler.IsVisible = _ablauf.Fehler is not null;
         }
+        foreach (var termin in new[] { _ap1, _ap2 })
+        {
+            termin?.ClearValue(TextBox.BorderBrushProperty);
+        }
         if (_ablauf.FehlerFeld is { } feld && _elemente.TryGetValue(feld, out var control) && control is TextBox box)
         {
             box.Farbe(TextBox.BorderBrushProperty, "Pinsel.red");
@@ -415,7 +419,10 @@ public sealed class RundgangEbene
             case Key.Tab:
                 e.Handled = true;
                 var naechstes = _ablauf.Naechstes(aktuell ?? _ablauf.Reihenfolge[^1], e.KeyModifiers.HasFlag(KeyModifiers.Shift));
-                _elemente[naechstes].Focus(NavigationMethod.Tab);
+                if (_elemente.TryGetValue(naechstes, out var ziel))
+                {
+                    ziel.Focus(NavigationMethod.Tab);
+                }
                 break;
             case Key.Enter or Key.Space when aktuell is { } element && _elemente[element] is ToggleSwitch schalter:
                 e.Handled = true;

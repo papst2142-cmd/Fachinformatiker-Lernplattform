@@ -350,6 +350,57 @@ public class RundgangTests
 
     // -- Tastatur (Kern) -----------------------------------------------------------------------
 
+    /// <summary>Gegenpruefung W4 F1: ein Fehler der Seite 5 gilt nach "Zurück" nicht mehr, "Weiter" fuehrt wieder auf Seite 5.</summary>
+    [Fact]
+    public void FehlerGiltNurAufSeiteFuenf()
+    {
+        var ablauf = new RundgangAblauf(Einrichten.Startwerte([]));
+        ablauf.Springen(4);
+        ablauf.TerminAp1 = "31.02.2027";
+        Assert.Null(ablauf.Fertig(Heute));
+        Assert.NotNull(ablauf.Fehler);
+        Assert.True(ablauf.Zurueck());
+        Assert.Null(ablauf.Fehler);
+        Assert.Null(ablauf.FehlerFeld);
+        Assert.Null(ablauf.Fertig(Heute));           // Seite 4: "Weiter"
+        Assert.True(ablauf.Letzte);
+        Assert.Null(ablauf.Fehler);
+        Assert.Equal("31.02.2027", ablauf.TerminAp1);  // der Entwurf bleibt
+        ablauf.SpeichernFehlgeschlagen();
+        ablauf.Springen(4);
+        Assert.Null(ablauf.Fehler);
+    }
+
+    /// <summary>Gegenpruefung W4 F4: misslingt das Speichern der Fachrichtung, bleibt der Merker weg (die Frage kommt wieder; nur ohne Root pruefbar).</summary>
+    [Fact]
+    public void FrageKommtWiederWennSpeichernMisslingt()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+        using var g = new Geraet("PC");
+        Assert.True(g.Start().Frage);
+        var db = g.Lernstand.Pfad;
+        Assert.True(File.Exists(db));
+        File.SetUnixFileMode(db, UnixFileMode.UserRead);
+        try
+        {
+            var gesperrt = new LernstandSchreiber(new Lernstand(db));
+            var (gewaehlt, fehler, merker) = AusbildungFrage.FrageAntwort(gesperrt, 0, "ae", Heute);
+            Assert.True(fehler);        // nur ohne Root pruefbar (wie die anderen Schreibschutz-Tests)
+            Assert.Null(gewaehlt);
+            var werte = new JsonObject { ["x"] = 1 };
+            merker(werte);
+            Assert.Equal("{\"x\":1}", werte.ToJsonString());
+        }
+        finally
+        {
+            File.SetUnixFileMode(db, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        Assert.True(g.Start().Frage);
+    }
+
     [Fact]
     public void RundgangTastatur()
     {

@@ -91,7 +91,8 @@ public static class AusbildungFrage
     /// <summary>
     /// Antwort auf die Frage (Knopf 0 = "Speichern", 1 = "Überspringen", -1 = Esc/Zurueck-Geste): nur
     /// "Speichern" mit einer Wahl speichert die Fachrichtung; sonst bleibt der Lernstand unberuehrt (es gilt
-    /// weiter SI). Merker ist immer die Aenderung fuer einstellungen.json (gefragt, bei Erfolg auch zuletzt).
+    /// weiter SI). Merker ist die Aenderung fuer einstellungen.json (gefragt, bei Erfolg auch zuletzt; misslingt
+    /// das Speichern, aendert sie nichts).
     /// Gewaehlt = die gespeicherte Fachrichtung (dann folgt der Warnhinweis), Fehler = Speichern ging nicht (N9).
     /// </summary>
     public static (string? Gewaehlt, bool Fehler, Action<JsonObject> Merker) FrageAntwort(LernstandSchreiber schreiber, int knopf,
@@ -101,9 +102,9 @@ public static class AusbildungFrage
         {
             return (null, false, w => Beantwortet(w, null, heute));
         }
-        var gespeichert = Pruefung.Ausbildung.Waehlen(schreiber, wahl);
-        var neu = gespeichert ? wahl : null;
-        return (neu, !gespeichert, w => Beantwortet(w, neu, heute));
+        // Misslingt das Speichern, bleibt auch der Merker weg: die Frage kommt beim naechsten Start wieder
+        // (sonst gaelte still SI, Gegenpruefung W4 F4)
+        return Pruefung.Ausbildung.Waehlen(schreiber, wahl) ? (wahl, false, w => Beantwortet(w, wahl, heute)) : (null, true, _ => { });
     }
 
     /// <summary>Antwort auf den Warnhinweis: nur "Ja" (Knopf 0) aendert etwas, "Nein" (1) und Esc (-1) nichts.</summary>
