@@ -18,11 +18,12 @@ namespace Lernplattform.Views;
 /// nur fuer die Sitzung), Musterloesung bzw. Loesungsansaetze zum Aufdecken mit "Gewusst"/
 /// "Nicht gewusst". Ablauf und Speichern in Core.Lernen.Szenarioablauf. Ab der Breite
 /// <see cref="MainView.BreitGrenze"/> stehen Liste und Aufgabe nebeneinander (2 : 5), darunter
-/// untereinander. Kein Knopf "Als Vorlage" (kommt mit W3, Nico).
+/// untereinander. Testprojekt: Knopf "Als Vorlage fürs Abschlussprojekt" (W3, Nico; use_as_template).
 /// </summary>
 public sealed class SzenarioSeite : UserControl
 {
     private readonly string _quelle;
+    private readonly Action<Lerninhalt>? _alsVorlage;
     private readonly Grid _raster = new();
     private readonly StackPanel _detail = new() { Spacing = 14 };
     private readonly List<Action> _wartend = [];
@@ -43,9 +44,10 @@ public sealed class SzenarioSeite : UserControl
     private (double Groesse, double Breite)? _laengstes;
     private bool _eigeneSetzen;
 
-    public SzenarioSeite(string quelle)
+    public SzenarioSeite(string quelle, Action<Lerninhalt>? alsVorlage = null)
     {
         _quelle = quelle;
+        _alsVorlage = alsVorlage;
         Content = new ScrollViewer { Content = new StackPanel { Margin = new Thickness(16), Children = { _raster } } };
         _raster.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Geladen = LadenAsync();
@@ -223,7 +225,14 @@ public sealed class SzenarioSeite : UserControl
         _umschalten.Click += (_, _) => Umschalten();
         var naechstes = LernTeile.Knopf(Projekt ? TestprojektTexte.Naechstes : SzenarienTexte.Naechstes);
         naechstes.Click += (_, _) => Laden(_liste.NaechsteNach(a.Index));
-        _detail.Children.Add(new WrapPanel { Children = { _umschalten, naechstes } });
+        var knoepfe = new WrapPanel { Children = { _umschalten, naechstes } };
+        if (Projekt && _alsVorlage is { } alsVorlage)
+        {
+            var vorlage = LernTeile.Knopf(ProjektTexte.AlsVorlage);
+            vorlage.Click += (_, _) => alsVorlage(a.Eintrag);
+            knoepfe.Children.Add(vorlage);
+        }
+        _detail.Children.Add(knoepfe);
 
         _raster.Children.Add(_listenKarte);
         _raster.Children.Add(_detail);

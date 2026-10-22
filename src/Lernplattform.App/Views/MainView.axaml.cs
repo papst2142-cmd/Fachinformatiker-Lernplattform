@@ -88,7 +88,10 @@ public partial class MainView : UserControl
         // Ebene fuer Hinweis- und Rueckfragefenster ueber allen Seiten (Phase 2)
         var ebene = new Panel { IsVisible = false };
         Dialog.Ebene(ebene);
-        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), ebene } };
+        // W3: Ebene fuer Kurzhinweise (show_badge_toast) unter den Fenstern, laesst Klicks daneben durch
+        var hinweise = new Panel { IsVisible = false };
+        Kurzhinweis.Ebene(hinweise);
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), hinweise, ebene } };
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
@@ -198,7 +201,9 @@ public partial class MainView : UserControl
                 // Phase 4, W1: Lernseiten
                 Seiten.Ap1Szenarien => new SzenarioSeite(Core.Lernen.Quellen.Ap1),
                 Seiten.Ap2Szenarien => new SzenarioSeite(Core.Lernen.Quellen.Ap2),
-                Seiten.Testprojekt => new SzenarioSeite(Core.Lernen.Quellen.Projekt),
+                Seiten.Testprojekt => new SzenarioSeite(Core.Lernen.Quellen.Projekt, vorlage => _ = AlsVorlageAsync(vorlage)),
+                // Phase 4, W3: Abschlussprojekt
+                Seiten.Abschluss => new AbschlussprojektSeite(),
                 Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
@@ -211,6 +216,11 @@ public partial class MainView : UserControl
 
     private void Zeige(string id)
     {
+        // W3: beim Verlassen der Seite "Abschlussprojekt" offene Eingaben speichern
+        if (AktuelleSeite != id && _seiten.TryGetValue(AktuelleSeite, out var vorher) && vorher is AbschlussprojektSeite verlassen)
+        {
+            verlassen.Speichern();
+        }
         AktuelleSeite = id;
         var gebaut = _seiten.ContainsKey(id);
         _inhalt.Content = Seite(id);
@@ -244,6 +254,10 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is NotizblockSeite notizblock)
         {
             notizblock.Gezeigt();
+        }
+        if (gebaut && _seiten[id] is AbschlussprojektSeite abschluss)
+        {
+            abschluss.Gezeigt();
         }
         if (gebaut && _seiten[id] is OptionenSeite optionen)
         {
@@ -286,6 +300,9 @@ public partial class MainView : UserControl
             case OptionenSeite optionen:
                 optionen.Gezeigt();
                 break;
+            case AbschlussprojektSeite abschluss:
+                abschluss.Gezeigt();
+                break;
         }
     }
 
@@ -304,6 +321,13 @@ public partial class MainView : UserControl
         {
             Messwerte.Reihe("Seitenwechsel (gebaute Seite)", ms);
         }
+    }
+
+    /// <summary>use_as_template (Seite Testprojekt): erst das Abschlussprojekt zeigen, dann uebernehmen.</summary>
+    private async Task AlsVorlageAsync(Core.Inhalte.Lerninhalt vorlage)
+    {
+        await ZeigeAsync(Seiten.Abschluss);
+        ((AbschlussprojektSeite)_seiten[Seiten.Abschluss]).Vorlage(vorlage);
     }
 
     /// <summary>

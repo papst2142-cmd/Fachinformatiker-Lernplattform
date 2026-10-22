@@ -117,6 +117,14 @@ public class ProjektAblaufTests
         Assert.Equal(1, a.Zeilen());
         Assert.Equal(1, a.Abgleiche);
         Assert.Empty(a.Ablauf.Offen);
+        // Feld: strip, Textfeld: rstrip (Pythons Leerraum, auch U+3000)
+        a.Ablauf.Eingabe("ziel", () => "\u3000 Ziel \n", textfeld: true);
+        a.Ablauf.Getippt("ziel");
+        a.Ablauf.Eingabe("betrieb", () => " Firma\u3000");
+        a.Ablauf.Getippt("betrieb");
+        Assert.True(a.Ablauf.Speichern());
+        Assert.Equal("\u3000 Ziel", a.Gespeichert("neu01")["ziel"]);
+        Assert.Equal(2, a.Zeilen());
     }
 
     [Fact]

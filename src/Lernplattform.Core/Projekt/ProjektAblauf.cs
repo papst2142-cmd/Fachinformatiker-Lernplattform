@@ -181,8 +181,12 @@ public sealed class ProjektAblauf(Func<LernstandSchreiber> schreiber, Func<JsonO
 
     // -- Speichern -----------------------------------------------------------------------------
 
-    /// <summary>Ein Eingabefeld anmelden: liefert den aktuellen Wert (Feld: strip, Textfeld: rstrip).</summary>
-    public void Eingabe(string feld, Func<string> wert) => _eingaben[feld] = wert;
+    /// <summary>
+    /// Ein Eingabefeld anmelden: roh liefert den Text der Oberflaeche; gespeichert wird bei einem Feld
+    /// box.get().strip(), bei einem Textfeld get("1.0", "end-1c").rstrip() (Pythons Leerraum).
+    /// </summary>
+    public void Eingabe(string feld, Func<string> roh, bool textfeld = false) =>
+        _eingaben[feld] = textfeld ? () => Rechner.PythonZeichen.RStrip(roh()) : () => Rechner.PythonZeichen.Strip(roh());
 
     /// <summary>Wert, mit dem ein Feld startet (fields.get(feld, vorgabe)).</summary>
     public string Startwert(string feld, string vorgabe = "") => Felder.TryGetValue(feld, out var wert) ? wert : vorgabe;

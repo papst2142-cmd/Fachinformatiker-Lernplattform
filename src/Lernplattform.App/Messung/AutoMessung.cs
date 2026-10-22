@@ -5,6 +5,7 @@ using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Projekt;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Programm;
@@ -74,6 +75,7 @@ public static class AutoMessung
         funde += await RechnerMesspunkteAsync(ansicht);
         funde += await W1MesspunkteAsync(ansicht, inhalte);
         funde += await KlausurMesspunkteAsync(ansicht);
+        funde += await ProjektMesspunkteAsync(ansicht);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -184,6 +186,14 @@ public static class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 4, W3: Reiter des Abschlussprojekts, Rueckfrage, Fehler beim Export, Kurzhinweis
+                await foreach (var ansichtName in ProjektAnsichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -201,6 +211,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
         Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
         Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
+        Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -325,6 +336,12 @@ public static class AutoMessung
     private static readonly (string Text, string Flaeche)[] KlausurPaare =
     [
         ("red", "card_hi"), ("green", "card_hi"),
+    ];
+
+    // Phase 4, W3: Rahmen des Kurzhinweises (yellow auf card_hi); Summe rot und Warnungen gelb auf card stehen schon oben
+    private static readonly (string Text, string Flaeche)[] ProjektPaare =
+    [
+        ("yellow", "card_hi"),
     ];
 
     // Phase 4, W1: Bereichsnamen im Notizblock (accent, purple, blue, accent2, orange) und Status auf card_alt
@@ -942,6 +959,122 @@ public static class AutoMessung
         ("pruefung/laeuft", () => Dialog.Zeigen(PruefungTexte.LaeuftTitel, PruefungTexte.LaeuftText, Dialog.Ok)),
     ];
 
+    // Phase 4, W3: langer Titel fuer Rueckfrage und Kurzhinweis
+    private const string LangerTitel = "Einführung einer zentralen Benutzer- und Rechteverwaltung mit Active Directory für 120 Arbeitsplätze";
+
+    /// <summary>Rueckfrage, Fehler beim Export und Kurzhinweis des Abschlussprojekts (Wortliste W3 Nr 16, 19, 28).</summary>
+    private static readonly (string Name, Action Zeigen, Action Schliessen)[] ProjektFenster =
+    [
+        ("abschluss/rueckfrage-loeschen", () => _ = Dialog.Zeigen(ProjektTexte.RueckfrageTitel,
+            Abschlussprojekt.Rueckfrage(new Dictionary<string, string> { [Abschlussprojekt.TitelFeld] = LangerTitel }, true), TrainerTexte.Ja, TrainerTexte.Nein),
+            Dialog.AlleSchliessen),
+        ("abschluss/export-fehler", () => _ = Dialog.Zeigen(ProjektTexte.SpeichernFehlgeschlagen, ProjektTexte.DateiNichtGespeichert, Dialog.Ok),
+            Dialog.AlleSchliessen),
+        ("abschluss/kurzhinweis", () => Kurzhinweis.Zeigen(Beschriftungen.Einsetzen(ProjektTexte.Gespeichert,
+            Abschlussprojekt.ExportName(new Dictionary<string, string> { [Abschlussprojekt.TitelFeld] = LangerTitel }, "pdf"))), Kurzhinweis.Schliessen),
+    ];
+
+    /// <summary>
+    /// Phase 4, W3: die 6 Reiter des Abschlussprojekts nacheinander zeigen (je nach dem Zeigen
+    /// pruefen), dann Fachgespraech mit Hinweis und "Wusstest du es?", die Fenster. Nichts wird
+    /// gespeichert (es gibt keine offenen Eingaben); danach wieder Reiter "Übersicht".
+    /// </summary>
+    private static async IAsyncEnumerable<string> ProjektAnsichten(MainView ansicht)
+    {
+        if (!ansicht.GebauteSeiten.TryGetValue(Seiten.Abschluss, out var gebaut) || gebaut is not AbschlussprojektSeite seite)
+        {
+            yield break;
+        }
+        await ansicht.ZeigeAsync(Seiten.Abschluss);
+        foreach (var (reiter, _) in Abschlussprojekt.Reiter)
+        {
+            seite.Probe(reiter);
+            await ansicht.BildFertigAsync();
+            yield return "abschluss/" + reiter;
+        }
+        seite.ProbeHinweis(true);
+        await ansicht.BildFertigAsync();
+        yield return "abschluss/fachgespraech-hinweis";
+        seite.ProbeHinweis(false);
+        foreach (var (name, zeigen, schliessen) in ProjektFenster)
+        {
+            zeigen();
+            await ansicht.BildFertigAsync();
+            yield return name;
+            schliessen();
+        }
+        seite.Probe(Abschlussprojekt.Reiter[0].Schluessel);
+        await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// Phase 4, W3 (Plan P4-8 Abschnitt 6, Messpunkte): erstes Laden des Projekts, jeder Reiter
+    /// (erstes Bauen und Wiederverwenden), Projekt wechseln, PDF und Text eines Projekts mit
+    /// 8 vollen Kapiteln erzeugen. Grenze 400 ms, Fund ab 1 000 ms. Nichts wird gespeichert.
+    /// </summary>
+    private static async Task<int> ProjektMesspunkteAsync(MainView ansicht)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        if (!ansicht.GebauteSeiten.TryGetValue(Seiten.Abschluss, out var gebaut) || gebaut is not AbschlussprojektSeite seite)
+        {
+            Messwerte.Notiere("Abschlussprojekt: FEHLER, Seite nicht gebaut");
+            return 1;
+        }
+        void Notiere(string titel, double ms)
+        {
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms > Abbruch)
+            {
+                Messwerte.Notiere("  FEHLER: ueber 1000 ms");
+                funde++;
+            }
+        }
+        async Task Messpunkt(string titel, Action schritt)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            Notiere(titel, uhr.Elapsed.TotalMilliseconds);
+        }
+        Notiere("Abschlussprojekt erstes Laden des Projekts (Reiter Übersicht gebaut)", seite.LadenMs);
+        await ansicht.ZeigeAsync(Seiten.Abschluss);
+        foreach (var runde in (string[])["erstes Bauen", "wiederverwendet"])
+        {
+            foreach (var (reiter, name) in Abschlussprojekt.Reiter.Skip(1).Append(Abschlussprojekt.Reiter[0]))
+            {
+                await Messpunkt($"Abschlussprojekt Reiter \"{name}\" ({runde}, bis zum Bild)", () => seite.Probe(reiter));
+            }
+        }
+        var vorher = seite.Ablauf.Projekt;
+        await Messpunkt("Abschlussprojekt Projekt wechseln (Reiter neu, bis zum Bild)", () => seite.ProbeLaden("messung-" + Abschlussprojekt.NeueKennung()));
+        seite.ProbeLaden(vorher);
+        await ansicht.BildFertigAsync();
+        // Projekt mit 8 vollen Kapiteln (je etwa 2 Seiten), vollem Antrag und Sachkosten
+        var felder = new Dictionary<string, string>(StringComparer.Ordinal) { [Abschlussprojekt.TitelFeld] = LangerTitel };
+        var absatz = string.Concat(Enumerable.Repeat("Die Umsetzung erfolgt schrittweise nach Plan, mit Tests und Abnahme durch den Auftraggeber. ", 60));
+        foreach (var k in Abschlussprojekt.Kapitel)
+        {
+            felder["kapitel_" + k.Schluessel] = absatz + "\n\n" + absatz;
+        }
+        foreach (var a in Abschlussprojekt.Antrag)
+        {
+            felder[a.Schluessel] = absatz[..600];
+        }
+        for (var n = 0; n < Abschlussprojekt.Sachkostenzeilen; n++)
+        {
+            felder["material_name_" + n] = "Server mit Lizenz " + n;
+            felder["material_betrag_" + n] = "1.234,50";
+        }
+        var uhr = Stopwatch.StartNew();
+        var pdf = Abschlussprojekt.ExportPdf(felder, 40, DateTime.Now);
+        Notiere(string.Create(inv, $"Abschlussprojekt PDF erzeugen (8 volle Kapitel, {pdf.Length / 1024} KB)"), uhr.Elapsed.TotalMilliseconds);
+        uhr.Restart();
+        var text = Abschlussprojekt.TextDatei(Abschlussprojekt.ExportText(felder, 40), false);
+        Notiere(string.Create(inv, $"Abschlussprojekt Text erzeugen (8 volle Kapitel, {text.Length / 1024} KB)"), uhr.Elapsed.TotalMilliseconds);
+        return funde;
+    }
+
     /// <summary>
     /// Phase 4, W2: Ansichten der Klausursimulation nacheinander zeigen (je nach dem Zeigen
     /// pruefen), ohne zu speichern (KlausurTeil.Probe), dann die Rueckfragen. Danach wieder
@@ -1205,6 +1338,13 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
+                    await foreach (var name in ProjektAnsichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
                     foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
                     {
                         await ansicht.ZeigeAsync(seite);
@@ -1218,7 +1358,7 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {seite}: {fund}");
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare).Concat(KlausurPaare))
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare).Concat(KlausurPaare).Concat(ProjektPaare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -1230,7 +1370,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite, der Lernseiten (Phase 4, W1) und der Klausursimulation (Phase 4, W2) geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite, der Lernseiten (Phase 4, W1), der Klausursimulation (Phase 4, W2) und des Abschlussprojekts (Phase 4, W3) geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)

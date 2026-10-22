@@ -63,6 +63,8 @@ public partial class App : Application
             {
                 if (e.Kind == ActivationKind.Background)
                 {
+                    // W3: offene Eingaben im Abschlussprojekt zuerst speichern (_lifecycle main.py 5975)
+                    Programm.Zustand.EingabenSpeichern();
                     Programm.AbgleichDienst.Verlassen();
                 }
             };
