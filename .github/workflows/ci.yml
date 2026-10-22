@@ -1,15 +1,38 @@
 # Phase 0: Bauen und Testen auf jedem Push und Pull Request.
 # Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
+#
+# Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
+# - schnell: vergleichswerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
+#   Laeuft bei jedem Push auf einen Pull Request und auf main.
+# - voll: dazu tests (windows-latest, macos-15), pakete x3 und android (8 Teile). Laeuft nur
+#   ueber workflow_dispatch (Vorgabe voll) oder bei einem Pull Request mit dem Label "voll".
+#   Der volle Lauf auf dem Kopf des Pull Requests ist das Merge-Tor.
+# Ein Label ausser "voll" startet nichts und bricht nichts ab (alle Teile uebersprungen).
 name: CI
 
 on:
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
+    inputs:
+      stufe:
+        description: "Stufe: voll (alle 8 Teile) oder schnell"
+        type: choice
+        options: [voll, schnell]
+        default: voll
 
 permissions:
   contents: read
+
+# B3: je Pull Request eine Gruppe, ein neuer Push bricht den alten Lauf ab. Laeufe auf main,
+# ueber workflow_dispatch und Label ausser "voll" bekommen eine eigene Gruppe (nie abgebrochen).
+concurrency:
+  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -19,10 +42,12 @@ env:
 jobs:
   tests:
     name: tests (${{ matrix.os }})
+    # schnell nur ubuntu-latest, voll alle drei Systeme
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
+        os: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '["ubuntu-latest", "windows-latest", "macos-15"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -54,7 +79,8 @@ jobs:
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen
       # wechseln, Layoutpruefung breit und schmal (384 x 832). Rot bei Absturz, bei einem
-      # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3).
+      # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3). Ueberschreitet ein
+      # wiederholbarer Messpunkt seine Grenze, misst der Start-Test ihn bis zu 3 Mal (P4-12 B6).
       - name: Start ohne Bedienung (Linux, Xvfb)
         if: runner.os == 'Linux'
         timeout-minutes: 10
@@ -72,7 +98,7 @@ jobs:
         run: dotnet run --no-build -c Release --project src/Lernplattform.Desktop
       - uses: actions/upload-artifact@v7
         with:
-          name: messung-${{ runner.os }}
+          name: messung-${{ runner.os }}-${{ github.run_attempt }}
           path: messung_${{ runner.os }}.txt
         if: always()
 
@@ -80,6 +106,8 @@ jobs:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
     # Update-Probe A 0.9.0 -> A 0.9.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
+    # nur Stufe voll
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
     strategy:
       fail-fast: false
       matrix:
@@ -120,6 +148,7 @@ jobs:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
     # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
     name: vergleichswerte (Python 3.12)
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -244,6 +273,8 @@ jobs:
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)
+    # nur Stufe voll
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

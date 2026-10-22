@@ -22,6 +22,15 @@
   - `inhalte.json` (G1), `testdaten.db/.json`, `sicherung_test.json.gz`: `Core/Daten`. Nur Testdaten; Nicos echter Lernstand nie im Repo (Auflage A3).
 - Ein Bildschirm-Aufbau für PC und Handy. Beschriftungen PC = Handy. Farbwelten (72 = 6 × 6 × 2) werden im Core berechnet und müssen exakt den Python-Hexwerten entsprechen (A2).
 
+## CI (zwei Stufen, Weisung P4-12, Nico 22.10.2026)
+- **schnell** = `vergleichswerte` + `tests (ubuntu-latest)` mit Start-Test und Python-Prüfungen. Läuft bei jedem Push auf einen PR und auf `main` (main nur schnell).
+- **voll** = zusätzlich `tests` windows-latest und macos-15, `pakete` ×3, `android` (zusammen 8 Teile). Nur über `workflow_dispatch` (Vorgabe `voll`) oder am PR mit Label `voll`. Kein voller Lauf bei normalem PR-Push oder auf main.
+- **Voll nur einmal je Welle auf dem fertigen Kopf** (Dispatch oder Label); Zwischenstände nur schnell. Label `voll` danach wieder entfernen, sonst läuft jeder weitere Push voll. Merge-Tor = voller Lauf 8/8 auf demselben Kopf (ein Dispatch-Lauf genügt).
+- Vorher wie bisher alles lokal testen (alle Tests als `claude`, Start-Test). Auf einen Lauf mit **einem** Warte-Befehl warten (eine Schleife bis zum Ende), nicht mit vielen Einzelabfragen.
+- Ist ein Teil rot, nennt die Meldung Messpunkt, Wert, Grenze und alle Einzelmessungen (Artefakt `messung-<OS>-<Versuch>`, Zeilen `FEHLER:`).
+- Messwiederholung (`Core/Diagnose/Messwiederholung.cs`): Ein wiederholbarer Messpunkt über seiner Grenze wird bis zu 3 Mal gemessen (Zustand davor, 200 ms Pause, kein Vorwärmen); rot nur, wenn alle Messungen darüber liegen. Grenzen unverändert (Farbregler 150/100 ms, Ansicht 400 ms, Abbruch 1 000 ms). Einmalige Messpunkte (erstes Öffnen/Laden/Bauen, Karteikarten bis erste Karte, Farbregler Schritt 1, Seitenwechsel aus MainView) bleiben streng.
+- `concurrency`: je PR eine Gruppe, neuer Push bricht den alten Lauf ab; main, Dispatch und fremde Labels werden nie abgebrochen. `paths-ignore`: `**.md`, `docs/**`. Das Regelwerk von `main` verlangt keine Status-Prüfungen (nur kein Löschen, kein Force-Push).
+
 ## Namen (endgültig, Nico 19.10.2026)
 - Anzeige „Fachinformatiker Lernplattform“; Android `io.github.papst2142cmd.lernplattform`; Datenordner `Fachinformatiker-Lernplattform` (Linux `fachinformatiker-lernplattform`); Datenbank `lernplattform.db`; Installationskennung (Velopack) `Fachinformatiker-Lernplattform`; Programmdatei `Lernplattform` auf allen Systemen (Windows `Lernplattform.exe`, Linux/macOS `Lernplattform`, Nico 20.10.2026, ersetzt die frühere Kleinschreibung). Kennung und Programmname nach der ersten Auslieferung nie ändern.
 - **Durchgehende Update-Linie:** A, B und 1.0 haben dieselbe Kennung und denselben Datenordner; der Lernstand bleibt bei jedem Update. Kennung und Datenordner nie ändern. Eigene Installation nur gegenüber der Python-Linie (einmalige Übernahme aus `lernstand.json.gz`).
