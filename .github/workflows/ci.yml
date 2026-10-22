@@ -193,6 +193,9 @@ jobs:
           # Phase 4 W3 (Weisung P4-8): Zeichentabelle des PDF-Exports und G34 aus dem unabhaengigen Skript
           python3 -I werkzeuge/tabellen/erzeuge_pdf_zeichen.py python-linie neu/PdfZeichen.Tabelle.cs
           python3 -I werkzeuge/vergleich/pruefe_abschlussprojekt.py inhalte neu/abschlussprojekt_skript.json
+          # Phase 4 W4 (Weisung P4-10/P4-11): G35 Hilfe aus Python und aus dem unabhaengigen Skript
+          python3 -I werkzeuge/vergleich/erzeuge_hilfe.py python-linie neu/hilfe.json
+          python3 -I werkzeuge/vergleich/pruefe_hilfe.py neu/hilfe_skript.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -210,7 +213,7 @@ jobs:
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
-                       "pruefung.json", "fachrichtungen.json"):
+                       "pruefung.json", "fachrichtungen.json", "hilfe.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
@@ -240,6 +243,14 @@ jobs:
           for teil in teile:
               assert skript[teil] == g34[teil], "G34 " + teil + ": Skript weicht von Python ab"
           print("G34 Skript gleich Python")
+          # G35 (W4): das Skript nur aus der Spezifikation muss in allen Teilen gleich Python sein
+          g35 = json.load(open("neu/hilfe.json", encoding="utf-8"))
+          skript = json.load(open("neu/hilfe_skript.json", encoding="utf-8"))
+          teile = ("texte", "datum", "suche", "name", "einstellungen", "rundgang", "oberflaeche", "paare")
+          assert sorted(skript) == sorted(teile), sorted(skript)
+          for teil in teile:
+              assert skript[teil] == g35[teil], "G35 " + teil + ": Skript weicht von Python ab"
+          print("G35 Skript gleich Python")
           PY
 
   android:

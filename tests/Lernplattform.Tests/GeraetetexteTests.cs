@@ -77,6 +77,7 @@ public partial class GeraetetexteTests
                 Geraetetexte.KopieName("vor_uebernahme_2026-10-21_0612.db", false)),
             ("Abgleich.Geraet", "-", Geraetetexte.Geraet(true, "Rechner"), Geraetetexte.Geraet(false, "Rechner")),
             ("Pruefung.StartFrage", "-", Geraetetexte.PruefungStartFrage(true), Geraetetexte.PruefungStartFrage(false)),
+            ("Rundgang.Tasten", "-", Geraetetexte.RundgangTasten(true) ?? "", Geraetetexte.RundgangTasten(false) ?? ""),
         };
         foreach (var bereich in Optionen.AlleFuer(true))
         {
@@ -131,7 +132,7 @@ public partial class GeraetetexteTests
             Assert.True(paare.Any(p => p.Stelle == ausnahme.Stelle && Einheitlich(p.Pc) != Einheitlich(p.Handy)),
                 $"{ausnahme.Nr} {ausnahme.Stelle}: kein Unterschied mehr");
         }
-        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11", "B12"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
+        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11", "B12", "B13"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
     }
 
     [Fact]
@@ -202,6 +203,9 @@ public partial class GeraetetexteTests
         ("Views/AbschlussprojektSeite.cs", "private static readonly bool Handy = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/AbschlussprojektSeite.cs", "var daten = _a.ExportDaten(endung, Handy, DateTime.Now);", "Technik: Textdatei PC CRLF mit BOM, Handy LF ohne BOM (app_gui 4736, main.py 2388), kein Anzeigetext"),
         ("Views/OptionenSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Views/OptionenSeite.cs", "if (!Pc)", "Verhalten: Termin am Handy beim Tippen speichern, sobald gueltig (main.py 4484-4490, W4)"),
+        ("Views/RundgangEbene.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Views/RundgangEbene.cs", "var reihe = new KnopfReihe { EineZeile = Pc, Margin = new Thickness(0, 10, 0, 0) };", "Aufbau: Knopfzeile PC eine Zeile, wenn sie passt, sonst wie Handy Hauptknopf oben (main.py 5059-5066, W4)"),
         ("Views/RuecksicherungTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "if (!Android && pfad is not null)", "Technik: Speicherweg (Android ueber Datenstrom)"),
         ("Views/Seiten.cs", "foreach (var punkt in Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)))", "Seitentitel: PC-Wortlaut auf beiden Geraeten"),
@@ -209,7 +213,7 @@ public partial class GeraetetexteTests
         ("Views/Seiten.cs", "Suche => Navigation.SucheHandy,", "Seitentitel \"Suchen\" auf beiden Geraeten gleich"),
         ("Views/SucheSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/SucheSeite.cs", "ergebnis = await Task.Run(() => GlobaleSuche.Suchen(text, anfrage, Pc, abbruch.Token), abbruch.Token);", "B4: Suchwoerter (Optionen.StichwoerterFuer = Geraetetexte.OptionenSuchwoerter, Test SuchwoerterWieInDerSuche)"),
-        ("Views/SucheSeite.cs", "ergebnis ??= new SuchErgebnis(anfrage, GlobaleSuche.OptionenTreffer(anfrage, Pc));", "B4: wie oben"),
+        ("Views/SucheSeite.cs", "ergebnis ??= new SuchErgebnis(anfrage, GlobaleSuche.SchnelleTreffer(anfrage, Pc));", "B4: wie oben (Hilfe und Optionen, Diff A)"),
         ("Views/Texte.cs", "public static IReadOnlyList<NavPunkt> NavigationPc { get; } = Navigation.Pc.Select(Punkt).ToList();", "Daten der Seitenleiste"),
         ("Views/Texte.cs", "public static IReadOnlyList<NavPunkt> NavigationHandy { get; } = Navigation.Handy.Select(Punkt).ToList();", "Daten der unteren Leiste"),
         ("Views/UebernahmeTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),

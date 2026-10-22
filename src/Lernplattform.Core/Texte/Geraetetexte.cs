@@ -31,6 +31,7 @@ public static class Geraetetexte
         new("B10", "Uebernahme.Dateifilter", "Android kennt den Dateityp .fisisicherung nicht"),
         new("B11", "Abgleich.Geraet", "\"PC <Rechnername>\" / \"Handy\" (Sammelliste 24)"),
         new("B12", "Pruefung.StartFrage", "\"das Programm\" / \"die App\" (Wortliste W2 Nr 24, Weisung P4-6)"),
+        new("B13", "Rundgang.Tasten", "Tastenzeile des Rundgangs nur am PC (fisi_hilfe.TOUR_KEYS, Wortliste W4)"),
     ];
 
     // -- Aufbau (pc = breiter Aufbau) -----------------------------------------
@@ -86,6 +87,9 @@ public static class Geraetetexte
 
     /// <summary>Rueckfrage "Prüfung starten" (B12): PC "das Programm", Handy "die App".</summary>
     public static string PruefungStartFrage(bool pc) => pc ? PruefungTexte.StartFrage : PruefungTexte.StartFrageHandy;
+
+    /// <summary>Tastenzeile unter dem Rundgang (B13): nur am PC, am Handy keine.</summary>
+    public static string? RundgangTasten(bool pc) => pc ? Hilfe.HilfeTexte.TourTasten : null;
 
     /// <summary>Geraet in Commit-Nachricht und Sicherung (B11).</summary>
     public static string Geraet(bool pc, string rechnername) => pc ? ("PC " + rechnername.Trim()).Trim() : "Handy";

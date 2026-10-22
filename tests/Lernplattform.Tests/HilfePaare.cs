@@ -1,0 +1,50 @@
+namespace Lernplattform.Tests;
+
+/// <summary>
+/// Phase 4, W4: feste Tabelle der Paare (Nachtrag P4-11 Abschnitt 5). Sie steht im Testprojekt, nicht in
+/// Core/Hilfe/HilfeTexte.cs: die alten Python-Texte nennen das alte Repository, und das Programm darf es
+/// nirgends nennen (AbgleichTests.FesteAdresseUndKeinAltesRepository).
+/// </summary>
+internal static class HilfePaare
+{
+    /// <summary>Feste Tabelle „alt → neu“ (Nachtrag P4-11 Abschnitt 5): wo und wie C# von Python abweicht.</summary>
+    public static readonly IReadOnlyList<(string Nr, string Thema, string Alt, string Neu)> Paare =
+    [
+        ("N1", "abgleich",
+            "Namen fisi-lernstand.",
+            "Namen Fi-Lernstand."),
+        ("N1", "abgleich",
+            "deinname/fisi-lernstand",
+            "deinname/Fi-Lernstand"),
+        ("N2", "schutzprogramm",
+            "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
+            "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),
+        ("N2", "update_schutz",
+            "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
+            "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),
+        ("W1", "update",
+            "\n\nUnter Linux legt „Desktop-Verknüpfung anlegen“ eine Verknüpfung auf dem Desktop an oder erneuert si"
+            + "e, zum Beispiel nachdem du das AppImage verschoben hast.",
+            ""),
+        ("W2", "haenger",
+            "\n\nAb Version 0.59.2 unter Linux: Hängt das Programm, öffne ein Terminal und gib diesen Befehl ein:\nki"
+            + "ll -USR1 $(pgrep -i -x -o fisi-lernplattf)\n"
+            + "Das Programm schreibt dann in die Datei haenger.log, an welcher Stelle es gerade steht. Es wird "
+            + "dabei nicht beendet. Achtung: In Version 0.59.1 und älter beendet derselbe Befehl das Programm. In "
+            + "den „Optionen“ unter „Diagnose und Werkzeuge“ kopiert „Befehl kopieren“ ihn für dich.",
+            ""),
+        ("W3", "haenger",
+            "Unter Linux mit IBus schaltet das Programm für sich die IBus-Eingabe ab (X11 ab 0.60, bisher nur im "
+            + "Test geprüft), sonst kann es einfrieren. Umlaute, ß und AltGr gehen weiter. Wer IBus braucht, "
+            + "startet es mit\n"
+            + "FISI_XIM=1 fisi-lernplattform\nMit FISI_XIM=1 kann das Programm wieder langsamer sein oder hängen.",
+            "Hängt unter Linux das Tippen, startest du das Programm mit dem Startschalter\n"
+            + "--ohne-eingabemethode\nDann nutzt es keine Eingabemethode, zum Beispiel IBus."),
+        ("W4", "tastatur",
+            " Die Spielkarte und die Grundrisse im Spiel brauchen noch die Maus.",
+            ""),
+        ("N2", "RELEASE_PAGE_TEXT",
+            "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
+            "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),
+    ];
+}

@@ -20,7 +20,7 @@ namespace Lernplattform.Messung;
 /// Grenze zum breiten Aufbau und in der PC-Startgroesse 1360 x 880 mit der Layoutpruefung.
 /// Nichts wird gespeichert. Rueckgabe: Anzahl Funde (ueber 1 000 ms oder Layout).
 /// </summary>
-public static class AutoMessung
+public static partial class AutoMessung
 {
     public const double Abbruch = 1000;
     public const double Geraetegrenze = 400;
@@ -76,6 +76,7 @@ public static class AutoMessung
         funde += await W1MesspunkteAsync(ansicht, inhalte);
         funde += await KlausurMesspunkteAsync(ansicht);
         funde += await ProjektMesspunkteAsync(ansicht);
+        funde += await W4MesspunkteAsync(ansicht);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -104,6 +105,7 @@ public static class AutoMessung
         var layoutFunde = new List<string>();
         var gepruefteGroessen = new List<string>();
         var groessenJeStufe = 0;
+        var w4Gekuerzt = new List<string>();
         foreach (var stufe in Einstellungen.Schriftgroessen)
         {
             var faktor = Zustand.SchriftFaktor(stufe);
@@ -194,6 +196,19 @@ public static class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 4, W4: Hilfe, Rundgang, Ausbildungsfrage, Warnhinweis, Optionen (ab 7,5 Minuten nur schmal und pc)
+                if (name == "grenze" && Messwerte.SeitStart.Elapsed > W4Zeitgrenze)
+                {
+                    w4Gekuerzt.Add(stufe);
+                    continue;
+                }
+                await foreach (var ansichtName in W4Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -212,6 +227,10 @@ public static class AutoMessung
         Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
         Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
         Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
+        Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
+        Messwerte.Notiere(w4Gekuerzt.Count == 0
+            ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
+            : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -1345,6 +1364,13 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
+                    await foreach (var name in W4Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
                     foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
                     {
                         await ansicht.ZeigeAsync(seite);
@@ -1358,7 +1384,7 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {seite}: {fund}");
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare).Concat(KlausurPaare).Concat(ProjektPaare))
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare).Concat(KlausurPaare).Concat(ProjektPaare).Concat(W4Paare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -1370,7 +1396,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite, der Lernseiten (Phase 4, W1), der Klausursimulation (Phase 4, W2) und des Abschlussprojekts (Phase 4, W3) geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite, der Lernseiten (Phase 4, W1), der Klausursimulation (Phase 4, W2), des Abschlussprojekts (Phase 4, W3) und der Hilfe mit Rundgang (Phase 4, W4) geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)

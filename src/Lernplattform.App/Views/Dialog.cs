@@ -27,7 +27,10 @@ public static class Dialog
     public static Task<int> Zeigen(string titel, string text, params string[] knoepfe) =>
         Zeigen(titel, Schrift.Text(text), knoepfe);
 
-    public static Task<int> Zeigen(string titel, Control inhalt, params string[] knoepfe)
+    public static Task<int> Zeigen(string titel, Control inhalt, params string[] knoepfe) => Zeigen(titel, inhalt, null, knoepfe);
+
+    /// <summary>W4: wie oben; vorbereiten bekommt die Knoepfe (z. B. "Speichern" erst nach einer Wahl freigeben).</summary>
+    public static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, params string[] knoepfe)
     {
         var fertig = new TaskCompletionSource<int>();
         if (_ebene is not { } ebene)
@@ -51,6 +54,7 @@ public static class Dialog
             knopf.Click += (_, _) => Schliessen(nummer);
             reihe.Children.Add(knopf);
         }
+        vorbereiten?.Invoke([.. reihe.Children.OfType<Button>()]);
         var koerper = new StackPanel
         {
             Spacing = 10,
@@ -75,8 +79,8 @@ public static class Dialog
         ebene.Children.Add(fenster);
         ebene.IsVisible = true;
         Offen = fenster;
-        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt)
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => reihe.Children.FirstOrDefault()?.Focus());
+        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => reihe.Children.FirstOrDefault(k => k.IsEnabled)?.Focus());
         return fertig.Task;
     }
 

@@ -23,6 +23,8 @@ internal static class AbsturzProbe
     public const string ArtAusbildung = "ausbildung";
     public const string ArtProjektLoeschen = "projekt_loeschen";
     public const string ArtProjektfelderViele = "projektfelder_viele";
+    public const string ArtKlausurFesthalten = "klausur_festhalten";
+    public const string ArtEinrichten = "einrichten";
     public const string Fertig = "FERTIG";
     private const string Variable = "LERNPLATTFORM_ABSTURZPROBE";
     private const string Argumente = "LERNPLATTFORM_ABSTURZPROBE_ARGUMENTE";
@@ -136,6 +138,37 @@ internal static class AbsturzProbe
                     Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;
+                case ArtKlausurFesthalten:
+                    // W4 (Sammelliste 51): offene Klausur-Antworten immer wieder festhalten wie bei Zustand.EingabenSpeichern
+                    var probe = KlausurAblaufTests.EchteAblage(args[1]);
+                    var klausur = KlausurAbsturzTests.Ablauf(args[0], probe);
+                    klausur.Starten(Klausur.Konzeption);
+                    while (true)
+                    {
+                        var nk = Guid.NewGuid().ToString("N");
+                        if (klausur.Festhalten([(Klausur.Schluessel(0, 0), "Antwort " + nk + new string('.', 3000))]))
+                        {
+                            Console.Out.WriteLine("gespeichert " + nk);
+                            Console.Out.Flush();
+                        }
+                    }
+                case ArtEinrichten:
+                    // W4: Rundgang "Fertig" (Name, Termin, Merker) immer wieder in einem Schreibvorgang
+                    var einrichten = new Einstellungen(args[0]);
+                    while (true)
+                    {
+                        var ne = "N" + Guid.NewGuid().ToString("N");
+                        var (_, aenderung) = Lernplattform.Core.Hilfe.Einrichten.Speichern(ne, new Dictionary<string, bool> { ["B"] = true },
+                            "1.2.2027", "", new DateOnly(2026, 10, 22));
+                        var werte = einrichten.Laden();
+                        aenderung!(werte);
+                        werte["probe"] = ne;
+                        if (einrichten.Speichern(werte))
+                        {
+                            Console.Out.WriteLine("gespeichert " + ne);
+                            Console.Out.Flush();
+                        }
+                    }
                 case ArtAusbildung:
                     var ausbildung = new LernstandSchreiber(new Lernstand(args[0]));
                     for (var runde = 0; ; runde++)
@@ -235,7 +268,7 @@ internal static class AbsturzProbe
                 {
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
-                if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung
+                if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung && art != ArtKlausurFesthalten && art != ArtEinrichten
                     && art != ArtProjektLoeschen && art != ArtProjektfelderViele
                     && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
