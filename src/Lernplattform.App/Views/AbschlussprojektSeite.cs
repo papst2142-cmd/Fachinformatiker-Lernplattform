@@ -577,25 +577,55 @@ public sealed class AbschlussprojektSeite : UserControl
     /// </summary>
     private async Task ExportAsync(string endung)
     {
+        if (_exportLaeuft)
+        {
+            return;               // Doppelklick: ein Dialog genuegt
+        }
+        _exportLaeuft = true;
+        try
+        {
+            await ExportSchreibenAsync(endung);
+        }
+        finally
+        {
+            _exportLaeuft = false;
+        }
+    }
+
+    private bool _exportLaeuft;
+
+    private async Task ExportSchreibenAsync(string endung)
+    {
         _takt.Stop();
         var vorschlag = _a.ExportName(endung);
         if (TopLevel.GetTopLevel(this) is not { } top)
         {
             return;
         }
-        var datei = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        IStorageFile? datei;
+        try
         {
-            Title = ProjektTexte.DialogTitel,
-            SuggestedFileName = vorschlag,
-            DefaultExtension = endung,
-            FileTypeChoices = [endung == "pdf"
-                ? new FilePickerFileType(ProjektTexte.PdfTyp) { Patterns = ["*.pdf"], MimeTypes = ["application/pdf"] }
-                : new FilePickerFileType(ProjektTexte.TextTyp) { Patterns = ["*.txt"], MimeTypes = ["text/plain"] }],
-        });
+            datei = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = ProjektTexte.DialogTitel,
+                SuggestedFileName = vorschlag,
+                DefaultExtension = endung,
+                FileTypeChoices = [endung == "pdf"
+                    ? new FilePickerFileType(ProjektTexte.PdfTyp) { Patterns = ["*.pdf"], MimeTypes = ["application/pdf"] }
+                    : new FilePickerFileType(ProjektTexte.TextTyp) { Patterns = ["*.txt"], MimeTypes = ["text/plain"] }],
+            });
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            await Dialog.Zeigen(ProjektTexte.SpeichernFehlgeschlagen, ProjektTexte.DateiNichtGespeichert, Dialog.Ok);
+            return;
+        }
         if (datei is null)
         {
             return;
         }
+        var name = datei.Name;    // vor Dispose lesen
         try
         {
             var daten = _a.ExportDaten(endung, Handy, DateTime.Now);
@@ -616,7 +646,7 @@ public sealed class AbschlussprojektSeite : UserControl
         {
             datei.Dispose();
         }
-        Kurzhinweis.Zeigen(Beschriftungen.Einsetzen(ProjektTexte.Gespeichert, datei.Name));
+        Kurzhinweis.Zeigen(Beschriftungen.Einsetzen(ProjektTexte.Gespeichert, name));
     }
 
     /// <summary>on_show (beim Zeigen und nach dem Abgleich): nachladen, wenn nichts offen ist.</summary>
