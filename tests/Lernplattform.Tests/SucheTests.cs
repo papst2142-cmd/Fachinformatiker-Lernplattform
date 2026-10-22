@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Lernen;
 using Lernplattform.Core.Suche;
 using Lernplattform.Core.Texte;
 
@@ -160,6 +161,7 @@ public class SucheTests
                     treffer.AddRange(text.Suchen(anfrage!, TestContext.Current.CancellationToken));
                     ergebnis = new SuchErgebnis(anfrage!, treffer);
                 }
+                ergebnis = OhneAusbildung(ergebnis);
                 if (ergebnis.Treffer.Count != erwartet.GetProperty("anzahl").GetInt32())
                 {
                     abweichungen.Add($"{geraet} {begriff}: {ergebnis.Treffer.Count} statt {erwartet.GetProperty("anzahl").GetInt32()} Treffer");
@@ -183,6 +185,53 @@ public class SucheTests
             }
         }
         return abweichungen;
+    }
+
+    /// <summary>
+    /// Phase 4, W2: den Optionen-Bereich "Ausbildung" gibt es nur in C# (Wortliste W2 Abschnitt 7,
+    /// Weisung P4-6). Ohne seinen Treffer muss alles andere wie G19 sein; wo er steht, prueft
+    /// <see cref="AusbildungNurWoErPasst"/>.
+    /// </summary>
+    private static SuchErgebnis OhneAusbildung(SuchErgebnis ergebnis) =>
+        new(ergebnis.Anfrage, [.. ergebnis.Treffer.Where(t => !IstAusbildung(t))]);
+
+    private static bool IstAusbildung(SuchTreffer t) => t.Art == Optionen.SucheArt && t.Titel == PruefungTexte.AusbildungReiter;
+
+    [Fact]
+    public void AusbildungNurWoErPasst()
+    {
+        var gesehen = 0;
+        foreach (var fall in G19.GetProperty("suche").EnumerateArray())
+        {
+            if (GlobaleSuche.Anfrage(fall.GetProperty("begriff").GetString()!) is not { } anfrage)
+            {
+                continue;
+            }
+            foreach (var pc in new[] { true, false })
+            {
+                var treffer = GlobaleSuche.Suchen(Text.Value, anfrage, pc, TestContext.Current.CancellationToken).Treffer;
+                var nadel = PythonKlein.Klein(Lernregeln.Strip(anfrage));
+                var passt = nadel.Length > 0 && (PythonKlein.Klein(PruefungTexte.AusbildungReiter).Contains(nadel, StringComparison.Ordinal)
+                    || PruefungTexte.AusbildungSuchwoerter.Any(w => PythonKlein.Klein(w).Contains(nadel, StringComparison.Ordinal)));
+                Assert.Equal(passt ? 1 : 0, treffer.Count(IstAusbildung));
+                if (!passt)
+                {
+                    continue;
+                }
+                gesehen++;
+                // Reihenfolge wie in den Optionen: nach den Bereichen vor "Lerninhalte", vor allen Inhalten
+                var optionen = treffer.TakeWhile(t => t.Art == Optionen.SucheArt).Select(t => t.Titel).ToList();
+                var reihenfolge = Optionen.AlleFuer(pc).Select(b => b.Titel).ToList();
+                Assert.Equal(optionen.OrderBy(reihenfolge.IndexOf), optionen);
+                var detail = treffer.Single(IstAusbildung).Detail;
+                Assert.StartsWith(SucheTexte.OptionenDetail, detail, StringComparison.Ordinal);
+            }
+        }
+        Assert.True(gesehen > 0, "kein Suchbegriff aus G19 trifft \"Ausbildung\"");
+        Assert.Single(GlobaleSuche.OptionenTreffer("Fachrichtung", true));
+        Assert.Equal((Optionen.Ausbildung, false), GlobaleSuche.Ziel(PruefungTexte.AusbildungReiter, "Fachrichtung"));
+        Assert.Equal(PruefungTexte.AusbildungReiter, Optionen.Bereich(Optionen.Ausbildung).Titel);
+        Assert.DoesNotContain(Optionen.Bereiche, b => b.Id == Optionen.Ausbildung);      // G9 bleibt wie Python
     }
 
     [Fact]

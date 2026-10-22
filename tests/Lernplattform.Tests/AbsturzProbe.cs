@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Pruefung;
 
 namespace Lernplattform.Tests;
 
@@ -17,6 +18,9 @@ internal static class AbsturzProbe
     public const string ArtProjektfeld = "projektfeld";
     public const string ArtUebernahme = "uebernahme";
     public const string ArtVorschau = "vorschau";
+    public const string ArtAbschluss = "abschluss";
+    public const string ArtVorLoeschen = "vor_loeschen";
+    public const string ArtAusbildung = "ausbildung";
     public const string Fertig = "FERTIG";
     private const string Variable = "LERNPLATTFORM_ABSTURZPROBE";
     private const string Argumente = "LERNPLATTFORM_ABSTURZPROBE_ARGUMENTE";
@@ -91,6 +95,56 @@ internal static class AbsturzProbe
                     Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;
+                case ArtAbschluss:
+                    var na = "";
+                    var abschluss = new LernstandSchreiber(new Lernstand(args[0]), null, () => "probe-" + na + "-" + Guid.NewGuid().ToString("N"));
+                    while (true)
+                    {
+                        na = Guid.NewGuid().ToString("N");
+                        // 30 Antworten mit langen Fragen, damit die eine Buchung viele Seiten der Datei beruehrt
+                        var zeilen = Enumerable.Range(0, 30)
+                            .Select(i => (Abschlusszeile)new QuizAntwort("WiSo", "Frage " + na + " " + i + new string('.', 3000), i % 2 == 0)).ToList();
+                        if (abschluss.PruefungAbschliessen(na, "wiso", 50, "4 (Ausreichend)", 60, "{}", zeilen))
+                        {
+                            Console.Out.WriteLine("gespeichert " + na);
+                            Console.Out.Flush();
+                        }
+                    }
+                case ArtVorLoeschen:
+                    // Abschluss bis vor clear_running: das Entfernen der laufenden Pruefung haelt an
+                    var ablage = KlausurAbsturzTests.DateiAblage(args[1], neu =>
+                    {
+                        if (!neu.ContainsKey(LaufendePruefung.Schluessel))
+                        {
+                            Console.Out.WriteLine(Halt);
+                            Console.Out.Flush();
+                            Thread.Sleep(Timeout.Infinite);
+                        }
+                    });
+                    var ablauf = KlausurAbsturzTests.Ablauf(args[0], ablage);
+                    ablauf.Zeigen();
+                    if (ablauf.ImLauf)
+                    {
+                        ablauf.Abgeben(auto: false);    // WiSo: Abgabe gespeichert, dann gleich der Abschluss
+                    }
+                    else
+                    {
+                        ablauf.Abschliessen();
+                    }
+                    Console.Out.WriteLine(Fertig);
+                    Console.Out.Flush();
+                    break;
+                case ArtAusbildung:
+                    var ausbildung = new LernstandSchreiber(new Lernstand(args[0]));
+                    for (var runde = 0; ; runde++)
+                    {
+                        var wert = Ausbildung.Werte[runde % Ausbildung.Werte.Length];
+                        if (Ausbildung.Waehlen(ausbildung, wert))
+                        {
+                            Console.Out.WriteLine("gespeichert " + runde);
+                            Console.Out.Flush();
+                        }
+                    }
                 case ArtVorschau:
                     Uebernahme.Haltepunkt = punkt =>
                     {
@@ -150,7 +204,8 @@ internal static class AbsturzProbe
                 {
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
-                if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && (zeile.Result == Halt || zeile.Result == Fertig))
+                if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung
+                    && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
                     break;
                 }

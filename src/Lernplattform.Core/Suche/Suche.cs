@@ -149,7 +149,7 @@ public static class GlobaleSuche
         {
             return treffer;
         }
-        foreach (var bereich in Texte.Optionen.BereicheFuer(pc))
+        foreach (var bereich in Texte.Optionen.AlleFuer(pc))
         {
             var alle = bereich.StichwoerterFuer(pc);
             var woerter = alle.Where(w => klein(w).Contains(nadel, StringComparison.Ordinal)).ToList();
@@ -167,7 +167,7 @@ public static class GlobaleSuche
     /// <summary>hit_target: Bereich zu einem Optionen-Treffer und ob "Vorlagen" mit aufklappt.</summary>
     public static (string? Bereich, bool Vorlagen) Ziel(string titel, string anfrage)
     {
-        var bereich = Texte.Optionen.Bereiche.FirstOrDefault(b => b.Titel == titel);
+        var bereich = Texte.Optionen.AlleFuer(true).FirstOrDefault(b => b.Titel == titel);
         if (bereich is null)
         {
             return (null, false);

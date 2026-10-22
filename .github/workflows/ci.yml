@@ -46,6 +46,10 @@ jobs:
       - name: Sicherung fuer die alte App in Python 0.63.2 einlesen
         if: runner.os == 'Linux'
         run: python3 -I werkzeuge/vergleich/pruefe_ruecksicherung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ruecksicherung
+      # Phase 4, W2: C#-Sicherung mit der Fachrichtung (zz-einstellungen) in Python 0.63.2 (+1 Projekt, dokumentiert)
+      - name: Sicherung mit Fachrichtung in Python 0.63.2 einlesen
+        if: runner.os == 'Linux'
+        run: python3 -I werkzeuge/vergleich/pruefe_ausbildung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ausbildung
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen
@@ -181,6 +185,9 @@ jobs:
           # Phase 4 W1 (Weisung P4-3): G33 Notizblock und Listen, G34 Abschlussprojekt (Teil speichern)
           python3 -I werkzeuge/vergleich/erzeuge_notizblock.py python-linie tests/Vergleich/testdaten.db neu/notizblock.json
           python3 -I werkzeuge/vergleich/erzeuge_abschlussprojekt.py python-linie neu/abschlussprojekt.json
+          # Phase 4 W2 (Weisung P4-6): G32 Klausur aus Python, G36 Fachrichtungen (unabhaengiges Skript)
+          python3 -I werkzeuge/vergleich/erzeuge_pruefung.py python-linie neu/pruefung.json
+          python3 -I werkzeuge/vergleich/erzeuge_fachrichtungen.py inhalte neu/fachrichtungen.json
           python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
           python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
@@ -198,12 +205,29 @@ jobs:
                        "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
-                       "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json"):
+                       "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
+                       "pruefung.json", "fachrichtungen.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
               assert alt == neu, name + " weicht ab"
               print(name, "gleich")
+          # G36 (Skript nur aus der Spezifikation) muss bei SI gleich G32 (Python) sein
+          g32 = json.load(open("neu/pruefung.json", encoding="utf-8"))
+          g36 = json.load(open("neu/fachrichtungen.json", encoding="utf-8"))
+          for a, b in zip(g32["kriterien"]["szenarien"], g36["kriterien"], strict=True):
+              assert [a["quelle"], a["index"], a["teile"] is not None] == b[:3], (a["quelle"], a["index"])
+              if a["teile"] is not None:
+                  assert [a["teile"]["einleitung"], a["teile"]["teile"]] == b[3:], (a["quelle"], a["index"])
+          for a, b in zip(g32["gesamt"]["faelle"], g36["gesamt"], strict=True):
+              assert a[:6] == b[:6], a[0]
+          si = [f for f in g32["gesamt"]["faelle"] if not f[4]]
+          texte = {tuple(t[0]): t for t in g36["texte"]["si"]}
+          for f in si:
+              if tuple(f[0]) in texte:
+                  assert texte[tuple(f[0])][2] == f[7] and texte[tuple(f[0])][1][2] == f[6], f[0]
+          assert [t[1] for t in g32["kriterien"]["teilpunkte"]] == [t[1] for t in g36["teilpunkte"]]
+          print("G36 SI gleich G32")
           PY
 
   android:

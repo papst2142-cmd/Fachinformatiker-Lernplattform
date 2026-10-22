@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 
 namespace Lernplattform.Core.Daten;
 
@@ -131,6 +132,50 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
     }
 
     /// <summary>
+    /// finish (E6, bewusste Abweichung von Python): Antwortzeilen und Ergebniszeile in EINER
+    /// Buchung. kennung ist die uid der Ergebniszeile, erzeugt beim Start der Pruefung und in der
+    /// laufenden Pruefung abgelegt. Steht diese uid schon in pruefungen, schreibt der Weg nichts,
+    /// auch keine Antworten (jede Zeile prueft das selbst; die Ergebniszeile kommt zuletzt).
+    /// Ein Stempel fuer alle Zeilen. Rueckgabe true: das Ergebnis liegt jetzt vor (neu oder schon
+    /// vorher); false: nichts gespeichert (Lesefehler, Schreibschutz, Fehler), alles oder nichts.
+    /// </summary>
+    public bool PruefungAbschliessen(string kennung, string art, double punkte, string note, int dauerSekunden,
+        string daten, IReadOnlyList<Abschlusszeile> antworten)
+    {
+        const string Neu = " WHERE NOT EXISTS (SELECT 1 FROM pruefungen WHERE uid = $kennung)";
+        var (zeit, abstand) = Stempel();
+        var sql = new StringBuilder();
+        var parameter = new List<(string Name, object? Wert)> { ("$zeit", zeit), ("$abstand", abstand), ("$kennung", kennung) };
+        for (var i = 0; i < antworten.Count; i++)
+        {
+            var n = i.ToString(CultureInfo.InvariantCulture);
+            switch (antworten[i])
+            {
+                case QuizAntwort quiz:
+                    sql.Append("INSERT INTO quiz_answers (timestamp, utc_offset, category, question, correct, uid)"
+                        + $" SELECT $zeit, $abstand, $a{n}, $b{n}, $r{n}, $u{n}" + Neu + "; ");
+                    parameter.AddRange([($"$a{n}", quiz.Fachbereich), ($"$b{n}", quiz.Frage)]);
+                    parameter.Add(($"$r{n}", quiz.Richtig ? 1 : 0));
+                    break;
+                case AufgabeAntwort aufgabe:
+                    sql.Append($"INSERT INTO {(aufgabe.Ap1 ? "ap1_events" : "scenario_events")}"
+                        + " (timestamp, utc_offset, scenario_index, title, theme, correct, uid)"
+                        + $" SELECT $zeit, $abstand, $p{n}, $a{n}, $b{n}, $r{n}, $u{n}" + Neu + "; ");
+                    parameter.AddRange([($"$p{n}", aufgabe.Position), ($"$a{n}", aufgabe.Titel), ($"$b{n}", aufgabe.Thema)]);
+                    parameter.Add(($"$r{n}", aufgabe.Gewusst ? 1 : 0));
+                    break;
+                default:
+                    throw new ArgumentException("Unbekannte Antwortzeile", nameof(antworten));
+            }
+            parameter.Add(($"$u{n}", _kennung()));
+        }
+        sql.Append("INSERT INTO pruefungen (timestamp, utc_offset, art, punkte, note, dauer, daten, uid)"
+            + " SELECT $zeit, $abstand, $art, $punkte, $note, $dauer, $daten, $kennung" + Neu);
+        parameter.AddRange([("$art", art), ("$punkte", punkte), ("$note", note), ("$dauer", dauerSekunden), ("$daten", daten)]);
+        return Lernstand.Schreiben(sql.ToString(), [.. parameter]);
+    }
+
+    /// <summary>
     /// purge_superseded_project_rows (Python v0.63.2 woertlich, dieselben zwei DELETE wie in
     /// Uebernahme.Zusammenfuehren): erst spaetere nicht leere Fassungen in geloeschten Projekten,
     /// dann jede Fassung, die eine neuere desselben Feldes hat (gleiche Zeit: groessere uid gilt).
@@ -204,3 +249,12 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
         return statistik;
     }
 }
+
+/// <summary>Eine Antwortzeile des Pruefungsabschlusses (finish).</summary>
+public abstract record Abschlusszeile;
+
+/// <summary>WiSo: log_quiz_answer(category, question, ok) je bekannter Frage.</summary>
+public sealed record QuizAntwort(string Fachbereich, string Frage, bool Richtig) : Abschlusszeile;
+
+/// <summary>Offene Aufgabe: log_ap1 (quelle "ap1") oder log_scenario; Gewusst = punkte * 2 >= max.</summary>
+public sealed record AufgabeAntwort(bool Ap1, int Position, string Titel, string Thema, bool Gewusst) : Abschlusszeile;

@@ -73,6 +73,7 @@ public static class AutoMessung
         funde += Festbreitenschrift();
         funde += await RechnerMesspunkteAsync(ansicht);
         funde += await W1MesspunkteAsync(ansicht, inhalte);
+        funde += await KlausurMesspunkteAsync(ansicht);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
         var werte = Zustand.Werte;
@@ -175,6 +176,14 @@ public static class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 4, W2: Ansichten der Klausursimulation und ihre Rueckfragen
+                await foreach (var ansichtName in KlausurAnsichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -191,6 +200,7 @@ public static class AutoMessung
         Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
         Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
         Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
+        Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
         Messwerte.Notiere("  Groessen: " + string.Join(", ", gepruefteGroessen));
         foreach (var fund in layoutFunde.Distinct().Take(60))
         {
@@ -309,6 +319,12 @@ public static class AutoMessung
     [
         ("purple", "card"),
         ("cyan", "card"),      // W4a: Titel der Karte "Übertragungsdauer"
+    ];
+
+    // Phase 4, W2: Balken "Nach Themen" (rot/gruen) auf card_hi; alle Textfarben der Klausur stehen schon oben
+    private static readonly (string Text, string Flaeche)[] KlausurPaare =
+    [
+        ("red", "card_hi"), ("green", "card_hi"),
     ];
 
     // Phase 4, W1: Bereichsnamen im Notizblock (accent, purple, blue, accent2, orange) und Status auf card_alt
@@ -913,6 +929,99 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
     }
 
+    /// <summary>Rueckfragen und Hinweise der Klausursimulation (Wortliste W2 Abschnitt 4), laengster Bereichsname.</summary>
+    private static readonly (string Name, Func<Task<int>> Zeigen)[] KlausurFenster =
+    [
+        ("pruefung/frage-starten", () => Dialog.Zeigen(PruefungTexte.StartTitel, Beschriftungen.Einsetzen(Geraetetexte.PruefungStartFrage(true),
+            Core.Pruefung.Klausur.Arten.MaxBy(a => a.Name.Length)!.Name, 90), TrainerTexte.Ja, TrainerTexte.Nein)),
+        ("pruefung/frage-abbrechen", () => Dialog.Zeigen(PruefungTexte.AbbrechenTitel, PruefungTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
+        ("pruefung/frage-abgeben", () => Dialog.Zeigen(PruefungTexte.AbgebenTitel, PruefungTexte.AbgebenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
+        ("pruefung/zeit-wiso", () => Dialog.Zeigen(PruefungTexte.ZeitTitel, PruefungTexte.ZeitWiso, Dialog.Ok)),
+        ("pruefung/zeit-aufgaben", () => Dialog.Zeigen(PruefungTexte.ZeitTitel, PruefungTexte.ZeitOffen, Dialog.Ok)),
+        ("pruefung/frage-abschliessen", () => Dialog.Zeigen(PruefungTexte.BewertungAbschliessen, PruefungTexte.AbschliessenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
+        ("pruefung/laeuft", () => Dialog.Zeigen(PruefungTexte.LaeuftTitel, PruefungTexte.LaeuftText, Dialog.Ok)),
+    ];
+
+    /// <summary>
+    /// Phase 4, W2: Ansichten der Klausursimulation nacheinander zeigen (je nach dem Zeigen
+    /// pruefen), ohne zu speichern (KlausurTeil.Probe), dann die Rueckfragen. Danach wieder
+    /// wie gespeichert und Art "Übung".
+    /// </summary>
+    private static async IAsyncEnumerable<string> KlausurAnsichten(MainView ansicht)
+    {
+        if (!ansicht.GebauteSeiten.TryGetValue(Seiten.Trainer, out var gebaut) || gebaut is not TrainerSeite trainer)
+        {
+            yield break;
+        }
+        await trainer.Geladen;
+        await ansicht.ZeigeAsync(Seiten.Trainer);
+        trainer.ArtWaehlen(TrainerTexte.Pruefung);
+        var klausur = trainer.Klausur!;
+        for (var art = 0; art < KlausurTeil.ProbeNamen.Length; art++)
+        {
+            klausur.Probe(art);
+            await ansicht.BildFertigAsync();
+            yield return KlausurTeil.ProbeNamen[art];
+        }
+        klausur.Probe(-1);
+        await ansicht.BildFertigAsync();
+        foreach (var (name, zeigen) in KlausurFenster)
+        {
+            _ = zeigen();
+            await ansicht.BildFertigAsync();
+            yield return name;
+            Dialog.AlleSchliessen();
+        }
+        trainer.ArtWaehlen(TrainerTexte.Uebung);
+        await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// Phase 4, W2 (Weisung P4-6, Messpunkte): Umschalter auf "Prüfung" (Auswahl mit Lernstand),
+    /// laufende Pruefung zeigen (Aufgaben, WiSo), Aufgabe wechseln, WiSo blaettern, Bewertung zeigen
+    /// und Aufgabe wechseln, Ergebnis zeigen, je bis zum Bild und ohne Speichern. Grenze 400 ms,
+    /// Fund ab 1 000 ms.
+    /// </summary>
+    private static async Task<int> KlausurMesspunkteAsync(MainView ansicht)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        if (!ansicht.GebauteSeiten.TryGetValue(Seiten.Trainer, out var gebaut) || gebaut is not TrainerSeite trainer)
+        {
+            Messwerte.Notiere("Klausursimulation: FEHLER, Pruefungstrainer nicht gebaut");
+            return 1;
+        }
+        await trainer.Geladen;
+        await ansicht.ZeigeAsync(Seiten.Trainer);
+        async Task Messpunkt(string titel, Action schritt)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            var ms = uhr.Elapsed.TotalMilliseconds;
+            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
+            if (ms > Abbruch)
+            {
+                Messwerte.Notiere("  FEHLER: ueber 1000 ms");
+                funde++;
+            }
+        }
+        await Messpunkt("Pruefungstrainer Wechsel zu \"Prüfung\" (Auswahl mit Lernstand, bis zum Bild)", () => trainer.ArtWaehlen(TrainerTexte.Pruefung));
+        var k = trainer.Klausur!;
+        await Messpunkt("Pruefung Auswahl mit 9 Pruefungen und Gesamtergebnis (bis zum Bild)", () => k.Probe(0));
+        await Messpunkt("Laufende Pruefung zeigen, Aufgaben mit den laengsten Texten (bis zum Bild)", () => k.Probe(2));
+        await Messpunkt("Laufende Pruefung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(1));
+        await Messpunkt("Laufende Pruefung WiSo zeigen (bis zum Bild)", () => k.Probe(3));
+        await Messpunkt("Laufende Pruefung WiSo blaettern (bis zum Bild)", k.ProbeBlaettern);
+        await Messpunkt("Bewertung zeigen (bis zum Bild)", () => k.Probe(4));
+        await Messpunkt("Bewertung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(2));
+        await Messpunkt("Ergebnis mit \"Nach Themen\" zeigen (bis zum Bild)", () => k.Probe(5));
+        k.Probe(-1);
+        trainer.ArtWaehlen(TrainerTexte.Uebung);
+        await ansicht.BildFertigAsync();
+        return funde;
+    }
+
     /// <summary>
     /// Phase 4, W1 (Plan Abschnitt 7): erstes Oeffnen der Lernseiten bis der erste Eintrag steht,
     /// AP2-Liste (330) blaettern, Szenario wechseln, Musterloesung aufdecken (ohne Speichern),
@@ -1089,6 +1198,13 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
+                    await foreach (var name in KlausurAnsichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
                     foreach (var seite in (string[])[Seiten.Fortschritt, Seiten.Suche])
                     {
                         await ansicht.ZeigeAsync(seite);
@@ -1102,7 +1218,7 @@ public static class AutoMessung
                             layoutFunde.Add($"{welt} {seite}: {fund}");
                         }
                     }
-                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare))
+                    foreach (var (text, flaeche) in W2Paare.Concat(W3Paare).Concat(RechnerPaare).Concat(W1Paare).Concat(KlausurPaare))
                     {
                         var wert = Farbwelt.Kontrast(palette.Farben[text], palette.Farben[flaeche]);
                         var schluessel = text + " auf " + flaeche;
@@ -1114,7 +1230,7 @@ public static class AutoMessung
                 }
             }
         }
-        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite und der Lernseiten (Phase 4, W1) geprueft: {anzahl}"));
+        Messwerte.Notiere(string.Create(inv, $"Farbwelten mit den Ansichten der Wellen 2 und 3, der Rechner-Seite, der Lernseiten (Phase 4, W1) und der Klausursimulation (Phase 4, W2) geprueft: {anzahl}"));
         foreach (var (schluessel, (wert, welt)) in tiefst)
         {
             var grenze = schluessel.StartsWith("text", StringComparison.Ordinal) || schluessel.StartsWith("muted", StringComparison.Ordinal)

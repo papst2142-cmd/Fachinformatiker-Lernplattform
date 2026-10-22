@@ -35,6 +35,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private readonly Func<Control>? _sicherung;
     private readonly List<RadioButton> _schrift = [];
     private readonly List<RadioButton> _darstellung = [];
+    private readonly List<RadioButton> _fachrichtung = [];
     private EigeneFarbenTeil? _eigene;
     private bool _setzen;
 
@@ -139,6 +140,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Ueber => Ueber(),
         Optionen.Sicherung when _sicherung is not null => _sicherung(),
         Optionen.Abgleich => new AbgleichTeil().Teil,
+        Optionen.Ausbildung => Ausbildung(),
         _ => Platzhalterzeile(),
     };
 
@@ -152,6 +154,64 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     {
         _fehler.IsVisible = !gespeichert;
         return gespeichert;
+    }
+
+    // -- Ausbildung (Phase 4, W2; Wortliste W2 Abschnitt 7) ---------------------
+
+    /// <summary>
+    /// Fachrichtung waehlen: gespeichert im Lernstand (Ausbildung.Waehlen), mit dem Abgleich auf
+    /// die anderen Geraete. Die Anzeige zeigt den neuen Wert erst nach Erfolg; sonst
+    /// "Speichern fehlgeschlagen" und der alte Wert.
+    /// </summary>
+    private Control Ausbildung()
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(new StackPanel
+        {
+            Spacing = 2,
+            Children =
+            {
+                Schrift.Text(PruefungTexte.AusbildungTitel, "Normal", FontWeight.Bold),
+                Schrift.Text(PruefungTexte.AusbildungUntertitel, "Klein", FontWeight.Normal, "Pinsel.muted"),
+            },
+        });
+        var aktuell = Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber);
+        var reihe = new WrapPanel();
+        foreach (var (wert, text) in PruefungTexte.Fachrichtungen)
+        {
+            var wahl = Auswahl(text, "fachrichtung", wert == aktuell);
+            wahl.Content = new LernText(text, "Normal", FontWeight.Normal, "Pinsel.text");   // lange Namen nie im Wort trennen
+            wahl.Tag = wert;
+            wahl.IsCheckedChanged += (_, _) =>
+            {
+                if (_setzen || wahl.IsChecked != true)
+                {
+                    return;
+                }
+                if (Ergebnis(Core.Pruefung.Ausbildung.Waehlen(Zustand.Schreiber, wert)))
+                {
+                    AbgleichDienst.NachDemLernen();     // wie nach jedem Speichern im Lernstand
+                }
+                else
+                {
+                    Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
+                }
+            };
+            _fachrichtung.Add(wahl);
+            reihe.Children.Add(wahl);
+        }
+        panel.Children.Add(reihe);
+        panel.Children.Add(Schrift.Text(PruefungTexte.AusbildungHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        return panel;
+    }
+
+    /// <summary>on_show: die Fachrichtung kann per Abgleich gekommen sein.</summary>
+    public void Gezeigt()
+    {
+        if (_fachrichtung.Count > 0)
+        {
+            Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
+        }
     }
 
     // -- Optische Anpassungen ------------------------------------------------

@@ -237,6 +237,7 @@ public static class UebernahmeAblauf
             }
         }
         projekte.ExceptWith(marken.Where(m => m.Value.Wert == "1").Select(m => m.Key));
+        projekte.Remove("s:" + Pruefung.Ausbildung.Zeile);   // Fachrichtung ist kein Projekt (P4-5, Python zaehlt sie mit)
         laeufe.ExceptWith(geloescht);
         return (eintraege, laeufe.Count, abzeichen, projekte.Count);
     }

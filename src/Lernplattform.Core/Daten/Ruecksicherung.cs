@@ -266,6 +266,7 @@ public static class Ruecksicherung
             }
         }
         projekte.ExceptWith(marken.Where(m => Dashboard.PyText.Str(m.Value.Wert) == "1").Select(m => m.Key));
+        projekte.Remove(Pruefung.Ausbildung.Zeile);   // Fachrichtung ist kein Projekt (P4-5, Python zaehlt sie mit)
         return new PyObjekt
         {
             { "lerneintraege", ereignisse },
