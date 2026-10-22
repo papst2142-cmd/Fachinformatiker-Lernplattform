@@ -199,6 +199,8 @@ public partial class GeraetetexteTests
         ("Views/Navigationsleisten.cs", "foreach (var punkt in Texte.NavigationHandy)", "Aufbau: untere Leiste (B1, B5)"),
         ("Views/Navigationsleisten.cs", "var punkt = Texte.NavigationPc.First(p => p.Id == eltern);", "Aufbau: Unterpunkt der Seitenleiste markieren"),
         ("Views/KlausurTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter (B12)"),
+        ("Views/AbschlussprojektSeite.cs", "private static readonly bool Handy = OperatingSystem.IsAndroid();", "Schalter"),
+        ("Views/AbschlussprojektSeite.cs", "var daten = _a.ExportDaten(endung, Handy, DateTime.Now);", "Technik: Textdatei PC CRLF mit BOM, Handy LF ohne BOM (app_gui 4736, main.py 2388), kein Anzeigetext"),
         ("Views/OptionenSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "if (!Android && pfad is not null)", "Technik: Speicherweg (Android ueber Datenstrom)"),
