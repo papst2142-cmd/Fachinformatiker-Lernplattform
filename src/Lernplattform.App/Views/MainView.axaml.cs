@@ -190,7 +190,7 @@ public partial class MainView : UserControl
                 Seiten.Optionen => new OptionenSeite(BaueSicherung),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
                 Seiten.Karteikarten => new KarteikartenSeite(),
-                Seiten.Trainer => new TrainerSeite(),
+                Seiten.Trainer => new TrainerSeite(ThemaUebenAsync),
                 Seiten.Fortschritt => new FortschrittSeite(JetztUebenAsync),
                 Seiten.Suche => new SucheSeite((treffer, anfrage) => _ = TrefferOeffnenAsync(treffer, anfrage)),
                 // Phase 3, W2: Rechner (der Trainer im Umschalter kommt mit Welle 3)
@@ -245,6 +245,10 @@ public partial class MainView : UserControl
         {
             notizblock.Gezeigt();
         }
+        if (gebaut && _seiten[id] is OptionenSeite optionen)
+        {
+            optionen.Gezeigt();
+        }
         if (_seiten[id] is SucheSeite suche)
         {
             suche.Fokus();
@@ -278,6 +282,9 @@ public partial class MainView : UserControl
                 break;
             case NotizblockSeite notizblock:
                 notizblock.Gezeigt();
+                break;
+            case OptionenSeite optionen:
+                optionen.Gezeigt();
                 break;
         }
     }
@@ -364,6 +371,15 @@ public partial class MainView : UserControl
             };
         }
         trainer.Ueben(schluessel, reihenfolgeBehalten: true, nachher: nachher);
+    }
+
+    /// <summary>practice_topic aus "Nach Themen" der Pruefung (Phase 4 W2): wie im Fortschritt.</summary>
+    private async Task ThemaUebenAsync(string name)
+    {
+        if (await FortschrittSeite.ThemaTeileAsync(name) is { } teile)
+        {
+            await JetztUebenAsync(teile);
+        }
     }
 
     /// <summary>open_search_hit: Optionen (Bereich aufklappen), Karteikarte, Pruefungsfrage, Szenarien.</summary>

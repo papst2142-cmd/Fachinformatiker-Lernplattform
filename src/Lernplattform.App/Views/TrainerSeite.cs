@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Lernen;
+using Lernplattform.Core.Pruefung;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Programm;
@@ -13,7 +14,8 @@ namespace Lernplattform.Views;
 
 /// <summary>
 /// Phase 2, L6: Pruefungstrainer wie app_gui.QuizView (PC-Wortlaut, PC und Handy gleich).
-/// Art "Uebung" mit Core.Lernen.Uebung; Art "Prüfung" kommt in Welle 3 (Platzhalter).
+/// Art "Uebung" mit Core.Lernen.Uebung; Art "Prüfung" ist die Klausursimulation (Phase 4 W2,
+/// <see cref="KlausurTeil"/>); eine laufende Pruefung geht beim Zeigen vor.
 /// Unter dem Ergebnis steht der Hinweis "Übungsprüfung, keine offizielle IHK-Prüfung."
 /// (Weisung P2-4).
 /// </summary>
@@ -25,6 +27,8 @@ public sealed class TrainerSeite : UserControl
     private Uebung? _u;
     private Func<Task>? _nachher;
     private Lerninhalte? _inhalte;      // follow_up: zweiter Teil von "Jetzt üben" nach dem Ergebnis
+    private readonly Func<string, Task> _themaUeben;
+    private KlausurTeil? _klausur;
 
     private Pillen _art = null!;
     private StackPanel _uebungTeil = null!;
@@ -49,8 +53,10 @@ public sealed class TrainerSeite : UserControl
 
     private readonly System.Diagnostics.Stopwatch _messuhr = System.Diagnostics.Stopwatch.StartNew();
 
-    public TrainerSeite()
+    /// <param name="themaUeben">practice_topic ("Jetzt üben" unter "Nach Themen" der Pruefung).</param>
+    public TrainerSeite(Func<string, Task>? themaUeben = null)
     {
+        _themaUeben = themaUeben ?? (_ => Task.CompletedTask);
         _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Content = new ScrollViewer { Content = _liste };
         _takt.Tick += (_, _) => UhrZeigen();
@@ -85,6 +91,11 @@ public sealed class TrainerSeite : UserControl
                 }
                 _wartend.Clear();
                 Vorbereitung();
+                if (_klausur!.Laeuft && _art.Wert != TrainerTexte.Pruefung)
+                {
+                    _art.Waehle(TrainerTexte.Pruefung);     // on_show: eine laufende Pruefung geht vor
+                    ArtZeigen(TrainerTexte.Pruefung);
+                }
                 InhaltMs = _messuhr.Elapsed.TotalMilliseconds;
             });
         }
@@ -106,10 +117,24 @@ public sealed class TrainerSeite : UserControl
         }
     }
 
-    /// <summary>on_show: ohne laufende Session den Pool neu rechnen.</summary>
+    /// <summary>on_show: laufende Pruefung geht vor; sonst ohne laufende Session den Pool neu rechnen.</summary>
     public void Gezeigt()
     {
-        if (_u is { Laeuft: false } u)
+        if (_klausur is not { } klausur)
+        {
+            return;
+        }
+        if (_art.Wert != TrainerTexte.Pruefung && klausur.Laeuft)
+        {
+            _art.Waehle(TrainerTexte.Pruefung);
+            ArtZeigen(TrainerTexte.Pruefung);
+            return;
+        }
+        if (_art.Wert == TrainerTexte.Pruefung)
+        {
+            klausur.Zeigen();
+        }
+        else if (_u is { Laeuft: false } u)
         {
             u.PoolNeu();
             Vorbereitung();
@@ -125,8 +150,16 @@ public sealed class TrainerSeite : UserControl
         Mit(u =>
         {
             _nachher = null;
-            _art?.Waehle(TrainerTexte.Uebung);
-            ArtZeigen(TrainerTexte.Uebung);
+            if (_art.Wert != TrainerTexte.Uebung)
+            {
+                if (_klausur!.Laeuft)
+                {
+                    _ = Dialog.Zeigen(PruefungTexte.LaeuftTitel, PruefungTexte.LaeuftText, Dialog.Ok);
+                    return;
+                }
+                _art.Waehle(TrainerTexte.Uebung);
+                ArtZeigen(TrainerTexte.Uebung);
+            }
             if (u.Laeuft)
             {
                 _takt.Stop();
@@ -150,8 +183,11 @@ public sealed class TrainerSeite : UserControl
     /// </summary>
     public void Springen(string frage) => Mit(u =>
     {
-        _art?.Waehle(TrainerTexte.Uebung);
-        ArtZeigen(TrainerTexte.Uebung);
+        if (_art.Wert != TrainerTexte.Uebung && !_klausur!.Laeuft)
+        {
+            _art.Waehle(TrainerTexte.Uebung);
+            ArtZeigen(TrainerTexte.Uebung);
+        }
         var eintrag = _inhalte?.Quizfragen.FirstOrDefault(q => q.Frage == frage);
         if (eintrag is null)
         {
@@ -255,7 +291,8 @@ public sealed class TrainerSeite : UserControl
         _uebungTeil.Children.Add(new WrapPanel { Children = { _einreichen, _abbrechen } });
         _liste.Children.Add(_uebungTeil);
 
-        _pruefungTeil = Schrift.Karte(Schrift.Text(Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        _klausur = new KlausurTeil(inhalte, _themaUeben);
+        _pruefungTeil = _klausur.Teil;
         _pruefungTeil.IsVisible = false;
         _liste.Children.Add(_pruefungTeil);
     }
@@ -274,11 +311,36 @@ public sealed class TrainerSeite : UserControl
         return knopf;
     }
 
+    /// <summary>_on_mode: zur Pruefung laufende Uebung beenden (ohne Ergebnis), zurueck Pruefung verbergen.</summary>
     private void ArtZeigen(string art)
     {
-        _uebungTeil.IsVisible = art == TrainerTexte.Uebung;
-        _pruefungTeil.IsVisible = art == TrainerTexte.Pruefung;
+        if (art == TrainerTexte.Pruefung)
+        {
+            if (_u is { Laeuft: true } u)
+            {
+                _nachher = null;
+                _takt.Stop();
+                u.Abbrechen();
+                Zurueckgesetzt();
+            }
+            _uebungTeil.IsVisible = false;
+            _pruefungTeil.IsVisible = true;
+            _klausur!.Zeigen();
+        }
+        else
+        {
+            _klausur!.Verbergen();
+            _pruefungTeil.IsVisible = false;
+            _uebungTeil.IsVisible = true;
+        }
+        if (Content is ScrollViewer rollen)
+        {
+            rollen.Offset = default;      // to_top
+        }
     }
+
+    /// <summary>Nur fuer den Start ohne Bedienung und die Tests.</summary>
+    internal KlausurTeil? Klausur => _klausur;
 
     /// <summary>Filter, Pool und Fragenanzahl zeigen (_update_pool).</summary>
     private void Vorbereitung()

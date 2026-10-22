@@ -11,6 +11,9 @@ namespace Lernplattform.Core.Pruefung;
 /// <summary>Die Kachel "Gesamtergebnis" (overall_card): Bereichszeilen, dann Hinweis oder Ergebnis mit Regeln.</summary>
 public sealed record Gesamtkachel(IReadOnlyList<string> Zeilen, string? Hinweis, GesamtErgebnis Ergebnis, string? GesamtZeile);
 
+/// <summary>Ein Balken der Karte "Nach Themen" (Anteil in Prozent, rot unter 50).</summary>
+public sealed record Themenbalken(string Name, double Anteil, string Wert, bool Schwach);
+
 /// <summary>Eine Zeile der Liste "Letzte Prüfungen".</summary>
 public sealed record VerlaufZeile(string Datum, string Name, string Punkte, string Note, double Wert);
 
@@ -112,6 +115,39 @@ public static class Gesamtstand
         return new Gesamtkachel(zeilen, null, ergebnis, Beschriftungen.Einsetzen(PruefungTexte.GesamtZeile, PythonRunden.PunkteText(ergebnis.Gesamt),
             Navigation.NoteKurz, ergebnis.Note, ergebnis.Bestanden ? PruefungTexte.Bestanden : PruefungTexte.NichtBestanden));
     }
+
+    // -- Ergebnis (show_result) ---------------------------------------------------------------
+
+    /// <summary>"%s Punkte" gross.</summary>
+    public static string Punkte(KlausurErgebnis ergebnis) => Beschriftungen.Einsetzen(PruefungTexte.PunkteMuster, PythonRunden.PunkteText(ergebnis.Punkte));
+
+    /// <summary>"Note (Orientierung) 2 (Gut)  ·  Dauer 12:34".</summary>
+    public static string NoteDauer(KlausurErgebnis ergebnis) =>
+        Beschriftungen.Einsetzen(PruefungTexte.NoteDauer, Navigation.NoteKurz, ergebnis.Note, Klausur.Zeittext(ergebnis.Dauer));
+
+    /// <summary>WiSo "%d von %d Fragen richtig", sonst je Aufgabe "Aufgabe %d · %s: %d von %d Punkten".</summary>
+    public static List<string> Ergebniszeilen(string art, KlausurErgebnis ergebnis)
+    {
+        var daten = ergebnis.Daten;
+        if (art == Klausur.Wiso)
+        {
+            return [Beschriftungen.Einsetzen(PruefungTexte.FragenRichtig, Ganz(daten["richtig"]), ((List<object?>)daten["fragen"]!).Count)];
+        }
+        return ((List<object?>)daten["aufgaben"]!).Cast<PyObjekt>().Select((a, i) => Beschriftungen.Einsetzen(PruefungTexte.AufgabeErgebnis,
+            i + 1, a["titel"] as string ?? "", Ganz(a["punkte"]), Ganz(a["max"]))).ToList();
+    }
+
+    /// <summary>Balken "Nach Themen", nach Namen sortiert wie sorted(themen.items()).</summary>
+    public static List<Themenbalken> Themen(KlausurErgebnis ergebnis) => ergebnis.Themen
+        .OrderBy(t => t.Thema, StringComparer.Ordinal)
+        .Select(t =>
+        {
+            var anteil = t.Moeglich != 0 ? t.Erreicht / t.Moeglich * 100 : 0;
+            return new Themenbalken(t.Thema, anteil, Beschriftungen.Einsetzen(PruefungTexte.BalkenWert,
+                PythonRunden.PunkteText(t.Erreicht), PythonRunden.PunkteText(t.Moeglich)), anteil < 50);
+        }).ToList();
+
+    private static long Ganz(object? wert) => (long)Math.Truncate(KlausurErgebnis.Zahl(wert));
 
     /// <summary>Zeile einer Regel: "erfüllt:  " bzw. "offen:  " davor.</summary>
     public static string Regel((string Text, bool Ok) regel) => (regel.Ok ? PruefungTexte.Erfuellt : PruefungTexte.Offen) + regel.Text;

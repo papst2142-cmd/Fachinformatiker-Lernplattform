@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Lernplattform.Core.Inhalte;
+using Lernplattform.Core.Rechner;
+using Lernplattform.Core.Texte;
 using Lernplattform.Core.Zufall;
 
 namespace Lernplattform.Core.Pruefung;
@@ -365,6 +367,62 @@ public static class Klausur
         zustand["dauer"] = Math.Min(Gesamt(zustand), (long)Math.Truncate(Vergangen(zustand, jetzt, zone)));
         zustand["phase"] = Bewertung;
     }
+
+    // -- Anzeige der laufenden Pruefung und der Bewertung (ExamPanel) -------------------------
+
+    /// <summary>_progress: WiSo beantwortete Fragen, sonst bearbeitete Teilaufgaben (nicht nur Leerraum).</summary>
+    public static string Fortschritt(KlausurInhalte inhalte, JsonObject zustand)
+    {
+        var antworten = zustand["antworten"] as JsonObject ?? [];
+        if (Json.Text(zustand["art"]) == Wiso)
+        {
+            var fragen = (zustand["fragen"] as JsonArray ?? []).Select(Json.Text).ToList();
+            var fertig = fragen.Count(q => q is not null && Wahr(antworten[q]));
+            return Beschriftungen.Einsetzen(PruefungTexte.FragenBeantwortet, fertig, fragen.Count);
+        }
+        var gesamt = Enumerable.Range(0, (zustand["aufgaben"] as JsonArray ?? []).Count).Sum(n => Details(inhalte, zustand, n)?.Teile.Count ?? 0);
+        var bearbeitet = antworten.Count(p => Json.Text(p.Value) is { } t && PythonZeichen.Strip(t).Length > 0);
+        return Beschriftungen.Einsetzen(PruefungTexte.TeileBearbeitet, bearbeitet, gesamt);
+    }
+
+    /// <summary>_sum_text: Summe der ganzzahligen Punkte aller Teilaufgaben.</summary>
+    public static string Zwischenstand(KlausurInhalte inhalte, JsonObject zustand)
+    {
+        var punkte = zustand["punkte"] as JsonObject ?? [];
+        long summe = 0;
+        var aufgaben = (zustand["aufgaben"] as JsonArray ?? []).Count;
+        for (var n = 0; n < aufgaben; n++)
+        {
+            var teile = Details(inhalte, zustand, n)?.Teile.Count ?? 0;
+            for (var t = 0; t < teile; t++)
+            {
+                summe += (long)Math.Truncate(Json.Zahl(punkte[Schluessel(n, t)]) ?? 0);
+            }
+        }
+        return Beschriftungen.Einsetzen(PruefungTexte.Zwischenstand, summe);
+    }
+
+    /// <summary>Gespeicherte Antwort einer Teilaufgabe ("" ohne Antwort).</summary>
+    public static string Antwort(JsonObject zustand, string schluessel) => Json.Text((zustand["antworten"] as JsonObject)?[schluessel]) ?? "";
+
+    /// <summary>Antworttext wie box.get("1.0", "end").rstrip("\n").</summary>
+    public static string Feldtext(string? text) => (text ?? "").Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n');
+
+    /// <summary>Wahrheitswert wie Python bool(x) fuer JSON-Werte.</summary>
+    private static bool Wahr(JsonNode? knoten) => knoten switch
+    {
+        null => false,
+        JsonObject o => o.Count > 0,
+        JsonArray a => a.Count > 0,
+        JsonValue v => v.GetValueKind() switch
+        {
+            JsonValueKind.String => v.GetValue<string>().Length > 0,
+            JsonValueKind.True => true,
+            JsonValueKind.Number => Json.Zahl(v) != 0,
+            _ => false,
+        },
+        _ => false,
+    };
 
     /// <summary>suggested_points: Punktevorschlag aus abgehakten Kriterien.</summary>
     public static int Vorschlag(int maximum, IReadOnlyList<bool> haken) => haken.Count == 0

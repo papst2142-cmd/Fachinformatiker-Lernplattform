@@ -236,11 +236,20 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
 
     private async Task ThemaUebenAsync(string name)
     {
+        if (await ThemaTeileAsync(name) is { } teile)
+        {
+            await _ueben(teile);
+        }
+    }
+
+    /// <summary>practice_topic: Teile fuer "Jetzt üben" zu einem Thema (auch "Nach Themen" der Pruefung, Phase 4 W2).</summary>
+    internal static async Task<List<(string Quelle, List<string> Schluessel)>?> ThemaTeileAsync(string name)
+    {
         if (await Zustand.Inhalte is not { } inhalte)
         {
-            return;
+            return null;
         }
-        await _ueben(JetztUeben.ThemenTeile(inhalte, Auswertung.BuchLesen(Pfad), JetztUeben.Themen(inhalte, name), NeuerZufall()));
+        return JetztUeben.ThemenTeile(inhalte, Auswertung.BuchLesen(Pfad), JetztUeben.Themen(inhalte, name), NeuerZufall());
     }
 
     private async Task PunktUebenAsync(string id)

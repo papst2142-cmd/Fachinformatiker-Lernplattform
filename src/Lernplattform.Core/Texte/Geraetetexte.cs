@@ -30,6 +30,7 @@ public static class Geraetetexte
         new("B9", "Diagnose.Knoepfe", "\"Ordner öffnen\" gibt es nur am PC"),
         new("B10", "Uebernahme.Dateifilter", "Android kennt den Dateityp .fisisicherung nicht"),
         new("B11", "Abgleich.Geraet", "\"PC <Rechnername>\" / \"Handy\" (Sammelliste 24)"),
+        new("B12", "Pruefung.StartFrage", "\"das Programm\" / \"die App\" (Wortliste W2 Nr 24, Weisung P4-6)"),
     ];
 
     // -- Aufbau (pc = breiter Aufbau) -----------------------------------------
@@ -57,8 +58,8 @@ public static class Geraetetexte
     /// <summary>Text im Ring eines Fachbereichs (B8).</summary>
     public static string Ring(DashboardFachbereich fachbereich, bool pc) => pc ? fachbereich.RingText : fachbereich.RingTextHandy;
 
-    /// <summary>Bereiche der Optionen (B4).</summary>
-    public static IReadOnlyList<OptionenBereich> OptionenBereiche(bool pc) => Optionen.BereicheFuer(pc);
+    /// <summary>Bereiche der Optionen (B4; ab Phase 4 W2 mit "Ausbildung").</summary>
+    public static IReadOnlyList<OptionenBereich> OptionenBereiche(bool pc) => Optionen.AlleFuer(pc);
 
     /// <summary>Untertitel eines Bereichs: beide mit dem PC-Wortlaut (T3, Nico 21.10.).</summary>
     public static string? OptionenUntertitel(OptionenBereich bereich, bool pc) => bereich.UntertitelPc;
@@ -82,6 +83,9 @@ public static class Geraetetexte
 
     /// <summary>Dateiname der Kopie im Ergebnis (B6: am Handy Umbruchpunkt nach "_", P2-6 A3).</summary>
     public static string KopieName(string dateiname, bool pc) => UebernahmeTexte.KopieName(dateiname, !pc);
+
+    /// <summary>Rueckfrage "Prüfung starten" (B12): PC "das Programm", Handy "die App".</summary>
+    public static string PruefungStartFrage(bool pc) => pc ? PruefungTexte.StartFrage : PruefungTexte.StartFrageHandy;
 
     /// <summary>Geraet in Commit-Nachricht und Sicherung (B11).</summary>
     public static string Geraet(bool pc, string rechnername) => pc ? ("PC " + rechnername.Trim()).Trim() : "Handy";

@@ -136,5 +136,21 @@ public static class Optionen
 
     /// <summary>Bereich zur Kennung (KeyNotFoundException, wenn es ihn nicht gibt).</summary>
     public static OptionenBereich Bereich(string id) =>
-        Bereiche.FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
+        Bereiche.Append(AusbildungBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
+
+    // -- Phase 4, W2: Bereich "Ausbildung" (nur C#, Wortliste W2 Abschnitt 7) -----------------
+
+    public const string Ausbildung = "ausbildung";
+
+    /// <summary>Neu in C# (Python hat ihn nicht); <see cref="Bereiche"/> bleibt wie G9.</summary>
+    public static readonly OptionenBereich AusbildungBereich = new(Ausbildung, PruefungTexte.AusbildungReiter, null, null,
+        false, false, false, [], PruefungTexte.AusbildungSuchwoerter, []);
+
+    /// <summary>Angezeigte Bereiche: wie <see cref="BereicheFuer"/>, "Ausbildung" vor "Lerninhalte".</summary>
+    public static IReadOnlyList<OptionenBereich> AlleFuer(bool pc)
+    {
+        var liste = BereicheFuer(pc).ToList();
+        liste.Insert(liste.FindIndex(b => b.Id == Lerninhalte), AusbildungBereich);
+        return liste;
+    }
 }

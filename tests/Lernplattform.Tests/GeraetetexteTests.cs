@@ -76,8 +76,9 @@ public partial class GeraetetexteTests
             ("Uebernahme.KopieName", "-", Geraetetexte.KopieName("vor_uebernahme_2026-10-21_0612.db", true),
                 Geraetetexte.KopieName("vor_uebernahme_2026-10-21_0612.db", false)),
             ("Abgleich.Geraet", "-", Geraetetexte.Geraet(true, "Rechner"), Geraetetexte.Geraet(false, "Rechner")),
+            ("Pruefung.StartFrage", "-", Geraetetexte.PruefungStartFrage(true), Geraetetexte.PruefungStartFrage(false)),
         };
-        foreach (var bereich in Optionen.Bereiche)
+        foreach (var bereich in Optionen.AlleFuer(true))
         {
             paare.Add(("Optionen.Untertitel", bereich.Id, Geraetetexte.OptionenUntertitel(bereich, true) ?? "",
                 Geraetetexte.OptionenUntertitel(bereich, false) ?? ""));
@@ -130,7 +131,7 @@ public partial class GeraetetexteTests
             Assert.True(paare.Any(p => p.Stelle == ausnahme.Stelle && Einheitlich(p.Pc) != Einheitlich(p.Handy)),
                 $"{ausnahme.Nr} {ausnahme.Stelle}: kein Unterschied mehr");
         }
-        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
+        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11", "B12"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
     }
 
     [Fact]
@@ -167,7 +168,7 @@ public partial class GeraetetexteTests
     [Fact]
     public void SuchwoerterWieInDerSuche()
     {
-        foreach (var bereich in Optionen.Bereiche)
+        foreach (var bereich in Optionen.AlleFuer(true))
         {
             foreach (var pc in new[] { true, false })
             {
@@ -197,6 +198,7 @@ public partial class GeraetetexteTests
         ("Views/Navigationsleisten.cs", "var raster = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(\",\", Enumerable.Repeat(\"*\", Texte.NavigationHandy.Count))) };", "Aufbau: untere Leiste (B1, B5)"),
         ("Views/Navigationsleisten.cs", "foreach (var punkt in Texte.NavigationHandy)", "Aufbau: untere Leiste (B1, B5)"),
         ("Views/Navigationsleisten.cs", "var punkt = Texte.NavigationPc.First(p => p.Id == eltern);", "Aufbau: Unterpunkt der Seitenleiste markieren"),
+        ("Views/KlausurTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter (B12)"),
         ("Views/OptionenSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "if (!Android && pfad is not null)", "Technik: Speicherweg (Android ueber Datenstrom)"),
