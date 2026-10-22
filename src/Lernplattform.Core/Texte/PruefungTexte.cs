@@ -5,7 +5,7 @@ namespace Lernplattform.Core.Texte;
 /// zeichengleich zu Python v0.63.2 (app_gui ExamPanel, fisi_pruefung); der Test vergleicht jeden
 /// Namen mit dem Teil "texte" von G32 (tests/Vergleich/pruefung.json, mit ast aus Python gelesen).
 /// Neu (Abschnitt 6 und 7 der Wortliste): Fachrichtungen und Optionen &gt; Ausbildung.
-/// Nr 81 (Hinweis auf die Projektnote unter "Übersicht") fehlt bis W3 (Weisung P4-6, 3a).
+/// Nr 81 (Hinweis auf die Projektnote unter "Übersicht") kommt mit W3 (Weisung P4-8).
 /// </summary>
 public static class PruefungTexte
 {
@@ -77,6 +77,7 @@ public static class PruefungTexte
     public const string BereichZeile = "%s (%d %%): %s";                                                        // 4124
     public const string NochOffen = "noch offen";                                                               // 4126
     public const string FehltNoch = "Für das Gesamtergebnis fehlt noch: %s.";                                   // 4131
+    public const string ProjektHinweisW3 = " Die Projektnote schätzt du im Abschlussprojekt unter „Übersicht“.";// 4133, Nr 81 (W3)
     public const string GesamtZeile = "Gesamt %s Punkte · %s %s · %s";                                          // 4137
     public const string Bestanden = "bestanden";                                                                // 4139
     public const string NichtBestanden = "nicht bestanden";                                                     // 4139

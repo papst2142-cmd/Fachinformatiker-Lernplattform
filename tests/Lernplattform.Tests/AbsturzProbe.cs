@@ -21,6 +21,8 @@ internal static class AbsturzProbe
     public const string ArtAbschluss = "abschluss";
     public const string ArtVorLoeschen = "vor_loeschen";
     public const string ArtAusbildung = "ausbildung";
+    public const string ArtProjektLoeschen = "projekt_loeschen";
+    public const string ArtProjektfelderViele = "projektfelder_viele";
     public const string Fertig = "FERTIG";
     private const string Variable = "LERNPLATTFORM_ABSTURZPROBE";
     private const string Argumente = "LERNPLATTFORM_ABSTURZPROBE_ARGUMENTE";
@@ -145,6 +147,35 @@ internal static class AbsturzProbe
                             Console.Out.Flush();
                         }
                     }
+                case ArtProjektfelderViele:
+                    var nv = "";
+                    var viele = new LernstandSchreiber(new Lernstand(args[0]), null, () => "probe-" + nv);
+                    for (var runde = 0; ; runde++)
+                    {
+                        nv = Guid.NewGuid().ToString("N");
+                        // 6 Projekte x 8 Felder, lange Werte: INSERT und Aufraeumen beruehren viele Seiten
+                        if (viele.ProjektFeldSpeichern("probe-" + (runde % 6), "feld " + (runde / 6 % 8), "wert " + nv + new string('.', 3000)))
+                        {
+                            Console.Out.WriteLine("gespeichert probe-" + nv);
+                            Console.Out.Flush();
+                        }
+                    }
+                case ArtProjektLoeschen:
+                    var loeschen = new LernstandSchreiber(new Lernstand(args[0]));
+                    for (var runde = 0; ; runde++)
+                    {
+                        // je Runde ein Projekt mit 5 langen Feldern, dann in einer Buchung loeschen (Diff A)
+                        var projekt = "probe-" + runde;
+                        for (var f = 0; f < 5; f++)
+                        {
+                            loeschen.ProjektFeldSpeichern(projekt, "feld " + f, "wert " + runde + new string('.', 3000));
+                        }
+                        if (loeschen.ProjektLoeschen(projekt))
+                        {
+                            Console.Out.WriteLine("gespeichert " + projekt);
+                            Console.Out.Flush();
+                        }
+                    }
                 case ArtVorschau:
                     Uebernahme.Haltepunkt = punkt =>
                     {
@@ -205,6 +236,7 @@ internal static class AbsturzProbe
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
                 }
                 if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung
+                    && art != ArtProjektLoeschen && art != ArtProjektfelderViele
                     && (zeile.Result == Halt || zeile.Result == Fertig))
                 {
                     break;

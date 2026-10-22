@@ -212,6 +212,46 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
     }
 
     /// <summary>
+    /// delete_project in EINER Buchung (Phase 4 W3; bewusste Abweichung von Python wie Entscheidung E6
+    /// im Plan Phase 4). Reihenfolge wie Python: erst die Marke "_geloescht" = "1" und
+    /// <see cref="ProjektAufraeumen"/> (entfernt nicht leere Fassungen, die spaeter liegen als die
+    /// Marke), dann je Feld eine leere Fassung, wenn die dann geltende Fassung nicht leer ist, dann noch
+    /// einmal aufraeumen. Alle Zeilen mit demselben feinen Stempel wie <see cref="ProjektFeldSpeichern"/>.
+    /// Die Kandidaten kommen aus <see cref="ProjektFelder"/> vor der Buchung (Reihenfolge wie Python);
+    /// ob eine leere Fassung entsteht, entscheidet die Bedingung in der Buchung selbst. Jeder Kandidat
+    /// bekommt eine uid, auch wenn er nichts schreibt (nur bei einer Fassung in der Zukunft, M4).
+    /// Python schreibt jede Zeile einzeln fest; bricht es dazwischen ab, bleibt das Projekt
+    /// ausgeblendet, aber Texte stehen noch in der Datenbank. Hier steht alles oder nichts.
+    /// Rueckgabe wie delete_project: true = geloescht; false = nichts gespeichert.
+    /// </summary>
+    public bool ProjektLoeschen(string projekt)
+    {
+        var felder = ProjektFelder().TryGetValue(projekt, out var vorhanden) ? vorhanden : [];
+        var zeit = _uhr.Jetzt().ToString("yyyy-MM-dd HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+        var sql = new StringBuilder("INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid)"
+            + " VALUES ($zeit, $projekt, '_geloescht', '1', $u); " + ProjektAufraeumen + "; ");
+        var parameter = new List<(string Name, object? Wert)> { ("$zeit", zeit), ("$projekt", projekt), ("$u", _kennung()) };
+        var n = 0;
+        foreach (var (feld, wert) in felder)
+        {
+            if (feld == "_geloescht" || wert.Length == 0)
+            {
+                continue;
+            }
+            var i = (n++).ToString(CultureInfo.InvariantCulture);
+            // nur wenn die nach dem Aufraeumen geltende Fassung dieses Feldes nicht leer ist (Python liest nach der Marke)
+            sql.Append("INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid)"
+                + $" SELECT $zeit, $projekt, $f{i}, '', $u{i} WHERE EXISTS (SELECT 1 FROM abschlussprojekt AS a"
+                + $" WHERE a.projekt = $projekt AND a.feld = $f{i} AND a.wert != ''"
+                + " AND NOT EXISTS (SELECT 1 FROM abschlussprojekt AS b WHERE b.projekt = a.projekt AND b.feld = a.feld"
+                + " AND (b.timestamp > a.timestamp OR (b.timestamp = a.timestamp AND b.uid > a.uid)))); ");
+            parameter.AddRange([($"$f{i}", feld), ($"$u{i}", _kennung())]);
+        }
+        sql.Append(ProjektAufraeumen);
+        return Lernstand.Schreiben(sql.ToString(), [.. parameter]);
+    }
+
+    /// <summary>
     /// project_fields: {projekt: {feld: wert}}, je Feld die neueste Fassung (ORDER BY timestamp, uid;
     /// die letzte Zeile gewinnt). Bei einem Lesefehler leer (Python default=[]). Reihenfolge wie
     /// Python-dict: Projekte und Felder in der Reihenfolge ihres ersten Auftretens.

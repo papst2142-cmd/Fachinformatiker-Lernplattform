@@ -53,7 +53,19 @@ public static class Zustand
     /// <summary>Beim Beenden des Programms (z. B. Aufgedecktes als angesehen speichern, flush_inputs).</summary>
     public static event Action? BeimBeenden;
 
-    public static void Beenden() => BeimBeenden?.Invoke();
+    /// <summary>
+    /// W3: offene Eingaben speichern (flush_inputs(revealed=False)): das Abschlussprojekt vor Sicherung
+    /// und Uebernahme (Diff B), beim Verlassen der App am Handy und beim Beenden.
+    /// </summary>
+    public static event Action? BeiEingabenSpeichern;
+
+    public static void EingabenSpeichern() => BeiEingabenSpeichern?.Invoke();
+
+    public static void Beenden()
+    {
+        EingabenSpeichern();
+        BeimBeenden?.Invoke();
+    }
 
     private static IReadOnlyList<(string Tabelle, string Alt, string Neu)>? _umbenennungen;
 
@@ -162,6 +174,22 @@ public static class Zustand
             return null;
         }
     }
+
+    /// <summary>W3: Fragen fuers Fachgespraech (inhalte/fachgespraech.json, _load_questions); leer bei einem Lesefehler.</summary>
+    public static IReadOnlyList<Core.Projekt.ProjektFrage> Fachfragen() => LazyInitializer.EnsureInitialized(ref _fachfragen, () =>
+    {
+        try
+        {
+            return Core.Projekt.Fachgespraech.Laden(EingebauteDatei("fachgespraech"));
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            return [];
+        }
+    });
+
+    private static List<Core.Projekt.ProjektFrage>? _fachfragen;
 
     /// <summary>inhalte/&lt;name&gt;.json aus dem Programm selbst.</summary>
     private static byte[] EingebauteDatei(string name)

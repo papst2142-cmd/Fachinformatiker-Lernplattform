@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Diagnose;
+using Lernplattform.Core.Projekt;
 using Microsoft.Data.Sqlite;
 
 namespace Lernplattform.Tests;
@@ -658,5 +659,208 @@ public class AbgleichTests
         Assert.Equal([120.0, 60.0], Abgleich.Abstaende(new DateTime(2026, 3, 29, 2, 30, 0), berlin).Order().Reverse());
         Assert.Equal([120.0, 60.0], Abgleich.Abstaende(new DateTime(2026, 10, 25, 2, 30, 0), berlin).Order().Reverse());
         Assert.Equal([120.0], Abgleich.Abstaende(new DateTime(2026, 7, 1, 12, 0, 0), berlin));
+    }
+
+    // -- W3: Projektzeilen auf mehreren Geraeten (Plan P4-8 Abschnitt 6, wie test_n16_0632 M3, M4, M6, 5.4) --
+
+    private const string Geheim = "PRIVATER TEXT N16";
+
+    private static List<(string Uid, string Zeit, string Feld, string Wert)> ProjektZeilen(Geraet g, string projekt = "p1") =>
+        [.. g.Lernstand.Abfragen("SELECT uid, timestamp, feld, wert FROM abschlussprojekt WHERE projekt = $p ORDER BY uid", ("$p", projekt))
+            .Select(z => ((string)z[0]!, (string)z[1]!, (string)z[2]!, (string)z[3]!))];
+
+    /// <summary>Uhr der Attrappe und aller Geraete auf Zeit + stunden (+ eigener Versatz je Geraet in Stunden).</summary>
+    private static void Stelle(GitHubAttrappe attrappe, double stunden, Geraet[] geraete, Dictionary<Geraet, double>? versatz = null)
+    {
+        var server = Zeit.AddHours(stunden);
+        attrappe.Datum = () => server;
+        foreach (var g in geraete)
+        {
+            g.Jetzt = server.AddHours(versatz?.GetValueOrDefault(g) ?? 0);
+        }
+    }
+
+    private static void Runden(GitHubAttrappe attrappe, IEnumerable<Geraet> folge, int runden)
+    {
+        for (var r = 0; r < runden; r++)
+        {
+            foreach (var g in folge)
+            {
+                g.Abgleichen(attrappe);
+            }
+        }
+    }
+
+    /// <summary>
+    /// pruefe_ende: auf jedem Geraet "_geloescht" = "1", kein Projekt sichtbar, nur leere Fassungen
+    /// (AK1); dann Ruhe: nach zwei Runden in zwei weiteren Runden kein Hochladen (AK6).
+    /// </summary>
+    private static void PruefeEnde(GitHubAttrappe attrappe, Geraet[] alle, string fall)
+    {
+        foreach (var g in alle)
+        {
+            var zeilen = ProjektZeilen(g);
+            Assert.True(zeilen.Any(z => z.Feld == "_geloescht" && z.Wert == "1"), fall + " " + g.Name + ": _geloescht fehlt");
+            Assert.Empty(Abschlussprojekt.Projekte(g.Schreiber.ProjektFelder()));
+            Assert.True(zeilen.All(z => z.Wert == "" || (z.Feld == "_geloescht" && z.Wert == "1")),
+                fall + " " + g.Name + ": " + string.Join("; ", zeilen));
+        }
+        Runden(attrappe, alle, 2);
+        var vorher = attrappe.Commits;
+        Runden(attrappe, alle, 2);
+        Assert.True(vorher == attrappe.Commits, fall + ": Hin und Her");
+    }
+
+    /// <summary>A aendert, B loescht (Matrix 5.1, Ursachen Uhr vor 2 h und offline), beide Reihenfolgen.</summary>
+    [Theory]
+    [InlineData(true, 2.0)]
+    [InlineData(false, 2.0)]
+    [InlineData(true, 0.0)]
+    [InlineData(false, 0.0)]
+    public void Projekt_AAendertBLoescht(bool bZuerst, double versatzA)
+    {
+        using var attrappe = Attrappe();
+        using var a = new Geraet("A", Zeit);
+        using var b = new Geraet("B", Zeit);
+        Geraet[] beide = [a, b];
+        Stelle(attrappe, 0, beide);
+        b.Schreiber.ProjektFeldSpeichern("p1", "titel", "Titel alt");
+        b.Schreiber.ProjektFeldSpeichern("p1", "ziel", "Ziel alt");
+        Runden(attrappe, [b, a], 1);
+        Stelle(attrappe, 0.5, beide, new() { [a] = versatzA });
+        if (versatzA != 0)
+        {
+            a.Schreiber.ProjektFeldSpeichern("p1", "ziel", Geheim + " A");
+        }
+        Stelle(attrappe, 1, beide);
+        Assert.True(Abschlussprojekt.Loeschen(b.Schreiber, "p1"));
+        if (versatzA == 0)
+        {
+            Stelle(attrappe, 1.5, beide);
+            a.Schreiber.ProjektFeldSpeichern("p1", "ziel", Geheim + " A offline");
+        }
+        Stelle(attrappe, 2, beide);
+        Runden(attrappe, bZuerst ? [b, a] : [a, b], 2);
+        PruefeEnde(attrappe, beide, "5.1");
+    }
+
+    /// <summary>M3: ein Geraet bearbeitet offline nach dem Loeschen (beide Reihenfolgen).</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Projekt_M3_OfflineNachDemLoeschen(bool oZuerst)
+    {
+        using var attrappe = Attrappe();
+        using var o = new Geraet("O", Zeit);
+        using var n = new Geraet("N", Zeit);
+        Geraet[] beide = [o, n];
+        Stelle(attrappe, 0, beide);
+        o.Schreiber.ProjektFeldSpeichern("p1", "titel", "Titel p1");
+        Runden(attrappe, [o, n], 1);
+        Stelle(attrappe, 1, beide);
+        Assert.True(Abschlussprojekt.Loeschen(n.Schreiber, "p1"));
+        n.Abgleichen(attrappe);
+        Stelle(attrappe, 1.5, beide);
+        o.Schreiber.ProjektFeldSpeichern("p1", "titel", Geheim + " offline");
+        Runden(attrappe, oZuerst ? [o, n] : [n, o], 3);
+        PruefeEnde(attrappe, beide, "M3");
+    }
+
+    /// <summary>M4: Uhr des einen Geraets 2 h vor, das andere loescht danach (beide Reihenfolgen).</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Projekt_M4_UhrVorDannLoeschen(bool nZuerst)
+    {
+        using var attrappe = Attrappe();
+        using var o = new Geraet("O", Zeit);
+        using var n = new Geraet("N", Zeit);
+        Geraet[] beide = [o, n];
+        Stelle(attrappe, 0, beide);
+        n.Schreiber.ProjektFeldSpeichern("p1", "titel", "Titel p1");
+        Runden(attrappe, [n, o], 1);
+        Stelle(attrappe, 0.5, beide, new() { [o] = 2 });
+        o.Schreiber.ProjektFeldSpeichern("p1", "titel", Geheim + " Uhr vor");
+        o.Abgleichen(attrappe);
+        Stelle(attrappe, 1, beide);
+        n.Abgleichen(attrappe);
+        Assert.True(Abschlussprojekt.Loeschen(n.Schreiber, "p1"));
+        // M4 im Kern: die spaetere Fassung liegt beim Loeschen schon vor; das Aufraeumen nach der Marke
+        // entfernt sie, danach gilt fuer "titel" nichts mehr -> keine leere Fassung (Python liest nach der Marke)
+        Assert.Equal([("_geloescht", "1")], ProjektZeilen(n).Select(z => (z.Feld, z.Wert)));
+        Runden(attrappe, nZuerst ? [n, o] : [o, n], 3);
+        PruefeEnde(attrappe, beide, "M4");
+    }
+
+    /// <summary>M6: drei Geraete, das Offline-Geraet mit Uhr +2 h schreibt, ein anderes loescht.</summary>
+    [Fact]
+    public void Projekt_M6_DreiGeraeteOfflineMitUhrVor()
+    {
+        using var attrappe = Attrappe();
+        using var o = new Geraet("O", Zeit);
+        using var n = new Geraet("N", Zeit);
+        using var p = new Geraet("P", Zeit);
+        Geraet[] alle = [o, n, p];
+        Stelle(attrappe, 0, alle);
+        o.Schreiber.ProjektFeldSpeichern("p1", "titel", "Titel p1");
+        Runden(attrappe, alle, 1);
+        Stelle(attrappe, 0.5, alle, new() { [p] = 2 });
+        p.Schreiber.ProjektFeldSpeichern("p1", "ziel", Geheim + " P");
+        Stelle(attrappe, 1, alle);
+        Assert.True(Abschlussprojekt.Loeschen(n.Schreiber, "p1"));
+        Stelle(attrappe, 2, alle);
+        Runden(attrappe, [n, o, p], 2);
+        PruefeEnde(attrappe, alle, "M6");
+    }
+
+    /// <summary>5.4: drei Geraete in vier Reihenfolgen (B Uhr +2 h, C offline nach dem Loeschen).</summary>
+    [Theory]
+    [InlineData("ABC")]
+    [InlineData("ACB")]
+    [InlineData("CAB")]
+    [InlineData("BCA")]
+    public void Projekt_DreiGeraete(string folge)
+    {
+        using var attrappe = Attrappe();
+        using var a = new Geraet("A", Zeit);
+        using var b = new Geraet("B", Zeit);
+        using var c = new Geraet("C", Zeit);
+        Geraet[] alle = [a, b, c];
+        Stelle(attrappe, 0, alle);
+        a.Schreiber.ProjektFeldSpeichern("p1", "titel", "Titel p1");
+        Runden(attrappe, alle, 1);
+        Stelle(attrappe, 0.5, alle, new() { [b] = 2 });
+        b.Schreiber.ProjektFeldSpeichern("p1", "ziel", Geheim + " B");
+        Stelle(attrappe, 1, alle);
+        Assert.True(Abschlussprojekt.Loeschen(a.Schreiber, "p1"));
+        Stelle(attrappe, 1.5, alle);
+        c.Schreiber.ProjektFeldSpeichern("p1", "zusatz", Geheim + " C offline");
+        Stelle(attrappe, 2, alle);
+        var geraete = new Dictionary<char, Geraet> { ['A'] = a, ['B'] = b, ['C'] = c };
+        var reihe = folge.Select(x => geraete[x]).ToArray();
+        Runden(attrappe, reihe, 2);
+        PruefeEnde(attrappe, reihe, "5.4 " + folge);
+    }
+
+    /// <summary>Gleiche Mikrosekunde auf zwei Geraeten: die groessere uid gilt, auf beiden, beide Reihenfolgen.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Projekt_GleicheMikrosekundeGroessereUidGilt(bool aZuerst)
+    {
+        using var attrappe = Attrappe();
+        using var a = new Geraet("A", Zeit);
+        using var b = new Geraet("B", Zeit);
+        const string Zeitpunkt = "2026-10-20 12:00:00.123456";
+        a.Ausfuehren("INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid) VALUES ($t, 'p1', 'titel', 'von A', 'zzzz-gross')",
+            ("$t", Zeitpunkt));
+        b.Ausfuehren("INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid) VALUES ($t, 'p1', 'titel', 'von B', '0000-klein')",
+            ("$t", Zeitpunkt));
+        Runden(attrappe, aZuerst ? [a, b] : [b, a], 2);
+        foreach (var g in new[] { a, b })
+        {
+            Assert.Equal("von A", g.Schreiber.ProjektFelder()["p1"]["titel"]);
+            Assert.Equal([("zzzz-gross", Zeitpunkt, "titel", "von A")], ProjektZeilen(g));
+        }
     }
 }
