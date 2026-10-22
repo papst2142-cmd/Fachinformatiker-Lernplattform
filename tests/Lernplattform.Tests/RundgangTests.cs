@@ -143,6 +143,36 @@ public class RundgangTests
         Assert.Equal(vorher, File.ReadAllBytes(kaputt));
     }
 
+    /// <summary>Wie fisi_hilfe.db_has_data (default=True): Das Verzeichnis ist lesbar, eine Tabelle nicht
+    /// (Seite zerstoert). Die erste Tabelle ist leer, also entscheidet nur der Lesefehler: "Daten vorhanden".</summary>
+    [Fact]
+    public void LesefehlerEinerTabelleGiltAlsDaten()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, "tabelle_kaputt.db");
+        long seite, groesse;
+        using (var db = VergleichsHilfe.Oeffnen(pfad))
+        {
+            using var befehl = db.CreateCommand();
+            befehl.CommandText = "CREATE TABLE t1 (a); CREATE TABLE t2 (a); INSERT INTO t2 VALUES (1)";
+            befehl.ExecuteNonQuery();
+            befehl.CommandText = "SELECT rootpage FROM sqlite_master WHERE name = 't2'";
+            seite = (long)befehl.ExecuteScalar()!;
+            befehl.CommandText = "PRAGMA page_size";
+            groesse = (long)befehl.ExecuteScalar()!;
+        }
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        using (var datei = File.OpenWrite(pfad))
+        {
+            datei.Seek((seite - 1) * groesse, SeekOrigin.Begin);
+            datei.Write(Enumerable.Repeat((byte)'x', (int)groesse).ToArray());
+        }
+        Assert.Equal(seite * groesse, new FileInfo(pfad).Length);
+        var vorher = File.ReadAllBytes(pfad);
+        Assert.True(Einrichten.HatDaten(pfad));
+        Assert.Equal(vorher, File.ReadAllBytes(pfad));
+    }
+
     /// <summary>Plan 2.3 K1: RundgangFaellig vor der Frage bestimmt; nach der Frage kommt der Rundgang, obwohl jetzt eine Zeile da ist.</summary>
     [Fact]
     public void RundgangNachAusbildungsfrage()
