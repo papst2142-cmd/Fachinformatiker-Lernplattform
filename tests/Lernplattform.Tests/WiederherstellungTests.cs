@@ -417,4 +417,34 @@ public class WiederherstellungTests
             Assert.Equal(fall.GetProperty("erwartet").GetString(), fehler.Fehler.ToString());
         }
     }
+
+    /// <summary>
+    /// Beleg fuer die CI: je Fall in beleg_wiederherstellung/&lt;fall&gt;/ die Datenbank vorher und nachher,
+    /// die Sicherung, die Sicherheitskopie und einstellungen.json vorher und nachher.
+    /// werkzeuge/vergleich/pruefe_wiederherstellung.py (unabhaengig geschrieben) prueft sie mit Python 0.63.2.
+    /// </summary>
+    [Fact]
+    public void BelegFuerPython()
+    {
+        var beleg = System.IO.Path.Combine(AppContext.BaseDirectory, "beleg_wiederherstellung");
+        if (Directory.Exists(beleg))
+        {
+            Directory.Delete(beleg, true);
+        }
+        foreach (var (name, datei, ziel) in new[] { ("a_gefuellt", "a", "gefuellt"), ("a_leer", "a", "leer"), ("b_gefuellt", "b", "gefuellt"),
+                     ("c_gefuellt", "c", "gefuellt"), ("d_aufhebung", "d", "gefuellt_aufhebung"), ("e_gefuellt", "e", "gefuellt") })
+        {
+            using var a = new Aufbau(ziel);
+            var ordner = Directory.CreateDirectory(System.IO.Path.Combine(beleg, name)).FullName;
+            File.Copy(a.Pfad, System.IO.Path.Combine(ordner, "vorher.db"));
+            File.Copy(a.Einstellungen.Pfad, System.IO.Path.Combine(ordner, "einstellungen_vorher.json"));
+            File.WriteAllBytes(System.IO.Path.Combine(ordner, "sicherung.fisisicherung"), Datei(datei));
+            var kopie = a.Ersetzen(datei);
+            File.Copy(a.Pfad, System.IO.Path.Combine(ordner, "nachher.db"));
+            File.Copy(kopie, System.IO.Path.Combine(ordner, "kopie.fisisicherung"));
+            File.Copy(a.Einstellungen.Pfad, System.IO.Path.Combine(ordner, "einstellungen_nachher.json"));
+            Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+        }
+        Assert.Equal(6, Directory.GetDirectories(beleg).Length);
+    }
 }
