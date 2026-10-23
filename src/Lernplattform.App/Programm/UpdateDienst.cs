@@ -68,6 +68,26 @@ public static class UpdateDienst
         }
     }
 
+    /// <summary>
+    /// Fehlschlagtext fuer das Fenster: der Pfad von update.log darf nach "\\", "/" und "-" umbrechen
+    /// (U+200B ohne Breite), sonst trennt ein schmales Fenster mit grosser Schrift ein Wort darin
+    /// (Start-Test Windows, "C:\\Users\\…\\AppData\\Roaming\\Fachinformatiker-Lernplattform\\update.log").
+    /// </summary>
+    internal static string FehlschlagAnzeige(string text, string? ordner = null)
+    {
+        var pfad = Updateprotokoll.Pfad(ordner);
+        var brechbar = new System.Text.StringBuilder(pfad.Length * 2);
+        foreach (var zeichen in pfad)
+        {
+            brechbar.Append(zeichen);
+            if (zeichen is '\\' or '/' or '-')
+            {
+                brechbar.Append('\u200B');
+            }
+        }
+        return text.Replace(pfad, brechbar.ToString(), StringComparison.Ordinal);
+    }
+
     /// <summary>check_finished_update: lief vor diesem Start ein Update, das nicht angekommen ist?</summary>
     private static void LetztesUpdatePruefen()
     {
@@ -75,7 +95,7 @@ public static class UpdateDienst
         {
             if (UpdateMerker.Abschliessen(Zustand.Einstellungen, Aktuell.Anzeige, Fehlerprotokoll.System()) is { Ok: false } fehler)
             {
-                _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel, fehler.Text, Dialog.Ok);
+                _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel, FehlschlagAnzeige(fehler.Text), Dialog.Ok);
             }
             Zustand.EinstellungenNeuLesen();
         }

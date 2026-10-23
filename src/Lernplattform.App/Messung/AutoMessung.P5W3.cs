@@ -1,5 +1,6 @@
 using Lernplattform.Core.Texte;
 using Lernplattform.Core.Update;
+using Lernplattform.Programm;
 using Lernplattform.Views;
 
 namespace Lernplattform.Messung;
@@ -63,7 +64,10 @@ public static partial class AutoMessung
             Dialog.AlleSchliessen();
             await ansicht.BildFertigAsync();
         }
-        _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel, UpdateMerker.Fehlschlag("A 0.11.1", "A 0.11.0", "windows"), Dialog.Ok);
+        // fester langer Windows-Pfad statt des Datenordners: beide Laeufe und alle Systeme pruefen denselben Text
+        const string ordner = @"C:\Users\Auszubildender\AppData\Roaming\Fachinformatiker-Lernplattform";
+        _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel,
+            UpdateDienst.FehlschlagAnzeige(UpdateMerker.Fehlschlag("A 0.11.1", "A 0.11.0", "windows", ordner), ordner), Dialog.Ok);
         await ansicht.BildFertigAsync();
         yield return "update/nicht-abgeschlossen";
         Dialog.AlleSchliessen();
