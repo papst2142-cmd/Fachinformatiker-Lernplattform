@@ -275,6 +275,11 @@ def sammeln_android(assets, apk, aus):
                 dateien[pfad] = sdk
             else:
                 ohne.append(pfad)
+                # Hinweis fuer die Zuordnung: wo liegt die Bibliothek unter den Paketwurzeln?
+                for wurzel in paketwurzeln():
+                    for ort, _, liste in os.walk(wurzel):
+                        if bibliothek in liste:
+                            print("Hinweis: %s liegt in %s" % (bibliothek, ort))
         elif name in karte:
             dateien[pfad] = karte[name]
         elif sdk and pfad.startswith("lib/arm64-v8a/") and (
@@ -365,7 +370,7 @@ def laufzeit_android():
             klein = eintrag.lower()
             # CoreCLR und NativeAOT sind andere Laufzeiten, die dieser Bau nicht nutzt (Mono, libmonosgen)
             if not (klein.startswith(("microsoft.netcore.app.runtime.", "microsoft.android.runtime."))
-                    and klein.endswith("android-arm64") and ".cross." not in klein
+                    and klein.endswith(("android-arm64", ".android")) and ".cross." not in klein
                     and ".coreclr." not in klein and ".nativeaot." not in klein) and klein != "microsoft.android.sdk.linux":
                 continue
             for version in os.listdir(os.path.join(wurzel, eintrag)):
