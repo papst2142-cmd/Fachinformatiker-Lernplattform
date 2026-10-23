@@ -912,8 +912,37 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 _setzen = false;
             }
         };
-        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalter } };
+        // Phase 6 W2 (VE5, app_gui 7206): "Verknüpfung anlegen" mit Zeile, nur unter Linux im installierten AppImage
+        var verknuepfung = Schrift.Knopf(VerknuepfungTexte.Anlegen);
+        verknuepfung.Margin = new Thickness(0, 0, 16, 6);
+        var stand = Schrift.Text(VerknuepfungDienst.Unterstuetzt ? VerknuepfungDienst.StatusText() : VerknuepfungTexte.Keine,
+            "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        stand.VerticalAlignment = VerticalAlignment.Center;
+        verknuepfung.Click += (_, _) => stand.Text = VerknuepfungDienst.AnlegenUndMelden();
+        if (VerknuepfungDienst.Unterstuetzt)
+        {
+            // nach "Ja" in der Rueckfrage beim Start und beim erneuten Zeigen der Seite den Stand neu lesen
+            void Neu() => stand.Text = VerknuepfungDienst.StatusText();
+            VerknuepfungDienst.Geaendert += Neu;
+            DetachedFromVisualTree += (_, _) => VerknuepfungDienst.Geaendert -= Neu;
+            AttachedToVisualTree += (_, _) =>
+            {
+                VerknuepfungDienst.Geaendert -= Neu;
+                VerknuepfungDienst.Geaendert += Neu;
+                Neu();
+            };
+        }
+        var reihe = new WrapPanel { IsVisible = VerknuepfungDienst.Unterstuetzt, Children = { verknuepfung, stand } };
+        VerknuepfungReihe = reihe;
+        VerknuepfungZeile = stand;
+        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalter, reihe } };
     }
+
+    /// <summary>Reihe "Verknüpfung anlegen" (Linux, AppImage); der Start ohne Bedienung zeigt sie auf allen Systemen.</summary>
+    internal WrapPanel? VerknuepfungReihe { get; private set; }
+
+    /// <summary>Zeile neben "Verknüpfung anlegen" (Start ohne Bedienung setzt dort ein Probeergebnis).</summary>
+    internal TextBlock? VerknuepfungZeile { get; private set; }
 
     /// <summary>Knopf "Nach Updates suchen", sobald gebaut (Start ohne Bedienung).</summary>
     public Button? UpdateKnopf { get; private set; }

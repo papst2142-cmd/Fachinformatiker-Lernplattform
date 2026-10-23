@@ -25,7 +25,9 @@ internal static class HilfePaare
         ("W1", "update",
             "\n\nUnter Linux legt „Desktop-Verknüpfung anlegen“ eine Verknüpfung auf dem Desktop an oder erneuert si"
             + "e, zum Beispiel nachdem du das AppImage verschoben hast.",
-            ""),
+            // Phase 6 W2 (Weisung P6-7, Nachtrag Nico 23.10.2026 20:07): W2-12, Wortliste Spalte "C# a"
+            "\n\nUnter Linux legt „Verknüpfung anlegen“ eine Verknüpfung im Anwendungsmenü und auf dem Desktop an "
+            + "oder erneuert sie, zum Beispiel nachdem du das AppImage verschoben hast."),
         ("W2", "haenger",
             "\n\nAb Version 0.59.2 unter Linux: Hängt das Programm, öffne ein Terminal und gib diesen Befehl ein:\nki"
             + "ll -USR1 $(pgrep -i -x -o fisi-lernplattf)\n"

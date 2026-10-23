@@ -7,7 +7,8 @@
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
 #   Update muss die Pruefung beim Start "ok" mit der neuen Version melden (genau
 #   einmal) und die Zahl der Kopien um eins steigen. Sammelliste 46 (Velopack-Sperre
-#   unter Windows) wird nur beobachtet und am Ende gezaehlt.
+#   unter Windows) wird nur beobachtet und am Ende gezaehlt (Phase 6 T5).
+#   Phase 6 T4: unter Windows zum Schluss deinstallieren; beide Datenordner bleiben gleich.
 # Aufruf: werkzeuge/pakete/pakete_und_update.sh <rid> <ausgabeordner>
 #   rid: win-x64 | linux-x64 | osx-arm64 (macOS: nur Pakete, keine Update-Probe)
 # Braucht: dotnet, vpk (dotnet tool), unter Linux mksquashfs.
@@ -134,7 +135,34 @@ grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 test "$(grep -c "Probe: angelegt von 1.0.0-a.0.11.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
 test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq 2
-echo "Sammelliste 46 (Velopack-Sperre): $(grep -c "AcquireLockFailed" "$LERNPLATTFORM_UPDATE_BERICHT" || true) mal im Bericht"
+# T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,
+# die auch Nutzer traefe); "Version nicht erreicht" bleibt oben rot
+echo "T5 Velopack-Sperre (Sammelliste 46): $(grep -c "AcquireLockFailed" "$LERNPLATTFORM_UPDATE_BERICHT" || true) mal im Bericht"
+
+# T4 (Phase 6, Sammelliste 11): Deinstallation unter Windows laesst Datenordner und Lernstand stehen,
+# auch den echten Datenordner %APPDATA%\Fachinformatiker-Lernplattform (ohne LERNPLATTFORM_DATEN)
+case "$RID" in
+  win-*)
+    ECHT="$(cygpath -u "$APPDATA")/$ID"
+    # nie auf einem echten PC: die Probe deinstalliert und darf einen echten Lernstand nie beruehren
+    if [ "${CI:-}" != "true" ]; then echo "FEHLER: T4 laeuft nur in der CI (CI=true)"; exit 1; fi
+    if [ -e "$ECHT" ]; then echo "FEHLER: T4 echter Datenordner besteht schon, wird nicht angefasst: $ECHT"; exit 1; fi
+    tmp="$AUS/tmp/echt"
+    mkdir -p "$tmp"
+    TMPDIR="$tmp" LERNPLATTFORM_UPDATE_AUTO=bericht LERNPLATTFORM_UPDATE_ORDNER="$AUS" env -u LERNPLATTFORM_DATEN "$APP" || echo "Rueckgabe $?"
+    test -f "$ECHT/lernplattform.db" && test -f "$ECHT/update_probe.txt" || { echo "FEHLER: T4 echter Datenordner nicht angelegt: $ECHT"; exit 1; }
+    vorher="$( (cd "$ECHT" && find . -type f | sort | xargs sha256sum); (cd "$LERNPLATTFORM_DATEN" && find . -type f | sort | xargs sha256sum) )"
+    WURZEL_APP="$(cygpath -u "$LOCALAPPDATA")/$ID"
+    env -u LERNPLATTFORM_DATEN "$WURZEL_APP/Update.exe" --silent uninstall || echo "Update.exe Rueckgabe $?"
+    for _ in $(seq 1 30); do [ -e "$APP" ] || break; sleep 2; done
+    if [ -e "$APP" ]; then echo "FEHLER: T4 Programm nach der Deinstallation noch da: $APP"; exit 1; fi
+    nachher="$( (cd "$ECHT" && find . -type f | sort | xargs sha256sum); (cd "$LERNPLATTFORM_DATEN" && find . -type f | sort | xargs sha256sum) )"
+    if [ "$vorher" != "$nachher" ]; then
+      echo "FEHLER: T4 Datenordner nach der Deinstallation veraendert"; diff <(echo "$vorher") <(echo "$nachher") || true; exit 1
+    fi
+    echo "T4 Deinstallation: Programm entfernt, $(echo "$nachher" | wc -l) Dateien in beiden Datenordnern unveraendert"
+    ;;
+esac
 echo "UPDATE-PROBE GRUEN"
 cat "$LERNPLATTFORM_UPDATE_BERICHT"
 echo "--- update.log ---"

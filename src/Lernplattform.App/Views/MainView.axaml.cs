@@ -156,7 +156,7 @@ public partial class MainView : UserControl
     {
         try
         {
-            await Core.Hilfe.AusbildungFrage.Ablauf(Programm.Zustand.Einstellungen.NurAnzeige, AutoModus, () => Programm.Zustand.Werte,
+            var schritte = await Core.Hilfe.AusbildungFrage.Ablauf(Programm.Zustand.Einstellungen.NurAnzeige, AutoModus, () => Programm.Zustand.Werte,
                 () => Task.Run(() =>
                 {
                     var lernstand = Programm.Zustand.Lernstand;
@@ -170,6 +170,12 @@ public partial class MainView : UserControl
                     Neu();
                 },
                 AusbildungAnderswoAsync, RundgangAsync);
+            // Phase 6 W2 (maybe_ask_shortcut): unter Linux im AppImage einmal fragen, 400 ms nach dem Rundgang, sonst nach 2,5 s
+            if (Programm.VerknuepfungDienst.Unterstuetzt)
+            {
+                await Task.Delay(schritte.Rundgang ? 400 : 2500);
+                await Programm.VerknuepfungDienst.StartFrageAsync();
+            }
         }
         catch (Exception fehler)
         {
