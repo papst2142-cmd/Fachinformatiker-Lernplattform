@@ -53,6 +53,33 @@ public sealed partial record UpdateVersion(int Stufe, int Haupt, int Neben, int 
         return new UpdateVersion(stufe, teile[0], teile[1], teile[2]);
     }
 
+    [GeneratedRegex(@"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\z", RegexOptions.CultureInvariant)]
+    private static partial Regex DreiZahlen();
+
+    /// <summary>
+    /// Phase 6 W1 (Sammelliste 73): Tag eines Releases aus Stufe und Version wie in Directory.Build.props.
+    /// Stufe "A"/"B" ergibt "vA0.12.0"/"vB0.1.0", ohne Stufe nur ab 1.0 ("v1.0.0"). Alles andere (auch "0.12.0"
+    /// ohne Stufe, das <see cref="Lesen"/> als 1.0-Reihe liest) ergibt null, und der Release-Ablauf bricht ab.
+    /// Version nur aus drei Zahlen mit Ziffern 0-9 ohne fuehrende Null. <see cref="Lesen"/> selbst bleibt unveraendert (G41).
+    /// </summary>
+    public static string? ReleaseTag(string? stufe, string? version)
+    {
+        // jede der drei Zahlen muss in int passen (gleich release.py), sonst kein Tag
+        if (DreiZahlen().Match(version ?? "") is not { Success: true } m || !int.TryParse(m.Groups[1].Value,
+                NumberStyles.None, CultureInfo.InvariantCulture, out var haupt)
+            || !int.TryParse(m.Groups[2].Value, NumberStyles.None, CultureInfo.InvariantCulture, out _)
+            || !int.TryParse(m.Groups[3].Value, NumberStyles.None, CultureInfo.InvariantCulture, out _))
+        {
+            return null;
+        }
+        return stufe switch
+        {
+            "A" or "B" => "v" + stufe + version,
+            "" or null when haupt >= 1 => "v" + version,
+            _ => null,
+        };
+    }
+
     /// <summary>is_newer: true, wenn kandidat hoeher als aktuell ist; ist eine der beiden ungueltig, false.</summary>
     public static bool IstNeuer(string? kandidat, string? aktuell) =>
         Lesen(kandidat) is { } neu && Lesen(aktuell) is { } alt && neu.CompareTo(alt) > 0;

@@ -1,0 +1,125 @@
+{
+  "_hinweis": "Phase 6 W1 (T1, Sammelliste 73): gemeinsame Faelle fuer UpdateVersion.ReleaseTag (C#-Test ReleaseTests) und werkzeuge/release/release.py (selbsttest). tag null = abgelehnt.",
+  "faelle": [
+    {
+      "stufe": "A",
+      "version": "0.11.0",
+      "tag": "vA0.11.0"
+    },
+    {
+      "stufe": "A",
+      "version": "0.12.1",
+      "tag": "vA0.12.1"
+    },
+    {
+      "stufe": "B",
+      "version": "0.1.0",
+      "tag": "vB0.1.0"
+    },
+    {
+      "stufe": "",
+      "version": "1.0.0",
+      "tag": "v1.0.0"
+    },
+    {
+      "stufe": "",
+      "version": "2.3.4",
+      "tag": "v2.3.4"
+    },
+    {
+      "stufe": "",
+      "version": "0.12.0",
+      "tag": null
+    },
+    {
+      "stufe": "",
+      "version": "0.64.0",
+      "tag": null
+    },
+    {
+      "stufe": "C",
+      "version": "0.1.0",
+      "tag": null
+    },
+    {
+      "stufe": "a",
+      "version": "0.11.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.11",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.11.0.1",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.11.0-x",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.1٣.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.11.0\n",
+      "tag": null
+    },
+    {
+      "stufe": "",
+      "version": "01.0.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.012.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "2147483647.0.0",
+      "tag": "vA2147483647.0.0"
+    },
+    {
+      "stufe": "A",
+      "version": "2147483648.0.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.99999999999.0",
+      "tag": null
+    },
+    {
+      "stufe": "A ",
+      "version": "0.11.0",
+      "tag": null
+    },
+    {
+      "stufe": "B",
+      "version": "1.0.0",
+      "tag": "vB1.0.0"
+    },
+    {
+      "stufe": "A",
+      "version": "０.11.0",
+      "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": " 0.11.0",
+      "tag": null
+    }
+  ]
+}

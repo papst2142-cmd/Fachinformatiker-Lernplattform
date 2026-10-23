@@ -1,0 +1,45 @@
+{
+  "_hinweis": "Ohne Feld plattformen gilt ein Zusatz fuer alle Plattformen. Phase 6 W1 (VE4, Sammelliste 12). Ordnet jede ausgelieferte Datei einem Bestandteil zu. Pakete aus NuGet erkennt erzeuge_lizenzen.py selbst aus Lernplattform.deps.json bzw. project.assets.json und liest Lizenz und Lizenzdateien aus dem Paket. Hier stehen nur: eigene Dateien, Dateien, die Velopack beim Packen hinzufuegt, eingebettete Teile ohne eigenes Paket und Lizenztexte fuer Pakete, die nur eine Lizenzangabe ohne Datei haben.",
+  "eigen": {
+    "beschreibung": "Fachinformatiker Lernplattform, Copyright (c) 2026 Nico H, Alle Rechte vorbehalten (LICENSE.txt)",
+    "dateien": ["Lernplattform.dll", "Lernplattform.App.dll", "Lernplattform.Core.dll", "Lernplattform.deps.json",
+                "Lernplattform.runtimeconfig.json", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt", "LICENSE.txt",
+                "Fachinformatiker-Lernplattform.desktop", "Fachinformatiker-Lernplattform.png", ".DirIcon", "AppRun",
+                "setup.ico", "sq.version", "Info.plist", "PkgInfo", "icon.icns", "Lernplattform.icns"]
+  },
+  "zusaetze": [
+    {"id": "Velopack-Programme", "version": "1.2.161", "plattformen": ["win-x64", "linux-x64", "osx-arm64"], "lizenz": "MIT", "quelle": "https://github.com/velopack/velopack (Tag 1.2.161)",
+     "beschreibung": "Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt",
+     "dateien": ["Squirrel.exe", "Update.exe", "Setup.exe", "Fachinformatiker-Lernplattform_ExecutionStub.exe", "Fachinformatiker Lernplattform_ExecutionStub.exe",
+                 "Fachinformatiker-Lernplattform.exe", "UpdateNix", "UpdateMac", "Fachinformatiker-Lernplattform-win-Setup.exe"],
+     "texte": ["Velopack_MIT.txt", "Velopack_Rust_1.2.161.txt"]},
+    {"id": "AppImage type2-runtime", "version": "vpk 1.2.161", "plattformen": ["linux-x64"], "lizenz": "MIT", "quelle": "https://github.com/AppImage/type2-runtime",
+     "beschreibung": "Startteil jedes AppImage (Linux), von vpk vorangestellt",
+     "dateien": ["Fachinformatiker-Lernplattform.AppImage"], "texte": ["AppImage_type2-runtime_MIT.txt"]},
+    {"id": "Schrift Inter", "version": "in Avalonia.Fonts.Inter 12.1.4", "lizenz": "OFL-1.1", "quelle": "https://github.com/rsms/inter",
+     "beschreibung": "Schrift der Oberflaeche, eingebettet in Avalonia.Fonts.Inter.dll", "dateien": [], "texte": ["Inter_OFL-1.1.txt"]},
+    {"id": "Schrift JetBrains Mono", "version": "2.304", "lizenz": "OFL-1.1", "quelle": "https://github.com/JetBrains/JetBrainsMono",
+     "beschreibung": "Festbreitenschrift der Rechner (nur Regular), eingebettet in Lernplattform.App.dll", "dateien": [],
+     "texte": ["JetBrainsMono_OFL-1.1.txt"]},
+    {"id": "ARM Optimized Routines", "version": "f67e7da", "lizenz": "MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception)",
+     "quelle": "https://github.com/ARM-software/optimized-routines",
+     "beschreibung": "math/pow.c, pow_log_data.c, exp_data.c, nachgebaut in C# als Core/Mathe/PythonPow.cs", "dateien": [],
+     "texte": ["ARM_MIT.txt"]},
+    {"id": "SQLite", "version": "in SQLitePCLRaw.lib.e_sqlite3 2.1.13", "lizenz": "gemeinfrei", "quelle": "https://sqlite.org/copyright.html",
+     "beschreibung": "Datenbank, in e_sqlite3", "dateien": [], "texte": ["SQLite_gemeinfrei.txt"]}
+  ],
+  "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
+  "ohne_nuspec": {
+    "Microsoft.NETCore.App.Host": {"lizenz": "MIT", "quelle": "https://github.com/dotnet/dotnet"},
+    "Microsoft.NETCore.App.Runtime": {"lizenz": "MIT", "quelle": "https://github.com/dotnet/dotnet"}
+  },
+  "texte_fuer_pakete": {
+    "Microsoft.NETCore.App": "DotNet_MIT.txt",
+    "Avalonia": "Avalonia_MIT.txt",
+    "MicroCom.Runtime": "MicroCom_MIT.txt",
+    "Tmds.DBus.Protocol": "TmdsDBus_MIT.txt",
+    "Microsoft.Data.Sqlite": "DotNet_MIT.txt",
+    "SQLitePCLRaw": "SQLitePCLRaw_Apache-2.0.txt",
+    "Velopack": "Velopack_MIT.txt"
+  }
+}
