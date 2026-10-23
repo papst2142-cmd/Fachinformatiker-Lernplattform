@@ -161,6 +161,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Lerninhalte => Lerninhalte(bereich),
         Optionen.Loeschen => Loeschen(),
         Optionen.Datenbank => Datenbank(),
+        Optionen.Updates => Updates(),
         _ => Platzhalterzeile(),
     };
 
@@ -852,6 +853,80 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     }
 
     // -- Diagnose (Phase 5 W2: Problem melden, Leistungsmessung, Hänger-Diagnose) ----
+
+    // -- Updates (Phase 5 BE10, app_gui 7182; Handy main.py 4549) ---------------
+
+    /// <summary>
+    /// "Nach Updates suchen" mit Zeile fuer das Ergebnis und der Schalter "Beim Start automatisch nach
+    /// Updates suchen" (auto_check, nur dieses Geraet). Gibt es ein Update, oeffnet sich das Fenster.
+    /// </summary>
+    private Control Updates()
+    {
+        var zeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        zeile.VerticalAlignment = VerticalAlignment.Center;
+        zeile.IsVisible = false;
+        var knopf = Schrift.Knopf(Optionen.UpdatesSuchen, betont: true);
+        knopf.Margin = new Thickness(0, 0, 16, 6);
+        knopf.Click += async (_, _) =>
+        {
+            knopf.IsEnabled = false;
+            UpdateZeile(zeile, UpdateTexte.Suche, "Pinsel.text_dim");
+            var ergebnis = await UpdateDienst.VonHandAsync();
+            knopf.IsEnabled = true;
+            switch (ergebnis)
+            {
+                case null:
+                    zeile.IsVisible = false;    // eine Suche laeuft schon (automatisch beim Start)
+                    break;
+                case { Fehler: { } fehler }:
+                    UpdateZeile(zeile, fehler, "Pinsel.red");
+                    break;
+                case { Angebot: null }:
+                    UpdateZeile(zeile, Beschriftungen.Einsetzen(UpdateTexte.Neueste, Update.Anzeige), "Pinsel.green");
+                    break;
+                case { Angebot: { } angebot }:
+                    UpdateZeile(zeile, Beschriftungen.Einsetzen(UpdateTexte.Verfuegbar, angebot.Version), "Pinsel.accent");
+                    break;
+            }
+        };
+        UpdateKnopf = knopf;
+        UpdateErgebnis = zeile;
+        var schalter = new ToggleSwitch
+        {
+            Content = Schrift.Text(Optionen.UpdatesAutomatisch, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+            IsChecked = Zustand.Werte[Einstellungen.AutoCheckSchluessel]?.GetValueKind() is System.Text.Json.JsonValueKind.True,
+            OnContent = null,
+            OffContent = null,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(schalter, Optionen.UpdatesAutomatisch);
+        schalter.IsCheckedChanged += (_, _) =>
+        {
+            if (_setzen)
+            {
+                return;
+            }
+            if (!Ergebnis(Zustand.Setze(Einstellungen.AutoCheckSchluessel, schalter.IsChecked == true)))
+            {
+                _setzen = true;
+                schalter.IsChecked = !schalter.IsChecked;
+                _setzen = false;
+            }
+        };
+        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalter } };
+    }
+
+    /// <summary>Knopf "Nach Updates suchen", sobald gebaut (Start ohne Bedienung).</summary>
+    public Button? UpdateKnopf { get; private set; }
+
+    /// <summary>Zeile fuer das Ergebnis der Suche (Start ohne Bedienung zeigt dort einen Fehler).</summary>
+    internal TextBlock? UpdateErgebnis { get; private set; }
+
+    internal static void UpdateZeile(TextBlock zeile, string text, string farbe)
+    {
+        zeile.Text = text;
+        zeile.IsVisible = true;
+        zeile.Farbe(TextBlock.ForegroundProperty, farbe);
+    }
 
     /// <summary>Bereich "Diagnose und Werkzeuge", sobald gebaut (Start ohne Bedienung).</summary>
     public DiagnoseTeil? DiagnoseBereich => _diagnose;

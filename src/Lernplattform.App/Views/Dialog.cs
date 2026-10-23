@@ -34,13 +34,21 @@ public static class Dialog
         Zeigen(titel, inhalt, vorbereiten, -1, knoepfe);
 
     /// <summary>
+    /// Phase 5 BE10 (UpdateDialog): wie oben, aber ein Knopf, fuer den bleibtOffen(nummer) true liefert,
+    /// schliesst das Fenster nicht (z. B. "Jetzt aktualisieren" zeigt danach den Fortschritt im selben Fenster).
+    /// </summary>
+    public static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, Func<int, bool> bleibtOffen,
+        params string[] knoepfe) => Zeigen(titel, inhalt, vorbereiten, -1, knoepfe, bleibtOffen);
+
+    /// <summary>
     /// Phase 5: Rueckfrage mit Vorgabe (askyesno(default="no")): Eingabe/Leertaste waehlt den Knopf
     /// mit der Nummer vorgabe, nicht den ersten.
     /// </summary>
     public static Task<int> Rueckfrage(string titel, string text, int vorgabe, params string[] knoepfe) =>
         Zeigen(titel, Schrift.Text(text), null, vorgabe, knoepfe);
 
-    private static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, int vorgabe, string[] knoepfe)
+    private static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, int vorgabe, string[] knoepfe,
+        Func<int, bool>? bleibtOffen = null)
     {
         var fertig = new TaskCompletionSource<int>();
         if (_ebene is not { } ebene)
@@ -61,7 +69,13 @@ public static class Dialog
         {
             var nummer = i;
             var knopf = Schrift.Knopf(knoepfe[i], i == 0);
-            knopf.Click += (_, _) => Schliessen(nummer);
+            knopf.Click += (_, _) =>
+            {
+                if (bleibtOffen?.Invoke(nummer) != true)
+                {
+                    Schliessen(nummer);
+                }
+            };
             reihe.Children.Add(knopf);
         }
         vorbereiten?.Invoke([.. reihe.Children.OfType<Button>()]);

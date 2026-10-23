@@ -1,0 +1,656 @@
+{
+ "quelle": "fisi_update.py (v0.63.2)",
+ "python": "3.12",
+ "zeit": "2026-10-23 12:34:56",
+ "texte": {
+  "UNEXPECTED_ANSWER": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen.",
+  "NO_ASSET_TEXT": "Für dein System liegt diesmal keine Datei bei. Auf der Download-Seite stehen alle Dateien dieses Releases.",
+  "DOWNLOAD_HTTP": "Der Download ist fehlgeschlagen (HTTP %d). Bitte später erneut versuchen.",
+  "DOWNLOAD_TIMEOUT": "Der Download hat zu lange gedauert. Bitte die Internetverbindung prüfen und erneut versuchen.",
+  "DOWNLOAD_OFFLINE": "Keine Verbindung zum Download. Bitte die Internetverbindung prüfen.",
+  "DOWNLOAD_INCOMPLETE": "Der Download ist unvollständig. Bitte erneut versuchen.",
+  "DOWNLOAD_SAVE": "Die Datei konnte nicht gespeichert werden. Bitte freien Speicherplatz prüfen und erneut versuchen.",
+  "DOWNLOAD_CHECKSUM": "Die heruntergeladene Datei ist beschädigt (Prüfsumme stimmt nicht). Bitte erneut versuchen.",
+  "FAILED_TITLE": "Update nicht abgeschlossen",
+  "FAILED_TEXT": "Das Update auf Version %(neu)s wurde nicht installiert. Installiert ist weiterhin Version %(alt)s. Dein Lernstand ist davon nicht betroffen.\n\n%(grund)s\n\nDas Protokoll liegt hier:\n%(pfad)s\nEs steht auch unter Optionen › Diagnose und Werkzeuge › Problem melden.\n\n%(tipp)s",
+  "FAILED_TIP_WINDOWS": "Tipp: PC neu starten und das Update erneut versuchen. Klappt es dann nicht, den Installer von der Download-Seite von Hand starten.",
+  "FAILED_TIP_APPIMAGE": "Tipp: Das Update später erneut versuchen. Klappt es dann nicht, die neue AppImage-Datei von der Download-Seite laden, ausführbar machen (z. B. chmod +x) und von Hand starten. Die bisherige Datei erst löschen, wenn die neue läuft.",
+  "REASON_ROLLBACK": "Der Installer konnte nicht alle Dateien ersetzen und hat alle Änderungen rückgängig gemacht.",
+  "REASON_UNKNOWN": "Der Installer hat die Installation nicht abgeschlossen.",
+  "REASON_APPIMAGE": "Die neue Version ließ sich auf diesem System nicht starten. Die bisherige Version wurde wiederhergestellt.",
+  "NOTES_END": "### Herunterladen",
+  "PENDING_KEY": "update_ausstehend",
+  "UPDATE_LOG_NAME": "update.log",
+  "UPDATE_LOG_MAX": 65536
+ },
+ "notizen": [
+  [
+   "",
+   ""
+  ],
+  [
+   "Nur ein Satz.",
+   "Nur ein Satz."
+  ],
+  [
+   "## A 0.11.1\n\n- **Neu:** Update im Programm\n- Fix: `Abgleich`\n  zweite Zeile des Punkts\n\nAbsatz\nweiter im Absatz\n\n### Herunterladen\n- Datei.exe sha256 ...",
+   "## A 0.11.1\n• Neu: Update im Programm\n• Fix: Abgleich zweite Zeile des Punkts\nAbsatz weiter im Absatz"
+  ],
+  [
+   "* Stern-Punkt\r\n* __fett__\r\n\r\nText",
+   "• Stern-Punkt\n• fett\nText"
+  ],
+  [
+   "   - eingerueckt  \n\t\n-ohne Leerzeichen\n- \n### Herunterladen",
+   "• eingerueckt\n-ohne Leerzeichen -"
+  ],
+  [
+   "Vorher\n### Herunterladen\nnachher",
+   "Vorher"
+  ],
+  [
+   "Zeile mit Leerraum \n\n\n- Ä Ö Ü ß €",
+   "Zeile mit Leerraum\n• Ä Ö Ü ß €"
+  ]
+ ],
+ "suche": [
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "Fachinformatiker-Lernplattform.apk",
+    "asset_url": "https://example.invalid/app.apk",
+    "asset_size": 1234,
+    "asset_digest": "sha256:abababababababababababababababababababababababababababababababab"
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.64.0",
+   "ergebnis": null
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.65.0",
+   "ergebnis": null
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.63.10\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.9",
+   "ergebnis": {
+    "version": "0.63.10",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "Fachinformatiker-Lernplattform.apk",
+    "asset_url": "https://example.invalid/app.apk",
+    "asset_size": 1234,
+    "asset_digest": "sha256:abababababababababababababababababababababababababababababababab"
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": true, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": null
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": \"ja\", \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": null
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": 0, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "Fachinformatiker-Lernplattform.apk",
+    "asset_url": "https://example.invalid/app.apk",
+    "asset_size": 1234,
+    "asset_digest": "sha256:abababababababababababababababababababababababababababababababab"
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": null,
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": []}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": null,
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": null}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": null, \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": 5, \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"kaputt\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": null
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": null, \"html_url\": null, \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "",
+    "page_url": "https://github.com/papst2142-cmd/Fisi-Lernplattform/releases/latest",
+    "asset_name": "Fachinformatiker-Lernplattform.apk",
+    "asset_url": "https://example.invalid/app.apk",
+    "asset_size": 1234,
+    "asset_digest": "sha256:abababababababababababababababababababababababababababababababab"
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": 7, \"html_url\": \"\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "",
+    "page_url": "https://github.com/papst2142-cmd/Fisi-Lernplattform/releases/latest",
+    "asset_name": "Fachinformatiker-Lernplattform.apk",
+    "asset_url": "https://example.invalid/app.apk",
+    "asset_size": 1234,
+    "asset_digest": "sha256:abababababababababababababababababababababababababababababababab"
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [\"text\", 5, null, {\"name\": 5}, {\"name\": \"x.APK\"}, {\"name\": \"b.apk\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "b.apk",
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"c.apk\", \"size\": \"groß\", \"digest\": 5}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "c.apk",
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"d.apk\", \"size\": 1.5}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": "d.apk",
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\"}",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "version": "0.64.0",
+    "notes": "- Neu",
+    "page_url": "https://example.invalid/release",
+    "asset_name": null,
+    "asset_url": null,
+    "asset_size": 0,
+    "asset_digest": null
+   }
+  },
+  {
+   "antwort": "{\"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}",
+   "aktuell": "0.63.2",
+   "ergebnis": null
+  },
+  {
+   "antwort": "[{\"tag_name\": \"v0.64.0\", \"prerelease\": false, \"draft\": false, \"body\": \"  - Neu  \\n\", \"html_url\": \"https://example.invalid/release\", \"assets\": [{\"name\": \"Fachinformatiker-Lernplattform-win-Setup.exe\", \"browser_download_url\": \"https://example.invalid/s.exe\", \"size\": 9}, {\"name\": \"Fachinformatiker-Lernplattform.apk\", \"browser_download_url\": \"https://example.invalid/app.apk\", \"size\": 1234, \"digest\": \"sha256:abababababababababababababababababababababababababababababababab\"}]}]",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": "\"text\"",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": "null",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Die Antwort von GitHub ist unerwartet. Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": {
+    "http": 403
+   },
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "GitHub hat die Anfrage abgelehnt (HTTP 403). Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": {
+    "http": 404
+   },
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "GitHub hat die Anfrage abgelehnt (HTTP 404). Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": {
+    "http": 500
+   },
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "GitHub hat die Anfrage abgelehnt (HTTP 500). Bitte später erneut versuchen."
+   }
+  },
+  {
+   "antwort": {
+    "netz": true
+   },
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Keine Verbindung zu GitHub. Bitte die Internetverbindung prüfen."
+   }
+  },
+  {
+   "antwort": "{kaputt",
+   "aktuell": "0.63.2",
+   "ergebnis": {
+    "fehler": "Keine Verbindung zu GitHub. Bitte die Internetverbindung prüfen."
+   }
+  }
+ ],
+ "protokoll": [
+  {
+   "name": "neu",
+   "vorher": null,
+   "zeilen": [
+    "Download startet: Version 0.11.1, Paket.nupkg"
+   ],
+   "nachher": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n"
+  },
+  {
+   "name": "anhaengen",
+   "vorher": "2026-10-22 08:00:00 | Programm | alt\n",
+   "zeilen": [
+    "zwei",
+    "drei mit | Strich"
+   ],
+   "nachher": "2026-10-22 08:00:00 | Programm | alt\n2026-10-23 12:34:56 | Programm | zwei\n2026-10-23 12:34:56 | Programm | drei mit | Strich\n"
+  },
+  {
+   "name": "kuerzen",
+   "vorher": "{lang}",
+   "zeilen": [
+    "nach dem Kuerzen"
+   ],
+   "nachher": {
+    "sha256": "a7a7b9ecaa30aca8ae5842dcdbfba081201341266e5d0e4ee07501645667504d",
+    "zeichen": 32800,
+    "ende": "Zeile 02994 mit Text äöü\nZeile 02995 mit Text äöü\nZeile 02996 mit Text äöü\nZeile 02997 mit Text äöü\nZeile 02998 mit Text äöü\nZeile 02999 mit Text äöü\n2026-10-23 12:34:56 | Programm | nach dem Kuerzen\n"
+   }
+  },
+  {
+   "name": "kuerzen mit Emoji",
+   "vorher": "{emoji}",
+   "zeilen": [
+    "danach"
+   ],
+   "nachher": {
+    "sha256": "8b8c02843a46972422a656fb8acb6584bd90e3ada3e79c15aaf6aa747c5b73aa",
+    "zeichen": 32790,
+    "ende": " Text äöü\nZeile 02994 mit Text äöü\nZeile 02995 mit Text äöü\nZeile 02996 mit Text äöü\nZeile 02997 mit Text äöü\nZeile 02998 mit Text äöü\nZeile 02999 mit Text äöü\n2026-10-23 12:34:56 | Programm | danach\n"
+   }
+  },
+  {
+   "name": "kuerzen ohne Zeilenende",
+   "vorher": "{x70k}",
+   "zeilen": [
+    "eine Zeile"
+   ],
+   "nachher": {
+    "sha256": "8ac1bdef231e946e3b24f41bfbe6463b2af5f0f267d628f2890d5d79f335f07d",
+    "zeichen": 32812,
+    "ende": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2026-10-23 12:34:56 | Programm | eine Zeile\n"
+   }
+  },
+  {
+   "name": "CRLF und CR",
+   "vorher": "{crlf}",
+   "zeilen": [
+    "neu"
+   ],
+   "nachher": {
+    "sha256": "a253b8778ad0e0ba4f1ecfffab55e8437bf5207f6d1a1aebf2c8e949870f8ded",
+    "zeichen": 32803,
+    "ende": "\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\na\nb\nc\n2026-10-23 12:34:56 | Programm | neu\n"
+   }
+  }
+ ],
+ "lesen": [
+  [
+   "",
+   16384,
+   ""
+  ],
+  [
+   "eine\nzwei\n",
+   16384,
+   "eine\nzwei"
+  ],
+  [
+   "a\nbb\nccc\n",
+   5,
+   "ccc"
+  ],
+  [
+   "ohne Zeilenende",
+   4,
+   "ende"
+  ],
+  [
+   "  Rand  \n\n",
+   16384,
+   "Rand"
+  ],
+  [
+   "{lang}",
+   16384,
+   {
+    "sha256": "a8e8276ae6a89df0478c6f8c8f3c4542d232204bc82de69756a654d06a3b3908",
+    "zeichen": 14624,
+    "ende": "\nZeile 02992 mit Text äöü\nZeile 02993 mit Text äöü\nZeile 02994 mit Text äöü\nZeile 02995 mit Text äöü\nZeile 02996 mit Text äöü\nZeile 02997 mit Text äöü\nZeile 02998 mit Text äöü\nZeile 02999 mit Text äöü"
+   }
+  ],
+  [
+   "x\nä\nü\n",
+   3,
+   ""
+  ],
+  [
+   "{crlf}",
+   100,
+   "a\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc\na\r\nb\rc"
+  ],
+  [
+   null,
+   16384,
+   ""
+  ]
+ ],
+ "download": [
+  {
+   "name": "ok mit Pruefsumme",
+   "groesse": 11,
+   "digest": "sha256:4d1254d38045187e3843e01dc7f4dffdded1279f84eb7f1a08d304a977b2b3af",
+   "inhalt": "Paketinhalt",
+   "fehler": null,
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | Download fertig: Paket.nupkg (11 Bytes, Größe und Prüfsumme geprüft)\n"
+  },
+  {
+   "name": "ok ohne Pruefsumme",
+   "groesse": 0,
+   "digest": null,
+   "inhalt": "Paketinhalt",
+   "fehler": null,
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | GitHub nennt keine Prüfsumme für Paket.nupkg, nur die Größe wird geprüft.\n2026-10-23 12:34:56 | Programm | Download fertig: Paket.nupkg (11 Bytes, Größe geprüft)\n"
+  },
+  {
+   "name": "Pruefsumme falsch",
+   "groesse": 11,
+   "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "inhalt": "Paketinhalt",
+   "fehler": "Die heruntergeladene Datei ist beschädigt (Prüfsumme stimmt nicht). Bitte erneut versuchen.",
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | Prüfsumme falsch: erwartet 0000000000000000000000000000000000000000000000000000000000000000, erhalten 4d1254d38045187e3843e01dc7f4dffdded1279f84eb7f1a08d304a977b2b3af\n"
+  },
+  {
+   "name": "Pruefsumme ungueltig (nur Groesse)",
+   "groesse": 11,
+   "digest": "md5:1234",
+   "inhalt": "Paketinhalt",
+   "fehler": null,
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | GitHub nennt keine Prüfsumme für Paket.nupkg, nur die Größe wird geprüft.\n2026-10-23 12:34:56 | Programm | Download fertig: Paket.nupkg (11 Bytes, Größe geprüft)\n"
+  },
+  {
+   "name": "Groesse falsch",
+   "groesse": 14,
+   "digest": null,
+   "inhalt": "Paketinhalt",
+   "fehler": "Der Download ist unvollständig. Bitte erneut versuchen.",
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | Download unvollständig: 11 von 14 Bytes\n"
+  },
+  {
+   "name": "Groesse 0 (nicht geprueft)",
+   "groesse": 0,
+   "digest": null,
+   "inhalt": "Paketinhalt",
+   "fehler": null,
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | GitHub nennt keine Prüfsumme für Paket.nupkg, nur die Größe wird geprüft.\n2026-10-23 12:34:56 | Programm | Download fertig: Paket.nupkg (11 Bytes, Größe geprüft)\n"
+  },
+  {
+   "name": "Pruefsumme gross geschrieben",
+   "groesse": 11,
+   "digest": "SHA256:4D1254D38045187E3843E01DC7F4DFFDDED1279F84EB7F1A08D304A977B2B3AF",
+   "inhalt": "Paketinhalt",
+   "fehler": null,
+   "log": "2026-10-23 12:34:56 | Programm | Download startet: Version 0.11.1, Paket.nupkg\n2026-10-23 12:34:56 | Programm | Download fertig: Paket.nupkg (11 Bytes, Größe und Prüfsumme geprüft)\n"
+  }
+ ],
+ "merker": {
+  "auto_check": true,
+  "tagesziel": 20,
+  "update_ausstehend": {
+   "version": "0.11.1",
+   "zeit": "2026-10-23T12:34:56"
+  }
+ },
+ "abschluss": [
+  {
+   "name": "kein Merker",
+   "merker": null,
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": null,
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": null
+  },
+  {
+   "name": "angekommen",
+   "merker": {
+    "version": "0.11.1",
+    "zeit": "2026-10-23T12:00:00"
+   },
+   "aktuell": "0.11.1",
+   "installer": null,
+   "ergebnis": [
+    "ok",
+    "0.11.1"
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 0.11.1 abgeschlossen, Programm läuft als 0.11.1.\n"
+  },
+  {
+   "name": "neuer als erwartet",
+   "merker": {
+    "version": "0.11.1"
+   },
+   "aktuell": "0.12.0",
+   "installer": null,
+   "ergebnis": [
+    "ok",
+    "0.12.0"
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 0.11.1 abgeschlossen, Programm läuft als 0.12.0.\n"
+  },
+  {
+   "name": "nicht angekommen",
+   "merker": {
+    "version": "0.11.1",
+    "zeit": "2026-10-23T12:00:00"
+   },
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": [
+    "fehler",
+    "Das Update auf Version 0.11.1 wurde nicht installiert. Installiert ist weiterhin Version 0.11.0. Dein Lernstand ist davon nicht betroffen.\n\nDer Installer hat die Installation nicht abgeschlossen.\n\nDas Protokoll liegt hier:\n{PFAD}\nEs steht auch unter Optionen › Diagnose und Werkzeuge › Problem melden.\n\nTipp: PC neu starten und das Update erneut versuchen. Klappt es dann nicht, den Installer von der Download-Seite von Hand starten."
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 0.11.1 NICHT abgeschlossen, installiert ist weiterhin 0.11.0.\n"
+  },
+  {
+   "name": "nicht angekommen, Installer zurueckgerollt",
+   "merker": {
+    "version": "0.11.1"
+   },
+   "aktuell": "0.11.0",
+   "installer": "x\nRolling back changes\n",
+   "ergebnis": [
+    "fehler",
+    "Das Update auf Version 0.11.1 wurde nicht installiert. Installiert ist weiterhin Version 0.11.0. Dein Lernstand ist davon nicht betroffen.\n\nDer Installer konnte nicht alle Dateien ersetzen und hat alle Änderungen rückgängig gemacht.\n\nDas Protokoll liegt hier:\n{PFAD}\nEs steht auch unter Optionen › Diagnose und Werkzeuge › Problem melden.\n\nTipp: PC neu starten und das Update erneut versuchen. Klappt es dann nicht, den Installer von der Download-Seite von Hand starten."
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 0.11.1 NICHT abgeschlossen, installiert ist weiterhin 0.11.0.\n"
+  },
+  {
+   "name": "Ziel leer",
+   "merker": {
+    "version": ""
+   },
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": [
+    "ok",
+    "0.11.0"
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf ? abgeschlossen, Programm läuft als 0.11.0.\n"
+  },
+  {
+   "name": "Ziel fehlt",
+   "merker": {
+    "zeit": "x"
+   },
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": [
+    "ok",
+    "0.11.0"
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf ? abgeschlossen, Programm läuft als 0.11.0.\n"
+  },
+  {
+   "name": "Ziel Zahl",
+   "merker": {
+    "version": 5
+   },
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": [
+    "fehler",
+    "Das Update auf Version 5 wurde nicht installiert. Installiert ist weiterhin Version 0.11.0. Dein Lernstand ist davon nicht betroffen.\n\nDer Installer hat die Installation nicht abgeschlossen.\n\nDas Protokoll liegt hier:\n{PFAD}\nEs steht auch unter Optionen › Diagnose und Werkzeuge › Problem melden.\n\nTipp: PC neu starten und das Update erneut versuchen. Klappt es dann nicht, den Installer von der Download-Seite von Hand starten."
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 5 NICHT abgeschlossen, installiert ist weiterhin 0.11.0.\n"
+  },
+  {
+   "name": "Merker kein Objekt",
+   "merker": "0.11.1",
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": null,
+   "einstellungen": {
+    "auto_check": true,
+    "update_ausstehend": "0.11.1"
+   },
+   "log": null
+  },
+  {
+   "name": "AppImage",
+   "merker": {
+    "version": "0.11.1",
+    "alt": "/opt/fehlt/Programm.AppImage.alt"
+   },
+   "aktuell": "0.11.0",
+   "installer": null,
+   "ergebnis": [
+    "fehler",
+    "Das Update auf Version 0.11.1 wurde nicht installiert. Installiert ist weiterhin Version 0.11.0. Dein Lernstand ist davon nicht betroffen.\n\nDie neue Version ließ sich auf diesem System nicht starten. Die bisherige Version wurde wiederhergestellt.\n\nDas Protokoll liegt hier:\n{PFAD}\nEs steht auch unter Optionen › Diagnose und Werkzeuge › Problem melden.\n\nTipp: Das Update später erneut versuchen. Klappt es dann nicht, die neue AppImage-Datei von der Download-Seite laden, ausführbar machen (z. B. chmod +x) und von Hand starten. Die bisherige Datei erst löschen, wenn die neue läuft."
+   ],
+   "einstellungen": {
+    "auto_check": true
+   },
+   "log": "2026-10-23 12:34:56 | Programm | Update auf 0.11.1 NICHT abgeschlossen, installiert ist weiterhin 0.11.0.\n"
+  }
+ ]
+}

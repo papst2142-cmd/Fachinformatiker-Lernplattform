@@ -21,8 +21,7 @@ public class BegriffeTests
     {
         // Phase 5 W1: "Sicherung erstellen", "Sicherung einspielen", "Alles ersetzen" gebaut (gestrichen)
         // Phase 5 W2: "Messung aufzeichnen", "leistungsmessung.csv", "Messdatei zeigen", "Messdatei löschen" gebaut (gestrichen)
-        ["Jetzt aktualisieren"] = 5,
-        ["Installieren"] = 5,
+        // Phase 5 W3: "Jetzt aktualisieren" (Fenster "Update verfügbar") und "Installieren" (Hinweis am Handy) gebaut (gestrichen)
     };
 
     /// <summary>Einziger Begriff, der keine Beschriftung ist (NOT_A_LABEL).</summary>
@@ -86,7 +85,7 @@ public class BegriffeTests
         // Liste A darf nur Begriffe nennen, die noch in der Hilfe stehen
         var veraltet = NochNichtGebaut.Keys.Where(b => !begriffe.Contains(b)).ToList();
         Assert.True(veraltet.Count == 0, "Liste A: Begriff steht nicht mehr in der Hilfe: " + string.Join(" | ", veraltet));
-        Assert.Equal(2, NochNichtGebaut.Count);                  // Phase 5 W1: 9 -> 6, W2: 6 -> 2 (je gebaute Begriffe gestrichen)
+        Assert.Empty(NochNichtGebaut);                           // Phase 5 W1: 9 -> 6, W2: 6 -> 2, W3: 2 -> 0 (Liste A abgearbeitet, Sammelliste 57)
         Assert.All(NochNichtGebaut.Values, phase => Assert.Equal(5, phase));   // Weisung P5-3 Punkt 4: Phase 6 -> 5
     }
 

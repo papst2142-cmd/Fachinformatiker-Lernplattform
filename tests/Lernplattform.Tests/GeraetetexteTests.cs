@@ -79,6 +79,15 @@ public partial class GeraetetexteTests
             ("Pruefung.StartFrage", "-", Geraetetexte.PruefungStartFrage(true), Geraetetexte.PruefungStartFrage(false)),
             ("Rundgang.Tasten", "-", Geraetetexte.RundgangTasten(true) ?? "", Geraetetexte.RundgangTasten(false) ?? ""),
         };
+        foreach (var installierbar in new[] { true, false })
+        {
+            paare.Add(("Update.Knopf", "installierbar " + installierbar, Geraetetexte.UpdateKnopf(installierbar, true), Geraetetexte.UpdateKnopf(installierbar, false)));
+            foreach (var mitDatei in new[] { true, false })
+            {
+                paare.Add(("Update.Hinweis", $"installierbar {installierbar}, Datei {mitDatei}", Geraetetexte.UpdateHinweis(installierbar, mitDatei, true),
+                    Geraetetexte.UpdateHinweis(installierbar, mitDatei, false)));
+            }
+        }
         foreach (var bereich in Optionen.AlleFuer(true))
         {
             paare.Add(("Optionen.Untertitel", bereich.Id, Geraetetexte.OptionenUntertitel(bereich, true) ?? "",
@@ -132,7 +141,7 @@ public partial class GeraetetexteTests
             Assert.True(paare.Any(p => p.Stelle == ausnahme.Stelle && Einheitlich(p.Pc) != Einheitlich(p.Handy)),
                 $"{ausnahme.Nr} {ausnahme.Stelle}: kein Unterschied mehr");
         }
-        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11", "B12", "B13"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
+        Assert.Equal(["B1", "B3", "B4", "B5", "B8", "B9", "B10", "B11", "B12", "B13", "B14"], Geraetetexte.Ausnahmen.Select(a => a.Nr).Distinct());
     }
 
     [Fact]
@@ -228,6 +237,17 @@ public partial class GeraetetexteTests
         ("Views/DiagnoseTeil.cs", "Problembericht.Bauen(Zustand.Lernstand, Update.Anzeige, Pc ? \"PC\" : \"Handy\", Zustand.Werte, DateTime.Now);", "Daten: Geraet im Bericht wie build_report(db, APP_VERSION, \"PC\"/\"Handy\") (G38)"),
         ("Views/DiagnoseTeil.cs", "if (Pc && pfad is not null)", "Technik: Speicherweg (Handy ueber Datenstrom mit Zuruecklesen)"),
         ("Views/DiagnoseTeil.cs", "if (Pc)", "Verhalten: Messdatei zeigen PC Datenordner, Handy Datei speichern (app_gui 8566, main.py 4585)"),
+        // Phase 5 W3 (BE10); Texte des Fensters ueber Geraetetexte.UpdateKnopf/UpdateHinweis (B14)
+        ("Programm/UpdateDienst.cs", "public static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Programm/UpdateDienst.cs", "if (Pc)", "Verhalten: PC prueft nach 1 s das letzte Update und sucht nach 3 s (app_gui 8675), Handy sucht nach 3 s (main.py 6077)"),
+        ("Programm/UpdateDienst.cs", "if (!Pc)", "Verhalten: Handy sucht automatisch hoechstens alle 30 Minuten (main.py AUTO_INTERVAL)"),
+        ("Programm/UpdateDienst.cs", "_ = SuchenAsync(false, verzoegerung, nochmal: !Pc);", "Verhalten: Handy versucht es nach einem Netzfehler beim Start nach 30 s noch einmal (main.py AUTO_RETRY)"),
+        ("Programm/UpdateDienst.cs", "if (!vonHand && !Pc)", "Verhalten: Zeitpunkt der letzten automatischen Suche nur am Handy (main.py check_updates)"),
+        ("Views/UpdateFenster.cs", "private readonly bool Pc;", "Schalter"),
+        ("Views/UpdateFenster.cs", "Pc = pc ?? UpdateDienst.Pc;", "Schalter (der Start ohne Bedienung zeigt auch die Ansicht des Handys)"),
+        ("Views/UpdateFenster.cs", "var farbe = Pc ? \"Pinsel.text_dim\" : \"Pinsel.accent\";", "Optik: Hinweiszeile am Handy in accent (main.py 6158), PC text_dim, kein Text"),
+        ("Views/UpdateFenster.cs", "if (!Pc)", "Verhalten: \"Später\" gilt am Handy bis zum naechsten Start (main.py dismissed_version)"),
+        ("Views/UpdateFenster.cs", "return Pc;", "Verhalten: PC-Fenster bleibt nach \"Zur Download-Seite\" offen (app_gui 9416), Handy schliesst nach \"Herunterladen\" (main.py 6163)"),
     ];
 
     [GeneratedRegex(@"IsAndroid\(\)|(?<![\w.])(Handy|Android|Pc)\b(?!\s*\()|\.\w*(Handy|Pc)\d*\b")]

@@ -30,10 +30,11 @@ public static class LeistungTexte
 public static class HaengerTexte
 {
     public const string Titel = "Hänger-Diagnose";
+    /// <summary>HELP ohne "Vorladen" (die C#-Linie laedt nicht vor; Sammelliste 71, Wortliste W3).</summary>
     public const string Hilfe = "Bleibt das Programm hängen, schreibt es nach 30 Sekunden automatisch in die "
         + "Datei haenger.log, an welcher Stelle es steht. Blockaden ab 5 Sekunden stehen "
         + "kurz in fehler.log, bei bekannten langen Vorgängen (Seitenaufbau, "
-        + "Darstellungswechsel, Schriftwechsel, Vorladen) erst ab 30 Sekunden. Der "
+        + "Darstellungswechsel, Schriftwechsel) erst ab 30 Sekunden. Der "
         + "Abgleich läuft im Hintergrund und blockiert nicht. Beide Dateien liegen im "
         + "Datenordner und stehen im Problembericht. Es wird nichts gesendet.";
     /// <summary>SIGNAL_HELP ohne "Ab Version 0.59.2" und ohne den Satz zu 0.59.1 (Wortliste W2).</summary>

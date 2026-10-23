@@ -129,6 +129,8 @@ public partial class MainView : UserControl
             Messwerte.ErstesBild ??= Messwerte.SeitStart.Elapsed.TotalMilliseconds;
             // Phase 5 W2: Startzeile der Messung, Herzschlag, Antworten auf einen zweiten Start
             Programm.Diagnosedienst.Verbinden(this);
+            // Phase 5 BE10: Pruefung des letzten Updates und Suche beim Start (einmal je Programmstart)
+            Programm.UpdateDienst.Starten();
             if (AutoModus)
             {
                 Dispatcher.UIThread.Post(async () => await AutoLaufAsync(), DispatcherPriority.Background);
