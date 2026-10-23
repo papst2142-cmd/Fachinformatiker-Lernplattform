@@ -1,0 +1,1262 @@
+{
+ "quelle": "fisi_leistung.py (v0.63.2)",
+ "start": "2026-10-20T10:00:00",
+ "schritt_us": 1001500,
+ "system": "Linux 6.8.0-45-generic",
+ "spalten": [
+  "zeit",
+  "version",
+  "geraet",
+  "system",
+  "ereignis",
+  "von",
+  "nach",
+  "dauer_ms",
+  "max_ms",
+  "anzahl",
+  "ereignisse",
+  "speicher_mb",
+  "privat_mb",
+  "elemente",
+  "aufgaben",
+  "customtkinter",
+  "verfuegbar_mb",
+  "vorgang",
+  "messart"
+ ],
+ "max_bytes": 1048576,
+ "trim_to": 838860,
+ "flush_lines": 25,
+ "texte": {
+  "state_none": "Noch keine Messdatei vorhanden.",
+  "state_file": "Messdatei: %(zeilen)d Einträge, %(kb)s KB"
+ },
+ "zahlen": [
+  [
+   null,
+   "",
+   ""
+  ],
+  [
+   0,
+   "0",
+   "0"
+  ],
+  [
+   7,
+   "7",
+   "7"
+  ],
+  [
+   1234,
+   "1234",
+   "1234"
+  ],
+  [
+   0.0,
+   "0,0",
+   "0"
+  ],
+  [
+   0.05,
+   "0,1",
+   "0"
+  ],
+  [
+   0.15,
+   "0,1",
+   "0"
+  ],
+  [
+   0.25,
+   "0,2",
+   "0"
+  ],
+  [
+   0.35,
+   "0,3",
+   "0"
+  ],
+  [
+   1.25,
+   "1,2",
+   "1"
+  ],
+  [
+   2.5,
+   "2,5",
+   "2"
+  ],
+  [
+   3.5,
+   "3,5",
+   "4"
+  ],
+  [
+   12.345,
+   "12,3",
+   "12"
+  ],
+  [
+   99.95,
+   "100,0",
+   "100"
+  ],
+  [
+   1022.5,
+   "1022,5",
+   "1022"
+  ],
+  [
+   1023.5,
+   "1023,5",
+   "1024"
+  ],
+  [
+   2047.5,
+   "2047,5",
+   "2048"
+  ],
+  [
+   -0.05,
+   "-0,1",
+   "-0"
+  ],
+  [
+   -1.25,
+   "-1,2",
+   "-1"
+  ],
+  [
+   123.45,
+   "123,5",
+   "123"
+  ],
+  [
+   1e-07,
+   "0,0",
+   "0"
+  ],
+  [
+   123456.789,
+   "123456,8",
+   "123457"
+  ]
+ ],
+ "sauber": [
+  [
+   "",
+   ""
+  ],
+  [
+   "a;b",
+   "a,b"
+  ],
+  [
+   "zeile1\nzeile2",
+   "zeile1 zeile2"
+  ],
+  [
+   "a\r\nb",
+   "a  b"
+  ],
+  [
+   "x;y;z\r",
+   "x,y,z "
+  ],
+  [
+   null,
+   ""
+  ],
+  [
+   0,
+   ""
+  ]
+ ],
+ "faelle": [
+  {
+   "name": "einfach",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": false,
+   "alt": null,
+   "aufrufe": [
+    [
+     "start",
+     {
+      "elemente": 3300,
+      "aufgaben": 25
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "von": "dashboard",
+      "nach": "settings",
+      "dauer_ms": 42.05,
+      "elemente": 3301,
+      "aufgaben": 24,
+      "messart": 2
+     },
+     "seite:settings"
+    ],
+    [
+     "darstellung",
+     {
+      "von": "dunkel",
+      "nach": "hell",
+      "dauer_ms": 812.25,
+      "max_ms": 401.75
+     },
+     "darstellung"
+    ],
+    [
+     "groesse",
+     {
+      "von": "1360x880",
+      "nach": "1200x800",
+      "dauer_ms": 12.5,
+      "max_ms": 30.25,
+      "anzahl": 14,
+      "ereignisse": 220
+     },
+     ""
+    ],
+    [
+     "blockiert",
+     {
+      "nach": "dashboard",
+      "dauer_ms": 2512.0,
+      "vorgang": "abgleich"
+     },
+     "bereit"
+    ],
+    [
+     "vorladen",
+     {
+      "nach": "help:teil",
+      "dauer_ms": 3.35,
+      "speicher": false
+     },
+     "vorladen:help"
+    ],
+    [
+     "vorladen_fertig",
+     {
+      "dauer_ms": 1999.95
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "von": "a;b",
+      "nach": "c\nd",
+      "dauer_ms": 0.05
+     },
+     "x;y"
+    ],
+    [
+     "ende",
+     {},
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;start;;;;;;;123,5;;3300;25;Avalonia 12.1.0;2048;;\n2026-10-20T10:00:01.001;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;dashboard;settings;42,0;;;;123,5;;3301;24;;;seite:settings;2\n2026-10-20T10:00:02.003;A 0.10.0;PC;Linux 6.8.0-45-generic;darstellung;dunkel;hell;812,2;401,8;;;123,5;;;;;;darstellung;\n2026-10-20T10:00:03.004;A 0.10.0;PC;Linux 6.8.0-45-generic;groesse;1360x880;1200x800;12,5;30,2;14;220;123,5;;;;;;;\n2026-10-20T10:00:04.006;A 0.10.0;PC;Linux 6.8.0-45-generic;blockiert;;dashboard;2512,0;;;;123,5;;;;;;abgleich;\n2026-10-20T10:00:05.007;A 0.10.0;PC;Linux 6.8.0-45-generic;vorladen;;help:teil;3,4;;;;;;;;;;vorladen:help;\n2026-10-20T10:00:06.009;A 0.10.0;PC;Linux 6.8.0-45-generic;vorladen_fertig;;;2000,0;;;;123,5;;;;;;;\n2026-10-20T10:00:07.010;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;a,b;c d;0,1;;;;123,5;;;;;;x,y;\n2026-10-20T10:00:08.012;A 0.10.0;PC;Linux 6.8.0-45-generic;ende;;;;;;;123,5;;;;;;;\n",
+   "info": [
+    9,
+    1131
+   ],
+   "zustand": "Messdatei: 9 Einträge, 1,1 KB"
+  },
+  {
+   "name": "startvorgang",
+   "version": "A 0.10.0",
+   "geraet": "Handy",
+   "toolkit": "",
+   "start_task": "eingabe-umgehung",
+   "windows": false,
+   "alt": null,
+   "aufrufe": [
+    [
+     "start",
+     {},
+     "anders"
+    ],
+    [
+     "start",
+     {
+      "vorgang": "gesetzt"
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "x"
+     },
+     "laufend"
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-10-20T10:00:00.000;A 0.10.0;Handy;Linux 6.8.0-45-generic;start;;;;;;;123,5;;;;;2048;eingabe-umgehung;\n2026-10-20T10:00:01.001;A 0.10.0;Handy;Linux 6.8.0-45-generic;start;;;;;;;123,5;;;;;2048;gesetzt;\n2026-10-20T10:00:02.003;A 0.10.0;Handy;Linux 6.8.0-45-generic;seite;;x;;;;;123,5;;;;;;laufend;\n",
+   "info": [
+    3,
+    463
+   ],
+   "zustand": "Messdatei: 3 Einträge, 0,5 KB"
+  },
+  {
+   "name": "windows",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": true,
+   "alt": null,
+   "aufrufe": [
+    [
+     "start",
+     {},
+     ""
+    ],
+    [
+     "seite",
+     {
+      "von": "a",
+      "nach": "b",
+      "dauer_ms": 1.25
+     },
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;start;;;;;;;100,2;50,8;;;Avalonia 12.1.0;1022;;\n2026-10-20T10:00:01.001;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;a;b;1,2;;;;100,2;50,8;;;;;;\n",
+   "info": [
+    2,
+    363
+   ],
+   "zustand": "Messdatei: 2 Einträge, 0,4 KB"
+  },
+  {
+   "name": "aus_an",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": false,
+   "alt": null,
+   "aufrufe": [
+    [
+     "seite",
+     {
+      "nach": "vorher"
+     },
+     ""
+    ],
+    [
+     "AUS",
+     {},
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "nicht"
+     },
+     ""
+    ],
+    [
+     "AN",
+     {},
+     "an"
+    ],
+    [
+     "seite",
+     {
+      "nach": "danach"
+     },
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;vorher;;;;;123,5;;;;;;;\n2026-10-20T10:00:01.001;A 0.10.0;PC;Linux 6.8.0-45-generic;ende;;;;;;;123,5;;;;;;;\n2026-10-20T10:00:02.003;A 0.10.0;PC;Linux 6.8.0-45-generic;start;;;;;;;123,5;;;;Avalonia 12.1.0;2048;an;\n2026-10-20T10:00:03.004;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;danach;;;;;123,5;;;;;;;\n",
+   "info": [
+    4,
+    531
+   ],
+   "zustand": "Messdatei: 4 Einträge, 0,5 KB"
+  },
+  {
+   "name": "alter_kopf",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": false,
+   "alt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter\n2026-01-01T00:00:00.000;0.58.1;PC;Windows 11;start;;;;;;;;;;;4.2\n2026-01-01T00:00:01.000;0.58.1;PC;Windows 11;seite;a;b;1,0;;;;;;;;\n",
+   "aufrufe": [
+    [
+     "seite",
+     {
+      "nach": "neu",
+      "dauer_ms": 5.5
+     },
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-01-01T00:00:00.000;0.58.1;PC;Windows 11;start;;;;;;;;;;;4.2\n2026-01-01T00:00:01.000;0.58.1;PC;Windows 11;seite;a;b;1,0;;;;;;;;\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;neu;5,5;;;;123,5;;;;;;;\n",
+   "info": [
+    3,
+    385
+   ],
+   "zustand": "Messdatei: 3 Einträge, 0,4 KB"
+  },
+  {
+   "name": "gleicher_kopf",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": false,
+   "alt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\nalte;zeile\n",
+   "aufrufe": [
+    [
+     "seite",
+     {
+      "nach": "neu"
+     },
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\nalte;zeile\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;neu;;;;;123,5;;;;;;;\n",
+   "info": [
+    2,
+    261
+   ],
+   "zustand": "Messdatei: 2 Einträge, 0,3 KB"
+  },
+  {
+   "name": "puffer_voll",
+   "version": "A 0.10.0",
+   "geraet": "PC",
+   "toolkit": "Avalonia 12.1.0",
+   "start_task": "",
+   "windows": false,
+   "alt": null,
+   "aufrufe": [
+    [
+     "seite",
+     {
+      "nach": "s0",
+      "dauer_ms": 0.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s1",
+      "dauer_ms": 0.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s2",
+      "dauer_ms": 1.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s3",
+      "dauer_ms": 1.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s4",
+      "dauer_ms": 2.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s5",
+      "dauer_ms": 2.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s6",
+      "dauer_ms": 3.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s7",
+      "dauer_ms": 3.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s8",
+      "dauer_ms": 4.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s9",
+      "dauer_ms": 4.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s10",
+      "dauer_ms": 5.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s11",
+      "dauer_ms": 5.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s12",
+      "dauer_ms": 6.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s13",
+      "dauer_ms": 6.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s14",
+      "dauer_ms": 7.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s15",
+      "dauer_ms": 7.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s16",
+      "dauer_ms": 8.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s17",
+      "dauer_ms": 8.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s18",
+      "dauer_ms": 9.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s19",
+      "dauer_ms": 9.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s20",
+      "dauer_ms": 10.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s21",
+      "dauer_ms": 10.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s22",
+      "dauer_ms": 11.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s23",
+      "dauer_ms": 11.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s24",
+      "dauer_ms": 12.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s25",
+      "dauer_ms": 12.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s26",
+      "dauer_ms": 13.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s27",
+      "dauer_ms": 13.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s28",
+      "dauer_ms": 14.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s29",
+      "dauer_ms": 14.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s30",
+      "dauer_ms": 15.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s31",
+      "dauer_ms": 15.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s32",
+      "dauer_ms": 16.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s33",
+      "dauer_ms": 16.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s34",
+      "dauer_ms": 17.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s35",
+      "dauer_ms": 17.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s36",
+      "dauer_ms": 18.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s37",
+      "dauer_ms": 18.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s38",
+      "dauer_ms": 19.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s39",
+      "dauer_ms": 19.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s40",
+      "dauer_ms": 20.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s41",
+      "dauer_ms": 20.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s42",
+      "dauer_ms": 21.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s43",
+      "dauer_ms": 21.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s44",
+      "dauer_ms": 22.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s45",
+      "dauer_ms": 22.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s46",
+      "dauer_ms": 23.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s47",
+      "dauer_ms": 23.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s48",
+      "dauer_ms": 24.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s49",
+      "dauer_ms": 24.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s50",
+      "dauer_ms": 25.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s51",
+      "dauer_ms": 25.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s52",
+      "dauer_ms": 26.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s53",
+      "dauer_ms": 26.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s54",
+      "dauer_ms": 27.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s55",
+      "dauer_ms": 27.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s56",
+      "dauer_ms": 28.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s57",
+      "dauer_ms": 28.5
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s58",
+      "dauer_ms": 29.0
+     },
+     ""
+    ],
+    [
+     "seite",
+     {
+      "nach": "s59",
+      "dauer_ms": 29.5
+     },
+     ""
+    ]
+   ],
+   "inhalt": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\n2026-10-20T10:00:00.000;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s0;0,0;;;;123,5;;;;;;;\n2026-10-20T10:00:01.001;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s1;0,5;;;;123,5;;;;;;;\n2026-10-20T10:00:02.003;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s2;1,0;;;;123,5;;;;;;;\n2026-10-20T10:00:03.004;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s3;1,5;;;;123,5;;;;;;;\n2026-10-20T10:00:04.006;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s4;2,0;;;;123,5;;;;;;;\n2026-10-20T10:00:05.007;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s5;2,5;;;;123,5;;;;;;;\n2026-10-20T10:00:06.009;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s6;3,0;;;;123,5;;;;;;;\n2026-10-20T10:00:07.010;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s7;3,5;;;;123,5;;;;;;;\n2026-10-20T10:00:08.012;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s8;4,0;;;;123,5;;;;;;;\n2026-10-20T10:00:09.013;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s9;4,5;;;;123,5;;;;;;;\n2026-10-20T10:00:10.015;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s10;5,0;;;;123,5;;;;;;;\n2026-10-20T10:00:11.016;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s11;5,5;;;;123,5;;;;;;;\n2026-10-20T10:00:12.018;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s12;6,0;;;;123,5;;;;;;;\n2026-10-20T10:00:13.019;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s13;6,5;;;;123,5;;;;;;;\n2026-10-20T10:00:14.021;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s14;7,0;;;;123,5;;;;;;;\n2026-10-20T10:00:15.022;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s15;7,5;;;;123,5;;;;;;;\n2026-10-20T10:00:16.024;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s16;8,0;;;;123,5;;;;;;;\n2026-10-20T10:00:17.025;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s17;8,5;;;;123,5;;;;;;;\n2026-10-20T10:00:18.027;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s18;9,0;;;;123,5;;;;;;;\n2026-10-20T10:00:19.028;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s19;9,5;;;;123,5;;;;;;;\n2026-10-20T10:00:20.030;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s20;10,0;;;;123,5;;;;;;;\n2026-10-20T10:00:21.031;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s21;10,5;;;;123,5;;;;;;;\n2026-10-20T10:00:22.033;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s22;11,0;;;;123,5;;;;;;;\n2026-10-20T10:00:23.034;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s23;11,5;;;;123,5;;;;;;;\n2026-10-20T10:00:24.036;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s24;12,0;;;;123,5;;;;;;;\n2026-10-20T10:00:25.037;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s25;12,5;;;;123,5;;;;;;;\n2026-10-20T10:00:26.039;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s26;13,0;;;;123,5;;;;;;;\n2026-10-20T10:00:27.040;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s27;13,5;;;;123,5;;;;;;;\n2026-10-20T10:00:28.042;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s28;14,0;;;;123,5;;;;;;;\n2026-10-20T10:00:29.043;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s29;14,5;;;;123,5;;;;;;;\n2026-10-20T10:00:30.045;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s30;15,0;;;;123,5;;;;;;;\n2026-10-20T10:00:31.046;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s31;15,5;;;;123,5;;;;;;;\n2026-10-20T10:00:32.048;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s32;16,0;;;;123,5;;;;;;;\n2026-10-20T10:00:33.049;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s33;16,5;;;;123,5;;;;;;;\n2026-10-20T10:00:34.051;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s34;17,0;;;;123,5;;;;;;;\n2026-10-20T10:00:35.052;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s35;17,5;;;;123,5;;;;;;;\n2026-10-20T10:00:36.054;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s36;18,0;;;;123,5;;;;;;;\n2026-10-20T10:00:37.055;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s37;18,5;;;;123,5;;;;;;;\n2026-10-20T10:00:38.057;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s38;19,0;;;;123,5;;;;;;;\n2026-10-20T10:00:39.058;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s39;19,5;;;;123,5;;;;;;;\n2026-10-20T10:00:40.060;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s40;20,0;;;;123,5;;;;;;;\n2026-10-20T10:00:41.061;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s41;20,5;;;;123,5;;;;;;;\n2026-10-20T10:00:42.063;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s42;21,0;;;;123,5;;;;;;;\n2026-10-20T10:00:43.064;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s43;21,5;;;;123,5;;;;;;;\n2026-10-20T10:00:44.066;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s44;22,0;;;;123,5;;;;;;;\n2026-10-20T10:00:45.067;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s45;22,5;;;;123,5;;;;;;;\n2026-10-20T10:00:46.069;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s46;23,0;;;;123,5;;;;;;;\n2026-10-20T10:00:47.070;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s47;23,5;;;;123,5;;;;;;;\n2026-10-20T10:00:48.072;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s48;24,0;;;;123,5;;;;;;;\n2026-10-20T10:00:49.073;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s49;24,5;;;;123,5;;;;;;;\n2026-10-20T10:00:50.075;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s50;25,0;;;;123,5;;;;;;;\n2026-10-20T10:00:51.076;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s51;25,5;;;;123,5;;;;;;;\n2026-10-20T10:00:52.078;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s52;26,0;;;;123,5;;;;;;;\n2026-10-20T10:00:53.079;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s53;26,5;;;;123,5;;;;;;;\n2026-10-20T10:00:54.081;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s54;27,0;;;;123,5;;;;;;;\n2026-10-20T10:00:55.082;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s55;27,5;;;;123,5;;;;;;;\n2026-10-20T10:00:56.084;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s56;28,0;;;;123,5;;;;;;;\n2026-10-20T10:00:57.085;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s57;28,5;;;;123,5;;;;;;;\n2026-10-20T10:00:58.087;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s58;29,0;;;;123,5;;;;;;;\n2026-10-20T10:00:59.088;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;;s59;29,5;;;;123,5;;;;;;;\n",
+   "info": [
+    60,
+    5593
+   ],
+   "zustand": "Messdatei: 60 Einträge, 5,5 KB"
+  }
+ ],
+ "kuerzen": {
+  "anzahl": 9000,
+  "muster": "record('seite', von='seite%04d' % (i % 997), nach='ziel%04d' % ((i * 7) % 1009), dauer_ms=i * 0.25, elemente=i, aufgaben=i % 50, messart=2 if i % 3 else None); task_source = 'vorladen:settings'",
+  "zeilen": 7346,
+  "erste": "2026-10-20T10:27:36.481;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;seite0657;ziel0479;413,5;;;;123,5;;1654;4;;;vorladen:settings;2",
+  "letzte": "2026-10-20T12:30:12.498;A 0.10.0;PC;Linux 6.8.0-45-generic;seite;seite0026;ziel0435;2249,8;;;;123,5;;8999;49;;;vorladen:settings;2",
+  "groesse": 956229,
+  "sha256": "10aba76909064b540601d7f8212ebd3fde3024d8396bed1c971942abd7b6a987",
+  "zustand": "Messdatei: 7346 Einträge, 933,8 KB"
+ },
+ "auswertung": {
+  "datei": "zeit;version;geraet;system;ereignis;von;nach;dauer_ms;max_ms;anzahl;ereignisse;speicher_mb;privat_mb;elemente;aufgaben;customtkinter;verfuegbar_mb;vorgang;messart\nt;v;PC;s;seite;a;dashboard;10,5;;;;;;;;\nt;v;PC;s;seite;a;settings;20,0;;;;;;;;\nt;v;PC;s;seite;a;dashboard;11,5;;;;;;;;;;;2\nt;v;PC;s;seite;a;dashboard;12,25;;;;;;;;;;;2\nt;v;PC;s;seite;a;settings;7;;;;;;;;;;; 2 \nt;v;PC;s;seite;a;dashboard;13;;;;;;;;;;;1\nt;v;PC;s;seite;a;help;kaputt;;;;;;;;;;;2\nt;v;PC;s;seite;a;help;;;;;;;;;;;;2\nt;v;PC;s;darstellung;a;help;99;;;;;;;;;;;2\nt;v;PC;s;seite;a;quiz;3,5;;;;;;;;;;;x\nt;v;PC;s;seite;a;quiz;4,5;;;;;;;;;;;\n\nt;v;PC;s;seite;a;stats;1e3;;;;;;;;;;;2\nkurz;zeile\n",
+  "zeilen": [
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "dashboard",
+    "dauer_ms": "10,5",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": ""
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "settings",
+    "dauer_ms": "20,0",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": ""
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "dashboard",
+    "dauer_ms": "11,5",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "dashboard",
+    "dauer_ms": "12,25",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "settings",
+    "dauer_ms": "7",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": " 2 "
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "dashboard",
+    "dauer_ms": "13",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "1"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "help",
+    "dauer_ms": "kaputt",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "help",
+    "dauer_ms": "",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "darstellung",
+    "von": "a",
+    "nach": "help",
+    "dauer_ms": "99",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "quiz",
+    "dauer_ms": "3,5",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "x"
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "quiz",
+    "dauer_ms": "4,5",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": ""
+   },
+   {
+    "zeit": "t",
+    "version": "v",
+    "geraet": "PC",
+    "system": "s",
+    "ereignis": "seite",
+    "von": "a",
+    "nach": "stats",
+    "dauer_ms": "1e3",
+    "max_ms": "",
+    "anzahl": "",
+    "ereignisse": "",
+    "speicher_mb": "",
+    "privat_mb": "",
+    "elemente": "",
+    "aufgaben": "",
+    "customtkinter": "",
+    "verfuegbar_mb": "",
+    "vorgang": "",
+    "messart": "2"
+   },
+   {
+    "zeit": "kurz",
+    "version": "zeile"
+   }
+  ],
+  "messart": [
+   1,
+   1,
+   2,
+   2,
+   2,
+   1,
+   2,
+   2,
+   2,
+   1,
+   1,
+   2,
+   1
+  ],
+  "seiten": {
+   "1": [
+    [
+     "dashboard",
+     [
+      10.5,
+      13.0
+     ]
+    ],
+    [
+     "settings",
+     [
+      20.0
+     ]
+    ],
+    [
+     "quiz",
+     [
+      3.5,
+      4.5
+     ]
+    ]
+   ],
+   "2": [
+    [
+     "dashboard",
+     [
+      11.5,
+      12.25
+     ]
+    ],
+    [
+     "settings",
+     [
+      7.0
+     ]
+    ],
+    [
+     "stats",
+     [
+      1000.0
+     ]
+    ]
+   ]
+  }
+ }
+}

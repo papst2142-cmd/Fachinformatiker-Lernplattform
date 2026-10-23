@@ -50,6 +50,10 @@ public sealed class Einstellungen
     private readonly string _pfad;
     private bool _defektGesehen;
 
+    // Phase 5 W2 (Risiko 5, Sammelliste 55): Lesen-Aendern-Schreiben nie gleichzeitig (Oberflaeche,
+    // Abgleich im Hintergrund, Schalter der Leistungsmessung), sonst ginge eine Aenderung verloren.
+    private static readonly object Schreibsperre = new();
+
     public Einstellungen(string? ordner = null)
     {
         _pfad = Path.Combine(ordner ?? Ablage.Datenordner(), DateiName);
@@ -66,12 +70,23 @@ public sealed class Einstellungen
     /// <summary>Die gespeicherten Einstellungen mit Vorgabewerten (wie load_settings).</summary>
     public JsonObject Laden()
     {
+        var (werte, gesperrt) = LadenMitZustand();
+        NurAnzeige = gesperrt;
+        return werte;
+    }
+
+    /// <summary>
+    /// Laden mit dem Lesezustand dieses einen Aufrufs. Setze und Aendern entscheiden danach und nicht
+    /// ueber NurAnzeige, das ein gleichzeitiges Laden in einem anderen Faden umsetzen kann
+    /// (Gegenpruefung W2 Fund 3: sonst ueberschrieben Vorgaben die Datei).
+    /// </summary>
+    private (JsonObject Werte, bool Gesperrt) LadenMitZustand()
+    {
         var werte = new JsonObject { [AutoCheckSchluessel] = true };
         var (roh, gesperrt) = Lesen();
-        NurAnzeige = gesperrt;
         if (roh is null)
         {
-            return werte;
+            return (werte, gesperrt);
         }
         try
         {
@@ -96,7 +111,7 @@ public sealed class Einstellungen
             {
             }
         }
-        return werte;
+        return (werte, false);
     }
 
     /// <summary>
@@ -212,7 +227,10 @@ public sealed class Einstellungen
     {
         try
         {
-            File.Move(Hilfsdatei, _pfad, true);
+            lock (Schreibsperre)
+            {
+                File.Move(Hilfsdatei, _pfad, true);
+            }
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
@@ -228,17 +246,26 @@ public sealed class Einstellungen
     /// </summary>
     private (byte[]? Roh, bool Gesperrt) Lesen()
     {
-        try
+        // Lesen unter derselben Sperre wie das Schreiben: unter Windows scheitert das Ersetzen einer gerade
+        // gelesenen Datei sonst (und das Lesen waehrend des Ersetzens); Lauf 39929224886 windows-latest
+        lock (Schreibsperre)
         {
-            return (File.ReadAllBytes(_pfad), false);
-        }
-        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return (null, false);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return (null, true);
+            try
+            {
+                // Mitbenutzung erlauben: Leser anderer Programme (Gegenpruefung W2 Fund 2)
+                using var datei = new FileStream(_pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var puffer = new MemoryStream();
+                datei.CopyTo(puffer);
+                return (puffer.ToArray(), false);
+            }
+            catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+            {
+                return (null, false);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                return (null, true);
+            }
         }
     }
 
@@ -255,7 +282,10 @@ public sealed class Einstellungen
             return null;
         }
         _defektGesehen = false;
-        Speichern(Laden());
+        lock (Schreibsperre)
+        {
+            Speichern(Laden());
+        }
         _defektGesehen = false;
         return (DefektTitel, DefektText);
     }
@@ -263,9 +293,36 @@ public sealed class Einstellungen
     /// <summary>Einen Wert setzen und sofort speichern (alle anderen Schluessel bleiben).</summary>
     public bool Setze(string schluessel, JsonNode? wert)
     {
-        var werte = Laden();
-        werte[schluessel] = wert;
-        return Speichern(werte);
+        lock (Schreibsperre)
+        {
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
+            {
+                return false;
+            }
+            werte[schluessel] = wert;
+            return Speichern(werte);
+        }
+    }
+
+    /// <summary>
+    /// Mehrere Werte in einem Schritt aendern (Laden, Aendern, Speichern unter derselben Sperre wie
+    /// <see cref="Setze"/>). false: nicht lesbar (NurAnzeige) oder nicht gespeichert, Datei unveraendert.
+    /// </summary>
+    public bool Aendern(Action<JsonObject> aenderung)
+    {
+        lock (Schreibsperre)
+        {
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
+            {
+                return false;
+            }
+            aenderung(werte);
+            return Speichern(werte);
+        }
     }
 
     // -- Gelesene Werte mit Vorgaben und Pruefung wie Python ---------------

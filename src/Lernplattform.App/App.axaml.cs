@@ -26,6 +26,8 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
         // Phase 1: Einstellungen lesen, Farbwelt und Schriftstufe anwenden, Inhalte im Hintergrund laden
         Programm.Zustand.Starten();
+        // Phase 5 W2 (BE7): Leistungsmessung nach dem gespeicherten Schalter (aus = keine Datei)
+        Programm.Diagnosedienst.Starten(Programm.Zustand.Werte);
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -39,9 +41,12 @@ public partial class App : Application
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
             desktop.Exit += (_, _) =>
             {
+                // Phase 5 W2 (BE8): ab jetzt "endet" fuer einen zweiten Start, Messdatei schreiben
+                Programm.Diagnosedienst.Beenden();
                 Programm.Zustand.Beenden();
                 // L10: letzter Abgleich, wenn seither gelernt wurde (run_before_exit, hoechstens 12 s)
                 Programm.AbgleichDienst.VorDemBeenden();
+                Programm.Diagnosedienst.NachDemAbgleich();
             };
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactoryApplicationLifetime)

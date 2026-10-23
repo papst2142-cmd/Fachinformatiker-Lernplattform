@@ -20,7 +20,7 @@ namespace Lernplattform.Views;
 /// <summary>
 /// Phase 1, K8: Optionen in der Reihenfolge von fisi_optionen.AREAS. Gebaut sind
 /// Optische Anpassungen (Schriftgroesse, Darstellung, Vorlagen, eigene Farben),
-/// Tagesziel, Abgleich PC und Handy (Phase 2, L10), Diagnose (Fehlerprotokoll anzeigen und kopieren) und "Über das
+/// Tagesziel, Abgleich PC und Handy (Phase 2, L10), Diagnose (Phase 5 W2, <see cref="DiagnoseTeil"/>) und "Über das
 /// Programm". Die uebrigen Bereiche zeigen den Platzhalter. Jede Aenderung wird
 /// sofort gespeichert; geht das nicht, erscheint "Speichern fehlgeschlagen" und
 /// die Anzeige springt auf den gespeicherten Wert zurueck.
@@ -48,6 +48,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private List<string> _lernfelder = [];
     private TextBlock? _rpFehler;
     private Action? _tageszielNeu;
+    private DiagnoseTeil? _diagnose;
 
     public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null)
     {
@@ -234,6 +235,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }
         RahmenplanNeu();
         _tageszielNeu?.Invoke();
+        _diagnose?.Neu();
     }
 
     private async Task WarnungAsync(string wert)
@@ -528,9 +530,11 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 {
                     return;
                 }
+                var vorher = Einstellungen.Schriftgroesse(Zustand.Werte);
                 if (Ergebnis(Zustand.Setze(Einstellungen.SchriftSchluessel, stufe.Id)))
                 {
-                    Schrift.Anwenden(stufe.Faktor);
+                    // Phase 5 W2: Vorgang "schrift" fuer die Haenger-Diagnose, Zeile "darstellung" in der Messung
+                    Diagnosedienst.Darstellung(vorher, stufe.Id, () => Schrift.Anwenden(stufe.Faktor), "schrift");
                 }
                 else
                 {
@@ -583,10 +587,14 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 {
                     return;
                 }
+                var vorher = Einstellungen.Darstellung(Zustand.Werte);
                 if (Ergebnis(Zustand.Setze(Einstellungen.DarstellungSchluessel, id)))
                 {
-                    Zustand.DesignAnwenden();
-                    _eigene?.Neu();
+                    Diagnosedienst.Darstellung(vorher, id, () =>
+                    {
+                        Zustand.DesignAnwenden();
+                        _eigene?.Neu();
+                    });
                 }
                 else
                 {
@@ -843,48 +851,15 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         };
     }
 
-    // -- Diagnose ------------------------------------------------------------
+    // -- Diagnose (Phase 5 W2: Problem melden, Leistungsmessung, Hänger-Diagnose) ----
+
+    /// <summary>Bereich "Diagnose und Werkzeuge", sobald gebaut (Start ohne Bedienung).</summary>
+    public DiagnoseTeil? DiagnoseBereich => _diagnose;
 
     private Control Diagnose(OptionenBereich bereich)
     {
-        var panel = new StackPanel { Spacing = 10 };
-        foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
-        {
-            panel.Children.Add(Abschnitt(abschnitt.Titel));
-            if (abschnitt.Id != Optionen.AbschnittProblem)
-            {
-                panel.Children.Add(Platzhalterzeile());
-                continue;
-            }
-            // Phase 1 (K4): nur das Fehlerprotokoll anzeigen und kopieren; "Problem melden" kommt in Phase 6
-            var protokoll = new TextBox
-            {
-                IsReadOnly = true,
-                TextWrapping = TextWrapping.Wrap,
-                AcceptsReturn = true,
-                MaxHeight = 320,
-                FontFamily = new FontFamily("monospace"),
-            }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
-            void Neu()
-            {
-                var text = Fehlerprotokoll.Anzeigen();
-                protokoll.Text = text.Length == 0 ? Fehlerprotokoll.KeinProtokoll : text;
-            }
-            Neu();
-            var kopieren = Schrift.Knopf(DiagnoseTexte.Kopieren);
-            kopieren.Click += async (_, _) =>
-            {
-                Neu();
-                if (TopLevel.GetTopLevel(this)?.Clipboard is { } ablage)
-                {
-                    await Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(ablage, protokoll.Text ?? "");
-                }
-            };
-            panel.Children.Add(Schrift.Text(Fehlerprotokoll.DateiName, "Klein", FontWeight.SemiBold, "Pinsel.text_dim"));
-            panel.Children.Add(protokoll);
-            panel.Children.Add(new WrapPanel { Children = { kopieren } });
-        }
-        return panel;
+        _diagnose = new DiagnoseTeil(bereich, Ergebnis);
+        return _diagnose.Teil;
     }
 
     // -- Über das Programm ---------------------------------------------------

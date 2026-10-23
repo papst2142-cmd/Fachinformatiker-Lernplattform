@@ -127,6 +127,8 @@ public partial class MainView : UserControl
         AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ =>
         {
             Messwerte.ErstesBild ??= Messwerte.SeitStart.Elapsed.TotalMilliseconds;
+            // Phase 5 W2: Startzeile der Messung, Herzschlag, Antworten auf einen zweiten Start
+            Programm.Diagnosedienst.Verbinden(this);
             if (AutoModus)
             {
                 Dispatcher.UIThread.Post(async () => await AutoLaufAsync(), DispatcherPriority.Background);
@@ -349,6 +351,7 @@ public partial class MainView : UserControl
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
+        Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
     private void NachAbgleich()
@@ -389,10 +392,21 @@ public partial class MainView : UserControl
     public async Task ZeigeAsync(string id)
     {
         var erstes = !_seiten.ContainsKey(id);
+        var vorher = AktuelleSeite;
         var uhr = Stopwatch.StartNew();
-        Zeige(id);
+        // Phase 5 W2 (BE8): Vorgang fuer die Haenger-Diagnose, solange die Seite gebaut wird
+        var vorgang = Core.Diagnose.Haenger.Vorgang("seite:" + id);
+        try
+        {
+            Zeige(id);
+        }
+        finally
+        {
+            Core.Diagnose.Haenger.Vorgang(vorgang);
+        }
         await BildFertigAsync();
         var ms = uhr.Elapsed.TotalMilliseconds;
+        Programm.Diagnosedienst.Seite(vorher, id, ms);
         if (erstes)
         {
             Messwerte.ErstesOeffnen[id] = ms;

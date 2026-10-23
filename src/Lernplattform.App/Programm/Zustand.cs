@@ -244,13 +244,7 @@ public static class Zustand
     /// </summary>
     public static bool Aendere(Action<JsonObject> aenderung)
     {
-        var werte = Einstellungen.Laden();
-        if (Einstellungen.NurAnzeige)
-        {
-            return false;
-        }
-        aenderung(werte);
-        if (!Einstellungen.Speichern(werte))
+        if (!Einstellungen.Aendern(aenderung))
         {
             return false;
         }

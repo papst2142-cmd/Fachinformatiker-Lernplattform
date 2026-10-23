@@ -121,7 +121,8 @@ public static class Fehlerprotokoll
         long groesse;
         try
         {
-            using var datei = File.OpenRead(pfad);
+            // haenger.log haelt die Haenger-Diagnose zum Schreiben offen: Mitbenutzung erlauben (Windows, Gegenpruefung W2 Fund 1)
+            using var datei = new FileStream(pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
             groesse = datei.Length;
             datei.Seek(Math.Max(0, groesse - grenze), SeekOrigin.Begin);
             using var puffer = new MemoryStream();

@@ -240,6 +240,9 @@ jobs:
           # Phase 5 W1 (Weisung P5-3): G37 Alles ersetzen und Zusammenfuehren, G40 Loeschen und Marke mit Uhrabweichung
           python3 -I werkzeuge/vergleich/erzeuge_sicherung_ersetzen.py python-linie tests/Vergleich/uebernahme.json neu/sicherung_ersetzen.json
           python3 -I werkzeuge/vergleich/erzeuge_loeschen.py python-linie tests/Vergleich/uebernahme.json neu/loeschen.json
+          # Phase 5 W2 (Weisung P5-6): G38 Problembericht, G39 Leistungsmessung
+          python3 -I werkzeuge/vergleich/erzeuge_problembericht.py python-linie neu/problembericht.json
+          python3 -I werkzeuge/vergleich/erzeuge_leistungsmessung.py python-linie neu/leistungsmessung.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -258,7 +261,8 @@ jobs:
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
                        "pruefung.json", "fachrichtungen.json", "hilfe.json",
-                       "sicherung_ersetzen.json", "loeschen.json"):
+                       "sicherung_ersetzen.json", "loeschen.json", "problembericht.json",
+                       "leistungsmessung.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
