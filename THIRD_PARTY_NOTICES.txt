@@ -12,51 +12,124 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 
 - AppImage type2-runtime (vpk 1.2.161) | MIT | https://github.com/AppImage/type2-runtime | linux-x64
   Startteil jedes AppImage (Linux), von vpk vorangestellt
-- ARM Optimized Routines (f67e7da) | MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception) | https://github.com/ARM-software/optimized-routines | linux-x64, osx-arm64, win-x64
+- ARM Optimized Routines (f67e7da) | MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception) | https://github.com/ARM-software/optimized-routines | android-arm64, linux-x64, osx-arm64, win-x64
   math/pow.c, pow_log_data.c, exp_data.c, nachgebaut in C# als Core/Mathe/PythonPow.cs
-- Avalonia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
+- Avalonia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
+- Avalonia.Android (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64
 - Avalonia.Angle.Windows.Natives (2.1.27548.20260419) | Datei LICENSE im Paket | https://github.com/AvaloniaUI/angle/ | win-x64
+- Avalonia.BuildServices (11.3.2) | MIT | https://github.com/AvaloniaUI/Avalonia.BuildServices | android-arm64
 - Avalonia.Desktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Fonts.Inter (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
+- Avalonia.Fonts.Inter (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
 - Avalonia.FreeDesktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
 - Avalonia.FreeDesktop.AtSpi (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.HarfBuzz (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
+- Avalonia.HarfBuzz (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
 - Avalonia.Native (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Remote.Protocol (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Skia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Themes.Fluent (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
+- Avalonia.Remote.Protocol (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
+- Avalonia.Skia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
+- Avalonia.Themes.Fluent (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
 - Avalonia.Win32 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
 - Avalonia.X11 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- CommunityToolkit.Mvvm (8.4.2) | MIT | https://github.com/CommunityToolkit/dotnet | linux-x64, osx-arm64, win-x64
-- HarfBuzzSharp (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | linux-x64, osx-arm64, win-x64
-- HarfBuzzSharp.NativeAssets.Linux (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | linux-x64
+- CommunityToolkit.Mvvm (8.4.2) | MIT | https://github.com/CommunityToolkit/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
+- HarfBuzzSharp (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, win-x64
+- HarfBuzzSharp.NativeAssets.Android (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
+- HarfBuzzSharp.NativeAssets.Linux (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64
 - HarfBuzzSharp.NativeAssets.macOS (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64
+- HarfBuzzSharp.NativeAssets.WebAssembly (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - HarfBuzzSharp.NativeAssets.Win32 (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | win-x64
-- MicroCom.Runtime (0.11.6) | MIT | https://github.com/kekekeks/MicroCom | linux-x64, osx-arm64, win-x64
-- Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | linux-x64, osx-arm64, win-x64
+- MicroCom.Runtime (0.11.6) | MIT | https://github.com/kekekeks/MicroCom | android-arm64, linux-x64, osx-arm64, win-x64
+- Microsoft.Android.Runtime.36.android (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
+- Microsoft.Android.Sdk.Linux (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
+- Microsoft.Data.Sqlite (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
+- Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
+- Microsoft.NET.ILLink.Tasks (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Host.linux-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | linux-x64
 - Microsoft.NETCore.App.Host.osx-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Host.win-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | win-x64
 - Microsoft.NETCore.App.Runtime.linux-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | linux-x64
+- Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Runtime.win-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | win-x64
-- Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | linux-x64, osx-arm64, win-x64
+- Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, win-x64
   Schrift der Oberflaeche, eingebettet in Avalonia.Fonts.Inter.dll
-- Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | linux-x64, osx-arm64, win-x64
+- Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, win-x64
   Festbreitenschrift der Rechner (nur Regular), eingebettet in Lernplattform.App.dll
-- SkiaSharp (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | linux-x64, osx-arm64, win-x64
-- SkiaSharp.NativeAssets.Linux (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | linux-x64
+- SkiaSharp (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, win-x64
+- SkiaSharp.NativeAssets.Android (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
+- SkiaSharp.NativeAssets.Linux (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64
 - SkiaSharp.NativeAssets.macOS (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64
+- SkiaSharp.NativeAssets.WebAssembly (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - SkiaSharp.NativeAssets.Win32 (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | win-x64
-- SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13) | gemeinfrei | https://sqlite.org/copyright.html | linux-x64, osx-arm64, win-x64
+- SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13) | gemeinfrei | https://sqlite.org/copyright.html | android-arm64, linux-x64, osx-arm64, win-x64
   Datenbank, in e_sqlite3
-- SQLitePCLRaw.bundle_e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, win-x64
-- SQLitePCLRaw.core (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, win-x64
+- SQLitePCLRaw.bundle_e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
+- SQLitePCLRaw.core (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
 - SQLitePCLRaw.lib.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, win-x64
-- SQLitePCLRaw.provider.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, win-x64
+- SQLitePCLRaw.lib.e_sqlite3.android (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64
+- SQLitePCLRaw.provider.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
 - Tmds.DBus.Protocol (0.94.1) | MIT | https://github.com/tmds/Tmds.DBus.git | linux-x64, osx-arm64, win-x64
 - Velopack (1.2.161) | MIT | https://github.com/velopack/velopack | linux-x64, osx-arm64, win-x64
 - Velopack-Programme (1.2.161) | MIT | https://github.com/velopack/velopack (Tag 1.2.161) | linux-x64, osx-arm64, win-x64
   Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt
+- Xamarin.AndroidX.Activity (1.12.4.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Annotation (1.9.1.7) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Annotation.Experimental (1.5.1.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Annotation.Jvm (1.9.1.7) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.AppCompat (1.7.1.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.AppCompat.AppCompatResources (1.7.1.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Arch.Core.Common (2.2.0.20) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Arch.Core.Runtime (2.2.0.20) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Collection (1.5.0.5) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Collection.Jvm (1.5.0.5) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Compose.Runtime.Annotation (1.10.4.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Compose.Runtime.Annotation.Android (1.10.4.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Concurrent.Futures (1.3.0.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Core (1.17.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Core.Core.Ktx (1.17.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Core.SplashScreen (1.0.1.15) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Core.ViewTree (1.0.0.5) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.CursorAdapter (1.0.0.36) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.CustomView (1.2.0.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.DocumentFile (1.1.0.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.DrawerLayout (1.2.0.20) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Emoji2 (1.6.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Emoji2.ViewsHelper (1.6.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Fragment (1.8.9.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Interpolator (1.0.0.36) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.Common (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.Common.Jvm (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.LiveData.Core (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.Process (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.Runtime (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.Runtime.Android (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.ViewModel (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.ViewModel.Android (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.ViewModelSavedState (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Lifecycle.ViewModelSavedState.Android (2.10.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Loader (1.1.0.36) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.NavigationEvent (1.0.2.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.NavigationEvent.Android (1.0.2.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.ProfileInstaller.ProfileInstaller (1.4.1.7) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.ResourceInspection.Annotation (1.0.1.24) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.SavedState (1.4.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.SavedState.SavedState.Android (1.4.0.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Startup.StartupRuntime (1.2.0.7) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Tracing.Tracing (1.3.0.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Tracing.Tracing.Android (1.3.0.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.VectorDrawable (1.2.0.10) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.VectorDrawable.Animated (1.2.0.10) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.VersionedParcelable (1.2.1.5) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.ViewPager (1.1.0.6) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Window (1.5.1.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Window.WindowCore (1.5.1.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.AndroidX.Window.WindowCore.Jvm (1.5.1.2) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.Google.Guava.ListenableFuture (1.0.0.31) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.Jetbrains.Annotations (26.1.0.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.JSpecify (1.0.0.6) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.Kotlin.StdLib (2.3.10.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.KotlinX.Coroutines.Android (1.10.2.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.KotlinX.Coroutines.Core (1.10.2.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.KotlinX.Coroutines.Core.Jvm (1.10.2.3) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.KotlinX.Serialization.Core (1.10.0.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
+- Xamarin.KotlinX.Serialization.Core.Jvm (1.10.0.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
 
 Nicht ausgeliefert (nur Tests und Bau): xunit.v3, Microsoft.Testing.Platform, vpk, Python-Werkzeuge.
