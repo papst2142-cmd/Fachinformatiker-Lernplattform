@@ -97,14 +97,11 @@ public sealed class EinspielenTeil
             return;
         }
         var optionen = new FilePickerOpenOptions { Title = SicherungTexte.KnopfEinspielen, AllowMultiple = false };
-        // Android kennt fuer .fisisicherung keinen Dateityp: dort ohne Filter (wie bei der Uebernahme, B10)
-        if (!Android)
+        // Android kennt fuer .fisisicherung keinen Dateityp: dort ohne Filter (derselbe Filter wie bei der Uebernahme, B10)
+        var filter = Geraetetexte.UebernahmeDateifilter(!Android);
+        if (filter.Count > 0)
         {
-            optionen.FileTypeFilter =
-            [
-                new FilePickerFileType(RuecksicherungTexte.DateiTyp) { Patterns = ["*" + Ruecksicherung.Endung] },
-                new FilePickerFileType(SicherungTexte.FilterAlle) { Patterns = ["*"] },
-            ];
+            optionen.FileTypeFilter = [.. filter.Select(f => new FilePickerFileType(f.Name) { Patterns = [f.Muster] })];
         }
         var auswahl = await top.StorageProvider.OpenFilePickerAsync(optionen);
         if (auswahl.Count == 0)
