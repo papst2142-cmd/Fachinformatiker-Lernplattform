@@ -63,7 +63,9 @@ public class WiederherstellungTests
 
         public string Kopien => System.IO.Path.Combine(Daten, Uebernahme.SicherungsOrdner);
 
-        public string Ersetzen(string datei) =>
+        public string Ersetzen(string datei) => ErsetzenMitErgebnis(datei).Kopie;
+
+        public ErsetzenErgebnis ErsetzenMitErgebnis(string datei) =>
             Wiederherstellung.Ersetzen(new Lernstand(Pfad), Sicherung(datei), Einstellungen, App, Geraet, null, Uhr);
 
         public void Dispose() => _ordner.Dispose();
@@ -369,6 +371,80 @@ public class WiederherstellungTests
         Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
         Assert.Equal(VergleichsHilfe.Stand(ziel), VergleichsHilfe.Stand(a.Pfad, ziel));
         Assert.Equal(einstellungenVorher, File.ReadAllText(a.Einstellungen.Pfad));
+    }
+
+    /// <summary>
+    /// Weisung P5-4 A1, Weg (a): einstellungen.json beim Ersetzen nicht lesbar (gesperrt). Der Lernstand wird
+    /// ersetzt, das Tagesziel bleibt alt, und die Rueckmeldung sagt es in einer eigenen Zeile (W13).
+    /// Kontrollfehler: Satz fehlt = rot.
+    /// </summary>
+    [Fact]
+    public void TageszielNichtLesbarSagtEs()
+    {
+        using var a = new Aufbau("gefuellt");
+        var vorher = File.ReadAllBytes(a.Einstellungen.Pfad);
+        ErsetzenErgebnis ergebnis;
+        using (new FileStream(a.Einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            ergebnis = a.ErsetzenMitErgebnis("a");
+        }
+        Assert.False(ergebnis.TageszielUebernommen);
+        Assert.Equal(vorher, File.ReadAllBytes(a.Einstellungen.Pfad));
+        Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+        var nachher = Fall("a_gefuellt").GetProperty("nachher");
+        Assert.Equal(VergleichsHilfe.Stand(nachher), VergleichsHilfe.Stand(a.Pfad, nachher));   // Lernstand trotzdem ersetzt
+        var meldung = SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", ergebnis.TageszielUebernommen);
+        Assert.EndsWith("\n" + SicherungTexte.TageszielNichtUebernommen, meldung);
+        Assert.StartsWith(SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung"), meldung);
+    }
+
+    /// <summary>
+    /// Weisung P5-4 A1, Weg (b): die Hilfsdatei laesst sich nach dem commit nicht an ihren Platz bringen
+    /// (an der Stelle von einstellungen.json liegt ein Ordner mit Inhalt). Lernstand ersetzt, Hilfsdatei weg,
+    /// Rueckmeldung mit dem Satz W13. Kontrollfehler: Satz fehlt = rot.
+    /// </summary>
+    [Fact]
+    public void TageszielNichtEingesetztSagtEs()
+    {
+        using var a = new Aufbau("gefuellt");
+        Wiederherstellung.Haltepunkt = punkt =>
+        {
+            if (punkt == "vor-commit")
+            {
+                File.Delete(a.Einstellungen.Pfad);
+                Directory.CreateDirectory(a.Einstellungen.Pfad);
+                File.WriteAllText(Path.Combine(a.Einstellungen.Pfad, "belegt"), "x");
+            }
+        };
+        ErsetzenErgebnis ergebnis;
+        try
+        {
+            ergebnis = a.ErsetzenMitErgebnis("a");
+        }
+        finally
+        {
+            Wiederherstellung.Haltepunkt = null;
+        }
+        Assert.False(ergebnis.TageszielUebernommen);
+        Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+        var nachher = Fall("a_gefuellt").GetProperty("nachher");
+        Assert.Equal(VergleichsHilfe.Stand(nachher), VergleichsHilfe.Stand(a.Pfad, nachher));
+        Assert.EndsWith("\n" + SicherungTexte.TageszielNichtUebernommen,
+            SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", ergebnis.TageszielUebernommen));
+        Directory.Delete(a.Einstellungen.Pfad, true);
+    }
+
+    /// <summary>Normalfall: Tagesziel uebernommen, kein Zusatzsatz (W13 nur im Fehlerfall).</summary>
+    [Fact]
+    public void TageszielUebernommenOhneZusatz()
+    {
+        using var a = new Aufbau("gefuellt");
+        var ergebnis = a.ErsetzenMitErgebnis("a");
+        Assert.True(ergebnis.TageszielUebernommen);
+        var meldung = SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", ergebnis.TageszielUebernommen);
+        Assert.DoesNotContain(SicherungTexte.TageszielNichtUebernommen, meldung);
+        Assert.DoesNotContain("\n", meldung);
+        Assert.Equal("Das Tagesziel ließ sich nicht übernehmen.", SicherungTexte.TageszielNichtUebernommen);
     }
 
     /// <summary>Wird nichts gespeichert (Lesefehler, Schreibschutz): nichts ersetzt, keine Kopie.</summary>

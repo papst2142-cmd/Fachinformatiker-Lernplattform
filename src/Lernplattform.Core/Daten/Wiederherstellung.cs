@@ -60,6 +60,12 @@ public sealed record Sicherungsinhalt(Austausch Daten, JsonObject Einstellungen,
 /// Datenbank). Geraetebezogenes (Farben, Zugangsschluessel) bleibt. Alle Tabellen werden in
 /// einer Buchung geleert und gefuellt; die Nummern (id) zaehlen weiter (AUTOINCREMENT).
 /// </summary>
+/// <summary>
+/// Ergebnis von „Alles ersetzen“ (Weisung P5-4 A1): Pfad der Sicherheitskopie und ob das Tagesziel der
+/// Sicherung in einstellungen.json angekommen ist (false: Einstellungen nicht lesbar oder Umbenennen gescheitert).
+/// </summary>
+public sealed record ErsetzenErgebnis(string Kopie, bool TageszielUebernommen);
+
 public static class Wiederherstellung
 {
     public const string Praefix = "vor_wiederherstellung_";   // SAFETY_PREFIX
@@ -77,14 +83,14 @@ public static class Wiederherstellung
     internal static Action<string>? Haltepunkt { get; set; }
 
     /// <summary>
-    /// replace_all. Rueckgabe: Pfad der Sicherheitskopie. Ablauf: Pruefung "nur lesen", Sperre (wie
+    /// replace_all. Rueckgabe: Pfad der Sicherheitskopie und ob das Tagesziel uebernommen ist. Ablauf: Pruefung "nur lesen", Sperre (wie
     /// Abgleich und Uebernahme), Sicherheitskopie (geschrieben, zurueckgelesen, geprueft), noch einmal
     /// "nur lesen", dann eine Buchung: Tabellen leeren und fuellen, Marken und Aufhebungen
     /// (replace_lifts), Tagesziel in die Hilfsdatei; commit; Hilfsdatei an ihren Platz.
     /// Scheitert die Kopie oder die Buchung, bleibt der Lernstand unveraendert.
     /// </summary>
     /// <param name="ordner">Vorgabe: Ordner "sicherungen" neben der Datenbank.</param>
-    public static string Ersetzen(Lernstand ziel, Sicherungsinhalt sicherung, Einstellungen einstellungen, string appVersion, string geraet,
+    public static ErsetzenErgebnis Ersetzen(Lernstand ziel, Sicherungsinhalt sicherung, Einstellungen einstellungen, string appVersion, string geraet,
         string? ordner = null, Uhr? uhr = null)
     {
         uhr ??= Uhr.System;
@@ -154,12 +160,9 @@ public static class Wiederherstellung
                 ? "SQLite-Fehler " + s.SqliteErrorCode.ToString(CultureInfo.InvariantCulture) : e.GetType().Name));
             throw new WiederherstellungAusnahme(WiederherstellungFehler.EinspielenGescheitert);
         }
-        // Sehr selten scheitert das: Lernstand neu, Tagesziel bleibt alt (wie Python)
-        if (hilfsdatei)
-        {
-            einstellungen.HilfsdateiEinsetzen();
-        }
-        return kopie;
+        // Sehr selten scheitert das: Lernstand neu, Tagesziel bleibt alt (wie Python); die Rueckmeldung sagt es (P5-4 A1)
+        var tagesziel = hilfsdatei && einstellungen.HilfsdateiEinsetzen();
+        return new ErsetzenErgebnis(kopie, tagesziel);
     }
 
     private static void NurLesenPruefen(Lernstand ziel)

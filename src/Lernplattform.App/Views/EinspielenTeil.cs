@@ -202,7 +202,7 @@ public sealed class EinspielenTeil
         }
         // show_wait: „Bitte warten“ ueber dem ganzen Fenster, solange ersetzt und neu angezeigt wird (vor jeder
         // Meldung wieder weg); nichts darunter laesst sich bedienen, also auch keine Antwort zwischen Kopie und commit
-        string? kopie = null;
+        ErsetzenErgebnis? ergebnis = null;
         string? fehlerText = null;
         using (Dialog.Warten(SicherungTexte.WartenErsetzen))
         {
@@ -210,25 +210,26 @@ public sealed class EinspielenTeil
             {
                 var einstellungen = Zustand.Einstellungen;
                 var geraet = AbgleichDienst.Geraet();
-                kopie = await Task.Run(() => Wiederherstellung.Ersetzen(lernstand, sicherung, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet));
+                ergebnis = await Task.Run(() => Wiederherstellung.Ersetzen(lernstand, sicherung, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet));
             }
             catch (WiederherstellungAusnahme fehler)
             {
                 fehlerText = SicherungTexte.ErsetzenFehler(fehler, lernstand.NurLesenGrund);
             }
-            if (kopie is not null)
+            if (ergebnis is not null)
             {
                 // Ab hier ist ersetzt: ein Fehler beim Neu-Zeigen aendert die Rueckmeldung nicht (Gegenpruefung W1 Fund 1)
                 NurProtokoll(Zustand.EinstellungenNeuLesen);
                 Nachher();
             }
         }
-        if (kopie is null)
+        if (ergebnis is null)
         {
             await Hinweis(fehlerText ?? SicherungTexte.EinspielenGescheitert);
             return;
         }
-        await MeldungMitDatei(SicherungTexte.ErsetztMeldung(sicherung, Geraetetexte.KopieName(Path.GetFileName(kopie), !Android)));
+        await MeldungMitDatei(SicherungTexte.ErsetztMeldung(sicherung, Geraetetexte.KopieName(Path.GetFileName(ergebnis.Kopie), !Android),
+            ergebnis.TageszielUebernommen));
         await NurProtokollAsync(AusbildungTeil.VergleichenAsync);
     }
 

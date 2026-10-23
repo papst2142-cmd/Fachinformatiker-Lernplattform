@@ -105,9 +105,15 @@ public static class SicherungTexte
     public static string ErsetzenFragePython(Sicherungsinhalt sicherung) =>
         Beschriftungen.Einsetzen(FrageAnfang, sicherung.ErstelltText) + FrageKopiePython + FrageRest;
 
-    /// <summary>replace_message (Dateiname am Handy mit Umbruchstellen wie bei der Übernahme).</summary>
-    public static string ErsetztMeldung(Sicherungsinhalt sicherung, string kopieName) =>
-        Beschriftungen.Einsetzen(Ersetzt, sicherung.ErstelltText, kopieName);
+    /// <summary>(W13, Weisung P5-4 A1) eigene Zeile unter replace_message, wenn das Tagesziel nicht ankam.</summary>
+    public const string TageszielNichtUebernommen = "Das Tagesziel ließ sich nicht übernehmen.";
+
+    /// <summary>
+    /// replace_message (Dateiname am Handy mit Umbruchstellen wie bei der Übernahme); kam das Tagesziel
+    /// nicht an, folgt in einer eigenen Zeile (W13).
+    /// </summary>
+    public static string ErsetztMeldung(Sicherungsinhalt sicherung, string kopieName, bool tageszielUebernommen = true) =>
+        Beschriftungen.Einsetzen(Ersetzt, sicherung.ErstelltText, kopieName) + (tageszielUebernommen ? "" : "\n" + TageszielNichtUebernommen);
 
     /// <summary>kept_deleted_text.</summary>
     public static string BleibtGeloescht(int anzahl) => anzahl == 1 ? BleibtGeloeschtEins

@@ -31,7 +31,7 @@ public static partial class AutoMessung
         ("sicherung/frage-ersetzen", () => EinspielenTeil.FrageZeigen(ProbeInhalt())),
         ("sicherung/rueckfrage-ersetzen", () => Dialog.Rueckfrage(SicherungTexte.RueckfrageTitel, SicherungTexte.Rueckfrage, 1, TrainerTexte.Ja, TrainerTexte.Nein)),
         ("sicherung/ersetzt", () => EinspielenTeil.MeldungMitDatei(SicherungTexte.ErsetztMeldung(ProbeInhalt(),
-            UebernahmeTexte.KopieName(Wiederherstellung.Praefix + "2026-10-23_1200_2" + Ruecksicherung.Endung, !ansicht.Breit)))),
+            UebernahmeTexte.KopieName(Wiederherstellung.Praefix + "2026-10-23_1200_2" + Ruecksicherung.Endung, !ansicht.Breit), false))),   // P5-4 A1: laengste Form mit dem Satz W13
         ("sicherung/zusammengefuehrt", () => EinspielenTeil.MeldungMitDatei(SicherungTexte.Zusammengefuehrt(ProbeBericht(),
             UebernahmeTexte.KopieName("vor_uebernahme_2026-10-23_120000_2.db", !ansicht.Breit)))),
         ("sicherung/kopie-gescheitert", () => Dialog.Zeigen(SicherungTexte.Titel,
