@@ -1,3 +1,4 @@
 # SHA-256-Fingerabdruck des Zertifikats im Android-Release-Schluessel (Phase 6 W1, VE3, Pruefung T3).
-# Leer, bis der Schluessel nach dem Merge von W1 mit eigener Weisung erzeugt ist; release.yml bricht bis dahin ab.
+# Schluessel erzeugt von Chat am 23.10.2026 (Weisung P6-5), PKCS12, RSA 4096, Alias lernplattform, gueltig bis 10.03.2054.
 # Hier steht nur der oeffentliche Fingerabdruck (64 Hexzeichen), nie der Schluessel oder ein Passwort.
+328aae64ab7ed35e37b0a84cdd046289deb59e940b45a29120ec1ee42b2bf012
