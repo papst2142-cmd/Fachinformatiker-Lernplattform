@@ -26,6 +26,8 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
         // Phase 1: Einstellungen lesen, Farbwelt und Schriftstufe anwenden, Inhalte im Hintergrund laden
         Programm.Zustand.Starten();
+        // Phase 5 W2 (BE7): Leistungsmessung nach dem gespeicherten Schalter (aus = keine Datei)
+        Programm.Diagnosedienst.Starten(Programm.Zustand.Werte);
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -39,9 +41,16 @@ public partial class App : Application
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
             desktop.Exit += (_, _) =>
             {
+                // Phase 5 W2 (BE8): ab jetzt "endet" fuer einen zweiten Start, Messdatei schreiben
+                Programm.Diagnosedienst.Beenden();
                 Programm.Zustand.Beenden();
-                // L10: letzter Abgleich, wenn seither gelernt wurde (run_before_exit, hoechstens 12 s)
-                Programm.AbgleichDienst.VorDemBeenden();
+                // L10: letzter Abgleich, wenn seither gelernt wurde (run_before_exit, hoechstens 12 s);
+                // Phase 5 BE10: nicht, wenn das Programm fuer ein Update schliesst (on_close(final_sync=False))
+                if (!Programm.UpdateDienst.FuerUpdateBeendet)
+                {
+                    Programm.AbgleichDienst.VorDemBeenden();
+                }
+                Programm.Diagnosedienst.NachDemAbgleich();
             };
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactoryApplicationLifetime)
@@ -59,6 +68,14 @@ public partial class App : Application
         // L10: Handy gleicht beim Verlassen der App ab (on_leave), wenn seither gelernt wurde
         if (OperatingSystem.IsAndroid() && this.TryGetFeature<IActivatableLifetime>() is { } leben)
         {
+            // Phase 5 BE10: beim Zurueckholen nach Updates suchen (hoechstens alle 30 Minuten, _lifecycle main.py 5979)
+            leben.Activated += (_, e) =>
+            {
+                if (e.Kind == ActivationKind.Background)
+                {
+                    Programm.UpdateDienst.Zurueck();
+                }
+            };
             leben.Deactivated += (_, e) =>
             {
                 if (e.Kind == ActivationKind.Background)

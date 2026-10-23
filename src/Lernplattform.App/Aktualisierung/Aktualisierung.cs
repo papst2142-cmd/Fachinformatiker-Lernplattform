@@ -18,6 +18,12 @@ public static class Aktualisierung
     /// <summary>Kurzer Zustand des Updaters (installiert, Version), oder null ohne Updater.</summary>
     public static Func<string>? Zustand { get; set; }
 
+    /// <summary>
+    /// Phase 5 BE9: Quelle des Updates am PC (Velopack), vom Desktop-Start gesetzt. Am Handy null:
+    /// dort sucht <see cref="Core.Update.GithubSuche"/> und die APK kommt ueber den Browser.
+    /// </summary>
+    public static Func<Core.Update.IUpdateQuelle>? Quelle { get; set; }
+
     private static string Metadaten(string schluessel) => typeof(Aktualisierung).Assembly
         .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == schluessel)?.Value ?? "";
 }

@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.11.0 (in Arbeit, Phase 5: Betrieb)
+Version A 0.11.0, Paket 1.0.0-a.0.11.0, Android 1001100 (Weisung P5-8). Ein Update von A 0.10.0 behält den Lernstand.
+- Welle 1, Sicherung: Optionen „Sicherung“ mit „Sicherung erstellen“ und „Sicherung einspielen“ (Vorschau, Zusammenführen oder „Alles ersetzen“ mit zwei Rückfragen), „Löschen und zurücksetzen“ und am PC „Datenbank“. Vor jedem Ersetzen entsteht eine Kopie unter `sicherungen/`.
+- Welle 2, Diagnose: Optionen „Diagnose und Werkzeuge“ mit „Problem melden“ (Bericht ohne Benutzerpfade und ohne Zugangsdaten, kopieren oder speichern), Leistungsmessung mit Messdatei, am PC die Hänger-Diagnose und eine Sperre gegen einen zweiten gleichzeitigen Programmstart.
+- Welle 3, Update im Programm: Optionen „Updates“ mit „Nach Updates suchen“ und dem Schalter „Beim Start automatisch nach Updates suchen“. Gibt es eine neuere Version, zeigt das Fenster „Update verfügbar“ die Neuerungen. Am PC lädt „Jetzt aktualisieren“ das Update (Größe und SHA-256-Prüfsumme werden geprüft), legt vorher eine Kopie des Lernstands unter `sicherungen/vor_update_*.db` an und startet das Programm danach neu; läuft das Programm nicht als installierte Anwendung, führt „Zur Download-Seite“ zum Release. Am Handy öffnet „Herunterladen“ die neue App-Datei im Browser.
+- Kam ein Update nicht an, meldet der nächste Start einmal „Update nicht abgeschlossen“ mit Grund, Tipp und dem Pfad von `update.log`; jeder Schritt des Updates steht in `update.log` (auch im Problembericht).
+- Update, Sicherung einspielen, Übernahme und Abgleich laufen nie gleichzeitig. Gesucht wird nur nach veröffentlichten Versionen (keine Vorab-Versionen); die Reihenfolge ist A vor B vor 1.0.
+- Der Hilfetext der Hänger-Diagnose nennt „Vorladen“ nicht mehr (gibt es in dieser Linie nicht, Sammelliste 71).
+- Start ohne Bedienung zeigt die neuen Ansichten in allen Schriftstufen, Größen und 72 Farbwelten.
+
 ## A 0.10.0 (in Arbeit, Phase 4: Prüfungsbereiche)
 Version A 0.10.0, Paket 1.0.0-a.0.10.0, Android 1001000 (Weisung P4-16). Ein Update von A 0.9.0 behält den Lernstand.
 - Neue Lernseiten „AP1-Szenarien“, „AP2-Szenarien“ und „Testprojekt“ (bisher „Kommt in einer späteren Ausbaustufe“): Liste mit Status-Punkt, Suche, Themen- und Statusfilter, Blättern, Aufgabe mit eigenem Lösungsfeld, Musterlösung aufdecken und „Gewusst“/„Nicht gewusst“. Jede Bewertung wird genau einmal gespeichert, wie in Python 0.63.2.

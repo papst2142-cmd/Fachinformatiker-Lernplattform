@@ -20,7 +20,7 @@ namespace Lernplattform.Views;
 /// <summary>
 /// Phase 1, K8: Optionen in der Reihenfolge von fisi_optionen.AREAS. Gebaut sind
 /// Optische Anpassungen (Schriftgroesse, Darstellung, Vorlagen, eigene Farben),
-/// Tagesziel, Abgleich PC und Handy (Phase 2, L10), Diagnose (Fehlerprotokoll anzeigen und kopieren) und "Über das
+/// Tagesziel, Abgleich PC und Handy (Phase 2, L10), Diagnose (Phase 5 W2, <see cref="DiagnoseTeil"/>) und "Über das
 /// Programm". Die uebrigen Bereiche zeigen den Platzhalter. Jede Aenderung wird
 /// sofort gespeichert; geht das nicht, erscheint "Speichern fehlgeschlagen" und
 /// die Anzeige springt auf den gespeicherten Wert zurueck.
@@ -47,6 +47,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private ComboBox? _rpLernfeld;
     private List<string> _lernfelder = [];
     private TextBlock? _rpFehler;
+    private Action? _tageszielNeu;
+    private DiagnoseTeil? _diagnose;
 
     public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null)
     {
@@ -157,6 +159,9 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Ausbildung => Ausbildung(),
         Optionen.Rundgang => RundgangUndHilfe(),
         Optionen.Lerninhalte => Lerninhalte(bereich),
+        Optionen.Loeschen => Loeschen(),
+        Optionen.Datenbank => Datenbank(),
+        Optionen.Updates => Updates(),
         _ => Platzhalterzeile(),
     };
 
@@ -230,6 +235,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
         }
         RahmenplanNeu();
+        _tageszielNeu?.Invoke();
+        _diagnose?.Neu();
     }
 
     private async Task WarnungAsync(string wert)
@@ -524,9 +531,11 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 {
                     return;
                 }
+                var vorher = Einstellungen.Schriftgroesse(Zustand.Werte);
                 if (Ergebnis(Zustand.Setze(Einstellungen.SchriftSchluessel, stufe.Id)))
                 {
-                    Schrift.Anwenden(stufe.Faktor);
+                    // Phase 5 W2: Vorgang "schrift" fuer die Haenger-Diagnose, Zeile "darstellung" in der Messung
+                    Diagnosedienst.Darstellung(vorher, stufe.Id, () => Schrift.Anwenden(stufe.Faktor), "schrift");
                 }
                 else
                 {
@@ -579,10 +588,14 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 {
                     return;
                 }
+                var vorher = Einstellungen.Darstellung(Zustand.Werte);
                 if (Ergebnis(Zustand.Setze(Einstellungen.DarstellungSchluessel, id)))
                 {
-                    Zustand.DesignAnwenden();
-                    _eigene?.Neu();
+                    Diagnosedienst.Darstellung(vorher, id, () =>
+                    {
+                        Zustand.DesignAnwenden();
+                        _eigene?.Neu();
+                    });
                 }
                 else
                 {
@@ -667,6 +680,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     {
         var panel = new StackPanel { Spacing = 10 };
         var ziel = Einstellungen.Ziel(Zustand.Werte);
+        var schalterListe = new List<(string Schluessel, ToggleSwitch Schalter)>();
         foreach (var (schluessel, text) in TageszielTexte.Schalter)
         {
             if (schluessel == "erinnerung_an")
@@ -697,6 +711,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 }
             };
             panel.Children.Add(schalter);
+            schalterListe.Add((schluessel, schalter));
         }
         var anzahl = new NumericUpDown
         {
@@ -733,51 +748,193 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         });
         panel.Children.Add(Schrift.Text(TageszielTexte.Schalter[2].Text + ": " + Beschriftungen.Platzhalter, "Klein", FontWeight.Normal, "Pinsel.muted"));
         panel.Children.Add(Schrift.Text(TageszielTexte.HinweisGezaehlt, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Phase 5 BE3 (_after_restore): nach „Alles ersetzen“ die Werte aus der Sicherung zeigen
+        _tageszielNeu = () =>
+        {
+            var jetzt = Einstellungen.Ziel(Zustand.Werte);
+            _setzen = true;
+            foreach (var (schluessel, schalter) in schalterListe)
+            {
+                schalter.IsChecked = schluessel == "ziel_an" ? jetzt.ZielAn : jetzt.SerieAn;
+            }
+            anzahl.Value = jetzt.ZielAnzahl;
+            _setzen = false;
+        };
         return panel;
     }
 
-    // -- Diagnose ------------------------------------------------------------
+    // -- Löschen und zurücksetzen (Phase 5 BE4, _build_loeschen) -------------
+
+    private Control Loeschen()
+    {
+        var panel = new StackPanel { Spacing = 6 };
+        void Teil(string titel, string text, Control knopf, bool erster)
+        {
+            var kopf = Abschnitt(titel);
+            if (!erster)
+            {
+                kopf.Margin = new Thickness(0, 14, 0, 0);
+            }
+            panel.Children.Add(kopf);
+            panel.Children.Add(Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+            knopf.Margin = new Thickness(0, 6, 8, 0);
+            knopf.HorizontalAlignment = HorizontalAlignment.Left;
+            panel.Children.Add(knopf);
+        }
+        var alles = Schrift.Gefahrknopf(LoeschenTexte.LerndatenKnopf);
+        alles.Click += async (_, _) => await LoeschenAsync(LoeschenTexte.LerndatenFrageTitel, LoeschenTexte.LerndatenFrage,
+            s => s.AllesLoeschen(), LoeschenTexte.LerndatenErfolgTitel, LoeschenTexte.LerndatenErfolg);
+        Teil(LoeschenTexte.Lerndaten, LoeschenTexte.LerndatenText, alles, true);
+        var historie = Schrift.Gefahrknopf(LoeschenTexte.HistorieKnopf);
+        historie.Click += async (_, _) => await LoeschenAsync(LoeschenTexte.HistorieFrageTitel, LoeschenTexte.HistorieFrage,
+            s => s.HistorieLoeschen(), LoeschenTexte.HistorieErfolgTitel, LoeschenTexte.HistorieErfolg);
+        Teil(LoeschenTexte.Historie, LoeschenTexte.HistorieText, historie, false);
+        // Spielstand und Bestenliste kommen mit dem Spiel (Phase 7)
+        Teil(LoeschenTexte.Spielstand, Beschriftungen.Platzhalter, new Border(), false);
+        Teil(LoeschenTexte.Bestenliste, Beschriftungen.Platzhalter, new Border(), false);
+        return panel;
+    }
+
+    /// <summary>
+    /// clear_history / reset_all mit _delete_checked: Rueckfrage, loeschen; ein Datenbankfehler
+    /// waehrenddessen wird gesammelt und als genau ein Fenster gezeigt („Es wurde nichts gelöscht.“),
+    /// sonst Bestaetigung mit clock_fix_text und Abgleich wie nach dem Lernen (notify_progress).
+    /// </summary>
+    private static async Task LoeschenAsync(string titel, string frage, Func<LernstandSchreiber, bool> loeschen, string erfolgTitel, string erfolg)
+    {
+        if (await Dialog.Zeigen(titel, frage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        {
+            return;
+        }
+        var schreiber = Zustand.Schreiber;
+        bool geloescht;
+        IReadOnlyList<string> gesammelt;
+        try
+        {
+            (geloescht, gesammelt) = Loeschablauf.Ausfuehren(() => loeschen(schreiber), () => Zustand.Fehlermeldung, e => Zustand.Fehlermeldung = e);
+        }
+        catch (Exception fehler)
+        {
+            // Nie einen Systemtext zeigen; Einzelheiten ins Fehlerprotokoll (die Marke entsteht vor dem Schreiben)
+            Fehlerprotokoll.Schreiben(fehler);
+            (geloescht, gesammelt) = (false, []);
+        }
+        if (!geloescht)
+        {
+            await Dialog.Zeigen(titel, LoeschenTexte.NichtsGeloeschtMit(gesammelt), Dialog.Ok);
+            return;
+        }
+        AbgleichDienst.NachDemLernen();
+        await Dialog.Zeigen(erfolgTitel, LoeschenTexte.MitUhrHinweis(erfolg, schreiber.LetzteUhrkorrektur), Dialog.Ok);
+    }
+
+    // -- Datenbank (Phase 5 BE4, nur PC, _build_datenbank) --------------------
+
+    private static Control Datenbank()
+    {
+        var pfad = new TextBox
+        {
+            Text = Zustand.Lernstand.Pfad,
+            IsReadOnly = true,
+            TextWrapping = TextWrapping.Wrap,
+            FontFamily = new FontFamily("monospace"),
+        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
+        Avalonia.Automation.AutomationProperties.SetName(pfad, LoeschenTexte.DatenbankTitel);
+        return new StackPanel
+        {
+            Spacing = 8,
+            Children =
+            {
+                Schrift.Text(LoeschenTexte.DatenbankTitel, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+                pfad,
+                Schrift.Text(LoeschenTexte.DatenbankHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"),
+            },
+        };
+    }
+
+    // -- Diagnose (Phase 5 W2: Problem melden, Leistungsmessung, Hänger-Diagnose) ----
+
+    // -- Updates (Phase 5 BE10, app_gui 7182; Handy main.py 4549) ---------------
+
+    /// <summary>
+    /// "Nach Updates suchen" mit Zeile fuer das Ergebnis und der Schalter "Beim Start automatisch nach
+    /// Updates suchen" (auto_check, nur dieses Geraet). Gibt es ein Update, oeffnet sich das Fenster.
+    /// </summary>
+    private Control Updates()
+    {
+        var zeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        zeile.VerticalAlignment = VerticalAlignment.Center;
+        zeile.IsVisible = false;
+        var knopf = Schrift.Knopf(Optionen.UpdatesSuchen, betont: true);
+        knopf.Margin = new Thickness(0, 0, 16, 6);
+        knopf.Click += async (_, _) =>
+        {
+            knopf.IsEnabled = false;
+            UpdateZeile(zeile, UpdateTexte.Suche, "Pinsel.text_dim");
+            var ergebnis = await UpdateDienst.VonHandAsync();
+            knopf.IsEnabled = true;
+            switch (ergebnis)
+            {
+                case null:
+                    zeile.IsVisible = false;    // eine Suche laeuft schon (automatisch beim Start)
+                    break;
+                case { Fehler: { } fehler }:
+                    UpdateZeile(zeile, fehler, "Pinsel.red");
+                    break;
+                case { Angebot: null }:
+                    UpdateZeile(zeile, Beschriftungen.Einsetzen(UpdateTexte.Neueste, Update.Anzeige), "Pinsel.green");
+                    break;
+                case { Angebot: { } angebot }:
+                    UpdateZeile(zeile, Beschriftungen.Einsetzen(UpdateTexte.Verfuegbar, angebot.Version), "Pinsel.accent");
+                    break;
+            }
+        };
+        UpdateKnopf = knopf;
+        UpdateErgebnis = zeile;
+        var schalter = new ToggleSwitch
+        {
+            Content = Schrift.Text(Optionen.UpdatesAutomatisch, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+            IsChecked = Zustand.Werte[Einstellungen.AutoCheckSchluessel]?.GetValueKind() is System.Text.Json.JsonValueKind.True,
+            OnContent = null,
+            OffContent = null,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(schalter, Optionen.UpdatesAutomatisch);
+        schalter.IsCheckedChanged += (_, _) =>
+        {
+            if (_setzen)
+            {
+                return;
+            }
+            if (!Ergebnis(Zustand.Setze(Einstellungen.AutoCheckSchluessel, schalter.IsChecked == true)))
+            {
+                _setzen = true;
+                schalter.IsChecked = !schalter.IsChecked;
+                _setzen = false;
+            }
+        };
+        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalter } };
+    }
+
+    /// <summary>Knopf "Nach Updates suchen", sobald gebaut (Start ohne Bedienung).</summary>
+    public Button? UpdateKnopf { get; private set; }
+
+    /// <summary>Zeile fuer das Ergebnis der Suche (Start ohne Bedienung zeigt dort einen Fehler).</summary>
+    internal TextBlock? UpdateErgebnis { get; private set; }
+
+    internal static void UpdateZeile(TextBlock zeile, string text, string farbe)
+    {
+        zeile.Text = text;
+        zeile.IsVisible = true;
+        zeile.Farbe(TextBlock.ForegroundProperty, farbe);
+    }
+
+    /// <summary>Bereich "Diagnose und Werkzeuge", sobald gebaut (Start ohne Bedienung).</summary>
+    public DiagnoseTeil? DiagnoseBereich => _diagnose;
 
     private Control Diagnose(OptionenBereich bereich)
     {
-        var panel = new StackPanel { Spacing = 10 };
-        foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
-        {
-            panel.Children.Add(Abschnitt(abschnitt.Titel));
-            if (abschnitt.Id != Optionen.AbschnittProblem)
-            {
-                panel.Children.Add(Platzhalterzeile());
-                continue;
-            }
-            // Phase 1 (K4): nur das Fehlerprotokoll anzeigen und kopieren; "Problem melden" kommt in Phase 6
-            var protokoll = new TextBox
-            {
-                IsReadOnly = true,
-                TextWrapping = TextWrapping.Wrap,
-                AcceptsReturn = true,
-                MaxHeight = 320,
-                FontFamily = new FontFamily("monospace"),
-            }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
-            void Neu()
-            {
-                var text = Fehlerprotokoll.Anzeigen();
-                protokoll.Text = text.Length == 0 ? Fehlerprotokoll.KeinProtokoll : text;
-            }
-            Neu();
-            var kopieren = Schrift.Knopf(DiagnoseTexte.Kopieren);
-            kopieren.Click += async (_, _) =>
-            {
-                Neu();
-                if (TopLevel.GetTopLevel(this)?.Clipboard is { } ablage)
-                {
-                    await Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(ablage, protokoll.Text ?? "");
-                }
-            };
-            panel.Children.Add(Schrift.Text(Fehlerprotokoll.DateiName, "Klein", FontWeight.SemiBold, "Pinsel.text_dim"));
-            panel.Children.Add(protokoll);
-            panel.Children.Add(new WrapPanel { Children = { kopieren } });
-        }
-        return panel;
+        _diagnose = new DiagnoseTeil(bereich, Ergebnis);
+        return _diagnose.Teil;
     }
 
     // -- Über das Programm ---------------------------------------------------

@@ -19,15 +19,9 @@ public class BegriffeTests
     /// <summary>Liste A: Begriff -> Phase, in der er gebaut wird. Rot, sobald er als Text auftaucht.</summary>
     public static readonly IReadOnlyDictionary<string, int> NochNichtGebaut = new Dictionary<string, int>(StringComparer.Ordinal)
     {
-        ["Sicherung erstellen"] = 6,
-        ["Sicherung einspielen"] = 6,
-        ["Alles ersetzen"] = 6,
-        ["Jetzt aktualisieren"] = 6,
-        ["Installieren"] = 6,
-        ["Messung aufzeichnen"] = 6,
-        ["leistungsmessung.csv"] = 6,
-        ["Messdatei zeigen"] = 6,
-        ["Messdatei löschen"] = 6,
+        // Phase 5 W1: "Sicherung erstellen", "Sicherung einspielen", "Alles ersetzen" gebaut (gestrichen)
+        // Phase 5 W2: "Messung aufzeichnen", "leistungsmessung.csv", "Messdatei zeigen", "Messdatei löschen" gebaut (gestrichen)
+        // Phase 5 W3: "Jetzt aktualisieren" (Fenster "Update verfügbar") und "Installieren" (Hinweis am Handy) gebaut (gestrichen)
     };
 
     /// <summary>Einziger Begriff, der keine Beschriftung ist (NOT_A_LABEL).</summary>
@@ -91,8 +85,8 @@ public class BegriffeTests
         // Liste A darf nur Begriffe nennen, die noch in der Hilfe stehen
         var veraltet = NochNichtGebaut.Keys.Where(b => !begriffe.Contains(b)).ToList();
         Assert.True(veraltet.Count == 0, "Liste A: Begriff steht nicht mehr in der Hilfe: " + string.Join(" | ", veraltet));
-        Assert.Equal(9, NochNichtGebaut.Count);
-        Assert.All(NochNichtGebaut.Values, phase => Assert.Equal(6, phase));
+        Assert.Empty(NochNichtGebaut);                           // Phase 5 W1: 9 -> 6, W2: 6 -> 2, W3: 2 -> 0 (Liste A abgearbeitet, Sammelliste 57)
+        Assert.All(NochNichtGebaut.Values, phase => Assert.Equal(5, phase));   // Weisung P5-3 Punkt 4: Phase 6 -> 5
     }
 
     /// <summary>Genau eine Datei ist ausgenommen, und sie enthaelt alle geprueften Texte (findet sich nicht selbst).</summary>

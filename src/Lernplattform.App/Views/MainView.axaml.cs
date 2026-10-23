@@ -127,6 +127,10 @@ public partial class MainView : UserControl
         AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ =>
         {
             Messwerte.ErstesBild ??= Messwerte.SeitStart.Elapsed.TotalMilliseconds;
+            // Phase 5 W2: Startzeile der Messung, Herzschlag, Antworten auf einen zweiten Start
+            Programm.Diagnosedienst.Verbinden(this);
+            // Phase 5 BE10: Pruefung des letzten Updates und Suche beim Start (einmal je Programmstart)
+            Programm.UpdateDienst.Starten();
             if (AutoModus)
             {
                 Dispatcher.UIThread.Post(async () => await AutoLaufAsync(), DispatcherPriority.Background);
@@ -349,6 +353,7 @@ public partial class MainView : UserControl
         }
         _kopfTitel.Text = Seiten.Titel(id);
         _leisten.Markiere(id);
+        Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
     private void NachAbgleich()
@@ -389,10 +394,21 @@ public partial class MainView : UserControl
     public async Task ZeigeAsync(string id)
     {
         var erstes = !_seiten.ContainsKey(id);
+        var vorher = AktuelleSeite;
         var uhr = Stopwatch.StartNew();
-        Zeige(id);
+        // Phase 5 W2 (BE8): Vorgang fuer die Haenger-Diagnose, solange die Seite gebaut wird
+        var vorgang = Core.Diagnose.Haenger.Vorgang("seite:" + id);
+        try
+        {
+            Zeige(id);
+        }
+        finally
+        {
+            Core.Diagnose.Haenger.Vorgang(vorgang);
+        }
         await BildFertigAsync();
         var ms = uhr.Elapsed.TotalMilliseconds;
+        Programm.Diagnosedienst.Seite(vorher, id, ms);
         if (erstes)
         {
             Messwerte.ErstesOeffnen[id] = ms;
@@ -568,11 +584,17 @@ public partial class MainView : UserControl
     private Control BaueSicherung()
     {
         var panel = new StackPanel { Spacing = 8 };
+        // Phase 5 BE1/BE3 (_build_sicherung): Hilfe, dann [Sicherung erstellen] [Sicherung einspielen]
+        panel.Children.Add(Schrift.Text(Core.Texte.SicherungTexte.Hilfe + " " + Core.Texte.SicherungTexte.HilfeAlteApp,
+            "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        var zustand = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        zustand.IsVisible = false;
+        var erstellen = new RuecksicherungTeil(panel, zustand);
+        var einspielen = new EinspielenTeil(panel, zustand, NachAbgleich);
+        panel.Children.Add(new WrapPanel { Margin = new Thickness(0, 4, 0, 0), Children = { erstellen.Knopf, einspielen.Knopf } });
+        panel.Children.Add(zustand);
         // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
         panel.Children.Add(new UebernahmeTeil(panel).Teil);
-        // Phase 2, L9: Sicherung für die alte App erstellen
-        panel.Children.Add(new RuecksicherungTeil(panel).Teil);
-        panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
         kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");

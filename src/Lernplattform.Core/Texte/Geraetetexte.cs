@@ -32,6 +32,8 @@ public static class Geraetetexte
         new("B11", "Abgleich.Geraet", "\"PC <Rechnername>\" / \"Handy\" (Sammelliste 24)"),
         new("B12", "Pruefung.StartFrage", "\"das Programm\" / \"die App\" (Wortliste W2 Nr 24, Weisung P4-6)"),
         new("B13", "Rundgang.Tasten", "Tastenzeile des Rundgangs nur am PC (fisi_hilfe.TOUR_KEYS, Wortliste W4)"),
+        new("B14", "Update.Knopf", "PC laedt und installiert selbst (\"Jetzt aktualisieren\", ohne Installation \"Zur Download-Seite\"), Handy laedt die APK im Browser (\"Herunterladen\", main.py 6163, Wortliste W3)"),
+        new("B14", "Update.Hinweis", "PC ohne Installation Hinweis auf die Download-Seite, Handy Hinweis zum Browser bzw. Release ohne APK (main.py 6141, Wortliste W3)"),
     ];
 
     // -- Aufbau (pc = breiter Aufbau) -----------------------------------------
@@ -93,4 +95,12 @@ public static class Geraetetexte
 
     /// <summary>Geraet in Commit-Nachricht und Sicherung (B11).</summary>
     public static string Geraet(bool pc, string rechnername) => pc ? ("PC " + rechnername.Trim()).Trim() : "Handy";
+
+    /// <summary>Hauptknopf im Fenster "Update verfügbar" (B14, Phase 5 BE10).</summary>
+    public static string UpdateKnopf(bool installierbar, bool pc) =>
+        pc ? (installierbar ? UpdateTexte.Jetzt : UpdateTexte.ZurSeite) : UpdateTexte.Herunterladen;
+
+    /// <summary>Hinweiszeile im Fenster "Update verfügbar" (B14): leer, wenn der PC selbst installieren kann.</summary>
+    public static string UpdateHinweis(bool installierbar, bool mitDatei, bool pc) =>
+        pc ? (installierbar ? "" : UpdateTexte.NichtInstalliert) : (mitDatei ? UpdateTexte.HandyHinweis : UpdateTexte.HandyOhneDatei);
 }

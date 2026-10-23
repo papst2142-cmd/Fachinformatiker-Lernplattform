@@ -60,6 +60,12 @@ public static partial class AutoMessung
         await Messwiederholung.MessenAsync(rechnung(), grenze, () => Task.FromResult<double?>(rechnung()), null, Task.Delay);
 
     /// <summary>
+    /// Sammelliste 64: Messpunkte aus <see cref="Ergebnis"/> ueber 1 000 ms, nur fuer die Zeile "Zeitgrenze CI".
+    /// Sammelliste 70: wird zu Beginn jedes Laufs geleert, jeder Punkt steht in der Zeile nur einmal.
+    /// </summary>
+    private static readonly List<string> UeberAbbruch = [];
+
+    /// <summary>
     /// Ergebniszeile eines Messpunkts (Messwert = kleinste Einzelmessung; nach einer Wiederholung
     /// alle Einzelmessungen) und bei Rot die Fehlerzeile mit Messpunkt, Wert, Grenze und allen
     /// Einzelmessungen (Weisung P4-12 B5). Rueckgabe 1 = Fund.
@@ -68,6 +74,10 @@ public static partial class AutoMessung
     {
         var inv = CultureInfo.InvariantCulture;
         var ms = reihe.Bester;
+        if (ms > Abbruch)
+        {
+            UeberAbbruch.Add(titel);
+        }
         Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}")
             + (reihe.Wiederholt ? " (wiederholt, Einzelmessungen " + reihe.Einzelwerte() + ")" : ""));
         if (!reihe.Rot)
@@ -101,6 +111,7 @@ public static partial class AutoMessung
     {
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
+        UeberAbbruch.Clear();
         var inhalte = await Zustand.Inhalte;
         // Erstes Oeffnen jeder Seite (Seitenleiste, untere Leiste, Kopfleiste)
         var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
@@ -279,6 +290,30 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 5, W1: Sicherung, Loeschen, Datenbank und ihre Fenster (gleiche Zeitgrenze wie W4)
+                await foreach (var ansichtName in P5Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                // Phase 5, W2: Diagnose und Werkzeuge mit Bericht, Fenster und Kurzhinweis
+                await foreach (var ansichtName in P5W2Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                // Phase 5, W3: Updates mit Fehlerzeile, Fenster "Update verfügbar" und "Update nicht abgeschlossen"
+                await foreach (var ansichtName in P5W3Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -298,6 +333,9 @@ public static partial class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
         Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
         Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
+        Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis, Bitte warten beim Ersetzen"));
+        Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
+        Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
@@ -325,9 +363,12 @@ public static partial class AutoMessung
         {
             zuLang.Add(reihe);
         }
-        Messwerte.Notiere(zuLang.Count == 0
+        // Sammelliste 64 (nur Text): die Zeile nennt auch einmalige Messpunkte ueber 1 000 ms; das Urteil
+        // faellt wie bisher ueber ihre FEHLER-Zeilen (dort schon gezaehlt, hier nicht noch einmal)
+        var zuLangText = zuLang.Concat(UeberAbbruch.Where(t => !zuLang.Contains(t))).Distinct().ToList();
+        Messwerte.Notiere(zuLangText.Count == 0
             ? "Zeitgrenze CI: alle Werte unter 1000 ms"
-            : "Zeitgrenze CI ueberschritten (ueber 1000 ms): " + string.Join(", ", zuLang));
+            : "Zeitgrenze CI ueberschritten (ueber 1000 ms): " + string.Join(", ", zuLangText));
         // Weisung P4-12 B5: Messpunkt, Wert, Grenze und Einzelmessungen; erstes Oeffnen und der
         // Seitenwechsel (MainView) sind einmalige Messungen und werden nicht wiederholt
         foreach (var (seite, ms) in Messwerte.ErstesOeffnen.Where(e => e.Value > Abbruch))
@@ -343,6 +384,8 @@ public static partial class AutoMessung
             Messwerte.Notiere("  FEHLER: " + Messwiederholung.Einmal(ms, Abbruch).Fehlertext(reihe + " (Hoechstwert)"));
         }
         funde += zuLang.Count;
+        funde += _w2Fehlt;   // Phase 5 W2: fehlender Diagnose-Bereich (Gegenpruefung Fund 11)
+        funde += _w3Fehlt;   // Phase 5 W3: fehlender Update-Bereich
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
     }
@@ -1476,6 +1519,27 @@ public static partial class AutoMessung
                         }
                     }
                     await foreach (var name in W4Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P5Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P5W2Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P5W3Ansichten(ansicht))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {

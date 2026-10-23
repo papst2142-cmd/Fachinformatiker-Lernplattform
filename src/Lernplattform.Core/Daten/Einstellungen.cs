@@ -50,6 +50,10 @@ public sealed class Einstellungen
     private readonly string _pfad;
     private bool _defektGesehen;
 
+    // Phase 5 W2 (Risiko 5, Sammelliste 55): Lesen-Aendern-Schreiben nie gleichzeitig (Oberflaeche,
+    // Abgleich im Hintergrund, Schalter der Leistungsmessung), sonst ginge eine Aenderung verloren.
+    private static readonly object Schreibsperre = new();
+
     public Einstellungen(string? ordner = null)
     {
         _pfad = Path.Combine(ordner ?? Ablage.Datenordner(), DateiName);
@@ -66,12 +70,23 @@ public sealed class Einstellungen
     /// <summary>Die gespeicherten Einstellungen mit Vorgabewerten (wie load_settings).</summary>
     public JsonObject Laden()
     {
+        var (werte, gesperrt) = LadenMitZustand();
+        NurAnzeige = gesperrt;
+        return werte;
+    }
+
+    /// <summary>
+    /// Laden mit dem Lesezustand dieses einen Aufrufs. Setze und Aendern entscheiden danach und nicht
+    /// ueber NurAnzeige, das ein gleichzeitiges Laden in einem anderen Faden umsetzen kann
+    /// (Gegenpruefung W2 Fund 3: sonst ueberschrieben Vorgaben die Datei).
+    /// </summary>
+    private (JsonObject Werte, bool Gesperrt) LadenMitZustand()
+    {
         var werte = new JsonObject { [AutoCheckSchluessel] = true };
         var (roh, gesperrt) = Lesen();
-        NurAnzeige = gesperrt;
         if (roh is null)
         {
-            return werte;
+            return (werte, gesperrt);
         }
         try
         {
@@ -96,7 +111,7 @@ public sealed class Einstellungen
             {
             }
         }
-        return werte;
+        return (werte, false);
     }
 
     /// <summary>
@@ -114,29 +129,7 @@ public sealed class Einstellungen
         var temp = _pfad + ".tmp";
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_pfad)!);
-            var optionen = new FileStreamOptions
-            {
-                Mode = FileMode.Create,
-                Access = FileAccess.Write,
-                Share = FileShare.None,
-            };
-            if (!OperatingSystem.IsWindows())
-            {
-                optionen.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-            }
-            using (var datei = new FileStream(temp, optionen))
-            {
-                if (!OperatingSystem.IsWindows())
-                {
-                    // falls .tmp schon da war (dann gilt UnixCreateMode nicht)
-                    File.SetUnixFileMode(datei.SafeFileHandle, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
-                var text = werte.ToJsonString(new JsonSerializerOptions { WriteIndented = true, IndentSize = 2 });
-                var bytes = new UTF8Encoding(false).GetBytes(text);
-                datei.Write(bytes);
-                datei.Flush(true);
-            }
+            Schreiben(temp, werte);
             File.Move(temp, _pfad, true);
             return true;
         }
@@ -154,22 +147,125 @@ public sealed class Einstellungen
     }
 
     /// <summary>
+    /// Werte nach &lt;datei&gt; schreiben (eingerueckt, UTF-8 ohne BOM), unter Linux/macOS nur fuer das
+    /// eigene Konto lesbar (0600, auch wenn die Datei schon da war), auf die Platte bringen.
+    /// Wirft IOException bzw. UnauthorizedAccessException.
+    /// </summary>
+    private void Schreiben(string datei, JsonObject werte)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_pfad)!);
+        var optionen = new FileStreamOptions
+        {
+            Mode = FileMode.Create,
+            Access = FileAccess.Write,
+            Share = FileShare.None,
+        };
+        if (!OperatingSystem.IsWindows())
+        {
+            optionen.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        }
+        using var strom = new FileStream(datei, optionen);
+        if (!OperatingSystem.IsWindows())
+        {
+            // falls die Datei schon da war (dann gilt UnixCreateMode nicht)
+            File.SetUnixFileMode(strom.SafeFileHandle, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        var text = werte.ToJsonString(new JsonSerializerOptions { WriteIndented = true, IndentSize = 2 });
+        strom.Write(new UTF8Encoding(false).GetBytes(text));
+        strom.Flush(true);
+    }
+
+    // -- Phase 5 BE2: Hilfsdatei fuer "Alles ersetzen" (fisi_sicherung _settings_temp, remove_stale_temp)
+
+    /// <summary>SETTINGS_TEMP_SUFFIX: Hilfsdatei neben einstellungen.json.</summary>
+    public const string HilfsdateiEndung = ".sicherung.tmp";
+
+    public string Hilfsdatei => _pfad + HilfsdateiEndung;
+
+    /// <summary>
+    /// remove_stale_temp: Hilfsdatei eines abgebrochenen "Alles ersetzen" loeschen (beim Start und vor
+    /// dem naechsten Schreiben). Sie enthaelt den Zugangsschluessel; nachgeholt wird sie nie.
+    /// </summary>
+    public void HilfsdateiEntfernen()
+    {
+        try
+        {
+            File.Delete(Hilfsdatei);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// _settings_temp: alte Hilfsdatei loeschen, Werte in die Hilfsdatei schreiben (0600, auf der Platte).
+    /// Ist die vorhandene einstellungen.json nicht lesbar, wird nichts geschrieben (Rueckgabe false,
+    /// wie <see cref="Speichern"/>). Scheitert das Schreiben: Hilfsdatei entfernt, Ausnahme weiter.
+    /// </summary>
+    public bool HilfsdateiSchreiben(JsonObject werte)
+    {
+        HilfsdateiEntfernen();
+        if (Lesen().Gesperrt)
+        {
+            NurAnzeige = true;
+            return false;
+        }
+        try
+        {
+            Schreiben(Hilfsdatei, werte);
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            HilfsdateiEntfernen();
+            throw;
+        }
+    }
+
+    /// <summary>os.replace(Hilfsdatei, einstellungen.json); scheitert es, Hilfsdatei entfernt, Rueckgabe false.</summary>
+    public bool HilfsdateiEinsetzen()
+    {
+        try
+        {
+            lock (Schreibsperre)
+            {
+                File.Move(Hilfsdatei, _pfad, true);
+            }
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            HilfsdateiEntfernen();
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Inhalt der Datei. Fehlt sie (Datei oder Ordner), ist das kein Fehler: (null, false).
     /// Jeder andere Lesefehler ergibt (null, true).
     /// </summary>
     private (byte[]? Roh, bool Gesperrt) Lesen()
     {
-        try
+        // Lesen unter derselben Sperre wie das Schreiben: unter Windows scheitert das Ersetzen einer gerade
+        // gelesenen Datei sonst (und das Lesen waehrend des Ersetzens); Lauf 39929224886 windows-latest
+        lock (Schreibsperre)
         {
-            return (File.ReadAllBytes(_pfad), false);
-        }
-        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return (null, false);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return (null, true);
+            try
+            {
+                // Mitbenutzung erlauben: Leser anderer Programme (Gegenpruefung W2 Fund 2)
+                using var datei = new FileStream(_pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var puffer = new MemoryStream();
+                datei.CopyTo(puffer);
+                return (puffer.ToArray(), false);
+            }
+            catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+            {
+                return (null, false);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                return (null, true);
+            }
         }
     }
 
@@ -186,7 +282,10 @@ public sealed class Einstellungen
             return null;
         }
         _defektGesehen = false;
-        Speichern(Laden());
+        lock (Schreibsperre)
+        {
+            Speichern(Laden());
+        }
         _defektGesehen = false;
         return (DefektTitel, DefektText);
     }
@@ -194,9 +293,36 @@ public sealed class Einstellungen
     /// <summary>Einen Wert setzen und sofort speichern (alle anderen Schluessel bleiben).</summary>
     public bool Setze(string schluessel, JsonNode? wert)
     {
-        var werte = Laden();
-        werte[schluessel] = wert;
-        return Speichern(werte);
+        lock (Schreibsperre)
+        {
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
+            {
+                return false;
+            }
+            werte[schluessel] = wert;
+            return Speichern(werte);
+        }
+    }
+
+    /// <summary>
+    /// Mehrere Werte in einem Schritt aendern (Laden, Aendern, Speichern unter derselben Sperre wie
+    /// <see cref="Setze"/>). false: nicht lesbar (NurAnzeige) oder nicht gespeichert, Datei unveraendert.
+    /// </summary>
+    public bool Aendern(Action<JsonObject> aenderung)
+    {
+        lock (Schreibsperre)
+        {
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
+            {
+                return false;
+            }
+            aenderung(werte);
+            return Speichern(werte);
+        }
     }
 
     // -- Gelesene Werte mit Vorgaben und Pruefung wie Python ---------------

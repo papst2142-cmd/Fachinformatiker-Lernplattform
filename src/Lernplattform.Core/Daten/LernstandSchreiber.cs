@@ -6,7 +6,7 @@ namespace Lernplattform.Core.Daten;
 /// <summary>
 /// Speichert Antworten wie fisi_core.DBManager (log_card, log_quiz_answer, save_test_result,
 /// log_trainer; Phase 3 R5 dazu trainer_stats; Phase 4 PB1 log_ap1, log_scenario, log_project,
-/// save_exam, save_project_field, project_fields):
+/// save_exam, save_project_field, project_fields; Phase 5 BE4 clear_history, reset_all):
 /// Zeitstempel in Ortszeit, utc_offset aus demselben Augenblick, uid = uuid4 als Hex.
 /// Jeder Vorgang ist eine Transaktion (Lernstand.Schreiben): die Zeile steht ganz oder gar nicht.
 /// Wird nichts gespeichert (Lesefehler, Schreibschutz), lehnt Lernstand still ab.
@@ -270,6 +270,53 @@ public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Fun
                 Convert.ToString(zeile[2], CultureInfo.InvariantCulture) ?? "";
         }
         return projekte;
+    }
+
+    // -- Phase 5 BE4: Loeschen (fisi_core clear_history, reset_all, _marker_now) ------------
+
+    /// <summary>
+    /// last_clock_fix: Abweichung in Sekunden (Geraeteuhr minus GitHub), mit der die letzte
+    /// Loeschmarke korrigiert wurde; 0 = keine Korrektur (fuer clock_fix_text).
+    /// </summary>
+    public double LetzteUhrkorrektur { get; private set; }
+
+    /// <summary>
+    /// _marker_now: Zeitpunkt fuer eine Loeschmarke, Ortszeit mit Zone. Wich die Uhr beim letzten
+    /// Abgleich um mehr als 300 s von GitHub ab, gilt die Uhrzeit von GitHub (nicht mehr, sobald die
+    /// Uhr seither richtig gestellt wurde). Ging sie nach und ist ein Sprung seit der Messung nicht
+    /// feststellbar, wird nichts eingerechnet (Python 0.63.2 S-1, Weg b). (Text, Sekunden oder 0).
+    /// </summary>
+    public (string Marke, double Korrektur) MarkeJetzt()
+    {
+        var jetzt = _uhr.Jetzt();
+        var wert = Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", Uhrabweichung.Schluessel)) is [var zeile, ..]
+            ? zeile[0] : null;
+        var abweichung = _abweichung.Abweichung(wert, jetzt);
+        if (abweichung < -Uhrabweichung.Toleranz && _abweichung.SprungUnbekannt(wert, jetzt))
+        {
+            abweichung = null;
+        }
+        if (abweichung is { } a && Math.Abs(a) > Uhrabweichung.Toleranz)
+        {
+            // timedelta(seconds=a): auf Mikrosekunden gerundet (halb gerade), dann astimezone()
+            var korrigiert = _uhr.Ortszeit(jetzt.AddTicks(-(long)Math.Round(a * 1_000_000, MidpointRounding.ToEven) * 10));
+            return (Uhr.MitZone(korrigiert), a);
+        }
+        return (Uhr.MitZone(jetzt), 0);
+    }
+
+    /// <summary>clear_history: Testergebnisse und Pruefungen loeschen, Marke history_cleared_at (eine Buchung).</summary>
+    public bool HistorieLoeschen() => Loeschen(Wiederherstellung.Historientabellen, "history_cleared_at");
+
+    /// <summary>reset_all: alle Lern-Ereignisse loeschen, Marke reset_at (eine Buchung).</summary>
+    public bool AllesLoeschen() => Loeschen(Wiederherstellung.Ereignistabellen, "reset_at");
+
+    private bool Loeschen(IReadOnlyList<string> tabellen, string schluessel)
+    {
+        var (marke, korrektur) = MarkeJetzt();
+        LetzteUhrkorrektur = korrektur;
+        return Lernstand.Schreiben(string.Concat(tabellen.Select(t => "DELETE FROM " + t + "; "))
+            + "INSERT OR REPLACE INTO sync_meta (key, value) VALUES ($k, $marke)", ("$k", schluessel), ("$marke", marke));
     }
 
     /// <summary>

@@ -439,6 +439,30 @@ public static class Ruecksicherung
         }
     }
 
+    /// <summary>
+    /// Phase 5 BE1 (Sammelliste 26): die Datei am gewaehlten Ort (Android-Dateiwaehler) zuruecklesen.
+    /// Laenge und Inhalt muessen gleich bytes sein, sonst T4 (abgeschnitten: Unbekannt, Lesefehler: Fehlerart).
+    /// </summary>
+    public static async Task ZuruecklesenAsync(byte[] bytes, Func<Task<Stream>> oeffnen, CancellationToken abbruch = default)
+    {
+        byte[] gelesen;
+        try
+        {
+            await using var quelle = await oeffnen();
+            using var puffer = new MemoryStream();
+            await quelle.CopyToAsync(puffer, abbruch);
+            gelesen = puffer.ToArray();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
+        {
+            throw new RuecksicherungAusnahme(Fehlerart(e));
+        }
+        if (!gelesen.AsSpan().SequenceEqual(bytes))
+        {
+            throw new RuecksicherungAusnahme(RuecksicherungFehler.Unbekannt);
+        }
+    }
+
     /// <summary>Kurzer Grund fuer T4 (nie ein Pfad): Platz, Berechtigung oder unbekannt.</summary>
     public static RuecksicherungFehler Fehlerart(Exception e)
     {

@@ -1,0 +1,1282 @@
+{
+ "quelle": "fisi_core.DBManager.reset_all, clear_history, _marker_now, clock_deviation, clock_jump_unknown; fisi_sync.clock_fix_text; fisi_optionen, fisi_lernen, app_gui (Python v0.63.2)",
+ "python": "3.12.3",
+ "zone": "Europe/Berlin",
+ "jetzt_utc": "2026-10-20T10:00:00+00:00",
+ "lauf": 1000.0,
+ "start": "start-test",
+ "prozess": "prozess-test",
+ "ereignistabellen": [
+  "test_results",
+  "card_events",
+  "quiz_answers",
+  "scenario_events",
+  "project_events",
+  "ap1_events",
+  "trainer_aufgaben",
+  "pruefungen"
+ ],
+ "historientabellen": [
+  "test_results",
+  "pruefungen"
+ ],
+ "marken": [
+  [
+   null,
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "kein json",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": 0.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": 200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": -200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": 301.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 11:54:59+02:00",
+   301.0,
+   "Die Uhr dieses Geräts geht um 5 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -301.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:05:01+02:00",
+   -301.0,
+   "Die Uhr dieses Geräts geht um 5 Minuten nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 300.5, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 11:54:59+02:00",
+   300.5,
+   "Die Uhr dieses Geräts geht um 5 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -300.5, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:05:00+02:00",
+   -300.5,
+   "Die Uhr dieses Geräts geht um 5 Minuten nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 11:00:00+02:00",
+   3600.0,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -7200.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 14:00:00+02:00",
+   -7200.0,
+   "Die Uhr dieses Geräts geht um 2 Stunden nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 5430.3, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 10:29:29+02:00",
+   5430.3,
+   "Die Uhr dieses Geräts geht um 2 Stunden vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -9090.7, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 14:31:30+02:00",
+   -9090.7,
+   "Die Uhr dieses Geräts geht um 3 Stunden nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 90000.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-19 11:00:00+02:00",
+   90000.0,
+   "Die Uhr dieses Geräts geht um 1 Tag vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -200000.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-22 19:33:20+02:00",
+   -200000.0,
+   "Die Uhr dieses Geräts geht um 2 Tage nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -500000.0, \"gemessen\": \"2026-10-20T12:00:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-26 05:53:20+01:00",
+   -500000.0,
+   "Die Uhr dieses Geräts geht um 6 Tage nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T10:00:00+02:00\", \"lauf\": -6200.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 11:00:00+02:00",
+   3600.0,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": 400.0, \"start\": \"anderer\", \"prozess\": \"frueher\"}",
+   "2026-10-20 11:00:00+02:00",
+   3600.0,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": -3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": 400.0, \"start\": \"anderer\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T11:00:00+02:00\", \"lauf\": 400.0, \"start\": \"start-test\", \"prozess\": \"prozess-test\"}",
+   "2026-10-20 11:00:00+02:00",
+   3600.0,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-19T11:00:00+02:00\", \"lauf\": -89000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ],
+  [
+   "{\"s\": 3600.0, \"gemessen\": \"2026-10-20T12:30:00+02:00\", \"lauf\": 1000.0, \"start\": \"start-test\", \"prozess\": \"frueher\"}",
+   "2026-10-20 12:00:00+02:00",
+   0,
+   ""
+  ]
+ ],
+ "loeschen": {
+  "historie": {
+   "tabellen": {
+    "test_results": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "score",
+      "total",
+      "percentage",
+      "note",
+      "duration_seconds",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "card_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "category",
+      "question",
+      "mode",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 08:00:00",
+       "Netzwerk & Protokolle",
+       "Wie viele nutzbare Hosts bietet ein /30-Subnetz?",
+       "lernen",
+       1,
+       "q-0001",
+       120
+      ],
+      [
+       2,
+       "2026-10-05 11:59:59",
+       "Netzwerk & Protokolle",
+       "Welches Protokoll ermittelt zu einer bekannten IP-Adresse die MAC-Adresse im lokalen Netz?",
+       "lernen",
+       0,
+       "q-0003",
+       120
+      ],
+      [
+       3,
+       "2026-10-05 12:00:00",
+       "IT-Sicherheit & Datenschutz",
+       "Welches Schutzziel der IT-Sicherheit schützt vor unbefugter Datenveränderung?",
+       "lernen",
+       1,
+       "q-0005",
+       120
+      ],
+      [
+       4,
+       "2026-10-05 13:00:01",
+       "IT-Sicherheit & Datenschutz",
+       "Was bedeutet die '1' in der bekannten 3-2-1-Backup-Regel?",
+       "lernen",
+       1,
+       "q-0007",
+       60
+      ],
+      [
+       5,
+       "2026-10-12 09:30:00",
+       "IT-Sicherheit & Datenschutz",
+       "Welches Schutzziel stellt sicher, dass Daten nur befugten Personen zugänglich sind?",
+       "lernen",
+       0,
+       "q-0009",
+       120
+      ],
+      [
+       6,
+       "2026-10-19 23:59:59",
+       "IT-Sicherheit & Datenschutz",
+       "Was ist eine Zwei-Faktor-Authentifizierung (2FA)?",
+       "lernen",
+       1,
+       "q-0011",
+       120
+      ],
+      [
+       7,
+       "2026-10-15 10:00:00",
+       "Netzwerk",
+       "Was ist ein Hot Aisle / Cold Aisle Konzept im Rechenzentrum?",
+       "lernen",
+       1,
+       "q-0013",
+       120
+      ],
+      [
+       8,
+       "2026-10-05 11:00:00",
+       "Netzwerk & Protokolle",
+       "Wie viele nutzbare Hosts bietet ein /30-Subnetz?",
+       "lernen",
+       1,
+       "q-alt-1",
+       null
+      ],
+      [
+       9,
+       "2026-10-05 12:30:00",
+       "Netzwerk & Protokolle",
+       "Welches Protokoll ermittelt zu einer bekannten IP-Adresse die MAC-Adresse im lokalen Netz?",
+       "lernen",
+       0,
+       "q-alt-2",
+       null
+      ]
+     ]
+    },
+    "quiz_answers": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "category",
+      "question",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 08:00:00",
+       "IT-Sicherheit & Datenschutz",
+       "Gemäß DSGVO müssen Datenschutzverstöße an die Aufsichtsbehörde gemeldet werden. Wie lang ist die Frist?",
+       1,
+       "q-0002",
+       120
+      ],
+      [
+       2,
+       "2026-10-05 11:59:59",
+       "IT-Sicherheit & Datenschutz",
+       "Was beschreibt die 3-2-1-Backup-Regel?",
+       0,
+       "q-0004",
+       120
+      ],
+      [
+       3,
+       "2026-10-05 12:00:00",
+       "IT-Sicherheit & Datenschutz",
+       "Was ist ein Zero-Day-Exploit?",
+       1,
+       "q-0006",
+       120
+      ],
+      [
+       4,
+       "2026-10-05 13:00:01",
+       "IT-Sicherheit & Datenschutz",
+       "Was beschreibt das Prinzip Least Privilege?",
+       0,
+       "q-0008",
+       60
+      ],
+      [
+       5,
+       "2026-10-12 09:30:00",
+       "IT-Sicherheit & Datenschutz",
+       "Was ist der Zweck eines Penetrationstests?",
+       1,
+       "q-0010",
+       120
+      ],
+      [
+       6,
+       "2026-10-19 23:59:59",
+       "IT-Sicherheit & Datenschutz",
+       "Was versteht man unter Social Engineering?",
+       0,
+       "q-0012",
+       120
+      ],
+      [
+       7,
+       "2026-10-16 10:00:00",
+       "Netzwerk",
+       "Wie lassen sich Server Core-Maschinen grafisch aus der Ferne verwalten?",
+       0,
+       "q-0014",
+       120
+      ]
+     ]
+    },
+    "scenario_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "scenario_index",
+      "title",
+      "theme",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-10 20:00:00",
+       3,
+       "Szenario",
+       "Netzwerk",
+       1,
+       "q-0018",
+       120
+      ]
+     ]
+    },
+    "project_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "project_index",
+      "title",
+      "category",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-10 20:05:00",
+       1,
+       "Projekt",
+       "Netzwerk",
+       null,
+       "q-0019",
+       120
+      ]
+     ]
+    },
+    "ap1_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "scenario_index",
+      "title",
+      "theme",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-10 20:10:00",
+       2,
+       "AP1",
+       "Grundlagen",
+       0,
+       "q-0020",
+       120
+      ]
+     ]
+    },
+    "trainer_aufgaben": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "art",
+      "stufe",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-11 07:00:00",
+       "subnetz",
+       2,
+       1,
+       "q-0021",
+       120
+      ]
+     ]
+    },
+    "pruefungen": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "art",
+      "punkte",
+      "note",
+      "dauer",
+      "daten",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "spiel_ereignisse": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "typ",
+      "daten",
+      "geraet",
+      "uid",
+      "lauf",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0026",
+       "l1",
+       120
+      ],
+      [
+       2,
+       "2026-10-03 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0027",
+       "l1",
+       120
+      ],
+      [
+       3,
+       "2026-10-02 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0028",
+       "l2",
+       120
+      ],
+      [
+       4,
+       "2026-09-30 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0029",
+       null,
+       120
+      ],
+      [
+       5,
+       "2026-10-06 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0030",
+       "l1",
+       120
+      ]
+     ]
+    },
+    "spiel_plaetze": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "platz",
+      "lauf",
+      "aktion",
+      "daten",
+      "geraet",
+      "uid"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 10:00:00.000001",
+       1,
+       "l1",
+       "angelegt",
+       "{\"name\": \"Platz eins\"}",
+       "PC",
+       "q-0022"
+      ],
+      [
+       2,
+       "2026-10-01 10:00:00.000002",
+       2,
+       "l2",
+       "angelegt",
+       "{}",
+       "PC",
+       "q-0023"
+      ],
+      [
+       3,
+       "2026-10-03 10:00:00.500000",
+       2,
+       "",
+       "umbenannt",
+       "{\"name\": \"Zweiter\"}",
+       "PC",
+       "q-0024"
+      ],
+      [
+       4,
+       "2026-10-08 10:00:00.000000",
+       2,
+       "l2",
+       "geloescht",
+       "{}",
+       "PC",
+       "q-0025"
+      ]
+     ]
+    },
+    "spiel_bestenliste": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "durchgang",
+      "art",
+      "schluessel",
+      "wert",
+      "daten",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-09-29 10:00:00",
+       "l1",
+       "erfolg",
+       "erster",
+       1.0,
+       "{}",
+       "q-0031",
+       120
+      ],
+      [
+       2,
+       "2026-10-07 10:00:00",
+       "l1",
+       "erfolg",
+       "erster",
+       1.0,
+       "{}",
+       "q-0032",
+       120
+      ]
+     ]
+    },
+    "abschlussprojekt": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "projekt",
+      "feld",
+      "wert",
+      "uid"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 10:00:00",
+       "p1",
+       "titel",
+       "Erster Titel",
+       "q-0033"
+      ],
+      [
+       2,
+       "2026-10-02 10:00:00",
+       "p1",
+       "titel",
+       "Zweiter Titel",
+       "q-0034"
+      ],
+      [
+       3,
+       "2026-10-02 10:00:00",
+       "p2",
+       "titel",
+       "Weg",
+       "q-0035"
+      ],
+      [
+       4,
+       "2026-10-03 10:00:00",
+       "p2",
+       "_geloescht",
+       "1",
+       "q-0036"
+      ],
+      [
+       5,
+       "2026-10-04 10:00:00",
+       "p2",
+       "titel",
+       "Nach dem Loeschen",
+       "q-0037"
+      ]
+     ]
+    }
+   },
+   "sync_meta": [
+    [
+     "aufgehoben:reset_at",
+     "[\"2026-10-06 00:00:00+02:00\", \"2026-10-05 12:00:00+02:00\"]"
+    ],
+    [
+     "bestenliste_reset_at",
+     "2026-10-01 09:00:00"
+    ],
+    [
+     "gekappt:reset_at",
+     "[]"
+    ],
+    [
+     "history_cleared_at",
+     "2026-10-20 12:00:00+02:00"
+    ],
+    [
+     "reset_at",
+     "2026-10-05 12:00:00+02:00"
+    ],
+    [
+     "spiel_reset_at",
+     "2026-10-02 00:00:00+02:00"
+    ]
+   ],
+   "sqlite_sequence": [
+    [
+     "abschlussprojekt",
+     5
+    ],
+    [
+     "ap1_events",
+     1
+    ],
+    [
+     "card_events",
+     9
+    ],
+    [
+     "project_events",
+     1
+    ],
+    [
+     "pruefungen",
+     2
+    ],
+    [
+     "quiz_answers",
+     7
+    ],
+    [
+     "scenario_events",
+     1
+    ],
+    [
+     "spiel_bestenliste",
+     2
+    ],
+    [
+     "spiel_ereignisse",
+     5
+    ],
+    [
+     "spiel_plaetze",
+     4
+    ],
+    [
+     "test_results",
+     3
+    ],
+    [
+     "trainer_aufgaben",
+     1
+    ]
+   ]
+  },
+  "alles": {
+   "tabellen": {
+    "test_results": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "score",
+      "total",
+      "percentage",
+      "note",
+      "duration_seconds",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "card_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "category",
+      "question",
+      "mode",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "quiz_answers": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "category",
+      "question",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "scenario_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "scenario_index",
+      "title",
+      "theme",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "project_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "project_index",
+      "title",
+      "category",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "ap1_events": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "scenario_index",
+      "title",
+      "theme",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "trainer_aufgaben": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "art",
+      "stufe",
+      "correct",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "pruefungen": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "art",
+      "punkte",
+      "note",
+      "dauer",
+      "daten",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": []
+    },
+    "spiel_ereignisse": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "typ",
+      "daten",
+      "geraet",
+      "uid",
+      "lauf",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0026",
+       "l1",
+       120
+      ],
+      [
+       2,
+       "2026-10-03 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0027",
+       "l1",
+       120
+      ],
+      [
+       3,
+       "2026-10-02 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0028",
+       "l2",
+       120
+      ],
+      [
+       4,
+       "2026-09-30 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0029",
+       null,
+       120
+      ],
+      [
+       5,
+       "2026-10-06 11:00:00",
+       "auftrag",
+       "{}",
+       "PC",
+       "q-0030",
+       "l1",
+       120
+      ]
+     ]
+    },
+    "spiel_plaetze": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "platz",
+      "lauf",
+      "aktion",
+      "daten",
+      "geraet",
+      "uid"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 10:00:00.000001",
+       1,
+       "l1",
+       "angelegt",
+       "{\"name\": \"Platz eins\"}",
+       "PC",
+       "q-0022"
+      ],
+      [
+       2,
+       "2026-10-01 10:00:00.000002",
+       2,
+       "l2",
+       "angelegt",
+       "{}",
+       "PC",
+       "q-0023"
+      ],
+      [
+       3,
+       "2026-10-03 10:00:00.500000",
+       2,
+       "",
+       "umbenannt",
+       "{\"name\": \"Zweiter\"}",
+       "PC",
+       "q-0024"
+      ],
+      [
+       4,
+       "2026-10-08 10:00:00.000000",
+       2,
+       "l2",
+       "geloescht",
+       "{}",
+       "PC",
+       "q-0025"
+      ]
+     ]
+    },
+    "spiel_bestenliste": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "durchgang",
+      "art",
+      "schluessel",
+      "wert",
+      "daten",
+      "uid",
+      "utc_offset"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-09-29 10:00:00",
+       "l1",
+       "erfolg",
+       "erster",
+       1.0,
+       "{}",
+       "q-0031",
+       120
+      ],
+      [
+       2,
+       "2026-10-07 10:00:00",
+       "l1",
+       "erfolg",
+       "erster",
+       1.0,
+       "{}",
+       "q-0032",
+       120
+      ]
+     ]
+    },
+    "abschlussprojekt": {
+     "spalten": [
+      "id",
+      "timestamp",
+      "projekt",
+      "feld",
+      "wert",
+      "uid"
+     ],
+     "zeilen": [
+      [
+       1,
+       "2026-10-01 10:00:00",
+       "p1",
+       "titel",
+       "Erster Titel",
+       "q-0033"
+      ],
+      [
+       2,
+       "2026-10-02 10:00:00",
+       "p1",
+       "titel",
+       "Zweiter Titel",
+       "q-0034"
+      ],
+      [
+       3,
+       "2026-10-02 10:00:00",
+       "p2",
+       "titel",
+       "Weg",
+       "q-0035"
+      ],
+      [
+       4,
+       "2026-10-03 10:00:00",
+       "p2",
+       "_geloescht",
+       "1",
+       "q-0036"
+      ],
+      [
+       5,
+       "2026-10-04 10:00:00",
+       "p2",
+       "titel",
+       "Nach dem Loeschen",
+       "q-0037"
+      ]
+     ]
+    }
+   },
+   "sync_meta": [
+    [
+     "aufgehoben:reset_at",
+     "[\"2026-10-06 00:00:00+02:00\", \"2026-10-05 12:00:00+02:00\"]"
+    ],
+    [
+     "bestenliste_reset_at",
+     "2026-10-01 09:00:00"
+    ],
+    [
+     "gekappt:reset_at",
+     "[]"
+    ],
+    [
+     "history_cleared_at",
+     "2026-10-03 08:00:00+02:00"
+    ],
+    [
+     "reset_at",
+     "2026-10-20 12:00:00+02:00"
+    ],
+    [
+     "spiel_reset_at",
+     "2026-10-02 00:00:00+02:00"
+    ]
+   ],
+   "sqlite_sequence": [
+    [
+     "abschlussprojekt",
+     5
+    ],
+    [
+     "ap1_events",
+     1
+    ],
+    [
+     "card_events",
+     9
+    ],
+    [
+     "project_events",
+     1
+    ],
+    [
+     "pruefungen",
+     2
+    ],
+    [
+     "quiz_answers",
+     7
+    ],
+    [
+     "scenario_events",
+     1
+    ],
+    [
+     "spiel_bestenliste",
+     2
+    ],
+    [
+     "spiel_ereignisse",
+     5
+    ],
+    [
+     "spiel_plaetze",
+     4
+    ],
+    [
+     "test_results",
+     3
+    ],
+    [
+     "trainer_aufgaben",
+     1
+    ]
+   ]
+  }
+ },
+ "uhrtexte": [
+  [
+   0,
+   ""
+  ],
+  [
+   0.0,
+   ""
+  ],
+  [
+   1,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   29.9,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   30,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   30.5,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   31,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   89,
+   "Die Uhr dieses Geräts geht um 1 Minute vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   90,
+   "Die Uhr dieses Geräts geht um 2 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   150,
+   "Die Uhr dieses Geräts geht um 2 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   3599,
+   "Die Uhr dieses Geräts geht um 60 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   3600,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   5399,
+   "Die Uhr dieses Geräts geht um 1 Stunde vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   5400,
+   "Die Uhr dieses Geräts geht um 2 Stunden vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   9000,
+   "Die Uhr dieses Geräts geht um 2 Stunden vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   86399,
+   "Die Uhr dieses Geräts geht um 24 Stunden vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   86400,
+   "Die Uhr dieses Geräts geht um 1 Tag vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   129599,
+   "Die Uhr dieses Geräts geht um 1 Tag vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   129600,
+   "Die Uhr dieses Geräts geht um 2 Tage vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   216000,
+   "Die Uhr dieses Geräts geht um 2 Tage vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   216000.1,
+   "Die Uhr dieses Geräts geht um 3 Tage vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   10000000.0,
+   "Die Uhr dieses Geräts geht um 116 Tage vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -0.4,
+   "Die Uhr dieses Geräts geht um 1 Minute nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -45,
+   "Die Uhr dieses Geräts geht um 1 Minute nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -3600,
+   "Die Uhr dieses Geräts geht um 1 Stunde nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -7200,
+   "Die Uhr dieses Geräts geht um 2 Stunden nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -172800,
+   "Die Uhr dieses Geräts geht um 2 Tage nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   -301.0,
+   "Die Uhr dieses Geräts geht um 5 Minuten nach. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ],
+  [
+   301.0,
+   "Die Uhr dieses Geräts geht um 5 Minuten vor. Die Löschung wurde mit der Uhrzeit von GitHub gespeichert."
+  ]
+ ],
+ "texte": {
+  "bereich_titel": "Löschen und zurücksetzen",
+  "bereich_untertitel": "Lerndaten, Historie, Spielstand, Bestenliste",
+  "lerndaten": "LERNDATEN",
+  "lerndaten_text": "Setzt sämtliche Lernfortschritte zurück: Testergebnisse, Klausursimulationen, Karteikarten-Verlauf, Antworten im Prüfungstrainer, Aufgaben im Rechen-Trainer und bearbeitete Szenarien und Testprojekte. Erhalten bleiben das Abschlussprojekt, deine Einstellungen (z. B. das Tagesziel) und der Spielstand des Lernspiels; das Wissen im Spiel beginnt aber wieder bei 0. Mit eingerichtetem Abgleich gilt das Zurücksetzen auf allen abgeglichenen Geräten. Dieser Schritt lässt sich nicht rückgängig machen.",
+  "lerndaten_knopf": "Alle Lerndaten löschen",
+  "lerndaten_frage_titel": "Alles zurücksetzen",
+  "lerndaten_frage": "Wirklich ALLE Lerndaten unwiderruflich löschen?",
+  "lerndaten_erfolg_titel": "Zurückgesetzt",
+  "lerndaten_erfolg": "Alle Lerndaten wurden gelöscht.",
+  "historie": "HISTORIE",
+  "historie_text": "Löscht alle gespeicherten Testergebnisse und Prüfungen, die im „Fortschritt“ stehen. Die übrigen Lerndaten (Tagesziel, Lernserie, Aufgaben pro Tag) bleiben erhalten. Dieser Schritt lässt sich nicht rückgängig machen.",
+  "historie_knopf": "Historie löschen",
+  "historie_frage_titel": "Historie löschen",
+  "historie_frage": "Wirklich alle gespeicherten Testergebnisse und Prüfungen löschen?\n\nDie Lern-Ereignisse für das Dashboard bleiben erhalten.",
+  "historie_erfolg_titel": "Gelöscht",
+  "historie_erfolg": "Die Historie wurde gelöscht.",
+  "nichts_geloescht": "Es wurde nichts gelöscht.",
+  "spielstand": "SPIELSTAND",
+  "spielstand_knopf": "Spielstand zurücksetzen",
+  "bestenliste": "BESTENLISTE",
+  "bestenliste_knopf": "Bestenliste löschen",
+  "datenbank_titel": "Speicherort der Lernfortschritte:",
+  "datenbank_hinweis": "Der Pfad lässt sich über die Umgebungsvariable FISI_DB_PATH überschreiben, zum Beispiel um die Datenbank auf einem Netzlaufwerk abzulegen."
+ }
+}

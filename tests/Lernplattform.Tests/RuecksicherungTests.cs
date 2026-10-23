@@ -247,6 +247,32 @@ public class RuecksicherungTests
         Assert.False(geoeffnet);
     }
 
+    /// <summary>
+    /// Phase 5 BE1, Kontrollfehler „Android meldet Gespeichert bei abgeschnittener Datei“ (Sammelliste 26):
+    /// Zuruecklesen nimmt nur genau dieselben Bytes an; abgeschnitten, verlaengert, ein Byte anders, leer
+    /// oder nicht lesbar ergibt T4.
+    /// </summary>
+    [Fact]
+    public async Task ZuruecklesenNurBeiGleichemInhalt()
+    {
+        var (ordner, lernstand) = Beispiel();
+        using var _ = ordner;
+        var bytes = Ruecksicherung.Erstellen(lernstand, [], "A 0.10.0", "Handy", new DateTime(2026, 10, 23, 12, 0, 0));
+        var abbruch = TestContext.Current.CancellationToken;
+        await Ruecksicherung.ZuruecklesenAsync(bytes, () => Task.FromResult<Stream>(new MemoryStream(bytes)), abbruch);
+        var anders = (byte[])bytes.Clone();
+        anders[^1] ^= 1;
+        foreach (var falsch in new[] { bytes[..^1], bytes[..(bytes.Length / 2)], [.. bytes, 0], anders, [] })
+        {
+            var f = await Assert.ThrowsAsync<RuecksicherungAusnahme>(() =>
+                Ruecksicherung.ZuruecklesenAsync(bytes, () => Task.FromResult<Stream>(new MemoryStream(falsch)), abbruch));
+            Assert.Equal(RuecksicherungFehler.Unbekannt, f.Fehler);
+        }
+        var g = await Assert.ThrowsAsync<RuecksicherungAusnahme>(() =>
+            Ruecksicherung.ZuruecklesenAsync(bytes, () => throw new UnauthorizedAccessException(), abbruch));
+        Assert.Equal(RuecksicherungFehler.KeineBerechtigung, g.Fehler);
+    }
+
     [Fact]
     public void Texte()
     {
