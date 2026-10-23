@@ -118,7 +118,7 @@ public sealed class SucheSeite : UserControl
         {
             return null;
         }
-        ergebnis ??= new SuchErgebnis(anfrage, GlobaleSuche.OptionenTreffer(anfrage, Pc));
+        ergebnis ??= new SuchErgebnis(anfrage, GlobaleSuche.SchnelleTreffer(anfrage, Pc));
         _treffer.Children.Clear();
         _info.Text = ergebnis.Info;
         if (ergebnis.Treffer.Count == 0)

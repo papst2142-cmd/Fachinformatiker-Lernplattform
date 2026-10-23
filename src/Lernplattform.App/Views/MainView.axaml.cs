@@ -91,7 +91,10 @@ public partial class MainView : UserControl
         // W3: Ebene fuer Kurzhinweise (show_badge_toast) unter den Fenstern, laesst Klicks daneben durch
         var hinweise = new Panel { IsVisible = false };
         Kurzhinweis.Ebene(hinweise);
-        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), hinweise, ebene } };
+        // W4: Ebene fuer den Rundgang ueber allen Seiten, unter den Hinweisfenstern
+        var rundgang = new Panel { IsVisible = false };
+        RundgangEbene.Ebene(rundgang);
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), hinweise, rundgang, ebene } };
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
@@ -102,11 +105,16 @@ public partial class MainView : UserControl
             {
                 NachAbgleich();
             }
+            // W4: Fachrichtung von einem anderen Geraet (Merker ausbildung_zuletzt, Frage 2 a)
+            if (ergebnis is not null)
+            {
+                Dispatcher.UIThread.Post(async () => await AusbildungAnderswoAsync());
+            }
         };
         // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
         AddHandler(KeyDownEvent, (_, e) =>
         {
-            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control) && Dialog.Offen is null)
+            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control) && Dialog.Offen is null && RundgangEbene.Offen is null)
             {
                 e.Handled = true;
                 _ = ZeigeAsync(Seiten.Suche);
@@ -123,10 +131,76 @@ public partial class MainView : UserControl
             {
                 Dispatcher.UIThread.Post(async () => await AutoLaufAsync(), DispatcherPriority.Background);
             }
+            else if (!_startGelaufen)
+            {
+                _startGelaufen = true;
+                Dispatcher.UIThread.Post(async () => await StartAblaufAsync(), DispatcherPriority.Background);
+            }
         });
     }
 
     public bool Breit => _breit ?? true;
+
+    private bool _startGelaufen;
+
+    /// <summary>
+    /// W4, Plan 2.3: beim Start erst bestimmen, ob der Rundgang faellig ist (vor der Frage, die eine Zeile
+    /// anlegt), dann Ausbildungsfrage (mit Warnhinweis) bzw. Vergleich des Merkers, dann der Rundgang.
+    /// Bei nur lesbaren Einstellungen und im Start ohne Bedienung erscheint nichts von selbst.
+    /// </summary>
+    private async Task StartAblaufAsync()
+    {
+        try
+        {
+            await Core.Hilfe.AusbildungFrage.Ablauf(Programm.Zustand.Einstellungen.NurAnzeige, AutoModus, () => Programm.Zustand.Werte,
+                () => Task.Run(() =>
+                {
+                    var lernstand = Programm.Zustand.Lernstand;
+                    var schreiber = Programm.Zustand.Schreiber;
+                    return new Core.Hilfe.StartLage(Core.Hilfe.Einrichten.HatDaten(lernstand.Pfad), lernstand.NurLesenGrund is null,
+                        Core.Pruefung.Ausbildung.Gewaehlt(schreiber), Core.Pruefung.Ausbildung.Gespeichert(schreiber));
+                }),
+                async () =>
+                {
+                    await AusbildungTeil.FrageAsync();
+                    Neu();
+                },
+                AusbildungAnderswoAsync, RundgangAsync);
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
+    }
+
+    /// <summary>W4: Merker ausbildung_zuletzt vergleichen (Start, nach Abgleich, Uebernahme, Ruecksicherung).</summary>
+    public async Task AusbildungAnderswoAsync()
+    {
+        await AusbildungTeil.VergleichenAsync();
+        Neu();
+    }
+
+    /// <summary>Rundgang starten (Optionen, Hilfe, Start); nach dem Speichern zeigen Optionen und Dashboard die neuen Werte.</summary>
+    public async Task RundgangAsync()
+    {
+        if (await RundgangEbene.Starten())
+        {
+            Neu();
+        }
+    }
+
+    /// <summary>Optionen (Name, Rahmenplan, Fachrichtung) und Dashboard (Begruessung) neu zeigen.</summary>
+    private void Neu()
+    {
+        if (_seiten.TryGetValue(Seiten.Optionen, out var optionen))
+        {
+            ((OptionenSeite)optionen).Gezeigt();
+        }
+        if (AktuelleSeite == Seiten.Dashboard && _seiten.TryGetValue(Seiten.Dashboard, out var dashboard))
+        {
+            ((DashboardSeite)dashboard).Neu();
+        }
+    }
 
     private void SchriftGeaendert()
     {
@@ -190,7 +264,9 @@ public partial class MainView : UserControl
             seite = id switch
             {
                 Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync()),
-                Seiten.Optionen => new OptionenSeite(BaueSicherung),
+                Seiten.Optionen => new OptionenSeite(BaueSicherung, () => _ = RundgangAsync(), () => _ = ZeigeAsync(Seiten.Hilfe)),
+                // Phase 4, W4: Hilfe
+                Seiten.Hilfe => new HilfeSeite(() => _ = RundgangAsync()),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),
                 Seiten.Karteikarten => new KarteikartenSeite(),
                 Seiten.Trainer => new TrainerSeite(ThemaUebenAsync),
@@ -262,6 +338,10 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is OptionenSeite optionen)
         {
             optionen.Gezeigt();
+        }
+        if (gebaut && _seiten[id] is HilfeSeite hilfe)
+        {
+            hilfe.Gezeigt();
         }
         if (_seiten[id] is SucheSeite suche)
         {
@@ -406,11 +486,19 @@ public partial class MainView : UserControl
         }
     }
 
-    /// <summary>open_search_hit: Optionen (Bereich aufklappen), Karteikarte, Pruefungsfrage, Szenarien.</summary>
+    /// <summary>open_search_hit: Hilfe (Abschnitt aufklappen), Optionen (Bereich aufklappen), Karteikarte, Pruefungsfrage, Szenarien.</summary>
     private async Task TrefferOeffnenAsync(Core.Suche.SuchTreffer treffer, string anfrage)
     {
         switch (treffer.Art)
         {
+            case Core.Hilfe.RundgangTexte.SucheArt:
+                // open_section: Abschnitt mit diesem Titel aufklappen (W4)
+                await ZeigeAsync(Seiten.Hilfe);
+                if (Core.Hilfe.HilfeTexte.Abschnitte.FirstOrDefault(a => a.Titel == treffer.Titel) is { } abschnitt)
+                {
+                    ((HilfeSeite)_seiten[Seiten.Hilfe]).Oeffnen(abschnitt.Id);
+                }
+                break;
             case Core.Texte.Optionen.SucheArt:
                 var (bereich, vorlagen) = Core.Suche.GlobaleSuche.Ziel(treffer.Titel, anfrage);
                 if (bereich is not null)

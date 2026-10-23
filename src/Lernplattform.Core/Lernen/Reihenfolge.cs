@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Mathe;
+using Lernplattform.Core.Rechner;
 
 namespace Lernplattform.Core.Lernen;
 
@@ -151,27 +152,49 @@ public sealed class RahmenplanGewicht
         return _lernfelder.Where(f => f.Abschnitt.Length == 0 || abschnitte.Contains(f.Abschnitt)).Select(f => f.Id).ToList();
     }
 
-    /// <summary>parse_date: "TT.MM.JJJJ" oder "JJJJ-MM-TT" (strptime), sonst null.</summary>
+    /// <summary>
+    /// parse_date: "TT.MM.JJJJ" oder "JJJJ-MM-TT" (strptime), sonst null. Wie Python: str.strip()
+    /// (auch U+001C bis U+001F), und wo strptime \d nimmt, gilt jede Dezimalziffer (str.isdecimal,
+    /// z. B. Vollbreite); die uebrigen Ziffern sind ASCII (Spezifikation G35, Teil datum).
+    /// </summary>
     public static DateOnly? Datum(string? text)
     {
-        text = (text ?? "").Trim();
-        var m = Regex.Match(text, @"^(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])\.(1[0-2]|0[1-9]|[1-9])\.([0-9]{4})\z");
-        if (!m.Success)
+        text = PythonZeichen.Strip(text ?? "");
+        const string Z = @"(?:[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Nd})";   // \d von strptime, Wert unten
+        const string T = "(3[0-1]|[1-2]" + Z + "|0[1-9]|[1-9]| [1-9])";
+        const string M = "(1[0-2]|0[1-9]|[1-9])";
+        const string J = "(" + Z + Z + Z + Z + ")";
+        var m = Regex.Match(text, "^" + T + @"\." + M + @"\." + J + @"\z");
+        if (m.Success && Tag(m.Groups[3].Value, m.Groups[2].Value, m.Groups[1].Value) is { } a)
         {
-            m = Regex.Match(text, @"^()([0-9]{4})-(1[0-2]|0[1-9]|[1-9])-(3[01]|[12][0-9]|0[1-9]|[1-9]| [1-9])\z");
-            if (!m.Success)
-            {
-                return null;
-            }
-            return Tag(m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value);
+            return a;
         }
-        return Tag(m.Groups[3].Value, m.Groups[2].Value, m.Groups[1].Value);
+        m = Regex.Match(text, "^" + J + "-" + M + "-" + T + @"\z");
+        return m.Success ? Tag(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value) : null;
 
         static DateOnly? Tag(string jahr, string monat, string tag)
         {
-            int j = int.Parse(jahr, CultureInfo.InvariantCulture), mo = int.Parse(monat, CultureInfo.InvariantCulture),
-                t = int.Parse(tag.Trim(), CultureInfo.InvariantCulture);
+            if (Zahl(jahr) is not { } j || Zahl(monat) is not { } mo || Zahl(tag.TrimStart(' ')) is not { } t)
+            {
+                return null;
+            }
             return j >= 1 && t <= DateTime.DaysInMonth(j, mo) ? new DateOnly(j, mo, t) : null;
+        }
+
+        // int() der Ziffern; null, wenn ein Zeichen fuer Python keine Dezimalziffer ist
+        static int? Zahl(string ziffern)
+        {
+            var wert = 0;
+            for (var i = 0; i < ziffern.Length; i += char.IsSurrogatePair(ziffern, i) ? 2 : 1)
+            {
+                var ziffer = PythonZeichen.Dezimalwert(char.ConvertToUtf32(ziffern, i));
+                if (ziffer < 0)
+                {
+                    return null;
+                }
+                wert = wert * 10 + ziffer;
+            }
+            return wert;
         }
     }
 

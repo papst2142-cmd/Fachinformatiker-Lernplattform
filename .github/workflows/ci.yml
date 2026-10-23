@@ -112,7 +112,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.9.0 -> A 0.9.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.10.0 -> A 0.10.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -140,16 +140,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.9.0
-          path: pakete/feed-A-0.9.0/
+          name: paket-${{ matrix.rid }}-A-0.10.0
+          path: pakete/feed-A-0.10.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.9.1
-          path: pakete/feed-A-0.9.1/
+          name: updateprobe-${{ matrix.rid }}-A-0.10.1
+          path: pakete/feed-A-0.10.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.9.0-tar
+          name: appimage-linux-x64-A-0.10.0-tar
           path: pakete/appimage/
 
   vergleichswerte:
@@ -230,6 +230,9 @@ jobs:
           # Phase 4 W3 (Weisung P4-8): Zeichentabelle des PDF-Exports und G34 aus dem unabhaengigen Skript
           python3 -I werkzeuge/tabellen/erzeuge_pdf_zeichen.py python-linie neu/PdfZeichen.Tabelle.cs
           python3 -I werkzeuge/vergleich/pruefe_abschlussprojekt.py inhalte neu/abschlussprojekt_skript.json
+          # Phase 4 W4 (Weisung P4-10/P4-11): G35 Hilfe aus Python und aus dem unabhaengigen Skript
+          python3 -I werkzeuge/vergleich/erzeuge_hilfe.py python-linie neu/hilfe.json
+          python3 -I werkzeuge/vergleich/pruefe_hilfe.py neu/hilfe_skript.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -247,7 +250,7 @@ jobs:
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
-                       "pruefung.json", "fachrichtungen.json"):
+                       "pruefung.json", "fachrichtungen.json", "hilfe.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
@@ -277,6 +280,14 @@ jobs:
           for teil in teile:
               assert skript[teil] == g34[teil], "G34 " + teil + ": Skript weicht von Python ab"
           print("G34 Skript gleich Python")
+          # G35 (W4): das Skript nur aus der Spezifikation muss in allen Teilen gleich Python sein
+          g35 = json.load(open("neu/hilfe.json", encoding="utf-8"))
+          skript = json.load(open("neu/hilfe_skript.json", encoding="utf-8"))
+          teile = ("texte", "datum", "suche", "name", "einstellungen", "rundgang", "oberflaeche", "paare")
+          assert sorted(skript) == sorted(teile), sorted(skript)
+          for teil in teile:
+              assert skript[teil] == g35[teil], "G35 " + teil + ": Skript weicht von Python ab"
+          print("G35 Skript gleich Python")
           PY
 
   android:
@@ -293,10 +304,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.9.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.9.0 installierbar.
-      - name: Update-APK A 0.9.1 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.9.1 -o apk-update
+      # Spike D (A4b): zweite APK A 0.10.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.10.0 installierbar.
+      - name: Update-APK A 0.10.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.10.1 -o apk-update
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
@@ -304,16 +315,16 @@ jobs:
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1000900'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1000901'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001000'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001001'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.9.0
+          name: lernplattform-android-A-0.10.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.9.1
+          name: updateprobe-android-A-0.10.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error

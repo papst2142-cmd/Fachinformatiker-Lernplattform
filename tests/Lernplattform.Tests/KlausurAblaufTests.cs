@@ -456,4 +456,70 @@ public class KlausurAblaufTests
         var datei = Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Views", "KlausurTeil.cs");
         Assert.DoesNotContain("Festbreite", File.ReadAllText(datei), StringComparison.Ordinal);
     }
+
+    // -- W4, Sammelliste 51: offene Antworten sofort festhalten (flush_inputs) ------------------
+
+    /// <summary>Laufende Pruefung in einer echten einstellungen.json (atomar wie Zustand.Aendere).</summary>
+    internal static LaufendePruefung EchteAblage(string ordner)
+    {
+        var einstellungen = new Einstellungen(ordner);
+        return new LaufendePruefung(einstellungen.Laden, aendern =>
+        {
+            var werte = einstellungen.Laden();
+            if (einstellungen.NurAnzeige)
+            {
+                return false;
+            }
+            aendern(werte);
+            return einstellungen.Speichern(werte);
+        });
+    }
+
+    /// <summary>
+    /// Vor Sicherung und Uebernahme und beim Verlassen der App am Handy ruft die Oberflaeche
+    /// Zustand.EingabenSpeichern; die Klausur haelt dann sofort fest (nicht erst nach 1,2 s).
+    /// Danach liest ein Neustart die Antwort aus der Datei.
+    /// </summary>
+    [Fact]
+    public void EingabenSpeichernHaeltKlausurSofortFest()
+    {
+        using var ordner = new TempOrdner();
+        var db = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        var a = KlausurAbsturzTests.Ablauf(db, EchteAblage(ordner.Pfad));
+        a.Starten(Klausur.Konzeption);
+        var feld = "noch nicht gespeichert";
+        Action? beiEingabenSpeichern = null;
+        beiEingabenSpeichern += () => a.Festhalten([(Klausur.Schluessel(0, 0), feld)]);
+        var vorher = File.ReadAllText(Path.Combine(ordner.Pfad, Einstellungen.DateiName));
+        Assert.DoesNotContain(feld, vorher, StringComparison.Ordinal);
+        beiEingabenSpeichern.Invoke();                  // z. B. "Lernstand übernehmen" oder App verlassen
+        var gespeichert = new Einstellungen(ordner.Pfad).Laden()[LaufendePruefung.Schluessel]!["antworten"]!;
+        Assert.Equal(feld, (string)gespeichert[Klausur.Schluessel(0, 0)]!);
+        var neu = KlausurAbsturzTests.Ablauf(db, EchteAblage(ordner.Pfad));
+        Assert.Equal(KlausurAnsicht.Lauf, neu.Zeigen().Ansicht);
+        Assert.Equal(feld, (string)neu.Zustand!["antworten"]![Klausur.Schluessel(0, 0)]!);
+        // die Oberflaeche meldet sich an das Ereignis an (KlausurTeil, Sammelliste 51)
+        var quelle = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Views", "KlausurTeil.cs"));
+        Assert.Contains("Zustand.BeiEingabenSpeichern += Festhalten;", quelle, StringComparison.Ordinal);
+    }
+
+    /// <summary>Hart beendet waehrend des Festhaltens: einstellungen.json ist heil und enthaelt eine ganze Antwort.</summary>
+    [Fact]
+    public void AbsturzBeimFesthalten()
+    {
+        using var ordner = new TempOrdner();
+        var db = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        for (var runde = 0; runde < 3; runde++)
+        {
+            var gemeldet = AbsturzProbe.Starten(AbsturzProbe.ArtKlausurFesthalten, [db, ordner.Pfad], 10 + runde * 7);
+            var einstellungen = new Einstellungen(ordner.Pfad);
+            var werte = einstellungen.Laden();
+            Assert.Null(einstellungen.DefektHinweis());
+            Assert.False(File.Exists(Path.Combine(ordner.Pfad, Einstellungen.DefektName)));
+            var antwort = (string)werte[LaufendePruefung.Schluessel]!["antworten"]![Klausur.Schluessel(0, 0)]!;
+            Assert.Matches("^Antwort [0-9a-f]{32}\\.{3000}$", antwort);
+            Assert.True(gemeldet.Count >= 10 + runde * 7);
+            File.Delete(Path.Combine(ordner.Pfad, Einstellungen.DateiName));
+        }
+    }
 }

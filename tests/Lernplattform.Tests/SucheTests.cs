@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
+using Lernplattform.Core.Hilfe;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Lernen;
 using Lernplattform.Core.Suche;
@@ -190,10 +191,11 @@ public class SucheTests
     /// <summary>
     /// Phase 4, W2: den Optionen-Bereich "Ausbildung" gibt es nur in C# (Wortliste W2 Abschnitt 7,
     /// Weisung P4-6). Ohne seinen Treffer muss alles andere wie G19 sein; wo er steht, prueft
-    /// <see cref="AusbildungNurWoErPasst"/>.
+    /// <see cref="AusbildungNurWoErPasst"/>. Ab W4 ebenso die Hilfe-Treffer: G19 enthaelt sie nicht
+    /// (erzeuge_suche.py 17), sie prueft G35 (HilfeTests), ihren Platz <see cref="ReihenfolgeOptionenKartenFragenAp2Ap1"/>.
     /// </summary>
     private static SuchErgebnis OhneAusbildung(SuchErgebnis ergebnis) =>
-        new(ergebnis.Anfrage, [.. ergebnis.Treffer.Where(t => !IstAusbildung(t))]);
+        new(ergebnis.Anfrage, [.. ergebnis.Treffer.Where(t => !IstAusbildung(t) && t.Art != RundgangTexte.SucheArt)]);
 
     private static bool IstAusbildung(SuchTreffer t) => t.Art == Optionen.SucheArt && t.Titel == PruefungTexte.AusbildungReiter;
 
@@ -220,7 +222,7 @@ public class SucheTests
                 }
                 gesehen++;
                 // Reihenfolge wie in den Optionen: nach den Bereichen vor "Lerninhalte", vor allen Inhalten
-                var optionen = treffer.TakeWhile(t => t.Art == Optionen.SucheArt).Select(t => t.Titel).ToList();
+                var optionen = treffer.SkipWhile(t => t.Art == RundgangTexte.SucheArt).TakeWhile(t => t.Art == Optionen.SucheArt).Select(t => t.Titel).ToList();
                 var reihenfolge = Optionen.AlleFuer(pc).Select(b => b.Titel).ToList();
                 Assert.Equal(optionen.OrderBy(reihenfolge.IndexOf), optionen);
                 var detail = treffer.Single(IstAusbildung).Detail;
@@ -263,11 +265,11 @@ public class SucheTests
     public void ReihenfolgeOptionenKartenFragenAp2Ap1()
     {
         var ergebnis = GlobaleSuche.Suchen(Text.Value, "e", true, TestContext.Current.CancellationToken);
-        var reihenfolge = new[] { Optionen.SucheArt, SucheTexte.ArtKarte, SucheTexte.ArtQuiz, SucheTexte.ArtAp2, SucheTexte.ArtAp1 };
+        var reihenfolge = new[] { RundgangTexte.SucheArt, Optionen.SucheArt, SucheTexte.ArtKarte, SucheTexte.ArtQuiz, SucheTexte.ArtAp2, SucheTexte.ArtAp1 };
         var arten = ergebnis.Treffer.Select(t => Array.IndexOf(reihenfolge, t.Art)).ToList();
         Assert.DoesNotContain(-1, arten);
         Assert.Equal(arten.Order(), arten);
-        Assert.Equal(5, arten.Distinct().Count());
+        Assert.Equal(6, arten.Distinct().Count());
         Assert.Equal(GlobaleSuche.Zeilen, ergebnis.Gezeigt.Count);
     }
 
@@ -311,7 +313,8 @@ public class SucheTests
         var uhr = Stopwatch.StartNew();
         var ergebnis = GlobaleSuche.Suchen(text, "Subnetz", true, TestContext.Current.CancellationToken);
         var ms = uhr.Elapsed.TotalMilliseconds;
-        Assert.Equal(86, ergebnis.Treffer.Count);
+        Assert.Equal(86, ergebnis.Treffer.Count(t => t.Art != RundgangTexte.SucheArt));
+        Assert.Equal(1, ergebnis.Treffer.Count(t => t.Art == RundgangTexte.SucheArt));   // W4: Hilfe "Rechner"
         Assert.True(ms < 400, ms.ToString("F1", CultureInfo.InvariantCulture) + " ms");
     }
 }

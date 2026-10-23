@@ -105,9 +105,9 @@ public sealed class Suchtext
 }
 
 /// <summary>
-/// Phase 2, L8: globale Suche wie app_gui.SearchView.search / SearchScreen.search,
-/// ohne Hilfe-Treffer (kommen mit der Hilfe in Phase 4): erst Bereiche der Optionen
-/// (fisi_optionen.search_options), dann die Lerninhalte. Hoechstens 60 Zeilen.
+/// Phase 2, L8: globale Suche wie app_gui.SearchView.search / SearchScreen.search:
+/// erst die Hilfe-Abschnitte (fisi_hilfe.search_help, ab Phase 4 W4), dann Bereiche der
+/// Optionen (fisi_optionen.search_options), dann die Lerninhalte. Hoechstens 60 Zeilen.
 /// </summary>
 public static class GlobaleSuche
 {
@@ -129,13 +129,23 @@ public static class GlobaleSuche
     /// </summary>
     public static string? Anfrage(string? eingabe) => Lernregeln.Strip(eingabe ?? "") is { Length: > 0 } anfrage ? anfrage : null;
 
-    /// <summary>Alle Treffer zu einer (schon bereinigten) Anfrage, Optionen zuerst.</summary>
+    /// <summary>Alle Treffer zu einer (schon bereinigten) Anfrage, Hilfe und Optionen zuerst.</summary>
     public static SuchErgebnis Suchen(Suchtext text, string anfrage, bool pc, CancellationToken abbruch = default)
     {
-        var treffer = OptionenTreffer(anfrage, pc, text.Klein);
+        var treffer = SchnelleTreffer(anfrage, pc, text.Klein);
         abbruch.ThrowIfCancellationRequested();
         treffer.AddRange(text.Suchen(anfrage, abbruch));
         return new SuchErgebnis(anfrage, treffer);
+    }
+
+    /// <summary>Hilfe- und Optionen-Treffer ohne Lerninhalte (solange der Suchtext noch nicht bereit ist).</summary>
+    public static List<SuchTreffer> SchnelleTreffer(string anfrage, bool pc) => SchnelleTreffer(anfrage, pc, PythonKlein.Klein);
+
+    private static List<SuchTreffer> SchnelleTreffer(string anfrage, bool pc, Func<string, string> klein)
+    {
+        var treffer = Hilfe.HilfeTexte.Treffer(anfrage, klein);
+        treffer.AddRange(OptionenTreffer(anfrage, pc, klein));
+        return treffer;
     }
 
     /// <summary>search_options: Bereiche, deren Titel oder Stichwoerter die Anfrage enthalten.</summary>

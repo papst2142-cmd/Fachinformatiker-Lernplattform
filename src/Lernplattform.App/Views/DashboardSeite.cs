@@ -76,8 +76,9 @@ public sealed class DashboardSeite : UserControl
             if (inhalte is not null)
             {
                 var ziel = Einstellungen.Ziel(Zustand.Werte);
+                var name = Core.Hilfe.Einrichten.NameLesen(Zustand.Werte);    // W4: "Hallo <Name>" (greeting)
                 var pfad = System.IO.Path.Combine(Ablage.Datenordner(), Lernstand.DateiName);
-                werte = await Task.Run(() => DashboardWerte.Lesen(pfad, DateOnly.FromDateTime(DateTime.Now), inhalte, ziel));
+                werte = await Task.Run(() => DashboardWerte.Lesen(pfad, DateOnly.FromDateTime(DateTime.Now), inhalte, ziel, name));
             }
         }
         catch (Exception fehler)

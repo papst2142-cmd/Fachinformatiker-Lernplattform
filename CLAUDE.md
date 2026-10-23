@@ -5,6 +5,12 @@
 - Immer Deutsch, ausführlich und verständlich. Nico ist kein Entwickler. Bei Unklarheit fragen (Optionen + Empfehlung).
 - Keine Zeitangaben oder Terminprognosen.
 
+## Zusammenarbeit (Regel Automatische Uebergabe, Nico 23.10.2026)
+- Bindend: `Fi-Austausch/weisungen/Regel_Automatische_Uebergabe.md` (bei Widerspruch gilt sie). Nico ist nicht mehr der Bote: CC arbeitet die Weisung ab, pusht die Meldung nach `meldungen/`, beendet die Sitzung nicht, sondern wartet selbst auf die nächste Weisung (`git fetch` alle 2 Minuten, höchstens 90 Minuten) und arbeitet sofort weiter. Kann CC nicht warten: erste Zeile der Meldung „WARTE NICHT: Sitzung endet“.
+- Stopp nur bei „ENTSCHEIDUNG NÖTIG: Nico“ (Merge in main, Release, Optik und Fotos, Grenzwerte, Inhalte verschieben, Datenverlust-Risiko, Konto/Repo-Einstellungen, Löschen, Vorbehalte Nicos); sonst entscheiden CC (E1) und Chat (E2).
+- Selbst Gefundenes sofort im selben Commit beheben, wenn es eine Prüfung nur strenger macht oder ein falsches Grün verhindert, kein Programmverhalten und keine Optik ändert, nichts lockert, keine Stoppgrenzen-Datei berührt und im Dateikreis der Weisung liegt; in der Meldung eigene Zeile „Selbst gefunden und behoben: <Fund>, <Datei>“. Sonst Frage oder Sammelliste.
+- Startzeile für einen neuen CC-Thread (steht in der Regel-Datei): „Lies Fi-Austausch weisungen/Regel_Automatische_Uebergabe.md und die aktuelle Weisung (weisungen/README.md nennt sie). Arbeite sie ab, pushe die Meldung nach meldungen/, warte dann selbst auf die naechste Weisung (git fetch alle 2 Minuten) und arbeite weiter, bis in einer Meldung oder Weisung ENTSCHEIDUNG NOETIG: Nico steht. Selbst Gefundenes behebst du nach Abschnitt 5 sofort.“
+
 ## Projekt
 - Lernprogramm für die Fachinformatiker-Ausbildung (Systemintegration). Prioritäten: 1 Lernen, 2 Komfort/Tempo, 3 Spiel, 4 Verteilung.
 - Neubau in C# der Python-Linie `papst2142-cmd/Fisi-Lernplattform`. Diese ist seit 0.63.2 (main fbc657d, Tag v0.63.2) **eingefroren**: nur lesen, nie löschen, Referenz für Vergleichswerte.

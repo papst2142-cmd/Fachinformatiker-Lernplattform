@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.10.0 (in Arbeit, Phase 4: Prüfungsbereiche)
+Version A 0.10.0, Paket 1.0.0-a.0.10.0, Android 1001000 (Weisung P4-16). Ein Update von A 0.9.0 behält den Lernstand.
+- Neue Lernseiten „AP1-Szenarien“, „AP2-Szenarien“ und „Testprojekt“ (bisher „Kommt in einer späteren Ausbaustufe“): Liste mit Status-Punkt, Suche, Themen- und Statusfilter, Blättern, Aufgabe mit eigenem Lösungsfeld, Musterlösung aufdecken und „Gewusst“/„Nicht gewusst“. Jede Bewertung wird genau einmal gespeichert, wie in Python 0.63.2.
+- Neue Seite „Notizblock“: Lernstand je Bereich, Filter, Suche und Einträge mit Musterantwort zum Aufklappen.
+- Klausursimulation im Prüfungstrainer: Prüfung wählen, laufende Prüfung mit Countdown, WiSo-Teil, Abbrechen und Abgeben mit Rückfrage, Bewertung mit Kriterien und Punktvorschlag, Ergebnis mit schwachen Themen und „Gesamtergebnis“. Eine laufende Prüfung bleibt nach dem Beenden erhalten; der Abschluss wird in einem Schritt gespeichert (alles oder nichts).
+- Neue Seite „Abschlussprojekt“ mit sechs Reitern: Projekt anlegen, wählen und löschen, Vorlage aus dem Testprojekt, automatisches Speichern nach dem Tippen, Export als Text und als PDF.
+- Neue Seite „Hilfe“ (16 Themen und 5 Seiten, auch in der Suche) und ein Rundgang beim ersten Start mit „Jetzt einrichten“ (Name, Rahmenplan, Prüfungstermine). Die Ausbildungsfrage erscheint beim Start, solange keine Ausbildung gewählt ist; ein Wechsel der Ausbildung zeigt einen Hinweis, auch auf anderen Geräten nach dem Abgleich.
+- Optionen: neue Bereiche „Rundgang und Hilfe“ und „Lerninhalte > Rahmenplan“.
+- Start ohne Bedienung zeigt alle neuen Ansichten in allen Schriftstufen, Größen und 72 Farbwelten. Ein Messwert über der Grenze wird bis zu 3 Mal gemessen; ist der Start-Test rot, folgt ein 2. Lauf (rot nur, wenn derselbe Punkt in beiden Läufen rot ist).
+
 ## A 0.9.0 (in Arbeit, Phase 3: Rechner, Welle 4)
 Version A 0.9.0, Paket 1.0.0-a.0.9.0, Android 1000900 (Weisung P3-24):
 - Neue Rechner auf der Seite „Rechner“, je mit „Rechenweg anzeigen“ und eigener Aufgabenart im Trainer, gerechnet wie in Python 0.63.2 (Vergleichswerte G28 bis G31):

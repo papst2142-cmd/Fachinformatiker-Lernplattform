@@ -24,8 +24,9 @@ import sys
 
 AUSNAHME = "URTEIL: rot (Ausnahme"
 LAYOUT_KOPF = "Layoutpruefung ("
-# Beschreibende Zeilen unter der Layout-Kopfzeile (AutoMessung.cs), keine Funde
-LAYOUT_TEXT = ("  darin ", "  dazu ", "  und ", "  Groessen: ")
+# Beschreibende Zeilen unter der Layout-Kopfzeile (AutoMessung.cs), keine Funde; "W4-Ansichten"
+# ist die Zeile zur 7,5-Minuten-Grenze der W4-Ansichten (Weisung P4-16, sonst waere jeder 2. Lauf rot)
+LAYOUT_TEXT = ("  darin ", "  dazu ", "  und ", "  Groessen: ", "  W4-Ansichten ")
 FEHLER = re.compile(r"FEHLER(?: \(([^)]*)\))?: ?(.*)")
 OHNE_ZEILE = "Rueckgabe 3 ohne erkannte Fehlerzeile"
 KONTRAST = re.compile(r"\s*(Kontrast [^:]*): .* UNTER ")

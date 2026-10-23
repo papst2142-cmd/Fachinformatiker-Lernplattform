@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Diagnose;
+using Lernplattform.Core.Hilfe;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Messung;
@@ -38,10 +39,20 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private readonly List<RadioButton> _fachrichtung = [];
     private EigeneFarbenTeil? _eigene;
     private bool _setzen;
+    private readonly Action? _rundgang;
+    private readonly Action? _hilfe;
+    private TextBox? _name;
+    private readonly Dictionary<string, ToggleSwitch> _rpSchalter = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, TextBox> _rpTermine = new(StringComparer.Ordinal);
+    private ComboBox? _rpLernfeld;
+    private List<string> _lernfelder = [];
+    private TextBlock? _rpFehler;
 
-    public OptionenSeite(Func<Control>? sicherung = null)
+    public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null)
     {
         _sicherung = sicherung;
+        _rundgang = rundgang;
+        _hilfe = hilfe;
         _fehler = Schrift.Karte(new StackPanel
         {
             Spacing = 4,
@@ -60,6 +71,9 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }
         Content = new ScrollViewer { Content = liste };
     }
+
+    /// <summary>Klappbereich eines Bereichs (Start ohne Bedienung), null bei offenen Bereichen.</summary>
+    public Expander? Klappe(string id) => _bereiche.TryGetValue(id, out var bereich) ? bereich.Klappe : null;
 
     public void AllesAufklappen()
     {
@@ -141,6 +155,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Sicherung when _sicherung is not null => _sicherung(),
         Optionen.Abgleich => new AbgleichTeil().Teil,
         Optionen.Ausbildung => Ausbildung(),
+        Optionen.Rundgang => RundgangUndHilfe(),
+        Optionen.Lerninhalte => Lerninhalte(bereich),
         _ => Platzhalterzeile(),
     };
 
@@ -191,6 +207,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 if (Ergebnis(Core.Pruefung.Ausbildung.Waehlen(Zustand.Schreiber, wert)))
                 {
                     AbgleichDienst.NachDemLernen();     // wie nach jedem Speichern im Lernstand
+                    _ = WarnungAsync(wert);             // W4: Warnhinweis Rahmenplan (Plan 2.5)
                 }
                 else
                 {
@@ -205,13 +222,271 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         return panel;
     }
 
-    /// <summary>on_show: die Fachrichtung kann per Abgleich gekommen sein.</summary>
+    /// <summary>on_show: die Fachrichtung kann per Abgleich gekommen sein; W4: Name und Rahmenplan (refresh_plan).</summary>
     public void Gezeigt()
     {
         if (_fachrichtung.Count > 0)
         {
             Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
         }
+        RahmenplanNeu();
+    }
+
+    private async Task WarnungAsync(string wert)
+    {
+        await AusbildungTeil.GewechseltAsync(wert);
+        RahmenplanNeu();
+    }
+
+    // -- Rundgang und Hilfe (Phase 4, W4; app_gui 7266-7287) ------------------
+
+    private Control RundgangUndHilfe()
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(new LernText(RundgangTexte.OptionenText, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        var starten = Schrift.Knopf(RundgangTexte.RundgangStarten, betont: true);
+        starten.Click += (_, _) => _rundgang?.Invoke();
+        var hilfe = Schrift.Knopf(RundgangTexte.HilfeOeffnen);
+        hilfe.Click += (_, _) => _hilfe?.Invoke();
+        panel.Children.Add(new WrapPanel { Margin = new Thickness(0, 4, 0, 0), Children = { starten, hilfe } });
+        var titel = Abschnitt(RundgangTexte.Name);
+        titel.Margin = new Thickness(0, 10, 0, 0);
+        panel.Children.Add(titel);
+        _name = new TextBox
+        {
+            Text = Core.Hilfe.Einrichten.NameLesen(Zustand.Werte),
+            PlaceholderText = RundgangTexte.NameZusatz,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            MaxWidth = 520,
+        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Breite(380);
+        Avalonia.Automation.AutomationProperties.SetName(_name, RundgangTexte.Name);
+        _name.LostFocus += (_, _) => NameSpeichern();
+        _name.KeyDown += (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Enter)
+            {
+                NameSpeichern();
+            }
+        };
+        panel.Children.Add(_name);
+        panel.Children.Add(new LernText(Core.Hilfe.HilfeTexte.NameHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        return panel;
+    }
+
+    /// <summary>_save_name: bereinigt speichern (nur einstellungen.json), nur wenn er sich aendert; danach rechnet das Dashboard neu.</summary>
+    private void NameSpeichern()
+    {
+        if (_name is null)
+        {
+            return;
+        }
+        var text = _name.Text ?? "";
+        if (Core.Hilfe.Einrichten.NameSetzen((JsonObject)Zustand.Werte.DeepClone(), text)
+            && !Ergebnis(Zustand.Aendere(w => Core.Hilfe.Einrichten.NameSetzen(w, text))))
+        {
+            _name.Text = Core.Hilfe.Einrichten.NameLesen(Zustand.Werte);
+            return;
+        }
+        var name = Core.Hilfe.Einrichten.NameBereinigen(text);
+        if (_name.Text != name)
+        {
+            _name.Text = name;
+        }
+    }
+
+    // -- Lerninhalte > Rahmenplan (Phase 4, W4; app_gui 7397-7437, 7741-7761) ---
+
+    private Control Lerninhalte(OptionenBereich bereich)
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(Platzhalterzeile());          // Zaehlteil (N10, Sammelliste 54)
+        foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
+        {
+            var titel = Abschnitt(abschnitt.Titel);
+            titel.Margin = new Thickness(0, 10, 0, 0);
+            panel.Children.Add(titel);
+            if (abschnitt.Id == Optionen.AbschnittRahmenplan)
+            {
+                panel.Children.Add(Rahmenplan());
+            }
+        }
+        return panel;
+    }
+
+    private Control Rahmenplan()
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(Schrift.Text(RahmenplanTexte.NurDiesesGeraet, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        panel.Children.Add(new LernText(RahmenplanTexte.Untertitel, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        var schalter = Core.Hilfe.Einrichten.Abschnitte
+            .Select(a => (a.Schluessel, RahmenplanTexte.AbschnittText(a.Abschnitt)))
+            .Append((Core.Hilfe.Einrichten.GewichtungSchluessel, RahmenplanTexte.Gewichtung));
+        foreach (var (schluessel, text) in schalter)
+        {
+            var knopf = new ToggleSwitch
+            {
+                Content = new LernText(text, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+                OnContent = null,
+                OffContent = null,
+            };
+            Avalonia.Automation.AutomationProperties.SetName(knopf, text);
+            knopf.IsCheckedChanged += (_, _) =>
+            {
+                if (_setzen)
+                {
+                    return;
+                }
+                var an = knopf.IsChecked == true;
+                if (!Ergebnis(Zustand.Aendere(w => Core.Hilfe.Einrichten.RahmenplanSetzen(w, schluessel, an))))
+                {
+                    RahmenplanNeu();
+                }
+            };
+            _rpSchalter[schluessel] = knopf;
+            panel.Children.Add(knopf);
+        }
+        panel.Children.Add(new LernText(RahmenplanTexte.GewichtungHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        var reihe = new WrapPanel();
+        _rpLernfeld = new ComboBox { MinWidth = 110, ItemsSource = new List<string> { RahmenplanTexte.LernfeldAus }, SelectedIndex = 0 };
+        Avalonia.Automation.AutomationProperties.SetName(_rpLernfeld, RahmenplanTexte.Lernfeld);
+        _rpLernfeld.SelectionChanged += (_, _) =>
+        {
+            if (_setzen || _rpLernfeld.SelectedIndex < 0)
+            {
+                return;
+            }
+            var wert = _rpLernfeld.SelectedIndex == 0 ? "" : _lernfelder[_rpLernfeld.SelectedIndex - 1];
+            if (!Ergebnis(Zustand.Aendere(w => Core.Hilfe.Einrichten.RahmenplanSetzen(w, Core.Hilfe.Einrichten.LernfeldSchluessel, wert))))
+            {
+                RahmenplanNeu();
+            }
+        };
+        reihe.Children.Add(Paar(RahmenplanTexte.Lernfeld, _rpLernfeld));
+        foreach (var (schluessel, text) in new[]
+        {
+            (Core.Hilfe.Einrichten.TerminAp1Schluessel, RahmenplanTexte.TerminAp1),
+            (Core.Hilfe.Einrichten.TerminAp2Schluessel, RahmenplanTexte.TerminAp2),
+        })
+        {
+            var feld = new TextBox { MinWidth = 130 }.Farbe(TextBox.ForegroundProperty, "Pinsel.text");   // kein Platzhalter (N12)
+            Avalonia.Automation.AutomationProperties.SetName(feld, text);
+            feld.LostFocus += (_, _) => TerminSpeichern(schluessel, false);
+            feld.KeyDown += (_, e) =>
+            {
+                if (e.Key == Avalonia.Input.Key.Enter)
+                {
+                    TerminSpeichern(schluessel, false);
+                }
+            };
+            if (!Pc) // Termin beim Tippen
+            {
+                // am Handy speichern beim Tippen, sobald das Datum gueltig ist (main.py 4484-4490)
+                feld.TextChanged += (_, _) =>
+                {
+                    if (!_setzen)
+                    {
+                        TerminSpeichern(schluessel, true);
+                    }
+                };
+            }
+            _rpTermine[schluessel] = feld;
+            reihe.Children.Add(Paar(text, feld));
+        }
+        panel.Children.Add(reihe);
+        _rpFehler = Schrift.Text(RahmenplanTexte.DatumUngueltig, "Klein", FontWeight.Normal, "Pinsel.red");
+        _rpFehler.IsVisible = false;
+        panel.Children.Add(_rpFehler);
+        RahmenplanNeu();
+        _ = LernfelderAsync();
+        return panel;
+    }
+
+    private static Control Paar(string text, Control feld)
+    {
+        var beschriftung = Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        beschriftung.VerticalAlignment = VerticalAlignment.Center;
+        beschriftung.Margin = new Thickness(0, 0, 10, 0);
+        return new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 28, 8), Children = { beschriftung, feld } };
+    }
+
+    /// <summary>field_options: "Aus" und alle Lernfelder (Reihenfolge der Lerninhalte), sobald sie geladen sind.</summary>
+    private async Task LernfelderAsync()
+    {
+        if (await Zustand.Inhalte is not { } inhalte || _rpLernfeld is null)
+        {
+            return;
+        }
+        _lernfelder = [.. inhalte.Rahmenplan["lernfelder"]!.AsArray().Select(f => (string)f!["id"]!)];
+        _setzen = true;
+        _rpLernfeld.ItemsSource = new List<string> { RahmenplanTexte.LernfeldAus }.Concat(_lernfelder).ToList();
+        _setzen = false;
+        RahmenplanNeu();
+    }
+
+    /// <summary>
+    /// _save_rp fuer einen Termin: leer = kein Termin, ungueltig = Fehlerzeile (beim Tippen am Handy still),
+    /// sonst JJJJ-MM-TT speichern und als TT.MM.JJJJ zeigen.
+    /// </summary>
+    private void TerminSpeichern(string schluessel, bool beimTippen)
+    {
+        var feld = _rpTermine[schluessel];
+        var (iso, fehler) = Core.Hilfe.Einrichten.PruefeDatum(feld.Text);
+        if (fehler is not null)
+        {
+            if (!beimTippen)
+            {
+                _rpFehler!.IsVisible = true;
+            }
+            return;
+        }
+        _rpFehler!.IsVisible = false;
+        var alt = Zustand.Werte[schluessel] is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var t) ? t : null;
+        if (alt != iso && !Ergebnis(Zustand.Aendere(w => Core.Hilfe.Einrichten.RahmenplanSetzen(w, schluessel, iso))))
+        {
+            RahmenplanNeu();
+            return;
+        }
+        if (!beimTippen)
+        {
+            _setzen = true;
+            feld.Text = Core.Hilfe.Einrichten.DatumText(iso);
+            _setzen = false;
+        }
+    }
+
+    /// <summary>refresh_plan: Name und Rahmenplan-Werte aus den Einstellungen zeigen (nach Einrichten, Abgleich, Fehler).</summary>
+    private void RahmenplanNeu()
+    {
+        _setzen = true;
+        if (_name is not null && !_name.IsFocused)
+        {
+            _name.Text = Core.Hilfe.Einrichten.NameLesen(Zustand.Werte);
+        }
+        var werte = Core.Hilfe.Einrichten.Startwerte(Zustand.Werte);
+        foreach (var (abschnitt, schluessel) in Core.Hilfe.Einrichten.Abschnitte)
+        {
+            if (_rpSchalter.TryGetValue(schluessel, out var knopf))
+            {
+                knopf.IsChecked = werte.Abschnitt(abschnitt);
+            }
+        }
+        if (_rpSchalter.TryGetValue(Core.Hilfe.Einrichten.GewichtungSchluessel, out var gewichtung))
+        {
+            gewichtung.IsChecked = Core.Hilfe.Einrichten.Gewichtung(Zustand.Werte);
+        }
+        if (_rpTermine.Count > 0)
+        {
+            _rpTermine[Core.Hilfe.Einrichten.TerminAp1Schluessel].Text = werte.TerminAp1;
+            _rpTermine[Core.Hilfe.Einrichten.TerminAp2Schluessel].Text = werte.TerminAp2;
+            _rpFehler!.IsVisible = false;
+        }
+        if (_rpLernfeld is not null)
+        {
+            var feld = Zustand.Werte[Core.Hilfe.Einrichten.LernfeldSchluessel] is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var t) ? t : "";
+            var index = _lernfelder.IndexOf(feld);
+            _rpLernfeld.SelectedIndex = index + 1;
+        }
+        _setzen = false;
     }
 
     // -- Optische Anpassungen ------------------------------------------------

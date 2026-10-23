@@ -122,5 +122,6 @@ public sealed class RuecksicherungTeil
             await Ruecksicherung.SpeichernUeberAsync(arbeitsdatei, bytes, datei.OpenWriteAsync);
         }
         Zeige(RuecksicherungTexte.Erfolg(datei.Name));
+        await AusbildungTeil.VergleichenAsync();          // W4: Vergleich des Merkers wie nach Abgleich und Uebernahme
     }
 }

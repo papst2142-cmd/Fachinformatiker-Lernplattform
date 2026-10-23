@@ -30,6 +30,47 @@ public static class Messwerte
         liste.Add(ms);
     }
 
+    /// <summary>Anzahl der Werte je Messreihe (Stand vor einem Messpunkt, Weisung P4-16).</summary>
+    public static Dictionary<string, int> Stand() => Reihen.ToDictionary(r => r.Key, r => r.Value.Count, StringComparer.Ordinal);
+
+    /// <summary>Letzter Wert der Reihe, wenn seit <paramref name="stand"/> einer dazukam, sonst null.</summary>
+    public static double? NeuSeit(Dictionary<string, int> stand, string name) =>
+        Reihen.TryGetValue(name, out var liste) && liste.Count > stand.GetValueOrDefault(name) ? liste[^1] : null;
+
+    /// <summary>Alle Reihen auf <paramref name="stand"/> zuruecksetzen (Werte danach entfernen).</summary>
+    public static void ZurueckAuf(Dictionary<string, int> stand)
+    {
+        foreach (var (name, liste) in Reihen.ToList())
+        {
+            var anzahl = stand.GetValueOrDefault(name);
+            if (anzahl == 0)
+            {
+                Reihen.Remove(name);    // erst seit dem Stand entstanden (leere Reihe haette keinen Hoechstwert)
+            }
+            else if (liste.Count > anzahl)
+            {
+                liste.RemoveRange(anzahl, liste.Count - anzahl);
+            }
+        }
+    }
+
+    /// <summary>Eine Reihe auf <paramref name="anzahl"/> Werte kuerzen (0 = Reihe entfernen).</summary>
+    public static void ReiheAuf(string name, int anzahl)
+    {
+        if (!Reihen.TryGetValue(name, out var liste))
+        {
+            return;
+        }
+        if (anzahl == 0)
+        {
+            Reihen.Remove(name);
+        }
+        else if (liste.Count > anzahl)
+        {
+            liste.RemoveRange(anzahl, liste.Count - anzahl);
+        }
+    }
+
     /// <summary>Hoechstwert jeder Messreihe.</summary>
     public static Dictionary<string, double> Hoechstwerte() => Reihen.ToDictionary(r => r.Key, r => r.Value.Max(), StringComparer.Ordinal);
 

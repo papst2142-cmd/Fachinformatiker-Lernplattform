@@ -47,6 +47,8 @@ public sealed class KlausurTeil
         _takt.Tick += (_, _) => Ticken();
         _speichern.Tick += (_, _) => Festhalten();
         Zustand.BeimBeenden += Verbergen;      // Antworten beim Beenden festhalten
+        // W4 (Sammelliste 51): vor Sicherung und Uebernahme und beim Verlassen der App am Handy sofort festhalten (flush_inputs)
+        Zustand.BeiEingabenSpeichern += Festhalten;
     }
 
     public Control Teil => _koerper;

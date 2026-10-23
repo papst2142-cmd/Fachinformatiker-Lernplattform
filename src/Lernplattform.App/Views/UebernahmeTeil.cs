@@ -170,6 +170,7 @@ public sealed class UebernahmeTeil
                 }
             });
             await Hinweis(UebernahmeTexte.Ergebnis(bericht, bericht.Sicherungsdatei is { } datei ? Geraetetexte.KopieName(Path.GetFileName(datei), !Android) : null));
+            await AusbildungTeil.VergleichenAsync();      // W4: Fachrichtung kann mit der Uebernahme gekommen sein
         }
         catch (UebernahmeAusnahme fehler)
         {
