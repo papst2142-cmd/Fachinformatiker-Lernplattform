@@ -798,17 +798,17 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             return;
         }
         var schreiber = Zustand.Schreiber;
-        var gesammelt = new List<string>();
-        var vorher = Zustand.Fehlermeldung;
-        Zustand.Fehlermeldung = gesammelt.Add;
         bool geloescht;
+        IReadOnlyList<string> gesammelt;
         try
         {
-            geloescht = loeschen(schreiber);
+            (geloescht, gesammelt) = Loeschablauf.Ausfuehren(() => loeschen(schreiber), () => Zustand.Fehlermeldung, e => Zustand.Fehlermeldung = e);
         }
-        finally
+        catch (Exception fehler)
         {
-            Zustand.Fehlermeldung = vorher;
+            // Nie einen Systemtext zeigen; Einzelheiten ins Fehlerprotokoll (die Marke entsteht vor dem Schreiben)
+            Fehlerprotokoll.Schreiben(fehler);
+            (geloescht, gesammelt) = (false, []);
         }
         if (!geloescht)
         {

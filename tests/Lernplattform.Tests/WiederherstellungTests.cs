@@ -338,6 +338,39 @@ public class WiederherstellungTests
         Assert.Single(Directory.GetFiles(a.Kopien));   // die Kopie bleibt (sie wird nie von allein geloescht, D3)
     }
 
+    /// <summary>
+    /// Gegenpruefung W1 Fund 5: auch ein unerwarteter Fehler nach dem Schreiben der Hilfsdatei (vor dem commit)
+    /// laesst sie (mit Zugangsschluessel) nicht liegen; die Buchung ist zurueckgenommen, der Fehler geht weiter.
+    /// </summary>
+    [Fact]
+    public void UnerwarteterFehlerEntferntHilfsdatei()
+    {
+        using var a = new Aufbau("gefuellt");
+        var ziel = G37.GetProperty("ziele").GetProperty("gefuellt");
+        var einstellungenVorher = File.ReadAllText(a.Einstellungen.Pfad);
+        var gesehen = false;
+        Wiederherstellung.Haltepunkt = punkt =>
+        {
+            if (punkt == "vor-commit")
+            {
+                gesehen = File.Exists(a.Einstellungen.Hilfsdatei);
+                throw new InvalidOperationException("Probe");
+            }
+        };
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => a.Ersetzen("a"));
+        }
+        finally
+        {
+            Wiederherstellung.Haltepunkt = null;
+        }
+        Assert.True(gesehen);
+        Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+        Assert.Equal(VergleichsHilfe.Stand(ziel), VergleichsHilfe.Stand(a.Pfad, ziel));
+        Assert.Equal(einstellungenVorher, File.ReadAllText(a.Einstellungen.Pfad));
+    }
+
     /// <summary>Wird nichts gespeichert (Lesefehler, Schreibschutz): nichts ersetzt, keine Kopie.</summary>
     [Fact]
     public void NurLesenErsetztNichts()
@@ -377,6 +410,16 @@ public class WiederherstellungTests
         }
         einstellungen.HilfsdateiEntfernen();
         Assert.False(File.Exists(einstellungen.Hilfsdatei));
+        // Gesperrte einstellungen.json (Lesefehler): keine Hilfsdatei, NurAnzeige, Datei bytegleich
+        Assert.True(einstellungen.Setze("ziel_anzahl", 25));
+        var vorher = File.ReadAllBytes(einstellungen.Pfad);
+        using (new FileStream(einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            Assert.False(einstellungen.HilfsdateiSchreiben(new JsonObject { ["ziel_anzahl"] = 50, ["sync_token"] = "geheim-123456" }));
+            Assert.True(einstellungen.NurAnzeige);
+            Assert.False(File.Exists(einstellungen.Hilfsdatei));
+        }
+        Assert.Equal(vorher, File.ReadAllBytes(einstellungen.Pfad));
     }
 
     /// <summary>Kopien in derselben Minute ueberschreiben sich nie (_2, _3).</summary>

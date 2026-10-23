@@ -21,16 +21,19 @@ public static partial class AutoMessung
     private static Sicherungsinhalt ProbeInhalt() => _probeInhalt ??= Sicherungsinhalt.Lesen(
         Ruecksicherung.Erstellen(Zustand.Lernstand, Zustand.Werte, Aktualisierung.Aktualisierung.Anzeige, LangerGeraetename, new DateTime(2026, 10, 23, 12, 0, 0)));
 
-    /// <summary>Fenster der W1 (Name, Zeigen); Eintraege mit grossen Zahlen und langem Dateinamen.</summary>
+    /// <summary>
+    /// Fenster der W1 (Name, Zeigen); Eintraege mit grossen Zahlen und dem laengsten echten Dateinamen der
+    /// Kopie (zweite Kopie in derselben Minute). Im schmalen Aufbau mit den Umbruchstellen des Handys (wie W2).
+    /// </summary>
     private static (string Name, Func<Task<int>> Zeigen)[] P5Fenster(MainView ansicht) =>
     [
         ("sicherung/vorschau", () => EinspielenTeil.VorschauZeigen(ProbeInhalt())),
         ("sicherung/frage-ersetzen", () => EinspielenTeil.FrageZeigen(ProbeInhalt())),
         ("sicherung/rueckfrage-ersetzen", () => Dialog.Rueckfrage(SicherungTexte.RueckfrageTitel, SicherungTexte.Rueckfrage, 1, TrainerTexte.Ja, TrainerTexte.Nein)),
         ("sicherung/ersetzt", () => Dialog.Zeigen(SicherungTexte.Titel, SicherungTexte.ErsetztMeldung(ProbeInhalt(),
-            Geraetetexte.KopieName("Lernplattform-Sicherung_2026-10-23_1200_2.fisisicherung", !ansicht.Breit)), Dialog.Ok)),
+            UebernahmeTexte.KopieName(Wiederherstellung.Praefix + "2026-10-23_1200_2" + Ruecksicherung.Endung, !ansicht.Breit)), Dialog.Ok)),
         ("sicherung/zusammengefuehrt", () => Dialog.Zeigen(SicherungTexte.Titel, SicherungTexte.Zusammengefuehrt(ProbeBericht(),
-            Geraetetexte.KopieName("vor_uebernahme_2026-10-23_120000_2.db", !ansicht.Breit)), Dialog.Ok)),
+            UebernahmeTexte.KopieName("vor_uebernahme_2026-10-23_120000_2.db", !ansicht.Breit)), Dialog.Ok)),
         ("sicherung/kopie-gescheitert", () => Dialog.Zeigen(SicherungTexte.Titel,
             SicherungTexte.ErsetzenFehler(new WiederherstellungAusnahme(WiederherstellungFehler.KopieGescheitert, RuecksicherungFehler.KeineBerechtigung), null), Dialog.Ok)),
         ("sicherung/einspielen-gescheitert", () => Dialog.Zeigen(SicherungTexte.Titel, SicherungTexte.EinspielenGescheitert, Dialog.Ok)),
@@ -42,11 +45,11 @@ public static partial class AutoMessung
     ];
 
     /// <summary>Anzahl der W1-Ansichten (fuer den Bericht): 3 Bereiche der Optionen und die Fenster.</summary>
-    public const int P5AnsichtenAnzahl = 3 + 10;
+    public const int P5AnsichtenAnzahl = 3 + 10 + 1;
 
     /// <summary>
     /// Die neuen Ansichten der W1 nacheinander (je nach dem Zeigen pruefen): Optionen „Sicherung“,
-    /// „Löschen und zurücksetzen“ und „Datenbank“ aufgeklappt, dann die Fenster.
+    /// „Löschen und zurücksetzen“ und „Datenbank“ aufgeklappt, dann die Fenster und „Bitte warten“ beim Ersetzen.
     /// </summary>
     private static async IAsyncEnumerable<string> P5Ansichten(MainView ansicht)
     {
@@ -67,6 +70,11 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             yield return name;
             Dialog.AlleSchliessen();
+        }
+        using (Dialog.Warten(SicherungTexte.WartenErsetzen))
+        {
+            await ansicht.BildFertigAsync();
+            yield return "sicherung/bitte-warten";
         }
         await ansicht.BildFertigAsync();
     }

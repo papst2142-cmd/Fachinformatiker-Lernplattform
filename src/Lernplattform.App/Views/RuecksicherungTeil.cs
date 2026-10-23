@@ -114,7 +114,23 @@ public sealed class RuecksicherungTeil
             var arbeitsdatei = Path.Combine(Ablage.Datenordner(), "ruecksicherung" + Ruecksicherung.Endung);
             await Ruecksicherung.SpeichernUeberAsync(arbeitsdatei, bytes, datei.OpenWriteAsync);
             // Phase 5 BE1 (Sammelliste 26): die Kopie am gewaehlten Ort zuruecklesen, erst dann "Gespeichert"
-            await Ruecksicherung.ZuruecklesenAsync(bytes, datei.OpenReadAsync);
+            try
+            {
+                await Ruecksicherung.ZuruecklesenAsync(bytes, datei.OpenReadAsync);
+            }
+            catch (RuecksicherungAusnahme)
+            {
+                // Eine abgeschnittene Datei bleibt nicht unter dem Namen einer Sicherung liegen (Gegenpruefung W1 Fund 10)
+                try
+                {
+                    await datei.DeleteAsync();
+                }
+                catch (Exception weg) when (weg is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+                {
+                    Core.Diagnose.Fehlerprotokoll.Schreiben(weg);
+                }
+                throw;
+            }
         }
         Zeige(RuecksicherungTexte.Erfolg(datei.Name));
         await AusbildungTeil.VergleichenAsync();          // W4: Vergleich des Merkers wie nach Abgleich und Uebernahme

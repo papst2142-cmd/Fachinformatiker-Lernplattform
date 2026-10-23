@@ -142,9 +142,14 @@ public static class Wiederherstellung
             Haltepunkt?.Invoke("vor-commit");
             tx.Commit();
         }
-        catch (Exception e) when (e is SqliteException or IOException or UnauthorizedAccessException)
+        catch (Exception e)
         {
+            // Die Hilfsdatei (mit Zugangsschluessel) bleibt bei keinem Fehler liegen; die Buchung ist zurueckgenommen
             einstellungen.HilfsdateiEntfernen();
+            if (e is not (SqliteException or IOException or UnauthorizedAccessException))
+            {
+                throw;
+            }
             Uebernahme.Protokoll(ziel.Pfad, "Alles ersetzen gescheitert, nichts geaendert: " + (e is SqliteException s
                 ? "SQLite-Fehler " + s.SqliteErrorCode.ToString(CultureInfo.InvariantCulture) : e.GetType().Name));
             throw new WiederherstellungAusnahme(WiederherstellungFehler.EinspielenGescheitert);

@@ -173,10 +173,11 @@ public sealed class EinspielenTeil
             await Hinweis(SicherungTexte.ZusammenfuehrenFehler(fehler.Fehler, lernstand.NurLesenGrund));
             return;
         }
+        // Ab hier ist zusammengefuehrt: ein Fehler beim Neu-Zeigen aendert die Rueckmeldung nicht (Gegenpruefung W1 Fund 1)
         Nachher();
         await Hinweis(SicherungTexte.Zusammengefuehrt(bericht,
             bericht.Sicherungsdatei is { } datei ? Geraetetexte.KopieName(Path.GetFileName(datei), !Android) : null));
-        await AusbildungTeil.VergleichenAsync();
+        await NurProtokollAsync(AusbildungTeil.VergleichenAsync);
     }
 
     /// <summary>_replace_backup: zwei Rueckfragen (Vorgabe „Nein“), Bitte warten, ersetzen, Meldung.</summary>
@@ -192,32 +193,67 @@ public sealed class EinspielenTeil
             await Hinweis(AbgleichTexte.Belegt);
             return;
         }
-        Zeige(SicherungTexte.WartenErsetzen);
-        string kopie;
-        try
+        // show_wait: „Bitte warten“ ueber dem ganzen Fenster, solange ersetzt und neu angezeigt wird (vor jeder
+        // Meldung wieder weg); nichts darunter laesst sich bedienen, also auch keine Antwort zwischen Kopie und commit
+        string? kopie = null;
+        string? fehlerText = null;
+        using (Dialog.Warten(SicherungTexte.WartenErsetzen))
         {
-            var einstellungen = Zustand.Einstellungen;
-            var geraet = AbgleichDienst.Geraet();
-            kopie = await Task.Run(() => Wiederherstellung.Ersetzen(lernstand, sicherung, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet));
+            try
+            {
+                var einstellungen = Zustand.Einstellungen;
+                var geraet = AbgleichDienst.Geraet();
+                kopie = await Task.Run(() => Wiederherstellung.Ersetzen(lernstand, sicherung, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet));
+            }
+            catch (WiederherstellungAusnahme fehler)
+            {
+                fehlerText = SicherungTexte.ErsetzenFehler(fehler, lernstand.NurLesenGrund);
+            }
+            if (kopie is not null)
+            {
+                // Ab hier ist ersetzt: ein Fehler beim Neu-Zeigen aendert die Rueckmeldung nicht (Gegenpruefung W1 Fund 1)
+                NurProtokoll(Zustand.EinstellungenNeuLesen);
+                Nachher();
+            }
         }
-        catch (WiederherstellungAusnahme fehler)
+        if (kopie is null)
         {
-            Zeige("");
-            await Hinweis(SicherungTexte.ErsetzenFehler(fehler, lernstand.NurLesenGrund));
+            await Hinweis(fehlerText ?? SicherungTexte.EinspielenGescheitert);
             return;
         }
-        Zustand.EinstellungenNeuLesen();
-        Nachher();
-        Zeige("");
         await Hinweis(SicherungTexte.ErsetztMeldung(sicherung, Geraetetexte.KopieName(Path.GetFileName(kopie), !Android)));
-        await AusbildungTeil.VergleichenAsync();
+        await NurProtokollAsync(AusbildungTeil.VergleichenAsync);
     }
 
-    /// <summary>_after_restore: Seiten neu zeigen, Abgleich wie nach dem Lernen (notify_progress).</summary>
+    /// <summary>_after_restore: Seiten neu zeigen, Abgleich wie nach dem Lernen (notify_progress); Fehler nur ins Protokoll.</summary>
     private void Nachher()
     {
-        _danach();
-        AbgleichDienst.NachDemLernen();
+        NurProtokoll(_danach);
+        NurProtokoll(AbgleichDienst.NachDemLernen);
+    }
+
+    private static void NurProtokoll(Action schritt)
+    {
+        try
+        {
+            schritt();
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
+    }
+
+    private static async Task NurProtokollAsync(Func<Task> schritt)
+    {
+        try
+        {
+            await schritt();
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
     }
 
     /// <summary>Inhalt des Vorschau-Fensters (BackupDialog): Zeilen von backup_summary, Leerzeile, PREVIEW_HINT.</summary>

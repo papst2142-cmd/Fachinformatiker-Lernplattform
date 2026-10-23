@@ -96,6 +96,42 @@ public class LoeschenTests
         Assert.Equal(vorher, UebernahmeTests.Sha(pfad));
     }
 
+    /// <summary>
+    /// _delete_checked: Datenbanktexte waehrend der Loeschung werden gesammelt (kein allgemeines Fenster),
+    /// danach ist der vorige Empfaenger wieder gesetzt, auch nach einer Ausnahme; genau ein Text daraus.
+    /// </summary>
+    [Fact]
+    public void LoeschungSammeltDatenbanktexte()
+    {
+        var allgemein = new List<string>();
+        Action<string>? empfaenger = allgemein.Add;
+        var ergebnis = Loeschablauf.Ausfuehren(() =>
+        {
+            empfaenger!("Die Datenbank ist gesperrt.");
+            empfaenger!("Die Platte ist voll.");
+            return false;
+        }, () => empfaenger, e => empfaenger = e);
+        Assert.False(ergebnis.Geloescht);
+        Assert.Equal(["Die Datenbank ist gesperrt.", "Die Platte ist voll."], ergebnis.Meldungen);
+        Assert.Empty(allgemein);
+        empfaenger("danach");
+        Assert.Equal(["danach"], allgemein);
+        Assert.Equal("Es wurde nichts gelöscht.\n\nDie Datenbank ist gesperrt.\n\nDie Platte ist voll.", LoeschenTexte.NichtsGeloeschtMit(ergebnis.Meldungen));
+        Assert.Equal(LoeschenTexte.NichtsGeloescht, LoeschenTexte.NichtsGeloeschtMit([]));
+        // Ausnahme: Empfaenger trotzdem zurueck
+        Assert.Throws<InvalidOperationException>(() => Loeschablauf.Ausfuehren(() => throw new InvalidOperationException(), () => empfaenger, e => empfaenger = e));
+        empfaenger("wieder");
+        Assert.Equal(["danach", "wieder"], allgemein);
+        // Gelungen: nichts gesammelt; echte Loeschung ueber denselben Weg
+        using var ordner = new TempOrdner();
+        var pfad = UebernahmeTests.BaueDatenbank(G20.GetProperty("quelle_db"), Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var schreiber = new LernstandSchreiber(new Lernstand(pfad, t => empfaenger?.Invoke(t)), Uhr, null, Abweichung);
+        var gut = Loeschablauf.Ausfuehren(schreiber.HistorieLoeschen, () => empfaenger, e => empfaenger = e);
+        Assert.True(gut.Geloescht);
+        Assert.Empty(gut.Meldungen);
+        Assert.Equal(["danach", "wieder"], allgemein);
+    }
+
     [Fact]
     public void TexteWiePython()
     {
