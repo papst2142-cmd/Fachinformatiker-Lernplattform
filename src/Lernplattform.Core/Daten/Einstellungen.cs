@@ -246,21 +246,26 @@ public sealed class Einstellungen
     /// </summary>
     private (byte[]? Roh, bool Gesperrt) Lesen()
     {
-        try
+        // Lesen unter derselben Sperre wie das Schreiben: unter Windows scheitert das Ersetzen einer gerade
+        // gelesenen Datei sonst (und das Lesen waehrend des Ersetzens); Lauf 39929224886 windows-latest
+        lock (Schreibsperre)
         {
-            // Mitbenutzung erlauben: ein gleichzeitiges Ersetzen (Speichern) scheitert unter Windows sonst (Gegenpruefung W2 Fund 2)
-            using var datei = new FileStream(_pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            using var puffer = new MemoryStream();
-            datei.CopyTo(puffer);
-            return (puffer.ToArray(), false);
-        }
-        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return (null, false);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return (null, true);
+            try
+            {
+                // Mitbenutzung erlauben: Leser anderer Programme (Gegenpruefung W2 Fund 2)
+                using var datei = new FileStream(_pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var puffer = new MemoryStream();
+                datei.CopyTo(puffer);
+                return (puffer.ToArray(), false);
+            }
+            catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+            {
+                return (null, false);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                return (null, true);
+            }
         }
     }
 

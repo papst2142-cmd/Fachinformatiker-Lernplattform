@@ -28,7 +28,13 @@ public sealed class HaengerTests : IDisposable
         _ordner.Dispose();
     }
 
-    private string Log() => File.ReadAllText(Haenger.Pfad(_ordner.Pfad), Encoding.UTF8);
+    // geteilt lesen wie Fehlerprotokoll.Anzeigen: die Diagnose haelt haenger.log offen (unter Windows sonst gesperrt)
+    private string Log()
+    {
+        using var datei = new FileStream(Haenger.Pfad(_ordner.Pfad), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var leser = new StreamReader(datei, Encoding.UTF8);
+        return leser.ReadToEnd();
+    }
 
     [Fact]
     public void StartzeileUndOhneHerzschlagNichts()
