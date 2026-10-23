@@ -1,5 +1,11 @@
 # Änderungen
 
+## Phase 6, Welle 1: Release-Ablauf (ohne neue Version, Weisung P6-2)
+Keine neue Programmfunktion, die Version bleibt A 0.11.0 (Plan Phase 6, D5).
+- Release-Bau als Skript (`werkzeuge/release/baue_release.sh`), im vollen CI-Lauf ohne Hochladen geprüft; `release.yml` startet nur von Hand, nur von `main` und nur mit vollem Lauf 8/8 und legt höchstens einen Entwurf an.
+- Tag-Regel `vA…`/`vB…`/`v1…` mit Test (Sammelliste 73), Release-Text mit SHA-256-Tabelle (Sammelliste 56), Android-Release-Schlüssel nur über Geheimnisse mit Fingerabdruck-Prüfung.
+- „Über“ → Fremdbestandteile zeigt jetzt die beim Bau erzeugte Liste: jede ausgelieferte Datei gehört zu einem genannten Bestandteil; die vollen Lizenztexte liegen als `THIRD_PARTY_LICENSES.txt` am PC neben dem Programm und im Release, in der Android-App noch nicht (Sammelliste 12).
+
 ## A 0.11.0 (in Arbeit, Phase 5: Betrieb)
 Version A 0.11.0, Paket 1.0.0-a.0.11.0, Android 1001100 (Weisung P5-8). Ein Update von A 0.10.0 behält den Lernstand.
 - Welle 1, Sicherung: Optionen „Sicherung“ mit „Sicherung erstellen“ und „Sicherung einspielen“ (Vorschau, Zusammenführen oder „Alles ersetzen“ mit zwei Rückfragen), „Löschen und zurücksetzen“ und am PC „Datenbank“. Vor jedem Ersetzen entsteht eine Kopie unter `sicherungen/`.
