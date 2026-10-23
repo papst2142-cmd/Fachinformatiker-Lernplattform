@@ -16,7 +16,9 @@ sealed class Program
     public static int Main(string[] args)
     {
         // Velopack zuerst: erledigt Installations- und Update-Schritte und beendet dann selbst.
-        VelopackApp.Build().Run();
+        // Phase 5 W3: ein geladenes Paket nie von allein beim Start einspielen; ein Update laeuft nur
+        // ueber UpdateAblauf.Installieren (vorher Kopie des Lernstands und Merker, Gegenpruefung W3 Fund 1).
+        VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_AUTO") is { Length: > 0 } modus)
         {
             return Updater.Auto(modus);
