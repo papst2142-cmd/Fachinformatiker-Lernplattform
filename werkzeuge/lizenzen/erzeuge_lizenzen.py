@@ -74,6 +74,11 @@ def paket_info(paket_id, version, bestand, ordner=None):
         lizenz = "Datei " + feld(spec, r'<license type="file">([^<]+)<') + " im Paket"
     lizenz = lizenz or feld(spec, r"<licenseUrl>([^<]+)<")
     quelle = feld(spec, r'<repository [^>]*url="([^"]+)"') or feld(spec, r"<projectUrl>([^<]+)<")
+    if not spec:
+        for anfang, angabe in sorted(bestand.get("ohne_nuspec", {}).items()):
+            if paket_id.startswith(anfang + "."):
+                lizenz, quelle = angabe["lizenz"], angabe["quelle"]
+                break
     texte = []
     for name in sorted(os.listdir(ordner)):
         if LIZENZDATEI.match(name) and os.path.isfile(os.path.join(ordner, name)):

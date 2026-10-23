@@ -28,7 +28,13 @@
     {"id": "SQLite", "version": "in SQLitePCLRaw.lib.e_sqlite3 2.1.13", "lizenz": "gemeinfrei", "quelle": "https://sqlite.org/copyright.html",
      "beschreibung": "Datenbank, in e_sqlite3", "dateien": [], "texte": ["SQLite_gemeinfrei.txt"]}
   ],
+  "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
+  "ohne_nuspec": {
+    "Microsoft.NETCore.App.Host": {"lizenz": "MIT", "quelle": "https://github.com/dotnet/dotnet"},
+    "Microsoft.NETCore.App.Runtime": {"lizenz": "MIT", "quelle": "https://github.com/dotnet/dotnet"}
+  },
   "texte_fuer_pakete": {
+    "Microsoft.NETCore.App": "DotNet_MIT.txt",
     "Avalonia": "Avalonia_MIT.txt",
     "MicroCom.Runtime": "MicroCom_MIT.txt",
     "Tmds.DBus.Protocol": "TmdsDBus_MIT.txt",
