@@ -9,19 +9,19 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 - Code: `papst2142-cmd/Fachinformatiker-Lernplattform` (`main`, geschützt: Änderungen nur per PR, Squash nach Freigabe). Regeln: `CLAUDE.md` im Repo.
 - Austausch: `papst2142-cmd/Fi-Austausch` (`weisungen/`, `meldungen/`, `anlagen/`, `SAMMELLISTE_NEU.md`).
 - Referenz (nur lesen): `papst2142-cmd/Fisi-Lernplattform` (Python, eingefroren seit v0.63.2, main fbc657d).
-- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–4 umgesetzt (`Plan_Phase3_CSharp.md`, `Plan_Phase4_CSharp.md` liegen noch dort, ältere in der Git-Historie), **`Plan_Phase5_CSharp.md` als Entwurf zur Freigabe**.
+- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–5 umgesetzt (ältere Pläne in der Git-Historie); **Phase 6 (Verteilung) beginnt mit einem Plan nach Nicos Phasenwahl**.
 - Zusammenarbeit: `Fi-Austausch/weisungen/Regel_Automatische_Uebergabe.md` (bindend, Abschnitte 1–11, Startzeilen für neue Threads).
 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.10.0** auf `main` (540027e, PR #21; Paket 1.0.0-a.0.10.0, Android 1001000, Update-APK 1001001); kein Tag, kein öffentliches Release |
-| Phase | 0–4 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche) |
-| Jetzt | **Phase 5 (Betrieb): Plan liegt zur Prüfung und Freigabe** (Weisung P5-2). Wellen W1 Sicherung, W2 Diagnose, W3 Update + A 0.11.0. Kein Bau vor „Plan freigegeben“ |
+| Version | **A 0.11.0** auf `main` (eb1d3d8, PR #24; Paket 1.0.0-a.0.11.0, Android 1001100, Update-APK 1001101); kein Tag, kein öffentliches Release |
+| Phase | 0–5 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update) |
+| Jetzt | **Phase 6 (Verteilung: Installer, Signierung, erstes Release)**: warten auf Nicos Phasenwahl und Weisung P6-1 (Plan, kein Bau vor „Plan freigegeben“) |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
-| Vergleichswerte | G1–G36 bestehen, CI erzeugt alle neu; Phase 5 plant G37–G41 |
-| Letzte/nächste Meldung | **P5-1** (Plan Phase 5) / P5-2 |
-| Sammelliste | nächste freie Nummer **65**; offen für Nico: 24 (Rechnername im Gerätenamen) |
+| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu |
+| Letzte/nächste Meldung | **P5-6** (Ende Phase 5) / P6-1 |
+| Sammelliste | nächste freie Nummer **74**; offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46, 56, 73 |
 | Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Bleibende Regeln“ (Regel A) |
 
 ## 4. So arbeitet der neue Chat
