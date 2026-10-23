@@ -114,29 +114,7 @@ public sealed class Einstellungen
         var temp = _pfad + ".tmp";
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_pfad)!);
-            var optionen = new FileStreamOptions
-            {
-                Mode = FileMode.Create,
-                Access = FileAccess.Write,
-                Share = FileShare.None,
-            };
-            if (!OperatingSystem.IsWindows())
-            {
-                optionen.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-            }
-            using (var datei = new FileStream(temp, optionen))
-            {
-                if (!OperatingSystem.IsWindows())
-                {
-                    // falls .tmp schon da war (dann gilt UnixCreateMode nicht)
-                    File.SetUnixFileMode(datei.SafeFileHandle, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
-                var text = werte.ToJsonString(new JsonSerializerOptions { WriteIndented = true, IndentSize = 2 });
-                var bytes = new UTF8Encoding(false).GetBytes(text);
-                datei.Write(bytes);
-                datei.Flush(true);
-            }
+            Schreiben(temp, werte);
             File.Move(temp, _pfad, true);
             return true;
         }
@@ -149,6 +127,97 @@ public sealed class Einstellungen
             catch (Exception f) when (f is IOException or UnauthorizedAccessException)
             {
             }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Werte nach &lt;datei&gt; schreiben (eingerueckt, UTF-8 ohne BOM), unter Linux/macOS nur fuer das
+    /// eigene Konto lesbar (0600, auch wenn die Datei schon da war), auf die Platte bringen.
+    /// Wirft IOException bzw. UnauthorizedAccessException.
+    /// </summary>
+    private void Schreiben(string datei, JsonObject werte)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_pfad)!);
+        var optionen = new FileStreamOptions
+        {
+            Mode = FileMode.Create,
+            Access = FileAccess.Write,
+            Share = FileShare.None,
+        };
+        if (!OperatingSystem.IsWindows())
+        {
+            optionen.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        }
+        using var strom = new FileStream(datei, optionen);
+        if (!OperatingSystem.IsWindows())
+        {
+            // falls die Datei schon da war (dann gilt UnixCreateMode nicht)
+            File.SetUnixFileMode(strom.SafeFileHandle, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        var text = werte.ToJsonString(new JsonSerializerOptions { WriteIndented = true, IndentSize = 2 });
+        strom.Write(new UTF8Encoding(false).GetBytes(text));
+        strom.Flush(true);
+    }
+
+    // -- Phase 5 BE2: Hilfsdatei fuer "Alles ersetzen" (fisi_sicherung _settings_temp, remove_stale_temp)
+
+    /// <summary>SETTINGS_TEMP_SUFFIX: Hilfsdatei neben einstellungen.json.</summary>
+    public const string HilfsdateiEndung = ".sicherung.tmp";
+
+    public string Hilfsdatei => _pfad + HilfsdateiEndung;
+
+    /// <summary>
+    /// remove_stale_temp: Hilfsdatei eines abgebrochenen "Alles ersetzen" loeschen (beim Start und vor
+    /// dem naechsten Schreiben). Sie enthaelt den Zugangsschluessel; nachgeholt wird sie nie.
+    /// </summary>
+    public void HilfsdateiEntfernen()
+    {
+        try
+        {
+            File.Delete(Hilfsdatei);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// _settings_temp: alte Hilfsdatei loeschen, Werte in die Hilfsdatei schreiben (0600, auf der Platte).
+    /// Ist die vorhandene einstellungen.json nicht lesbar, wird nichts geschrieben (Rueckgabe false,
+    /// wie <see cref="Speichern"/>). Scheitert das Schreiben: Hilfsdatei entfernt, Ausnahme weiter.
+    /// </summary>
+    public bool HilfsdateiSchreiben(JsonObject werte)
+    {
+        HilfsdateiEntfernen();
+        if (Lesen().Gesperrt)
+        {
+            NurAnzeige = true;
+            return false;
+        }
+        try
+        {
+            Schreiben(Hilfsdatei, werte);
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            HilfsdateiEntfernen();
+            throw;
+        }
+    }
+
+    /// <summary>os.replace(Hilfsdatei, einstellungen.json); scheitert es, Hilfsdatei entfernt, Rueckgabe false.</summary>
+    public bool HilfsdateiEinsetzen()
+    {
+        try
+        {
+            File.Move(Hilfsdatei, _pfad, true);
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            HilfsdateiEntfernen();
             return false;
         }
     }

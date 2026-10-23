@@ -269,6 +269,36 @@ public static class Loeschmarken
         return ergebnis;
     }
 
+    /// <summary>
+    /// Phase 5 BE2, replace_lifts: Aufhebungen nach "Alles ersetzen". Je Marke, die vor dem Ersetzen
+    /// gueltig und spaeter war als die der Sicherung (oder die Sicherung hat keine), [alt, neu]
+    /// vereinigt mit einer frueheren Aufhebung dieses Geraets (_union_lift). Nur diese Schluessel.
+    /// </summary>
+    public static Dictionary<string, string[]> ErsetzenAufhebungen(IReadOnlyDictionary<string, object?> alteMarken,
+        IReadOnlyDictionary<string, object?> alteAufhebungen, IReadOnlyDictionary<string, object?> neueMarken)
+    {
+        var ergebnis = new Dictionary<string, string[]>();
+        foreach (var k in Schluessel)
+        {
+            var neuWert = neueMarken.GetValueOrDefault(k);
+            if (alteMarken.GetValueOrDefault(k) is not string alt || Lesen(alt) is null)
+            {
+                continue;
+            }
+            var neu = "";
+            if (Wahr(neuWert))
+            {
+                if (Lesen(neuWert) is null || Reihenfolge(alt, (string)neuWert!) <= 0)
+                {
+                    continue;
+                }
+                neu = (string)neuWert!;
+            }
+            ergebnis[k] = Vereinigen([alt, neu], Paar(alteAufhebungen.GetValueOrDefault(k)))!;
+        }
+        return ergebnis;
+    }
+
     /// <summary>_lifted: die Marke nach der Aufhebung (null = keine Marke mehr).</summary>
     public static object? Aufgehoben(object? wert, string[]? paar, bool zone = true)
     {

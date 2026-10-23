@@ -10,7 +10,7 @@ namespace Lernplattform.Core.Texte;
 public static class RuecksicherungTexte
 {
     /// <summary>T1 Knopf.</summary>
-    public const string Knopf = "Sicherung für die alte App erstellen";
+    public const string Knopf = "Sicherung erstellen";                                   // (Py) BTN_CREATE (Frage 2: ersetzt „Sicherung für die alte App erstellen“)
 
     /// <summary>T2 Erklärung unter dem Knopf.</summary>
     public const string Erklaerung = "Erstellt eine Sicherungsdatei, die die alte Python-Version der Lernplattform (0.63.2) über „Sicherung zusammenführen“ einlesen kann. Dein Lernstand hier wird dabei nicht verändert. Hast du hier einen Verlauf geleert oder etwas zurückgesetzt, entfernt das Zusammenführen in der alten App dort ebenfalls ältere Einträge.";

@@ -25,6 +25,7 @@ internal static class AbsturzProbe
     public const string ArtProjektfelderViele = "projektfelder_viele";
     public const string ArtKlausurFesthalten = "klausur_festhalten";
     public const string ArtEinrichten = "einrichten";
+    public const string ArtErsetzen = "ersetzen";
     public const string Fertig = "FERTIG";
     private const string Variable = "LERNPLATTFORM_ABSTURZPROBE";
     private const string Argumente = "LERNPLATTFORM_ABSTURZPROBE_ARGUMENTE";
@@ -96,6 +97,22 @@ internal static class AbsturzProbe
                     };
                     var daten = Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]);
                     Uebernahme.Uebernehmen(new Lernstand(args[0]), daten, Umbenennungen.Laden(Pfade.Inhalte));
+                    Console.Out.WriteLine(Fertig);
+                    Console.Out.Flush();
+                    break;
+                case ArtErsetzen:
+                    // Phase 5 BE2: "Alles ersetzen" haelt am Haltepunkt args[3] an
+                    Wiederherstellung.Haltepunkt = punkt =>
+                    {
+                        if (punkt == args[3])
+                        {
+                            Console.Out.WriteLine(Halt);
+                            Console.Out.Flush();
+                            Thread.Sleep(Timeout.Infinite);
+                        }
+                    };
+                    Wiederherstellung.Ersetzen(new Lernstand(args[0]), Sicherungsinhalt.Lesen(File.ReadAllBytes(args[1])),
+                        new Einstellungen(args[2]), "A 0.10.0", "PC");
                     Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;
