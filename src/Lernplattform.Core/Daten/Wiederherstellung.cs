@@ -53,6 +53,12 @@ public sealed record Sicherungsinhalt(Austausch Daten, JsonObject Einstellungen,
 }
 
 /// <summary>
+/// Ergebnis von „Alles ersetzen“ (Weisung P5-4 A1): Pfad der Sicherheitskopie und ob das Tagesziel der
+/// Sicherung in einstellungen.json angekommen ist (false: Einstellungen nicht lesbar oder Umbenennen gescheitert).
+/// </summary>
+public sealed record ErsetzenErgebnis(string Kopie, bool TageszielUebernommen);
+
+/// <summary>
 /// Phase 5 BE2: "Alles ersetzen" wie fisi_sicherung.replace_all (Python v0.63.2). Der Lernstand
 /// des Geraets wird durch die Sicherung ersetzt: dieselben Eintraege mit derselben uid, dieselben
 /// Loeschmarken, dazu das Tagesziel. Vorher kommt der jetzige Stand als Sicherheitskopie
@@ -60,12 +66,6 @@ public sealed record Sicherungsinhalt(Austausch Daten, JsonObject Einstellungen,
 /// Datenbank). Geraetebezogenes (Farben, Zugangsschluessel) bleibt. Alle Tabellen werden in
 /// einer Buchung geleert und gefuellt; die Nummern (id) zaehlen weiter (AUTOINCREMENT).
 /// </summary>
-/// <summary>
-/// Ergebnis von „Alles ersetzen“ (Weisung P5-4 A1): Pfad der Sicherheitskopie und ob das Tagesziel der
-/// Sicherung in einstellungen.json angekommen ist (false: Einstellungen nicht lesbar oder Umbenennen gescheitert).
-/// </summary>
-public sealed record ErsetzenErgebnis(string Kopie, bool TageszielUebernommen);
-
 public static class Wiederherstellung
 {
     public const string Praefix = "vor_wiederherstellung_";   // SAFETY_PREFIX

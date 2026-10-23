@@ -112,7 +112,7 @@ public static class SicherungTexte
     /// replace_message (Dateiname am Handy mit Umbruchstellen wie bei der Übernahme); kam das Tagesziel
     /// nicht an, folgt in einer eigenen Zeile (W13).
     /// </summary>
-    public static string ErsetztMeldung(Sicherungsinhalt sicherung, string kopieName, bool tageszielUebernommen = true) =>
+    public static string ErsetztMeldung(Sicherungsinhalt sicherung, string kopieName, bool tageszielUebernommen) =>
         Beschriftungen.Einsetzen(Ersetzt, sicherung.ErstelltText, kopieName) + (tageszielUebernommen ? "" : "\n" + TageszielNichtUebernommen);
 
     /// <summary>kept_deleted_text.</summary>

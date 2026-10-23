@@ -103,7 +103,7 @@ public class WiederherstellungTests
         Assert.Equal(fall.GetProperty("kopie_name").GetString(), System.IO.Path.GetFileName(kopie));
         var kopieIst = Entpackt(kopie);
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(fall.GetProperty("kopie").GetRawText()), kopieIst), kopieIst!.ToJsonString());
-        Assert.Equal(fall.GetProperty("meldung").GetString(), SicherungTexte.ErsetztMeldung(Sicherung(fall.GetProperty("datei").GetString()!), System.IO.Path.GetFileName(kopie)));
+        Assert.Equal(fall.GetProperty("meldung").GetString(), SicherungTexte.ErsetztMeldung(Sicherung(fall.GetProperty("datei").GetString()!), System.IO.Path.GetFileName(kopie), true));
         // Kontrollfehler "Nummern neu ab 1": nach zweimal Ersetzen zaehlen die Nummern weiter
         if (name.EndsWith("_zweimal", StringComparison.Ordinal))
         {
@@ -394,8 +394,8 @@ public class WiederherstellungTests
         var nachher = Fall("a_gefuellt").GetProperty("nachher");
         Assert.Equal(VergleichsHilfe.Stand(nachher), VergleichsHilfe.Stand(a.Pfad, nachher));   // Lernstand trotzdem ersetzt
         var meldung = SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", ergebnis.TageszielUebernommen);
-        Assert.EndsWith("\n" + SicherungTexte.TageszielNichtUebernommen, meldung);
-        Assert.StartsWith(SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung"), meldung);
+        // genau die Python-Rueckmeldung, dann eine eigene Zeile mit W13 (Gegenpruefung A1: Gleichheit statt Anfang/Ende)
+        Assert.Equal(SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", true) + "\n" + SicherungTexte.TageszielNichtUebernommen, meldung);
     }
 
     /// <summary>
@@ -411,6 +411,7 @@ public class WiederherstellungTests
         {
             if (punkt == "vor-commit")
             {
+                Assert.True(File.Exists(a.Einstellungen.Hilfsdatei));   // Weg (b): geschrieben, erst das Einsetzen scheitert
                 File.Delete(a.Einstellungen.Pfad);
                 Directory.CreateDirectory(a.Einstellungen.Pfad);
                 File.WriteAllText(Path.Combine(a.Einstellungen.Pfad, "belegt"), "x");
@@ -429,7 +430,7 @@ public class WiederherstellungTests
         Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
         var nachher = Fall("a_gefuellt").GetProperty("nachher");
         Assert.Equal(VergleichsHilfe.Stand(nachher), VergleichsHilfe.Stand(a.Pfad, nachher));
-        Assert.EndsWith("\n" + SicherungTexte.TageszielNichtUebernommen,
+        Assert.Equal(SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", true) + "\n" + SicherungTexte.TageszielNichtUebernommen,
             SicherungTexte.ErsetztMeldung(Sicherung("a"), "k.fisisicherung", ergebnis.TageszielUebernommen));
         Directory.Delete(a.Einstellungen.Pfad, true);
     }
