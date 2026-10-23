@@ -179,6 +179,9 @@ def sammeln_desktop(rid, ordner, aus, paketdateien):
     dateien, pakete, ohne = {}, {}, []
     for pfad in sorted(set(namen)):
         name = pfad.rsplit("/", 1)[-1].rsplit(":", 1)[-1]
+        if ":" in pfad and name.endswith(".__symlink"):
+            # vpk (macOS) legt Verknuepfungen im Paket als <Name>.__symlink ab; sie zaehlt wie die Datei selbst
+            name = name[:-len(".__symlink")]
         im_paket = ":" in pfad
         if (name in eigen and (im_paket or ("/" not in pfad and name not in NUR_IM_PAKET))) or (
                 "/" not in pfad and name.endswith("-AppImage.tar.gz")):

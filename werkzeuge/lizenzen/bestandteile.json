@@ -10,7 +10,7 @@
   "zusaetze": [
     {"id": "Velopack-Programme", "version": "1.2.161", "plattformen": ["win-x64", "linux-x64", "osx-arm64"], "lizenz": "MIT", "quelle": "https://github.com/velopack/velopack (Tag 1.2.161)",
      "beschreibung": "Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt",
-     "dateien": ["Squirrel.exe", "Update.exe", "Setup.exe", "Fachinformatiker-Lernplattform_ExecutionStub.exe",
+     "dateien": ["Squirrel.exe", "Update.exe", "Setup.exe", "Fachinformatiker-Lernplattform_ExecutionStub.exe", "Fachinformatiker Lernplattform_ExecutionStub.exe",
                  "Fachinformatiker-Lernplattform.exe", "UpdateNix", "UpdateMac", "Fachinformatiker-Lernplattform-win-Setup.exe"],
      "texte": ["Velopack_MIT.txt", "Velopack_Rust_1.2.161.txt"]},
     {"id": "AppImage type2-runtime", "version": "vpk 1.2.161", "plattformen": ["linux-x64"], "lizenz": "MIT", "quelle": "https://github.com/AppImage/type2-runtime",

@@ -329,9 +329,10 @@ jobs:
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)
-    # nur Stufe voll; wartet auf pakete, weil es am Ende den Release-Entwurf zusammenstellt
+    # nur Stufe voll; wartet auf pakete, weil es am Ende den Release-Entwurf zusammenstellt. Die APK
+    # baut und prueft es auch bei rotem pakete-Teil (!cancelled), nur das Zusammenstellen braucht pakete gruen.
     needs: pakete
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    if: "!cancelled() && ((github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))))"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -376,11 +377,15 @@ jobs:
           PYTHON: python
         run: bash werkzeuge/release/baue_release.sh android release
       - uses: actions/download-artifact@v8
+        if: needs.pakete.result == 'success'
         with:
           pattern: release-*-*
           path: release
       - name: Release zusammenstellen und pruefen (T2, Lizenzliste)
         run: |
+          if [ "${{ needs.pakete.result }}" != "success" ]; then
+            echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
+          fi
           ls -la release
           python -I werkzeuge/release/release.py zusammen release release/entwurf
       - uses: actions/upload-artifact@v7
