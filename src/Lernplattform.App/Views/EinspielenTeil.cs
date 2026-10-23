@@ -50,6 +50,13 @@ public sealed class EinspielenTeil
 
     private static Task Hinweis(string text) => Dialog.Zeigen(SicherungTexte.Titel, text, Dialog.Ok);
 
+    /// <summary>
+    /// Rueckmeldung mit dem Dateinamen der Kopie: der Name hat am PC keine Umbruchstelle (kopierbar, P2-6 A3),
+    /// deshalb wird bei grosser Schrift nur zu langer Text bis zur Stufe „Normal“ kleiner (WortText, wie W3).
+    /// </summary>
+    public static Task<int> MeldungMitDatei(string text) =>
+        Dialog.Zeigen(SicherungTexte.Titel, new WortText(text, "Normal", FontWeight.Normal, "Pinsel.text"), Dialog.Ok);
+
     private void Zeige(string text)
     {
         _zustand.Text = text;
@@ -175,7 +182,7 @@ public sealed class EinspielenTeil
         }
         // Ab hier ist zusammengefuehrt: ein Fehler beim Neu-Zeigen aendert die Rueckmeldung nicht (Gegenpruefung W1 Fund 1)
         Nachher();
-        await Hinweis(SicherungTexte.Zusammengefuehrt(bericht,
+        await MeldungMitDatei(SicherungTexte.Zusammengefuehrt(bericht,
             bericht.Sicherungsdatei is { } datei ? Geraetetexte.KopieName(Path.GetFileName(datei), !Android) : null));
         await NurProtokollAsync(AusbildungTeil.VergleichenAsync);
     }
@@ -221,7 +228,7 @@ public sealed class EinspielenTeil
             await Hinweis(fehlerText ?? SicherungTexte.EinspielenGescheitert);
             return;
         }
-        await Hinweis(SicherungTexte.ErsetztMeldung(sicherung, Geraetetexte.KopieName(Path.GetFileName(kopie), !Android)));
+        await MeldungMitDatei(SicherungTexte.ErsetztMeldung(sicherung, Geraetetexte.KopieName(Path.GetFileName(kopie), !Android)));
         await NurProtokollAsync(AusbildungTeil.VergleichenAsync);
     }
 
