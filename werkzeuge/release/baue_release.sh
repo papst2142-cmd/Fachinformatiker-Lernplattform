@@ -12,7 +12,9 @@
 #   LERNPLATTFORM_RELEASE_STRENG=1 (release.yml): ohne Release-Schluessel oder mit anderem Fingerabdruck
 #   als werkzeuge/release/android_fingerabdruck.txt ist das ein FEHLER.
 # Braucht: dotnet, vpk 1.2.161 (Desktop), unter Linux squashfs-tools, fuer Android den Workload.
-set -euo pipefail
+set -Eeuo pipefail
+# kein stummer Abbruch: Zeile und Befehl nennen (Befehle enthalten nie ein Passwort, nur env:-Verweise)
+trap 'echo "FEHLER: Abbruch in Zeile $LINENO (Rueckgabe $?): $BASH_COMMAND"' ERR
 TEIL="$1"
 mkdir -p "$2"
 AUS="$(cd "$2" && pwd)"
@@ -98,8 +100,14 @@ android() {
   if [ "${#apk[@]}" -ne 1 ] || [ ! -f "${apk[0]}" ]; then echo "FEHLER: nicht genau eine signierte APK"; exit 1; fi
   bt="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)"
   "$bt/apksigner" verify --print-certs "${apk[0]}" | tr -d '\r' > "$ARBEIT/zertifikat.txt"
+  cat "$ARBEIT/zertifikat.txt"
   local fp soll
-  fp="$(grep -m1 "Signer #1 certificate SHA-256 digest:" "$ARBEIT/zertifikat.txt" | sed 's/.*digest: *//' | tr 'A-F' 'a-f')"
+  # apksigner schreibt je Signaturschema eine Zeile ("Signer #1 certificate ..." oder "V3.0 Signer: certificate ...");
+  # alle muessen denselben Fingerabdruck nennen
+  fp="$(sed -n 's/.*certificate SHA-256 digest: *//p' "$ARBEIT/zertifikat.txt" | tr 'A-F' 'a-f' | sort -u)"
+  if [ -z "$fp" ] || [ "$(printf '%s\n' "$fp" | wc -l)" -ne 1 ]; then
+    echo "FEHLER: nicht genau ein Zertifikat-Fingerabdruck in der APK: $fp"; exit 1
+  fi
   # sed statt grep: eine Datei nur aus Kommentaren ist kein Fehler (grep gaebe 1, set -e braeche stumm ab)
   soll="$(sed -e '/^#/d' "$WURZEL/werkzeuge/release/android_fingerabdruck.txt" | tr -d ' \r\n:' | tr 'A-F' 'a-f')"
   echo "Android: Fingerabdruck des Zertifikats $fp"
