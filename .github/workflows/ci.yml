@@ -387,7 +387,11 @@ jobs:
             echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
           fi
           ls -la release
-          python -I werkzeuge/release/release.py zusammen release release/entwurf
+          rc=0
+          python -I werkzeuge/release/release.py zusammen release release/entwurf || rc=$?
+          # Release-Text ins Protokoll (Entwurf fuer die Meldung, Artefakte sind nicht immer abrufbar)
+          if [ -f release/release.md ]; then echo "===== ANFANG release.md ====="; cat release/release.md; echo "===== ENDE release.md ====="; fi
+          exit "$rc"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
