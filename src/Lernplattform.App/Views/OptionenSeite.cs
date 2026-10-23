@@ -47,6 +47,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     private ComboBox? _rpLernfeld;
     private List<string> _lernfelder = [];
     private TextBlock? _rpFehler;
+    private Action? _tageszielNeu;
 
     public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null)
     {
@@ -157,6 +158,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Ausbildung => Ausbildung(),
         Optionen.Rundgang => RundgangUndHilfe(),
         Optionen.Lerninhalte => Lerninhalte(bereich),
+        Optionen.Loeschen => Loeschen(),
+        Optionen.Datenbank => Datenbank(),
         _ => Platzhalterzeile(),
     };
 
@@ -230,6 +233,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
         }
         RahmenplanNeu();
+        _tageszielNeu?.Invoke();
     }
 
     private async Task WarnungAsync(string wert)
@@ -667,6 +671,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
     {
         var panel = new StackPanel { Spacing = 10 };
         var ziel = Einstellungen.Ziel(Zustand.Werte);
+        var schalterListe = new List<(string Schluessel, ToggleSwitch Schalter)>();
         foreach (var (schluessel, text) in TageszielTexte.Schalter)
         {
             if (schluessel == "erinnerung_an")
@@ -697,6 +702,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                 }
             };
             panel.Children.Add(schalter);
+            schalterListe.Add((schluessel, schalter));
         }
         var anzahl = new NumericUpDown
         {
@@ -733,7 +739,108 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         });
         panel.Children.Add(Schrift.Text(TageszielTexte.Schalter[2].Text + ": " + Beschriftungen.Platzhalter, "Klein", FontWeight.Normal, "Pinsel.muted"));
         panel.Children.Add(Schrift.Text(TageszielTexte.HinweisGezaehlt, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Phase 5 BE3 (_after_restore): nach „Alles ersetzen“ die Werte aus der Sicherung zeigen
+        _tageszielNeu = () =>
+        {
+            var jetzt = Einstellungen.Ziel(Zustand.Werte);
+            _setzen = true;
+            foreach (var (schluessel, schalter) in schalterListe)
+            {
+                schalter.IsChecked = schluessel == "ziel_an" ? jetzt.ZielAn : jetzt.SerieAn;
+            }
+            anzahl.Value = jetzt.ZielAnzahl;
+            _setzen = false;
+        };
         return panel;
+    }
+
+    // -- Löschen und zurücksetzen (Phase 5 BE4, _build_loeschen) -------------
+
+    private Control Loeschen()
+    {
+        var panel = new StackPanel { Spacing = 6 };
+        void Teil(string titel, string text, Control knopf, bool erster)
+        {
+            var kopf = Abschnitt(titel);
+            if (!erster)
+            {
+                kopf.Margin = new Thickness(0, 14, 0, 0);
+            }
+            panel.Children.Add(kopf);
+            panel.Children.Add(Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+            knopf.Margin = new Thickness(0, 6, 8, 0);
+            knopf.HorizontalAlignment = HorizontalAlignment.Left;
+            panel.Children.Add(knopf);
+        }
+        var alles = Schrift.Gefahrknopf(LoeschenTexte.LerndatenKnopf);
+        alles.Click += async (_, _) => await LoeschenAsync(LoeschenTexte.LerndatenFrageTitel, LoeschenTexte.LerndatenFrage,
+            s => s.AllesLoeschen(), LoeschenTexte.LerndatenErfolgTitel, LoeschenTexte.LerndatenErfolg);
+        Teil(LoeschenTexte.Lerndaten, LoeschenTexte.LerndatenText, alles, true);
+        var historie = Schrift.Gefahrknopf(LoeschenTexte.HistorieKnopf);
+        historie.Click += async (_, _) => await LoeschenAsync(LoeschenTexte.HistorieFrageTitel, LoeschenTexte.HistorieFrage,
+            s => s.HistorieLoeschen(), LoeschenTexte.HistorieErfolgTitel, LoeschenTexte.HistorieErfolg);
+        Teil(LoeschenTexte.Historie, LoeschenTexte.HistorieText, historie, false);
+        // Spielstand und Bestenliste kommen mit dem Spiel (Phase 7)
+        Teil(LoeschenTexte.Spielstand, Beschriftungen.Platzhalter, new Border(), false);
+        Teil(LoeschenTexte.Bestenliste, Beschriftungen.Platzhalter, new Border(), false);
+        return panel;
+    }
+
+    /// <summary>
+    /// clear_history / reset_all mit _delete_checked: Rueckfrage, loeschen; ein Datenbankfehler
+    /// waehrenddessen wird gesammelt und als genau ein Fenster gezeigt („Es wurde nichts gelöscht.“),
+    /// sonst Bestaetigung mit clock_fix_text und Abgleich wie nach dem Lernen (notify_progress).
+    /// </summary>
+    private static async Task LoeschenAsync(string titel, string frage, Func<LernstandSchreiber, bool> loeschen, string erfolgTitel, string erfolg)
+    {
+        if (await Dialog.Zeigen(titel, frage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        {
+            return;
+        }
+        var schreiber = Zustand.Schreiber;
+        var gesammelt = new List<string>();
+        var vorher = Zustand.Fehlermeldung;
+        Zustand.Fehlermeldung = gesammelt.Add;
+        bool geloescht;
+        try
+        {
+            geloescht = loeschen(schreiber);
+        }
+        finally
+        {
+            Zustand.Fehlermeldung = vorher;
+        }
+        if (!geloescht)
+        {
+            await Dialog.Zeigen(titel, LoeschenTexte.NichtsGeloeschtMit(gesammelt), Dialog.Ok);
+            return;
+        }
+        AbgleichDienst.NachDemLernen();
+        await Dialog.Zeigen(erfolgTitel, LoeschenTexte.MitUhrHinweis(erfolg, schreiber.LetzteUhrkorrektur), Dialog.Ok);
+    }
+
+    // -- Datenbank (Phase 5 BE4, nur PC, _build_datenbank) --------------------
+
+    private static Control Datenbank()
+    {
+        var pfad = new TextBox
+        {
+            Text = Zustand.Lernstand.Pfad,
+            IsReadOnly = true,
+            TextWrapping = TextWrapping.Wrap,
+            FontFamily = new FontFamily("monospace"),
+        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
+        Avalonia.Automation.AutomationProperties.SetName(pfad, LoeschenTexte.DatenbankTitel);
+        return new StackPanel
+        {
+            Spacing = 8,
+            Children =
+            {
+                Schrift.Text(LoeschenTexte.DatenbankTitel, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
+                pfad,
+                Schrift.Text(LoeschenTexte.DatenbankHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"),
+            },
+        };
     }
 
     // -- Diagnose ------------------------------------------------------------

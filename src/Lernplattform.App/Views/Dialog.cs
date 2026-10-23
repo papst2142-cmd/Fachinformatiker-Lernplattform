@@ -30,7 +30,17 @@ public static class Dialog
     public static Task<int> Zeigen(string titel, Control inhalt, params string[] knoepfe) => Zeigen(titel, inhalt, null, knoepfe);
 
     /// <summary>W4: wie oben; vorbereiten bekommt die Knoepfe (z. B. "Speichern" erst nach einer Wahl freigeben).</summary>
-    public static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, params string[] knoepfe)
+    public static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, params string[] knoepfe) =>
+        Zeigen(titel, inhalt, vorbereiten, -1, knoepfe);
+
+    /// <summary>
+    /// Phase 5: Rueckfrage mit Vorgabe (askyesno(default="no")): Eingabe/Leertaste waehlt den Knopf
+    /// mit der Nummer vorgabe, nicht den ersten.
+    /// </summary>
+    public static Task<int> Rueckfrage(string titel, string text, int vorgabe, params string[] knoepfe) =>
+        Zeigen(titel, Schrift.Text(text), null, vorgabe, knoepfe);
+
+    private static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, int vorgabe, string[] knoepfe)
     {
         var fertig = new TaskCompletionSource<int>();
         if (_ebene is not { } ebene)
@@ -79,8 +89,9 @@ public static class Dialog
         ebene.Children.Add(fenster);
         ebene.IsVisible = true;
         Offen = fenster;
-        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => reihe.Children.FirstOrDefault(k => k.IsEnabled)?.Focus());
+        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen, Phase 5: die Vorgabe
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            (vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled))?.Focus());
         return fertig.Task;
     }
 

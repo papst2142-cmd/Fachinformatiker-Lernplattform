@@ -279,6 +279,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 5, W1: Sicherung, Loeschen, Datenbank und ihre Fenster (gleiche Zeitgrenze wie W4)
+                await foreach (var ansichtName in P5Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -298,6 +306,7 @@ public static partial class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
         Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
         Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
+        Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis"));
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
@@ -1476,6 +1485,13 @@ public static partial class AutoMessung
                         }
                     }
                     await foreach (var name in W4Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P5Ansichten(ansicht))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {

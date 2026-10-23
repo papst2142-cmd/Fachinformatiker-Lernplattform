@@ -9,10 +9,13 @@ using Lernplattform.Programm;
 namespace Lernplattform.Views;
 
 /// <summary>
-/// Phase 2, L9: „Sicherung für die alte App erstellen“ in Optionen &gt; Sicherung (Weisung P2-11).
+/// Phase 2, L9: „Sicherung erstellen“ in Optionen &gt; Sicherung (Weisung P2-11; Phase 5 Frage 2:
+/// ein Knopf statt „Sicherung für die alte App erstellen“, Knopf und Zustandszeile setzt
+/// SicherungTeil zusammen).
 /// Speichern-Dialog mit Vorschlag wie default_name, Wartehinweis wie Python, Datei wie
 /// create_backup (Core.Daten.Ruecksicherung). PC: atomar am gewaehlten Ort. Handy: atomar im
-/// App-Ordner schreiben und pruefen, dann an den gewaehlten Ort kopieren (A2). Fehler: T3/T4,
+/// App-Ordner schreiben und pruefen, dann an den gewaehlten Ort kopieren (A2) und dort zurueck-
+/// lesen (Phase 5 BE1, Sammelliste 26: Laenge und Inhalt gleich, sonst T4). Fehler: T3/T4,
 /// Erfolg „Gespeichert: &lt;Dateiname&gt;“. Der Lernstand wird nur gelesen.
 /// </summary>
 public sealed class RuecksicherungTeil
@@ -23,26 +26,16 @@ public sealed class RuecksicherungTeil
     private readonly TextBlock _zustand;
     private bool _laeuft;
 
-    public RuecksicherungTeil(Control besitzer)
+    public RuecksicherungTeil(Control besitzer, TextBlock zustand)
     {
         _besitzer = besitzer;
-        _knopf = Schrift.Knopf(RuecksicherungTexte.Knopf);
+        // Python: NeoButton(BTN_CREATE, kind="primary")
+        _knopf = Schrift.Knopf(RuecksicherungTexte.Knopf, betont: true);
         _knopf.Click += async (_, _) => await AblaufAsync();
-        _zustand = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
-        _zustand.IsVisible = false;
-        Teil = new StackPanel
-        {
-            Spacing = 4,
-            Children =
-            {
-                new WrapPanel { Children = { _knopf } },
-                Schrift.Text(RuecksicherungTexte.Erklaerung, "Normal", FontWeight.Normal, "Pinsel.text_dim"),
-                _zustand,
-            },
-        };
+        _zustand = zustand;
     }
 
-    public Control Teil { get; }
+    public Button Knopf => _knopf;
 
     private void Zeige(string text)
     {
@@ -120,6 +113,8 @@ public sealed class RuecksicherungTeil
         {
             var arbeitsdatei = Path.Combine(Ablage.Datenordner(), "ruecksicherung" + Ruecksicherung.Endung);
             await Ruecksicherung.SpeichernUeberAsync(arbeitsdatei, bytes, datei.OpenWriteAsync);
+            // Phase 5 BE1 (Sammelliste 26): die Kopie am gewaehlten Ort zuruecklesen, erst dann "Gespeichert"
+            await Ruecksicherung.ZuruecklesenAsync(bytes, datei.OpenReadAsync);
         }
         Zeige(RuecksicherungTexte.Erfolg(datei.Name));
         await AusbildungTeil.VergleichenAsync();          // W4: Vergleich des Merkers wie nach Abgleich und Uebernahme
