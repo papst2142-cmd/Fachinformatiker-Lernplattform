@@ -75,6 +75,10 @@ jobs:
       - name: Sicherung mit Fachrichtung in Python 0.63.2 einlesen
         if: runner.os == 'Linux'
         run: python3 -I werkzeuge/vergleich/pruefe_ausbildung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ausbildung
+      # Phase 5, W1 (Plan Risiko 1): Stand nach "Alles ersetzen" der C#-Linie, unabhaengig mit Python 0.63.2 geprueft
+      - name: Alles ersetzen mit Python 0.63.2 pruefen
+        if: runner.os == 'Linux'
+        run: python3 -I werkzeuge/vergleich/pruefe_wiederherstellung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_wiederherstellung
       - name: Desktop bauen
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen
@@ -233,6 +237,9 @@ jobs:
           # Phase 4 W4 (Weisung P4-10/P4-11): G35 Hilfe aus Python und aus dem unabhaengigen Skript
           python3 -I werkzeuge/vergleich/erzeuge_hilfe.py python-linie neu/hilfe.json
           python3 -I werkzeuge/vergleich/pruefe_hilfe.py neu/hilfe_skript.json
+          # Phase 5 W1 (Weisung P5-3): G37 Alles ersetzen und Zusammenfuehren, G40 Loeschen und Marke mit Uhrabweichung
+          python3 -I werkzeuge/vergleich/erzeuge_sicherung_ersetzen.py python-linie tests/Vergleich/uebernahme.json neu/sicherung_ersetzen.json
+          python3 -I werkzeuge/vergleich/erzeuge_loeschen.py python-linie tests/Vergleich/uebernahme.json neu/loeschen.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -250,7 +257,8 @@ jobs:
                        "rechner_zahlen.json", "subnetting.json", "rechner.json",
                        "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
-                       "pruefung.json", "fachrichtungen.json", "hilfe.json"):
+                       "pruefung.json", "fachrichtungen.json", "hilfe.json",
+                       "sicherung_ersetzen.json", "loeschen.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

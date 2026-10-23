@@ -568,11 +568,17 @@ public partial class MainView : UserControl
     private Control BaueSicherung()
     {
         var panel = new StackPanel { Spacing = 8 };
+        // Phase 5 BE1/BE3 (_build_sicherung): Hilfe, dann [Sicherung erstellen] [Sicherung einspielen]
+        panel.Children.Add(Schrift.Text(Core.Texte.SicherungTexte.Hilfe + " " + Core.Texte.SicherungTexte.HilfeAlteApp,
+            "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+        var zustand = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        zustand.IsVisible = false;
+        var erstellen = new RuecksicherungTeil(panel, zustand);
+        var einspielen = new EinspielenTeil(panel, zustand, NachAbgleich);
+        panel.Children.Add(new WrapPanel { Margin = new Thickness(0, 4, 0, 0), Children = { erstellen.Knopf, einspielen.Knopf } });
+        panel.Children.Add(zustand);
         // Phase 2, L5: Lernstand übernehmen (Sicherung, Abgleich-Datei, alte Datenbank)
         panel.Children.Add(new UebernahmeTeil(panel).Teil);
-        // Phase 2, L9: Sicherung für die alte App erstellen
-        panel.Children.Add(new RuecksicherungTeil(panel).Teil);
-        panel.Children.Add(Schrift.Text(Core.Texte.Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
 
         var kopieren = new Button { Content = "Ergebnis kopieren" };
         kopieren.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");

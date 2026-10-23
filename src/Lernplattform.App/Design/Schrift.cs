@@ -113,4 +113,13 @@ public static class Schrift
         beschriftung.Farbe(TextBlock.ForegroundProperty, betont ? "Pinsel.on_accent" : "Pinsel.text");
         return knopf;
     }
+
+    /// <summary>Phase 5 BE4: Knopf fuer unwiderrufliche Schritte (NeoButton kind="danger"): Verlauf "danger", helle Schrift.</summary>
+    public static Button Gefahrknopf(string text)
+    {
+        var knopf = Knopf(text);
+        knopf.Farbe(Button.BackgroundProperty, "Verlauf.danger").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
+        ((TextBlock)knopf.Content!).Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+        return knopf;
+    }
 }

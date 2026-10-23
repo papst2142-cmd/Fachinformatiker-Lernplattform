@@ -206,6 +206,7 @@ public partial class GeraetetexteTests
         ("Views/OptionenSeite.cs", "if (!Pc) // Termin beim Tippen", "Verhalten: Termin am Handy beim Tippen speichern, sobald gueltig (main.py 4484-4490, W4)"),
         ("Views/RundgangEbene.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RundgangEbene.cs", "var reihe = new KnopfReihe { EineZeile = Pc, Margin = new Thickness(0, 10, 0, 0) };", "Aufbau: Knopfzeile PC eine Zeile, wenn sie passt, sonst wie Handy Hauptknopf oben (main.py 5059-5066, W4)"),
+        ("Views/EinspielenTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter (Phase 5 BE3; nur als Argument fuer Geraetetexte)"),
         ("Views/RuecksicherungTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RuecksicherungTeil.cs", "if (!Android && pfad is not null)", "Technik: Speicherweg (Android ueber Datenstrom)"),
         ("Views/Seiten.cs", "foreach (var punkt in Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)))", "Seitentitel: PC-Wortlaut auf beiden Geraeten"),

@@ -94,6 +94,8 @@ public static class Zustand
 
     public static void Starten()
     {
+        // Phase 5 BE2 (remove_stale_temp): Hilfsdatei eines abgebrochenen „Alles ersetzen“ entfernen
+        Einstellungen.HilfsdateiEntfernen();
         DefektHinweis = Einstellungen.DefektHinweis();
         Werte = Einstellungen.Laden();
         Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
