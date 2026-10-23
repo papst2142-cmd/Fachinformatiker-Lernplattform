@@ -50,6 +50,10 @@ public sealed class Einstellungen
     private readonly string _pfad;
     private bool _defektGesehen;
 
+    // Phase 5 W2 (Risiko 5, Sammelliste 55): Lesen-Aendern-Schreiben nie gleichzeitig (Oberflaeche,
+    // Abgleich im Hintergrund, Schalter der Leistungsmessung), sonst ginge eine Aenderung verloren.
+    private static readonly object Schreibsperre = new();
+
     public Einstellungen(string? ordner = null)
     {
         _pfad = Path.Combine(ordner ?? Ablage.Datenordner(), DateiName);
@@ -255,7 +259,10 @@ public sealed class Einstellungen
             return null;
         }
         _defektGesehen = false;
-        Speichern(Laden());
+        lock (Schreibsperre)
+        {
+            Speichern(Laden());
+        }
         _defektGesehen = false;
         return (DefektTitel, DefektText);
     }
@@ -263,9 +270,30 @@ public sealed class Einstellungen
     /// <summary>Einen Wert setzen und sofort speichern (alle anderen Schluessel bleiben).</summary>
     public bool Setze(string schluessel, JsonNode? wert)
     {
-        var werte = Laden();
-        werte[schluessel] = wert;
-        return Speichern(werte);
+        lock (Schreibsperre)
+        {
+            var werte = Laden();
+            werte[schluessel] = wert;
+            return Speichern(werte);
+        }
+    }
+
+    /// <summary>
+    /// Mehrere Werte in einem Schritt aendern (Laden, Aendern, Speichern unter derselben Sperre wie
+    /// <see cref="Setze"/>). false: nicht lesbar (NurAnzeige) oder nicht gespeichert, Datei unveraendert.
+    /// </summary>
+    public bool Aendern(Action<JsonObject> aenderung)
+    {
+        lock (Schreibsperre)
+        {
+            var werte = Laden();
+            if (NurAnzeige)
+            {
+                return false;
+            }
+            aenderung(werte);
+            return Speichern(werte);
+        }
     }
 
     // -- Gelesene Werte mit Vorgaben und Pruefung wie Python ---------------

@@ -20,12 +20,9 @@ public class BegriffeTests
     public static readonly IReadOnlyDictionary<string, int> NochNichtGebaut = new Dictionary<string, int>(StringComparer.Ordinal)
     {
         // Phase 5 W1: "Sicherung erstellen", "Sicherung einspielen", "Alles ersetzen" gebaut (gestrichen)
+        // Phase 5 W2: "Messung aufzeichnen", "leistungsmessung.csv", "Messdatei zeigen", "Messdatei löschen" gebaut (gestrichen)
         ["Jetzt aktualisieren"] = 5,
         ["Installieren"] = 5,
-        ["Messung aufzeichnen"] = 5,
-        ["leistungsmessung.csv"] = 5,
-        ["Messdatei zeigen"] = 5,
-        ["Messdatei löschen"] = 5,
     };
 
     /// <summary>Einziger Begriff, der keine Beschriftung ist (NOT_A_LABEL).</summary>
@@ -89,7 +86,7 @@ public class BegriffeTests
         // Liste A darf nur Begriffe nennen, die noch in der Hilfe stehen
         var veraltet = NochNichtGebaut.Keys.Where(b => !begriffe.Contains(b)).ToList();
         Assert.True(veraltet.Count == 0, "Liste A: Begriff steht nicht mehr in der Hilfe: " + string.Join(" | ", veraltet));
-        Assert.Equal(6, NochNichtGebaut.Count);                  // Phase 5 W1: 9 -> 6 (drei Begriffe gebaut)
+        Assert.Equal(2, NochNichtGebaut.Count);                  // Phase 5 W1: 9 -> 6, W2: 6 -> 2 (je gebaute Begriffe gestrichen)
         Assert.All(NochNichtGebaut.Values, phase => Assert.Equal(5, phase));   // Weisung P5-3 Punkt 4: Phase 6 -> 5
     }
 

@@ -64,10 +64,17 @@ public static partial class AutoMessung
     /// alle Einzelmessungen) und bei Rot die Fehlerzeile mit Messpunkt, Wert, Grenze und allen
     /// Einzelmessungen (Weisung P4-12 B5). Rueckgabe 1 = Fund.
     /// </summary>
+    /// <summary>Sammelliste 64: Messpunkte aus <see cref="Ergebnis"/> ueber 1 000 ms, nur fuer die Zeile "Zeitgrenze CI".</summary>
+    private static readonly List<string> UeberAbbruch = [];
+
     private static int Ergebnis(string titel, Messreihe reihe)
     {
         var inv = CultureInfo.InvariantCulture;
         var ms = reihe.Bester;
+        if (ms > Abbruch)
+        {
+            UeberAbbruch.Add(titel);
+        }
         Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}")
             + (reihe.Wiederholt ? " (wiederholt, Einzelmessungen " + reihe.Einzelwerte() + ")" : ""));
         if (!reihe.Rot)
@@ -287,6 +294,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 5, W2: Diagnose und Werkzeuge mit Bericht, Fenster und Kurzhinweis
+                await foreach (var ansichtName in P5W2Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -307,6 +322,7 @@ public static partial class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
         Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
         Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis, Bitte warten beim Ersetzen"));
+        Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
@@ -334,9 +350,12 @@ public static partial class AutoMessung
         {
             zuLang.Add(reihe);
         }
-        Messwerte.Notiere(zuLang.Count == 0
+        // Sammelliste 64 (nur Text): die Zeile nennt auch einmalige Messpunkte ueber 1 000 ms; das Urteil
+        // faellt wie bisher ueber ihre FEHLER-Zeilen (dort schon gezaehlt, hier nicht noch einmal)
+        var zuLangText = zuLang.Concat(UeberAbbruch.Where(t => !zuLang.Contains(t))).ToList();
+        Messwerte.Notiere(zuLangText.Count == 0
             ? "Zeitgrenze CI: alle Werte unter 1000 ms"
-            : "Zeitgrenze CI ueberschritten (ueber 1000 ms): " + string.Join(", ", zuLang));
+            : "Zeitgrenze CI ueberschritten (ueber 1000 ms): " + string.Join(", ", zuLangText));
         // Weisung P4-12 B5: Messpunkt, Wert, Grenze und Einzelmessungen; erstes Oeffnen und der
         // Seitenwechsel (MainView) sind einmalige Messungen und werden nicht wiederholt
         foreach (var (seite, ms) in Messwerte.ErstesOeffnen.Where(e => e.Value > Abbruch))
@@ -1492,6 +1511,13 @@ public static partial class AutoMessung
                         }
                     }
                     await foreach (var name in P5Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P5W2Ansichten(ansicht))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
