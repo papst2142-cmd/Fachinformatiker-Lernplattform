@@ -18,7 +18,7 @@
 - Lernprogramm für die Fachinformatiker-Ausbildung (Systemintegration). Prioritäten: 1 Lernen, 2 Komfort/Tempo, 3 Spiel, 4 Verteilung.
 - Neubau in C# der Python-Linie `papst2142-cmd/Fisi-Lernplattform`. Diese ist seit 0.63.2 (main fbc657d, Tag v0.63.2) **eingefroren**: nur lesen, nie löschen, Referenz für Vergleichswerte.
 - Repo: `papst2142-cmd/Fachinformatiker-Lernplattform`, Zweig `main` (Ruleset: kein Löschen, kein Force-Push). Arbeit auf Zweigen, Merge per Squash nach Freigabe.
-- Phasen 0–7 laut `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md`; **Phasenfolge neu (Nico 23.10.2026, Abschnitt 12): 5 Betrieb, 6 Verteilung und Gesamttest, 7 Spiel. Spiel zuletzt** (wird grundlegend überarbeitet; Spiel-Abgleich nach Vorschlag in Phase 7, Entscheidung Nico im Plan Phase 5). Phasen 0–4 fertig. Jede Phase: Plan → Nicos Freigabe → Bau → Bericht → Abnahme.
+- Phasen 0–7 laut `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md`; **Phasenfolge neu (Nico 23.10.2026 07:22 und 07:35, Abschnitt 12): 5 Betrieb, 6 Verteilung (Installer, Signierung), 7 Spiel (grundlegend überarbeitet, Spiel spät), 8 Spiel-Abgleich und Kleinigkeiten aus der Sammelliste, 9 NVDA und Gesamttest; danach Beta und 1.0.** Phasen 0–4 fertig. Jede Phase: Plan → Nicos Freigabe → Bau → Bericht → Abnahme.
 
 ## Technik
 - .NET 10 (LTS, SDK in `global.json`), Avalonia 12.1.x, SQLite (Microsoft.Data.Sqlite), xUnit v3 mit Microsoft.Testing.Platform (`dotnet test --project tests/Lernplattform.Tests`).
@@ -63,7 +63,7 @@
 ## Aktueller Stand
 - **Phasen 0–4 abgenommen und gemergt** (letzter Merge PR #21, main **540027e**, A 0.10.0, Main-Lauf grün). Kein Tag, kein Release. Nico nutzt bis Ende des Umbaus keins der Programme. Arbeit immer auf einem neuen Zweig ab `main`; alte Zweige (z. B. `phase4-w4`) bleiben stehen, Löschen nur Nico.
 - Inhalt bisher: Kern (Phase 1), Lernkern mit Karteikarten, Prüfungstrainer, Fortschritt, Suche, Übernahme, Rücksicherung, Abgleich PC↔Handy, Farbregler (Phase 2), Rechner (Phase 3), Prüfungsbereiche: Szenarien, Testprojekt, Notizblock, Klausur, Abschlussprojekt, Hilfe, Rundgang, Ausbildungsfrage (Phase 4). Einzelheiten je Welle: Git-Historie und Berichte auf Fi-Austausch.
-- **Jetzt Phase 5 (Betrieb):** Weisung P5-1 = Plan `Fi-Austausch/weisungen/Plan_Phase5_CSharp.md` (Sicherung/Wiederherstellung, Problem melden, Diagnose, Update im Programm; Wellen W1 Sicherung, W2 Diagnose, W3 Update + A 0.11.0). Kein Bau vor „Plan freigegeben“. Meldungen ab P5-1. Die Liste A in `BegriffeTests.cs` (9 Begriffe, Phasennummer noch alt „6“) nennt genau, was Phase 5 baut.
+- **Jetzt Phase 5 (Betrieb):** Weisung P5-2 (ersetzt P5-1) = Plan `Fi-Austausch/weisungen/Plan_Phase5_CSharp.md` (Sicherung/Wiederherstellung, Problem melden, Diagnose, Update im Programm; Wellen W1 Sicherung, W2 Diagnose, W3 Update + A 0.11.0). Kein Bau vor „Plan freigegeben“. Meldungen ab P5-1. Die Liste A in `BegriffeTests.cs` (9 Begriffe, Phasennummer noch alt „6“) nennt genau, was Phase 5 baut.
 - Vergleichswerte G1–G36 bestehen (`tests/Vergleich/`, Erzeuger `werkzeuge/vergleich/*.py`, CI erzeugt neu); Phase 5 plant G37–G41.
 - Sammelliste (Fi-Austausch `SAMMELLISTE_NEU.md`): nächste freie Nummer **65**. Für Phase 5 relevant: 24 (Rechnername im Gerätenamen, offen für Nico), 25 (clock_fix_text), 26 (Android-Kopie zurücklesen), 46 (Velopack-Sperre Windows), 51 (Eingaben vor Sicherung speichern), 56 (SHA-256 auf der Release-Seite, Phase 6), 57 (Begriffe-Liste A).
 
