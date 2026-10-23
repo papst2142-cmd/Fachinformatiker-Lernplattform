@@ -16,6 +16,7 @@ Aufrufe (python3 -I):
   erzeuge_lizenzen.py pruefen <THIRD_PARTY_NOTICES.txt im Repo> <sammlung.json> ...
 """
 import hashlib
+import io
 import json
 import os
 import re
@@ -216,8 +217,8 @@ def sammeln_android(assets, apk, aus):
     with open(assets, encoding="utf-8") as d:
         daten = json.load(d)
     ziel = next(v for k, v in daten["targets"].items() if "android" in k and "/" in k)
-    karte, pakete, fehlend = {}, {}, []
-    for schluessel, eintrag in ziel.items():
+    karte, pakete, fehlend, pfade = {}, {}, [], {}
+    for schluessel, eintrag in sorted(ziel.items()):
         if eintrag.get("type") != "package":
             continue
         name, version = schluessel.split("/")
@@ -230,6 +231,13 @@ def sammeln_android(assets, apk, aus):
         for gruppe in ("runtime", "native", "runtimeTargets"):
             for pfad in eintrag.get(gruppe, {}):
                 karte[os.path.basename(pfad)] = name
+        # Java-/Kotlin-Teile (.aar/.jar im Paket, auch ein classes.jar darin) landen mit ihrem Pfad in der APK
+        # Bei gleichem Pfad in mehreren Paketen (Kotlin-Metadaten, R.txt) gilt das erste nach Namen.
+        for innen in archivinhalt(os.path.join(NUGET, name.lower(), version.lower())):
+            pfade.setdefault(innen, name)
+            # native Bibliothek eines .aar (jni/<abi>/lib.so) liegt in der APK unter lib/<abi>/
+            if innen.startswith("jni/") and innen.endswith(".so"):
+                karte.setdefault(os.path.basename(innen), name)
     # Laufzeit und Android-Teile von .NET (Workload-Pakete, nicht in project.assets.json)
     laufzeit = []
     for name, version, ordner in laufzeit_android():
@@ -254,9 +262,23 @@ def sammeln_android(assets, apk, aus):
             dateien[pfad] = sdk
         elif kotlin_paket(pfad, pakete):
             dateien[pfad] = kotlin_paket(pfad, pakete)
+        elif pfad in pfade:
+            dateien[pfad] = pfade[pfad]
+        elif pfad.startswith("lib/arm64-v8a/libaot-") and name.endswith(".so"):
+            # vorab uebersetzte .NET-Bibliothek (AOT): gehoert zum Bestandteil der Bibliothek
+            bibliothek = name[len("libaot-"):-len(".so")]
+            if bibliothek.startswith("Lernplattform."):
+                dateien[pfad] = "eigen"
+            elif bibliothek in karte:
+                dateien[pfad] = karte[bibliothek]
+            elif sdk and bibliothek == "_Microsoft.Android.Resource.Designer.dll":
+                dateien[pfad] = sdk
+            else:
+                ohne.append(pfad)
         elif name in karte:
             dateien[pfad] = karte[name]
-        elif sdk and pfad.startswith("lib/arm64-v8a/") and name.startswith(("libassembl", "libxa", "libarchive-dso-stub")):
+        elif sdk and pfad.startswith("lib/arm64-v8a/") and (
+                name.startswith(("libassembl", "libxa", "libarchive-dso-stub")) or name in ("libmonodroid.so", "libarc.bin.so")):
             # beim Bau erzeugt (gebuendelte .NET-Bibliotheken, App-Tabelle): Werkzeug des Android-Workloads
             dateien[pfad] = sdk
         else:
@@ -283,6 +305,29 @@ def paketwurzeln():
 
 def versionsschluessel(v):
     return [(0, int(x), "") if x.isdigit() else (1, 0, x) for x in re.split(r"[.-]", v)]
+
+
+def archivinhalt(ordner):
+    """Pfade in den .aar/.jar/.zip eines Paketordners, auch in einem darin liegenden .jar oder .zip (classes.jar)."""
+    gefunden = []
+    if not os.path.isdir(ordner):
+        return gefunden
+    for wurzel, _, namen in os.walk(ordner):
+        for datei in sorted(namen):
+            if not datei.endswith((".aar", ".jar", ".zip")):
+                continue
+            try:
+                with zipfile.ZipFile(os.path.join(wurzel, datei)) as z:
+                    for innen in z.namelist():
+                        if innen.endswith("/"):
+                            continue
+                        gefunden.append(innen)
+                        if innen.endswith((".jar", ".zip")):
+                            with zipfile.ZipFile(io.BytesIO(z.read(innen))) as j:
+                                gefunden += [n for n in j.namelist() if not n.endswith("/")]
+            except zipfile.BadZipFile:
+                fehler("kein Archiv: " + os.path.join(wurzel, datei))
+    return gefunden
 
 
 def flach(text):
@@ -318,8 +363,10 @@ def laufzeit_android():
     for wurzel in paketwurzeln():
         for eintrag in sorted(os.listdir(wurzel)):
             klein = eintrag.lower()
+            # CoreCLR und NativeAOT sind andere Laufzeiten, die dieser Bau nicht nutzt (Mono, libmonosgen)
             if not (klein.startswith(("microsoft.netcore.app.runtime.", "microsoft.android.runtime."))
-                    and klein.endswith("android-arm64") and ".cross." not in klein) and klein != "microsoft.android.sdk.linux":
+                    and klein.endswith("android-arm64") and ".cross." not in klein
+                    and ".coreclr." not in klein and ".nativeaot." not in klein) and klein != "microsoft.android.sdk.linux":
                 continue
             for version in os.listdir(os.path.join(wurzel, eintrag)):
                 if not version.startswith(("10.", "36.")):
@@ -400,6 +447,10 @@ def main_pruefen(repo_datei, sammlungen):
         import difflib
         print("FEHLER: THIRD_PARTY_NOTICES.txt im Repo weicht von der neu erzeugten Liste ab:")
         sys.stdout.writelines(difflib.unified_diff(alt.splitlines(True), neu.splitlines(True), "Repo", "neu"))
+        # ganze neue Liste zum Uebernehmen (nach Pruefung von Hand ins Repo)
+        print("===== ANFANG neue THIRD_PARTY_NOTICES.txt =====")
+        sys.stdout.write(neu)
+        print("===== ENDE neue THIRD_PARTY_NOTICES.txt =====")
         return 1
     print("THIRD_PARTY_NOTICES.txt gleich der neu erzeugten Liste (%d Bestandteile)" % len(alle))
     return 0
