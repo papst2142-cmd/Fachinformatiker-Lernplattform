@@ -1,15 +1,38 @@
 # Phase 0: Bauen und Testen auf jedem Push und Pull Request.
 # Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
+#
+# Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
+# - schnell: vergleichswerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
+#   Laeuft bei jedem Push auf einen Pull Request und auf main.
+# - voll: dazu tests (windows-latest, macos-15), pakete x3 und android (8 Teile). Laeuft nur
+#   ueber workflow_dispatch (Vorgabe voll) oder bei einem Pull Request mit dem Label "voll".
+#   Der volle Lauf auf dem Kopf des Pull Requests ist das Merge-Tor.
+# Ein Label ausser "voll" startet nichts und bricht nichts ab (alle Teile uebersprungen).
 name: CI
 
 on:
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
+    inputs:
+      stufe:
+        description: "Stufe: voll (alle 8 Teile) oder schnell"
+        type: choice
+        options: [voll, schnell]
+        default: voll
 
 permissions:
   contents: read
+
+# B3: je Pull Request eine Gruppe, ein neuer Push bricht den alten Lauf ab. Laeufe auf main,
+# ueber workflow_dispatch und Label ausser "voll" bekommen eine eigene Gruppe (nie abgebrochen).
+concurrency:
+  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -19,10 +42,12 @@ env:
 jobs:
   tests:
     name: tests (${{ matrix.os }})
+    # schnell nur ubuntu-latest, voll alle drei Systeme
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
+        os: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '["ubuntu-latest", "windows-latest", "macos-15"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -39,8 +64,8 @@ jobs:
           repository: papst2142-cmd/Fisi-Lernplattform
           ref: v0.63.2
           path: python-linie
+      # Python auf allen Systemen: Urteil des Start-Tests (werkzeuge/starttest/urteil.py, P4-13)
       - uses: actions/setup-python@v7
-        if: runner.os == 'Linux'
         with:
           python-version: "3.12"
       - name: Sicherung fuer die alte App in Python 0.63.2 einlesen
@@ -54,32 +79,43 @@ jobs:
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Start ohne Bedienung (Phase 1): jede Seite oeffnen, Hell/Dunkel und Schriftstufen
       # wechseln, Layoutpruefung breit und schmal (384 x 832). Rot bei Absturz, bei einem
-      # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3).
-      - name: Start ohne Bedienung (Linux, Xvfb)
-        if: runner.os == 'Linux'
+      # Wert ueber 1000 ms oder einem Layoutfund (Rueckgabe 3). Ueberschreitet ein
+      # wiederholbarer Messpunkt seine Grenze, misst der Start-Test ihn bis zu 3 Mal (P4-12 B6).
+      # Neustart-Regel (Weisung P4-13): Rueckgabe 3 im 1. Lauf -> 2. Lauf in neuem Prozess mit
+      # frischem Datenordner; rot nur, wenn derselbe Messpunkt in beiden Laeufen rot ist.
+      # Absturz (andere Rueckgabe, Ausnahme, keine Messdatei) startet nicht neu und ist rot.
+      - name: Start ohne Bedienung (1. Lauf)
+        id: lauf1
         timeout-minutes: 10
-        env:
-          LERNPLATTFORM_MESSUNG_AUTO: "1"
-          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
-        run: xvfb-run -a -s "-screen 0 1280x800x24" dotnet run --no-build -c Release --project src/Lernplattform.Desktop
-      - name: Start ohne Bedienung
-        if: runner.os != 'Linux'
+        shell: bash
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+      - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: steps.lauf1.outputs.rc == '3'
         timeout-minutes: 10
         shell: bash
         env:
-          LERNPLATTFORM_MESSUNG_AUTO: "1"
-          LERNPLATTFORM_MESSUNG_DATEI: messung_${{ runner.os }}.txt
-        run: dotnet run --no-build -c Release --project src/Lernplattform.Desktop
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
       - uses: actions/upload-artifact@v7
         with:
-          name: messung-${{ runner.os }}
-          path: messung_${{ runner.os }}.txt
+          name: messung-${{ runner.os }}-${{ github.run_attempt }}
+          path: messung_${{ runner.os }}_lauf*_versuch${{ github.run_attempt }}.txt
         if: always()
+      # Sicherungsschritt (Weisung P4-14 c): 1. Lauf ohne Fehler, aber Rueckgabe weder 0 noch 3
+      # (leer, mit \r, verlorene Ausgabe) -> rot. Ein verschwiegenes Rot darf nie gruen enden.
+      - name: Start-Test Rueckgabe pruefen
+        if: always() && steps.lauf1.outcome == 'success' && steps.lauf1.outputs.rc != '0' && steps.lauf1.outputs.rc != '3'
+        shell: bash
+        run: |
+          echo "Rueckgabe des 1. Laufs unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.lauf1.outputs.rc }}')"
+          exit 1
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
     # Update-Probe A 0.9.0 -> A 0.9.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
+    # nur Stufe voll
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
     strategy:
       fail-fast: false
       matrix:
@@ -120,6 +156,7 @@ jobs:
     # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
     # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
     name: vergleichswerte (Python 3.12)
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -255,6 +292,8 @@ jobs:
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)
+    # nur Stufe voll
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
