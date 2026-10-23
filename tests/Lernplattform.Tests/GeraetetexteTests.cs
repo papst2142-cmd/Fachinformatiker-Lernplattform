@@ -218,6 +218,15 @@ public partial class GeraetetexteTests
         ("Views/Texte.cs", "public static IReadOnlyList<NavPunkt> NavigationPc { get; } = Navigation.Pc.Select(Punkt).ToList();", "Daten der Seitenleiste"),
         ("Views/Texte.cs", "public static IReadOnlyList<NavPunkt> NavigationHandy { get; } = Navigation.Handy.Select(Punkt).ToList();", "Daten der unteren Leiste"),
         ("Views/UebernahmeTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
+        // Phase 5 W2 (BE6 bis BE8)
+        ("Programm/Diagnosedienst.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Programm/Diagnosedienst.cs", "var messung = new Leistungsmessung(Update.Anzeige, Pc ? \"PC\" : \"Handy\", pfad, aktiv, Pc ? Toolkit() : \"\");", "Daten: Spalten geraet und toolkit der Messdatei wie Recorder(APP_VERSION, \"PC\"/\"Handy\") (G39), kein Anzeigetext"),
+        ("Programm/Diagnosedienst.cs", "if (Pc)", "Verhalten: Spalte vorgang nur am PC (Haenger-Diagnose nur PC, app_gui 8481)"),
+        ("Views/DiagnoseTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Views/DiagnoseTeil.cs", "foreach (var text in DiagnoseTexte.Knoepfe(Pc))", "Verhalten: \"Datenordner öffnen\" nur am PC (app_gui 7624, main.py 4108); Liste in DiagnoseTexte (Phase 1)"),
+        ("Views/DiagnoseTeil.cs", "Problembericht.Bauen(Zustand.Lernstand, Update.Anzeige, Pc ? \"PC\" : \"Handy\", Zustand.Werte, DateTime.Now);", "Daten: Geraet im Bericht wie build_report(db, APP_VERSION, \"PC\"/\"Handy\") (G38)"),
+        ("Views/DiagnoseTeil.cs", "if (Pc && pfad is not null)", "Technik: Speicherweg (Handy ueber Datenstrom mit Zuruecklesen)"),
+        ("Views/DiagnoseTeil.cs", "if (Pc)", "Verhalten: Messdatei zeigen PC Datenordner, Handy Datei speichern (app_gui 8566, main.py 4585)"),
     ];
 
     [GeneratedRegex(@"IsAndroid\(\)|(?<![\w.])(Handy|Android|Pc)\b(?!\s*\()|\.\w*(Handy|Pc)\d*\b")]
