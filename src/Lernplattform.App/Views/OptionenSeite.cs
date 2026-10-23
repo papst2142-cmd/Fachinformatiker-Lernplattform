@@ -378,7 +378,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
                     TerminSpeichern(schluessel, false);
                 }
             };
-            if (!Pc)
+            if (!Pc) // Termin beim Tippen
             {
                 // am Handy speichern beim Tippen, sobald das Datum gueltig ist (main.py 4484-4490)
                 feld.TextChanged += (_, _) =>

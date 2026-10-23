@@ -140,12 +140,13 @@ public static partial class AutoMessung
         funde += await W1MesspunkteAsync(ansicht, inhalte);
         funde += await KlausurMesspunkteAsync(ansicht);
         funde += await ProjektMesspunkteAsync(ansicht);
-        funde += await W4MesspunkteAsync(ansicht);
+        // Weisung P4-16: auch die W4-Messpunkte melden ihre roten Werte in reihenRot
+        var reihenRot = new List<string>();
+        funde += await W4MesspunkteAsync(ansicht, reihenRot);
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge); ueber 1 000 ms wird derselbe
         // Wechsel wiederholt (vorher die andere Darstellung bzw. die Stufe davor, Weisung P4-12 B6)
         var werte = Zustand.Werte;
-        var reihenRot = new List<string>();
         void Farben(string darstellung) => FarbenAnwenden.Anwenden(Farbwelt.Berechne(darstellung, Einstellungen.Grundfarbe(werte), Einstellungen.Hintergrund(werte)));
         var stufen = Einstellungen.Schriftgroessen.Append(Einstellungen.SchriftNormal).ToList();
         for (var runde = 0; runde < 3; runde++)

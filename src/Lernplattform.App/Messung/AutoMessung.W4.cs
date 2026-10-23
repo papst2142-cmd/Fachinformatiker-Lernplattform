@@ -4,8 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Hilfe;
 using Lernplattform.Core.Texte;
 using Lernplattform.Programm;
@@ -102,8 +104,12 @@ public static partial class AutoMessung
     /// Messpunkte W4 (Grenze 400 ms, Fund ab 1 000 ms), je dreimal bis zum Bild: Hilfe wieder oeffnen,
     /// jeden Abschnitt aufklappen, Rundgang zeigen und je Schritt, Seite 5 bauen, Optionen-Bereiche
     /// aufklappen, Ausbildungsfrage und Warnhinweis zeigen. Dazu die Tastaturpruefung (nur PC).
+    /// Messlogik nach Weisung P4-12 B6 (eingeordnet mit Weisung P4-16): einmalig und streng sind
+    /// "Hilfe erstes Oeffnen" (Erstes Oeffnen der Seite) und das erste "Rundgang zeigen" (erster Bau
+    /// der Rundgang-Ebene); alles andere ist wiederholbar mit dem Zustand davor. Rote Werte stehen
+    /// danach in <paramref name="reihenRot"/>.
     /// </summary>
-    private static async Task<int> W4MesspunkteAsync(MainView ansicht)
+    private static async Task<int> W4MesspunkteAsync(MainView ansicht, List<string> reihenRot)
     {
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
@@ -118,37 +124,76 @@ public static partial class AutoMessung
             Messwerte.Notiere("Hilfe: FEHLER, Seite nicht gebaut");
             return 1;
         }
+        var klappen = hilfe.GetLogicalDescendants().OfType<Expander>().ToList();
         for (var runde = 0; runde < 3; runde++)
         {
             await ansicht.ZeigeAsync(Seiten.Dashboard);
-            var uhr = Stopwatch.StartNew();
-            await ansicht.ZeigeAsync(Seiten.Hilfe);
-            hilfe.Gezeigt();
-            await ansicht.BildFertigAsync();
-            Messwerte.Reihe("Hilfe wieder oeffnen", uhr.Elapsed.TotalMilliseconds);
+            await W4WertAsync("Hilfe wieder oeffnen", async () =>
+            {
+                var uhr = Stopwatch.StartNew();
+                await ansicht.ZeigeAsync(Seiten.Hilfe);
+                hilfe.Gezeigt();
+                await ansicht.BildFertigAsync();
+                Messwerte.Reihe("Hilfe wieder oeffnen", uhr.Elapsed.TotalMilliseconds);
+            }, () => ansicht.ZeigeAsync(Seiten.Dashboard), reihenRot);
             foreach (var abschnitt in HilfeTexte.Abschnitte)
             {
-                hilfe.Oeffnen(abschnitt.Id);         // misst "Hilfe: Abschnitt aufklappen" bis zum Bild
-                await ansicht.BildFertigAsync();
-                await ansicht.BildFertigAsync();
+                var klappe = klappen.FirstOrDefault(k => Avalonia.Automation.AutomationProperties.GetName(k) == abschnitt.Titel);
+                if (klappe is null)
+                {
+                    // ohne Klappe kein Zustand davor: der Punkt waere still einmalig (Gegenpruefung L1)
+                    Messwerte.Notiere("Hilfe: FEHLER, keine Klappe fuer Abschnitt " + abschnitt.Id);
+                    funde++;
+                }
+                // misst "Hilfe: Abschnitt aufklappen" bis zum Bild; davor: Abschnitt zu
+                await W4WertAsync("Hilfe: Abschnitt aufklappen", async () =>
+                {
+                    hilfe.Oeffnen(abschnitt.Id);
+                    await ansicht.BildFertigAsync();
+                    await ansicht.BildFertigAsync();
+                }, klappe is null ? null : async () =>
+                {
+                    klappe.IsExpanded = false;
+                    await ansicht.BildFertigAsync();
+                }, reihenRot);
             }
             hilfe.Gezeigt();
             await ansicht.BildFertigAsync();
         }
         for (var runde = 0; runde < 3; runde++)
         {
-            if (RundgangEbene.Probe() is not { } rundgang)
+            RundgangEbene? rundgang = null;
+            // misst "Rundgang zeigen"; das erste Mal einmalig (erster Bau), danach davor: Rundgang zu
+            await W4WertAsync("Rundgang zeigen", async () =>
+            {
+                rundgang = RundgangEbene.Probe();
+                await ansicht.BildFertigAsync();
+            }, runde == 0 ? null : async () =>
+            {
+                rundgang?.Ueberspringen();
+                await ansicht.BildFertigAsync();
+            }, reihenRot);
+            if (rundgang is not { } offen)
             {
                 Messwerte.Notiere("Rundgang: FEHLER, Probe nicht moeglich");
                 return funde + 1;
             }
-            await ansicht.BildFertigAsync();
-            while (!rundgang.Ablauf.Letzte)
+            while (!offen.Ablauf.Letzte)
             {
-                rundgang.Fertig();                   // "Weiter": misst "Rundgang: Schritt" bzw. "Seite 5 bauen"
-                await ansicht.BildFertigAsync();
+                var index = offen.Ablauf.Index;
+                var name = index + 1 == RundgangAblauf.Anzahl - 1 ? "Rundgang: Seite 5 bauen" : "Rundgang: Schritt";
+                // "Weiter"; davor: dieselbe Seite wieder zeigen
+                await W4WertAsync(name, async () =>
+                {
+                    offen.Fertig();
+                    await ansicht.BildFertigAsync();
+                }, async () =>
+                {
+                    offen.Springen(index);
+                    await ansicht.BildFertigAsync();
+                }, reihenRot);
             }
-            rundgang.Ueberspringen();
+            offen.Ueberspringen();
             await ansicht.BildFertigAsync();
         }
         if (ansicht.GebauteSeiten.TryGetValue(Seiten.Optionen, out var o) && o is OptionenSeite optionen)
@@ -162,27 +207,51 @@ public static partial class AutoMessung
                     funde++;
                     continue;
                 }
-                for (var runde = 0; runde < 3; runde++)
+                async Task Zu()
                 {
                     klappe.IsExpanded = false;
                     await ansicht.BildFertigAsync();
-                    var uhr = Stopwatch.StartNew();
-                    klappe.IsExpanded = true;
-                    await ansicht.BildFertigAsync();
-                    Messwerte.Reihe("Optionen: " + name + " aufklappen", uhr.Elapsed.TotalMilliseconds);
+                }
+                for (var runde = 0; runde < 3; runde++)
+                {
+                    await Zu();
+                    await W4WertAsync("Optionen: " + name + " aufklappen", async () =>
+                    {
+                        var uhr = Stopwatch.StartNew();
+                        klappe.IsExpanded = true;
+                        await ansicht.BildFertigAsync();
+                        Messwerte.Reihe("Optionen: " + name + " aufklappen", uhr.Elapsed.TotalMilliseconds);
+                    }, Zu, reihenRot);
                 }
             }
         }
         for (var runde = 0; runde < 3; runde++)
         {
-            var (frage, _) = AusbildungTeil.FrageZeigen();
-            await ansicht.BildFertigAsync();
+            Task<int>? frage = null;
+            Task<int>? warnung = null;
+            // misst "Ausbildungsfrage zeigen" und "Warnhinweis zeigen"; davor: Fenster zu
+            await W4WertAsync("Ausbildungsfrage zeigen", async () =>
+            {
+                (frage, _) = AusbildungTeil.FrageZeigen();
+                await ansicht.BildFertigAsync();
+            }, async () =>
+            {
+                Dialog.AlleSchliessen();
+                await frage!;
+            }, reihenRot);
             Dialog.AlleSchliessen();
-            await frage;
-            var warnung = AusbildungTeil.WarnungZeigen(WarnungFachrichtung);
-            await ansicht.BildFertigAsync();
+            await frage!;
+            await W4WertAsync("Warnhinweis zeigen", async () =>
+            {
+                warnung = AusbildungTeil.WarnungZeigen(WarnungFachrichtung);
+                await ansicht.BildFertigAsync();
+            }, async () =>
+            {
+                Dialog.AlleSchliessen();
+                await warnung!;
+            }, reihenRot);
             Dialog.AlleSchliessen();
-            await warnung;
+            await warnung!;
         }
         if (TopLevel.GetTopLevel(ansicht) is Window)
         {
@@ -204,6 +273,48 @@ public static partial class AutoMessung
         var ziel = top.FocusManager?.GetFocusedElement() as Interactive ?? top;
         ziel.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = taste, KeyModifiers = zusatz, Source = ziel });
         ziel.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyUpEvent, Key = taste, KeyModifiers = zusatz, Source = ziel });
+    }
+
+    /// <summary>
+    /// Weisung P4-16: ein W4-Messpunkt nach der Messlogik von Weisung P4-12 B6. Den Wert schreibt das
+    /// Programm (oder <paramref name="schritt"/>) in die Messreihe <paramref name="name"/>. Liegt er
+    /// ueber 1 000 ms, wird nach <paramref name="zurueck"/> (Zustand davor, nicht gemessen) und
+    /// 200 ms Pause bis zu 3 Mal gemessen; ohne <paramref name="zurueck"/> bleibt der Punkt einmalig
+    /// und streng. Danach behaelt die Reihe <paramref name="name"/> nur den kleinsten Wert dieses
+    /// Punkts; Werte, die <paramref name="zurueck"/> schreibt, fallen heraus. Werte anderer Messpunkte,
+    /// die der Schritt selbst schreibt (z. B. "Seitenwechsel (gebaute Seite)" aus MainView, streng),
+    /// bleiben alle stehen. Rot nur, wenn alle Messungen ueber der Grenze liegen (dann mit allen
+    /// Einzelmessungen in <paramref name="rot"/>).
+    /// </summary>
+    private static async Task W4WertAsync(string name, Func<Task> schritt, Func<Task>? zurueck, List<string> rot)
+    {
+        var anfang = Messwerte.Stand().GetValueOrDefault(name);
+        async Task<double?> Einmal()
+        {
+            var stand = Messwerte.Stand();
+            await schritt();
+            return Messwerte.NeuSeit(stand, name);
+        }
+        async Task Zurueck()
+        {
+            var stand = Messwerte.Stand();
+            await zurueck!();
+            Messwerte.ZurueckAuf(stand);    // nur die Werte aus zurueck heraus (nicht gemessen)
+        }
+        var erste = await Einmal();
+        var reihe = zurueck is null
+            ? Messwiederholung.Einmal(erste, Abbruch)
+            : await Messwiederholung.MessenAsync(erste, Abbruch, Einmal, Zurueck, Task.Delay);
+        Messwerte.ReiheAuf(name, anfang);
+        Messwerte.Reihe(name, reihe.Bester ?? double.PositiveInfinity);
+        if (reihe.Wiederholt)
+        {
+            Messwerte.Notiere("Wiederholt " + name + ": Einzelmessungen " + reihe.Einzelwerte() + (reihe.Rot ? " (rot)" : " (gruen)"));
+        }
+        if (reihe.Rot)
+        {
+            rot.Add(reihe.Fehlertext(name));
+        }
     }
 
     /// <summary>

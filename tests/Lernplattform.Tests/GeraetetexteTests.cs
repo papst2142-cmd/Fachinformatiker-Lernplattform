@@ -203,7 +203,7 @@ public partial class GeraetetexteTests
         ("Views/AbschlussprojektSeite.cs", "private static readonly bool Handy = OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/AbschlussprojektSeite.cs", "var daten = _a.ExportDaten(endung, Handy, DateTime.Now);", "Technik: Textdatei PC CRLF mit BOM, Handy LF ohne BOM (app_gui 4736, main.py 2388), kein Anzeigetext"),
         ("Views/OptionenSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
-        ("Views/OptionenSeite.cs", "if (!Pc)", "Verhalten: Termin am Handy beim Tippen speichern, sobald gueltig (main.py 4484-4490, W4)"),
+        ("Views/OptionenSeite.cs", "if (!Pc) // Termin beim Tippen", "Verhalten: Termin am Handy beim Tippen speichern, sobald gueltig (main.py 4484-4490, W4)"),
         ("Views/RundgangEbene.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/RundgangEbene.cs", "var reihe = new KnopfReihe { EineZeile = Pc, Margin = new Thickness(0, 10, 0, 0) };", "Aufbau: Knopfzeile PC eine Zeile, wenn sie passt, sonst wie Handy Hauptknopf oben (main.py 5059-5066, W4)"),
         ("Views/RuecksicherungTeil.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
@@ -313,5 +313,10 @@ public partial class GeraetetexteTests
         Assert.Single(Quelltextfunde([("Views/X.cs", "var t = OperatingSystem.IsAndroid() ? \"Start\" : \"Dashboard\";")]));
         Assert.Single(Quelltextfunde([("Views/X.cs", "Schrift.Text(bereich.UntertitelHandy);")]));
         Assert.Empty(Quelltextfunde([("Views/X.cs", "Schrift.Text(Geraetetexte.Banner(w.Banner, Pc));")]));
+        // Weisung P4-16 b: der Erlaubt-Eintrag gilt nur fuer die Zeile mit dem Kommentar
+        // "Termin beim Tippen"; ein weiteres "if (!Pc)" in derselben Datei ist ein Fund
+        Assert.Empty(Quelltextfunde([("Views/OptionenSeite.cs", "            if (!Pc) // Termin beim Tippen")]));
+        Assert.Single(Quelltextfunde([("Views/OptionenSeite.cs", "            if (!Pc)")]));
+        Assert.Single(Quelltextfunde([("Views/OptionenSeite.cs", "            if (!Pc) // anderer Grund")]));
     }
 }
