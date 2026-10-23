@@ -371,6 +371,7 @@ public static partial class AutoMessung
             Messwerte.Notiere("  FEHLER: " + Messwiederholung.Einmal(ms, Abbruch).Fehlertext(reihe + " (Hoechstwert)"));
         }
         funde += zuLang.Count;
+        funde += _w2Fehlt;   // Phase 5 W2: fehlender Diagnose-Bereich (Gegenpruefung Fund 11)
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
     }

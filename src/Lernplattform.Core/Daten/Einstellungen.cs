@@ -70,12 +70,23 @@ public sealed class Einstellungen
     /// <summary>Die gespeicherten Einstellungen mit Vorgabewerten (wie load_settings).</summary>
     public JsonObject Laden()
     {
+        var (werte, gesperrt) = LadenMitZustand();
+        NurAnzeige = gesperrt;
+        return werte;
+    }
+
+    /// <summary>
+    /// Laden mit dem Lesezustand dieses einen Aufrufs. Setze und Aendern entscheiden danach und nicht
+    /// ueber NurAnzeige, das ein gleichzeitiges Laden in einem anderen Faden umsetzen kann
+    /// (Gegenpruefung W2 Fund 3: sonst ueberschrieben Vorgaben die Datei).
+    /// </summary>
+    private (JsonObject Werte, bool Gesperrt) LadenMitZustand()
+    {
         var werte = new JsonObject { [AutoCheckSchluessel] = true };
         var (roh, gesperrt) = Lesen();
-        NurAnzeige = gesperrt;
         if (roh is null)
         {
-            return werte;
+            return (werte, gesperrt);
         }
         try
         {
@@ -100,7 +111,7 @@ public sealed class Einstellungen
             {
             }
         }
-        return werte;
+        return (werte, false);
     }
 
     /// <summary>
@@ -216,7 +227,10 @@ public sealed class Einstellungen
     {
         try
         {
-            File.Move(Hilfsdatei, _pfad, true);
+            lock (Schreibsperre)
+            {
+                File.Move(Hilfsdatei, _pfad, true);
+            }
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
@@ -234,7 +248,11 @@ public sealed class Einstellungen
     {
         try
         {
-            return (File.ReadAllBytes(_pfad), false);
+            // Mitbenutzung erlauben: ein gleichzeitiges Ersetzen (Speichern) scheitert unter Windows sonst (Gegenpruefung W2 Fund 2)
+            using var datei = new FileStream(_pfad, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var puffer = new MemoryStream();
+            datei.CopyTo(puffer);
+            return (puffer.ToArray(), false);
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
@@ -272,7 +290,12 @@ public sealed class Einstellungen
     {
         lock (Schreibsperre)
         {
-            var werte = Laden();
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
+            {
+                return false;
+            }
             werte[schluessel] = wert;
             return Speichern(werte);
         }
@@ -286,8 +309,9 @@ public sealed class Einstellungen
     {
         lock (Schreibsperre)
         {
-            var werte = Laden();
-            if (NurAnzeige)
+            var (werte, gesperrt) = LadenMitZustand();
+            NurAnzeige = gesperrt;
+            if (gesperrt)
             {
                 return false;
             }

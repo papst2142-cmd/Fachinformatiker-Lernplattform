@@ -221,7 +221,8 @@ public partial class GeraetetexteTests
         // Phase 5 W2 (BE6 bis BE8)
         ("Programm/Diagnosedienst.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Programm/Diagnosedienst.cs", "var messung = new Leistungsmessung(Update.Anzeige, Pc ? \"PC\" : \"Handy\", pfad, aktiv, Pc ? Toolkit() : \"\");", "Daten: Spalten geraet und toolkit der Messdatei wie Recorder(APP_VERSION, \"PC\"/\"Handy\") (G39), kein Anzeigetext"),
-        ("Programm/Diagnosedienst.cs", "if (Pc)", "Verhalten: Spalte vorgang nur am PC (Haenger-Diagnose nur PC, app_gui 8481)"),
+        ("Programm/Diagnosedienst.cs", "if (Pc)", "Verhalten: Spalte vorgang nur am PC (Haenger-Diagnose nur PC, app_gui 8481); Zeile groesse PC wie PerfMonitor, Handy wie MobilePerf"),
+        ("Programm/Diagnosedienst.cs", "Messung.Aufzeichnen(Leistungsmessung.EreignisSeite, von, nach, ms, elemente: Elemente(), messart: Pc ? Leistungsmessung.MessartGezeichnet : null);", "Daten: messart 2 nur am PC (PerfMonitor.page), Handy leer (MobilePerf.page), kein Anzeigetext"),
         ("Views/DiagnoseTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/DiagnoseTeil.cs", "foreach (var text in DiagnoseTexte.Knoepfe(Pc))", "Verhalten: \"Datenordner öffnen\" nur am PC (app_gui 7624, main.py 4108); Liste in DiagnoseTexte (Phase 1)"),
         ("Views/DiagnoseTeil.cs", "Problembericht.Bauen(Zustand.Lernstand, Update.Anzeige, Pc ? \"PC\" : \"Handy\", Zustand.Werte, DateTime.Now);", "Daten: Geraet im Bericht wie build_report(db, APP_VERSION, \"PC\"/\"Handy\") (G38)"),

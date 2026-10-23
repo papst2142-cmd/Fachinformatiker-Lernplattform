@@ -220,7 +220,7 @@ public sealed class DiagnoseTeil
                 case DiagnoseTexte.Speichern:
                     var text = await Task.Run(BerichtText);
                     await SpeichernAsync(DiagnoseTexte.Speichern, Problembericht.StandardName(DateTime.Now), Problembericht.Endung,
-                        DiagnoseTexte.Dateityp, "text/plain", System.Text.Encoding.UTF8.GetBytes(text + "\n"));
+                        DiagnoseTexte.Dateityp, "text/plain", System.Text.Encoding.UTF8.GetBytes(Zeilenenden(text + "\n")));
                     break;
                 case DiagnoseTexte.OrdnerOeffnen:
                     var ordner = Path.GetDirectoryName(Path.GetFullPath(Zustand.Lernstand.Pfad))!;
@@ -236,6 +236,9 @@ public sealed class DiagnoseTeil
             Fehlerprotokoll.Schreiben(fehler);
         }
     }
+
+    /// <summary>Python schreibt im Textmodus: unter Windows CRLF (Gegenpruefung W2 Fund 12), sonst LF.</summary>
+    private static string Zeilenenden(string text) => OperatingSystem.IsWindows() ? text.Replace("\n", "\r\n", StringComparison.Ordinal) : text;
 
     private async Task<bool> KopierenAsync(string text)
     {
@@ -319,10 +322,12 @@ public sealed class DiagnoseTeil
                 using var _ = Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { "/select,", markieren }, UseShellExecute = false });
                 return true;
             }
-            if (TopLevel.GetTopLevel(Teil)?.Launcher is { } launcher)
+            if (TopLevel.GetTopLevel(Teil)?.Launcher is { } launcher && await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(ordner)))
             {
-                return await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(ordner));
+                return true;
             }
+            // das Fenster verweist auf fehler.log: dort steht dann auch etwas (Gegenpruefung W2 Fund 7)
+            Fehlerprotokoll.Schreiben("Ordner oeffnen: das System hat keinen Dateimanager gestartet");
         }
         catch (Exception fehler)
         {

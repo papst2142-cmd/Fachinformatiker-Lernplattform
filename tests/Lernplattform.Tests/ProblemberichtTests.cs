@@ -12,6 +12,7 @@ namespace Lernplattform.Tests;
 /// tests/Vergleich/problembericht.json). Kontrollfehler: Token im Bericht, Rechnername im Geraet,
 /// Schnitt mitten in der Zeile, Groessen mit Ortskultur.
 /// </summary>
+[Collection("Haenger")]
 public class ProblemberichtTests
 {
     private static readonly JsonElement G38 = VergleichsHilfe.Lade("problembericht.json");
@@ -175,6 +176,26 @@ public class ProblemberichtTests
             DateTime.Now, temp.Pfad, Path.Combine(temp.Pfad, "update.log"));
         Assert.DoesNotContain(token, text, StringComparison.Ordinal);
         Assert.Contains("Abgleich eingerichtet: ja", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>Gegenpruefung W2 Fund 1: haenger.log steht im Bericht, auch waehrend die Haenger-Diagnose sie offen haelt (Windows).</summary>
+    [Fact]
+    public void OffeneHaengerDateiImBericht()
+    {
+        using var temp = new TempOrdner();
+        var fehlerlog = new List<string>();
+        try
+        {
+            Haenger.FuerTests(() => "", fehlerlog.Add);
+            Assert.True(Haenger.Einrichten("A 0.10.0", temp.Pfad, plattform: "linux", waechter: false));
+            var text = Problembericht.Bauen(null, "A 0.10.0", "PC", [], DateTime.Now, temp.Pfad, Path.Combine(temp.Pfad, "update.log"));
+            Assert.Contains("--- haenger.log ---\n=== ", text, StringComparison.Ordinal);
+            Assert.Contains("| Start | Version A 0.10.0 | linux | pid ", text, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Haenger.FuerTests();
+        }
     }
 
     /// <summary>Kontrollfehler "Schnitt mitten in der Zeile": gekuerzte Protokolle beginnen mit einer ganzen Zeile.</summary>

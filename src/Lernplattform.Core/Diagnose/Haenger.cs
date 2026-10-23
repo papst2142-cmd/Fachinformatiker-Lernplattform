@@ -61,8 +61,9 @@ public static class Haenger
         public string Vorgang = Bereit;
     }
 
-    private static double? _herzschlag;
-    private static double? _gesetzt;
+    // Zeitpunkte als Objekte (Referenzen werden ganz gelesen): Waechter und Oberflaeche lesen nie einen halben Wert (Gegenpruefung W2 Fund 9)
+    private static volatile Zeitpunkt? _herzschlag;
+    private static volatile Zeitpunkt? _gesetzt;
     private static int _gesetztFuer;
     private static int _stellen;
     private static volatile string _seite = "";
@@ -70,7 +71,9 @@ public static class Haenger
     private static Func<bool>? _schliessend;
     private static int _zeilen;
     private static Blockade? _blockade;
-    private static (string Vorgang, double Ende)? _zuletzt;
+    private static volatile Tuple<string, double>? _zuletzt;
+
+    private sealed record Zeitpunkt(double Wert);
     private static Func<string> _wartepunkte = () => FaedenText();
     private static Action<string> _fehlerlog = text => Fehlerprotokoll.Schreiben(text);
 
@@ -226,7 +229,7 @@ public static class Haenger
             {
                 return;
             }
-            _gesetzt = jetzt;
+            _gesetzt = new Zeitpunkt(jetzt);
             _gesetztFuer = sekunden;
         }
     }
@@ -237,9 +240,9 @@ public static class Haenger
         try
         {
             var nun = jetzt ?? Jetzt();
-            var letzter = _herzschlag;
-            _herzschlag = nun;
-            if (_gesetzt is not { } gesetzt || nun - gesetzt >= NeuSetzenSekunden || _gesetztFuer != StelleNach)
+            var letzter = _herzschlag?.Wert;
+            _herzschlag = new Zeitpunkt(nun);
+            if (_gesetzt?.Wert is not { } gesetzt || nun - gesetzt >= NeuSetzenSekunden || _gesetztFuer != StelleNach)
             {
                 Setzen(StelleNach, nun);
             }
@@ -262,7 +265,7 @@ public static class Haenger
         _vorgang = name;
         if (vorher != Bereit && name != vorher)
         {
-            _zuletzt = (vorher, jetzt ?? Jetzt());
+            _zuletzt = Tuple.Create(vorher, jetzt ?? Jetzt());
         }
         return vorher;
     }
@@ -278,7 +281,7 @@ public static class Haenger
         {
             return vorgang;
         }
-        return _zuletzt is { } z && z.Ende >= seit ? z.Vorgang : Bereit;
+        return _zuletzt is { } z && z.Item2 >= seit ? z.Item1 : Bereit;
     }
 
     /// <summary>current: (Seite, Vorgang).</summary>
@@ -351,7 +354,7 @@ public static class Haenger
     public static string? Pruefen(double? jetzt = null)
     {
         var nun = jetzt ?? Jetzt();
-        if (_herzschlag is not { } letzter)
+        if (_herzschlag?.Wert is not { } letzter)
         {
             return null;   // Herzschlag noch nicht gestartet (Programmstart)
         }
@@ -411,7 +414,7 @@ public static class Haenger
         // Stelle: die vorgemerkte Zeit ist abgelaufen, ohne dass der Herzschlag sie neu gesetzt hat
         lock (Sperre)
         {
-            if (_gesetzt is { } gesetzt && nun - gesetzt >= _gesetztFuer)
+            if (_gesetzt?.Wert is { } gesetzt && nun - gesetzt >= _gesetztFuer)
             {
                 _gesetzt = null;
                 _stellen++;
@@ -486,7 +489,9 @@ public static class Haenger
         {
             pfad ??= Pfad();
             var text = Lesen(pfad, BerichtMax * 4);
-            if (text.Length == 0 || !text.Contains("Hauptfaden", StringComparison.Ordinal))
+            // wie Python ("File \"" = Stapel bei Abruf und Schliessen): hier deren Zeilen "Abruf (Signal" und "Noch offen" (Gegenpruefung W2 Fund 4)
+            if (text.Length == 0 || !(text.Contains("Hauptfaden", StringComparison.Ordinal) || text.Contains("Abruf (Signal", StringComparison.Ordinal)
+                || text.Contains("Noch offen ", StringComparison.Ordinal)))
             {
                 return HaengerTexte.Keine;
             }

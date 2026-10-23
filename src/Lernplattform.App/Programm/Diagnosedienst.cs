@@ -78,8 +78,21 @@ public static class Diagnosedienst
     /// </summary>
     public static void Verbinden(Control ansicht)
     {
+        if (ReferenceEquals(_ansicht, ansicht))
+        {
+            return;
+        }
         if (_ansicht is not null)
         {
+            // Android baut die Ansicht bei einer neuen Activity neu: Bindungen umhaengen, sonst nichts doppelt (Gegenpruefung W2 Fund 6)
+            var aktiv = _gebunden;
+            Ausschalten();
+            _ansicht = ansicht;
+            _fenster = TopLevel.GetTopLevel(ansicht);
+            if (aktiv && Messung.Aktiv)
+            {
+                Einschalten();
+            }
             return;
         }
         _ansicht = ansicht;
@@ -230,7 +243,8 @@ public static class Diagnosedienst
         {
             return;
         }
-        Messung.Aufzeichnen(Leistungsmessung.EreignisSeite, von, nach, ms, elemente: Elemente(), messart: Leistungsmessung.MessartGezeichnet);
+        // PC misst bis gezeichnet (messart 2, B-I-05), das Handy wie MobilePerf ohne messart (Gegenpruefung W2 Fund 5)
+        Messung.Aufzeichnen(Leistungsmessung.EreignisSeite, von, nach, ms, elemente: Elemente(), messart: Pc ? Leistungsmessung.MessartGezeichnet : null);
     }
 
     /// <summary>Darstellungs- oder Schriftwechsel (theme): Dauer des Neuaufbaus, danach sofort schreiben.</summary>
@@ -336,8 +350,17 @@ public static class Diagnosedienst
         var verzoegerungen = zug.Verzoegerungen.Count > 0 ? zug.Verzoegerungen : [0.0];
         static string Text(Size groesse) => ((int)groesse.Width).ToString(System.Globalization.CultureInfo.InvariantCulture) + "x"
             + ((int)groesse.Height).ToString(System.Globalization.CultureInfo.InvariantCulture);
-        Messung.Aufzeichnen(Leistungsmessung.EreignisGroesse, Text(zug.Von), _groesse is { } jetzt ? Text(jetzt) : "",
-            verzoegerungen.Average(), verzoegerungen.Max(), zug.Schritte, zug.Ereignisse, Elemente());
+        var nach = _groesse is { } jetzt ? Text(jetzt) : "";
+        if (Pc)
+        {
+            Messung.Aufzeichnen(Leistungsmessung.EreignisGroesse, Text(zug.Von), nach,
+                verzoegerungen.Average(), verzoegerungen.Max(), zug.Schritte, zug.Ereignisse, Elemente());
+        }
+        else
+        {
+            // Handy wie MobilePerf._finish_resize: von, nach, Schritte, Elemente
+            Messung.Aufzeichnen(Leistungsmessung.EreignisGroesse, Text(zug.Von), nach, anzahl: zug.Schritte, elemente: Elemente());
+        }
         Messung.Schreiben();
     }
 

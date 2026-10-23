@@ -35,7 +35,19 @@ public class EinstellungenSperreTests
                 }
             }
         })).ToArray();
+        // Gegenpruefung W2 Fund 2: dazu Leser ohne Sperre (Oberflaeche, Abgleich), die dauernd laden
+        var fertig = false;
+        var leser = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
+        {
+            var einstellungen = new Einstellungen(ordner.Pfad);
+            while (!Volatile.Read(ref fertig))
+            {
+                einstellungen.Laden();
+            }
+        })).ToArray();
         await Task.WhenAll(faeden);
+        Volatile.Write(ref fertig, true);
+        await Task.WhenAll(leser);
         var ende = new Einstellungen(ordner.Pfad).Laden();
         for (var nr = 0; nr < 4; nr++)
         {

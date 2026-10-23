@@ -72,7 +72,7 @@ public static class Einzelstart
         }
     }
 
-    /// <summary>Windows: Freigabe- oder Sperrverletzung; Linux/macOS: flock meldet "wird benutzt" (EWOULDBLOCK).</summary>
+    /// <summary>Windows: Freigabe- oder Sperrverletzung; Linux/macOS: flock meldet "wird benutzt" (EWOULDBLOCK, Linux 11, macOS 35).</summary>
     private static bool IstBelegt(IOException e)
     {
         if (OperatingSystem.IsWindows())
@@ -80,7 +80,9 @@ public static class Einzelstart
             var code = e.HResult & 0xFFFF;
             return code is 32 or 33;   // ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION
         }
-        return true;
+        // .NET traegt unter Unix die errno ein (Versuch: Linux 11): nur EWOULDBLOCK ist "belegt",
+        // ein anderer E/A-Fehler heisst "Sperre nicht verfuegbar" (Gegenpruefung W2 Fund 8)
+        return e.HResult == (OperatingSystem.IsMacOS() ? 35 : 11);
     }
 
     private static string AntwortPfad(string ordner, string token) => Path.Combine(ordner, Praefix + token + AntwortEndung);

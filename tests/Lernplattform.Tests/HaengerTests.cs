@@ -162,6 +162,15 @@ public sealed class HaengerTests : IDisposable
         Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(Path.Combine(_ordner.Pfad, "fehlt.log")));
     }
 
+    /// <summary>Gegenpruefung W2 Fund 4: nach einem Abruf (kill -USR1) nennen die Optionen die Datei, nicht "Keine Hänger".</summary>
+    [Fact]
+    public void ZustandTextNachAbruf()
+    {
+        Haenger.Abruf();
+        Assert.Contains("| Abruf (Signal USR1): Seite: -, Vorgang: bereit", Log(), StringComparison.Ordinal);
+        Assert.StartsWith("haenger.log: ", Haenger.ZustandText(Haenger.Pfad(_ordner.Pfad)), StringComparison.Ordinal);
+    }
+
     [Fact]
     public void GrosseDateiWirdBeimStartGekuerzt()
     {

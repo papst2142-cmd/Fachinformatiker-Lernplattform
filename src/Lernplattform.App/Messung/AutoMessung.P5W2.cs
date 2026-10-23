@@ -13,6 +13,9 @@ public static partial class AutoMessung
     /// <summary>Anzahl der W2-Ansichten (fuer den Bericht): der Bereich, zwei Fenster, ein Kurzhinweis.</summary>
     public const int P5W2AnsichtenAnzahl = 1 + 2 + 1;
 
+    /// <summary>Fehlender Diagnose-Bereich (zaehlt als Fund im Urteil).</summary>
+    private static int _w2Fehlt;
+
     private static (string Name, Func<Task<int>> Zeigen)[] P5W2Fenster() =>
     [
         ("diagnose/ordner-fehler", () => Dialog.Zeigen(DiagnoseTexte.OrdnerOeffnen,
@@ -22,18 +25,22 @@ public static partial class AutoMessung
 
     private static async IAsyncEnumerable<string> P5W2Ansichten(MainView ansicht)
     {
-        if (ansicht.GebauteSeiten.TryGetValue(Seiten.Optionen, out var o) && o is OptionenSeite optionen)
+        // erst zeigen (baut die Seite); fehlt der Bereich danach, ist das ein Fund statt eines stillen Uebergehens (Gegenpruefung W2 Fund 11)
+        await ansicht.ZeigeAsync(Seiten.Optionen);
+        var optionen = (OptionenSeite)ansicht.GebauteSeiten[Seiten.Optionen];
+        optionen.OeffneBereich(Optionen.Diagnose, false);
+        if (optionen.DiagnoseBereich is not { } diagnose)
         {
-            await ansicht.ZeigeAsync(Seiten.Optionen);
-            optionen.OeffneBereich(Optionen.Diagnose, false);
-            if (optionen.DiagnoseBereich is { } diagnose)
-            {
-                await diagnose.Bericht;
-            }
-            await ansicht.BildFertigAsync();
-            await ansicht.BildFertigAsync();
-            yield return "optionen/diagnose";
+            Messwerte.Notiere("  FEHLER: Optionen ohne Bereich \"Diagnose und Werkzeuge\"");
+            _w2Fehlt++;
         }
+        else
+        {
+            await diagnose.Bericht;
+        }
+        await ansicht.BildFertigAsync();
+        await ansicht.BildFertigAsync();
+        yield return "optionen/diagnose";
         foreach (var (name, zeigen) in P5W2Fenster())
         {
             _ = zeigen();
