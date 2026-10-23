@@ -152,7 +152,9 @@ public static partial class HilfeTexte
             + "„Beim Start automatisch nach Updates suchen“ an, sucht die App beim Start von selbst.\n"
             + "\nAm PC führt „Jetzt aktualisieren“ durch Download und Installation, danach startet das Programm neu. "
             + "Am Handy wird die neue Version im Browser heruntergeladen. Danach die Datei öffnen und "
-            + "„Installieren“ tippen. Dein Lernstand bleibt erhalten."),
+            + "„Installieren“ tippen. Dein Lernstand bleibt erhalten.\n"
+            + "\nUnter Linux legt „Verknüpfung anlegen“ eine Verknüpfung im Anwendungsmenü und auf dem Desktop an "
+            + "oder erneuert sie, zum Beispiel nachdem du das AppImage verschoben hast."),
         new("farben", "Eigene Farben", ["Optionen"],
             "In den „Optionen“ unter „Optische Anpassungen“ bei „Farben“ liegen die „Vorlagen“ mit „Grundfarbe“ "
             + "und „Hintergrund“ (zum Aufklappen). In der hellen Darstellung heißen die Hintergründe nach ihrer "

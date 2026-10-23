@@ -1,5 +1,11 @@
 # Änderungen
 
+## Phase 6, Welle 2: Plattformen (ohne neue Version, Weisung P6-6/P6-7)
+Die Version bleibt A 0.11.0 (die neue Version kommt mit dem ersten Release in Welle 3).
+- Linux (installiertes AppImage): Optionen „Updates“ mit „Verknüpfung anlegen“. Die Verknüpfung kommt ins Anwendungsmenü und, wenn es einen Desktop-Ordner gibt, auf den Desktop; ein erneuter Klick erneuert sie (zum Beispiel nachdem das AppImage verschoben wurde). Beim ersten Start fragt das Programm einmal danach („Ja“, „Nein“ fragt beim nächsten Start wieder, „Nicht mehr fragen“). Der Hilfe-Artikel „Update“ erklärt den Knopf.
+- Windows: die Update-Probe deinstalliert zum Schluss und prüft, dass Datenordner und Lernstand dabei unverändert bleiben (T4); sie zählt, wie oft die Velopack-Sperre auftritt (T5, Sammelliste 46).
+- Start ohne Bedienung zeigt die neuen Ansichten in allen Schriftstufen, Größen und 72 Farbwelten.
+
 ## Phase 6, Welle 1: Release-Ablauf (ohne neue Version, Weisung P6-2)
 Keine neue Programmfunktion, die Version bleibt A 0.11.0 (Plan Phase 6, D5).
 - Release-Bau als Skript (`werkzeuge/release/baue_release.sh`), im vollen CI-Lauf ohne Hochladen geprüft; `release.yml` startet nur von Hand, nur von `main` und nur mit vollem Lauf 8/8 und legt höchstens einen Entwurf an.

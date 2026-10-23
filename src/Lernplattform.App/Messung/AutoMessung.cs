@@ -314,6 +314,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 6, W2: Updates mit "Verknüpfung anlegen", Rueckfrage beim Start und ihr Ergebnis
+                await foreach (var ansichtName in P6W2Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -336,6 +344,7 @@ public static partial class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis, Bitte warten beim Ersetzen"));
         Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
         Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
+        Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
@@ -1540,6 +1549,13 @@ public static partial class AutoMessung
                         }
                     }
                     await foreach (var name in P5W3Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P6W2Ansichten(ansicht))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
