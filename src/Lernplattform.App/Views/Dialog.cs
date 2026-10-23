@@ -35,7 +35,8 @@ public static class Dialog
 
     /// <summary>
     /// Phase 5 BE10 (UpdateDialog): wie oben, aber ein Knopf, fuer den bleibtOffen(nummer) true liefert,
-    /// schliesst das Fenster nicht (z. B. "Jetzt aktualisieren" zeigt danach den Fortschritt im selben Fenster).
+    /// schliesst das Fenster nicht (z. B. "Jetzt aktualisieren" zeigt danach den Fortschritt im selben Fenster);
+    /// bleibtOffen(-1) entscheidet ueber Escape (waehrend des Updates bleibt das Fenster offen).
     /// </summary>
     public static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, Func<int, bool> bleibtOffen,
         params string[] knoepfe) => Zeigen(titel, inhalt, vorbereiten, -1, knoepfe, bleibtOffen);
@@ -97,7 +98,10 @@ public static class Dialog
             if (e.Key == Key.Escape)
             {
                 e.Handled = true;
-                Schliessen(-1);
+                if (bleibtOffen?.Invoke(-1) != true)
+                {
+                    Schliessen(-1);
+                }
             }
         };
         ebene.Children.Add(fenster);

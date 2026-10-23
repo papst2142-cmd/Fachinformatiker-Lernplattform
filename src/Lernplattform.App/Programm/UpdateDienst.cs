@@ -192,7 +192,7 @@ public static class UpdateDienst
         var quelle = Aktuell.Quelle!();
         await Task.Run(() => UpdateAblauf.LadenAsync(quelle, angebot, fortschritt));
         installiere();
-        return await Task.Run(() => UpdateAblauf.Installieren(quelle, angebot, Zustand.Einstellungen));
+        return await Task.Run(() => UpdateAblauf.Installieren(quelle, angebot, Zustand.Einstellungen, sperreHalten: true));
     }
 
     /// <summary>Nach dem Start des Updaters: Programm schliessen (ohne letzten Abgleich).</summary>

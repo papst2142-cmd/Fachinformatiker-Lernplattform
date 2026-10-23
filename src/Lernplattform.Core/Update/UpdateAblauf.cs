@@ -160,13 +160,36 @@ public static class UpdateAblauf
     /// Wartet wie Abgleich und Uebernahme auf <see cref="Vorgaenge"/> (nur im Hintergrund aufrufen);
     /// die Oberflaeche fragt vorher <see cref="Vorgaenge.Belegt"/> und lehnt dann mit AbgleichTexte.Belegt ab.
     /// </summary>
-    public static string Installieren(IUpdateQuelle quelle, UpdateAngebot angebot, Einstellungen einstellungen, string? ordner = null, Uhr? uhr = null)
+    public static string Installieren(IUpdateQuelle quelle, UpdateAngebot angebot, Einstellungen einstellungen, string? ordner = null, Uhr? uhr = null,
+        bool sperreHalten = false)
     {
         if (!quelle.Installiert)
         {
             throw new UpdateFehler(UpdateTexte.NurInstalliert);
         }
-        using var sperre = Vorgaenge.Sperren();   // D8: nicht neben Abgleich, Uebernahme oder Sicherung (die Oberflaeche lehnt vorher ab)
+        var sperre = Vorgaenge.Sperren();   // D8: nicht neben Abgleich, Uebernahme oder Sicherung (die Oberflaeche lehnt vorher ab)
+        try
+        {
+            var text = InstallierenGesperrt(quelle, angebot, einstellungen, ordner, uhr);
+            if (sperreHalten)
+            {
+                // bis das Programm endet (der Updater wartet darauf): kein Abgleich mehr dazwischen (Gegenpruefung W3 Fund 4)
+                GehalteneSperre = sperre;
+                sperre = null;
+            }
+            return text;
+        }
+        finally
+        {
+            sperre?.Dispose();
+        }
+    }
+
+    /// <summary>Nach einem gestarteten Update gehaltene Sperre (gibt das Ende des Programms frei).</summary>
+    internal static IDisposable? GehalteneSperre { get; set; }
+
+    private static string InstallierenGesperrt(IUpdateQuelle quelle, UpdateAngebot angebot, Einstellungen einstellungen, string? ordner, Uhr? uhr)
+    {
         var daten = ordner ?? Ablage.Datenordner();
         string? kopie;
         try

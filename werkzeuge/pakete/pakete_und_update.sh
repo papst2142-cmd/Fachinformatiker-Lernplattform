@@ -103,21 +103,25 @@ warte_auf() { # Version, die erreicht sein muss (Update laeuft nach dem Beenden 
   echo "FEHLER: Version $1 nicht erreicht"; cat "$LERNPLATTFORM_UPDATE_BERICHT"; return 1
 }
 
+letzte() { # letzte Zeile des Berichts ohne \r (Windows schreibt CRLF; grep -x vergleicht die ganze Zeile)
+  tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | tr -d '\r'
+}
+
 pruefe_abschluss() { # Anzeige, Zahl der Kopien
   starte bericht "$AUS"
-  if ! tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | grep -qx "bericht: Abschluss ok $1; Kopien vor dem Update: $2"; then
+  if ! letzte | grep -qx "bericht: Abschluss ok $1; Kopien vor dem Update: $2"; then
     echo "FEHLER: erwartet Abschluss ok $1 mit $2 Kopien"; cat "$LERNPLATTFORM_UPDATE_BERICHT"; return 1
   fi
   # zweiter Start: keine zweite Meldung
   starte bericht "$AUS"
-  if ! tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: $2"; then
+  if ! letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: $2"; then
     echo "FEHLER: zweite Meldung nach dem Neustart"; cat "$LERNPLATTFORM_UPDATE_BERICHT"; return 1
   fi
 }
 
 starte bericht "$AUS"
 grep -q "bericht: Version 1.0.0-a.0.11.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
-grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0" "$LERNPLATTFORM_UPDATE_BERICHT"
+letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
 starte suchen "$AUS/feed-A-0.11.1"
 warte_auf 1.0.0-a.0.11.1
 pruefe_abschluss "A 0.11.1" 1

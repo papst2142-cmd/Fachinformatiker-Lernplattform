@@ -119,6 +119,9 @@ internal static class Updater
 /// <summary>Velopack als <see cref="IUpdateQuelle"/>; Fehler werden zu deutschen Texten wie in fisi_update.py.</summary>
 internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true) : IUpdateQuelle
 {
+    /// <summary>Hoechstens so lange ohne Fortschritt (ein Prozent des Pakets), dann DownloadZeit.</summary>
+    public static readonly TimeSpan Stillstand = TimeSpan.FromSeconds(60);
+
     public UpdateManager Manager { get; } = new(quelle);
 
     public bool Installiert => Manager.IsInstalled;
@@ -161,13 +164,24 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true)
     {
         var info = (UpdateInfo)angebot.Intern!;
         var gesamt = Math.Max(1, angebot.Groesse);
+        // wie Python (30 s je Lesevorgang): kommt Stillstand lang kein Fortschritt, gilt der Download als zu langsam
+        using var stillstand = CancellationTokenSource.CreateLinkedTokenSource(abbruch);
+        stillstand.CancelAfter(Stillstand);
         try
         {
-            await Manager.DownloadUpdatesAsync(info, prozent => fortschritt(gesamt * prozent / 100, gesamt), abbruch).ConfigureAwait(false);
+            await Manager.DownloadUpdatesAsync(info, prozent =>
+            {
+                stillstand.CancelAfter(Stillstand);
+                fortschritt(gesamt * prozent / 100, gesamt);
+            }, stillstand.Token).ConfigureAwait(false);
         }
         catch (ChecksumFailedException)
         {
             throw new UpdateFehler(UpdateTexte.DownloadPruefsumme);
+        }
+        catch (OperationCanceledException) when (!abbruch.IsCancellationRequested)
+        {
+            throw new UpdateFehler(UpdateTexte.DownloadZeit);
         }
         return Path.Combine(VelopackLocator.Current.PackagesDir!, info.TargetFullRelease.FileName);
     }

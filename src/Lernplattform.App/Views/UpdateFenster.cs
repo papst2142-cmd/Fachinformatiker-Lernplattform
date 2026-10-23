@@ -86,9 +86,13 @@ public sealed class UpdateFenster
         }
     }
 
-    /// <summary>Knopf 0 ("Jetzt aktualisieren", "Zur Download-Seite") bleibt im Fenster; "Herunterladen" und "Später" schliessen.</summary>
+    /// <summary>Knopf 0 ("Jetzt aktualisieren", "Zur Download-Seite") bleibt im Fenster; "Herunterladen", "Später" und Escape schliessen.</summary>
     private bool Gewaehlt(int nummer)
     {
+        if (_laeuft)
+        {
+            return true;    // waehrend Laden und Installieren schliesst auch Escape nicht (Gegenpruefung W3 Fund 2)
+        }
         if (nummer != 0)
         {
             return false;
@@ -189,6 +193,10 @@ public sealed class UpdateFenster
         Zeile(text, farbe);
         _balken.IsVisible = balken is not null;
         _balken.Value = balken ?? 0;
+        foreach (var knopf in _knoepfe)
+        {
+            knopf.IsEnabled = balken is null;   // wie beim echten Laden gesperrt
+        }
         if (balken is null && _knoepfe.Count == 2)
         {
             ((TextBlock)_knoepfe[0].Content!).Text = UpdateTexte.Erneut;

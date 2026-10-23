@@ -47,9 +47,9 @@
 - Linux nur AppImage mit Velopack-Update; Android-Update über neue APK (gleicher Schlüssel); nur arm64-v8a.
 
 ## Version
-- Auf `main` intern `0.10.0` (Anzeige „A 0.10.0“, Paket `1.0.0-a.0.10.0`, Android 1001000, Update-APK in `ci.yml` 1001001, main 540027e, Ende Phase 4). Nächste Programmversion erst, wenn die Weisung es sagt (Plan Phase 5: A 0.11.0 am Ende der Phase). Versionsstellen finden mit `grep -nE "0\.10\.[01]|100100"`. Bei Versionssprung auch `ci.yml` (Versionscode, Artefaktnamen) und `werkzeuge/pakete/pakete_und_update.sh` anpassen. Noch kein Tag, kein öffentliches Release. Reihenfolge A < B < 1.0.
+- Auf `main` intern `0.10.0` (Anzeige „A 0.10.0“, main 540027e, Ende Phase 4). **Zweig `phase5-w3` hebt auf `0.11.0`** (Anzeige „A 0.11.0“, Paket `1.0.0-a.0.11.0`, Android 1001100, Update-APK in `ci.yml` 1001101, Update-Probe A 0.11.0 → A 0.11.1 → B 0.1.0), gilt nach dem Merge von W3 (Ende Phase 5). Versionsstellen finden mit `grep -nE "0\.11\.[01]|100110[01]"`. Bei Versionssprung auch `ci.yml` (Versionscode, Artefaktnamen) und `werkzeuge/pakete/pakete_und_update.sh` anpassen. Noch kein Tag, kein öffentliches Release. Reihenfolge A < B < 1.0.
 - Schema x.y.z (Nico 20.10.2026): x = 0 in Alpha/Beta, y = neue Funktionen, z = Fixes. **Bei jedem Update Versionsnummer +1** (nur in `Directory.Build.props`; Android-Versionscode wird daraus berechnet), aber erst wenn die Weisung es sagt. Jede Version bekommt einen Abschnitt in `AENDERUNGEN.md`. Reine Dokument-PRs ohne Programmänderung erhöhen die Version nicht.
-- Android-Versionscode: Stufe × 1 000 000 + Haupt × 10 000 + Neben × 100 + Fix (A=1, B=2, ab 1.0=3); A 0.10.0 = 1001000. Verlauf: Phase 1 A 0.2.0, Phase 2 A 0.3.0–0.6.0, Phase 3 bis A 0.9.0, Phase 4 A 0.10.0; Fixes dazwischen z+1.
+- Android-Versionscode: Stufe × 1 000 000 + Haupt × 10 000 + Neben × 100 + Fix (A=1, B=2, ab 1.0=3); A 0.10.0 = 1001000. Verlauf: Phase 1 A 0.2.0, Phase 2 A 0.3.0–0.6.0, Phase 3 bis A 0.9.0, Phase 4 A 0.10.0, Phase 5 A 0.11.0; Fixes dazwischen z+1.
 
 ## Regeln (fest)
 - Commits Deutsch, ASCII, Identität `papst2142-cmd <333448595+papst2142-cmd@users.noreply.github.com>`. Nie private E-Mail, nie Zugangsdaten, keine Schlüssel im Repo.

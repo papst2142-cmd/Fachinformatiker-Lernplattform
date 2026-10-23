@@ -541,6 +541,30 @@ public class UpdateTests
         Assert.False(quelle.SperreFrei);            // waehrend des Starts gehalten
     }
 
+    [Fact]
+    public void NachDemStartBleibtDieSperreBisZumEnde()
+    {
+        // Gegenpruefung W3 Fund 4: nach dem Start des Updaters kein Abgleich mehr bis zum Ende des Programms
+        using var temp = new TempOrdner();
+        Assert.Equal(UpdateTexte.Installiert, UpdateAblauf.Installieren(new Quelle(), new UpdateAngebot("A 0.11.1", "", "s", "p"),
+            new Einstellungen(temp.Pfad), temp.Pfad, FesteUhr, sperreHalten: true));
+        try
+        {
+            Assert.True(Vorgaenge.Belegt);
+            Assert.NotNull(UpdateAblauf.GehalteneSperre);
+        }
+        finally
+        {
+            UpdateAblauf.GehalteneSperre?.Dispose();
+            UpdateAblauf.GehalteneSperre = null;
+        }
+        // scheitert der Start, bleibt nichts gehalten
+        var e = Assert.Throws<UpdateFehler>(() => UpdateAblauf.Installieren(new Quelle { BeimInstallieren = () => throw new IOException("x") },
+            new UpdateAngebot("A 0.11.1", "", "s", "p"), new Einstellungen(temp.Pfad), temp.Pfad, FesteUhr, sperreHalten: true));
+        Assert.Equal(UpdateTexte.StartFehler, e.Message);
+        Assert.Null(UpdateAblauf.GehalteneSperre);
+    }
+
     // ---- Hilfen -------------------------------------------------------------------------------
 
     private sealed class Attrappe(Func<HttpRequestMessage, HttpResponseMessage> antwort) : HttpMessageHandler
