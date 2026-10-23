@@ -9,19 +9,20 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 - Code: `papst2142-cmd/Fachinformatiker-Lernplattform` (`main`, geschützt: Änderungen nur per PR, Squash nach Freigabe). Regeln: `CLAUDE.md` im Repo.
 - Austausch: `papst2142-cmd/Fi-Austausch` (`weisungen/`, `meldungen/`, `anlagen/`, `SAMMELLISTE_NEU.md`).
 - Referenz (nur lesen): `papst2142-cmd/Fisi-Lernplattform` (Python, eingefroren seit v0.63.2, main fbc657d).
-- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md`. Phasenpläne in `Fi-Austausch/weisungen/`: `Plan_Phase0_CSharp.md`, `Plan_Phase1_CSharp.md`, `Plan_Phase2_CSharp.md` (alle umgesetzt). Plan Phase 3 (Rechner) entsteht als Nächstes.
+- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung und Gesamttest, 7 Spiel). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–4 umgesetzt (`Plan_Phase3_CSharp.md`, `Plan_Phase4_CSharp.md` liegen noch dort, ältere in der Git-Historie), **`Plan_Phase5_CSharp.md` als Entwurf zur Freigabe**.
+- Zusammenarbeit: `Fi-Austausch/weisungen/Regel_Automatische_Uebergabe.md` (bindend, Abschnitte 1–11, Startzeilen für neue Threads).
 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.6.0** auf `main` (4ecf7c7, W5 gemergt, PR #9; Paket 1.0.0-a.0.6.0, Android 1000600, Update-APK 1000601); kein Tag, kein öffentliches Release |
-| Phase | 0, 1 und **2 (Lernkern) abgenommen und gemergt**. Phase 2: W1 (PR #4), W2 (PR #5), W3 (PR #6), W4 (PR #7), W5 (PR #9, Weisungen P2-18/P2-19): Karteikarten, Wiederholung, Prüfungstrainer, Fortschritt, Suche, Übernahme, Rücksicherung, Abgleich PC↔Handy, Texte PC = Handy (Geraetetexte), Farbregler mit Spur |
-| Jetzt | **Phase 3 (Rechner): Plan als Entwurf vorlegen** (Weisung P2-19 A3; Aufbau wie Plan_Phase2: Inventar Python, Vergleichswerte, Pakete, Wellen, Entscheidungen für Nico). Kein Bau vor Nicos Freigabe. Eigener Thread |
-| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms (Nico, P2-17, `Farbreglerregel.cs`) |
-| Vergleichswerte | G1, G2, G6, G6b, G9–G14 bestehen; Phase 2: G15–G17, G20 (W1), G22 lerntexte (W2), G18 auswertung, G19 suche (W3), G21 abgleich (W4), G23 reglerspur (W5, `erzeuge_reglerspur.py`). CI erzeugt alle neu |
-| Letzte/nächste Meldung | P2-13 (Doku nach Merge W5) / **P3-1** (Plan Phase 3) |
-| Sammelliste | nächste freie Nummer **29**. Offen für Nico: 24 (Rechnername im Gerätenamen); Nico-Tests am S24: 18, 21, 23, 26; 28 = CI-Einzelwerte über 400 ms beobachten |
-| Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Aktueller Stand“ (Regel A) |
+| Version | **A 0.10.0** auf `main` (540027e, PR #21; Paket 1.0.0-a.0.10.0, Android 1001000, Update-APK 1001001); kein Tag, kein öffentliches Release |
+| Phase | 0–4 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche) |
+| Jetzt | **Phase 5 (Betrieb): Plan liegt zur Prüfung und Freigabe** (Weisung P5-1). Wellen W1 Sicherung, W2 Diagnose, W3 Update + A 0.11.0. Kein Bau vor „Plan freigegeben“ |
+| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
+| Vergleichswerte | G1–G36 bestehen, CI erzeugt alle neu; Phase 5 plant G37–G41 |
+| Letzte/nächste Meldung | **P5-1** (Plan Phase 5) / P5-2 |
+| Sammelliste | nächste freie Nummer **65**; offen für Nico: 24 (Rechnername im Gerätenamen) |
+| Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Bleibende Regeln“ (Regel A) |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).
