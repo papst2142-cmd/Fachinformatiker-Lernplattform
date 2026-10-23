@@ -29,6 +29,74 @@ public static class AutoMessung
     public const double PcBreite = 1360;
     public const double PcHoehe = 880;
 
+    /// <summary>
+    /// Weisung P4-12 B6: einen Schritt bis zum fertigen Bild messen. Liegt die Messung ueber
+    /// <paramref name="grenze"/> und ist der Messpunkt wiederholbar, wird dieselbe Handlung bis zu
+    /// 3 Mal gemessen (vorher <paramref name="zurueck"/> = Zustand davor, nicht gemessen, und eine
+    /// kurze Pause; kein Vorwaermen). Ohne <paramref name="zurueck"/> und ohne
+    /// <paramref name="wiederholbar"/> bleibt der Messpunkt streng (eine Messung).
+    /// </summary>
+    private static async Task<Messreihe> BildMessenAsync(MainView ansicht, Action schritt, Action? zurueck = null,
+        bool wiederholbar = false, double grenze = Abbruch)
+    {
+        async Task<double?> Einmal()
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await ansicht.BildFertigAsync();
+            return uhr.Elapsed.TotalMilliseconds;
+        }
+        var erste = await Einmal();
+        if (zurueck is null && !wiederholbar)
+        {
+            return Messwiederholung.Einmal(erste, grenze);
+        }
+        return await Messwiederholung.MessenAsync(erste, grenze, Einmal,
+            zurueck is null ? null : async () => { zurueck(); await ansicht.BildFertigAsync(); }, Task.Delay);
+    }
+
+    /// <summary>Weisung P4-12 B6: eine reine Rechnung (ohne Bild) messen, ueber der Grenze bis zu 3 Mal.</summary>
+    private static async Task<Messreihe> RechnungMessenAsync(Func<double> rechnung, double grenze = Abbruch) =>
+        await Messwiederholung.MessenAsync(rechnung(), grenze, () => Task.FromResult<double?>(rechnung()), null, Task.Delay);
+
+    /// <summary>
+    /// Ergebniszeile eines Messpunkts (Messwert = kleinste Einzelmessung; nach einer Wiederholung
+    /// alle Einzelmessungen) und bei Rot die Fehlerzeile mit Messpunkt, Wert, Grenze und allen
+    /// Einzelmessungen (Weisung P4-12 B5). Rueckgabe 1 = Fund.
+    /// </summary>
+    private static int Ergebnis(string titel, Messreihe reihe)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var ms = reihe.Bester;
+        Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}")
+            + (reihe.Wiederholt ? " (wiederholt, Einzelmessungen " + reihe.Einzelwerte() + ")" : ""));
+        if (!reihe.Rot)
+        {
+            return 0;
+        }
+        Messwerte.Notiere("  FEHLER: " + reihe.Fehlertext(titel));
+        return 1;
+    }
+
+    /// <summary>
+    /// Weisung P4-12 B6: ein Wert einer Messreihe (Wechsel Hell/Dunkel, Schriftstufe); ueber
+    /// 1 000 ms wird nach <paramref name="zurueck"/> wiederholt, die Reihe bekommt den kleinsten Wert.
+    /// Rot bleibt rot ueber "Zeitgrenze CI" am Ende; die Einzelmessungen stehen dann in <paramref name="rot"/>.
+    /// </summary>
+    private static async Task ReihenwertAsync(MainView ansicht, string name, Action schritt, Action zurueck, List<string> rot)
+    {
+        var reihe = await BildMessenAsync(ansicht, schritt, zurueck);
+        Messwerte.Reihe(name, reihe.Bester ?? double.PositiveInfinity);
+        if (reihe.Wiederholt)
+        {
+            Messwerte.Notiere("Wiederholt " + name + ": Einzelmessungen " + reihe.Einzelwerte() + (reihe.Rot ? " (rot)" : " (gruen)"));
+        }
+        if (reihe.Rot)
+        {
+            rot.Add(reihe.Fehlertext(name));
+        }
+    }
+
     public static async Task<int> LaufAsync(MainView ansicht)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -58,14 +126,10 @@ public static class AutoMessung
         {
             await kartenSeite.Geladen;
             await trainerSeite.Geladen;
+            // einmalig (Laden gleich nach dem Start), nicht wiederholbar: streng
             foreach (var (titel, ms) in new[] { ("Karteikarten bis erste Karte", kartenSeite.InhaltMs), ("Pruefungstrainer bis Vorbereitung", trainerSeite.InhaltMs) })
             {
-                Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms"));
-                if (ms is null or > Abbruch)
-                {
-                    Messwerte.Notiere("  FEHLER: nicht fertig oder ueber 1000 ms");
-                    funde++;
-                }
+                funde += Ergebnis(titel, Messwiederholung.Einmal(ms, Abbruch));
             }
         }
 
@@ -77,23 +141,28 @@ public static class AutoMessung
         funde += await KlausurMesspunkteAsync(ansicht);
         funde += await ProjektMesspunkteAsync(ansicht);
 
-        // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge)
+        // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge); ueber 1 000 ms wird derselbe
+        // Wechsel wiederholt (vorher die andere Darstellung bzw. die Stufe davor, Weisung P4-12 B6)
         var werte = Zustand.Werte;
+        var reihenRot = new List<string>();
+        void Farben(string darstellung) => FarbenAnwenden.Anwenden(Farbwelt.Berechne(darstellung, Einstellungen.Grundfarbe(werte), Einstellungen.Hintergrund(werte)));
+        var stufen = Einstellungen.Schriftgroessen.Append(Einstellungen.SchriftNormal).ToList();
         for (var runde = 0; runde < 3; runde++)
         {
             foreach (var darstellung in (string[])[Farbwelt.Hell, Farbwelt.Dunkel])
             {
-                var uhr = Stopwatch.StartNew();
-                FarbenAnwenden.Anwenden(Farbwelt.Berechne(darstellung, Einstellungen.Grundfarbe(werte), Einstellungen.Hintergrund(werte)));
-                await ansicht.BildFertigAsync();
-                Messwerte.Reihe("Wechsel Hell/Dunkel", uhr.Elapsed.TotalMilliseconds);
+                var andere = darstellung == Farbwelt.Hell ? Farbwelt.Dunkel : Farbwelt.Hell;
+                await ReihenwertAsync(ansicht, "Wechsel Hell/Dunkel", () => Farben(darstellung), () => Farben(andere), reihenRot);
             }
-            foreach (var stufe in Einstellungen.Schriftgroessen.Append(Einstellungen.SchriftNormal))
+            for (var i = 0; i < stufen.Count; i++)
             {
-                var uhr = Stopwatch.StartNew();
-                Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
-                await ansicht.BildFertigAsync();
-                Messwerte.Reihe("Wechsel Schriftstufe", uhr.Elapsed.TotalMilliseconds);
+                var stufe = stufen[i];
+                var davor = stufen[(i + stufen.Count - 1) % stufen.Count];
+                if (davor == stufe)
+                {
+                    davor = stufen.First(x => x != stufe);
+                }
+                await ReihenwertAsync(ansicht, "Wechsel Schriftstufe", () => Schrift.Anwenden(Zustand.SchriftFaktor(stufe)), () => Schrift.Anwenden(Zustand.SchriftFaktor(davor)), reihenRot);
             }
         }
 
@@ -239,6 +308,20 @@ public static class AutoMessung
         Messwerte.Notiere(zuLang.Count == 0
             ? "Zeitgrenze CI: alle Werte unter 1000 ms"
             : "Zeitgrenze CI ueberschritten (ueber 1000 ms): " + string.Join(", ", zuLang));
+        // Weisung P4-12 B5: Messpunkt, Wert, Grenze und Einzelmessungen; erstes Oeffnen und der
+        // Seitenwechsel (MainView) sind einmalige Messungen und werden nicht wiederholt
+        foreach (var (seite, ms) in Messwerte.ErstesOeffnen.Where(e => e.Value > Abbruch))
+        {
+            Messwerte.Notiere("  FEHLER: " + Messwiederholung.Einmal(ms, Abbruch).Fehlertext("Erstes Oeffnen '" + seite + "'"));
+        }
+        foreach (var text in reihenRot)
+        {
+            Messwerte.Notiere("  FEHLER: " + text);
+        }
+        foreach (var (reihe, ms) in Messwerte.Hoechstwerte().Where(r => r.Value > Abbruch && !reihenRot.Any(t => t.StartsWith(r.Key + ":", StringComparison.Ordinal))))
+        {
+            Messwerte.Notiere("  FEHLER: " + Messwiederholung.Einmal(ms, Abbruch).Fehlertext(reihe + " (Hoechstwert)"));
+        }
         funde += zuLang.Count;
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
@@ -390,32 +473,32 @@ public static class AutoMessung
             return 1;
         }
         var s = rechner.Subnet;
-        async Task Messpunkt(string titel, Action schritt, bool ohneFehler = true)
+        // Weisung P4-12 B6: mit zurueck (Zustand davor) oder wiederholbar (gleiche Rechnung) wird
+        // ueber 1 000 ms wiederholt; ohne beides streng
+        async Task Messpunkt(string titel, Action schritt, bool ohneFehler = true, Action? zurueck = null, bool wiederholbar = false)
         {
-            var uhr = Stopwatch.StartNew();
-            schritt();
-            await ansicht.BildFertigAsync();
-            var ms = uhr.Elapsed.TotalMilliseconds;
+            var reihe = await BildMessenAsync(ansicht, schritt, zurueck, wiederholbar);
             var fehler = s.Aktuell.Fehler.IsVisible ? s.Aktuell.Fehler.Text : null;
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms > Abbruch || (ohneFehler && fehler is not null))
+            var rot = Ergebnis(titel, reihe);
+            funde += rot;
+            if (ohneFehler && fehler is not null)
             {
-                Messwerte.Notiere("  FEHLER: " + (fehler ?? "ueber 1000 ms"));
-                funde++;
+                Messwerte.Notiere("  FEHLER: " + fehler);
+                funde += 1 - rot;
             }
         }
         rechner.Waehle("subnetting");
         s.ModusSetzen("ipv4");
         await ansicht.BildFertigAsync();
-        await Messpunkt("Rechner Wechsel IPv4 -> IPv6", () => s.ModusSetzen("ipv6"));
+        await Messpunkt("Rechner Wechsel IPv4 -> IPv6", () => s.ModusSetzen("ipv6"), zurueck: () => s.ModusSetzen("ipv4"));
         s.AnsichtSetzen("ipv6", "aufteilen");
         await ansicht.BildFertigAsync();
         foreach (var (netz, anzahl) in new[] { ("2001:db8::/32", "4294967296"), ("2001:db8::/64", "18446744073709551616") })
         {
             s.Aktuell.Netz.Text = netz;
             s.Aktuell.Zweites!.Text = anzahl;
-            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, erste Seite", s.Aktuell.Rechnen);
-            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, letzte Seite", () => s.Aktuell.Blaettern("last"));
+            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, erste Seite", s.Aktuell.Rechnen, wiederholbar: true);
+            await Messpunkt($"Rechner {netz} in {anzahl} Subnetze, letzte Seite", () => s.Aktuell.Blaettern("last"), zurueck: () => s.Aktuell.Blaettern("first"));
             Messwerte.Notiere("  " + s.Aktuell.SeiteText);
         }
         s.ModusSetzen("ipv4");
@@ -423,34 +506,31 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
         s.Aktuell.Netz.Text = "10.0.0.0/16";
         s.Aktuell.Zweites!.Text = string.Join("\n", Hostbedarf12);
-        await Messpunkt("Rechner Hostbedarf mit 12 Zeilen", s.Aktuell.Rechnen);
-        await Messpunkt("Rechner Rechenweg (Hostbedarf) oeffnen", () => s.RechenwegZeigen(true));
+        await Messpunkt("Rechner Hostbedarf mit 12 Zeilen", s.Aktuell.Rechnen, wiederholbar: true);
+        await Messpunkt("Rechner Rechenweg (Hostbedarf) oeffnen", () => s.RechenwegZeigen(true), zurueck: () => s.RechenwegZeigen(false));
         s.RechenwegZeigen(false);
         await ansicht.BildFertigAsync();
         // W4a (Weisung P3-17): Auswahl-Pillen, Datenmengen und Uebertragung mit Rechenweg
         var d = rechner.Daten;
-        async Task DatenMesspunkt(string titel, Action schritt, Func<string> fehler)
+        async Task DatenMesspunkt(string titel, Action schritt, Func<string> fehler, Action? zurueck = null, bool wiederholbar = false)
         {
-            var uhr = Stopwatch.StartNew();
-            schritt();
-            await ansicht.BildFertigAsync();
-            var ms = uhr.Elapsed.TotalMilliseconds;
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms > Abbruch || fehler().Length > 0)
+            var rot = Ergebnis(titel, await BildMessenAsync(ansicht, schritt, zurueck, wiederholbar));
+            funde += rot;
+            if (fehler().Length > 0)
             {
-                Messwerte.Notiere("  FEHLER: " + (fehler().Length > 0 ? fehler() : "ueber 1000 ms"));
-                funde++;
+                Messwerte.Notiere("  FEHLER: " + fehler());
+                funde += 1 - rot;
             }
         }
-        await DatenMesspunkt("Rechner Auswahl Datenmengen", () => rechner.Waehle("datenmengen"), () => "");
+        await DatenMesspunkt("Rechner Auswahl Datenmengen", () => rechner.Waehle("datenmengen"), () => "", Auswahl(rechner, rechner.Gewaehlt));
         d.DatenEingabe("1.000.000.000.000", "TiB");
-        await DatenMesspunkt("Datenmengen 10^12 TiB berechnen", d.DatenRechnen, () => d.DatenFehler);
-        await DatenMesspunkt("Rechenweg (Datenmengen) oeffnen", () => d.DatenWeg.Zeigen(true), () => d.DatenFehler);
+        await DatenMesspunkt("Datenmengen 10^12 TiB berechnen", d.DatenRechnen, () => d.DatenFehler, wiederholbar: true);
+        await DatenMesspunkt("Rechenweg (Datenmengen) oeffnen", () => d.DatenWeg.Zeigen(true), () => d.DatenFehler, () => d.DatenWeg.Zeigen(false));
         d.DatenWeg.Zeigen(false);
-        await DatenMesspunkt("Rechner Auswahl Uebertragung", () => rechner.Waehle("uebertragung"), () => "");
+        await DatenMesspunkt("Rechner Auswahl Uebertragung", () => rechner.Waehle("uebertragung"), () => "", Auswahl(rechner, rechner.Gewaehlt));
         d.DauerEingabe("1.000.000.000.000", "TiB", "0,001", "kbit/s", "0,1");
-        await DatenMesspunkt("Uebertragung 10^12 TiB mit 0,001 kbit/s bei 0,1 % berechnen", d.DauerRechnen, () => d.DauerFehler);
-        await DatenMesspunkt("Rechenweg (Uebertragung) oeffnen", () => d.DauerWeg.Zeigen(true), () => d.DauerFehler);
+        await DatenMesspunkt("Uebertragung 10^12 TiB mit 0,001 kbit/s bei 0,1 % berechnen", d.DauerRechnen, () => d.DauerFehler, wiederholbar: true);
+        await DatenMesspunkt("Rechenweg (Uebertragung) oeffnen", () => d.DauerWeg.Zeigen(true), () => d.DauerFehler, () => d.DauerWeg.Zeigen(false));
         d.DauerWeg.Zeigen(false);
         d.DatenEingabe(RechnerTexte.DataDefault, RechnerTexte.DataDefaultUnit);
         d.DauerEingabe(RechnerTexte.TransferDefaultSize, RechnerTexte.DataDefaultUnit, RechnerTexte.TransferDefaultRate, "Mbit/s", RechnerTexte.TransferDefaultPercent);
@@ -460,18 +540,21 @@ public static class AutoMessung
         await ansicht.BildFertigAsync();
         // W3 (R7): Reiter Trainer (erstes Zeigen liest die Statistik), Runde und Pruefen ohne Speichern
         await Messpunkt("Rechner Reiter Trainer (erstes Zeigen)", () => rechner.Tab("trainer"), ohneFehler: false);
-        await Messpunkt("Trainer Runde starten (ohne Speichern)", () => rechner.Trainer.Probe("bedarf", 3, pruefen: false), ohneFehler: false);
-        await Messpunkt("Trainer Pruefen (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
-        await Messpunkt("Trainer Naechste Aufgabe (ohne Speichern)", rechner.Trainer.Druecken, ohneFehler: false);
-        await Messpunkt("Trainer Runde Uebertragungsdauer Schwer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: false), ohneFehler: false);
-        await Messpunkt("Trainer Pruefen Uebertragungsdauer (ohne Speichern)", () => rechner.Trainer.Probe("dauer", 3, pruefen: true), ohneFehler: false);
-        await Messpunkt("Trainer Runde Bild und Video Schwer (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: false), ohneFehler: false);
-        await Messpunkt("Trainer Pruefen Bild und Video (ohne Speichern)", () => rechner.Trainer.Probe("video", 3, pruefen: true), ohneFehler: false);
+        // Probe baut jede Runde neu mit festem Startwert (wiederholbar); Pruefen und Naechste
+        // Aufgabe stellen vorher denselben Zustand wieder her (gleiche Folge wie beim ersten Mal)
+        var t = rechner.Trainer;
+        await Messpunkt("Trainer Runde starten (ohne Speichern)", () => t.Probe("bedarf", 3, pruefen: false), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Pruefen (ohne Speichern)", t.Druecken, ohneFehler: false, zurueck: () => t.Probe("bedarf", 3, pruefen: false));
+        await Messpunkt("Trainer Naechste Aufgabe (ohne Speichern)", t.Druecken, ohneFehler: false, zurueck: () => { t.Probe("bedarf", 3, pruefen: false); t.Druecken(); });
+        await Messpunkt("Trainer Runde Uebertragungsdauer Schwer (ohne Speichern)", () => t.Probe("dauer", 3, pruefen: false), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Pruefen Uebertragungsdauer (ohne Speichern)", () => t.Probe("dauer", 3, pruefen: true), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Runde Bild und Video Schwer (ohne Speichern)", () => t.Probe("video", 3, pruefen: false), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Pruefen Bild und Video (ohne Speichern)", () => t.Probe("video", 3, pruefen: true), ohneFehler: false, wiederholbar: true);
         // W4c (Weisung P3-23): Trainer WiSo
-        await Messpunkt("Trainer Runde Verkaufskalkulation Schwer (ohne Speichern)", () => rechner.Trainer.Probe("verkauf", 3, pruefen: false), ohneFehler: false);
-        await Messpunkt("Trainer Pruefen Verkaufskalkulation richtig (ohne Speichern)", () => rechner.Trainer.Probe("verkauf", 3, pruefen: true, richtig: true), ohneFehler: false);
-        await Messpunkt("Trainer Runde Amortisation Schwer (ohne Speichern)", () => rechner.Trainer.Probe("amort", 3, pruefen: false), ohneFehler: false);
-        await Messpunkt("Trainer Pruefen Amortisation falsch (ohne Speichern)", () => rechner.Trainer.Probe("amort", 3, pruefen: true), ohneFehler: false);
+        await Messpunkt("Trainer Runde Verkaufskalkulation Schwer (ohne Speichern)", () => t.Probe("verkauf", 3, pruefen: false), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Pruefen Verkaufskalkulation richtig (ohne Speichern)", () => t.Probe("verkauf", 3, pruefen: true, richtig: true), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Runde Amortisation Schwer (ohne Speichern)", () => t.Probe("amort", 3, pruefen: false), ohneFehler: false, wiederholbar: true);
+        await Messpunkt("Trainer Pruefen Amortisation falsch (ohne Speichern)", () => t.Probe("amort", 3, pruefen: true), ohneFehler: false, wiederholbar: true);
         rechner.Trainer.ProbeEnde();
         rechner.Tab("rechner");
         await ansicht.BildFertigAsync();
@@ -485,8 +568,14 @@ public static class AutoMessung
     /// Grenzfall in Byte und die Uebernahme bei leerer Datenrate in der echten Oberflaeche pruefen.
     /// Jede Abweichung ist ein Fund. Danach stehen beide Karten wieder auf ihren Vorgaben.
     /// </summary>
+    /// <summary>Messpunkt der Rechner-Karten (Weisung P4-12 B6: zurueck bzw. wiederholbar wie bei <c>BildMessenAsync</c>).</summary>
+    private delegate Task DatenPunkt(string titel, Action schritt, Func<string> fehler, Action? zurueck = null, bool wiederholbar = false);
+
+    /// <summary>Zurueck auf die Karte, die vor dem Messpunkt gewaehlt war (Wert jetzt gelesen).</summary>
+    private static Action Auswahl(RechnerSeite rechner, string vorher) => () => rechner.Waehle(vorher);
+
     private static async Task<int> VideoMesspunkteAsync(MainView ansicht, RechnerSeite rechner,
-        Func<string, Action, Func<string>, Task> messpunkt)
+        DatenPunkt messpunkt)
     {
         var funde = 0;
         var v = rechner.Video;
@@ -499,14 +588,14 @@ public static class AutoMessung
                 funde++;
             }
         }
-        await messpunkt("Rechner Auswahl Bild und Video", () => rechner.Waehle("bild"), () => "");
+        await messpunkt("Rechner Auswahl Bild und Video", () => rechner.Waehle("bild"), () => "", Auswahl(rechner, rechner.Gewaehlt));
         Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf vor der ersten Berechnung aktiv");
         v.Rechnen();
         Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf ohne Dauer aktiv");
         v.Eingabe("1920", "1080", "25", "24", "2", "50");
-        await messpunkt("Bild und Video mit Video berechnen", v.Rechnen, () => v.Fehler);
+        await messpunkt("Bild und Video mit Video berechnen", v.Rechnen, () => v.Fehler, wiederholbar: true);
         Pruefe(v.KnopfAktiv, "Uebernahme-Knopf mit Video-Ergebnis gesperrt");
-        await messpunkt("Rechenweg (Bild und Video) oeffnen", () => v.Weg.Zeigen(true), () => v.Fehler);
+        await messpunkt("Rechenweg (Bild und Video) oeffnen", () => v.Weg.Zeigen(true), () => v.Fehler, () => v.Weg.Zeigen(false));
         v.Weg.Zeigen(false);
         v.Eingabe("1920", "1080", "25", "24", "3", "50");
         Pruefe(!v.KnopfAktiv, "Uebernahme-Knopf nach Feldaenderung aktiv");
@@ -521,7 +610,7 @@ public static class AutoMessung
         Pruefe(!v.KnopfAktiv && v.Fehler == RechnerTexte.VideoNeedsFps, "Fehler Dauer ohne Bildrate: Knopf aktiv oder falscher Hinweis");
         v.Eingabe("1920", "1080", "25", "24", "2", "50");
         v.Rechnen();
-        await messpunkt("Uebernahme in Uebertragung (Wechsel und Rechnen)", v.Uebernehmen, () => d.DauerFehler);
+        await messpunkt("Uebernahme in Uebertragung (Wechsel und Rechnen)", v.Uebernehmen, () => d.DauerFehler, Auswahl(rechner, "bild"));
         var f = d.DauerFelder;
         Pruefe(rechner.Gewaehlt == "uebertragung", "Auswahl nicht auf Uebertragung");
         Pruefe(f.Groesse == "355,957" && f.Einheit == "MiB", $"Dateigroesse {f.Groesse} {f.Einheit} statt 355,957 MiB");
@@ -583,7 +672,7 @@ public static class AutoMessung
     /// pruefen. Jede Abweichung ist ein Fund. Danach stehen alle Rechner wieder auf ihren Vorgaben.
     /// </summary>
     private static async Task<int> WisoMesspunkteAsync(MainView ansicht, RechnerSeite rechner,
-        Func<string, Action, Func<string>, Task> messpunkt)
+        DatenPunkt messpunkt)
     {
         var funde = 0;
         var w = rechner.Wiso;
@@ -595,7 +684,7 @@ public static class AutoMessung
                 funde++;
             }
         }
-        await messpunkt("Rechner Auswahl WiSo", () => rechner.Waehle("wiso"), () => "");
+        await messpunkt("Rechner Auswahl WiSo", () => rechner.Waehle("wiso"), () => "", Auswahl(rechner, rechner.Gewaehlt));
         Pruefe(rechner.Gewaehlt == "wiso" && w.Gewaehlt == "bezug", "Auswahl nicht WiSo / Bezug");
         var letzte = new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -609,11 +698,12 @@ public static class AutoMessung
         };
         foreach (var (r, name) in RechnerTexte.WisoAuswahl)
         {
-            await messpunkt("WiSo Auswahl " + name, () => w.Waehle(r), () => "");
-            await messpunkt("WiSo " + name + " berechnen", () => w.Rechnen(r), () => w.Fehler(r));
+            var vorher = w.Gewaehlt;
+            await messpunkt("WiSo Auswahl " + name, () => w.Waehle(r), () => "", vorher == r ? null : () => w.Waehle(vorher));
+            await messpunkt("WiSo " + name + " berechnen", () => w.Rechnen(r), () => w.Fehler(r), wiederholbar: true);
             Pruefe(w.Kasten(r).Roh.Split('\n').Any(z => z.StartsWith(letzte[r], StringComparison.Ordinal) && z.EndsWith(": " + soll[r], StringComparison.Ordinal)),
                 name + ": Ergebnis ohne \"" + letzte[r] + " : " + soll[r] + "\"");
-            await messpunkt("Rechenweg (WiSo " + name + ") oeffnen", () => w.Weg(r).Zeigen(true), () => w.Fehler(r));
+            await messpunkt("Rechenweg (WiSo " + name + ") oeffnen", () => w.Weg(r).Zeigen(true), () => w.Fehler(r), () => w.Weg(r).Zeigen(false));
             w.Weg(r).Zeigen(false);
         }
         w.Waehle("bezug");
@@ -628,7 +718,7 @@ public static class AutoMessung
             "Fehler Prozent mit 3 Nachkommastellen fehlt oder Ergebnis nicht leer");
         w.Waehle("zinsen");
         w.Eingabe("zinsen", ["5.000", "4,5", "3"], "monate");
-        await messpunkt("WiSo Zinsen 3 Monate berechnen", () => w.Rechnen("zinsen"), () => w.Fehler("zinsen"));
+        await messpunkt("WiSo Zinsen 3 Monate berechnen", () => w.Rechnen("zinsen"), () => w.Fehler("zinsen"), wiederholbar: true);
         Pruefe(w.Kasten("zinsen").Roh.Split('\n').Any(z => z.EndsWith(": 3 Monate = 90 Tage", StringComparison.Ordinal)), "Pille Monate: Laufzeit nicht \"3 Monate = 90 Tage\"");
         WisoVorgaben(w);
         await ansicht.BildFertigAsync();
@@ -846,15 +936,8 @@ public static class AutoMessung
     {
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
-        void Messpunkt(string titel, double? ms)
-        {
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms is null or > Abbruch)
-            {
-                Messwerte.Notiere("  FEHLER: nicht fertig oder ueber 1000 ms");
-                funde++;
-            }
-        }
+        // einmalige Messpunkte (erstes Laden, erste Suche) bleiben streng
+        void Messpunkt(string titel, double? ms) => funde += Ergebnis(titel, Messwiederholung.Einmal(ms, Abbruch));
         if (ansicht.GebauteSeiten[Seiten.Fortschritt] is FortschrittSeite fortschritt)
         {
             await fortschritt.Fertig.Task;
@@ -886,23 +969,33 @@ public static class AutoMessung
                 zeilen.Add((quelle, frage, tag.ToString("yyyy-MM-dd", inv) + " 12:00:00", (int)zufall.RandRange(3) != 0));
             }
             zeilen.Sort((a, b) => string.CompareOrdinal(a.Zeit, b.Zeit));
-            var uhr = Stopwatch.StartNew();
-            var buch = new Core.Lernen.Antwortbuch();
-            foreach (var z in zeilen)
+            // reine Rechnung mit neuen Objekten je Messung: wiederholbar (Weisung P4-12 B6)
+            var teile = new List<(double Buch, double Plan)>();
+            double Rechnen()
             {
-                buch.Hinzufuegen(z.Quelle, z.Schluessel, z.Zeit, z.Richtig);
+                var uhr = Stopwatch.StartNew();
+                var buch = new Core.Lernen.Antwortbuch();
+                foreach (var z in zeilen)
+                {
+                    buch.Hinzufuegen(z.Quelle, z.Schluessel, z.Zeit, z.Richtig);
+                }
+                var msBuch = uhr.Elapsed.TotalMilliseconds;
+                var plan = Core.Lernen.Wiederholungsplan.Aus(new Core.Lernen.StatusBuch(buch), heute, inhalte);
+                var msPlan = uhr.Elapsed.TotalMilliseconds - msBuch;
+                var quelleErst = plan.ErsteQuelle();
+                if (quelleErst is not null)
+                {
+                    _ = plan.Sitzung(quelleErst);
+                }
+                teile.Add((msBuch, msPlan));
+                return uhr.Elapsed.TotalMilliseconds;
             }
-            var msBuch = uhr.Elapsed.TotalMilliseconds;
-            var plan = Core.Lernen.Wiederholungsplan.Aus(new Core.Lernen.StatusBuch(buch), heute, inhalte);
-            var msPlan = uhr.Elapsed.TotalMilliseconds - msBuch;
-            var quelleErst = plan.ErsteQuelle();
-            if (quelleErst is not null)
-            {
-                _ = plan.Sitzung(quelleErst);
-            }
-            var msGesamt = uhr.Elapsed.TotalMilliseconds;
-            Messpunkt("Faelligkeit bei 100 000 synthetischen Antworten (Buch, Plan, erste Sitzung)", msGesamt);
-            Messwerte.Notiere(string.Create(inv, $"  davon Antworten einlesen {msBuch:F0} ms, Plan {msPlan:F0} ms, erste Sitzung {msGesamt - msBuch - msPlan:F0} ms"));
+            var reihe = await RechnungMessenAsync(Rechnen);
+            funde += Ergebnis("Faelligkeit bei 100 000 synthetischen Antworten (Buch, Plan, erste Sitzung)", reihe);
+            var beste = Enumerable.Range(0, reihe.Werte.Count).MinBy(i => reihe.Werte[i]);
+            var msGesamt = reihe.Werte[beste]!.Value;
+            var (msBuchBest, msPlanBest) = teile[beste];
+            Messwerte.Notiere(string.Create(inv, $"  davon Antworten einlesen {msBuchBest:F0} ms, Plan {msPlanBest:F0} ms, erste Sitzung {msGesamt - msBuchBest - msPlanBest:F0} ms"));
         }
         return funde;
     }
@@ -1021,33 +1114,25 @@ public static class AutoMessung
             Messwerte.Notiere("Abschlussprojekt: FEHLER, Seite nicht gebaut");
             return 1;
         }
-        void Notiere(string titel, double ms)
-        {
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms > Abbruch)
-            {
-                Messwerte.Notiere("  FEHLER: ueber 1000 ms");
-                funde++;
-            }
-        }
-        async Task Messpunkt(string titel, Action schritt)
-        {
-            var uhr = Stopwatch.StartNew();
-            schritt();
-            await ansicht.BildFertigAsync();
-            Notiere(titel, uhr.Elapsed.TotalMilliseconds);
-        }
-        Notiere("Abschlussprojekt erstes Laden des Projekts (Reiter Übersicht gebaut)", seite.LadenMs);
+        async Task Messpunkt(string titel, Action schritt, Action? zurueck = null) => funde += Ergebnis(titel, await BildMessenAsync(ansicht, schritt, zurueck));
+        // erstes Laden und erstes Bauen der Reiter sind einmalig (streng); "wiederverwendet"
+        // zeigt vor einer Wiederholung den Reiter davor (Weisung P4-12 B6)
+        funde += Ergebnis("Abschlussprojekt erstes Laden des Projekts (Reiter Übersicht gebaut)", Messwiederholung.Einmal(seite.LadenMs, Abbruch));
         await ansicht.ZeigeAsync(Seiten.Abschluss);
+        var davor = Abschlussprojekt.Reiter[0].Item1;
         foreach (var runde in (string[])["erstes Bauen", "wiederverwendet"])
         {
             foreach (var (reiter, name) in Abschlussprojekt.Reiter.Skip(1).Append(Abschlussprojekt.Reiter[0]))
             {
-                await Messpunkt($"Abschlussprojekt Reiter \"{name}\" ({runde}, bis zum Bild)", () => seite.Probe(reiter));
+                var zurueckReiter = davor;
+                await Messpunkt($"Abschlussprojekt Reiter \"{name}\" ({runde}, bis zum Bild)", () => seite.Probe(reiter),
+                    runde == "erstes Bauen" ? null : () => seite.Probe(zurueckReiter));
+                davor = reiter;
             }
         }
         var vorher = seite.Ablauf.Projekt;
-        await Messpunkt("Abschlussprojekt Projekt wechseln (Reiter neu, bis zum Bild)", () => seite.ProbeLaden("messung-" + Abschlussprojekt.NeueKennung()));
+        var neu = "messung-" + Abschlussprojekt.NeueKennung();
+        await Messpunkt("Abschlussprojekt Projekt wechseln (Reiter neu, bis zum Bild)", () => seite.ProbeLaden(neu), () => seite.ProbeLaden(vorher));
         seite.ProbeLaden(vorher);
         await ansicht.BildFertigAsync();
         // Projekt mit 8 vollen Kapiteln (je etwa 2 Seiten), vollem Antrag und Sachkosten
@@ -1066,12 +1151,23 @@ public static class AutoMessung
             felder["material_name_" + n] = "Server mit Lizenz " + n;
             felder["material_betrag_" + n] = "1.234,50";
         }
-        var uhr = Stopwatch.StartNew();
-        var pdf = Abschlussprojekt.ExportPdf(felder, 40, DateTime.Now);
-        Notiere(string.Create(inv, $"Abschlussprojekt PDF erzeugen (8 volle Kapitel, {pdf.Length / 1024} KB)"), uhr.Elapsed.TotalMilliseconds);
-        uhr.Restart();
-        var text = Abschlussprojekt.TextDatei(Abschlussprojekt.ExportText(felder, 40), false);
-        Notiere(string.Create(inv, $"Abschlussprojekt Text erzeugen (8 volle Kapitel, {text.Length / 1024} KB)"), uhr.Elapsed.TotalMilliseconds);
+        // reine Rechnungen: wiederholbar
+        var pdf = Array.Empty<byte>();
+        var text = Array.Empty<byte>();
+        var reihePdf = await RechnungMessenAsync(() =>
+        {
+            var uhr = Stopwatch.StartNew();
+            pdf = Abschlussprojekt.ExportPdf(felder, 40, DateTime.Now);
+            return uhr.Elapsed.TotalMilliseconds;
+        });
+        funde += Ergebnis(string.Create(inv, $"Abschlussprojekt PDF erzeugen (8 volle Kapitel, {pdf.Length / 1024} KB)"), reihePdf);
+        var reiheText = await RechnungMessenAsync(() =>
+        {
+            var uhr = Stopwatch.StartNew();
+            text = Abschlussprojekt.TextDatei(Abschlussprojekt.ExportText(felder, 40), false);
+            return uhr.Elapsed.TotalMilliseconds;
+        });
+        funde += Ergebnis(string.Create(inv, $"Abschlussprojekt Text erzeugen (8 volle Kapitel, {text.Length / 1024} KB)"), reiheText);
         return funde;
     }
 
@@ -1126,29 +1222,20 @@ public static class AutoMessung
         }
         await trainer.Geladen;
         await ansicht.ZeigeAsync(Seiten.Trainer);
-        async Task Messpunkt(string titel, Action schritt)
-        {
-            var uhr = Stopwatch.StartNew();
-            schritt();
-            await ansicht.BildFertigAsync();
-            var ms = uhr.Elapsed.TotalMilliseconds;
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms > Abbruch)
-            {
-                Messwerte.Notiere("  FEHLER: ueber 1000 ms");
-                funde++;
-            }
-        }
+        async Task Messpunkt(string titel, Action schritt, Action? zurueck = null, bool wiederholbar = false) =>
+            funde += Ergebnis(titel, await BildMessenAsync(ansicht, schritt, zurueck, wiederholbar));
+        // Wechsel zu "Prüfung" baut den Teil zum ersten Mal (streng); Probe setzt jede Ansicht
+        // vollstaendig neu (wiederholbar), Wechseln und Blaettern stellen vorher den Zustand davor her
         await Messpunkt("Pruefungstrainer Wechsel zu \"Prüfung\" (Auswahl mit Lernstand, bis zum Bild)", () => trainer.ArtWaehlen(TrainerTexte.Pruefung));
         var k = trainer.Klausur!;
-        await Messpunkt("Pruefung Auswahl mit 9 Pruefungen und Gesamtergebnis (bis zum Bild)", () => k.Probe(0));
-        await Messpunkt("Laufende Pruefung zeigen, Aufgaben mit den laengsten Texten (bis zum Bild)", () => k.Probe(2));
-        await Messpunkt("Laufende Pruefung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(1));
-        await Messpunkt("Laufende Pruefung WiSo zeigen (bis zum Bild)", () => k.Probe(3));
-        await Messpunkt("Laufende Pruefung WiSo blaettern (bis zum Bild)", k.ProbeBlaettern);
-        await Messpunkt("Bewertung zeigen (bis zum Bild)", () => k.Probe(4));
-        await Messpunkt("Bewertung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(2));
-        await Messpunkt("Ergebnis mit \"Nach Themen\" zeigen (bis zum Bild)", () => k.Probe(5));
+        await Messpunkt("Pruefung Auswahl mit 9 Pruefungen und Gesamtergebnis (bis zum Bild)", () => k.Probe(0), wiederholbar: true);
+        await Messpunkt("Laufende Pruefung zeigen, Aufgaben mit den laengsten Texten (bis zum Bild)", () => k.Probe(2), wiederholbar: true);
+        await Messpunkt("Laufende Pruefung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(1), () => k.ProbeAufgabe(0));
+        await Messpunkt("Laufende Pruefung WiSo zeigen (bis zum Bild)", () => k.Probe(3), wiederholbar: true);
+        await Messpunkt("Laufende Pruefung WiSo blaettern (bis zum Bild)", k.ProbeBlaettern, () => k.Probe(3));
+        await Messpunkt("Bewertung zeigen (bis zum Bild)", () => k.Probe(4), wiederholbar: true);
+        await Messpunkt("Bewertung Aufgabe wechseln (bis zum Bild)", () => k.ProbeAufgabe(2), () => k.ProbeAufgabe(0));
+        await Messpunkt("Ergebnis mit \"Nach Themen\" zeigen (bis zum Bild)", () => k.Probe(5), wiederholbar: true);
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);
         await ansicht.BildFertigAsync();
@@ -1165,22 +1252,17 @@ public static class AutoMessung
     {
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
-        void Messpunkt(string titel, double? ms)
-        {
-            Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}"));
-            if (ms is null or > Abbruch)
-            {
-                Messwerte.Notiere("  FEHLER: nicht fertig oder ueber 1000 ms");
-                funde++;
-            }
-        }
-        async Task<double> Bild(Action schritt)
+        // einmalige Messpunkte (erstes Laden, erste Suche) bleiben streng
+        void Messpunkt(string titel, double? ms) => funde += Ergebnis(titel, Messwiederholung.Einmal(ms, Abbruch));
+        // Weisung P4-12 B6: vor einer Wiederholung der Zustand davor (zurueck)
+        async Task Bild(string titel, Action schritt, Action zurueck) => funde += Ergebnis(titel, await BildMessenAsync(ansicht, schritt, zurueck));
+        // reine Rechnung mit denselben Daten (wiederholbar)
+        async Task Rechnung(string titel, Action rechnung) => funde += Ergebnis(titel, await RechnungMessenAsync(() =>
         {
             var uhr = Stopwatch.StartNew();
-            schritt();
-            await ansicht.BildFertigAsync();
+            rechnung();
             return uhr.Elapsed.TotalMilliseconds;
-        }
+        }));
         foreach (var id in (string[])[Seiten.Ap1Szenarien, Seiten.Ap2Szenarien, Seiten.Testprojekt])
         {
             if (ansicht.GebauteSeiten.TryGetValue(id, out var gebaut) && gebaut is SzenarioSeite seite)
@@ -1194,17 +1276,19 @@ public static class AutoMessung
             await notiz.Geladen;
             Messpunkt("Notizblock bis Liste", notiz.InhaltMs);
             await ansicht.ZeigeAsync(Seiten.Notizblock);
-            Messpunkt("Notizblock Filter Status Offen mit allen Musterantworten (bis zum Bild)", await Bild(() => notiz.Probe(0)));
-            Messpunkt("Notizblock Suche \"netz\" (bis zum Bild)", await Bild(() => notiz.Probe(2)));
+            await Bild("Notizblock Filter Status Offen mit allen Musterantworten (bis zum Bild)", () => notiz.Probe(0), () => notiz.Probe(-1));
+            await Bild("Notizblock Suche \"netz\" (bis zum Bild)", () => notiz.Probe(2), () => { notiz.Probe(-1); notiz.Probe(0); });
             notiz.Probe(-1);
         }
         if (ansicht.GebauteSeiten.TryGetValue(Seiten.Ap2Szenarien, out var ap2) && ap2 is SzenarioSeite szenarien)
         {
             await ansicht.ZeigeAsync(Seiten.Ap2Szenarien);
-            Messpunkt("AP2-Szenarien Liste blaettern (bis zum Bild)", await Bild(() => szenarien.Liste.Blaettern(1)));
-            Messpunkt("AP2-Szenarien Liste letzte Seite (bis zum Bild)", await Bild(() => szenarien.Probe(1)));
-            Messpunkt("AP2-Szenarien Szenario wechseln (bis zum Bild)", await Bild(() => szenarien.Oeffnen(200)));
-            Messpunkt("AP2-Szenarien Musterloesung aufdecken, laengste (ohne Speichern, bis zum Bild)", await Bild(() => szenarien.Probe(0)));
+            var liste = szenarien.Liste;
+            Action ZurSeite(int seite) => () => liste.Blaettern(seite - liste.Seite);
+            await Bild("AP2-Szenarien Liste blaettern (bis zum Bild)", () => liste.Blaettern(1), ZurSeite(liste.Seite));
+            await Bild("AP2-Szenarien Liste letzte Seite (bis zum Bild)", () => szenarien.Probe(1), ZurSeite(liste.Seite));
+            await Bild("AP2-Szenarien Szenario wechseln (bis zum Bild)", () => szenarien.Oeffnen(200), () => szenarien.Probe(-1));
+            await Bild("AP2-Szenarien Musterloesung aufdecken, laengste (ohne Speichern, bis zum Bild)", () => szenarien.Probe(0), () => szenarien.Oeffnen(200));
             szenarien.Probe(-1);
         }
         if (inhalte is not null)
@@ -1224,18 +1308,20 @@ public static class AutoMessung
             }
             var status = new Core.Lernen.StatusBuch(buch);
             var kern = new Core.Lernen.Notizblock(inhalte);
-            var uhr = Stopwatch.StartNew();
             var eintraege = kern.Eintraege(status);
-            _ = kern.Uebersicht(status);
-            var msFilter = uhr.Elapsed.TotalMilliseconds;
-            Messpunkt(string.Create(inv, $"Notizblock-Kern bei 100 000 Antworten: Eintraege und Uebersicht ({eintraege.Count} zu ueben)"), msFilter);
+            var reihe = await RechnungMessenAsync(() =>
+            {
+                var uhr = Stopwatch.StartNew();
+                eintraege = kern.Eintraege(status);
+                _ = kern.Uebersicht(status);
+                return uhr.Elapsed.TotalMilliseconds;
+            });
+            funde += Ergebnis(string.Create(inv, $"Notizblock-Kern bei 100 000 Antworten: Eintraege und Uebersicht ({eintraege.Count} zu ueben)"), reihe);
             var alle = kern.Eintraege(status, Core.Lernen.FragenStatus.Alle);
-            uhr.Restart();
+            var uhrSuche = Stopwatch.StartNew();
             _ = kern.Suchen(alle, "netz");
-            Messpunkt("Notizblock-Kern erste Suche ueber alle Fragen (baut den Suchtext)", uhr.Elapsed.TotalMilliseconds);
-            uhr.Restart();
-            _ = kern.Suchen(alle, "subnetz");
-            Messpunkt("Notizblock-Kern weitere Suche ueber alle Fragen", uhr.Elapsed.TotalMilliseconds);
+            Messpunkt("Notizblock-Kern erste Suche ueber alle Fragen (baut den Suchtext)", uhrSuche.Elapsed.TotalMilliseconds);
+            await Rechnung("Notizblock-Kern weitere Suche ueber alle Fragen", () => _ = kern.Suchen(alle, "subnetz"));
         }
         return funde;
     }
@@ -1262,12 +1348,34 @@ public static class AutoMessung
         }
         var alt = regler.Value;
         var zeiten = new List<double>();
+        var einzel = new List<string>();
         for (var wert = 0; wert <= 359; wert++)
         {
-            var uhr = Stopwatch.StartNew();
-            regler.Value = wert;
-            await ansicht.BildFertigAsync();
-            zeiten.Add(uhr.Elapsed.TotalMilliseconds);
+            var ziel = wert;
+            async Task<double?> Schritt()
+            {
+                var uhr = Stopwatch.StartNew();
+                regler.Value = ziel;
+                await ansicht.BildFertigAsync();
+                return uhr.Elapsed.TotalMilliseconds;
+            }
+            var erste = await Schritt();
+            if (wert == 0)
+            {
+                // Schritt 1 traegt das erste Zeichnen: einmalig, streng (nicht wiederholt)
+                zeiten.Add(erste!.Value);
+                einzel.Add(Messwiederholung.Einmal(erste, Farbreglerregel.GrenzeErsterSchritt).Einzelwerte("F1") + " (nicht wiederholt)");
+                continue;
+            }
+            // Weisung P4-12 B6: ueber der Grenze derselbe Schritt erneut (vorher Wert davor, nicht gemessen)
+            var reihe = await Messwiederholung.MessenAsync(erste, Farbreglerregel.GrenzeWeitereSchritte, Schritt,
+                async () => { regler.Value = ziel - 1; await ansicht.BildFertigAsync(); }, Task.Delay);
+            zeiten.Add(reihe.Bester ?? double.PositiveInfinity);
+            einzel.Add(reihe.Einzelwerte("F1"));
+            if (reihe.Wiederholt)
+            {
+                Messwerte.Notiere(string.Create(inv, $"Farbregler Schritt {wert + 1} wiederholt: Einzelmessungen {reihe.Einzelwerte("F1")} ({(reihe.Rot ? "rot" : "gruen")})"));
+            }
         }
         regler.Value = alt;
         await ansicht.BildFertigAsync();
@@ -1276,7 +1384,9 @@ public static class AutoMessung
         var funde = Farbreglerregel.Funde(zeiten);
         foreach (var fund in funde)
         {
-            Messwerte.Notiere("  FEHLER: " + fund);
+            // "Schritt n: ..." (Farbreglerregel), dazu alle Einzelmessungen dieses Schritts
+            var nr = int.Parse(fund["Schritt ".Length..fund.IndexOf(':', StringComparison.Ordinal)], inv);
+            Messwerte.Notiere("  FEHLER: Farbregler " + fund + "; Einzelmessungen " + einzel[nr - 1]);
         }
         if (funde.Count > 0)
         {
