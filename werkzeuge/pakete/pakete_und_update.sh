@@ -153,7 +153,7 @@ case "$RID" in
     test -f "$ECHT/lernplattform.db" && test -f "$ECHT/update_probe.txt" || { echo "FEHLER: T4 echter Datenordner nicht angelegt: $ECHT"; exit 1; }
     vorher="$( (cd "$ECHT" && find . -type f | sort | xargs sha256sum); (cd "$LERNPLATTFORM_DATEN" && find . -type f | sort | xargs sha256sum) )"
     WURZEL_APP="$(cygpath -u "$LOCALAPPDATA")/$ID"
-    "$WURZEL_APP/Update.exe" --silent uninstall || echo "Update.exe Rueckgabe $?"
+    env -u LERNPLATTFORM_DATEN "$WURZEL_APP/Update.exe" --silent uninstall || echo "Update.exe Rueckgabe $?"
     for _ in $(seq 1 30); do [ -e "$APP" ] || break; sleep 2; done
     if [ -e "$APP" ]; then echo "FEHLER: T4 Programm nach der Deinstallation noch da: $APP"; exit 1; fi
     nachher="$( (cd "$ECHT" && find . -type f | sort | xargs sha256sum); (cd "$LERNPLATTFORM_DATEN" && find . -type f | sort | xargs sha256sum) )"

@@ -164,7 +164,8 @@ public static class Verknuepfung
         return Normal(pfad) == Normal(Path.GetFullPath(home)) || !Directory.Exists(pfad) ? null : pfad;
     }
 
-    private static string Normal(string pfad) => pfad.Length > 1 ? pfad.TrimEnd('/') : pfad;
+    // Trennzeichen am Ende weg ("/" und unter Windows auch "\\"), die Wurzel bleibt
+    private static string Normal(string pfad) => Path.TrimEndingDirectorySeparator(pfad);
 
     // _from_user_dirs: ~/.config/user-dirs.dirs, Zeile XDG_DESKTOP_DIR="$HOME/..."
     private static string? AusUserDirs(VerknuepfungUmgebung umgebung)
