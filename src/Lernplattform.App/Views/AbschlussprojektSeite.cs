@@ -160,15 +160,8 @@ public sealed class AbschlussprojektSeite : UserControl
         }
     }
 
-    private static Border Karte(string titel, string? untertitel, Control inhalt)
-    {
-        var kopf = new StackPanel { Spacing = 2, Children = { Schrift.Text(titel, "Mittel", FontWeight.Bold) } };
-        if (untertitel is not null)
-        {
-            kopf.Children.Add(Schrift.Text(untertitel, "Klein", FontWeight.Normal, "Pinsel.muted"));
-        }
-        return Schrift.Karte(new StackPanel { Spacing = 10, Children = { kopf, inhalt } });
-    }
+    private static Border Karte(string titel, string? untertitel, Control inhalt) =>
+        Schrift.KopfKarte(titel, untertitel, inhalt);   // A 0.12.2: Kartenkopf wie ui.Card
 
     private static TextBlock Hinweis(string text) => Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.muted");
 

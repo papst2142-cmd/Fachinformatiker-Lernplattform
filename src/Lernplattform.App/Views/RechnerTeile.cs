@@ -254,17 +254,9 @@ public static class RechnerTeile
     /// Karte mit Titel in Grossbuchstaben in der Farbe der Karte (Python Card: Strich, TITEL, Unterschrift).
     /// Die Unterschrift laesst sich spaeter aendern (set_subtitle).
     /// </summary>
-    public static Border Karte(string titel, string farbe, TextBlock unter, Control inhalt)
-    {
-        var strich = new Border { Width = 4, Height = 14, CornerRadius = new CornerRadius(2), Margin = new Thickness(0, 0, 9, 0), VerticalAlignment = VerticalAlignment.Center }
-            .Farbe(Border.BackgroundProperty, farbe);
-        var titelText = new WortText(Lernplattform.Core.Texte.Beschriftungen.Gross(titel), "Klein", FontWeight.Bold, farbe) { VerticalAlignment = VerticalAlignment.Center };
-        var kopf = new DockPanel { Children = { strich, titelText } };
-        DockPanel.SetDock(strich, Dock.Left);
-        unter.Margin = new Thickness(13, 2, 0, 0);
-        return Design.Schrift.Karte(new StackPanel { Spacing = 12, Children = { new StackPanel { Children = { kopf, unter } }, inhalt } });
-    }
+    public static Border Karte(string titel, string farbe, TextBlock unter, Control inhalt) =>
+        Design.Schrift.Karte(new StackPanel { Spacing = 12, Children = { Design.Schrift.KartenKopf(titel, unter, farbe), inhalt } });
 
     /// <summary>Unterschrift einer Karte (tiny, muted).</summary>
-    public static TextBlock Unterschrift(string text) => Design.Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.muted");
+    public static TextBlock Unterschrift(string text) => Design.Schrift.Text(text, "Winzig", FontWeight.Normal, "Pinsel.muted");
 }

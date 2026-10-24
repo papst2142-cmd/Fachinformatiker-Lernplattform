@@ -124,7 +124,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.12.1 -> A 0.12.2 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.12.2 -> A 0.12.3 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -156,16 +156,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.12.1
-          path: pakete/feed-A-0.12.1/
+          name: paket-${{ matrix.rid }}-A-0.12.2
+          path: pakete/feed-A-0.12.2/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.12.2
-          path: pakete/feed-A-0.12.2/
+          name: updateprobe-${{ matrix.rid }}-A-0.12.3
+          path: pakete/feed-A-0.12.3/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.12.1-tar
+          name: appimage-linux-x64-A-0.12.2-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -346,10 +346,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.12.2 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.12.1 installierbar.
-      - name: Update-APK A 0.12.2 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.12.2 -o apk-update
+      # Spike D (A4b): zweite APK A 0.12.3 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.12.2 installierbar.
+      - name: Update-APK A 0.12.3 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.12.3 -o apk-update
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
@@ -357,17 +357,17 @@ jobs:
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001201'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001202'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001202'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001203'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.12.1
+          name: lernplattform-android-A-0.12.2
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.12.2
+          name: updateprobe-android-A-0.12.3
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),

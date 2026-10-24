@@ -154,6 +154,7 @@ public static partial class AutoMessung
         // Weisung P4-16: auch die W4-Messpunkte melden ihre roten Werte in reihenRot
         var reihenRot = new List<string>();
         funde += await W4MesspunkteAsync(ansicht, reihenRot);
+        funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge); ueber 1 000 ms wird derselbe
         // Wechsel wiederholt (vorher die andere Darstellung bzw. die Stufe davor, Weisung P4-12 B6)

@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.12.2
+Neues Aussehen: Alle Seiten sehen jetzt so aus wie die bisherige Handy-App, am PC und am Handy gleich.
+
+- Schrift ist Roboto, Symbole stammen aus Material Icons (beide im Programm enthalten, Lizenzen unter „Optionen“ → „Über das Programm“).
+- Kopfzeile mit Logo, „Bereich / Seite“ und auf der Startseite der Versionsnummer; rechts Hilfe und Suche. Die untere Leiste am Handy zeigt Symbole, der gewählte Bereich ist hervorgehoben.
+- Karten mit farbigem Strich und Titel in Großbuchstaben, runde Knöpfe mit Farbverlauf.
+- Startseite: großes Banner mit Gesamtfortschritt, Tagesziel als Ring, vier Fortschrittsringe in zwei Spalten, Lernverlauf als Liniendiagramm, Abdeckung als Balken, Ringe je Fachbereich in deren Farben, Aktivitäten als Kacheln und die Prüfungsthemen mit kleinen Ringen.
+- Kalender „Lerntage“ mit runden Tagen; mit den Pfeilen blätterst du zum Vor- oder Folgemonat.
+- Lernen: Kacheln mit farbigem Symbol. Optionen: Bereiche zum Auf- und Zuklappen mit Pfeil und „aufklappen“/„zuklappen“.
+
 ## A 0.12.1
 Keine neue Funktion: Diese Version gibt es, damit das Update von A 0.12.0 auf eine neuere Version einmal echt ausprobiert werden kann.
 

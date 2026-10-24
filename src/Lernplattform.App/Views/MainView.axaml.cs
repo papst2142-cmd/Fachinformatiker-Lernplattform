@@ -35,7 +35,17 @@ public partial class MainView : UserControl
     private readonly TextBox _ergebnis = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, MinHeight = 160 };
     private readonly TextBlock _zustand = new() { TextWrapping = TextWrapping.Wrap };
     private readonly Navigationsleisten _leisten;
-    private readonly TextBlock _kopfTitel = Schrift.Text("", "Gross", FontWeight.SemiBold);
+    // A 0.12.2: Kopfzeile wie _appbar am Handy (Brotkrumen "BEREICH / SEITE", Version nur auf Start, Logo-Ring)
+    private readonly TextBlock _krumeBereich = Schrift.Text("", "Klein", FontWeight.Bold);
+    private readonly TextBlock _krumeSeite = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.accent");
+    private readonly TextBlock _versionZeile = Schrift.Text(Core.Texte.Beschriftungen.Einsetzen(Core.Texte.Navigation.Fusszeile, Update.Anzeige), "Winzig", FontWeight.Normal, "Pinsel.muted");
+    private readonly Control _logo = Logo();
+    // Ab 160 % im schmalen Aufbau stehen die Brotkrumen in einer eigenen Zeile unter Logo und Symbolen
+    // (LARGE_FACTOR): neben Logo, Hilfe und Suche blieben bei 384 Punkten nur etwa 200 fuer ein Wort
+    // wie "ABSCHLUSSPROJEKT"
+    private readonly Panel _kopfUnten = new StackPanel();
+    private DockPanel? _kopf;
+    private StackPanel? _kopfTitel;
     private bool? _breit;
 
     public static bool AutoModus => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_AUTO") == "1";
@@ -57,17 +67,24 @@ public partial class MainView : UserControl
         }
         _leisten = new Navigationsleisten(id => _ = ZeigeAsync(id));
 
-        var suche = Symbolknopf(Symbole.Suche, Seiten.Titel(Seiten.Suche), Seiten.Suche);
-        var hilfe = Symbolknopf(Symbole.Hilfe, Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
-        var kopf = new DockPanel { Margin = new Thickness(16, 10, 8, 10) };
-        var symbole = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { suche, hilfe } };
+        // Wie am Handy: Hilfe vor Suche, Symbole text_dim, rechts 6 Punkte Abstand
+        var hilfe = Symbolknopf("HELP_OUTLINE_ROUNDED", Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
+        var suche = Symbolknopf("SEARCH_ROUNDED", Seiten.Titel(Seiten.Suche), Seiten.Suche);
+        var kopf = new DockPanel { Margin = new Thickness(0, 0, 6, 0) };
+        var symbole = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Children = { hilfe, suche } };
         DockPanel.SetDock(symbole, Dock.Right);
         kopf.Children.Add(symbole);
-        _kopfTitel.VerticalAlignment = VerticalAlignment.Center;
-        _kopfTitel.TextWrapping = TextWrapping.Wrap;
+        DockPanel.SetDock(_logo, Dock.Left);
+        kopf.Children.Add(_logo);
+        var trenner = Schrift.Text("/", "Klein", FontWeight.Normal, "Pinsel.muted");
+        var krumen = new WrapPanel { ItemSpacing = 7, LineSpacing = 1, Children = { _krumeBereich, trenner, _krumeSeite } };
+        _kopfTitel = new StackPanel { Spacing = 1, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(16, 6, 12, 6), Children = { krumen, _versionZeile } };
+        _kopf = kopf;
         kopf.Children.Add(_kopfTitel);
-        var kopfleiste = new Border { Child = kopf, BorderThickness = new Thickness(0, 0, 0, 1) }
-            .Farbe(Border.BackgroundProperty, "Pinsel.bg").Farbe(Border.BorderBrushProperty, "Pinsel.border");
+        var kopfleiste = new Border { Child = new StackPanel { Children = { kopf, _kopfUnten } } }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
+        Schrift.Geaendert += KopfAnordnen;
+        // Flutter-Kopfzeile 56 hoch, waechst mit der Schrift
+        kopfleiste.Bind(MinHeightProperty, kopfleiste.GetResourceObservable("Schrift.Normal", v => v is double d ? 56 * d / Schrift.Grundgroessen["Normal"] : 56));
 
         var raster = new Grid
         {
@@ -236,21 +253,67 @@ public partial class MainView : UserControl
         _breit = breit;
         _leisten.Seitenleiste.IsVisible = breit;
         _leisten.UntereLeiste.IsVisible = !breit;
+        // Logo-Ring nur im schmalen Aufbau (breit steht der Programmname in der Seitenleiste)
+        _logo.IsVisible = !breit;
+        KopfAnordnen();
         _leisten.Markiere(AktuelleSeite);
+        Brotkrumen(AktuelleSeite);
     }
 
-    private Button Symbolknopf(Geometry symbol, string name, string ziel)
+    /// <summary>Brotkrumen neben den Symbolen oder (ab 160 % im schmalen Aufbau) in einer Zeile darunter.</summary>
+    private void KopfAnordnen()
+    {
+        if (_kopf is null || _kopfTitel is null)
+        {
+            return;
+        }
+        var unten = _breit == false && Schrift.Gross;
+        if (unten == (_kopfTitel.Parent == _kopfUnten))
+        {
+            return;
+        }
+        (_kopfTitel.Parent as Panel)?.Children.Remove(_kopfTitel);
+        _kopfTitel.Margin = unten ? new Thickness(16, 0, 12, 8) : new Thickness(16, 6, 12, 6);
+        (unten ? _kopfUnten.Children : _kopf.Children).Add(_kopfTitel);
+    }
+
+    /// <summary>Symbolknopf wie ft.IconButton (48 x 48, Symbol 24, text_dim).</summary>
+    private Button Symbolknopf(string symbol, string name, string ziel)
     {
         var knopf = new Button
         {
-            Content = new PathIcon { Data = symbol, Width = 20, Height = 20 }.Farbe(PathIcon.ForegroundProperty, "Pinsel.text"),
-            Padding = new Thickness(10),
+            Content = Symbole.Block(symbol, 24, "Pinsel.text_dim"),
+            Padding = new Thickness(12),
             Background = Brushes.Transparent,
+            CornerRadius = new CornerRadius(999),
+            VerticalAlignment = VerticalAlignment.Center,
         };
         ToolTip.SetTip(knopf, name);
         Avalonia.Automation.AutomationProperties.SetName(knopf, name);
         knopf.Click += async (_, _) => await ZeigeAsync(ziel);
         return knopf;
+    }
+
+    /// <summary>Logo wie am Handy: Ring 30 (Dicke 4, Verlauf accent nach accent2) mit Punkt accent2 (10), links 16 Abstand.</summary>
+    private static Control Logo()
+    {
+        var ring = new VerlaufRing(1, "accent", "accent2", 4) { Width = 30, Height = 30 };
+        var punkt = new Border { Width = 10, Height = 10, CornerRadius = new CornerRadius(5), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
+            .Farbe(Border.BackgroundProperty, "Pinsel.accent2");
+        var logo = new Grid { Width = 30, Height = 30, Margin = new Thickness(16, 0, 6, 0), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Children = { ring, punkt } };
+        Avalonia.Automation.AutomationProperties.SetAccessibilityView(logo, Avalonia.Automation.AccessibilityView.Raw);
+        return logo;
+    }
+
+    /// <summary>Brotkrumen der Seite (Navigation.KopfPc bzw. KopfHandy); Versionszeile nur auf der Startseite.</summary>
+    private void Brotkrumen(string id)
+    {
+        var breit = _breit ?? true;
+        var titel = Core.Texte.Geraetetexte.Kopfzeilen(breit).FirstOrDefault(k => k.Id == id)
+            ?? Core.Texte.Geraetetexte.Kopfzeilen(!breit).FirstOrDefault(k => k.Id == id);
+        _krumeBereich.Text = titel?.Bereich ?? "";
+        _krumeSeite.Text = titel?.Seite ?? Seiten.Titel(id);
+        _versionZeile.IsVisible = id == Seiten.Dashboard;
     }
 
     /// <summary>Wartet, bis das naechste Bild fertig gezeichnet ist (zwei Bildaufrufe).</summary>
@@ -357,7 +420,7 @@ public partial class MainView : UserControl
         {
             suche.Fokus();
         }
-        _kopfTitel.Text = Seiten.Titel(id);
+        Brotkrumen(id);
         _leisten.Markiere(id);
         Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }

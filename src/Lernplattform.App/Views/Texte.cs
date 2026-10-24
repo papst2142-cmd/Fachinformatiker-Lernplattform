@@ -11,7 +11,7 @@ public static class Texte
 
     public static IReadOnlyList<NavPunkt> NavigationHandy { get; } = Navigation.Handy.Select(Punkt).ToList();
 
-    private static NavPunkt Punkt(NavEintrag e) => new(e.Id, e.Titel, e.Unterpunkte.Select(Punkt).ToList());
+    private static NavPunkt Punkt(NavEintrag e) => new(e.Id, e.Titel, e.Unterpunkte.Select(Punkt).ToList(), e.Symbol, e.SymbolAktiv ?? e.Symbol);
 
     /// <summary>Welcher Eintrag der unteren Leiste zu einer Seite gehoert (Lernbereiche: "Lernen").</summary>
     public static string HandyZiel(string id)

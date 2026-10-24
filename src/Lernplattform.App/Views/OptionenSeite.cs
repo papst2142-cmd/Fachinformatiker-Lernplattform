@@ -65,7 +65,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             },
         });
         _fehler.IsVisible = false;
-        var liste = new StackPanel { Spacing = 12, Margin = new Thickness(16) };
+        var liste = new StackPanel { Spacing = 14, Margin = new Thickness(16, 4, 16, 24) };   // screen_list
         liste.Children.Add(_fehler);
         foreach (var bereich in Geraetetexte.OptionenBereiche(Pc))
         {
@@ -115,37 +115,36 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }, DispatcherPriority.Loaded);
     }
 
+    /// <summary>Akzentfarbe je Bereich wie OptionsScreen am Handy (Ausbildung und Datenbank gibt es nur in C#).</summary>
+    private static string Akzent(string id) => id switch
+    {
+        Optionen.Updates or Optionen.Sicherung or Optionen.Spiel => "Pinsel.accent2",
+        Optionen.Tagesziel or Optionen.Rundgang or Optionen.Ueber => "Pinsel.green",
+        Optionen.Lerninhalte => "Pinsel.purple",
+        Optionen.Loeschen => "Pinsel.red",
+        Optionen.Diagnose => "Pinsel.orange",
+        Optionen.Ausbildung => "Pinsel.blue",
+        Optionen.Datenbank => "Pinsel.cyan",
+        _ => "Pinsel.accent",
+    };
+
     private Control Bereich(OptionenBereich bereich, Control inhalt)
     {
-        var titel = Schrift.Text(bereich.Titel, "Mittel", FontWeight.Bold);
-        var kopf = new StackPanel { Spacing = 2, Children = { titel } };
-        if (Geraetetexte.OptionenUntertitel(bereich, Pc) is { } untertitel)
-        {
-            var text = bereich.Id == Optionen.Updates ? Beschriftungen.Einsetzen(untertitel, Update.Anzeige) : untertitel;
-            kopf.Children.Add(Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.muted"));
-        }
+        var untertitel = Geraetetexte.OptionenUntertitel(bereich, Pc) is { } u
+            ? bereich.Id == Optionen.Updates ? Beschriftungen.Einsetzen(u, Update.Anzeige.Replace(' ', '\u00A0')) : u
+            : null;
+        var akzent = Akzent(bereich.Id);
         if (bereich.Offen)
         {
-            var offen = Schrift.Karte(new StackPanel { Spacing = 12, Children = { kopf, inhalt } });
+            var offen = Schrift.KopfKarte(bereich.Titel, untertitel, inhalt, akzent);
             _bereiche[bereich.Id] = (offen, null);
             return offen;
         }
-        var klappe = new Expander
-        {
-            Header = kopf,
-            Content = inhalt,
-            IsExpanded = bereich.Aufgeklappt,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-        };
-        klappe.Farbe(Expander.BackgroundProperty, "Pinsel.card").Farbe(Expander.BorderBrushProperty, "Pinsel.border")
-            .Farbe(Expander.ForegroundProperty, "Pinsel.text");
-        Avalonia.Automation.AutomationProperties.SetName(klappe, bereich.Titel);
+        // A 0.12.2: Klappkarte wie FoldCard(marker=True) am Handy
+        var klappe = Klappkarte.Bauen(bereich.Titel, untertitel, inhalt, akzent, bereich.Aufgeklappt);
         _klappen.Add(klappe);
-        var karte = Schrift.Karte(klappe);
-        karte.Padding = new Thickness(0);
-        _bereiche[bereich.Id] = (karte, klappe);
-        return karte;
+        _bereiche[bereich.Id] = (klappe, klappe);
+        return klappe;
     }
 
     private Control Inhalt(OptionenBereich bereich) => bereich.Id switch
@@ -893,7 +892,6 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         UpdateErgebnis = zeile;
         var schalter = new ToggleSwitch
         {
-            Content = Schrift.Text(Optionen.UpdatesAutomatisch, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
             IsChecked = Zustand.Werte[Einstellungen.AutoCheckSchluessel]?.GetValueKind() is System.Text.Json.JsonValueKind.True,
             OnContent = null,
             OffContent = null,
@@ -935,7 +933,14 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         var reihe = new WrapPanel { IsVisible = VerknuepfungDienst.Unterstuetzt, Children = { verknuepfung, stand } };
         VerknuepfungReihe = reihe;
         VerknuepfungZeile = stand;
-        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalter, reihe } };
+        // A 0.12.2 wie _switch am Handy: Schalter links, Text (13 text_dim) rechts daneben
+        var schalterText = Schrift.Pt(Optionen.UpdatesAutomatisch, 13, FontWeight.Normal, "Pinsel.text_dim");
+        schalterText.VerticalAlignment = VerticalAlignment.Center;
+        schalter.VerticalAlignment = VerticalAlignment.Center;
+        var schalterZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 10, Children = { schalter, schalterText } };
+        Grid.SetColumn(schalterText, 1);
+        knopf.Margin = new Thickness(0, 0, 16, 0);
+        return new StackPanel { Spacing = 10, Children = { new WrapPanel { Children = { knopf, zeile } }, schalterZeile, reihe } };
     }
 
     /// <summary>Reihe "Verknüpfung anlegen" (Linux, AppImage); der Start ohne Bedienung zeigt sie auf allen Systemen.</summary>
@@ -974,7 +979,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         // Python und ...") fehlt, bis Nico den Text fuer die C#-Linie festlegt.
         var text = UeberTexte.Programmname + " Version " + Update.Anzeige + "\n" + UeberTexte.Copyright + "\n\n"
             + UeberTexte.Beschreibung + "\n\n" + UeberTexte.Hinweis + "\n\n" + UeberTexte.ClaudeHinweis;
-        var panel = new StackPanel { Spacing = 10, Children = { Schrift.Text(text) } };
+        var panel = new StackPanel { Spacing = 10, Children = { Schrift.Pt(text, 13, FontWeight.Normal, "Pinsel.text_dim") } };
         var anzeige = new TextBox
         {
             IsReadOnly = true,
@@ -983,10 +988,13 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             MaxHeight = 360,
             IsVisible = false,
         }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
-        var reihe = new WrapPanel();
+        // A 0.12.2: Knoepfe volle Breite als Rahmenknoepfe (GradientButton kind="ghost", expand)
+        var reihe = new StackPanel { Spacing = 10 };
         foreach (var (knopfText, datei) in (ReadOnlySpan<(string, string)>)[(UeberTexte.KnopfLizenz, "LICENSE.txt"), (UeberTexte.KnopfFremd, "THIRD_PARTY_NOTICES.txt")])
         {
             var knopf = Schrift.Knopf(knopfText);
+            knopf.Margin = new Thickness(0);
+            knopf.HorizontalAlignment = HorizontalAlignment.Stretch;
             knopf.Click += (_, _) =>
             {
                 anzeige.Text = Eingebettet(datei);
