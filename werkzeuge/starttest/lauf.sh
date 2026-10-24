@@ -26,6 +26,9 @@ fi
 rcdatei=$(mktemp)
 befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" dotnet run --no-build -c Release --project src/Lernplattform.Desktop)
 if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
+  # Phase 7 W1: Xvfb hat nur den Mesa-Softwaretreiber llvmpipe, den Avalonia fuer OpenGL sperrt;
+  # der Start-Test erlaubt ihn, damit der Pflicht-Messpunkt "GL-Zusammenhang erzeugt" messbar ist
+  export LERNPLATTFORM_GL_LLVMPIPE=1
   befehl=(xvfb-run -a -s "-screen 0 1280x800x24" "${befehl[@]}")
 fi
 "${befehl[@]}"

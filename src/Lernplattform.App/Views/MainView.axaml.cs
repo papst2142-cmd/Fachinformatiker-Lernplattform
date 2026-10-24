@@ -353,6 +353,8 @@ public partial class MainView : UserControl
                 Seiten.Testprojekt => new SzenarioSeite(Core.Lernen.Quellen.Projekt, vorlage => _ = AlsVorlageAsync(vorlage)),
                 // Phase 4, W3: Abschlussprojekt
                 Seiten.Abschluss => new AbschlussprojektSeite(),
+                // Phase 7, W1: 3D-Stichprobe der Stadt (noch ohne Spiel-Kern)
+                Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Core.Spiel.Probe.ProbeWelt.Bauen(SpielInhalt)),
                 Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
@@ -650,6 +652,16 @@ public partial class MainView : UserControl
     /// Startseite, jetzt in Optionen &gt; Sicherung (Nico, Frage 4a). Knoepfe, Texte und die
     /// Pruefung selbst (SicherungPruefenAsync, SicherungsPruefung) sind unveraendert.
     /// </summary>
+    /// <summary>inhalte/spiel/&lt;name&gt;.json aus dem Programm selbst (Phase 7 W1).</summary>
+    private static byte[] SpielInhalt(string name)
+    {
+        using var strom = typeof(MainView).Assembly.GetManifestResourceStream("inhalte/spiel/" + name + ".json")
+            ?? throw new FileNotFoundException("inhalte/spiel/" + name + ".json");
+        using var kopie = new MemoryStream();
+        strom.CopyTo(kopie);
+        return kopie.ToArray();
+    }
+
     private Control BaueSicherung()
     {
         var panel = new StackPanel { Spacing = 8 };

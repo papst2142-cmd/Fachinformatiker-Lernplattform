@@ -108,10 +108,25 @@ jobs:
         env:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+      # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
+      # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
+      - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
+        if: always() && runner.os != 'macOS' && steps.lauf1.outcome != 'skipped'
+        timeout-minutes: 5
+        shell: bash
+        env:
+          LERNPLATTFORM_SOFTWARE: "1"
+          LERNPLATTFORM_MESSUNG_TEIL: spiel-ersatz
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_ersatz
+        run: |
+          datei=messung_${{ runner.os }}_ersatz_versuch${{ github.run_attempt }}.txt
+          bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
+          cat "$datei" || true
+          grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
       - uses: actions/upload-artifact@v7
         with:
           name: messung-${{ runner.os }}-${{ github.run_attempt }}
-          path: messung_${{ runner.os }}_lauf*_versuch${{ github.run_attempt }}.txt
+          path: messung_${{ runner.os }}_*_versuch${{ github.run_attempt }}.txt
         if: always()
       # Sicherungsschritt (Weisung P4-14 c): 1. Lauf ohne Fehler, aber Rueckgabe weder 0 noch 3
       # (leer, mit \r, verlorene Ausgabe) -> rot. Ein verschwiegenes Rot darf nie gruen enden.
@@ -350,6 +365,31 @@ jobs:
       # Testschluessel; auf dem S24 als Update ueber A 0.12.2 installierbar.
       - name: Update-APK A 0.12.3 bauen
         run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.12.3 -o apk-update
+      # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
+      # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
+      - name: Probe-APK 3D-Stichprobe bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Probe=true -o apk-probe
+      - name: Probe-APK pruefen (eigene Kennung, Testschluessel, nie Release-Schluessel)
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          a=$(ls apk-probe/*-Signed.apk)
+          "$BT/aapt2" dump badging "$a" | head -n 1
+          "$BT/aapt2" dump badging "$a" | head -n 1 | grep -q "name='io.github.papst2142cmd.lernplattform.probe'"
+          "$BT/aapt2" dump badging "$a" | grep -q "application-label:'Lernplattform Probe'"
+          zert=$("$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | head -n 1 | awk '{print $NF}')
+          echo "Probe-Zertifikat SHA-256: $zert"
+          release=$(grep -v '^#' werkzeuge/release/android_fingerabdruck.txt | tr -d ' \r\n')
+          test -n "$zert"
+          if [ "$zert" = "$release" ]; then echo "FEHLER: Probe-APK traegt den Release-Schluessel"; exit 1; fi
+          for b in apk/*-Signed.apk; do
+            "$BT/apksigner" verify --print-certs "$b" | grep "SHA-256" | head -n 1 | grep -q "$zert" || { echo "FEHLER: Probe-APK nicht mit dem Testschluessel dieses Laufs"; exit 1; }
+          done
+          mv "$a" apk-probe/Lernplattform-Probe-3D-arm64.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lernplattform-probe-3d-android
+          path: apk-probe/Lernplattform-Probe-3D-arm64.apk
+          if-no-files-found: error
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)

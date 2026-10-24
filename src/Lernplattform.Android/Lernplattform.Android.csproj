@@ -16,6 +16,15 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>
 
+  <!-- Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe, nur mit -p:Probe=true aus der CI.
+       Befristete Ausnahme NUR fuer die Probe: eigene Kennung und eigener Name, damit sie neben der echten
+       App liegt und deren Lernstand nie beruehrt. Die echte Kennung oben bleibt unveraendert. -->
+  <PropertyGroup Condition="'$(Probe)' == 'true'">
+    <ApplicationId>io.github.papst2142cmd.lernplattform.probe</ApplicationId>
+    <ApplicationTitle>Lernplattform Probe</ApplicationTitle>
+    <DefineConstants>$(DefineConstants);PROBE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <AndroidResource Include="Icon.png">
       <Link>Resources\drawable\Icon.png</Link>
