@@ -161,11 +161,22 @@ public sealed class HaengerTests : IDisposable
         Assert.Equal("blockiert", Haenger.Pruefen(51));
     }
 
+    /// <summary>
+    /// A 0.12.2 (Weisung P6-15): eigener, leerer Datenordner. Die Diagnose schreibt nur bei der Einrichtung
+    /// (Startzeile) dorthin und wird gleich wieder geschlossen; ein spaet verarbeitetes Signal aus
+    /// <see cref="SignalSchreibtAbruf"/> (macOS) kann diese Datei damit nicht mehr erreichen.
+    /// </summary>
     [Fact]
     public void ZustandTextOhneHaenger()
     {
-        Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(Haenger.Pfad(_ordner.Pfad)));
-        Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(Path.Combine(_ordner.Pfad, "fehlt.log")));
+        using var eigener = new TempOrdner();
+        Haenger.FuerTests(() => "1 lp T S wartet", text => _fehlerlog.Add(text));
+        Assert.True(Haenger.Einrichten("A 0.10.0", eigener.Pfad, plattform: "linux", zusatz: "x11", waechter: false));
+        Haenger.FuerTests(() => "1 lp T S wartet", text => _fehlerlog.Add(text));
+        var pfad = Haenger.Pfad(eigener.Pfad);
+        Assert.Matches(@"^=== \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Start \| Version A 0\.10\.0 \| linux \| pid \d+ \| x11 ===\n$", File.ReadAllText(pfad));
+        Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(pfad));
+        Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(Path.Combine(eigener.Pfad, "fehlt.log")));
     }
 
     /// <summary>Gegenpruefung W2 Fund 4: nach einem Abruf (kill -USR1) nennen die Optionen die Datei, nicht "Keine Hänger".</summary>

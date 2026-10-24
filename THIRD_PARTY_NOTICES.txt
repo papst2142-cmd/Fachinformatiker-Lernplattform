@@ -50,9 +50,13 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Runtime.win-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | win-x64
 - Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, win-x64
-  Schrift der Oberflaeche, eingebettet in Avalonia.Fonts.Inter.dll
+  Ersatzschrift fuer Zeichen, die Roboto nicht hat (z. B. Pfeile, Haken), eingebettet in Avalonia.Fonts.Inter.dll
 - Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, win-x64
   Festbreitenschrift der Rechner (nur Regular), eingebettet in Lernplattform.App.dll
+- Schrift Material Icons (aus flet-web 1.0.1) | Apache-2.0 | https://github.com/google/material-design-icons | android-arm64, linux-x64, osx-arm64, win-x64
+  Symbole der Oberflaeche (Teilschrift fisi_symbole.otf mit 35 Zeichen aus MaterialIcons-Regular.otf, erzeugt von werkzeuge/symbole/erzeuge_symbole.py), eingebettet in Lernplattform.App.dll
+- Schrift Roboto (2.138) | Apache-2.0 | https://github.com/googlefonts/roboto (Release v2.138, roboto-unhinted.zip) | android-arm64, linux-x64, osx-arm64, win-x64
+  Schrift der Oberflaeche (Regular und Bold, unveraendert), eingebettet in Lernplattform.App.dll
 - SkiaSharp (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, win-x64
 - SkiaSharp.NativeAssets.Android (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - SkiaSharp.NativeAssets.Linux (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64

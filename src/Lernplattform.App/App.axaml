@@ -4,6 +4,13 @@
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
+    <Application.Resources>
+        <!-- A 0.12.2 (Weisung P6-17, Nico): Schrift der Oberflaeche ist Roboto 2.138 wie in der Python-Linie,
+             auf allen Geraeten gleich (Assets/Fonts, Regular und Bold). Inter nur fuer Zeichen, die Roboto nicht
+             hat (Pfeile, Haken). Einzige Stelle fuer die Schriftwahl. -->
+        <FontFamily x:Key="ContentControlThemeFontFamily">avares://Lernplattform.App/Assets/Fonts#Roboto, fonts:Inter#Inter, $Default</FontFamily>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>

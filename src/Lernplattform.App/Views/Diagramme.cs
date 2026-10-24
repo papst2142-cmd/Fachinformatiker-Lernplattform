@@ -44,7 +44,7 @@ public abstract class DiagrammFlaeche : Control
     protected double Px(double wert) => wert * Schrift / 11;
 
     protected FormattedText Text(string text, IBrush? farbe) =>
-        new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, Schrift, farbe);
+        new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(Avalonia.Controls.Documents.TextElement.GetFontFamily(this)), Schrift, farbe);
 
     /// <summary>Waagrechte Rasterlinie: unterste durchgezogen, sonst gestrichelt (2, 4).</summary>
     protected void Rasterlinie(DrawingContext dc, double links, double rechts, double y, bool durchgezogen)

@@ -338,7 +338,7 @@ public partial class GeraetetexteTests
     public void Kontrollfehler_HandyTextInDerAnsicht()
     {
         var dashboard = AppDateien().Single(d => d.Item1 == "Views/DashboardSeite.cs");
-        var falsch = dashboard.Item2.Replace("Schrift.Text(Geraetetexte.AktivitaetZeile1(a, Pc)),", "Schrift.Text(Pc ? a.Pc1 : a.Handy1),", StringComparison.Ordinal);
+        var falsch = dashboard.Item2.Replace("Schrift.Pt(Geraetetexte.AktivitaetZeile1(a, Pc), 13,", "Schrift.Pt(Pc ? a.Pc1 : a.Handy1, 13,", StringComparison.Ordinal);
         Assert.NotEqual(dashboard.Item2, falsch);
         Assert.Single(Quelltextfunde([(dashboard.Item1, falsch)]));
         Assert.Single(Quelltextfunde([("Views/X.cs", "var t = OperatingSystem.IsAndroid() ? \"Start\" : \"Dashboard\";")]));

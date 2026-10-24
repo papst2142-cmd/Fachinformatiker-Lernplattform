@@ -21,7 +21,7 @@ namespace Lernplattform.Views;
 public sealed class DashboardSeite : UserControl
 {
     private static readonly bool Pc = !OperatingSystem.IsAndroid();
-    private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16) };
+    private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16, 4, 16, 24) };   // screen_list
 
     private readonly Action _wiederholen;
     private bool _gezeigt;
@@ -112,38 +112,50 @@ public sealed class DashboardSeite : UserControl
         });
     }
 
+    /// <summary>Ringfarben der vier Ringkarten und Abdeckungsbalken (Reihenfolge Karteikarten, Pruefungstrainer, AP1, AP2).</summary>
+    private static readonly (string A, string B)[] RingFarben = [("accent", "purple"), ("purple", "accent2"), ("blue", "accent"), ("accent2", "orange")];
+
+    /// <summary>THEME_COLOR: Farbe je Themenblock der AP1/AP2 in Reihenfolge der Themen.</summary>
+    private static readonly string[] ThemenFarben = ["cyan", "pink", "purple", "blue", "green"];
+
+    /// <summary>kind_color: Farbe des Punkts je Aktivitaetsart.</summary>
+    private static string ArtFarbe(string art) => art switch
+    {
+        "Karteikarte" => "Pinsel.accent",
+        "Prüfungsfrage" => "Pinsel.purple",
+        "AP1-Szenario" => "Pinsel.blue",
+        "AP2-Szenario" => "Pinsel.accent2",
+        "Testprojekt" => "Pinsel.orange",
+        "Test-Session" => "Pinsel.green",
+        _ => "Pinsel.muted",
+    };
+
+    /// <summary>Kalender "Lerntage" (fuer die Messung des Blaetterns im Start ohne Bedienung).</summary>
+    public LerntageKalender? Kalender { get; private set; }
+
+    /// <summary>
+    /// A 0.12.2: Aufbau wie DashboardScreen am Handy (Python 0.63.2): Banner, Heute, vier Ringkarten in
+    /// zwei Spalten, Erfolgsquote, Lernverlauf als Liniendiagramm, Abdeckung, Fachbereiche (3 + 2),
+    /// Aktivitaeten, Lerntage mit Blaettern, AP1/AP2-Themen. Werte und Texte unveraendert aus Core.
+    /// </summary>
     private void Zeigen(DashboardWerte w)
     {
+        var gross = Schrift.Gross;   // ab 160 % Banner und Ringkarten untereinander (LARGE_FACTOR am Handy)
         if (DashboardTexte.Hinweis(w.Zustand) is { } hinweis)
         {
             _liste.Children.Add(Schrift.Karte(Schrift.Text(hinweis, "Normal", FontWeight.SemiBold, "Pinsel.orange")));
         }
-        // Banner
-        var banner = new Border
-        {
-            CornerRadius = new CornerRadius(16),
-            Padding = new Thickness(20),
-            Child = new StackPanel
-            {
-                Spacing = 6,
-                Children =
-                {
-                    Schrift.Text(w.Banner.Titel, "Banner", FontWeight.Bold, "Pinsel.on_accent"),
-                    Schrift.Text(Geraetetexte.Banner(w.Banner, Pc), "Normal", FontWeight.Normal, "Pinsel.on_accent"),
-                    Schrift.Text(w.Banner.Gross, "Zahl", FontWeight.Bold, "Pinsel.on_accent"),
-                    Schrift.Text(w.Banner.GrossUnter, "Klein", FontWeight.Normal, "Pinsel.on_accent"),
-                },
-            },
-        }.Farbe(Border.BackgroundProperty, "Verlauf.hero");
-        _liste.Children.Add(banner);
+        _liste.Children.Add(Banner(w.Banner, gross));
 
         // Heute: Tagesziel und Wiederholung
-        var heute = new StackPanel { Spacing = 8 };
+        var heute = new StackPanel { Spacing = 10 };
         if (w.Tagesziel.Sichtbar)
         {
-            heute.Children.Add(Zeile(Ring(w.Tagesziel.Anteil, w.Tagesziel.RingText, "Pinsel.green"), Schrift.Text(w.Tagesziel.Text)));
+            var ring = VerlaufRing.MitText(w.Tagesziel.Anteil, w.Tagesziel.Erreicht ? "green" : "accent", null, w.Tagesziel.RingText, null, 74, 7);
+            SetzeRingGroessen(ring, 14);
+            heute.Children.Add(Zeile(ring, Schrift.Pt(w.Tagesziel.Text, 14, FontWeight.Bold), 14));
         }
-        heute.Children.Add(Schrift.Text(w.Faellig.Text));
+        heute.Children.Add(Schrift.Pt(w.Faellig.Text, 14, FontWeight.Bold));
         // Wie Python: PC zeigt den Knopf immer, gesperrt ohne faellige Aufgaben
         // (set_enabled(plan.count() > 0)); Handy zeigt ihn nur mit faelligen Aufgaben
         // (visible = plan.count() > 0). Klick auf beiden Geraeten gleich (start_review).
@@ -151,215 +163,224 @@ public sealed class DashboardSeite : UserControl
         {
             var knopf = LernTeile.Knopf(DashboardTexte.Wiederholen, true);
             knopf.IsEnabled = w.Faellig.Wiederholen;
+            knopf.Margin = new Thickness(0);
             knopf.Click += (_, _) => _wiederholen();
             heute.Children.Add(new WrapPanel { Children = { knopf } });
         }
-        _liste.Children.Add(Karte(DashboardTexte.HeuteTitel, DashboardTexte.HeuteUnter, heute));
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.HeuteTitel, DashboardTexte.HeuteUnter, heute, "Pinsel.green"));
 
-        // Vier Ringe: Karteikarten, Pruefungstrainer, AP1, AP2
-        var ringe = new WrapPanel();
-        foreach (var k in w.Kennzahlen)
+        // Vier Ringkarten, je zwei nebeneinander (ab 160 % untereinander)
+        for (var i = 0; i < w.Kennzahlen.Count; i += 2)
         {
-            ringe.Children.Add(Schrift.Karte(new StackPanel
+            var reihe = new Grid { ColumnSpacing = 12, RowSpacing = 12 };
+            for (var j = i; j < Math.Min(i + 2, w.Kennzahlen.Count); j++)
             {
-                Spacing = 4,
-                Children =
+                var k = w.Kennzahlen[j];
+                var (a, b) = RingFarben[j % RingFarben.Length];
+                var ring = VerlaufRing.MitText(k.Anteil, a, b, k.Gross, k.Unter, 112, 11);
+                var karte = Schrift.KopfKarte(k.Titel, null, new Viewbox
                 {
-                    Schrift.Text(k.Titel, "Normal", FontWeight.SemiBold),
-                    Ring(k.Anteil, k.Gross, "Pinsel.accent"),
-                    Schrift.Text(k.Unter, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
-                },
-            }.Breite(150)));
-            ((Border)ringe.Children[^1]).Margin = new Thickness(0, 0, 10, 10);
+                    Stretch = Stretch.Uniform,
+                    StretchDirection = StretchDirection.DownOnly,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Child = ring,
+                });
+                karte.Padding = new Thickness(14);
+                // ring_fit (Nacharbeit M1): Rand seitlich 14, hoechstens bis 6 enger, damit Ring und Titel
+                // in die Karte passen (bei 384 Punkten: Normal und Gross 14, Sehr gross 11)
+                karte.SizeChanged += (_, e) =>
+                {
+                    var innen = Math.Floor(e.NewSize.Width) - 2;
+                    var ringGroesse = Math.Max(40, Math.Min(Math.Round(112 * Schrift.Faktor), innen - 2 * 6));
+                    var seite = Math.Min(14, Math.Max(6, Math.Floor((innen - ringGroesse) / 2)));
+                    if (Math.Abs(karte.Padding.Left - seite) > 0.1)
+                    {
+                        karte.Padding = new Thickness(seite, 14);
+                    }
+                };
+                if (gross)
+                {
+                    reihe.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                    Grid.SetRow(karte, j - i);
+                }
+                else
+                {
+                    reihe.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    Grid.SetColumn(karte, j - i);
+                }
+                reihe.Children.Add(karte);
+            }
+            _liste.Children.Add(reihe);
         }
-        _liste.Children.Add(ringe);
 
         // Erfolgsquote
-        _liste.Children.Add(Karte(DashboardTexte.QuoteTitel, DashboardTexte.QuoteUntertitel, new StackPanel
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.QuoteTitel, DashboardTexte.QuoteUntertitel, new StackPanel
         {
-            Spacing = 4,
-            Children = { Schrift.Text(w.Quote.Text, "Titel", FontWeight.Bold), Schrift.Text(w.Quote.Unter, "Klein", FontWeight.Normal, "Pinsel.text_dim") },
-        }));
+            Spacing = 10,
+            Children = { Schrift.Pt(w.Quote.Text, 34, FontWeight.Bold, "Pinsel.accent"), Schrift.Pt(w.Quote.Unter, 13, FontWeight.Normal, "Pinsel.muted") },
+        }, "Pinsel.accent2"));
 
-        // Lernverlauf (14 Tage)
-        var hoechst = Math.Max(1, w.Verlauf.Max(t => t.Anzahl));
-        var balken = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(",", w.Verlauf.Select(_ => "*"))), Height = 140 };
-        for (var i = 0; i < w.Verlauf.Count; i++)
+        // Lernverlauf (14 Tage) als Liniendiagramm mit Flaeche und Legende
+        var diagramm = new LinienDiagramm(200, "accent");
+        diagramm.Daten(w.Verlauf.Select(t => t.Beschriftung).ToList(), DashboardTexte.VerlaufSerie, w.Verlauf.Select(t => (double)t.Anzahl).ToList());
+        Avalonia.Automation.AutomationProperties.SetName(diagramm, string.Join(", ", w.Verlauf.Select(t => t.Beschriftung + " " + t.Anzahl)));
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.VerlaufTitel, Beschriftungen.Einsetzen(DashboardTexte.VerlaufUnter, DashboardWerte.Tage), diagramm));
+
+        // Abdeckung: Verlaufsbalken je Bereich
+        var abdeckung = new StackPanel { Spacing = 14 };
+        for (var i = 0; i < w.Kennzahlen.Count; i++)
         {
-            var tag = w.Verlauf[i];
-            var saeule = new Border
-            {
-                Height = 100.0 * tag.Anzahl / hoechst,
-                Margin = new Thickness(2, 0),
-                CornerRadius = new CornerRadius(3),
-                VerticalAlignment = VerticalAlignment.Bottom,
-            }.Farbe(Border.BackgroundProperty, "Pinsel.accent");
-            ToolTip.SetTip(saeule, tag.Beschriftung + ": " + tag.Anzahl);
-            var spalte = new DockPanel { LastChildFill = true };
-            var datum = new TextBlock { Text = i % 2 == 0 ? tag.Beschriftung[..2] : "", HorizontalAlignment = HorizontalAlignment.Center }
-                .Groesse("Klein").Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
-            DockPanel.SetDock(datum, Dock.Bottom);
-            spalte.Children.Add(datum);
-            spalte.Children.Add(saeule);
-            Grid.SetColumn(spalte, i);
-            balken.Children.Add(spalte);
+            var k = w.Kennzahlen[i];
+            var (a, b) = RingFarben[i % RingFarben.Length];
+            abdeckung.Children.Add(Balken(k.Titel, k.BalkenText, k.BalkenProzent, a, b));
         }
-        _liste.Children.Add(Karte(DashboardTexte.VerlaufTitel, Beschriftungen.Einsetzen(DashboardTexte.VerlaufUnter, DashboardWerte.Tage), balken));
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.AbdeckungTitel, DashboardTexte.AbdeckungUnter, abdeckung, "Pinsel.purple"));
 
-        // Abdeckung
-        var abdeckung = new StackPanel { Spacing = 8 };
-        foreach (var k in w.Kennzahlen)
+        // Fortschritt je Fachbereich: Ringe 3 + 2 in den Fachbereichsfarben; ab 160 % je Reihe zwei
+        // (bei drei Spalten passten "Netzwerk" und "Sicherheit" nicht mehr in ihre Spalte)
+        var fach = new StackPanel { Spacing = 16 };
+        var jeReihe = gross ? 2 : 3;
+        for (var i = 0; i < w.Fachbereiche.Count; i += jeReihe)
         {
-            abdeckung.Children.Add(Schrift.Text(k.Titel + "  " + k.BalkenText, "Klein"));
-            abdeckung.Children.Add(new ProgressBar { Minimum = 0, Maximum = 100, Value = k.BalkenProzent, Height = 8 }
-                .Farbe(ProgressBar.ForegroundProperty, "Pinsel.accent").Farbe(ProgressBar.BackgroundProperty, "Pinsel.ring_bg"));
-        }
-        _liste.Children.Add(Karte(DashboardTexte.AbdeckungTitel, DashboardTexte.AbdeckungUnter, abdeckung));
-
-        // Fortschritt je Fachbereich
-        var fach = new WrapPanel();
-        foreach (var f in w.Fachbereiche)
-        {
-            var feld = new StackPanel
+            var reihe = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(",", Enumerable.Repeat("*", Math.Min(jeReihe, w.Fachbereiche.Count - i)))) };
+            for (var j = i; j < Math.Min(i + jeReihe, w.Fachbereiche.Count); j++)
             {
-                Spacing = 4,
-                Margin = new Thickness(0, 0, 10, 10),
-                Children =
-                {
-                    Ring(f.Abdeckung / 100.0, Geraetetexte.Ring(f, Pc), "Pinsel.accent2"),
-                    Schrift.Text(f.Kurz, "Normal", FontWeight.SemiBold),
-                    Schrift.Text(f.Detail, "Klein", FontWeight.Normal, "Pinsel.text_dim"),
-                },
-            }.Breite(140);
-            fach.Children.Add(feld);
+                var f = w.Fachbereiche[j];
+                var farbe = ListenTeil.Farben.TryGetValue(f.Name, out var pinsel) ? pinsel["Pinsel.".Length..] : "accent";
+                var ring = VerlaufRing.MitText(f.Abdeckung / 100.0, farbe, null, Geraetetexte.Ring(f, Pc), null, 74, 7);
+                SetzeRingGroessen(ring, 14);
+                ring.HorizontalAlignment = HorizontalAlignment.Center;
+                var name = Schrift.Pt(f.Kurz, 13, FontWeight.Bold);
+                var detail = Schrift.Pt(f.Detail, 11, FontWeight.Normal, "Pinsel.muted");
+                name.TextAlignment = detail.TextAlignment = TextAlignment.Center;
+                var feld = new StackPanel { Spacing = 4, Children = { ring, name, detail } };
+                Grid.SetColumn(feld, j - i);
+                reihe.Children.Add(feld);
+            }
+            fach.Children.Add(reihe);
         }
         // Untertitel "Auswahl zeigt die Themen" erst mit dem Reinzoom (Weisung P1-2 3.4: nichts zusagen, was fehlt)
-        _liste.Children.Add(Karte(DashboardTexte.FachTitel, null, fach));
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.FachTitel, null, fach, "Pinsel.green"));
 
-        // Aktivitaeten
-        var aktiv = new StackPanel { Spacing = 8 };
+        // Aktivitaeten als Kacheln mit Punkt in der Farbe der Art
+        var aktiv = new StackPanel { Spacing = 6 };
         if (w.Aktivitaeten.Count == 0)
         {
-            aktiv.Children.Add(Schrift.Text(Geraetetexte.AktivitaetenLeer(Pc), "Normal", FontWeight.Normal, "Pinsel.text_dim"));
+            aktiv.Children.Add(Schrift.Pt(Geraetetexte.AktivitaetenLeer(Pc), 13, FontWeight.Normal, "Pinsel.muted"));
         }
         foreach (var a in w.Aktivitaeten)
         {
-            aktiv.Children.Add(new StackPanel
+            var zeile1 = Schrift.Pt(Geraetetexte.AktivitaetZeile1(a, Pc), 13, FontWeight.Normal, "Pinsel.text_dim");
+            zeile1.TextWrapping = TextWrapping.NoWrap;
+            zeile1.TextTrimming = TextTrimming.CharacterEllipsis;
+            var punkt = new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(4.5), VerticalAlignment = VerticalAlignment.Center }
+                .Farbe(Border.BackgroundProperty, ArtFarbe(a.Art));
+            var texte = new StackPanel { Spacing = 1, Children = { zeile1, Schrift.Pt(Geraetetexte.AktivitaetZeile2(a, Pc), 11, FontWeight.Normal, "Pinsel.muted") } };
+            aktiv.Children.Add(new Border
             {
-                Children =
-                {
-                    Schrift.Text(Geraetetexte.AktivitaetZeile1(a, Pc)),
-                    Schrift.Text(Geraetetexte.AktivitaetZeile2(a, Pc), "Klein", FontWeight.Normal, "Pinsel.text_dim"),
-                },
-            });
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(12, 8),
+                Child = Zeile(punkt, texte, 10),
+            }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt"));
         }
-        _liste.Children.Add(Karte(DashboardTexte.AktivitaetenTitel, DashboardTexte.AktivitaetenUnter, aktiv));
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.AktivitaetenTitel, DashboardTexte.AktivitaetenUnter, aktiv));
 
-        // Lerntage (Monat)
-        var kalender = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*,*,*,*") };
-        var zeile = 0;
-        kalender.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        string[] wochentage = ["M", "D", "M", "D", "F", "S", "S"];
-        for (var i = 0; i < 7; i++)
-        {
-            var kopf = new TextBlock { Text = wochentage[i], HorizontalAlignment = HorizontalAlignment.Center }
-                .Groesse("Klein").Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
-            Grid.SetColumn(kopf, i);
-            kalender.Children.Add(kopf);
-        }
-        foreach (var woche in w.Kalender.Wochen)
-        {
-            zeile++;
-            kalender.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            for (var i = 0; i < woche.Count; i++)
-            {
-                if (woche[i] == 0)
-                {
-                    continue;
-                }
-                var gelernt = w.Kalender.Lerntage.Contains(woche[i]);
-                var tag = new Border
-                {
-                    Margin = new Thickness(2),
-                    Padding = new Thickness(0, 4),
-                    CornerRadius = new CornerRadius(6),
-                    Child = new TextBlock { Text = woche[i].ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment = HorizontalAlignment.Center }
-                        .Groesse("Klein").Farbe(TextBlock.ForegroundProperty, gelernt ? "Pinsel.on_accent" : "Pinsel.text"),
-                };
-                tag.Farbe(Border.BackgroundProperty, gelernt ? "Pinsel.green" : "Pinsel.card_alt");
-                Grid.SetColumn(tag, i);
-                Grid.SetRow(tag, zeile);
-                kalender.Children.Add(tag);
-            }
-        }
-        _liste.Children.Add(Karte(DashboardTexte.KalenderTitel, DashboardTexte.KalenderUnter,
-            new StackPanel { Spacing = 8, Children = { Schrift.Text(w.Kalender.Titel, "Normal", FontWeight.SemiBold), kalender } }));
+        // Lerntage (Monat) mit Blaettern
+        Kalender = new LerntageKalender(w.Kalender);
+        _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.KalenderTitel, DashboardTexte.KalenderUnter, Kalender, "Pinsel.purple"));
 
-        // AP1 und AP2 Pruefungsthemen
-        foreach (var (titel, unter, themen) in (ReadOnlySpan<(string, string, IReadOnlyList<DashboardThema>)>)
-            [(DashboardTexte.Ap1Titel, DashboardTexte.Ap1Unter, w.Ap1Themen), (DashboardTexte.Ap2Titel, DashboardTexte.Ap2Unter, w.Ap2Themen)])
+        // AP1 und AP2 Pruefungsthemen: je Thema Ring links, Name rechts
+        foreach (var (titel, unter, themen, akzent) in (ReadOnlySpan<(string, string, IReadOnlyList<DashboardThema>, string)>)
+            [(DashboardTexte.Ap1Titel, DashboardTexte.Ap1Unter, w.Ap1Themen, "Pinsel.blue"), (DashboardTexte.Ap2Titel, DashboardTexte.Ap2Unter, w.Ap2Themen, "Pinsel.accent2")])
         {
-            var feld = new WrapPanel();
-            foreach (var t in themen)
+            var feld = new StackPanel { Spacing = 8 };
+            for (var i = 0; i < themen.Count; i++)
             {
-                feld.Children.Add(new StackPanel
-                {
-                    Spacing = 4,
-                        Margin = new Thickness(0, 0, 10, 10),
-                    Children = { Ring(t.Prozent / 100.0, t.RingText, "Pinsel.purple"), Schrift.Text(t.Name, "Klein") },
-                }.Breite(140));
+                var t = themen[i];
+                var farbe = ThemenFarben[i % ThemenFarben.Length];
+                var ring = VerlaufRing.MitText(t.Prozent / 100.0, farbe, FarbenAnwenden.MischName(farbe, "text", 0.25), t.RingText, null, 46, 5);
+                SetzeRingGroessen(ring, 11);
+                feld.Children.Add(Zeile(ring, Schrift.Pt(t.Name, 13, FontWeight.Normal, "Pinsel.text_dim"), 14));
             }
-            _liste.Children.Add(Karte(titel, unter, feld));
+            _liste.Children.Add(Schrift.KopfKarte(titel, unter, feld, akzent));
         }
     }
 
-    private static TextBlock Unter(string? unter)
+    /// <summary>HeroPanel: Titel 22 fett, Zeile 13, rechts grosse Zahl 30 mit Unterzeile 12; ab 160 % untereinander.</summary>
+    private static Border Banner(DashboardBanner banner, bool gross)
     {
-        var text = Schrift.Text(unter ?? "", "Klein", FontWeight.Normal, "Pinsel.muted");
-        text.IsVisible = unter is not null;
-        return text;
-    }
-
-    private static Border Karte(string titel, string? unter, Control inhalt) =>
-        Schrift.Karte(new StackPanel
+        var hell = FarbenAnwenden.Mischung("on_accent", "accent2", 0.25);
+        var texte = new StackPanel
         {
-            Spacing = 10,
+            Spacing = 6,
+            VerticalAlignment = VerticalAlignment.Center,
             Children =
             {
-                new StackPanel
-                {
-                    Spacing = 2,
-                    Children = { Schrift.Text(titel, "Mittel", FontWeight.Bold), Unter(unter) },
-                },
-                inhalt,
+                Schrift.Pt(banner.Titel, 22, FontWeight.Bold, "Pinsel.on_accent"),
+                Schrift.Pt(Geraetetexte.Banner(banner, Pc), 13, FontWeight.Normal, hell),
             },
-        });
+        };
+        var zahl = Schrift.Pt(banner.Gross, 30, FontWeight.Bold, "Pinsel.on_accent");
+        var unter = Schrift.Pt(banner.GrossUnter, 12, FontWeight.Normal, hell);
+        var zahlen = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { zahl, unter } };
+        zahl.TextAlignment = unter.TextAlignment = gross ? TextAlignment.Left : TextAlignment.Right;
+        zahlen.HorizontalAlignment = gross ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        Control inhalt;
+        if (gross)
+        {
+            inhalt = new StackPanel { Spacing = 12, Children = { texte, zahlen } };
+        }
+        else
+        {
+            var raster = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+            Grid.SetColumn(zahlen, 1);
+            raster.Children.Add(texte);
+            raster.Children.Add(zahlen);
+            inhalt = raster;
+        }
+        return new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(20), Child = inhalt }
+            .Farbe(Border.BackgroundProperty, "Verlauf.hero");
+    }
 
-    private static Control Zeile(Control links, Control rechts)
+    /// <summary>GradientBar: Name links (13 text_dim), Wert rechts (12 muted), darunter Balken 8 mit Verlauf.</summary>
+    private static Control Balken(string name, string wert, double prozent, string a, string b)
+    {
+        var anteil = (int)Math.Round(Math.Max(0, Math.Min(100, prozent)) * 10);
+        var kopf = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+        var wertText = Schrift.Pt(wert, 12, FontWeight.Normal, "Pinsel.muted");
+        Grid.SetColumn(wertText, 1);
+        kopf.Children.Add(Schrift.Pt(name, 13, FontWeight.Normal, "Pinsel.text_dim"));
+        kopf.Children.Add(wertText);
+        var spur = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions($"{anteil}*,{1000 - anteil}*") };
+        var hinten = new Border { CornerRadius = new CornerRadius(4) }.Farbe(Border.BackgroundProperty, "Pinsel.ring_bg");
+        Grid.SetColumnSpan(hinten, 2);
+        spur.Children.Add(hinten);
+        if (anteil > 0)
+        {
+            spur.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Farbe(Border.BackgroundProperty, FarbenAnwenden.Paar(a, b)));
+        }
+        var feld = new StackPanel { Spacing = 6, Children = { kopf, spur } };
+        Avalonia.Automation.AutomationProperties.SetName(feld, name + " " + wert);
+        return feld;
+    }
+
+    /// <summary>Zahl in der Mitte eines kleinen Rings: big_size wie am Handy.</summary>
+    private static void SetzeRingGroessen(Grid ring, double gross)
+    {
+        if (ring.Children[1] is StackPanel texte && texte.Children[0] is TextBlock zahl)
+        {
+            zahl.Bind(Avalonia.Controls.Documents.TextElement.FontSizeProperty, zahl.GetResourceObservable("Schrift.Normal", v => v is double d ? gross * d / Schrift.Grundgroessen["Normal"] : gross));
+        }
+    }
+
+    private static Control Zeile(Control links, Control rechts, double abstand)
     {
         rechts.VerticalAlignment = VerticalAlignment.Center;
-        var raster = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 12 };
+        links.VerticalAlignment = VerticalAlignment.Center;
+        var raster = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = abstand };
         Grid.SetColumn(rechts, 1);
         raster.Children.Add(links);
         raster.Children.Add(rechts);
         return raster;
-    }
-
-    /// <summary>Ring mit Anteil 0..1 und Text in der Mitte.</summary>
-    private static Control Ring(double anteil, string text, string farbe)
-    {
-        anteil = Math.Max(0, Math.Min(1, anteil));
-        var hinten = new Arc { StartAngle = -90, SweepAngle = 360, StrokeThickness = 8 }.Farbe(Shape.StrokeProperty, "Pinsel.ring_bg");
-        var vorne = new Arc { StartAngle = -90, SweepAngle = 360 * anteil, StrokeThickness = 8, StrokeLineCap = PenLineCap.Round }
-            .Farbe(Shape.StrokeProperty, farbe);
-        var mitte = new TextBlock { Text = text, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
-            .Groesse("Klein").Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
-        mitte.FontWeight = FontWeight.Bold;
-        var feld = new Grid { HorizontalAlignment = HorizontalAlignment.Left, Children = { hinten, vorne, mitte } };
-        // Ring waechst mit der Schrift, damit "100 %" hineinpasst
-        feld.Bind(Layoutable.WidthProperty, feld.GetResourceObservable("Schrift.Klein", v => v is double d ? 64 * d / 12 : 64));
-        feld.Bind(Layoutable.HeightProperty, feld.GetResourceObservable("Schrift.Klein", v => v is double d ? 64 * d / 12 : 64));
-        Avalonia.Automation.AutomationProperties.SetName(feld, text);
-        return feld;
     }
 }

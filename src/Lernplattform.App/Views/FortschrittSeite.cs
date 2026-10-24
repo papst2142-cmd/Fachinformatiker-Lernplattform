@@ -282,15 +282,8 @@ public sealed class FortschrittSeite : UserControl, IAufklappbar
             },
         });
 
-    internal static Border Karte(string titel, string? unter, Control inhalt)
-    {
-        var kopf = new StackPanel { Spacing = 2, Children = { Schrift.Text(titel, "Mittel", FontWeight.Bold) } };
-        if (unter is not null)
-        {
-            kopf.Children.Add(Schrift.Text(unter, "Klein", FontWeight.Normal, "Pinsel.muted"));
-        }
-        return Schrift.Karte(new StackPanel { Spacing = 10, Children = { kopf, inhalt } });
-    }
+    internal static Border Karte(string titel, string? unter, Control inhalt) =>
+        Schrift.KopfKarte(titel, unter, inhalt);   // A 0.12.2: Kartenkopf wie ui.Card
 
     /// <summary>Zeile mit farbiger Markierung links und "Jetzt üben" (weak_topic_rows, CoverageCard._leaf).</summary>
     internal static Border UebenZeile(string titel, Control? unten, string markierung, string flaeche, Action? ueben, string? wert = null)

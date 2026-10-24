@@ -875,19 +875,8 @@ public sealed class KlausurTeil
     // -- Bausteine ----------------------------------------------------------------------------
 
     /// <summary>Card(title, subtitle): Titel, Untertitel, Inhalt.</summary>
-    private static Border Karte(string titel, string untertitel, Control inhalt)
-    {
-        var kopf = new StackPanel
-        {
-            Spacing = 2,
-            Children =
-            {
-                new LernText(titel, "Mittel", FontWeight.Bold, "Pinsel.text"),
-                new LernText(untertitel, "Klein", FontWeight.Normal, "Pinsel.muted"),
-            },
-        };
-        return Schrift.Karte(new StackPanel { Spacing = 10, Children = { kopf, inhalt } });
-    }
+    private static Border Karte(string titel, string untertitel, Control inhalt) =>
+        Schrift.KopfKarte(titel, untertitel, inhalt);   // A 0.12.2: Kartenkopf wie ui.Card
 
     private static Border Zeile(Control inhalt, string flaeche, Thickness innen) => new Border
     {
