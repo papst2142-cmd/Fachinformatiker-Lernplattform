@@ -240,6 +240,70 @@ public static class Py
     public static double F(object? wert) => Zahl(wert, out var d) ? d
         : throw new InvalidDataException("Zahl erwartet, nicht " + (wert?.GetType().Name ?? "None"));
 
+    /// <summary>int(wert) wie Python: float wird abgeschnitten, Text wird gelesen, None ist ein Fehler.</summary>
+    public static long Int(object? wert) => wert switch
+    {
+        long n => n,
+        int n => n,
+        bool b => b ? 1 : 0,
+        double d when double.IsFinite(d) => checked((long)Math.Truncate(d)),
+        double => throw new OverflowException("int() von inf oder nan"),
+        string s when long.TryParse(s.Trim().Replace("_", ""), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var n)
+            && !s.StartsWith('_') && !s.EndsWith('_') && !s.Contains("__", StringComparison.Ordinal) => n,
+        string s => throw new FormatException("invalid literal for int() with base 10: '" + s + "'"),
+        _ => throw new InvalidCastException("int() fuer " + (wert?.GetType().Name ?? "None")),
+    };
+
+    /// <summary>isinstance(wert, int) (auch True/False).</summary>
+    public static bool IstInt(object? wert) => wert is long or int or bool;
+
+    /// <summary>type(wert) is int (ohne True/False).</summary>
+    public static bool IstNurInt(object? wert) => wert is long or int;
+
+    /// <summary>text.format(**namen) fuer einfache Felder {name}, mit {{ und }}.</summary>
+    public static string Format(string text, PyObjekt namen)
+    {
+        var b = new StringBuilder();
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '{' && i + 1 < text.Length && text[i + 1] == '{')
+            {
+                b.Append('{');
+                i++;
+            }
+            else if (c == '}' && i + 1 < text.Length && text[i + 1] == '}')
+            {
+                b.Append('}');
+                i++;
+            }
+            else if (c == '{')
+            {
+                var ende = text.IndexOf('}', i);
+                if (ende < 0)
+                {
+                    throw new FormatException("Single '{' encountered in format string");
+                }
+                var name = text[(i + 1)..ende];
+                if (name.Length == 0 || name.IndexOfAny([':', '!', '.', '[', '{']) >= 0 || !Hat(namen, name))
+                {
+                    throw new FormatException("format(): Feld {" + name + "} nicht nachgebaut oder fehlt");
+                }
+                b.Append(Str(namen[name]));
+                i = ende;
+            }
+            else if (c == '}')
+            {
+                throw new FormatException("Single '}' encountered in format string");
+            }
+            else
+            {
+                b.Append(c);
+            }
+        }
+        return b.ToString();
+    }
+
     /// <summary>Ein System.Text.Json-Knoten (z. B. aus <c>Lerninhalte</c>) als Python-Wert.</summary>
     public static object? AusKnoten(System.Text.Json.Nodes.JsonNode? knoten) =>
         knoten is null ? null : Lesen(knoten.ToJsonString());
