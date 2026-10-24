@@ -79,8 +79,8 @@ public sealed class ProbeWelt
         var teile = new List<Teil>();
         var hindernisse = new List<(double, double, double, double)>();
         var haeuser = new List<ProbeHaus>();
-        // Boden: Wiese, Gehweg, Strasse mit Mittellinie
-        teile.Add(Quader(-2, -0.06f, -2, StadtBreite + 2, 0f, StadtTiefe + 2, Farben.Wiese));
+        // Boden: Wiese (weit ueber den Stadtrand, damit die geneigte Kamera keinen leeren Himmel zeigt), Gehweg, Strasse mit Mittellinie
+        teile.Add(Quader(-30, -0.06f, -30, StadtBreite + 30, 0f, StadtTiefe + 30, Farben.Wiese));
         teile.Add(Quader(0, 0f, StrasseZ1 - 0.7f, StadtBreite, 0.02f, StrasseZ1, Farben.Gehweg));
         teile.Add(Quader(0, 0f, StrasseZ1, StadtBreite, 0.015f, StrasseZ2, Farben.Strasse));
         for (var x = 0.5f; x < StadtBreite; x += 2f)

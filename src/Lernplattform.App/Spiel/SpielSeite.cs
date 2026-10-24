@@ -22,6 +22,9 @@ public sealed class SpielSeite : Grid
     /// <summary>So lange wartet die Seite auf OpenGL, dann gilt "ohne Grafik".</summary>
     public static readonly TimeSpan GlWarten = TimeSpan.FromSeconds(4);
 
+    /// <summary>Kleinste Hoehe der 3D-Flaeche in Punkten.</summary>
+    public const double MinHoehe = 280;
+
     private readonly ProbeSpiel _spiel;
     private readonly TextBlock _probeZeile;
     private readonly TextBlock _zeile;
@@ -42,10 +45,11 @@ public sealed class SpielSeite : Grid
     public SpielSeite(ProbeWelt welt)
     {
         _spiel = new ProbeSpiel(welt);
-        Flaeche = new StadtFlaeche(_spiel) { MinHeight = 260 };
-        RowDefinitions = new RowDefinitions("Auto,*");
-        Margin = new Thickness(16);
-        RowSpacing = 12;
+        Flaeche = new StadtFlaeche(_spiel);
+        // Inhalt in einem ScrollViewer: die 3D-Flaeche fuellt den Rest der Seite, ist aber nie
+        // niedriger als MinHoehe (Handy mit grosser Schrift: dann wird die Seite verschoben)
+        var innen = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto"), Margin = new Thickness(16), RowSpacing = 12 };
+        Children.Add(new ScrollViewer { Content = innen, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
 
         _probeZeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
         _zeile = Schrift.Text(_spiel.Zeile);
@@ -59,7 +63,7 @@ public sealed class SpielSeite : Grid
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
         var knoepfe = new WrapPanel { Children = { _betreten, _zurStadt, _warten, _orteKnopf } };
         var kopf = Schrift.KopfKarte(SpielProbeTexte.Titel, null, new StackPanel { Spacing = 8, Children = { _probeZeile, _zeile, knoepfe } });
-        Children.Add(kopf);
+        innen.Children.Add(kopf);
 
         var liste = new StackPanel { Spacing = 8 };
         foreach (var haus in welt.Haeuser)
@@ -85,7 +89,7 @@ public sealed class SpielSeite : Grid
         _flaecheRahmen = new Border { CornerRadius = new CornerRadius(16), ClipToBounds = true, Child = Flaeche };
         var unten = new Grid
         {
-            RowDefinitions = new RowDefinitions("Auto,Auto,*"),
+            RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
             RowSpacing = 12,
         };
         unten.Children.Add(_ersatz);
@@ -94,7 +98,10 @@ public sealed class SpielSeite : Grid
         Grid.SetRow(_flaecheRahmen, 2);
         unten.Children.Add(_flaecheRahmen);
         Grid.SetRow(unten, 1);
-        Children.Add(unten);
+        innen.Children.Add(unten);
+        void Hoehe() => _flaecheRahmen.Height = Math.Max(MinHoehe, Bounds.Height - 2 * 16 - 12 - kopf.Bounds.Height);
+        SizeChanged += (_, _) => Hoehe();
+        kopf.SizeChanged += (_, _) => Hoehe();
 
         _spiel.Geaendert += Beschriften;
         Flaeche.BildGezeichnet += () =>
