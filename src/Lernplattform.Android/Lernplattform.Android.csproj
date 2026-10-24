@@ -23,6 +23,8 @@
     <ApplicationId>io.github.papst2142cmd.lernplattform.probe</ApplicationId>
     <ApplicationTitle>Lernplattform Probe</ApplicationTitle>
     <DefineConstants>$(DefineConstants);PROBE</DefineConstants>
+    <!-- eigenes Manifest nur fuer den App-Namen (android:label), das normale Manifest bleibt unberuehrt -->
+    <AndroidManifest>Properties\AndroidManifest.Probe.xml</AndroidManifest>
   </PropertyGroup>
 
   <ItemGroup>
