@@ -275,6 +275,7 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_spiel_tickets.py python-linie neu/spiel_tickets.json
           python3 -I werkzeuge/vergleich/erzeuge_spiel_bewertung.py python-linie neu/spiel_bewertung.json
           python3 -I werkzeuge/vergleich/erzeuge_spiel_texte.py python-linie neu/spiel_texte.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_aktionen.py python-linie neu/spiel_aktionen.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -296,7 +297,7 @@ jobs:
                        "sicherung_ersetzen.json", "loeschen.json", "problembericht.json",
                        "leistungsmessung.json", "update.json", "spiel_inhalte.json", "spiel_wege.json",
                        "spiel_neuaufbau.json", "spiel_tickets.json", "spiel_bewertung.json",
-                       "spiel_texte.json"):
+                       "spiel_texte.json", "spiel_aktionen.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

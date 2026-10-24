@@ -198,6 +198,9 @@ public static class Py
     /// <summary>max(a, b) fuer Zahlen: bei Gleichstand bleibt a.</summary>
     public static object? Max(object? a, object? b) => Kleiner(a, b) ? b : a;
 
+    /// <summary>min(a, b) fuer Zahlen: bei Gleichstand bleibt a (wie Python).</summary>
+    public static object? Min(object? a, object? b) => Kleiner(b, a) ? b : a;
+
     private static object Rechnen(object? a, object? b, Func<long, long, long> ganz, Func<double, double, double> komma)
     {
         if (Ganz(a, out var x) && Ganz(b, out var y))
