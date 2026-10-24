@@ -1,5 +1,8 @@
 # Änderungen
 
+## A 0.12.1
+Keine neue Funktion: Diese Version gibt es, damit das Update von A 0.12.0 auf eine neuere Version einmal echt ausprobiert werden kann.
+
 ## A 0.12.0
 Die erste Version zum Herunterladen. Das Programm ist noch in der Alphaphase (A): Es wird gerade aufgebaut und ist zum eigenen Ausprobieren gedacht. Dein Lernstand bleibt bei jedem späteren Update erhalten.
 
