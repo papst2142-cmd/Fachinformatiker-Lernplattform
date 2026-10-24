@@ -414,6 +414,11 @@ jobs:
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
           done
+          # Phase 7 W1: die normale App behaelt ihre Kennung (die Probe-APK wird im selben Job gebaut)
+          for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
+            "$BT/aapt2" dump badging "$a" > kennung.txt
+            head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+          done
           "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001202'"
           "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001203'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
@@ -432,7 +437,15 @@ jobs:
       - name: Release-APK bauen (Testschluessel)
         env:
           PYTHON: python
-        run: bash werkzeuge/release/baue_release.sh android release
+        run: |
+          bash werkzeuge/release/baue_release.sh android release
+          # Phase 7 W1: Release-APK nie mit der Kennung der Probe (gleicher obj-Ordner wie der Probe-Bau)
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          for a in release/release-android/*-android-arm64.apk; do
+            "$BT/aapt2" dump badging "$a" > kennung_release.txt
+            head -n 1 kennung_release.txt
+            head -n 1 kennung_release.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+          done
       - uses: actions/download-artifact@v8
         if: needs.pakete.result == 'success'
         with:

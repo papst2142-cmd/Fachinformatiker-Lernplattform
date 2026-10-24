@@ -106,6 +106,7 @@ public sealed class StadtFlaeche : OpenGlControlBase
 
     protected override void OnOpenGlInit(GlInterface gl)
     {
+        GlFehler = null;
         try
         {
             var v = GlVersion;
@@ -126,6 +127,15 @@ public sealed class StadtFlaeche : OpenGlControlBase
             GlFehler = e.Message;
         }
         GlGestartet?.Invoke();
+    }
+
+    /// <summary>Zusammenhang verloren (z. B. Treiber neu gestartet): bis zum neuen Start gilt "nicht bereit".</summary>
+    protected override void OnOpenGlLost()
+    {
+        GlBereit = false;
+        _flaechen.Clear();
+        _programm = 0;
+        base.OnOpenGlLost();
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)

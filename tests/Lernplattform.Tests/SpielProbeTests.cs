@@ -165,6 +165,18 @@ public class SpielProbeTests
     }
 
     [Theory]
+    [InlineData(480, true, 0)]
+    [InlineData(1140, false, 720)]          // 19:00 geschlossen, oeffnet morgen um 7:00
+    [InlineData(1440 + 420, true, 0)]       // naechster Tag 7:00
+    [InlineData(1440 + 300, false, 120)]    // naechster Tag 5:00
+    public void OeffnungszeitGiltJedenTag(int minute, bool offen, int bis)
+    {
+        var haus = new ProbeHaus("x", "X", 0, 0, 420, 1140, true);
+        Assert.Equal(offen, haus.Offen(minute));
+        Assert.Equal(bis, haus.MinutenBisOffen(minute));
+    }
+
+    [Theory]
     [InlineData(0.0, 0)]
     [InlineData(0.01, 1)]
     [InlineData(0.5, 1)]
