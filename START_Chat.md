@@ -15,12 +15,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.12.1** auf `main` (e031933, PR #30); veröffentlicht vA0.12.0 (Nico 24.10.2026 16:19), vA0.12.1 durch Nico (Weisung P6-13). Zweig `claude/project-thread-n4dahs` (ab e031933) hebt auf **A 0.12.2** (Paket 1.0.0-a.0.12.2, Tag vA0.12.2, Android 1001202, Update-APK 1001203, Update-Probe A 0.12.2 → A 0.12.3 → B 0.1.0; Weisung P6-14) |
-| Phase | 0–5 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); Phase 6 W1 Release-Ablauf, W2 Plattformen (Linux-Verknüpfung) und W3 erstes Release gemergt |
-| Jetzt | **A 0.12.2 Optik wie Python 0.63.2** (Weisung P6-14 bis P6-17): alle Seiten wie die Handy-App, Schrift Roboto, Symbole Material Icons (`fisi_symbole.otf`), Kalender mit Blättern; Fix HaengerTests (P6-15). Merge erst nach Nicos Bild-Abnahme (`bilder/A0.12.2_Optik/`). Bericht Phase 6 (VE9) vorbereitet, Push erst nach Weisung mit Ergebnis des Update-Tests A 0.12.1 |
+| Version | **A 0.12.2** auf `main` (c79c53f, PR #31), veröffentlicht als vA0.12.2 (24.10.2026 20:41). Davor vA0.12.0 (d30b1a3) und vA0.12.1 (e031933). Nächste Version A 0.12.3 bzw. nach Weisung. CC startet `release.yml` nie |
+| Phase | 0–5 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); **Phase 6 fertig** bis auf den Update-Test am Windows-PC (Nico): W1 Release-Ablauf, W2 Plattformen, W3 erstes Release, A 0.12.1 Update-Test, A 0.12.2 Optik wie Python 0.63.2. Update-Test S24 A 0.12.0 → A 0.12.2 bestanden |
+| Jetzt | Bericht Phase 6 (VE9) liegt auf Fi-Austausch `anlagen/P6-Bericht_Phase6.md` (Meldung P6-16), wartet auf Abnahme; danach Phase 7 (Spiel) nur nach Plan und Nicos Freigabe |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu |
-| Letzte/nächste Meldung | **P6-14** (A 0.12.2 Optik) / P6-15 |
+| Letzte/nächste Meldung | **P6-16** (Bericht Phase 6) / P6-17 bzw. P7-1 |
 | Sammelliste | nächste freie Nummer **79**; offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46; 74 (Lizenztexte in der APK), 75 (Kommentar PythonPow.cs), 76/77 (Linux-Verknüpfung), 78 (Start-Test-Probe) |
 | Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Bleibende Regeln“ (Regel A) |
 
