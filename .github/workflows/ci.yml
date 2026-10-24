@@ -390,7 +390,9 @@ jobs:
           "$BT/aapt2" dump badging "$a" > probe_badging.txt
           head -n 1 probe_badging.txt
           head -n 1 probe_badging.txt | grep -q "name='io.github.papst2142cmd.lernplattform.probe'"
-          grep -q "application-label:'Lernplattform Probe'" probe_badging.txt
+          grep -E "^(application-label|launchable-activity):" probe_badging.txt || true
+          grep -q "^application-label:'Lernplattform Probe'" probe_badging.txt
+          grep -q "^launchable-activity:.*label='Lernplattform Probe'" probe_badging.txt
           "$BT/apksigner" verify --print-certs "$a" > probe_zert.txt
           zert=$(grep "SHA-256" probe_zert.txt | head -n 1 | awk '{print $NF}')
           echo "Probe-Zertifikat SHA-256: $zert"
@@ -418,6 +420,7 @@ jobs:
           for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
             "$BT/aapt2" dump badging "$a" > kennung.txt
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+            grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
           "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001202'"
           "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001203'"
