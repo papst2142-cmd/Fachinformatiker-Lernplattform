@@ -188,6 +188,16 @@ public static class Py
     /// <summary>a * b fuer Zahlen (int bleibt int, sonst float).</summary>
     public static object Mal(object? a, object? b) => Rechnen(a, b, (x, y) => x * y, (x, y) => x * y);
 
+    /// <summary>a - b fuer Zahlen (int bleibt int, sonst float).</summary>
+    public static object Minus(object? a, object? b) => Rechnen(a, b, (x, y) => x - y, (x, y) => x - y);
+
+    /// <summary>a &lt; b fuer Zahlen.</summary>
+    public static bool Kleiner(object? a, object? b) => Zahl(a, out var x) && Zahl(b, out var y)
+        ? x < y : throw new NotSupportedException("< fuer " + (a?.GetType().Name ?? "None") + " und " + (b?.GetType().Name ?? "None"));
+
+    /// <summary>max(a, b) fuer Zahlen: bei Gleichstand bleibt a.</summary>
+    public static object? Max(object? a, object? b) => Kleiner(a, b) ? b : a;
+
     private static object Rechnen(object? a, object? b, Func<long, long, long> ganz, Func<double, double, double> komma)
     {
         if (Ganz(a, out var x) && Ganz(b, out var y))
