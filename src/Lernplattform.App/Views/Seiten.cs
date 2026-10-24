@@ -19,6 +19,7 @@ public static class Seiten
     public const string Notizblock = "notebook";
     public const string Rechner = "calc";
     public const string Abschluss = "abschluss";
+    public const string Spiel = "game";
 
     /// <summary>Titel einer Seite fuer Kopfleiste und Platzhalter (Beschriftungen aus G9, PC-Namen).</summary>
     public static string Titel(string id)

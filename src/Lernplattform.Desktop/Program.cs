@@ -62,7 +62,16 @@ sealed class Program
             x11.RenderingMode = [X11RenderingMode.Software];
             win32.RenderingMode = [Win32RenderingMode.Software];
         }
-        Messwerte.Notiere("Schalter: Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard"));
+        // Phase 7 W1: Avalonia sperrt unter Linux den Mesa-Softwaretreiber llvmpipe fuer OpenGL (Liste
+        // GlxRendererBlacklist). In Xvfb der CI gibt es nur ihn; nur fuer den Start-Test erlaubt
+        // LERNPLATTFORM_GL_LLVMPIPE=1 ihn, damit die 3D-Probe dort ueberhaupt OpenGL bekommt.
+        var llvmpipe = Environment.GetEnvironmentVariable("LERNPLATTFORM_GL_LLVMPIPE") == "1" && !software;
+        if (llvmpipe)
+        {
+            x11.GlxRendererBlacklist = [];
+        }
+        Messwerte.Notiere("Schalter: Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard")
+            + (llvmpipe ? ", llvmpipe erlaubt" : ""));
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .With(x11)

@@ -112,6 +112,11 @@ public static partial class AutoMessung
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
         UeberAbbruch.Clear();
+        // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
+        {
+            return await ErsatzLaufAsync(ansicht);
+        }
         var inhalte = await Zustand.Inhalte;
         // Erstes Oeffnen jeder Seite (Seitenleiste, untere Leiste, Kopfleiste)
         var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
@@ -155,6 +160,7 @@ public static partial class AutoMessung
         var reihenRot = new List<string>();
         funde += await W4MesspunkteAsync(ansicht, reihenRot);
         funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
+        funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
 
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge); ueber 1 000 ms wird derselbe
         // Wechsel wiederholt (vorher die andere Darstellung bzw. die Stufe davor, Weisung P4-12 B6)
@@ -323,6 +329,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
+                await foreach (var ansichtName in P7W1Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -346,6 +360,7 @@ public static partial class AutoMessung
         Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
         Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
         Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
+        Messwerte.Notiere(string.Create(inv, $"  und {P7W1AnsichtenAnzahl} Ansichten der Welle W1 (Phase 7, 3D-Stichprobe, ohne Speichern): Stadt, Ortsliste offen, Haus mit Oeffnungszeit, Buero innen, ohne 3D (Hinweis und Ortsliste)"));
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
