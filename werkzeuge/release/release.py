@@ -3,7 +3,11 @@
   release.py version                     Version, Stufe, Tag (T1), Paketversion aus Directory.Build.props als
                                          NAME=Wert-Zeilen; Rueckgabe 1, wenn der Tag nach der Regel nicht geht.
   release.py selbsttest                  Tag-Regel gegen werkzeuge/release/tag_faelle.json (dieselben Faelle
-                                         wie der C#-Test ReleaseTests).
+                                         wie der C#-Test ReleaseTests); prueft, dass probe_release.md zum
+                                         heutigen Release-Text passt und das Update-Fenster daraus nur
+                                         "Neu in dieser Version" zeigt.
+  release.py probe                       schreibt werkzeuge/release/probe_release.md neu (Release-Text mit zwei
+                                         festen Probedateien; der C#-Test ReleaseTests liest ihn mit UpdateNotizen).
   release.py zusammen <eingang> <aus>    sammelt die Dateien der vier Bauteile (Unterordner von <eingang>),
                                          schreibt Lizenz-Uebersicht und Volltexte, prueft die Uebersicht im
                                          Repo, schreibt den Release-Text <aus>/../release.md und prueft alles (T2).
@@ -29,6 +33,11 @@ ZAHL = r"(?:0|[1-9][0-9]*)"
 VERSION = re.compile(r"^" + ZAHL + r"\." + ZAHL + r"\." + ZAHL + r"\Z")
 STUFENTEXT = {"A": " (Alphaversion „A“)", "B": " (Betaversion „B“)"}
 SEITE = "https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"
+# Weisung P6-10: das Update-Fenster (Core/Update/UpdateNotizen.cs, wie Python plain_notes) zeigt den
+# Release-Text bis zu dieser Zeile. Davor steht darum nur der Abschnitt aus AENDERUNGEN.md.
+ENDE_NOTIZEN = "### Herunterladen"
+PROBE = os.path.join(WURZEL, "werkzeuge", "release", "probe_release.md")
+PROBE_DATEIEN = {"Probe-1.txt": b"Probe 1\n", "Probe-2.txt": b"Probe 2\n"}
 
 
 def fehler(text):
@@ -107,12 +116,45 @@ def neuerungen(anzeige):
     return "\n".join(zeilen[start[0] + 1:ende]).strip()
 
 
+def lesbar(markdown):
+    """Wie UpdateNotizen.Lesbar (C#) und plain_notes (fisi_update.py): Text fuer das Update-Fenster."""
+    punkte = []
+    for zeile in (markdown or "").replace("\r\n", "\n").split("\n"):
+        ohne = zeile.strip()
+        if ohne == ENDE_NOTIZEN:
+            break
+        if not ohne:
+            punkte.append("")
+        elif ohne.startswith("- ") or ohne.startswith("* "):
+            punkte.append("• " + ohne[2:])
+        elif punkte and punkte[-1]:
+            punkte[-1] += " " + ohne
+        else:
+            punkte.append(ohne)
+    text = "\n".join(p for p in punkte if p)
+    for zeichen in ("**", "__", "`"):
+        text = text.replace(zeichen, "")
+    return text
+
+
+def pruefe_notizen(k, text):
+    """Rueckgabe 1, wenn das Update-Fenster aus dem Release-Text mehr oder anderes zeigte als den Abschnitt."""
+    neu = neuerungen(k["ANZEIGE"])
+    rot = 0
+    if not neu or not text.startswith(neu + "\n\n" + ENDE_NOTIZEN + "\n"):
+        fehler("Release-Text beginnt nicht mit dem Abschnitt '## %s' aus AENDERUNGEN.md und '%s'" % (k["ANZEIGE"], ENDE_NOTIZEN))
+        rot = 1
+    if text.count(ENDE_NOTIZEN + "\n") != 1 or lesbar(text) != lesbar(neu) or not lesbar(neu):
+        fehler("Update-Fenster zeigte aus dem Release-Text nicht genau 'Neu in dieser Version'")
+        rot = 1
+    return rot
+
+
 def release_text(k, aus):
     dateien = sorted(os.listdir(aus))
-    z = ["# Fachinformatiker Lernplattform " + k["ANZEIGE"], "",
-         "Privates Lernprogramm für die Ausbildung Fachinformatiker/in" + STUFENTEXT.get(k["STUFE"], "") + ". Copyright Nico H, alle Rechte "
-         "vorbehalten (siehe `LICENSE.txt`).", "",
-         "## Neu in dieser Version", "", neuerungen(k["ANZEIGE"]), "",
+    z = [neuerungen(k["ANZEIGE"]), "", ENDE_NOTIZEN, "",
+         "**Fachinformatiker Lernplattform " + k["ANZEIGE"] + "**: privates Lernprogramm für die Ausbildung Fachinformatiker/in"
+         + STUFENTEXT.get(k["STUFE"], "") + ". Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).", "",
          "## Welche Datei für welches Gerät?", "",
          "- **Windows:** `" + ID + "-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital "
          "signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann "
@@ -184,9 +226,10 @@ def pruefe(aus, text_pfad):
         if os.path.isfile(pfad) and (int(groesse) != os.path.getsize(pfad) or summe != sha256(pfad)):
             fehler("Pruefsumme oder Groesse im Release-Text falsch: " + name)
             rot = 1
-    if not text.startswith("# Fachinformatiker Lernplattform " + k["ANZEIGE"] + "\n"):
-        fehler("Titel des Release-Texts passt nicht zur Version")
+    if ("\n**Fachinformatiker Lernplattform " + k["ANZEIGE"] + "**: ") not in text:
+        fehler("Kopfzeile des Release-Texts passt nicht zur Version")
         rot = 1
+    rot |= pruefe_notizen(k, text)
     print("T2: %d Dateien geprueft, %s" % (len(ist), "rot" if rot else "gruen"))
     return rot
 
@@ -273,7 +316,25 @@ def selbsttest():
         fehler("Version im Repo ergibt keinen Tag")
         rot = 1
     print("Selbsttest Tag-Regel: %d Faelle, Repo %s -> %s, %s" % (len(faelle), k["ANZEIGE"], k["TAG"], "rot" if rot else "gruen"))
-    return rot
+    probe = probe_text(k)
+    rot_probe = pruefe_notizen(k, probe)
+    with open(PROBE, encoding="utf-8") as d:
+        if d.read() != probe:
+            fehler("werkzeuge/release/probe_release.md passt nicht zum heutigen Release-Text "
+                   "(python3 -I werkzeuge/release/release.py probe)")
+            rot_probe = 1
+    print("Selbsttest Update-Fenster: %s" % ("rot" if rot_probe else "gruen"))
+    return rot | rot_probe
+
+
+def probe_text(k):
+    """Release-Text mit zwei festen Probedateien (gleich bei jedem Lauf)."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as ordner:
+        for name, inhalt in PROBE_DATEIEN.items():
+            with open(os.path.join(ordner, name), "wb") as d:
+                d.write(inhalt)
+        return release_text(k, ordner)
 
 
 def main():
@@ -288,6 +349,10 @@ def main():
         return 0
     if befehl == "selbsttest":
         return selbsttest()
+    if befehl == "probe":
+        with open(PROBE, "w", encoding="utf-8", newline="\n") as d:
+            d.write(probe_text(kennzahlen()))
+        return 0
     if befehl == "zusammen":
         return zusammen(sys.argv[2], sys.argv[3])
     if befehl == "pruefe":

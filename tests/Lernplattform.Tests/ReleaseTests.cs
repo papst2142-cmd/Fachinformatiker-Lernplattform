@@ -72,4 +72,40 @@ public class ReleaseTests
         Assert.Equal(UpdateVersion.Lesen(tag), UpdateVersion.Lesen(paket));
         Assert.Equal(UpdateVersion.Lesen(tag)!.Anzeige, (stufe + " " + version).Trim());
     }
+
+    /// <summary>
+    /// Weisung P6-10: Das Fenster "Update verfuegbar" zeigt aus dem Release-Text (release.py release_text,
+    /// hier die Probe werkzeuge/release/probe_release.md, deren Aktualitaet release.py selbsttest prueft)
+    /// genau den Abschnitt "## &lt;Anzeige&gt;" aus AENDERUNGEN.md, ohne Kopfzeile, Dateiliste und Pruefsummen.
+    /// </summary>
+    [Fact]
+    public void UpdateFensterZeigtNurNeuInDieserVersion()
+    {
+        var props = XDocument.Load(Path.Combine(Pfade.Wurzel, "Directory.Build.props"));
+        var anzeige = (props.Descendants("Stufe").Single().Value.Trim() + " " + props.Descendants("Version").Single().Value.Trim()).Trim();
+        var probe = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "probe_release.md")).Replace("\r\n", "\n", StringComparison.Ordinal);
+        var abschnitt = Abschnitt(anzeige);
+        var fenster = UpdateNotizen.Lesbar(probe);
+        Assert.NotEqual("", fenster);
+        Assert.Equal(UpdateNotizen.Lesbar(abschnitt), fenster);
+        Assert.StartsWith(abschnitt + "\n\n" + UpdateNotizen.Ende + "\n", probe, StringComparison.Ordinal);
+        // Kontrolle: der Rest des Release-Texts steht wirklich in der Probe, nur nicht im Fenster
+        foreach (var rest in new[] { "**Fachinformatiker Lernplattform " + anzeige + "**", "## Welche Datei für welches Gerät?", "## Prüfsummen (SHA-256)", "`Probe-1.txt`" })
+        {
+            Assert.Contains(rest, probe, StringComparison.Ordinal);
+            Assert.DoesNotContain(rest.Replace("**", "", StringComparison.Ordinal).Replace("`", "", StringComparison.Ordinal), fenster, StringComparison.Ordinal);
+        }
+        // Kontrollfehler: der alte Aufbau (Titel und "## Neu in dieser Version" vor dem Abschnitt) zeigte mehr
+        Assert.NotEqual(fenster, UpdateNotizen.Lesbar("# Fachinformatiker Lernplattform " + anzeige + "\n\n## Neu in dieser Version\n\n" + probe));
+    }
+
+    /// <summary>Abschnitt "## &lt;Anzeige&gt;" aus AENDERUNGEN.md ohne Ueberschrift, wie release.py neuerungen().</summary>
+    private static string Abschnitt(string anzeige)
+    {
+        var zeilen = File.ReadAllText(Path.Combine(Pfade.Wurzel, "AENDERUNGEN.md")).Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var start = Enumerable.Range(0, zeilen.Length).Where(i => zeilen[i] == "## " + anzeige || zeilen[i].StartsWith("## " + anzeige + " ", StringComparison.Ordinal)).ToList();
+        Assert.Single(start);
+        var ende = Enumerable.Range(start[0] + 1, zeilen.Length - start[0] - 1).FirstOrDefault(i => zeilen[i].StartsWith("## ", StringComparison.Ordinal), zeilen.Length);
+        return string.Join("\n", zeilen[(start[0] + 1)..ende]).Trim();
+    }
 }
