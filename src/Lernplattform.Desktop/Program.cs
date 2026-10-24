@@ -70,12 +70,26 @@ sealed class Program
         {
             x11.GlxRendererBlacklist = [];
         }
+        // Phase 7 W1 (Plan Abschnitt 3, Weg 1): macOS zeichnet in Avalonia 12.1.4 standardmaessig mit Metal,
+        // dort gibt es kein OpenGL fuer die 3D-Flaeche. Nur zur Messung fuer Nicos Entscheidung stellt
+        // LERNPLATTFORM_MAC_OPENGL=1 die ganze App auf OpenGL um (sonst bleibt alles wie bisher).
+        var macOpenGl = Environment.GetEnvironmentVariable("LERNPLATTFORM_MAC_OPENGL") == "1";
+        var native = new AvaloniaNativePlatformOptions();
+        if (macOpenGl)
+        {
+            native.RenderingMode = [AvaloniaNativeRenderingMode.OpenGl, AvaloniaNativeRenderingMode.Software];
+        }
         Messwerte.Notiere("Schalter: Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard")
-            + (llvmpipe ? ", llvmpipe erlaubt" : ""));
-        return AppBuilder.Configure<App>()
+            + (llvmpipe ? ", llvmpipe erlaubt" : "") + (macOpenGl ? ", macOS mit OpenGL statt Metal" : ""));
+        var builder = AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .With(x11)
-            .With(win32)
+            .With(win32);
+        if (macOpenGl)
+        {
+            builder = builder.With(native);
+        }
+        return builder
             .WithInterFont()
             .LogToTrace();
     }

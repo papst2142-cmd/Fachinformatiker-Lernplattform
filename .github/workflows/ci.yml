@@ -123,6 +123,19 @@ jobs:
           bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           cat "$datei" || true
           grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
+      # Phase 7 W1, nur Messung fuer Nicos Entscheidung (Plan Abschnitt 3, Weg 1): ganzer Start-Test auf
+      # macOS mit OpenGL statt Metal. Aendert kein Urteil dieses Jobs (das faellt allein im Standard-Zeichenweg).
+      - name: Nur Messung macOS mit OpenGL statt Metal (Weg 1, ohne Urteil)
+        if: always() && runner.os == 'macOS' && steps.lauf1.outcome != 'skipped'
+        timeout-minutes: 12
+        shell: bash
+        env:
+          LERNPLATTFORM_MAC_OPENGL: "1"
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_opengl
+        run: |
+          datei=messung_${{ runner.os }}_macopengl_versuch${{ github.run_attempt }}.txt
+          GITHUB_OUTPUT=/dev/null bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
+          grep -E "^(Schalter|Spiel|URTEIL)|FEHLER" "$datei" || true
       - uses: actions/upload-artifact@v7
         with:
           name: messung-${{ runner.os }}-${{ github.run_attempt }}
@@ -373,16 +386,20 @@ jobs:
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
           a=$(ls apk-probe/*-Signed.apk)
-          "$BT/aapt2" dump badging "$a" | head -n 1
-          "$BT/aapt2" dump badging "$a" | head -n 1 | grep -q "name='io.github.papst2142cmd.lernplattform.probe'"
-          "$BT/aapt2" dump badging "$a" | grep -q "application-label:'Lernplattform Probe'"
-          zert=$("$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | head -n 1 | awk '{print $NF}')
+          # erst in Dateien schreiben: head/grep -q beenden die Leitung frueh, mit pipefail waere das rot
+          "$BT/aapt2" dump badging "$a" > probe_badging.txt
+          head -n 1 probe_badging.txt
+          head -n 1 probe_badging.txt | grep -q "name='io.github.papst2142cmd.lernplattform.probe'"
+          grep -q "application-label:'Lernplattform Probe'" probe_badging.txt
+          "$BT/apksigner" verify --print-certs "$a" > probe_zert.txt
+          zert=$(grep "SHA-256" probe_zert.txt | head -n 1 | awk '{print $NF}')
           echo "Probe-Zertifikat SHA-256: $zert"
           release=$(grep -v '^#' werkzeuge/release/android_fingerabdruck.txt | tr -d ' \r\n')
           test -n "$zert"
           if [ "$zert" = "$release" ]; then echo "FEHLER: Probe-APK traegt den Release-Schluessel"; exit 1; fi
           for b in apk/*-Signed.apk; do
-            "$BT/apksigner" verify --print-certs "$b" | grep "SHA-256" | head -n 1 | grep -q "$zert" || { echo "FEHLER: Probe-APK nicht mit dem Testschluessel dieses Laufs"; exit 1; }
+            "$BT/apksigner" verify --print-certs "$b" > test_zert.txt
+            grep -q "SHA-256.*$zert" test_zert.txt || { echo "FEHLER: Probe-APK nicht mit dem Testschluessel dieses Laufs"; exit 1; }
           done
           mv "$a" apk-probe/Lernplattform-Probe-3D-arm64.apk
       - uses: actions/upload-artifact@v7
