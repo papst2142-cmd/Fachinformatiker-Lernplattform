@@ -7,7 +7,11 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// <summary>Ein Haus der Stichprobe mit Tuer und Oeffnungszeit (Minuten seit 0 Uhr; null = immer offen).</summary>
 public sealed record ProbeHaus(string Id, string Name, float TuerX, float TuerZ, int? Oeffnet, int? Schliesst, bool HatInnenraum)
 {
-    public bool Offen(int minute) => Oeffnet is not { } von || Schliesst is not { } bis || (minute >= von && minute < bis);
+    /// <summary>Offen zur Spielminute (Tageszeit, die Uhr laeuft ueber Mitternacht weiter).</summary>
+    public bool Offen(int minute) => Oeffnet is not { } von || Schliesst is not { } bis || (minute % 1440 >= von && minute % 1440 < bis);
+
+    /// <summary>Minuten bis zur naechsten Oeffnung (0 = jetzt offen).</summary>
+    public int MinutenBisOffen(int minute) => Offen(minute) || Oeffnet is not { } von ? 0 : ((von - minute % 1440) % 1440 + 1440) % 1440;
 }
 
 /// <summary>Eine begehbare Flaeche (Stadt oder Innenraum): Teile, Wegsuche, Startpunkt, Groesse.</summary>

@@ -29,6 +29,9 @@ public static partial class AutoMessung
     /// <summary>Anzahl der Spiel-Ansichten je Groesse und Stufe (fuer den Bericht).</summary>
     public const int P7W1AnsichtenAnzahl = 5;
 
+    /// <summary>Ansichten, die nicht aufgebaut werden konnten (zaehlen wie Layoutfunde).</summary>
+    private static readonly List<string> P7W1AnsichtFehler = [];
+
     private static async Task<SpielSeite?> SpielSeiteAsync(MainView ansicht)
     {
         await ansicht.ZeigeAsync(Seiten.Spiel);
@@ -48,7 +51,7 @@ public static partial class AutoMessung
         var seite = await SpielSeiteAsync(ansicht);
         if (seite is null)
         {
-            Messwerte.Notiere("Spiel: FEHLER, Seite nicht gebaut");
+            Messwerte.Notiere("  FEHLER: Spiel Seite: nicht gebaut");
             return 1;
         }
         if (!await GlAbwartenAsync(seite))
@@ -64,16 +67,18 @@ public static partial class AutoMessung
         {
             await ansicht.BildFertigAsync();
         }
-        funde += Ergebnis("Spiel: Stadt oeffnen bis erstes Bild", Messwiederholung.Einmal(seite.OeffnenMs, Abbruch));
+        funde += Ergebnis("Spiel Stadt oeffnen bis erstes Bild", Messwiederholung.Einmal(seite.OeffnenMs, Abbruch));
 
         // Wechsel Stadt -> Innenraum und zurueck (wiederholbar)
         var spiel = seite.Spiel;
         var buero = spiel.Welt.Haeuser.First(h => h.HatInnenraum);
         spiel.GeheZu(buero);
         spiel.SofortAnkommen();
-        if (!buero.Offen(spiel.Minute))
+        spiel.Warten(buero.MinutenBisOffen(spiel.Minute));
+        if (!spiel.KannBetreten)
         {
-            spiel.Warten(buero.Oeffnet!.Value - spiel.Minute);
+            Messwerte.Notiere("  FEHLER: Spiel Wechsel: Buero nicht betretbar (" + spiel.Zeile + ")");
+            return funde + 1;
         }
         await seite.Flaeche.NaechstesBildAsync();
         async Task<double?> Wechsel(Action schritt)
@@ -87,14 +92,19 @@ public static partial class AutoMessung
         async Task Hinein() { spiel.Betreten(); await seite.Flaeche.NaechstesBildAsync(); }
         async Task Hinaus() { spiel.Verlassen(); await seite.Flaeche.NaechstesBildAsync(); }
         var rein = await Wechsel(() => spiel.Betreten());
-        funde += Ergebnis("Spiel: Stadt -> Innenraum", await Messwiederholung.MessenAsync(rein, Abbruch,
+        funde += Ergebnis("Spiel Stadt -> Innenraum", await Messwiederholung.MessenAsync(rein, Abbruch,
             () => Wechsel(() => spiel.Betreten()), Hinaus, Task.Delay));
         var raus = await Wechsel(() => spiel.Verlassen());
-        funde += Ergebnis("Spiel: Innenraum -> Stadt", await Messwiederholung.MessenAsync(raus, Abbruch,
+        funde += Ergebnis("Spiel Innenraum -> Stadt", await Messwiederholung.MessenAsync(raus, Abbruch,
             () => Wechsel(() => spiel.Verlassen()), Hinein, Task.Delay));
-        if (spiel.ImInnenraum)
+        // die Wechsel muessen wirklich gewechselt haben (sonst haette die Messung nur die Stadt gezeichnet)
+        var verlassenOk = !spiel.ImInnenraum;
+        var betretenOk = spiel.Betreten() && spiel.ImInnenraum;
+        spiel.Verlassen();
+        if (!verlassenOk || !betretenOk || spiel.ImInnenraum)
         {
-            spiel.Verlassen();
+            Messwerte.Notiere("  FEHLER: Spiel Wechsel: Betreten oder Verlassen gelingt nicht");
+            funde++;
         }
 
         // Zeit je Bild beim Kameraschwenk: Median <= 50 ms, 95 % <= 100 ms (bis zu 3 Laeufe, rot nur, wenn alle rot)
@@ -128,7 +138,7 @@ public static partial class AutoMessung
             var ms = uhr.Elapsed.TotalMilliseconds;
             return weg.Count == 0 ? double.NaN : ms;
         }
-        funde += Ergebnis("Spiel: Weg suchen", await RechnungMessenAsync(Suche, SpielWegGrenze));
+        funde += Ergebnis("Spiel Weg suchen", await RechnungMessenAsync(Suche, SpielWegGrenze));
         Messwerte.Notiere(string.Create(inv, $"Spiel: Bilder/s nach dem Schwenk {seite.Flaeche.BilderJeSekunde}, Bilder gesamt {seite.Flaeche.BilderGesamt}"));
         return funde;
     }
@@ -201,11 +211,13 @@ public static partial class AutoMessung
         var buero = spiel.Welt.Haeuser.First(h => h.HatInnenraum);
         spiel.GeheZu(buero);
         spiel.SofortAnkommen();
-        if (!buero.Offen(spiel.Minute))
+        spiel.Warten(buero.MinutenBisOffen(spiel.Minute));
+        if (!spiel.Betreten())
         {
-            spiel.Warten(buero.Oeffnet!.Value - spiel.Minute);
+            // die Layoutpruefung darf unter "spiel/buero" nie still die Stadt pruefen (zaehlt als Layoutfund)
+            P7W1AnsichtFehler.Add("spiel/buero: Buero nicht betretbar");
+            yield break;
         }
-        spiel.Betreten();
         await ansicht.BildFertigAsync();
         yield return "spiel/buero";
         spiel.Verlassen();
@@ -226,7 +238,7 @@ public static partial class AutoMessung
         var seite = await SpielSeiteAsync(ansicht);
         if (seite is null)
         {
-            Messwerte.Notiere("Spiel ohne OpenGL: FEHLER, Seite nicht gebaut");
+            Messwerte.Notiere("  FEHLER: Spiel ohne OpenGL: Seite nicht gebaut");
             return 1;
         }
         var gl = await GlAbwartenAsync(seite);

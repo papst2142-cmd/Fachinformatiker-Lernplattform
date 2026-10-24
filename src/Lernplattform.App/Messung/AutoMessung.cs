@@ -330,6 +330,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
+                P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in P7W1Ansichten(ansicht))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
@@ -337,6 +338,7 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
             }
         }
 

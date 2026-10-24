@@ -114,6 +114,14 @@ public sealed class SpielSeite : Grid
             if (Flaeche.GlBereit)
             {
                 _glEntschieden.TrySetResult(true);
+                if (_ersatz!.IsVisible && !_ersatzErzwungen)
+                {
+                    // OpenGL kam erst nach der Wartezeit (kalter Start): 3D zurueckholen, Ortsliste bleibt ueber "Orte"
+                    _ersatz.IsVisible = false;
+                    _ortsliste!.IsVisible = false;
+                    _flaecheRahmen!.IsVisible = true;
+                    Beschriften();
+                }
             }
             else
             {
