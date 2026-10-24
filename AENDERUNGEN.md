@@ -4,26 +4,26 @@
 Die erste Version zum Herunterladen. Das Programm ist noch in der Alphaphase (A): Es wird gerade aufgebaut und ist zum eigenen Ausprobieren gedacht. Dein Lernstand bleibt bei jedem späteren Update erhalten.
 
 **Installieren**
-- Für jedes Gerät gibt es eine eigene Datei: Windows-Installation, Linux-Programm (AppImage, auch gepackt als `.tar.gz`), Android-App für 64-Bit-Handys und ein Paket für Macs mit Apple-Chip (nur gebaut, noch nicht auf einem Mac ausprobiert). Welche Datei für welches Gerät ist, steht auf der Release-Seite.
-- Zu jeder Datei nennt die Release-Seite eine Prüfsumme (SHA-256). Damit kannst du nachprüfen, dass die Datei vollständig und unverändert angekommen ist.
+- Für jedes Gerät gibt es eine eigene Datei: Windows-Installation, Linux-Programm (AppImage, auch gepackt als `.tar.gz`), Android-App für 64-Bit-Handys und ein Paket für Macs mit Apple-Chip (nur gebaut, noch nicht auf einem Mac ausprobiert).
+- Zu jeder Datei gibt es eine Prüfsumme (SHA-256). Damit kannst du nachprüfen, dass die Datei vollständig und unverändert angekommen ist.
 - Die Android-App ist immer mit demselben Schlüssel unterschrieben. Darum lässt sich jede spätere Version einfach über die alte installieren, ohne dass der Lernstand verloren geht.
-- Linux: Unter „Optionen“ → „Updates“ legt „Verknüpfung anlegen“ das Programm ins Anwendungsmenü und, wenn es einen Desktop-Ordner gibt, auf den Desktop. Beim ersten Start fragt das Programm einmal danach („Ja“, „Nein“ fragt beim nächsten Start wieder, „Nicht mehr fragen“).
-- „Über“ → Fremdbestandteile listet alle mitgelieferten Bausteine anderer Hersteller mit ihren Lizenzen. Die vollen Lizenztexte liegen als `THIRD_PARTY_LICENSES.txt` am PC neben dem Programm und auf der Release-Seite zum Herunterladen.
+- Linux: Unter „Optionen“ → „Updates“ legt „Verknüpfung anlegen“ das Programm ins Anwendungsmenü und, wenn es einen Desktop-Ordner gibt, auf den Desktop. Beim Start des installierten AppImage fragt das Programm danach, bis du „Ja“ oder „Nicht mehr fragen“ wählst („Nein“ fragt beim nächsten Start wieder).
+- Unter „Optionen“ → „Über das Programm“ zeigt „Hinweise zu Fremdbestandteilen“ alle mitgelieferten Bausteine anderer Hersteller mit ihren Lizenzen. Die vollen Lizenztexte liegen als `THIRD_PARTY_LICENSES.txt` am PC neben dem Programm und auf der Release-Seite zum Herunterladen.
 
 **Updates**
 - Unter „Optionen“ → „Updates“ sucht „Nach Updates suchen“ nach einer neueren Version; auf Wunsch geschieht das bei jedem Start von selbst („Beim Start automatisch nach Updates suchen“).
-- Gibt es eine neuere Version, zeigt das Fenster „Update verfügbar“, was neu ist. Am PC lädt „Jetzt aktualisieren“ das Update, prüft Größe und Prüfsumme, legt vorher eine Kopie deines Lernstands im Ordner `sicherungen` an und startet das Programm neu. Am Handy öffnet „Herunterladen“ die neue App-Datei im Browser.
+- Gibt es eine neuere Version, zeigt das Fenster „Update verfügbar“, was neu ist. Unter Windows und Linux lädt „Jetzt aktualisieren“ das Update, prüft Größe und Prüfsumme, legt vorher eine Kopie deines Lernstands im Ordner `sicherungen` an und startet das Programm neu. Am Handy öffnet „Herunterladen“ die neue App-Datei im Browser.
 - Kam ein Update nicht an, sagt der nächste Start einmal „Update nicht abgeschlossen“, mit Grund und einem Tipp. Jeder Schritt steht in der Datei `update.log`.
 - Gesucht wird nur nach veröffentlichten Versionen. Die Reihenfolge ist Alpha (A) vor Beta (B) vor 1.0.
 
 **Lernstand sichern**
 - Unter „Optionen“ → „Sicherung“ erstellst du mit „Sicherung erstellen“ eine Datei mit deinem ganzen Lernstand, zum Beispiel für einen USB-Stick. „Sicherung einspielen“ zeigt zuerst, was in der Datei steckt; dann wählst du, ob sie mit dem jetzigen Stand zusammengeführt wird oder ihn ersetzt („Alles ersetzen“ fragt zweimal nach).
-- Vor jedem Ersetzen legt das Programm selbst eine Kopie im Ordner `sicherungen` an. Diese Kopien löscht es nie von allein.
+- Vor jedem Einspielen, Update und Abgleich legt das Programm selbst eine Kopie deines Lernstands im Ordner `sicherungen` an. Diese Kopien löscht es nie von allein.
 - „Löschen und zurücksetzen“ löscht auf Wunsch Lerndaten, Historie, Spielstand oder Bestenliste; am PC zeigt „Datenbank“, wo die Datei mit deinem Lernstand liegt.
 - Update, Sicherung einspielen und der Abgleich zwischen PC und Handy laufen nie gleichzeitig, damit sie sich nicht gegenseitig stören.
 
 **Wenn etwas nicht klappt**
-- Unter „Optionen“ → „Diagnose und Werkzeuge“ erstellt „Problem melden“ einen Bericht zum Kopieren oder Speichern. Er enthält keine persönlichen Ordnernamen und keine Zugangsdaten.
+- Unter „Optionen“ → „Diagnose und Werkzeuge“ erstellt „Problem melden“ einen Bericht zum Kopieren oder Speichern. Zugangsschlüssel, Passwörter und dein Benutzername in Pfaden werden daraus entfernt; andere Angaben, zum Beispiel der Name deines Rechners, können darin stehen. Sieh dir den Bericht vor dem Weitergeben an.
 - Dort gibt es auch eine Leistungsmessung (schreibt Messwerte in eine Datei) und am PC die Hänger-Diagnose für den Fall, dass das Programm nicht mehr reagiert.
 - Am PC startet das Programm nur einmal: Ein zweiter Start holt das schon offene Fenster nach vorn, statt ein zweites Programm zu öffnen.
 
