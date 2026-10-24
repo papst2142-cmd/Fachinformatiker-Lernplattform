@@ -1,6 +1,6 @@
 # Phase 6 W1 (Weisung P6-2, Plan Phase 6 VE1-VE4): Release aus einem Commit auf main.
-# Startet NUR von Hand (workflow_dispatch), nie bei einem Push. Wer startet: nur Nico (oder Chat mit
-# Nicos schriftlichem OK); CC startet diesen Ablauf nie.
+# Startet NUR von Hand (workflow_dispatch), nie bei einem Push. Wer startet: Chat nach Nicos Merge-OK
+# (Nico 24.10.2026: "Release macht Chat automatisch"); CC startet diesen Ablauf nie.
 #   art = entwurf (Vorgabe): baut alle Dateien (Windows, Linux, macOS, Android mit Release-Schluessel),
 #         prueft T1-T3 und die Lizenzliste und legt einen ENTWURF an (nur fuer Nico sichtbar, kein Tag).
 #         Hoechstens ein Entwurf: ein erneuter Lauf ersetzt dessen Dateien und Text. Liegen im Entwurf
