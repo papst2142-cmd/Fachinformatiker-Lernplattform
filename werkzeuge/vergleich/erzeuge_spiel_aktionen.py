@@ -12,7 +12,10 @@ dazu absichtlich falsche Aufrufe.
 Je Aufruf wird festgehalten: n (Anzahl Ereignisse davor), Methode, Argumente
 und entweder die geschriebenen Ereignisse [Art, Daten] (ohne Erfolge, die
 kommen mit W3) oder der Text des ValueError. Die C#-Seite baut den Spielstand
-aus den ersten n Ereignissen und vergleicht.
+aus den ersten n Ereignissen und vergleicht. Dazu je Lauf Stichproben der
+Wohnung (placed_furniture, boxed_furniture, furniture_at und home_message auf
+einem Raster, sleep_text, rent_text, move_offer, move_texts) und
+day_end_money_text fuer jeden Feierabend.
 
 Keine Lerndaten; alle Daten- und Einstellungsordner zeigen in einen leeren
 Temp-Ordner. Uhr, uuid4 und die Wahl der Aufrufe (random.Random mit festem
@@ -22,6 +25,7 @@ Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_spiel_aktionen.py <pfad_fisi_lernplattform> tests/Vergleich/spiel_aktionen.json
 """
 import copy
+import hashlib
 import json
 import os
 import random
@@ -32,6 +36,11 @@ import uuid
 AUSSEHEN = {"haut": "hell", "haare": "kurz", "haarfarbe": "braun", "oberteil": "hoodie",
             "farbe": "blau", "hose": "jeans", "brille": False, "bart": False,
             "extra": "headset", "kreis": "gelb"}
+
+
+def pruefsumme(wert):
+    text = json.dumps(wert, ensure_ascii=False, sort_keys=False, separators=(",", ":"))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def zeitstempel(nummer):
@@ -190,6 +199,41 @@ class Lauf:
         self.rufe("restore_layout", fg.home_layout(game.state))
         self.rufe("restore_layout", {"moebel": {"gibt_es_nicht": [1, 1, 0]}, "boeden": {}})
 
+    # -- Texte und Abfragen der Wohnung ---------------------------------------
+
+    def wohnung(self, state):
+        """placed/boxed furniture, furniture_at und home_message auf einem Raster,
+        sleep_text, rent_text, moves_available mit move_offer und move_texts."""
+        fg = self.fg
+        gebaeude = fg.apartment(state.home_id)["gebaeude"]
+        punkte = [(x / 4.0, y / 4.0) for x in range(-1, int(gebaeude["breite"] * 4) + 2, 2)
+                  for y in range(-1, int(gebaeude["hoehe"] * 4) + 2, 2)]
+        bei = []
+        for x, y in punkte:
+            item = fg.furniture_at(state, x, y)
+            titel, text, knoepfe = fg.home_message((x, y), state)
+            bei.append([x, y, item["stueck"] if item else None, [titel, text, [list(k) for k in knoepfe]]])
+        umzuege = [[home["id"], fg.move_offer(state, home, False), fg.move_offer(state, home, True),
+                    list(fg.move_texts(state, home, False)), list(fg.move_texts(state, home, True))]
+                   for home in fg.moves_available(state)]
+        return {"aufgestellt": fg.placed_furniture(state), "karton": [list(z) for z in fg.boxed_furniture(state)],
+                "raster": bei, "schlafen": fg.sleep_text(state), "miete": fg.rent_text(state), "umzuege": umzuege}
+
+    def stichproben(self):
+        """Wohnung zu jedem 12. Spielstand; voll bei den ersten vier, sonst als sha256."""
+        fg = self.fg
+        events = self.db.game_events(self.game.run)
+        ergebnis = []
+        nummern = sorted({f["n"] for f in self.faelle})
+        for i, n in enumerate(nummern[::12] + [len(events)]):
+            werte = self.wohnung(fg.GameState(events[:n]))
+            eintrag = {"n": n, "sha256": pruefsumme(werte)}
+            if i < 4:
+                eintrag["werte"] = werte
+            ergebnis.append(eintrag)
+        geld = [[d, fg.day_end_money_text(d)] for _t, k, d in events if k == fg.EV_DAY_END]
+        return ergebnis, geld
+
     def spielen(self, tage, schwierigkeit):
         self.rufe("set_profile", "   ", AUSSEHEN, schwierigkeit)
         self.rufe("set_profile", "  Nico mit einem sehr langen Namen, der gekürzt wird  ", AUSSEHEN, schwierigkeit)
@@ -198,7 +242,9 @@ class Lauf:
             self.arbeitstag(tag)
             self.moebelrunde(tag)
         events = [[t, k, d] for t, k, d in self.db.game_events(self.game.run)]
-        return {"name": self.name, "ereignisse": events, "faelle": self.faelle}
+        wohnung, geld = self.stichproben()
+        return {"name": self.name, "ereignisse": events, "faelle": self.faelle, "wohnung": wohnung,
+                "feierabend_geld": geld}
 
 
 def main():

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
@@ -91,5 +92,72 @@ public class SpielAktionenTests
             }
         }
         Assert.True(anzahl > 2000 && fehler > 800, anzahl + " Aufrufe, " + fehler + " mit Fehlertext");
+    }
+
+    private static string Sha(object? wert) => Convert.ToHexStringLower(SHA256.HashData(PythonJson.Utf8(PythonJson.Text(wert))));
+
+    private static List<object?> Paar((string A, string B) p) => [p.A, p.B];
+
+    /// <summary>Die Abfragen der Wohnung wie im Erzeuger (Reihenfolge der Schluessel wie Python).</summary>
+    private static PyObjekt WohnungWerte(Spielstand stand)
+    {
+        var gebaeude = (PyObjekt)Wohnung.Bleibe(stand.Wohnung, stand.Inhalt)!["gebaeude"]!;
+        var raster = new List<object?>();
+        for (var x = -1; x < (int)(Py.F(gebaeude["breite"]) * 4) + 2; x += 2)
+        {
+            for (var y = -1; y < (int)(Py.F(gebaeude["hoehe"]) * 4) + 2; y += 2)
+            {
+                var (px, py) = (x / 4.0, y / 4.0);
+                var (titel, text, knoepfe) = Wohnung.Nachricht(px, py, stand);
+                raster.Add(new List<object?> { px, py, Wohnung.MoebelBei(stand, px, py)?.Stueck,
+                    new List<object?> { titel, text, knoepfe.Select(k => (object?)new List<object?> { k.Aktion, k.Name }).ToList() } });
+            }
+        }
+        var aufgestellt = Wohnung.AufgestellteMoebel(stand).Select(m => (object?)new PyObjekt
+        {
+            { "typ", m.Typ }, { "x", m.X }, { "y", m.Y }, { "w", m.W }, { "h", m.H }, { "dreh", m.Dreh },
+            { "stueck", m.Stueck }, { "moebel", m.Moebel }, { "blick", m.Blick },
+        }).ToList();
+        var umzuege = Wohnung.Umzuege(stand).Select(w => (object?)new List<object?>
+        {
+            w["id"], Wohnung.UmzugAngebot(stand, w, false), Wohnung.UmzugAngebot(stand, w, true),
+            Paar(Wohnung.UmzugTexte(stand, w, false)), Paar(Wohnung.UmzugTexte(stand, w, true)),
+        }).ToList();
+        return new PyObjekt
+        {
+            { "aufgestellt", aufgestellt },
+            { "karton", Wohnung.ImKarton(stand).Select(k => (object?)new List<object?> { k.Stueck, k.Moebel }).ToList() },
+            { "raster", raster }, { "schlafen", Wohnung.SchlafText(stand) }, { "miete", Wohnung.MietText(stand) }, { "umzuege", umzuege },
+        };
+    }
+
+    [Fact]
+    public void WohnungWiePython()
+    {
+        var anzahl = 0;
+        foreach (var lauf in Soll.GetProperty("laeufe").EnumerateArray())
+        {
+            var ereignisse = SpielNeuaufbauTests.Ereignisse(lauf.GetProperty("ereignisse"));
+            foreach (var probe in lauf.GetProperty("wohnung").EnumerateArray())
+            {
+                var n = probe.GetProperty("n").GetInt32();
+                var wo = lauf.GetProperty("name").GetString() + " n=" + n;
+                var ist = WohnungWerte(new Spielstand(ereignisse.Take(n), Inhalt));
+                if (probe.TryGetProperty("werte", out var werte))
+                {
+                    foreach (var (k, v) in (PyObjekt)W(werte)!)
+                    {
+                        Assert.True(T(v) == T(ist[k]), wo + " " + k + "\n  Python: " + T(v) + "\n  C#:     " + T(ist[k]));
+                    }
+                }
+                Assert.True(S(probe.GetProperty("sha256")) == Sha(ist), wo + " weicht ab: " + T(ist));
+                anzahl++;
+            }
+            foreach (var f in lauf.GetProperty("feierabend_geld").EnumerateArray())
+            {
+                Assert.Equal(S(f[1]), Wohnung.FeierabendGeldText((PyObjekt)W(f[0])!));
+            }
+        }
+        Assert.True(anzahl > 50, anzahl + " Stichproben");
     }
 }
