@@ -270,6 +270,7 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_update.py python-linie neu/update.json
           # Phase 7 W2: Spiel-Kern (G42 Spielinhalte)
           python3 -I werkzeuge/vergleich/erzeuge_spiel_inhalte.py python-linie neu/spiel_inhalte.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_wege.py python-linie neu/spiel_wege.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -289,7 +290,7 @@ jobs:
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
                        "pruefung.json", "fachrichtungen.json", "hilfe.json",
                        "sicherung_ersetzen.json", "loeschen.json", "problembericht.json",
-                       "leistungsmessung.json", "update.json", "spiel_inhalte.json"):
+                       "leistungsmessung.json", "update.json", "spiel_inhalte.json", "spiel_wege.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

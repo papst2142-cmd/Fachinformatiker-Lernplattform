@@ -236,6 +236,10 @@ public static class Py
         return false;
     }
 
+    /// <summary>float(wert) fuer Zahlen (int und float aus JSON).</summary>
+    public static double F(object? wert) => Zahl(wert, out var d) ? d
+        : throw new InvalidDataException("Zahl erwartet, nicht " + (wert?.GetType().Name ?? "None"));
+
     /// <summary>Ein System.Text.Json-Knoten (z. B. aus <c>Lerninhalte</c>) als Python-Wert.</summary>
     public static object? AusKnoten(System.Text.Json.Nodes.JsonNode? knoten) =>
         knoten is null ? null : Lesen(knoten.ToJsonString());
