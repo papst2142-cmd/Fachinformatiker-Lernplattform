@@ -217,6 +217,31 @@ public static partial class AutoMessung
         return (median, Stelle(0.95));
     }
 
+    /// <summary>
+    /// Jeder sichtbare Knopf der Ebene ueber der Stadt liegt ganz auf der Seite ("Spiel verlassen",
+    /// Hineingehen, Warten, Orte); sonst ist er am Handy quer nicht erreichbar. Knoepfe in einer
+    /// Rolle (Ortsliste) zaehlen nicht, die erreicht man durch Rollen.
+    /// </summary>
+    private static List<string> KnoepfeImBild(SpielSeite seite, string ansichtName)
+    {
+        var fehler = new List<string>();
+        var seiteRahmen = new Rect(seite.Bounds.Size).Inflate(0.5);
+        foreach (var knopf in seite.Ebene.GetVisualDescendants().OfType<Button>())
+        {
+            if (!knopf.IsEffectivelyVisible || knopf.GetVisualAncestors().OfType<ScrollViewer>().Any())
+            {
+                continue;
+            }
+            var lage = knopf.TranslatePoint(default, seite);
+            if (lage is not { } p || !seiteRahmen.Contains(new Rect(p, knopf.Bounds.Size)))
+            {
+                fehler.Add(string.Create(CultureInfo.InvariantCulture,
+                    $"{ansichtName}: Knopf \"{(knopf.Content as TextBlock)?.Text ?? knopf.Content?.ToString()}\" nicht ganz im Bild ({lage?.X:F0},{lage?.Y:F0} {knopf.Bounds.Width:F0}x{knopf.Bounds.Height:F0}, Seite {seite.Bounds.Width:F0}x{seite.Bounds.Height:F0})"));
+            }
+        }
+        return fehler;
+    }
+
     /// <summary>Ansichten der Spiel-Seite fuer die Layoutpruefung: Stadt, Ortsliste, geschlossenes Haus, Buero, ohne 3D.</summary>
     private static async IAsyncEnumerable<string> P7W1Ansichten(MainView ansicht)
     {
@@ -228,19 +253,23 @@ public static partial class AutoMessung
         }
         var spiel = Frisch(seite);
         await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/stadt"));
         yield return "spiel/stadt";
         seite.OrtslisteZeigen(true);
         await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/orte"));
         yield return "spiel/orte";
         seite.OrtslisteZeigen(false);
         // Haus mit Oeffnungszeit, das bei der Ankunft noch zu hat (Moebelhaus oeffnet um 10:00): Hinweis und "Warten"
         spiel.GeheZu("moebelhaus");
         spiel.SofortAnkommen();
+        seite.Flaeche.KameraAufFigur();
         if (!spiel.KannWarten)
         {
             P7W1AnsichtFehler.Add("spiel/haus: Moebelhaus ist bei der Ankunft nicht geschlossen (" + spiel.Zeile + ")");
         }
         await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/haus"));
         yield return "spiel/haus";
         if (!ZurBitweiche(spiel) || !spiel.Betreten())
         {
@@ -249,10 +278,12 @@ public static partial class AutoMessung
             yield break;
         }
         await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/buero"));
         yield return "spiel/buero";
         spiel.Verlassen();
         seite.ErsatzVorfuehren(true);
         await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/ohne-3d"));
         yield return "spiel/ohne-3d";
         seite.ErsatzVorfuehren(false);
         await ansicht.BildFertigAsync();
@@ -317,6 +348,31 @@ public static partial class AutoMessung
         await seite.Flaeche.NaechstesBildAsync();
         await ansicht.BildFertigAsync();
         Pruefe("Namensschilder sichtbar", seite.SchilderSichtbar > 0, seite.SchilderSichtbar.ToString(CultureInfo.InvariantCulture));
+
+        // Handy quer (Groesse des S24 quer, 836 x 385): alle Knoepfe ganz im Bild, auch mit dem langen
+        // Hinweis beim Oeffnen und mit offener Ortsliste
+        if (top is Window fenster)
+        {
+            var (breite, hoehe, mindest) = (fenster.Width, fenster.Height, fenster.MinHeight);
+            fenster.MinHeight = 0; // das PC-Fenster ist sonst mindestens 480 hoch
+            fenster.Width = 836;
+            fenster.Height = 385;
+            Frisch(seite);
+            await seite.Flaeche.NaechstesBildAsync();
+            await ansicht.BildFertigAsync();
+            var quer = KnoepfeImBild(seite, "quer");
+            seite.OrtslisteZeigen(true);
+            await ansicht.BildFertigAsync();
+            quer.AddRange(KnoepfeImBild(seite, "quer mit Ortsliste"));
+            seite.OrtslisteZeigen(false);
+            var groesse = string.Create(CultureInfo.InvariantCulture, $"Seite {seite.Bounds.Width:F0} x {seite.Bounds.Height:F0}");
+            Pruefe("Handy quer: Knoepfe im Bild", quer.Count == 0 && seite.Bounds.Height < 400, quer.Count == 0 ? "ja (" + groesse + ")" : string.Join("; ", quer));
+            fenster.Width = breite;
+            fenster.Height = hoehe;
+            fenster.MinHeight = mindest;
+            await ansicht.BildFertigAsync();
+            await ansicht.BildFertigAsync();
+        }
 
         // "Spiel verlassen" fuehrt zurueck zur Seite davor, Kopfleiste und Navigation sind wieder da
         seite.VerlassenKnopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));

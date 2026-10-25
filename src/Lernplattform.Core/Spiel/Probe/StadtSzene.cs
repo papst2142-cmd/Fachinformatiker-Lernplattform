@@ -178,8 +178,11 @@ public sealed class StadtSzene
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
                 : ((min.X + max.X) / 2, max.Z);
-            // Tuer vor der Front: kleines Rechteck, wo der Fussweg die Front trifft
-            teile.Add(Quader(tx - 0.22f, 0f, max.Z - 0.02f, tx + 0.22f, 0.7f, max.Z + 0.03f, Farben.Tuer));
+            // Tuer: kleines Rechteck, wo der Fussweg die Front trifft; liegt die Tuer hinten (Moebelhaus:
+            // Zugang von der Strasse noerdlich), sitzt sie an der Rueckseite
+            var vorne = tz >= (min.Z + max.Z) / 2;
+            var seite = vorne ? max.Z : min.Z;
+            teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
                 tx, tz, min, max, schild));

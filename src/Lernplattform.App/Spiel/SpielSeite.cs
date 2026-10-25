@@ -30,11 +30,15 @@ public sealed class SpielSeite : Grid
 
     private const double Rand = 12;
     private const double OrtslisteBreite = 300;
+    private const double UntenBreite = 720;
 
     private readonly Action _verlassen;
     private readonly TextBlock _kopfzeile;
     private readonly TextBlock _probeZeile;
     private readonly TextBlock _zeile;
+    private readonly ScrollViewer _zeileRolle;
+    private readonly Border _unten;
+    private readonly Grid _mitte;
     private readonly Button _betreten;
     private readonly Button _zurStadt;
     private readonly Button _warten;
@@ -83,10 +87,18 @@ public sealed class SpielSeite : Grid
         _orteKnopf = Schrift.Knopf(SpielProbeTexte.Orte);
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
         var knoepfe = new WrapPanel { Children = { _betreten, _zurStadt, _warten, _orteKnopf } };
-        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeile, knoepfe } });
+        // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
+        // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
+        _zeileRolle = new ScrollViewer
+        {
+            Content = _zeile,
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        };
+        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, knoepfe } });
         unten.Padding = new Thickness(14, 10, 14, 2);
-        unten.MaxWidth = 720;
+        unten.MaxWidth = UntenBreite;
         unten.HorizontalAlignment = HorizontalAlignment.Left;
+        _unten = unten;
 
         _ortsliste = Schrift.Karte(new ScrollViewer
         {
@@ -123,7 +135,15 @@ public sealed class SpielSeite : Grid
         Grid.SetRow(mitte, 1);
         Grid.SetColumnSpan(mitte, 2);
         ebene.Children.Add(mitte);
-        ebene.SizeChanged += (_, e) => _ortsliste.Width = Math.Max(0, Math.Min(OrtslisteBreite, e.NewSize.Width - Rand));
+        _mitte = mitte;
+        ebene.SizeChanged += (_, _) => Anordnen();
+        _ortsliste.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                Anordnen();
+            }
+        };
         Grid.SetRow(unten, 2);
         Grid.SetColumnSpan(unten, 2);
         ebene.Children.Add(unten);
@@ -241,6 +261,28 @@ public sealed class SpielSeite : Grid
     private bool IsAttachedToVisualTree() => TopLevel.GetTopLevel(this) is not null;
 
     public bool OrtslisteSichtbar => _ortsliste.IsVisible;
+
+    /// <summary>
+    /// Ebene an die Groesse anpassen: Ortsliste hoechstens 300 breit; ist Platz fuer Liste und untere
+    /// Karte nebeneinander (PC, Handy quer), reicht die Liste bis unten und die Karte wird schmaler,
+    /// sonst bleibt die Liste ueber der Karte. Der Text der unteren Karte bekommt hoechstens ein
+    /// Viertel der Hoehe, damit die Knoepfe am Handy quer nie aus dem Bild rutschen.
+    /// </summary>
+    private void Anordnen()
+    {
+        var groesse = Ebene.Bounds.Size;
+        if (groesse.Width <= 0 || groesse.Height <= 0)
+        {
+            return;
+        }
+        _ortsliste.Width = Math.Max(0, Math.Min(OrtslisteBreite, groesse.Width - Rand));
+        var nebeneinander = groesse.Width >= (2 * OrtslisteBreite) + (3 * Rand);
+        Grid.SetRowSpan(_mitte, nebeneinander ? 2 : 1);
+        _unten.MaxWidth = nebeneinander && _ortsliste.IsVisible
+            ? Math.Min(UntenBreite, groesse.Width - _ortsliste.Width - (2 * Rand))
+            : UntenBreite;
+        _zeileRolle.MaxHeight = Math.Max(40, groesse.Height / 4);
+    }
 
     public bool ErsatzSichtbar => _ersatz.IsVisible;
 
@@ -399,6 +441,7 @@ public sealed class SpielSeite : Grid
             teile.Add(SpielProbeTexte.GrafikStartet);
         }
         _probeZeile.Text = string.Join(" · ", teile);
+        _probeZeile.IsVisible = teile.Count > 0;
         if (Spiel is not { } spiel)
         {
             _betreten.IsVisible = _zurStadt.IsVisible = _warten.IsVisible = false;

@@ -51,6 +51,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private double _abstandZwei;
     private double _winkelZwei;
     private double _folgenAb;
+    private double _nachlaufBis;
 
     public StadtFlaeche()
     {
@@ -282,9 +283,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var geht = _spiel?.Fortschreiten(dt) ?? false;
         VorBild?.Invoke();
         var kamera = AktuelleKamera;
-        if (geht && kamera is not null && jetzt >= _folgenAb)
+        if (geht)
         {
-            // Kamera folgt der Figur weich, solange niemand selbst verschiebt
+            _nachlaufBis = jetzt + 1.5;
+        }
+        if ((geht || jetzt < _nachlaufBis) && kamera is not null && jetzt >= _folgenAb)
+        {
+            // Kamera folgt der Figur weich (nach der Ankunft noch kurz, bis sie mittig steht), solange
+            // niemand selbst verschiebt
             var k = (float)Math.Min(1, dt * 2.5);
             kamera.Setzen(kamera.ZielX + ((_spiel!.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
         }
@@ -328,7 +334,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _bilder.Dequeue();
         }
         BildGezeichnet?.Invoke();
-        if (geht || Dauerlauf)
+        if (geht || Dauerlauf || jetzt < _nachlaufBis)
         {
             RequestNextFrameRendering();
         }
@@ -522,6 +528,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         var p = _zeiger.Values.Take(2).ToArray();
         return p.Length < 2 ? 0 : Math.Atan2(p[1].Y - p[0].Y, p[1].X - p[0].X) * 180 / Math.PI;
+    }
+
+    /// <summary>Kamera sofort auf die Figur stellen (nach einem Sprung ohne Gehen, z. B. im Start-Test).</summary>
+    public void KameraAufFigur()
+    {
+        if (AktuelleKamera is { } kamera && _spiel is { } spiel)
+        {
+            kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+            AnfordernBild();
+        }
     }
 
     /// <summary>Tippen an (x, y) in Punkten: Stadt -> Haus unter dem Finger, Buero -> zum Bodenpunkt.</summary>
