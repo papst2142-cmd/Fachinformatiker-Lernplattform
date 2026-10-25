@@ -12,6 +12,8 @@ namespace Lernplattform.Tests;
 /// umbenennen, loeschen, zuruecksetzen, Loeschen auf dem anderen Geraet) mit derselben Uhr und denselben
 /// Kennungen und ergibt nach jedem Schritt dieselben Zeilen in spiel_ereignisse, spiel_plaetze,
 /// spiel_bestenliste und sync_meta, denselben aktiven Durchgang und dieselbe Uebersicht wie Python 0.63.2.
+/// Teil "alt" (Weisung P7-7, Sammelliste 97): zweite Datenbank mit dem alten Durchgang von vor 0.48,
+/// mehr Durchgaengen als Plaetzen (Extra) und Namen mit Umlauten, Emoji und Python-Leerzeichen.
 /// </summary>
 public class SpielVerwaltungTests
 {
@@ -64,7 +66,8 @@ public class SpielVerwaltungTests
             zaehler++;
             return (zaehler * 104729).ToString("x16", CultureInfo.InvariantCulture) + (zaehler * 7919).ToString("x16", CultureInfo.InvariantCulture);
         }
-        var schreiber = new LernstandSchreiber(lernstand, Laufende(), Kennung);
+        var uhr = Laufende();
+        var schreiber = new LernstandSchreiber(lernstand, uhr, Kennung);
         Spielverwaltung? spiel = null;
         Spielverwaltung G() => spiel!;
         string Offen() => (string)G().Stand.OffeneTickets()[0]["id"]!;
@@ -113,30 +116,85 @@ public class SpielVerwaltungTests
             ("Neu gestartet am Ende", () => Starten().Lauf),
         };
 
-        var schritte = Soll.GetProperty("schritte");
-        Assert.Equal(schritte.GetArrayLength(), aktionen.Count);
-        for (var i = 0; i < aktionen.Count; i++)
+        Vergleichen(Soll.GetProperty("schritte"), aktionen);
+
+        // Teil "alt": neue Datenbank, Uhr und Kennungen laufen weiter
+        lernstand = new Lernstand(Path.Combine(ordner.Pfad, "alt_" + Lernstand.DateiName));
+        schreiber = new LernstandSchreiber(lernstand, uhr, Kennung);
+        using (Vorgaenge.Sperren())
         {
-            var soll = schritte[i];
-            var wo = soll.GetProperty("name").GetString()!;
-            Assert.Equal(wo, aktionen[i].Name);
-            PyObjekt ergebnis;
-            try
+            // die Ereignisse aus Schritt 2 (Schwierigkeit, Profil) ohne Durchgang (vor 0.48)
+            foreach (var zeile in Soll.GetProperty("schritte")[1].GetProperty("tabellen").GetProperty("spiel_ereignisse").EnumerateArray())
             {
-                ergebnis = new PyObjekt { { "wert", aktionen[i].Aktion() } };
+                Assert.NotNull(schreiber.SpielEreignisSpeichern(zeile[3].GetString()!, zeile[4].GetString()!, "PC", null));
             }
-            catch (SpielFehler fehler)
+        }
+        object? Handy(long platz, string lauf, string aktion, string daten = "{}")
+        {
+            using (Vorgaenge.Sperren())
             {
-                ergebnis = new PyObjekt { { "fehler", fehler.Message } };
+                Assert.True(schreiber.SpielPlatzSpeichern(platz, lauf, aktion, daten, "Handy"));
             }
-            Gleich(W(soll.GetProperty("ergebnis")), ergebnis, wo + ": Ergebnis");
-            Gleich(W(soll.GetProperty("tabellen")), Tabellen(lernstand), wo + ": Tabellen");
-            Gleich(W(soll.GetProperty("lauf")), G().Lauf, wo + ": run");
-            Gleich(W(soll.GetProperty("platz")), G().PlatzVon(), wo + ": slot_of");
-            Gleich(W(soll.GetProperty("anzeige")), G().AktivAnzeige(), wo + ": active_label");
-            Gleich(W(soll.GetProperty("plaetze")), G().Plaetze(), wo + ": slots");
-            Gleich(W(soll.GetProperty("spieler")), G().Stand.Profil is { } p ? p["name"] : null, wo + ": Spieler");
-            Gleich(W(soll.GetProperty("ereignisse")), (long)G().Stand.Verlauf.Count, wo + ": Ereignisse");
+            G().Neuladen();
+            return null;
+        }
+        var alt = new List<(string Name, Func<object?> Aktion)>
+        {
+            ("Start mit altem Durchgang", () => Starten().Lauf),
+            ("Alter Durchgang: Ticket verschoben", () => G().ZumSchreiben().Verschieben(Offen())),
+            ("Handy legt Platz 2 an", () => Handy(2, "lhandy0000000002", Spielstaende.Angelegt)),
+            ("Handy legt Platz 3 an", () => Handy(3, "lhandy0000000003", Spielstaende.Angelegt)),
+            ("Handy legt Platz 1 noch einmal an (Extra)", () => Handy(1, "lhandy0000000004", Spielstaende.Angelegt)),
+            ("Handy legt Platz 5 an (Extra)", () => Handy(5, "lhandy0000000005", Spielstaende.Angelegt)),
+            ("Handy benennt Platz 4 um (zaehlt nicht)", () => Handy(4, "", Spielstaende.Umbenannt, "{\"name\": \"Vier\"}")),
+            ("Handy benennt Platz 3 um (Emoji, zu lang)", () =>
+                Handy(3, "", Spielstaende.Umbenannt, "{\"name\": \"\u3000" + string.Concat(Enumerable.Repeat("\U0001F3AE", 30)) + "\"}")),
+            ("Neu gestartet mit Extras", () => Starten().Lauf),
+            ("Extra waehlen", () => { G().LaufWaehlen(G().Belegung().Extra[0]); return null; }),
+            ("Extra Profil", () => { G().ZumSchreiben().Profil("J\u00f6rg \U0001F3AE", Aussehen(), Ereignisse.Einfach); return null; }),
+            ("Platz 2 umbenannt (Umlaute, Emoji, strip)", () =>
+            {
+                G().PlatzUmbenennen(2, "\u001f\u2003 Pr\u00fcfung \u00e4\u00f6\u00fc \u00c4\u00d6\u00dc \u00df 12\U0001F3AE\U0001F3AE Ende \u3000\u001c");
+                return null;
+            }),
+            ("Platz 3 loeschen (Extra rueckt nach)", () => G().LaufLoeschen(Platz(3))),
+            ("Alten Durchgang waehlen", () => { G().LaufWaehlen(Spielstaende.AlterLauf); return null; }),
+            ("Alten Durchgang loeschen", () => G().LaufLoeschen(Spielstaende.AlterLauf)),
+            ("Neu gestartet ohne alten Durchgang", () => Starten().Lauf),
+        };
+        Vergleichen(Soll.GetProperty("alt"), alt);
+        // Kontrolle: der Teil "alt" hat wirklich den alten Durchgang, ein Extra und einen gekuerzten Emoji-Namen
+        var altSoll = Soll.GetProperty("alt");
+        Assert.Equal("alt", altSoll[0].GetProperty("lauf").GetString());
+        Assert.Contains(altSoll[5].GetProperty("plaetze").EnumerateArray(), p => p.GetProperty("extra").GetBoolean());
+        Assert.Equal(24, altSoll[7].GetProperty("plaetze")[2].GetProperty("name").GetString()!.EnumerateRunes().Count());
+
+        void Vergleichen(JsonElement schritte, List<(string Name, Func<object?> Aktion)> aktionen)
+        {
+            Assert.Equal(schritte.GetArrayLength(), aktionen.Count);
+            for (var i = 0; i < aktionen.Count; i++)
+            {
+                var soll = schritte[i];
+                var wo = soll.GetProperty("name").GetString()!;
+                Assert.Equal(wo, aktionen[i].Name);
+                PyObjekt ergebnis;
+                try
+                {
+                    ergebnis = new PyObjekt { { "wert", aktionen[i].Aktion() } };
+                }
+                catch (SpielFehler fehler)
+                {
+                    ergebnis = new PyObjekt { { "fehler", fehler.Message } };
+                }
+                Gleich(W(soll.GetProperty("ergebnis")), ergebnis, wo + ": Ergebnis");
+                Gleich(W(soll.GetProperty("tabellen")), Tabellen(lernstand), wo + ": Tabellen");
+                Gleich(W(soll.GetProperty("lauf")), G().Lauf, wo + ": run");
+                Gleich(W(soll.GetProperty("platz")), G().PlatzVon(), wo + ": slot_of");
+                Gleich(W(soll.GetProperty("anzeige")), G().AktivAnzeige(), wo + ": active_label");
+                Gleich(W(soll.GetProperty("plaetze")), G().Plaetze(), wo + ": slots");
+                Gleich(W(soll.GetProperty("spieler")), G().Stand.Profil is { } p ? p["name"] : null, wo + ": Spieler");
+                Gleich(W(soll.GetProperty("ereignisse")), (long)G().Stand.Verlauf.Count, wo + ": Ereignisse");
+            }
         }
     }
 

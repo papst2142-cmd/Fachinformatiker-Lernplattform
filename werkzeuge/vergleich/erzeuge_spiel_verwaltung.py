@@ -6,7 +6,11 @@ Sammelliste 94), gerechnet vom echten Python-Code der Python-Linie (v0.63.2,
 eingefroren): die Platzverwaltung der Klasse Game (_resolve_run, new_run mit
 Doppel-Tipp, _ensure_run, select_run, rename_slot, delete_run mit und ohne
 eigenen Namen, reset, reload nach einem Loeschen auf dem anderen Geraet,
-slot_of, active_label, slots).
+slot_of, active_label, slots). Dazu (Weisung P7-7, Sammelliste 97) eine zweite
+Datenbank: der alte Durchgang von vor 0.48 (Ereignisse ohne lauf, Durchgang
+"alt" auf Platz 1), mehr Durchgaenge als Plaetze (Extra, Platz 5), Namen mit
+Umlauten, Emoji und Python-Leerzeichen (strip) und das Kuerzen nach Codepunkten,
+Feld "alt".
 
 In einer leeren Temp-Datenbank (fisi_core.DBManager) spielt ein Geraet "PC"
 Schritt fuer Schritt. Nach jedem Schritt werden alle vier beteiligten Tabellen
@@ -95,8 +99,10 @@ def erzeugen(repo, ziel, tmp):
     db._stamp = stempel
     schritte = []
     spiel = [None]
+    aktuell = [pfad, db, schritte]
 
     def schritt(name, aktion):
+        pfad, _db, schritte = aktuell
         try:
             ergebnis = {"wert": aktion()}
         except ValueError as fehler:
@@ -116,7 +122,7 @@ def erzeugen(repo, ziel, tmp):
         })
 
     def starten():
-        spiel[0] = fg.Game(db, "PC")
+        spiel[0] = fg.Game(aktuell[1], "PC")
         return spiel[0].run
 
     def g():
@@ -158,11 +164,47 @@ def erzeugen(repo, ziel, tmp):
     schritt("Aktiven Durchgang loeschen (mit Profil)", lambda: g().delete_run(g().run, keep_name=True))
     schritt("Neu gestartet am Ende", starten)
 
+    # Zweite Datenbank (Sammelliste 97): alter Durchgang, Extra-Durchgaenge, Namen mit Nicht-ASCII.
+    # Uhr und uuid laufen weiter.
+    pfad_alt = os.path.join(tmp, "verwaltung_alt.db")
+    db_alt = core.DBManager(pfad_alt)
+    db_alt._stamp = stempel
+    alt = []
+    aktuell[:] = [pfad_alt, db_alt, alt]
+    profil = schritte[1]["tabellen"]["spiel_ereignisse"]
+
+    def handy(platz, lauf, aktion, daten="{}"):
+        db_alt.log_slot(platz, lauf, aktion, daten, "Handy")
+        g().reload()
+    # die Ereignisse aus Schritt 2 (Schwierigkeit, Profil) noch einmal ohne Durchgang (vor 0.48),
+    # vor dem ersten Schritt
+    for zeile in profil:
+        db_alt.log_game_event(zeile[3], zeile[4], "PC", run=None)
+    schritt("Start mit altem Durchgang", starten)
+    schritt("Alter Durchgang: Ticket verschoben", lambda: g().defer(offen()))
+    schritt("Handy legt Platz 2 an", lambda: handy(2, "lhandy0000000002", fg.SLOT_CREATED))
+    schritt("Handy legt Platz 3 an", lambda: handy(3, "lhandy0000000003", fg.SLOT_CREATED))
+    schritt("Handy legt Platz 1 noch einmal an (Extra)", lambda: handy(1, "lhandy0000000004", fg.SLOT_CREATED))
+    schritt("Handy legt Platz 5 an (Extra)", lambda: handy(5, "lhandy0000000005", fg.SLOT_CREATED))
+    schritt("Handy benennt Platz 4 um (zaehlt nicht)",
+            lambda: handy(4, "", fg.SLOT_RENAMED, json.dumps({"name": "Vier"}, ensure_ascii=False)))
+    schritt("Handy benennt Platz 3 um (Emoji, zu lang)",
+            lambda: handy(3, "", fg.SLOT_RENAMED, json.dumps({"name": "\u3000" + "\U0001F3AE" * 30}, ensure_ascii=False)))
+    schritt("Neu gestartet mit Extras", starten)
+    schritt("Extra waehlen", lambda: g().select_run(g().layout()["extra"][0]) and None)
+    schritt("Extra Profil", lambda: g().set_profile("J\u00f6rg \U0001F3AE", AUSSEHEN, fg.DIFF_EASY) and None)
+    schritt("Platz 2 umbenannt (Umlaute, Emoji, strip)",
+            lambda: g().rename_slot(2, "\x1f\u2003 Pr\u00fcfung \u00e4\u00f6\u00fc \u00c4\u00d6\u00dc \u00df 12\U0001F3AE\U0001F3AE Ende \u3000\x1c"))
+    schritt("Platz 3 loeschen (Extra rueckt nach)", lambda: g().delete_run(g().layout()["plaetze"][3]))
+    schritt("Alten Durchgang waehlen", lambda: g().select_run(fg.LEGACY_RUN) and None)
+    schritt("Alten Durchgang loeschen", lambda: g().delete_run(fg.LEGACY_RUN))
+    schritt("Neu gestartet ohne alten Durchgang", starten)
+
     os.makedirs(os.path.dirname(ziel), exist_ok=True)
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
-        json.dump({"schritte": schritte}, handle, ensure_ascii=False, indent=None, separators=(",", ":"))
+        json.dump({"schritte": schritte, "alt": alt}, handle, ensure_ascii=False, indent=None, separators=(",", ":"))
         handle.write("\n")
-    print("G44 Verwaltung: %d Schritte -> %s" % (len(schritte), ziel))
+    print("G44 Verwaltung: %d + %d Schritte -> %s" % (len(schritte), len(alt), ziel))
     return 0
 
 

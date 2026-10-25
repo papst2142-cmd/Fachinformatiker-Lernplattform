@@ -463,6 +463,15 @@ public sealed class Stadt
     // -- Pruefung der Inhalte ------------------------------------------------
 
     /// <summary>Fehler in stadt.json (leer = alles gut): Orte, Tueren, Wege, Zeiten, Uhr.</summary>
+    /// <summary>Felder eines Eintrags in neue_orte (Aufbau wie orte.json, dazu sortiment).</summary>
+    public static readonly IReadOnlyList<string> NeueOrtFelder = ["id", "name", "x", "y", "schild", "modell", "rolle", "ansicht", "sortiment", "frei"];
+
+    /// <summary>Rollen der neuen Orte (bisher nur Geschaefte).</summary>
+    public static readonly IReadOnlyList<string> NeueOrtRollen = ["geschaeft"];
+
+    /// <summary>Sortimente der Geschaefte.</summary>
+    public static readonly IReadOnlyList<string> Sortimente = ["moebel", "elektro"];
+
     public List<string> Pruefen()
     {
         var fehler = new List<string>();
@@ -484,6 +493,26 @@ public sealed class Stadt
             if (!Py.Hat(modelle, Py.Str(Get(ort, "modell"))))
             {
                 fehler.Add(id + ": Modell fehlt in neue_modelle");
+            }
+            // Sammelliste 99 (Weisung P7-7): Rolle, Ansicht, Sortiment und Felder nur aus festen Listen
+            foreach (var (k, _) in ort)
+            {
+                if (!NeueOrtFelder.Contains(k))
+                {
+                    fehler.Add(id + ": unbekanntes Feld " + k);
+                }
+            }
+            if (!NeueOrtRollen.Contains(Py.Str(Get(ort, "rolle"))))
+            {
+                fehler.Add(id + ": unbekannte Rolle " + Py.Str(Get(ort, "rolle")));
+            }
+            else if (Py.Str(Get(ort, "ansicht")) != Py.Str(Get(ort, "rolle")) + ":" + id)
+            {
+                fehler.Add(id + ": Ansicht muss " + Py.Str(Get(ort, "rolle")) + ":" + id + " sein");
+            }
+            if (!Sortimente.Contains(Py.Str(Get(ort, "sortiment"))))
+            {
+                fehler.Add(id + ": unbekanntes Sortiment " + Py.Str(Get(ort, "sortiment")));
             }
             foreach (var (k, _) in Py.Wahr(Get(ort, "frei")) ? Objekt(ort["frei"]) : [])
             {
