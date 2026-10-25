@@ -118,8 +118,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _innenNeu = true;
         if (_spiel?.Innen is { } innen && (!_kameras.ContainsKey(innen.Ansicht) || _innenGeladen?.Ansicht != innen.Ansicht))
         {
-            // schraeg von vorn (Sueden) mit Blick in die Raeume, so weit weg, dass der Flur ganz zu sehen ist
-            _kameras[innen.Ansicht] = new Kamera(_spiel.FigurX + 3, _spiel.FigurZ, Math.Clamp(Math.Max(innen.Breite, innen.Tiefe) * 0.75f, 12f, 28f))
+            // schraeg von vorn (Sueden) mit Blick in die Raeume, auf die Mitte des ganzen Innenraums (Nachtrag 2
+            // zu P7-12: vorher auf die Figur an der Tuer, dann lag der Laden halb ausserhalb des Bildes)
+            _kameras[innen.Ansicht] = new Kamera(innen.Breite / 2, innen.Tiefe / 2, Math.Clamp(Math.Max(innen.Breite, innen.Tiefe) * 0.85f, 12f, 28f))
             {
                 Neigung = 58f,
                 Grenzen = (0, 0, innen.Breite, innen.Tiefe),
