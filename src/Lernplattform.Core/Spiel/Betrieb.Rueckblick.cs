@@ -47,6 +47,38 @@ public static partial class Betrieb
         return (Py.Wahr(wert) ? Py.Str(wert) : "").Split('\n')[0];
     }
 
+    /// <summary>morning_text: Szene zum Start eines Arbeitstags; mit Firma dazu die Story-Momente (Wechsel, Markt, Personal).</summary>
+    public static object? MorgenText(long tag, PyObjekt inhalt, Spielstand? stand = null)
+    {
+        var tage = Objekt(inhalt["story"])["tage"];
+        object? text = Py.Wahr(tage) ? Get(Objekt(tage), tag.ToString(System.Globalization.CultureInfo.InvariantCulture), "") : "";
+        if (stand is not null && Py.Wahr(stand.Firma))
+        {
+            var teile = new[] { text, WechselNachricht(stand, inhalt), MarktNachricht(stand, inhalt), PersonalNachricht(stand, inhalt) };
+            text = string.Join("\n\n", teile.Where(Py.Wahr).Select(t => t is string x ? x : throw new InvalidDataException("Story-Text ist kein Text")));
+        }
+        return text;
+    }
+
+    /// <summary>day_end_text: Szene zum Feierabend; mit eigener Firma deren Texte.</summary>
+    public static object? FeierabendSzene(long tag, PyObjekt inhalt, bool firma = false)
+    {
+        var f = inhalt["firma"] as PyObjekt ?? [];
+        if (firma && Py.Wahr(f["feierabend"]))
+        {
+            var liste = Liste(f["feierabend"]);
+            return liste[(int)PyMod(tag - 1, liste.Count)];
+        }
+        var story = Objekt(inhalt["story"]);
+        var texte = Py.Wahr(story["feierabend"]) ? story["feierabend"] : new List<object?> { story["tagesende"] };
+        if (texte is string text)
+        {
+            return text;
+        }
+        var t = Liste(texte);
+        return t[(int)PyMod(tag - 1, t.Count)];
+    }
+
     /// <summary>journey: das Ereignistagebuch, aelteste zuerst; je Eintrag {"tag", "gruppe", "art", "titel", "text"}.</summary>
     public static List<PyObjekt> Reise(Spielstand stand, PyObjekt? inhalt = null)
     {
