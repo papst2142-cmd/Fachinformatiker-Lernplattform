@@ -378,7 +378,12 @@ public class SpielProbeTests
         Assert.Single(szene.Uebergaenge, u => u.Strasse);
         var strasse = szene.Uebergaenge.Single(u => u.Strasse).Mitte;
         Assert.Equal(7.5f, strasse.X, 3);
-        var wege = szene.Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
+        // Nachtrag 1 zu P7-13 (Foto 02): an Tag 1 sind Birkenhain und Talheim-Nord noch nicht da, also
+        // auch ihre Fusswege und Uebergaenge nicht; ab Tag 66 sind beide da
+        Assert.DoesNotContain(szene.Uebergaenge, u => !u.Strasse);
+        var spaet = NeuesSpiel();
+        spaet.Ablauf.Stand.TageFertig = 65;
+        var wege = StadtSzene.Bauen(spaet.Stadt, spaet.Ablauf.Stand).Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
         Assert.True(wege.Count == 2, string.Join("; ", wege));
         Assert.Contains(wege, w => MathF.Abs(w.X - 12.6f) < 0.01f);
         Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f && w.Y < 6.5f);
