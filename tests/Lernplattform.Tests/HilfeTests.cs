@@ -136,7 +136,7 @@ public class HilfeTests
             .Select(p => (p.GetProperty("nr").GetString(), p.GetProperty("thema").GetString(), p.GetProperty("alt").GetString(), p.GetProperty("neu").GetString()))
             .ToList();
         Assert.Equal(soll, HilfePaare.Paare.Select(p => ((string?)p.Nr, (string?)p.Thema, (string?)p.Alt, (string?)p.Neu)).ToList());
-        Assert.Equal(9, soll.Count);
+        Assert.Equal(10, soll.Count); // 9 aus Phase 4 und S1 Spielzeit (Phase 7 W6, StadtTexte.HilfeSatz)
         // keine Python-Eigenheiten in der gezeigten Hilfe (Weisung P4-10 Punkt 2)
         foreach (var verboten in new[] { "fisi-lernplattf", "FISI_XIM", "kill -USR1", "0.59.", "fisi-lernstand", "Fisi-Lernplattform" })
         {

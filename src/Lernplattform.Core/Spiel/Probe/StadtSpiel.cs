@@ -130,7 +130,11 @@ public sealed class StadtSpiel
                 return StadtGrund.KeinWeg;
             }
         }
-        var ergebnis = frei is null ? Stadt.Gehen(Ablauf, ziel) : Stadt.Gehen(Ablauf, ziel, Schritte(frei));
+        var ergebnis = Schreiben(() => frei is null ? Stadt.Gehen(Ablauf, ziel) : Stadt.Gehen(Ablauf, ziel, Schritte(frei)));
+        if (ergebnis is null)
+        {
+            return StadtGrund.KeinProfil;
+        }
         if (!ergebnis.Ok)
         {
             Zeile = StadtTexte.Grund(ergebnis.Grund);
@@ -230,7 +234,11 @@ public sealed class StadtSpiel
             return false;
         }
         var schritte = Math.Max(1, Schritte(weg));
-        var ergebnis = Stadt.Laufen(Ablauf, schritte);
+        var ergebnis = Schreiben(() => Stadt.Laufen(Ablauf, schritte));
+        if (ergebnis is null)
+        {
+            return false;
+        }
         if (!ergebnis.Ok)
         {
             Zeile = StadtTexte.Grund(ergebnis.Grund);
@@ -352,7 +360,10 @@ public sealed class StadtSpiel
     /// <summary>Vor dem geschlossenen Ort bis zur Oeffnung warten (Ereignis stadt_gewartet).</summary>
     public StadtGrund Warten()
     {
-        var ergebnis = Stadt.Warten(Ablauf);
+        if (Schreiben(() => Stadt.Warten(Ablauf)) is not { } ergebnis)
+        {
+            return StadtGrund.KeinProfil;
+        }
         Zeile = ergebnis.Ok ? OrtZeile(Jetzt.Ort) : StadtTexte.Grund(ergebnis.Grund);
         Geaendert?.Invoke();
         return ergebnis.Grund;
@@ -390,16 +401,81 @@ public sealed class StadtSpiel
         }
         var (titel, text, knoepfe) = innen.Nachricht(FigurX, FigurZ, Ablauf.Stand);
         Zeile = text.Length > 0 ? titel + "\n" + text : titel;
-        // bis W6 nur die Knoepfe, die hinausfuehren (Auftraege, Lernen, Schlafen, Feierabend kommen mit der Spieloberflaeche)
-        Knoepfe = [.. knoepfe.Where(k => k.Aktion is "buero" or "zuhause")];
+        if (_notiz is { } notiz)
+        {
+            // W6: Hinweis einmal ueber dem Text (Python notices, z. B. "Feierabend nach Arbeitstag 3")
+            Zeile = notiz.Titel + "\n" + notiz.Text + "\n\n" + Zeile;
+            _notiz = null;
+        }
+        Knoepfe = [.. knoepfe];
     }
 
-    /// <summary>Einen Knopf aus <see cref="Knoepfe"/> ausfuehren: hinaus und zum Ort gehen (dort gleich hinein).</summary>
+    private (string Titel, string Text)? _notiz;
+
+    /// <summary>W6: Hinweis, der einmal ueber dem Text des Innenraums steht (Python self.notices).</summary>
+    public void NotizSetzen(string titel, string text)
+    {
+        _notiz = (titel, text);
+        InnenText();
+        Geaendert?.Invoke();
+    }
+
+    /// <summary>Aktion eines Knopfs, die die Oberflaeche ausfuehrt (Auftrag, Feierabend, Lernen, Schlafen, Personal).</summary>
+    public event Action<string>? Aktion;
+
+    /// <summary>
+    /// W6: nach einer Aenderung ausserhalb der Stadt (Ticket geloest, Firma, Abgleich) Szene, Innenraum,
+    /// Text und Knoepfe neu bestimmen; die Figur bleibt stehen.
+    /// </summary>
+    public void Auffrischen()
+    {
+        NeueSzene();
+        InnenNeu();
+        InnenText();
+        Geaendert?.Invoke();
+    }
+
+    /// <summary>
+    /// W6: nach dem Feierabend beginnt der neue Arbeitstag um 07:00 zu Hause (Stadt.Stand): hinaus,
+    /// die Figur steht vor der Wohnung und geht gleich hinein.
+    /// </summary>
+    public void Neubeginn()
+    {
+        _weg.Clear();
+        _danachZu = null;
+        _zielOrt = null;
+        ImFreien = false;
+        Innen = null;
+        EinrichtenBeenden();
+        Knoepfe = [];
+        NeueSzene();
+        InnenGeaendert?.Invoke();
+        var hier = Szene.Ort(Jetzt.Ort);
+        FigurX = hier?.StehX ?? 0;
+        FigurZ = hier?.StehZ ?? 0;
+        FigurRichtung = 0;
+        Zeile = OrtZeile(Jetzt.Ort);
+        if (!Betreten())
+        {
+            Geaendert?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Einen Knopf aus <see cref="Knoepfe"/> ausfuehren: "buero"/"zuhause" hinaus und zum Ort gehen (dort
+    /// gleich hinein), alle anderen meldet <see cref="Aktion"/> an die Oberflaeche.
+    /// </summary>
     public bool Knopf(string aktion)
     {
         if (!Knoepfe.Any(k => k.Aktion == aktion))
         {
             return false;
+        }
+        if (aktion is not ("zuhause" or "buero"))
+        {
+            // W6: Auftrag, Feierabend, Lernen, Schlafen, Personal fuehrt die Oberflaeche aus (run_action)
+            Aktion?.Invoke(aktion);
+            return true;
         }
         var ziel = aktion == "zuhause"
             ? Szene.Orte.FirstOrDefault(o => o.Ansicht == "zuhause")
@@ -607,6 +683,28 @@ public sealed class StadtSpiel
             Waehlen(stueck);
         }
         return ok;
+    }
+
+    /// <summary>
+    /// W6: Weg oder Warten schreiben (Spielstand in der Datenbank). Laeuft ein anderer Vorgang, steht
+    /// AbgleichTexte.Belegt in der Zeile und nichts ist geschrieben (null); ebenso bei einem Fehler des Spiels.
+    /// </summary>
+    private StadtErgebnis? Schreiben(Func<StadtErgebnis> aktion)
+    {
+        try
+        {
+            return aktion();
+        }
+        catch (SpielBelegtAusnahme)
+        {
+            Zeile = AbgleichTexte.Belegt;
+        }
+        catch (SpielFehler e)
+        {
+            Zeile = e.Message;
+        }
+        Geaendert?.Invoke();
+        return null;
     }
 
     /// <summary>

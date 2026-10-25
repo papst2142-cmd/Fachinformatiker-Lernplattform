@@ -116,7 +116,9 @@ public static partial class HilfeTexte
             + "dem, was du mit Karteikarten und im Prüfungstrainer lernst.\n"
             + "\nMit genug Erspartem und gutem Ansehen kannst du eine eigene Firma gründen, Leute einstellen und Auft"
             + "räge annehmen. Es gibt drei Spielstände für getrennte Durchgänge. Der Lernfortschritt gilt für alle "
-            + "gemeinsam."),
+            + "gemeinsam.\n"
+            // Phase 7 W6: Paar S1 (Satz der Stadt, StadtTexte.HilfeSatz)
+            + "\n" + Texte.StadtTexte.HilfeSatz),
         new("fortschritt", "Fortschritt und Rahmenplan", ["Fortschritt", "Optionen"],
             "Unter „Fortschritt“ siehst du die Ergebnisse deiner Prüfungen und wie viel du an den letzten Tagen "
             + "gelernt hast. Deine Lernserie steht oben im Banner des „Dashboard“ (am Handy: „Start“). Die "

@@ -7,13 +7,15 @@ namespace Lernplattform.Spiel;
 /// <summary>
 /// Phase 7, W4: Spielinhalte aus dem Programm selbst laden (inhalte/spiel wie Python 0.63.2 und
 /// inhalte_csharp/spiel, PC und Handy gleich) und die Stadt mit einem Spielstand im Arbeitsspeicher
-/// starten. Bis die Oberflaeche zum Anlegen der Spielfigur kommt (W6), legt die Probe eine feste
-/// Figur an; nichts davon wird gespeichert.
+/// starten. W6: <see cref="Laden"/> liefert die Sitzung mit dem Spielstand aus lernplattform.db;
+/// <see cref="Neu"/> bleibt die Probe im Arbeitsspeicher (Hintergrund ohne Spielfigur, Start-Test).
 /// </summary>
 public static class SpielStart
 {
     /// <summary>Name der Probe-Figur (wird nirgends gezeigt und nie gespeichert).</summary>
     public const string ProbeName = "Probe";
+
+    private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
     public static byte[]? Lesen(string pfad)
     {
@@ -29,7 +31,7 @@ public static class SpielStart
 
     private static byte[] Muss(string pfad) => Lesen(pfad) ?? throw new FileNotFoundException(pfad);
 
-    public static StadtSpiel Laden()
+    public static SpielSitzung Laden()
     {
         // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
         var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult();
@@ -38,7 +40,10 @@ public static class SpielStart
         var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");
         var stadt = new Stadt(inhalt, daten);
         var innenraeume = Py.Lesen(Muss("inhalte_csharp/spiel/innenraeume.json")) as PyObjekt;
-        return Neu(stadt, GrafikLaden(), innenraeume);
+        var suche = Programm.Zustand.Suchtext.GetAwaiter().GetResult();
+        // Geraet im Spielprotokoll wie fg.Game(app.db, device="PC"/"Handy") (fisi_game_gui 2863, spiel.py 1801)
+        var geraet = Pc ? "PC" : "Handy";
+        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet);
     }
 
     /// <summary>

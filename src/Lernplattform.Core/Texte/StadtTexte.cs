@@ -26,6 +26,9 @@ public static class StadtTexte
     public const string Warten = "Warten";
     public const string Verlassen = "Spiel verlassen";
 
+    /// <summary>W6 (Weisung P7-11): Knopf zur Spieluebersicht ueber der Stadt; neuer Text, Vorschlag in Meldung P7-11.</summary>
+    public const string Uebersicht = "Übersicht";
+
     /// <summary>Text zu einem Grund, warum eine Aktion nicht geht (Ok = leer).</summary>
     public static string Grund(StadtGrund grund, string? oeffnet = null) => grund switch
     {
