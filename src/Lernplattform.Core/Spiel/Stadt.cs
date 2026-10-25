@@ -521,8 +521,8 @@ public sealed class Stadt
     /// <summary>Felder eines Eintrags in neue_orte (Aufbau wie orte.json, dazu sortiment).</summary>
     public static readonly IReadOnlyList<string> NeueOrtFelder = ["id", "name", "x", "y", "schild", "modell", "rolle", "ansicht", "sortiment", "frei"];
 
-    /// <summary>Rollen der neuen Orte (bisher nur Geschaefte).</summary>
-    public static readonly IReadOnlyList<string> NeueOrtRollen = ["geschaeft"];
+    /// <summary>Rollen der neuen Orte: Geschaefte (W7) und Schalter (Bank, Amt; W7b).</summary>
+    public static readonly IReadOnlyList<string> NeueOrtRollen = ["geschaeft", "schalter"];
 
     /// <summary>Sortimente der Geschaefte.</summary>
     public static readonly IReadOnlyList<string> Sortimente = ["moebel", "elektro"];
@@ -565,7 +565,15 @@ public sealed class Stadt
             {
                 fehler.Add(id + ": Ansicht muss " + Py.Str(Get(ort, "rolle")) + ":" + id + " sein");
             }
-            if (!Sortimente.Contains(Py.Str(Get(ort, "sortiment"))))
+            if (Py.Str(Get(ort, "rolle")) != "geschaeft")
+            {
+                // W7b: nur Geschaefte haben ein Sortiment
+                if (Py.Hat(ort, "sortiment"))
+                {
+                    fehler.Add(id + ": Sortiment nur fuer Geschaefte");
+                }
+            }
+            else if (!Sortimente.Contains(Py.Str(Get(ort, "sortiment"))))
             {
                 fehler.Add(id + ": unbekanntes Sortiment " + Py.Str(Get(ort, "sortiment")));
             }

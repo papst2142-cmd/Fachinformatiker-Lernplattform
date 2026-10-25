@@ -628,8 +628,8 @@ public sealed partial class SpielTafel
         Bestaetigen("Kredit aufnehmen", Wirtschaft.KreditFrage(angebot, I), () =>
         {
             var ok = Py.Gleich(angebot["paket"], Wirtschaft.FreierKredit)
-                ? FirmaTun(a => a.KreditAufnehmen(angebot["summe"], angebot["laufzeit"]))
-                : FirmaTun(a => a.KreditAufnehmen(0L, 0L, angebot["paket"]));
+                ? FirmaTun(a => KreditAufnehmenAm(a, angebot["summe"], angebot["laufzeit"]))
+                : FirmaTun(a => KreditAufnehmenAm(a, 0L, 0L, angebot["paket"]));
             if (ok)
             {
                 FirmaGeaendert();
@@ -640,7 +640,7 @@ public sealed partial class SpielTafel
     private void KreditAbloesen(PyObjekt eintrag) =>
         Bestaetigen("Kredit ablösen", Wirtschaft.AbloeseText(eintrag, I), () =>
         {
-            if (FirmaTun(a => a.KreditAbloesen(eintrag["id"])))
+            if (FirmaTun(a => KreditAbloesenAm(a, eintrag["id"])))
             {
                 FirmaGeaendert();
             }

@@ -85,6 +85,8 @@ public sealed partial class SpielTafel : Grid
     {
         string krumen;
         IEnumerable<Control?> teile;
+        // W7b: die Seite am Schalter (Bank, Amt) setzt den Ort beim Bauen wieder
+        _schalter = null;
         if (_stapel.Count > 0)
         {
             krumen = _stapel[^1].Krumen;
