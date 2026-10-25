@@ -15,7 +15,11 @@ aus dem Ereignisprotokoll), gerechnet vom echten Python-Code der Python-Linie
                 * gespielt mit der echten Spiel-API (fisi_game.Game, eigene
                   Wegwerf-Datenbank, feste Uhr und feste uuid): fruehe Tage,
                   ein gemischter Lauf (richtig, falsch, verschoben, Moebel,
-                  Umzug) und ein langer Lauf bis zum hoechsten Rang.
+                  Umzug) und ein langer Lauf bis zum hoechsten Rang;
+                * W3: zwei Firmen-Laeufe mit dem Spieler von G47
+                  (erzeuge_spiel_firma.Lauf: Gruendung, Personal, Ausbau,
+                  Filiale, Kredite, Werbung, Zertifizierung, Serverfarm,
+                  Projekte), Stichpunkte alle 40 Ereignisse und am Ende.
                 Je Protokoll gibt es Stichpunkte (Anzahl der Ereignisse), an
                 denen der Spielstand neu aufgebaut wird: GameState(events[:n]).
   stand       - je Stichpunkt alle Felder von vars(GameState) (ohne content,
@@ -39,6 +43,8 @@ import os
 import sys
 import tempfile
 import uuid
+
+HIER = os.path.dirname(os.path.abspath(__file__))
 
 AUSSEHEN = {"haut": "oliv", "frisur": "zopf", "haarfarbe": "rot", "oberteil": "gruen",
             "extra": "headset", "kreis": "gelb"}
@@ -283,6 +289,13 @@ def main():
             ("lang", 130, "rrrrrrrrrf", "normal", True)):
         events, stich = gespielt(fg, core, tmp, name, tage, muster, schwierigkeit, wohnen)
         protokolle.append((name, [[t, k, d] for t, k, d in events], [0, 1, 2] + stich))
+    sys.path.insert(1, HIER)
+    import erzeuge_spiel_firma as firma
+    for name, seed, schwierigkeit, tage in (("firma", 4711, fg.DIFF_NORMAL, 30),
+                                            ("firma_einfach", 815, fg.DIFF_EASY, 20)):
+        lauf = firma.Lauf(fg, core, tmp, name, seed, schwierigkeit)
+        events = lauf.spielen(tage)["ereignisse"]
+        protokolle.append((name, events, sorted(set(range(0, len(events), 40)) | {len(events)})))
     daten = {"protokolle": []}
     for name, events, stich in protokolle:
         staende = []
