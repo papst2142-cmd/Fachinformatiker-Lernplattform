@@ -128,6 +128,14 @@ public static class PyFormat
         return (negativ ? "-" : "") + ganz;
     }
 
+    /// <summary>"{:,.0f}".format(wert).replace(",", ".") (metric_text).</summary>
+    public static string GanzPunkt(object? wert)
+    {
+        var text = Fest(Py.F(wert), 0);
+        var zeichen = text.StartsWith('-') ? "-" : "";
+        return zeichen + Tausender(text.TrimStart('-')).Replace(',', '.');
+    }
+
     /// <summary>"{:,}" bzw. "{:,.2f}" ohne Vorzeichen: Tausender mit Komma.</summary>
     private static string Tausender(string ziffern)
     {

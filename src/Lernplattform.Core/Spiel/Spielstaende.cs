@@ -225,6 +225,30 @@ public static class Spielstaende
         return kennung.Length == 0 ? "" : Kurz(kennung, 1).ToUpperInvariant() + PythonKlein.Klein(kennung[Kurz(kennung, 1).Length..]);
     }
 
+    private static PyObjekt SchwierigkeitRegeln(PyObjekt inhalt) =>
+        Objekt(inhalt["balancing"])["schwierigkeit"] is PyObjekt r && Py.Wahr(r) ? r : [];
+
+    /// <summary>difficulty_levels: [(id, Name, Erklaerung)] in der Reihenfolge der Auswahl.</summary>
+    public static List<(object? Id, object? Name, object? Text)> SchwierigkeitStufen(PyObjekt inhalt)
+    {
+        var regeln = SchwierigkeitRegeln(inhalt);
+        var stufen = Py.Wahr(Get(regeln, "stufen")) ? Liste(regeln["stufen"]).Select(Objekt).ToList()
+            : [new PyObjekt { { "id", Ereignisse.Einfach }, { "name", "Einfach" }, { "text", "" } },
+                new PyObjekt { { "id", Ereignisse.Normal }, { "name", "Normal" }, { "text", "" } }];
+        return [.. stufen.Select(s => (s["id"], s["name"], Get(s, "text", "")))];
+    }
+
+    /// <summary>difficulty_default</summary>
+    public static object? SchwierigkeitVoreinstellung(PyObjekt inhalt) => Get(SchwierigkeitRegeln(inhalt), "voreinstellung", Ereignisse.Normal);
+
+    /// <summary>difficulty_badge_text: "Schwierigkeitsgrad: Einfach" (Anzeige im Spiel).</summary>
+    public static string SchwierigkeitAnzeige(Spielstand stand) => "Schwierigkeitsgrad: " + SchwierigkeitName(stand.Stufe, stand.Inhalt);
+
+    /// <summary>difficulty_options_text: Zeile in den Optionen (PC und Handy gleich).</summary>
+    public static string SchwierigkeitOptionen(Spielstand stand) =>
+        stand.Profil is null && stand.Schwierigkeitsgrad is null ? "Schwierigkeitsgrad: wird beim Spielstart gewählt"
+            : SchwierigkeitAnzeige(stand) + " · ändern nur durch „Spielstand zurücksetzen“";
+
     /// <summary>slot_summary: Kurzinfo eines Durchgangs fuer den Auswahlbildschirm.</summary>
     public static PyObjekt Kurzinfo(Spielstand? stand)
     {
