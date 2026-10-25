@@ -371,4 +371,37 @@ public class SpielInnenraumTests
         }
         Assert.Equal(ansichten.Count, gesehen);
     }
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 5): im Elektromarkt liegt in jedem Regal mit Teilen Ware in drei Boeden,
+    /// auf den Auslagetischen Notebooks, Monitore und Grafikkarten; die Geraete fuer die Wohnung je zweimal. Im
+    /// Buero bleiben Regale ohne Ware leer.
+    /// </summary>
+    [Fact]
+    public void VolleRegaleImElektromarkt()
+    {
+        var innen = Innenraum.Bauen("geschaeft:elektromarkt", NeuerAblauf().Stand, Innenraeume.Value, null)!;
+        var deko = Deko(innen.Gebaeude).ToList();
+        int Darin(PyObjekt d, float ab) => innen.Teile.Count(t =>
+        {
+            var (mx, mz) = ((t.X1 + t.X2) / 2, (t.Z1 + t.Z2) / 2);
+            return t.Y1 >= ab && mx >= Py.F(d["x"]) && mx <= Py.F(d["x"]) + Py.F(d["w"]) && mz >= Py.F(d["y"]) && mz <= Py.F(d["y"]) + Py.F(d["h"]);
+        });
+        var regale = deko.Where(d => Py.Gleich(d["typ"], "regal") && Py.Str(d["ware"]).StartsWith("teile:", StringComparison.Ordinal)).ToList();
+        Assert.Equal(15, regale.Count);
+        Assert.All(regale, d => Assert.True(Darin(d, 0.05f) >= 6, Py.Str(d["ware"]) + ": " + Darin(d, 0.05f)));
+        var auslagen = deko.Where(d => Py.Gleich(d["typ"], "auslage")).ToList();
+        Assert.Equal(["teile:notebook", "teile:monitor", "teile:gpu"], auslagen.Select(d => Py.Str(d["ware"])));
+        Assert.All(auslagen, d => Assert.True(Darin(d, 0.74f * Innenraum.Meter) >= 3, Py.Str(d["ware"]) + " ohne Ware auf dem Tisch"));
+        // Geraete fuer die Wohnung je zweimal ausgestellt
+        Assert.All(["fernseher", "spielkonsole", "waschmaschine"], w => Assert.Equal(2, deko.Count(d => Py.Gleich(d["ware"], w))));
+        // Kontrollfehler: dasselbe Regal ohne Ware ist leer (das Regal selbst steht ab dem Boden)
+        var leer = Innenraum.AusGrundriss("buero", new PyObjekt
+        {
+            { "breite", 8.0 }, { "hoehe", 8.0 },
+            { "flur", new PyObjekt { { "y", 6.0 }, { "h", 2.0 }, { "eingang", new PyObjekt { { "von", 6.3 }, { "bis", 7.7 } } }, { "spieler", new List<object?> { 1.2, 7.0 } } } },
+            { "raeume", new List<object?> { new PyObjekt { { "id", "a" }, { "name", "A" }, { "x", 0.0 }, { "y", 0.0 }, { "w", 8.0 }, { "h", 6.0 }, { "tuer", new PyObjekt { { "von", 1.0 }, { "bis", 2.4 } } },
+                { "deko", new List<object?> { new PyObjekt { { "typ", "regal" }, { "x", 0.4 }, { "y", 0.3 }, { "w", 2.4 }, { "h", 0.6 } } } } } } },
+        }, null);
+        Assert.Equal(0, leer.Teile.Count(t => t.Y1 >= 0.05f && t.X1 >= 0.39f && t.X2 <= 2.81f && t.Z2 <= 0.91f));
+    }
 }
