@@ -13,7 +13,7 @@ namespace Lernplattform.Core.Daten;
 /// Die Uhrabweichung (sync_meta "uhr_abweichung") misst und schreibt nur der Abgleich (L10);
 /// die Uebernahme bringt sie nicht mit. Stempel rechnet sie ein wie Python _stamp (W4).
 /// </summary>
-public sealed class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Func<string>? kennung = null, Uhrabweichung? abweichung = null)
+public sealed partial class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = null, Func<string>? kennung = null, Uhrabweichung? abweichung = null)
 {
     private readonly Uhr _uhr = uhr ?? Uhr.System;
     private readonly Func<string> _kennung = kennung ?? NeueKennung;

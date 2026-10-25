@@ -19,6 +19,13 @@ public static class Vorgaenge
         return new Freigabe();
     }
 
+    /// <summary>
+    /// Phase 7, W8 (R3): wie <see cref="Sperren"/>, aber ohne zu warten. null: gerade laeuft ein
+    /// anderer Vorgang (Abgleich, Uebernahme, Update, Sicherung einspielen); dann schreibt das Spiel
+    /// nichts und die Oberflaeche lehnt mit AbgleichTexte.Belegt ab.
+    /// </summary>
+    public static IDisposable? Versuchen() => Sperre.Wait(0) ? new Freigabe() : null;
+
     /// <summary>Laeuft gerade ein Vorgang (Abgleich, Uebernahme, Sicherung fuer die alte App)?</summary>
     public static bool Belegt => Sperre.CurrentCount == 0;
 

@@ -16,7 +16,7 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielFingerabdruckTests
 {
-    private const string SollHash = "f2b59ce8f78a533cc3ec565ab983d418959e788d8ff16d35a907de328a626656";
+    internal const string SollHash = "f2b59ce8f78a533cc3ec565ab983d418959e788d8ff16d35a907de328a626656";
 
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_fingerabdruck.json");
 
@@ -86,11 +86,17 @@ public class SpielFingerabdruckTests
     private static Spielablauf Spielen()
     {
         var zaehler = 0;
-        var spiel = new Spielablauf(Inhalt, uhr: () =>
+        return Spielen(new SpielSpeicher(() =>
         {
             zaehler += 7;
             return new DateTime(2026, 10, 1).AddSeconds(zaehler).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        })
+        }));
+    }
+
+    /// <summary>Das Szenario mit einem beliebigen Speicher (W8: auch in der Datenbank).</summary>
+    internal static Spielablauf Spielen(ISpielSpeicher speicher)
+    {
+        var spiel = new Spielablauf(Inhalt, speicher)
         {
             Wissen = () => (PyObjekt)W(Soll.GetProperty("wissen"))!,
             ThemenWissen = () => (PyObjekt)W(Soll.GetProperty("themen_wissen"))!,
@@ -230,16 +236,19 @@ public class SpielFingerabdruckTests
     [Fact]
     public void HashWieFingerabdruck()
     {
-        var spiel = Gespielt.Value;
-        var s = spiel.Stand;
+        Assert.Equal(SollHash, Soll.GetProperty("hash").GetString());
+        Assert.Equal(SollHash, Hash(Gespielt.Value.Stand));
+    }
+
+    /// <summary>fingerabdruck.py: sha256 aus Ereignissen (Art, Daten) und den Werten des Spielstands.</summary>
+    internal static string Hash(Spielstand s)
+    {
         var blob = new PyObjekt
         {
             { "events", s.Verlauf.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList() },
             { "werte", Werte(s) },
         };
-        var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(Dumps(blob, sortiert: true, ascii: false))));
-        Assert.Equal(SollHash, Soll.GetProperty("hash").GetString());
-        Assert.Equal(SollHash, hash);
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(Dumps(blob, sortiert: true, ascii: false))));
     }
 
     /// <summary>json.dumps mit den Standard-Trennzeichen (", ", ": ") wie fingerabdruck.py.</summary>
