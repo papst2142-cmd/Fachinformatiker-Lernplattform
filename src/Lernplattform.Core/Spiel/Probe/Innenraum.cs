@@ -6,6 +6,13 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>Eine Person im Innenraum (Platz wie Python "platz", Aussehen fuer die Figur).</summary>
+/// <summary>
+/// Nachtrag 1 zu P7-13 (Wunsch 3): ein Wandstueck des Innenraums (Teile <see cref="Von"/> bis vor
+/// <see cref="Bis"/> in <see cref="Innenraum.Teile"/>) mit Kasten; <see cref="Aussen"/> zeigt bei einer
+/// Aussenwand nach draussen, bei einer Innenwand ist es null.
+/// </summary>
+public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen);
+
 public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObjekt? Aussehen, bool Auftrag, PyObjekt Daten);
 
 /// <summary>
@@ -83,9 +90,15 @@ public sealed class Innenraum
     /// <summary>Welche Moebel wo stehen (aendert sie sich, laedt die Darstellung neu).</summary>
     public string Signatur { get; private set; } = "";
 
-    public Netz NetzBauen()
+    /// <summary>Alle Wandstuecke (innen und aussen), jedes fuer sich durchsichtig zu zeichnen.</summary>
+    public IReadOnlyList<InnenWand> Waende => _waende;
+
+    private readonly List<InnenWand> _waende = [];
+
+    /// <summary>Das ganze Netz; mit <paramref name="ohneWaende"/> ohne die Wandstuecke (die zeichnet die Flaeche einzeln).</summary>
+    public Netz NetzBauen(bool ohneWaende = false)
     {
-        var netz = Netz.Aus(_teile);
+        var netz = Netz.Aus(ohneWaende ? _teile.Where((_, i) => !_waende.Any(w => i >= w.Von && i < w.Bis)) : _teile);
         foreach (var stueck in _stuecke)
         {
             if (Grafik?.Modell(stueck.Name) is { } modell)
@@ -94,6 +107,38 @@ public sealed class Innenraum
             }
         }
         return netz;
+    }
+
+    /// <summary>Netz eines Wandstuecks.</summary>
+    public Netz WandNetz(InnenWand wand) => Netz.Aus(_teile.Skip(wand.Von).Take(wand.Bis - wand.Von));
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 3, Sammelliste 102): Wandstuecke, die halb durchsichtig gezeichnet
+    /// werden: jede Aussenwand, die zur Kamera zeigt (die vorderen Waende), und jede Wand, die zwischen
+    /// Auge und Figur steht (Fuesse, Mitte, Kopf wie <see cref="StadtSzene.Verdeckt"/>). Fuellt
+    /// <paramref name="ergebnis"/> (ohne neue Liste je Bild).
+    /// </summary>
+    public void Durchsichtig(Vector3 auge, float figurX, float figurZ, float figurHoehe, HashSet<InnenWand> ergebnis)
+    {
+        ergebnis.Clear();
+        foreach (var w in _waende)
+        {
+            var mitte = (w.Min + w.Max) / 2;
+            var blick = new Vector2(auge.X - mitte.X, auge.Z - mitte.Z);
+            if (w.Aussen != Vector2.Zero && blick.LengthSquared() > 1e-6f && Vector2.Dot(w.Aussen, Vector2.Normalize(blick)) > 0.2f)
+            {
+                ergebnis.Add(w);
+                continue;
+            }
+            foreach (var anteil in (ReadOnlySpan<float>)[0.15f, 0.5f, 0.95f])
+            {
+                if (StadtSzene.Schneidet(auge, new Vector3(figurX, figurHoehe * anteil, figurZ), w.Min, w.Max))
+                {
+                    ergebnis.Add(w);
+                    break;
+                }
+            }
+        }
     }
 
     /// <summary>Innenraum aus einem beliebigen Grundriss (Pruefungen, Fotos): ohne Personen und Bodenwahl.</summary>
@@ -428,6 +473,7 @@ public sealed class Innenraum
         }
         _teile.Add(Quader(x1, 0, z1, x2, WandHoehe - 0.06f, z2, Farben.Wand));
         _teile.Add(Quader(x1, WandHoehe - 0.06f, z1, x2, WandHoehe, z2, Farben.WandKante));
+        _waende.Add(new InnenWand(_teile.Count - 2, _teile.Count, new Vector3(x1, 0, z1), new Vector3(x2, WandHoehe, z2), Vector2.Zero));
     }
 
     /// <summary>Aussenwaende mit Eingang (links im Flur), Fenstern (Glas ab Bruestung) und Rolltor.</summary>
@@ -479,6 +525,7 @@ public sealed class Innenraum
             }
             var pos = waagerecht ? -d : 0f;
             var ende = waagerecht ? laenge + d : laenge;
+            var erstes = _teile.Count;
             foreach (var (von, bis, art) in oeffnungen)
             {
                 Stueck(pos, Math.Max(pos, von), 0, WandHoehe, Farben.Aussen);
@@ -500,6 +547,11 @@ public sealed class Innenraum
                 pos = Math.Max(pos, bis);
             }
             Stueck(pos, ende, 0, WandHoehe, Farben.Aussen);
+            // die ganze Seite als ein Wandstueck; nach draussen zeigt -innenSeite (oben/links: innenSeite 1)
+            var aussen = waagerecht ? new Vector2(0, -innenSeite) : new Vector2(-innenSeite, 0);
+            _waende.Add(new InnenWand(erstes, _teile.Count,
+                waagerecht ? new Vector3(-d, 0, a0) : new Vector3(a0, 0, 0),
+                waagerecht ? new Vector3(laenge + d, WandHoehe, a1) : new Vector3(a1, WandHoehe, laenge), aussen));
         }
         Seite(true, 0, Breite, 1);
         Seite(true, Tiefe, Breite, -1);
@@ -671,6 +723,13 @@ public sealed class Innenraum
                 break;
             case "regal":
                 Modell(r, "bookcaseOpen", 0, 0, b, tt, 1.8f * M, 0, Farben.HolzDunkel);
+                // Nachtrag 1 zu P7-13 (Wunsch 5): volle Regale im Laden, die Ware je Art sichtbar
+                Regalware(r, b, tt, Get(d, "ware") as string);
+                break;
+            case "auslage":
+                // Praesentationstisch im Laden (Nachtrag 1 zu P7-13, Wunsch 5): Ware obenauf
+                Modell(r, "table", 0, 0, b, tt, 0.75f * M, 0, Farben.Hell);
+                Auslage(r, b, tt, Get(d, "ware") as string);
                 break;
             case "hochregal":
                 Modell(r, "bookcaseOpen", 0, 0, b, tt, 2.4f * M, 0, Farben.Metall);
@@ -749,6 +808,83 @@ public sealed class Innenraum
             default:
                 Eigen(typ, r, b, tt);
                 break;
+        }
+    }
+
+    /// <summary>Aussehen einer Teile-Art im Laden: Breite und Hoehe eines Stuecks, zwei Farben im Wechsel.</summary>
+    private static (float Breite, float Hoehe, Vector3 Farbe, Vector3 Zweite) Warenform(string? ware) => ware switch
+    {
+        "teile:mainboard" => (0.42f, 0.1f, Netz.Farbe("#166534"), Netz.Farbe("#1E3A8A")),
+        "teile:cpu" => (0.2f, 0.22f, Netz.Farbe("#DC2626"), Netz.Farbe("#2563EB")),
+        "teile:ram" => (0.28f, 0.12f, Netz.Farbe("#15803D"), Netz.Farbe("#111827")),
+        "teile:ssd" => (0.16f, 0.1f, Netz.Farbe("#1F2937"), Netz.Farbe("#7C3AED")),
+        "teile:gpu" => (0.5f, 0.2f, Netz.Farbe("#111827"), Netz.Farbe("#4B5563")),
+        "teile:netzteil" => (0.28f, 0.24f, Netz.Farbe("#374151"), Netz.Farbe("#1F2937")),
+        "teile:gehaeuse" => (0.42f, 0.7f, Netz.Farbe("#1F2937"), Netz.Farbe("#E5E7EB")),
+        "teile:notebook" => (0.5f, 0.06f, Netz.Farbe("#9CA3AF"), Netz.Farbe("#1F2937")),
+        "teile:usv_akku" => (0.24f, 0.26f, Netz.Farbe("#111827"), Netz.Farbe("#B91C1C")),
+        "teile:monitor" => (0.55f, 0.42f, Netz.Farbe("#1F2937"), Netz.Farbe("#374151")),
+        "teile:patchkabel" => (0.2f, 0.16f, Netz.Farbe("#FACC15"), Netz.Farbe("#2563EB")),
+        "teile:luefter" => (0.2f, 0.2f, Netz.Farbe("#1F2937"), Netz.Farbe("#0EA5E9")),
+        "teile:toner" => (0.38f, 0.18f, Netz.Farbe("#111827"), Netz.Farbe("#DB2777")),
+        "teile:sfp" => (0.12f, 0.06f, Netz.Farbe("#9CA3AF"), Netz.Farbe("#2563EB")),
+        "teile:drucker" => (0.55f, 0.38f, Netz.Farbe("#E5E7EB"), Netz.Farbe("#6B7280")),
+        "regal" => (0.07f, 0.42f, Netz.Farbe("#B91C1C"), Netz.Farbe("#1D4ED8")),
+        _ => (0.3f, 0.26f, Farben.Karton, Mischen(Farben.Karton, Vector3.Zero, 0.2f)),
+    };
+
+    /// <summary>Ware in den drei Boeden eines offenen Regals (ohne Ware bleibt es leer, z. B. im Buero).</summary>
+    private void Regalware(Rahmen r, float b, float t, string? ware)
+    {
+        if (ware is null)
+        {
+            return;
+        }
+        var (breite, hoehe, farbe, zweite) = Warenform(ware);
+        var tief = Math.Min(0.42f, t * 0.7f);
+        var boden = 1.8f * Meter;
+        var anzahl = Math.Max(1, (int)((b - 0.12f) / (breite + 0.05f)));
+        var abstand = (b - 0.12f - (anzahl * breite)) / Math.Max(1, anzahl);
+        var nr = 0;
+        foreach (var anteil in (ReadOnlySpan<float>)[0.03f, 0.36f, 0.69f])
+        {
+            var unten = boden * anteil;
+            var oben = Math.Min(unten + hoehe, unten + (boden * 0.3f));
+            for (var i = 0; i < anzahl; i++)
+            {
+                var lx = 0.06f + (abstand / 2) + (i * (breite + abstand));
+                Kasten(r, lx, t - tief - 0.04f, breite, tief, unten, oben, nr++ % 3 == 1 ? zweite : farbe);
+            }
+        }
+    }
+
+    /// <summary>Ware auf einem Auslagetisch: eine Reihe (Notebooks aufgeklappt, Monitore mit Bild).</summary>
+    private void Auslage(Rahmen r, float b, float t, string? ware)
+    {
+        var (breite, hoehe, farbe, zweite) = Warenform(ware);
+        var tisch = 0.75f * Meter;
+        var anzahl = Math.Max(1, (int)((b - 0.2f) / (breite + 0.15f)));
+        var abstand = (b - 0.2f - (anzahl * breite)) / Math.Max(1, anzahl);
+        for (var i = 0; i < anzahl; i++)
+        {
+            var lx = 0.1f + (abstand / 2) + (i * (breite + abstand));
+            if (ware == "teile:notebook")
+            {
+                // Unterteil flach, Deckel hochkant mit Bildschirm
+                Kasten(r, lx, (t / 2) - 0.05f, breite, 0.32f, tisch, tisch + 0.04f, i % 2 == 0 ? farbe : zweite);
+                Kasten(r, lx, (t / 2) - 0.09f, breite, 0.04f, tisch, tisch + 0.32f, i % 2 == 0 ? farbe : zweite);
+                Kasten(r, lx + 0.03f, (t / 2) - 0.05f, breite - 0.06f, 0.005f, tisch + 0.05f, tisch + 0.29f, Farben.Bildschirm);
+            }
+            else if (ware == "teile:monitor")
+            {
+                Kasten(r, lx + (breite * 0.4f), (t / 2) - 0.05f, breite * 0.2f, 0.12f, tisch, tisch + 0.12f, zweite);
+                Kasten(r, lx, (t / 2) - 0.05f, breite, 0.05f, tisch + 0.12f, tisch + 0.12f + hoehe, farbe);
+                Kasten(r, lx + 0.03f, t / 2, breite - 0.06f, 0.005f, tisch + 0.15f, tisch + 0.09f + hoehe, Farben.Bildschirm);
+            }
+            else
+            {
+                Kasten(r, lx, (t / 2) - 0.15f, breite, 0.3f, tisch, tisch + hoehe, i % 3 == 1 ? zweite : farbe);
+            }
         }
     }
 

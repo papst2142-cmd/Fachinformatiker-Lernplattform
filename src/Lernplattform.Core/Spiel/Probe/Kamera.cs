@@ -61,8 +61,16 @@ public sealed class Kamera
     /// </summary>
     public float Nah => Math.Max(0.3f, Abstand * 0.3f);
 
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): das Bild um diesen Anteil der halben Bildhoehe nach oben schieben
+    /// (Bildraum, 0 = Ziel in der Mitte). So steht das Ziel (die Figur) in der Mitte des freien Bereichs
+    /// zwischen Kopfzeile und Textkarte statt hinter der Karte; Tippen rechnet mit demselben Bild.
+    /// </summary>
+    public float Versatz { get; set; }
+
     public Matrix4x4 Projektion(float breite, float hoehe) =>
-        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f);
+        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
+        * Matrix4x4.CreateTranslation(0, Versatz, 0);
 
     public void Setzen(float zielX, float zielZ)
     {

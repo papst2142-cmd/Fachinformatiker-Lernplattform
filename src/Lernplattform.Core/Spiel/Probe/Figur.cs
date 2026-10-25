@@ -182,4 +182,24 @@ public static class Figur
             new Teil(TeilArt.Quader, -w, 0, -w, w, groesse * 0.22f, w, gruen),
         ]);
     }
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): Kreis am Boden um die Spielfigur in der Stadt, in der Farbe "Kreis"
+    /// des Aussehens (RING_COLORS, wie der Kreis im Buero der 2D-Ansicht). Ursprung in der Mitte, flach
+    /// auf Hoehe 0; die Flaeche zeichnet ihn ohne Tiefenpruefung, damit ihn kein Haus verdeckt.
+    /// </summary>
+    public static Netz Ring(PyObjekt? aussehen, float radius, float breite)
+    {
+        var name = Aussehen.Normalisieren(aussehen)["kreis"] as string ?? "pink";
+        var farbe = Probe.Netz.Farbe(SpielBilder.KreisFarben.GetValueOrDefault(name, "#F472B6"));
+        const int Stuecke = 24;
+        var teile = new List<Teil>();
+        for (var i = 0; i < Stuecke; i++)
+        {
+            // Sehnen etwas ueber die Ecke hinaus, damit zwischen den Stuecken keine Luecke bleibt
+            float a = i * 2 * MathF.PI / Stuecke, b = (i + 1) * 2 * MathF.PI / Stuecke, mitte = (a + b) / 2, halb = (b - a) / 2 * 1.08f;
+            teile.Add(new Teil(TeilArt.Band, radius * MathF.Sin(mitte - halb), 0f, radius * MathF.Cos(mitte - halb),
+                radius * MathF.Sin(mitte + halb), breite, radius * MathF.Cos(mitte + halb), farbe));
+        }
+        return Probe.Netz.Aus(teile);
+    }
 }
