@@ -1,5 +1,5 @@
 {
- "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6).",
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a).",
  "pakete": {
   "commercial": {
    "zip": "kenney_city-kit-commercial_2.1.zip",
@@ -21,6 +21,20 @@
    "id": "Grafik Kenney Train Kit",
    "version": "1.1",
    "sha256": "cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475"
+  },
+  "furniture": {
+   "zip": "kenney_furniturePack.zip",
+   "quelle": "Kenney Furniture Kit (Furniture Pack) 1.0, opengameart.org/content/furniture-kit",
+   "id": "Grafik Kenney Furniture Kit",
+   "version": "1.0",
+   "sha256": "68afa4e6dc8a53942379fb47f1e84ec735d46b77bb1c1ceb968e245693dde067"
+  },
+  "characters": {
+   "zip": "kenney_animated-characters-3.zip",
+   "quelle": "Kenney Animated Characters 3 1.1, kenney-assets.itch.io/animated-characters-3",
+   "id": "Grafik Kenney Animated Characters 3",
+   "version": "1.1",
+   "sha256": "6c197462dc9976b522a07d11e0fb42b9caa7cf71d39abbc3ca708b69f13a40dd"
   }
  },
  "modelle": [
@@ -151,6 +165,211 @@
    "paket": "commercial",
    "datei": "Models/OBJ format/building-l.obj",
    "atlas": "Models/Textures/variation-b.png"
+  },
+  {
+   "name": "desk",
+   "paket": "furniture",
+   "datei": "Models/desk.obj",
+   "drehen": 180
+  },
+  {
+   "name": "chairDesk",
+   "paket": "furniture",
+   "datei": "Models/chairDesk.obj",
+   "drehen": 180
+  },
+  {
+   "name": "computerScreen",
+   "paket": "furniture",
+   "datei": "Models/computerScreen.obj",
+   "drehen": 180
+  },
+  {
+   "name": "table",
+   "paket": "furniture",
+   "datei": "Models/table.obj",
+   "drehen": 180
+  },
+  {
+   "name": "chair",
+   "paket": "furniture",
+   "datei": "Models/chair.obj",
+   "drehen": 180
+  },
+  {
+   "name": "kitchenBar",
+   "paket": "furniture",
+   "datei": "Models/kitchenBar.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bookcaseClosedWide",
+   "paket": "furniture",
+   "datei": "Models/bookcaseClosedWide.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bookcaseOpen",
+   "paket": "furniture",
+   "datei": "Models/bookcaseOpen.obj",
+   "drehen": 180
+  },
+  {
+   "name": "pottedPlant",
+   "paket": "furniture",
+   "datei": "Models/pottedPlant.obj",
+   "drehen": 180
+  },
+  {
+   "name": "loungeChair",
+   "paket": "furniture",
+   "datei": "Models/loungeChair.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bench",
+   "paket": "furniture",
+   "datei": "Models/bench.obj",
+   "drehen": 180
+  },
+  {
+   "name": "kitchenCabinet",
+   "paket": "furniture",
+   "datei": "Models/kitchenCabinet.obj",
+   "drehen": 180
+  },
+  {
+   "name": "kitchenCoffeeMachine",
+   "paket": "furniture",
+   "datei": "Models/kitchenCoffeeMachine.obj",
+   "drehen": 180
+  },
+  {
+   "name": "kitchenCabinetDrawer",
+   "paket": "furniture",
+   "datei": "Models/kitchenCabinetDrawer.obj",
+   "drehen": 180
+  },
+  {
+   "name": "kitchenFridge",
+   "paket": "furniture",
+   "datei": "Models/kitchenFridge.obj",
+   "drehen": 180
+  },
+  {
+   "name": "toilet",
+   "paket": "furniture",
+   "datei": "Models/toilet.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bathroomSink",
+   "paket": "furniture",
+   "datei": "Models/bathroomSink.obj",
+   "drehen": 180
+  },
+  {
+   "name": "shower",
+   "paket": "furniture",
+   "datei": "Models/shower.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bathtub",
+   "paket": "furniture",
+   "datei": "Models/bathtub.obj",
+   "drehen": 180
+  },
+  {
+   "name": "rugRectangle",
+   "paket": "furniture",
+   "datei": "Models/rugRectangle.obj",
+   "drehen": 180
+  },
+  {
+   "name": "cardboardBoxClosed",
+   "paket": "furniture",
+   "datei": "Models/cardboardBoxClosed.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bedSingle",
+   "paket": "furniture",
+   "datei": "Models/bedSingle.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bedDouble",
+   "paket": "furniture",
+   "datei": "Models/bedDouble.obj",
+   "drehen": 180
+  },
+  {
+   "name": "loungeSofa",
+   "paket": "furniture",
+   "datei": "Models/loungeSofa.obj",
+   "drehen": 180
+  },
+  {
+   "name": "loungeSofaOttoman",
+   "paket": "furniture",
+   "datei": "Models/loungeSofaOttoman.obj",
+   "drehen": 180
+  },
+  {
+   "name": "tableCoffee",
+   "paket": "furniture",
+   "datei": "Models/tableCoffee.obj",
+   "drehen": 180
+  },
+  {
+   "name": "cabinetTelevision",
+   "paket": "furniture",
+   "datei": "Models/cabinetTelevision.obj",
+   "drehen": 180
+  },
+  {
+   "name": "televisionModern",
+   "paket": "furniture",
+   "datei": "Models/televisionModern.obj",
+   "drehen": 180
+  },
+  {
+   "name": "bookcaseClosedDoors",
+   "paket": "furniture",
+   "datei": "Models/bookcaseClosedDoors.obj",
+   "drehen": 180
+  },
+  {
+   "name": "sideTableDrawers",
+   "paket": "furniture",
+   "datei": "Models/sideTableDrawers.obj",
+   "drehen": 180
+  },
+  {
+   "name": "lampRoundFloor",
+   "paket": "furniture",
+   "datei": "Models/lampRoundFloor.obj",
+   "drehen": 180
+  },
+  {
+   "name": "washer",
+   "paket": "furniture",
+   "datei": "Models/washer.obj",
+   "drehen": 180
+  },
+  {
+   "name": "loungeChairRelax",
+   "paket": "furniture",
+   "datei": "Models/loungeChairRelax.obj",
+   "drehen": 180
+  },
+  {
+   "name": "figur",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "arme": 72
   }
  ]
 }
