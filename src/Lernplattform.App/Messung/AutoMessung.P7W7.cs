@@ -36,8 +36,9 @@ public static partial class AutoMessung
                 P7W1AnsichtFehler.Add("spiel/innen-" + laden + ": nicht betretbar (" + spiel.Zeile.Replace('\n', ' ') + ")");
                 continue;
             }
-            await seite.Flaeche.NaechstesBildAsync();
+            // nur BildFertigAsync wie P7W1Ansichten: ohne GL (macOS-CI) zeichnet die 3D-Flaeche nie ein Bild
             await ansicht.BildFertigAsync();
+            P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/innen-" + laden));
             yield return "spiel/innen-" + laden;
             var innen = spiel.Innen!;
             if (innen.Personen.FirstOrDefault() is { } verkauf)
@@ -45,6 +46,7 @@ public static partial class AutoMessung
                 spiel.GeheZu(verkauf.X, verkauf.Z);
                 spiel.SofortAnkommen();
                 await ansicht.BildFertigAsync();
+                P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/innen-" + laden + "-verkauf"));
                 yield return "spiel/innen-" + laden + "-verkauf";
             }
             // die Ware mit dem laengsten Namen (Text unter der Ansicht)
@@ -58,6 +60,7 @@ public static partial class AutoMessung
             spiel.GeheZu(Py.F(ware["x"]) + (Py.F(ware["w"]) / 2), Py.F(ware["y"]) + (Py.F(ware["h"]) / 2));
             spiel.SofortAnkommen();
             await ansicht.BildFertigAsync();
+            P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/innen-" + laden + "-ware"));
             yield return "spiel/innen-" + laden + "-ware";
             spiel.Verlassen();
         }
