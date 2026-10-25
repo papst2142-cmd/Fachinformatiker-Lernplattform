@@ -64,6 +64,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private double _abstandZwei;
     private double _winkelZwei;
     private double _folgenAb;
+    private double _weiterBis;   // Nachtrag 1 zu P7-12: nach einer Bedienung im Takt des Bildschirms weiterzeichnen
+    private int _aufrufe;
+    private long _dreiecke;
     private double _nachlaufBis;
 
     public StadtFlaeche()
@@ -94,7 +97,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _kameras.Clear();
             if (value is not null)
             {
-                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ - 1, 17f)
+                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ - 0.3f, 10f)
                 {
                     Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
                 };
@@ -162,7 +165,25 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Start-Test: wird je Bild vor dem Zeichnen gerufen (z. B. Kamera ein Stueck drehen).</summary>
     public Action? VorBild { get; set; }
 
-    public void AnfordernBild() => RequestNextFrameRendering();
+    /// <summary>
+    /// Neues Bild anfordern. Nachtrag 1 zu P7-12 (Wunsch 4): danach noch 0,75 s im Takt des Bildschirms
+    /// weiterzeichnen; vorher kam beim Ziehen und Zoomen nur je Fingerbewegung ein Bild (am S24 rund 55/s,
+    /// obwohl die Grafik 120/s schafft).
+    /// </summary>
+    public void AnfordernBild()
+    {
+        _weiterBis = _uhr.Elapsed.TotalSeconds + 0.75;
+        RequestNextFrameRendering();
+    }
+
+    /// <summary>Zeichenaufrufe im letzten Bild (Messung, Wunsch 4).</summary>
+    public int LetzteZeichenaufrufe { get; private set; }
+
+    /// <summary>Dreiecke im letzten Bild (Messung, Wunsch 4).</summary>
+    public long LetzteDreiecke { get; private set; }
+
+    /// <summary>Rechenzeit des Programms fuer das letzte Bild in ms (ohne Warten auf die Grafikkarte).</summary>
+    public double LetzteZeichenzeitMs { get; private set; }
 
     /// <summary>Wartet auf das naechste gezeichnete 3D-Bild (Messung); fordert es an.</summary>
     public Task NaechstesBildAsync()
@@ -310,6 +331,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         var jetzt = _uhr.Elapsed.TotalSeconds;
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
+        _aufrufe = 0;
+        _dreiecke = 0;
         _letztesBild = jetzt;
         if (_spiel is { } spiel && _szeneNeu && GlBereit)
         {
@@ -416,6 +439,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
         }
         gl.Disable(GL_DEPTH_TEST);
+        LetzteZeichenaufrufe = _aufrufe;
+        LetzteDreiecke = _dreiecke;
+        LetzteZeichenzeitMs = (_uhr.Elapsed.TotalSeconds - jetzt) * 1000;
         BilderGesamt++;
         _bilder.Enqueue(jetzt);
         while (_bilder.Count > 0 && _bilder.Peek() < jetzt - 1)
@@ -423,7 +449,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _bilder.Dequeue();
         }
         BildGezeichnet?.Invoke();
-        if (geht || Dauerlauf || jetzt < _nachlaufBis)
+        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis)
         {
             RequestNextFrameRendering();
         }
@@ -485,6 +511,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.UniformMatrix4fv(_ortModell, 1, false, &modell);
         netz.Binden(gl);
         gl.DrawElements(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero);
+        _aufrufe++;
+        _dreiecke += netz.Anzahl / 3;
     }
 
     private Color Himmel() =>

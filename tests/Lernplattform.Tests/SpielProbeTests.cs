@@ -193,13 +193,56 @@ public class SpielProbeTests
         spiel.GeheZu("bitweiche");
         spiel.Fortschreiten(0.2);
         Assert.True(spiel.Geht);
+        var (x, z, uhr) = (spiel.FigurX, spiel.FigurZ, spiel.Jetzt.Uhr);
+        // Nachtrag 1 zu P7-12 (Wunsch 5): kein Sprung; das neue Ziel gilt erst nach der Ankunft
         Assert.Equal(StadtGrund.Ok, spiel.GeheZu("elektromarkt"));
-        // der erste Weg zaehlt ganz (Figur springt an sein Ziel), dann der zweite von dort
+        Assert.Equal((x, z, uhr), (spiel.FigurX, spiel.FigurZ, spiel.Jetzt.Uhr));
+        Assert.Single(spiel.Ablauf.Stand.Verlauf, e => e.Art == Stadt.Gegangen);
+        Assert.Equal("Danach geht es weiter zu Elektromarkt.", spiel.Zeile);
+        spiel.SofortAnkommen();
         var gegangen = spiel.Ablauf.Stand.Verlauf.Where(e => e.Art == Stadt.Gegangen).ToList();
         Assert.Equal(2, gegangen.Count);
         Assert.Equal("bitweiche", gegangen[1].Daten["von"]);
-        spiel.SofortAnkommen();
         Assert.Equal("elektromarkt", spiel.Jetzt.Ort);
+    }
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 5): schnelles Tippen (Orte und freie Punkte) bei 60 Bildern/s: die
+    /// Figur bewegt sich je Bild hoechstens so weit, wie sie in der Zeit gehen kann, und die Spielzeit
+    /// zaehlt genau die gegangenen Wege (Summe der Schritte der Ereignisse).
+    /// </summary>
+    [Fact]
+    public void SchnellesTippenOhneSprung()
+    {
+        var spiel = NeuesSpiel();
+        var ziele = new object[] { "bitweiche", "talheim", (20.0, 18.0), "moebelhaus", (26.0, 16.0), "zuhause", "elektromarkt", (14.0, 22.5), "zuhause" };
+        const double dt = 1.0 / 60;
+        var bilder = 0;
+        var getippt = 0;
+        while (getippt < ziele.Length || spiel.Geht)
+        {
+            if (bilder % 25 == 0 && getippt < ziele.Length)
+            {
+                if (ziele[getippt++] is string ort)
+                {
+                    spiel.GeheZu(ort);
+                }
+                else
+                {
+                    var (px, pz) = ((double, double))ziele[getippt - 1];
+                    spiel.GeheZu(px, pz);
+                }
+            }
+            var (vx, vz) = (spiel.FigurX, spiel.FigurZ);
+            spiel.Fortschreiten(dt);
+            var weite = Math.Sqrt(((spiel.FigurX - vx) * (spiel.FigurX - vx)) + ((spiel.FigurZ - vz) * (spiel.FigurZ - vz)));
+            Assert.True(weite <= (StadtSpiel.Tempo * dt) + 1e-4, "Sprung um " + weite + " im Bild " + bilder);
+            Assert.True(++bilder < 60 * 600, "die Figur kommt nie an");
+        }
+        var wege = spiel.Ablauf.Stand.Verlauf.Where(e => e.Art is Stadt.Gegangen or Stadt.Gelaufen).ToList();
+        Assert.True(wege.Count >= 2);
+        var minuten = wege.Sum(e => Py.Int(e.Daten["minuten"]));
+        Assert.Equal(420 + minuten, spiel.Jetzt.Uhr);
     }
 
     [Fact]
@@ -330,17 +373,15 @@ public class SpielProbeTests
     public void BahnuebergaengeBrueckenUndSchichten()
     {
         var szene = NeuesSpiel().Szene;
-        // Strasse x = 7,5 kreuzt das Gleis einmal; Fusswege Birkenhain (Park) und Talheim Nord (der Weg
-        // vom Bahnhof kreuzt das Gleis am Bahnhof, im Bogen und noch einmal auf dem Weg nach Sueden)
+        // Strasse x = 7,5 kreuzt das Gleis einmal; Fusswege Birkenhain (Park) und Talheim Nord (seit
+        // Nachtrag 1 zu P7-12, Wunsch 3, quert der Weg vom Bahnhof das Gleis nur noch einmal, am Bahnhof)
         Assert.Single(szene.Uebergaenge, u => u.Strasse);
         var strasse = szene.Uebergaenge.Single(u => u.Strasse).Mitte;
         Assert.Equal(7.5f, strasse.X, 3);
         var wege = szene.Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
-        Assert.True(wege.Count == 4, string.Join("; ", wege));
+        Assert.True(wege.Count == 2, string.Join("; ", wege));
         Assert.Contains(wege, w => MathF.Abs(w.X - 12.6f) < 0.01f);
-        Assert.Contains(wege, w => MathF.Abs(w.X - 26.3f) < 0.01f);
-        Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f);
-        Assert.Contains(wege, w => MathF.Abs(w.Y - 6.5f) < 0.01f);
+        Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f && w.Y < 6.5f);
         // Bruecken: Strasse x = 7,5 und die Hauptstrasse y = 20,8 ueber den Fluss
         Assert.Equal(2, szene.Bruecken.Count);
         Assert.Contains(szene.Bruecken, b => MathF.Abs(b.X - 7.5f) < 0.01f);
@@ -355,7 +396,16 @@ public class SpielProbeTests
         Assert.True(StadtSzene.Hoehe.Weg - StadtSzene.Hoehe.Wasser >= 0.012f - 1e-6f);
         Assert.True(StadtSzene.Hoehe.Strasse - StadtSzene.Hoehe.Weg >= 0.012f - 1e-6f);
         Assert.True(StadtSzene.Hoehe.Uebergang < StadtSzene.Hoehe.Schiene, "die Schienen schauen aus dem Uebergang heraus");
-        Assert.True(Kamera.Nah >= 1.5f && Kamera.Nah < Kamera.AbstandMin);
+        // Tiefenpuffer des Handys (16 Bit): bei jedem Abstand trennt er am fernen Bildrand (1,5-facher
+        // Abstand) noch Schichten im Abstand 0,006; die nahe Ebene schneidet vor dem Ziel nichts ab
+        foreach (var abstand in (float[])[Kamera.AbstandMin, 5f, 17f, Kamera.AbstandMax])
+        {
+            var k = new Kamera(0, 0, abstand);
+            var z = abstand * 1.5f;
+            Assert.True(z * z / (k.Nah * 65536f) <= 0.006f, "Tiefenpuffer zu grob bei Abstand " + abstand);
+            Assert.True(k.Nah <= abstand * 0.35f, "nahe Ebene zu weit vorn bei Abstand " + abstand);
+        }
+        Assert.Equal(1.5f, new Kamera(0, 0, 5f).Nah, 4);
         // keine Mittellinie mitten auf einer Kreuzung (das "+" am Elektromarkt)
         var linien = szene.Teile.Where(t => t.Art == TeilArt.Band && MathF.Abs(t.Y1 - StadtSzene.Hoehe.Mittellinie) < 1e-6f).ToList();
         Assert.NotEmpty(linien);

@@ -24,6 +24,7 @@ public sealed class StadtSpiel
     private readonly List<(double X, double Y)> _weg = [];
     private string? _zielOrt;
     private string? _danachZu;
+    private object? _danach;   // Nachtrag 1 zu P7-12: naechstes Ziel (Ort-Id oder Bodenpunkt), erst nach der Ankunft
 
     public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null)
     {
@@ -111,13 +112,16 @@ public sealed class StadtSpiel
         {
             Verlassen();
         }
-        var von = Jetzt.Ort;
         if (Geht)
         {
-            // laufender Weg: die Figur steht schon am Ziel im Protokoll, Sprung dorthin
-            SofortAnkommen();
-            von = Jetzt.Ort;
+            // Nachtrag 1 zu P7-12 (Wunsch 5): kein Sprung. Der laufende Weg steht schon ganz im
+            // Protokoll (Uhr), darum geht die Figur ihn zu Ende und erst dann zum neuen Ziel
+            _danach = ziel;
+            Zeile = string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.DanachZu, Name(ziel));
+            Geaendert?.Invoke();
+            return StadtGrund.Ok;
         }
+        var von = Jetzt.Ort;
         // von einem freien Punkt: Weg ueber das Laufraster bis vor die Tuer, die Schritte zaehlt dieser Weg
         List<(double X, double Y)>? frei = null;
         if (ImFreien && Szene.Ort(ziel) is { } zielOrt)
@@ -230,7 +234,11 @@ public sealed class StadtSpiel
     {
         if (Geht)
         {
-            SofortAnkommen();
+            // Nachtrag 1 zu P7-12 (Wunsch 5): wie bei einem Ort erst nach der Ankunft weiter
+            _danach = (x, z);
+            Zeile = SpielProbeTexte.DanachDorthin;
+            Geaendert?.Invoke();
+            return true;
         }
         var weg = Szene.Laufraster.Weg((FigurX, FigurZ), (x, z));
         if (weg.Count == 0)
@@ -330,6 +338,19 @@ public sealed class StadtSpiel
             Zeile = SpielProbeTexte.ImFreien;
         }
         Geaendert?.Invoke();
+        if (_danach is { } naechstes)
+        {
+            // das beim Gehen getippte Ziel: von hier aus weiter (nicht, wenn die Figur hineingegangen ist)
+            _danach = null;
+            if (!ImInnenraum && naechstes is string naechsterOrt)
+            {
+                GeheZu(naechsterOrt);
+            }
+            else if (!ImInnenraum && naechstes is ValueTuple<double, double> punkt)
+            {
+                InDerStadtGehen(punkt.Item1, punkt.Item2);
+            }
+        }
     }
 
     /// <summary>Zeile vor einem Ort: offen bis, immer offen, geschlossen (oeffnet um / heute nicht mehr).</summary>
@@ -449,6 +470,7 @@ public sealed class StadtSpiel
     {
         _weg.Clear();
         _danachZu = null;
+        _danach = null;
         _zielOrt = null;
         ImFreien = false;
         Innen = null;

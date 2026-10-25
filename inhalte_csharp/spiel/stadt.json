@@ -8,7 +8,8 @@
     "uhr: beginn = Tagesbeginn zu Hause, abend = danach nur noch heimgehen, minuten_je_schritt = Spielzeit je Zelle.",
     "zugaenge: Tuer je Ort und der Fussweg von der Tuer zur naechsten Strasse aus orte.json (typ strasse).",
     "oeffnungszeiten: [oeffnet, schliesst) je Ort; ein Ort ohne Eintrag ist immer offen.",
-    "neue_orte und neue_modelle: Aufbau wie orte und modelle in orte.json."
+    "neue_orte und neue_modelle: Aufbau wie orte und modelle in orte.json.",
+    "Ausnahme (Nico 25.10.2026, Nachtrag 1 zu P7-12, Wunsch 3): der Fussweg von talheim_nord ist umgelegt und quert das Gleis nur einmal (vorher dreimal)."
   ],
   "raster": {"zelle": 0.5, "breite": 0.8},
   "uhr": {"beginn": 420, "abend": 1200, "minuten_je_schritt": 2, "heim": "zuhause"},
@@ -16,7 +17,7 @@
     "zuhause": {"tuer": [27.7, 19.8], "weg": [[27.7, 19.8], [27.7, 20.8]]},
     "bitweiche": {"tuer": [14.9, 19.8], "weg": [[14.9, 19.8], [14.9, 20.8]]},
     "talheim": {"tuer": [21.9, 10.95], "weg": [[21.9, 10.95], [21.9, 11.2], [18.4, 11.2]]},
-    "talheim_nord": {"tuer": [30.2, 5.55], "weg": [[30.2, 5.55], [30.2, 6.5], [26.3, 6.5], [26.3, 14.4], [29.8, 14.4]]},
+    "talheim_nord": {"tuer": [30.2, 5.55], "weg": [[30.2, 5.55], [30.2, 11.2], [26.3, 11.2], [26.3, 14.4], [29.8, 14.4]]},
     "betriebswerkstatt": {"tuer": [29.3, 14.0], "weg": [[29.3, 14.0], [29.3, 14.4], [29.8, 14.4]]},
     "lindenau": {"tuer": [5.7, 10.2], "weg": [[5.7, 10.2], [7.5, 10.2]]},
     "birkenhain": {"tuer": [12.6, 8.8], "weg": [[12.6, 8.8], [12.6, 12.6]]},

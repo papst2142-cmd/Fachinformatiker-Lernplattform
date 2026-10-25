@@ -16,8 +16,8 @@ public static class Figur
     /// <summary>Name des Modells in modelle.bin.</summary>
     public const string Modell = "figur";
 
-    /// <summary>Hoehe der Figur in der Stadt (wie die Kloetzchen-Figur aus W1).</summary>
-    public const float StadtHoehe = 1.24f;
+    /// <summary>Hoehe der Figur in der Stadt: 1,8 m im Massstab der Stadt (Nachtrag 1 zu P7-12, Wunsch 2; vorher 1,24 = 6,2 m).</summary>
+    public const float StadtHoehe = 1.8f * StadtSzene.Meter;
 
     public static readonly IReadOnlyDictionary<string, string> Haut = new Dictionary<string, string>
     {
@@ -104,7 +104,71 @@ public static class Figur
         }
         var netz = new Probe.Netz();
         netz.Hinzu(new GrafikModell(gm.Name, gm.Ecken, farben), lage);
+        if (Kopf(gm) is { } kopf)
+        {
+            foreach (var teil in Gesicht(kopf.Min, kopf.Max, haut))
+            {
+                netz.Hinzu(teil with
+                {
+                    X1 = (teil.X1 - mitte.X) * s, Y1 = (teil.Y1 - gm.Min.Y) * s, Z1 = (teil.Z1 - mitte.Z) * s,
+                    X2 = (teil.X2 - mitte.X) * s, Y2 = (teil.Y2 - gm.Min.Y) * s, Z2 = (teil.Z2 - mitte.Z) * s,
+                });
+            }
+        }
         return netz;
+    }
+
+    /// <summary>Kasten der Haut am Kopf (Haut-Dreiecke oberhalb von 75 % der Hoehe), null ohne Kopf.</summary>
+    public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm)
+    {
+        var groesse = gm.Max.Y - gm.Min.Y;
+        Vector3? min = null, max = null;
+        for (var d = 0; d < gm.Dreiecke; d++)
+        {
+            var y = (gm.Ecken[(d * 9) + 1] + gm.Ecken[(d * 9) + 4] + gm.Ecken[(d * 9) + 7]) / 3;
+            if (Erkennen(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2], (y - gm.Min.Y) / groesse) != Bereich.Haut
+                || (y - gm.Min.Y) / groesse < 0.75f)
+            {
+                continue;
+            }
+            for (var e = 0; e < 3; e++)
+            {
+                var p = new Vector3(gm.Ecken[(d * 9) + (e * 3)], gm.Ecken[(d * 9) + (e * 3) + 1], gm.Ecken[(d * 9) + (e * 3) + 2]);
+                min = min is { } a ? Vector3.Min(a, p) : p;
+                max = max is { } b ? Vector3.Max(b, p) : p;
+            }
+        }
+        return min is { } mi && max is { } ma ? (mi, ma) : null;
+    }
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 1, Nico): Gesicht vorn am Kopf (+z) im Massstab des Kopfs: zwei Augen
+    /// (dunkel, mit hellem Glanzpunkt) und ein Mund im Hautton, dunkler und roetlicher. Die Vorlage hat ihr
+    /// Gesicht nur in der Textur, die die Grafik-Bibliothek nicht mitnimmt.
+    /// </summary>
+    public static List<Teil> Gesicht(Vector3 min, Vector3 max, Vector3 haut)
+    {
+        var b = max.X - min.X;
+        var h = max.Y - min.Y;
+        var vorn = max.Z;
+        var t = b * 0.03f;
+        var mitteX = (min.X + max.X) / 2;
+        var auge = Probe.Netz.Farbe("#2B2233");
+        var glanz = Probe.Netz.Farbe("#F4F1FA");
+        var mund = Vector3.Clamp((haut * 0.55f) + new Vector3(0.18f, 0.02f, 0.02f), Vector3.Zero, Vector3.One);
+        var teile = new List<Teil>();
+        var augeY = min.Y + (h * 0.55f);
+        var augeB = b * 0.11f;
+        var augeH = h * 0.16f;
+        foreach (var seite in (float[])[-1f, 1f])
+        {
+            var x = mitteX + (seite * b * 0.2f);
+            teile.Add(new Teil(TeilArt.Quader, x - (augeB / 2), augeY, vorn - t, x + (augeB / 2), augeY + augeH, vorn + t, auge));
+            teile.Add(new Teil(TeilArt.Quader, x, augeY + (augeH * 0.6f), vorn + t, x + (augeB * 0.4f), augeY + (augeH * 0.95f), vorn + (t * 1.6f), glanz));
+        }
+        var mundY = min.Y + (h * 0.3f);
+        teile.Add(new Teil(TeilArt.Quader, mitteX - (b * 0.14f), mundY, vorn - t, mitteX + (b * 0.14f), mundY + (h * 0.05f), vorn + t, mund));
+        return teile;
     }
 
     /// <summary>Gruenes Ausrufezeichen ueber einer Person mit Auftrag (wie das "!" der 2D-Ansicht), Ursprung unten.</summary>

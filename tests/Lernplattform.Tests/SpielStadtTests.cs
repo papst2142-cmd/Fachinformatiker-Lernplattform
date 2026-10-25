@@ -193,6 +193,46 @@ public class SpielStadtTests
         Assert.True(soll == ist, "Schritte ab zu Hause: " + ist);
     }
 
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 3, Nico): kein Fussweg quert das Gleis mehr als einmal; der Weg von
+    /// Talheim-Nord (Tuer noerdlich des Gleises) quert es genau einmal.
+    /// </summary>
+    [Fact]
+    public void FusswegeQuerenGleisHoechstensEinmal()
+    {
+        static List<(double X, double Y)> Punkte(object? liste) =>
+            [.. ((List<object?>)liste!).Select(p => (Py.F(((List<object?>)p!)[0]), Py.F(((List<object?>)p!)[1])))];
+        static bool Schneiden((double X, double Y) a, (double X, double Y) b, (double X, double Y) c, (double X, double Y) d)
+        {
+            static double Kreuz((double X, double Y) o, (double X, double Y) p, (double X, double Y) q) =>
+                ((p.X - o.X) * (q.Y - o.Y)) - ((p.Y - o.Y) * (q.X - o.X));
+            return Kreuz(a, b, c) * Kreuz(a, b, d) < 0 && Kreuz(c, d, a) * Kreuz(c, d, b) < 0;
+        }
+        var bahnen = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(Inhalt["orte"])["welt"]), "landschaft")
+            .Select(SpielDaten.Objekt).Where(l => Py.Str(l["typ"]) == "bahn").Select(l => Punkte(l["punkte"])).ToList();
+        Assert.NotEmpty(bahnen);
+        foreach (var (id, zugang) in SpielDaten.Objekt(Daten.Value["zugaenge"]))
+        {
+            var weg = Punkte(SpielDaten.Objekt(zugang)["weg"]);
+            var querungen = 0;
+            for (var i = 1; i < weg.Count; i++)
+            {
+                foreach (var bahn in bahnen)
+                {
+                    for (var j = 1; j < bahn.Count; j++)
+                    {
+                        querungen += Schneiden(weg[i - 1], weg[i], bahn[j - 1], bahn[j]) ? 1 : 0;
+                    }
+                }
+            }
+            Assert.True(querungen <= 1, id + " quert das Gleis " + querungen + " Mal");
+            if (id == "talheim_nord")
+            {
+                Assert.Equal(1, querungen);
+            }
+        }
+    }
+
     // -- Tagesuhr und Oeffnungszeiten --------------------------------------------
 
     private static Spielablauf NeuesSpiel()
