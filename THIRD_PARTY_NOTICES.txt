@@ -51,14 +51,14 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.Android.Sdk.Linux (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
 - Microsoft.Data.Sqlite (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
-- Microsoft.NET.ILLink.Tasks (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
-- Microsoft.NETCore.App.Host.linux-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | linux-x64
-- Microsoft.NETCore.App.Host.osx-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | osx-arm64
-- Microsoft.NETCore.App.Host.win-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | win-x64
-- Microsoft.NETCore.App.Runtime.linux-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | linux-x64
-- Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
-- Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | osx-arm64
-- Microsoft.NETCore.App.Runtime.win-x64 (10.0.13) | MIT | https://github.com/dotnet/dotnet | win-x64
+- Microsoft.NET.ILLink.Tasks (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
+- Microsoft.NETCore.App.Host.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
+- Microsoft.NETCore.App.Host.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Host.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
+- Microsoft.NETCore.App.Runtime.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
+- Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
+- Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Runtime.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
 - Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, win-x64
   Ersatzschrift fuer Zeichen, die Roboto nicht hat (z. B. Pfeile, Haken), eingebettet in Avalonia.Fonts.Inter.dll
 - Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, win-x64
