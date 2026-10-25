@@ -32,7 +32,7 @@ public class SpielFingerabdruckTests
         { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" },
     };
 
-    private static readonly Lazy<Spielablauf> Gespielt = new(Spielen);
+    internal static readonly Lazy<Spielablauf> Gespielt = new(Spielen);
 
     /// <summary>szenario045.play_day</summary>
     private static void Arbeitstag(Spielablauf spiel)

@@ -48,6 +48,7 @@ public sealed class Spielablauf
     private bool pruefe;
     private PySet einmal = [];
     private string? letzteZeit;
+    private int schritte;   // _incremental
 
     public Spielablauf(PyObjekt inhalt, SpielSpeicher? speicher = null, Func<string>? uhr = null)
     {
@@ -82,6 +83,9 @@ public sealed class Spielablauf
     /// <summary>Wie oft der schrittweise Spielstand am Feierabend vom Neuaufbau abwich (Python: Zeile in fehler.log).</summary>
     public int Abweichungen { get; private set; }
 
+    /// <summary>Die Felder der letzten Pruefung am Feierabend, die abwichen (leer: gleich).</summary>
+    public List<string> LetzteUnterschiede { get; private set; } = [];
+
     /// <summary>firm_levels: Wissensstand je Fachbereich und je Thema zusammen.</summary>
     public PyObjekt FirmenStufen()
     {
@@ -107,6 +111,7 @@ public sealed class Spielablauf
         Stand = new Spielstand(ereignisse, Inhalt);
         einmal = Stand.EinmalGezaehlt();
         letzteZeit = ereignisse.Count > 0 ? (string?)ereignisse[^1].Zeit : null;
+        schritte = 0;
         return Stand;
     }
 
@@ -128,20 +133,12 @@ public sealed class Spielablauf
         else
         {
             letzteZeit = zeit;
-            try
-            {
-                var tagVorher = Stand.Tag;
-                if (Stand.Anwenden(new SpielEreignis(zeit, art, nutz), einmal))
-                {
-                    Stand.BearbeitetNotieren(art, nutz, tagVorher);
-                }
-            }
-            catch (Exception)
+            if (!Anwenden(zeit, art, nutz))
             {
                 // Nicht (ganz) angewendet: neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
                 Neuaufbau();
             }
-            if (art == Ereignisse.Feierabend)
+            else if (art == Ereignisse.Feierabend)
             {
                 Pruefen();
             }
@@ -152,18 +149,55 @@ public sealed class Spielablauf
         }
     }
 
+    /// <summary>
+    /// _apply_written (STATE_COPY = True): das Ereignis auf einer Kopie des Spielstands anwenden. Wer
+    /// den alten Stand haelt, sieht ihn unveraendert; schlaegt das Anwenden fehl, bleibt er der
+    /// geltende Stand (false: voll neu rechnen).
+    /// </summary>
+    private bool Anwenden(string zeit, string art, PyObjekt nutz)
+    {
+        var stand = Stand.Kopie();
+        var marken = new PySet(einmal);
+        try
+        {
+            var tagVorher = stand.Tag;
+            // Ein uebersprungenes Doppel (E-5, false) kommt nicht in history und zaehlt nicht fuer die Tagestickets
+            if (stand.Anwenden(new SpielEreignis(zeit, art, nutz), marken))
+            {
+                stand.BearbeitetNotieren(art, nutz, tagVorher);
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+        Stand = stand;
+        einmal = marken;
+        schritte += 1;
+        return true;
+    }
+
+    /// <summary>
+    /// _verify_state: nach schrittweisen Ereignissen am Feierabend mit dem vollstaendigen Neuaufbau
+    /// vergleichen (GameState.differences); weicht er ab, gilt der Neuaufbau.
+    /// </summary>
     private void Pruefen()
     {
-        var schritt = PythonJson.Text(PyAusgabe.Wert(Stand.Felder()));
+        if (schritte == 0)
+        {
+            return;
+        }
         var stand = Stand;
+        var marken = einmal;
         var neu = Neuaufbau();
-        if (schritt != PythonJson.Text(PyAusgabe.Wert(neu.Felder())))
+        LetzteUnterschiede = stand.Unterschiede(neu);
+        if (LetzteUnterschiede.Count > 0)
         {
             Abweichungen += 1;
             return;
         }
         Stand = stand;
-        einmal = stand.EinmalGezaehlt();
+        einmal = marken;
     }
 
     /// <summary>Die Ereignisse einer Aktion nacheinander schreiben; Rueckgabe: die Daten des letzten (wie Python).</summary>
