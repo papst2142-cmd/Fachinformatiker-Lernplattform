@@ -63,6 +63,7 @@ public sealed class SpielSeite : Grid
     private int _anhaengen;
     private TopLevel? _oben;
     private bool _autoRandVorher = true;
+    private Control? _randInhalt;
     private bool _randVorher;
 
     /// <summary>Stadt mit Spielstand und Spielansichten (W6): die Tafel liegt ueber der Stadt.</summary>
@@ -221,8 +222,16 @@ public sealed class SpielSeite : Grid
                 _oben.BackRequested += Zurueck;
                 // P7-10 Nachtrag 1: die 3D-Flaeche reicht bis an den Rand (auch neben die Kamera-Aussparung),
                 // nur die Knoepfe und Karten bleiben im sicheren Bereich
-                _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_oben);
-                TopLevel.SetAutoSafeAreaPadding(_oben, false);
+                // Nachtrag 1 zu P7-13 (schwarzer Rand links, S24): Avalonia liest AutoSafeAreaPadding am Inhalt
+                // des TopLevel (MainView, TopLevel.InvalidateChildInsetsPadding), nicht am TopLevel selbst;
+                // vorher blieb der sichere Rand als Innenabstand der MainView stehen (schwarzer Streifen
+                // neben der Kamera-Aussparung) und die Ebene zog ihn ein zweites Mal ab
+                _randInhalt = _oben.Content as Control;
+                if (_randInhalt is not null)
+                {
+                    _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_randInhalt);
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, false);
+                }
                 if (_oben.InsetsManager is { } rand)
                 {
                     // Nachtrag 1 zu P7-12 (S24): ohne Rand-zu-Rand legt Android die Ansicht neben die
@@ -261,7 +270,11 @@ public sealed class SpielSeite : Grid
                     rand.SafeAreaChanged -= SicherAendern;
                     rand.DisplayEdgeToEdgePreference = _randVorher;
                 }
-                TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
+                if (_randInhalt is not null)
+                {
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, _autoRandVorher);
+                    _randInhalt = null;
+                }
                 _oben = null;
             }
         };
