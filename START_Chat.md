@@ -17,10 +17,10 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 |---|---|
 | Version | **A 0.12.2** auf `main` (c79c53f, PR #31), veröffentlicht als vA0.12.2 (24.10.2026 20:41). Davor vA0.12.0 (d30b1a3) und vA0.12.1 (e031933). Nächste Version A 0.12.3 bzw. nach Weisung. Release macht Chat nach Nicos Merge-OK (Nico 24.10.2026 18:19), CC nie. CC startet `release.yml` nie |
 | Phase | 0–6 abgenommen; 0–5 (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); **Phase 6 fertig** bis auf den Update-Test am Windows-PC (Nico): W1 Release-Ablauf, W2 Plattformen, W3 erstes Release, A 0.12.1 Update-Test, A 0.12.2 Optik wie Python 0.63.2. Update-Test S24 A 0.12.0 → A 0.12.2 bestanden |
-| Jetzt | **Phase 7:** W1 Stichprobe 3D PR #35 (nicht mergen, wartet auf Nicos S24-Probe und Entscheidung, Meldung P7-2); W2 Spiel-Kern Teil 1 gemergt (PR #36, main 40affd5, Meldung P7-3); W3 Spiel-Kern Teil 2 PR #37 (Zweig `claude/p7-w3-spielkern`, Meldung P7-4, wartet auf Chat-Lesung des Stoppgrenzen-Diffs und Nicos Merge-OK). PC-Update-Test aus Phase 6 offen (Nico) |
+| Jetzt | **Phase 7:** W1 Stichprobe 3D PR #35 (nicht mergen, wartet auf Nicos S24-Probe und Entscheidung, Meldung P7-2); W2 Spiel-Kern Teil 1 gemergt (PR #36, main 40affd5, Meldung P7-3); W3 Spiel-Kern Teil 2 gemergt (PR #37, main 3807754, Meldung P7-4). Jetzt W8 Spielstand aus Python (Weisung P7-5). PC-Update-Test aus Phase 6 offen (Nico) |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
-| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu; Spiel (W2, main 40affd5): `spiel_*.json` für G42, G44–G46, G48, G49; W3 (PR #37): G43 `spiel_fingerabdruck.json` (f2b59ce8…6656), G47 `spiel_firma.json` |
-| Letzte/nächste Meldung | **P7-4** (W3 Spiel-Kern Teil 2) / P7-5; Sammelliste nächste 92 |
+| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu; Spiel (W2, main 40affd5): `spiel_*.json` für G42, G44–G46, G48, G49; W3 (main 3807754): G43 `spiel_fingerabdruck.json` (f2b59ce8…6656), G47 `spiel_firma.json` |
+| Letzte/nächste Meldung | **P7-4** (W3 Spiel-Kern Teil 2) / P7-5 (W8); Sammelliste nächste 92 |
 | Sammelliste | nächste freie Nummer **79**; offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46; 74 (Lizenztexte in der APK), 75 (Kommentar PythonPow.cs), 76/77 (Linux-Verknüpfung), 78 (Start-Test-Probe) |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
