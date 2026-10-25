@@ -201,6 +201,15 @@ public static class Py
     /// <summary>min(a, b) fuer Zahlen: bei Gleichstand bleibt a (wie Python).</summary>
     public static object? Min(object? a, object? b) => Kleiner(b, a) ? b : a;
 
+    /// <summary>int(round(x)): ganze Zahlen bleiben, Kommazahlen halb gerade (PythonRunden).</summary>
+    public static long Rund(object? x) => IstInt(x) ? Int(x) : Mathe.PythonRunden.Runde(F(x));
+
+    /// <summary>round(x, n) fuer eine Zahl: ganze Zahlen bleiben ganz, Kommazahlen auf n Stellen (halb gerade).</summary>
+    public static object Rund(object? x, int stellen) => IstInt(x) ? Int(x) : Mathe.PythonRundenStellen.Runde(F(x), stellen);
+
+    /// <summary>a / b wie Python 3 (immer Kommazahl).</summary>
+    public static double Durch(object? a, object? b) => F(a) / F(b);
+
     /// <summary>
     /// sum(werte) wie Python 3.12: ganze Zahlen exakt; ab der ersten Kommazahl float mit Ausgleich
     /// nach Neumaier fuer weitere Kommazahlen (wie <c>PythonSumme</c>), ganze Zahlen dann ohne Ausgleich.

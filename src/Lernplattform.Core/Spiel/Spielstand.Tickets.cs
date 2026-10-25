@@ -267,15 +267,8 @@ public sealed partial class Spielstand
         return zaehler;
     }
 
-    /// <summary>can_end_day (ohne eigene Firma: keine offenen Tickets mehr).</summary>
-    public bool FeierabendMoeglich()
-    {
-        if (Py.Wahr(Firma))
-        {
-            throw new NotSupportedException("Feierabend der eigenen Firma kommt in Phase 7 W3");
-        }
-        return OffeneTickets().Count == 0;
-    }
+    /// <summary>can_end_day: ohne Firma keine offenen Tickets mehr, mit Firma (ab 0.43) keine offenen Entscheidungen.</summary>
+    public bool FeierabendMoeglich() => Py.Wahr(Firma) ? OffeneEntscheidungen().Count == 0 : OffeneTickets().Count == 0;
 
     /// <summary>all_done: keine Aufgabe mehr offen.</summary>
     public bool AllesErledigt() => Liste(Inhalt["aufgaben"]).All(a => Geloest.Contains(Objekt(a)["id"]));
