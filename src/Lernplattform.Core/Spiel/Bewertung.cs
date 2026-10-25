@@ -79,7 +79,7 @@ public static partial class Bewertung
             "terminal" => TerminalPruefen(auftrag, AlsObjekt(antwort), inhalt).Probleme,
             "diagnose" => DiagnosePruefen(auftrag, AlsObjekt(antwort), inhalt, verfuegbar).Probleme,
             "wartung" => WartungPruefen(auftrag, AlsObjekt(antwort)).Probleme,
-            "bestueckung" => throw new NotSupportedException("Serverfarm-Aufgabe bestueckung kommt in Phase 7 W3"),
+            "bestueckung" => Betrieb.FitProbleme(auftrag, AlsObjekt(antwort), inhalt),
             _ => [],
         };
 
@@ -180,7 +180,7 @@ public static partial class Bewertung
             case "rack":
                 return RackLoesung(auftrag, inhalt);
             case "bestueckung":
-                throw new NotSupportedException("Serverfarm-Aufgabe bestueckung kommt in Phase 7 W3");
+                return Betrieb.FitLoesung(auftrag, inhalt);
             case "terminal":
                 return TerminalLoesung(auftrag);
             case "diagnose":
@@ -217,11 +217,7 @@ public static partial class Bewertung
             }
             if (BauProbleme(auftrag, antwort, erlaubt, inhalt).Count == 0)
             {
-                object preis = 0L;
-                foreach (var (_, kennung) in antwort)
-                {
-                    preis = Py.Plus(preis, Teil(kennung, inhalt)!["preis"]);
-                }
+                var preis = Py.Summe(antwort.Select(p => Teil(p.Value, inhalt)!["preis"]));
                 if (beste is null || Py.Kleiner(preis, beste.Value.Preis))
                 {
                     beste = (preis, antwort);

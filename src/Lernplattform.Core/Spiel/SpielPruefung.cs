@@ -11,10 +11,10 @@ namespace Lernplattform.Core.Spiel;
 /// <c>fisi_game.py</c> (Python 0.63.2, Z. 485-2830): Grundrisse, Wohnungen, Miete, Raenge,
 /// Hardware, Rack-Geraete, Falschlieferung und jeder Auftrag mit den Pruefungen seines Typs,
 /// in derselben Reihenfolge und mit denselben Texten. Leere Liste = in Ordnung.
-/// Noch nicht enthalten (kommen mit ihrer Logik in W3): _validate_firm, _validate_loans,
-/// _validate_business, _validate_world, _validate_achievements, _validate_farm.
+/// Die Pruefungen der Firma, Kredite, des Geschaefts, der Spielwelt, der Erfolge und der Serverfarm
+/// stehen in <c>SpielPruefung.Betrieb.cs</c> (W3).
 /// </summary>
-public static class SpielPruefung
+public static partial class SpielPruefung
 {
     public const int MaxTicket = 700;     // MAX_TICKET_CHARS
     public const int MaxOption = 110;     // MAX_OPTION_CHARS
@@ -357,7 +357,7 @@ public static class SpielPruefung
 
     // -- Gesamtpruefung ---------------------------------------------------
 
-    /// <summary>validate_game_content (ohne Firma, Kredite, Geschaeft, Welt, Erfolge, Serverfarm; W3).</summary>
+    /// <summary>validate_game_content</summary>
     public static List<string> Pruefen(PyObjekt inhalt, Lerninhalte lernen)
     {
         var probleme = new List<string>();
@@ -402,6 +402,13 @@ public static class SpielPruefung
         }
         probleme.AddRange(Wohnungen(inhalt));
         probleme.AddRange(Miete(inhalt));
+        var themen = new SpielThemen(lernen);
+        probleme.AddRange(Firma(inhalt, themen));
+        probleme.AddRange(Kredite(inhalt));
+        probleme.AddRange(Geschaeft(inhalt, themen));
+        probleme.AddRange(Welt(inhalt));
+        probleme.AddRange(Erfolge(inhalt));
+        probleme.AddRange(Farm(inhalt, lernen, themen));
 
         var jeTag = balancing["tickets_pro_tag"];
         var gehalt = Objekt(balancing["gehalt_pro_tag"]);
@@ -825,7 +832,7 @@ public static class SpielPruefung
     {
         var nutzer = Objekte(inhalt["aufgaben"]).Where(a => Py.Gleich(Get(a, "nach"), erste["id"]) && Py.Wahr(Get(a, "aus_lager"))).ToList();
         var arten = new PySet(nutzer.SelectMany(a => Liste(a["aus_lager"])));
-        var menge = Objekte(erste["bedarf"]).Where(b => arten.Contains(b["typ"])).Aggregate((object)0L, (summe, b) => Py.Plus(summe, b["menge"]));
+        var menge = Py.Summe(Objekte(erste["bedarf"]).Where(b => arten.Contains(b["typ"])).Select(b => b["menge"]));
         return Py.Kleiner(menge, (long)nutzer.Count) ? [Prozent("mehr Auftraege holen Ware aus '%s', als bestellt wird", erste["id"])] : [];
     }
 

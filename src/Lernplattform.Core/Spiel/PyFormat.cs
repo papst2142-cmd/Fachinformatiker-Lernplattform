@@ -64,16 +64,18 @@ public static class PyFormat
             var wert = werte[n++];
             var text = fmt[i] switch
             {
-                's' => genau is int g2 ? Py.Str(wert)[..Math.Min(g2, Py.Str(wert).Length)] : Py.Str(wert),
+                's' => genau is int g2 ? Rechner.PythonZeichen.Teil(Py.Str(wert), 0, g2) : Py.Str(wert),
                 'd' or 'i' => Vorzeichen(Ganz(wert).ToString(CultureInfo.InvariantCulture), flags),
                 'f' => Vorzeichen(Fest(Py.F(wert), genau ?? 6), flags),
                 _ => throw new FormatException("Format %" + fmt[i] + " nicht nachgebaut"),
             };
-            if (text.Length < breite)
+            // Breite in Codepunkten wie Python (ein Emoji zaehlt 1, in UTF-16 aber 2)
+            var lang = Rechner.PythonZeichen.Laenge(text);
+            if (lang < breite)
             {
-                text = flags.Contains('-', StringComparison.Ordinal) ? text.PadRight(breite)
+                text = flags.Contains('-', StringComparison.Ordinal) ? text.PadRight(text.Length + breite - lang)
                     : flags.Contains('0', StringComparison.Ordinal) && fmt[i] != 's' ? Nullen(text, breite)
-                    : text.PadLeft(breite);
+                    : text.PadLeft(text.Length + breite - lang);
             }
             b.Append(text);
         }
@@ -124,6 +126,14 @@ public static class PyFormat
         }
         var negativ = x < 0 || (x == 0 && double.IsNegative(x));
         return (negativ ? "-" : "") + ganz;
+    }
+
+    /// <summary>"{:,.0f}".format(wert).replace(",", ".") (metric_text).</summary>
+    public static string GanzPunkt(object? wert)
+    {
+        var text = Fest(Py.F(wert), 0);
+        var zeichen = text.StartsWith('-') ? "-" : "";
+        return zeichen + Tausender(text.TrimStart('-')).Replace(',', '.');
     }
 
     /// <summary>"{:,}" bzw. "{:,.2f}" ohne Vorzeichen: Tausender mit Komma.</summary>
@@ -203,7 +213,7 @@ public static class PyFormat
             b.Append(char.GetUnicodeCategory(c) == UnicodeCategory.DecimalDigitNumber ? (char)('0' + (int)char.GetNumericValue(c)) : c);
         }
         t = b.ToString();
-        var klein = t.ToLowerInvariant();
+        var klein = Suche.PythonKlein.Klein(t);
         var ohne = klein.TrimStart('+', '-');
         if (ohne.Length == klein.Length - 1 || ohne.Length == klein.Length)
         {

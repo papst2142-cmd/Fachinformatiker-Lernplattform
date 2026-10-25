@@ -201,6 +201,63 @@ public static class Py
     /// <summary>min(a, b) fuer Zahlen: bei Gleichstand bleibt a (wie Python).</summary>
     public static object? Min(object? a, object? b) => Kleiner(b, a) ? b : a;
 
+    /// <summary>int(round(x)): ganze Zahlen bleiben, Kommazahlen halb gerade (PythonRunden).</summary>
+    public static long Rund(object? x) => IstInt(x) ? Int(x) : Mathe.PythonRunden.Runde(F(x));
+
+    /// <summary>round(x, n) fuer eine Zahl: ganze Zahlen bleiben ganz, Kommazahlen auf n Stellen (halb gerade).</summary>
+    public static object Rund(object? x, int stellen) => IstInt(x) ? Int(x) : Mathe.PythonRundenStellen.Runde(F(x), stellen);
+
+    /// <summary>a / b wie Python 3 (immer Kommazahl).</summary>
+    public static double Durch(object? a, object? b) => F(a) / F(b);
+
+    /// <summary>
+    /// sum(werte) wie Python 3.12: ganze Zahlen exakt; ab der ersten Kommazahl float mit Ausgleich
+    /// nach Neumaier fuer weitere Kommazahlen (wie <c>PythonSumme</c>), ganze Zahlen dann ohne Ausgleich.
+    /// </summary>
+    public static object Summe(IEnumerable<object?> werte)
+    {
+        using var e = werte.GetEnumerator();
+        long ganz = 0;
+        double summe;
+        while (true)
+        {
+            if (!e.MoveNext())
+            {
+                return ganz;
+            }
+            if (Ganz(e.Current, out var n))
+            {
+                ganz = checked(ganz + n);
+                continue;
+            }
+            summe = ganz + (e.Current is double erste ? erste : throw new NotSupportedException("sum mit " + (e.Current?.GetType().Name ?? "None")));
+            break;
+        }
+        var ausgleich = 0.0;
+        while (e.MoveNext())
+        {
+            if (e.Current is double x)
+            {
+                var t = summe + x;
+                ausgleich += Math.Abs(summe) >= Math.Abs(x) ? (summe - t) + x : (x - t) + summe;
+                summe = t;
+            }
+            else if (Ganz(e.Current, out var n))
+            {
+                summe += n;
+            }
+            else
+            {
+                throw new NotSupportedException("sum mit " + (e.Current?.GetType().Name ?? "None"));
+            }
+        }
+        if (ausgleich != 0 && double.IsFinite(ausgleich))
+        {
+            summe += ausgleich;
+        }
+        return summe;
+    }
+
     private static object Rechnen(object? a, object? b, Func<long, long, long> ganz, Func<double, double, double> komma)
     {
         if (Ganz(a, out var x) && Ganz(b, out var y))

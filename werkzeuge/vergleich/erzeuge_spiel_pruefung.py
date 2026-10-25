@@ -13,9 +13,9 @@ Jeder Fall ist eine Liste von Aenderungen am geladenen Inhalt (wie GAME):
 Ein Pfad ist eine Liste aus Schluesseln (Text) und Listenplaetzen (Zahl). Die
 C#-Seite macht dieselben Aenderungen und vergleicht die Liste der Probleme.
 
-Die Pruefungen der Firma, Kredite, des Geschaefts, der Spielwelt, der Erfolge
-und der Serverfarm kommen in W3; sie sind hier durch leere Listen ersetzt,
-"w3" nennt, wie viele Meldungen sie fuer den Fall haetten (oder ihre Ausnahme).
+Seit W3 ("Spiel-Kern Teil 2") laufen auch die Pruefungen der Firma, Kredite,
+des Geschaefts, der Spielwelt, der Erfolge und der Serverfarm mit (vorher
+durch leere Listen ersetzt), dazu kaputte Fassungen fuer jede ihrer Meldungen.
 
 Keine Lerndaten; alle Daten- und Einstellungsordner zeigen in einen leeren
 Temp-Ordner.
@@ -28,10 +28,6 @@ import json
 import os
 import sys
 import tempfile
-
-W3 = ("_validate_firm", "_validate_loans", "_validate_business", "_validate_world",
-      "_validate_achievements", "_validate_farm")
-
 
 def anwenden(inhalt, aenderungen):
     for schritt in aenderungen:
@@ -48,6 +44,23 @@ def anwenden(inhalt, aenderungen):
         else:
             raise ValueError(art)
     return inhalt
+
+
+# Diese Meldungen entstehen in Python beim Durchgehen einer Menge (set von Texten): ihre
+# Reihenfolge haengt vom Hash-Zufall des Laufs ab. Damit die Datei bei jedem Lauf gleich ist,
+# stehen sie hier sortiert; C# gibt sie ebenso sortiert aus.
+MENGEN_MELDUNGEN = ("Spiel-Karte: Kundenort '", "Spiel-Karte: kein Gebaeude fuer Wohnung '")
+
+
+def ordnen(probleme):
+    ergebnis = list(probleme)
+    for anfang in MENGEN_MELDUNGEN:
+        stellen = [i for i, text in enumerate(ergebnis) if text.startswith(anfang)]
+        if stellen and stellen != list(range(stellen[0], stellen[-1] + 1)):
+            raise SystemExit("Mengen-Meldungen nicht am Stueck: %s" % anfang)
+        for i, text in zip(stellen, sorted(ergebnis[i] for i in stellen)):
+            ergebnis[i] = text
+    return ergebnis
 
 
 def faelle(fg, g):
@@ -269,7 +282,265 @@ def faelle(fg, g):
     fall("Wartung Antwort", ["set", A + [wa, "abschluss_antwort"], "keine"])
     fall("Wartung Abschluss lang", ["add", A + [wa, "abschluss"], "a" * 111])
     fall("Zwischenfall Feld", ["set", ["zwischenfaelle", 0, "hilfe"], ""])
+    faelle_w3(fall, g)
     return f
+
+
+def faelle_w3(fall, g):
+    """W3: Firma, Kredite, Geschaeft, Spielwelt, Erfolge, Serverfarm."""
+    F = ["firma"]
+    st = F + ["gebaeude", "stufen"]
+    fall("Firma fehlt", ["del", F])
+    fall("Firma Abschnitt", ["del", F + ["gruendung"]])
+    fall("Firma Stufe Nummer", ["set", st + [1, "stufe"], 7])
+    fall("Firma Startstufe Preis", ["set", st + [0, "preis"], 100])
+    fall("Firma Stufe ohne Plaetze", ["set", st + [1, "plaetze"], g["firma"]["gebaeude"]["stufen"][0]["plaetze"]])
+    platz = g["firma"]["gebaeude"]["stufen"][1]["plaetze"][0]
+    fall("Firma Platz verstellt", ["set", st + [1, "plaetze", 0], [0.05, 0.05, platz[2]]])
+    fall("Firma Platz Raum", ["set", st + [1, "plaetze", 0], [platz[0], platz[1], "nirgends"]])
+    fall("Firma Stufen leer", ["set", st, []])
+    fall("Firma Vornamen", ["set", F + ["namen", "vornamen"], ["a"]])
+    fall("Firma Bewerber", ["set", F + ["bewerbung", "werte_min"], 95])
+    fall("Kunden fehlen", ["del", F + ["kunden"]])
+    fall("Kunde doppelt", ["set", F + ["kunden", 1, "id"], g["firma"]["kunden"][0]["id"]])
+    fall("Kunde Art", ["set", F + ["kunden", 0, "art"], "geizig"])
+    fall("Kunde Kontakt", ["set", F + ["kunden", 0, "kontakt"], ""])
+    fall("Kunden wenige", ["set", F + ["kunden"], g["firma"]["kunden"][:2]])
+    fall("Kundenart Spanne", ["set", F + ["angebote", "arten", "normal", "von"], 120])
+    fall("Laune", ["set", F + ["angebote", "laune", "kampfpreis", "chance"], 0.9])
+    fall("Zuschlaege leer", ["set", F + ["angebote", "zuschlaege"], []])
+    fall("Zuschlag hoch", ["add", F + ["angebote", "zuschlaege"], 150])
+    fall("Artikel leer", ["set", F + ["angebote", "artikel"], []])
+    fall("Artikel Spanne", ["set", F + ["angebote", "artikel", 0, "preis"], [10, 5]])
+    fall("Artikel Menge", ["set", F + ["angebote", "artikel", 0, "menge"], [0, 5]])
+    fall("Anfragetext", ["add", F + ["angebote", "texte"], "Hallo {wer}"])
+    fall("Anfragetexte leer", ["set", F + ["angebote", "texte"], []])
+    tv = F + ["tickets", "vorlagen"]
+    fall("Kundenticket doppelt", ["set", tv + [1, "id"], g["firma"]["tickets"]["vorlagen"][0]["id"]])
+    fall("Kundenticket Fach", ["set", tv + [0, "cat"], "kochen"])
+    fall("Kundenticket Thema", ["set", tv + [0, "thema"], "kochen"])
+    fall("Kundenticket Stufe", ["set", tv + [0, "stufe"], "extrem"])
+    fall("Kundenticket Kunde", ["set", tv + [0, "kunde"], "niemand"])
+    fall("Kundenticket lang", ["set", tv + [0, "text"], "Ä" * 701])
+    fall("Kundenticket wenige", ["set", F + ["tickets", "mindestens"], 99999])
+    mb = F + ["mitbewerber", "firmen"]
+    fall("Mitbewerber fehlen", ["del", F + ["mitbewerber"]])
+    fall("Bitweiche fehlt", ["set", mb + [0, "id"], "weichebit"])
+    fall("Mitbewerber Name", ["set", mb + [1, "name"], ""])
+    fall("Mitbewerber Spanne", ["set", mb + [1, "von"], 50], ["set", mb + [1, "bis"], 10], ["set", mb + [1, "kundenart"], ""])
+    fall("Mitbewerber Fach", ["set", mb + [1, "fach"], {"kochen": 1}])
+    fall("Mitbewerber Laune", ["set", mb + [1, "laune"], {"wild": {"chance": 2, "text": "x"}}])
+    fall("Mitbewerber bietet nie", ["set", mb + [1, "gewicht"], {}])
+    fall("Projekt-Bieter", ["set", F + ["mitbewerber", "projekt_bieter"], {"von": 0, "bis": 2}])
+    fall("Projekte Abschnitt", ["del", F + ["projekte", "stufen"]])
+    fall("Projektarbeit Stufe", ["set", ["projektarbeiten", 0, "schwierigkeit"], "Extrem"])
+    fall("Projektarbeit Fach", ["set", ["projektarbeiten", 0, "cat"], "Kochen"])
+    fall("Projektstufe Frist", ["set", F + ["projekte", "stufen", "Leicht", "frist"], 0])
+    fall("Projektstufe Material", ["set", F + ["projekte", "stufen", "Leicht", "material"], [5, 1]])
+    fall("Ausschreibungstext", ["add", F + ["projekte", "texte"], "{was}"])
+    fall("Buerosatz", ["add", F + ["projekte", "buero"], "{wer}"])
+    fall("Ausschreibung kurz", ["set", F + ["projekte", "gilt_tage"], 0])
+    sr = F + ["sonderraeume", "raeume"]
+    fall("Sonderraum doppelt", ["set", sr + [1, "id"], g["firma"]["sonderraeume"]["raeume"][0]["id"]])
+    fall("Sonderraum Name", ["set", sr + [0, "name"], ""])
+    fall("Sonderraum Stufe", ["set", sr + [0, "ab_stufe"], 99])
+    fall("Sonderraum Stufe Text", ["set", sr + [0, "ab_stufe"], "3"])
+    fall("Sonderraum Preis", ["set", sr + [0, "preis"], 0])
+    fall("Sonderraum Flaeche", ["set", sr + [0, "raum"], "nirgends"])
+    fall("Sonderraum Arbeitsplatz", ["set", sr + [0, "raum"], platz[2]], ["set", sr + [0, "ab_stufe"], 2])
+    fall("Sonderraum Vorteil", ["set", sr + [0, "effekt"], {"glueck": 1}])
+    fall("Sonderraum ohne Vorteil", ["set", sr + [0, "effekt"], {}])
+    fall("Wechsel Person", ["set", F + ["wechsel", 0, "kollege"], "niemand"])
+    fall("Wechsel Werte", ["set", F + ["wechsel", 0, "werte"], {}])
+    fall("Wechsel Staerke", ["set", F + ["wechsel", 0, "staerken"], ["kochen"]])
+    mk = F + ["macken"]
+    fall("Macke Text", ["add", mk, "alt"])
+    fall("Macke doppelt", ["set", mk + [1, "id"], g["firma"]["macken"][0]["id"]])
+    fall("Macke ohne Staerke", ["set", mk + [0, "plus"], {}])
+    fall("Macke Wirkung", ["set", mk + [0, "minus"], {"glueck": 1}])
+    fall("Macke Person", ["set", mk + [0, "kollege"], "niemand"])
+    fall("Macken wenige", ["set", mk, g["firma"]["macken"][:4]])
+    fall("Personal Abschnitt", ["del", F + ["personal", "coaching"]])
+    fall("Personal Stufen", ["set", F + ["personal", "macken", "stufen"], {"1": 1}])
+    fall("Konflikt Texte", ["set", F + ["personal", "konflikt", "texte"], g["firma"]["personal"]["konflikt"]["texte"][:2]])
+    fall("Konflikt Summe", ["set", F + ["personal", "konflikt", "summen"], "{c} und {a}"])
+    rh = F + ["rivalitaet", "rueckhol"]
+    fall("Rueckhol Chance", ["set", rh + ["chance"], -1])
+    fall("Rueckhol Spanne", ["set", rh + ["angebot_plus"], [5, 1]])
+    fall("Rueckhol Texte", ["set", rh + ["texte"], g["firma"]["rivalitaet"]["rueckhol"]["texte"][:1]])
+    fall("Rueckhol Platzhalter", ["add", rh + ["texte"], "{wer}"])
+    gw = F + ["rivalitaet", "gegenwind"]
+    fall("Gegenwind Fenster", ["set", gw + ["fenster"], "x"])
+    fall("Gegenwind Faktor", ["set", gw + ["vorteil_faktor"], 2])
+    fall("Gegenwind Mindestens", ["set", gw + ["mindestens"], 999])
+    kj = F + ["markt", "konjunktur", "phasen"]
+    fall("Konjunktur Phase", ["del", kj + ["neutral"]])
+    fall("Konjunktur Feld", ["del", kj + ["aufschwung", "name"]])
+    tr = F + ["markt", "trends"]
+    fall("Trend Dauer", ["set", tr + ["dauer"], [5, 1]])
+    fall("Trend Pause", ["set", tr + ["pause"], [0, 1]])
+    fall("Trend doppelt", ["set", tr + ["liste", 1, "id"], g["firma"]["markt"]["trends"]["liste"][0]["id"]])
+    fall("Trend Fach", ["set", tr + ["liste", 0, "cat"], "kochen"])
+    fall("Trend Artikel", ["set", tr + ["liste", 0, "artikel", 0, "preis"], [1]])
+    fall("Trends wenige", ["set", tr + ["liste"], g["firma"]["markt"]["trends"]["liste"][:1]])
+    fi = F + ["filiale"]
+    fall("Filiale Voraussetzung", ["set", fi + ["voraussetzung", "mitarbeiter"], -1])
+    fall("Filiale Stufe", ["set", fi + ["voraussetzung", "stufe"], 99])
+    fall("Filiale Name", ["set", fi + ["name_vorschlag"], ""])
+    fall("Filiale Preis", ["set", fi + ["stufen", 0, "preis"], 0])
+    fall("Filiale Nummer", ["set", fi + ["stufen", 1, "stufe"], 5])
+    fall("Filiale Plaetze", ["set", fi + ["stufen", 1, "plaetze"], g["firma"]["filiale"]["stufen"][0]["plaetze"]])
+    fall("Filiale Naehe", ["add", fi + ["naehe", "orte"], "atlantis"])
+    fall("Filiale Stufen leer", ["set", fi + ["stufen"], []])
+    fall("Lernen Deckel", ["set", F + ["lernen", "deckel"], 999])
+    fall("Lernen fehlt", ["del", F + ["lernen", "halb_ab"]])
+    fall("Weiterbildung Preis", ["set", F + ["weiterbildung", "fachbereich", "preis"], 0])
+
+    k = ["balancing", "kredite"]
+    fall("Kredite fehlen", ["del", k])
+    fall("Kredite Bank", ["del", k + ["bank"]])
+    fall("Kredite Laufzeit", ["set", k + ["zins", "basis"], {"x": 1}])
+    fall("Kredite Zins", ["set", k + ["zins", "basis", "100"], 1.0])
+    fall("Kredit doppelt", ["set", k + ["pakete", 1, "id"], g["balancing"]["kredite"]["pakete"][0]["id"]])
+    fall("Kredit frei", ["set", k + ["pakete", 0, "id"], "frei"])
+    fall("Kredit Laufzeit", ["set", k + ["pakete", 0, "laufzeit"], 999])
+    fall("Kredit Summe", ["set", k + ["pakete", 0, "summe"], 0])
+    fall("Mahnstufe Nummer", ["set", k + ["mahnung", "stufen", 0, "stufe"], 5])
+    fall("Mahnstufen leer", ["set", k + ["mahnung", "stufen"], []])
+    fall("Mahnstufe Achse", ["set", k + ["mahnung", "stufen", 0, "reputation"], {"glueck": -1}])
+
+    b = ["balancing"]
+    fall("Steuern fehlen", ["del", b + ["steuern"]])
+    fall("Steuern Finanzamt", ["del", b + ["steuern", "finanzamt"]])
+    fall("Steuersatz", ["set", b + ["steuern", "satz"], 150])
+    fall("Steuer faellig", ["set", b + ["steuern", "faellig_tage"], 0])
+    wb = b + ["marketing", "formen"]
+    fall("Werbung doppelt", ["set", wb + [1, "id"], g["balancing"]["marketing"]["formen"][0]["id"]])
+    fall("Werbung laufend", ["set", wb + [0, "laufend"], 0])
+    fall("Werbung einmalig", ["set", wb + [0, "einmalig"], {}])
+    fall("Werbung Wirkung", ["set", wb + [0, "wirkung"], {"glueck": 1}])
+    fall("Werbung leer", ["set", wb, []])
+    zl = b + ["zertifizierungen", "liste"]
+    fall("Zertifizierung doppelt", ["set", zl + [1, "id"], g["balancing"]["zertifizierungen"]["liste"][0]["id"]])
+    fall("Zertifizierung Preis", ["set", zl + [0, "preis"], 0])
+    fall("Zertifizierung Vorteil", ["set", zl + [0, "vorteil"], {"kochen": 1}])
+    gl = b + ["zertifizierungen", "grossauftraege"]
+    fall("Grossauftraege Abstand", ["del", gl + ["abstand_tage"]])
+    fall("Grossauftrag doppelt", ["set", gl + ["liste", 1, "id"], g["balancing"]["zertifizierungen"]["grossauftraege"]["liste"][0]["id"]])
+    fall("Grossauftrag Fach", ["set", gl + ["liste", 0, "cat"], "kochen"])
+    fall("Grossauftrag Thema", ["set", gl + ["liste", 0, "thema"], "kochen"])
+    fall("Grossauftrag braucht", ["set", gl + ["liste", 0, "braucht"], ["iso1"]])
+    fall("Grossauftrag Titel", ["set", gl + ["liste", 0, "titel"], ""])
+    fall("Zertifizierungen leer", ["set", zl, []])
+
+    o = ["orte"]
+    orte = g["orte"]["orte"]
+    zu = next(i for i, x in enumerate(orte) if x.get("ansicht") == "zuhause")
+    ku = next(i for i, x in enumerate(orte) if (x.get("frei") or {}).get("kundenort"))
+    fall("Karte fehlt", ["del", o])
+    fall("Karte Breite", ["set", o + ["welt", "breite"], 0])
+    fall("Landschaft", ["add", o + ["welt", "landschaft"], {"typ": "vulkan"}])
+    fall("Landschaft Modell", ["add", o + ["welt", "landschaft"], {"typ": "gebaeude", "modell": "ufo"}])
+    fall("Ort doppelt", ["set", o + ["orte", 1, "id"], orte[0]["id"]])
+    fall("Ort Name", ["set", o + ["orte", 1, "name"], ""])
+    fall("Ort Modell", ["set", o + ["orte", 1, "modell"], "ufo"])
+    fall("Ort ausserhalb", ["set", o + ["orte", 1, "x"], 999])
+    fall("Ort Schild", ["set", o + ["orte", 1, "schild"], [1]])
+    fall("Ort Rolle", ["set", o + ["orte", 1, "rolle"], "pirat"])
+    fall("Ort Ansicht", ["set", o + ["orte", 1, "ansicht"], "keller"])
+    fall("Ort Ansicht Kunde", ["set", o + ["orte", 1, "ansicht"], "kunde:mond"])
+    fall("Ort Variante", ["set", o + ["orte", 1, "vor_gruendung"], {"rolle": "pirat", "ansicht": "keller"}])
+    fall("Ort ohne Freischaltung", ["set", o + ["orte", 1, "frei"], {}])
+    fall("Ort Freischaltung", ["set", o + ["orte", 1, "frei"], {"zaubern": True}])
+    fall("Ort Kundenort", ["set", o + ["orte", ku, "frei"], {"kundenort": "mond"}])
+    fall("Ort Aufgabe", ["set", o + ["orte", 1, "frei"], {"aufgabe": "gibtsnicht"}])
+    fall("Kundenort fehlt", ["set", o + ["orte", ku, "frei"], {"immer": True}])
+    fall("Modell leer", ["set", o + ["modelle", "leer"], []])
+    m = o + ["modelle", "stellwerk", 0]
+    fall("Modell Teil", ["add", o + ["modelle", "stellwerk"], {"art": "ufo"}])
+    fall("Modell Block", ["set", m + ["w"], 0])
+    fall("Modell Dach", ["set", m + ["dach"], "kuppel"])
+    fall("Modell Angabe", ["set", m + ["glitzer"], True])
+    fall("Modell Sonderraum", ["set", m + ["raum"], "keller"])
+    fall("Modell Wohnung", ["set", m + ["wohnung"], ["schloss"]])
+    fall("Modell Aufgabe", ["set", m + ["erledigt"], "gibtsnicht"])
+    fall("Zuhause ohne Gebaeude", ["set", o + ["modelle", "nur_schild"], [{"art": "schild"}]],
+         ["set", o + ["orte", zu, "modell"], "nur_schild"])
+    fall("Zuhause Block spaeter", ["set", o + ["modelle", "spaet"], [{"art": "block", "w": 1, "t": 1, "h": 1, "ab_stufe": 2},
+                                                                   {"art": "block", "w": 1, "t": 1, "h": 1, "gegruendet": True},
+                                                                   {"art": "block", "w": 1, "t": 1, "h": 1, "wohnung": ["schloss"]}]],
+         ["set", o + ["orte", zu, "modell"], "spaet"])
+
+    e = ["erfolge"]
+    fall("Erfolge fehlen", ["del", e])
+    fall("Erfolg doppelt", ["set", e + ["erfolge", 1, "id"], g["erfolge"]["erfolge"][0]["id"]])
+    fall("Erfolg Gruppe", ["set", e + ["erfolge", 0, "gruppe"], "sport"])
+    fall("Erfolg Wert", ["set", e + ["erfolge", 0, "wert"], "glueck"])
+    fall("Erfolg Bild", ["set", e + ["erfolge", 0, "bild"], "ufo"])
+    fall("Erfolg Ort", ["set", e + ["erfolge", 0, "ort"], "mond"])
+    fall("Erfolg Bestwert", ["set", e + ["erfolge", 0, "bestwert"], "glueck"])
+    fall("Erfolg Moment", ["set", e + ["erfolge", 0, "moment_text"], "{wer} am Tag {tag}"])
+    fall("Erfolg ohne Stufen", ["set", e + ["erfolge", 0, "stufen"], []])
+    fall("Erfolg Stufen absteigend", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "gold", "ab": 1}, {"stufe": "bronze", "ab": 2}]])
+    fall("Erfolg Stufe Platin", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "platin"}]])
+    fall("Erfolg Stufen gleich", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "bronze", "ab": 3}, {"stufe": "silber", "ab": 3.0}]])
+    fall("Erfolg vier Stufen", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "bronze", "ab": i} for i in range(1, 5)]])
+    fall("Bestwert Wert", ["set", e + ["bestwerte", 0, "id"], "glueck"])
+    fall("Bestwert besser", ["set", e + ["bestwerte", 0, "besser"], "egal"])
+
+    s = ["serverfarm"]
+    r = ["balancing", "serverfarm"]
+    a = s + ["aufgaben"]
+    auf = g["serverfarm"]["aufgaben"]
+
+    def nr(typ):
+        return next(i for i, x in enumerate(auf) if x["typ"] == typ)
+    fall("Serverfarm fehlt", ["del", s])
+    fall("Serverfarm Regel", ["del", r + ["bonus"]])
+    fall("Serverfarm Raum", ["set", r + ["freischaltung", "raum"], "keller"])
+    fall("Serverfarm Zertifizierung", ["add", r + ["freischaltung", "zertifizierungen"], "iso1"])
+    fall("Serverfarm Verzug", ["set", r + ["verzug"], [[0.5, 0], [0.4, 2]]])
+    fall("Serverfarm Aussehen", ["set", s + ["personen", 0, "aussehen", "haut"], "gruen"])
+    fall("Serverfarm Aussehen Teil", ["set", s + ["personen", 0, "aussehen", "fluegel"], "ja"])
+    fall("Serverfarm Phase doppelt", ["set", s + ["phasen", 2, "id"], "planung"])
+    fall("Serverfarm Phase fehlt", ["set", s + ["phasen", 3, "id"], "aufbau"])
+    fall("Serverfarm soll_tag", ["set", s + ["phasen", 1, "soll_tag"], 99])
+    fall("Serverfarm Thema", ["add", s + ["phasen", 1, "themen"], "kochen"])
+    fall("Serverfarm Team ohne Themen", ["set", s + ["phasen", 1, "themen"], []])
+    fall("Serverfarm Teile Art", ["set", s + ["teile"], [t for t in g["serverfarm"]["teile"] if t["typ"] != "nic"]])
+    fall("Serverfarm Teil", ["set", s + ["teile", 0, "preis"], 0])
+    fall("Serverfarm Teil doppelt", ["set", s + ["teile", 1, "id"], g["serverfarm"]["teile"][0]["id"]])
+    fall("Serverfarm Aufgabe Feld", ["set", a + [0, "hilfe"], ""])
+    fall("Serverfarm Aufgabe Ticket", ["set", a + [0, "ticket"], ""])
+    fall("Serverfarm Aufgabe doppelt", ["set", a + [1, "id"], auf[0]["id"]])
+    fall("Serverfarm Aufgabe Typ", ["set", a + [0, "typ"], "raten"])
+    fall("Serverfarm Aufgabe Phase", ["set", a + [0, "phase"], "pause"])
+    fall("Serverfarm Aufgabe Person", ["set", a + [0, "person"], "niemand"])
+    fall("Serverfarm Aufgabe Fach", ["set", a + [0, "cat"], "kochen"])
+    fall("Serverfarm Anforderung", ["set", a + [0, "anforderungen"], {"kochen": 10}])
+    fall("Serverfarm Anforderung Wert", ["set", a + [0, "anforderungen"], {"ipv4": 150}])
+    fall("Serverfarm Ticket lang", ["set", a + [0, "ticket"], "x" * 701])
+    au = nr("auswahl")
+    fall("Serverfarm Auswahl", ["set", a + [au, "optionen"], ["a"]])
+    fall("Serverfarm Auswahl lang", ["add", a + [au, "optionen"], "Lang " * 30])
+    zo = nr("zuordnung")
+    fall("Serverfarm Zuordnung", ["set", a + [zo, "paare"], [["a", "b"], ["a", "c"]]])
+    fall("Serverfarm Angebot", ["del", s + ["angebot"]])
+    fall("Serverfarm Suchbegriff", ["add", a + [0, "suchbegriffe"], "xyzzy-gibt-es-nicht"])
+    fall("Serverfarm Formular", ["set", a + [nr("formular"), "formular"], "zauber"])
+    fall("Serverfarm Rack", ["set", a + [nr("rack"), "geraete"], ["gibtsnicht"]])
+    fall("Serverfarm Terminal", ["set", a + [nr("terminal"), "schritte"], []])
+    fall("Serverfarm Diagnose", ["set", a + [nr("diagnose"), "ursache"], "keine"])
+    fall("Serverfarm Bestellung", ["set", a + [nr("bestellung"), "angebote"], []])
+    be = a + [nr("bestueckung"), "bestueckung"]
+    vorlage = g["serverfarm"]["aufgaben"][nr("bestueckung")]["bestueckung"]["vorlagen"][0]
+    fall("Bestueckung ohne Vorlagen", ["set", be + ["vorlagen"], []])
+    fall("Bestueckung Rack", ["set", be + ["rack"], "gibtsnicht"])
+    fall("Bestueckung Feld", ["del", be + ["vorlagen", 0, "name"]])
+    fall("Bestueckung Geraet", ["set", be + ["vorlagen", 0, "geraet"], "toaster"])
+    fall("Bestueckung RAID", ["set", be + ["vorlagen", 0, "soll"], dict(vorlage.get("soll") or {}, raid=["RAID 7"])])
+    fall("Bestueckung ohne Loesung", ["set", be + ["vorlagen", 0, "schaechte"], 0])
+    fall("Bestueckung zu wenige Geraete", ["set", be + ["vorlagen", 0, "anzahl"], 99])
 
 
 def main():
@@ -284,27 +555,16 @@ def main():
     sys.path.insert(0, repo)
     import fisi_game as fg
 
-    original = {name: getattr(fg, name) for name in W3}
-
-    def nur_w3(inhalt):
-        try:
-            return len(sum((original[name](inhalt) for name in W3), []))
-        except Exception as fehler:
-            return type(fehler).__name__
-
-    for name in W3:
-        setattr(fg, name, lambda inhalt: [])
-    echt = fg.validate_game_content(copy.deepcopy(fg.GAME))
+    echt = ordnen(fg.validate_game_content(copy.deepcopy(fg.GAME)))
     liste = []
     for fall in faelle(fg, fg.GAME):
         inhalt = anwenden(copy.deepcopy(fg.GAME), fall["aenderungen"])
         try:
-            fall["probleme"] = fg.validate_game_content(inhalt)
+            fall["probleme"] = ordnen(fg.validate_game_content(inhalt))
         except Exception as fehler:     # Python bricht ab: C# muss ebenfalls abbrechen
             fall["ausnahme"] = type(fehler).__name__
-        fall["w3"] = (nur_w3(anwenden(copy.deepcopy(fg.GAME), fall["aenderungen"])))
         liste.append(fall)
-    daten = {"echt": echt, "echt_w3": nur_w3(copy.deepcopy(fg.GAME)), "faelle": liste}
+    daten = {"echt": echt, "faelle": liste}
     os.makedirs(os.path.dirname(os.path.abspath(ziel)), exist_ok=True)
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(daten, handle, ensure_ascii=False, indent=None, separators=(",", ":"))

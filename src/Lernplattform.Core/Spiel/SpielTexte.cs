@@ -57,7 +57,7 @@ public static class SpielTexte
         return (zaehler ?? []).OrderBy(p => ordnung.IndexOf(p.Key) is var i and >= 0 ? i : ordnung.Count).Select(p => (p.Key, p.Value)).ToList();
     }
 
-    private static object Summe(IEnumerable<object?> werte) => werte.Aggregate((object)0L, (a, b) => Py.Plus(a, b));
+    private static object Summe(IEnumerable<object?> werte) => Py.Summe(werte);
 
     /// <summary>rack_summary: Live-Anzeige unter dem Schrank (Text, ueberlastet).</summary>
     public static (string Text, bool Ueberlastet) RackZusammenfassung(PyObjekt auftrag, PyObjekt? antwort, PyObjekt inhalt)

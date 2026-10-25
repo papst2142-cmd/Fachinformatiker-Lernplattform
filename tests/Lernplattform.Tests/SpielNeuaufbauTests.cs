@@ -8,7 +8,7 @@ namespace Lernplattform.Tests;
 /// <summary>
 /// Phase 7, W2: Vergleichswerte G44 (<c>spiel_neuaufbau.json</c>, Erzeuger
 /// <c>werkzeuge/vergleich/erzeuge_spiel_neuaufbau.py</c>): der Spielstand aus dem Ereignisprotokoll
-/// (von Hand und mit der echten Python-Spiel-API gespielt) hat jedes Feld und jeden abgeleiteten
+/// (von Hand und mit der echten Python-Spiel-API gespielt, seit W3 mit zwei Firmen-Laeufen) hat jedes Feld und jeden abgeleiteten
 /// Wert genau wie <c>fisi_game.GameState</c> (Python 0.63.2).
 /// </summary>
 public class SpielNeuaufbauTests
@@ -96,7 +96,7 @@ public class SpielNeuaufbauTests
     public void SchrittweiseWieNeuaufbau()
     {
         // Game._log: apply_event + note_handled auf dem vorhandenen Stand ergibt denselben Stand
-        foreach (var protokoll in VergleichsHilfe.Mindestens(Soll.GetProperty("protokolle"), 18, "protokolle"))
+        foreach (var protokoll in VergleichsHilfe.Mindestens(Soll.GetProperty("protokolle"), 20, "protokolle"))
         {
             var ereignisse = Ereignisse(protokoll.GetProperty("ereignisse"));
             var s = new Spielstand([], SpielInhaltTests.Inhalt);

@@ -15,7 +15,7 @@ public sealed class SpielFehler(string text) : Exception(text);
 /// mit <c>_log</c> schreibt (Art, Daten), in derselben Reihenfolge, oder wirft <see cref="SpielFehler"/>.
 /// Schreiben, Erfolge (check_achievements) und die Firma kommen in W3.
 /// </summary>
-public static class SpielAktionen
+public static partial class SpielAktionen
 {
     public const int NameMax = 30;   // [:30] in set_profile
 
@@ -103,21 +103,77 @@ public static class SpielAktionen
         return Eins(Ereignisse.Verschoben, Bewertung.Verschieben(auftrag, stand.Tag, Objekt(stand.Inhalt["balancing"])));
     }
 
-    /// <summary>end_day ohne Firma: Gehalt, Rang und Miete des Tages.</summary>
-    public static List<(string Art, PyObjekt Daten)> Feierabend(Spielstand stand)
+    /// <summary>
+    /// end_day: Gehalt, Rang und Miete des Tages; mit Firma dazu der Tagesabschluss der Firma
+    /// (Umsatz, Kundentickets, Projekte, Serverfarm, Personal, Gelerntes, Kredite, Steuer, Werbung).
+    /// Mit Firma braucht es den Wissensstand (<paramref name="wissen"/>).
+    /// </summary>
+    public static List<(string Art, PyObjekt Daten)> Feierabend(Spielstand stand, FirmenWissen? wissen = null)
     {
-        if (Py.Wahr(stand.Firma))
-        {
-            throw new NotSupportedException("Feierabend der Firma kommt in Phase 7 W3");
-        }
         if (!stand.FeierabendMoeglich())
         {
-            throw new SpielFehler("Es sind noch Tickets offen.");
+            throw new SpielFehler(Py.Wahr(stand.Firma) ? Betrieb.EntscheidungenOffenText : "Es sind noch Tickets offen.");
         }
         var daten = new PyObjekt { { "tag", stand.Tag }, { "gehalt", stand.Gehalt }, { "rang", stand.Rang } };
         if (stand.Miete != 0)
         {
             daten.Add("miete", stand.Miete);
+        }
+        if (Py.Wahr(stand.Firma))
+        {
+            ArgumentNullException.ThrowIfNull(wissen);
+            var inhalt = stand.Inhalt;
+            var firma = stand.FirmenTag();
+            daten.Add("firma", firma);
+            var tickets = Betrieb.TicketAusgaenge(stand, inhalt);
+            if (tickets.Count > 0)
+            {
+                Py.Setzen(firma, "tickets", tickets.Cast<object?>().ToList());
+            }
+            var projekte = Betrieb.ProjektAusgaenge(stand, wissen.Stufen, wissen.Projekte, inhalt);
+            if (projekte.Count > 0)
+            {
+                Py.Setzen(firma, "projekte", projekte.Cast<object?>().ToList());
+            }
+            // Ab 0.52: Serverfarm - Freischaltung und der Arbeitstag der Kampagne
+            if (stand.FarmFrei is null && Betrieb.FarmFehlt(stand, inhalt).Count == 0)
+            {
+                Py.Setzen(firma, "serverfarm_frei", 1L);
+            }
+            var farm = Betrieb.FarmTag(stand, wissen.Themen, inhalt);
+            if (Py.Wahr(farm))
+            {
+                Py.Setzen(firma, "serverfarm", farm);
+            }
+            // Ab 0.42: Umsatzsteuer ab diesem Feierabend; ab 0.47 auf "Einfach" keine
+            if (Py.Wahr(stand.Erleichterung("umsatzsteuer", true)))
+            {
+                Py.Setzen(firma, "ust", 1L);
+            }
+            Py.Setzen(firma, "personal", new List<object?>());
+            // Einmal durchrechnen, was der Feierabend bringt (nur fuer die Anzeige)
+            var nachher = new Spielstand([.. stand.Verlauf, new SpielEreignis("", Ereignisse.Feierabend, daten)], inhalt);
+            Py.Setzen(firma, "personal", wissen.Personal(nachher, stand.Tag, inhalt));
+            var gelernt = Betrieb.HeuteGelernt(stand, nachher, inhalt);
+            if (gelernt.Count > 0)
+            {
+                Py.Setzen(firma, "gelernt", gelernt);
+            }
+            var kredite = Wirtschaft.KrediteHeute(nachher, stand.Tag);
+            if (kredite.Count > 0)
+            {
+                Py.Setzen(firma, "kredite", kredite);
+            }
+            var steuer = Wirtschaft.SteuernHeute(nachher, stand.Tag);
+            if (steuer.Count > 0)
+            {
+                Py.Setzen(firma, "steuer", steuer);
+            }
+            var werbung = Py.Summe(nachher.WerbeProtokoll.Cast<PyTupel>().Where(w => Py.Gleich(w[0], stand.Tag)).Select(w => w[2]));
+            if (Py.Wahr(werbung))
+            {
+                Py.Setzen(firma, "werbung", werbung);
+            }
         }
         return Eins(Ereignisse.Feierabend, daten);
     }

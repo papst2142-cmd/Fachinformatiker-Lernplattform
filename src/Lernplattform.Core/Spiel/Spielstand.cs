@@ -13,8 +13,8 @@ public sealed record SpielEreignis(object? Zeit, string Art, PyObjekt Daten);
 /// <c>fisi_game.GameState</c> (Python 0.63.2, Z. 3314-4930). Alle Felder heissen wie in Python
 /// (Kommentar) und stehen in derselben Reihenfolge; Werte sind Python-Werte (long, double,
 /// string, <see cref="PyObjekt"/>, <see cref="PyDict"/>, <see cref="PySet"/>, <see cref="PyTupel"/>).
-/// W2 baut den Stand ohne eigene Firma; die Ereignisse und Feierabend-Teile der Firma und der
-/// Serverfarm kommen in W3 (bis dahin: NotSupportedException). Stoppgrenze (Plan Phase 7,
+/// W2 baut den Stand ohne eigene Firma, W3 ergaenzt die Firma und die Serverfarm
+/// (<c>Spielstand.Firma.cs</c>). Stoppgrenze (Plan Phase 7,
 /// Abschnitt 10). Vergleichswerte G44 (<c>spiel_neuaufbau.json</c>) und G45 (<c>spiel_tickets.json</c>).
 /// </summary>
 public sealed partial class Spielstand
@@ -190,9 +190,13 @@ public sealed partial class Spielstand
         {
             heute = TageFertig + 1;
         }
-        if (Ereignisse.Firma.Contains(art) || Ereignisse.Farm.Contains(art))
+        if (Ereignisse.Firma.Contains(art))
         {
-            throw new NotSupportedException("Ereignis " + art + ": eigene Firma und Serverfarm kommen in Phase 7 W3");
+            FirmaAnwenden(art, daten, heute);
+        }
+        if (Ereignisse.Farm.Contains(art))
+        {
+            FarmAnwenden(art, daten, heute);
         }
         if (art == Ereignisse.Schwierigkeit && Schwierigkeitsgrad is null
             && daten["stufe"] is string stufe && stufe is Ereignisse.Einfach or Ereignisse.Normal)
@@ -324,29 +328,98 @@ public sealed partial class Spielstand
         Buchen(heute, Ereignisse.BuchGehalt, Get(daten, "gehalt", 0L));
         Buchen(heute, Ereignisse.BuchWohnen, -Py.Int(Get(daten, "miete", 0L)));
         var firma = Py.Wahr(daten["firma"]) ? Objekt(daten["firma"]) : new PyObjekt();
+        // Ab 0.43 wirken Macken beim Lernen und die Stimmung aendert sich - nur bei Feierabenden
+        // mit firma.personal (alte Tage bleiben, wie sie waren)
         Live = Py.Hat(firma, "personal");
-        if (Projekte.Count > 0 || Farm is not null || Personal.Count > 0 || Firma is not null)
+        // Wer heute im Projekt oder in der Weiterbildung war, macht keine Routine
+        var beschaeftigt = new PySet(LaufendeProjekte().SelectMany(p => Liste(p["team"])));
+        foreach (var person in FarmTeam())
         {
-            throw new NotSupportedException("Feierabend der eigenen Firma kommt in Phase 7 W3");
+            beschaeftigt.Add(person);
         }
         Geld += Py.Int(Get(firma, "umsatz", 0L)) - Py.Int(Get(firma, "gehaelter", 0L)) - Py.Int(Get(firma, "nebenkosten", 0L));
         Buchen(heute, Ereignisse.BuchUmsatz, Get(firma, "umsatz", 0L));
         Buchen(heute, Ereignisse.BuchGehaelter, -Py.Int(Get(firma, "gehaelter", 0L)));
         Buchen(heute, Ereignisse.BuchNebenkosten, -Py.Int(Get(firma, "nebenkosten", 0L)));
-        if (Py.Wahr(firma["tickets"]) || Py.Wahr(firma["projekte"]) || Py.Wahr(firma["serverfarm"])
-            || Py.Wahr(firma["serverfarm_frei"]) || (Live && Py.Wahr(firma["personal"])))
+        foreach (var eintrag in ListeOderLeer(firma, "tickets").Select(Objekt))
         {
-            throw new NotSupportedException("Feierabend der eigenen Firma kommt in Phase 7 W3");
+            if (TicketErgebnisse.ContainsKey(eintrag["ticket"]))
+            {
+                continue;
+            }
+            TicketErgebnisse[eintrag["ticket"]] = Py.Flach(eintrag);
+            Geld += Py.Int(Get(eintrag, "geld", 0L));
+            Buchen(heute, Ereignisse.BuchKundentickets, Get(eintrag, "geld", 0L));
+            ReputationAendern(Py.Wahr(eintrag["reputation"]) ? Objekt(eintrag["reputation"]) : new PyObjekt());
+            if (Py.Wahr(eintrag["erfolg"]))
+            {
+                LernenAusTicket(eintrag, heute);
+            }
+            else if (Live)
+            {
+                StimmungNachFehlschlag(eintrag, heute);
+            }
+        }
+        foreach (var eintrag in ListeOderLeer(firma, "projekte").Select(Objekt))
+        {
+            if (ProjektTagAnwenden(eintrag, heute) && Py.Wahr(eintrag["fertig"]))
+            {
+                LernenAusProjekt(eintrag, heute);
+            }
+        }
+        // Ab 0.52: Serverfarm (Freischaltung, Team-Punkte, Phasen, Abnahme)
+        if (Py.Wahr(firma["serverfarm_frei"]) && FarmFrei is null && Py.Wahr(Firma))
+        {
+            FarmFrei = heute;
+        }
+        if (Py.Wahr(firma["serverfarm"]))
+        {
+            FarmTagAnwenden(Objekt(firma["serverfarm"]), heute);
+        }
+        LernenRoutine(beschaeftigt, heute);
+        if (Live)
+        {
+            PersonalTag(heute, ListeOderLeer(firma, "personal"));
         }
         Live = false;
+        if (Py.Wahr(Firma) && Personal.Count >= 3)
+        {
+            StimmungsProtokoll.Add(new PyTupel(heute, Py.F(Py.Summe(Personal.Keys.Select(p => (object?)StimmungVon(p)))) / Personal.Count));
+        }
+        // Ab 0.44: Wer ein Rueckhol-Angebot angenommen hat, geht nach diesem Feierabend zurueck
+        foreach (var (person, bis) in Gehend.ToList())
+        {
+            if (Py.Int(bis) <= heute && Personal.ContainsKey(person))
+            {
+                var geht = MitarbeiterGeht(person);
+                Zurueckgekehrt[person] = new PyTupel(heute, Get(Antworten.Get("leaving:" + Py.Str(person)) as PyObjekt ?? new PyObjekt(), "firma", ""),
+                    Get(geht ?? new PyObjekt(), "name", ""));
+                Gehend.Pop(person);
+            }
+        }
+        if (Py.Wahr(Firma))
+        {
+            // Ab 0.42: laufende Werbung, dann Kreditraten, dann Umsatzsteuer - geplatzte Zahlungen
+            // landen in derselben Mahnstufe
+            WerbeTag(heute);
+            var geplatzt = KreditTag(heute);
+            if (Py.Wahr(firma["ust"]))
+            {
+                geplatzt.AddRange(SteuerTag(heute));
+            }
+            MahnTagAnwenden(heute, geplatzt);
+        }
         Kontostaende.Add(new PyTupel(heute, Geld));
         StartReputation = MittlereReputation;
         TagesProtokoll.Add(new PyTupel(heute, PythonRunden.Runde1(MittlereReputation)));
-        var rang = RangFuer(MittlereReputation, Balancing, Tag);
-        if (!Py.Gleich(rang, RangGesehen))
+        if (Firma is null)
         {
-            RangProtokoll.Add(new PyTupel(Tag, rang));
-            RangGesehen = rang;
+            var rang = RangFuer(MittlereReputation, Balancing, Tag);
+            if (!Py.Gleich(rang, RangGesehen))
+            {
+                RangProtokoll.Add(new PyTupel(Tag, rang));
+                RangGesehen = rang;
+            }
         }
     }
 
@@ -412,7 +485,7 @@ public sealed partial class Spielstand
     public long Tag => TageFertig + 1;
 
     /// <summary>mean_reputation</summary>
-    public double MittlereReputation => Reputation.Sum(p => Py.Int(p.Value)) / (double)Reputation.Count;
+    public double MittlereReputation => Py.F(Py.Summe(Reputation.Select(p => p.Value))) / Reputation.Count;
 
     /// <summary>rank</summary>
     public object? Rang => RangFuer(MittlereReputation, Balancing, Tag);

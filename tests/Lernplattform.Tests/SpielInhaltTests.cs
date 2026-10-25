@@ -14,8 +14,15 @@ public class SpielInhaltTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
 
-    internal static readonly PyObjekt Inhalt = SpielInhalt.Laden(Path.Combine(Pfade.Inhalte, "spiel"),
-        Lerninhalte.Laden(Pfade.Inhalte).Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList());
+    internal static readonly PyObjekt Inhalt = Laden();
+
+    /// <summary>Spielinhalte laden; dabei die Themen der Lerninhalte fuer alle Spiel-Tests setzen (SpielThemen.Standard).</summary>
+    private static PyObjekt Laden()
+    {
+        var lernen = Lerninhalte.Laden(Pfade.Inhalte);
+        SpielThemen.Standard ??= new SpielThemen(lernen);
+        return SpielInhalt.Laden(Path.Combine(Pfade.Inhalte, "spiel"), lernen.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList());
+    }
 
     private static object? PyWert(JsonElement e) => Py.Lesen(e.GetRawText());
 
@@ -104,5 +111,21 @@ public class SpielInhaltTests
         Assert.True(Py.Enthaelt(Py.Lesen("""["a", 3.0]"""), 3L));
         Assert.Equal(1.0, Py.Plus(1L, Py.Mal(0L, 2.5)));
         Assert.Equal(42L, Py.Plus(18L, Py.Mal(2L, 12L)));
+    }
+
+    [Fact]
+    public void PySummeWiePython()
+    {
+        // sum() aus python3.12 -I abgelesen; eine einfache Schleife ergaebe 0.9999999999999999, 0.0,
+        // 1000000000000003.4 und 0.1
+        Assert.Equal(1.0, Py.Summe(Enumerable.Repeat((object?)0.1, 10)));
+        Assert.Equal(1.6, Py.Summe([1L, 0.1, 0.2, 0.3]));
+        Assert.Equal(0.0, Py.Summe([1e16, 1L, -1e16]));   // ganze Zahl nach einer Kommazahl: ohne Ausgleich
+        Assert.Equal(1.0, Py.Summe([1e16, 1.0, -1e16]));
+        Assert.Equal(1000000000000003.2, Py.Summe([2L, 0.5, 1000000000000000L, 0.1, 0.7]));
+        Assert.Equal(1.1, Py.Summe([1e100, 1.0, -1e100, 0.1]));
+        Assert.Equal(7L, Py.Summe([3L, 4L]));
+        Assert.Equal(0L, Py.Summe([]));
+        Assert.Equal(3L, Py.Summe([true, 2L]));
     }
 }
