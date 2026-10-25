@@ -241,7 +241,7 @@ public sealed class Spielablauf
 
     private void Schreiben(string art, PyObjekt daten)
     {
-        var text = PythonJson.Text(daten);
+        var text = PythonJson.Standard(daten);
         var vorher = AktuellerStempel();
         if (Speicher.Schreiben(art, text) is null)
         {
@@ -427,7 +427,7 @@ public sealed class Spielablauf
                 {
                     var leise = still || (alteStory && Betrieb.StoryAbzeichen.Contains(Py.Str(regel["id"])));
                     var info = Betrieb.FreischaltInfo(stand, regel, stufe, zeilen, Inhalt);
-                    Speicher.Schreiben(Ereignisse.Erfolg, PythonJson.Text(new PyObjekt
+                    Speicher.Schreiben(Ereignisse.Erfolg, PythonJson.Standard(new PyObjekt
                     {
                         { "erfolg", regel["id"] }, { "stufe", stufe }, { "tag", tag }, { "nachgetragen", leise },
                     }));
@@ -440,7 +440,7 @@ public sealed class Spielablauf
             }
             foreach (var (art, schluessel, wert, daten) in Betrieb.BestenNeu(Stand, zeilen, Inhalt, erzwingen))
             {
-                Speicher.BestenSchreiben(Stand.ErstesEreignis!, art, schluessel, wert, PythonJson.Text(daten));
+                Speicher.BestenSchreiben(Stand.ErstesEreignis!, art, schluessel, wert, PythonJson.Standard(daten));
             }
             Freigeschaltet.AddRange(infos);
             return infos;
