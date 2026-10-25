@@ -44,6 +44,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Dictionary<StadtHaus, GlNetz> _haeuser = [];
     private readonly Dictionary<string, GlNetz> _figuren = [];
     private GlNetz? _innen;
+    private readonly Dictionary<InnenWand, GlNetz> _innenWaende = [];
+    private readonly HashSet<InnenWand> _durchsichtig = [];
     private Innenraum? _innenGeladen;
     private bool _innenNeu;
     private GlNetz? _markierung;
@@ -278,6 +280,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _haeuser.Clear();
         _figuren.Clear();
         _innen = null;
+        _innenWaende.Clear();
         _markierung = null;
         _markierungSchluessel = "";
         _ring = null;
@@ -290,7 +293,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
-        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring))
+        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenWaende.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring))
         {
             netz?.Freigeben(gl);
         }
@@ -298,6 +301,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _haeuser.Clear();
         _figuren.Clear();
         _innen = null;
+        _innenWaende.Clear();
         _markierung = null;
         _ring = null;
         _ringSchluessel = "";
@@ -401,7 +405,17 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         if (_spiel is { } s2 && _innenNeu && GlBereit)
         {
             _innen?.Freigeben(gl);
-            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzBauen()) : null;
+            foreach (var alt in _innenWaende.Values)
+            {
+                alt.Freigeben(gl);
+            }
+            _innenWaende.Clear();
+            // Nachtrag 1 zu P7-13 (Wunsch 3): Waende einzeln, jede kann halb durchsichtig werden
+            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzBauen(ohneWaende: true)) : null;
+            foreach (var wand in s2.Innen?.Waende ?? [])
+            {
+                _innenWaende[wand] = GlNetz.Laden(gl, s2.Innen!.WandNetz(wand));
+            }
             _innenGeladen = s2.Innen;
             _innenNeu = false;
         }
@@ -462,6 +476,15 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                         Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(person.X, groesse + 0.25f, person.Z), sichtProj);
                     }
                 }
+                // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102)
+                innen.Durchsichtig(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, groesse, _durchsichtig);
+                foreach (var (wand, netz) in _innenWaende)
+                {
+                    gl.Uniform1f(_ortDurch, _durchsichtig.Contains(wand) ? 1f : 0f);
+                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                }
+                gl.Uniform1f(_ortDurch, 0f);
+                VerdecktZahl = _durchsichtig.Count;
                 if (Markierung(gl) is { } markierung)
                 {
                     gl.Uniform1f(_ortDurch, 1f);

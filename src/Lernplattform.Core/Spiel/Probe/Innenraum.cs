@@ -6,6 +6,13 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>Eine Person im Innenraum (Platz wie Python "platz", Aussehen fuer die Figur).</summary>
+/// <summary>
+/// Nachtrag 1 zu P7-13 (Wunsch 3): ein Wandstueck des Innenraums (Teile <see cref="Von"/> bis vor
+/// <see cref="Bis"/> in <see cref="Innenraum.Teile"/>) mit Kasten; <see cref="Aussen"/> zeigt bei einer
+/// Aussenwand nach draussen, bei einer Innenwand ist es null.
+/// </summary>
+public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen);
+
 public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObjekt? Aussehen, bool Auftrag, PyObjekt Daten);
 
 /// <summary>
@@ -83,9 +90,15 @@ public sealed class Innenraum
     /// <summary>Welche Moebel wo stehen (aendert sie sich, laedt die Darstellung neu).</summary>
     public string Signatur { get; private set; } = "";
 
-    public Netz NetzBauen()
+    /// <summary>Alle Wandstuecke (innen und aussen), jedes fuer sich durchsichtig zu zeichnen.</summary>
+    public IReadOnlyList<InnenWand> Waende => _waende;
+
+    private readonly List<InnenWand> _waende = [];
+
+    /// <summary>Das ganze Netz; mit <paramref name="ohneWaende"/> ohne die Wandstuecke (die zeichnet die Flaeche einzeln).</summary>
+    public Netz NetzBauen(bool ohneWaende = false)
     {
-        var netz = Netz.Aus(_teile);
+        var netz = Netz.Aus(ohneWaende ? _teile.Where((_, i) => !_waende.Any(w => i >= w.Von && i < w.Bis)) : _teile);
         foreach (var stueck in _stuecke)
         {
             if (Grafik?.Modell(stueck.Name) is { } modell)
@@ -94,6 +107,38 @@ public sealed class Innenraum
             }
         }
         return netz;
+    }
+
+    /// <summary>Netz eines Wandstuecks.</summary>
+    public Netz WandNetz(InnenWand wand) => Netz.Aus(_teile.Skip(wand.Von).Take(wand.Bis - wand.Von));
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 3, Sammelliste 102): Wandstuecke, die halb durchsichtig gezeichnet
+    /// werden: jede Aussenwand, die zur Kamera zeigt (die vorderen Waende), und jede Wand, die zwischen
+    /// Auge und Figur steht (Fuesse, Mitte, Kopf wie <see cref="StadtSzene.Verdeckt"/>). Fuellt
+    /// <paramref name="ergebnis"/> (ohne neue Liste je Bild).
+    /// </summary>
+    public void Durchsichtig(Vector3 auge, float figurX, float figurZ, float figurHoehe, HashSet<InnenWand> ergebnis)
+    {
+        ergebnis.Clear();
+        foreach (var w in _waende)
+        {
+            var mitte = (w.Min + w.Max) / 2;
+            var blick = new Vector2(auge.X - mitte.X, auge.Z - mitte.Z);
+            if (w.Aussen != Vector2.Zero && blick.LengthSquared() > 1e-6f && Vector2.Dot(w.Aussen, Vector2.Normalize(blick)) > 0.2f)
+            {
+                ergebnis.Add(w);
+                continue;
+            }
+            foreach (var anteil in (ReadOnlySpan<float>)[0.15f, 0.5f, 0.95f])
+            {
+                if (StadtSzene.Schneidet(auge, new Vector3(figurX, figurHoehe * anteil, figurZ), w.Min, w.Max))
+                {
+                    ergebnis.Add(w);
+                    break;
+                }
+            }
+        }
     }
 
     /// <summary>Innenraum aus einem beliebigen Grundriss (Pruefungen, Fotos): ohne Personen und Bodenwahl.</summary>
@@ -405,6 +450,7 @@ public sealed class Innenraum
         }
         _teile.Add(Quader(x1, 0, z1, x2, WandHoehe - 0.06f, z2, Farben.Wand));
         _teile.Add(Quader(x1, WandHoehe - 0.06f, z1, x2, WandHoehe, z2, Farben.WandKante));
+        _waende.Add(new InnenWand(_teile.Count - 2, _teile.Count, new Vector3(x1, 0, z1), new Vector3(x2, WandHoehe, z2), Vector2.Zero));
     }
 
     /// <summary>Aussenwaende mit Eingang (links im Flur), Fenstern (Glas ab Bruestung) und Rolltor.</summary>
@@ -456,6 +502,7 @@ public sealed class Innenraum
             }
             var pos = waagerecht ? -d : 0f;
             var ende = waagerecht ? laenge + d : laenge;
+            var erstes = _teile.Count;
             foreach (var (von, bis, art) in oeffnungen)
             {
                 Stueck(pos, Math.Max(pos, von), 0, WandHoehe, Farben.Aussen);
@@ -477,6 +524,11 @@ public sealed class Innenraum
                 pos = Math.Max(pos, bis);
             }
             Stueck(pos, ende, 0, WandHoehe, Farben.Aussen);
+            // die ganze Seite als ein Wandstueck; nach draussen zeigt -innenSeite (oben/links: innenSeite 1)
+            var aussen = waagerecht ? new Vector2(0, -innenSeite) : new Vector2(-innenSeite, 0);
+            _waende.Add(new InnenWand(erstes, _teile.Count,
+                waagerecht ? new Vector3(-d, 0, a0) : new Vector3(a0, 0, 0),
+                waagerecht ? new Vector3(laenge + d, WandHoehe, a1) : new Vector3(a1, WandHoehe, laenge), aussen));
         }
         Seite(true, 0, Breite, 1);
         Seite(true, Tiefe, Breite, -1);

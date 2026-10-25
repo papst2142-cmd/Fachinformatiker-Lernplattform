@@ -326,4 +326,49 @@ public class SpielInnenraumTests
         var einzeln = szene.Haeuser.Sum(h => h.TeileBis - h.TeileVon);
         Assert.True(einzeln > 0 && einzeln < szene.Teile.Count);
     }
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 3, Sammelliste 102): in jedem Gebaeude sind die vorderen Aussenwaende
+    /// (zur Kamera) und jede Wand zwischen Auge und Figur halb durchsichtig, die hintere Wand nie. Netz
+    /// ohne Waende plus die Waende einzeln ergeben das ganze Netz.
+    /// </summary>
+    [Fact]
+    public void VordereWaendeInJedemGebaeudeDurchsichtig()
+    {
+        var ablauf = NeuerAblauf();
+        ablauf.Stand.TageFertig = 200;
+        var stand = ablauf.Stand;
+        var ansichten = new List<string> { "buero", "zuhause", "serverfarm" };
+        ansichten.AddRange(SpielDaten.Kundenorte(Inhalt).Select(k => "kunde:" + Py.Str(k["id"])));
+        ansichten.AddRange(["geschaeft:moebelhaus", "geschaeft:elektromarkt"]);
+        var gesehen = 0;
+        var durch = new HashSet<InnenWand>();
+        foreach (var ansicht in ansichten)
+        {
+            var innen = Innenraum.Bauen(ansicht, stand, Innenraeume.Value, null);
+            Assert.True(innen is not null, ansicht);
+            gesehen++;
+            var aussen = innen!.Waende.Where(w => w.Aussen != Vector2.Zero).ToList();
+            Assert.Equal(4, aussen.Count);
+            Assert.Equal(innen.NetzBauen().AnzahlEcken, innen.NetzBauen(ohneWaende: true).AnzahlEcken + innen.Waende.Sum(w => innen.WandNetz(w).AnzahlEcken));
+            // Kamera wie die Flaeche: schraeg von vorn (Sueden) auf die Mitte
+            var kamera = new Kamera(innen.Breite / 2, innen.Tiefe / 2, Math.Clamp(Math.Max(innen.Breite, innen.Tiefe) * 0.85f, 12f, 28f)) { Neigung = 58f };
+            innen.Durchsichtig(kamera.Auge, innen.StartX, innen.StartZ, Innenraum.FigurHoehe, durch);
+            Assert.Contains(aussen.Single(w => w.Aussen == new Vector2(0, 1)), durch);
+            Assert.DoesNotContain(aussen.Single(w => w.Aussen == new Vector2(0, -1)), durch);
+            Assert.DoesNotContain(aussen.Single(w => w.Aussen == new Vector2(-1, 0)), durch);
+            Assert.DoesNotContain(aussen.Single(w => w.Aussen == new Vector2(1, 0)), durch);
+            // jede Innenwand, hinter der die Figur steht (Figur noerdlich der Wand, Auge suedlich), wird durchsichtig
+            foreach (var wand in innen.Waende.Where(w => w.Aussen == Vector2.Zero && w.Max.X - w.Min.X > 0.6f))
+            {
+                var x = (wand.Min.X + wand.Max.X) / 2;
+                var auge = new Vector3(x, 12, wand.Max.Z + 8);
+                innen.Durchsichtig(auge, x, wand.Min.Z - 0.4f, Innenraum.FigurHoehe, durch);
+                Assert.Contains(wand, durch);
+                // Figur vor der Wand: diese Wand bleibt fest
+                innen.Durchsichtig(auge, x, wand.Max.Z + 0.6f, Innenraum.FigurHoehe, durch);
+                Assert.DoesNotContain(wand, durch);
+            }
+        }
+        Assert.Equal(ansichten.Count, gesehen);
+    }
 }
