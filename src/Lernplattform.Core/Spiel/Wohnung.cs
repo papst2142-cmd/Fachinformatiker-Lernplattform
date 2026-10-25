@@ -12,7 +12,7 @@ namespace Lernplattform.Core.Spiel;
 /// rotated_position, furniture_at/near, home_message, rent_terms, move_offer, move_texts,
 /// rent_text, moves_available). Die Zeichnung der Wohnung (home_building) kommt mit der Darstellung.
 /// </summary>
-public static class Wohnung
+public static partial class Wohnung
 {
     public const double Raster = 0.25;           // GRID
     public const double TuerFrei = 1.0;          // DOOR_CLEARANCE
@@ -21,6 +21,18 @@ public static class Wohnung
 
     /// <summary>WALK_FREE: darueber laeuft man (oder es haengt an der Wand).</summary>
     public static readonly IReadOnlyList<string> Begehbar = ["teppich", "fussmatte", "whiteboard", "markierung", "bild", "wimpel", "kamera"];
+
+    /// <summary>FLOOR_KINDS (Kennung, Name)</summary>
+    public static readonly IReadOnlyList<(string Id, string Name)> BodenArtenListe =
+        [("parkett", "Parkett"), ("teppichboden", "Teppich"), ("fliesen", "Fliesen"), ("beton", "Estrich")];
+
+    public static readonly IReadOnlyList<string> BodenArten = [.. BodenArtenListe.Select(b => b.Id)];
+
+    /// <summary>FLOOR_COLORS (Kennung, Name); die Farbe selbst rechnet die Darstellung (floor_color haengt am Farbthema).</summary>
+    public static readonly IReadOnlyList<(string Id, string Name)> BodenFarbenListe =
+        [("violett", "Violett"), ("cyan", "Cyan"), ("gruen", "Grün"), ("orange", "Orange"), ("pink", "Pink"), ("grau", "Grau")];
+
+    public static readonly IReadOnlyList<string> BodenFarben = [.. BodenFarbenListe.Select(b => b.Id)];
 
     /// <summary>Ein aufgestelltes Moebel (placed_furniture).</summary>
     public sealed record Aufgestellt(string Typ, double X, double Y, object? W, object? H, long Dreh, string Stueck, object? Moebel, object? Blick);

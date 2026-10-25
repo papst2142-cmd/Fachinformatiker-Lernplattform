@@ -7,6 +7,8 @@ using Avalonia.Media;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
 using Avalonia.Rendering;
+using Lernplattform.Core.Daten;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using static Avalonia.OpenGL.GlConsts;
 
@@ -23,6 +25,9 @@ namespace Lernplattform.Spiel;
 /// (Capture) und liegt nie in einer ScrollView, sonst nimmt die Seite die Geste (Fehler S24, W1).
 /// Treffer zaehlt die ganze Flaeche (<see cref="ICustomHitTest"/>): das GL-Bild selbst ist fuer
 /// Avalonia kein gezeichneter Inhalt, sonst ginge ein Finger an der Flaeche vorbei an den Rahmen.
+/// W5: Innenraeume (<see cref="Innenraum"/>), Figuren aus dem CC0-Modell mit Aussehen, Personen mit
+/// "!" bei einem Auftrag, Vorschau beim Einrichten; steht die Figur hinter einem Haus, wird es halb
+/// durchsichtig gezeichnet (Rasterung im Pixel-Shader, ohne Mischen: Sammelliste 102).
 /// </summary>
 public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 {
@@ -36,12 +41,20 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Dictionary<string, Kamera> _kameras = [];
     private bool _szeneNeu;
     private readonly Dictionary<string, GlNetz> _flaechen = [];
-    private GlNetz? _figur;
+    private readonly Dictionary<StadtHaus, GlNetz> _haeuser = [];
+    private readonly Dictionary<string, GlNetz> _figuren = [];
+    private GlNetz? _innen;
+    private Innenraum? _innenGeladen;
+    private bool _innenNeu;
+    private GlNetz? _markierung;
+    private string _markierungSchluessel = "";
+    private GlNetz? _ausruf;
     private GlNetz? _marke;
     private int _programm;
     private int _ortMvp;
     private int _ortModell;
     private int _ortHell;
+    private int _ortDurch;
     private readonly Stopwatch _uhr = Stopwatch.StartNew();
     private double _letztesBild = -1;
     private readonly Queue<double> _bilder = new();
@@ -75,27 +88,41 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 _spiel.Geaendert -= AnfordernBild;
                 _spiel.SzeneGeaendert -= SzeneNeu;
+                _spiel.InnenGeaendert -= InnenNeu;
             }
             _spiel = value;
             _kameras.Clear();
             if (value is not null)
             {
-                var b = value.Buero;
                 _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ - 1, 17f)
                 {
                     Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
                 };
-                _kameras[ProbeWelt.Buero] = new Kamera(b.Breite / 2, b.Tiefe / 2, 22f)
-                {
-                    Neigung = 62f,
-                    Grenzen = (0, 0, b.Breite, b.Tiefe),
-                };
                 value.Geaendert += AnfordernBild;
                 value.SzeneGeaendert += SzeneNeu;
+                value.InnenGeaendert += InnenNeu;
                 _szeneNeu = true;
+                _innenNeu = true;
+                InnenNeu();
             }
             AnfordernBild();
         }
+    }
+
+    /// <summary>Neuer Innenraum (oder neue Einrichtung): Netz neu laden; bei einem anderen Ort neue Kamera auf der Figur.</summary>
+    private void InnenNeu()
+    {
+        _innenNeu = true;
+        if (_spiel?.Innen is { } innen && (!_kameras.ContainsKey(innen.Ansicht) || _innenGeladen?.Ansicht != innen.Ansicht))
+        {
+            // schraeg von vorn (Sueden) mit Blick in die Raeume, so weit weg, dass der Flur ganz zu sehen ist
+            _kameras[innen.Ansicht] = new Kamera(_spiel.FigurX + 3, _spiel.FigurZ, Math.Clamp(Math.Max(innen.Breite, innen.Tiefe) * 0.75f, 12f, 28f))
+            {
+                Neigung = 58f,
+                Grenzen = (0, 0, innen.Breite, innen.Tiefe),
+            };
+        }
+        AnfordernBild();
     }
 
     private void SzeneNeu()
@@ -166,8 +193,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _ortMvp = gl.GetUniformLocationString(_programm, "uMvp");
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
             _ortHell = gl.GetUniformLocationString(_programm, "uHell");
-            _figur = GlNetz.Laden(gl, ProbeWelt.Figur());
+            _ortDurch = gl.GetUniformLocationString(_programm, "uDurch");
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
+            _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
             GlBereit = true;
         }
@@ -183,18 +211,28 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         GlBereit = false;
         _flaechen.Clear();
+        _haeuser.Clear();
+        _figuren.Clear();
+        _innen = null;
+        _markierung = null;
+        _markierungSchluessel = "";
         _szeneNeu = true;
+        _innenNeu = true;
         _programm = 0;
         base.OnOpenGlLost();
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
-        foreach (var netz in _flaechen.Values.Append(_figur).Append(_marke))
+        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf))
         {
             netz?.Freigeben(gl);
         }
         _flaechen.Clear();
+        _haeuser.Clear();
+        _figuren.Clear();
+        _innen = null;
+        _markierung = null;
         if (_programm != 0)
         {
             gl.DeleteProgram(_programm);
@@ -228,8 +266,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             in vec3 vFarbe;
             in vec3 vNormale;
             uniform float uHell;
+            uniform float uDurch;
             out vec4 fFarbe;
             void main() {
+                // halb durchsichtig ohne Mischen: jedes zweite Pixel faellt weg (Schachbrett)
+                if (uDurch > 0.5 && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0) < 0.5) {
+                    discard;
+                }
                 vec3 licht = normalize(vec3(0.35, 0.85, 0.45));
                 float d = abs(dot(normalize(vNormale), licht));
                 fFarbe = vec4(vFarbe * (0.48 + 0.52 * d) * uHell, 1.0);
@@ -270,15 +313,27 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _letztesBild = jetzt;
         if (_spiel is { } spiel && _szeneNeu && GlBereit)
         {
-            // Stadt (und Buero) in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern
-            foreach (var alt in _flaechen.Values)
+            // Stadt in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern;
+            // jedes Haus fuer sich (es kann durchsichtig werden)
+            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values))
             {
                 alt.Freigeben(gl);
             }
             _flaechen.Clear();
+            _haeuser.Clear();
             _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, spiel.Szene.NetzBauen());
-            _flaechen[ProbeWelt.Buero] = GlNetz.Laden(gl, Netz.Aus(spiel.Buero.Teile));
+            foreach (var haus in spiel.Szene.Haeuser)
+            {
+                _haeuser[haus] = GlNetz.Laden(gl, spiel.Szene.HausNetz(haus));
+            }
             _szeneNeu = false;
+        }
+        if (_spiel is { } s2 && _innenNeu && GlBereit)
+        {
+            _innen?.Freigeben(gl);
+            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzBauen()) : null;
+            _innenGeladen = s2.Innen;
+            _innenNeu = false;
         }
         var geht = _spiel?.Fortschreiten(dt) ?? false;
         VorBild?.Invoke();
@@ -305,21 +360,55 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.DepthFunc(GlLequal);
         gl.DepthMask(1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (GlBereit && _spiel is not null && kamera is not null && _flaechen.TryGetValue(_spiel.FlaecheId, out var flaeche))
+        var flaeche = _spiel is null ? null : _spiel.ImInnenraum ? _innen : _flaechen.GetValueOrDefault(ProbeWelt.Stadt);
+        if (GlBereit && _spiel is not null && kamera is not null && flaeche is not null)
         {
             gl.UseProgram(_programm);
             gl.Uniform1f(_ortHell, IstDunkel() ? 0.72f : 1f);
+            gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
             if (_spiel.Ziel is { } ziel && _marke is not null)
             {
-                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation((float)ziel.X, 0, (float)ziel.Y), sichtProj);
+                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation((float)ziel.X, _spiel.ImInnenraum ? 0.03f : StadtSzene.Hoehe.Uebergang + 0.012f, (float)ziel.Y), sichtProj);
             }
-            if (_figur is not null)
+            var innen = _spiel.Innen;
+            var groesse = innen is null ? Figur.StadtHoehe : Innenraum.FigurHoehe;
+            var spieler = FigurNetz(gl, "#spieler", _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null);
+            Zeichnen(gl, spieler, Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
+                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ), sichtProj);
+            if (innen is not null)
             {
-                var modell = Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
-                    * Matrix4x4.CreateTranslation(_spiel.FigurX, 0, _spiel.FigurZ);
-                Zeichnen(gl, _figur, modell, sichtProj);
+                foreach (var person in innen.Personen)
+                {
+                    // Personen schauen zur Spielfigur
+                    var blick = MathF.Atan2(_spiel.FigurX - person.X, _spiel.FigurZ - person.Z);
+                    Zeichnen(gl, FigurNetz(gl, person.Id, person.Aussehen), Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(blick)
+                        * Matrix4x4.CreateTranslation(person.X, 0, person.Z), sichtProj);
+                    if (person.Auftrag && _ausruf is not null)
+                    {
+                        Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(person.X, groesse + 0.25f, person.Z), sichtProj);
+                    }
+                }
+                if (Markierung(gl) is { } markierung)
+                {
+                    gl.Uniform1f(_ortDurch, 1f);
+                    Zeichnen(gl, markierung, Matrix4x4.Identity, sichtProj);
+                    gl.Uniform1f(_ortDurch, 0f);
+                }
+            }
+            else
+            {
+                // Haeuser; wer zwischen Auge und Figur steht, halb durchsichtig (Sammelliste 102)
+                var verdeckt = _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe);
+                foreach (var (haus, netz) in _haeuser)
+                {
+                    var durch = verdeckt.Contains(haus);
+                    gl.Uniform1f(_ortDurch, durch ? 1f : 0f);
+                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                }
+                gl.Uniform1f(_ortDurch, 0f);
+                VerdecktZahl = verdeckt.Count;
             }
             if (gl.IsBindVertexArrayAvailable)
             {
@@ -338,6 +427,55 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             RequestNextFrameRendering();
         }
+    }
+
+    /// <summary>Wie viele Haeuser im letzten Bild halb durchsichtig waren (Start-Test, Fotos).</summary>
+    public int VerdecktZahl { get; private set; }
+
+    /// <summary>Figur (Hoehe 1) mit Aussehen, je Person einmal geladen.</summary>
+    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen)
+    {
+        var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value));
+        if (!_figuren.TryGetValue(schluessel, out var netz))
+        {
+            netz = GlNetz.Laden(gl, Figur.Netz(_spiel?.Grafik, aussehen, 1f));
+            _figuren[schluessel] = netz;
+        }
+        return netz;
+    }
+
+    /// <summary>Vorschau beim Einrichten (gruen/gelb/rot) und Rahmen um das gewaehlte Moebel; null = nichts.</summary>
+    private GlNetz? Markierung(GlInterface gl)
+    {
+        if (_spiel is not { Einrichten: true } spiel)
+        {
+            return null;
+        }
+        var teile = new List<Teil>();
+        if (spiel.Vorschau is { } v)
+        {
+            var farbe = Netz.Farbe(spiel.VorschauFarbe switch { "gruen" => "#34D399", "gelb" => "#FBBF24", _ => "#F87171" });
+            float x = (float)Py.F(v["x"]), z = (float)Py.F(v["y"]), w = (float)Py.F(v["w"]), t = (float)Py.F(v["h"]);
+            teile.Add(new Teil(TeilArt.Quader, x, 0.04f, z, x + w, 0.9f, z + t, farbe));
+        }
+        else if (spiel.Ausgewaehlt is { } stueck && Wohnung.AufgestellteMoebel(spiel.Ablauf.Stand).FirstOrDefault(m => m.Stueck == stueck) is { } m)
+        {
+            float x = (float)m.X, z = (float)m.Y, w = (float)Py.F(m.W), t = (float)Py.F(m.H);
+            var farbe = Netz.Farbe("#22D3EE");
+            teile.Add(new Teil(TeilArt.Quader, x - 0.08f, 0.04f, z - 0.08f, x + w + 0.08f, 0.07f, z + t + 0.08f, farbe));
+        }
+        if (teile.Count == 0)
+        {
+            return null;
+        }
+        var schluessel = string.Join(";", teile);
+        if (schluessel != _markierungSchluessel || _markierung is null)
+        {
+            _markierung?.Freigeben(gl);
+            _markierung = GlNetz.Laden(gl, Netz.Aus(teile));
+            _markierungSchluessel = schluessel;
+        }
+        return _markierung;
     }
 
     private unsafe void Zeichnen(GlInterface gl, GlNetz netz, Matrix4x4 modell, Matrix4x4 sichtProj)

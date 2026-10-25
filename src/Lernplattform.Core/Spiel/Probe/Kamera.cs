@@ -52,8 +52,15 @@ public sealed class Kamera
 
     public Matrix4x4 Sicht => Matrix4x4.CreateLookAt(Auge, Ziel, Vector3.UnitY);
 
+    /// <summary>
+    /// Naechste Ebene des Sichtraums: je weiter vorn, desto genauer der Tiefenpuffer (am Handy 16 Bit;
+    /// mit 0,5 flimmerten Fussweg/Strasse und Wasser/Bruecke, Wunsch Nico 25.10.2026). Die Kamera steht
+    /// mindestens <see cref="AbstandMin"/> vom Ziel weg, 1,5 schneidet darum nichts ab.
+    /// </summary>
+    public const float Nah = 1.5f;
+
     public Matrix4x4 Projektion(float breite, float hoehe) =>
-        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), 0.5f, 200f);
+        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f);
 
     public void Setzen(float zielX, float zielZ)
     {

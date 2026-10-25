@@ -314,6 +314,8 @@ jobs:
           # Phase 7 (Weisung P7-6): G44 Platzverwaltung (Sammelliste 94), G48 Orte der Stadt-Karte
           python3 -I werkzeuge/vergleich/erzeuge_spiel_verwaltung.py python-linie neu/spiel_verwaltung.json
           python3 -I werkzeuge/vergleich/erzeuge_spiel_stadt.py python-linie neu/spiel_stadt.json
+          # Phase 7 W5 (Weisung P7-10): G49 Innenraeume (Grundriss, Personen, Texte, Moebel-Vorschau) auf den Staenden von G44/G47
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_orte.py python-linie neu/spiel_aktionen.json neu/spiel_firma.json neu/spiel_orte.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -337,7 +339,8 @@ jobs:
                        "spiel_neuaufbau.json", "spiel_tickets.json", "spiel_bewertung.json",
                        "spiel_texte.json", "spiel_aktionen.json", "spiel_pruefung.json",
                        "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json",
-                       "spiel_uebernahme.json", "spiel_verwaltung.json", "spiel_stadt.json"):
+                       "spiel_uebernahme.json", "spiel_verwaltung.json", "spiel_stadt.json",
+                       "spiel_orte.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)

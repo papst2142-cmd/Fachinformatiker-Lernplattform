@@ -26,4 +26,16 @@ public static class SpielProbeTexte
     public const string Bilder = "{0} Bilder/s";
     public const string OhneGrafik = "3D ist auf diesem Gerät nicht verfügbar (keine Grafikbeschleunigung). Die Orte erreichst du über die Liste.";
     public const string GrafikStartet = "3D startet …";
+
+    // W5: Einrichten der Wohnung, Beschriftungen wie Python (mobile/src/spiel.py _home_editor, fisi_game_gui HomeView)
+    public const string Einrichten = "Einrichten";
+    public const string Fertig = "Fertig";
+    public const string Drehen = "Drehen";
+    public const string InDenKarton = "In den Karton";
+    public const string Aufstellen = "Aufstellen";
+    public const string Ausgewaehlt = "Ausgewählt";
+    public const string ImKarton = "Im Karton";
+    public const string AllesAusgepackt = "Alles ist ausgepackt.";
+    public const string EinrichtenAufstellen = "Tippe auf den Boden, wo es hin soll. Ein zweites Tippen auf die Vorschau stellt es auf.";
+    public const string EinrichtenVerschieben = "Tippe auf den Boden, um es dorthin zu stellen, oder drehe es.";
 }

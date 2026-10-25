@@ -43,6 +43,10 @@ public sealed class SpielSeite : Grid
     private readonly Button _zurStadt;
     private readonly Button _warten;
     private readonly Button _orteKnopf;
+    private readonly Button _einrichten;
+    private readonly WrapPanel _ortKnoepfe = new();
+    private readonly StackPanel _einrichtenTafel = new() { Spacing = 6 };
+    private string _tafelSchluessel = "";
     private readonly StackPanel _liste = new() { Spacing = 8 };
     private readonly Border _ortsliste;
     private readonly Border _ersatz;
@@ -87,12 +91,14 @@ public sealed class SpielSeite : Grid
         _warten.Click += (_, _) => Spiel?.Warten();
         _orteKnopf = Schrift.Knopf(SpielProbeTexte.Orte);
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
-        var knoepfe = new WrapPanel { Children = { _betreten, _zurStadt, _warten, _orteKnopf } };
+        _einrichten = Schrift.Knopf(SpielProbeTexte.Einrichten);
+        _einrichten.Click += (_, _) => Spiel?.EinrichtenUmschalten();
+        var knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf } };
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
         _zeileRolle = new ScrollViewer
         {
-            Content = _zeile,
+            Content = new StackPanel { Spacing = 8, Children = { _zeile, _einrichtenTafel } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
         var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, knoepfe } });
@@ -353,7 +359,11 @@ public sealed class SpielSeite : Grid
     private void Zurueck(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if (Spiel is { ImInnenraum: true } spiel)
+        if (Spiel is { Einrichten: true } einrichten)
+        {
+            einrichten.EinrichtenUmschalten();
+        }
+        else if (Spiel is { ImInnenraum: true } spiel)
         {
             spiel.Verlassen();
         }
@@ -474,8 +484,84 @@ public sealed class SpielSeite : Grid
         _kopfzeile.Text = spiel.Kopfzeile;
         _zeile.Text = spiel.Zeile;
         _betreten.IsVisible = spiel.KannBetreten;
-        _zurStadt.IsVisible = spiel.ImInnenraum;
+        _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten;
         _warten.IsVisible = spiel.KannWarten;
         _orteKnopf.IsVisible = !spiel.ImInnenraum;
+        _einrichten.IsVisible = spiel.KannEinrichten;
+        if (_einrichten.Content is TextBlock einrichtenText)
+        {
+            einrichtenText.Text = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
+        }
+        else
+        {
+            _einrichten.Content = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
+        }
+        TafelBauen(spiel);
+    }
+
+    /// <summary>Knoepfe des Ortes (place_message) und beim Einrichten Auswahl und Karton (wie Python _home_editor).</summary>
+    private void TafelBauen(StadtSpiel spiel)
+    {
+        var karton = spiel.Einrichten ? spiel.ImKarton() : [];
+        var schluessel = string.Join("|", spiel.Knoepfe.Select(k => k.Aktion + k.Name)) + "#" + spiel.Einrichten + "#" + spiel.Ausgewaehlt
+            + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck));
+        if (schluessel == _tafelSchluessel)
+        {
+            return;
+        }
+        _tafelSchluessel = schluessel;
+        _ortKnoepfe.Children.Clear();
+        foreach (var (aktion, name) in spiel.Knoepfe)
+        {
+            var knopf = Schrift.Knopf(name, true);
+            knopf.Click += (_, _) => spiel.Knopf(aktion);
+            _ortKnoepfe.Children.Add(knopf);
+        }
+        _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
+        _einrichtenTafel.Children.Clear();
+        _einrichtenTafel.IsVisible = spiel.Einrichten;
+        if (!spiel.Einrichten)
+        {
+            return;
+        }
+        if (spiel.AusgewaehltName is { } name2)
+        {
+            _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.Ausgewaehlt, "Klein", FontWeight.Bold, "Pinsel.muted"));
+            _einrichtenTafel.Children.Add(Schrift.Text(name2, "Normal", FontWeight.Bold));
+            var reihe = new WrapPanel();
+            var drehen = Schrift.Knopf(SpielProbeTexte.Drehen);
+            drehen.Click += (_, _) => spiel.Drehen();
+            reihe.Children.Add(drehen);
+            if (spiel.Vorschau is not null)
+            {
+                var aufstellen = Schrift.Knopf(SpielProbeTexte.Aufstellen, true);
+                aufstellen.Click += (_, _) => spiel.Aufstellen();
+                reihe.Children.Add(aufstellen);
+            }
+            if (spiel.AusgewaehltSteht)
+            {
+                var karton2 = Schrift.Knopf(SpielProbeTexte.InDenKarton);
+                karton2.Click += (_, _) => spiel.InDenKarton();
+                reihe.Children.Add(karton2);
+            }
+            _einrichtenTafel.Children.Add(reihe);
+        }
+        _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.ImKarton, "Klein", FontWeight.Bold, "Pinsel.muted"));
+        if (karton.Count == 0)
+        {
+            _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.AllesAusgepackt, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        }
+        foreach (var (stueck, name) in karton)
+        {
+            var aufstellen = Schrift.Knopf(SpielProbeTexte.Aufstellen);
+            aufstellen.Click += (_, _) => spiel.Waehlen(stueck);
+            var reihe = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+            var text = Schrift.Text(name, "Normal", FontWeight.SemiBold);
+            text.VerticalAlignment = VerticalAlignment.Center;
+            reihe.Children.Add(text);
+            Grid.SetColumn(aufstellen, 1);
+            reihe.Children.Add(aufstellen);
+            _einrichtenTafel.Children.Add(reihe);
+        }
     }
 }

@@ -41,6 +41,65 @@ public class SpielGrafikTests
         Assert.True(new FileInfo(Path.Combine(Ordner, "modelle.bin")).Length < 10_000_000);
     }
 
+    /// <summary>
+    /// Gegenprobe zum eigenen FBX-Leser (Weisung P7-10 Frage 1a): characterMedium.fbx ergibt genau 1604
+    /// Dreiecke (wie die Polygonliste der Datei, Vierecke geteilt), steht auf dem Boden, ist etwa
+    /// 3,77 Einheiten hoch und schaut nach +z (Gesicht vorn); Pruefsumme ueber Ecken und Farben fest.
+    /// </summary>
+    [Fact]
+    public void FigurAusFbxWieGelesen()
+    {
+        var figur = Bibliothek.Value.Modell(Figur.Modell)!;
+        Assert.Equal(1604, figur.Dreiecke);
+        Assert.InRange(figur.Min.Y, 0f, 0.01f);
+        Assert.InRange(figur.Max.Y, 3.76f, 3.77f);
+        var daten = new byte[(figur.Ecken.Length * 4) + figur.Farben.Length];
+        Buffer.BlockCopy(figur.Ecken, 0, daten, 0, figur.Ecken.Length * 4);
+        figur.Farben.CopyTo(daten, figur.Ecken.Length * 4);
+        Assert.Equal("bb2d00fa62d2a38c5e669924deda1d74fac1b72e072a669e36f01b3fee569634",
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(daten)));
+        // Gesicht (Hautfarbe ueber Kinnhoehe) liegt vorn
+        var gesicht = new List<float>();
+        for (var d = 0; d < figur.Dreiecke; d++)
+        {
+            var y = (figur.Ecken[(d * 9) + 1] + figur.Ecken[(d * 9) + 4] + figur.Ecken[(d * 9) + 7]) / 3;
+            if (y > 2.9f && Figur.Erkennen(figur.Farben[d * 3], figur.Farben[(d * 3) + 1], figur.Farben[(d * 3) + 2], y / 3.77f) == Figur.Bereich.Haut)
+            {
+                gesicht.Add((figur.Ecken[(d * 9) + 2] + figur.Ecken[(d * 9) + 5] + figur.Ecken[(d * 9) + 8]) / 3);
+            }
+        }
+        Assert.True(gesicht.Count > 10 && gesicht.Average() > 0.2f, "Gesicht vorn: " + gesicht.Count);
+    }
+
+    /// <summary>Aussehen faerbt Hemd, Haut und Haare (SHIRT_COLORS, SKIN_COLORS, HAIR_COLORS), der Rest bleibt.</summary>
+    [Fact]
+    public void FigurTraegtDasAussehen()
+    {
+        var gruen = Figur.Netz(Bibliothek.Value, new PyObjekt { { "oberteil", "gruen" }, { "haut", "dunkel" }, { "haarfarbe", "blond" } }, 1f);
+        var pink = Figur.Netz(Bibliothek.Value, new PyObjekt { { "oberteil", "pink" }, { "haut", "dunkel" }, { "haarfarbe", "blond" } }, 1f);
+        Assert.Equal(gruen.AnzahlEcken, pink.AnzahlEcken);
+        int anders = 0, gleich = 0;
+        for (var i = 0; i < gruen.Ecken.Count; i += Netz.Zahlen)
+        {
+            // Hoehe 1: Ursprung unten, hoechster Punkt 1
+            Assert.InRange(gruen.Ecken[i + 1], -0.001f, 1.001f);
+            var a = new Vector3(gruen.Ecken[i + 6], gruen.Ecken[i + 7], gruen.Ecken[i + 8]);
+            var b = new Vector3(pink.Ecken[i + 6], pink.Ecken[i + 7], pink.Ecken[i + 8]);
+            if (Vector3.Distance(a, b) > 0.05f)
+            {
+                anders++;
+                Assert.True(a.Y > a.X, "Hemd gruen");
+                Assert.True(b.X > b.Y, "Hemd pink");
+            }
+            else
+            {
+                gleich++;
+            }
+        }
+        Assert.True(anders > 100, "Hemd-Ecken: " + anders);
+        Assert.True(gleich > anders, "Rest bleibt");
+    }
+
     [Fact]
     public void FalschePruefsummeWirdAbgelehnt()
     {
@@ -63,8 +122,10 @@ public class SpielGrafikTests
             Assert.True(Py.Gleich(teil["art"], "block"), schluessel + " ist kein Block");
             Assert.NotNull(bib.Modell(name));
         }
-        // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Zug (Schienen seit P7-10 Nachtrag 1 eigene Geometrie)
-        var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" };
+        // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Zug (Schienen seit P7-10 Nachtrag 1 eigene Geometrie),
+        // seit W5 Moebel der Innenraeume und die Figur
+        var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c", Figur.Modell }
+            .Concat(Innenraum.Modelle).ToList();
         foreach (var m in bib.Modelle)
         {
             Assert.True(bib.Bloecke.Values.Contains(m.Name) || fest.Contains(m.Name), m.Name + " wird nicht genutzt");
@@ -83,6 +144,8 @@ public class SpielGrafikTests
             ["commercial"] = "Grafik Kenney City Kit Commercial",
             ["suburban"] = "Grafik Kenney City Kit Suburban",
             ["train"] = "Grafik Kenney Train Kit",
+            ["furniture"] = "Grafik Kenney Furniture Kit",
+            ["characters"] = "Grafik Kenney Animated Characters 3",
         };
         foreach (var paket in genutzt)
         {

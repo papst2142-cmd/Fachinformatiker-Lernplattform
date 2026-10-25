@@ -37,8 +37,8 @@ public static class SpielStart
         var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
         var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");
         var stadt = new Stadt(inhalt, daten);
-        var buero = ProbeWelt.BueroBauen(name => Muss("inhalte/spiel/" + name + ".json"));
-        return Neu(stadt, buero, GrafikLaden());
+        var innenraeume = Py.Lesen(Muss("inhalte_csharp/spiel/innenraeume.json")) as PyObjekt;
+        return Neu(stadt, GrafikLaden(), innenraeume);
     }
 
     /// <summary>
@@ -66,10 +66,10 @@ public static class SpielStart
     public static string? GrafikFehler { get; private set; }
 
     /// <summary>Neuer Spielstand (nur im Arbeitsspeicher) mit der Probe-Figur, Tag 1 um 07:00 zu Hause.</summary>
-    public static StadtSpiel Neu(Stadt stadt, ProbeFlaeche buero, GrafikBibliothek? grafik)
+    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume)
     {
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil(ProbeName, new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, buero, grafik);
+        return new StadtSpiel(stadt, ablauf, grafik, innenraeume);
     }
 }
