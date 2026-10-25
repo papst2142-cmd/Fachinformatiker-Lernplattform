@@ -14,8 +14,15 @@ public class SpielInhaltTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
 
-    internal static readonly PyObjekt Inhalt = SpielInhalt.Laden(Path.Combine(Pfade.Inhalte, "spiel"),
-        Lerninhalte.Laden(Pfade.Inhalte).Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList());
+    internal static readonly PyObjekt Inhalt = Laden();
+
+    /// <summary>Spielinhalte laden; dabei die Themen der Lerninhalte fuer alle Spiel-Tests setzen (SpielThemen.Standard).</summary>
+    private static PyObjekt Laden()
+    {
+        var lernen = Lerninhalte.Laden(Pfade.Inhalte);
+        SpielThemen.Standard ??= new SpielThemen(lernen);
+        return SpielInhalt.Laden(Path.Combine(Pfade.Inhalte, "spiel"), lernen.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList());
+    }
 
     private static object? PyWert(JsonElement e) => Py.Lesen(e.GetRawText());
 

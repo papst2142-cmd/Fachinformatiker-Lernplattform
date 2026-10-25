@@ -413,14 +413,11 @@ public static class Wohnung
         ? Prozent("Zur Miete: %s pro Arbeitstag, Kaution %s hinterlegt", GanzeEuro(stand.Miete), GanzeEuro(stand.Kaution))
         : "";
 
-    /// <summary>day_end_money_text ohne Firma: "Gehalt: +190 €." bzw. mit Miete.</summary>
-    public static string FeierabendGeldText(PyObjekt daten)
+    /// <summary>day_end_money_text: "Gehalt: +190 €." bzw. mit Miete; mit Firma der Tagesabschluss der Firma.</summary>
+    public static string FeierabendGeldText(PyObjekt daten, PyObjekt? inhalt = null)
     {
-        if (Py.Wahr(Get(daten, "firma")))
-        {
-            throw new NotSupportedException("Feierabend der Firma kommt in Phase 7 W3");
-        }
-        var text = "Gehalt: +" + GanzeEuro(Get(daten, "gehalt", 0L)) + ".";
+        var text = Py.Wahr(Get(daten, "firma")) ? Betrieb.FirmenTagText(Objekt(daten["firma"]), inhalt ?? throw new ArgumentNullException(nameof(inhalt)))
+            : "Gehalt: +" + GanzeEuro(Get(daten, "gehalt", 0L)) + ".";
         if (Py.Wahr(Get(daten, "miete")))
         {
             text += " Miete: -" + GanzeEuro(daten["miete"]) + ".";
