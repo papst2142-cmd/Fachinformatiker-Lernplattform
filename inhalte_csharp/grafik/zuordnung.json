@@ -1,5 +1,5 @@
 {
- "_hinweis": "Phase 7 W4 (Weisung P7-9 Nachtrag 3/4): welcher Block (Modell aus orte.json/stadt.json : Nummer des Teils ab 0) als welches CC0-Modell (modelle.json) gezeichnet wird. Bloecke ohne Eintrag bleiben eigene Geometrie (z. B. Lokschuppen mit Toren, Haltepunkt). Baeume (tree_large/tree_small), Schienen (railroad-straight) und der stehende Zug am laengsten geraden Gleisstueck kommen ohne Eintrag.",
+ "_hinweis": "Phase 7 W4 (Weisung P7-9 Nachtrag 3/4): welcher Block (Modell aus orte.json/stadt.json : Nummer des Teils ab 0) als welches CC0-Modell (modelle.json) gezeichnet wird. Bloecke ohne Eintrag bleiben eigene Geometrie (z. B. Lokschuppen mit Toren, Haltepunkt). Baeume (tree_large/tree_small) und der stehende Zug am laengsten geraden Gleisstueck kommen ohne Eintrag; Schienen und Fluss sind seit Weisung P7-10 Nachtrag 1 eigene Geometrie in glatten Boegen.",
  "bloecke": {
   "stellwerk:0": "house_type15",
   "bitweiche:0": "building-k@a",

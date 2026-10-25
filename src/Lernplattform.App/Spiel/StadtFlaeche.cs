@@ -540,7 +540,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
     }
 
-    /// <summary>Tippen an (x, y) in Punkten: Stadt -> Haus unter dem Finger, Buero -> zum Bodenpunkt.</summary>
+    /// <summary>Tippen an (x, y) in Punkten: Stadt -> Haus unter dem Finger, sonst zum Bodenpunkt; Buero -> zum Bodenpunkt.</summary>
     public void Tippen(Point p)
     {
         if (AktuelleKamera is not { } kamera || _spiel is not { } spiel)
@@ -559,6 +559,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             && spiel.Szene.OrtBei(strahl.Start, strahl.Richtung) is { } ort)
         {
             spiel.GeheZu(ort.Id);
+        }
+        else if (kamera.Boden((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height) is { } boden)
+        {
+            // kein Haus getroffen: frei dorthin gehen (P7-10 Nachtrag 1, Wunsch 3)
+            spiel.GeheZu(boden.X, boden.Y);
         }
         AnfordernBild();
     }

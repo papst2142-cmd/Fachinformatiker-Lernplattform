@@ -361,6 +361,23 @@ public static partial class AutoMessung
         Pruefe("Tippen auf ein Haus geht hin", spiel.Jetzt.Ort == "bitweiche", "Ziel " + spiel.Jetzt.Ort + " (" + spiel.Zeile + ")");
         spiel.SofortAnkommen();
 
+        // P7-10 Nachtrag 1 (Wunsch 3): Tippen auf einen freien Platz (Park am Fluss) geht dorthin und kostet Spielzeit
+        var frei = new System.Numerics.Vector3(4f, 0f, 19.5f);
+        kamera.Setzen(frei.X, frei.Z);
+        await seite.Flaeche.NaechstesBildAsync();
+        var uhrVorher = spiel.Jetzt.Uhr;
+        if (kamera.Bildpunkt(frei, (float)seite.Flaeche.Bounds.Width, (float)seite.Flaeche.Bounds.Height) is { } fp)
+        {
+            seite.Flaeche.Tippen(new Point(fp.X, fp.Y));
+        }
+        spiel.SofortAnkommen();
+        var dort = Math.Abs(spiel.FigurX - frei.X) < 0.3f && Math.Abs(spiel.FigurZ - frei.Z) < 0.3f;
+        var gelaufen = spiel.ImFreien && dort && spiel.Jetzt.Uhr > uhrVorher && spiel.Ablauf.Stand.Verlauf[^1].Art == Lernplattform.Core.Spiel.Stadt.Gelaufen;
+        Pruefe("Tippen auf einen freien Platz geht hin", gelaufen, string.Create(CultureInfo.InvariantCulture,
+            $"Figur bei {spiel.FigurX:F2}/{spiel.FigurZ:F2}, Uhr {uhrVorher} -> {spiel.Jetzt.Uhr} ({spiel.Zeile})"));
+        // Kamera zurueck zur Bitweiche (dort stehen die Namensschilder fuer die naechste Pruefung)
+        kamera.Setzen((ort.KastenMin.X + ort.KastenMax.X) / 2, (ort.KastenMin.Z + ort.KastenMax.Z) / 2);
+
         // Tasten: Pfeil verschiebt, Q dreht, + zoomt
         float x = kamera.ZielX, d = kamera.Drehung, a = kamera.Abstand;
         var tasten = seite.Flaeche.Taste(Key.Left) & seite.Flaeche.Taste(Key.Q) & seite.Flaeche.Taste(Key.OemPlus);

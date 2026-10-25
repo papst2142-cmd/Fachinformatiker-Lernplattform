@@ -90,11 +90,6 @@
    "datei": "Models/OBJ format/tree_small.obj"
   },
   {
-   "name": "railroad-straight",
-   "paket": "train",
-   "datei": "Models/OBJ format/railroad-straight.obj"
-  },
-  {
    "name": "train-electric-city-a",
    "paket": "train",
    "datei": "Models/OBJ format/train-electric-city-a.obj"

@@ -30,8 +30,8 @@ public sealed class StadtSpiel
         Grafik = grafik;
         Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik);
         var hier = Szene.Ort(Jetzt.Ort);
-        FigurX = hier?.TuerX ?? 0;
-        FigurZ = hier?.TuerZ ?? 0;
+        FigurX = hier?.StehX ?? 0;
+        FigurZ = hier?.StehZ ?? 0;
         // Beim Oeffnen erklaert die Zeile die Bedienung (Weisung P7-9 Punkt 1); ab dem ersten Schritt Ort und Uhr.
         Zeile = SpielProbeTexte.Hinweis;
     }
@@ -48,6 +48,12 @@ public sealed class StadtSpiel
     public StadtSzene Szene { get; private set; }
 
     public bool ImInnenraum { get; private set; }
+
+    /// <summary>
+    /// Die Figur steht frei in der Stadt (hingetippt, Nachtrag 1 Wunsch 3), nicht vor dem Ort, an dem
+    /// sie zuletzt war: dann kein Hineingehen und kein Warten, bis sie wieder an einem Ort ankommt.
+    /// </summary>
+    public bool ImFreien { get; private set; }
 
     /// <summary>"stadt" oder "buero" (welche Flaeche die Darstellung zeigt).</summary>
     public string FlaecheId => ImInnenraum ? ProbeWelt.Buero : ProbeWelt.Stadt;
@@ -99,16 +105,41 @@ public sealed class StadtSpiel
             SofortAnkommen();
             von = Jetzt.Ort;
         }
-        var ergebnis = Stadt.Gehen(Ablauf, ziel);
+        // von einem freien Punkt: Weg ueber das Laufraster bis vor die Tuer, die Schritte zaehlt dieser Weg
+        List<(double X, double Y)>? frei = null;
+        if (ImFreien && Szene.Ort(ziel) is { } zielOrt)
+        {
+            frei = [.. Szene.Laufraster.Weg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ))];
+            if (frei.Count == 0 && !(Math.Abs(FigurX - zielOrt.StehX) < 0.01 && Math.Abs(FigurZ - zielOrt.StehZ) < 0.01))
+            {
+                Zeile = SpielProbeTexte.NichtErreichbar;
+                Geaendert?.Invoke();
+                return StadtGrund.KeinWeg;
+            }
+        }
+        var ergebnis = frei is null ? Stadt.Gehen(Ablauf, ziel) : Stadt.Gehen(Ablauf, ziel, Schritte(frei));
         if (!ergebnis.Ok)
         {
             Zeile = StadtTexte.Grund(ergebnis.Grund);
             Geaendert?.Invoke();
             return ergebnis.Grund;
         }
-        var zellen = Stadt.Weg(von, ziel)!.Zellen;
         _weg.Clear();
-        _weg.AddRange(zellen.Skip(1).Select(z => ((z.X + 0.5) * Stadt.Zelle, (z.Y + 0.5) * Stadt.Zelle)));
+        if (frei is not null)
+        {
+            _weg.AddRange(frei);
+        }
+        else
+        {
+            var zellen = Stadt.Weg(von, ziel)!.Zellen;
+            _weg.AddRange(zellen.Skip(1).Select(z => ((z.X + 0.5) * Stadt.Zelle, (z.Y + 0.5) * Stadt.Zelle)));
+            if (Szene.Ort(ziel) is { } o)
+            {
+                // die letzten Meter von der Tuerzelle auf den Stehplatz vor der Tuer
+                _weg.Add((o.StehX, o.StehZ));
+            }
+        }
+        ImFreien = false;
         _zielOrt = ziel;
         var daten = ergebnis.Daten!;
         Zeile = string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.Unterwegs, Name(ziel)) + " "
@@ -121,12 +152,20 @@ public sealed class StadtSpiel
         return StadtGrund.Ok;
     }
 
-    /// <summary>Im Innenraum: zum Bodenpunkt gehen (freie Wegsuche, ohne Spielzeit). In der Stadt nur von Ort zu Ort.</summary>
+    /// <summary>Schritte eines freien Wegs: seine Laenge in Zellen des Stadt-Rasters, aufgerundet.</summary>
+    public long Schritte(IReadOnlyList<(double X, double Y)> weg) =>
+        (long)Math.Ceiling((Wegsuche.Laenge((FigurX, FigurZ), weg) / Stadt.Zelle) - 1e-9);
+
+    /// <summary>
+    /// Zum Bodenpunkt gehen. Im Innenraum ohne Spielzeit; in der Stadt (Nachtrag 1, Wunsch 3) ueber
+    /// Strassen, Wege, Wiese und Parks, nicht durch Haeuser, Wasser und Gleis (nur Bruecken und
+    /// Uebergaenge). Die Schritte kosten Spielzeit wie ein Weg zu einem Ort (Ereignis stadt_gelaufen).
+    /// </summary>
     public bool GeheZu(double x, double z)
     {
         if (!ImInnenraum)
         {
-            return false;
+            return InDerStadtGehen(x, z);
         }
         var weg = Buero.Wege.Weg((FigurX, FigurZ), (x, z));
         _weg.Clear();
@@ -134,6 +173,36 @@ public sealed class StadtSpiel
         Zeile = weg.Count == 0 ? SpielProbeTexte.NichtErreichbar : SpielProbeTexte.ImBuero;
         Geaendert?.Invoke();
         return weg.Count > 0;
+    }
+
+    private bool InDerStadtGehen(double x, double z)
+    {
+        if (Geht)
+        {
+            SofortAnkommen();
+        }
+        var weg = Szene.Laufraster.Weg((FigurX, FigurZ), (x, z));
+        if (weg.Count == 0)
+        {
+            Zeile = SpielProbeTexte.NichtErreichbar;
+            Geaendert?.Invoke();
+            return false;
+        }
+        var schritte = Math.Max(1, Schritte(weg));
+        var ergebnis = Stadt.Laufen(Ablauf, schritte);
+        if (!ergebnis.Ok)
+        {
+            Zeile = StadtTexte.Grund(ergebnis.Grund);
+            Geaendert?.Invoke();
+            return false;
+        }
+        _weg.Clear();
+        _weg.AddRange(weg);
+        _zielOrt = null;
+        ImFreien = true;
+        Zeile = string.Format(CultureInfo.InvariantCulture, StadtTexte.Wegdauer, ergebnis.Daten!["schritte"], ergebnis.Daten["minuten"]) + ".";
+        Geaendert?.Invoke();
+        return true;
     }
 
     /// <summary>Figur um <paramref name="sekunden"/> weiterbewegen; true, solange sie geht.</summary>
@@ -195,6 +264,10 @@ public sealed class StadtSpiel
             _zielOrt = null;
             NeueSzene();
         }
+        else if (ImFreien)
+        {
+            Zeile = SpielProbeTexte.ImFreien;
+        }
         Geaendert?.Invoke();
     }
 
@@ -216,12 +289,12 @@ public sealed class StadtSpiel
         return name + ": " + (oeffnet ? StadtTexte.Grund(StadtGrund.Geschlossen, Stadt.Uhrzeit(zeit.Auf)) : StadtTexte.OeffnetNichtMehr);
     }
 
-    private string Innenraum(string id) =>
-        MitInnenraum.Contains(id) ? "" : " " + string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.KeinInnenraum, Name(id));
+    // der Ortsname steht schon vorn in der Zeile (Nachtrag 1: nicht doppelt)
+    private static string Innenraum(string id) => MitInnenraum.Contains(id) ? "" : " " + SpielProbeTexte.KeinInnenraum;
 
-    public bool KannWarten => !ImInnenraum && !Geht && Stadt.WartenPruefen(Ablauf.Stand).Ok;
+    public bool KannWarten => !ImInnenraum && !ImFreien && !Geht && Stadt.WartenPruefen(Ablauf.Stand).Ok;
 
-    public bool KannBetreten => !ImInnenraum && !Geht && MitInnenraum.Contains(Jetzt.Ort) && Stadt.Betreten(Ablauf.Stand) == StadtGrund.Ok;
+    public bool KannBetreten => !ImInnenraum && !ImFreien && !Geht && MitInnenraum.Contains(Jetzt.Ort) && Stadt.Betreten(Ablauf.Stand) == StadtGrund.Ok;
 
     /// <summary>Vor dem geschlossenen Ort bis zur Oeffnung warten (Ereignis stadt_gewartet).</summary>
     public StadtGrund Warten()
@@ -257,8 +330,8 @@ public sealed class StadtSpiel
         _weg.Clear();
         ImInnenraum = false;
         var hier = Szene.Ort(Jetzt.Ort);
-        FigurX = hier?.TuerX ?? 0;
-        FigurZ = hier?.TuerZ ?? 0;
+        FigurX = hier?.StehX ?? 0;
+        FigurZ = hier?.StehZ ?? 0;
         FigurRichtung = 0;
         Zeile = OrtZeile(Jetzt.Ort);
         Geaendert?.Invoke();

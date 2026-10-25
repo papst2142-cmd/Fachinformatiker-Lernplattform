@@ -103,7 +103,7 @@ public class SpielProbeTests
         Assert.Contains(szene.Orte, o => o.Id == "moebelhaus");
         Assert.Contains(szene.Orte, o => o.Id == "elektromarkt");
         Assert.DoesNotContain(szene.Orte, o => o.Id == "lokschuppen");   // noch nicht frei (Python place_unlocked)
-        Assert.True(szene.Teile.Count > 500);
+        Assert.True(szene.Teile.Count + szene.Streifen.Count > 500);
         foreach (var ort in szene.Orte)
         {
             Assert.True(ort.KastenMin.X < ort.KastenMax.X && ort.KastenMin.Y < ort.KastenMax.Y && ort.KastenMin.Z < ort.KastenMax.Z, ort.Id);
@@ -168,7 +168,7 @@ public class SpielProbeTests
         spiel.SofortAnkommen();
         Assert.False(spiel.Geht);
         var tuer = spiel.Szene.Ort("moebelhaus")!;
-        Assert.Equal((tuer.TuerX, tuer.TuerZ), (spiel.FigurX, spiel.FigurZ));
+        Assert.Equal((tuer.StehX, tuer.StehZ), (spiel.FigurX, spiel.FigurZ));
         Assert.True(spiel.Jetzt.Uhr < 600, "Moebelhaus oeffnet um 10:00");
         Assert.Equal("Möbelhaus: Geschlossen. Öffnet um 10:00 Uhr.", spiel.Zeile);
         Assert.True(spiel.KannWarten);
@@ -286,6 +286,175 @@ public class SpielProbeTests
         Assert.True(StadtSzene.Licht("a", 0, 1));
         var an = Enumerable.Range(0, 400).Count(i => StadtSzene.Licht("x", i, 0.5));
         Assert.InRange(an, 150, 250);
+    }
+
+    [Fact]
+    public void GlatteKurveOhneKnick()
+    {
+        // rechter Winkel: Bogen mit Radius 3 statt Ecke, Anfang und Ende bleiben, Richtung aendert sich in kleinen Stuecken
+        var p = new List<Vector2> { new(0, 0), new(10, 0), new(10, 10) };
+        var glatt = Kurve.Glatt(p);
+        Assert.Equal(p[0], glatt[0]);
+        Assert.Equal(p[^1], glatt[^1]);
+        Assert.True(glatt.Count > 20);
+        for (var i = 1; i + 1 < glatt.Count; i++)
+        {
+            var a = Vector2.Normalize(glatt[i] - glatt[i - 1]);
+            var b = Vector2.Normalize(glatt[i + 1] - glatt[i]);
+            var grad = MathF.Acos(Math.Clamp(Vector2.Dot(a, b), -1f, 1f)) * 180f / MathF.PI;
+            Assert.True(grad <= Kurve.GradJeStueck + 0.01f, "Knick von " + grad + " Grad bei Punkt " + i);
+        }
+        // alle Bogenpunkte liegen 3 vom Mittelpunkt (7, 3) entfernt
+        foreach (var q in glatt.Where(q => q.X > 7.001f && q.Y < 2.999f))
+        {
+            Assert.Equal(3f, Vector2.Distance(q, new Vector2(7, 3)), 3);
+        }
+        // kurze Stuecke: die Boegen treffen sich in der Mitte, kein Punkt rutscht zurueck
+        var zickzack = Kurve.Glatt([new(0, 0), new(1, 0.3f), new(2, 0), new(3, 0.3f), new(4, 0)]);
+        for (var i = 1; i < zickzack.Count; i++)
+        {
+            Assert.True(zickzack[i].X > zickzack[i - 1].X - 1e-5f);
+        }
+        Assert.Equal(1f, Kurve.Abstand(new Vector2(5, 1), [new(0, 0), new(10, 0)]), 5);
+    }
+
+    [Fact]
+    public void StreifenHatGleicheBreiteAuchImBogen()
+    {
+        var glatt = Kurve.Glatt([new(0, 0), new(6, 0), new(6, 6)]);
+        var netz = new Netz();
+        netz.Hinzu(new Streifen(glatt, 1f, 0.01f, 0.01f, Vector3.One));
+        // jede Ecke der Oberseite liegt eine halbe Breite von der Mittellinie
+        for (var i = 0; i < netz.AnzahlEcken; i++)
+        {
+            var q = new Vector2(netz.Ecken[i * Netz.Zahlen], netz.Ecken[(i * Netz.Zahlen) + 2]);
+            Assert.Equal(0.5f, Kurve.Abstand(q, glatt), 2);
+            Assert.Equal(1f, netz.Ecken[(i * Netz.Zahlen) + 4]);   // Normale nach oben
+        }
+    }
+
+    [Fact]
+    public void FreiesGehenNichtDurchWasserGleisUndHaeuser()
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), null);
+        var raster = szene.Laufraster;
+        var inhalt = SpielInhaltTests.Inhalt;
+        var welt = SpielDaten.Objekt(SpielDaten.Objekt(inhalt["orte"])["welt"]);
+        List<Vector2> Linie(string typ) => [.. SpielDaten.Liste(SpielDaten.ListeOderLeer(welt, "landschaft").Select(SpielDaten.Objekt)
+            .First(t => Py.Gleich(t["typ"], typ))["punkte"]).Select(SpielDaten.Liste).Select(q => new Vector2((float)Py.F(q[0]), (float)Py.F(q[1])))];
+        var strassen = SpielDaten.ListeOderLeer(welt, "landschaft").Select(SpielDaten.Objekt).Where(t => Py.Gleich(t["typ"], "strasse"))
+            .Select(t => SpielDaten.Liste(t["punkte"]).Select(SpielDaten.Liste).Select(q => new Vector2((float)Py.F(q[0]), (float)Py.F(q[1]))).ToList()).ToList();
+        // Fusswege von der Tuer zur Strasse (stadt.json) queren das Gleis wie Strassen (Haltepunkt Birkenhain)
+        strassen.AddRange(SpielDaten.Objekt(SpielStadtTests.Daten.Value["zugaenge"]).Select(z => SpielDaten.Liste(SpielDaten.Objekt(z.Value)["weg"])
+            .Select(SpielDaten.Liste).Select(q => new Vector2((float)Py.F(q[0]), (float)Py.F(q[1]))).ToList()));
+        var fluss = Kurve.Glatt(Linie("fluss"));
+        var bahn = Kurve.Glatt(Linie("bahn"));
+        int wasser = 0, bruecke = 0, gleis = 0, uebergang = 0;
+        for (var x = 0.125; x < szene.Breite; x += StadtSzene.LaufSchritt)
+        {
+            for (var z = 0.125; z < szene.Tiefe; z += StadtSzene.LaufSchritt)
+            {
+                var c = new Vector2((float)x, (float)z);
+                var aufStrasse = strassen.Any(l => Kurve.Abstand(c, l) <= Math.Max(StadtSzene.StrassenBreite / 2, 0.25f));
+                if (Kurve.Abstand(c, fluss) < StadtSzene.FlussBreite / 2)
+                {
+                    if (aufStrasse)
+                    {
+                        Assert.True(raster.KannStehen(x, z), "Bruecke " + c);
+                        bruecke++;
+                    }
+                    else
+                    {
+                        Assert.False(raster.KannStehen(x, z), "Wasser " + c);
+                        wasser++;
+                    }
+                }
+                if (Kurve.Abstand(c, bahn) < StadtSzene.GleisBreite / 2)
+                {
+                    if (aufStrasse)
+                    {
+                        uebergang++;
+                    }
+                    else
+                    {
+                        Assert.False(raster.KannStehen(x, z), "Gleis " + c);
+                        gleis++;
+                    }
+                }
+            }
+        }
+        Assert.True(wasser > 50 && bruecke > 0 && gleis > 50 && uebergang > 0, $"{wasser} {bruecke} {gleis} {uebergang}");
+        // mitten in einem Haus steht niemand, vor jeder Tuer schon
+        foreach (var ort in szene.Orte)
+        {
+            Assert.True(raster.KannStehen(ort.StehX, ort.StehZ), ort.Id);
+        }
+        var bitweiche = szene.Ort("bitweiche")!;
+        Assert.False(raster.KannStehen((bitweiche.KastenMin.X + bitweiche.KastenMax.X) / 2, (bitweiche.KastenMin.Z + bitweiche.KastenMax.Z) / 2));
+        // ein Weg ueber den Fluss geht ueber eine Bruecke: jeder Punkt der Strecke ist frei
+        var von = (X: 4.125, Y: 18.125);   // Mitte einer Zelle (die Glaettung rechnet ab der Zellmitte)
+        var weg = raster.Weg(von, (14.0, 16.0));
+        Assert.NotEmpty(weg);
+        foreach (var p in weg)
+        {
+            Assert.True(raster.StreckeFrei(von, p), "Strecke " + von + " -> " + p + " frei: " + raster.KannStehen(von.X, von.Y));
+            von = p;
+        }
+    }
+
+    [Fact]
+    public void FreiesGehenKostetSpielzeitUndBleibtAmOrt()
+    {
+        var spiel = NeuesSpiel();
+        var (x0, z0) = (spiel.FigurX, spiel.FigurZ);
+        Assert.True(spiel.GeheZu(24.0, 16.0));
+        var e = spiel.Ablauf.Stand.Verlauf[^1];
+        Assert.Equal(Stadt.Gelaufen, e.Art);
+        var schritte = Py.Int(e.Daten["schritte"]);
+        Assert.True(schritte > 0);
+        Assert.Equal(schritte * 2, Py.Int(e.Daten["minuten"]));
+        // Schritte = Weglaenge in Zellen zu 0,5, aufgerundet (mindestens die Luftlinie)
+        var luft = Math.Sqrt(Math.Pow(24.0 - x0, 2) + Math.Pow(16.0 - z0, 2));
+        Assert.True(schritte >= (long)Math.Floor(luft / 0.5));
+        Assert.Equal(420 + (schritte * 2), spiel.Jetzt.Uhr);
+        Assert.Equal("zuhause", spiel.Jetzt.Ort);   // der Ort bleibt der zuletzt erreichte
+        spiel.SofortAnkommen();
+        Assert.True(spiel.ImFreien);
+        Assert.Equal(SpielProbeTexte.ImFreien, spiel.Zeile);
+        Assert.False(spiel.KannBetreten);
+        Assert.False(spiel.KannWarten);
+        var uhr = spiel.Jetzt.Uhr;
+        // von hier zu einem Ort: der freie Weg zaehlt (ein Ereignis stadt_gegangen mit "nach")
+        spiel.SofortAnkommen();
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("bitweiche"));
+        var g = spiel.Ablauf.Stand.Verlauf[^1];
+        Assert.Equal(Stadt.Gegangen, g.Art);
+        Assert.Equal("bitweiche", g.Daten["nach"]);
+        spiel.SofortAnkommen();
+        Assert.False(spiel.ImFreien);
+        var ort = spiel.Szene.Ort("bitweiche")!;
+        Assert.Equal((ort.StehX, ort.StehZ), (spiel.FigurX, spiel.FigurZ));
+        Assert.True(spiel.Jetzt.Uhr > uhr);
+        Assert.True(spiel.KannBetreten);
+        // abends nicht mehr frei gehen
+        var abend = NeuesSpiel();
+        abend.Ablauf.Log(Stadt.Gewartet, new Lernplattform.Core.Daten.PyObjekt { { "tag", 1L }, { "ort", "zuhause" }, { "minuten", 779L } });
+        Assert.False(abend.GeheZu(24.0, 16.0));
+        Assert.Equal(StadtTexte.Grund(StadtGrund.Abend), abend.Zeile);
+        Assert.Equal(1199, abend.Jetzt.Uhr);
+    }
+
+    [Fact]
+    public void StehplatzNichtAufDemGleisUndZeileOhneDoppeltenNamen()
+    {
+        var spiel = NeuesSpiel();
+        var talheim = spiel.Szene.Ort("talheim")!;
+        Assert.True(talheim.StehZ > 11.0f, "Stehplatz am Bahnhof auf dem Fussweg, nicht am Gleis: " + talheim.StehZ);
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("talheim"));
+        spiel.SofortAnkommen();
+        Assert.Equal((talheim.StehX, talheim.StehZ), (spiel.FigurX, spiel.FigurZ));
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(spiel.Zeile, "Bahnhof Talheim"));
+        Assert.EndsWith("Innenraum kommt später.", spiel.Zeile);
     }
 
     [Fact]

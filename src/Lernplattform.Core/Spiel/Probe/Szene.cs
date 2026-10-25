@@ -97,6 +97,64 @@ public sealed class Netz
         }
     }
 
+    /// <summary>Ein Streifen: Oberseite (und bei Hoehe Seiten und Enden) entlang des Linienzugs, Ecken auf Gehrung.</summary>
+    public void Hinzu(Streifen s)
+    {
+        if (s.Punkte.Count < 2)
+        {
+            return;
+        }
+        var n = Kurve.Normalen(s.Punkte);
+        var halb = s.Breite / 2;
+        var links = new List<Vector2>();
+        var rechts = new List<Vector2>();
+        for (var i = 0; i < s.Punkte.Count; i++)
+        {
+            var q = n[i].Quer * (halb * n[i].Faktor);
+            links.Add(s.Punkte[i] + q);
+            rechts.Add(s.Punkte[i] - q);
+        }
+        var hoch = s.Oben - s.Unten > 1e-5f;
+        Vector3 O(Vector2 p) => new(p.X, s.Oben, p.Y);
+        Vector3 U(Vector2 p) => new(p.X, s.Unten, p.Y);
+        for (var i = 0; i + 1 < s.Punkte.Count; i++)
+        {
+            Flaeche(O(rechts[i]), O(links[i]), O(links[i + 1]), O(rechts[i + 1]), s.Farbe, Vector3.UnitY);
+            if (hoch)
+            {
+                var seite = s.Farbe * 0.85f;
+                Flaeche(U(links[i]), U(links[i + 1]), O(links[i + 1]), O(links[i]), seite, null);
+                Flaeche(U(rechts[i + 1]), U(rechts[i]), O(rechts[i]), O(rechts[i + 1]), seite, null);
+            }
+        }
+        if (hoch)
+        {
+            Flaeche(U(rechts[0]), U(links[0]), O(links[0]), O(rechts[0]), s.Farbe * 0.85f, null);
+            Flaeche(U(links[^1]), U(rechts[^1]), O(rechts[^1]), O(links[^1]), s.Farbe * 0.85f, null);
+        }
+    }
+
+    /// <summary>Viereck mit fester Normale (oben) oder aus den Ecken; ohne Flaeche (entartet) nichts.</summary>
+    private void Flaeche(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 farbe, Vector3? normale)
+    {
+        var kreuz = Vector3.Cross(b - a, c - a);
+        if (kreuz.LengthSquared() < 1e-14f)
+        {
+            kreuz = Vector3.Cross(c - a, d - a);
+            if (kreuz.LengthSquared() < 1e-14f)
+            {
+                return;
+            }
+        }
+        var n = normale ?? Vector3.Normalize(kreuz);
+        var basis = (uint)AnzahlEcken;
+        foreach (var p in (Vector3[])[a, b, c, d])
+        {
+            Ecke(p, n, farbe);
+        }
+        _indizes.AddRange([basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
+    }
+
     private void Satteldach(Teil t)
     {
         var laengsX = t.X2 - t.X1 >= t.Z2 - t.Z1;

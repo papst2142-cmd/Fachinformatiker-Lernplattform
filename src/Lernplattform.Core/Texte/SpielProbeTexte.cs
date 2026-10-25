@@ -7,7 +7,7 @@ namespace Lernplattform.Core.Texte;
 public static class SpielProbeTexte
 {
     public const string Titel = "Spiel (Probe 3D)";
-    public const string Hinweis = "Tippe auf ein Haus oder seinen Namen, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, Q und E drehen.";
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, Q und E drehen.";
     public const string Orte = "Orte";
     public const string Hingehen = "Hingehen";
     public const string Betreten = "Hineingehen";
@@ -16,10 +16,11 @@ public static class SpielProbeTexte
     public const string Offen = "{0}: geöffnet bis {1} Uhr.";
     public const string ImmerOffen = "{0}: immer offen.";
     public const string Geschlossen = "{0}: geschlossen, öffnet um {1} Uhr.";
-    public const string KeinInnenraum = "{0}: Innenraum kommt später.";
+    public const string KeinInnenraum = "Innenraum kommt später.";
     public const string Unterwegs = "Unterwegs zu {0} …";
     public const string Angekommen = "Angekommen.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
+    public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
     public const string ImBuero = "Büro der Bitweiche. Tippe auf den Boden, um hinzugehen.";
     public const string Spielzeit = "Spielzeit {0} Uhr";
     public const string Bilder = "{0} Bilder/s";

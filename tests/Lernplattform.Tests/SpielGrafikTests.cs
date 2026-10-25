@@ -63,8 +63,8 @@ public class SpielGrafikTests
             Assert.True(Py.Gleich(teil["art"], "block"), schluessel + " ist kein Block");
             Assert.NotNull(bib.Modell(name));
         }
-        // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Schienen, Zug
-        var fest = new[] { "tree_large", "tree_small", "railroad-straight", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" };
+        // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Zug (Schienen seit P7-10 Nachtrag 1 eigene Geometrie)
+        var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" };
         foreach (var m in bib.Modelle)
         {
             Assert.True(bib.Bloecke.Values.Contains(m.Name) || fest.Contains(m.Name), m.Name + " wird nicht genutzt");
@@ -99,7 +99,8 @@ public class SpielGrafikTests
         var stadt = new Stadt(SpielInhaltTests.Inhalt, SpielStadtTests.Daten.Value);
         var szene = StadtSzene.Bauen(stadt, null, Bibliothek.Value);
         var namen = szene.Stuecke.Select(s => s.Name).ToHashSet();
-        Assert.Contains("railroad-straight", namen);
+        Assert.DoesNotContain("railroad-straight", namen);
+        Assert.True(szene.Streifen.Count > 100, "Gleis und Fluss als Streifen");
         Assert.Contains("train-electric-city-a", namen);
         Assert.True(namen.Contains("tree_large") || namen.Contains("tree_small"));
         // Bitweiche und Zuhause stehen als CC0-Haeuser

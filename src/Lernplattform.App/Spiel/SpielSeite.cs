@@ -56,6 +56,7 @@ public sealed class SpielSeite : Grid
     private bool _ersatzErzwungen;
     private int _anhaengen;
     private TopLevel? _oben;
+    private bool _autoRandVorher = true;
 
     public SpielSeite(Func<StadtSpiel> laden, Action verlassen)
     {
@@ -187,6 +188,15 @@ public sealed class SpielSeite : Grid
             if (_oben is not null)
             {
                 _oben.BackRequested += Zurueck;
+                // P7-10 Nachtrag 1: die 3D-Flaeche reicht bis an den Rand (auch neben die Kamera-Aussparung),
+                // nur die Knoepfe und Karten bleiben im sicheren Bereich
+                _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_oben);
+                TopLevel.SetAutoSafeAreaPadding(_oben, false);
+                if (_oben.InsetsManager is { } rand)
+                {
+                    rand.SafeAreaChanged += SicherAendern;
+                }
+                SicherSetzen();
             }
             Flaeche.Focus();
             var anhaengen = ++_anhaengen;
@@ -206,11 +216,25 @@ public sealed class SpielSeite : Grid
             if (_oben is not null)
             {
                 _oben.BackRequested -= Zurueck;
+                if (_oben.InsetsManager is { } rand)
+                {
+                    rand.SafeAreaChanged -= SicherAendern;
+                }
+                TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
                 _oben = null;
             }
         };
         Beschriften();
         Geladen = LadenAsync(laden);
+    }
+
+    private void SicherAendern(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => SicherSetzen();
+
+    /// <summary>Rand der Ebene = fester Rand plus sicherer Bereich des Geraets (Kamera-Aussparung, Leisten).</summary>
+    private void SicherSetzen()
+    {
+        var sicher = _oben?.InsetsManager?.SafeAreaPadding ?? default;
+        Ebene.Margin = new Thickness(Rand + sicher.Left, Rand + sicher.Top, Rand + sicher.Right, Rand + sicher.Bottom);
     }
 
     private async Task<StadtSpiel> LadenAsync(Func<StadtSpiel> laden)

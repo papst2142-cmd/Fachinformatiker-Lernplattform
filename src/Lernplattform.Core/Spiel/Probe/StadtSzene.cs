@@ -10,7 +10,16 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// (Grundflaeche der Gebaeude mal hoechstem Block) und Punkt fuer das Namensschild darueber.
 /// </summary>
 public sealed record StadtOrt(string Id, string Name, string Kurz, string Rolle, float TuerX, float TuerZ,
-    Vector3 KastenMin, Vector3 KastenMax, Vector3 Schild);
+    Vector3 KastenMin, Vector3 KastenMax, Vector3 Schild)
+{
+    /// <summary>
+    /// Wo die Figur vor dem Ort steht (P7-10 Nachtrag 1): ein kleines Stueck von der Tuer den Fussweg
+    /// entlang nach draussen, damit sie nicht in der Tuer, auf dem Bahnsteig im Zug oder halb im Haus steht.
+    /// </summary>
+    public float StehX { get; init; } = TuerX;
+
+    public float StehZ { get; init; } = TuerZ;
+}
 
 /// <summary>
 /// Phase 7, W4 (Weisung P7-9 Punkt 3c): die ganze Stadt aus <c>orte.json</c> und <c>stadt.json</c>
@@ -28,10 +37,18 @@ public sealed class StadtSzene
     public const float StrassenBreite = 0.72f;
     public const float FlussBreite = 0.65f;
 
-    private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek? grafik,
-        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe)
+    /// <summary>Rasterweite des freien Gehens (wie im Innenraum, WALK_STEP).</summary>
+    public const double LaufSchritt = 0.25;
+
+    /// <summary>So weit bleibt die Figur beim freien Gehen von Haeusern, Wasser und Gleis weg.</summary>
+    public const double LaufKoerper = 0.15;
+
+    private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<Streifen> streifen, IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek? grafik,
+        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe, Wegsuche laufraster)
     {
         Teile = teile;
+        Streifen = streifen;
+        Laufraster = laufraster;
         Stuecke = stuecke;
         Grafik = grafik;
         Orte = orte;
@@ -42,6 +59,16 @@ public sealed class StadtSzene
 
     public IReadOnlyList<Teil> Teile { get; }
 
+    /// <summary>Fluss, Ufer und Gleis als glatte Baender (P7-10 Nachtrag 1).</summary>
+    public IReadOnlyList<Streifen> Streifen { get; }
+
+    /// <summary>
+    /// Freies Gehen (P7-10 Nachtrag 1, Wunsch 3): begehbar sind Strassen, Fusswege, Wiese und Parks;
+    /// nicht Haeuser, Wasser (nur ueber Bruecken = Strasse ueber dem Fluss) und Gleis (nur an
+    /// Uebergaengen = Strasse ueber dem Gleis). Zellen zu <see cref="LaufSchritt"/>.
+    /// </summary>
+    public Wegsuche Laufraster { get; }
+
     /// <summary>Platzierte CC0-Modelle (leer ohne Grafik-Bibliothek).</summary>
     public IReadOnlyList<ModellStueck> Stuecke { get; }
 
@@ -51,6 +78,10 @@ public sealed class StadtSzene
     public Netz NetzBauen()
     {
         var netz = Netz.Aus(Teile);
+        foreach (var streifen in Streifen)
+        {
+            netz.Hinzu(streifen);
+        }
         foreach (var stueck in Stuecke)
         {
             if (Grafik?.Modell(stueck.Name) is { } modell)
@@ -93,6 +124,9 @@ public sealed class StadtSzene
         public static readonly Vector3 Boden = Netz.Farbe("#9CC48A");
         public static readonly Vector3 Park = Netz.Farbe("#7FB069");
         public static readonly Vector3 Wasser = Netz.Farbe("#4FA8D8");
+        public static readonly Vector3 Ufer = Netz.Farbe("#B9A77A");
+        public static readonly Vector3 Schwelle = Netz.Farbe("#6E4A2F");
+        public static readonly Vector3 Stahl = Netz.Farbe("#5E6472");
         public static readonly Vector3 Strasse = Netz.Farbe("#4A4560");
         public static readonly Vector3 Mittellinie = Netz.Farbe("#F4F1FA");
         public static readonly Vector3 Gleisbett = Netz.Farbe("#8E8AA3");
@@ -136,7 +170,12 @@ public sealed class StadtSzene
             Quader(-30, -0.06f, -30, breite + 30, 0f, tiefe + 30, Mischen(Farben.Boden, Schwarz, 0.12f)),
             Quader(0, -0.05f, 0, breite, 0.001f, tiefe, Farben.Boden),
         };
+        var streifen = new List<Streifen>();
+        var hindernisse = new List<(double, double, double, double)>();
+        var wasser = new List<List<Vector2>>();
+        var gleise = new List<List<Vector2>>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
+        var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
         {
             foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], art)))
@@ -150,14 +189,24 @@ public sealed class StadtSzene
                         break;
                     }
                     case "fluss":
-                        Linie(teile, Punkte(item["punkte"]), 0.006f, FlussBreite, Farben.Wasser);
+                    {
+                        // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2)
+                        var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
+                        streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, 0.003f, 0.003f, Farben.Ufer));
+                        streifen.Add(new Streifen(glatt, FlussBreite, 0.006f, 0.006f, Farben.Wasser));
+                        wasser.Add(glatt);
                         break;
+                    }
                     case "strasse":
                         Linie(teile, Punkte(item["punkte"]), 0.01f, StrassenBreite, Farben.Strasse);
                         break;
                     case "bahn":
-                        Gleis(teile, stuecke, grafik, Punkte(item["punkte"]));
+                    {
+                        var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
+                        Gleis(streifen, glatt, strassen);
+                        gleise.Add(glatt);
                         break;
+                    }
                 }
             }
         }
@@ -190,7 +239,7 @@ public sealed class StadtSzene
             var modell = Py.Str(item["modell"]);
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
-            Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell);
+            Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse);
             signatur.Add(modell + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
         var orte = new List<StadtOrt>();
@@ -202,7 +251,7 @@ public sealed class StadtSzene
             float ox = (float)Py.F(ort["x"]), oz = (float)Py.F(ort["y"]);
             var rolle = ort["rolle"] as string ?? "";
             var vorher = stuecke.Count;
-            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id);
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
@@ -217,15 +266,90 @@ public sealed class StadtSzene
                 teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
             }
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
+            var (sx, sz) = Stehplatz(stadt, id, tx, tz);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
-                tx, tz, min, max, schild));
+                tx, tz, min, max, schild) { StehX = sx, StehZ = sz });
             signatur.Add(id + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
         if (grafik is not null)
         {
-            Zug(stuecke, grafik, landschaft.Where(t => Py.Gleich(t["typ"], "bahn")).Select(t => Punkte(t["punkte"])));
+            Zug(stuecke, grafik, gleise);
         }
-        return new StadtSzene(teile, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe);
+        var wege = Objekt(stadt.Daten["zugaenge"]).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, wege, orte);
+        return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster);
+    }
+
+    private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
+
+    /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
+    private static (float X, float Z) Stehplatz(Stadt stadt, string id, float tx, float tz)
+    {
+        if (Get(Objekt(stadt.Daten["zugaenge"]), id) is not PyObjekt zugang)
+        {
+            return (tx, tz);
+        }
+        var weg = Vektoren(zugang["weg"]);
+        if (weg.Count < 2)
+        {
+            return (tx, tz);
+        }
+        var d = weg[1] - weg[0];
+        var l = d.Length();
+        if (l < 1e-4f)
+        {
+            return (tx, tz);
+        }
+        var p = weg[0] + (d / l * MathF.Min(0.3f, l));
+        return (p.X, p.Y);
+    }
+
+    /// <summary>
+    /// Laufraster des freien Gehens: frei ist eine Zelle, deren Mitte <see cref="LaufKoerper"/> von jedem
+    /// Haus (Bloecke der Modelle) weg ist und nicht im Wasser oder auf dem Gleis liegt; Strassen (auch
+    /// ueber Fluss und Gleis), Fusswege und die Stehplaetze vor den Tueren sind immer frei.
+    /// </summary>
+    private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
+        List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte)
+    {
+        var frei = new List<(int, int)>();
+        var spalten = (int)(breite / LaufSchritt);
+        var zeilen = (int)(tiefe / LaufSchritt);
+        var grenze = LaufKoerper * LaufKoerper;
+        for (var s = 0; s < spalten; s++)
+        {
+            for (var z = 0; z < zeilen; z++)
+            {
+                var c = new Vector2((float)((s + 0.5) * LaufSchritt), (float)((z + 0.5) * LaufSchritt));
+                bool Auf(List<List<Vector2>> linien, float weite) => linien.Any(l => Kurve.Abstand(c, l) <= weite);
+                var immer = Auf(strassen, StrassenBreite / 2) || Auf(wege, 0.25f)
+                    || orte.Any(o => Vector2.Distance(c, new Vector2(o.StehX, o.StehZ)) <= 0.25f);
+                if (!immer)
+                {
+                    if (Auf(wasser, (FlussBreite / 2) + 0.1f) || Auf(gleise, (GleisBreite / 2) + 0.1f))
+                    {
+                        continue;
+                    }
+                    var imHaus = false;
+                    foreach (var (x1, z1, x2, z2) in hindernisse)
+                    {
+                        var dx = Math.Max(Math.Max(x1 - c.X, 0), c.X - x2);
+                        var dz = Math.Max(Math.Max(z1 - c.Y, 0), c.Y - z2);
+                        if ((dx * dx) + (dz * dz) < grenze)
+                        {
+                            imHaus = true;
+                            break;
+                        }
+                    }
+                    if (imHaus)
+                    {
+                        continue;
+                    }
+                }
+                frei.Add((s, z));
+            }
+        }
+        return new Wegsuche(frei, LaufSchritt);
     }
 
     private static void Linie(List<Teil> teile, List<(float X, float Z)> p, float hoehe, float breite, Vector3 farbe)
@@ -301,54 +425,49 @@ public sealed class StadtSzene
         return MathF.Abs(probe.X - d.X) + MathF.Abs(probe.Z - d.Y) < 1e-3f ? m : Matrix4x4.CreateRotationY(-winkel);
     }
 
-    private static void Gleis(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, List<(float X, float Z)> p)
+    /// <summary>
+    /// Gleis als glatte Baender (Nachtrag 1, Wunsch 1): Schotterbett, Schwellen alle 0,14 quer zur
+    /// Fahrtrichtung, zwei Schienen im festen Abstand; die Boegen kommen aus <see cref="Kurve.Glatt"/>,
+    /// darum ohne Knick und Versatz.
+    /// </summary>
+    private static void Gleis(List<Streifen> streifen, List<Vector2> p, List<List<Vector2>> strassen)
     {
-        Linie(teile, p, 0.006f, GleisBreite, Farben.Gleisbett);
-        if (grafik?.Modell("railroad-straight") is { } schiene)
+        streifen.Add(new Streifen(p, GleisBreite, 0.004f, 0.02f, Farben.Gleisbett));
+        bool AufStrasse(Vector2 q) => strassen.Any(s => Kurve.Abstand(q, s) <= StrassenBreite / 2);
+        // Uebergang: wo eine Strasse das Gleis kreuzt, liegt Strassenbelag zwischen den Schienen statt Schotter
+        var uebergang = new List<Vector2>();
+        foreach (var (ort, _) in Kurve.Entlang(p, 0.05f).Append((p[^1], Vector2.Zero)))
         {
-            // Train Kit: ein Stueck je Abschnitt (gestreckt auf die Laenge), auf dem eigenen Gleisbett
-            var laenge = schiene.Max.Z - schiene.Min.Z;
-            var skala = GleisBreite / (schiene.Max.X - schiene.Min.X);
-            for (var i = 0; i + 1 < p.Count; i++)
+            if (AufStrasse(ort) && ort != p[^1])
             {
-                var d = new Vector2(p[i + 1].X - p[i].X, p[i + 1].Z - p[i].Z);
-                var l = d.Length();
-                if (l < 1e-4f)
-                {
-                    continue;
-                }
-                var n = Math.Max(1, (int)MathF.Round(l / (laenge * skala)));
-                var e = d / l;
-                for (var k = 0; k < n; k++)
-                {
-                    var start = new Vector2(p[i].X, p[i].Z) + (e * (k * l / n));
-                    var anker = new Vector3((schiene.Min.X + schiene.Max.X) / 2, schiene.Min.Y, schiene.Min.Z);
-                    stuecke.Add(new ModellStueck(schiene.Name, Lage(schiene, anker, new Vector3(skala, skala, l / n / laenge), new Vector3(start.X, 0.004f, start.Y), e)));
-                }
+                uebergang.Add(ort);
             }
-            return;
-        }
-        foreach (var (x1, z1, x2, z2) in Striche(p, 0.05f, 0.12f))
-        {
-            // Schwellen quer zur Linie
-            var d = Vector2.Normalize(new Vector2(x2 - x1, z2 - z1));
-            var q = new Vector2(-d.Y, d.X) * 0.17f;
-            teile.Add(Band(x1 - q.X, z1 - q.Y, x1 + q.X, z1 + q.Y, 0.012f, 0.06f, Mischen(Farben.Holz, Weiss, 0.2f)));
-        }
-        for (var seite = -1; seite <= 1; seite += 2)
-        {
-            var versetzt = new List<(float X, float Z)>();
-            for (var i = 0; i < p.Count; i++)
+            else if (uebergang.Count > 0)
             {
-                var vor = p[Math.Min(i + 1, p.Count - 1)];
-                var nach = p[Math.Max(i - 1, 0)];
-                var d = new Vector2(vor.X - nach.X, vor.Z - nach.Z);
-                d = d.LengthSquared() < 1e-12f ? Vector2.UnitX : Vector2.Normalize(d);
-                versetzt.Add((p[i].X + (-d.Y * 0.09f * seite), p[i].Z + (d.X * 0.09f * seite)));
+                if (uebergang.Count > 1)
+                {
+                    streifen.Add(new Streifen([.. uebergang], GleisBreite + 0.04f, 0.022f, 0.022f, Farben.Strasse));
+                }
+                uebergang.Clear();
             }
-            Linie(teile, versetzt, 0.02f, 0.035f, Farben.Schiene);
+        }
+        foreach (var (ort, richtung) in Kurve.Entlang(p, 0.14f, 0.07f))
+        {
+            if (AufStrasse(ort))
+            {
+                continue;
+            }
+            var quer = new Vector2(-richtung.Y, richtung.X) * 0.17f;
+            streifen.Add(new Streifen([ort - quer, ort + quer], 0.06f, 0.02f, 0.035f, Farben.Schwelle));
+        }
+        foreach (var seite in (float[])[-SpurHalb, SpurHalb])
+        {
+            streifen.Add(new Streifen(Kurve.Versetzt(p, seite), 0.03f, 0.035f, 0.065f, Farben.Stahl));
         }
     }
+
+    /// <summary>Halber Abstand der Schienen.</summary>
+    public const float SpurHalb = 0.09f;
 
     private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, float x, float z, float r)
     {
@@ -378,13 +497,15 @@ public sealed class StadtSzene
 
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
-        List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed)
+        List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse)
     {
         var bloecke = new List<Block>();
         foreach (var (_, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
         {
             float x = ox + Zahl(teil, "x"), z = oz + Zahl(teil, "y");
             bloecke.Add(new Block(x, z, x + Zahl(teil, "w"), z + Zahl(teil, "t"), Zahl(teil, "h")));
+            // Haeuser sperren das freie Gehen (Flaechen wie Bahnsteige und Hoefe nicht)
+            hindernisse.Add((x, z, x + Zahl(teil, "w"), z + Zahl(teil, "t")));
         }
         // Front und Hoehe einer Stelle der Fassade (Karten-y) suchen: Block mit Ueberlappung in x
         (float Front, float Hoehe, Block? B) Fassade(float x1, float x2, float y)
@@ -583,24 +704,21 @@ public sealed class StadtSzene
     /// Ein stehender Zug (Train Kit, drei Wagen) auf dem laengsten geraden Gleisabschnitt, zur Zierde
     /// am Bahnhof; faehrt nicht und verbindet nichts (Zug zwischen Spielwelten plant Nico spaeter).
     /// </summary>
-    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<(float X, float Z)>> bahnen)
+    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<Vector2>> bahnen)
     {
         var wagen = new[] { "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" }.Select(grafik.Modell).ToList();
         if (wagen.Any(w => w is null))
         {
             return;
         }
+        // laengstes gerades Stueck der geglaetteten Bahn (die Boegen sind in kurze Stuecke zerlegt)
         (Vector2 A, Vector2 B) best = default;
         foreach (var p in bahnen)
         {
-            for (var i = 0; i + 1 < p.Count; i++)
+            var stueck = Kurve.LaengstesStueck(p);
+            if ((stueck.B - stueck.A).Length() > (best.B - best.A).Length())
             {
-                var a = new Vector2(p[i].X, p[i].Z);
-                var b = new Vector2(p[i + 1].X, p[i + 1].Z);
-                if ((b - a).Length() > (best.B - best.A).Length())
-                {
-                    best = (a, b);
-                }
+                best = stueck;
             }
         }
         var l = (best.B - best.A).Length();
@@ -618,7 +736,7 @@ public sealed class StadtSzene
             var lang = (w!.Max.Z - w.Min.Z) * skala;
             var vorne = best.A + (e * pos);
             var anker = new Vector3((w.Min.X + w.Max.X) / 2, w.Min.Y, w.Max.Z);
-            stuecke.Add(new ModellStueck(w.Name, Lage(w, anker, new Vector3(skala), new Vector3(vorne.X, 0.03f, vorne.Y), e)));
+            stuecke.Add(new ModellStueck(w.Name, Lage(w, anker, new Vector3(skala), new Vector3(vorne.X, 0.05f, vorne.Y), e)));
             pos -= lang;
         }
     }
@@ -639,13 +757,13 @@ public sealed class StadtSzene
     /// Strahl trifft (etwas vergroessert, damit kleine Haeuser am Handy treffbar sind), sonst der
     /// Ort, dessen Tuer naeher als <paramref name="tuerWeite"/> am getroffenen Bodenpunkt liegt.
     /// </summary>
-    public StadtOrt? OrtBei(Vector3 start, Vector3 richtung, float tuerWeite = 1.2f)
+    public StadtOrt? OrtBei(Vector3 start, Vector3 richtung, float tuerWeite = 0.8f)
     {
         StadtOrt? bester = null;
         var besterT = float.MaxValue;
         foreach (var ort in Orte)
         {
-            var rand = new Vector3(0.3f, 0.3f, 0.3f);
+            var rand = new Vector3(0.2f, 0.2f, 0.2f);
             if (Treffer(start, richtung, ort.KastenMin - rand, ort.KastenMax + rand) is { } t && t < besterT)
             {
                 besterT = t;

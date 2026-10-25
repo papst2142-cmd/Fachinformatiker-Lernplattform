@@ -20,8 +20,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "ee38c0933baebf8e76df9fe02040e89447f8d2eb49a432d9c016a51d99c15048",
- "bytes": 2511312,
+ "sha256": "27111d696bac4ef0a96b99f964838f4af2ae5adc8f2661d7c9b75bb19f30c318",
+ "bytes": 2481209,
  "modelle": [
   {
    "name": "building-e",
@@ -242,23 +242,6 @@
     0.1052,
     0.567,
     0.1215
-   ]
-  },
-  {
-   "name": "railroad-straight",
-   "paket": "train",
-   "datei": "Models/OBJ format/railroad-straight.obj",
-   "atlas": null,
-   "dreiecke": 752,
-   "min": [
-    -0.5,
-    0.0,
-    0.0
-   ],
-   "max": [
-    0.5,
-    0.1,
-    4.0
    ]
   },
   {
