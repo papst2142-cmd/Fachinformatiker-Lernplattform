@@ -552,7 +552,8 @@ public static partial class AutoMessung
 
         // Vollbild: die Seite fuellt das ganze Fenster, Kopfleiste und Navigation sind weg
         var top = TopLevel.GetTopLevel(ansicht);
-        var voll = ansicht.Vollbild && Vollbild.An && top is not null
+        // Nachtrag 1 zu P7-13: der sichere Rand wird am Inhalt des TopLevel abgeschaltet (sonst schwarzer Streifen)
+        var voll = ansicht.Vollbild && Vollbild.An && top is not null && top.Content is Control inhalt && !TopLevel.GetAutoSafeAreaPadding(inhalt)
             && Math.Abs(seite.Bounds.Width - ansicht.Bounds.Width) < 1 && Math.Abs(seite.Bounds.Height - ansicht.Bounds.Height) < 1;
         Pruefe("Vollbild", voll, string.Create(CultureInfo.InvariantCulture,
             $"{(voll ? "ja" : "nein")} (Seite {seite.Bounds.Width:F0} x {seite.Bounds.Height:F0}, Fenster {ansicht.Bounds.Width:F0} x {ansicht.Bounds.Height:F0})"));
@@ -638,7 +639,8 @@ public static partial class AutoMessung
         {
             await ansicht.BildFertigAsync();
         }
-        var zurueck = ansicht.AktuelleSeite != Seiten.Spiel && !ansicht.Vollbild && !Vollbild.An;
+        var zurueck = ansicht.AktuelleSeite != Seiten.Spiel && !ansicht.Vollbild && !Vollbild.An
+            && top?.Content is Control danach && TopLevel.GetAutoSafeAreaPadding(danach);
         Pruefe("Spiel verlassen", zurueck, "Seite " + ansicht.AktuelleSeite + ", Vollbild " + (ansicht.Vollbild ? "an" : "aus"));
         await ansicht.ZeigeAsync(Seiten.Spiel);
         await ansicht.BildFertigAsync();

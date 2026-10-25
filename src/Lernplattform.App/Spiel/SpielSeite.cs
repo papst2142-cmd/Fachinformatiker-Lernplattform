@@ -38,6 +38,7 @@ public sealed class SpielSeite : Grid
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
     private readonly Border _unten;
+    private readonly Border _kopf;
     private readonly Grid _mitte;
     private readonly Button _betreten;
     private readonly Button _zurStadt;
@@ -62,6 +63,7 @@ public sealed class SpielSeite : Grid
     private int _anhaengen;
     private TopLevel? _oben;
     private bool _autoRandVorher = true;
+    private Control? _randInhalt;
     private bool _randVorher;
 
     /// <summary>Stadt mit Spielstand und Spielansichten (W6): die Tafel liegt ueber der Stadt.</summary>
@@ -90,6 +92,7 @@ public sealed class SpielSeite : Grid
         var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile } });
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
+        _kopf = kopf;
         var verlassenKnopf = Schrift.Knopf(StadtTexte.Verlassen, true);
         verlassenKnopf.Margin = new Thickness(0);
         verlassenKnopf.VerticalAlignment = VerticalAlignment.Top;
@@ -173,6 +176,8 @@ public sealed class SpielSeite : Grid
         ebene.Children.Add(unten);
         Children.Add(ebene);
         Ebene = ebene;
+        // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
+        ebene.LayoutUpdated += (_, _) => FreiSetzen();
 
         Flaeche.BildGezeichnet += () =>
         {
@@ -199,7 +204,11 @@ public sealed class SpielSeite : Grid
                 ErsatzZeigen();
             }
         };
-        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => Beschriften());
+        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) =>
+        {
+            Beschriften();
+            ZeitenSchreiben(false);
+        });
         AttachedToVisualTree += (_, _) =>
         {
             // die Seite wird beim Seitenwechsel ab- und angehaengt; OpenGL richtet sich dann neu ein
@@ -213,8 +222,16 @@ public sealed class SpielSeite : Grid
                 _oben.BackRequested += Zurueck;
                 // P7-10 Nachtrag 1: die 3D-Flaeche reicht bis an den Rand (auch neben die Kamera-Aussparung),
                 // nur die Knoepfe und Karten bleiben im sicheren Bereich
-                _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_oben);
-                TopLevel.SetAutoSafeAreaPadding(_oben, false);
+                // Nachtrag 1 zu P7-13 (schwarzer Rand links, S24): Avalonia liest AutoSafeAreaPadding am Inhalt
+                // des TopLevel (MainView, TopLevel.InvalidateChildInsetsPadding), nicht am TopLevel selbst;
+                // vorher blieb der sichere Rand als Innenabstand der MainView stehen (schwarzer Streifen
+                // neben der Kamera-Aussparung) und die Ebene zog ihn ein zweites Mal ab
+                _randInhalt = _oben.Content as Control;
+                if (_randInhalt is not null)
+                {
+                    _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_randInhalt);
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, false);
+                }
                 if (_oben.InsetsManager is { } rand)
                 {
                     // Nachtrag 1 zu P7-12 (S24): ohne Rand-zu-Rand legt Android die Ansicht neben die
@@ -244,6 +261,7 @@ public sealed class SpielSeite : Grid
         {
             _anhaengen++;
             _takt.Stop();
+            ZeitenSchreiben(true);
             if (_oben is not null)
             {
                 _oben.BackRequested -= Zurueck;
@@ -252,7 +270,11 @@ public sealed class SpielSeite : Grid
                     rand.SafeAreaChanged -= SicherAendern;
                     rand.DisplayEdgeToEdgePreference = _randVorher;
                 }
-                TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
+                if (_randInhalt is not null)
+                {
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, _autoRandVorher);
+                    _randInhalt = null;
+                }
                 _oben = null;
             }
         };
@@ -408,6 +430,55 @@ public sealed class SpielSeite : Grid
     /// sonst bleibt die Liste ueber der Karte. Der Text der unteren Karte bekommt hoechstens ein
     /// Viertel der Hoehe, damit die Knoepfe am Handy quer nie aus dem Bild rutschen.
     /// </summary>
+    private long _zeitenStand = -1;
+    private long _zeitenUm;
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 4): Bildzeiten alle 10 s (und beim Verlassen) nach spiel_bilder.log im
+    /// Datenordner schreiben, im Hintergrund; "Problem melden" zeigt die Datei mit.
+    /// </summary>
+    private void ZeitenSchreiben(bool sofort)
+    {
+        var zeiten = Flaeche.Zeiten;
+        if (zeiten.Gesamt == _zeitenStand || (!sofort && Stopwatch.GetElapsedTime(_zeitenUm).TotalSeconds < BildZeiten.FensterSekunden))
+        {
+            return;
+        }
+        _zeitenStand = zeiten.Gesamt;
+        _zeitenUm = Stopwatch.GetTimestamp();
+        var text = zeiten.Text();
+        string pfad;
+        try
+        {
+            pfad = Path.Combine(Core.Daten.Ablage.Datenordner(), BildZeiten.DateiName);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            return;
+        }
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                File.WriteAllText(pfad, text);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // nur Messung: ohne Datei geht es weiter
+            }
+        });
+    }
+
+    /// <summary>Verdeckte Hoehe oben (bis unter die Kopfzeile) und unten (ab der Textkarte) an die Flaeche geben.</summary>
+    private void FreiSetzen()
+    {
+        if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben
+            && _unten.TranslatePoint(default, Flaeche) is { } unten && Flaeche.Bounds.Height > 1)
+        {
+            Flaeche.Frei = (Math.Clamp(oben.Y, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
+        }
+    }
+
     private void Anordnen()
     {
         var groesse = Ebene.Bounds.Size;
@@ -550,6 +621,7 @@ public sealed class SpielSeite : Grid
         }
         var breite = (float)Flaeche.Bounds.Width;
         var hoehe = (float)Flaeche.Bounds.Height;
+        var skalierung = Math.Max(1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
         foreach (var ort in spiel.Szene.Orte)
         {
             if (!_schildKnoepfe.TryGetValue(ort.Id, out var schild))
@@ -567,11 +639,31 @@ public sealed class SpielSeite : Grid
             }
             var w = schild.DesiredSize.Width;
             var h = schild.DesiredSize.Height;
-            var links = p.X - (w / 2);
-            var oben = p.Y - h;
-            schild.IsVisible = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
-            Canvas.SetLeft(schild, links);
-            Canvas.SetTop(schild, oben);
+            // auf ganze Bildpunkte gerundet und nur bei einer Aenderung gesetzt: jede neue Lage ordnet die
+            // Ebene neu an (Wunsch 4, Nachtrag 1 zu P7-13)
+            var links = Math.Round((p.X - (w / 2)) * skalierung) / skalierung;
+            var oben = Math.Round((p.Y - h) * skalierung) / skalierung;
+            // Nachtrag 1 zu P7-13 (Wunsch 2): nah an der Figur liegt das Schild eines Hauses oft ueber dem
+            // Bild; steht das Haus (Mitte der Front am Boden) im freien Bereich, haengt das Schild oben an dessen Rand
+            var frei = Flaeche.Frei.Oben;
+            if (oben < frei && kamera.Bildpunkt(new System.Numerics.Vector3((ort.KastenMin.X + ort.KastenMax.X) / 2, 0, ort.KastenMax.Z), breite, hoehe) is { } front
+                && front.Y >= frei + h && front.Y <= hoehe - Flaeche.Frei.Unten)
+            {
+                oben = Math.Round(frei * skalierung) / skalierung;
+            }
+            var sichtbar = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
+            if (schild.IsVisible != sichtbar)
+            {
+                schild.IsVisible = sichtbar;
+            }
+            if (Canvas.GetLeft(schild) != links)
+            {
+                Canvas.SetLeft(schild, links);
+            }
+            if (Canvas.GetTop(schild) != oben)
+            {
+                Canvas.SetTop(schild, oben);
+            }
         }
     }
 

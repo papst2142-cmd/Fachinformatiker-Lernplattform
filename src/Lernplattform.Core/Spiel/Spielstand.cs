@@ -255,6 +255,17 @@ public sealed partial class Spielstand
         {
             Einrichtungen[daten["wohnung"]] = daten;
         }
+        else if (art == Geschaefte.TeilGekauft)
+        {
+            // W7 (nur C#, Weisung P7-12): Teil im Elektromarkt gekauft, liegt sofort im Lager
+            Geld += Py.Int(Get(daten, "geld", 0L));
+            Buchen(heute, Ereignisse.BuchWaren, Get(daten, "geld", 0L));
+            Lieferungen.Add(new PyObjekt
+            {
+                { "teil", daten["teil"] }, { "menge", Py.Int(Get(daten, "menge", 1L)) }, { "ankunft", heute }, { "aufgabe", null },
+                { "haendler", Get(daten, "laden", "") }, { "gekauft", true },
+            });
+        }
         if (art == Ereignisse.Profil)
         {
             // Der juengste Eintrag gewinnt (Ereignisse sind sortiert)

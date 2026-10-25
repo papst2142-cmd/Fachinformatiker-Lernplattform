@@ -97,6 +97,25 @@ public class SpielNeustartTests
             Tun("Feierabend Tag " + tag, a => a.Feierabend());
         }
         Tun("Gruenden ohne Voraussetzung", a => a.Gruenden("Zu frueh"));
+
+        // W7 (Weisung P7-12): Einkauf im Moebelhaus und (ohne Firma abgelehnt) im Elektromarkt
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        var geschaefte = new Geschaefte(Inhalt, SpielGeschaefteTests.Daten.Value);
+        var ware = geschaefte.Waren("moebelhaus").Where(w => w.Art == Geschaefte.ArtMoebel).MinBy(w => w.Preis)!;
+        var teil = geschaefte.Waren("elektromarkt").First(w => w.Art == Geschaefte.ArtTeil);
+        Tun("Kaufen zu Hause", a => a.MoebelKaufen(geschaefte, stadt, "moebelhaus", ware.Id));
+        Tun("Gehen Moebelhaus", a => stadt.Gehen(a, "moebelhaus"));
+        Tun("Warten Moebelhaus", a => stadt.Warten(a));
+        Assert.Equal(StadtGrund.Ok, stadt.Betreten(spiel.Stand));
+        Assert.True(spiel.Stand.Geld >= ware.Preis, "nach vier Tagen reicht das Geld fuer " + ware.Id);
+        string? stueck = null;
+        Tun("Moebel kaufen", a => stueck = a.MoebelKaufen(geschaefte, stadt, "moebelhaus", ware.Id));
+        Assert.True(stueck is not null && spiel.Stand.Moebel.ContainsKey(stueck));
+        Tun("Gehen Elektromarkt", a => stadt.Gehen(a, "elektromarkt"));
+        var vorTeil = spiel.Stand.Verlauf.Count;
+        Tun("Teil ohne Firma", a => a.TeilKaufen(geschaefte, stadt, "elektromarkt", teil.Id));
+        Assert.Equal(vorTeil, spiel.Stand.Verlauf.Count);
+        Tun("Gehen heim", a => stadt.Gehen(a, "zuhause"));
         Assert.True(schritte > 8);
         var stand = spiel.Stand;
         Assert.True(stand.Tag >= 5);

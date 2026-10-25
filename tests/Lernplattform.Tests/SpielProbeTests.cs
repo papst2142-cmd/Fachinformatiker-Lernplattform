@@ -177,9 +177,9 @@ public class SpielProbeTests
         Assert.Equal(600, spiel.Jetzt.Uhr);
         Assert.Equal(Stadt.Gewartet, spiel.Ablauf.Stand.Verlauf[^1].Art);
         Assert.StartsWith("Möbelhaus: geöffnet bis 20:00 Uhr.", spiel.Zeile);
-        Assert.Contains("Innenraum kommt später", spiel.Zeile);
+        Assert.DoesNotContain("Innenraum kommt später", spiel.Zeile);
         Assert.False(spiel.KannWarten);
-        Assert.False(spiel.KannBetreten);   // das Moebelhaus hat bis W7 keinen Innenraum
+        Assert.True(spiel.KannBetreten);   // W7 (Weisung P7-12): das Moebelhaus hat jetzt einen Innenraum
         Assert.Equal(StadtGrund.Gesperrt, spiel.GeheZu("lokschuppen"));
         Assert.Equal(StadtTexte.Gesperrt, spiel.Zeile);
         Assert.Equal(StadtGrund.SchonDa, spiel.GeheZu("moebelhaus"));
@@ -324,6 +324,40 @@ public class SpielProbeTests
         }
     }
 
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): mit Versatz steht das Ziel (die Figur) in der Mitte des freien
+    /// Bereichs zwischen Kopfzeile (oben 100) und Textkarte (unten 260 von 900); Tippen rechnet mit
+    /// demselben Bild. Der Kreis um die Figur hat die Kreisfarbe des Aussehens.
+    /// </summary>
+    [Fact]
+    public void FigurImFreienBereichMitKreis()
+    {
+        var k = new Kamera(10, 5, 6) { Versatz = (260f - 100f) / 900f };
+        var ziel = k.Bildpunkt(k.Ziel, 400, 900)!.Value;
+        Assert.Equal(200f, ziel.X, 0.05f);
+        Assert.Equal((100f + (900f - 260f)) / 2, ziel.Y, 0.05f);
+        foreach (var (x, y) in new[] { (200f, 370f), (50f, 600f), (350f, 150f) })
+        {
+            var boden = k.Boden(x, y, 400, 900)!.Value;
+            var zurueck = k.Bildpunkt(new Vector3(boden.X, 0, boden.Y), 400, 900)!.Value;
+            Assert.Equal(x, zurueck.X, 0.05f);
+            Assert.Equal(y, zurueck.Y, 0.05f);
+        }
+        Assert.Equal(new Vector3(10, 0, 5), new Vector3(k.Boden(ziel.X, ziel.Y, 400, 900)!.Value.X, 0, k.Boden(ziel.X, ziel.Y, 400, 900)!.Value.Y), new Vector3Naehe(0.001f));
+        var ring = Figur.Ring(new Lernplattform.Core.Daten.PyObjekt { { "kreis", "gelb" } }, 0.22f, 0.06f);
+        Assert.True(ring.AnzahlEcken >= 24 * 4);
+        Assert.Equal(Netz.Farbe("#FBBF24").X, ring.Ecken[6], 3);
+        // ohne Angabe Pink, die Voreinstellung des Aussehens (APPEARANCE)
+        Assert.Equal(Netz.Farbe("#F472B6").X, Figur.Ring(null, 0.22f, 0.06f).Ecken[6], 3);
+    }
+
+    private sealed class Vector3Naehe(float genau) : IEqualityComparer<Vector3>
+    {
+        public bool Equals(Vector3 a, Vector3 b) => Vector3.Distance(a, b) <= genau;
+
+        public int GetHashCode(Vector3 v) => 0;
+    }
+
     [Fact]
     public void FensterLichtIstFest()
     {
@@ -378,7 +412,12 @@ public class SpielProbeTests
         Assert.Single(szene.Uebergaenge, u => u.Strasse);
         var strasse = szene.Uebergaenge.Single(u => u.Strasse).Mitte;
         Assert.Equal(7.5f, strasse.X, 3);
-        var wege = szene.Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
+        // Nachtrag 1 zu P7-13 (Foto 02): an Tag 1 sind Birkenhain und Talheim-Nord noch nicht da, also
+        // auch ihre Fusswege und Uebergaenge nicht; ab Tag 66 sind beide da
+        Assert.DoesNotContain(szene.Uebergaenge, u => !u.Strasse);
+        var spaet = NeuesSpiel();
+        spaet.Ablauf.Stand.TageFertig = 65;
+        var wege = StadtSzene.Bauen(spaet.Stadt, spaet.Ablauf.Stand).Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
         Assert.True(wege.Count == 2, string.Join("; ", wege));
         Assert.Contains(wege, w => MathF.Abs(w.X - 12.6f) < 0.01f);
         Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f && w.Y < 6.5f);

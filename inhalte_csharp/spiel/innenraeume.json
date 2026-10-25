@@ -3,7 +3,8 @@
     "Innenraeume der C#-Linie ohne Vorlage in der Python-Linie (Phase 7, Weisung P7-10, W5).",
     "Aufbau wie ein 'gebaeude' in gebaeude.json (breite, hoehe, flur mit eingang und spieler, raeume mit tuer und deko, fenster als [x1, y1, x2, y2] auf der Aussenwand).",
     "serverfarm: die Halle im Lokschuppen; 'plaetze' setzt die Personen aus serverfarm.json (id -> [x, y]).",
-    "Hier wird nur angehaengt: neue Eintraege kommen ans Ende, bestehende Zeilen bleiben."
+    "Hier wird nur angehaengt: neue Eintraege kommen ans Ende, bestehende Zeilen bleiben.",
+    "Nachtrag 1 zu P7-13 (Wunsch 5): Elektromarkt mit Auslagetischen (typ auslage, Ware obenauf), zweitem Fernseher, zweiter Spielkonsole und zweiter Waschmaschine; offene Regale mit Ware zeigen sie in drei Boeden. Jedes Moebel bleibt in genau einem Geschaeft."
   ],
   "serverfarm": {
     "gebaeude": {
@@ -41,5 +42,86 @@
       ]
     },
     "plaetze": {"arendt": [23.7, 10.7], "brauer": [12.5, 4.3], "ruppert": [6.0, 11.0]}
+  },
+  "moebelhaus": {
+    "gebaeude": {
+      "breite": 28.0,
+      "hoehe": 15,
+      "fenster": [[3.0, 0, 7.0, 0], [11.0, 0, 15.0, 0], [19.0, 0, 23.0, 0]],
+      "flur": {"y": 11.0, "h": 4.0, "name": "Kasse", "boden": "fliesen", "eingang": {"von": 12.3, "bis": 13.7}, "spieler": [1.2, 13.0], "deko": [
+        {"typ": "tresen", "x": 20.0, "y": 11.2, "w": 3.6, "h": 0.9},
+        {"typ": "pflanze", "x": 26.9, "y": 11.2, "w": 0.8, "h": 0.8},
+        {"typ": "fussmatte", "x": 0.2, "y": 12.4, "w": 0.6, "h": 1.2}
+      ]},
+      "raeume": [
+        {"id": "ausstellung", "name": "Ausstellung", "x": 0, "y": 0, "w": 28.0, "h": 11.0, "tuer": {"von": 4.0, "bis": 9.0}, "boden": "parkett", "deko": [
+            {"typ": "bett", "x": 0.4, "y": 0.3, "w": 3.0, "h": 3.6, "ware": "bett_doppel"},
+            {"typ": "bett", "x": 4.0, "y": 0.3, "w": 1.8, "h": 3.4, "ware": "bett_einzel"},
+            {"typ": "regal", "x": 6.4, "y": 0.3, "w": 0.5, "h": 2.4, "ware": "regal"},
+            {"typ": "teppich", "x": 7.5, "y": 0.3, "w": 3.0, "h": 2.2, "ware": "teppich"},
+            {"typ": "liegestuhl", "x": 11.1, "y": 0.3, "w": 1.0, "h": 2.0, "ware": "liegestuhl"},
+            {"typ": "sonnenschirm", "x": 12.7, "y": 0.3, "w": 1.6, "h": 1.6, "ware": "sonnenschirm"},
+            {"typ": "sofa", "x": 14.9, "y": 0.3, "w": 3.6, "h": 1.4, "ware": "sofa"},
+            {"typ": "sitzsack", "x": 19.1, "y": 0.3, "w": 1.2, "h": 1.2, "ware": "sitzsack"},
+            {"typ": "esstisch", "x": 20.9, "y": 0.3, "w": 2.4, "h": 1.2, "ware": "esstisch"},
+            {"typ": "sessel", "x": 23.9, "y": 0.3, "w": 1.1, "h": 1.1, "ware": "sessel"},
+            {"typ": "schreibtisch", "x": 0.4, "y": 4.8, "w": 2.6, "h": 1.1, "ware": "schreibtisch"},
+            {"typ": "couchtisch", "x": 3.6, "y": 4.8, "w": 1.8, "h": 1.0, "ware": "couchtisch"},
+            {"typ": "kleiderschrank", "x": 6.0, "y": 4.8, "w": 2.8, "h": 1.0, "ware": "kleiderschrank"},
+            {"typ": "grill", "x": 9.4, "y": 4.8, "w": 1.0, "h": 1.0, "ware": "grill"},
+            {"typ": "hochbeet", "x": 11.0, "y": 4.8, "w": 2.2, "h": 1.0, "ware": "hochbeet"},
+            {"typ": "kommode", "x": 13.8, "y": 4.8, "w": 1.8, "h": 0.8, "ware": "kommode"},
+            {"typ": "pflanze", "x": 16.2, "y": 4.8, "w": 0.8, "h": 0.8, "ware": "pflanze"},
+            {"typ": "stehlampe", "x": 17.6, "y": 4.8, "w": 0.7, "h": 0.7, "ware": "stehlampe"},
+            {"typ": "aquarium", "x": 18.9, "y": 4.8, "w": 1.8, "h": 0.7, "ware": "aquarium"},
+            {"typ": "bild", "x": 21.3, "y": 4.8, "w": 1.4, "h": 0.3, "ware": "bild"}
+          ]}
+      ]
+    },
+    "personen": [
+      {"id": "holm", "name": "Petra Holm", "rolle": "Verkäuferin", "aussehen": {"haut": "hell", "frisur": "zopf", "haarfarbe": "blond", "oberteil": "violett"}, "text": "Schau dich in Ruhe um. Was du kaufst, kommt in den Karton und du stellst es zu Hause selbst auf.", "platz": [21.8, 12.8]}
+    ]
+  },
+  "elektromarkt": {
+    "gebaeude": {
+      "breite": 24.0,
+      "hoehe": 14,
+      "fenster": [[4.0, 0, 8.0, 0], [14.0, 0, 18.0, 0]],
+      "flur": {"y": 10.0, "h": 4.0, "name": "Kasse", "boden": "fliesen", "eingang": {"von": 11.3, "bis": 12.7}, "spieler": [1.2, 12.0], "deko": [
+        {"typ": "tresen", "x": 16.0, "y": 10.2, "w": 3.6, "h": 0.9},
+        {"typ": "fussmatte", "x": 0.2, "y": 11.4, "w": 0.6, "h": 1.2}
+      ]},
+      "raeume": [
+        {"id": "verkauf", "name": "Verkaufsraum", "x": 0, "y": 0, "w": 24.0, "h": 10.0, "tuer": {"von": 3.0, "bis": 8.0}, "boden": "fliesen", "deko": [
+            {"typ": "regal", "x": 0.4, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:mainboard"},
+            {"typ": "regal", "x": 3.3, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:cpu"},
+            {"typ": "regal", "x": 6.2, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:ram"},
+            {"typ": "regal", "x": 9.1, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:ssd"},
+            {"typ": "regal", "x": 12.0, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:gpu"},
+            {"typ": "regal", "x": 14.9, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:netzteil"},
+            {"typ": "regal", "x": 17.8, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:gehaeuse"},
+            {"typ": "regal", "x": 20.7, "y": 0.3, "w": 2.4, "h": 0.6, "ware": "teile:notebook"},
+            {"typ": "regal", "x": 0.4, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:usv_akku"},
+            {"typ": "regal", "x": 3.3, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:monitor"},
+            {"typ": "regal", "x": 6.2, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:patchkabel"},
+            {"typ": "regal", "x": 9.1, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:luefter"},
+            {"typ": "regal", "x": 12.0, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:toner"},
+            {"typ": "regal", "x": 14.9, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:sfp"},
+            {"typ": "regal", "x": 17.8, "y": 4.2, "w": 2.4, "h": 0.6, "ware": "teile:drucker"},
+            {"typ": "fernseher", "x": 6.0, "y": 7.4, "w": 3.0, "h": 0.8, "ware": "fernseher"},
+            {"typ": "spielkonsole", "x": 10.0, "y": 7.4, "w": 0.8, "h": 0.5, "ware": "spielkonsole"},
+            {"typ": "waschmaschine", "x": 11.8, "y": 7.4, "w": 1.0, "h": 1.0, "ware": "waschmaschine"},
+            {"typ": "auslage", "x": 20.7, "y": 4.2, "w": 2.4, "h": 0.9, "ware": "teile:notebook"},
+            {"typ": "auslage", "x": 14.0, "y": 7.4, "w": 2.4, "h": 0.9, "ware": "teile:monitor"},
+            {"typ": "fernseher", "x": 17.0, "y": 7.4, "w": 3.0, "h": 0.8, "ware": "fernseher"},
+            {"typ": "auslage", "x": 20.7, "y": 7.4, "w": 2.4, "h": 0.9, "ware": "teile:gpu"},
+            {"typ": "spielkonsole", "x": 0.4, "y": 7.6, "w": 0.8, "h": 0.5, "ware": "spielkonsole"},
+            {"typ": "waschmaschine", "x": 1.6, "y": 7.4, "w": 1.0, "h": 1.0, "ware": "waschmaschine"}
+          ]}
+      ]
+    },
+    "personen": [
+      {"id": "yildirim", "name": "Deniz Yıldırım", "rolle": "Verkäufer", "aussehen": {"haut": "oliv", "frisur": "kurz", "haarfarbe": "schwarz", "oberteil": "orange", "extra": "headset"}, "text": "Für deine Wohnung oder für die Firma? Teile nimmst du gleich mit, dafür sind sie etwas teurer als beim Versand.", "platz": [17.8, 11.8]}
+    ]
   }
 }

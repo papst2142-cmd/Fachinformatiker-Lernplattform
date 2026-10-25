@@ -201,6 +201,12 @@ public sealed class StadtSpiel
             (zx, zz) = (m.X + (Py.F(m.W) / 2), m.Y + (Py.F(m.H) / 2));
             reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(m.W), Py.F(m.H)) / 2);
         }
+        else if (person is null && innen.WareBei(x, z) is { } ware)
+        {
+            // W7: auf eine Ware im Geschaeft: bis neben die Auslage
+            (zx, zz) = (Py.F(ware["x"]) + (Py.F(ware["w"]) / 2), Py.F(ware["y"]) + (Py.F(ware["h"]) / 2));
+            reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(ware["w"]), Py.F(ware["h"])) / 2);
+        }
         var weg = innen.Weg(FigurX, FigurZ, zx, zz, reichweite);
         _weg.Clear();
         _weg.AddRange(weg);
@@ -773,10 +779,10 @@ public sealed class StadtSpiel
     /// <summary>Szene neu bauen, wenn sich sichtbare Orte oder Modellteile geaendert haben.</summary>
     private void NeueSzene()
     {
-        var neu = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
-        if (neu.Signatur != Szene.Signatur)
+        // Nachtrag 1 zu P7-13 (Wunsch 4): erst die Signatur vergleichen, nur bei einer Aenderung neu bauen
+        if (StadtSzene.SignaturFuer(Stadt, Ablauf.Stand) != Szene.Signatur)
         {
-            Szene = neu;
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
             SzeneGeaendert?.Invoke();
         }
     }
