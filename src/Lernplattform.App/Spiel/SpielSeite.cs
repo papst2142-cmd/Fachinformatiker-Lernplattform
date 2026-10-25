@@ -643,6 +643,14 @@ public sealed class SpielSeite : Grid
             // Ebene neu an (Wunsch 4, Nachtrag 1 zu P7-13)
             var links = Math.Round((p.X - (w / 2)) * skalierung) / skalierung;
             var oben = Math.Round((p.Y - h) * skalierung) / skalierung;
+            // Nachtrag 1 zu P7-13 (Wunsch 2): nah an der Figur liegt das Schild eines Hauses oft ueber dem
+            // Bild; steht das Haus (Mitte der Front am Boden) im freien Bereich, haengt das Schild oben an dessen Rand
+            var frei = Flaeche.Frei.Oben;
+            if (oben < frei && kamera.Bildpunkt(new System.Numerics.Vector3((ort.KastenMin.X + ort.KastenMax.X) / 2, 0, ort.KastenMax.Z), breite, hoehe) is { } front
+                && front.Y >= frei + h && front.Y <= hoehe - Flaeche.Frei.Unten)
+            {
+                oben = Math.Round(frei * skalierung) / skalierung;
+            }
             var sichtbar = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
             if (schild.IsVisible != sichtbar)
             {
