@@ -245,12 +245,6 @@
    "drehen": 180
   },
   {
-   "name": "kitchenCabinetDrawer",
-   "paket": "furniture",
-   "datei": "Models/kitchenCabinetDrawer.obj",
-   "drehen": 180
-  },
-  {
    "name": "kitchenFridge",
    "paket": "furniture",
    "datei": "Models/kitchenFridge.obj",

@@ -38,7 +38,11 @@
     {"id": "Grafik Kenney City Kit Suburban", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney-assets.itch.io/city-kit-suburban (Kenney, www.kenney.nl)",
      "beschreibung": "Wohnhaeuser und Baeume der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CityKitSuburban_CC0.txt"]},
     {"id": "Grafik Kenney Train Kit", "version": "1.1", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/train-kit (Kenney, www.kenney.nl)",
-     "beschreibung": "Schienen und stehender Zug der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_TrainKit_CC0.txt"]}
+     "beschreibung": "Stehender Zug der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_TrainKit_CC0.txt"]},
+    {"id": "Grafik Kenney Furniture Kit", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/furniture-kit (Kenney, www.kenney.nl)",
+     "beschreibung": "Moebel der Innenraeume im Spiel (Buero, Wohnung, Kunden), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_FurnitureKit_CC0.txt"]},
+    {"id": "Grafik Kenney Animated Characters 3", "version": "1.1", "lizenz": "CC0-1.0", "quelle": "https://kenney-assets.itch.io/animated-characters-3 (Kenney, www.kenney.nl)",
+     "beschreibung": "Spielfigur und Personen im Spiel (feste Haltung), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_AnimatedCharacters3_CC0.txt"]}
   ],
   "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
   "ohne_nuspec": {

@@ -32,8 +32,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "82c39601d7695f44adb5b6d419db6f551b88ddab9fb4d28f4a5dcf36473a11fb",
- "bytes": 2862530,
+ "sha256": "562d6328daecaff1638a469e1718a04b8e0d7b5726dad395bd76ad36404d7bee",
+ "bytes": 2842184,
  "modelle": [
   {
    "name": "building-e",
@@ -662,23 +662,6 @@
     1.8954,
     1.7749,
     -0.0
-   ]
-  },
-  {
-   "name": "kitchenCabinetDrawer",
-   "paket": "furniture",
-   "datei": "Models/kitchenCabinetDrawer.obj",
-   "atlas": null,
-   "dreiecke": 508,
-   "min": [
-    -0.0,
-    0.5824,
-    -4.5
-   ],
-   "max": [
-    4.3,
-    5.3,
-    -1.3
    ]
   },
   {

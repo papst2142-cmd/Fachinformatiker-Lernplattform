@@ -35,7 +35,7 @@ public static partial class AutoMessung
     public const string TeilErsatz = "spiel-ersatz";
 
     /// <summary>Anzahl der Spiel-Ansichten je Groesse und Stufe (fuer den Bericht).</summary>
-    public const int P7W1AnsichtenAnzahl = 5;
+    public const int P7W1AnsichtenAnzahl = 7;
 
     /// <summary>Ansichten, die nicht aufgebaut werden konnten (zaehlen wie Layoutfunde).</summary>
     private static readonly List<string> P7W1AnsichtFehler = [];
@@ -56,7 +56,7 @@ public static partial class AutoMessung
     private static StadtSpiel Frisch(SpielSeite seite)
     {
         var alt = seite.Spiel!;
-        var neu = SpielStart.Neu(alt.Stadt, alt.Buero, alt.Grafik);
+        var neu = SpielStart.Neu(alt.Stadt, alt.Grafik, alt.Innenraeume);
         seite.SpielSetzen(neu);
         return neu;
     }
@@ -163,6 +163,8 @@ public static partial class AutoMessung
             funde++;
         }
 
+        funde += await P7W5Async(ansicht, seite);
+
         // Zeit je Bild beim Kameraschwenk: Median <= 50 ms, 95 % <= 100 ms (bis zu 3 Laeufe, rot nur, wenn alle rot)
         var laeufe = new List<(double Median, double P95)>();
         for (var lauf = 0; lauf < Messwiederholung.Hoechstens; lauf++)
@@ -193,6 +195,133 @@ public static partial class AutoMessung
         }
         funde += Ergebnis("Spiel Weg suchen", await RechnungMessenAsync(Suche, SpielWegGrenze));
         Messwerte.Notiere(string.Create(inv, $"Spiel: Bilder/s nach dem Schwenk {seite.Flaeche.BilderJeSekunde}, Bilder gesamt {seite.Flaeche.BilderGesamt}"));
+        return funde;
+    }
+
+    /// <summary>
+    /// W5 (Weisung P7-10): Wechsel Stadt -> Wohnung und Stadt -> Kunde (wiederholbar, 400 ms),
+    /// "Zur Arbeit" fuehrt ins Buero, Einrichten waehlt ein Moebel, ein Haus vor der Figur wird
+    /// halb durchsichtig gezeichnet (Sammelliste 102). Jede Pruefung, die nicht gelingt, ist ein Fund.
+    /// </summary>
+    private static async Task<int> P7W5Async(MainView ansicht, SpielSeite seite)
+    {
+        var funde = 0;
+        void Pruefe(string punkt, bool ok, string wert)
+        {
+            Messwerte.Notiere("Spiel: " + punkt + ": " + wert);
+            if (!ok)
+            {
+                Messwerte.Notiere("  FEHLER: Spiel " + punkt + ": " + wert);
+                funde++;
+            }
+        }
+        async Task<double?> Wechsel(Action schritt)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await seite.Flaeche.NaechstesBildAsync();
+            await ansicht.BildFertigAsync();
+            return uhr.Elapsed.TotalMilliseconds;
+        }
+
+        // Stadt -> Wohnung (das neue Spiel steht vor der Wohnung)
+        var spiel = Frisch(seite);
+        await seite.Flaeche.NaechstesBildAsync();
+        if (!spiel.KannBetreten)
+        {
+            Pruefe("Wohnung betretbar", false, spiel.Zeile);
+            return funde;
+        }
+        async Task Hinaus() { spiel.Verlassen(); await seite.Flaeche.NaechstesBildAsync(); }
+        var rein = await Wechsel(() => spiel.Betreten());
+        var wohnungOk = spiel.FlaecheId == "zuhause";
+        funde += Ergebnis("Spiel Stadt -> Wohnung", await Messwiederholung.MessenAsync(rein, Abbruch,
+            () => Wechsel(() => spiel.Betreten()), Hinaus, Task.Delay));
+        if (!spiel.ImInnenraum)
+        {
+            spiel.Betreten();
+        }
+        Pruefe("Wohnung betreten", wohnungOk && spiel.FlaecheId == "zuhause", "Flaeche " + spiel.FlaecheId);
+
+        // Einrichten: Modus an, die Startmatratze antippen waehlt sie, "Fertig" beendet den Modus
+        spiel.EinrichtenUmschalten();
+        spiel.GeheZu(1.0, 1.0);
+        await seite.Flaeche.NaechstesBildAsync();
+        await ansicht.BildFertigAsync();
+        var gewaehlt = spiel.Einrichten && spiel.Ausgewaehlt == "start-matratze" && spiel.AusgewaehltSteht;
+        var name = spiel.Ausgewaehlt ?? "nichts gewaehlt";
+        spiel.EinrichtenUmschalten();
+        Pruefe("Einrichten waehlt ein Moebel", gewaehlt && !spiel.Einrichten, name);
+
+        // "Zur Arbeit": hinaus, zum Buero gehen und gleich hinein
+        var arbeit = spiel.Knopf("buero");
+        spiel.SofortAnkommen();
+        await seite.Flaeche.NaechstesBildAsync();
+        Pruefe("Zur Arbeit fuehrt ins Buero", arbeit && spiel.FlaecheId == "buero", "Flaeche " + spiel.FlaecheId + " (" + spiel.Zeile.Replace('\n', ' ') + ")");
+        spiel.Verlassen();
+
+        // Stadt -> Kunde (Talheim, ein Kundenort mit Innenraum)
+        spiel.GeheZu("talheim");
+        spiel.SofortAnkommen();
+        if (!spiel.KannBetreten && spiel.KannWarten)
+        {
+            spiel.Warten();
+        }
+        if (!spiel.KannBetreten)
+        {
+            Pruefe("Kunde betretbar", false, spiel.Zeile);
+        }
+        else
+        {
+            await seite.Flaeche.NaechstesBildAsync();
+            var kunde = await Wechsel(() => spiel.Betreten());
+            funde += Ergebnis("Spiel Stadt -> Kunde", await Messwiederholung.MessenAsync(kunde, Abbruch,
+                () => Wechsel(() => spiel.Betreten()), Hinaus, Task.Delay));
+            if (!spiel.ImInnenraum)
+            {
+                spiel.Betreten();
+            }
+            Pruefe("Kunde betreten", spiel.FlaecheId.StartsWith("kunde", StringComparison.Ordinal), "Flaeche " + spiel.FlaecheId);
+            spiel.Verlassen();
+        }
+
+        // Haus vor der Figur: halb durchsichtig. Figur neben die Bitweiche, Kamera in jede Richtung drehen,
+        // bis das Haus zwischen Auge und Figur steht; die Zeichnung muss es dann durchsichtig zeichnen
+        spiel = Frisch(seite);
+        var kamera = seite.Flaeche.AktuelleKamera!;
+        var haus = spiel.Szene.Haeuser.First(h => h.Id == "bitweiche");
+        var mitte = (haus.Min + haus.Max) / 2;
+        var gezeichnet = 0;
+        var gesehen = false;
+        foreach (var (px, pz) in new[] { (mitte.X, haus.Min.Z - 0.8f), (mitte.X, haus.Max.Z + 0.8f), (haus.Min.X - 0.8f, mitte.Z), (haus.Max.X + 0.8f, mitte.Z) })
+        {
+            if (gesehen)
+            {
+                break;
+            }
+            spiel.GeheZu(px, pz);
+            spiel.SofortAnkommen();
+            foreach (var drehung in new[] { 0f, 90f, 180f, 270f })
+            {
+                kamera.Drehung = drehung;
+                kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+                if (!spiel.Szene.Verdeckt(kamera.Auge, spiel.FigurX, spiel.FigurZ, Figur.StadtHoehe).Contains(haus))
+                {
+                    continue;
+                }
+                gesehen = true;
+                await seite.Flaeche.NaechstesBildAsync();
+                await seite.Flaeche.NaechstesBildAsync();
+                gezeichnet = seite.Flaeche.VerdecktZahl;
+                break;
+            }
+        }
+        kamera.Drehung = 0;
+        Pruefe("Haus vor der Figur durchsichtig", gesehen && gezeichnet > 0, gesehen
+            ? gezeichnet.ToString(CultureInfo.InvariantCulture) + " Haus/Haeuser durchsichtig gezeichnet"
+            : "keine Stelle gefunden, an der die Bitweiche die Figur verdeckt");
+        Frisch(seite);
+        await seite.Flaeche.NaechstesBildAsync();
         return funde;
     }
 
@@ -266,7 +395,7 @@ public static partial class AutoMessung
         return fehler;
     }
 
-    /// <summary>Ansichten der Spiel-Seite fuer die Layoutpruefung: Stadt, Ortsliste, geschlossenes Haus, Buero, ohne 3D.</summary>
+    /// <summary>Ansichten der Spiel-Seite fuer die Layoutpruefung: Stadt, Ortsliste, geschlossenes Haus, Buero, Kunde, Einrichten, ohne 3D.</summary>
     private static async IAsyncEnumerable<string> P7W1Ansichten(MainView ansicht)
     {
         var seite = await SpielSeiteAsync(ansicht);
@@ -304,6 +433,35 @@ public static partial class AutoMessung
         await ansicht.BildFertigAsync();
         P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/buero"));
         yield return "spiel/buero";
+        spiel.Verlassen();
+        // W5: Kunde (Talheim) und die Wohnung im Modus "Einrichten" mit gewaehltem Moebel und Tafel
+        spiel.GeheZu("talheim");
+        spiel.SofortAnkommen();
+        if (!spiel.KannBetreten && spiel.KannWarten)
+        {
+            spiel.Warten();
+        }
+        if (!spiel.Betreten())
+        {
+            P7W1AnsichtFehler.Add("spiel/kunde: Kunde nicht betretbar (" + spiel.Zeile + ")");
+            yield break;
+        }
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/kunde"));
+        yield return "spiel/kunde";
+        spiel.Verlassen();
+        spiel = Frisch(seite);
+        if (!spiel.Betreten())
+        {
+            P7W1AnsichtFehler.Add("spiel/einrichten: Wohnung nicht betretbar (" + spiel.Zeile + ")");
+            yield break;
+        }
+        spiel.EinrichtenUmschalten();
+        spiel.Waehlen("start-matratze");
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/einrichten"));
+        yield return "spiel/einrichten";
+        spiel.EinrichtenUmschalten();
         spiel.Verlassen();
         seite.ErsatzVorfuehren(true);
         await ansicht.BildFertigAsync();
