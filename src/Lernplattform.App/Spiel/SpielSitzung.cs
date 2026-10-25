@@ -17,9 +17,10 @@ namespace Lernplattform.Spiel;
 public sealed class SpielSitzung
 {
     public SpielSitzung(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, Lerninhalte? lernen, Suchtext? suche,
-        LernstandSchreiber schreiber, string geraet)
+        LernstandSchreiber schreiber, string geraet, PyObjekt? geschaefte = null)
     {
         Stadt = stadt;
+        Geschaefte = geschaefte is null ? null : new Geschaefte(stadt.Inhalt, geschaefte);
         Grafik = grafik;
         Innenraeume = innenraeume;
         Lernen = lernen;
@@ -42,6 +43,9 @@ public sealed class SpielSitzung
     public GrafikBibliothek? Grafik { get; }
 
     public PyObjekt? Innenraeume { get; }
+
+    /// <summary>W7: Sortiment und Preise von Moebelhaus und Elektromarkt (geschaefte.json).</summary>
+    public Geschaefte? Geschaefte { get; }
 
     public Lerninhalte? Lernen { get; }
 

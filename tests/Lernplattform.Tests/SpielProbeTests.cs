@@ -177,9 +177,9 @@ public class SpielProbeTests
         Assert.Equal(600, spiel.Jetzt.Uhr);
         Assert.Equal(Stadt.Gewartet, spiel.Ablauf.Stand.Verlauf[^1].Art);
         Assert.StartsWith("Möbelhaus: geöffnet bis 20:00 Uhr.", spiel.Zeile);
-        Assert.Contains("Innenraum kommt später", spiel.Zeile);
+        Assert.DoesNotContain("Innenraum kommt später", spiel.Zeile);
         Assert.False(spiel.KannWarten);
-        Assert.False(spiel.KannBetreten);   // das Moebelhaus hat bis W7 keinen Innenraum
+        Assert.True(spiel.KannBetreten);   // W7 (Weisung P7-12): das Moebelhaus hat jetzt einen Innenraum
         Assert.Equal(StadtGrund.Gesperrt, spiel.GeheZu("lokschuppen"));
         Assert.Equal(StadtTexte.Gesperrt, spiel.Zeile);
         Assert.Equal(StadtGrund.SchonDa, spiel.GeheZu("moebelhaus"));

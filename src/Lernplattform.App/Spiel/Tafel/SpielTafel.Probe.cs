@@ -62,6 +62,23 @@ public sealed partial class SpielTafel
         FirmaOeffnen(reiter);
     }
 
+    /// <summary>W7: Sortiment eines Geschaefts (im Elektromarkt mit den Teilen des Typs); false ohne Geschaefte.</summary>
+    internal bool ProbeGeschaeft(string laden, string? typ = null)
+    {
+        _waehlen = false;
+        _entwurf.Clear();
+        if (_s.Geschaefte is null)
+        {
+            return false;
+        }
+        GeschaeftOeffnen(laden, typ);
+        return _laden == laden;
+    }
+
+    /// <summary>W7: die Teile-Typen des Elektromarkts (Reihenfolge des Sortiments).</summary>
+    internal List<string> ProbeTeileTypen() =>
+        _s.Geschaefte is { } g ? [.. g.Waren("elektromarkt").Where(w => w.Art == Geschaefte.ArtTeil).Select(w => w.Typ).Distinct()] : [];
+
     /// <summary>Ein Ticket des Typs als Seite (ohne Einreichen); false, wenn es keins gibt.</summary>
     internal bool ProbeTicket(string typ)
     {

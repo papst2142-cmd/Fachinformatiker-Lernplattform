@@ -197,6 +197,12 @@ public sealed class StadtSpiel
             (zx, zz) = (m.X + (Py.F(m.W) / 2), m.Y + (Py.F(m.H) / 2));
             reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(m.W), Py.F(m.H)) / 2);
         }
+        else if (person is null && innen.WareBei(x, z) is { } ware)
+        {
+            // W7: auf eine Ware im Geschaeft: bis neben die Auslage
+            (zx, zz) = (Py.F(ware["x"]) + (Py.F(ware["w"]) / 2), Py.F(ware["y"]) + (Py.F(ware["h"]) / 2));
+            reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(ware["w"]), Py.F(ware["h"])) / 2);
+        }
         var weg = innen.Weg(FigurX, FigurZ, zx, zz, reichweite);
         _weg.Clear();
         _weg.AddRange(weg);

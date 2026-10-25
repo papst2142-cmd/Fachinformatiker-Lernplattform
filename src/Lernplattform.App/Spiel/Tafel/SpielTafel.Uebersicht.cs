@@ -284,6 +284,12 @@ public sealed partial class SpielTafel
     /// <summary>run_action: Knoepfe unter den Orten (Auftrag, Personal, Feierabend, Lernen, Schlafen).</summary>
     public void AktionAusfuehren(string aktion)
     {
+        if (IstLadenAktion(aktion))
+        {
+            // W7: Sortiment und Kaufen im Moebelhaus und Elektromarkt
+            LadenAktion(aktion);
+            return;
+        }
         if (aktion.StartsWith("auftrag:", StringComparison.Ordinal))
         {
             TicketOeffnen(aktion["auftrag:".Length..], vonOrt: true);

@@ -43,7 +43,8 @@ public static class SpielStart
         var suche = Programm.Zustand.Suchtext.GetAwaiter().GetResult();
         // Geraet im Spielprotokoll wie fg.Game(app.db, device="PC"/"Handy") (fisi_game_gui 2863, spiel.py 1801)
         var geraet = Pc ? "PC" : "Handy";
-        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet);
+        var geschaefte = Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt;
+        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte);
     }
 
     /// <summary>

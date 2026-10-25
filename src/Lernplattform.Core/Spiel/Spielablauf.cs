@@ -502,6 +502,18 @@ public sealed class Spielablauf
 
     public PyObjekt Verschieben(object? aufgabe) => Ausfuehren(SpielAktionen.Verschieben(Stand, aufgabe));
 
+    /// <summary>W7: Moebelstueck im Geschaeft kaufen (wie buy_furniture); Rueckgabe: das neue Stueck (im Karton).</summary>
+    public string MoebelKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string moebel, string? stueck = null)
+    {
+        stueck ??= "m" + Guid.NewGuid().ToString("N")[..10];
+        Ausfuehren(geschaefte.MoebelKaufen(stadt, Stand, laden, moebel, stueck));
+        return stueck;
+    }
+
+    /// <summary>W7: Teil fuer die Firma im Elektromarkt kaufen (liegt sofort im Lager).</summary>
+    public PyObjekt TeilKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string teil) =>
+        Ausfuehren(geschaefte.TeilKaufen(stadt, Stand, laden, teil));
+
     public PyObjekt Feierabend() =>
         Ausfuehren(SpielAktionen.Feierabend(Stand, Py.Wahr(Stand.Firma) ? FirmenWissen() : null));
 

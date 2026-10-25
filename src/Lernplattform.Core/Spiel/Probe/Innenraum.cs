@@ -108,6 +108,7 @@ public sealed class Innenraum
         "filiale" => OrtFiliale,
         Serverfarm => Serverfarm,
         not null when ansicht.StartsWith("kunde:", StringComparison.Ordinal) => ansicht["kunde:".Length..],
+        not null when ansicht.StartsWith("geschaeft:", StringComparison.Ordinal) && Geschaefte.Laeden.Contains(ansicht["geschaeft:".Length..]) => ansicht["geschaeft:".Length..],
         _ => null,
     };
 
@@ -140,6 +141,16 @@ public sealed class Innenraum
                 }
             }
             return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null);
+        }
+        if (Geschaefte.Laeden.Contains(ort))
+        {
+            // W7: Moebelhaus und Elektromarkt (Grundriss, Auslage und Verkaeufer aus innenraeume.json)
+            if ((innenraeume is null ? null : Get(innenraeume, ort)) is not PyObjekt laden)
+            {
+                return null;
+            }
+            var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
+            return new Innenraum(ansicht!, ort, Objekt(laden["gebaeude"]), verkauf, grafik, null);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -183,6 +194,10 @@ public sealed class Innenraum
     /// <summary>Text unter der Ansicht (Ueberschrift, Text, Knoepfe) wie place_message/home_message.</summary>
     public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double z, Spielstand stand)
     {
+        if (Geschaefte.Laeden.Contains(Ort))
+        {
+            return LadenNachricht(x, z, stand);
+        }
         if (Ort == Serverfarm)
         {
             if (PersonNahe(x, z) is { } p)
@@ -194,6 +209,67 @@ public sealed class Innenraum
             return (wo, Betrieb.FarmOrtText(stand, stand.Inhalt), []);
         }
         return SpielOrte.Nachricht(Ort, x, z, PersonNahe(x, z)?.Daten, stand, Gebaeude);
+    }
+
+    /// <summary>W7: Aktion "Sortiment" (alle Waren des Geschaefts) und "Sortiment" eines Teile-Typs.</summary>
+    public const string AktionSortiment = "sortiment";
+
+    /// <summary>W7: Aktion "Kaufen" eines Moebelstuecks ("kaufen:&lt;moebel&gt;").</summary>
+    public const string AktionKaufen = "kaufen:";
+
+    /// <summary>W7: Ware der Auslage an der Stelle (Tippen), etwas grosszuegiger als ihr Umriss.</summary>
+    public PyObjekt? WareBei(double x, double z) =>
+        Geschaefte.Laeden.Contains(Ort)
+            ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", Gebaeude } }).FirstOrDefault(d => Abstand(d, x, z) <= 0.2)
+            : null;
+
+    /// <summary>W7: naechste Ware der Auslage in Reichweite der Figur (wie furniture_near, 0,9 vom Rand).</summary>
+    public PyObjekt? WareNahe(double x, double z) =>
+        Geschaefte.Laeden.Contains(Ort)
+            ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", Gebaeude } })
+                .Select(d => (d, a: Abstand(d, x, z))).Where(p => p.a <= Wohnung.MoebelReichweite + 0.3).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault()
+            : null;
+
+    private static double Abstand(PyObjekt d, double x, double z)
+    {
+        double x1 = Py.F(d["x"]), z1 = Py.F(d["y"]), x2 = x1 + Py.F(d["w"]), z2 = z1 + Py.F(d["h"]);
+        var dx = Math.Max(Math.Max(x1 - x, 0), x - x2);
+        var dz = Math.Max(Math.Max(z1 - z, 0), z - z2);
+        return Math.Sqrt((dx * dx) + (dz * dz));
+    }
+
+    private (string, string, List<(string, string)>) LadenNachricht(double x, double z, Spielstand stand)
+    {
+        var name = Ort == "moebelhaus" ? "Möbelhaus" : "Elektromarkt";
+        var sortiment = (AktionSortiment, "Sortiment");
+        if (PersonNahe(x, z) is { } p)
+        {
+            return (PyFormat.Prozent("%s · %s", p.Name, Get(p.Daten, "rolle", "")), Py.Str(Get(p.Daten, "text", "")), [sortiment]);
+        }
+        if (WareNahe(x, z) is { } d)
+        {
+            var ware = Py.Str(d["ware"]);
+            if (ware.StartsWith("teile:", StringComparison.Ordinal))
+            {
+                var typ = ware["teile:".Length..];
+                return (Geschaefte.TypName(typ, stand.Inhalt), Py.Wahr(stand.Firma) ? "Teile für die Firma, sofort im Lager." : Geschaefte.NurMitFirma,
+                    [(AktionSortiment + ":" + typ, "Ansehen")]);
+            }
+            if (Wohnung.MoebelStueck(ware, stand.Inhalt) is { } m)
+            {
+                var texte = ListeOderLeer(m, "texte");
+                var zeilen = PyFormat.Prozent("Preis: %s", Wohnung.GanzeEuro(m["preis"]))
+                    + (texte.Count > 0 ? "\n" + Py.Str(texte[0]) : "");
+                var knoepfe = new List<(string, string)>();
+                if (stand.Geld >= Py.Int(m["preis"]))
+                {
+                    knoepfe.Add((AktionKaufen + ware, "Kaufen"));
+                }
+                knoepfe.Add(sortiment);
+                return (Py.Str(m["name"]), zeilen, knoepfe);
+            }
+        }
+        return (PyFormat.Prozent("Du bist im %s.", name), "Tippe auf eine Ware oder sprich mit dem Verkauf.", [sortiment]);
     }
 
     // ---- Aufbau ----------------------------------------------------------

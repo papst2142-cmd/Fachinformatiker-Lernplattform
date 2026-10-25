@@ -401,7 +401,7 @@ public class SpielStadtTests
         return (spiel, staende);
     }
 
-    private static string StadtHash(Spielablauf spiel, List<object?> staende)
+    internal static string StadtHash(Spielablauf spiel, List<object?> staende)
     {
         var s = spiel.Stand;
         var blob = new PyObjekt
