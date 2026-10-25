@@ -258,6 +258,8 @@ public sealed partial class SpielTafel
         if (Wirtschaft.SteuerAktiv(stand))
         {
             yield return SteuerKarte(stand);
+            // W7b, Text 5 (Nachtrag 2 zu P7-13)
+            yield return T("Die Umsatzsteuer siehst du auch auf dem Amt.", 12, "text_dim");
         }
         yield return Karte("Gegen wen verloren", verloren, "pink", "an Mitbewerber");
     }
@@ -446,6 +448,11 @@ public sealed partial class SpielTafel
         {
             T(PyFormat.Prozent("Deine Hausbank. Zinsen pro Jahr, ein Spieljahr hat %d Arbeitstage.", regeln["tage_pro_jahr"]), 12, "text_dim"),
         };
+        if (_schalter != Schalter.Bank)
+        {
+            // W7b, Text 5 (Nachtrag 2 zu P7-13): nur in der Firmen-Tafel, nicht am Schalter
+            bank.Add(T("Das geht auch in der Bank.", 12, "text_dim"));
+        }
         if (ok)
         {
             bank.Add(T("Kreditrahmen " + Euro(pruefung["rahmen"]), 20, "text", true));
