@@ -28,14 +28,26 @@ public static class PythonJson
     public static string Text(object? wert, bool sortiert = false)
     {
         var text = new StringBuilder();
-        Schreiben(text, wert, sortiert);
+        Schreiben(text, wert, sortiert, false);
+        return text.ToString();
+    }
+
+    /// <summary>
+    /// Phase 7 (Weisung P7-6): json.dumps(wert, ensure_ascii=False) mit Pythons Standard-Trennzeichen
+    /// (", " und ": "), so schreibt Python die Daten der Spielereignisse, der Bestenliste und der
+    /// Platznamen in die Datenbank.
+    /// </summary>
+    public static string Standard(object? wert)
+    {
+        var text = new StringBuilder();
+        Schreiben(text, wert, false, true);
         return text.ToString();
     }
 
     /// <summary>Wie Python text.encode("utf-8"): ein einzelnes Ersatzzeichen (Surrogat) ist ein Fehler.</summary>
     public static byte[] Utf8(string text) => new UTF8Encoding(false, true).GetBytes(text);
 
-    private static void Schreiben(StringBuilder text, object? wert, bool sortiert)
+    private static void Schreiben(StringBuilder text, object? wert, bool sortiert, bool weit)
     {
         switch (wert)
         {
@@ -68,12 +80,12 @@ public static class PythonJson
                 {
                     if (!erstes)
                     {
-                        text.Append(',');
+                        text.Append(weit ? ", " : ",");
                     }
                     erstes = false;
                     Zeichenkette(text, schluessel);
-                    text.Append(':');
-                    Schreiben(text, inhalt, sortiert);
+                    text.Append(weit ? ": " : ":");
+                    Schreiben(text, inhalt, sortiert, weit);
                 }
                 text.Append('}');
                 break;
@@ -84,10 +96,10 @@ public static class PythonJson
                 {
                     if (!erster)
                     {
-                        text.Append(',');
+                        text.Append(weit ? ", " : ",");
                     }
                     erster = false;
-                    Schreiben(text, inhalt, sortiert);
+                    Schreiben(text, inhalt, sortiert, weit);
                 }
                 text.Append(']');
                 break;

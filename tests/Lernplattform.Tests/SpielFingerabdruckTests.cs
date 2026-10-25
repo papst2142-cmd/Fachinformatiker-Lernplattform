@@ -184,7 +184,7 @@ public class SpielFingerabdruckTests
     }
 
     /// <summary>Die Werte des Fingerabdrucks (tag, geld, ansehen, mitarbeiter, stimmung).</summary>
-    private static PyObjekt Werte(Spielstand s) => new()
+    internal static PyObjekt Werte(Spielstand s) => new()
     {
         { "tag", s.Tag },
         { "geld", s.Geld },
