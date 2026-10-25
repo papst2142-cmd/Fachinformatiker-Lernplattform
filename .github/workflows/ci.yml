@@ -268,6 +268,19 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_leistungsmessung.py python-linie neu/leistungsmessung.json
           # Phase 5 W3 (Weisung P5-8): G41 Update (fisi_update.py)
           python3 -I werkzeuge/vergleich/erzeuge_update.py python-linie neu/update.json
+          # Phase 7 W2: Spiel-Kern (G42 Spielinhalte)
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_inhalte.py python-linie neu/spiel_inhalte.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_wege.py python-linie neu/spiel_wege.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_neuaufbau.py python-linie neu/spiel_neuaufbau.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_tickets.py python-linie neu/spiel_tickets.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_bewertung.py python-linie neu/spiel_bewertung.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_texte.py python-linie neu/spiel_texte.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_aktionen.py python-linie neu/spiel_aktionen.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_pruefung.py python-linie neu/spiel_pruefung.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_plaetze.py python-linie neu/spiel_plaetze.json
+          # Phase 7 W3 (Weisung P7-4): G43 Spielwerte-Fingerabdruck f2b59ce8, G47 Firma
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_fingerabdruck.py python-linie neu/spiel_fingerabdruck.json
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_firma.py python-linie neu/spiel_firma.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -287,11 +300,16 @@ jobs:
                        "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
                        "pruefung.json", "fachrichtungen.json", "hilfe.json",
                        "sicherung_ersetzen.json", "loeschen.json", "problembericht.json",
-                       "leistungsmessung.json", "update.json"):
+                       "leistungsmessung.json", "update.json", "spiel_inhalte.json", "spiel_wege.json",
+                       "spiel_neuaufbau.json", "spiel_tickets.json", "spiel_bewertung.json",
+                       "spiel_texte.json", "spiel_aktionen.json", "spiel_pruefung.json",
+                       "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
               assert alt == neu, name + " weicht ab"
+              if name.startswith("spiel_"):  # streng: 1 und 1.0 sind fuer C# verschieden
+                  assert json.dumps(alt) == json.dumps(neu), name + " weicht ab (Zahlart)"
               print(name, "gleich")
           # G36 (Skript nur aus der Spezifikation) muss bei SI gleich G32 (Python) sein
           g32 = json.load(open("neu/pruefung.json", encoding="utf-8"))

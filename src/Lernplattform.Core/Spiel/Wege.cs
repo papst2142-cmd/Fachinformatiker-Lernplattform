@@ -1,0 +1,381 @@
+using Lernplattform.Core.Daten;
+using Lernplattform.Core.Mathe;
+
+namespace Lernplattform.Core.Spiel;
+
+/// <summary>
+/// Phase 7, W2: ein Ort zum Laufen wie das content-dict, das <c>fisi_game.walk_path</c> bekommt:
+/// Grundriss (<c>gebaeude</c>) und die Personen dort (<c>kollegen</c>, mit "platz"). Das Raster
+/// wird je Ort einmal berechnet (Python: _GRID_CACHE und _PEOPLE_CACHE).
+/// </summary>
+public sealed class LaufOrt(PyObjekt gebaeude, List<object?> personen)
+{
+    private PyMenge? basis;
+    private PyMenge? frei;
+
+    public PyObjekt Gebaeude { get; } = gebaeude;
+
+    public List<object?> Personen { get; } = personen;
+
+    /// <summary>_base_grid: begehbare Zellen ohne Personen.</summary>
+    public PyMenge Basis => basis ??= Wege.BasisRaster(Gebaeude);
+
+    /// <summary>_walk_grid: begehbare Zellen, Personen stehen im Weg.</summary>
+    public PyMenge Frei => frei ??= Wege.LaufRaster(Basis, Personen);
+}
+
+/// <summary>
+/// Phase 7, W2: Laufwege der Spielfigur wie <c>fisi_game.py</c> (Python 0.63.2, Z. 11532-11840):
+/// Raster mit Schrittweite 0,25, Wandstuecke mit Tueroeffnungen, Breitensuche mit acht
+/// Richtungen und Glaetten. Bei gleichem Abstand entscheidet die Reihenfolge der Python-Menge
+/// (<see cref="PyMenge"/>). Vergleichswerte G48 (<c>spiel_wege.json</c>).
+/// </summary>
+public static class Wege
+{
+    public const double Schritt = 0.25;       // WALK_STEP
+    public const double Koerper = 0.3;        // BODY_RADIUS
+    public const double PersonRadius = 0.5;   // PERSON_RADIUS
+    public const double Reichweite = 1.3;     // REACH
+    public const double WandInnen = 0.16;     // WALL_INNER
+
+    /// <summary>WALK_FREE: darueber laeuft man (oder es haengt an der Wand).</summary>
+    public static readonly IReadOnlyList<string> Begehbar =
+        ["teppich", "fussmatte", "whiteboard", "markierung", "bild", "wimpel", "kamera"];
+
+    private static readonly (int, int)[] Richtungen = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)];
+
+    /// <summary>door_side: "s", "n" oder per "seite" "w"/"o".</summary>
+    public static string TuerSeite(PyObjekt raum, PyObjekt gebaeude)
+    {
+        var tuer = Py.Wahr(raum["tuer"]) ? (PyObjekt)raum["tuer"]! : new PyObjekt();
+        if (Py.Wahr(tuer["seite"]))
+        {
+            return (string)tuer["seite"]!;
+        }
+        var flur = (PyObjekt)gebaeude["flur"]!;
+        return Py.F(raum["y"]) + Py.F(raum["h"]) <= Py.F(flur["y"]) ? "s" : "n";
+    }
+
+    /// <summary>_segments: Wandstuecke als Rechtecke (x1, y1, x2, y2), Tueroeffnungen ausgespart.</summary>
+    public static List<(double, double, double, double)> Wandstuecke(PyObjekt gebaeude)
+    {
+        var breite = Py.F(gebaeude["breite"]);
+        var hoehe = Py.F(gebaeude["hoehe"]);
+        var halb = WandInnen / 2.0;
+        var waende = new List<(double, double, double, double)>();
+
+        void Waagerecht(double x1, double x2, double y, (double, double)? luecke)
+        {
+            if (luecke is var (von, bis))
+            {
+                waende.Add((x1, y - halb, von, y + halb));
+                waende.Add((bis, y - halb, x2, y + halb));
+            }
+            else
+            {
+                waende.Add((x1, y - halb, x2, y + halb));
+            }
+        }
+
+        void Senkrecht(double x, double y1, double y2, (double, double)? luecke)
+        {
+            if (luecke is var (von, bis))
+            {
+                waende.Add((x - halb, y1, x + halb, von));
+                waende.Add((x - halb, bis, x + halb, y2));
+            }
+            else
+            {
+                waende.Add((x - halb, y1, x + halb, y2));
+            }
+        }
+
+        foreach (var eintrag in Liste(gebaeude["raeume"]))
+        {
+            var raum = (PyObjekt)eintrag!;
+            double x = Py.F(raum["x"]), y = Py.F(raum["y"]), w = Py.F(raum["w"]), h = Py.F(raum["h"]);
+            (double, double)? luecke = Py.Wahr(raum["tuer"])
+                ? (Py.F(((PyObjekt)raum["tuer"]!)["von"]), Py.F(((PyObjekt)raum["tuer"]!)["bis"]))
+                : null;
+            var seite = TuerSeite(raum, gebaeude);
+            Waagerecht(x, x + w, y, seite == "n" ? luecke : null);
+            Waagerecht(x, x + w, y + h, seite == "s" ? luecke : null);
+            Senkrecht(x, y, y + h, seite == "w" ? luecke : null);
+            Senkrecht(x + w, y, y + h, seite == "o" ? luecke : null);
+        }
+        waende.Add((0, -1, breite, 0.15));
+        waende.Add((0, hoehe - 0.15, breite, hoehe + 1));
+        waende.Add((-1, 0, 0.15, hoehe));
+        waende.Add((breite - 0.15, 0, breite + 1, hoehe));
+        return waende;
+    }
+
+    /// <summary>_obstacles: Wandstuecke und Einrichtung (ohne <see cref="Begehbar"/>).</summary>
+    public static List<(double, double, double, double)> Hindernisse(PyObjekt gebaeude)
+    {
+        var rechtecke = Wandstuecke(gebaeude);
+        var deko = Liste(gebaeude["raeume"]).SelectMany(r => DekoListe((PyObjekt)r!)).ToList();
+        deko.AddRange(DekoListe((PyObjekt)gebaeude["flur"]!));
+        foreach (var d in deko)
+        {
+            if (Begehbar.Contains((string)d["typ"]!))
+            {
+                continue;
+            }
+            double x = Py.F(d["x"]), y = Py.F(d["y"]);
+            rechtecke.Add((x, y, x + Py.F(d["w"]), y + Py.F(d["h"])));
+        }
+        return rechtecke;
+    }
+
+    private static IEnumerable<PyObjekt> DekoListe(PyObjekt d) =>
+        Py.Hat(d, "deko") ? Liste(d["deko"]).Select(e => (PyObjekt)e!) : [];
+
+    /// <summary>_base_grid</summary>
+    public static PyMenge BasisRaster(PyObjekt gebaeude)
+    {
+        var spalten = (long)(Py.F(gebaeude["breite"]) / Schritt);
+        var zeilen = (long)(Py.F(gebaeude["hoehe"]) / Schritt);
+        var rechtecke = Hindernisse(gebaeude);
+        var grenze = Koerper * Koerper;
+        var frei = new PyMenge();
+        for (long spalte = 0; spalte < spalten; spalte++)
+        {
+            var cx = (spalte + 0.5) * Schritt;
+            for (long zeile = 0; zeile < zeilen; zeile++)
+            {
+                var cy = (zeile + 0.5) * Schritt;
+                var gesperrt = false;
+                foreach (var (x1, y1, x2, y2) in rechtecke)
+                {
+                    var dx = Math.Max(Math.Max(x1 - cx, 0), cx - x2);
+                    var dy = Math.Max(Math.Max(y1 - cy, 0), cy - y2);
+                    if (dx * dx + dy * dy < grenze)
+                    {
+                        gesperrt = true;
+                        break;
+                    }
+                }
+                if (!gesperrt)
+                {
+                    frei.Add((spalte, zeile));
+                }
+            }
+        }
+        return frei;
+    }
+
+    /// <summary>_walk_grid (ohne Zwischenspeicher): Zellen um jede Person sind gesperrt.</summary>
+    public static PyMenge LaufRaster(PyMenge basis, List<object?> personen)
+    {
+        var reichweite = (long)(PersonRadius / Schritt) + 1;
+        var grenze = PythonPow.Pow(PersonRadius, 2);
+        var gesperrt = new HashSet<(long, long)>();
+        foreach (var person in personen)
+        {
+            if (Platz(person) is not var (px, py))
+            {
+                continue;
+            }
+            var (spalte0, zeile0) = Zelle(px, py);
+            for (var spalte = spalte0 - reichweite; spalte <= spalte0 + reichweite; spalte++)
+            {
+                for (var zeile = zeile0 - reichweite; zeile <= zeile0 + reichweite; zeile++)
+                {
+                    double cx = (spalte + 0.5) * Schritt, cy = (zeile + 0.5) * Schritt;
+                    if (PythonPow.Pow(px - cx, 2) + PythonPow.Pow(py - cy, 2) < grenze)
+                    {
+                        gesperrt.Add((spalte, zeile));
+                    }
+                }
+            }
+        }
+        return gesperrt.Count > 0 ? basis.Ohne(gesperrt) : basis;
+    }
+
+    /// <summary>"platz" einer Person, null wenn er fehlt oder leer ist.</summary>
+    public static (double, double)? Platz(object? person)
+    {
+        var platz = ((PyObjekt)person!)["platz"];
+        return Py.Wahr(platz) ? (Py.F(((List<object?>)platz!)[0]), Py.F(((List<object?>)platz!)[1])) : null;
+    }
+
+    /// <summary>_cell</summary>
+    public static (long, long) Zelle(double x, double y) => ((long)(x / Schritt), (long)(y / Schritt));
+
+    /// <summary>_center</summary>
+    public static (double, double) Mitte((long, long) zelle) => ((zelle.Item1 + 0.5) * Schritt, (zelle.Item2 + 0.5) * Schritt);
+
+    /// <summary>can_stand</summary>
+    public static bool KannStehen(double x, double y, LaufOrt ort) => ort.Frei.Contains(Zelle(x, y));
+
+    /// <summary>_nearest_free: Zelle des Punkts oder die naechste freie (bei Gleichstand die erste der Menge).</summary>
+    public static (long, long)? NaechsteFrei(double x, double y, PyMenge frei)
+    {
+        var start = Zelle(x, y);
+        if (frei.Contains(start))
+        {
+            return start;
+        }
+        (long, long)? beste = null;
+        long besterAbstand = 0;
+        foreach (var zelle in frei)
+        {
+            // int ** 2 in Python: ganze Zahl, exakt
+            long ds = zelle.Spalte - start.Item1, dz = zelle.Zeile - start.Item2;
+            var abstand = checked(ds * ds + dz * dz);
+            if (beste is null || abstand < besterAbstand)
+            {
+                beste = zelle;
+                besterAbstand = abstand;
+            }
+        }
+        return beste;
+    }
+
+    /// <summary>_line_free: geht die gerade Strecke a -> b nur ueber begehbare Zellen?</summary>
+    public static bool StreckeFrei((double, double) a, (double, double) b, PyMenge frei)
+    {
+        var schritte = (long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1;
+        for (long i = 0; i <= schritte; i++)
+        {
+            var t = i / (double)schritte;
+            if (!frei.Contains(Zelle(a.Item1 + (b.Item1 - a.Item1) * t, a.Item2 + (b.Item2 - a.Item2) * t)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// walk_path: Weg von start zu ziel als Liste von Punkten (ohne den Startpunkt). reichweite &gt; 0:
+    /// es genuegt, bis auf diesen Abstand heranzukommen. Leer = schon da oder nicht erreichbar.
+    /// </summary>
+    public static List<(double, double)> Weg((double, double) start, (double, double) ziel, double reichweite, LaufOrt ort)
+    {
+        var frei = ort.Frei;
+        var anfang = NaechsteFrei(start.Item1, start.Item2, frei);
+        var ziele = new HashSet<(long, long)>();
+        if (reichweite > 0)
+        {
+            var grenze = reichweite * reichweite;
+            foreach (var zelle in frei)
+            {
+                var m = Mitte(zelle);
+                if (PythonPow.Pow(m.Item1 - ziel.Item1, 2) + PythonPow.Pow(m.Item2 - ziel.Item2, 2) <= grenze)
+                {
+                    ziele.Add(zelle);
+                }
+            }
+        }
+        else if (NaechsteFrei(ziel.Item1, ziel.Item2, frei) is { } zielZelle)
+        {
+            ziele.Add(zielZelle);
+        }
+        if (anfang is not { } beginn || ziele.Count == 0 || ziele.Contains(beginn))
+        {
+            return [];
+        }
+        var vorher = new Dictionary<(long, long), (long, long)?> { [beginn] = null };
+        var schlange = new List<(long, long)> { beginn };
+        (long, long)? gefunden = null;
+        for (var k = 0; k < schlange.Count; k++)
+        {
+            var zelle = schlange[k];
+            if (ziele.Contains(zelle))
+            {
+                gefunden = zelle;
+                break;
+            }
+            foreach (var (dx, dy) in Richtungen)
+            {
+                var naechste = (zelle.Item1 + dx, zelle.Item2 + dy);
+                if (frei.Contains(naechste) && !vorher.ContainsKey(naechste))
+                {
+                    // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
+                    if (dx != 0 && dy != 0 && (!frei.Contains((zelle.Item1 + dx, zelle.Item2)) || !frei.Contains((zelle.Item1, zelle.Item2 + dy))))
+                    {
+                        continue;
+                    }
+                    vorher[naechste] = zelle;
+                    schlange.Add(naechste);
+                }
+            }
+        }
+        if (gefunden is null)
+        {
+            return [];
+        }
+        var zellen = new List<(long, long)>();
+        for (var z = gefunden; z is { } aktuell; z = vorher[aktuell])
+        {
+            zellen.Add(aktuell);
+        }
+        zellen.Reverse();
+        var punkte = zellen.Select(Mitte).ToList();
+        if (reichweite <= 0 && KannStehen(ziel.Item1, ziel.Item2, ort))
+        {
+            punkte[^1] = ziel;
+        }
+        // Glaetten: Zwischenpunkte weglassen, solange die gerade Strecke frei ist
+        var glatt = new List<(double, double)> { punkte[0] };
+        var index = 0;
+        while (index < punkte.Count - 1)
+        {
+            var weiter = punkte.Count - 1;
+            while (weiter > index + 1 && !StreckeFrei(punkte[index], punkte[weiter], frei))
+            {
+                weiter--;
+            }
+            glatt.Add(punkte[weiter]);
+            index = weiter;
+        }
+        return glatt.Skip(1).ToList();
+    }
+
+    /// <summary>person_at: Person an der Stelle (x, y) oder null.</summary>
+    public static PyObjekt? PersonBei(double x, double y, LaufOrt ort, double radius = 0.7)
+    {
+        foreach (var person in ort.Personen)
+        {
+            if (Platz(person) is var (px, py) && PythonPow.Pow(px - x, 2) + PythonPow.Pow(py - y, 2) <= radius * radius)
+            {
+                return (PyObjekt)person!;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>person_near: Person in Reichweite der Spielfigur (zum Ansprechen) oder null.</summary>
+    public static PyObjekt? PersonNahe(double x, double y, LaufOrt ort) => PersonBei(x, y, ort, Reichweite + 0.15);
+
+    /// <summary>start_position</summary>
+    public static (double, double) StartPlatz(PyObjekt gebaeude)
+    {
+        var flur = (PyObjekt)gebaeude["flur"]!;
+        if (!Py.Hat(flur, "spieler"))
+        {
+            return (2.4, 7.0);
+        }
+        var p = (List<object?>)flur["spieler"]!;
+        return (Py.F(p[0]), Py.F(p[1]));
+    }
+
+    /// <summary>room_at: Raum an der Stelle (x, y), der Flur ist kein Raum.</summary>
+    public static PyObjekt? RaumBei(double x, double y, PyObjekt gebaeude)
+    {
+        foreach (var eintrag in Liste(gebaeude["raeume"]))
+        {
+            var r = (PyObjekt)eintrag!;
+            double rx = Py.F(r["x"]), ry = Py.F(r["y"]);
+            if (rx <= x && x < rx + Py.F(r["w"]) && ry <= y && y < ry + Py.F(r["h"]))
+            {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    private static List<object?> Liste(object? wert) => wert as List<object?> ?? throw new InvalidDataException("Liste erwartet");
+}
