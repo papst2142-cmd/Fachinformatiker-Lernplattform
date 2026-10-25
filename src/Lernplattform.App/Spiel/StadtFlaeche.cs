@@ -6,19 +6,25 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
+using Avalonia.Rendering;
 using Lernplattform.Core.Spiel.Probe;
 using static Avalonia.OpenGL.GlConsts;
 
 namespace Lernplattform.Spiel;
 
 /// <summary>
-/// Phase 7, W1 (Stichprobe, Plan Abschnitt 3 Technik A): 3D-Flaeche mit Avalonias eingebautem
-/// <see cref="OpenGlControlBase"/> und eigener kleiner Darstellung (OpenGL ES 3.0 bzw. OpenGL 3.x,
-/// Matrizen aus System.Numerics, keine Fremdbibliothek). Zeichnet die aktuelle Flaeche aus
-/// <see cref="ProbeSpiel"/>, die Figur und die Zielmarke. Tippen/Klick geht hin, Ziehen
-/// verschiebt, zwei Finger oder Mausrad zoomen, Pfeiltasten gehen, Eingabe betritt.
+/// Phase 7, W1 (Stichprobe, Plan Abschnitt 3 Technik A), ab W4 die ganze Stadt: 3D-Flaeche mit
+/// Avalonias eingebautem <see cref="OpenGlControlBase"/> und eigener kleiner Darstellung (OpenGL ES 3.0
+/// bzw. OpenGL 3.x, Matrizen aus System.Numerics, keine Fremdbibliothek). Zeichnet die Stadt oder das
+/// Buero aus <see cref="StadtSpiel"/>, die Figur und die Zielmarke.
+/// Bedienung (Weisung P7-9 Punkt 3a): Tippen/Klick auf ein Haus geht hin (im Buero: zum Bodenpunkt),
+/// Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen, Mausrad zoomt, Pfeiltasten
+/// verschieben, Q/E drehen, +/- zoomen, Eingabe geht hinein. Die Flaeche faengt jeden Zeiger selbst
+/// (Capture) und liegt nie in einer ScrollView, sonst nimmt die Seite die Geste (Fehler S24, W1).
+/// Treffer zaehlt die ganze Flaeche (<see cref="ICustomHitTest"/>): das GL-Bild selbst ist fuer
+/// Avalonia kein gezeichneter Inhalt, sonst ginge ein Finger an der Flaeche vorbei an den Rahmen.
 /// </summary>
-public sealed class StadtFlaeche : OpenGlControlBase
+public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 {
     private const int Lagen = Netz.Zahlen * sizeof(float);
     // in GlConsts nicht enthalten (Werte aus der OpenGL-Spezifikation)
@@ -26,8 +32,9 @@ public sealed class StadtFlaeche : OpenGlControlBase
     private const int GlUnsignedInt = 0x1405;
     private const double ZiehenAb = 8;
 
-    private readonly ProbeSpiel _spiel;
+    private StadtSpiel? _spiel;
     private readonly Dictionary<string, Kamera> _kameras = [];
+    private bool _szeneNeu;
     private readonly Dictionary<string, GlNetz> _flaechen = [];
     private GlNetz? _figur;
     private GlNetz? _marke;
@@ -42,23 +49,58 @@ public sealed class StadtFlaeche : OpenGlControlBase
     private Point _druckStart;
     private bool _gezogen;
     private double _abstandZwei;
+    private double _winkelZwei;
     private double _folgenAb;
 
-    public StadtFlaeche(ProbeSpiel spiel)
+    public StadtFlaeche()
     {
-        _spiel = spiel;
         Focusable = true;
         ClipToBounds = true;
-        _kameras[ProbeWelt.Stadt] = new Kamera(spiel.FigurX + 5, spiel.FigurZ - 1, 17f)
+    }
+
+    /// <summary>Jeder Punkt innerhalb der Flaeche trifft sie (Gesten, Tippen, Mausrad); Avalonia gibt
+    /// den Punkt im Raum des Fensters.</summary>
+    public bool HitTest(Point point) =>
+        TopLevel.GetTopLevel(this) is Visual wurzel && wurzel.TranslatePoint(point, this) is { } lokal
+        && new Rect(Bounds.Size).Contains(lokal);
+
+    /// <summary>Das Spiel (kommt nach dem Laden der Inhalte); bis dahin zeichnet die Flaeche nur den Himmel.</summary>
+    public StadtSpiel? Spiel
+    {
+        get => _spiel;
+        set
         {
-            Grenzen = (0, 0, ProbeWelt.StadtBreite, ProbeWelt.StadtTiefe),
-        };
-        _kameras[ProbeWelt.Buero] = new Kamera(spiel.Welt.BueroFlaeche.Breite / 2, spiel.Welt.BueroFlaeche.Tiefe / 2, 22f)
-        {
-            Neigung = 62f,
-            Grenzen = (0, 0, spiel.Welt.BueroFlaeche.Breite, spiel.Welt.BueroFlaeche.Tiefe),
-        };
-        _spiel.Geaendert += AnfordernBild;
+            if (_spiel is not null)
+            {
+                _spiel.Geaendert -= AnfordernBild;
+                _spiel.SzeneGeaendert -= SzeneNeu;
+            }
+            _spiel = value;
+            _kameras.Clear();
+            if (value is not null)
+            {
+                var b = value.Buero;
+                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ - 1, 17f)
+                {
+                    Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
+                };
+                _kameras[ProbeWelt.Buero] = new Kamera(b.Breite / 2, b.Tiefe / 2, 22f)
+                {
+                    Neigung = 62f,
+                    Grenzen = (0, 0, b.Breite, b.Tiefe),
+                };
+                value.Geaendert += AnfordernBild;
+                value.SzeneGeaendert += SzeneNeu;
+                _szeneNeu = true;
+            }
+            AnfordernBild();
+        }
+    }
+
+    private void SzeneNeu()
+    {
+        _szeneNeu = true;
+        AnfordernBild();
     }
 
     /// <summary>OpenGL steht (Pflicht-Messpunkt "GL-Zusammenhang erzeugt").</summary>
@@ -70,6 +112,9 @@ public sealed class StadtFlaeche : OpenGlControlBase
     /// <summary>"OpenGL ES 3.0 · Renderer · Version" fuer Probe-Zeile und Messdatei.</summary>
     public string GlText { get; private set; } = "";
 
+    /// <summary>Kurzform fuer die Zeile ueber der Stadt: Version und Grafikchip ohne Treiberangaben.</summary>
+    public string GlKurz { get; private set; } = "";
+
     public long BilderGesamt { get; private set; }
 
     /// <summary>Bilder in der letzten Sekunde.</summary>
@@ -80,7 +125,8 @@ public sealed class StadtFlaeche : OpenGlControlBase
 
     public event Action? GlGestartet;
 
-    public Kamera AktuelleKamera => _kameras[_spiel.Flaeche.Id];
+    /// <summary>Kamera der gezeigten Flaeche (Stadt oder Buero); null, solange das Spiel noch laedt.</summary>
+    public Kamera? AktuelleKamera => _spiel is null ? null : _kameras[_spiel.FlaecheId];
 
     /// <summary>Messung: laeuft, solange gesetzt, ohne Pause weiter (Kameraschwenk).</summary>
     public bool Dauerlauf { get; set; }
@@ -112,14 +158,16 @@ public sealed class StadtFlaeche : OpenGlControlBase
             var v = GlVersion;
             var es = v.Type == GlProfileType.OpenGLES;
             GlText = (es ? "OpenGL ES " : "OpenGL ") + v.Major + "." + v.Minor + " · " + gl.Renderer + " · " + gl.Version;
+            var grafik = gl.Renderer ?? "";
+            var klammer = grafik.IndexOf(" (", StringComparison.Ordinal);
+            GlKurz = (es ? "OpenGL ES " : "OpenGL ") + v.Major + "." + v.Minor + " · " + (klammer > 0 ? grafik[..klammer] : grafik);
             _programm = Programm(gl, es, v);
             _ortMvp = gl.GetUniformLocationString(_programm, "uMvp");
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
             _ortHell = gl.GetUniformLocationString(_programm, "uHell");
-            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, Netz.Aus(_spiel.Welt.StadtFlaeche.Teile));
-            _flaechen[ProbeWelt.Buero] = GlNetz.Laden(gl, Netz.Aus(_spiel.Welt.BueroFlaeche.Teile));
             _figur = GlNetz.Laden(gl, ProbeWelt.Figur());
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
+            _szeneNeu = true;
             GlBereit = true;
         }
         catch (Exception e)
@@ -134,6 +182,7 @@ public sealed class StadtFlaeche : OpenGlControlBase
     {
         GlBereit = false;
         _flaechen.Clear();
+        _szeneNeu = true;
         _programm = 0;
         base.OnOpenGlLost();
     }
@@ -218,14 +267,26 @@ public sealed class StadtFlaeche : OpenGlControlBase
         var jetzt = _uhr.Elapsed.TotalSeconds;
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
         _letztesBild = jetzt;
-        var geht = _spiel.Fortschreiten(dt);
+        if (_spiel is { } spiel && _szeneNeu && GlBereit)
+        {
+            // Stadt (und Buero) in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern
+            foreach (var alt in _flaechen.Values)
+            {
+                alt.Freigeben(gl);
+            }
+            _flaechen.Clear();
+            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, Netz.Aus(spiel.Szene.Teile));
+            _flaechen[ProbeWelt.Buero] = GlNetz.Laden(gl, Netz.Aus(spiel.Buero.Teile));
+            _szeneNeu = false;
+        }
+        var geht = _spiel?.Fortschreiten(dt) ?? false;
         VorBild?.Invoke();
         var kamera = AktuelleKamera;
-        if (geht && jetzt >= _folgenAb)
+        if (geht && kamera is not null && jetzt >= _folgenAb)
         {
             // Kamera folgt der Figur weich, solange niemand selbst verschiebt
             var k = (float)Math.Min(1, dt * 2.5);
-            kamera.Setzen(kamera.ZielX + ((_spiel.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
+            kamera.Setzen(kamera.ZielX + ((_spiel!.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
         }
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
@@ -238,7 +299,7 @@ public sealed class StadtFlaeche : OpenGlControlBase
         gl.DepthFunc(GlLequal);
         gl.DepthMask(1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (GlBereit && _flaechen.TryGetValue(_spiel.Flaeche.Id, out var flaeche))
+        if (GlBereit && _spiel is not null && kamera is not null && _flaechen.TryGetValue(_spiel.FlaecheId, out var flaeche))
         {
             gl.UseProgram(_programm);
             gl.Uniform1f(_ortHell, IstDunkel() ? 0.72f : 1f);
@@ -314,6 +375,7 @@ public sealed class StadtFlaeche : OpenGlControlBase
         else if (_zeiger.Count == 2)
         {
             _abstandZwei = Abstand();
+            _winkelZwei = Winkel();
             _gezogen = true;
         }
         e.Pointer.Capture(this);
@@ -329,14 +391,25 @@ public sealed class StadtFlaeche : OpenGlControlBase
         }
         var p = e.GetPosition(this);
         _zeiger[e.Pointer] = p;
+        if (AktuelleKamera is not { } kamera)
+        {
+            return;
+        }
         if (_zeiger.Count >= 2)
         {
+            // zwei Finger: Abstand = Zoom, Winkel = Drehen um die Hochachse
             var neu = Abstand();
             if (_abstandZwei > 1 && neu > 1)
             {
-                AktuelleKamera.Zoomen((float)(neu / _abstandZwei));
+                kamera.Zoomen((float)(neu / _abstandZwei));
             }
             _abstandZwei = neu;
+            var winkel = Winkel();
+            var dreh = winkel - _winkelZwei;
+            dreh = dreh > 180 ? dreh - 360 : dreh < -180 ? dreh + 360 : dreh;
+            kamera.Drehen((float)dreh);
+            _winkelZwei = winkel;
+            _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
             AnfordernBild();
             return;
         }
@@ -346,7 +419,7 @@ public sealed class StadtFlaeche : OpenGlControlBase
         }
         if (_gezogen)
         {
-            AktuelleKamera.Verschieben((float)(p.X - vorher.X), (float)(p.Y - vorher.Y), (float)Bounds.Height);
+            kamera.Verschieben((float)(p.X - vorher.X), (float)(p.Y - vorher.Y), (float)Bounds.Height);
             _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
             AnfordernBild();
         }
@@ -373,33 +446,69 @@ public sealed class StadtFlaeche : OpenGlControlBase
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        AktuelleKamera.Zoomen(MathF.Pow(1.12f, (float)e.Delta.Y));
+        AktuelleKamera?.Zoomen(MathF.Pow(1.12f, (float)e.Delta.Y));
         AnfordernBild();
         e.Handled = true;
     }
 
+    /// <summary>Weite eines Pfeiltasten-Schritts in Bildpunkten (wie Ziehen).</summary>
+    public const float TastenSchritt = 48f;
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        var (dx, dz) = e.Key switch
+        if (Taste(e.Key))
         {
-            Key.Left => (-1, 0),
-            Key.Right => (1, 0),
-            Key.Up => (0, -1),
-            Key.Down => (0, 1),
-            _ => (0, 0),
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Taste anwenden (auch fuer den Start-Test); true, wenn die Flaeche sie genommen hat.</summary>
+    public bool Taste(Key taste)
+    {
+        if (AktuelleKamera is not { } kamera || _spiel is not { } spiel)
+        {
+            return false;
+        }
+        var (dx, dy) = taste switch
+        {
+            Key.Left => (TastenSchritt, 0f),
+            Key.Right => (-TastenSchritt, 0f),
+            Key.Up => (0f, TastenSchritt),
+            Key.Down => (0f, -TastenSchritt),
+            _ => (0f, 0f),
         };
-        if (dx != 0 || dz != 0)
+        if (dx != 0 || dy != 0)
         {
-            _spiel.Schritt(dx, dz);
-            _folgenAb = 0;
-            AnfordernBild();
-            e.Handled = true;
+            kamera.Verschieben(dx, dy, (float)Math.Max(1, Bounds.Height));
         }
-        else if (e.Key == Key.Enter && _spiel.Betreten())
+        else if (taste == Key.Q)
         {
-            e.Handled = true;
+            kamera.Drehen(-15f);
         }
+        else if (taste == Key.E)
+        {
+            kamera.Drehen(15f);
+        }
+        else if (taste is Key.OemPlus or Key.Add)
+        {
+            kamera.Zoomen(1.15f);
+        }
+        else if (taste is Key.OemMinus or Key.Subtract)
+        {
+            kamera.Zoomen(1 / 1.15f);
+        }
+        else if (taste == Key.Enter)
+        {
+            return spiel.Betreten();
+        }
+        else
+        {
+            return false;
+        }
+        _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        AnfordernBild();
+        return true;
     }
 
     private double Abstand()
@@ -408,22 +517,32 @@ public sealed class StadtFlaeche : OpenGlControlBase
         return p.Length < 2 ? 0 : Math.Sqrt(Math.Pow(p[0].X - p[1].X, 2) + Math.Pow(p[0].Y - p[1].Y, 2));
     }
 
-    /// <summary>Tippen an (x, y) in Punkten: Haus in der Naehe -> zur Tuer, sonst zum Bodenpunkt.</summary>
+    /// <summary>Winkel der Linie zwischen den zwei Fingern in Grad.</summary>
+    private double Winkel()
+    {
+        var p = _zeiger.Values.Take(2).ToArray();
+        return p.Length < 2 ? 0 : Math.Atan2(p[1].Y - p[0].Y, p[1].X - p[0].X) * 180 / Math.PI;
+    }
+
+    /// <summary>Tippen an (x, y) in Punkten: Stadt -> Haus unter dem Finger, Buero -> zum Bodenpunkt.</summary>
     public void Tippen(Point p)
     {
-        var boden = AktuelleKamera.Boden((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height);
-        if (boden is not { } b)
+        if (AktuelleKamera is not { } kamera || _spiel is not { } spiel)
         {
             return;
         }
         _folgenAb = 0;
-        if (_spiel.HausBei(b.X, b.Y) is { } haus)
+        if (spiel.ImInnenraum)
         {
-            _spiel.GeheZu(haus);
+            if (kamera.Boden((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height) is { } b)
+            {
+                spiel.GeheZu(b.X, b.Y);
+            }
         }
-        else
+        else if (kamera.Strahl((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height) is { } strahl
+            && spiel.Szene.OrtBei(strahl.Start, strahl.Richtung) is { } ort)
         {
-            _spiel.GeheZu(b.X, b.Y);
+            spiel.GeheZu(ort.Id);
         }
         AnfordernBild();
     }

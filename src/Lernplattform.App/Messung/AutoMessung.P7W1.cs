@@ -1,5 +1,9 @@
 using System.Diagnostics;
 using System.Globalization;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Spiel;
@@ -8,7 +12,10 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Phase 7, W1 (3D-Stichprobe, Plan Abschnitt 4, Grenzen Nico 24.10.2026 Frage 3a):
+/// Phase 7, W1 (3D-Stichprobe, Plan Abschnitt 4, Grenzen Nico 24.10.2026 Frage 3a), ab W4 die
+/// ganze Stadt (Weisung P7-9): dazu Vollbild beim Betreten und "Spiel verlassen", Gesten erreichen
+/// die 3D-Flaeche (keine ScrollView darum, die Ebene darueber laesst die Mitte frei), Tippen auf ein
+/// Haus geht hin, Tasten bewegen die Kamera.
 /// Pflicht-Messpunkt "GL-Zusammenhang erzeugt" (fehlt er im normalen Lauf, ist der Lauf rot,
 /// sonst waeren die Bildzeiten ein falsches Gruen ueber den Ersatzweg), Stadt oeffnen bis
 /// erstes Bild (einmalig, streng), Wechsel Stadt -> Innenraum und zurueck (wiederholbar),
@@ -35,7 +42,34 @@ public static partial class AutoMessung
     private static async Task<SpielSeite?> SpielSeiteAsync(MainView ansicht)
     {
         await ansicht.ZeigeAsync(Seiten.Spiel);
-        return ansicht.GebauteSeiten.TryGetValue(Seiten.Spiel, out var s) ? s as SpielSeite : null;
+        if (!ansicht.GebauteSeiten.TryGetValue(Seiten.Spiel, out var s) || s is not SpielSeite seite)
+        {
+            return null;
+        }
+        // Inhalte laden im Hintergrund; ohne Spiel gibt es nichts zu pruefen (zaehlt als Fehler)
+        var fertig = await Task.WhenAny(seite.Geladen, Task.Delay(TimeSpan.FromSeconds(30)));
+        return fertig == seite.Geladen && seite.Geladen.IsCompletedSuccessfully ? seite : null;
+    }
+
+    /// <summary>Frischer Spielstand je Durchgang (sonst waere es nach vielen Wegen Abend).</summary>
+    private static StadtSpiel Frisch(SpielSeite seite)
+    {
+        var alt = seite.Spiel!;
+        var neu = SpielStart.Neu(alt.Stadt, alt.Buero);
+        seite.SpielSetzen(neu);
+        return neu;
+    }
+
+    /// <summary>Zur Bitweiche gehen und (falls noetig) bis zur Oeffnung warten; true, wenn man hinein kann.</summary>
+    private static bool ZurBitweiche(StadtSpiel spiel)
+    {
+        spiel.GeheZu("bitweiche");
+        spiel.SofortAnkommen();
+        if (!spiel.KannBetreten && spiel.KannWarten)
+        {
+            spiel.Warten();
+        }
+        return spiel.KannBetreten;
     }
 
     private static async Task<bool> GlAbwartenAsync(SpielSeite seite)
@@ -51,7 +85,7 @@ public static partial class AutoMessung
         var seite = await SpielSeiteAsync(ansicht);
         if (seite is null)
         {
-            Messwerte.Notiere("  FEHLER: Spiel Seite: nicht gebaut");
+            Messwerte.Notiere("  FEHLER: Spiel Seite: nicht gebaut oder Inhalte nicht geladen");
             return 1;
         }
         if (!await GlAbwartenAsync(seite))
@@ -69,13 +103,11 @@ public static partial class AutoMessung
         }
         funde += Ergebnis("Spiel Stadt oeffnen bis erstes Bild", Messwiederholung.Einmal(seite.OeffnenMs, Abbruch));
 
+        funde += await P7W4BedienungAsync(ansicht, seite);
+
         // Wechsel Stadt -> Innenraum und zurueck (wiederholbar)
-        var spiel = seite.Spiel;
-        var buero = spiel.Welt.Haeuser.First(h => h.HatInnenraum);
-        spiel.GeheZu(buero);
-        spiel.SofortAnkommen();
-        spiel.Warten(buero.MinutenBisOffen(spiel.Minute));
-        if (!spiel.KannBetreten)
+        var spiel = Frisch(seite);
+        if (!ZurBitweiche(spiel))
         {
             Messwerte.Notiere("  FEHLER: Spiel Wechsel: Buero nicht betretbar (" + spiel.Zeile + ")");
             return funde + 1;
@@ -127,16 +159,13 @@ public static partial class AutoMessung
             funde++;
         }
 
-        // Weg suchen: von der Haustuer "Zuhause" zum Bahnhof (Rechnung ohne Bild)
-        var start = spiel.Welt.Haeuser[0];
-        var ziel = spiel.Welt.Haeuser[^1];
-        var wege = spiel.Welt.StadtFlaeche.Wege;
+        // Weg suchen: von der Haustuer "Zuhause" zur Filiale am anderen Ende der Stadt (Rechnung ohne Bild)
         double Suche()
         {
             var uhr = Stopwatch.StartNew();
-            var weg = wege.Weg((start.TuerX, start.TuerZ), (ziel.TuerX, ziel.TuerZ));
+            var weg = spiel.Stadt.Weg("zuhause", "filiale");
             var ms = uhr.Elapsed.TotalMilliseconds;
-            return weg.Count == 0 ? double.NaN : ms;
+            return weg is null ? double.NaN : ms;
         }
         funde += Ergebnis("Spiel Weg suchen", await RechnungMessenAsync(Suche, SpielWegGrenze));
         Messwerte.Notiere(string.Create(inv, $"Spiel: Bilder/s nach dem Schwenk {seite.Flaeche.BilderJeSekunde}, Bilder gesamt {seite.Flaeche.BilderGesamt}"));
@@ -169,7 +198,7 @@ public static partial class AutoMessung
         {
             // hin und her schwenken, damit die Ansicht in der Stadt bleibt
             var richtung = (schritt++ / 30 % 2 == 0) ? 1f : -1f;
-            flaeche.AktuelleKamera.Verschieben(6f * richtung, 0f, (float)Math.Max(1, flaeche.Bounds.Height));
+            flaeche.AktuelleKamera?.Verschieben(6f * richtung, 0f, (float)Math.Max(1, flaeche.Bounds.Height));
         };
         flaeche.BildGezeichnet += Bild;
         flaeche.Dauerlauf = true;
@@ -194,25 +223,26 @@ public static partial class AutoMessung
         var seite = await SpielSeiteAsync(ansicht);
         if (seite is null)
         {
+            P7W1AnsichtFehler.Add("spiel: Seite nicht gebaut oder Inhalte nicht geladen");
             yield break;
         }
-        var spiel = seite.Spiel;
+        var spiel = Frisch(seite);
         await ansicht.BildFertigAsync();
         yield return "spiel/stadt";
         seite.OrtslisteZeigen(true);
         await ansicht.BildFertigAsync();
         yield return "spiel/orte";
         seite.OrtslisteZeigen(false);
-        var bahnhof = spiel.Welt.Haeuser[^1];
-        spiel.GeheZu(bahnhof);
+        // Haus mit Oeffnungszeit, das bei der Ankunft noch zu hat (Moebelhaus oeffnet um 10:00): Hinweis und "Warten"
+        spiel.GeheZu("moebelhaus");
         spiel.SofortAnkommen();
+        if (!spiel.KannWarten)
+        {
+            P7W1AnsichtFehler.Add("spiel/haus: Moebelhaus ist bei der Ankunft nicht geschlossen (" + spiel.Zeile + ")");
+        }
         await ansicht.BildFertigAsync();
         yield return "spiel/haus";
-        var buero = spiel.Welt.Haeuser.First(h => h.HatInnenraum);
-        spiel.GeheZu(buero);
-        spiel.SofortAnkommen();
-        spiel.Warten(buero.MinutenBisOffen(spiel.Minute));
-        if (!spiel.Betreten())
+        if (!ZurBitweiche(spiel) || !spiel.Betreten())
         {
             // die Layoutpruefung darf unter "spiel/buero" nie still die Stadt pruefen (zaehlt als Layoutfund)
             P7W1AnsichtFehler.Add("spiel/buero: Buero nicht betretbar");
@@ -226,6 +256,79 @@ public static partial class AutoMessung
         yield return "spiel/ohne-3d";
         seite.ErsatzVorfuehren(false);
         await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// W4 (Weisung P7-9 Punkt 2 und 3a): Vollbild, Gesten, Tippen, Tasten, "Spiel verlassen".
+    /// Jede Pruefung, die nicht gelingt, ist ein Fund (rot).
+    /// </summary>
+    private static async Task<int> P7W4BedienungAsync(MainView ansicht, SpielSeite seite)
+    {
+        var funde = 0;
+        void Pruefe(string punkt, bool ok, string wert)
+        {
+            Messwerte.Notiere("Spiel: " + punkt + ": " + wert);
+            if (!ok)
+            {
+                Messwerte.Notiere("  FEHLER: Spiel " + punkt + ": " + wert);
+                funde++;
+            }
+        }
+        var spiel = Frisch(seite);
+        await seite.Flaeche.NaechstesBildAsync();
+        await ansicht.BildFertigAsync();
+
+        // Vollbild: die Seite fuellt das ganze Fenster, Kopfleiste und Navigation sind weg
+        var top = TopLevel.GetTopLevel(ansicht);
+        var voll = ansicht.Vollbild && Vollbild.An && top is not null
+            && Math.Abs(seite.Bounds.Width - ansicht.Bounds.Width) < 1 && Math.Abs(seite.Bounds.Height - ansicht.Bounds.Height) < 1;
+        Pruefe("Vollbild", voll, string.Create(CultureInfo.InvariantCulture,
+            $"{(voll ? "ja" : "nein")} (Seite {seite.Bounds.Width:F0} x {seite.Bounds.Height:F0}, Fenster {ansicht.Bounds.Width:F0} x {ansicht.Bounds.Height:F0})"));
+
+        // Gesten: keine ScrollView um die 3D-Flaeche, und ein Finger in der Mitte trifft die Flaeche selbst
+        var scroll = seite.Flaeche.GetVisualAncestors().OfType<ScrollViewer>().Count();
+        var mitte = seite.Flaeche.TranslatePoint(new Point(seite.Flaeche.Bounds.Width / 2, seite.Flaeche.Bounds.Height / 2), ansicht);
+        var getroffen = mitte is { } m ? ansicht.InputHitTest(m) as Visual : null;
+        var trifft = getroffen is not null && (getroffen == seite.Flaeche || getroffen.GetVisualAncestors().Contains(seite.Flaeche));
+        Pruefe("Gesten erreichen die 3D-Flaeche", scroll == 0 && trifft,
+            "ScrollView darum " + scroll + ", Mitte trifft " + (getroffen?.GetType().Name ?? "nichts"));
+
+        // Tippen auf ein Haus geht hin (Bitweiche: Mitte ihres Kastens auf den Bildschirm gerechnet)
+        var kamera = seite.Flaeche.AktuelleKamera!;
+        var ort = spiel.Szene.Ort("bitweiche")!;
+        kamera.Setzen((ort.KastenMin.X + ort.KastenMax.X) / 2, (ort.KastenMin.Z + ort.KastenMax.Z) / 2);
+        await seite.Flaeche.NaechstesBildAsync();
+        var punkt = kamera.Bildpunkt((ort.KastenMin + ort.KastenMax) / 2, (float)seite.Flaeche.Bounds.Width, (float)seite.Flaeche.Bounds.Height);
+        if (punkt is { } p)
+        {
+            seite.Flaeche.Tippen(new Point(p.X, p.Y));
+        }
+        Pruefe("Tippen auf ein Haus geht hin", spiel.Jetzt.Ort == "bitweiche", "Ziel " + spiel.Jetzt.Ort + " (" + spiel.Zeile + ")");
+        spiel.SofortAnkommen();
+
+        // Tasten: Pfeil verschiebt, Q dreht, + zoomt
+        float x = kamera.ZielX, d = kamera.Drehung, a = kamera.Abstand;
+        var tasten = seite.Flaeche.Taste(Key.Left) & seite.Flaeche.Taste(Key.Q) & seite.Flaeche.Taste(Key.OemPlus);
+        var bewegt = tasten && kamera.ZielX != x && kamera.Drehung != d && kamera.Abstand < a;
+        Pruefe("Tasten bewegen die Kamera", bewegt, bewegt ? "ja" : "nein");
+        kamera.Drehung = 0;
+
+        // Schilder: mindestens ein Ortsname steht ueber der Stadt
+        await seite.Flaeche.NaechstesBildAsync();
+        await ansicht.BildFertigAsync();
+        Pruefe("Namensschilder sichtbar", seite.SchilderSichtbar > 0, seite.SchilderSichtbar.ToString(CultureInfo.InvariantCulture));
+
+        // "Spiel verlassen" fuehrt zurueck zur Seite davor, Kopfleiste und Navigation sind wieder da
+        seite.VerlassenKnopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+        for (var i = 0; i < 20 && ansicht.AktuelleSeite == Seiten.Spiel; i++)
+        {
+            await ansicht.BildFertigAsync();
+        }
+        var zurueck = ansicht.AktuelleSeite != Seiten.Spiel && !ansicht.Vollbild && !Vollbild.An;
+        Pruefe("Spiel verlassen", zurueck, "Seite " + ansicht.AktuelleSeite + ", Vollbild " + (ansicht.Vollbild ? "an" : "aus"));
+        await ansicht.ZeigeAsync(Seiten.Spiel);
+        await ansicht.BildFertigAsync();
+        return funde;
     }
 
     /// <summary>
@@ -257,10 +360,11 @@ public static partial class AutoMessung
             funde++;
         }
         // ohne 3D sofort ankommen, die Wegzeit zaehlt trotzdem
-        var vorher = seite.Spiel.Minute;
-        seite.Spiel.GeheZu(seite.Spiel.Welt.Haeuser[^1]);
-        seite.Spiel.SofortAnkommen();
-        var weiter = seite.Spiel.Minute > vorher;
+        var spiel = seite.Spiel!;
+        var vorher = spiel.Jetzt.Uhr;
+        spiel.GeheZu("bitweiche");
+        spiel.SofortAnkommen();
+        var weiter = spiel.Jetzt.Uhr > vorher;
         Messwerte.Notiere("Spiel ohne OpenGL: Weg ueber die Ortsliste " + (weiter ? "kostet Spielzeit" : "FEHLER, keine Spielzeit"));
         funde += weiter ? 0 : 1;
         await ansicht.BildFertigAsync();

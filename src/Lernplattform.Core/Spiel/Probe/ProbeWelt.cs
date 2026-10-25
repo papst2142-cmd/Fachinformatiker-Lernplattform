@@ -4,102 +4,31 @@ using System.Text.Json;
 
 namespace Lernplattform.Core.Spiel.Probe;
 
-/// <summary>Ein Haus der Stichprobe mit Tuer und Oeffnungszeit (Minuten seit 0 Uhr; null = immer offen).</summary>
-public sealed record ProbeHaus(string Id, string Name, float TuerX, float TuerZ, int? Oeffnet, int? Schliesst, bool HatInnenraum)
-{
-    /// <summary>Offen zur Spielminute (Tageszeit, die Uhr laeuft ueber Mitternacht weiter).</summary>
-    public bool Offen(int minute) => Oeffnet is not { } von || Schliesst is not { } bis || (minute % 1440 >= von && minute % 1440 < bis);
-
-    /// <summary>Minuten bis zur naechsten Oeffnung (0 = jetzt offen).</summary>
-    public int MinutenBisOffen(int minute) => Offen(minute) || Oeffnet is not { } von ? 0 : ((von - minute % 1440) % 1440 + 1440) % 1440;
-}
-
 /// <summary>Eine begehbare Flaeche (Stadt oder Innenraum): Teile, Wegsuche, Startpunkt, Groesse.</summary>
 public sealed record ProbeFlaeche(string Id, IReadOnlyList<Teil> Teile, Wegsuche Wege, float StartX, float StartZ,
     float Breite, float Tiefe);
 
 /// <summary>
-/// Phase 7, W1 (Stichprobe, Plan Abschnitt 4): ein Strassenstueck mit drei Haeusern und ein
-/// Innenraum. Die Haeuser kommen aus den Aussenmodellen der Python-Weltkarte
-/// (<c>inhalte/spiel/orte.json</c>, Teile block/baum/tor/schild), der Innenraum ist das Buero
-/// aus <c>gebaeude.json</c> (Raeume, Waende, Deko, Raster wie fisi_game._base_grid). Noch kein
-/// Spiel-Kern, keine Spielzahlen, nichts wird gespeichert. Uhr und Oeffnungszeiten sind nur
-/// Probewerte (Spielzeit in Schritten, nie die echte Uhr).
+/// Phase 7, W1 (Stichprobe, Plan Abschnitt 4), seit W4 nur noch der Innenraum: das Buero aus
+/// <c>gebaeude.json</c> (Raeume, Waende, Deko, Raster wie fisi_game._base_grid) mit freier Wegsuche,
+/// dazu Figur, Zielmarke und Farben. Die Stadt baut seit W4 <see cref="StadtSzene"/> aus dem
+/// Stadt-Kern. Nichts wird gespeichert.
 /// </summary>
-public sealed class ProbeWelt
+public static class ProbeWelt
 {
-    // Raster wie fisi_game (WALK_STEP, BODY_RADIUS); die Stadt nutzt groessere Zellen
+    // Raster wie fisi_game (WALK_STEP, BODY_RADIUS)
     public const double InnenSchritt = 0.25;
-    public const double StadtSchritt = 0.5;
     public const double Koerper = 0.3;
     public const float WandInnen = 0.16f;
-
-    /// <summary>Start der Probe-Uhr: 8:00 Uhr.</summary>
-    public const int StartMinute = 8 * 60;
-
-    /// <summary>Ein Weg kostet je angefangene halbe Karteneinheit eine Spielminute.</summary>
-    public const double MinuteJeEinheit = 2.0;
 
     public const string Stadt = "stadt";
     public const string Buero = "buero";
 
-    private static readonly (string Id, string Name, string Modell, string? Variante, float X, float Z, int? Oeffnet, int? Schliesst, bool Innen)[] Plan =
-    [
-        ("zuhause", "Zuhause", "wohnung", "apartment", 2.0f, 3.0f, null, null, false),
-        ("bitweiche", "Bitweiche", "bitweiche", null, 9.0f, 3.4f, 7 * 60, 19 * 60, true),
-        ("talheim", "Bahnhof Talheim", "bahnhof", null, 17.5f, 2.6f, 10 * 60, 18 * 60, false),
-    ];
-
-    public const float StadtBreite = 26f;
-    public const float StadtTiefe = 12f;
-    public const float StrasseZ1 = 8.2f;
-    public const float StrasseZ2 = 9.6f;
-
-    private ProbeWelt(ProbeFlaeche stadtFlaeche, ProbeFlaeche buero, IReadOnlyList<ProbeHaus> haeuser)
+    /// <summary>Das Buero aus <c>gebaeude.json</c> (<paramref name="lesen"/>: Name ohne ".json" unter inhalte/spiel).</summary>
+    public static ProbeFlaeche BueroBauen(Func<string, byte[]> lesen)
     {
-        StadtFlaeche = stadtFlaeche;
-        BueroFlaeche = buero;
-        Haeuser = haeuser;
-    }
-
-    public ProbeFlaeche StadtFlaeche { get; }
-
-    public ProbeFlaeche BueroFlaeche { get; }
-
-    public IReadOnlyList<ProbeHaus> Haeuser { get; }
-
-    public static string Uhrzeit(int minute) =>
-        string.Create(CultureInfo.InvariantCulture, $"{minute / 60 % 24:00}:{minute % 60:00}");
-
-    /// <summary>Spielminuten fuer einen Weg der Laenge <paramref name="laenge"/> (mindestens 1, wenn man geht).</summary>
-    public static int Minuten(double laenge) => laenge <= 0 ? 0 : Math.Max(1, (int)Math.Ceiling(laenge * MinuteJeEinheit - 1e-9));
-
-    /// <summary>Welt aus den Inhalten bauen (<paramref name="lesen"/>: Name ohne ".json" unter inhalte/spiel).</summary>
-    public static ProbeWelt Bauen(Func<string, byte[]> lesen)
-    {
-        using var orte = JsonDocument.Parse(lesen("orte"));
         using var gebaeude = JsonDocument.Parse(lesen("gebaeude"));
-        var modelle = orte.RootElement.GetProperty("modelle");
-        var teile = new List<Teil>();
-        var hindernisse = new List<(double, double, double, double)>();
-        var haeuser = new List<ProbeHaus>();
-        // Boden: Wiese (weit ueber den Stadtrand, damit die geneigte Kamera keinen leeren Himmel zeigt), Gehweg, Strasse mit Mittellinie
-        teile.Add(Quader(-30, -0.06f, -30, StadtBreite + 30, 0f, StadtTiefe + 30, Farben.Wiese));
-        teile.Add(Quader(0, 0f, StrasseZ1 - 0.7f, StadtBreite, 0.02f, StrasseZ1, Farben.Gehweg));
-        teile.Add(Quader(0, 0f, StrasseZ1, StadtBreite, 0.015f, StrasseZ2, Farben.Strasse));
-        for (var x = 0.5f; x < StadtBreite; x += 2f)
-        {
-            teile.Add(Quader(x, 0.015f, ((StrasseZ1 + StrasseZ2) / 2) - 0.04f, x + 1f, 0.02f, ((StrasseZ1 + StrasseZ2) / 2) + 0.04f, Farben.Linie));
-        }
-        foreach (var (id, name, modell, variante, ox, oz, oeffnet, schliesst, innen) in Plan)
-        {
-            var (tuerX, tuerZ) = HausBauen(modelle.GetProperty(modell), variante, ox, oz, teile, hindernisse);
-            haeuser.Add(new ProbeHaus(id, name, tuerX, tuerZ, oeffnet, schliesst, innen));
-        }
-        var stadtWege = new Wegsuche(Wegsuche.FreieZellen(StadtBreite, StadtTiefe, StadtSchritt, Koerper, hindernisse), StadtSchritt);
-        var start = haeuser[0];
-        var stadt = new ProbeFlaeche(Stadt, teile, stadtWege, start.TuerX, start.TuerZ, StadtBreite, StadtTiefe);
-        return new ProbeWelt(stadt, BueroBauen(gebaeude.RootElement), haeuser);
+        return BueroBauen(gebaeude.RootElement);
     }
 
     private static Teil Quader(float x1, float y1, float z1, float x2, float y2, float z2, Vector3 farbe) =>
@@ -107,92 +36,6 @@ public sealed class ProbeWelt
 
     private static float Zahl(JsonElement e, string name, float vorgabe = 0f) =>
         e.TryGetProperty(name, out var w) && w.ValueKind == JsonValueKind.Number ? (float)w.GetDouble() : vorgabe;
-
-    private static bool PasstZurVariante(JsonElement teil, string? variante)
-    {
-        if (!teil.TryGetProperty("wohnung", out var liste))
-        {
-            return true;
-        }
-        return variante is not null && liste.EnumerateArray().Any(x => x.GetString() == variante);
-    }
-
-    /// <summary>Ein Aussenmodell aus orte.json an (ox, oz) bauen; Rueckgabe: Punkt vor der Tuer des ersten Blocks.</summary>
-    private static (float X, float Z) HausBauen(JsonElement modell, string? variante, float ox, float oz,
-        List<Teil> teile, List<(double, double, double, double)> hindernisse)
-    {
-        (float X, float Z)? tuer = null;
-        foreach (var teil in modell.EnumerateArray())
-        {
-            if (!PasstZurVariante(teil, variante))
-            {
-                continue;
-            }
-            var art = teil.GetProperty("art").GetString();
-            float x = ox + Zahl(teil, "x"), z = oz + Zahl(teil, "y");
-            switch (art)
-            {
-                case "block":
-                {
-                    float w = Zahl(teil, "w"), t = Zahl(teil, "t"), h = Zahl(teil, "h");
-                    var dach = teil.TryGetProperty("dach", out var d) ? d.GetString() : "flach";
-                    var wand = tuer is null ? Farben.Wand : Farben.WandZwei;
-                    var hoehe = dach == "sattel" ? h * 0.72f : h;
-                    teile.Add(Quader(x, 0, z, x + w, hoehe, z + t, wand));
-                    if (dach == "sattel")
-                    {
-                        teile.Add(new Teil(TeilArt.Satteldach, x - 0.1f, hoehe, z - 0.1f, x + w + 0.1f, h, z + t + 0.1f, Farben.Dach));
-                    }
-                    else
-                    {
-                        teile.Add(Quader(x - 0.05f, hoehe, z - 0.05f, x + w + 0.05f, hoehe + 0.08f, z + t + 0.05f, Farben.Dachrand));
-                    }
-                    var fenster = !teil.TryGetProperty("fenster", out var f) || f.ValueKind != JsonValueKind.False;
-                    if (fenster)
-                    {
-                        // Fensterband vorne, je Geschoss (etwa 0,9 Einheiten) eines
-                        for (var y = 0.45f; y + 0.35f < hoehe; y += 0.9f)
-                        {
-                            for (var fx = x + 0.3f; fx + 0.45f <= x + w - 0.2f; fx += 0.8f)
-                            {
-                                teile.Add(Quader(fx, y, z + t, fx + 0.45f, y + 0.35f, z + t + 0.03f, Farben.Fenster));
-                            }
-                        }
-                    }
-                    hindernisse.Add((x, z, x + w, z + t));
-                    if (tuer is null)
-                    {
-                        var tx = x + (w / 2);
-                        teile.Add(Quader(tx - 0.25f, 0, z + t, tx + 0.25f, 0.8f, z + t + 0.04f, Farben.Tuer));
-                        tuer = (tx, z + t + 0.45f);
-                    }
-                    break;
-                }
-                case "tor":
-                {
-                    float w = Zahl(teil, "w"), h = Zahl(teil, "h");
-                    // Tor vorne am Gebaeude (y ist im Modell die Unterkante)
-                    teile.Add(Quader(x, 0, z - 0.02f, x + w, h, z + 0.04f, Farben.Tor));
-                    break;
-                }
-                case "schild":
-                {
-                    var w = Zahl(teil, "w");
-                    teile.Add(Quader(x, 1.1f, z - 0.02f, x + w, 1.35f, z + 0.06f, Farben.Schild));
-                    break;
-                }
-                case "baum":
-                {
-                    var r = Zahl(teil, "r", 0.4f);
-                    teile.Add(Quader(x - 0.08f, 0, z - 0.08f, x + 0.08f, 0.6f, z + 0.08f, Farben.Stamm));
-                    teile.Add(Quader(x - r, 0.5f, z - r, x + r, 0.5f + (2 * r), z + r, Farben.Krone));
-                    hindernisse.Add((x - 0.1, z - 0.1, x + 0.1, z + 0.1));
-                    break;
-                }
-            }
-        }
-        return tuer ?? (ox, oz);
-    }
 
     private static readonly string[] BegehbareDeko = ["teppich", "fussmatte", "whiteboard", "markierung", "bild", "wimpel", "kamera"];
 

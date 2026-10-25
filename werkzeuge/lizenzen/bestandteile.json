@@ -1,7 +1,7 @@
 {
   "_hinweis": "Ohne Feld plattformen gilt ein Zusatz fuer alle Plattformen. Phase 6 W1 (VE4, Sammelliste 12). Ordnet jede ausgelieferte Datei einem Bestandteil zu. Pakete aus NuGet erkennt erzeuge_lizenzen.py selbst aus Lernplattform.deps.json bzw. project.assets.json und liest Lizenz und Lizenzdateien aus dem Paket. Hier stehen nur: eigene Dateien, Dateien, die Velopack beim Packen hinzufuegt, eingebettete Teile ohne eigenes Paket und Lizenztexte fuer Pakete, die nur eine Lizenzangabe ohne Datei haben.",
   "eigen": {
-    "beschreibung": "Fachinformatiker Lernplattform, Copyright (c) 2026 Nico H, Alle Rechte vorbehalten (LICENSE.txt)",
+    "beschreibung": "Fachinformatiker Lernplattform, Copyright (c) 2026 Nico H, Alle Rechte vorbehalten (LICENSE.txt). Eigene Inhalte eingebettet in Lernplattform.App.dll: inhalte/ (Lerninhalte und inhalte/spiel wie Python 0.63.2) und ab Phase 7 W4 inhalte_csharp/spiel (Stadt-Kern der C#-Linie, Sammelliste 100)",
     "dateien": ["Lernplattform.dll", "Lernplattform.App.dll", "Lernplattform.Core.dll", "Lernplattform.deps.json",
                 "Lernplattform.runtimeconfig.json", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt", "LICENSE.txt",
                 "Fachinformatiker-Lernplattform.desktop", "Fachinformatiker-Lernplattform.png", ".DirIcon", "AppRun",

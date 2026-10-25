@@ -15,9 +15,10 @@
   <ItemGroup>
     <!-- Phase 1: Lerninhalte im Programm selbst (PC und Handy gleich), unveraendert aus inhalte/ -->
     <EmbeddedResource Include="..\..\inhalte\*.json" LogicalName="inhalte/%(Filename)%(Extension)" Visible="false" />
-    <EmbeddedResource Include="..\..\inhalte\spiel\balancing.json" LogicalName="inhalte/spiel/balancing.json" Visible="false" />
-    <!-- Phase 7 W1 (3D-Stichprobe): Aussenmodelle der Weltkarte und Grundriss des Bueros -->
-    <EmbeddedResource Include="..\..\inhalte\spiel\orte.json;..\..\inhalte\spiel\gebaeude.json" LogicalName="inhalte/spiel/%(Filename)%(Extension)" Visible="false" />
+    <!-- Phase 7 W4: alle Spielinhalte (Spiel-Kern und 3D-Stadt), unveraendert aus inhalte/spiel -->
+    <EmbeddedResource Include="..\..\inhalte\spiel\*.json" LogicalName="inhalte/spiel/%(Filename)%(Extension)" Visible="false" />
+    <!-- Phase 7 W4 (Sammelliste 100): Inhalte nur der C#-Linie (Stadt-Kern), getrennt von inhalte/ (G1) -->
+    <EmbeddedResource Include="..\..\inhalte_csharp\spiel\*.json" LogicalName="inhalte_csharp/spiel/%(Filename)%(Extension)" Visible="false" />
     <!-- Fuer "Über das Programm": Lizenz und Hinweise zu Fremdbestandteilen -->
     <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
   </ItemGroup>

@@ -7,7 +7,7 @@ namespace Lernplattform.Core.Texte;
 public static class SpielProbeTexte
 {
     public const string Titel = "Spiel (Probe 3D)";
-    public const string Hinweis = "Probe für die 3D-Stadt: tippe auf den Boden oder ein Haus, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger oder das Mausrad zoomen, Pfeiltasten gehen.";
+    public const string Hinweis = "Tippe auf ein Haus oder seinen Namen, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, Q und E drehen.";
     public const string Orte = "Orte";
     public const string Hingehen = "Hingehen";
     public const string Betreten = "Hineingehen";

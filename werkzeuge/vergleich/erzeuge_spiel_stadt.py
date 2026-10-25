@@ -5,7 +5,9 @@ Erzeugt die Vergleichswerte G48 Teil "Stadt" (Phase 7, Weisung P7-6, Stadt-Kern
 ohne Darstellung), gerechnet vom echten Python-Code der Python-Linie (v0.63.2,
 eingefroren): welche Orte der Weltkarte zu sehen sind (place_unlocked) und mit
 welchem Namen, Kurznamen, welcher Rolle, Ansicht und welchem Hinweis
-(map_places: die Felder id, name, kurz, rolle, ansicht, hinweis).
+(map_places: die Felder id, name, kurz, rolle, ansicht, hinweis). Ab W4 (Weisung
+P7-9) dazu je Ort und je Gebaeude der Landschaft die sichtbaren Modellteile und der
+Umriss (Feld "boxen"), fuer die 3D-Stadt.
 
 Die Spielstaende sind dieselben wie in G44 (erzeuge_spiel_neuaufbau.py): alle
 Protokolle werden mit denselben Funktionen und derselben festen uuid neu
@@ -39,8 +41,30 @@ FELDER = ("id", "name", "kurz", "rolle", "ansicht", "hinweis")
 
 def sicht(fg, state):
     regeln = fg.map_rules().get("orte") or []
+    orte = fg.map_places(state)
     return {"frei": [fg.place_unlocked(regel, state) for regel in regeln],
-            "orte": [[ort.get(k) for k in FELDER] for ort in fg.map_places(state)]}
+            "orte": [[ort.get(k) for k in FELDER] for ort in orte],
+            "boxen": boxen(fg, state, orte)}
+
+
+def boxen(fg, state, orte):
+    """Ab W4 (Weisung P7-9): je sichtbarem Ort und je Gebaeude der Landschaft das Modell,
+    die Stellen der sichtbaren Teile (model_parts/_part_visible) und der Umriss
+    (map_places "box" bzw. model_shapes), fuer die 3D-Stadt."""
+    ctx = fg._map_context(state)
+    modelle = fg.map_rules().get("modelle") or {}
+
+    def teile(modell):
+        return [i for i, teil in enumerate(modelle.get(modell, [])) if fg._part_visible(teil, ctx)]
+    liste = []
+    for item in (fg.map_rules().get("welt") or {}).get("landschaft") or []:
+        if item["typ"] == "gebaeude":
+            _model, box = fg.model_shapes(item["modell"], item["x"], item["y"], "#8B93A1", state,
+                                          None, item["modell"])
+            liste.append([item["modell"], teile(item["modell"]), list(box)])
+    for ort in orte:
+        liste.append([ort["id"], teile(ort["modell"]), list(ort["box"])])
+    return liste
 
 
 def szenario045(fg, core, repo):

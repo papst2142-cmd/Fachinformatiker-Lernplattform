@@ -11,6 +11,12 @@ public enum TeilArt
 
     /// <summary>Satteldach ueber der Grundflaeche X1..X2 / Z1..Z2 von Hoehe Y1 bis First Y2, First laengs der laengeren Seite.</summary>
     Satteldach,
+
+    /// <summary>
+    /// Flaches Band am Boden (Strasse, Fluss, Gleis) von (X1, Z1) nach (X2, Z2) auf Hoehe Y1 mit
+    /// Breite Y2 (Phase 7 W4).
+    /// </summary>
+    Band,
 }
 
 /// <summary>Ein Teil der Szene in Weltkoordinaten (X nach rechts, Y nach oben, Z zum Betrachter).</summary>
@@ -57,6 +63,11 @@ public sealed class Netz
             Satteldach(t);
             return;
         }
+        if (t.Art == TeilArt.Band)
+        {
+            Band(t);
+            return;
+        }
         Vector3 a = new(t.X1, t.Y1, t.Z1), b = new(t.X2, t.Y2, t.Z2);
         // sechs Seiten, Ecken gegen den Uhrzeigersinn von aussen gesehen
         Viereck(new(a.X, b.Y, a.Z), new(a.X, b.Y, b.Z), new(b.X, b.Y, b.Z), new(b.X, b.Y, a.Z), t.Farbe);   // oben
@@ -91,6 +102,27 @@ public sealed class Netz
             Dreieck(v1, v2, fv, f * 0.9f);    // Giebel vorne
             Dreieck(h2, h1, fh, f * 0.9f);    // Giebel hinten
         }
+    }
+
+    private void Band(Teil t)
+    {
+        var richtung = new Vector2(t.X2 - t.X1, t.Z2 - t.Z1);
+        if (richtung.LengthSquared() < 1e-12f)
+        {
+            return;
+        }
+        var quer = Vector2.Normalize(new Vector2(-richtung.Y, richtung.X)) * (t.Y2 / 2);
+        Vector3 Ecke(float x, float z, Vector2 q) => new(x + q.X, t.Y1, z + q.Y);
+        var a = Ecke(t.X1, t.Z1, -quer);
+        var b = Ecke(t.X1, t.Z1, quer);
+        var c = Ecke(t.X2, t.Z2, quer);
+        var d = Ecke(t.X2, t.Z2, -quer);
+        // Normale nach oben: Reihenfolge so waehlen, dass das Kreuzprodukt +Y zeigt
+        if (Vector3.Cross(b - a, c - a).Y < 0)
+        {
+            (b, d) = (d, b);
+        }
+        Viereck(a, b, c, d, t.Farbe);
     }
 
     private void Viereck(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 farbe)

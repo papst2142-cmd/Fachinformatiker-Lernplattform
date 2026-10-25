@@ -29,8 +29,8 @@ public sealed class Kamera
     /// <summary>Neigung ueber dem Boden in Grad.</summary>
     public float Neigung { get; init; } = 52f;
 
-    /// <summary>Drehung um die Hochachse in Grad (0 = Blick nach -Z).</summary>
-    public float Drehung { get; init; } = 0f;
+    /// <summary>Drehung um die Hochachse in Grad (0 = Blick nach -Z), W4: per zwei Finger oder Tasten Q/E.</summary>
+    public float Drehung { get; set; } = 0f;
 
     public float Sichtfeld { get; init; } = 40f;
 
@@ -83,6 +83,40 @@ public sealed class Kamera
         {
             Abstand = Math.Clamp(Abstand / faktor, AbstandMin, AbstandMax);
         }
+    }
+
+    /// <summary>Um die Hochachse drehen (Grad), Ergebnis immer in [0, 360).</summary>
+    public void Drehen(float grad)
+    {
+        Drehung = ((Drehung + grad) % 360f + 360f) % 360f;
+    }
+
+    /// <summary>Strahl vom Auge durch den Bildpunkt (x, y): Start und Richtung (Laenge 1) oder null.</summary>
+    public (Vector3 Start, Vector3 Richtung)? Strahl(float x, float y, float breite, float hoehe)
+    {
+        if (!Matrix4x4.Invert(Sicht * Projektion(breite, hoehe), out var umgekehrt))
+        {
+            return null;
+        }
+        var nx = (2f * x / Math.Max(breite, 1)) - 1f;
+        var ny = 1f - (2f * y / Math.Max(hoehe, 1));
+        var nah = Vector4.Transform(new Vector4(nx, ny, 0f, 1f), umgekehrt);
+        var fern = Vector4.Transform(new Vector4(nx, ny, 1f, 1f), umgekehrt);
+        var a = new Vector3(nah.X, nah.Y, nah.Z) / nah.W;
+        var b = new Vector3(fern.X, fern.Y, fern.Z) / fern.W;
+        var r = b - a;
+        return r.LengthSquared() < 1e-12f ? null : (a, Vector3.Normalize(r));
+    }
+
+    /// <summary>Bildpunkt eines Weltpunkts (x, y in Punkten) oder null, wenn er hinter der Kamera liegt.</summary>
+    public (float X, float Y)? Bildpunkt(Vector3 p, float breite, float hoehe)
+    {
+        var v = Vector4.Transform(new Vector4(p, 1f), Sicht * Projektion(breite, hoehe));
+        if (v.W <= 1e-6f)
+        {
+            return null;
+        }
+        return ((v.X / v.W + 1f) / 2f * breite, (1f - (v.Y / v.W)) / 2f * hoehe);
     }
 
     /// <summary>Punkt am Boden (Y = 0) unter dem Bildpunkt (x, y) oder null (Blick in den Himmel).</summary>

@@ -17,4 +17,30 @@ namespace Lernplattform.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
+    /// <summary>
+    /// Phase 7 W4 (Weisung P7-9 Punkt 2, Wunsch Nico): im Spiel Querformat und Systemleisten aus
+    /// (Wischen vom Rand zeigt sie kurz); beim Verlassen wieder die Einstellung des Geraets
+    /// (Hochformat, wenn das Handy hochgehalten wird oder das automatische Drehen aus ist).
+    /// </summary>
+    protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        Lernplattform.Spiel.Vollbild.Geraet = an => RunOnUiThread(() =>
+        {
+            RequestedOrientation = an ? ScreenOrientation.SensorLandscape : ScreenOrientation.Unspecified;
+            if (OperatingSystem.IsAndroidVersionAtLeast(30) && Window?.InsetsController is { } leisten)
+            {
+                if (an)
+                {
+                    // 2 = BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE (Leisten erscheinen beim Wischen vom Rand kurz)
+                    leisten.SystemBarsBehavior = 2;
+                    leisten.Hide(global::Android.Views.WindowInsets.Type.SystemBars());
+                }
+                else
+                {
+                    leisten.Show(global::Android.Views.WindowInsets.Type.SystemBars());
+                }
+            }
+        });
+    }
 }
