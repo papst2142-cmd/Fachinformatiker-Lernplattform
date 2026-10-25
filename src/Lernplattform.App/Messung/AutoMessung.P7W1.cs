@@ -31,6 +31,11 @@ public static partial class AutoMessung
     public const double SpielWegGrenze = 50;
     public const int SpielBilder = 120;
 
+    /// <summary>Nachtrag 1 zu P7-12 (Wunsch 4): Grenzen der Gesamtansicht (ganz herausgezoomt), unabhaengig vom Grafiktreiber.</summary>
+    public const long GesamtDreieckeGrenze = 100_000;
+
+    public const int GesamtAufrufeGrenze = 20;
+
     /// <summary>Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den kurzen Lauf ohne OpenGL (mit --software).</summary>
     public const string TeilErsatz = "spiel-ersatz";
 
@@ -184,6 +189,8 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Zeit je Bild: {text} (Grenze Median {SpielBildMedian:F0} ms, 95 % {SpielBild95:F0} ms; Einzelmessungen {laeufe.Count} Laeufe)"));
             funde++;
         }
+
+        funde += await GesamtansichtAsync(seite);
 
         // Weg suchen: von der Haustuer "Zuhause" zur Filiale am anderen Ende der Stadt (Rechnung ohne Bild)
         double Suche()
@@ -368,6 +375,58 @@ public static partial class AutoMessung
         double Stelle(double anteil) => sortiert[Math.Min(sortiert.Count - 1, (int)Math.Ceiling(anteil * sortiert.Count) - 1)];
         var median = sortiert.Count % 2 == 1 ? sortiert[sortiert.Count / 2] : (sortiert[(sortiert.Count / 2) - 1] + sortiert[sortiert.Count / 2]) / 2;
         return (median, Stelle(0.95));
+    }
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 4, S24 55 Bilder/s in der Uebersicht): ganz herausgezoomt auf die
+    /// Stadtmitte. Messpunkte, die nicht vom Grafiktreiber abhaengen: Zeichenaufrufe und Dreiecke je Bild
+    /// (Grenzen <see cref="GesamtAufrufeGrenze"/>, <see cref="GesamtDreieckeGrenze"/>); dazu Zeit je Bild beim
+    /// Schwenk in dieser Ansicht (Grenzen wie beim Schwenk, bis zu 3 Laeufe) und Rechenzeit je Bild.
+    /// </summary>
+    private static async Task<int> GesamtansichtAsync(SpielSeite seite)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        var flaeche = seite.Flaeche;
+        if (flaeche.AktuelleKamera is not { } kamera || seite.Spiel is not { } spiel)
+        {
+            Messwerte.Notiere("  FEHLER: Spiel Gesamtansicht: keine Kamera");
+            return 1;
+        }
+        var abstand = kamera.Abstand;
+        kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
+        kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
+        await flaeche.NaechstesBildAsync();
+        await flaeche.NaechstesBildAsync();
+        var aufrufe = flaeche.LetzteZeichenaufrufe;
+        var dreiecke = flaeche.LetzteDreiecke;
+        Messwerte.Notiere(string.Create(inv, $"Spiel: Gesamtansicht (Abstand {kamera.Abstand:F0}): {aufrufe} Zeichenaufrufe, {dreiecke} Dreiecke je Bild, Rechenzeit {flaeche.LetzteZeichenzeitMs:F1} ms (Grenzen {GesamtAufrufeGrenze} Aufrufe, {GesamtDreieckeGrenze} Dreiecke)"));
+        if (aufrufe > GesamtAufrufeGrenze || dreiecke > GesamtDreieckeGrenze || aufrufe == 0)
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Gesamtansicht: {aufrufe} Zeichenaufrufe, {dreiecke} Dreiecke (Grenzen {GesamtAufrufeGrenze}, {GesamtDreieckeGrenze})"));
+            funde++;
+        }
+        var laeufe = new List<(double Median, double P95)>();
+        for (var lauf = 0; lauf < Messwiederholung.Hoechstens; lauf++)
+        {
+            var (median, p95) = await SchwenkAsync(seite);
+            laeufe.Add((median, p95));
+            if (median <= SpielBildMedian && p95 <= SpielBild95)
+            {
+                break;
+            }
+            await Task.Delay(Messwiederholung.Pause);
+        }
+        var text = string.Join("; ", laeufe.Select(l => string.Create(inv, $"Median {l.Median:F1} ms, 95 % {l.P95:F1} ms")));
+        Messwerte.Notiere("Spiel: Zeit je Bild in der Gesamtansicht (" + SpielBilder + " Bilder): " + text);
+        if (laeufe.All(l => l.Median > SpielBildMedian || l.P95 > SpielBild95))
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Zeit je Bild Gesamtansicht: {text} (Grenze Median {SpielBildMedian:F0} ms, 95 % {SpielBild95:F0} ms; Einzelmessungen {laeufe.Count} Laeufe)"));
+            funde++;
+        }
+        kamera.Zoomen(kamera.Abstand / abstand);
+        kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+        return funde;
     }
 
     /// <summary>

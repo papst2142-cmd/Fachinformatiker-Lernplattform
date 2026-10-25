@@ -62,6 +62,7 @@ public sealed class SpielSeite : Grid
     private int _anhaengen;
     private TopLevel? _oben;
     private bool _autoRandVorher = true;
+    private bool _randVorher;
 
     /// <summary>Stadt mit Spielstand und Spielansichten (W6): die Tafel liegt ueber der Stadt.</summary>
     public SpielSeite(Func<SpielSitzung> laden, Action verlassen, Tafel.SpielWege? wege) : this(verlassen)
@@ -216,6 +217,10 @@ public sealed class SpielSeite : Grid
                 TopLevel.SetAutoSafeAreaPadding(_oben, false);
                 if (_oben.InsetsManager is { } rand)
                 {
+                    // Nachtrag 1 zu P7-12 (S24): ohne Rand-zu-Rand legt Android die Ansicht neben die
+                    // Kamera-Aussparung (schwarzer Streifen links im Querformat), trotz ShortEdges
+                    _randVorher = rand.DisplayEdgeToEdgePreference;
+                    rand.DisplayEdgeToEdgePreference = true;
                     rand.SafeAreaChanged += SicherAendern;
                 }
                 SicherSetzen();
@@ -245,6 +250,7 @@ public sealed class SpielSeite : Grid
                 if (_oben.InsetsManager is { } rand)
                 {
                     rand.SafeAreaChanged -= SicherAendern;
+                    rand.DisplayEdgeToEdgePreference = _randVorher;
                 }
                 TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
                 _oben = null;
