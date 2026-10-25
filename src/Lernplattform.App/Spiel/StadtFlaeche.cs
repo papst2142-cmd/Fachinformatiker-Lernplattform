@@ -50,6 +50,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private string _markierungSchluessel = "";
     private GlNetz? _ausruf;
     private GlNetz? _marke;
+    private GlNetz? _ring;
+    private string _ringSchluessel = "";
     private int _programm;
     private int _ortMvp;
     private int _ortModell;
@@ -97,7 +99,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _kameras.Clear();
             if (value is not null)
             {
-                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ - 0.3f, 10f)
+                // Nachtrag 1 zu P7-13 (Wunsch 2): naeher an der Figur (vorher Abstand 10, die Figur war am S24
+                // rund 45 Bildpunkte hoch); die Figur steht ueber den Versatz in der Mitte des freien Bereichs
+                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ, StartAbstand)
                 {
                     Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
                 };
@@ -135,6 +139,32 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         AnfordernBild();
     }
 
+    /// <summary>Abstand der Stadt-Kamera beim Start (Nachtrag 1 zu P7-13, Wunsch 2).</summary>
+    public const float StartAbstand = 6f;
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): von Kopfzeile (oben) und Textkarte (unten) verdeckte Hoehe in Punkten;
+    /// die Kamera stellt ihr Ziel (die Figur) in die Mitte des freien Bereichs dazwischen.
+    /// </summary>
+    public (double Oben, double Unten) Frei
+    {
+        get => _frei;
+        set
+        {
+            if (_frei != value)
+            {
+                _frei = value;
+                AnfordernBild();
+            }
+        }
+    }
+
+    private (double Oben, double Unten) _frei;
+
+    /// <summary>Versatz der Kamera fuer den freien Bereich (Bildraum, hoechstens 0,6).</summary>
+    private float FreiVersatz() =>
+        Bounds.Height > 1 ? (float)Math.Clamp((_frei.Unten - _frei.Oben) / Bounds.Height, -0.6, 0.6) : 0f;
+
     /// <summary>OpenGL steht (Pflicht-Messpunkt "GL-Zusammenhang erzeugt").</summary>
     public bool GlBereit { get; private set; }
 
@@ -158,7 +188,19 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public event Action? GlGestartet;
 
     /// <summary>Kamera der gezeigten Flaeche (Stadt oder Buero); null, solange das Spiel noch laedt.</summary>
-    public Kamera? AktuelleKamera => _spiel is null ? null : _kameras[_spiel.FlaecheId];
+    public Kamera? AktuelleKamera
+    {
+        get
+        {
+            if (_spiel is null)
+            {
+                return null;
+            }
+            var kamera = _kameras[_spiel.FlaecheId];
+            kamera.Versatz = FreiVersatz();
+            return kamera;
+        }
+    }
 
     /// <summary>Messung: laeuft, solange gesetzt, ohne Pause weiter (Kameraschwenk).</summary>
     public bool Dauerlauf { get; set; }
@@ -238,6 +280,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _innen = null;
         _markierung = null;
         _markierungSchluessel = "";
+        _ring = null;
+        _ringSchluessel = "";
         _szeneNeu = true;
         _innenNeu = true;
         _programm = 0;
@@ -246,7 +290,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
-        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf))
+        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring))
         {
             netz?.Freigeben(gl);
         }
@@ -255,6 +299,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _figuren.Clear();
         _innen = null;
         _markierung = null;
+        _ring = null;
+        _ringSchluessel = "";
         if (_programm != 0)
         {
             gl.DeleteProgram(_programm);
@@ -398,9 +444,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             var innen = _spiel.Innen;
             var groesse = innen is null ? Figur.StadtHoehe : Innenraum.FigurHoehe;
-            var spieler = FigurNetz(gl, "#spieler", _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null);
-            Zeichnen(gl, spieler, Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
-                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ), sichtProj);
+            var aussehen = _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
+            var spieler = FigurNetz(gl, "#spieler", aussehen);
+            var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
+                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ);
+            Zeichnen(gl, spieler, figurLage, sichtProj);
             if (innen is not null)
             {
                 foreach (var person in innen.Personen)
@@ -433,6 +481,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 gl.Uniform1f(_ortDurch, 0f);
                 VerdecktZahl = verdeckt.Count;
+                // Nachtrag 1 zu P7-13 (Wunsch 2): Kreis um die Figur in ihrer Kreisfarbe, ohne Tiefenpruefung
+                // (kein Haus, Baum oder Schild verdeckt ihn), danach die Figur noch einmal ganz vorn
+                gl.Disable(GL_DEPTH_TEST);
+                Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, StadtSzene.Hoehe.Figur + 0.01f, _spiel.FigurZ), sichtProj);
+                gl.Enable(GL_DEPTH_TEST);
+                gl.Clear(GL_DEPTH_BUFFER_BIT);
+                Zeichnen(gl, spieler, figurLage, sichtProj);
             }
             if (gl.IsBindVertexArrayAvailable)
             {
@@ -458,6 +513,22 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     /// <summary>Wie viele Haeuser im letzten Bild halb durchsichtig waren (Start-Test, Fotos).</summary>
     public int VerdecktZahl { get; private set; }
+
+    /// <summary>Kreis um die Spielfigur (Radius 0,22 = 1,1 m), neu geladen, wenn sich die Kreisfarbe aendert.</summary>
+    private GlNetz Ring(GlInterface gl, PyObjekt? aussehen)
+    {
+        var schluessel = Aussehen.Normalisieren(aussehen)["kreis"] as string ?? "";
+        if (_ring is null || schluessel != _ringSchluessel)
+        {
+            _ring?.Freigeben(gl);
+            _ring = GlNetz.Laden(gl, Figur.Ring(aussehen, RingRadius, 0.06f));
+            _ringSchluessel = schluessel;
+        }
+        return _ring;
+    }
+
+    /// <summary>Radius des Kreises um die Figur in der Stadt.</summary>
+    public const float RingRadius = 0.22f;
 
     /// <summary>Figur (Hoehe 1) mit Aussehen, je Person einmal geladen.</summary>
     private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen)

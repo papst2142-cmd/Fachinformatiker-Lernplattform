@@ -38,6 +38,7 @@ public sealed class SpielSeite : Grid
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
     private readonly Border _unten;
+    private readonly Border _kopf;
     private readonly Grid _mitte;
     private readonly Button _betreten;
     private readonly Button _zurStadt;
@@ -90,6 +91,7 @@ public sealed class SpielSeite : Grid
         var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile } });
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
+        _kopf = kopf;
         var verlassenKnopf = Schrift.Knopf(StadtTexte.Verlassen, true);
         verlassenKnopf.Margin = new Thickness(0);
         verlassenKnopf.VerticalAlignment = VerticalAlignment.Top;
@@ -173,6 +175,8 @@ public sealed class SpielSeite : Grid
         ebene.Children.Add(unten);
         Children.Add(ebene);
         Ebene = ebene;
+        // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
+        ebene.LayoutUpdated += (_, _) => FreiSetzen();
 
         Flaeche.BildGezeichnet += () =>
         {
@@ -408,6 +412,16 @@ public sealed class SpielSeite : Grid
     /// sonst bleibt die Liste ueber der Karte. Der Text der unteren Karte bekommt hoechstens ein
     /// Viertel der Hoehe, damit die Knoepfe am Handy quer nie aus dem Bild rutschen.
     /// </summary>
+    /// <summary>Verdeckte Hoehe oben (bis unter die Kopfzeile) und unten (ab der Textkarte) an die Flaeche geben.</summary>
+    private void FreiSetzen()
+    {
+        if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben
+            && _unten.TranslatePoint(default, Flaeche) is { } unten && Flaeche.Bounds.Height > 1)
+        {
+            Flaeche.Frei = (Math.Clamp(oben.Y, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
+        }
+    }
+
     private void Anordnen()
     {
         var groesse = Ebene.Bounds.Size;
