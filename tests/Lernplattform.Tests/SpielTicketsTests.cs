@@ -22,16 +22,16 @@ public class SpielTicketsTests
     public void RaengeWiePython()
     {
         var r = Soll.GetProperty("raenge");
-        foreach (var f in r.GetProperty("tickets").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(r.GetProperty("tickets"), 6, "tickets"))
         {
             Assert.Equal(f[1].GetInt64(), Spielstand.TicketsJeTag(W(f[0]), Balancing));
         }
-        foreach (var f in r.GetProperty("rang").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(r.GetProperty("rang"), 80, "rang"))
         {
             long? tag = f[1].ValueKind == JsonValueKind.Null ? null : f[1].GetInt64();
             Assert.Equal(f[2].GetString(), Spielstand.RangFuer(f[0].GetDouble(), Balancing, tag));
         }
-        foreach (var f in r.GetProperty("naechster").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(r.GetProperty("naechster"), 40, "naechster"))
         {
             Assert.Equal(PythonJson.Text(W(f[2])), PythonJson.Text(PyAusgabe.Wert(Spielstand.NaechsterRangFuer(f[0].GetDouble(), f[1].GetInt64(), Balancing))));
         }
@@ -40,7 +40,7 @@ public class SpielTicketsTests
     [Fact]
     public void WuerfelWiePython()
     {
-        foreach (var f in Soll.GetProperty("wuerfel").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(Soll.GetProperty("wuerfel"), 100, "wuerfel"))
         {
             Assert.Equal(f[3].GetDouble(), Wuerfel.Werfen(f[0].GetString()!, f[1].GetInt64(), f[2].GetString()!));
         }
@@ -50,7 +50,7 @@ public class SpielTicketsTests
     public void TageWiePython()
     {
         var inhalt = SpielInhaltTests.Inhalt;
-        foreach (var lauf in Soll.GetProperty("laeufe").EnumerateArray())
+        foreach (var lauf in VergleichsHilfe.Mindestens(Soll.GetProperty("laeufe"), 10, "laeufe"))
         {
             var start = lauf.GetProperty("start").GetString()!;
             var ereignisse = new List<SpielEreignis>
@@ -59,7 +59,7 @@ public class SpielTicketsTests
                 new(start, Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } }),
             };
             var nummer = 0;
-            foreach (var soll in lauf.GetProperty("tage").EnumerateArray())
+            foreach (var soll in VergleichsHilfe.Mindestens(lauf.GetProperty("tage"), 75, "tage"))
             {
                 var s = new Spielstand(ereignisse, inhalt);
                 var tag = s.Tag;

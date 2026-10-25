@@ -64,7 +64,7 @@ public class SpielInhaltTests
     [Fact]
     public void VariantenWiePython()
     {
-        foreach (var fall in Soll.GetProperty("faelle").GetProperty("varianten").EnumerateArray())
+        foreach (var fall in VergleichsHilfe.Mindestens(Soll.GetProperty("faelle").GetProperty("varianten"), 6, "varianten"))
         {
             var ergebnis = SpielInhalt.VariantenAufloesen(PyWert(fall.GetProperty("eintraege")), fall.GetProperty("vorlage").GetBoolean());
             Assert.Equal(fall.GetProperty("name").GetString() + " " + PythonJson.Text(PyWert(fall.GetProperty("ergebnis"))),
@@ -75,12 +75,12 @@ public class SpielInhaltTests
     [Fact]
     public void ZeilenUndStoryWiePython()
     {
-        foreach (var fall in Soll.GetProperty("faelle").GetProperty("zeilen").EnumerateArray())
+        foreach (var fall in VergleichsHilfe.Mindestens(Soll.GetProperty("faelle").GetProperty("zeilen"), 12, "zeilen"))
         {
             Assert.Equal(PythonJson.Text(PyWert(fall.GetProperty("ergebnis"))),
                 PythonJson.Text(SpielInhalt.Zeilen(PyWert(fall.GetProperty("eingabe")))));
         }
-        foreach (var fall in Soll.GetProperty("faelle").GetProperty("story").EnumerateArray())
+        foreach (var fall in VergleichsHilfe.Mindestens(Soll.GetProperty("faelle").GetProperty("story"), 8, "story"))
         {
             Assert.Equal(PythonJson.Text(PyWert(fall.GetProperty("ergebnis"))),
                 PythonJson.Text(SpielInhalt.StoryWert(PyWert(fall.GetProperty("eingabe")))));

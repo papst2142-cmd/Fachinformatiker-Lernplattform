@@ -96,7 +96,7 @@ public class SpielNeuaufbauTests
     public void SchrittweiseWieNeuaufbau()
     {
         // Game._log: apply_event + note_handled auf dem vorhandenen Stand ergibt denselben Stand
-        foreach (var protokoll in Soll.GetProperty("protokolle").EnumerateArray())
+        foreach (var protokoll in VergleichsHilfe.Mindestens(Soll.GetProperty("protokolle"), 18, "protokolle"))
         {
             var ereignisse = Ereignisse(protokoll.GetProperty("ereignisse"));
             var s = new Spielstand([], SpielInhaltTests.Inhalt);

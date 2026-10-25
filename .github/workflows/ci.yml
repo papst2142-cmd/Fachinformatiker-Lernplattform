@@ -305,6 +305,8 @@ jobs:
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
               assert alt == neu, name + " weicht ab"
+              if name.startswith("spiel_"):  # streng: 1 und 1.0 sind fuer C# verschieden
+                  assert json.dumps(alt) == json.dumps(neu), name + " weicht ab (Zahlart)"
               print(name, "gleich")
           # G36 (Skript nur aus der Spezifikation) muss bei SI gleich G32 (Python) sein
           g32 = json.load(open("neu/pruefung.json", encoding="utf-8"))

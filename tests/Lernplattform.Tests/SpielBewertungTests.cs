@@ -155,7 +155,7 @@ public class SpielBewertungTests
     public void TexteWiePython()
     {
         var t = Soll.GetProperty("texte");
-        foreach (var f in t.GetProperty("zahl").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("zahl"), 39, "zahl"))
         {
             var ist = Bewertung.ZahlLesen(W(f[0]));
             var wo = "parse_number(" + f[0].GetRawText() + ")";
@@ -168,28 +168,28 @@ public class SpielBewertungTests
                 Assert.True(ist is double d && (d.Equals(ZahlAusSoll(f[1])) || (double.IsNaN(d) && double.IsNaN(ZahlAusSoll(f[1])))), wo + " = " + f[1] + ", C# " + ist);
             }
         }
-        foreach (var f in t.GetProperty("praefix").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("praefix"), 21, "praefix"))
         {
             GleichOderAusnahme(f[1], () => Bewertung.PraefixLesen(W(f[0])), "parse_prefix(" + f[0].GetRawText() + ")");
         }
-        foreach (var f in t.GetProperty("ip").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("ip"), 12, "ip"))
         {
             Assert.Equal(T(W(f[1])), T(Bewertung.IpLesen(W(f[0]))));
         }
-        foreach (var f in t.GetProperty("num").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("num"), 20, "num"))
         {
             object? wert = f[0].ValueKind == JsonValueKind.String ? ZahlAusSoll(f[0]) : W(f[0]);
             Assert.Equal(f[0].GetRawText() + " " + f[1].GetString(), f[0].GetRawText() + " " + PyFormat.Num(wert));
         }
-        foreach (var f in t.GetProperty("euro").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("euro"), 11, "euro"))
         {
             Assert.Equal(f[0].GetRawText() + " " + f[1].GetString(), f[0].GetRawText() + " " + PyFormat.Euro(W(f[0])));
         }
-        foreach (var f in t.GetProperty("plural").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("plural"), 6, "plural"))
         {
             Assert.Equal(f[1].GetString(), PyFormat.Plural(W(f[0]), "Arbeitstag", "Arbeitstage"));
         }
-        foreach (var f in t.GetProperty("netzteil").EnumerateArray())
+        foreach (var f in VergleichsHilfe.Mindestens(t.GetProperty("netzteil"), 16, "netzteil"))
         {
             var cpu = SpielDaten.Teil(f[0].GetString(), Inhalt);
             var gpu = f[1].ValueKind == JsonValueKind.Null ? null : SpielDaten.Teil(f[1].GetString(), Inhalt);

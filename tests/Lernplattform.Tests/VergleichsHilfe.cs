@@ -12,6 +12,14 @@ namespace Lernplattform.Tests;
 /// </summary>
 internal static class VergleichsHilfe
 {
+    /// <summary>Die Eintraege einer Liste aus den Vergleichswerten; rot, wenn der Erzeuger weniger als
+    /// <paramref name="mindestens"/> geliefert hat (eine leere Liste darf nicht still gruen sein).</summary>
+    public static JsonElement.ArrayEnumerator Mindestens(JsonElement liste, int mindestens, string wo)
+    {
+        Assert.True(liste.GetArrayLength() >= mindestens, wo + ": " + liste.GetArrayLength() + " Eintraege, erwartet mindestens " + mindestens);
+        return liste.EnumerateArray();
+    }
+
     public static JsonElement Lade(string datei)
     {
         using var f = File.OpenRead(Pfade.Vergleich(datei));
