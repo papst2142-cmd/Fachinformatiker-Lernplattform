@@ -272,8 +272,9 @@ public class SpielProbeTests
         {
             var boden = k.Boden(x, y, 800, 600)!.Value;
             var zurueck = k.Bildpunkt(new Vector3(boden.X, 0, boden.Y), 800, 600)!.Value;
-            Assert.Equal(x, zurueck.X, 2);
-            Assert.Equal(y, zurueck.Y, 2);
+            // hin und zurueck auf 1/20 Bildpunkt genau (float; macOS arm64 rechnet mit FMA, dort 499,994 statt 500)
+            Assert.Equal(x, zurueck.X, 0.05f);
+            Assert.Equal(y, zurueck.Y, 0.05f);
         }
     }
 
