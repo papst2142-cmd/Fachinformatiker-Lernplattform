@@ -371,7 +371,7 @@ public static partial class Betrieb
         var macke = Waehle(Liste(regeln["macken"]).Select(Objekt).Where(m => !Py.Wahr(m["kollege"])).ToList(), startwert, runde, salz + "macke");
         var kennung = Prozent("bw%d-%d", runde, nummer);
         // Ab 0.44: Manche kommen von einem Mitbewerber (der sie spaeter zurueckwill)
-        var frueher = FruehererArbeitgeber(startwert, kennung, inhalt);
+        var frueher = Py.Str(FruehererArbeitgeberVon(startwert, kennung, inhalt));
         var rolle = Rolle(werte);
         if (frueher.Length > 0)
         {

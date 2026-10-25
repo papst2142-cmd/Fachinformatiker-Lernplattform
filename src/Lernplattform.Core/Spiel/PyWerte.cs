@@ -86,6 +86,9 @@ public sealed class PyDict : IEnumerable<KeyValuePair<object?, object?>>
         return this[schluessel];
     }
 
+    /// <summary>d.clear()</summary>
+    public void Clear() => werte.Clear();
+
     public IEnumerable<object?> Keys => werte.Keys.Select(k => ReferenceEquals(k, Keins) ? null : k);
 
     public IEnumerable<object?> Values => werte.Values;

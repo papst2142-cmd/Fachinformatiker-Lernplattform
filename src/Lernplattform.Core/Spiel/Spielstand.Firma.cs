@@ -13,7 +13,7 @@ public sealed partial class Spielstand
 {
     // Zwischenspeicher wie in Python (gehoeren nicht zu den verglichenen Feldern)
     private readonly Dictionary<object, PyObjekt> themenBasis = new(PyVergleich.Gleich!);   // _topic_base
-    internal readonly Dictionary<long, object?> Druck = [];                                  // _pressure
+    internal readonly PyDict Druck = new();                                  // _pressure
 
     private static SpielThemen T => SpielThemen.Jetzt;
 
@@ -694,7 +694,7 @@ public sealed partial class Spielstand
             return;
         }
         var zuwachs = (PyObjekt)PersonalZuwachs.SetDefault(person, new PyObjekt())!;
-        Py.Setzen(zuwachs, (string)thema, Py.F(Get(zuwachs, (string)thema, 0.0)) + nachher - vorher);
+        Py.Setzen(zuwachs, (string)thema!, Py.F(Get(zuwachs, (string)thema!, 0.0)) + nachher - vorher);
         LernProtokoll.Add(new PyTupel(tag, person, thema, vorher, nachher, grund));
     }
 
@@ -795,7 +795,7 @@ public sealed partial class Spielstand
         }
         if (Py.Kleiner(Geld, ziel["startkapital"]))
         {
-            fehlt.Add(PyFormat.Prozent("noch %s Erspartes", Wohnung.GanzeEuro(Py.Minus(ziel["startkapital"], Math.Max(0, Geld)))));
+            fehlt.Add(PyFormat.Prozent("noch %s Erspartes", Spiel.Wohnung.GanzeEuro(Py.Minus(ziel["startkapital"], Math.Max(0, Geld)))));
         }
         if (Py.Kleiner(MittlereReputation, ziel["mindest_reputation"]))
         {
