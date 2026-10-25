@@ -73,6 +73,41 @@ public class SpielDatenbankTests
         });
     }
 
+    /// <summary>
+    /// Gegenpruefung W8 Fund 1 (_current_stamp/_apply_written): schrittweise nur, solange das Protokoll
+    /// genau zum Spielstand passt. Kommt ein Ereignis desselben Durchgangs von aussen dazu (Abgleich,
+    /// Uebernahme), rechnet die naechste Aktion voll neu, und der Stand enthaelt es.
+    /// </summary>
+    [Fact]
+    public void FremdesEreignisRechnetNeu()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var schreiber = Schreiber(lernstand);
+        var spiel = new Spielablauf(Inhalt, Datenbank(schreiber));
+        spiel.Log(Ereignisse.Profil, new PyObjekt { { "name", "Probe" } });
+        spiel.Log(Ereignisse.Erledigt, Erledigt("probe-1"));
+        Assert.Equal(1, spiel.Schritte);   // der schrittweise Weg wird wirklich genutzt
+
+        Assert.NotNull(schreiber.SpielEreignisSpeichern(Ereignisse.Erledigt, PythonJson.Text(Erledigt("fremd-1", 500L)), "Handy", Lauf));
+        spiel.Log(Ereignisse.Erledigt, Erledigt("probe-2"));
+
+        Assert.Equal(0, spiel.Schritte);
+        Assert.Contains("fremd-1", spiel.Stand.Geloest.Cast<object?>().Select(x => x?.ToString()));
+        var stand = spiel.Stand;
+        Assert.Empty(stand.Unterschiede(spiel.Neuaufbau()));
+
+        // Danach wieder schrittweise
+        spiel.Log(Ereignisse.Erledigt, Erledigt("probe-3"));
+        Assert.Equal(1, spiel.Schritte);
+        Assert.Empty(spiel.Stand.Unterschiede(new Spielstand(spiel.Speicher.Ereignisse(), Inhalt)));
+    }
+
+    private static PyObjekt Erledigt(string aufgabe, long geld = 60L) => new()
+    {
+        { "aufgabe", aufgabe }, { "tag", 1L }, { "richtig", true }, { "geld", geld },
+    };
+
     /// <summary>Laeuft ein anderer Vorgang, schreibt eine Aktion gar nichts (auch nicht teilweise) und der Stand bleibt.</summary>
     [Fact]
     public void BelegtSchreibtNichts()

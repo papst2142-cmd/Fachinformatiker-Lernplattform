@@ -70,6 +70,20 @@ public class SpielablaufTests
         Assert.Equal(geld, vorher.Geld);
     }
 
+    /// <summary>
+    /// Gegenpruefung W8 Fund 2: steht das kaputte Ereignis im Protokoll, wirft jede weitere Aktion wie
+    /// Python (Stempel leer, voll neu gerechnet), statt still auf dem alten Stand weiterzurechnen.
+    /// </summary>
+    [Fact]
+    public void NachKaputtemEreignisWirftJedeAktion()
+    {
+        var spiel = Neu();
+        Assert.Throws<FormatException>(() => spiel.Log(Ereignisse.Gegruendet, new PyObjekt { { "name", "Probe IT" }, { "geld", "viel" } }));
+
+        Assert.Throws<FormatException>(() => spiel.Log(Ereignisse.Erledigt, Erledigt("probe-2")));
+        Assert.Throws<FormatException>(() => spiel.Log(Ereignisse.Erledigt, Erledigt("probe-3")));
+    }
+
     /// <summary>86: die Kopie teilt mit dem Original nur die Inhalte, gemeinsame Objekte bleiben gemeinsam.</summary>
     [Fact]
     public void KopieTeiltNurDieInhalte()

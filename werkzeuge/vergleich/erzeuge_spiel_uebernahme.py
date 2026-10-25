@@ -45,6 +45,7 @@ Datei bei jedem Lauf gleich ist.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_spiel_uebernahme.py <pfad_fisi_lernplattform> tests/Vergleich/spiel_uebernahme.json
 """
+import atexit
 import datetime
 import gzip
 import hashlib
@@ -154,6 +155,7 @@ def main():
     import time
     time.tzset()
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # nur Testdaten, nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

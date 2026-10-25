@@ -26,7 +26,22 @@ public interface ISpielSpeicher
 
     /// <summary>reset_records</summary>
     bool BestenlisteLoeschen();
+
+    /// <summary>
+    /// game_event_stamp: (Anzahl, hoechste Nummer, juengster Zeitstempel) der Zeilen des Durchgangs;
+    /// null = kein Stempel (dann wird nach jedem Schreiben voll neu gerechnet).
+    /// </summary>
+    SpielStempel? Stempel();
+
+    /// <summary>Die Zeilen des Durchgangs mit einer Nummer ueber <paramref name="nummer"/>, nach Nummer.</summary>
+    List<SpielZeile> ZeilenNach(long nummer);
 }
+
+/// <summary>Stempel des Ereignisprotokolls eines Durchgangs (Python: Tupel aus COUNT, MAX(id), MAX(timestamp)).</summary>
+public readonly record struct SpielStempel(long Anzahl, long? Nummer, object? Zeit);
+
+/// <summary>Eine Zeile aus spiel_ereignisse (Nummer, Zeitstempel, Art, Daten als JSON-Text).</summary>
+public sealed record SpielZeile(long Nummer, object? Zeit, string Art, string? Daten);
 
 /// <summary>Das Spiel darf gerade nicht schreiben (Abgleich, Uebernahme, Update oder Sicherung einspielen laeuft).</summary>
 public sealed class SpielBelegtAusnahme() : Exception("Spiel: ein anderer Vorgang laeuft, nichts geschrieben");
@@ -74,6 +89,13 @@ public sealed class SpielSpeicher(Func<string>? uhr = null) : ISpielSpeicher
         return true;
     }
 
+    public SpielStempel? Stempel() => ereignisse.Count == 0
+        ? new SpielStempel(0, null, null)
+        : new SpielStempel(ereignisse.Count, ereignisse.Max(e => e.Nr), ereignisse.Select(e => e.Zeit).Max(StringComparer.Ordinal));
+
+    public List<SpielZeile> ZeilenNach(long nummer) =>
+        [.. ereignisse.Where(e => e.Nr > nummer).OrderBy(e => e.Nr).Select(e => new SpielZeile(e.Nr, e.Zeit, e.Art, e.Daten))];
+
     private sealed class Leer : IDisposable
     {
         public void Dispose()
@@ -86,12 +108,13 @@ public sealed class SpielSpeicher(Func<string>? uhr = null) : ISpielSpeicher
 /// Phase 7, W3: die Klasse <c>Game</c> aus <c>fisi_game.py</c> (Python 0.63.2, Z. 5042-6006) fuer
 /// einen Durchgang: Ereignisse schreiben (_log, mit JSON wie Python), den Spielstand fortschreiben,
 /// Erfolge pruefen und die Bestenliste fuehren. Die Aktionen selbst stehen in <see cref="SpielAktionen"/>.
+/// Nicht threadsicher: ein Spielablauf wird nur von einem Thread benutzt (wie Game in Python).
 /// </summary>
 public sealed class Spielablauf
 {
     private bool pruefe;
     private PySet einmal = [];
-    private string? letzteZeit;
+    private SpielStempel? stempel;   // _stamp: Stempel, zu dem der Spielstand genau passt (null: neu rechnen)
     private int schritte;   // _incremental
     private IDisposable? sitzung;
     private int tiefe;
@@ -132,6 +155,9 @@ public sealed class Spielablauf
     /// <summary>Wie oft der schrittweise Spielstand am Feierabend vom Neuaufbau abwich (Python: Zeile in fehler.log).</summary>
     public int Abweichungen { get; private set; }
 
+    /// <summary>_incremental: schrittweise angewendete Ereignisse seit dem letzten Neuaufbau.</summary>
+    public int Schritte => schritte;
+
     /// <summary>Die Felder der letzten Pruefung am Feierabend, die abwichen (leer: gleich).</summary>
     public List<string> LetzteUnterschiede { get; private set; } = [];
 
@@ -156,13 +182,21 @@ public sealed class Spielablauf
     /// <summary>reload: Spielstand aus allen Ereignissen neu berechnen.</summary>
     public Spielstand Neuaufbau()
     {
+        // Wirft der Neuaufbau (kaputtes Ereignis im Protokoll), bleibt der Stempel leer: jede weitere
+        // Aktion rechnet wieder voll neu und wirft wie Python, statt still auf dem alten Stand weiterzurechnen
+        stempel = null;
+        var vorher = Speicher.Stempel();
         var ereignisse = Speicher.Ereignisse();
         Stand = new Spielstand(ereignisse, Inhalt);
         einmal = Stand.EinmalGezaehlt();
-        letzteZeit = ereignisse.Count > 0 ? (string?)ereignisse[^1].Zeit : null;
+        stempel = vorher;
         schritte = 0;
         return Stand;
     }
+
+    /// <summary>_current_stamp: der Stempel des Protokolls, wenn der Spielstand genau dazu passt (sonst null).</summary>
+    private SpielStempel? AktuellerStempel() =>
+        stempel is { } gemerkt && Speicher.Stempel() is { } jetzt && jetzt == gemerkt ? jetzt : null;
 
     /// <summary>
     /// _log: ein Ereignis als JSON schreiben, es (wie json.loads) auf den Spielstand anwenden und danach
@@ -208,7 +242,8 @@ public sealed class Spielablauf
     private void Schreiben(string art, PyObjekt daten)
     {
         var text = PythonJson.Text(daten);
-        if (Speicher.Schreiben(art, text) is not { } zeit)
+        var vorher = AktuellerStempel();
+        if (Speicher.Schreiben(art, text) is null)
         {
             // Nicht gespeichert (Python: log_game_event gibt False, danach voll neu gerechnet)
             NichtGespeichert += 1;
@@ -219,23 +254,15 @@ public sealed class Spielablauf
             }
             return;
         }
-        var nutz = Py.Lesen(text) as PyObjekt ?? [];
-        if (letzteZeit is not null && string.CompareOrdinal(zeit, letzteZeit) < 0)
+        if (!Nachtragen(vorher, art, text))
         {
+            // Protokoll sonst geaendert (Abgleich, Uebernahme, Uhr zurueck) oder nicht (ganz) angewendet:
+            // neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
             Neuaufbau();
         }
-        else
+        else if (art == Ereignisse.Feierabend)
         {
-            letzteZeit = zeit;
-            if (!Anwenden(zeit, art, nutz))
-            {
-                // Nicht (ganz) angewendet: neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
-                Neuaufbau();
-            }
-            else if (art == Ereignisse.Feierabend)
-            {
-                Pruefen();
-            }
+            Pruefen();
         }
         if (art != Ereignisse.Erfolg)
         {
@@ -244,9 +271,48 @@ public sealed class Spielablauf
     }
 
     /// <summary>
-    /// _apply_written (STATE_COPY = True): das Ereignis auf einer Kopie des Spielstands anwenden. Wer
-    /// den alten Stand haelt, sieht ihn unveraendert; schlaegt das Anwenden fehl, bleibt er der
-    /// geltende Stand (false: voll neu rechnen).
+    /// _apply_written: nur schrittweise weiterrechnen, wenn seit dem Stempel <paramref name="vorher"/>
+    /// genau diese eine Zeile dazukam und sie in der Sortierung des Neuaufbaus (Zeitstempel, dann
+    /// Nummer) zuletzt steht; false: voll neu rechnen.
+    /// </summary>
+    private bool Nachtragen(SpielStempel? vorher, string art, string text)
+    {
+        if (vorher is not { } alt || Speicher.Stempel() is not { } nach || nach.Anzahl != alt.Anzahl + 1)
+        {
+            return false;
+        }
+        if (Speicher.ZeilenNach(alt.Nummer ?? 0) is not [var zeile]
+            || zeile.Nummer != nach.Nummer || zeile.Art != art || zeile.Daten != text
+            || zeile.Zeit is not string zeit || !Equals(zeit, nach.Zeit)
+            || (alt.Zeit is not null && !(alt.Zeit is string altZeit && string.CompareOrdinal(zeit, altZeit) >= 0)))
+        {
+            return false;
+        }
+        PyObjekt nutz;
+        try
+        {
+            if (Py.Lesen(text) is not PyObjekt gelesen)
+            {
+                return false;
+            }
+            nutz = gelesen;
+        }
+        catch (Exception fehler) when (fehler is FormatException or System.Text.Json.JsonException or InvalidOperationException)
+        {
+            return false;
+        }
+        if (!Anwenden(zeit, art, nutz))
+        {
+            return false;
+        }
+        stempel = nach;
+        return true;
+    }
+
+    /// <summary>
+    /// STATE_COPY = True: das Ereignis auf einer Kopie des Spielstands anwenden. Wer den alten Stand
+    /// haelt, sieht ihn unveraendert; schlaegt das Anwenden fehl, bleibt er der geltende Stand
+    /// (false: voll neu rechnen).
     /// </summary>
     private bool Anwenden(string zeit, string art, PyObjekt nutz)
     {
@@ -263,6 +329,7 @@ public sealed class Spielablauf
         }
         catch (Exception)
         {
+            stempel = null;
             return false;
         }
         Stand = stand;
@@ -279,6 +346,12 @@ public sealed class Spielablauf
     {
         if (schritte == 0)
         {
+            return;
+        }
+        if (Speicher.Stempel() is not { } jetzt || stempel != jetzt)
+        {
+            // Protokoll hat sich sonst geaendert: still neu rechnen (keine Abweichung, wie Python)
+            Neuaufbau();
             return;
         }
         var stand = Stand;

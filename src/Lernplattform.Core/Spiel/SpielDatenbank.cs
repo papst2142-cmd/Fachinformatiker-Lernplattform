@@ -66,6 +66,27 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
         }
     }
 
+    private (string Wo, string? Wert) Bedingung() =>
+        string.IsNullOrEmpty(Lauf) || Lauf == LernstandSchreiber.AlterLauf ? ("(lauf IS NULL OR lauf = '')", null) : ("lauf = $lauf", Lauf);
+
+    /// <summary>game_event_stamp: COUNT, MAX(id), MAX(timestamp) des Durchgangs; null bei einem Lesefehler (Abfragen meldet ihn).</summary>
+    public SpielStempel? Stempel()
+    {
+        var (wo, wert) = Bedingung();
+        const string Sql = "SELECT COUNT(*), MAX(id), MAX(timestamp) FROM spiel_ereignisse WHERE ";
+        var zeilen = wert is null ? Lernstand.Abfragen(Sql + wo) : Lernstand.Abfragen(Sql + wo, ("$lauf", wert));
+        return zeilen is [var z, ..] ? new SpielStempel((long)z[0]!, z[1] as long?, z[2]) : null;
+    }
+
+    /// <summary>Die Zeilen des Durchgangs nach der Nummer <paramref name="nummer"/> (leer bei einem Lesefehler).</summary>
+    public List<SpielZeile> ZeilenNach(long nummer)
+    {
+        var (wo, wert) = Bedingung();
+        var sql = "SELECT id, timestamp, typ, daten FROM spiel_ereignisse WHERE " + wo + " AND id > $nr ORDER BY id";
+        var zeilen = wert is null ? Lernstand.Abfragen(sql, ("$nr", nummer)) : Lernstand.Abfragen(sql, ("$lauf", wert), ("$nr", nummer));
+        return [.. zeilen.Select(z => new SpielZeile((long)z[0]!, z[1], z[2] as string ?? "", z[3] as string))];
+    }
+
     public bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten)
     {
         Pruefen();
