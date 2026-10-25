@@ -120,15 +120,7 @@ public static partial class Bewertung
     /// <summary>_money: round(wert + 1e-9, 2).</summary>
     private static double Geld(object wert) => PythonRundenStellen.Runde(Py.F(wert) + 1e-9, 2);
 
-    private static object Summe(IEnumerable<object> werte)
-    {
-        var liste = werte.ToList();
-        if (liste.All(Py.IstInt))
-        {
-            return liste.Aggregate((object)0L, (a, b) => Py.Plus(a, b));
-        }
-        return PythonSumme.Summe(liste.Select(Py.F));
-    }
+    private static object Summe(IEnumerable<object> werte) => Py.Summe(werte);
 
     /// <summary>offer_values: Zuschlagskalkulation (schluessel, name, wert).</summary>
     public static List<(string Id, string Name, object Wert)> AngebotWerte(PyObjekt daten)
@@ -349,7 +341,8 @@ public static partial class Bewertung
         _ => throw new NotSupportedException("Formular-Eingabe ist kein Text: " + wert.GetType().Name),
     };
 
-    private static readonly Regex Endung = new(@"(€|EUR|TB|GB|Platten?|%|Hosts?)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    // re.I bei Python: "s" passt auch auf das lange s "ſ" (U+017F), sonst nur ASCII gross/klein (mit python3.12 -I fuer alle Buchstaben des Musters ermittelt)
+    private static readonly Regex Endung = new(@"(€|EUR|TB|GB|Platten?|%|Ho[sſ]t[sſ]?)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex Tausenderpunkt = new(@"\A-?[1-9]\d{0,2}(\.\d{3})+\z", RegexOptions.CultureInvariant);
 
     /// <summary>parse_number: "1.234,50 €", "16 TB", "66,7 %", "12000"; null, wenn es keine Zahl ist.</summary>

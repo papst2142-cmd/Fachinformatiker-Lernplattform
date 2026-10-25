@@ -217,11 +217,7 @@ public static partial class Bewertung
             }
             if (BauProbleme(auftrag, antwort, erlaubt, inhalt).Count == 0)
             {
-                object preis = 0L;
-                foreach (var (_, kennung) in antwort)
-                {
-                    preis = Py.Plus(preis, Teil(kennung, inhalt)!["preis"]);
-                }
+                var preis = Py.Summe(antwort.Select(p => Teil(p.Value, inhalt)!["preis"]));
                 if (beste is null || Py.Kleiner(preis, beste.Value.Preis))
                 {
                     beste = (preis, antwort);

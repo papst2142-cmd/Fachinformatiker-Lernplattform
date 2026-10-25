@@ -123,11 +123,7 @@ public static partial class Bewertung
         {
             probleme.Add("Der Auftrag verlangt eine Grafikkarte.");
         }
-        object preis = 0L;
-        foreach (var k in reihenfolge)
-        {
-            preis = Py.Plus(preis, gewaehlt[k]["preis"]);
-        }
+        var preis = Py.Summe(reihenfolge.Select(k => gewaehlt[k]["preis"]));
         if (Py.Wahr(Get(regeln, "budget")) && Py.Kleiner(regeln["budget"], preis))
         {
             probleme.Add(Prozent("Zu teuer: %d € bei %d € Budget.", preis, regeln["budget"]));
@@ -245,13 +241,8 @@ public static partial class Bewertung
         var gruppen = new List<long[]>();
         foreach (var zahlen in Produkt(zeilen.Select(z => z.Anzahl + 1).ToArray()))
         {
-            object groesse = 0L;
-            object module = 0L;
-            for (var i = 0; i < zeilen.Count; i++)
-            {
-                groesse = Py.Plus(groesse, Py.Mal(zeilen[i].Teil[k], zahlen[i]));
-                module = Py.Plus(module, Py.Mal(Get(zeilen[i].Teil, "module", 1L), zahlen[i]));
-            }
+            var groesse = Py.Summe(zeilen.Select((z, i) => (object?)Py.Mal(z.Teil[k], zahlen[i])));
+            var module = Py.Summe(zeilen.Select((z, i) => (object?)Py.Mal(Get(z.Teil, "module", 1L), zahlen[i])));
             if (Py.Kleiner(groesse, ziel) || Py.Kleiner(plaetze, module))
             {
                 continue;

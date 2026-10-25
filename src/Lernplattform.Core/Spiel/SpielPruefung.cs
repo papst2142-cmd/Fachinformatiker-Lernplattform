@@ -825,7 +825,7 @@ public static class SpielPruefung
     {
         var nutzer = Objekte(inhalt["aufgaben"]).Where(a => Py.Gleich(Get(a, "nach"), erste["id"]) && Py.Wahr(Get(a, "aus_lager"))).ToList();
         var arten = new PySet(nutzer.SelectMany(a => Liste(a["aus_lager"])));
-        var menge = Objekte(erste["bedarf"]).Where(b => arten.Contains(b["typ"])).Aggregate((object)0L, (summe, b) => Py.Plus(summe, b["menge"]));
+        var menge = Py.Summe(Objekte(erste["bedarf"]).Where(b => arten.Contains(b["typ"])).Select(b => b["menge"]));
         return Py.Kleiner(menge, (long)nutzer.Count) ? [Prozent("mehr Auftraege holen Ware aus '%s', als bestellt wird", erste["id"])] : [];
     }
 

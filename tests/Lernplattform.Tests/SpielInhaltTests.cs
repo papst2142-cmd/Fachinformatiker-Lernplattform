@@ -105,4 +105,20 @@ public class SpielInhaltTests
         Assert.Equal(1.0, Py.Plus(1L, Py.Mal(0L, 2.5)));
         Assert.Equal(42L, Py.Plus(18L, Py.Mal(2L, 12L)));
     }
+
+    [Fact]
+    public void PySummeWiePython()
+    {
+        // sum() aus python3.12 -I abgelesen; eine einfache Schleife ergaebe 0.9999999999999999, 0.0,
+        // 1000000000000003.4 und 0.1
+        Assert.Equal(1.0, Py.Summe(Enumerable.Repeat((object?)0.1, 10)));
+        Assert.Equal(1.6, Py.Summe([1L, 0.1, 0.2, 0.3]));
+        Assert.Equal(0.0, Py.Summe([1e16, 1L, -1e16]));   // ganze Zahl nach einer Kommazahl: ohne Ausgleich
+        Assert.Equal(1.0, Py.Summe([1e16, 1.0, -1e16]));
+        Assert.Equal(1000000000000003.2, Py.Summe([2L, 0.5, 1000000000000000L, 0.1, 0.7]));
+        Assert.Equal(1.1, Py.Summe([1e100, 1.0, -1e100, 0.1]));
+        Assert.Equal(7L, Py.Summe([3L, 4L]));
+        Assert.Equal(0L, Py.Summe([]));
+        Assert.Equal(3L, Py.Summe([true, 2L]));
+    }
 }

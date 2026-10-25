@@ -412,7 +412,7 @@ public sealed partial class Spielstand
     public long Tag => TageFertig + 1;
 
     /// <summary>mean_reputation</summary>
-    public double MittlereReputation => Reputation.Sum(p => Py.Int(p.Value)) / (double)Reputation.Count;
+    public double MittlereReputation => Py.F(Py.Summe(Reputation.Select(p => p.Value))) / Reputation.Count;
 
     /// <summary>rank</summary>
     public object? Rang => RangFuer(MittlereReputation, Balancing, Tag);

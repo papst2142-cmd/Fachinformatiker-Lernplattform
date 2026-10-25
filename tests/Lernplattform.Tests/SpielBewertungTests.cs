@@ -206,6 +206,7 @@ public class SpielBewertungTests
         Assert.Equal("True None 2.5", PyFormat.Prozent("%s %s %s", true, null, 2.5));
         Assert.Equal("0.12 0.14 -0.00", PyFormat.Prozent("%.2f %.2f %.2f", 0.125, 0.135, -0.001));
         Assert.Equal("  -5|7    |+3|007", PyFormat.Prozent("%4d|%-5d|%+d|%03d", -5L, 7L, 3L, 7L));
+        Assert.Equal("\U0001F600a|    \U0001F600|\U0001F600   |", PyFormat.Prozent("%.2s|%5s|%-4s|", "\U0001F600ab", "\U0001F600", "\U0001F600"));   // Codepunkte, nicht UTF-16
         Assert.ThrowsAny<FormatException>(() => PyFormat.Prozent("%d", "x"));
         Assert.ThrowsAny<FormatException>(() => PyFormat.Prozent("%d %d", 1L));
     }

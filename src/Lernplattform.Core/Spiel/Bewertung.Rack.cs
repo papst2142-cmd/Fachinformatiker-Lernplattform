@@ -62,12 +62,8 @@ public static partial class Bewertung
     private static long? UsvLeistung(PyObjekt auftrag, List<RackPlatz> belegt, PyObjekt inhalt)
     {
         var regeln = Objekt(Hardware(inhalt)["rack_regeln"]);
-        object summe = 0L;
-        foreach (var r in belegt.Where(r => Typ(r.Geraet) == "usv"))
-        {
-            summe = Py.Plus(summe, Get(r.Geraet, "leistung", 0L));
-        }
-        summe = Py.Plus(summe, Get(Objekt(auftrag["schrank"]), "usv_watt", 0L));
+        var summe = Py.Plus(Py.Summe(belegt.Where(r => Typ(r.Geraet) == "usv").Select(r => Get(r.Geraet, "leistung", 0L))),
+            Get(Objekt(auftrag["schrank"]), "usv_watt", 0L));
         if (!Py.Wahr(summe))
         {
             return null;
@@ -147,16 +143,8 @@ public static partial class Bewertung
     {
         var schrank = Objekt(auftrag["schrank"]);
         var probleme = new List<string>();
-        object gewicht = 0L;
-        object strom = 0L;
-        foreach (var r in belegt)
-        {
-            gewicht = Py.Plus(gewicht, r.Geraet["gewicht"]);
-            if (Typ(r.Geraet) != "usv")
-            {
-                strom = Py.Plus(strom, r.Geraet["watt"]);
-            }
-        }
+        var gewicht = Py.Summe(belegt.Select(r => r.Geraet["gewicht"]));
+        var strom = Py.Summe(belegt.Where(r => Typ(r.Geraet) != "usv").Select(r => r.Geraet["watt"]));
         if (Py.Kleiner(schrank["traglast"], gewicht))
         {
             probleme.Add(Prozent("Zu schwer: %d kg bei %d kg Traglast des Schranks.", gewicht, schrank["traglast"]));
@@ -186,11 +174,7 @@ public static partial class Bewertung
         {
             foreach (var art in new[] { "switch", "patchpanel" })
             {
-                object ports = 0L;
-                foreach (var r in belegt.Where(r => Typ(r.Geraet) == art))
-                {
-                    ports = Py.Plus(ports, Get(r.Geraet, "ports", 0L));
-                }
+                var ports = Py.Summe(belegt.Where(r => Typ(r.Geraet) == art).Select(r => Get(r.Geraet, "ports", 0L)));
                 if (Py.Kleiner(ports, regeln["ports_min"]))
                 {
                     probleme.Add(Prozent("Zu wenige Ports (%s): %d, gebraucht werden %d.", RackTypName(art, inhalt), ports, regeln["ports_min"]));
