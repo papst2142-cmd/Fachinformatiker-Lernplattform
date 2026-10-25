@@ -9,7 +9,8 @@ namespace Lernplattform.Tests;
 /// Phase 7, W2: Vergleichswerte G42 Teil "Pruefung" (<c>spiel_pruefung.json</c>, Erzeuger
 /// <c>werkzeuge/vergleich/erzeuge_spiel_pruefung.py</c>): <see cref="SpielPruefung.Pruefen"/> meldet fuer die
 /// echten Spielinhalte und fuer jede absichtlich kaputte Fassung dieselben Probleme in derselben
-/// Reihenfolge wie <c>fisi_game.validate_game_content</c> (ohne die Pruefungen aus W3).
+/// Reihenfolge wie <c>fisi_game.validate_game_content</c> (seit W3 mit Firma, Krediten, Geschaeft,
+/// Spielwelt, Erfolgen und Serverfarm).
 /// </summary>
 public class SpielPruefungTests
 {
@@ -86,6 +87,6 @@ public class SpielPruefungTests
             Assert.True(soll == ist, name + "\n  Python: " + soll + "\n  C#:     " + ist);
             anzahl++;
         }
-        Assert.True(anzahl > 150, anzahl + " Faelle");
+        Assert.True(anzahl > 350, anzahl + " Faelle");
     }
 }
