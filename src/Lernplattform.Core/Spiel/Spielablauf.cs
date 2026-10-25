@@ -4,20 +4,69 @@ using Lernplattform.Core.Daten;
 namespace Lernplattform.Core.Spiel;
 
 /// <summary>
-/// Phase 7, W3: Speicher eines Durchgangs im Arbeitsspeicher (wie die Tabellen spiel_ereignisse und
-/// spiel_bestenliste). Die Daten stehen als JSON-Text darin wie in Python; die SQLite-Fassung kommt
-/// mit dem Lernstand (Weisung P7-4, 3a).
+/// Phase 7, W8: wo ein Durchgang seine Ereignisse und die Bestenliste ablegt (Python: die Datenbank
+/// hinter <c>Game.db</c>). Geschrieben wird nur innerhalb einer <see cref="Sitzung"/>.
 /// </summary>
-public sealed class SpielSpeicher
+public interface ISpielSpeicher
 {
+    /// <summary>Schreibrecht fuer eine Aktion; null: gerade laeuft ein anderer Vorgang (nichts schreiben).</summary>
+    IDisposable? Sitzung();
+
+    /// <summary>log_game_event: Rueckgabe der Zeitstempel der Zeile, null = nicht gespeichert.</summary>
+    string? Schreiben(string art, string daten);
+
+    /// <summary>game_events: chronologisch (Zeitstempel, dann Nummer), Daten wie json.loads.</summary>
+    List<SpielEreignis> Ereignisse();
+
+    /// <summary>log_record: eine Zeile der Bestenliste (daten ist JSON-Text).</summary>
+    bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten);
+
+    /// <summary>records: alle Zeilen der Bestenliste chronologisch.</summary>
+    List<BestenZeile> Bestenliste();
+
+    /// <summary>reset_records</summary>
+    bool BestenlisteLoeschen();
+
+    /// <summary>
+    /// game_event_stamp: (Anzahl, hoechste Nummer, juengster Zeitstempel) der Zeilen des Durchgangs;
+    /// null = kein Stempel (dann wird nach jedem Schreiben voll neu gerechnet).
+    /// </summary>
+    SpielStempel? Stempel();
+
+    /// <summary>Die Zeilen des Durchgangs mit einer Nummer ueber <paramref name="nummer"/>, nach Nummer.</summary>
+    List<SpielZeile> ZeilenNach(long nummer);
+}
+
+/// <summary>Stempel des Ereignisprotokolls eines Durchgangs (Python: Tupel aus COUNT, MAX(id), MAX(timestamp)).</summary>
+public readonly record struct SpielStempel(long Anzahl, long? Nummer, object? Zeit);
+
+/// <summary>Eine Zeile aus spiel_ereignisse (Nummer, Zeitstempel, Art, Daten als JSON-Text).</summary>
+public sealed record SpielZeile(long Nummer, object? Zeit, string Art, string? Daten);
+
+/// <summary>Das Spiel darf gerade nicht schreiben (Abgleich, Uebernahme, Update oder Sicherung einspielen laeuft).</summary>
+public sealed class SpielBelegtAusnahme() : Exception("Spiel: ein anderer Vorgang laeuft, nichts geschrieben");
+
+/// <summary>
+/// Phase 7, W3: Speicher eines Durchgangs im Arbeitsspeicher (wie die Tabellen spiel_ereignisse und
+/// spiel_bestenliste) fuer Tests und Vergleichswerte. Die Daten stehen als JSON-Text darin wie in
+/// Python; die Fassung in der Datenbank ist <see cref="SpielDatenbank"/> (W8).
+/// </summary>
+public sealed class SpielSpeicher(Func<string>? uhr = null) : ISpielSpeicher
+{
+    private readonly Func<string> uhr = uhr ?? (() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
     private readonly List<(long Nr, string Zeit, string Art, string Daten)> ereignisse = [];
     private readonly List<(long Nr, BestenZeile Zeile)> bestenliste = [];
     private long nummer;
 
-    /// <summary>log_game_event</summary>
-    public void Schreiben(string zeit, string art, string daten) => ereignisse.Add((++nummer, zeit, art, daten));
+    public IDisposable? Sitzung() => new Leer();
 
-    /// <summary>game_events: chronologisch (Zeitstempel, dann Nummer), Daten wie json.loads.</summary>
+    public string? Schreiben(string art, string daten)
+    {
+        var zeit = uhr();
+        ereignisse.Add((++nummer, zeit, art, daten));
+        return zeit;
+    }
+
     public List<SpielEreignis> Ereignisse() =>
         [.. ereignisse.OrderBy(e => e.Zeit, StringComparer.Ordinal).ThenBy(e => e.Nr)
             .Select(e => new SpielEreignis(e.Zeit, e.Art, Py.Lesen(e.Daten) as PyObjekt ?? []))];
@@ -25,41 +74,65 @@ public sealed class SpielSpeicher
     /// <summary>Die geschriebenen Ereignisse in der Reihenfolge des Schreibens (Art, JSON-Text).</summary>
     public IReadOnlyList<(string Art, string Daten)> Geschrieben => [.. ereignisse.Select(e => (e.Art, e.Daten))];
 
-    /// <summary>log_record: eine Zeile der Bestenliste (Wert wie die Spalte REAL).</summary>
-    public void BestenSchreiben(string zeit, string lauf, string art, string schluessel, object? wert, string daten) =>
-        bestenliste.Add((++nummer, new BestenZeile(zeit, lauf, art, schluessel, wert is null ? null : Py.F(wert),
+    public bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten)
+    {
+        bestenliste.Add((++nummer, new BestenZeile(uhr(), lauf, art, schluessel, wert is null ? null : Py.F(wert),
             Py.Lesen(daten) as PyObjekt ?? [])));
+        return true;
+    }
 
-    /// <summary>records: alle Zeilen der Bestenliste chronologisch.</summary>
     public List<BestenZeile> Bestenliste() => [.. bestenliste.OrderBy(z => z.Zeile.Zeit, StringComparer.Ordinal).ThenBy(z => z.Nr).Select(z => z.Zeile)];
 
-    /// <summary>reset_records</summary>
-    public void BestenlisteLoeschen() => bestenliste.Clear();
+    public bool BestenlisteLoeschen()
+    {
+        bestenliste.Clear();
+        return true;
+    }
+
+    public SpielStempel? Stempel() => ereignisse.Count == 0
+        ? new SpielStempel(0, null, null)
+        : new SpielStempel(ereignisse.Count, ereignisse.Max(e => e.Nr), ereignisse.Select(e => e.Zeit).Max(StringComparer.Ordinal));
+
+    public List<SpielZeile> ZeilenNach(long nummer) =>
+        [.. ereignisse.Where(e => e.Nr > nummer).OrderBy(e => e.Nr).Select(e => new SpielZeile(e.Nr, e.Zeit, e.Art, e.Daten))];
+
+    private sealed class Leer : IDisposable
+    {
+        public void Dispose()
+        {
+        }
+    }
 }
 
 /// <summary>
 /// Phase 7, W3: die Klasse <c>Game</c> aus <c>fisi_game.py</c> (Python 0.63.2, Z. 5042-6006) fuer
 /// einen Durchgang: Ereignisse schreiben (_log, mit JSON wie Python), den Spielstand fortschreiben,
 /// Erfolge pruefen und die Bestenliste fuehren. Die Aktionen selbst stehen in <see cref="SpielAktionen"/>.
+/// Nicht threadsicher: ein Spielablauf wird nur von einem Thread benutzt (wie Game in Python).
 /// </summary>
 public sealed class Spielablauf
 {
-    private readonly Func<string> uhr;
     private bool pruefe;
     private PySet einmal = [];
-    private string? letzteZeit;
+    private SpielStempel? stempel;   // _stamp: Stempel, zu dem der Spielstand genau passt (null: neu rechnen)
+    private int schritte;   // _incremental
+    private IDisposable? sitzung;
+    private int tiefe;
 
-    public Spielablauf(PyObjekt inhalt, SpielSpeicher? speicher = null, Func<string>? uhr = null)
+    /// <param name="uhr">Nur fuer den Speicher im Arbeitsspeicher (ohne <paramref name="speicher"/>).</param>
+    public Spielablauf(PyObjekt inhalt, ISpielSpeicher? speicher = null, Func<string>? uhr = null)
     {
         Inhalt = inhalt;
-        Speicher = speicher ?? new SpielSpeicher();
-        this.uhr = uhr ?? (() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+        Speicher = speicher ?? new SpielSpeicher(uhr);
         Stand = Neuaufbau();
     }
 
     public PyObjekt Inhalt { get; }
 
-    public SpielSpeicher Speicher { get; }
+    public ISpielSpeicher Speicher { get; }
+
+    /// <summary>Wie oft ein Ereignis nicht gespeichert wurde (Python: log_game_event gab False).</summary>
+    public int NichtGespeichert { get; private set; }
 
     /// <summary>state</summary>
     public Spielstand Stand { get; private set; }
@@ -82,6 +155,12 @@ public sealed class Spielablauf
     /// <summary>Wie oft der schrittweise Spielstand am Feierabend vom Neuaufbau abwich (Python: Zeile in fehler.log).</summary>
     public int Abweichungen { get; private set; }
 
+    /// <summary>_incremental: schrittweise angewendete Ereignisse seit dem letzten Neuaufbau.</summary>
+    public int Schritte => schritte;
+
+    /// <summary>Die Felder der letzten Pruefung am Feierabend, die abwichen (leer: gleich).</summary>
+    public List<string> LetzteUnterschiede { get; private set; } = [];
+
     /// <summary>firm_levels: Wissensstand je Fachbereich und je Thema zusammen.</summary>
     public PyObjekt FirmenStufen()
     {
@@ -103,12 +182,21 @@ public sealed class Spielablauf
     /// <summary>reload: Spielstand aus allen Ereignissen neu berechnen.</summary>
     public Spielstand Neuaufbau()
     {
+        // Wirft der Neuaufbau (kaputtes Ereignis im Protokoll), bleibt der Stempel leer: jede weitere
+        // Aktion rechnet wieder voll neu und wirft wie Python, statt still auf dem alten Stand weiterzurechnen
+        stempel = null;
+        var vorher = Speicher.Stempel();
         var ereignisse = Speicher.Ereignisse();
         Stand = new Spielstand(ereignisse, Inhalt);
         einmal = Stand.EinmalGezaehlt();
-        letzteZeit = ereignisse.Count > 0 ? (string?)ereignisse[^1].Zeit : null;
+        stempel = vorher;
+        schritte = 0;
         return Stand;
     }
+
+    /// <summary>_current_stamp: der Stempel des Protokolls, wenn der Spielstand genau dazu passt (sonst null).</summary>
+    private SpielStempel? AktuellerStempel() =>
+        stempel is { } gemerkt && Speicher.Stempel() is { } jetzt && jetzt == gemerkt ? jetzt : null;
 
     /// <summary>
     /// _log: ein Ereignis als JSON schreiben, es (wie json.loads) auf den Spielstand anwenden und danach
@@ -117,34 +205,64 @@ public sealed class Spielablauf
     /// </summary>
     public void Log(string art, PyObjekt daten)
     {
-        var text = PythonJson.Text(daten);
-        var zeit = uhr();
-        Speicher.Schreiben(zeit, art, text);
-        var nutz = Py.Lesen(text) as PyObjekt ?? [];
-        if (letzteZeit is not null && string.CompareOrdinal(zeit, letzteZeit) < 0)
+        Betreten();
+        try
         {
+            Schreiben(art, daten);
+        }
+        finally
+        {
+            Verlassen();
+        }
+    }
+
+    /// <summary>
+    /// Schreibrecht fuer eine Aktion holen (geschachtelt: nur das aeusserste holt es). Laeuft gerade
+    /// Abgleich, Uebernahme, Update oder Sicherung einspielen, schreibt die Aktion gar nichts.
+    /// </summary>
+    private void Betreten()
+    {
+        if (tiefe == 0)
+        {
+            sitzung = Speicher.Sitzung() ?? throw new SpielBelegtAusnahme();
+        }
+        tiefe += 1;
+    }
+
+    private void Verlassen()
+    {
+        tiefe -= 1;
+        if (tiefe == 0)
+        {
+            sitzung?.Dispose();
+            sitzung = null;
+        }
+    }
+
+    private void Schreiben(string art, PyObjekt daten)
+    {
+        var text = PythonJson.Text(daten);
+        var vorher = AktuellerStempel();
+        if (Speicher.Schreiben(art, text) is null)
+        {
+            // Nicht gespeichert (Python: log_game_event gibt False, danach voll neu gerechnet)
+            NichtGespeichert += 1;
+            Neuaufbau();
+            if (art != Ereignisse.Erfolg)
+            {
+                ErfolgePruefen(feierabend: art == Ereignisse.Feierabend);
+            }
+            return;
+        }
+        if (!Nachtragen(vorher, art, text))
+        {
+            // Protokoll sonst geaendert (Abgleich, Uebernahme, Uhr zurueck) oder nicht (ganz) angewendet:
+            // neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
             Neuaufbau();
         }
-        else
+        else if (art == Ereignisse.Feierabend)
         {
-            letzteZeit = zeit;
-            try
-            {
-                var tagVorher = Stand.Tag;
-                if (Stand.Anwenden(new SpielEreignis(zeit, art, nutz), einmal))
-                {
-                    Stand.BearbeitetNotieren(art, nutz, tagVorher);
-                }
-            }
-            catch (Exception)
-            {
-                // Nicht (ganz) angewendet: neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
-                Neuaufbau();
-            }
-            if (art == Ereignisse.Feierabend)
-            {
-                Pruefen();
-            }
+            Pruefen();
         }
         if (art != Ereignisse.Erfolg)
         {
@@ -152,30 +270,121 @@ public sealed class Spielablauf
         }
     }
 
+    /// <summary>
+    /// _apply_written: nur schrittweise weiterrechnen, wenn seit dem Stempel <paramref name="vorher"/>
+    /// genau diese eine Zeile dazukam und sie in der Sortierung des Neuaufbaus (Zeitstempel, dann
+    /// Nummer) zuletzt steht; false: voll neu rechnen.
+    /// </summary>
+    private bool Nachtragen(SpielStempel? vorher, string art, string text)
+    {
+        if (vorher is not { } alt || Speicher.Stempel() is not { } nach || nach.Anzahl != alt.Anzahl + 1)
+        {
+            return false;
+        }
+        if (Speicher.ZeilenNach(alt.Nummer ?? 0) is not [var zeile]
+            || zeile.Nummer != nach.Nummer || zeile.Art != art || zeile.Daten != text
+            || zeile.Zeit is not string zeit || !Equals(zeit, nach.Zeit)
+            || (alt.Zeit is not null && !(alt.Zeit is string altZeit && string.CompareOrdinal(zeit, altZeit) >= 0)))
+        {
+            return false;
+        }
+        PyObjekt nutz;
+        try
+        {
+            if (Py.Lesen(text) is not PyObjekt gelesen)
+            {
+                return false;
+            }
+            nutz = gelesen;
+        }
+        catch (Exception fehler) when (fehler is FormatException or System.Text.Json.JsonException or InvalidOperationException)
+        {
+            return false;
+        }
+        if (!Anwenden(zeit, art, nutz))
+        {
+            return false;
+        }
+        stempel = nach;
+        return true;
+    }
+
+    /// <summary>
+    /// STATE_COPY = True: das Ereignis auf einer Kopie des Spielstands anwenden. Wer den alten Stand
+    /// haelt, sieht ihn unveraendert; schlaegt das Anwenden fehl, bleibt er der geltende Stand
+    /// (false: voll neu rechnen).
+    /// </summary>
+    private bool Anwenden(string zeit, string art, PyObjekt nutz)
+    {
+        var stand = Stand.Kopie();
+        var marken = new PySet(einmal);
+        try
+        {
+            var tagVorher = stand.Tag;
+            // Ein uebersprungenes Doppel (E-5, false) kommt nicht in history und zaehlt nicht fuer die Tagestickets
+            if (stand.Anwenden(new SpielEreignis(zeit, art, nutz), marken))
+            {
+                stand.BearbeitetNotieren(art, nutz, tagVorher);
+            }
+        }
+        catch (Exception)
+        {
+            stempel = null;
+            return false;
+        }
+        Stand = stand;
+        einmal = marken;
+        schritte += 1;
+        return true;
+    }
+
+    /// <summary>
+    /// _verify_state: nach schrittweisen Ereignissen am Feierabend mit dem vollstaendigen Neuaufbau
+    /// vergleichen (GameState.differences); weicht er ab, gilt der Neuaufbau.
+    /// </summary>
     private void Pruefen()
     {
-        var schritt = PythonJson.Text(PyAusgabe.Wert(Stand.Felder()));
+        if (schritte == 0)
+        {
+            return;
+        }
+        if (Speicher.Stempel() is not { } jetzt || stempel != jetzt)
+        {
+            // Protokoll hat sich sonst geaendert: still neu rechnen (keine Abweichung, wie Python)
+            Neuaufbau();
+            return;
+        }
         var stand = Stand;
+        var marken = einmal;
         var neu = Neuaufbau();
-        if (schritt != PythonJson.Text(PyAusgabe.Wert(neu.Felder())))
+        LetzteUnterschiede = stand.Unterschiede(neu);
+        if (LetzteUnterschiede.Count > 0)
         {
             Abweichungen += 1;
             return;
         }
         Stand = stand;
-        einmal = stand.EinmalGezaehlt();
+        einmal = marken;
     }
 
     /// <summary>Die Ereignisse einer Aktion nacheinander schreiben; Rueckgabe: die Daten des letzten (wie Python).</summary>
     public PyObjekt Ausfuehren(List<(string Art, PyObjekt Daten)> ereignisse)
     {
-        PyObjekt letzte = [];
-        foreach (var (art, daten) in ereignisse)
+        Betreten();
+        try
         {
-            Log(art, daten);
-            letzte = daten;
+            PyObjekt letzte = [];
+            foreach (var (art, daten) in ereignisse)
+            {
+                Schreiben(art, daten);
+                letzte = daten;
+            }
+            return letzte;
         }
-        return letzte;
+        finally
+        {
+            Verlassen();
+        }
     }
 
     /// <summary>
@@ -183,6 +392,19 @@ public sealed class Spielablauf
     /// Ein aelterer Spielstand ohne Abzeichen bekommt sie still nachgetragen.
     /// </summary>
     public List<PyObjekt> ErfolgePruefen(PyObjekt? wissen = null, bool feierabend = false, bool erzwingen = false)
+    {
+        Betreten();
+        try
+        {
+            return Erfolge(wissen, feierabend, erzwingen);
+        }
+        finally
+        {
+            Verlassen();
+        }
+    }
+
+    private List<PyObjekt> Erfolge(PyObjekt? wissen, bool feierabend, bool erzwingen)
     {
         var stand = Stand;
         if (pruefe || stand.Profil is null || string.IsNullOrEmpty(stand.ErstesEreignis))
@@ -205,7 +427,7 @@ public sealed class Spielablauf
                 {
                     var leise = still || (alteStory && Betrieb.StoryAbzeichen.Contains(Py.Str(regel["id"])));
                     var info = Betrieb.FreischaltInfo(stand, regel, stufe, zeilen, Inhalt);
-                    Speicher.Schreiben(uhr(), Ereignisse.Erfolg, PythonJson.Text(new PyObjekt
+                    Speicher.Schreiben(Ereignisse.Erfolg, PythonJson.Text(new PyObjekt
                     {
                         { "erfolg", regel["id"] }, { "stufe", stufe }, { "tag", tag }, { "nachgetragen", leise },
                     }));
@@ -218,7 +440,7 @@ public sealed class Spielablauf
             }
             foreach (var (art, schluessel, wert, daten) in Betrieb.BestenNeu(Stand, zeilen, Inhalt, erzwingen))
             {
-                Speicher.BestenSchreiben(uhr(), Stand.ErstesEreignis!, art, schluessel, wert, PythonJson.Text(daten));
+                Speicher.BestenSchreiben(Stand.ErstesEreignis!, art, schluessel, wert, PythonJson.Text(daten));
             }
             Freigeschaltet.AddRange(infos);
             return infos;
@@ -253,10 +475,19 @@ public sealed class Spielablauf
     }
 
     /// <summary>reset_records: Bestenliste loeschen; der laufende Spielstand traegt sich gleich neu ein.</summary>
-    public void BestenlisteLoeschen()
+    public bool BestenlisteLoeschen()
     {
-        Speicher.BestenlisteLoeschen();
-        ErfolgePruefen();
+        Betreten();
+        try
+        {
+            var ok = Speicher.BestenlisteLoeschen();
+            ErfolgePruefen();
+            return ok;
+        }
+        finally
+        {
+            Verlassen();
+        }
     }
 
     // -- Aktionen (die Pruefung steht in SpielAktionen) --------------------------------

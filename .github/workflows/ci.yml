@@ -281,6 +281,8 @@ jobs:
           # Phase 7 W3 (Weisung P7-4): G43 Spielwerte-Fingerabdruck f2b59ce8, G47 Firma
           python3 -I werkzeuge/vergleich/erzeuge_spiel_fingerabdruck.py python-linie neu/spiel_fingerabdruck.json
           python3 -I werkzeuge/vergleich/erzeuge_spiel_firma.py python-linie neu/spiel_firma.json
+          # Phase 7 W8 (Weisung P7-5): G44 Spielstand aus einer echten Python-Datenbank ueber die Uebernahme
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_uebernahme.py python-linie neu/spiel_uebernahme.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -303,7 +305,8 @@ jobs:
                        "leistungsmessung.json", "update.json", "spiel_inhalte.json", "spiel_wege.json",
                        "spiel_neuaufbau.json", "spiel_tickets.json", "spiel_bewertung.json",
                        "spiel_texte.json", "spiel_aktionen.json", "spiel_pruefung.json",
-                       "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json"):
+                       "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json",
+                       "spiel_uebernahme.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
