@@ -46,6 +46,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private GlNetz? _innen;
     private readonly Dictionary<InnenWand, GlNetz> _innenWaende = [];
     private readonly HashSet<InnenWand> _durchsichtig = [];
+    private readonly HashSet<StadtHaus> _verdeckt = [];
+    private readonly Dictionary<string, (PyObjekt? Aussehen, GlNetz Netz)> _figurZuletzt = [];
+    private PyObjekt? _ringAussehen;
     private Innenraum? _innenGeladen;
     private bool _innenNeu;
     private GlNetz? _markierung;
@@ -72,6 +75,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _aufrufe;
     private long _dreiecke;
     private double _nachlaufBis;
+    private readonly int[] _gcVorher = new int[3];
+    private long _bytesVorher = -1;
+
+    /// <summary>Nachtrag 1 zu P7-13 (Wunsch 4): Zeitmessung je Bild (Datei spiel_bilder.log, Problembericht).</summary>
+    public BildZeiten Zeiten { get; } = new();
 
     public StadtFlaeche()
     {
@@ -93,7 +101,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             if (_spiel is not null)
             {
-                _spiel.Geaendert -= AnfordernBild;
+                _spiel.Geaendert -= SpielGeaendert;
                 _spiel.SzeneGeaendert -= SzeneNeu;
                 _spiel.InnenGeaendert -= InnenNeu;
             }
@@ -107,7 +115,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 {
                     Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
                 };
-                value.Geaendert += AnfordernBild;
+                value.Geaendert += SpielGeaendert;
                 value.SzeneGeaendert += SzeneNeu;
                 value.InnenGeaendert += InnenNeu;
                 _szeneNeu = true;
@@ -132,6 +140,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 Grenzen = (0, 0, innen.Breite, innen.Tiefe),
             };
         }
+        AnfordernBild();
+    }
+
+    /// <summary>Spielstand geaendert (z. B. neues Aussehen): Figuren beim naechsten Bild neu nachschlagen.</summary>
+    private void SpielGeaendert()
+    {
+        _figurZuletzt.Clear();
+        _ringAussehen = null;
         AnfordernBild();
     }
 
@@ -255,6 +271,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var grafik = gl.Renderer ?? "";
             var klammer = grafik.IndexOf(" (", StringComparison.Ordinal);
             GlKurz = (es ? "OpenGL ES " : "OpenGL ") + v.Major + "." + v.Minor + " · " + (klammer > 0 ? grafik[..klammer] : grafik);
+            Zeiten.Kopf = "Grafik: " + GlText;
             _programm = Programm(gl, es, v);
             _ortMvp = gl.GetUniformLocationString(_programm, "uMvp");
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
@@ -279,11 +296,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _flaechen.Clear();
         _haeuser.Clear();
         _figuren.Clear();
+        _figurZuletzt.Clear();
         _innen = null;
         _innenWaende.Clear();
         _markierung = null;
         _markierungSchluessel = "";
         _ring = null;
+        _ringAussehen = null;
         _ringSchluessel = "";
         _szeneNeu = true;
         _innenNeu = true;
@@ -300,10 +319,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _flaechen.Clear();
         _haeuser.Clear();
         _figuren.Clear();
+        _figurZuletzt.Clear();
         _innen = null;
         _innenWaende.Clear();
         _markierung = null;
         _ring = null;
+        _ringAussehen = null;
         _ringSchluessel = "";
         if (_programm != 0)
         {
@@ -381,6 +402,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override unsafe void OnOpenGlRender(GlInterface gl, int fb)
     {
         var jetzt = _uhr.Elapsed.TotalSeconds;
+        var abstandMs = _letztesBild < 0 ? 0 : (jetzt - _letztesBild) * 1000;
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
         _aufrufe = 0;
         _dreiecke = 0;
@@ -419,8 +441,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _innenGeladen = s2.Innen;
             _innenNeu = false;
         }
+        var nachLaden = _uhr.Elapsed.TotalSeconds;
         var geht = _spiel?.Fortschreiten(dt) ?? false;
         VorBild?.Invoke();
+        var nachLogik = _uhr.Elapsed.TotalSeconds;
+        var verdecktSek = 0.0;
         var kamera = AktuelleKamera;
         if (geht)
         {
@@ -477,7 +502,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     }
                 }
                 // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102)
+                var d0 = _uhr.Elapsed.TotalSeconds;
                 innen.Durchsichtig(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, groesse, _durchsichtig);
+                verdecktSek += _uhr.Elapsed.TotalSeconds - d0;
                 foreach (var (wand, netz) in _innenWaende)
                 {
                     gl.Uniform1f(_ortDurch, _durchsichtig.Contains(wand) ? 1f : 0f);
@@ -495,15 +522,17 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             else
             {
                 // Haeuser; wer zwischen Auge und Figur steht, halb durchsichtig (Sammelliste 102)
-                var verdeckt = _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe);
+                var v0 = _uhr.Elapsed.TotalSeconds;
+                _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe, _verdeckt);
+                verdecktSek += _uhr.Elapsed.TotalSeconds - v0;
                 foreach (var (haus, netz) in _haeuser)
                 {
-                    var durch = verdeckt.Contains(haus);
+                    var durch = _verdeckt.Contains(haus);
                     gl.Uniform1f(_ortDurch, durch ? 1f : 0f);
                     Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
                 }
                 gl.Uniform1f(_ortDurch, 0f);
-                VerdecktZahl = verdeckt.Count;
+                VerdecktZahl = _verdeckt.Count;
                 // Nachtrag 1 zu P7-13 (Wunsch 2): Kreis um die Figur in ihrer Kreisfarbe, ohne Tiefenpruefung
                 // (kein Haus, Baum oder Schild verdeckt ihn), danach die Figur noch einmal ganz vorn
                 gl.Disable(GL_DEPTH_TEST);
@@ -527,11 +556,29 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _bilder.Dequeue();
         }
+        var nachZeichnen = _uhr.Elapsed.TotalSeconds;
         BildGezeichnet?.Invoke();
+        Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen);
         if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis)
         {
             RequestNextFrameRendering();
         }
+    }
+
+    /// <summary>Teilzeiten des Bildes in <see cref="Zeiten"/> eintragen (Speicherbereinigung und Speicher seit dem letzten Bild).</summary>
+    private void Messen(double start, double abstandMs, double nachLaden, double nachLogik, double verdecktSek, double nachZeichnen)
+    {
+        var ende = _uhr.Elapsed.TotalSeconds;
+        Span<int> gc = [GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2)];
+        var bytes = GC.GetAllocatedBytesForCurrentThread();
+        if (_bytesVorher >= 0)
+        {
+            Zeiten.Aufnehmen(new BildZeiten.Bild(start, abstandMs, (nachLogik - nachLaden) * 1000, ((nachLaden - start) + verdecktSek) * 1000,
+                (nachZeichnen - nachLogik - verdecktSek) * 1000, (ende - nachZeichnen) * 1000,
+                gc[0] - _gcVorher[0], gc[1] - _gcVorher[1], gc[2] - _gcVorher[2], bytes - _bytesVorher, _spiel?.ImInnenraum ?? false));
+        }
+        gc.CopyTo(_gcVorher);
+        _bytesVorher = bytes;
     }
 
     /// <summary>Wie viele Haeuser im letzten Bild halb durchsichtig waren (Start-Test, Fotos).</summary>
@@ -540,6 +587,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Kreis um die Spielfigur (Radius 0,22 = 1,1 m), neu geladen, wenn sich die Kreisfarbe aendert.</summary>
     private GlNetz Ring(GlInterface gl, PyObjekt? aussehen)
     {
+        if (_ring is not null && ReferenceEquals(aussehen, _ringAussehen))
+        {
+            return _ring;
+        }
+        _ringAussehen = aussehen;
         var schluessel = Aussehen.Normalisieren(aussehen)["kreis"] as string ?? "";
         if (_ring is null || schluessel != _ringSchluessel)
         {
@@ -556,12 +608,19 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Figur (Hoehe 1) mit Aussehen, je Person einmal geladen.</summary>
     private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen)
     {
+        // Wunsch 4: dasselbe Aussehen wie im letzten Bild ohne neuen Schluessel (der kostete je Bild und
+        // Figur ein neues Woerterbuch und Zeichenketten, also Arbeit fuer die Speicherbereinigung)
+        if (_figurZuletzt.TryGetValue(id, out var zuletzt) && ReferenceEquals(zuletzt.Aussehen, aussehen))
+        {
+            return zuletzt.Netz;
+        }
         var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value));
         if (!_figuren.TryGetValue(schluessel, out var netz))
         {
             netz = GlNetz.Laden(gl, Figur.Netz(_spiel?.Grafik, aussehen, 1f));
             _figuren[schluessel] = netz;
         }
+        _figurZuletzt[id] = (aussehen, netz);
         return netz;
     }
 

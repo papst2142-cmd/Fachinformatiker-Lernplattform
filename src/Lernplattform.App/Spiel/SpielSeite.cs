@@ -203,7 +203,11 @@ public sealed class SpielSeite : Grid
                 ErsatzZeigen();
             }
         };
-        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => Beschriften());
+        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) =>
+        {
+            Beschriften();
+            ZeitenSchreiben(false);
+        });
         AttachedToVisualTree += (_, _) =>
         {
             // die Seite wird beim Seitenwechsel ab- und angehaengt; OpenGL richtet sich dann neu ein
@@ -248,6 +252,7 @@ public sealed class SpielSeite : Grid
         {
             _anhaengen++;
             _takt.Stop();
+            ZeitenSchreiben(true);
             if (_oben is not null)
             {
                 _oben.BackRequested -= Zurueck;
@@ -412,6 +417,45 @@ public sealed class SpielSeite : Grid
     /// sonst bleibt die Liste ueber der Karte. Der Text der unteren Karte bekommt hoechstens ein
     /// Viertel der Hoehe, damit die Knoepfe am Handy quer nie aus dem Bild rutschen.
     /// </summary>
+    private long _zeitenStand = -1;
+    private long _zeitenUm;
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 4): Bildzeiten alle 10 s (und beim Verlassen) nach spiel_bilder.log im
+    /// Datenordner schreiben, im Hintergrund; "Problem melden" zeigt die Datei mit.
+    /// </summary>
+    private void ZeitenSchreiben(bool sofort)
+    {
+        var zeiten = Flaeche.Zeiten;
+        if (zeiten.Gesamt == _zeitenStand || (!sofort && Stopwatch.GetElapsedTime(_zeitenUm).TotalSeconds < BildZeiten.FensterSekunden))
+        {
+            return;
+        }
+        _zeitenStand = zeiten.Gesamt;
+        _zeitenUm = Stopwatch.GetTimestamp();
+        var text = zeiten.Text();
+        string pfad;
+        try
+        {
+            pfad = Path.Combine(Core.Daten.Ablage.Datenordner(), BildZeiten.DateiName);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            return;
+        }
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                File.WriteAllText(pfad, text);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // nur Messung: ohne Datei geht es weiter
+            }
+        });
+    }
+
     /// <summary>Verdeckte Hoehe oben (bis unter die Kopfzeile) und unten (ab der Textkarte) an die Flaeche geben.</summary>
     private void FreiSetzen()
     {
@@ -564,6 +608,7 @@ public sealed class SpielSeite : Grid
         }
         var breite = (float)Flaeche.Bounds.Width;
         var hoehe = (float)Flaeche.Bounds.Height;
+        var skalierung = Math.Max(1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
         foreach (var ort in spiel.Szene.Orte)
         {
             if (!_schildKnoepfe.TryGetValue(ort.Id, out var schild))
@@ -581,11 +626,23 @@ public sealed class SpielSeite : Grid
             }
             var w = schild.DesiredSize.Width;
             var h = schild.DesiredSize.Height;
-            var links = p.X - (w / 2);
-            var oben = p.Y - h;
-            schild.IsVisible = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
-            Canvas.SetLeft(schild, links);
-            Canvas.SetTop(schild, oben);
+            // auf ganze Bildpunkte gerundet und nur bei einer Aenderung gesetzt: jede neue Lage ordnet die
+            // Ebene neu an (Wunsch 4, Nachtrag 1 zu P7-13)
+            var links = Math.Round((p.X - (w / 2)) * skalierung) / skalierung;
+            var oben = Math.Round((p.Y - h) * skalierung) / skalierung;
+            var sichtbar = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
+            if (schild.IsVisible != sichtbar)
+            {
+                schild.IsVisible = sichtbar;
+            }
+            if (Canvas.GetLeft(schild) != links)
+            {
+                Canvas.SetLeft(schild, links);
+            }
+            if (Canvas.GetTop(schild) != oben)
+            {
+                Canvas.SetTop(schild, oben);
+            }
         }
     }
 

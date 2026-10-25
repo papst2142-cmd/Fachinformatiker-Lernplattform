@@ -779,10 +779,10 @@ public sealed class StadtSpiel
     /// <summary>Szene neu bauen, wenn sich sichtbare Orte oder Modellteile geaendert haben.</summary>
     private void NeueSzene()
     {
-        var neu = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
-        if (neu.Signatur != Szene.Signatur)
+        // Nachtrag 1 zu P7-13 (Wunsch 4): erst die Signatur vergleichen, nur bei einer Aenderung neu bauen
+        if (StadtSzene.SignaturFuer(Stadt, Ablauf.Stand) != Szene.Signatur)
         {
-            Szene = neu;
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
             SzeneGeaendert?.Invoke();
         }
     }

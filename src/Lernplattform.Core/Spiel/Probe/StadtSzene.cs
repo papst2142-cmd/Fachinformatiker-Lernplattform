@@ -186,11 +186,19 @@ public sealed class StadtSzene
     public List<StadtHaus> Verdeckt(Vector3 auge, float figurX, float figurZ, float figurHoehe)
     {
         var ergebnis = new List<StadtHaus>();
+        Verdeckt(auge, figurX, figurZ, figurHoehe, ergebnis);
+        return ergebnis;
+    }
+
+    /// <summary>Wie <see cref="Verdeckt(Vector3, float, float, float)"/>, fuellt aber <paramref name="ergebnis"/> (je Bild ohne neue Liste, Wunsch 4).</summary>
+    public void Verdeckt(Vector3 auge, float figurX, float figurZ, float figurHoehe, ICollection<StadtHaus> ergebnis)
+    {
+        ergebnis.Clear();
         foreach (var h in Haeuser)
         {
             var min = h.Min + new Vector3(0.05f, 0, 0.05f);
             var max = h.Max - new Vector3(0.05f, 0, 0.05f);
-            foreach (var anteil in (float[])[0.15f, 0.5f, 0.95f])
+            foreach (var anteil in (ReadOnlySpan<float>)[0.15f, 0.5f, 0.95f])
             {
                 if (Schneidet(auge, new Vector3(figurX, figurHoehe * anteil, figurZ), min, max))
                 {
@@ -199,7 +207,6 @@ public sealed class StadtSzene
                 }
             }
         }
-        return ergebnis;
     }
 
     /// <summary>Schneidet die Strecke a-b den Kasten (Platten-Verfahren)?</summary>
@@ -296,6 +303,30 @@ public sealed class StadtSzene
 
     private static List<(float X, float Z)> Punkte(object? punkte) =>
         [.. Liste(punkte).Select(p => Liste(p)).Select(p => ((float)Py.F(p[0]), (float)Py.F(p[1])))];
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 4): nur die <see cref="Signatur"/> der Stadt fuer einen Spielstand,
+    /// ohne Geometrie (Bauen braucht am PC rund 160 ms und 12 MB; vorher baute jede Ankunft die ganze
+    /// Stadt neu, nur um die Signatur zu vergleichen). Gleich <c>Bauen(stadt, stand).Signatur</c>.
+    /// </summary>
+    public static string SignaturFuer(Stadt stadt, Spielstand? stand)
+    {
+        var inhalt = stadt.Inhalt;
+        var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
+        var k = StadtModelle.Kontext(stand, inhalt);
+        var modelle = StadtModelle.Modelle(inhalt, stadt.Daten);
+        var signatur = new List<string>();
+        foreach (var item in ListeOderLeer(welt, "landschaft").Select(Objekt).Where(t => Py.Gleich(t["typ"], "gebaeude")))
+        {
+            var modell = Py.Str(item["modell"]);
+            signatur.Add(modell + ":" + string.Join(",", StadtModelle.Teile(modelle, modell, k).Select(t => t.Nr)));
+        }
+        foreach (var ort in stadt.Orte(stand))
+        {
+            signatur.Add(Py.Str(ort["id"]) + ":" + string.Join(",", StadtModelle.Teile(modelle, Py.Str(ort["modell"]), k).Select(t => t.Nr)));
+        }
+        return string.Join(";", signatur);
+    }
 
     /// <summary>
     /// Die Stadt fuer einen Spielstand (null = wie ein neuer Spielstand ohne Ereignisse). Mit
