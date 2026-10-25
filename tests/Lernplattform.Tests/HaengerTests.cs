@@ -234,6 +234,9 @@ public sealed class HaengerTests : IDisposable
         {
             Thread.Sleep(50);
         }
-        Assert.Contains("| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", Log(), StringComparison.Ordinal);
+        // Sammelliste 101 (macOS einmal rot): bei Rot den ganzen Log und die Wartezeit zeigen, nicht nur den Anfang
+        var log = Log();
+        Assert.True(log.Contains("| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", StringComparison.Ordinal),
+            "nach " + uhr.ElapsedMilliseconds + " ms, Seite/Vorgang jetzt " + Haenger.Aktuell() + ", voller Log:\n" + log);
     }
 }

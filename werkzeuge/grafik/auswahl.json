@@ -1,0 +1,156 @@
+{
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6).",
+ "pakete": {
+  "commercial": {
+   "zip": "kenney_city-kit-commercial_2.1.zip",
+   "quelle": "Kenney City Kit (Commercial) 2.1, opengameart.org/content/city-kit-commercial",
+   "id": "Grafik Kenney City Kit Commercial",
+   "version": "2.1",
+   "sha256": "f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b"
+  },
+  "suburban": {
+   "zip": "kenney_cityKitSuburban.zip",
+   "quelle": "Kenney City Kit (Suburban), kenney-assets.itch.io/city-kit-suburban",
+   "id": "Grafik Kenney City Kit Suburban",
+   "version": "1.0",
+   "sha256": "f19ce43dd738720ff2095e3b357fae35879a320cf0bd6b3c10c1099d5fba2cb3"
+  },
+  "train": {
+   "zip": "kenney_train-kit.zip",
+   "quelle": "Kenney Train Kit, kenney.nl/assets/train-kit",
+   "id": "Grafik Kenney Train Kit",
+   "version": "1.1",
+   "sha256": "cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475"
+  }
+ },
+ "modelle": [
+  {
+   "name": "building-e",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-e.obj"
+  },
+  {
+   "name": "building-h",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-h.obj"
+  },
+  {
+   "name": "building-m",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-m.obj"
+  },
+  {
+   "name": "low-detail-building-wide-a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/low-detail-building-wide-a.obj"
+  },
+  {
+   "name": "low-detail-building-wide-b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/low-detail-building-wide-b.obj"
+  },
+  {
+   "name": "house_type03",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type03.obj"
+  },
+  {
+   "name": "house_type06",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type06.obj"
+  },
+  {
+   "name": "house_type08",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type08.obj"
+  },
+  {
+   "name": "house_type10",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type10.obj"
+  },
+  {
+   "name": "house_type12",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type12.obj"
+  },
+  {
+   "name": "house_type15",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type15.obj"
+  },
+  {
+   "name": "tree_large",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/tree_large.obj"
+  },
+  {
+   "name": "tree_small",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/tree_small.obj"
+  },
+  {
+   "name": "train-electric-city-a",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-a.obj"
+  },
+  {
+   "name": "train-electric-city-b",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-b.obj"
+  },
+  {
+   "name": "train-electric-city-c",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-c.obj"
+  },
+  {
+   "name": "building-k@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-k.obj",
+   "atlas": "Models/Textures/variation-a.png"
+  },
+  {
+   "name": "building-e@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-e.obj",
+   "atlas": "Models/Textures/variation-b.png"
+  },
+  {
+   "name": "building-h@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-h.obj",
+   "atlas": "Models/Textures/variation-a.png"
+  },
+  {
+   "name": "building-a@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-a.obj",
+   "atlas": "Models/Textures/variation-b.png"
+  },
+  {
+   "name": "building-f@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-f.obj",
+   "atlas": "Models/Textures/variation-a.png"
+  },
+  {
+   "name": "building-c@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-c.obj",
+   "atlas": "Models/Textures/variation-b.png"
+  },
+  {
+   "name": "building-j@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-j.obj",
+   "atlas": "Models/Textures/variation-a.png"
+  },
+  {
+   "name": "building-l@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-l.obj",
+   "atlas": "Models/Textures/variation-b.png"
+  }
+ ]
+}

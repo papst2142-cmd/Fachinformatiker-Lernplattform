@@ -40,8 +40,8 @@ public sealed record StadtWeg(IReadOnlyList<(long X, long Y)> Zellen)
 /// <c>inhalte_csharp/spiel/stadt.json</c> (nur C#-Linie): Raster aus Strassen und Fusswegen, Wegsuche
 /// (Breitensuche von Tuer zu Tuer), Tagesuhr in Spielschritten (nie die echte Uhr), Oeffnungszeiten je
 /// Ort und die neuen Orte Moebelhaus und Elektromarkt.
-/// Die Stadt wirkt nur ueber zwei neue, angehaengte Ereignisse (<see cref="Gegangen"/>,
-/// <see cref="Gewartet"/>); der Spielstand des alten Spiels (Tickets, Bewertung, Geld, Arbeitstag,
+/// Die Stadt wirkt nur ueber neue, angehaengte Ereignisse (<see cref="Gegangen"/>,
+/// <see cref="Gewartet"/>, seit P7-10 Nachtrag 1 <see cref="Gelaufen"/>); der Spielstand des alten Spiels (Tickets, Bewertung, Geld, Arbeitstag,
 /// Fingerabdruck f2b59ce8) bleibt davon unberuehrt. Wann ein Ort auf der Karte ist und wie er heisst,
 /// rechnet <see cref="OrtFrei"/> und <see cref="Orte"/> wie Python (place_unlocked, map_places,
 /// Vergleichswerte G48 Teil Stadt).
@@ -57,6 +57,13 @@ public sealed class Stadt
 
     /// <summary>Ereignis: vor einem geschlossenen Ort bis zur Oeffnung gewartet {"tag", "ort", "minuten"}.</summary>
     public const string Gewartet = "stadt_gewartet";
+
+    /// <summary>
+    /// Ereignis: frei in der Stadt gegangen, ohne an einem anderen Ort anzukommen
+    /// {"tag", "ort", "schritte", "minuten"} (Weisung P7-10 Nachtrag 1, Wunsch 3). Der Ort bleibt der
+    /// zuletzt erreichte, nur die Uhr laeuft weiter.
+    /// </summary>
+    public const string Gelaufen = "stadt_gelaufen";
 
     /// <summary>Minuten eines Tages; laenger dauert kein Weg und kein Warten.</summary>
     public const long TagMinuten = 1440;
@@ -337,7 +344,7 @@ public sealed class Stadt
         var uhr = Beginn;
         foreach (var e in stand.Verlauf)
         {
-            if ((e.Art != Gegangen && e.Art != Gewartet) || !Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
+            if ((e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen) || !Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
             {
                 continue;
             }
@@ -366,8 +373,13 @@ public sealed class Stadt
 
     // -- Aktionen ------------------------------------------------------------
 
-    /// <summary>Kann die Figur jetzt zu <paramref name="ziel"/> gehen? Bei Ok das Ereignis dazu (noch nicht geschrieben).</summary>
-    public StadtErgebnis GehenPruefen(Spielstand stand, string ziel)
+    /// <summary>
+    /// Kann die Figur jetzt zu <paramref name="ziel"/> gehen? Bei Ok das Ereignis dazu (noch nicht
+    /// geschrieben). Mit <paramref name="schritte"/> kommt sie von einem freien Punkt der Stadt (die
+    /// Wegsuche der Darstellung hat die Schritte gezaehlt); dann darf das Ziel auch der Ort sein, an
+    /// dem sie zuletzt war.
+    /// </summary>
+    public StadtErgebnis GehenPruefen(Spielstand stand, string ziel, long? schritte = null)
     {
         if (stand.Profil is null)
         {
@@ -382,22 +394,62 @@ public sealed class Stadt
             return new(StadtGrund.Gesperrt);
         }
         var jetzt = Stand(stand);
-        if (jetzt.Ort == ziel)
+        long anzahl;
+        if (schritte is { } frei)
         {
-            return new(StadtGrund.SchonDa);
+            if (frei < 0 || frei * MinutenJeSchritt > TagMinuten || Tuer(ziel) is null)
+            {
+                return new(StadtGrund.KeinWeg);
+            }
+            anzahl = frei;
         }
-        if (Weg(jetzt.Ort, ziel) is not { } weg)
+        else
         {
-            return new(StadtGrund.KeinWeg);
+            if (jetzt.Ort == ziel)
+            {
+                return new(StadtGrund.SchonDa);
+            }
+            if (Weg(jetzt.Ort, ziel) is not { } weg)
+            {
+                return new(StadtGrund.KeinWeg);
+            }
+            anzahl = weg.Schritte;
         }
-        var minuten = weg.Schritte * MinutenJeSchritt;
+        var minuten = anzahl * MinutenJeSchritt;
         if (ziel != Heim && jetzt.Uhr + minuten > Abend)
         {
             return new(StadtGrund.Abend);
         }
         return new(StadtGrund.Ok, Gegangen, new PyObjekt
         {
-            { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", weg.Schritte }, { "minuten", minuten },
+            { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", anzahl }, { "minuten", minuten },
+        });
+    }
+
+    /// <summary>
+    /// Kann die Figur <paramref name="schritte"/> frei durch die Stadt gehen (nicht zu einem Ort)? Wie
+    /// ein Weg kostet jeder Schritt <see cref="MinutenJeSchritt"/>; nach <see cref="Abend"/> geht nur
+    /// noch der Weg nach Hause, darum dann nicht.
+    /// </summary>
+    public StadtErgebnis LaufenPruefen(Spielstand stand, long schritte)
+    {
+        if (stand.Profil is null)
+        {
+            return new(StadtGrund.KeinProfil);
+        }
+        if (schritte <= 0 || schritte * MinutenJeSchritt > TagMinuten)
+        {
+            return new(StadtGrund.KeinWeg);
+        }
+        var jetzt = Stand(stand);
+        var minuten = schritte * MinutenJeSchritt;
+        if (jetzt.Uhr + minuten > Abend)
+        {
+            return new(StadtGrund.Abend);
+        }
+        return new(StadtGrund.Ok, Gelaufen, new PyObjekt
+        {
+            { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", schritte }, { "minuten", minuten },
         });
     }
 
@@ -446,7 +498,10 @@ public sealed class Stadt
     }
 
     /// <summary>Zu einem Ort gehen und das Ereignis schreiben (nur wenn es geht).</summary>
-    public StadtErgebnis Gehen(Spielablauf spiel, string ziel) => Ausfuehren(spiel, GehenPruefen(spiel.Stand, ziel));
+    public StadtErgebnis Gehen(Spielablauf spiel, string ziel, long? schritte = null) => Ausfuehren(spiel, GehenPruefen(spiel.Stand, ziel, schritte));
+
+    /// <summary>Frei durch die Stadt gehen und das Ereignis schreiben (nur wenn es geht).</summary>
+    public StadtErgebnis Laufen(Spielablauf spiel, long schritte) => Ausfuehren(spiel, LaufenPruefen(spiel.Stand, schritte));
 
     /// <summary>Bis zur Oeffnung warten und das Ereignis schreiben (nur wenn es geht).</summary>
     public StadtErgebnis Warten(Spielablauf spiel) => Ausfuehren(spiel, WartenPruefen(spiel.Stand));

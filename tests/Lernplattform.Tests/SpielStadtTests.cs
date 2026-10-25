@@ -44,6 +44,33 @@ public class SpielStadtTests
             .Select(o => (object?)new List<object?> { o["id"], o["name"], o["kurz"], o["rolle"], o["ansicht"], o["hinweis"] }).ToList();
         var s = T(W(soll.GetProperty("orte")));
         Assert.True(s == T(orte), wo + "\n  Python: " + s + "\n  C#:     " + T(orte));
+        var b = T(W(soll.GetProperty("boxen")));
+        var ist = T(Boxen(stand));
+        Assert.True(b == ist, wo + " (Modellteile und Umrisse)\n  Python: " + b + "\n  C#:     " + ist);
+    }
+
+    /// <summary>W4: je Gebaeude der Landschaft und je sichtbarem Ort Modell, sichtbare Teile, Umriss (wie erzeuge_spiel_stadt.boxen).</summary>
+    private static List<object?> Boxen(Spielstand? stand)
+    {
+        var k = StadtModelle.Kontext(stand, Inhalt);
+        var modelle = StadtModelle.Modelle(Inhalt, null);
+        var liste = new List<object?>();
+        void Eintrag(object? name, string modell, double x, double y)
+        {
+            var teile = StadtModelle.Teile(modelle, modell, k);
+            var (x1, y1, x2, y2) = StadtModelle.Box(teile, x, y);
+            liste.Add(new List<object?> { name, teile.Select(t => (object?)(long)t.Nr).ToList(), new List<object?> { x1, y1, x2, y2 } });
+        }
+        var welt = SpielDaten.Objekt(SpielDaten.Objekt(Inhalt["orte"])["welt"]);
+        foreach (var teil in SpielDaten.ListeOderLeer(welt, "landschaft").Select(SpielDaten.Objekt).Where(t => Py.Gleich(t["typ"], "gebaeude")))
+        {
+            Eintrag(teil["modell"], Py.Str(teil["modell"]), Py.F(teil["x"]), Py.F(teil["y"]));
+        }
+        foreach (var ort in Stadt.Orte(stand, Inhalt, AlteRegeln))
+        {
+            Eintrag(ort["id"], Py.Str(ort["modell"]), Py.F(ort["x"]), Py.F(ort["y"]));
+        }
+        return liste;
     }
 
     [Fact]

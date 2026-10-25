@@ -108,10 +108,38 @@ jobs:
         env:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+      # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
+      # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
+      - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
+        if: always() && runner.os != 'macOS' && steps.lauf1.outcome != 'skipped'
+        timeout-minutes: 5
+        shell: bash
+        env:
+          LERNPLATTFORM_SOFTWARE: "1"
+          LERNPLATTFORM_MESSUNG_TEIL: spiel-ersatz
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_ersatz
+        run: |
+          datei=messung_${{ runner.os }}_ersatz_versuch${{ github.run_attempt }}.txt
+          bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
+          cat "$datei" || true
+          grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
+      # Phase 7 W1, nur Messung fuer Nicos Entscheidung (Plan Abschnitt 3, Weg 1): ganzer Start-Test auf
+      # macOS mit OpenGL statt Metal. Aendert kein Urteil dieses Jobs (das faellt allein im Standard-Zeichenweg).
+      - name: Nur Messung macOS mit OpenGL statt Metal (Weg 1, ohne Urteil)
+        if: always() && runner.os == 'macOS' && steps.lauf1.outcome != 'skipped'
+        timeout-minutes: 12
+        shell: bash
+        env:
+          LERNPLATTFORM_MAC_OPENGL: "1"
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_opengl
+        run: |
+          datei=messung_${{ runner.os }}_macopengl_versuch${{ github.run_attempt }}.txt
+          GITHUB_OUTPUT=/dev/null bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
+          grep -E "^(Schalter|Spiel|URTEIL)|FEHLER" "$datei" || true
       - uses: actions/upload-artifact@v7
         with:
           name: messung-${{ runner.os }}-${{ github.run_attempt }}
-          path: messung_${{ runner.os }}_lauf*_versuch${{ github.run_attempt }}.txt
+          path: messung_${{ runner.os }}_*_versuch${{ github.run_attempt }}.txt
         if: always()
       # Sicherungsschritt (Weisung P4-14 c): 1. Lauf ohne Fehler, aber Rueckgabe weder 0 noch 3
       # (leer, mit \r, verlorene Ausgabe) -> rot. Ein verschwiegenes Rot darf nie gruen enden.
@@ -374,12 +402,49 @@ jobs:
       # Testschluessel; auf dem S24 als Update ueber A 0.12.2 installierbar.
       - name: Update-APK A 0.12.3 bauen
         run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.12.3 -o apk-update
+      # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
+      # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
+      - name: Probe-APK 3D-Stichprobe bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Probe=true -o apk-probe
+      - name: Probe-APK pruefen (eigene Kennung, Testschluessel, nie Release-Schluessel)
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          a=$(ls apk-probe/*-Signed.apk)
+          # erst in Dateien schreiben: head/grep -q beenden die Leitung frueh, mit pipefail waere das rot
+          "$BT/aapt2" dump badging "$a" > probe_badging.txt
+          head -n 1 probe_badging.txt
+          head -n 1 probe_badging.txt | grep -q "name='io.github.papst2142cmd.lernplattform.probe'"
+          grep -E "^(application-label|launchable-activity):" probe_badging.txt || true
+          grep -q "^application-label:'Lernplattform Probe'" probe_badging.txt
+          grep -q "^launchable-activity:.*label='Lernplattform Probe'" probe_badging.txt
+          "$BT/apksigner" verify --print-certs "$a" > probe_zert.txt
+          zert=$(grep "SHA-256" probe_zert.txt | head -n 1 | awk '{print $NF}')
+          echo "Probe-Zertifikat SHA-256: $zert"
+          release=$(grep -v '^#' werkzeuge/release/android_fingerabdruck.txt | tr -d ' \r\n')
+          test -n "$zert"
+          if [ "$zert" = "$release" ]; then echo "FEHLER: Probe-APK traegt den Release-Schluessel"; exit 1; fi
+          for b in apk/*-Signed.apk; do
+            "$BT/apksigner" verify --print-certs "$b" > test_zert.txt
+            grep -q "SHA-256.*$zert" test_zert.txt || { echo "FEHLER: Probe-APK nicht mit dem Testschluessel dieses Laufs"; exit 1; }
+          done
+          mv "$a" apk-probe/Lernplattform-Probe-3D-arm64.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lernplattform-probe-3d-android
+          path: apk-probe/Lernplattform-Probe-3D-arm64.apk
+          if-no-files-found: error
       - name: Versionscode und Schluessel pruefen
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
           for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
             "$BT/aapt2" dump badging "$a" | head -n 1
             "$BT/apksigner" verify --print-certs "$a" | grep "SHA-256" | tee -a zertifikate.txt
+          done
+          # Phase 7 W1: die normale App behaelt ihre Kennung (die Probe-APK wird im selben Job gebaut)
+          for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
+            "$BT/aapt2" dump badging "$a" > kennung.txt
+            head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+            grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
           "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001202'"
           "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001203'"
@@ -399,7 +464,15 @@ jobs:
       - name: Release-APK bauen (Testschluessel)
         env:
           PYTHON: python
-        run: bash werkzeuge/release/baue_release.sh android release
+        run: |
+          bash werkzeuge/release/baue_release.sh android release
+          # Phase 7 W1: Release-APK nie mit der Kennung der Probe (gleicher obj-Ordner wie der Probe-Bau)
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          for a in release/release-android/*-android-arm64.apk; do
+            "$BT/aapt2" dump badging "$a" > kennung_release.txt
+            head -n 1 kennung_release.txt
+            head -n 1 kennung_release.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+          done
       - uses: actions/download-artifact@v8
         if: needs.pakete.result == 'success'
         with:

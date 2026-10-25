@@ -45,6 +45,10 @@ public partial class MainView : UserControl
     // wie "ABSCHLUSSPROJEKT"
     private readonly Panel _kopfUnten = new StackPanel();
     private DockPanel? _kopf;
+    private readonly Border _kopfleiste;
+    // Phase 7 W4: Seite vor dem Spiel (Ziel von "Spiel verlassen") und ob gerade Vollbild gilt
+    private string _vorSpiel = Seiten.Dashboard;
+    private bool _vollbild;
     private StackPanel? _kopfTitel;
     private bool? _breit;
 
@@ -82,6 +86,7 @@ public partial class MainView : UserControl
         _kopf = kopf;
         kopf.Children.Add(_kopfTitel);
         var kopfleiste = new Border { Child = new StackPanel { Children = { kopf, _kopfUnten } } }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
+        _kopfleiste = kopfleiste;
         Schrift.Geaendert += KopfAnordnen;
         // Flutter-Kopfzeile 56 hoch, waechst mit der Schrift
         kopfleiste.Bind(MinHeightProperty, kopfleiste.GetResourceObservable("Schrift.Normal", v => v is double d ? 56 * d / Schrift.Grundgroessen["Normal"] : 56));
@@ -238,6 +243,40 @@ public partial class MainView : UserControl
     }
 
     /// <summary>
+    /// Phase 7 W4 (Weisung P7-9 Punkt 2, Wunsch Nico): "Spiel" im Vollbild, PC = Handy. Kopfleiste,
+    /// Seitenleiste und untere Leiste verschwinden, der Inhalt fuellt das ganze Fenster; am Handy
+    /// zusaetzlich Querformat und Systemleisten aus (<see cref="Lernplattform.Spiel.Vollbild"/>). Zurueck ueber
+    /// "Spiel verlassen", Esc oder die Zurueck-Taste.
+    /// </summary>
+    private void VollbildSetzen(bool an)
+    {
+        if (_vollbild == an)
+        {
+            return;
+        }
+        _vollbild = an;
+        _kopfleiste.IsVisible = !an;
+        Grid.SetColumn(_inhalt, an ? 0 : 1);
+        Grid.SetColumnSpan(_inhalt, an ? 2 : 1);
+        Grid.SetRow(_inhalt, an ? 0 : 1);
+        Grid.SetRowSpan(_inhalt, an ? 3 : 1);
+        if (an)
+        {
+            _leisten.Seitenleiste.IsVisible = false;
+            _leisten.UntereLeiste.IsVisible = false;
+        }
+        else
+        {
+            _breit = null;
+            AufbauWaehlen(Bounds.Width);
+        }
+        Lernplattform.Spiel.Vollbild.Setzen(an);
+    }
+
+    /// <summary>true, solange das Spiel im Vollbild laeuft (Start-Test).</summary>
+    public bool Vollbild => _vollbild;
+
+    /// <summary>
     /// Die Seitenleiste braucht mit groesserer Schrift mehr Platz: breit erst ab
     /// BreitAb x Schriftfaktor (wie Umbruchpunkte in em), darunter der Handy-Aufbau.
     /// </summary>
@@ -246,7 +285,7 @@ public partial class MainView : UserControl
     private void AufbauWaehlen(double breite)
     {
         var breit = breite >= BreitGrenze;
-        if (_breit == breit)
+        if (_breit == breit || _vollbild)
         {
             return;
         }
@@ -353,6 +392,8 @@ public partial class MainView : UserControl
                 Seiten.Testprojekt => new SzenarioSeite(Core.Lernen.Quellen.Projekt, vorlage => _ = AlsVorlageAsync(vorlage)),
                 // Phase 4, W3: Abschlussprojekt
                 Seiten.Abschluss => new AbschlussprojektSeite(),
+                // Phase 7, W4: begehbare 3D-Stadt im Vollbild (W1 war die Stichprobe), "Spiel verlassen" fuehrt zurueck
+                Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Lernplattform.Spiel.SpielStart.Laden, () => _ = ZeigeAsync(_vorSpiel)),
                 Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
@@ -370,8 +411,13 @@ public partial class MainView : UserControl
         {
             verlassen.Speichern();
         }
+        if (id == Seiten.Spiel && AktuelleSeite != Seiten.Spiel)
+        {
+            _vorSpiel = AktuelleSeite;
+        }
         AktuelleSeite = id;
         var gebaut = _seiten.ContainsKey(id);
+        VollbildSetzen(id == Seiten.Spiel);
         _inhalt.Content = Seite(id);
         if (gebaut && _seiten[id] is DashboardSeite dashboard)
         {
