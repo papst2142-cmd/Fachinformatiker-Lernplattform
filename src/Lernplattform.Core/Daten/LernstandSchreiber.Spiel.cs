@@ -45,7 +45,15 @@ public sealed partial class LernstandSchreiber
             ("$daten", string.IsNullOrEmpty(daten) ? "{}" : daten), ("$geraet", geraet ?? ""), ("$uid", _kennung()));
 
     /// <summary>
-    /// purge_deleted_runs: entfernt alle Ereignisse geloeschter Durchgaenge (der alte Durchgang
+    /// set_meta(ACTIVE_RUN_KEY, lauf) (Weisung P7-6, Sammelliste 94): der zuletzt auf diesem Geraet
+    /// gewaehlte Durchgang ("" = keiner) in sync_meta "spiel_aktiver_lauf" (Spielstaende.AktiverLaufSchluessel).
+    /// </summary>
+    public bool SpielAktivMerken(string lauf) =>
+        Lernstand.Schreiben("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ($k, $v)",
+            ("$k", "spiel_aktiver_lauf"), ("$v", lauf ?? ""));
+
+    /// <summary>
+    /// purge_deleted_runs:entfernt alle Ereignisse geloeschter Durchgaenge (der alte Durchgang
     /// sind die Ereignisse ohne lauf). Dieselbe Rechnung wie in Uebernahme.Zusammenfuehren.
     /// </summary>
     public const string GeloeschteLaeufeAufraeumen =
