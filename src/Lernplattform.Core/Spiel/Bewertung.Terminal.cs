@@ -115,7 +115,7 @@ public static partial class Bewertung
         return new TerminalErgebnis(richtig, fehler, gefahr, offen, probleme);
     }
 
-    private static PyObjekt TerminalLoesung(PyObjekt auftrag) => new()
+    internal static PyObjekt TerminalLoesung(PyObjekt auftrag) => new()
     {
         { "schritte", Schritte(auftrag).Select(s => (object?)new List<object?> { RichtigerBefehl(s) is int i ? (long)i : null }).ToList() },
     };
@@ -180,7 +180,7 @@ public static partial class Bewertung
         return new DiagnoseErgebnis(richtig, erledigt.Count, systematisch, unsicher ? 1 : 0, probleme);
     }
 
-    private static PyObjekt DiagnoseLoesung(PyObjekt auftrag, PyObjekt inhalt, IReadOnlyList<object?>? verfuegbar)
+    internal static PyObjekt DiagnoseLoesung(PyObjekt auftrag, PyObjekt inhalt, IReadOnlyList<object?>? verfuegbar)
     {
         var ergebnis = new PyObjekt
         {
@@ -359,7 +359,7 @@ public static partial class Bewertung
         return new WartungErgebnis(probleme.Count == 0, probleme, uebersehen);
     }
 
-    private static PyObjekt WartungLoesung(PyObjekt auftrag)
+    internal static PyObjekt WartungLoesung(PyObjekt auftrag)
     {
         var bewertung = new PyObjekt();
         foreach (var punkt in Liste(auftrag["pruefpunkte"]).Select(Objekt))
