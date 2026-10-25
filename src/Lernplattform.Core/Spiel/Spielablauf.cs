@@ -502,6 +502,28 @@ public sealed class Spielablauf
 
     public PyObjekt Verschieben(object? aufgabe) => Ausfuehren(SpielAktionen.Verschieben(Stand, aufgabe));
 
+    /// <summary>W7: Moebelstueck im Geschaeft kaufen (wie buy_furniture); Rueckgabe: das neue Stueck (im Karton).</summary>
+    public string MoebelKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string moebel, string? stueck = null)
+    {
+        stueck ??= "m" + Guid.NewGuid().ToString("N")[..10];
+        Ausfuehren(geschaefte.MoebelKaufen(stadt, Stand, laden, moebel, stueck));
+        return stueck;
+    }
+
+    /// <summary>W7: Teil fuer die Firma im Elektromarkt kaufen (liegt sofort im Lager).</summary>
+    public PyObjekt TeilKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string teil) =>
+        Ausfuehren(geschaefte.TeilKaufen(stadt, Stand, laden, teil));
+
+    /// <summary>W7b: Kredit in der Bank aufnehmen (nur in der geoeffneten Bank, sonst wie KreditAufnehmen).</summary>
+    public PyObjekt BankKreditAufnehmen(Stadt stadt, object? summe, object? laufzeit, object? paket = null) =>
+        Ausfuehren(Schalter.KreditAufnehmen(stadt, Stand, summe, laufzeit, paket));
+
+    /// <summary>W7b: Kredit in der Bank abloesen (nur in der geoeffneten Bank, sonst wie KreditAbloesen).</summary>
+    public PyObjekt BankKreditAbloesen(Stadt stadt, object? kredit) => Ausfuehren(Schalter.KreditAbloesen(stadt, Stand, kredit));
+
+    /// <summary>W7b: Firma auf dem Amt gruenden (nur auf dem geoeffneten Amt, sonst wie Gruenden).</summary>
+    public PyObjekt AmtGruenden(Stadt stadt, string? name) => Ausfuehren(Schalter.Gruenden(stadt, Stand, name));
+
     public PyObjekt Feierabend() =>
         Ausfuehren(SpielAktionen.Feierabend(Stand, Py.Wahr(Stand.Firma) ? FirmenWissen() : null));
 

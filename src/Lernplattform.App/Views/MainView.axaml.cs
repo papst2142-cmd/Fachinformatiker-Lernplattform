@@ -393,7 +393,8 @@ public partial class MainView : UserControl
                 // Phase 4, W3: Abschlussprojekt
                 Seiten.Abschluss => new AbschlussprojektSeite(),
                 // Phase 7, W4: begehbare 3D-Stadt im Vollbild (W1 war die Stichprobe), "Spiel verlassen" fuehrt zurueck
-                Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Lernplattform.Spiel.SpielStart.Laden, () => _ = ZeigeAsync(_vorSpiel)),
+                Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Lernplattform.Spiel.SpielStart.Laden, () => _ = ZeigeAsync(_vorSpiel),
+                    new Lernplattform.Spiel.Tafel.SpielWege((fach, thema) => _ = SpielKartenAsync(fach, thema), t => _ = TrefferOeffnenAsync(t, ""))),
                 Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
@@ -618,6 +619,21 @@ public partial class MainView : UserControl
     }
 
     /// <summary>open_search_hit: Hilfe (Abschnitt aufklappen), Optionen (Bereich aufklappen), Karteikarte, Pruefungsfrage, Szenarien.</summary>
+    /// <summary>Aus dem Spiel zu den Karteikarten (open_cards(category, topic)); ohne Fachbereich alle Karteikarten.</summary>
+    private async Task SpielKartenAsync(string? fachbereich, string? thema)
+    {
+        if (fachbereich is null || !Core.Inhalte.Fachbereiche.Alle.Contains(fachbereich))
+        {
+            await ZeigeAsync(Seiten.Karteikarten);
+            return;
+        }
+        await ZeigeAsync(fachbereich);
+        if (thema is not null && _seiten[fachbereich] is KarteikartenSeite karten)
+        {
+            karten.SetzeFachbereich(fachbereich, thema);
+        }
+    }
+
     private async Task TrefferOeffnenAsync(Core.Suche.SuchTreffer treffer, string anfrage)
     {
         switch (treffer.Art)

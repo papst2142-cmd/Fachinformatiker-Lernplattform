@@ -23,7 +23,7 @@ public class SpielProbeTests
         var stadt = NeueStadt();
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil("Probe", new Lernplattform.Core.Daten.PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, BueroFlaeche.Value);
+        return new StadtSpiel(stadt, ablauf, null, SpielInnenraumTests.Innenraeume.Value);
     }
 
     private static Wegsuche Leer(int spalten, int zeilen, params (int, int)[] belegt)
@@ -177,9 +177,9 @@ public class SpielProbeTests
         Assert.Equal(600, spiel.Jetzt.Uhr);
         Assert.Equal(Stadt.Gewartet, spiel.Ablauf.Stand.Verlauf[^1].Art);
         Assert.StartsWith("Möbelhaus: geöffnet bis 20:00 Uhr.", spiel.Zeile);
-        Assert.Contains("Innenraum kommt später", spiel.Zeile);
+        Assert.DoesNotContain("Innenraum kommt später", spiel.Zeile);
         Assert.False(spiel.KannWarten);
-        Assert.False(spiel.KannBetreten);   // das Moebelhaus hat bis W7 keinen Innenraum
+        Assert.True(spiel.KannBetreten);   // W7 (Weisung P7-12): das Moebelhaus hat jetzt einen Innenraum
         Assert.Equal(StadtGrund.Gesperrt, spiel.GeheZu("lokschuppen"));
         Assert.Equal(StadtTexte.Gesperrt, spiel.Zeile);
         Assert.Equal(StadtGrund.SchonDa, spiel.GeheZu("moebelhaus"));
@@ -193,30 +193,76 @@ public class SpielProbeTests
         spiel.GeheZu("bitweiche");
         spiel.Fortschreiten(0.2);
         Assert.True(spiel.Geht);
+        var (x, z, uhr) = (spiel.FigurX, spiel.FigurZ, spiel.Jetzt.Uhr);
+        // Nachtrag 1 zu P7-12 (Wunsch 5): kein Sprung; das neue Ziel gilt erst nach der Ankunft
         Assert.Equal(StadtGrund.Ok, spiel.GeheZu("elektromarkt"));
-        // der erste Weg zaehlt ganz (Figur springt an sein Ziel), dann der zweite von dort
+        Assert.Equal((x, z, uhr), (spiel.FigurX, spiel.FigurZ, spiel.Jetzt.Uhr));
+        Assert.Single(spiel.Ablauf.Stand.Verlauf, e => e.Art == Stadt.Gegangen);
+        Assert.Equal("Danach geht es weiter zu Elektromarkt.", spiel.Zeile);
+        spiel.SofortAnkommen();
         var gegangen = spiel.Ablauf.Stand.Verlauf.Where(e => e.Art == Stadt.Gegangen).ToList();
         Assert.Equal(2, gegangen.Count);
         Assert.Equal("bitweiche", gegangen[1].Daten["von"]);
-        spiel.SofortAnkommen();
         Assert.Equal("elektromarkt", spiel.Jetzt.Ort);
+    }
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 5): schnelles Tippen (Orte und freie Punkte) bei 60 Bildern/s: die
+    /// Figur bewegt sich je Bild hoechstens so weit, wie sie in der Zeit gehen kann, und die Spielzeit
+    /// zaehlt genau die gegangenen Wege (Summe der Schritte der Ereignisse).
+    /// </summary>
+    [Fact]
+    public void SchnellesTippenOhneSprung()
+    {
+        var spiel = NeuesSpiel();
+        var ziele = new object[] { "bitweiche", "talheim", (20.0, 18.0), "moebelhaus", (26.0, 16.0), "zuhause", "elektromarkt", (14.0, 22.5), "zuhause" };
+        const double dt = 1.0 / 60;
+        var bilder = 0;
+        var getippt = 0;
+        while (getippt < ziele.Length || spiel.Geht)
+        {
+            if (bilder % 25 == 0 && getippt < ziele.Length)
+            {
+                if (ziele[getippt++] is string ort)
+                {
+                    spiel.GeheZu(ort);
+                }
+                else
+                {
+                    var (px, pz) = ((double, double))ziele[getippt - 1];
+                    spiel.GeheZu(px, pz);
+                }
+            }
+            var (vx, vz) = (spiel.FigurX, spiel.FigurZ);
+            spiel.Fortschreiten(dt);
+            var weite = Math.Sqrt(((spiel.FigurX - vx) * (spiel.FigurX - vx)) + ((spiel.FigurZ - vz) * (spiel.FigurZ - vz)));
+            Assert.True(weite <= (StadtSpiel.Tempo * dt) + 1e-4, "Sprung um " + weite + " im Bild " + bilder);
+            Assert.True(++bilder < 60 * 600, "die Figur kommt nie an");
+        }
+        var wege = spiel.Ablauf.Stand.Verlauf.Where(e => e.Art is Stadt.Gegangen or Stadt.Gelaufen).ToList();
+        Assert.True(wege.Count >= 2);
+        var minuten = wege.Sum(e => Py.Int(e.Daten["minuten"]));
+        Assert.Equal(420 + minuten, spiel.Jetzt.Uhr);
     }
 
     [Fact]
     public void BueroBetretenUndVerlassen()
     {
         var spiel = NeuesSpiel();
-        Assert.False(spiel.Betreten());   // zu Hause gibt es bis W5 keinen Innenraum
+        // seit W5 hat auch die Wohnung einen Innenraum
+        Assert.True(spiel.Betreten());
+        Assert.Equal("zuhause", spiel.FlaecheId);
+        spiel.Verlassen();
         spiel.GeheZu("bitweiche");
         spiel.SofortAnkommen();
         Assert.True(spiel.KannBetreten);
         Assert.True(spiel.Betreten());
         Assert.True(spiel.ImInnenraum);
-        Assert.Equal(ProbeWelt.Buero, spiel.FlaecheId);
+        Assert.Equal("buero", spiel.FlaecheId);
         var uhr = spiel.Jetzt.Uhr;
         Assert.True(spiel.GeheZu(20.0, 7.0));
         spiel.SofortAnkommen();
-        Assert.Equal(uhr, spiel.Jetzt.Uhr);   // im Buero vergeht (bis W5) keine Spielzeit
+        Assert.Equal(uhr, spiel.Jetzt.Uhr);   // im Innenraum vergeht beim Gehen keine Spielzeit (wie Python)
         spiel.Verlassen();
         Assert.False(spiel.ImInnenraum);
         Assert.Equal("bitweiche", spiel.Jetzt.Ort);
@@ -278,6 +324,40 @@ public class SpielProbeTests
         }
     }
 
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): mit Versatz steht das Ziel (die Figur) in der Mitte des freien
+    /// Bereichs zwischen Kopfzeile (oben 100) und Textkarte (unten 260 von 900); Tippen rechnet mit
+    /// demselben Bild. Der Kreis um die Figur hat die Kreisfarbe des Aussehens.
+    /// </summary>
+    [Fact]
+    public void FigurImFreienBereichMitKreis()
+    {
+        var k = new Kamera(10, 5, 6) { Versatz = (260f - 100f) / 900f };
+        var ziel = k.Bildpunkt(k.Ziel, 400, 900)!.Value;
+        Assert.Equal(200f, ziel.X, 0.05f);
+        Assert.Equal((100f + (900f - 260f)) / 2, ziel.Y, 0.05f);
+        foreach (var (x, y) in new[] { (200f, 370f), (50f, 600f), (350f, 150f) })
+        {
+            var boden = k.Boden(x, y, 400, 900)!.Value;
+            var zurueck = k.Bildpunkt(new Vector3(boden.X, 0, boden.Y), 400, 900)!.Value;
+            Assert.Equal(x, zurueck.X, 0.05f);
+            Assert.Equal(y, zurueck.Y, 0.05f);
+        }
+        Assert.Equal(new Vector3(10, 0, 5), new Vector3(k.Boden(ziel.X, ziel.Y, 400, 900)!.Value.X, 0, k.Boden(ziel.X, ziel.Y, 400, 900)!.Value.Y), new Vector3Naehe(0.001f));
+        var ring = Figur.Ring(new Lernplattform.Core.Daten.PyObjekt { { "kreis", "gelb" } }, 0.22f, 0.06f);
+        Assert.True(ring.AnzahlEcken >= 24 * 4);
+        Assert.Equal(Netz.Farbe("#FBBF24").X, ring.Ecken[6], 3);
+        // ohne Angabe Pink, die Voreinstellung des Aussehens (APPEARANCE)
+        Assert.Equal(Netz.Farbe("#F472B6").X, Figur.Ring(null, 0.22f, 0.06f).Ecken[6], 3);
+    }
+
+    private sealed class Vector3Naehe(float genau) : IEqualityComparer<Vector3>
+    {
+        public bool Equals(Vector3 a, Vector3 b) => Vector3.Distance(a, b) <= genau;
+
+        public int GetHashCode(Vector3 v) => 0;
+    }
+
     [Fact]
     public void FensterLichtIstFest()
     {
@@ -316,6 +396,59 @@ public class SpielProbeTests
             Assert.True(zickzack[i].X > zickzack[i - 1].X - 1e-5f);
         }
         Assert.Equal(1f, Kurve.Abstand(new Vector2(5, 1), [new(0, 0), new(10, 0)]), 5);
+    }
+
+    /// <summary>
+    /// Wunsch Nico 25.10.2026 (S24-Probe): Bahnuebergang an der Strasse (mit Warnkreuzen) und an den
+    /// Fusswegen ueber das Gleis, Bruecken wo eine Strasse den Fluss kreuzt, flache Schichten mit
+    /// genug Abstand fuer den 16-Bit-Tiefenpuffer.
+    /// </summary>
+    [Fact]
+    public void BahnuebergaengeBrueckenUndSchichten()
+    {
+        var szene = NeuesSpiel().Szene;
+        // Strasse x = 7,5 kreuzt das Gleis einmal; Fusswege Birkenhain (Park) und Talheim Nord (seit
+        // Nachtrag 1 zu P7-12, Wunsch 3, quert der Weg vom Bahnhof das Gleis nur noch einmal, am Bahnhof)
+        Assert.Single(szene.Uebergaenge, u => u.Strasse);
+        var strasse = szene.Uebergaenge.Single(u => u.Strasse).Mitte;
+        Assert.Equal(7.5f, strasse.X, 3);
+        // Nachtrag 1 zu P7-13 (Foto 02): an Tag 1 sind Birkenhain und Talheim-Nord noch nicht da, also
+        // auch ihre Fusswege und Uebergaenge nicht; ab Tag 66 sind beide da
+        Assert.DoesNotContain(szene.Uebergaenge, u => !u.Strasse);
+        var spaet = NeuesSpiel();
+        spaet.Ablauf.Stand.TageFertig = 65;
+        var wege = StadtSzene.Bauen(spaet.Stadt, spaet.Ablauf.Stand).Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
+        Assert.True(wege.Count == 2, string.Join("; ", wege));
+        Assert.Contains(wege, w => MathF.Abs(w.X - 12.6f) < 0.01f);
+        Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f && w.Y < 6.5f);
+        // Bruecken: Strasse x = 7,5 und die Hauptstrasse y = 20,8 ueber den Fluss
+        Assert.Equal(2, szene.Bruecken.Count);
+        Assert.Contains(szene.Bruecken, b => MathF.Abs(b.X - 7.5f) < 0.01f);
+        Assert.Contains(szene.Bruecken, b => MathF.Abs(b.Y - 20.8f) < 0.01f);
+        // Schichten von unten nach oben, je mindestens 0,012 auseinander (Gleisbett und Wasser liegen nie uebereinander)
+        float[] schichten = [StadtSzene.Hoehe.Park, StadtSzene.Hoehe.Ufer, StadtSzene.Hoehe.Wasser, StadtSzene.Hoehe.Weg,
+            StadtSzene.Hoehe.Strasse, StadtSzene.Hoehe.Flaeche, StadtSzene.Hoehe.Schiene];
+        for (var i = 1; i < schichten.Length; i++)
+        {
+            Assert.True(schichten[i] - schichten[i - 1] >= 0.006f - 1e-6f, "Schicht " + i);
+        }
+        Assert.True(StadtSzene.Hoehe.Weg - StadtSzene.Hoehe.Wasser >= 0.012f - 1e-6f);
+        Assert.True(StadtSzene.Hoehe.Strasse - StadtSzene.Hoehe.Weg >= 0.012f - 1e-6f);
+        Assert.True(StadtSzene.Hoehe.Uebergang < StadtSzene.Hoehe.Schiene, "die Schienen schauen aus dem Uebergang heraus");
+        // Tiefenpuffer des Handys (16 Bit): bei jedem Abstand trennt er am fernen Bildrand (1,5-facher
+        // Abstand) noch Schichten im Abstand 0,006; die nahe Ebene schneidet vor dem Ziel nichts ab
+        foreach (var abstand in (float[])[Kamera.AbstandMin, 5f, 17f, Kamera.AbstandMax])
+        {
+            var k = new Kamera(0, 0, abstand);
+            var z = abstand * 1.5f;
+            Assert.True(z * z / (k.Nah * 65536f) <= 0.006f, "Tiefenpuffer zu grob bei Abstand " + abstand);
+            Assert.True(k.Nah <= abstand * 0.35f, "nahe Ebene zu weit vorn bei Abstand " + abstand);
+        }
+        Assert.Equal(1.5f, new Kamera(0, 0, 5f).Nah, 4);
+        // keine Mittellinie mitten auf einer Kreuzung (das "+" am Elektromarkt)
+        var linien = szene.Teile.Where(t => t.Art == TeilArt.Band && MathF.Abs(t.Y1 - StadtSzene.Hoehe.Mittellinie) < 1e-6f).ToList();
+        Assert.NotEmpty(linien);
+        Assert.DoesNotContain(linien, t => MathF.Abs(((t.X1 + t.X2) / 2) - 29.8f) < 0.3f && MathF.Abs(((t.Z1 + t.Z2) / 2) - 20.8f) < 0.3f);
     }
 
     [Fact]
@@ -454,7 +587,9 @@ public class SpielProbeTests
         spiel.SofortAnkommen();
         Assert.Equal((talheim.StehX, talheim.StehZ), (spiel.FigurX, spiel.FigurZ));
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(spiel.Zeile, "Bahnhof Talheim"));
-        Assert.EndsWith("Innenraum kommt später.", spiel.Zeile);
+        // seit W5 hat der Bahnhof (Kunde) einen Innenraum; das Moebelhaus noch nicht
+        Assert.DoesNotContain(SpielProbeTexte.KeinInnenraum, spiel.Zeile);
+        Assert.True(spiel.KannBetreten);
     }
 
     [Fact]

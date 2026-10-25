@@ -45,6 +45,10 @@ internal static class HilfePaare
         ("W4", "tastatur",
             " Die Spielkarte und die Grundrisse im Spiel brauchen noch die Maus.",
             ""),
+        // Phase 7 W6 (Weisung P7-11, Hilfe-Abschnitt Spiel): Satz der Stadt (StadtTexte.HilfeSatz, Weisung P7-9)
+        ("S1", "spiel",
+            "Der Lernfortschritt gilt für alle gemeinsam.",
+            "Der Lernfortschritt gilt für alle gemeinsam.\n\nIm Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),

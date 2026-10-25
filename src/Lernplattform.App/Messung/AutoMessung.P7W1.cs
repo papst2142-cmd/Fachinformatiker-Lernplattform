@@ -31,11 +31,16 @@ public static partial class AutoMessung
     public const double SpielWegGrenze = 50;
     public const int SpielBilder = 120;
 
+    /// <summary>Nachtrag 1 zu P7-12 (Wunsch 4): Grenzen der Gesamtansicht (ganz herausgezoomt), unabhaengig vom Grafiktreiber.</summary>
+    public const long GesamtDreieckeGrenze = 100_000;
+
+    public const int GesamtAufrufeGrenze = 20;
+
     /// <summary>Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den kurzen Lauf ohne OpenGL (mit --software).</summary>
     public const string TeilErsatz = "spiel-ersatz";
 
     /// <summary>Anzahl der Spiel-Ansichten je Groesse und Stufe (fuer den Bericht).</summary>
-    public const int P7W1AnsichtenAnzahl = 5;
+    public const int P7W1AnsichtenAnzahl = 7;
 
     /// <summary>Ansichten, die nicht aufgebaut werden konnten (zaehlen wie Layoutfunde).</summary>
     private static readonly List<string> P7W1AnsichtFehler = [];
@@ -56,7 +61,7 @@ public static partial class AutoMessung
     private static StadtSpiel Frisch(SpielSeite seite)
     {
         var alt = seite.Spiel!;
-        var neu = SpielStart.Neu(alt.Stadt, alt.Buero, alt.Grafik);
+        var neu = SpielStart.Neu(alt.Stadt, alt.Grafik, alt.Innenraeume);
         seite.SpielSetzen(neu);
         return neu;
     }
@@ -163,6 +168,8 @@ public static partial class AutoMessung
             funde++;
         }
 
+        funde += await P7W5Async(ansicht, seite);
+
         // Zeit je Bild beim Kameraschwenk: Median <= 50 ms, 95 % <= 100 ms (bis zu 3 Laeufe, rot nur, wenn alle rot)
         var laeufe = new List<(double Median, double P95)>();
         for (var lauf = 0; lauf < Messwiederholung.Hoechstens; lauf++)
@@ -183,6 +190,8 @@ public static partial class AutoMessung
             funde++;
         }
 
+        funde += await GesamtansichtAsync(seite);
+
         // Weg suchen: von der Haustuer "Zuhause" zur Filiale am anderen Ende der Stadt (Rechnung ohne Bild)
         double Suche()
         {
@@ -193,6 +202,133 @@ public static partial class AutoMessung
         }
         funde += Ergebnis("Spiel Weg suchen", await RechnungMessenAsync(Suche, SpielWegGrenze));
         Messwerte.Notiere(string.Create(inv, $"Spiel: Bilder/s nach dem Schwenk {seite.Flaeche.BilderJeSekunde}, Bilder gesamt {seite.Flaeche.BilderGesamt}"));
+        return funde;
+    }
+
+    /// <summary>
+    /// W5 (Weisung P7-10): Wechsel Stadt -> Wohnung und Stadt -> Kunde (wiederholbar, 400 ms),
+    /// "Zur Arbeit" fuehrt ins Buero, Einrichten waehlt ein Moebel, ein Haus vor der Figur wird
+    /// halb durchsichtig gezeichnet (Sammelliste 102). Jede Pruefung, die nicht gelingt, ist ein Fund.
+    /// </summary>
+    private static async Task<int> P7W5Async(MainView ansicht, SpielSeite seite)
+    {
+        var funde = 0;
+        void Pruefe(string punkt, bool ok, string wert)
+        {
+            Messwerte.Notiere("Spiel: " + punkt + ": " + wert);
+            if (!ok)
+            {
+                Messwerte.Notiere("  FEHLER: Spiel " + punkt + ": " + wert);
+                funde++;
+            }
+        }
+        async Task<double?> Wechsel(Action schritt)
+        {
+            var uhr = Stopwatch.StartNew();
+            schritt();
+            await seite.Flaeche.NaechstesBildAsync();
+            await ansicht.BildFertigAsync();
+            return uhr.Elapsed.TotalMilliseconds;
+        }
+
+        // Stadt -> Wohnung (das neue Spiel steht vor der Wohnung)
+        var spiel = Frisch(seite);
+        await seite.Flaeche.NaechstesBildAsync();
+        if (!spiel.KannBetreten)
+        {
+            Pruefe("Wohnung betretbar", false, spiel.Zeile);
+            return funde;
+        }
+        async Task Hinaus() { spiel.Verlassen(); await seite.Flaeche.NaechstesBildAsync(); }
+        var rein = await Wechsel(() => spiel.Betreten());
+        var wohnungOk = spiel.FlaecheId == "zuhause";
+        funde += Ergebnis("Spiel Stadt -> Wohnung", await Messwiederholung.MessenAsync(rein, Abbruch,
+            () => Wechsel(() => spiel.Betreten()), Hinaus, Task.Delay));
+        if (!spiel.ImInnenraum)
+        {
+            spiel.Betreten();
+        }
+        Pruefe("Wohnung betreten", wohnungOk && spiel.FlaecheId == "zuhause", "Flaeche " + spiel.FlaecheId);
+
+        // Einrichten: Modus an, die Startmatratze antippen waehlt sie, "Fertig" beendet den Modus
+        spiel.EinrichtenUmschalten();
+        spiel.GeheZu(1.0, 1.0);
+        await seite.Flaeche.NaechstesBildAsync();
+        await ansicht.BildFertigAsync();
+        var gewaehlt = spiel.Einrichten && spiel.Ausgewaehlt == "start-matratze" && spiel.AusgewaehltSteht;
+        var name = spiel.Ausgewaehlt ?? "nichts gewaehlt";
+        spiel.EinrichtenUmschalten();
+        Pruefe("Einrichten waehlt ein Moebel", gewaehlt && !spiel.Einrichten, name);
+
+        // "Zur Arbeit": hinaus, zum Buero gehen und gleich hinein
+        var arbeit = spiel.Knopf("buero");
+        spiel.SofortAnkommen();
+        await seite.Flaeche.NaechstesBildAsync();
+        Pruefe("Zur Arbeit fuehrt ins Buero", arbeit && spiel.FlaecheId == "buero", "Flaeche " + spiel.FlaecheId + " (" + spiel.Zeile.Replace('\n', ' ') + ")");
+        spiel.Verlassen();
+
+        // Stadt -> Kunde (Talheim, ein Kundenort mit Innenraum)
+        spiel.GeheZu("talheim");
+        spiel.SofortAnkommen();
+        if (!spiel.KannBetreten && spiel.KannWarten)
+        {
+            spiel.Warten();
+        }
+        if (!spiel.KannBetreten)
+        {
+            Pruefe("Kunde betretbar", false, spiel.Zeile);
+        }
+        else
+        {
+            await seite.Flaeche.NaechstesBildAsync();
+            var kunde = await Wechsel(() => spiel.Betreten());
+            funde += Ergebnis("Spiel Stadt -> Kunde", await Messwiederholung.MessenAsync(kunde, Abbruch,
+                () => Wechsel(() => spiel.Betreten()), Hinaus, Task.Delay));
+            if (!spiel.ImInnenraum)
+            {
+                spiel.Betreten();
+            }
+            Pruefe("Kunde betreten", spiel.FlaecheId.StartsWith("kunde", StringComparison.Ordinal), "Flaeche " + spiel.FlaecheId);
+            spiel.Verlassen();
+        }
+
+        // Haus vor der Figur: halb durchsichtig. Figur neben die Bitweiche, Kamera in jede Richtung drehen,
+        // bis das Haus zwischen Auge und Figur steht; die Zeichnung muss es dann durchsichtig zeichnen
+        spiel = Frisch(seite);
+        var kamera = seite.Flaeche.AktuelleKamera!;
+        var haus = spiel.Szene.Haeuser.First(h => h.Id == "bitweiche");
+        var mitte = (haus.Min + haus.Max) / 2;
+        var gezeichnet = 0;
+        var gesehen = false;
+        foreach (var (px, pz) in new[] { (mitte.X, haus.Min.Z - 0.8f), (mitte.X, haus.Max.Z + 0.8f), (haus.Min.X - 0.8f, mitte.Z), (haus.Max.X + 0.8f, mitte.Z) })
+        {
+            if (gesehen)
+            {
+                break;
+            }
+            spiel.GeheZu(px, pz);
+            spiel.SofortAnkommen();
+            foreach (var drehung in new[] { 0f, 90f, 180f, 270f })
+            {
+                kamera.Drehung = drehung;
+                kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+                if (!spiel.Szene.Verdeckt(kamera.Auge, spiel.FigurX, spiel.FigurZ, Figur.StadtHoehe).Contains(haus))
+                {
+                    continue;
+                }
+                gesehen = true;
+                await seite.Flaeche.NaechstesBildAsync();
+                await seite.Flaeche.NaechstesBildAsync();
+                gezeichnet = seite.Flaeche.VerdecktZahl;
+                break;
+            }
+        }
+        kamera.Drehung = 0;
+        Pruefe("Haus vor der Figur durchsichtig", gesehen && gezeichnet > 0, gesehen
+            ? gezeichnet.ToString(CultureInfo.InvariantCulture) + " Haus/Haeuser durchsichtig gezeichnet"
+            : "keine Stelle gefunden, an der die Bitweiche die Figur verdeckt");
+        Frisch(seite);
+        await seite.Flaeche.NaechstesBildAsync();
         return funde;
     }
 
@@ -242,6 +378,58 @@ public static partial class AutoMessung
     }
 
     /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 4, S24 55 Bilder/s in der Uebersicht): ganz herausgezoomt auf die
+    /// Stadtmitte. Messpunkte, die nicht vom Grafiktreiber abhaengen: Zeichenaufrufe und Dreiecke je Bild
+    /// (Grenzen <see cref="GesamtAufrufeGrenze"/>, <see cref="GesamtDreieckeGrenze"/>); dazu Zeit je Bild beim
+    /// Schwenk in dieser Ansicht (Grenzen wie beim Schwenk, bis zu 3 Laeufe) und Rechenzeit je Bild.
+    /// </summary>
+    private static async Task<int> GesamtansichtAsync(SpielSeite seite)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        var flaeche = seite.Flaeche;
+        if (flaeche.AktuelleKamera is not { } kamera || seite.Spiel is not { } spiel)
+        {
+            Messwerte.Notiere("  FEHLER: Spiel Gesamtansicht: keine Kamera");
+            return 1;
+        }
+        var abstand = kamera.Abstand;
+        kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
+        kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
+        await flaeche.NaechstesBildAsync();
+        await flaeche.NaechstesBildAsync();
+        var aufrufe = flaeche.LetzteZeichenaufrufe;
+        var dreiecke = flaeche.LetzteDreiecke;
+        Messwerte.Notiere(string.Create(inv, $"Spiel: Gesamtansicht (Abstand {kamera.Abstand:F0}): {aufrufe} Zeichenaufrufe, {dreiecke} Dreiecke je Bild, Rechenzeit {flaeche.LetzteZeichenzeitMs:F1} ms (Grenzen {GesamtAufrufeGrenze} Aufrufe, {GesamtDreieckeGrenze} Dreiecke)"));
+        if (aufrufe > GesamtAufrufeGrenze || dreiecke > GesamtDreieckeGrenze || aufrufe == 0)
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Gesamtansicht: {aufrufe} Zeichenaufrufe, {dreiecke} Dreiecke (Grenzen {GesamtAufrufeGrenze}, {GesamtDreieckeGrenze})"));
+            funde++;
+        }
+        var laeufe = new List<(double Median, double P95)>();
+        for (var lauf = 0; lauf < Messwiederholung.Hoechstens; lauf++)
+        {
+            var (median, p95) = await SchwenkAsync(seite);
+            laeufe.Add((median, p95));
+            if (median <= SpielBildMedian && p95 <= SpielBild95)
+            {
+                break;
+            }
+            await Task.Delay(Messwiederholung.Pause);
+        }
+        var text = string.Join("; ", laeufe.Select(l => string.Create(inv, $"Median {l.Median:F1} ms, 95 % {l.P95:F1} ms")));
+        Messwerte.Notiere("Spiel: Zeit je Bild in der Gesamtansicht (" + SpielBilder + " Bilder): " + text);
+        if (laeufe.All(l => l.Median > SpielBildMedian || l.P95 > SpielBild95))
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Zeit je Bild Gesamtansicht: {text} (Grenze Median {SpielBildMedian:F0} ms, 95 % {SpielBild95:F0} ms; Einzelmessungen {laeufe.Count} Laeufe)"));
+            funde++;
+        }
+        kamera.Zoomen(kamera.Abstand / abstand);
+        kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+        return funde;
+    }
+
+    /// <summary>
     /// Jeder sichtbare Knopf der Ebene ueber der Stadt liegt ganz auf der Seite ("Spiel verlassen",
     /// Hineingehen, Warten, Orte); sonst ist er am Handy quer nicht erreichbar. Knoepfe in einer
     /// Rolle (Ortsliste) zaehlen nicht, die erreicht man durch Rollen.
@@ -266,7 +454,7 @@ public static partial class AutoMessung
         return fehler;
     }
 
-    /// <summary>Ansichten der Spiel-Seite fuer die Layoutpruefung: Stadt, Ortsliste, geschlossenes Haus, Buero, ohne 3D.</summary>
+    /// <summary>Ansichten der Spiel-Seite fuer die Layoutpruefung: Stadt, Ortsliste, geschlossenes Haus, Buero, Kunde, Einrichten, ohne 3D.</summary>
     private static async IAsyncEnumerable<string> P7W1Ansichten(MainView ansicht)
     {
         var seite = await SpielSeiteAsync(ansicht);
@@ -305,6 +493,35 @@ public static partial class AutoMessung
         P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/buero"));
         yield return "spiel/buero";
         spiel.Verlassen();
+        // W5: Kunde (Talheim) und die Wohnung im Modus "Einrichten" mit gewaehltem Moebel und Tafel
+        spiel.GeheZu("talheim");
+        spiel.SofortAnkommen();
+        if (!spiel.KannBetreten && spiel.KannWarten)
+        {
+            spiel.Warten();
+        }
+        if (!spiel.Betreten())
+        {
+            P7W1AnsichtFehler.Add("spiel/kunde: Kunde nicht betretbar (" + spiel.Zeile + ")");
+            yield break;
+        }
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/kunde"));
+        yield return "spiel/kunde";
+        spiel.Verlassen();
+        spiel = Frisch(seite);
+        if (!spiel.Betreten())
+        {
+            P7W1AnsichtFehler.Add("spiel/einrichten: Wohnung nicht betretbar (" + spiel.Zeile + ")");
+            yield break;
+        }
+        spiel.EinrichtenUmschalten();
+        spiel.Waehlen("start-matratze");
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/einrichten"));
+        yield return "spiel/einrichten";
+        spiel.EinrichtenUmschalten();
+        spiel.Verlassen();
         seite.ErsatzVorfuehren(true);
         await ansicht.BildFertigAsync();
         P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/ohne-3d"));
@@ -335,7 +552,8 @@ public static partial class AutoMessung
 
         // Vollbild: die Seite fuellt das ganze Fenster, Kopfleiste und Navigation sind weg
         var top = TopLevel.GetTopLevel(ansicht);
-        var voll = ansicht.Vollbild && Vollbild.An && top is not null
+        // Nachtrag 1 zu P7-13: der sichere Rand wird am Inhalt des TopLevel abgeschaltet (sonst schwarzer Streifen)
+        var voll = ansicht.Vollbild && Vollbild.An && top is not null && top.Content is Control inhalt && !TopLevel.GetAutoSafeAreaPadding(inhalt)
             && Math.Abs(seite.Bounds.Width - ansicht.Bounds.Width) < 1 && Math.Abs(seite.Bounds.Height - ansicht.Bounds.Height) < 1;
         Pruefe("Vollbild", voll, string.Create(CultureInfo.InvariantCulture,
             $"{(voll ? "ja" : "nein")} (Seite {seite.Bounds.Width:F0} x {seite.Bounds.Height:F0}, Fenster {ansicht.Bounds.Width:F0} x {ansicht.Bounds.Height:F0})"));
@@ -421,7 +639,8 @@ public static partial class AutoMessung
         {
             await ansicht.BildFertigAsync();
         }
-        var zurueck = ansicht.AktuelleSeite != Seiten.Spiel && !ansicht.Vollbild && !Vollbild.An;
+        var zurueck = ansicht.AktuelleSeite != Seiten.Spiel && !ansicht.Vollbild && !Vollbild.An
+            && top?.Content is Control danach && TopLevel.GetAutoSafeAreaPadding(danach);
         Pruefe("Spiel verlassen", zurueck, "Seite " + ansicht.AktuelleSeite + ", Vollbild " + (ansicht.Vollbild ? "an" : "aus"));
         await ansicht.ZeigeAsync(Seiten.Spiel);
         await ansicht.BildFertigAsync();

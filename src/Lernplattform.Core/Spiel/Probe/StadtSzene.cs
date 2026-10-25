@@ -19,7 +19,17 @@ public sealed record StadtOrt(string Id, string Name, string Kurz, string Rolle,
     public float StehX { get; init; } = TuerX;
 
     public float StehZ { get; init; } = TuerZ;
+
+    /// <summary>Ansicht wie orte.json ("buero", "zuhause", "kunde:talheim", "serverfarm" ...), W5: welcher Innenraum.</summary>
+    public string? Ansicht { get; init; }
 }
+
+/// <summary>
+/// Ein Haus der Stadt mit seinen Teilen (Bereiche in <see cref="StadtSzene.Teile"/> und
+/// <see cref="StadtSzene.Stuecke"/>) und seinem Kasten: steht die Figur dahinter, zeichnet die
+/// Darstellung es halb durchsichtig (Sammelliste 102, W5).
+/// </summary>
+public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int StueckeVon, int StueckeBis, Vector3 Min, Vector3 Max);
 
 /// <summary>
 /// Phase 7, W4 (Weisung P7-9 Punkt 3c): die ganze Stadt aus <c>orte.json</c> und <c>stadt.json</c>
@@ -33,9 +43,45 @@ public sealed record StadtOrt(string Id, string Name, string Kurz, string Rolle,
 /// </summary>
 public sealed class StadtSzene
 {
+    /// <summary>
+    /// Massstab der Stadt (Nachtrag 1 zu P7-12, Wunsch 2): eine Karteneinheit sind 5 m. Damit passen die
+    /// Groessen aus orte.json (Strasse 0,72 = 3,6 m, Fussweg 0,5 = 2,5 m, Baeume 6 bis 8 m, Haeuser 2 bis
+    /// 3 Stockwerke); Figur (1,8 m), Zug (2,9 m breit), Spur (1,435 m) und Tueren (2,2 m) richten sich danach.
+    /// </summary>
+    public const float Meter = 0.2f;
+
     /// <summary>Breite der Strassen wie landscape_shapes (0.72), Fluss 0.65.</summary>
     public const float StrassenBreite = 0.72f;
     public const float FlussBreite = 0.65f;
+
+    /// <summary>
+    /// Hoehen der flachen Schichten am Boden (Wunsch Nico 25.10.2026 nach der S24-Probe: kein Flimmern
+    /// an Fusswegen und Wasser). Je Schicht mindestens 0,012 Abstand, sonst kaempfen zwei Flaechen im
+    /// Tiefenpuffer des Handys (16 Bit) um dasselbe Bildpixel; was oben liegen muss, liegt hoeher:
+    /// Park, Ufer, Wasser, Gleisbett, Fussweg, Strasse, Mittellinie, Uebergang, Schienen.
+    /// </summary>
+    public static class Hoehe
+    {
+        public const float Park = 0.012f;
+        public const float Ufer = 0.022f;
+        public const float Wasser = 0.034f;
+        public const float Gleisbett = 0.034f;
+        public const float Weg = 0.046f;
+        public const float Strasse = 0.058f;
+        public const float Mittellinie = 0.068f;
+
+        /// <summary>Flaechen der Modelle am Boden (Hof, Bahnsteig), ueber Fussweg und Strasse.</summary>
+        public const float Flaeche = 0.064f;
+        public const float Uebergang = 0.07f;
+        public const float Schwelle = 0.05f;
+        public const float Schiene = 0.08f;
+
+        /// <summary>Die Figur steht auf Weg und Strasse, nicht darin.</summary>
+        public const float Figur = Strasse;
+    }
+
+    /// <summary>Breite der Fusswege (Zugaenge von der Tuer zur Strasse).</summary>
+    public const float WegBreite = 0.5f;
 
     /// <summary>Rasterweite des freien Gehens (wie im Innenraum, WALK_STEP).</summary>
     public const double LaufSchritt = 0.25;
@@ -44,8 +90,9 @@ public sealed class StadtSzene
     public const double LaufKoerper = 0.15;
 
     private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<Streifen> streifen, IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek? grafik,
-        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe, Wegsuche laufraster)
+        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe, Wegsuche laufraster, IReadOnlyList<StadtHaus> haeuser)
     {
+        Haeuser = haeuser;
         Teile = teile;
         Streifen = streifen;
         Laufraster = laufraster;
@@ -58,6 +105,21 @@ public sealed class StadtSzene
     }
 
     public IReadOnlyList<Teil> Teile { get; }
+
+    /// <summary>Mitten der Bruecken (Strasse ueber dem Fluss).</summary>
+    public IReadOnlyList<Vector2> Bruecken { get; private init; } = [];
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 1): alle Baeume (Landschaft und Modelle) mit Mitte und Radius, so wie
+    /// sie stehen; keiner steht auf Strasse, Fussweg, Gleis oder Wasser (<see cref="BaumSperren"/>).
+    /// </summary>
+    public IReadOnlyList<(Vector2 Mitte, float R)> Baeume { get; private init; } = [];
+
+    /// <summary>Linien, auf denen kein Baum stehen darf, mit halber Breite (Strassen, Fusswege, Gleise, Fluss mit Ufer).</summary>
+    public IReadOnlyList<(IReadOnlyList<Vector2> Linie, float Halb)> BaumSperren { get; private init; } = [];
+
+    /// <summary>Mitten der Bahnuebergaenge; Strasse = mit Warnkreuzen, sonst Fussweg.</summary>
+    public IReadOnlyList<(Vector2 Mitte, bool Strasse)> Uebergaenge { get; private init; } = [];
 
     /// <summary>Fluss, Ufer und Gleis als glatte Baender (P7-10 Nachtrag 1).</summary>
     public IReadOnlyList<Streifen> Streifen { get; }
@@ -74,22 +136,112 @@ public sealed class StadtSzene
 
     public GrafikBibliothek? Grafik { get; }
 
-    /// <summary>Das Dreiecksnetz der ganzen Stadt: eigene Teile und CC0-Modelle.</summary>
+    /// <summary>Die Haeuser (Gebaeude der Landschaft und Orte), jedes mit eigenem Netz (<see cref="HausNetz"/>).</summary>
+    public IReadOnlyList<StadtHaus> Haeuser { get; }
+
+    /// <summary>Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle.</summary>
     public Netz NetzBauen()
     {
-        var netz = Netz.Aus(Teile);
+        var teileHaus = new bool[Teile.Count];
+        var stueckeHaus = new bool[Stuecke.Count];
+        foreach (var h in Haeuser)
+        {
+            Array.Fill(teileHaus, true, h.TeileVon, h.TeileBis - h.TeileVon);
+            Array.Fill(stueckeHaus, true, h.StueckeVon, h.StueckeBis - h.StueckeVon);
+        }
+        var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i]));
         foreach (var streifen in Streifen)
         {
             netz.Hinzu(streifen);
         }
-        foreach (var stueck in Stuecke)
+        for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (Grafik?.Modell(stueck.Name) is { } modell)
+            if (!stueckeHaus[i] && Grafik?.Modell(Stuecke[i].Name) is { } modell)
             {
-                netz.Hinzu(modell, stueck.Lage);
+                netz.Hinzu(modell, Stuecke[i].Lage);
             }
         }
         return netz;
+    }
+
+    /// <summary>Das Netz eines Hauses (eigene Teile und CC0-Modelle).</summary>
+    public Netz HausNetz(StadtHaus haus)
+    {
+        var netz = Netz.Aus(Teile.Skip(haus.TeileVon).Take(haus.TeileBis - haus.TeileVon));
+        for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
+        {
+            if (Grafik?.Modell(Stuecke[i].Name) is { } modell)
+            {
+                netz.Hinzu(modell, Stuecke[i].Lage);
+            }
+        }
+        return netz;
+    }
+
+    /// <summary>
+    /// Haeuser, die zwischen Auge und Figur stehen (Sammelliste 102): die Strecken vom Auge zu Fuss,
+    /// Mitte und Kopf der Figur schneiden ihren Kasten (etwas verkleinert, damit ein Haus, vor dem die
+    /// Figur steht, nicht zaehlt).
+    /// </summary>
+    public List<StadtHaus> Verdeckt(Vector3 auge, float figurX, float figurZ, float figurHoehe)
+    {
+        var ergebnis = new List<StadtHaus>();
+        Verdeckt(auge, figurX, figurZ, figurHoehe, ergebnis);
+        return ergebnis;
+    }
+
+    /// <summary>Wie <see cref="Verdeckt(Vector3, float, float, float)"/>, fuellt aber <paramref name="ergebnis"/> (je Bild ohne neue Liste, Wunsch 4).</summary>
+    public void Verdeckt(Vector3 auge, float figurX, float figurZ, float figurHoehe, ICollection<StadtHaus> ergebnis)
+    {
+        ergebnis.Clear();
+        foreach (var h in Haeuser)
+        {
+            var min = h.Min + new Vector3(0.05f, 0, 0.05f);
+            var max = h.Max - new Vector3(0.05f, 0, 0.05f);
+            foreach (var anteil in (ReadOnlySpan<float>)[0.15f, 0.5f, 0.95f])
+            {
+                if (Schneidet(auge, new Vector3(figurX, figurHoehe * anteil, figurZ), min, max))
+                {
+                    ergebnis.Add(h);
+                    break;
+                }
+            }
+        }
+    }
+
+    /// <summary>Schneidet die Strecke a-b den Kasten (Platten-Verfahren)?</summary>
+    public static bool Schneidet(Vector3 a, Vector3 b, Vector3 min, Vector3 max)
+    {
+        var d = b - a;
+        float t0 = 0, t1 = 1;
+        for (var i = 0; i < 3; i++)
+        {
+            var da = i == 0 ? d.X : i == 1 ? d.Y : d.Z;
+            var pa = i == 0 ? a.X : i == 1 ? a.Y : a.Z;
+            var lo = i == 0 ? min.X : i == 1 ? min.Y : min.Z;
+            var hi = i == 0 ? max.X : i == 1 ? max.Y : max.Z;
+            if (MathF.Abs(da) < 1e-8f)
+            {
+                if (pa < lo || pa > hi)
+                {
+                    return false;
+                }
+                continue;
+            }
+            var u = (lo - pa) / da;
+            var v = (hi - pa) / da;
+            if (u > v)
+            {
+                (u, v) = (v, u);
+            }
+            t0 = MathF.Max(t0, u);
+            t1 = MathF.Min(t1, v);
+            if (t0 > t1)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public IReadOnlyList<StadtOrt> Orte { get; }
@@ -153,6 +305,30 @@ public sealed class StadtSzene
         [.. Liste(punkte).Select(p => Liste(p)).Select(p => ((float)Py.F(p[0]), (float)Py.F(p[1])))];
 
     /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 4): nur die <see cref="Signatur"/> der Stadt fuer einen Spielstand,
+    /// ohne Geometrie (Bauen braucht am PC rund 160 ms und 12 MB; vorher baute jede Ankunft die ganze
+    /// Stadt neu, nur um die Signatur zu vergleichen). Gleich <c>Bauen(stadt, stand).Signatur</c>.
+    /// </summary>
+    public static string SignaturFuer(Stadt stadt, Spielstand? stand)
+    {
+        var inhalt = stadt.Inhalt;
+        var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
+        var k = StadtModelle.Kontext(stand, inhalt);
+        var modelle = StadtModelle.Modelle(inhalt, stadt.Daten);
+        var signatur = new List<string>();
+        foreach (var item in ListeOderLeer(welt, "landschaft").Select(Objekt).Where(t => Py.Gleich(t["typ"], "gebaeude")))
+        {
+            var modell = Py.Str(item["modell"]);
+            signatur.Add(modell + ":" + string.Join(",", StadtModelle.Teile(modelle, modell, k).Select(t => t.Nr)));
+        }
+        foreach (var ort in stadt.Orte(stand))
+        {
+            signatur.Add(Py.Str(ort["id"]) + ":" + string.Join(",", StadtModelle.Teile(modelle, Py.Str(ort["modell"]), k).Select(t => t.Nr)));
+        }
+        return string.Join(";", signatur);
+    }
+
+    /// <summary>
     /// Die Stadt fuer einen Spielstand (null = wie ein neuer Spielstand ohne Ereignisse). Mit
     /// <paramref name="grafik"/> stehen statt der eigenen Bloecke, Baeume und Schienen die CC0-Modelle
     /// (Zuordnung je Block in zuordnung.json; Bloecke ohne Zuordnung bleiben eigene Geometrie).
@@ -176,6 +352,14 @@ public sealed class StadtSzene
         var gleise = new List<List<Vector2>>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+        var zugangswege = Objekt(stadt.Daten["zugaenge"]).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        // Nachtrag 1 zu P7-13 (Chat, Foto 02): gezeichnet (mit Bahnuebergang) wird nur der Fussweg eines
+        // sichtbaren Orts; Weg zu Talheim-Nord und zur Werkstatt erscheinen mit dem Ort (Tag 12 bzw. 22),
+        // vorher lag er als Ring ohne Ziel auf der Wiese. Laufraster und Baumsperren nutzen alle Wege.
+        var sichtbareOrte = stadt.Orte(stand).Select(o => Py.Str(o["id"])).ToHashSet();
+        var sichtbareWege = Objekt(stadt.Daten["zugaenge"]).Where(z => sichtbareOrte.Contains(z.Key)).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        var bruecken = new List<Vector2>();
+        var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
         {
             foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], art)))
@@ -185,61 +369,91 @@ public sealed class StadtSzene
                     case "park":
                     {
                         float x = Zahl(item, "x"), z = Zahl(item, "y");
-                        teile.Add(Quader(x, 0f, z, x + Zahl(item, "w"), 0.004f, z + Zahl(item, "h"), Farben.Park));
+                        teile.Add(Quader(x, 0f, z, x + Zahl(item, "w"), Hoehe.Park, z + Zahl(item, "h"), Farben.Park));
                         break;
                     }
                     case "fluss":
                     {
+                        // Bruecken (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt
+                        foreach (var strasse in strassen)
+                        {
+                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Kurve.Glatt(Vektoren(item["punkte"])), strasse))
+                            {
+                                Bruecke(teile, streifen, mitte, richtung, sinus);
+                                bruecken.Add(mitte);
+                            }
+                        }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2)
                         var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
-                        streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, 0.003f, 0.003f, Farben.Ufer));
-                        streifen.Add(new Streifen(glatt, FlussBreite, 0.006f, 0.006f, Farben.Wasser));
+                        streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, Hoehe.Ufer, Hoehe.Ufer, Farben.Ufer));
+                        streifen.Add(new Streifen(glatt, FlussBreite, Hoehe.Wasser, Hoehe.Wasser, Farben.Wasser));
                         wasser.Add(glatt);
                         break;
                     }
                     case "strasse":
-                        Linie(teile, Punkte(item["punkte"]), 0.01f, StrassenBreite, Farben.Strasse);
+                        Linie(teile, Punkte(item["punkte"]), Hoehe.Strasse, StrassenBreite, Farben.Strasse);
                         break;
                     case "bahn":
                     {
                         var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
-                        Gleis(streifen, glatt, strassen);
+                        uebergaenge.AddRange(Gleis(teile, streifen, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
                         break;
                     }
                 }
             }
         }
-        // Mittellinien und Fusswege der Stadt (Zugaenge von der Tuer zur Strasse)
+        // Mittellinien und Fusswege der Stadt (Zugaenge von der Tuer zur Strasse); keine Striche
+        // mitten auf einer Kreuzung (dort lagen sonst zwei Striche als "+" uebereinander)
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "strasse")))
         {
+            var eigene = Vektoren(item["punkte"]);
+            var andere = strassen.Where(s2 => !s2.SequenceEqual(eigene)).ToList();
             foreach (var (x1, z1, x2, z2) in Striche(Punkte(item["punkte"]), 0.2f, 0.25f))
             {
-                teile.Add(Band(x1, z1, x2, z2, 0.014f, 0.04f, Farben.Mittellinie));
+                var mitte = new Vector2((x1 + x2) / 2, (z1 + z2) / 2);
+                if (andere.Any(a => Kurve.Abstand(mitte, a) <= (StrassenBreite / 2) + 0.05f))
+                {
+                    continue;
+                }
+                teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
             }
         }
-        foreach (var (_, zugang) in Objekt(stadt.Daten["zugaenge"]))
+        foreach (var (_, zugang) in Objekt(stadt.Daten["zugaenge"]).Where(z => sichtbareOrte.Contains(z.Key)))
         {
-            Linie(teile, Punkte(Objekt(zugang)["weg"]), 0.008f, 0.5f, Mischen(Farben.Strasse, Weiss, 0.45f));
+            Linie(teile, Punkte(Objekt(zugang)["weg"]), Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
         }
+        // Nachtrag 1 zu P7-13 (Wunsch 1): Baeume weichen Strassen, Fusswegen, Gleisen und dem Fluss aus
+        var baeume = new BaumPlaner([
+            .. strassen.Select(l => ((IReadOnlyList<Vector2>)l, StrassenBreite / 2)),
+            .. zugangswege.Select(l => ((IReadOnlyList<Vector2>)l, WegBreite / 2)),
+            .. gleise.Select(l => ((IReadOnlyList<Vector2>)l, (GleisBreite / 2) + 0.1f)),
+            .. wasser.Select(l => ((IReadOnlyList<Vector2>)l, (FlussBreite + 0.3f) / 2)),
+        ]);
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "baum")))
         {
             var r = Zahl(item, "r", 0.45f);
             foreach (var (x, z) in Punkte(item["punkte"]))
             {
-                Baum(teile, stuecke, grafik, x, z, r);
+                Baum(teile, stuecke, grafik, baeume, x, z, r);
             }
         }
 
         var k = StadtModelle.Kontext(stand, inhalt);
         var modelle = StadtModelle.Modelle(inhalt, stadt.Daten);
         var signatur = new List<string>();
+        var haeuser = new List<StadtHaus>();
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude")))
         {
             var modell = Py.Str(item["modell"]);
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
-            Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse);
+            var (tv, sv) = (teile.Count, stuecke.Count);
+            var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume);
+            if (hmin.X <= hmax.X)
+            {
+                haeuser.Add(new StadtHaus(modell + "#" + haeuser.Count.ToString(CultureInfo.InvariantCulture), tv, teile.Count, sv, stuecke.Count, hmin, hmax));
+            }
             signatur.Add(modell + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
         var orte = new List<StadtOrt>();
@@ -251,7 +465,8 @@ public sealed class StadtSzene
             float ox = (float)Py.F(ort["x"]), oz = (float)Py.F(ort["y"]);
             var rolle = ort["rolle"] as string ?? "";
             var vorher = stuecke.Count;
-            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse);
+            var teileVorher = teile.Count;
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
@@ -263,21 +478,30 @@ public sealed class StadtSzene
             // (CC0-Haeuser haben eigene Tueren)
             if (!mitGrafik)
             {
-                teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+                teile.Add(Quader(tx - (TuerBreite / 2), 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + (TuerBreite / 2), TuerHoehe, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+            }
+            if (min.X <= max.X)
+            {
+                haeuser.Add(new StadtHaus(id, teileVorher, teile.Count, vorher, stuecke.Count, min, max));
             }
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
             var (sx, sz) = Stehplatz(stadt, id, tx, tz);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
-                tx, tz, min, max, schild) { StehX = sx, StehZ = sz });
+                tx, tz, min, max, schild) { StehX = sx, StehZ = sz, Ansicht = ort["ansicht"] as string });
             signatur.Add(id + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
         if (grafik is not null)
         {
             Zug(stuecke, grafik, gleise);
         }
-        var wege = Objekt(stadt.Daten["zugaenge"]).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, wege, orte);
-        return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte);
+        return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
+        {
+            Bruecken = bruecken,
+            Baeume = baeume.Gesetzt,
+            BaumSperren = baeume.Sperren,
+            Uebergaenge = uebergaenge,
+        };
     }
 
     private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
@@ -428,49 +652,204 @@ public sealed class StadtSzene
     /// <summary>
     /// Gleis als glatte Baender (Nachtrag 1, Wunsch 1): Schotterbett, Schwellen alle 0,14 quer zur
     /// Fahrtrichtung, zwei Schienen im festen Abstand; die Boegen kommen aus <see cref="Kurve.Glatt"/>,
-    /// darum ohne Knick und Versatz.
+    /// darum ohne Knick und Versatz. Bahnuebergaenge (Wunsch Nico 25.10.2026): wo eine Strasse oder ein
+    /// Fussweg das Gleis kreuzt, liegt ein Belag in Richtung der Strasse (so breit wie sie) ueber dem
+    /// Schotter, die Schienen schauen heraus; an Strassen stehen davor Warnkreuze.
     /// </summary>
-    private static void Gleis(List<Streifen> streifen, List<Vector2> p, List<List<Vector2>> strassen)
+    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
     {
-        streifen.Add(new Streifen(p, GleisBreite, 0.004f, 0.02f, Farben.Gleisbett));
-        bool AufStrasse(Vector2 q) => strassen.Any(s => Kurve.Abstand(q, s) <= StrassenBreite / 2);
-        // Uebergang: wo eine Strasse das Gleis kreuzt, liegt Strassenbelag zwischen den Schienen statt Schotter
-        var uebergang = new List<Vector2>();
-        foreach (var (ort, _) in Kurve.Entlang(p, 0.05f).Append((p[^1], Vector2.Zero)))
+        streifen.Add(new Streifen(p, GleisBreite, 0.004f, Hoehe.Gleisbett, Farben.Gleisbett));
+        var uebergaenge = new List<(Vector2 Mitte, Vector2 Richtung, float Breite)>();
+        foreach (var (linien, breite, farbe, kreuze) in (IEnumerable<(List<List<Vector2>>, float, Vector3, bool)>)
+            [(strassen, StrassenBreite, Farben.Strasse, true), (wege, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f), false)])
         {
-            if (AufStrasse(ort) && ort != p[^1])
+            foreach (var linie in linien)
             {
-                uebergang.Add(ort);
-            }
-            else if (uebergang.Count > 0)
-            {
-                if (uebergang.Count > 1)
+                foreach (var (mitte, richtung, sinus) in Kreuzungen(p, linie))
                 {
-                    streifen.Add(new Streifen([.. uebergang], GleisBreite + 0.04f, 0.022f, 0.022f, Farben.Strasse));
+                    Uebergang(teile, streifen, mitte, richtung, sinus, breite, farbe, kreuze);
+                    uebergaenge.Add((mitte, richtung, breite));
                 }
-                uebergang.Clear();
             }
         }
+        bool AufUebergang(Vector2 q) => uebergaenge.Any(u =>
+        {
+            var d = q - u.Mitte;
+            var quer = new Vector2(-u.Richtung.Y, u.Richtung.X);
+            return MathF.Abs(Vector2.Dot(d, quer)) <= (u.Breite / 2) + 0.02f && MathF.Abs(Vector2.Dot(d, u.Richtung)) <= 0.6f;
+        });
         foreach (var (ort, richtung) in Kurve.Entlang(p, 0.14f, 0.07f))
         {
-            if (AufStrasse(ort))
+            if (AufUebergang(ort))
             {
                 continue;
             }
             var quer = new Vector2(-richtung.Y, richtung.X) * 0.17f;
-            streifen.Add(new Streifen([ort - quer, ort + quer], 0.06f, 0.02f, 0.035f, Farben.Schwelle));
+            streifen.Add(new Streifen([ort - quer, ort + quer], 0.06f, Hoehe.Gleisbett, Hoehe.Schwelle, Farben.Schwelle));
         }
         foreach (var seite in (float[])[-SpurHalb, SpurHalb])
         {
-            streifen.Add(new Streifen(Kurve.Versetzt(p, seite), 0.03f, 0.035f, 0.065f, Farben.Stahl));
+            streifen.Add(new Streifen(Kurve.Versetzt(p, seite), 0.03f, Hoehe.Schwelle, Hoehe.Schiene, Farben.Stahl));
+        }
+        return [.. uebergaenge.Select(u => (u.Mitte, u.Breite == StrassenBreite))];
+    }
+
+    /// <summary>
+    /// Schnittpunkte der Linie <paramref name="b"/> (Strasse, Weg) mit <paramref name="a"/> (Gleis, Fluss):
+    /// Ort, Richtung von <paramref name="b"/> dort und |sin| des Winkels zwischen beiden.
+    /// </summary>
+    public static List<(Vector2 Mitte, Vector2 Richtung, float Sinus)> Kreuzungen(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b)
+    {
+        var liste = new List<(Vector2, Vector2, float)>();
+        for (var i = 0; i + 1 < a.Count; i++)
+        {
+            for (var j = 0; j + 1 < b.Count; j++)
+            {
+                var r = a[i + 1] - a[i];
+                var s = b[j + 1] - b[j];
+                var nenner = (r.X * s.Y) - (r.Y * s.X);
+                if (MathF.Abs(nenner) < 1e-9f)
+                {
+                    continue;
+                }
+                var q = b[j] - a[i];
+                var t = ((q.X * s.Y) - (q.Y * s.X)) / nenner;
+                var u = ((q.X * r.Y) - (q.Y * r.X)) / nenner;
+                if (t < 0 || t > 1 || u < 0 || u > 1)
+                {
+                    continue;
+                }
+                var mitte = a[i] + (r * t);
+                // dieselbe Kreuzung nicht doppelt (Schnitt genau auf einer Ecke)
+                if (liste.Any(k => Vector2.Distance(k.Item1, mitte) < 0.05f))
+                {
+                    continue;
+                }
+                var rn = Vector2.Normalize(r);
+                var sn = Vector2.Normalize(s);
+                liste.Add((mitte, sn, MathF.Max(0.2f, MathF.Abs((rn.X * sn.Y) - (rn.Y * sn.X)))));
+            }
+        }
+        return liste;
+    }
+
+    /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>
+    private static void Uebergang(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool kreuze)
+    {
+        var halb = ((GleisBreite / 2) + 0.12f) / sinus;
+        streifen.Add(new Streifen([mitte - (richtung * halb), mitte + (richtung * halb)], breite, Hoehe.Gleisbett, Hoehe.Uebergang, farbe));
+        if (!kreuze)
+        {
+            return;
+        }
+        // Warnkreuz (Andreaskreuz) rechts der Fahrbahn vor dem Gleis, je Seite eins
+        var quer = new Vector2(-richtung.Y, richtung.X);
+        foreach (var vor in (float[])[-1f, 1f])
+        {
+            var fuss = mitte + (richtung * vor * (halb + 0.2f)) + (quer * -vor * ((breite / 2) + 0.14f));
+            teile.Add(Quader(fuss.X - 0.025f, 0f, fuss.Y - 0.025f, fuss.X + 0.025f, 0.62f, fuss.Y + 0.025f, Weiss));
+            teile.Add(Quader(fuss.X - 0.13f, 0.5f, fuss.Y - 0.03f, fuss.X + 0.13f, 0.56f, fuss.Y + 0.03f, Farben.Rot));
+            teile.Add(Quader(fuss.X - 0.03f, 0.4f, fuss.Y - 0.13f, fuss.X + 0.03f, 0.66f, fuss.Y + 0.13f, Farben.Rot));
         }
     }
 
-    /// <summary>Halber Abstand der Schienen.</summary>
-    public const float SpurHalb = 0.09f;
-
-    private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, float x, float z, float r)
+    /// <summary>
+    /// Bruecke (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt, ein Steinbett unter der
+    /// Fahrbahn bis ueber beide Ufer, Bruestungen an beiden Seiten und Pfosten an den Enden.
+    /// </summary>
+    private static void Bruecke(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus)
     {
+        var halb = (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
+        var a = mitte - (richtung * halb);
+        var b = mitte + (richtung * halb);
+        var stein = Netz.Farbe("#9A94A8");
+        // Steinbett breiter als die Fahrbahn: sein Rand zeigt die Bruecke, die Fahrbahn liegt darauf
+        streifen.Add(new Streifen([a, b], StrassenBreite + 0.2f, 0f, Hoehe.Strasse - 0.012f, stein));
+        var quer = new Vector2(-richtung.Y, richtung.X);
+        foreach (var seite in (float[])[-1f, 1f])
+        {
+            var versatz = quer * seite * ((StrassenBreite / 2) + 0.06f);
+            streifen.Add(new Streifen([a + versatz, b + versatz], 0.07f, Hoehe.Strasse - 0.012f, Hoehe.Strasse + 0.16f, stein * 0.92f));
+            foreach (var ende in (Vector2[])[a + versatz, b + versatz])
+            {
+                teile.Add(Quader(ende.X - 0.07f, 0f, ende.Y - 0.07f, ende.X + 0.07f, Hoehe.Strasse + 0.24f, ende.Y + 0.07f, stein * 0.85f));
+            }
+        }
+    }
+
+    /// <summary>Halber Abstand der Schienen (Normalspur 1,435 m).</summary>
+    public const float SpurHalb = 1.435f / 2 * Meter;
+
+    /// <summary>Tuer der eigenen Haeuser: 1,8 m breit (zweifluegelig), 2,2 m hoch.</summary>
+    public const float TuerBreite = 1.8f * Meter;
+
+    public const float TuerHoehe = 2.2f * Meter;
+
+    /// <summary>Breite der Zuege (Wagenkasten 2,9 m).</summary>
+    public const float ZugBreite = 2.9f * Meter;
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 1): schiebt einen Baum, dessen Krone eine gesperrte Linie beruehrt, quer
+    /// von ihr weg, bis er frei steht (z. B. der Baum der Wohnung, der sonst auf der Kreuzung stand).
+    /// </summary>
+    private sealed class BaumPlaner(List<(IReadOnlyList<Vector2> Linie, float Halb)> sperren)
+    {
+        public List<(IReadOnlyList<Vector2> Linie, float Halb)> Sperren { get; } = sperren;
+
+        public List<(Vector2 Mitte, float R)> Gesetzt { get; } = [];
+
+        public Vector2 Setzen(float x, float z, float r)
+        {
+            var p = new Vector2(x, z);
+            for (var runde = 0; runde < 20; runde++)
+            {
+                var schlimmste = 0f;
+                var weg = Vector2.Zero;
+                foreach (var (linie, halb) in Sperren)
+                {
+                    var (naechster, richtung) = Naechster(p, linie);
+                    var fehlt = halb + r + 0.02f - Vector2.Distance(p, naechster);
+                    if (fehlt > schlimmste)
+                    {
+                        var weg1 = p - naechster;
+                        weg = (weg1.LengthSquared() > 1e-8f ? Vector2.Normalize(weg1) : new Vector2(-richtung.Y, richtung.X)) * fehlt;
+                        schlimmste = fehlt;
+                    }
+                }
+                if (schlimmste <= 0)
+                {
+                    break;
+                }
+                p += weg;
+            }
+            Gesetzt.Add((p, r));
+            return p;
+        }
+
+        /// <summary>Naechster Punkt der Linie und die Richtung ihres Abschnitts dort.</summary>
+        private static (Vector2 Punkt, Vector2 Richtung) Naechster(Vector2 p, IReadOnlyList<Vector2> linie)
+        {
+            var best = (Punkt: linie[0], Richtung: Vector2.UnitX);
+            var abstand = float.MaxValue;
+            for (var i = 1; i < linie.Count; i++)
+            {
+                var (a, b) = (linie[i - 1], linie[i]);
+                var ab = b - a;
+                var t = ab.LengthSquared() > 0 ? Math.Clamp(Vector2.Dot(p - a, ab) / ab.LengthSquared(), 0f, 1f) : 0f;
+                var q = a + (ab * t);
+                if (Vector2.Distance(p, q) < abstand)
+                {
+                    abstand = Vector2.Distance(p, q);
+                    best = (q, ab.LengthSquared() > 0 ? Vector2.Normalize(ab) : Vector2.UnitX);
+                }
+            }
+            return best;
+        }
+    }
+
+    private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, BaumPlaner planer, float x, float z, float r)
+    {
+        (x, z) = planer.Setzen(x, z, r) is var p ? (p.X, p.Y) : default;
         // Suburban-Baum (gross/klein im Wechsel nach Lage), so hoch wie der eigene Baum (0,4 + 2,2 r)
         var name = ((int)MathF.Round((x * 7) + (z * 3)) & 1) == 0 ? "tree_large" : "tree_small";
         if (grafik?.Modell(name) is { } baum)
@@ -497,7 +876,8 @@ public sealed class StadtSzene
 
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
-        List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse)
+        List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
+        BaumPlaner baeume)
     {
         var bloecke = new List<Block>();
         foreach (var (_, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
@@ -606,7 +986,7 @@ public sealed class StadtSzene
                     }
                     else
                     {
-                        teile.Add(Quader(x, 0, y, x + w, 0.05f, y + h, eigen));
+                        teile.Add(Quader(x, 0, y, x + w, Hoehe.Flaeche, y + h, eigen));
                     }
                     Kasten(x, 0, y, x + w, 0.05f, y + h);
                     break;
@@ -637,7 +1017,7 @@ public sealed class StadtSzene
                     }
                     else
                     {
-                        teile.Add(Quader(x - r, 0, y - r, x + r, 0.06f, y + r, eigen));
+                        teile.Add(Quader(x - r, 0, y - r, x + r, Hoehe.Flaeche + 0.012f, y + r, eigen));
                     }
                     break;
                 }
@@ -650,7 +1030,7 @@ public sealed class StadtSzene
                     break;
                 }
                 case "baum":
-                    Baum(teile, stuecke, grafik, x, y, Zahl(teil, "r", 0.4f));
+                    Baum(teile, stuecke, grafik, baeume, x, y, Zahl(teil, "r", 0.4f));
                     break;
                 case "geruest":
                 {
@@ -727,7 +1107,7 @@ public sealed class StadtSzene
             return;
         }
         var e = (best.B - best.A) / l;
-        var skala = GleisBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X) * 1.15f;
+        var skala = ZugBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X);
         var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
         // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
         var pos = ((l - gesamt) / 2) + gesamt;
@@ -736,7 +1116,7 @@ public sealed class StadtSzene
             var lang = (w!.Max.Z - w.Min.Z) * skala;
             var vorne = best.A + (e * pos);
             var anker = new Vector3((w.Min.X + w.Max.X) / 2, w.Min.Y, w.Max.Z);
-            stuecke.Add(new ModellStueck(w.Name, Lage(w, anker, new Vector3(skala), new Vector3(vorne.X, 0.05f, vorne.Y), e)));
+            stuecke.Add(new ModellStueck(w.Name, Lage(w, anker, new Vector3(skala), new Vector3(vorne.X, Hoehe.Schiene - 0.015f, vorne.Y), e)));
             pos -= lang;
         }
     }

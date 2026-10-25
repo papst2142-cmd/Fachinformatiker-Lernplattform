@@ -10,7 +10,8 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// </summary>
 public sealed class Kamera
 {
-    public const float AbstandMin = 5f;
+    /// <summary>Naechster Abstand: 2 (Nachtrag 1 zu P7-12: die Figur ist jetzt 1,8 m = 0,36 hoch, vorher 5 bei 1,24).</summary>
+    public const float AbstandMin = 2f;
     public const float AbstandMax = 40f;
 
     public Kamera(float zielX, float zielZ, float abstand)
@@ -52,8 +53,24 @@ public sealed class Kamera
 
     public Matrix4x4 Sicht => Matrix4x4.CreateLookAt(Auge, Ziel, Vector3.UnitY);
 
+    /// <summary>
+    /// Naechste Ebene des Sichtraums: je weiter vorn, desto genauer der Tiefenpuffer (am Handy 16 Bit;
+    /// mit 0,5 flimmerten Fussweg/Strasse und Wasser/Bruecke, Wunsch Nico 25.10.2026). Sie waechst mit
+    /// dem Abstand (bei 5 wie bisher 1,5), damit die Kamera nah an die kleinere Figur kann, ohne vorn etwas
+    /// abzuschneiden, und weit weg der Tiefenpuffer genau bleibt.
+    /// </summary>
+    public float Nah => Math.Max(0.3f, Abstand * 0.3f);
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 2): das Bild um diesen Anteil der halben Bildhoehe nach oben schieben
+    /// (Bildraum, 0 = Ziel in der Mitte). So steht das Ziel (die Figur) in der Mitte des freien Bereichs
+    /// zwischen Kopfzeile und Textkarte statt hinter der Karte; Tippen rechnet mit demselben Bild.
+    /// </summary>
+    public float Versatz { get; set; }
+
     public Matrix4x4 Projektion(float breite, float hoehe) =>
-        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), 0.5f, 200f);
+        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
+        * Matrix4x4.CreateTranslation(0, Versatz, 0);
 
     public void Setzen(float zielX, float zielZ)
     {

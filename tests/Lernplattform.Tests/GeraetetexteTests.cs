@@ -237,6 +237,9 @@ public partial class GeraetetexteTests
         ("Views/DiagnoseTeil.cs", "Problembericht.Bauen(Zustand.Lernstand, Update.Anzeige, Pc ? \"PC\" : \"Handy\", Zustand.Werte, DateTime.Now);", "Daten: Geraet im Bericht wie build_report(db, APP_VERSION, \"PC\"/\"Handy\") (G38)"),
         ("Views/DiagnoseTeil.cs", "if (Pc && pfad is not null)", "Technik: Speicherweg (Handy ueber Datenstrom mit Zuruecklesen)"),
         ("Views/DiagnoseTeil.cs", "if (Pc)", "Verhalten: Messdatei zeigen PC Datenordner, Handy Datei speichern (app_gui 8566, main.py 4585)"),
+        // Phase 7 W6 (Weisung P7-11): Geraet im Spielprotokoll (Spalte geraet von spiel_ereignisse und spiel_plaetze)
+        ("Spiel/SpielStart.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
+        ("Spiel/SpielStart.cs", "var geraet = Pc ? \"PC\" : \"Handy\";", "Daten: Geraet im Spielprotokoll wie fg.Game(app.db, device=\"PC\"/\"Handy\") (fisi_game_gui 2863, spiel.py 1801), kein Anzeigetext"),
         // Phase 5 W3 (BE10); Texte des Fensters ueber Geraetetexte.UpdateKnopf/UpdateHinweis (B14)
         ("Programm/UpdateDienst.cs", "public static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Programm/UpdateDienst.cs", "if (Pc)", "Verhalten: PC prueft nach 1 s das letzte Update und sucht nach 3 s (app_gui 8675), Handy sucht nach 3 s (main.py 6077)"),

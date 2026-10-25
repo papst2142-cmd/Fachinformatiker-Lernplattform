@@ -14,13 +14,21 @@ Pakete malen jede Flaeche einfarbig aus dem Atlas). Nur Python-Standardbibliothe
 
 Aufbau modelle.bin (Little Endian): "FLGM", uint32 Version 1, uint32 Anzahl Modelle; je Modell: uint16 Laenge
 + Name (UTF-8), uint32 Dreiecke, je Dreieck 9 x float32 (drei Ecken x, y, z) und 4 Byte Farbe (R, G, B, 0).
-Koordinaten wie im Paket (Y nach oben, Vorderseite +Z).
+Koordinaten wie im Paket (Y nach oben, Vorderseite +Z); "drehen": 180 in auswahl.json dreht ein Modell um die
+Hochachse, wenn das Paket die Vorderseite nach -Z legt (Furniture Kit: Lehnen liegen bei +Z).
+
+Figur (Phase 7 W5, Weisung P7-10 Frage 1a): Animated Characters 3 gibt es nur als binaeres FBX. fbx_lesen liest
+es selbst (Knoten, Eigenschaften, mit zlib gepackte Felder), fbx_figur nimmt das Netz (Vertices,
+PolygonVertexIndex, UV), die Farbe je Dreieck aus der Haut-PNG ("haut") an der UV-Mitte und senkt die Arme aus
+der T-Haltung ("arme": Winkel in Grad) ueber die Gewichte der Knochen (Cluster) um das Schultergelenk
+(TransformLink des Arm-Knochens). Danach Y nach oben, Vorderseite +Z wie die anderen Modelle. Bewegungen spaeter.
 
 Aufruf: python3 -I werkzeuge/grafik/wandle_modelle.py <ordner mit den ZIPs> [<ausgabeordner>]
 """
 
 import hashlib
 import json
+import math
 import os
 import struct
 import sys
@@ -156,6 +164,146 @@ def farbe_fuer(z, ordner, mat, punkte, atlanten, ersatz=None):
     return tuple(min(255, max(0, round(c * 255))) for c in kd)
 
 
+def fbx_lesen(daten):
+    """Binaeres FBX (Version 7.x) -> Liste der obersten Knoten (name, werte, kinder)."""
+    if daten[:21] != b"Kaydara FBX Binary  \x00":
+        raise ValueError("kein binaeres FBX")
+    breit = struct.unpack_from("<I", daten, 23)[0] >= 7500
+    knoten, pos = [], 27
+    while True:
+        k, pos = _fbx_knoten(daten, pos, breit)
+        if k is None:
+            return knoten
+        knoten.append(k)
+
+
+def _fbx_knoten(d, pos, breit):
+    if breit:
+        ende, anzahl, _ = struct.unpack_from("<QQQ", d, pos)
+        pos += 24
+    else:
+        ende, anzahl, _ = struct.unpack_from("<III", d, pos)
+        pos += 12
+    laenge = d[pos]
+    pos += 1
+    if ende == 0:
+        return None, pos
+    name = d[pos:pos + laenge].decode("ascii")
+    pos += laenge
+    werte = []
+    for _ in range(anzahl):
+        art = chr(d[pos])
+        pos += 1
+        if art in "YCIFDL":
+            fmt = {"Y": "<h", "C": "<B", "I": "<i", "F": "<f", "D": "<d", "L": "<q"}[art]
+            werte.append(struct.unpack_from(fmt, d, pos)[0])
+            pos += struct.calcsize(fmt)
+        elif art in "SR":
+            n = struct.unpack_from("<I", d, pos)[0]
+            werte.append(d[pos + 4:pos + 4 + n])
+            pos += 4 + n
+        elif art in "fdlib":
+            n, packung, groesse = struct.unpack_from("<III", d, pos)
+            roh = d[pos + 12:pos + 12 + groesse]
+            pos += 12 + groesse
+            if packung == 1:
+                roh = zlib.decompress(roh)
+            werte.append(list(struct.unpack("<%d%s" % (n, {"f": "f", "d": "d", "l": "q", "i": "i", "b": "B"}[art]), roh)))
+        else:
+            raise ValueError("FBX: unbekannter Werttyp %r" % art)
+    kinder = []
+    while pos < ende:
+        k, pos = _fbx_knoten(d, pos, breit)
+        if k is None:
+            break
+        kinder.append(k)
+    return (name, werte, kinder), ende
+
+
+def _fbx_kind(knoten, name):
+    return next((k for k in knoten[2] if k[0] == name), None)
+
+
+def _fbx_feld(knoten, name):
+    k = _fbx_kind(knoten, name)
+    return k[1][0] if k else None
+
+
+def fbx_figur(z, pfad, haut, arme):
+    """Figur aus einem FBX im ZIP -> Dreiecke wie obj_wandeln (Y oben, Vorderseite +Z)."""
+    wurzel = fbx_lesen(z.read(pfad))
+    objekte = next(k for k in wurzel if k[0] == "Objects")
+    netz = next(k for k in objekte[2] if k[0] == "Geometry" and k[1][2] == b"Mesh")
+    ecken = _fbx_feld(netz, "Vertices")
+    vielecke = _fbx_feld(netz, "PolygonVertexIndex")
+    uv_knoten = _fbx_kind(netz, "LayerElementUV")
+    uvs, uv_index = _fbx_feld(uv_knoten, "UV"), _fbx_feld(uv_knoten, "UVIndex")
+    punkte = [tuple(ecken[i * 3:i * 3 + 3]) for i in range(len(ecken) // 3)]
+    # Arme senken: je Ecke das gewichtete Mittel aus "bleibt" und "um die Schulter gedreht"
+    drehung = {}
+    gewichte = [0.0] * len(punkte)
+    for k in objekte[2]:
+        if k[0] != "Deformer" or k[1][2] != b"Cluster":
+            continue
+        knochen = k[1][1].split(b"\x00")[0].decode("ascii")
+        seite = "Left" if knochen.startswith(("LeftArm", "LeftForeArm", "LeftHand")) else \
+            "Right" if knochen.startswith(("RightArm", "RightForeArm", "RightHand")) else None
+        indizes, werte = _fbx_feld(k, "Indexes"), _fbx_feld(k, "Weights")
+        if not indizes:
+            continue
+        for i, g in zip(indizes, werte):
+            gewichte[i] += g
+            if seite:
+                drehung.setdefault(i, {}).setdefault(seite, 0.0)
+                drehung[i][seite] += g
+    gelenke = {}
+    for k in objekte[2]:
+        if k[0] == "Deformer" and k[1][2] == b"Cluster":
+            knochen = k[1][1].split(b"\x00")[0].decode("ascii")
+            if knochen in ("LeftArm", "RightArm"):
+                m = _fbx_feld(k, "TransformLink")
+                # Welt (Y oben, x100) -> Netz (Z oben): x = X/100, y = -Z/100, z = Y/100
+                gelenke[knochen[:-3]] = (m[12] / 100.0, -m[14] / 100.0, m[13] / 100.0)
+    winkel = {"Left": -math.radians(arme), "Right": math.radians(arme)}
+    gesenkt = []
+    for i, (x, y, zz) in enumerate(punkte):
+        anteile = drehung.get(i, {})
+        summe = gewichte[i] or 1.0
+        nx, nz = x, zz
+        for seite, g in anteile.items():
+            gx, _, gz = gelenke[seite]
+            c, s = math.cos(winkel[seite]), math.sin(winkel[seite])
+            dx, dz = x - gx, zz - gz
+            rx, rz = gx + dx * c - dz * s, gz + dx * s + dz * c
+            nx += (rx - x) * g / summe
+            nz += (rz - zz) * g / summe
+        gesenkt.append((nx, nz, -y))
+    breite, hoehe, pixel = png_lesen(z.read(haut))
+    dreiecke, vieleck = [], []
+    for nummer, wert in enumerate(vielecke):
+        vieleck.append((wert if wert >= 0 else ~wert, nummer))
+        if wert >= 0:
+            continue
+        u = sum(uvs[uv_index[n] * 2] for _, n in vieleck) / len(vieleck)
+        v = sum(uvs[uv_index[n] * 2 + 1] for _, n in vieleck) / len(vieleck)
+        u -= int(u // 1)
+        v -= int(v // 1)
+        farbe = pixel(int(u * breite), int((1 - v) * hoehe))
+        for i in range(1, len(vieleck) - 1):
+            dreiecke.append(((gesenkt[vieleck[0][0]], gesenkt[vieleck[i][0]], gesenkt[vieleck[i + 1][0]]), farbe))
+        vieleck = []
+    return dreiecke
+
+
+def gedreht(dreiecke, grad):
+    """Um die Hochachse drehen (nur 180: x und z spiegeln, Umlaufsinn bleibt)."""
+    if grad % 360 == 0:
+        return dreiecke
+    if grad % 360 != 180:
+        raise ValueError("drehen: nur 180 Grad")
+    return [(tuple((-p[0], p[1], -p[2]) for p in e), f) for e, f in dreiecke]
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -172,14 +320,18 @@ def main():
         if paket["zip"] not in zips:
             zips[paket["zip"]] = zipfile.ZipFile(os.path.join(quelle, paket["zip"]))
         z = zips[paket["zip"]]
-        dreiecke = obj_wandeln(z, eintrag["datei"], eintrag.get("atlas"))
+        if eintrag["datei"].endswith(".fbx"):
+            dreiecke = fbx_figur(z, eintrag["datei"], eintrag["haut"], eintrag.get("arme", 0))
+        else:
+            dreiecke = obj_wandeln(z, eintrag["datei"], eintrag.get("atlas"))
+        dreiecke = gedreht(dreiecke, eintrag.get("drehen", 0))
         name = eintrag["name"].encode("utf-8")
         bin_teile.append(struct.pack("<H", len(name)) + name + struct.pack("<I", len(dreiecke)))
         alle = [p for d in dreiecke for p in d[0]]
         for ecken, farbe in dreiecke:
             bin_teile.append(struct.pack("<9f", *[w for p in ecken for w in p]) + bytes((farbe[0], farbe[1], farbe[2], 0)))
         liste.append({
-            "name": eintrag["name"], "paket": eintrag["paket"], "datei": eintrag["datei"], "atlas": eintrag.get("atlas"), "dreiecke": len(dreiecke),
+            "name": eintrag["name"], "paket": eintrag["paket"], "datei": eintrag["datei"], "atlas": eintrag.get("atlas") or eintrag.get("haut"), "dreiecke": len(dreiecke),
             "min": [round(min(p[i] for p in alle), 4) for i in range(3)],
             "max": [round(max(p[i] for p in alle), 4) for i in range(3)],
         })

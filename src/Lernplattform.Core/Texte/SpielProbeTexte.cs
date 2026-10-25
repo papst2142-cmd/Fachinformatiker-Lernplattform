@@ -19,6 +19,10 @@ public static class SpielProbeTexte
     public const string KeinInnenraum = "Innenraum kommt später.";
     public const string Unterwegs = "Unterwegs zu {0} …";
     public const string Angekommen = "Angekommen.";
+
+    // Nachtrag 1 zu P7-12 (Wunsch 5): ein neues Ziel waehrend des Gehens gilt ab der Ankunft
+    public const string DanachZu = "Danach geht es weiter zu {0}.";
+    public const string DanachDorthin = "Danach geht es dorthin weiter.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
     public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
     public const string ImBuero = "Büro der Bitweiche. Tippe auf den Boden, um hinzugehen.";
@@ -26,4 +30,16 @@ public static class SpielProbeTexte
     public const string Bilder = "{0} Bilder/s";
     public const string OhneGrafik = "3D ist auf diesem Gerät nicht verfügbar (keine Grafikbeschleunigung). Die Orte erreichst du über die Liste.";
     public const string GrafikStartet = "3D startet …";
+
+    // W5: Einrichten der Wohnung, Beschriftungen wie Python (mobile/src/spiel.py _home_editor, fisi_game_gui HomeView)
+    public const string Einrichten = "Einrichten";
+    public const string Fertig = "Fertig";
+    public const string Drehen = "Drehen";
+    public const string InDenKarton = "In den Karton";
+    public const string Aufstellen = "Aufstellen";
+    public const string Ausgewaehlt = "Ausgewählt";
+    public const string ImKarton = "Im Karton";
+    public const string AllesAusgepackt = "Alles ist ausgepackt.";
+    public const string EinrichtenAufstellen = "Tippe auf den Boden, wo es hin soll. Ein zweites Tippen auf die Vorschau stellt es auf.";
+    public const string EinrichtenVerschieben = "Tippe auf den Boden, um es dorthin zu stellen, oder drehe es.";
 }

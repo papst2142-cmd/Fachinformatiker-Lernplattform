@@ -38,11 +38,17 @@ public sealed class SpielSeite : Grid
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
     private readonly Border _unten;
+    private readonly Border _kopf;
     private readonly Grid _mitte;
     private readonly Button _betreten;
     private readonly Button _zurStadt;
     private readonly Button _warten;
     private readonly Button _orteKnopf;
+    private readonly Button _einrichten;
+    private readonly Button _uebersicht;
+    private readonly WrapPanel _ortKnoepfe = new();
+    private readonly StackPanel _einrichtenTafel = new() { Spacing = 6 };
+    private string _tafelSchluessel = "";
     private readonly StackPanel _liste = new() { Spacing = 8 };
     private readonly Border _ortsliste;
     private readonly Border _ersatz;
@@ -57,8 +63,22 @@ public sealed class SpielSeite : Grid
     private int _anhaengen;
     private TopLevel? _oben;
     private bool _autoRandVorher = true;
+    private Control? _randInhalt;
+    private bool _randVorher;
 
-    public SpielSeite(Func<StadtSpiel> laden, Action verlassen)
+    /// <summary>Stadt mit Spielstand und Spielansichten (W6): die Tafel liegt ueber der Stadt.</summary>
+    public SpielSeite(Func<SpielSitzung> laden, Action verlassen, Tafel.SpielWege? wege) : this(verlassen)
+    {
+        Geladen = SitzungLadenAsync(laden, wege);
+    }
+
+    /// <summary>Nur die Stadt (Probe aus dem Arbeitsspeicher, ohne Spielansichten).</summary>
+    public SpielSeite(Func<StadtSpiel> laden, Action verlassen) : this(verlassen)
+    {
+        Geladen = LadenAsync(laden);
+    }
+
+    private SpielSeite(Action verlassen)
     {
         _verlassen = verlassen;
         Flaeche = new StadtFlaeche();
@@ -72,6 +92,7 @@ public sealed class SpielSeite : Grid
         var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile } });
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
+        _kopf = kopf;
         var verlassenKnopf = Schrift.Knopf(StadtTexte.Verlassen, true);
         verlassenKnopf.Margin = new Thickness(0);
         verlassenKnopf.VerticalAlignment = VerticalAlignment.Top;
@@ -87,12 +108,17 @@ public sealed class SpielSeite : Grid
         _warten.Click += (_, _) => Spiel?.Warten();
         _orteKnopf = Schrift.Knopf(SpielProbeTexte.Orte);
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
-        var knoepfe = new WrapPanel { Children = { _betreten, _zurStadt, _warten, _orteKnopf } };
+        _einrichten = Schrift.Knopf(SpielProbeTexte.Einrichten);
+        _einrichten.Click += (_, _) => Spiel?.EinrichtenUmschalten();
+        _uebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
+        _uebersicht.IsVisible = false;
+        _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
+        var knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
         _zeileRolle = new ScrollViewer
         {
-            Content = _zeile,
+            Content = new StackPanel { Spacing = 8, Children = { _zeile, _einrichtenTafel } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
         var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, knoepfe } });
@@ -150,6 +176,8 @@ public sealed class SpielSeite : Grid
         ebene.Children.Add(unten);
         Children.Add(ebene);
         Ebene = ebene;
+        // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
+        ebene.LayoutUpdated += (_, _) => FreiSetzen();
 
         Flaeche.BildGezeichnet += () =>
         {
@@ -176,7 +204,11 @@ public sealed class SpielSeite : Grid
                 ErsatzZeigen();
             }
         };
-        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => Beschriften());
+        _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) =>
+        {
+            Beschriften();
+            ZeitenSchreiben(false);
+        });
         AttachedToVisualTree += (_, _) =>
         {
             // die Seite wird beim Seitenwechsel ab- und angehaengt; OpenGL richtet sich dann neu ein
@@ -190,15 +222,31 @@ public sealed class SpielSeite : Grid
                 _oben.BackRequested += Zurueck;
                 // P7-10 Nachtrag 1: die 3D-Flaeche reicht bis an den Rand (auch neben die Kamera-Aussparung),
                 // nur die Knoepfe und Karten bleiben im sicheren Bereich
-                _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_oben);
-                TopLevel.SetAutoSafeAreaPadding(_oben, false);
+                // Nachtrag 1 zu P7-13 (schwarzer Rand links, S24): Avalonia liest AutoSafeAreaPadding am Inhalt
+                // des TopLevel (MainView, TopLevel.InvalidateChildInsetsPadding), nicht am TopLevel selbst;
+                // vorher blieb der sichere Rand als Innenabstand der MainView stehen (schwarzer Streifen
+                // neben der Kamera-Aussparung) und die Ebene zog ihn ein zweites Mal ab
+                _randInhalt = _oben.Content as Control;
+                if (_randInhalt is not null)
+                {
+                    _autoRandVorher = TopLevel.GetAutoSafeAreaPadding(_randInhalt);
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, false);
+                }
                 if (_oben.InsetsManager is { } rand)
                 {
+                    // Nachtrag 1 zu P7-12 (S24): ohne Rand-zu-Rand legt Android die Ansicht neben die
+                    // Kamera-Aussparung (schwarzer Streifen links im Querformat), trotz ShortEdges
+                    _randVorher = rand.DisplayEdgeToEdgePreference;
+                    rand.DisplayEdgeToEdgePreference = true;
                     rand.SafeAreaChanged += SicherAendern;
                 }
                 SicherSetzen();
             }
             Flaeche.Focus();
+            if (Tafel is { } tafel && _tafelAn)
+            {
+                tafel.Gezeigt();
+            }
             var anhaengen = ++_anhaengen;
             DispatcherTimer.RunOnce(() =>
             {
@@ -213,19 +261,24 @@ public sealed class SpielSeite : Grid
         {
             _anhaengen++;
             _takt.Stop();
+            ZeitenSchreiben(true);
             if (_oben is not null)
             {
                 _oben.BackRequested -= Zurueck;
                 if (_oben.InsetsManager is { } rand)
                 {
                     rand.SafeAreaChanged -= SicherAendern;
+                    rand.DisplayEdgeToEdgePreference = _randVorher;
                 }
-                TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
+                if (_randInhalt is not null)
+                {
+                    TopLevel.SetAutoSafeAreaPadding(_randInhalt, _autoRandVorher);
+                    _randInhalt = null;
+                }
                 _oben = null;
             }
         };
         Beschriften();
-        Geladen = LadenAsync(laden);
     }
 
     private void SicherAendern(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => SicherSetzen();
@@ -244,9 +297,94 @@ public sealed class SpielSeite : Grid
         return spiel;
     }
 
-    /// <summary>Spiel einsetzen (nach dem Laden; der Start-Test setzt je Durchgang ein frisches ein).</summary>
+    private async Task<StadtSpiel> SitzungLadenAsync(Func<SpielSitzung> laden, Tafel.SpielWege? wege)
+    {
+        var sitzung = await Task.Run(laden);
+        var tafel = new Tafel.SpielTafel(sitzung, _verlassen, wege);
+        tafel.Geaendert += () =>
+        {
+            Beschriften();
+            Flaeche.AnfordernBild();
+        };
+        // die Tafel deckt die ganze Seite ab: Ebene und Namensschilder darunter treten solange zurueck
+        tafel.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                Ebene.IsVisible = !tafel.IsVisible;
+                _schilder.IsVisible = !tafel.IsVisible && !_ersatz.IsVisible;
+            }
+        };
+        Tafel = tafel;
+        _sitzung = sitzung;
+        _tafelAn = true;
+        Children.Add(tafel);
+        sitzung.SpielGewechselt += () =>
+        {
+            if (_tafelAn)
+            {
+                Einsetzen(sitzung.Spiel);
+            }
+        };
+        Einsetzen(sitzung.Spiel);
+        if (IsAttachedToVisualTree())
+        {
+            tafel.Gezeigt();
+        }
+        else
+        {
+            tafel.Zeichnen();
+        }
+        return sitzung.Spiel;
+    }
+
+    /// <summary>Die Spielansichten ueber der Stadt (null ohne Spielstand, nur Probe).</summary>
+    public Tafel.SpielTafel? Tafel { get; private set; }
+
+    private SpielSitzung? _sitzung;
+    private bool _tafelAn;
+
+    /// <summary>
+    /// Spiel einsetzen (der Start-Test setzt je Durchgang ein frisches aus dem Arbeitsspeicher ein):
+    /// die Spielansichten treten dann zurueck, bis <see cref="TafelZeigen"/> sie wieder holt.
+    /// </summary>
     public void SpielSetzen(StadtSpiel spiel)
     {
+        _tafelAn = false;
+        if (Tafel is { } tafel)
+        {
+            tafel.IsVisible = false;
+        }
+        Einsetzen(spiel);
+        _uebersicht.IsVisible = false;
+    }
+
+    /// <summary>Spielansichten wieder zeigen (zurueck zum Spielstand der Sitzung).</summary>
+    public void TafelZeigen()
+    {
+        if (Tafel is not { } tafel || _sitzung is null)
+        {
+            return;
+        }
+        _tafelAn = true;
+        Einsetzen(_sitzung.Spiel);
+        tafel.Gezeigt();
+    }
+
+    private void Einsetzen(StadtSpiel spiel)
+    {
+        if (Tafel is { } tafel)
+        {
+            if (Spiel is { } vorher)
+            {
+                vorher.Aktion -= tafel.AktionAusfuehren;
+            }
+            if (_tafelAn)
+            {
+                spiel.Aktion += tafel.AktionAusfuehren;
+            }
+            _uebersicht.IsVisible = _tafelAn;
+        }
         if (Spiel is { } alt)
         {
             alt.Geaendert -= Beschriften;
@@ -266,7 +404,7 @@ public sealed class SpielSeite : Grid
     public StadtSpiel? Spiel { get; private set; }
 
     /// <summary>Fertig, wenn Inhalte und Stadt geladen sind.</summary>
-    public Task<StadtSpiel> Geladen { get; }
+    public Task<StadtSpiel> Geladen { get; } = null!;
 
     public Button VerlassenKnopf { get; }
 
@@ -292,6 +430,55 @@ public sealed class SpielSeite : Grid
     /// sonst bleibt die Liste ueber der Karte. Der Text der unteren Karte bekommt hoechstens ein
     /// Viertel der Hoehe, damit die Knoepfe am Handy quer nie aus dem Bild rutschen.
     /// </summary>
+    private long _zeitenStand = -1;
+    private long _zeitenUm;
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-13 (Wunsch 4): Bildzeiten alle 10 s (und beim Verlassen) nach spiel_bilder.log im
+    /// Datenordner schreiben, im Hintergrund; "Problem melden" zeigt die Datei mit.
+    /// </summary>
+    private void ZeitenSchreiben(bool sofort)
+    {
+        var zeiten = Flaeche.Zeiten;
+        if (zeiten.Gesamt == _zeitenStand || (!sofort && Stopwatch.GetElapsedTime(_zeitenUm).TotalSeconds < BildZeiten.FensterSekunden))
+        {
+            return;
+        }
+        _zeitenStand = zeiten.Gesamt;
+        _zeitenUm = Stopwatch.GetTimestamp();
+        var text = zeiten.Text();
+        string pfad;
+        try
+        {
+            pfad = Path.Combine(Core.Daten.Ablage.Datenordner(), BildZeiten.DateiName);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            return;
+        }
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                File.WriteAllText(pfad, text);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // nur Messung: ohne Datei geht es weiter
+            }
+        });
+    }
+
+    /// <summary>Verdeckte Hoehe oben (bis unter die Kopfzeile) und unten (ab der Textkarte) an die Flaeche geben.</summary>
+    private void FreiSetzen()
+    {
+        if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben
+            && _unten.TranslatePoint(default, Flaeche) is { } unten && Flaeche.Bounds.Height > 1)
+        {
+            Flaeche.Frei = (Math.Clamp(oben.Y, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
+        }
+    }
+
     private void Anordnen()
     {
         var groesse = Ebene.Bounds.Size;
@@ -353,7 +540,15 @@ public sealed class SpielSeite : Grid
     private void Zurueck(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if (Spiel is { ImInnenraum: true } spiel)
+        if (Tafel is { IsVisible: true } tafel && tafel.Zurueck())
+        {
+            return;
+        }
+        if (Spiel is { Einrichten: true } einrichten)
+        {
+            einrichten.EinrichtenUmschalten();
+        }
+        else if (Spiel is { ImInnenraum: true } spiel)
         {
             spiel.Verlassen();
         }
@@ -426,6 +621,7 @@ public sealed class SpielSeite : Grid
         }
         var breite = (float)Flaeche.Bounds.Width;
         var hoehe = (float)Flaeche.Bounds.Height;
+        var skalierung = Math.Max(1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
         foreach (var ort in spiel.Szene.Orte)
         {
             if (!_schildKnoepfe.TryGetValue(ort.Id, out var schild))
@@ -443,11 +639,31 @@ public sealed class SpielSeite : Grid
             }
             var w = schild.DesiredSize.Width;
             var h = schild.DesiredSize.Height;
-            var links = p.X - (w / 2);
-            var oben = p.Y - h;
-            schild.IsVisible = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
-            Canvas.SetLeft(schild, links);
-            Canvas.SetTop(schild, oben);
+            // auf ganze Bildpunkte gerundet und nur bei einer Aenderung gesetzt: jede neue Lage ordnet die
+            // Ebene neu an (Wunsch 4, Nachtrag 1 zu P7-13)
+            var links = Math.Round((p.X - (w / 2)) * skalierung) / skalierung;
+            var oben = Math.Round((p.Y - h) * skalierung) / skalierung;
+            // Nachtrag 1 zu P7-13 (Wunsch 2): nah an der Figur liegt das Schild eines Hauses oft ueber dem
+            // Bild; steht das Haus (Mitte der Front am Boden) im freien Bereich, haengt das Schild oben an dessen Rand
+            var frei = Flaeche.Frei.Oben;
+            if (oben < frei && kamera.Bildpunkt(new System.Numerics.Vector3((ort.KastenMin.X + ort.KastenMax.X) / 2, 0, ort.KastenMax.Z), breite, hoehe) is { } front
+                && front.Y >= frei + h && front.Y <= hoehe - Flaeche.Frei.Unten)
+            {
+                oben = Math.Round(frei * skalierung) / skalierung;
+            }
+            var sichtbar = links >= 0 && oben >= 0 && links + w <= breite && oben + h <= hoehe;
+            if (schild.IsVisible != sichtbar)
+            {
+                schild.IsVisible = sichtbar;
+            }
+            if (Canvas.GetLeft(schild) != links)
+            {
+                Canvas.SetLeft(schild, links);
+            }
+            if (Canvas.GetTop(schild) != oben)
+            {
+                Canvas.SetTop(schild, oben);
+            }
         }
     }
 
@@ -474,8 +690,84 @@ public sealed class SpielSeite : Grid
         _kopfzeile.Text = spiel.Kopfzeile;
         _zeile.Text = spiel.Zeile;
         _betreten.IsVisible = spiel.KannBetreten;
-        _zurStadt.IsVisible = spiel.ImInnenraum;
+        _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten;
         _warten.IsVisible = spiel.KannWarten;
         _orteKnopf.IsVisible = !spiel.ImInnenraum;
+        _einrichten.IsVisible = spiel.KannEinrichten;
+        if (_einrichten.Content is TextBlock einrichtenText)
+        {
+            einrichtenText.Text = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
+        }
+        else
+        {
+            _einrichten.Content = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
+        }
+        TafelBauen(spiel);
+    }
+
+    /// <summary>Knoepfe des Ortes (place_message) und beim Einrichten Auswahl und Karton (wie Python _home_editor).</summary>
+    private void TafelBauen(StadtSpiel spiel)
+    {
+        var karton = spiel.Einrichten ? spiel.ImKarton() : [];
+        var schluessel = string.Join("|", spiel.Knoepfe.Select(k => k.Aktion + k.Name)) + "#" + spiel.Einrichten + "#" + spiel.Ausgewaehlt
+            + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck));
+        if (schluessel == _tafelSchluessel)
+        {
+            return;
+        }
+        _tafelSchluessel = schluessel;
+        _ortKnoepfe.Children.Clear();
+        foreach (var (aktion, name) in spiel.Knoepfe)
+        {
+            var knopf = Schrift.Knopf(name, true);
+            knopf.Click += (_, _) => spiel.Knopf(aktion);
+            _ortKnoepfe.Children.Add(knopf);
+        }
+        _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
+        _einrichtenTafel.Children.Clear();
+        _einrichtenTafel.IsVisible = spiel.Einrichten;
+        if (!spiel.Einrichten)
+        {
+            return;
+        }
+        if (spiel.AusgewaehltName is { } name2)
+        {
+            _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.Ausgewaehlt, "Klein", FontWeight.Bold, "Pinsel.muted"));
+            _einrichtenTafel.Children.Add(Schrift.Text(name2, "Normal", FontWeight.Bold));
+            var reihe = new WrapPanel();
+            var drehen = Schrift.Knopf(SpielProbeTexte.Drehen);
+            drehen.Click += (_, _) => spiel.Drehen();
+            reihe.Children.Add(drehen);
+            if (spiel.Vorschau is not null)
+            {
+                var aufstellen = Schrift.Knopf(SpielProbeTexte.Aufstellen, true);
+                aufstellen.Click += (_, _) => spiel.Aufstellen();
+                reihe.Children.Add(aufstellen);
+            }
+            if (spiel.AusgewaehltSteht)
+            {
+                var karton2 = Schrift.Knopf(SpielProbeTexte.InDenKarton);
+                karton2.Click += (_, _) => spiel.InDenKarton();
+                reihe.Children.Add(karton2);
+            }
+            _einrichtenTafel.Children.Add(reihe);
+        }
+        _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.ImKarton, "Klein", FontWeight.Bold, "Pinsel.muted"));
+        if (karton.Count == 0)
+        {
+            _einrichtenTafel.Children.Add(Schrift.Text(SpielProbeTexte.AllesAusgepackt, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        }
+        foreach (var (stueck, name) in karton)
+        {
+            var aufstellen = Schrift.Knopf(SpielProbeTexte.Aufstellen);
+            aufstellen.Click += (_, _) => spiel.Waehlen(stueck);
+            var reihe = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+            var text = Schrift.Text(name, "Normal", FontWeight.SemiBold);
+            text.VerticalAlignment = VerticalAlignment.Center;
+            reihe.Children.Add(text);
+            Grid.SetColumn(aufstellen, 1);
+            reihe.Children.Add(aufstellen);
+            _einrichtenTafel.Children.Add(reihe);
+        }
     }
 }

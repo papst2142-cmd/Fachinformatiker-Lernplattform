@@ -121,13 +121,13 @@ public class SpielStadtTests
     {
         var stadt = NeueStadt();
         Assert.Empty(stadt.Pruefen());
-        Assert.Equal(12, stadt.Regeln.Count);
-        Assert.Equal(["moebelhaus", "elektromarkt"], stadt.Regeln.Skip(10).Select(r => (string)r["id"]!));
+        Assert.Equal(14, stadt.Regeln.Count);
+        Assert.Equal(["moebelhaus", "elektromarkt", "amt", "bank"], stadt.Regeln.Skip(10).Select(r => (string)r["id"]!));
         Assert.Equal((64L, 48L), (stadt.Breite, stadt.Hoehe));
         // Sammelliste 99: die neuen Orte genau mit Rolle, Ansicht und Sortiment
-        Assert.Equal(["geschaeft:moebelhaus/moebel", "geschaeft:elektromarkt/elektro"],
-            stadt.Regeln.Skip(10).Select(r => r["rolle"] + ":" + r["id"] + "/" + r["sortiment"]));
-        Assert.Equal(["geschaeft:moebelhaus", "geschaeft:elektromarkt"], stadt.Regeln.Skip(10).Select(r => (string)r["ansicht"]!));
+        Assert.Equal(["geschaeft:moebelhaus/moebel", "geschaeft:elektromarkt/elektro", "schalter:amt/", "schalter:bank/"],
+            stadt.Regeln.Skip(10).Select(r => r["rolle"] + ":" + r["id"] + "/" + SpielDaten.Get(r, "sortiment", "")));
+        Assert.Equal(["geschaeft:moebelhaus", "geschaeft:elektromarkt", "schalter:amt", "schalter:bank"], stadt.Regeln.Skip(10).Select(r => (string)r["ansicht"]!));
         // Kontrollfehler: jeder Fehler wird gefunden
         PyObjekt Kaputt(Action<PyObjekt> aendern)
         {
@@ -152,6 +152,8 @@ public class SpielStadtTests
             ("elektromarkt: Ansicht muss geschaeft:elektromarkt sein", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[1]!, "ansicht", "geschaeft:moebelhaus"))),
             ("moebelhaus: unbekanntes Sortiment lebensmittel", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[0]!, "sortiment", "lebensmittel"))),
             ("elektromarkt: unbekanntes Sortiment None", Kaputt(d => ((PyObjekt)((List<object?>)d["neue_orte"]!)[1]!).RemoveAll(p => p.Key == "sortiment"))),
+            ("amt: Sortiment nur fuer Geschaefte", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[2]!, "sortiment", "moebel"))),
+            ("bank: unbekannte Rolle bank", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[3]!, "rolle", "bank"))),
             ("elektromarkt: unbekanntes Feld kurz", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[1]!, "kurz", "Elektro"))),
             ("talheim_nord: von zuhause aus nicht erreichbar", Kaputt(d =>
                 Py.Setzen(O(O(d, "zugaenge"), "talheim_nord"), "weg", new List<object?> { new List<object?> { 30.2, 5.55 }, new List<object?> { 30.2, 6.5 } }))),
@@ -188,9 +190,49 @@ public class SpielStadtTests
         Assert.Null(stadt.Weg("zuhause", "kino"));
         // feste Werte (Schritte ab zu Hause); aendern sie sich, aendert sich die Spielzeit der Wege
         var soll = "bitweiche 30, talheim 46, talheim_nord 51, betriebswerkstatt 20, lindenau 67, birkenhain 56, "
-            + "gewerbehof 31, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9";
+            + "gewerbehof 31, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9, amt 53, bank 46";
         var ist = string.Join(", ", ids.Skip(1).Select(b => b + " " + stadt.Weg("zuhause", b)!.Schritte));
         Assert.True(soll == ist, "Schritte ab zu Hause: " + ist);
+    }
+
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 3, Nico): kein Fussweg quert das Gleis mehr als einmal; der Weg von
+    /// Talheim-Nord (Tuer noerdlich des Gleises) quert es genau einmal.
+    /// </summary>
+    [Fact]
+    public void FusswegeQuerenGleisHoechstensEinmal()
+    {
+        static List<(double X, double Y)> Punkte(object? liste) =>
+            [.. ((List<object?>)liste!).Select(p => (Py.F(((List<object?>)p!)[0]), Py.F(((List<object?>)p!)[1])))];
+        static bool Schneiden((double X, double Y) a, (double X, double Y) b, (double X, double Y) c, (double X, double Y) d)
+        {
+            static double Kreuz((double X, double Y) o, (double X, double Y) p, (double X, double Y) q) =>
+                ((p.X - o.X) * (q.Y - o.Y)) - ((p.Y - o.Y) * (q.X - o.X));
+            return Kreuz(a, b, c) * Kreuz(a, b, d) < 0 && Kreuz(c, d, a) * Kreuz(c, d, b) < 0;
+        }
+        var bahnen = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(Inhalt["orte"])["welt"]), "landschaft")
+            .Select(SpielDaten.Objekt).Where(l => Py.Str(l["typ"]) == "bahn").Select(l => Punkte(l["punkte"])).ToList();
+        Assert.NotEmpty(bahnen);
+        foreach (var (id, zugang) in SpielDaten.Objekt(Daten.Value["zugaenge"]))
+        {
+            var weg = Punkte(SpielDaten.Objekt(zugang)["weg"]);
+            var querungen = 0;
+            for (var i = 1; i < weg.Count; i++)
+            {
+                foreach (var bahn in bahnen)
+                {
+                    for (var j = 1; j < bahn.Count; j++)
+                    {
+                        querungen += Schneiden(weg[i - 1], weg[i], bahn[j - 1], bahn[j]) ? 1 : 0;
+                    }
+                }
+            }
+            Assert.True(querungen <= 1, id + " quert das Gleis " + querungen + " Mal");
+            if (id == "talheim_nord")
+            {
+                Assert.Equal(1, querungen);
+            }
+        }
     }
 
     // -- Tagesuhr und Oeffnungszeiten --------------------------------------------
@@ -401,7 +443,7 @@ public class SpielStadtTests
         return (spiel, staende);
     }
 
-    private static string StadtHash(Spielablauf spiel, List<object?> staende)
+    internal static string StadtHash(Spielablauf spiel, List<object?> staende)
     {
         var s = spiel.Stand;
         var blob = new PyObjekt

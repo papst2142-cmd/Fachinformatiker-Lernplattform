@@ -7,13 +7,15 @@ namespace Lernplattform.Spiel;
 /// <summary>
 /// Phase 7, W4: Spielinhalte aus dem Programm selbst laden (inhalte/spiel wie Python 0.63.2 und
 /// inhalte_csharp/spiel, PC und Handy gleich) und die Stadt mit einem Spielstand im Arbeitsspeicher
-/// starten. Bis die Oberflaeche zum Anlegen der Spielfigur kommt (W6), legt die Probe eine feste
-/// Figur an; nichts davon wird gespeichert.
+/// starten. W6: <see cref="Laden"/> liefert die Sitzung mit dem Spielstand aus lernplattform.db;
+/// <see cref="Neu"/> bleibt die Probe im Arbeitsspeicher (Hintergrund ohne Spielfigur, Start-Test).
 /// </summary>
 public static class SpielStart
 {
     /// <summary>Name der Probe-Figur (wird nirgends gezeigt und nie gespeichert).</summary>
     public const string ProbeName = "Probe";
+
+    private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
     public static byte[]? Lesen(string pfad)
     {
@@ -29,7 +31,7 @@ public static class SpielStart
 
     private static byte[] Muss(string pfad) => Lesen(pfad) ?? throw new FileNotFoundException(pfad);
 
-    public static StadtSpiel Laden()
+    public static SpielSitzung Laden()
     {
         // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
         var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult();
@@ -37,8 +39,12 @@ public static class SpielStart
         var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
         var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");
         var stadt = new Stadt(inhalt, daten);
-        var buero = ProbeWelt.BueroBauen(name => Muss("inhalte/spiel/" + name + ".json"));
-        return Neu(stadt, buero, GrafikLaden());
+        var innenraeume = Py.Lesen(Muss("inhalte_csharp/spiel/innenraeume.json")) as PyObjekt;
+        var suche = Programm.Zustand.Suchtext.GetAwaiter().GetResult();
+        // Geraet im Spielprotokoll wie fg.Game(app.db, device="PC"/"Handy") (fisi_game_gui 2863, spiel.py 1801)
+        var geraet = Pc ? "PC" : "Handy";
+        var geschaefte = Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt;
+        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte);
     }
 
     /// <summary>
@@ -66,10 +72,10 @@ public static class SpielStart
     public static string? GrafikFehler { get; private set; }
 
     /// <summary>Neuer Spielstand (nur im Arbeitsspeicher) mit der Probe-Figur, Tag 1 um 07:00 zu Hause.</summary>
-    public static StadtSpiel Neu(Stadt stadt, ProbeFlaeche buero, GrafikBibliothek? grafik)
+    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume)
     {
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil(ProbeName, new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, buero, grafik);
+        return new StadtSpiel(stadt, ablauf, grafik, innenraeume);
     }
 }

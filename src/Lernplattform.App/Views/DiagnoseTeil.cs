@@ -187,7 +187,7 @@ public sealed class DiagnoseTeil
         {
             Path.Combine(ordner, Fehlerprotokoll.DateiName), Path.Combine(ordner, Problembericht.UpdateName),
             Path.Combine(ordner, Problembericht.HaengerName), Path.Combine(ordner, Problembericht.InfoName),
-            db, db + "-wal", db + "-journal",
+            Path.Combine(ordner, Core.Spiel.Probe.BildZeiten.DateiName), db, db + "-wal", db + "-journal",
         })
         {
             try

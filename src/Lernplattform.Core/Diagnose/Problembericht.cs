@@ -16,7 +16,8 @@ namespace Lernplattform.Core.Diagnose;
 /// Benutzerpfade entfernt (Datenschutz, G10). Ohne Oberflaeche: PC und Handy zeigen, kopieren
 /// und speichern denselben Text.
 /// Abweichung (Wortliste W2): Zeile "Python: …" heisst "Laufzeit: …" (.NET); eine nicht lesbare
-/// Datenbank nennt statt des Systemtexts nur die Fehlerart.
+/// Datenbank nennt statt des Systemtexts nur die Fehlerart. Ab Nachtrag 1 zu P7-13 folgt, wenn vorhanden,
+/// spiel_bilder.log (Bildzeiten des Spiels).
 /// </summary>
 public static class Problembericht
 {
@@ -193,6 +194,12 @@ public static class Problembericht
         if (info.Length > 0)
         {
             zeilen.AddRange(["", "--- " + InfoName + " ---", info]);
+        }
+        // Nachtrag 1 zu P7-13 (Wunsch 4, ohne Vorlage in Python): Bildzeiten des Spiels, nur wenn vorhanden
+        var bilder = Fehlerprotokoll.Anzeigen(Path.Combine(logOrdner, Spiel.Probe.BildZeiten.DateiName), Spiel.Probe.BildZeiten.DateiMax);
+        if (bilder.Length > 0)
+        {
+            zeilen.AddRange(["", "--- " + Spiel.Probe.BildZeiten.DateiName + " ---", bilder]);
         }
         var text = Datenschutz.Schwaerzen(string.Join("\n", zeilen), Datenschutz.Geheimnisse(Paare(einstellungen)));
         return Datenschutz.PfadeAnonymisieren(text, umgebung, heim);
