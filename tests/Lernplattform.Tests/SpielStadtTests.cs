@@ -113,6 +113,7 @@ public class SpielStadtTests
             ("Oeffnungszeit fuer unbekannten Ort: kino", Kaputt(d => Py.Setzen(O(d, "oeffnungszeiten"), "kino", new List<object?> { 600L, 900L }))),
             ("heim muss ein Ort ohne Oeffnungszeit sein", Kaputt(d => Py.Setzen(O(d, "oeffnungszeiten"), "zuhause", new List<object?> { 600L, 900L }))),
             ("uhr ungueltig", Kaputt(d => Py.Setzen(O(d, "uhr"), "abend", 300L))),
+            ("Heimweg nach dem Abend endet nach Mitternacht", Kaputt(d => Py.Setzen(O(d, "uhr"), "minuten_je_schritt", 3L))),
             ("Ort doppelt: zuhause", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[0]!, "id", "zuhause"))),
             ("moebelhaus: Modell fehlt in neue_modelle", Kaputt(d => O(d, "neue_modelle").RemoveAll(p => p.Key == "moebelhaus"))),
             ("elektromarkt: unbekannte Freischaltung bald", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[1]!, "frei", new PyObjekt { { "bald", true } }))),
@@ -187,6 +188,8 @@ public class SpielStadtTests
         Assert.Equal(StadtGrund.Gesperrt, stadt.Gehen(spiel, "gewerbehof").Grund);
         Assert.Equal(StadtGrund.NichtGeschlossen, stadt.Warten(spiel).Grund);
         var anzahl = spiel.Stand.Verlauf.Count;
+        var bestenliste = T(spiel.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Art, z.Schluessel, z.Wert, z.Daten }).ToList());
+        var erfolge = spiel.Stand.Verlauf.Count(e => e.Art == Ereignisse.Erfolg);
 
         // 30 Schritte zu je 2 Minuten
         var weg = stadt.Gehen(spiel, "bitweiche");
@@ -194,6 +197,9 @@ public class SpielStadtTests
         Assert.Equal("{\"tag\":1,\"von\":\"zuhause\",\"nach\":\"bitweiche\",\"schritte\":30,\"minuten\":60}", T(weg.Daten));
         Assert.Equal(new StadtStand(1, "bitweiche", 480), stadt.Stand(spiel.Stand));
         Assert.Equal(anzahl + 1, spiel.Stand.Verlauf.Count);
+        // ein Weg schreibt nur sein Ereignis: keine Erfolge, keine Zeile in der Bestenliste
+        Assert.Equal(erfolge, spiel.Stand.Verlauf.Count(e => e.Art == Ereignisse.Erfolg));
+        Assert.Equal(bestenliste, T(spiel.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()));
         Assert.Equal(StadtGrund.Ok, stadt.Betreten(spiel.Stand));
 
         // Moebelhaus oeffnet um 10:00: geschlossen, warten, dann offen
@@ -271,6 +277,8 @@ public class SpielStadtTests
         spiel.Log(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "nach", 7L }, { "minuten", 10L } });
         spiel.Log(Stadt.Gewartet, new PyObjekt { { "tag", 1L }, { "minuten", 2.5 } });
         spiel.Log(Stadt.Gegangen, new PyObjekt { { "tag", 2L }, { "nach", "bitweiche" }, { "minuten", 10L } });
+        spiel.Log(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "nach", "kino" }, { "minuten", 10L } });
+        spiel.Log(Stadt.Gewartet, new PyObjekt { { "tag", 1L }, { "ort", "zuhause" }, { "minuten", 5000L } });
         Assert.Equal(vorher, stadt.Stand(spiel.Stand));
         // Kontrollfehler: ein gueltiges Ereignis zaehlt
         spiel.Log(Stadt.Gewartet, new PyObjekt { { "tag", 1L }, { "ort", "zuhause" }, { "minuten", 5L } });
@@ -378,6 +386,7 @@ public class SpielStadtTests
         Assert.True(s.Verlauf.Count(e => e.Art == Stadt.Gegangen) >= 18, "zu wenige Wege");
         Assert.Contains(s.Verlauf, e => e.Art == Stadt.Gewartet);
         Assert.Equal(7, s.Tag);
+        Assert.Equal(0, spiel.Abweichungen);
         Assert.True(SollStadtHash == hash, "zweiter Fingerabdruck: " + hash);
         // Kontrollfehler: 3 statt 2 Minuten je Schritt aendert den Fingerabdruck
         var langsam = (PyObjekt)Py.Lesen(T(Daten.Value))!;

@@ -13,8 +13,9 @@ namespace Lernplattform.Core.Spiel;
 /// Jeder Durchgang ist ein <see cref="Spielablauf"/> ueber <see cref="SpielDatenbank"/>. Geschrieben
 /// wird nur ueber <see cref="LernstandSchreiber"/> und nur mit der Sperre der <see cref="Vorgaenge"/>
 /// (ohne Warten, belegt = nichts schreiben, <see cref="SpielBelegtAusnahme"/>); eine Aktion haelt die
-/// Sperre ueber alle ihre Schritte. Einzige Abweichung: Ist die Sperre beim Start belegt, merkt sich
-/// der Start den bestimmten Durchgang nicht (sync_meta), er wird beim naechsten Schreiben gemerkt.
+/// Sperre ueber alle ihre Schritte. Abweichung: Ist die Sperre belegt, wenn der aktive Durchgang nur
+/// bestimmt wird (Start, Neuladen), merkt er sich ihn nicht (sync_meta); das holt das naechste
+/// Bestimmen nach. Neuladen beim selben Durchgang behaelt den Spielablauf (wie Python reload).
 /// Nicht threadsicher (wie Game in Python).
 /// </summary>
 public sealed class Spielverwaltung
@@ -24,6 +25,7 @@ public sealed class Spielverwaltung
     private readonly Func<IDisposable?> holen;
     private IDisposable? gehalten;
     private Spielstand leer;
+    private string? ablaufLauf;
 
     /// <param name="laufKennung">uuid4().hex fuer neue Durchgaenge (Vorgabe: zufaellig; Tests geben feste vor).</param>
     /// <param name="sperre">Wie die Sperre geholt wird (Vorgabe <see cref="Vorgaenge.Versuchen"/>, ohne Warten).</param>
@@ -37,14 +39,7 @@ public sealed class Spielverwaltung
         holen = sperre ?? Vorgaenge.Versuchen;
         Einrichten = einrichten;
         leer = new Spielstand([], inhalt);
-        try
-        {
-            LaufBestimmen();
-        }
-        catch (SpielBelegtAusnahme)
-        {
-            Lauf = Spielstaende.AktiverLauf(Gespeichert(), Belegung());
-        }
+        LaufBestimmen();
         Neuladen();
     }
 
@@ -124,13 +119,18 @@ public sealed class Spielverwaltung
     /// </summary>
     public Spielstand Neuladen()
     {
-        var ablauf = Lauf is null ? null : Neu(Lauf);
+        var ablauf = Lauf is null ? null : Ablauf is not null && ablaufLauf == Lauf ? Ablauf : Neu(Lauf);
+        if (ablauf is not null && ablauf == Ablauf)
+        {
+            ablauf.Neuaufbau();
+        }
         if ((ablauf is null || ablauf.Stand.Verlauf.Count == 0) && (Lauf is null || !Belegung().Bekannt.Contains(Lauf)))
         {
             LaufBestimmen();
             ablauf = Lauf is null ? null : Neu(Lauf);
         }
         Ablauf = ablauf;
+        ablaufLauf = Lauf;
         leer = new Spielstand([], Inhalt);
         return Stand;
     }
@@ -153,7 +153,14 @@ public sealed class Spielverwaltung
         if ((Lauf ?? "") != (gespeichert ?? ""))
         {
             var lauf = Lauf ?? "";
-            Halten(() => schreiber.SpielAktivMerken(lauf));
+            try
+            {
+                Halten(() => schreiber.SpielAktivMerken(lauf));
+            }
+            catch (SpielBelegtAusnahme)
+            {
+                // nur ein Merker: belegt = nicht merken, das naechste Bestimmen holt es nach
+            }
         }
     }
 
@@ -188,6 +195,7 @@ public sealed class Spielverwaltung
         }
         Lauf = lauf;
         schreiber.SpielAktivMerken(lauf);
+        Ablauf?.Freigeschaltet.Clear();   // self.unlocked = []
         return Neuladen();
     });
 
@@ -288,6 +296,7 @@ public sealed class Spielverwaltung
             Lauf = null;
             schreiber.SpielAktivMerken("");
             Ablauf = null;
+            ablaufLauf = null;
             leer = new Spielstand([], Inhalt);
         }
         return ok;

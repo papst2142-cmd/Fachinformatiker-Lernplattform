@@ -165,6 +165,23 @@ public class SpielVerwaltungTests
         var neu = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: () => null);
         Assert.Equal(lauf, neu.Lauf);
         Assert.Equal(vorher, Stand());
+        // Veralteter Merker ohne Plaetze (Durchgang auf dem anderen Geraet geloescht), Sperre belegt:
+        // Start, Neuladen und Zuruecksetzen werfen nicht und schreiben nichts
+        using (Vorgaenge.Sperren())
+        {
+            schreiber.SpielLaufLoeschen(1, lauf, "Handy");
+        }
+        var geloescht = Stand();
+        var ohne = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: () => null);
+        Assert.Null(ohne.Lauf);
+        ohne.Neuladen();
+        Assert.True(ohne.Zuruecksetzen());
+        Assert.Equal(geloescht, Stand());
+        Assert.Contains(lauf, geloescht);
+        // Kontrollfehler: mit freier Sperre wird der Merker geleert
+        var mit = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        Assert.Null(mit.Lauf);
+        Assert.NotEqual(geloescht, Stand());
         // Kontrollfehler: mit freier Sperre schreibt dieselbe Aktion
         frei = true;
         spiel.PlatzUmbenennen(1, "x");

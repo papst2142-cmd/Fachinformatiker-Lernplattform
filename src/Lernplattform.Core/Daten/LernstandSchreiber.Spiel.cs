@@ -53,7 +53,7 @@ public sealed partial class LernstandSchreiber
             ("$k", "spiel_aktiver_lauf"), ("$v", lauf ?? ""));
 
     /// <summary>
-    /// purge_deleted_runs:entfernt alle Ereignisse geloeschter Durchgaenge (der alte Durchgang
+    /// purge_deleted_runs: entfernt alle Ereignisse geloeschter Durchgaenge (der alte Durchgang
     /// sind die Ereignisse ohne lauf). Dieselbe Rechnung wie in Uebernahme.Zusammenfuehren.
     /// </summary>
     public const string GeloeschteLaeufeAufraeumen =

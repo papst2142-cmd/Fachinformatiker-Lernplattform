@@ -58,6 +58,9 @@ public sealed class Stadt
     /// <summary>Ereignis: vor einem geschlossenen Ort bis zur Oeffnung gewartet {"tag", "ort", "minuten"}.</summary>
     public const string Gewartet = "stadt_gewartet";
 
+    /// <summary>Minuten eines Tages; laenger dauert kein Weg und kein Warten.</summary>
+    public const long TagMinuten = 1440;
+
     private static readonly (long X, long Y)[] Nachbarn = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
     private readonly HashSet<(long, long)> begehbar = [];
@@ -339,13 +342,14 @@ public sealed class Stadt
                 continue;
             }
             var minuten = Get(e.Daten, "minuten");
-            if (!Py.IstNurInt(minuten) || Py.Int(minuten) < 0)
+            if (!Py.IstNurInt(minuten) || Py.Int(minuten) < 0 || Py.Int(minuten) > TagMinuten)
             {
                 continue;
             }
             if (e.Art == Gegangen)
             {
-                if (Get(e.Daten, "nach") is not string nach)
+                // ein Ort, den diese Fassung nicht kennt (z. B. aus einer neueren per Abgleich), zaehlt nicht
+                if (Get(e.Daten, "nach") is not string nach || Tuer(nach) is null)
                 {
                     continue;
                 }
@@ -535,9 +539,18 @@ public sealed class Stadt
         {
             fehler.Add("heim muss ein Ort ohne Oeffnungszeit sein");
         }
-        if (Beginn < 0 || Beginn >= Abend || Abend > 1440 || MinutenJeSchritt < 1)
+        if (Beginn < 0 || Beginn >= Abend || Abend > TagMinuten || MinutenJeSchritt < 1)
         {
             fehler.Add("uhr ungueltig");
+        }
+        else
+        {
+            // auch der laengste Heimweg nach dem Abend endet vor Mitternacht
+            var weiteste = ids.Where(id => id != Heim).Select(id => Weg(id, Heim)?.Schritte ?? 0).DefaultIfEmpty(0).Max();
+            if (Abend + weiteste * MinutenJeSchritt >= TagMinuten)
+            {
+                fehler.Add("Heimweg nach dem Abend endet nach Mitternacht");
+            }
         }
         if (neu.Any(o => alt.Contains(Py.Str(o["id"]))))
         {
