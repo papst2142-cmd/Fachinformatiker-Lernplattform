@@ -276,7 +276,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 alt.Freigeben(gl);
             }
             _flaechen.Clear();
-            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, Netz.Aus(spiel.Szene.Teile));
+            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, spiel.Szene.NetzBauen());
             _flaechen[ProbeWelt.Buero] = GlNetz.Laden(gl, Netz.Aus(spiel.Buero.Teile));
             _szeneNeu = false;
         }

@@ -19,6 +19,7 @@
     <EmbeddedResource Include="..\..\inhalte\spiel\*.json" LogicalName="inhalte/spiel/%(Filename)%(Extension)" Visible="false" />
     <!-- Phase 7 W4 (Sammelliste 100): Inhalte nur der C#-Linie (Stadt-Kern), getrennt von inhalte/ (G1) -->
     <EmbeddedResource Include="..\..\inhalte_csharp\spiel\*.json" LogicalName="inhalte_csharp/spiel/%(Filename)%(Extension)" Visible="false" />
+    <EmbeddedResource Include="..\..\inhalte_csharp\grafik\*.*" LogicalName="inhalte_csharp/grafik/%(Filename)%(Extension)" Visible="false" />
     <!-- Fuer "Über das Programm": Lizenz und Hinweise zu Fremdbestandteilen -->
     <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
   </ItemGroup>

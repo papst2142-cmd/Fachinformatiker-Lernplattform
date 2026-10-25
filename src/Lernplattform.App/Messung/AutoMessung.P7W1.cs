@@ -16,7 +16,8 @@ namespace Lernplattform.Messung;
 /// ganze Stadt (Weisung P7-9): dazu Vollbild beim Betreten und "Spiel verlassen", Gesten erreichen
 /// die 3D-Flaeche (keine ScrollView darum, die Ebene darueber laesst die Mitte frei), Tippen auf ein
 /// Haus geht hin, Tasten bewegen die Kamera.
-/// Pflicht-Messpunkt "GL-Zusammenhang erzeugt" (fehlt er im normalen Lauf, ist der Lauf rot,
+/// Pflicht-Messpunkt "GL-Zusammenhang erzeugt" auf Windows und Linux (fehlt er im normalen Lauf, ist der Lauf rot;
+/// macOS ohne GL zeigt die Ortsliste und ist gruen, Weisung P7-9 Nachtrag 2;
 /// sonst waeren die Bildzeiten ein falsches Gruen ueber den Ersatzweg), Stadt oeffnen bis
 /// erstes Bild (einmalig, streng), Wechsel Stadt -> Innenraum und zurueck (wiederholbar),
 /// Zeit je Bild beim Kameraschwenk (Median und 95 %, 120 Bilder), Weg suchen. Dazu die
@@ -55,7 +56,7 @@ public static partial class AutoMessung
     private static StadtSpiel Frisch(SpielSeite seite)
     {
         var alt = seite.Spiel!;
-        var neu = SpielStart.Neu(alt.Stadt, alt.Buero);
+        var neu = SpielStart.Neu(alt.Stadt, alt.Buero, alt.Grafik);
         seite.SpielSetzen(neu);
         return neu;
     }
@@ -88,8 +89,31 @@ public static partial class AutoMessung
             Messwerte.Notiere("  FEHLER: Spiel Seite: nicht gebaut oder Inhalte nicht geladen");
             return 1;
         }
+        // CC0-Modelle muessen geladen sein (sonst zeichnete die Stadt still eigene Geometrie)
+        var grafik = seite.Spiel?.Grafik;
+        Messwerte.Notiere("Spiel: CC0-Grafik: " + (grafik is null ? "nicht geladen (" + SpielStart.GrafikFehler + ")"
+            : grafik.Modelle.Count.ToString(CultureInfo.InvariantCulture) + " Modelle, " + seite.Spiel!.Szene.Stuecke.Count.ToString(CultureInfo.InvariantCulture) + " in der Stadt"));
+        if (grafik is null || seite.Spiel!.Szene.Stuecke.Count == 0)
+        {
+            Messwerte.Notiere("  FEHLER: Spiel CC0-Grafik: nicht geladen oder nicht in der Stadt");
+            return 1;
+        }
         if (!await GlAbwartenAsync(seite))
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                // Weisung P7-9 Nachtrag 2 (Nico 25.10.2026): macOS ohne GL = ohne 3D, Ortsliste sichtbar, kein
+                // Fehler; die App versucht dort weiter 3D (kein Sonderweg). Rot nur, wenn der Ersatz fehlt.
+                await ansicht.BildFertigAsync();
+                var ersatz = seite.ErsatzSichtbar && seite.OrtslisteSichtbar;
+                Messwerte.Notiere("Spiel: GL-Zusammenhang erzeugt: nein (macOS: ohne 3D, Ortsliste " + (ersatz ? "sichtbar" : "FEHLT") + ")");
+                if (!ersatz)
+                {
+                    Messwerte.Notiere("  FEHLER: Spiel macOS ohne GL: Hinweis und Ortsliste nicht sichtbar");
+                    return 1;
+                }
+                return 0;
+            }
             Messwerte.Notiere("Spiel: GL-Zusammenhang erzeugt: nein");
             Messwerte.Notiere("  FEHLER: Spiel GL-Zusammenhang: fehlt (" + (seite.Flaeche.GlFehler ?? "OpenGL nicht verfuegbar, Ersatz Ortsliste") + ")");
             return 1;

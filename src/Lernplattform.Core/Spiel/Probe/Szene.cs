@@ -78,6 +78,25 @@ public sealed class Netz
         Viereck(new(b.X, a.Y, b.Z), new(b.X, a.Y, a.Z), new(b.X, b.Y, a.Z), new(b.X, b.Y, b.Z), t.Farbe);   // rechts
     }
 
+    /// <summary>Ein CC0-Modell an seiner Lage einfuegen (flache Normale je Dreieck, Farbe des Dreiecks).</summary>
+    public void Hinzu(GrafikModell modell, Matrix4x4 lage)
+    {
+        var e = modell.Ecken;
+        for (var d = 0; d < modell.Dreiecke; d++)
+        {
+            var a = Vector3.Transform(new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]), lage);
+            var b = Vector3.Transform(new Vector3(e[(d * 9) + 3], e[(d * 9) + 4], e[(d * 9) + 5]), lage);
+            var c = Vector3.Transform(new Vector3(e[(d * 9) + 6], e[(d * 9) + 7], e[(d * 9) + 8]), lage);
+            var kreuz = Vector3.Cross(b - a, c - a);
+            if (kreuz.LengthSquared() < 1e-14f)
+            {
+                continue;
+            }
+            var farbe = new Vector3(modell.Farben[d * 3], modell.Farben[(d * 3) + 1], modell.Farben[(d * 3) + 2]) / 255f;
+            Dreieck(a, b, c, farbe);
+        }
+    }
+
     private void Satteldach(Teil t)
     {
         var laengsX = t.X2 - t.X1 >= t.Z2 - t.Z1;

@@ -1,7 +1,7 @@
 {
   "_hinweis": "Ohne Feld plattformen gilt ein Zusatz fuer alle Plattformen. Phase 6 W1 (VE4, Sammelliste 12). Ordnet jede ausgelieferte Datei einem Bestandteil zu. Pakete aus NuGet erkennt erzeuge_lizenzen.py selbst aus Lernplattform.deps.json bzw. project.assets.json und liest Lizenz und Lizenzdateien aus dem Paket. Hier stehen nur: eigene Dateien, Dateien, die Velopack beim Packen hinzufuegt, eingebettete Teile ohne eigenes Paket und Lizenztexte fuer Pakete, die nur eine Lizenzangabe ohne Datei haben.",
   "eigen": {
-    "beschreibung": "Fachinformatiker Lernplattform, Copyright (c) 2026 Nico H, Alle Rechte vorbehalten (LICENSE.txt). Eigene Inhalte eingebettet in Lernplattform.App.dll: inhalte/ (Lerninhalte und inhalte/spiel wie Python 0.63.2) und ab Phase 7 W4 inhalte_csharp/spiel (Stadt-Kern der C#-Linie, Sammelliste 100)",
+    "beschreibung": "Fachinformatiker Lernplattform, Copyright (c) 2026 Nico H, Alle Rechte vorbehalten (LICENSE.txt). Eigene Inhalte eingebettet in Lernplattform.App.dll: inhalte/ (Lerninhalte und inhalte/spiel wie Python 0.63.2) und ab Phase 7 W4 inhalte_csharp/spiel (Stadt-Kern der C#-Linie, Sammelliste 100) und inhalte_csharp/grafik (CC0-Modelle, eigene Bestandteile unten)",
     "dateien": ["Lernplattform.dll", "Lernplattform.App.dll", "Lernplattform.Core.dll", "Lernplattform.deps.json",
                 "Lernplattform.runtimeconfig.json", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt", "LICENSE.txt",
                 "Fachinformatiker-Lernplattform.desktop", "Fachinformatiker-Lernplattform.png", ".DirIcon", "AppRun",
@@ -32,7 +32,13 @@
      "beschreibung": "math/pow.c, pow_log_data.c, exp_data.c, nachgebaut in C# als Core/Mathe/PythonPow.cs", "dateien": [],
      "texte": ["ARM_MIT.txt"]},
     {"id": "SQLite", "version": "in SQLitePCLRaw.lib.e_sqlite3 2.1.13", "lizenz": "gemeinfrei", "quelle": "https://sqlite.org/copyright.html",
-     "beschreibung": "Datenbank, in e_sqlite3", "dateien": [], "texte": ["SQLite_gemeinfrei.txt"]}
+     "beschreibung": "Datenbank, in e_sqlite3", "dateien": [], "texte": ["SQLite_gemeinfrei.txt"]},
+    {"id": "Grafik Kenney City Kit Commercial", "version": "2.1", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/city-kit-commercial (Kenney, www.kenney.nl)",
+     "beschreibung": "Haeuser der Stadt im Spiel (Buero, Laeden, Wohnhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CityKitCommercial_CC0.txt"]},
+    {"id": "Grafik Kenney City Kit Suburban", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney-assets.itch.io/city-kit-suburban (Kenney, www.kenney.nl)",
+     "beschreibung": "Wohnhaeuser und Baeume der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CityKitSuburban_CC0.txt"]},
+    {"id": "Grafik Kenney Train Kit", "version": "1.1", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/train-kit (Kenney, www.kenney.nl)",
+     "beschreibung": "Schienen und stehender Zug der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_TrainKit_CC0.txt"]}
   ],
   "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
   "ohne_nuspec": {

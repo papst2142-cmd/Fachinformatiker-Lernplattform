@@ -28,9 +28,12 @@ public sealed class StadtSzene
     public const float StrassenBreite = 0.72f;
     public const float FlussBreite = 0.65f;
 
-    private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe)
+    private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek? grafik,
+        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe)
     {
         Teile = teile;
+        Stuecke = stuecke;
+        Grafik = grafik;
         Orte = orte;
         Signatur = signatur;
         Breite = breite;
@@ -38,6 +41,25 @@ public sealed class StadtSzene
     }
 
     public IReadOnlyList<Teil> Teile { get; }
+
+    /// <summary>Platzierte CC0-Modelle (leer ohne Grafik-Bibliothek).</summary>
+    public IReadOnlyList<ModellStueck> Stuecke { get; }
+
+    public GrafikBibliothek? Grafik { get; }
+
+    /// <summary>Das Dreiecksnetz der ganzen Stadt: eigene Teile und CC0-Modelle.</summary>
+    public Netz NetzBauen()
+    {
+        var netz = Netz.Aus(Teile);
+        foreach (var stueck in Stuecke)
+        {
+            if (Grafik?.Modell(stueck.Name) is { } modell)
+            {
+                netz.Hinzu(modell, stueck.Lage);
+            }
+        }
+        return netz;
+    }
 
     public IReadOnlyList<StadtOrt> Orte { get; }
 
@@ -96,9 +118,14 @@ public sealed class StadtSzene
     private static List<(float X, float Z)> Punkte(object? punkte) =>
         [.. Liste(punkte).Select(p => Liste(p)).Select(p => ((float)Py.F(p[0]), (float)Py.F(p[1])))];
 
-    /// <summary>Die Stadt fuer einen Spielstand (null = wie ein neuer Spielstand ohne Ereignisse).</summary>
-    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand)
+    /// <summary>
+    /// Die Stadt fuer einen Spielstand (null = wie ein neuer Spielstand ohne Ereignisse). Mit
+    /// <paramref name="grafik"/> stehen statt der eigenen Bloecke, Baeume und Schienen die CC0-Modelle
+    /// (Zuordnung je Block in zuordnung.json; Bloecke ohne Zuordnung bleiben eigene Geometrie).
+    /// </summary>
+    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null)
     {
+        var stuecke = new List<ModellStueck>();
         var inhalt = stadt.Inhalt;
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
         var breite = (float)Py.F(welt["breite"]);
@@ -129,7 +156,7 @@ public sealed class StadtSzene
                         Linie(teile, Punkte(item["punkte"]), 0.01f, StrassenBreite, Farben.Strasse);
                         break;
                     case "bahn":
-                        Gleis(teile, Punkte(item["punkte"]));
+                        Gleis(teile, stuecke, grafik, Punkte(item["punkte"]));
                         break;
                 }
             }
@@ -151,7 +178,7 @@ public sealed class StadtSzene
             var r = Zahl(item, "r", 0.45f);
             foreach (var (x, z) in Punkte(item["punkte"]))
             {
-                Baum(teile, x, z, r);
+                Baum(teile, stuecke, grafik, x, z, r);
             }
         }
 
@@ -163,7 +190,7 @@ public sealed class StadtSzene
             var modell = Py.Str(item["modell"]);
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
-            Modell(teile, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell);
+            Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell);
             signatur.Add(modell + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
         var orte = new List<StadtOrt>();
@@ -174,7 +201,9 @@ public sealed class StadtSzene
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
             float ox = (float)Py.F(ort["x"]), oz = (float)Py.F(ort["y"]);
             var rolle = ort["rolle"] as string ?? "";
-            var (min, max) = Modell(teile, sichtbar, ox, oz, RollenFarbe(rolle), id);
+            var vorher = stuecke.Count;
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id);
+            var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
                 : ((min.X + max.X) / 2, max.Z);
@@ -182,13 +211,21 @@ public sealed class StadtSzene
             // Zugang von der Strasse noerdlich), sitzt sie an der Rueckseite
             var vorne = tz >= (min.Z + max.Z) / 2;
             var seite = vorne ? max.Z : min.Z;
-            teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+            // (CC0-Haeuser haben eigene Tueren)
+            if (!mitGrafik)
+            {
+                teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+            }
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
                 tx, tz, min, max, schild));
             signatur.Add(id + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
-        return new StadtSzene(teile, orte, string.Join(";", signatur), breite, tiefe);
+        if (grafik is not null)
+        {
+            Zug(stuecke, grafik, landschaft.Where(t => Py.Gleich(t["typ"], "bahn")).Select(t => Punkte(t["punkte"])));
+        }
+        return new StadtSzene(teile, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe);
     }
 
     private static void Linie(List<Teil> teile, List<(float X, float Z)> p, float hoehe, float breite, Vector3 farbe)
@@ -236,9 +273,61 @@ public sealed class StadtSzene
         return liste;
     }
 
-    private static void Gleis(List<Teil> teile, List<(float X, float Z)> p)
+    /// <summary>Breite des Gleises in der Welt; die Schienen des Train Kit (1 breit, 4 lang) werden darauf skaliert.</summary>
+    public const float GleisBreite = 0.42f;
+
+    /// <summary>
+    /// Lage eines Modells: Kasten des Modells (min) auf <paramref name="ort"/>, skaliert mit
+    /// <paramref name="mass"/>, Vorderseite (+Z) in Richtung <paramref name="richtung"/> (Karte x/z).
+    /// </summary>
+    public static Matrix4x4 Lage(GrafikModell m, Vector3 anker, Vector3 mass, Vector3 ort, Vector2 richtung)
     {
-        Linie(teile, p, 0.006f, 0.42f, Farben.Gleisbett);
+        var drehung = Drehung(richtung);
+        return Matrix4x4.CreateTranslation(-anker) * Matrix4x4.CreateScale(mass) * drehung * Matrix4x4.CreateTranslation(ort);
+    }
+
+    /// <summary>Drehung um die Hochachse, die +Z auf die Richtung (x, z) legt.</summary>
+    public static Matrix4x4 Drehung(Vector2 richtung)
+    {
+        if (richtung.LengthSquared() < 1e-12f)
+        {
+            return Matrix4x4.Identity;
+        }
+        var d = Vector2.Normalize(richtung);
+        var winkel = MathF.Atan2(d.X, d.Y);
+        var m = Matrix4x4.CreateRotationY(winkel);
+        var probe = Vector3.TransformNormal(Vector3.UnitZ, m);
+        // Drehsinn von System.Numerics nicht voraussetzen: sonst die Gegenrichtung
+        return MathF.Abs(probe.X - d.X) + MathF.Abs(probe.Z - d.Y) < 1e-3f ? m : Matrix4x4.CreateRotationY(-winkel);
+    }
+
+    private static void Gleis(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, List<(float X, float Z)> p)
+    {
+        Linie(teile, p, 0.006f, GleisBreite, Farben.Gleisbett);
+        if (grafik?.Modell("railroad-straight") is { } schiene)
+        {
+            // Train Kit: ein Stueck je Abschnitt (gestreckt auf die Laenge), auf dem eigenen Gleisbett
+            var laenge = schiene.Max.Z - schiene.Min.Z;
+            var skala = GleisBreite / (schiene.Max.X - schiene.Min.X);
+            for (var i = 0; i + 1 < p.Count; i++)
+            {
+                var d = new Vector2(p[i + 1].X - p[i].X, p[i + 1].Z - p[i].Z);
+                var l = d.Length();
+                if (l < 1e-4f)
+                {
+                    continue;
+                }
+                var n = Math.Max(1, (int)MathF.Round(l / (laenge * skala)));
+                var e = d / l;
+                for (var k = 0; k < n; k++)
+                {
+                    var start = new Vector2(p[i].X, p[i].Z) + (e * (k * l / n));
+                    var anker = new Vector3((schiene.Min.X + schiene.Max.X) / 2, schiene.Min.Y, schiene.Min.Z);
+                    stuecke.Add(new ModellStueck(schiene.Name, Lage(schiene, anker, new Vector3(skala, skala, l / n / laenge), new Vector3(start.X, 0.004f, start.Y), e)));
+                }
+            }
+            return;
+        }
         foreach (var (x1, z1, x2, z2) in Striche(p, 0.05f, 0.12f))
         {
             // Schwellen quer zur Linie
@@ -261,8 +350,17 @@ public sealed class StadtSzene
         }
     }
 
-    private static void Baum(List<Teil> teile, float x, float z, float r)
+    private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, float x, float z, float r)
     {
+        // Suburban-Baum (gross/klein im Wechsel nach Lage), so hoch wie der eigene Baum (0,4 + 2,2 r)
+        var name = ((int)MathF.Round((x * 7) + (z * 3)) & 1) == 0 ? "tree_large" : "tree_small";
+        if (grafik?.Modell(name) is { } baum)
+        {
+            var s = (0.4f + (2.2f * r)) / (baum.Max.Y - baum.Min.Y) * 1.15f;
+            var anker = new Vector3((baum.Min.X + baum.Max.X) / 2, baum.Min.Y, (baum.Min.Z + baum.Max.Z) / 2);
+            stuecke.Add(new ModellStueck(name, Lage(baum, anker, new Vector3(s), new Vector3(x, 0, z), Vector2.UnitY)));
+            return;
+        }
         teile.Add(Quader(x - 0.07f, 0, z - 0.07f, x + 0.07f, 0.5f, z + 0.07f, Farben.Holz));
         teile.Add(Quader(x - r, 0.4f, z - r, x + r, 0.4f + (1.6f * r), z + r, Netz.Farbe("#34D399") * 0.8f));
         teile.Add(Quader(x - (r * 0.6f), 0.4f + (1.6f * r), z - (r * 0.6f), x + (r * 0.6f), 0.4f + (2.2f * r), z + (r * 0.6f), Netz.Farbe("#34D399") * 0.9f));
@@ -279,7 +377,8 @@ public sealed class StadtSzene
     private sealed record Block(float X1, float Z1, float X2, float Z2, float H);
 
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
-    private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed)
+    private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
+        List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed)
     {
         var bloecke = new List<Block>();
         foreach (var (_, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
@@ -306,7 +405,7 @@ public sealed class StadtSzene
             max = Vector3.Max(max, new Vector3(x2, y2, z2));
         }
         var nr = 0;
-        foreach (var (_, teil) in sichtbar)
+        foreach (var (teilNr, teil) in sichtbar)
         {
             nr++;
             var art = Py.Str(teil["art"]);
@@ -318,6 +417,13 @@ public sealed class StadtSzene
                 case "block":
                 {
                     float w = Zahl(teil, "w"), t = Zahl(teil, "t"), h = Zahl(teil, "h");
+                    if (grafik is not null && grafik.Bloecke.TryGetValue(modellName + ":" + teilNr.ToString(CultureInfo.InvariantCulture), out var grafikName)
+                        && grafik.Modell(grafikName) is { } gm)
+                    {
+                        var hoch = GrafikBlock(stuecke, gm, x, y, w, t, h);
+                        Kasten(x, 0, y, x + w, hoch, y + t);
+                        break;
+                    }
                     var dach = teil["dach"] as string;
                     var wand = Mischen(eigen, Weiss, 0.55f);
                     var dachFarbe = Mischen(eigen, Schwarz, 0.3f);
@@ -423,7 +529,7 @@ public sealed class StadtSzene
                     break;
                 }
                 case "baum":
-                    Baum(teile, x, y, Zahl(teil, "r", 0.4f));
+                    Baum(teile, stuecke, grafik, x, y, Zahl(teil, "r", 0.4f));
                     break;
                 case "geruest":
                 {
@@ -450,6 +556,71 @@ public sealed class StadtSzene
             max = new Vector3(ox + 1, 1, oz + 1);
         }
         return (min, max);
+    }
+
+    /// <summary>
+    /// Ein Block aus einem CC0-Modell: so viele Kopien nebeneinander, dass jede etwa die Form des
+    /// Modells behaelt, zusammen genau die Grundflaeche w x t (Front bei y + t). Die Hoehe liegt
+    /// zwischen der Python-Hoehe h und der natuerlichen Hoehe des Modells (Mittel), damit Fenster und
+    /// Tueren nicht platt gedrueckt wirken. Rueckgabe: Hoehe in der Welt.
+    /// </summary>
+    public static float GrafikBlock(List<ModellStueck> stuecke, GrafikModell gm, float x, float y, float w, float t, float h)
+    {
+        var mass = gm.Max - gm.Min;
+        // erst ab 1,5-facher Breite eine zweite Kopie (sonst wirkt ein Laden wie zwei Haeuser)
+        var anzahl = Math.Max(1, (int)((w / t) / (mass.X / mass.Z) / 1.5f));
+        var sx = w / anzahl / mass.X;
+        var sz = t / mass.Z;
+        var sy = ((h / mass.Y) + MathF.Sqrt(sx * sz)) / 2;
+        for (var i = 0; i < anzahl; i++)
+        {
+            stuecke.Add(new ModellStueck(gm.Name, Lage(gm, gm.Min, new Vector3(sx, sy, sz), new Vector3(x + (i * w / anzahl), 0, y), Vector2.UnitY)));
+        }
+        return mass.Y * sy;
+    }
+
+    /// <summary>
+    /// Ein stehender Zug (Train Kit, drei Wagen) auf dem laengsten geraden Gleisabschnitt, zur Zierde
+    /// am Bahnhof; faehrt nicht und verbindet nichts (Zug zwischen Spielwelten plant Nico spaeter).
+    /// </summary>
+    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<(float X, float Z)>> bahnen)
+    {
+        var wagen = new[] { "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" }.Select(grafik.Modell).ToList();
+        if (wagen.Any(w => w is null))
+        {
+            return;
+        }
+        (Vector2 A, Vector2 B) best = default;
+        foreach (var p in bahnen)
+        {
+            for (var i = 0; i + 1 < p.Count; i++)
+            {
+                var a = new Vector2(p[i].X, p[i].Z);
+                var b = new Vector2(p[i + 1].X, p[i + 1].Z);
+                if ((b - a).Length() > (best.B - best.A).Length())
+                {
+                    best = (a, b);
+                }
+            }
+        }
+        var l = (best.B - best.A).Length();
+        if (l < 1)
+        {
+            return;
+        }
+        var e = (best.B - best.A) / l;
+        var skala = GleisBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X) * 1.15f;
+        var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
+        // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
+        var pos = ((l - gesamt) / 2) + gesamt;
+        foreach (var w in wagen)
+        {
+            var lang = (w!.Max.Z - w.Min.Z) * skala;
+            var vorne = best.A + (e * pos);
+            var anker = new Vector3((w.Min.X + w.Max.X) / 2, w.Min.Y, w.Max.Z);
+            stuecke.Add(new ModellStueck(w.Name, Lage(w, anker, new Vector3(skala), new Vector3(vorne.X, 0.03f, vorne.Y), e)));
+            pos -= lang;
+        }
     }
 
     /// <summary>_part_fill: benannte Farben der Modellteile, sonst Hex-Wert.</summary>

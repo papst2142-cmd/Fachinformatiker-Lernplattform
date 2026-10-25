@@ -1,0 +1,31 @@
+{
+ "_hinweis": "Phase 7 W4 (Weisung P7-9 Nachtrag 3/4): welcher Block (Modell aus orte.json/stadt.json : Nummer des Teils ab 0) als welches CC0-Modell (modelle.json) gezeichnet wird. Bloecke ohne Eintrag bleiben eigene Geometrie (z. B. Lokschuppen mit Toren, Haltepunkt). Baeume (tree_large/tree_small), Schienen (railroad-straight) und der stehende Zug am laengsten geraden Gleisstueck kommen ohne Eintrag.",
+ "bloecke": {
+  "stellwerk:0": "house_type15",
+  "bitweiche:0": "building-k@a",
+  "bitweiche:1": "low-detail-building-wide-b",
+  "bahnhof:2": "house_type03",
+  "bahnhof:3": "building-m",
+  "bahnhof_neu:1": "building-e@b",
+  "bahnhof_neu:3": "building-e",
+  "werkstatt:0": "low-detail-building-wide-a",
+  "verwaltung:0": "house_type08",
+  "verwaltung:1": "house_type15",
+  "wohnung:2": "building-f@a",
+  "wohnung:3": "house_type12",
+  "wohnung:4": "house_type06",
+  "wohnung:5": "house_type15",
+  "wohnung:6": "building-c@b",
+  "gewerbehof:0": "house_type10",
+  "gewerbehof:1": "house_type10",
+  "gewerbehof:3": "building-a@b",
+  "gewerbehof:6": "building-h",
+  "gewerbehof:7": "low-detail-building-wide-a",
+  "gewerbehof:10": "low-detail-building-wide-a",
+  "filiale:0": "building-h@a",
+  "filiale:1": "building-h@a",
+  "filiale:2": "building-l@b",
+  "moebelhaus:0": "building-e@b",
+  "elektromarkt:0": "building-j@a"
+ }
+}

@@ -22,12 +22,13 @@ public sealed class StadtSpiel
     private readonly List<(double X, double Y)> _weg = [];
     private string? _zielOrt;
 
-    public StadtSpiel(Stadt stadt, Spielablauf ablauf, ProbeFlaeche buero)
+    public StadtSpiel(Stadt stadt, Spielablauf ablauf, ProbeFlaeche buero, GrafikBibliothek? grafik = null)
     {
         Stadt = stadt;
         Ablauf = ablauf;
         Buero = buero;
-        Szene = StadtSzene.Bauen(stadt, ablauf.Stand);
+        Grafik = grafik;
+        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik);
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.TuerX ?? 0;
         FigurZ = hier?.TuerZ ?? 0;
@@ -36,6 +37,9 @@ public sealed class StadtSpiel
     }
 
     public Stadt Stadt { get; }
+
+    /// <summary>CC0-Modelle der Stadt (null = eigene Geometrie).</summary>
+    public GrafikBibliothek? Grafik { get; }
 
     public Spielablauf Ablauf { get; }
 
@@ -263,7 +267,7 @@ public sealed class StadtSpiel
     /// <summary>Szene neu bauen, wenn sich sichtbare Orte oder Modellteile geaendert haben.</summary>
     private void NeueSzene()
     {
-        var neu = StadtSzene.Bauen(Stadt, Ablauf.Stand);
+        var neu = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
         if (neu.Signatur != Szene.Signatur)
         {
             Szene = neu;

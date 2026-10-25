@@ -1,0 +1,452 @@
+{
+ "_hinweis": "Erzeugt von werkzeuge/grafik/wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0). Nicht von Hand aendern.",
+ "pakete": {
+  "commercial": {
+   "zip": "kenney_city-kit-commercial_2.1.zip",
+   "sha256": "f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b",
+   "quelle": "Kenney City Kit (Commercial) 2.1, opengameart.org/content/city-kit-commercial",
+   "lizenz": "CC0 1.0"
+  },
+  "suburban": {
+   "zip": "kenney_cityKitSuburban.zip",
+   "sha256": "f19ce43dd738720ff2095e3b357fae35879a320cf0bd6b3c10c1099d5fba2cb3",
+   "quelle": "Kenney City Kit (Suburban), kenney-assets.itch.io/city-kit-suburban",
+   "lizenz": "CC0 1.0"
+  },
+  "train": {
+   "zip": "kenney_train-kit.zip",
+   "sha256": "cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475",
+   "quelle": "Kenney Train Kit, kenney.nl/assets/train-kit",
+   "lizenz": "CC0 1.0"
+  }
+ },
+ "sha256": "ee38c0933baebf8e76df9fe02040e89447f8d2eb49a432d9c016a51d99c15048",
+ "bytes": 2511312,
+ "modelle": [
+  {
+   "name": "building-e",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-e.obj",
+   "atlas": null,
+   "dreiecke": 3018,
+   "min": [
+    -0.82,
+    0.0,
+    -0.5039
+   ],
+   "max": [
+    0.82,
+    0.893,
+    0.5039
+   ]
+  },
+  {
+   "name": "building-h",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-h.obj",
+   "atlas": null,
+   "dreiecke": 3024,
+   "min": [
+    -0.4418,
+    0.0,
+    -0.5039
+   ],
+   "max": [
+    0.4418,
+    1.293,
+    0.5039
+   ]
+  },
+  {
+   "name": "building-m",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-m.obj",
+   "atlas": null,
+   "dreiecke": 7480,
+   "min": [
+    -0.62,
+    0.0,
+    -0.621
+   ],
+   "max": [
+    0.62,
+    3.15,
+    0.621
+   ]
+  },
+  {
+   "name": "low-detail-building-wide-a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/low-detail-building-wide-a.obj",
+   "atlas": null,
+   "dreiecke": 312,
+   "min": [
+    -0.5,
+    0.0,
+    -0.25
+   ],
+   "max": [
+    0.5,
+    1.1,
+    0.25
+   ]
+  },
+  {
+   "name": "low-detail-building-wide-b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/low-detail-building-wide-b.obj",
+   "atlas": null,
+   "dreiecke": 492,
+   "min": [
+    -0.5,
+    0.0,
+    -0.25
+   ],
+   "max": [
+    0.5,
+    1.15,
+    0.25
+   ]
+  },
+  {
+   "name": "house_type03",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type03.obj",
+   "atlas": null,
+   "dreiecke": 580,
+   "min": [
+    -0.854,
+    0.0,
+    -0.458
+   ],
+   "max": [
+    0.854,
+    1.1375,
+    0.458
+   ]
+  },
+  {
+   "name": "house_type06",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type06.obj",
+   "atlas": null,
+   "dreiecke": 776,
+   "min": [
+    -0.65,
+    0.0,
+    -0.6581
+   ],
+   "max": [
+    0.65,
+    1.1375,
+    0.6581
+   ]
+  },
+  {
+   "name": "house_type08",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type08.obj",
+   "atlas": null,
+   "dreiecke": 688,
+   "min": [
+    -0.8682,
+    0.0,
+    -0.5029
+   ],
+   "max": [
+    0.8682,
+    1.2,
+    0.5029
+   ]
+  },
+  {
+   "name": "house_type10",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type10.obj",
+   "atlas": null,
+   "dreiecke": 718,
+   "min": [
+    -0.903,
+    0.0,
+    -0.6989
+   ],
+   "max": [
+    0.903,
+    1.1375,
+    0.6989
+   ]
+  },
+  {
+   "name": "house_type12",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type12.obj",
+   "atlas": null,
+   "dreiecke": 630,
+   "min": [
+    -0.65,
+    0.0,
+    -0.5029
+   ],
+   "max": [
+    0.65,
+    1.1375,
+    0.5029
+   ]
+  },
+  {
+   "name": "house_type15",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/house_type15.obj",
+   "atlas": null,
+   "dreiecke": 316,
+   "min": [
+    -0.4521,
+    0.0,
+    -0.45
+   ],
+   "max": [
+    0.4521,
+    1.1496,
+    0.45
+   ]
+  },
+  {
+   "name": "tree_large",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/tree_large.obj",
+   "atlas": null,
+   "dreiecke": 48,
+   "min": [
+    -0.1052,
+    0.0,
+    -0.1215
+   ],
+   "max": [
+    0.1052,
+    0.767,
+    0.1215
+   ]
+  },
+  {
+   "name": "tree_small",
+   "paket": "suburban",
+   "datei": "Models/OBJ format/tree_small.obj",
+   "atlas": null,
+   "dreiecke": 48,
+   "min": [
+    -0.1052,
+    0.0,
+    -0.1215
+   ],
+   "max": [
+    0.1052,
+    0.567,
+    0.1215
+   ]
+  },
+  {
+   "name": "railroad-straight",
+   "paket": "train",
+   "datei": "Models/OBJ format/railroad-straight.obj",
+   "atlas": null,
+   "dreiecke": 752,
+   "min": [
+    -0.5,
+    0.0,
+    0.0
+   ],
+   "max": [
+    0.5,
+    0.1,
+    4.0
+   ]
+  },
+  {
+   "name": "train-electric-city-a",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-a.obj",
+   "atlas": null,
+   "dreiecke": 1628,
+   "min": [
+    -0.55,
+    0.0,
+    -1.2
+   ],
+   "max": [
+    0.55,
+    1.6828,
+    1.2
+   ]
+  },
+  {
+   "name": "train-electric-city-b",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-b.obj",
+   "atlas": null,
+   "dreiecke": 2260,
+   "min": [
+    -0.65,
+    0.0,
+    -1.35
+   ],
+   "max": [
+    0.65,
+    2.2192,
+    1.35
+   ]
+  },
+  {
+   "name": "train-electric-city-c",
+   "paket": "train",
+   "datei": "Models/OBJ format/train-electric-city-c.obj",
+   "atlas": null,
+   "dreiecke": 2040,
+   "min": [
+    -0.55,
+    0.0,
+    -1.35
+   ],
+   "max": [
+    0.55,
+    1.6828,
+    1.35
+   ]
+  },
+  {
+   "name": "building-k@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-k.obj",
+   "atlas": "Models/Textures/variation-a.png",
+   "dreiecke": 5920,
+   "min": [
+    -1.0418,
+    0.0,
+    -0.471
+   ],
+   "max": [
+    1.0418,
+    1.47,
+    0.471
+   ]
+  },
+  {
+   "name": "building-e@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-e.obj",
+   "atlas": "Models/Textures/variation-b.png",
+   "dreiecke": 3018,
+   "min": [
+    -0.82,
+    0.0,
+    -0.5039
+   ],
+   "max": [
+    0.82,
+    0.893,
+    0.5039
+   ]
+  },
+  {
+   "name": "building-h@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-h.obj",
+   "atlas": "Models/Textures/variation-a.png",
+   "dreiecke": 3024,
+   "min": [
+    -0.4418,
+    0.0,
+    -0.5039
+   ],
+   "max": [
+    0.4418,
+    1.293,
+    0.5039
+   ]
+  },
+  {
+   "name": "building-a@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-a.obj",
+   "atlas": "Models/Textures/variation-b.png",
+   "dreiecke": 2504,
+   "min": [
+    -0.4418,
+    0.0,
+    -0.47
+   ],
+   "max": [
+    0.4418,
+    1.293,
+    0.47
+   ]
+  },
+  {
+   "name": "building-f@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-f.obj",
+   "atlas": "Models/Textures/variation-a.png",
+   "dreiecke": 3588,
+   "min": [
+    -0.42,
+    0.0,
+    -0.515
+   ],
+   "max": [
+    0.42,
+    1.693,
+    0.515
+   ]
+  },
+  {
+   "name": "building-c@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-c.obj",
+   "atlas": "Models/Textures/variation-b.png",
+   "dreiecke": 2390,
+   "min": [
+    -0.4418,
+    0.0,
+    -0.545
+   ],
+   "max": [
+    0.4418,
+    0.893,
+    0.545
+   ]
+  },
+  {
+   "name": "building-j@a",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-j.obj",
+   "atlas": "Models/Textures/variation-a.png",
+   "dreiecke": 10492,
+   "min": [
+    -1.0418,
+    0.0,
+    -0.67
+   ],
+   "max": [
+    1.0418,
+    1.693,
+    0.67
+   ]
+  },
+  {
+   "name": "building-l@b",
+   "paket": "commercial",
+   "datei": "Models/OBJ format/building-l.obj",
+   "atlas": "Models/Textures/variation-b.png",
+   "dreiecke": 7024,
+   "min": [
+    -0.685,
+    0.0,
+    -0.701
+   ],
+   "max": [
+    0.685,
+    2.27,
+    0.701
+   ]
+  }
+ ]
+}
