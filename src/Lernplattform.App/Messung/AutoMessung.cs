@@ -339,6 +339,16 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 7, W6: Spielansichten ueber der Stadt (Platzwahl, Figur, Uebersicht, Reise, Tickets, Firma)
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in P7W6Ansichten(ansicht))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
             }
         }
 

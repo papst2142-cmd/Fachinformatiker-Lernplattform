@@ -43,6 +43,13 @@ public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int Stueck
 /// </summary>
 public sealed class StadtSzene
 {
+    /// <summary>
+    /// Massstab der Stadt (Nachtrag 1 zu P7-12, Wunsch 2): eine Karteneinheit sind 5 m. Damit passen die
+    /// Groessen aus orte.json (Strasse 0,72 = 3,6 m, Fussweg 0,5 = 2,5 m, Baeume 6 bis 8 m, Haeuser 2 bis
+    /// 3 Stockwerke); Figur (1,8 m), Zug (2,9 m breit), Spur (1,435 m) und Tueren (2,2 m) richten sich danach.
+    /// </summary>
+    public const float Meter = 0.2f;
+
     /// <summary>Breite der Strassen wie landscape_shapes (0.72), Fluss 0.65.</summary>
     public const float StrassenBreite = 0.72f;
     public const float FlussBreite = 0.65f;
@@ -419,7 +426,7 @@ public sealed class StadtSzene
             // (CC0-Haeuser haben eigene Tueren)
             if (!mitGrafik)
             {
-                teile.Add(Quader(tx - 0.22f, 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + 0.22f, 0.7f, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+                teile.Add(Quader(tx - (TuerBreite / 2), 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + (TuerBreite / 2), TuerHoehe, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
             }
             if (min.X <= max.X)
             {
@@ -716,8 +723,16 @@ public sealed class StadtSzene
         }
     }
 
-    /// <summary>Halber Abstand der Schienen.</summary>
-    public const float SpurHalb = 0.09f;
+    /// <summary>Halber Abstand der Schienen (Normalspur 1,435 m).</summary>
+    public const float SpurHalb = 1.435f / 2 * Meter;
+
+    /// <summary>Tuer der eigenen Haeuser: 1,8 m breit (zweifluegelig), 2,2 m hoch.</summary>
+    public const float TuerBreite = 1.8f * Meter;
+
+    public const float TuerHoehe = 2.2f * Meter;
+
+    /// <summary>Breite der Zuege (Wagenkasten 2,9 m).</summary>
+    public const float ZugBreite = 2.9f * Meter;
 
     private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, float x, float z, float r)
     {
@@ -977,7 +992,7 @@ public sealed class StadtSzene
             return;
         }
         var e = (best.B - best.A) / l;
-        var skala = GleisBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X) * 1.15f;
+        var skala = ZugBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X);
         var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
         // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
         var pos = ((l - gesamt) / 2) + gesamt;

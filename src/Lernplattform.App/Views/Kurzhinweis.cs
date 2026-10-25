@@ -27,7 +27,8 @@ public static class Kurzhinweis
     /// <summary>Wird von MainView gesetzt: die Ebene ueber allen Seiten (laesst Klicks daneben durch).</summary>
     internal static void Ebene(Panel ebene) => _ebene = ebene;
 
-    public static void Zeigen(string text)
+    /// <param name="farbe">Rand des Hinweises (Phase 7 W6: wie toast(message, color) im Spiel), Vorgabe gelb.</param>
+    public static void Zeigen(string text, string farbe = "Pinsel.yellow")
     {
         Schliessen();
         if (_ebene is not { } ebene)
@@ -46,7 +47,7 @@ public static class Kurzhinweis
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
             MaxWidth = 560,
-        }.Farbe(Border.BackgroundProperty, "Pinsel.card_hi").Farbe(Border.BorderBrushProperty, "Pinsel.yellow");
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_hi").Farbe(Border.BorderBrushProperty, farbe);
         hinweis.PointerPressed += (_, e) =>
         {
             e.Handled = true;

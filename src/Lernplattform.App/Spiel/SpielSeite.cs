@@ -44,6 +44,7 @@ public sealed class SpielSeite : Grid
     private readonly Button _warten;
     private readonly Button _orteKnopf;
     private readonly Button _einrichten;
+    private readonly Button _uebersicht;
     private readonly WrapPanel _ortKnoepfe = new();
     private readonly StackPanel _einrichtenTafel = new() { Spacing = 6 };
     private string _tafelSchluessel = "";
@@ -61,8 +62,21 @@ public sealed class SpielSeite : Grid
     private int _anhaengen;
     private TopLevel? _oben;
     private bool _autoRandVorher = true;
+    private bool _randVorher;
 
-    public SpielSeite(Func<StadtSpiel> laden, Action verlassen)
+    /// <summary>Stadt mit Spielstand und Spielansichten (W6): die Tafel liegt ueber der Stadt.</summary>
+    public SpielSeite(Func<SpielSitzung> laden, Action verlassen, Tafel.SpielWege? wege) : this(verlassen)
+    {
+        Geladen = SitzungLadenAsync(laden, wege);
+    }
+
+    /// <summary>Nur die Stadt (Probe aus dem Arbeitsspeicher, ohne Spielansichten).</summary>
+    public SpielSeite(Func<StadtSpiel> laden, Action verlassen) : this(verlassen)
+    {
+        Geladen = LadenAsync(laden);
+    }
+
+    private SpielSeite(Action verlassen)
     {
         _verlassen = verlassen;
         Flaeche = new StadtFlaeche();
@@ -93,7 +107,10 @@ public sealed class SpielSeite : Grid
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
         _einrichten = Schrift.Knopf(SpielProbeTexte.Einrichten);
         _einrichten.Click += (_, _) => Spiel?.EinrichtenUmschalten();
-        var knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf } };
+        _uebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
+        _uebersicht.IsVisible = false;
+        _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
+        var knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
         _zeileRolle = new ScrollViewer
@@ -200,11 +217,19 @@ public sealed class SpielSeite : Grid
                 TopLevel.SetAutoSafeAreaPadding(_oben, false);
                 if (_oben.InsetsManager is { } rand)
                 {
+                    // Nachtrag 1 zu P7-12 (S24): ohne Rand-zu-Rand legt Android die Ansicht neben die
+                    // Kamera-Aussparung (schwarzer Streifen links im Querformat), trotz ShortEdges
+                    _randVorher = rand.DisplayEdgeToEdgePreference;
+                    rand.DisplayEdgeToEdgePreference = true;
                     rand.SafeAreaChanged += SicherAendern;
                 }
                 SicherSetzen();
             }
             Flaeche.Focus();
+            if (Tafel is { } tafel && _tafelAn)
+            {
+                tafel.Gezeigt();
+            }
             var anhaengen = ++_anhaengen;
             DispatcherTimer.RunOnce(() =>
             {
@@ -225,13 +250,13 @@ public sealed class SpielSeite : Grid
                 if (_oben.InsetsManager is { } rand)
                 {
                     rand.SafeAreaChanged -= SicherAendern;
+                    rand.DisplayEdgeToEdgePreference = _randVorher;
                 }
                 TopLevel.SetAutoSafeAreaPadding(_oben, _autoRandVorher);
                 _oben = null;
             }
         };
         Beschriften();
-        Geladen = LadenAsync(laden);
     }
 
     private void SicherAendern(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => SicherSetzen();
@@ -250,9 +275,94 @@ public sealed class SpielSeite : Grid
         return spiel;
     }
 
-    /// <summary>Spiel einsetzen (nach dem Laden; der Start-Test setzt je Durchgang ein frisches ein).</summary>
+    private async Task<StadtSpiel> SitzungLadenAsync(Func<SpielSitzung> laden, Tafel.SpielWege? wege)
+    {
+        var sitzung = await Task.Run(laden);
+        var tafel = new Tafel.SpielTafel(sitzung, _verlassen, wege);
+        tafel.Geaendert += () =>
+        {
+            Beschriften();
+            Flaeche.AnfordernBild();
+        };
+        // die Tafel deckt die ganze Seite ab: Ebene und Namensschilder darunter treten solange zurueck
+        tafel.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                Ebene.IsVisible = !tafel.IsVisible;
+                _schilder.IsVisible = !tafel.IsVisible && !_ersatz.IsVisible;
+            }
+        };
+        Tafel = tafel;
+        _sitzung = sitzung;
+        _tafelAn = true;
+        Children.Add(tafel);
+        sitzung.SpielGewechselt += () =>
+        {
+            if (_tafelAn)
+            {
+                Einsetzen(sitzung.Spiel);
+            }
+        };
+        Einsetzen(sitzung.Spiel);
+        if (IsAttachedToVisualTree())
+        {
+            tafel.Gezeigt();
+        }
+        else
+        {
+            tafel.Zeichnen();
+        }
+        return sitzung.Spiel;
+    }
+
+    /// <summary>Die Spielansichten ueber der Stadt (null ohne Spielstand, nur Probe).</summary>
+    public Tafel.SpielTafel? Tafel { get; private set; }
+
+    private SpielSitzung? _sitzung;
+    private bool _tafelAn;
+
+    /// <summary>
+    /// Spiel einsetzen (der Start-Test setzt je Durchgang ein frisches aus dem Arbeitsspeicher ein):
+    /// die Spielansichten treten dann zurueck, bis <see cref="TafelZeigen"/> sie wieder holt.
+    /// </summary>
     public void SpielSetzen(StadtSpiel spiel)
     {
+        _tafelAn = false;
+        if (Tafel is { } tafel)
+        {
+            tafel.IsVisible = false;
+        }
+        Einsetzen(spiel);
+        _uebersicht.IsVisible = false;
+    }
+
+    /// <summary>Spielansichten wieder zeigen (zurueck zum Spielstand der Sitzung).</summary>
+    public void TafelZeigen()
+    {
+        if (Tafel is not { } tafel || _sitzung is null)
+        {
+            return;
+        }
+        _tafelAn = true;
+        Einsetzen(_sitzung.Spiel);
+        tafel.Gezeigt();
+    }
+
+    private void Einsetzen(StadtSpiel spiel)
+    {
+        if (Tafel is { } tafel)
+        {
+            if (Spiel is { } vorher)
+            {
+                vorher.Aktion -= tafel.AktionAusfuehren;
+            }
+            if (_tafelAn)
+            {
+                spiel.Aktion += tafel.AktionAusfuehren;
+            }
+            _uebersicht.IsVisible = _tafelAn;
+        }
         if (Spiel is { } alt)
         {
             alt.Geaendert -= Beschriften;
@@ -272,7 +382,7 @@ public sealed class SpielSeite : Grid
     public StadtSpiel? Spiel { get; private set; }
 
     /// <summary>Fertig, wenn Inhalte und Stadt geladen sind.</summary>
-    public Task<StadtSpiel> Geladen { get; }
+    public Task<StadtSpiel> Geladen { get; } = null!;
 
     public Button VerlassenKnopf { get; }
 
@@ -359,6 +469,10 @@ public sealed class SpielSeite : Grid
     private void Zurueck(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;
+        if (Tafel is { IsVisible: true } tafel && tafel.Zurueck())
+        {
+            return;
+        }
         if (Spiel is { Einrichten: true } einrichten)
         {
             einrichten.EinrichtenUmschalten();

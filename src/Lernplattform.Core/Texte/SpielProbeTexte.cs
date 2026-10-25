@@ -19,6 +19,10 @@ public static class SpielProbeTexte
     public const string KeinInnenraum = "Innenraum kommt später.";
     public const string Unterwegs = "Unterwegs zu {0} …";
     public const string Angekommen = "Angekommen.";
+
+    // Nachtrag 1 zu P7-12 (Wunsch 5): ein neues Ziel waehrend des Gehens gilt ab der Ankunft
+    public const string DanachZu = "Danach geht es weiter zu {0}.";
+    public const string DanachDorthin = "Danach geht es dorthin weiter.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
     public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
     public const string ImBuero = "Büro der Bitweiche. Tippe auf den Boden, um hinzugehen.";

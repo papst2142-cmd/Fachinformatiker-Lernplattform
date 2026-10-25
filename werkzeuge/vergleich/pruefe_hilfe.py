@@ -359,6 +359,10 @@ PAARE = [
     {"nr": "W4", "thema": "tastatur",
      "alt": " Die Spielkarte und die Grundrisse im Spiel brauchen noch die Maus.",
      "neu": ""},
+    # Phase 7 W6 (Weisung P7-11, Hilfe-Abschnitt Spiel): Satz der Stadt, freigegeben mit Weisung P7-9
+    {"nr": "S1", "thema": "spiel",
+     "alt": "Der Lernfortschritt gilt für alle gemeinsam.",
+     "neu": "Der Lernfortschritt gilt für alle gemeinsam.\n\nIm Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle."},
     # UNKLAR: Nachtrag Abschnitt 3 nennt fuer RELEASE_PAGE_TEXT nur thema; "nr" setze ich
     # auf "N2" (Tabelle Abschnitt 3: "RELEASE_PAGE_TEXT | NEU: N2"), Platz am Ende der Liste.
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT",
