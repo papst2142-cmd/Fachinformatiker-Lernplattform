@@ -35,6 +35,9 @@ public class SpielInnenraumTests
     [InlineData("filiale", "filiale")]
     [InlineData("serverfarm", "serverfarm")]
     [InlineData("kunde:talheim", "talheim")]
+    [InlineData("schalter:bank", "bank")]
+    [InlineData("schalter:amt", "amt")]
+    [InlineData("schalter:kino", null)]
     [InlineData("mitbewerber:bitweiche", null)]
     [InlineData("firma", null)]
     [InlineData("firma:gebaeude", null)]
@@ -339,7 +342,7 @@ public class SpielInnenraumTests
         var stand = ablauf.Stand;
         var ansichten = new List<string> { "buero", "zuhause", "serverfarm" };
         ansichten.AddRange(SpielDaten.Kundenorte(Inhalt).Select(k => "kunde:" + Py.Str(k["id"])));
-        ansichten.AddRange(["geschaeft:moebelhaus", "geschaeft:elektromarkt"]);
+        ansichten.AddRange(["geschaeft:moebelhaus", "geschaeft:elektromarkt", "schalter:bank", "schalter:amt"]);
         var gesehen = 0;
         var durch = new HashSet<InnenWand>();
         foreach (var ansicht in ansichten)

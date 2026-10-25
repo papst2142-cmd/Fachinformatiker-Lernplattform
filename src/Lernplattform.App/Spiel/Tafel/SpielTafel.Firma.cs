@@ -179,7 +179,7 @@ public sealed partial class SpielTafel
         Bestaetigen("Firma gründen", PyFormat.Prozent("„%s“ für %s gründen? Danach arbeitest du nicht mehr bei Bitweiche.",
             (name ?? "").Trim(), Euro(kosten)), () =>
         {
-            if (Tun(a => a.Gruenden(name)) is not { } daten)
+            if (Tun(a => GruendenAm(a, name)) is not { } daten)
             {
                 return;
             }

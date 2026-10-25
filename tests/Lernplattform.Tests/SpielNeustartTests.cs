@@ -137,4 +137,77 @@ public class SpielNeustartTests
             Assert.Equal(zeilen, nachNeustart[tabelle]);
         }
     }
+
+    /// <summary>
+    /// W7b (Weisung P7-13): Bank und Amt mit Firma (Szenario 045 in der Datei). Kredit zu Hause
+    /// (abgelehnt), in der Bank aufnehmen und abloesen, Gruenden auf dem Amt (abgelehnt, schon Firma);
+    /// nach jedem Schritt nur angehaengt, nach dem Neustart derselbe Spielstand.
+    /// </summary>
+    [Fact]
+    public void BankUndAmtNurAngehaengt()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        var lernstand = new Lernstand(pfad);
+        var schreiber = new LernstandSchreiber(lernstand);
+        var spiel = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        spiel.NeuerLauf(1);
+        var speicher = new SpielDatenbank(schreiber, "PC", spiel.Lauf, Vorgaenge.Sperren);
+        using (speicher.Sitzung())
+        {
+            foreach (var e in SpielFingerabdruckTests.Gespielt.Value.Stand.Verlauf)
+        {
+                Assert.NotNull(speicher.Schreiben(e.Art, PythonJson.Standard(e.Daten)));
+            }
+        }
+        spiel.Neuladen();
+        Assert.True(Py.Wahr(spiel.Stand.Firma));
+
+        void Tun(string name, Action<Spielablauf> aktion, bool abgelehnt = false)
+        {
+            var vorher = Alles(lernstand);
+            var fehler = false;
+            try
+            {
+                aktion(spiel.ZumSchreiben());
+            }
+            catch (SpielFehler)
+            {
+                fehler = true;
+                Assert.Equal(vorher.Select(p => (p.Key, p.Value.Count)), Alles(lernstand).Select(p => (p.Key, p.Value.Count)));
+            }
+            Assert.True(abgelehnt == fehler, name + (abgelehnt ? ": nicht abgelehnt" : ": abgelehnt"));
+            NurAngehaengt(vorher, Alles(lernstand), name);
+        }
+
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        var paket = Wirtschaft.KreditPakete(spiel.Stand, Inhalt).First(a => !Py.Wahr(a["problem"]));
+        Tun("Kredit zu Hause", a => a.BankKreditAufnehmen(stadt, 0L, 0L, paket["paket"]), abgelehnt: true);
+        Tun("Gehen Bank", a => stadt.Gehen(a, Schalter.Bank));
+        Tun("Kredit vor dem Oeffnen", a => a.BankKreditAufnehmen(stadt, 0L, 0L, paket["paket"]), abgelehnt: true);
+        Tun("Warten Bank", a => stadt.Warten(a));
+        Tun("Kredit aufnehmen", a => a.BankKreditAufnehmen(stadt, 0L, 0L, paket["paket"]));
+        var kredit = spiel.Stand.Verlauf.Last(e => e.Art == Ereignisse.Kredit).Daten["kredit"];
+        Tun("Kredit abloesen", a => a.BankKreditAbloesen(stadt, kredit));
+        Assert.Equal(kredit, spiel.Stand.Verlauf.Last(e => e.Art == Ereignisse.KreditAbgeloest).Daten["kredit"]);
+        Tun("Gehen Amt", a => stadt.Gehen(a, Schalter.Amt));
+        Tun("Gruenden mit Firma", a => a.AmtGruenden(stadt, "Noch eine"), abgelehnt: true);
+        Tun("Gehen heim", a => stadt.Gehen(a, "zuhause"));
+        var stand = spiel.Stand;
+
+        var vorNeustart = Alles(lernstand);
+        var lernstand2 = new Lernstand(pfad);
+        var neu = new Spielverwaltung(new LernstandSchreiber(lernstand2), "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        neu.Neuladen();
+        Assert.Equal(spiel.Lauf, neu.Lauf);
+        Assert.Empty(stand.Unterschiede(neu.Stand));
+        Assert.Equal(stand.Geld, neu.Stand.Geld);
+        Assert.Equal(stand.Kredite.Count, neu.Stand.Kredite.Count);
+        var nachNeustart = Alles(lernstand2);
+        Assert.Equal(vorNeustart.Keys, nachNeustart.Keys);
+        foreach (var (tabelle, zeilen) in vorNeustart)
+        {
+            Assert.Equal(zeilen, nachNeustart[tabelle]);
+        }
+    }
 }

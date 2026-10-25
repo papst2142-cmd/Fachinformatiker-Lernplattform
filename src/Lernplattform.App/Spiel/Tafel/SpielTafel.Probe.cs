@@ -75,6 +75,15 @@ public sealed partial class SpielTafel
         return _laden == laden;
     }
 
+    /// <summary>W7b: Seite am Schalter von Bank oder Amt (ohne Schreiben); false, wenn sie nicht offen ist.</summary>
+    internal bool ProbeSchalter(string ort)
+    {
+        _waehlen = false;
+        _entwurf.Clear();
+        SchalterOeffnen(ort);
+        return _stapel.Count == 1 && _schalter == ort;
+    }
+
     /// <summary>W7: die Teile-Typen des Elektromarkts (Reihenfolge des Sortiments).</summary>
     internal List<string> ProbeTeileTypen() =>
         _s.Geschaefte is { } g ? [.. g.Waren("elektromarkt").Where(w => w.Art == Geschaefte.ArtTeil).Select(w => w.Typ).Distinct()] : [];

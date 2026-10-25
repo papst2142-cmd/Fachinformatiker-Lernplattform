@@ -123,5 +123,58 @@
     "personen": [
       {"id": "yildirim", "name": "Deniz Yıldırım", "rolle": "Verkäufer", "aussehen": {"haut": "oliv", "frisur": "kurz", "haarfarbe": "schwarz", "oberteil": "orange", "extra": "headset"}, "text": "Für deine Wohnung oder für die Firma? Teile nimmst du gleich mit, dafür sind sie etwas teurer als beim Versand.", "platz": [17.8, 11.8]}
     ]
+  },
+  "bank": {
+    "gebaeude": {"breite": 16.0, "hoehe": 11, "fenster": [[3.0, 0, 6.0, 0], [10.0, 0, 13.0, 0]],
+      "flur": {"y": 7.0, "h": 4.0, "name": "Eingang", "boden": "fliesen", "eingang": {"von": 8.3, "bis": 9.7}, "spieler": [1.2, 9.0], "deko": [
+        {"typ": "automat", "x": 13.4, "y": 7.2, "w": 1.0, "h": 0.6},
+        {"typ": "pflanze", "x": 14.9, "y": 10.0, "w": 0.8, "h": 0.8},
+        {"typ": "fussmatte", "x": 0.2, "y": 8.4, "w": 0.6, "h": 1.2}
+      ]},
+      "raeume": [
+        {"id": "schalterhalle", "name": "Schalterhalle", "x": 0, "y": 0, "w": 16.0, "h": 7.0, "tuer": {"von": 2.0, "bis": 7.0}, "boden": "parkett", "deko": [
+          {"typ": "tresen", "x": 6.0, "y": 2.4, "w": 4.4, "h": 0.4},
+          {"typ": "aktenregal", "x": 5.4, "y": 0.2, "w": 0.6, "h": 2.7},
+          {"typ": "aktenregal", "x": 10.4, "y": 0.2, "w": 0.6, "h": 2.7},
+          {"typ": "anzeigetafel", "x": 6.2, "y": 0.0, "w": 4.0, "h": 0.1},
+          {"typ": "schreibtisch", "x": 12.2, "y": 2.0, "w": 2.2, "h": 1.0},
+          {"typ": "sessel", "x": 12.8, "y": 3.4, "w": 0.9, "h": 0.9},
+          {"typ": "bank", "x": 1.0, "y": 4.6, "w": 2.4, "h": 0.6},
+          {"typ": "pflanze", "x": 0.4, "y": 0.4, "w": 0.8, "h": 0.8},
+          {"typ": "pflanze", "x": 14.8, "y": 0.4, "w": 0.8, "h": 0.8}
+        ]}
+      ]
+    },
+    "personen": [
+      {"id": "brandt", "name": "Jonas Brandt", "rolle": "Bankberater", "aussehen": {"haut": "mittel", "frisur": "kurz", "haarfarbe": "braun", "oberteil": "pink", "extra": "brille"}, "text": "Guten Tag! Bei mir bekommt deine Firma Kredite, und laufende Kredite kannst du hier ablösen.", "platz": [8.2, 1.95]}
+    ]
+  },
+  "amt": {
+    "gebaeude": {"breite": 18.0, "hoehe": 12, "fenster": [[3.0, 0, 7.0, 0], [11.0, 0, 15.0, 0]],
+      "flur": {"y": 8.0, "h": 4.0, "name": "Wartebereich", "boden": "fliesen", "eingang": {"von": 9.3, "bis": 10.7}, "spieler": [1.2, 10.0], "deko": [
+        {"typ": "bank", "x": 4.0, "y": 11.2, "w": 2.4, "h": 0.6},
+        {"typ": "bank", "x": 8.0, "y": 11.2, "w": 2.4, "h": 0.6},
+        {"typ": "pflanze", "x": 12.2, "y": 11.0, "w": 0.8, "h": 0.8},
+        {"typ": "wasserspender", "x": 16.8, "y": 11.0, "w": 0.6, "h": 0.6},
+        {"typ": "fussmatte", "x": 0.2, "y": 9.4, "w": 0.6, "h": 1.2}
+      ]},
+      "raeume": [
+        {"id": "buergerbuero", "name": "Bürgerbüro", "x": 0, "y": 0, "w": 18.0, "h": 8.0, "tuer": {"von": 2.0, "bis": 7.0}, "boden": "teppichboden", "deko": [
+          {"typ": "tresen", "x": 6.8, "y": 2.4, "w": 4.4, "h": 0.4},
+          {"typ": "aktenregal", "x": 6.2, "y": 0.2, "w": 0.6, "h": 2.7},
+          {"typ": "aktenregal", "x": 11.2, "y": 0.2, "w": 0.6, "h": 2.7},
+          {"typ": "anzeigetafel", "x": 7.0, "y": 0.0, "w": 4.0, "h": 0.1},
+          {"typ": "aktenregal", "x": 0.4, "y": 0.3, "w": 2.6, "h": 0.6},
+          {"typ": "aktenregal", "x": 15.0, "y": 0.3, "w": 2.6, "h": 0.6},
+          {"typ": "schreibtisch", "x": 13.4, "y": 3.0, "w": 2.2, "h": 1.0},
+          {"typ": "drucker", "x": 0.4, "y": 3.0, "w": 0.8, "h": 0.6},
+          {"typ": "bank", "x": 1.0, "y": 6.2, "w": 2.4, "h": 0.6},
+          {"typ": "pflanze", "x": 16.6, "y": 6.8, "w": 0.8, "h": 0.8}
+        ]}
+      ]
+    },
+    "personen": [
+      {"id": "kraus", "name": "Sabine Kraus", "rolle": "Sachbearbeiterin", "aussehen": {"haut": "hell", "frisur": "lang", "haarfarbe": "grau", "oberteil": "gruen", "extra": "brille"}, "text": "Willkommen auf dem Amt. Hier meldest du deine Firma an und siehst, was sie an Umsatzsteuer zurücklegt.", "platz": [9.0, 1.95]}
+    ]
   }
 }

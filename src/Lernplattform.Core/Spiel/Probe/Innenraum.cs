@@ -154,6 +154,7 @@ public sealed class Innenraum
         Serverfarm => Serverfarm,
         not null when ansicht.StartsWith("kunde:", StringComparison.Ordinal) => ansicht["kunde:".Length..],
         not null when ansicht.StartsWith("geschaeft:", StringComparison.Ordinal) && Geschaefte.Laeden.Contains(ansicht["geschaeft:".Length..]) => ansicht["geschaeft:".Length..],
+        not null when ansicht.StartsWith("schalter:", StringComparison.Ordinal) && Schalter.Orte.Contains(ansicht["schalter:".Length..]) => ansicht["schalter:".Length..],
         _ => null,
     };
 
@@ -187,9 +188,10 @@ public sealed class Innenraum
             }
             return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null);
         }
-        if (Geschaefte.Laeden.Contains(ort))
+        if (Geschaefte.Laeden.Contains(ort) || Schalter.Orte.Contains(ort))
         {
-            // W7: Moebelhaus und Elektromarkt (Grundriss, Auslage und Verkaeufer aus innenraeume.json)
+            // W7: Moebelhaus und Elektromarkt (Grundriss, Auslage und Verkaeufer aus innenraeume.json),
+            // W7b: Bank und Amt (Grundriss, Schalter und Person ebenso)
             if ((innenraeume is null ? null : Get(innenraeume, ort)) is not PyObjekt laden)
             {
                 return null;
@@ -242,6 +244,10 @@ public sealed class Innenraum
         if (Geschaefte.Laeden.Contains(Ort))
         {
             return LadenNachricht(x, z, stand);
+        }
+        if (Schalter.Orte.Contains(Ort))
+        {
+            return SchalterNachricht(x, z, stand);
         }
         if (Ort == Serverfarm)
         {
@@ -315,6 +321,23 @@ public sealed class Innenraum
             }
         }
         return (PyFormat.Prozent("Du bist im %s.", name), "Tippe auf eine Ware oder sprich mit dem Verkauf.", [sortiment]);
+    }
+
+    /// <summary>W7b: Aktion "am Schalter" (Bank: Kredite, Amt: Gruendung oder Steuern).</summary>
+    public const string AktionSchalter = "schalter";
+
+    private (string, string, List<(string, string)>) SchalterNachricht(double x, double z, Spielstand stand)
+    {
+        var firma = Py.Wahr(stand.Firma);
+        var knopf = (AktionSchalter, Ort == Schalter.Bank ? "Kredite" : firma ? "Steuern" : "Gründung");
+        if (PersonNahe(x, z) is { } p)
+        {
+            return (PyFormat.Prozent("%s · %s", p.Name, Get(p.Daten, "rolle", "")), Py.Str(Get(p.Daten, "text", "")), [knopf]);
+        }
+        var person = Personen.Count > 0 ? Personen[0].Name : "";
+        return Ort == Schalter.Bank
+            ? ("Du bist in der Bank.", PyFormat.Prozent("Am Schalter hilft dir %s mit Krediten für deine Firma.", person), [knopf])
+            : ("Du bist auf dem Amt.", PyFormat.Prozent("Am Schalter hilft dir %s mit der Gründung und der Umsatzsteuer.", person), [knopf]);
     }
 
     // ---- Aufbau ----------------------------------------------------------

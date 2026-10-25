@@ -258,6 +258,8 @@ public sealed partial class SpielTafel
         if (Wirtschaft.SteuerAktiv(stand))
         {
             yield return SteuerKarte(stand);
+            // W7b, Text 5 (Nachtrag 2 zu P7-13)
+            yield return T("Die Umsatzsteuer siehst du auch auf dem Amt.", 12, "text_dim");
         }
         yield return Karte("Gegen wen verloren", verloren, "pink", "an Mitbewerber");
     }
@@ -446,6 +448,11 @@ public sealed partial class SpielTafel
         {
             T(PyFormat.Prozent("Deine Hausbank. Zinsen pro Jahr, ein Spieljahr hat %d Arbeitstage.", regeln["tage_pro_jahr"]), 12, "text_dim"),
         };
+        if (_schalter != Schalter.Bank)
+        {
+            // W7b, Text 5 (Nachtrag 2 zu P7-13): nur in der Firmen-Tafel, nicht am Schalter
+            bank.Add(T("Das geht auch in der Bank.", 12, "text_dim"));
+        }
         if (ok)
         {
             bank.Add(T("Kreditrahmen " + Euro(pruefung["rahmen"]), 20, "text", true));
@@ -628,8 +635,8 @@ public sealed partial class SpielTafel
         Bestaetigen("Kredit aufnehmen", Wirtschaft.KreditFrage(angebot, I), () =>
         {
             var ok = Py.Gleich(angebot["paket"], Wirtschaft.FreierKredit)
-                ? FirmaTun(a => a.KreditAufnehmen(angebot["summe"], angebot["laufzeit"]))
-                : FirmaTun(a => a.KreditAufnehmen(0L, 0L, angebot["paket"]));
+                ? FirmaTun(a => KreditAufnehmenAm(a, angebot["summe"], angebot["laufzeit"]))
+                : FirmaTun(a => KreditAufnehmenAm(a, 0L, 0L, angebot["paket"]));
             if (ok)
             {
                 FirmaGeaendert();
@@ -640,7 +647,7 @@ public sealed partial class SpielTafel
     private void KreditAbloesen(PyObjekt eintrag) =>
         Bestaetigen("Kredit ablösen", Wirtschaft.AbloeseText(eintrag, I), () =>
         {
-            if (FirmaTun(a => a.KreditAbloesen(eintrag["id"])))
+            if (FirmaTun(a => KreditAbloesenAm(a, eintrag["id"])))
             {
                 FirmaGeaendert();
             }

@@ -96,14 +96,16 @@ jobs:
       # Neustart-Regel (Weisung P4-13): Rueckgabe 3 im 1. Lauf -> 2. Lauf in neuem Prozess mit
       # frischem Datenordner; rot nur, wenn derselbe Messpunkt in beiden Laeufen rot ist.
       # Absturz (andere Rueckgabe, Ausnahme, keine Messdatei) startet nicht neu und ist rot.
+      # Wachhund je Lauf 15 Minuten (vorher 10): mit den Spielansichten aus Phase 7 braucht ein
+      # gesunder Lauf auf Windows und macOS 9,5 bis 10 Minuten (P7-13a); die Messgrenzen bleiben.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
-        timeout-minutes: 10
+        timeout-minutes: 15
         shell: bash
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: steps.lauf1.outputs.rc == '3'
-        timeout-minutes: 10
+        timeout-minutes: 15
         shell: bash
         env:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2

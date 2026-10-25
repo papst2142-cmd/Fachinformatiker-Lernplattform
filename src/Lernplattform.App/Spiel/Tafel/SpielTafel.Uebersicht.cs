@@ -284,6 +284,12 @@ public sealed partial class SpielTafel
     /// <summary>run_action: Knoepfe unter den Orten (Auftrag, Personal, Feierabend, Lernen, Schlafen).</summary>
     public void AktionAusfuehren(string aktion)
     {
+        if (IstSchalterAktion(aktion))
+        {
+            // W7b: Schalter in Bank und Amt
+            SchalterOeffnen();
+            return;
+        }
         if (IstLadenAktion(aktion))
         {
             // W7: Sortiment und Kaufen im Moebelhaus und Elektromarkt
