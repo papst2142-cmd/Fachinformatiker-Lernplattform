@@ -9,20 +9,20 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 - Code: `papst2142-cmd/Fachinformatiker-Lernplattform` (`main`, geschützt: Änderungen nur per PR, Squash nach Freigabe). Regeln: `CLAUDE.md` im Repo.
 - Austausch: `papst2142-cmd/Fi-Austausch` (`weisungen/`, `meldungen/`, `anlagen/`, `SAMMELLISTE_NEU.md`).
 - Referenz (nur lesen): `papst2142-cmd/Fisi-Lernplattform` (Python, eingefroren seit v0.63.2, main fbc657d).
-- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–5 umgesetzt (ältere Pläne in der Git-Historie); **Phase 6 (Verteilung): Plan `Plan_Phase6_CSharp.md` freigegeben (Weisung P6-2), W1–W3 gemergt, A 0.12.0 veröffentlicht (vA0.12.0); A 0.12.1 gemergt (Update-Test durch Nico), A 0.12.2 Optik im Bau, danach Bericht Phase 6**.
+- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–5 umgesetzt (ältere Pläne in der Git-Historie); Phase 6 (Verteilung) abgenommen (Weisung P6-21); **Phase 7 (Spiel in echtem 3D): Plan `Plan_Phase7_CSharp.md` freigegeben (Weisung P7-2)**.
 - Zusammenarbeit: `Fi-Austausch/weisungen/Regel_Automatische_Uebergabe.md` (bindend, Abschnitte 1–11, Startzeilen für neue Threads).
 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
 | Version | **A 0.12.2** auf `main` (c79c53f, PR #31), veröffentlicht als vA0.12.2 (24.10.2026 20:41). Davor vA0.12.0 (d30b1a3) und vA0.12.1 (e031933). Nächste Version A 0.12.3 bzw. nach Weisung. Release macht Chat nach Nicos Merge-OK (Nico 24.10.2026 18:19), CC nie. CC startet `release.yml` nie |
-| Phase | 0–5 abgenommen und gemergt (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); **Phase 6 fertig** bis auf den Update-Test am Windows-PC (Nico): W1 Release-Ablauf, W2 Plattformen, W3 erstes Release, A 0.12.1 Update-Test, A 0.12.2 Optik wie Python 0.63.2. Update-Test S24 A 0.12.0 → A 0.12.2 bestanden |
-| Jetzt | Bericht Phase 6 (VE9) liegt auf Fi-Austausch `anlagen/P6-Bericht_Phase6.md` (Meldung P6-16), wartet auf Abnahme; danach Phase 7 (Spiel) nur nach Plan und Nicos Freigabe |
+| Phase | 0–6 abgenommen; 0–5 (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); **Phase 6 fertig** bis auf den Update-Test am Windows-PC (Nico): W1 Release-Ablauf, W2 Plattformen, W3 erstes Release, A 0.12.1 Update-Test, A 0.12.2 Optik wie Python 0.63.2. Update-Test S24 A 0.12.0 → A 0.12.2 bestanden |
+| Jetzt | **Phase 7:** W1 Stichprobe 3D PR #35 (nicht mergen, wartet auf Nicos S24-Probe und Entscheidung, Meldung P7-2); W2 Spiel-Kern Teil 1 gemergt (PR #36, main 40affd5, Meldung P7-3); W3 Spiel-Kern Teil 2 gemergt (PR #37, main 3807754, Meldung P7-4). W8 Spielstand aus Python gebaut (PR #38, Kopf 005abee, voll 8/8 Lauf 40160849644, Meldung P7-5): wartet auf Chats Lesung (Schreiben über Lernstand) und Nicos Merge-OK. **P7-6 Stadt-Kern + Platzverwaltung gebaut** (PR #40, auf #38 gesetzt, Kopf c45c4f9, voller Lauf 40167172491 8/8, Meldungen P7-6/P7-7, von Chat abgenommen): #38 und #40 nur zusammen mergen, wartet auf Nicos Merge-OK. PC-Update-Test aus Phase 6 offen (Nico) |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
-| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu |
-| Letzte/nächste Meldung | **P6-16** (Bericht Phase 6) / P6-17 bzw. P7-1 |
-| Sammelliste | nächste freie Nummer **79**; offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46; 74 (Lizenztexte in der APK), 75 (Kommentar PythonPow.cs), 76/77 (Linux-Verknüpfung), 78 (Start-Test-Probe) |
-| Stoppgrenzen | unverändert, siehe `CLAUDE.md` „Bleibende Regeln“ (Regel A) |
+| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu; Spiel (W2, main 40affd5): `spiel_*.json` für G42, G44–G46, G48, G49; W3 (main 3807754): G43 `spiel_fingerabdruck.json` (f2b59ce8…6656), G47 `spiel_firma.json`; W8 (PR #38): G44 Übernahme `spiel_uebernahme.json`; P7-6 (PR #40): G44 Verwaltung `spiel_verwaltung.json`, G48 Stadt `spiel_stadt.json`, zweiter Fingerabdruck 86ac8f19…59ac |
+| Letzte/nächste Meldung | **P7-7** (Nacharbeit 97/99) / P7-8; Sammelliste nächste 101 |
+| Sammelliste | nächste freie Nummer **101** (95–100 aus P7-6); offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46; 74 (Lizenztexte in der APK), 75 (Kommentar PythonPow.cs), 76/77 (Linux-Verknüpfung), 78 (Start-Test-Probe) |
+| Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
 ## 4. So arbeitet der neue Chat
 1. `CLAUDE.md` und diese Datei lesen, dann die jüngste Weisung auf `Fi-Austausch` (bei Widerspruch gilt die jüngere).
