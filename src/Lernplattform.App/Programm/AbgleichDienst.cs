@@ -53,6 +53,7 @@ public static class AbgleichDienst
 
     private static AbgleichErgebnis Arbeit()
     {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         using var netz = new GitHubZugang();
         return Abgleich.Ausfuehren(Zustand.Lernstand, Zustand.Einstellungen, Geraet(), netz, Zustand.Umbenennungen);
     }

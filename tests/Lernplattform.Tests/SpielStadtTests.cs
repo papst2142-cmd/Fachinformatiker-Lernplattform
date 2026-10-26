@@ -397,10 +397,10 @@ public class SpielStadtTests
     /// Zweites Szenario (nur C#): sechs Arbeitstage mit Wegen zur Arbeit, zu den Geschaeften (mit Warten)
     /// und heim; Tickets werden richtig geloest oder verschoben, abends Feierabend.
     /// </summary>
-    internal static (Spielablauf Spiel, List<object?> Stadtstaende) StadtSzenario(PyObjekt? daten = null)
+    internal static (Spielablauf Spiel, List<object?> Stadtstaende) StadtSzenario(PyObjekt? daten = null, ISpielSpeicher? speicher = null)
     {
         var stadt = NeueStadt(daten);
-        var spiel = NeuesSpiel();
+        var spiel = speicher is null ? NeuesSpiel() : new Spielablauf(Inhalt, speicher);
         spiel.Profil("Nico", Aussehen(), Ereignisse.Normal);
         var staende = new List<object?>();
         void Merken(StadtErgebnis e)

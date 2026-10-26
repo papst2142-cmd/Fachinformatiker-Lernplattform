@@ -32,8 +32,35 @@ public sealed class SpielSitzung
             Wissen = new SpielWissen(schreiber.Lernstand.Pfad, lernen, SpielDaten.Objekt(stadt.Inhalt["balancing"]));
         }
         _schreiber = schreiber;
-        Verwaltung = new Spielverwaltung(schreiber, geraet, stadt.Inhalt, einrichten: Einrichten);
+        // Weisung P7-17: Spielschritte im Hintergrund schreiben; ein Schreibfehler haelt das Spiel an
+        Schlange.Fehler += fehler => Avalonia.Threading.Dispatcher.UIThread.Post(Schreibfehler);
+        Verwaltung = new Spielverwaltung(schreiber, geraet, stadt.Inhalt, einrichten: Einrichten, schlange: Schlange);
         Spiel = Neu();
+    }
+
+    /// <summary>Weisung P7-17: die Schlange der Spielschritte (ein Schreiber, feste Reihenfolge).</summary>
+    public Spielschlange Schlange { get; } = new();
+
+    /// <summary>
+    /// Weisung P7-17: ein Spielschritt wurde nicht gespeichert (steht in fehler.log). Der Spielstand wird aus der
+    /// Datenbank neu aufgebaut, das Spiel haelt an und zeigt den Hinweis.
+    /// </summary>
+    private void Schreibfehler()
+    {
+        try
+        {
+            Verwaltung.Ablauf?.Neuaufbau();
+        }
+        catch (Exception fehler)
+        {
+            // ein kaputtes Ereignis im Protokoll: die naechste Aktion wirft wie Python, der Hinweis bleibt
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Spiel: Neuaufbau nach Schreibfehler: " + fehler.GetType().Name,
+                Path.Combine(Path.GetDirectoryName(_schreiber.Lernstand.Pfad)!, Core.Diagnose.Fehlerprotokoll.DateiName));
+        }
+        if (!Abgleichen())
+        {
+            Spiel.Anhalten(Core.Texte.TrainerTexte.NichtGespeichert);
+        }
     }
 
     private readonly LernstandSchreiber _schreiber;
@@ -111,7 +138,11 @@ public sealed class SpielSitzung
     public PyObjekt Fachwissen() => Verwaltung.Ablauf?.Wissen() ?? Wissen?.Fachbereiche() ?? [];
 
     /// <summary>records(): die Bestenliste aller Durchgaenge.</summary>
-    public List<BestenZeile> Bestenliste() => SpielDatenbank.Bestenzeilen(_schreiber.Lernstand);
+    public List<BestenZeile> Bestenliste()
+    {
+        Schlange.Leeren();
+        return SpielDatenbank.Bestenzeilen(_schreiber.Lernstand);
+    }
 
     /// <summary>topic_knowledge()</summary>
     public PyObjekt Themenwissen() => Verwaltung.Ablauf?.ThemenWissen() ?? Wissen?.Themen() ?? [];

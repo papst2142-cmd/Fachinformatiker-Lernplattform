@@ -262,6 +262,8 @@ public sealed class SpielSeite : Grid
         };
         DetachedFromVisualTree += (_, _) =>
         {
+            // Weisung P7-17: beim Verlassen des Spiels alle Spielschritte fertig schreiben
+            Core.Spiel.Spielschlange.AlleLeeren();
             _anhaengen++;
             _takt.Stop();
             ZeitenSchreiben(true);

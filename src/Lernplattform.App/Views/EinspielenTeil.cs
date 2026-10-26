@@ -91,6 +91,7 @@ public sealed class EinspielenTeil
 
     private async Task AblaufInnenAsync(TopLevel top)
     {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
         {
             // P2-12 A2: nicht warten, solange ein Abgleich oder eine Uebernahme laeuft
@@ -153,6 +154,7 @@ public sealed class EinspielenTeil
     /// <summary>_merge_backup: Weg von „Lernstand übernehmen“ (deleted_runs erst mit dem Spiel, Plan BE3).</summary>
     private async Task ZusammenfuehrenAsync(Lernstand lernstand, Sicherungsinhalt sicherung)
     {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
         {
             await Hinweis(AbgleichTexte.Belegt);
@@ -195,6 +197,7 @@ public sealed class EinspielenTeil
         {
             return;
         }
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
         {
             await Hinweis(AbgleichTexte.Belegt);

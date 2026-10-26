@@ -82,6 +82,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _layouts;
     private double _layoutMs;
     private double _auftraegeMs;
+    // Weisung P7-17: steht die Bildschleife (kein naechstes Bild angefordert), ist die Zeit bis zum ersten
+    // Anlass (Zeiger oder Anforderung) Ruhe, kein Warten; dazu die Zeitstempel fuer langsame Bilder
+    private bool _ruht = true;
+    private long _anforderungStempel;
+    private long _zeigerStempel;
 
     /// <summary>Nachtrag 1 zu P7-13 (Wunsch 4): Zeitmessung je Bild (Datei spiel_bilder.log, Problembericht).</summary>
     public BildZeiten Zeiten { get; } = new();
@@ -250,6 +255,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public void AnfordernBild()
     {
         _weiterBis = _uhr.Elapsed.TotalSeconds + 0.75;
+        Anfordern();
+    }
+
+    /// <summary>Weisung P7-17: naechstes Bild anfordern; steht die Bildschleife, den ersten Anlass merken.</summary>
+    private void Anfordern()
+    {
+        if (_ruht && _anforderungStempel == 0)
+        {
+            _anforderungStempel = Stopwatch.GetTimestamp();
+        }
         RequestNextFrameRendering();
     }
 
@@ -272,7 +287,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             fertig.TrySetResult();
         }
         BildGezeichnet += Einmal;
-        RequestNextFrameRendering();
+        Anfordern();
         return fertig.Task;
     }
 
@@ -420,6 +435,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override unsafe void OnOpenGlRender(GlInterface gl, int fb)
     {
         var jetzt = _uhr.Elapsed.TotalSeconds;
+        var startStempel = Stopwatch.GetTimestamp();
+        var ruhte = _ruht;
+        _ruht = false;
         var bytesBeginn = GC.GetAllocatedBytesForCurrentThread();
         var abstandMs = _letztesBild < 0 ? 0 : (jetzt - _letztesBild) * 1000;
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
@@ -577,15 +595,58 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         var nachZeichnen = _uhr.Elapsed.TotalSeconds;
         BildGezeichnet?.Invoke();
-        Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen, bytesBeginn);
+        Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen, bytesBeginn, ruhte, startStempel);
         if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis)
         {
             RequestNextFrameRendering();
         }
+        else
+        {
+            _ruht = true;
+        }
+    }
+
+    /// <summary>
+    /// Weisung P7-17: Ruhe vor diesem Bild in ms. Stand die Bildschleife, zaehlt die Zeit vom Ende des letzten
+    /// Bildes bis zum ersten Anlass (Zeiger oder Anforderung) als Ruhe; ohne eigenen Anlass (Avalonia zeichnet
+    /// von sich aus neu) die ganze Luecke.
+    /// </summary>
+    private double Ruhe(bool ruhte, long startStempel)
+    {
+        if (!ruhte)
+        {
+            return 0;
+        }
+        var anlass = Erster(_anforderungStempel, _zeigerStempel > _endeVorherStempel ? _zeigerStempel : 0);
+        var bis = anlass > 0 ? Math.Min(anlass, startStempel) : startStempel;
+        return Math.Max(0, Stopwatch.GetElapsedTime(_endeVorherStempel, bis).TotalMilliseconds);
+    }
+
+    private static long Erster(long a, long b) => a == 0 ? b : b == 0 ? a : Math.Min(a, b);
+
+    /// <summary>
+    /// Weisung P7-17: fuer ein langsames Bild die Zeitpunkte der Eingabe vor Bildbeginn (Finger auf/ab von
+    /// Android, Zeiger-Ereignis von Avalonia, erste Anforderung), nur die seit dem Ende des letzten Bildes.
+    /// </summary>
+    private string? Eingabe(long startStempel)
+    {
+        var teile = new List<string>(3);
+        void Dazu(string name, long stempel)
+        {
+            if (stempel > _endeVorherStempel && stempel <= startStempel)
+            {
+                teile.Add(name + " " + BildZeiten.Ms(Stopwatch.GetElapsedTime(stempel, startStempel).TotalMilliseconds));
+            }
+        }
+        Dazu("Finger", Systemwerte.Finger);
+        Dazu("Zeiger", _zeigerStempel);
+        Dazu("Anforderung", _anforderungStempel);
+        return teile.Count == 0 ? null : "vor Bildbeginn: " + string.Join(", ", teile) + " ms";
     }
 
     /// <summary>Teilzeiten des Bildes in <see cref="Zeiten"/> eintragen (Speicherbereinigung und Speicher seit dem letzten Bild).</summary>
-    private void Messen(double start, double abstandMs, double nachLaden, double nachLogik, double verdecktSek, double nachZeichnen, long bytesBeginn)
+    private void Messen(double start, double abstandMs, double nachLaden, double nachLogik, double verdecktSek, double nachZeichnen, long bytesBeginn,
+        bool ruhte, long startStempel)
     {
         var ende = _uhr.Elapsed.TotalSeconds;
         Span<int> gc = [GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2)];
@@ -595,12 +656,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             (nachZeichnen - nachLogik - verdecktSek) * 1000, (ende - nachZeichnen) * 1000,
             gc[0] - _gcVorher[0], gc[1] - _gcVorher[1], gc[2] - _gcVorher[2], bytes - _bytesVorher, _spiel?.ImInnenraum ?? false,
             _endeVorher < 0 ? 0 : (start - _endeVorher) * 1000, _layouts, _layoutMs, _auftraegeMs + (_spiel?.AktionenMessen() ?? 0), bytes - bytesBeginn,
-            teile.WegMs, teile.EreignisMs);
-        if (Systemwerte.Seit is { } seit && BildZeiten.Dauer(bild) >= BildZeiten.LangsamAbMs)
+            teile.WegMs, teile.EreignisMs, RuheMs: _endeVorher < 0 ? 0 : Ruhe(ruhte, startStempel));
+        if (BildZeiten.Dauer(bild) >= BildZeiten.LangsamAbMs)
         {
-            // Weisung P7-16: Werte des Systems (Android) seit dem Ende des letzten Bildes, nur fuer langsame Bilder
-            bild = bild with { System = seit(_endeVorherStempel) };
+            // Weisung P7-16: Werte des Systems (Android) seit dem Ende des letzten Bildes, nur fuer langsame Bilder;
+            // Weisung P7-17: dazu die Zeitpunkte der Eingabe
+            bild = bild with { System = Systemwerte.Seit?.Invoke(_endeVorherStempel), Eingabe = Eingabe(startStempel) };
         }
+        _anforderungStempel = 0;
         var aufnehmen = _bytesVorher >= 0;
         gc.CopyTo(_gcVorher);
         _bytesVorher = bytes;
@@ -721,12 +784,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnSizeChanged(SizeChangedEventArgs e)
     {
         base.OnSizeChanged(e);
-        RequestNextFrameRendering();
+        Anfordern();
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        _zeigerStempel = Stopwatch.GetTimestamp();
         Focus();
         var p = e.GetPosition(this);
         _zeiger[e.Pointer] = p;
@@ -791,6 +855,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        _zeigerStempel = Stopwatch.GetTimestamp();
         var war = _zeiger.Remove(e.Pointer);
         e.Pointer.Capture(null);
         if (war && _zeiger.Count == 0 && !_gezogen)

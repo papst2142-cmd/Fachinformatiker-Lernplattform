@@ -25,16 +25,30 @@ public sealed partial class LernstandSchreiber
     /// der alte Durchgang (Spalte lauf NULL). Rueckgabe: der Zeitstempel der Zeile, null = nichts
     /// gespeichert.
     /// </summary>
-    public string? SpielEreignisSpeichern(string art, string daten, string geraet, string? lauf)
+    public string? SpielEreignisSpeichern(string art, string daten, string geraet, string? lauf) =>
+        SpielEreignisSpeichern(art, daten, geraet, lauf, SpielMarkeJetzt(UhrabweichungLesen()));
+
+    /// <summary>
+    /// Weisung P7-17: Zeitstempel, Abstand zu UTC und uid einer Zeile des Spiels, festgelegt zur Zeit der
+    /// Aktion; geschrieben wird sie danach im Hintergrund (Core/Spiel/Spielschlange), mit genau diesen Werten.
+    /// </summary>
+    public readonly record struct SpielMarke(string Zeit, int Abstand, string Uid);
+
+    /// <summary>Die Marke fuer eine Zeile jetzt (dieselbe Reihenfolge wie vorher: erst Stempel, dann uid).</summary>
+    public SpielMarke SpielMarkeJetzt(object? uhrabweichung)
     {
-        var (zeit, abstand) = Stempel();
-        return Lernstand.Schreiben(
+        var (zeit, abstand) = Stempel(uhrabweichung);
+        return new SpielMarke(zeit, abstand, _kennung());
+    }
+
+    /// <summary>log_game_event mit fester Marke (Weisung P7-17); Rueckgabe wie oben.</summary>
+    public string? SpielEreignisSpeichern(string art, string daten, string geraet, string? lauf, SpielMarke marke) =>
+        Lernstand.Schreiben(
             "INSERT INTO spiel_ereignisse (timestamp, utc_offset, typ, daten, geraet, uid, lauf)"
             + " VALUES ($zeit, $abstand, $art, $daten, $geraet, $uid, $lauf)",
-            ("$zeit", zeit), ("$abstand", abstand), ("$art", art), ("$daten", daten), ("$geraet", geraet ?? ""),
-            ("$uid", _kennung()), ("$lauf", string.IsNullOrEmpty(lauf) || lauf == AlterLauf ? null : lauf))
-            ? zeit : null;
-    }
+            ("$zeit", marke.Zeit), ("$abstand", marke.Abstand), ("$art", art), ("$daten", daten), ("$geraet", geraet ?? ""),
+            ("$uid", marke.Uid), ("$lauf", string.IsNullOrEmpty(lauf) || lauf == AlterLauf ? null : lauf))
+            ? marke.Zeit : null;
 
     /// <summary>log_slot: eine Zeile der Platz-Tabelle (angelegt, umbenannt, geloescht).</summary>
     public bool SpielPlatzSpeichern(long platz, string lauf, string aktion, string daten, string geraet) =>
@@ -77,12 +91,37 @@ public sealed partial class LernstandSchreiber
     /// Marke von "Bestenliste loeschen" (als Text, mit Zone in UTC), bekommt er die Marke + 1 s in
     /// deren Zone (Python 0.63.2 B-G-17, FG-100), sonst entfernte der naechste Abgleich ihn wieder.
     /// </summary>
-    public bool BestenSpeichern(string? lauf, string art, string schluessel, object? wert, string daten)
+    public bool BestenSpeichern(string? lauf, string art, string schluessel, object? wert, string daten) =>
+        BestenSpeichern(lauf, art, schluessel, wert, daten, SpielMarkeJetzt(UhrabweichungLesen()));
+
+    /// <summary>
+    /// log_record mit fester Marke (Weisung P7-17). Die Marke von "Bestenliste loeschen" wird beim Schreiben
+    /// gelesen; sie aendert sich nur mit der Sperre der Vorgaenge oder ueber <see cref="BestenlisteLoeschen"/>,
+    /// das die Schlange vorher leert, also ist sie dieselbe wie zur Zeit der Aktion.
+    /// </summary>
+    public bool BestenSpeichern(string? lauf, string art, string schluessel, object? wert, string daten, SpielMarke stempel)
     {
-        var (zeit, abstand) = Stempel();
-        var gelesen = Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", "bestenliste_reset_at")) is [var z, ..]
-            ? z[0] : null;
-        if (Loeschmarken.Lesen(gelesen) is { } marke)
+        var (zeit, abstand) = BestenZeit(stempel, BestenMarkeLesen());
+        return Lernstand.Schreiben(
+            "INSERT INTO spiel_bestenliste (timestamp, utc_offset, durchgang, art, schluessel, wert, daten, uid)"
+            + " VALUES ($zeit, $abstand, $lauf, $art, $schluessel, $wert, $daten, $uid)",
+            ("$zeit", zeit), ("$abstand", abstand), ("$lauf", lauf ?? ""), ("$art", art), ("$schluessel", schluessel),
+            ("$wert", wert), ("$daten", string.IsNullOrEmpty(daten) ? "{}" : daten), ("$uid", stempel.Uid));
+    }
+
+    /// <summary>Die Marke "Bestenliste loeschen" (bestenliste_reset_at, roh wie gespeichert).</summary>
+    public object? BestenMarkeLesen() =>
+        Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", "bestenliste_reset_at")) is [var z, ..] ? z[0] : null;
+
+    /// <summary>
+    /// Zeitstempel und utc_offset einer Zeile der Bestenliste wie log_record: liegt die Zeile nicht nach der
+    /// Marke "Bestenliste loeschen", gilt eine Sekunde nach der Marke (Weisung P7-17: auch fuer die Zeilen,
+    /// die das Spiel vor dem Schreiben schon in seiner Bestenliste fuehrt).
+    /// </summary>
+    public static (string Zeit, int Abstand) BestenZeit(SpielMarke stempel, object? loeschmarke)
+    {
+        var (zeit, abstand) = (stempel.Zeit, stempel.Abstand);
+        if (Loeschmarken.Lesen(loeschmarke) is { } marke)
         {
             var ort = Loeschmarken.Ortszeit(marke.Text[..19])!.Value;
             var eintragUtc = Loeschmarken.Ortszeit(zeit)!.Value.AddMinutes(-abstand);
@@ -95,11 +134,7 @@ public sealed partial class LernstandSchreiber
                 }
             }
         }
-        return Lernstand.Schreiben(
-            "INSERT INTO spiel_bestenliste (timestamp, utc_offset, durchgang, art, schluessel, wert, daten, uid)"
-            + " VALUES ($zeit, $abstand, $lauf, $art, $schluessel, $wert, $daten, $uid)",
-            ("$zeit", zeit), ("$abstand", abstand), ("$lauf", lauf ?? ""), ("$art", art), ("$schluessel", schluessel),
-            ("$wert", wert), ("$daten", string.IsNullOrEmpty(daten) ? "{}" : daten), ("$uid", _kennung()));
+        return (zeit, abstand);
     }
 
     /// <summary>reset_records: die Bestenliste loeschen, Marke bestenliste_reset_at (eine Buchung).</summary>

@@ -626,6 +626,29 @@ public sealed class StadtSpiel
     }
 
     /// <summary>
+    /// Weisung P7-17: ein Spielschritt wurde nicht gespeichert, der Spielstand ist aus der Datenbank neu
+    /// aufgebaut. Die Figur bleibt stehen (draussen am Ort des gespeicherten Stands), der Hinweis steht in der Zeile.
+    /// </summary>
+    public void Anhalten(string hinweis)
+    {
+        _weg.Clear();
+        _danachZu = null;
+        _danach = null;
+        _zielOrt = null;
+        if (!ImInnenraum)
+        {
+            ImFreien = false;
+            var hier = Szene.Ort(Jetzt.Ort);
+            FigurX = hier?.StehX ?? FigurX;
+            FigurZ = hier?.StehZ ?? FigurZ;
+        }
+        NeueSzene();
+        InnenNeu();
+        Zeile = hinweis;
+        Geaendert?.Invoke();
+    }
+
+    /// <summary>
     /// W6: nach dem Feierabend beginnt der neue Arbeitstag um 07:00 zu Hause (Stadt.Stand): hinaus,
     /// die Figur steht vor der Wohnung und geht gleich hinein.
     /// </summary>

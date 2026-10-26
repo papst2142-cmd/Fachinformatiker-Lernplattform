@@ -265,17 +265,24 @@ public sealed class Lernstand
         return "sonstige";
     }
 
+    // Weisung P7-17: das Spiel schreibt im Hintergrund, ein Fehler kann also auch aus einem anderen Faden kommen
+    private readonly object _meldenSperre = new();
+
     private void Melden(string nachricht, string? art = null)
     {
         art ??= Fehlerart(nachricht);
         Fehlerprotokoll.Schreiben($"Datenbankfehler ({art}): {nachricht}",
             Path.Combine(Path.GetDirectoryName(Pfad)!, Fehlerprotokoll.DateiName));
-        var erste = !_fehlerzaehler.ContainsKey(art);
-        _fehlerzaehler[art] = _fehlerzaehler.GetValueOrDefault(art) + 1;
-        var schonNurLesen = NurLesenGrund is not null;
-        if (!schonNurLesen && NurLesenZeilen.ContainsKey(art))
+        bool erste, schonNurLesen;
+        lock (_meldenSperre)
         {
-            NurLesenGrund = art;
+            erste = !_fehlerzaehler.ContainsKey(art);
+            _fehlerzaehler[art] = _fehlerzaehler.GetValueOrDefault(art) + 1;
+            schonNurLesen = NurLesenGrund is not null;
+            if (!schonNurLesen && NurLesenZeilen.ContainsKey(art))
+            {
+                NurLesenGrund = art;
+            }
         }
         if (erste && !schonNurLesen)
         {

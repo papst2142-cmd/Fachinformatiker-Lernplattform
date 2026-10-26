@@ -90,10 +90,29 @@ public class MainActivity : AvaloniaMainActivity
 
     public override bool DispatchTouchEvent(global::Android.Views.MotionEvent? e)
     {
-        if (_messung is { } messung && e?.ActionMasked == global::Android.Views.MotionEventActions.Down)
+        var art = e?.ActionMasked;
+        if (_messung is { } messung && art == global::Android.Views.MotionEventActions.Down)
         {
             messung.Beruehrungen++;
         }
+        if (art is global::Android.Views.MotionEventActions.Down or global::Android.Views.MotionEventActions.Up)
+        {
+            // Weisung P7-17: Zeitpunkt fuer die Eingabe vor einem langsamen Bild
+            Lernplattform.Spiel.Systemwerte.Finger = System.Diagnostics.Stopwatch.GetTimestamp();
+        }
         return base.DispatchTouchEvent(e);
+    }
+
+    /// <summary>Weisung P7-17: vor dem Wechsel in den Hintergrund alle Spielschritte fertig schreiben.</summary>
+    protected override void OnPause()
+    {
+        Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
+        base.OnPause();
+    }
+
+    protected override void OnStop()
+    {
+        Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
+        base.OnStop();
     }
 }

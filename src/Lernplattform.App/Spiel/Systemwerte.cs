@@ -15,4 +15,10 @@ public static class Systemwerte
     /// gerufen nur fuer langsame Bilder im Oberflaechen-Thread; null = nichts.
     /// </summary>
     public static Func<long, string?>? Seit { get; set; }
+
+    /// <summary>
+    /// Weisung P7-17: Zeitstempel (<see cref="System.Diagnostics.Stopwatch.GetTimestamp"/>) des letzten Fingers
+    /// auf oder ab, gesetzt von der Plattform (Android: MainActivity), 0 = keiner.
+    /// </summary>
+    public static long Finger { get; set; }
 }

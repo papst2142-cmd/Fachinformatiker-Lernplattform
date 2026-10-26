@@ -54,9 +54,13 @@ public class SpielVerwaltungTests
         return SpeichernTests.FesteUhr(() => start.AddTicks(15_000_000L * ++n));
     }
 
-    [Fact]
-    public void VerwaltungWiePython()
+    /// <param name="hintergrund">Weisung P7-17: dieselben Schritte mit Schreiben im Hintergrund (vor jedem Vergleich geleert).</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void VerwaltungWiePython(bool hintergrund)
     {
+        var schlange = hintergrund ? new Spielschlange() : null;
         using var ordner = new TempOrdner();
         var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
         var zaehler = 1L;   // fisi_core zieht beim Import schon eine uuid4 (PROCESS_TOKEN)
@@ -72,7 +76,7 @@ public class SpielVerwaltungTests
         Spielverwaltung G() => spiel!;
         string Offen() => (string)G().Stand.OffeneTickets()[0]["id"]!;
         string Platz(long n) => G().Belegung().LaufAuf(n)!;
-        Spielverwaltung Starten() => spiel = new Spielverwaltung(schreiber, "PC", Inhalt, Kennung, Vorgaenge.Sperren);
+        Spielverwaltung Starten() => spiel = new Spielverwaltung(schreiber, "PC", Inhalt, Kennung, Vorgaenge.Sperren, schlange: schlange);
 
         var aktionen = new List<(string Name, Func<object?> Aktion)>
         {
@@ -186,6 +190,7 @@ public class SpielVerwaltungTests
                 {
                     ergebnis = new PyObjekt { { "fehler", fehler.Message } };
                 }
+                schlange?.Leeren();
                 Gleich(W(soll.GetProperty("ergebnis")), ergebnis, wo + ": Ergebnis");
                 Gleich(W(soll.GetProperty("tabellen")), Tabellen(lernstand), wo + ": Tabellen");
                 Gleich(W(soll.GetProperty("lauf")), G().Lauf, wo + ": run");

@@ -204,6 +204,7 @@ public static class UpdateDienst
     /// </summary>
     internal static async Task<string> AktualisierenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, Action installiere)
     {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
         {
             // D8: Abgleich, Uebernahme oder Sicherung laeuft; die Oberflaeche wartet nie

@@ -29,9 +29,12 @@ public sealed class Spielverwaltung
 
     /// <param name="laufKennung">uuid4().hex fuer neue Durchgaenge (Vorgabe: zufaellig; Tests geben feste vor).</param>
     /// <param name="sperre">Wie die Sperre geholt wird (Vorgabe <see cref="Vorgaenge.Versuchen"/>, ohne Warten).</param>
+    /// <param name="schlange">Weisung P7-17: die Spielschritte im Hintergrund schreiben (null: sofort, wie vorher).
+    /// Eigene Schreib- und Lesezugriffe der Verwaltung leeren sie vorher.</param>
     public Spielverwaltung(LernstandSchreiber schreiber, string geraet, PyObjekt inhalt, Func<string>? laufKennung = null,
-        Func<IDisposable?>? sperre = null, Action<Spielablauf>? einrichten = null)
+        Func<IDisposable?>? sperre = null, Action<Spielablauf>? einrichten = null, Spielschlange? schlange = null)
     {
+        Schlange = schlange;
         this.schreiber = schreiber;
         Geraet = geraet;
         Inhalt = inhalt;
@@ -44,6 +47,9 @@ public sealed class Spielverwaltung
     }
 
     public string Geraet { get; }
+
+    /// <summary>Weisung P7-17: die Schlange der Spielschritte (null: es wird sofort geschrieben).</summary>
+    public Spielschlange? Schlange { get; }
 
     public PyObjekt Inhalt { get; }
 
@@ -63,6 +69,7 @@ public sealed class Spielverwaltung
 
     private T Lesen<T>(Func<SqliteConnection, T> lesen, T vorgabe)
     {
+        Schlange?.Leeren();
         try
         {
             using var verbindung = schreiber.Lernstand.Verbindung();
@@ -137,9 +144,19 @@ public sealed class Spielverwaltung
 
     private Spielablauf Neu(string lauf)
     {
-        var ablauf = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, Geraet, lauf, Sperre));
+        var ablauf = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, Geraet, lauf, Sperre, Schlange));
         Einrichten?.Invoke(ablauf);
         return ablauf;
+    }
+
+    /// <summary>
+    /// Weisung P7-17: eigene Schreibzugriffe der Verwaltung erst, wenn die Spielschritte davor geschrieben
+    /// sind (dieselbe Reihenfolge der Zeilen wie beim sofortigen Schreiben).
+    /// </summary>
+    private LernstandSchreiber Direkt()
+    {
+        Schlange?.Leeren();
+        return schreiber;
     }
 
     /// <summary>Sperre fuer einen Spielablauf: haelt die Verwaltung sie schon (laufende Aktion), gilt sie mit.</summary>
@@ -155,7 +172,7 @@ public sealed class Spielverwaltung
             var lauf = Lauf ?? "";
             try
             {
-                Halten(() => schreiber.SpielAktivMerken(lauf));
+                Halten(() => Direkt().SpielAktivMerken(lauf));
             }
             catch (SpielBelegtAusnahme)
             {
@@ -173,6 +190,8 @@ public sealed class Spielverwaltung
         {
             return aktion();
         }
+        // Weisung P7-17: erst alle Spielschritte schreiben (bis dahin haelt das Spiel die Sperre)
+        Schlange?.Leeren();
         gehalten = holen() ?? throw new SpielBelegtAusnahme();
         try
         {
@@ -180,6 +199,8 @@ public sealed class Spielverwaltung
         }
         finally
         {
+            // Zeilen, die das Spiel in dieser Aktion angehaengt hat, noch mit dieser Sperre schreiben
+            Schlange?.Leeren();
             var frei = gehalten;
             gehalten = null;
             frei.Dispose();
@@ -194,7 +215,7 @@ public sealed class Spielverwaltung
             throw new SpielFehler("Diesen Spielstand gibt es nicht mehr.");
         }
         Lauf = lauf;
-        schreiber.SpielAktivMerken(lauf);
+        Direkt().SpielAktivMerken(lauf);
         Ablauf?.Freigeschaltet.Clear();   // self.unlocked = []
         return Neuladen();
     });
@@ -219,7 +240,7 @@ public sealed class Spielverwaltung
             throw new SpielFehler("Diesen Platz gibt es nicht.");
         }
         var lauf = "l" + laufKennung()[..16];
-        schreiber.SpielPlatzSpeichern(platz, lauf, Spielstaende.Angelegt, "{}", Geraet);
+        Direkt().SpielPlatzSpeichern(platz, lauf, Spielstaende.Angelegt, "{}", Geraet);
         LaufWaehlen(lauf);
         return lauf;
     });
@@ -260,7 +281,7 @@ public sealed class Spielverwaltung
         var text = Rechner.PythonZeichen.Strip(name ?? "");
         text = string.Concat(text.EnumerateRunes().Take(Spielstaende.NameMax).Select(r => r.ToString()));
         var daten = PythonJson.Standard(new PyObjekt { { "name", text } });
-        return Halten(() => schreiber.SpielPlatzSpeichern(platz, "", Spielstaende.Umbenannt, daten, Geraet));
+        return Halten(() => Direkt().SpielPlatzSpeichern(platz, "", Spielstaende.Umbenannt, daten, Geraet));
     }
 
     /// <summary>
@@ -282,7 +303,7 @@ public sealed class Spielverwaltung
             LaufWaehlen(lauf);
         }
         Ablauf!.ErfolgePruefen(erzwingen: true);
-        var ok = schreiber.SpielLaufLoeschen(platz, lauf, Geraet);
+        var ok = Direkt().SpielLaufLoeschen(platz, lauf, Geraet);
         if (platz != 0 && !nameBehalten && belegung.Namen.Any(n => n.Platz == platz))
         {
             PlatzUmbenennen(platz, "");
@@ -294,7 +315,7 @@ public sealed class Spielverwaltung
         else
         {
             Lauf = null;
-            schreiber.SpielAktivMerken("");
+            Direkt().SpielAktivMerken("");
             Ablauf = null;
             ablaufLauf = null;
             leer = new Spielstand([], Inhalt);

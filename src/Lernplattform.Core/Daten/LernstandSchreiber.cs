@@ -31,12 +31,22 @@ public sealed partial class LernstandSchreiber(Lernstand lernstand, Uhr? uhr = n
     /// Uhr seither richtig gestellt wurde. Ging sie vor und ist ein Sprung seit der Messung nicht
     /// feststellbar, wird nichts eingerechnet (Python 0.63.2 S-1, Weg b). Die Ortszeit bleibt.
     /// </summary>
-    public (string Zeit, int Abstand) Stempel()
+    public (string Zeit, int Abstand) Stempel() => Stempel(UhrabweichungLesen());
+
+    /// <summary>
+    /// Weisung P7-17: der gespeicherte Wert der Uhrabweichung (sync_meta), den <see cref="Stempel(object?)"/>
+    /// braucht. Ihn schreibt nur der Abgleich (mit der Sperre der Vorgaenge); solange das Spiel die Sperre
+    /// haelt, bleibt er gleich und muss nicht je Zeile neu gelesen werden.
+    /// </summary>
+    public object? UhrabweichungLesen() =>
+        Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", Uhrabweichung.Schluessel)) is [var zeile, ..]
+            ? zeile[0] : null;
+
+    /// <summary>Wie <see cref="Stempel()"/> mit schon gelesenem Wert der Uhrabweichung (Weisung P7-17).</summary>
+    public (string Zeit, int Abstand) Stempel(object? wert)
     {
         var jetzt = _uhr.Jetzt();
         var abstand = Uhr.AbstandMinuten(jetzt);
-        var wert = Lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = $k", ("$k", Uhrabweichung.Schluessel)) is [var zeile, ..]
-            ? zeile[0] : null;
         var abweichung = _abweichung.Abweichung(wert, jetzt);
         if (abweichung > Uhrabweichung.Toleranz && _abweichung.SprungUnbekannt(wert, jetzt))
         {
