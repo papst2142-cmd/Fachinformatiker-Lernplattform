@@ -1,8 +1,8 @@
 <Project>
   <!-- Gemeinsame Einstellungen aller Projekte. Version nur hier aendern. -->
   <PropertyGroup>
-    <!-- Interne Zahlenversion; Anzeige "A 0.12.2" (A = Alphaphase), Tag vA0.12.2 -->
-    <Version>0.12.2</Version>
+    <!-- Interne Zahlenversion; Anzeige "A 0.13.0" (A = Alphaphase), Tag vA0.13.0 -->
+    <Version>0.13.0</Version>
     <Stufe>A</Stufe>
     <Product>Fachinformatiker Lernplattform</Product>
     <Company>Nico H</Company>

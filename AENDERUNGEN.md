@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.13.0
+Neu: Das Spiel ist jetzt in echtem 3D, am PC und am Handy gleich.
+
+- Du gehst mit deiner Figur durch eine Stadt: Tippe oder klicke auf ein Ziel, und die Figur läuft dorthin. Die Kamera folgt ihr. Ziehen verschiebt die Ansicht, mit zwei Fingern zoomst und drehst du, am PC zoomt auch das Mausrad.
+- Orte zum Betreten: deine Wohnung, die Firma, das Möbelhaus, der Elektromarkt, die Bank und das Amt. Innen siehst du den Raum mit Möbeln und Personen; die Wand zur Kamera hin ist durchsichtig.
+- Im Möbelhaus und im Elektromarkt kaufst du Möbel für deine Wohnung und Teile für die Arbeit. In der Bank nimmst du Kredite auf und zahlst sie zurück, auf dem Amt gründest du deine eigene Firma. Die Geschäfte haben Öffnungszeiten, und der Tag läuft mit jedem Weg weiter.
+- Die Firma, die Tickets aus dem Berufsalltag, Erfolge und die Bestenliste funktionieren wie in der bisherigen Python-Version. Deine Spielstände aus der Python-Version werden übernommen.
+- Das Spiel läuft flüssig auch auf dem Handy: Jeder Spielschritt wird im Hintergrund gespeichert, deshalb reagiert das Bild sofort. Vor einer Sicherung, einem Update, dem Abgleich und beim Beenden schreibt das Programm alles fertig. Kann ein Spielschritt einmal nicht gespeichert werden, sagt es dir das und lädt den letzten gespeicherten Stand.
+- Die Grafik besteht aus frei verwendbaren Modellen (CC0); sie stehen mit den übrigen Bausteinen unter „Optionen“ → „Über das Programm“.
+
 ## A 0.12.2
 Neues Aussehen: Alle Seiten sehen jetzt so aus wie die bisherige Handy-App, am PC und am Handy gleich.
 

@@ -59,7 +59,7 @@ public sealed class SpielSitzung
         }
         if (!Abgleichen())
         {
-            Spiel.Anhalten(Core.Texte.TrainerTexte.NichtGespeichert);
+            Spiel.Anhalten(Core.Texte.SpielProbeTexte.SchrittNichtGespeichert);
         }
     }
 
