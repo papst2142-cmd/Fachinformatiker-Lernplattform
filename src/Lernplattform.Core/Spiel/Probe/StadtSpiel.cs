@@ -38,6 +38,7 @@ public sealed class StadtSpiel
         FigurZ = hier?.StehZ ?? 0;
         // Beim Oeffnen erklaert die Zeile die Bedienung (Weisung P7-9 Punkt 1); ab dem ersten Schritt Ort und Uhr.
         Zeile = SpielProbeTexte.Hinweis;
+        Vorbereiten(Jetzt.Ort);
     }
 
     public Stadt Stadt { get; }
@@ -128,7 +129,7 @@ public sealed class StadtSpiel
         List<(double X, double Y)>? frei = null;
         if (ImFreien && Szene.Ort(ziel) is { } zielOrt)
         {
-            frei = [.. Szene.Laufraster.Weg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ))];
+            frei = [.. MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ)))];
             if (frei.Count == 0 && !(Math.Abs(FigurX - zielOrt.StehX) < 0.01 && Math.Abs(FigurZ - zielOrt.StehZ) < 0.01))
             {
                 Zeile = SpielProbeTexte.NichtErreichbar;
@@ -164,6 +165,7 @@ public sealed class StadtSpiel
         }
         ImFreien = false;
         _zielOrt = ziel;
+        Vorbereiten(ziel);
         var daten = ergebnis.Daten!;
         Zeile = string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.Unterwegs, Name(ziel)) + " "
             + string.Format(CultureInfo.InvariantCulture, StadtTexte.Wegdauer, daten["schritte"], daten["minuten"]);
@@ -211,7 +213,7 @@ public sealed class StadtSpiel
             (zx, zz) = (Py.F(ware["x"]) + (Py.F(ware["w"]) / 2), Py.F(ware["y"]) + (Py.F(ware["h"]) / 2));
             reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(ware["w"]), Py.F(ware["h"])) / 2);
         }
-        var weg = innen.Weg(FigurX, FigurZ, zx, zz, reichweite);
+        var weg = MitWeg(() => innen.Weg(FigurX, FigurZ, zx, zz, reichweite));
         _weg.Clear();
         _weg.AddRange(weg);
         if (weg.Count == 0)
@@ -244,7 +246,7 @@ public sealed class StadtSpiel
             Geaendert?.Invoke();
             return true;
         }
-        var weg = Szene.Laufraster.Weg((FigurX, FigurZ), (x, z));
+        var weg = MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (x, z)));
         if (weg.Count == 0)
         {
             Zeile = SpielProbeTexte.NichtErreichbar;
@@ -305,6 +307,47 @@ public sealed class StadtSpiel
         var wert = _aktionenMs;
         _aktionenMs = 0;
         return wert;
+    }
+
+    private double _wegMs;
+    private double _ereignisMs;
+
+    /// <summary>
+    /// Weisung P7-16: Teile der Aktionen seit dem letzten Abruf: Wegsuche (Stadt und Innenraum) und
+    /// Ereignis schreiben (Pruefen, Spielablauf, Datenbank). Sie stecken schon in <see cref="AktionenMessen"/>.
+    /// </summary>
+    public (double WegMs, double EreignisMs) TeileMessen()
+    {
+        var wert = (_wegMs, _ereignisMs);
+        _wegMs = 0;
+        _ereignisMs = 0;
+        return wert;
+    }
+
+    private T MitEreignis<T>(Func<T> schreiben)
+    {
+        var beginn = System.Diagnostics.Stopwatch.GetTimestamp();
+        try
+        {
+            return schreiben();
+        }
+        finally
+        {
+            _ereignisMs += System.Diagnostics.Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
+        }
+    }
+
+    private T MitWeg<T>(Func<T> suche)
+    {
+        var beginn = System.Diagnostics.Stopwatch.GetTimestamp();
+        try
+        {
+            return suche();
+        }
+        finally
+        {
+            _wegMs += System.Diagnostics.Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
+        }
     }
 
     private T Gemessen<T>(Func<T> aktion)
@@ -379,6 +422,7 @@ public sealed class StadtSpiel
             Zeile = OrtZeile(ort);
             _zielOrt = null;
             NeueSzene();
+            Vorbereiten(ort);
             if (_danachZu is { } weiter && weiter == ort)
             {
                 // "Zur Arbeit" / "Zurueck ins Buero": am Ziel gleich hinein
@@ -459,7 +503,8 @@ public sealed class StadtSpiel
         {
             return false;
         }
-        var innen = Probe.Innenraum.Bauen(Szene.Ort(Jetzt.Ort)?.Ansicht, Ablauf.Stand, Innenraeume, Grafik);
+        var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
+        var innen = Vorbereitet(ansicht) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik);
         if (innen is null)
         {
             return false;
@@ -475,6 +520,67 @@ public sealed class StadtSpiel
         Geaendert?.Invoke();
         return true;
     }
+
+    private Task<Innenraum?>? _vorbereitung;
+    private string? _vorAnsicht;
+    private Spielstand? _vorStand;
+
+    /// <summary>
+    /// Weisung P7-16: den Innenraum eines Orts ausserhalb des Oberflaechen-Threads vorbereiten (Grundriss,
+    /// Netze, Laufraster), solange die Figur hingeht oder davor steht. Gebaut wird aus einer Kopie des
+    /// Spielstands; benutzt wird das Ergebnis beim Betreten nur, wenn der Spielstand noch derselbe ist
+    /// (jedes Ereignis ersetzt den Stand, STATE_COPY), sonst wird wie bisher sofort gebaut.
+    /// </summary>
+    public void Vorbereiten(string? ort)
+    {
+        var ansicht = ort is null ? null : Szene.Ort(ort)?.Ansicht;
+        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand)))
+        {
+            return;
+        }
+        var stand = Ablauf.Stand;
+        var kopie = stand.Kopie();
+        var (innenraeume, grafik) = (Innenraeume, Grafik);
+        _vorAnsicht = ansicht;
+        _vorStand = stand;
+        _vorbereitung = Task.Run(() =>
+        {
+            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik);
+            innen?.Vorbereiten();
+            return innen;
+        });
+    }
+
+    /// <summary>Der vorbereitete Innenraum zur Ansicht, wenn er zum jetzigen Spielstand passt (sonst null).</summary>
+    private Innenraum? Vorbereitet(string? ansicht)
+    {
+        var aufgabe = _vorbereitung;
+        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand);
+        _vorbereitung = null;
+        _vorAnsicht = null;
+        _vorStand = null;
+        if (!passt)
+        {
+            return null;
+        }
+        try
+        {
+            // laeuft sie noch, ist Warten nie laenger als neu bauen
+            var innen = aufgabe!.GetAwaiter().GetResult();
+            if (innen is not null)
+            {
+                VorbereitetGenommen++;
+            }
+            return innen;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Wie oft das Betreten den vorbereiteten Innenraum genommen hat (Start-Test, Tests).</summary>
+    public int VorbereitetGenommen { get; private set; }
 
     /// <summary>Text und Knoepfe zum Platz der Figur im Innenraum (place_message/home_message).</summary>
     private void InnenText()
@@ -782,7 +888,7 @@ public sealed class StadtSpiel
     {
         try
         {
-            return aktion();
+            return MitEreignis(aktion);
         }
         catch (SpielBelegtAusnahme)
         {
@@ -804,11 +910,11 @@ public sealed class StadtSpiel
     {
         try
         {
-            var ereignisse = aktion();
-            if (ereignisse.Count > 0)
+            MitEreignis(() =>
             {
-                Ablauf.Ausfuehren(ereignisse);
-            }
+                var ereignisse = aktion();
+                return ereignisse.Count > 0 ? Ablauf.Ausfuehren(ereignisse) : null;
+            });
         }
         catch (SpielBelegtAusnahme)
         {

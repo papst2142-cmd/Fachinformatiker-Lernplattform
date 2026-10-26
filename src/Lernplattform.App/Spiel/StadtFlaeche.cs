@@ -78,6 +78,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly int[] _gcVorher = new int[3];
     private long _bytesVorher = -1;
     private double _endeVorher = -1;
+    private long _endeVorherStempel = Stopwatch.GetTimestamp();
     private int _layouts;
     private double _layoutMs;
     private double _auftraegeMs;
@@ -287,7 +288,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var klammer = grafik.IndexOf(" (", StringComparison.Ordinal);
             GlKurz = (es ? "OpenGL ES " : "OpenGL ") + v.Major + "." + v.Minor + " · " + (klammer > 0 ? grafik[..klammer] : grafik);
             // Weisung P7-15: laeuft das Zeichnen im Oberflaechen-Thread, wartet jedes Bild auf Layout und Auftraege
-            Zeiten.Kopf = "Grafik: " + GlText + " · Bild im Oberflächen-Thread: " + (Avalonia.Threading.Dispatcher.UIThread.CheckAccess() ? "ja" : "nein");
+            Zeiten.Kopf = "Grafik: " + GlText + " · Bild im Oberflächen-Thread: " + (Avalonia.Threading.Dispatcher.UIThread.CheckAccess() ? "ja" : "nein")
+                + (Systemwerte.Kopf?.Invoke() is { Length: > 0 } system ? "\n" + system : "");
             _programm = Programm(gl, es, v);
             _ortMvp = gl.GetUniformLocationString(_programm, "uMvp");
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
@@ -450,10 +452,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _innenWaende.Clear();
             // Nachtrag 1 zu P7-13 (Wunsch 3): Waende einzeln, jede kann halb durchsichtig werden
-            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzBauen(ohneWaende: true)) : null;
+            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzOhneWaende) : null;
             foreach (var wand in s2.Innen?.Waende ?? [])
             {
-                _innenWaende[wand] = GlNetz.Laden(gl, s2.Innen!.WandNetz(wand));
+                _innenWaende[wand] = GlNetz.Laden(gl, s2.Innen!.WandNetzFertig(wand));
             }
             _innenGeladen = s2.Innen;
             _innenNeu = false;
@@ -588,10 +590,17 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var ende = _uhr.Elapsed.TotalSeconds;
         Span<int> gc = [GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2)];
         var bytes = GC.GetAllocatedBytesForCurrentThread();
+        var teile = _spiel?.TeileMessen() ?? default;
         var bild = new BildZeiten.Bild(start, abstandMs, (nachLogik - nachLaden) * 1000, ((nachLaden - start) + verdecktSek) * 1000,
             (nachZeichnen - nachLogik - verdecktSek) * 1000, (ende - nachZeichnen) * 1000,
             gc[0] - _gcVorher[0], gc[1] - _gcVorher[1], gc[2] - _gcVorher[2], bytes - _bytesVorher, _spiel?.ImInnenraum ?? false,
-            _endeVorher < 0 ? 0 : (start - _endeVorher) * 1000, _layouts, _layoutMs, _auftraegeMs + (_spiel?.AktionenMessen() ?? 0), bytes - bytesBeginn);
+            _endeVorher < 0 ? 0 : (start - _endeVorher) * 1000, _layouts, _layoutMs, _auftraegeMs + (_spiel?.AktionenMessen() ?? 0), bytes - bytesBeginn,
+            teile.WegMs, teile.EreignisMs);
+        if (Systemwerte.Seit is { } seit && BildZeiten.Dauer(bild) >= BildZeiten.LangsamAbMs)
+        {
+            // Weisung P7-16: Werte des Systems (Android) seit dem Ende des letzten Bildes, nur fuer langsame Bilder
+            bild = bild with { System = seit(_endeVorherStempel) };
+        }
         var aufnehmen = _bytesVorher >= 0;
         gc.CopyTo(_gcVorher);
         _bytesVorher = bytes;
@@ -599,6 +608,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _layoutMs = 0;
         _auftraegeMs = 0;
         _endeVorher = ende;
+        _endeVorherStempel = Stopwatch.GetTimestamp();
         if (aufnehmen)
         {
             // die Messung selbst (alle 10 s eine Zeile) zaehlt als Auftrag vor dem naechsten Bild
@@ -644,7 +654,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value));
         if (!_figuren.TryGetValue(schluessel, out var netz))
         {
-            netz = GlNetz.Laden(gl, Figur.Netz(_spiel?.Grafik, aussehen, 1f));
+            netz = GlNetz.Laden(gl, _spiel?.Innen?.PersonNetz(id, aussehen) ?? Figur.Netz(_spiel?.Grafik, aussehen, 1f));
             _figuren[schluessel] = netz;
         }
         _figurZuletzt[id] = (aussehen, netz);
@@ -934,14 +944,15 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             g._ecken = gl.GenBuffer();
             gl.BindBuffer(GL_ARRAY_BUFFER, g._ecken);
-            var ecken = netz.Ecken.ToArray();
+            // Weisung P7-16: direkt aus dem Netz hochladen (keine Kopie als neues Feld)
+            var ecken = netz.EckenFeld;
             fixed (float* zeiger = ecken)
             {
                 gl.BufferData(GL_ARRAY_BUFFER, new IntPtr(ecken.Length * sizeof(float)), new IntPtr(zeiger), GL_STATIC_DRAW);
             }
             g._indizes = gl.GenBuffer();
             gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, g._indizes);
-            var indizes = netz.Indizes.ToArray();
+            var indizes = netz.IndizesFeld;
             fixed (uint* zeiger = indizes)
             {
                 gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, new IntPtr(indizes.Length * sizeof(uint)), new IntPtr(zeiger), GL_STATIC_DRAW);

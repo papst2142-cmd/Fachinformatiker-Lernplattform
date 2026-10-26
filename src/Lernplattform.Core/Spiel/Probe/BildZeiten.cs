@@ -38,7 +38,12 @@ public sealed class BildZeiten
     /// </summary>
     public readonly record struct Bild(double Zeit, double AbstandMs, double LogikMs, double VorbereitungMs, double ZeichnenMs, double DanachMs,
         int Gc0, int Gc1, int Gc2, long Bytes, bool Innen, double LueckeMs = 0, int Layouts = 0, double LayoutMs = 0, double AuftraegeMs = 0,
-        long BytesBild = 0);
+        long BytesBild = 0, double WegMs = 0, double EreignisMs = 0, string? System = null);
+
+    /// <summary>Weisung P7-16: Teile der Auftraege eines Bildes (Wegsuche, Ereignis schreiben), leer ohne beide.</summary>
+    public static string Davon(Bild b) => b.WegMs > 0 || b.EreignisMs > 0
+        ? " (davon Wegsuche " + Ms(b.WegMs) + ", Ereignis " + Ms(b.EreignisMs) + ")"
+        : "";
 
     /// <summary>Zeit der Luecke, die keinem gemessenen Teil gehoert (Oberflaeche ohne eigene Auftraege, Grafiktreiber, System).</summary>
     public static double AusserhalbMs(Bild b) => b.LueckeMs < PauseAb * 1000 ? Math.Max(0, b.LueckeMs - b.LayoutMs - b.AuftraegeMs) : 0;
@@ -249,7 +254,7 @@ public sealed class BildZeiten
             schluss.Append(string.Create(CultureInfo.InvariantCulture,
                 $"  {TimeSpan.FromSeconds(b.Zeit):hh\\:mm\\:ss\\.ff} {(b.Innen ? "innen" : "Stadt")}: {Ms(Dauer(b))} ms (Logik {Ms(b.LogikMs)}, Vorbereitung {Ms(b.VorbereitungMs)}, " +
                 $"Zeichnen {Ms(b.ZeichnenMs)}, Danach {Ms(b.DanachMs)}, GC {b.Gc0}/{b.Gc1}/{b.Gc2}, {b.Bytes / 1024} KB) Lücke {Ms(b.LueckeMs)}, " +
-                $"Layout {b.Layouts}x {Ms(b.LayoutMs)}, Aufträge {Ms(b.AuftraegeMs)}, außerhalb {Ms(AusserhalbMs(b))}, im Bild {b.BytesBild / 1024} KB, Teil: {Teil(b)}\n"));
+                $"Layout {b.Layouts}x {Ms(b.LayoutMs)}, Aufträge {Ms(b.AuftraegeMs)}{Davon(b)}, außerhalb {Ms(AusserhalbMs(b))}, im Bild {b.BytesBild / 1024} KB, Teil: {Teil(b)}{(b.System is { Length: > 0 } system ? "; " + system : "")}\n"));
         }
         if (schluss.Length > 0)
         {
