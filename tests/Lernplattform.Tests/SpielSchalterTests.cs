@@ -312,4 +312,57 @@ public class SpielSchalterTests
             spiel.Verlassen();
         }
     }
+
+    /// <summary>
+    /// Weisung P7-15b: die Platznummern auf dem Amt sind von Kamera und Eingang her lesbar. Aus den weissen
+    /// Segmenten jeder Tafel wird die Ziffer zurueckgelesen (links/rechts so, wie die Kamera sie sieht) und mit
+    /// der Nummer verglichen; die Ziffern liegen vorn (+z, zum Eingang und zur Kamera), nicht hinten.
+    /// Kein Bildvergleich: gespiegelt hiesse eine 2 wie eine 5 (S) und eine 3 wie ein E.
+    /// </summary>
+    [Fact]
+    public void PlatznummernSindVonDerKameraHerLesbar()
+    {
+        var stand = new Spielablauf(Inhalt).Stand;
+        var amt = Innenraum.Bauen("schalter:" + Schalter.Amt, stand, SpielInnenraumTests.Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
+        // Segmente wie Innenraum.Segmente (a oben, b rechts oben, c rechts unten, d unten, e links unten, f links oben, g Mitte)
+        string[] soll = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
+        var schilder = SpielInnenraumTests.Deko(amt.Gebaeude).Where(d => Py.Str(d["typ"]) == "platznummer").ToList();
+        Assert.Equal(3, schilder.Count);
+        foreach (var d in schilder)
+        {
+            float x = (float)Py.F(d["x"]), z = (float)Py.F(d["y"]), w = (float)Py.F(d["w"]), h = (float)Py.F(d["h"]);
+            var nummer = (int)Py.Int(d["nummer"]);
+            var segmente = amt.Teile.Where(t => t.Farbe == Innenraum.Farben.Weiss && t.X1 >= x - 0.01f && t.X2 <= x + w + 0.01f
+                && t.Z1 >= z - 0.01f && t.Z2 <= z + h + 0.05f).ToList();
+            Assert.True(segmente.Count >= 2, "Platz " + nummer + ": keine Ziffer");
+            // Kamera wie im Spiel (Drehung 0, Blick nach -z) vor dem Schild: rechts im Bild = groesseres x
+            var kamera = new Kamera(x + (w / 2), z + 2, 9);
+            var sichtProj = kamera.Sicht * kamera.Projektion(1280, 720);
+            float BildX(float wx, float wy, float wz)
+            {
+                var p = System.Numerics.Vector4.Transform(new System.Numerics.Vector4(wx, wy, wz, 1), sichtProj);
+                return p.X / p.W;
+            }
+            float x0 = segmente.Min(t => t.X1), x1 = segmente.Max(t => t.X2), y0 = segmente.Min(t => t.Y1), y1 = segmente.Max(t => t.Y2);
+            float vorn = segmente.Max(t => t.Z2), ym = (y0 + y1) / 2;
+            Assert.True(BildX(x1, ym, vorn) > BildX(x0, ym, vorn), "Platz " + nummer + ": links und rechts vertauscht");
+            // vorn: die Ziffern stehen vor der Tafel (zur Kamera und zum Eingang hin), die Kamera steht davor
+            Assert.True(segmente.Min(t => t.Z1) >= z + h - 0.001f, "Platz " + nummer + ": Ziffer nicht auf der Vorderseite");
+            Assert.True(kamera.Auge.Z > vorn);
+            var gelesen = new System.Text.StringBuilder();
+            // Mitte der Tafel (die Ziffer steht mittig; eine 1 hat nur rechte Segmente)
+            var mitteX = x + (w / 2);
+            foreach (var t in segmente)
+            {
+                bool waagrecht = (t.X2 - t.X1) > (t.Y2 - t.Y1);
+                float cy = (t.Y1 + t.Y2) / 2;
+                // links/rechts im Bild, nicht im Grundriss
+                bool rechts = BildX((t.X1 + t.X2) / 2, cy, vorn) > BildX(mitteX, cy, vorn);
+                gelesen.Append(waagrecht
+                    ? (cy > y1 - 0.05f ? 'a' : cy < y0 + 0.05f ? 'd' : 'g')
+                    : (rechts ? (cy > ym ? 'b' : 'c') : (cy > ym ? 'f' : 'e')));
+            }
+            Assert.Equal(soll[nummer], string.Concat(gelesen.ToString().Order()));
+        }
+    }
 }
