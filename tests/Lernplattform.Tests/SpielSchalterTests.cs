@@ -239,6 +239,59 @@ public class SpielSchalterTests
         }
     }
 
+    /// <summary>
+    /// P7-15: Bank und Amt haben je einen eigenen Charakter. Fester Vergleich ohne Bild: die Liste der
+    /// Einrichtung und die Farben (Waende innen und aussen, Boeden) unterscheiden sich; jedes
+    /// Zusatzstueck hat Geometrie, der Grundriss in innenraeume.json bleibt dabei unveraendert.
+    /// </summary>
+    [Fact]
+    public void BankUndAmtSehenVerschiedenAus()
+    {
+        var stand = new Spielablauf(Inhalt).Stand;
+        var grundrisse = SpielInnenraumTests.Innenraeume.Value;
+        Innenraum Raum(string ort) => Innenraum.Bauen("schalter:" + ort, stand, grundrisse, SpielGrafikTests.Bibliothek.Value)!;
+        var bank = Raum(Schalter.Bank);
+        var amt = Raum(Schalter.Amt);
+        HashSet<string> Typen(Innenraum r) => [.. SpielInnenraumTests.Deko(r.Gebaeude).Select(d => Py.Str(d["typ"]))];
+        var nurBank = Typen(bank).Except(Typen(amt)).ToList();
+        var nurAmt = Typen(amt).Except(Typen(bank)).ToList();
+        Assert.True(nurBank.Count >= 4, "nur in der Bank: " + string.Join(", ", nurBank));
+        Assert.True(nurAmt.Count >= 4, "nur auf dem Amt: " + string.Join(", ", nurAmt));
+        Assert.Contains("tresor", nurBank);
+        Assert.Contains("geldautomat", nurBank);
+        Assert.Contains("wartemarken", nurAmt);
+        Assert.Contains("platznummer", nurAmt);
+        // Farben: eigene Waende innen und aussen, eigene Boeden, keine Farbe der Palette mehr
+        Assert.NotEqual(bank.WandFarbe, amt.WandFarbe);
+        Assert.NotEqual(bank.AussenFarbe, amt.AussenFarbe);
+        Assert.NotEqual(Innenraum.Farben.Wand, bank.WandFarbe);
+        Assert.NotEqual(Innenraum.Farben.Wand, amt.WandFarbe);
+        Assert.NotEqual(bank.BodenFarben["flur"], amt.BodenFarben["flur"]);
+        Assert.NotEqual(bank.BodenFarben["schalterhalle"], amt.BodenFarben["buergerbuero"]);
+        // Bank kuehl (Blau ueberwiegt Rot), Amt warm (Rot ueberwiegt Blau)
+        Assert.True(bank.WandFarbe.Z > bank.WandFarbe.X && bank.BodenFarben["schalterhalle"].Z > bank.BodenFarben["schalterhalle"].X);
+        Assert.True(amt.WandFarbe.X > amt.WandFarbe.Z && amt.BodenFarben["buergerbuero"].X > amt.BodenFarben["buergerbuero"].Z);
+        foreach (var r in new[] { bank, amt })
+        {
+            Assert.All(SpielInnenraumTests.Deko(r.Gebaeude), d => Assert.True(SpielInnenraumTests.HatGeometrie(r, d), r.Ort + ": " + Py.Str(d["typ"]) + " ohne Geometrie"));
+            Assert.Contains(r.Teile, t => t.Farbe == r.WandFarbe);
+            Assert.Contains(r.Teile, t => t.Farbe == r.AussenFarbe);
+        }
+        // der Zusatz steht nur angehaengt: der Grundriss selbst bleibt (Kopie), der Zusatz ist eigener Schluessel
+        var zusatz = SpielDaten.Objekt(grundrisse["zusatz"]);
+        foreach (var ort in new[] { Schalter.Bank, Schalter.Amt })
+        {
+            var grundriss = SpielDaten.Objekt(SpielDaten.Objekt(grundrisse[ort])["gebaeude"]);
+            Assert.False(Py.Hat(grundriss, "wandfarbe"));
+            var mehr = SpielInnenraumTests.Deko(Raum(ort).Gebaeude).Count() - SpielInnenraumTests.Deko(grundriss).Count();
+            var soll = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["flur"]), "deko").Count
+                + SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["raeume"]).Sum(p => SpielDaten.ListeOderLeer(SpielDaten.Objekt(p.Value), "deko").Count);
+            Assert.Equal(soll, mehr);
+        }
+        Assert.Same(SpielDaten.Objekt(SpielDaten.Objekt(grundrisse["moebelhaus"])["gebaeude"]),
+            Innenraum.Bauen("geschaeft:moebelhaus", stand, grundrisse, null)!.Gebaeude);
+    }
+
     [Fact]
     public void BetretenInDerStadt()
     {

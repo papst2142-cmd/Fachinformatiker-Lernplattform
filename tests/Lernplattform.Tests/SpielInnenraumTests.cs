@@ -81,11 +81,11 @@ public class SpielInnenraumTests
         }
     }
 
-    private static IEnumerable<PyObjekt> Deko(PyObjekt gebaeude) =>
+    internal static IEnumerable<PyObjekt> Deko(PyObjekt gebaeude) =>
         SpielDaten.Liste(gebaeude["raeume"]).Select(SpielDaten.Objekt).SelectMany(r => SpielDaten.ListeOderLeer(r, "deko"))
             .Concat(SpielDaten.ListeOderLeer(SpielDaten.Objekt(gebaeude["flur"]), "deko")).Select(SpielDaten.Objekt);
 
-    private static bool HatGeometrie(Innenraum innen, PyObjekt d)
+    internal static bool HatGeometrie(Innenraum innen, PyObjekt d)
     {
         float x = (float)Py.F(d["x"]) - 0.05f, z = (float)Py.F(d["y"]) - 0.05f;
         float x2 = x + (float)Py.F(d["w"]) + 0.1f, z2 = z + (float)Py.F(d["h"]) + 0.1f;

@@ -176,5 +176,45 @@
     "personen": [
       {"id": "kraus", "name": "Sabine Kraus", "rolle": "Sachbearbeiterin", "aussehen": {"haut": "hell", "frisur": "lang", "haarfarbe": "grau", "oberteil": "gruen", "extra": "brille"}, "text": "Willkommen auf dem Amt. Hier meldest du deine Firma an und siehst, was sie an Umsatzsteuer zurücklegt.", "platz": [9.0, 1.95]}
     ]
+  },
+  "zusatz": {
+    "_hinweis": [
+      "Weisung P7-15: eigener Charakter fuer Bank und Amt, nur angehaengt. Je Ort ersetzen wandfarbe, aussenfarbe, boden und bodenfarbe die Werte des Grundrisses oben; deko kommt zur Einrichtung hinzu (flur und raeume nach id).",
+      "Bank kuehl (Blau, Grau, Stein): Glas auf dem Tresen, Abstandslinie, Schliessfaecher, Tresor, Geldautomaten im Eingang. Amt warm (Sand, Terrakotta): Wartemarken und Anzeigetafel im Wartebereich, Wappen, Fahne, nummerierte Plaetze 1 bis 3, zweiter Schreibtisch."
+    ],
+    "bank": {
+      "wandfarbe": "#BFD6F0", "aussenfarbe": "#8FAED6",
+      "flur": {"bodenfarbe": "#B4C4D8", "deko": [
+        {"typ": "geldautomat", "x": 8.2, "y": 7.1, "w": 1.0, "h": 0.6},
+        {"typ": "geldautomat", "x": 9.4, "y": 7.1, "w": 1.0, "h": 0.6}
+      ]},
+      "raeume": {
+        "schalterhalle": {"boden": "fliesen", "bodenfarbe": "#C9D6E8", "deko": [
+          {"typ": "glaswand", "x": 6.0, "y": 2.4, "w": 4.4, "h": 0.12},
+          {"typ": "markierung", "x": 6.0, "y": 3.8, "w": 4.4, "h": 0.08},
+          {"typ": "schliessfaecher", "x": 0.0, "y": 1.6, "w": 0.5, "h": 2.6},
+          {"typ": "tresor", "x": 15.4, "y": 1.8, "w": 0.6, "h": 2.0}
+        ]}
+      }
+    },
+    "amt": {
+      "wandfarbe": "#F6E6CC", "aussenfarbe": "#E2C49A",
+      "flur": {"bodenfarbe": "#EEDCBF", "deko": [
+        {"typ": "wartemarken", "x": 7.4, "y": 8.05, "w": 0.7, "h": 0.5},
+        {"typ": "anzeigetafel", "x": 10.0, "y": 8.0, "w": 3.0, "h": 0.1},
+        {"typ": "wappen", "x": 14.0, "y": 8.0, "w": 1.2, "h": 0.1},
+        {"typ": "pflanze", "x": 6.8, "y": 11.1, "w": 0.8, "h": 0.8}
+      ]},
+      "raeume": {
+        "buergerbuero": {"bodenfarbe": "#B9825E", "deko": [
+          {"typ": "schreibtisch", "x": 2.4, "y": 3.0, "w": 2.2, "h": 1.0},
+          {"typ": "platznummer", "nummer": 1, "unten": 0.75, "x": 2.5, "y": 3.75, "w": 0.4, "h": 0.1},
+          {"typ": "platznummer", "nummer": 2, "unten": 1.05, "x": 7.0, "y": 2.65, "w": 0.4, "h": 0.1},
+          {"typ": "platznummer", "nummer": 3, "unten": 0.75, "x": 15.1, "y": 3.75, "w": 0.4, "h": 0.1},
+          {"typ": "fahne", "x": 16.8, "y": 1.3, "w": 0.6, "h": 0.6},
+          {"typ": "pflanze", "x": 4.6, "y": 0.3, "w": 0.8, "h": 0.8}
+        ]}
+      }
+    }
   }
 }
