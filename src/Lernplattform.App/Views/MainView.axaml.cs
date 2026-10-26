@@ -292,7 +292,7 @@ public partial class MainView : UserControl
         _breit = breit;
         _leisten.Seitenleiste.IsVisible = breit;
         _leisten.UntereLeiste.IsVisible = !breit;
-        // Logo-Ring nur im schmalen Aufbau (breit steht der Programmname in der Seitenleiste)
+        // Logo-Ring der Kopfleiste nur im schmalen Aufbau (breit steht das Logo in der Seitenleiste)
         _logo.IsVisible = !breit;
         KopfAnordnen();
         _leisten.Markiere(AktuelleSeite);
@@ -469,11 +469,14 @@ public partial class MainView : UserControl
         }
         Brotkrumen(id);
         _leisten.Markiere(id);
+        // Phase 8 W2b: Kasten LERNSTATUS im Hintergrund neu zaehlen (wie refresh nach dem Lernen in Python)
+        _leisten.LernstatusLesen();
         Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
     private void NachAbgleich()
     {
+        _leisten.LernstatusLesen();
         if (!_seiten.TryGetValue(AktuelleSeite, out var seite))
         {
             return;
@@ -752,6 +755,9 @@ public partial class MainView : UserControl
 
     /// <summary>Alle schon gebauten Seiten (fuer die Layoutpruefung im Start ohne Bedienung).</summary>
     public IReadOnlyDictionary<string, Control> GebauteSeiten => _seiten;
+
+    /// <summary>Seitenleiste und untere Leiste (Start-Test, Phase 8 W2b).</summary>
+    public Navigationsleisten Leisten => _leisten;
 
     /// <summary>
     /// Weisung P1-3: Zustand und Ergebnisfeld der Sicherung haengen genau in der

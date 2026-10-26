@@ -119,6 +119,26 @@ public static class Navigation
     public const string Menue = "MENÜ";
     public const string Lernstatus = "LERNSTATUS";
 
+    // Phase 8 W2b (Sammelliste 115, Nico 26.10.2026): Gruppen der Seitenleiste am PC
+    public const string GruppeLernen = "LERNEN";
+    public const string GruppeSpiel = "SPIEL";
+    public const string GruppeWerkzeuge = "WERKZEUGE";
+
+    /// <summary>
+    /// Gruppen der Seitenleiste am PC (Titel null = ohne Ueberschrift) mit den Kennungen aus <see cref="Pc"/>;
+    /// <see cref="Pc"/> bleibt in der Python-Reihenfolge (G9). Darunter angeheftet <see cref="PcUnten"/>.
+    /// </summary>
+    public static readonly IReadOnlyList<(string? Titel, IReadOnlyList<string> Ids)> PcGruppen =
+    [
+        (null, ["dashboard"]),
+        (GruppeLernen, ["cards", "quiz", "ap1scenarios", "scenarios", "testproject", "abschluss", "progress"]),
+        (GruppeSpiel, ["game"]),
+        (GruppeWerkzeuge, ["notebook", "calc"]),
+    ];
+
+    /// <summary>Unten angeheftet (ausserhalb des Rollbereichs), darunter Lernstatus und Version.</summary>
+    public static readonly IReadOnlyList<string> PcUnten = ["help", "settings"];
+
     /// <summary>Brotkrumen am PC (VIEW_TITLES, Reihenfolge wie dort).</summary>
     public static readonly IReadOnlyList<Kopftitel> KopfPc =
     [

@@ -67,11 +67,29 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         _fehler.IsVisible = false;
         var liste = new StackPanel { Spacing = 14, Margin = new Thickness(16, 4, 16, 24) };   // screen_list
         liste.Children.Add(_fehler);
-        foreach (var bereich in Geraetetexte.OptionenBereiche(Pc))
+        // Phase 8 W2b (Sammelliste 116): Bereiche in Gruppen LERNEN, AUSSEHEN, SPIEL, DATEN, PROGRAMM,
+        // jede Karte zugeklappt mit Titel und Kurzzeile; Reihenfolge und Inhalte der Bereiche aus Geraetetexte
+        var bereiche = Geraetetexte.OptionenBereiche(Pc);
+        Angezeigt = bereiche;
+        foreach (var (titel, gruppe) in Optionen.Gruppieren(bereiche))
         {
-            liste.Children.Add(Bereich(bereich, Inhalt(bereich)));
+            var karten = new StackPanel { Spacing = 10 };
+            foreach (var bereich in gruppe)
+            {
+                karten.Children.Add(Bereich(bereich, Inhalt(bereich)));
+            }
+            liste.Children.Add(new StackPanel { Spacing = 8, Children = { Gruppe(titel), karten } });
+        }
+        if (bereiche.FirstOrDefault(b => !_bereiche.ContainsKey(b.Id)) is { } fehlt)
+        {
+            throw new InvalidOperationException("Optionen: Bereich ohne Gruppe: " + fehlt.Id);
         }
         Content = new ScrollViewer { Content = liste };
+        UpdateDienst.Gefunden += version => Dispatcher.UIThread.Post(() => UpdateVerfuegbar(version));
+        if (UpdateDienst.Verfuegbar is { } verfuegbar)
+        {
+            UpdateVerfuegbar(verfuegbar);
+        }
     }
 
     /// <summary>Klappbereich eines Bereichs (Start ohne Bedienung), null bei offenen Bereichen.</summary>
@@ -128,20 +146,63 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         _ => "Pinsel.accent",
     };
 
+    /// <summary>Gruppen-Ueberschrift wie in der Seitenleiste (11 fett, muted, Grossbuchstaben).</summary>
+    private static TextBlock Gruppe(string titel)
+    {
+        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel.muted");
+        text.Margin = new Thickness(4, 6, 0, 0);
+        return text;
+    }
+
+    private TextBlock? _updateKurz;
+
+    /// <summary>Die angezeigten Bereiche (Start-Test: jeder hat eine Klappkarte).</summary>
+    public IReadOnlyList<OptionenBereich> Angezeigt { get; }
+
+    /// <summary>Eine neue Version ist gefunden: ohne Aufklappen in der Kurzzeile der Karte "Updates" sichtbar.</summary>
+    private void UpdateVerfuegbar(string version)
+    {
+        if (_updateKurz is null)
+        {
+            return;
+        }
+        _updateKurz.Text = Beschriftungen.Einsetzen(UpdateTexte.Verfuegbar, version);
+        _updateKurz.Farbe(TextBlock.ForegroundProperty, "Pinsel.accent");
+        _updateKurz.FontWeight = FontWeight.Bold;
+    }
+
+    /// <summary>Start-Test: Kurzzeile der Karte "Updates" mit gefundener Version zeigen und zurueckgeben; null stellt die Zeile zurueck.</summary>
+    public string UpdateKurzProbe(string? version)
+    {
+        if (_updateKurz is null)
+        {
+            return "";
+        }
+        if (version is not null)
+        {
+            UpdateVerfuegbar(version);
+            return _updateKurz.Text ?? "";
+        }
+        _updateKurz.Text = Beschriftungen.Einsetzen(Optionen.Kurzzeile(Optionen.Bereich(Optionen.Updates)), Update.Anzeige.Replace(' ', '\u00A0'));
+        _updateKurz.Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
+        _updateKurz.FontWeight = FontWeight.Normal;
+        return _updateKurz.Text;
+    }
+
+    /// <summary>A 0.12.2: Klappkarte wie FoldCard(marker=True) am Handy; seit W2b jede Karte zugeklappt mit Kurzzeile.</summary>
     private Control Bereich(OptionenBereich bereich, Control inhalt)
     {
-        var untertitel = Geraetetexte.OptionenUntertitel(bereich, Pc) is { } u
-            ? bereich.Id == Optionen.Updates ? Beschriftungen.Einsetzen(u, Update.Anzeige.Replace(' ', '\u00A0')) : u
-            : null;
-        var akzent = Akzent(bereich.Id);
-        if (bereich.Offen)
+        var kurz = Optionen.Kurzzeile(bereich);
+        if (bereich.Id == Optionen.Updates)
         {
-            var offen = Schrift.KopfKarte(bereich.Titel, untertitel, inhalt, akzent);
-            _bereiche[bereich.Id] = (offen, null);
-            return offen;
+            kurz = Beschriftungen.Einsetzen(kurz, Update.Anzeige.Replace(' ', '\u00A0'));
         }
-        // A 0.12.2: Klappkarte wie FoldCard(marker=True) am Handy
-        var klappe = Klappkarte.Bauen(bereich.Titel, untertitel, inhalt, akzent, bereich.Aufgeklappt);
+        var kurzText = Schrift.Text(kurz, "Winzig", FontWeight.Normal, "Pinsel.muted");
+        if (bereich.Id == Optionen.Updates)
+        {
+            _updateKurz = kurzText;
+        }
+        var klappe = Klappkarte.Bauen(bereich.Titel, kurzText, inhalt, Akzent(bereich.Id));
         _klappen.Add(klappe);
         _bereiche[bereich.Id] = (klappe, klappe);
         return klappe;

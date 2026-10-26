@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.13.2
+Aufgeräumte Seitenleiste am PC und übersichtlichere Optionen.
+
+- Die Seitenleiste am PC zeigt wieder das Logo und vor jedem Eintrag ein Symbol, wie am Handy. Die Einträge stehen in Gruppen mit kleinen Überschriften: oben das Dashboard, dann „Lernen“ (Karteikarten, Prüfungstrainer, AP1- und AP2-Szenarien, Testprojekt, Abschlussprojekt, Fortschritt), „Spiel“ und „Werkzeuge“ (Notizblock, Rechner). Hilfe und Optionen stehen immer sichtbar unten.
+- Karteikarten und Spiel haben einen kleinen Pfeil: Ein Klick klappt die Unterpunkte auf oder zu. Der gewählte Eintrag ist hervorgehoben.
+- Unten in der Seitenleiste zeigt der Kasten „Lernstatus“, wie viele Karten und Fragen du schon bearbeitet hast, mit Balken, darunter die Versionsnummer.
+- Die Optionen sind in Gruppen geordnet: Lernen, Aussehen, Spiel, Daten und Programm. Jede Karte ist zuerst zugeklappt und zeigt nur ihren Titel und eine kurze Zeile; ein Tippen öffnet sie. Gibt es ein Update, steht das schon in der kurzen Zeile der Karte „Updates“.
+- Die Suche findet weiterhin jeden Bereich der Optionen und klappt ihn auf.
+- Am Handy bleibt die untere Leiste, wie sie war.
+
 ## A 0.13.1
 Kleine Verbesserungen, damit nichts verloren geht und alles flüssig bleibt.
 

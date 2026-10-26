@@ -19,7 +19,11 @@ namespace Lernplattform.Views;
 /// </summary>
 public static class Klappkarte
 {
-    public static Expander Bauen(string titel, string? unter, Control inhalt, string akzent = "Pinsel.accent", bool offen = false)
+    public static Expander Bauen(string titel, string? unter, Control inhalt, string akzent = "Pinsel.accent", bool offen = false) =>
+        Bauen(titel, string.IsNullOrEmpty(unter) ? null : Schrift.Text(unter, "Winzig", FontWeight.Normal, "Pinsel.muted"), inhalt, akzent, offen);
+
+    /// <summary>Phase 8 W2b: mit eigener Unterschrift (die Optionen aendern sie, z. B. "Version … ist verfügbar.").</summary>
+    public static Expander Bauen(string titel, TextBlock? unterText, Control inhalt, string akzent = "Pinsel.accent", bool offen = false)
     {
         var klappe = new Expander
         {
@@ -35,9 +39,10 @@ public static class Klappkarte
                 .Farbe(Border.BackgroundProperty, akzent);
             var titelText = Schrift.Text(Beschriftungen.Gross(titel), "Winzig", FontWeight.Bold, akzent);
             var texte = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center, Children = { titelText } };
-            if (!string.IsNullOrEmpty(unter))
+            if (unterText is not null)
             {
-                texte.Children.Add(Schrift.Text(unter, "Winzig", FontWeight.Normal, "Pinsel.muted"));
+                (unterText.Parent as Panel)?.Children.Remove(unterText);
+                texte.Children.Add(unterText);
             }
             var zustand = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.text_dim");
             zustand.TextWrapping = TextWrapping.NoWrap;
