@@ -26,10 +26,12 @@ Aufbau:
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_problembericht.py <pfad_fisi_lernplattform> tests/Vergleich/problembericht.json
 """
+import atexit
 import datetime
 import json
 import os
 import platform
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -44,6 +46,7 @@ def main():
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     heim = os.path.join(tmp, "home", "kim")
     daten = os.path.join(heim, "daten")
     logs = os.path.join(heim, "logs")

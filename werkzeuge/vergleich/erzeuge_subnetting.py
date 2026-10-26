@@ -33,11 +33,13 @@ Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_subnetting.py <pfad_fisi_lernplattform> tests/Vergleich/subnetting.json
 """
 import ast
+import atexit
 import ipaddress
 import json
 import os
 import random
 import re
+import shutil
 import sys
 import tempfile
 
@@ -124,6 +126,7 @@ def main():
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

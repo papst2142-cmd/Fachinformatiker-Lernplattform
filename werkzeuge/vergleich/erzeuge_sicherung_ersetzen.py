@@ -26,6 +26,7 @@ Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_sicherung_ersetzen.py <pfad_fisi_lernplattform> tests/Vergleich/uebernahme.json tests/Vergleich/sicherung_ersetzen.json
 """
 import ast
+import atexit
 import copy
 import datetime
 import gzip
@@ -66,6 +67,7 @@ def main():
     os.environ["TZ"] = ZONE
     time.tzset()
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

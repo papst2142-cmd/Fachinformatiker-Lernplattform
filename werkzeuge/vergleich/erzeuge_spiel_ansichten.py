@@ -24,6 +24,7 @@ einen leeren Temp-Ordner, uuid4 ist fest.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_spiel_ansichten.py <pfad_fisi_lernplattform> tests/Vergleich/spiel_ansichten.json
 """
+import atexit
 import copy
 import json
 import os
@@ -122,6 +123,7 @@ def main():
     repo, ziel = sys.argv[1], sys.argv[2]
     quelle = os.path.join(HIER, "..", "..", "tests", "Vergleich", "testdaten.db")
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

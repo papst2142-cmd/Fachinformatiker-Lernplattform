@@ -16,8 +16,10 @@ Die Texte sind ausgedacht (keine echten Daten, keine echten Schluessel).
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_fehlerprotokoll.py <pfad_fisi_lernplattform> tests/Vergleich/fehlerprotokoll.json
 """
+import atexit
 import json
 import os
+import shutil
 import sys
 import tempfile
 
@@ -78,6 +80,7 @@ def main():
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     sys.path.insert(0, repo)

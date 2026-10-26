@@ -229,14 +229,17 @@ public sealed class HaengerTests : IDisposable
             kill.WaitForExit();
             Assert.Equal(0, kill.ExitCode);
         }
+        // Sammelliste 107 (macOS einmal rot "nach 0 ms" mit einer Zeile "Seite: -"): auf genau die erwartete
+        // Zeile warten statt auf die erste Abruf-Zeile; Wortlaut und Frist (10 s) bleiben wie vorher
+        const string Erwartet = "| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===";
         var uhr = Stopwatch.StartNew();
-        while (!Log().Contains("Abruf (Signal USR1)", StringComparison.Ordinal) && uhr.Elapsed < TimeSpan.FromSeconds(10))
+        while (!Log().Contains(Erwartet, StringComparison.Ordinal) && uhr.Elapsed < TimeSpan.FromSeconds(10))
         {
             Thread.Sleep(50);
         }
         // Sammelliste 101 (macOS einmal rot): bei Rot den ganzen Log und die Wartezeit zeigen, nicht nur den Anfang
         var log = Log();
-        Assert.True(log.Contains("| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", StringComparison.Ordinal),
+        Assert.True(log.Contains(Erwartet, StringComparison.Ordinal),
             "nach " + uhr.ElapsedMilliseconds + " ms, Seite/Vorgang jetzt " + Haenger.Aktuell() + ", voller Log:\n" + log);
     }
 }

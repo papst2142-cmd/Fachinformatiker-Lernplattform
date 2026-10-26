@@ -117,7 +117,51 @@ public static partial class AutoMessung
         {
             return await ErsatzLaufAsync(ansicht);
         }
+        // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
+        Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
         var inhalte = await Zustand.Inhalte;
+        // Weisung P4-16: auch die W4-Messpunkte melden ihre roten Werte in reihenRot
+        var reihenRot = new List<string>();
+        if (MitLernen)
+        {
+            funde += await LernteilMessenAsync(ansicht, inhalte, reihenRot);
+        }
+        if (MitSpiel)
+        {
+            funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
+        }
+        if (MitLernen)
+        {
+            await WechselReihenAsync(ansicht, reihenRot);
+        }
+        funde += await LayoutAsync(ansicht, inhalte);
+        if (MitLernen)
+        {
+            funde += await OptionenZweimalAsync(ansicht);
+        }
+        funde += AbschlussAuswerten(reihenRot);
+        Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
+        return funde;
+    }
+
+    /// <summary>Sammelliste 106: Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den Lernteil (alles ausser den Spielansichten).</summary>
+    public const string TeilLernen = "lernen";
+
+    /// <summary>Sammelliste 106: Wert von LERNPLATTFORM_MESSUNG_TEIL nur fuer die Spielansichten (3D-Stichprobe und Spiel-Layout).</summary>
+    public const string TeilSpiel = "spiel";
+
+    private static string? Teil => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL");
+
+    /// <summary>Ohne Angabe (lokal) misst der Start-Test alles in einem Lauf wie bisher.</summary>
+    private static bool MitLernen => Teil != TeilSpiel;
+
+    private static bool MitSpiel => Teil != TeilLernen;
+
+    /// <summary>Erstes Oeffnen jeder Seite und die Messpunkte des Lernteils (Phasen 1 bis 6).</summary>
+    private static async Task<int> LernteilMessenAsync(MainView ansicht, Lerninhalte? inhalte, List<string> reihenRot)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
         // Erstes Oeffnen jeder Seite (Seitenleiste, untere Leiste, Kopfleiste)
         var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
             .Concat(Texte.NavigationHandy.Select(p => p.Id))
@@ -156,12 +200,14 @@ public static partial class AutoMessung
         funde += await W1MesspunkteAsync(ansicht, inhalte);
         funde += await KlausurMesspunkteAsync(ansicht);
         funde += await ProjektMesspunkteAsync(ansicht);
-        // Weisung P4-16: auch die W4-Messpunkte melden ihre roten Werte in reihenRot
-        var reihenRot = new List<string>();
         funde += await W4MesspunkteAsync(ansicht, reihenRot);
         funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
-        funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
+        return funde;
+    }
 
+    /// <summary>Wechsel Hell/Dunkel und Schriftstufe, rote Reihen in <paramref name="reihenRot"/>.</summary>
+    private static async Task WechselReihenAsync(MainView ansicht, List<string> reihenRot)
+    {
         // Wechsel Hell/Dunkel und Schriftstufe (je 3 Durchgaenge); ueber 1 000 ms wird derselbe
         // Wechsel wiederholt (vorher die andere Darstellung bzw. die Stufe davor, Weisung P4-12 B6)
         var werte = Zustand.Werte;
@@ -185,7 +231,16 @@ public static partial class AutoMessung
                 await ReihenwertAsync(ansicht, "Wechsel Schriftstufe", () => Schrift.Anwenden(Zustand.SchriftFaktor(stufe)), () => Schrift.Anwenden(Zustand.SchriftFaktor(davor)), reihenRot);
             }
         }
+    }
 
+    /// <summary>
+    /// Layoutpruefung je Schriftstufe und Fenstergroesse; der Lernteil prueft alle gebauten Seiten und seine
+    /// Ansichten, der Spielteil die Spielansichten (Sammelliste 106). Liefert die Zahl der Funde.
+    /// </summary>
+    private static async Task<int> LayoutAsync(MainView ansicht, Lerninhalte? inhalte)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
         // Layoutpruefung je Seite und Schriftstufe in festen Fenstergroessen: schmal (Handy),
         // an der Grenze zum breiten Aufbau (MainView.BreitGrenze, engster PC-Aufbau) und
         // Startgroesse der Python-Linie (1360 x 880). Ohne Fenster (Handy) nur wie gestartet.
@@ -216,7 +271,9 @@ public static partial class AutoMessung
                 }
                 var ist = string.Create(inv, $"{name} {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}");
                 gepruefteGroessen.Add(stufe + " " + ist);
-                foreach (var id in ansicht.GebauteSeiten.Keys.ToList())
+                // Sammelliste 106: der Lernteil prueft alle Seiten ausser dem Spiel, der Spielteil nur das Spiel
+                // (nach der 3D-Stichprobe wie im ganzen Lauf); zusammen genau die Seiten des ganzen Laufs
+                foreach (var id in ansicht.GebauteSeiten.Keys.Where(id => id == Seiten.Spiel ? MitSpiel : MitLernen).ToList())
                 {
                     await ansicht.ZeigeAsync(id);
                     if (ansicht.GebauteSeiten[id] is DashboardSeite neuGerechnet)
@@ -245,7 +302,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 2: Ansichten nach dem Pruefen, Ergebnis und Fenster der Uebernahme
-                await foreach (var (ansichtName, _) in W2Ansichten(ansicht, inhalte))
+                await foreach (var (ansichtName, _) in MitLernen ? W2Ansichten(ansicht, inhalte) : Keine<(string, int)>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -253,7 +310,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 3, W2: Ansichten der Rechner-Seite
-                await foreach (var ansichtName in RechnerAnsichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? RechnerAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -261,7 +318,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W1: Ansichten der Lernseiten
-                await foreach (var ansichtName in W1Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? W1Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -269,7 +326,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W2: Ansichten der Klausursimulation und ihre Rueckfragen
-                await foreach (var ansichtName in KlausurAnsichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? KlausurAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -277,7 +334,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W3: Reiter des Abschlussprojekts, Rueckfrage, Fehler beim Export, Kurzhinweis
-                await foreach (var ansichtName in ProjektAnsichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? ProjektAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -290,7 +347,7 @@ public static partial class AutoMessung
                     w4Gekuerzt.Add(stufe);
                     continue;
                 }
-                await foreach (var ansichtName in W4Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? W4Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -298,7 +355,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W1: Sicherung, Loeschen, Datenbank und ihre Fenster (gleiche Zeitgrenze wie W4)
-                await foreach (var ansichtName in P5Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? P5Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -306,7 +363,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W2: Diagnose und Werkzeuge mit Bericht, Fenster und Kurzhinweis
-                await foreach (var ansichtName in P5W2Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? P5W2Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -314,7 +371,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W3: Updates mit Fehlerzeile, Fenster "Update verfügbar" und "Update nicht abgeschlossen"
-                await foreach (var ansichtName in P5W3Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? P5W3Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -322,7 +379,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 6, W2: Updates mit "Verknüpfung anlegen", Rueckfrage beim Start und ihr Ergebnis
-                await foreach (var ansichtName in P6W2Ansichten(ansicht))
+                await foreach (var ansichtName in MitLernen ? P6W2Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -331,7 +388,7 @@ public static partial class AutoMessung
                 }
                 // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in P7W1Ansichten(ansicht))
+                await foreach (var ansichtName in MitSpiel ? P7W1Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -341,7 +398,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W6: Spielansichten ueber der Stadt (Platzwahl, Figur, Uebersicht, Reise, Tickets, Firma)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in P7W6Ansichten(ansicht))
+                await foreach (var ansichtName in MitSpiel ? P7W6Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -351,7 +408,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W7: Moebelhaus und Elektromarkt (innen in 3D, Sortiment in der Tafel)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in P7W7Ansichten(ansicht))
+                await foreach (var ansichtName in MitSpiel ? P7W7Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -361,7 +418,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W7b: Bank und Amt (innen in 3D, Seiten am Schalter in der Tafel)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in P7W7bAnsichten(ansicht))
+                await foreach (var ansichtName in MitSpiel ? P7W7bAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -373,27 +430,36 @@ public static partial class AutoMessung
         }
 
         // Phase 2 (Weisung P2-4): alle 72 Farbwelten mit den neuen Ansichten (Layout und Lesbarkeit)
-        funde += await FarbweltenAsync(ansicht, inhalte, layoutFunde);
+        if (MitLernen)
+        {
+            funde += await FarbweltenAsync(ansicht, inhalte, layoutFunde);
+        }
         Zustand.DesignAnwenden();
 
-        Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Count} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
-        Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
-        Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
-        Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
-        Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
-        Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
-        Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
-        Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
-        Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
-        Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
-        Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
-        Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
-        Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis, Bitte warten beim Ersetzen"));
-        Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
-        Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
-        Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
-        Messwerte.Notiere(string.Create(inv, $"  und {P7W1AnsichtenAnzahl} Ansichten der Wellen W1/W4/W5 (Phase 7, Stadt in 3D im Vollbild, ohne Speichern): Stadt mit Namensschildern, Ortsliste offen, Moebelhaus geschlossen, Buero innen, Kunde innen, Wohnung beim Einrichten mit gewaehltem Moebel, ohne 3D (Hinweis und Ortsliste)"));
-        Messwerte.Notiere("  und die Spielansichten der Wellen W6/W7 (Phase 7): Platzwahl, Figur, Uebersicht, Meine Reise, Meilenstein, 9 Ticket-Bretter, 9 Firmen-Reiter; Moebelhaus und Elektromarkt innen (Eingang, Verkauf, Ware), Sortiment Moebelhaus und Elektromarkt mit zwei Teile-Typen (ohne Kaufen); W7b: Bank und Amt innen (Eingang, Schalter), Seiten Bank und Amt (ohne Schreiben)");
+        Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Keys.Count(id => id == Seiten.Spiel ? MitSpiel : MitLernen)} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
+        if (MitLernen)
+        {
+            Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
+            Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
+            Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
+            Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
+            Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
+            Messwerte.Notiere("  und 8 Ansichten der Welle W4b (Phase 3): Bild und Video mit Video-Ergebnis, Rechenweg und aktivem Uebernahme-Knopf; groesste Werte (100.000 x 100.000, 32 Bit, 1.000 fps, 10.000 Minuten); Fehler Dauer ohne Bildrate; Uebernahme-Ergebnis in Uebertragung (MiB und Byte); Trainer Bild und Video Schwer offen und geprueft, Eingabefehler");
+            Messwerte.Notiere("  und 27 Ansichten der Welle W4c (Phase 3): WiSo-Rechner je Rechner mit Vorgaben und offenem Rechenweg (6), groesste Werte (Verkauf 999.999.999,99 mit 99,99 % in allen Prozentfeldern, Deckung 10.000.000 Stueck, Abschreibung 50 Jahre ab Dezember, Zinsen 600 Monate, Amortisation 20.000/6.000/500), Fehler zu viele Nachkommastellen (Geld und Prozent), Zinsen mit Pille Monate; Trainer WiSo je Art Schwer offen und geprueft (12), Eingabefehler");
+            Messwerte.Notiere("  und 11 Ansichten der Welle W1 (Phase 4, ohne Speichern): AP1, AP2 und Testprojekt je laengste Aufgabe mit aufgedeckter Loesung und \"Wusstest du es?\" sowie letzte Seite der Liste; Notizblock Status Offen mit allen Musterantworten, Suche ohne Treffer, Suche \"netz\"");
+            Messwerte.Notiere(string.Create(inv, $"  und {KlausurTeil.ProbeNamen.Length + KlausurFenster.Length} Ansichten der Welle W2 (Phase 4, ohne Speichern): Pruefung Auswahl SI mit 9 Pruefungen und vollstaendigem Gesamtergebnis, Auswahl AE (gesperrt, noch offen), laufende Pruefung Aufgabe und WiSo, Bewertung, Ergebnis Aufgabe und WiSo mit \"Nach Themen\", WiSo nicht gespeichert; Rueckfragen Starten, Abbrechen, Abgeben, Zeit abgelaufen (2), Abschliessen, Pruefung laeuft"));
+            Messwerte.Notiere(string.Create(inv, $"  und {Abschlussprojekt.Reiter.Count + ProjektFenster.Length + 1} Ansichten der Welle W3 (Phase 4, ohne Speichern): Abschlussprojekt je Reiter (6), Fachgespraech mit Hinweis und \"Wusstest du es?\", Rueckfrage Loeschen mit langem Titel, Export misslingt, Kurzhinweis \"Gespeichert: …\""));
+            Messwerte.Notiere(string.Create(inv, $"  und {W4AnsichtenAnzahl} Ansichten der Welle W4 (Phase 4, ohne Speichern): Hilfe eingeklappt und mit dem laengsten Abschnitt offen, Rundgang Seiten 1 bis 5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage, Warnhinweis DPA, Optionen \"Rundgang und Hilfe\" und \"Lerninhalte\""));
+            Messwerte.Notiere(string.Create(inv, $"  und {P5AnsichtenAnzahl} Ansichten der Welle W1 (Phase 5, ohne Speichern): Optionen \"Sicherung\", \"Löschen und zurücksetzen\", \"Datenbank\"; Vorschau der Sicherung, beide Rueckfragen zu \"Alles ersetzen\", Ersetzt, Zusammengefuehrt, Kopie gescheitert, Einspielen gescheitert, Rueckfrage Historie, Nichts geloescht, Geloescht mit Uhrhinweis, Bitte warten beim Ersetzen"));
+            Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
+            Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
+            Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
+        }
+        if (MitSpiel)
+        {
+            Messwerte.Notiere(string.Create(inv, $"  und {P7W1AnsichtenAnzahl} Ansichten der Wellen W1/W4/W5 (Phase 7, Stadt in 3D im Vollbild, ohne Speichern): Stadt mit Namensschildern, Ortsliste offen, Moebelhaus geschlossen, Buero innen, Kunde innen, Wohnung beim Einrichten mit gewaehltem Moebel, ohne 3D (Hinweis und Ortsliste)"));
+            Messwerte.Notiere("  und die Spielansichten der Wellen W6/W7 (Phase 7): Platzwahl, Figur, Uebersicht, Meine Reise, Meilenstein, 9 Ticket-Bretter, 9 Firmen-Reiter; Moebelhaus und Elektromarkt innen (Eingang, Verkauf, Ware), Sortiment Moebelhaus und Elektromarkt mit zwei Teile-Typen (ohne Kaufen); W7b: Bank und Amt innen (Eingang, Schalter), Seiten Bank und Amt (ohne Schreiben)");
+        }
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"
             : "  W4-Ansichten ab 7,5 Minuten nur schmal und pc, ohne grenze bei: " + string.Join(", ", w4Gekuerzt));
@@ -403,7 +469,19 @@ public static partial class AutoMessung
             Messwerte.Notiere("  " + fund);
         }
         funde += layoutFunde.Count;
+        return funde;
+    }
 
+    /// <summary>Sammelliste 106: leere Folge fuer die Ansichten des anderen Teils.</summary>
+    private static async IAsyncEnumerable<T> Keine<T>()
+    {
+        await Task.CompletedTask;
+        yield break;
+    }
+
+    /// <summary>Weisung P1-3 (nur Lernteil): Optionen zweimal oeffnen.</summary>
+    private static async Task<int> OptionenZweimalAsync(MainView ansicht)
+    {
         // Weisung P1-3: Optionen zweimal oeffnen baut die Seite nicht neu, die
         // Sicherung (geteilte Felder _zustand, _ergebnis) bleibt an ihrem Platz
         var optionen = ansicht.GebauteSeiten[Seiten.Optionen];
@@ -415,7 +493,13 @@ public static partial class AutoMessung
         Messwerte.Notiere(einmal
             ? "Optionen zweimal geoeffnet: dieselbe Seite, Sicherung an ihrem Platz"
             : "Optionen zweimal geoeffnet: FEHLER (Seite neu gebaut oder Sicherung nicht in Optionen)");
-        funde += einmal ? 0 : 1;
+        return einmal ? 0 : 1;
+    }
+
+    /// <summary>Alle Werte ueber der Abbruchgrenze als FEHLER-Zeilen; liefert die Zahl der Funde.</summary>
+    private static int AbschlussAuswerten(List<string> reihenRot)
+    {
+        var funde = 0;
         var zuLang = Messwerte.ErstesOeffnen.Where(e => e.Value > Abbruch).Select(e => e.Key).ToList();
         foreach (var (reihe, ms) in Messwerte.Hoechstwerte().Where(r => r.Value > Abbruch))
         {
@@ -444,7 +528,6 @@ public static partial class AutoMessung
         funde += zuLang.Count;
         funde += _w2Fehlt;   // Phase 5 W2: fehlender Diagnose-Bereich (Gegenpruefung Fund 11)
         funde += _w3Fehlt;   // Phase 5 W3: fehlender Update-Bereich
-        Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
     }
 

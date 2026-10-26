@@ -26,11 +26,13 @@ Aufbau:
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_update.py <pfad_fisi_lernplattform> tests/Vergleich/update.json
 """
+import atexit
 import datetime
 import hashlib
 import io
 import json
 import os
+import shutil
 import sys
 import tempfile
 import urllib.error
@@ -120,6 +122,8 @@ def main():
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
+    tempfile.tempdir = tmp   # Sammelliste 91: auch der Download-Ordner von fisi_update (FISI-Lernplattform-Update)
     daten = os.path.join(tmp, "daten")
     os.makedirs(daten)
     os.environ["HOME"] = os.path.join(tmp, "home")

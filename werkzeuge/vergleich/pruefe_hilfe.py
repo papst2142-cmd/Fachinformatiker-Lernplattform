@@ -7,9 +7,11 @@ Python-Linie noch den C#-Code. Aufruf:
     python3 -I pruefe_hilfe.py <ausgabe.json>
 Nur Standardbibliothek, Python 3.12.
 """
+import atexit
 import json
 import os
 import re
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -793,6 +795,7 @@ def main(argv):
     assert len(KONSTANTEN) == 25 and len(SEITEN) == 5 and len(ABSCHNITTE) == 16
     assert KONSTANTEN["OPTIONS_SUBTITLE"] == OPTIONS_SUBTITLE
     ordner = tempfile.mkdtemp()
+    atexit.register(shutil.rmtree, ordner, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     erg = {
         "texte": teil_texte(),
         "datum": teil_datum(),
