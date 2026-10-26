@@ -239,6 +239,59 @@ public class SpielSchalterTests
         }
     }
 
+    /// <summary>
+    /// P7-15: Bank und Amt haben je einen eigenen Charakter. Fester Vergleich ohne Bild: die Liste der
+    /// Einrichtung und die Farben (Waende innen und aussen, Boeden) unterscheiden sich; jedes
+    /// Zusatzstueck hat Geometrie, der Grundriss in innenraeume.json bleibt dabei unveraendert.
+    /// </summary>
+    [Fact]
+    public void BankUndAmtSehenVerschiedenAus()
+    {
+        var stand = new Spielablauf(Inhalt).Stand;
+        var grundrisse = SpielInnenraumTests.Innenraeume.Value;
+        Innenraum Raum(string ort) => Innenraum.Bauen("schalter:" + ort, stand, grundrisse, SpielGrafikTests.Bibliothek.Value)!;
+        var bank = Raum(Schalter.Bank);
+        var amt = Raum(Schalter.Amt);
+        HashSet<string> Typen(Innenraum r) => [.. SpielInnenraumTests.Deko(r.Gebaeude).Select(d => Py.Str(d["typ"]))];
+        var nurBank = Typen(bank).Except(Typen(amt)).ToList();
+        var nurAmt = Typen(amt).Except(Typen(bank)).ToList();
+        Assert.True(nurBank.Count >= 4, "nur in der Bank: " + string.Join(", ", nurBank));
+        Assert.True(nurAmt.Count >= 4, "nur auf dem Amt: " + string.Join(", ", nurAmt));
+        Assert.Contains("tresor", nurBank);
+        Assert.Contains("geldautomat", nurBank);
+        Assert.Contains("wartemarken", nurAmt);
+        Assert.Contains("platznummer", nurAmt);
+        // Farben: eigene Waende innen und aussen, eigene Boeden, keine Farbe der Palette mehr
+        Assert.NotEqual(bank.WandFarbe, amt.WandFarbe);
+        Assert.NotEqual(bank.AussenFarbe, amt.AussenFarbe);
+        Assert.NotEqual(Innenraum.Farben.Wand, bank.WandFarbe);
+        Assert.NotEqual(Innenraum.Farben.Wand, amt.WandFarbe);
+        Assert.NotEqual(bank.BodenFarben["flur"], amt.BodenFarben["flur"]);
+        Assert.NotEqual(bank.BodenFarben["schalterhalle"], amt.BodenFarben["buergerbuero"]);
+        // Bank kuehl (Blau ueberwiegt Rot), Amt warm (Rot ueberwiegt Blau)
+        Assert.True(bank.WandFarbe.Z > bank.WandFarbe.X && bank.BodenFarben["schalterhalle"].Z > bank.BodenFarben["schalterhalle"].X);
+        Assert.True(amt.WandFarbe.X > amt.WandFarbe.Z && amt.BodenFarben["buergerbuero"].X > amt.BodenFarben["buergerbuero"].Z);
+        foreach (var r in new[] { bank, amt })
+        {
+            Assert.All(SpielInnenraumTests.Deko(r.Gebaeude), d => Assert.True(SpielInnenraumTests.HatGeometrie(r, d), r.Ort + ": " + Py.Str(d["typ"]) + " ohne Geometrie"));
+            Assert.Contains(r.Teile, t => t.Farbe == r.WandFarbe);
+            Assert.Contains(r.Teile, t => t.Farbe == r.AussenFarbe);
+        }
+        // der Zusatz steht nur angehaengt: der Grundriss selbst bleibt (Kopie), der Zusatz ist eigener Schluessel
+        var zusatz = SpielDaten.Objekt(grundrisse["zusatz"]);
+        foreach (var ort in new[] { Schalter.Bank, Schalter.Amt })
+        {
+            var grundriss = SpielDaten.Objekt(SpielDaten.Objekt(grundrisse[ort])["gebaeude"]);
+            Assert.False(Py.Hat(grundriss, "wandfarbe"));
+            var mehr = SpielInnenraumTests.Deko(Raum(ort).Gebaeude).Count() - SpielInnenraumTests.Deko(grundriss).Count();
+            var soll = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["flur"]), "deko").Count
+                + SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["raeume"]).Sum(p => SpielDaten.ListeOderLeer(SpielDaten.Objekt(p.Value), "deko").Count);
+            Assert.Equal(soll, mehr);
+        }
+        Assert.Same(SpielDaten.Objekt(SpielDaten.Objekt(grundrisse["moebelhaus"])["gebaeude"]),
+            Innenraum.Bauen("geschaeft:moebelhaus", stand, grundrisse, null)!.Gebaeude);
+    }
+
     [Fact]
     public void BetretenInDerStadt()
     {
@@ -257,6 +310,59 @@ public class SpielSchalterTests
             Assert.Equal("schalter:" + ort, spiel.FlaecheId);
             Assert.Contains(spiel.Knoepfe, k => k.Aktion == Innenraum.AktionSchalter);
             spiel.Verlassen();
+        }
+    }
+
+    /// <summary>
+    /// Weisung P7-15b: die Platznummern auf dem Amt sind von Kamera und Eingang her lesbar. Aus den weissen
+    /// Segmenten jeder Tafel wird die Ziffer zurueckgelesen (links/rechts so, wie die Kamera sie sieht) und mit
+    /// der Nummer verglichen; die Ziffern liegen vorn (+z, zum Eingang und zur Kamera), nicht hinten.
+    /// Kein Bildvergleich: gespiegelt hiesse eine 2 wie eine 5 (S) und eine 3 wie ein E.
+    /// </summary>
+    [Fact]
+    public void PlatznummernSindVonDerKameraHerLesbar()
+    {
+        var stand = new Spielablauf(Inhalt).Stand;
+        var amt = Innenraum.Bauen("schalter:" + Schalter.Amt, stand, SpielInnenraumTests.Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
+        // Segmente wie Innenraum.Segmente (a oben, b rechts oben, c rechts unten, d unten, e links unten, f links oben, g Mitte)
+        string[] soll = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
+        var schilder = SpielInnenraumTests.Deko(amt.Gebaeude).Where(d => Py.Str(d["typ"]) == "platznummer").ToList();
+        Assert.Equal(3, schilder.Count);
+        foreach (var d in schilder)
+        {
+            float x = (float)Py.F(d["x"]), z = (float)Py.F(d["y"]), w = (float)Py.F(d["w"]), h = (float)Py.F(d["h"]);
+            var nummer = (int)Py.Int(d["nummer"]);
+            var segmente = amt.Teile.Where(t => t.Farbe == Innenraum.Farben.Weiss && t.X1 >= x - 0.01f && t.X2 <= x + w + 0.01f
+                && t.Z1 >= z - 0.01f && t.Z2 <= z + h + 0.05f).ToList();
+            Assert.True(segmente.Count >= 2, "Platz " + nummer + ": keine Ziffer");
+            // Kamera wie im Spiel (Drehung 0, Blick nach -z) vor dem Schild: rechts im Bild = groesseres x
+            var kamera = new Kamera(x + (w / 2), z + 2, 9);
+            var sichtProj = kamera.Sicht * kamera.Projektion(1280, 720);
+            float BildX(float wx, float wy, float wz)
+            {
+                var p = System.Numerics.Vector4.Transform(new System.Numerics.Vector4(wx, wy, wz, 1), sichtProj);
+                return p.X / p.W;
+            }
+            float x0 = segmente.Min(t => t.X1), x1 = segmente.Max(t => t.X2), y0 = segmente.Min(t => t.Y1), y1 = segmente.Max(t => t.Y2);
+            float vorn = segmente.Max(t => t.Z2), ym = (y0 + y1) / 2;
+            Assert.True(BildX(x1, ym, vorn) > BildX(x0, ym, vorn), "Platz " + nummer + ": links und rechts vertauscht");
+            // vorn: die Ziffern stehen vor der Tafel (zur Kamera und zum Eingang hin), die Kamera steht davor
+            Assert.True(segmente.Min(t => t.Z1) >= z + h - 0.001f, "Platz " + nummer + ": Ziffer nicht auf der Vorderseite");
+            Assert.True(kamera.Auge.Z > vorn);
+            var gelesen = new System.Text.StringBuilder();
+            // Mitte der Tafel (die Ziffer steht mittig; eine 1 hat nur rechte Segmente)
+            var mitteX = x + (w / 2);
+            foreach (var t in segmente)
+            {
+                bool waagrecht = (t.X2 - t.X1) > (t.Y2 - t.Y1);
+                float cy = (t.Y1 + t.Y2) / 2;
+                // links/rechts im Bild, nicht im Grundriss
+                bool rechts = BildX((t.X1 + t.X2) / 2, cy, vorn) > BildX(mitteX, cy, vorn);
+                gelesen.Append(waagrecht
+                    ? (cy > y1 - 0.05f ? 'a' : cy < y0 + 0.05f ? 'd' : 'g')
+                    : (rechts ? (cy > ym ? 'b' : 'c') : (cy > ym ? 'f' : 'e')));
+            }
+            Assert.Equal(soll[nummer], string.Concat(gelesen.ToString().Order()));
         }
     }
 }

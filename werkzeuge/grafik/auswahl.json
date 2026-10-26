@@ -1,5 +1,5 @@
 {
- "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a).",
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor.",
  "pakete": {
   "commercial": {
    "zip": "kenney_city-kit-commercial_2.1.zip",
@@ -35,6 +35,13 @@
    "id": "Grafik Kenney Animated Characters 3",
    "version": "1.1",
    "sha256": "6c197462dc9976b522a07d11e0fb42b9caa7cf71d39abbc3ca708b69f13a40dd"
+  },
+  "kaykit_moebel": {
+   "zip": "KayKit_Furniture_Bits_1.0_FREE.zip",
+   "quelle": "KayKit Furniture Bits 1.0 (Kay Lousberg), github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0",
+   "id": "Grafik KayKit Furniture Bits",
+   "version": "1.0",
+   "sha256": "84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242"
   }
  },
  "modelle": [
@@ -364,6 +371,21 @@
    "datei": "Model/characterMedium.fbx",
    "haut": "Skins/humanMaleA.png",
    "arme": 72
+  },
+  {
+   "name": "kkChairA",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/chair_A.obj"
+  },
+  {
+   "name": "kkArmchair",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/armchair.obj"
+  },
+  {
+   "name": "kkPictureframeLargeB",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/pictureframe_large_B.obj"
   }
  ]
 }

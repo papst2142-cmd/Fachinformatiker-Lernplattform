@@ -81,11 +81,11 @@ public class SpielInnenraumTests
         }
     }
 
-    private static IEnumerable<PyObjekt> Deko(PyObjekt gebaeude) =>
+    internal static IEnumerable<PyObjekt> Deko(PyObjekt gebaeude) =>
         SpielDaten.Liste(gebaeude["raeume"]).Select(SpielDaten.Objekt).SelectMany(r => SpielDaten.ListeOderLeer(r, "deko"))
             .Concat(SpielDaten.ListeOderLeer(SpielDaten.Objekt(gebaeude["flur"]), "deko")).Select(SpielDaten.Objekt);
 
-    private static bool HatGeometrie(Innenraum innen, PyObjekt d)
+    internal static bool HatGeometrie(Innenraum innen, PyObjekt d)
     {
         float x = (float)Py.F(d["x"]) - 0.05f, z = (float)Py.F(d["y"]) - 0.05f;
         float x2 = x + (float)Py.F(d["w"]) + 0.1f, z2 = z + (float)Py.F(d["h"]) + 0.1f;
@@ -108,7 +108,11 @@ public class SpielInnenraumTests
         var typen = new HashSet<string>();
         foreach (var g in new[] { SpielDaten.Objekt(Inhalt["gebaeude"]), SpielDaten.Objekt(SpielDaten.Objekt(Innenraeume.Value["serverfarm"])["gebaeude"]) }
             .Concat(SpielDaten.Kundenorte(Inhalt).Select(k => SpielDaten.Objekt(k["gebaeude"])))
-            .Concat(SpielDaten.Liste(SpielDaten.Objekt(Inhalt["wohnungen"])["wohnungen"]).Select(w => SpielDaten.Objekt(SpielDaten.Objekt(w)["gebaeude"]))))
+            .Concat(SpielDaten.Liste(SpielDaten.Objekt(Inhalt["wohnungen"])["wohnungen"]).Select(w => SpielDaten.Objekt(SpielDaten.Objekt(w)["gebaeude"])))
+            // P7-15: auch Laeden, Bank und Amt aus innenraeume.json mit ihrem angehaengten Zusatz
+            .Concat(new[] { "moebelhaus", "elektromarkt", "bank", "amt" }.Select(ort => Innenraum.MitZusatz(
+                SpielDaten.Objekt(SpielDaten.Objekt(Innenraeume.Value[ort])["gebaeude"]),
+                SpielDaten.Get(SpielDaten.Objekt(Innenraeume.Value["zusatz"]), ort) as PyObjekt))))
         {
             typen.UnionWith(Deko(g).Select(d => Py.Str(d["typ"])));
         }

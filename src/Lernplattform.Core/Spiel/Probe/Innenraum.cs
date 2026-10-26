@@ -39,7 +39,7 @@ public sealed class Innenraum
     public const string Serverfarm = "serverfarm";
 
     /// <summary>Alle CC0-Modelle, die Innenraeume nutzen (Pruefung: jedes Modell in modelle.bin wird gebraucht).</summary>
-    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer"];
+    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB"];
 
     private readonly List<Teil> _teile = [];
     private readonly List<ModellStueck> _stuecke = [];
@@ -197,7 +197,8 @@ public sealed class Innenraum
                 return null;
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
-            return new Innenraum(ansicht!, ort, Objekt(laden["gebaeude"]), verkauf, grafik, null);
+            var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
+            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -217,6 +218,56 @@ public sealed class Innenraum
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
         var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
         return new Innenraum(ansicht!, ort, gebaeude, leute, grafik, boeden);
+    }
+
+    /// <summary>
+    /// Grundriss mit dem angehaengten Zusatz aus innenraeume.json ("zusatz" je Ort, P7-15): Werte wie
+    /// wandfarbe, aussenfarbe, boden, bodenfarbe ersetzen die des Grundrisses, Einrichtung ("deko") kommt
+    /// hinzu, Raeume nach ihrer id. Der Grundriss selbst bleibt unveraendert (Kopie).
+    /// </summary>
+    public static PyObjekt MitZusatz(PyObjekt gebaeude, PyObjekt? zusatz)
+    {
+        if (zusatz is null)
+        {
+            return gebaeude;
+        }
+        var neu = (PyObjekt)Py.Kopie(gebaeude)!;
+        static void Einmischen(PyObjekt ziel, PyObjekt dazu)
+        {
+            foreach (var (k, v) in dazu)
+            {
+                if (k == "deko")
+                {
+                    var liste = Get(ziel, "deko") as List<object?> ?? [];
+                    liste.AddRange(Liste(Py.Kopie(v)));
+                    Py.Setzen(ziel, "deko", liste);
+                }
+                else if (!k.StartsWith('_'))
+                {
+                    Py.Setzen(ziel, k, Py.Kopie(v));
+                }
+            }
+        }
+        foreach (var (k, v) in zusatz)
+        {
+            if (k == "flur")
+            {
+                Einmischen(Objekt(neu["flur"]), Objekt(v));
+            }
+            else if (k == "raeume")
+            {
+                foreach (var (id, raumZusatz) in Objekt(v))
+                {
+                    var raum = Liste(neu["raeume"]).Select(Objekt).First(r => Py.Gleich(r["id"], id));
+                    Einmischen(raum, Objekt(raumZusatz));
+                }
+            }
+            else if (!k.StartsWith('_'))
+            {
+                Py.Setzen(neu, k, Py.Kopie(v));
+            }
+        }
+        return neu;
     }
 
     private static InnenPerson Person(PyObjekt p, bool auftrag)
@@ -393,14 +444,29 @@ public sealed class Innenraum
         _ => null,
     };
 
+    /// <summary>Farbe der Innenwaende (Grundriss "wandfarbe", sonst die Palette).</summary>
+    public Vector3 WandFarbe { get; private set; } = Farben.Wand;
+
+    /// <summary>Farbe der Aussenwaende (Grundriss "aussenfarbe", sonst die Palette).</summary>
+    public Vector3 AussenFarbe { get; private set; } = Farben.Aussen;
+
+    /// <summary>Bodenfarbe je Raum-id und "flur".</summary>
+    public IReadOnlyDictionary<string, Vector3> BodenFarben => _bodenFarben;
+
+    private readonly Dictionary<string, Vector3> _bodenFarben = [];
+
+    private static Vector3? Hex(PyObjekt o, string k) => Get(o, k) is string hex ? Netz.Farbe(hex) : null;
+
     private void Aufbauen(PyObjekt? boeden)
     {
         var signatur = new List<string>();
+        WandFarbe = Hex(Gebaeude, "wandfarbe") ?? Farben.Wand;
+        AussenFarbe = Hex(Gebaeude, "aussenfarbe") ?? Farben.Aussen;
         // Wiese um das Haus, damit die geneigte Kamera keinen leeren Himmel zeigt
         _teile.Add(Quader(-20, -0.08f, -20, Breite + 20, -0.02f, Tiefe + 20, Mischen(Farben.Wiese, Vector3.Zero, 0.1f)));
         var flur = Objekt(Gebaeude["flur"]);
         _teile.Add(Quader(0, -0.02f, 0, Breite, 0.02f, Tiefe, Farben.Boden));
-        Flaeche(0, (float)Py.F(flur["y"]), Breite, (float)Py.F(flur["h"]), Get(flur, "boden") as string, null, null, 0.03f);
+        _bodenFarben["flur"] = Flaeche(0, (float)Py.F(flur["y"]), Breite, (float)Py.F(flur["h"]), Get(flur, "boden") as string, null, null, 0.03f, Hex(flur, "bodenfarbe"));
         foreach (var raum in Liste(Gebaeude["raeume"]).Select(Objekt))
         {
             var boden = Get(raum, "boden") as string;
@@ -410,7 +476,7 @@ public sealed class Innenraum
             {
                 wahl = BodenAkzent(eintrag[1]);
             }
-            Flaeche((float)Py.F(raum["x"]), (float)Py.F(raum["y"]), (float)Py.F(raum["w"]), (float)Py.F(raum["h"]), boden, akzent, wahl, 0.035f);
+            _bodenFarben[Py.Str(raum["id"])] = Flaeche((float)Py.F(raum["x"]), (float)Py.F(raum["y"]), (float)Py.F(raum["w"]), (float)Py.F(raum["h"]), boden, akzent, wahl, 0.035f, Hex(raum, "bodenfarbe"));
         }
         // Innenwaende wie fisi_game._segments (ohne die vier Aussenwaende am Ende)
         var stuecke = Wege.Wandstuecke(Gebaeude);
@@ -429,8 +495,11 @@ public sealed class Innenraum
         Signatur = string.Join(";", signatur);
     }
 
-    /// <summary>Boden einer Flaeche: Art (parkett, teppichboden, fliesen, beton), Raumfarbe als Hauch, Fliesen mit Fugen.</summary>
-    private void Flaeche(float x, float z, float w, float t, string? boden, Vector3? raumFarbe, Vector3? wahl, float hoehe)
+    /// <summary>
+    /// Boden einer Flaeche: Art (parkett, teppichboden, fliesen, beton), Raumfarbe als Hauch, Fliesen mit
+    /// Fugen; <paramref name="fest"/> (bodenfarbe) ersetzt die Farbe der Art. Gibt die Bodenfarbe zurueck.
+    /// </summary>
+    private Vector3 Flaeche(float x, float z, float w, float t, string? boden, Vector3? raumFarbe, Vector3? wahl, float hoehe, Vector3? fest = null)
     {
         var farbe = boden switch
         {
@@ -440,6 +509,10 @@ public sealed class Innenraum
             "beton" => Farben.Beton,
             _ => raumFarbe is { } r2 ? Mischen(Farben.Boden, r2, 0.18f) : Farben.Boden,
         };
+        if (fest is { } eigene)
+        {
+            farbe = eigene;
+        }
         if (wahl is { } akzent)
         {
             farbe = Mischen(farbe, akzent, 0.3f);
@@ -449,11 +522,11 @@ public sealed class Innenraum
         {
             for (var fx = x + 0.6f; fx < x + w - 0.05f; fx += 0.6f)
             {
-                _teile.Add(Quader(fx - 0.012f, hoehe, z, fx + 0.012f, hoehe + 0.002f, z + t, Farben.Fuge));
+                _teile.Add(Quader(fx - 0.012f, hoehe, z, fx + 0.012f, hoehe + 0.002f, z + t, fest is null ? Farben.Fuge : Mischen(farbe, Vector3.Zero, 0.12f)));
             }
             for (var fz = z + 0.6f; fz < z + t - 0.05f; fz += 0.6f)
             {
-                _teile.Add(Quader(x, hoehe, fz - 0.012f, x + w, hoehe + 0.002f, fz + 0.012f, Farben.Fuge));
+                _teile.Add(Quader(x, hoehe, fz - 0.012f, x + w, hoehe + 0.002f, fz + 0.012f, fest is null ? Farben.Fuge : Mischen(farbe, Vector3.Zero, 0.12f)));
             }
         }
         else if (boden == "parkett")
@@ -463,6 +536,7 @@ public sealed class Innenraum
                 _teile.Add(Quader(x, hoehe, fz - 0.008f, x + w, hoehe + 0.002f, fz + 0.008f, Mischen(farbe, Vector3.Zero, 0.15f)));
             }
         }
+        return farbe;
     }
 
     private void Wand(float x1, float z1, float x2, float z2)
@@ -471,8 +545,8 @@ public sealed class Innenraum
         {
             return;
         }
-        _teile.Add(Quader(x1, 0, z1, x2, WandHoehe - 0.06f, z2, Farben.Wand));
-        _teile.Add(Quader(x1, WandHoehe - 0.06f, z1, x2, WandHoehe, z2, Farben.WandKante));
+        _teile.Add(Quader(x1, 0, z1, x2, WandHoehe - 0.06f, z2, WandFarbe));
+        _teile.Add(Quader(x1, WandHoehe - 0.06f, z1, x2, WandHoehe, z2, WandFarbe == Farben.Wand ? Farben.WandKante : Mischen(WandFarbe, Vector3.Zero, 0.2f)));
         _waende.Add(new InnenWand(_teile.Count - 2, _teile.Count, new Vector3(x1, 0, z1), new Vector3(x2, WandHoehe, z2), Vector2.Zero));
     }
 
@@ -528,11 +602,11 @@ public sealed class Innenraum
             var erstes = _teile.Count;
             foreach (var (von, bis, art) in oeffnungen)
             {
-                Stueck(pos, Math.Max(pos, von), 0, WandHoehe, Farben.Aussen);
+                Stueck(pos, Math.Max(pos, von), 0, WandHoehe, AussenFarbe);
                 switch (art)
                 {
                     case 'f':
-                        Stueck(von, bis, 0, 0.9f * Meter, Farben.Aussen);
+                        Stueck(von, bis, 0, 0.9f * Meter, AussenFarbe);
                         Stueck(von, bis, 0.9f * Meter, WandHoehe - 0.12f, Farben.Glas);
                         Stueck(von, bis, WandHoehe - 0.12f, WandHoehe, Farben.Rahmen);
                         break;
@@ -546,7 +620,7 @@ public sealed class Innenraum
                 }
                 pos = Math.Max(pos, bis);
             }
-            Stueck(pos, ende, 0, WandHoehe, Farben.Aussen);
+            Stueck(pos, ende, 0, WandHoehe, AussenFarbe);
             // die ganze Seite als ein Wandstueck; nach draussen zeigt -innenSeite (oben/links: innenSeite 1)
             var aussen = waagerecht ? new Vector2(0, -innenSeite) : new Vector2(-innenSeite, 0);
             _waende.Add(new InnenWand(erstes, _teile.Count,
@@ -629,7 +703,7 @@ public sealed class Innenraum
         "regal", "aktenregal", "hochregal", "kleiderschrank", "kuechenzeile", "kuehlschrank", "waschmaschine", "fernseher",
         "kommode", "sofa", "bett", "matratze", "tresen", "waschbecken", "wc", "badewanne", "kaffeemaschine", "usv", "rack",
         "klima", "drucker", "automat", "wasserspender", "monitorwand", "anzeigetafel", "whiteboard", "bild", "aquarium",
-        "werkbank", "leitstand", "bank",
+        "werkbank", "leitstand", "bank", "glaswand", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen", "gemaelde",
     ];
 
     private int AutoDrehung(float x, float z, float w, float t)
@@ -805,6 +879,25 @@ public sealed class Innenraum
             case "liegestuhl":
                 Modell(r, "loungeChairRelax", 0, 0, b, tt, 0.8f * M, 0, Farben.Hell);
                 break;
+            case "stuhlreihe":
+            {
+                // Wartestuehle nebeneinander (KayKit, P7-15 Nachtrag 1), so viele, wie in die Breite passen
+                var n = Math.Max(1, (int)(b / 0.8f));
+                for (var i = 0; i < n; i++)
+                {
+                    Modell(r, "kkChairA", (b * i / n) + (b / n / 2) - 0.32f, 0, 0.64f, tt, 0.95f * M, 0, Farben.Polster);
+                }
+                break;
+            }
+            case "wartesessel":
+                Modell(r, "kkArmchair", 0, 0, b, tt, 0.85f * M, 0, Farben.Polster);
+                break;
+            case "gemaelde":
+                Modell(r, "kkPictureframeLargeB", 0, 0, b, Math.Min(tt, 0.12f), 0.6f * M, 1.0f * M, Netz.Farbe("#F472B6"));
+                break;
+            case "platznummer":
+                Platznummer(r, b, tt, (int)Py.Int(Get(d, "nummer", 1L)), (float)Py.F(Get(d, "unten", 0.75)) * M);
+                break;
             default:
                 Eigen(typ, r, b, tt);
                 break;
@@ -905,6 +998,34 @@ public sealed class Innenraum
                     Modell(r, "cardboardBoxClosed", (i * kb) + 0.08f, (j * kt) + 0.08f, kb - 0.16f, kt - 0.16f, 0.4f * Meter, 0.5f * Meter, Farben.Karton);
                 }
             }
+        }
+    }
+
+    /// <summary>Ziffern als Siebensegment (a oben, b rechts oben, c rechts unten, d unten, e links unten, f links oben, g Mitte).</summary>
+    private static readonly string[] Segmente = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
+
+    /// <summary>Nummernschild eines Schalterplatzes (P7-15): Schild auf dem Tisch, Ziffer zur Vorderseite.</summary>
+    private void Platznummer(Rahmen r, float b, float t, int nummer, float unten)
+    {
+        var tafel = Netz.Farbe("#1D4ED8");
+        Kasten(r, b * 0.3f, 0, b * 0.4f, t, unten, unten + 0.06f, Farben.Geraet);
+        float hoehe = 0.42f, tafelUnten = unten + 0.06f;
+        Kasten(r, 0, 0, b, t, tafelUnten, tafelUnten + hoehe, tafel);
+        float s = 0.035f, zb = Math.Min(b * 0.5f, 0.2f), zh = hoehe * 0.7f;
+        float lx = (b - zb) / 2, y0 = tafelUnten + ((hoehe - zh) / 2), y1 = y0 + (zh / 2), y2 = y0 + zh;
+        foreach (var seg in Segmente[((nummer % 10) + 10) % 10])
+        {
+            var (a, bis, von, ober) = seg switch
+            {
+                'a' => (lx, lx + zb, y2 - s, y2),
+                'b' => (lx + zb - s, lx + zb, y1, y2),
+                'c' => (lx + zb - s, lx + zb, y0, y1),
+                'd' => (lx, lx + zb, y0, y0 + s),
+                'e' => (lx, lx + s, y0, y1),
+                'f' => (lx, lx + s, y1, y2),
+                _ => (lx, lx + zb, y1 - (s / 2), y1 + (s / 2)),
+            };
+            Kasten(r, a, t, bis - a, 0.015f, von, ober, Farben.Weiss);
         }
     }
 
@@ -1056,6 +1177,92 @@ public sealed class Innenraum
             case "spielkonsole":
                 Kasten(r, 0, 0, b, t, 0, 0.12f * M, Farben.MetallDunkel);
                 break;
+            case "glaswand":
+            {
+                // Glas auf dem Tresen (P7-15): nur Rahmen und Glaskante, damit die Person dahinter sichtbar bleibt
+                float unten = 1.05f * M, oben = 1.6f * M;
+                Kasten(r, 0, 0, b, t, unten, unten + 0.04f, Farben.Glas);
+                Kasten(r, 0, 0, b, t, oben - 0.05f, oben, Farben.Rahmen);
+                var n = Math.Max(2, (int)MathF.Round(b / 1.1f));
+                for (var i = 0; i <= n; i++)
+                {
+                    Kasten(r, (b - 0.06f) * i / n, 0, 0.06f, t, unten, oben, Farben.Rahmen);
+                }
+                // Durchreiche in der Mitte
+                Kasten(r, (b / 2) - 0.4f, 0, 0.8f, t + 0.06f, unten, unten + 0.02f, Farben.MetallDunkel);
+                break;
+            }
+            case "schliessfaecher":
+            {
+                var koerper = Netz.Farbe("#94A3B8");
+                var tuer = Netz.Farbe("#CBD5E1");
+                Kasten(r, 0, 0, b, t, 0, 1.7f * M, koerper);
+                var spalten = Math.Max(2, (int)(b / 0.45f));
+                var breite = b / spalten;
+                var hoehe = (1.6f * M - 0.1f) / 5;
+                for (var i = 0; i < spalten; i++)
+                {
+                    for (var j = 0; j < 5; j++)
+                    {
+                        var lx = i * breite;
+                        var unten = 0.1f + (j * hoehe);
+                        Kasten(r, lx + 0.03f, t - 0.01f, breite - 0.06f, 0.03f, unten + 0.03f, unten + hoehe - 0.03f, tuer);
+                        Kasten(r, lx + breite - 0.12f, t, 0.05f, 0.03f, unten + (hoehe / 2) - 0.03f, unten + (hoehe / 2) + 0.03f, Farben.Gelb);
+                    }
+                }
+                break;
+            }
+            case "tresor":
+            {
+                var stahl = Netz.Farbe("#475569");
+                var hell = Netz.Farbe("#E2E8F0");
+                Kasten(r, 0, 0, b, t, 0, 1.75f * M, stahl);
+                Kasten(r, 0.15f, t - 0.01f, b - 0.3f, 0.04f, 0.15f * M, 1.6f * M, Netz.Farbe("#64748B"));
+                // Rad in der Mitte (Kreuz mit Nabe) und Scharniere links
+                var mitte = 0.9f * M;
+                Kasten(r, (b / 2) - 0.35f, t + 0.02f, 0.7f, 0.04f, mitte - 0.03f, mitte + 0.03f, hell);
+                Kasten(r, (b / 2) - 0.03f, t + 0.02f, 0.06f, 0.04f, mitte - 0.35f, mitte + 0.35f, hell);
+                Kasten(r, (b / 2) - 0.1f, t + 0.03f, 0.2f, 0.05f, mitte - 0.1f, mitte + 0.1f, Farben.Gelb);
+                Kasten(r, 0.12f, t, 0.06f, 0.06f, 0.4f * M, 0.6f * M, hell);
+                Kasten(r, 0.12f, t, 0.06f, 0.06f, 1.15f * M, 1.35f * M, hell);
+                break;
+            }
+            case "geldautomat":
+                Kasten(r, 0, 0, b, t, 0, 1.5f * M, Netz.Farbe("#334155"));
+                Kasten(r, 0, 0, b, t, 1.5f * M, 1.7f * M, Netz.Farbe("#2563EB"));
+                Kasten(r, 0.12f, t - 0.02f, b - 0.24f, 0.04f, 1.0f * M, 1.35f * M, Farben.Bildschirm);
+                Kasten(r, 0.1f, t - 0.02f, b - 0.2f, 0.14f, 0.85f * M, 0.92f * M, Netz.Farbe("#94A3B8"));
+                Kasten(r, 0.25f, t - 0.01f, b - 0.5f, 0.03f, 0.7f * M, 0.75f * M, Farben.Geraet);
+                break;
+            case "wartemarken":
+                Kasten(r, 0.15f, 0.1f, b - 0.3f, t - 0.2f, 0, 1.0f * M, Netz.Farbe("#B45309"));
+                Kasten(r, 0, 0, b, t, 1.0f * M, 1.5f * M, Netz.Farbe("#F59E0B"));
+                Kasten(r, 0.1f, t - 0.01f, b - 0.2f, 0.03f, 1.2f * M, 1.42f * M, Farben.Bildschirm);
+                Kasten(r, 0.2f, t - 0.01f, b - 0.4f, 0.04f, 1.06f * M, 1.1f * M, Farben.Weiss);
+                break;
+            case "wappen":
+            {
+                var gold = Netz.Farbe("#FBBF24");
+                var tief = Math.Min(t, 0.1f);
+                Kasten(r, b * 0.15f, 0, b * 0.7f, tief, 1.0f * M, 1.5f * M, gold);
+                Kasten(r, b * 0.32f, 0, b * 0.36f, tief, 0.9f * M, 1.0f * M, gold);
+                Kasten(r, b * 0.25f, 0, b * 0.5f, tief + 0.02f, 1.08f * M, 1.42f * M, Netz.Farbe("#B91C1C"));
+                Kasten(r, b * 0.45f, 0, b * 0.1f, tief + 0.03f, 1.12f * M, 1.38f * M, Farben.Geraet);
+                break;
+            }
+            case "fahne":
+            {
+                // Fahne im Staender: Fuss, Mast, Tuch in drei Streifen
+                Kasten(r, 0, 0, b, t, 0, 0.06f * M, Netz.Farbe("#475569"));
+                Kasten(r, 0.06f, (t / 2) - 0.03f, 0.06f, 0.06f, 0, 1.75f * M, Farben.Metall);
+                var streifen = new[] { Farben.Geraet, Netz.Farbe("#DC2626"), Netz.Farbe("#FACC15") };
+                for (var i = 0; i < 3; i++)
+                {
+                    var oben = (1.68f - (i * 0.22f)) * M;
+                    Kasten(r, 0.12f, (t / 2) - 0.01f, b - 0.14f, 0.02f, oben - (0.22f * M), oben, streifen[i]);
+                }
+                break;
+            }
             default:
                 Kasten(r, 0, 0, b, t, 0, 0.6f * M, Farben.Karton);
                 break;
