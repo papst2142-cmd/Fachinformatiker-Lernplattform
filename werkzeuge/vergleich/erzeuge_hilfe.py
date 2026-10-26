@@ -21,9 +21,11 @@ Teile (Spezifikation P4-10_Spezifikation_G35.md mit Nachtrag P4-11 Abschnitt 3 u
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_hilfe.py <pfad_fisi_lernplattform> tests/Vergleich/hilfe.json
 """
+import atexit
 import datetime
 import json
 import os
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -142,6 +144,7 @@ def schreibe(pfad, inhalt):
 def main():
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp()
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")
     sys.path.insert(0, repo)
     import fisi_core as fc

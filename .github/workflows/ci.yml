@@ -98,18 +98,41 @@ jobs:
       # Absturz (andere Rueckgabe, Ausnahme, keine Messdatei) startet nicht neu und ist rot.
       # Wachhund je Lauf 15 Minuten (vorher 10): mit den Spielansichten aus Phase 7 braucht ein
       # gesunder Lauf auf Windows und macOS 9,5 bis 10 Minuten (P7-13a); die Messgrenzen bleiben.
+      # Sammelliste 106 (Weisung P8-2): Lernteil und Spielansichten als eigene Schritte, jeder mit
+      # eigenem Wachhund, eigener Neustart-Regel und eigenen Messdateien. Der Wachhund bleibt bei
+      # 15 Minuten, bis beide Schritte auf allen drei Systemen belegt darunter liegen.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
         timeout-minutes: 15
         shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: lernen
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: steps.lauf1.outputs.rc == '3'
         timeout-minutes: 15
         shell: bash
         env:
+          LERNPLATTFORM_MESSUNG_TEIL: lernen
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+      - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
+        id: spiel1
+        if: always() && steps.lauf1.outcome != 'skipped'
+        timeout-minutes: 15
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: spiel
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel1
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_spiel1_versuch${{ github.run_attempt }}.txt
+      - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: always() && steps.spiel1.outputs.rc == '3'
+        timeout-minutes: 15
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: spiel
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel2
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_spiel2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_spiel1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
       # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
       - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
@@ -150,6 +173,12 @@ jobs:
         shell: bash
         run: |
           echo "Rueckgabe des 1. Laufs unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.lauf1.outputs.rc }}')"
+          exit 1
+      - name: Spielansichten Rueckgabe pruefen
+        if: always() && steps.spiel1.outcome == 'success' && steps.spiel1.outputs.rc != '0' && steps.spiel1.outputs.rc != '3'
+        shell: bash
+        run: |
+          echo "Rueckgabe des 1. Laufs der Spielansichten unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.spiel1.outputs.rc }}')"
           exit 1
 
   pakete:

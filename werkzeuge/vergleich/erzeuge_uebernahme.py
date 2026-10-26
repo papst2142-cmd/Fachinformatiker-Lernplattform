@@ -31,6 +31,7 @@ time.tzset), Zeitstempel und uid beim Schreiben sind fest.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_uebernahme.py <pfad_fisi_lernplattform> tests/Vergleich/uebernahme.json
 """
+import atexit
 import base64
 import copy
 import datetime
@@ -56,6 +57,7 @@ def main():
     os.environ["TZ"] = ZONE
     time.tzset()
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

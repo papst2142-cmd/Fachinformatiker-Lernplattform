@@ -106,6 +106,7 @@ def main():
 
 
 def erzeugen(repo, ziel, tmp):
+    tempfile.tempdir = tmp   # Sammelliste 91: auch die Datenbank von fingerabdruck.py (f.db) liegt im Temp-Ordner
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

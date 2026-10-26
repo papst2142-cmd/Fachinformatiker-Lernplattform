@@ -33,9 +33,11 @@ Temp-Ordner.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_spiel_orte.py <pfad_fisi_lernplattform> <spiel_aktionen.json> <spiel_firma.json> tests/Vergleich/spiel_orte.json
 """
+import atexit
 import hashlib
 import json
 import os
+import shutil
 import sys
 import tempfile
 
@@ -139,6 +141,7 @@ def main():
         return 2
     repo, aktionen_pfad, firma_pfad, ziel = sys.argv[1:5]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

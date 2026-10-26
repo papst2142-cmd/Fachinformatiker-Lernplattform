@@ -55,6 +55,7 @@ Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_dashboard.py <pfad_fisi_lernplattform> tests/Vergleich/testdaten.db tests/Vergleich/dashboard.json
 """
 import ast
+import atexit
 import calendar
 import datetime
 import json
@@ -472,6 +473,7 @@ def main():
         return 2
     repo, testdaten, ziel = sys.argv[1], sys.argv[2], sys.argv[3]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")

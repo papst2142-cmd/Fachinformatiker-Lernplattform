@@ -21,11 +21,13 @@ die Datei bei jedem Lauf gleich ist; der Hash haengt nicht von der Uhr ab.
 Aufruf:
   python3 -I werkzeuge/vergleich/erzeuge_spiel_fingerabdruck.py <pfad_fisi_lernplattform> tests/Vergleich/spiel_fingerabdruck.json
 """
+import atexit
 import contextlib
 import io
 import json
 import os
 import runpy
+import shutil
 import sys
 import tempfile
 
@@ -44,6 +46,8 @@ def main():
         return 2
     repo, ziel = sys.argv[1], sys.argv[2]
     tmp = tempfile.mkdtemp(prefix="vergleich_")
+    atexit.register(shutil.rmtree, tmp, True)   # Sammelliste 91: Temp-Ordner nach dem Lauf weg
+    tempfile.tempdir = tmp   # Sammelliste 91: auch die Datenbank von fingerabdruck.py (f.db) liegt im Temp-Ordner
     for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         os.environ[name] = tmp
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")
