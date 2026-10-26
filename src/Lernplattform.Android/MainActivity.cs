@@ -80,8 +80,11 @@ public class MainActivity : AvaloniaMainActivity
         }
         _messung = new Systemmessung(Waerme, hertz);
         var messung = _messung;
+        // global:: nicht in der Interpolation: der Doppelpunkt waere dort der Beginn einer Formatangabe
+        var version = global::Android.OS.Build.VERSION.Release;
+        var api = (int)global::Android.OS.Build.VERSION.SdkInt;
         Lernplattform.Spiel.Systemwerte.Kopf = () => string.Create(System.Globalization.CultureInfo.InvariantCulture,
-            $"Android {global::Android.OS.Build.VERSION.Release} (API {(int)global::Android.OS.Build.VERSION.SdkInt}), Bildwiederholrate {messung.Hertz:0} Hz");
+            $"Android {version} (API {api}), Bildwiederholrate {messung.Hertz:0} Hz");
         Lernplattform.Spiel.Systemwerte.Seit = messung.Seit;
     }
 
