@@ -90,6 +90,36 @@ public static class Spielstaende
         return ergebnis;
     }
 
+    /// <summary>
+    /// Weisung P8-5 (L3): Zeitstempel, Art und Geraet der Stadt-Zeilen eines Durchgangs (nur C#-Ereignisse,
+    /// Python liest sie nicht). Siehe <see cref="SpielGeraete"/>.
+    /// </summary>
+    public static List<(string Zeit, string Art, string Geraet)> StadtGeraete(SqliteConnection verbindung, string? lauf)
+    {
+        var (wo, wert) = Bedingung(lauf);
+        using var befehl = verbindung.CreateCommand();
+        befehl.CommandText = "SELECT timestamp, typ, geraet FROM spiel_ereignisse WHERE (" + wo
+            + ") AND typ IN ($a, $b, $c)";
+        if (wert is not null)
+        {
+            befehl.Parameters.AddWithValue("$lauf", wert);
+        }
+        befehl.Parameters.AddWithValue("$a", Stadt.Gegangen);
+        befehl.Parameters.AddWithValue("$b", Stadt.Gewartet);
+        befehl.Parameters.AddWithValue("$c", Stadt.Gelaufen);
+        var ergebnis = new List<(string, string, string)>();
+        using var leser = befehl.ExecuteReader();
+        while (leser.Read())
+        {
+            if (leser.IsDBNull(0) || leser.IsDBNull(1))
+            {
+                continue;   // ohne Zeitstempel nicht zuzuordnen: zaehlt als eigenes Geraet
+            }
+            ergebnis.Add((leser.GetValue(0).ToString() ?? "", leser.GetString(1), leser.IsDBNull(2) ? "" : leser.GetValue(2).ToString() ?? ""));
+        }
+        return ergebnis;
+    }
+
     /// <summary>slot_rows: alle Zeilen der Platz-Tabelle chronologisch (kaputte Daten = leeres dict).</summary>
     public static List<PlatzZeile> Zeilen(SqliteConnection verbindung)
     {

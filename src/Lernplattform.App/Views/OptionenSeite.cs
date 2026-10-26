@@ -133,23 +133,13 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         }, DispatcherPriority.Loaded);
     }
 
-    /// <summary>Akzentfarbe je Bereich wie OptionsScreen am Handy (Ausbildung und Datenbank gibt es nur in C#).</summary>
-    private static string Akzent(string id) => id switch
-    {
-        Optionen.Updates or Optionen.Sicherung or Optionen.Spiel => "Pinsel.accent2",
-        Optionen.Tagesziel or Optionen.Rundgang or Optionen.Ueber => "Pinsel.green",
-        Optionen.Lerninhalte => "Pinsel.purple",
-        Optionen.Loeschen => "Pinsel.red",
-        Optionen.Diagnose => "Pinsel.orange",
-        Optionen.Ausbildung => "Pinsel.blue",
-        Optionen.Datenbank => "Pinsel.cyan",
-        _ => "Pinsel.accent",
-    };
+    /// <summary>Farbe je Bereich: die seiner Gruppe (Weisung P8-5b), "Loeschen und zuruecksetzen" rot.</summary>
+    private static string Akzent(string id) => "Pinsel." + Optionen.Farbe(id);
 
-    /// <summary>Gruppen-Ueberschrift wie in der Seitenleiste (11 fett, muted, Grossbuchstaben).</summary>
+    /// <summary>Gruppen-Ueberschrift wie in der Seitenleiste (11 fett, Grossbuchstaben), seit P8-5b in der Farbe der Gruppe.</summary>
     private static TextBlock Gruppe(string titel)
     {
-        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel.muted");
+        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel." + Optionen.GruppenFarben[titel]);
         text.Margin = new Thickness(4, 6, 0, 0);
         return text;
     }

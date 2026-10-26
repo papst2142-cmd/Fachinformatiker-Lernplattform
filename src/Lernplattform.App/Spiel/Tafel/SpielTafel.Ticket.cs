@@ -43,6 +43,10 @@ public sealed partial class SpielTafel
     }
 
     private TicketSeite? _ticket;
+    private Seite? _ticketEintrag;
+
+    /// <summary>Ist gerade ein Ticket offen (Seite auf dem Stapel)? Dann frischt ein Abgleich nicht auf (wie Python).</summary>
+    public bool TicketOffen => _ticketEintrag is { } eintrag && _stapel.Contains(eintrag);
 
     /// <summary>Ticket zum Bearbeiten oeffnen (aus der Uebersicht oder von einem Ort in der Stadt).</summary>
     public void TicketOeffnen(string kennung, bool vonOrt = false)
@@ -97,6 +101,7 @@ public sealed partial class SpielTafel
             Core.Mathe.PythonRunden.Runde(Py.F(Objekt(I["balancing"])["bonus_ohne_hilfe"]) * 100)), 12, "muted"));
         seite.Teile.Add(seite.Knoepfe);
         Oeffnen(Krumen("PRAXIS", "SPIEL"), () => seite.Teile);
+        _ticketEintrag = _stapel[^1];
     }
 
     /// <summary>_show_help</summary>

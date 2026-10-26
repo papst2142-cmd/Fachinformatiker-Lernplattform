@@ -9,19 +9,19 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 - Code: `papst2142-cmd/Fachinformatiker-Lernplattform` (`main`, geschützt: Änderungen nur per PR, Squash nach Freigabe). Regeln: `CLAUDE.md` im Repo.
 - Austausch: `papst2142-cmd/Fi-Austausch` (`weisungen/`, `meldungen/`, `anlagen/`, `SAMMELLISTE_NEU.md`).
 - Referenz (nur lesen): `papst2142-cmd/Fisi-Lernplattform` (Python, eingefroren seit v0.63.2, main fbc657d).
-- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–5 umgesetzt (ältere Pläne in der Git-Historie); Phase 6 (Verteilung) abgenommen (Weisung P6-21); **Phase 7 (Spiel in echtem 3D): Plan `Plan_Phase7_CSharp.md` freigegeben (Weisung P7-2)**.
+- Gesamtplan: `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Phasenfolge neu Abschnitt 12: 5 Betrieb, 6 Verteilung, 7 Spiel, 8 Spiel-Abgleich und Kleinigkeiten, 9 NVDA und Gesamttest, danach Beta). Pläne in `Fi-Austausch/weisungen/`: Phasen 0–5 umgesetzt (ältere Pläne in der Git-Historie); Phase 6 (Verteilung) abgenommen (Weisung P6-21); Phase 7 (Spiel in 3D) abgenommen; **Phase 8: Plan `Plan_Phase8_CSharp.md` freigegeben (Weisung P8-2)**.
 - Zusammenarbeit: `Fi-Austausch/weisungen/Regel_Automatische_Uebergabe.md` (bindend, Abschnitte 1–11, Startzeilen für neue Threads).
 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.12.2** auf `main` (c79c53f, PR #31), veröffentlicht als vA0.12.2 (24.10.2026 20:41). Davor vA0.12.0 (d30b1a3) und vA0.12.1 (e031933). Nächste Version A 0.12.3 bzw. nach Weisung. Release macht Chat nach Nicos Merge-OK (Nico 24.10.2026 18:19), CC nie. CC startet `release.yml` nie |
-| Phase | 0–6 abgenommen; 0–5 (Kern, Lernkern, Rechner, Prüfungsbereiche, Betrieb: Sicherung, Diagnose, Update); **Phase 6 fertig** bis auf den Update-Test am Windows-PC (Nico): W1 Release-Ablauf, W2 Plattformen, W3 erstes Release, A 0.12.1 Update-Test, A 0.12.2 Optik wie Python 0.63.2. Update-Test S24 A 0.12.0 → A 0.12.2 bestanden |
-| Jetzt | **Phase 7:** W1 Stichprobe 3D PR #35 (nicht mergen); W2, W3, W8, P7-6, W4 sowie W5 Innenräume, W6 Ansichten, W7 Geschäfte und W7b Bank und Amt mit Nicos S24-Wünschen gemergt (main **e885b8f**, Weisung P7-14). Nächste Welle nach Nicos S24-Probe (spiel_bilder.log, 60 Bilder/s). Einzelheiten `CLAUDE.md` Punkt Phase 7 |
-| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler im Start ohne Bedienung: erster Schritt 150 ms, ab Schritt 2 100 ms. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
-| Vergleichswerte | G1–G41 bestehen, CI erzeugt alle neu; Spiel (W2, main 40affd5): `spiel_*.json` für G42, G44–G46, G48, G49; W3 (main 3807754): G43 `spiel_fingerabdruck.json` (f2b59ce8…6656), G47 `spiel_firma.json`; W8 (PR #38): G44 Übernahme `spiel_uebernahme.json`; P7-6 (PR #40): G44 Verwaltung `spiel_verwaltung.json`, G48 Stadt `spiel_stadt.json`, zweiter Fingerabdruck 86ac8f19…59ac |
-| Letzte/nächste Meldung | **P7-14a** (Doku) / P7-15; Sammelliste nächste 108 |
-| Sammelliste | nächste freie Nummer **108** (106 Start-Test aufteilen, 107 HaengerTests macOS); offen für Nico: 24 (Rechnername im Gerätenamen); für Phase 6: 46; 74 (Lizenztexte in der APK), 75 (Kommentar PythonPow.cs), 76/77 (Linux-Verknüpfung), 78 (Start-Test-Probe) |
+| Version | **A 0.14.0** auf Zweig `claude/project-thread-8mg42a` (Phase 8 W3 Spiel-Abgleich, PR als Entwurf, Weisung P8-5). Auf `main` **A 0.13.2** (a9f9448, PR #53). Zuletzt veröffentlicht vA0.13.1 (4684608). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
+| Phase | 0–7 abgenommen (Phase 7 Spiel in 3D, Bericht `Fi-Austausch/anlagen/P7-Bericht_Phase7.md`). **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 Prüfstand (#51), W2 Eingaben A 0.13.1 (#52), W2b Seitenleiste/Optionen A 0.13.2 (#53) gemergt |
+| Jetzt | **W3 Spiel-Abgleich (A 0.14.0):** Spielseite frischt nach Abgleich auf (nicht bei offenem Ticket, danach nachgeholt), gelöschter Platz wird neu gewählt, Tagesuhr der Stadt nimmt das Gerät mit dem weitesten Stand (`SpielGeraete.cs`), Spielsperre erst vor dem ersten Schreiben (`Spielablauf.Sichern`); Nachtrag P8-5b: Optionen je Gruppe eine Farbe (Löschen rot). Danach W4 Spiel-Tempo, W5 Kaufhaus + Hilfe + Abschluss |
+| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Farbregler erster Schritt 150 ms, ab Schritt 2 100 ms. Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`). Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
+| Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Spiel: `tests/Vergleich/spiel_*.json`; neu G51 `spiel_abgleich.json` (Erzeuger `werkzeuge/vergleich/erzeuge_spiel_abgleich.py`, drei Geräte, Abgleich wie `fisi_sync`). Fingerabdrücke f2b59ce8, 86ac8f19, 185dee1b unverändert |
+| Letzte/nächste Meldung | **P8-5b** (Gruppenfarben, nach P8-5 W3) / P8-6 |
+| Sammelliste | nächste freie Nummer **122** (118–120 aus P8-5, 121 Gruppenfarben der Optionen in P8-5b); offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
 ## 4. So arbeitet der neue Chat

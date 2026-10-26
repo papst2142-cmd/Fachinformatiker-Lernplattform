@@ -102,6 +102,8 @@ jobs:
       # eigenem Wachhund, eigener Neustart-Regel und eigenen Messdateien. Weisung P8-3 (E2 Chat):
       # Spielschritte 10 Minuten (Lauf 40326477854: hoechstens 64 s); die Lernschritte bleiben bei
       # 15 Minuten, bis ein zweiter voller Lauf alle unter 9 Minuten zeigt (dann W3).
+      # Weisung P8-5 (W3): Lauf 40351299271 zeigte ubuntu 476 s, windows 540 s, macOS 594 s, nicht
+      # alle unter 540 s; darum bleiben die Lernschritte bei 15 Minuten.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
         timeout-minutes: 15
@@ -184,7 +186,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.13.2 -> A 0.13.3 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.14.0 -> A 0.14.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -216,16 +218,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.13.2
-          path: pakete/feed-A-0.13.2/
+          name: paket-${{ matrix.rid }}-A-0.14.0
+          path: pakete/feed-A-0.14.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.13.3
-          path: pakete/feed-A-0.13.3/
+          name: updateprobe-${{ matrix.rid }}-A-0.14.1
+          path: pakete/feed-A-0.14.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.13.2-tar
+          name: appimage-linux-x64-A-0.14.0-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -350,6 +352,8 @@ jobs:
           python3 -I werkzeuge/vergleich/erzeuge_spiel_orte.py python-linie neu/spiel_aktionen.json neu/spiel_firma.json neu/spiel_orte.json
           # Phase 7 W6 (Weisung P7-11): G50 Spiel-Ansichten (Rueckmeldungen, Rack-Balken, Formular, Ersatzteile, Wissen, Figur)
           python3 -I werkzeuge/vergleich/erzeuge_spiel_ansichten.py python-linie neu/spiel_ansichten.json
+          # Phase 8 W3 (Weisung P8-5): G51 Spiel-Abgleich (drei Geraete offline, fisi_sync ohne Netz, Neuaufbau)
+          python3 -I werkzeuge/vergleich/erzeuge_spiel_abgleich.py python-linie neu/spiel_abgleich.json
           diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
           diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
           diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
@@ -374,7 +378,7 @@ jobs:
                        "spiel_texte.json", "spiel_aktionen.json", "spiel_pruefung.json",
                        "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json",
                        "spiel_uebernahme.json", "spiel_verwaltung.json", "spiel_stadt.json",
-                       "spiel_orte.json", "spiel_ansichten.json"):
+                       "spiel_orte.json", "spiel_ansichten.json", "spiel_abgleich.json"):
               alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
               neu = json.load(open("neu/" + name, encoding="utf-8"))
               alt.pop("python", None); neu.pop("python", None)
@@ -435,10 +439,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.13.3 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.13.2 installierbar.
-      - name: Update-APK A 0.13.3 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.13.3 -o apk-update
+      # Spike D (A4b): zweite APK A 0.14.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.14.0 installierbar.
+      - name: Update-APK A 0.14.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.14.1 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -483,17 +487,17 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001302'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001303'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1001400'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1001401'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.13.2
+          name: lernplattform-android-A-0.14.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.13.3
+          name: updateprobe-android-A-0.14.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),

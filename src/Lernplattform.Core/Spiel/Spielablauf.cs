@@ -18,6 +18,12 @@ public interface ISpielSpeicher
     /// <summary>game_events: chronologisch (Zeitstempel, dann Nummer), Daten wie json.loads.</summary>
     List<SpielEreignis> Ereignisse();
 
+    /// <summary>
+    /// Weisung P8-5 (L3): wer die Stadt-Zeilen geschrieben hat, Stand des letzten <see cref="Ereignisse"/>
+    /// (null: ein Speicher ohne Geraete, alles zaehlt als ein Geraet).
+    /// </summary>
+    SpielGeraete? Geraete => null;
+
     /// <summary>log_record: eine Zeile der Bestenliste (daten ist JSON-Text).</summary>
     bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten);
 
@@ -134,8 +140,19 @@ public sealed class Spielablauf
     /// <summary>Wie oft ein Ereignis nicht gespeichert wurde (Python: log_game_event gab False).</summary>
     public int NichtGespeichert { get; private set; }
 
-    /// <summary>state</summary>
-    public Spielstand Stand { get; private set; }
+    /// <summary>state (mit der Zuordnung der Stadt-Schritte zu den Geraeten, Weisung P8-5 L3)</summary>
+    public Spielstand Stand
+    {
+        get => stand;
+        private set
+        {
+            stand = value;
+            SpielGeraete.Setzen(value, geraete);
+        }
+    }
+
+    private Spielstand stand = null!;
+    private SpielGeraete? geraete;
 
     /// <summary>unlocked: neu erreichte Abzeichen-Stufen fuer die Anzeige.</summary>
     public List<PyObjekt> Freigeschaltet { get; } = [];
@@ -187,6 +204,7 @@ public sealed class Spielablauf
         stempel = null;
         var vorher = Speicher.Stempel();
         var ereignisse = Speicher.Ereignisse();
+        geraete = Speicher.Geraete;
         Stand = new Spielstand(ereignisse, Inhalt);
         einmal = Stand.EinmalGezaehlt();
         stempel = vorher;
@@ -217,16 +235,24 @@ public sealed class Spielablauf
     }
 
     /// <summary>
-    /// Schreibrecht fuer eine Aktion holen (geschachtelt: nur das aeusserste holt es). Laeuft gerade
-    /// Abgleich, Uebernahme, Update oder Sicherung einspielen, schreibt die Aktion gar nichts.
+    /// Eine Aktion beginnt (geschachtelt: nur die aeusserste zaehlt). Das Schreibrecht holt erst
+    /// <see cref="Sichern"/> vor dem ersten Schreiben (Weisung P8-5, L4, Sammelliste 92): eine Aktion,
+    /// die nur liest (Erfolge pruefen ohne neue Abzeichen), laeuft auch waehrend eines Abgleichs, wie in Python.
     /// </summary>
-    private void Betreten()
+    private void Betreten() => tiefe += 1;
+
+    /// <summary>
+    /// Schreibrecht fuer die laufende Aktion vor ihrem ersten Schreiben holen; danach gilt es bis zum Ende der
+    /// aeussersten Aktion. Laeuft gerade Abgleich, Uebernahme, Update oder Sicherung einspielen, schreibt die
+    /// Aktion gar nichts (das erste Schreiben kommt vor jeder Aenderung am Spielstand).
+    /// </summary>
+    private void Sichern()
     {
         if (tiefe == 0)
         {
-            sitzung = Speicher.Sitzung() ?? throw new SpielBelegtAusnahme();
+            throw new InvalidOperationException("Das Spiel schreibt nur innerhalb einer Aktion");
         }
-        tiefe += 1;
+        sitzung ??= Speicher.Sitzung() ?? throw new SpielBelegtAusnahme();
     }
 
     private void Verlassen()
@@ -242,6 +268,7 @@ public sealed class Spielablauf
     private void Schreiben(string art, PyObjekt daten)
     {
         var text = PythonJson.Standard(daten);
+        Sichern();
         var vorher = AktuellerStempel();
         if (Speicher.Schreiben(art, text) is null)
         {
@@ -427,6 +454,7 @@ public sealed class Spielablauf
                 {
                     var leise = still || (alteStory && Betrieb.StoryAbzeichen.Contains(Py.Str(regel["id"])));
                     var info = Betrieb.FreischaltInfo(stand, regel, stufe, zeilen, Inhalt);
+                    Sichern();
                     Speicher.Schreiben(Ereignisse.Erfolg, PythonJson.Standard(new PyObjekt
                     {
                         { "erfolg", regel["id"] }, { "stufe", stufe }, { "tag", tag }, { "nachgetragen", leise },
@@ -440,6 +468,7 @@ public sealed class Spielablauf
             }
             foreach (var (art, schluessel, wert, daten) in Betrieb.BestenNeu(Stand, zeilen, Inhalt, erzwingen))
             {
+                Sichern();
                 Speicher.BestenSchreiben(Stand.ErstesEreignis!, art, schluessel, wert, PythonJson.Standard(daten));
             }
             Freigeschaltet.AddRange(infos);
@@ -480,6 +509,7 @@ public sealed class Spielablauf
         Betreten();
         try
         {
+            Sichern();
             var ok = Speicher.BestenlisteLoeschen();
             ErfolgePruefen();
             return ok;

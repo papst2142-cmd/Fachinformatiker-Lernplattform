@@ -142,6 +142,11 @@ public sealed partial class SpielTafel : Grid
     public void AllesSchliessen()
     {
         _stapel.Clear();
+        if (_nachAbgleich)
+        {
+            Gezeigt();   // Weisung P8-5 (L1): der Abgleich kam, waehrend das Ticket offen war
+            return;
+        }
         Zeichnen();
     }
 
@@ -151,7 +156,14 @@ public sealed partial class SpielTafel : Grid
         if (_stapel.Count > 0)
         {
             _stapel.RemoveAt(_stapel.Count - 1);
-            Auffrischen();
+            if (_nachAbgleich && !TicketOffen)
+            {
+                Gezeigt();   // Weisung P8-5 (L1): der Abgleich kam, waehrend das Ticket offen war
+            }
+            else
+            {
+                Auffrischen();
+            }
             return true;
         }
         if (Py.Hat(_entwurf, "edit") && Stand.Profil is not null)
@@ -235,9 +247,27 @@ public sealed partial class SpielTafel : Grid
         Neu();
     }
 
+    private bool _nachAbgleich;
+
+    /// <summary>
+    /// Weisung P8-5 (L1, refresh_after_sync): nach einem Abgleich mit neuen oder entfernten Eintraegen den
+    /// Spielstand neu lesen und zeigen wie <see cref="Gezeigt"/> (ein woanders geloeschter Platz wird dabei neu
+    /// gewaehlt, L2). Ist gerade ein Ticket offen, wie in Python nicht; dann holt das Schliessen des Tickets es nach.
+    /// </summary>
+    public void NachAbgleich()
+    {
+        if (TicketOffen)
+        {
+            _nachAbgleich = true;
+            return;
+        }
+        Gezeigt();
+    }
+
     /// <summary>on_show: Spielstand neu lesen, Wissen-Abzeichen pruefen, neue Abzeichen zeigen.</summary>
     public void Gezeigt()
     {
+        _nachAbgleich = false;
         try
         {
             _s.Verwaltung.Neuladen();

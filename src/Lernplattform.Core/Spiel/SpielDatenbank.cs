@@ -199,6 +199,7 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
         {
             using var verbindung = Lernstand.Verbindung();
             var ereignisse = Spielstaende.LaufEreignisse(verbindung, Lauf);
+            Geraete = new SpielGeraete(Geraet, Spielstaende.StadtGeraete(verbindung, Lauf));
             lock (zustand)
             {
                 gestoert = false;   // der Stand kommt jetzt wieder aus der Datenbank
@@ -210,6 +211,9 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
             return [];   // Python: _execute(default=[])
         }
     }
+
+    /// <summary>Weisung P8-5 (L3): wer die Stadt-Zeilen geschrieben hat (Stand des letzten <see cref="Ereignisse"/>).</summary>
+    public SpielGeraete? Geraete { get; private set; }
 
     private (string Wo, string? Wert) Bedingung() =>
         string.IsNullOrEmpty(Lauf) || Lauf == LernstandSchreiber.AlterLauf ? ("(lauf IS NULL OR lauf = '')", null) : ("lauf = $lauf", Lauf);

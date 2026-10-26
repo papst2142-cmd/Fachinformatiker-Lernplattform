@@ -507,6 +507,10 @@ public partial class MainView : UserControl
             case AbschlussprojektSeite abschluss:
                 abschluss.Gezeigt();
                 break;
+            case Lernplattform.Spiel.SpielSeite spiel:
+                // Weisung P8-5 (L1): wie Python, nicht waehrend eines offenen Tickets
+                spiel.NachAbgleich();
+                break;
         }
     }
 

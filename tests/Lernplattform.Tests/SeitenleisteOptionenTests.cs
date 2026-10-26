@@ -1,5 +1,6 @@
 using Lernplattform.Core.Dashboard;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Design;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Texte;
 
@@ -54,6 +55,32 @@ public class SeitenleisteOptionenTests
             {
                 Assert.Equal(untertitel, Optionen.Kurzzeile(bereich));
             }
+        }
+    }
+
+    /// <summary>
+    /// Weisung P8-5b (Sammelliste 121, Nico 26.10.2026 19:43): jede Gruppe eine Farbe, jede Karte die Farbe
+    /// ihrer Gruppe, "Loeschen und zuruecksetzen" rot. Die Farben sind Schluessel der Farbwelt (keine Hexwerte).
+    /// </summary>
+    [Fact]
+    public void GruppenfarbenWieNico()
+    {
+        Assert.Equal(
+            [("LERNEN", "blue"), ("AUSSEHEN", "cyan"), ("SPIEL", "pink"), ("DATEN", "purple"), ("PROGRAMM", "orange")],
+            Optionen.Gruppen.Select(g => (g.Titel, Optionen.GruppenFarben[g.Titel])));
+        foreach (var (titel, ids) in Optionen.Gruppen)
+        {
+            foreach (var id in ids)
+            {
+                Assert.Equal(id == Optionen.Loeschen ? "red" : Optionen.GruppenFarben[titel], Optionen.Farbe(id));
+            }
+        }
+        Assert.Equal("red", Optionen.Farbe(Optionen.Loeschen));
+        Assert.Contains(Optionen.Loeschen, Optionen.Gruppen.Single(g => g.Titel == Optionen.GruppeDaten).Ids);
+        var palette = Farbwelt.Berechne("", "", "");   // unbekannt: Standard wie Python
+        foreach (var farbe in Optionen.GruppenFarben.Values.Append("red"))
+        {
+            Assert.True(palette.Farben.ContainsKey(farbe), farbe);
         }
     }
 

@@ -36,6 +36,9 @@ public static partial class AutoMessung
     private static readonly (string Text, string Flaeche)[] W4Paare =
     [
         ("accent2", "card"),
+        // Weisung P8-5b: Gruppenfarben der Optionen, Titel auf der Karte und Ueberschrift auf dem Hintergrund
+        ("blue", "card"), ("pink", "card"), ("purple", "card"), ("orange", "card"), ("cyan", "card"), ("red", "card"),
+        ("blue", "bg"), ("cyan", "bg"), ("pink", "bg"), ("purple", "bg"), ("orange", "bg"),
     ];
 
     private static HilfeAbschnitt LaengsterAbschnitt => HilfeTexte.Abschnitte.MaxBy(a => a.Text.Length)!;
