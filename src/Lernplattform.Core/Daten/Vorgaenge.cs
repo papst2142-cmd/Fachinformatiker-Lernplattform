@@ -12,12 +12,23 @@ public static class Vorgaenge
 {
     private static readonly SemaphoreSlim Sperre = new(1, 1);
 
+    private static long _wechsel;
+
     /// <summary>Wartet, bis kein anderer Vorgang laeuft; Freigabe mit Dispose.</summary>
     public static IDisposable Sperren()
     {
         Sperre.Wait();
+        Interlocked.Increment(ref _wechsel);
         return new Freigabe();
     }
+
+    /// <summary>
+    /// Weisung P8-6 (Sammelliste 108): zaehlt jedes <see cref="Sperren"/> (Abgleich, Uebernahme, Sicherung
+    /// einspielen, Loeschen, Update). Nur diese Vorgaenge aendern sync_meta oder tauschen die Datenbank; wer
+    /// einen Wert daraus unter der Sperre aus <see cref="Versuchen"/> gelesen hat, darf ihn behalten, solange
+    /// diese Zahl gleich bleibt (das Spiel liest die Uhrabweichung so nur einmal je Sitzung).
+    /// </summary>
+    public static long Wechsel => Interlocked.Read(ref _wechsel);
 
     /// <summary>
     /// Phase 7, W8 (R3): wie <see cref="Sperren"/>, aber ohne zu warten. null: gerade laeuft ein
