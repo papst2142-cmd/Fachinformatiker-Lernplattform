@@ -336,14 +336,24 @@ public sealed class Stadt
 
     public bool Offen(string id, long uhr) => Oeffnungszeit(id) is not { } z || (z.Auf <= uhr && uhr < z.Zu);
 
-    /// <summary>Stand der Stadt aus dem Ereignisprotokoll: Ort und Uhr des laufenden Arbeitstags.</summary>
+    /// <summary>
+    /// Stand der Stadt aus dem Ereignisprotokoll: Ort und Uhr des laufenden Arbeitstags. Weisung P8-5 (L3,
+    /// Nicos Antwort 1a): haben mehrere Geraete am selben Tag gespielt (nach einem Abgleich), zaehlt das
+    /// Geraet, das an diesem Tag am weitesten gespielt hat (hoechste Uhr, bei Gleichstand der spaetere
+    /// Schritt), mit seinem Ort; die Minuten der Geraete werden nicht addiert. Ein Schritt rechnet ab dem
+    /// Stand weiter, von dem er ausging: steht im Schritt ("von" beim Gehen, "ort" beim Warten und Laufen) der
+    /// Ort des bis dahin gezeigten Stands, ab diesem (das Geraet hatte ihn nach dem Abgleich gesehen), sonst
+    /// ab dem eigenen Stand des Geraets (ohne Abgleich dazwischen gespielt). Ein Geraet: wie bisher.
+    /// </summary>
     public StadtStand Stand(Spielstand stand)
     {
         var tag = stand.Tag;
-        var ort = Heim;
-        var uhr = Beginn;
+        var geraete = SpielGeraete.Von(stand);
+        var je = new Dictionary<string, (string Ort, long Uhr, int Letzter)>(StringComparer.Ordinal);
+        var nummer = 0;
         foreach (var e in stand.Verlauf)
         {
+            nummer++;
             if ((e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen) || !Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
             {
                 continue;
@@ -352,6 +362,16 @@ public sealed class Stadt
             if (!Py.IstNurInt(minuten) || Py.Int(minuten) < 0 || Py.Int(minuten) > TagMinuten)
             {
                 continue;
+            }
+            var geraet = geraete?.Von(e) ?? "";
+            var (ort, uhr, _) = je.TryGetValue(geraet, out var bisher) ? bisher : (Heim, Beginn, 0);
+            if (je.Count > 0 && Get(e.Daten, e.Art == Gegangen ? "von" : "ort") is string ab)
+            {
+                var gezeigt = je.Values.MaxBy(g => (g.Uhr, g.Letzter));
+                if (gezeigt.Ort == ab && gezeigt.Uhr > uhr)
+                {
+                    (ort, uhr) = (gezeigt.Ort, gezeigt.Uhr);
+                }
             }
             if (e.Art == Gegangen)
             {
@@ -362,9 +382,14 @@ public sealed class Stadt
                 }
                 ort = nach;
             }
-            uhr += Py.Int(minuten);
+            je[geraet] = (ort, uhr + Py.Int(minuten), nummer);
         }
-        return new StadtStand(tag, ort, uhr);
+        if (je.Count == 0)
+        {
+            return new StadtStand(tag, Heim, Beginn);
+        }
+        var weitester = je.Values.MaxBy(g => (g.Uhr, g.Letzter));
+        return new StadtStand(tag, weitester.Ort, weitester.Uhr);
     }
 
     /// <summary>Uhrzeit zur Anzeige: 425 = "07:05".</summary>

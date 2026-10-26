@@ -129,6 +129,7 @@ public static partial class AutoMessung
         if (MitSpiel)
         {
             funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
+            funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
         }
         if (MitLernen)
         {

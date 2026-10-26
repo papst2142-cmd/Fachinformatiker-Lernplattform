@@ -365,6 +365,18 @@ public sealed class SpielSeite : Grid
         _uebersicht.IsVisible = false;
     }
 
+    /// <summary>
+    /// Weisung P8-5 (L1): nach einem Abgleich mit neuen oder entfernten Eintraegen den Spielstand neu lesen
+    /// (Stadt und Spielansichten); nicht, solange nur die Probe oder ein Spiel aus dem Start-Test zu sehen ist.
+    /// </summary>
+    public void NachAbgleich()
+    {
+        if (Tafel is { } tafel && _tafelAn)
+        {
+            tafel.NachAbgleich();
+        }
+    }
+
     /// <summary>Spielansichten wieder zeigen (zurueck zum Spielstand der Sitzung).</summary>
     public void TafelZeigen()
     {

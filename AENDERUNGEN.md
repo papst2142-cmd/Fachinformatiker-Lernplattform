@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.14.0
+Das Spiel bleibt zwischen PC und Handy sauber abgeglichen.
+
+- Nach einem Abgleich zeigt die Spielseite sofort den neuen Stand, auch wenn du auf dem anderen Gerät weitergespielt hast. Hast du gerade ein Ticket offen, bleibt es offen; der neue Stand erscheint, sobald du das Ticket schließt.
+- Hast du auf dem anderen Gerät einen Spielplatz gelöscht, wählt das Programm nach dem Abgleich von selbst einen vorhandenen Platz.
+- Hast du am selben Spieltag auf PC und Handy gespielt, ohne dazwischen abzugleichen, zählt die Uhrzeit in der Stadt nicht mehr die Wege beider Geräte zusammen. Sie richtet sich nach dem Gerät, das an diesem Tag am weitesten gekommen ist.
+- Ein Schritt im Spiel, der nichts speichert, hält einen gleichzeitigen Abgleich oder eine Sicherung nicht mehr auf; das Spiel belegt den Lernstand erst, wenn es wirklich etwas schreibt.
+
 ## A 0.13.2
 Aufgeräumte Seitenleiste am PC und übersichtlichere Optionen.
 
