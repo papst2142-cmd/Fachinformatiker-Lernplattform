@@ -25,8 +25,10 @@ public class MainActivity : AvaloniaMainActivity
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        SystemmessungEinrichten();
         Lernplattform.Spiel.Vollbild.Geraet = an => RunOnUiThread(() =>
         {
+            _messung?.Setzen(an);
             RequestedOrientation = an ? ScreenOrientation.SensorLandscape : ScreenOrientation.Unspecified;
             if (OperatingSystem.IsAndroidVersionAtLeast(28) && Window is { } fenster && fenster.Attributes is { } lage)
             {
@@ -52,5 +54,43 @@ public class MainActivity : AvaloniaMainActivity
                 }
             }
         });
+    }
+
+    private Systemmessung? _messung;
+
+    /// <summary>
+    /// Weisung P7-16: Werte von Android fuer langsame Bilder im Spiel (Speicherbereinigung von Java,
+    /// Waermezustand, ausgelassene Takte, Beruehrungen), nur gemessen, solange das Spiel offen ist.
+    /// </summary>
+    private void SystemmessungEinrichten()
+    {
+        var power = GetSystemService(PowerService) as global::Android.OS.PowerManager;
+        double hertz = 0;
+        if (OperatingSystem.IsAndroidVersionAtLeast(30) && Display is { } anzeige)
+        {
+            hertz = anzeige.RefreshRate;
+        }
+        int Waerme()
+        {
+            if (OperatingSystem.IsAndroidVersionAtLeast(29) && power is not null)
+            {
+                return (int)power.CurrentThermalStatus;
+            }
+            return -1;
+        }
+        _messung = new Systemmessung(Waerme, hertz);
+        var messung = _messung;
+        Lernplattform.Spiel.Systemwerte.Kopf = () => string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"Android {global::Android.OS.Build.VERSION.Release} (API {(int)global::Android.OS.Build.VERSION.SdkInt}), Bildwiederholrate {messung.Hertz:0} Hz");
+        Lernplattform.Spiel.Systemwerte.Seit = messung.Seit;
+    }
+
+    public override bool DispatchTouchEvent(global::Android.Views.MotionEvent? e)
+    {
+        if (_messung is { } messung && e?.ActionMasked == global::Android.Views.MotionEventActions.Down)
+        {
+            messung.Beruehrungen++;
+        }
+        return base.DispatchTouchEvent(e);
     }
 }

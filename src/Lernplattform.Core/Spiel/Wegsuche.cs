@@ -14,44 +14,88 @@ public sealed class Wegsuche
     private static readonly (int Dx, int Dy)[] Nachbarn =
         [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)];
 
-    private readonly HashSet<(int, int)> _frei;
+    // Weisung P7-16: Raster als Feld statt Menge, Suche mit wiederverwendeten Puffern (keine neuen
+    // Listen je Schritt). Ergebnis wie vorher: gleiche Nachbar-Reihenfolge, gleiche Breitensuche.
+    private readonly bool[] _frei;
+    private readonly int _spalte0, _zeile0, _spalten, _zeilen;
+    private readonly int[] _vorher, _marke, _reihe;
+    private int _runde;
+    private readonly object _sperre = new();
 
     public Wegsuche(IEnumerable<(int Spalte, int Zeile)> frei, double schritt)
     {
-        _frei = [.. frei];
+        var liste = frei.ToList();
         Schritt = schritt;
+        AnzahlFrei = liste.Distinct().Count();
+        if (liste.Count == 0)
+        {
+            _frei = [];
+            _vorher = _marke = _reihe = [];
+            return;
+        }
+        _spalte0 = liste.Min(z => z.Spalte);
+        _zeile0 = liste.Min(z => z.Zeile);
+        _spalten = liste.Max(z => z.Spalte) - _spalte0 + 1;
+        _zeilen = liste.Max(z => z.Zeile) - _zeile0 + 1;
+        _frei = new bool[_spalten * _zeilen];
+        foreach (var (spalte, zeile) in liste)
+        {
+            _frei[Index(spalte, zeile)] = true;
+        }
+        _vorher = new int[_frei.Length];
+        _marke = new int[_frei.Length];
+        _reihe = new int[_frei.Length];
     }
 
     /// <summary>Kantenlaenge einer Zelle in Karteneinheiten (WALK_STEP).</summary>
     public double Schritt { get; }
 
-    public int AnzahlFrei => _frei.Count;
+    public int AnzahlFrei { get; }
+
+    private int Index(int spalte, int zeile) => ((spalte - _spalte0) * _zeilen) + (zeile - _zeile0);
+
+    private bool Frei(int spalte, int zeile) =>
+        (uint)(spalte - _spalte0) < (uint)_spalten && (uint)(zeile - _zeile0) < (uint)_zeilen && _frei[Index(spalte, zeile)];
 
     public (int Spalte, int Zeile) Zelle(double x, double y) => ((int)(x / Schritt), (int)(y / Schritt));
 
     public (double X, double Y) Mitte((int Spalte, int Zeile) zelle) => ((zelle.Spalte + 0.5) * Schritt, (zelle.Zeile + 0.5) * Schritt);
 
-    public bool IstFrei((int, int) zelle) => _frei.Contains(zelle);
+    public bool IstFrei((int, int) zelle) => Frei(zelle.Item1, zelle.Item2);
 
-    public bool KannStehen(double x, double y) => _frei.Contains(Zelle(x, y));
+    public bool KannStehen(double x, double y)
+    {
+        var (spalte, zeile) = Zelle(x, y);
+        return Frei(spalte, zeile);
+    }
 
     public (int Spalte, int Zeile)? NaechsteFreie(double x, double y)
     {
         var start = Zelle(x, y);
-        if (_frei.Contains(start))
+        if (Frei(start.Spalte, start.Zeile))
         {
             return start;
         }
+        // naechste freie Zelle; bei gleichem Abstand die kleinste (Spalte, Zeile): Spalten und Zeilen
+        // aufsteigend, nur ein echt kleinerer Abstand ersetzt
         (int, int)? beste = null;
         long besteWeite = long.MaxValue;
-        foreach (var zelle in _frei)
+        for (var s = 0; s < _spalten; s++)
         {
-            long dx = zelle.Item1 - start.Spalte, dy = zelle.Item2 - start.Zeile;
-            var weite = (dx * dx) + (dy * dy);
-            if (weite < besteWeite || (weite == besteWeite && beste is { } b && zelle.CompareTo(b) < 0))
+            long dx = s + _spalte0 - start.Spalte;
+            for (var z = 0; z < _zeilen; z++)
             {
-                beste = zelle;
-                besteWeite = weite;
+                if (!_frei[(s * _zeilen) + z])
+                {
+                    continue;
+                }
+                long dy = z + _zeile0 - start.Zeile;
+                var weite = (dx * dx) + (dy * dy);
+                if (weite < besteWeite)
+                {
+                    beste = (s + _spalte0, z + _zeile0);
+                    besteWeite = weite;
+                }
             }
         }
         return beste;
@@ -64,7 +108,7 @@ public sealed class Wegsuche
         for (var i = 0; i <= schritte; i++)
         {
             var t = i / (double)schritte;
-            if (!_frei.Contains(Zelle(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t))))
+            if (!KannStehen(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t)))
             {
                 return false;
             }
@@ -84,50 +128,74 @@ public sealed class Wegsuche
         {
             return [];
         }
-        var vorher = new Dictionary<(int, int), (int, int)?> { [von] = null };
-        var reihe = new List<(int, int)> { von };
-        (int, int)? gefunden = null;
-        for (var i = 0; i < reihe.Count; i++)   // Breitensuche (die Liste waechst mit)
+        List<(double X, double Y)> punkte;
+        lock (_sperre)
         {
-            var zelle = reihe[i];
-            if (zelle == nach)
+            if (++_runde == int.MaxValue)
             {
-                gefunden = zelle;
-                break;
+                Array.Clear(_marke);
+                _runde = 1;
             }
-            foreach (var (dx, dy) in Nachbarn)
+            int anfang = Index(von.Item1, von.Item2), ende = Index(nach.Item1, nach.Item2);
+            _marke[anfang] = _runde;
+            _vorher[anfang] = -1;
+            _reihe[0] = anfang;
+            int lesen = 0, schreiben = 1;
+            var gefunden = false;
+            while (lesen < schreiben)   // Breitensuche
             {
-                var naechste = (zelle.Item1 + dx, zelle.Item2 + dy);
-                if (!_frei.Contains(naechste) || vorher.ContainsKey(naechste))
+                var i = _reihe[lesen++];
+                if (i == ende)
                 {
-                    continue;
+                    gefunden = true;
+                    break;
                 }
-                // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
-                if (dx != 0 && dy != 0 && (!_frei.Contains((zelle.Item1 + dx, zelle.Item2)) || !_frei.Contains((zelle.Item1, zelle.Item2 + dy))))
+                int spalte = (i / _zeilen) + _spalte0, zeile = (i % _zeilen) + _zeile0;
+                foreach (var (dx, dy) in Nachbarn)
                 {
-                    continue;
+                    int ns = spalte + dx, nz = zeile + dy;
+                    if (!Frei(ns, nz))
+                    {
+                        continue;
+                    }
+                    var n = Index(ns, nz);
+                    if (_marke[n] == _runde)
+                    {
+                        continue;
+                    }
+                    // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
+                    if (dx != 0 && dy != 0 && (!Frei(spalte + dx, zeile) || !Frei(spalte, zeile + dy)))
+                    {
+                        continue;
+                    }
+                    _marke[n] = _runde;
+                    _vorher[n] = i;
+                    _reihe[schreiben++] = n;
                 }
-                vorher[naechste] = zelle;
-                reihe.Add(naechste);
             }
+            if (!gefunden)
+            {
+                return [];
+            }
+            var anzahl = 0;
+            for (var i = ende; i >= 0; i = _vorher[i])
+            {
+                anzahl++;
+            }
+            var feld = new (double X, double Y)[anzahl];
+            var k = anzahl;
+            for (var i = ende; i >= 0; i = _vorher[i])
+            {
+                feld[--k] = Mitte(((i / _zeilen) + _spalte0, (i % _zeilen) + _zeile0));
+            }
+            punkte = [.. feld];
         }
-        if (gefunden is null)
-        {
-            return [];
-        }
-        var zellen = new List<(int, int)>();
-        for (var z = gefunden; z is { } jetzt; z = vorher[jetzt])
-        {
-            zellen.Add(jetzt);
-        }
-        zellen.Reverse();
-        var punkte = zellen.Select(Mitte).ToList();
         if (KannStehen(ziel.X, ziel.Y))
         {
             punkte[^1] = ziel;
         }
         // Glaetten: Zwischenpunkte weglassen, solange die gerade Strecke frei ist
-        var glatt = new List<(double X, double Y)> { punkte[0] };
+        var glatt = new List<(double X, double Y)>();
         var index = 0;
         while (index < punkte.Count - 1)
         {
@@ -139,7 +207,7 @@ public sealed class Wegsuche
             glatt.Add(punkte[weiter]);
             index = weiter;
         }
-        return glatt.Skip(1).ToList();
+        return glatt;
     }
 
     /// <summary>Laenge eines Wegs ab <paramref name="start"/> in Karteneinheiten.</summary>

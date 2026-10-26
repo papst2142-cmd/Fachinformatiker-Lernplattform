@@ -93,6 +93,26 @@ public sealed class SpielBildZeitenTests
         Assert.DoesNotContain("125,0 ms (", text, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Weisung P7-16: je langsamem Bild die Teile der Auftraege (Wegsuche, Ereignis) und die Werte des
+    /// Systems (Android), wenn die Plattform sie liefert; ohne sie bleibt die Zeile wie bisher.
+    /// </summary>
+    [Fact]
+    public void LangsamesBildMitTeilenUndSystemwerten()
+    {
+        var z = new BildZeiten();
+        z.Aufnehmen(new BildZeiten.Bild(1.0, 8.3, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, false, 30, 1, 0.5, 26, 512, 0.4, 20.1));
+        z.Aufnehmen(new BildZeiten.Bild(2.0, 120, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, true, 118, 0, 0, 0, 512,
+            System: "Android (seit 160 ms): GC 1 in 3 ms, blockierend 0 in 0 ms, ausgelassene Takte 13, Berührungen 0, Wärme keine"));
+        z.Aufnehmen(new BildZeiten.Bild(3.0, 40, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, true, 38, 0, 0, 0, 512));
+        var text = z.Text();
+        Assert.Contains("Aufträge 26,0 (davon Wegsuche 0,4, Ereignis 20,1), außerhalb", text, StringComparison.Ordinal);
+        Assert.Contains("Teil: außerhalb; Android (seit 160 ms): GC 1 in 3 ms", text, StringComparison.Ordinal);
+        var ohne = text.Split('\n').Single(l => l.Contains("00:00:03.00", StringComparison.Ordinal));
+        Assert.EndsWith("Teil: außerhalb", ohne, StringComparison.Ordinal);
+        Assert.DoesNotContain("davon", ohne, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void BildzeitenImProblembericht()
     {

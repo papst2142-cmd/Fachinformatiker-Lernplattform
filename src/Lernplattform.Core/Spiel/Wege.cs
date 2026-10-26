@@ -22,6 +22,76 @@ public sealed class LaufOrt(PyObjekt gebaeude, List<object?> personen)
 
     /// <summary>_walk_grid: begehbare Zellen, Personen stehen im Weg.</summary>
     public PyMenge Frei => frei ??= Wege.LaufRaster(Basis, Personen);
+
+    private FreiFeld? feld;
+
+    /// <summary>Weisung P7-16: <see cref="Frei"/> als Feld fuer die Breitensuche (gleiche Zellen, schneller).</summary>
+    internal FreiFeld Feld => feld ??= new FreiFeld(Frei);
+}
+
+/// <summary>
+/// Weisung P7-16: die begehbaren Zellen eines Orts als Feld mit wiederverwendeten Puffern fuer die
+/// Breitensuche (keine neuen Listen je Schritt). Die Reihenfolge der Suche bleibt die von walk_path.
+/// </summary>
+internal sealed class FreiFeld
+{
+    private readonly bool[] _frei;
+    private readonly long _spalte0, _zeile0;
+    private readonly int _spalten, _zeilen;
+
+    public FreiFeld(PyMenge frei)
+    {
+        if (frei.Count == 0)
+        {
+            _frei = [];
+            Vorher = Marke = Reihe = Ziel = [];
+            return;
+        }
+        _spalte0 = frei.Min(z => z.Spalte);
+        _zeile0 = frei.Min(z => z.Zeile);
+        _spalten = checked((int)(frei.Max(z => z.Spalte) - _spalte0 + 1));
+        _zeilen = checked((int)(frei.Max(z => z.Zeile) - _zeile0 + 1));
+        _frei = new bool[checked(_spalten * _zeilen)];
+        foreach (var (spalte, zeile) in frei)
+        {
+            _frei[Index(spalte, zeile)] = true;
+        }
+        Vorher = new int[_frei.Length];
+        Marke = new int[_frei.Length];
+        Reihe = new int[_frei.Length];
+        Ziel = new int[_frei.Length];
+    }
+
+    public int[] Vorher { get; }
+
+    public int[] Marke { get; }
+
+    public int[] Reihe { get; }
+
+    /// <summary>Marke der Zielzellen dieser Suche.</summary>
+    public int[] Ziel { get; }
+
+    public int Runde { get; private set; }
+
+    public object Sperre { get; } = new();
+
+    public int NeueRunde()
+    {
+        if (++Runde == int.MaxValue)
+        {
+            Array.Clear(Marke);
+            Array.Clear(Ziel);
+            Runde = 1;
+        }
+        return Runde;
+    }
+
+    public int Index(long spalte, long zeile) => (int)(((spalte - _spalte0) * _zeilen) + (zeile - _zeile0));
+
+    public bool Frei(long spalte, long zeile) =>
+        (ulong)(spalte - _spalte0) < (ulong)_spalten && (ulong)(zeile - _zeile0) < (ulong)_zeilen && _frei[Index(spalte, zeile)];
+
+    public (long, long) Zelle(int index) => ((index / _zeilen) + _spalte0, (index % _zeilen) + _zeile0);
 }
 
 /// <summary>
@@ -277,40 +347,60 @@ public static class Wege
         {
             return [];
         }
-        var vorher = new Dictionary<(long, long), (long, long)?> { [beginn] = null };
-        var schlange = new List<(long, long)> { beginn };
-        (long, long)? gefunden = null;
-        for (var k = 0; k < schlange.Count; k++)
+        // Breitensuche ueber das Feld (Weisung P7-16), Reihenfolge wie walk_path
+        var feld = ort.Feld;
+        var zellen = new List<(long, long)>();
+        lock (feld.Sperre)
         {
-            var zelle = schlange[k];
-            if (ziele.Contains(zelle))
+            var runde = feld.NeueRunde();
+            foreach (var zelle in ziele)
             {
-                gefunden = zelle;
-                break;
+                feld.Ziel[feld.Index(zelle.Item1, zelle.Item2)] = runde;
             }
-            foreach (var (dx, dy) in Richtungen)
+            var erste = feld.Index(beginn.Item1, beginn.Item2);
+            feld.Marke[erste] = runde;
+            feld.Vorher[erste] = -1;
+            feld.Reihe[0] = erste;
+            int lesen = 0, schreiben = 1, gefunden = -1;
+            while (lesen < schreiben)
             {
-                var naechste = (zelle.Item1 + dx, zelle.Item2 + dy);
-                if (frei.Contains(naechste) && !vorher.ContainsKey(naechste))
+                var i = feld.Reihe[lesen++];
+                if (feld.Ziel[i] == runde)
                 {
-                    // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
-                    if (dx != 0 && dy != 0 && (!frei.Contains((zelle.Item1 + dx, zelle.Item2)) || !frei.Contains((zelle.Item1, zelle.Item2 + dy))))
+                    gefunden = i;
+                    break;
+                }
+                var (spalte, zeile) = feld.Zelle(i);
+                foreach (var (dx, dy) in Richtungen)
+                {
+                    long ns = spalte + dx, nz = zeile + dy;
+                    if (!feld.Frei(ns, nz))
                     {
                         continue;
                     }
-                    vorher[naechste] = zelle;
-                    schlange.Add(naechste);
+                    var n = feld.Index(ns, nz);
+                    if (feld.Marke[n] == runde)
+                    {
+                        continue;
+                    }
+                    // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
+                    if (dx != 0 && dy != 0 && (!feld.Frei(spalte + dx, zeile) || !feld.Frei(spalte, zeile + dy)))
+                    {
+                        continue;
+                    }
+                    feld.Marke[n] = runde;
+                    feld.Vorher[n] = i;
+                    feld.Reihe[schreiben++] = n;
                 }
             }
-        }
-        if (gefunden is null)
-        {
-            return [];
-        }
-        var zellen = new List<(long, long)>();
-        for (var z = gefunden; z is { } aktuell; z = vorher[aktuell])
-        {
-            zellen.Add(aktuell);
+            if (gefunden < 0)
+            {
+                return [];
+            }
+            for (var i = gefunden; i >= 0; i = feld.Vorher[i])
+            {
+                zellen.Add(feld.Zelle(i));
+            }
         }
         zellen.Reverse();
         var punkte = zellen.Select(Mitte).ToList();

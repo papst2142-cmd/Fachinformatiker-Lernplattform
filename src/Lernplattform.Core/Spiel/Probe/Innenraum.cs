@@ -112,6 +112,34 @@ public sealed class Innenraum
     /// <summary>Netz eines Wandstuecks.</summary>
     public Netz WandNetz(InnenWand wand) => Netz.Aus(_teile.Skip(wand.Von).Take(wand.Bis - wand.Von));
 
+    private Netz? _netzOhneWaende;
+    private Dictionary<InnenWand, Netz>? _wandNetze;
+
+    /// <summary>
+    /// Weisung P7-16: Netze und Laufraster vorab bauen (auch ausserhalb des Oberflaechen-Threads, bevor der
+    /// Innenraum gezeigt wird). Danach liefern <see cref="NetzOhneWaende"/> und <see cref="WandNetzFertig"/>
+    /// dieselben Netze ohne neue Arbeit im Bild.
+    /// </summary>
+    public void Vorbereiten()
+    {
+        _netzOhneWaende ??= NetzBauen(ohneWaende: true);
+        _wandNetze ??= _waende.ToDictionary(w => w, WandNetz);
+        _personNetze ??= Personen.GroupBy(p => p.Id).ToDictionary(g => g.Key, g => (g.First().Aussehen, Figur.Netz(Grafik, g.First().Aussehen, 1f)));
+        _ = Lauf.Feld;
+    }
+
+    private Dictionary<string, (PyObjekt? Aussehen, Netz Netz)>? _personNetze;
+
+    /// <summary>Vorbereitetes Netz der Person (Figur der Hoehe 1) zu genau diesem Aussehen, sonst null.</summary>
+    public Netz? PersonNetz(string id, PyObjekt? aussehen) =>
+        _personNetze is { } fertig && fertig.TryGetValue(id, out var p) && ReferenceEquals(p.Aussehen, aussehen) ? p.Netz : null;
+
+    /// <summary>Netz ohne Wandstuecke (vorbereitet oder jetzt gebaut).</summary>
+    public Netz NetzOhneWaende => _netzOhneWaende ??= NetzBauen(ohneWaende: true);
+
+    /// <summary>Netz eines Wandstuecks (vorbereitet oder jetzt gebaut).</summary>
+    public Netz WandNetzFertig(InnenWand wand) => _wandNetze is { } fertig && fertig.TryGetValue(wand, out var netz) ? netz : WandNetz(wand);
+
     /// <summary>
     /// Nachtrag 1 zu P7-13 (Wunsch 3, Sammelliste 102): Wandstuecke, die halb durchsichtig gezeichnet
     /// werden: jede Aussenwand, die zur Kamera zeigt (die vorderen Waende), und jede Wand, die zwischen

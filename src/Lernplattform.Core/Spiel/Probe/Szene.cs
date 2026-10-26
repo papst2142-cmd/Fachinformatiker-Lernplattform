@@ -37,6 +37,12 @@ public sealed class Netz
 
     public IReadOnlyList<uint> Indizes => _indizes;
 
+    /// <summary>Weisung P7-16: die Ecken ohne Kopie (zum Hochladen in die Grafikkarte).</summary>
+    public ReadOnlySpan<float> EckenFeld => System.Runtime.InteropServices.CollectionsMarshal.AsSpan(_ecken);
+
+    /// <summary>Weisung P7-16: die Indizes ohne Kopie.</summary>
+    public ReadOnlySpan<uint> IndizesFeld => System.Runtime.InteropServices.CollectionsMarshal.AsSpan(_indizes);
+
     public int AnzahlEcken => _ecken.Count / Zahlen;
 
     public static Vector3 Farbe(string hex)
@@ -49,6 +55,12 @@ public sealed class Netz
     public static Netz Aus(IEnumerable<Teil> teile)
     {
         var netz = new Netz();
+        if (teile.TryGetNonEnumeratedCount(out var anzahl))
+        {
+            // Weisung P7-16: Platz fuer Quader (24 Ecken, 36 Indizes) vorab, statt die Listen oft zu vergroessern
+            netz._ecken.Capacity = anzahl * 24 * Zahlen;
+            netz._indizes.Capacity = anzahl * 36;
+        }
         foreach (var teil in teile)
         {
             netz.Hinzu(teil);
