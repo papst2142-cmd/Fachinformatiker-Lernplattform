@@ -41,6 +41,8 @@ public partial class App : Application
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
             desktop.Exit += (_, _) =>
             {
+                // Weisung P7-17: zuerst alle Spielschritte fertig schreiben
+                Core.Spiel.Spielschlange.AlleLeeren();
                 // Phase 5 W2 (BE8): ab jetzt "endet" fuer einen zweiten Start, Messdatei schreiben
                 Programm.Diagnosedienst.Beenden();
                 Programm.Zustand.Beenden();
@@ -80,6 +82,8 @@ public partial class App : Application
             {
                 if (e.Kind == ActivationKind.Background)
                 {
+                    // Weisung P7-17: alle Spielschritte fertig schreiben
+                    Core.Spiel.Spielschlange.AlleLeeren();
                     // W3: offene Eingaben im Abschlussprojekt zuerst speichern (_lifecycle main.py 5975)
                     Programm.Zustand.EingabenSpeichern();
                     Programm.AbgleichDienst.Verlassen();

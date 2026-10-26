@@ -38,7 +38,13 @@ public sealed class BildZeiten
     /// </summary>
     public readonly record struct Bild(double Zeit, double AbstandMs, double LogikMs, double VorbereitungMs, double ZeichnenMs, double DanachMs,
         int Gc0, int Gc1, int Gc2, long Bytes, bool Innen, double LueckeMs = 0, int Layouts = 0, double LayoutMs = 0, double AuftraegeMs = 0,
-        long BytesBild = 0, double WegMs = 0, double EreignisMs = 0, string? System = null);
+        long BytesBild = 0, double WegMs = 0, double EreignisMs = 0, string? System = null, double RuheMs = 0, string? Eingabe = null);
+
+    /// <summary>
+    /// Weisung P7-17: der Teil der Luecke nach der Ruhe. Stand die Bildschleife (nichts zu zeichnen), gehoert die
+    /// Zeit bis zum ersten Anlass (Beruehrung, Anforderung) keinem Bild; nur der Rest bis zum Bildbeginn zaehlt.
+    /// </summary>
+    public static double LueckeOhneRuhe(Bild b) => Math.Max(0, b.LueckeMs - b.RuheMs);
 
     /// <summary>Weisung P7-16: Teile der Auftraege eines Bildes (Wegsuche, Ereignis schreiben), leer ohne beide.</summary>
     public static string Davon(Bild b) => b.WegMs > 0 || b.EreignisMs > 0
@@ -46,7 +52,7 @@ public sealed class BildZeiten
         : "";
 
     /// <summary>Zeit der Luecke, die keinem gemessenen Teil gehoert (Oberflaeche ohne eigene Auftraege, Grafiktreiber, System).</summary>
-    public static double AusserhalbMs(Bild b) => b.LueckeMs < PauseAb * 1000 ? Math.Max(0, b.LueckeMs - b.LayoutMs - b.AuftraegeMs) : 0;
+    public static double AusserhalbMs(Bild b) => b.LueckeMs < PauseAb * 1000 ? Math.Max(0, LueckeOhneRuhe(b) - b.LayoutMs - b.AuftraegeMs) : 0;
 
     /// <summary>
     /// Teil mit der meisten Zeit in diesem Bild: Logik, Vorbereitung, Zeichnen, Danach, Layout, Auftraege
@@ -118,7 +124,7 @@ public sealed class BildZeiten
         var eigen = b.LogikMs + b.VorbereitungMs + b.ZeichnenMs + b.DanachMs;
         if (b.LueckeMs > 0)
         {
-            return eigen + (b.LueckeMs < PauseAb * 1000 ? b.LueckeMs : b.LayoutMs + b.AuftraegeMs);
+            return eigen + (b.LueckeMs < PauseAb * 1000 ? LueckeOhneRuhe(b) : b.LayoutMs + b.AuftraegeMs);
         }
         return b.AbstandMs > 0 && b.AbstandMs < PauseAb * 1000 ? b.AbstandMs : eigen;
     }
@@ -157,7 +163,10 @@ public sealed class BildZeiten
         }
     }
 
-    private static string Ms(double wert) => wert.ToString("0.0", CultureInfo.InvariantCulture).Replace('.', ',');
+    /// <summary>Ein Bild im Lauf: Abstand unter der Pause und ohne Ruhe davor (Weisung P7-17: nach Ruhe zaehlt es wie nach einer Pause).</summary>
+    private static bool ImLauf(Bild b) => b.AbstandMs > 0 && b.AbstandMs < PauseAb * 1000 && b.RuheMs <= 0;
+
+    public static string Ms(double wert) => wert.ToString("0.0", CultureInfo.InvariantCulture).Replace('.', ',');
 
     /// <summary>
     /// Eine Zeile fuer die Bilder eines Fensters: Anzahl, Bilder je Sekunde im Lauf (ohne Pausen), Abstand
@@ -171,7 +180,7 @@ public sealed class BildZeiten
         var lauf = 0;
         foreach (var b in bilder)
         {
-            if (b.AbstandMs > 0 && b.AbstandMs < PauseAb * 1000)
+            if (ImLauf(b))
             {
                 werte[lauf++] = b.AbstandMs;
             }
@@ -190,7 +199,7 @@ public sealed class BildZeiten
         var l = 0;
         foreach (var b in bilder)
         {
-            if (b.AbstandMs > 0 && b.AbstandMs < PauseAb * 1000)
+            if (ImLauf(b))
             {
                 werte[l++] = b.LueckeMs;
             }
@@ -234,7 +243,7 @@ public sealed class BildZeiten
     {
         var sb = new StringBuilder();
         sb.Append("Bildzeiten im Spiel (je 10 s; Zeiten Mittel/hoechster in ms; Abstand Mitte/95 %/hoechster)\n");
-        sb.Append("Lücke = Ende des letzten Bildes bis Beginn des nächsten; außerhalb = Lücke ohne Layout und eigene Aufträge; Dauer = Lücke + Bild\n");
+        sb.Append("Lücke = Ende des letzten Bildes bis Beginn des nächsten; Ruhe = Teil der Lücke ohne Anlass (nichts zu zeichnen); außerhalb = Lücke ohne Ruhe, Layout und eigene Aufträge; Dauer = Lücke ohne Ruhe + Bild\n");
         if (Kopf.Length > 0)
         {
             sb.Append(Kopf).Append('\n');
@@ -253,8 +262,8 @@ public sealed class BildZeiten
             var b = _langsam[i];
             schluss.Append(string.Create(CultureInfo.InvariantCulture,
                 $"  {TimeSpan.FromSeconds(b.Zeit):hh\\:mm\\:ss\\.ff} {(b.Innen ? "innen" : "Stadt")}: {Ms(Dauer(b))} ms (Logik {Ms(b.LogikMs)}, Vorbereitung {Ms(b.VorbereitungMs)}, " +
-                $"Zeichnen {Ms(b.ZeichnenMs)}, Danach {Ms(b.DanachMs)}, GC {b.Gc0}/{b.Gc1}/{b.Gc2}, {b.Bytes / 1024} KB) Lücke {Ms(b.LueckeMs)}, " +
-                $"Layout {b.Layouts}x {Ms(b.LayoutMs)}, Aufträge {Ms(b.AuftraegeMs)}{Davon(b)}, außerhalb {Ms(AusserhalbMs(b))}, im Bild {b.BytesBild / 1024} KB, Teil: {Teil(b)}{(b.System is { Length: > 0 } system ? "; " + system : "")}\n"));
+                $"Zeichnen {Ms(b.ZeichnenMs)}, Danach {Ms(b.DanachMs)}, GC {b.Gc0}/{b.Gc1}/{b.Gc2}, {b.Bytes / 1024} KB) Lücke {Ms(b.LueckeMs)}{(b.RuheMs > 0 ? ", Ruhe " + Ms(b.RuheMs) : "")}, " +
+                $"Layout {b.Layouts}x {Ms(b.LayoutMs)}, Aufträge {Ms(b.AuftraegeMs)}{Davon(b)}, außerhalb {Ms(AusserhalbMs(b))}, im Bild {b.BytesBild / 1024} KB, Teil: {Teil(b)}{(b.Eingabe is { Length: > 0 } eingabe ? "; " + eingabe : "")}{(b.System is { Length: > 0 } system ? "; " + system : "")}\n"));
         }
         if (schluss.Length > 0)
         {

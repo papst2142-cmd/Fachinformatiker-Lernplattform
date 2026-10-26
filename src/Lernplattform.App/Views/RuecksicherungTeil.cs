@@ -79,6 +79,7 @@ public sealed class RuecksicherungTeil
 
     private async Task AblaufInnenAsync(TopLevel top)
     {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
         {
             // P2-12 A2: nicht warten, solange ein Abgleich oder eine Uebernahme laeuft

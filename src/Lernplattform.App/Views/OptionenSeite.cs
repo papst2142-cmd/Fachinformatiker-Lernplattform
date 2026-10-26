@@ -805,6 +805,7 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         {
             return;
         }
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         var schreiber = Zustand.Schreiber;
         bool geloescht;
         IReadOnlyList<string> gesammelt;
