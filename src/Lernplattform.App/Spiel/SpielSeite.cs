@@ -206,8 +206,10 @@ public sealed class SpielSeite : Grid
         };
         _takt = new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) =>
         {
+            var beginn = Stopwatch.GetTimestamp();
             Beschriften();
             ZeitenSchreiben(false);
+            Flaeche.AuftragGemessen(Stopwatch.GetElapsedTime(beginn).TotalMilliseconds);
         });
         AttachedToVisualTree += (_, _) =>
         {
@@ -220,6 +222,7 @@ public sealed class SpielSeite : Grid
             if (_oben is not null)
             {
                 _oben.BackRequested += Zurueck;
+                _oben.LayoutUpdated += LayoutGezaehlt;
                 // P7-10 Nachtrag 1: die 3D-Flaeche reicht bis an den Rand (auch neben die Kamera-Aussparung),
                 // nur die Knoepfe und Karten bleiben im sicheren Bereich
                 // Nachtrag 1 zu P7-13 (schwarzer Rand links, S24): Avalonia liest AutoSafeAreaPadding am Inhalt
@@ -265,6 +268,7 @@ public sealed class SpielSeite : Grid
             if (_oben is not null)
             {
                 _oben.BackRequested -= Zurueck;
+                _oben.LayoutUpdated -= LayoutGezaehlt;
                 if (_oben.InsetsManager is { } rand)
                 {
                     rand.SafeAreaChanged -= SicherAendern;
@@ -470,6 +474,25 @@ public sealed class SpielSeite : Grid
     }
 
     /// <summary>Verdeckte Hoehe oben (bis unter die Kopfzeile) und unten (ab der Textkarte) an die Flaeche geben.</summary>
+    private void LayoutGezaehlt(object? sender, EventArgs e) => Flaeche.LayoutGezaehlt();
+
+    /// <summary>Weisung P7-15: Layout der Spielseite messen (Zeit gehoert zur Luecke vor dem naechsten Bild).</summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var beginn = Stopwatch.GetTimestamp();
+        var groesse = base.MeasureOverride(availableSize);
+        Flaeche.LayoutGemessen(Stopwatch.GetElapsedTime(beginn).TotalMilliseconds);
+        return groesse;
+    }
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        var beginn = Stopwatch.GetTimestamp();
+        var groesse = base.ArrangeOverride(finalSize);
+        Flaeche.LayoutGemessen(Stopwatch.GetElapsedTime(beginn).TotalMilliseconds);
+        return groesse;
+    }
+
     private void FreiSetzen()
     {
         if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben

@@ -146,6 +146,7 @@ public class SpielGrafikTests
             ["train"] = "Grafik Kenney Train Kit",
             ["furniture"] = "Grafik Kenney Furniture Kit",
             ["characters"] = "Grafik Kenney Animated Characters 3",
+            ["kaykit_moebel"] = "Grafik KayKit Furniture Bits",
         };
         foreach (var paket in genutzt)
         {

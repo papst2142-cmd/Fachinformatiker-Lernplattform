@@ -77,9 +77,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private double _nachlaufBis;
     private readonly int[] _gcVorher = new int[3];
     private long _bytesVorher = -1;
+    private double _endeVorher = -1;
+    private int _layouts;
+    private double _layoutMs;
+    private double _auftraegeMs;
 
     /// <summary>Nachtrag 1 zu P7-13 (Wunsch 4): Zeitmessung je Bild (Datei spiel_bilder.log, Problembericht).</summary>
     public BildZeiten Zeiten { get; } = new();
+
+    /// <summary>Weisung P7-15: ein Layout-Durchlauf des Fensters seit dem letzten Bild (zaehlt fuer das naechste Bild).</summary>
+    public void LayoutGezaehlt() => _layouts++;
+
+    /// <summary>Weisung P7-15: Zeit fuer das Layout der Spielseite seit dem letzten Bild.</summary>
+    public void LayoutGemessen(double ms) => _layoutMs += ms;
+
+    /// <summary>Weisung P7-15: Zeit eines eigenen Auftrags auf dem Oberflaechen-Thread ausserhalb des Bildes (Textzeile, Eingabe).</summary>
+    public void AuftragGemessen(double ms) => _auftraegeMs += ms;
+
+    private static double MsSeit(long beginn) => Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
 
     public StadtFlaeche()
     {
@@ -271,7 +286,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var grafik = gl.Renderer ?? "";
             var klammer = grafik.IndexOf(" (", StringComparison.Ordinal);
             GlKurz = (es ? "OpenGL ES " : "OpenGL ") + v.Major + "." + v.Minor + " · " + (klammer > 0 ? grafik[..klammer] : grafik);
-            Zeiten.Kopf = "Grafik: " + GlText;
+            // Weisung P7-15: laeuft das Zeichnen im Oberflaechen-Thread, wartet jedes Bild auf Layout und Auftraege
+            Zeiten.Kopf = "Grafik: " + GlText + " · Bild im Oberflächen-Thread: " + (Avalonia.Threading.Dispatcher.UIThread.CheckAccess() ? "ja" : "nein");
             _programm = Programm(gl, es, v);
             _ortMvp = gl.GetUniformLocationString(_programm, "uMvp");
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
@@ -402,6 +418,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override unsafe void OnOpenGlRender(GlInterface gl, int fb)
     {
         var jetzt = _uhr.Elapsed.TotalSeconds;
+        var bytesBeginn = GC.GetAllocatedBytesForCurrentThread();
         var abstandMs = _letztesBild < 0 ? 0 : (jetzt - _letztesBild) * 1000;
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
         _aufrufe = 0;
@@ -558,7 +575,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         var nachZeichnen = _uhr.Elapsed.TotalSeconds;
         BildGezeichnet?.Invoke();
-        Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen);
+        Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen, bytesBeginn);
         if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis)
         {
             RequestNextFrameRendering();
@@ -566,19 +583,29 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     }
 
     /// <summary>Teilzeiten des Bildes in <see cref="Zeiten"/> eintragen (Speicherbereinigung und Speicher seit dem letzten Bild).</summary>
-    private void Messen(double start, double abstandMs, double nachLaden, double nachLogik, double verdecktSek, double nachZeichnen)
+    private void Messen(double start, double abstandMs, double nachLaden, double nachLogik, double verdecktSek, double nachZeichnen, long bytesBeginn)
     {
         var ende = _uhr.Elapsed.TotalSeconds;
         Span<int> gc = [GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2)];
         var bytes = GC.GetAllocatedBytesForCurrentThread();
-        if (_bytesVorher >= 0)
-        {
-            Zeiten.Aufnehmen(new BildZeiten.Bild(start, abstandMs, (nachLogik - nachLaden) * 1000, ((nachLaden - start) + verdecktSek) * 1000,
-                (nachZeichnen - nachLogik - verdecktSek) * 1000, (ende - nachZeichnen) * 1000,
-                gc[0] - _gcVorher[0], gc[1] - _gcVorher[1], gc[2] - _gcVorher[2], bytes - _bytesVorher, _spiel?.ImInnenraum ?? false));
-        }
+        var bild = new BildZeiten.Bild(start, abstandMs, (nachLogik - nachLaden) * 1000, ((nachLaden - start) + verdecktSek) * 1000,
+            (nachZeichnen - nachLogik - verdecktSek) * 1000, (ende - nachZeichnen) * 1000,
+            gc[0] - _gcVorher[0], gc[1] - _gcVorher[1], gc[2] - _gcVorher[2], bytes - _bytesVorher, _spiel?.ImInnenraum ?? false,
+            _endeVorher < 0 ? 0 : (start - _endeVorher) * 1000, _layouts, _layoutMs, _auftraegeMs + (_spiel?.AktionenMessen() ?? 0), bytes - bytesBeginn);
+        var aufnehmen = _bytesVorher >= 0;
         gc.CopyTo(_gcVorher);
         _bytesVorher = bytes;
+        _layouts = 0;
+        _layoutMs = 0;
+        _auftraegeMs = 0;
+        _endeVorher = ende;
+        if (aufnehmen)
+        {
+            // die Messung selbst (alle 10 s eine Zeile) zaehlt als Auftrag vor dem naechsten Bild
+            var beginn = Stopwatch.GetTimestamp();
+            Zeiten.Aufnehmen(bild);
+            AuftragGemessen(MsSeit(beginn));
+        }
     }
 
     /// <summary>Wie viele Haeuser im letzten Bild halb durchsichtig waren (Start-Test, Fotos).</summary>

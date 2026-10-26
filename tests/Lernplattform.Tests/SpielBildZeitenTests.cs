@@ -62,6 +62,37 @@ public sealed class SpielBildZeitenTests
         Assert.Contains(", 0 langsam", text, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Weisung P7-15: die Zeit eines langsamen Bildes bleibt bei diesem Bild (Luecke + eigene Teile), nicht
+    /// beim naechsten; eine lange Luecke ohne gemessene Arbeit heisst "ausserhalb", eine Pause zaehlt nicht.
+    /// </summary>
+    [Fact]
+    public void HaengerGehoertDemBildDasIhnVerursacht()
+    {
+        var z = new BildZeiten();
+        // Bild 1: 120 ms Vorbereitung (z. B. Laden beim Betreten); Bild 2 danach: Abstand 125 ms, eigene Teile fast 0
+        var langsam = new BildZeiten.Bild(1.0, 8.3, 0.1, 120, 3, 0.1, 0, 0, 0, 1024, true, 5, 0, 0, 0, 512);
+        var danach = new BildZeiten.Bild(1.125, 125, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, true, 5, 0, 0, 0, 512);
+        var draussen = new BildZeiten.Bild(2.0, 90, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, true, 88, 1, 0.5, 1.0, 512);
+        var pause = new BildZeiten.Bild(5.0, 3000, 0.1, 0.2, 2, 0.1, 0, 0, 0, 1024, true, 2990, 0, 0, 0, 512);
+        Assert.Equal(128.2, BildZeiten.Dauer(langsam), 6);
+        Assert.Equal("Vorbereitung", BildZeiten.Teil(langsam));
+        Assert.True(BildZeiten.Dauer(danach) < BildZeiten.LangsamAbMs);
+        Assert.Equal("außerhalb", BildZeiten.Teil(draussen));
+        Assert.Equal(86.5, BildZeiten.AusserhalbMs(draussen), 6);
+        Assert.Equal(0, BildZeiten.AusserhalbMs(pause));
+        Assert.True(BildZeiten.Dauer(pause) < BildZeiten.LangsamAbMs);
+        foreach (var b in new[] { langsam, danach, draussen, pause })
+        {
+            z.Aufnehmen(b);
+        }
+        var text = z.Text();
+        Assert.Contains("128,2 ms (Logik 0,1, Vorbereitung 120,0", text, StringComparison.Ordinal);
+        Assert.Contains("Teil: Vorbereitung", text, StringComparison.Ordinal);
+        Assert.Contains("Teil: außerhalb", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("125,0 ms (", text, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void BildzeitenImProblembericht()
     {

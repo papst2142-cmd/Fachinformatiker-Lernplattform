@@ -39,7 +39,7 @@ public sealed class Innenraum
     public const string Serverfarm = "serverfarm";
 
     /// <summary>Alle CC0-Modelle, die Innenraeume nutzen (Pruefung: jedes Modell in modelle.bin wird gebraucht).</summary>
-    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer"];
+    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB"];
 
     private readonly List<Teil> _teile = [];
     private readonly List<ModellStueck> _stuecke = [];
@@ -703,7 +703,7 @@ public sealed class Innenraum
         "regal", "aktenregal", "hochregal", "kleiderschrank", "kuechenzeile", "kuehlschrank", "waschmaschine", "fernseher",
         "kommode", "sofa", "bett", "matratze", "tresen", "waschbecken", "wc", "badewanne", "kaffeemaschine", "usv", "rack",
         "klima", "drucker", "automat", "wasserspender", "monitorwand", "anzeigetafel", "whiteboard", "bild", "aquarium",
-        "werkbank", "leitstand", "bank", "glaswand", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen",
+        "werkbank", "leitstand", "bank", "glaswand", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen", "gemaelde",
     ];
 
     private int AutoDrehung(float x, float z, float w, float t)
@@ -878,6 +878,22 @@ public sealed class Innenraum
                 break;
             case "liegestuhl":
                 Modell(r, "loungeChairRelax", 0, 0, b, tt, 0.8f * M, 0, Farben.Hell);
+                break;
+            case "stuhlreihe":
+            {
+                // Wartestuehle nebeneinander (KayKit, P7-15 Nachtrag 1), so viele, wie in die Breite passen
+                var n = Math.Max(1, (int)(b / 0.8f));
+                for (var i = 0; i < n; i++)
+                {
+                    Modell(r, "kkChairA", (b * i / n) + (b / n / 2) - 0.32f, 0, 0.64f, tt, 0.95f * M, 0, Farben.Polster);
+                }
+                break;
+            }
+            case "wartesessel":
+                Modell(r, "kkArmchair", 0, 0, b, tt, 0.85f * M, 0, Farben.Polster);
+                break;
+            case "gemaelde":
+                Modell(r, "kkPictureframeLargeB", 0, 0, b, Math.Min(tt, 0.12f), 0.6f * M, 1.0f * M, Netz.Farbe("#F472B6"));
                 break;
             case "platznummer":
                 Platznummer(r, b, tt, (int)Py.Int(Get(d, "nummer", 1L)), (float)Py.F(Get(d, "unten", 0.75)) * M);

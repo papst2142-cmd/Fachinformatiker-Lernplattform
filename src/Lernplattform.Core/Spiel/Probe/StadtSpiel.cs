@@ -106,7 +106,9 @@ public sealed class StadtSpiel
     public string Name(string id) => Szene.Ort(id)?.Name ?? id;
 
     /// <summary>Zum Ort gehen: Ereignis schreiben (Uhr springt), dann den Weg sichtbar abgehen.</summary>
-    public StadtGrund GeheZu(string ziel)
+    public StadtGrund GeheZu(string ziel) => Gemessen(() => GeheZuOrt(ziel));
+
+    private StadtGrund GeheZuOrt(string ziel)
     {
         if (ImInnenraum)
         {
@@ -182,7 +184,9 @@ public sealed class StadtSpiel
     /// Strassen, Wege, Wiese und Parks, nicht durch Haeuser, Wasser und Gleis (nur Bruecken und
     /// Uebergaenge). Die Schritte kosten Spielzeit wie ein Weg zu einem Ort (Ereignis stadt_gelaufen).
     /// </summary>
-    public bool GeheZu(double x, double z)
+    public bool GeheZu(double x, double z) => Gemessen(() => GeheZuPunkt(x, z));
+
+    private bool GeheZuPunkt(double x, double z)
     {
         if (Innen is not { } innen)
         {
@@ -275,6 +279,55 @@ public sealed class StadtSpiel
         {
             return false;
         }
+        _imBild = true;
+        try
+        {
+            return Weiter(sekunden);
+        }
+        finally
+        {
+            _imBild = false;
+        }
+    }
+
+    // ---- Messung (Weisung P7-15) ----
+
+    private double _aktionenMs;
+    private bool _imBild;
+    private bool _inAktion;
+
+    /// <summary>
+    /// Zeit in Aktionen der Oberflaeche (Gehen zu einem Ort oder Punkt, Warten, Betreten, Knopf, Verlassen) seit dem
+    /// letzten Abruf, ohne die Aktionen, die beim Zeichnen eines Bildes entstehen (die zaehlen dort als Logik).
+    /// </summary>
+    public double AktionenMessen()
+    {
+        var wert = _aktionenMs;
+        _aktionenMs = 0;
+        return wert;
+    }
+
+    private T Gemessen<T>(Func<T> aktion)
+    {
+        if (_imBild || _inAktion)
+        {
+            return aktion();
+        }
+        var beginn = System.Diagnostics.Stopwatch.GetTimestamp();
+        _inAktion = true;
+        try
+        {
+            return aktion();
+        }
+        finally
+        {
+            _inAktion = false;
+            _aktionenMs += System.Diagnostics.Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
+        }
+    }
+
+    private bool Weiter(double sekunden)
+    {
         var rest = sekunden * Tempo;
         while (rest > 0 && _weg.Count > 0)
         {
@@ -385,7 +438,9 @@ public sealed class StadtSpiel
     public bool KannBetreten => !ImInnenraum && !ImFreien && !Geht && HatInnenraum(Jetzt.Ort) && Stadt.Betreten(Ablauf.Stand) == StadtGrund.Ok;
 
     /// <summary>Vor dem geschlossenen Ort bis zur Oeffnung warten (Ereignis stadt_gewartet).</summary>
-    public StadtGrund Warten()
+    public StadtGrund Warten() => Gemessen(WartenOhneMessung);
+
+    private StadtGrund WartenOhneMessung()
     {
         if (Schreiben(() => Stadt.Warten(Ablauf)) is not { } ergebnis)
         {
@@ -396,7 +451,9 @@ public sealed class StadtSpiel
         return ergebnis.Grund;
     }
 
-    public bool Betreten()
+    public bool Betreten() => Gemessen(BetretenOhneMessung);
+
+    private bool BetretenOhneMessung()
     {
         if (!KannBetreten)
         {
@@ -493,7 +550,9 @@ public sealed class StadtSpiel
     /// Einen Knopf aus <see cref="Knoepfe"/> ausfuehren: "buero"/"zuhause" hinaus und zum Ort gehen (dort
     /// gleich hinein), alle anderen meldet <see cref="Aktion"/> an die Oberflaeche.
     /// </summary>
-    public bool Knopf(string aktion)
+    public bool Knopf(string aktion) => Gemessen(() => KnopfOhneMessung(aktion));
+
+    private bool KnopfOhneMessung(string aktion)
     {
         if (!Knoepfe.Any(k => k.Aktion == aktion))
         {
@@ -525,7 +584,9 @@ public sealed class StadtSpiel
         return true;
     }
 
-    public void Verlassen()
+    public void Verlassen() => Gemessen(() => { VerlassenOhneMessung(); return true; });
+
+    private void VerlassenOhneMessung()
     {
         if (!ImInnenraum)
         {

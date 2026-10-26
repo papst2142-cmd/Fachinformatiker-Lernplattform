@@ -30,10 +30,16 @@
    "sha256": "6c197462dc9976b522a07d11e0fb42b9caa7cf71d39abbc3ca708b69f13a40dd",
    "quelle": "Kenney Animated Characters 3 1.1, kenney-assets.itch.io/animated-characters-3",
    "lizenz": "CC0 1.0"
+  },
+  "kaykit_moebel": {
+   "zip": "KayKit_Furniture_Bits_1.0_FREE.zip",
+   "sha256": "84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242",
+   "quelle": "KayKit Furniture Bits 1.0 (Kay Lousberg), github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0",
+   "lizenz": "CC0 1.0"
   }
  },
- "sha256": "562d6328daecaff1638a469e1718a04b8e0d7b5726dad395bd76ad36404d7bee",
- "bytes": 2842184,
+ "sha256": "7567867c1efd1c07f1d29c61f59b2cde69ee9995f99cde212d562771c342f506",
+ "bytes": 2878080,
  "modelle": [
   {
    "name": "building-e",
@@ -1002,6 +1008,57 @@
     0.662,
     3.7654,
     0.5142
+   ]
+  },
+  {
+   "name": "kkChairA",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/chair_A.obj",
+   "atlas": null,
+   "dreiecke": 308,
+   "min": [
+    -0.375,
+    -0.0,
+    -0.4701
+   ],
+   "max": [
+    0.375,
+    1.2583,
+    0.375
+   ]
+  },
+  {
+   "name": "kkArmchair",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/armchair.obj",
+   "atlas": null,
+   "dreiecke": 528,
+   "min": [
+    -0.9,
+    0.0,
+    -0.75
+   ],
+   "max": [
+    0.9,
+    1.2241,
+    0.85
+   ]
+  },
+  {
+   "name": "kkPictureframeLargeB",
+   "paket": "kaykit_moebel",
+   "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/pictureframe_large_B.obj",
+   "atlas": null,
+   "dreiecke": 60,
+   "min": [
+    -1.0,
+    -0.6,
+    0.0
+   ],
+   "max": [
+    1.0,
+    0.6,
+    0.2
    ]
   }
  ]

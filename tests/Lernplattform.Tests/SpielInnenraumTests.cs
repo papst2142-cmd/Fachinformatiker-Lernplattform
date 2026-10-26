@@ -108,7 +108,11 @@ public class SpielInnenraumTests
         var typen = new HashSet<string>();
         foreach (var g in new[] { SpielDaten.Objekt(Inhalt["gebaeude"]), SpielDaten.Objekt(SpielDaten.Objekt(Innenraeume.Value["serverfarm"])["gebaeude"]) }
             .Concat(SpielDaten.Kundenorte(Inhalt).Select(k => SpielDaten.Objekt(k["gebaeude"])))
-            .Concat(SpielDaten.Liste(SpielDaten.Objekt(Inhalt["wohnungen"])["wohnungen"]).Select(w => SpielDaten.Objekt(SpielDaten.Objekt(w)["gebaeude"]))))
+            .Concat(SpielDaten.Liste(SpielDaten.Objekt(Inhalt["wohnungen"])["wohnungen"]).Select(w => SpielDaten.Objekt(SpielDaten.Objekt(w)["gebaeude"])))
+            // P7-15: auch Laeden, Bank und Amt aus innenraeume.json mit ihrem angehaengten Zusatz
+            .Concat(new[] { "moebelhaus", "elektromarkt", "bank", "amt" }.Select(ort => Innenraum.MitZusatz(
+                SpielDaten.Objekt(SpielDaten.Objekt(Innenraeume.Value[ort])["gebaeude"]),
+                SpielDaten.Get(SpielDaten.Objekt(Innenraeume.Value["zusatz"]), ort) as PyObjekt))))
         {
             typen.UnionWith(Deko(g).Select(d => Py.Str(d["typ"])));
         }
