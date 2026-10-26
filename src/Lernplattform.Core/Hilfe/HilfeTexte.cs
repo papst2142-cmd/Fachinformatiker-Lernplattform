@@ -190,7 +190,7 @@ public static partial class HilfeTexte
         new("haenger", "Hänger-Diagnose (PC)", ["Optionen"],
             "Bleibt das Programm am PC hängen, schreibt es nach 30 Sekunden automatisch in die Datei "
             + "haenger.log, an welcher Stelle es steht. Blockaden ab 5 Sekunden stehen kurz in fehler.log, bei "
-            + "bekannten langen Vorgängen (Seitenaufbau, Darstellungswechsel, Schriftwechsel, Vorladen) erst ab 30 "
+            + "bekannten langen Vorgängen (Seitenaufbau, Darstellungswechsel, Schriftwechsel) erst ab 30 "
             + "Sekunden. Der Abgleich läuft im Hintergrund und blockiert nicht. Beide Dateien liegen im "
             + "Datenordner und stehen im Bericht bei „Problem melden“. Es wird nichts gesendet.\n"
             + "\nHängt unter Linux das Tippen, startest du das Programm mit dem Startschalter\n--ohne-eingabemethode\nD"

@@ -49,6 +49,10 @@ internal static class HilfePaare
         ("S1", "spiel",
             "Der Lernfortschritt gilt für alle gemeinsam.",
             "Der Lernfortschritt gilt für alle gemeinsam.\n\nIm Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle."),
+        // Phase 8 W2 (Weisung P8-3, Sammelliste 72, Nico 23.10.2026): "Vorladen" streichen, die C#-Linie laedt nicht vor
+        ("W5", "haenger",
+            ", Vorladen)",
+            ")"),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),

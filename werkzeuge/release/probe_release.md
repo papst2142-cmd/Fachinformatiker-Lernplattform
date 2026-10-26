@@ -1,22 +1,21 @@
-Neu: Das Spiel ist jetzt in echtem 3D, am PC und am Handy gleich.
+Kleine Verbesserungen, damit nichts verloren geht und alles flüssig bleibt.
 
-- Du gehst mit deiner Figur durch eine Stadt: Tippe oder klicke auf ein Ziel, und die Figur läuft dorthin. Die Kamera folgt ihr. Ziehen verschiebt die Ansicht, mit zwei Fingern zoomst und drehst du, am PC zoomt auch das Mausrad.
-- Orte zum Betreten: deine Wohnung, die Firma, das Möbelhaus, der Elektromarkt, die Bank und das Amt. Innen siehst du den Raum mit Möbeln und Personen; die Wand zur Kamera hin ist durchsichtig.
-- Im Möbelhaus und im Elektromarkt kaufst du Möbel für deine Wohnung und Teile für die Arbeit. In der Bank nimmst du Kredite auf und zahlst sie zurück, auf dem Amt gründest du deine eigene Firma. Die Geschäfte haben Öffnungszeiten, und der Tag läuft mit jedem Weg weiter.
-- Die Firma, die Tickets aus dem Berufsalltag, Erfolge und die Bestenliste funktionieren wie in der bisherigen Python-Version. Deine Spielstände aus der Python-Version werden übernommen.
-- Das Spiel läuft flüssig auch auf dem Handy: Jeder Spielschritt wird im Hintergrund gespeichert, deshalb reagiert das Bild sofort. Vor einer Sicherung, einem Update, dem Abgleich und beim Beenden schreibt das Programm alles fertig. Kann ein Spielschritt einmal nicht gespeichert werden, sagt es dir das und lädt den letzten gespeicherten Stand.
-- Die Grafik besteht aus frei verwendbaren Modellen (CC0); sie stehen mit den übrigen Bausteinen unter „Optionen“ → „Über das Programm“.
+- Was du in einer laufenden Prüfung oder im Abschlussprojekt gerade tippst, wird jetzt auch vor einem Update sofort gespeichert und am Handy zuverlässig, sobald du die App verlässt. Vor einer Sicherung und beim Übernehmen eines Lernstands war das schon so.
+- Neuer Knopf „Lizenzen“ unter „Optionen“ → „Über das Programm“: Er zeigt die vollständigen Lizenztexte aller mitgelieferten Bausteine, jetzt auch am Handy. Jeder Baustein steht in einer eigenen Karte zum Aufklappen.
+- Die Fortschrittsringe auf der Startseite zeigen wieder einen sauberen Farbverlauf von einer Farbe zur anderen. Vorher sah man bei einem Teil-Fortschritt eine Farbe und ein Dreieck in einer anderen Farbe.
+- Unter Linux bleibt das Fenster bedienbar, während „Verknüpfung anlegen“ arbeitet.
+- Die Hilfe zur Hänger-Diagnose nennt das „Vorladen“ nicht mehr, weil es das in dieser Version nicht gibt.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.13.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.13.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.13.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.13.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.13.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.13.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.13.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.13.1-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

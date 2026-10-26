@@ -202,6 +202,8 @@ public static partial class AutoMessung
         funde += await ProjektMesspunkteAsync(ansicht);
         funde += await W4MesspunkteAsync(ansicht, reihenRot);
         funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
+        funde += await LizenzenMesspunkteAsync(ansicht);   // Phase 8 W2: Knopf "Lizenzen"
+        funde += RingVerlaufPruefen();   // Phase 8 W2 Nachtrag (P8-3b): Farbverlauf der Fortschrittsringe
         return funde;
     }
 
@@ -386,6 +388,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // Phase 8, W2: "Über das Programm" mit der Liste "Lizenzen" (zu und ein Bestandteil offen)
+                await foreach (var ansichtName in MitLernen ? P8W2Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
                 // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P7W1Ansichten(ansicht) : Keine<string>())
@@ -454,6 +464,7 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  und {P5W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 5, ohne Speichern): Optionen \"Diagnose und Werkzeuge\" mit Problembericht, Fehler Datenordner, Fehler Speichern, Kurzhinweis \"Bericht in die Zwischenablage kopiert\""));
             Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
             Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
+            Messwerte.Notiere(string.Create(inv, $"  und {P8W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 8): Optionen \"Über das Programm\" mit der Liste \"Lizenzen\" (alle zu, erster Bestandteil offen)"));
         }
         if (MitSpiel)
         {
@@ -1688,6 +1699,13 @@ public static partial class AutoMessung
                         }
                     }
                     await foreach (var name in P6W2Ansichten(ansicht))
+                    {
+                        foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                        {
+                            layoutFunde.Add($"{welt} {name}: {fund}");
+                        }
+                    }
+                    await foreach (var name in P8W2Ansichten(ansicht))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {

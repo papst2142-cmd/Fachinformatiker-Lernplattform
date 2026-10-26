@@ -917,7 +917,19 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         var stand = Schrift.Text(VerknuepfungDienst.Unterstuetzt ? VerknuepfungDienst.StatusText() : VerknuepfungTexte.Keine,
             "Klein", FontWeight.Normal, "Pinsel.text_dim");
         stand.VerticalAlignment = VerticalAlignment.Center;
-        verknuepfung.Click += (_, _) => stand.Text = VerknuepfungDienst.AnlegenUndMelden();
+        verknuepfung.Click += async (_, _) =>
+        {
+            // Sammelliste 77: im Hintergrund anlegen; solange ist der Knopf gesperrt (kein zweites Anlegen)
+            verknuepfung.IsEnabled = false;
+            try
+            {
+                stand.Text = await VerknuepfungDienst.AnlegenUndMeldenAsync();
+            }
+            finally
+            {
+                verknuepfung.IsEnabled = true;
+            }
+        };
         if (VerknuepfungDienst.Unterstuetzt)
         {
             // nach "Ja" in der Rueckfrage beim Start und beim erneuten Zeigen der Seite den Stand neu lesen
@@ -989,6 +1001,8 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             MaxHeight = 360,
             IsVisible = false,
         }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
+        // Phase 8 W2 (Sammelliste 74, Nico 5a): volle Lizenztexte, erst beim ersten Klick aufgebaut
+        var lizenzen = new StackPanel { Spacing = 10, IsVisible = false };
         // A 0.12.2: Knoepfe volle Breite als Rahmenknoepfe (GradientButton kind="ghost", expand)
         var reihe = new StackPanel { Spacing = 10 };
         foreach (var (knopfText, datei) in (ReadOnlySpan<(string, string)>)[(UeberTexte.KnopfLizenz, "LICENSE.txt"), (UeberTexte.KnopfFremd, "THIRD_PARTY_NOTICES.txt")])
@@ -1000,12 +1014,62 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
             {
                 anzeige.Text = Eingebettet(datei);
                 anzeige.IsVisible = true;
+                lizenzen.IsVisible = false;
             };
             reihe.Children.Add(knopf);
         }
+        var lizenzKnopf = Schrift.Knopf(UeberTexte.KnopfLizenzen);
+        lizenzKnopf.Margin = new Thickness(0);
+        lizenzKnopf.HorizontalAlignment = HorizontalAlignment.Stretch;
+        LizenzenOeffnen = () => LizenzenZeigen(lizenzen, anzeige);
+        lizenzKnopf.Click += (_, _) => LizenzenOeffnen();
+        reihe.Children.Add(lizenzKnopf);
+        LizenzenTeil = lizenzen;
         panel.Children.Add(reihe);
         panel.Children.Add(anzeige);
+        panel.Children.Add(lizenzen);
         return panel;
+    }
+
+    /// <summary>Wie ein Klick auf "Lizenzen" und die Anzeige dazu (fuer den Start ohne Bedienung).</summary>
+    internal Action? LizenzenOeffnen { get; private set; }
+
+    internal StackPanel? LizenzenTeil { get; private set; }
+
+    /// <summary>
+    /// "Lizenzen": je Bestandteil eine Klappkarte wie in der Hilfe (Titel aus THIRD_PARTY_LICENSES.txt);
+    /// der Text entsteht erst beim Aufklappen und zeichnet nur die sichtbaren Bloecke (die Datei ist ueber 1 MB).
+    /// </summary>
+    private static void LizenzenZeigen(StackPanel lizenzen, TextBox anzeige)
+    {
+        anzeige.IsVisible = false;
+        lizenzen.IsVisible = true;
+        if (lizenzen.Children.Count > 0)
+        {
+            return;
+        }
+        var (vorspann, teile) = Lizenztexte.Zerlegen(Eingebettet("THIRD_PARTY_LICENSES.txt"));
+        lizenzen.Children.Add(new LernText(vorspann.Trim(), "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        foreach (var teil in teile)
+        {
+            var klappe = new Expander
+            {
+                Header = Schrift.Text(Lizenztexte.Brechbar(teil.Titel), "Normal", FontWeight.Bold),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            };
+            klappe.Farbe(Expander.BackgroundProperty, "Pinsel.card_alt").Farbe(Expander.BorderBrushProperty, "Pinsel.border")
+                .Farbe(Expander.ForegroundProperty, "Pinsel.text");
+            Avalonia.Automation.AutomationProperties.SetName(klappe, teil.Titel);
+            klappe.Expanding += (_, _) => klappe.Content ??= new ItemsControl
+            {
+                ItemsSource = teil.Bloecke,
+                ItemsPanel = new Avalonia.Controls.Templates.FuncTemplate<Panel?>(() => new VirtualizingStackPanel()),
+                ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<string>((block, _) =>
+                    new LernText(block, "Klein", FontWeight.Normal, "Pinsel.text_soft")),
+            };
+            lizenzen.Children.Add(klappe);
+        }
     }
 
     private static string Eingebettet(string datei)

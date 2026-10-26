@@ -103,10 +103,15 @@ public class MainActivity : AvaloniaMainActivity
         return base.DispatchTouchEvent(e);
     }
 
-    /// <summary>Weisung P7-17: vor dem Wechsel in den Hintergrund alle Spielschritte fertig schreiben.</summary>
+    /// <summary>
+    /// Weisung P7-17: vor dem Wechsel in den Hintergrund alle Spielschritte fertig schreiben.
+    /// Sammelliste 51 (_lifecycle main.py 5970): offene Eingaben in Klausur und Abschlussprojekt
+    /// speichern, auch wenn Avalonia den Wechsel nicht als Deactivated meldet.
+    /// </summary>
     protected override void OnPause()
     {
         Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
+        Lernplattform.Programm.Zustand.EingabenSpeichern();
         base.OnPause();
     }
 

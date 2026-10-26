@@ -503,6 +503,34 @@ public class KlausurAblaufTests
         Assert.Contains("Zustand.BeiEingabenSpeichern += Festhalten;", quelle, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Sammelliste 51 (Weisung P8-3, wie Python flush_inputs/_flush_inputs/_lifecycle): Jede Stelle, an
+    /// der Python offene Eingaben speichert, ruft Zustand.EingabenSpeichern: Sicherung erstellen,
+    /// Sicherung einspielen, Lernstand uebernehmen, Update (vor der Kopie vor_update_*), Beenden und
+    /// der Wechsel der Handy-App in den Hintergrund (Avalonia und Android OnPause).
+    /// </summary>
+    [Theory]
+    [InlineData("Lernplattform.App/Views/RuecksicherungTeil.cs", 1)]
+    [InlineData("Lernplattform.App/Views/EinspielenTeil.cs", 1)]
+    [InlineData("Lernplattform.App/Views/UebernahmeTeil.cs", 1)]
+    [InlineData("Lernplattform.App/Programm/UpdateDienst.cs", 1)]
+    [InlineData("Lernplattform.App/App.axaml.cs", 1)]
+    [InlineData("Lernplattform.Android/MainActivity.cs", 1)]
+    public void EingabenSpeichernVorJedemVorgang(string datei, int anzahl)
+    {
+        var quelle = File.ReadAllText(Path.Combine([Pfade.Wurzel, "src", .. datei.Split('/')]));
+        var treffer = System.Text.RegularExpressions.Regex.Matches(quelle, @"Zustand\.EingabenSpeichern\(\);").Count;
+        Assert.Equal(anzahl, treffer);
+        var zustand = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Programm", "Zustand.cs"));
+        Assert.Contains("EingabenSpeichern();\n        BeimBeenden?.Invoke();", zustand.Replace("\r\n", "\n"), StringComparison.Ordinal);
+        if (datei.EndsWith("UpdateDienst.cs", StringComparison.Ordinal))
+        {
+            // vor dem Laden und Installieren (dort entsteht die Kopie vor_update_*)
+            Assert.True(quelle.IndexOf("Zustand.EingabenSpeichern();", StringComparison.Ordinal)
+                < quelle.IndexOf("UpdateAblauf.Installieren(", StringComparison.Ordinal));
+        }
+    }
+
     /// <summary>Hart beendet waehrend des Festhaltens: einstellungen.json ist heil und enthaelt eine ganze Antwort.</summary>
     [Fact]
     public void AbsturzBeimFesthalten()
