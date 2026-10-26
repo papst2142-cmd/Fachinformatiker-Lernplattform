@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Texte;
 using Lernplattform.Views;
 
@@ -71,6 +73,17 @@ public static partial class AutoMessung
                 }
             }
             await ansicht.ZeigeAsync(Seiten.Optionen);
+            // Weisung P8-5b: Titel jeder Karte in der Farbe ihrer Gruppe, "Loeschen und zuruecksetzen" rot
+            foreach (var bereich in bereiche)
+            {
+                var titel = optionen.Klappe(bereich.Id)?.GetVisualDescendants().OfType<TextBlock>()
+                    .FirstOrDefault(t => t.Text == Beschriftungen.Gross(bereich.Titel));
+                var soll = optionen.TryFindResource("Pinsel." + Optionen.Farbe(bereich.Id), out var r) ? r as ISolidColorBrush : null;
+                if (titel?.Foreground is not ISolidColorBrush ist || soll is null || ist.Color != soll.Color)
+                {
+                    Fehler("Optionen: " + bereich.Titel + " nicht in der Farbe " + Optionen.Farbe(bereich.Id));
+                }
+            }
             foreach (var bereich in bereiche)
             {
                 // wie die Suche (open_area): jede Karte aufklappen und wieder zu

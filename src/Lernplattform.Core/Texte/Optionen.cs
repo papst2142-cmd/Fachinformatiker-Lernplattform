@@ -172,6 +172,20 @@ public static class Optionen
         (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber]),
     ];
 
+    /// <summary>
+    /// Weisung P8-5b (Sammelliste 121, Nico 26.10.2026 19:43): jede Gruppe eine Farbe (Schluessel der Farbwelt);
+    /// Ueberschrift, Pfeil, Strich und Titel jeder Karte der Gruppe nehmen sie an. Ausnahme: "Loeschen und
+    /// zuruecksetzen" bleibt rot als Warnung (<see cref="Farbe"/>).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> GruppenFarben = new Dictionary<string, string>
+    {
+        [GruppeLernen] = "blue", [GruppeAussehen] = "cyan", [GruppeSpiel] = "pink", [GruppeDaten] = "purple", [GruppeProgramm] = "orange",
+    };
+
+    /// <summary>Farbe (Schluessel der Farbwelt) der Karte eines Bereichs: die seiner Gruppe, "Loeschen" rot.</summary>
+    public static string Farbe(string id) =>
+        id == Loeschen ? "red" : GruppenFarben[Gruppen.First(g => g.Ids.Contains(id)).Titel];
+
     /// <summary>Die angezeigten Bereiche (<see cref="AlleFuer"/>) nach <see cref="Gruppen"/> geordnet; fehlende ("nur PC") entfallen.</summary>
     public static IReadOnlyList<(string Titel, IReadOnlyList<OptionenBereich> Bereiche)> Gruppieren(IReadOnlyList<OptionenBereich> angezeigt) =>
         [.. Gruppen.Select(g => (g.Titel, (IReadOnlyList<OptionenBereich>)[.. g.Ids.Select(id => angezeigt.FirstOrDefault(b => b.Id == id)).OfType<OptionenBereich>()]))];
