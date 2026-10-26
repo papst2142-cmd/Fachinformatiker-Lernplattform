@@ -207,6 +207,43 @@ public sealed class VerknuepfungTests : IDisposable
     public void NurLinuxImInstalliertenAppImage(bool linux, bool installiert, string? appImage, bool soll) =>
         Assert.Equal(soll, Verknuepfung.Unterstuetzt(linux, installiert, appImage));
 
+    /// <summary>
+    /// Sammelliste 77 (Weisung P8-3): Das Anlegen laeuft im Hintergrund; haengt xdg-user-dir, laeuft der
+    /// Aufrufer weiter (Ergebnis wie vorher).
+    /// Die Oberflaeche ruft es nur ueber Task.Run auf und sperrt den Knopf solange.
+    /// </summary>
+    [Fact]
+    public async Task AnlegenImHintergrund()
+    {
+        using var drin = new ManualResetEventSlim();
+        using var frei = new ManualResetEventSlim();
+        var umgebung = Umgebung();
+        var langsam = umgebung with
+        {
+            XdgDesktop = () =>
+            {
+                drin.Set();
+                Assert.True(frei.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));   // xdg-user-dir haengt, bis der Test freigibt
+                return Desktop;
+            },
+        };
+        var aufgabe = Task.Run(() => Verknuepfung.Anlegen(langsam));
+        // der Aufrufer (die Oberflaeche) laeuft weiter, waehrend xdg-user-dir haengt
+        Assert.True(drin.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        Assert.False(aufgabe.IsCompleted);
+        frei.Set();
+        var ergebnis = await aufgabe;
+        Assert.True(ergebnis.Ok);
+        Assert.True(File.Exists(Menue));
+        Assert.True(File.Exists(Path.Combine(Desktop, Verknuepfung.DateiName)));
+        var dienst = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Programm", "VerknuepfungDienst.cs"));
+        Assert.Contains("await Task.Run(() => Verknuepfung.Anlegen(umgebung));", dienst, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnlegenUndMelden()", dienst, StringComparison.Ordinal);
+        var optionen = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Views", "OptionenSeite.cs"));
+        Assert.Contains("stand.Text = await VerknuepfungDienst.AnlegenUndMeldenAsync();", optionen, StringComparison.Ordinal);
+        Assert.Contains("verknuepfung.IsEnabled = false;", optionen, StringComparison.Ordinal);
+    }
+
     /// <summary>Merker nur ueber Einstellungen.Aendern; andere Schluessel bleiben.</summary>
     [Fact]
     public void MerkerUeberEinstellungenAendern()

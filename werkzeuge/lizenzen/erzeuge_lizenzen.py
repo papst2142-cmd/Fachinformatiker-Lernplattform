@@ -442,8 +442,9 @@ def volltexte(alle):
     return "\n".join(z).rstrip("\n") + "\n"
 
 
-def main_pruefen(repo_datei, sammlungen):
-    """Die Uebersicht im Repo (im Programm eingebettet) muss gleich der aus den Sammlungen erzeugten sein."""
+def main_pruefen(repo_datei, sammlungen, repo_volltexte=None):
+    """Die Uebersicht im Repo (im Programm eingebettet) muss gleich der aus den Sammlungen erzeugten sein,
+    ebenso die Volltexte im Repo (repo_volltexte, ebenfalls eingebettet)."""
     alle, wo = vereinigen(sammlungen)
     neu = uebersicht(alle, wo)
     with open(repo_datei, encoding="utf-8") as d:
@@ -458,6 +459,20 @@ def main_pruefen(repo_datei, sammlungen):
         print("===== ENDE neue THIRD_PARTY_NOTICES.txt =====")
         return 1
     print("THIRD_PARTY_NOTICES.txt gleich der neu erzeugten Liste (%d Bestandteile)" % len(alle))
+    if repo_volltexte is None:
+        return 0
+    # Phase 8 W2 (Weisung P8-3, Sammelliste 74): die Volltexte sind im Programm eingebettet (Knopf
+    # "Lizenzen" in den Optionen, auch in der APK) und muessen gleich den neu erzeugten sein
+    neu = volltexte(alle)
+    with open(repo_volltexte, encoding="utf-8") as d:
+        alt = d.read().replace("\r\n", "\n")
+    if alt != neu:
+        import difflib
+        print("FEHLER: THIRD_PARTY_LICENSES.txt im Repo weicht von den neu erzeugten Lizenztexten ab "
+              "(neue Datei im Artefakt release-entwurf):")
+        sys.stdout.writelines(difflib.unified_diff(alt.splitlines(True), neu.splitlines(True), "Repo", "neu"))
+        return 1
+    print("THIRD_PARTY_LICENSES.txt gleich den neu erzeugten Lizenztexten (%d Zeichen)" % len(neu))
     return 0
 
 

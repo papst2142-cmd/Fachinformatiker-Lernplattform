@@ -210,6 +210,9 @@ public static class UpdateDienst
             // D8: Abgleich, Uebernahme oder Sicherung laeuft; die Oberflaeche wartet nie
             throw new UpdateFehler(AbgleichTexte.Belegt);
         }
+        // Sammelliste 51 (flush_inputs vor on_close beim Update, app_gui 11119/11151): offene Eingaben in
+        // Klausur und Abschlussprojekt speichern, bevor die Kopie vor_update_* entsteht
+        Zustand.EingabenSpeichern();
         var quelle = Aktuell.Quelle!();
         await Task.Run(() => UpdateAblauf.LadenAsync(quelle, angebot, fortschritt));
         installiere();

@@ -172,6 +172,8 @@ public static class UeberTexte
     public const string KnopfFremd = "Hinweise zu Fremdbestandteilen";
     public const string TitelLizenz = "Lizenz";
     public const string TitelFremd = "Hinweise zu Fremdbestandteilen";
+    /// <summary>Phase 8 W2 (Weisung P8-3, Nico 5a): Knopf, der die vollen Lizenztexte zeigt (nur C#-Linie).</summary>
+    public const string KnopfLizenzen = "Lizenzen";
 
     /// <summary>Ganzer Text der Seite (wie about_text); version = Anzeigeversion, z. B. "A 0.1.0".</summary>
     public static string Text(string version, string plattform) =>

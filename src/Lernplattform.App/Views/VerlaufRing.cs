@@ -58,14 +58,12 @@ public sealed class VerlaufRing : Control
         var winkel = Math.Max(0.02, _anteil) * 360;
         var pinsel = new ConicGradientBrush
         {
-            Center = new RelativePoint(0.5, 0.5, RelativeUnit.Relative),
-            Angle = 0,
-            GradientStops =
-            {
-                new GradientStop(Farbe(_a), 0),
-                new GradientStop(Farbe(_b), Math.Max(0.01, _anteil)),
-                new GradientStop(_anteil >= 0.999 ? Farbe(_a) : Farbe(_b), 1),
-            },
+            // Sammelliste 113 (Weisung P8-3b): Mitte fest in der Ringmitte. Relativ (0,5/0,5) bezog sie sich
+            // auf die Umrandung des gezeichneten Bogens; bei einem Teilbogen lag sie dann neben der Ringmitte,
+            // und statt des Verlaufs entstanden eine Farbe und ein Dreieck in der anderen.
+            Center = new RelativePoint(mitte, RelativeUnit.Absolute),
+            Angle = 0,   // 0 = 12 Uhr, im Uhrzeigersinn (wie rotation=-pi/2 in ui.Ring)
+            GradientStops = Stopps(_anteil, Farbe(_a), Farbe(_b), _dicke / 2 / (2 * Math.PI * radius)),
         };
         var stift = new Pen(pinsel, _dicke, lineCap: PenLineCap.Round);
         if (winkel >= 359.9)
@@ -83,6 +81,24 @@ public sealed class VerlaufRing : Control
             ctx.EndFigure(false);
         }
         dc.DrawGeometry(null, stift, bogen);
+    }
+
+    /// <summary>
+    /// Verlauf wie ui.Ring (colors [a, b, b], stops [0, max(0,01, anteil), 1]; voll: [a, b, a]). Weisung
+    /// P8-3b: hinter dem Bogen bleibt b noch fuer die Laenge der runden Kappe am Ende (<paramref name="kappe"/>
+    /// = Anteil des Kreises), dann geht der Verlauf auf der freien Strecke zu a zurueck, so dass auch die
+    /// Kappe am Anfang (sie ragt vor 12 Uhr) a zeigt; im Bogen und an den Kappen gibt es keinen Sprung.
+    /// </summary>
+    internal static GradientStops Stopps(double anteil, Color a, Color b, double kappe)
+    {
+        var ende = Math.Max(0.01, anteil);
+        if (anteil >= 0.999)
+        {
+            return [new GradientStop(a, 0), new GradientStop(b, ende), new GradientStop(a, 1)];
+        }
+        var rand = Math.Min(kappe, (1 - ende) / 2);
+        return [new GradientStop(a, 0), new GradientStop(b, ende), new GradientStop(b, ende + rand),
+            new GradientStop(a, 1 - rand), new GradientStop(a, 1)];
     }
 
     /// <summary>Punkt auf dem Kreis; 0 Grad = 12 Uhr, im Uhrzeigersinn.</summary>

@@ -41,12 +41,17 @@ public static class VerknuepfungDienst
     /// <summary>Zeile neben dem Knopf (W2-2, W2-3).</summary>
     public static string StatusText() => Verknuepfung.StatusText(Umgebung);
 
-    /// <summary>create_and_report(): anlegen oder erneuern; bei Erfolg Merker "erledigt". Text mit Umbruchstellen in Pfaden.</summary>
-    public static string AnlegenUndMelden()
+    /// <summary>
+    /// create_and_report(): anlegen oder erneuern; bei Erfolg Merker "erledigt". Text mit Umbruchstellen in Pfaden.
+    /// Sammelliste 77 (Weisung P8-3): Das Anlegen (xdg-user-dir und gio je bis 5 s) laeuft im Hintergrund, die
+    /// Oberflaeche bleibt bedienbar; der Merker wird danach wieder auf dem Oberflaechen-Thread gesetzt.
+    /// </summary>
+    public static async Task<string> AnlegenUndMeldenAsync()
     {
         try
         {
-            var ergebnis = Verknuepfung.Anlegen(Umgebung);
+            var umgebung = Umgebung;
+            var ergebnis = await Task.Run(() => Verknuepfung.Anlegen(umgebung));
             if (ergebnis.Ok)
             {
                 Zustand.Aendere(werte => Verknuepfung.Setzen(werte, Verknuepfung.Erledigt));
@@ -77,7 +82,7 @@ public static class VerknuepfungDienst
                 VerknuepfungTexte.Ja, VerknuepfungTexte.Nein, VerknuepfungTexte.NieFragen);
             if (wahl == 0)
             {
-                var text = AnlegenUndMelden();
+                var text = await AnlegenUndMeldenAsync();
                 Geaendert?.Invoke();
                 await Dialog.Zeigen(VerknuepfungTexte.FrageTitel, text, Dialog.Ok);
             }

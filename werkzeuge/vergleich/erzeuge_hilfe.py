@@ -66,6 +66,8 @@ PAARE = [
     {"nr": "S1", "thema": "spiel",
      "alt": "Der Lernfortschritt gilt für alle gemeinsam.",
      "neu": "Der Lernfortschritt gilt für alle gemeinsam.\n\nIm Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle."},
+    # Phase 8 W2 (Weisung P8-3, Sammelliste 72, Nico 23.10.2026): "Vorladen" streichen, die C#-Linie laedt nicht vor
+    {"nr": "W5", "thema": "haenger", "alt": ", Vorladen)", "neu": ")"},
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT", "alt": REL_PY, "neu": REL_CS},
 ]
 

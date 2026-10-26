@@ -261,7 +261,8 @@ def zusammen(eingang, aus):
     with open(os.path.join(aus, "THIRD_PARTY_LICENSES.txt"), "w", encoding="utf-8", newline="\n") as d:
         d.write(lizenzen.volltexte(alle))
     rot = 1 if len(sammlungen) != 4 else 0
-    rot |= lizenzen.main_pruefen(os.path.join(WURZEL, "THIRD_PARTY_NOTICES.txt"), sammlungen)
+    rot |= lizenzen.main_pruefen(os.path.join(WURZEL, "THIRD_PARTY_NOTICES.txt"), sammlungen,
+                                 os.path.join(WURZEL, "THIRD_PARTY_LICENSES.txt"))
     text_pfad = os.path.join(os.path.dirname(os.path.abspath(aus)), "release.md")
     with open(text_pfad, "w", encoding="utf-8", newline="\n") as d:
         d.write(release_text(k, aus))

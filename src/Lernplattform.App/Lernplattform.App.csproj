@@ -21,7 +21,7 @@
     <EmbeddedResource Include="..\..\inhalte_csharp\spiel\*.json" LogicalName="inhalte_csharp/spiel/%(Filename)%(Extension)" Visible="false" />
     <EmbeddedResource Include="..\..\inhalte_csharp\grafik\*.*" LogicalName="inhalte_csharp/grafik/%(Filename)%(Extension)" Visible="false" />
     <!-- Fuer "Über das Programm": Lizenz und Hinweise zu Fremdbestandteilen -->
-    <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
+    <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt;..\..\THIRD_PARTY_LICENSES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

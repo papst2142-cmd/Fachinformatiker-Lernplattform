@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.13.1
+Kleine Verbesserungen, damit nichts verloren geht und alles flüssig bleibt.
+
+- Was du in einer laufenden Prüfung oder im Abschlussprojekt gerade tippst, wird jetzt auch vor einem Update sofort gespeichert und am Handy zuverlässig, sobald du die App verlässt. Vor einer Sicherung und beim Übernehmen eines Lernstands war das schon so.
+- Neuer Knopf „Lizenzen“ unter „Optionen“ → „Über das Programm“: Er zeigt die vollständigen Lizenztexte aller mitgelieferten Bausteine, jetzt auch am Handy. Jeder Baustein steht in einer eigenen Karte zum Aufklappen.
+- Die Fortschrittsringe auf der Startseite zeigen wieder einen sauberen Farbverlauf von einer Farbe zur anderen. Vorher sah man bei einem Teil-Fortschritt eine Farbe und ein Dreieck in einer anderen Farbe.
+- Unter Linux bleibt das Fenster bedienbar, während „Verknüpfung anlegen“ arbeitet.
+- Die Hilfe zur Hänger-Diagnose nennt das „Vorladen“ nicht mehr, weil es das in dieser Version nicht gibt.
+
 ## A 0.13.0
 Neu: Das Spiel ist jetzt in echtem 3D, am PC und am Handy gleich.
 
