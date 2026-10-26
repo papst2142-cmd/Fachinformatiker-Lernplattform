@@ -31,6 +31,12 @@ public static class UpdateDienst
     private static DateTime? _letzteAuto;
     private static string? _abgelehnt;
 
+    /// <summary>Phase 8 W2b: zuletzt gefundene neue Version (Anzeige), null solange keine gefunden wurde.</summary>
+    public static string? Verfuegbar { get; private set; }
+
+    /// <summary>Phase 8 W2b: eine Suche (beim Start oder von Hand) hat eine neue Version gefunden (Kurzzeile der Karte "Updates").</summary>
+    public static event Action<string>? Gefunden;
+
     /// <summary>Gerade offenes Update-Fenster (hoechstens eins).</summary>
     public static UpdateFenster? Fenster { get; internal set; }
 
@@ -172,6 +178,11 @@ public static class UpdateDienst
             {
                 _letzteAuto = DateTime.UtcNow;
             }
+        }
+        if (angebot is not null)
+        {
+            Verfuegbar = angebot.Version;
+            Gefunden?.Invoke(angebot.Version);
         }
         if (angebot is not null && Fenster is null && (vonHand || angebot.Version != _abgelehnt))
         {

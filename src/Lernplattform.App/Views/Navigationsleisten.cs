@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lernplattform.Core.Texte;
 using Lernplattform.Design;
+using Lernplattform.Programm;
 
 namespace Lernplattform.Views;
 
@@ -33,53 +35,288 @@ public sealed class Navigationsleisten
         UntereLeiste = BaueUntereLeiste();
     }
 
+    /// <summary>
+    /// Phase 8 W2b (Sammelliste 114/115): Seitenleiste wie Python 0.63.2 PC (Sidebar, NavRow): Logo-Ring 34
+    /// (Dicke 5, Punkt 12) mit "FI" (21 fett) und "Lernplattform" (11 muted); Eintraege in Gruppen mit kleiner
+    /// Ueberschrift (11 fett muted wie MENÜ), je Zeile Symbol 22 (Unterpunkte 20) und Text 14 fett text_dim
+    /// (Unterpunkte 13 muted), Aufklapp-Pfeil bei Karteikarten und Spiel; unten angeheftet Hilfe, Optionen,
+    /// Kasten LERNSTATUS (11 fett muted, Balken "Karten und Fragen bearbeitet" mit x / y) und Version (11 muted).
+    /// </summary>
     private Control BaueSeitenleiste()
     {
-        var liste = new StackPanel { Spacing = 2, Margin = new Thickness(10, 14) };
-        liste.Children.Add(new Border
-        {
-            Margin = new Thickness(6, 0, 6, 14),
-            Child = Schrift.Text(Texte.Programmname, "Mittel", FontWeight.Bold),
-        });
         foreach (var punkt in Texte.NavigationPc)
         {
-            liste.Children.Add(Eintrag(punkt, _seitenKnoepfe, 0));
-            if (punkt.Unter.Count > 0)
+            _punkte[punkt.Id] = punkt;
+        }
+        var oben = new StackPanel { Spacing = 1, Margin = new Thickness(12, 0, 12, 8) };
+        foreach (var (titel, ids) in Navigation.PcGruppen)
+        {
+            if (titel is not null)
             {
-                var unter = new StackPanel { Spacing = 2, IsVisible = false };
-                foreach (var u in punkt.Unter)
-                {
-                    unter.Children.Add(Eintrag(u, _seitenKnoepfe, 1));
-                }
-                _unterpunkte[punkt.Id] = unter;
-                liste.Children.Add(unter);
+                oben.Children.Add(Gruppe(titel));
+            }
+            foreach (var id in ids)
+            {
+                EintragMitUnterpunkten(_punkte[id], oben);
             }
         }
+        var unten = new StackPanel { Spacing = 1, Margin = new Thickness(12, 8, 12, 0) };
+        foreach (var id in Navigation.PcUnten)
+        {
+            EintragMitUnterpunkten(_punkte[id], unten);
+        }
+        var fuss = new StackPanel { Children = { unten, LernstatusKasten(), Version() } };
+        var rollen = new ScrollViewer { Content = oben, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+        var aufbau = new DockPanel();
+        var logo = LogoZeile();
+        DockPanel.SetDock(logo, Dock.Top);
+        DockPanel.SetDock(fuss, Dock.Bottom);
+        aufbau.Children.Add(logo);
+        aufbau.Children.Add(fuss);
+        aufbau.Children.Add(rollen);
+        _rollen = rollen;
         var leiste = new Border
         {
-            Width = 240,
+            Width = 244,
             BorderThickness = new Thickness(0, 0, 1, 0),
-            Child = new ScrollViewer { Content = liste },
+            Child = aufbau,
         };
-        // Breite waechst mit der Schrift mit, damit "Prüfungstrainer" einzeilig bleibt
-        leiste.Bind(Layoutable.WidthProperty, leiste.GetResourceObservable("Schrift.Normal", v => v is double d ? 240 * d / 14 : 240));
+        // Breite waechst mit der Schrift mit, damit "Abschlussprojekt" mit Symbol einzeilig bleibt
+        leiste.Bind(Layoutable.WidthProperty, leiste.GetResourceObservable("Schrift.Normal", v => v is double d ? 244 * d / 14 : 244));
         return leiste.Farbe(Border.BackgroundProperty, "Pinsel.sidebar").Farbe(Border.BorderBrushProperty, "Pinsel.border");
     }
 
+    private ScrollViewer? _rollen;
+    private readonly Dictionary<string, NavPunkt> _punkte = new(StringComparer.Ordinal);
+
+    /// <summary>Beschriftung eines Eintrags der Seitenleiste (Start-Test).</summary>
+    public string Titel(string id) => _punkte[id].Titel;
+    private readonly HashSet<string> _offen = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, TextBlock> _pfeile = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (Border Strich, TextBlock Symbol, TextBlock Text, bool Unter)> _seitenTeile = new(StringComparer.Ordinal);
+    private TextBlock? _statusWert;
+    private Grid? _statusSpur;
+    private int _statusLaeuft;
+
+    /// <summary>Logo wie Sidebar (pady 22/20, padx 20): Ring 34 mit Punkt 12, "FI" und "Lernplattform".</summary>
+    private static Control LogoZeile()
+    {
+        var ring = new VerlaufRing(1, "accent", "accent2", 5) { Width = 34, Height = 34 };
+        var punkt = new Border { Width = 12, Height = 12, CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
+            .Farbe(Border.BackgroundProperty, "Pinsel.accent2");
+        var marke = new Viewbox { VerticalAlignment = VerticalAlignment.Center, Child = new Grid { Width = 34, Height = 34, Children = { ring, punkt } } };
+        Mitwachsen(marke, 34);
+        Avalonia.Automation.AutomationProperties.SetAccessibilityView(marke, Avalonia.Automation.AccessibilityView.Raw);
+        var name = Schrift.Pt(Navigation.Logo, 21, FontWeight.Bold);
+        name.VerticalAlignment = VerticalAlignment.Center;
+        name.Margin = new Thickness(12, 0, 0, 0);
+        var zusatz = Schrift.Pt(Navigation.LogoZusatz, 11, FontWeight.Normal, "Pinsel.muted");
+        zusatz.VerticalAlignment = VerticalAlignment.Center;
+        zusatz.Margin = new Thickness(7, 7, 0, 0);
+        var zeile = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(20, 22, 20, 20), Children = { marke, name, zusatz } };
+        Avalonia.Automation.AutomationProperties.SetName(zeile, Texte.Programmname);
+        return zeile;
+    }
+
+    /// <summary>
+    /// Am PC waechst die ganze Seitenleiste mit der Schrift (wie apply_ui_scale in Python 0.63.2), auch Symbole
+    /// und Logo; sonst stuenden bei "Maximal" Symbole von 22 Punkten neben Text von 28.
+    /// </summary>
+    private static void SymbolMitwachsen(TextBlock symbol, double basis) =>
+        symbol.Bind(TextBlock.FontSizeProperty, symbol.GetResourceObservable("Schrift.Normal", v => v is double d ? basis * d / Schrift.Grundgroessen["Normal"] : basis));
+
+    private static void Mitwachsen(Control element, double basis)
+    {
+        element.Bind(Layoutable.WidthProperty, element.GetResourceObservable("Schrift.Normal", v => v is double d ? basis * d / Schrift.Grundgroessen["Normal"] : basis));
+        element.Bind(Layoutable.HeightProperty, element.GetResourceObservable("Schrift.Normal", v => v is double d ? basis * d / Schrift.Grundgroessen["Normal"] : basis));
+    }
+
+    /// <summary>Kleine Gruppen-Ueberschrift wie "MENÜ" (label 11 fett, muted, links 24 bzw. 12 im Rand der Liste).</summary>
+    private static TextBlock Gruppe(string titel)
+    {
+        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel.muted");
+        text.Margin = new Thickness(12, 10, 0, 6);
+        return text;
+    }
+
+    private void EintragMitUnterpunkten(NavPunkt punkt, Panel ziel)
+    {
+        ziel.Children.Add(Eintrag(punkt, _seitenKnoepfe, 0));
+        if (punkt.Unter.Count > 0)
+        {
+            var unter = new StackPanel { Spacing = 1, IsVisible = false };
+            foreach (var u in punkt.Unter)
+            {
+                unter.Children.Add(Eintrag(u, _seitenKnoepfe, 1));
+            }
+            _unterpunkte[punkt.Id] = unter;
+            ziel.Children.Add(unter);
+        }
+    }
+
+    /// <summary>
+    /// Zeile wie NavRow: Strich 4 x 20 links (nur aktiv, Verlauf accent), Symbol 22 (Unterpunkt 20, eingerueckt),
+    /// Text, bei Unterpunkten rechts der Pfeil (zu: nach unten, offen: nach oben).
+    /// </summary>
     private Button Eintrag(NavPunkt punkt, Dictionary<string, Button> ablage, int ebene)
     {
+        var unter = ebene > 0;
+        var strich = new Border { Width = 4, CornerRadius = new CornerRadius(2), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) }.HoeheMitSchrift(20);
+        var symbol = Symbole.Block(punkt.Symbol, unter ? 20 : 22, "Pinsel.muted");
+        SymbolMitwachsen(symbol, unter ? 20 : 22);
+        // Abstand als Rand eines Rahmens, nicht des Symbols (sonst gilt es in der Layoutpruefung als abgeschnitten)
+        var symbolRahmen = new Border { Padding = new Thickness(unter ? 20 : 8, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
+        var text = unter ? Schrift.Pt(punkt.Titel, 13, FontWeight.Normal, "Pinsel.muted") : Schrift.Pt(punkt.Titel, 14, FontWeight.Bold, "Pinsel.text_dim");
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.TextWrapping = TextWrapping.NoWrap;
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto") };
+        Grid.SetColumn(symbolRahmen, 1);
+        Grid.SetColumn(text, 2);
+        zeile.Children.Add(strich);
+        zeile.Children.Add(symbolRahmen);
+        zeile.Children.Add(text);
+        if (punkt.Unter.Count > 0)
+        {
+            var pfeil = Symbole.Block("chevron_right", 16, "Pinsel.muted");
+            SymbolMitwachsen(pfeil, 16);
+            pfeil.RenderTransform = new RotateTransform(90);
+            var pfeilRahmen = new Border { Padding = new Thickness(8, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center, Child = pfeil };
+            Grid.SetColumn(pfeilRahmen, 3);
+            zeile.Children.Add(pfeilRahmen);
+            _pfeile[punkt.Id] = pfeil;
+        }
         var knopf = new Button
         {
-            Content = Schrift.Text(punkt.Titel, ebene == 0 ? "Normal" : "Klein"),
+            Content = zeile,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(12 + 14 * ebene, 8, 12, 8),
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Padding = new Thickness(0, unter ? 8 : 9),
+            CornerRadius = new CornerRadius(10),
             Background = Brushes.Transparent,
         };
         Avalonia.Automation.AutomationProperties.SetName(knopf, punkt.Titel);
-        knopf.Click += (_, _) => _oeffnen(punkt.Id);
+        knopf.Click += (_, _) =>
+        {
+            // wie Sidebar._on_nav: Eintrag mit Unterpunkten klappt auf bzw. zu und oeffnet die Seite
+            if (_unterpunkte.ContainsKey(punkt.Id) && !_offen.Remove(punkt.Id))
+            {
+                _offen.Add(punkt.Id);
+            }
+            _oeffnen(punkt.Id);
+            Aufklappen();
+        };
         ablage[punkt.Id] = knopf;
+        _seitenTeile[punkt.Id] = (strich, symbol, text, unter);
         return knopf;
+    }
+
+    /// <summary>Kasten LERNSTATUS (card, Radius 14, Rand border, aussen 14, innen 14/12/10).</summary>
+    private Control LernstatusKasten()
+    {
+        var titel = Schrift.Pt(Navigation.Lernstatus, 11, FontWeight.Bold, "Pinsel.muted");
+        var name = Schrift.Pt(Core.Dashboard.DashboardTexte.SeitenleisteBalken, 13, FontWeight.Normal, "Pinsel.text_dim");
+        name.TextWrapping = TextWrapping.Wrap;
+        _statusWert = Schrift.Pt("", 13, FontWeight.Normal, "Pinsel.muted");
+        _statusWert.HorizontalAlignment = HorizontalAlignment.Right;
+        _statusSpur = new Grid { Height = 9, ColumnDefinitions = new ColumnDefinitions("0*,1000*") };
+        var hinten = new Border { CornerRadius = new CornerRadius(4.5) }.Farbe(Border.BackgroundProperty, "Pinsel.ring_bg");
+        Grid.SetColumnSpan(hinten, 2);
+        _statusSpur.Children.Add(hinten);
+        _statusSpur.Children.Add(new Border { CornerRadius = new CornerRadius(4.5), IsVisible = false }.Farbe(Border.BackgroundProperty, FarbenAnwenden.Paar("accent", "accent2")));
+        var kasten = new Border
+        {
+            Margin = new Thickness(14, 8, 14, 0),
+            Padding = new Thickness(14, 12, 14, 10),
+            CornerRadius = new CornerRadius(14),
+            BorderThickness = new Thickness(1),
+            Child = new StackPanel { Spacing = 6, Children = { titel, name, _statusWert, _statusSpur } },
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card").Farbe(Border.BorderBrushProperty, "Pinsel.border");
+        return kasten;
+    }
+
+    private static Control Version()
+    {
+        var text = Schrift.Pt(Beschriftungen.Einsetzen(Navigation.Fusszeile, Aktualisierung.Aktualisierung.Anzeige), 11, FontWeight.Normal, "Pinsel.muted");
+        text.HorizontalAlignment = HorizontalAlignment.Center;
+        text.Margin = new Thickness(0, 8, 0, 14);
+        return text;
+    }
+
+    /// <summary>Zeigt bearbeitet / gesamt im Kasten LERNSTATUS (Sidebar.update_status).</summary>
+    public void Lernstatus(long bearbeitet, int gesamt)
+    {
+        if (_statusWert is null || _statusSpur is null)
+        {
+            return;
+        }
+        _statusWert.Text = Core.Dashboard.DashboardTexte.DeInt(bearbeitet) + " / " + Core.Dashboard.DashboardTexte.DeInt(gesamt);
+        var anteil = (int)Math.Round(Math.Max(0, Math.Min(1, (double)bearbeitet / Math.Max(1, gesamt))) * 1000);
+        _statusSpur.ColumnDefinitions[0].Width = new GridLength(anteil, GridUnitType.Star);
+        _statusSpur.ColumnDefinitions[1].Width = new GridLength(1000 - anteil, GridUnitType.Star);
+        _statusSpur.Children[1].IsVisible = anteil > 0;
+        Avalonia.Automation.AutomationProperties.SetName(_statusSpur, Core.Dashboard.DashboardTexte.SeitenleisteBalken + " " + _statusWert.Text);
+    }
+
+    /// <summary>Liest den Lernstatus im Hintergrund neu (nach jedem Seitenwechsel; hoechstens eine Lesung zugleich).</summary>
+    public void LernstatusLesen()
+    {
+        if (Interlocked.Exchange(ref _statusLaeuft, 1) == 1)
+        {
+            return;
+        }
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (await Zustand.DashboardInhalte is { } inhalte)
+                {
+                    var pfad = System.IO.Path.Combine(Core.Daten.Ablage.Datenordner(), Core.Daten.Lernstand.DateiName);
+                    var (bearbeitet, gesamt) = Core.Dashboard.Lernstatus.Lesen(pfad, inhalte);
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => Lernstatus(bearbeitet, gesamt));
+                }
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _statusLaeuft, 0);
+            }
+        });
+    }
+
+    /// <summary>Start-Test: Unterpunkte eines Eintrags auf- bzw. zuklappen (ohne die Seite zu oeffnen).</summary>
+    public void Umschalten(string id)
+    {
+        if (!_offen.Remove(id))
+        {
+            _offen.Add(id);
+        }
+        Aufklappen();
+    }
+
+    /// <summary>Start-Test: Unterpunkte sichtbar?</summary>
+    public bool Offen(string id) => _unterpunkte.TryGetValue(id, out var unter) && unter.IsVisible;
+
+    /// <summary>Start-Test: Zeile "x / y" im Kasten LERNSTATUS (leer, bis sie gelesen ist).</summary>
+    public string LernstatusText => _statusWert?.Text ?? "";
+
+    /// <summary>Start-Test: Eintraege der Seitenleiste mit Symbol (Kennung, Symboltext).</summary>
+    public IEnumerable<(string Id, string Symbol)> SeitenSymbole => _seitenTeile.Select(t => (t.Key, t.Value.Symbol.Text ?? ""));
+
+    /// <summary>Unterpunkte zeigen bzw. verbergen, Pfeil drehen (offen: nach oben).</summary>
+    private void Aufklappen()
+    {
+        foreach (var (eltern, unter) in _unterpunkte)
+        {
+            var offen = _offen.Contains(eltern);
+            unter.IsVisible = offen;
+            if (_pfeile.TryGetValue(eltern, out var pfeil))
+            {
+                pfeil.RenderTransform = new RotateTransform(offen ? -90 : 90);
+            }
+        }
     }
 
     private Control BaueUntereLeiste()
@@ -139,11 +376,16 @@ public sealed class Navigationsleisten
         {
             Hervorheben(knopf, kennung == id);
         }
-        foreach (var (eltern, unter) in _unterpunkte)
+        // wie Sidebar.set_active: eine Unterseite klappt ihren Eintrag auf; der Eintrag selbst klappt per Tippen
+        foreach (var eltern in _unterpunkte.Keys)
         {
             var punkt = Texte.NavigationPc.First(p => p.Id == eltern);
-            unter.IsVisible = id == eltern || punkt.Unter.Any(u => u.Id == id);
+            if (punkt.Unter.Any(u => u.Id == id))
+            {
+                _offen.Add(eltern);
+            }
         }
+        Aufklappen();
         var unten = Texte.HandyZiel(id);
         foreach (var (kennung, (pille, aus, an)) in _untenTeile)
         {
@@ -162,7 +404,8 @@ public sealed class Navigationsleisten
         }
     }
 
-    private static void Hervorheben(Button knopf, bool aktiv)
+    /// <summary>NavRow.set_active: aktiv card_hi, Strich mit Verlauf, Text text, Symbol und Pfeil accent; sonst sidebar, muted/text_dim.</summary>
+    private void Hervorheben(Button knopf, bool aktiv)
     {
         if (aktiv)
         {
@@ -173,10 +416,30 @@ public sealed class Navigationsleisten
             knopf.ClearValue(Button.BackgroundProperty);
             knopf.Background = Brushes.Transparent;
         }
-        if (knopf.Content is TextBlock text)
+        var id = _seitenKnoepfe.First(k => k.Value == knopf).Key;
+        if (!_seitenTeile.TryGetValue(id, out var teile))
         {
-            text.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.text");
-            text.FontWeight = aktiv ? FontWeight.SemiBold : FontWeight.Normal;
+            return;
+        }
+        if (aktiv)
+        {
+            teile.Strich.Farbe(Border.BackgroundProperty, "Verlauf.accent");
+        }
+        else
+        {
+            teile.Strich.ClearValue(Border.BackgroundProperty);
+            teile.Strich.Background = Brushes.Transparent;
+        }
+        teile.Symbol.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.muted");
+        teile.Text.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.text" : teile.Unter ? "Pinsel.muted" : "Pinsel.text_dim");
+        if (_pfeile.TryGetValue(id, out var pfeil))
+        {
+            pfeil.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.muted");
+        }
+        if (aktiv)
+        {
+            // Sidebar.set_active (B-D-09): den aktiven Eintrag ganz ins Bild rollen
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => knopf.BringIntoView(), Avalonia.Threading.DispatcherPriority.Loaded);
         }
     }
 }

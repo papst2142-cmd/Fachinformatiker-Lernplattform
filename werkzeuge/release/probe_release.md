@@ -1,21 +1,22 @@
-Kleine Verbesserungen, damit nichts verloren geht und alles flüssig bleibt.
+Aufgeräumte Seitenleiste am PC und übersichtlichere Optionen.
 
-- Was du in einer laufenden Prüfung oder im Abschlussprojekt gerade tippst, wird jetzt auch vor einem Update sofort gespeichert und am Handy zuverlässig, sobald du die App verlässt. Vor einer Sicherung und beim Übernehmen eines Lernstands war das schon so.
-- Neuer Knopf „Lizenzen“ unter „Optionen“ → „Über das Programm“: Er zeigt die vollständigen Lizenztexte aller mitgelieferten Bausteine, jetzt auch am Handy. Jeder Baustein steht in einer eigenen Karte zum Aufklappen.
-- Die Fortschrittsringe auf der Startseite zeigen wieder einen sauberen Farbverlauf von einer Farbe zur anderen. Vorher sah man bei einem Teil-Fortschritt eine Farbe und ein Dreieck in einer anderen Farbe.
-- Unter Linux bleibt das Fenster bedienbar, während „Verknüpfung anlegen“ arbeitet.
-- Die Hilfe zur Hänger-Diagnose nennt das „Vorladen“ nicht mehr, weil es das in dieser Version nicht gibt.
+- Die Seitenleiste am PC zeigt wieder das Logo und vor jedem Eintrag ein Symbol, wie am Handy. Die Einträge stehen in Gruppen mit kleinen Überschriften: oben das Dashboard, dann „Lernen“ (Karteikarten, Prüfungstrainer, AP1- und AP2-Szenarien, Testprojekt, Abschlussprojekt, Fortschritt), „Spiel“ und „Werkzeuge“ (Notizblock, Rechner). Hilfe und Optionen stehen immer sichtbar unten.
+- Karteikarten und Spiel haben einen kleinen Pfeil: Ein Klick klappt die Unterpunkte auf oder zu. Der gewählte Eintrag ist hervorgehoben.
+- Unten in der Seitenleiste zeigt der Kasten „Lernstatus“, wie viele Karten und Fragen du schon bearbeitet hast, mit Balken, darunter die Versionsnummer.
+- Die Optionen sind in Gruppen geordnet: Lernen, Aussehen, Spiel, Daten und Programm. Jede Karte ist zuerst zugeklappt und zeigt nur ihren Titel und eine kurze Zeile; ein Tippen öffnet sie. Gibt es ein Update, steht das schon in der kurzen Zeile der Karte „Updates“.
+- Die Suche findet weiterhin jeden Bereich der Optionen und klappt ihn auf.
+- Am Handy bleibt die untere Leiste, wie sie war.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.13.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.13.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.13.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.13.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.13.1-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.13.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.13.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.13.2-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

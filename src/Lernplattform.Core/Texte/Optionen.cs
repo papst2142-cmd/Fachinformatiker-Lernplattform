@@ -153,4 +153,45 @@ public static class Optionen
         liste.Insert(liste.FindIndex(b => b.Id == Lerninhalte), AusbildungBereich);
         return liste;
     }
+
+    // -- Phase 8 W2b (Sammelliste 116, Nico 26.10.2026): Gruppen, alle Karten zugeklappt ----------
+
+    public const string GruppeLernen = "LERNEN";
+    public const string GruppeAussehen = "AUSSEHEN";
+    public const string GruppeSpiel = "SPIEL";
+    public const string GruppeDaten = "DATEN";
+    public const string GruppeProgramm = "PROGRAMM";
+
+    /// <summary>Gruppen der Optionen-Seite mit den Bereichen in Anzeigereihenfolge ("Datenbank" nur am PC).</summary>
+    public static readonly IReadOnlyList<(string Titel, IReadOnlyList<string> Ids)> Gruppen =
+    [
+        (GruppeLernen, [Ausbildung, Tagesziel, Lerninhalte]),
+        (GruppeAussehen, [Optik]),
+        (GruppeSpiel, [Spiel]),
+        (GruppeDaten, [Abgleich, Sicherung, Datenbank, Loeschen]),
+        (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber]),
+    ];
+
+    /// <summary>Die angezeigten Bereiche (<see cref="AlleFuer"/>) nach <see cref="Gruppen"/> geordnet; fehlende ("nur PC") entfallen.</summary>
+    public static IReadOnlyList<(string Titel, IReadOnlyList<OptionenBereich> Bereiche)> Gruppieren(IReadOnlyList<OptionenBereich> angezeigt) =>
+        [.. Gruppen.Select(g => (g.Titel, (IReadOnlyList<OptionenBereich>)[.. g.Ids.Select(id => angezeigt.FirstOrDefault(b => b.Id == id)).OfType<OptionenBereich>()]))];
+
+    // Kurzzeilen fuer Bereiche ohne Untertitel (jede Karte zeigt zugeklappt Titel und Kurzzeile)
+    public const string LerninhalteKurz = "Anzahl der Inhalte und Rahmenplan";
+    public const string DatenbankKurz = "Speicherort des Lernstands";
+    public const string UeberKurz = "Version und Lizenzen";
+
+    /// <summary>
+    /// Kurzzeile einer zugeklappten Karte: der Untertitel (<see cref="OptionenBereich.UntertitelPc"/>, "%s" = Version),
+    /// sonst eine eigene Zeile; <see cref="Bereiche"/> bleibt wie G9.
+    /// </summary>
+    public static string Kurzzeile(OptionenBereich bereich) => bereich.UntertitelPc ?? bereich.Id switch
+    {
+        Ausbildung => PruefungTexte.AusbildungTitel,
+        Lerninhalte => LerninhalteKurz,
+        Datenbank => DatenbankKurz,
+        Spiel => Beschriftungen.Platzhalter,
+        Ueber => UeberKurz,
+        _ => throw new KeyNotFoundException(bereich.Id),
+    };
 }
