@@ -91,7 +91,8 @@ public static class LernTeile
         var wahl = new RadioButton
         {
             GroupName = gruppe,
-            Content = Schrift.Text(text, "Normal", FontWeight.Normal, "Pinsel.text_soft"),
+            // Fix A 0.14.2 (Weisung P8-9): sehr lange Woerter bleiben ganz (LernText)
+            Content = new LernText(text, "Normal", FontWeight.Normal, "Pinsel.text_soft"),
             Tag = text,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };

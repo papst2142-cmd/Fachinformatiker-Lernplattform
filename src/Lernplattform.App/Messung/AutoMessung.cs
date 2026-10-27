@@ -460,7 +460,7 @@ public static partial class AutoMessung
         if (MitLernen)
         {
             Messwerte.Notiere("  darin Welle 3: Fortschritt (je Ebene der Abdeckung die erste Zeile aufgeklappt) und Suche mit den Treffern zu \"Subnetz\"");
-            Messwerte.Notiere("  dazu je Stufe und Groesse 9 Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen");
+            Messwerte.Notiere(string.Create(inv, $"  dazu je Stufe und Groesse {9 + Core.Inhalte.Fachbereiche.Alle.Count} Ansichten der Welle 2: Karteikarten nach dem Pruefen (3 Modi, laengster Themenname), je Fachbereich die Karte mit dem laengsten Wort (Fix A 0.14.2), Pruefungstrainer Frage und Ergebnis, Uebernahme Vorschau, Ergebnis und Fehler, Rueckfrage Abbrechen"));
             Messwerte.Notiere("  und 6 Ansichten der Rechner-Seite (Phase 3), jeweils mit offenem Rechenweg: IPv6 Netzdaten, 2001:db8::/32 in 4.294.967.296 Subnetze (letzte Seite), Hostbedarf mit 12 Zeilen, Fehleingabe RAID, USV zu klein, Reiter Trainer");
             Messwerte.Notiere("  und 9 weitere Ansichten des Rechen-Trainers (Phase 3, W3, ohne Speichern): je IPv6, Nach Hostbedarf, Netz aufteilen, IPv4 Schwer offen und geprueft, Auswertung");
             Messwerte.Notiere("  und 13 Ansichten der Welle W4a (Phase 3): Datenmengen 4,7 GB, 10^12 TiB, 0,001 Bit, Fehleingabe; Uebertragung Vorgabe, 10^12 TiB mit 0,001 kbit/s bei 0,1 %, 0,001 Byte mit 1.000.000 Gbit/s; Bild und Video; Trainer Datenmengen und Uebertragungsdauer Schwer offen und geprueft, Eingabefehler");
@@ -573,6 +573,14 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             yield return ("cards/" + KartenTexte.Modi[art].Wert, art);
         }
+        // Fix A 0.14.2 (Weisung P8-9): je Fachbereich die Karte mit dem laengsten Wort (Frage, Antworten,
+        // Musterloesung) nach dem Pruefen mit Multiple Choice, damit kein Fund vom Datum (der gezeigten Karte) abhaengt
+        foreach (var (fachbereich, frage) in KartenMitLaengstemWort(inhalte))
+        {
+            karten.Probe(1, frage);
+            await ansicht.BildFertigAsync();
+            yield return ("cards/laengstes_wort/" + fachbereich, 3);
+        }
         karten.Probe(-1);
         await ansicht.ZeigeAsync(Seiten.Trainer);
         for (var art = 0; art < 2; art++)
@@ -599,6 +607,27 @@ public static partial class AutoMessung
             Dialog.AlleSchliessen();
         }
         await ansicht.BildFertigAsync();
+    }
+
+    /// <summary>
+    /// Fix A 0.14.2: je Fachbereich (Reihenfolge wie die Seitenleiste) die Frage der Karteikarte mit dem laengsten
+    /// Wort in Frage, Antworten und Musterloesung (Zeichen bis zum naechsten Leerraum; bei Gleichstand die erste Karte).
+    /// </summary>
+    internal static List<(string Fachbereich, string Frage)> KartenMitLaengstemWort(Lerninhalte inhalte)
+    {
+        static int Laengstes(Lerninhalt k) =>
+            new[] { k.Frage, k.Antwort, k.Text("a_full") }.Concat(k.Optionen)
+                .SelectMany(t => (t ?? "").Split([' ', '\u00A0', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries))
+                .Select(w => w.Length).DefaultIfEmpty(0).Max();
+        var liste = new List<(string, string)>();
+        foreach (var fachbereich in Core.Inhalte.Fachbereiche.Alle)
+        {
+            if (inhalte.Karteikarten.Where(k => k.Fachbereich == fachbereich && k.Frage is not null).MaxBy(Laengstes) is { } karte)
+            {
+                liste.Add((fachbereich, karte.Frage!));
+            }
+        }
+        return liste;
     }
 
     /// <summary>Bericht mit allen Zeilen und Hinweisen (grosse Zahlen), nur fuer die Anzeige.</summary>

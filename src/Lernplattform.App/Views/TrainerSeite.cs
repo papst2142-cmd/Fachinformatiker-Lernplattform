@@ -272,9 +272,10 @@ public sealed class TrainerSeite : UserControl
         DockPanel.SetDock(rechts, Dock.Right);
         _uebungTeil.Children.Add(Schrift.Karte(new DockPanel { Children = { rechts, _fortschritt } }));
 
-        _frage = Schrift.Text(TrainerTexte.StartHinweis, "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
+        // Fix A 0.14.2 (Weisung P8-9): LernText wie bei den Karteikarten, sehr lange Woerter bleiben ganz
+        _frage = new LernText(TrainerTexte.StartHinweis, "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
         _optionen = new StackPanel { Spacing = 6 };
-        _erklaerung = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        _erklaerung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
         _hinweisKurz = Schrift.Text(TrainerTexte.HinweisKurz, "Klein", FontWeight.Normal, "Pinsel.muted");
         _hinweisKurz.IsVisible = false;
         _uebungTeil.Children.Add(Schrift.Karte(new StackPanel
