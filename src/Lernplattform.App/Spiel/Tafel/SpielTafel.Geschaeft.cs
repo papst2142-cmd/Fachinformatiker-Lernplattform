@@ -26,6 +26,8 @@ public sealed partial class SpielTafel
         {
             return;
         }
+        // Phase 8 W6: das Sortiment folgt der Festzeit, mit der der Innenraum gebaut wurde
+        _s.Geschaefte.Festzeit = _s.Spiel.Innen?.Fest ?? _s.Spiel.Szene.Fest;
         if (typ is not null)
         {
             _teileTyp = typ;

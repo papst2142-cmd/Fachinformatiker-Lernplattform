@@ -35,7 +35,9 @@ public class SpielGrafikTests
             Assert.Equal(eintrag.GetProperty("dreiecke").GetInt32(), m.Dreiecke);
             Assert.True(m.Dreiecke > 0);
             Assert.All(m.Ecken, e => Assert.True(float.IsFinite(e)));
-            Assert.Equal(eintrag.GetProperty("min")[1].GetDouble(), m.Min.Y, 3);
+            // modelle.json rundet auf 4 Stellen: hoechstens 0,00005 Abstand (strenger als der fruehere Vergleich auf 3 gerundete
+            // Stellen, der an der Rundungsgrenze faelschlich rot war: hw-skull_candle 0,0575 gegen 0,057455)
+            Assert.True(Math.Abs(eintrag.GetProperty("min")[1].GetDouble() - m.Min.Y) <= 0.00005 + 1e-6, eintrag.GetProperty("name").GetString());
         }
         // Groessenziel Plan Abschnitt 6: alle Spielgrafiken hoechstens 10 MB
         Assert.True(new FileInfo(Path.Combine(Ordner, "modelle.bin")).Length < 10_000_000);
@@ -123,9 +125,9 @@ public class SpielGrafikTests
             Assert.NotNull(bib.Modell(name));
         }
         // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Zug (Schienen seit P7-10 Nachtrag 1 eigene Geometrie),
-        // seit W5 Moebel der Innenraeume und die Figur
+        // seit W5 Moebel der Innenraeume und die Figur, seit Phase 8 W6 die Fest-Deko aus festzeiten.json
         var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c", Figur.Modell }
-            .Concat(Innenraum.Modelle).ToList();
+            .Concat(Innenraum.Modelle).Concat(FestDeko.Modelle(FestDekoTests.Daten.Value)).ToList();
         foreach (var m in bib.Modelle)
         {
             Assert.True(bib.Bloecke.Values.Contains(m.Name) || fest.Contains(m.Name), m.Name + " wird nicht genutzt");
@@ -148,6 +150,9 @@ public class SpielGrafikTests
             ["characters"] = "Grafik Kenney Animated Characters 3",
             ["kaykit_moebel"] = "Grafik KayKit Furniture Bits",
             ["modular"] = "Grafik Kenney Modular Buildings",
+            ["kaykit_halloween"] = "Grafik KayKit Halloween Bits",
+            ["kaykit_holiday"] = "Grafik KayKit Holiday Bits",
+            ["cube_pets"] = "Grafik Kenney Cube Pets",
         };
         foreach (var paket in genutzt)
         {

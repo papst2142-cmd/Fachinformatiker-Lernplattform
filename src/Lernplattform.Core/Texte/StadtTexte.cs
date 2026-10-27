@@ -24,8 +24,8 @@ public static class StadtTexte
     public const string Kopfzeile = "Tag {0} · {1} Uhr";
     public const string HilfeSatz = "Im Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle.";
 
-    /// <summary>Phase 8 W5 (Weisung P8-7 B2, Paar H1): Absatz der Hilfe zur Stadt in 3D, mit Kaufhaus und Bett.</summary>
-    public const string HilfeStadt = "Du bewegst dich durch eine Stadt in 3D: Tippe oder klicke auf einen Weg oder ein Haus, dann geht deine Figur dorthin. Im Möbelhaus und im Elektromarkt kaufst du ein, im Kaufhaus Kleidung für deine Figur. In der Bank nimmst du Kredite auf, auf dem Amt gründest du deine Firma. Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause. Zum Feierabend gehst du zu Hause ins Bett. Kann dein Gerät keine 3D-Grafik zeigen, stehen die Orte in einer Liste.";
+    /// <summary>Phase 8 W5 (Weisung P8-7 B2, Paar H1): Absatz der Hilfe zur Stadt in 3D, mit Kaufhaus und Bett; Phase 8 W6 (Paar F1): Festzeiten.</summary>
+    public const string HilfeStadt = "Du bewegst dich durch eine Stadt in 3D: Tippe oder klicke auf einen Weg oder ein Haus, dann geht deine Figur dorthin. Im Möbelhaus und im Elektromarkt kaufst du ein, im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung. In der Bank nimmst du Kredite auf, auf dem Amt gründest du deine Firma. Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause. Zum Feierabend gehst du zu Hause ins Bett. Kann dein Gerät keine 3D-Grafik zeigen, stehen die Orte in einer Liste.";
     public const string Warten = "Warten";
     public const string Verlassen = "Spiel verlassen";
 

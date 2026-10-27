@@ -42,6 +42,12 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
 
     public PyObjekt Daten { get; } = daten;
 
+    /// <summary>
+    /// Phase 8 W6: die Festzeit, mit der die Ansicht zuletzt gebaut wurde (null = keine); bestimmt die Festkleidung
+    /// im Sortiment des Kaufhauses. Setzt die Oberflaeche beim Aufbau einer Ansicht.
+    /// </summary>
+    public string? Festzeit { get; set; }
+
     /// <summary>Das Sortiment eines Geschaefts in der Reihenfolge der Datei (erst Moebel, dann Teile).</summary>
     public List<Ware> Waren(string laden)
     {
@@ -66,7 +72,7 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
         }
         if (laden == Kleidung.Laden)
         {
-            waren.AddRange(Kleidung.Sortiment(Daten).Select(k => new Ware(Kleidung.Art, k.Id, k.Name, k.Preis, k.Slot)));
+            waren.AddRange(Kleidung.Sortiment(Daten, Festzeit).Select(k => new Ware(Kleidung.Art, k.Id, k.Name, k.Preis, k.Slot)));
         }
         return waren;
     }

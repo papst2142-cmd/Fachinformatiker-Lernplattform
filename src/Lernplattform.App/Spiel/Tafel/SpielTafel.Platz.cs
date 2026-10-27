@@ -205,7 +205,7 @@ public sealed partial class SpielTafel
         var zeilen = new List<Control?>();
         foreach (var stelle in Kleidung.Stellen(g.Daten))
         {
-            var eigene = Kleidung.Sortiment(g.Daten).Where(k => k.Slot == stelle.Id && stand.Kleider.ContainsKey(k.Id)).ToList();
+            var eigene = Kleidung.Alle(g.Daten).Where(k => k.Slot == stelle.Id && stand.Kleider.ContainsKey(k.Id)).ToList();
             if (eigene.Count == 0)
             {
                 continue;

@@ -61,7 +61,7 @@ public static partial class AutoMessung
     private static StadtSpiel Frisch(SpielSeite seite)
     {
         var alt = seite.Spiel!;
-        var neu = SpielStart.Neu(alt.Stadt, alt.Grafik, alt.Innenraeume, alt.GeschaefteDaten);
+        var neu = SpielStart.Neu(alt.Stadt, alt.Grafik, alt.Innenraeume, alt.GeschaefteDaten, alt.Feste, Core.Spiel.Festzeit.Heute);
         seite.SpielSetzen(neu);
         return neu;
     }

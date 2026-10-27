@@ -32,12 +32,18 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - CommunityToolkit.Mvvm (8.4.2) | MIT | https://github.com/CommunityToolkit/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
 - Grafik KayKit Furniture Bits (1.0) | CC0-1.0 | https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0 (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
   Wartestuehle, Sessel und Bild in Bank und Amt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
+- Grafik KayKit Halloween Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/halloween-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+  Deko zur Festzeit Halloween im Spiel (Kuerbisse, Laterne, Grabsteine, kahler Baum, Totenkopf-Kerze), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
+- Grafik KayKit Holiday Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/holiday-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+  Deko zur Festzeit Weihnachten im Spiel (Weihnachtsbaum, Geschenke, Schneemaenner, Laterne, Lebkuchenhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
 - Grafik Kenney Animated Characters 3 (1.1) | CC0-1.0 | https://kenney-assets.itch.io/animated-characters-3 (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
   Spielfigur und Personen im Spiel (feste Haltung), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
 - Grafik Kenney City Kit Commercial (2.1) | CC0-1.0 | https://opengameart.org/content/city-kit-commercial (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
   Haeuser der Stadt im Spiel (Buero, Laeden, Wohnhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
 - Grafik Kenney City Kit Suburban (1.0) | CC0-1.0 | https://kenney-assets.itch.io/city-kit-suburban (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
   Wohnhaeuser und Baeume der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
+- Grafik Kenney Cube Pets (2.0) | CC0-1.0 | https://kenney.nl/assets/cube-pets (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+  Osterhase und Kueken zur Festzeit Ostern im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
 - Grafik Kenney Furniture Kit (1.0) | CC0-1.0 | https://opengameart.org/content/furniture-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
   Moebel der Innenraeume im Spiel (Buero, Wohnung, Kunden), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
 - Grafik Kenney Modular Buildings (2.1) | CC0-1.0 | https://kenney-assets.itch.io/modular-buildings (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64

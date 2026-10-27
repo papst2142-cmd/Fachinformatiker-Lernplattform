@@ -115,6 +115,12 @@ public sealed class StadtSzene
     /// </summary>
     public IReadOnlyList<(Vector2 Mitte, float R)> Baeume { get; private init; } = [];
 
+    /// <summary>Phase 8 W6: die Festzeit, mit der die Szene gebaut wurde (null = keine).</summary>
+    public string? Fest { get; private init; }
+
+    /// <summary>Phase 8 W6: die gesetzte Fest-Deko (leer ohne Festzeit).</summary>
+    public IReadOnlyList<FestDeko.Gesetzt> FestGesetzt { get; private init; } = [];
+
     /// <summary>Linien, auf denen kein Baum stehen darf, mit halber Breite (Strassen, Fusswege, Gleise, Fluss mit Ufer).</summary>
     public IReadOnlyList<(IReadOnlyList<Vector2> Linie, float Halb)> BaumSperren { get; private init; } = [];
 
@@ -309,7 +315,8 @@ public sealed class StadtSzene
     /// ohne Geometrie (Bauen braucht am PC rund 160 ms und 12 MB; vorher baute jede Ankunft die ganze
     /// Stadt neu, nur um die Signatur zu vergleichen). Gleich <c>Bauen(stadt, stand).Signatur</c>.
     /// </summary>
-    public static string SignaturFuer(Stadt stadt, Spielstand? stand)
+    /// <remarks>Phase 8 W6: mit Festzeit steht "fest:&lt;festzeit&gt;" angehaengt am Ende.</remarks>
+    public static string SignaturFuer(Stadt stadt, Spielstand? stand, string? fest = null)
     {
         var inhalt = stadt.Inhalt;
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
@@ -325,6 +332,10 @@ public sealed class StadtSzene
         {
             signatur.Add(Py.Str(ort["id"]) + ":" + string.Join(",", StadtModelle.Teile(modelle, Py.Str(ort["modell"]), k).Select(t => t.Nr)));
         }
+        if (fest is not null)
+        {
+            signatur.Add("fest:" + fest);
+        }
         return string.Join(";", signatur);
     }
 
@@ -333,7 +344,11 @@ public sealed class StadtSzene
     /// <paramref name="grafik"/> stehen statt der eigenen Bloecke, Baeume und Schienen die CC0-Modelle
     /// (Zuordnung je Block in zuordnung.json; Bloecke ohne Zuordnung bleiben eigene Geometrie).
     /// </summary>
-    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null)
+    /// <remarks>
+    /// Phase 8 W6: <paramref name="fest"/> = Festzeit (null = keine, die Szene wie vorher), <paramref name="feste"/> =
+    /// Inhalt von festzeiten.json; die Deko kommt nur angehaengt dazu (<see cref="FestDeko.Stadt"/>).
+    /// </remarks>
+    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null)
     {
         var stuecke = new List<ModellStueck>();
         var inhalt = stadt.Inhalt;
@@ -494,6 +509,11 @@ public sealed class StadtSzene
         {
             Zug(stuecke, grafik, gleise);
         }
+        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse);
+        if (fest is not null)
+        {
+            signatur.Add("fest:" + fest);
+        }
         var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
@@ -501,6 +521,8 @@ public sealed class StadtSzene
             Baeume = baeume.Gesetzt,
             BaumSperren = baeume.Sperren,
             Uebergaenge = uebergaenge,
+            Fest = fest,
+            FestGesetzt = festGesetzt,
         };
     }
 

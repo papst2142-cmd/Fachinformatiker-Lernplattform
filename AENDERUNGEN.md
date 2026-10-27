@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.16.0
+Neu im Spiel: Festzeiten. Zu Ostern, Halloween, Weihnachten und Silvester ist die Stadt geschmückt.
+
+- Das Spiel schaut auf das Datum deines Geräts. Von Palmsonntag bis Ostermontag ist Ostern, vom 24. Oktober bis 1. November Halloween, vom 1. bis 26. Dezember Weihnachten und vom 27. Dezember bis 1. Januar Silvester. In dieser Zeit ist die Stadt passend geschmückt, an den übrigen Tagen sieht sie aus wie bisher.
+- An den Haustüren stehen dann zum Beispiel Kürbisse und Laternen, Geschenke mit einem Kranz über der Tür, Raketen mit Konfetti oder Ostereier und Blumenbeete. Im Park im Südwesten gibt es zu jeder Festzeit einen eigenen Platz: einen Halloween-Friedhof, einen großen Weihnachtsbaum mit Schneemann, Raketen mit Feuerwerk am Himmel oder einen Osterhasen mit Küken und vielen bunten Eiern.
+- Auch drinnen ist geschmückt: in den Geschäften, im Büro, bei der Bank, auf dem Amt und bei den Kunden, je nach Platz in einer Ecke und am Eingang, in deiner Wohnung an einem festen Platz im Wohnraum neben der Tür. Steht dort eines deiner Möbel, bleibt der Schmuck weg. Die Deko steht nie im Weg: Personen, Waren und der Ausgang bleiben immer erreichbar.
+- Im Kaufhaus gibt es in jeder Festzeit zwei passende Stücke für deine Figur: Hexenhut und Kürbis-Pullover zu Halloween, Weihnachtsmütze und grünen Weihnachtspullover zu Weihnachten, Partyhut und goldenes Glitzerhemd zu Silvester, Hasenohren und hellgrünes T-Shirt zu Ostern. Die Schaufensterpuppen tragen sie dann. Was du gekauft hast, behältst du und kannst es jederzeit tragen, auch nach der Festzeit und auf deinen anderen Geräten.
+- Die Hilfe erklärt die Festzeiten im Abschnitt zum Spiel.
+
 ## A 0.15.0
 Neu im Spiel: das Kaufhaus mit Kleidung für deine Figur, und Feierabend über das Bett.
 

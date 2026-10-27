@@ -17,9 +17,10 @@ namespace Lernplattform.Spiel;
 public sealed class SpielSitzung
 {
     public SpielSitzung(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, Lerninhalte? lernen, Suchtext? suche,
-        LernstandSchreiber schreiber, string geraet, PyObjekt? geschaefte = null)
+        LernstandSchreiber schreiber, string geraet, PyObjekt? geschaefte = null, PyObjekt? feste = null)
     {
         Stadt = stadt;
+        Feste = feste;
         Geschaefte = geschaefte is null ? null : new Geschaefte(stadt.Inhalt, geschaefte);
         Grafik = grafik;
         Innenraeume = innenraeume;
@@ -74,6 +75,9 @@ public sealed class SpielSitzung
     /// <summary>W7: Sortiment und Preise von Moebelhaus und Elektromarkt (geschaefte.json).</summary>
     public Geschaefte? Geschaefte { get; }
 
+    /// <summary>Phase 8 W6: Fest-Deko (festzeiten.json); die Festzeit fragt jede Ansicht beim Aufbau ueber <see cref="Festzeit.Heute"/>.</summary>
+    public PyObjekt? Feste { get; }
+
     public Lerninhalte? Lernen { get; }
 
     public Suchtext? Suche { get; }
@@ -110,8 +114,8 @@ public sealed class SpielSitzung
     }
 
     private StadtSpiel Neu() => Verwaltung.Ablauf is { } ablauf && ablauf.Stand.Profil is not null
-        ? new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume, Geschaefte?.Daten)
-        : SpielStart.Neu(Stadt, Grafik, Innenraeume, Geschaefte?.Daten);
+        ? new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute)
+        : SpielStart.Neu(Stadt, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute);
 
     /// <summary>
     /// Nach jeder Aenderung: gehoert die Stadt noch zum aktiven Durchgang (mit Figur), nur auffrischen,

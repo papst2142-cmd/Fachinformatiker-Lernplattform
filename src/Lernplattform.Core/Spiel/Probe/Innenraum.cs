@@ -46,8 +46,10 @@ public sealed class Innenraum
     private readonly List<(Netz Netz, Matrix4x4 Lage)> _puppen = [];
 
     private Innenraum(string ansicht, string ort, PyObjekt gebaeude, List<InnenPerson> personen, GrafikBibliothek? grafik, PyObjekt? boeden,
-        PyObjekt? kleider = null)
+        PyObjekt? kleider = null, string? fest = null, PyObjekt? feste = null)
     {
+        Fest = fest;
+        _festDaten = feste;
         Kleiderdaten = kleider;
         Ansicht = ansicht;
         Ort = ort;
@@ -59,9 +61,32 @@ public sealed class Innenraum
         var (sx, sz) = Wege.StartPlatz(gebaeude);
         StartX = (float)sx;
         StartZ = (float)sz;
-        Lauf = new LaufOrt(gebaeude, [.. personen.Select(p => (object?)p.Daten)]);
+        var leute = personen.Select(p => (object?)p.Daten).ToList();
+        // Phase 8 W6: Fest-Deko als Hindernis in einer Kopie des Grundrisses (nur Laufwege der Darstellung)
+        var muster = FestDeko.Muster(feste, fest);
+        if (muster is not null)
+        {
+            var ziele = Geschaefte.Laeden.Contains(ort)
+                ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", gebaeude } })
+                    .Select(d => (Py.F(d["x"]) + (Py.F(d["w"]) / 2), Py.F(d["y"]) + (Py.F(d["h"]) / 2),
+                        Wohnung.MoebelReichweite + 0.3 + (Math.Max(Py.F(d["w"]), Py.F(d["h"])) / 2))).ToList()
+                : [];
+            _festPlan = FestDeko.InnenPlanen(ort, gebaeude, leute, grafik, feste, muster, ort == OrtZuhause, ziele);
+            _festMuster = muster;
+        }
+        Lauf = _festPlan?.Lauf ?? new LaufOrt(gebaeude, leute);
         Aufbauen(boeden);
     }
+
+    private readonly FestDeko.InnenPlan? _festPlan;
+    private readonly PyObjekt? _festDaten;
+    private readonly PyObjekt? _festMuster;
+
+    /// <summary>Phase 8 W6: die Festzeit, mit der dieser Innenraum gebaut wurde (null = keine).</summary>
+    public string? Fest { get; }
+
+    /// <summary>Phase 8 W6: die gesetzte Fest-Deko (leer ohne Festzeit oder ohne freien Platz).</summary>
+    public IReadOnlyList<FestDeko.Gesetzt> FestGesetzt => _festPlan?.Gesetzt ?? [];
 
     /// <summary>"buero", "zuhause", "filiale", "kunde:&lt;id&gt;" oder "serverfarm".</summary>
     public string Ansicht { get; }
@@ -201,7 +226,8 @@ public sealed class Innenraum
     /// Filiale nicht eroeffnet, Serverfarm ohne innenraeume.json). <paramref name="innenraeume"/>:
     /// Inhalt von innenraeume.json; <paramref name="geschaefte"/>: Inhalt von geschaefte.json (Kleidung im Kaufhaus).
     /// </summary>
-    public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null)
+    public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null,
+        string? fest = null, PyObjekt? feste = null)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -224,7 +250,7 @@ public sealed class Innenraum
                     personen.Add(Person(kopie, false));
                 }
             }
-            return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null);
+            return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null, null, fest, feste);
         }
         if (Geschaefte.Laeden.Contains(ort) || Schalter.Orte.Contains(ort))
         {
@@ -236,7 +262,7 @@ public sealed class Innenraum
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
-            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null, geschaefte);
+            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null, geschaefte, fest, feste);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -255,7 +281,7 @@ public sealed class Innenraum
         var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
         var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
-        return new Innenraum(ansicht!, ort, gebaeude, leute, grafik, boeden);
+        return new Innenraum(ansicht!, ort, gebaeude, leute, grafik, boeden, null, fest, feste);
     }
 
     /// <summary>
@@ -529,10 +555,24 @@ public sealed class Innenraum
         Aussenwaende(Objekt(flur["eingang"]));
         var deko = Liste(Gebaeude["raeume"]).Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko"))
             .Concat(ListeOderLeer(flur, "deko")).Select(Objekt);
+        if (Fest is not null && Ort == Kleidung.Laden)
+        {
+            // Phase 8 W6: die ersten Puppen im Flur tragen die Festkleidung
+            _festPuppen = [.. ListeOderLeer(flur, "deko").Select(Objekt).Where(d => Py.Gleich(d["typ"], "puppe")).Take(FestDeko.Puppen(_festDaten))];
+        }
         foreach (var d in deko)
         {
             Deko(d);
             signatur.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{d["typ"]}@{Py.F(d["x"])},{Py.F(d["y"])},{Py.Int(Get(d, "dreh", 0L))}"));
+        }
+        if (_festPlan is not null && _festMuster is not null)
+        {
+            FestDeko.InnenZeichnen(_festPlan, _festMuster, _teile, _stuecke, Grafik, Lauf.Basis);
+        }
+        if (Fest is not null)
+        {
+            // Phase 8 W6: nur angehaengt, damit ein Wechsel der Festzeit neu laedt
+            signatur.Add("fest:" + Fest + string.Concat(_festPlan?.Plaetze.Select(p => string.Create(System.Globalization.CultureInfo.InvariantCulture, $",{p.Platz}@{p.X}/{p.Z}")) ?? []));
         }
         Signatur = string.Join(";", signatur);
     }
@@ -855,7 +895,7 @@ public sealed class Innenraum
                 Umkleide(r, b, tt);
                 break;
             case "puppe":
-                Puppe(x, z, w, t, dreh, ListeOderLeer(d, "kleidung").Select(Py.Str).ToList());
+                Puppe(x, z, w, t, dreh, PuppenKleidung(d));
                 break;
             case "aktenregal":
                 Modell(r, "bookcaseClosedWide", 0, 0, b, tt, 1.8f * M, 0, Farben.HolzDunkel);
@@ -1116,6 +1156,23 @@ public sealed class Innenraum
         Kasten(r, 0, t - 0.04f, b, 0.04f, hoch - 0.05f, hoch, Farben.Metall);
         Kasten(r, 0.06f, t - 0.06f, b * 0.55f, 0.04f, 0.15f * Meter, hoch - 0.05f, Netz.Farbe("#DB2777"));
         Kasten(r, 0.12f, 0.08f, 0.5f, 0.3f, 0, 0.45f * Meter, Farben.Holz);
+    }
+
+    private List<PyObjekt> _festPuppen = [];
+
+    /// <summary>
+    /// Kleidung einer Puppe; in der Festzeit tragen die ersten Puppen im Flur (festzeiten.json innen.puppen) Kopf und
+    /// Oberteil der Festkleidung, der Rest bleibt.
+    /// </summary>
+    private List<string> PuppenKleidung(PyObjekt d)
+    {
+        var kleidung = ListeOderLeer(d, "kleidung").Select(Py.Str).ToList();
+        if (Kleiderdaten is null || !_festPuppen.Any(p => ReferenceEquals(p, d)))
+        {
+            return kleidung;
+        }
+        var fest = Kleidung.Alle(Kleiderdaten).Where(k => k.Festzeit == Fest && k.Slot is ("oberteil" or "kopf")).ToList();
+        return [.. fest.Select(k => k.Id), .. kleidung.Where(id => Kleidung.Finden(Kleiderdaten, id) is { } k && !fest.Any(f => f.Slot == k.Slot))];
     }
 
     /// <summary>Kaufhaus (Phase 8 W5): Schaufensterpuppe (die Figur ohne Gesichtsfarbe) mit Kleidung aus dem Sortiment.</summary>

@@ -266,6 +266,66 @@ public static class Figur
                 teile.Add(new Teil(TeilArt.Quader, ((min.X + max.X) / 2) - (b * 0.08f), oben - (h * 0.02f), ((min.Z + max.Z) / 2) - (b * 0.08f),
                     ((min.X + max.X) / 2) + (b * 0.08f), oben + (h * 0.12f), ((min.Z + max.Z) / 2) + (b * 0.08f), Probe.Netz.Farbe("#F8FAFC")));
                 break;
+            case "spitzhut":
+            {
+                // Phase 8 W6: Hexenhut (Halloween): breite Krempe, Kegel aus vier Stufen, schraeg nach hinten, Band
+                teile.AddRange(Rund(x1 - (b * 0.2f), z1 - (t * 0.2f), x2 + (b * 0.2f), z2 + (t * 0.2f), max.Y - (h * 0.02f), max.Y + (h * 0.03f), f));
+                teile.AddRange(Rund(x1, z1, x2, z2, max.Y + (h * 0.03f), max.Y + (h * 0.12f), Probe.Netz.Farbe("#F97316")));
+                float cx = (min.X + max.X) / 2, cz = (min.Z + max.Z) / 2;
+                for (var i = 0; i < 4; i++)
+                {
+                    var r = b * (0.42f - (i * 0.09f));
+                    var y = max.Y + (h * (0.12f + (i * 0.16f)));
+                    var dz = -t * 0.06f * i;
+                    teile.Add(new Teil(TeilArt.Quader, cx - r, y, cz + dz - r, cx + r, y + (h * 0.17f), cz + dz + r, f));
+                }
+                break;
+            }
+            case "zipfelmuetze":
+            {
+                // Phase 8 W6: Weihnachtsmuetze: weisser Rand, roter Zipfel zur Seite geneigt, weisser Bommel
+                var weiss = Probe.Netz.Farbe("#F8FAFC");
+                teile.AddRange(Rund(x1, z1, x2, z2, max.Y - (h * 0.08f), max.Y + (h * 0.05f), weiss));
+                float cx = (min.X + max.X) / 2, cz = (min.Z + max.Z) / 2;
+                for (var i = 0; i < 4; i++)
+                {
+                    var r = b * (0.4f - (i * 0.085f));
+                    var y = max.Y + (h * (0.05f + (i * 0.09f)));
+                    var dx = b * 0.16f * i;
+                    teile.Add(new Teil(TeilArt.Quader, cx + dx - r, y, cz - r, cx + dx + r, y + (h * 0.12f), cz + r, f));
+                }
+                var bx = cx + (b * 0.68f);
+                teile.Add(new Teil(TeilArt.Quader, bx - (b * 0.13f), max.Y + (h * 0.18f), cz - (b * 0.13f), bx + (b * 0.13f), max.Y + (h * 0.42f), cz + (b * 0.13f), weiss));
+                break;
+            }
+            case "partyhut":
+            {
+                // Phase 8 W6: Silvester, bunter Kegel mit Streifen und Bommel
+                float cx = (min.X + max.X) / 2, cz = (min.Z + max.Z) / 2;
+                var streifen = Probe.Netz.Farbe("#FDE047");
+                for (var i = 0; i < 5; i++)
+                {
+                    var r = b * (0.3f - (i * 0.055f));
+                    var y = max.Y + (h * (i * 0.12f)) - (h * 0.04f);
+                    teile.Add(new Teil(TeilArt.Quader, cx - r, y, cz - r, cx + r, y + (h * 0.13f), cz + r, i % 2 == 0 ? f : streifen));
+                }
+                teile.Add(new Teil(TeilArt.Quader, cx - (b * 0.08f), max.Y + (h * 0.6f), cz - (b * 0.08f), cx + (b * 0.08f), max.Y + (h * 0.76f), cz + (b * 0.08f), Probe.Netz.Farbe("#EC4899")));
+                break;
+            }
+            case "hasenohren":
+            {
+                // Phase 8 W6: Ostern, Haarreif mit zwei langen Ohren (aussen Farbe, innen rosa)
+                var rosa = Probe.Netz.Farbe("#F9A8D4");
+                float cz = (min.Z + max.Z) / 2;
+                teile.Add(new Teil(TeilArt.Quader, x1, max.Y - (h * 0.02f), cz - (t * 0.06f), x2, max.Y + (h * 0.04f), cz + (t * 0.06f), f * 0.85f));
+                foreach (var seite in (float[])[-1f, 1f])
+                {
+                    var x = ((min.X + max.X) / 2) + (seite * b * 0.22f);
+                    teile.Add(new Teil(TeilArt.Quader, x - (b * 0.1f), max.Y, cz - (t * 0.07f), x + (b * 0.1f), max.Y + (h * 0.75f), cz + (t * 0.07f), f));
+                    teile.Add(new Teil(TeilArt.Quader, x - (b * 0.05f), max.Y + (h * 0.08f), cz + (t * 0.07f), x + (b * 0.05f), max.Y + (h * 0.68f), cz + (t * 0.09f), rosa));
+                }
+                break;
+            }
             default:
                 // Hut: Krempe rundum und Band, der Kopf des Huts ist das umgefaerbte Haar
                 teile.AddRange(Rund(x1 - (b * 0.14f), z1 - (t * 0.14f), x2 + (b * 0.14f), z2 + (t * 0.14f), max.Y - (h * 0.01f), max.Y + (h * 0.03f), f));
@@ -288,6 +348,8 @@ public static class Figur
     {
         "kappe" => hoeheAnteil > 0.93f,
         "muetze" => hoeheAnteil > 0.86f,
+        "spitzhut" or "zipfelmuetze" => hoeheAnteil > 0.88f,
+        "partyhut" or "hasenohren" => false,
         _ => hoeheAnteil > 0.89f,
     };
 

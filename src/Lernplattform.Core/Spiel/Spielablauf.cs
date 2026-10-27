@@ -546,7 +546,7 @@ public sealed class Spielablauf
 
     /// <summary>Phase 8 W5: Kleidung im Kaufhaus kaufen und gleich anziehen (zwei Zeilen in einem Schritt).</summary>
     public PyObjekt KleidungKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string stueck) =>
-        Ausfuehren(Kleidung.Kaufen(stadt, Stand, geschaefte.Daten, laden, stueck));
+        Ausfuehren(Kleidung.Kaufen(stadt, Stand, geschaefte.Daten, laden, stueck, geschaefte.Festzeit));
 
     /// <summary>Phase 8 W5: gekaufte Kleidung anziehen oder einen Slot ablegen (stueck null), ueberall (Tafel "Figur").</summary>
     public PyObjekt KleidungAnziehen(Geschaefte geschaefte, string slot, string? stueck) =>

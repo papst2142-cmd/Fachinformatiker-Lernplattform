@@ -26,14 +26,22 @@ public sealed class StadtSpiel
     private string? _danachZu;
     private object? _danach;   // Nachtrag 1 zu P7-12: naechstes Ziel (Ort-Id oder Bodenpunkt), erst nach der Ankunft
 
-    public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null)
+    /// <remarks>
+    /// Phase 8 W6: <paramref name="feste"/> = Inhalt von festzeiten.json, <paramref name="festzeit"/> liefert die
+    /// Festzeit beim Aufbau einer Ansicht (Spiel oeffnen, Stadt betreten, Innenraum betreten), in der App
+    /// <see cref="Festzeit.Heute"/>; ohne (Tests) nie eine Festzeit.
+    /// </remarks>
+    public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null,
+        PyObjekt? feste = null, Func<string?>? festzeit = null)
     {
         Stadt = stadt;
         Ablauf = ablauf;
         Grafik = grafik;
         Innenraeume = innenraeume;
         GeschaefteDaten = geschaefte;
-        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik);
+        Feste = feste;
+        _festzeit = festzeit;
+        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik, FestJetzt(), feste);
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
         FigurZ = hier?.StehZ ?? 0;
@@ -54,6 +62,14 @@ public sealed class StadtSpiel
 
     /// <summary>Phase 8 W5: Inhalt von geschaefte.json (Kleidung im Kaufhaus), null = ohne.</summary>
     public PyObjekt? GeschaefteDaten { get; }
+
+    /// <summary>Phase 8 W6: Inhalt von festzeiten.json, null = ohne Fest-Deko.</summary>
+    public PyObjekt? Feste { get; }
+
+    private readonly Func<string?>? _festzeit;
+
+    /// <summary>Phase 8 W6: die Festzeit jetzt (nur beim Aufbau einer Ansicht gefragt).</summary>
+    private string? FestJetzt() => _festzeit?.Invoke();
 
     private (Spielstand? Stand, IReadOnlyList<Figur.Stueck> Stuecke) _kleidung = (null, []);
 
@@ -525,7 +541,8 @@ public sealed class StadtSpiel
             return false;
         }
         var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
-        var innen = Vorbereitet(ansicht) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten);
+        var fest = FestJetzt();
+        var innen = Vorbereitet(ansicht, fest) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste);
         if (innen is null)
         {
             return false;
@@ -545,6 +562,7 @@ public sealed class StadtSpiel
     private Task<Innenraum?>? _vorbereitung;
     private string? _vorAnsicht;
     private Spielstand? _vorStand;
+    private string? _vorFest;
 
     /// <summary>
     /// Weisung P7-16: den Innenraum eines Orts ausserhalb des Oberflaechen-Threads vorbereiten (Grundriss,
@@ -555,31 +573,34 @@ public sealed class StadtSpiel
     public void Vorbereiten(string? ort)
     {
         var ansicht = ort is null ? null : Szene.Ort(ort)?.Ansicht;
-        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand)))
+        var fest = FestJetzt();
+        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest))
         {
             return;
         }
         var stand = Ablauf.Stand;
         var kopie = stand.Kopie();
-        var (innenraeume, grafik, geschaefte) = (Innenraeume, Grafik, GeschaefteDaten);
+        var (innenraeume, grafik, geschaefte, feste) = (Innenraeume, Grafik, GeschaefteDaten, Feste);
         _vorAnsicht = ansicht;
         _vorStand = stand;
+        _vorFest = fest;
         _vorbereitung = Task.Run(() =>
         {
-            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte);
+            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste);
             innen?.Vorbereiten();
             return innen;
         });
     }
 
-    /// <summary>Der vorbereitete Innenraum zur Ansicht, wenn er zum jetzigen Spielstand passt (sonst null).</summary>
-    private Innenraum? Vorbereitet(string? ansicht)
+    /// <summary>Der vorbereitete Innenraum zur Ansicht, wenn er zum jetzigen Spielstand und zur Festzeit passt (sonst null).</summary>
+    private Innenraum? Vorbereitet(string? ansicht, string? fest)
     {
         var aufgabe = _vorbereitung;
-        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand);
+        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest;
         _vorbereitung = null;
         _vorAnsicht = null;
         _vorStand = null;
+        _vorFest = null;
         if (!passt)
         {
             return null;
@@ -746,6 +767,12 @@ public sealed class StadtSpiel
         Innen = null;
         EinrichtenBeenden();
         Knoepfe = [];
+        // Phase 8 W6: Stadt betreten = Aufbau einer Ansicht, die Festzeit neu fragen
+        if (FestJetzt() is var fest && fest != Szene.Fest)
+        {
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste);
+            SzeneGeaendert?.Invoke();
+        }
         InnenGeaendert?.Invoke();
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
@@ -983,7 +1010,8 @@ public sealed class StadtSpiel
         {
             return;
         }
-        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten) ?? alt;
+        // Phase 8 W6: dieselbe Festzeit wie beim Betreten (nie mitten in einer Ansicht wechseln)
+        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste) ?? alt;
         InnenGeaendert?.Invoke();
     }
 
@@ -991,9 +1019,10 @@ public sealed class StadtSpiel
     private void NeueSzene()
     {
         // Nachtrag 1 zu P7-13 (Wunsch 4): erst die Signatur vergleichen, nur bei einer Aenderung neu bauen
-        if (StadtSzene.SignaturFuer(Stadt, Ablauf.Stand) != Szene.Signatur)
+        // Phase 8 W6: die Festzeit der Szene bleibt (neu gefragt wird nur beim Betreten der Stadt)
+        if (StadtSzene.SignaturFuer(Stadt, Ablauf.Stand, Szene.Fest) != Szene.Signatur)
         {
-            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik);
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, Szene.Fest, Feste);
             SzeneGeaendert?.Invoke();
         }
     }

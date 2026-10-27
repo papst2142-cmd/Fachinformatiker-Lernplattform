@@ -1,5 +1,5 @@
 {
- "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor. Kaufhaus (Weisung P8-8c, Variante 2 Galerie): aus Bauteilen von Modular Buildings zusammengesetzt (datei \"teile\", je Teil Versatz v), \"drehen\" 180, damit die Schaufenster zur Strasse zeigen.",
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor. Kaufhaus (Weisung P8-8c, Variante 2 Galerie): aus Bauteilen von Modular Buildings zusammengesetzt (datei \"teile\", je Teil Versatz v), \"drehen\" 180, damit die Schaufenster zur Strasse zeigen. Festzeiten (Weisung P8-12, Phase 8 W6): KayKit Halloween Bits (hw-), KayKit Holiday Bits (xm-), Kenney Cube Pets (os-), Vorderseite +Z, ohne drehen.",
  "pakete": {
   "commercial": {
    "zip": "kenney_city-kit-commercial_2.1.zip",
@@ -49,6 +49,27 @@
    "id": "Grafik Kenney Modular Buildings",
    "version": "2.1",
    "sha256": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6"
+  },
+  "kaykit_halloween": {
+   "zip": "KayKit_HalloweenBits_1.0_FREE.zip",
+   "quelle": "KayKit Halloween Bits 1.0 (Kay Lousberg), kaylousberg.itch.io/halloween-bits",
+   "id": "Grafik KayKit Halloween Bits",
+   "version": "1.0",
+   "sha256": "a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4"
+  },
+  "kaykit_holiday": {
+   "zip": "KayKit_Holiday_Bits_1.0_FREE.zip",
+   "quelle": "KayKit Holiday Bits 1.0 (Kay Lousberg), kaylousberg.itch.io/holiday-bits",
+   "id": "Grafik KayKit Holiday Bits",
+   "version": "1.0",
+   "sha256": "2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a"
+  },
+  "cube_pets": {
+   "zip": "kenney_cube-pets.zip",
+   "quelle": "Kenney Cube Pets, kenney.nl/assets/cube-pets",
+   "id": "Grafik Kenney Cube Pets",
+   "version": "2.0",
+   "sha256": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283"
   }
  },
  "modelle": [
@@ -431,6 +452,96 @@
     {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [2, 1.24, -0.5]}
    ],
    "drehen": 180
+  },
+  {
+   "name": "hw-pumpkin_orange_jackolantern",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_orange_jackolantern.obj"
+  },
+  {
+   "name": "hw-pumpkin_yellow_small",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_yellow_small.obj"
+  },
+  {
+   "name": "hw-pumpkin_orange_small",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_orange_small.obj"
+  },
+  {
+   "name": "hw-lantern_standing",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/lantern_standing.obj"
+  },
+  {
+   "name": "hw-gravestone",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/gravestone.obj"
+  },
+  {
+   "name": "hw-tree_dead_large_decorated",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/tree_dead_large_decorated.obj"
+  },
+  {
+   "name": "hw-skull_candle",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/skull_candle.obj"
+  },
+  {
+   "name": "xm-christmas_tree_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/christmas_tree_decorated.obj"
+  },
+  {
+   "name": "xm-present_A_red",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_A_red.obj"
+  },
+  {
+   "name": "xm-present_B_green",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_B_green.obj"
+  },
+  {
+   "name": "xm-present_A_yellow",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_A_yellow.obj"
+  },
+  {
+   "name": "xm-present_sphere_A_blue",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_sphere_A_blue.obj"
+  },
+  {
+   "name": "xm-snowman_A",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/snowman_A.obj"
+  },
+  {
+   "name": "xm-snowman_B",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/snowman_B.obj"
+  },
+  {
+   "name": "xm-lantern_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/lantern_decorated.obj"
+  },
+  {
+   "name": "xm-gingerbread_house_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/gingerbread_house_decorated.obj"
+  },
+  {
+   "name": "os-animal-bunny",
+   "paket": "cube_pets",
+   "datei": "Models/OBJ format/animal-bunny.obj"
+  },
+  {
+   "name": "os-animal-chick",
+   "paket": "cube_pets",
+   "datei": "Models/OBJ format/animal-chick.obj"
   }
  ]
 }
