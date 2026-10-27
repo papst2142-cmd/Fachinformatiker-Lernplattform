@@ -1,4 +1,7 @@
+using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Design;
+using Lernplattform.Programm;
 using Lernplattform.Views;
 
 namespace Lernplattform.Messung;
@@ -16,6 +19,52 @@ namespace Lernplattform.Messung;
 /// </summary>
 public static partial class AutoMessung
 {
+    /// <summary>
+    /// Sammelliste 112 (Weisung P8-7 B4): die Spielseite einmal vor der 3D-Stichprobe in allen Schriftstufen in der
+    /// schmalen Groesse pruefen (Spiel zuerst schmal geoeffnet). Funde wie die Layoutpruefung ("&lt;Groesse&gt; &lt;Stufe&gt;
+    /// spiel vor der Stichprobe: …"); danach Schrift und Fenster wie vorher.
+    /// </summary>
+    private static async Task<int> P8W5SpielVorStichprobeAsync(MainView ansicht)
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var fenster = Avalonia.Controls.TopLevel.GetTopLevel(ansicht) as Avalonia.Controls.Window;
+        var (breiteVorher, hoeheVorher) = fenster is null ? (0d, 0d) : (fenster.Width, fenster.Height);
+        var funde = new List<string>();
+        foreach (var stufe in Einstellungen.Schriftgroessen)
+        {
+            Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
+            if (fenster is not null)
+            {
+                var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
+                fenster.Width = Math.Min(SchmalBreite, hoechstB);
+                fenster.Height = Math.Min(SchmalHoehe, hoechstH);
+            }
+            await ansicht.BildFertigAsync();
+            await ansicht.BildFertigAsync();
+            if (await SpielSeiteAsync(ansicht) is null)
+            {
+                funde.Add("spiel vor der Stichprobe: Spielseite nicht gebaut");
+                break;
+            }
+            await ansicht.BildFertigAsync();
+            var ist = string.Create(inv, $"schmal {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}");
+            funde.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => $"{ist} {stufe} spiel vor der Stichprobe: {f}"));
+        }
+        Zustand.DesignAnwenden();
+        if (fenster is not null)
+        {
+            fenster.Width = breiteVorher;
+            fenster.Height = hoeheVorher;
+        }
+        await ansicht.BildFertigAsync();
+        Messwerte.Notiere(string.Create(inv, $"Spielseite vor der 3D-Stichprobe (Sammelliste 112), {Einstellungen.Schriftgroessen.Count} Schriftstufen schmal: {funde.Count} Funde"));
+        foreach (var fund in funde.Distinct().Take(20))
+        {
+            Messwerte.Notiere("  " + fund);
+        }
+        return funde.Count;
+    }
+
     private static async Task<int> P8W5MesspunkteAsync(MainView ansicht)
     {
         var funde = 0;

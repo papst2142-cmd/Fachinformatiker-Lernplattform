@@ -1,18 +1,21 @@
-Lange Wörter bleiben auf dem Handy ganz.
+Neu im Spiel: das Kaufhaus mit Kleidung für deine Figur, und Feierabend über das Bett.
 
-- Bei sehr großer Schrift auf einem schmalen Bildschirm wurden einzelne sehr lange Wörter in Karteikarten mitten im Wort getrennt, zum Beispiel „Dokumentationsaufgaben“. Jetzt wird in diesem Fall nur der betroffene Text so weit kleiner, dass das Wort ganz in die Zeile passt, höchstens bis zur Schriftgröße „Normal“. Das gilt für die Frage, die Antworten zum Auswählen und die Musterlösung, auch im Prüfungstrainer.
-- Die automatische Prüfung beim Bauen des Programms sieht sich jetzt in jedem Fachbereich gezielt die Karte mit dem längsten Wort an. So fällt ein solcher Fehler sofort auf und nicht erst an dem Tag, an dem zufällig genau diese Karte vorne steht.
+- In der Stadt gibt es jetzt ein Kaufhaus. Dort kaufst du Kleidung für deine Figur: Oberteile, Hosen, Schuhe sowie Kappen und Mützen, 20 Stücke zwischen 12 und 90 €. Was du kaufst, zieht deine Figur sofort an. Unter „Figur“ wechselst du jederzeit zwischen deinen gekauften Stücken oder legst etwas wieder ab. Jedes Stück kaufst du nur einmal.
+- Du kannst den Arbeitstag jetzt auch zu Hause über das Bett beenden. Sind noch Aufgaben offen, fragt das Bett vorher nach. Ohne eigene Firma kannst du trotzdem schlafen gehen: Die offenen Aufgaben werden dann verschoben, genau wie mit dem Knopf „Verschieben“. Mit eigener Firma sagt dir das Bett, was vor dem Feierabend noch zu erledigen ist.
+- Der Rückblick „Meine Reise“ nennt Beförderungen wieder richtig. Bisher stand nach einem Streit im Team bei jedem späteren Rangwechsel „Zurückgestuft“.
+- In den Optionen zeigt die Karte „Spiel“ jetzt einen passenden Hinweis statt „Kommt in einer späteren Ausbaustufe“.
+- Die Hilfe erklärt das Kaufhaus, das Bett, den Spielstand beim Abgleich und den Knopf „Lizenzen“.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.14.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.15.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.14.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.14.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.14.2-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.15.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.15.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.15.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

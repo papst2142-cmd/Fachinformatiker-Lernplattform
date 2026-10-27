@@ -128,6 +128,7 @@ public static partial class AutoMessung
         }
         if (MitSpiel)
         {
+            funde += await P8W5SpielVorStichprobeAsync(ansicht); // Sammelliste 112: Spielseite zuerst schmal
             funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
             funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
             funde += await P8W5MesspunkteAsync(ansicht);       // Phase 8 W5: Rueckfrage am Bett
