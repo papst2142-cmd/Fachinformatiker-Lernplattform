@@ -544,6 +544,14 @@ public sealed class Spielablauf
     public PyObjekt TeilKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string teil) =>
         Ausfuehren(geschaefte.TeilKaufen(stadt, Stand, laden, teil));
 
+    /// <summary>Phase 8 W5: Kleidung im Kaufhaus kaufen und gleich anziehen (zwei Zeilen in einem Schritt).</summary>
+    public PyObjekt KleidungKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string stueck) =>
+        Ausfuehren(Kleidung.Kaufen(stadt, Stand, geschaefte.Daten, laden, stueck));
+
+    /// <summary>Phase 8 W5: gekaufte Kleidung anziehen oder einen Slot ablegen (stueck null), ueberall (Tafel "Figur").</summary>
+    public PyObjekt KleidungAnziehen(Geschaefte geschaefte, string slot, string? stueck) =>
+        Ausfuehren(Kleidung.Anziehen(Stand, geschaefte.Daten, slot, stueck));
+
     /// <summary>W7b: Kredit in der Bank aufnehmen (nur in der geoeffneten Bank, sonst wie KreditAufnehmen).</summary>
     public PyObjekt BankKreditAufnehmen(Stadt stadt, object? summe, object? laufzeit, object? paket = null) =>
         Ausfuehren(Schalter.KreditAufnehmen(stadt, Stand, summe, laufzeit, paket));

@@ -220,5 +220,41 @@
         ]}
       }
     }
+  },
+  "kaufhaus": {
+    "gebaeude": {"breite": 22.0, "hoehe": 13, "fenster": [[3.0, 0, 7.0, 0], [15.0, 0, 19.0, 0]], "wandfarbe": "#F4EEE6", "aussenfarbe": "#E9D8C4",
+      "flur": {"y": 9.0, "h": 4.0, "name": "Eingang", "boden": "fliesen", "eingang": {"von": 10.3, "bis": 11.7}, "spieler": [1.2, 11.0], "bodenfarbe": "#EFE9E1", "deko": [
+        {"typ": "fussmatte", "x": 0.2, "y": 10.4, "w": 0.6, "h": 1.2},
+        {"typ": "pflanze", "x": 20.8, "y": 12.0, "w": 0.8, "h": 0.8},
+        {"typ": "puppe", "x": 3.6, "y": 11.6, "w": 0.8, "h": 0.8, "kleidung": ["hoodie_gruen", "jeans_blau", "sneaker_weiss", "kappe_rot"]},
+        {"typ": "puppe", "x": 5.6, "y": 11.6, "w": 0.8, "h": 0.8, "kleidung": ["hemd_hellblau", "chino_beige", "lederschuhe", "hut_braun"]},
+        {"typ": "puppe", "x": 16.0, "y": 11.6, "w": 0.8, "h": 0.8, "kleidung": ["pulli_rot", "jeans_schwarz", "stiefel", "muetze_gelb"]},
+        {"typ": "puppe", "x": 18.0, "y": 11.6, "w": 0.8, "h": 0.8, "kleidung": ["polo_blau", "jeans_blau", "sneaker_weiss", "muetze_grau"]}
+      ]},
+      "raeume": [
+        {"id": "verkauf", "name": "Verkaufsraum", "x": 0, "y": 0, "w": 22.0, "h": 9.0, "tuer": {"von": 1.0, "bis": 21.0}, "boden": "parkett", "bodenfarbe": "#E3C9A0", "deko": [
+          {"typ": "kleiderstaender", "x": 0.4, "y": 0.4, "w": 2.8, "h": 0.6, "ware": "kleidung:oberteil"},
+          {"typ": "kleiderstaender", "x": 4.0, "y": 0.4, "w": 2.8, "h": 0.6, "ware": "kleidung:oberteil"},
+          {"typ": "kleiderstaender", "x": 0.6, "y": 3.6, "w": 2.8, "h": 0.6, "ware": "kleidung:hose"},
+          {"typ": "auslage", "x": 4.2, "y": 3.4, "w": 2.2, "h": 1.0, "ware": "kleidung:kopf"},
+          {"typ": "kleiderregal", "x": 14.6, "y": 0.3, "w": 2.6, "h": 0.6, "ware": "kleidung:hose"},
+          {"typ": "kleiderregal", "x": 17.6, "y": 0.3, "w": 2.6, "h": 0.6, "ware": "kleidung:schuhe"},
+          {"typ": "kleiderregal", "x": 21.0, "y": 2.4, "w": 0.6, "h": 2.6, "ware": "kleidung:schuhe"},
+          {"typ": "puppe", "x": 7.0, "y": 6.0, "w": 0.8, "h": 0.8, "kleidung": ["shirt_schwarz", "stoffhose_grau", "sneaker_rot", "muetze_grau"]},
+          {"typ": "spiegel", "x": 0.0, "y": 5.6, "w": 0.12, "h": 1.4},
+          {"typ": "umkleide", "x": 15.2, "y": 6.6, "w": 1.6, "h": 1.6},
+          {"typ": "umkleide", "x": 17.2, "y": 6.6, "w": 1.6, "h": 1.6},
+          {"typ": "pflanze", "x": 20.8, "y": 7.8, "w": 0.8, "h": 0.8},
+          {"typ": "kleiderstaender", "x": 15.0, "y": 3.4, "w": 2.8, "h": 0.6, "ware": "kleidung:oberteil"},
+          {"typ": "teppich", "x": 9.0, "y": 3.6, "w": 5.0, "h": 2.6},
+          {"typ": "kassentisch", "x": 10.2, "y": 4.4, "w": 1.6, "h": 0.8},
+          {"typ": "kleiderregal", "x": 8.0, "y": 0.3, "w": 2.6, "h": 0.6, "ware": "kleidung:oberteil"},
+          {"typ": "kleiderregal", "x": 11.2, "y": 0.3, "w": 2.6, "h": 0.6, "ware": "kleidung:hose"}
+        ]}
+      ]
+    },
+    "personen": [
+      {"id": "lenz", "name": "Mara Lenz", "rolle": "Verkäuferin", "aussehen": {"haut": "oliv", "frisur": "locken", "haarfarbe": "schwarz", "oberteil": "orange"}, "text": "Hallo! Hier gibt es Kleidung für deine Figur. Was du kaufst, ziehst du gleich an.", "platz": [12.5, 4.8]}
+    ]
   }
 }

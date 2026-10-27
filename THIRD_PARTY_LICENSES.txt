@@ -554,6 +554,41 @@ Quelle: License.txt aus kenney_furniturePack.zip (SHA-256 der ZIP 68afa4e6dc8a53
 	@KenneyNL
 
 ##############################################################################
+Grafik Kenney Modular Buildings (2.1), Lizenz CC0-1.0
+
+--- Kenney_ModularBuildings_CC0.txt ---
+Quelle: License.txt aus kenney_modular-buildings.zip (SHA-256 der ZIP 47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6), von Nico am 26.10.2026 geladen (Fi-Austausch anlagen/grafik_cc0).
+
+	
+
+	Modular Buildings (2.1)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 08-02-2024 14:01
+	
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+	
+	Follow on social media for updates:
+
+	• Twitter:   twitter.com/KenneyNL
+	• Instagram: instagram.com/kenney_nl
+	• Mastodon:  mastodon.gamedev.place/@kenney
+
+##############################################################################
 Grafik Kenney Train Kit (1.1), Lizenz CC0-1.0
 
 --- Kenney_TrainKit_CC0.txt ---

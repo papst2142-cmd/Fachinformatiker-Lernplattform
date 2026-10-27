@@ -550,7 +550,7 @@ public sealed class Stadt
     public static readonly IReadOnlyList<string> NeueOrtRollen = ["geschaeft", "schalter"];
 
     /// <summary>Sortimente der Geschaefte.</summary>
-    public static readonly IReadOnlyList<string> Sortimente = ["moebel", "elektro"];
+    public static readonly IReadOnlyList<string> Sortimente = ["moebel", "elektro", Kleidung.Art];   // Kleidung: Phase 8 W5 (Kaufhaus)
 
     public List<string> Pruefen()
     {

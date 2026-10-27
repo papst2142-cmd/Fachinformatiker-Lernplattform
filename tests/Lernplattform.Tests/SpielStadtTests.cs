@@ -121,13 +121,13 @@ public class SpielStadtTests
     {
         var stadt = NeueStadt();
         Assert.Empty(stadt.Pruefen());
-        Assert.Equal(14, stadt.Regeln.Count);
-        Assert.Equal(["moebelhaus", "elektromarkt", "amt", "bank"], stadt.Regeln.Skip(10).Select(r => (string)r["id"]!));
+        Assert.Equal(15, stadt.Regeln.Count);   // Phase 8 W5: Kaufhaus angehaengt
+        Assert.Equal(["moebelhaus", "elektromarkt", "amt", "bank", "kaufhaus"], stadt.Regeln.Skip(10).Select(r => (string)r["id"]!));
         Assert.Equal((64L, 48L), (stadt.Breite, stadt.Hoehe));
         // Sammelliste 99: die neuen Orte genau mit Rolle, Ansicht und Sortiment
-        Assert.Equal(["geschaeft:moebelhaus/moebel", "geschaeft:elektromarkt/elektro", "schalter:amt/", "schalter:bank/"],
+        Assert.Equal(["geschaeft:moebelhaus/moebel", "geschaeft:elektromarkt/elektro", "schalter:amt/", "schalter:bank/", "geschaeft:kaufhaus/kleidung"],
             stadt.Regeln.Skip(10).Select(r => r["rolle"] + ":" + r["id"] + "/" + SpielDaten.Get(r, "sortiment", "")));
-        Assert.Equal(["geschaeft:moebelhaus", "geschaeft:elektromarkt", "schalter:amt", "schalter:bank"], stadt.Regeln.Skip(10).Select(r => (string)r["ansicht"]!));
+        Assert.Equal(["geschaeft:moebelhaus", "geschaeft:elektromarkt", "schalter:amt", "schalter:bank", "geschaeft:kaufhaus"], stadt.Regeln.Skip(10).Select(r => (string)r["ansicht"]!));
         // Kontrollfehler: jeder Fehler wird gefunden
         PyObjekt Kaputt(Action<PyObjekt> aendern)
         {
@@ -190,7 +190,7 @@ public class SpielStadtTests
         Assert.Null(stadt.Weg("zuhause", "kino"));
         // feste Werte (Schritte ab zu Hause); aendern sie sich, aendert sich die Spielzeit der Wege
         var soll = "bitweiche 30, talheim 46, talheim_nord 51, betriebswerkstatt 20, lindenau 67, birkenhain 56, "
-            + "gewerbehof 31, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9, amt 53, bank 46";
+            + "gewerbehof 31, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9, amt 53, bank 46, kaufhaus 5";
         var ist = string.Join(", ", ids.Skip(1).Select(b => b + " " + stadt.Weg("zuhause", b)!.Schritte));
         Assert.True(soll == ist, "Schritte ab zu Hause: " + ist);
     }

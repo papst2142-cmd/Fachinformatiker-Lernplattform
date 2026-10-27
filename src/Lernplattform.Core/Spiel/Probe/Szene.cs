@@ -225,6 +225,23 @@ public sealed class Netz
         _indizes.AddRange([basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
     }
 
+    /// <summary>Ein fertiges Netz an seiner Lage einfuegen (Schaufensterpuppe mit Kleidung).</summary>
+    public void Hinzu(Netz andere, Matrix4x4 lage)
+    {
+        var basis = (uint)AnzahlEcken;
+        var e = andere._ecken;
+        for (var i = 0; i < e.Count; i += Zahlen)
+        {
+            var p = Vector3.Transform(new Vector3(e[i], e[i + 1], e[i + 2]), lage);
+            var n = Vector3.Normalize(Vector3.TransformNormal(new Vector3(e[i + 3], e[i + 4], e[i + 5]), lage));
+            Ecke(p, n, new Vector3(e[i + 6], e[i + 7], e[i + 8]));
+        }
+        foreach (var j in andere._indizes)
+        {
+            _indizes.Add(basis + j);
+        }
+    }
+
     private void Dreieck(Vector3 a, Vector3 b, Vector3 c, Vector3 farbe)
     {
         var n = Vector3.Normalize(Vector3.Cross(b - a, c - a));

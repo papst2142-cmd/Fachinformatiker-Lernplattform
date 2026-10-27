@@ -43,9 +43,12 @@ public sealed class Innenraum
 
     private readonly List<Teil> _teile = [];
     private readonly List<ModellStueck> _stuecke = [];
+    private readonly List<(Netz Netz, Matrix4x4 Lage)> _puppen = [];
 
-    private Innenraum(string ansicht, string ort, PyObjekt gebaeude, List<InnenPerson> personen, GrafikBibliothek? grafik, PyObjekt? boeden)
+    private Innenraum(string ansicht, string ort, PyObjekt gebaeude, List<InnenPerson> personen, GrafikBibliothek? grafik, PyObjekt? boeden,
+        PyObjekt? kleider = null)
     {
+        Kleiderdaten = kleider;
         Ansicht = ansicht;
         Ort = ort;
         Gebaeude = gebaeude;
@@ -74,6 +77,9 @@ public sealed class Innenraum
     public LaufOrt Lauf { get; }
 
     public GrafikBibliothek? Grafik { get; }
+
+    /// <summary>Phase 8 W5: Inhalt von geschaefte.json fuer die Kleidung im Kaufhaus (Farben der Auslage, Puppen), null = grau.</summary>
+    public PyObjekt? Kleiderdaten { get; }
 
     public float Breite { get; }
 
@@ -105,6 +111,10 @@ public sealed class Innenraum
             {
                 netz.Hinzu(modell, stueck.Lage);
             }
+        }
+        foreach (var (puppe, lage) in _puppen)
+        {
+            netz.Hinzu(puppe, lage);
         }
         return netz;
     }
@@ -189,9 +199,9 @@ public sealed class Innenraum
     /// <summary>
     /// Innenraum zur Ansicht fuer den Spielstand; null, wenn es ihn (noch) nicht gibt (keine Wohnung,
     /// Filiale nicht eroeffnet, Serverfarm ohne innenraeume.json). <paramref name="innenraeume"/>:
-    /// Inhalt von innenraeume.json.
+    /// Inhalt von innenraeume.json; <paramref name="geschaefte"/>: Inhalt von geschaefte.json (Kleidung im Kaufhaus).
     /// </summary>
-    public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik)
+    public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -226,7 +236,7 @@ public sealed class Innenraum
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
-            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null);
+            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null, geschaefte);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -370,7 +380,7 @@ public sealed class Innenraum
 
     private (string, string, List<(string, string)>) LadenNachricht(double x, double z, Spielstand stand)
     {
-        var name = Ort == "moebelhaus" ? "Möbelhaus" : "Elektromarkt";
+        var name = Ort switch { "moebelhaus" => "Möbelhaus", "kaufhaus" => "Kaufhaus", _ => "Elektromarkt" };
         var sortiment = (AktionSortiment, "Sortiment");
         if (PersonNahe(x, z) is { } p)
         {
@@ -379,6 +389,10 @@ public sealed class Innenraum
         if (WareNahe(x, z) is { } d)
         {
             var ware = Py.Str(d["ware"]);
+            if (ware.StartsWith("kleidung:", StringComparison.Ordinal))
+            {
+                return (Kleidung.Abteilung(Kleiderdaten, ware["kleidung:".Length..]), Kleidung.FuerDieFigur, [(AktionSortiment + ":" + ware["kleidung:".Length..], "Ansehen")]);
+            }
             if (ware.StartsWith("teile:", StringComparison.Ordinal))
             {
                 var typ = ware["teile:".Length..];
@@ -731,7 +745,7 @@ public sealed class Innenraum
         "regal", "aktenregal", "hochregal", "kleiderschrank", "kuechenzeile", "kuehlschrank", "waschmaschine", "fernseher",
         "kommode", "sofa", "bett", "matratze", "tresen", "waschbecken", "wc", "badewanne", "kaffeemaschine", "usv", "rack",
         "klima", "drucker", "automat", "wasserspender", "monitorwand", "anzeigetafel", "whiteboard", "bild", "aquarium",
-        "werkbank", "leitstand", "bank", "glaswand", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen", "gemaelde",
+        "werkbank", "leitstand", "bank", "glaswand", "kleiderregal", "spiegel", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen", "gemaelde",
     ];
 
     private int AutoDrehung(float x, float z, float w, float t)
@@ -819,6 +833,29 @@ public sealed class Innenraum
             }
             case "tresen":
                 Modell(r, "kitchenBar", 0, 0, b, tt, 1.05f * M, 0, Farben.Holz);
+                break;
+            case "kassentisch":
+                // Kaufhaus (Weisung P8-8c): freistehende kleine Kasse (Tisch mit Kasse und Bildschirm), keine Tresenwand
+                Modell(r, "table", 0, 0, b, tt, 0.95f * M, 0, Farben.Hell);
+                Kasten(r, (b / 2) - 0.25f, (tt / 2) - 0.2f, 0.5f, 0.4f, 0.95f * M, 1.1f * M, Farben.Geraet);
+                Kasten(r, (b / 2) - 0.2f, (tt / 2) - 0.25f, 0.4f, 0.05f, 1.1f * M, 1.35f * M, Farben.Geraet);
+                break;
+            case "kleiderstaender":
+                Kleiderstaender(r, b, tt, Get(d, "ware") as string);
+                break;
+            case "kleiderregal":
+                Modell(r, "bookcaseOpen", 0, 0, b, tt, 1.8f * M, 0, Farben.Hell);
+                Kleiderfaecher(r, b, tt, Get(d, "ware") as string);
+                break;
+            case "spiegel":
+                Kasten(r, 0, 0, b, tt, 0.1f * M, 1.9f * M, Farben.HolzDunkel);
+                Kasten(r, 0.06f, tt, b - 0.12f, 0.01f, 0.15f * M, 1.85f * M, Netz.Farbe("#CFE8F5"));
+                break;
+            case "umkleide":
+                Umkleide(r, b, tt);
+                break;
+            case "puppe":
+                Puppe(x, z, w, t, dreh, ListeOderLeer(d, "kleidung").Select(Py.Str).ToList());
                 break;
             case "aktenregal":
                 Modell(r, "bookcaseClosedWide", 0, 0, b, tt, 1.8f * M, 0, Farben.HolzDunkel);
@@ -984,6 +1021,19 @@ public sealed class Innenraum
     {
         var (breite, hoehe, farbe, zweite) = Warenform(ware);
         var tisch = 0.75f * Meter;
+        if (ware is not null && ware.StartsWith("kleidung:", StringComparison.Ordinal))
+        {
+            // Kaufhaus: Kappen und Muetzen in den Farben des Sortiments
+            var farben = Kleidung.Farben(Kleiderdaten, ware);
+            var n = Math.Max(1, (int)((b - 0.2f) / 0.32f));
+            for (var i = 0; i < n; i++)
+            {
+                var lx = 0.1f + (i * (b - 0.2f) / n);
+                Kasten(r, lx, (t / 2) - 0.12f, 0.24f, 0.24f, tisch, tisch + 0.12f, farben[i % farben.Count]);
+                Kasten(r, lx + 0.04f, (t / 2) + 0.12f, 0.16f, 0.1f, tisch, tisch + 0.03f, farben[i % farben.Count] * 0.75f);
+            }
+            return;
+        }
         var anzahl = Math.Max(1, (int)((b - 0.2f) / (breite + 0.15f)));
         var abstand = (b - 0.2f - (anzahl * breite)) / Math.Max(1, anzahl);
         for (var i = 0; i < anzahl; i++)
@@ -1007,6 +1057,76 @@ public sealed class Innenraum
                 Kasten(r, lx, (t / 2) - 0.15f, breite, 0.3f, tisch, tisch + hoehe, i % 3 == 1 ? zweite : farbe);
             }
         }
+    }
+
+    /// <summary>Kaufhaus (Phase 8 W5): Kleiderstange auf zwei Fuessen, Oberteile (Hosen) haengend in den Farben des Sortiments.</summary>
+    private void Kleiderstaender(Rahmen r, float b, float t, string? ware)
+    {
+        var stange = 1.5f * Meter;
+        Kasten(r, 0.02f, (t / 2) - 0.03f, 0.06f, 0.06f, 0, stange, Farben.Metall);
+        Kasten(r, b - 0.08f, (t / 2) - 0.03f, 0.06f, 0.06f, 0, stange, Farben.Metall);
+        Kasten(r, 0, (t / 2) - 0.2f, 0.1f, 0.4f, 0, 0.04f, Farben.Metall);
+        Kasten(r, b - 0.1f, (t / 2) - 0.2f, 0.1f, 0.4f, 0, 0.04f, Farben.Metall);
+        Kasten(r, 0, (t / 2) - 0.02f, b, 0.04f, stange - 0.04f, stange, Farben.Metall);
+        var farben = Kleidung.Farben(Kleiderdaten, ware);
+        var anzahl = Math.Max(1, (int)((b - 0.3f) / 0.12f));
+        for (var i = 0; i < anzahl; i++)
+        {
+            var lx = 0.15f + (i * (b - 0.3f) / anzahl);
+            var lang = ware == "kleidung:hose" ? 0.95f : 0.7f;
+            Kasten(r, lx, (t / 2) - 0.22f, 0.05f, 0.44f, stange - (lang * Meter), stange - 0.06f, farben[i % farben.Count]);
+        }
+    }
+
+    /// <summary>Kaufhaus (Phase 8 W5): gefaltete Stapel (Hosen) oder Schuhkartons und Schuhe in drei Boeden.</summary>
+    private void Kleiderfaecher(Rahmen r, float b, float t, string? ware)
+    {
+        var farben = Kleidung.Farben(Kleiderdaten, ware);
+        var schuhe = ware == "kleidung:schuhe";
+        var (breite, hoehe) = schuhe ? (0.28f, 0.12f) : (0.36f, 0.16f);
+        var tief = Math.Min(0.4f, t * 0.7f);
+        var boden = 1.8f * Meter;
+        var anzahl = Math.Max(1, (int)((b - 0.12f) / (breite + 0.06f)));
+        var abstand = (b - 0.12f - (anzahl * breite)) / anzahl;
+        var nr = 0;
+        foreach (var anteil in (ReadOnlySpan<float>)[0.03f, 0.36f, 0.69f])
+        {
+            var unten = boden * anteil;
+            for (var i = 0; i < anzahl; i++)
+            {
+                var lx = 0.06f + (abstand / 2) + (i * (breite + abstand));
+                var f = farben[nr++ % farben.Count];
+                Kasten(r, lx, t - tief - 0.04f, breite, tief, unten, unten + hoehe, f);
+                if (!schuhe)
+                {
+                    Kasten(r, lx, t - tief - 0.04f, breite, tief, unten + hoehe + 0.01f, unten + (hoehe * 2), f * 0.85f);
+                }
+            }
+        }
+    }
+
+    /// <summary>Kaufhaus (Phase 8 W5): Umkleidekabine mit drei Waenden und Vorhang (halb offen).</summary>
+    private void Umkleide(Rahmen r, float b, float t)
+    {
+        var hoch = 2.0f * Meter;
+        var wand = Netz.Farbe("#E8E2F4");
+        Kasten(r, 0, 0, b, 0.06f, 0, hoch, wand);
+        Kasten(r, 0, 0, 0.06f, t, 0, hoch, wand);
+        Kasten(r, b - 0.06f, 0, 0.06f, t, 0, hoch, wand);
+        Kasten(r, 0, t - 0.04f, b, 0.04f, hoch - 0.05f, hoch, Farben.Metall);
+        Kasten(r, 0.06f, t - 0.06f, b * 0.55f, 0.04f, 0.15f * Meter, hoch - 0.05f, Netz.Farbe("#DB2777"));
+        Kasten(r, 0.12f, 0.08f, 0.5f, 0.3f, 0, 0.45f * Meter, Farben.Holz);
+    }
+
+    /// <summary>Kaufhaus (Phase 8 W5): Schaufensterpuppe (die Figur ohne Gesichtsfarbe) mit Kleidung aus dem Sortiment.</summary>
+    private void Puppe(float x, float z, float w, float t, int dreh, List<string> kleidung)
+    {
+        var stuecke = kleidung.Select(id => Kleidung.FigurStueck(Kleiderdaten, id)).OfType<Figur.Stueck>().ToList();
+        var aussehen = new PyObjekt { { "haut", "hell" }, { "frisur", "glatze" }, { "haarfarbe", "grau" }, { "oberteil", "cyan" } };
+        var netz = Figur.Netz(Grafik, aussehen, FigurHoehe * 0.98f, stuecke);
+        var lage = Matrix4x4.CreateRotationY(-MathF.PI / 2 * dreh) * Matrix4x4.CreateTranslation(x + (w / 2), 0.1f, z + (t / 2));
+        _puppen.Add((netz, lage));
+        _teile.Add(Quader(x + (w / 2) - 0.25f, 0, z + (t / 2) - 0.25f, x + (w / 2) + 0.25f, 0.1f, z + (t / 2) + 0.25f, Farben.Metall));
     }
 
     private void Kartons(Rahmen r, float b, float t)

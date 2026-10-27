@@ -26,12 +26,13 @@ public sealed class StadtSpiel
     private string? _danachZu;
     private object? _danach;   // Nachtrag 1 zu P7-12: naechstes Ziel (Ort-Id oder Bodenpunkt), erst nach der Ankunft
 
-    public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null)
+    public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null)
     {
         Stadt = stadt;
         Ablauf = ablauf;
         Grafik = grafik;
         Innenraeume = innenraeume;
+        GeschaefteDaten = geschaefte;
         Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik);
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
@@ -50,6 +51,26 @@ public sealed class StadtSpiel
 
     /// <summary>Inhalt von inhalte_csharp/spiel/innenraeume.json (Serverfarm), null = ohne.</summary>
     public PyObjekt? Innenraeume { get; }
+
+    /// <summary>Phase 8 W5: Inhalt von geschaefte.json (Kleidung im Kaufhaus), null = ohne.</summary>
+    public PyObjekt? GeschaefteDaten { get; }
+
+    private (Spielstand? Stand, IReadOnlyList<Figur.Stueck> Stuecke) _kleidung = (null, []);
+
+    /// <summary>Phase 8 W5: was die Spielfigur traegt (je Spielstand einmal berechnet; dieselbe Liste, solange er gilt).</summary>
+    public IReadOnlyList<Figur.Stueck> Kleidung
+    {
+        get
+        {
+            var stand = Ablauf.Stand;
+            if (!ReferenceEquals(_kleidung.Stand, stand))
+            {
+                var neu = GeschaefteDaten is null ? [] : Spiel.Kleidung.Angezogen(stand, GeschaefteDaten).Values.Select(k => new Figur.Stueck(k.Slot, k.Form, k.Farbe)).ToList();
+                _kleidung = (stand, _kleidung.Stuecke.SequenceEqual(neu) ? _kleidung.Stuecke : neu);
+            }
+            return _kleidung.Stuecke;
+        }
+    }
 
     public StadtSzene Szene { get; private set; }
 
@@ -504,7 +525,7 @@ public sealed class StadtSpiel
             return false;
         }
         var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
-        var innen = Vorbereitet(ansicht) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik);
+        var innen = Vorbereitet(ansicht) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten);
         if (innen is null)
         {
             return false;
@@ -540,12 +561,12 @@ public sealed class StadtSpiel
         }
         var stand = Ablauf.Stand;
         var kopie = stand.Kopie();
-        var (innenraeume, grafik) = (Innenraeume, Grafik);
+        var (innenraeume, grafik, geschaefte) = (Innenraeume, Grafik, GeschaefteDaten);
         _vorAnsicht = ansicht;
         _vorStand = stand;
         _vorbereitung = Task.Run(() =>
         {
-            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik);
+            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte);
             innen?.Vorbereiten();
             return innen;
         });
@@ -962,7 +983,7 @@ public sealed class StadtSpiel
         {
             return;
         }
-        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik) ?? alt;
+        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten) ?? alt;
         InnenGeaendert?.Invoke();
     }
 

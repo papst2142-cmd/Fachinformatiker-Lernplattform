@@ -44,7 +44,9 @@
     {"id": "Grafik Kenney Animated Characters 3", "version": "1.1", "lizenz": "CC0-1.0", "quelle": "https://kenney-assets.itch.io/animated-characters-3 (Kenney, www.kenney.nl)",
      "beschreibung": "Spielfigur und Personen im Spiel (feste Haltung), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_AnimatedCharacters3_CC0.txt"]},
     {"id": "Grafik KayKit Furniture Bits", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0 (Kay Lousberg, www.kaylousberg.com)",
-     "beschreibung": "Wartestuehle, Sessel und Bild in Bank und Amt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_FurnitureBits_CC0.txt"]}
+     "beschreibung": "Wartestuehle, Sessel und Bild in Bank und Amt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_FurnitureBits_CC0.txt"]},
+    {"id": "Grafik Kenney Modular Buildings", "version": "2.1", "lizenz": "CC0-1.0", "quelle": "https://kenney-assets.itch.io/modular-buildings (Kenney, www.kenney.nl)",
+     "beschreibung": "Haus des Kaufhauses in der Stadt im Spiel (aus Bauteilen zusammengesetzt), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_ModularBuildings_CC0.txt"]}
   ],
   "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
   "ohne_nuspec": {

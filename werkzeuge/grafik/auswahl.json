@@ -1,5 +1,5 @@
 {
- "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor.",
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor. Kaufhaus (Weisung P8-8c, Variante 2 Galerie): aus Bauteilen von Modular Buildings zusammengesetzt (datei \"teile\", je Teil Versatz v), \"drehen\" 180, damit die Schaufenster zur Strasse zeigen.",
  "pakete": {
   "commercial": {
    "zip": "kenney_city-kit-commercial_2.1.zip",
@@ -42,6 +42,13 @@
    "id": "Grafik KayKit Furniture Bits",
    "version": "1.0",
    "sha256": "84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242"
+  },
+  "modular": {
+   "zip": "kenney_modular-buildings.zip",
+   "quelle": "Kenney Modular Buildings 2.1, kenney-assets.itch.io/modular-buildings",
+   "id": "Grafik Kenney Modular Buildings",
+   "version": "2.1",
+   "sha256": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6"
   }
  },
  "modelle": [
@@ -386,6 +393,44 @@
    "name": "kkPictureframeLargeB",
    "paket": "kaykit_moebel",
    "datei": "KayKit-Furniture-Bits-1.0-96d5930a8dbdb363409bbc2d3341718b00e17c9c/addons/kaykit_furniture_bits/Assets/obj/pictureframe_large_B.obj"
+  },
+  {
+   "name": "kaufhaus-galerie",
+   "paket": "modular",
+   "datei": "teile",
+   "teile": [
+    {"datei": "Models/OBJ format/building-window-large.obj", "v": [-2, 0, 0.5]},
+    {"datei": "Models/OBJ format/building-block.obj", "v": [-2, 0, -0.5]},
+    {"datei": "Models/OBJ format/building-window-awnings.obj", "v": [-2, 0.62, 0.5]},
+    {"datei": "Models/OBJ format/building-windows.obj", "v": [-2, 0.62, -0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [-2, 1.24, 0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [-2, 1.24, -0.5]},
+    {"datei": "Models/OBJ format/building-window-large.obj", "v": [-1, 0, 0.5]},
+    {"datei": "Models/OBJ format/building-block.obj", "v": [-1, 0, -0.5]},
+    {"datei": "Models/OBJ format/building-window-awnings.obj", "v": [-1, 0.62, 0.5]},
+    {"datei": "Models/OBJ format/building-windows.obj", "v": [-1, 0.62, -0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [-1, 1.24, 0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [-1, 1.24, -0.5]},
+    {"datei": "Models/OBJ format/building-door-window.obj", "v": [0, 0, 0.5]},
+    {"datei": "Models/OBJ format/building-block.obj", "v": [0, 0, -0.5]},
+    {"datei": "Models/OBJ format/building-window-awnings.obj", "v": [0, 0.62, 0.5]},
+    {"datei": "Models/OBJ format/building-windows.obj", "v": [0, 0.62, -0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [0, 1.24, 0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [0, 1.24, -0.5]},
+    {"datei": "Models/OBJ format/building-window-large.obj", "v": [1, 0, 0.5]},
+    {"datei": "Models/OBJ format/building-block.obj", "v": [1, 0, -0.5]},
+    {"datei": "Models/OBJ format/building-window-awnings.obj", "v": [1, 0.62, 0.5]},
+    {"datei": "Models/OBJ format/building-windows.obj", "v": [1, 0.62, -0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [1, 1.24, 0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [1, 1.24, -0.5]},
+    {"datei": "Models/OBJ format/building-window-large.obj", "v": [2, 0, 0.5]},
+    {"datei": "Models/OBJ format/building-block.obj", "v": [2, 0, -0.5]},
+    {"datei": "Models/OBJ format/building-window-awnings.obj", "v": [2, 0.62, 0.5]},
+    {"datei": "Models/OBJ format/building-windows.obj", "v": [2, 0.62, -0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [2, 1.24, 0.5]},
+    {"datei": "Models/OBJ format/roof-flat-top.obj", "v": [2, 1.24, -0.5]}
+   ],
+   "drehen": 180
   }
  ]
 }
