@@ -4,12 +4,15 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Phase 8 W5 (Weisung P8-7 B1, Plan Phase 8 Abschnitt 11): Feierabend ueber das Bett. Messpunkt (wiederholbar,
-/// Grenze 400 ms): "Spiel: Rueckfrage am Bett (bis zum Bild)", die Rueckfrage nach dem Spielstand des
+/// Phase 8 W5 (Weisung P8-7 B1, Plan Phase 8 Abschnitt 11): Feierabend ueber das Bett. Messpunkt (streng, ohne
+/// Wiederholung, Grenze 400 ms): "Spiel: Rueckfrage am Bett (bis zum Bild)", die Rueckfrage nach dem Spielstand des
 /// Durchgangs aus W3 (<see cref="Wohnung.SchlafFrage"/>) bis zum Bild. Prueft: der Text passt zum Stand (ist der
 /// Feierabend nicht moeglich, nennt er die offenen Aufgaben; ohne Firma fragt das Bett trotzdem, Weisung P8-8b).
 /// Die Anordnung der drei Texte prueft die Layoutpruefung (Fenster "spiel/bett_feierabend", "spiel/bett_offen",
 /// "spiel/bett_trotzdem").
+/// Kaufhaus (Weisung P8-8c): Messpunkt "Spiel: Kaufhaus Sortiment (bis zum Bild)" (streng, Grenze 400 ms), die Seite
+/// "Kleidung" des Kaufhauses bis zum Bild; die Abteilungen zeigt die Layoutpruefung (P7W7Ansichten,
+/// "spiel/sortiment-kaufhaus-&lt;Slot&gt;").
 /// </summary>
 public static partial class AutoMessung
 {
@@ -45,6 +48,20 @@ public static partial class AutoMessung
                     : Dialog.Zeigen(Wohnung.SchlafenTitel, frage, Wohnung.SchlafenNein, Wohnung.SchlafenJa);
             }, Dialog.AlleSchliessen, grenze: Geraetegrenze));
         Dialog.AlleSchliessen();
+        await ansicht.BildFertigAsync();
+
+        if (tafel.Sitzung.Geschaefte is null)
+        {
+            Fehler("Kaufhaus Sortiment: Geschaefte nicht geladen");
+            return funde;
+        }
+        funde += Ergebnis("Spiel: Kaufhaus Sortiment (bis zum Bild)",
+            await BildMessenAsync(ansicht, () =>
+            {
+                tafel.ProbeGeschaeft(Kleidung.Laden);
+                seite.TafelZeigen();
+            }, tafel.AllesSchliessen, grenze: Geraetegrenze));
+        tafel.AllesSchliessen();
         await ansicht.BildFertigAsync();
         return funde;
     }
