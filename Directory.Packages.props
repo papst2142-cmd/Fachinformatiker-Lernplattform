@@ -17,8 +17,9 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <!-- Updates PC (Windows, Linux-AppImage, macOS), MIT -->
     <PackageVersion Include="Velopack" Version="1.2.161" />
-    <!-- Phase 8 W8 (Weisung P8-16, E2 Chat): Abspiel-Bibliothek, vorerst nur in der Probe-APK -->
+    <!-- Phase 8 W8 (Weisungen P8-16/P8-17, E2 Chat): Abspiel-Bibliothek (MIT, enthaelt miniaudio PD/MIT-0) und OGG lesen (MIT) -->
     <PackageVersion Include="SoundFlow" Version="1.4.1" />
+    <PackageVersion Include="NVorbis" Version="0.10.5" />
     <!-- Nur Tests, wird nicht ausgeliefert -->
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>

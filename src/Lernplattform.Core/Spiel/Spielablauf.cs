@@ -291,11 +291,16 @@ public sealed class Spielablauf
         {
             Pruefen();
         }
+        // Phase 8 W8: nur Darstellung (Toene), nach dem Anwenden; Erfolge danach melden sich selbst
+        NachEreignis?.Invoke(art, daten);
         if (art != Ereignisse.Erfolg)
         {
             ErfolgePruefen(feierabend: art == Ereignisse.Feierabend);
         }
     }
+
+    /// <summary>Phase 8 W8: nach jedem gespeicherten Ereignis (Art, Daten), nur fuer die Darstellung (Toene).</summary>
+    public Action<string, PyObjekt>? NachEreignis { get; set; }
 
     /// <summary>
     /// _apply_written: nur schrittweise weiterrechnen, wenn seit dem Stempel <paramref name="vorher"/>

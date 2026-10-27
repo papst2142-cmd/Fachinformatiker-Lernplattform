@@ -1,0 +1,365 @@
+{
+ "_hinweis": "Phase 8 W8: Toene des Spiels (werkzeuge/toene/erzeuge_toene.py), alle CC0 1.0. Nur angehaengt; anlass ordnet die Datei dem Tonplan zu (Core/Spiel/Ton/Tonplan.cs).",
+ "dateien": [
+  {
+   "datei": "stadt_voegel.ogg",
+   "anlass": "stadt_grund",
+   "werk": "Park ambiences, Thimras",
+   "fundstelle": "https://opengameart.org/content/park-ambiences",
+   "quelle": "park_ambience_birds.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "b3827474be54241ecbd0cd969fe0028f7a2d5e162c9b4285c0cd10b34a4a5c0a"
+  },
+  {
+   "datei": "stadt_fluss.ogg",
+   "anlass": "fluss",
+   "werk": "Park ambiences, Thimras",
+   "fundstelle": "https://opengameart.org/content/park-ambiences",
+   "quelle": "park_ambience_river.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "3cb118c9e4b1fe29e7572a3178f847741a7254f10105718783589987e330173e"
+  },
+  {
+   "datei": "vogelruf.ogg",
+   "anlass": "vogelruf",
+   "werk": "Bird chirping sounds, syncopika",
+   "fundstelle": "https://opengameart.org/content/bird-chirping-sounds",
+   "quelle": "birdchirping071414.wav",
+   "lizenz": "CC0-1.0",
+   "sha256": "0ae03028b704e27930ccdbaf71b2254292e26a264952d45b76b291963b4195f7"
+  },
+  {
+   "datei": "auto_taxi.ogg",
+   "anlass": "auto:car-taxi",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_0.wav (Tonhoehe x 0.62)",
+   "lizenz": "CC0-1.0",
+   "sha256": "052503a8ea5f8710b1ca7ce4aaad7271e65e33a133f6cd217ec5e1681951a2a8"
+  },
+  {
+   "datei": "auto_van.ogg",
+   "anlass": "auto:car-van",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_1.wav (Tonhoehe x 0.56)",
+   "lizenz": "CC0-1.0",
+   "sha256": "8b8703f359ec9b3a3c314cdf34b0cb841959ef36df3bb205b82ac0267511aa9d"
+  },
+  {
+   "datei": "auto_sedan.ogg",
+   "anlass": "auto:car-sedan",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_2.wav (Tonhoehe x 0.66)",
+   "lizenz": "CC0-1.0",
+   "sha256": "5bc1a5dac84468fa31f7e4c25c5a07f54bc3b342e51467f1e1a1f2dc22642df3"
+  },
+  {
+   "datei": "auto_police.ogg",
+   "anlass": "auto:car-police",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_3.wav (Tonhoehe x 0.6)",
+   "lizenz": "CC0-1.0",
+   "sha256": "ee175530f4bfbf747c419b8e6f4fb1f9a6d3a9663b1f0ac392b20526f22b505d"
+  },
+  {
+   "datei": "auto_ambulance.ogg",
+   "anlass": "auto:car-ambulance",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_4.wav (Tonhoehe x 0.58)",
+   "lizenz": "CC0-1.0",
+   "sha256": "5be0bfc0d72d185268b0c8966e37371bf3d53f67283b8dfa9df48e4d41fcc0c7"
+  },
+  {
+   "datei": "auto_garbage-truck.ogg",
+   "anlass": "auto:car-garbage-truck",
+   "werk": "racing car engine sound loops, domasx2",
+   "fundstelle": "https://opengameart.org/node/5633",
+   "quelle": "loop_5.wav (Tonhoehe x 0.42)",
+   "lizenz": "CC0-1.0",
+   "sha256": "f76533aa4151d8c2820fb47f28fc36da76da0b97934e4eeea97c8d22a2d4ef55"
+  },
+  {
+   "datei": "footstep_concrete_000.ogg",
+   "anlass": "schritt_concrete",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_concrete_000.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe"
+  },
+  {
+   "datei": "footstep_concrete_001.ogg",
+   "anlass": "schritt_concrete",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_concrete_001.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d"
+  },
+  {
+   "datei": "footstep_concrete_002.ogg",
+   "anlass": "schritt_concrete",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_concrete_002.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13"
+  },
+  {
+   "datei": "footstep_concrete_003.ogg",
+   "anlass": "schritt_concrete",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_concrete_003.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "8b513c2f0316324060b9174b8f28df6c2147418c506e6a53b77f18e149a5547b"
+  },
+  {
+   "datei": "footstep_concrete_004.ogg",
+   "anlass": "schritt_concrete",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_concrete_004.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "24dd8db2413e5b81ad181e1205c12a1c7801da5f85715d471b92a4b2f632e45e"
+  },
+  {
+   "datei": "footstep_grass_000.ogg",
+   "anlass": "schritt_grass",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_grass_000.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
+  },
+  {
+   "datei": "footstep_grass_001.ogg",
+   "anlass": "schritt_grass",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_grass_001.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
+  },
+  {
+   "datei": "footstep_grass_002.ogg",
+   "anlass": "schritt_grass",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_grass_002.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc"
+  },
+  {
+   "datei": "footstep_grass_003.ogg",
+   "anlass": "schritt_grass",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_grass_003.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "0546e1d8ab2def714425701a18bd34c5ee2794b12e858e5b595aabcf38a34137"
+  },
+  {
+   "datei": "footstep_grass_004.ogg",
+   "anlass": "schritt_grass",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_grass_004.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "086fd4ab3546a507ea5f5c759a9a10e535c95ade13705c238bc0eeffd7d4e8ba"
+  },
+  {
+   "datei": "footstep_wood_000.ogg",
+   "anlass": "schritt_wood",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_wood_000.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "5f1c252942a220d658121bd9417448cd19649ded9fff2ff15f6e50899373ce8e"
+  },
+  {
+   "datei": "footstep_wood_001.ogg",
+   "anlass": "schritt_wood",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_wood_001.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "e4f68e1c9fd55b4dc8ca89ed2bbab6f200171bc54bdc18aa96b80d8e7336f462"
+  },
+  {
+   "datei": "footstep_wood_002.ogg",
+   "anlass": "schritt_wood",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_wood_002.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "9ff095b05cee5eec40b081defe3f0eef7232bb16d4865ce03b9f6dbab875cfdd"
+  },
+  {
+   "datei": "footstep_wood_003.ogg",
+   "anlass": "schritt_wood",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_wood_003.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "2a68a083daa9eda08fed0ea5da5280dfbe0de226196c576be02f95259dd139d9"
+  },
+  {
+   "datei": "footstep_wood_004.ogg",
+   "anlass": "schritt_wood",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_wood_004.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "b33e0854e2b3f6b6492e25c25ef8f90447a332f7c6bb25dd02edced9581d3441"
+  },
+  {
+   "datei": "footstep_carpet_000.ogg",
+   "anlass": "schritt_carpet",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_carpet_000.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "b9524658b52a99a20590f8feefc103088637fd13ea8ec35811aee785e1f2f330"
+  },
+  {
+   "datei": "footstep_carpet_001.ogg",
+   "anlass": "schritt_carpet",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_carpet_001.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "9af3c3f76705107339e72036e4053bdca3eaa50ad31c8c929f42ce8d40e5d781"
+  },
+  {
+   "datei": "footstep_carpet_002.ogg",
+   "anlass": "schritt_carpet",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_carpet_002.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "9af3c3f76705107339e72036e4053bdca3eaa50ad31c8c929f42ce8d40e5d781"
+  },
+  {
+   "datei": "footstep_carpet_003.ogg",
+   "anlass": "schritt_carpet",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_carpet_003.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "4ae7454338d57c7d102145919ae653c7d010eb542797c4f25a1c7470be3a7e4c"
+  },
+  {
+   "datei": "footstep_carpet_004.ogg",
+   "anlass": "schritt_carpet",
+   "werk": "Impact Sounds, Kenney",
+   "fundstelle": "https://kenney.nl/assets/impact-sounds",
+   "quelle": "kenney_impact-sounds.zip/Audio/footstep_carpet_004.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "4ae7454338d57c7d102145919ae653c7d010eb542797c4f25a1c7470be3a7e4c"
+  },
+  {
+   "datei": "doorOpen_1.ogg",
+   "anlass": "tuer_auf",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorOpen_1.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b"
+  },
+  {
+   "datei": "doorOpen_2.ogg",
+   "anlass": "tuer_auf",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorOpen_2.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "68962fb0458c9bac59dec3adefa9849703c7c89d34712de03dd0075d095e79e9"
+  },
+  {
+   "datei": "doorClose_1.ogg",
+   "anlass": "tuer_zu",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorClose_1.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb"
+  },
+  {
+   "datei": "doorClose_2.ogg",
+   "anlass": "tuer_zu",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorClose_2.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "4aa4fe79836c53cd6d0cb0b22ddc33b9901429463ae1bb75131f072683f63f21"
+  },
+  {
+   "datei": "doorClose_3.ogg",
+   "anlass": "tuer_zu",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorClose_3.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "d0a2540e5e1639bc2fbeef34e76f28e9f9cb8a151736a0ac4c13859994328d0e"
+  },
+  {
+   "datei": "doorClose_4.ogg",
+   "anlass": "tuer_zu",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/doorClose_4.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "fd21c0e7a9d0317375d2561590f0770dd3380ee35507d064862cb44d6f71595b"
+  },
+  {
+   "datei": "handleCoins.ogg",
+   "anlass": "kasse",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/handleCoins.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab"
+  },
+  {
+   "datei": "handleCoins2.ogg",
+   "anlass": "kasse",
+   "werk": "RPG Audio, Kenney",
+   "fundstelle": "https://kenney.nl/assets/rpg-audio",
+   "quelle": "kenney_rpg-audio.zip/Audio/handleCoins2.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32"
+  },
+  {
+   "datei": "jingles_PIZZI07.ogg",
+   "anlass": "melodie_feierabend",
+   "werk": "Music Jingles, Kenney",
+   "fundstelle": "https://kenney.nl/assets/music-jingles",
+   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI07.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "91870588924e0e498c6eb8d4f4ccf8595c9e7dc51fb553797b551062e642ce7c"
+  },
+  {
+   "datei": "jingles_PIZZI03.ogg",
+   "anlass": "melodie_erfolg",
+   "werk": "Music Jingles, Kenney",
+   "fundstelle": "https://kenney.nl/assets/music-jingles",
+   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI03.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "88da900ec74a79fb845f2dcf2068383998833a9ee1b87a23f074924781af5700"
+  },
+  {
+   "datei": "jingles_PIZZI00.ogg",
+   "anlass": "melodie_ticket",
+   "werk": "Music Jingles, Kenney",
+   "fundstelle": "https://kenney.nl/assets/music-jingles",
+   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI00.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "b442ade3308a2bbda4b8c572c86f9f1071c7bdbcfb1e6f915d35c605b61bd475"
+  }
+ ]
+}

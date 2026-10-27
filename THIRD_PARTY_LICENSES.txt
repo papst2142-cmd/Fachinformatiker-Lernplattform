@@ -7918,6 +7918,91 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 [Paket Microsoft.NETCore.App.Runtime.win-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
+miniaudio (0.11.24 (in SoundFlow 1.4.1)), Lizenz MIT-0 oder Unlicense (Public Domain)
+
+--- SoundFlow_Drittanbieter.txt ---
+Quelle: SOUNDFLOW-THIRD-PARTY-NOTICES.txt aus dem NuGet-Paket SoundFlow 1.4.1, Abschnitte 1 und 2 (SoundFlow und miniaudio in libminiaudio).
+Die Abschnitte 3 bis 5 der Datei (PortMidi, WebRTC APM, FFmpeg) gehoeren zu Erweiterungspaketen von SoundFlow, die das Programm nicht nutzt und nicht ausliefert
+(geprueft: die ausgelieferten libminiaudio-Dateien enthalten keinen dieser Teile).
+
+SoundFlow Third-Party Notices
+=============================
+
+This file contains the license notices for the SoundFlow library and the 
+third-party native libraries it wraps or utilizes.
+
+--------------------------------------------------------------------------------
+1. SoundFlow (and sub-libraries)
+License: MIT
+Copyright (c) 2026 Ahmed Abdallah (LSXPrime)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+2. MiniAudio
+License: MIT or Unlicense (Dual Licensed)
+Author: David Reid
+
+(Notice used under MIT terms)
+Copyright (c) David Reid
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of 
+this software and associated documentation files (the "Software"), to deal in 
+the Software without restriction, including without limitation the rights to 
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
+of the Software, and to permit persons to whom the Software is furnished to do 
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+##############################################################################
+NVorbis (0.10.5), Lizenz Datei LICENSE im Paket
+Copyright laut Paket: Copyright © Andrew Ward 2021
+
+--- Paket NVorbis 0.10.5: LICENSE ---
+MIT License
+
+Copyright (c) 2020 Andrew Ward
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+##############################################################################
 Schrift Inter (in Avalonia.Fonts.Inter 12.1.4), Lizenz OFL-1.1
 
 --- Inter_OFL-1.1.txt ---
@@ -8582,6 +8667,28 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 [Paket SkiaSharp.NativeAssets.Win32 3.119.4: THIRD-PARTY-NOTICES.txt: gleicher Text wie bei HarfBuzzSharp.NativeAssets.Android, Paket HarfBuzzSharp.NativeAssets.Android 8.3.1.3: THIRD-PARTY-NOTICES.txt]
 
 ##############################################################################
+SoundFlow (1.4.1), Lizenz Datei LICENSE.md im Paket
+Copyright laut Paket: Copyright (c) 2025 LSXPrime
+
+--- Paket SoundFlow 1.4.1: LICENSE.md ---
+MIT License
+
+Copyright (c) 2025 LSXPrime
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+##############################################################################
 SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13), Lizenz gemeinfrei
 
 --- SQLite_gemeinfrei.txt ---
@@ -8856,6 +8963,132 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+##############################################################################
+Toene Bird chirping sounds (syncopika) (OpenGameArt), Lizenz CC0-1.0
+
+--- OpenGameArt_syncopika_BirdChirping_CC0.txt ---
+Werk: "Bird chirping sounds", syncopika
+Fundstelle: https://opengameart.org/content/bird-chirping-sounds
+Lizenz: Creative Commons Zero (CC0 1.0 Universal), https://creativecommons.org/publicdomain/zero/1.0/
+Die Lizenz wurde auf der Fundstelle geprueft (Fi-Austausch anlagen/audio_cc0/HERKUNFT.md, Ordner opengameart_bird_chirping_syncopika, 27.10.2026).
+
+CC0 1.0 Universal: Der Urheber hat das Werk in die Gemeinfreiheit entlassen, soweit das Gesetz es zulaesst.
+Es darf ohne Erlaubnis und ohne Namensnennung kopiert, veraendert, verbreitet und auch kommerziell genutzt werden.
+Im Programm zugeschnitten und umgewandelt von werkzeuge/toene/erzeuge_toene.py.
+
+##############################################################################
+Toene Kenney Impact Sounds (1.0), Lizenz CC0-1.0
+
+--- Kenney_ImpactSounds_CC0.txt ---
+Quelle: License.txt aus kenney_impact-sounds.zip (SHA-256 der ZIP 029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8), seit 27.10.2026 im Ton-Vorrat (Fi-Austausch anlagen/audio_cc0, Weisung P8-17d).
+
+	
+
+	Impact Sounds (1.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 19-12-2019
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+
+	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+	Patreon:  http://patreon.com/kenney/
+
+	Follow on Twitter for updates:
+	http://twitter.com/KenneyNL
+
+##############################################################################
+Toene Kenney Music Jingles (1.0), Lizenz CC0-1.0
+
+--- Kenney_MusicJingles_CC0.txt ---
+Quelle: License.txt aus kenney_music-jingles.zip (SHA-256 der ZIP b729ba57959bd58793d2c5cafa348aaf2655d354f3da35ec4729e03ec77197b8), seit 27.10.2026 im Ton-Vorrat (Fi-Austausch anlagen/audio_cc0, Weisung P8-17d).
+
+	
+
+	Music Jingles
+
+	by  Kenney Vleugels (Kenney.nl)
+
+			------------------------------
+
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+
+	Follow on Twitter for updates:
+	@KenneyNL
+
+##############################################################################
+Toene Kenney RPG Audio (1.0), Lizenz CC0-1.0
+
+--- Kenney_RPGAudio_CC0.txt ---
+Quelle: License.txt aus kenney_rpg-audio.zip (SHA-256 der ZIP 6dbeaf8544da958d8f2adcb4a4a4b76c1ade34a05f8ab9edccd327da7375f38b), seit 27.10.2026 im Ton-Vorrat (Fi-Austausch anlagen/audio_cc0, Weisung P8-17d).
+
+	
+
+	RPG Audio
+
+	by  Kenney Vleugels (Kenney.nl)
+
+			------------------------------
+
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+
+	Follow on Twitter for updates:
+	@KenneyNL
+
+##############################################################################
+Toene Park ambiences (Thimras) (OpenGameArt), Lizenz CC0-1.0
+
+--- OpenGameArt_Thimras_ParkAmbiences_CC0.txt ---
+Werk: "Park ambiences", Thimras
+Fundstelle: https://opengameart.org/content/park-ambiences
+Lizenz: Creative Commons Zero (CC0 1.0 Universal), https://creativecommons.org/publicdomain/zero/1.0/
+Die Lizenz wurde auf der Fundstelle geprueft (Fi-Austausch anlagen/audio_cc0/HERKUNFT.md, Ordner opengameart_park_ambiences_thimras, 27.10.2026).
+
+CC0 1.0 Universal: Der Urheber hat das Werk in die Gemeinfreiheit entlassen, soweit das Gesetz es zulaesst.
+Es darf ohne Erlaubnis und ohne Namensnennung kopiert, veraendert, verbreitet und auch kommerziell genutzt werden.
+Im Programm zugeschnitten und umgewandelt von werkzeuge/toene/erzeuge_toene.py.
+
+##############################################################################
+Toene racing car engine sound loops (domasx2) (OpenGameArt), Lizenz CC0-1.0
+
+--- OpenGameArt_domasx2_CarEngineLoops_CC0.txt ---
+Werk: "racing car engine sound loops", domasx2
+Fundstelle: https://opengameart.org/node/5633
+Lizenz: Creative Commons Zero (CC0 1.0 Universal), https://creativecommons.org/publicdomain/zero/1.0/
+Die Lizenz wurde auf der Fundstelle geprueft (Fi-Austausch anlagen/audio_cc0/HERKUNFT.md, Ordner opengameart_car_engine_loops_domasx2, 27.10.2026).
+
+CC0 1.0 Universal: Der Urheber hat das Werk in die Gemeinfreiheit entlassen, soweit das Gesetz es zulaesst.
+Es darf ohne Erlaubnis und ohne Namensnennung kopiert, veraendert, verbreitet und auch kommerziell genutzt werden.
+Im Programm zugeschnitten und umgewandelt von werkzeuge/toene/erzeuge_toene.py.
 
 ##############################################################################
 Velopack (1.2.161), Lizenz MIT

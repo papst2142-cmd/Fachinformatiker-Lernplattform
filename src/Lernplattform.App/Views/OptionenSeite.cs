@@ -25,7 +25,7 @@ namespace Lernplattform.Views;
 /// sofort gespeichert; geht das nicht, erscheint "Speichern fehlgeschlagen" und
 /// die Anzeige springt auf den gespeicherten Wert zurueck.
 /// </summary>
-public sealed class OptionenSeite : UserControl, IAufklappbar
+public sealed partial class OptionenSeite : UserControl, IAufklappbar
 {
     private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
@@ -213,6 +213,9 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Datenbank => Datenbank(),
         Optionen.Updates => Updates(),
         Optionen.Spiel when Lernplattform.Spiel.TonProbe.Geraet is { } probe => TonProbeTeil(probe),
+        Optionen.Ton => Ton(),
+        Optionen.Vollbild => VollbildKarte(),
+        Optionen.Tasten => Tasten(),
         _ => Platzhalterzeile(),
     };
 

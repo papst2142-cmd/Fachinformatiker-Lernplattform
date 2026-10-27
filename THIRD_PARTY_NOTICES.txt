@@ -73,6 +73,9 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Runtime.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
+- miniaudio (0.11.24 (in SoundFlow 1.4.1)) | MIT-0 oder Unlicense (Public Domain) | https://github.com/mackron/miniaudio (David Reid), gebaut von SoundFlow (https://github.com/LSXPrime/SoundFlow) | android-arm64, linux-x64, osx-arm64, win-x64
+  Tonausgabe auf allen Systemen, enthalten in libminiaudio (miniaudio.dll, libminiaudio.so, libminiaudio.dylib) aus dem Paket SoundFlow
+- NVorbis (0.10.5) | Datei LICENSE im Paket | https://github.com/NVorbis/NVorbis | android-arm64, linux-x64, osx-arm64, win-x64
 - Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, win-x64
   Ersatzschrift fuer Zeichen, die Roboto nicht hat (z. B. Pfeile, Haken), eingebettet in Avalonia.Fonts.Inter.dll
 - Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, win-x64
@@ -87,6 +90,7 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - SkiaSharp.NativeAssets.macOS (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64
 - SkiaSharp.NativeAssets.WebAssembly (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - SkiaSharp.NativeAssets.Win32 (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | win-x64
+- SoundFlow (1.4.1) | Datei LICENSE.md im Paket | https://github.com/LSXPrime/SoundFlow | android-arm64, linux-x64, osx-arm64, win-x64
 - SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13) | gemeinfrei | https://sqlite.org/copyright.html | android-arm64, linux-x64, osx-arm64, win-x64
   Datenbank, in e_sqlite3
 - SQLitePCLRaw.bundle_e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
@@ -95,6 +99,18 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - SQLitePCLRaw.lib.e_sqlite3.android (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64
 - SQLitePCLRaw.provider.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
 - Tmds.DBus.Protocol (0.94.1) | MIT | https://github.com/tmds/Tmds.DBus.git | linux-x64, osx-arm64, win-x64
+- Toene Bird chirping sounds (syncopika) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/bird-chirping-sounds (syncopika) | android-arm64, linux-x64, osx-arm64, win-x64
+  Einzelne Vogelrufe in Parks im Spiel, umgewandelt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
+- Toene Kenney Impact Sounds (1.0) | CC0-1.0 | https://kenney.nl/assets/impact-sounds (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+  Schritte auf Stein, Gras, Holz und Teppich im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
+- Toene Kenney Music Jingles (1.0) | CC0-1.0 | https://kenney.nl/assets/music-jingles (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+  Kurze Melodien (Feierabend, Erfolg, Ticket) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
+- Toene Kenney RPG Audio (1.0) | CC0-1.0 | https://kenney.nl/assets/rpg-audio (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+  Tueren und Muenzen (Kasse) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
+- Toene Park ambiences (Thimras) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/park-ambiences (Thimras) | android-arm64, linux-x64, osx-arm64, win-x64
+  Voegel und Fluss in der Stadt im Spiel, zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
+- Toene racing car engine sound loops (domasx2) (OpenGameArt) | CC0-1.0 | https://opengameart.org/node/5633 (domasx2) | android-arm64, linux-x64, osx-arm64, win-x64
+  Motoren der Autos in der Stadt im Spiel, Tonhoehe abgesenkt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
 - Velopack (1.2.161) | MIT | https://github.com/velopack/velopack | linux-x64, osx-arm64, win-x64
 - Velopack-Programme (1.2.161) | MIT | https://github.com/velopack/velopack (Tag 1.2.161) | linux-x64, osx-arm64, win-x64
   Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt

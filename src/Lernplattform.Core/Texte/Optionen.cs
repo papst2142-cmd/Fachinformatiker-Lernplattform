@@ -136,11 +136,25 @@ public static class Optionen
 
     /// <summary>Bereich zur Kennung (KeyNotFoundException, wenn es ihn nicht gibt).</summary>
     public static OptionenBereich Bereich(string id) =>
-        Bereiche.Append(AusbildungBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
+        Bereiche.Append(AusbildungBereich).Append(TonBereich).Append(VollbildBereich).Append(TastenBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
 
     // -- Phase 4, W2: Bereich "Ausbildung" (nur C#, Wortliste W2 Abschnitt 7) -----------------
 
     public const string Ausbildung = "ausbildung";
+
+    // -- Phase 8 W8 (Weisungen P8-15 bis P8-17): Karten neben der G9-Liste wie "Ausbildung" ----------------
+    public const string Ton = "ton";
+    public const string Vollbild = "vollbild";
+    public const string Tasten = "tasten";
+    public const string TastenKurz = "Tasten zum Drehen, Verschieben und Zoomen im Spiel";
+    public static readonly OptionenBereich TastenBereich = new(Tasten, "Tastenbelegung", null, null,
+        false, false, false, [], ["Tasten", "Tastatur", "Tastenbelegung"], []);
+    public const string TonKurz = "Lautstärke von Musik und Geräuschen im Spiel";
+    public const string VollbildKurz = "Programm über den ganzen Bildschirm";
+    public static readonly OptionenBereich TonBereich = new(Ton, "Musik und Geräusche", null, null,
+        false, false, false, [], ["Musik", "Geräusche", "Ton", "Lautstärke", "stumm"], []);
+    public static readonly OptionenBereich VollbildBereich = new(Vollbild, "Vollbild", null, null,
+        false, false, false, [], ["Vollbild", "Fenster", "F11"], []);
 
     /// <summary>Neu in C# (Python hat ihn nicht); <see cref="Bereiche"/> bleibt wie G9.</summary>
     public static readonly OptionenBereich AusbildungBereich = new(Ausbildung, PruefungTexte.AusbildungReiter, null, null,
@@ -151,6 +165,9 @@ public static class Optionen
     {
         var liste = BereicheFuer(pc).ToList();
         liste.Insert(liste.FindIndex(b => b.Id == Lerninhalte), AusbildungBereich);
+        liste.Insert(liste.FindIndex(b => b.Id == Spiel) + 1, TonBereich);
+        liste.Insert(liste.FindIndex(b => b.Id == Ton) + 1, TastenBereich);
+        liste.Insert(liste.FindIndex(b => b.Id == Optik) + 1, VollbildBereich);
         return liste;
     }
 
@@ -166,8 +183,8 @@ public static class Optionen
     public static readonly IReadOnlyList<(string Titel, IReadOnlyList<string> Ids)> Gruppen =
     [
         (GruppeLernen, [Ausbildung, Tagesziel, Lerninhalte]),
-        (GruppeAussehen, [Optik]),
-        (GruppeSpiel, [Spiel]),
+        (GruppeAussehen, [Optik, Vollbild]),
+        (GruppeSpiel, [Spiel, Ton, Tasten]),
         (GruppeDaten, [Abgleich, Sicherung, Datenbank, Loeschen]),
         (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber]),
     ];
@@ -208,6 +225,9 @@ public static class Optionen
         Lerninhalte => LerninhalteKurz,
         Datenbank => DatenbankKurz,
         Spiel => SpielKurz,
+        Ton => TonKurz,
+        Tasten => TastenKurz,
+        Vollbild => VollbildKurz,
         Ueber => UeberKurz,
         _ => throw new KeyNotFoundException(bereich.Id),
     };

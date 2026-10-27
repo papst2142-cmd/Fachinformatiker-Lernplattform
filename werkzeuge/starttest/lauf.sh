@@ -16,6 +16,8 @@ export LERNPLATTFORM_MESSUNG_DATEI="$datei"
 # Phase 8 W6: festes Datum ohne Festzeit (Teilplan P8-11 Abschnitt 4), die CI haengt nie vom echten Tag ab;
 # die Festzeiten setzt der Start-Test selbst (Festzeit.Probe). Ein ungueltiger Wert bricht den Start-Test ab.
 export LERNPLATTFORM_DATUM=2026-06-15
+# Phase 8 W8: Pruefstand stumm (stiller Tondienst, zaehlt nur die Anlaesse)
+export LERNPLATTFORM_TON=aus
 # Beleg frischer Datenordner (das Programm liest LERNPLATTFORM_DATEN in Core/Daten/Ablage.cs)
 if [ -n "${LERNPLATTFORM_DATEN:-}" ]; then
   if [ -d "$LERNPLATTFORM_DATEN" ]; then

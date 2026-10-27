@@ -1,0 +1,8 @@
+Werk: "Park ambiences", Thimras
+Fundstelle: https://opengameart.org/content/park-ambiences
+Lizenz: Creative Commons Zero (CC0 1.0 Universal), https://creativecommons.org/publicdomain/zero/1.0/
+Die Lizenz wurde auf der Fundstelle geprueft (Fi-Austausch anlagen/audio_cc0/HERKUNFT.md, Ordner opengameart_park_ambiences_thimras, 27.10.2026).
+
+CC0 1.0 Universal: Der Urheber hat das Werk in die Gemeinfreiheit entlassen, soweit das Gesetz es zulaesst.
+Es darf ohne Erlaubnis und ohne Namensnennung kopiert, veraendert, verbreitet und auch kommerziell genutzt werden.
+Im Programm zugeschnitten und umgewandelt von werkzeuge/toene/erzeuge_toene.py.

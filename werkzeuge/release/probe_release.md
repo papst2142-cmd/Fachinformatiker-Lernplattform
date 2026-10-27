@@ -1,22 +1,25 @@
-Neu im Spiel: Die Stadt wird lebendiger, mit Schritten, Autos und viel mehr Grün.
+Neu im Spiel: Geräusche, Vollbild, Drehen mit der rechten Maustaste und eine eigene Tastenbelegung.
 
-- Deine Figur bewegt beim Gehen jetzt Beine und Arme. In der Stadt rennt sie, in den Räumen geht sie ruhig. Wenn sie stehen bleibt, steht sie still wie bisher. Kleidung, Kappe und Gesicht bewegen sich mit.
-- Auf den Straßen fahren sechs Autos: ein Taxi, ein Lieferwagen, eine Limousine, ein Polizeiauto, ein Krankenwagen und ein Müllwagen. Sie fahren auf der rechten Spur, biegen ab und kommen am Rand der Karte wieder herein. An Kreuzungen warten sie, bis die Kreuzung frei ist, und sie fahren nicht auf das Auto vor ihnen auf. Steht oder geht deine Figur auf der Fahrbahn, hält das Auto davor an. Die Autos sind nur zum Anschauen und ändern nichts am Spiel.
-- Damit das Handy Strom spart, fahren die Autos nur, solange du die Stadt bedienst oder deine Figur unterwegs ist, und danach noch 10 Sekunden. Dann bleiben sie stehen, bis du wieder etwas tust.
-- Statt immer gleicher Bäume gibt es jetzt verschiedene Baumarten in unterschiedlichen Größen: Bäume mit runder Krone, mit breiter Schirmkrone und Tannen. Dazu kommen Büsche, Grasbüschel, Steine und bunte Blumenbeete in den Parks, an den Straßenrändern und auf freien Flächen.
-- Nichts davon steht auf Straßen, Fußwegen, Gleisen, im Wasser, vor einer Tür oder dort, wo zu den Festzeiten geschmückt wird. Um Büsche, Steine, Beete und Bäume im Park geht deine Figur herum, über Gras geht sie einfach drüber. Jede Tür bleibt erreichbar.
-- Aus der Ferne, also wenn du die ganze Stadt ansiehst, werden die kleinen Pflanzen nicht gezeichnet und die Autos einfacher dargestellt. So bleibt das Spiel auch auf dem Handy flüssig.
+- Die Stadt klingt jetzt: Vögel zwischen den Häusern, das Rauschen des Flusses, wenn du nah am Wasser bist, und die Motoren der Autos. Ein Auto klingt lauter, je näher es der Bildmitte ist, und ist still, sobald es weit weg ist oder alle Autos stehen. In Parks und bei Bäumen ruft ab und zu ein einzelner Vogel.
+- Deine Figur macht Schritte, die zum Boden passen: Stein auf der Straße, Gras im Park, Teppich in der Wohnung und im Büro, Holz in den Geschäften, in der Bank und auf dem Amt. Türen öffnen und schließen sich hörbar, beim Kaufen und beim Kredit klimpern Münzen, und kurze Melodien begleiten den Feierabend, einen neuen Erfolg und ein richtig gelöstes Ticket.
+- In den Optionen gibt es unter SPIEL die neue Karte „Musik und Geräusche“ mit drei Reglern: Gesamt, Musik und Umgebung, jeweils von 0 bis 100 %. Bei 0 % ist es ganz still. Beim ersten Start stehen sie auf 80, 50 und 80 %.
+- Musik gibt es nur mit deinen eigenen Liedern. In derselben Karte fügst du Lieder hinzu (MP3, WAV, FLAC oder OGG) und entfernst sie wieder; das Programm legt dafür eine Kopie an, deine eigene Datei bleibt unberührt. Du wählst, wo sie laufen: nur in den Räumen (so ist es beim ersten Start), nur in der Stadt oder überall. In der Stadt liegt die Musik leise unter den Geräuschen.
+- Töne gibt es nur im Spiel. Verlässt du das Spiel, legst du das Handy weg oder verkleinerst du das Fenster am PC, ist es sofort still. Kommst du zurück, klingt es von selbst wieder, und die Geräusche und dein Lied laufen an derselben Stelle weiter.
+- Unter AUSSEHEN gibt es die Karte „Vollbild“. Am PC füllt das Programm dann den ganzen Bildschirm, auch beim nächsten Start; die Taste F11 schaltet ebenfalls um. Am Handy blendet derselbe Schalter die Leisten oben und unten aus, wie bisher schon im Spiel.
+- Am PC drehst du die Kamera in der Stadt und in den Räumen, solange du die rechte Maustaste hältst und die Maus zur Seite bewegst. Ein Klick mit der rechten Maustaste lässt die Figur nicht mehr loslaufen.
+- Unter SPIEL gibt es die Karte „Tastenbelegung“: alle Tasten des Spiels zum Verschieben, Drehen, Zoomen, Hineingehen und für das Vollbild. Klicke auf einen Knopf und drücke die neue Taste. Ist sie schon vergeben, sagt das Programm das und ändert nichts. „Standard wiederherstellen“ setzt alles zurück. Der Hinweis in der Stadt nennt deine Tasten. Die Karte gibt es auch am Handy, falls du dort eine Tastatur ansteckst.
+- Alle Geräusche sind frei nutzbar (CC0) und stehen mit ihrer Herkunft in den Lizenzen.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.17.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.18.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.17.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.17.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.17.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.18.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.18.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.18.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
