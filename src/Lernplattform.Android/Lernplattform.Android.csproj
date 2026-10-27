@@ -38,6 +38,12 @@
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
   </ItemGroup>
 
+  <!-- Phase 8 W8 Vorarbeit (Weisung P8-16 a): Abspiel-Bibliothek nur in der Probe-APK (Ton-Probe am S24);
+       die echte App bekommt sie erst mit dem Bau von W8 (mit Lizenzliste, A5) -->
+  <ItemGroup Condition="'$(Probe)' == 'true'">
+    <PackageReference Include="SoundFlow" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Lernplattform.App\Lernplattform.App.csproj" />
   </ItemGroup>

@@ -26,6 +26,10 @@ public class MainActivity : AvaloniaMainActivity
     {
         base.OnCreate(savedInstanceState);
         SystemmessungEinrichten();
+#if PROBE
+        // Weisung P8-16 a: Ton-Probe mit SoundFlow (nur Probe-APK)
+        Lernplattform.Spiel.TonProbe.Geraet = _tonprobe;
+#endif
         Lernplattform.Spiel.Vollbild.Geraet = an => RunOnUiThread(() =>
         {
             _messung?.Setzen(an);
@@ -108,8 +112,15 @@ public class MainActivity : AvaloniaMainActivity
     /// Sammelliste 51 (_lifecycle main.py 5970): offene Eingaben in Klausur und Abschlussprojekt
     /// speichern, auch wenn Avalonia den Wechsel nicht als Deactivated meldet.
     /// </summary>
+#if PROBE
+    private readonly Tonprobe _tonprobe = new();
+#endif
+
     protected override void OnPause()
     {
+#if PROBE
+        _tonprobe.Aufraeumen();
+#endif
         Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
         Lernplattform.Programm.Zustand.EingabenSpeichern();
         base.OnPause();

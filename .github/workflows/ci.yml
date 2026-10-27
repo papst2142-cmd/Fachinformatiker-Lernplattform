@@ -468,6 +468,13 @@ jobs:
             "$BT/apksigner" verify --print-certs "$b" > test_zert.txt
             grep -q "SHA-256.*$zert" test_zert.txt || { echo "FEHLER: Probe-APK nicht mit dem Testschluessel dieses Laufs"; exit 1; }
           done
+          # Weisung P8-16 a: Ton-Probe; die Abspiel-Bibliothek steckt nur in der Probe-APK, nie in der echten App
+          unzip -l "$a" > probe_inhalt.txt
+          grep -q "lib/arm64-v8a/libminiaudio.so" probe_inhalt.txt || { echo "FEHLER: Probe-APK ohne libminiaudio.so"; exit 1; }
+          for b in apk/*-Signed.apk apk-update/*-Signed.apk; do
+            unzip -l "$b" > app_inhalt.txt
+            if grep -q "libminiaudio" app_inhalt.txt; then echo "FEHLER: $b enthaelt die Abspiel-Bibliothek der Probe"; exit 1; fi
+          done
           mv "$a" apk-probe/Lernplattform-Probe-3D-arm64.apk
       - uses: actions/upload-artifact@v7
         with:
@@ -513,6 +520,8 @@ jobs:
             "$BT/aapt2" dump badging "$a" > kennung_release.txt
             head -n 1 kennung_release.txt
             head -n 1 kennung_release.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
+            unzip -l "$a" > release_inhalt.txt
+            if grep -q "libminiaudio" release_inhalt.txt; then echo "FEHLER: $a enthaelt die Abspiel-Bibliothek der Probe"; exit 1; fi
           done
       - uses: actions/download-artifact@v8
         if: needs.pakete.result == 'success'

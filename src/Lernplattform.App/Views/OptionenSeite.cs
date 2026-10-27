@@ -212,8 +212,55 @@ public sealed class OptionenSeite : UserControl, IAufklappbar
         Optionen.Loeschen => Loeschen(),
         Optionen.Datenbank => Datenbank(),
         Optionen.Updates => Updates(),
+        Optionen.Spiel when Lernplattform.Spiel.TonProbe.Geraet is { } probe => TonProbeTeil(probe),
         _ => Platzhalterzeile(),
     };
+
+    /// <summary>
+    /// Weisung P8-16 a: Ton-Probe nur in der Probe-APK (sonst ist <see cref="Lernplattform.Spiel.TonProbe.Geraet"/> null):
+    /// Regler 0 bis 100 %, Knopf Starten/Anhalten, Zeile mit dem Ergebnis. Texte nur für die Probe.
+    /// </summary>
+    private static Control TonProbeTeil(Lernplattform.Spiel.ITonProbe probe)
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(new LernText("Ton-Probe (nur in der Probe-App): spielt zwei kurze Töne als Schleife. Der Regler ändert die Lautstärke sofort.", "Klein", FontWeight.Normal, "Pinsel.muted"));
+        var zahl = Schrift.Text("50 %", "Normal", FontWeight.Bold, "Pinsel.text");
+        var regler = new Slider { Minimum = 0, Maximum = 100, Value = 50, SmallChange = 5, LargeChange = 10 };
+        Avalonia.Automation.AutomationProperties.SetName(regler, "Lautstärke");
+        regler.ValueChanged += (_, e) =>
+        {
+            zahl.Text = $"{(int)e.NewValue} %";
+            probe.Lautstaerke((float)(e.NewValue / 100));
+        };
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+        zahl.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(zahl, 1);
+        zeile.Children.Add(regler);
+        zeile.Children.Add(zahl);
+        panel.Children.Add(zeile);
+        var ergebnis = new LernText("", "Klein", FontWeight.Normal, "Pinsel.text_dim");
+        var laeuft = false;
+        var knopf = Schrift.Knopf("Ton starten", true);
+        knopf.HorizontalAlignment = HorizontalAlignment.Left;
+        knopf.Click += (_, _) =>
+        {
+            if (laeuft)
+            {
+                probe.Anhalten();
+                laeuft = false;
+                ((TextBlock)knopf.Content!).Text = "Ton starten";
+                ergebnis.Text = "Angehalten.";
+                return;
+            }
+            var zeileText = probe.Starten((float)(regler.Value / 100));
+            laeuft = zeileText.StartsWith("Ton läuft", StringComparison.Ordinal);
+            ((TextBlock)knopf.Content!).Text = laeuft ? "Ton anhalten" : "Ton starten";
+            ergebnis.Text = zeileText;
+        };
+        panel.Children.Add(knopf);
+        panel.Children.Add(ergebnis);
+        return panel;
+    }
 
     private static TextBlock Platzhalterzeile() => Schrift.Text(Beschriftungen.Platzhalter, "Normal", FontWeight.Normal, "Pinsel.text_dim");
 
