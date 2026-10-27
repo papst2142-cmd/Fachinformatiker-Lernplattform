@@ -9,6 +9,69 @@
              auf allen Geraeten gleich (Assets/Fonts, Regular und Bold). Inter nur fuer Zeichen, die Roboto nicht
              hat (Pfeile, Haken). Einzige Stelle fuer die Schriftwahl. -->
         <FontFamily x:Key="ContentControlThemeFontFamily">avares://Lernplattform.App/Assets/Fonts#Roboto, fonts:Inter#Inter, $Default</FontFamily>
+
+        <!-- A 0.15.0 (Weisung P8-10, Sammelliste 128, Nico): eine Schaltstelle fuer alle Scrollleisten wie Python 0.63.2:
+             schmal (6 px), runde Enden, keine Pfeilknoepfe, keine Verbreiterung bei Maus darueber. Spur
+             Pinsel.scrollbar, Griff in der Programmfarbe Pinsel.accent (Kontrast in AutoMessung.W4.cs W4Paare).
+             Ziehen am Griff und Klick in die Spur (blaettern) bleiben; die Pruefung steht in Layoutpruefung. -->
+        <ControlTheme x:Key="LeisteSpur" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent" />
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+        <ControlTheme x:Key="LeisteGriff" TargetType="Thumb">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{DynamicResource Pinsel.accent}" CornerRadius="3" />
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+        <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Style Selector="^:vertical">
+                <Setter Property="Width" Value="6" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border Background="{DynamicResource Pinsel.scrollbar}" CornerRadius="3">
+                            <Track Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True"
+                                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                                   Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.DecreaseButton>
+                                    <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource LeisteSpur}" />
+                                </Track.DecreaseButton>
+                                <Track.IncreaseButton>
+                                    <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource LeisteSpur}" />
+                                </Track.IncreaseButton>
+                                <Thumb Theme="{StaticResource LeisteGriff}" />
+                            </Track>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+            <Style Selector="^:horizontal">
+                <Setter Property="Height" Value="6" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border Background="{DynamicResource Pinsel.scrollbar}" CornerRadius="3">
+                            <Track Name="PART_Track" Orientation="Horizontal"
+                                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                                   Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.DecreaseButton>
+                                    <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource LeisteSpur}" />
+                                </Track.DecreaseButton>
+                                <Track.IncreaseButton>
+                                    <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource LeisteSpur}" />
+                                </Track.IncreaseButton>
+                                <Thumb Theme="{StaticResource LeisteGriff}" />
+                            </Track>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+        </ControlTheme>
     </Application.Resources>
 
     <Application.Styles>

@@ -65,6 +65,84 @@ public static partial class AutoMessung
         return funde.Count;
     }
 
+    /// <summary>
+    /// Weisung P8-10 (Sammelliste 128): Scrollleisten. Seitenleiste am PC mit offenen Unterpunkten Karteikarten und
+    /// Spiel in einem niedrigen Fenster (die Leiste muss scrollen), danach die erste Rechner-Ansicht mit sichtbarer
+    /// waagerechter Leiste (schmal). Jede Ansicht prueft die Layoutpruefung samt Stil der Leisten (6 px, ohne Pfeile);
+    /// fehlt eine sichtbare Leiste, ist das ein Fund. Danach Fenster und Unterpunkte wie vorher.
+    /// </summary>
+    private static async Task<int> P8W5ScrollleistenAsync(MainView ansicht)
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var funde = new List<string>();
+        var fenster = Avalonia.Controls.TopLevel.GetTopLevel(ansicht) as Avalonia.Controls.Window;
+        if (fenster is null)
+        {
+            Messwerte.Notiere("Scrollleisten (Weisung P8-10): ohne Fenster nicht geprueft");
+            return 0;
+        }
+        var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
+        static List<Avalonia.Controls.Primitives.ScrollBar> Leisten(Avalonia.Controls.Control wurzel, Avalonia.Layout.Orientation richtung) =>
+            [.. Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(wurzel).OfType<Avalonia.Controls.Primitives.ScrollBar>()
+                .Where(l => l.Orientation == richtung && l.IsEffectivelyVisible && l.Bounds.Width > 0 && l.Bounds.Height > 0)];
+
+        // 1. Seitenleiste am PC, niedriges Fenster
+        var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
+        fenster.Width = Math.Min(PcBreite, hoechstB);
+        fenster.Height = Math.Min(LeisteFensterHoehe, hoechstH);
+        await ansicht.ZeigeAsync(Seiten.Dashboard);
+        var leisten = ansicht.Leisten;
+        var zu = ((string[])["cards", "game"]).Where(id => !leisten.Offen(id)).ToList();
+        foreach (var id in zu)
+        {
+            leisten.Umschalten(id);
+        }
+        await ansicht.BildFertigAsync();
+        await ansicht.BildFertigAsync();
+        var senkrecht = Leisten(leisten.Seitenleiste, Avalonia.Layout.Orientation.Vertical);
+        Messwerte.Notiere(string.Create(inv, $"Scrollleisten (Weisung P8-10): Seitenleiste {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}, sichtbare senkrechte Leisten {senkrecht.Count}"));
+        if (senkrecht.Count == 0)
+        {
+            funde.Add("Scrollleiste: Seitenleiste ohne sichtbare Leiste");
+        }
+        funde.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => "seitenleiste/leiste: " + f));
+        foreach (var id in zu)
+        {
+            leisten.Umschalten(id);
+        }
+
+        // 2. waagerechte Leiste: Rechner-Ansichten (Ergebniskasten mit langen IPv6-Zeilen) in der schmalen Groesse
+        string? gefunden = null;
+        fenster.Width = Math.Min(SchmalBreite, hoechstB);
+        fenster.Height = Math.Min(SchmalHoehe, hoechstH);
+        await ansicht.BildFertigAsync();
+        await foreach (var name in RechnerAnsichten(ansicht))
+        {
+            if (gefunden is null && Leisten(ansicht, Avalonia.Layout.Orientation.Horizontal).Count > 0)
+            {
+                gefunden = "schmal " + name;
+                funde.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => "waagerecht/" + name + ": " + f));
+            }
+        }
+        Messwerte.Notiere("  waagerechte Leiste: " + (gefunden ?? "keine Seite"));
+        if (gefunden is null)
+        {
+            funde.Add("Scrollleiste: keine Seite mit sichtbarer waagerechter Leiste");
+        }
+        fenster.Width = breiteVorher;
+        fenster.Height = hoeheVorher;
+        await ansicht.ZeigeAsync(Seiten.Dashboard);
+        await ansicht.BildFertigAsync();
+        foreach (var fund in funde.Distinct().Take(20))
+        {
+            Messwerte.Notiere("  FEHLER: " + fund);
+        }
+        return funde.Count;
+    }
+
+    /// <summary>Hoehe des Fensters fuer die Seitenleiste mit Leiste (Weisung P8-10).</summary>
+    private const double LeisteFensterHoehe = 520;
+
     private static async Task<int> P8W5MesspunkteAsync(MainView ansicht)
     {
         var funde = 0;

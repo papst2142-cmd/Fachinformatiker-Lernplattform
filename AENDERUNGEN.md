@@ -8,6 +8,7 @@ Neu im Spiel: das Kaufhaus mit Kleidung für deine Figur, und Feierabend über d
 - Der Rückblick „Meine Reise“ nennt Beförderungen wieder richtig. Bisher stand nach einem Streit im Team bei jedem späteren Rangwechsel „Zurückgestuft“.
 - In den Optionen zeigt die Karte „Spiel“ jetzt einen passenden Hinweis statt „Kommt in einer späteren Ausbaustufe“.
 - Die Hilfe erklärt das Kaufhaus, das Bett, den Spielstand beim Abgleich und den Knopf „Lizenzen“.
+- Die Scrollleisten sind jetzt schmal und rund wie in der bisherigen Version, ohne Pfeile und ohne graue Verbreiterung, wenn die Maus darüber ist. Der Griff hat die Farbe deiner Farbwelt und ist in Hell und Dunkel gut zu erkennen. Ziehen, Klicken in die Leiste und das Mausrad funktionieren wie bisher.
 
 ## A 0.14.2
 Lange Wörter bleiben auf dem Handy ganz.

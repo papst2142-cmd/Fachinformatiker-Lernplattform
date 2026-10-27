@@ -136,6 +136,7 @@ public static partial class AutoMessung
         if (MitLernen)
         {
             await WechselReihenAsync(ansicht, reihenRot);
+            funde += await P8W5ScrollleistenAsync(ansicht);    // Weisung P8-10: Scrollleisten schmal und rund
         }
         funde += await LayoutAsync(ansicht, inhalte);
         if (MitLernen)
