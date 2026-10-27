@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Diagnose;
 
 namespace Lernplattform.Core.Spiel;
 
@@ -291,8 +292,16 @@ public sealed class Spielablauf
         {
             Pruefen();
         }
-        // Phase 8 W8: nur Darstellung (Toene), nach dem Anwenden; Erfolge danach melden sich selbst
-        NachEreignis?.Invoke(art, daten);
+        // Phase 8 W8: nur Darstellung (Toene), nach dem Anwenden; Erfolge danach melden sich selbst.
+        // Weisung P8-19: eine Ausnahme der Darstellung beruehrt nie die Spiel-Logik (fehler.log, weiter)
+        try
+        {
+            NachEreignis?.Invoke(art, daten);
+        }
+        catch (Exception fehler)
+        {
+            Fehlerprotokoll.Schreiben("Spiel: Darstellung nach Ereignis " + art + " fehlgeschlagen: " + fehler.GetType().Name + ": " + fehler.Message, NachEreignisFehlerPfad);
+        }
         if (art != Ereignisse.Erfolg)
         {
             ErfolgePruefen(feierabend: art == Ereignisse.Feierabend);
@@ -301,6 +310,9 @@ public sealed class Spielablauf
 
     /// <summary>Phase 8 W8: nach jedem gespeicherten Ereignis (Art, Daten), nur fuer die Darstellung (Toene).</summary>
     public Action<string, PyObjekt>? NachEreignis { get; set; }
+
+    /// <summary>fehler.log fuer eine Ausnahme in <see cref="NachEreignis"/>; null = Datenordner (nur Tests setzen ihn).</summary>
+    public string? NachEreignisFehlerPfad { get; set; }
 
     /// <summary>
     /// _apply_written: nur schrittweise weiterrechnen, wenn seit dem Stempel <paramref name="vorher"/>

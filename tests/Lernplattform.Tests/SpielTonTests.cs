@@ -550,6 +550,67 @@ public sealed class SpielTonTests
         Assert.Equal(Anlass.Kasse, Tonplan.AusEreignis(gemeldet[0].Art, []));
     }
 
+    /// <summary>
+    /// Weisung P8-19: wirft der Haken der Darstellung, bleibt die Spiel-Logik gleich: Ereignis angewandt,
+    /// Erfolge geprueft (dieselben Zeilen wie ohne Haken), Fingerabdruck gleich, Eintrag in fehler.log.
+    /// </summary>
+    [Fact]
+    public void WerfenderHakenBeruehrtDieSpielLogikNicht()
+    {
+        (List<string> Zeilen, string Hash, int Erfolge) Spielen(bool werfen, string? log)
+        {
+            var speicher = new SpielSpeicher(() => "2026-10-03 00:00:00");
+            // ohne die Erfolge des Szenarios: die erste Aktion schaltet sie wieder frei (check_achievements)
+            foreach (var e in SpielFingerabdruckTests.Gespielt.Value.Stand.Verlauf.Where(e => e.Art != Ereignisse.Erfolg))
+            {
+                speicher.Schreiben(e.Art, PythonJson.Standard(e.Daten));
+            }
+            var ablauf = new Spielablauf(SpielInhaltTests.Inhalt, speicher) { NachEreignisFehlerPfad = log };
+            if (werfen)
+            {
+                ablauf.NachEreignis = (art, _) => throw new InvalidOperationException("Probe " + art);
+            }
+            var vorher = ablauf.Stand.Verlauf.Count;
+            var stadt = new Stadt(SpielInhaltTests.Inhalt, SpielStadtTests.Daten.Value);
+            Assert.Equal(StadtGrund.Ok, stadt.Gehen(ablauf, Schalter.Bank).Grund);
+            if (stadt.Betreten(ablauf.Stand) == StadtGrund.Geschlossen)
+            {
+                Assert.Equal(StadtGrund.Ok, stadt.Warten(ablauf).Grund);
+            }
+            var paket = Wirtschaft.KreditPakete(ablauf.Stand, SpielInhaltTests.Inhalt).First(a => !Py.Wahr(a["problem"]));
+            ablauf.BankKreditAufnehmen(stadt, 0L, 0L, paket["paket"]);
+            ablauf.SchlafenGehen();
+            // Erfolge pruefen ohne Haken nachgeholt: nichts darf mehr fehlen
+            Assert.Empty(ablauf.ErfolgePruefen());
+            var neu = ablauf.Stand.Verlauf.Skip(vorher).ToList();
+            return ([.. neu.Select(e => e.Art + " " + PythonJson.Standard(e.Daten))], SpielFingerabdruckTests.Hash(ablauf.Stand),
+                neu.Count(e => e.Art == Ereignisse.Erfolg));
+        }
+
+        var ordner = Path.Combine(Path.GetTempPath(), "lp_haken_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(ordner);
+        try
+        {
+            var log = Path.Combine(ordner, Fehlerprotokoll.DateiName);
+            var ohne = Spielen(false, log);
+            Assert.False(File.Exists(log));
+            var mit = Spielen(true, log);
+            Assert.Contains(ohne.Zeilen, z => z.StartsWith(Ereignisse.Kredit + " ", StringComparison.Ordinal));
+            Assert.Contains(ohne.Zeilen, z => z.StartsWith(Ereignisse.Feierabend + " ", StringComparison.Ordinal));
+            Assert.True(ohne.Erfolge > 0, "der Ablauf soll mindestens einen Erfolg freischalten");
+            Assert.Equal(ohne.Zeilen, mit.Zeilen);
+            Assert.Equal(ohne.Erfolge, mit.Erfolge);
+            Assert.Equal(ohne.Hash, mit.Hash);
+            var text = File.ReadAllText(log);
+            Assert.Contains("Spiel: Darstellung nach Ereignis " + Ereignisse.Kredit + " fehlgeschlagen: InvalidOperationException: Probe " + Ereignisse.Kredit, text, StringComparison.Ordinal);
+            Assert.Contains("Darstellung nach Ereignis " + Ereignisse.Feierabend + " fehlgeschlagen", text, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(ordner, true);
+        }
+    }
+
     // -- Toene im Programm ------------------------------------------------------------
 
     /// <summary>Pruefsumme ueber die 40 Toene aus W8 (Datei und SHA-256 in toene.json): neue Toene nur angehaengt.</summary>
