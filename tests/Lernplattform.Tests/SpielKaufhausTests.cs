@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 
 namespace Lernplattform.Tests;
 
@@ -69,6 +70,75 @@ public class SpielKaufhausTests
         Assert.Empty(NeueStadt().Pruefen());
     }
 
+    /// <summary>
+    /// Phase 8 W6 (Nico 2a): je Festzeit kommen Kopf und Oberteil der Festkleidung ans Ende des Sortiments; ohne
+    /// Festzeit bleibt es wie in W5. Gekauft werden kann nur, was gerade im Sortiment steht; gekannt, getragen und
+    /// dargestellt wird alles (Kleidung.Alle, Finden).
+    /// </summary>
+    [Fact]
+    public void SortimentJeFestzeit()
+    {
+        var basis = Kleidung.Sortiment(Daten);
+        Assert.Equal(28, Kleidung.Alle(Daten).Count);
+        Assert.Equal(basis, Kleidung.Sortiment(Daten, null));
+        Assert.All(basis, k => Assert.Null(k.Festzeit));
+        var erwartet = new Dictionary<string, string[]>
+        {
+            [Festzeit.Halloween] = ["hexenhut", "kuerbis_pulli"],
+            [Festzeit.Weihnachten] = ["weihnachtsmuetze", "weihnachtspulli"],
+            [Festzeit.Silvester] = ["partyhut", "glitzerhemd"],
+            [Festzeit.Ostern] = ["hasenohren", "fruehlingsshirt"],
+        };
+        foreach (var (fest, ids) in erwartet)
+        {
+            var mit = Kleidung.Sortiment(Daten, fest);
+            Assert.Equal(basis, mit.Take(basis.Count));
+            Assert.Equal(ids, mit.Skip(basis.Count).Select(k => k.Id));
+            Assert.Equal(["kopf", "oberteil"], mit.Skip(basis.Count).Select(k => k.Slot));
+            var g = Neu();
+            g.Festzeit = fest;
+            Assert.Equal(mit.Select(k => k.Id), g.Waren(Kleidung.Laden).Select(w => w.Id));
+            foreach (var id in ids)
+            {
+                Assert.NotNull(Kleidung.Finden(Daten, id));
+                Assert.NotNull(Kleidung.FigurStueck(Daten, id));
+            }
+        }
+        Assert.Equal(basis.Select(k => k.Id), Neu().Waren(Kleidung.Laden).Select(w => w.Id));
+        // die neuen Formen haben Geometrie an der Figur
+        foreach (var form in new[] { "spitzhut", "zipfelmuetze", "partyhut", "hasenohren" })
+        {
+            var ohne = Figur.Netz(SpielGrafikTests.Bibliothek.Value, null, 1f).AnzahlEcken;
+            var mit = Figur.Netz(SpielGrafikTests.Bibliothek.Value, null, 1f, [new Figur.Stueck("kopf", form, "#DC2626")]).AnzahlEcken;
+            Assert.True(mit > ohne, form + " ohne Geometrie");
+        }
+    }
+
+    /// <summary>Phase 8 W6: Festkleidung kaufen geht nur in ihrer Festzeit (sonst wie ein unbekanntes Stueck), nichts wird geschrieben.</summary>
+    [Fact]
+    public void FestkleidungNurInDerFestzeit()
+    {
+        var stadt = NeueStadt();
+        var ablauf = NeuesSpiel();
+        InsKaufhaus(stadt, ablauf);
+        var g = Neu();
+        var zeilen = ablauf.Stand.Verlauf.Count;
+        var fehler = Assert.Throws<SpielFehler>(() => ablauf.KleidungKaufen(g, stadt, Kleidung.Laden, "weihnachtsmuetze"));
+        Assert.Equal(Geschaefte.GibtEsNicht, fehler.Message);
+        g.Festzeit = Festzeit.Halloween;
+        Assert.Throws<SpielFehler>(() => ablauf.KleidungKaufen(g, stadt, Kleidung.Laden, "weihnachtsmuetze"));
+        Assert.Equal(zeilen, ablauf.Stand.Verlauf.Count);
+        g.Festzeit = Festzeit.Weihnachten;
+        ablauf.KleidungKaufen(g, stadt, Kleidung.Laden, "weihnachtsmuetze");
+        Assert.True(ablauf.Stand.Kleider.ContainsKey("weihnachtsmuetze"));
+        Assert.Equal("weihnachtsmuetze", Kleidung.Angezogen(ablauf.Stand, Daten)["kopf"].Id);
+        // nach der Festzeit: bleibt gekauft, ablegen und wieder anziehen geht
+        g.Festzeit = null;
+        ablauf.KleidungAnziehen(g, "kopf", null);
+        ablauf.KleidungAnziehen(g, "kopf", "weihnachtsmuetze");
+        Assert.Equal("weihnachtsmuetze", Kleidung.Angezogen(ablauf.Stand, Daten)["kopf"].Id);
+    }
+
     [Fact]
     public void PruefungFindetFehler()
     {
@@ -84,7 +154,10 @@ public class SpielKaufhausTests
             ("kaufhaus: Preis fehlt oder ungueltig: shirt_weiss", Kaputt(k => Py.Setzen(Erstes(k), "preis", 0L))),
             ("kaufhaus: shirt_weiss: unbekannter Slot", Kaputt(k => Py.Setzen(Erstes(k), "slot", "guertel"))),
             ("kaufhaus: shirt_weiss: Farbe ungueltig", Kaputt(k => Py.Setzen(Erstes(k), "farbe", "weiss"))),
-            ("kaufhaus: shirt_weiss: unbekanntes Feld festzeit", Kaputt(k => Py.Setzen(Erstes(k), "festzeit", "halloween"))),
+            // Phase 8 W6: das Feld festzeit ist erlaubt (Festkleidung), aber nur mit einer bekannten Festzeit
+            ("kaufhaus: shirt_weiss: unbekanntes Feld rabatt", Kaputt(k => Py.Setzen(Erstes(k), "rabatt", 10L))),
+            ("kaufhaus: shirt_weiss: unbekannte Festzeit", Kaputt(k => Py.Setzen(Erstes(k), "festzeit", "fasching"))),
+            ("kaufhaus: shirt_weiss: unbekannte Festzeit", Kaputt(k => Py.Setzen(Erstes(k), "festzeit", 1L))),
             ("kaufhaus: doppelt: shirt_schwarz", Kaputt(k => Py.Setzen(Erstes(k), "id", "shirt_schwarz"))),
             ("kaufhaus: unbekanntes Feld moebel", Kaputt(k => Py.Setzen(k, "moebel", new List<object?>()))),
         };

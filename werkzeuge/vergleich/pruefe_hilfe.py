@@ -380,6 +380,10 @@ PAARE = [
     {"nr": "L1", "thema": "rechtliches",
      "alt": "„Lizenz“ und „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen).",
      "neu": "„Lizenz“, „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen) und „Lizenzen“ (die vollständigen Lizenztexte dieser Bestandteile)."},
+    # Phase 8 W6 (Weisung P8-12, Teilplan P8-11 Abschnitt 6): Festzeiten (F1)
+    {"nr": "F1", "thema": "spiel",
+     "alt": "im Kaufhaus Kleidung für deine Figur.",
+     "neu": "im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung."},
     # UNKLAR: Nachtrag Abschnitt 3 nennt fuer RELEASE_PAGE_TEXT nur thema; "nr" setze ich
     # auf "N2" (Tabelle Abschnitt 3: "RELEASE_PAGE_TEXT | NEU: N2"), Platz am Ende der Liste.
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT",

@@ -44,7 +44,8 @@ public static class SpielStart
         // Geraet im Spielprotokoll wie fg.Game(app.db, device="PC"/"Handy") (fisi_game_gui 2863, spiel.py 1801)
         var geraet = Pc ? "PC" : "Handy";
         var geschaefte = Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt;
-        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte);
+        var feste = Py.Lesen(Muss("inhalte_csharp/spiel/festzeiten.json")) as PyObjekt;
+        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
     }
 
     /// <summary>
@@ -72,10 +73,12 @@ public static class SpielStart
     public static string? GrafikFehler { get; private set; }
 
     /// <summary>Neuer Spielstand (nur im Arbeitsspeicher) mit der Probe-Figur, Tag 1 um 07:00 zu Hause.</summary>
-    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, PyObjekt? geschaefte = null)
+    /// <remarks>Phase 8 W6: <paramref name="feste"/> = festzeiten.json, <paramref name="festzeit"/> wie bei <see cref="StadtSpiel"/>.</remarks>
+    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, PyObjekt? geschaefte = null,
+        PyObjekt? feste = null, Func<string?>? festzeit = null)
     {
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil(ProbeName, new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, grafik, innenraeume, geschaefte);
+        return new StadtSpiel(stadt, ablauf, grafik, innenraeume, geschaefte, feste, festzeit);
     }
 }

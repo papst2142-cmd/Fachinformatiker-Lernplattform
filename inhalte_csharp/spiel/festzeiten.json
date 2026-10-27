@@ -1,0 +1,152 @@
+{
+  "_hinweis": "Phase 8 W6 (Weisung P8-12, Teilplan P8-11): Festzeiten, nur Darstellung (keine Spielregel, kein Ereignis). zeitraeume: zum Nachlesen, muessen gleich Core/Spiel/Festzeit.cs sein (Ladepruefung). staedte: je Stadt-Id die Deko je Festzeit; tueren = Muster je Tuer (an links/rechts/mitte/ueber, dx entlang der Fassade, dz nach aussen, Masse der Stadt), plaetze = feste Punkte der Stadt (x, z), innen = Muster fuer Ecke und Eingang (dx, dz, r in Einheiten des Grundrisses, hoehe und y in Metern). art: modell (CC0-Modell aus modelle.bin), rakete, konfetti, eier, beet, feuerwerk, kranz, laterne (eigene Formen; Kranz und Laterne an den Tueren statt der Modelle, Tempo Weihnachten). innen.orte: feste Plaetze je Ort statt der Suche; innen.wohnung: diese Plaetze in der Wohnung (fester Platz am Eingang, entfaellt bei Moebeln dort); innen.puppen: so viele Puppen im Flur des Kaufhauses tragen die Festkleidung. Nur anhaengen.",
+  "zeitraeume": {
+    "ostern": {"von_ostern": -7, "bis_ostern": 1},
+    "halloween": {"von": [10, 24], "bis": [11, 1]},
+    "weihnachten": {"von": [12, 1], "bis": [12, 26]},
+    "silvester": {"von": [12, 27], "bis": [1, 1]}
+  },
+  "innen": {
+    "orte": {
+      "kaufhaus": {"ecke": [20.6, 1.2], "links": [8.8, 12.2], "rechts": [13.2, 12.2]}
+    },
+    "wohnung": ["links"],
+    "puppen": 2
+  },
+  "staedte": {
+    "standard": {
+      "halloween": {
+        "tueren": [
+          {"art": "modell", "name": "hw-pumpkin_orange_jackolantern", "an": "links", "hoehe": 0.2},
+          {"art": "modell", "name": "hw-pumpkin_yellow_small", "an": "links", "dx": -0.2, "dz": 0.08, "hoehe": 0.11},
+          {"art": "modell", "name": "hw-lantern_standing", "an": "rechts", "hoehe": 0.24}
+        ],
+        "plaetze": [
+          {"art": "modell", "name": "hw-tree_dead_large_decorated", "x": 3.4, "z": 18.8, "hoehe": 1.1},
+          {"art": "modell", "name": "hw-gravestone", "x": 2.5, "z": 19.7, "hoehe": 0.2},
+          {"art": "modell", "name": "hw-gravestone", "x": 3.1, "z": 19.8, "hoehe": 0.2},
+          {"art": "modell", "name": "hw-gravestone", "x": 3.7, "z": 19.8, "hoehe": 0.2},
+          {"art": "modell", "name": "hw-gravestone", "x": 4.3, "z": 19.7, "hoehe": 0.2},
+          {"art": "modell", "name": "hw-skull_candle", "x": 4.4, "z": 19.1, "hoehe": 0.16},
+          {"art": "modell", "name": "hw-pumpkin_orange_jackolantern", "x": 2.6, "z": 19.0, "hoehe": 0.16},
+          {"art": "modell", "name": "hw-pumpkin_orange_small", "x": 2.9, "z": 18.8, "hoehe": 0.08},
+          {"art": "modell", "name": "hw-tree_dead_large_decorated", "x": 13.6, "z": 6.6, "hoehe": 1.0},
+          {"art": "modell", "name": "hw-pumpkin_orange_jackolantern", "x": 13.2, "z": 7.2, "hoehe": 0.15}
+        ],
+        "innen": {
+          "ecke": [
+            {"art": "modell", "name": "hw-tree_dead_large_decorated", "hoehe": 2.2}
+          ],
+          "links": [
+            {"art": "modell", "name": "hw-pumpkin_orange_jackolantern", "hoehe": 0.55},
+            {"art": "modell", "name": "hw-pumpkin_yellow_small", "dx": 0.7, "dz": 0.2, "hoehe": 0.3}
+          ],
+          "rechts": [
+            {"art": "modell", "name": "hw-lantern_standing", "hoehe": 0.7},
+            {"art": "modell", "name": "hw-skull_candle", "dx": 0.8, "hoehe": 0.4}
+          ]
+        }
+      },
+      "weihnachten": {
+        "tueren": [
+          {"art": "kranz", "an": "ueber", "hoehe": 0.2},
+          {"art": "laterne", "an": "links", "hoehe": 0.5},
+          {"art": "modell", "name": "xm-present_A_red", "an": "rechts", "hoehe": 0.12},
+          {"art": "modell", "name": "xm-present_B_green", "an": "rechts", "dx": 0.16, "dz": 0.05, "hoehe": 0.15}
+        ],
+        "plaetze": [
+          {"art": "modell", "name": "xm-christmas_tree_decorated", "x": 3.4, "z": 18.8, "hoehe": 1.15},
+          {"art": "modell", "name": "xm-present_A_red", "x": 3.0, "z": 19.35, "hoehe": 0.13},
+          {"art": "modell", "name": "xm-present_B_green", "x": 3.75, "z": 19.4, "hoehe": 0.13},
+          {"art": "modell", "name": "xm-present_A_yellow", "x": 3.35, "z": 19.55, "hoehe": 0.13},
+          {"art": "modell", "name": "xm-present_sphere_A_blue", "x": 4.05, "z": 19.2, "hoehe": 0.13},
+          {"art": "modell", "name": "xm-snowman_B", "x": 2.2, "z": 19.4, "hoehe": 0.36},
+          {"art": "modell", "name": "xm-snowman_A", "x": 13.4, "z": 7.0, "hoehe": 0.3},
+          {"art": "modell", "name": "xm-gingerbread_house_decorated", "x": 4.4, "z": 19.7, "hoehe": 0.25}
+        ],
+        "innen": {
+          "ecke": [
+            {"art": "modell", "name": "xm-christmas_tree_decorated", "hoehe": 2.0},
+            {"art": "modell", "name": "xm-present_A_red", "dx": -1.0, "dz": 0.9, "hoehe": 0.35},
+            {"art": "modell", "name": "xm-present_B_green", "dx": -0.4, "dz": 1.1, "hoehe": 0.45}
+          ],
+          "links": [
+            {"art": "modell", "name": "xm-snowman_A", "hoehe": 1.0}
+          ],
+          "rechts": [
+            {"art": "modell", "name": "xm-lantern_decorated", "hoehe": 1.6}
+          ]
+        }
+      },
+      "silvester": {
+        "tueren": [
+          {"art": "rakete", "an": "links", "hoehe": 0.32, "farbe": 0},
+          {"art": "rakete", "an": "rechts", "hoehe": 0.32, "farbe": 3},
+          {"art": "konfetti", "an": "mitte", "dz": 0.12, "r": 0.3, "anzahl": 26, "groesse": 0.022}
+        ],
+        "plaetze": [
+          {"art": "rakete", "x": 2.8, "z": 19.6, "hoehe": 0.26, "farbe": 0},
+          {"art": "rakete", "x": 3.02, "z": 19.6, "hoehe": 0.26, "farbe": 1},
+          {"art": "rakete", "x": 3.24, "z": 19.6, "hoehe": 0.26, "farbe": 2},
+          {"art": "rakete", "x": 3.46, "z": 19.6, "hoehe": 0.26, "farbe": 3},
+          {"art": "rakete", "x": 3.68, "z": 19.6, "hoehe": 0.26, "farbe": 4},
+          {"art": "rakete", "x": 3.9, "z": 19.6, "hoehe": 0.26, "farbe": 5},
+          {"art": "konfetti", "x": 3.4, "z": 19.0, "r": 0.8, "anzahl": 160, "groesse": 0.03},
+          {"art": "konfetti", "x": 13.2, "z": 7.4, "r": 0.8, "anzahl": 90, "groesse": 0.03},
+          {"art": "feuerwerk", "x": 3.0, "z": 19.4, "y": 0.9, "r": 0.45, "farbe": 0},
+          {"art": "feuerwerk", "x": 4.6, "z": 19.0, "y": 1.1, "r": 0.4, "farbe": 1},
+          {"art": "feuerwerk", "x": 1.9, "z": 18.6, "y": 1.0, "r": 0.35, "farbe": 3},
+          {"art": "feuerwerk", "x": 13.0, "z": 7.4, "y": 1.0, "r": 0.45, "farbe": 2},
+          {"art": "feuerwerk", "x": 24.5, "z": 17.0, "y": 1.1, "r": 0.45, "farbe": 4},
+          {"art": "feuerwerk", "x": 21.0, "z": 19.4, "y": 0.9, "r": 0.4, "farbe": 5},
+          {"art": "feuerwerk", "x": 27.6, "z": 20.0, "y": 1.0, "r": 0.4, "farbe": 6}
+        ],
+        "innen": {
+          "ecke": [
+            {"art": "rakete", "dx": -0.6, "dz": 0.4, "hoehe": 1.0, "farbe": 0},
+            {"art": "rakete", "dx": -0.2, "dz": 0.4, "hoehe": 1.0, "farbe": 1},
+            {"art": "rakete", "dx": 0.2, "dz": 0.4, "hoehe": 1.0, "farbe": 2},
+            {"art": "rakete", "dx": 0.6, "dz": 0.4, "hoehe": 1.0, "farbe": 3},
+            {"art": "feuerwerk", "dx": -1.0, "dz": 1.2, "y": 1.6, "r": 1.17, "farbe": 1}
+          ],
+          "links": [
+            {"art": "rakete", "hoehe": 0.9, "farbe": 1},
+            {"art": "konfetti", "dx": 2.2, "dz": -1.2, "r": 2.4, "anzahl": 140, "groesse": 0.09, "y": 0.018}
+          ],
+          "rechts": [
+            {"art": "rakete", "hoehe": 0.9, "farbe": 4}
+          ]
+        }
+      },
+      "ostern": {
+        "tueren": [
+          {"art": "eier", "an": "links", "r": 0.12, "hoehe": 0.1, "anzahl": 5},
+          {"art": "beet", "an": "rechts", "r": 0.14, "hoehe": 0.14, "anzahl": 6}
+        ],
+        "plaetze": [
+          {"art": "modell", "name": "os-animal-bunny", "x": 3.4, "z": 18.9, "hoehe": 0.42},
+          {"art": "modell", "name": "os-animal-chick", "x": 4.0, "z": 19.3, "hoehe": 0.16, "blick": [-1, 1]},
+          {"art": "modell", "name": "os-animal-chick", "x": 2.8, "z": 19.4, "hoehe": 0.14, "blick": [1, 1]},
+          {"art": "eier", "x": 3.4, "z": 19.0, "r": 0.8, "hoehe": 0.08, "anzahl": 22},
+          {"art": "beet", "x": 2.3, "z": 18.9, "r": 0.45, "hoehe": 0.12, "anzahl": 18},
+          {"art": "beet", "x": 4.5, "z": 19.5, "r": 0.4, "hoehe": 0.12, "anzahl": 18},
+          {"art": "modell", "name": "os-animal-bunny", "x": 13.4, "z": 7.0, "hoehe": 0.26},
+          {"art": "eier", "x": 13.4, "z": 7.4, "r": 0.6, "hoehe": 0.08, "anzahl": 10}
+        ],
+        "innen": {
+          "ecke": [
+            {"art": "modell", "name": "os-animal-bunny", "hoehe": 0.9},
+            {"art": "modell", "name": "os-animal-chick", "dx": -0.9, "dz": 0.6, "hoehe": 0.45},
+            {"art": "eier", "dx": -0.5, "dz": 0.5, "r": 0.9, "hoehe": 0.25, "anzahl": 8}
+          ],
+          "links": [
+            {"art": "beet", "r": 0.4, "hoehe": 0.4, "anzahl": 8}
+          ],
+          "rechts": [
+            {"art": "beet", "r": 0.4, "hoehe": 0.4, "anzahl": 8}
+          ]
+        }
+      }
+    }
+  }
+}

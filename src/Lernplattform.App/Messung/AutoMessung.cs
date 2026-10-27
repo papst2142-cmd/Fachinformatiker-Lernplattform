@@ -119,6 +119,18 @@ public static partial class AutoMessung
         }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
+        // Phase 8 W6 (Teilplan P8-11 Abschnitt 4): festes Datum aus lauf.sh; ein ungueltiger Wert bricht den Start-Test ab
+        try
+        {
+            var datum = Core.Spiel.Festzeit.SchalterDatum();
+            Messwerte.Notiere(Core.Spiel.Festzeit.Schalter + ": " + (datum?.ToString("yyyy-MM-dd", inv) ?? "nicht gesetzt (Datum des Geraets)")
+                + ", Festzeit " + (Core.Spiel.Festzeit.Heute() ?? "keine"));
+        }
+        catch (InvalidOperationException fehler)
+        {
+            Messwerte.Notiere("  FEHLER: " + fehler.Message);
+            throw;
+        }
         var inhalte = await Zustand.Inhalte;
         // Weisung P4-16: auch die W4-Messpunkte melden ihre roten Werte in reihenRot
         var reihenRot = new List<string>();
@@ -132,6 +144,7 @@ public static partial class AutoMessung
             funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
             funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
             funde += await P8W5MesspunkteAsync(ansicht);       // Phase 8 W5: Rueckfrage am Bett
+            funde += await P8W6FestzeitenAsync(ansicht);       // Phase 8 W6: Stadt, Park und Kaufhaus je Festzeit
         }
         if (MitLernen)
         {

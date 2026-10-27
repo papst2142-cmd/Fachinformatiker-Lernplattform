@@ -294,4 +294,90 @@ public class SpielNeustartTests
             Assert.Equal(zeilen, nachNeustart[tabelle]);
         }
     }
+
+    /// <summary>
+    /// R3 fuer die Festkleidung (Phase 8 W6, Weisung P8-12, Nico 2a): Kauf in der Festzeit (ausserhalb abgelehnt, nichts
+    /// geschrieben), Anziehen und Ablegen ausserhalb der Festzeit; nur angehaengte Zeilen, und der Neuaufbau nach dem
+    /// Neustart schaut nie auf das Datum (dieselbe Kleidung ohne Festzeit).
+    /// </summary>
+    [Fact]
+    public void FestkleidungNurAngehaengt()
+    {
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        var lernstand = new Lernstand(pfad);
+        var schreiber = new LernstandSchreiber(lernstand);
+        var spiel = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        spiel.NeuerLauf(1);
+        var speicher = new SpielDatenbank(schreiber, "PC", spiel.Lauf, Vorgaenge.Sperren);
+        using (speicher.Sitzung())
+        {
+            foreach (var e in SpielFingerabdruckTests.Gespielt.Value.Stand.Verlauf)
+            {
+                Assert.NotNull(speicher.Schreiben(e.Art, PythonJson.Standard(e.Daten)));
+            }
+        }
+        spiel.Neuladen();
+
+        void Tun(string name, Action<Spielablauf> aktion, bool abgelehnt = false)
+        {
+            var vorher = Alles(lernstand);
+            var fehler = false;
+            try
+            {
+                aktion(spiel.ZumSchreiben());
+            }
+            catch (SpielFehler)
+            {
+                fehler = true;
+                Assert.Equal(vorher.Select(p => (p.Key, p.Value.Count)), Alles(lernstand).Select(p => (p.Key, p.Value.Count)));
+            }
+            Assert.True(abgelehnt == fehler, name + (abgelehnt ? ": nicht abgelehnt" : ": abgelehnt"));
+            NurAngehaengt(vorher, Alles(lernstand), name);
+        }
+
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        var geschaefte = new Geschaefte(Inhalt, SpielGeschaefteTests.Daten.Value);
+        var daten = geschaefte.Daten;
+        var muetze = Kleidung.Alle(daten).First(k => k.Id == "weihnachtsmuetze");
+        var pulli = Kleidung.Alle(daten).First(k => k.Id == "weihnachtspulli");
+        Assert.True(spiel.Stand.Geld >= muetze.Preis + pulli.Preis, "Geld reicht fuer zwei Stuecke");
+        Tun("Gehen Kaufhaus", a => stadt.Gehen(a, Kleidung.Laden));
+        if (stadt.Betreten(spiel.Stand) == StadtGrund.Geschlossen)
+        {
+            Tun("Warten Kaufhaus", a => stadt.Warten(a));
+        }
+        Assert.Equal(StadtGrund.Ok, stadt.Betreten(spiel.Stand));
+        Tun("Kaufen ohne Festzeit", a => a.KleidungKaufen(geschaefte, stadt, Kleidung.Laden, muetze.Id), abgelehnt: true);
+        geschaefte.Festzeit = Festzeit.Ostern;
+        Tun("Kaufen andere Festzeit", a => a.KleidungKaufen(geschaefte, stadt, Kleidung.Laden, muetze.Id), abgelehnt: true);
+        geschaefte.Festzeit = Festzeit.Weihnachten;
+        Tun("Kaufen Muetze", a => a.KleidungKaufen(geschaefte, stadt, Kleidung.Laden, muetze.Id));
+        Tun("Kaufen Pulli", a => a.KleidungKaufen(geschaefte, stadt, Kleidung.Laden, pulli.Id));
+        Tun("Doppelkauf", a => a.KleidungKaufen(geschaefte, stadt, Kleidung.Laden, pulli.Id), abgelehnt: true);
+        geschaefte.Festzeit = null;
+        Tun("Gehen heim", a => stadt.Gehen(a, "zuhause"));
+        Tun("Muetze ablegen", a => a.KleidungAnziehen(geschaefte, "kopf", null));
+        Tun("Muetze wieder anziehen", a => a.KleidungAnziehen(geschaefte, "kopf", muetze.Id));
+        Tun("Pulli ablegen", a => a.KleidungAnziehen(geschaefte, "oberteil", null));
+        var stand = spiel.Stand;
+        Assert.Equal(2, stand.Kleider.Count);
+        Assert.Equal([("kopf", muetze.Id)], Kleidung.Angezogen(stand, daten).Select(p => (p.Key, p.Value.Id)));
+
+        var vorNeustart = Alles(lernstand);
+        var lernstand2 = new Lernstand(pfad);
+        var neu = new Spielverwaltung(new LernstandSchreiber(lernstand2), "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        neu.Neuladen();
+        Assert.Equal(spiel.Lauf, neu.Lauf);
+        Assert.Empty(stand.Unterschiede(neu.Stand));
+        Assert.Equal(stand.Geld, neu.Stand.Geld);
+        Assert.Equal(stand.Kleider.Keys, neu.Stand.Kleider.Keys);
+        Assert.Equal(Kleidung.Angezogen(stand, daten).Select(p => (p.Key, p.Value.Id)), Kleidung.Angezogen(neu.Stand, daten).Select(p => (p.Key, p.Value.Id)));
+        var nachNeustart = Alles(lernstand2);
+        Assert.Equal(vorNeustart.Keys, nachNeustart.Keys);
+        foreach (var (tabelle, zeilen) in vorNeustart)
+        {
+            Assert.Equal(zeilen, nachNeustart[tabelle]);
+        }
+    }
 }

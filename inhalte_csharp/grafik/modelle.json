@@ -42,10 +42,28 @@
    "sha256": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6",
    "quelle": "Kenney Modular Buildings 2.1, kenney-assets.itch.io/modular-buildings",
    "lizenz": "CC0 1.0"
+  },
+  "kaykit_halloween": {
+   "zip": "KayKit_HalloweenBits_1.0_FREE.zip",
+   "sha256": "a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4",
+   "quelle": "KayKit Halloween Bits 1.0 (Kay Lousberg), kaylousberg.itch.io/halloween-bits",
+   "lizenz": "CC0 1.0"
+  },
+  "kaykit_holiday": {
+   "zip": "KayKit_Holiday_Bits_1.0_FREE.zip",
+   "sha256": "2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a",
+   "quelle": "KayKit Holiday Bits 1.0 (Kay Lousberg), kaylousberg.itch.io/holiday-bits",
+   "lizenz": "CC0 1.0"
+  },
+  "cube_pets": {
+   "zip": "kenney_cube-pets.zip",
+   "sha256": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283",
+   "quelle": "Kenney Cube Pets, kenney.nl/assets/cube-pets",
+   "lizenz": "CC0 1.0"
   }
  },
- "sha256": "031c2076039c3c3febe4b87ae990abe929fc9a72949aaf63135c180750da8d87",
- "bytes": 2981782,
+ "sha256": "be8effb288a75c72c5ce799798e2285930ab100cafb4c633a515df4608a7e096",
+ "bytes": 4182209,
  "modelle": [
   {
    "name": "building-e",
@@ -1082,6 +1100,312 @@
     2.55,
     1.4525,
     1.05
+   ]
+  },
+  {
+   "name": "hw-pumpkin_orange_jackolantern",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_orange_jackolantern.obj",
+   "atlas": null,
+   "dreiecke": 374,
+   "min": [
+    -0.75,
+    -0.0037,
+    -0.7004
+   ],
+   "max": [
+    0.75,
+    1.2963,
+    0.6996
+   ]
+  },
+  {
+   "name": "hw-pumpkin_yellow_small",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_yellow_small.obj",
+   "atlas": null,
+   "dreiecke": 322,
+   "min": [
+    -0.3,
+    -0.0027,
+    -0.3
+   ],
+   "max": [
+    0.3,
+    0.5473,
+    0.3
+   ]
+  },
+  {
+   "name": "hw-pumpkin_orange_small",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/pumpkin_orange_small.obj",
+   "atlas": null,
+   "dreiecke": 322,
+   "min": [
+    -0.3,
+    -0.0027,
+    -0.3
+   ],
+   "max": [
+    0.3,
+    0.5473,
+    0.3
+   ]
+  },
+  {
+   "name": "hw-lantern_standing",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/lantern_standing.obj",
+   "atlas": null,
+   "dreiecke": 264,
+   "min": [
+    -0.32,
+    -0.0,
+    -0.32
+   ],
+   "max": [
+    0.32,
+    0.9252,
+    0.32
+   ]
+  },
+  {
+   "name": "hw-gravestone",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/gravestone.obj",
+   "atlas": null,
+   "dreiecke": 271,
+   "min": [
+    -0.7,
+    0.0,
+    -0.2
+   ],
+   "max": [
+    0.7,
+    1.6,
+    0.2
+   ]
+  },
+  {
+   "name": "hw-tree_dead_large_decorated",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/tree_dead_large_decorated.obj",
+   "atlas": null,
+   "dreiecke": 1496,
+   "min": [
+    -1.322,
+    -0.2722,
+    -0.8549
+   ],
+   "max": [
+    0.9797,
+    5.1448,
+    0.7594
+   ]
+  },
+  {
+   "name": "hw-skull_candle",
+   "paket": "kaykit_halloween",
+   "datei": "KayKit_HalloweenBits_1.0_FREE/Assets/obj/skull_candle.obj",
+   "atlas": null,
+   "dreiecke": 542,
+   "min": [
+    -0.4588,
+    0.0575,
+    -0.5189
+   ],
+   "max": [
+    0.4588,
+    1.2448,
+    0.4172
+   ]
+  },
+  {
+   "name": "xm-christmas_tree_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/christmas_tree_decorated.obj",
+   "atlas": null,
+   "dreiecke": 13236,
+   "min": [
+    -1.4597,
+    0.0,
+    -1.4597
+   ],
+   "max": [
+    1.4597,
+    4.2307,
+    1.4597
+   ]
+  },
+  {
+   "name": "xm-present_A_red",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_A_red.obj",
+   "atlas": null,
+   "dreiecke": 678,
+   "min": [
+    -0.2819,
+    -0.0,
+    -0.2819
+   ],
+   "max": [
+    0.2819,
+    0.6617,
+    0.2819
+   ]
+  },
+  {
+   "name": "xm-present_B_green",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_B_green.obj",
+   "atlas": null,
+   "dreiecke": 678,
+   "min": [
+    -0.2607,
+    -0.0,
+    -0.2519
+   ],
+   "max": [
+    0.2608,
+    1.0617,
+    0.2519
+   ]
+  },
+  {
+   "name": "xm-present_A_yellow",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_A_yellow.obj",
+   "atlas": null,
+   "dreiecke": 678,
+   "min": [
+    -0.2819,
+    -0.0,
+    -0.2819
+   ],
+   "max": [
+    0.2819,
+    0.6617,
+    0.2819
+   ]
+  },
+  {
+   "name": "xm-present_sphere_A_blue",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/present_sphere_A_blue.obj",
+   "atlas": null,
+   "dreiecke": 834,
+   "min": [
+    -0.2788,
+    -0.3073,
+    -0.2788
+   ],
+   "max": [
+    0.2788,
+    0.4428,
+    0.2788
+   ]
+  },
+  {
+   "name": "xm-snowman_A",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/snowman_A.obj",
+   "atlas": null,
+   "dreiecke": 1654,
+   "min": [
+    -1.0957,
+    -0.0006,
+    -0.6226
+   ],
+   "max": [
+    1.0718,
+    2.0481,
+    0.7465
+   ]
+  },
+  {
+   "name": "xm-snowman_B",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/snowman_B.obj",
+   "atlas": null,
+   "dreiecke": 2650,
+   "min": [
+    -1.0957,
+    -0.0006,
+    -0.6226
+   ],
+   "max": [
+    1.0718,
+    2.6952,
+    0.7465
+   ]
+  },
+  {
+   "name": "xm-lantern_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/lantern_decorated.obj",
+   "atlas": null,
+   "dreiecke": 1451,
+   "min": [
+    -0.4956,
+    0.0,
+    -0.4526
+   ],
+   "max": [
+    0.4956,
+    3.9906,
+    0.4526
+   ]
+  },
+  {
+   "name": "xm-gingerbread_house_decorated",
+   "paket": "kaykit_holiday",
+   "datei": "KayKit_Holiday_Bits_1.0_FREE/Assets/obj/gingerbread_house_decorated.obj",
+   "atlas": null,
+   "dreiecke": 3484,
+   "min": [
+    -0.7789,
+    0.0,
+    -0.7817
+   ],
+   "max": [
+    0.7789,
+    1.6486,
+    0.7789
+   ]
+  },
+  {
+   "name": "os-animal-bunny",
+   "paket": "cube_pets",
+   "datei": "Models/OBJ format/animal-bunny.obj",
+   "atlas": null,
+   "dreiecke": 575,
+   "min": [
+    -0.625,
+    0.0,
+    -0.625
+   ],
+   "max": [
+    0.625,
+    2.01,
+    0.7048
+   ]
+  },
+  {
+   "name": "os-animal-chick",
+   "paket": "cube_pets",
+   "datei": "Models/OBJ format/animal-chick.obj",
+   "atlas": null,
+   "dreiecke": 490,
+   "min": [
+    -1.098,
+    0.0,
+    -0.625
+   ],
+   "max": [
+    1.098,
+    1.5942,
+    0.725
    ]
   }
  ]

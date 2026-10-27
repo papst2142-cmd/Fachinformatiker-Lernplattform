@@ -39,8 +39,11 @@ public static class Kleidung
     public const string SchonGekauft = "Das hast du schon. Anziehen kannst du es unter „Figur“.";
     public const string NichtGekauft = "Das hast du noch nicht gekauft.";
 
-    /// <summary>Ein Kleidungsstueck: Slot (Stelle an der Figur), Form (Schnitt) und Farbe.</summary>
-    public sealed record Stueck(string Id, string Name, string Slot, long Preis, string Form, string Farbe);
+    /// <summary>
+    /// Ein Kleidungsstueck: Slot (Stelle an der Figur), Form (Schnitt) und Farbe. Phase 8 W6: <see cref="Festzeit"/>
+    /// (Feld "festzeit") = nur in dieser Festzeit im Sortiment, gekauft bleibt es und ist immer tragbar (Nico 2a).
+    /// </summary>
+    public sealed record Stueck(string Id, string Name, string Slot, long Preis, string Form, string Farbe, string? Festzeit = null);
 
     /// <summary>Eine Stelle an der Figur mit Namen und Abteilung im Kaufhaus.</summary>
     public sealed record Stelle(string Id, string Name, string Abteilung);
@@ -51,14 +54,22 @@ public static class Kleidung
             ? [.. ListeOderLeer(laden, "slots").OfType<PyObjekt>().Select(s => new Stelle(Py.Str(s["id"]), Py.Str(s["name"]), Py.Str(s["abteilung"])))]
             : [];
 
-    /// <summary>Das Sortiment in der Reihenfolge der Datei.</summary>
-    public static List<Stueck> Sortiment(PyObjekt daten) =>
+    /// <summary>Alle Stuecke der Datei (auch Festkleidung) in ihrer Reihenfolge: kennen, tragen, darstellen.</summary>
+    public static List<Stueck> Alle(PyObjekt daten) =>
         Get(daten, Laden) is PyObjekt laden
             ? [.. ListeOderLeer(laden, "kleidung").OfType<PyObjekt>().Select(k => new Stueck(Py.Str(k["id"]), Py.Str(k["name"]), Py.Str(k["slot"]),
-                Py.Int(k["preis"]), Py.Str(k["form"]), Py.Str(k["farbe"])))]
+                Py.Int(k["preis"]), Py.Str(k["form"]), Py.Str(k["farbe"]), Get(k, "festzeit") as string))]
             : [];
 
-    public static Stueck? Finden(PyObjekt daten, string id) => Sortiment(daten).FirstOrDefault(k => k.Id == id);
+    /// <summary>
+    /// Das Sortiment in der Reihenfolge der Datei: alle Stuecke ohne Festzeit, dazu die Festkleidung der Festzeit
+    /// <paramref name="festzeit"/> (Phase 8 W6; null = keine Festzeit, das Sortiment wie in W5).
+    /// </summary>
+    public static List<Stueck> Sortiment(PyObjekt daten, string? festzeit = null) =>
+        [.. Alle(daten).Where(k => k.Festzeit is null || k.Festzeit == festzeit)];
+
+    /// <summary>Ein Stueck nach Id (auch Festkleidung ausserhalb der Festzeit: gekauft bleibt gekauft).</summary>
+    public static Stueck? Finden(PyObjekt daten, string id) => Alle(daten).FirstOrDefault(k => k.Id == id);
 
     /// <summary>Was die Figur traegt (Slot -> Stueck), nur gekaufte Stuecke aus dem Sortiment am richtigen Slot.</summary>
     public static Dictionary<string, Stueck> Angezogen(Spielstand stand, PyObjekt daten)
@@ -105,13 +116,14 @@ public static class Kleidung
     }
 
     /// <summary>Kaufen (nur im geoeffneten Kaufhaus, in dem die Figur steht): Kaufpreis ab und gleich anziehen.</summary>
-    public static List<(string Art, PyObjekt Daten)> Kaufen(Stadt stadt, Spielstand stand, PyObjekt daten, string laden, string stueck)
+    /// <remarks>Phase 8 W6: nur, was in der Festzeit <paramref name="festzeit"/> im Sortiment steht.</remarks>
+    public static List<(string Art, PyObjekt Daten)> Kaufen(Stadt stadt, Spielstand stand, PyObjekt daten, string laden, string stueck, string? festzeit = null)
     {
         if (Geschaefte.ImLaden(stadt, stand, laden) is { Length: > 0 } grund)
         {
             throw new SpielFehler(grund);
         }
-        if (laden != Laden || Finden(daten, stueck) is not { } ware)
+        if (laden != Laden || Sortiment(daten, festzeit).FirstOrDefault(k => k.Id == stueck) is not { } ware)
         {
             throw new SpielFehler(Geschaefte.GibtEsNicht);
         }
@@ -132,10 +144,10 @@ public static class Kleidung
         (daten is null ? null : Stellen(daten).FirstOrDefault(s => s.Id == slot)?.Abteilung) ?? slot;
 
     /// <summary>Farben des Sortiments fuer eine Auslage "kleidung:&lt;slot&gt;" (Kleiderstange, Regal, Tisch); ohne Daten grau.</summary>
-    public static List<System.Numerics.Vector3> Farben(PyObjekt? daten, string? ware)
+    public static List<System.Numerics.Vector3> Farben(PyObjekt? daten, string? ware, string? festzeit = null)
     {
         var slot = ware is not null && ware.StartsWith(Art + ":", StringComparison.Ordinal) ? ware[(Art.Length + 1)..] : "";
-        var farben = daten is null ? [] : Sortiment(daten).Where(k => k.Slot == slot).Select(k => Probe.Netz.Farbe(k.Farbe)).ToList();
+        var farben = daten is null ? [] : Sortiment(daten, festzeit).Where(k => k.Slot == slot).Select(k => Probe.Netz.Farbe(k.Farbe)).ToList();
         return farben.Count > 0 ? farben : [Probe.Netz.Farbe("#9CA3AF")];
     }
 
@@ -175,7 +187,7 @@ public static class Kleidung
             }
             foreach (var (feld, _) in stueck)
             {
-                if (feld is not ("id" or "name" or "slot" or "preis" or "form" or "farbe"))
+                if (feld is not ("id" or "name" or "slot" or "preis" or "form" or "farbe" or "festzeit"))
                 {
                     fehler.Add("kaufhaus: " + id + ": unbekanntes Feld " + feld);
                 }
@@ -183,6 +195,10 @@ public static class Kleidung
             if (!ids.Add(id))
             {
                 fehler.Add("kaufhaus: doppelt: " + id);
+            }
+            if (Py.Hat(stueck, "festzeit") && (Get(stueck, "festzeit") is not string fest || !Festzeit.Alle.Contains(fest)))
+            {
+                fehler.Add("kaufhaus: " + id + ": unbekannte Festzeit");
             }
             if (Get(stueck, "name") is not string { Length: > 0 } || Get(stueck, "form") is not string { Length: > 0 })
             {
@@ -201,7 +217,7 @@ public static class Kleidung
                 fehler.Add("kaufhaus: " + id + ": Farbe ungueltig");
             }
         }
-        foreach (var stelle in stellen.Where(s => !ListeOderLeer(eintrag, "kleidung").OfType<PyObjekt>().Any(k => Py.Gleich(Get(k, "slot"), s))))
+        foreach (var stelle in stellen.Where(s => !ListeOderLeer(eintrag, "kleidung").OfType<PyObjekt>().Any(k => Py.Gleich(Get(k, "slot"), s) && !Py.Hat(k, "festzeit"))))
         {
             fehler.Add("kaufhaus: Slot ohne Kleidung: " + stelle);
         }

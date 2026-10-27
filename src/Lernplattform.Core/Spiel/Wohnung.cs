@@ -132,6 +132,10 @@ public static partial class Wohnung
         return bereiche;
     }
 
+    /// <summary>Phase 8 W6: die Tuerzonen als Rechtecke (x, y, w, h) fuer die Fest-Deko (sie bleiben frei wie fuer Moebel).</summary>
+    internal static List<(double X, double Y, double W, double H)> TuerFlaechen(PyObjekt gebaeude) =>
+        [.. TuerZonen(gebaeude).Select(z => (z.X, z.Y, z.W, z.H))];
+
     /// <summary>_door_zones: Flaechen vor und hinter jeder Tuer, die frei bleiben muessen.</summary>
     private static List<Flaeche> TuerZonen(PyObjekt gebaeude)
     {

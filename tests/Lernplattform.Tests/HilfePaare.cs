@@ -64,6 +64,10 @@ internal static class HilfePaare
         ("L1", "rechtliches",
             "„Lizenz“ und „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen).",
             "„Lizenz“, „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen) und „Lizenzen“ (die vollständigen Lizenztexte dieser Bestandteile)."),
+        // Phase 8 W6 (Weisung P8-12, Teilplan P8-11 Abschnitt 6): Festzeiten (F1)
+        ("F1", "spiel",
+            "im Kaufhaus Kleidung für deine Figur.",
+            "im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),
