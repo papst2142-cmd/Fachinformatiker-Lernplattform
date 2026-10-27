@@ -599,10 +599,12 @@ public static partial class AutoMessung
                 UebernahmeTexte.Ergebnis(ProbeBericht(), UebernahmeTexte.KopieName("vor_uebernahme_2026-10-20_120000_2.db", !ansicht.Breit)), Dialog.Ok)),
             ("uebernahme/fehler", () => Dialog.Zeigen(UebernahmeTexte.Titel, UebernahmeTexte.SchreibenGescheitert, Dialog.Ok)),
             ("trainer/rueckfrage", () => Dialog.Zeigen(TrainerTexte.Abbrechen, TrainerTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
-            // Phase 8 W5: Rueckfrage am Bett (Feierabend ueber das Bett), beide Texte
+            // Phase 8 W5: Rueckfrage am Bett (Feierabend ueber das Bett), alle drei Texte
             ("spiel/bett_feierabend", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenFertig,
                 Core.Spiel.Wohnung.SchlafenNein, Core.Spiel.Wohnung.SchlafenJa)),
             ("spiel/bett_offen", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenOffen(12), Dialog.Ok)),
+            ("spiel/bett_trotzdem", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenTrotzdem(12),
+                Core.Spiel.Wohnung.SchlafenNein, Core.Spiel.Wohnung.SchlafenJa)),
         };
         for (var i = 0; i < fenster.Length; i++)
         {

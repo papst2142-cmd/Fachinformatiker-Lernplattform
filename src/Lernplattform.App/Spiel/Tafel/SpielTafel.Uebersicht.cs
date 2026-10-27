@@ -319,29 +319,39 @@ public sealed partial class SpielTafel
     }
 
     /// <summary>
-    /// Phase 8 W5 (Plan Phase 8 Abschnitt 11): am Bett schlafen gehen = Feierabend machen, vorher eine Rueckfrage;
-    /// sind noch Aufgaben offen, nur ein Hinweis (der Feierabend geht dann auch ueber den Knopf nicht).
+    /// Phase 8 W5 (Plan Phase 8 Abschnitt 11, Weisung P8-8b): am Bett schlafen gehen = Feierabend machen, vorher
+    /// eine Rueckfrage. Ohne Firma und mit offenen Tickets verschiebt "Schlafen gehen" zuerst alle offenen Tickets
+    /// wie der Knopf "Verschieben" (<see cref="Spielablauf.SchlafenGehen"/>); mit Firma und offenen Entscheidungen
+    /// nur ein Hinweis.
     /// </summary>
     private async Task SchlafenAsync()
     {
-        var (moeglich, text) = Wohnung.SchlafFrage(Stand);
-        if (!moeglich)
+        var (art, text) = Wohnung.SchlafFrage(Stand);
+        if (art == Wohnung.Schlafart.Hinweis)
         {
             await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Dialog.Ok);
             return;
         }
-        if (await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Wohnung.SchlafenNein, Wohnung.SchlafenJa) == 1)
+        if (await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Wohnung.SchlafenNein, Wohnung.SchlafenJa) != 1)
+        {
+            return;
+        }
+        if (art == Wohnung.Schlafart.Fertig)
         {
             FeierabendMachen();
+        }
+        else if (!FeierabendMachen(a => a.SchlafenGehen()))
+        {
+            Fortschritt();   // abgebrochen: schon verschobene Tickets bleiben verschoben, kein Feierabend
         }
     }
 
     /// <summary>end_day ueber den Knopf "Feierabend machen" oder das Bett: Notiz, neuer Tag zu Hause.</summary>
-    private void FeierabendMachen()
+    private bool FeierabendMachen(Func<Spielablauf, PyObjekt>? aktion = null)
     {
-        if (Tun(a => a.Feierabend()) is not { } daten)
+        if (Tun(aktion ?? (a => a.Feierabend())) is not { } daten)
         {
-            return;
+            return false;
         }
         Raum = null;
         _stapel.Clear();
@@ -351,5 +361,6 @@ public sealed partial class SpielTafel
             PyFormat.Prozent("%s %s", Betrieb.FeierabendSzene(tag, I, Py.Wahr(Get(daten, "firma"))), Wohnung.FeierabendGeldText(daten, I)));
         _s.Spiel.Neubeginn();
         Fortschritt();
+        return true;
     }
 }

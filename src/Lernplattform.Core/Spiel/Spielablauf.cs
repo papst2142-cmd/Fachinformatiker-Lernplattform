@@ -557,6 +557,39 @@ public sealed class Spielablauf
     public PyObjekt Feierabend() =>
         Ausfuehren(SpielAktionen.Feierabend(Stand, Py.Wahr(Stand.Firma) ? FirmenWissen() : null));
 
+    /// <summary>
+    /// Phase 8 W5 (Weisung P8-8b, Nico Option b): am Bett schlafen gehen. Ohne Firma werden alle offenen
+    /// Tickets nacheinander verschoben, genau wie mit dem Knopf "Verschieben" (dieselbe Aktion, Reihenfolge
+    /// wie <see cref="Spielstand.OffeneTickets"/>), danach derselbe Feierabend. Bricht ein Schritt ab
+    /// (Sperre belegt, Fehler), wirft er wie jede Aktion und es gibt keinen Feierabend. Nach einem
+    /// Schreibfehler verwirft die Spielschlange die uebrigen Zeilen (auch den Feierabend); war ein Schritt
+    /// nicht gespeichert (Stand neu aus der Datenbank), hoert das Bett auf, statt die Tickets erneut zu
+    /// verschieben (Test SpielBettTests).
+    /// </summary>
+    public PyObjekt SchlafenGehen()
+    {
+        if (!Py.Wahr(Stand.Firma))
+        {
+            var nicht = NichtGespeichert;
+            // Schutz gegen eine Schleife: jedes verschobene Ticket ist heute nicht mehr offen
+            for (var schritt = 0; Stand.OffeneTickets() is { Count: > 0 } offen; schritt++)
+            {
+                if (schritt >= SchlafenHoechstens)
+                {
+                    throw new SpielFehler("Die offenen Tickets lassen sich nicht verschieben.");
+                }
+                Verschieben(offen[0]["id"]);
+                if (NichtGespeichert != nicht)
+                {
+                    throw new SpielFehler(Texte.SpielProbeTexte.SchrittNichtGespeichert);
+                }
+            }
+        }
+        return Feierabend();
+    }
+
+    private const int SchlafenHoechstens = 100;
+
     public PyObjekt Gruenden(string? name) => Ausfuehren(SpielAktionen.Gruenden(Stand, name));
 
     public PyObjekt Einstellen(object? bewerbung) => Ausfuehren(SpielAktionen.Einstellen(Stand, bewerbung));
