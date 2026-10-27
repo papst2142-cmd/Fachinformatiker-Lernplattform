@@ -87,13 +87,35 @@ public static class Figur
     }
 
     /// <summary>Die Figur mit getragener Kleidung (Kaufhaus): Oberteil, Hose und Schuhe umgefaerbt, Kopfbedeckung dazu.</summary>
-    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung)
+    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung) =>
+        Netz(grafik, aussehen, hoehe, kleidung, null, -1);
+
+    /// <summary>Schrittbewegung Gehen (eigene Gelenk-Bewegung, in den Innenraeumen; Nico 1a, Weisung P8-14).</summary>
+    public const string Gehen = "figur-gehen";
+
+    /// <summary>Schrittbewegung Rennen (Animations/run.fbx aus dem Paket, in der Stadt; Nico 1a, Weisung P8-14).</summary>
+    public const string Rennen = "figur-lauf";
+
+    /// <summary>Bilder je Bewegung (ein Doppelschritt), je Bild ein Modell Name plus zwei Ziffern in modelle.bin.</summary>
+    public const int Bilder = 16;
+
+    /// <summary>Modellname von Bild <paramref name="bild"/> der Bewegung <paramref name="bewegung"/>.</summary>
+    public static string BildName(string bewegung, int bild) =>
+        bewegung + bild.ToString("00", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Die Figur in Bild <paramref name="bild"/> der Bewegung <paramref name="bewegung"/> (null oder -1 = stehend).
+    /// Farben, Groesse und Lage kommen immer von der stehenden Figur (sonst wuerde sie je Bild pulsieren), die Ecken
+    /// vom Bild der Bewegung (gleiche Dreiecke in gleicher Reihenfolge, Sammelliste 125).
+    /// </summary>
+    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild)
     {
         var a = Aussehen.Normalisieren(aussehen);
         if (grafik?.Modell(Modell) is not { } gm)
         {
             return ProbeWelt.Figur();
         }
+        var form = bild >= 0 && bewegung is not null && grafik.Modell(BildName(bewegung, bild)) is { } fm && fm.Dreiecke == gm.Dreiecke ? fm : gm;
         var oben = kleidung?.FirstOrDefault(k => k.Slot == "oberteil");
         var hose = kleidung?.FirstOrDefault(k => k.Slot == "hose");
         var schuhe = kleidung?.FirstOrDefault(k => k.Slot == "schuhe");
@@ -137,8 +159,8 @@ public static class Figur
             farben[(d * 3) + 2] = (byte)neu.Z;
         }
         var netz = new Probe.Netz();
-        netz.Hinzu(new GrafikModell(gm.Name, gm.Ecken, farben), lage);
-        if (Kopf(gm) is { } kopf)
+        netz.Hinzu(new GrafikModell(form.Name, form.Ecken, farben), lage);
+        if (Kopf(gm, form) is { } kopf)
         {
             var teile = Gesicht(kopf.Min, kopf.Max, haut);
             if (kopfStueck is not null)
@@ -162,7 +184,10 @@ public static class Figur
     }
 
     /// <summary>Kasten der Haut am Kopf (Haut-Dreiecke oberhalb von 75 % der Hoehe), null ohne Kopf.</summary>
-    public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm)
+    public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm) => Kopf(gm, gm);
+
+    /// <summary>Kopf-Kasten im Bild <paramref name="form"/>, erkannt an den Dreiecken der stehenden Figur.</summary>
+    public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm, GrafikModell form)
     {
         var groesse = gm.Max.Y - gm.Min.Y;
         Vector3? min = null, max = null;
@@ -176,7 +201,7 @@ public static class Figur
             }
             for (var e = 0; e < 3; e++)
             {
-                var p = new Vector3(gm.Ecken[(d * 9) + (e * 3)], gm.Ecken[(d * 9) + (e * 3) + 1], gm.Ecken[(d * 9) + (e * 3) + 2]);
+                var p = new Vector3(form.Ecken[(d * 9) + (e * 3)], form.Ecken[(d * 9) + (e * 3) + 1], form.Ecken[(d * 9) + (e * 3) + 2]);
                 min = min is { } a ? Vector3.Min(a, p) : p;
                 max = max is { } b ? Vector3.Max(b, p) : p;
             }

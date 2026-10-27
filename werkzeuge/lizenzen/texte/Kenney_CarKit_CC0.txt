@@ -1,0 +1,30 @@
+Quelle: License.txt aus kenney_car-kit.zip (SHA-256 der ZIP f8a69b83fbf94c9850079bc6e078ea3d8ba4c7393dd9f57f8ba544963d1b1d14), seit 27.10.2026 im Grafik-Vorrat (Fi-Austausch anlagen/grafik_cc0, Weisung P8-13).
+
+	
+
+	Car Kit (2.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 01-05-2024 11:13
+	
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+	
+	Follow on social media for updates:
+
+	• Twitter:   twitter.com/KenneyNL
+	• Instagram: instagram.com/kenney_nl
+	• Mastodon:  mastodon.gamedev.place/@kenney

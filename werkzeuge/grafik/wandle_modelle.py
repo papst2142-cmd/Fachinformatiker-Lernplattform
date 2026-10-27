@@ -294,6 +294,225 @@ def fbx_figur(z, pfad, haut, arme):
         vieleck = []
     return dreiecke
 
+def mul(a, b):  # 4x4, Zeilen-Listen, Spaltenvektoren
+    return [[sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)] for i in range(4)]
+
+def ident():
+    return [[1.0 if i == j else 0.0 for j in range(4)] for i in range(4)]
+
+def trans(t):
+    m = ident(); m[0][3], m[1][3], m[2][3] = t; return m
+
+def skal(s):
+    m = ident(); m[0][0], m[1][1], m[2][2] = s; return m
+
+def rot(achse, grad):
+    c, s = math.cos(math.radians(grad)), math.sin(math.radians(grad))
+    m = ident()
+    if achse == 0: m[1][1], m[1][2], m[2][1], m[2][2] = c, -s, s, c
+    elif achse == 1: m[0][0], m[0][2], m[2][0], m[2][2] = c, s, -s, c
+    else: m[0][0], m[0][1], m[1][0], m[1][1] = c, -s, s, c
+    return m
+
+def euler(r):  # FBX eEulerXYZ: erst X, dann Y, dann Z
+    return mul(rot(2, r[2]), mul(rot(1, r[1]), rot(0, r[0])))
+
+def aus_fbx(f):  # 16 Werte spaltenweise
+    return [[f[j * 4 + i] for j in range(4)] for i in range(4)]
+
+def invers(m):
+    # allgemeine 4x4-Inverse (Gauss)
+    a = [row[:] + [1.0 if i == j else 0.0 for j in range(4)] for i, row in enumerate(m)]
+    for c in range(4):
+        p = max(range(c, 4), key=lambda r: abs(a[r][c])); a[c], a[p] = a[p], a[c]
+        d = a[c][c]; a[c] = [x / d for x in a[c]]
+        for r in range(4):
+            if r != c:
+                f = a[r][c]; a[r] = [x - f * y for x, y in zip(a[r], a[c])]
+    return [row[4:] for row in a]
+
+def anwenden(m, p):
+    return tuple(m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3] for i in range(3))
+
+def name(k):
+    return k[1][1].split(b'\x00')[0].decode()
+
+class Skelett:
+    def __init__(self, wurzel):
+        obj = next(k for k in wurzel if k[0] == 'Objects')
+        con = next(k for k in wurzel if k[0] == 'Connections')
+        self.modelle = {}
+        ids = {}
+        for k in obj[2]:
+            if k[0] == 'Model':
+                p = {q[1][0].decode(): q[1][4:] for q in _fbx_kind(k, 'Properties70')[2]}
+                self.modelle[name(k)] = {'T': p.get('Lcl Translation', [0, 0, 0]), 'R': p.get('Lcl Rotation', [0, 0, 0]),
+                                         'S': p.get('Lcl Scaling', [1, 1, 1]), 'id': k[1][0]}
+                ids[k[1][0]] = name(k)
+        self.eltern = {}
+        alle = {k[1][0]: k for k in obj[2]}
+        knoten = {}  # curvenode id -> (modell, eigenschaft)
+        kurven = {}  # curve id -> (curvenode, achse)
+        for c in con[2]:
+            v = c[1]
+            if v[0] == b'OO' and v[1] in ids and v[2] in ids:
+                self.eltern[ids[v[1]]] = ids[v[2]]
+            if v[0] == b'OP' and v[2] in ids and v[1] in alle and alle[v[1]][0] == 'AnimationCurveNode':
+                knoten[v[1]] = (ids[v[2]], v[3].decode())
+            if v[0] == b'OP' and v[2] in alle and alle[v[2]][0] == 'AnimationCurveNode' and alle[v[1]][0] == 'AnimationCurve':
+                kurven[v[1]] = (v[2], v[3].decode())
+        self.anim = {}  # (modell, eig) -> [kx, ky, kz] je (zeiten, werte)
+        for kid, (cn, achse) in kurven.items():
+            if cn not in knoten: continue
+            k = alle[kid]
+            zeiten, werte = _fbx_feld(k, 'KeyTime'), _fbx_feld(k, 'KeyValueFloat')
+            self.anim.setdefault(knoten[cn], {})['XYZ'.index(achse[-1])] = (zeiten, werte)
+
+    def wert(self, modell, eig, t):
+        basis = list(self.modelle[modell]['T' if eig == 'Lcl Translation' else 'R' if eig == 'Lcl Rotation' else 'S'])
+        for i, (zeiten, werte) in self.anim.get((modell, eig), {}).items():
+            if t <= zeiten[0]: basis[i] = werte[0]; continue
+            if t >= zeiten[-1]: basis[i] = werte[-1]; continue
+            for j in range(1, len(zeiten)):
+                if zeiten[j] >= t:
+                    a = (t - zeiten[j - 1]) / (zeiten[j] - zeiten[j - 1]); basis[i] = werte[j - 1] + (werte[j] - werte[j - 1]) * a; break
+        return basis
+
+    def global_(self, t=None, extra=None):
+        erg = {}
+        def g(n):
+            if n in erg: return erg[n]
+            m = self.modelle[n]
+            T = self.wert(n, 'Lcl Translation', t) if t is not None else m['T']
+            R = self.wert(n, 'Lcl Rotation', t) if t is not None else m['R']
+            S = self.wert(n, 'Lcl Scaling', t) if t is not None else m['S']
+            lokal = mul(trans(T), mul(euler(R), skal(S)))
+            if extra and n in extra:
+                lokal = mul(lokal, extra[n])
+            erg[n] = mul(g(self.eltern[n]), lokal) if n in self.eltern else lokal
+            return erg[n]
+        for n in self.modelle: g(n)
+        return erg
+
+
+
+def fbx_haut(wurzel):
+    """Haut des Netzes: je Knochen (Name) die Ecken-Gewichte, Transform und TransformLink (Bindehaltung)."""
+    obj = next(k for k in wurzel if k[0] == 'Objects')
+    con = next(k for k in wurzel if k[0] == 'Connections')
+    namen = {k[1][0]: name(k) for k in obj[2] if k[0] == 'Model'}
+    knochen_von = {c[1][2]: namen[c[1][1]] for c in con[2] if c[1][0] == b'OO' and c[1][1] in namen}
+    haut = []
+    for k in obj[2]:
+        if k[0] == 'Deformer' and k[1][2] == b'Cluster' and _fbx_feld(k, 'Indexes'):
+            haut.append((knochen_von[k[1][0]], _fbx_feld(k, 'Indexes'), _fbx_feld(k, 'Weights'),
+                         aus_fbx(_fbx_feld(k, 'Transform')), aus_fbx(_fbx_feld(k, 'TransformLink'))))
+    return haut
+
+
+def welt_drehen(G, eltern, knochen, achse, grad):
+    """Dreht einen Knochen samt allen Kindern in Weltlage um sein Gelenk (eigene Bewegung)."""
+    p = (G[knochen][0][3], G[knochen][1][3], G[knochen][2][3])
+    m = mul(trans(p), mul(rot(achse, grad), trans((-p[0], -p[1], -p[2]))))
+    def unter(n):
+        while n is not None:
+            if n == knochen:
+                return True
+            n = eltern.get(n)
+        return False
+    for n in list(G):
+        if unter(n):
+            G[n] = mul(m, G[n])
+
+
+def gehen_haltung(sk, phase, arme):
+    """Eigene Gehbewegung (Entwurf): Ruhehaltung des Modells, Arme gesenkt, Beine und Arme schwingen."""
+    G = sk.global_()
+    s, c = math.sin(2 * math.pi * phase), math.cos(2 * math.pi * phase)
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, 22 * s)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -22 * s)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -18 - 8 * max(0, -s))
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -18 - 8 * max(0, s))
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -26 * s)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, 26 * s)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 4 + 40 * max(0, c) ** 1.5)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 4 + 40 * max(0, -c) ** 1.5)
+    welt_drehen(G, sk.eltern, 'LeftFoot', 0, -10 * max(0, c))
+    welt_drehen(G, sk.eltern, 'RightFoot', 0, -10 * max(0, -c))
+    # Huefte: leicht auf und ab (tiefster Punkt, wenn die Beine gespreizt sind)
+    hub = trans((0, -2.2 * abs(s), 0))
+    for n in G:
+        G[n] = mul(hub, G[n])
+    return G
+
+
+def eintrag_netz(wurzel):
+    """Name des Modells, unter dem das Netz haengt."""
+    obj = next(k for k in wurzel if k[0] == 'Objects')
+    con = next(k for k in wurzel if k[0] == 'Connections')
+    netz = next(k for k in obj[2] if k[0] == "Geometry" and k[1][2] == b"Mesh")
+    namen = {k[1][0]: name(k) for k in obj[2] if k[0] == 'Model'}
+    return next(namen[c[1][2]] for c in con[2] if c[1][0] == b'OO' and c[1][1] == netz[1][0])
+
+
+def fbx_figur_haltung(z, pfad, haut_png, G):
+    """Figur mit Haut nach Haltung G (Knochen -> Weltmatrix) -> Dreiecke (Y oben, Vorderseite +Z)."""
+    wurzel = fbx_lesen(z.read(pfad))
+    objekte = next(k for k in wurzel if k[0] == "Objects")
+    netz = next(k for k in objekte[2] if k[0] == "Geometry" and k[1][2] == b"Mesh")
+    ecken = _fbx_feld(netz, "Vertices")
+    vielecke = _fbx_feld(netz, "PolygonVertexIndex")
+    uv_knoten = _fbx_kind(netz, "LayerElementUV")
+    uvs, uv_index = _fbx_feld(uv_knoten, "UV"), _fbx_feld(uv_knoten, "UVIndex")
+    punkte = [tuple(ecken[i * 3:i * 3 + 3]) for i in range(len(ecken) // 3)]
+    summe = [[0.0, 0.0, 0.0] for _ in punkte]
+    gewicht = [0.0] * len(punkte)
+    # Transform der Cluster ist in diesem Paket die Einheitsmatrix; das Netz liegt unter dem Modell
+    # "characterMedium" (gedreht und x100), dessen Weltlage gilt
+    netz_lage = Skelett(wurzel).global_()[eintrag_netz(wurzel)]
+    for knochen, indizes, werte, _, TL in fbx_haut(wurzel):
+        m = mul(G[knochen], mul(invers(TL), netz_lage))
+        for i, g in zip(indizes, werte):
+            q = anwenden(m, punkte[i])
+            for a in range(3):
+                summe[i][a] += q[a] * g
+            gewicht[i] += g
+    welt = [tuple(v / 100.0 / (gewicht[i] or 1.0) for v in summe[i]) for i in range(len(punkte))]
+    breite, hoehe, pixel = png_lesen(z.read(haut_png))
+    dreiecke, vieleck = [], []
+    for nummer, wert in enumerate(vielecke):
+        vieleck.append((wert if wert >= 0 else ~wert, nummer))
+        if wert >= 0:
+            continue
+        u = sum(uvs[uv_index[n] * 2] for _, n in vieleck) / len(vieleck)
+        v = sum(uvs[uv_index[n] * 2 + 1] for _, n in vieleck) / len(vieleck)
+        u -= int(u // 1)
+        v -= int(v // 1)
+        farbe = pixel(int(u * breite), int((1 - v) * hoehe))
+        for i in range(1, len(vieleck) - 1):
+            dreiecke.append(((welt[vieleck[0][0]], welt[vieleck[i][0]], welt[vieleck[i + 1][0]]), farbe))
+        vieleck = []
+    return dreiecke
+
+
+def bewegung_bilder(z, eintrag):
+    """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket) oder "gehen" (eigene Gelenk-Bewegung)."""
+    bilder = eintrag["bilder"]
+    modell = Skelett(fbx_lesen(z.read(eintrag["datei"])))
+    erg = []
+    if eintrag["bewegung"] == "gehen":
+        for b in range(bilder):
+            erg.append(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], gehen_haltung(modell, b / bilder, eintrag.get("arme", 72))))
+        return erg
+    anim = Skelett(fbx_lesen(z.read(eintrag["animation"])))
+    ende = eintrag["ende"]
+    for b in range(bilder):
+        G = anim.global_(t=ende * b // bilder)
+        erg.append(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G))
+    return erg
+
 
 def gedreht(dreiecke, grad):
     """Um die Hochachse drehen (nur 180: x und z spiegeln, Umlaufsinn bleibt)."""
@@ -314,6 +533,7 @@ def main():
         auswahl = json.load(f)
     bin_teile = [b"FLGM", struct.pack("<II", 1, len(auswahl["modelle"]))]
     liste = []
+    ausgabe = []
     zips = {}
     for eintrag in auswahl["modelle"]:
         paket = auswahl["pakete"][eintrag["paket"]]
@@ -327,18 +547,25 @@ def main():
                 dx, dy, dz = teil["v"]
                 for ecken, farbe in gedreht(obj_wandeln(z, teil["datei"], eintrag.get("atlas")), teil.get("drehen", 0)):
                     dreiecke.append((tuple((q[0] + dx, q[1] + dy, q[2] + dz) for q in ecken), farbe))
+        elif "bewegung" in eintrag:
+            # Phase 8 W7: je Bild ein eigenes Modell name00, name01, ...
+            for nr, dreiecke in enumerate(bewegung_bilder(z, eintrag)):
+                ausgabe.append((eintrag, "%s%02d" % (eintrag["name"], nr), dreiecke))
+            continue
         elif eintrag["datei"].endswith(".fbx"):
             dreiecke = fbx_figur(z, eintrag["datei"], eintrag["haut"], eintrag.get("arme", 0))
         else:
             dreiecke = obj_wandeln(z, eintrag["datei"], eintrag.get("atlas"))
-        dreiecke = gedreht(dreiecke, eintrag.get("drehen", 0))
-        name = eintrag["name"].encode("utf-8")
+        ausgabe.append((eintrag, eintrag["name"], gedreht(dreiecke, eintrag.get("drehen", 0))))
+    bin_teile[1] = struct.pack("<II", 1, len(ausgabe))
+    for eintrag, modellname, dreiecke in ausgabe:
+        name = modellname.encode("utf-8")
         bin_teile.append(struct.pack("<H", len(name)) + name + struct.pack("<I", len(dreiecke)))
         alle = [p for d in dreiecke for p in d[0]]
         for ecken, farbe in dreiecke:
             bin_teile.append(struct.pack("<9f", *[w for p in ecken for w in p]) + bytes((farbe[0], farbe[1], farbe[2], 0)))
         liste.append({
-            "name": eintrag["name"], "paket": eintrag["paket"], "datei": eintrag["datei"], "atlas": eintrag.get("atlas") or eintrag.get("haut"), "dreiecke": len(dreiecke),
+            "name": modellname, "paket": eintrag["paket"], "datei": eintrag["datei"], "atlas": eintrag.get("atlas") or eintrag.get("haut"), "dreiecke": len(dreiecke),
             "min": [round(min(p[i] for p in alle), 4) for i in range(3)],
             "max": [round(max(p[i] for p in alle), 4) for i in range(3)],
         })

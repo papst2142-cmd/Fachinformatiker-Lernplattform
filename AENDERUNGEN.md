@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.17.0
+Neu im Spiel: Die Stadt wird lebendiger, mit Schritten, Autos und viel mehr Grün.
+
+- Deine Figur bewegt beim Gehen jetzt Beine und Arme. In der Stadt rennt sie, in den Räumen geht sie ruhig. Wenn sie stehen bleibt, steht sie still wie bisher. Kleidung, Kappe und Gesicht bewegen sich mit.
+- Auf den Straßen fahren sechs Autos: ein Taxi, ein Lieferwagen, eine Limousine, ein Polizeiauto, ein Krankenwagen und ein Müllwagen. Sie fahren auf der rechten Spur, biegen ab und kommen am Rand der Karte wieder herein. An Kreuzungen warten sie, bis die Kreuzung frei ist, und sie fahren nicht auf das Auto vor ihnen auf. Steht oder geht deine Figur auf der Fahrbahn, hält das Auto davor an. Die Autos sind nur zum Anschauen und ändern nichts am Spiel.
+- Damit das Handy Strom spart, fahren die Autos nur, solange du die Stadt bedienst oder deine Figur unterwegs ist, und danach noch 10 Sekunden. Dann bleiben sie stehen, bis du wieder etwas tust.
+- Statt immer gleicher Bäume gibt es jetzt verschiedene Baumarten in unterschiedlichen Größen: Bäume mit runder Krone, mit breiter Schirmkrone und Tannen. Dazu kommen Büsche, Grasbüschel, Steine und bunte Blumenbeete in den Parks, an den Straßenrändern und auf freien Flächen.
+- Nichts davon steht auf Straßen, Fußwegen, Gleisen, im Wasser, vor einer Tür oder dort, wo zu den Festzeiten geschmückt wird. Um Büsche, Steine, Beete und Bäume im Park geht deine Figur herum, über Gras geht sie einfach drüber. Jede Tür bleibt erreichbar.
+- Aus der Ferne, also wenn du die ganze Stadt ansiehst, werden die kleinen Pflanzen nicht gezeichnet und die Autos einfacher dargestellt. So bleibt das Spiel auch auf dem Handy flüssig.
+
 ## A 0.16.0
 Neu im Spiel: Festzeiten. Zu Ostern, Halloween, Weihnachten und Silvester ist die Stadt geschmückt.
 

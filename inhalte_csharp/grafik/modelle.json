@@ -60,10 +60,22 @@
    "sha256": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283",
    "quelle": "Kenney Cube Pets, kenney.nl/assets/cube-pets",
    "lizenz": "CC0 1.0"
+  },
+  "car_kit": {
+   "zip": "kenney_car-kit.zip",
+   "sha256": "f8a69b83fbf94c9850079bc6e078ea3d8ba4c7393dd9f57f8ba544963d1b1d14",
+   "quelle": "Kenney Car Kit 2.0, kenney.nl/assets/car-kit",
+   "lizenz": "CC0 1.0"
+  },
+  "kaykit_wald": {
+   "zip": "KayKit_Forest_Nature_Pack_1.0_FREE.zip",
+   "sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c",
+   "quelle": "KayKit Forest Nature Pack 1.0 (Kay Lousberg)",
+   "lizenz": "CC0 1.0"
   }
  },
- "sha256": "be8effb288a75c72c5ce799798e2285930ab100cafb4c633a515df4608a7e096",
- "bytes": 4182209,
+ "sha256": "51076c0f239b4db31131bde32c22e63e910b566e5bfe5a367bae875426d8fbdb",
+ "bytes": 6951611,
  "modelle": [
   {
    "name": "building-e",
@@ -1406,6 +1418,958 @@
     1.098,
     1.5942,
     0.725
+   ]
+  },
+  {
+   "name": "figur-gehen00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0155,
+    -0.6971
+   ],
+   "max": [
+    0.662,
+    3.7654,
+    0.5436
+   ]
+  },
+  {
+   "name": "figur-gehen01",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0397,
+    -0.5339
+   ],
+   "max": [
+    0.662,
+    3.757,
+    0.7133
+   ]
+  },
+  {
+   "name": "figur-gehen02",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0288,
+    -0.6936
+   ],
+   "max": [
+    0.662,
+    3.7498,
+    0.8615
+   ]
+  },
+  {
+   "name": "figur-gehen03",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0172,
+    -0.7987
+   ],
+   "max": [
+    0.662,
+    3.745,
+    0.9674
+   ]
+  },
+  {
+   "name": "figur-gehen04",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0187,
+    -0.8338
+   ],
+   "max": [
+    0.662,
+    3.7434,
+    1.002
+   ]
+  },
+  {
+   "name": "figur-gehen05",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0251,
+    -0.8742
+   ],
+   "max": [
+    0.662,
+    3.745,
+    0.9674
+   ]
+  },
+  {
+   "name": "figur-gehen06",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0347,
+    -0.882
+   ],
+   "max": [
+    0.662,
+    3.7498,
+    0.8615
+   ]
+  },
+  {
+   "name": "figur-gehen07",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0252,
+    -0.8233
+   ],
+   "max": [
+    0.662,
+    3.757,
+    0.7133
+   ]
+  },
+  {
+   "name": "figur-gehen08",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0155,
+    -0.6972
+   ],
+   "max": [
+    0.662,
+    3.7654,
+    0.5436
+   ]
+  },
+  {
+   "name": "figur-gehen09",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0397,
+    -0.5339
+   ],
+   "max": [
+    0.662,
+    3.757,
+    0.7133
+   ]
+  },
+  {
+   "name": "figur-gehen10",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0288,
+    -0.6936
+   ],
+   "max": [
+    0.662,
+    3.7498,
+    0.8615
+   ]
+  },
+  {
+   "name": "figur-gehen11",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0173,
+    -0.7987
+   ],
+   "max": [
+    0.662,
+    3.745,
+    0.9674
+   ]
+  },
+  {
+   "name": "figur-gehen12",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0187,
+    -0.8338
+   ],
+   "max": [
+    0.662,
+    3.7434,
+    1.002
+   ]
+  },
+  {
+   "name": "figur-gehen13",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0251,
+    -0.8742
+   ],
+   "max": [
+    0.662,
+    3.745,
+    0.9674
+   ]
+  },
+  {
+   "name": "figur-gehen14",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0347,
+    -0.882
+   ],
+   "max": [
+    0.662,
+    3.7498,
+    0.8615
+   ]
+  },
+  {
+   "name": "figur-gehen15",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6615,
+    -0.0252,
+    -0.8233
+   ],
+   "max": [
+    0.662,
+    3.757,
+    0.7133
+   ]
+  },
+  {
+   "name": "figur-lauf00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7478,
+    0.0008,
+    -1.0284
+   ],
+   "max": [
+    0.6152,
+    3.6274,
+    1.1
+   ]
+  },
+  {
+   "name": "figur-lauf01",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7629,
+    -0.0016,
+    -0.8724
+   ],
+   "max": [
+    0.6157,
+    3.606,
+    1.1
+   ]
+  },
+  {
+   "name": "figur-lauf02",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7723,
+    0.0009,
+    -0.5943
+   ],
+   "max": [
+    0.6262,
+    3.5845,
+    1.0834
+   ]
+  },
+  {
+   "name": "figur-lauf03",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7564,
+    -0.0016,
+    -0.3762
+   ],
+   "max": [
+    0.6582,
+    3.5908,
+    0.9981
+   ]
+  },
+  {
+   "name": "figur-lauf04",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7276,
+    0.0031,
+    -0.48
+   ],
+   "max": [
+    0.6806,
+    3.6067,
+    0.8727
+   ]
+  },
+  {
+   "name": "figur-lauf05",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6888,
+    -0.049,
+    -0.8224
+   ],
+   "max": [
+    0.6814,
+    3.6219,
+    1.1318
+   ]
+  },
+  {
+   "name": "figur-lauf06",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6612,
+    0.1231,
+    -1.0024
+   ],
+   "max": [
+    0.6706,
+    3.6275,
+    1.2644
+   ]
+  },
+  {
+   "name": "figur-lauf07",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6523,
+    0.0715,
+    -0.9727
+   ],
+   "max": [
+    0.6571,
+    3.6275,
+    1.2226
+   ]
+  },
+  {
+   "name": "figur-lauf08",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6492,
+    -0.0012,
+    -0.8935
+   ],
+   "max": [
+    0.6536,
+    3.6275,
+    1.2263
+   ]
+  },
+  {
+   "name": "figur-lauf09",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6544,
+    -0.0057,
+    -0.7755
+   ],
+   "max": [
+    0.698,
+    3.606,
+    1.225
+   ]
+  },
+  {
+   "name": "figur-lauf10",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.6736,
+    0.0021,
+    -0.6211
+   ],
+   "max": [
+    0.7489,
+    3.5845,
+    1.2278
+   ]
+  },
+  {
+   "name": "figur-lauf11",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7249,
+    -0.0014,
+    -0.4496
+   ],
+   "max": [
+    0.7319,
+    3.5908,
+    1.128
+   ]
+  },
+  {
+   "name": "figur-lauf12",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7586,
+    -0.0032,
+    -0.4559
+   ],
+   "max": [
+    0.6923,
+    3.6067,
+    0.9019
+   ]
+  },
+  {
+   "name": "figur-lauf13",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7708,
+    -0.0236,
+    -0.8095
+   ],
+   "max": [
+    0.648,
+    3.6219,
+    1.0028
+   ]
+  },
+  {
+   "name": "figur-lauf14",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7664,
+    0.1558,
+    -0.9986
+   ],
+   "max": [
+    0.6243,
+    3.6274,
+    1.2989
+   ]
+  },
+  {
+   "name": "figur-lauf15",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.7538,
+    0.0899,
+    -1.0356
+   ],
+   "max": [
+    0.6156,
+    3.6275,
+    1.0986
+   ]
+  },
+  {
+   "name": "car-taxi",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/taxi.obj",
+   "atlas": null,
+   "dreiecke": 2072,
+   "min": [
+    -0.75,
+    0.0,
+    -1.4
+   ],
+   "max": [
+    0.75,
+    1.5,
+    1.35
+   ]
+  },
+  {
+   "name": "car-van",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj",
+   "atlas": null,
+   "dreiecke": 2082,
+   "min": [
+    -0.75,
+    0.0,
+    -1.4
+   ],
+   "max": [
+    0.75,
+    1.35,
+    1.35
+   ]
+  },
+  {
+   "name": "car-sedan",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/sedan.obj",
+   "atlas": null,
+   "dreiecke": 2032,
+   "min": [
+    -0.75,
+    0.0,
+    -1.3
+   ],
+   "max": [
+    0.75,
+    1.3,
+    1.25
+   ]
+  },
+  {
+   "name": "car-police",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/police.obj",
+   "atlas": null,
+   "dreiecke": 2304,
+   "min": [
+    -0.75,
+    0.0,
+    -1.55
+   ],
+   "max": [
+    0.75,
+    1.3,
+    1.55
+   ]
+  },
+  {
+   "name": "car-ambulance",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/ambulance.obj",
+   "atlas": null,
+   "dreiecke": 2804,
+   "min": [
+    -0.75,
+    0.0,
+    -1.65
+   ],
+   "max": [
+    0.75,
+    1.8,
+    1.6
+   ]
+  },
+  {
+   "name": "car-garbage-truck",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/garbage-truck.obj",
+   "atlas": null,
+   "dreiecke": 3124,
+   "min": [
+    -0.8,
+    0.0,
+    -1.7
+   ],
+   "max": [
+    0.8,
+    1.6,
+    1.75
+   ]
+  },
+  {
+   "name": "wd-tree_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_1_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 530,
+   "min": [
+    -1.9346,
+    -0.2613,
+    -1.6256
+   ],
+   "max": [
+    1.2464,
+    3.8994,
+    1.6256
+   ]
+  },
+  {
+   "name": "wd-tree_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_3_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 978,
+   "min": [
+    -1.5521,
+    -0.2613,
+    -1.5466
+   ],
+   "max": [
+    1.5411,
+    3.2453,
+    1.5466
+   ]
+  },
+  {
+   "name": "wd-tree_4_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_4_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 404,
+   "min": [
+    -0.96,
+    -0.3421,
+    -1.0197
+   ],
+   "max": [
+    1.0473,
+    4.9323,
+    0.9847
+   ]
+  },
+  {
+   "name": "wd-bush_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_1_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 72,
+   "min": [
+    -0.1336,
+    -0.0029,
+    -0.117
+   ],
+   "max": [
+    0.1336,
+    0.2237,
+    0.117
+   ]
+  },
+  {
+   "name": "wd-bush_1_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_1_B_Color1.obj",
+   "atlas": null,
+   "dreiecke": 168,
+   "min": [
+    -0.3612,
+    -0.0124,
+    -0.3612
+   ],
+   "max": [
+    0.3612,
+    0.4718,
+    0.3612
+   ]
+  },
+  {
+   "name": "wd-bush_2_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_2_B_Color1.obj",
+   "atlas": null,
+   "dreiecke": 108,
+   "min": [
+    -0.429,
+    -0.0,
+    -0.429
+   ],
+   "max": [
+    0.429,
+    0.858,
+    0.429
+   ]
+  },
+  {
+   "name": "wd-bush_4_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_4_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 44,
+   "min": [
+    -0.2884,
+    -0.0002,
+    -0.2884
+   ],
+   "max": [
+    0.2884,
+    0.4342,
+    0.2884
+   ]
+  },
+  {
+   "name": "wd-bush_4_c",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_4_C_Color1.obj",
+   "atlas": null,
+   "dreiecke": 108,
+   "min": [
+    -0.7906,
+    -0.0064,
+    -0.7906
+   ],
+   "max": [
+    0.7906,
+    1.2956,
+    0.7906
+   ]
+  },
+  {
+   "name": "wd-bush_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_3_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 208,
+   "min": [
+    -0.5165,
+    -0.0254,
+    -0.5165
+   ],
+   "max": [
+    0.5165,
+    0.4599,
+    0.5165
+   ]
+  },
+  {
+   "name": "wd-grass_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_1_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 44,
+   "min": [
+    -0.1696,
+    -0.02,
+    -0.0784
+   ],
+   "max": [
+    0.1696,
+    0.5393,
+    0.0734
+   ]
+  },
+  {
+   "name": "wd-grass_1_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_1_B_Color1.obj",
+   "atlas": null,
+   "dreiecke": 132,
+   "min": [
+    -0.266,
+    -0.0563,
+    -0.3368
+   ],
+   "max": [
+    0.2391,
+    0.4812,
+    0.2189
+   ]
+  },
+  {
+   "name": "wd-grass_2_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_2_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 44,
+   "min": [
+    -0.0775,
+    -0.0313,
+    -0.174
+   ],
+   "max": [
+    0.0775,
+    0.8875,
+    0.0796
+   ]
+  },
+  {
+   "name": "wd-grass_2_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_2_B_Color1.obj",
+   "atlas": null,
+   "dreiecke": 132,
+   "min": [
+    -0.2136,
+    -0.0313,
+    -0.2741
+   ],
+   "max": [
+    0.1899,
+    0.8875,
+    0.1233
+   ]
+  },
+  {
+   "name": "wd-rock_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_1_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 48,
+   "min": [
+    -0.3195,
+    0.0,
+    -0.3039
+   ],
+   "max": [
+    0.2585,
+    0.5403,
+    0.3039
+   ]
+  },
+  {
+   "name": "wd-rock_1_d",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_1_D_Color1.obj",
+   "atlas": null,
+   "dreiecke": 84,
+   "min": [
+    -0.3868,
+    0.0,
+    -0.6247
+   ],
+   "max": [
+    0.5403,
+    1.13,
+    0.5319
+   ]
+  },
+  {
+   "name": "wd-rock_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_3_A_Color1.obj",
+   "atlas": null,
+   "dreiecke": 84,
+   "min": [
+    -0.5295,
+    -0.4653,
+    -0.4149
+   ],
+   "max": [
+    0.4268,
+    0.3936,
+    0.3926
+   ]
+  },
+  {
+   "name": "wd-rock_3_g",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_3_G_Color1.obj",
+   "atlas": null,
+   "dreiecke": 168,
+   "min": [
+    -0.9557,
+    -0.8728,
+    -0.8905
+   ],
+   "max": [
+    0.9066,
+    1.1273,
+    0.8436
+   ]
+  },
+  {
+   "name": "wd-rock_2_c",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_2_C_Color1.obj",
+   "atlas": null,
+   "dreiecke": 108,
+   "min": [
+    -0.6476,
+    0.0,
+    -0.6476
+   ],
+   "max": [
+    0.6477,
+    1.3262,
+    0.6476
    ]
   }
  ]
