@@ -64,10 +64,10 @@ KENNEY_DATEIEN = (
     + [("kenney_rpg-audio", f"Audio/doorOpen_{n}.ogg", "tuer_auf") for n in (1, 2)]
     + [("kenney_rpg-audio", f"Audio/doorClose_{n}.ogg", "tuer_zu") for n in (1, 2, 3, 4)]
     + [("kenney_rpg-audio", f"Audio/{name}.ogg", "kasse") for name in ("handleCoins", "handleCoins2")]
-    # E2 P8-17d Punkt 4: eine Reihe (Pizzicato), Nico waehlt an den Hoerproben (STEEL als zweite)
-    + [("kenney_music-jingles", "Audio/Pizzicato jingles/jingles_PIZZI07.ogg", "melodie_feierabend"),
-       ("kenney_music-jingles", "Audio/Pizzicato jingles/jingles_PIZZI03.ogg", "melodie_erfolg"),
-       ("kenney_music-jingles", "Audio/Pizzicato jingles/jingles_PIZZI00.ogg", "melodie_ticket")]
+    # E2 P8-17d Punkt 4: eine Reihe; Nico waehlte an den Hoerproben STEEL (Weisung P8-21)
+    + [("kenney_music-jingles", "Audio/Steel jingles/jingles_STEEL07.ogg", "melodie_feierabend"),
+       ("kenney_music-jingles", "Audio/Steel jingles/jingles_STEEL01.ogg", "melodie_erfolg"),
+       ("kenney_music-jingles", "Audio/Steel jingles/jingles_STEEL09.ogg", "melodie_ticket")]
 )
 
 # zweite Reihe nur als Hoerprobe (nicht im Programm)

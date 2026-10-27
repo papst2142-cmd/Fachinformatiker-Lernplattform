@@ -614,7 +614,7 @@ public sealed class SpielTonTests
     // -- Toene im Programm ------------------------------------------------------------
 
     /// <summary>Pruefsumme ueber die 40 Toene aus W8 (Datei und SHA-256 in toene.json): neue Toene nur angehaengt.</summary>
-    private const string SollToeneW8 = "4bab89e27fa317e51ec700e63a49d98b672d39a44192fc94ffc5c9a03856958f";
+    private const string SollToeneW8 = "4d7776c2a2df89b57cb3c58054fed184d530f037f8edc85625140af163148960";
 
     private static List<(string Datei, string Anlass, string Sha)> Eintraege()
     {

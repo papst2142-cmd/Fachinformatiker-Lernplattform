@@ -335,31 +335,31 @@
    "sha256": "4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32"
   },
   {
-   "datei": "jingles_PIZZI07.ogg",
+   "datei": "jingles_STEEL07.ogg",
    "anlass": "melodie_feierabend",
    "werk": "Music Jingles, Kenney",
    "fundstelle": "https://kenney.nl/assets/music-jingles",
-   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI07.ogg",
+   "quelle": "kenney_music-jingles.zip/Audio/Steel jingles/jingles_STEEL07.ogg",
    "lizenz": "CC0-1.0",
-   "sha256": "91870588924e0e498c6eb8d4f4ccf8595c9e7dc51fb553797b551062e642ce7c"
+   "sha256": "206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece"
   },
   {
-   "datei": "jingles_PIZZI03.ogg",
+   "datei": "jingles_STEEL01.ogg",
    "anlass": "melodie_erfolg",
    "werk": "Music Jingles, Kenney",
    "fundstelle": "https://kenney.nl/assets/music-jingles",
-   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI03.ogg",
+   "quelle": "kenney_music-jingles.zip/Audio/Steel jingles/jingles_STEEL01.ogg",
    "lizenz": "CC0-1.0",
-   "sha256": "88da900ec74a79fb845f2dcf2068383998833a9ee1b87a23f074924781af5700"
+   "sha256": "099b192f120f7eb7c24613be277428628b9ec9c81e1f8420254abce336fbe7e5"
   },
   {
-   "datei": "jingles_PIZZI00.ogg",
+   "datei": "jingles_STEEL09.ogg",
    "anlass": "melodie_ticket",
    "werk": "Music Jingles, Kenney",
    "fundstelle": "https://kenney.nl/assets/music-jingles",
-   "quelle": "kenney_music-jingles.zip/Audio/Pizzicato jingles/jingles_PIZZI00.ogg",
+   "quelle": "kenney_music-jingles.zip/Audio/Steel jingles/jingles_STEEL09.ogg",
    "lizenz": "CC0-1.0",
-   "sha256": "b442ade3308a2bbda4b8c572c86f9f1071c7bdbcfb1e6f915d35c605b61bd475"
+   "sha256": "6eba3198a05a3388be4a1edc2d11135ac2b924d8418704e94636d3e0af3c2854"
   }
  ]
 }
