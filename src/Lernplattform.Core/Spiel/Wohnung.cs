@@ -348,6 +348,38 @@ public static partial class Wohnung
         return (Py.Str(bleibe["name"]), wo + " Geh zum Bett, zum Schreibtisch oder zur Wohnungstür.", []);
     }
 
+    /// <summary>Phase 8 W5 (Plan Phase 8 Abschnitt 11, Nico 26.10.2026): Titel und Knoepfe der Rueckfrage am Bett.</summary>
+    public const string SchlafenTitel = "Feierabend";
+
+    public const string SchlafenJa = "Schlafen gehen";
+
+    public const string SchlafenNein = "Noch nicht";
+
+    /// <summary>Text der Rueckfrage am Bett, wenn alle Aufgaben des Tages erledigt sind.</summary>
+    public const string SchlafenFertig = "Du hast alle Aufgaben für heute erledigt. Willst du schlafen gehen und Feierabend machen?";
+
+    /// <summary>Text der Rueckfrage am Bett, wenn noch <paramref name="offen"/> Aufgaben offen sind.</summary>
+    public static string SchlafenOffen(int offen) => offen == 1
+        ? "Für heute ist noch 1 Aufgabe offen. Erledige sie zuerst, dann kannst du schlafen gehen und Feierabend machen."
+        : Prozent("Für heute sind noch %d Aufgaben offen. Erledige sie zuerst, dann kannst du schlafen gehen und Feierabend machen.", offen);
+
+    /// <summary>
+    /// Phase 8 W5: Rueckfrage am Bett. Schlafen gehen ist derselbe Feierabend wie der Knopf "Feierabend machen"
+    /// (<see cref="SpielAktionen.Feierabend"/>), darum nur, wenn er moeglich ist (<see cref="Spielstand.FeierabendMoeglich"/>).
+    /// Offen zaehlt, was den Feierabend aufhaelt: ohne Firma die offenen Tickets des Tages
+    /// (<see cref="Spielstand.OffeneTickets"/>), mit Firma die offenen Personal-Entscheidungen. Bei offenen
+    /// Aufgaben nur ein Hinweis (Meldung P8-7b, Option a).
+    /// </summary>
+    public static (bool Moeglich, string Text) SchlafFrage(Spielstand stand)
+    {
+        if (stand.FeierabendMoeglich())
+        {
+            return (true, SchlafenFertig);
+        }
+        var offen = Py.Wahr(stand.Firma) ? stand.OffeneEntscheidungen().Count : stand.OffeneTickets().Count;
+        return (false, SchlafenOffen(offen));
+    }
+
     /// <summary>sleep_text</summary>
     public static string SchlafText(Spielstand stand)
     {

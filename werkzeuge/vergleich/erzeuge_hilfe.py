@@ -68,6 +68,17 @@ PAARE = [
      "neu": "Der Lernfortschritt gilt für alle gemeinsam.\n\nIm Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle."},
     # Phase 8 W2 (Weisung P8-3, Sammelliste 72, Nico 23.10.2026): "Vorladen" streichen, die C#-Linie laedt nicht vor
     {"nr": "W5", "thema": "haenger", "alt": ", Vorladen)", "neu": ")"},
+    # Phase 8 W5 (Weisung P8-7 B2, Plan Phase 8 Abschnitt 4 und 11, Nico 4a): Stadt in 3D mit Kaufhaus und Bett (H1),
+    # Spielstand im Abgleich (H2), Knopf "Lizenzen" in "Über das Programm" (L1)
+    {"nr": "H1", "thema": "spiel",
+     "alt": "die echte Uhr spielt keine Rolle.",
+     "neu": "die echte Uhr spielt keine Rolle.\n\nDu bewegst dich durch eine Stadt in 3D: Tippe oder klicke auf einen Weg oder ein Haus, dann geht deine Figur dorthin. Im Möbelhaus und im Elektromarkt kaufst du ein, im Kaufhaus Kleidung für deine Figur. In der Bank nimmst du Kredite auf, auf dem Amt gründest du deine Firma. Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause. Zum Feierabend gehst du zu Hause ins Bett. Kann dein Gerät keine 3D-Grafik zeigen, stehen die Orte in einer Liste."},
+    {"nr": "H2", "thema": "spiel",
+     "alt": "Der Lernfortschritt gilt für alle gemeinsam.",
+     "neu": "Der Lernfortschritt gilt für alle gemeinsam. Mit eingerichtetem Abgleich spielst du denselben Spielstand auf PC und Handy weiter."},
+    {"nr": "L1", "thema": "rechtliches",
+     "alt": "„Lizenz“ und „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen).",
+     "neu": "„Lizenz“, „Hinweise zu Fremdbestandteilen“ (Bestandteile anderer Hersteller und ihre Lizenzen) und „Lizenzen“ (die vollständigen Lizenztexte dieser Bestandteile)."},
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT", "alt": REL_PY, "neu": REL_CS},
 ]
 

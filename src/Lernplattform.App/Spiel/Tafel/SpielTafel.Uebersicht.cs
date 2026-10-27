@@ -306,18 +306,7 @@ public sealed partial class SpielTafel
         }
         else if (aktion == "feierabend")
         {
-            if (Tun(a => a.Feierabend()) is not { } daten)
-            {
-                return;
-            }
-            Raum = null;
-            _stapel.Clear();
-            var tag = Py.Int(daten["tag"]);
-            _s.Abgleichen();
-            _s.Spiel.NotizSetzen(PyFormat.Prozent("Feierabend nach Arbeitstag %d", tag),
-                PyFormat.Prozent("%s %s", Betrieb.FeierabendSzene(tag, I, Py.Wahr(Get(daten, "firma"))), Wohnung.FeierabendGeldText(daten, I)));
-            _s.Spiel.Neubeginn();
-            Fortschritt();
+            FeierabendMachen();
         }
         else if (aktion == "lernen")
         {
@@ -325,8 +314,42 @@ public sealed partial class SpielTafel
         }
         else if (aktion == "schlafen")
         {
-            _s.Spiel.NotizSetzen("Gute Nacht", Wohnung.SchlafText(Stand));
-            _s.Spiel.Auffrischen();
+            _ = SchlafenAsync();
         }
+    }
+
+    /// <summary>
+    /// Phase 8 W5 (Plan Phase 8 Abschnitt 11): am Bett schlafen gehen = Feierabend machen, vorher eine Rueckfrage;
+    /// sind noch Aufgaben offen, nur ein Hinweis (der Feierabend geht dann auch ueber den Knopf nicht).
+    /// </summary>
+    private async Task SchlafenAsync()
+    {
+        var (moeglich, text) = Wohnung.SchlafFrage(Stand);
+        if (!moeglich)
+        {
+            await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Dialog.Ok);
+            return;
+        }
+        if (await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Wohnung.SchlafenNein, Wohnung.SchlafenJa) == 1)
+        {
+            FeierabendMachen();
+        }
+    }
+
+    /// <summary>end_day ueber den Knopf "Feierabend machen" oder das Bett: Notiz, neuer Tag zu Hause.</summary>
+    private void FeierabendMachen()
+    {
+        if (Tun(a => a.Feierabend()) is not { } daten)
+        {
+            return;
+        }
+        Raum = null;
+        _stapel.Clear();
+        var tag = Py.Int(daten["tag"]);
+        _s.Abgleichen();
+        _s.Spiel.NotizSetzen(PyFormat.Prozent("Feierabend nach Arbeitstag %d", tag),
+            PyFormat.Prozent("%s %s", Betrieb.FeierabendSzene(tag, I, Py.Wahr(Get(daten, "firma"))), Wohnung.FeierabendGeldText(daten, I)));
+        _s.Spiel.Neubeginn();
+        Fortschritt();
     }
 }
