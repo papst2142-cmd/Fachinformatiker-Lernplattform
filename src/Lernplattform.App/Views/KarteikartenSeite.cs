@@ -163,7 +163,8 @@ public sealed class KarteikartenSeite : UserControl
 
         _untertitel = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.accent");
         _statuszeile = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.muted");
-        _frage = Schrift.Text("", "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
+        // Fix A 0.14.2 (Weisung P8-9): LernText, damit ein sehr langes Wort in schmaler Ansicht bei grosser Schrift ganz bleibt
+        _frage = new LernText("", "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
         _liste.Children.Add(Schrift.Karte(new StackPanel
         {
             Spacing = 6,
@@ -185,8 +186,8 @@ public sealed class KarteikartenSeite : UserControl
         _freitext = new StackPanel { Spacing = 8, Children = { Schrift.Text(KartenTexte.FreitextHinweis, "Normal", FontWeight.Normal, "Pinsel.text_dim"), _eingabe } };
         _optionen = new StackPanel { Spacing = 6 };
         _aufdecken = Schrift.Text(KartenTexte.AufdeckenHinweis, "Normal", FontWeight.Normal, "Pinsel.text_dim");
-        _rueckmeldung = Schrift.Text("", "Normal", FontWeight.Bold);
-        _loesung = Schrift.Text("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        _rueckmeldung = new LernText("", "Normal", FontWeight.Bold, "Pinsel.text");
+        _loesung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
         var gewusst = LernTeile.Knopf(KartenTexte.Gewusst, true);
         gewusst.Click += (_, _) => Bewerten(true);
         var nichtGewusst = LernTeile.Knopf(KartenTexte.NichtGewusst);
@@ -325,7 +326,7 @@ public sealed class KarteikartenSeite : UserControl
     /// 1 Multiple Choice, 2 Aufdecken mit "Wusstest du es?") mit dem laengsten Themennamen,
     /// ohne etwas zu speichern. -1 = zurueck auf "Alle" und Freitext.
     /// </summary>
-    internal void Probe(int art)
+    internal void Probe(int art, string? frage = null)
     {
         if (_k is not { } k)
         {
@@ -339,7 +340,12 @@ public sealed class KarteikartenSeite : UserControl
             return;
         }
         var lang = k.Themen.MaxBy(t => t.Name.Length);
-        if (lang is not null && k.Thema != lang.Id)
+        if (frage is not null)
+        {
+            // Fix A 0.14.2: eine bestimmte Karte (Start-Test: laengstes Wort je Fachbereich)
+            k.Springen(frage);
+        }
+        else if (lang is not null && k.Thema != lang.Id)
         {
             k.SetzeThema(lang.Id);
         }

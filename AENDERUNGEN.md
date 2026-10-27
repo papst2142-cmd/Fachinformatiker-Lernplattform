@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.14.2
+Lange Wörter bleiben auf dem Handy ganz.
+
+- Bei sehr großer Schrift auf einem schmalen Bildschirm wurden einzelne sehr lange Wörter in Karteikarten mitten im Wort getrennt, zum Beispiel „Dokumentationsaufgaben“. Jetzt wird in diesem Fall nur der betroffene Text so weit kleiner, dass das Wort ganz in die Zeile passt, höchstens bis zur Schriftgröße „Normal“. Das gilt für die Frage, die Antworten zum Auswählen und die Musterlösung, auch im Prüfungstrainer.
+- Die automatische Prüfung beim Bauen des Programms sieht sich jetzt in jedem Fachbereich gezielt die Karte mit dem längsten Wort an. So fällt ein solcher Fehler sofort auf und nicht erst an dem Tag, an dem zufällig genau diese Karte vorne steht.
+
 ## A 0.14.1
 Das Spiel reagiert schneller.
 
