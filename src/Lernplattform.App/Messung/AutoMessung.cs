@@ -128,12 +128,15 @@ public static partial class AutoMessung
         }
         if (MitSpiel)
         {
+            funde += await P8W5SpielVorStichprobeAsync(ansicht); // Sammelliste 112: Spielseite zuerst schmal
             funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
             funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
+            funde += await P8W5MesspunkteAsync(ansicht);       // Phase 8 W5: Rueckfrage am Bett
         }
         if (MitLernen)
         {
             await WechselReihenAsync(ansicht, reihenRot);
+            funde += await P8W5ScrollleistenAsync(ansicht);    // Weisung P8-10: Scrollleisten schmal und rund
         }
         funde += await LayoutAsync(ansicht, inhalte);
         if (MitLernen)
@@ -598,6 +601,12 @@ public static partial class AutoMessung
                 UebernahmeTexte.Ergebnis(ProbeBericht(), UebernahmeTexte.KopieName("vor_uebernahme_2026-10-20_120000_2.db", !ansicht.Breit)), Dialog.Ok)),
             ("uebernahme/fehler", () => Dialog.Zeigen(UebernahmeTexte.Titel, UebernahmeTexte.SchreibenGescheitert, Dialog.Ok)),
             ("trainer/rueckfrage", () => Dialog.Zeigen(TrainerTexte.Abbrechen, TrainerTexte.AbbrechenFrage, TrainerTexte.Ja, TrainerTexte.Nein)),
+            // Phase 8 W5: Rueckfrage am Bett (Feierabend ueber das Bett), alle drei Texte
+            ("spiel/bett_feierabend", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenFertig,
+                Core.Spiel.Wohnung.SchlafenNein, Core.Spiel.Wohnung.SchlafenJa)),
+            ("spiel/bett_offen", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenOffen(12), Dialog.Ok)),
+            ("spiel/bett_trotzdem", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenTrotzdem(12),
+                Core.Spiel.Wohnung.SchlafenNein, Core.Spiel.Wohnung.SchlafenJa)),
         };
         for (var i = 0; i < fenster.Length; i++)
         {

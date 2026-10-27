@@ -39,6 +39,8 @@ public static partial class AutoMessung
         // Weisung P8-5b: Gruppenfarben der Optionen, Titel auf der Karte und Ueberschrift auf dem Hintergrund
         ("blue", "card"), ("pink", "card"), ("purple", "card"), ("orange", "card"), ("cyan", "card"), ("red", "card"),
         ("blue", "bg"), ("cyan", "bg"), ("pink", "bg"), ("purple", "bg"), ("orange", "bg"),
+        // Weisung P8-10: Griff der Scrollleisten (Programmfarbe) gegen Spur und Hintergruende
+        ("accent", "scrollbar"), ("accent", "sidebar"), ("accent", "bg"), ("accent", "card"),
     ];
 
     private static HilfeAbschnitt LaengsterAbschnitt => HilfeTexte.Abschnitte.MaxBy(a => a.Text.Length)!;

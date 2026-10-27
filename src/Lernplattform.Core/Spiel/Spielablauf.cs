@@ -544,6 +544,14 @@ public sealed class Spielablauf
     public PyObjekt TeilKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string teil) =>
         Ausfuehren(geschaefte.TeilKaufen(stadt, Stand, laden, teil));
 
+    /// <summary>Phase 8 W5: Kleidung im Kaufhaus kaufen und gleich anziehen (zwei Zeilen in einem Schritt).</summary>
+    public PyObjekt KleidungKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string stueck) =>
+        Ausfuehren(Kleidung.Kaufen(stadt, Stand, geschaefte.Daten, laden, stueck));
+
+    /// <summary>Phase 8 W5: gekaufte Kleidung anziehen oder einen Slot ablegen (stueck null), ueberall (Tafel "Figur").</summary>
+    public PyObjekt KleidungAnziehen(Geschaefte geschaefte, string slot, string? stueck) =>
+        Ausfuehren(Kleidung.Anziehen(Stand, geschaefte.Daten, slot, stueck));
+
     /// <summary>W7b: Kredit in der Bank aufnehmen (nur in der geoeffneten Bank, sonst wie KreditAufnehmen).</summary>
     public PyObjekt BankKreditAufnehmen(Stadt stadt, object? summe, object? laufzeit, object? paket = null) =>
         Ausfuehren(Schalter.KreditAufnehmen(stadt, Stand, summe, laufzeit, paket));
@@ -556,6 +564,39 @@ public sealed class Spielablauf
 
     public PyObjekt Feierabend() =>
         Ausfuehren(SpielAktionen.Feierabend(Stand, Py.Wahr(Stand.Firma) ? FirmenWissen() : null));
+
+    /// <summary>
+    /// Phase 8 W5 (Weisung P8-8b, Nico Option b): am Bett schlafen gehen. Ohne Firma werden alle offenen
+    /// Tickets nacheinander verschoben, genau wie mit dem Knopf "Verschieben" (dieselbe Aktion, Reihenfolge
+    /// wie <see cref="Spielstand.OffeneTickets"/>), danach derselbe Feierabend. Bricht ein Schritt ab
+    /// (Sperre belegt, Fehler), wirft er wie jede Aktion und es gibt keinen Feierabend. Nach einem
+    /// Schreibfehler verwirft die Spielschlange die uebrigen Zeilen (auch den Feierabend); war ein Schritt
+    /// nicht gespeichert (Stand neu aus der Datenbank), hoert das Bett auf, statt die Tickets erneut zu
+    /// verschieben (Test SpielBettTests).
+    /// </summary>
+    public PyObjekt SchlafenGehen()
+    {
+        if (!Py.Wahr(Stand.Firma))
+        {
+            var nicht = NichtGespeichert;
+            // Schutz gegen eine Schleife: jedes verschobene Ticket ist heute nicht mehr offen
+            for (var schritt = 0; Stand.OffeneTickets() is { Count: > 0 } offen; schritt++)
+            {
+                if (schritt >= SchlafenHoechstens)
+                {
+                    throw new SpielFehler("Die offenen Tickets lassen sich nicht verschieben.");
+                }
+                Verschieben(offen[0]["id"]);
+                if (NichtGespeichert != nicht)
+                {
+                    throw new SpielFehler(Texte.SpielProbeTexte.SchrittNichtGespeichert);
+                }
+            }
+        }
+        return Feierabend();
+    }
+
+    private const int SchlafenHoechstens = 100;
 
     public PyObjekt Gruenden(string? name) => Ausfuehren(SpielAktionen.Gruenden(Stand, name));
 

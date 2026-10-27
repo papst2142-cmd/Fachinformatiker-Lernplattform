@@ -41,7 +41,12 @@ public static class Figur
         Hemd,
         Haut,
         Haare,
+        Hose,
+        Schuhe,
     }
+
+    /// <summary>Phase 8 W5 (Kaufhaus): ein getragenes Kleidungsstueck, Slot (oberteil, hose, schuhe, kopf), Form und Farbe.</summary>
+    public sealed record Stueck(string Slot, string Form, string Farbe);
 
     /// <summary>
     /// Hemd: blaugrau (Blau deutlich ueber Rot, hell) zwischen Huefte und Hals; Haut: Rot deutlich
@@ -65,14 +70,35 @@ public static class Figur
     }
 
     /// <summary>Die Figur als Netz, <paramref name="hoehe"/> hoch, gefaerbt nach <paramref name="aussehen"/> (null = Voreinstellung).</summary>
-    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe)
+    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe) => Netz(grafik, aussehen, hoehe, null);
+
+    /// <summary>Hose: blaugrau unter der Huefte, Schuhe: grau ganz unten (nur wenn ein Stueck getragen wird).</summary>
+    public static Bereich Kleidung(byte r, byte g, byte b, float hoeheAnteil)
+    {
+        if (b - r >= 30 && r < 140 && hoeheAnteil > 0.06f && hoeheAnteil < 0.36f)
+        {
+            return Bereich.Hose;
+        }
+        if (hoeheAnteil < 0.08f && Math.Abs(r - g) < 14 && Math.Abs(g - b) < 14 && r > 150)
+        {
+            return Bereich.Schuhe;
+        }
+        return Bereich.Sonst;
+    }
+
+    /// <summary>Die Figur mit getragener Kleidung (Kaufhaus): Oberteil, Hose und Schuhe umgefaerbt, Kopfbedeckung dazu.</summary>
+    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung)
     {
         var a = Aussehen.Normalisieren(aussehen);
         if (grafik?.Modell(Modell) is not { } gm)
         {
             return ProbeWelt.Figur();
         }
-        var hemd = Probe.Netz.Farbe(Oberteil[Py.Str(a["oberteil"])]);
+        var oben = kleidung?.FirstOrDefault(k => k.Slot == "oberteil");
+        var hose = kleidung?.FirstOrDefault(k => k.Slot == "hose");
+        var schuhe = kleidung?.FirstOrDefault(k => k.Slot == "schuhe");
+        var kopfStueck = kleidung?.FirstOrDefault(k => k.Slot == "kopf");
+        var hemd = Probe.Netz.Farbe(oben?.Farbe ?? Oberteil[Py.Str(a["oberteil"])]);
         var haut = Probe.Netz.Farbe(Haut[Py.Str(a["haut"])]);
         var haar = Probe.Netz.Farbe(Haare[Py.Str(a["haarfarbe"])]);
         var groesse = gm.Max.Y - gm.Min.Y;
@@ -84,11 +110,19 @@ public static class Figur
         {
             var y = (gm.Ecken[(d * 9) + 1] + gm.Ecken[(d * 9) + 4] + gm.Ecken[(d * 9) + 7]) / 3;
             byte r = farben[d * 3], g = farben[(d * 3) + 1], b = farben[(d * 3) + 2];
-            var (ziel, bezug) = Erkennen(r, g, b, (y - gm.Min.Y) / groesse) switch
+            var bereich = Erkennen(r, g, b, (y - gm.Min.Y) / groesse);
+            if (bereich == Bereich.Sonst && (hose is not null || schuhe is not null))
+            {
+                bereich = Kleidung(r, g, b, (y - gm.Min.Y) / groesse);
+            }
+            var (ziel, bezug) = bereich switch
             {
                 Bereich.Hemd => (hemd, 212f),
                 Bereich.Haut => (haut, 230f),
+                Bereich.Haare when kopfStueck is not null && Bedeckt(kopfStueck.Form, (y - gm.Min.Y) / groesse) => (Probe.Netz.Farbe(kopfStueck.Farbe), 60f),
                 Bereich.Haare => (haar, 60f),
+                Bereich.Hose when hose is not null => (Probe.Netz.Farbe(hose.Farbe), 115f),
+                Bereich.Schuhe when schuhe is not null => (Probe.Netz.Farbe(schuhe.Farbe), 215f),
                 _ => (Vector3.Zero, 0f),
             };
             if (bezug == 0)
@@ -106,7 +140,16 @@ public static class Figur
         netz.Hinzu(new GrafikModell(gm.Name, gm.Ecken, farben), lage);
         if (Kopf(gm) is { } kopf)
         {
-            foreach (var teil in Gesicht(kopf.Min, kopf.Max, haut))
+            var teile = Gesicht(kopf.Min, kopf.Max, haut);
+            if (kopfStueck is not null)
+            {
+                teile.AddRange(Kopfbedeckung(kopf.Min, kopf.Max, gm.Max.Y, kopfStueck));
+            }
+            if (oben is { Form: "kapuze" })
+            {
+                teile.AddRange(Kapuze(kopf.Min, kopf.Max, hemd));
+            }
+            foreach (var teil in teile)
             {
                 netz.Hinzu(teil with
                 {
@@ -201,5 +244,60 @@ public static class Figur
                 radius * MathF.Sin(mitte + halb), breite, radius * MathF.Cos(mitte + halb), farbe));
         }
         return Probe.Netz.Aus(teile);
+    }
+
+    /// <summary>Kappe (mit Schirm nach vorn), Muetze (mit Bommel) oder Hut (mit Krempe) auf dem Kopf, Masse nach dem Kopf.</summary>
+    public static List<Teil> Kopfbedeckung(Vector3 min, Vector3 max, float oben, Stueck stueck)
+    {
+        var f = Probe.Netz.Farbe(stueck.Farbe);
+        var dunkel = f * 0.75f;
+        float b = max.X - min.X, t = max.Z - min.Z, h = max.Y - min.Y, rand = b * 0.08f;
+        float x1 = min.X - rand, x2 = max.X + rand, z1 = min.Z - rand, z2 = max.Z + rand;
+        var teile = new List<Teil>();
+        switch (stueck.Form)
+        {
+            case "kappe":
+                // die Kappe ist das umgefaerbte Haar oben (Bedeckt), dazu der Schirm nach vorn
+                teile.Add(new Teil(TeilArt.Quader, min.X + (b * 0.2f), max.Y + (h * 0.12f), max.Z - (t * 0.1f), max.X - (b * 0.2f), max.Y + (h * 0.15f), max.Z + (t * 0.12f), dunkel));
+                break;
+            case "muetze":
+                // Umschlag am Rand und Bommel oben
+                teile.AddRange(Rund(x1, z1, x2, z2, max.Y - (h * 0.06f), max.Y + (h * 0.04f), dunkel));
+                teile.Add(new Teil(TeilArt.Quader, ((min.X + max.X) / 2) - (b * 0.08f), oben - (h * 0.02f), ((min.Z + max.Z) / 2) - (b * 0.08f),
+                    ((min.X + max.X) / 2) + (b * 0.08f), oben + (h * 0.12f), ((min.Z + max.Z) / 2) + (b * 0.08f), Probe.Netz.Farbe("#F8FAFC")));
+                break;
+            default:
+                // Hut: Krempe rundum und Band, der Kopf des Huts ist das umgefaerbte Haar
+                teile.AddRange(Rund(x1 - (b * 0.14f), z1 - (t * 0.14f), x2 + (b * 0.14f), z2 + (t * 0.14f), max.Y - (h * 0.01f), max.Y + (h * 0.03f), f));
+                teile.AddRange(Rund(x1, z1, x2, z2, max.Y + (h * 0.03f), max.Y + (h * 0.09f), dunkel));
+                break;
+        }
+        return teile;
+    }
+
+    /// <summary>Kaufhaus (Weisung P8-8c, Hinweis Chat): runde Scheibe aus vier versetzten Quadern (von oben fast rund statt eckig).</summary>
+    private static List<Teil> Rund(float x1, float z1, float x2, float z2, float y1, float y2, Vector3 farbe)
+    {
+        float cx = (x1 + x2) / 2, cz = (z1 + z2) / 2, rx = (x2 - x1) / 2, rz = (z2 - z1) / 2;
+        Teil Kasten(float fx, float fz) => new(TeilArt.Quader, cx - (rx * fx), y1, cz - (rz * fz), cx + (rx * fx), y2, cz + (rz * fz), farbe);
+        return [Kasten(1f, 0.4f), Kasten(0.4f, 1f), Kasten(0.86f, 0.7f), Kasten(0.7f, 0.86f)];
+    }
+
+    /// <summary>Welche Haar-Dreiecke die Kopfbedeckung bedeckt (Hoehe relativ zur Figur).</summary>
+    public static bool Bedeckt(string form, float hoeheAnteil) => form switch
+    {
+        "kappe" => hoeheAnteil > 0.93f,
+        "muetze" => hoeheAnteil > 0.86f,
+        _ => hoeheAnteil > 0.89f,
+    };
+
+    /// <summary>Kapuze des Kapuzenpullis: Wulst hinten am Hals in der Farbe des Oberteils.</summary>
+    public static List<Teil> Kapuze(Vector3 min, Vector3 max, Vector3 farbe)
+    {
+        float b = max.X - min.X, h = max.Y - min.Y;
+        return
+        [
+            new Teil(TeilArt.Quader, min.X + (b * 0.05f), min.Y - (h * 0.25f), min.Z - (b * 0.18f), max.X - (b * 0.05f), min.Y + (h * 0.25f), min.Z + (b * 0.12f), farbe * 0.9f),
+        ];
     }
 }

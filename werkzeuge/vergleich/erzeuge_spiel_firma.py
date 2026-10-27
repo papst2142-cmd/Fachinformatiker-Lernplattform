@@ -30,6 +30,9 @@ random.Random mit festem Startwert.
   wissen      - der feste Wissensstand des Laufs (knowledge, topic_knowledge,
                 learned_projects).
 
+Mit KORREKTUR 83 (Phase 8 W5): journey() rechnet ohne den Fehler der Python-
+Linie (Rangliste im Konflikt-Zweig ueberschrieben), siehe korrigiere_83.
+
 Werte wie G44: set -> {"menge": sortiert}, Tupel -> Liste, dict mit anderen
 als Text-Schluesseln -> {"paare": [[k, v]]}. Keine Lerndaten; alle Daten-
 und Einstellungsordner zeigen in einen leeren Temp-Ordner. Uhr und uuid4
@@ -406,6 +409,35 @@ class Lauf:
                 "faelle": self.faelle, "staende": self.staende}
 
 
+# ---- KORREKTUR 83 (Sammelliste 83, Nico 3a, Weisung P8-7 B5) -------------------
+# Python 0.63.2 ueberschreibt in journey() im Konflikt-Zweig die Rangliste "names"
+# mit _pair_names(...) (ein dict). Danach gilt in der Rang-Schleife jeder Rang als
+# Stufe 0, und jeder Rangwechsel heisst "Zurueckgestuft". Die C#-Linie korrigiert
+# das; der Vergleichswert rechnet mit derselben Korrektur. Die Python-Linie bleibt
+# unberuehrt: nur in diesem Erzeuger wird journey() aus dem Quelltext neu gebaut,
+# mit eigenem Namen fuer das Paar im Konflikt-Zweig. Jede Ersetzung muss genau
+# einmal passen, sonst bricht der Erzeuger ab.
+KORREKTUR_83 = (
+    ('            names = _pair_names(data.get("name_a", ""), data.get("name_b", ""))\n'
+     '            add(tag, JOURNEY_FIRM, EV_CONFLICT, "Streit: %s und %s" % (names["a"], names["b"]),\n',
+     '            paar = _pair_names(data.get("name_a", ""), data.get("name_b", ""))\n'
+     '            add(tag, JOURNEY_FIRM, EV_CONFLICT, "Streit: %s und %s" % (paar["a"], paar["b"]),\n'),
+)
+
+
+def korrigiere_83(fg):
+    import inspect
+    quelle = inspect.getsource(fg.journey)
+    for alt, neu in KORREKTUR_83:
+        if quelle.count(alt) != 1:
+            raise SystemExit("KORREKTUR 83: Stelle in journey() nicht genau einmal gefunden")
+        quelle = quelle.replace(alt, neu)
+    raum = {}
+    exec(compile(quelle, "journey_korrektur_83", "exec"), fg.__dict__, raum)
+    fg.journey = raum["journey"]
+# ---- Ende KORREKTUR 83 --------------------------------------------------------
+
+
 def main():
     if len(sys.argv) != 3:
         print(__doc__)
@@ -425,6 +457,7 @@ def main():
     uuid.uuid4 = feste_uuid
     import fisi_core as core
     import fisi_game as fg
+    korrigiere_83(fg)   # KORREKTUR 83, siehe oben
 
     laeufe = [Lauf(fg, core, tmp, "normal", 4711, fg.DIFF_NORMAL).spielen(70),
               Lauf(fg, core, tmp, "einfach", 815, fg.DIFF_EASY).spielen(45)]

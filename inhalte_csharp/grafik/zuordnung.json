@@ -26,6 +26,7 @@
   "filiale:1": "building-h@a",
   "filiale:2": "building-l@b",
   "moebelhaus:0": "building-e@b",
-  "elektromarkt:0": "building-j@a"
+  "elektromarkt:0": "building-j@a",
+  "kaufhaus:0": "kaufhaus-galerie"
  }
 }

@@ -320,7 +320,14 @@ def main():
         if paket["zip"] not in zips:
             zips[paket["zip"]] = zipfile.ZipFile(os.path.join(quelle, paket["zip"]))
         z = zips[paket["zip"]]
-        if eintrag["datei"].endswith(".fbx"):
+        if "teile" in eintrag:
+            # Phase 8 W5 (Kaufhaus, Weisung P8-8c): aus Bauteilen zusammengesetzt (Modular Buildings), je Teil Versatz x, y, z
+            dreiecke = []
+            for teil in eintrag["teile"]:
+                dx, dy, dz = teil["v"]
+                for ecken, farbe in gedreht(obj_wandeln(z, teil["datei"], eintrag.get("atlas")), teil.get("drehen", 0)):
+                    dreiecke.append((tuple((q[0] + dx, q[1] + dy, q[2] + dz) for q in ecken), farbe))
+        elif eintrag["datei"].endswith(".fbx"):
             dreiecke = fbx_figur(z, eintrag["datei"], eintrag["haut"], eintrag.get("arme", 0))
         else:
             dreiecke = obj_wandeln(z, eintrag["datei"], eintrag.get("atlas"))

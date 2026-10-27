@@ -97,9 +97,8 @@ public static partial class Betrieb
         var bitweiche = Objekt(inhalt["gebaeude"])["firma"];
         long tagNr = 1, geloest = 0, zwischenfaelle = 0, gewonnen = 0;
         var begonnen = false;
-        // Python ueberschreibt "names" im Konflikt-Zweig mit _pair_names (ein dict): danach gilt in
-        // der Rang-Schleife jeder Rang als Stufe 0 (wie Python, Sammelliste)
-        var namenUeberschrieben = false;
+        // Sammelliste 83 (Phase 8 W5, Nico 3a): Python 0.63.2 ueberschreibt "names" im Konflikt-Zweig mit
+        // _pair_names, danach hiess jeder Rangwechsel "Zurueckgestuft". C# korrigiert das (G47 mit KORREKTUR 83).
         var eingestellt = new PyDict();
         var beantwortet = new PySet();
         string Name(PyObjekt d) => Py.Str(Get(d, "name", ""));
@@ -185,7 +184,6 @@ public static partial class Betrieb
             {
                 beantwortet.Add(d["konflikt"]);
                 var paar = PaarNamen(Get(d, "name_a", ""), Get(d, "name_b", ""));
-                namenUeberschrieben = true;
                 Neu(tag, ReiseFirma, Ereignisse.Konflikt, Prozent("Streit: %s und %s", paar["a"], paar["b"]), KonfliktWahlText(d));
             }
             else if (art == Ereignisse.Erweitert)
@@ -384,7 +382,7 @@ public static partial class Betrieb
         foreach (var eintrag in stand.RangProtokoll)
         {
             var rang = eintrag[1];
-            var index = namenUeberschrieben ? -1 : namen.FindIndex(n => Py.Gleich(n, rang));
+            var index = namen.FindIndex(n => Py.Gleich(n, rang));
             long stufe = index < 0 ? 0 : index;
             Neu(eintrag[0], ReiseKarriere, "rang", Prozent(stufe > vorher ? "Befördert: %s" : "Zurückgestuft: %s", rang));
             vorher = stufe;

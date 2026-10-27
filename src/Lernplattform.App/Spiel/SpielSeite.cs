@@ -55,6 +55,7 @@ public sealed class SpielSeite : Grid
     private readonly Border _flaecheRahmen;
     private readonly Canvas _schilder = new() { ClipToBounds = true };
     private readonly Dictionary<string, Button> _schildKnoepfe = [];
+    private readonly Dictionary<Button, (double Schrift, Size Groesse)> _schildGroessen = [];
     private readonly DispatcherTimer _takt;
     private readonly long _gebaut = Stopwatch.GetTimestamp();
     private long _angehaengt = Stopwatch.GetTimestamp();
@@ -623,6 +624,7 @@ public sealed class SpielSeite : Grid
             _schilder.Children.Remove(alt);
         }
         _schildKnoepfe.Clear();
+        _schildGroessen.Clear();
         foreach (var ort in spiel.Szene.Orte)
         {
             var id = ort.Id;
@@ -670,12 +672,24 @@ public sealed class SpielSeite : Grid
                 schild.IsVisible = false;
                 continue;
             }
-            if (!schild.IsMeasureValid)
+            // Sammelliste 112: ein unsichtbares Schild misst 0 x 0 (Avalonia). Mit dieser Groesse lag es beim
+            // ersten Zeigen um die halbe Breite zu weit rechts und galt als ganz sichtbar; ohne weiteres Bild
+            // (Bildschleife ruht) blieb es so und ragte ueber den Rand. Darum gilt die zuletzt sichtbar gemessene
+            // Groesse (je Schriftgroesse); fehlt sie, wird das Schild einmal sichtbar gemessen.
+            var warSichtbar = schild.IsVisible;
+            var schrift = ((TextBlock)schild.Content!).FontSize;
+            if (warSichtbar || !_schildGroessen.TryGetValue(schild, out var gemerkt) || gemerkt.Schrift != schrift)
             {
-                schild.Measure(Size.Infinity);
+                schild.IsVisible = true;
+                if (!schild.IsMeasureValid)
+                {
+                    schild.Measure(Size.Infinity);
+                }
+                gemerkt = (schrift, schild.DesiredSize);
+                _schildGroessen[schild] = gemerkt;
             }
-            var w = schild.DesiredSize.Width;
-            var h = schild.DesiredSize.Height;
+            var w = gemerkt.Groesse.Width;
+            var h = gemerkt.Groesse.Height;
             // auf ganze Bildpunkte gerundet und nur bei einer Aenderung gesetzt: jede neue Lage ordnet die
             // Ebene neu an (Wunsch 4, Nachtrag 1 zu P7-13)
             var links = Math.Round((p.X - (w / 2)) * skalierung) / skalierung;
@@ -692,6 +706,10 @@ public sealed class SpielSeite : Grid
             if (schild.IsVisible != sichtbar)
             {
                 schild.IsVisible = sichtbar;
+            }
+            if (!warSichtbar && !sichtbar)
+            {
+                continue;
             }
             if (Canvas.GetLeft(schild) != links)
             {

@@ -72,7 +72,7 @@ public class SpielGeschaefteTests
                 Assert.Equal(Py.Int(m["preis"]), w.Preis);
                 Assert.True(Py.Wahr(SpielDaten.Get(m, "laden", true)), w.Id);
             }
-            else
+            else if (w.Art == Geschaefte.ArtTeil)
             {
                 var teil = SpielDaten.Teil(w.Id, Inhalt)!;
                 Assert.True(w.Preis >= Py.F(teil["preis"]), w.Id + " billiger als beim Versand");
@@ -95,12 +95,12 @@ public class SpielGeschaefteTests
         moebel.Add(moebel[0]);
         var teile = (List<object?>)SpielDaten.Objekt(kaputt["elektromarkt"])["teile"]!;
         Py.Setzen(SpielDaten.Objekt(teile[0]), "preis", 0L);
-        kaputt.Add("kaufhaus", new PyObjekt());
+        kaputt.Add("baumarkt", new PyObjekt());   // seit Phase 8 W5 ist "kaufhaus" ein Geschaeft
         var fehler = Neu(kaputt).Pruefen(Innenraeume.Value);
         Assert.Contains("moebelhaus: Moebel nicht im Laden: gibt_es_nicht", fehler);
         Assert.Contains(fehler, f => f.StartsWith("moebelhaus: doppelt: ", StringComparison.Ordinal));
         Assert.Contains(fehler, f => f.StartsWith("elektromarkt: Preis fehlt oder ungueltig: ", StringComparison.Ordinal));
-        Assert.Contains("unbekanntes Geschaeft: kaufhaus", fehler);
+        Assert.Contains("unbekanntes Geschaeft: baumarkt", fehler);
         Assert.Contains(Neu().Pruefen(null), f => f.EndsWith("kein Grundriss in innenraeume.json", StringComparison.Ordinal));
     }
 

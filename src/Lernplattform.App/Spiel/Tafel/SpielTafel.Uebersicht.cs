@@ -306,18 +306,7 @@ public sealed partial class SpielTafel
         }
         else if (aktion == "feierabend")
         {
-            if (Tun(a => a.Feierabend()) is not { } daten)
-            {
-                return;
-            }
-            Raum = null;
-            _stapel.Clear();
-            var tag = Py.Int(daten["tag"]);
-            _s.Abgleichen();
-            _s.Spiel.NotizSetzen(PyFormat.Prozent("Feierabend nach Arbeitstag %d", tag),
-                PyFormat.Prozent("%s %s", Betrieb.FeierabendSzene(tag, I, Py.Wahr(Get(daten, "firma"))), Wohnung.FeierabendGeldText(daten, I)));
-            _s.Spiel.Neubeginn();
-            Fortschritt();
+            FeierabendMachen();
         }
         else if (aktion == "lernen")
         {
@@ -325,8 +314,53 @@ public sealed partial class SpielTafel
         }
         else if (aktion == "schlafen")
         {
-            _s.Spiel.NotizSetzen("Gute Nacht", Wohnung.SchlafText(Stand));
-            _s.Spiel.Auffrischen();
+            _ = SchlafenAsync();
         }
+    }
+
+    /// <summary>
+    /// Phase 8 W5 (Plan Phase 8 Abschnitt 11, Weisung P8-8b): am Bett schlafen gehen = Feierabend machen, vorher
+    /// eine Rueckfrage. Ohne Firma und mit offenen Tickets verschiebt "Schlafen gehen" zuerst alle offenen Tickets
+    /// wie der Knopf "Verschieben" (<see cref="Spielablauf.SchlafenGehen"/>); mit Firma und offenen Entscheidungen
+    /// nur ein Hinweis.
+    /// </summary>
+    private async Task SchlafenAsync()
+    {
+        var (art, text) = Wohnung.SchlafFrage(Stand);
+        if (art == Wohnung.Schlafart.Hinweis)
+        {
+            await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Dialog.Ok);
+            return;
+        }
+        if (await Dialog.Zeigen(Wohnung.SchlafenTitel, text, Wohnung.SchlafenNein, Wohnung.SchlafenJa) != 1)
+        {
+            return;
+        }
+        if (art == Wohnung.Schlafart.Fertig)
+        {
+            FeierabendMachen();
+        }
+        else if (!FeierabendMachen(a => a.SchlafenGehen()))
+        {
+            Fortschritt();   // abgebrochen: schon verschobene Tickets bleiben verschoben, kein Feierabend
+        }
+    }
+
+    /// <summary>end_day ueber den Knopf "Feierabend machen" oder das Bett: Notiz, neuer Tag zu Hause.</summary>
+    private bool FeierabendMachen(Func<Spielablauf, PyObjekt>? aktion = null)
+    {
+        if (Tun(aktion ?? (a => a.Feierabend())) is not { } daten)
+        {
+            return false;
+        }
+        Raum = null;
+        _stapel.Clear();
+        var tag = Py.Int(daten["tag"]);
+        _s.Abgleichen();
+        _s.Spiel.NotizSetzen(PyFormat.Prozent("Feierabend nach Arbeitstag %d", tag),
+            PyFormat.Prozent("%s %s", Betrieb.FeierabendSzene(tag, I, Py.Wahr(Get(daten, "firma"))), Wohnung.FeierabendGeldText(daten, I)));
+        _s.Spiel.Neubeginn();
+        Fortschritt();
+        return true;
     }
 }

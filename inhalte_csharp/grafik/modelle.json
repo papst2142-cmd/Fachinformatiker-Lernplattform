@@ -36,10 +36,16 @@
    "sha256": "84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242",
    "quelle": "KayKit Furniture Bits 1.0 (Kay Lousberg), github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0",
    "lizenz": "CC0 1.0"
+  },
+  "modular": {
+   "zip": "kenney_modular-buildings.zip",
+   "sha256": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6",
+   "quelle": "Kenney Modular Buildings 2.1, kenney-assets.itch.io/modular-buildings",
+   "lizenz": "CC0 1.0"
   }
  },
- "sha256": "7567867c1efd1c07f1d29c61f59b2cde69ee9995f99cde212d562771c342f506",
- "bytes": 2878080,
+ "sha256": "031c2076039c3c3febe4b87ae990abe929fc9a72949aaf63135c180750da8d87",
+ "bytes": 2981782,
  "modelle": [
   {
    "name": "building-e",
@@ -1059,6 +1065,23 @@
     1.0,
     0.6,
     0.2
+   ]
+  },
+  {
+   "name": "kaufhaus-galerie",
+   "paket": "modular",
+   "datei": "teile",
+   "atlas": null,
+   "dreiecke": 2592,
+   "min": [
+    -2.55,
+    0.0,
+    -1.0641
+   ],
+   "max": [
+    2.55,
+    1.4525,
+    1.05
    ]
   }
  ]

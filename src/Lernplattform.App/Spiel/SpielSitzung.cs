@@ -110,8 +110,8 @@ public sealed class SpielSitzung
     }
 
     private StadtSpiel Neu() => Verwaltung.Ablauf is { } ablauf && ablauf.Stand.Profil is not null
-        ? new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume)
-        : SpielStart.Neu(Stadt, Grafik, Innenraeume);
+        ? new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume, Geschaefte?.Daten)
+        : SpielStart.Neu(Stadt, Grafik, Innenraeume, Geschaefte?.Daten);
 
     /// <summary>
     /// Nach jeder Aenderung: gehoert die Stadt noch zum aktiven Durchgang (mit Figur), nur auffrischen,

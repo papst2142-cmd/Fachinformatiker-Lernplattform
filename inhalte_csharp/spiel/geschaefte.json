@@ -4,7 +4,8 @@
     "moebel: Ids aus inhalte/spiel/wohnungen.json (Preis wie Python, Kauf als moebel_gekauft, das Stueck kommt in den Karton).",
     "teile: Ids aus hardware.json (teile und ersatzteile) mit Ladenpreis in Euro Spielgeld; Kauf nur mit eigener Firma als teil_gekauft, die Ware liegt sofort im Lager.",
     "Grundriss, Auslage (deko mit ware) und Verkaeufer (personen mit platz) stehen in innenraeume.json.",
-    "Hier wird nur angehaengt: neue Eintraege kommen ans Ende, bestehende Zeilen bleiben."
+    "Hier wird nur angehaengt: neue Eintraege kommen ans Ende, bestehende Zeilen bleiben.",
+    "kaufhaus (Phase 8 W5, Weisung P8-8c): slots = Stellen an der Figur mit Abteilung, kleidung = Sortiment (id, name, slot, preis in Euro Spielgeld, form, farbe); Kauf als kleidung_gekauft, Anziehen als kleidung_getragen."
   ],
   "moebelhaus": {
     "moebel": ["bett_einzel", "bett_doppel", "sofa", "sessel", "sitzsack", "couchtisch", "esstisch", "schreibtisch", "regal", "kleiderschrank", "kommode", "pflanze", "teppich", "stehlampe", "aquarium", "liegestuhl", "grill", "sonnenschirm", "hochbeet", "bild"]
@@ -90,6 +91,36 @@
       {"teil": "fan_150_230v", "preis": 61},
       {"teil": "fan_150_24v", "preis": 56},
       {"teil": "akku_12v18_m5", "preis": 61}
+    ]
+  },
+  "kaufhaus": {
+    "slots": [
+      {"id": "oberteil", "name": "Oberteil", "abteilung": "Oberteile"},
+      {"id": "hose", "name": "Hose", "abteilung": "Hosen"},
+      {"id": "schuhe", "name": "Schuhe", "abteilung": "Schuhe"},
+      {"id": "kopf", "name": "Kopf", "abteilung": "Kappen und Mützen"}
+    ],
+    "kleidung": [
+      {"id": "shirt_weiss", "name": "T-Shirt weiß", "slot": "oberteil", "preis": 15, "form": "shirt", "farbe": "#F1F5F9"},
+      {"id": "shirt_schwarz", "name": "T-Shirt schwarz", "slot": "oberteil", "preis": 15, "form": "shirt", "farbe": "#1F2937"},
+      {"id": "polo_blau", "name": "Poloshirt blau", "slot": "oberteil", "preis": 25, "form": "shirt", "farbe": "#2563EB"},
+      {"id": "hemd_hellblau", "name": "Hemd hellblau", "slot": "oberteil", "preis": 35, "form": "shirt", "farbe": "#93C5FD"},
+      {"id": "pulli_rot", "name": "Pullover rot", "slot": "oberteil", "preis": 40, "form": "shirt", "farbe": "#DC2626"},
+      {"id": "hoodie_grau", "name": "Kapuzenpulli grau", "slot": "oberteil", "preis": 45, "form": "kapuze", "farbe": "#6B7280"},
+      {"id": "hoodie_gruen", "name": "Kapuzenpulli grün", "slot": "oberteil", "preis": 45, "form": "kapuze", "farbe": "#15803D"},
+      {"id": "jeans_blau", "name": "Jeans blau", "slot": "hose", "preis": 40, "form": "hose", "farbe": "#1E3A8A"},
+      {"id": "jeans_schwarz", "name": "Jeans schwarz", "slot": "hose", "preis": 40, "form": "hose", "farbe": "#111827"},
+      {"id": "chino_beige", "name": "Chinohose beige", "slot": "hose", "preis": 45, "form": "hose", "farbe": "#C8B48A"},
+      {"id": "stoffhose_grau", "name": "Stoffhose grau", "slot": "hose", "preis": 55, "form": "hose", "farbe": "#6B7280"},
+      {"id": "sneaker_weiss", "name": "Turnschuhe weiß", "slot": "schuhe", "preis": 50, "form": "schuhe", "farbe": "#F8FAFC"},
+      {"id": "sneaker_rot", "name": "Turnschuhe rot", "slot": "schuhe", "preis": 60, "form": "schuhe", "farbe": "#EF4444"},
+      {"id": "lederschuhe", "name": "Lederschuhe braun", "slot": "schuhe", "preis": 80, "form": "schuhe", "farbe": "#6B3F1D"},
+      {"id": "stiefel", "name": "Stiefel schwarz", "slot": "schuhe", "preis": 90, "form": "schuhe", "farbe": "#1F1F1F"},
+      {"id": "kappe_rot", "name": "Kappe rot", "slot": "kopf", "preis": 15, "form": "kappe", "farbe": "#DC2626"},
+      {"id": "kappe_blau", "name": "Kappe blau", "slot": "kopf", "preis": 15, "form": "kappe", "farbe": "#1D4ED8"},
+      {"id": "muetze_grau", "name": "Mütze grau", "slot": "kopf", "preis": 12, "form": "muetze", "farbe": "#9CA3AF"},
+      {"id": "muetze_gelb", "name": "Mütze gelb", "slot": "kopf", "preis": 12, "form": "muetze", "farbe": "#FBBF24"},
+      {"id": "hut_braun", "name": "Hut braun", "slot": "kopf", "preis": 30, "form": "hut", "farbe": "#7C4A21"}
     ]
   }
 }

@@ -81,6 +81,13 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             yield return "spiel/sortiment-elektromarkt-" + typ;
         }
+        // Phase 8 W5 (Weisung P8-8c): das Kaufhaus je Abteilung
+        foreach (var stelle in tafel.Sitzung.Geschaefte is { } g ? Kleidung.Stellen(g.Daten) : [])
+        {
+            tafel.ProbeGeschaeft(Kleidung.Laden, stelle.Id);
+            await ansicht.BildFertigAsync();
+            yield return "spiel/sortiment-kaufhaus-" + stelle.Id;
+        }
         tafel.AllesSchliessen();
         seite.SpielSetzen(Frisch(seite));
         await ansicht.BildFertigAsync();

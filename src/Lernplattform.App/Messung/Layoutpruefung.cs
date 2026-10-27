@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 
@@ -10,6 +11,8 @@ namespace Lernplattform.Messung;
 /// (1) Woerter, die mitten im Wort umbrechen, (2) Knoepfe, die aus ihrer Karte
 /// ragen, (3) abgeschnittene einzeilige Beschriftungen und (4) Inhalte, die
 /// ueber den rechten Fensterrand hinausgehen. Liefert je Fund eine Zeile.
+/// A 0.15.0 (Weisung P8-10): (5) jede sichtbare Scrollleiste traegt den schmalen Stil aus App.axaml
+/// (hoechstens 6 px dick, keine Pfeilknoepfe).
 /// </summary>
 public static class Layoutpruefung
 {
@@ -32,6 +35,9 @@ public static class Layoutpruefung
                     break;
                 case Button knopf:
                     PruefeKnopf(knopf, funde);
+                    break;
+                case ScrollBar leiste:
+                    PruefeLeiste(leiste, funde);
                     break;
             }
             if (element is TextBlock or Button && element.TranslatePoint(new Point(element.Bounds.Width, 0), wurzel) is { } rechts
@@ -72,6 +78,23 @@ public static class Layoutpruefung
             }
         }
     }
+
+    /// <summary>Weisung P8-10: Scrollleiste schmal und ohne Pfeilknoepfe (Stil in App.axaml).</summary>
+    private static void PruefeLeiste(ScrollBar leiste, List<string> funde)
+    {
+        var dicke = leiste.Orientation == Avalonia.Layout.Orientation.Vertical ? leiste.Bounds.Width : leiste.Bounds.Height;
+        if (dicke > LeisteDicke + Toleranz)
+        {
+            funde.Add($"Scrollleiste nicht schmal: {dicke:F0} > {LeisteDicke:F0}");
+        }
+        if (leiste.GetVisualDescendants().OfType<Control>().Any(c => c.Name is "PART_LineUpButton" or "PART_LineDownButton"))
+        {
+            funde.Add("Scrollleiste mit Pfeilknoepfen");
+        }
+    }
+
+    /// <summary>Dicke der Scrollleisten in App.axaml (Weisung P8-10).</summary>
+    public const double LeisteDicke = 6;
 
     private static void PruefeKnopf(Button knopf, List<string> funde)
     {

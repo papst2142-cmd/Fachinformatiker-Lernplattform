@@ -27,7 +27,8 @@
     "moebelhaus": {"tuer": [15.9, 21.4], "weg": [[15.9, 21.4], [15.9, 20.8]]},
     "elektromarkt": {"tuer": [24.7, 21.4], "weg": [[24.7, 21.4], [24.7, 20.8]]},
     "amt": {"tuer": [10.6, 13.2], "weg": [[10.6, 13.2], [10.6, 12.6]]},
-    "bank": {"tuer": [14.4, 13.2], "weg": [[14.4, 13.2], [14.4, 12.6]]}
+    "bank": {"tuer": [14.4, 13.2], "weg": [[14.4, 13.2], [14.4, 12.6]]},
+    "kaufhaus": {"tuer": [28.6, 21.4], "weg": [[28.6, 21.4], [28.6, 20.8]]}
   },
   "oeffnungszeiten": {
     "bitweiche": [420, 1140],
@@ -39,18 +40,21 @@
     "moebelhaus": [600, 1200],
     "elektromarkt": [540, 1200],
     "amt": [480, 960],
-    "bank": [540, 1080]
+    "bank": [540, 1080],
+    "kaufhaus": [570, 1200]
   },
   "neue_orte": [
     {"id": "moebelhaus", "name": "Möbelhaus", "x": 14.2, "y": 21.4, "schild": [14.3, 23.55], "modell": "moebelhaus", "rolle": "geschaeft", "ansicht": "geschaeft:moebelhaus", "sortiment": "moebel", "frei": {"immer": true}},
     {"id": "elektromarkt", "name": "Elektromarkt", "x": 23.2, "y": 21.4, "schild": [23.3, 23.35], "modell": "elektromarkt", "rolle": "geschaeft", "ansicht": "geschaeft:elektromarkt", "sortiment": "elektro", "frei": {"immer": true}},
     {"id": "amt", "name": "Amt", "x": 9.0, "y": 13.2, "schild": [9.1, 15.25], "modell": "amt", "rolle": "schalter", "ansicht": "schalter:amt", "frei": {"immer": true}},
-    {"id": "bank", "name": "Bank", "x": 13.0, "y": 13.2, "schild": [13.1, 15.05], "modell": "bank", "rolle": "schalter", "ansicht": "schalter:bank", "frei": {"immer": true}}
+    {"id": "bank", "name": "Bank", "x": 13.0, "y": 13.2, "schild": [13.1, 15.05], "modell": "bank", "rolle": "schalter", "ansicht": "schalter:bank", "frei": {"immer": true}},
+    {"id": "kaufhaus", "name": "Kaufhaus", "x": 27.0, "y": 21.4, "schild": [27.1, 23.35], "modell": "kaufhaus", "rolle": "geschaeft", "ansicht": "geschaeft:kaufhaus", "sortiment": "kleidung", "frei": {"immer": true}}
   ],
   "neue_modelle": {
     "moebelhaus": [{"art": "block", "x": 0, "y": 0, "w": 3.4, "t": 2.0, "h": 1.4, "licht": 0.4}, {"art": "schild", "x": 0.4, "y": 1.3, "w": 2.6}],
     "elektromarkt": [{"art": "block", "x": 0, "y": 0, "w": 3.0, "t": 1.8, "h": 1.2, "dach": "shed", "licht": 0.5}, {"art": "schild", "x": 0.3, "y": 1.1, "w": 2.4}],
     "amt": [{"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 1.6, "dach": "sattel", "licht": 0.3}, {"art": "schild", "x": 0.4, "y": 1.1, "w": 2.4}],
-    "bank": [{"art": "block", "x": 0, "y": 0, "w": 2.8, "t": 1.6, "h": 1.8, "licht": 0.5}, {"art": "schild", "x": 0.3, "y": 1.0, "w": 2.2}]
+    "bank": [{"art": "block", "x": 0, "y": 0, "w": 2.8, "t": 1.6, "h": 1.8, "licht": 0.5}, {"art": "schild", "x": 0.3, "y": 1.0, "w": 2.2}],
+    "kaufhaus": [{"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 2.0, "licht": 0.5}, {"art": "schild", "x": 0.4, "y": 1.1, "w": 2.4}]
   }
 }

@@ -348,6 +348,55 @@ public static partial class Wohnung
         return (Py.Str(bleibe["name"]), wo + " Geh zum Bett, zum Schreibtisch oder zur Wohnungstür.", []);
     }
 
+    /// <summary>Phase 8 W5 (Plan Phase 8 Abschnitt 11, Nico 26.10.2026): Titel und Knoepfe der Rueckfrage am Bett.</summary>
+    public const string SchlafenTitel = "Feierabend";
+
+    public const string SchlafenJa = "Schlafen gehen";
+
+    public const string SchlafenNein = "Noch nicht";
+
+    /// <summary>Text der Rueckfrage am Bett, wenn alle Aufgaben des Tages erledigt sind.</summary>
+    public const string SchlafenFertig = "Du hast alle Aufgaben für heute erledigt. Willst du schlafen gehen und Feierabend machen?";
+
+    /// <summary>Weisung P8-8b (Nico Option b): Rueckfrage am Bett ohne Firma, wenn noch <paramref name="offen"/> Tickets offen sind.</summary>
+    public static string SchlafenTrotzdem(int offen) => offen == 1
+        ? "Für heute ist noch 1 Aufgabe offen. Willst du wirklich schlafen gehen und Feierabend machen?"
+        : Prozent("Für heute sind noch %d Aufgaben offen. Willst du wirklich schlafen gehen und Feierabend machen?", offen);
+
+    /// <summary>Hinweis am Bett mit Firma, wenn noch <paramref name="offen"/> Personal-Entscheidungen offen sind (Option a).</summary>
+    public static string SchlafenOffen(int offen) => offen == 1
+        ? "Für heute ist noch 1 Aufgabe offen. Erledige sie zuerst, dann kannst du schlafen gehen und Feierabend machen."
+        : Prozent("Für heute sind noch %d Aufgaben offen. Erledige sie zuerst, dann kannst du schlafen gehen und Feierabend machen.", offen);
+
+    /// <summary>Was das Bett tut: fragen und schlafen, fragen und vorher alle Tickets verschieben, oder nur hinweisen.</summary>
+    public enum Schlafart
+    {
+        Fertig,
+        TicketsVerschieben,
+        Hinweis,
+    }
+
+    /// <summary>
+    /// Phase 8 W5: Rueckfrage am Bett. Schlafen gehen ist derselbe Feierabend wie der Knopf "Feierabend machen"
+    /// (<see cref="SpielAktionen.Feierabend"/>). Sind alle Aufgaben erledigt (<see cref="Spielstand.FeierabendMoeglich"/>),
+    /// fragt das Bett mit Nicos erstem Text. Ohne Firma und mit offenen Tickets (<see cref="Spielstand.OffeneTickets"/>)
+    /// fragt es, ob trotzdem geschlafen wird; "Schlafen gehen" verschiebt dann alle offenen Tickets wie der Knopf
+    /// "Verschieben" (<see cref="Spielablauf.SchlafenGehen"/>, Weisung P8-8b). Alle Tickets lassen sich verschieben,
+    /// auch Zwischenfall und falsche Lieferung (<see cref="SpielAktionen.Verschieben"/> findet sie ueber
+    /// <see cref="SpielDaten.Auftrag"/>, die Ticket-Tafel zeigt den Knopf bei jedem Ticket). Mit Firma und offenen
+    /// Personal-Entscheidungen nur ein Hinweis (Option a), denn Entscheidungen lassen sich nicht verschieben.
+    /// </summary>
+    public static (Schlafart Art, string Text) SchlafFrage(Spielstand stand)
+    {
+        if (stand.FeierabendMoeglich())
+        {
+            return (Schlafart.Fertig, SchlafenFertig);
+        }
+        return Py.Wahr(stand.Firma)
+            ? (Schlafart.Hinweis, SchlafenOffen(stand.OffeneEntscheidungen().Count))
+            : (Schlafart.TicketsVerschieben, SchlafenTrotzdem(stand.OffeneTickets().Count));
+    }
+
     /// <summary>sleep_text</summary>
     public static string SchlafText(Spielstand stand)
     {

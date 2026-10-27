@@ -96,6 +96,9 @@ public sealed partial class Spielstand
     public object? Schwierigkeitsgrad;                    // difficulty
     public object? FarmFrei;                              // farm_unlocked
     public object? Farm;                                  // farm
+    // nur C# (Phase 8 W5, Weisung P8-8c): Kleidung aus dem Kaufhaus
+    public PyDict Kleider = new();                        // gekaufte Stuecke (Stueck -> Tag des Kaufs)
+    public PyObjekt? Getragen;                            // juengstes kleidung_getragen (Slot -> Stueck oder null)
 
     public PyObjekt Balancing => Objekt(Inhalt["balancing"]);
 
@@ -265,6 +268,22 @@ public sealed partial class Spielstand
                 { "teil", daten["teil"] }, { "menge", Py.Int(Get(daten, "menge", 1L)) }, { "ankunft", heute }, { "aufgabe", null },
                 { "haendler", Get(daten, "laden", "") }, { "gekauft", true },
             });
+        }
+        else if (art == Kleidung.Gekauft)
+        {
+            // W5 (nur C#, Weisung P8-8c): Kleidung im Kaufhaus gekauft. Ein zweiter Kauf desselben Stuecks
+            // (zwei Geraete ohne Abgleich) zaehlt nicht, kein zweites Mal Geld ab (wie E-5, Nico Frage 5a)
+            if (daten["stueck"] is string { Length: > 0 } stueck && !Kleider.ContainsKey(stueck))
+            {
+                Geld += Py.Int(Get(daten, "geld", 0L));
+                Buchen(heute, Kleidung.BuchKleidung, Get(daten, "geld", 0L));
+                Kleider[stueck] = heute;
+            }
+        }
+        else if (art == Kleidung.Getragen)
+        {
+            // der juengste Eintrag gilt (wie profil_gesetzt); nicht gekaufte Stuecke uebergeht Kleidung.Angezogen
+            Getragen = daten["getragen"] is PyObjekt getragen ? Py.Flach(getragen) : null;
         }
         if (art == Ereignisse.Profil)
         {

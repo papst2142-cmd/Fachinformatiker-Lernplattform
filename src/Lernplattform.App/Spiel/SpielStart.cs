@@ -72,10 +72,10 @@ public static class SpielStart
     public static string? GrafikFehler { get; private set; }
 
     /// <summary>Neuer Spielstand (nur im Arbeitsspeicher) mit der Probe-Figur, Tag 1 um 07:00 zu Hause.</summary>
-    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume)
+    public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, PyObjekt? geschaefte = null)
     {
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil(ProbeName, new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, grafik, innenraeume);
+        return new StadtSpiel(stadt, ablauf, grafik, innenraeume, geschaefte);
     }
 }

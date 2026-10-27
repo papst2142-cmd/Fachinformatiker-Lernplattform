@@ -55,7 +55,10 @@ public class SeitenleisteOptionenTests
             {
                 Assert.Equal(untertitel, Optionen.Kurzzeile(bereich));
             }
+            // Sammelliste 117 (Phase 8 W5): keine Karte kuendigt mehr eine spaetere Ausbaustufe an
+            Assert.NotEqual(Beschriftungen.Platzhalter, Optionen.Kurzzeile(bereich));
         }
+        Assert.Equal(Optionen.SpielKurz, Optionen.Kurzzeile(Optionen.AlleFuer(true).First(b => b.Id == Optionen.Spiel)));
     }
 
     /// <summary>

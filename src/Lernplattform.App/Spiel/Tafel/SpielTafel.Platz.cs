@@ -183,11 +183,40 @@ public sealed partial class SpielTafel
             ], "accent2");
         }
         yield return Karte("Deine Spielfigur", teile, "accent");
+        if (stand.Profil is not null && stand.Kleider.Count > 0 && _s.Geschaefte is { } g)
+        {
+            yield return KleidungTragenKarte(stand, g);
+        }
         if (stand.Profil is null && stand.Schwierigkeitsgrad is null)
         {
             yield return SchwierigkeitKarte();
         }
         yield return Reihe(knoepfe);
+    }
+
+    /// <summary>
+    /// Phase 8 W5 (Weisung P8-8c, Nico 3a): gekaufte Kleidung je Slot anziehen oder ablegen ("nichts"), gilt sofort
+    /// (eigener Schritt kleidung_getragen, unabhaengig von "Speichern").
+    /// </summary>
+    private Control KleidungTragenKarte(Spielstand stand, Geschaefte g)
+    {
+        const string ohne = "-";
+        var angezogen = Kleidung.Angezogen(stand, g.Daten);
+        var zeilen = new List<Control?>();
+        foreach (var stelle in Kleidung.Stellen(g.Daten))
+        {
+            var eigene = Kleidung.Sortiment(g.Daten).Where(k => k.Slot == stelle.Id && stand.Kleider.ContainsKey(k.Id)).ToList();
+            if (eigene.Count == 0)
+            {
+                continue;
+            }
+            zeilen.Add(Label(stelle.Name));
+            var wahl = new List<(string, string)> { (ohne, Kleidung.Nichts) };
+            wahl.AddRange(eigene.Select(k => (k.Id, k.Name)));
+            zeilen.Add(Pillen(wahl, angezogen.TryGetValue(stelle.Id, out var traegt) ? traegt.Id : ohne,
+                wert => KleidungAnziehen(stelle.Id, wert == ohne ? null : wert)));
+        }
+        return Karte(Kleidung.Ueberschrift, zeilen, "pink");
     }
 
     /// <summary>_difficulty_card: Schwierigkeitsgrad beim Spielstart (fest fuer den Durchgang).</summary>

@@ -195,6 +195,9 @@ public static class Optionen
     public const string DatenbankKurz = "Speicherort des Lernstands";
     public const string UeberKurz = "Version und Lizenzen";
 
+    /// <summary>Phase 8 W5 (Sammelliste 117): Kurzzeile "Spiel", ersetzt den Platzhalter (Vorschlag CC, Chat liest).</summary>
+    public const string SpielKurz = "Spielstände und Schwierigkeitsgrad wählst du im Spiel";
+
     /// <summary>
     /// Kurzzeile einer zugeklappten Karte: der Untertitel (<see cref="OptionenBereich.UntertitelPc"/>, "%s" = Version),
     /// sonst eine eigene Zeile; <see cref="Bereiche"/> bleibt wie G9.
@@ -204,7 +207,7 @@ public static class Optionen
         Ausbildung => PruefungTexte.AusbildungTitel,
         Lerninhalte => LerninhalteKurz,
         Datenbank => DatenbankKurz,
-        Spiel => Beschriftungen.Platzhalter,
+        Spiel => SpielKurz,
         Ueber => UeberKurz,
         _ => throw new KeyNotFoundException(bereich.Id),
     };

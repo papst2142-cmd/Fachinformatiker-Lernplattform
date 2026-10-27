@@ -4,7 +4,10 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Lernplattform.Core.Spiel;
 
-/// <summary>Eine Ware im Geschaeft: Moebelstueck (Art "moebel") oder Teil fuer die Firma (Art "teil").</summary>
+/// <summary>
+/// Eine Ware im Geschaeft: Moebelstueck (Art "moebel"), Teil fuer die Firma (Art "teil") oder seit Phase 8 W5
+/// Kleidung im Kaufhaus (Art "kleidung", <see cref="Typ"/> ist der Slot).
+/// </summary>
 public sealed record Ware(string Art, string Id, string Name, long Preis, string Typ);
 
 /// <summary>
@@ -25,7 +28,7 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
     public const string ArtTeil = "teil";
 
     /// <summary>Die Geschaefte (Ids wie in stadt.json neue_orte).</summary>
-    public static readonly IReadOnlyList<string> Laeden = ["moebelhaus", "elektromarkt"];
+    public static readonly IReadOnlyList<string> Laeden = ["moebelhaus", "elektromarkt", Kleidung.Laden];   // Kaufhaus: Phase 8 W5
 
     public const string NurImLaden = "Einkaufen geht nur in einem geöffneten Geschäft.";
     public const string GibtEsNicht = "Das gibt es hier nicht.";
@@ -60,6 +63,10 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             {
                 waren.Add(new Ware(ArtTeil, Py.Str(t["teil"]), Py.Str(teil["name"]), Py.Int(t["preis"]), Py.Str(teil["typ"])));
             }
+        }
+        if (laden == Kleidung.Laden)
+        {
+            waren.AddRange(Kleidung.Sortiment(Daten).Select(k => new Ware(Kleidung.Art, k.Id, k.Name, k.Preis, k.Slot)));
         }
         return waren;
     }
@@ -126,10 +133,14 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             }
             foreach (var (k, _) in eintrag)
             {
-                if (k is not ("moebel" or "teile"))
+                if (laden == Kleidung.Laden ? k is not ("slots" or "kleidung") : k is not ("moebel" or "teile"))
                 {
                     fehler.Add(laden + ": unbekanntes Feld " + k);
                 }
+            }
+            if (laden == Kleidung.Laden)
+            {
+                fehler.AddRange(Kleidung.Pruefen(eintrag));
             }
             var gesehen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var id in ListeOderLeer(eintrag, "moebel"))
@@ -168,11 +179,14 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
                 continue;
             }
             var typen = Waren(laden).Where(w => w.Art == ArtTeil).Select(w => w.Typ).ToHashSet(StringComparer.Ordinal);
+            var stellen = Waren(laden).Where(w => w.Art == Kleidung.Art).Select(w => w.Typ).ToHashSet(StringComparer.Ordinal);
             var ausgestellt = new HashSet<string>(StringComparer.Ordinal);
             foreach (var d in Auslage(raum))
             {
                 var ware = Py.Str(d["ware"]);
-                if (ware.StartsWith("teile:", StringComparison.Ordinal) ? !typen.Contains(ware["teile:".Length..]) : !gesehen.Contains("moebel:" + ware))
+                if (ware.StartsWith("teile:", StringComparison.Ordinal) ? !typen.Contains(ware["teile:".Length..])
+                    : ware.StartsWith(Kleidung.Art + ":", StringComparison.Ordinal) ? !stellen.Contains(ware[(Kleidung.Art.Length + 1)..])
+                    : !gesehen.Contains("moebel:" + ware))
                 {
                     fehler.Add(laden + ": Auslage ohne Ware im Sortiment: " + ware);
                 }
@@ -185,6 +199,10 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             foreach (var typ in typen.Where(t => !ausgestellt.Contains("teile:" + t)))
             {
                 fehler.Add(laden + ": Teile-Typ ohne Regal: " + typ);
+            }
+            foreach (var stelle in stellen.Where(t => !ausgestellt.Contains(Kleidung.Art + ":" + t)))
+            {
+                fehler.Add(laden + ": Kleidung ohne Auslage: " + stelle);
             }
             if (ListeOderLeer(raum, "personen").Count == 0)
             {

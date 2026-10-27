@@ -47,7 +47,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Dictionary<InnenWand, GlNetz> _innenWaende = [];
     private readonly HashSet<InnenWand> _durchsichtig = [];
     private readonly HashSet<StadtHaus> _verdeckt = [];
-    private readonly Dictionary<string, (PyObjekt? Aussehen, GlNetz Netz)> _figurZuletzt = [];
+    private readonly Dictionary<string, (PyObjekt? Aussehen, IReadOnlyList<Figur.Stueck>? Kleidung, GlNetz Netz)> _figurZuletzt = [];
     private PyObjekt? _ringAussehen;
     private Innenraum? _innenGeladen;
     private bool _innenNeu;
@@ -521,7 +521,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var innen = _spiel.Innen;
             var groesse = innen is null ? Figur.StadtHoehe : Innenraum.FigurHoehe;
             var aussehen = _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
-            var spieler = FigurNetz(gl, "#spieler", aussehen);
+            var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung);
             var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
                 * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ);
             Zeichnen(gl, spieler, figurLage, sichtProj);
@@ -705,22 +705,25 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Radius des Kreises um die Figur in der Stadt.</summary>
     public const float RingRadius = 0.22f;
 
-    /// <summary>Figur (Hoehe 1) mit Aussehen, je Person einmal geladen.</summary>
-    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen)
+    /// <summary>Figur (Hoehe 1) mit Aussehen (die Spielfigur mit Kleidung aus dem Kaufhaus), je Person einmal geladen.</summary>
+    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null)
     {
         // Wunsch 4: dasselbe Aussehen wie im letzten Bild ohne neuen Schluessel (der kostete je Bild und
-        // Figur ein neues Woerterbuch und Zeichenketten, also Arbeit fuer die Speicherbereinigung)
-        if (_figurZuletzt.TryGetValue(id, out var zuletzt) && ReferenceEquals(zuletzt.Aussehen, aussehen))
+        // Figur ein neues Woerterbuch und Zeichenketten, also Arbeit fuer die Speicherbereinigung);
+        // StadtSpiel.Kleidung gibt dieselbe Liste zurueck, solange sich nichts aendert
+        if (_figurZuletzt.TryGetValue(id, out var zuletzt) && ReferenceEquals(zuletzt.Aussehen, aussehen) && ReferenceEquals(zuletzt.Kleidung, kleidung))
         {
             return zuletzt.Netz;
         }
-        var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value));
+        var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value))
+            + (kleidung is { Count: > 0 } ? "|" + string.Join(",", kleidung.Select(k => k.Slot + ":" + k.Form + ":" + k.Farbe)) : "");
         if (!_figuren.TryGetValue(schluessel, out var netz))
         {
-            netz = GlNetz.Laden(gl, _spiel?.Innen?.PersonNetz(id, aussehen) ?? Figur.Netz(_spiel?.Grafik, aussehen, 1f));
+            netz = GlNetz.Laden(gl, kleidung is { Count: > 0 } ? Figur.Netz(_spiel?.Grafik, aussehen, 1f, kleidung)
+                : _spiel?.Innen?.PersonNetz(id, aussehen) ?? Figur.Netz(_spiel?.Grafik, aussehen, 1f));
             _figuren[schluessel] = netz;
         }
-        _figurZuletzt[id] = (aussehen, netz);
+        _figurZuletzt[id] = (aussehen, kleidung, netz);
         return netz;
     }
 

@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.15.0
+Neu im Spiel: das Kaufhaus mit Kleidung für deine Figur, und Feierabend über das Bett.
+
+- In der Stadt gibt es jetzt ein Kaufhaus. Dort kaufst du Kleidung für deine Figur: Oberteile, Hosen, Schuhe sowie Kappen und Mützen, 20 Stücke zwischen 12 und 90 €. Was du kaufst, zieht deine Figur sofort an. Unter „Figur“ wechselst du jederzeit zwischen deinen gekauften Stücken oder legst etwas wieder ab. Jedes Stück kaufst du nur einmal.
+- Du kannst den Arbeitstag jetzt auch zu Hause über das Bett beenden. Sind noch Aufgaben offen, fragt das Bett vorher nach. Ohne eigene Firma kannst du trotzdem schlafen gehen: Die offenen Aufgaben werden dann verschoben, genau wie mit dem Knopf „Verschieben“. Mit eigener Firma sagt dir das Bett, was vor dem Feierabend noch zu erledigen ist.
+- Der Rückblick „Meine Reise“ nennt Beförderungen wieder richtig. Bisher stand nach einem Streit im Team bei jedem späteren Rangwechsel „Zurückgestuft“.
+- In den Optionen zeigt die Karte „Spiel“ jetzt einen passenden Hinweis statt „Kommt in einer späteren Ausbaustufe“.
+- Die Hilfe erklärt das Kaufhaus, das Bett, den Spielstand beim Abgleich und den Knopf „Lizenzen“.
+- Die Scrollleisten sind jetzt schmal und rund wie in der bisherigen Version, ohne Pfeile und ohne graue Verbreiterung, wenn die Maus darüber ist. Der Griff hat die Farbe deiner Farbwelt und ist in Hell und Dunkel gut zu erkennen. Ziehen, Klicken in die Leiste und das Mausrad funktionieren wie bisher.
+
 ## A 0.14.2
 Lange Wörter bleiben auf dem Handy ganz.
 
