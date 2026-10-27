@@ -26,7 +26,10 @@ public class SpielGrafikTests
         var bib = Bibliothek.Value;
         using var index = JsonDocument.Parse(File.ReadAllText(Path.Combine(Ordner, "modelle.json")));
         using var auswahl = JsonDocument.Parse(File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "grafik", "auswahl.json")));
-        var namen = auswahl.RootElement.GetProperty("modelle").EnumerateArray().Select(m => m.GetProperty("name").GetString()!).ToList();
+        // seit Phase 8 W7: ein Eintrag mit "bilder" ergibt so viele Modelle (Name plus zwei Ziffern)
+        var namen = auswahl.RootElement.GetProperty("modelle").EnumerateArray().SelectMany(m => m.TryGetProperty("bilder", out var b)
+            ? Enumerable.Range(0, b.GetInt32()).Select(i => m.GetProperty("name").GetString()! + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture))
+            : [m.GetProperty("name").GetString()!]).ToList();
         Assert.Equal(namen, index.RootElement.GetProperty("modelle").EnumerateArray().Select(m => m.GetProperty("name").GetString()!).ToList());
         Assert.Equal(namen.Count, bib.Modelle.Count);
         foreach (var eintrag in index.RootElement.GetProperty("modelle").EnumerateArray())
@@ -102,6 +105,22 @@ public class SpielGrafikTests
         Assert.True(gleich > anders, "Rest bleibt");
     }
 
+    /// <summary>
+    /// R3 (Phase 8 W7): modelle.bin waechst nur hinten. Die 79 Modelle bis W6 (A 0.16.0) stehen Byte fuer Byte
+    /// unveraendert vorn (Pruefsumme ueber alles nach dem Kopf), nur die Anzahl im Kopf ist neu.
+    /// </summary>
+    [Fact]
+    public void ModelleNurAngehaengt()
+    {
+        var bin = File.ReadAllBytes(Path.Combine(Ordner, "modelle.bin"));
+        const int laengeW6 = 4182209;
+        Assert.True(bin.Length > laengeW6);
+        Assert.Equal("464c474d01000000", Convert.ToHexStringLower(bin.AsSpan(0, 8)));
+        Assert.Equal("76fc0177abd57897a02061c1fbb2f0ae1f20d2ad256308a9da3c82f48e96f022",
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bin.AsSpan(12, laengeW6 - 12))));
+        Assert.Equal(Bibliothek.Value.Modelle.Count, BitConverter.ToInt32(bin, 8));
+    }
+
     [Fact]
     public void FalschePruefsummeWirdAbgelehnt()
     {
@@ -125,9 +144,12 @@ public class SpielGrafikTests
             Assert.NotNull(bib.Modell(name));
         }
         // nur genutzte Modelle im Repo (Plan Abschnitt 6): Bloecke, Baeume, Zug (Schienen seit P7-10 Nachtrag 1 eigene Geometrie),
-        // seit W5 Moebel der Innenraeume und die Figur, seit Phase 8 W6 die Fest-Deko aus festzeiten.json
+        // seit W5 Moebel der Innenraeume und die Figur, seit Phase 8 W6 die Fest-Deko aus festzeiten.json,
+        // seit Phase 8 W7 die Schrittbilder der Figur, die Autos und das Gruen
         var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c", Figur.Modell }
-            .Concat(Innenraum.Modelle).Concat(FestDeko.Modelle(FestDekoTests.Daten.Value)).ToList();
+            .Concat(Innenraum.Modelle).Concat(FestDeko.Modelle(FestDekoTests.Daten.Value))
+            .Concat(new[] { Figur.Gehen, Figur.Rennen }.SelectMany(b => Enumerable.Range(0, Figur.Bilder).Select(i => Figur.BildName(b, i))))
+            .Concat(Verkehr.Strecken.Select(s => s.Modell)).Concat(Gruen.Modelle).ToList();
         foreach (var m in bib.Modelle)
         {
             Assert.True(bib.Bloecke.Values.Contains(m.Name) || fest.Contains(m.Name), m.Name + " wird nicht genutzt");
@@ -153,6 +175,8 @@ public class SpielGrafikTests
             ["kaykit_halloween"] = "Grafik KayKit Halloween Bits",
             ["kaykit_holiday"] = "Grafik KayKit Holiday Bits",
             ["cube_pets"] = "Grafik Kenney Cube Pets",
+            ["car_kit"] = "Grafik Kenney Car Kit",
+            ["kaykit_wald"] = "Grafik KayKit Forest Nature Pack",
         };
         foreach (var paket in genutzt)
         {

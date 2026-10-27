@@ -406,9 +406,32 @@ public sealed class StadtSpiel
         }
     }
 
+    /// <summary>
+    /// Zurueckgelegter Weg der Figur (Sammelliste 125): nur er bestimmt das Bild der Schrittbewegung, nie die Uhr.
+    /// Setzen nur im Start-Test (fester Weg fuer gleiche Bilder).
+    /// </summary>
+    public double Schrittweg { get; set; }
+
+    /// <summary>Weg eines Doppelschritts in der Stadt (bei Tempo 3,5 rund 2,5 Doppelschritte je Sekunde).</summary>
+    public const double ZyklusStadt = 1.4;
+
+    /// <summary>Weg eines Doppelschritts: in der Stadt <see cref="ZyklusStadt"/>, innen 1,5 Figurhoehen.</summary>
+    public double Zyklus => ImInnenraum ? 1.5 * Probe.Innenraum.FigurHoehe : ZyklusStadt;
+
+    /// <summary>Bewegung der Figur: in der Stadt Rennen, in den Innenraeumen Gehen (Nico 1a, Weisung P8-14).</summary>
+    public string Bewegung => ImInnenraum ? Figur.Gehen : Figur.Rennen;
+
+    /// <summary>Bild der Schrittbewegung (0 bis <see cref="Figur.Bilder"/> - 1) nach dem Weg, -1 = steht.</summary>
+    public int SchrittBild => Geht ? BildNachWeg(Schrittweg, Zyklus) : -1;
+
+    /// <summary>Bild der Bewegung nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
+    public static int BildNachWeg(double weg, double zyklus) =>
+        (int)((((weg / zyklus) % 1.0) + 1.0) % 1.0 * Figur.Bilder) % Figur.Bilder;
+
     private bool Weiter(double sekunden)
     {
         var rest = sekunden * Tempo;
+        Schrittweg += rest;
         while (rest > 0 && _weg.Count > 0)
         {
             var (zx, zz) = _weg[0];
@@ -433,6 +456,7 @@ public sealed class StadtSpiel
                 rest = 0;
             }
         }
+        Schrittweg -= rest;
         if (_weg.Count == 0)
         {
             Ankommen();

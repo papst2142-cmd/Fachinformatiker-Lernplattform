@@ -56,6 +56,48 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private GlNetz? _ausruf;
     private GlNetz? _marke;
     private GlNetz? _ring;
+
+    // Phase 8 W7: Kleingruen (nur bis GruenWeite gezeichnet) und Autos
+    private GlNetz? _gruen;
+    private Verkehr? _verkehr;
+    private readonly Dictionary<string, GlNetz> _autoNetze = [];
+
+    /// <summary>Kleingruen nur bis zu diesem Kameraabstand (in der Gesamtansicht waere es nur wenige Pixel gross).</summary>
+    public const float GruenWeite = 18f;
+
+    /// <summary>Ab diesem Kameraabstand zeigen Autos eine einfache Fernform (zwei Kaesten in der Lackfarbe).</summary>
+    public const float AutoFern = 25f;
+
+    /// <summary>Start-Test: feste Fahrzeit je Bild fuer die Autos (gleiche Bilder), 0 = echte Bildzeit.</summary>
+    public static double AutoSchritt { get; set; }
+
+    /// <summary>Start-Test: festes Bild der Schrittbewegung (-1 = nach dem Weg der Figur).</summary>
+    public static int ProbeBild { get; set; } = -1;
+
+    /// <summary>Die Autos der Stadt (null ohne Grafik oder vor dem ersten Bild).</summary>
+    public Verkehr? Verkehr => _verkehr;
+
+    /// <summary>Haeufigste kraeftige Farbe des Modells (Lack), sonst Grau.</summary>
+    private static Vector3 Hauptfarbe(GrafikModell m)
+    {
+        var zaehl = new Dictionary<int, int>();
+        for (var d = 0; d < m.Dreiecke; d++)
+        {
+            int r = m.Farben[d * 3], g = m.Farben[(d * 3) + 1], b = m.Farben[(d * 3) + 2];
+            if (Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b)) < 40)
+            {
+                continue;
+            }
+            var k = (r << 16) | (g << 8) | b;
+            zaehl[k] = zaehl.GetValueOrDefault(k) + 1;
+        }
+        if (zaehl.Count == 0)
+        {
+            return new Vector3(0.6f);
+        }
+        var best = zaehl.MaxBy(p => p.Value).Key;
+        return new Vector3(((best >> 16) & 255) / 255f, ((best >> 8) & 255) / 255f, (best & 255) / 255f);
+    }
     private string _ringSchluessel = "";
     private int _programm;
     private int _ortMvp;
@@ -255,6 +297,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public void AnfordernBild()
     {
         _weiterBis = _uhr.Elapsed.TotalSeconds + 0.75;
+        // Nico 3a: bedient = die Autos fahren noch Verkehr.Nachlauf Sekunden
+        _verkehr?.Bedient(_uhr.Elapsed.TotalSeconds);
         Anfordern();
     }
 
@@ -459,6 +503,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 _haeuser[haus] = GlNetz.Laden(gl, spiel.Szene.HausNetz(haus));
             }
+            _gruen?.Freigeben(gl);
+            _gruen = spiel.Szene.GruenNetzBauen() is { } gn ? GlNetz.Laden(gl, gn) : null;
+            // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar)
+            if (_verkehr is null && spiel.Grafik is not null)
+            {
+                _verkehr = Verkehr.Fuer(spiel.Szene);
+                _verkehr.Bedient(jetzt);
+            }
             _szeneNeu = false;
         }
         if (_spiel is { } s2 && _innenNeu && GlBereit)
@@ -487,6 +539,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         if (geht)
         {
             _nachlaufBis = jetzt + 1.5;
+            _verkehr?.Bedient(jetzt);
         }
         if ((geht || jetzt < _nachlaufBis) && kamera is not null && jetzt >= _folgenAb)
         {
@@ -514,6 +567,51 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
+            if (!_spiel.ImInnenraum && _gruen is not null && kamera.Abstand <= GruenWeite)
+            {
+                Zeichnen(gl, _gruen, Matrix4x4.Identity, sichtProj);
+            }
+            if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
+            {
+                if (AutoSchritt > 0 || _verkehr.Faehrt(jetzt))
+                {
+                    _verkehr.Weiter(AutoSchritt > 0 ? AutoSchritt : dt, _spiel.FigurX, _spiel.FigurZ);
+                }
+                foreach (var auto in _verkehr.Autos)
+                {
+                    if (grafikA.Modell(auto.Modell) is not { } am)
+                    {
+                        continue;
+                    }
+                    // ab AutoFern Abstand eine einfache Fernform (zwei Kaesten in der Hauptfarbe des Autos)
+                    var fern = kamera.Abstand > AutoFern;
+                    var schl = auto.Modell + (fern ? "|fern" : "");
+                    if (!_autoNetze.TryGetValue(schl, out var an))
+                    {
+                        Netz nz;
+                        if (fern)
+                        {
+                            var farbe = Hauptfarbe(am);
+                            float h = am.Max.Y - am.Min.Y;
+                            nz = Netz.Aus(
+                            [
+                                new Teil(TeilArt.Quader, am.Min.X, am.Min.Y + (h * 0.12f), am.Min.Z, am.Max.X, am.Min.Y + (h * 0.55f), am.Max.Z, farbe),
+                                new Teil(TeilArt.Quader, am.Min.X * 0.85f, am.Min.Y + (h * 0.55f), am.Min.Z * 0.5f, am.Max.X * 0.85f, am.Max.Y, am.Max.Z * 0.45f, farbe * 0.8f),
+                            ]);
+                        }
+                        else
+                        {
+                            nz = new Netz();
+                            nz.Hinzu(am, Matrix4x4.Identity);
+                        }
+                        an = GlNetz.Laden(gl, nz);
+                        _autoNetze[schl] = an;
+                    }
+                    var (ort, richtung) = auto.Lage(auto.Weg);
+                    var anker = new Vector3((am.Min.X + am.Max.X) / 2, am.Min.Y, (am.Min.Z + am.Max.Z) / 2);
+                    Zeichnen(gl, an, StadtSzene.Lage(am, anker, new Vector3(StadtSzene.Meter * 1.1f), new Vector3(ort.X, StadtSzene.Hoehe.Strasse, ort.Y), richtung), sichtProj);
+                }
+            }
             if (_spiel.Ziel is { } ziel && _marke is not null)
             {
                 Zeichnen(gl, _marke, Matrix4x4.CreateTranslation((float)ziel.X, _spiel.ImInnenraum ? 0.03f : StadtSzene.Hoehe.Uebergang + 0.012f, (float)ziel.Y), sichtProj);
@@ -521,7 +619,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var innen = _spiel.Innen;
             var groesse = innen is null ? Figur.StadtHoehe : Innenraum.FigurHoehe;
             var aussehen = _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
-            var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung);
+            // Sammelliste 125: Bild der Schrittbewegung nach dem zurueckgelegten Weg (nie nach der Uhr)
+            var bild = ProbeBild >= 0 ? ProbeBild : _spiel.SchrittBild;
+            var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
             var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
                 * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ);
             Zeichnen(gl, spieler, figurLage, sichtProj);
@@ -596,7 +696,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var nachZeichnen = _uhr.Elapsed.TotalSeconds;
         BildGezeichnet?.Invoke();
         Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen, bytesBeginn, ruhte, startStempel);
-        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis)
+        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Faehrt(jetzt)))
         {
             RequestNextFrameRendering();
         }
@@ -706,8 +806,20 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public const float RingRadius = 0.22f;
 
     /// <summary>Figur (Hoehe 1) mit Aussehen (die Spielfigur mit Kleidung aus dem Kaufhaus), je Person einmal geladen.</summary>
-    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null)
+    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null, string? bewegung = null, int bild = -1)
     {
+        if (bild >= 0 && bewegung is not null)
+        {
+            // Bilder der Schrittbewegung: je Aussehen, Kleidung und Bild einmal gebaut (Sammelliste 125)
+            var sb = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value))
+                + (kleidung is { Count: > 0 } ? "|" + string.Join(",", kleidung.Select(k => k.Slot + ":" + k.Form + ":" + k.Farbe)) : "") + "|" + Figur.BildName(bewegung, bild);
+            if (!_figuren.TryGetValue(sb, out var nb))
+            {
+                nb = GlNetz.Laden(gl, Figur.Netz(_spiel?.Grafik, aussehen, 1f, kleidung, bewegung, bild));
+                _figuren[sb] = nb;
+            }
+            return nb;
+        }
         // Wunsch 4: dasselbe Aussehen wie im letzten Bild ohne neuen Schluessel (der kostete je Bild und
         // Figur ein neues Woerterbuch und Zeichenketten, also Arbeit fuer die Speicherbereinigung);
         // StadtSpiel.Kleidung gibt dieselbe Liste zurueck, solange sich nichts aendert

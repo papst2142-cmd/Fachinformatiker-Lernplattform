@@ -52,7 +52,11 @@
     {"id": "Grafik KayKit Holiday Bits", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kaylousberg.itch.io/holiday-bits (Kay Lousberg, www.kaylousberg.com)",
      "beschreibung": "Deko zur Festzeit Weihnachten im Spiel (Weihnachtsbaum, Geschenke, Schneemaenner, Laterne, Lebkuchenhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_HolidayBits_CC0.txt"]},
     {"id": "Grafik Kenney Cube Pets", "version": "2.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/cube-pets (Kenney, www.kenney.nl)",
-     "beschreibung": "Osterhase und Kueken zur Festzeit Ostern im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CubePets_CC0.txt"]}
+     "beschreibung": "Osterhase und Kueken zur Festzeit Ostern im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CubePets_CC0.txt"]},
+    {"id": "Grafik Kenney Car Kit", "version": "2.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/car-kit (Kenney, www.kenney.nl)",
+     "beschreibung": "Fahrende Autos in der Stadt im Spiel (Taxi, Lieferwagen, Limousine, Polizei, Krankenwagen, Muellwagen), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CarKit_CC0.txt"]},
+    {"id": "Grafik KayKit Forest Nature Pack", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kaylousberg.itch.io (KayKit Forest Nature Pack, Kay Lousberg, www.kaylousberg.com)",
+     "beschreibung": "Baeume, Buesche, Graeser und Steine in der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_ForestNaturePack_CC0.txt"]}
   ],
   "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
   "ohne_nuspec": {

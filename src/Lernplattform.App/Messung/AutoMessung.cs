@@ -145,6 +145,7 @@ public static partial class AutoMessung
             funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
             funde += await P8W5MesspunkteAsync(ansicht);       // Phase 8 W5: Rueckfrage am Bett
             funde += await P8W6FestzeitenAsync(ansicht);       // Phase 8 W6: Stadt, Park und Kaufhaus je Festzeit
+            funde += await P8W7MesspunkteAsync(ansicht);       // Phase 8 W7: Schritte, Autos, Gruen
         }
         if (MitLernen)
         {

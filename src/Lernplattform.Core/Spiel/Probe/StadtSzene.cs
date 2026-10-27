@@ -167,6 +167,13 @@ public sealed class StadtSzene
                 netz.Hinzu(modell, Stuecke[i].Lage);
             }
         }
+        foreach (var baum in GruenKlein?.Baeume ?? [])
+        {
+            if (Grafik?.Modell(baum.Name) is { } modell)
+            {
+                netz.Hinzu(modell, baum.Lage);
+            }
+        }
         return netz;
     }
 
@@ -509,10 +516,39 @@ public sealed class StadtSzene
         {
             Zug(stuecke, grafik, gleise);
         }
+        // Hindernisse vor der Fest-Deko: das Gruen haengt so nicht an der heutigen Festzeit
+        var hindernisseVorFest = hindernisse.ToList();
         var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse);
         if (fest is not null)
         {
             signatur.Add("fest:" + fest);
+        }
+        // Phase 8 W7 (Sammelliste 129): Gruen nach der Festzeit-Deko; frei bleiben auch die Plaetze JEDER Festzeit,
+        // damit das Gruen an jedem Tag gleich steht und die Deko aus W6 unveraendert bleibt
+        Gruen.Ergebnis? gruen = null;
+        if (grafik is not null)
+        {
+            var festPlaetze = new List<(Vector2 P, float R)>();
+            foreach (var f in Festzeit.Alle)
+            {
+                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList()))
+                {
+                    festPlaetze.Add((new Vector2(g.X, g.Z), Math.Max(g.R, 0.12f)));
+                }
+            }
+            var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
+            bool Frei(float x, float z, float r) =>
+                baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
+                && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
+                && haeuserKaesten.All(k => x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f)
+                && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
+                && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f);
+            var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
+            // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
+            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt);
+            // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
+            // ueber Gras geht die Figur
+            hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
         }
         var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
@@ -523,6 +559,8 @@ public sealed class StadtSzene
             Uebergaenge = uebergaenge,
             Fest = fest,
             FestGesetzt = festGesetzt,
+            GruenKlein = gruen,
+            Strassen = strassen,
         };
     }
 
@@ -869,9 +907,37 @@ public sealed class StadtSzene
         }
     }
 
+    /// <summary>Phase 8 W7: Kleingruen (Buesche, Graeser, Steine, Beete; eigenes Netz), null ohne Grafik.</summary>
+    public Gruen.Ergebnis? GruenKlein { get; private init; }
+
+    /// <summary>Mittellinien der Strassen (fuer die Autos, Phase 8 W7).</summary>
+    public IReadOnlyList<IReadOnlyList<Vector2>> Strassen { get; private init; } = [];
+
+    /// <summary>Netz des Kleingruens (nur in der Naehe gezeichnet), null = keins.</summary>
+    public Netz? GruenNetzBauen()
+    {
+        if (GruenKlein is not { } g || Grafik is null)
+        {
+            return null;
+        }
+        var netz = Netz.Aus(g.Teile);
+        foreach (var st in g.Stuecke)
+        {
+            if (Grafik.Modell(st.Name) is { } m)
+            {
+                netz.Hinzu(m, st.Lage);
+            }
+        }
+        return netz;
+    }
+
     private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, BaumPlaner planer, float x, float z, float r)
     {
         (x, z) = planer.Setzen(x, z, r) is var p ? (p.X, p.Y) : default;
+        if (grafik is not null && Gruen.Baum(stuecke, grafik, x, z, r))
+        {
+            return;
+        }
         // Suburban-Baum (gross/klein im Wechsel nach Lage), so hoch wie der eigene Baum (0,4 + 2,2 r)
         var name = ((int)MathF.Round((x * 7) + (z * 3)) & 1) == 0 ? "tree_large" : "tree_small";
         if (grafik?.Modell(name) is { } baum)

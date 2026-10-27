@@ -1,5 +1,5 @@
 {
- "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor. Kaufhaus (Weisung P8-8c, Variante 2 Galerie): aus Bauteilen von Modular Buildings zusammengesetzt (datei \"teile\", je Teil Versatz v), \"drehen\" 180, damit die Schaufenster zur Strasse zeigen. Festzeiten (Weisung P8-12, Phase 8 W6): KayKit Halloween Bits (hw-), KayKit Holiday Bits (xm-), Kenney Cube Pets (os-), Vorderseite +Z, ohne drehen.",
+ "_hinweis": "Welche Modelle wandle_modelle.py aus den CC0-Paketen (Fi-Austausch anlagen/grafik_cc0) wandelt. Nur genutzte Modelle (Plan Phase 7 Abschnitt 6). Furniture Kit: \"drehen\" 180, weil die Lehnen bei +Z liegen (Vorderseite -Z). Figur: FBX mit Haut-PNG, Arme um \"arme\" Grad gesenkt (Weisung P7-10 Frage 1a). KayKit Furniture Bits (Weisung P7-15 Nachtrag 1, Bank und Amt): Vorderseite +Z wie vorgesehen, ohne drehen; Namen mit kk davor. Kaufhaus (Weisung P8-8c, Variante 2 Galerie): aus Bauteilen von Modular Buildings zusammengesetzt (datei \"teile\", je Teil Versatz v), \"drehen\" 180, damit die Schaufenster zur Strasse zeigen. Festzeiten (Weisung P8-12, Phase 8 W6): KayKit Halloween Bits (hw-), KayKit Holiday Bits (xm-), Kenney Cube Pets (os-), Vorderseite +Z, ohne drehen. Schritte, Autos, Gruen (Weisung P8-14, Phase 8 W7): Figur mit \"bilder\" Bildern je Bewegung als eigene Modelle (Name plus zwei Ziffern), \"gehen\" eigene Gelenk-Bewegung, \"lauf\" aus \"animation\" bis \"ende\"; Kenney Car Kit (car-, sechs Autos, Nico 2b), KayKit Forest Nature Pack (wd-), ohne die Baeume mit Wuerfelkrone (Nico 4c).",
  "pakete": {
   "commercial": {
    "zip": "kenney_city-kit-commercial_2.1.zip",
@@ -70,6 +70,20 @@
    "id": "Grafik Kenney Cube Pets",
    "version": "2.0",
    "sha256": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283"
+  },
+  "car_kit": {
+   "zip": "kenney_car-kit.zip",
+   "quelle": "Kenney Car Kit 2.0, kenney.nl/assets/car-kit",
+   "id": "Grafik Kenney Car Kit",
+   "version": "2.0",
+   "sha256": "f8a69b83fbf94c9850079bc6e078ea3d8ba4c7393dd9f57f8ba544963d1b1d14"
+  },
+  "kaykit_wald": {
+   "zip": "KayKit_Forest_Nature_Pack_1.0_FREE.zip",
+   "quelle": "KayKit Forest Nature Pack 1.0 (Kay Lousberg), kaylousberg.itch.io",
+   "id": "Grafik KayKit Forest Nature Pack",
+   "version": "1.0",
+   "sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c"
   }
  },
  "modelle": [
@@ -542,6 +556,146 @@
    "name": "os-animal-chick",
    "paket": "cube_pets",
    "datei": "Models/OBJ format/animal-chick.obj"
+  },
+  {
+   "name": "figur-gehen",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 16,
+   "arme": 72,
+   "bewegung": "gehen"
+  },
+  {
+   "name": "figur-lauf",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 16,
+   "arme": 72,
+   "bewegung": "lauf",
+   "animation": "Animations/run.fbx",
+   "ende": 30790772000
+  },
+  {
+   "name": "car-taxi",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/taxi.obj"
+  },
+  {
+   "name": "car-van",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj"
+  },
+  {
+   "name": "car-sedan",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/sedan.obj"
+  },
+  {
+   "name": "car-police",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/police.obj"
+  },
+  {
+   "name": "car-ambulance",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/ambulance.obj"
+  },
+  {
+   "name": "car-garbage-truck",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/garbage-truck.obj"
+  },
+  {
+   "name": "wd-tree_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_1_A_Color1.obj"
+  },
+  {
+   "name": "wd-tree_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_3_A_Color1.obj"
+  },
+  {
+   "name": "wd-tree_4_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Tree_4_A_Color1.obj"
+  },
+  {
+   "name": "wd-bush_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_1_A_Color1.obj"
+  },
+  {
+   "name": "wd-bush_1_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_1_B_Color1.obj"
+  },
+  {
+   "name": "wd-bush_2_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_2_B_Color1.obj"
+  },
+  {
+   "name": "wd-bush_4_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_4_A_Color1.obj"
+  },
+  {
+   "name": "wd-bush_4_c",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_4_C_Color1.obj"
+  },
+  {
+   "name": "wd-bush_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Bush_3_A_Color1.obj"
+  },
+  {
+   "name": "wd-grass_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_1_A_Color1.obj"
+  },
+  {
+   "name": "wd-grass_1_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_1_B_Color1.obj"
+  },
+  {
+   "name": "wd-grass_2_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_2_A_Color1.obj"
+  },
+  {
+   "name": "wd-grass_2_b",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Grass_2_B_Color1.obj"
+  },
+  {
+   "name": "wd-rock_1_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_1_A_Color1.obj"
+  },
+  {
+   "name": "wd-rock_1_d",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_1_D_Color1.obj"
+  },
+  {
+   "name": "wd-rock_3_a",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_3_A_Color1.obj"
+  },
+  {
+   "name": "wd-rock_3_g",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_3_G_Color1.obj"
+  },
+  {
+   "name": "wd-rock_2_c",
+   "paket": "kaykit_wald",
+   "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_2_C_Color1.obj"
   }
  ]
 }
