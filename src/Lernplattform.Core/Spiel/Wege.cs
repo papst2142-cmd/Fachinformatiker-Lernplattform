@@ -201,38 +201,70 @@ public static class Wege
     private static IEnumerable<PyObjekt> DekoListe(PyObjekt d) =>
         Py.Hat(d, "deko") ? Liste(d["deko"]).Select(e => (PyObjekt)e!) : [];
 
-    /// <summary>_base_grid</summary>
+    /// <summary>
+    /// _base_grid. Weisung P8-6 (109): jedes Rechteck prueft nur die Zellen, deren Mitte naeher als
+    /// <see cref="Koerper"/> (plus eine Zelle Rand) liegt; weiter weg ist dx oder dy mindestens Koerper und
+    /// die Zelle nie gesperrt. Die Pruefung je Zelle und Rechteck ist dieselbe Rechnung wie vorher, die
+    /// Zellen kommen in derselben Reihenfolge in die Menge (gleiche Reihenfolge wie Python, G48).
+    /// </summary>
     public static PyMenge BasisRaster(PyObjekt gebaeude)
     {
         var spalten = (long)(Py.F(gebaeude["breite"]) / Schritt);
         var zeilen = (long)(Py.F(gebaeude["hoehe"]) / Schritt);
         var rechtecke = Hindernisse(gebaeude);
         var grenze = Koerper * Koerper;
-        var frei = new PyMenge();
-        for (long spalte = 0; spalte < spalten; spalte++)
+        var gesperrt = new bool[Math.Max(0, spalten) * Math.Max(0, zeilen)];
+        foreach (var (x1, y1, x2, y2) in rechtecke)
         {
-            var cx = (spalte + 0.5) * Schritt;
-            for (long zeile = 0; zeile < zeilen; zeile++)
+            var (s1, s2) = Bereich(x1, x2, spalten);
+            var (z1, z2) = Bereich(y1, y2, zeilen);
+            for (var spalte = s1; spalte <= s2; spalte++)
             {
-                var cy = (zeile + 0.5) * Schritt;
-                var gesperrt = false;
-                foreach (var (x1, y1, x2, y2) in rechtecke)
+                var cx = (spalte + 0.5) * Schritt;
+                for (var zeile = z1; zeile <= z2; zeile++)
                 {
+                    var index = spalte * zeilen + zeile;
+                    if (gesperrt[index])
+                    {
+                        continue;
+                    }
+                    var cy = (zeile + 0.5) * Schritt;
                     var dx = Math.Max(Math.Max(x1 - cx, 0), cx - x2);
                     var dy = Math.Max(Math.Max(y1 - cy, 0), cy - y2);
                     if (dx * dx + dy * dy < grenze)
                     {
-                        gesperrt = true;
-                        break;
+                        gesperrt[index] = true;
                     }
                 }
-                if (!gesperrt)
+            }
+        }
+        var frei = new PyMenge();
+        for (long spalte = 0; spalte < spalten; spalte++)
+        {
+            for (long zeile = 0; zeile < zeilen; zeile++)
+            {
+                if (!gesperrt[spalte * zeilen + zeile])
                 {
                     frei.Add((spalte, zeile));
                 }
             }
         }
         return frei;
+    }
+
+    /// <summary>
+    /// Zellen 0 bis anzahl-1, deren Mitte von [a, b] weniger als <see cref="Koerper"/> entfernt sein kann
+    /// (eine Zelle Rand mehr, damit Rundung nichts auslaesst). Leer: (1, 0).
+    /// </summary>
+    private static (long Von, long Bis) Bereich(double a, double b, long anzahl)
+    {
+        var von = Math.Floor((a - Koerper) / Schritt) - 1;
+        var bis = Math.Ceiling((b + Koerper) / Schritt) + 1;
+        if (double.IsNaN(von) || double.IsNaN(bis))
+        {
+            return (0, anzahl - 1);   // nie bei echten Inhalten: dann wie vorher jede Zelle pruefen
+        }
+        return ((long)Math.Max(von, 0), (long)Math.Min(bis, anzahl - 1));
     }
 
     /// <summary>_walk_grid (ohne Zwischenspeicher): Zellen um jede Person sind gesperrt.</summary>
@@ -318,6 +350,22 @@ public static class Wege
         return true;
     }
 
+    /// <summary>Wie <see cref="StreckeFrei((double, double), (double, double), PyMenge)"/> ueber das Feld derselben Zellen (Weisung P8-6, 109).</summary>
+    internal static bool StreckeFrei((double, double) a, (double, double) b, FreiFeld frei)
+    {
+        var schritte = (long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1;
+        for (long i = 0; i <= schritte; i++)
+        {
+            var t = i / (double)schritte;
+            var (spalte, zeile) = Zelle(a.Item1 + (b.Item1 - a.Item1) * t, a.Item2 + (b.Item2 - a.Item2) * t);
+            if (!frei.Frei(spalte, zeile))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /// <summary>
     /// walk_path: Weg von start zu ziel als Liste von Punkten (ohne den Startpunkt). reichweite &gt; 0:
     /// es genuegt, bis auf diesen Abstand heranzukommen. Leer = schon da oder nicht erreichbar.
@@ -330,10 +378,18 @@ public static class Wege
         if (reichweite > 0)
         {
             var grenze = reichweite * reichweite;
+            // Weisung P8-6 (109): liegt die Mitte in x oder y deutlich weiter als reichweite weg, ist ihr Quadrat
+            // sicher groesser als grenze; nur die anderen Zellen rechnen wie vorher (PythonPow, gleiches Ergebnis)
+            var schranke = reichweite * (1 + 1e-9);
             foreach (var zelle in frei)
             {
                 var m = Mitte(zelle);
-                if (PythonPow.Pow(m.Item1 - ziel.Item1, 2) + PythonPow.Pow(m.Item2 - ziel.Item2, 2) <= grenze)
+                double dx = m.Item1 - ziel.Item1, dy = m.Item2 - ziel.Item2;
+                if (Math.Abs(dx) > schranke || Math.Abs(dy) > schranke)
+                {
+                    continue;
+                }
+                if (PythonPow.Pow(dx, 2) + PythonPow.Pow(dy, 2) <= grenze)
                 {
                     ziele.Add(zelle);
                 }
@@ -414,7 +470,7 @@ public static class Wege
         while (index < punkte.Count - 1)
         {
             var weiter = punkte.Count - 1;
-            while (weiter > index + 1 && !StreckeFrei(punkte[index], punkte[weiter], frei))
+            while (weiter > index + 1 && !StreckeFrei(punkte[index], punkte[weiter], feld))
             {
                 weiter--;
             }

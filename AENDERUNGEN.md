@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.14.1
+Das Spiel reagiert schneller.
+
+- Jeder Schritt im Spiel speichert etwas weniger Zusatzarbeit: Die Zeitkorrektur aus dem letzten Abgleich liest das Programm nur noch einmal, solange du spielst, statt bei jedem Schritt. Nach einem Abgleich, einer eingespielten Sicherung oder einer Übernahme liest es sie neu.
+- Das Tippen auf ein Ziel in Räumen wie Büro, Wohnung, Geschäften oder bei Kunden findet den Weg schneller, vor allem beim Ansprechen einer Person und beim ersten Tippen nach dem Betreten oder nach dem Umstellen von Möbeln. Die Figur geht dabei genau dieselben Wege wie vorher.
+
 ## A 0.14.0
 Das Spiel bleibt zwischen PC und Handy sauber abgeglichen.
 

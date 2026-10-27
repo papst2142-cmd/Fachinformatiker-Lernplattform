@@ -149,11 +149,37 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
             Stempel = stempel,
             Basis = stempel.Nummer ?? 0,
             Naechste = naechste,
-            Uhrabweichung = schreiber.UhrabweichungLesen(),
+            Uhrabweichung = UhrabweichungGemerkt(),
             Loeschmarke = schreiber.BestenMarkeLesen(),
             Besten = Bestenzeilen(Lernstand),
         };
     }
+
+    private (long Wechsel, object? Wert)? uhrabweichung;
+    private int uhrabweichungGelesen;
+
+    /// <summary>
+    /// Weisung P8-6 (Sammelliste 108): die Uhrabweichung aus sync_meta einmal je Sitzung des Spiels statt je
+    /// Aktion. Sie schreibt nur der Abgleich, und nur er, Uebernahme, Sicherung einspielen, Loeschen und Update
+    /// aendern sync_meta oder tauschen die Datenbank, alle mit <see cref="Vorgaenge.Sperren"/>. Hat seit dem
+    /// Lesen einer von ihnen die Sperre gehabt (<see cref="Vorgaenge.Wechsel"/>), wird neu gelesen. Aufgerufen
+    /// nur unter der Sperre der Vorgaenge (in einer Sitzung) und unter <c>zustand</c>.
+    /// </summary>
+    private object? UhrabweichungGemerkt()
+    {
+        var wechsel = Vorgaenge.Wechsel;
+        if (uhrabweichung is { } gemerkt && gemerkt.Wechsel == wechsel)
+        {
+            return gemerkt.Wert;
+        }
+        var wert = schreiber.UhrabweichungLesen();
+        uhrabweichungGelesen++;
+        uhrabweichung = (wechsel, wert);
+        return wert;
+    }
+
+    /// <summary>Wie oft die Uhrabweichung aus der Datenbank gelesen wurde (nur Tests, Weisung P8-6).</summary>
+    internal int UhrabweichungGelesen => uhrabweichungGelesen;
 
     private static object? Spaeter(object? alt, string neu) =>
         alt is string a && string.CompareOrdinal(a, neu) >= 0 ? alt : neu;

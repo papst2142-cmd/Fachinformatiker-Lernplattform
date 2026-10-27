@@ -34,15 +34,19 @@ public sealed class PyMenge : IEnumerable<(long Spalte, long Zeile)>
     /// <summary>hash() eines Python-Tupels aus zwei ganzen Zahlen.</summary>
     public static long Hash((long, long) zelle)
     {
-        var acc = Prime5;
-        foreach (var teil in new[] { zelle.Item1, zelle.Item2 })
-        {
-            acc += unchecked((ulong)IntHash(teil) * Prime2);
-            acc = (acc << 31) | (acc >> 33);
-            acc = unchecked(acc * Prime1);
-        }
+        // Weisung P8-6 (109): beide Teile nacheinander ohne neues Feld je Aufruf, dieselbe Rechnung
+        var acc = Runde(Prime5, zelle.Item1);
+        acc = Runde(acc, zelle.Item2);
         acc += 2UL ^ (Prime5 ^ 3527539UL);
         return acc == ulong.MaxValue ? 1546275796 : unchecked((long)acc);
+    }
+
+    /// <summary>Eine Runde von xxHash fuer ein Element des Tupels (tuplehash).</summary>
+    private static ulong Runde(ulong acc, long teil)
+    {
+        acc += unchecked((ulong)IntHash(teil) * Prime2);
+        acc = (acc << 31) | (acc >> 33);
+        return unchecked(acc * Prime1);
     }
 
     /// <summary>hash(int) fuer |n| &lt; 2**61 - 1 (hash(-1) ist -2).</summary>

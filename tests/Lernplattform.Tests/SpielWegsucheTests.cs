@@ -216,6 +216,100 @@ public sealed class SpielWegsucheTests
         return glatt.Skip(1).ToList();
     }
 
+    /// <summary>Altes _base_grid (Stand main dfadfd8): jede Zelle gegen jedes Rechteck, unveraendert.</summary>
+    private static PyMenge BasisRasterAlt(PyObjekt gebaeude)
+    {
+        var spalten = (long)(Py.F(gebaeude["breite"]) / Wege.Schritt);
+        var zeilen = (long)(Py.F(gebaeude["hoehe"]) / Wege.Schritt);
+        var rechtecke = Wege.Hindernisse(gebaeude);
+        var grenze = Wege.Koerper * Wege.Koerper;
+        var frei = new PyMenge();
+        for (long spalte = 0; spalte < spalten; spalte++)
+        {
+            var cx = (spalte + 0.5) * Wege.Schritt;
+            for (long zeile = 0; zeile < zeilen; zeile++)
+            {
+                var cy = (zeile + 0.5) * Wege.Schritt;
+                var gesperrt = false;
+                foreach (var (x1, y1, x2, y2) in rechtecke)
+                {
+                    var dx = Math.Max(Math.Max(x1 - cx, 0), cx - x2);
+                    var dy = Math.Max(Math.Max(y1 - cy, 0), cy - y2);
+                    if (dx * dx + dy * dy < grenze)
+                    {
+                        gesperrt = true;
+                        break;
+                    }
+                }
+                if (!gesperrt)
+                {
+                    frei.Add((spalte, zeile));
+                }
+            }
+        }
+        return frei;
+    }
+
+    /// <summary>Alter Tupel-Hash (Stand main dfadfd8) fuer hash((a, b)).</summary>
+    private static long HashAlt((long, long) zelle)
+    {
+        const ulong Prime1 = 11400714785074694791UL, Prime2 = 14029467366897019727UL, Prime5 = 2870177450012600261UL;
+        var acc = Prime5;
+        foreach (var teil in new[] { zelle.Item1, zelle.Item2 })
+        {
+            acc += unchecked((ulong)(teil == -1 ? -2 : teil) * Prime2);
+            acc = (acc << 31) | (acc >> 33);
+            acc = unchecked(acc * Prime1);
+        }
+        acc += 2UL ^ (Prime5 ^ 3527539UL);
+        return acc == ulong.MaxValue ? 1546275796 : unchecked((long)acc);
+    }
+
+    /// <summary>
+    /// Weisung P8-6 (109): das schnellere Raster der Innenraeume (Rechteck nur gegen nahe Zellen) hat dieselben
+    /// Zellen in derselben Reihenfolge wie vorher, auch mit Moebeln an jeder Stelle des Grundrisses; der Hash
+    /// ohne neues Feld je Aufruf ist derselbe.
+    /// </summary>
+    [Fact]
+    public void InnenraeumeGleichesRaster()
+    {
+        var ablauf = new Spielablauf(SpielInhaltTests.Inhalt);
+        ablauf.Stand.TageFertig = 200;
+        var ansichten = new List<string> { "buero", "zuhause", "serverfarm" };
+        ansichten.AddRange(SpielDaten.Kundenorte(SpielInhaltTests.Inhalt).Select(k => "kunde:" + Py.Str(k["id"])));
+        ansichten.AddRange(["geschaeft:moebelhaus", "geschaeft:elektromarkt", "schalter:bank", "schalter:amt"]);
+        var zufall = new Random(18);
+        var verglichen = 0;
+        foreach (var ansicht in ansichten)
+        {
+            var innen = Innenraum.Bauen(ansicht, ablauf.Stand, SpielInnenraumTests.Innenraeume.Value, null)!;
+            Assert.Equal([.. BasisRasterAlt(innen.Gebaeude)], [.. Wege.BasisRaster(innen.Gebaeude)]);
+            verglichen++;
+            // dazu Grundrisse mit einem Moebelstueck an zufaelligen Stellen, auch am und ueber dem Rand
+            for (var i = 0; i < 25; i++)
+            {
+                var gebaeude = (PyObjekt)Py.Kopie(innen.Gebaeude)!;
+                var flur = (PyObjekt)gebaeude["flur"]!;
+                var deko = Py.Hat(flur, "deko") ? (List<object?>)flur["deko"]! : [];
+                deko.Add(new PyObjekt
+                {
+                    { "typ", "regal" }, { "x", zufall.NextDouble() * (innen.Breite + 2) - 1 }, { "y", zufall.NextDouble() * (innen.Tiefe + 2) - 1 },
+                    { "w", 0.05 + zufall.NextDouble() * 2 }, { "h", 0.05 + zufall.NextDouble() * 2 },
+                });
+                Py.Setzen(flur, "deko", deko);
+                Assert.Equal([.. BasisRasterAlt(gebaeude)], [.. Wege.BasisRaster(gebaeude)]);
+                verglichen++;
+            }
+        }
+        Assert.Equal(ansichten.Count * 26, verglichen);
+        for (var i = 0; i < 2000; i++)
+        {
+            var zelle = ((long)zufall.Next(-300, 300), (long)zufall.Next(-300, 300));
+            Assert.Equal(HashAlt(zelle), PyMenge.Hash(zelle));
+        }
+        Assert.Equal(HashAlt((-1, -1)), PyMenge.Hash((-1, -1)));
+    }
+
     [Fact]
     public void StadtGleicheWege()
     {
