@@ -117,7 +117,9 @@ public class FestDekoTests
 
     private static readonly Dictionary<string, string[]> OhneTuerDeko = new()
     {
-        [Festzeit.Ostern] = ["talheim_nord", "gewerbehof", "elektromarkt", "amt", "bank"],
+        // W8b (Weisung P8-20, Nico 4a): die Tuer sitzt jetzt genau am Ende des Fusswegs auf der Wand (vorher Mitte der
+        // Rasterzelle); am Haltepunkt Birkenhain ist daneben kein Platz mehr fuer die Osterbeete (vorher ohne birkenhain)
+        [Festzeit.Ostern] = ["talheim_nord", "birkenhain", "gewerbehof", "elektromarkt", "amt", "bank"],
         [Festzeit.Halloween] = ["talheim_nord", "birkenhain", "gewerbehof"],
         [Festzeit.Weihnachten] = [],
         [Festzeit.Silvester] = [],

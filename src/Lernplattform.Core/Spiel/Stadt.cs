@@ -105,7 +105,8 @@ public sealed class Stadt
         {
             Linie(teil["punkte"]);
         }
-        foreach (var (id, zugang) in Objekt(stadt["zugaenge"]))
+        Zugaenge = ZugaengeMit(stadt);
+        foreach (var (id, zugang) in Zugaenge)
         {
             var z = Objekt(zugang);
             Linie(z["weg"]);
@@ -128,6 +129,45 @@ public sealed class Stadt
             var paar = Liste(wert);
             zeiten[id] = (Py.Int(paar[0]), Py.Int(paar[1]));
         }
+    }
+
+    /// <summary>
+    /// Die Zugaenge je Ort (Tuer und Fussweg zur Strasse): "zugaenge" aus stadt.json, darin ersetzt durch
+    /// den angehaengten Abschnitt "zugaenge_neu" (Phase 8 W8b, Weisung P8-20, Nico 1a: Bahnhof und
+    /// Gewerbehof). Reihenfolge wie "zugaenge"; ein Ort nur in "zugaenge_neu" kommt hinten dazu.
+    /// </summary>
+    public PyObjekt Zugaenge { get; }
+
+    private static PyObjekt ZugaengeMit(PyObjekt stadt)
+    {
+        var neu = ZugaengeNeu(stadt);
+        var ergebnis = new PyObjekt();
+        foreach (var (id, zugang) in Objekt(stadt["zugaenge"]))
+        {
+            ergebnis.Add(id, Get(neu, id) ?? zugang);
+        }
+        foreach (var (id, zugang) in neu)
+        {
+            if (!Py.Hat(ergebnis, id))
+            {
+                ergebnis.Add(id, zugang);
+            }
+        }
+        return ergebnis;
+    }
+
+    /// <summary>Abschnitt "zugaenge_neu" ohne Hinweise (Schluessel mit "_").</summary>
+    private static PyObjekt ZugaengeNeu(PyObjekt stadt)
+    {
+        var neu = new PyObjekt();
+        foreach (var (id, zugang) in Py.Wahr(Get(stadt, "zugaenge_neu")) ? Objekt(stadt["zugaenge_neu"]) : [])
+        {
+            if (!id.StartsWith('_'))
+            {
+                neu.Add(id, zugang);
+            }
+        }
+        return neu;
     }
 
     /// <summary>stadt.json aus einem Ordner (inhalte_csharp/spiel).</summary>
@@ -627,7 +667,14 @@ public sealed class Stadt
                 fehler.Add(id + ": von " + Heim + " aus nicht erreichbar");
             }
         }
-        foreach (var (id, zugang) in Objekt(Daten["zugaenge"]))
+        foreach (var (id, _) in ZugaengeNeu(Daten))
+        {
+            if (!Py.Hat(Objekt(Daten["zugaenge"]), id))
+            {
+                fehler.Add("zugaenge_neu ersetzt keinen Zugang: " + id);
+            }
+        }
+        foreach (var (id, zugang) in Zugaenge)
         {
             if (!ids.Contains(id))
             {

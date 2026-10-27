@@ -277,6 +277,11 @@ public sealed class Innenraum
             return null;
         }
         var gebaeude = SpielOrte.Gebaeude(ort, stand);
+        // W8b (Nico 2a): Zusatz fuer Kundenorte (Bahnhof Talheim innen als Wartehalle), angehaengt in innenraeume.json
+        if (innenraeume is not null && Get(innenraeume, "zusatz_kunden") is PyObjekt zk && Get(zk, ort) is PyObjekt zo)
+        {
+            gebaeude = MitZusatz(gebaeude, zo);
+        }
         var auftraege = ort == OrtZuhause ? new PyDict() : stand.Auftraege(ort);
         var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
@@ -287,7 +292,8 @@ public sealed class Innenraum
     /// <summary>
     /// Grundriss mit dem angehaengten Zusatz aus innenraeume.json ("zusatz" je Ort, P7-15): Werte wie
     /// wandfarbe, aussenfarbe, boden, bodenfarbe ersetzen die des Grundrisses, Einrichtung ("deko") kommt
-    /// hinzu, Raeume nach ihrer id. Der Grundriss selbst bleibt unveraendert (Kopie).
+    /// hinzu, Raeume nach ihrer id; "ohne" nimmt Einrichtung dieser Typen heraus (W8b). Der Grundriss selbst
+    /// bleibt unveraendert (Kopie).
     /// </summary>
     public static PyObjekt MitZusatz(PyObjekt gebaeude, PyObjekt? zusatz)
     {
@@ -300,7 +306,12 @@ public sealed class Innenraum
         {
             foreach (var (k, v) in dazu)
             {
-                if (k == "deko")
+                if (k == "ohne")
+                {
+                    var weg = Liste(v).Select(Py.Str).ToHashSet();
+                    Py.Setzen(ziel, "deko", (Get(ziel, "deko") as List<object?> ?? []).Where(d => !weg.Contains(Py.Str(Objekt(d)["typ"]))).ToList());
+                }
+                else if (k == "deko")
                 {
                     var liste = Get(ziel, "deko") as List<object?> ?? [];
                     liste.AddRange(Liste(Py.Kopie(v)));
@@ -997,6 +1008,9 @@ public sealed class Innenraum
             case "wartesessel":
                 Modell(r, "kkArmchair", 0, 0, b, tt, 0.85f * M, 0, Farben.Polster);
                 break;
+            case "bahnhofsuhr":
+                Bahnhofsuhr(r, b, tt);
+                break;
             case "gemaelde":
                 Modell(r, "kkPictureframeLargeB", 0, 0, b, Math.Min(tt, 0.12f), 0.6f * M, 1.0f * M, Netz.Farbe("#F472B6"));
                 break;
@@ -1231,6 +1245,39 @@ public sealed class Innenraum
                 _ => (lx, lx + zb, y1 - (s / 2), y1 + (s / 2)),
             };
             Kasten(r, a, t, bis - a, 0.015f, von, ober, Farben.Weiss);
+        }
+    }
+
+    /// <summary>Grosse Bahnhofsuhr am Mast (W8b): runde Scheibe aus Streifen, beidseitig, Zeiger auf 10:10.</summary>
+    private void Bahnhofsuhr(Rahmen r, float b, float t)
+    {
+        const float M = Meter;
+        var mitteX = b / 2;
+        var mitteZ = t / 2;
+        var radius = 0.9f * M;
+        var hoehe = 3.0f * M;
+        Kasten(r, mitteX - 0.06f, mitteZ - 0.06f, 0.12f, 0.12f, 0, hoehe - radius, Farben.MetallDunkel);
+        const int streifen = 14;
+        for (var i = 0; i < streifen; i++)
+        {
+            var y1 = -radius + (2 * radius * i / streifen);
+            var y2 = -radius + (2 * radius * (i + 1) / streifen);
+            var ym = (y1 + y2) / 2;
+            var halb = MathF.Sqrt(MathF.Max(0, (radius * radius) - (ym * ym)));
+            var innen = MathF.Sqrt(MathF.Max(0, (radius * 0.86f * (radius * 0.86f)) - (ym * ym)));
+            Kasten(r, mitteX - halb, mitteZ - 0.07f, 2 * halb, 0.14f, hoehe + y1, hoehe + y2, Farben.MetallDunkel);
+            if (innen > 0)
+            {
+                Kasten(r, mitteX - innen, mitteZ - 0.085f, 2 * innen, 0.17f, hoehe + y1, hoehe + y2, Farben.Weiss);
+            }
+        }
+        // Zeiger (10:10), roter Sekundenzeiger und Striche bei 12, 3, 6, 9
+        Kasten(r, mitteX - 0.03f, mitteZ - 0.1f, 0.06f, 0.2f, hoehe, hoehe + (radius * 0.75f), Farben.Geraet);
+        Kasten(r, mitteX - (radius * 0.55f), mitteZ - 0.1f, radius * 0.55f, 0.2f, hoehe - 0.03f, hoehe + 0.03f, Farben.Geraet);
+        Kasten(r, mitteX - 0.02f, mitteZ - 0.11f, 0.04f, 0.22f, hoehe - (radius * 0.8f), hoehe, Farben.Rot);
+        foreach (var (dx, dy) in new[] { (0f, 0.78f), (0.78f, 0f), (0f, -0.78f), (-0.78f, 0f) })
+        {
+            Kasten(r, mitteX + (dx * radius) - 0.025f, mitteZ - 0.095f, 0.05f, 0.19f, hoehe + (dy * radius) - 0.025f, hoehe + (dy * radius) + 0.025f, Farben.Geraet);
         }
     }
 

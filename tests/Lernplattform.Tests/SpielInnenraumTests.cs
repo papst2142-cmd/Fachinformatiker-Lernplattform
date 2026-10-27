@@ -81,6 +81,35 @@ public class SpielInnenraumTests
         }
     }
 
+    /// <summary>
+    /// Phase 8 W8b (Weisung P8-20, Nico 2a): der Bahnhof Talheim ist innen eine Wartehalle; Gleis, Zug und
+    /// Bahnsteigkante sieht man draussen. Uhr und Baenke sind da, jede Person ist vom Eingang erreichbar.
+    /// </summary>
+    [Fact]
+    public void BahnhofOhneZug()
+    {
+        var stand = NeuerAblauf().Stand;
+        var innen = Innenraum.Bauen("kunde:talheim", stand, Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
+        var typen = Deko(innen.Gebaeude).Select(d => Py.Str(d["typ"])).ToList();
+        Assert.DoesNotContain("gleis", typen);
+        Assert.DoesNotContain("zug", typen);
+        Assert.DoesNotContain("markierung", typen);
+        Assert.Single(typen, t => t == "bahnhofsuhr");
+        Assert.True(typen.Count(t => t == "bank") >= 12, "Baenke: " + typen.Count(t => t == "bank"));
+        var halle = SpielDaten.Liste(innen.Gebaeude["raeume"]).Select(SpielDaten.Objekt).Single(r => Py.Gleich(r["id"], "bahnsteig"));
+        Assert.Equal("Wartehalle", Py.Str(halle["name"]));
+        Assert.DoesNotContain(innen.Stuecke, st => st.Name.StartsWith("train", StringComparison.Ordinal) || st.Name.StartsWith("rail", StringComparison.Ordinal));
+        Assert.NotEmpty(innen.Personen);
+        foreach (var p in innen.Personen)
+        {
+            var nah = Math.Sqrt(Math.Pow(p.X - innen.StartX, 2) + Math.Pow(p.Z - innen.StartZ, 2)) <= Wege.Reichweite;
+            Assert.True(nah || innen.Weg(innen.StartX, innen.StartZ, p.X, p.Z, Wege.Reichweite).Count > 0, p.Id + " nicht erreichbar");
+        }
+        // der Python-Grundriss selbst bleibt unveraendert (Zusatz nur in einer Kopie)
+        var python = SpielDaten.Kundenorte(Inhalt).Single(k => Py.Gleich(k["id"], "talheim"));
+        Assert.Contains("gleis", Deko(SpielDaten.Objekt(python["gebaeude"])).Select(d => Py.Str(d["typ"])));
+    }
+
     internal static IEnumerable<PyObjekt> Deko(PyObjekt gebaeude) =>
         SpielDaten.Liste(gebaeude["raeume"]).Select(SpielDaten.Objekt).SelectMany(r => SpielDaten.ListeOderLeer(r, "deko"))
             .Concat(SpielDaten.ListeOderLeer(SpielDaten.Objekt(gebaeude["flur"]), "deko")).Select(SpielDaten.Objekt);

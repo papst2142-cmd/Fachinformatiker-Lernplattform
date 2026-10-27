@@ -17,7 +17,8 @@ namespace Lernplattform.Tests;
 public class SpielStadtTests
 {
     /// <summary>Zweiter Fingerabdruck (nur C#): Szenario <see cref="StadtSzenario"/>, Ereignisse und Werte.</summary>
-    internal const string SollStadtHash = "86ac8f1907ea9f67f2bba91f4cb4003c9042894de2f99d1e8e87c1d1872e59ac";
+    /// <remarks>Neu seit Phase 8 W8b (Weisung P8-20, Nico 1a: neuer Weg zum Bahnhof), vorher 86ac8f19...59ac.</remarks>
+    internal const string SollStadtHash = "03d0a0128b76991c5eb81f165e190119a8cb5ed4bd615a1354554b6a3cb54dfb";
 
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_stadt.json");
 
@@ -155,6 +156,8 @@ public class SpielStadtTests
             ("amt: Sortiment nur fuer Geschaefte", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[2]!, "sortiment", "moebel"))),
             ("bank: unbekannte Rolle bank", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[3]!, "rolle", "bank"))),
             ("elektromarkt: unbekanntes Feld kurz", Kaputt(d => Py.Setzen((PyObjekt)((List<object?>)d["neue_orte"]!)[1]!, "kurz", "Elektro"))),
+            ("zugaenge_neu ersetzt keinen Zugang: kino", Kaputt(d => Py.Setzen(O(d, "zugaenge_neu"), "kino", Py.Kopie(O(O(d, "zugaenge_neu"), "talheim"))))),
+            ("gewerbehof: Tuer liegt nicht auf einem Weg", Kaputt(d => Py.Setzen(O(O(d, "zugaenge_neu"), "gewerbehof"), "tuer", new List<object?> { 19.4, 14.6 }))),
             ("talheim_nord: von zuhause aus nicht erreichbar", Kaputt(d =>
                 Py.Setzen(O(O(d, "zugaenge"), "talheim_nord"), "weg", new List<object?> { new List<object?> { 30.2, 5.55 }, new List<object?> { 30.2, 6.5 } }))),
         };
@@ -189,8 +192,9 @@ public class SpielStadtTests
         }
         Assert.Null(stadt.Weg("zuhause", "kino"));
         // feste Werte (Schritte ab zu Hause); aendern sie sich, aendert sich die Spielzeit der Wege
-        var soll = "bitweiche 30, talheim 46, talheim_nord 51, betriebswerkstatt 20, lindenau 67, birkenhain 56, "
-            + "gewerbehof 31, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9, amt 53, bank 46, kaufhaus 5";
+        // W8b (Weisung P8-20, Nico 1a): Bahnhof 46 -> 45 (Tuer an der Suedwand), Gewerbehof 31 -> 34 (Tuer an der Westwand)
+        var soll = "bitweiche 30, talheim 45, talheim_nord 51, betriebswerkstatt 20, lindenau 67, birkenhain 56, "
+            + "gewerbehof 34, filiale 82, lokschuppen 80, moebelhaus 27, elektromarkt 9, amt 53, bank 46, kaufhaus 5";
         var ist = string.Join(", ", ids.Skip(1).Select(b => b + " " + stadt.Weg("zuhause", b)!.Schritte));
         Assert.True(soll == ist, "Schritte ab zu Hause: " + ist);
     }
@@ -213,7 +217,7 @@ public class SpielStadtTests
         var bahnen = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(Inhalt["orte"])["welt"]), "landschaft")
             .Select(SpielDaten.Objekt).Where(l => Py.Str(l["typ"]) == "bahn").Select(l => Punkte(l["punkte"])).ToList();
         Assert.NotEmpty(bahnen);
-        foreach (var (id, zugang) in SpielDaten.Objekt(Daten.Value["zugaenge"]))
+        foreach (var (id, zugang) in NeueStadt().Zugaenge)
         {
             var weg = Punkte(SpielDaten.Objekt(zugang)["weg"]);
             var querungen = 0;

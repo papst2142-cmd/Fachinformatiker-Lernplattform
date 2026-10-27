@@ -29,6 +29,9 @@ public sealed record StadtOrt(string Id, string Name, string Kurz, string Rolle,
 /// <see cref="StadtSzene.Stuecke"/>) und seinem Kasten: steht die Figur dahinter, zeichnet die
 /// Darstellung es halb durchsichtig (Sammelliste 102, W5).
 /// </summary>
+/// <summary>W8b: Tuer eines Orts auf der Wand (Mitte), Richtung nach aussen, Anfang des Fusswegs; Modell = Tuer des CC0-Modells.</summary>
+public sealed record StadtTuer(string Ort, Vector2 Mitte, Vector2 Aussen, Vector2 WegAnfang, bool Modell);
+
 public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int StueckeVon, int StueckeBis, Vector3 Min, Vector3 Max);
 
 /// <summary>
@@ -374,12 +377,14 @@ public sealed class StadtSzene
         var gleise = new List<List<Vector2>>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
-        var zugangswege = Objekt(stadt.Daten["zugaenge"]).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
+        zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
         // Nachtrag 1 zu P7-13 (Chat, Foto 02): gezeichnet (mit Bahnuebergang) wird nur der Fussweg eines
         // sichtbaren Orts; Weg zu Talheim-Nord und zur Werkstatt erscheinen mit dem Ort (Tag 12 bzw. 22),
         // vorher lag er als Ring ohne Ziel auf der Wiese. Laufraster und Baumsperren nutzen alle Wege.
         var sichtbareOrte = stadt.Orte(stand).Select(o => Py.Str(o["id"])).ToHashSet();
-        var sichtbareWege = Objekt(stadt.Daten["zugaenge"]).Where(z => sichtbareOrte.Contains(z.Key)).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
+        var sichtbareWege = stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         var bruecken = new List<Vector2>();
         var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
@@ -441,7 +446,7 @@ public sealed class StadtSzene
                 teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
             }
         }
-        foreach (var (_, zugang) in Objekt(stadt.Daten["zugaenge"]).Where(z => sichtbareOrte.Contains(z.Key)))
+        foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
         {
             Linie(teile, Punkte(Objekt(zugang)["weg"]), Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
         }
@@ -478,6 +483,24 @@ public sealed class StadtSzene
             }
             signatur.Add(modell + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
+        // W8b (Nico 3a): Haeuser ohne Ort (Stellwerk) mit Gehweg zur Strasse, Tuer und Namensschild, nicht betretbar
+        var zierhaeuser = new List<StadtZierhaus>();
+        var tueren = new List<StadtTuer>();
+        foreach (var zier in StadtTueren.Zierwege(stadt))
+        {
+            var weg = Vektoren(zier["weg"]);
+            Linie(teile, [.. weg.Select(v => (v.X, v.Y))], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+            if (haeuser.FirstOrDefault(h => h.Id.StartsWith(Py.Str(zier["modell"]) + "#", StringComparison.Ordinal)) is not { } haus)
+            {
+                continue;
+            }
+            var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, Vektoren(new List<object?> { zier["tuer"] })[0]);
+            StadtTueren.Tuer(teile, wand.X + (aussen.X * 0.005f), wand.Y + (aussen.Y * 0.005f), aussen, MathF.Min(TuerHoehe, haus.Max.Y * 0.7f));
+            tueren.Add(new StadtTuer(Py.Str(zier["modell"]), wand, aussen, weg[0], false));
+            var ende = weg[^1];
+            zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((haus.Min.X + haus.Max.X) / 2, haus.Max.Y + 0.55f, (haus.Min.Z + haus.Max.Z) / 2),
+                haus.Min, haus.Max, ende.X, ende.Y));
+        }
         var orte = new List<StadtOrt>();
         foreach (var ort in stadt.Orte(stand))
         {
@@ -488,18 +511,43 @@ public sealed class StadtSzene
             var rolle = ort["rolle"] as string ?? "";
             var vorher = stuecke.Count;
             var teileVorher = teile.Count;
-            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume);
+            var hindernisVorher = hindernisse.Count;
+            var modellTuer = StadtTueren.ModellVersatz(stadt, id);
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
                 : ((min.X + max.X) / 2, max.Z);
-            // Tuer: kleines Rechteck, wo der Fussweg die Front trifft; liegt die Tuer hinten (Moebelhaus:
-            // Zugang von der Strasse noerdlich), sitzt sie an der Rueckseite
-            var vorne = tz >= (min.Z + max.Z) / 2;
-            var seite = vorne ? max.Z : min.Z;
-            // (CC0-Haeuser haben eigene Tueren)
-            if (!mitGrafik)
+            if (Get(stadt.Zugaenge, id) is PyObjekt zugang)
             {
+                // W8b (Nico 4a): die Tuer sitzt genau am Anfang des Fusswegs auf der naechsten Wand des Hauses
+                // (Bloecke dieses Orts); bleibt eine Luecke, laeuft der Gehweg bis an die Wand
+                var anfang = Vektoren(zugang["weg"])[0];
+                (tx, tz) = (anfang.X, anfang.Y);
+                var bloecke = hindernisse.Skip(hindernisVorher).ToList();
+                if (bloecke.Count > 0)
+                {
+                    var block = bloecke.MinBy(bk => Kurve.Abstand(anfang, [new((float)bk.Item1, (float)bk.Item2), new((float)bk.Item3, (float)bk.Item2),
+                        new((float)bk.Item3, (float)bk.Item4), new((float)bk.Item1, (float)bk.Item4), new((float)bk.Item1, (float)bk.Item2)]));
+                    var (wand, aussen) = StadtTueren.Wand(new Vector3((float)block.Item1, 0, (float)block.Item2), new Vector3((float)block.Item3, max.Y, (float)block.Item4), anfang);
+                    if (sichtbareOrte.Contains(id) && Vector2.Distance(wand, anfang) > 0.02f)
+                    {
+                        Linie(teile, [(anfang.X, anfang.Y), (wand.X, wand.Y)], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+                    }
+                    tueren.Add(new StadtTuer(id, wand, aussen, anfang, modellTuer is not null && mitGrafik));
+                    if (modellTuer is null || !mitGrafik)
+                    {
+                        // niedrige Haeuser (Kiosk, Bahnhof) bekommen eine niedrigere Tuer
+                        var hBlock = sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")).Select(t => Zahl(t.Teil, "h")).DefaultIfEmpty(1f).Max();
+                        StadtTueren.Tuer(teile, wand.X + (aussen.X * 0.005f), wand.Y + (aussen.Y * 0.005f), aussen, MathF.Min(TuerHoehe, hBlock * 0.7f));
+                    }
+                }
+            }
+            else if (!mitGrafik)
+            {
+                // ohne Fussweg: kleines Rechteck vorne oder hinten an der Front
+                var vorne = tz >= (min.Z + max.Z) / 2;
+                var seite = vorne ? max.Z : min.Z;
                 teile.Add(Quader(tx - (TuerBreite / 2), 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + (TuerBreite / 2), TuerHoehe, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
             }
             if (min.X <= max.X)
@@ -561,6 +609,8 @@ public sealed class StadtSzene
             FestGesetzt = festGesetzt,
             GruenKlein = gruen,
             Strassen = strassen,
+            Zierhaeuser = zierhaeuser,
+            Tueren = tueren,
         };
     }
 
@@ -569,7 +619,7 @@ public sealed class StadtSzene
     /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
     private static (float X, float Z) Stehplatz(Stadt stadt, string id, float tx, float tz)
     {
-        if (Get(Objekt(stadt.Daten["zugaenge"]), id) is not PyObjekt zugang)
+        if (Get(stadt.Zugaenge, id) is not PyObjekt zugang)
         {
             return (tx, tz);
         }
@@ -913,6 +963,12 @@ public sealed class StadtSzene
     /// <summary>Mittellinien der Strassen (fuer die Autos, Phase 8 W7).</summary>
     public IReadOnlyList<IReadOnlyList<Vector2>> Strassen { get; private init; } = [];
 
+    /// <summary>W8b: Tueren der Orte mit Fussweg (eigene aus Kaesten oder die des CC0-Modells).</summary>
+    public IReadOnlyList<StadtTuer> Tueren { get; private init; } = [];
+
+    /// <summary>W8b: Haeuser ohne Ort mit Gehweg, Tuer und Namensschild (nicht betretbar).</summary>
+    public IReadOnlyList<StadtZierhaus> Zierhaeuser { get; private init; } = [];
+
     /// <summary>Netz des Kleingruens (nur in der Naehe gezeichnet), null = keins.</summary>
     public Netz? GruenNetzBauen()
     {
@@ -965,7 +1021,7 @@ public sealed class StadtSzene
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
         List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
-        BaumPlaner baeume)
+        BaumPlaner baeume, float versatz = 0f)
     {
         var bloecke = new List<Block>();
         foreach (var (_, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
@@ -1009,7 +1065,8 @@ public sealed class StadtSzene
                     if (grafik is not null && grafik.Bloecke.TryGetValue(modellName + ":" + teilNr.ToString(CultureInfo.InvariantCulture), out var grafikName)
                         && grafik.Modell(grafikName) is { } gm)
                     {
-                        var hoch = GrafikBlock(stuecke, gm, x, y, w, t, h);
+                        // W8b: Versatz, damit die eigene Tuer des Modells auf dem Fussweg sitzt (Kasten bleibt)
+                        var hoch = GrafikBlock(stuecke, gm, x + versatz, y, w, t, h);
                         Kasten(x, 0, y, x + w, hoch, y + t);
                         break;
                     }
@@ -1057,6 +1114,28 @@ public sealed class StadtSzene
                                 var fx = x + 0.25f + (spalte * zelleB);
                                 var an = Licht(seed + "|" + nr, (zeile * spalten) + spalte, anteil);
                                 teile.Add(Quader(fx, unten, y + t, fx + zelleB - 0.25f, oben, y + t + 0.03f, an ? lichtfarbe : Farben.Fenster));
+                                // W8b (Nico 5a): Fenster ringsum, auch an der Rueckseite
+                                var hinten = Licht(seed + "|" + nr + "|r", (zeile * spalten) + spalte, anteil);
+                                teile.Add(Quader(fx, unten, y - 0.03f, fx + zelleB - 0.25f, oben, y, hinten ? lichtfarbe : Farben.Fenster));
+                            }
+                        }
+                        // und an beiden Seiten (Spalten je 0,8 der Tiefe)
+                        var seitenSpalten = Math.Max(1, (int)(t / 0.8f));
+                        var zelleT = (t - 0.3f) / seitenSpalten;
+                        for (var zeile = 0; zeile < zeilen; zeile++)
+                        {
+                            for (var spalte = 0; spalte < seitenSpalten; spalte++)
+                            {
+                                var oben = h - 0.2f - (zeile * zelleH);
+                                var unten = oben - (zelleH - 0.3f);
+                                if (oben > wandHoehe - 0.05f || unten < 0.1f)
+                                {
+                                    continue;
+                                }
+                                var fz = y + 0.25f + (spalte * zelleT);
+                                var an = Licht(seed + "|" + nr + "|s", (zeile * seitenSpalten) + spalte, anteil);
+                                teile.Add(Quader(x - 0.03f, unten, fz, x, oben, fz + zelleT - 0.25f, an ? lichtfarbe : Farben.Fenster));
+                                teile.Add(Quader(x + w, unten, fz, x + w + 0.03f, oben, fz + zelleT - 0.25f, an ? lichtfarbe : Farben.Fenster));
                             }
                         }
                     }
@@ -1198,7 +1277,8 @@ public sealed class StadtSzene
         var skala = ZugBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X);
         var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
         // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
-        var pos = ((l - gesamt) / 2) + gesamt;
+        // W8b (Nico 2a): der Zug haelt am Ostende des Bahnsteigs, der Fussweg zum Bahnhof quert das Gleis im Westen
+        var pos = e.X > 0 ? l - 0.1f : gesamt + 0.1f;
         foreach (var w in wagen)
         {
             var lang = (w!.Max.Z - w.Min.Z) * skala;

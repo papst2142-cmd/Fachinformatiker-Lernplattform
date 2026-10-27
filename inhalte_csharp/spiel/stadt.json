@@ -56,5 +56,17 @@
     "amt": [{"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 1.6, "dach": "sattel", "licht": 0.3}, {"art": "schild", "x": 0.4, "y": 1.1, "w": 2.4}],
     "bank": [{"art": "block", "x": 0, "y": 0, "w": 2.8, "t": 1.6, "h": 1.8, "licht": 0.5}, {"art": "schild", "x": 0.3, "y": 1.0, "w": 2.2}],
     "kaufhaus": [{"art": "block", "x": 0, "y": 0, "w": 3.2, "t": 1.8, "h": 2.0, "licht": 0.5}, {"art": "schild", "x": 0.4, "y": 1.1, "w": 2.4}]
+  },
+  "zugaenge_neu": {
+    "_hinweis": "Phase 8 W8b (Weisung P8-20, Nico 1a): ersetzt den Zugang dieses Orts aus zugaenge; Bahnhof mit Tuer an der Suedwand des Empfangsgebaeudes, Gewerbehof mit Tuer an der Westwand.",
+    "talheim": {"tuer": [19.9, 9.3], "weg": [[19.9, 9.3], [19.9, 11.2], [18.4, 11.2]]},
+    "gewerbehof": {"tuer": [19.4, 14.0], "weg": [[19.4, 14.0], [18.4, 14.0]]}
+  },
+  "darstellung": {
+    "_hinweis": "Phase 8 W8b (Weisung P8-20): nur Darstellung, nicht im Stadt-Raster. modell_tuer: Versatz des CC0-Modells in x, damit seine eigene Tuer auf dem Fussweg sitzt (alle anderen Orte bekommen eine eigene Tuer aus Kaesten). zierwege: Gehweg und Tuer an einem Haus ohne Ort, mit Namensschild (nicht betretbar).",
+    "modell_tuer": {"elektromarkt": 0, "moebelhaus": -0.42, "betriebswerkstatt": 0, "talheim_nord": -0.33},
+    "zierwege": [
+      {"name": "Stellwerk", "modell": "stellwerk", "tuer": [17.25, 14.0], "weg": [[17.25, 14.0], [17.25, 14.45], [18.4, 14.45]]}
+    ]
   }
 }

@@ -408,17 +408,20 @@ public class SpielProbeTests
     {
         var szene = NeuesSpiel().Szene;
         // Strasse x = 7,5 kreuzt das Gleis einmal; Fusswege Birkenhain (Park) und Talheim Nord (seit
-        // Nachtrag 1 zu P7-12, Wunsch 3, quert der Weg vom Bahnhof das Gleis nur noch einmal, am Bahnhof)
+        // Nachtrag 1 zu P7-12, Wunsch 3, quert der Weg vom Bahnhof das Gleis nur noch einmal, am Bahnhof);
+        // seit W8b (Nico 1a) quert auch der Weg vom Bahnhof Talheim das Gleis einmal (x 19,9, Tuer an der Suedwand)
         Assert.Single(szene.Uebergaenge, u => u.Strasse);
         var strasse = szene.Uebergaenge.Single(u => u.Strasse).Mitte;
         Assert.Equal(7.5f, strasse.X, 3);
         // Nachtrag 1 zu P7-13 (Foto 02): an Tag 1 sind Birkenhain und Talheim-Nord noch nicht da, also
-        // auch ihre Fusswege und Uebergaenge nicht; ab Tag 66 sind beide da
-        Assert.DoesNotContain(szene.Uebergaenge, u => !u.Strasse);
+        // auch ihre Fusswege und Uebergaenge nicht; ab Tag 66 sind beide da. Der Bahnhof ist ab Tag 1 da.
+        var tag1 = szene.Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
+        Assert.True(tag1.Count == 1 && MathF.Abs(tag1[0].X - 19.9f) < 0.01f, string.Join("; ", tag1));
         var spaet = NeuesSpiel();
         spaet.Ablauf.Stand.TageFertig = 65;
         var wege = StadtSzene.Bauen(spaet.Stadt, spaet.Ablauf.Stand).Uebergaenge.Where(u => !u.Strasse).Select(u => u.Mitte).ToList();
-        Assert.True(wege.Count == 2, string.Join("; ", wege));
+        Assert.True(wege.Count == 3, string.Join("; ", wege));
+        Assert.Contains(wege, w => MathF.Abs(w.X - 19.9f) < 0.01f);
         Assert.Contains(wege, w => MathF.Abs(w.X - 12.6f) < 0.01f);
         Assert.Contains(wege, w => MathF.Abs(w.X - 30.2f) < 0.01f && w.Y < 6.5f);
         // Bruecken: Strasse x = 7,5 und die Hauptstrasse y = 20,8 ueber den Fluss
@@ -478,7 +481,7 @@ public class SpielProbeTests
         var strassen = SpielDaten.ListeOderLeer(welt, "landschaft").Select(SpielDaten.Objekt).Where(t => Py.Gleich(t["typ"], "strasse"))
             .Select(t => SpielDaten.Liste(t["punkte"]).Select(SpielDaten.Liste).Select(q => new Vector2((float)Py.F(q[0]), (float)Py.F(q[1]))).ToList()).ToList();
         // Fusswege von der Tuer zur Strasse (stadt.json) queren das Gleis wie Strassen (Haltepunkt Birkenhain)
-        strassen.AddRange(SpielDaten.Objekt(SpielStadtTests.Daten.Value["zugaenge"]).Select(z => SpielDaten.Liste(SpielDaten.Objekt(z.Value)["weg"])
+        strassen.AddRange(NeueStadt().Zugaenge.Select(z => SpielDaten.Liste(SpielDaten.Objekt(z.Value)["weg"])
             .Select(SpielDaten.Liste).Select(q => new Vector2((float)Py.F(q[0]), (float)Py.F(q[1]))).ToList()));
         var fluss = Kurve.Glatt(Linie("fluss"));
         var bahn = Kurve.Glatt(Linie("bahn"));
@@ -582,7 +585,11 @@ public class SpielProbeTests
     {
         var spiel = NeuesSpiel();
         var talheim = spiel.Szene.Ort("talheim")!;
-        Assert.True(talheim.StehZ > 11.0f, "Stehplatz am Bahnhof auf dem Fussweg, nicht am Gleis: " + talheim.StehZ);
+        // W8b (Weisung P8-20, Nico 1a): die Tuer sitzt an der Suedwand des Bahnhofs (z 9,3), der Fussweg quert
+        // das Gleis nach Sueden; der Stehplatz liegt auf dem Fussweg vor der Tuer, noch vor dem Bahnsteig (ab z 9,7)
+        // und nicht am Gleis (vorher: Tuer suedlich des Gleises, Stehplatz z > 11,0)
+        Assert.Equal(19.9f, talheim.StehX, 3);
+        Assert.True(talheim.StehZ > 9.3f && talheim.StehZ < 9.7f, "Stehplatz am Bahnhof auf dem Fussweg vor der Tuer, nicht am Gleis: " + talheim.StehZ);
         Assert.Equal(StadtGrund.Ok, spiel.GeheZu("talheim"));
         spiel.SofortAnkommen();
         Assert.Equal((talheim.StehX, talheim.StehZ), (spiel.FigurX, spiel.FigurZ));
