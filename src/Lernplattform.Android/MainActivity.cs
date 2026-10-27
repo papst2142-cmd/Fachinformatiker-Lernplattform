@@ -118,11 +118,11 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnPause()
     {
+        Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
+        Lernplattform.Programm.Zustand.EingabenSpeichern();
 #if PROBE
         _tonprobe.Aufraeumen();
 #endif
-        Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
-        Lernplattform.Programm.Zustand.EingabenSpeichern();
         base.OnPause();
     }
 
