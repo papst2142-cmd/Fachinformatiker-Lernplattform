@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.16.0** auf Zweig `claude/project-thread-ewf1qn` (Phase 8 W6 Festzeiten, PR als Entwurf, Weisung P8-12). Auf `main` **A 0.15.0** (6aa5556, PR #57). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
+| Version | **A 0.16.0** auf `main` (1993ad7, PR #58, Phase 8 W6 Festzeiten, Weisung P8-12), davor A 0.15.0 (6aa5556, PR #57). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
 | Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 Prüfstand (#51), W2 Eingaben A 0.13.1 (#52), W2b Seitenleiste/Optionen A 0.13.2 (#53), W3 Spiel-Abgleich A 0.14.0 (#54), W4 Spiel-Tempo A 0.14.1 (#55), Fix Worttrennung A 0.14.2 (#56), W5 Kaufhaus A 0.15.0 (#57) gemergt |
 | Jetzt | **W6 Festzeiten (A 0.16.0, Teilplan `Fi-Austausch/anlagen/P8-11_Teilplan_Festzeiten.md`, Nico 1a–5a):** Ostern, Halloween, Weihnachten, Silvester nach dem Gerätedatum (`Festzeit.Heute()` einzige Stelle, Schalter `LERNPLATTFORM_DATUM`, `lauf.sh` setzt 2026-06-15), Deko in Stadt, Park und Innenräumen nur angehängt (`festzeiten.json`, `FestDeko.cs`), Festkleidung im Kaufhaus (nur in der Festzeit kaufbar, behalten immer), Kranz und Laterne an den Türen als eigene einfache Form (Dreiecksgrenze der Gesamtansicht). Wartet auf Nicos Merge-OK |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`). Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Fingerabdrücke f2b59ce8, 86ac8f19, 185dee1b, a3ec3cdf unverändert (Tests ohne Festzeit) |
 | Letzte/nächste Meldung | **P8-12** (W6 Festzeiten) / P8-13 |
-| Sammelliste | nächste freie Nummer **129**; offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
+| Sammelliste | nächste freie Nummer **131** (130 aus P8-12, 129 Bäume W7); offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
 ## 4. So arbeitet der neue Chat
