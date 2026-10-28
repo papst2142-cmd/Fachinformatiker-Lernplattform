@@ -63,8 +63,8 @@
     "gewerbehof": {"tuer": [19.4, 14.0], "weg": [[19.4, 14.0], [18.4, 14.0]]}
   },
   "darstellung": {
-    "_hinweis": "Phase 8 W8b (Weisung P8-20): nur Darstellung, nicht im Stadt-Raster. modell_tuer: Versatz des CC0-Modells in x, damit seine eigene Tuer auf dem Fussweg sitzt (alle anderen Orte bekommen eine eigene Tuer aus Kaesten). zierwege: Gehweg und Tuer an einem Haus ohne Ort, mit Namensschild (nicht betretbar).",
-    "modell_tuer": {"elektromarkt": 0, "moebelhaus": -0.42, "betriebswerkstatt": 0, "talheim_nord": -0.33},
+    "_hinweis": "Phase 8 W8b (Weisung P8-20): nur Darstellung, nicht im Stadt-Raster. modell_tuer: Versatz des CC0-Modells in x, damit seine eigene Tuer mittig auf dem Fussweg sitzt (P8-30 nachgemessen, StadtTuerenTests.ModellTuerMittig) (alle anderen Orte bekommen eine eigene Tuer aus Kaesten). zierwege: Gehweg und Tuer an einem Haus ohne Ort, mit Namensschild (nicht betretbar).",
+    "modell_tuer": {"elektromarkt": -0.031, "moebelhaus": -0.415, "betriebswerkstatt": 0, "talheim_nord": -0.463},
     "zierwege": [
       {"name": "Stellwerk", "modell": "stellwerk", "tuer": [17.25, 14.0], "weg": [[17.25, 14.0], [17.25, 14.45], [18.4, 14.45]]}
     ]

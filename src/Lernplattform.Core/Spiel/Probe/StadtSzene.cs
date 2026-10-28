@@ -504,9 +504,11 @@ public sealed class StadtSzene
         var umgefaerbt = new Dictionary<int, GrafikModell>();
         // P8-28 (Nico: Tueren sitzen nicht am Haus, Fenster halb verdeckt): Tuer auf die echte Wand des CC0-Modells
         // (gemessen, StadtTueren.Wandtiefe), Gehweg bis dorthin, Rahmen nach hinten bis an die Wand, Fenster an der
-        // Tuer weg (Glas der Modelle in Wandfarbe, eigene Fensterscheiben in der Farbe ihres Blocks)
+        // Tuer weg (Glas der Modelle in Wandfarbe, eigene Fensterscheiben in der Farbe ihres Blocks); P8-30: Tueren der
+        // Modelle daneben und an den Seitenwaenden samt Rahmen in Wandfarbe (nur eine Tuer je Haus), kein eigenes
+        // Vordach unter einem Dach des Modells
         StadtTuer TuerSetzen(string ort, Vector2 wand, Vector2 aussen, Vector2 anfang, float hoehe, bool modellTuer, bool gehweg,
-            int stueckeVon, int stueckeBis, List<(int Teil, Vector3 Wand)> fenster)
+            int stueckeVon, int stueckeBis, List<(int Teil, Vector3 Wand)> fenster, Vector3 hausMin, Vector3 hausMax)
         {
             var (tiefe, hinten) = grafik is not null && stueckeBis > stueckeVon
                 ? StadtTueren.Wandtiefe(stuecke.GetRange(stueckeVon, stueckeBis - stueckeVon), grafik, wand, aussen, hoehe) ?? (0f, 0f)
@@ -520,10 +522,14 @@ public sealed class StadtSzene
             {
                 return new StadtTuer(ort, mitte, aussen, anfang, true, hoehe, 0f);
             }
-            StadtTueren.Tuer(teile, mitte.X + (aussen.X * 0.005f), mitte.Y + (aussen.Y * 0.005f), aussen, hoehe, hinten);
+            var vordach = grafik is null || stueckeBis == stueckeVon
+                || !StadtTueren.Ueberdacht(stuecke.GetRange(stueckeVon, stueckeBis - stueckeVon), grafik, mitte, aussen, hoehe);
+            StadtTueren.Tuer(teile, mitte.X + (aussen.X * 0.005f), mitte.Y + (aussen.Y * 0.005f), aussen, hoehe, hinten, vordach);
             if (grafik is not null)
             {
                 StadtTueren.FensterWeg(stuecke, stueckeVon, stueckeBis, grafik, umgefaerbt, mitte, aussen, hoehe, hinten);
+                StadtTueren.TuerenWeg(stuecke, stueckeVon, stueckeBis, grafik, umgefaerbt, mitte, aussen);
+                StadtTueren.SeitenTuerenWeg(stuecke, stueckeVon, stueckeBis, grafik, umgefaerbt, aussen, hausMin, hausMax);
             }
             foreach (var (nr, wandFarbe) in fenster)
             {
@@ -546,7 +552,7 @@ public sealed class StadtSzene
             }
             var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, Vektoren(new List<object?> { zier["tuer"] })[0]);
             tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, weg[0], MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), false, true,
-                haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? []));
+                haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? [], haus.Min, haus.Max));
             var ende = weg[^1];
             zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((haus.Min.X + haus.Max.X) / 2, haus.Max.Y + 0.55f, (haus.Min.Z + haus.Max.Z) / 2),
                 haus.Min, haus.Max, ende.X, ende.Y));
@@ -584,7 +590,7 @@ public sealed class StadtSzene
                     // niedrige Haeuser (Kiosk, Bahnhof) bekommen eine niedrigere Tuer
                     var hBlock = sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")).Select(t => Zahl(t.Teil, "h")).DefaultIfEmpty(1f).Max();
                     tueren.Add(TuerSetzen(id, wand, aussen, anfang, MathF.Min(TuerHoehe, hBlock * 0.7f), modellTuer is not null && mitGrafik,
-                        sichtbareOrte.Contains(id), vorher, stuecke.Count, fenster));
+                        sichtbareOrte.Contains(id), vorher, stuecke.Count, fenster, min, max));
                 }
             }
             else if (!mitGrafik)

@@ -38,6 +38,9 @@ public sealed class StadtTuerenTests
     /// <summary>Grenze fuer den Spalt zwischen Tuer und Wand (Weisung P8-28, Vorschlag: 0,02 = 10 cm).</summary>
     internal const float SpaltGrenze = 0.02f;
 
+    /// <summary>Grenze fuer den Versatz zwischen Mitte des Gehwegs und Mitte der sichtbaren Tuer (Weisung P8-30: 0,02).</summary>
+    internal const float MittigGrenze = 0.02f;
+
     public static TheoryData<bool> MitGrafik => [true, false];
 
     [Theory]
@@ -64,7 +67,10 @@ public sealed class StadtTuerenTests
             Assert.Equal(mitGrafik && StadtTueren.ModellVersatz(stadt, id) is not null, tuer.Modell);
             if (!tuer.Modell)
             {
-                Assert.True(TuerTeile(szene, tuer) >= 7, id + ": keine eigene Tuer aus Kaesten");
+                // 7 Kaesten, ohne Vordach unter einem Dach des Modells 6 (P8-30)
+                var soll = mitGrafik && Ueberdacht(szene, tuer) ? 6 : 7;
+                Assert.True(TuerTeile(szene, tuer) >= soll, id + ": keine eigene Tuer aus Kaesten");
+                Assert.Equal(soll == 7, VordachTeile(szene, tuer) == 1);
             }
         }
         // jede Modell-Tuer aus stadt.json gehoert zu einem Ort mit Fussweg
@@ -80,10 +86,11 @@ public sealed class StadtTuerenTests
         Assert.NotEmpty(szene.Tueren);
         foreach (var tuer in szene.Tueren)
         {
-            // Mitte der Tuer und Anfang (Tuer-Ende) des Fusswegs hoechstens 0,05 auseinander, quer zur Wand gemessen
+            // Mitte der Tuer und Anfang (Tuer-Ende) des Fusswegs hoechstens 0,02 auseinander, quer zur Wand gemessen
+            // (P8-30: vorher 0,05; die Mitte der Modell-Tueren prueft ModellTuerMittig)
             var quer = new Vector2(-tuer.Aussen.Y, tuer.Aussen.X);
             var versatz = MathF.Abs(Vector2.Dot(tuer.WegAnfang - tuer.Mitte, quer));
-            Assert.True(versatz <= 0.05f, tuer.Ort + ": Gehweg nicht mittig (" + versatz + ")");
+            Assert.True(versatz <= MittigGrenze, tuer.Ort + ": Gehweg nicht mittig (" + versatz + ")");
             // der Gehweg reicht bis an die Wand: liegt sein Anfang vor der Wand, fuehrt ein Stueck Gehweg bis zur Tuer
             var luecke = Vector2.Dot(tuer.WegAnfang - tuer.Mitte, tuer.Aussen);
             Assert.True(luecke >= -0.05f, tuer.Ort + ": Gehweg beginnt im Haus (" + luecke + ")");
@@ -179,6 +186,96 @@ public sealed class StadtTuerenTests
         Assert.True(geprueft >= 10, "zu wenige Tueren geprueft: " + geprueft);
     }
 
+    /// <summary>
+    /// Weisung P8-30 (Nico: "Talheim Nord ist der Gehweg z.B. nicht mittig an der Tuer sondern versetzt"): bei Haeusern,
+    /// deren CC0-Modell die Tuer stellt, liegt die Mitte dieser Tuer (dunkles Rechteck aus Rahmen und Fluegeln, beim
+    /// Rolltor der Werkstatt jede Farbe) hoechstens <see cref="MittigGrenze"/> neben der Mitte des Gehwegs.
+    /// </summary>
+    [Fact]
+    public void ModellTuerMittig()
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), Grafik);
+        var modellTueren = szene.Tueren.Where(t => t.Modell).ToList();
+        Assert.Equal(["betriebswerkstatt", "elektromarkt", "moebelhaus", "talheim_nord"], modellTueren.Select(t => t.Ort).Order());
+        foreach (var tuer in modellTueren)
+        {
+            var haus = szene.Haeuser.Single(h => h.Id == tuer.Ort);
+            var quer = new Vector2(-tuer.Aussen.Y, tuer.Aussen.X);
+            var weg = Vector2.Dot(tuer.WegAnfang - tuer.Mitte, quer);
+            var gefunden = StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen)
+                .Where(m => m.A1 < weg && m.A2 > weg).ToList();
+            if (gefunden.Count == 0)
+            {
+                gefunden = [.. StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen, hell: true)
+                    .Where(m => m.A1 < weg && m.A2 > weg)];
+            }
+            var modellTuer = Assert.Single(gefunden.DistinctBy(m => (MathF.Round(m.A1, 2), MathF.Round(m.A2, 2))));
+            var versatz = MathF.Abs(modellTuer.Mitte - weg);
+            Assert.True(versatz <= MittigGrenze, tuer.Ort + ": Gehweg nicht mittig an der Modell-Tuer (" + versatz.ToString("0.000", CultureInfo.InvariantCulture) + ")");
+        }
+    }
+
+    /// <summary>
+    /// Weisung P8-30 (Nico: "bei einigen Tueren sind dann versetzt noch die Hintergrundtuer zu sehen"): neben einer
+    /// eigenen Glastuer ist keine Tuer des CC0-Modells mehr zu sehen (bis <see cref="StadtTueren.NebenTuerWeite"/> seitlich,
+    /// sie hat die Wandfarbe); vorher hatten Stellwerk und Bahnhof Talheim je eine.
+    /// </summary>
+    [Fact]
+    public void EineTuerJeHaus()
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), Grafik);
+        var geprueft = 0;
+        foreach (var tuer in szene.Tueren.Where(t => !t.Modell))
+        {
+            var haus = szene.Haeuser.FirstOrDefault(h => h.Id == tuer.Ort || h.Id.StartsWith(tuer.Ort + "#", StringComparison.Ordinal));
+            if (haus is null || haus.StueckeBis == haus.StueckeVon)
+            {
+                continue;
+            }
+            var zweite = StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen)
+                .Where(m => m.A2 > -StadtTueren.NebenTuerWeite && m.A1 < StadtTueren.NebenTuerWeite && Sichtbar(szene, m, tuer.Mitte, tuer.Aussen)).ToList();
+            Assert.True(zweite.Count == 0, tuer.Ort + ": zweite Tuer des Modells sichtbar bei " + string.Join(", ", zweite.Select(m => m.Mitte.ToString("0.00", CultureInfo.InvariantCulture))));
+            // auch der Rahmen der alten Tuer ist in Wandfarbe (Stellwerk: grauer Rahmen blieb nach P8-30 erst stehen)
+            foreach (var m in StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, i => Grafik.Modell(szene.Stuecke[i].Name), tuer.Mitte, tuer.Aussen)
+                .Where(m => m.A2 > -StadtTueren.NebenTuerWeite && m.A1 < StadtTueren.NebenTuerWeite))
+            {
+                Assert.False(Sichtbar(szene, m, tuer.Mitte, tuer.Aussen), tuer.Ort + ": Rahmen der Tuer des Modells zu sehen bei " + m.Mitte.ToString("0.00", CultureInfo.InvariantCulture));
+            }
+            geprueft++;
+        }
+        Assert.True(geprueft >= 8, "zu wenige Haeuser geprueft: " + geprueft);
+        // auch an den Seitenwaenden (von schraeg zu sehen) keine Tuer des Modells mehr; vorher hatten Lindenau, Gewerbehof
+        // und Filiale dort Tueren
+        var seiten = 0;
+        foreach (var tuer in szene.Tueren.Where(t => !t.Modell))
+        {
+            var haus = szene.Haeuser.FirstOrDefault(h => h.Id == tuer.Ort || h.Id.StartsWith(tuer.Ort + "#", StringComparison.Ordinal));
+            if (haus is null || haus.StueckeBis == haus.StueckeVon)
+            {
+                continue;
+            }
+            foreach (var (mitte, aussen, weite, tief) in StadtTueren.SeitenWaende(tuer.Aussen, haus.Min, haus.Max))
+            {
+                var roh = StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, i => Grafik.Modell(szene.Stuecke[i].Name), mitte, aussen, weite: weite, tief: tief)
+                    .Where(m => m.A2 > -weite && m.A1 < weite).ToList();
+                seiten += roh.Count;
+                Assert.All(roh, m => Assert.True(Sichtbar(szene, m, mitte, aussen) == false, tuer.Ort + ": Tuer oder Rahmen des Modells an der Seitenwand zu sehen bei " + m.Mitte.ToString("0.00", CultureInfo.InvariantCulture)));
+                var zweite = StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, mitte, aussen, weite: weite, tief: tief)
+                    .Where(m => m.A2 > -weite && m.A1 < weite && Sichtbar(szene, m, mitte, aussen)).ToList();
+                Assert.True(zweite.Count == 0, tuer.Ort + ": Tuer des Modells an der Seitenwand bei " + string.Join(", ", zweite.Select(m => m.Mitte.ToString("0.00", CultureInfo.InvariantCulture))));
+            }
+        }
+        Assert.True(seiten >= 3, "Gegenprobe: zu wenige Tueren an Seitenwaenden vor dem Umfaerben: " + seiten);
+        // die Erkennung findet die Tueren der Modelle (Gegenprobe ohne Umfaerben: Stellwerk und Bahnhof)
+        foreach (var id in new[] { "stellwerk", "talheim" })
+        {
+            var tuer = szene.Tueren.Single(t => t.Ort == id);
+            var haus = szene.Haeuser.First(h => h.Id == id || h.Id.StartsWith(id + "#", StringComparison.Ordinal));
+            Assert.Contains(StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, i => Grafik.Modell(szene.Stuecke[i].Name), tuer.Mitte, tuer.Aussen),
+                m => m.A2 > -StadtTueren.NebenTuerWeite && m.A1 < StadtTueren.NebenTuerWeite);
+        }
+    }
+
     /// <summary>Die CC0-Stuecke des Hauses einer Tuer (Kasten des Orts oder des Stellwerks), leer ohne Modell.</summary>
     private static List<ModellStueck> Stuecke(StadtSzene szene, StadtTuer tuer)
     {
@@ -255,6 +352,42 @@ public sealed class StadtTuerenTests
     private static bool Drin(Teil t, Vector2 p) => t.X1 - 0.01f <= p.X && p.X <= t.X2 + 0.01f && t.Z1 - 0.01f <= p.Y && p.Y <= t.Z2 + 0.01f;
 
     /// <summary>Kaesten der eigenen Tuer (Rahmen, Fluegel, Oberlichter, Stufe, Vordach) dicht an der Tuermitte.</summary>
+    /// <summary>
+    /// Eine Tuer des Modells ist zu sehen, wenn sie nicht ganz in der Farbe ihrer Wand ist (bei dunklen Waenden, z. B.
+    /// am Gewerbehof, bleibt die Wandfarbe dunkel und die Erkennung findet das Rechteck weiter).
+    /// </summary>
+    private static bool Sichtbar(StadtSzene szene, StadtTueren.ModellTuer m, Vector2 mitte, Vector2 aussen) =>
+        !StadtTueren.InWandfarbe(szene.ModellAn(m.Stueck)!, szene.Stuecke[m.Stueck].Lage, m, mitte, aussen);
+
+    /// <summary>Hat das Modell ueber dem Platz vor der Tuer ein eigenes Dach (P8-30)?</summary>
+    private static bool Ueberdacht(StadtSzene szene, StadtTuer tuer) =>
+        Stuecke(szene, tuer) is { Count: > 0 } st && StadtTueren.Ueberdacht(st, Grafik, tuer.Mitte, tuer.Aussen, tuer.Hoehe);
+
+    /// <summary>
+    /// P8-30 (Gewerbehof: eigenes Vordach steckte im gruenen Vordach des Modells): unter einem Dach des Modells kein
+    /// eigenes Vordach, sonst genau eines.
+    /// </summary>
+    [Fact]
+    public void KeinVordachUnterModellDach()
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), Grafik);
+        var ohne = new List<string>();
+        foreach (var tuer in szene.Tueren.Where(t => !t.Modell))
+        {
+            var dach = Ueberdacht(szene, tuer);
+            Assert.True(VordachTeile(szene, tuer) == (dach ? 0 : 1), tuer.Ort + ": Vordach " + VordachTeile(szene, tuer) + ", Dach des Modells " + dach);
+            if (dach)
+            {
+                ohne.Add(tuer.Ort);
+            }
+        }
+        Assert.Contains("gewerbehof", ohne);
+        Assert.True(szene.Tueren.Count(t => !t.Modell) - ohne.Count >= 8, "zu wenige Tueren mit Vordach: " + string.Join(", ", ohne));
+    }
+
+    private static int VordachTeile(StadtSzene szene, StadtTuer tuer) => szene.Teile.Count(t =>
+        Vector2.Distance(new Vector2((t.X1 + t.X2) / 2, (t.Z1 + t.Z2) / 2), tuer.Mitte) < 0.2f && t.Farbe == StadtTueren.Vordach);
+
     private static int TuerTeile(StadtSzene szene, StadtTuer tuer) => szene.Teile.Count(t =>
         Vector2.Distance(new Vector2((t.X1 + t.X2) / 2, (t.Z1 + t.Z2) / 2), tuer.Mitte) < 0.2f
         && (t.Farbe == StadtTueren.Rahmen || t.Farbe == StadtTueren.Glas || t.Farbe == StadtTueren.GlasHell || t.Farbe == StadtTueren.Stufe || t.Farbe == StadtTueren.Vordach));

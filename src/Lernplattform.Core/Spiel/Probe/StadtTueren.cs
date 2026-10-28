@@ -36,7 +36,7 @@ public static class StadtTueren
     /// Tuer aus Kaesten: Mitte (x, z) auf der Wand, Richtung n zeigt nach aussen. Rahmen, zwei Glasfluegel
     /// mit hellem Oberlicht, Stufe davor, Vordach darueber.
     /// </summary>
-    public static void Tuer(List<Teil> teile, float x, float z, Vector2 n, float hoehe, float hinten = 0f)
+    public static void Tuer(List<Teil> teile, float x, float z, Vector2 n, float hoehe, float hinten = 0f, bool vordach = true)
     {
         var b = StadtSzene.TuerBreite;
         var quer = new Vector2(-n.Y, n.X);
@@ -55,7 +55,33 @@ public static class StadtTueren
         Q(-(b / 2) + 0.06f, -0.04f, h * 0.55f, h - 0.06f, 0.045f, 0.05f, GlasHell);
         Q(0.04f, (b / 2) - 0.06f, h * 0.55f, h - 0.06f, 0.045f, 0.05f, GlasHell);
         Q(-(b / 2) - 0.08f, (b / 2) + 0.08f, 0f, 0.035f, 0.0f, 0.16f, Stufe);
-        Q(-(b / 2) - 0.12f, (b / 2) + 0.12f, h + 0.05f, h + 0.1f, 0f, 0.3f, Vordach);
+        if (vordach)
+        {
+            Q(-(b / 2) - 0.12f, (b / 2) + 0.12f, h + 0.05f, h + 0.1f, 0f, 0.3f, Vordach);
+        }
+    }
+
+    /// <summary>
+    /// P8-30: hat das CC0-Modell ueber dem Platz vor der Tuer schon ein Dach (Gewerbehof: gruenes Vordach), kommt kein
+    /// eigenes Vordach dazu, sonst steckt eines im anderen. Geprueft mit 15 Strahlen nach oben (quer ueber die Breite des
+    /// Vordachs, bis 0,3 vor der Wand), Treffer bis 0,3 ueber der Tuer.
+    /// </summary>
+    public static bool Ueberdacht(IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek grafik, Vector2 mitte, Vector2 aussen, float hoehe)
+    {
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        var halb = (StadtSzene.TuerBreite / 2) + 0.12f;
+        foreach (var a in (ReadOnlySpan<float>)[-halb, -halb / 2, 0f, halb / 2, halb])
+        {
+            foreach (var d in (ReadOnlySpan<float>)[0.05f, 0.15f, 0.28f])
+            {
+                var p = mitte + (quer * a) + (aussen * d);
+                if (Treffer(stuecke, grafik, new Vector3(p.X, 0.1f, p.Y), Vector3.UnitY, hoehe + 0.2f) is not null)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /// <summary>Rand um die Tuer (Rahmen, Vordach), in dem kein Fenster liegen darf (Weisung P8-28).</summary>
@@ -182,6 +208,229 @@ public static class StadtTueren
             }
             umgefaerbt[i] = new GrafikModell(gm.Name, gm.Ecken, farben);
         }
+    }
+
+    /// <summary>
+    /// Eine Tuer eines CC0-Modells an der Fassade einer Tuer (P8-30): Stueck, Dreiecke, Spanne quer zur Wand (A1..A2,
+    /// 0 = Mitte der Tuer, positiv in Richtung (-aussen.Y, aussen.X)), Tiefe hinter der Tuer, Oberkante.
+    /// </summary>
+    public sealed record ModellTuer(int Stueck, List<int> Dreiecke, float A1, float A2, float Tiefe, float Oben)
+    {
+        public float Mitte => (A1 + A2) / 2;
+    }
+
+    /// <summary>Wie weit seitlich (quer zur Wand) Tueren der Modelle als "zweite Tuer" zaehlen (P8-30).</summary>
+    public const float NebenTuerWeite = 1.2f;
+
+    private static float Helligkeit(Vector3 f) => (0.2126f * f.X) + (0.7152f * f.Y) + (0.0722f * f.Z);
+
+    /// <summary>
+    /// Weisung P8-30 (Nico: "versetzt noch die Hintergrundtuer zu sehen"): Tueren der CC0-Stuecke [von, bis) an der
+    /// Fassade der Tuer (mitte, aussen) erkennen. Eine Modell-Tuer ist ein dunkles Rechteck (Helligkeit unter 0,45,
+    /// kein Glas; Rahmen, Fluegel und Stufe zusammen, alles unter 0,66) parallel zur Wand, unten am Boden (bis 0,05),
+    /// mindestens 0,25 hoch und 0,15 bis 0,55 breit, hoechstens
+    /// 0,4 vor bis 0,5 hinter der Tuer und hoechstens <see cref="NebenTuerWeite"/> + 0,3 seitlich. Mit
+    /// <paramref name="hell"/> zaehlt jede Farbe und die Breite bis 5,5 (Rolltor der Werkstatt).
+    /// </summary>
+    public static List<ModellTuer> ModellTueren(IReadOnlyList<ModellStueck> stuecke, int von, int bis, Func<int, GrafikModell?> modell,
+        Vector2 mitte, Vector2 aussen, bool hell = false, float weite = NebenTuerWeite, float tief = 0.5f)
+    {
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        var ergebnis = new List<ModellTuer>();
+        for (var i = von; i < bis; i++)
+        {
+            if (modell(i) is not { } gm)
+            {
+                continue;
+            }
+            // Dreiecke je Ebene (Tiefe auf 0,01 gerundet)
+            var ebenen = new SortedDictionary<int, List<(int D, float A1, float A2, float Y1, float Y2)>>();
+            for (var d = 0; d < gm.Dreiecke; d++)
+            {
+                var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
+                if (IstGlas(f) || (!hell && Helligkeit(f) >= 0.45f))
+                {
+                    continue;
+                }
+                var (a, b, c) = Ecken(gm, d, stuecke[i].Lage);
+                float qmin = float.MaxValue, qmax = float.MinValue, dmin = float.MaxValue, dmax = float.MinValue;
+                foreach (var p in (ReadOnlySpan<Vector3>)[a, b, c])
+                {
+                    var r = new Vector2(p.X, p.Z) - mitte;
+                    var q = Vector2.Dot(r, quer);
+                    var t = -Vector2.Dot(r, aussen);
+                    (qmin, qmax, dmin, dmax) = (MathF.Min(qmin, q), MathF.Max(qmax, q), MathF.Min(dmin, t), MathF.Max(dmax, t));
+                }
+                var y1 = MathF.Min(a.Y, MathF.Min(b.Y, c.Y));
+                var y2 = MathF.Max(a.Y, MathF.Max(b.Y, c.Y));
+                if (dmax - dmin > 0.02f || dmin < -0.4f || dmax > tief || qmax < -weite - 0.3f || qmin > weite + 0.3f || y1 > 0.7f || qmax - qmin < 0.005f)
+                {
+                    continue;
+                }
+                var k = (int)MathF.Round((dmin + dmax) / 2 * 100);
+                if (!ebenen.TryGetValue(k, out var liste))
+                {
+                    ebenen[k] = liste = [];
+                }
+                liste.Add((d, qmin, qmax, y1, y2));
+            }
+            foreach (var (k, liste) in ebenen)
+            {
+                // Tueren bestehen aus mehreren Stuecken (Rahmen, Fluegel, Stufe): seitlich zusammenhaengende Dreiecke
+                // einer Ebene, die ganz unter 0,66 liegen, zu Rechtecken fassen
+                var unten = liste.Where(e => e.Y2 <= 0.66f).OrderBy(e => e.A1).ToList();
+                var gruppe = new List<(int D, float A1, float A2, float Y1, float Y2)>();
+                var rechts = float.MinValue;
+                void Fertig()
+                {
+                    if (gruppe.Count == 0)
+                    {
+                        return;
+                    }
+                    float a1 = gruppe.Min(g => g.A1), a2 = gruppe.Max(g => g.A2), y1 = gruppe.Min(g => g.Y1), y2 = gruppe.Max(g => g.Y2);
+                    if (y1 <= 0.05f && y2 >= 0.25f && a2 - a1 >= 0.15f && a2 - a1 <= (hell ? 5.5f : 0.55f))
+                    {
+                        ergebnis.Add(new ModellTuer(i, [.. gruppe.Select(g => g.D)], a1, a2, k / 100f, y2));
+                    }
+                    gruppe.Clear();
+                }
+                foreach (var e in unten)
+                {
+                    if (gruppe.Count > 0 && e.A1 > rechts + 0.01f)
+                    {
+                        Fertig();
+                    }
+                    gruppe.Add(e);
+                    rechts = gruppe.Max(g => g.A2);
+                }
+                Fertig();
+            }
+        }
+        return ergebnis;
+    }
+
+    /// <summary>
+    /// Weisung P8-30 (Nico: "bei einigen Tueren sind dann versetzt noch die Hintergrundtuer zu sehen"): Tueren der
+    /// CC0-Stuecke [von, bis) neben einer eigenen Tuer (bis <paramref name="weite"/> seitlich) bekommen samt ihrem Rahmen
+    /// die Farbe der Wand um sie herum, damit an jedem Haus nur eine Tuer zu sehen ist.
+    /// </summary>
+    public static void TuerenWeg(List<ModellStueck> stuecke, int von, int bis, GrafikBibliothek grafik, Dictionary<int, GrafikModell> umgefaerbt,
+        Vector2 mitte, Vector2 aussen, float weite = NebenTuerWeite, float tief = 0.5f)
+    {
+        GrafikModell? An(int i) => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name);
+        foreach (var t in ModellTueren(stuecke, von, bis, An, mitte, aussen, weite: weite, tief: tief).Where(t => t.A2 > -weite && t.A1 < weite))
+        {
+            var gm = An(t.Stueck)!;
+            var lage = stuecke[t.Stueck].Lage;
+            var farbe = Wandfarbe(gm, lage, t, mitte, aussen);
+            var farben = (byte[])gm.Farben.Clone();
+            foreach (var d in t.Dreiecke.Concat(TuerRahmen(gm, lage, t, mitte, aussen)))
+            {
+                farben[d * 3] = (byte)MathF.Round(farbe.X * 255);
+                farben[(d * 3) + 1] = (byte)MathF.Round(farbe.Y * 255);
+                farben[(d * 3) + 2] = (byte)MathF.Round(farbe.Z * 255);
+            }
+            umgefaerbt[t.Stueck] = new GrafikModell(gm.Name, gm.Ecken, farben);
+        }
+    }
+
+    /// <summary>Ist eine Modell-Tuer samt Rahmen ganz in der Farbe der Wand um sie herum (also nicht zu sehen)?</summary>
+    public static bool InWandfarbe(GrafikModell gm, Matrix4x4 lage, ModellTuer tuer, Vector2 mitte, Vector2 aussen)
+    {
+        var farbe = Wandfarbe(gm, lage, tuer, mitte, aussen);
+        return tuer.Dreiecke.Concat(TuerRahmen(gm, lage, tuer, mitte, aussen)).All(d => Vector3.Distance(new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f, farbe) < 0.01f);
+    }
+
+    /// <summary>
+    /// Weisung P8-30: Tueren der CC0-Stuecke [von, bis) an den beiden Seitenwaenden des Hauses (Kasten min/max, quer zur
+    /// Tuer mit Richtung <paramref name="aussen"/>) wie <see cref="TuerenWeg"/> in Wandfarbe; sie sind beim Blick auf die
+    /// eigene Tuer von schraeg zu sehen. Die Rueckseite bleibt, wie das Modell sie hat.
+    /// </summary>
+    public static void SeitenTuerenWeg(List<ModellStueck> stuecke, int von, int bis, GrafikBibliothek grafik, Dictionary<int, GrafikModell> umgefaerbt,
+        Vector2 aussen, Vector3 min, Vector3 max)
+    {
+        foreach (var n in SeitenWaende(aussen, min, max))
+        {
+            TuerenWeg(stuecke, von, bis, grafik, umgefaerbt, n.Mitte, n.Aussen, n.Weite, n.Tief);
+        }
+    }
+
+    /// <summary>
+    /// Die beiden Seitenwaende eines Hauskastens quer zur Richtung <paramref name="aussen"/>: Mitte, Richtung nach aussen,
+    /// halbe Laenge und Tiefe (ganzer Kasten, denn Seitenwaende der Modelle koennen weit hinter dem Kasten liegen, z. B.
+    /// das schmalere vordere Haus von Lindenau).
+    /// </summary>
+    public static IEnumerable<(Vector2 Mitte, Vector2 Aussen, float Weite, float Tief)> SeitenWaende(Vector2 aussen, Vector3 min, Vector3 max)
+    {
+        var c = new Vector2((min.X + max.X) / 2, (min.Z + max.Z) / 2);
+        var halb = new Vector2((max.X - min.X) / 2, (max.Z - min.Z) / 2);
+        foreach (var n in new[] { new Vector2(-aussen.Y, aussen.X), new Vector2(aussen.Y, -aussen.X) })
+        {
+            var tief = MathF.Abs(n.X) > 0.5f ? halb.X : halb.Y;
+            var lang = MathF.Abs(n.X) > 0.5f ? halb.Y : halb.X;
+            yield return (c + (n * tief), n, lang, 2 * tief);
+        }
+    }
+
+    /// <summary>
+    /// Rahmen einer Modell-Tuer: Dreiecke (kein Glas, jede Farbe), die ganz im Kasten um die Tuer liegen (seitlich 0,1 mehr,
+    /// bis 0,1 ueber die Tuer, 0,12 davor und dahinter, weil eine Seitenwand auch von der anderen Seite her erkannt wird).
+    /// </summary>
+    private static IEnumerable<int> TuerRahmen(GrafikModell gm, Matrix4x4 lage, ModellTuer tuer, Vector2 mitte, Vector2 aussen)
+    {
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        for (var d = 0; d < gm.Dreiecke; d++)
+        {
+            var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
+            if (IstGlas(f))
+            {
+                continue;
+            }
+            var (a, b, c) = Ecken(gm, d, lage);
+            var drin = true;
+            foreach (var p in (ReadOnlySpan<Vector3>)[a, b, c])
+            {
+                var r = new Vector2(p.X, p.Z) - mitte;
+                var q = Vector2.Dot(r, quer);
+                var t = -Vector2.Dot(r, aussen);
+                drin &= q >= tuer.A1 - 0.1f && q <= tuer.A2 + 0.1f && p.Y >= -0.01f && p.Y <= tuer.Oben + 0.1f && t >= tuer.Tiefe - 0.12f && t <= tuer.Tiefe + 0.12f;
+            }
+            if (drin)
+            {
+                yield return d;
+            }
+        }
+    }
+
+    /// <summary>Farbe der Wand um eine Modell-Tuer: groesste Flaeche gleicher Farbe in ihrer Ebene (ohne Tuer, ohne Glas), sonst Grau.</summary>
+    private static Vector3 Wandfarbe(GrafikModell gm, Matrix4x4 lage, ModellTuer tuer, Vector2 mitte, Vector2 aussen)
+    {
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        var drin = tuer.Dreiecke.ToHashSet();
+        var flaechen = new Dictionary<Vector3, float>();
+        for (var d = 0; d < gm.Dreiecke; d++)
+        {
+            var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
+            if (drin.Contains(d) || IstGlas(f))
+            {
+                continue;
+            }
+            var (a, b, c) = Ecken(gm, d, lage);
+            float qmin = float.MaxValue, qmax = float.MinValue, dmin = float.MaxValue, dmax = float.MinValue;
+            foreach (var p in (ReadOnlySpan<Vector3>)[a, b, c])
+            {
+                var r = new Vector2(p.X, p.Z) - mitte;
+                (qmin, qmax) = (MathF.Min(qmin, Vector2.Dot(r, quer)), MathF.Max(qmax, Vector2.Dot(r, quer)));
+                (dmin, dmax) = (MathF.Min(dmin, -Vector2.Dot(r, aussen)), MathF.Max(dmax, -Vector2.Dot(r, aussen)));
+            }
+            if (dmax - dmin > 0.02f || MathF.Abs(((dmin + dmax) / 2) - tuer.Tiefe) > 0.05f || qmax < tuer.A1 - 0.6f || qmin > tuer.A2 + 0.6f
+                || MathF.Min(a.Y, MathF.Min(b.Y, c.Y)) > tuer.Oben + 0.3f)
+            {
+                continue;
+            }
+            flaechen[f] = flaechen.GetValueOrDefault(f) + (Vector3.Cross(b - a, c - a).Length() / 2);
+        }
+        return flaechen.Count > 0 ? flaechen.MaxBy(w => w.Value).Key : new Vector3(0.56f, 0.57f, 0.6f);
     }
 
     /// <summary>Die drei Ecken eines Dreiecks in der Welt.</summary>
