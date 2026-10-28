@@ -13,6 +13,9 @@ public sealed class Tonschalter
 
     public bool ImHintergrund { get; private set; }
 
+    /// <summary>Phase 8 W9: laeuft gerade eine Hoerprobe (auch ausserhalb des Spiels)?</summary>
+    public bool Hoerprobe { get; private set; }
+
     public int Gesamt { get; private set; } = TonEinstellungen.GesamtVorgabe;
 
     /// <summary>Soll der Ton gerade laufen?</summary>
@@ -27,12 +30,14 @@ public sealed class Tonschalter
     private bool _ausHintergrund;
 
     /// <summary>Neuer Zustand; Rueckgabe true = Geraet oeffnen, false = schliessen, null = nichts aendern.</summary>
-    public bool? Setzen(bool? imSpiel = null, bool? hintergrund = null, int? gesamt = null)
+    /// <remarks>Phase 8 W9: <paramref name="hoerprobe"/> = eine Hoerprobe in den Optionen braucht das Geraet auch ausserhalb des Spiels.</remarks>
+    public bool? Setzen(bool? imSpiel = null, bool? hintergrund = null, int? gesamt = null, bool? hoerprobe = null)
     {
         ImSpiel = imSpiel ?? ImSpiel;
         ImHintergrund = hintergrund ?? ImHintergrund;
         Gesamt = gesamt ?? Gesamt;
-        var soll = ImSpiel && !ImHintergrund && Gesamt > 0;
+        Hoerprobe = hoerprobe ?? Hoerprobe;
+        var soll = (ImSpiel || Hoerprobe) && !ImHintergrund && Gesamt > 0;
         if (soll == Laeuft)
         {
             return null;

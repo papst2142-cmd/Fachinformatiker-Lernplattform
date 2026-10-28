@@ -11,7 +11,7 @@ public static class TonTexte
     public const string Musik = "Musik";
     public const string Umgebung = "Umgebung";
     public const string Prozent = "{0} %";
-    public const string ReglerSatz = "Gesamt regelt alles zusammen, Musik die Musik, Umgebung die Geräusche (Schritte, Autos, Türen, Kasse). Bei 0 % ist es still. Töne spielen nur im Spiel.";
+    public const string ReglerSatz = "Gesamt regelt alles zusammen, Musik die Musik, Umgebung die Geräusche (Schritte, Autos, Türen, Kasse). Bei 0 % ist es still. Töne spielen nur im Spiel. Beim Verstellen hörst du ein kurzes Beispiel.";
 
     // Eigene Lieder (P8-17, P8-17b; Vorschlag)
     public const string Lieder = "Eigene Lieder";

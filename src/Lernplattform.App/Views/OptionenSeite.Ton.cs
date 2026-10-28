@@ -148,6 +148,11 @@ public sealed partial class OptionenSeite
             }
             // die Lautstaerke folgt sofort, geschrieben wird erst, wenn der Regler ruht (nicht jeder Zwischenwert)
             TonDienst.Regler(Aktuell());
+            // Phase 8 W9: Hoerprobe in der neuen Lautstaerke (Weisung P8-29)
+            if (Hoerprobe.Fuer(schluessel) is { } probe)
+            {
+                TonDienst.Hoerprobe(probe);
+            }
             _tonSpeichern ??= new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => TonSpeichern());
             _tonSpeichern.Stop();
             _tonSpeichern.Start();

@@ -226,8 +226,33 @@ public sealed class Innenraum
     /// Filiale nicht eroeffnet, Serverfarm ohne innenraeume.json). <paramref name="innenraeume"/>:
     /// Inhalt von innenraeume.json; <paramref name="geschaefte"/>: Inhalt von geschaefte.json (Kleidung im Kaufhaus).
     /// </summary>
+    /// <remarks>Phase 8 W9: <paramref name="jahreszeit"/> faerbt die Wiese um das Haus (Sommer = wie vorher).</remarks>
     public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null,
-        string? fest = null, PyObjekt? feste = null)
+        string? fest = null, PyObjekt? feste = null, Jahreszeit jahreszeit = Jahreszeit.Sommer)
+    {
+        var raum = BauenOhneJahreszeit(ansicht, stand, innenraeume, grafik, geschaefte, fest, feste);
+        raum?.WieseFaerben(jahreszeit);
+        return raum;
+    }
+
+    /// <summary>Phase 8 W9: Jahreszeit der Wiese um das Haus.</summary>
+    public Jahreszeit Jahreszeit { get; private set; } = Jahreszeit.Sommer;
+
+    private int _wiese = -1;
+
+    private void WieseFaerben(Jahreszeit jahreszeit)
+    {
+        Jahreszeit = jahreszeit;
+        if (jahreszeit == Jahreszeit.Sommer || _wiese < 0)
+        {
+            return;
+        }
+        var neu = Jahreszeitfarben.Faerben(jahreszeit, Faerbeart.Stadt, Farben.Wiese, 1f, 0f);
+        _teile[_wiese] = _teile[_wiese] with { Farbe = Jahreszeitfarben.IstSchnee(neu) ? Jahreszeitfarben.Schnee(0.9f) : Mischen(neu, Vector3.Zero, 0.1f) };
+    }
+
+    private static Innenraum? BauenOhneJahreszeit(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
+        string? fest, PyObjekt? feste)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -542,6 +567,7 @@ public sealed class Innenraum
         WandFarbe = Hex(Gebaeude, "wandfarbe") ?? Farben.Wand;
         AussenFarbe = Hex(Gebaeude, "aussenfarbe") ?? Farben.Aussen;
         // Wiese um das Haus, damit die geneigte Kamera keinen leeren Himmel zeigt
+        _wiese = _teile.Count;
         _teile.Add(Quader(-20, -0.08f, -20, Breite + 20, -0.02f, Tiefe + 20, Mischen(Farben.Wiese, Vector3.Zero, 0.1f)));
         var flur = Objekt(Gebaeude["flur"]);
         _teile.Add(Quader(0, -0.02f, 0, Breite, 0.02f, Tiefe, Farben.Boden));

@@ -288,9 +288,15 @@ public sealed class StadtTuerenTests
     public void KeineFrontOhneFenster()
     {
         var stadt = NeueStadt();
-        // Stand wie in Meldung P8-20 (ohne Firma): der Gewerbehof hat ohne Grafik mit Satteldach unter 1,4 Hoehe gar keine
-        // Fenster (Sammelliste, Fund aus P8-28); die Ersatzdarstellung aendert diese Welle nicht
-        var stand = Spaet(firma: false);
+        // W9 (Sammelliste 147): auch mit Firma, der Gewerbehof (Satteldach, Hoehe 1,3) hat jetzt Fenster unter dem Dach
+        foreach (var firma in (bool[])[false, true])
+        {
+            FrontenMitFenstern(stadt, Spaet(firma));
+        }
+    }
+
+    private static void FrontenMitFenstern(Stadt stadt, Spielstand stand)
+    {
         var szene = StadtSzene.Bauen(stadt, stand);
         var gezaehlt = 0;
         foreach (var ort in szene.Orte)

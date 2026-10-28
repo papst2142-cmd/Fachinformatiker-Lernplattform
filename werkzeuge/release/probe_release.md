@@ -1,23 +1,22 @@
-Neu im Spiel: Die Häuser der Stadt haben jetzt richtige Türen, und der Bahnhof sieht innen wie ein Bahnhof aus.
+Neu im Spiel: Die Stadt zeigt jetzt die Jahreszeit, und an den Ton-Reglern hörst du sofort ein Beispiel.
 
-- Jeder Gehweg führt jetzt genau auf eine Tür zu. Häuser ohne eigene Tür bekommen eine Glastür mit Rahmen, Stufe und kleinem Vordach (kein Vordach, wo das Haus schon ein Dach über der Tür hat). Jede Tür sitzt direkt an der Hauswand, auch wenn die Wand hinter einem Vorbau oder Vordach liegt, und wo eine Tür ist, ist kein Fenster mehr. Jedes Haus zeigt nur noch eine Tür: weitere Türen an der Vorderseite und an den Seiten haben die Farbe der Wand. Beim Möbelhaus, beim Elektromarkt und bei Talheim-Nord ist das Haus ein Stück verschoben, damit seine eigene Tür genau mittig am Ende des Gehwegs liegt.
-- Der Bahnhof Talheim hat seinen Eingang jetzt an der Vorderseite des Empfangsgebäudes. Der Gehweg führt von dort über das Gleis zur Straße. Der Zug hält dafür am anderen Ende des Bahnsteigs. Der Weg von zu Hause zum Bahnhof ist dadurch ein Stück kürzer.
-- Der Gewerbehof hat seinen Eingang an der Seite zur Straße.
-- Innen ist der Bahnhof Talheim jetzt eine Wartehalle mit Bänken, Pflanzen und einer großen Bahnhofsuhr. Gleis und Zug siehst du draußen.
-- Das rote Haus neben dem Bahnhof ist das Stellwerk. Es hat jetzt einen Gehweg, eine Tür und ein Namensschild. Hineingehen kannst du nicht; tippst du auf das Schild, geht deine Figur bis vor das Haus.
-- Die Häuser haben jetzt rundherum Fenster, also auch an der Rückseite und an den Seiten.
-- Im Problembericht steht eine neue Zeile, wie lange das Öffnen des Lautsprechers im Spiel gedauert hat.
+- Die Farben der Stadt folgen der Jahreszeit nach dem Datum deines Geräts. Im Frühling sind Wiesen und Bäume hellgrün, und jeder dritte Laubbaum blüht rosa. Im Sommer sieht die Stadt aus wie bisher. Im Herbst färbt sich das Laub gelb, orange und rot, einige Bäume sind noch halb grün, und die Wiesen werden goldbraun. Nadelbäume bleiben das ganze Jahr grün.
+- Im Winter liegt Schnee: auf den Wiesen, im Park, auf den Dächern (auch auf dem steilen Dach des Stellwerks), auf Bäumen, Büschen und Blumenbeeten. Straßen und Gehwege sind geräumt, der Fluss ist hellblau. Im dunklen Design bleibt der Schnee hell, alles andere wird wie bisher abgedunkelt.
+- Auch die Wiese, die du durch die Fenster der Räume siehst, hat die Farbe der Jahreszeit.
+- Die Schmuckstücke der Festzeiten (zum Beispiel Weihnachtsbaum, Ostereier, Kürbisse) behalten ihre eigenen Farben. Es ist nur die Darstellung: dein Spielstand und das Spiel selbst ändern sich dadurch nicht.
+- In den Optionen unter „Musik und Geräusche“ hörst du beim Verstellen eines Reglers sofort ein kurzes Beispiel in der neuen Lautstärke, auch außerhalb des Spiels. „Gesamt“ spielt den Klang der Stadt und eine Melodie, „Musik“ dein erstes eigenes Lied (ohne eigenes Lied zwei Melodien des Spiels im Wechsel) und „Umgebung“ den Klang der Stadt zur aktuellen Jahreszeit. Es klingt immer nur ein Beispiel; kurz nach dem letzten Verstellen blendet es aus. Bei 0 % bleibt es still.
+- Falls die Hausmodelle einmal nicht geladen werden können, hat in der einfachen Ersatzdarstellung jetzt auch der Gewerbehof Fenster.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.19.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.20.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.19.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.19.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.19.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.20.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.20.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.20.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

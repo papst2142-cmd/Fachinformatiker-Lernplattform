@@ -147,6 +147,7 @@ public static partial class AutoMessung
             funde += await P8W6FestzeitenAsync(ansicht);       // Phase 8 W6: Stadt, Park und Kaufhaus je Festzeit
             funde += await P8W7MesspunkteAsync(ansicht);       // Phase 8 W7: Schritte, Autos, Gruen
             funde += await P8W8TonAsync(ansicht);              // Phase 8 W8: Toene, Maus, Tasten, eigene Lieder
+            funde += await P8W9JahreszeitenAsync(ansicht);     // Phase 8 W9: Stadt je Jahreszeit, Winter mit Weihnachten
         }
         if (MitLernen)
         {
@@ -199,6 +200,7 @@ public static partial class AutoMessung
         }
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
+        funde += await P8W9HoerprobeAsync(ansicht);     // Phase 8 W9: Hoerprobe an jedem Ton-Regler
 
         // Phase 2: Karteikarten und Pruefungstrainer lesen Lernstand und Reihenfolge im Hintergrund;
         // gemessen wird vom Bauen der Seite bis die erste Karte bzw. die Vorbereitung steht
