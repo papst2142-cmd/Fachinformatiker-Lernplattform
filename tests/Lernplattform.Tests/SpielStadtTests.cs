@@ -294,25 +294,42 @@ public class SpielStadtTests
         Assert.Equal(StadtGrund.Ok, stadt.Betreten(spiel.Stand));
         Assert.Equal(StadtGrund.NichtGeschlossen, stadt.Warten(spiel).Grund);
 
-        // Hin und her, bis der Abend kommt: dann nur noch heim
+        // W10 (Weisung P8-34, Nico 2c): hin und her ueber 20:00 hinaus; jeder Weg geht, die Minuten jedes Wegs
+        // sind auf die Zeit bis 23:00 gekappt, dann steht die Uhr
         string[] runde = ["elektromarkt", "moebelhaus"];
         var i = 0;
-        while (true)
+        var ueberAbend = false;
+        while (stadt.Stand(spiel.Stand).Uhr < Stadt.UhrSteht)
         {
-            var ergebnis = stadt.Gehen(spiel, runde[i++ % 2]);
-            if (!ergebnis.Ok)
-            {
-                Assert.Equal(StadtGrund.Abend, ergebnis.Grund);
-                break;
-            }
+            Assert.True(i < 500, "die Uhr erreicht 23:00 nie");
+            var vorher = stadt.Stand(spiel.Stand);
+            var ziel = runde[i++ % 2];
+            var ergebnis = stadt.Gehen(spiel, ziel);
+            Assert.True(ergebnis.Ok);
+            var voll = 2 * stadt.Weg(vorher.Ort, ziel)!.Schritte;
+            Assert.Equal(Math.Min(voll, Stadt.UhrSteht - vorher.Uhr), Py.Int(ergebnis.Daten!["minuten"]));
+            Assert.Equal(stadt.Weg(vorher.Ort, ziel)!.Schritte, Py.Int(ergebnis.Daten["schritte"]));
+            ueberAbend |= vorher.Uhr > stadt.Abend;
         }
-        var abends = stadt.Stand(spiel.Stand);
-        Assert.True(abends.Uhr <= stadt.Abend);
-        Assert.True(abends.Uhr + 2 * stadt.Weg(abends.Ort, runde[(i - 1) % 2])!.Schritte > stadt.Abend);
-        Assert.Equal(StadtGrund.Abend, stadt.Gehen(spiel, "bitweiche").Grund);
+        Assert.True(ueberAbend, "kein Weg nach 20:00");
+        var spaet = stadt.Stand(spiel.Stand);
+        Assert.Equal(Stadt.UhrSteht, spaet.Uhr);
+        // um 23:00: jeder Weg geht und kostet 0 Minuten, die Uhr bleibt stehen; alle Orte ausser zu Hause sind zu
+        var nachBitweiche = stadt.Gehen(spiel, "bitweiche");
+        Assert.True(nachBitweiche.Ok);
+        Assert.Equal(0L, Py.Int(nachBitweiche.Daten!["minuten"]));
+        Assert.Equal(new StadtStand(1, "bitweiche", Stadt.UhrSteht), stadt.Stand(spiel.Stand));
+        Assert.Equal(StadtGrund.OeffnetNichtMehr, stadt.Betreten(spiel.Stand));
+        Assert.Equal(StadtGrund.OeffnetNichtMehr, stadt.Warten(spiel).Grund);
+        Assert.True(stadt.Gehen(spiel, "talheim").Ok);
+        Assert.Equal(StadtGrund.OeffnetNichtMehr, stadt.Betreten(spiel.Stand));
+        var gelaufen = stadt.Laufen(spiel, 40);
+        Assert.True(gelaufen.Ok);
+        Assert.Equal(0L, Py.Int(gelaufen.Daten!["minuten"]));
         Assert.True(stadt.Gehen(spiel, "zuhause").Ok);
-        Assert.True(stadt.Stand(spiel.Stand).Uhr > stadt.Abend);
-        Assert.Equal(StadtGrund.Abend, stadt.Gehen(spiel, "elektromarkt").Grund);
+        Assert.Equal(new StadtStand(1, "zuhause", Stadt.UhrSteht), stadt.Stand(spiel.Stand));
+        Assert.Equal(StadtGrund.Ok, stadt.Betreten(spiel.Stand));
+        Assert.DoesNotContain(spiel.Stand.Verlauf, e => (e.Art is Stadt.Gegangen or Stadt.Gelaufen) && Py.Int(e.Daten["minuten"]) < 0);
 
         // Die Verwaltung schliesst um 17:00: danach oeffnet sie heute nicht mehr
         Assert.Equal((480L, 1020L), stadt.Oeffnungszeit("lindenau"));
@@ -327,6 +344,28 @@ public class SpielStadtTests
         }
         spiel.Feierabend();
         Assert.Equal(new StadtStand(2, "zuhause", 420), stadt.Stand(spiel.Stand));
+    }
+
+    [Fact]
+    public void AlteZeilenNachDemAbend()
+    {
+        // W10: bis A 0.20.0 zaehlte der Heimweg nach 20:00 weiter (z. B. bis 20:16); solche Zeilen gelten weiter,
+        // ein neuer Weg rechnet ab dort und wird auf 23:00 gekappt
+        var stadt = NeueStadt();
+        var spiel = NeuesSpiel();
+        spiel.Profil("Nico", Aussehen());
+        spiel.Log(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", "zuhause" }, { "nach", "bitweiche" }, { "schritte", 30L }, { "minuten", 770L } });
+        spiel.Log(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", "bitweiche" }, { "nach", "zuhause" }, { "schritte", 30L }, { "minuten", 26L } });
+        Assert.Equal(new StadtStand(1, "zuhause", 1216), stadt.Stand(spiel.Stand));
+        var weg = stadt.Gehen(spiel, "bitweiche");
+        Assert.True(weg.Ok);
+        Assert.Equal(60L, Py.Int(weg.Daten!["minuten"]));
+        // 22:50 + 30 Schritte (60 Minuten) = gekappt auf 10 Minuten
+        spiel.Log(Stadt.Gelaufen, new PyObjekt { { "tag", 1L }, { "ort", "bitweiche" }, { "schritte", 47L }, { "minuten", 94L } });
+        Assert.Equal(new StadtStand(1, "bitweiche", 1370), stadt.Stand(spiel.Stand));
+        var heim = stadt.Gehen(spiel, "zuhause");
+        Assert.Equal(10L, Py.Int(heim.Daten!["minuten"]));
+        Assert.Equal(new StadtStand(1, "zuhause", Stadt.UhrSteht), stadt.Stand(spiel.Stand));
     }
 
     [Fact]

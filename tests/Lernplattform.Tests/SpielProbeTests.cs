@@ -273,16 +273,32 @@ public class SpielProbeTests
     }
 
     [Fact]
-    public void AbendsNurNochNachHause()
+    public void SpaetStehtDieUhr()
     {
+        // W10 (Weisung P8-34, Nico 2c): abends geht jeder Weg weiter, um 23:00 bleibt die Uhr stehen
         var spiel = NeuesSpiel();
-        // hin und her bis zum Abend: irgendwann geht nur noch der Weg nach Hause
-        var grund = StadtGrund.Ok;
-        for (var i = 0; i < 200 && grund == StadtGrund.Ok; i++)
+        var i = 0;
+        while (spiel.Jetzt.Uhr < Stadt.UhrSteht)
         {
-            grund = spiel.GeheZu(spiel.Jetzt.Ort == "elektromarkt" ? "talheim" : "elektromarkt");
+            Assert.True(i++ < 300, "die Uhr erreicht 23:00 nie");
+            Assert.Equal(StadtGrund.Ok, spiel.GeheZu(spiel.Jetzt.Ort == "elektromarkt" ? "talheim" : "elektromarkt"));
             spiel.SofortAnkommen();
         }
+        Assert.Equal(Stadt.UhrSteht, spiel.Jetzt.Uhr);
+        // der Hinweis steht einmal vor der Zeile des Orts
+        Assert.StartsWith(StadtTexte.UhrSteht + "\n", spiel.Zeile);
+        Assert.Contains(StadtTexte.OeffnetNichtMehr, spiel.Zeile);
+        Assert.False(spiel.KannBetreten);
+        Assert.False(spiel.KannWarten);
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("bitweiche"));
+        spiel.SofortAnkommen();
+        Assert.Equal(Stadt.UhrSteht, spiel.Jetzt.Uhr);
+        Assert.DoesNotContain(StadtTexte.UhrSteht, spiel.Zeile);
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("zuhause"));
+        spiel.SofortAnkommen();
+        Assert.Equal(new StadtStand(1, "zuhause", Stadt.UhrSteht), spiel.Jetzt);
+        Assert.True(spiel.KannBetreten);
+    }
         Assert.Equal(StadtGrund.Abend, grund);
         Assert.Equal(StadtTexte.Abend, spiel.Zeile);
         Assert.Equal(StadtGrund.Ok, spiel.GeheZu("zuhause"));

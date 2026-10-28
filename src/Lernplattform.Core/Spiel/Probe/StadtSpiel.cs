@@ -500,6 +500,21 @@ public sealed class StadtSpiel
         }
     }
 
+    /// <summary>Tag, an dem der Hinweis "Es ist 23 Uhr …" schon stand (einmal je Tag).</summary>
+    private long _uhrStehtTag = -1;
+
+    /// <summary>W10 (Weisung P8-34, Nico 2c): steht die Uhr seit diesem Weg, einmal je Tag den Hinweis davor.</summary>
+    private string MitUhrHinweis(string zeile)
+    {
+        var jetzt = Jetzt;
+        if (jetzt.Uhr < Stadt.UhrSteht || _uhrStehtTag == jetzt.Tag)
+        {
+            return zeile;
+        }
+        _uhrStehtTag = jetzt.Tag;
+        return StadtTexte.UhrSteht + "\n" + zeile;
+    }
+
     private void Ankommen()
     {
         if (ImInnenraum)
@@ -508,7 +523,7 @@ public sealed class StadtSpiel
         }
         else if (_zielOrt is { } ort)
         {
-            Zeile = OrtZeile(ort);
+            Zeile = MitUhrHinweis(OrtZeile(ort));
             _zielOrt = null;
             NeueSzene();
             Vorbereiten(ort);
@@ -521,7 +536,7 @@ public sealed class StadtSpiel
         }
         else if (ImFreien)
         {
-            Zeile = SpielProbeTexte.ImFreien;
+            Zeile = MitUhrHinweis(SpielProbeTexte.ImFreien);
         }
         Geaendert?.Invoke();
         if (_danach is { } naechstes)

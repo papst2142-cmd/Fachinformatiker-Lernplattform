@@ -68,6 +68,10 @@ internal static class HilfePaare
         ("F1", "spiel",
             "im Kaufhaus Kleidung für deine Figur.",
             "im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung."),
+        // Phase 8 W10 (Weisung P8-34, Nico 2c): abends weiter gehen, um 23 Uhr steht die Uhr (T1)
+        ("T1", "spiel",
+            "Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause.",
+            "Die Häuser haben Öffnungszeiten. Abends kannst du weiter durch die Stadt gehen; um 23 Uhr bleibt die Uhr stehen, bis du zu Hause schlafen gehst."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),

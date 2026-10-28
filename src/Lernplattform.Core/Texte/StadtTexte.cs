@@ -17,6 +17,9 @@ public static class StadtTexte
     public const string SchonDa = "Du bist schon hier.";
     public const string KeinWeg = "Dorthin führt kein Weg.";
     public const string Abend = "Es ist Abend. Du kannst nur noch nach Hause gehen.";
+
+    /// <summary>W10 (Weisung P8-34, Nico 2c, Text von Chat angenommen): einmal je Tag, wenn die Uhr um 23:00 stehen bleibt.</summary>
+    public const string UhrSteht = "Es ist 23 Uhr. Die Uhr bleibt stehen, bis du zu Hause schlafen gehst.";
     public const string Geschlossen = "Geschlossen. Öffnet um {0} Uhr.";
     public const string OeffnetNichtMehr = "Geschlossen. Heute öffnet der Ort nicht mehr.";
     public const string NichtGeschlossen = "Der Ort ist geöffnet.";
@@ -24,8 +27,8 @@ public static class StadtTexte
     public const string Kopfzeile = "Tag {0} · {1} Uhr";
     public const string HilfeSatz = "Im Spiel vergeht nur Spielzeit: Jeder Schritt kostet Minuten, die echte Uhr spielt keine Rolle.";
 
-    /// <summary>Phase 8 W5 (Weisung P8-7 B2, Paar H1): Absatz der Hilfe zur Stadt in 3D, mit Kaufhaus und Bett; Phase 8 W6 (Paar F1): Festzeiten.</summary>
-    public const string HilfeStadt = "Du bewegst dich durch eine Stadt in 3D: Tippe oder klicke auf einen Weg oder ein Haus, dann geht deine Figur dorthin. Im Möbelhaus und im Elektromarkt kaufst du ein, im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung. In der Bank nimmst du Kredite auf, auf dem Amt gründest du deine Firma. Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause. Zum Feierabend gehst du zu Hause ins Bett. Kann dein Gerät keine 3D-Grafik zeigen, stehen die Orte in einer Liste.";
+    /// <summary>Phase 8 W5 (Weisung P8-7 B2, Paar H1): Absatz der Hilfe zur Stadt in 3D, mit Kaufhaus und Bett; Phase 8 W6 (Paar F1): Festzeiten; W10 (Paar T1): Uhr steht um 23 Uhr.</summary>
+    public const string HilfeStadt = "Du bewegst dich durch eine Stadt in 3D: Tippe oder klicke auf einen Weg oder ein Haus, dann geht deine Figur dorthin. Im Möbelhaus und im Elektromarkt kaufst du ein, im Kaufhaus Kleidung für deine Figur. Zu Halloween, Weihnachten, Silvester und Ostern ist die Stadt geschmückt; im Kaufhaus gibt es dann passende Kleidung. In der Bank nimmst du Kredite auf, auf dem Amt gründest du deine Firma. Die Häuser haben Öffnungszeiten. Abends kannst du weiter durch die Stadt gehen; um 23 Uhr bleibt die Uhr stehen, bis du zu Hause schlafen gehst. Zum Feierabend gehst du zu Hause ins Bett. Kann dein Gerät keine 3D-Grafik zeigen, stehen die Orte in einer Liste.";
     public const string Warten = "Warten";
     public const string Verlassen = "Spiel verlassen";
 
