@@ -63,6 +63,18 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private Verkehr? _verkehr;
     private readonly Dictionary<bool, GlNetz> _autoNetze = [];   // alle Autos in einem Netz (Weisung P8-14b), nah und fern
     private readonly Matrix4x4[] _autoLagen = new Matrix4x4[AutosHoechstens];
+    // Phase 8 W11: Festzeiten-Verkehr (Gestalten statt Autos) und das eigene Netz der Laternen, Tannen und Kuerbisse
+    private FestVerkehr.Satz _satz = FestVerkehr.Satz.Autos;
+    private List<FestVerkehr.Gestalt>? _gestalten;
+    private bool _satzInnen = true;
+    private long? _satzUhr;
+    private readonly Dictionary<bool, GlNetz> _paket = [];
+
+    /// <summary>Phase 8 W11: wer gerade auf den Strassen faehrt bzw. laeuft (Start-Test).</summary>
+    public FestVerkehr.Satz Satz => _satz;
+
+    /// <summary>Phase 8 W11: die Festgestalten (null = Autos).</summary>
+    public IReadOnlyList<FestVerkehr.Gestalt>? Gestalten => _gestalten;
     private int _autoProgramm;
     private int _autoOrtSichtProj;
     private int _autoOrtLagen;
@@ -70,7 +82,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _autoOrtDurch;
 
     /// <summary>So viele Autos fasst ein Netz (Groesse des Felds uAutos im Shader).</summary>
-    public const int AutosHoechstens = 8;
+    public const int AutosHoechstens = 16;
 
     /// <summary>Kleingruen nur bis zu diesem Kameraabstand (in der Gesamtansicht waere es nur wenige Pixel gross).</summary>
     public const float GruenWeite = 18f;
@@ -414,18 +426,20 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _autoProgramm = 0;
         _gruen = null;
         _autoNetze.Clear();
+        _paket.Clear();
         base.OnOpenGlLost();
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenWaende.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring)
-            .Append(_gruen).Concat(_autoNetze.Values))
+            .Append(_gruen).Concat(_autoNetze.Values).Concat(_paket.Values))
         {
             netz?.Freigeben(gl);
         }
         _gruen = null;
         _autoNetze.Clear();
+        _paket.Clear();
         if (_autoProgramm != 0)
         {
             gl.DeleteProgram(_autoProgramm);
@@ -463,7 +477,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         in vec3 aFarbe;
         in float aNummer;
         uniform mat4 uSichtProj;
-        uniform mat4 uAutos[8];
+        uniform mat4 uAutos[16];
         out vec3 vFarbe;
         out vec3 vNormale;
         out vec3 vWelt;
@@ -602,11 +616,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _gruen?.Freigeben(gl);
             _gruen = spiel.Szene.GruenNetzBauen() is { } gn ? GlNetz.Laden(gl, gn) : null;
-            // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar)
-            if (_verkehr is null && spiel.Grafik is not null)
+            foreach (var alt in _paket.Values)
             {
-                _verkehr = Verkehr.Fuer(spiel.Szene);
-                _verkehr.Bedient(jetzt);
+                alt.Freigeben(gl);
+            }
+            _paket.Clear();
+            if (spiel.Grafik is not null)
+            {
+                // W11 (Nico 5a): Laternen, Tannen und Kuerbisse, nah die Paket-Modelle, fern einfache Kaesten
+                _paket[false] = GlNetz.Laden(gl, spiel.Szene.PaketNetzBauen(false));
+                _paket[true] = GlNetz.Laden(gl, spiel.Szene.PaketNetzBauen(true));
+            }
+            // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar); eine Szene mit
+            // anderer Festzeit (neuer Tag) bekommt ihren eigenen Satz
+            if (spiel.Grafik is not null
+                && FestVerkehr.Fuer(spiel.Szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, spiel.Szene.Jahreszeit) is var satzNeu
+                && (_verkehr is null || satzNeu != _satz))
+            {
+                SatzSetzen(gl, spiel, satzNeu, jetzt);
             }
             _szeneNeu = false;
         }
@@ -627,6 +654,19 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _innenGeladen = s2.Innen;
             _innenNeu = false;
         }
+        if (_spiel is { } s3 && GlBereit && _verkehr is not null && s3.Grafik is not null
+            && ((_satzInnen && !s3.ImInnenraum) || Tageslicht.FesteUhr != _satzUhr))
+        {
+            // W11 (Teilplan 1): Wechsel der Gestalten nur beim Betreten der Stadt (oder fester Uhr im Start-Test),
+            // nie mitten im Bild
+            var neu = FestVerkehr.Fuer(s3.Szene.Fest, Tageslicht.FesteUhr ?? s3.Jetzt.Uhr, s3.Szene.Jahreszeit);
+            if (neu != _satz)
+            {
+                SatzSetzen(gl, s3, neu, jetzt);
+            }
+        }
+        _satzInnen = _spiel?.ImInnenraum ?? true;
+        _satzUhr = Tageslicht.FesteUhr;
         var nachLaden = _uhr.Elapsed.TotalSeconds;
         var geht = _spiel?.Fortschreiten(dt) ?? false;
         VorBild?.Invoke();
@@ -649,7 +689,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             // Phase 8 W8: Schleifen der Stadt nach der Bildmitte (Fluss, Autos nach Naehe, Voegel)
             TonDienst.Takt(tonSpiel.ImInnenraum, tonSpiel.ImInnenraum ? null
-                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, _verkehr, _verkehr?.Faehrt(jetzt) == true));
+                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, _verkehr, _verkehr?.Faehrt(jetzt) == true && _gestalten is null));
         }
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
@@ -678,6 +718,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 Zeichnen(gl, _gruen, Matrix4x4.Identity, sichtProj);
             }
+            if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
+            {
+                Zeichnen(gl, paket, Matrix4x4.Identity, sichtProj);
+            }
             if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
             {
                 if (AutoSchritt > 0 || _verkehr.Faehrt(jetzt))
@@ -686,6 +730,18 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 // ab AutoFern Abstand eine einfache Fernform (zwei Kaesten in der Hauptfarbe des Autos)
                 var fern = kamera.Abstand > AutoFern;
+                if (_gestalten is { } gestalten)
+                {
+                    // W11: Festgestalten im selben Zeichenaufruf wie die Autos (nah alle Schrittbilder, das gezeigte je Gestalt)
+                    if (!_autoNetze.TryGetValue(fern, out var festNetz))
+                    {
+                        festNetz = GlNetz.LadenMitNummern(gl, FestVerkehr.Netze(gestalten, fern));
+                        _autoNetze[fern] = festNetz;
+                    }
+                    ZeichnenAutos(gl, festNetz, FestVerkehr.Lagen(gestalten, _verkehr, fern, _autoLagen), sichtProj);
+                }
+                else
+                {
                 if (!_autoNetze.TryGetValue(fern, out var autosNetz))
                 {
                     autosNetz = GlNetz.LadenMitNummern(gl, _verkehr.Autos.Take(AutosHoechstens).Select(a => AutoNetz(grafikA, a.Modell, fern)).ToList());
@@ -703,6 +759,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     }
                 }
                 ZeichnenAutos(gl, autosNetz, anzahl, sichtProj);
+                }
             }
             if (_spiel.Ziel is { } ziel && _marke is not null)
             {
@@ -988,6 +1045,23 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     }
 
     /// <summary>Alle Autos in einem Zeichenaufruf (eigenes Programm), danach wieder das Programm der Szene.</summary>
+    /// <summary>
+    /// Phase 8 W11: Autos oder Festgestalten setzen (neuer Verkehr nach <see cref="FestVerkehr.VerkehrFuer"/>, die
+    /// Netze der Autos bzw. Gestalten werden neu geladen).
+    /// </summary>
+    private void SatzSetzen(GlInterface gl, StadtSpiel spiel, FestVerkehr.Satz satz, double jetzt)
+    {
+        foreach (var alt in _autoNetze.Values)
+        {
+            alt.Freigeben(gl);
+        }
+        _autoNetze.Clear();
+        _satz = satz;
+        _gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(spiel.Grafik!, satz);
+        _verkehr = FestVerkehr.VerkehrFuer(spiel.Szene, satz);
+        _verkehr.Bedient(jetzt);
+    }
+
     private unsafe void ZeichnenAutos(GlInterface gl, GlNetz netz, int anzahl, Matrix4x4 sichtProj)
     {
         gl.UseProgram(_autoProgramm);

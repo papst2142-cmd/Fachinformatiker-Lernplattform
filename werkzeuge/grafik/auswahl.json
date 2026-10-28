@@ -84,6 +84,13 @@
    "id": "Grafik KayKit Forest Nature Pack",
    "version": "1.0",
    "sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c"
+  },
+  "graveyard": {
+   "zip": "kenney_graveyard-kit_5.0.zip",
+   "quelle": "Kenney Graveyard Kit 5.0, kenney.nl/assets/graveyard-kit",
+   "id": "Grafik Kenney Graveyard Kit",
+   "version": "5.0",
+   "sha256": "1a93613f2e5675f3310acf49ec9ef13ae7adeb756ac3b205bfb6cc9311a81062"
   }
  },
  "modelle": [
@@ -696,6 +703,51 @@
    "name": "wd-rock_2_c",
    "paket": "kaykit_wald",
    "datei": "KayKit_Forest_Nature_Pack_1.0_FREE/Assets/obj/Rock_2_C_Color1.obj"
+  },
+  {
+   "name": "gy-lightpost-single",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/lightpost-single.obj"
+  },
+  {
+   "name": "gy-lightpost-double",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/lightpost-double.obj"
+  },
+  {
+   "name": "gy-pine",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine.obj"
+  },
+  {
+   "name": "gy-pine-crooked",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-crooked.obj"
+  },
+  {
+   "name": "gy-pine-fall",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-fall.obj"
+  },
+  {
+   "name": "gy-pine-fall-crooked",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-fall-crooked.obj"
+  },
+  {
+   "name": "gy-pumpkin",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin.obj"
+  },
+  {
+   "name": "gy-pumpkin-carved",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin-carved.obj"
+  },
+  {
+   "name": "gy-pumpkin-tall-carved",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin-tall-carved.obj"
   }
  ]
 }

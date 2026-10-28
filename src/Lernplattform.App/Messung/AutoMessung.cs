@@ -149,6 +149,7 @@ public static partial class AutoMessung
             funde += await P8W8TonAsync(ansicht);              // Phase 8 W8: Toene, Maus, Tasten, eigene Lieder
             funde += await P8W9JahreszeitenAsync(ansicht);     // Phase 8 W9: Stadt je Jahreszeit, Winter mit Weihnachten
             funde += await P8W10SpielAsync(ansicht);           // Phase 8 W10: Hinweisfeld, Tag und Nacht, Laternen
+            funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 21 Laternen
         }
         if (MitLernen)
         {

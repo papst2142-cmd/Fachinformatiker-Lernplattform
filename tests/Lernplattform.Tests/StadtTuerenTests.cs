@@ -331,9 +331,11 @@ public sealed class StadtTuerenTests
         var o = stadt.Regeln.First(r => Py.Gleich(r["id"], id));
         float ox = (float)Py.F(o["x"]), oz = (float)Py.F(o["y"]);
         var modelle = StadtModelle.Modelle(stadt.Inhalt, stadt.Daten);
-        return [.. StadtModelle.Teile(modelle, Py.Str(o["modell"]), StadtModelle.Kontext(stand, stadt.Inhalt))
-            .Where(t => Py.Gleich(t.Teil["art"], "block"))
-            .Select(t => (ox + (float)Py.F(t.Teil["x"]), oz + (float)Py.F(t.Teil["y"]), (float)Py.F(t.Teil["w"]), (float)Py.F(t.Teil["t"]), (float)Py.F(t.Teil["h"]), t.Teil))];
+        var modell = Py.Str(o["modell"]);
+        // W11: wie gezeichnet (Bahnhof ohne Turm, Altbau-Anbau an der Ostwand, StadtSzene.Darstellung)
+        return [.. StadtModelle.Teile(modelle, modell, StadtModelle.Kontext(stand, stadt.Inhalt))
+            .Where(t => Py.Gleich(t.Teil["art"], "block") && StadtSzene.Darstellung(modell, t.Nr) is not null)
+            .Select(t => (ox + (float)Py.F(t.Teil["x"]) + StadtSzene.Darstellung(modell, t.Nr)!.Value, oz + (float)Py.F(t.Teil["y"]), (float)Py.F(t.Teil["w"]), (float)Py.F(t.Teil["t"]), (float)Py.F(t.Teil["h"]), t.Teil))];
     }
 
     /// <summary>Abstand eines Punkts zur naechsten Wand des Blocks (innerhalb ihrer Spanne, sonst gross).</summary>
@@ -362,7 +364,7 @@ public sealed class StadtTuerenTests
     /// Eine Tuer des Modells ist zu sehen, wenn sie nicht ganz in der Farbe ihrer Wand ist (bei dunklen Waenden, z. B.
     /// am Gewerbehof, bleibt die Wandfarbe dunkel und die Erkennung findet das Rechteck weiter).
     /// </summary>
-    private static bool Sichtbar(StadtSzene szene, StadtTueren.ModellTuer m, Vector2 mitte, Vector2 aussen) =>
+    internal static bool Sichtbar(StadtSzene szene, StadtTueren.ModellTuer m, Vector2 mitte, Vector2 aussen) =>
         !StadtTueren.InWandfarbe(szene.ModellAn(m.Stueck)!, szene.Stuecke[m.Stueck].Lage, m, mitte, aussen);
 
     /// <summary>Hat das Modell ueber dem Platz vor der Tuer ein eigenes Dach (P8-30)?</summary>

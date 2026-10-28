@@ -121,15 +121,21 @@ public sealed class SpielJahreszeitFarbenTests
             // und im Netz der Stadt steht die Deko am Ende der eigenen Teile bzw. Modelle in diesen Farben
             var farbenStadt = Farben(szene.NetzBauen()).ToHashSet();
             Assert.All(Farben(deko).Distinct(), f => Assert.Contains(f, farbenStadt));
+            // W11: die Deko aus dem Graveyard Kit (Kuerbisse) steht im eigenen Netz, ebenso unveraendert (ohne Leuchtmarke)
+            var paket = Deko(sommer, paket: true);
+            Assert.Equal(Farben(paket), Farben(Deko(szene, paket: true)));
+            var farbenPaket = Farben(szene.PaketNetzBauen(false)).Select(f => Nachtlicht.Leuchtet(f) ? f - new Vector3(Nachtlicht.Marke) : f).ToHashSet();
+            Assert.All(Farben(paket).Distinct(), f => Assert.Contains(f, farbenPaket));
         }
     }
 
-    private static Netz Deko(StadtSzene s)
+    /// <summary>Netz nur aus der Fest-Deko: eigene Teile und Modelle der Stadt, mit <paramref name="paket"/> nur die Modelle im eigenen Netz.</summary>
+    private static Netz Deko(StadtSzene s, bool paket = false)
     {
-        var n = Netz.Aus(s.Teile.Skip(s.FestTeileVon));
+        var n = paket ? new Netz() : Netz.Aus(s.Teile.Skip(s.FestTeileVon));
         foreach (var st in s.Stuecke.Skip(s.FestStueckeVon))
         {
-            if (Grafik.Modell(st.Name) is { } m)
+            if (StadtSzene.ImPaket(st.Name) == paket && Grafik.Modell(st.Name) is { } m)
             {
                 n.Hinzu(m, st.Lage);
             }

@@ -22,6 +22,18 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// </summary>
 public static class FestDeko
 {
+    /// <summary>
+    /// Phase 8 W11 (Sammelliste 161, P8-41b): die Kuerbisse der Stadt aus dem Graveyard Kit (gleiche Plaetze und
+    /// Anzahl, festzeiten.json bleibt; innen bleiben die alten); sie stehen im eigenen Netz (<see cref="StadtSzene.PaketNetzBauen"/>).
+    /// </summary>
+    public static string Kuerbis(string name) => name switch
+    {
+        "hw-pumpkin_orange_jackolantern" => "gy-pumpkin-carved",
+        "hw-pumpkin_yellow_small" => "gy-pumpkin-tall-carved",
+        "hw-pumpkin_orange_small" => "gy-pumpkin",
+        _ => name,
+    };
+
     /// <summary>Stadt-Id der heutigen Stadt in festzeiten.json (spaetere Staedte bekommen einen eigenen Abschnitt).</summary>
     public const string Standard = "standard";
 
@@ -422,14 +434,15 @@ public static class FestDeko
 
     /// <summary>Einen Eintrag an (x, z) zeichnen; <paramref name="meter"/>: Faktor fuer Hoehen (Stadt 1, innen Innenraum.Meter).</summary>
     private static void Zeichnen(PyObjekt e, float x, float z, float meter, float y0, Vector2 blick, int farbVersatz,
-        List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? g, Func<float, float, bool>? boden)
+        List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? g, Func<float, float, bool>? boden, bool stadt = false)
     {
         var farbe = Bunt[(((int)Zahl(e, "farbe") + farbVersatz) % Bunt.Length + Bunt.Length) % Bunt.Length];
         switch (Py.Str(e["art"]))
         {
             case "modell":
                 var richtung = Get(e, "blick") is List<object?> b ? new Vector2((float)Py.F(b[0]), (float)Py.F(b[1])) : blick;
-                Stueck(teile, stuecke, g, Py.Str(e["name"]), x, z, Zahl(e, "hoehe") * meter, richtung, y0 + (Zahl(e, "y") * meter));
+                var mname = stadt ? Kuerbis(Py.Str(e["name"])) : Py.Str(e["name"]);
+                Stueck(teile, stuecke, g, mname, x, z, Zahl(e, "hoehe") * meter, richtung, y0 + (Zahl(e, "y") * meter));
                 break;
             case "rakete":
                 Rakete(teile, x, z, Zahl(e, "hoehe") * meter, farbe);
@@ -480,7 +493,7 @@ public static class FestDeko
         void Setzen(PyObjekt e, float x, float z, float y0, Vector2 blick, int farbVersatz, bool amBoden)
         {
             var r = amBoden ? Radius(e, g, 1f) : 0f;
-            Zeichnen(e, x, z, 1f, y0, blick, farbVersatz, teile, stuecke, g, null);
+            Zeichnen(e, x, z, 1f, y0, blick, farbVersatz, teile, stuecke, g, null, stadt: true);
             gesetzt.Add(new Gesetzt(Py.Str(e["art"]), Get(e, "name") as string, x, z, r, r > 0));
             if (r > 0)
             {
