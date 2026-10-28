@@ -148,6 +148,7 @@ public static partial class AutoMessung
             funde += await P8W7MesspunkteAsync(ansicht);       // Phase 8 W7: Schritte, Autos, Gruen
             funde += await P8W8TonAsync(ansicht);              // Phase 8 W8: Toene, Maus, Tasten, eigene Lieder
             funde += await P8W9JahreszeitenAsync(ansicht);     // Phase 8 W9: Stadt je Jahreszeit, Winter mit Weihnachten
+            funde += await P8W10SpielAsync(ansicht);           // Phase 8 W10: Hinweisfeld, Tag und Nacht, Laternen
         }
         if (MitLernen)
         {
@@ -201,6 +202,7 @@ public static partial class AutoMessung
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
         funde += await P8W9HoerprobeAsync(ansicht);     // Phase 8 W9: Hoerprobe an jedem Ton-Regler
+        funde += await P8W10DashboardAsync(ansicht);    // Phase 8 W10: Dashboard breit, Kacheln auf einer Hoehe
 
         // Phase 2: Karteikarten und Pruefungstrainer lesen Lernstand und Reihenfolge im Hintergrund;
         // gemessen wird vom Bauen der Seite bis die erste Karte bzw. die Vorbereitung steht
@@ -485,6 +487,24 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 8, W10: Hinweisfeld zu (mit und ohne Meldung), Nacht, Uhr steht um 23 Uhr
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? P8W10Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 8, W10: Dashboard bei 1280 x 720 und 1920 x 1080 (nur einmal je Stufe, bei der Groesse "pc")
+                await foreach (var ansichtName in MitLernen && name == "pc" ? P8W10DashboardAnsichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{stufe} {ansichtName}: {fund}");
+                    }
+                }
             }
         }
 
@@ -516,12 +536,14 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 8): Optionen \"Über das Programm\" mit der Liste \"Lizenzen\" (alle zu, erster Bestandteil offen)"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2bAnsichtenAnzahl} Ansichten der Welle W2b (Phase 8): Seitenleiste mit offenen Unterpunkten Karteikarten und Spiel, Optionen in Gruppen mit allen Karten zu"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W8AnsichtenAnzahl} Ansichten der Welle W8 (Phase 8): Optionen \"Musik und Geräusche\" mit einem eigenen Lied, \"Vollbild\", \"Tastenbelegung\" mit Meldung \"schon belegt\""));
+            Messwerte.Notiere(string.Create(inv, $"  und je Schriftstufe {P8W10DashboardAnsichtenAnzahl} Ansichten der Welle W10 (Phase 8): Dashboard bei 1280 x 720 und 1920 x 1080 (hoechstens Bildschirmgroesse)"));
         }
         if (MitSpiel)
         {
             Messwerte.Notiere(string.Create(inv, $"  und {P7W1AnsichtenAnzahl} Ansichten der Wellen W1/W4/W5 (Phase 7, Stadt in 3D im Vollbild, ohne Speichern): Stadt mit Namensschildern, Ortsliste offen, Moebelhaus geschlossen, Buero innen, Kunde innen, Wohnung beim Einrichten mit gewaehltem Moebel, ohne 3D (Hinweis und Ortsliste)"));
             Messwerte.Notiere("  und die Spielansichten der Wellen W6/W7 (Phase 7): Platzwahl, Figur, Uebersicht, Meine Reise, Meilenstein, 9 Ticket-Bretter, 9 Firmen-Reiter; Moebelhaus und Elektromarkt innen (Eingang, Verkauf, Ware), Sortiment Moebelhaus und Elektromarkt mit zwei Teile-Typen (ohne Kaufen); W7b: Bank und Amt innen (Eingang, Schalter), Seiten Bank und Amt (ohne Schreiben)");
             Messwerte.Notiere(string.Create(inv, $"  und {P8W8bAnsichtenAnzahl} Ansichten der Welle W8b (Phase 8): vor den Tueren von Bahnhof Talheim und Moebelhaus, am Stellwerk (Gehweg, Tuer, Schild), Bahnhof innen (Wartehalle)"));
+            Messwerte.Notiere(string.Create(inv, $"  und {P8W10AnsichtenAnzahl} Ansichten der Welle W10 (Phase 8): Hinweisfeld zu, zu mit Meldung, Stadt nachts um 21 Uhr, Uhr steht um 23 Uhr"));
         }
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"

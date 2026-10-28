@@ -139,9 +139,9 @@ public static class Schrift
     /// (11 fett, Akzentfarbe), Unterschrift rechts daneben (11 muted, rechtsbuendig, Aufteilung 3:2),
     /// darunter der Inhalt mit 12 Abstand.
     /// </summary>
-    public static Border KopfKarte(string titel, string? unter, Control inhalt, string akzent = "Pinsel.accent", Control? aktion = null)
+    public static Border KopfKarte(string titel, string? unter, Control inhalt, string akzent = "Pinsel.accent", Control? aktion = null, bool oben = false)
     {
-        var kopf = KartenKopf(titel, unter, akzent, out _, aktion);
+        var kopf = KartenKopf(titel, unter, akzent, out _, aktion, oben);
         return Karte(new StackPanel { Spacing = 12, Children = { kopf, inhalt } });
     }
 
@@ -153,14 +153,18 @@ public static class Schrift
     /// <see cref="UntereinanderAb"/> steht die Unterschrift linksbuendig unter dem Titel, der Strich auf
     /// Hoehe der ersten Titelzeile; ein Wechsel der Schriftstufe ordnet neu an.
     /// </summary>
-    public static Grid KartenKopf(string titel, string? unter, string akzent, out TextBlock unterText, Control? aktion = null)
+    public static Grid KartenKopf(string titel, string? unter, string akzent, out TextBlock unterText, Control? aktion = null, bool oben = false)
     {
         unterText = Text(unter ?? "", "Winzig", FontWeight.Normal, "Pinsel.muted");
-        return KartenKopf(titel, unterText, akzent, aktion);
+        return KartenKopf(titel, unterText, akzent, aktion, oben);
     }
 
-    /// <summary>Wie oben mit einer eigenen Unterschrift-Zeile, deren Text sich spaeter aendern darf (set_subtitle).</summary>
-    public static Grid KartenKopf(string titel, TextBlock unterBlock, string akzent, Control? aktion = null)
+    /// <summary>
+    /// Wie oben mit einer eigenen Unterschrift-Zeile, deren Text sich spaeter aendern darf (set_subtitle).
+    /// <paramref name="oben"/> (Phase 8 W10): Titel, Strich und Unterschrift oben buendig, auch wenn die Unterschrift
+    /// nebeneinander umbricht (Kacheln einer Reihe haben ihre Ueberschrift dann auf einer Hoehe).
+    /// </summary>
+    public static Grid KartenKopf(string titel, TextBlock unterBlock, string akzent, Control? aktion = null, bool oben = false)
     {
         var strich = new Border { Width = 4, Height = 14, CornerRadius = new CornerRadius(2) }
             .Farbe(Border.BackgroundProperty, akzent);
@@ -212,8 +216,13 @@ public static class Schrift
             Grid.SetRow(unterBlock, untereinander ? 1 : 0);
             unterBlock.TextAlignment = untereinander ? TextAlignment.Left : TextAlignment.Right;
             // Strich mittig zur ersten Titelzeile (tick_top), sonst mittig zur Zeile
-            strich.VerticalAlignment = untereinander ? VerticalAlignment.Top : VerticalAlignment.Center;
-            strich.Margin = new Thickness(0, untereinander ? Math.Max(0, Math.Round((Grundgroessen["Winzig"] * Faktor * 1.17 - 14) / 2, 1)) : 0, 0, 0);
+            var obenBuendig = untereinander || oben;
+            strich.VerticalAlignment = obenBuendig ? VerticalAlignment.Top : VerticalAlignment.Center;
+            strich.Margin = new Thickness(0, obenBuendig ? Math.Max(0, Math.Round((Grundgroessen["Winzig"] * Faktor * 1.17 - 14) / 2, 1)) : 0, 0, 0);
+            if (oben)
+            {
+                titelText.VerticalAlignment = unterBlock.VerticalAlignment = VerticalAlignment.Top;
+            }
         }
         unterBlock.PropertyChanged += (_, e) =>
         {
