@@ -1,6 +1,6 @@
 Neu im Spiel: Die Häuser der Stadt haben jetzt richtige Türen, und der Bahnhof sieht innen wie ein Bahnhof aus.
 
-- Jeder Gehweg führt jetzt genau auf eine Tür zu. Häuser ohne eigene Tür bekommen eine Glastür mit Rahmen, Stufe und kleinem Vordach. Beim Möbelhaus und bei Talheim-Nord ist das Haus ein Stück verschoben, damit seine eigene Tür am Gehweg liegt.
+- Jeder Gehweg führt jetzt genau auf eine Tür zu. Häuser ohne eigene Tür bekommen eine Glastür mit Rahmen, Stufe und kleinem Vordach. Jede Tür sitzt direkt an der Hauswand, auch wenn die Wand hinter einem Vorbau oder Vordach liegt, und wo eine Tür ist, ist kein Fenster mehr. Beim Möbelhaus und bei Talheim-Nord ist das Haus ein Stück verschoben, damit seine eigene Tür am Gehweg liegt.
 - Der Bahnhof Talheim hat seinen Eingang jetzt an der Vorderseite des Empfangsgebäudes. Der Gehweg führt von dort über das Gleis zur Straße. Der Zug hält dafür am anderen Ende des Bahnsteigs. Der Weg von zu Hause zum Bahnhof ist dadurch ein Stück kürzer.
 - Der Gewerbehof hat seinen Eingang an der Seite zur Straße.
 - Innen ist der Bahnhof Talheim jetzt eine Wartehalle mit Bänken, Pflanzen und einer großen Bahnhofsuhr. Gleis und Zug siehst du draußen.

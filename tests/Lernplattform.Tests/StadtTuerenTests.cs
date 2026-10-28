@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Numerics;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
@@ -16,14 +17,26 @@ public sealed class StadtTuerenTests
 
     private static Stadt NeueStadt() => new(SpielInhaltTests.Inhalt, SpielStadtTests.Daten.Value);
 
-    /// <summary>Spielstand, in dem alle Orte mit Fussweg zu sehen sind (Tag 201, alle Kundenorte freigeschaltet).</summary>
-    private static Spielstand Spaet()
+    /// <summary>
+    /// Spielstand, in dem alle Orte mit Fussweg zu sehen sind (Tag 201, alle Kundenorte freigeschaltet; P8-28: mit
+    /// Firma der Stufe 5 und Zweigstelle, damit auch Gewerbehof und Filiale dabei sind).
+    /// </summary>
+    private static Spielstand Spaet(bool firma = true)
     {
         var ablauf = new Spielablauf(SpielInhaltTests.Inhalt);
         ablauf.Profil("Probe", new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
         ablauf.Stand.TageFertig = 200;
+        if (!firma)
+        {
+            return ablauf.Stand;
+        }
+        ablauf.Stand.Firma = new PyObjekt { { "stufe", 5L }, { "name", "Probe" }, { "tag", 1L } };
+        ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L } };
         return ablauf.Stand;
     }
+
+    /// <summary>Grenze fuer den Spalt zwischen Tuer und Wand (Weisung P8-28, Vorschlag: 0,02 = 10 cm).</summary>
+    internal const float SpaltGrenze = 0.02f;
 
     public static TheoryData<bool> MitGrafik => [true, false];
 
@@ -36,13 +49,17 @@ public sealed class StadtTuerenTests
         var szene = StadtSzene.Bauen(stadt, stand, mitGrafik ? Grafik : null);
         var sichtbar = szene.Orte.Select(o => o.Id).ToHashSet();
         var mitWeg = stadt.Zugaenge.Select(z => z.Key).Where(sichtbar.Contains).ToList();
-        Assert.True(mitWeg.Count >= 12, "zu wenige Orte sichtbar: " + string.Join(", ", mitWeg));
+        Assert.True(mitWeg.Count >= 14, "zu wenige Orte sichtbar: " + string.Join(", ", mitWeg));
+        Assert.Contains("gewerbehof", mitWeg);
         foreach (var id in mitWeg)
         {
             var tuer = Assert.Single(szene.Tueren, t => t.Ort == id);
-            // die Tuer liegt auf einer Wand eines Blocks des Hauses (Abstand hoechstens 0,02)
+            // ohne Grafik liegt die Tuer auf einer Wand eines Blocks des Hauses (Abstand hoechstens 0,02); mit Grafik
+            // auf der echten Wand des Modells, also auf der Wand des Blocks oder dahinter, innerhalb seiner Spanne
+            // (der Spalt zum Modell: TuerSitztAnDerWand)
             var abstand = Bloecke(stadt, stand, id).Min(b => AufWand(b, tuer.Mitte));
-            Assert.True(abstand <= 0.02f, id + ": Tuer nicht auf der Wand (" + abstand + ")");
+            Assert.True(abstand <= (mitGrafik ? 0.4f : 0.02f), id + ": Tuer nicht auf der Wand (" + abstand + ")");
+            Assert.True(mitGrafik || tuer.Hinten == 0f, id + ": ohne Grafik reicht der Rahmen nicht nach hinten");
             // Modell-Tuer nur mit Grafik und nur fuer Modelle aus darstellung.modell_tuer, sonst eine eigene aus Kaesten
             Assert.Equal(mitGrafik && StadtTueren.ModellVersatz(stadt, id) is not null, tuer.Modell);
             if (!tuer.Modell)
@@ -84,12 +101,99 @@ public sealed class StadtTuerenTests
         Assert.True(stellwerk.Schild.Y > stellwerk.KastenMax.Y, "Schild nicht ueber dem Haus");
     }
 
+    /// <summary>
+    /// Weisung P8-28 (Nico: "es sieht so aus, als wuerden die Tueren nicht an den Gebaeuden dran sein"): hinter jeder
+    /// Tuer (eigene und die des Modells) liegt die Wand des CC0-Modells hoechstens <see cref="SpaltGrenze"/> hinter dem
+    /// Rahmen. Gemessen mit Strahlen von vorn auf 7 Stellen ueber die Glasbreite in 4 Hoehen; jeder muss treffen.
+    /// </summary>
+    [Fact]
+    public void TuerSitztAnDerWand()
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), Grafik);
+        var gemessen = 0;
+        foreach (var tuer in szene.Tueren)
+        {
+            var quer = new Vector2(-tuer.Aussen.Y, tuer.Aussen.X);
+            var stuecke = Stuecke(szene, tuer);
+            if (stuecke.Count == 0)
+            {
+                continue;
+            }
+            var spalte = new List<string>();
+            for (var i = -3; i <= 3; i++)
+            {
+                for (var j = 1; j <= 4; j++)
+                {
+                    var p = tuer.Mitte + (quer * (i * ((StadtSzene.TuerBreite / 2) - 0.03f) / 3)) + (tuer.Aussen * 0.3f);
+                    var t = StadtTueren.Treffer(stuecke, Grafik, new Vector3(p.X, tuer.Hoehe * (0.15f + (j * 0.18f)), p.Y), new Vector3(-tuer.Aussen.X, 0, -tuer.Aussen.Y), 1.3f);
+                    Assert.True(t is not null, tuer.Ort + ": hinter der Tuer keine Wand (Stelle " + i + "/" + j + ")");
+                    // Spalt = Weg hinter der Rueckseite des Rahmens (davor stehende Pfeiler zaehlen negativ)
+                    var spalt = t!.Value.T - 0.3f - tuer.Hinten;
+                    Assert.True(spalt <= SpaltGrenze, tuer.Ort + ": Spalt zwischen Tuer und Wand " + spalt.ToString("0.000", CultureInfo.InvariantCulture)
+                        + " (Stelle " + i + "/" + j + ", Grenze " + SpaltGrenze + ")");
+                    gemessen++;
+                }
+            }
+        }
+        // alle Haeuser mit CC0-Modell, auch Stellwerk und Bahnhof Talheim (Nico P8-28)
+        Assert.All(new[] { "stellwerk", "talheim", "gewerbehof", "lindenau", "moebelhaus", "kaufhaus", "zuhause", "bitweiche" },
+            id => Assert.True(Stuecke(szene, Assert.Single(szene.Tueren, t => t.Ort == id)).Count > 0, id + ": ohne Modell gemessen"));
+        Assert.True(gemessen >= 12 * 28, "zu wenige Tueren gemessen: " + gemessen / 28);
+    }
+
+    /// <summary>
+    /// Weisung P8-28 (Nico: "Bitte dann die Fenster entfernen, wenn dort eine Tuer ist."): auf der Flaeche einer
+    /// eigenen Tuer (Breite mit Rahmen und Rand 0,05, bis ueber das Vordach, von vor der Tuer bis hinter die Wand)
+    /// liegt kein Fenster, weder Glas eines CC0-Modells noch eine eigene Fensterscheibe.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(MitGrafik))]
+    public void KeinFensterAnDerTuer(bool mitGrafik)
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), mitGrafik ? Grafik : null);
+        var scheiben = new[] { Netz.Farbe("#5B6B8C"), Netz.Farbe("#FCE7A6"), Netz.Farbe("#22D3EE") };
+        var geprueft = 0;
+        foreach (var tuer in szene.Tueren.Where(t => !t.Modell))
+        {
+            for (var i = 0; i < szene.Stuecke.Count; i++)
+            {
+                var gm = szene.ModellAn(i)!;
+                for (var d = 0; d < gm.Dreiecke; d++)
+                {
+                    var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
+                    if (StadtTueren.IstGlas(f))
+                    {
+                        var (a, b, c) = StadtTueren.Ecken(gm, d, szene.Stuecke[i].Lage);
+                        Assert.False(StadtTueren.AufTuerFlaeche(a, b, c, tuer.Mitte, tuer.Aussen, tuer.Hoehe, tuer.Hinten),
+                            tuer.Ort + ": Fenster von " + szene.Stuecke[i].Name + " an der Tuer");
+                    }
+                }
+            }
+            foreach (var t in szene.Teile.Where(t => scheiben.Contains(t.Farbe)))
+            {
+                Assert.False(StadtTueren.AufTuerFlaeche(new(t.X1, t.Y1, t.Z1), new(t.X2, t.Y2, t.Z2), new(t.X1, t.Y1, t.Z1), tuer.Mitte, tuer.Aussen, tuer.Hoehe, tuer.Hinten),
+                    tuer.Ort + ": Fensterscheibe an der Tuer (" + t.X1 + "/" + t.Z1 + ")");
+            }
+            geprueft++;
+        }
+        Assert.True(geprueft >= 10, "zu wenige Tueren geprueft: " + geprueft);
+    }
+
+    /// <summary>Die CC0-Stuecke des Hauses einer Tuer (Kasten des Orts oder des Stellwerks), leer ohne Modell.</summary>
+    private static List<ModellStueck> Stuecke(StadtSzene szene, StadtTuer tuer)
+    {
+        var haus = szene.Haeuser.FirstOrDefault(h => h.Id == tuer.Ort || h.Id.StartsWith(tuer.Ort + "#", StringComparison.Ordinal));
+        return haus is null || szene.Grafik is null ? [] : [.. szene.Stuecke.Skip(haus.StueckeVon).Take(haus.StueckeBis - haus.StueckeVon)];
+    }
+
     /// <summary>Jede Wand eines eigenen Blocks (ohne CC0-Grafik) mit mindestens 0,8 Laenge hat Fenster (Nico 5a: ringsum).</summary>
     [Fact]
     public void KeineFrontOhneFenster()
     {
         var stadt = NeueStadt();
-        var stand = Spaet();
+        // Stand wie in Meldung P8-20 (ohne Firma): der Gewerbehof hat ohne Grafik mit Satteldach unter 1,4 Hoehe gar keine
+        // Fenster (Sammelliste, Fund aus P8-28); die Ersatzdarstellung aendert diese Welle nicht
+        var stand = Spaet(firma: false);
         var szene = StadtSzene.Bauen(stadt, stand);
         var gezaehlt = 0;
         foreach (var ort in szene.Orte)
