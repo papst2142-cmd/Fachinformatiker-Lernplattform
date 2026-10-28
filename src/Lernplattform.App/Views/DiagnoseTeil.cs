@@ -23,6 +23,9 @@ public sealed class DiagnoseTeil
 {
     private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
+    // Sammelliste 142 (W8b): Zeile zum Ton im Problembericht
+    static DiagnoseTeil() => Problembericht.TonZeile = Spiel.TonDienst.BerichtZeile;
+
     private readonly Func<bool, bool> _ergebnis;
     private readonly TextBox _bericht;
     private readonly ToggleSwitch _messung;

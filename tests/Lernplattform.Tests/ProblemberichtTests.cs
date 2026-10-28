@@ -223,4 +223,16 @@ public class ProblemberichtTests
             Assert.Equal(text, Zahltext.Punkt(wert, stellen));
         }
     }
+
+    /// <summary>Sammelliste 142 (W8b): Zeile zum Ton; ohne gesetzte Zeile (Tests, G38) bleibt der Bericht wie Python.</summary>
+    [Fact]
+    public void TonZeile()
+    {
+        Assert.Equal("Ton: Gerät geöffnet in 43 ms", Problembericht.TonText(42.6, false, true));
+        Assert.Equal("Ton: Gerät geöffnet in 0 ms", Problembericht.TonText(0, true, true));
+        Assert.Equal("Ton: kein Gerät", Problembericht.TonText(-1, true, true));
+        Assert.Equal("Ton: Gerät noch nicht geöffnet", Problembericht.TonText(-1, false, true));
+        Assert.Equal("Ton: Spiel noch nicht geöffnet", Problembericht.TonText(-1, false, false));
+        Assert.Null(Problembericht.TonZeile);
+    }
 }

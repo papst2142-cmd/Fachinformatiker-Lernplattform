@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.19.0
+Neu im Spiel: Die Häuser der Stadt haben jetzt richtige Türen, und der Bahnhof sieht innen wie ein Bahnhof aus.
+
+- Jeder Gehweg führt jetzt genau auf eine Tür zu. Häuser ohne eigene Tür bekommen eine Glastür mit Rahmen, Stufe und kleinem Vordach. Beim Möbelhaus und bei Talheim-Nord ist das Haus ein Stück verschoben, damit seine eigene Tür am Gehweg liegt.
+- Der Bahnhof Talheim hat seinen Eingang jetzt an der Vorderseite des Empfangsgebäudes. Der Gehweg führt von dort über das Gleis zur Straße. Der Zug hält dafür am anderen Ende des Bahnsteigs. Der Weg von zu Hause zum Bahnhof ist dadurch ein Stück kürzer.
+- Der Gewerbehof hat seinen Eingang an der Seite zur Straße.
+- Innen ist der Bahnhof Talheim jetzt eine Wartehalle mit Bänken, Pflanzen und einer großen Bahnhofsuhr. Gleis und Zug siehst du draußen.
+- Das rote Haus neben dem Bahnhof ist das Stellwerk. Es hat jetzt einen Gehweg, eine Tür und ein Namensschild. Hineingehen kannst du nicht; tippst du auf das Schild, geht deine Figur bis vor das Haus.
+- Die Häuser haben jetzt rundherum Fenster, also auch an der Rückseite und an den Seiten.
+- Im Problembericht steht eine neue Zeile, wie lange das Öffnen des Lautsprechers im Spiel gedauert hat.
+
 ## A 0.18.0
 Neu im Spiel: Geräusche, Vollbild, Drehen mit der rechten Maustaste und eine eigene Tastenbelegung.
 

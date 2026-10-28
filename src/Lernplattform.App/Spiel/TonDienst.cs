@@ -60,6 +60,9 @@ public static class TonDienst
 
     public static bool Still => _ausgabe is null or StilleAusgabe;
 
+    /// <summary>Sammelliste 142: Zeile fuer den Problembericht (Oeffnungszeit des Geraets oder warum keine).</summary>
+    public static string BerichtZeile() => Core.Diagnose.Problembericht.TonText(GeoeffnetMs, _ausgabe is StilleAusgabe, _vorbereitung is not null);
+
     /// <summary>Jahreszeit des Stadt-Grundklangs, gesetzt beim Betreten der Spielseite (Weisung P8-24).</summary>
     public static Core.Spiel.Jahreszeit Zeit => _jahreszeit;
 
