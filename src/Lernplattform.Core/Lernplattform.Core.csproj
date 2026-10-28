@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <!-- Phase 8 W8: Toene (OGG) lesen, nur verwalteter Code -->
+    <PackageReference Include="NVorbis" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lernplattform.Tests" />

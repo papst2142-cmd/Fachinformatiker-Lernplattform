@@ -115,7 +115,13 @@ public static class Festzeit
             : throw new InvalidOperationException(Schalter + " ungueltig (erwartet JJJJ-MM-TT): " + wert);
     }
 
-    /// <summary>Festzeit jetzt: Probe (Start-Test), sonst Schalter (Pruefstand), sonst das lokale Datum des Geraets.</summary>
+    /// <summary>
+    /// Das Datum jetzt: Schalter (Pruefstand), sonst das lokale Datum des Geraets. Die einzige Stelle im Spiel,
+    /// die das Geraetedatum liest (auch fuer die Jahreszeit, Weisung P8-24).
+    /// </summary>
+    public static DateOnly Datum() => SchalterDatum() ?? DateOnly.FromDateTime(DateTime.Now);
+
+    /// <summary>Festzeit jetzt: Probe (Start-Test), sonst nach <see cref="Datum"/>.</summary>
     public static string? Heute() =>
-        _probeAktiv ? _probe : Fuer(SchalterDatum() ?? DateOnly.FromDateTime(DateTime.Now));
+        _probeAktiv ? _probe : Fuer(Datum());
 }

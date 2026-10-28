@@ -141,6 +141,14 @@ public partial class MainView : UserControl
                 e.Handled = true;
                 _ = ZeigeAsync(Seiten.Suche);
             }
+            // Phase 8 W8 (Sammelliste 131/133): Vollbild ein und aus (Standard F11) auf jeder Seite;
+            // nicht, solange die Tastenbelegung auf eine neue Taste wartet
+            else if (!Lernplattform.Spiel.Vollbild.TasteWartet && e.KeyModifiers == KeyModifiers.None
+                && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Vollbild)
+            {
+                e.Handled = true;
+                Lernplattform.Spiel.Vollbild.Umschalten();
+            }
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);

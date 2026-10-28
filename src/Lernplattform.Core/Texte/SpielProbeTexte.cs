@@ -1,3 +1,5 @@
+using Tasten = Lernplattform.Core.Spiel.Probe.Tastenbelegung;
+
 namespace Lernplattform.Core.Texte;
 
 /// <summary>
@@ -7,7 +9,20 @@ namespace Lernplattform.Core.Texte;
 public static class SpielProbeTexte
 {
     public const string Titel = "Spiel (Probe 3D)";
-    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, Q und E drehen.";
+    /// <summary>Hinweis mit der Standardbelegung (Phase 8 W8: rechte Maustaste dreht, Text von Chat angenommen, P8-16 E2 Punkt 5).</summary>
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, rechte Maustaste oder Q und E drehen.";
+
+    /// <summary>Hinweis mit den gewaehlten Tasten (Tastenbelegung); mit Standard genau <see cref="Hinweis"/>.</summary>
+    public static string HinweisFuer(Tasten tasten)
+    {
+        string T(string aufgabe) => tasten.AnzeigeFuer(aufgabe);
+        var pfeile = tasten.Eigen.Keys.Any(a => a is Tasten.Links or Tasten.Rechts
+            or Tasten.Hoch or Tasten.Runter)
+            ? $"{T(Tasten.Links)}, {T(Tasten.Rechts)}, {T(Tasten.Hoch)} und {T(Tasten.Runter)}"
+            : "Pfeiltasten";
+        return "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. "
+            + $"Am PC: Mausrad zoomt, {pfeile} verschieben, rechte Maustaste oder {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen.";
+    }
     public const string Orte = "Orte";
     public const string Hingehen = "Hingehen";
     public const string Betreten = "Hineingehen";

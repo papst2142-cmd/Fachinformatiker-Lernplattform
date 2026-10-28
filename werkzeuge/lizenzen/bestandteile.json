@@ -56,7 +56,21 @@
     {"id": "Grafik Kenney Car Kit", "version": "2.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/car-kit (Kenney, www.kenney.nl)",
      "beschreibung": "Fahrende Autos in der Stadt im Spiel (Taxi, Lieferwagen, Limousine, Polizei, Krankenwagen, Muellwagen), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_CarKit_CC0.txt"]},
     {"id": "Grafik KayKit Forest Nature Pack", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kaylousberg.itch.io (KayKit Forest Nature Pack, Kay Lousberg, www.kaylousberg.com)",
-     "beschreibung": "Baeume, Buesche, Graeser und Steine in der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_ForestNaturePack_CC0.txt"]}
+     "beschreibung": "Baeume, Buesche, Graeser und Steine in der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["KayKit_ForestNaturePack_CC0.txt"]},
+    {"id": "miniaudio", "version": "0.11.24 (in SoundFlow 1.4.1)", "lizenz": "MIT-0 oder Unlicense (Public Domain)", "quelle": "https://github.com/mackron/miniaudio (David Reid), gebaut von SoundFlow (https://github.com/LSXPrime/SoundFlow)",
+     "beschreibung": "Tonausgabe auf allen Systemen, enthalten in libminiaudio (miniaudio.dll, libminiaudio.so, libminiaudio.dylib) aus dem Paket SoundFlow", "dateien": [], "texte": ["SoundFlow_Drittanbieter.txt"]},
+    {"id": "Toene Kenney Impact Sounds", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/impact-sounds (Kenney, www.kenney.nl)",
+     "beschreibung": "Schritte auf Stein, Gras, Holz und Teppich im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_ImpactSounds_CC0.txt"]},
+    {"id": "Toene Kenney RPG Audio", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/rpg-audio (Kenney, www.kenney.nl)",
+     "beschreibung": "Tueren und Muenzen (Kasse) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_RPGAudio_CC0.txt"]},
+    {"id": "Toene Kenney Music Jingles", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/music-jingles (Kenney, www.kenney.nl)",
+     "beschreibung": "Kurze Melodien (Feierabend, Erfolg, Ticket) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_MusicJingles_CC0.txt"]},
+    {"id": "Toene Park ambiences (Thimras)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/park-ambiences (Thimras)",
+     "beschreibung": "Voegel, Wind und Fluss in der Stadt im Spiel (je Jahreszeit), zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_Thimras_ParkAmbiences_CC0.txt"]},
+    {"id": "Toene racing car engine sound loops (domasx2)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/node/5633 (domasx2)",
+     "beschreibung": "Motoren der Autos in der Stadt im Spiel, Tonhoehe abgesenkt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_domasx2_CarEngineLoops_CC0.txt"]},
+    {"id": "Toene Bird chirping sounds (syncopika)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/bird-chirping-sounds (syncopika)",
+     "beschreibung": "Einzelne Vogelrufe in Parks im Spiel, umgewandelt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_syncopika_BirdChirping_CC0.txt"]}
   ],
   "_hinweis_ohne_nuspec": "Pakete aus dotnet/packs (mit dem SDK geliefert) haben keine .nuspec; Lizenz und Quelle dann von hier (Angaben wie im gleichnamigen NuGet-Paket).",
   "ohne_nuspec": {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Lernplattform.Core.Spiel;
 
@@ -120,9 +121,51 @@ public class FestzeitTests
             }
         }
         Assert.Equal(erlaubt.OrderBy(p => p.Key, StringComparer.Ordinal), gefunden.OrderBy(p => p.Key, StringComparer.Ordinal));
-        // die Stelle in Festzeit.cs ist Heute()
+        // die Stelle in Festzeit.cs ist Datum(); Heute() (Festzeit) und Jahreszeiten.Heute() lesen nur sie (Weisung P8-24)
         var text = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src/Lernplattform.Core/Spiel/Festzeit.cs"));
-        Assert.Matches(@"public static string\? Heute\(\) =>\s+_probeAktiv \? _probe : Fuer\(SchalterDatum\(\) \?\? DateOnly\.FromDateTime\(DateTime\.Now\)\);", text);
+        Assert.Matches(@"public static DateOnly Datum\(\) => SchalterDatum\(\) \?\? DateOnly\.FromDateTime\(DateTime\.Now\);", text);
+        Assert.Matches(@"public static string\? Heute\(\) =>\s+_probeAktiv \? _probe : Fuer\(Datum\(\)\);", text);
+        var jahreszeit = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src/Lernplattform.Core/Spiel/Jahreszeit.cs"));
+        Assert.Matches(@"public static Jahreszeit Heute\(\) =>\s+_probe \?\? Fuer\(Festzeit\.Datum\(\)\);", jahreszeit);
+    }
+
+    /// <summary>Weisung P8-24: Jahreszeit meteorologisch je Grenztag, auch 29. Februar.</summary>
+    [Theory]
+    [InlineData("2028-02-28", Jahreszeit.Winter)]
+    [InlineData("2028-02-29", Jahreszeit.Winter)]
+    [InlineData("2028-03-01", Jahreszeit.Fruehling)]
+    [InlineData("2027-02-28", Jahreszeit.Winter)]
+    [InlineData("2027-03-01", Jahreszeit.Fruehling)]
+    [InlineData("2026-05-31", Jahreszeit.Fruehling)]
+    [InlineData("2026-06-01", Jahreszeit.Sommer)]
+    [InlineData("2026-06-15", Jahreszeit.Sommer)]
+    [InlineData("2026-08-31", Jahreszeit.Sommer)]
+    [InlineData("2026-09-01", Jahreszeit.Herbst)]
+    [InlineData("2026-11-30", Jahreszeit.Herbst)]
+    [InlineData("2026-12-01", Jahreszeit.Winter)]
+    [InlineData("2026-12-31", Jahreszeit.Winter)]
+    [InlineData("2027-01-01", Jahreszeit.Winter)]
+    public void JahreszeitJeGrenztag(string tag, Jahreszeit soll)
+    {
+        Assert.Equal(soll, Jahreszeiten.Fuer(DateOnly.ParseExact(tag, "yyyy-MM-dd", CultureInfo.InvariantCulture)));
+    }
+
+    [Fact]
+    public void JahreszeitProbeUndDatum()
+    {
+        try
+        {
+            foreach (var zeit in Enum.GetValues<Jahreszeit>())
+            {
+                Jahreszeiten.Probe(zeit);
+                Assert.Equal(zeit, Jahreszeiten.Heute());
+            }
+        }
+        finally
+        {
+            Jahreszeiten.ProbeEnde();
+        }
+        Assert.Equal(Jahreszeiten.Fuer(Festzeit.Datum()), Jahreszeiten.Heute());
     }
 
     [Fact]

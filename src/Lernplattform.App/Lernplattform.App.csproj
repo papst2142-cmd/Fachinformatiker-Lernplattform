@@ -29,6 +29,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- Phase 8 W8: Ausgabe der Toene auf allen Systemen (miniaudio) -->
+    <PackageReference Include="SoundFlow" />
   </ItemGroup>
 
   <ItemGroup>

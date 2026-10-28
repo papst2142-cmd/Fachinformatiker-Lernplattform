@@ -218,6 +218,8 @@ public sealed class SpielSeite : Grid
             _angehaengt = Stopwatch.GetTimestamp();
             OeffnenMs = null;
             _takt.Start();
+            // Phase 8 W8: Toene (Geraet oeffnen und Toene lesen im Hintergrund)
+            TonDienst.SpielBetreten();
             Flaeche.AnfordernBild();
             _oben = TopLevel.GetTopLevel(this);
             if (_oben is not null)
@@ -265,6 +267,8 @@ public sealed class SpielSeite : Grid
         {
             // Weisung P7-17: beim Verlassen des Spiels alle Spielschritte fertig schreiben
             Core.Spiel.Spielschlange.AlleLeeren();
+            // Phase 8 W8: Toene nur auf der Spielseite
+            TonDienst.SpielVerlassen();
             _anhaengen++;
             _takt.Stop();
             ZeitenSchreiben(true);
@@ -408,9 +412,11 @@ public sealed class SpielSeite : Grid
         {
             alt.Geaendert -= Beschriften;
             alt.SzeneGeaendert -= ListeBauen;
+            alt.Ton -= TonDienst.Anlass;
         }
         Spiel = spiel;
         Flaeche.Spiel = spiel;
+        spiel.Ton += TonDienst.Anlass;
         spiel.Geaendert += Beschriften;
         spiel.SzeneGeaendert += ListeBauen;
         ListeBauen();
