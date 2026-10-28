@@ -492,7 +492,15 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 vec3 licht = normalize(vec3(0.35, 0.85, 0.45));
                 float d = abs(dot(normalize(vNormale), licht));
-                fFarbe = vec4(vFarbe * (0.48 + 0.52 * d) * uHell, 1.0);
+                // Phase 8 W9 (Nico 5b): Schnee traegt die Marke +2 (Jahreszeitfarben.SchneeMarke) und wird im dunklen
+                // Design nicht abgedunkelt
+                vec3 farbe = vFarbe;
+                float hell = uHell;
+                if (farbe.r > 1.5) {
+                    farbe -= vec3(2.0);
+                    hell = 1.0;
+                }
+                fFarbe = vec4(farbe * (0.48 + 0.52 * d) * hell, 1.0);
             }
             """;
         var vs = gl.CreateShader(GL_VERTEX_SHADER);

@@ -73,12 +73,12 @@ public static class SpielStart
     public static string? GrafikFehler { get; private set; }
 
     /// <summary>Neuer Spielstand (nur im Arbeitsspeicher) mit der Probe-Figur, Tag 1 um 07:00 zu Hause.</summary>
-    /// <remarks>Phase 8 W6: <paramref name="feste"/> = festzeiten.json, <paramref name="festzeit"/> wie bei <see cref="StadtSpiel"/>.</remarks>
+    /// <remarks>Phase 8 W6: <paramref name="feste"/> = festzeiten.json, <paramref name="festzeit"/> und (W9) <paramref name="jahreszeit"/> wie bei <see cref="StadtSpiel"/>.</remarks>
     public static StadtSpiel Neu(Stadt stadt, GrafikBibliothek? grafik, PyObjekt? innenraeume, PyObjekt? geschaefte = null,
-        PyObjekt? feste = null, Func<string?>? festzeit = null)
+        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null)
     {
         var ablauf = new Spielablauf(stadt.Inhalt);
         ablauf.Profil(ProbeName, new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        return new StadtSpiel(stadt, ablauf, grafik, innenraeume, geschaefte, feste, festzeit);
+        return new StadtSpiel(stadt, ablauf, grafik, innenraeume, geschaefte, feste, festzeit, jahreszeit);
     }
 }

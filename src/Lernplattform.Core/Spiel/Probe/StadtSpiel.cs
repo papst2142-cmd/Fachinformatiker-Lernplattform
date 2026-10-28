@@ -34,7 +34,7 @@ public sealed class StadtSpiel
     /// <see cref="Festzeit.Heute"/>; ohne (Tests) nie eine Festzeit.
     /// </remarks>
     public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null,
-        PyObjekt? feste = null, Func<string?>? festzeit = null)
+        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null)
     {
         Stadt = stadt;
         Ablauf = ablauf;
@@ -43,7 +43,8 @@ public sealed class StadtSpiel
         GeschaefteDaten = geschaefte;
         Feste = feste;
         _festzeit = festzeit;
-        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik, FestJetzt(), feste);
+        _jahreszeit = jahreszeit;
+        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik, FestJetzt(), feste, JahreszeitJetzt());
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
         FigurZ = hier?.StehZ ?? 0;
@@ -86,6 +87,11 @@ public sealed class StadtSpiel
 
     /// <summary>Phase 8 W6: die Festzeit jetzt (nur beim Aufbau einer Ansicht gefragt).</summary>
     private string? FestJetzt() => _festzeit?.Invoke();
+
+    /// <summary>Phase 8 W9: Jahreszeit der Farben, gefragt wie die Festzeit beim Aufbau einer Ansicht (ohne: Sommer).</summary>
+    private readonly Func<Jahreszeit>? _jahreszeit;
+
+    private Jahreszeit JahreszeitJetzt() => _jahreszeit?.Invoke() ?? Jahreszeit.Sommer;
 
     private (Spielstand? Stand, IReadOnlyList<Figur.Stueck> Stuecke) _kleidung = (null, []);
 
@@ -588,7 +594,7 @@ public sealed class StadtSpiel
         }
         var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
         var fest = FestJetzt();
-        var innen = Vorbereitet(ansicht, fest) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste);
+        var innen = Vorbereitet(ansicht, fest) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste, Szene.Jahreszeit);
         if (innen is null)
         {
             return false;
@@ -610,6 +616,7 @@ public sealed class StadtSpiel
     private string? _vorAnsicht;
     private Spielstand? _vorStand;
     private string? _vorFest;
+    private Jahreszeit _vorJahreszeit;
 
     /// <summary>
     /// Weisung P7-16: den Innenraum eines Orts ausserhalb des Oberflaechen-Threads vorbereiten (Grundriss,
@@ -621,19 +628,20 @@ public sealed class StadtSpiel
     {
         var ansicht = ort is null ? null : Szene.Ort(ort)?.Ansicht;
         var fest = FestJetzt();
-        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest))
+        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest && Szene.Jahreszeit == _vorJahreszeit))
         {
             return;
         }
         var stand = Ablauf.Stand;
         var kopie = stand.Kopie();
-        var (innenraeume, grafik, geschaefte, feste) = (Innenraeume, Grafik, GeschaefteDaten, Feste);
+        var (innenraeume, grafik, geschaefte, feste, jahreszeit) = (Innenraeume, Grafik, GeschaefteDaten, Feste, Szene.Jahreszeit);
         _vorAnsicht = ansicht;
         _vorStand = stand;
         _vorFest = fest;
+        _vorJahreszeit = jahreszeit;
         _vorbereitung = Task.Run(() =>
         {
-            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste);
+            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
             innen?.Vorbereiten();
             return innen;
         });
@@ -643,7 +651,8 @@ public sealed class StadtSpiel
     private Innenraum? Vorbereitet(string? ansicht, string? fest)
     {
         var aufgabe = _vorbereitung;
-        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest;
+        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest
+            && _vorJahreszeit == Szene.Jahreszeit;
         _vorbereitung = null;
         _vorAnsicht = null;
         _vorStand = null;
@@ -816,9 +825,10 @@ public sealed class StadtSpiel
         EinrichtenBeenden();
         Knoepfe = [];
         // Phase 8 W6: Stadt betreten = Aufbau einer Ansicht, die Festzeit neu fragen
-        if (FestJetzt() is var fest && fest != Szene.Fest)
+        // Phase 8 W9: ebenso die Jahreszeit der Farben
+        if ((FestJetzt() is var fest && fest != Szene.Fest) | (JahreszeitJetzt() is var jahreszeit && jahreszeit != Szene.Jahreszeit))
         {
-            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste);
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste, jahreszeit);
             SzeneGeaendert?.Invoke();
         }
         InnenGeaendert?.Invoke();
@@ -1059,7 +1069,7 @@ public sealed class StadtSpiel
             return;
         }
         // Phase 8 W6: dieselbe Festzeit wie beim Betreten (nie mitten in einer Ansicht wechseln)
-        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste) ?? alt;
+        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste, alt.Jahreszeit) ?? alt;
         InnenGeaendert?.Invoke();
     }
 
@@ -1070,7 +1080,7 @@ public sealed class StadtSpiel
         // Phase 8 W6: die Festzeit der Szene bleibt (neu gefragt wird nur beim Betreten der Stadt)
         if (StadtSzene.SignaturFuer(Stadt, Ablauf.Stand, Szene.Fest) != Szene.Signatur)
         {
-            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, Szene.Fest, Feste);
+            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, Szene.Fest, Feste, Szene.Jahreszeit);
             SzeneGeaendert?.Invoke();
         }
     }

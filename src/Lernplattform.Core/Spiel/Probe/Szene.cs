@@ -45,6 +45,12 @@ public sealed class Netz
 
     public int AnzahlEcken => _ecken.Count / Zahlen;
 
+    /// <summary>
+    /// Phase 8 W9: Faerbung der folgenden eigenen Teile und Streifen je Flaeche (Farbe, Betrag der Normale nach
+    /// oben, mittlere Hoehe) -> neue Farbe; null = Farbe wie angegeben (Sommer, bitgleich wie vorher).
+    /// </summary>
+    public Func<Vector3, float, float, Vector3>? Faerbung { get; set; }
+
     public static Vector3 Farbe(string hex)
     {
         var h = hex.TrimStart('#');
@@ -91,7 +97,13 @@ public sealed class Netz
     }
 
     /// <summary>Ein CC0-Modell an seiner Lage einfuegen (flache Normale je Dreieck, Farbe des Dreiecks).</summary>
-    public void Hinzu(GrafikModell modell, Matrix4x4 lage)
+    public void Hinzu(GrafikModell modell, Matrix4x4 lage) => Hinzu(modell, lage, null);
+
+    /// <summary>
+    /// Phase 8 W9: wie <see cref="Hinzu(GrafikModell, Matrix4x4)"/>, die Farbe jedes Dreiecks aus
+    /// <paramref name="faerbung"/> (Nummer des Dreiecks im Modell, Betrag der Normale nach oben, mittlere Hoehe).
+    /// </summary>
+    public void Hinzu(GrafikModell modell, Matrix4x4 lage, Func<int, float, float, Vector3>? faerbung)
     {
         var e = modell.Ecken;
         for (var d = 0; d < modell.Dreiecke; d++)
@@ -104,7 +116,9 @@ public sealed class Netz
             {
                 continue;
             }
-            var farbe = new Vector3(modell.Farben[d * 3], modell.Farben[(d * 3) + 1], modell.Farben[(d * 3) + 2]) / 255f;
+            var farbe = faerbung is null
+                ? new Vector3(modell.Farben[d * 3], modell.Farben[(d * 3) + 1], modell.Farben[(d * 3) + 2]) / 255f
+                : faerbung(d, MathF.Abs(kreuz.Y) / MathF.Sqrt(kreuz.LengthSquared()), (a.Y + b.Y + c.Y) / 3);
             Dreieck(a, b, c, farbe);
         }
     }
@@ -159,6 +173,10 @@ public sealed class Netz
             }
         }
         var n = normale ?? Vector3.Normalize(kreuz);
+        if (Faerbung is { } f)
+        {
+            farbe = f(farbe, MathF.Abs(n.Y), (a.Y + b.Y + c.Y + d.Y) / 4);
+        }
         var basis = (uint)AnzahlEcken;
         foreach (var p in (Vector3[])[a, b, c, d])
         {
@@ -217,6 +235,10 @@ public sealed class Netz
     private void Viereck(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 farbe)
     {
         var n = Vector3.Normalize(Vector3.Cross(b - a, c - a));
+        if (Faerbung is { } f)
+        {
+            farbe = f(farbe, MathF.Abs(n.Y), (a.Y + b.Y + c.Y + d.Y) / 4);
+        }
         var basis = (uint)AnzahlEcken;
         foreach (var p in (Vector3[])[a, b, c, d])
         {

@@ -167,41 +167,101 @@ public sealed class StadtSzene
             Array.Fill(teileHaus, true, h.TeileVon, h.TeileBis - h.TeileVon);
             Array.Fill(stueckeHaus, true, h.StueckeVon, h.StueckeBis - h.StueckeVon);
         }
-        var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i]));
+        if (Jahreszeit == Jahreszeit.Sommer)
+        {
+            var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i]));
+            foreach (var streifen in Streifen)
+            {
+                netz.Hinzu(streifen);
+            }
+            for (var i = 0; i < Stuecke.Count; i++)
+            {
+                if (!stueckeHaus[i] && ModellAn(i) is { } modell)
+                {
+                    netz.Hinzu(modell, Stuecke[i].Lage);
+                }
+            }
+            foreach (var baum in GruenKlein?.Baeume ?? [])
+            {
+                if (Grafik?.Modell(baum.Name) is { } modell)
+                {
+                    netz.Hinzu(modell, baum.Lage);
+                }
+            }
+            return netz;
+        }
+        // Phase 8 W9: Farben nach der Jahreszeit; die Fest-Deko (ab FestTeileVon/FestStueckeVon) behaelt ihre Farben
+        var gefaerbt = new Netz();
+        for (var i = 0; i < Teile.Count; i++)
+        {
+            if (!teileHaus[i])
+            {
+                var t = Teile[i];
+                gefaerbt.Faerbung = i < FestTeileVon
+                    ? Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Stadt, Jahreszeitfarben.Samen(new Vector3((t.X1 + t.X2) / 2, 0, (t.Z1 + t.Z2) / 2)))
+                    : null;
+                gefaerbt.Hinzu(t);
+            }
+        }
+        gefaerbt.Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Stadt);
         foreach (var streifen in Streifen)
         {
-            netz.Hinzu(streifen);
+            gefaerbt.Hinzu(streifen);
         }
+        gefaerbt.Faerbung = null;
         for (var i = 0; i < Stuecke.Count; i++)
         {
             if (!stueckeHaus[i] && ModellAn(i) is { } modell)
             {
-                netz.Hinzu(modell, Stuecke[i].Lage);
+                gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : null);
             }
         }
         foreach (var baum in GruenKlein?.Baeume ?? [])
         {
             if (Grafik?.Modell(baum.Name) is { } modell)
             {
-                netz.Hinzu(modell, baum.Lage);
+                gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
         }
-        return netz;
+        return gefaerbt;
     }
 
     /// <summary>Das Netz eines Hauses (eigene Teile und CC0-Modelle).</summary>
     public Netz HausNetz(StadtHaus haus)
     {
-        var netz = Netz.Aus(Teile.Skip(haus.TeileVon).Take(haus.TeileBis - haus.TeileVon));
+        if (Jahreszeit == Jahreszeit.Sommer)
+        {
+            var netz = Netz.Aus(Teile.Skip(haus.TeileVon).Take(haus.TeileBis - haus.TeileVon));
+            for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
+            {
+                if (ModellAn(i) is { } modell)
+                {
+                    netz.Hinzu(modell, Stuecke[i].Lage);
+                }
+            }
+            return netz;
+        }
+        // Phase 8 W9: am Haus Schnee nur auf dem Dach; Baeume am Haus (Modellname mit "tree") wie die Baeume der Stadt
+        var gefaerbt = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Haus) };
+        for (var i = haus.TeileVon; i < haus.TeileBis; i++)
+        {
+            gefaerbt.Hinzu(Teile[i]);
+        }
+        gefaerbt.Faerbung = null;
         for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
         {
             if (ModellAn(i) is { } modell)
             {
-                netz.Hinzu(modell, Stuecke[i].Lage);
+                var art = Stuecke[i].Name.Contains("tree", StringComparison.Ordinal) ? Faerbeart.Stadt : Faerbeart.Haus;
+                gefaerbt.Hinzu(modell, Stuecke[i].Lage, ModellFaerbung(modell, Stuecke[i].Lage, art));
             }
         }
-        return netz;
+        return gefaerbt;
     }
+
+    /// <summary>Phase 8 W9: Faerbung eines Modells an seiner Lage (Samen und Nadelbaum je Modell); null im Sommer.</summary>
+    private Func<int, float, float, Vector3>? ModellFaerbung(GrafikModell modell, Matrix4x4 lage, Faerbeart art) =>
+        Jahreszeitfarben.FuerModell(Jahreszeit, art, modell, Jahreszeitfarben.Samen(lage.Translation), Jahreszeitfarben.Nadel(modell));
 
     /// <summary>
     /// Haeuser, die zwischen Auge und Figur stehen (Sammelliste 102): die Strecken vom Auge zu Fuss,
@@ -366,8 +426,11 @@ public sealed class StadtSzene
     /// <remarks>
     /// Phase 8 W6: <paramref name="fest"/> = Festzeit (null = keine, die Szene wie vorher), <paramref name="feste"/> =
     /// Inhalt von festzeiten.json; die Deko kommt nur angehaengt dazu (<see cref="FestDeko.Stadt"/>).
+    /// Phase 8 W9: <paramref name="jahreszeit"/> faerbt nur die Netze (<see cref="Jahreszeitfarben"/>), die Szene
+    /// selbst (Teile, Modelle, Laufraster, Signatur) bleibt gleich.
     /// </remarks>
-    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null)
+    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null,
+        Jahreszeit jahreszeit = Jahreszeit.Sommer)
     {
         var stuecke = new List<ModellStueck>();
         var inhalt = stadt.Inhalt;
@@ -616,6 +679,8 @@ public sealed class StadtSzene
         }
         // Hindernisse vor der Fest-Deko: das Gruen haengt so nicht an der heutigen Festzeit
         var hindernisseVorFest = hindernisse.ToList();
+        var festTeileVon = teile.Count;
+        var festStueckeVon = stuecke.Count;
         var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse);
         if (fest is not null)
         {
@@ -657,6 +722,9 @@ public sealed class StadtSzene
             Uebergaenge = uebergaenge,
             Fest = fest,
             FestGesetzt = festGesetzt,
+            FestTeileVon = festTeileVon,
+            FestStueckeVon = festStueckeVon,
+            Jahreszeit = jahreszeit,
             GruenKlein = gruen,
             Strassen = strassen,
             Zierhaeuser = zierhaeuser,
@@ -1028,6 +1096,14 @@ public sealed class StadtSzene
     /// <summary>W8b: Haeuser ohne Ort mit Gehweg, Tuer und Namensschild (nicht betretbar).</summary>
     public IReadOnlyList<StadtZierhaus> Zierhaeuser { get; private init; } = [];
 
+    /// <summary>Phase 8 W9: Jahreszeit der Farben (nur Darstellung, Sommer = Farben wie vorher).</summary>
+    public Jahreszeit Jahreszeit { get; private init; } = Jahreszeit.Sommer;
+
+    /// <summary>Phase 8 W9: ab diesem Teil und diesem Modell steht die Fest-Deko (behaelt ihre Farben).</summary>
+    public int FestTeileVon { get; private init; } = int.MaxValue;
+
+    public int FestStueckeVon { get; private init; } = int.MaxValue;
+
     /// <summary>Netz des Kleingruens (nur in der Naehe gezeichnet), null = keins.</summary>
     public Netz? GruenNetzBauen()
     {
@@ -1035,12 +1111,18 @@ public sealed class StadtSzene
         {
             return null;
         }
-        var netz = Netz.Aus(g.Teile);
+        // Phase 8 W9: Kleingruen nach der Jahreszeit, im Winter Schnee auf Bueschel, Steinen und Beeten
+        var netz = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Klein) };
+        foreach (var t in g.Teile)
+        {
+            netz.Hinzu(t);
+        }
+        netz.Faerbung = null;
         foreach (var st in g.Stuecke)
         {
             if (Grafik.Modell(st.Name) is { } m)
             {
-                netz.Hinzu(m, st.Lage);
+                netz.Hinzu(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein));
             }
         }
         return netz;
@@ -1154,17 +1236,18 @@ public sealed class StadtSzene
                     }
                     if (!Py.Hat(teil, "fenster") || Py.Wahr(teil["fenster"]))
                     {
-                        // Fensterraster wie model_part_shapes (Zeilen je 0,7, Spalten je 0,8), auf der Front
-                        var zeilen = Math.Max(1, (int)(h / 0.7f));
+                        // Fensterraster wie model_part_shapes (Zeilen je 0,7, Spalten je 0,8), auf der Front; W9
+                        // (Sammelliste 147): bei Satteldach nach der Wandhoehe, sonst lag jede Reihe im Dach
+                        var zeilen = Math.Max(1, (int)(wandHoehe / 0.7f));
                         var spalten = Math.Max(1, (int)(w / 0.8f));
-                        float zelleB = (w - 0.3f) / spalten, zelleH = (h - 0.2f) / zeilen;
+                        float zelleB = (w - 0.3f) / spalten, zelleH = (wandHoehe - 0.2f) / zeilen;
                         var anteil = Zahl(teil, "licht", 0.5f);
                         var lichtfarbe = teil["lichtfarbe"] is string lf && lf.Length > 0 ? Netz.Farbe(lf) : Farben.Licht;
                         for (var zeile = 0; zeile < zeilen; zeile++)
                         {
                             for (var spalte = 0; spalte < spalten; spalte++)
                             {
-                                var oben = h - 0.2f - (zeile * zelleH);
+                                var oben = wandHoehe - 0.2f - (zeile * zelleH);
                                 var unten = oben - (zelleH - 0.3f);
                                 if (oben > wandHoehe - 0.05f || unten < 0.1f)
                                 {
@@ -1187,7 +1270,7 @@ public sealed class StadtSzene
                         {
                             for (var spalte = 0; spalte < seitenSpalten; spalte++)
                             {
-                                var oben = h - 0.2f - (zeile * zelleH);
+                                var oben = wandHoehe - 0.2f - (zeile * zelleH);
                                 var unten = oben - (zelleH - 0.3f);
                                 if (oben > wandHoehe - 0.05f || unten < 0.1f)
                                 {

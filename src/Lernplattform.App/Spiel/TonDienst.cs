@@ -108,6 +108,7 @@ public static class TonDienst
     {
         lock (Sperre)
         {
+            ProbeBeenden(schliessen: false);
             Vorbereiten();
             // Grundklang je Jahreszeit: gewechselt wird nur beim Betreten der Spielseite
             _jahreszeit = Core.Spiel.Jahreszeiten.Heute();
@@ -135,6 +136,10 @@ public static class TonDienst
     {
         lock (Sperre)
         {
+            if (an)
+            {
+                ProbeBeenden(schliessen: true);
+            }
             Anwenden(Schalter.Setzen(hintergrund: an));
         }
     }
@@ -171,6 +176,9 @@ public static class TonDienst
     private static void Leeren()
     {
         Mischer.AllesBeenden();
+        // W9: eine laufende Hoerprobe (Gesamt kurz auf 0) startet beim Hochziehen neu
+        ProbeStimmen.Clear();
+        _probeWartet = Probe.Regler is not null;
         _grund = _fluss = _lied = 0;
         _grundSchluessel = null;
         _flussLaut = -1;
@@ -466,7 +474,7 @@ public static class TonDienst
             return;
         }
         var ort = _innen ? "innen" : "stadt";
-        var soll = Soll && Lieder is not null && TonEinstellungen.MusikHier(_werte.MusikOrte, _innen) && Mischer.Faktor(Tongruppe.Musik) > 0
+        var soll = Soll && Schalter.ImSpiel && Lieder is not null && TonEinstellungen.MusikHier(_werte.MusikOrte, _innen) && Mischer.Faktor(Tongruppe.Musik) > 0
             && _vorbereitung is { IsCompleted: true };
         if (!soll)
         {
@@ -502,7 +510,7 @@ public static class TonDienst
                     return;
                 }
                 var jetzt = _innen ? "innen" : "stadt";
-                if (still || !Soll || jetzt != ort || !TonEinstellungen.MusikHier(_werte.MusikOrte, _innen))
+                if (still || !Soll || !Schalter.ImSpiel || jetzt != ort || !TonEinstellungen.MusikHier(_werte.MusikOrte, _innen))
                 {
                     // stiller Dienst: nur zaehlen (Start-Test), je Ort einmal
                     gefunden.Strom.Dispose();
@@ -531,6 +539,198 @@ public static class TonDienst
             }
             _liedStill = null;
             MusikPruefen();
+        }
+    }
+
+    // Phase 8 W9 (Weisungen P8-29, P8-32, Nico 4b): Hoerprobe an den Reglern der Karte "Musik und Geräusche"
+
+    private static readonly Probenlauf Probe = new();
+    private static readonly List<(int Id, float Laut)> ProbeStimmen = [];
+    private static Timer? _probeTakt;
+    private static bool _probeWartet;
+    private static bool _probeLiedOeffnet;
+    private static int _probeNummer;
+
+    /// <summary>Start-Test: Beispiele gestartet (auch im stillen Dienst).</summary>
+    public static int ProbeStarts
+    {
+        get
+        {
+            lock (Sperre)
+            {
+                return Probe.Starts;
+            }
+        }
+    }
+
+    /// <summary>Start-Test: Stimmen des laufenden Beispiels im Mischer (nie von zwei Reglern zugleich).</summary>
+    public static int ProbeStimmenAnzahl
+    {
+        get
+        {
+            lock (Sperre)
+            {
+                return ProbeStimmen.Count;
+            }
+        }
+    }
+
+    /// <summary>Ein Regler wurde verstellt (nach <see cref="Regler"/>): Beispiel starten oder weiterklingen lassen.</summary>
+    public static void Hoerprobe(Tonregler regler)
+    {
+        lock (Sperre)
+        {
+            var jetzt = Uhr.Elapsed.TotalSeconds;
+            var wechsel = Probe.Aenderung(regler, jetzt);
+            if (wechsel == Probenwechsel.Weiter)
+            {
+                return;
+            }
+            StimmenBeenden();
+            _probeNummer++;
+            Vorbereiten();
+            Anwenden(Schalter.Setzen(hoerprobe: true));
+            var gruppe = regler == Tonregler.Musik ? Tongruppe.Musik : Tongruppe.Umgebung;
+            Zaehlen(Core.Spiel.Ton.Hoerprobe.Schluessel(regler), gruppe);
+            _probeWartet = true;
+            StimmenStarten();
+            _probeTakt ??= new Timer(_ => ProbeTakt(), null, 50, 50);
+        }
+    }
+
+    /// <summary>Beispiel jetzt starten, wenn die Toene gelesen und das Geraet gewuenscht ist (sonst im naechsten Takt).</summary>
+    private static void StimmenStarten()
+    {
+        if (!_probeWartet || Probe.Regler is not { } regler || !Soll || _toene is null)
+        {
+            return;
+        }
+        _probeWartet = false;
+        foreach (var ton in Core.Spiel.Ton.Hoerprobe.BeispielFuer(regler, Core.Spiel.Jahreszeiten.Heute()))
+        {
+            if (ton.Schluessel == Core.Spiel.Ton.Hoerprobe.EigenesLied)
+            {
+                LiedOderMelodien(ton);
+                continue;
+            }
+            Starten(ton, ton.Schluessel == Core.Spiel.Ton.Hoerprobe.Melodien ? MelodienDaten() : Erste(ton.Schluessel));
+        }
+    }
+
+    private static TonDaten? Erste(string schluessel) =>
+        _toene is not null && _toene.TryGetValue(schluessel, out var liste) && liste.Count > 0 ? liste[0] : null;
+
+    private static TonDaten? _melodien;
+
+    private static TonDaten? MelodienDaten()
+    {
+        if (_melodien is null && Erste("melodie_erfolg") is { } a && Erste("melodie_feierabend") is { } b)
+        {
+            _melodien = Core.Spiel.Ton.Hoerprobe.Kette(a, b);
+        }
+        return _melodien;
+    }
+
+    private static void Starten(Probenton ton, TonDaten? daten)
+    {
+        if (daten is null)
+        {
+            return;
+        }
+        var laut = ton.Laut * (float)Probe.Huelle(Uhr.Elapsed.TotalSeconds);
+        ProbeStimmen.Add((Mischer.Starten(daten, ton.Gruppe, laut, ton.Schleife), ton.Laut));
+    }
+
+    /// <summary>Musik-Regler: das erste lesbare eigene Lied (im Hintergrund geoeffnet), sonst die Melodien.</summary>
+    private static void LiedOderMelodien(Probenton ton)
+    {
+        var melodien = new Probenton(Core.Spiel.Ton.Hoerprobe.Melodien, ton.Gruppe, Tonplan.Melodie, true);
+        if (Lieder is not { } lieder || lieder.Liste().Count == 0 || _probeLiedOeffnet)
+        {
+            Starten(melodien, MelodienDaten());
+            return;
+        }
+        var nummer = _probeNummer;
+        _probeLiedOeffnet = true;
+        Task.Run(() =>
+        {
+            var lied = lieder.Erstes();
+            lock (Sperre)
+            {
+                _probeLiedOeffnet = false;
+                if (nummer != _probeNummer || Probe.Regler != Tonregler.Musik || !Soll)
+                {
+                    lied?.Strom.Dispose();
+                    return;
+                }
+                if (lied is not { } gefunden)
+                {
+                    Starten(melodien, MelodienDaten());
+                    return;
+                }
+                var laut = ton.Laut * (float)Probe.Huelle(Uhr.Elapsed.TotalSeconds);
+                ProbeStimmen.Add((Mischer.StromStarten(gefunden.Strom, ton.Gruppe, laut), ton.Laut));
+            }
+        });
+    }
+
+    private static void StimmenBeenden()
+    {
+        foreach (var (id, _) in ProbeStimmen)
+        {
+            Mischer.Beenden(id);
+        }
+        ProbeStimmen.Clear();
+    }
+
+    /// <summary>Alle 50 ms: Lautstaerke nach Einblenden/Nachlauf/Ausklang, danach Ende; Geraet ausserhalb des Spiels zu.</summary>
+    private static void ProbeTakt()
+    {
+        try
+        {
+            lock (Sperre)
+            {
+                var jetzt = Uhr.Elapsed.TotalSeconds;
+                if (Probe.Regler is not null && Probe.Ausgeklungen(jetzt))
+                {
+                    StimmenBeenden();
+                    _probeWartet = false;
+                }
+                if (Probe.GeraetFrei(jetzt))
+                {
+                    ProbeBeenden(schliessen: true);
+                    return;
+                }
+                if (Probe.Ausgeklungen(jetzt))
+                {
+                    return;
+                }
+                StimmenStarten();
+                var huelle = (float)Probe.Huelle(jetzt);
+                foreach (var (id, laut) in ProbeStimmen)
+                {
+                    Mischer.Lautstaerke(id, laut * huelle);
+                }
+            }
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Ton: Hoerprobe: " + fehler.GetType().Name);
+        }
+    }
+
+    /// <summary>Beispiel weg; <paramref name="schliessen"/>: Geraet ausserhalb des Spiels wieder zu.</summary>
+    private static void ProbeBeenden(bool schliessen)
+    {
+        StimmenBeenden();
+        Probe.Ende();
+        _probeWartet = false;
+        _probeNummer++;
+        _probeTakt?.Dispose();
+        _probeTakt = null;
+        if (schliessen || Schalter.Hoerprobe)
+        {
+            Anwenden(Schalter.Setzen(hoerprobe: false));
         }
     }
 }

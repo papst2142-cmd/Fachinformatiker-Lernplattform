@@ -91,17 +91,29 @@ public sealed class EigeneLieder(string datenordner)
     /// Naechstes lesbares Lied oeffnen (der Reihe nach, danach von vorn); jedes Lied hoechstens einmal
     /// versucht. null = keine Lieder oder keins lesbar.
     /// </summary>
-    public (string Name, ITonStrom Strom)? Naechstes(Func<Stream, string, ITonStrom>? oeffnen = null)
+    public (string Name, ITonStrom Strom)? Naechstes(Func<Stream, string, ITonStrom>? oeffnen = null) => Oeffnen(oeffnen, weiterzaehlen: true);
+
+    /// <summary>
+    /// Phase 8 W9 (Nico 4b): das erste lesbare Lied der Liste fuer die Hoerprobe am Musik-Regler; kaputte werden wie
+    /// bei <see cref="Naechstes"/> uebersprungen (Zeile in fehler.log). Die Reihenfolge der Musik im Spiel bleibt.
+    /// </summary>
+    public (string Name, ITonStrom Strom)? Erstes(Func<Stream, string, ITonStrom>? oeffnen = null) => Oeffnen(oeffnen, weiterzaehlen: false);
+
+    private (string Name, ITonStrom Strom)? Oeffnen(Func<Stream, string, ITonStrom>? oeffnen, bool weiterzaehlen)
     {
         var liste = Liste();
+        var ab = weiterzaehlen ? _naechstes : 0;
         for (var versuch = 0; versuch < liste.Count; versuch++)
         {
-            var name = liste[(_naechstes + versuch) % liste.Count];
+            var name = liste[(ab + versuch) % liste.Count];
             try
             {
                 var stream = new FileStream(Path.Combine(Ordner, name), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var strom = (oeffnen ?? ((s, e) => Tondekoder.Strom(s, e)))(stream, Path.GetExtension(name));
-                _naechstes = (_naechstes + versuch + 1) % liste.Count;
+                if (weiterzaehlen)
+                {
+                    _naechstes = (_naechstes + versuch + 1) % liste.Count;
+                }
                 return (name, strom);
             }
             catch (Exception fehler)

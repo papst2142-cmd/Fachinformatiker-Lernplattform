@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.20.0
+Neu im Spiel: Die Stadt zeigt jetzt die Jahreszeit, und an den Ton-Reglern hörst du sofort ein Beispiel.
+
+- Die Farben der Stadt folgen der Jahreszeit nach dem Datum deines Geräts. Im Frühling sind Wiesen und Bäume hellgrün, und jeder dritte Laubbaum blüht rosa. Im Sommer sieht die Stadt aus wie bisher. Im Herbst färbt sich das Laub gelb, orange und rot, einige Bäume sind noch halb grün, und die Wiesen werden goldbraun. Nadelbäume bleiben das ganze Jahr grün.
+- Im Winter liegt Schnee: auf den Wiesen, im Park, auf den Dächern (auch auf dem steilen Dach des Stellwerks), auf Bäumen, Büschen und Blumenbeeten. Straßen und Gehwege sind geräumt, der Fluss ist hellblau. Im dunklen Design bleibt der Schnee hell, alles andere wird wie bisher abgedunkelt.
+- Auch die Wiese, die du durch die Fenster der Räume siehst, hat die Farbe der Jahreszeit.
+- Die Schmuckstücke der Festzeiten (zum Beispiel Weihnachtsbaum, Ostereier, Kürbisse) behalten ihre eigenen Farben. Es ist nur die Darstellung: dein Spielstand und das Spiel selbst ändern sich dadurch nicht.
+- In den Optionen unter „Musik und Geräusche“ hörst du beim Verstellen eines Reglers sofort ein kurzes Beispiel in der neuen Lautstärke, auch außerhalb des Spiels. „Gesamt“ spielt den Klang der Stadt und eine Melodie, „Musik“ dein erstes eigenes Lied (ohne eigenes Lied zwei Melodien des Spiels im Wechsel) und „Umgebung“ den Klang der Stadt zur aktuellen Jahreszeit. Es klingt immer nur ein Beispiel; kurz nach dem letzten Verstellen blendet es aus. Bei 0 % bleibt es still.
+- Falls die Hausmodelle einmal nicht geladen werden können, hat in der einfachen Ersatzdarstellung jetzt auch der Gewerbehof Fenster.
+
 ## A 0.19.0
 Neu im Spiel: Die Häuser der Stadt haben jetzt richtige Türen, und der Bahnhof sieht innen wie ein Bahnhof aus.
 
