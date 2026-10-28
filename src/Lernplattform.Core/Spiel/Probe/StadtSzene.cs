@@ -115,6 +115,12 @@ public sealed class StadtSzene
     /// </summary>
     public IReadOnlyList<(Vector2 Mitte, float R)> Baeume { get; private init; } = [];
 
+    /// <summary>Phase 8 W8 (Toene): Parks als Rechtecke (Schritte auf Gras, Vogelrufe).</summary>
+    public IReadOnlyList<(float X1, float Z1, float X2, float Z2)> Parks { get; private init; } = [];
+
+    /// <summary>Phase 8 W8 (Toene, P8-17c Punkt 2): Mittellinien des Flusses (geglaettet).</summary>
+    public IReadOnlyList<IReadOnlyList<Vector2>> Fluesse { get; private init; } = [];
+
     /// <summary>Phase 8 W6: die Festzeit, mit der die Szene gebaut wurde (null = keine).</summary>
     public string? Fest { get; private init; }
 
@@ -371,6 +377,7 @@ public sealed class StadtSzene
         var streifen = new List<Streifen>();
         var hindernisse = new List<(double, double, double, double)>();
         var wasser = new List<List<Vector2>>();
+        var parkFlaechen = new List<(float X1, float Z1, float X2, float Z2)>();
         var gleise = new List<List<Vector2>>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
@@ -392,6 +399,7 @@ public sealed class StadtSzene
                     {
                         float x = Zahl(item, "x"), z = Zahl(item, "y");
                         teile.Add(Quader(x, 0f, z, x + Zahl(item, "w"), Hoehe.Park, z + Zahl(item, "h"), Farben.Park));
+                        parkFlaechen.Add((x, z, x + Zahl(item, "w"), z + Zahl(item, "h")));
                         break;
                     }
                     case "fluss":
@@ -561,6 +569,8 @@ public sealed class StadtSzene
             FestGesetzt = festGesetzt,
             GruenKlein = gruen,
             Strassen = strassen,
+            Parks = parkFlaechen,
+            Fluesse = [.. wasser],
         };
     }
 

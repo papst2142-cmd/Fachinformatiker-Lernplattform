@@ -2,6 +2,8 @@ using System.Globalization;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Texte;
 
+using Lernplattform.Core.Spiel.Ton;
+
 namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>
@@ -46,9 +48,23 @@ public sealed class StadtSpiel
         FigurX = hier?.StehX ?? 0;
         FigurZ = hier?.StehZ ?? 0;
         // Beim Oeffnen erklaert die Zeile die Bedienung (Weisung P7-9 Punkt 1); ab dem ersten Schritt Ort und Uhr.
-        Zeile = SpielProbeTexte.Hinweis;
+        Zeile = SpielProbeTexte.HinweisFuer(Tastenbelegung.Aktuell);
         Vorbereiten(Jetzt.Ort);
+        // Phase 8 W8: Toene erst nach dem geschriebenen Ereignis (Kasse, Melodien), nur Darstellung
+        ablauf.NachEreignis = (art, daten) =>
+        {
+            if (Tonplan.AusEreignis(art, daten) is { } anlass)
+            {
+                Ton?.Invoke(new Tonanlass(anlass));
+            }
+        };
     }
+
+    /// <summary>Phase 8 W8: Anlass fuer einen Ton (Schritt, Tuer, Kasse, Melodie); nur Darstellung.</summary>
+    public event Action<Tonanlass>? Ton;
+
+    /// <summary>Boden unter der Figur (Schritte).</summary>
+    public Untergrund Boden => Tonplan.Boden(Innen?.Ansicht, !ImInnenraum && Tonplan.ImPark(Szene, FigurX, FigurZ));
 
     public Stadt Stadt { get; }
 
@@ -431,6 +447,7 @@ public sealed class StadtSpiel
     private bool Weiter(double sekunden)
     {
         var rest = sekunden * Tempo;
+        var halbVorher = Math.Floor(Schrittweg / (Zyklus / 2));
         Schrittweg += rest;
         while (rest > 0 && _weg.Count > 0)
         {
@@ -457,6 +474,11 @@ public sealed class StadtSpiel
             }
         }
         Schrittweg -= rest;
+        // Phase 8 W8: zwei Schritte je Doppelschritt (Bild 0 und 8 von 16)
+        if (Ton is not null && Math.Floor(Schrittweg / (Zyklus / 2)) != halbVorher)
+        {
+            Ton.Invoke(new Tonanlass(Anlass.Schritt, Boden));
+        }
         if (_weg.Count == 0)
         {
             Ankommen();
@@ -578,6 +600,7 @@ public sealed class StadtSpiel
         FigurZ = innen.StartZ;
         FigurRichtung = 90;
         InnenText();
+        Ton?.Invoke(new Tonanlass(Anlass.TuerAuf));
         InnenGeaendert?.Invoke();
         Geaendert?.Invoke();
         return true;
@@ -789,6 +812,7 @@ public sealed class StadtSpiel
         }
         _weg.Clear();
         Innen = null;
+        Ton?.Invoke(new Tonanlass(Anlass.TuerZu));
         EinrichtenBeenden();
         Knoepfe = [];
         // Phase 8 W6: Stadt betreten = Aufbau einer Ansicht, die Festzeit neu fragen

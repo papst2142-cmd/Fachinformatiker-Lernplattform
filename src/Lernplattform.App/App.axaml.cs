@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -28,16 +29,35 @@ public partial class App : Application
         Programm.Zustand.Starten();
         // Phase 5 W2 (BE7): Leistungsmessung nach dem gespeicherten Schalter (aus = keine Datei)
         Programm.Diagnosedienst.Starten(Programm.Zustand.Werte);
+        // Phase 8 W8: Tastenbelegung, Toene und Vollbild aus den Einstellungen
+        Core.Spiel.Probe.Tastenbelegung.Aktuell = Core.Spiel.Probe.Tastenbelegung.Lesen(Programm.Zustand.Werte);
+        Spiel.TonDienst.Regler(Core.Spiel.Ton.TonEinstellungen.Lesen(Programm.Zustand.Werte));
+        Spiel.TonDienst.Lieder = new Core.Spiel.Ton.EigeneLieder(Core.Daten.Ablage.Datenordner());
+        Spiel.Vollbild.DauerhaftSetzen(Core.Spiel.Ton.VollbildWahl.Lesen(Programm.Zustand.Werte));
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
+            var fenster = new MainWindow
             {
                 DataContext = new MainViewModel()
             };
+            // Phase 8 W8 (Sammelliste 131): Vollbild vor dem ersten Zeigen (kein Aufblitzen), Toene aus, solange minimiert
+            if (Spiel.Vollbild.Dauerhaft)
+            {
+                fenster.WindowState = WindowState.FullScreen;
+            }
+            Spiel.Vollbild.Fenster = an => fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            fenster.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == Window.WindowStateProperty)
+                {
+                    Spiel.TonDienst.Hintergrund(fenster.WindowState == WindowState.Minimized);
+                }
+            };
+            desktop.MainWindow = fenster;
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
             desktop.Exit += (_, _) =>
             {

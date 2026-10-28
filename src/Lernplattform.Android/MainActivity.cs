@@ -26,7 +26,12 @@ public class MainActivity : AvaloniaMainActivity
     {
         base.OnCreate(savedInstanceState);
         SystemmessungEinrichten();
-        Lernplattform.Spiel.Vollbild.Geraet = an => RunOnUiThread(() =>
+#if PROBE
+        // Weisung P8-16 a: Ton-Probe mit SoundFlow (nur Probe-APK)
+        Lernplattform.Spiel.TonProbe.Geraet = _tonprobe;
+#endif
+        // Phase 8 W8 (Nico 3a): "leisten" = Systemleisten aus, im Spiel immer, sonst mit dem Schalter "Vollbild"
+        Lernplattform.Spiel.Vollbild.Geraet = (an, leisten) => RunOnUiThread(() =>
         {
             _messung?.Setzen(an);
             RequestedOrientation = an ? ScreenOrientation.SensorLandscape : ScreenOrientation.Unspecified;
@@ -40,20 +45,22 @@ public class MainActivity : AvaloniaMainActivity
                     : global::Android.Views.LayoutInDisplayCutoutMode.Default;
                 fenster.Attributes = lage;
             }
-            if (OperatingSystem.IsAndroidVersionAtLeast(30) && Window?.InsetsController is { } leisten)
+            if (OperatingSystem.IsAndroidVersionAtLeast(30) && Window?.InsetsController is { } steuerung)
             {
-                if (an)
+                if (leisten)
                 {
                     // 2 = BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE (Leisten erscheinen beim Wischen vom Rand kurz)
-                    leisten.SystemBarsBehavior = 2;
-                    leisten.Hide(global::Android.Views.WindowInsets.Type.SystemBars());
+                    steuerung.SystemBarsBehavior = 2;
+                    steuerung.Hide(global::Android.Views.WindowInsets.Type.SystemBars());
                 }
                 else
                 {
-                    leisten.Show(global::Android.Views.WindowInsets.Type.SystemBars());
+                    steuerung.Show(global::Android.Views.WindowInsets.Type.SystemBars());
                 }
             }
         });
+        // Phase 8 W8: Schalter "Vollbild" schon beim Start an
+        Lernplattform.Spiel.Vollbild.GeraetAnwenden();
     }
 
     private Systemmessung? _messung;
@@ -108,11 +115,26 @@ public class MainActivity : AvaloniaMainActivity
     /// Sammelliste 51 (_lifecycle main.py 5970): offene Eingaben in Klausur und Abschlussprojekt
     /// speichern, auch wenn Avalonia den Wechsel nicht als Deactivated meldet.
     /// </summary>
+#if PROBE
+    private readonly Tonprobe _tonprobe = new();
+#endif
+
     protected override void OnPause()
     {
         Lernplattform.Core.Spiel.Spielschlange.AlleLeeren();
         Lernplattform.Programm.Zustand.EingabenSpeichern();
+        // Phase 8 W8: im Hintergrund still
+        Lernplattform.Spiel.TonDienst.Hintergrund(true);
+#if PROBE
+        _tonprobe.Aufraeumen();
+#endif
         base.OnPause();
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        Lernplattform.Spiel.TonDienst.Hintergrund(false);
     }
 
     protected override void OnStop()

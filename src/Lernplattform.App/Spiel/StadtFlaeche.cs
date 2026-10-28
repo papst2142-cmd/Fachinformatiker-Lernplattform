@@ -10,6 +10,7 @@ using Avalonia.Rendering;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Spiel.Ton;
 using static Avalonia.OpenGL.GlConsts;
 
 namespace Lernplattform.Spiel;
@@ -598,6 +599,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var k = (float)Math.Min(1, dt * 2.5);
             kamera.Setzen(kamera.ZielX + ((_spiel!.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
         }
+        if (_spiel is { } tonSpiel && kamera is not null && TonDienst.Aktiv)
+        {
+            // Phase 8 W8: Schleifen der Stadt nach der Bildmitte (Fluss, Autos nach Naehe, Voegel)
+            TonDienst.Takt(tonSpiel.ImInnenraum, tonSpiel.ImInnenraum ? null
+                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, _verkehr, _verkehr?.Faehrt(jetzt) == true));
+        }
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
         var hoehe = (int)Math.Max(1, Bounds.Height * skalierung);
@@ -977,12 +984,26 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         Anfordern();
     }
 
+    /// <summary>Phase 8 W8 (Sammelliste 132/135): Maus ueber den Kameragriff (rechte Taste dreht, nie Gehen).</summary>
+    private readonly Kameragriff _griff = new(ZiehenAb);
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
         _zeigerStempel = Stopwatch.GetTimestamp();
         Focus();
         var p = e.GetPosition(this);
+        if (e.Pointer.Type == PointerType.Mouse)
+        {
+            var art = e.GetCurrentPoint(this).Properties.PointerUpdateKind;
+            if (art is PointerUpdateKind.LeftButtonPressed or PointerUpdateKind.RightButtonPressed)
+            {
+                _griff.Druecken(art == PointerUpdateKind.RightButtonPressed, p.X, p.Y);
+                e.Pointer.Capture(this);
+            }
+            e.Handled = true;
+            return;
+        }
         _zeiger[e.Pointer] = p;
         if (_zeiger.Count == 1)
         {
@@ -1002,6 +1023,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+        if (e.Pointer.Type == PointerType.Mouse)
+        {
+            if (!_griff.Gedrueckt || AktuelleKamera is not { } maus)
+            {
+                return;
+            }
+            var mp = e.GetPosition(this);
+            MausSchritt(maus, _griff.Bewegen(mp.X, mp.Y));
+            return;
+        }
         if (!_zeiger.TryGetValue(e.Pointer, out var vorher))
         {
             return;
@@ -1046,6 +1077,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         base.OnPointerReleased(e);
         _zeigerStempel = Stopwatch.GetTimestamp();
+        if (e.Pointer.Type == PointerType.Mouse)
+        {
+            var art = e.GetCurrentPoint(this).Properties.PointerUpdateKind;
+            if (art is PointerUpdateKind.LeftButtonReleased or PointerUpdateKind.RightButtonReleased)
+            {
+                var tippen = _griff.Loslassen(art == PointerUpdateKind.RightButtonReleased);
+                if (!_griff.Gedrueckt)
+                {
+                    e.Pointer.Capture(null);
+                }
+                if (tippen)
+                {
+                    Tippen(e.GetPosition(this));
+                }
+            }
+            e.Handled = true;
+            return;
+        }
         var war = _zeiger.Remove(e.Pointer);
         e.Pointer.Capture(null);
         if (war && _zeiger.Count == 0 && !_gezogen)
@@ -1058,6 +1107,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (e.Pointer.Type == PointerType.Mouse)
+        {
+            _griff.Abbrechen();
+        }
         _zeiger.Remove(e.Pointer);
     }
 
@@ -1088,35 +1141,37 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             return false;
         }
-        var (dx, dy) = taste switch
+        // Phase 8 W8 (Sammelliste 133): Tasten nach der Tastenbelegung (Standard wie bisher)
+        var aufgabe = Tastenbelegung.Aktuell.AufgabeFuer(taste.ToString());
+        var (dx, dy) = aufgabe switch
         {
-            Key.Left => (TastenSchritt, 0f),
-            Key.Right => (-TastenSchritt, 0f),
-            Key.Up => (0f, TastenSchritt),
-            Key.Down => (0f, -TastenSchritt),
+            Tastenbelegung.Links => (TastenSchritt, 0f),
+            Tastenbelegung.Rechts => (-TastenSchritt, 0f),
+            Tastenbelegung.Hoch => (0f, TastenSchritt),
+            Tastenbelegung.Runter => (0f, -TastenSchritt),
             _ => (0f, 0f),
         };
         if (dx != 0 || dy != 0)
         {
             kamera.Verschieben(dx, dy, (float)Math.Max(1, Bounds.Height));
         }
-        else if (taste == Key.Q)
+        else if (aufgabe == Tastenbelegung.DrehLinks)
         {
             kamera.Drehen(-15f);
         }
-        else if (taste == Key.E)
+        else if (aufgabe == Tastenbelegung.DrehRechts)
         {
             kamera.Drehen(15f);
         }
-        else if (taste is Key.OemPlus or Key.Add)
+        else if (aufgabe == Tastenbelegung.Naeher)
         {
             kamera.Zoomen(1.15f);
         }
-        else if (taste is Key.OemMinus or Key.Subtract)
+        else if (aufgabe == Tastenbelegung.Weiter)
         {
             kamera.Zoomen(1 / 1.15f);
         }
-        else if (taste == Key.Enter)
+        else if (aufgabe == Tastenbelegung.Hinein)
         {
             return spiel.Betreten();
         }
@@ -1127,6 +1182,41 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
         AnfordernBild();
         return true;
+    }
+
+    /// <summary>Ein Schritt der Maus anwenden (auch fuer den Start-Test): Ziehen verschiebt, rechte Taste dreht.</summary>
+    public void MausSchritt(Kamera kamera, Kameragriff.Schritt schritt)
+    {
+        switch (schritt.Art)
+        {
+            case Kameragriff.Art.Ziehen:
+                kamera.Verschieben((float)schritt.Dx, (float)schritt.Dy, (float)Bounds.Height);
+                break;
+            case Kameragriff.Art.Drehen:
+                kamera.Drehen(schritt.Grad);
+                break;
+            default:
+                return;
+        }
+        _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        AnfordernBild();
+    }
+
+    /// <summary>Start-Test: Maus mit rechter Taste von x1 nach x2 ziehen (wie echte Ereignisse ueber den Griff).</summary>
+    public bool ProbeRechtsZiehen(double x1, double x2, double y)
+    {
+        if (AktuelleKamera is not { } kamera)
+        {
+            return false;
+        }
+        _griff.Druecken(true, x1, y);
+        MausSchritt(kamera, _griff.Bewegen(x2, y));
+        var tippen = _griff.Loslassen(true);
+        if (tippen)
+        {
+            Tippen(new Point(x2, y));
+        }
+        return !tippen;
     }
 
     private double Abstand()
