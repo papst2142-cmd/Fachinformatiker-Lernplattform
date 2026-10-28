@@ -455,6 +455,32 @@ public sealed class SpielTonTests
         }
     }
 
+    /// <summary>Weisung P8-24 (Nico): Grundklang und Einzelrufe je Jahreszeit, Winter ohne Voegel.</summary>
+    [Fact]
+    public void GrundklangUndRufeJeJahreszeit()
+    {
+        Assert.Equal(Tonplan.StadtGrundSchluessel, Tonplan.StadtGrundFuer(Jahreszeit.Fruehling));
+        Assert.Equal(Tonplan.StadtGrundSchluessel, Tonplan.StadtGrundFuer(Jahreszeit.Sommer));
+        Assert.Equal(Tonplan.StadtGrundHerbst, Tonplan.StadtGrundFuer(Jahreszeit.Herbst));
+        Assert.Equal(Tonplan.StadtGrundWinter, Tonplan.StadtGrundFuer(Jahreszeit.Winter));
+        Assert.Equal(new Tonplan.Rufe(8, 25, 0.3f), Tonplan.RufeFuer(Jahreszeit.Sommer));
+        Assert.Equal(new Tonplan.Rufe(30, 90, 0.2f), Tonplan.RufeFuer(Jahreszeit.Fruehling));
+        Assert.Equal(new Tonplan.Rufe(30, 90, 0.2f), Tonplan.RufeFuer(Jahreszeit.Herbst));
+        Assert.Null(Tonplan.RufeFuer(Jahreszeit.Winter));
+        var zufall = new Random(7);
+        for (var i = 0; i < 200; i++)
+        {
+            Assert.InRange(Tonplan.NaechsterRuf(zufall, Tonplan.RufeFuer(Jahreszeit.Fruehling)!), 30, 90);
+        }
+        // jede Jahreszeit hat ihre Schleife; die Winter-Schleife ist ohne Vogelband-Rufe aus Wind gemacht
+        var eintraege = Eintraege();
+        foreach (var zeit in Enum.GetValues<Jahreszeit>())
+        {
+            Assert.Single(eintraege, e => e.Anlass == Tonplan.StadtGrundFuer(zeit));
+        }
+        Assert.DoesNotContain(eintraege, e => e.Anlass == Tonplan.StadtGrundWinter && e.Datei.Contains("voegel", StringComparison.Ordinal));
+    }
+
     private static readonly PyObjekt Aussehen = new() { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } };
 
     private static StadtSpiel NeuesSpiel()
@@ -613,8 +639,8 @@ public sealed class SpielTonTests
 
     // -- Toene im Programm ------------------------------------------------------------
 
-    /// <summary>Pruefsumme ueber die 40 Toene aus W8 (Datei und SHA-256 in toene.json): neue Toene nur angehaengt.</summary>
-    private const string SollToeneW8 = "4d7776c2a2df89b57cb3c58054fed184d530f037f8edc85625140af163148960";
+    /// <summary>Pruefsumme ueber die 42 Toene aus W8 (Datei und SHA-256 in toene.json): neue Toene nur angehaengt.</summary>
+    private const string SollToeneW8 = "507bd023840d9a80d9d3039ad2c4f42d199d14323d645d390577638d20f462dc";
 
     private static List<(string Datei, string Anlass, string Sha)> Eintraege()
     {
@@ -627,8 +653,8 @@ public sealed class SpielTonTests
     public void ToeneNurAngehaengt()
     {
         var eintraege = Eintraege();
-        Assert.True(eintraege.Count >= 40);
-        var text = string.Concat(eintraege.Take(40).Select(e => e.Datei + ":" + e.Sha + "\n"));
+        Assert.True(eintraege.Count >= 42);
+        var text = string.Concat(eintraege.Take(42).Select(e => e.Datei + ":" + e.Sha + "\n"));
         Assert.Equal(SollToeneW8, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text))));
         foreach (var (datei, _, sha) in eintraege)
         {
@@ -653,6 +679,8 @@ public sealed class SpielTonTests
             }
         }
         Assert.Contains(Tonplan.StadtGrundSchluessel, anlaesse);
+        Assert.Contains(Tonplan.StadtGrundHerbst, anlaesse);
+        Assert.Contains(Tonplan.StadtGrundWinter, anlaesse);
         Assert.Contains(Tonplan.FlussSchluessel, anlaesse);
         foreach (var (modell, _, _) in Verkehr.Strecken)
         {
@@ -668,7 +696,7 @@ public sealed class SpielTonTests
             var ton = Tondekoder.Lesen(stream, Path.GetExtension(datei));
             Assert.True(ton.Proben.Length > 1000, datei);
             Assert.All(ton.Proben, p => Assert.InRange(p, -1.0001f, 1.0001f));
-            if (anlass is Tonplan.StadtGrundSchluessel or Tonplan.FlussSchluessel)
+            if (anlass is Tonplan.StadtGrundSchluessel or Tonplan.StadtGrundHerbst or Tonplan.StadtGrundWinter or Tonplan.FlussSchluessel)
             {
                 Assert.InRange(ton.Sekunden, 60, 90);
             }

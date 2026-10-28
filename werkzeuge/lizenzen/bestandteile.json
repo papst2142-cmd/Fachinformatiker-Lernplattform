@@ -66,7 +66,7 @@
     {"id": "Toene Kenney Music Jingles", "version": "1.0", "lizenz": "CC0-1.0", "quelle": "https://kenney.nl/assets/music-jingles (Kenney, www.kenney.nl)",
      "beschreibung": "Kurze Melodien (Feierabend, Erfolg, Ticket) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["Kenney_MusicJingles_CC0.txt"]},
     {"id": "Toene Park ambiences (Thimras)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/park-ambiences (Thimras)",
-     "beschreibung": "Voegel und Fluss in der Stadt im Spiel, zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_Thimras_ParkAmbiences_CC0.txt"]},
+     "beschreibung": "Voegel, Wind und Fluss in der Stadt im Spiel (je Jahreszeit), zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_Thimras_ParkAmbiences_CC0.txt"]},
     {"id": "Toene racing car engine sound loops (domasx2)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/node/5633 (domasx2)",
      "beschreibung": "Motoren der Autos in der Stadt im Spiel, Tonhoehe abgesenkt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll", "dateien": [], "texte": ["OpenGameArt_domasx2_CarEngineLoops_CC0.txt"]},
     {"id": "Toene Bird chirping sounds (syncopika)", "version": "OpenGameArt", "lizenz": "CC0-1.0", "quelle": "https://opengameart.org/content/bird-chirping-sounds (syncopika)",

@@ -3,7 +3,8 @@
 ## A 0.18.0
 Neu im Spiel: Geräusche, Vollbild, Drehen mit der rechten Maustaste und eine eigene Tastenbelegung.
 
-- Die Stadt klingt jetzt: Vögel zwischen den Häusern, das Rauschen des Flusses, wenn du nah am Wasser bist, und die Motoren der Autos. Ein Auto klingt lauter, je näher es der Bildmitte ist, und ist still, sobald es weit weg ist oder alle Autos stehen. In Parks und bei Bäumen ruft ab und zu ein einzelner Vogel.
+- Die Stadt klingt jetzt: leise Vögel in der Ferne, das Rauschen des Flusses, wenn du nah am Wasser bist, und die Motoren der Autos. Ein Auto klingt lauter, je näher es der Bildmitte ist, und ist still, sobald es weit weg ist oder alle Autos stehen. In Parks und bei Bäumen ruft ab und zu ein einzelner Vogel.
+- Der Klang folgt der Jahreszeit nach dem Datum deines Geräts: im Frühling ruhige Vögel und nur selten ein einzelner Ruf, im Sommer etwas mehr Rufe, im Herbst ein leiser Wind mit wenigen Vögeln und im Winter nur gedämpfter Wind ohne Vögel.
 - Deine Figur macht Schritte, die zum Boden passen: Stein auf der Straße, Gras im Park, Teppich in der Wohnung und im Büro, Holz in den Geschäften, in der Bank und auf dem Amt. Türen öffnen und schließen sich hörbar, beim Kaufen und beim Kredit klimpern Münzen, und kurze Melodien begleiten den Feierabend, einen neuen Erfolg und ein richtig gelöstes Ticket.
 - In den Optionen gibt es unter SPIEL die neue Karte „Musik und Geräusche“ mit drei Reglern: Gesamt, Musik und Umgebung, jeweils von 0 bis 100 %. Bei 0 % ist es ganz still. Beim ersten Start stehen sie auf 80, 50 und 80 %.
 - Musik gibt es nur mit deinen eigenen Liedern. In derselben Karte fügst du Lieder hinzu (MP3, WAV, FLAC oder OGG) und entfernst sie wieder; das Programm legt dafür eine Kopie an, deine eigene Datei bleibt unberührt. Du wählst, wo sie laufen: nur in den Räumen (so ist es beim ersten Start), nur in der Stadt oder überall. In der Stadt liegt die Musik leise unter den Geräuschen.

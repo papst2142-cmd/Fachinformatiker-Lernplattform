@@ -117,6 +117,37 @@ public static partial class AutoMessung
                 && gegangen && g1 - g0 == a1 - a0 && a1 > a0,
                 string.Create(inv, $"im Hintergrund {(ausImHintergrund ? "aus" : "an")}, danach {(TonDienst.Aktiv ? "an" : "aus")}, Wiederanläufe {TonDienst.Wiederanlaeufe - wieder}, {g1 - g0} von {a1 - a0} Schritten gespielt"));
 
+            // 2c. Grundklang je Jahreszeit (Weisung P8-24): gewechselt beim Betreten der Spielseite, Winter ohne Einzelrufe
+            var nachDatum = Jahreszeiten.Heute();
+            var jahreszeiten = new List<string>();
+            var jahreszeitenOk = true;
+            try
+            {
+                foreach (var zeit in Enum.GetValues<Jahreszeit>())
+                {
+                    Jahreszeiten.Probe(zeit);
+                    var schluessel = Tonplan.StadtGrundFuer(zeit);
+                    var grundVorher = Zahl(TonDienst.Anlaesse, schluessel);
+                    TonDienst.SpielVerlassen();
+                    TonDienst.SpielBetreten();
+                    await flaeche.NaechstesBildAsync();
+                    await flaeche.NaechstesBildAsync();
+                    var rufe = Tonplan.RufeFuer(zeit);
+                    var ok = TonDienst.Zeit == zeit && Zahl(TonDienst.Anlaesse, schluessel) == grundVorher + 1 && (zeit == Jahreszeit.Winter) == (rufe is null);
+                    jahreszeitenOk &= ok;
+                    jahreszeiten.Add(string.Create(inv, $"{zeit} {schluessel} +{Zahl(TonDienst.Anlaesse, schluessel) - grundVorher}, Rufe {(rufe is null ? "keine" : $"{rufe.Min:F0}-{rufe.Max:F0} s")}"));
+                }
+            }
+            finally
+            {
+                Jahreszeiten.ProbeEnde();
+                TonDienst.SpielVerlassen();
+                TonDienst.SpielBetreten();
+            }
+            await flaeche.NaechstesBildAsync();
+            Pruefe("Grundklang je Jahreszeit", jahreszeitenOk && TonDienst.Zeit == nachDatum,
+                string.Join("; ", jahreszeiten) + "; nach Datum wieder " + nachDatum);
+
             // 3. Tueren (Wohnung) und Melodie (Feierabend)
             var auf = Zahl(TonDienst.Anlaesse, "tuer_auf");
             var zu = Zahl(TonDienst.Anlaesse, "tuer_zu");

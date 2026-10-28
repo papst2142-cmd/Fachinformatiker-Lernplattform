@@ -2,13 +2,31 @@
  "_hinweis": "Phase 8 W8: Toene des Spiels (werkzeuge/toene/erzeuge_toene.py), alle CC0 1.0. Nur angehaengt; anlass ordnet die Datei dem Tonplan zu (Core/Spiel/Ton/Tonplan.cs).",
  "dateien": [
   {
-   "datei": "stadt_voegel.ogg",
+   "datei": "stadt_voegel_ruhig.ogg",
    "anlass": "stadt_grund",
    "werk": "Park ambiences, Thimras",
    "fundstelle": "https://opengameart.org/content/park-ambiences",
    "quelle": "park_ambience_birds.ogg",
    "lizenz": "CC0-1.0",
-   "sha256": "b3827474be54241ecbd0cd969fe0028f7a2d5e162c9b4285c0cd10b34a4a5c0a"
+   "sha256": "2c1b657681c860de66dc7e7b6c3bce46fb9881f26b0fe70564dfe48fc559216d"
+  },
+  {
+   "datei": "stadt_herbst.ogg",
+   "anlass": "stadt_grund_herbst",
+   "werk": "Park ambiences, Thimras",
+   "fundstelle": "https://opengameart.org/content/park-ambiences",
+   "quelle": "park_ambience_wind.ogg + park_ambience_birds.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "48850f9e80eb6c2db9a747fc9323c6376a98d27cb0e201b4f36f7572b347d8ac"
+  },
+  {
+   "datei": "stadt_winter.ogg",
+   "anlass": "stadt_grund_winter",
+   "werk": "Park ambiences, Thimras",
+   "fundstelle": "https://opengameart.org/content/park-ambiences",
+   "quelle": "park_ambience_wind.ogg",
+   "lizenz": "CC0-1.0",
+   "sha256": "c509384162d0a8df5af30213a7082b6775afe5009a2e12b5f669971b6c5ae20b"
   },
   {
    "datei": "stadt_fluss.ogg",

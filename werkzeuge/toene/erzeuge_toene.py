@@ -9,8 +9,12 @@ Ergebnis: `src/Lernplattform.App/Assets/Toene/*.ogg` und `toene.json` (Datei -> 
 Die Dateien werden nur angehaengt: eine schon vorhandene Datei mit anderem Inhalt bricht ab
 (gleicher Grundsatz wie modelle.bin, Test SpielTonTests.ToeneNurAngehaengt).
 
-- Stadt-Grundgeraeusch (Voegel) und Fluss: ruhigster Ausschnitt von 75 s, Ende in den Anfang
-  uebergeblendet (nahtlose Schleife), mono 22 050 Hz, OGG 48 kbit/s.
+- Fluss: ruhigster Ausschnitt von 75 s, Ende in den Anfang uebergeblendet (nahtlose Schleife),
+  mono 22 050 Hz, OGG 48 kbit/s.
+- Stadt-Grundgeraeusch je Jahreszeit (Weisungen P8-23, P8-24, Nico): 60-s-Schleifen wie der Fluss.
+  Fruehling und Sommer: Voegel, Ausschnitt mit den wenigsten Rufen, Tiefpass 4 kHz (klingt entfernt),
+  6 dB leiser als die erste W8-Fassung. Herbst: leiser Wind ohne Boeen, die Voegel ganz leise darueber.
+  Winter: nur Wind, noch leiser und stark gedaempft (Tiefpass 1,5 kHz, wie unter Schnee), keine Voegel.
 - Autos: je Autoart eine Schleife aus loop_0..5, Tonhoehe abgesenkt (Muellwagen am tiefsten).
 - Vogelruf: mono, Spitze auf -6 dB.
 - Kenney: die genutzten Dateien unveraendert kopiert.
@@ -149,6 +153,41 @@ def ambiente(quelle: Path, art: str) -> np.ndarray:
     return auf_rms(schleife(signal, int(start * schritt * AMBIENTE_RATE), AMBIENTE_RATE), -24.0 if art == "voegel" else -23.0)
 
 
+def tiefpass(signal: np.ndarray, rate: int, grenze: float) -> np.ndarray:
+    # weich (2. Ordnung), ueber die ganze Schleife: bleibt nahtlos
+    spektrum = np.fft.rfft(signal)
+    spektrum *= 1 / np.sqrt(1 + (np.fft.rfftfreq(len(signal), 1 / rate) / grenze) ** 4)
+    return np.fft.irfft(spektrum, len(signal))
+
+
+def rufe_je_fenster(band: np.ndarray, fenster: int) -> list[tuple[int, int]]:
+    oben = band > np.percentile(band, 50) + 10
+    summe = np.cumsum(np.r_[False, oben[1:] & ~oben[:-1]])
+    return [(int(summe[i + fenster] - summe[i]), i) for i in range(0, len(summe) - fenster, 20)]
+
+
+def jahreszeiten(cc0: Path) -> dict[str, np.ndarray]:
+    """Stadt-Grund je Jahreszeit (60 s, 22 050 Hz). Pegel bezogen auf die erste W8-Fassung (-24 dB RMS)."""
+    global AMBIENTE_LAENGE
+    alt, AMBIENTE_LAENGE = AMBIENTE_LAENGE, 60.0
+    try:
+        ordner = cc0 / "opengameart_park_ambiences_thimras"
+        fenster = int((AMBIENTE_LAENGE + AMBIENTE_BLENDE) / 0.05)
+        voegel = lesen(ordner / "park_ambience_birds.ogg", AMBIENTE_RATE)
+        start = min(rufe_je_fenster(vogelband(voegel, AMBIENTE_RATE), fenster))[1]
+        ruhig = tiefpass(schleife(voegel, int(start * 0.05 * AMBIENTE_RATE), AMBIENTE_RATE), AMBIENTE_RATE, 4000.0)
+        wind = lesen(ordner / "park_ambience_wind.ogg", AMBIENTE_RATE)
+        start = ruhigster(huellkurve(wind, AMBIENTE_RATE)[:-1], fenster)
+        wind = schleife(wind, int(start * 0.05 * AMBIENTE_RATE), AMBIENTE_RATE)
+        return {
+            "voegel": auf_rms(ruhig, -30.0),
+            "herbst": auf_rms(auf_rms(wind, -28.0) + auf_rms(ruhig, -38.0), -27.5),
+            "winter": auf_rms(tiefpass(wind, AMBIENTE_RATE, 1500.0), -31.0),
+        }
+    finally:
+        AMBIENTE_LAENGE = alt
+
+
 def auto(quelle: Path, faktor: float) -> np.ndarray:
     # Tonhoehe absenken: langsamer abspielen (laenger und tiefer), wieder auf 44 100 Hz
     signal = lesen(quelle, 44100)
@@ -181,10 +220,17 @@ def main() -> int:
     arbeit = Path(tempfile.mkdtemp(prefix="toene_"))
     eintraege: list[dict] = []
 
-    for name, datei, art in (("park_ambience_birds.ogg", "stadt_voegel.ogg", "voegel"), ("park_ambience_river.ogg", "stadt_fluss.ogg", "fluss")):
+    grund = jahreszeiten(cc0)
+    for art, datei, anlass, name in (("voegel", "stadt_voegel_ruhig.ogg", "stadt_grund", "park_ambience_birds.ogg"),
+                                     ("herbst", "stadt_herbst.ogg", "stadt_grund_herbst", "park_ambience_wind.ogg + park_ambience_birds.ogg"),
+                                     ("winter", "stadt_winter.ogg", "stadt_grund_winter", "park_ambience_wind.ogg")):
         tmp = arbeit / datei
-        schreiben(tmp, ambiente(cc0 / "opengameart_park_ambiences_thimras" / name, art), AMBIENTE_RATE, "48k")
-        anhaengen(eintraege, datei, tmp, "stadt_grund" if art == "voegel" else "fluss", THIMRAS, name)
+        # gedaempft (Tiefpass), darum reichen 32 kbit/s
+        schreiben(tmp, grund[art], AMBIENTE_RATE, "32k")
+        anhaengen(eintraege, datei, tmp, anlass, THIMRAS, name)
+    tmp = arbeit / "stadt_fluss.ogg"
+    schreiben(tmp, ambiente(cc0 / "opengameart_park_ambiences_thimras" / "park_ambience_river.ogg", "fluss"), AMBIENTE_RATE, "48k")
+    anhaengen(eintraege, "stadt_fluss.ogg", tmp, "fluss", THIMRAS, "park_ambience_river.ogg")
 
     tmp = arbeit / "vogelruf.ogg"
     schreiben(tmp, auf_spitze(lesen(cc0 / "opengameart_bird_chirping_syncopika" / "birdchirping071414.wav", 44100), -6.0), 44100, "64k")
@@ -243,9 +289,6 @@ def hoerproben_bauen(cc0: Path, ordner: Path) -> None:
     raus("02_tuer_auf_und_zu.ogg", mischen([(0.0, ton("doorOpen_1.ogg"), 0.8), (1.5, ton("doorClose_2.ogg"), 0.8),
                                             (3.0, ton("doorOpen_2.ogg"), 0.8), (4.5, ton("doorClose_4.ogg"), 0.8)], 6.0))
     raus("03_kasse.ogg", mischen([(0.0, ton("handleCoins.ogg"), 0.8), (1.5, ton("handleCoins2.ogg"), 0.8)], 3.0))
-    for reihe, dateien in (("PIZZI", [("jingles_PIZZI07.ogg", "feierabend"), ("jingles_PIZZI03.ogg", "erfolg"), ("jingles_PIZZI00.ogg", "ticket")]),):
-        for datei, art in dateien:
-            raus(f"04_melodie_{art}_{reihe}.ogg", mischen([(0.2, ton(datei), 0.9)], 2.0))
     with zipfile.ZipFile(cc0 / "kenney_music-jingles.zip") as zip_:
         for pfad, anlass in STEEL:
             raus(f"04_melodie_{anlass.split('_')[1]}_STEEL.ogg", mischen([(0.2, lesen("", 44100, zip_.read(pfad)), 0.9)], 2.2))
@@ -253,9 +296,8 @@ def hoerproben_bauen(cc0: Path, ordner: Path) -> None:
     for modell, _, _ in AUTOS:
         signal = ton(f"auto_{modell}.ogg")
         raus(f"06_auto_{modell}.ogg", np.tile(signal, int(3 * 44100 / len(signal)) + 1)[: 3 * 44100] * 0.7)
-    # 30 s Stadt: Voegel durchgehend, Fluss mittel, Vogelrufe, ein Taxi faehrt nah vorbei
+    # 30 s Stadt je Jahreszeit: Grund, Fluss mittel, Einzelrufe wie im Spiel, ein Taxi faehrt nah vorbei
     laenge = 30.0
-    voegel = ton("stadt_voegel.ogg")[: int(laenge * 44100)]
     fluss = ton("stadt_fluss.ogg")[: int(laenge * 44100)]
     taxi = ton("auto_taxi.ogg")
     taxi = np.tile(taxi, int(laenge * 44100 / len(taxi)) + 1)[: int(laenge * 44100)]
@@ -263,9 +305,12 @@ def hoerproben_bauen(cc0: Path, ordner: Path) -> None:
     # Abstand des Autos zur Bildmitte: von 24 auf 1 (bei 15 s) und wieder auf 24, Laut = 1 / (1 + d / 6)
     abstand = np.abs(t - 15) * 1.55 + 1
     naehe = np.where(abstand >= 25, 0, 1 / (1 + abstand / 6))
-    stadt = voegel * 0.8 + fluss * 0.8 * 0.45 + taxi * naehe * 0.8 * 0.6
-    stadt = mischen([(0, stadt, 1.0)] + [(s, ton("vogelruf.ogg"), 0.35) for s in (4.5, 17.0, 26.5)], laenge)
-    raus("07_stadt_30s_voegel_fluss_auto.ogg", stadt)
+    # Einzelrufe (Tonplan.Rufe): Sommer alle 8 bis 25 s (0,3), Fruehling und Herbst 30 bis 90 s (0,2), Winter keine
+    for name, datei, rufe, laut in (("fruehling", "stadt_voegel_ruhig.ogg", (19.0,), 0.2), ("sommer", "stadt_voegel_ruhig.ogg", (4.5, 17.0, 26.5), 0.3),
+                                    ("herbst", "stadt_herbst.ogg", (19.0,), 0.2), ("winter", "stadt_winter.ogg", (), 0.0)):
+        grund = ton(datei)[: int(laenge * 44100)]
+        stadt = grund * 0.8 + fluss * 0.8 * 0.45 + taxi * naehe * 0.8 * 0.6
+        raus(f"08_stadt_30s_{name}.ogg", mischen([(0, stadt, 1.0)] + [(s, ton("vogelruf.ogg"), laut) for s in rufe], laenge))
     print(f"Hoerproben in {ordner}")
 
 

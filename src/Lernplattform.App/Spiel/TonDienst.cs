@@ -38,6 +38,8 @@ public static class TonDienst
     private static bool _liedOeffnet;
     private static string? _liedStill;
     private static double _naechsterRuf = -1;
+    private static Core.Spiel.Jahreszeit _jahreszeit = Core.Spiel.Jahreszeit.Sommer;
+    private static string? _grundSchluessel;
     private static Timer? _pflege;
     private static double _letzterTakt;
 
@@ -57,6 +59,9 @@ public static class TonDienst
     public static double GeoeffnetMs { get; private set; } = -1;
 
     public static bool Still => _ausgabe is null or StilleAusgabe;
+
+    /// <summary>Jahreszeit des Stadt-Grundklangs, gesetzt beim Betreten der Spielseite (Weisung P8-24).</summary>
+    public static Core.Spiel.Jahreszeit Zeit => _jahreszeit;
 
     /// <summary>Klingt gerade etwas (Spielseite, Geraet offen, Regler ueber 0)?</summary>
     public static bool Klingt => Volatile.Read(ref _laeuft) && !Still;
@@ -101,6 +106,8 @@ public static class TonDienst
         lock (Sperre)
         {
             Vorbereiten();
+            // Grundklang je Jahreszeit: gewechselt wird nur beim Betreten der Spielseite
+            _jahreszeit = Core.Spiel.Jahreszeiten.Heute();
             Anwenden(Schalter.Setzen(imSpiel: true));
             _pflege ??= new Timer(_ => Pflege(), null, 1000, 1000);
         }
@@ -162,6 +169,7 @@ public static class TonDienst
     {
         Mischer.AllesBeenden();
         _grund = _fluss = _lied = 0;
+        _grundSchluessel = null;
         _flussLaut = -1;
         _liedStill = null;
         Autos.Clear();
@@ -307,7 +315,8 @@ public static class TonDienst
             }
             var wahl = Tonplan.Variante(liste.Count, Letzte.GetValueOrDefault(schluessel, -1), Zufall);
             Letzte[schluessel] = wahl;
-            Mischer.Starten(liste[wahl], gruppe, Tonplan.Laut(anlass.Art));
+            var laut = anlass.Art == Core.Spiel.Ton.Anlass.Vogelruf ? Tonplan.RufeFuer(_jahreszeit)?.Laut ?? 0f : Tonplan.Laut(anlass.Art);
+            Mischer.Starten(liste[wahl], gruppe, laut);
         }
     }
 
@@ -330,12 +339,28 @@ public static class TonDienst
 
     private static void Schleifen()
     {
-        if (!_laeuft || _toene is null)
+        if (!_laeuft)
         {
             return;
         }
         var lage = _lage;
-        _grund = Schleife(_grund, Tonplan.StadtGrundSchluessel, lage is null ? 0 : Tonplan.StadtGrund);
+        var grund = Tonplan.StadtGrundFuer(_jahreszeit);
+        if (lage is not null && grund != _grundSchluessel)
+        {
+            // andere Jahreszeit: alte Schleife aus; gezaehlt auch im stillen Dienst (Start-Test)
+            if (_grund != 0)
+            {
+                Mischer.Beenden(_grund);
+                _grund = 0;
+            }
+            _grundSchluessel = grund;
+            Zaehlen(grund, Tongruppe.Umgebung);
+        }
+        if (_toene is null)
+        {
+            return;
+        }
+        _grund = Schleife(_grund, grund, lage is null ? 0 : Tonplan.StadtGrund);
         var fluss = lage is null ? 0 : Tonplan.Fluss * lage.Fluss;
         if (Math.Abs(fluss - _flussLaut) > 0.005f)
         {
@@ -409,15 +434,16 @@ public static class TonDienst
                     Autos.Clear();
                     AutoLaut.Clear();
                 }
-                if (Soll && _lage is { VogelNah: true })
+                // Einzelrufe je Jahreszeit (im Winter keine)
+                if (Soll && _lage is { VogelNah: true } && Tonplan.RufeFuer(_jahreszeit) is { } rufe)
                 {
                     if (_naechsterRuf < 0)
                     {
-                        _naechsterRuf = jetzt + Tonplan.NaechsterRuf(Zufall);
+                        _naechsterRuf = jetzt + Tonplan.NaechsterRuf(Zufall, rufe);
                     }
                     else if (jetzt >= _naechsterRuf)
                     {
-                        _naechsterRuf = jetzt + Tonplan.NaechsterRuf(Zufall);
+                        _naechsterRuf = jetzt + Tonplan.NaechsterRuf(Zufall, rufe);
                         Anlass(new Tonanlass(Core.Spiel.Ton.Anlass.Vogelruf));
                     }
                 }

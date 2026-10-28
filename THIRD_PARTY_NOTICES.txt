@@ -108,7 +108,7 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Toene Kenney RPG Audio (1.0) | CC0-1.0 | https://kenney.nl/assets/rpg-audio (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
   Tueren und Muenzen (Kasse) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
 - Toene Park ambiences (Thimras) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/park-ambiences (Thimras) | android-arm64, linux-x64, osx-arm64, win-x64
-  Voegel und Fluss in der Stadt im Spiel, zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
+  Voegel, Wind und Fluss in der Stadt im Spiel (je Jahreszeit), zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
 - Toene racing car engine sound loops (domasx2) (OpenGameArt) | CC0-1.0 | https://opengameart.org/node/5633 (domasx2) | android-arm64, linux-x64, osx-arm64, win-x64
   Motoren der Autos in der Stadt im Spiel, Tonhoehe abgesenkt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
 - Velopack (1.2.161) | MIT | https://github.com/velopack/velopack | linux-x64, osx-arm64, win-x64

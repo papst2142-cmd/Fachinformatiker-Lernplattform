@@ -46,6 +46,25 @@ public static class Tonplan
     public const double RufMin = 8;
     public const double RufMax = 25;
 
+    /// <summary>Seltene, leisere Einzelrufe (Fruehling und Herbst, Weisungen P8-23 B und P8-24).</summary>
+    public const double RufSeltenMin = 30;
+    public const double RufSeltenMax = 90;
+    public const float VogelrufSelten = 0.2f;
+
+    /// <summary>Einzelrufe einer Jahreszeit: Abstand (Sekunden) und Lautstaerke.</summary>
+    public sealed record Rufe(double Min, double Max, float Laut);
+
+    /// <summary>
+    /// Einzelrufe je Jahreszeit (Nico, Weisung P8-24): Sommer wie bisher (8 bis 25 s), Fruehling und Herbst
+    /// selten und leiser (30 bis 90 s), Winter keine.
+    /// </summary>
+    public static Rufe? RufeFuer(Jahreszeit jahreszeit) => jahreszeit switch
+    {
+        Jahreszeit.Sommer => new(RufMin, RufMax, Vogelruf),
+        Jahreszeit.Winter => null,
+        _ => new(RufSeltenMin, RufSeltenMax, VogelrufSelten),
+    };
+
     /// <summary>Vogelrufe nur in einem Park oder so nah an einem Baum.</summary>
     public const float BaumNah = 4f;
 
@@ -81,6 +100,19 @@ public static class Tonplan
     };
 
     public const string StadtGrundSchluessel = "stadt_grund";
+    public const string StadtGrundHerbst = "stadt_grund_herbst";
+    public const string StadtGrundWinter = "stadt_grund_winter";
+
+    /// <summary>
+    /// Stadt-Grundklang je Jahreszeit (Weisung P8-24): Fruehling und Sommer ruhige Voegel, Herbst leiser Wind
+    /// mit wenigen Voegeln, Winter nur gedaempfter Wind.
+    /// </summary>
+    public static string StadtGrundFuer(Jahreszeit jahreszeit) => jahreszeit switch
+    {
+        Jahreszeit.Herbst => StadtGrundHerbst,
+        Jahreszeit.Winter => StadtGrundWinter,
+        _ => StadtGrundSchluessel,
+    };
     public const string FlussSchluessel = "fluss";
 
     public static string AutoSchluessel(string modell) => "auto:" + modell;
@@ -121,6 +153,8 @@ public static class Tonplan
     }
 
     public static double NaechsterRuf(Random zufall) => RufMin + (zufall.NextDouble() * (RufMax - RufMin));
+
+    public static double NaechsterRuf(Random zufall, Rufe rufe) => rufe.Min + (zufall.NextDouble() * (rufe.Max - rufe.Min));
 
     public static bool ImPark(StadtSzene szene, float x, float z) =>
         szene.Parks.Any(p => x >= Math.Min(p.X1, p.X2) && x <= Math.Max(p.X1, p.X2) && z >= Math.Min(p.Z1, p.Z2) && z <= Math.Max(p.Z1, p.Z2));
