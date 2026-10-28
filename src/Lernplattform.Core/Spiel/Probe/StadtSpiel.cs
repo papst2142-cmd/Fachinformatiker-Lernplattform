@@ -153,7 +153,7 @@ public sealed class StadtSpiel
         get
         {
             var jetzt = Jetzt;
-            return string.Format(CultureInfo.InvariantCulture, StadtTexte.Kopfzeile, jetzt.Tag, Stadt.Uhrzeit(jetzt.Uhr));
+            return string.Format(CultureInfo.InvariantCulture, StadtTexte.Kopfzeile, jetzt.Tag, Stadt.Uhrzeit(Tageslicht.FesteUhr ?? jetzt.Uhr));
         }
     }
 

@@ -94,6 +94,47 @@ public sealed class SpielBedienungTests
         }
     }
 
+    // -- Hinweisfeld (Phase 8 W10, Nico 1b) -------------------------------------------
+
+    [Fact]
+    public void HinweisfeldZustandGemerkt()
+    {
+        Assert.False(HinweisWahl.Zugeklappt(new JsonObject()));
+        Assert.False(HinweisWahl.Zugeklappt(new JsonObject { [HinweisWahl.Schluessel] = "Zu" }));
+        Assert.False(HinweisWahl.Zugeklappt(new JsonObject { [HinweisWahl.Schluessel] = true }));
+        Assert.True(HinweisWahl.Zugeklappt(new JsonObject { [HinweisWahl.Schluessel] = "zu" }));
+        var ordner = Path.Combine(Path.GetTempPath(), "lp_hinweis_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(ordner);
+        try
+        {
+            var einstellungen = new Einstellungen(ordner);
+            Assert.True(HinweisWahl.Setzen(einstellungen, true));
+            var werte = JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject();
+            Assert.Equal("zu", (string?)werte[HinweisWahl.Schluessel]);
+            Assert.True(HinweisWahl.Zugeklappt(werte));
+            Assert.True(HinweisWahl.Setzen(einstellungen, false));
+            werte = JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject();
+            Assert.Equal("offen", (string?)werte[HinweisWahl.Schluessel]);
+            Assert.False(HinweisWahl.Zugeklappt(werte));
+        }
+        finally
+        {
+            Directory.Delete(ordner, true);
+        }
+    }
+
+    [Fact]
+    public void HinweisfeldKurzeMeldung()
+    {
+        var hinweis = SpielProbeTexte.HinweisFuer(new Tastenbelegung());
+        Assert.Equal("", HinweisWahl.KurzeMeldung(hinweis, hinweis));
+        Assert.Equal("", HinweisWahl.KurzeMeldung(SpielProbeTexte.ImFreien, hinweis));
+        Assert.Equal("", HinweisWahl.KurzeMeldung("", hinweis));
+        var spaet = StadtTexte.UhrSteht + "\n" + "Bitweiche: geschlossen";
+        Assert.Equal(spaet, HinweisWahl.KurzeMeldung(spaet, hinweis));
+        Assert.Equal(TimeSpan.FromSeconds(5), HinweisWahl.MeldungDauer);
+    }
+
     [Fact]
     public void KaputteBelegungGiltAlsStandard()
     {

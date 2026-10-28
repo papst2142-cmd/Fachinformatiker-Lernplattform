@@ -37,6 +37,13 @@ public sealed class SpielSeite : Grid
     private readonly TextBlock _probeZeile;
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
+    private readonly Button _klapp;
+    private readonly TextBlock _klappSymbol;
+    private readonly TextBlock _kurz;
+    private readonly WrapPanel _knoepfe;
+    private bool _hinweisZu = Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte);
+    private string _letzteZeile = "";
+    private long _kurzBis;
     private readonly Border _unten;
     private readonly Border _kopf;
     private readonly Grid _mitte;
@@ -114,7 +121,26 @@ public sealed class SpielSeite : Grid
         _uebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
         _uebersicht.IsVisible = false;
         _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
-        var knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
+        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
+        // Phase 8 W10 (Sammelliste 148, Nico 1b): Pfeil links vor den Knoepfen klappt das Hinweisfeld zu;
+        // zugeklappt bleibt nur der Pfeil, eine neue kurze Meldung steht 5 s daneben
+        _klappSymbol = Views.Symbole.Block("arrow_drop_down", 26, "Pinsel.text");
+        _klappSymbol.RenderTransformOrigin = RelativePoint.Center;
+        _klapp = Schrift.Knopf("");
+        _klapp.Content = _klappSymbol;
+        _klapp.VerticalAlignment = VerticalAlignment.Top;
+        _klapp.Click += (_, _) => HinweisUmschalten();
+        _kurz = Schrift.Text("");
+        _kurz.TextWrapping = TextWrapping.Wrap;
+        _kurz.VerticalAlignment = VerticalAlignment.Center;
+        _kurz.Margin = new Thickness(4, 0, 8, 6);
+        _kurz.IsVisible = false;
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        klappZeile.Children.Add(_klapp);
+        Grid.SetColumn(_kurz, 1);
+        klappZeile.Children.Add(_kurz);
+        Grid.SetColumn(_knoepfe, 1);
+        klappZeile.Children.Add(_knoepfe);
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
         _zeileRolle = new ScrollViewer
@@ -122,7 +148,7 @@ public sealed class SpielSeite : Grid
             Content = new StackPanel { Spacing = 8, Children = { _zeile, _einrichtenTafel } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
-        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, knoepfe } });
+        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, klappZeile } });
         unten.Padding = new Thickness(14, 10, 14, 2);
         unten.MaxWidth = UntenBreite;
         unten.HorizontalAlignment = HorizontalAlignment.Left;
@@ -759,6 +785,7 @@ public sealed class SpielSeite : Grid
         }
         _kopfzeile.Text = spiel.Kopfzeile;
         _zeile.Text = spiel.Zeile;
+        HinweisfeldZeigen(spiel);
         _betreten.IsVisible = spiel.KannBetreten;
         _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten;
         _warten.IsVisible = spiel.KannWarten;
@@ -773,6 +800,45 @@ public sealed class SpielSeite : Grid
             _einrichten.Content = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
         }
         TafelBauen(spiel);
+    }
+
+    /// <summary>Hinweisfeld zugeklappt (beim Einrichten immer offen, sonst fehlen Auswahl und Karton).</summary>
+    public bool HinweisZu => _hinweisZu && Spiel is not { Einrichten: true };
+
+    /// <summary>Kurze Meldung neben dem zugeklappten Pfeil (Start-Test, Fotos); leer = keine.</summary>
+    public string KurzeMeldung => _kurz.IsVisible ? _kurz.Text ?? "" : "";
+
+    /// <summary>Pfeil gedrueckt: auf- oder zuklappen und den Zustand merken (nur ueber Einstellungen.Aendern).</summary>
+    public void HinweisUmschalten()
+    {
+        var neu = !_hinweisZu;
+        if (Programm.Zustand.Aendere(w => Core.Spiel.Probe.HinweisWahl.Wert(w, neu)))
+        {
+            _hinweisZu = neu;
+            _kurzBis = 0;
+            Beschriften();
+        }
+    }
+
+    private void HinweisfeldZeigen(StadtSpiel spiel)
+    {
+        var zu = HinweisZu;
+        var zeile = spiel.Zeile ?? "";
+        var meldung = Core.Spiel.Probe.HinweisWahl.KurzeMeldung(zeile, SpielProbeTexte.HinweisFuer(Core.Spiel.Probe.Tastenbelegung.Aktuell));
+        if (zeile != _letzteZeile)
+        {
+            _letzteZeile = zeile;
+            _kurzBis = meldung.Length > 0
+                ? Stopwatch.GetTimestamp() + (long)(Core.Spiel.Probe.HinweisWahl.MeldungDauer.TotalSeconds * Stopwatch.Frequency)
+                : 0;
+        }
+        _zeileRolle.IsVisible = !zu;
+        _knoepfe.IsVisible = !zu;
+        _kurz.Text = meldung;
+        _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
+        _klappSymbol.RenderTransform = new RotateTransform(zu ? 180 : 0);
+        Avalonia.Automation.AutomationProperties.SetName(_klapp, zu ? SpielProbeTexte.HinweisAusklappen : SpielProbeTexte.HinweisEinklappen);
+        _klapp.IsVisible = !spiel.Einrichten;
     }
 
     /// <summary>Knoepfe des Ortes (place_message) und beim Einrichten Auswahl und Karton (wie Python _home_editor).</summary>

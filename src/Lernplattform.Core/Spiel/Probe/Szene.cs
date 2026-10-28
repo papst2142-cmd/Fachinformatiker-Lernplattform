@@ -278,4 +278,33 @@ public sealed class Netz
     {
         _ecken.AddRange([p.X, p.Y, p.Z, n.X, n.Y, n.Z, farbe.X, farbe.Y, farbe.Z]);
     }
+
+    /// <summary>
+    /// Phase 8 W10 (Nico 3b): Marke "leuchtet nachts" auf die Farbe der Ecken von <paramref name="von"/> bis vor
+    /// <paramref name="bis"/> (alle drei Anteile + <see cref="Nachtlicht.Marke"/>). Der Shader zieht sie ab; am Tag
+    /// sieht die Flaeche aus wie vorher, nachts mischt er sie zum Lampenlicht. Ecken mit Schnee bleiben ohne Marke.
+    /// </summary>
+    public void Leuchten(int von, int bis)
+    {
+        for (var e = von; e < bis; e++)
+        {
+            var i = (e * Zahlen) + 6;
+            if (_ecken[i] >= Jahreszeitfarben.SchneeMarke - 0.5f)
+            {
+                continue;   // Schnee auf dem Fensterbrett leuchtet nicht
+            }
+            _ecken[i] += Nachtlicht.Marke;
+            _ecken[i + 1] += Nachtlicht.Marke;
+            _ecken[i + 2] += Nachtlicht.Marke;
+        }
+    }
+
+    /// <summary>Ort der Ecke Nummer <paramref name="e"/>.</summary>
+    public Vector3 Ort(int e) => new(_ecken[e * Zahlen], _ecken[(e * Zahlen) + 1], _ecken[(e * Zahlen) + 2]);
+
+    /// <summary>Normale der Ecke Nummer <paramref name="e"/>.</summary>
+    public Vector3 Normale(int e) => new(_ecken[(e * Zahlen) + 3], _ecken[(e * Zahlen) + 4], _ecken[(e * Zahlen) + 5]);
+
+    /// <summary>Farbe der Ecke Nummer <paramref name="e"/> (mit Marken).</summary>
+    public Vector3 FarbeAn(int e) => new(_ecken[(e * Zahlen) + 6], _ecken[(e * Zahlen) + 7], _ecken[(e * Zahlen) + 8]);
 }

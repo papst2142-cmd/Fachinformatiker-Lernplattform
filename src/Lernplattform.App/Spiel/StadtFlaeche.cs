@@ -114,6 +114,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _ortModell;
     private int _ortHell;
     private int _ortDurch;
+    private int[] _lichtOrte = [];
+    private int[] _autoLichtOrte = [];
+    private Tageslicht.Licht _lichtVon = Tageslicht.Tag;
+    private Tageslicht.Licht _lichtZiel = Tageslicht.Tag;
+    private double _lichtSeit = double.MinValue;
+    private bool _lichtNeu = true;
+    private bool _lichtInnen;
+    private long? _lichtFest;
     private readonly Stopwatch _uhr = Stopwatch.StartNew();
     private double _letztesBild = -1;
     private readonly Queue<double> _bilder = new();
@@ -219,6 +227,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Spielstand geaendert (z. B. neues Aussehen): Figuren beim naechsten Bild neu nachschlagen.</summary>
     private void SpielGeaendert()
     {
+        _lichtNeu = true;
         _figurZuletzt.Clear();
         _ringAussehen = null;
         AnfordernBild();
@@ -226,6 +235,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     private void SzeneNeu()
     {
+        _lichtNeu = true;
         _szeneNeu = true;
         AnfordernBild();
     }
@@ -364,11 +374,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
             _ortHell = gl.GetUniformLocationString(_programm, "uHell");
             _ortDurch = gl.GetUniformLocationString(_programm, "uDurch");
+            _lichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht" }.Select(n => gl.GetUniformLocationString(_programm, n))];
             _autoProgramm = Programm(gl, es, v, autos: true);
             _autoOrtSichtProj = gl.GetUniformLocationString(_autoProgramm, "uSichtProj");
             _autoOrtLagen = gl.GetUniformLocationString(_autoProgramm, "uAutos");
             _autoOrtHell = gl.GetUniformLocationString(_autoProgramm, "uHell");
             _autoOrtDurch = gl.GetUniformLocationString(_autoProgramm, "uDurch");
+            _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
@@ -484,6 +496,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             in vec3 vNormale;
             uniform float uHell;
             uniform float uDurch;
+            uniform float uTag;
+            uniform float uTonR;
+            uniform float uTonG;
+            uniform float uTonB;
+            uniform float uNacht;
             out vec4 fFarbe;
             void main() {
                 // halb durchsichtig ohne Mischen: jedes zweite Pixel faellt weg (Schachbrett)
@@ -496,11 +513,21 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 // Design nicht abgedunkelt
                 vec3 farbe = vFarbe;
                 float hell = uHell;
+                // Phase 8 W10 (Nico 3b): Marke +4 = leuchtet nachts (Fenster, Laternen; beim Netzbau gesetzt,
+                // Nachtlicht.Marke); am Tag sieht die Flaeche aus wie vorher
+                float glut = 0.0;
+                if (farbe.r > 3.5) {
+                    farbe -= vec3(4.0);
+                    glut = 1.0;
+                }
                 if (farbe.r > 1.5) {
                     farbe -= vec3(2.0);
-                    hell = 1.0;
+                    hell = uTag;
                 }
-                fFarbe = vec4(farbe * (0.48 + 0.52 * d) * hell, 1.0);
+                vec3 ton = vec3(uTonR, uTonG, uTonB);
+                vec3 normal = farbe * (0.48 + 0.52 * d) * hell * ton;
+                vec3 leuchten = vec3(0.99, 0.86, 0.55);
+                fFarbe = vec4(mix(normal, leuchten, glut * uNacht), 1.0);
             }
             """;
         var vs = gl.CreateShader(GL_VERTEX_SHADER);
@@ -618,7 +645,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var hoehe = (int)Math.Max(1, Bounds.Height * skalierung);
         gl.Viewport(0, 0, breite, hoehe);
         var himmel = Himmel();
-        gl.ClearColor(himmel.R / 255f, himmel.G / 255f, himmel.B / 255f, 1f);
+        var licht = AktuellesLicht();
+        var tagAnteil = (licht.Hell - 0.42f) / 0.58f;
+        var hv = System.Numerics.Vector3.Lerp(licht.Himmel, new System.Numerics.Vector3(himmel.R / 255f, himmel.G / 255f, himmel.B / 255f), Math.Clamp(tagAnteil, 0f, 1f));
+        gl.ClearColor(hv.X, hv.Y, hv.Z, 1f);
         gl.ClearDepth(1f);
         gl.Enable(GL_DEPTH_TEST);
         gl.DepthFunc(GlLequal);
@@ -628,7 +658,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         if (GlBereit && _spiel is not null && kamera is not null && flaeche is not null)
         {
             gl.UseProgram(_programm);
-            gl.Uniform1f(_ortHell, IstDunkel() ? 0.72f : 1f);
+            gl.Uniform1f(_ortHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
+            LichtSetzen(gl, _lichtOrte, licht);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
@@ -954,7 +985,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             gl.UniformMatrix4fv(_autoOrtLagen, anzahl, false, lagen);
         }
-        gl.Uniform1f(_autoOrtHell, IstDunkel() ? 0.72f : 1f);
+        var licht = AktuellesLicht();
+        gl.Uniform1f(_autoOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
+        LichtSetzen(gl, _autoLichtOrte, licht);
         gl.Uniform1f(_autoOrtDurch, 0f);
         netz.Binden(gl);
         gl.DrawElements(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero);
@@ -972,6 +1005,53 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.DrawElements(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero);
         _aufrufe++;
         _dreiecke += netz.Anzahl / 3;
+    }
+
+    /// <summary>
+    /// Phase 8 W10 (Nico 3b): Licht nach der Tagesuhr der Stadt und der Jahreszeit, innen immer Tag. Die Uhr wird nur
+    /// nach einer Aenderung des Spiels neu gelesen (nicht je Bild); springt sie, blendet das Licht in
+    /// <see cref="Tageslicht.Ueberblenden"/> ueber (Wechsel zwischen innen und aussen und feste Uhr sofort).
+    /// </summary>
+    private Tageslicht.Licht AktuellesLicht()
+    {
+        var jetzt = _uhr.Elapsed.TotalSeconds;
+        var innen = _spiel is null || _spiel.ImInnenraum;
+        var fest = Tageslicht.FesteUhr;
+        if (_lichtNeu || innen != _lichtInnen || fest != _lichtFest)
+        {
+            var ziel = innen ? Tageslicht.Tag : Tageslicht.Fuer(fest ?? _spiel!.Jetzt.Uhr, Jahreszeiten.Heute());
+            var sofort = innen != _lichtInnen || fest != _lichtFest || _lichtSeit == double.MinValue;
+            if (ziel != _lichtZiel || sofort)
+            {
+                _lichtVon = sofort ? ziel : LichtBei(jetzt);
+                _lichtZiel = ziel;
+                _lichtSeit = jetzt;
+            }
+            _lichtNeu = false;
+            _lichtInnen = innen;
+            _lichtFest = fest;
+        }
+        var licht = LichtBei(jetzt);
+        if (licht != _lichtZiel)
+        {
+            AnfordernBild();
+        }
+        return licht;
+    }
+
+    private Tageslicht.Licht LichtBei(double jetzt) =>
+        Tageslicht.Mischen(_lichtVon, _lichtZiel, (float)((jetzt - _lichtSeit) / Tageslicht.Ueberblenden.TotalSeconds));
+
+    /// <summary>Licht im Bild (Start-Test: Tag, Daemmerung, Nacht).</summary>
+    public Tageslicht.Licht LichtJetzt => _lichtZiel;
+
+    private static void LichtSetzen(GlInterface gl, int[] orte, Tageslicht.Licht l)
+    {
+        gl.Uniform1f(orte[0], l.Hell);
+        gl.Uniform1f(orte[1], l.Ton.X);
+        gl.Uniform1f(orte[2], l.Ton.Y);
+        gl.Uniform1f(orte[3], l.Ton.Z);
+        gl.Uniform1f(orte[4], l.Nacht);
     }
 
     private Color Himmel() =>

@@ -40,6 +40,9 @@ public static class SpielProbeTexte
     public const string DanachDorthin = "Danach geht es dorthin weiter.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
     public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
+    // Phase 8 W10 (Sammelliste 148, Nico 1b): Klappknopf des Hinweisfelds (Bildschirmleser)
+    public const string HinweisEinklappen = "Hinweis einklappen";
+    public const string HinweisAusklappen = "Hinweis ausklappen";
     public const string ImBuero = "Büro der Bitweiche. Tippe auf den Boden, um hinzugehen.";
     public const string Spielzeit = "Spielzeit {0} Uhr";
     public const string Bilder = "{0} Bilder/s";
