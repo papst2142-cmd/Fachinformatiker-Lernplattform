@@ -174,6 +174,43 @@ public sealed class SpielTageslichtTests
         Assert.True(markiert > 0 && markiert < gesamt / 4, $"{markiert} von {gesamt}");
     }
 
+    /// <summary>
+    /// Weisung P8-34: kein gelber Strich an der Seitenkante (Bank): nachts leuchtet nur die Scheibe, nie die schmale
+    /// Kante eines Fensterblocks oder einer Glasscheibe. Kein leuchtendes Dreieck liegt flach (Dachfenster der Modelle
+    /// sind schraeg) und jedes ist quer zu seiner Normalen waagrecht mindestens <see cref="Nachtlicht.GlasMindestens"/> breit.
+    /// </summary>
+    [Theory]
+    [InlineData(Jahreszeit.Herbst)]
+    [InlineData(Jahreszeit.Winter)]
+    public void SeitenkantenLeuchtenNie(Jahreszeit j)
+    {
+        var szene = StadtSzene.Bauen(NeueStadt(), Spaet(), Grafik, jahreszeit: j);
+        var geprueft = 0;
+        foreach (var haus in szene.Haeuser)
+        {
+            var netz = szene.HausNetz(haus);
+            var ind = netz.IndizesFeld;
+            for (var i = 0; i + 2 < ind.Length; i += 3)
+            {
+                var e = (int)ind[i];
+                if (!Nachtlicht.Leuchtet(netz.FarbeAn(e)))
+                {
+                    continue;
+                }
+                var n = netz.Normale(e);
+                Assert.True(MathF.Abs(n.Y) < 0.9f, $"{haus.Id}: leuchtende Flaeche liegt flach ({n})");
+                var quer = Vector3.Normalize(new Vector3(-n.Z, 0, n.X));
+                var a = Vector3.Dot(netz.Ort(e), quer);
+                var b = Vector3.Dot(netz.Ort((int)ind[i + 1]), quer);
+                var c = Vector3.Dot(netz.Ort((int)ind[i + 2]), quer);
+                var breite = MathF.Max(a, MathF.Max(b, c)) - MathF.Min(a, MathF.Min(b, c));
+                Assert.True(breite >= Nachtlicht.GlasMindestens - 0.001f, $"{haus.Id}: leuchtende Kante {breite:F3} breit bei {netz.Ort(e)}");
+                geprueft++;
+            }
+        }
+        Assert.True(geprueft > 100, geprueft.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     [Fact]
     public void GlaskantenLeuchtenNie()
     {

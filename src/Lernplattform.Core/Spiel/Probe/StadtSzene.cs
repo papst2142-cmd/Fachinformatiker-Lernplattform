@@ -269,14 +269,28 @@ public sealed class StadtSzene
         return gefaerbt;
     }
 
-    /// <summary>W10: eigenes Teil ins Netz, Fenster mit Licht mit der Marke "leuchtet nachts".</summary>
+    /// <summary>
+    /// W10: eigenes Teil ins Netz, Fenster mit Licht mit der Marke "leuchtet nachts", aber nur die Scheibe selbst
+    /// (Flaechen quer zur duennsten Seite): die schmalen Kanten des Fensterblocks (Seitenkante der Bank, Weisung
+    /// P8-34) bleiben dunkel.
+    /// </summary>
     private void TeilHinzu(Netz netz, int i)
     {
         var von = netz.AnzahlEcken;
-        netz.Hinzu(Teile[i]);
-        if (LichtTeile.Contains(i))
+        var t = Teile[i];
+        netz.Hinzu(t);
+        if (!LichtTeile.Contains(i))
         {
-            netz.Leuchten(von, netz.AnzahlEcken);
+            return;
+        }
+        var mass = new Vector3(MathF.Abs(t.X2 - t.X1), MathF.Abs(t.Y2 - t.Y1), MathF.Abs(t.Z2 - t.Z1));
+        var duenn = mass.X <= mass.Y && mass.X <= mass.Z ? Vector3.UnitX : mass.Y <= mass.Z ? Vector3.UnitY : Vector3.UnitZ;
+        for (var e = von; e < netz.AnzahlEcken; e++)
+        {
+            if (MathF.Abs(Vector3.Dot(netz.Normale(e), duenn)) > 0.9f)
+            {
+                netz.Leuchten(e, e + 1);
+            }
         }
     }
 

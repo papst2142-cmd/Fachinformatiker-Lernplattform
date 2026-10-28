@@ -374,13 +374,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _ortModell = gl.GetUniformLocationString(_programm, "uModell");
             _ortHell = gl.GetUniformLocationString(_programm, "uHell");
             _ortDurch = gl.GetUniformLocationString(_programm, "uDurch");
-            _lichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht" }.Select(n => gl.GetUniformLocationString(_programm, n))];
+            _lichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_programm, n))];
             _autoProgramm = Programm(gl, es, v, autos: true);
             _autoOrtSichtProj = gl.GetUniformLocationString(_autoProgramm, "uSichtProj");
             _autoOrtLagen = gl.GetUniformLocationString(_autoProgramm, "uAutos");
             _autoOrtHell = gl.GetUniformLocationString(_autoProgramm, "uHell");
             _autoOrtDurch = gl.GetUniformLocationString(_autoProgramm, "uDurch");
-            _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
+            _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
@@ -466,9 +466,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         uniform mat4 uAutos[8];
         out vec3 vFarbe;
         out vec3 vNormale;
+        out vec3 vWelt;
         void main() {
             mat4 lage = uAutos[int(aNummer + 0.5)];
-            gl_Position = uSichtProj * (lage * vec4(aOrt, 1.0));
+            vWelt = (lage * vec4(aOrt, 1.0)).xyz;
+            gl_Position = uSichtProj * vec4(vWelt, 1.0);
             vNormale = (lage * vec4(aNormale, 0.0)).xyz;
             vFarbe = aFarbe;
         }
@@ -485,8 +487,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             uniform mat4 uModell;
             out vec3 vFarbe;
             out vec3 vNormale;
+            out vec3 vWelt;
             void main() {
                 gl_Position = uMvp * vec4(aOrt, 1.0);
+                vWelt = (uModell * vec4(aOrt, 1.0)).xyz;
                 vNormale = (uModell * vec4(aNormale, 0.0)).xyz;
                 vFarbe = aFarbe;
             }
@@ -494,6 +498,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         const string pixel = """
             in vec3 vFarbe;
             in vec3 vNormale;
+            in vec3 vWelt;
             uniform float uHell;
             uniform float uDurch;
             uniform float uTag;
@@ -501,6 +506,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             uniform float uTonG;
             uniform float uTonB;
             uniform float uNacht;
+            uniform float uAugeX;
+            uniform float uAugeY;
+            uniform float uAugeZ;
             out vec4 fFarbe;
             void main() {
                 // halb durchsichtig ohne Mischen: jedes zweite Pixel faellt weg (Schachbrett)
@@ -518,7 +526,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 float glut = 0.0;
                 if (farbe.r > 3.5) {
                     farbe -= vec3(4.0);
-                    glut = 1.0;
+                    // fast von der Seite gesehen (Fenster an einer Seitenwand) kein heller Strich: das Licht nimmt
+                    // mit dem flachen Blick ab (Weisung P8-34, Seitenkante der Bank)
+                    vec3 blick = normalize(vec3(uAugeX, uAugeY, uAugeZ) - vWelt);
+                    glut = smoothstep(0.15, 0.45, abs(dot(normalize(vNormale), blick)));
                 }
                 if (farbe.r > 1.5) {
                     farbe -= vec3(2.0);
@@ -659,7 +670,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             gl.UseProgram(_programm);
             gl.Uniform1f(_ortHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
-            LichtSetzen(gl, _lichtOrte, licht);
+            LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
@@ -987,7 +998,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         var licht = AktuellesLicht();
         gl.Uniform1f(_autoOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
-        LichtSetzen(gl, _autoLichtOrte, licht);
+        LichtSetzen(gl, _autoLichtOrte, licht, AktuelleKamera?.Auge ?? default);
         gl.Uniform1f(_autoOrtDurch, 0f);
         netz.Binden(gl);
         gl.DrawElements(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero);
@@ -1045,13 +1056,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Licht im Bild (Start-Test: Tag, Daemmerung, Nacht).</summary>
     public Tageslicht.Licht LichtJetzt => _lichtZiel;
 
-    private static void LichtSetzen(GlInterface gl, int[] orte, Tageslicht.Licht l)
+    private static void LichtSetzen(GlInterface gl, int[] orte, Tageslicht.Licht l, System.Numerics.Vector3 auge)
     {
         gl.Uniform1f(orte[0], l.Hell);
         gl.Uniform1f(orte[1], l.Ton.X);
         gl.Uniform1f(orte[2], l.Ton.Y);
         gl.Uniform1f(orte[3], l.Ton.Z);
         gl.Uniform1f(orte[4], l.Nacht);
+        gl.Uniform1f(orte[5], auge.X);
+        gl.Uniform1f(orte[6], auge.Y);
+        gl.Uniform1f(orte[7], auge.Z);
     }
 
     private Color Himmel() =>
