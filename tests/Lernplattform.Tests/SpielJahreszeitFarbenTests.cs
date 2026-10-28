@@ -256,6 +256,9 @@ public sealed class SpielJahreszeitFarbenTests
         var nicht = Jahreszeitfarben.Faerben(Jahreszeit.Fruehling, Faerbeart.Stadt, gruen, 0.5f, 1f, 4);
         Assert.True(bluehend.X > bluehend.Y, "Bluete rosa");
         Assert.True(nicht.Y > nicht.X, "kein Bluehen gruen");
+        // Kleingruen (Bueschel, Graeser) blueht nie, auch nicht mit dem Samen eines bluehenden Baums
+        var klein = Jahreszeitfarben.Faerben(Jahreszeit.Fruehling, Faerbeart.Klein, gruen, 0.5f, 1f, 3);
+        Assert.True(klein.Y > klein.X, "Kleingruen bleibt gruen");
         Assert.Equal(Jahreszeitfarben.Boden, Jahreszeitfarben.Faerben(Jahreszeit.Sommer, Faerbeart.Stadt, Jahreszeitfarben.Boden, 1, 0));
         Assert.True(Jahreszeitfarben.IstSchnee(Jahreszeitfarben.Faerben(Jahreszeit.Winter, Faerbeart.Stadt, Jahreszeitfarben.Boden, 1, 0)));
         Assert.False(Jahreszeitfarben.IstSchnee(Jahreszeitfarben.Faerben(Jahreszeit.Herbst, Faerbeart.Stadt, Jahreszeitfarben.Boden, 1, 0)));

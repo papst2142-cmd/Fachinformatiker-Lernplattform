@@ -168,7 +168,8 @@ public static class Jahreszeitfarben
         switch (j)
         {
             case Jahreszeit.Fruehling:
-                return s % BlueteJeder == 0 && !nadel
+                // nur Laubbaeume bluehen (Nico 3c), nie Bueschel, Graeser und Steine des Kleingruens
+                return s % BlueteJeder == 0 && !nadel && art != Faerbeart.Klein
                     ? Mischen(c, Bluete * schatten, 0.8f)
                     : Mischen(c, Maigruen * schatten, 0.45f);
             case Jahreszeit.Herbst:
