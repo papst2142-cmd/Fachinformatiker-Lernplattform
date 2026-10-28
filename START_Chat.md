@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.19.0** auf Zweig `claude/project-thread-y4uobc` (Phase 8 W8b Stadt-Feinschliff, PR als Entwurf, Weisung P8-20/P8-22). Auf `main` **A 0.18.0** (f8e0c98, PR #61). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
-| Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 Prüfstand (#51), W2 Eingaben A 0.13.1 (#52), W2b A 0.13.2 (#53), W3 Spiel-Abgleich A 0.14.0 (#54), W4 Spiel-Tempo A 0.14.1 (#55), Fix A 0.14.2 (#56), W5 Kaufhaus A 0.15.0 (#57), W6 Festzeiten A 0.16.0 (#58), W7 Schritte/Autos/Grün A 0.17.0 (#59), W8 Ton/Vollbild/Tasten A 0.18.0 (#61) gemergt |
-| Jetzt | **W8b Stadt-Feinschliff (A 0.19.0, Teilplan `Fi-Austausch/anlagen/P8-18_Teilplan_W8b_Stadt_Feinschliff.md`, Nico 1a–5a):** neue Wege Bahnhof und Gewerbehof (`zugaenge_neu`, neuer Stadt-Fingerabdruck 03d0a012), Türen am Wegende, Fenster ringsum, Stellwerk mit Schild (nicht betretbar), Bahnhof innen als Wartehalle, Ton-Zeile im Problembericht (Sammelliste 142). Wartet auf Nicos Merge-OK. Danach W9 (A 0.20.0) nach Weisung |
+| Version | **A 0.19.0** auf `main` (c34a9f5, PR #62, W8b Stadt-Feinschliff, 28.10.2026). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
+| Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 Prüfstand (#51), W2 Eingaben A 0.13.1 (#52), W2b A 0.13.2 (#53), W3 Spiel-Abgleich A 0.14.0 (#54), W4 Spiel-Tempo A 0.14.1 (#55), Fix A 0.14.2 (#56), W5 Kaufhaus A 0.15.0 (#57), W6 Festzeiten A 0.16.0 (#58), W7 Schritte/Autos/Grün A 0.17.0 (#59), W8 Ton/Vollbild/Tasten A 0.18.0 (#61), W8b Stadt-Feinschliff A 0.19.0 (#62) gemergt |
+| Jetzt | **W8b gemergt** (Türen am Wegende und mittig, nur eine Tür je Haus, Fenster ringsum, Stellwerk mit Schild, Bahnhof innen als Wartehalle, Stadt-Fingerabdruck 03d0a012; Prüfung je Haus mit Nahaufnahmen aus 4 Blickwinkeln, Bilder `Fi-Austausch/bilder/A0.19.0_W8b_Tueren2/`). Nächstes: W9 (u. a. Hörprobe an den Ton-Reglern, Weisung P8-29) nach Weisung in einem neuen CC-Thread |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`). Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Fingerabdrücke f2b59ce8, 86ac8f19, 185dee1b, a3ec3cdf unverändert (Tests ohne Festzeit) |
-| Letzte/nächste Meldung | **P8-12** (W6 Festzeiten) / P8-13 |
-| Sammelliste | nächste freie Nummer **129**; offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
+| Letzte/nächste Meldung | **P8-30** (W8b Türen Feinschliff, Fi-Austausch 55ce136) / nach nächster Weisung |
+| Sammelliste | nächste freie Nummer **148**; offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
 ## 4. So arbeitet der neue Chat
