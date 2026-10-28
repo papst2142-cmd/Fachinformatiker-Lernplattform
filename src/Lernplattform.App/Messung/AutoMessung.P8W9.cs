@@ -101,6 +101,8 @@ public static partial class AutoMessung
             Jahreszeiten.ProbeEnde();
             Festzeit.ProbeEnde();
             seite.SpielSetzen(vorher);
+            // die Kamera wieder auf die Figur des Spiels von vorher (die Layoutpruefung sieht dieselbe Ansicht wie ohne diese Messung)
+            seite.Flaeche.KameraAufFigur();
             await seite.Flaeche.NaechstesBildAsync();
         }
         return funde;
