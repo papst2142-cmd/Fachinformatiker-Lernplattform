@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.19.0** auf Zweig `claude/project-thread-y4uobc` (Phase 8 W8b Stadt-Feinschliff, PR als Entwurf, Weisung P8-20/P8-22). Auf `main` **A 0.18.0** (f8e0c98, PR #61). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
-| Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 Prüfstand (#51), W2 Eingaben A 0.13.1 (#52), W2b A 0.13.2 (#53), W3 Spiel-Abgleich A 0.14.0 (#54), W4 Spiel-Tempo A 0.14.1 (#55), Fix A 0.14.2 (#56), W5 Kaufhaus A 0.15.0 (#57), W6 Festzeiten A 0.16.0 (#58), W7 Schritte/Autos/Grün A 0.17.0 (#59), W8 Ton/Vollbild/Tasten A 0.18.0 (#61) gemergt |
-| Jetzt | **W8b Stadt-Feinschliff (A 0.19.0, Teilplan `Fi-Austausch/anlagen/P8-18_Teilplan_W8b_Stadt_Feinschliff.md`, Nico 1a–5a):** neue Wege Bahnhof und Gewerbehof (`zugaenge_neu`, neuer Stadt-Fingerabdruck 03d0a012), Türen am Wegende, Fenster ringsum, Stellwerk mit Schild (nicht betretbar), Bahnhof innen als Wartehalle, Ton-Zeile im Problembericht (Sammelliste 142). Wartet auf Nicos Merge-OK. Danach W9 (A 0.20.0) nach Weisung |
-| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`). Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
-| Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Fingerabdrücke f2b59ce8, 86ac8f19, 185dee1b, a3ec3cdf unverändert (Tests ohne Festzeit) |
-| Letzte/nächste Meldung | **P8-12** (W6 Festzeiten) / P8-13 |
-| Sammelliste | nächste freie Nummer **129**; offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
+| Version | **A 0.21.0** auf `main` (ae19579, PR #64, Phase 8 W10), davor A 0.20.0 (W9, #63, 99d2804), A 0.19.0 (W8b, #62, c34a9f5). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
+| Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 bis W8 (#51–#61), W8b Stadt-Feinschliff A 0.19.0 (#62), W9 Jahreszeiten A 0.20.0 (#63), W10 Hinweisfeld/spät gehen/Tag und Nacht/Dashboard breit A 0.21.0 (#64) gemergt |
+| Jetzt | **W11 Festzeiten-Verkehr und Stadtfehler (A 0.22.0)**: Teilplan `Fi-Austausch/anlagen/P8-35_Teilplan_W11_Festzeiten_Verkehr.md` (Meldung P8-35), Nicos Auswahl Weisung P8-39; Bau nur nach eigener Weisung auf neuem Zweig ab main. Danach Sammelliste 144 und Bericht Phase 8 |
+| Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`); ohne OpenGL (macOS-CI) nie auf ein Bild der 3D-Fläche warten. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
+| Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Fingerabdrücke f2b59ce8, 03d0a012 (Stadt seit W8b), 185dee1b, a3ec3cdf unverändert |
+| Letzte/nächste Meldung | **P8-37** (Rückfrage W10) und P8-35 (Teilplan W11) / nach Weisung |
+| Sammelliste | nächste freie Nummer **159** (153–158 für W11); offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9; 143 weite Übersicht über 100 000 Dreiecke (mit Laternen 110 103) |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 
 ## 4. So arbeitet der neue Chat
