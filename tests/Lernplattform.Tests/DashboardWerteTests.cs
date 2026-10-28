@@ -507,4 +507,21 @@ public class DashboardWerteTests
             Assert.Equal(paar[1].GetString(), DashboardTexte.LetzteWorteZusammen(paar[0].GetString()!));
         }
     }
+
+    /// <summary>
+    /// Phase 8 W10 (Nico 4a): breit ab 900 Punkten Inhalt x Schriftfaktor, ab 160 % nie; Handy quer (Inhalt 671 bei
+    /// 915 x 412) und schmale Fenster bleiben wie bisher, PC 1280 x 720 (Inhalt etwa 1 000) wird breit.
+    /// </summary>
+    [Fact]
+    public void BreiteAnordnungNurWennPlatzReicht()
+    {
+        Assert.Equal(900, DashboardAnordnung.BreitAb);
+        Assert.False(DashboardAnordnung.Breit(671, 1.0, false));
+        Assert.False(DashboardAnordnung.Breit(899.9, 1.0, false));
+        Assert.True(DashboardAnordnung.Breit(900, 1.0, false));
+        Assert.True(DashboardAnordnung.Breit(1000, 1.0, false));
+        Assert.False(DashboardAnordnung.Breit(1000, 1.15, false));
+        Assert.True(DashboardAnordnung.Breit(1035, 1.15, false));
+        Assert.False(DashboardAnordnung.Breit(3000, 1.6, true));
+    }
 }

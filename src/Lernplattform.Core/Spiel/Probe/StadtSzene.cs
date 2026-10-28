@@ -188,6 +188,7 @@ public sealed class StadtSzene
                     netz.Hinzu(modell, baum.Lage);
                 }
             }
+            LaternenHinzu(netz);
             return netz;
         }
         // Phase 8 W9: Farben nach der Jahreszeit; die Fest-Deko (ab FestTeileVon/FestStueckeVon) behaelt ihre Farben
@@ -223,6 +224,7 @@ public sealed class StadtSzene
                 gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
         }
+        LaternenHinzu(gefaerbt);
         return gefaerbt;
     }
 
@@ -231,12 +233,18 @@ public sealed class StadtSzene
     {
         if (Jahreszeit == Jahreszeit.Sommer)
         {
-            var netz = Netz.Aus(Teile.Skip(haus.TeileVon).Take(haus.TeileBis - haus.TeileVon));
+            var netz = new Netz();
+            for (var i = haus.TeileVon; i < haus.TeileBis; i++)
+            {
+                TeilHinzu(netz, i);
+            }
             for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
             {
                 if (ModellAn(i) is { } modell)
                 {
+                    var von = netz.Indizes.Count;
                     netz.Hinzu(modell, Stuecke[i].Lage);
+                    Nachtlicht.GlasMarkieren(netz, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture));
                 }
             }
             return netz;
@@ -245,7 +253,7 @@ public sealed class StadtSzene
         var gefaerbt = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Haus) };
         for (var i = haus.TeileVon; i < haus.TeileBis; i++)
         {
-            gefaerbt.Hinzu(Teile[i]);
+            TeilHinzu(gefaerbt, i);
         }
         gefaerbt.Faerbung = null;
         for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
@@ -253,10 +261,49 @@ public sealed class StadtSzene
             if (ModellAn(i) is { } modell)
             {
                 var art = Stuecke[i].Name.Contains("tree", StringComparison.Ordinal) ? Faerbeart.Stadt : Faerbeart.Haus;
+                var von = gefaerbt.Indizes.Count;
                 gefaerbt.Hinzu(modell, Stuecke[i].Lage, ModellFaerbung(modell, Stuecke[i].Lage, art));
+                Nachtlicht.GlasMarkieren(gefaerbt, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture));
             }
         }
         return gefaerbt;
+    }
+
+    /// <summary>
+    /// W10: eigenes Teil ins Netz, Fenster mit Licht mit der Marke "leuchtet nachts", aber nur die Scheibe selbst
+    /// (Flaechen quer zur duennsten Seite): die schmalen Kanten des Fensterblocks (Seitenkante der Bank, Weisung
+    /// P8-34) bleiben dunkel.
+    /// </summary>
+    private void TeilHinzu(Netz netz, int i)
+    {
+        var von = netz.AnzahlEcken;
+        var t = Teile[i];
+        netz.Hinzu(t);
+        if (!LichtTeile.Contains(i))
+        {
+            return;
+        }
+        var mass = new Vector3(MathF.Abs(t.X2 - t.X1), MathF.Abs(t.Y2 - t.Y1), MathF.Abs(t.Z2 - t.Z1));
+        var duenn = mass.X <= mass.Y && mass.X <= mass.Z ? Vector3.UnitX : mass.Y <= mass.Z ? Vector3.UnitY : Vector3.UnitZ;
+        for (var e = von; e < netz.AnzahlEcken; e++)
+        {
+            if (MathF.Abs(Vector3.Dot(netz.Normale(e), duenn)) > 0.9f)
+            {
+                netz.Leuchten(e, e + 1);
+            }
+        }
+    }
+
+    /// <summary>W10 (Nico 3b): die Strassenlaternen ins Netz der Stadt (kein eigener Zeichenaufruf).</summary>
+    private void LaternenHinzu(Netz netz)
+    {
+        var faerbung = netz.Faerbung;
+        netz.Faerbung = null;
+        foreach (var p in Laternen)
+        {
+            Nachtlicht.Laterne(netz, p.X, p.Y);
+        }
+        netz.Faerbung = faerbung;
     }
 
     /// <summary>Phase 8 W9: Faerbung eines Modells an seiner Lage (Samen und Nadelbaum je Modell); null im Sommer.</summary>
@@ -545,6 +592,7 @@ public sealed class StadtSzene
         var signatur = new List<string>();
         var haeuser = new List<StadtHaus>();
         var fensterJeHaus = new Dictionary<string, List<(int, Vector3)>>();
+        var alleFenster = new List<(int Teil, Vector3 Wand)>();
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude")))
         {
             var modell = Py.Str(item["modell"]);
@@ -553,6 +601,7 @@ public sealed class StadtSzene
             var (tv, sv) = (teile.Count, stuecke.Count);
             var fenster = new List<(int, Vector3)>();
             var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume, fenster: fenster);
+            alleFenster.AddRange(fenster);
             if (hmin.X <= hmax.X)
             {
                 var hausId = modell + "#" + haeuser.Count.ToString(CultureInfo.InvariantCulture);
@@ -634,6 +683,7 @@ public sealed class StadtSzene
             var modellTuer = StadtTueren.ModellVersatz(stadt, id);
             var fenster = new List<(int, Vector3)>();
             var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f, fenster);
+            alleFenster.AddRange(fenster);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
                 ? ((float)((zelle.Item1 + 0.5) * stadt.Zelle), (float)((zelle.Item2 + 0.5) * stadt.Zelle))
@@ -727,6 +777,8 @@ public sealed class StadtSzene
             Jahreszeit = jahreszeit,
             GruenKlein = gruen,
             Strassen = strassen,
+            // W10 (Nico 3b): Fenster mit Licht (nicht die dunklen und nicht die an der Tuer in Wandfarbe)
+            LichtTeile = alleFenster.Where(f => teile[f.Teil].Farbe != Farben.Fenster && teile[f.Teil].Farbe != f.Wand).Select(f => f.Teil).ToHashSet(),
             Zierhaeuser = zierhaeuser,
             Tueren = tueren,
             Umgefaerbt = umgefaerbt,
@@ -1080,6 +1132,14 @@ public sealed class StadtSzene
 
     /// <summary>Phase 8 W7: Kleingruen (Buesche, Graeser, Steine, Beete; eigenes Netz), null ohne Grafik.</summary>
     public Gruen.Ergebnis? GruenKlein { get; private init; }
+
+    /// <summary>Phase 8 W10 (Nico 3b): Nummern der eigenen Fenster in <see cref="Teile"/>, die nachts leuchten.</summary>
+    public IReadOnlySet<int> LichtTeile { get; private init; } = new HashSet<int>();
+
+    /// <summary>Phase 8 W10 (Nico 3b): Plaetze der Strassenlaternen (<see cref="Nachtlicht.Plaetze"/>), einmal je Szene.</summary>
+    public IReadOnlyList<Vector2> Laternen => _laternen ??= Nachtlicht.Plaetze(this);
+
+    private List<Vector2>? _laternen;
 
     /// <summary>Mittellinien der Strassen (fuer die Autos, Phase 8 W7).</summary>
     public IReadOnlyList<IReadOnlyList<Vector2>> Strassen { get; private init; } = [];

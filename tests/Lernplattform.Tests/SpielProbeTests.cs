@@ -273,19 +273,31 @@ public class SpielProbeTests
     }
 
     [Fact]
-    public void AbendsNurNochNachHause()
+    public void SpaetStehtDieUhr()
     {
+        // W10 (Weisung P8-34, Nico 2c): abends geht jeder Weg weiter, um 23:00 bleibt die Uhr stehen
         var spiel = NeuesSpiel();
-        // hin und her bis zum Abend: irgendwann geht nur noch der Weg nach Hause
-        var grund = StadtGrund.Ok;
-        for (var i = 0; i < 200 && grund == StadtGrund.Ok; i++)
+        var i = 0;
+        while (spiel.Jetzt.Uhr < Stadt.UhrSteht)
         {
-            grund = spiel.GeheZu(spiel.Jetzt.Ort == "elektromarkt" ? "talheim" : "elektromarkt");
+            Assert.True(i++ < 300, "die Uhr erreicht 23:00 nie");
+            Assert.Equal(StadtGrund.Ok, spiel.GeheZu(spiel.Jetzt.Ort == "elektromarkt" ? "talheim" : "elektromarkt"));
             spiel.SofortAnkommen();
         }
-        Assert.Equal(StadtGrund.Abend, grund);
-        Assert.Equal(StadtTexte.Abend, spiel.Zeile);
+        Assert.Equal(Stadt.UhrSteht, spiel.Jetzt.Uhr);
+        // der Hinweis steht einmal vor der Zeile des Orts
+        Assert.StartsWith(StadtTexte.UhrSteht + "\n", spiel.Zeile);
+        Assert.Contains(StadtTexte.OeffnetNichtMehr, spiel.Zeile);
+        Assert.False(spiel.KannBetreten);
+        Assert.False(spiel.KannWarten);
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("bitweiche"));
+        spiel.SofortAnkommen();
+        Assert.Equal(Stadt.UhrSteht, spiel.Jetzt.Uhr);
+        Assert.DoesNotContain(StadtTexte.UhrSteht, spiel.Zeile);
         Assert.Equal(StadtGrund.Ok, spiel.GeheZu("zuhause"));
+        spiel.SofortAnkommen();
+        Assert.Equal(new StadtStand(1, "zuhause", Stadt.UhrSteht), spiel.Jetzt);
+        Assert.True(spiel.KannBetreten);
     }
 
     [Fact]
@@ -572,12 +584,20 @@ public class SpielProbeTests
         Assert.Equal((ort.StehX, ort.StehZ), (spiel.FigurX, spiel.FigurZ));
         Assert.True(spiel.Jetzt.Uhr > uhr);
         Assert.True(spiel.KannBetreten);
-        // abends nicht mehr frei gehen
+        // W10 (Nico 2c): abends frei weiter gehen, die Minuten nur bis 23:00, danach steht die Uhr
         var abend = NeuesSpiel();
-        abend.Ablauf.Log(Stadt.Gewartet, new Lernplattform.Core.Daten.PyObjekt { { "tag", 1L }, { "ort", "zuhause" }, { "minuten", 779L } });
-        Assert.False(abend.GeheZu(24.0, 16.0));
-        Assert.Equal(StadtTexte.Grund(StadtGrund.Abend), abend.Zeile);
-        Assert.Equal(1199, abend.Jetzt.Uhr);
+        abend.Ablauf.Log(Stadt.Gewartet, new Lernplattform.Core.Daten.PyObjekt { { "tag", 1L }, { "ort", "zuhause" }, { "minuten", 959L } });
+        Assert.Equal(1379, abend.Jetzt.Uhr);
+        Assert.True(abend.GeheZu(24.0, 16.0));
+        var spaet = abend.Ablauf.Stand.Verlauf[^1];
+        Assert.Equal(Stadt.Gelaufen, spaet.Art);
+        Assert.True(Py.Int(spaet.Daten["schritte"]) > 1);
+        Assert.Equal(1L, Py.Int(spaet.Daten["minuten"]));
+        Assert.Equal(Stadt.UhrSteht, abend.Jetzt.Uhr);
+        abend.SofortAnkommen();
+        Assert.True(abend.GeheZu(x0, z0));
+        Assert.Equal(0L, Py.Int(abend.Ablauf.Stand.Verlauf[^1].Daten["minuten"]));
+        Assert.Equal(Stadt.UhrSteht, abend.Jetzt.Uhr);
     }
 
     [Fact]

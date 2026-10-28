@@ -13,7 +13,7 @@ public enum StadtGrund
     Gesperrt,          // der Ort ist noch nicht auf der Karte (frei)
     SchonDa,           // die Figur steht schon dort
     KeinWeg,           // kein Weg auf dem Raster
-    Abend,             // abends nur noch heimgehen
+    Abend,             // bis A 0.20.0: abends nur noch heimgehen (seit W10 nicht mehr erzeugt)
     Geschlossen,       // der Ort hat gerade zu
     OeffnetNichtMehr,  // zu, und er oeffnet heute nicht mehr vor dem Abend
     NichtGeschlossen,  // Warten geht nur vor einem geschlossenen Ort
@@ -46,9 +46,10 @@ public sealed record StadtWeg(IReadOnlyList<(long X, long Y)> Zellen)
 /// rechnet <see cref="OrtFrei"/> und <see cref="Orte"/> wie Python (place_unlocked, map_places,
 /// Vergleichswerte G48 Teil Stadt).
 /// Regeln der Tagesuhr: Jeder Arbeitstag beginnt zu Hause um <see cref="Beginn"/>. Ein Weg kostet
-/// Schritte mal <see cref="MinutenJeSchritt"/>. Kaeme man an einem anderen Ort als zu Hause erst nach
-/// <see cref="Abend"/> an, geht nur noch der Weg nach Hause. Betreten geht nur, solange der Ort offen
-/// ist; vor einem Ort, der heute noch oeffnet, kann man bis zur Oeffnung warten.
+/// Schritte mal <see cref="MinutenJeSchritt"/>. Seit W10 (Weisung P8-34, Nico 2c) geht jeder Weg auch abends
+/// weiter; um <see cref="UhrSteht"/> (23:00) bleibt die Uhr stehen (Minuten eines Wegs werden darauf gekappt),
+/// bis die Figur zu Hause schlafen geht. Betreten geht nur, solange der Ort offen ist; vor einem Ort, der heute
+/// noch (bis zum <see cref="Abend"/>) oeffnet, kann man bis zur Oeffnung warten.
 /// </summary>
 public sealed class Stadt
 {
@@ -188,7 +189,20 @@ public sealed class Stadt
 
     public long Beginn { get; }
 
+    /// <summary>
+    /// Abend (20:00): bis hierhin kann man vor einem geschlossenen Ort auf die Oeffnung warten. Seit W10 (Weisung
+    /// P8-34, Nico 2c) geht danach jeder Weg weiter, die Orte folgen ihren Oeffnungszeiten.
+    /// </summary>
     public long Abend { get; }
+
+    /// <summary>
+    /// W10 (Weisung P8-34, Nico 2c): um 23:00 bleibt die Uhr stehen, bis die Figur zu Hause schlafen geht
+    /// (Feierabend, neuer Tag um <see cref="Beginn"/>). Wege danach gehen weiter und kosten keine Minuten.
+    /// </summary>
+    public const long UhrSteht = 1380;
+
+    /// <summary>Minuten eines Wegs, gekappt auf die Zeit bis <see cref="UhrSteht"/> (danach 0).</summary>
+    private static long Gekappt(long uhr, long minuten) => Math.Max(0, Math.Min(minuten, UhrSteht - uhr));
 
     public long MinutenJeSchritt { get; }
 
@@ -480,11 +494,7 @@ public sealed class Stadt
             }
             anzahl = weg.Schritte;
         }
-        var minuten = anzahl * MinutenJeSchritt;
-        if (ziel != Heim && jetzt.Uhr + minuten > Abend)
-        {
-            return new(StadtGrund.Abend);
-        }
+        var minuten = Gekappt(jetzt.Uhr, anzahl * MinutenJeSchritt);
         return new(StadtGrund.Ok, Gegangen, new PyObjekt
         {
             { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", anzahl }, { "minuten", minuten },
@@ -493,8 +503,7 @@ public sealed class Stadt
 
     /// <summary>
     /// Kann die Figur <paramref name="schritte"/> frei durch die Stadt gehen (nicht zu einem Ort)? Wie
-    /// ein Weg kostet jeder Schritt <see cref="MinutenJeSchritt"/>; nach <see cref="Abend"/> geht nur
-    /// noch der Weg nach Hause, darum dann nicht.
+    /// ein Weg kostet jeder Schritt <see cref="MinutenJeSchritt"/>, ab <see cref="UhrSteht"/> nichts mehr.
     /// </summary>
     public StadtErgebnis LaufenPruefen(Spielstand stand, long schritte)
     {
@@ -507,11 +516,7 @@ public sealed class Stadt
             return new(StadtGrund.KeinWeg);
         }
         var jetzt = Stand(stand);
-        var minuten = schritte * MinutenJeSchritt;
-        if (jetzt.Uhr + minuten > Abend)
-        {
-            return new(StadtGrund.Abend);
-        }
+        var minuten = Gekappt(jetzt.Uhr, schritte * MinutenJeSchritt);
         return new(StadtGrund.Ok, Gelaufen, new PyObjekt
         {
             { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", schritte }, { "minuten", minuten },
