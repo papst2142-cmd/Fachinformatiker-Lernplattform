@@ -544,6 +544,9 @@ public sealed class SpielSeite : Grid
     /// <summary>Sichtbare Namensschilder ueber der Stadt (Start-Test, Fotos).</summary>
     public int SchilderSichtbar => _schildKnoepfe.Values.Count(k => k.IsVisible);
 
+    /// <summary>W8b (Start-Test): hat das Haus ohne Ort (Stellwerk) ein Namensschild?</summary>
+    public bool HatSchild(string name) => _schildKnoepfe.ContainsKey("zier:" + name);
+
     public void OrtslisteZeigen(bool sichtbar)
     {
         _ortsliste.IsVisible = sichtbar || _ersatz.IsVisible;
@@ -631,10 +634,12 @@ public sealed class SpielSeite : Grid
         }
         _schildKnoepfe.Clear();
         _schildGroessen.Clear();
-        foreach (var ort in spiel.Szene.Orte)
+        // W8b (Nico 3a): auch Haeuser ohne Ort (Stellwerk) tragen ein Schild; nicht betretbar, ein Tippen
+        // fuehrt die Figur nur ans Ende ihres Gehwegs an der Strasse
+        foreach (var (id, name, gehe) in spiel.Szene.Orte.Select(o => (o.Id, o.Name, (Action)(() => spiel.GeheZu(o.Id))))
+            .Concat(spiel.Szene.Zierhaeuser.Select(z => (ZierId(z), z.Name, (Action)(() => spiel.GeheZu(z.GehX, z.GehZ))))))
         {
-            var id = ort.Id;
-            var text = new TextBlock { Text = ort.Name, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.NoWrap }.Groesse("Klein");
+            var text = new TextBlock { Text = name, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.NoWrap }.Groesse("Klein");
             text.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
             var schild = new Button
             {
@@ -645,10 +650,10 @@ public sealed class SpielSeite : Grid
                 IsVisible = false,
             };
             schild.Farbe(Button.BackgroundProperty, "Pinsel.card").Farbe(Button.BorderBrushProperty, "Pinsel.border_hi");
-            Avalonia.Automation.AutomationProperties.SetName(schild, ort.Name);
+            Avalonia.Automation.AutomationProperties.SetName(schild, name);
             schild.Click += (_, _) =>
             {
-                spiel.GeheZu(id);
+                gehe();
                 Flaeche.AnfordernBild();
             };
             _schildKnoepfe[id] = schild;
@@ -656,6 +661,9 @@ public sealed class SpielSeite : Grid
         }
         SchilderSetzen();
     }
+
+    /// <summary>Schluessel des Schilds eines Hauses ohne Ort (kann nie eine Ort-id sein).</summary>
+    private static string ZierId(StadtZierhaus z) => "zier:" + z.Name;
 
     /// <summary>Namensschilder ueber die Haeuser setzen (je Bild); nur ganz sichtbare Schilder zeigen.</summary>
     private void SchilderSetzen()
@@ -667,7 +675,8 @@ public sealed class SpielSeite : Grid
         var breite = (float)Flaeche.Bounds.Width;
         var hoehe = (float)Flaeche.Bounds.Height;
         var skalierung = Math.Max(1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
-        foreach (var ort in spiel.Szene.Orte)
+        foreach (var ort in spiel.Szene.Orte.Select(o => (o.Id, o.Schild, o.KastenMin, o.KastenMax))
+            .Concat(spiel.Szene.Zierhaeuser.Select(z => (Id: ZierId(z), z.Schild, z.KastenMin, z.KastenMax))))
         {
             if (!_schildKnoepfe.TryGetValue(ort.Id, out var schild))
             {

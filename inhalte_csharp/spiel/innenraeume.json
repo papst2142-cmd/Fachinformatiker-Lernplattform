@@ -256,5 +256,35 @@
     "personen": [
       {"id": "lenz", "name": "Mara Lenz", "rolle": "Verkäuferin", "aussehen": {"haut": "oliv", "frisur": "locken", "haarfarbe": "schwarz", "oberteil": "orange"}, "text": "Hallo! Hier gibt es Kleidung für deine Figur. Was du kaufst, ziehst du gleich an.", "platz": [12.5, 4.8]}
     ]
+  },
+  "zusatz_kunden": {
+    "_hinweis": "Phase 8 W8b (Weisung P8-20, Nico 2a): Zusatz je Kundenort wie zusatz; ohne nimmt Einrichtung dieser Typen heraus. Bahnhof Talheim innen als Wartehalle (Gleis und Zug sieht man draussen).",
+    "talheim": {
+      "raeume": {
+        "bahnsteig": {
+          "name": "Wartehalle", "kurz": "Wartehalle",
+          "ohne": ["gleis", "zug", "markierung"],
+          "deko": [
+          {"typ": "bank", "x": 2.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 2.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 6.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 6.0, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 9.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 9.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 18.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 18.0, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 21.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 21.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 25.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 25.0, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bahnhofsuhr", "x": 14.4, "y": 13.2, "w": 1.2, "h": 1.2},
+          {"typ": "pflanze", "x": 1.0, "y": 15.0, "w": 0.7, "h": 0.7},
+          {"typ": "pflanze", "x": 13.0, "y": 15.0, "w": 0.7, "h": 0.7},
+          {"typ": "pflanze", "x": 16.4, "y": 15.0, "w": 0.7, "h": 0.7},
+          {"typ": "pflanze", "x": 28.4, "y": 15.0, "w": 0.7, "h": 0.7}
+          ]
+        }
+      }
+    }
   }
 }

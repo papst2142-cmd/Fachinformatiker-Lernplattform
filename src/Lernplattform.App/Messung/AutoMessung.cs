@@ -473,6 +473,16 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 8, W8b: neue Tueren (Bahnhof, Moebelhaus), Stellwerk mit Schild, Bahnhof innen als Wartehalle
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
             }
         }
 
@@ -509,6 +519,7 @@ public static partial class AutoMessung
         {
             Messwerte.Notiere(string.Create(inv, $"  und {P7W1AnsichtenAnzahl} Ansichten der Wellen W1/W4/W5 (Phase 7, Stadt in 3D im Vollbild, ohne Speichern): Stadt mit Namensschildern, Ortsliste offen, Moebelhaus geschlossen, Buero innen, Kunde innen, Wohnung beim Einrichten mit gewaehltem Moebel, ohne 3D (Hinweis und Ortsliste)"));
             Messwerte.Notiere("  und die Spielansichten der Wellen W6/W7 (Phase 7): Platzwahl, Figur, Uebersicht, Meine Reise, Meilenstein, 9 Ticket-Bretter, 9 Firmen-Reiter; Moebelhaus und Elektromarkt innen (Eingang, Verkauf, Ware), Sortiment Moebelhaus und Elektromarkt mit zwei Teile-Typen (ohne Kaufen); W7b: Bank und Amt innen (Eingang, Schalter), Seiten Bank und Amt (ohne Schreiben)");
+            Messwerte.Notiere(string.Create(inv, $"  und {P8W8bAnsichtenAnzahl} Ansichten der Welle W8b (Phase 8): vor den Tueren von Bahnhof Talheim und Moebelhaus, am Stellwerk (Gehweg, Tuer, Schild), Bahnhof innen (Wartehalle)"));
         }
         Messwerte.Notiere(w4Gekuerzt.Count == 0
             ? "  W4-Ansichten in allen Groessen geprueft (Zeitgrenze 7,5 Minuten nicht erreicht)"

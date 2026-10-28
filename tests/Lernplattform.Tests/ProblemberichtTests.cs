@@ -223,4 +223,40 @@ public class ProblemberichtTests
             Assert.Equal(text, Zahltext.Punkt(wert, stellen));
         }
     }
+
+    /// <summary>
+    /// Sammelliste 142 (W8b): Zeile zum Ton; ohne gesetzte Zeile (Tests, G38) bleibt der Bericht wie Python.
+    /// Sammelliste 145 (P8-28): statt nur zu pruefen, dass die statische Zeile leer ist (rot, sobald ein anderer Test
+    /// <c>DiagnoseTeil</c> laedt), wird der Bericht mit und ohne Zeile gebaut und verglichen; danach gilt der alte
+    /// Wert wieder. G38 laeuft in derselben Klasse, also nie gleichzeitig.
+    /// </summary>
+    [Fact]
+    public void TonZeile()
+    {
+        Assert.Equal("Ton: Gerät geöffnet in 43 ms", Problembericht.TonText(42.6, false, true));
+        Assert.Equal("Ton: Gerät geöffnet in 0 ms", Problembericht.TonText(0, true, true));
+        Assert.Equal("Ton: kein Gerät", Problembericht.TonText(-1, true, true));
+        Assert.Equal("Ton: Gerät noch nicht geöffnet", Problembericht.TonText(-1, false, true));
+        Assert.Equal("Ton: Spiel noch nicht geöffnet", Problembericht.TonText(-1, false, false));
+        using var temp = new TempOrdner();
+        string Bericht() => Problembericht.Bauen(null, "A", "PC", [], new DateTime(2026, 10, 28, 9, 0, 0), temp.Pfad, Path.Combine(temp.Pfad, "update.log"));
+        var vorher = Problembericht.TonZeile;
+        try
+        {
+            Problembericht.TonZeile = null;
+            var ohne = Bericht().Split('\n').ToList();
+            Assert.DoesNotContain(ohne, z => z.StartsWith("Ton:", StringComparison.Ordinal));
+            Problembericht.TonZeile = () => Problembericht.TonText(42.6, false, true);
+            var mit = Bericht().Split('\n').ToList();
+            // genau eine Zeile mehr, am Ende des Kopfteils (vor der Leerzeile vor fehler.log), sonst alles gleich
+            var stelle = ohne.IndexOf("--- fehler.log ---") - 1;
+            Assert.True(stelle > 0 && ohne[stelle].Length == 0, "Kopfteil endet nicht vor fehler.log");
+            ohne.Insert(stelle, "Ton: Gerät geöffnet in 43 ms");
+            Assert.Equal(ohne, mit);
+        }
+        finally
+        {
+            Problembericht.TonZeile = vorher;
+        }
+    }
 }

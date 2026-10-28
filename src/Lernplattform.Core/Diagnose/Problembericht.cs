@@ -167,6 +167,18 @@ public static class Problembericht
     }
 
     /// <summary>
+    /// Sammelliste 142 (Phase 8 W8b, ohne Vorlage in Python): Zeile zum Ton des Spiels unter dem Kopfteil, gesetzt von der
+    /// App (der Core kennt das Audiogeraet nicht); null (Tests, Vergleich G38) = keine Zeile.
+    /// </summary>
+    public static Func<string>? TonZeile { get; set; }
+
+    /// <summary>Text der Ton-Zeile: ms = Dauer des letzten Oeffnens, keinGeraet = still ohne Audiogeraet.</summary>
+    public static string TonText(double ms, bool keinGeraet, bool vorbereitet) =>
+        ms >= 0 ? "Ton: Gerät geöffnet in " + ms.ToString("F0", CultureInfo.InvariantCulture) + " ms"
+        : keinGeraet ? "Ton: kein Gerät"
+        : vorbereitet ? "Ton: Gerät noch nicht geöffnet" : "Ton: Spiel noch nicht geöffnet";
+
+    /// <summary>
     /// build_report: der ganze Bericht, schon gefiltert. logOrdner: Ordner mit fehler.log, haenger.log und
     /// laeuft.info (Vorgabe Datenordner); updateLog: Pfad von update.log (Vorgabe im Datenordner).
     /// umgebung/heim nur fuer Tests (Pfade anonymisieren).
@@ -177,6 +189,10 @@ public static class Problembericht
     {
         einstellungen ??= [];
         var zeilen = Zeilen(db, version, geraet, einstellungen, jetzt, angaben, laufzeit);
+        if (TonZeile is { } ton)
+        {
+            zeilen.Add(ton());
+        }
         logOrdner ??= Ablage.Datenordner();
         var log = Fehlerprotokoll.Anzeigen(Path.Combine(logOrdner, Fehlerprotokoll.DateiName));
         zeilen.AddRange(["", "--- fehler.log ---", log.Length > 0 ? log : Fehlerprotokoll.KeinProtokoll]);
