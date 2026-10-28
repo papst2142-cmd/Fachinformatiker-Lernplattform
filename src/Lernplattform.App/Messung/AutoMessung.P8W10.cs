@@ -50,6 +50,7 @@ public static partial class AutoMessung
             return 1;
         }
         var vorher = seite.Spiel;
+        var mitGl = false;
         try
         {
             // Hinweisfeld (1b): zuklappen, gemerkt, kurze Meldung neben dem Pfeil, wieder auf
@@ -68,7 +69,8 @@ public static partial class AutoMessung
             Pruefe("Hinweisfeld wieder offen", !seite.HinweisZu && !Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte) && seite.KurzeMeldung.Length == 0,
                 $"zu {seite.HinweisZu}");
 
-            if (!await GlAbwartenAsync(seite))
+            mitGl = await GlAbwartenAsync(seite);
+            if (!mitGl)
             {
                 Messwerte.Notiere("Spiel: Tag und Nacht ohne GL nicht gemessen");
                 return funde;
@@ -120,7 +122,15 @@ public static partial class AutoMessung
             }
             seite.SpielSetzen(vorher);
             seite.Flaeche.KameraAufFigur();
-            await seite.Flaeche.NaechstesBildAsync();
+            // ohne GL (macOS in der CI) zeichnet die Flaeche nie ein Bild: dann nur auf die Oberflaeche warten
+            if (mitGl)
+            {
+                await seite.Flaeche.NaechstesBildAsync();
+            }
+            else
+            {
+                await ansicht.BildFertigAsync();
+            }
         }
         return funde;
     }
