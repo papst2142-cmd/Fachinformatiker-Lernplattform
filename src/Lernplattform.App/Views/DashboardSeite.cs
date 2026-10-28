@@ -290,6 +290,8 @@ public sealed class DashboardSeite : UserControl
         }, "Pinsel.accent2", oben: breit);
         if (breit && fuenf is not null)
         {
+            // Rand oben wie die Ringkarten (14), sonst sitzt die Ueberschrift 2 Punkte tiefer
+            quote.Padding = new Thickness(quote.Padding.Left, 14, quote.Padding.Right, quote.Padding.Bottom);
             fuenf.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
             Grid.SetColumn(quote, fuenf.ColumnDefinitions.Count - 1);
             fuenf.Children.Add(quote);
