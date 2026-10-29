@@ -31,10 +31,16 @@ public static partial class AutoMessung
     public const double SpielWegGrenze = 50;
     public const int SpielBilder = 120;
 
-    /// <summary>Nachtrag 1 zu P7-12 (Wunsch 4): Grenzen der Gesamtansicht (ganz herausgezoomt), unabhaengig vom Grafiktreiber.</summary>
-    public const long GesamtDreieckeGrenze = 100_000;
+    /// <summary>
+    /// Nachtrag 1 zu P7-12 (Wunsch 4): Grenzen der Gesamtansicht (ganz herausgezoomt), unabhaengig vom Grafiktreiber.
+    /// Vorher 100 000 Dreiecke und 20 Zeichenaufrufe (Nico 24.10.2026, Frage 3a). Neu 160 000 und 40 (Nico 29.10.2026,
+    /// Weisung P8-55): Leistungsprobe W12a am S24 Ultra (120 Hz) und Galaxy Tab A9+ (60 Hz) ohne Unterschied zur Stufe x1
+    /// bis 221 152 Dreiecke / 48 Aufrufe und bis 80 Aufrufe (Tab: 95 % 18,5 bis 18,9 ms, kein Bild ueber 33,3 ms;
+    /// S24: kein Bild ueber 16,7 ms), Anlagen P8-48_Leistungsprobe_S24.txt und P8-48_Leistungsprobe_TabA9plus.txt.
+    /// </summary>
+    public const long GesamtDreieckeGrenze = 160_000;
 
-    public const int GesamtAufrufeGrenze = 20;
+    public const int GesamtAufrufeGrenze = 40;
 
     /// <summary>Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den kurzen Lauf ohne OpenGL (mit --software).</summary>
     public const string TeilErsatz = "spiel-ersatz";
@@ -131,6 +137,8 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
         }
         funde += Ergebnis("Spiel Stadt oeffnen bis erstes Bild", Messwiederholung.Einmal(seite.OeffnenMs, Abbruch));
+        // Phase 8 W12 (Weisung P8-55): Vorladen bis fertig (Info) und 1. Betreten danach (streng 400 ms)
+        funde += await P8W12VorladenAsync(ansicht, seite);
 
         funde += await P7W4BedienungAsync(ansicht, seite);
 

@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.23.0
+Neu im Spiel: Die Stadt wird beim Öffnen einmal ganz vorbereitet, danach geht das Betreten der Häuser ohne Wartezeit.
+
+- Öffnest du das Spiel, bereitet das Programm die ganze Stadt, alle Räume, die Gestalten der Festzeiten und die Bilder der Figur einmal vor. Dauert das länger als drei Zehntelsekunden, steht in der Mitte ein Ring mit „Stadt wird geladen …“, der zeigt, wie weit es ist. Danach öffnet sich jedes Haus sofort, auch beim ersten Betreten.
+- Ein Raum wird nur dann neu aufgebaut, wenn sich in ihm wirklich etwas geändert hat (zum Beispiel neue Möbel oder eine neue Festzeit). Bisher wurde er oft unnötig neu gebaut.
+- Beginnt eine Festzeit oder eine neue Jahreszeit, während du in einem Haus bist, baut das Programm die Stadt schon im Hintergrund um. Beim Hinausgehen steht sie sofort bereit.
+- Am Handy: Kehrst du aus einer anderen App zurück, wird nur das Bild der Stadt neu an die Grafik übergeben, mit derselben Ladeanzeige. Die Stadt wird dafür nicht noch einmal berechnet.
+- Behoben: In einem sehr schmalen Fenster konnte das Namensschild eines Hauses (zum Beispiel „Zuhause“) kurz über den Rand ragen, nachdem das Fenster verkleinert worden war.
+- Dein Spielstand und das Spiel selbst ändern sich dadurch nicht.
+
 ## A 0.22.1
 Fehler behoben: Das Update-Fenster am PC zeigt wieder, was in der neuen Version neu ist.
 

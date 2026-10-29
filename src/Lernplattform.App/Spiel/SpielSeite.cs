@@ -61,6 +61,9 @@ public sealed class SpielSeite : Grid
     private readonly Border _ersatz;
     private readonly Border _flaecheRahmen;
     private readonly Canvas _schilder = new() { ClipToBounds = true };
+    private readonly Border _ladeanzeige;
+    private readonly Views.VerlaufRing _ladeRing;
+    private readonly DispatcherTimer _ladeTakt;
     private readonly Dictionary<string, Button> _schildKnoepfe = [];
     private readonly Dictionary<Button, (double Schrift, Size Groesse)> _schildGroessen = [];
     private readonly DispatcherTimer _takt;
@@ -94,6 +97,21 @@ public sealed class SpielSeite : Grid
         _flaecheRahmen = new Border { Child = Flaeche, ClipToBounds = true };
         Children.Add(_flaecheRahmen);
         Children.Add(_schilder);
+        // Weisung P8-55 (W12, Nico 1a): Ladeanzeige ueber der Stadt, solange vorgeladen wird (erst ab 0,3 s sichtbar)
+        _ladeRing = new Views.VerlaufRing(0, "accent", "accent2", 5) { Width = 34, Height = 34 };
+        _ladeanzeige = Schrift.Karte(new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 12,
+            Children = { _ladeRing, Schrift.Text(SpielProbeTexte.StadtLaedt, "Normal", FontWeight.SemiBold) },
+        });
+        _ladeanzeige.Padding = new Thickness(18, 12);
+        _ladeanzeige.HorizontalAlignment = HorizontalAlignment.Center;
+        _ladeanzeige.VerticalAlignment = VerticalAlignment.Center;
+        _ladeanzeige.IsVisible = false;
+        Children.Add(_ladeanzeige);
+        _ladeTakt = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) => LadeanzeigeSetzen());
+        Flaeche.VorladenGeaendert += () => Dispatcher.UIThread.Post(LadeanzeigeSetzen);
 
         _kopfzeile = Schrift.Text(SpielProbeTexte.GrafikStartet, "Normal", FontWeight.Bold);
         _probeZeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
@@ -235,6 +253,9 @@ public sealed class SpielSeite : Grid
             OeffnenMs ??= Stopwatch.GetElapsedTime(_angehaengt).TotalMilliseconds;
             SchilderSetzen();
         };
+        // Sammelliste 162: neue Groesse (Fenster schmaler, waehrend eine andere Seite zu sehen war) sofort
+        // beruecksichtigen; sonst standen die Schilder bis zum naechsten Bild an der alten Stelle ueber dem Rand
+        Flaeche.SizeChanged += (_, _) => SchilderSetzen();
         Flaeche.GlGestartet += () =>
         {
             if (Flaeche.GlBereit)
@@ -259,6 +280,12 @@ public sealed class SpielSeite : Grid
             var beginn = Stopwatch.GetTimestamp();
             Beschriften();
             ZeitenSchreiben(false);
+            if (Spiel is { ImInnenraum: true } drin)
+            {
+                // Weisung P8-55 (W12): neues Fest oder neue Jahreszeit: Szene und Festgestalten schon im Haus vorbereiten
+                drin.SzeneVorbereiten();
+                Flaeche.Vorausbauen();
+            }
             Flaeche.AuftragGemessen(Stopwatch.GetElapsedTime(beginn).TotalMilliseconds);
         });
         AttachedToVisualTree += (_, _) =>
@@ -320,6 +347,7 @@ public sealed class SpielSeite : Grid
             TonDienst.SpielVerlassen();
             _anhaengen++;
             _takt.Stop();
+            _ladeTakt.Stop();
             ZeitenSchreiben(true);
             if (_oben is not null)
             {
@@ -342,6 +370,29 @@ public sealed class SpielSeite : Grid
     }
 
     private void SicherAendern(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => SicherSetzen();
+
+    /// <summary>Weisung P8-55 (W12): Ladeanzeige nach dem Stand des Vorladens; die Namensschilder warten bis danach.</summary>
+    private void LadeanzeigeSetzen()
+    {
+        var laedt = Flaeche.LaedtVor;
+        _ladeanzeige.IsVisible = Core.Spiel.Probe.Ladeanzeige.Zeigen(laedt, Flaeche.VorladenSekunden);
+        _ladeRing.Anteil = Flaeche.VorladenAnteil;
+        _schilder.Opacity = laedt ? 0 : 1;
+        if (laedt)
+        {
+            _ladeTakt.Start();
+        }
+        else
+        {
+            _ladeTakt.Stop();
+        }
+    }
+
+    /// <summary>Weisung P8-55 (W12): ist die Ladeanzeige gerade zu sehen (Start-Test, Fotos)?</summary>
+    public bool LadeanzeigeSichtbar => _ladeanzeige.IsVisible;
+
+    /// <summary>Weisung P8-55 (W12): die Ladeanzeige selbst (Start-Test: Layoutpruefung).</summary>
+    public Border LadeanzeigeKarte => _ladeanzeige;
 
     /// <summary>Rand der Ebene = fester Rand plus sicherer Bereich des Geraets (Kamera-Aussparung, Leisten).</summary>
     private void SicherSetzen()

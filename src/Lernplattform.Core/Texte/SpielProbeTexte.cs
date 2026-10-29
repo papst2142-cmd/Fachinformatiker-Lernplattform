@@ -52,6 +52,9 @@ public static class SpielProbeTexte
     public const string OhneGrafik = "3D ist auf diesem Gerät nicht verfügbar (keine Grafikbeschleunigung). Die Orte erreichst du über die Liste.";
     public const string GrafikStartet = "3D startet …";
 
+    /// <summary>Weisung P8-55 (Text von Chat angenommen, P8-52): Ladeanzeige beim Oeffnen der Spielseite (erst ab 0,3 s).</summary>
+    public const string StadtLaedt = "Stadt wird geladen …";
+
     // Weisung P7-17/P7-18 (Text von Chat angenommen): ein Spielschritt wurde im Hintergrund nicht gespeichert
     public const string SchrittNichtGespeichert = "Ein Spielschritt konnte nicht gespeichert werden. Das Spiel lädt den letzten gespeicherten Stand.";
 

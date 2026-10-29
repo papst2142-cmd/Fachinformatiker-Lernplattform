@@ -175,6 +175,32 @@ public sealed class StadtSzene
     /// <summary>Die Haeuser (Gebaeude der Landschaft und Orte), jedes mit eigenem Netz (<see cref="HausNetz"/>).</summary>
     public IReadOnlyList<StadtHaus> Haeuser { get; }
 
+    private Fertig? _fertig;
+
+    /// <summary>Weisung P8-55 (W12): die fertigen Netze der Szene (Stadt, je Haus, Kleingruen, Paket nah und fern).</summary>
+    public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern);
+
+    /// <summary>
+    /// Weisung P8-55 (W12): alle Netze der Szene einmal bauen und behalten (auch ausserhalb des Oberflaechen-Threads,
+    /// bevor die Szene gezeigt wird; wie <see cref="Innenraum.Vorbereiten"/>). Danach baut das Hochladen nichts mehr.
+    /// Das Paket-Netz gibt es nur mit CC0-Grafik.
+    /// </summary>
+    public Fertig Vorbereiten()
+    {
+        if (_fertig is { } fertig)
+        {
+            return fertig;
+        }
+        var haeuser = new Dictionary<StadtHaus, Netz>();
+        foreach (var haus in Haeuser)
+        {
+            haeuser[haus] = HausNetz(haus);
+        }
+        fertig = new Fertig(NetzBauen(), haeuser, GruenNetzBauen(), Grafik is null ? null : PaketNetzBauen(false), Grafik is null ? null : PaketNetzBauen(true));
+        _fertig = fertig;
+        return fertig;
+    }
+
     /// <summary>Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle.</summary>
     public Netz NetzBauen()
     {

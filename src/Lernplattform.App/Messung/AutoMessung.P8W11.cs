@@ -9,7 +9,7 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Phase 8 W11 (Weisung P8-45): Festzeiten-Verkehr und Stadt-Feinschliff. Je Fest (Halloween abends, Weihnachten
 /// abends, Ostern tagsueber) die Gestalten statt der Autos: Satz, Anzahl, sie bewegen sich, die Gesamtansicht bleibt
-/// in den Grenzen (100 000 Dreiecke, 20 Aufrufe). Der Satz wechselt mit der Uhr (Halloween tagsueber Autos, ab der
+/// in den Grenzen (seit W12: 160 000 Dreiecke, 40 Aufrufe). Der Satz wechselt mit der Uhr (Halloween tagsueber Autos, ab der
 /// Daemmerung Gestalten). 21 Laternen (16 einfach, 5 doppelt) im eigenen Netz.
 /// </summary>
 public static partial class AutoMessung

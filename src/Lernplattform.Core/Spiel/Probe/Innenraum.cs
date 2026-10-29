@@ -252,7 +252,41 @@ public sealed class Innenraum
     }
 
     private static Innenraum? BauenOhneJahreszeit(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
-        string? fest, PyObjekt? feste)
+        string? fest, PyObjekt? feste) =>
+        EingabenFuer(ansicht, stand, innenraeume, geschaefte) is { } e
+            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste)
+            : null;
+
+    /// <summary>Weisung P8-55 (W12): alles, was ein Innenraum aus dem Spielstand liest (Grundriss, Personen, Boeden, Kleidung).</summary>
+    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider);
+
+    /// <summary>
+    /// Weisung P8-55 (W12, Selbstfund 3.4 im Teilplan): Inhalt des Innenraums zur Ansicht als Text, ohne ihn zu bauen
+    /// (Grundriss, Personen mit Auftrag, Boeden, Festzeit, Jahreszeit). Gleicher Text = gleicher Innenraum: so erkennt
+    /// das Spiel einen vorgeladenen Innenraum wieder, auch wenn ein Ereignis den Spielstand ersetzt hat (vorher galt nur
+    /// derselbe Spielstand). null = kein Innenraum (oder nicht als Text darstellbar, dann wird immer neu gebaut).
+    /// </summary>
+    public static string? InhaltSignatur(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
+    {
+        if (EingabenFuer(ansicht, stand, innenraeume, geschaefte) is not { } e)
+        {
+            return null;
+        }
+        try
+        {
+            return PythonJson.Text(new List<object?>
+            {
+                e.Ansicht, e.Ort, e.Gebaeude, e.Personen.Select(p => (object?)new List<object?> { p.Daten, p.Auftrag }).ToList(),
+                e.Boeden, e.Kleider is not null, fest, jahreszeit.ToString(),
+            });
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    private static Eingaben? EingabenFuer(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -275,7 +309,7 @@ public sealed class Innenraum
                     personen.Add(Person(kopie, false));
                 }
             }
-            return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null, null, fest, feste);
+            return new Eingaben(ansicht!, ort, Objekt(farm["gebaeude"]), personen, null, null);
         }
         if (Geschaefte.Laeden.Contains(ort) || Schalter.Orte.Contains(ort))
         {
@@ -287,7 +321,7 @@ public sealed class Innenraum
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
-            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null, geschaefte, fest, feste);
+            return new Eingaben(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, null, geschaefte);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -311,7 +345,7 @@ public sealed class Innenraum
         var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
         var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
-        return new Innenraum(ansicht!, ort, gebaeude, leute, grafik, boeden, null, fest, feste);
+        return new Eingaben(ansicht!, ort, gebaeude, leute, boeden, null);
     }
 
     /// <summary>

@@ -1,18 +1,22 @@
-Fehler behoben: Das Update-Fenster am PC zeigt wieder, was in der neuen Version neu ist.
+Neu im Spiel: Die Stadt wird beim Öffnen einmal ganz vorbereitet, danach geht das Betreten der Häuser ohne Wartezeit.
 
-- Bietet dir das Programm am PC (Windows und Linux) ein Update an, steht im Fenster jetzt die Liste „Neu in dieser Version“, so wie auf der Seite zum Herunterladen. Bisher stand dort nur „Keine Beschreibung vorhanden.“, weil die Beschreibung nicht in das Update-Paket gepackt wurde.
-- Die Beschreibung steht schon im Fenster, wenn dir das Programm das Update auf diese Version anbietet. Am Programm selbst, an deinem Lernstand und am Spiel ändert sich nichts.
+- Öffnest du das Spiel, bereitet das Programm die ganze Stadt, alle Räume, die Gestalten der Festzeiten und die Bilder der Figur einmal vor. Dauert das länger als drei Zehntelsekunden, steht in der Mitte ein Ring mit „Stadt wird geladen …“, der zeigt, wie weit es ist. Danach öffnet sich jedes Haus sofort, auch beim ersten Betreten.
+- Ein Raum wird nur dann neu aufgebaut, wenn sich in ihm wirklich etwas geändert hat (zum Beispiel neue Möbel oder eine neue Festzeit). Bisher wurde er oft unnötig neu gebaut.
+- Beginnt eine Festzeit oder eine neue Jahreszeit, während du in einem Haus bist, baut das Programm die Stadt schon im Hintergrund um. Beim Hinausgehen steht sie sofort bereit.
+- Am Handy: Kehrst du aus einer anderen App zurück, wird nur das Bild der Stadt neu an die Grafik übergeben, mit derselben Ladeanzeige. Die Stadt wird dafür nicht noch einmal berechnet.
+- Behoben: In einem sehr schmalen Fenster konnte das Namensschild eines Hauses (zum Beispiel „Zuhause“) kurz über den Rand ragen, nachdem das Fenster verkleinert worden war.
+- Dein Spielstand und das Spiel selbst ändern sich dadurch nicht.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.22.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.23.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.22.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.22.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.22.1-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.23.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.23.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.23.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
