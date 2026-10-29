@@ -448,6 +448,35 @@ def gehen_haltung(sk, phase, arme):
     return G
 
 
+def sitzen_haltung(sk, arme):
+    """Phase 9 W1 (Weisung P9-3): sitzend am Schreibtisch. Oberschenkel fast waagrecht nach vorn (80 Grad), Unterschenkel
+    fast senkrecht (85 Grad zurueck), Arme gesenkt und nach vorn, Haende ueber der Tischplatte (Werte so gewaehlt, dass
+    Stuhl, Tisch und Figur sich nicht durchdringen, Test SpielSitzenTests; Hoehe stellt bewegung_bilder ein)."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -40)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -40)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -60)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -60)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -80)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -80)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 85)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 85)
+    return G
+
+
+def auf_sitz(dreiecke, G, sitz):
+    """Sitzende Figur senken: die Unterseite der Oberschenkel (Ecken zwischen Huefte und Knie) liegt auf
+    Hoehe <sitz> (Einheiten des Modells, die Figur steht 3,77 hoch)."""
+    huefte, hoehe = G['LeftUpLeg'][2][3] / 100.0, G['LeftUpLeg'][1][3] / 100.0
+    knie = G['LeftLeg'][2][3] / 100.0
+    # nur die Oberschenkel: zwischen Huefte und Knie und hoeher als die Fuesse (die haengen darunter)
+    unten = min(p[1] for e, _ in dreiecke for p in e if huefte + 0.1 < p[2] < knie - 0.1 and p[1] > hoehe - 0.35)
+    d = sitz - unten
+    return [(tuple((p[0], p[1] + d, p[2]) for p in e), f) for e, f in dreiecke]
+
+
 def eintrag_netz(wurzel):
     """Name des Modells, unter dem das Netz haengt."""
     obj = next(k for k in wurzel if k[0] == 'Objects')
@@ -498,10 +527,14 @@ def fbx_figur_haltung(z, pfad, haut_png, G):
 
 
 def bewegung_bilder(z, eintrag):
-    """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket) oder "gehen" (eigene Gelenk-Bewegung)."""
+    """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket), "gehen" (eigene Gelenk-Bewegung) oder "sitzen"
+    (ein Bild, Phase 9 W1)."""
     bilder = eintrag["bilder"]
     modell = Skelett(fbx_lesen(z.read(eintrag["datei"])))
     erg = []
+    if eintrag["bewegung"] == "sitzen":
+        G = sitzen_haltung(modell, eintrag.get("arme", 72))
+        return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
     if eintrag["bewegung"] == "gehen":
         for b in range(bilder):
             erg.append(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], gehen_haltung(modell, b / bilder, eintrag.get("arme", 72))))

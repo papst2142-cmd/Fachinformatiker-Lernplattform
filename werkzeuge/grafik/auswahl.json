@@ -748,6 +748,16 @@
    "name": "gy-pumpkin-tall-carved",
    "paket": "graveyard",
    "datei": "Models/OBJ format/pumpkin-tall-carved.obj"
+  },
+  {
+   "name": "figur-sitzen",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 72,
+   "bewegung": "sitzen",
+   "sitz": 0.9
   }
  ]
 }
