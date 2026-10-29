@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.22.1
+Fehler behoben: Das Update-Fenster am PC zeigt wieder, was in der neuen Version neu ist.
+
+- Bietet dir das Programm am PC (Windows und Linux) ein Update an, steht im Fenster jetzt die Liste „Neu in dieser Version“, so wie auf der Seite zum Herunterladen. Bisher stand dort nur „Keine Beschreibung vorhanden.“, weil die Beschreibung nicht in das Update-Paket gepackt wurde.
+- Die Beschreibung steht schon im Fenster, wenn dir das Programm das Update auf diese Version anbietet. Am Programm selbst, an deinem Lernstand und am Spiel ändert sich nichts.
+
 ## A 0.22.0
 Neu im Spiel: Zu Halloween, Weihnachten und Ostern sind statt der Autos verkleidete Gestalten in der Stadt unterwegs, die Straßenlaternen sind neu, und der Bahnhof hat eine Bahnhofsuhr.
 

@@ -103,6 +103,9 @@ internal static class Updater
                 File.AppendAllText(bericht, "suchen: kein neueres Paket" + Environment.NewLine);
                 return 4;
             }
+            // Weisung P8-53: Notizen des angebotenen Pakets so, wie das Update-Fenster sie zeigt (Pruefsumme, die Probe vergleicht)
+            var notizen = UpdateNotizen.Lesbar(neu.Notizen);
+            File.AppendAllText(bericht, $"suchen: Notizen {notizen.Length} Zeichen; sha256 {Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(notizen)))}{Environment.NewLine}");
             Task.Run(() => UpdateAblauf.LadenAsync(quelle, neu)).GetAwaiter().GetResult();
             File.AppendAllText(bericht, $"suchen: spiele {neu.Version} ein{Environment.NewLine}");
             UpdateAblauf.Installieren(quelle, neu, einstellungen);

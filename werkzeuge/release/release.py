@@ -8,6 +8,11 @@
                                          "Neu in dieser Version" zeigt.
   release.py probe                       schreibt werkzeuge/release/probe_release.md neu (Release-Text mit zwei
                                          festen Probedateien; der C#-Test ReleaseTests liest ihn mit UpdateNotizen).
+  release.py notizen <datei>             Weisung P8-53: schreibt die Notizen fuer vpk pack --releaseNotes (Abschnitt
+                                         aus AENDERUNGEN.md wie im Release-Text) und druckt NOTIZEN_SHA256 (UTF-8
+                                         des Textes im Update-Fenster, so schreibt ihn die Update-Probe).
+  release.py pruefe-feed <json> [<paket>]  Rueckgabe 1, wenn ein Paket (Vorgabe: Paketversion im Repo) in
+                                         releases.<os>.json keine Notizen hat oder sie nicht den Abschnitt zeigen.
   release.py zusammen <eingang> <aus>    sammelt die Dateien der vier Bauteile (Unterordner von <eingang>),
                                          schreibt Lizenz-Uebersicht und Volltexte, prueft die Uebersicht im
                                          Repo, schreibt den Release-Text <aus>/../release.md und prueft alles (T2).
@@ -328,6 +333,43 @@ def selbsttest():
     return rot | rot_probe
 
 
+def notizen(datei):
+    """Weisung P8-53: Notizen fuer vpk pack --releaseNotes, derselbe Schnitt wie der Release-Text (Abschnitt
+    aus AENDERUNGEN.md bis vor ENDE_NOTIZEN). Druckt die Pruefsumme des Textes im Update-Fenster."""
+    text = neuerungen(kennzahlen()["ANZEIGE"])
+    if not lesbar(text):
+        fehler("Abschnitt in AENDERUNGEN.md ergibt keinen Text fuer das Update-Fenster")
+        return 1
+    with open(datei, "w", encoding="utf-8", newline="\n") as d:
+        d.write(text + "\n")
+    print("NOTIZEN_SHA256=" + hashlib.sha256(lesbar(text).encode("utf-8")).hexdigest())
+    return 0
+
+
+def pruefe_feed(json_pfad, paket=None):
+    """Weisung P8-53: Rueckgabe 1, wenn ein Paket im Feed (releases.<os>.json) keine Notizen hat oder das
+    Update-Fenster daraus nicht genau den Abschnitt 'Neu in dieser Version' zeigte."""
+    k = kennzahlen()
+    paket = paket or k["PAKET"]
+    soll = lesbar(neuerungen(k["ANZEIGE"]))
+    with open(json_pfad, encoding="utf-8-sig") as d:
+        pakete = [a for a in json.load(d).get("Assets", []) if a.get("Version") == paket]
+    if not pakete:
+        fehler("kein Paket %s in %s" % (paket, json_pfad))
+        return 1
+    rot = 0
+    for a in pakete:
+        text = a.get("NotesMarkdown") or ""
+        if not text.strip():
+            fehler("Paket %s in %s ohne Notizen (vpk pack ohne --releaseNotes?)" % (a.get("FileName"), json_pfad))
+            rot = 1
+        elif not soll or lesbar(text) != soll:
+            fehler("Notizen von %s zeigen im Update-Fenster nicht den Abschnitt '## %s'" % (a.get("FileName"), k["ANZEIGE"]))
+            rot = 1
+    print("Notizen im Feed %s: %d Paket(e) %s, %s" % (os.path.basename(json_pfad), len(pakete), paket, "rot" if rot else "gruen"))
+    return rot
+
+
 def probe_text(k):
     """Release-Text mit zwei festen Probedateien (gleich bei jedem Lauf)."""
     import tempfile
@@ -354,6 +396,10 @@ def main():
         with open(PROBE, "w", encoding="utf-8", newline="\n") as d:
             d.write(probe_text(kennzahlen()))
         return 0
+    if befehl == "notizen":
+        return notizen(sys.argv[2])
+    if befehl == "pruefe-feed":
+        return pruefe_feed(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
     if befehl == "zusammen":
         return zusammen(sys.argv[2], sys.argv[3])
     if befehl == "pruefe":

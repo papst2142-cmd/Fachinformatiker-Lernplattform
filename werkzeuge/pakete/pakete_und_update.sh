@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.22.0 (Paketversion 1.0.0-a.0.22.0) -> A 0.22.1 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.22.1 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.22.1 (Paketversion 1.0.0-a.0.22.1) -> A 0.22.2 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.22.2 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 #   Phase 5 W3 (Weisung P5-8): jedes Update laeuft wie der Knopf "Jetzt aktualisieren"
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
@@ -35,6 +35,14 @@ case "$RID" in
     ;;
 esac
 
+# Weisung P8-53: alle Probe-Pakete tragen die Notizen der Version im Repo (Abschnitt aus AENDERUNGEN.md,
+# Schnitt in release.py wie beim Release); die Update-Probe prueft sie im angebotenen Paket.
+PY="${PYTHON:-python3}"
+NOTIZEN="$AUS/notizen.md"
+NOTIZEN_SHA256="$("$PY" -I "$WURZEL/werkzeuge/release/release.py" notizen "$NOTIZEN" | tr -d '\r' | grep '^NOTIZEN_SHA256=' | cut -d= -f2)"
+test -n "$NOTIZEN_SHA256"
+case "$RID" in win-*) KANAL=win ;; linux-*) KANAL=linux ;; osx-*) KANAL=osx ;; esac
+
 baue() { # Stufe Version
   local stufe="$1" version="$2"
   local paket="1.0.0-$(echo "$stufe" | tr 'A-Z' 'a-z').$version"
@@ -43,13 +51,14 @@ baue() { # Stufe Version
     -p:Version="$version" -p:Stufe="$stufe" -p:DebugType=none -o "$pub"
   vpk pack -u "$ID" -v "$paket" -p "$pub" -e "$EXE" \
     -i "$ICON" --packTitle "Fachinformatiker Lernplattform" \
-    -o "$feed"
+    --releaseNotes "$NOTIZEN" -o "$feed"
   rm -rf "$pub"
+  "$PY" -I "$WURZEL/werkzeuge/release/release.py" pruefe-feed "$feed/releases.$KANAL.json" "$paket"
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.22.0
 baue A 0.22.1
+baue A 0.22.2
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -58,8 +67,8 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.22.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.22.0-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.22.0-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.22.1" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.22.1-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.22.1-AppImage.tar.gz"
     ;;
 esac
 
@@ -73,7 +82,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.22.0/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.22.1/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -81,7 +90,7 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.22.0/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.22.1/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
     ;;
 esac
@@ -120,19 +129,27 @@ pruefe_abschluss() { # Anzeige, Zahl der Kopien
   fi
 }
 
+pruefe_notizen() { # Weisung P8-53: das angebotene Paket hat Notizen, das Update-Fenster zeigte genau den Abschnitt
+  if ! tr -d '\r' < "$LERNPLATTFORM_UPDATE_BERICHT" | grep "^suchen: Notizen " | tail -n 1 | grep -q "; sha256 $NOTIZEN_SHA256\$"; then
+    echo "FEHLER: angebotenes Paket ohne die erwarteten Notizen (sha256 $NOTIZEN_SHA256)"; cat "$LERNPLATTFORM_UPDATE_BERICHT"; return 1
+  fi
+}
+
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.22.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
+grep -q "bericht: Version 1.0.0-a.0.22.1;" "$LERNPLATTFORM_UPDATE_BERICHT"
 letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
-starte suchen "$AUS/feed-A-0.22.1"
-warte_auf 1.0.0-a.0.22.1
-pruefe_abschluss "A 0.22.1" 1
+starte suchen "$AUS/feed-A-0.22.2"
+pruefe_notizen
+warte_auf 1.0.0-a.0.22.2
+pruefe_abschluss "A 0.22.2" 1
 starte suchen "$AUS/feed-B-0.1.0"
+pruefe_notizen
 warte_auf 1.0.0-b.0.1.0
 pruefe_abschluss "B 0.1.0" 2
-starte suchen "$AUS/feed-A-0.22.1"
+starte suchen "$AUS/feed-A-0.22.2"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.22.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.22.1" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
 test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq 2
 # T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,

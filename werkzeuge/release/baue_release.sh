@@ -55,8 +55,15 @@ desktop() {
   cp "$WURZEL/LICENSE.txt" "$pub/LICENSE.txt"
   "${LIZENZEN[@]}" sammeln desktop "$rid" "$pub" "$ARBEIT/vorab.json"
   "${LIZENZEN[@]}" schreiben "$ARBEIT/uebersicht.txt" "$pub/THIRD_PARTY_LICENSES.txt" "$ARBEIT/vorab.json"
-  vpk pack -u "$ID" -v "$PAKET" -p "$pub" -e "$exe" -i "$icon" --packTitle "Fachinformatiker Lernplattform" -o "$feed"
+  # Weisung P8-53: Notizen fuer das Update-Fenster (derselbe Abschnitt wie der Release-Text, Schnitt in release.py)
+  "$PY" -I "$WURZEL/werkzeuge/release/release.py" notizen "$ARBEIT/notizen.md"
+  vpk pack -u "$ID" -v "$PAKET" -p "$pub" -e "$exe" -i "$icon" --packTitle "Fachinformatiker Lernplattform" \
+    --releaseNotes "$ARBEIT/notizen.md" -o "$feed"
   ls -la "$feed"
+  local kanal
+  case "$rid" in win-*) kanal=win ;; linux-*) kanal=linux ;; osx-*) kanal=osx ;; esac
+  # ohne Notizen im Feed kein Release (das Update-Fenster zeigte sonst "Keine Beschreibung vorhanden.")
+  "$PY" -I "$WURZEL/werkzeuge/release/release.py" pruefe-feed "$feed/releases.$kanal.json"
   local inhalt=()
   case "$rid" in
     win-*)
