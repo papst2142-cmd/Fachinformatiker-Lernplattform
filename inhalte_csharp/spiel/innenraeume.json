@@ -302,5 +302,34 @@
     ]}},
     "elektromarkt": {"flur": {"deko": [{"typ": "kasse", "x": 18.6, "y": 10.4, "w": 0.6, "h": 0.5}]}},
     "moebelhaus": {"flur": {"deko": [{"typ": "kasse", "x": 22.6, "y": 11.4, "w": 0.6, "h": 0.5}]}}
+  },
+  "zusatz_moebel": {
+    "_hinweis": [
+      "Weisung P9-3 (Nico 29.10.2026): nur angehaengt, wirkt als letzter Zusatz bei allen Orten (auch Firma und Kundenorte); ohne nimmt Einrichtung dieser Typen heraus, deko kommt hinzu.",
+      "Raeume wirken nur, wenn der Grundriss sie hat (Buero: erst das Haus der Bitweiche, spaeter die eigene Firma); plaetze im Raum setzt den Platz einer Person nur in der Darstellung (Laufwege, Sitzen), nie im Spiel-Kern.",
+      "Bahnhof Talheim: die zwei Baenke aus dem Python-Grundriss mitten in der Wartehalle sind weg (die zwoelf Baenke der Wartehalle bleiben). Bank und Amt: die freie Bank steht an der Wand. Firma Verwaltung: Schreibtische an die Waende, dazwischen ein Gang."
+    ],
+    "bank": {"raeume": {"schalterhalle": {"ohne": ["bank"], "deko": [{"typ": "bank", "x": 7.8, "y": 6.3, "w": 2.4, "h": 0.6}]}}},
+    "amt": {"raeume": {"buergerbuero": {"ohne": ["bank"], "deko": [{"typ": "bank", "x": 7.8, "y": 7.3, "w": 2.4, "h": 0.6}]}}},
+    "talheim": {"raeume": {"bahnsteig": {"ohne": ["bank"], "deko": [
+          {"typ": "bank", "x": 2.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 6.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 9.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 18.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 21.5, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 25.0, "y": 12.3, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 2.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 6.0, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 9.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 18.0, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 21.5, "y": 14.4, "w": 2.4, "h": 0.5},
+          {"typ": "bank", "x": 25.0, "y": 14.4, "w": 2.4, "h": 0.5}
+    ]}}},
+    "buero": {
+      "raeume": {"verwaltung": {"ohne": ["schreibtisch"], "deko": [
+        {"typ": "schreibtisch", "x": 19.1, "y": 0.2, "w": 2.4, "h": 1.0, "blick": "s"},
+        {"typ": "schreibtisch", "x": 19.1, "y": 4.8, "w": 2.4, "h": 1.0, "blick": "n"}
+      ], "plaetze": {"frank": [20.3, 1.85], "paul": [20.3, 4.15]}}}
+    }
   }
 }

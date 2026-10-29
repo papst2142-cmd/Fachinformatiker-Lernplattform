@@ -154,6 +154,8 @@ public class SpielGrafikTests
             .Concat(Nachtlicht.Skizze.Select((l, i) => Nachtlicht.Modell(new Nachtlicht.Laterne(i + 1, default, l.Doppelt, default, default))))
             .Concat(new[] { "gy-pine", "gy-pine-crooked" }.SelectMany(t => new[] { t, StadtSzene.TanneIn(t, Jahreszeit.Herbst) }))
             .Concat(FestDeko.Modelle(FestDekoTests.Daten.Value).Select(FestDeko.Kuerbis))
+            // seit Phase 9 W1 (Weisung P9-3) das Sitzbild der Figur (Personen am Schreibtisch)
+            .Append(Figur.BildName(Figur.Sitzen, 0))
             .Concat(["hw-lantern_standing", "hw-pumpkin", "hw-pumpkin_orange_jackolantern", "os-animal-bunny", "os-animal-chick", "xm-present_A_red", "xm-present_A_yellow", "xm-present_B_green"])
             .ToList();
         foreach (var m in bib.Modelle)

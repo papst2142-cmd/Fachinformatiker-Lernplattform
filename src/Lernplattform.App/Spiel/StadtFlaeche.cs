@@ -851,6 +851,17 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 foreach (var person in innen.Personen)
                 {
+                    if (innen.Sitz(person) is { } sitz)
+                    {
+                        // Phase 9 W1 (Weisung P9-3): auf dem Schreibtischstuhl sitzend, mit dem Gesicht zum Tisch
+                        Zeichnen(gl, FigurNetz(gl, person.Id, person.Aussehen, null, Figur.Sitzen, 0), Matrix4x4.CreateScale(groesse)
+                            * Matrix4x4.CreateRotationY(sitz.Blick) * Matrix4x4.CreateTranslation(sitz.X, 0, sitz.Z), sichtProj);
+                        if (person.Auftrag && _ausruf is not null)
+                        {
+                            Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(sitz.X, groesse + 0.25f, sitz.Z), sichtProj);
+                        }
+                        continue;
+                    }
                     // Personen schauen zur Spielfigur
                     var blick = MathF.Atan2(_spiel.FigurX - person.X, _spiel.FigurZ - person.Z);
                     Zeichnen(gl, FigurNetz(gl, person.Id, person.Aussehen), Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(blick)
@@ -1034,6 +1045,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 foreach (var person in raum.Personen)
                 {
                     Figur1(FigurSchluessel(person.Id, person.Aussehen, null), () => raum.PersonNetz(person.Id, person.Aussehen) ?? Figur.Netz(grafik, person.Aussehen, 1f));
+                    if (raum.Sitz(person) is not null)
+                    {
+                        // Phase 9 W1: sitzende Personen ebenso vorab (Sitzbild)
+                        Figur1(FigurSchluessel(person.Id, person.Aussehen, null, Figur.Sitzen, 0), () => Figur.Netz(grafik, person.Aussehen, 1f, null, Figur.Sitzen, 0));
+                    }
                 }
             }
             return new Vorladepaket(szene, netze, satzPaket, verkehrAlt is not null, figuren, innen, aussehen);

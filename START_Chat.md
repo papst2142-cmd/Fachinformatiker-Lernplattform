@@ -16,12 +16,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Feld | Wert |
 |---|---|
 | Version | Auf `main` **A 0.23.0** (veröffentlicht als vA0.23.0). Zweig W1 `claude/p9-w1-pruefstand` **A 0.23.1**. Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
-| Phase | 0–8 abgenommen. **Phase 9** (Plan `Plan_Phase9_CSharp.md`, Weisung P9-2): W1 Prüfstand A 0.23.1 (Vollbild-Satz, Spiel-Ladeprüfung so streng wie Python, Beleg Python-Gerät); danach W2 Gerüst A 0.24.0, dann Inhalte-Runden AE → DPA → DV |
-| Jetzt | W1 als Entwurfs-PR mit vollem Lauf; Meldung P9-2 mit Fragen zu Phasenende, Einteilungsregeln und Ladezeit-Grenze |
+| Phase | 0–8 abgenommen. **Phase 9** (Plan `Plan_Phase9_CSharp.md`, Weisung P9-2): W1 Prüfstand A 0.23.1 (Vollbild-Satz, Spiel-Ladeprüfung so streng wie Python, Beleg Python-Gerät; Nachtrag P9-3: Personen sitzen am Schreibtisch, Bänke und Schreibtische an die Wand); danach W2 Gerüst A 0.24.0, dann Inhalte-Runden AE → DPA → DV |
+| Jetzt | W1 als Entwurfs-PR mit vollem Lauf; Meldung P9-2 mit Fragen zu Phasenende, Einteilungsregeln und Ladezeit-Grenze; Nachtrag Nicos Spielwünsche (Meldung P9-3, Optik-Abnahme Nico) |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu (G42 `spiel_pruefung.json` jetzt mit Platzhalter-Proben). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P9-2** / P9-3 |
-| Sammelliste | nächste freie Nummer **165** (164 Spiel je Fachrichtung in der Beta); offen für Nico: 24 (Rechnername im Gerätenamen) |
+| Letzte/nächste Meldung | **P9-3** / P9-4 |
+| Sammelliste | nächste freie Nummer **169** (164 Spiel je Fachrichtung in der Beta; 165–168 Nicos Spielwünsche, mit W1 erledigt); offen für Nico: 24 (Rechnername im Gerätenamen) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

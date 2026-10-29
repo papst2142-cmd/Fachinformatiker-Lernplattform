@@ -96,6 +96,9 @@ public static class Figur
     /// <summary>Schrittbewegung Rennen (Animations/run.fbx aus dem Paket, in der Stadt; Nico 1a, Weisung P8-14).</summary>
     public const string Rennen = "figur-lauf";
 
+    /// <summary>Phase 9 W1 (Weisung P9-3): sitzend am Schreibtisch, ein Bild (Name plus "00"), Personen auf einem Stuhl.</summary>
+    public const string Sitzen = "figur-sitzen";
+
     /// <summary>Bilder je Bewegung (ein Doppelschritt), je Bild ein Modell Name plus zwei Ziffern in modelle.bin.</summary>
     public const int Bilder = 16;
 

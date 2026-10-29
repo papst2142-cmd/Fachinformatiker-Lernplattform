@@ -1,10 +1,13 @@
 # Änderungen
 
 ## A 0.23.1
-Kleine Verbesserungen: ein genauerer Hinweis zum Vollbild und eine strengere Prüfung der Spielinhalte.
+Kleine Verbesserungen: ein genauerer Hinweis zum Vollbild, eine strengere Prüfung der Spielinhalte und aufgeräumte Räume im Spiel.
 
 - In den Optionen steht beim Vollbild jetzt auch, dass am PC die Taste F11 das Vollbild ein- und ausschaltet und die Taste Esc es verlässt.
 - Beim Start prüft das Programm die Inhalte des Spiels (Aufträge, Texte, Zahlen) jetzt genauso gründlich wie die frühere Python-Fassung, auch die Platzhalter in Texten wie „{kunde}“. Ein fehlerhaft gebauter Inhalt fällt damit schon beim Laden auf und nicht erst mitten im Spiel.
+- Im Spiel sitzen Personen an ihrem Schreibtisch jetzt richtig auf dem Bürostuhl und schauen zum Tisch, statt im Stuhl zu stehen.
+- In der Wartehalle des Bahnhofs Talheim stehen keine Bänke mehr mitten im Raum. In der Bank und im Amt steht die Wartebank jetzt an der Wand, Wege und Türen bleiben frei.
+- In der Verwaltung der Bitweiche stehen die beiden Schreibtische an den Wänden, dazwischen ist ein Gang frei.
 - Am Lernstand, am Spielstand und an der Bedienung ändert sich nichts.
 
 ## A 0.23.0

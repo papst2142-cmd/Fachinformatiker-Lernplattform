@@ -13,6 +13,9 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// </summary>
 public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen);
 
+/// <summary>Phase 9 W1 (Weisung P9-3): Stelle (X, Z) und Blick (Bogenmass wie die Figur) einer sitzenden Person, Stuhl = Mitte des Stuhls.</summary>
+public sealed record Sitzplatz(float X, float Z, float Blick, Vector2 Stuhl);
+
 public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObjekt? Aussehen, bool Auftrag, PyObjekt Daten);
 
 /// <summary>
@@ -76,6 +79,7 @@ public sealed class Innenraum
         }
         Lauf = _festPlan?.Lauf ?? new LaufOrt(gebaeude, leute);
         Aufbauen(boeden);
+        _sitze = SitzeFinden();
     }
 
     private readonly FestDeko.InnenPlan? _festPlan;
@@ -164,6 +168,52 @@ public sealed class Innenraum
     }
 
     private Dictionary<string, (PyObjekt? Aussehen, Netz Netz)>? _personNetze;
+
+    /// <summary>
+    /// Phase 9 W1 (Weisung P9-3, Wunsch 4): eine Person, deren Platz hoechstens so weit von der Mitte eines
+    /// Schreibtischstuhls entfernt ist, sitzt auf ihm (vorher stand sie "im" Stuhl).
+    /// </summary>
+    public const float SitzAbstand = 0.45f;
+
+    /// <summary>
+    /// Phase 9 W1: so weit sitzt die Figur hinter der Stuhlmitte (vom Tisch weg); damit beruehren sich Stuhl,
+    /// Tisch und sitzende Figur nicht (Test SpielSitzenTests prueft 0,03 bis 0,07: frei an allen Tischbreiten).
+    /// </summary>
+    public const float SitzZurueck = 0.05f;
+
+    private readonly List<Sitzplatz> _stuehle = [];
+
+    private readonly Dictionary<InnenPerson, Sitzplatz> _sitze;
+
+    /// <summary>Phase 9 W1: alle Schreibtischstuehle des Raums (Stelle der sitzenden Figur, Blick zum Tisch).</summary>
+    public IReadOnlyList<Sitzplatz> Stuehle => _stuehle;
+
+    private void StuhlMerken((float X, float Z, float W, float T) stuhl, (float X, float Z) tisch)
+    {
+        var mitte = new Vector2(stuhl.X + (stuhl.W / 2), stuhl.Z + (stuhl.T / 2));
+        var zumTisch = new Vector2(tisch.X, tisch.Z) - mitte;
+        // der Stuhl steht immer an einer Seite des Tischs: Blick genau senkrecht zu dieser Seite
+        zumTisch = MathF.Abs(zumTisch.X) > MathF.Abs(zumTisch.Y) ? new Vector2(MathF.Sign(zumTisch.X), 0) : new Vector2(0, MathF.Sign(zumTisch.Y));
+        var stelle = mitte - (zumTisch * SitzZurueck);
+        _stuehle.Add(new Sitzplatz(stelle.X, stelle.Y, MathF.Atan2(zumTisch.X, zumTisch.Y), mitte));
+    }
+
+    /// <summary>Phase 9 W1: der Stuhl, auf dem die Person sitzt (naechster Stuhl bis <see cref="SitzAbstand"/>), sonst null (sie steht).</summary>
+    public Sitzplatz? Sitz(InnenPerson person) => _sitze.TryGetValue(person, out var sitz) ? sitz : null;
+
+    private Dictionary<InnenPerson, Sitzplatz> SitzeFinden()
+    {
+        var sitze = new Dictionary<InnenPerson, Sitzplatz>(ReferenceEqualityComparer.Instance);
+        foreach (var p in Personen)
+        {
+            var platz = new Vector2(p.X, p.Z);
+            if (_stuehle.Where(s => Vector2.Distance(s.Stuhl, platz) <= SitzAbstand).MinBy(s => Vector2.Distance(s.Stuhl, platz)) is { } naechster)
+            {
+                sitze[p] = naechster;
+            }
+        }
+        return sitze;
+    }
 
     /// <summary>Vorbereitetes Netz der Person (Figur der Hoehe 1) zu genau diesem Aussehen, sonst null.</summary>
     public Netz? PersonNetz(string id, PyObjekt? aussehen) =>
@@ -323,7 +373,7 @@ public sealed class Innenraum
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
             // Weisung P8-56: zweiter angehaengter Zusatz (Fahne, Sessel, Puppen, Kassen), wirkt nach dem ersten
             var nachtrag = Get(innenraeume!, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
-            return new Eingaben(ansicht!, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag), verkauf, null, geschaefte);
+            return MitMoebeln(innenraeume, new Eingaben(ansicht!, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag), verkauf, null, geschaefte));
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -347,7 +397,67 @@ public sealed class Innenraum
         var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
         var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
-        return new Eingaben(ansicht!, ort, gebaeude, leute, boeden, null);
+        return MitMoebeln(innenraeume, new Eingaben(ansicht!, ort, gebaeude, leute, boeden, null));
+    }
+
+    /// <summary>
+    /// Phase 9 W1 (Weisung P9-3): letzter angehaengter Zusatz "zusatz_moebel" je Ort, wie <see cref="MitZusatz"/>, aber nur
+    /// fuer Raeume, die der Grundriss hat (das Buero ist erst das Haus der Bitweiche, spaeter die eigene Firma). "plaetze" in
+    /// einem Raum setzt den Platz einer Person nur fuer die Darstellung (Kopie ihrer Daten; der Spielstand bleibt unveraendert).
+    /// </summary>
+    private static Eingaben MitMoebeln(PyObjekt? innenraeume, Eingaben e)
+    {
+        if (innenraeume is null || Get(innenraeume, "zusatz_moebel") is not PyObjekt zm || Get(zm, e.Ort) is not PyObjekt zusatz)
+        {
+            return e;
+        }
+        var vorhanden = Liste(e.Gebaeude["raeume"]).Select(r => Py.Str(Objekt(r)["id"])).ToHashSet();
+        var einrichtung = new PyObjekt();
+        var plaetze = new Dictionary<string, List<object?>>();
+        foreach (var (k, v) in zusatz)
+        {
+            if (k != "raeume")
+            {
+                Py.Setzen(einrichtung, k, v);
+                continue;
+            }
+            var raeume = new PyObjekt();
+            foreach (var (id, raumZusatz) in Objekt(v))
+            {
+                if (!vorhanden.Contains(id))
+                {
+                    continue;
+                }
+                var ohnePlaetze = new PyObjekt();
+                foreach (var (rk, rv) in Objekt(raumZusatz))
+                {
+                    if (rk == "plaetze")
+                    {
+                        foreach (var (person, platz) in Objekt(rv))
+                        {
+                            plaetze[person] = Liste(platz);
+                        }
+                    }
+                    else
+                    {
+                        Py.Setzen(ohnePlaetze, rk, rv);
+                    }
+                }
+                Py.Setzen(raeume, id, ohnePlaetze);
+            }
+            Py.Setzen(einrichtung, k, raeume);
+        }
+        var personen = e.Personen.Select(p =>
+        {
+            if (!plaetze.TryGetValue(p.Id, out var platz))
+            {
+                return p;
+            }
+            var kopie = Py.Flach(p.Daten);
+            Py.Setzen(kopie, "platz", new List<object?> { Py.F(platz[0]), Py.F(platz[1]) });
+            return Person(kopie, p.Auftrag);
+        }).ToList();
+        return e with { Gebaeude = MitZusatz(e.Gebaeude, einrichtung), Personen = personen };
     }
 
     /// <summary>
@@ -913,8 +1023,10 @@ public sealed class Innenraum
             case "schreibtisch":
                 Modell(r, "desk", 0, 0, b, tt, 0.75f * M, 0, Farben.Holz);
                 Modell(r, "computerScreen", (b / 2) - 0.55f, 0.08f, 1.1f, 0.25f, 0.45f * M, 0.75f * M, Farben.Geraet);
-                // Stuhl vor dem Tisch, mit dem Gesicht zum Tisch (Python: 0,3 vor der Kante)
-                Modell(r, "chairDesk", (b / 2) - 0.38f, tt - 0.05f, 0.76f, 0.76f, 1.0f * M, 0, Farben.Polster, 2);
+                // Stuhl vor dem Tisch, mit dem Gesicht zum Tisch (Python: 0,3 vor der Kante); Phase 9 W1 (Weisung P9-3):
+                // direkt an der Tischkante statt 0,05 darunter, damit die Knie der sitzenden Figur die Schublade nicht beruehren
+                Modell(r, "chairDesk", (b / 2) - 0.38f, tt, 0.76f, 0.76f, 1.0f * M, 0, Farben.Polster, 2);
+                StuhlMerken(r.Rechteck((b / 2) - 0.38f, tt, 0.76f, 0.76f), (x + (w / 2), z + (t / 2)));
                 break;
             case "leitstand":
                 Modell(r, "desk", 0, 0, b, tt, 0.75f * M, 0, Farben.Holz);
