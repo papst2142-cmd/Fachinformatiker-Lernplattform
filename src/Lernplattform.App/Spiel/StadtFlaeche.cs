@@ -367,8 +367,15 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return fertig.Task;
     }
 
+    /// <summary>Weisung P8-51 (nur Messung W12): jedes Bild zusaetzlich hier, solange gesetzt.</summary>
+    public static List<BildZeiten.Bild>? Mitschnitt { get; set; }
+
+    /// <summary>Weisung P8-51 (nur Messung W12): Dauer des letzten Einrichtens (Shader, Grundnetze) in ms.</summary>
+    public double GlInitMs { get; private set; } = -1;
+
     protected override void OnOpenGlInit(GlInterface gl)
     {
+        var initBeginn = Stopwatch.GetTimestamp();
         GlFehler = null;
         try
         {
@@ -402,6 +409,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             GlFehler = e.Message;
         }
+        GlInitMs = MsSeit(initBeginn);
         GlGestartet?.Invoke();
     }
 
@@ -922,6 +930,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _auftraegeMs = 0;
         _endeVorher = ende;
         _endeVorherStempel = Stopwatch.GetTimestamp();
+        Mitschnitt?.Add(bild);
         if (aufnehmen)
         {
             // die Messung selbst (alle 10 s eine Zeile) zaehlt als Auftrag vor dem naechsten Bild
