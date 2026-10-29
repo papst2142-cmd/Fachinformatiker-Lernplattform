@@ -43,6 +43,12 @@ public sealed class Verkehr
         public float Weg { get; set; } = start;
         public bool Haelt { get; set; }
 
+        /// <summary>Phase 8 W11: Tempo dieses Fahrzeugs bzw. dieser Festgestalt (Karteneinheiten je Sekunde).</summary>
+        public float Tempo { get; init; } = Verkehr.Tempo;
+
+        /// <summary>Phase 8 W11: Nummer der Strecke in <see cref="Strecken"/>.</summary>
+        public int Nummer { get; init; }
+
         /// <summary>Ort und Fahrtrichtung bei Weg <paramref name="weg"/> (Rundlauf).</summary>
         public (Vector2 Ort, Vector2 Richtung) Lage(float weg)
         {
@@ -64,6 +70,9 @@ public sealed class Verkehr
     }
 
     public List<Auto> Autos { get; } = [];
+
+    /// <summary>Phase 8 W11: kleinster Abstand zum Vordermann (zu den Festzeiten 0,85 statt <see cref="Abstand"/>).</summary>
+    public float AbstandVorne { get; init; } = Abstand;
 
     /// <summary>Mitten der Kreuzungsfelder (Stellen, an denen sich Strassen treffen).</summary>
     public List<Vector2> Kreuzungen { get; } = [];
@@ -96,18 +105,26 @@ public sealed class Verkehr
     /// Verkehr fuer die Szene: jede Strecke, deren Punkte innerhalb der Karte auf einer Strasse liegen (andere Staedte
     /// ohne passende Strassen bekommen so keine falschen Autos); Kreuzungen aus den Strassen der Szene.
     /// </summary>
-    public static Verkehr Fuer(StadtSzene szene)
+    public static Verkehr Fuer(StadtSzene szene) => Fuer(szene, null, Abstand);
+
+    /// <summary>
+    /// Phase 8 W11 (Festzeiten-Verkehr): nur die Strecken aus <paramref name="tempo"/> (Nummer -> Tempo), alle anderen
+    /// bleiben leer; null = alle Strecken im normalen Tempo. <paramref name="abstand"/> = kleinster Abstand zum Vordermann,
+    /// <paramref name="bogen"/> = Halbmesser der Kurven an den Knicken.
+    /// </summary>
+    public static Verkehr Fuer(StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float abstand, float bogen = 0.6f)
     {
-        var v = new Verkehr();
+        var v = new Verkehr { AbstandVorne = abstand };
         v.Kreuzungen.AddRange(KreuzungenAus(szene.Strassen));
-        foreach (var (modell, punkte, start) in Strecken)
+        for (var nr = 0; nr < Strecken.Length; nr++)
         {
+            var (modell, punkte, start) = Strecken[nr];
             var mitte = punkte.Select(q => new Vector2(q.X, q.Z)).ToList();
-            if (!AufStrassen(mitte, szene))
+            if (!AufStrassen(mitte, szene) || (tempo is not null && !tempo.ContainsKey(nr)))
             {
                 continue;
             }
-            v.Autos.Add(new Auto(modell, Kurve.Versetzt(Kurve.Glatt(mitte, 0.6f), Spur), start));
+            v.Autos.Add(new Auto(modell, Kurve.Versetzt(Kurve.Glatt(mitte, bogen), Spur), start) { Nummer = nr, Tempo = tempo?[nr] ?? Tempo });
         }
         return v;
     }
@@ -211,7 +228,6 @@ public sealed class Verkehr
     /// </summary>
     public void Weiter(double sekunden, float fx, float fz)
     {
-        var schritt = (float)(sekunden * Tempo);
         var figurOrt = new Vector2(fx, fz);
         // belegt: Felder, in denen ein Auto steht (Heck, Mitte oder Front)
         var belegt = new Dictionary<int, Auto>();
@@ -227,6 +243,7 @@ public sealed class Verkehr
         }
         foreach (var a in Autos)
         {
+            var schritt = (float)(sekunden * a.Tempo);
             var (ort, richtung) = a.Lage(a.Weg + Front);
             // Figur auf der Fahrbahn vor dem Auto (bis FigurVoraus, quer bis 0,45 = ganze Strasse)?
             var zurFigur = figurOrt - ort;
@@ -234,14 +251,14 @@ public sealed class Verkehr
             var quer = MathF.Abs((zurFigur.X * richtung.Y) - (zurFigur.Y * richtung.X));
             var figur = voraus > -0.1f && voraus < FigurVoraus && quer < 0.45f;
             // anderes Auto zu nah voraus (gleiche Richtung)?
-            var vorne = Autos.Any(b => b != a && b.Lage() is var (bo, br) && Vector2.Dot(bo - ort, richtung) is var d && d > 0 && d < Abstand
-                && Vector2.Distance(bo, ort) < Abstand + 0.05f && Vector2.Dot(br, richtung) > 0.5f);
+            var vorne = Autos.Any(b => b != a && b.Lage() is var (bo, br) && Vector2.Dot(bo - ort, richtung) is var d && d > 0 && d < AbstandVorne
+                && Vector2.Distance(bo, ort) < AbstandVorne + 0.05f && Vector2.Dot(br, richtung) > 0.5f);
             // Kreuzung: das Feld kurz voraus ist von einem anderen Auto belegt (und das Auto steht noch nicht darin)
             var feldJetzt = Feld(ort);
             var feldVoraus = Feld(a.Lage(a.Weg + Front + FeldVorlauf).Ort);
             var kreuzung = feldVoraus >= 0 && feldVoraus != feldJetzt && belegt.TryGetValue(feldVoraus, out var anderes) && anderes != a;
             // Rundlauf: am Ende der Strecke wieder an den Anfang nur, wenn dort kein anderes Auto steht
-            var anfang = a.Weg + schritt + Front >= a.Laenge && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < Abstand + (2 * Front));
+            var anfang = a.Weg + schritt + Front >= a.Laenge && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front));
             a.Haelt = figur || vorne || kreuzung || anfang;
             if (a.Haelt)
             {

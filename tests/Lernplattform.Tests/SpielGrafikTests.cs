@@ -149,7 +149,13 @@ public class SpielGrafikTests
         var fest = new[] { "tree_large", "tree_small", "train-electric-city-a", "train-electric-city-b", "train-electric-city-c", Figur.Modell }
             .Concat(Innenraum.Modelle).Concat(FestDeko.Modelle(FestDekoTests.Daten.Value))
             .Concat(new[] { Figur.Gehen, Figur.Rennen }.SelectMany(b => Enumerable.Range(0, Figur.Bilder).Select(i => Figur.BildName(b, i))))
-            .Concat(Verkehr.Strecken.Select(s => s.Modell)).Concat(Gruen.Modelle).ToList();
+            .Concat(Verkehr.Strecken.Select(s => s.Modell)).Concat(Gruen.Modelle)
+            // seit Phase 8 W11 die Laternen, Tannen (im Herbst gefaerbt) und Kuerbisse aus dem Graveyard Kit und die Gestalten der Festzeiten
+            .Concat(Nachtlicht.Skizze.Select((l, i) => Nachtlicht.Modell(new Nachtlicht.Laterne(i + 1, default, l.Doppelt, default, default))))
+            .Concat(new[] { "gy-pine", "gy-pine-crooked" }.SelectMany(t => new[] { t, StadtSzene.TanneIn(t, Jahreszeit.Herbst) }))
+            .Concat(FestDeko.Modelle(FestDekoTests.Daten.Value).Select(FestDeko.Kuerbis))
+            .Concat(["hw-lantern_standing", "hw-pumpkin", "hw-pumpkin_orange_jackolantern", "os-animal-bunny", "os-animal-chick", "xm-present_A_red", "xm-present_A_yellow", "xm-present_B_green"])
+            .ToList();
         foreach (var m in bib.Modelle)
         {
             Assert.True(bib.Bloecke.Values.Contains(m.Name) || fest.Contains(m.Name), m.Name + " wird nicht genutzt");
@@ -177,6 +183,7 @@ public class SpielGrafikTests
             ["cube_pets"] = "Grafik Kenney Cube Pets",
             ["car_kit"] = "Grafik Kenney Car Kit",
             ["kaykit_wald"] = "Grafik KayKit Forest Nature Pack",
+            ["graveyard"] = "Grafik Kenney Graveyard Kit",
         };
         foreach (var paket in genutzt)
         {

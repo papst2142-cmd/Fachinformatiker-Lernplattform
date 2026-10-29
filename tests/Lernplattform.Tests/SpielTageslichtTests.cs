@@ -7,8 +7,8 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// Phase 8 W10 (Weisung P8-34, Nico 3b): Tag und Nacht in der Stadt. Licht nach der Tagesuhr der Stadt und der
-/// Jahreszeit (am Tag genau wie vorher), nachts leuchten Fenster mit Licht und 30 Strassenlaternen im Netz der
-/// Stadt (hoechstens etwa +1 000 Dreiecke, kein eigener Zeichenaufruf). Nur Darstellung.
+/// Jahreszeit (am Tag genau wie vorher), nachts leuchten Fenster mit Licht und die Strassenlaternen (W10: 30 im Netz
+/// der Stadt; seit W11 21 nach Nicos Skizze im eigenen Netz). Nur Darstellung.
 /// </summary>
 public sealed class SpielTageslichtTests
 {
@@ -96,50 +96,33 @@ public sealed class SpielTageslichtTests
         Assert.Equal(TimeSpan.FromSeconds(2), Tageslicht.Ueberblenden);
     }
 
+    /// <summary>
+    /// W10 (3b), seit W11 (Nico P8-45): die Laternen stehen nicht mehr im Netz der Stadt, sondern im eigenen Netz
+    /// (<see cref="StadtSzene.PaketNetzBauen"/>); im Netz der Stadt leuchtet nichts mehr (vorher genau die Lampen).
+    /// Platzregeln, Anzahl und Leuchtmarke pruefen die W11-Tests (<see cref="StadtDarstellungTests"/>).
+    /// </summary>
     [Fact]
-    public void LaternenImStadtNetz()
+    public void LaternenImEigenenNetz()
     {
         var stadt = NeueStadt();
         var stand = Spaet();
         var szene = StadtSzene.Bauen(stadt, stand, Grafik);
         var laternen = szene.Laternen;
         Assert.Equal(Nachtlicht.Anzahl, laternen.Count);
-        Assert.True(Nachtlicht.Anzahl * Nachtlicht.DreieckeJeLaterne <= 1000);
         // fest fuer dieselbe Stadt
         Assert.Equal(laternen, StadtSzene.Bauen(stadt, stand, Grafik).Laternen);
-        foreach (var p in laternen)
-        {
-            foreach (var (linie, halb) in szene.BaumSperren)
-            {
-                Assert.True(Kurve.Abstand(p, linie) >= halb + 0.08f, $"Laterne {p} auf Strasse, Weg, Gleis oder Fluss");
-            }
-            foreach (var h in szene.Haeuser)
-            {
-                Assert.False(p.X > h.Min.X - 0.1f && p.X < h.Max.X + 0.1f && p.Y > h.Min.Z - 0.1f && p.Y < h.Max.Z + 0.1f, $"Laterne {p} im Haus {h.Id}");
-            }
-            foreach (var t in szene.Tueren)
-            {
-                Assert.True(Vector2.Distance(p, t.WegAnfang) >= 0.6f, $"Laterne {p} vor der Tuer von {t.Ort}");
-            }
-            Assert.True(laternen.Count(q => Vector2.Distance(p, q) < 0.6f) == 1, $"Laterne {p} zu nah an einer anderen");
-        }
-        // genau 24 Dreiecke je Laterne mehr, davon die Lampe (12) mit der Marke
         var netz = szene.NetzBauen();
-        var leuchtend = 0;
         for (var e = 0; e < netz.AnzahlEcken; e++)
         {
-            if (Nachtlicht.Leuchtet(netz.FarbeAn(e)))
-            {
-                leuchtend++;
-            }
+            Assert.False(Nachtlicht.Leuchtet(netz.FarbeAn(e)), "im Netz der Stadt leuchtet etwas");
         }
-        Assert.Equal(Nachtlicht.Anzahl * 24, leuchtend);
-        var ohne = new Netz();
-        foreach (var p in laternen)
+        var paket = szene.PaketNetzBauen(false);
+        var leuchtend = 0;
+        for (var e = 0; e < paket.AnzahlEcken; e++)
         {
-            Nachtlicht.Laterne(ohne, p.X, p.Y);
+            leuchtend += Nachtlicht.Leuchtet(paket.FarbeAn(e)) ? 1 : 0;
         }
-        Assert.Equal(Nachtlicht.Anzahl * Nachtlicht.DreieckeJeLaterne, ohne.Indizes.Count / 3);
+        Assert.True(leuchtend > 0 && leuchtend < paket.AnzahlEcken / 4, $"{leuchtend} von {paket.AnzahlEcken} Ecken leuchten");
     }
 
     [Theory]

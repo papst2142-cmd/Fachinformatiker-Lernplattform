@@ -75,13 +75,13 @@ public static partial class AutoMessung
                 Messwerte.Notiere("Spiel: Tag und Nacht ohne GL nicht gemessen");
                 return funde;
             }
-            // Laternen (3b): im Netz der Stadt, hoechstens etwa +1 000 Dreiecke, kein eigener Zeichenaufruf
+            // Laternen (3b; seit W11 21 Laternen nach Nicos Skizze im eigenen Netz mit Ferne-Form, P8-45)
             spiel = Frisch(seite);
             var uhr = Stopwatch.StartNew();
             var plaetze = Nachtlicht.Plaetze(spiel.Szene);
             var platzMs = uhr.Elapsed.TotalMilliseconds;
             Pruefe("Laternen", spiel.Szene.Laternen.Count == Nachtlicht.Anzahl && plaetze.Count == Nachtlicht.Anzahl,
-                string.Create(inv, $"{spiel.Szene.Laternen.Count} Laternen, {spiel.Szene.Laternen.Count * Nachtlicht.DreieckeJeLaterne} Dreiecke im Netz der Stadt, Plaetze suchen {platzMs:F1} ms"));
+                string.Create(inv, $"{spiel.Szene.Laternen.Count} Laternen ({spiel.Szene.Laternen.Count(l => l.Doppelt)} doppelt), Plaetze suchen {platzMs:F1} ms"));
             Messwerte.Notiere(string.Create(inv, $"Spiel: Bauzeit der Netze mit Laternen und Lichtmarken (Info): {NetzeBauenMs(spiel.Szene):F1} ms"));
 
             // Tag und Nacht: dieselben Dreiecke und Aufrufe zu jeder Uhrzeit (nur Werte im Shader)

@@ -70,12 +70,18 @@
   "kaykit_wald": {
    "zip": "KayKit_Forest_Nature_Pack_1.0_FREE.zip",
    "sha256": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c",
-   "quelle": "KayKit Forest Nature Pack 1.0 (Kay Lousberg)",
+   "quelle": "KayKit Forest Nature Pack 1.0 (Kay Lousberg), kaylousberg.itch.io",
+   "lizenz": "CC0 1.0"
+  },
+  "graveyard": {
+   "zip": "kenney_graveyard-kit_5.0.zip",
+   "sha256": "1a93613f2e5675f3310acf49ec9ef13ae7adeb756ac3b205bfb6cc9311a81062",
+   "quelle": "Kenney Graveyard Kit 5.0, kenney.nl/assets/graveyard-kit",
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "51076c0f239b4db31131bde32c22e63e910b566e5bfe5a367bae875426d8fbdb",
- "bytes": 6951611,
+ "sha256": "62407de52ec42469aeb026722e2bd450447704c8152ab883268aa9067ad6d482",
+ "bytes": 7236766,
  "modelle": [
   {
    "name": "building-e",
@@ -2370,6 +2376,159 @@
     0.6477,
     1.3262,
     0.6476
+   ]
+  },
+  {
+   "name": "gy-lightpost-single",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/lightpost-single.obj",
+   "atlas": null,
+   "dreiecke": 704,
+   "min": [
+    -0.1044,
+    -0.0,
+    -0.1016
+   ],
+   "max": [
+    0.1044,
+    1.2666,
+    0.3633
+   ]
+  },
+  {
+   "name": "gy-lightpost-double",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/lightpost-double.obj",
+   "atlas": null,
+   "dreiecke": 1144,
+   "min": [
+    -0.1044,
+    -0.0,
+    -0.3633
+   ],
+   "max": [
+    0.1044,
+    1.2666,
+    0.3633
+   ]
+  },
+  {
+   "name": "gy-pine",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine.obj",
+   "atlas": null,
+   "dreiecke": 672,
+   "min": [
+    -0.589,
+    -0.1,
+    -0.6673
+   ],
+   "max": [
+    0.589,
+    2.2025,
+    0.6673
+   ]
+  },
+  {
+   "name": "gy-pine-crooked",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-crooked.obj",
+   "atlas": null,
+   "dreiecke": 672,
+   "min": [
+    -0.5711,
+    -0.1,
+    -0.6673
+   ],
+   "max": [
+    0.6069,
+    2.0081,
+    0.6673
+   ]
+  },
+  {
+   "name": "gy-pine-fall",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-fall.obj",
+   "atlas": null,
+   "dreiecke": 672,
+   "min": [
+    -0.589,
+    -0.1,
+    -0.6673
+   ],
+   "max": [
+    0.589,
+    2.2025,
+    0.6673
+   ]
+  },
+  {
+   "name": "gy-pine-fall-crooked",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pine-fall-crooked.obj",
+   "atlas": null,
+   "dreiecke": 672,
+   "min": [
+    -0.5711,
+    -0.1,
+    -0.6673
+   ],
+   "max": [
+    0.6069,
+    2.0081,
+    0.6673
+   ]
+  },
+  {
+   "name": "gy-pumpkin",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin.obj",
+   "atlas": null,
+   "dreiecke": 696,
+   "min": [
+    -0.1887,
+    0.0,
+    -0.1887
+   ],
+   "max": [
+    0.1887,
+    0.3211,
+    0.1887
+   ]
+  },
+  {
+   "name": "gy-pumpkin-carved",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin-carved.obj",
+   "atlas": null,
+   "dreiecke": 972,
+   "min": [
+    -0.1887,
+    0.0,
+    -0.1887
+   ],
+   "max": [
+    0.1887,
+    0.3211,
+    0.1887
+   ]
+  },
+  {
+   "name": "gy-pumpkin-tall-carved",
+   "paket": "graveyard",
+   "datei": "Models/OBJ format/pumpkin-tall-carved.obj",
+   "atlas": null,
+   "dreiecke": 920,
+   "min": [
+    -0.1627,
+    0.0,
+    -0.1367
+   ],
+   "max": [
+    0.1627,
+    0.3597,
+    0.1887
    ]
   }
  ]

@@ -112,8 +112,20 @@ public sealed class StadtSzene
 
     public IReadOnlyList<Teil> Teile { get; }
 
+    /// <summary>
+    /// Phase 8 W11 (Sammelliste 157): beide Enden jeder Strasse mit Richtung nach aussen und Verlaengerung ueber den
+    /// Endpunkt (halbe Strassenbreite am Kartenrand und an einer anderen Strasse, sonst halbe Gehwegbreite).
+    /// </summary>
+    public IReadOnlyList<(Vector2 Punkt, Vector2 Richtung, float Verlaengert)> StrassenEnden { get; private init; } = [];
+
     /// <summary>Mitten der Bruecken (Strasse ueber dem Fluss).</summary>
     public IReadOnlyList<Vector2> Bruecken { get; private init; } = [];
+
+    /// <summary>
+    /// Grundriss jeder Bruecke (W11, Weisung P8-47): Mitte, Richtung der Strasse, halbe Laenge bis zur Aussenkante der
+    /// Endpfosten und halbe Breite bis zur Aussenkante der Bruestung.
+    /// </summary>
+    public IReadOnlyList<(Vector2 Mitte, Vector2 Richtung, float HalbLaenge, float HalbBreite)> BrueckenKaesten { get; private init; } = [];
 
     /// <summary>
     /// Nachtrag 1 zu P7-13 (Wunsch 1): alle Baeume (Landschaft und Modelle) mit Mitte und Radius, so wie
@@ -138,6 +150,12 @@ public sealed class StadtSzene
 
     /// <summary>Mitten der Bahnuebergaenge; Strasse = mit Warnkreuzen, sonst Fussweg.</summary>
     public IReadOnlyList<(Vector2 Mitte, bool Strasse)> Uebergaenge { get; private init; } = [];
+
+    /// <summary>Ausstattung der Bahnuebergaenge an Strassen (P8-49): Andreaskreuz, Lichter, Halbschranke.</summary>
+    public IReadOnlyList<Bahnuebergang.Kreuz> Andreaskreuze { get; private init; } = [];
+
+    /// <summary>Mittellinien der Gleise (geglaettet), z. B. fuer den Lichtraum (<see cref="Bahnuebergang.LichtraumHalb"/>).</summary>
+    public IReadOnlyList<IReadOnlyList<Vector2>> Gleise { get; private init; } = [];
 
     /// <summary>Fluss, Ufer und Gleis als glatte Baender (P7-10 Nachtrag 1).</summary>
     public IReadOnlyList<Streifen> Streifen { get; }
@@ -176,7 +194,7 @@ public sealed class StadtSzene
             }
             for (var i = 0; i < Stuecke.Count; i++)
             {
-                if (!stueckeHaus[i] && ModellAn(i) is { } modell)
+                if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
                 {
                     netz.Hinzu(modell, Stuecke[i].Lage);
                 }
@@ -188,7 +206,6 @@ public sealed class StadtSzene
                     netz.Hinzu(modell, baum.Lage);
                 }
             }
-            LaternenHinzu(netz);
             return netz;
         }
         // Phase 8 W9: Farben nach der Jahreszeit; die Fest-Deko (ab FestTeileVon/FestStueckeVon) behaelt ihre Farben
@@ -212,7 +229,7 @@ public sealed class StadtSzene
         gefaerbt.Faerbung = null;
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!stueckeHaus[i] && ModellAn(i) is { } modell)
+            if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
             {
                 gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : null);
             }
@@ -224,7 +241,6 @@ public sealed class StadtSzene
                 gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
         }
-        LaternenHinzu(gefaerbt);
         return gefaerbt;
     }
 
@@ -240,7 +256,7 @@ public sealed class StadtSzene
             }
             for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
             {
-                if (ModellAn(i) is { } modell)
+                if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
                 {
                     var von = netz.Indizes.Count;
                     netz.Hinzu(modell, Stuecke[i].Lage);
@@ -258,7 +274,7 @@ public sealed class StadtSzene
         gefaerbt.Faerbung = null;
         for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
         {
-            if (ModellAn(i) is { } modell)
+            if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
             {
                 var art = Stuecke[i].Name.Contains("tree", StringComparison.Ordinal) ? Faerbeart.Stadt : Faerbeart.Haus;
                 var von = gefaerbt.Indizes.Count;
@@ -284,7 +300,9 @@ public sealed class StadtSzene
             return;
         }
         var mass = new Vector3(MathF.Abs(t.X2 - t.X1), MathF.Abs(t.Y2 - t.Y1), MathF.Abs(t.Z2 - t.Z1));
-        var duenn = mass.X <= mass.Y && mass.X <= mass.Z ? Vector3.UnitX : mass.Y <= mass.Z ? Vector3.UnitY : Vector3.UnitZ;
+        // das Zifferblatt der Bahnhofsuhr steht quer zur Suedwand: es leuchtet nach Osten und Westen (aus Streifen, die flacher als dick sind)
+        var duenn = t.Farbe == UhrBlatt ? Vector3.UnitX
+            : mass.X <= mass.Y && mass.X <= mass.Z ? Vector3.UnitX : mass.Y <= mass.Z ? Vector3.UnitY : Vector3.UnitZ;
         for (var e = von; e < netz.AnzahlEcken; e++)
         {
             if (MathF.Abs(Vector3.Dot(netz.Normale(e), duenn)) > 0.9f)
@@ -294,16 +312,78 @@ public sealed class StadtSzene
         }
     }
 
-    /// <summary>W10 (Nico 3b): die Strassenlaternen ins Netz der Stadt (kein eigener Zeichenaufruf).</summary>
-    private void LaternenHinzu(Netz netz)
+    /// <summary>
+    /// Phase 8 W11 (Nico 5a, P8-42): Modelle aus dem Graveyard Kit (Tannen, Kuerbisse) stehen nicht im Netz der Stadt
+    /// oder eines Hauses, sondern mit den Laternen im eigenen Netz (<see cref="PaketNetzBauen"/>).
+    /// </summary>
+    public static bool ImPaket(string modell) => modell.StartsWith("gy-", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Phase 8 W11 (Nico 5a, P8-42): eigenes Netz fuer Laternen, Tannen, Kuerbisse und Bahnuebergaenge (P8-49) (ein Zeichenaufruf mehr, die
+    /// Grenze der Gesamtansicht bleibt): nah die Paket-Modelle, fern (<paramref name="fern"/>) einfache Kaesten.
+    /// Tannen nach der Jahreszeit gefaerbt (im Herbst das orange Modell), Kuerbisse und Laternen behalten ihre Farben.
+    /// </summary>
+    public Netz PaketNetzBauen(bool fern)
     {
-        var faerbung = netz.Faerbung;
-        netz.Faerbung = null;
-        foreach (var p in Laternen)
+        var netz = new Netz();
+        // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
+        Bahnuebergang.Hinzu(netz, Andreaskreuze);
+        if (Grafik is null)
         {
-            Nachtlicht.Laterne(netz, p.X, p.Y);
+            return netz;
         }
-        netz.Faerbung = faerbung;
+        for (var i = 0; i < Stuecke.Count; i++)
+        {
+            if (!ImPaket(Stuecke[i].Name) || Grafik.Modell(TanneIn(Stuecke[i].Name, Jahreszeit)) is not { } m)
+            {
+                continue;
+            }
+            var lage = Stuecke[i].Lage;
+            var faerbung = i < FestStueckeVon ? ModellFaerbung(m, lage, Faerbeart.Stadt) : null;
+            if (fern)
+            {
+                FernKaesten(netz, m, lage, faerbung);
+            }
+            else
+            {
+                netz.Hinzu(m, lage, faerbung);
+            }
+        }
+        foreach (var l in Laternen)
+        {
+            Nachtlicht.Hinzu(netz, Grafik, l, fern);
+        }
+        return netz;
+    }
+
+    /// <summary>Ferne-Form eines Modells: untere und obere Haelfte als Kasten in der mittleren Farbe der Haelfte (oben schmaler).</summary>
+    private static void FernKaesten(Netz netz, GrafikModell m, Matrix4x4 lage, Func<int, float, float, Vector3>? faerbung)
+    {
+        var mitteY = (m.Min.Y + m.Max.Y) / 2;
+        var summe = new Vector3[2];
+        var zahl = new int[2];
+        for (var d = 0; d < m.Dreiecke; d++)
+        {
+            var y = (m.Ecken[(d * 9) + 1] + m.Ecken[(d * 9) + 4] + m.Ecken[(d * 9) + 7]) / 3;
+            var h = y < mitteY ? 0 : 1;
+            summe[h] += faerbung is null
+                ? new Vector3(m.Farben[d * 3], m.Farben[(d * 3) + 1], m.Farben[(d * 3) + 2]) / 255f
+                : faerbung(d, 0.5f, Vector3.Transform(new Vector3(0, y, 0), lage).Y);
+            zahl[h]++;
+        }
+        var unten = Vector3.Transform(new Vector3((m.Min.X + m.Max.X) / 2, m.Min.Y, (m.Min.Z + m.Max.Z) / 2), lage);
+        var oben = Vector3.Transform(new Vector3((m.Min.X + m.Max.X) / 2, m.Max.Y, (m.Min.Z + m.Max.Z) / 2), lage);
+        var breite = MathF.Max(m.Max.X - m.Min.X, m.Max.Z - m.Min.Z) * new Vector3(lage.M11, lage.M12, lage.M13).Length() / 2;
+        var mitte = (unten.Y + oben.Y) / 2;
+        for (var h = 0; h < 2; h++)
+        {
+            if (zahl[h] == 0)
+            {
+                continue;
+            }
+            var b = breite * (h == 0 ? 1f : 0.55f);
+            netz.Hinzu(new Teil(TeilArt.Quader, unten.X - b, h == 0 ? unten.Y : mitte, unten.Z - b, unten.X + b, h == 0 ? mitte : oben.Y, unten.Z + b, summe[h] / zahl[h]));
+        }
     }
 
     /// <summary>Phase 8 W9: Faerbung eines Modells an seiner Lage (Samen und Nadelbaum je Modell); null im Sommer.</summary>
@@ -495,6 +575,7 @@ public sealed class StadtSzene
         var wasser = new List<List<Vector2>>();
         var parkFlaechen = new List<(float X1, float Z1, float X2, float Z2)>();
         var gleise = new List<List<Vector2>>();
+        var andreaskreuze = new List<Bahnuebergang.Kreuz>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
@@ -506,6 +587,8 @@ public sealed class StadtSzene
         var sichtbareOrte = stadt.Orte(stand).Select(o => Py.Str(o["id"])).ToHashSet();
         var sichtbareWege = stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         var bruecken = new List<Vector2>();
+        var brueckenKaesten = new List<(Vector2, Vector2, float, float)>();
+        var strassenEnden = new List<(Vector2 Punkt, Vector2 Richtung, float Verlaengert)>();
         var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
         {
@@ -529,6 +612,7 @@ public sealed class StadtSzene
                             {
                                 Bruecke(teile, streifen, mitte, richtung, sinus);
                                 bruecken.Add(mitte);
+                                brueckenKaesten.Add((mitte, richtung, BrueckeHalb(sinus) + 0.07f, (StrassenBreite / 2) + 0.1f));
                             }
                         }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2)
@@ -539,12 +623,40 @@ public sealed class StadtSzene
                         break;
                     }
                     case "strasse":
-                        Linie(teile, Punkte(item["punkte"]), Hoehe.Strasse, StrassenBreite, Farben.Strasse);
+                        {
+                            // Phase 8 W11 (Sammelliste 157): ein Strassenende, das weder am Kartenrand noch an einer
+                            // anderen Strasse liegt, endet buendig an der Gehwegkante (halbe Gehwegbreite statt halber Strassenbreite)
+                            var pp = Punkte(item["punkte"]);
+                            var alleStr = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+                            float Ende(Vector2 e)
+                            {
+                                var amRand = e.X <= 0.01f || e.Y <= 0.01f || e.X >= breite - 0.01f || e.Y >= tiefe - 0.01f;
+                                var anStrasse = alleStr.Any(a => !a.SequenceEqual(Vektoren(item["punkte"])) && Kurve.Abstand(e, a) <= 0.05f);
+                                return amRand || anStrasse ? StrassenBreite / 2 : WegBreite / 2;
+                            }
+                            for (var i = 0; i + 1 < pp.Count; i++)
+                            {
+                                var a = new Vector2(pp[i].X, pp[i].Z);
+                                var b2 = new Vector2(pp[i + 1].X, pp[i + 1].Z);
+                                var r = Vector2.Normalize(b2 - a);
+                                var ea = i == 0 ? Ende(a) : StrassenBreite / 2;
+                                var eb = i + 2 == pp.Count ? Ende(b2) : StrassenBreite / 2;
+                                if (i == 0)
+                                {
+                                    strassenEnden.Add((a, -r, ea));
+                                }
+                                if (i + 2 == pp.Count)
+                                {
+                                    strassenEnden.Add((b2, r, eb));
+                                }
+                                teile.Add(Band(a.X - (r.X * ea), a.Y - (r.Y * ea), b2.X + (r.X * eb), b2.Y + (r.Y * eb), Hoehe.Strasse, StrassenBreite, Farben.Strasse));
+                            }
+                        }
                         break;
                     case "bahn":
                     {
                         var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
-                        uebergaenge.AddRange(Gleis(teile, streifen, glatt, strassen, sichtbareWege));
+                        uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
                         break;
                     }
@@ -665,6 +777,22 @@ public sealed class StadtSzene
             var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, Vektoren(new List<object?> { zier["tuer"] })[0]);
             tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, weg[0], MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), false, true,
                 haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? [], haus.Min, haus.Max));
+            if (grafik is not null)
+            {
+                // Phase 8 W11 (Sammelliste 156): die Tuer des Modells auf der Rueckseite (ohne Gehweg) samt Glas und
+                // Rahmen in Wandfarbe; die vordere Tuer mit Gehweg bleibt
+                var c = new Vector2((haus.Min.X + haus.Max.X) / 2, (haus.Min.Z + haus.Max.Z) / 2);
+                var tief = MathF.Abs(aussen.X) > 0.5f ? (haus.Max.X - haus.Min.X) / 2 : (haus.Max.Z - haus.Min.Z) / 2;
+                var lang = MathF.Abs(aussen.X) > 0.5f ? (haus.Max.Z - haus.Min.Z) / 2 : (haus.Max.X - haus.Min.X) / 2;
+                var rm = c - (aussen * tief);
+                var querR = new Vector2(aussen.Y, -aussen.X);
+                var gefunden = StadtTueren.ModellTueren(stuecke, haus.StueckeVon, haus.StueckeBis, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), rm, -aussen, weite: lang, tief: 2 * tief);
+                foreach (var mt in gefunden)
+                {
+                    StadtTueren.FensterWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm + (querR * mt.Mitte), -aussen, mt.Oben, mt.Tiefe + 0.1f);
+                }
+                StadtTueren.TuerenWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm, -aussen, lang, 2 * tief);
+            }
             var ende = weg[^1];
             zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((haus.Min.X + haus.Max.X) / 2, haus.Max.Y + 0.55f, (haus.Min.Z + haus.Max.Z) / 2),
                 haus.Min, haus.Max, ende.X, ende.Y));
@@ -731,7 +859,7 @@ public sealed class StadtSzene
         var hindernisseVorFest = hindernisse.ToList();
         var festTeileVon = teile.Count;
         var festStueckeVon = stuecke.Count;
-        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse);
+        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse, tueren);
         if (fest is not null)
         {
             signatur.Add("fest:" + fest);
@@ -739,23 +867,27 @@ public sealed class StadtSzene
         // Phase 8 W7 (Sammelliste 129): Gruen nach der Festzeit-Deko; frei bleiben auch die Plaetze JEDER Festzeit,
         // damit das Gruen an jedem Tag gleich steht und die Deko aus W6 unveraendert bleibt
         Gruen.Ergebnis? gruen = null;
+        var festPlaetze = new List<(Vector2 P, float R)>();
         if (grafik is not null)
         {
-            var festPlaetze = new List<(Vector2 P, float R)>();
             foreach (var f in Festzeit.Alle)
             {
-                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList()))
+                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList(), tueren))
                 {
                     festPlaetze.Add((new Vector2(g.X, g.Z), Math.Max(g.R, 0.12f)));
                 }
             }
             var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
+            // W11 (Weisung P8-47): die Laternenplaetze aus Nicos Skizze bleiben frei von Kleingruen
+            var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe).ToList();
             bool Frei(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
                 && haeuserKaesten.All(k => x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f)
                 && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
-                && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f);
+                && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
+                && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f)
+                && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt);
@@ -767,18 +899,25 @@ public sealed class StadtSzene
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             Bruecken = bruecken,
+            BrueckenKaesten = brueckenKaesten,
+            StrassenEnden = strassenEnden,
             Baeume = baeume.Gesetzt,
             BaumSperren = baeume.Sperren,
             Uebergaenge = uebergaenge,
+            Andreaskreuze = andreaskreuze,
+            Gleise = gleise,
             Fest = fest,
             FestGesetzt = festGesetzt,
+            FestPlaetzeAlle = festPlaetze,
             FestTeileVon = festTeileVon,
             FestStueckeVon = festStueckeVon,
             Jahreszeit = jahreszeit,
             GruenKlein = gruen,
             Strassen = strassen,
             // W10 (Nico 3b): Fenster mit Licht (nicht die dunklen und nicht die an der Tuer in Wandfarbe)
-            LichtTeile = alleFenster.Where(f => teile[f.Teil].Farbe != Farben.Fenster && teile[f.Teil].Farbe != f.Wand).Select(f => f.Teil).ToHashSet(),
+            // W11: dazu das Zifferblatt der Bahnhofsuhr
+            LichtTeile = alleFenster.Where(f => teile[f.Teil].Farbe != Farben.Fenster && teile[f.Teil].Farbe != f.Wand).Select(f => f.Teil)
+                .Concat(Enumerable.Range(0, teile.Count).Where(i => teile[i].Farbe == UhrBlatt)).ToHashSet(),
             Zierhaeuser = zierhaeuser,
             Tueren = tueren,
             Umgefaerbt = umgefaerbt,
@@ -939,7 +1078,7 @@ public sealed class StadtSzene
     /// Fussweg das Gleis kreuzt, liegt ein Belag in Richtung der Strasse (so breit wie sie) ueber dem
     /// Schotter, die Schienen schauen heraus; an Strassen stehen davor Warnkreuze.
     /// </summary>
-    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
+    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Bahnuebergang.Kreuz> andreaskreuze, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
     {
         streifen.Add(new Streifen(p, GleisBreite, 0.004f, Hoehe.Gleisbett, Farben.Gleisbett));
         var uebergaenge = new List<(Vector2 Mitte, Vector2 Richtung, float Breite)>();
@@ -950,7 +1089,7 @@ public sealed class StadtSzene
             {
                 foreach (var (mitte, richtung, sinus) in Kreuzungen(p, linie))
                 {
-                    Uebergang(teile, streifen, mitte, richtung, sinus, breite, farbe, kreuze);
+                    Uebergang(streifen, andreaskreuze, p, mitte, richtung, sinus, breite, farbe, kreuze);
                     uebergaenge.Add((mitte, richtung, breite));
                 }
             }
@@ -1017,32 +1156,28 @@ public sealed class StadtSzene
     }
 
     /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>
-    private static void Uebergang(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool kreuze)
+    private static void Uebergang(List<Streifen> streifen, List<Bahnuebergang.Kreuz> kreuze, IReadOnlyList<Vector2> gleis, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool mitKreuzen)
     {
         var halb = ((GleisBreite / 2) + 0.12f) / sinus;
         streifen.Add(new Streifen([mitte - (richtung * halb), mitte + (richtung * halb)], breite, Hoehe.Gleisbett, Hoehe.Uebergang, farbe));
-        if (!kreuze)
+        if (!mitKreuzen)
         {
             return;
         }
-        // Warnkreuz (Andreaskreuz) rechts der Fahrbahn vor dem Gleis, je Seite eins
-        var quer = new Vector2(-richtung.Y, richtung.X);
-        foreach (var vor in (float[])[-1f, 1f])
-        {
-            var fuss = mitte + (richtung * vor * (halb + 0.2f)) + (quer * -vor * ((breite / 2) + 0.14f));
-            teile.Add(Quader(fuss.X - 0.025f, 0f, fuss.Y - 0.025f, fuss.X + 0.025f, 0.62f, fuss.Y + 0.025f, Weiss));
-            teile.Add(Quader(fuss.X - 0.13f, 0.5f, fuss.Y - 0.03f, fuss.X + 0.13f, 0.56f, fuss.Y + 0.03f, Farben.Rot));
-            teile.Add(Quader(fuss.X - 0.03f, 0.4f, fuss.Y - 0.13f, fuss.X + 0.03f, 0.66f, fuss.Y + 0.13f, Farben.Rot));
-        }
+        // P8-49 (Nico, Variante c): Andreaskreuz mit Lichtern und Halbschranke je Fahrtrichtung rechts vor dem Gleis (P8-50),
+        // diagonal gegenueber, ausserhalb des Lichtraums (mit den Laternen im Paket-Netz, Bahnuebergang.Hinzu in PaketNetzBauen; im Netz der Stadt leuchtet nichts)
+        kreuze.AddRange(Bahnuebergang.Plaetze(mitte, richtung, sinus, gleis));
     }
 
     /// <summary>
     /// Bruecke (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt, ein Steinbett unter der
     /// Fahrbahn bis ueber beide Ufer, Bruestungen an beiden Seiten und Pfosten an den Enden.
     /// </summary>
+    private static float BrueckeHalb(float sinus) => (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
+
     private static void Bruecke(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus)
     {
-        var halb = (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
+        var halb = BrueckeHalb(sinus);
         var a = mitte - (richtung * halb);
         var b = mitte + (richtung * halb);
         var stein = Netz.Farbe("#9A94A8");
@@ -1136,10 +1271,13 @@ public sealed class StadtSzene
     /// <summary>Phase 8 W10 (Nico 3b): Nummern der eigenen Fenster in <see cref="Teile"/>, die nachts leuchten.</summary>
     public IReadOnlySet<int> LichtTeile { get; private init; } = new HashSet<int>();
 
-    /// <summary>Phase 8 W10 (Nico 3b): Plaetze der Strassenlaternen (<see cref="Nachtlicht.Plaetze"/>), einmal je Szene.</summary>
-    public IReadOnlyList<Vector2> Laternen => _laternen ??= Nachtlicht.Plaetze(this);
+    /// <summary>Phase 8 W11 (Nico P8-45): die 21 Strassenlaternen nach Nicos Skizze (<see cref="Nachtlicht.Plaetze"/>), einmal je Szene.</summary>
+    public IReadOnlyList<Nachtlicht.Laterne> Laternen => _laternen ??= Nachtlicht.Plaetze(this);
 
-    private List<Vector2>? _laternen;
+    private List<Nachtlicht.Laterne>? _laternen;
+
+    /// <summary>Phase 8 W7/W11: Plaetze der Fest-Deko aller Festzeiten (Mitte, Radius); frei fuer Gruen und Laternen.</summary>
+    public IReadOnlyList<(Vector2 P, float R)> FestPlaetzeAlle { get; private init; } = [];
 
     /// <summary>Mittellinien der Strassen (fuer die Autos, Phase 8 W7).</summary>
     public IReadOnlyList<IReadOnlyList<Vector2>> Strassen { get; private init; } = [];
@@ -1188,9 +1326,30 @@ public sealed class StadtSzene
         return netz;
     }
 
+    /// <summary>Phase 8 W11: Tanne an (x, z)? Fest nach Lage, gerade und krumm im Wechsel; null = Laubbaum wie bisher.</summary>
+    public static string? Tanne(float x, float z) =>
+        ((((int)MathF.Round((x * 5) + (z * 11)) % 3) + 3) % 3) != 0 ? null
+        : ((int)MathF.Round((x * 3) + (z * 7)) & 1) == 1 ? "gy-pine-crooked" : "gy-pine";
+
+    /// <summary>Phase 8 W11: Name der Tanne in der Jahreszeit (im Herbst das orange Modell).</summary>
+    public static string TanneIn(string name, Jahreszeit j) =>
+        j == Jahreszeit.Herbst && name.StartsWith("gy-pine", StringComparison.Ordinal) ? name.Replace("gy-pine", "gy-pine-fall", StringComparison.Ordinal) : name;
+
     private static void Baum(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, BaumPlaner planer, float x, float z, float r)
     {
         (x, z) = planer.Setzen(x, z, r) is var p ? (p.X, p.Y) : default;
+        if (grafik is not null && Tanne(x, z) is { } tname)
+        {
+            // Phase 8 W11 (Sammelliste 160): etwa jeder dritte Baum eine Tanne aus dem Graveyard Kit (eigenes Netz,
+            // PaketNetzBauen; im Herbst das orange Modell)
+            if (grafik.Modell(tname) is { } tanne)
+            {
+                var s = (0.4f + (2.2f * r)) / (tanne.Max.Y - tanne.Min.Y) * 1.25f;
+                var anker = new Vector3((tanne.Min.X + tanne.Max.X) / 2, tanne.Min.Y, (tanne.Min.Z + tanne.Max.Z) / 2);
+                stuecke.Add(new ModellStueck(tname, Lage(tanne, anker, new Vector3(s), new Vector3(x, 0, z), Vector2.UnitY)));
+                return;
+            }
+        }
         if (grafik is not null && Gruen.Baum(stuecke, grafik, x, z, r))
         {
             return;
@@ -1219,15 +1378,91 @@ public sealed class StadtSzene
 
     private sealed record Block(float X1, float Z1, float X2, float Z2, float H);
 
+    /// <summary>
+    /// Phase 8 W11 (Sammelliste 155, Teilplan S1): Darstellung einzelner Teile aus orte.json (die Datei bleibt wie in
+    /// Python): null = nicht zeichnen, sonst Versatz in x. Der Turm des Bahnhofs entfaellt (er steckte 0,6 tief im
+    /// Hauptgebaeude), der Anbau des Altbaus (lag ganz im Hauptgebaeude) steht Wand an Wand an dessen Ostwand.
+    /// </summary>
+    public static float? Darstellung(string modell, int teilNr) => (modell, teilNr) switch
+    {
+        ("bahnhof", 3) => null,
+        ("wohnung", 5) => AltbauAnbau,
+        _ => 0f,
+    };
+
+    /// <summary>Versatz des Altbau-Anbaus nach Osten: von x 2,3 an die Ostwand des Hauptgebaeudes (x 3,2).</summary>
+    public const float AltbauAnbau = 0.9f;
+
+    /// <summary>Lage der Bahnhofsuhr (Uhr c2) relativ zum Bahnhof: Mitte x, Hoehe, Wand (Suedwand des Hauptgebaeudes), Halbmesser, Arm.</summary>
+    /// <summary>Farbe des Zifferblatts der Bahnhofsuhr; nachts leuchten nur seine beiden Seiten (wie die Scheibe eines Fensters).</summary>
+    public static readonly Vector3 UhrBlatt = new(0.97f, 0.97f, 0.95f);
+
+    public const float UhrX = 3.2f, UhrY = 1.15f, UhrWand = 2.0f, UhrR = 0.24f, UhrArm = 0.1f;
+
+    /// <summary>
+    /// Phase 8 W11 (Nico P8-42/P8-45, Uhr c2): runde Bahnhofsuhr am Ausleger, quer zur Suedwand und von beiden Seiten
+    /// lesbar: Wandplatte auf der Wand, kurzer kraeftiger Arm bis in den Uhrring, Strebe darunter. Dunkler Ring,
+    /// weisses Zifferblatt (leuchtet nachts wie ein Fenster), Zeiger 10:10 und roter Sekundenzeiger bleiben dunkel.
+    /// </summary>
+    public static List<Teil> BahnhofsUhr(float ox, float oz)
+    {
+        var teile = new List<Teil>();
+        var weiss = UhrBlatt;
+        var dunkel = new Vector3(0.16f, 0.17f, 0.19f);
+        var zeiger = new Vector3(0.08f, 0.08f, 0.09f);
+        var rot = new Vector3(0.80f, 0.12f, 0.12f);
+        var wandZ = oz + UhrWand;
+        float kx = ox + UhrX, ky = UhrY, kr = UhrR, arm = UhrArm;
+        teile.Add(Quader(kx - 0.07f, ky - 0.16f, wandZ - 0.01f, kx + 0.07f, ky + 0.07f, wandZ + 0.03f, dunkel));
+        teile.Add(Quader(kx - 0.03f, ky - 0.03f, wandZ, kx + 0.03f, ky + 0.03f, wandZ + arm + 0.04f, dunkel));
+        for (var st = 0; st < 5; st++)
+        {
+            var z1 = wandZ + (arm * st / 5f);
+            var y1 = ky - 0.15f + (0.12f * st / 5f);
+            teile.Add(Quader(kx - 0.015f, y1, z1, kx + 0.015f, y1 + 0.04f, z1 + (arm / 5f) + 0.01f, dunkel));
+        }
+        // Scheibe quer zur Wand: a = laengs der Wand (z), c = quer (x)
+        var cz = wandZ + arm + kr;
+        const float d0 = 0.035f;
+        Teil K(float a1, float b1, float c1, float a2, float b2, float c2, Vector3 f) => Quader(kx + c1, b1, cz + a1, kx + c2, b2, cz + a2, f);
+        const int n = 10;
+        for (var i = 0; i < n; i++)
+        {
+            var y1 = -kr + (2 * kr * i / n);
+            var y2 = -kr + (2 * kr * (i + 1) / n);
+            var ym = (y1 + y2) / 2;
+            var halb = MathF.Sqrt(MathF.Max(0, (kr * kr) - (ym * ym)));
+            var innen = MathF.Sqrt(MathF.Max(0, (kr * 0.84f * (kr * 0.84f)) - (ym * ym)));
+            teile.Add(K(-halb, ky + y1, -d0, halb, ky + y2, d0, dunkel));
+            if (innen > 0)
+            {
+                teile.Add(K(-innen, ky + y1, -d0 - 0.008f, innen, ky + y2, d0 + 0.008f, weiss));
+            }
+        }
+        const float vz = d0 + 0.012f;
+        teile.Add(K(-0.012f, ky, -vz, 0.012f, ky + (kr * 0.72f), vz, zeiger));
+        teile.Add(K(-kr * 0.5f, ky - 0.012f, -vz, 0, ky + 0.012f, vz, zeiger));
+        teile.Add(K(-0.006f, ky - (kr * 0.75f), -vz - 0.004f, 0.006f, ky, vz + 0.004f, rot));
+        foreach (var (dx, dy) in new[] { (0f, 0.74f), (0.74f, 0f), (0f, -0.74f), (-0.74f, 0f) })
+        {
+            teile.Add(K((dx * kr) - 0.012f, ky + (dy * kr) - 0.012f, -vz, (dx * kr) + 0.012f, ky + (dy * kr) + 0.012f, vz, zeiger));
+        }
+        return teile;
+    }
+
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
         List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
         BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null)
     {
         var bloecke = new List<Block>();
-        foreach (var (_, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
+        foreach (var (blockNr, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
         {
-            float x = ox + Zahl(teil, "x"), z = oz + Zahl(teil, "y");
+            if (Darstellung(modellName, blockNr) is not { } dx)
+            {
+                continue;
+            }
+            float x = ox + Zahl(teil, "x") + dx, z = oz + Zahl(teil, "y");
             bloecke.Add(new Block(x, z, x + Zahl(teil, "w"), z + Zahl(teil, "t"), Zahl(teil, "h")));
             // Haeuser sperren das freie Gehen (Flaechen wie Bahnsteige und Hoefe nicht)
             hindernisse.Add((x, z, x + Zahl(teil, "w"), z + Zahl(teil, "t")));
@@ -1255,7 +1490,11 @@ public sealed class StadtSzene
         {
             nr++;
             var art = Py.Str(teil["art"]);
-            float x = ox + Zahl(teil, "x"), y = oz + Zahl(teil, "y");
+            if (Darstellung(modellName, teilNr) is not { } verschoben)
+            {
+                continue;
+            }
+            float x = ox + Zahl(teil, "x") + verschoben, y = oz + Zahl(teil, "y");
             var farbName = teil["farbe"] as string;
             var eigen = farbName is null or "akzent" ? ton : Teilfarbe(farbName, ton);
             switch (art)
@@ -1267,7 +1506,7 @@ public sealed class StadtSzene
                         && grafik.Modell(grafikName) is { } gm)
                     {
                         // W8b: Versatz, damit die eigene Tuer des Modells auf dem Fussweg sitzt (Kasten bleibt)
-                        var hoch = GrafikBlock(stuecke, gm, x + versatz, y, w, t, h);
+                        var hoch = GrafikBlock(stuecke, gm, x + versatz, y, w, t, h, modellName == "bahnhof");
                         Kasten(x, 0, y, x + w, hoch, y + t);
                         break;
                     }
@@ -1383,6 +1622,12 @@ public sealed class StadtSzene
                 {
                     var r = Zahl(teil, "r", 0.4f);
                     var (front, hoehe, b) = Fassade(x - r, x + r, y + r);
+                    if (modellName == "bahnhof")
+                    {
+                        // Phase 8 W11 (Nico P8-42/P8-45, Uhr c2): statt des gelben Schilds eine runde Bahnhofsuhr am Ausleger
+                        teile.AddRange(BahnhofsUhr(ox, oz));
+                        break;
+                    }
                     if (b is not null)
                     {
                         var mitte = Math.Min(front - y, b.H + 0.3f);
@@ -1438,13 +1683,18 @@ public sealed class StadtSzene
     /// zwischen der Python-Hoehe h und der natuerlichen Hoehe des Modells (Mittel), damit Fenster und
     /// Tueren nicht platt gedrueckt wirken. Rueckgabe: Hoehe in der Welt.
     /// </summary>
-    public static float GrafikBlock(List<ModellStueck> stuecke, GrafikModell gm, float x, float y, float w, float t, float h)
+    public static float GrafikBlock(List<ModellStueck> stuecke, GrafikModell gm, float x, float y, float w, float t, float h, bool gleich = false)
     {
         var mass = gm.Max - gm.Min;
         // erst ab 1,5-facher Breite eine zweite Kopie (sonst wirkt ein Laden wie zwei Haeuser)
         var anzahl = Math.Max(1, (int)((w / t) / (mass.X / mass.Z) / 1.5f));
         var sx = w / anzahl / mass.X;
         var sz = t / mass.Z;
+        if (gleich)
+        {
+            // Phase 8 W11 (Sammelliste 155): gleichmaessig skaliert (vorher 2,9-fach breit und 2,2-fach tief, Daecher schief)
+            sx = sz = MathF.Min(sx, sz);
+        }
         var sy = ((h / mass.Y) + MathF.Sqrt(sx * sz)) / 2;
         for (var i = 0; i < anzahl; i++)
         {

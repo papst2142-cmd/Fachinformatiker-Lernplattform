@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.22.0
+Neu im Spiel: Zu Halloween, Weihnachten und Ostern sind statt der Autos verkleidete Gestalten in der Stadt unterwegs, die Straßenlaternen sind neu, und der Bahnhof hat eine Bahnhofsuhr.
+
+- Zu Halloween gehen ab der Abenddämmerung statt der Autos sechs Gestalten über die Straßen: jemand im Zombie-Kostüm mit Kürbis-Eimer, zwei Geister mit Laterne, eine Hexe auf ihrem Besen, ein Skelett und ein Vampir mit Fledermaus über der Schulter. Laterne, Kürbis und die Augen des Vampirs leuchten im Dunkeln.
+- Zu Weihnachten ist ab der Abenddämmerung der Weihnachtsmann unterwegs, hinter ihm hüpfen drei Geschenke, vom größten zum kleinsten. Zu Ostern hoppeln tagsüber Hasen und laufen Hühner über die Straßen. Außerhalb dieser Zeiten fahren wie bisher die Autos.
+- Die Gestalten halten Abstand zueinander und zum Vordermann und bleiben auf der Fahrbahn. Es ist nur die Darstellung: dein Spielstand ändert sich dadurch nicht.
+- Die Stadt hat jetzt 21 Straßenlaternen statt 30, an den Stellen aus der neuen Planung: 16 einfache Laternen mit dem Arm zur Straße und 5 Doppel-Laternen mit zwei Armen längs der Straße. Keine Laterne steht mehr vor einer Tür, auf dem Weg zu einer Tür, auf einer Brücke, in einem Busch, Stein oder Beet. Nachts leuchtet nur das Glas der Leuchten.
+- Etwa jeder dritte Baum ist jetzt eine Tanne, im Herbst mit gefärbten Nadeln. Die Kürbisse zu Halloween haben eine neue Form. Tannen, Kürbisse und Laternen stammen aus einem frei nutzbaren Grafikpaket.
+- Der Bahnhof Talheim hat keinen Turm mehr, der im Gebäude steckte. Statt des gelben Schilds hängt eine runde Bahnhofsuhr an einem Ausleger an der Wand. Ihr Zifferblatt leuchtet nachts.
+- Am Stellwerk ist die Tür an der Seite ohne Gehweg verschwunden, die vordere Tür mit Gehweg bleibt. Straßen, die nicht an einer anderen Straße oder am Kartenrand enden, hören jetzt bündig mit dem Gehweg auf. Der kleine Anbau des Altbaus steht an der Hauswand statt im Haus.
+
 ## A 0.21.0
 Neu: In der Stadt wird es abends dunkel, du kannst länger unterwegs sein, das Hinweisfeld lässt sich zuklappen, und am breiten Bildschirm stehen die Karten des Dashboards nebeneinander.
 

@@ -41,7 +41,11 @@ public sealed class SpielGruenTests
     {
         var soll = Bauen(null).GruenKlein!;
         // W8b (Weisung P8-20): ein Busch weniger (75 -> 74): die Tueren sitzen auf der Wand (die Fest-Plaetze an den Tueren wandern mit) und der Gehweg am Stellwerk sperrt Platz
-        Assert.Equal(new Dictionary<string, int> { ["baum"] = 5, ["busch"] = 74, ["gras"] = 122, ["stein"] = 20, ["beet"] = 22 }.OrderBy(p => p.Key),
+        // W11 (Weisung P8-45): zwei Grasbuschel mehr (122 -> 124), weil Platz frei wird (Bahnhof ohne Turm, Strassenenden buendig)
+        // W11 (Weisung P8-47): Kleingruen laesst um jeden der 21 Laternenplaetze einen Streifen von 1,6 laengs der Strasse frei
+        // (Busch 74 -> 63, Gras 124 -> 114, Beet 22 -> 19), damit keine Laterne von Nicos Kreis weggeschoben wird
+        // W11 (Weisung P8-50): Laterne 4 auf der Westseite, die noerdliche Schranke auf der Ostseite (Beet 19 -> 18, Gras 114 -> 115)
+        Assert.Equal(new Dictionary<string, int> { ["baum"] = 5, ["busch"] = 63, ["gras"] = 115, ["stein"] = 20, ["beet"] = 18 }.OrderBy(p => p.Key),
             soll.Anzahl.OrderBy(p => p.Key));
         foreach (var fest in Festzeit.Alle.Prepend(null))
         {
