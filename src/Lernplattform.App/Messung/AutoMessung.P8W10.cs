@@ -75,7 +75,7 @@ public static partial class AutoMessung
                 Messwerte.Notiere("Spiel: Tag und Nacht ohne GL nicht gemessen");
                 return funde;
             }
-            // Laternen (3b; seit W11 21 Laternen nach Nicos Skizze im eigenen Netz mit Ferne-Form, P8-45)
+            // Laternen (3b; seit W11 21, seit P8-56 22 Laternen nach Nicos Skizze im eigenen Netz mit Ferne-Form, P8-45)
             spiel = Frisch(seite);
             var uhr = Stopwatch.StartNew();
             var plaetze = Nachtlicht.Plaetze(spiel.Szene);

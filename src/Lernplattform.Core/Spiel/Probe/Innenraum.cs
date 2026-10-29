@@ -321,7 +321,9 @@ public sealed class Innenraum
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
-            return new Eingaben(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, null, geschaefte);
+            // Weisung P8-56: zweiter angehaengter Zusatz (Fahne, Sessel, Puppen, Kassen), wirkt nach dem ersten
+            var nachtrag = Get(innenraeume!, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
+            return new Eingaben(ansicht!, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag), verkauf, null, geschaefte);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -950,6 +952,11 @@ public sealed class Innenraum
                 Modell(r, "table", 0, 0, b, tt, 0.95f * M, 0, Farben.Hell);
                 Kasten(r, (b / 2) - 0.25f, (tt / 2) - 0.2f, 0.5f, 0.4f, 0.95f * M, 1.1f * M, Farben.Geraet);
                 Kasten(r, (b / 2) - 0.2f, (tt / 2) - 0.25f, 0.4f, 0.05f, 1.1f * M, 1.35f * M, Farben.Geraet);
+                break;
+            case "kasse":
+                // Weisung P8-56: Kasse obenauf auf dem Tresen (Hoehe wie "tresen"), Bildschirm zur hinteren Kante
+                Kasten(r, 0.05f, 0.05f, b - 0.1f, tt - 0.1f, 1.05f * M, 1.2f * M, Farben.Geraet);
+                Kasten(r, 0.1f, 0.02f, b - 0.2f, 0.05f, 1.2f * M, 1.45f * M, Farben.Geraet);
                 break;
             case "kleiderstaender":
                 Kleiderstaender(r, b, tt, Get(d, "ware") as string);

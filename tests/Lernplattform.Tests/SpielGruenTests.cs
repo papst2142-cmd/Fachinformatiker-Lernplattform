@@ -45,7 +45,9 @@ public sealed class SpielGruenTests
         // W11 (Weisung P8-47): Kleingruen laesst um jeden der 21 Laternenplaetze einen Streifen von 1,6 laengs der Strasse frei
         // (Busch 74 -> 63, Gras 124 -> 114, Beet 22 -> 19), damit keine Laterne von Nicos Kreis weggeschoben wird
         // W11 (Weisung P8-50): Laterne 4 auf der Westseite, die noerdliche Schranke auf der Ostseite (Beet 19 -> 18, Gras 114 -> 115)
-        Assert.Equal(new Dictionary<string, int> { ["baum"] = 5, ["busch"] = 63, ["gras"] = 115, ["stein"] = 20, ["beet"] = 18 }.OrderBy(p => p.Key),
+        // Weisung P8-56: 22 Laternen (1 bis 3 und 7 an neuen Stellen, 22 neu), Laterne 1 tauscht mit dem Beet
+        // (Busch 63 -> 61, Gras 115 -> 113, Beet 18 -> 19: das getauschte Beet und eines an einer frei gewordenen Stelle)
+        Assert.Equal(new Dictionary<string, int> { ["baum"] = 5, ["busch"] = 61, ["gras"] = 113, ["stein"] = 20, ["beet"] = 19 }.OrderBy(p => p.Key),
             soll.Anzahl.OrderBy(p => p.Key));
         foreach (var fest in Festzeit.Alle.Prepend(null))
         {

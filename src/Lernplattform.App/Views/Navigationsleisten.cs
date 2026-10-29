@@ -65,6 +65,12 @@ public sealed class Navigationsleisten
         {
             EintragMitUnterpunkten(_punkte[id], unten);
         }
+        // Weisung P8-56 (Nico, Wahl b): "Programm beenden" immer, aber nur am PC (auf Android nicht zeigen)
+        if (!OperatingSystem.IsAndroid())
+        {
+            BeendenKnopf = BeendenEintrag();
+            unten.Children.Add(BeendenKnopf);
+        }
         var fuss = new StackPanel { Children = { unten, LernstatusKasten(), Version() } };
         var rollen = new ScrollViewer { Content = oben, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         var aufbau = new DockPanel();
@@ -87,6 +93,46 @@ public sealed class Navigationsleisten
     }
 
     private ScrollViewer? _rollen;
+
+    /// <summary>Knopf "Programm beenden" (nur PC; Start-Test), sonst null.</summary>
+    public Button? BeendenKnopf { get; private set; }
+
+    /// <summary>Symbol "Ausschalten" (eigene Umrisse: Strich und offener Ring, 24 x 24).</summary>
+    private static readonly Geometry Ausschalten = Geometry.Parse(
+        "M11,2 L13,2 L13,12 L11,12 Z M16.9,4.6 L15.8,6.3 A7.5,7.5 0 1 1 8.2,6.3 L7.1,4.6 A9.5,9.5 0 1 0 16.9,4.6 Z");
+
+    /// <summary>
+    /// Weisung P8-56: Zeile wie <see cref="Eintrag"/> (Symbol 22, Text 14 fett text_dim, ohne Strich), schliesst das
+    /// Fenster wie das Kreuz: Spielschritte schreiben, Abgleich, Sperren und Velopack laufen im Programmende (App.Exit).
+    /// </summary>
+    private static Button BeendenEintrag()
+    {
+        var symbol = new PathIcon { Data = Ausschalten, Width = 22, Height = 22 }.Farbe(PathIcon.ForegroundProperty, "Pinsel.muted");
+        Mitwachsen(symbol, 22);
+        Avalonia.Automation.AutomationProperties.SetAccessibilityView(symbol, Avalonia.Automation.AccessibilityView.Raw);
+        var symbolRahmen = new Border { Padding = new Thickness(8, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
+        var text = Schrift.Pt(Navigation.ProgrammBeenden, 14, FontWeight.Bold, "Pinsel.text_dim");
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.TextWrapping = TextWrapping.NoWrap;
+        // Platz des Strichs (4 + 6) wie bei den Eintraegen, damit Symbol und Text buendig stehen
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("10,Auto,*") };
+        Grid.SetColumn(symbolRahmen, 1);
+        Grid.SetColumn(text, 2);
+        zeile.Children.Add(symbolRahmen);
+        zeile.Children.Add(text);
+        var knopf = new Button
+        {
+            Content = zeile,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Padding = new Thickness(0, 9),
+            CornerRadius = new CornerRadius(10),
+            Background = Brushes.Transparent,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(knopf, Navigation.ProgrammBeenden);
+        knopf.Click += (_, _) => Programmende.Fenster();
+        return knopf;
+    }
     private readonly Dictionary<string, NavPunkt> _punkte = new(StringComparer.Ordinal);
 
     /// <summary>Beschriftung eines Eintrags der Seitenleiste (Start-Test).</summary>

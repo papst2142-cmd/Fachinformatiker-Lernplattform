@@ -333,14 +333,18 @@ public static class FestDeko
     /// Laterne auf einem Pfosten (Weisung P8-12 Tempo, Teilplan Abschnitt 5): statt des Modells (1 451 Dreiecke je Tuer)
     /// sechs Quader (72 Dreiecke): Fuss, Pfosten, Gehaeuse mit warmem Licht, Dach; unten mittig auf (x, y, z).
     /// </summary>
+    /// <summary>Farbe des Lichts der eigenen Laterne (<see cref="Laterne"/>); in der Stadt leuchtet sie nachts (Weisung P8-56).</summary>
+    public static readonly Vector3 LaternenLicht = Netz.Farbe("#FCD34D");
+
     public static void Laterne(List<Teil> t, float x, float z, float h, float y = 0f)
     {
+        // Weisung P8-56: das Gehaeuse mit warmem Licht (LaternenLicht) leuchtet in der Stadt nachts
         var dunkel = Netz.Farbe("#1F2937");
         var w = h * 0.13f;
         t.Add(Q(x - w, y, z - w, x + w, y + (h * 0.06f), z + w, dunkel));
         t.Add(Q(x - (w * 0.25f), y + (h * 0.06f), z - (w * 0.25f), x + (w * 0.25f), y + (h * 0.62f), z + (w * 0.25f), dunkel));
         t.Add(Q(x - (w * 0.75f), y + (h * 0.62f), z - (w * 0.75f), x + (w * 0.75f), y + (h * 0.66f), z + (w * 0.75f), dunkel));
-        t.Add(Q(x - (w * 0.6f), y + (h * 0.66f), z - (w * 0.6f), x + (w * 0.6f), y + (h * 0.88f), z + (w * 0.6f), Netz.Farbe("#FCD34D")));
+        t.Add(Q(x - (w * 0.6f), y + (h * 0.66f), z - (w * 0.6f), x + (w * 0.6f), y + (h * 0.88f), z + (w * 0.6f), LaternenLicht));
         t.Add(Q(x - (w * 0.85f), y + (h * 0.88f), z - (w * 0.85f), x + (w * 0.85f), y + (h * 0.94f), z + (w * 0.85f), dunkel));
         t.Add(Q(x - (w * 0.35f), y + (h * 0.94f), z - (w * 0.35f), x + (w * 0.35f), y + h, z + (w * 0.35f), Netz.Farbe("#DC2626")));
     }

@@ -293,4 +293,30 @@ public class SpielGeschaefteTests
         var (spiel2, staende2) = EinkaufSzenario(teurer);
         Assert.NotEqual(SollEinkaufHash, EinkaufHash(spiel2, staende2));
     }
+
+    /// <summary>
+    /// Weisung P8-56 (Nico, Bilder 8 bis 10): im Kaufhaus schauen die Schaufensterpuppen im Eingang in den Raum
+    /// (dreh 2, die Wand mit dem Eingang liegt im Sueden), im Elektromarkt und im Moebelhaus steht eine Kasse auf dem
+    /// Verkaufstresen (ganz innerhalb des Tresens, die Wege bleiben gleich).
+    /// </summary>
+    [Fact]
+    public void PuppenSchauenInDenRaumUndKasseAufDemTresen()
+    {
+        var stand = new Spielablauf(Inhalt).Stand;
+        var kaufhaus = Lernplattform.Core.Spiel.Probe.Innenraum.Bauen("geschaeft:kaufhaus", stand, Innenraeume.Value, null)!;
+        var flur = SpielDaten.Objekt(kaufhaus.Gebaeude["flur"]);
+        var puppen = SpielDaten.ListeOderLeer(flur, "deko").Select(SpielDaten.Objekt).Where(d => Py.Str(d["typ"]) == "puppe").ToList();
+        Assert.Equal(4, puppen.Count);
+        Assert.All(puppen, p => Assert.Equal(2L, Py.Int(p["dreh"])));
+        foreach (var ort in new[] { "elektromarkt", "moebelhaus" })
+        {
+            var raum = Lernplattform.Core.Spiel.Probe.Innenraum.Bauen("geschaeft:" + ort, stand, Innenraeume.Value, null)!;
+            var deko = SpielDaten.ListeOderLeer(SpielDaten.Objekt(raum.Gebaeude["flur"]), "deko").Select(SpielDaten.Objekt).ToList();
+            var kasse = Assert.Single(deko, d => Py.Str(d["typ"]) == "kasse");
+            var tresen = Assert.Single(deko, d => Py.Str(d["typ"]) == "tresen");
+            double F(PyObjekt d, string k) => Py.F(d[k]);
+            Assert.True(F(kasse, "x") >= F(tresen, "x") && F(kasse, "x") + F(kasse, "w") <= F(tresen, "x") + F(tresen, "w")
+                && F(kasse, "y") >= F(tresen, "y") && F(kasse, "y") + F(kasse, "h") <= F(tresen, "y") + F(tresen, "h"), ort + ": Kasse nicht auf dem Tresen");
+        }
+    }
 }

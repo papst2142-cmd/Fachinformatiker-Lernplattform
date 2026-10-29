@@ -5,6 +5,10 @@ Neu im Spiel: Die Stadt wird beim Öffnen einmal ganz vorbereitet, danach geht d
 - Beginnt eine Festzeit oder eine neue Jahreszeit, während du in einem Haus bist, baut das Programm die Stadt schon im Hintergrund um. Beim Hinausgehen steht sie sofort bereit.
 - Am Handy: Kehrst du aus einer anderen App zurück, wird nur das Bild der Stadt neu an die Grafik übergeben, mit derselben Ladeanzeige. Die Stadt wird dafür nicht noch einmal berechnet.
 - Behoben: In einem sehr schmalen Fenster konnte das Namensschild eines Hauses (zum Beispiel „Zuhause“) kurz über den Rand ragen, nachdem das Fenster verkleinert worden war.
+- Neu am PC: Unten in der Seitenleiste steht der Knopf „Programm beenden“. Er schließt das Programm genauso wie das Kreuz oben am Fenster, also auch mit Speichern und Abgleich. Das hilft vor allem im Vollbild, wo das Kreuz fehlt. Außerdem verlässt die Taste Esc jetzt das Vollbild (F11 schaltet es wie bisher ein und aus). Im Spiel bringt dich Esc weiter einen Schritt zurück. Am Handy gibt es den Knopf nicht, dort beendet das System die Apps.
+- Stadt: Die drei Laternen nördlich des Bahnübergangs stehen jetzt auf der anderen Straßenseite, die hinterste hat dabei mit dem Blumenbeet getauscht. Die Laterne an der Brücke im Westen steht jetzt direkt am Brückenende, und vor Amt und Bank steht gegenüber den Häusern eine neue Laterne. Damit leuchten nachts 22 Laternen.
+- Stadt: Das Stellwerk bekommt in den Festzeiten dieselbe Deko an der Tür wie die anderen Häuser. Die Lampen dieser Deko an den Türen (zum Beispiel die Laternen zu Halloween) leuchten nachts.
+- Räume: Im Amt hängt keine Fahne mehr, in der Bank stehen keine Sessel mehr (der Bürostuhl am Schreibtisch bleibt), die Schaufensterpuppen im Kaufhaus schauen in den Raum, und im Elektromarkt und im Möbelhaus steht eine Kasse auf dem Verkaufstresen.
 - Dein Spielstand und das Spiel selbst ändern sich dadurch nicht.
 
 ### Herunterladen

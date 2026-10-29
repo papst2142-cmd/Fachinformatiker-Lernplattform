@@ -15,12 +15,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | **A 0.23.0** auf Zweig `claude/project-thread-vruvcy` (W12 Vorladen, Weisung P8-55). Auf `main` **A 0.22.1** (39e4e56, PR #66). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
+| Version | **A 0.23.0** auf Zweig `claude/project-thread-vruvcy` (W12 Vorladen, Weisung P8-55, Nachtrag Optik P8-56). Auf `main` **A 0.22.1** (39e4e56, PR #66). Release macht Chat nach Nicos Merge-OK, CC startet `release.yml` nie |
 | Phase | 0–7 abgenommen. **Phase 8** (Plan `Plan_Phase8_CSharp.md`, Weisung P8-2): W1 bis W11 gemergt (zuletzt W10 #64 A 0.21.0, W11 #65 A 0.22.0, Fix #66 A 0.22.1) |
-| Jetzt | **W12 Vorladen A 0.23.0 (Weisung P8-55):** Spielseite lädt Stadt, Räume, Festgestalten und Figurbilder beim Öffnen vor (Ladeanzeige „Stadt wird geladen …“ ab 0,3 s), Räume per Inhalts-Signatur, Stadt für neues Fest schon im Haus gebaut, Android nach Hintergrund nur neu hochladen; Grenzen Gesamtansicht 160 000 / 40; Sammelliste 162 behoben, 145/147 waren schon behoben. Wartet auf vollen Lauf, Nicos Probe am S24/Tab und Merge-OK. Danach Sammelliste 144 und Bericht Phase 8 |
+| Jetzt | **W12 Vorladen A 0.23.0 (Weisung P8-55):** Spielseite lädt Stadt, Räume, Festgestalten und Figurbilder beim Öffnen vor (Ladeanzeige „Stadt wird geladen …“ ab 0,3 s), Räume per Inhalts-Signatur, Stadt für neues Fest schon im Haus gebaut, Android nach Hintergrund nur neu hochladen; Grenzen Gesamtansicht 160 000 / 40; Sammelliste 162 behoben, 145/147 waren schon behoben. **Nachtrag P8-56** (Nicos Wuensche, gleicher Zweig/PR #67): 22 Laternen, Beet getauscht, Stellwerk mit Fest-Deko an der Tuer, Tuer-Lampen leuchten nachts, Innenraeume ueber `zusatz_nachtrag` (Amt ohne Fahne, Bank ohne Sessel, Puppen gedreht, Kassen), Knopf „Programm beenden“ (nur PC), Esc verlaesst das Vollbild. Wartet auf vollen Lauf, Nicos Optik-Abnahme, Probe am S24/Tab und Merge-OK. Danach Sammelliste 144 und Bericht Phase 8 |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G51 bestehen, CI erzeugt alle neu. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P8-50** (W12 Vorladen) / P8-51 |
+| Letzte/nächste Meldung | **P8-51** (W12 Nachtrag Optik) / P8-52 |
 | Sammelliste | nächste freie Nummer **163**; offen für Nico: 24 (Rechnername im Gerätenamen); 84/85 in Phase 9 |
 | Stoppgrenzen | Regel A wie bisher, neu für das Spiel siehe `CLAUDE.md` „Aktueller Stand“, Punkt Phase 7 |
 

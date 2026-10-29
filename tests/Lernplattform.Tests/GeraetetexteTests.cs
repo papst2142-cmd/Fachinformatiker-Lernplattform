@@ -250,6 +250,9 @@ public partial class GeraetetexteTests
         ("Views/UpdateFenster.cs", "Pc = pc ?? UpdateDienst.Pc;", "Schalter (der Start ohne Bedienung zeigt auch die Ansicht des Handys)"),
         ("Views/UpdateFenster.cs", "var farbe = Pc ? \"Pinsel.text_dim\" : \"Pinsel.accent\";", "Optik: Hinweiszeile am Handy in accent (main.py 6158), PC text_dim, kein Text"),
         ("Views/UpdateFenster.cs", "if (!Pc)", "Verhalten: \"Später\" gilt am Handy bis zum naechsten Start (main.py dismissed_version)"),
+        // Weisung P8-56 (Nico, Wahl b): Knopf "Programm beenden" nur am PC, Android beendet Apps selbst; der Text ist an beiden Geraeten kein anderer
+        ("Views/Navigationsleisten.cs", "if (!OperatingSystem.IsAndroid())", "Verhalten: Knopf \"Programm beenden\" nur am PC (Nico P8-56 Wahl b), kein Text am Handy"),
+        ("Messung/AutoMessung.P8W2b.cs", "if (!OperatingSystem.IsAndroid() && (leisten.BeendenKnopf is not { } beenden || !beenden.IsEffectivelyVisible", "Start-Test: prueft den Knopf nur dort, wo er steht (PC)"),
         ("Views/UpdateFenster.cs", "return Pc;", "Verhalten: PC-Fenster bleibt nach \"Zur Download-Seite\" offen (app_gui 9416), Handy schliesst nach \"Herunterladen\" (main.py 6163)"),
     ];
 
