@@ -34,14 +34,15 @@ Einzelheiten fertiger Wellen: Git-Historie, Meldungen und Phasenberichte auf Fi-
 - `CLAUDE.md` aktuell halten und `START_Chat.md` als Übergabe für einen neuen Chat erneuern: am Ende jeder Welle/Phase auf eigenem Doku-Zweig ab `main` (keine Version) oder im nächsten regulären Commit.
 
 ## Projekt
-- Lernprogramm für die Fachinformatiker-Ausbildung (Systemintegration). Prioritäten: 1 Lernen, 2 Komfort/Tempo, 3 Spiel, 4 Verteilung.
+- Lernprogramm für die Fachinformatiker-Ausbildung (Systemintegration, ab Phase 9 auch AE, DPA, DV wählbar). Prioritäten: 1 Lernen, 2 Komfort/Tempo, 3 Spiel, 4 Verteilung.
 - Neubau in C# der Python-Linie `papst2142-cmd/Fisi-Lernplattform`; diese ist seit 0.63.2 (main fbc657d, Tag v0.63.2) **eingefroren**: nur lesen, nie löschen, Referenz für Vergleichswerte.
 - Repo `papst2142-cmd/Fachinformatiker-Lernplattform`, Zweig `main` (Ruleset: kein Löschen, kein Force-Push, keine Pflicht-Prüfungen). Jede Welle eigener Zweig ab `main`, Merge per Squash nach Freigabe; nach einem Merge neuen Zweig ab `main` anlegen (alte Zweige bleiben stehen, Löschen nur Nico). Lehre: Wellen nie stapeln.
 - Phasen laut `Fi-Austausch/weisungen/Plan_Umstieg_CSharp_2026-10-18.md` (Abschnitte 10, 12, 13): 0–4 Grundlagen bis Prüfungsbereiche, 5 Betrieb, 6 Verteilung, 7 Spiel in 3D, 8 Spiel-Abgleich und Sammelliste, 9 Fachrichtungen AE/DPA/DV wählbar (Inhalte nur anhängen, Freigabe Nico), 10 Barrierefreiheit (NVDA) und Gesamttest auf allen Geräten, dann Beta-Phasen (erste: drei neue Städte per Zug, Grafik-Vorrat `Fi-Austausch/anlagen/grafik_cc0/`), dann 1.0 (vorher rechtliche Prüfung E-R1). Jede Phase: Plan → Nicos Freigabe → Bau → Bericht → Abnahme.
 
 ## Aktueller Stand
-- Phasen 0–7 abgenommen (Bericht Phase 7 `Fi-Austausch/anlagen/P7-Bericht_Phase7.md`). **Phase 8** (Plan `Fi-Austausch/weisungen/Plan_Phase8_CSharp.md`): W1 bis W12 gemergt, zuletzt **W12 Vorladen + Nicos Optik-Nachtrag, A 0.23.0, PR #67, main 91be933** (29.10.2026). Release vA0.23.0 macht Chat. **Nächster Schritt: Bericht Phase 8** (nach Weisung).
-- Letzte Meldung P8-52; Sammelliste: nächste freie Nummer **164** (163 Vollbild-Satz mit Esc, offen; 144 offen; offen für Nico: 24).
+- Phasen 0–8 abgenommen (Phase 8: Nico 29.10.2026 17:37 MEZ, Bericht `Fi-Austausch/anlagen/P8-Bericht_Phase8.md`; W1 bis W12, 15 Versionen A 0.13.1 bis A 0.23.0, zuletzt PR #67 main 91be933, Doku-PR #68 main 6f2a8c9). **Phase 9 Fachrichtungen:** Plan-Entwurf `Fi-Austausch/weisungen/Plan_Phase9_CSharp.md` (Weisung P9-1, Meldung P9-1), wartet auf Nicos Freigabe und Fragen 1–5; kein Bau vor Freigabe.
+- Phase 9 Grundsätze (Plan): Wahl der Fachrichtung gibt es seit Phase 4 (`Core/Pruefung/Ausbildung.cs`, Zeile `zz-einstellungen` in `abschlussprojekt`, neueste gewinnt; Prüfungsaufbau `Fachrichtung.cs`, G36). Neue Inhalte AE/DPA/DV nur in `inhalte_csharp/lernen/` mit Feld `fachrichtung` (die CI verlangt `inhalte/` byte-gleich mit Python v0.63.2, `ci.yml` Schritt „Inhalte gleich wie v0.63.2“). SI bleibt exakt wie heute.
+- Letzte Meldung P9-1; Sammelliste: nächste freie Nummer **164** (163 und 84/85 in Phase 9 W1; 130 mit 162 erledigt; offen für Nico: 24).
 - Offen bis 1.0 (Phase 10): NVDA, echte Sicherung, B-Sprung nur CI, Windows > 100 % Skalierung, echte Linux-Hardware, Ladezeit S24, macOS ohne Start, PC- und Windows-Update-Test (Nico, nach Release A 0.13.0 möglich).
 
 ## Technik
