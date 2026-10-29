@@ -64,7 +64,7 @@ public static partial class AutoMessung
         // 3. Zahlen der Sicht AE: genau die gemeinsamen bisherigen Inhalte, keine AP2-Szenarien und Testprojekte
         var einteilung = ae.Einteilung;
         var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam),
-            Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam),
+            Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam),
             Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam));
         Messwerte.Notiere(string.Create(inv,
             $"Sicht AE: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien, {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));

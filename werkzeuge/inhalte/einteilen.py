@@ -16,10 +16,16 @@ Regeln (12.4 Punkt 2):
      Inhalt nur Punkte aus Abschnitt C, ist er si; trifft er einen Punkt aus
      A, B, D, E oder F, ist er gemeinsam. Ohne jeden Treffer: si (wie "ohne
      Eintrag gilt si").
+     Zusatzregeln (Weisung P9-6, Antwort 1b):
+     a) Thema ipv4 ist immer gemeinsam (AP1-Stoff fuer alle).
+     b) Sind die einzigen Treffer ausserhalb von C die Punkte A8a, A8b oder
+        A9a (Netzwerkkonzepte, Datenaustausch, Netzdienste) und gibt es dazu
+        einen C-Treffer, ist der Inhalt si (Netz-/Server-Spezialwissen).
+  3b. Die 54 im Programm erzeugten Subnetz-Aufgaben (QUIZ_QUESTIONS hinter
+     quizfragen.json) sind gemeinsam (Art quizfragen_erzeugt, Weisung P9-6).
   4. Fachgespraech: allgemeine Fragen (cat null) und die Faecher Wirtschaft
      und Datenbanken gemeinsam, Netzwerk, Sicherheit und Systeme si.
-Die 54 im Programm erzeugten Subnetz-Aufgaben stehen nicht in der Datei
-(ohne Eintrag gilt si). Abweichungen von den Regeln nur einzeln begruendet
+Abweichungen von den Regeln nur einzeln begruendet
 in AUSNAHMEN.
 
 Liest nur die eingefrorene Python-Linie v0.63.2.
@@ -35,6 +41,8 @@ import sys
 import tempfile
 
 WISO_THEMEN = ("recht", "arbeitswelt")
+GEMEINSAM_THEMEN = ("ipv4",)
+NUR_NETZ_A = ("A8a", "A8b", "A9a")
 FACH_GEMEINSAM = (None, "wirtschaft", "datenbanken")
 FACH_SI = ("netzwerk", "sicherheit", "systeme")
 
@@ -45,8 +53,8 @@ HINWEIS = [
     "Einteilung der bisherigen Lerninhalte aus inhalte/ (Phase 9, Plan Abschnitt 12.1): "
     "si = nur Systemintegration, gemeinsam = alle Fachrichtungen. Ohne Eintrag gilt si.",
     "Erzeugt von werkzeuge/inhalte/einteilen.py aus der Python-Linie v0.63.2, nie von Hand aendern.",
-    "Schluessel: Fragetext (karteikarten, quizfragen), Titel (szenarien_ap1, szenarien_ap2, "
-    "projektarbeiten), Kennung (fachgespraech).",
+    "Schluessel: Fragetext (karteikarten, quizfragen, quizfragen_erzeugt = die im Programm erzeugten "
+    "Subnetz-Aufgaben), Titel (szenarien_ap1, szenarien_ap2, projektarbeiten), Kennung (fachgespraech).",
 ]
 
 
@@ -91,8 +99,13 @@ def main():
             frage = eintrag["q"]
             treffer = punkte[(quelle, frage)]
             bereiche = sorted({abschnitt[p][0] for p in treffer})
+            ausser_c = sorted(p for p in treffer if abschnitt[p][0] != "C")
             if eintrag.get("thema") in WISO_THEMEN:
                 wert, grund = "gemeinsam", "WiSo-Thema"
+            elif eintrag.get("thema") in GEMEINSAM_THEMEN:
+                wert, grund = "gemeinsam", "Thema ipv4"
+            elif "C" in bereiche and ausser_c and all(p in NUR_NETZ_A for p in ausser_c):
+                wert, grund = "si", "nur " + "/".join(ausser_c) + " und C"
             elif bereiche == ["C"]:
                 wert, grund = "si", "nur Abschnitt C"
             elif not bereiche:
@@ -103,6 +116,9 @@ def main():
             if len(bereiche) > 1 or not bereiche:
                 grenzfaelle.append({"art": art, "schluessel": frage, "wert": wert, "grund": grund,
                                     "punkte": treffer, "thema": eintrag.get("thema")})
+    anzahl_datei = len(laden(inhalte, "quizfragen"))
+    for eintrag in core.QUIZ_QUESTIONS[anzahl_datei:]:
+        setze("quizfragen_erzeugt", eintrag["q"], "gemeinsam", "erzeugte Subnetz-Aufgabe")
     for eintrag in laden(inhalte, "szenarien_ap1"):
         setze("szenarien_ap1", eintrag["title"], "gemeinsam", "AP1")
     for eintrag in laden(inhalte, "szenarien_ap2"):

@@ -221,15 +221,21 @@ public static class Zustand
 
     private static Lerninhalte? InhalteLaden()
     {
-        try
+        // Phase 9 W2: die gewaehlte Fachrichtung (Lernstand) wird neben dem Laden gelesen, damit die Dateien sofort
+        // geladen werden wie bisher (beim ersten Start legt die Oberflaeche den Lernstand gleichzeitig an);
+        // gemessen wird nur das Laden aller Ordner und die Sicht, nicht das Warten auf die Wahl
+        var wahl = Task.Run(() =>
         {
-            // Phase 9 W2: gewaehlte Fachrichtung vor dem Laden lesen (nicht gemessen), dann alle Ordner kalt
-            Sicht = Core.Pruefung.Ausbildung.Aktuell(Schreiber);
-        }
-        catch (Exception fehler)
-        {
-            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
-        }
+            try
+            {
+                return Core.Pruefung.Ausbildung.Aktuell(Schreiber);
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                return Fachrichtungen.Vorgabe;
+            }
+        });
         var uhr = Stopwatch.StartNew();
         try
         {
@@ -238,6 +244,9 @@ public static class Zustand
                 Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
                 Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
             });
+            uhr.Stop();
+            Sicht = wahl.GetAwaiter().GetResult();
+            uhr.Start();
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,

@@ -124,24 +124,24 @@
     "fachgespraech": 60
    },
    "ae": {
-    "karteikarten": 1184,
-    "quizfragen": 1602,
+    "karteikarten": 1062,
+    "quizfragen": 1590,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dpa": {
-    "karteikarten": 1184,
-    "quizfragen": 1602,
+    "karteikarten": 1062,
+    "quizfragen": 1590,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dv": {
-    "karteikarten": 1184,
-    "quizfragen": 1602,
+    "karteikarten": 1062,
+    "quizfragen": 1590,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
@@ -158,24 +158,24 @@
     "fachgespraech": 60
    },
    "ae": {
-    "karteikarten": 1186,
-    "quizfragen": 1604,
+    "karteikarten": 1064,
+    "quizfragen": 1592,
     "szenarien_ap1": 265,
     "szenarien_ap2": 8,
     "projektarbeiten": 1,
     "fachgespraech": 42
    },
    "dpa": {
-    "karteikarten": 1185,
-    "quizfragen": 1602,
+    "karteikarten": 1063,
+    "quizfragen": 1590,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dv": {
-    "karteikarten": 1184,
-    "quizfragen": 1603,
+    "karteikarten": 1062,
+    "quizfragen": 1591,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
@@ -185,12 +185,16 @@
  },
  "einteilung": {
   "karteikarten": {
-   "si": 381,
-   "gemeinsam": 1184
+   "si": 503,
+   "gemeinsam": 1062
   },
   "quizfragen": {
-   "si": 518,
-   "gemeinsam": 1602
+   "si": 584,
+   "gemeinsam": 1536
+  },
+  "quizfragen_erzeugt": {
+   "si": 0,
+   "gemeinsam": 54
   },
   "szenarien_ap1": {
    "si": 0,

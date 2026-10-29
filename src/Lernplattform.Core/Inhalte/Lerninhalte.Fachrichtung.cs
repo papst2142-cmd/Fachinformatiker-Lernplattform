@@ -58,7 +58,7 @@ public sealed partial class Lerninhalte
     /// <summary>
     /// Bisherige Inhalte plus inhalte_csharp/lernen. <paramref name="lernen"/> liefert eine Datei
     /// (Name ohne ".json") oder null, wenn es sie nicht gibt. Die Zugehoerigkeit der bisherigen
-    /// Eintraege wird nach der Einteilung gesetzt (die 54 erzeugten Subnetz-Aufgaben bleiben si).
+    /// Eintraege wird nach der Einteilung gesetzt (die 54 erzeugten Subnetz-Aufgaben unter quizfragen_erzeugt).
     /// </summary>
     public static Lerninhalte MitLernen(Lerninhalte bisher, Func<string, byte[]?> lernen)
     {
@@ -69,8 +69,8 @@ public sealed partial class Lerninhalte
         }
         for (var i = 0; i < bisher.Quizfragen.Count; i++)
         {
-            bisher.Quizfragen[i].Zugehoerigkeit = i < bisher.AnzahlQuizfragenDatei
-                ? einteilung.Wert(Einteilung.Quizfragen, bisher.Quizfragen[i].Frage) : Fachrichtungen.Vorgabe;
+            bisher.Quizfragen[i].Zugehoerigkeit = einteilung.Wert(i < bisher.AnzahlQuizfragenDatei
+                ? Einteilung.Quizfragen : Einteilung.QuizErzeugt, bisher.Quizfragen[i].Frage);
         }
         foreach (var (liste, art) in new[] { (bisher.Ap1Szenarien, Einteilung.Ap1), (bisher.Ap2Szenarien, Einteilung.Ap2),
             (bisher.Testprojekte, Einteilung.Projekte) })
@@ -270,7 +270,10 @@ public sealed class Einteilung
     public const string Projekte = "projektarbeiten";
     public const string Fachgespraech = "fachgespraech";
 
-    public static readonly IReadOnlyList<string> Arten = [Karteikarten, Quizfragen, Ap1, Ap2, Projekte, Fachgespraech];
+    /// <summary>Die im Programm erzeugten Subnetz-Aufgaben (hinter quizfragen.json), Weisung P9-6: gemeinsam.</summary>
+    public const string QuizErzeugt = "quizfragen_erzeugt";
+
+    public static readonly IReadOnlyList<string> Arten = [Karteikarten, Quizfragen, QuizErzeugt, Ap1, Ap2, Projekte, Fachgespraech];
 
     public static readonly Einteilung Leer = new([]);
 

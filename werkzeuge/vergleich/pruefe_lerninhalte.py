@@ -222,10 +222,10 @@ def sichten(bisher, quiz_alle, lernen):
         def neue(datei):
             return sum(1 for e in lernen.get(datei) or [] if e.get("fachrichtung") == fr)
 
-        erzeugt = len(quiz_alle) - len(bisher["quizfragen"])
+        erzeugt = quiz_alle[len(bisher["quizfragen"]):]   # die im Programm erzeugten Subnetz-Aufgaben (Weisung P9-6)
         erg[fr] = {
             "karteikarten": zahl("karteikarten", bisher["karteikarten"], "q") + neue("karteikarten"),
-            "quizfragen": zahl("quizfragen", bisher["quizfragen"], "q") + (erzeugt if fr == "si" else 0) + neue("quizfragen"),
+            "quizfragen": zahl("quizfragen", bisher["quizfragen"], "q") + zahl("quizfragen_erzeugt", erzeugt, "q") + neue("quizfragen"),
             "szenarien_ap1": zahl("szenarien_ap1", bisher["szenarien_ap1"], "title"),
             "szenarien_ap2": zahl("szenarien_ap2", bisher["szenarien_ap2"], "title") + neue("szenarien_ap2"),
             "projektarbeiten": zahl("projektarbeiten", bisher["projektarbeiten"], "title") + neue("projektarbeiten"),

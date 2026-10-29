@@ -171,6 +171,7 @@ public class LerninhalteTests
         {
             [Einteilung.Karteikarten] = [.. bisher.Karteikarten.Select(k => k.Frage!)],
             [Einteilung.Quizfragen] = [.. bisher.Quizfragen.Take(bisher.AnzahlQuizfragenDatei).Select(q => q.Frage!)],
+            [Einteilung.QuizErzeugt] = [.. bisher.Quizfragen.Skip(bisher.AnzahlQuizfragenDatei).Select(q => q.Frage!)],
             [Einteilung.Ap1] = [.. bisher.Ap1Szenarien.Select(s => s.Titel!)],
             [Einteilung.Ap2] = [.. bisher.Ap2Szenarien.Select(s => s.Titel!)],
             [Einteilung.Projekte] = [.. bisher.Testprojekte.Select(s => s.Titel!)],
@@ -189,9 +190,10 @@ public class LerninhalteTests
         Assert.Equal(0, e.Anzahl(Einteilung.Ap2, Fachrichtungen.Gemeinsam));
         Assert.Equal(0, e.Anzahl(Einteilung.Projekte, Fachrichtungen.Gemeinsam));
         Assert.Equal(bisher.Ap2Szenarien.Count, alle.Ap2SzenarienFuer("si").Count);
-        // erzeugte Subnetz-Aufgaben (nicht in quizfragen.json) bleiben si
-        Assert.All(alle.Quizfragen.Skip(bisher.AnzahlQuizfragenDatei).Take(bisher.Quizfragen.Count - bisher.AnzahlQuizfragenDatei),
-            q => Assert.Equal(Fachrichtungen.Systemintegration, q.Zugehoerigkeit));
+        // erzeugte Subnetz-Aufgaben (nicht in quizfragen.json) sind gemeinsam (Weisung P9-6), alle 54 mit Eintrag
+        var erzeugt = alle.Quizfragen.Skip(bisher.AnzahlQuizfragenDatei).Take(bisher.Quizfragen.Count - bisher.AnzahlQuizfragenDatei).ToList();
+        Assert.Equal(54, erzeugt.Count);
+        Assert.All(erzeugt, q => Assert.Equal(Fachrichtungen.Gemeinsam, q.Zugehoerigkeit));
     }
 
     [Fact]
