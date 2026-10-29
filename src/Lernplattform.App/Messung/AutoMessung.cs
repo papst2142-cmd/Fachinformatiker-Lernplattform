@@ -117,6 +117,11 @@ public static partial class AutoMessung
         {
             return await ErsatzLaufAsync(ansicht);
         }
+        // Weisung P8-51: eigener Messlauf W12 (Anlaesse langsamer Bilder, Vorlade-Kosten), nur Messung
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilW12)
+        {
+            return await W12LaufAsync(ansicht);
+        }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
         // Phase 8 W6 (Teilplan P8-11 Abschnitt 4): festes Datum aus lauf.sh; ein ungueltiger Wert bricht den Start-Test ab
