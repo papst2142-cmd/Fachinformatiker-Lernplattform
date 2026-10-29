@@ -122,6 +122,29 @@ public sealed class SpielSeite : Grid
         _uebersicht.IsVisible = false;
         _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
         _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
+        if (Leistungsprobe.An)
+        {
+            // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
+            var probe = Schrift.Knopf(SpielProbeTexte.Leistungsprobe);
+            probe.Click += async (_, _) =>
+            {
+                if (Spiel is not { ImInnenraum: false } spiel || !Flaeche.GlBereit)
+                {
+                    return;
+                }
+                probe.IsEnabled = false;
+                try
+                {
+                    await Leistungsprobe.LaufenAsync(Flaeche, spiel);
+                }
+                finally
+                {
+                    ZeitenSchreiben(true);
+                    probe.IsEnabled = true;
+                }
+            };
+            _knoepfe.Children.Add(probe);
+        }
         // Phase 8 W10 (Sammelliste 148, Nico 1b): Pfeil links vor den Knoepfen klappt das Hinweisfeld zu;
         // zugeklappt bleibt nur der Pfeil, eine neue kurze Meldung steht 5 s daneben
         _klappSymbol = Views.Symbole.Block("arrow_drop_down", 26, "Pinsel.text");

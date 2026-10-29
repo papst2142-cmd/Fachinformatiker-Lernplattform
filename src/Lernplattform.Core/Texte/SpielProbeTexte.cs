@@ -24,6 +24,9 @@ public static class SpielProbeTexte
             + $"Am PC: Mausrad zoomt, {pfeile} verschieben, rechte Maustaste oder {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen.";
     }
     public const string Orte = "Orte";
+
+    /// <summary>Weisung P8-52 (Text von Chat angenommen): Knopf der Leistungsprobe, nur in der Probe-APK.</summary>
+    public const string Leistungsprobe = "Leistungsprobe";
     public const string Hingehen = "Hingehen";
     public const string Betreten = "Hineingehen";
     public const string ZurStadt = "Zur Stadt";
