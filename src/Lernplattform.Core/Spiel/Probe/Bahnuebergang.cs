@@ -59,38 +59,33 @@ public static class Bahnuebergang
     public const float SchrankeLaenge = 0.5f;
 
     /// <summary>
-    /// Plaetze an einem Bahnuebergang: je Strassenseite vor dem Gleis, rechts der Fahrbahn. <paramref name="richtung"/> =
-    /// Richtung der Strasse, <paramref name="sinus"/> = |sin| des Winkels zum Gleis. Liegt das Gleis (z. B. im Bogen) naeher,
-    /// rueckt die Ausstattung in Schritten von 0,02 entlang der Strasse vom Gleis weg, bis keine Ecke im Lichtraum liegt.
-    /// Kaeme sie dabei einem Laternenplatz (<paramref name="laternen"/>) naeher als <see cref="Nachtlicht.AbstandModell"/>
-    /// plus 0,05, steht sie links der Fahrbahn (die Laternen bleiben, wo Nico sie haben will).
+    /// Plaetze an einem Bahnuebergang (Nico P8-50, wie in echt bei Rechtsverkehr): je Fahrtrichtung vor dem Gleis auf der
+    /// rechten Strassenseite des ankommenden Autos (rechts wie die Spur in <see cref="Verkehr"/>), die Schranke sperrt
+    /// geschlossen dessen rechte Fahrspur bis zur Strassenmitte; die beiden Ausstattungen stehen sich diagonal gegenueber.
+    /// <paramref name="richtung"/> = Richtung der Strasse, <paramref name="sinus"/> = |sin| des Winkels zum Gleis. Liegt das
+    /// Gleis (z. B. im Bogen) naeher, rueckt die Ausstattung in Schritten von 0,02 entlang der Strasse vom Gleis weg, bis
+    /// keine Ecke im Lichtraum liegt.
     /// </summary>
-    public static IEnumerable<Kreuz> Plaetze(Vector2 mitte, Vector2 richtung, float sinus, IReadOnlyList<Vector2> gleis, IReadOnlyList<Vector2> laternen)
+    public static IEnumerable<Kreuz> Plaetze(Vector2 mitte, Vector2 richtung, float sinus, IReadOnlyList<Vector2> gleis)
     {
-        var quer = new Vector2(-richtung.Y, richtung.X);
         foreach (var vor in (float[])[-1f, 1f])
         {
-            Kreuz? gewaehlt = null;
-            foreach (var seite in (float[])[1f, -1f])
+            // das Auto kommt von der Seite "vor" und faehrt in Richtung -richtung * vor; rechts davon = Rechts(fahrt)
+            var rechts = Rechts(-richtung * vor);
+            var laengs = (LichtraumHalb + Luft + 0.06f) / sinus;
+            Kreuz k;
+            do
             {
-                var laengs = (LichtraumHalb + Luft + 0.06f) / sinus;
-                Kreuz k;
-                do
-                {
-                    k = new Kreuz(mitte + (richtung * vor * laengs) + (quer * -vor * seite * Seitlich), richtung * vor, quer * vor * seite);
-                    laengs += 0.02f;
-                }
-                while (Grundpunkte(k).Any(p => Kurve.Abstand(p, gleis) < LichtraumHalb + Luft) && laengs < 5f);
-                gewaehlt ??= k;
-                if (Grundpunkte(k).SkipLast(1).All(p => laternen.All(l => Vector2.Distance(p, l) >= Nachtlicht.AbstandModell + 0.05f)))
-                {
-                    gewaehlt = k;
-                    break;
-                }
+                k = new Kreuz(mitte + (richtung * vor * laengs) + (rechts * Seitlich), richtung * vor, -rechts);
+                laengs += 0.02f;
             }
-            yield return gewaehlt!;
+            while (Grundpunkte(k).Any(p => Kurve.Abstand(p, gleis) < LichtraumHalb + Luft) && laengs < 5f);
+            yield return k;
         }
     }
+
+    /// <summary>Rechte Seite zur Fahrtrichtung, wie die rechte Spur der Autos (<see cref="Kurve.Versetzt"/> mit positivem Abstand).</summary>
+    public static Vector2 Rechts(Vector2 fahrt) => new(-fahrt.Y, fahrt.X);
 
     private static readonly Lazy<Netz> Muster = new(() => Bauen().Netz);
 

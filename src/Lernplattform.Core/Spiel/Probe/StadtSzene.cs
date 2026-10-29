@@ -578,8 +578,6 @@ public sealed class StadtSzene
         var andreaskreuze = new List<Bahnuebergang.Kreuz>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
-        // die Ausstattung der Bahnuebergaenge haelt Abstand zu den Laternenplaetzen aus Nicos Skizze (P8-49)
-        var laternenZiele = Nachtlicht.Wunschplaetze(strassen, breite, tiefe).Select(w => (w.A + w.B) / 2).ToList();
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -658,7 +656,7 @@ public sealed class StadtSzene
                     case "bahn":
                     {
                         var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
-                        uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, laternenZiele, glatt, strassen, sichtbareWege));
+                        uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
                         break;
                     }
@@ -1080,7 +1078,7 @@ public sealed class StadtSzene
     /// Fussweg das Gleis kreuzt, liegt ein Belag in Richtung der Strasse (so breit wie sie) ueber dem
     /// Schotter, die Schienen schauen heraus; an Strassen stehen davor Warnkreuze.
     /// </summary>
-    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Bahnuebergang.Kreuz> andreaskreuze, List<Vector2> laternen, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
+    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Bahnuebergang.Kreuz> andreaskreuze, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
     {
         streifen.Add(new Streifen(p, GleisBreite, 0.004f, Hoehe.Gleisbett, Farben.Gleisbett));
         var uebergaenge = new List<(Vector2 Mitte, Vector2 Richtung, float Breite)>();
@@ -1091,7 +1089,7 @@ public sealed class StadtSzene
             {
                 foreach (var (mitte, richtung, sinus) in Kreuzungen(p, linie))
                 {
-                    Uebergang(streifen, andreaskreuze, laternen, p, mitte, richtung, sinus, breite, farbe, kreuze);
+                    Uebergang(streifen, andreaskreuze, p, mitte, richtung, sinus, breite, farbe, kreuze);
                     uebergaenge.Add((mitte, richtung, breite));
                 }
             }
@@ -1158,7 +1156,7 @@ public sealed class StadtSzene
     }
 
     /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>
-    private static void Uebergang(List<Streifen> streifen, List<Bahnuebergang.Kreuz> kreuze, IReadOnlyList<Vector2> laternen, IReadOnlyList<Vector2> gleis, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool mitKreuzen)
+    private static void Uebergang(List<Streifen> streifen, List<Bahnuebergang.Kreuz> kreuze, IReadOnlyList<Vector2> gleis, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool mitKreuzen)
     {
         var halb = ((GleisBreite / 2) + 0.12f) / sinus;
         streifen.Add(new Streifen([mitte - (richtung * halb), mitte + (richtung * halb)], breite, Hoehe.Gleisbett, Hoehe.Uebergang, farbe));
@@ -1166,9 +1164,9 @@ public sealed class StadtSzene
         {
             return;
         }
-        // P8-49 (Nico, Variante c): Andreaskreuz mit Lichtern und Halbschranke rechts der Fahrbahn (links, wenn rechts eine Laterne steht) vor dem Gleis, je
-        // Seite eins, ausserhalb des Lichtraums (mit den Laternen im Paket-Netz, Bahnuebergang.Hinzu in PaketNetzBauen; im Netz der Stadt leuchtet nichts)
-        kreuze.AddRange(Bahnuebergang.Plaetze(mitte, richtung, sinus, gleis, laternen));
+        // P8-49 (Nico, Variante c): Andreaskreuz mit Lichtern und Halbschranke je Fahrtrichtung rechts vor dem Gleis (P8-50),
+        // diagonal gegenueber, ausserhalb des Lichtraums (mit den Laternen im Paket-Netz, Bahnuebergang.Hinzu in PaketNetzBauen; im Netz der Stadt leuchtet nichts)
+        kreuze.AddRange(Bahnuebergang.Plaetze(mitte, richtung, sinus, gleis));
     }
 
     /// <summary>

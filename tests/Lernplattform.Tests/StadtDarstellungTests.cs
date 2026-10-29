@@ -114,7 +114,7 @@ public sealed class StadtDarstellungTests
     {
         (float X, float Z, bool D)[] soll =
         [
-            (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (8.00f, 7.72f, false), (7.00f, 12.61f, true),
+            (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
             (8.00f, 14.53f, false), (7.00f, 16.82f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
             (9.96f, 21.30f, false), (11.94f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.39f, false),
             (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
@@ -130,6 +130,8 @@ public sealed class StadtDarstellungTests
             Assert.Equal(soll[i].D, l.Doppelt);
             Assert.True(Vector2.Distance(l.Ort, new Vector2(soll[i].X, soll[i].Z)) < 0.01f,
                 string.Create(CultureInfo.InvariantCulture, $"Laterne {l.Nr} bei {l.Ort.X:F2};{l.Ort.Y:F2} statt {soll[i].X:F2};{soll[i].Z:F2}"));
+            // P8-50: keine Laterne im Lichtraum eines Gleises
+            Assert.True(Sommer.Value.Gleise.All(g => Kurve.Abstand(l.Ort, g) >= Bahnuebergang.LichtraumHalb + Nachtlicht.AbstandModell), $"Laterne {l.Nr} im Lichtraum");
         }
     }
 
@@ -176,6 +178,74 @@ public sealed class StadtDarstellungTests
         }
         Assert.NotEmpty(alt);
         Assert.NotEmpty(ImLichtraum(szene, alt));
+    }
+
+    /// <summary>
+    /// Fehler der Lage nach Nicos Regel (P8-50, Rechtsverkehr): je Uebergang und Fahrtrichtung genau eine Ausstattung vor dem
+    /// Gleis auf der rechten Seite des ankommenden Autos; Drehpunkt und Ende der geschlossenen Schranke auf dessen rechter
+    /// Fahrspur bzw. am Rand (nie auf der Gegenspur).
+    /// </summary>
+    private static List<string> NichtRechts(StadtSzene szene, IReadOnlyList<Bahnuebergang.Kreuz> kreuze)
+    {
+        var fehler = new List<string>();
+        foreach (var g in szene.Gleise)
+        {
+            foreach (var strasse in szene.Strassen)
+            {
+                foreach (var (mitte, richtung, _) in StadtSzene.Kreuzungen(g, strasse))
+                {
+                    foreach (var vor in (float[])[-1f, 1f])
+                    {
+                        var fahrt = -richtung * vor;
+                        var rechts = Bahnuebergang.Rechts(fahrt);
+                        var hier = kreuze.Where(k => Vector2.Distance(k.Fuss, mitte) < 3f && Vector2.Dot(k.Fuss - mitte, richtung * vor) > 0).ToList();
+                        if (hier.Count != 1)
+                        {
+                            fehler.Add($"{hier.Count} Ausstattungen vor dem Gleis");
+                            continue;
+                        }
+                        var k = hier[0];
+                        var ende = k.Drehpunkt + (k.ZurStrasse * Bahnuebergang.SchrankeLaenge);
+                        if (Vector2.Dot(k.Fuss - mitte, rechts) <= StadtSzene.StrassenBreite / 2)
+                        {
+                            fehler.Add(string.Create(CultureInfo.InvariantCulture, $"Ausstattung bei {k.Fuss.X:F2};{k.Fuss.Y:F2} nicht rechts der Fahrtrichtung"));
+                        }
+                        if (Vector2.Dot(k.Drehpunkt - mitte, rechts) <= 0 || Vector2.Dot(ende - mitte, rechts) < -0.01f || Vector2.Dot(ende - mitte, rechts) > StadtSzene.StrassenBreite / 2)
+                        {
+                            fehler.Add(string.Create(CultureInfo.InvariantCulture, $"Schranke bei {k.Fuss.X:F2};{k.Fuss.Y:F2} sperrt nicht die rechte Spur"));
+                        }
+                    }
+                }
+            }
+        }
+        return fehler;
+    }
+
+    /// <summary>
+    /// Bahnuebergang (Weisung P8-50): je Fahrtrichtung rechts vor dem Gleis, die Schranke sperrt geschlossen nur die rechte
+    /// Spur; rechts heisst dieselbe Seite wie die Spur der Autos. Gegenprobe: mit der Lage aus P8-45 (beide auf einer Seite) rot.
+    /// </summary>
+    [Fact]
+    public void BahnuebergangRechtsInFahrtrichtung()
+    {
+        // dieselbe Seite wie die rechte Spur der Autos (Verkehr: Kurve.Versetzt um +Spur)
+        var spur = Kurve.Versetzt([new Vector2(0, 0), new Vector2(0, 1)], Verkehr.Spur);
+        Assert.True(Vector2.Distance(spur[0], Bahnuebergang.Rechts(new Vector2(0, 1)) * Verkehr.Spur) < 1e-5f);
+        var szene = Sommer.Value;
+        Assert.NotEmpty(szene.Andreaskreuze);
+        Assert.Empty(NichtRechts(szene, szene.Andreaskreuze));
+        // Gegenprobe P8-45: die noerdliche Ausstattung stand auf derselben Strassenseite wie die suedliche (gespiegelt)
+        var alt = szene.Andreaskreuze.Select((k, i) =>
+        {
+            if (i % 2 == 0)
+            {
+                return k;
+            }
+            var m = szene.Uebergaenge.Where(u => u.Strasse).MinBy(u => Vector2.Distance(u.Mitte, k.Fuss)).Mitte;
+            var r = -k.ZurStrasse;
+            return new Bahnuebergang.Kreuz(k.Fuss - (r * (2 * Vector2.Dot(k.Fuss - m, r))), k.Blick, -k.ZurStrasse);
+        }).ToList();
+        Assert.NotEmpty(NichtRechts(szene, alt));
     }
 
     /// <summary>Die Ausstattung steht nicht auf Fahrbahn oder Weg und nicht in Laterne, Baum, Gruen oder Deko einer Festzeit.</summary>

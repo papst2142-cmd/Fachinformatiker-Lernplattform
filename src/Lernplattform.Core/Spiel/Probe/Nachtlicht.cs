@@ -162,11 +162,12 @@ public static class Nachtlicht
     /// den Strassenkanten nachgebaut und jeden Kreis auf den Boden zurueckgerechnet. Alle Laternen stehen am Strassenrand im
     /// gleichen Abstand <see cref="Rand"/> (Nico 29.10.2026); die Stelle laengs der Strasse ist so gewaehlt, dass die
     /// Laterne in beiden Skizzen in ihrem Kreis steht (bei 9 und 11 zeigt die zweite Skizze die andere Seite bzw. die
-    /// Fahrbahn: dort gilt die erste Skizze). Reihenfolge wie bisher.
+    /// Fahrbahn: dort gilt die erste Skizze). Nr. 4 steht auf der Westseite, weil dort die Schranke fuer die
+    /// Fahrtrichtung nach Sueden steht (Nico P8-50). Reihenfolge wie bisher.
     /// </summary>
     public static readonly (float X, float Z, bool Doppelt)[] Skizze =
     [
-        (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (8.00f, 7.72f, false), (7.00f, 12.61f, true),
+        (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
         (8.00f, 14.63f, false), (7.00f, 16.87f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
         (10.16f, 21.30f, false), (11.89f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.19f, false),
         (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
