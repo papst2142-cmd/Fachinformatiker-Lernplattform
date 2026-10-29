@@ -113,6 +113,22 @@ public class LerninhalteTests
             G52.GetProperty("faelle").EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
     }
 
+    [Fact]
+    public void KaputteLernenDatei_BisherigeBleiben()
+    {
+        var fehler = new List<Exception>();
+        var lesen = Ordner(Probe, Lernen);
+        var inhalte = Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(Pfade.Inhalte),
+            n => n == "karteikarten" ? Encoding.UTF8.GetBytes("[{\"cat\": \"gibtsnicht\", \"q\": \"x\"}]") : lesen(n), fehler.Add);
+        Assert.Single(fehler);
+        var vorher = Lerninhalte.Laden(Pfade.Inhalte);
+        Assert.Equal(Schluessel(vorher.Karteikarten), Schluessel(inhalte.Fuer("si").Karteikarten));
+        Assert.Equal(Schluessel(vorher.Quizfragen), Schluessel(inhalte.Fuer("si").Quizfragen));
+        Assert.Empty(inhalte.Fuer("ae").Karteikarten);     // ohne Einteilung gilt si
+        Assert.Empty(InhaltePruefung.PruefenLernen(Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(Pfade.Inhalte), Ordner(Lernen), fehler.Add), Umbenennungen));
+        Assert.Single(fehler);
+    }
+
     // -- Einteilung und Sicht ------------------------------------------------------------------
 
     private static int Fachfragen(Lerninhalte inhalte, string fr) => Fachgespraech.Laden(Pfade.Inhalte)
@@ -168,6 +184,11 @@ public class LerninhalteTests
             Assert.Equal(liste.Distinct().Count(), e.Anzahl(art, "si") + e.Anzahl(art, "gemeinsam"));
             Assert.Equal(e.Schluessel(art).Count, e.Anzahl(art, "si") + e.Anzahl(art, "gemeinsam"));
         }
+        // AP2-Szenarien und Testprojekte nie gemeinsam: die SI-Klausur nimmt Ap2SzenarienFuer("si"), ihre gespeicherten
+        // Indizes (aufgaben[].index) blieben sonst nicht stabil (Gegenpruefung W2)
+        Assert.Equal(0, e.Anzahl(Einteilung.Ap2, Fachrichtungen.Gemeinsam));
+        Assert.Equal(0, e.Anzahl(Einteilung.Projekte, Fachrichtungen.Gemeinsam));
+        Assert.Equal(bisher.Ap2Szenarien.Count, alle.Ap2SzenarienFuer("si").Count);
         // erzeugte Subnetz-Aufgaben (nicht in quizfragen.json) bleiben si
         Assert.All(alle.Quizfragen.Skip(bisher.AnzahlQuizfragenDatei).Take(bisher.Quizfragen.Count - bisher.AnzahlQuizfragenDatei),
             q => Assert.Equal(Fachrichtungen.Systemintegration, q.Zugehoerigkeit));
@@ -230,7 +251,12 @@ public class LerninhalteTests
         var alle = Echt();
         Assert.Equal(Lies(Lerninhalte.Laden(Pfade.Inhalte)), Lies(alle.Fuer("si")));
         var ae = alle.Fuer("ae");
-        var werte = DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(ae), ziel, null, Path.Combine(ordner.Pfad, "fehler.log"));
+        var aeInhalte = new DashboardInhalte(ae);
+        var werte = DashboardWerte.Lesen(pfad, heute, aeInhalte, ziel, null, Path.Combine(ordner.Pfad, "fehler.log"));
+        // Seitenleiste (LERNSTATUS) zaehlt wie die Kachel nur die Sicht
+        Assert.Equal((werte.Bearbeitet, werte.InhalteGesamt), Lernstatus.Lesen(pfad, aeInhalte));
+        var siInhalte = new DashboardInhalte(alle.Fuer("si"));
+        Assert.True(Lernstatus.Lesen(pfad, siInhalte).Bearbeitet > werte.Bearbeitet);
         Assert.Equal(ae.InhalteJeFachbereich().Values.Sum(), werte.InhalteGesamt);
         Assert.All(werte.Kennzahlen, k => Assert.InRange(k.Wert, 0, k.Gesamt));
         Assert.Contains(werte.Kennzahlen, k => k.Gesamt == ae.Karteikarten.Count);

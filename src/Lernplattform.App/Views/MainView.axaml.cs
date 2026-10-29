@@ -292,6 +292,9 @@ public partial class MainView : UserControl
             if (seite is not (KarteikartenSeite or TrainerSeite or FortschrittSeite or SucheSeite
                 or SzenarioSeite or NotizblockSeite or DashboardSeite) && id != Seiten.Lernen)
             {
+                // Seiten mit Eingaben bleiben stehen und frischen nur ihre Sicht auf
+                (seite as OptionenSeite)?.SichtNeu();
+                (seite as AbschlussprojektSeite)?.SichtNeu();
                 continue;
             }
             switch (seite)

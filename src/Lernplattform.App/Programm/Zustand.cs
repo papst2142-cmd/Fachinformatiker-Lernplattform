@@ -129,11 +129,27 @@ public static class Zustand
         {
             return false;
         }
+        // fertige Sicht merken: ein Wechsel zurueck braucht Inhalte, Rahmenplan-Zuordnung, Suchtext und Dashboard nicht neu
+        if (Inhalte.IsCompletedSuccessfully && Inhalte.Result is not null)
+        {
+            Gemerkt[Sicht] = (Inhalte, Gewicht, Suchtext, DashboardInhalte);
+        }
         Sicht = fachrichtung;
+        if (Gemerkt.TryGetValue(fachrichtung, out var gemerkt))
+        {
+            (Inhalte, Gewicht, Suchtext, DashboardInhalte) = gemerkt;
+            return true;
+        }
         Inhalte = AlleInhalte.ContinueWith(t => t.IsCompletedSuccessfully ? t.Result?.Fuer(fachrichtung) : null, TaskScheduler.Default);
         AbgeleiteteStarten();
         return true;
     }
+
+    private static readonly Dictionary<string, (Task<Lerninhalte?> Inhalte, Task<RahmenplanGewicht?> Gewicht,
+        Task<Core.Suche.Suchtext?> Suchtext, Task<DashboardInhalte?> Dashboard)> Gemerkt = new(StringComparer.Ordinal);
+
+    /// <summary>Start-Test: gemerkte Sichten vergessen, damit jede Messung des Wechsels alles neu baut (streng).</summary>
+    public static void SichtenVergessen() => Gemerkt.Clear();
 
     /// <summary>Phase 9 W2: die Fachrichtung wurde gespeichert (Optionen); die Oberflaeche stellt die Sicht um.</summary>
     public static event Action? AusbildungGeaendert;
@@ -217,7 +233,11 @@ public static class Zustand
         var uhr = Stopwatch.StartNew();
         try
         {
-            var inhalte = Lerninhalte.MitLernen(Lerninhalte.Laden(EingebauteDatei), LernenDatei);
+            var inhalte = Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(EingebauteDatei), LernenDatei, fehler =>
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
+            });
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,

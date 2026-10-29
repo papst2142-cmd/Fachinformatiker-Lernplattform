@@ -534,6 +534,13 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         return new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 28, 8), Children = { beschriftung, feld } };
     }
 
+    /// <summary>Phase 9 W2: nach dem Wechsel der Sicht Zaehlteil und Lernfelder der neuen Fachrichtung zeigen.</summary>
+    public void SichtNeu()
+    {
+        _ = ZaehlteilAsync();
+        _ = LernfelderAsync();
+    }
+
     /// <summary>field_options: "Aus" und alle Lernfelder (Reihenfolge der Lerninhalte), sobald sie geladen sind.</summary>
     private async Task LernfelderAsync()
     {

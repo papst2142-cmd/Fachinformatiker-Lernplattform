@@ -40,6 +40,7 @@ public static partial class AutoMessung
 
         async Task<double?> Wechsel(string fachrichtung)
         {
+            Zustand.SichtenVergessen();     // jeder Wechsel baut die Sicht neu (keine gemerkte Sicht)
             var uhr = Stopwatch.StartNew();
             ansicht.SichtAnwenden(fachrichtung);
             await Zustand.Inhalte;

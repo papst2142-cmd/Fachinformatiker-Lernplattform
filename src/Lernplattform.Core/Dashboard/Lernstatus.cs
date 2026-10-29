@@ -27,8 +27,9 @@ public static class Lernstatus
                 DefaultTimeout = Lernstand.Wartezeit,
             }.ToString());
             verbindung.Open();
-            return (Anzahl(verbindung, "SELECT COUNT(DISTINCT question) FROM card_events")
-                + Anzahl(verbindung, "SELECT COUNT(DISTINCT question) FROM quiz_answers"), inhalte.Summe);
+            // Phase 9 W2: bei AE, DPA und DV nur Fragen der Sicht (wie die Kachel im Dashboard), SI wie Python
+            return (Anzahl(verbindung, "card_events", inhalte.SichtKarten)
+                + Anzahl(verbindung, "quiz_answers", inhalte.SichtFragen), inhalte.Summe);
         }
         catch (SqliteException)
         {
@@ -36,13 +37,27 @@ public static class Lernstatus
         }
     }
 
-    private static long Anzahl(SqliteConnection verbindung, string sql)
+    private static long Anzahl(SqliteConnection verbindung, string tabelle, HashSet<string>? sichtbar)
     {
         try
         {
             using var befehl = verbindung.CreateCommand();
-            befehl.CommandText = sql;
-            return befehl.ExecuteScalar() is long n ? n : 0;
+            if (sichtbar is null)
+            {
+                befehl.CommandText = $"SELECT COUNT(DISTINCT question) FROM {tabelle}";
+                return befehl.ExecuteScalar() is long n ? n : 0;
+            }
+            befehl.CommandText = $"SELECT DISTINCT question FROM {tabelle}";
+            using var leser = befehl.ExecuteReader();
+            long anzahl = 0;
+            while (leser.Read())
+            {
+                if (!leser.IsDBNull(0) && leser.GetValue(0) is string frage && sichtbar.Contains(frage))
+                {
+                    anzahl++;
+                }
+            }
+            return anzahl;
         }
         catch (SqliteException)
         {

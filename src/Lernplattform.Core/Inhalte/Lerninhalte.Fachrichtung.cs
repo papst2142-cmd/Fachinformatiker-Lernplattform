@@ -123,6 +123,24 @@ public sealed partial class Lerninhalte
         };
     }
 
+    /// <summary>
+    /// Wie <see cref="MitLernen"/>, aber eine nicht lesbare Datei in inhalte_csharp/lernen nimmt nie die bisherigen
+    /// Inhalte mit: dann gelten nur die bisherigen (alles si, AE/DPA/DV sehen nichts), der Fehler geht an
+    /// <paramref name="fehler"/>. Ein Fehler in inhalte/ selbst wirft wie bisher.
+    /// </summary>
+    public static Lerninhalte MitLernenSicher(Func<Lerninhalte> bisher, Func<string, byte[]?> lernen, Action<Exception> fehler)
+    {
+        try
+        {
+            return MitLernen(bisher(), lernen);
+        }
+        catch (Exception ausnahme) when (ausnahme is not OutOfMemoryException)
+        {
+            fehler(ausnahme);
+            return MitLernen(bisher(), _ => null);
+        }
+    }
+
     /// <summary>Zugehoerigkeit eines neuen Eintrags ohne gueltiges Feld "fachrichtung": niemand sieht ihn, die Pruefung meldet ihn.</summary>
     public const string Ungueltig = "";
 

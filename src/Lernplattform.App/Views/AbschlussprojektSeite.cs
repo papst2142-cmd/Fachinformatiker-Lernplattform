@@ -30,6 +30,11 @@ public sealed class AbschlussprojektSeite : UserControl
     private readonly ContentControl _bereich = new();
     private readonly Dictionary<string, Control> _reiter = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Action> _auffrischen = new(StringComparer.Ordinal);
+
+    private Action? _vorlagenFuellen;
+
+    /// <summary>Phase 9 W2: nach dem Wechsel der Sicht die Vorlagen (Testprojekte) neu fuellen, sobald die Inhalte fertig sind.</summary>
+    public void SichtNeu() => _ = Zustand.Inhalte.ContinueWith(_ => Dispatcher.UIThread.Post(() => _vorlagenFuellen?.Invoke()), TaskScheduler.Default);
     private readonly DispatcherTimer _takt = new();
     private readonly ProjektAblauf _a;
     private ComboBox _projekte = null!;
@@ -304,6 +309,7 @@ public sealed class AbschlussprojektSeite : UserControl
             auftrag.SelectedIndex = auswahl.Count > 0 ? 0 : -1;
         }
         bereich.SelectionChanged += (_, _) => Fuellen();
+        _vorlagenFuellen = Fuellen;
         bereich.SelectedIndex = 0;
         var uebernehmen = LernTeile.Knopf(ProjektTexte.Uebernehmen);
         uebernehmen.Click += (_, _) =>

@@ -69,7 +69,7 @@ public sealed class KlausurTeil
 
     private KlausurInhalte Inhalte => _a.Inhalte;
 
-    private Fachrichtung Fachrichtung => Fachrichtung.Nach(Ausbildung.Aktuell(Zustand.Schreiber));
+    private Fachrichtung Fachrichtung => Fachrichtung.Nach(Zustand.Sicht);    // Phase 9 W2: gezeigte Sicht (gleich der gespeicherten Wahl)
 
     // -- Allgemein ----------------------------------------------------------------------------
 

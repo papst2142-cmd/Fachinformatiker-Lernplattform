@@ -66,7 +66,20 @@ public sealed class TrainerSeite : UserControl
     public Task Geladen { get; }
 
     /// <summary>Phase 9 W2: vor dem Verwerfen der Seite (Wechsel der Fachrichtung) die Pruefung festhalten und abmelden.</summary>
-    public void Abmelden() => _klausur?.Abmelden();
+    /// Eine laufende Uebung endet wie beim Abbrechen (die Antworten sind schon einzeln gespeichert), die Uhr steht.
+    public void Abmelden()
+    {
+        _verworfen = true;
+        _nachher = null;
+        _takt.Stop();
+        if (_u is { Laeuft: true } u)
+        {
+            u.Abbrechen();
+        }
+        _klausur?.Abmelden();
+    }
+
+    private bool _verworfen;
 
     /// <summary>Zeit vom Bauen der Seite bis die Vorbereitung steht (Messwert).</summary>
     public double? InhaltMs { get; private set; }
@@ -296,6 +309,10 @@ public sealed class TrainerSeite : UserControl
         _uebungTeil.Children.Add(new WrapPanel { Children = { _einreichen, _abbrechen } });
         _liste.Children.Add(_uebungTeil);
 
+        if (_verworfen)
+        {
+            return;     // Phase 9 W2: Seite schon verworfen (Wechsel der Fachrichtung), keine Pruefung mehr anmelden
+        }
         _klausur = new KlausurTeil(inhalte, _themaUeben);
         _pruefungTeil = _klausur.Teil;
         _pruefungTeil.IsVisible = false;
