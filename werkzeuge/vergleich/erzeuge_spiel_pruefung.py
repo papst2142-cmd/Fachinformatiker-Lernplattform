@@ -17,6 +17,13 @@ Seit W3 ("Spiel-Kern Teil 2") laufen auch die Pruefungen der Firma, Kredite,
 des Geschaefts, der Spielwelt, der Erfolge und der Serverfarm mit (vorher
 durch leere Listen ersetzt), dazu kaputte Fassungen fuer jede ihrer Meldungen.
 
+Seit Phase 9 W1 (Sammelliste 84) dazu der Teil "format": Gegenproben fuer
+text.format(**werte) mit genau den Werten, die validate_game_content einsetzt
+(Text und ganze Zahlen). Je Probe der Ausgang "ok", "fehler" (KeyError,
+IndexError, ValueError: Python meldet ein Problem) oder "abbruch" (jede andere
+Ausnahme: die Pruefung bricht ab). Die Proben sind von Hand gewaehlt und mit
+festem Startwert zufaellig zusammengesetzt; dazu dir(str) und dir(int).
+
 Keine Lerndaten; alle Daten- und Einstellungsordner zeigen in einen leeren
 Temp-Ordner.
 
@@ -153,6 +160,14 @@ def faelle(fg, g):
     fall("Falschlieferung Antwort", ["set", fl + ["antwort"], "keine"])
     fall("Falschlieferung Person", ["set", fl + ["auftraggeber"], "niemand"])
     fall("Falschlieferung Raum", ["set", fl + ["raum"], "keller"])
+    fall("Falschlieferung Titel Zahl", ["set", fl + ["titel"], 5])
+    fall("Falschlieferung Titel None", ["set", fl + ["titel"], None])
+    fall("Falschlieferung Ticket Zahl", ["set", fl + ["ticket"], 7])
+    fall("Falschlieferung Ticket Zeilen Zahl", ["set", fl + ["ticket"], ["Zeile", 7]])
+    fall("Falschlieferung Titel Index", ["set", fl + ["titel"], "{ware[0]} fuer {bestellung}"])
+    fall("Falschlieferung Titel Index zu weit", ["set", fl + ["titel"], "{ware[1]}"])
+    fall("Falschlieferung Titel Methode", ["set", fl + ["titel"], "{ware.upper}"])
+    fall("Falschlieferung Titel Methode Angabe", ["set", fl + ["titel"], "{ware.upper:5}"])
     for i, text in enumerate(("{foo}", "{0}", "{}", "x { y", "x } y", "{ware!x}", "{{frei}} {ware} {bestellung!r:>3}",
                               "{ware.upper}", "{bestellung[0]}")):
         fall("Falschlieferung Format %d" % i, ["set", fl + ["titel"], text])
@@ -316,6 +331,10 @@ def faelle_w3(fall, g):
     fall("Artikel Spanne", ["set", F + ["angebote", "artikel", 0, "preis"], [10, 5]])
     fall("Artikel Menge", ["set", F + ["angebote", "artikel", 0, "menge"], [0, 5]])
     fall("Anfragetext", ["add", F + ["angebote", "texte"], "Hallo {wer}"])
+    fall("Anfragetext Angabe", ["add", F + ["angebote", "texte"], "{menge:05d} Stueck {artikel:>10}"])
+    fall("Anfragetext Angabe falsch", ["add", F + ["angebote", "texte"], "{menge:s} Stueck"])
+    fall("Anfragetext Index Zahl", ["add", F + ["angebote", "texte"], "{lieferzeit[0]} Tage"])
+    fall("Anfragetext Index leer", ["add", F + ["angebote", "texte"], "{kontakt[0]}"])
     fall("Anfragetexte leer", ["set", F + ["angebote", "texte"], []])
     tv = F + ["tickets", "vorlagen"]
     fall("Kundenticket doppelt", ["set", tv + [1, "id"], g["firma"]["tickets"]["vorlagen"][0]["id"]])
@@ -339,6 +358,12 @@ def faelle_w3(fall, g):
     fall("Projektarbeit Fach", ["set", ["projektarbeiten", 0, "cat"], "Kochen"])
     fall("Projektstufe Frist", ["set", F + ["projekte", "stufen", "Leicht", "frist"], 0])
     fall("Projektstufe Material", ["set", F + ["projekte", "stufen", "Leicht", "material"], [5, 1]])
+    fall("Projektstufe Aufwand Text", ["set", F + ["projekte", "stufen", "Leicht", "aufwand"], "5"])
+    fall("Projektstufe Frist Text", ["set", F + ["projekte", "stufen", "Leicht", "frist"], "3"])
+    fall("Projektstufe Material Text", ["set", F + ["projekte", "stufen", "Leicht", "material"], ["1", "2"]])
+    fall("Projektstufe Material gemischt", ["set", F + ["projekte", "stufen", "Leicht", "material"], [1, "2"]])
+    fall("Projektstufe Aufwand wahr", ["set", F + ["projekte", "stufen", "Leicht", "aufwand"], True])
+    fall("Projektstufe Frist None", ["set", F + ["projekte", "stufen", "Leicht", "frist"], None])
     fall("Ausschreibungstext", ["add", F + ["projekte", "texte"], "{was}"])
     fall("Buerosatz", ["add", F + ["projekte", "buero"], "{wer}"])
     fall("Ausschreibung kurz", ["set", F + ["projekte", "gilt_tage"], 0])
@@ -364,6 +389,11 @@ def faelle_w3(fall, g):
     fall("Macken wenige", ["set", mk, g["firma"]["macken"][:4]])
     fall("Personal Abschnitt", ["del", F + ["personal", "coaching"]])
     fall("Personal Stufen", ["set", F + ["personal", "macken", "stufen"], {"1": 1}])
+    fall("Personal Stufen Liste Text", ["set", F + ["personal", "macken", "stufen"], ["1", "2", "3"]])
+    fall("Personal Stufen Liste Zahlen", ["set", F + ["personal", "macken", "stufen"], [1, 2, 3]])
+    fall("Personal Stufen Liste gemischt", ["set", F + ["personal", "macken", "stufen"], [1, "2", 3]])
+    fall("Personal Stufen Text", ["set", F + ["personal", "macken", "stufen"], "123"])
+    fall("Personal Stufen Zahl", ["set", F + ["personal", "macken", "stufen"], 3])
     fall("Konflikt Texte", ["set", F + ["personal", "konflikt", "texte"], g["firma"]["personal"]["konflikt"]["texte"][:2]])
     fall("Konflikt Summe", ["set", F + ["personal", "konflikt", "summen"], "{c} und {a}"])
     rh = F + ["rivalitaet", "rueckhol"]
@@ -403,6 +433,13 @@ def faelle_w3(fall, g):
     fall("Kredite Bank", ["del", k + ["bank"]])
     fall("Kredite Laufzeit", ["set", k + ["zins", "basis"], {"x": 1}])
     fall("Kredite Zins", ["set", k + ["zins", "basis", "100"], 1.0])
+    zb = g["balancing"]["kredite"]["zins"]["basis"]
+    fall("Kredite Laufzeit hoch zwei", ["set", k + ["zins", "basis"], dict(zb, **{"\u00b2": 7.0})])
+    fall("Kredite Laufzeit arabisch", ["set", k + ["zins", "basis"], dict(zb, **{"\u0663\u0660": 7.0})])
+    fall("Kredite Laufzeit Null vorn", ["set", k + ["zins", "basis"], dict(zb, **{"020": 6.5})])
+    fall("Kredite Zins Text", ["set", k + ["zins", "basis", "100"], "10.5"])
+    fall("Kredite Zins Text kaputt", ["set", k + ["zins", "basis", "100"], "zehn"])
+    fall("Kredite Zins None", ["set", k + ["zins", "basis", "100"], None])
     fall("Kredit doppelt", ["set", k + ["pakete", 1, "id"], g["balancing"]["kredite"]["pakete"][0]["id"]])
     fall("Kredit frei", ["set", k + ["pakete", 0, "id"], "frei"])
     fall("Kredit Laufzeit", ["set", k + ["pakete", 0, "laufzeit"], 999])
@@ -416,6 +453,20 @@ def faelle_w3(fall, g):
     fall("Steuern Finanzamt", ["del", b + ["steuern", "finanzamt"]])
     fall("Steuersatz", ["set", b + ["steuern", "satz"], 150])
     fall("Steuer faellig", ["set", b + ["steuern", "faellig_tage"], 0])
+    # Phase 9 W1 (Sammelliste 85): Werte mit falscher Art; Python meldet oder bricht ab, C# genauso
+    fall("Steuersatz Text", ["set", b + ["steuern", "satz"], "19"])
+    fall("Steuersatz Text Leerzeichen", ["set", b + ["steuern", "satz"], " 19.5 "])
+    fall("Steuersatz Text Strich", ["set", b + ["steuern", "satz"], "1_9"])
+    fall("Steuersatz Text kaputt", ["set", b + ["steuern", "satz"], "neunzehn"])
+    fall("Steuersatz Text unendlich", ["set", b + ["steuern", "satz"], "inf"])
+    fall("Steuersatz Text arabisch", ["set", b + ["steuern", "satz"], "\u0661\u0669"])
+    fall("Steuersatz wahr", ["set", b + ["steuern", "satz"], True])
+    fall("Steuersatz Liste", ["set", b + ["steuern", "satz"], [19]])
+    fall("Steuersatz None", ["set", b + ["steuern", "satz"], None])
+    fall("Steuer faellig Text", ["set", b + ["steuern", "faellig_tage"], "12"])
+    fall("Steuer faellig Text Komma", ["set", b + ["steuern", "faellig_tage"], "12.0"])
+    fall("Steuer faellig Kommazahl", ["set", b + ["steuern", "faellig_tage"], 0.5])
+    fall("Steuer faellig arabisch", ["set", b + ["steuern", "faellig_tage"], "\u0661\u0662"])
     wb = b + ["marketing", "formen"]
     fall("Werbung doppelt", ["set", wb + [1, "id"], g["balancing"]["marketing"]["formen"][0]["id"]])
     fall("Werbung laufend", ["set", wb + [0, "laufend"], 0])
@@ -451,6 +502,12 @@ def faelle_w3(fall, g):
     fall("Ort Rolle", ["set", o + ["orte", 1, "rolle"], "pirat"])
     fall("Ort Ansicht", ["set", o + ["orte", 1, "ansicht"], "keller"])
     fall("Ort Ansicht Kunde", ["set", o + ["orte", 1, "ansicht"], "kunde:mond"])
+    fall("Ort Ansicht Liste", ["set", o + ["orte", 1, "ansicht"], ["kunde:mond"]])
+    fall("Ort Ansicht Zahl", ["set", o + ["orte", 1, "ansicht"], 5])
+    fall("Ort Ansicht Kommazahl", ["set", o + ["orte", 1, "ansicht"], 0.5])
+    fall("Ort Ansicht wahr", ["set", o + ["orte", 1, "ansicht"], True])
+    fall("Ort Ansicht Objekt", ["set", o + ["orte", 1, "ansicht"], {"kunde": 1}])
+    fall("Ort Ansicht Kunde Liste", ["set", o + ["orte", 1, "vor_gruendung"], {"ansicht": ["zuhause"]}])
     fall("Ort Variante", ["set", o + ["orte", 1, "vor_gruendung"], {"rolle": "pirat", "ansicht": "keller"}])
     fall("Ort ohne Freischaltung", ["set", o + ["orte", 1, "frei"], {}])
     fall("Ort Freischaltung", ["set", o + ["orte", 1, "frei"], {"zaubern": True}])
@@ -482,6 +539,15 @@ def faelle_w3(fall, g):
     fall("Erfolg Ort", ["set", e + ["erfolge", 0, "ort"], "mond"])
     fall("Erfolg Bestwert", ["set", e + ["erfolge", 0, "bestwert"], "glueck"])
     fall("Erfolg Moment", ["set", e + ["erfolge", 0, "moment_text"], "{wer} am Tag {tag}"])
+    # Phase 9 W1 (Sammelliste 84): Platzhalter mit Format-Angabe, Index, Attribut und Verschachtelung
+    fall("Erfolg Moment Angabe", ["set", e + ["erfolge", 0, "moment_text"], "{ziel:d} am Tag {tag}"])
+    fall("Erfolg Moment Index", ["set", e + ["erfolge", 0, "moment_text"], "{ziel[0]} am Tag {tag}"])
+    fall("Erfolg Moment Zahl Index", ["set", e + ["erfolge", 0, "moment_text"], "{tag[0]}"])
+    fall("Erfolg Moment Attribut", ["set", e + ["erfolge", 0, "moment_text"], "{ziel.gibtsnicht}"])
+    fall("Erfolg Moment Attribut gut", ["set", e + ["erfolge", 0, "moment_text"], "{tag.real:03d}. Tag"])
+    fall("Erfolg Moment verschachtelt", ["set", e + ["erfolge", 0, "moment_text"], "{ziel:>{tag}}"])
+    fall("Erfolg Moment Umwandlung", ["set", e + ["erfolge", 0, "moment_text"], "{ziel!q}"])
+    fall("Erfolg Moment Zahl", ["set", e + ["erfolge", 0, "moment_text"], 5])
     fall("Erfolg ohne Stufen", ["set", e + ["erfolge", 0, "stufen"], []])
     fall("Erfolg Stufen absteigend", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "gold", "ab": 1}, {"stufe": "bronze", "ab": 2}]])
     fall("Erfolg Stufe Platin", ["set", e + ["erfolge", 0, "stufen"], [{"stufe": "platin"}]])
@@ -545,6 +611,81 @@ def faelle_w3(fall, g):
     fall("Bestueckung zu wenige Geraete", ["set", be + ["vorlagen", 0, "anzahl"], 99])
 
 
+# Werte wie in fisi_game.py (Z. 786-787, 10068, 10150, 10155, 10360, 10384, 13089)
+FORMAT_WERTE = {
+    "falschlieferung": {"bestellung": "x", "ware": "y"},
+    "anfrage": {"kontakt": "", "menge": 1, "artikel": "", "lieferzeit": 1},
+    "ausschreibung": {"kunde": "", "auftrag": ""},
+    "buero": {"phase": "", "titel": "", "kunde": ""},
+    "konflikt": {"a": "A", "b": "B", "a_von": "As", "b_von": "Bs"},
+    "rueckhol": {"firma": "F", "name": "N", "plus": 10},
+    "moment": {"ziel": "", "tag": 1, "spieler": "", "firma": "", "filiale": ""},
+}
+
+FORMAT_HAND = [
+    "{kontakt:d}", "{kontakt[0]}", "{menge[0]}", "{menge:d}", "{menge:s}", "{menge:.2}", "{menge:.2f}",
+    "{menge:,}", "{menge:_x}", "{menge:,x}", "{menge:c}", "{menge:+c}", "{menge:#x}", "{menge:=5}", "{menge:05}",
+    "{menge:z}", "{menge:zf}", "{kontakt:z}", "{kontakt:=5}", "{kontakt:05}", "{kontakt:+}", "{kontakt:#}",
+    "{kontakt:,}", "{kontakt:_}", "{kontakt:.}", "{kontakt:.3}", "{kontakt:ss}", "{kontakt:x<5}", "{kontakt:\U0001F600<5}",
+    "{kontakt!r}", "{kontakt!a}", "{kontakt!s}", "{kontakt!x}", "{kontakt!}", "{kontakt!rs}", "{kontakt!r:5}",
+    "{kontakt.upper}", "{kontakt.upper:5}", "{kontakt.foo}", "{kontakt.__doc__:5}", "{kontakt.__class__}",
+    "{menge.real}", "{menge.imag:x}", "{menge.denominator}", "{menge.foo}", "{menge.real.real}",
+    "{kontakt[]}", "{kontakt.}", "{kontakt..x}", "{kontakt[0]x}", "{kontakt[0}", "{kontakt[}]}", "{kontakt[{]}",
+    "{kontakt{x}}", "{}", "{0}", "{.x}", "{[0]}", "{kontakt]}", "{kontakt[0]]}", "{artikel:{menge}}",
+    "{artikel:>{lieferzeit}}", "{artikel:{menge:x}}", "{artikel:{menge}{menge}}", "{artikel:{kontakt!r}}",
+    "{artikel:{menge:{menge}}}", "{artikel:{}}", "{artikel:{{}}}", "{artikel:}}", "{artikel:{}", "{", "}",
+    "{{", "}}", "{{kontakt}}", "x{kontakt}y", "{kontakt:99999999999999999999}", "{kontakt:.99999999999999999999}",
+    "{kontakt[99999999999999999999]}", "{kontakt[\u0663]}", "{kontakt[\u00b2]}", "{kontakt[-1]}",
+    "{bestellung[0]}", "{bestellung[1]}", "{bestellung[\u0660]}", "{ware[0][0]}", "{ware[0].upper}",
+    "{plus:x}", "{plus:#b}", "{plus:_b}", "{plus:c}", "{plus:n}", "{plus:,n}", "{plus:%}", "{plus:e}",
+    "{tag:{tag}}", "{tag:0{tag}}", "{tag:{tag}d}", "{ziel:{tag}.{tag}}",
+]
+
+FORMAT_STUECKE = ["{", "}", "{", "}", "[", "]", ".", ":", "!", "0", "1", "2", "5", "r", "s", "a", "x", "d",
+                  "b", "c", "X", "o", "n", "<", ">", "=", "^", "+", "-", " ", "#", ",", "_", "z", "%", "f",
+                  "e", "\u0663", "\u00b2", "real", "imag", "upper"]
+
+FORMAT_TEILE = ["[0]", "[1]", "[\u0663]", "[x]", "[]", ".real", ".imag", ".upper", ".foo", ".", "!r", "!s",
+                "!a", "!x", "!", ":", ":5", ":>5", ":<3", ":^7", ":05", ":x<4", ":0=5", ":+", ": ", ":-",
+                ":#x", ":#o", ":#b", ":X", ":c", ":d", ":n", ":,", ":_", ":_x", ":,d", ":.2", ":.", ":e",
+                ":f", ":%", ":s", ":z", ":#", ":=", ":{", "}", "{", "[{]", "[}]", "]", "[0]x"]
+
+
+def format_ausgang(text, werte):
+    try:
+        text.format(**werte)
+        return "ok"
+    except (KeyError, IndexError, ValueError):
+        return "fehler"
+    except Exception:       # die Pruefung in Python bricht ab
+        return "abbruch"
+
+
+def format_proben():
+    import random
+    zufall = random.Random(20261029)
+    proben = []
+    for gruppe, werte in FORMAT_WERTE.items():
+        for text in FORMAT_HAND:
+            proben.append([gruppe, text])
+    for _ in range(3000):
+        gruppe = zufall.choice(sorted(FORMAT_WERTE))
+        namen = list(FORMAT_WERTE[gruppe])
+        stuecke = FORMAT_STUECKE + namen * 4 + ["{%s}" % n for n in namen] + ["{%s:" % n for n in namen] \
+            + ["{%s[" % n for n in namen]
+        proben.append([gruppe, "".join(zufall.choice(stuecke) for _ in range(zufall.randint(1, 8)))])
+    for _ in range(3000):
+        gruppe = zufall.choice(sorted(FORMAT_WERTE))
+        namen = list(FORMAT_WERTE[gruppe])
+        text = "{" + zufall.choice(namen + ["", "0", "q"]) \
+            + "".join(zufall.choice(FORMAT_TEILE) for _ in range(zufall.randint(0, 3))) \
+            + zufall.choice(["}", "}", "}", "", "}}"]) + zufall.choice(["", "x", "{%s}" % zufall.choice(namen), "}"])
+        proben.append([gruppe, text])
+    for probe in proben:
+        probe.append(format_ausgang(probe[1], FORMAT_WERTE[probe[0]]))
+    return {"werte": FORMAT_WERTE, "attribute": {"str": dir(str), "int": dir(int)}, "proben": proben}
+
+
 def main():
     if len(sys.argv) != 3:
         print(__doc__)
@@ -567,7 +708,7 @@ def main():
         except Exception as fehler:     # Python bricht ab: C# muss ebenfalls abbrechen
             fall["ausnahme"] = type(fehler).__name__
         liste.append(fall)
-    daten = {"echt": echt, "faelle": liste}
+    daten = {"echt": echt, "faelle": liste, "format": format_proben()}
     os.makedirs(os.path.dirname(os.path.abspath(ziel)), exist_ok=True)
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(daten, handle, ensure_ascii=False, indent=None, separators=(",", ":"))
@@ -575,6 +716,9 @@ def main():
     leer = [f["name"] for f in liste if not f.get("probleme") and "ausnahme" not in f]
     print("G42 Pruefung: %d Faelle, %d Meldungen, ohne Meldung: %s -> %s"
           % (len(liste), sum(len(f.get("probleme", [])) for f in liste), ", ".join(leer) or "keiner", ziel))
+    ausgaenge = [p[2] for p in daten["format"]["proben"]]
+    print("G42 Format: %d Proben, ok %d, fehler %d, abbruch %d" % (len(ausgaenge), ausgaenge.count("ok"),
+                                                                 ausgaenge.count("fehler"), ausgaenge.count("abbruch")))
     return 0
 
 

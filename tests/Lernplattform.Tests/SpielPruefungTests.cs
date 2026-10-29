@@ -65,10 +65,24 @@ public class SpielPruefungTests
         Assert.Equal(T(W(Soll.GetProperty("echt"))), T(SpielPruefung.Pruefen((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, Lernen).Cast<object?>().ToList()));
     }
 
+    /// <summary>
+    /// Phase 9 W1 (Sammelliste 85): die einzigen Faelle, in denen C# bewusst strenger ist als Python. Python liest dort
+    /// Zahlen aus Texten (float("19"), int("١٢"), "٣٠".isdigit()) und laesst den Inhalt durch; das C#-Spiel rechnet
+    /// nur mit echten Zahlen und lehnt solche Inhalte deshalb schon beim Laden ab. Neue Eintraege nur mit Begruendung.
+    /// </summary>
+    private static readonly HashSet<string> CSharpStrenger =
+    [
+        "Kredite Laufzeit arabisch", "Kredite Zins Text", "Steuersatz Text", "Steuersatz Text Leerzeichen",
+        "Steuersatz Text Strich", "Steuersatz Text unendlich", "Steuersatz Text arabisch", "Steuer faellig arabisch",
+    ];
+
     [Fact]
     public void KaputteInhalteWiePython()
     {
         var anzahl = 0;
+        var abbrueche = 0;
+        var abweichungen = new List<string>();
+        var strenger = 0;
         foreach (var fall in Soll.GetProperty("faelle").EnumerateArray())
         {
             var name = fall.GetProperty("name").GetString();
@@ -79,14 +93,80 @@ public class SpielPruefungTests
                 // nicht still "in Ordnung" melden: entweder ebenfalls abbrechen oder das Problem nennen.
                 List<string>? gemeldet = null;
                 var fehler = Record.Exception(() => gemeldet = SpielPruefung.Pruefen(inhalt, Lernen));
-                Assert.True(fehler is not null || gemeldet!.Count > 0, name + ": Python bricht ab (" + art + "), C# meldet nichts");
+                if (fehler is null && gemeldet!.Count == 0)
+                    abweichungen.Add(name + ": Python bricht ab (" + art + "), C# meldet nichts");
+                abbrueche++;
                 continue;
             }
             var soll = T(W(fall.GetProperty("probleme")));
-            var ist = T(SpielPruefung.Pruefen(inhalt, Lernen).Cast<object?>().ToList());
-            Assert.True(soll == ist, name + "\n  Python: " + soll + "\n  C#:     " + ist);
+            List<string>? liste = null;
+            var ausnahme = Record.Exception(() => liste = SpielPruefung.Pruefen(inhalt, Lernen));
+            var ist = ausnahme is null ? T(liste!.Cast<object?>().ToList()) : "Abbruch: " + ausnahme.Message;
+            if (CSharpStrenger.Contains(name!))
+            {
+                // C# lehnt ab, was Python als Zahl umdeutet; abgelehnt werden muss es (sonst stuerzt das Spiel spaeter)
+                if (ausnahme is null && liste!.Count == 0)
+                    abweichungen.Add(name + ": C# muss strenger sein als Python, meldet aber nichts");
+                strenger++;
+            }
+            else if (soll != ist)
+            {
+                abweichungen.Add(name + "\n  Python: " + soll + "\n  C#:     " + ist);
+            }
             anzahl++;
         }
-        Assert.True(anzahl > 350, anzahl + " Faelle");
+        Assert.True(abweichungen.Count == 0, abweichungen.Count + " Abweichungen:\n" + string.Join("\n", abweichungen));
+        Assert.Equal(CSharpStrenger.Count, strenger);
+        Assert.True(anzahl > 400, anzahl + " Faelle");
+        Assert.True(abbrueche >= 15, abbrueche + " Abbrueche");
+    }
+
+    /// <summary>
+    /// Phase 9 W1 (Sammelliste 84): text.format(**werte) wie Python 3.12 fuer alle Proben aus G42 "format"
+    /// (von Hand und mit festem Startwert zufaellig zusammengesetzt, je mit den Werten der Pruefung).
+    /// "Nicht nachgebildet" (Ketten ueber Methoden und __doc__ hinaus) bricht ab und ist damit strenger
+    /// als Python; das darf nur selten vorkommen.
+    /// </summary>
+    [Fact]
+    public void PlatzhalterWiePython()
+    {
+        var format = Soll.GetProperty("format");
+        var werte = format.GetProperty("werte").EnumerateObject().ToDictionary(g => g.Name, g => (IReadOnlyDictionary<string, object>)g.Value
+            .EnumerateObject().ToDictionary(w => w.Name, w => w.Value.ValueKind == JsonValueKind.String ? (object)w.Value.GetString()! : w.Value.GetInt64()));
+        var fehler = new List<string>();
+        int proben = 0, strenger = 0;
+        var zahl = new Dictionary<string, int>();
+        foreach (var probe in format.GetProperty("proben").EnumerateArray())
+        {
+            var gruppe = probe[0].GetString()!;
+            var text = probe[1].GetString()!;
+            var soll = probe[2].GetString()!;
+            var ist = SpielPruefung.FormatPruefen(text, werte[gruppe]);
+            proben++;
+            zahl[soll] = zahl.GetValueOrDefault(soll) + 1;
+            if (ist == FormatUrteil.NichtNachgebildet)
+            {
+                strenger++;
+                continue;
+            }
+            var name = ist switch { FormatUrteil.Geht => "ok", FormatUrteil.Fehler => "fehler", _ => "abbruch" };
+            if (name != soll)
+            {
+                fehler.Add(gruppe + " " + text + ": Python " + soll + ", C# " + name);
+            }
+        }
+        Assert.True(fehler.Count == 0, string.Join("\n", fehler.Take(30)) + "\n(" + fehler.Count + " von " + proben + ")");
+        Assert.True(proben > 6000 && zahl.GetValueOrDefault("ok") > 1000 && zahl.GetValueOrDefault("fehler") > 1000
+            && zahl.GetValueOrDefault("abbruch") > 50, proben + " Proben");
+        Assert.True(strenger * 100 < proben, strenger + " von " + proben + " nicht nachgebildet");
+    }
+
+    /// <summary>Die eingebauten Listen dir(str) und dir(int) sind die von Python 3.12.</summary>
+    [Fact]
+    public void AttributeWiePython()
+    {
+        var attribute = Soll.GetProperty("format").GetProperty("attribute");
+        Assert.Equal(attribute.GetProperty("str").EnumerateArray().Select(a => a.GetString()!).Order(StringComparer.Ordinal), SpielPruefung.StrAttribute.Order(StringComparer.Ordinal));
+        Assert.Equal(attribute.GetProperty("int").EnumerateArray().Select(a => a.GetString()!).Order(StringComparer.Ordinal), SpielPruefung.IntAttribute.Order(StringComparer.Ordinal));
     }
 }

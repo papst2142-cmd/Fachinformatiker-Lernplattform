@@ -107,62 +107,6 @@ public static partial class SpielPruefung
         }
     }
 
-    /// <summary>str.format(bestellung=..., ware=...) laeuft ohne KeyError, IndexError und ValueError?</summary>
-    public static bool FormatGeht(string text, IReadOnlyCollection<string> namen)
-    {
-        var i = 0;
-        while (i < text.Length)
-        {
-            var z = text[i];
-            if (z == '}')
-            {
-                if (i + 1 < text.Length && text[i + 1] == '}')
-                {
-                    i += 2;
-                    continue;
-                }
-                return false;   // Single '}' encountered in format string
-            }
-            if (z != '{')
-            {
-                i++;
-                continue;
-            }
-            if (i + 1 < text.Length && text[i + 1] == '{')
-            {
-                i += 2;
-                continue;
-            }
-            // Feld bis zur passenden schliessenden Klammer (Format-Angabe darf {} enthalten)
-            var tiefe = 1;
-            var j = i + 1;
-            while (j < text.Length && tiefe > 0)
-            {
-                tiefe += text[j] == '{' ? 1 : text[j] == '}' ? -1 : 0;
-                j++;
-            }
-            if (tiefe > 0)
-            {
-                return false;   // expected '}' before end of string
-            }
-            var feld = text[(i + 1)..(j - 1)];
-            var ende = feld.IndexOfAny(['!', ':']);
-            var name = ende < 0 ? feld : feld[..ende];
-            var grund = name.Split('.', '[')[0];
-            if (grund.Length == 0 || grund.All(char.IsAsciiDigit) || !namen.Contains(grund))
-            {
-                return false;   // IndexError (Platz) oder KeyError (Name)
-            }
-            if (ende >= 0 && feld[ende] == '!' && !(feld.Length > ende + 1 && "rsa".Contains(feld[ende + 1])
-                && (feld.Length == ende + 2 || feld[ende + 2] == ':')))
-            {
-                return false;   // ValueError: Unknown conversion specifier
-            }
-            i = j;
-        }
-        return true;
-    }
-
     // -- Grundrisse und Wohnungen -----------------------------------------
 
     /// <summary>_validate_building</summary>
@@ -677,8 +621,9 @@ public static partial class SpielPruefung
         {
             probleme.Add("falschlieferung: unbekannter Raum");
         }
-        string[] namen = ["bestellung", "ware"];
-        if (!FormatGeht(Py.Str(SpielInhalt.Zeilen(Get(vorlage, "ticket"))), namen) || !FormatGeht(Py.Str(Get(vorlage, "titel", "")), namen))
+        // Python: _lines(ticket).format(bestellung="x", ware="y"), dann titel.format(...); kein Text = AttributeError (Abbruch)
+        if (!Format(SpielInhalt.Zeilen(Get(vorlage, "ticket")), ("bestellung", "x"), ("ware", "y"))
+            || !Format(Get(vorlage, "titel", ""), ("bestellung", "x"), ("ware", "y")))
         {
             probleme.Add("falschlieferung: nur {bestellung} und {ware} als Platzhalter");
         }

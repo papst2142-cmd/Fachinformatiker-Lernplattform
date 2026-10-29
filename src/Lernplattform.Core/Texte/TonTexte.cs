@@ -38,7 +38,7 @@ public static class TonTexte
 
     // Vollbild
     public const string Vollbild = "Vollbild";
-    public const string VollbildSatz = "Das Programm füllt den ganzen Bildschirm, ohne Fensterrahmen und Leisten. Die Wahl gilt auch beim nächsten Start. Am PC schaltet auch die Taste F11 um.";
+    public const string VollbildSatz = "Das Programm füllt den ganzen Bildschirm, ohne Fensterrahmen und Leisten. Die Wahl gilt auch beim nächsten Start. Am PC schaltet auch die Taste F11 um, Esc verlässt das Vollbild.";
 
     // Tastenbelegung
     public const string TasteDruecken = "Taste drücken …";

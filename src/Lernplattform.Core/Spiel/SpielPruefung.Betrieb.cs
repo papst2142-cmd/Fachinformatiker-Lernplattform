@@ -88,6 +88,65 @@ public static partial class SpielPruefung
         _ => throw new InvalidDataException("nicht iterierbar"),
     };
 
+    /// <summary>
+    /// sorted(werte) als Texte: lauter Texte nach Codepunkten; lauter Zahlen (oder ein einzelner Wert) sortiert Python
+    /// auch, das Ergebnis ist dann nie ["1", "2", "3"] (leere Liste); sonst bricht Python mit TypeError ab.
+    /// </summary>
+    private static List<string> Sortiert(List<object?> werte)
+    {
+        if (werte.All(w => w is string))
+        {
+            return [.. werte.Select(w => (string)w!).Order(StringComparer.Ordinal)];
+        }
+        if (werte.Count == 1 || werte.All(w => w is long or double or bool))
+        {
+            return [];
+        }
+        throw new InvalidDataException("sorted() mit gemischten Werten");
+    }
+
+    /// <summary>
+    /// str(wert) wie Python auch fuer Listen und dicts (Inhalt mit repr), nur fuer Meldungen der Pruefung.
+    /// Texte mit Zeichen, deren repr hier nicht nachgebildet ist, brechen ab (strenger als Python).
+    /// </summary>
+    private static string PyText(object? wert) => wert switch
+    {
+        string s => s,
+        List<object?> l => "[" + string.Join(", ", l.Select(PyRepr)) + "]",
+        PyObjekt o => "{" + string.Join(", ", o.Select(e => PyRepr(e.Key) + ": " + PyRepr(e.Value))) + "}",
+        _ => Py.Str(wert),
+    };
+
+    private static string PyRepr(object? wert)
+    {
+        if (wert is not string s)
+        {
+            return PyText(wert);
+        }
+        var zeichen = s.Contains('\'') && !s.Contains('"') ? '"' : '\'';
+        var text = new System.Text.StringBuilder().Append(zeichen);
+        foreach (var r in s.EnumerateRunes())
+        {
+            var art = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(r.Value);
+            text.Append(r.Value switch
+            {
+                '\\' => "\\\\",
+                '\n' => "\\n",
+                '\r' => "\\r",
+                '\t' => "\\t",
+                _ when r.Value == zeichen => "\\" + zeichen,
+                ' ' => " ",
+                _ when art is System.Globalization.UnicodeCategory.Control or System.Globalization.UnicodeCategory.Format
+                    or System.Globalization.UnicodeCategory.Surrogate or System.Globalization.UnicodeCategory.PrivateUse
+                    or System.Globalization.UnicodeCategory.OtherNotAssigned or System.Globalization.UnicodeCategory.SpaceSeparator
+                    or System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator
+                    => throw new InvalidDataException("repr() fuer dieses Zeichen nicht nachgebildet"),
+                _ => r.ToString(),
+            });
+        }
+        return text.Append(zeichen).ToString();
+    }
+
     /// <summary>d.get(k) or {} / d.get(k) or [] fuer beliebige Werte</summary>
     private static object? Oder(object? wert, object? leer) => Py.Wahr(wert) ? wert : leer;
 
@@ -100,8 +159,6 @@ public static partial class SpielPruefung
         var l = Liste(wert);
         return l.Count == 2 ? (l[0], l[1]) : throw new InvalidDataException("zwei Werte erwartet");
     }
-
-    private static bool Format(object? text, params string[] namen) => FormatGeht(text as string ?? throw new InvalidDataException("Text erwartet"), namen);
 
     private static bool Eindeutig(List<object?> werte)
     {
@@ -211,7 +268,7 @@ public static partial class SpielPruefung
         }
         foreach (var text in L(angebote, "texte"))
         {
-            if (!Format(text, "kontakt", "menge", "artikel", "lieferzeit"))
+            if (!Format(text, ("kontakt", ""), ("menge", 1L), ("artikel", ""), ("lieferzeit", 1L)))
             {
                 p.Add("Spiel-Firma: Anfragetext mit unbekanntem Platzhalter");
             }
@@ -356,14 +413,14 @@ public static partial class SpielPruefung
         }
         foreach (var text in Liste(projekte["texte"]))
         {
-            if (!Format(text, "kunde", "auftrag"))
+            if (!Format(text, ("kunde", ""), ("auftrag", "")))
             {
                 p.Add("Spiel-Firma: Ausschreibungstext mit unbekanntem Platzhalter");
             }
         }
         foreach (var text in Liste(projekte["buero"]))
         {
-            if (!Format(text, "phase", "titel", "kunde"))
+            if (!Format(text, ("phase", ""), ("titel", ""), ("kunde", "")))
             {
                 p.Add("Spiel-Firma: Buerosatz mit unbekanntem Platzhalter");
             }
@@ -499,8 +556,8 @@ public static partial class SpielPruefung
         {
             return p;
         }
-        var stufen = Schluessel(Oder(Get(Objekt(personal["macken"]), "stufen"), new PyObjekt())).Select(s => (string)s!).Order(StringComparer.Ordinal);
-        if (!stufen.SequenceEqual(["1", "2", "3"]))
+        // Python: sorted(stufen) != ["1", "2", "3"]; Zahlen sortiert Python auch (dann ungleich), gemischte Werte nicht (Abbruch)
+        if (!Sortiert(Schluessel(Oder(Get(Objekt(personal["macken"]), "stufen"), new PyObjekt()))).SequenceEqual(["1", "2", "3"]))
         {
             p.Add("Spiel-Firma: personal.macken.stufen braucht die Stufen 1 bis 3");
         }
@@ -512,7 +569,7 @@ public static partial class SpielPruefung
         }
         foreach (var text in texte.Append(Get(konflikt, "summen", "")))
         {
-            if (!Format(text, "a", "b", "a_von", "b_von"))
+            if (!Format(text, ("a", "A"), ("b", "B"), ("a_von", "As"), ("b_von", "Bs")))
             {
                 p.Add(Prozent("Spiel-Firma: Konflikt-Text mit falschem Platzhalter: %s", Anfang(text)));
             }
@@ -545,7 +602,7 @@ public static partial class SpielPruefung
         }
         foreach (var text in texte)
         {
-            if (!Format(text, "firma", "name", "plus"))
+            if (!Format(text, ("firma", "F"), ("name", "N"), ("plus", 10L)))
             {
                 p.Add(Prozent("Spiel-Firma: Rueckhol-Text mit falschem Platzhalter: %s", Anfang(text)));
             }
@@ -1056,7 +1113,7 @@ public static partial class SpielPruefung
             {
                 p.Add(Prozent("%s: unbekannter Bestwert '%s'", wo, regel["bestwert"]));
             }
-            if (Py.Wahr(Get(regel, "moment_text")) && !Format(regel["moment_text"], "ziel", "tag", "spieler", "firma", "filiale"))
+            if (Py.Wahr(Get(regel, "moment_text")) && !Format(regel["moment_text"], ("ziel", ""), ("tag", 1L), ("spieler", ""), ("firma", ""), ("filiale", "")))
             {
                 p.Add(Prozent("%s: unbekannter Platzhalter im moment_text", wo));
             }
@@ -1203,10 +1260,10 @@ public static partial class SpielPruefung
                 {
                     continue;
                 }
-                var text = Py.Str(ansicht);
+                var text = PyText(ansicht);
                 if (!In(KartenAnsichten, ansicht) && !KartenAnsichtVorsaetze.Any(vorsatz => text.StartsWith(vorsatz, StringComparison.Ordinal)))
                 {
-                    p.Add(Prozent("%s: unbekannte Ansicht '%s'", wo, ansicht));
+                    p.Add(Prozent("%s: unbekannte Ansicht '%s'", wo, text));
                 }
                 else if (text.StartsWith("kunde:", StringComparison.Ordinal) && !orteMenge.Contains(((string)ansicht!).Split(':', 2)[1]))
                 {

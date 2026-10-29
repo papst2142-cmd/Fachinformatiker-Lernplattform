@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.23.1
+Kleine Verbesserungen: ein genauerer Hinweis zum Vollbild und eine strengere Prüfung der Spielinhalte.
+
+- In den Optionen steht beim Vollbild jetzt auch, dass am PC die Taste F11 das Vollbild ein- und ausschaltet und die Taste Esc es verlässt.
+- Beim Start prüft das Programm die Inhalte des Spiels (Aufträge, Texte, Zahlen) jetzt genauso gründlich wie die frühere Python-Fassung, auch die Platzhalter in Texten wie „{kunde}“. Ein fehlerhaft gebauter Inhalt fällt damit schon beim Laden auf und nicht erst mitten im Spiel.
+- Am Lernstand, am Spielstand und an der Bedienung ändert sich nichts.
+
 ## A 0.23.0
 Neu im Spiel: Die Stadt wird beim Öffnen einmal ganz vorbereitet, danach geht das Betreten der Häuser ohne Wartezeit.
 
