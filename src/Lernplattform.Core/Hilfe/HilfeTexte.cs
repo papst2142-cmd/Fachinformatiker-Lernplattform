@@ -31,8 +31,8 @@ public static partial class HilfeTexte
         + "oben im „Dashboard“ (am Handy: „Start“) „Hallo“ und dein Name.";
 
     /// <summary>N4: Text der Ausbildungsfrage (nur C#, Weisung P4-10).</summary>
-    public const string AusbildungFrage = "Welche Fachrichtung lernst du? Davon hängen die Projektstunden im „Abschlussprojekt“ ab, später "
-        + "auch die Prüfungsbereiche. Die Wahl gilt auf allen Geräten, die du abgleichst. Ändern kannst du sie "
+    public const string AusbildungFrage = "Welche Fachrichtung lernst du? Davon hängen die Projektstunden im „Abschlussprojekt“, die "
+        + "Prüfungsbereiche und die gezeigten Lerninhalte ab. Die Wahl gilt auf allen Geräten, die du abgleichst. Ändern kannst du sie "
         + "jederzeit in den „Optionen“ unter „Ausbildung“.";
 
     /// <summary>N7: Warnhinweis Rahmenplan; %s = Fachrichtung (PruefungTexte.Fachrichtungen), %s = SECTION_OPTION_TEXT.</summary>
