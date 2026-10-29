@@ -118,6 +118,11 @@ public static class Navigation
     public const string Fusszeile = "Version %s";
     public const string Menue = "MENÜ";
     public const string Lernstatus = "LERNSTATUS";
+    /// <summary>
+    /// Weisung P8-56 (Nico, Wahl b): Knopf unten in der Seitenleiste, nur am PC (Android beendet Apps selbst);
+    /// beendet wie das Schliessen des Fensters, auch im Vollbild.
+    /// </summary>
+    public const string ProgrammBeenden = "Programm beenden";
 
     // Phase 8 W2b (Sammelliste 115, Nico 26.10.2026): Gruppen der Seitenleiste am PC
     public const string GruppeLernen = "LERNEN";

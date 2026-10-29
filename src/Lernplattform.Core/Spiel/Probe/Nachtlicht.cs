@@ -21,8 +21,11 @@ public static class Nachtlicht
     /// <summary>Marke auf der Farbe (alle drei Anteile + 4); Schnee hat + 2 (<see cref="Jahreszeitfarben.SchneeMarke"/>).</summary>
     public const float Marke = 4f;
 
-    /// <summary>Phase 8 W11 (Nico 28.10.2026 21:58: "Es sind damit nur noch 21 Laternen"): 16 einfache und 5 Doppel-Laternen.</summary>
-    public const int Anzahl = 21, Einfach = 16, Doppelt = 5;
+    /// <summary>
+    /// Phase 8 W11 (Nico 28.10.2026 21:58: "Es sind damit nur noch 21 Laternen"): 16 einfache und 5 Doppel-Laternen.
+    /// Weisung P8-56 (Nico 29.10.2026): eine einfache Laterne mehr gegenueber Amt und Bank, also 22 (17 einfach, 5 doppelt).
+    /// </summary>
+    public const int Anzahl = 22, Einfach = 17, Doppelt = 5;
 
     /// <summary>Anteil leuchtender Glasscheiben an den CC0-Modellen.</summary>
     public const double GlasAnteil = 0.5;
@@ -164,18 +167,28 @@ public static class Nachtlicht
     /// Laterne in beiden Skizzen in ihrem Kreis steht (bei 9 und 11 zeigt die zweite Skizze die andere Seite bzw. die
     /// Fahrbahn: dort gilt die erste Skizze). Nr. 4 steht auf der Westseite, weil dort die Schranke fuer die
     /// Fahrtrichtung nach Sueden steht (Nico P8-50). Reihenfolge wie bisher.
+    /// Weisung P8-56 (Nico 29.10.2026, Bilder 1 bis 3): Nr. 1 bis 3 an der Strasse noerdlich des Bahnuebergangs je auf
+    /// die andere Strassenseite (Nr. 1 tauscht dabei mit dem Beet, siehe <see cref="Beete"/>), Nr. 7 direkt an das
+    /// Brueckenende wie Nr. 6 auf der anderen Seite, Nr. 22 neu gegenueber Amt und Bank: die Figur stand auf Bild 3 auf dem Fussweg nach Norden (12,30 bis 12,90), darum steht
+    /// die Laterne an der naechsten freien Stelle oestlich davon.
     /// </summary>
     public static readonly (float X, float Z, bool Doppelt)[] Skizze =
     [
-        (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
-        (8.00f, 14.63f, false), (7.00f, 16.87f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
+        (8.00f, 0.65f, false), (7.00f, 2.55f, false), (8.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
+        (8.00f, 14.63f, false), (7.00f, 16.52f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
         (10.16f, 21.30f, false), (11.89f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.19f, false),
         (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
-        (29.30f, 17.85f, false),
+        (29.30f, 17.85f, false), (12.95f, 12.10f, false),
     ];
 
     /// <summary>
-    /// Eine Laterne: Nummer (1 bis 21 wie in der Skizze), Mast unten auf <paramref name="Ort"/>, Arm-Richtung (einfach zur
+    /// Weisung P8-56 (Nico, Bild 1): Laterne 1 tauscht die Strassenseite mit dem Beet; das Beet steht seitdem an der
+    /// bisherigen Laternenseite (gesetzt vor allem anderen Kleingruen, nur Darstellung).
+    /// </summary>
+    public static readonly Vector2[] Beete = [new(6.92f, 0.65f)];
+
+    /// <summary>
+    /// Eine Laterne: Nummer (1 bis 22 wie in der Skizze), Mast unten auf <paramref name="Ort"/>, Arm-Richtung (einfach zur
     /// Strasse, doppelt laengs der Strasse), Ziel aus der Skizze und wie weit der Platz davon liegt.
     /// </summary>
     public sealed record Laterne(int Nr, Vector2 Ort, bool Doppelt, Vector2 Richtung, Vector2 Ziel)

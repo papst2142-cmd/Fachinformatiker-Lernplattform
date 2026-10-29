@@ -150,6 +150,11 @@ public partial class MainView : UserControl
                 Lernplattform.Spiel.Vollbild.Umschalten();
             }
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        // Weisung P8-56 (Nico, Wahl b): Esc verlaesst das Vollbild; am Fenster (auch ohne Fokus in der Ansicht) und erst
+        // nach allen anderen (Bubble, nicht behandelt): ein offenes Fenster, der Rundgang und die Spielseite (Esc = zurueck)
+        // behalten ihr Esc
+        AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.AddHandler(KeyDownEvent, EscVollbild, Avalonia.Interactivity.RoutingStrategies.Bubble);
+        DetachedFromVisualTree += (_, e) => (e.RootVisual as TopLevel)?.RemoveHandler(KeyDownEvent, EscVollbild);
 
         SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);
         Schrift.Geaendert += SchriftGeaendert;
@@ -174,6 +179,16 @@ public partial class MainView : UserControl
     }
 
     public bool Breit => _breit ?? true;
+
+    private static void EscVollbild(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && !e.Handled && e.KeyModifiers == KeyModifiers.None && Lernplattform.Spiel.Vollbild.Dauerhaft
+            && !Lernplattform.Spiel.Vollbild.TasteWartet && Dialog.Offen is null && RundgangEbene.Offen is null)
+        {
+            e.Handled = true;
+            Lernplattform.Spiel.Vollbild.Umschalten();
+        }
+    }
 
     private bool _startGelaufen;
 

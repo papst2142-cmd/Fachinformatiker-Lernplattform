@@ -82,6 +82,9 @@ public sealed class BildZeiten
     /// <summary>Kopf (Grafik, Geraet), steht ueber den Zeilen.</summary>
     public string Kopf { get; set; } = "";
 
+    /// <summary>Weisung P8-52: Zeilen der Leistungsprobe (nur Probe-APK), stehen unter dem Kopf; sonst leer.</summary>
+    public List<string> Probe { get; } = [];
+
     /// <summary>Bilder seit dem Start (ohne Pausen-Abstaende).</summary>
     public long Gesamt { get; private set; }
 
@@ -249,6 +252,10 @@ public sealed class BildZeiten
             sb.Append(Kopf).Append('\n');
         }
         sb.Append(string.Create(CultureInfo.InvariantCulture, $"Bilder gesamt: {Gesamt}\n"));
+        foreach (var zeile in Probe)
+        {
+            sb.Append(zeile).Append('\n');
+        }
         var zeilen = new List<string>(_fenster);
         var offen = Seit(Math.Max(_fensterAb, 0));
         if (offen > 0)

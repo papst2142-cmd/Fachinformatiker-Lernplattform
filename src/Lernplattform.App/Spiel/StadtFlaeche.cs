@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
 using Avalonia;
@@ -45,7 +46,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Dictionary<StadtHaus, GlNetz> _haeuser = [];
     private readonly Dictionary<string, GlNetz> _figuren = [];
     private GlNetz? _innen;
-    private readonly Dictionary<InnenWand, GlNetz> _innenWaende = [];
+    private Dictionary<InnenWand, GlNetz> _innenWaende = [];
+    // Weisung P8-55 (W12): jeder hochgeladene Innenraum bleibt in der Grafikkarte, solange er im Vorrat des Spiels ist
+    private readonly Dictionary<Innenraum, (GlNetz Netz, Dictionary<InnenWand, GlNetz> Waende)> _innenGl = [];
+    // Weisung P8-55 (W12): gebaute Netze der Figuren (Prozessor), bleiben ueber den Verlust des GL-Zusammenhangs
+    private readonly ConcurrentDictionary<string, Netz> _figurenCpu = new(StringComparer.Ordinal);
     private readonly HashSet<InnenWand> _durchsichtig = [];
     private readonly HashSet<StadtHaus> _verdeckt = [];
     private readonly Dictionary<string, (PyObjekt? Aussehen, IReadOnlyList<Figur.Stueck>? Kleidung, GlNetz Netz)> _figurZuletzt = [];
@@ -214,6 +219,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 _szeneNeu = true;
                 _innenNeu = true;
                 InnenNeu();
+                if (_glFrisch)
+                {
+                    // Weisung P8-55 (W12): das erste Spiel nach dem Einrichten von OpenGL wird vorgeladen
+                    VorladenStarten();
+                }
             }
             AnfordernBild();
         }
@@ -359,6 +369,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var fertig = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         void Einmal()
         {
+            // Weisung P8-55 (W12): Bilder waehrend des Vorladens zeigen nur den Himmel, gewartet wird auf ein echtes
+            if (_laedtVor)
+            {
+                return;
+            }
             BildGezeichnet -= Einmal;
             fertig.TrySetResult();
         }
@@ -367,8 +382,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return fertig.Task;
     }
 
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): Stadt so oft zeichnen (1 = normal).</summary>
+    public static int ProbeMehrfach { get; set; } = 1;
+
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): so viele Zeichenaufrufe je Bild mindestens (0 = normal).</summary>
+    public static int ProbeAufrufe { get; set; }
+
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): Stadt beim naechsten Bild neu in die Grafikkarte laden.</summary>
+    public void ProbeNeuLaden() => SzeneNeu();
+
+    /// <summary>Weisung P8-51 (nur Messung W12): jedes Bild zusaetzlich hier, solange gesetzt.</summary>
+    public static List<BildZeiten.Bild>? Mitschnitt { get; set; }
+
+    /// <summary>Weisung P8-51 (nur Messung W12): Dauer des letzten Einrichtens (Shader, Grundnetze) in ms.</summary>
+    public double GlInitMs { get; private set; } = -1;
+
     protected override void OnOpenGlInit(GlInterface gl)
     {
+        var initBeginn = Stopwatch.GetTimestamp();
         GlFehler = null;
         try
         {
@@ -397,11 +428,22 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
             GlBereit = true;
+            // Weisung P8-55 (W12): nach jedem Einrichten (Seite geoeffnet, Android nach dem Hintergrund) erst alles
+            // vorladen; ist das Spiel schon da, warten die Bilder bis dahin (kein Bauen im Bild)
+            _glFrisch = true;
+            _hochladen = null;
+            if (_spiel is not null)
+            {
+                _vorladeAufgabe = null;
+                _laedtVor = true;
+                Avalonia.Threading.Dispatcher.UIThread.Post(VorladenStarten);
+            }
         }
         catch (Exception e)
         {
             GlFehler = e.Message;
         }
+        GlInitMs = MsSeit(initBeginn);
         GlGestartet?.Invoke();
     }
 
@@ -414,7 +456,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _figuren.Clear();
         _figurZuletzt.Clear();
         _innen = null;
-        _innenWaende.Clear();
+        _innenWaende = [];
+        _innenGl.Clear();
+        _hochladen = null;
+        _vorladeAufgabe = null;
+        _glFrisch = false;
+        _laedtVor = false;
         _markierung = null;
         _markierungSchluessel = "";
         _ring = null;
@@ -432,11 +479,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
-        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenWaende.Values).Append(_innen).Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring)
-            .Append(_gruen).Concat(_autoNetze.Values).Concat(_paket.Values))
+        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
+            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_paket.Values))
         {
             netz?.Freigeben(gl);
         }
+        _innenGl.Clear();
+        _hochladen = null;
+        _vorladeAufgabe = null;
+        _glFrisch = false;
+        _laedtVor = false;
         _gruen = null;
         _autoNetze.Clear();
         _paket.Clear();
@@ -450,7 +502,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _figuren.Clear();
         _figurZuletzt.Clear();
         _innen = null;
-        _innenWaende.Clear();
+        _innenWaende = [];
         _markierung = null;
         _ring = null;
         _ringAussehen = null;
@@ -600,6 +652,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _aufrufe = 0;
         _dreiecke = 0;
         _letztesBild = jetzt;
+        if (_laedtVor && GlBereit)
+        {
+            VorladenBild(gl, jetzt, abstandMs, bytesBeginn, ruhte, startStempel);
+            return;
+        }
         if (_spiel is { } spiel && _szeneNeu && GlBereit)
         {
             // Stadt in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern;
@@ -610,23 +667,26 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _flaechen.Clear();
             _haeuser.Clear();
-            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, spiel.Szene.NetzBauen());
+            // Weisung P8-55 (W12): die Netze baut die Szene einmal (bei einem Fest- oder Jahreszeitwechsel schon im
+            // Haus im Hintergrund), hier wird nur noch hochgeladen
+            var fertig = spiel.Szene.Vorbereiten();
+            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, fertig.Stadt);
             foreach (var haus in spiel.Szene.Haeuser)
             {
-                _haeuser[haus] = GlNetz.Laden(gl, spiel.Szene.HausNetz(haus));
+                _haeuser[haus] = GlNetz.Laden(gl, fertig.Haeuser[haus]);
             }
             _gruen?.Freigeben(gl);
-            _gruen = spiel.Szene.GruenNetzBauen() is { } gn ? GlNetz.Laden(gl, gn) : null;
+            _gruen = fertig.Gruen is { } gn ? GlNetz.Laden(gl, gn) : null;
             foreach (var alt in _paket.Values)
             {
                 alt.Freigeben(gl);
             }
             _paket.Clear();
-            if (spiel.Grafik is not null)
+            if (fertig.PaketNah is { } nah && fertig.PaketFern is { } fernNetz)
             {
                 // W11 (Nico 5a): Laternen, Tannen und Kuerbisse, nah die Paket-Modelle, fern einfache Kaesten
-                _paket[false] = GlNetz.Laden(gl, spiel.Szene.PaketNetzBauen(false));
-                _paket[true] = GlNetz.Laden(gl, spiel.Szene.PaketNetzBauen(true));
+                _paket[false] = GlNetz.Laden(gl, nah);
+                _paket[true] = GlNetz.Laden(gl, fernNetz);
             }
             // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar); eine Szene mit
             // anderer Festzeit (neuer Tag) bekommt ihren eigenen Satz
@@ -640,18 +700,19 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         if (_spiel is { } s2 && _innenNeu && GlBereit)
         {
-            _innen?.Freigeben(gl);
-            foreach (var alt in _innenWaende.Values)
+            // Weisung P8-55 (W12): schon hochgeladene Innenraeume (Vorrat) werden genommen, nicht mehr gebrauchte freigegeben
+            if (s2.Innen is { } innen)
             {
-                alt.Freigeben(gl);
+                var geladen = InnenHochladen(gl, innen);
+                _innen = geladen.Netz;
+                _innenWaende = geladen.Waende;
             }
-            _innenWaende.Clear();
-            // Nachtrag 1 zu P7-13 (Wunsch 3): Waende einzeln, jede kann halb durchsichtig werden
-            _innen = s2.Innen is { } innen ? GlNetz.Laden(gl, innen.NetzOhneWaende) : null;
-            foreach (var wand in s2.Innen?.Waende ?? [])
+            else
             {
-                _innenWaende[wand] = GlNetz.Laden(gl, s2.Innen!.WandNetzFertig(wand));
+                _innen = null;
+                _innenWaende = [];
             }
+            InnenAufraeumen(gl, s2);
             _innenGeladen = s2.Innen;
             _innenNeu = false;
         }
@@ -714,6 +775,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
+            // Weisung P8-52 (nur Leistungsprobe der Probe-APK): die Stadt mehrfach an derselben Stelle (sonst einmal)
+            for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
+            {
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
             if (!_spiel.ImInnenraum && _gruen is not null && kamera.Abstand <= GruenWeite)
             {
@@ -722,6 +786,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
             {
                 Zeichnen(gl, paket, Matrix4x4.Identity, sichtProj);
+            }
+            if (mal > 0)
+            {
+                foreach (var netz in _haeuser.Values)
+                {
+                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                }
+            }
             }
             if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
             {
@@ -828,6 +900,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 gl.Clear(GL_DEPTH_BUFFER_BIT);
                 Zeichnen(gl, spieler, figurLage, sichtProj);
             }
+            // Weisung P8-52 (nur Leistungsprobe): weitere Zeichenaufrufe bis zur Zahl der Stufe, ein kleines Netz unter dem Boden
+            while (_aufrufe < ProbeAufrufe && _marke is not null)
+            {
+                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation(0f, -50f, 0f), sichtProj);
+            }
             if (gl.IsBindVertexArrayAvailable)
             {
                 gl.BindVertexArray(0);
@@ -853,6 +930,308 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         else
         {
             _ruht = true;
+        }
+    }
+
+    // ---- Weisung P8-55 (W12, Teilplan Abschnitt 3): Vorladen beim Oeffnen der Spielseite ----------------
+
+    /// <summary>So lange darf das Hochladen je Bild dauern (die Ladeanzeige laeuft weiter); mindestens ein Schritt je Bild.</summary>
+    public const double HochladenJeBildMs = 10;
+
+    private volatile bool _glFrisch;
+    private volatile bool _laedtVor;
+    private volatile Task<Vorladepaket>? _vorladeAufgabe;
+    private Queue<Action<GlInterface>>? _hochladen;
+    private int _hochladenGesamt;
+    private int _hochladenErledigt;
+    private long _vorladenBeginn;
+
+    /// <summary>Alles, was das Vorladen auf dem Prozessor baut (im Hintergrund).</summary>
+    private sealed record Vorladepaket(StadtSzene Szene, StadtSzene.Fertig Netze, SatzPaket? Satz, bool VerkehrBleibt,
+        IReadOnlyList<string> Figuren, IReadOnlyList<Innenraum> Innen, PyObjekt? Aussehen);
+
+    /// <summary>
+    /// Weisung P8-55 (W12): wird gerade vorgeladen (Ladeanzeige)? Waehrenddessen zeichnet die Flaeche nur den Himmel
+    /// und laedt in kleinen Stuecken je Bild hoch; <see cref="NaechstesBildAsync"/> wartet bis danach.
+    /// </summary>
+    public bool LaedtVor => _laedtVor;
+
+    /// <summary>Anteil des Hochladens fuer den Fortschrittsring (0 bis 1).</summary>
+    public double VorladenAnteil => Ladeanzeige.Anteil(_hochladenErledigt, _hochladenGesamt);
+
+    /// <summary>Sekunden seit Beginn des Vorladens (Ladeanzeige erst ab 0,3 s).</summary>
+    public double VorladenSekunden => _laedtVor && _vorladenBeginn != 0 ? Stopwatch.GetElapsedTime(_vorladenBeginn).TotalSeconds : 0;
+
+    /// <summary>Dauer des letzten Vorladens bis fertig in ms (Start-Test, nur Info), null = noch keins.</summary>
+    public double? VorladenMs { get; private set; }
+
+    /// <summary>Wie oft vorgeladen wurde (Start-Test: Android nach dem Hintergrund, Seite neu geoeffnet).</summary>
+    public int VorladenZahl { get; private set; }
+
+    /// <summary>Beginn und Ende des Vorladens (aus dem Faden der Grafik; die Seite reicht es an die Oberflaeche weiter).</summary>
+    public event Action? VorladenGeaendert;
+
+    /// <summary>
+    /// Vorladen beginnen (Oberflaechen-Thread): auf dem Prozessor im Hintergrund die Netze der Szene, die Autos bzw.
+    /// Festgestalten nah und fern, alle Schrittbilder der Spielfigur, den Kreis und alle Innenraeume mit ihren Personen;
+    /// danach laedt <see cref="VorladenBild"/> alles hoch und zeichnet jedes Netz einmal unsichtbar (die Shader werden im
+    /// Treiber uebersetzt). Schon gebaute Netze (nach dem Hintergrund unter Android) werden nur neu hochgeladen.
+    /// </summary>
+    private void VorladenStarten()
+    {
+        if (!_glFrisch || _spiel is not { } spiel || !GlBereit)
+        {
+            if (_vorladeAufgabe is null)
+            {
+                _laedtVor = false;
+            }
+            return;
+        }
+        _glFrisch = false;
+        var szene = spiel.Szene;
+        var grafik = spiel.Grafik;
+        var satz = grafik is null ? FestVerkehr.Satz.Autos : FestVerkehr.Fuer(szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
+        // gleicher Satz: die Autos behalten ihre Lage, nur die Netze werden neu hochgeladen
+        var verkehrAlt = _verkehr is not null && satz == _satz ? _verkehr : null;
+        var gestaltenAlt = _gestalten;
+        var aussehen = spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
+        var kleidung = spiel.Kleidung;
+        var innenFertig = spiel.AlleVorbereiten();
+        var figurenCpu = _figurenCpu;
+        _vorladenBeginn = Stopwatch.GetTimestamp();
+        _hochladenErledigt = 0;
+        _hochladenGesamt = 0;
+        _vorladeAufgabe = Task.Run(async () =>
+        {
+            var netze = szene.Vorbereiten();
+            SatzPaket? satzPaket = null;
+            if (grafik is not null)
+            {
+                satzPaket = verkehrAlt is not null
+                    ? new SatzPaket(szene, satz, gestaltenAlt, verkehrAlt, AutoNetze(verkehrAlt, gestaltenAlt, grafik, false), AutoNetze(verkehrAlt, gestaltenAlt, grafik, true))
+                    : SatzPaketBauen(szene, grafik, satz);
+            }
+            var figuren = new List<string>();
+            void Figur1(string schluessel, Func<Netz> bauen)
+            {
+                figurenCpu.GetOrAdd(schluessel, _ => bauen());
+                figuren.Add(schluessel);
+            }
+            // die Spielfigur: stehend und alle Schrittbilder (Rennen in der Stadt, Gehen in den Innenraeumen)
+            Figur1(FigurSchluessel("#spieler", aussehen, kleidung), () => kleidung is { Count: > 0 } ? Figur.Netz(grafik, aussehen, 1f, kleidung) : Figur.Netz(grafik, aussehen, 1f));
+            foreach (var bewegung in new[] { Figur.Rennen, Figur.Gehen })
+            {
+                for (var bild = 0; bild < Figur.Bilder; bild++)
+                {
+                    var b = bild;
+                    Figur1(FigurSchluessel("#spieler", aussehen, kleidung, bewegung, b), () => Figur.Netz(grafik, aussehen, 1f, kleidung, bewegung, b));
+                }
+            }
+            await innenFertig.ConfigureAwait(false);
+            var innen = spiel.Vorrat;
+            foreach (var raum in innen)
+            {
+                foreach (var person in raum.Personen)
+                {
+                    Figur1(FigurSchluessel(person.Id, person.Aussehen, null), () => raum.PersonNetz(person.Id, person.Aussehen) ?? Figur.Netz(grafik, person.Aussehen, 1f));
+                }
+            }
+            return new Vorladepaket(szene, netze, satzPaket, verkehrAlt is not null, figuren, innen, aussehen);
+        });
+        _laedtVor = true;
+        VorladenGeaendert?.Invoke();
+        Anfordern();
+    }
+
+    /// <summary>Start-Test: das jetzige Spiel noch einmal vorladen wie beim Oeffnen der Seite (nur mit OpenGL).</summary>
+    public void Vorladen()
+    {
+        _glFrisch = GlBereit;
+        VorladenStarten();
+    }
+
+    /// <summary>
+    /// Ein Bild waehrend des Vorladens: nur der Himmel; ist der Prozessor fertig, Hochladen in Stuecken
+    /// (hoechstens <see cref="HochladenJeBildMs"/> je Bild), zuletzt unsichtbar zeichnen. Danach zeichnet die Flaeche normal.
+    /// </summary>
+    private void VorladenBild(GlInterface gl, double jetzt, double abstandMs, long bytesBeginn, bool ruhte, long startStempel)
+    {
+        var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        gl.Viewport(0, 0, (int)Math.Max(1, Bounds.Width * skalierung), (int)Math.Max(1, Bounds.Height * skalierung));
+        var himmel = Himmel();
+        gl.ClearColor(himmel.R / 255f, himmel.G / 255f, himmel.B / 255f, 1f);
+        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        var fertig = false;
+        if (_vorladeAufgabe is { IsCompleted: true } aufgabe)
+        {
+            if (!aufgabe.IsCompletedSuccessfully)
+            {
+                // Fehler beim Bauen: wie vor W12 weiter (die Flaeche baut beim Zeichnen)
+                fertig = true;
+            }
+            else
+            {
+                _hochladen ??= HochladenPlanen(aufgabe.Result, jetzt);
+                var beginn = Stopwatch.GetTimestamp();
+                do
+                {
+                    _hochladen.Dequeue()(gl);
+                    _hochladenErledigt++;
+                }
+                while (_hochladen.Count > 0 && MsSeit(beginn) < HochladenJeBildMs);
+                fertig = _hochladen.Count == 0;
+            }
+        }
+        gl.Disable(GL_DEPTH_TEST);
+        BilderGesamt++;
+        _bilder.Enqueue(jetzt);
+        while (_bilder.Count > 0 && _bilder.Peek() < jetzt - 1)
+        {
+            _bilder.Dequeue();
+        }
+        var nachLaden = _uhr.Elapsed.TotalSeconds;
+        BildGezeichnet?.Invoke();
+        Messen(jetzt, abstandMs, nachLaden, nachLaden, 0, nachLaden, bytesBeginn, ruhte, startStempel);
+        if (fertig)
+        {
+            _hochladen = null;
+            _vorladeAufgabe = null;
+            VorladenMs = Stopwatch.GetElapsedTime(_vorladenBeginn).TotalMilliseconds;
+            VorladenZahl++;
+            _laedtVor = false;
+            VorladenGeaendert?.Invoke();
+        }
+        RequestNextFrameRendering();
+    }
+
+    /// <summary>Die Schritte des Hochladens: Stadt, Haeuser, Gruen, Paket, Autos/Gestalten, Figuren, Kreis, Innenraeume, Anwaermen.</summary>
+    private Queue<Action<GlInterface>> HochladenPlanen(Vorladepaket paket, double jetzt)
+    {
+        var schritte = new Queue<Action<GlInterface>>();
+        schritte.Enqueue(gl =>
+        {
+            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values).Concat(_paket.Values).Append(_gruen))
+            {
+                alt?.Freigeben(gl);
+            }
+            _flaechen.Clear();
+            _haeuser.Clear();
+            _paket.Clear();
+            _gruen = null;
+            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, paket.Netze.Stadt);
+        });
+        foreach (var (haus, netz) in paket.Netze.Haeuser)
+        {
+            schritte.Enqueue(gl => _haeuser[haus] = GlNetz.Laden(gl, netz));
+        }
+        if (paket.Netze.Gruen is { } gruen)
+        {
+            schritte.Enqueue(gl => _gruen = GlNetz.Laden(gl, gruen));
+        }
+        if (paket.Netze.PaketNah is { } nah && paket.Netze.PaketFern is { } fern)
+        {
+            schritte.Enqueue(gl => _paket[false] = GlNetz.Laden(gl, nah));
+            schritte.Enqueue(gl => _paket[true] = GlNetz.Laden(gl, fern));
+        }
+        schritte.Enqueue(gl =>
+        {
+            // eine Szene, die sich waehrend des Vorladens geaendert hat, laedt das naechste Bild wie bisher
+            _szeneNeu = !ReferenceEquals(_spiel?.Szene, paket.Szene);
+            if (paket.Satz is { } satz)
+            {
+                SatzEinsetzen(gl, satz, jetzt, paket.VerkehrBleibt);
+            }
+        });
+        foreach (var schluessel in paket.Figuren)
+        {
+            schritte.Enqueue(gl =>
+            {
+                if (!_figuren.ContainsKey(schluessel) && _figurenCpu.TryGetValue(schluessel, out var netz))
+                {
+                    _figuren[schluessel] = GlNetz.Laden(gl, netz);
+                }
+            });
+        }
+        schritte.Enqueue(gl => Ring(gl, paket.Aussehen));
+        foreach (var raum in paket.Innen)
+        {
+            schritte.Enqueue(gl => InnenHochladen(gl, raum));
+        }
+        schritte.Enqueue(gl =>
+        {
+            _innenNeu = true;
+            Anwaermen(gl);
+        });
+        _hochladenGesamt = schritte.Count;
+        return schritte;
+    }
+
+    /// <summary>
+    /// Jedes hochgeladene Netz einmal zeichnen, in einem Bildpunkt und danach geloescht (unsichtbar): der Treiber
+    /// uebersetzt die Shader und legt die Puffer jetzt an, nicht beim ersten echten Bild (Handy-Treiber).
+    /// </summary>
+    private void Anwaermen(GlInterface gl)
+    {
+        gl.Viewport(0, 0, 1, 1);
+        gl.Enable(GL_DEPTH_TEST);
+        gl.DepthFunc(GlLequal);
+        gl.UseProgram(_programm);
+        gl.Uniform1f(_ortHell, 1f);
+        LichtSetzen(gl, _lichtOrte, Tageslicht.Tag, default);
+        var netze = _flaechen.Values.Concat(_haeuser.Values).Concat(_paket.Values).Concat(_figuren.Values)
+            .Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Prepend(e.Netz))).Append(_gruen).Append(_marke).Append(_ausruf).Append(_ring);
+        var durch = 0f;
+        foreach (var netz in netze)
+        {
+            if (netz is not null)
+            {
+                // halb durchsichtig (Schachbrett) und normal, beide Wege des Pixel-Shaders
+                gl.Uniform1f(_ortDurch, durch);
+                durch = 1f - durch;
+                Zeichnen(gl, netz, Matrix4x4.Identity, Matrix4x4.Identity);
+            }
+        }
+        gl.Uniform1f(_ortDurch, 0f);
+        foreach (var netz in _autoNetze.Values)
+        {
+            ZeichnenAutos(gl, netz, AutosHoechstens, Matrix4x4.Identity);
+        }
+        if (gl.IsBindVertexArrayAvailable)
+        {
+            gl.BindVertexArray(0);
+        }
+        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    /// <summary>Innenraum in die Grafikkarte (oder schon dort): Netz ohne Waende und jede Wand fuer sich (halb durchsichtig).</summary>
+    private (GlNetz Netz, Dictionary<InnenWand, GlNetz> Waende) InnenHochladen(GlInterface gl, Innenraum innen)
+    {
+        if (!_innenGl.TryGetValue(innen, out var geladen))
+        {
+            // Nachtrag 1 zu P7-13 (Wunsch 3): Waende einzeln, jede kann halb durchsichtig werden
+            geladen = (GlNetz.Laden(gl, innen.NetzOhneWaende), innen.Waende.ToDictionary(w => w, w => GlNetz.Laden(gl, innen.WandNetzFertig(w))));
+            _innenGl[innen] = geladen;
+        }
+        return geladen;
+    }
+
+    /// <summary>Innenraeume freigeben, die weder gezeigt werden noch im Vorrat des Spiels sind.</summary>
+    private void InnenAufraeumen(GlInterface gl, StadtSpiel spiel)
+    {
+        var behalten = new HashSet<Innenraum>(spiel.Vorrat, ReferenceEqualityComparer.Instance);
+        if (spiel.Innen is { } jetzt)
+        {
+            behalten.Add(jetzt);
+        }
+        foreach (var alt in _innenGl.Keys.Where(k => !behalten.Contains(k)).ToList())
+        {
+            var (netz, waende) = _innenGl[alt];
+            netz.Freigeben(gl);
+            foreach (var wand in waende.Values)
+            {
+                wand.Freigeben(gl);
+            }
+            _innenGl.Remove(alt);
         }
     }
 
@@ -922,6 +1301,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _auftraegeMs = 0;
         _endeVorher = ende;
         _endeVorherStempel = Stopwatch.GetTimestamp();
+        Mitschnitt?.Add(bild);
         if (aufnehmen)
         {
             // die Messung selbst (alle 10 s eine Zeile) zaehlt als Auftrag vor dem naechsten Bild
@@ -955,17 +1335,23 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Radius des Kreises um die Figur in der Stadt.</summary>
     public const float RingRadius = 0.22f;
 
+    /// <summary>Schluessel einer Figur: Person, Aussehen, Kleidung und (beim Gehen) Bild der Schrittbewegung.</summary>
+    private static string FigurSchluessel(string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung, string? bewegung = null, int bild = -1) =>
+        id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value))
+        + (kleidung is { Count: > 0 } ? "|" + string.Join(",", kleidung.Select(k => k.Slot + ":" + k.Form + ":" + k.Farbe)) : "")
+        + (bild >= 0 && bewegung is not null ? "|" + Figur.BildName(bewegung, bild) : "");
+
     /// <summary>Figur (Hoehe 1) mit Aussehen (die Spielfigur mit Kleidung aus dem Kaufhaus), je Person einmal geladen.</summary>
     private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null, string? bewegung = null, int bild = -1)
     {
         if (bild >= 0 && bewegung is not null)
         {
             // Bilder der Schrittbewegung: je Aussehen, Kleidung und Bild einmal gebaut (Sammelliste 125)
-            var sb = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value))
-                + (kleidung is { Count: > 0 } ? "|" + string.Join(",", kleidung.Select(k => k.Slot + ":" + k.Form + ":" + k.Farbe)) : "") + "|" + Figur.BildName(bewegung, bild);
+            var sb = FigurSchluessel(id, aussehen, kleidung, bewegung, bild);
             if (!_figuren.TryGetValue(sb, out var nb))
             {
-                nb = GlNetz.Laden(gl, Figur.Netz(_spiel?.Grafik, aussehen, 1f, kleidung, bewegung, bild));
+                var grafik = _spiel?.Grafik;
+                nb = GlNetz.Laden(gl, _figurenCpu.GetOrAdd(sb, _ => Figur.Netz(grafik, aussehen, 1f, kleidung, bewegung, bild)));
                 _figuren[sb] = nb;
             }
             return nb;
@@ -977,12 +1363,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             return zuletzt.Netz;
         }
-        var schluessel = id + "|" + string.Join(",", Aussehen.Normalisieren(aussehen).Select(p => p.Value))
-            + (kleidung is { Count: > 0 } ? "|" + string.Join(",", kleidung.Select(k => k.Slot + ":" + k.Form + ":" + k.Farbe)) : "");
+        var schluessel = FigurSchluessel(id, aussehen, kleidung);
         if (!_figuren.TryGetValue(schluessel, out var netz))
         {
-            netz = GlNetz.Laden(gl, kleidung is { Count: > 0 } ? Figur.Netz(_spiel?.Grafik, aussehen, 1f, kleidung)
-                : _spiel?.Innen?.PersonNetz(id, aussehen) ?? Figur.Netz(_spiel?.Grafik, aussehen, 1f));
+            var (grafik, innen) = (_spiel?.Grafik, _spiel?.Innen);
+            netz = GlNetz.Laden(gl, _figurenCpu.GetOrAdd(schluessel, _ => kleidung is { Count: > 0 } ? Figur.Netz(grafik, aussehen, 1f, kleidung)
+                : innen?.PersonNetz(id, aussehen) ?? Figur.Netz(grafik, aussehen, 1f)));
             _figuren[schluessel] = netz;
         }
         _figurZuletzt[id] = (aussehen, kleidung, netz);
@@ -1050,17 +1436,82 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// Phase 8 W11: Autos oder Festgestalten setzen (neuer Verkehr nach <see cref="FestVerkehr.VerkehrFuer"/>, die
     /// Netze der Autos bzw. Gestalten werden neu geladen).
     /// </summary>
-    private void SatzSetzen(GlInterface gl, StadtSpiel spiel, FestVerkehr.Satz satz, double jetzt)
+    private void SatzSetzen(GlInterface gl, StadtSpiel spiel, FestVerkehr.Satz satz, double jetzt) =>
+        SatzEinsetzen(gl, SatzVorbereitetNehmen(spiel.Szene, satz) ?? SatzPaketBauen(spiel.Szene, spiel.Grafik!, satz), jetzt);
+
+    /// <summary>Weisung P8-55 (W12): Gestalten, Verkehr und beide Netze (nah, fern) eines Satzes, auf dem Prozessor gebaut.</summary>
+    private sealed record SatzPaket(StadtSzene Szene, FestVerkehr.Satz Satz, List<FestVerkehr.Gestalt>? Gestalten, Verkehr Verkehr, List<Netz> Nah, List<Netz> Fern);
+
+    private static SatzPaket SatzPaketBauen(StadtSzene szene, GrafikBibliothek grafik, FestVerkehr.Satz satz)
+    {
+        var gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(grafik, satz);
+        var verkehr = FestVerkehr.VerkehrFuer(szene, satz);
+        return new SatzPaket(szene, satz, gestalten, verkehr, AutoNetze(verkehr, gestalten, grafik, false), AutoNetze(verkehr, gestalten, grafik, true));
+    }
+
+    /// <summary>Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern).</summary>
+    private static List<Netz> AutoNetze(Verkehr verkehr, List<FestVerkehr.Gestalt>? gestalten, GrafikBibliothek grafik, bool fern) =>
+        gestalten is not null ? FestVerkehr.Netze(gestalten, fern) : [.. verkehr.Autos.Take(AutosHoechstens).Select(a => AutoNetz(grafik, a.Modell, fern))];
+
+    /// <summary>Satz einsetzen: alte Netze frei, neuer Verkehr (oder der alte bei <paramref name="verkehrBleibt"/>), beide Netze hochladen.</summary>
+    private void SatzEinsetzen(GlInterface gl, SatzPaket paket, double jetzt, bool verkehrBleibt = false)
     {
         foreach (var alt in _autoNetze.Values)
         {
             alt.Freigeben(gl);
         }
         _autoNetze.Clear();
-        _satz = satz;
-        _gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(spiel.Grafik!, satz);
-        _verkehr = FestVerkehr.VerkehrFuer(spiel.Szene, satz);
-        _verkehr.Bedient(jetzt);
+        if (!verkehrBleibt)
+        {
+            _satz = paket.Satz;
+            _gestalten = paket.Gestalten;
+            _verkehr = paket.Verkehr;
+            _verkehr.Bedient(jetzt);
+        }
+        _autoNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
+        _autoNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+    }
+
+    private sealed record SatzVorrat(StadtSzene Szene, FestVerkehr.Satz Satz, Task<SatzPaket> Aufgabe);
+
+    private volatile SatzVorrat? _satzVorrat;
+
+    /// <summary>Den im Haus vorbereiteten Satz nehmen, wenn er zu Szene und Satz passt (sonst null).</summary>
+    private SatzPaket? SatzVorbereitetNehmen(StadtSzene szene, FestVerkehr.Satz satz)
+    {
+        if (_satzVorrat is not { } v || !ReferenceEquals(v.Szene, szene) || v.Satz != satz)
+        {
+            return null;
+        }
+        _satzVorrat = null;
+        try
+        {
+            return v.Aufgabe.GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Weisung P8-55 (W12, Teilplan 3.5): im Haus den Satz fuer das Hinausgehen im Hintergrund vorbereiten (Festgestalten
+    /// oder Autos mit ihren Netzen), wenn er sich gegenueber dem jetzigen aendert (Daemmerung, neues Fest). Fuer die Szene,
+    /// die das Spiel beim Hinausgehen zeigen wird (<see cref="StadtSpiel.SzeneDraussen"/>). Die Seite ruft das im Takt.
+    /// </summary>
+    public void Vorausbauen()
+    {
+        if (_spiel is not { ImInnenraum: true } spiel || spiel.Grafik is not { } grafik || _laedtVor || _verkehr is null)
+        {
+            return;
+        }
+        var szene = spiel.SzeneDraussen;
+        var satz = FestVerkehr.Fuer(szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
+        if (satz == _satz || (_satzVorrat is { } v && ReferenceEquals(v.Szene, szene) && v.Satz == satz))
+        {
+            return;
+        }
+        _satzVorrat = new SatzVorrat(szene, satz, Task.Run(() => SatzPaketBauen(szene, grafik, satz)));
     }
 
     private unsafe void ZeichnenAutos(GlInterface gl, GlNetz netz, int anzahl, Matrix4x4 sichtProj)
@@ -1587,8 +2038,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 gl.DeleteVertexArray(_vao);
             }
-            gl.DeleteBuffer(_ecken);
-            gl.DeleteBuffer(_indizes);
+            if (_ecken != 0)
+            {
+                gl.DeleteBuffer(_ecken);
+            }
+            if (_indizes != 0)
+            {
+                gl.DeleteBuffer(_indizes);
+            }
+            // Weisung P8-55 (W12): ein zweites Freigeben (Vorrat und Anzeige teilen Netze) tut nichts
+            (_vao, _ecken, _indizes) = (0, 0, 0);
         }
     }
 }

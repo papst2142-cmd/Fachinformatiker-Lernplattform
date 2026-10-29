@@ -119,8 +119,11 @@ public sealed class SpielJahreszeitFarbenTests
             Assert.True(deko.AnzahlEcken > 0);
             Assert.Equal(Farben(deko), Farben(dekoJ));
             // und im Netz der Stadt steht die Deko am Ende der eigenen Teile bzw. Modelle in diesen Farben
-            var farbenStadt = Farben(szene.NetzBauen()).ToHashSet();
-            Assert.All(Farben(deko).Distinct(), f => Assert.Contains(f, farbenStadt));
+            // P8-56: die Lampen der Deko tragen im Netz der Stadt die Leuchtmarke (leuchten nachts), Farbe darunter gleich
+            // (auf 1/10 000 gerundet: +Marke -Marke ist in float nicht immer bitgleich)
+            static Vector3 Rund(Vector3 f) => new(MathF.Round(f.X, 4), MathF.Round(f.Y, 4), MathF.Round(f.Z, 4));
+            var farbenStadt = Farben(szene.NetzBauen()).Select(f => Rund(Nachtlicht.Leuchtet(f) ? f - new Vector3(Nachtlicht.Marke) : f)).ToHashSet();
+            Assert.All(Farben(deko).Distinct(), f => Assert.Contains(Rund(f), farbenStadt));
             // W11: die Deko aus dem Graveyard Kit (Kuerbisse) steht im eigenen Netz, ebenso unveraendert (ohne Leuchtmarke)
             var paket = Deko(sommer, paket: true);
             Assert.Equal(Farben(paket), Farben(Deko(szene, paket: true)));

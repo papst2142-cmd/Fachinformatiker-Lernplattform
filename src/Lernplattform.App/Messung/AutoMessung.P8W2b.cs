@@ -36,6 +36,26 @@ public static partial class AutoMessung
                 Fehler("Seitenleiste: Eintrag " + id + " ohne Symbol");
             }
         }
+        // Weisung P8-56 (Nico, Wahl b): "Programm beenden" unten in der Seitenleiste (PC, auch ohne Vollbild); Esc
+        // verlaesst das Vollbild (gedrueckt wird nur Esc, beendet wird hier nichts)
+        if (!OperatingSystem.IsAndroid() && (leisten.BeendenKnopf is not { } beenden || !beenden.IsEffectivelyVisible
+            || Avalonia.Automation.AutomationProperties.GetName(beenden) != Navigation.ProgrammBeenden))
+        {
+            Fehler("Seitenleiste: Knopf \"" + Navigation.ProgrammBeenden + "\" fehlt");
+        }
+        if (TopLevel.GetTopLevel(ansicht) is { } top)
+        {
+            Lernplattform.Spiel.Vollbild.DauerhaftSetzen(true);
+            await Task.Delay(300);
+            Taste(top, Avalonia.Input.Key.Escape);
+            await Task.Delay(300);
+            Messwerte.Notiere("Vollbild nach Esc: " + (Lernplattform.Spiel.Vollbild.Dauerhaft ? "an" : "aus"));
+            if (Lernplattform.Spiel.Vollbild.Dauerhaft)
+            {
+                Fehler("Vollbild: Esc verlaesst das Vollbild nicht");
+                Lernplattform.Spiel.Vollbild.DauerhaftSetzen(false);
+            }
+        }
         // Lernstatus: wird nach jedem Seitenwechsel im Hintergrund gelesen
         for (var i = 0; i < 100 && leisten.LernstatusText.Length == 0; i++)
         {

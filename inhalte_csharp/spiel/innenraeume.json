@@ -286,5 +286,21 @@
         }
       }
     }
+  },
+  "zusatz_nachtrag": {
+    "_hinweis": [
+      "Weisung P8-56 (Nico 29.10.2026): nur angehaengt, wirkt nach \"zusatz\" wie dieser (ohne nimmt Einrichtung dieser Typen heraus, deko kommt hinzu).",
+      "Amt ohne Fahne, Bank ohne beide Sessel (der Buerostuhl am Schreibtisch bleibt), Kaufhaus: Schaufensterpuppen im Eingang mit Blick in den Raum, Elektromarkt und Moebelhaus: Kasse auf dem Tresen."
+    ],
+    "amt": {"raeume": {"buergerbuero": {"ohne": ["fahne"]}}},
+    "bank": {"raeume": {"schalterhalle": {"ohne": ["sessel", "wartesessel"]}}},
+    "kaufhaus": {"flur": {"ohne": ["puppe"], "deko": [
+      {"typ": "puppe", "x": 3.6, "y": 11.6, "w": 0.8, "h": 0.8, "dreh": 2, "kleidung": ["hoodie_gruen", "jeans_blau", "sneaker_weiss", "kappe_rot"]},
+      {"typ": "puppe", "x": 5.6, "y": 11.6, "w": 0.8, "h": 0.8, "dreh": 2, "kleidung": ["hemd_hellblau", "chino_beige", "lederschuhe", "hut_braun"]},
+      {"typ": "puppe", "x": 16.0, "y": 11.6, "w": 0.8, "h": 0.8, "dreh": 2, "kleidung": ["pulli_rot", "jeans_schwarz", "stiefel", "muetze_gelb"]},
+      {"typ": "puppe", "x": 18.0, "y": 11.6, "w": 0.8, "h": 0.8, "dreh": 2, "kleidung": ["polo_blau", "jeans_blau", "sneaker_weiss", "muetze_grau"]}
+    ]}},
+    "elektromarkt": {"flur": {"deko": [{"typ": "kasse", "x": 18.6, "y": 10.4, "w": 0.6, "h": 0.5}]}},
+    "moebelhaus": {"flur": {"deko": [{"typ": "kasse", "x": 22.6, "y": 11.4, "w": 0.6, "h": 0.5}]}}
   }
 }

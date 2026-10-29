@@ -117,6 +117,11 @@ public static partial class AutoMessung
         {
             return await ErsatzLaufAsync(ansicht);
         }
+        // Weisung P8-51: eigener Messlauf W12 (Anlaesse langsamer Bilder, Vorlade-Kosten), nur Messung
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilW12)
+        {
+            return await W12LaufAsync(ansicht);
+        }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
         // Phase 8 W6 (Teilplan P8-11 Abschnitt 4): festes Datum aus lauf.sh; ein ungueltiger Wert bricht den Start-Test ab
@@ -149,7 +154,8 @@ public static partial class AutoMessung
             funde += await P8W8TonAsync(ansicht);              // Phase 8 W8: Toene, Maus, Tasten, eigene Lieder
             funde += await P8W9JahreszeitenAsync(ansicht);     // Phase 8 W9: Stadt je Jahreszeit, Winter mit Weihnachten
             funde += await P8W10SpielAsync(ansicht);           // Phase 8 W10: Hinweisfeld, Tag und Nacht, Laternen
-            funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 21 Laternen
+            funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 22 Laternen
+            funde += await P8W12SpielAsync(ansicht);           // Phase 8 W12: Vorladen, Fest im Haus, alle Orte
         }
         if (MitLernen)
         {

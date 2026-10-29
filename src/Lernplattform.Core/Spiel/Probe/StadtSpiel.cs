@@ -609,7 +609,12 @@ public sealed class StadtSpiel
         }
         var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
         var fest = FestJetzt();
-        var innen = Vorbereitet(ansicht, fest) ?? Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste, Szene.Jahreszeit);
+        var innen = Vorbereitet(ansicht, fest);
+        if (innen is null && Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste, Szene.Jahreszeit) is { } gebaut)
+        {
+            innen = gebaut;
+            InDenVorrat(gebaut);
+        }
         if (innen is null)
         {
             return false;
@@ -624,62 +629,126 @@ public sealed class StadtSpiel
         Ton?.Invoke(new Tonanlass(Anlass.TuerAuf));
         InnenGeaendert?.Invoke();
         Geaendert?.Invoke();
+        SzeneVorbereiten();
         return true;
     }
 
-    private Task<Innenraum?>? _vorbereitung;
-    private string? _vorAnsicht;
-    private Spielstand? _vorStand;
-    private string? _vorFest;
-    private Jahreszeit _vorJahreszeit;
+    /// <summary>
+    /// Weisung P8-55 (W12): vorbereitete Innenraeume je Ansicht mit ihrer Inhalts-Signatur
+    /// (<see cref="Probe.Innenraum.InhaltSignatur"/>). Ein Eintrag bleibt, bis ein anderer Inhalt ihn ersetzt.
+    /// </summary>
+    private readonly Dictionary<string, (string Signatur, Task<Innenraum?> Aufgabe)> _vorrat = new(StringComparer.Ordinal);
+
+    /// <summary>Inhalts-Signatur des Innenraums zur Ansicht beim jetzigen Spielstand, Festzeit und Jahreszeit (null = keiner).</summary>
+    private string? InnenSignatur(string? ansicht, string? fest) =>
+        Probe.Innenraum.OrtFuer(ansicht) is null ? null
+        : Probe.Innenraum.InhaltSignatur(ansicht, Ablauf.Stand, Innenraeume, GeschaefteDaten, fest, Szene.Jahreszeit);
 
     /// <summary>
     /// Weisung P7-16: den Innenraum eines Orts ausserhalb des Oberflaechen-Threads vorbereiten (Grundriss,
     /// Netze, Laufraster), solange die Figur hingeht oder davor steht. Gebaut wird aus einer Kopie des
-    /// Spielstands; benutzt wird das Ergebnis beim Betreten nur, wenn der Spielstand noch derselbe ist
-    /// (jedes Ereignis ersetzt den Stand, STATE_COPY), sonst wird wie bisher sofort gebaut.
+    /// Spielstands. Weisung P8-55 (W12): wiedererkannt wird er an seiner Inhalts-Signatur (vorher nur bei
+    /// demselben Spielstand, nach jedem Ereignis passte die Vorbereitung nicht mehr); ist schon ein Innenraum
+    /// mit derselben Signatur da, geschieht nichts.
     /// </summary>
     public void Vorbereiten(string? ort)
     {
         var ansicht = ort is null ? null : Szene.Ort(ort)?.Ansicht;
         var fest = FestJetzt();
-        if (Probe.Innenraum.OrtFuer(ansicht) is null || (ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest && Szene.Jahreszeit == _vorJahreszeit))
+        if (InnenSignatur(ansicht, fest) is not { } signatur || (_vorrat.TryGetValue(ansicht!, out var da) && da.Signatur == signatur))
         {
             return;
         }
-        var stand = Ablauf.Stand;
-        var kopie = stand.Kopie();
+        var kopie = Ablauf.Stand.Kopie();
         var (innenraeume, grafik, geschaefte, feste, jahreszeit) = (Innenraeume, Grafik, GeschaefteDaten, Feste, Szene.Jahreszeit);
-        _vorAnsicht = ansicht;
-        _vorStand = stand;
-        _vorFest = fest;
-        _vorJahreszeit = jahreszeit;
-        _vorbereitung = Task.Run(() =>
+        var aufgabe = Task.Run(() =>
         {
             var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
             innen?.Vorbereiten();
             return innen;
         });
+        lock (_vorrat)
+        {
+            _vorrat[ansicht!] = (signatur, aufgabe);
+        }
     }
 
-    /// <summary>Der vorbereitete Innenraum zur Ansicht, wenn er zum jetzigen Spielstand und zur Festzeit passt (sonst null).</summary>
+    /// <summary>
+    /// Weisung P8-55 (W12): alle Innenraeume der Stadt vorbereiten (beim Oeffnen der Spielseite), nacheinander in
+    /// einem Hintergrund-Faden aus einer Kopie des Spielstands; fertig, wenn alle gebaut sind. Schon vorbereitete
+    /// mit gleicher Signatur bleiben.
+    /// </summary>
+    public Task AlleVorbereiten()
+    {
+        var fest = FestJetzt();
+        var neu = new List<(string Ansicht, TaskCompletionSource<Innenraum?> Fertig)>();
+        foreach (var ansicht in Szene.Orte.Select(o => o.Ansicht).Where(a => Probe.Innenraum.OrtFuer(a) is not null).Distinct(StringComparer.Ordinal))
+        {
+            if (InnenSignatur(ansicht, fest) is not { } signatur || (_vorrat.TryGetValue(ansicht!, out var da) && da.Signatur == signatur))
+            {
+                continue;
+            }
+            var quelle = new TaskCompletionSource<Innenraum?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            lock (_vorrat)
+            {
+                _vorrat[ansicht!] = (signatur, quelle.Task);
+            }
+            neu.Add((ansicht!, quelle));
+        }
+        List<Task> alle;
+        lock (_vorrat)
+        {
+            alle = [.. _vorrat.Values.Select(v => (Task)v.Aufgabe)];
+        }
+        if (neu.Count > 0)
+        {
+            var kopie = Ablauf.Stand.Kopie();
+            var (innenraeume, grafik, geschaefte, feste, jahreszeit) = (Innenraeume, Grafik, GeschaefteDaten, Feste, Szene.Jahreszeit);
+            _ = Task.Run(() =>
+            {
+                foreach (var (ansicht, fertig) in neu)
+                {
+                    try
+                    {
+                        var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
+                        innen?.Vorbereiten();
+                        fertig.TrySetResult(innen);
+                    }
+                    catch (Exception e)
+                    {
+                        fertig.TrySetException(e);
+                    }
+                }
+            });
+        }
+        // ein fehlerhafter Innenraum haelt das Vorladen nicht auf (er wird beim Betreten wie bisher neu gebaut)
+        return Task.WhenAll(alle).ContinueWith(_ => { }, TaskScheduler.Default);
+    }
+
+    /// <summary>Weisung P8-55 (W12): die schon gebauten Innenraeume des Vorrats (fuer das Hochladen in die Grafikkarte).</summary>
+    /// <remarks>Darf aus dem Faden der Grafik gelesen werden (Abzug unter Sperre).</remarks>
+    public IReadOnlyList<Innenraum> Vorrat
+    {
+        get
+        {
+            lock (_vorrat)
+            {
+                return [.. _vorrat.Values.Where(v => v.Aufgabe.IsCompletedSuccessfully && v.Aufgabe.Result is not null).Select(v => v.Aufgabe.Result!)];
+            }
+        }
+    }
+
+    /// <summary>Der vorbereitete Innenraum zur Ansicht, wenn sein Inhalt zum jetzigen Stand, Fest und Jahreszeit passt (sonst null).</summary>
     private Innenraum? Vorbereitet(string? ansicht, string? fest)
     {
-        var aufgabe = _vorbereitung;
-        var passt = aufgabe is not null && ansicht == _vorAnsicht && ReferenceEquals(_vorStand, Ablauf.Stand) && fest == _vorFest
-            && _vorJahreszeit == Szene.Jahreszeit;
-        _vorbereitung = null;
-        _vorAnsicht = null;
-        _vorStand = null;
-        _vorFest = null;
-        if (!passt)
+        if (ansicht is null || !_vorrat.TryGetValue(ansicht, out var da) || InnenSignatur(ansicht, fest) != da.Signatur)
         {
             return null;
         }
         try
         {
             // laeuft sie noch, ist Warten nie laenger als neu bauen
-            var innen = aufgabe!.GetAwaiter().GetResult();
+            var innen = da.Aufgabe.GetAwaiter().GetResult();
             if (innen is not null)
             {
                 VorbereitetGenommen++;
@@ -688,7 +757,23 @@ public sealed class StadtSpiel
         }
         catch (Exception)
         {
+            lock (_vorrat)
+            {
+                _vorrat.Remove(ansicht);
+            }
             return null;
+        }
+    }
+
+    /// <summary>Weisung P8-55 (W12): einen eben gebauten Innenraum in den Vorrat legen (Betreten ohne Vorbereitung, Einrichten).</summary>
+    private void InDenVorrat(Innenraum innen)
+    {
+        if (Probe.Innenraum.InhaltSignatur(innen.Ansicht, Ablauf.Stand, Innenraeume, GeschaefteDaten, innen.Fest, innen.Jahreszeit) is { } signatur)
+        {
+            lock (_vorrat)
+            {
+                _vorrat[innen.Ansicht] = (signatur, Task.FromResult<Innenraum?>(innen));
+            }
         }
     }
 
@@ -843,9 +928,11 @@ public sealed class StadtSpiel
         // Phase 8 W9: ebenso die Jahreszeit der Farben
         if ((FestJetzt() is var fest && fest != Szene.Fest) | (JahreszeitJetzt() is var jahreszeit && jahreszeit != Szene.Jahreszeit))
         {
-            Szene = StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste, jahreszeit);
+            // Weisung P8-55 (W12): im Haus schon im Hintergrund gebaut (SzeneVorbereiten), sonst wie bisher jetzt
+            Szene = SzeneVorbereitet(fest, jahreszeit) ?? StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste, jahreszeit);
             SzeneGeaendert?.Invoke();
         }
+        _szeneVorbereitung = null;
         InnenGeaendert?.Invoke();
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
@@ -853,6 +940,68 @@ public sealed class StadtSpiel
         FigurRichtung = 0;
         Zeile = OrtZeile(Jetzt.Ort);
         Geaendert?.Invoke();
+    }
+
+    private (string? Fest, Jahreszeit Jahreszeit, string Signatur, Task<StadtSzene> Aufgabe)? _szeneVorbereitung;
+
+    /// <summary>
+    /// Weisung P8-55 (W12, Teilplan 3.5): hat sich im Haus die Festzeit oder die Jahreszeit geaendert (Geraetedatum
+    /// ueber Mitternacht), die Szene fuer das Hinausgehen schon jetzt im Hintergrund bauen (aus einer Kopie des
+    /// Spielstands, mit allen Netzen). Draussen oder ohne Wechsel geschieht nichts. Die Oberflaeche ruft das im Takt.
+    /// </summary>
+    public void SzeneVorbereiten()
+    {
+        if (!ImInnenraum)
+        {
+            return;
+        }
+        var fest = FestJetzt();
+        var jahreszeit = JahreszeitJetzt();
+        if (fest == Szene.Fest && jahreszeit == Szene.Jahreszeit)
+        {
+            return;
+        }
+        var signatur = StadtSzene.SignaturFuer(Stadt, Ablauf.Stand, fest);
+        if (_szeneVorbereitung is { } da && da.Fest == fest && da.Jahreszeit == jahreszeit && da.Signatur == signatur)
+        {
+            return;
+        }
+        var (stadt, kopie, grafik, feste) = (Stadt, Ablauf.Stand.Kopie(), Grafik, Feste);
+        _szeneVorbereitung = (fest, jahreszeit, signatur, Task.Run(() =>
+        {
+            var szene = StadtSzene.Bauen(stadt, kopie, grafik, fest, feste, jahreszeit);
+            szene.Vorbereiten();
+            return szene;
+        }));
+    }
+
+    /// <summary>
+    /// Weisung P8-55 (W12): die Szene, die beim Hinausgehen voraussichtlich gezeigt wird (die im Haus fertig vorbereitete,
+    /// sonst die jetzige); die Darstellung bereitet dafuer die Festgestalten vor.
+    /// </summary>
+    public StadtSzene SzeneDraussen => _szeneVorbereitung is { Aufgabe.IsCompletedSuccessfully: true } v ? v.Aufgabe.Result : Szene;
+
+    /// <summary>Weisung P8-55 (W12): Szenen, die im Hintergrund schon gebaut waren und beim Hinausgehen genommen wurden.</summary>
+    public int SzeneVorbereitetGenommen { get; private set; }
+
+    /// <summary>Die im Haus vorbereitete Szene, wenn sie zu Festzeit, Jahreszeit und Spielstand passt (sonst null).</summary>
+    private StadtSzene? SzeneVorbereitet(string? fest, Jahreszeit jahreszeit)
+    {
+        if (_szeneVorbereitung is not { } da || da.Fest != fest || da.Jahreszeit != jahreszeit
+            || da.Signatur != StadtSzene.SignaturFuer(Stadt, Ablauf.Stand, fest))
+        {
+            return null;
+        }
+        try
+        {
+            var szene = da.Aufgabe.GetAwaiter().GetResult();
+            SzeneVorbereitetGenommen++;
+            return szene;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     // ---- Einrichten der Wohnung (W5) -----------------------------------------
@@ -1085,6 +1234,10 @@ public sealed class StadtSpiel
         }
         // Phase 8 W6: dieselbe Festzeit wie beim Betreten (nie mitten in einer Ansicht wechseln)
         Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste, alt.Jahreszeit) ?? alt;
+        if (!ReferenceEquals(Innen, alt))
+        {
+            InDenVorrat(Innen);
+        }
         InnenGeaendert?.Invoke();
     }
 

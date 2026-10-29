@@ -286,10 +286,19 @@ public class SpielSchalterTests
             var mehr = SpielInnenraumTests.Deko(Raum(ort).Gebaeude).Count() - SpielInnenraumTests.Deko(grundriss).Count();
             var soll = SpielDaten.ListeOderLeer(SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["flur"]), "deko").Count
                 + SpielDaten.Objekt(SpielDaten.Objekt(zusatz[ort])["raeume"]).Sum(p => SpielDaten.ListeOderLeer(SpielDaten.Objekt(p.Value), "deko").Count);
+            // Weisung P8-56 (zusatz_nachtrag): die Bank ohne ihre beiden Sessel, das Amt ohne die Fahne
+            soll -= ort == Schalter.Bank ? 2 : 1;
             Assert.Equal(soll, mehr);
         }
-        Assert.Same(SpielDaten.Objekt(SpielDaten.Objekt(grundrisse["moebelhaus"])["gebaeude"]),
-            Innenraum.Bauen("geschaeft:moebelhaus", stand, grundrisse, null)!.Gebaeude);
+        Assert.DoesNotContain(Typen(bank), t => t is "sessel" or "wartesessel");
+        Assert.DoesNotContain("fahne", Typen(amt));
+        Assert.Contains("schreibtisch", Typen(bank));
+        // auch der Nachtrag mischt in eine Kopie: der Grundriss des Moebelhauses bleibt ohne Kasse
+        var moebel = SpielDaten.Objekt(SpielDaten.Objekt(grundrisse["moebelhaus"])["gebaeude"]);
+        var gebaut = Innenraum.Bauen("geschaeft:moebelhaus", stand, grundrisse, null)!.Gebaeude;
+        Assert.NotSame(moebel, gebaut);
+        Assert.DoesNotContain(SpielInnenraumTests.Deko(moebel), d => Py.Str(d["typ"]) == "kasse");
+        Assert.Single(SpielInnenraumTests.Deko(gebaut), d => Py.Str(d["typ"]) == "kasse");
     }
 
     [Fact]

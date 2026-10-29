@@ -7,7 +7,7 @@ using Lernplattform.Core.Spiel.Probe;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// Phase 8 W11 (Weisung P8-45): Darstellung der Stadt ohne Einfluss auf den Spielstand. Genau 21 Laternen nach
+/// Phase 8 W11 (Weisung P8-45): Darstellung der Stadt ohne Einfluss auf den Spielstand. Genau 22 Laternen (P8-56, vorher 21) nach
 /// Nicos Skizze (16 einfache mit dem Arm zur Strasse, 5 Doppel-Laternen mit den Armen laengs der Strasse) in jeder
 /// Jahres- und Festzeit an denselben Plaetzen, jede nach den Regeln aus P8-41 frei; die Regeln lehnen die verbotenen
 /// Stellen wirklich ab. Die Modelle eines Hauses ueberlappen sich nicht (Bahnhof ohne Turm, Altbau mit Anbau an der
@@ -34,7 +34,7 @@ public sealed class StadtDarstellungTests
         { Festzeit.Silvester, Jahreszeit.Winter },
     };
 
-    /// <summary>Genau 21 Laternen (16 einfach, 5 doppelt) an denselben Plaetzen in jeder Jahres- und Festzeit; jede frei nach den Regeln.</summary>
+    /// <summary>Genau 22 Laternen (17 einfach, 5 doppelt; P8-56) an denselben Plaetzen in jeder Jahres- und Festzeit; jede frei nach den Regeln.</summary>
     [Theory]
     [MemberData(nameof(Zeiten))]
     public void LaternenJeJahresUndFestzeit(string? fest, Jahreszeit j)
@@ -42,8 +42,8 @@ public sealed class StadtDarstellungTests
         var szene = Szene(fest, j);
         var laternen = szene.Laternen;
         Assert.Equal(Nachtlicht.Anzahl, laternen.Count);
-        Assert.Equal(21, laternen.Count);
-        Assert.Equal(16, laternen.Count(l => !l.Doppelt));
+        Assert.Equal(22, laternen.Count);
+        Assert.Equal(17, laternen.Count(l => !l.Doppelt));
         Assert.Equal(5, laternen.Count(l => l.Doppelt));
         Assert.Equal(Nachtlicht.Skizze.Length, laternen.Count);
         // dieselben Plaetze wie im Sommer ohne Fest
@@ -106,23 +106,23 @@ public sealed class StadtDarstellungTests
     }
 
     /// <summary>
-    /// Genau diese 21 Plaetze und Arten (Weisung P8-47, Kamera aus Nicos zwei Skizzen nachgebaut): Ort nach den Regeln,
-    /// D = Doppel-Laterne. Verschoben sind nur 6 (Brueckenpfosten), 7 (Baum), 11 und 12 (Brueckenpfosten), 15 (Tuer Stellwerk).
+    /// Genau diese 22 Plaetze (P8-56) und Arten (Weisung P8-47, Kamera aus Nicos zwei Skizzen nachgebaut): Ort nach den Regeln,
+    /// D = Doppel-Laterne. Verschoben sind nur 6 (Brueckenpfosten), 11 und 12 (Brueckenpfosten), 15 (Tuer Stellwerk).
     /// </summary>
     [Fact]
     public void LaternenGenauDiesePlaetze()
     {
         (float X, float Z, bool D)[] soll =
         [
-            (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
-            (8.00f, 14.53f, false), (7.00f, 16.82f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
+            (8.00f, 0.65f, false), (7.00f, 2.55f, false), (8.00f, 5.27f, false), (7.00f, 7.72f, false), (7.00f, 12.61f, true),
+            (8.00f, 14.53f, false), (7.00f, 16.52f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
             (9.96f, 21.30f, false), (11.94f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.39f, false),
             (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
-            (29.30f, 17.85f, false),
+            (29.30f, 17.85f, false), (12.95f, 12.10f, false),
         ];
         var laternen = Sommer.Value.Laternen;
         Assert.Equal(soll.Length, laternen.Count);
-        Assert.Equal(16, laternen.Count(l => !l.Doppelt));
+        Assert.Equal(17, laternen.Count(l => !l.Doppelt));
         for (var i = 0; i < soll.Length; i++)
         {
             var l = laternen[i];
@@ -133,6 +133,21 @@ public sealed class StadtDarstellungTests
             // P8-50: keine Laterne im Lichtraum eines Gleises
             Assert.True(Sommer.Value.Gleise.All(g => Kurve.Abstand(l.Ort, g) >= Bahnuebergang.LichtraumHalb + Nachtlicht.AbstandModell), $"Laterne {l.Nr} im Lichtraum");
         }
+    }
+
+    /// <summary>
+    /// Weisung P8-56 (Nico, Bild 1): Laterne 1 tauscht die Strassenseite mit dem Beet. Das Beet steht jetzt auf der
+    /// Westseite, wo vorher die Laterne stand, und an der alten Stelle des Beets auf der Ostseite steht die Laterne.
+    /// </summary>
+    [Fact]
+    public void LaterneEinsTauschtMitDemBeet()
+    {
+        var szene = Sommer.Value;
+        var beete = szene.GruenKlein!.Plaetze.Where(p => p.Item1 == "beet").Select(p => new Vector2(p.Item2, p.Item3)).ToList();
+        Assert.Contains(beete, b => Vector2.Distance(b, new Vector2(6.92f, 0.65f)) < 0.01f);
+        Assert.DoesNotContain(beete, b => Vector2.Distance(b, new Vector2(8.08f, 0.65f)) < 0.3f);
+        var eins = szene.Laternen[0];
+        Assert.True(eins.Ort.X > 7.5f && Vector2.Distance(eins.Ort, new Vector2(8.00f, 0.65f)) < 0.01f);
     }
 
     private static List<Vector2> Ecken(Bahnuebergang.Kreuz k) => Bahnuebergang.Grundpunkte(k);
@@ -312,6 +327,24 @@ public sealed class StadtDarstellungTests
         }
         // der Bahnhof (Tuer an der Suedwand, P8-48) hat seine Deko am Eingang
         Assert.Contains(anTueren, g => g.Ort == "talheim");
+        // Weisung P8-56 (Nico, Bild 4): auch das Stellwerk (Haus ohne Ort, nur mit Tuer) hat seine Deko an der Tuer
+        Assert.Contains(anTueren, g => g.Ort == "stellwerk");
+    }
+
+    /// <summary>
+    /// Weisung P8-56: die Lampen der Fest-Deko an den Tueren leuchten nachts (Halloween das Laternen-Modell,
+    /// Weihnachten die eigene Laterne); ohne Fest leuchtet im Netz der Stadt nichts.
+    /// </summary>
+    [Theory]
+    [InlineData(Festzeit.Halloween, Jahreszeit.Herbst, true)]
+    [InlineData(Festzeit.Weihnachten, Jahreszeit.Winter, true)]
+    [InlineData(null, Jahreszeit.Herbst, false)]
+    [InlineData(null, Jahreszeit.Sommer, false)]
+    public void FestLampenLeuchtenNachts(string? fest, Jahreszeit j, bool leuchtet)
+    {
+        var netz = Szene(fest, j).NetzBauen();
+        var lichter = Enumerable.Range(0, netz.AnzahlEcken).Count(e => Nachtlicht.Leuchtet(netz.FarbeAn(e)));
+        Assert.Equal(leuchtet, lichter > 0);
     }
 
     /// <summary>Groesster Abstand eines Deko-Stuecks von der Mitte seiner Tuer (P8-48).</summary>

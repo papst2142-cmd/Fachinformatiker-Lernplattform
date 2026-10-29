@@ -29,6 +29,19 @@ public class MainActivity : AvaloniaMainActivity
 #if PROBE
         // Weisung P8-16 a: Ton-Probe mit SoundFlow (nur Probe-APK)
         Lernplattform.Spiel.TonProbe.Geraet = _tonprobe;
+        // Weisung P8-52: Leistungsprobe (nur Probe-APK)
+        Lernplattform.Spiel.Leistungsprobe.An = true;
+        Lernplattform.Spiel.Leistungsprobe.BildschirmAn = an => RunOnUiThread(() =>
+        {
+            if (an)
+            {
+                Window?.AddFlags(global::Android.Views.WindowManagerFlags.KeepScreenOn);
+            }
+            else
+            {
+                Window?.ClearFlags(global::Android.Views.WindowManagerFlags.KeepScreenOn);
+            }
+        });
 #endif
         // Phase 8 W8 (Nico 3a): "leisten" = Systemleisten aus, im Spiel immer, sonst mit dem Schalter "Vollbild"
         Lernplattform.Spiel.Vollbild.Geraet = (an, leisten) => RunOnUiThread(() =>

@@ -252,7 +252,41 @@ public sealed class Innenraum
     }
 
     private static Innenraum? BauenOhneJahreszeit(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
-        string? fest, PyObjekt? feste)
+        string? fest, PyObjekt? feste) =>
+        EingabenFuer(ansicht, stand, innenraeume, geschaefte) is { } e
+            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste)
+            : null;
+
+    /// <summary>Weisung P8-55 (W12): alles, was ein Innenraum aus dem Spielstand liest (Grundriss, Personen, Boeden, Kleidung).</summary>
+    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider);
+
+    /// <summary>
+    /// Weisung P8-55 (W12, Selbstfund 3.4 im Teilplan): Inhalt des Innenraums zur Ansicht als Text, ohne ihn zu bauen
+    /// (Grundriss, Personen mit Auftrag, Boeden, Festzeit, Jahreszeit). Gleicher Text = gleicher Innenraum: so erkennt
+    /// das Spiel einen vorgeladenen Innenraum wieder, auch wenn ein Ereignis den Spielstand ersetzt hat (vorher galt nur
+    /// derselbe Spielstand). null = kein Innenraum (oder nicht als Text darstellbar, dann wird immer neu gebaut).
+    /// </summary>
+    public static string? InhaltSignatur(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
+    {
+        if (EingabenFuer(ansicht, stand, innenraeume, geschaefte) is not { } e)
+        {
+            return null;
+        }
+        try
+        {
+            return PythonJson.Text(new List<object?>
+            {
+                e.Ansicht, e.Ort, e.Gebaeude, e.Personen.Select(p => (object?)new List<object?> { p.Daten, p.Auftrag }).ToList(),
+                e.Boeden, e.Kleider is not null, fest, jahreszeit.ToString(),
+            });
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    private static Eingaben? EingabenFuer(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -275,7 +309,7 @@ public sealed class Innenraum
                     personen.Add(Person(kopie, false));
                 }
             }
-            return new Innenraum(ansicht!, ort, Objekt(farm["gebaeude"]), personen, grafik, null, null, fest, feste);
+            return new Eingaben(ansicht!, ort, Objekt(farm["gebaeude"]), personen, null, null);
         }
         if (Geschaefte.Laeden.Contains(ort) || Schalter.Orte.Contains(ort))
         {
@@ -287,7 +321,9 @@ public sealed class Innenraum
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
-            return new Innenraum(ansicht!, ort, MitZusatz(Objekt(laden["gebaeude"]), zusatz), verkauf, grafik, null, geschaefte, fest, feste);
+            // Weisung P8-56: zweiter angehaengter Zusatz (Fahne, Sessel, Puppen, Kassen), wirkt nach dem ersten
+            var nachtrag = Get(innenraeume!, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
+            return new Eingaben(ansicht!, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag), verkauf, null, geschaefte);
         }
         if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
@@ -311,7 +347,7 @@ public sealed class Innenraum
         var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
         var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
-        return new Innenraum(ansicht!, ort, gebaeude, leute, grafik, boeden, null, fest, feste);
+        return new Eingaben(ansicht!, ort, gebaeude, leute, boeden, null);
     }
 
     /// <summary>
@@ -916,6 +952,11 @@ public sealed class Innenraum
                 Modell(r, "table", 0, 0, b, tt, 0.95f * M, 0, Farben.Hell);
                 Kasten(r, (b / 2) - 0.25f, (tt / 2) - 0.2f, 0.5f, 0.4f, 0.95f * M, 1.1f * M, Farben.Geraet);
                 Kasten(r, (b / 2) - 0.2f, (tt / 2) - 0.25f, 0.4f, 0.05f, 1.1f * M, 1.35f * M, Farben.Geraet);
+                break;
+            case "kasse":
+                // Weisung P8-56: Kasse obenauf auf dem Tresen (Hoehe wie "tresen"), Bildschirm zur hinteren Kante
+                Kasten(r, 0.05f, 0.05f, b - 0.1f, tt - 0.1f, 1.05f * M, 1.2f * M, Farben.Geraet);
+                Kasten(r, 0.1f, 0.02f, b - 0.2f, 0.05f, 1.2f * M, 1.45f * M, Farben.Geraet);
                 break;
             case "kleiderstaender":
                 Kleiderstaender(r, b, tt, Get(d, "ware") as string);

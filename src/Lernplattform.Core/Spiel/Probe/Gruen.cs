@@ -75,7 +75,8 @@ public static class Gruen
     /// freie Flaechen (Raster 1,6). <paramref name="frei"/> prueft einen Kreis (x, z, r).
     /// </summary>
     public static Ergebnis Verteilen(GrafikBibliothek grafik, float breite, float tiefe, IEnumerable<(float X, float Z, float W, float H)> parks,
-        IEnumerable<IReadOnlyList<Vector2>> strassen, Func<float, float, float, bool> frei, List<(Vector2 Mitte, float R)> baeume)
+        IEnumerable<IReadOnlyList<Vector2>> strassen, Func<float, float, float, bool> frei, List<(Vector2 Mitte, float R)> baeume,
+        IEnumerable<Vector2>? beete = null)
     {
         var erg = new Ergebnis();
         var belegt = new List<(Vector2 P, float R)>();
@@ -135,6 +136,11 @@ public static class Gruen
             belegt.Add((new Vector2(x, z), r));
             erg.Plaetze.Add((art, x, z, r));
             Zaehlen(art);
+        }
+        // Weisung P8-56: fest gesetzte Beete (Tausch mit einer Laterne) vor allem anderen
+        foreach (var b in beete ?? [])
+        {
+            Setzen("beet", b.X, b.Y);
         }
         // Parks
         foreach (var (px, pz, pw, ph) in parks)

@@ -175,6 +175,32 @@ public sealed class StadtSzene
     /// <summary>Die Haeuser (Gebaeude der Landschaft und Orte), jedes mit eigenem Netz (<see cref="HausNetz"/>).</summary>
     public IReadOnlyList<StadtHaus> Haeuser { get; }
 
+    private Fertig? _fertig;
+
+    /// <summary>Weisung P8-55 (W12): die fertigen Netze der Szene (Stadt, je Haus, Kleingruen, Paket nah und fern).</summary>
+    public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern);
+
+    /// <summary>
+    /// Weisung P8-55 (W12): alle Netze der Szene einmal bauen und behalten (auch ausserhalb des Oberflaechen-Threads,
+    /// bevor die Szene gezeigt wird; wie <see cref="Innenraum.Vorbereiten"/>). Danach baut das Hochladen nichts mehr.
+    /// Das Paket-Netz gibt es nur mit CC0-Grafik.
+    /// </summary>
+    public Fertig Vorbereiten()
+    {
+        if (_fertig is { } fertig)
+        {
+            return fertig;
+        }
+        var haeuser = new Dictionary<StadtHaus, Netz>();
+        foreach (var haus in Haeuser)
+        {
+            haeuser[haus] = HausNetz(haus);
+        }
+        fertig = new Fertig(NetzBauen(), haeuser, GruenNetzBauen(), Grafik is null ? null : PaketNetzBauen(false), Grafik is null ? null : PaketNetzBauen(true));
+        _fertig = fertig;
+        return fertig;
+    }
+
     /// <summary>Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle.</summary>
     public Netz NetzBauen()
     {
@@ -187,7 +213,20 @@ public sealed class StadtSzene
         }
         if (Jahreszeit == Jahreszeit.Sommer)
         {
-            var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i]));
+            var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i] && i < FestTeileVon));
+            // Weisung P8-56: die Fest-Teile danach, das Licht der eigenen Laternen leuchtet nachts
+            for (var i = FestTeileVon; i < Teile.Count; i++)
+            {
+                if (!teileHaus[i])
+                {
+                    var von = netz.AnzahlEcken;
+                    netz.Hinzu(Teile[i]);
+                    if (Teile[i].Farbe == FestDeko.LaternenLicht)
+                    {
+                        netz.Leuchten(von, netz.AnzahlEcken);
+                    }
+                }
+            }
             foreach (var streifen in Streifen)
             {
                 netz.Hinzu(streifen);
@@ -196,7 +235,7 @@ public sealed class StadtSzene
             {
                 if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
                 {
-                    netz.Hinzu(modell, Stuecke[i].Lage);
+                    netz.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? null : FestLicht(modell));
                 }
             }
             foreach (var baum in GruenKlein?.Baeume ?? [])
@@ -218,7 +257,12 @@ public sealed class StadtSzene
                 gefaerbt.Faerbung = i < FestTeileVon
                     ? Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Stadt, Jahreszeitfarben.Samen(new Vector3((t.X1 + t.X2) / 2, 0, (t.Z1 + t.Z2) / 2)))
                     : null;
+                var von = gefaerbt.AnzahlEcken;
                 gefaerbt.Hinzu(t);
+                if (i >= FestTeileVon && t.Farbe == FestDeko.LaternenLicht)
+                {
+                    gefaerbt.Leuchten(von, gefaerbt.AnzahlEcken);
+                }
             }
         }
         gefaerbt.Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Stadt);
@@ -231,7 +275,7 @@ public sealed class StadtSzene
         {
             if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
             {
-                gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : null);
+                gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : FestLicht(modell));
             }
         }
         foreach (var baum in GruenKlein?.Baeume ?? [])
@@ -243,6 +287,13 @@ public sealed class StadtSzene
         }
         return gefaerbt;
     }
+
+    /// <summary>
+    /// Weisung P8-56 (Nico, Bild 4): die Lampen der Fest-Deko an den Tueren leuchten nachts wie die Laternen: bei
+    /// Laternen-Modellen nur Glas und Kerze (<see cref="FestVerkehr.Glut"/>), alles andere behaelt seine Farbe.
+    /// </summary>
+    private static Func<int, float, float, Vector3>? FestLicht(GrafikModell modell) =>
+        modell.Name.Contains("lantern", StringComparison.Ordinal) ? (d, _, _) => FestVerkehr.Glut(modell, d) : null;
 
     /// <summary>Das Netz eines Hauses (eigene Teile und CC0-Modelle).</summary>
     public Netz HausNetz(StadtHaus haus)
@@ -859,7 +910,18 @@ public sealed class StadtSzene
         var hindernisseVorFest = hindernisse.ToList();
         var festTeileVon = teile.Count;
         var festStueckeVon = stuecke.Count;
-        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse, tueren);
+        // Weisung P8-56 (Nico, Bild 4): auch das Stellwerk (Haus ohne Ort mit Tuer) bekommt die Deko an der Tuer wie die
+        // Haeuser der Orte; es steht hinten in der Liste, die Deko der Orte bleibt so an ihrem Platz
+        var festOrte = orte.Concat(tueren.Where(t => !t.Modell && orte.All(o => o.Id != t.Ort))
+            .Select(t => (Tuer: t, Haus: zierhaeuser.FirstOrDefault(z => t.Mitte.X >= z.KastenMin.X - 0.3f && t.Mitte.X <= z.KastenMax.X + 0.3f
+                && t.Mitte.Y >= z.KastenMin.Z - 0.3f && t.Mitte.Y <= z.KastenMax.Z + 0.3f)))
+            .Where(p => p.Haus is not null)
+            .Select(p => new StadtOrt(p.Tuer.Ort, p.Haus!.Name, p.Haus.Name, "zier", p.Tuer.Mitte.X, p.Tuer.Mitte.Y, p.Haus.KastenMin, p.Haus.KastenMax, p.Haus.Schild)
+            {
+                StehX = p.Tuer.WegAnfang.X,
+                StehZ = p.Tuer.WegAnfang.Y,
+            })).ToList();
+        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), festOrte, baeume.Sperren, hindernisse, tueren);
         if (fest is not null)
         {
             signatur.Add("fest:" + fest);
@@ -872,7 +934,7 @@ public sealed class StadtSzene
         {
             foreach (var f in Festzeit.Alle)
             {
-                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList(), tueren))
+                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), festOrte, baeume.Sperren, hindernisseVorFest.ToList(), tueren))
                 {
                     festPlaetze.Add((new Vector2(g.X, g.Z), Math.Max(g.R, 0.12f)));
                 }
@@ -890,7 +952,7 @@ public sealed class StadtSzene
                 && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
-            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt);
+            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, Nachtlicht.Beete);
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
