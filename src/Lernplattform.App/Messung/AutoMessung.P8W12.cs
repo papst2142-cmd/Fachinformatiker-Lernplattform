@@ -220,6 +220,17 @@ public static partial class AutoMessung
         GC.KeepAlive(stadtNetze);
         Zeile(string.Create(inv, $"Prozess: Arbeitsspeicher {Process.GetCurrentProcess().WorkingSet64 / 1024 / 1024} MB, verwaltet {GC.GetTotalMemory(false) / 1024 / 1024} MB (Start {speicherStart / 1024 / 1024} MB), GC {GC.CollectionCount(0)}/{GC.CollectionCount(1)}/{GC.CollectionCount(2)}"));
         Zeile(string.Create(inv, $"Toene geladen im Hintergrund: {TonDienst.GeladenMs:F0} ms (still: {TonDienst.Still})"));
+        // Weisung P8-52: die Leistungsprobe der Probe-APK hier mit 3 s je Stufe (Ablauf und Zeilen pruefen)
+        spiel = Frisch(seite);
+        await Bilder(flaeche, 5);
+        foreach (var z in await Leistungsprobe.LaufenAsync(flaeche, spiel, 3))
+        {
+            Zeile(z);
+        }
+        await Bilder(flaeche, 2);
+        var text = flaeche.Zeiten.Text();
+        Zeile("spiel_bilder.log mit Leistungsprobe: " + (text.Contains("Leistungsprobe Aufrufe 80:", StringComparison.Ordinal) && text.Contains("Leistungsprobe Vorladen:", StringComparison.Ordinal) ? "ja" : "NEIN")
+            + string.Create(inv, $", Stadt danach {flaeche.LetzteDreiecke} Dreiecke, {flaeche.LetzteZeichenaufrufe} Aufrufe"));
         Messwerte.Notiere("URTEIL: gruen");
         return 0;
     }

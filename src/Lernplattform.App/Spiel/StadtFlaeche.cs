@@ -367,6 +367,15 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return fertig.Task;
     }
 
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): Stadt so oft zeichnen (1 = normal).</summary>
+    public static int ProbeMehrfach { get; set; } = 1;
+
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): so viele Zeichenaufrufe je Bild mindestens (0 = normal).</summary>
+    public static int ProbeAufrufe { get; set; }
+
+    /// <summary>Weisung P8-52 (nur Leistungsprobe): Stadt beim naechsten Bild neu in die Grafikkarte laden.</summary>
+    public void ProbeNeuLaden() => SzeneNeu();
+
     /// <summary>Weisung P8-51 (nur Messung W12): jedes Bild zusaetzlich hier, solange gesetzt.</summary>
     public static List<BildZeiten.Bild>? Mitschnitt { get; set; }
 
@@ -722,6 +731,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
+            // Weisung P8-52 (nur Leistungsprobe der Probe-APK): die Stadt mehrfach an derselben Stelle (sonst einmal)
+            for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
+            {
             Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
             if (!_spiel.ImInnenraum && _gruen is not null && kamera.Abstand <= GruenWeite)
             {
@@ -730,6 +742,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
             {
                 Zeichnen(gl, paket, Matrix4x4.Identity, sichtProj);
+            }
+            if (mal > 0)
+            {
+                foreach (var netz in _haeuser.Values)
+                {
+                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                }
+            }
             }
             if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
             {
@@ -835,6 +855,11 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 gl.Enable(GL_DEPTH_TEST);
                 gl.Clear(GL_DEPTH_BUFFER_BIT);
                 Zeichnen(gl, spieler, figurLage, sichtProj);
+            }
+            // Weisung P8-52 (nur Leistungsprobe): weitere Zeichenaufrufe bis zur Zahl der Stufe, ein kleines Netz unter dem Boden
+            while (_aufrufe < ProbeAufrufe && _marke is not null)
+            {
+                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation(0f, -50f, 0f), sichtProj);
             }
             if (gl.IsBindVertexArrayAvailable)
             {
