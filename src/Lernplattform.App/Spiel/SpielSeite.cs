@@ -834,6 +834,16 @@ public sealed class SpielSeite : Grid
             {
                 Canvas.SetTop(schild, oben);
             }
+            // Sammelliste 162: bis zum naechsten Layout-Durchgang behielt ein gerade gezeigtes oder verschobenes
+            // Schild seine alte Lage (nach dem Verkleinern des Fensters ueber dem Rand); darum gleich dort anordnen
+            if (sichtbar && schild.Bounds != new Rect(links, oben, w, h))
+            {
+                if (!schild.IsMeasureValid)
+                {
+                    schild.Measure(Size.Infinity);
+                }
+                schild.Arrange(new Rect(links, oben, w, h));
+            }
         }
     }
 
