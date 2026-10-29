@@ -65,6 +65,9 @@ public sealed class TrainerSeite : UserControl
 
     public Task Geladen { get; }
 
+    /// <summary>Phase 9 W2: vor dem Verwerfen der Seite (Wechsel der Fachrichtung) die Pruefung festhalten und abmelden.</summary>
+    public void Abmelden() => _klausur?.Abmelden();
+
     /// <summary>Zeit vom Bauen der Seite bis die Vorbereitung steht (Messwert).</summary>
     public double? InhaltMs { get; private set; }
 

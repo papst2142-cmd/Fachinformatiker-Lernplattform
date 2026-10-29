@@ -51,9 +51,22 @@ public sealed class SzenarioSeite : UserControl
         Content = new ScrollViewer { Content = new StackPanel { Margin = new Thickness(16), Children = { _raster } } };
         _raster.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Geladen = LadenAsync();
-        Zustand.BeimBeenden += () => _a?.Speichern();      // flush_inputs beim Beenden
+        _beimBeenden = () => _a?.Speichern();
+        Zustand.BeimBeenden += _beimBeenden;      // flush_inputs beim Beenden
         SizeChanged += (_, e) => Aufteilen(e.NewSize.Width);
-        Schrift.Geaendert += () => Dispatcher.UIThread.Post(() => Aufteilen(Bounds.Width));
+        _schrift = () => Dispatcher.UIThread.Post(() => Aufteilen(Bounds.Width));
+        Schrift.Geaendert += _schrift;
+    }
+
+    private readonly Action _beimBeenden;
+    private readonly Action _schrift;
+
+    /// <summary>Phase 9 W2: vor dem Verwerfen der Seite (Wechsel der Fachrichtung) speichern und abmelden.</summary>
+    public void Abmelden()
+    {
+        _a?.Speichern();
+        Zustand.BeimBeenden -= _beimBeenden;
+        Schrift.Geaendert -= _schrift;
     }
 
     private bool Projekt => _quelle == Quellen.Projekt;
@@ -83,6 +96,25 @@ public sealed class SzenarioSeite : UserControl
                 Quellen.Ap2 => inhalte.Ap2Szenarien,
                 _ => inhalte.Testprojekte,
             };
+            if (eintraege.Count == 0)
+            {
+                // Phase 9 W2: AE, DPA und DV haben hier (noch) keine eigenen Aufgaben
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    _raster.Children.Clear();
+                    _raster.Children.Add(Schrift.Karte(new StackPanel
+                    {
+                        Spacing = 6,
+                        Children =
+                        {
+                            KartenTitel(_quelle switch { Quellen.Ap1 => SzenarienTexte.Ap1Titel, Quellen.Ap2 => SzenarienTexte.Ap2Titel, _ => TestprojektTexte.ListeTitel }),
+                            new LernText(FachrichtungTexte.KeineAufgaben, "Normal", FontWeight.Normal, "Pinsel.text_dim"),
+                        },
+                    }));
+                    InhaltMs = _uhr.Elapsed.TotalMilliseconds;
+                });
+                return;
+            }
             var ablauf = new Szenarioablauf(_quelle, eintraege, Zustand.BuchLesen, Zustand.Schreiber);
             await Task.Run(() => ablauf.Stati());
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -117,8 +149,17 @@ public sealed class SzenarioSeite : UserControl
         }
     }
 
-    /// <summary>load_scenario/load_project von aussen (Suchtreffer, Notizblock "Jetzt üben").</summary>
-    public void Oeffnen(int position) => Mit(() => Laden(position));
+    /// <summary>
+    /// load_scenario/load_project von aussen (Suchtreffer, Notizblock "Jetzt üben"); Phase 9 W2: mit der
+    /// gespeicherten Position (Nummer - 1), die Seite zeigt den Eintrag nur, wenn die Sicht ihn hat.
+    /// </summary>
+    public void Oeffnen(int gespeichert) => Mit(() =>
+    {
+        if (_a!.Position(gespeichert) is var position and >= 0)
+        {
+            Laden(position);
+        }
+    });
 
     /// <summary>Suchtreffer: das erste Szenario mit gleichem Titel (open_search_hit).</summary>
     public void Springen(string titel) => Mit(() =>

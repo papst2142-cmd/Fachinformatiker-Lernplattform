@@ -48,8 +48,9 @@ public static partial class HilfeTexte
     public static readonly IReadOnlyList<RundgangSeite> Seiten =
     [
         new("willkommen", "Willkommen",
-            "Die Fachinformatiker Lernplattform hilft dir bei der Vorbereitung auf die Prüfungen AP1 und AP2 "
-            + "(Schwerpunkt Systemintegration).\n"
+            // Phase 9 W2: Paar P9a (HilfePaare), statt "(Schwerpunkt Systemintegration)"
+            "Die Fachinformatiker Lernplattform hilft dir bei der Vorbereitung auf die Prüfungen AP1 und AP2. "
+            + "Deine Fachrichtung wählst du in den „Optionen“ unter „Ausbildung“.\n"
             + "\nLernen kannst du mit „Karteikarten“, im „Prüfungstrainer“ und mit den „AP1-Szenarien“ und „AP2-Szena"
             + "rien“, die wie Prüfungsaufgaben aufgebaut sind. Am PC findest du alles links in der Seitenleiste, "
             + "am Handy unter „Lernen“."),

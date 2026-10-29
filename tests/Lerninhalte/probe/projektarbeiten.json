@@ -1,0 +1,23 @@
+[
+ {
+  "title": "Probe AE: Raumbuchung als Webanwendung",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "fachrichtung": "ae",
+  "branche": "Hochschule (Probe)",
+  "schwierigkeit": "Mittel",
+  "ausgangssituation": "Räume werden per E-Mail gebucht.",
+  "auftrag": "Planen Sie eine Webanwendung zur Raumbuchung.",
+  "rahmenbedingungen": [
+   "80 Stunden"
+  ],
+  "aufgaben": [
+   "Erstellen Sie ein Lastenheft.",
+   "Entwerfen Sie das Datenmodell."
+  ],
+  "hinweise": [
+   "Muss- und Kann-Kriterien.",
+   "Tabellen Raum, Buchung, Person."
+  ]
+ }
+]

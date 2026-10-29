@@ -40,7 +40,7 @@ public sealed class AbschlussprojektSeite : UserControl
 
     public AbschlussprojektSeite()
     {
-        _a = new ProjektAblauf(() => Zustand.Schreiber, () => Zustand.Einstellungen.Laden(), Zustand.Aendere, Zustand.Fachfragen(),
+        _a = new ProjektAblauf(() => Zustand.Schreiber, () => Zustand.Einstellungen.Laden(), Zustand.Aendere, Zustand.FachfragenSicht,
             () => Abgleich.Eingerichtet(Zustand.Einstellungen.Laden()));
         _a.NachSpeichern += AbgleichDienst.NachDemLernen;            // Weisung P4-8, Frage 2 a: PC wie Handy
         _a.NeuGeladen += Neuaufbau;

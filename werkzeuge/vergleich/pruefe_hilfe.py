@@ -390,6 +390,10 @@ PAARE = [
      "neu": "Die Häuser haben Öffnungszeiten. Abends kannst du weiter durch die Stadt gehen; um 23 Uhr bleibt die Uhr stehen, bis du zu Hause schlafen gehst."},
     # UNKLAR: Nachtrag Abschnitt 3 nennt fuer RELEASE_PAGE_TEXT nur thema; "nr" setze ich
     # auf "N2" (Tabelle Abschnitt 3: "RELEASE_PAGE_TEXT | NEU: N2"), Platz am Ende der Liste.
+    # Phase 9 W2 (Weisung P9-5 Punkt 6): "Schwerpunkt Systemintegration" neutral; Seite des Rundgangs (P9a)
+    # und Hinweis zum Rahmenplan (P9b), Thema mit Vorsilbe "seite:" bzw. "k:" (nicht in der Hilfe-Suche)
+    {"nr": "P9a", "thema": "seite:willkommen", "alt": " (Schwerpunkt Systemintegration).\n", "neu": ". Deine Fachrichtung wählst du in den „Optionen“ unter „Ausbildung“.\n"},
+    {"nr": "P9b", "thema": "k:SETUP_PLAN_HINT", "alt": "Für Systemintegration kannst du sie ausgeschaltet lassen.", "neu": "Schalte den Abschnitt deiner Fachrichtung ein; für Systemintegration bleiben alle drei aus."},
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT",
      "alt": "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
      "neu": "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"},

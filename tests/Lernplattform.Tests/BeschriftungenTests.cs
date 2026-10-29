@@ -303,8 +303,15 @@ public class BeschriftungenTests
         Gleich(S(u, "plattform_pc"), UeberTexte.PlattformPython);
         Gleich(S(u, "plattform_handy"), UeberTexte.PlattformPythonHandy);
         var version = S(u, "beispielversion");
-        Gleich(S(u, "text_pc"), UeberTexte.Text(version, UeberTexte.PlattformPython));
-        Gleich(S(u, "text_handy"), UeberTexte.Text(version, UeberTexte.PlattformPythonHandy));
+        // Phase 9 W2 (Weisung P9-5 Punkt 6): einzige Abweichung, "(Schwerpunkt Systemintegration) " entfaellt
+        const string Alt = "zum Fachinformatiker (Schwerpunkt Systemintegration) mit";
+        const string Neu = "zum Fachinformatiker mit";
+        foreach (var (feld, plattform) in new[] { ("text_pc", UeberTexte.PlattformPython), ("text_handy", UeberTexte.PlattformPythonHandy) })
+        {
+            var python = S(u, feld);
+            Assert.Equal(1, (python.Length - python.Replace(Alt, "", StringComparison.Ordinal).Length) / Alt.Length);
+            Gleich(python.Replace(Alt, Neu, StringComparison.Ordinal), UeberTexte.Text(version, plattform));
+        }
         Assert.Equal(Liste(u, "knoepfe"), [UeberTexte.KnopfLizenz, UeberTexte.KnopfFremd]);
         Assert.Equal(Liste(u, "fenster"), [UeberTexte.TitelLizenz, UeberTexte.TitelFremd]);
     }

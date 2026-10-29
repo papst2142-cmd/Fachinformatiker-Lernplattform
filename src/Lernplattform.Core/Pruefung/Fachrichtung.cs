@@ -7,9 +7,9 @@ public sealed record Pruefungsbereich(string Rolle, string Art, string Kurz, str
 /// <summary>
 /// Phase 4, W2 (Spezifikation G32/G36 Abschnitt 1, Addendum P4-2 Tabelle 1, FIAusbV 2020):
 /// Aufbau der Abschlusspruefung je Fachrichtung. SI ist Python v0.63.2 (fisi_pruefung EXAMS,
-/// WEIGHTS, PART2, AREA_NAME); AE, DPA und DV haben eigene Bereiche b1/b2 (§ 28-33, § 36-41,
-/// § 20-25), die es in der App noch nicht gibt (Quelle "keine": gesperrt, "noch offen").
-/// Gewichte (§ 16/24/32/40 Abs. 1) und Ergaenzung (§ 17/25/33/41) sind fuer alle gleich.
+/// WEIGHTS, PART2, AREA_NAME); AE, DPA und DV haben eigene Bereiche b1/b2. Phase 9 W2: ihre
+/// Aufgaben kommen aus inhalte_csharp/lernen (Quelle "ap2_ae", "ap2_dpa", "ap2_dv"); solange es
+/// keine gibt, zeigt die Auswahl den Platzhalter. Gewichte und Ergaenzung sind fuer alle gleich.
 /// </summary>
 public sealed record Fachrichtung(string Id, string Name, string Projekt, int ProjektStunden, IReadOnlyList<Pruefungsbereich> Bereiche)
 {
@@ -25,13 +25,13 @@ public sealed record Fachrichtung(string Id, string Name, string Projekt, int Pr
         Neu("si", "Systemintegration", "Planen und Umsetzen eines Projektes der Systemintegration", 40, "ap2",
             ("konzeption", "Konzeption", "AP2 · Konzeption und Administration von IT-Systemen"),
             ("netzwerke", "Netzwerke", "AP2 · Analyse und Entwicklung von Netzwerken")),
-        Neu("ae", "Anwendungsentwicklung", "Planen und Umsetzen eines Softwareprojektes", 80, "keine",
+        Neu("ae", "Anwendungsentwicklung", "Planen und Umsetzen eines Softwareprojektes", 80, "ap2_ae",
             ("softwareprodukt", "Softwareprodukt", "AP2 · Planen eines Softwareproduktes"),
             ("algorithmen", "Algorithmen", "AP2 · Entwicklung und Umsetzung von Algorithmen")),
-        Neu("dpa", "Daten- und Prozessanalyse", "Planen und Durchführen eines Projektes der Datenanalyse", 40, "keine",
+        Neu("dpa", "Daten- und Prozessanalyse", "Planen und Durchführen eines Projektes der Datenanalyse", 40, "ap2_dpa",
             ("prozessanalyse", "Prozessanalyse", "AP2 · Durchführen einer Prozessanalyse"),
             ("datenqualitaet", "Datenqualität", "AP2 · Sicherstellen der Datenqualität")),
-        Neu("dv", "Digitale Vernetzung", "Planen und Umsetzen eines Projektes der digitalen Vernetzung", 40, "keine",
+        Neu("dv", "Digitale Vernetzung", "Planen und Umsetzen eines Projektes der digitalen Vernetzung", 40, "ap2_dv",
             ("diagnose", "Diagnose", "AP2 · Diagnose und Störungsbeseitigung in vernetzten Systemen"),
             ("betrieb", "Betrieb", "AP2 · Betrieb und Erweiterung von vernetzten Systemen")),
     ];

@@ -66,6 +66,19 @@ public static class FortschrittTexte
     public const string FilterAp1 = "AP1";
     public static readonly IReadOnlyList<(string Wert, string Text)> Filter =
         [(FilterAlle, "Alle"), (FilterAp1, "AP1"), ("Konzeption", "Konzeption"), ("Netzwerke", "Netzwerke"), ("Projekt", "Projekt"), ("WiSo", "WiSo")];
+
+    /// <summary>Phase 9 W2: Filter je Fachrichtung (SI wie Python; AE, DPA, DV mit den Kurznamen ihrer Bereiche b1/b2).</summary>
+    public static IReadOnlyList<(string Wert, string Text)> FilterFuer(string fachrichtung)
+    {
+        if (fachrichtung == Inhalte.Fachrichtungen.Systemintegration)
+        {
+            return Filter;
+        }
+        var fr = Pruefung.Fachrichtung.Nach(fachrichtung);
+        var (b1, b2) = (fr.Bereich("b1").Kurz, fr.Bereich("b2").Kurz);
+        return [(FilterAlle, "Alle"), (FilterAp1, "AP1"), (b1, b1), (b2, b2), ("Projekt", "Projekt"), ("WiSo", "WiSo")];
+    }
+
     public const string KeinInhalt = "kein Lerninhalt vorhanden";
     public const string KeineAntworten = "Noch keine Antworten. Starte mit Karteikarten oder dem Prüfungstrainer.";
     public const string AktuellesLernfeld = "Dein aktuelles Lernfeld";

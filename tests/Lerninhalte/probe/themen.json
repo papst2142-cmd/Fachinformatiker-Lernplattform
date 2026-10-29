@@ -1,0 +1,23 @@
+{
+ "_hinweis": [
+  "Probe-Inhalte nur fuer Tests (Phase 9 W2), nie ausgeliefert."
+ ],
+ "themen": {
+  "systeme": [
+   {
+    "id": "ae_entwurf",
+    "name": "Softwareentwurf (Probe)",
+    "kurz": "Entwurf",
+    "fachrichtung": "ae"
+   }
+  ],
+  "datenbanken": [
+   {
+    "id": "dpa_datenqualitaet",
+    "name": "Datenqualität (Probe)",
+    "kurz": "Datenqualität",
+    "fachrichtung": "dpa"
+   }
+  ]
+ }
+}

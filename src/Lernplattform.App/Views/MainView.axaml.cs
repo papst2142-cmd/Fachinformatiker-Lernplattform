@@ -120,6 +120,8 @@ public partial class MainView : UserControl
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
+        // Phase 9 W2: nach der Wahl in den Optionen die Inhalte der neuen Fachrichtung zeigen
+        Programm.Zustand.AusbildungGeaendert += () => SichtPruefen();
         // L10 (refresh_after_sync): nach einem Abgleich mit neuen oder entfernten Eintraegen die offene Seite neu rechnen
         Programm.AbgleichDienst.Fertig += (ergebnis, _) =>
         {
@@ -247,6 +249,7 @@ public partial class MainView : UserControl
     /// <summary>Optionen (Name, Rahmenplan, Fachrichtung) und Dashboard (Begruessung) neu zeigen.</summary>
     private void Neu()
     {
+        SichtPruefen();
         if (_seiten.TryGetValue(Seiten.Optionen, out var optionen))
         {
             ((OptionenSeite)optionen).Gezeigt();
@@ -255,6 +258,63 @@ public partial class MainView : UserControl
         {
             ((DashboardSeite)dashboard).Neu();
         }
+    }
+
+    /// <summary>
+    /// Phase 9 W2: gilt eine andere Fachrichtung als die der gezeigten Inhalte (Wahl in den Optionen, erste Frage,
+    /// Abgleich, Uebernahme, Ruecksicherung), die Sicht umstellen und die Seiten mit Lerninhalten verwerfen; sie
+    /// bauen sich beim naechsten Zeigen mit der neuen Sicht. Vorher speichern sie Offenes. Der Lernstand bleibt.
+    /// </summary>
+    public bool SichtPruefen()
+    {
+        string fachrichtung;
+        try
+        {
+            fachrichtung = Core.Pruefung.Ausbildung.Aktuell(Programm.Zustand.Schreiber);
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            return false;
+        }
+        return SichtAnwenden(fachrichtung);
+    }
+
+    /// <summary>Sicht auf <paramref name="fachrichtung"/> stellen (ohne zu speichern, auch fuer den Start-Test); false = schon so.</summary>
+    public bool SichtAnwenden(string fachrichtung)
+    {
+        if (!Programm.Zustand.SichtSetzen(fachrichtung))
+        {
+            return false;
+        }
+        foreach (var (id, seite) in _seiten.ToList())
+        {
+            if (seite is not (KarteikartenSeite or TrainerSeite or FortschrittSeite or SucheSeite
+                or SzenarioSeite or NotizblockSeite or DashboardSeite) && id != Seiten.Lernen)
+            {
+                continue;
+            }
+            switch (seite)
+            {
+                case KarteikartenSeite karten:
+                    karten.Abmelden();
+                    break;
+                case TrainerSeite trainer:
+                    trainer.Abmelden();
+                    break;
+                case SzenarioSeite szenarien:
+                    szenarien.Abmelden();
+                    break;
+            }
+            _seiten.Remove(id);
+        }
+        // die gezeigte Seite gleich mit der neuen Sicht bauen
+        if (!_seiten.ContainsKey(AktuelleSeite))
+        {
+            Zeige(AktuelleSeite);
+        }
+        _leisten.LernstatusLesen();
+        return true;
     }
 
     private void SchriftGeaendert()

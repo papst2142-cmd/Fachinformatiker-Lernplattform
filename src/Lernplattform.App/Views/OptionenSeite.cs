@@ -312,6 +312,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
                 if (Ergebnis(Core.Pruefung.Ausbildung.Waehlen(Zustand.Schreiber, wert)))
                 {
                     AbgleichDienst.NachDemLernen();     // wie nach jedem Speichern im Lernstand
+                    Zustand.AusbildungGespeichert();    // Phase 9 W2: Inhalte der neuen Fachrichtung
                     _ = WarnungAsync(wert);             // W4: Warnhinweis Rahmenplan (Plan 2.5)
                 }
                 else
@@ -330,6 +331,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
     /// <summary>on_show: die Fachrichtung kann per Abgleich gekommen sein; W4: Name und Rahmenplan (refresh_plan).</summary>
     public void Gezeigt()
     {
+        _ = ZaehlteilAsync();
         if (_fachrichtung.Count > 0)
         {
             Zuruecksetzen(_fachrichtung, Core.Pruefung.Ausbildung.Aktuell(Zustand.Schreiber));
@@ -403,10 +405,26 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
 
     // -- Lerninhalte > Rahmenplan (Phase 4, W4; app_gui 7397-7437, 7741-7761) ---
 
+    private TextBlock? _zaehlteil;
+
+    /// <summary>Zahlen der Lerninhalte der aktuellen Sicht eintragen (Sammelliste 54).</summary>
+    private async Task ZaehlteilAsync()
+    {
+        if (_zaehlteil is not { } feld || await Zustand.Inhalte is not { } inhalte)
+        {
+            return;
+        }
+        var text = Core.Texte.FachrichtungTexte.Zaehlteil(inhalte, inhalte.Sicht ?? Core.Inhalte.Fachrichtungen.Vorgabe);
+        await Dispatcher.UIThread.InvokeAsync(() => feld.Text = text);
+    }
+
     private Control Lerninhalte(OptionenBereich bereich)
     {
         var panel = new StackPanel { Spacing = 8 };
-        panel.Children.Add(Platzhalterzeile());          // Zaehlteil (N10, Sammelliste 54)
+        // Phase 9 W2 (Sammelliste 54): Zaehlteil der gewaehlten Fachrichtung, nach dem Laden und bei jedem Zeigen
+        _zaehlteil = Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        panel.Children.Add(_zaehlteil);
+        _ = ZaehlteilAsync();
         foreach (var abschnitt in Geraetetexte.OptionenAbschnitte(bereich, Pc))
         {
             var titel = Abschnitt(abschnitt.Titel);

@@ -102,7 +102,7 @@ public static class Verknuepfung
         + "Type=Application\n"
         + "Name=Fachinformatiker Lernplattform\n"
         + "GenericName=Lernprogramm\n"
-        + "Comment=Lernprogramm fuer die Pruefungsvorbereitung zum Fachinformatiker (Schwerpunkt Systemintegration)\n"
+        + "Comment=Lernprogramm fuer die Pruefungsvorbereitung zum Fachinformatiker\n"
         + "Exec={exec}\n"
         + "Icon={icon}\n"
         + "Terminal=false\n"

@@ -250,6 +250,16 @@ public sealed class DashboardInhalte
                 }
             }
         }
+        // Phase 9 W2 (Plan Phase 9 Abschnitt 4): AE, DPA und DV zaehlen "x von y" nur ueber ihre Inhalte;
+        // SI zaehlt wie Python (jede gespeicherte Frage, auch unbekannte)
+        if (inhalte.Sicht is { } sicht && sicht != Fachrichtungen.Systemintegration)
+        {
+            SichtKarten = inhalte.Karteikarten.Select(k => k.Frage ?? "").ToHashSet(StringComparer.Ordinal);
+            SichtFragen = inhalte.Quizfragen.Select(q => q.Frage ?? "").ToHashSet(StringComparer.Ordinal);
+            SichtAp1 = inhalte.Ap1Szenarien.Select(s => (long)(s.Nummer - 1)).ToHashSet();
+            SichtAp2 = inhalte.Ap2Szenarien.Select(s => (long)(s.Nummer - 1)).ToHashSet();
+            Ap2Themen = InhaltePruefung.Ap2Themen(inhalte.RahmenplanZusatz, sicht);
+        }
         WissenFenster = (int)Zahl(parameter["letzte_antworten"]);
         WissenMindest = (int)Zahl(parameter["mindest_antworten"]);
         WissenVoll = Zahl(parameter["volle_abdeckung_prozent"]);
@@ -271,6 +281,18 @@ public sealed class DashboardInhalte
     internal Dictionary<string, string?> FragenThema { get; } = new(StringComparer.Ordinal);
 
     internal int WissenFenster { get; }
+
+    /// <summary>Phase 9 W2: sichtbare Inhalte bei AE, DPA und DV (null bei SI, dann zaehlt alles wie in Python).</summary>
+    internal HashSet<string>? SichtKarten { get; }
+
+    internal HashSet<string>? SichtFragen { get; }
+
+    internal HashSet<long>? SichtAp1 { get; }
+
+    internal HashSet<long>? SichtAp2 { get; }
+
+    /// <summary>Themenbloecke der AP2 auf dem Dashboard (SI wie Python, sonst die Themen von b1/b2 der Fachrichtung).</summary>
+    internal IReadOnlyList<string> Ap2Themen { get; } = Fachbereiche.Ap2Themen;
 
     internal int WissenMindest { get; }
 
@@ -380,10 +402,14 @@ public sealed record DashboardWerte(
         int gesamtKarten = lern.Karteikarten.Count, gesamtQuiz = lern.Quizfragen.Count;
         int gesamtAp1 = lern.Ap1Szenarien.Count, gesamtAp2 = lern.Ap2Szenarien.Count;
 
-        var karten = Anzahl(db, "SELECT COUNT(DISTINCT question) FROM card_events");
-        var fragen = Anzahl(db, "SELECT COUNT(DISTINCT question) FROM quiz_answers");
-        var ap1 = Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM ap1_events");
-        var ap2 = Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM scenario_events");
+        var karten = inhalte.SichtKarten is { } sk ? AnzahlIn(db, "SELECT DISTINCT question FROM card_events", sk)
+            : Anzahl(db, "SELECT COUNT(DISTINCT question) FROM card_events");
+        var fragen = inhalte.SichtFragen is { } sf ? AnzahlIn(db, "SELECT DISTINCT question FROM quiz_answers", sf)
+            : Anzahl(db, "SELECT COUNT(DISTINCT question) FROM quiz_answers");
+        var ap1 = inhalte.SichtAp1 is { } s1 ? AnzahlIn(db, "SELECT DISTINCT scenario_index FROM ap1_events", s1)
+            : Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM ap1_events");
+        var ap2 = inhalte.SichtAp2 is { } s2 ? AnzahlIn(db, "SELECT DISTINCT scenario_index FROM scenario_events", s2)
+            : Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM scenario_events");
         var (rate, richtig, beantwortet) = Erfolgsquote(db);
         var gelernt = karten + fragen;
 
@@ -422,8 +448,8 @@ public sealed record DashboardWerte(
         var werte = new DashboardWerte(
             DashboardZustand.Daten, banner, gelernt, inhalte.Summe, serie, tagesziel, faellig, kennzahlen, quote,
             LeseVerlauf(db, heute), LeseFachbereiche(db, inhalte), LeseAktivitaeten(db), LeseKalender(db, heute.Year, heute.Month),
-            LeseThemen(db, "ap1_events", inhalte.Ap1JeBlock, Inhalte.Fachbereiche.Ap1Themen),
-            LeseThemen(db, "scenario_events", inhalte.Ap2JeBlock, Inhalte.Fachbereiche.Ap2Themen),
+            LeseThemen(db, "ap1_events", inhalte.Ap1JeBlock, Inhalte.Fachbereiche.Ap1Themen, inhalte.SichtAp1),
+            LeseThemen(db, "scenario_events", inhalte.Ap2JeBlock, inhalte.Ap2Themen, inhalte.SichtAp2),
             LeseReinzoom(db, heute, inhalte));
         return werte with { Zustand = zustand ?? (db.Fehler ? DashboardZustand.Kaputt : IstLeer(db) ? DashboardZustand.Leer : DashboardZustand.Daten) };
     }
@@ -447,6 +473,10 @@ public sealed record DashboardWerte(
         var zeilen = db.Abfrage(sql);
         return zeilen is { Count: > 0 } && zeilen[0][0] is long n ? n : 0;
     }
+
+    /// <summary>Phase 9 W2: Zeilen einer DISTINCT-Abfrage, deren erster Wert in <paramref name="sichtbar"/> steht.</summary>
+    private static long AnzahlIn<T>(Leser db, string sql, HashSet<T> sichtbar) =>
+        (db.Abfrage(sql) ?? []).Count(z => z[0] is T wert && sichtbar.Contains(wert));
 
     private static (double Rate, double Richtig, long Gesamt) Erfolgsquote(Leser db)
     {
@@ -528,16 +558,33 @@ public sealed record DashboardWerte(
     {
         // category_coverage
         var gesehen = new Dictionary<string, long>(StringComparer.Ordinal);
-        foreach (var zeile in db.Abfrage(
-            "SELECT category, COUNT(DISTINCT question) FROM ("
-            + "  SELECT category, question FROM quiz_answers"
-            + "  UNION"
-            + "  SELECT category, question FROM card_events"
-            + ") GROUP BY category") ?? [])
+        if (inhalte.SichtKarten is { } karten && inhalte.SichtFragen is { } fragen)
         {
-            if (zeile[0] is string kategorie)
+            // Phase 9 W2: AE, DPA und DV zaehlen nur ihre Inhalte
+            foreach (var zeile in db.Abfrage(
+                "SELECT category, question FROM quiz_answers"
+                + "  UNION"
+                + "  SELECT category, question FROM card_events") ?? [])
             {
-                gesehen[kategorie] = (long)zeile[1]!;
+                if (zeile[0] is string kategorie && zeile[1] is string frage && (karten.Contains(frage) || fragen.Contains(frage)))
+                {
+                    gesehen[kategorie] = gesehen.GetValueOrDefault(kategorie) + 1;
+                }
+            }
+        }
+        else
+        {
+            foreach (var zeile in db.Abfrage(
+                "SELECT category, COUNT(DISTINCT question) FROM ("
+                + "  SELECT category, question FROM quiz_answers"
+                + "  UNION"
+                + "  SELECT category, question FROM card_events"
+                + ") GROUP BY category") ?? [])
+            {
+                if (zeile[0] is string kategorie)
+                {
+                    gesehen[kategorie] = (long)zeile[1]!;
+                }
             }
         }
         // category_stats
@@ -660,15 +707,31 @@ public sealed record DashboardWerte(
     }
 
     /// <summary>DBManager.theme_progress (AP2: scenario_events, AP1: ap1_events).</summary>
-    private static List<DashboardThema> LeseThemen(Leser db, string tabelle, OrderedDictionary<string, int> gesamt, IReadOnlyList<string> themen)
+    private static List<DashboardThema> LeseThemen(Leser db, string tabelle, OrderedDictionary<string, int> gesamt, IReadOnlyList<string> themen,
+        HashSet<long>? sichtbar)
     {
         var erledigt = new Dictionary<string, long>(StringComparer.Ordinal);
-        foreach (var zeile in db.Abfrage($"SELECT theme, COUNT(DISTINCT scenario_index) FROM {tabelle} GROUP BY theme") ?? [])
+        if (sichtbar is not null)
         {
-            if (zeile[0] is string thema)
+            // Phase 9 W2: AE, DPA und DV zaehlen nur ihre Szenarien
+            foreach (var zeile in db.Abfrage($"SELECT DISTINCT theme, scenario_index FROM {tabelle}") ?? [])
             {
-                var block = Inhalte.Fachbereiche.Block(thema)!;
-                erledigt[block] = erledigt.GetValueOrDefault(block) + (long)zeile[1]!;
+                if (zeile[0] is string thema && zeile[1] is long index && sichtbar.Contains(index))
+                {
+                    var block = Inhalte.Fachbereiche.Block(thema)!;
+                    erledigt[block] = erledigt.GetValueOrDefault(block) + 1;
+                }
+            }
+        }
+        else
+        {
+            foreach (var zeile in db.Abfrage($"SELECT theme, COUNT(DISTINCT scenario_index) FROM {tabelle} GROUP BY theme") ?? [])
+            {
+                if (zeile[0] is string thema)
+                {
+                    var block = Inhalte.Fachbereiche.Block(thema)!;
+                    erledigt[block] = erledigt.GetValueOrDefault(block) + (long)zeile[1]!;
+                }
             }
         }
         return themen.Select(thema =>

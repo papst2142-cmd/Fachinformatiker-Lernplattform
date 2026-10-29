@@ -49,11 +49,43 @@ public sealed class Szenarioablauf
     /// <summary>Lernstand neu lesen (on_show, nach einem Abgleich).</summary>
     public void NeuLesen() => _buch = null;
 
-    /// <summary>position_statuses der Quelle.</summary>
-    public Dictionary<int, (string Status, string Stufe)> Stati() => Listen.PositionsStati(Buch, Quelle);
+    /// <summary>
+    /// position_statuses der Quelle, nach Position in <see cref="Eintraege"/>. Phase 9 W2: der Lernstand
+    /// speichert die Position in der ganzen Liste (<see cref="Lerninhalt.Nummer"/> - 1); bei SI ist das
+    /// dieselbe Zahl, bei AE, DPA und DV zeigt die Liste nur einen Teil.
+    /// </summary>
+    public Dictionary<int, (string Status, string Stufe)> Stati()
+    {
+        var stati = new Dictionary<int, (string, string)>();
+        foreach (var (gespeichert, status) in Listen.PositionsStati(Buch, Quelle))
+        {
+            if (Position(gespeichert) is var position and >= 0)
+            {
+                stati[position] = status;
+            }
+        }
+        return stati;
+    }
+
+    /// <summary>Position in <see cref="Eintraege"/> zur gespeicherten Position, -1 wenn diese Sicht den Eintrag nicht zeigt.</summary>
+    public int Position(int gespeichert)
+    {
+        if (_positionen is null)
+        {
+            var positionen = new Dictionary<int, int>();
+            for (var i = 0; i < Eintraege.Count; i++)
+            {
+                positionen[Eintraege[i].Nummer - 1] = i;
+            }
+            _positionen = positionen;
+        }
+        return _positionen.TryGetValue(gespeichert, out var position) ? position : -1;
+    }
+
+    private Dictionary<int, int>? _positionen;
 
     /// <summary>status_label des gezeigten Eintrags.</summary>
-    public (string Text, string Farbe) StatusZeile => Texte.KartenTexte.StatusZeile(Buch, Quelle, (long)Index);
+    public (string Text, string Farbe) StatusZeile => Texte.KartenTexte.StatusZeile(Buch, Quelle, (long)(Eintrag.Nummer - 1));
 
     public Lerninhalt Eintrag => Eintraege[Index];
 
@@ -107,11 +139,12 @@ public sealed class Szenarioablauf
     {
         var eintrag = Eintraege[position];
         var titel = eintrag.Titel ?? "";
+        var gespeichert = eintrag.Nummer - 1;      // Phase 9 W2: Position in der ganzen Liste
         _ = Quelle switch
         {
-            Quellen.Ap1 => _schreiber?.Ap1Speichern(position, titel, eintrag.SzenarioThema ?? "", richtig),
-            Quellen.Ap2 => _schreiber?.SzenarioSpeichern(position, titel, eintrag.SzenarioThema ?? "", richtig),
-            _ => _schreiber?.ProjektSpeichern(position, titel, eintrag.Fachbereich ?? "", richtig),
+            Quellen.Ap1 => _schreiber?.Ap1Speichern(gespeichert, titel, eintrag.SzenarioThema ?? "", richtig),
+            Quellen.Ap2 => _schreiber?.SzenarioSpeichern(gespeichert, titel, eintrag.SzenarioThema ?? "", richtig),
+            _ => _schreiber?.ProjektSpeichern(gespeichert, titel, eintrag.Fachbereich ?? "", richtig),
         };
         _buch = null;
         NachSpeichern?.Invoke();

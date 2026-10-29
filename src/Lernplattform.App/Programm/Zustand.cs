@@ -26,8 +26,20 @@ public static class Zustand
     /// <summary>(Titel, Text), wenn einstellungen.json beim Start beschaedigt war (genau einmal).</summary>
     public static (string Titel, string Text)? DefektHinweis { get; private set; }
 
-    /// <summary>Lerninhalte; laeuft im Hintergrund, null wenn das Laden scheiterte.</summary>
+    /// <summary>
+    /// Lerninhalte der gewaehlten Fachrichtung (Phase 9 W2: gemeinsame plus eigene, <see cref="Lerninhalte.Fuer"/>);
+    /// laeuft im Hintergrund, null wenn das Laden scheiterte. Das Spiel nimmt davon nur <see cref="Lerninhalte.Bisher"/>.
+    /// </summary>
     public static Task<Lerninhalte?> Inhalte { get; private set; } = Task.FromResult<Lerninhalte?>(null);
+
+    /// <summary>Phase 9 W2: alle Inhalte (inhalte und inhalte_csharp/lernen), Grundlage jeder Sicht.</summary>
+    public static Task<Lerninhalte?> AlleInhalte { get; private set; } = Task.FromResult<Lerninhalte?>(null);
+
+    /// <summary>Fachrichtung der aktuellen <see cref="Inhalte"/> (si, ae, dpa, dv).</summary>
+    public static string Sicht { get; private set; } = Core.Inhalte.Fachrichtungen.Vorgabe;
+
+    /// <summary>Messpunkt "Inhalte laden" (alle Ordner, kalt, einmal je Programmstart); null bis fertig oder bei Fehler.</summary>
+    public static double? InhalteLadenMs { get; private set; }
 
     /// <summary>Gesamtzahlen und Zuordnungen fuer das Dashboard, nach den Lerninhalten.</summary>
     public static Task<DashboardInhalte?> DashboardInhalte { get; private set; } = Task.FromResult<DashboardInhalte?>(null);
@@ -100,7 +112,37 @@ public static class Zustand
         Werte = Einstellungen.Laden();
         Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
         DesignAnwenden();
-        Inhalte = Task.Run(InhalteLaden);
+        AlleInhalte = Task.Run(InhalteLaden);
+        Inhalte = AlleInhalte.ContinueWith(t => !t.IsCompletedSuccessfully || t.Result is not { } alle ? null
+            : _ersteSicht is { } erste && erste.Sicht == Sicht ? erste : alle.Fuer(Sicht), TaskScheduler.Default);
+        AbgeleiteteStarten();
+    }
+
+    /// <summary>
+    /// Phase 9 W2: Sicht auf eine andere Fachrichtung umstellen (nach der Wahl in den Optionen, beim Start und
+    /// nach Abgleich, Uebernahme oder Ruecksicherung). Nur Anzeige: der Lernstand bleibt, wie er ist.
+    /// false: schon diese Sicht.
+    /// </summary>
+    public static bool SichtSetzen(string fachrichtung)
+    {
+        if (fachrichtung == Sicht || !Core.Inhalte.Fachrichtungen.Werte.Contains(fachrichtung))
+        {
+            return false;
+        }
+        Sicht = fachrichtung;
+        Inhalte = AlleInhalte.ContinueWith(t => t.IsCompletedSuccessfully ? t.Result?.Fuer(fachrichtung) : null, TaskScheduler.Default);
+        AbgeleiteteStarten();
+        return true;
+    }
+
+    /// <summary>Phase 9 W2: die Fachrichtung wurde gespeichert (Optionen); die Oberflaeche stellt die Sicht um.</summary>
+    public static event Action? AusbildungGeaendert;
+
+    public static void AusbildungGespeichert() => AusbildungGeaendert?.Invoke();
+
+    /// <summary>Rahmenplan-Zuordnung, Suchtext und Dashboard-Zahlen zur aktuellen Sicht im Hintergrund.</summary>
+    private static void AbgeleiteteStarten()
+    {
         Gewicht = Inhalte.ContinueWith(t =>
         {
             if (!t.IsCompletedSuccessfully || t.Result is null)
@@ -159,12 +201,25 @@ public static class Zustand
         }, TaskScheduler.Default);
     }
 
+    private static Lerninhalte? _ersteSicht;
+
     private static Lerninhalte? InhalteLaden()
     {
+        try
+        {
+            // Phase 9 W2: gewaehlte Fachrichtung vor dem Laden lesen (nicht gemessen), dann alle Ordner kalt
+            Sicht = Core.Pruefung.Ausbildung.Aktuell(Schreiber);
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
         var uhr = Stopwatch.StartNew();
         try
         {
-            var inhalte = Lerninhalte.Laden(EingebauteDatei);
+            var inhalte = Lerninhalte.MitLernen(Lerninhalte.Laden(EingebauteDatei), LernenDatei);
+            _ersteSicht = inhalte.Fuer(Sicht);
+            InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"Lerninhalte im Hintergrund geladen: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
             return inhalte;
@@ -192,6 +247,33 @@ public static class Zustand
     });
 
     private static List<Core.Projekt.ProjektFrage>? _fachfragen;
+
+    /// <summary>
+    /// Phase 9 W2: Fragen fuers Fachgespraech der aktuellen Sicht (SI alle, sonst die gemeinsamen nach
+    /// einteilung_bisher.json); die Liste liest bei jedem Zugriff die aktuelle Sicht.
+    /// </summary>
+    public static IReadOnlyList<Core.Projekt.ProjektFrage> FachfragenSicht { get; } = new Core.Projekt.SichtListe<Core.Projekt.ProjektFrage>(() =>
+    {
+        var alle = Fachfragen();
+        if (Sicht == Core.Inhalte.Fachrichtungen.Systemintegration || !AlleInhalte.IsCompletedSuccessfully || AlleInhalte.Result is not { } inhalte)
+        {
+            return alle;
+        }
+        return alle.Where(f => inhalte.Einteilung.Wert(Einteilung.Fachgespraech, f.Id) == Core.Inhalte.Fachrichtungen.Gemeinsam).ToList();
+    });
+
+    /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>
+    private static byte[]? LernenDatei(string name)
+    {
+        using var strom = typeof(Zustand).Assembly.GetManifestResourceStream("inhalte_csharp/lernen/" + name + ".json");
+        if (strom is null)
+        {
+            return null;
+        }
+        using var puffer = new MemoryStream();
+        strom.CopyTo(puffer);
+        return puffer.ToArray();
+    }
 
     /// <summary>inhalte/&lt;name&gt;.json aus dem Programm selbst.</summary>
     private static byte[] EingebauteDatei(string name)

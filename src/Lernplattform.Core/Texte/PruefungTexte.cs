@@ -110,8 +110,9 @@ public static class PruefungTexte
     public const string AusbildungReiter = "Ausbildung";
     public const string AusbildungTitel = "Fachrichtung";
     public const string AusbildungUntertitel = "Wird mit dem Abgleich auf deine anderen Geräte übertragen.";
+    // Phase 9 W2 (Weisung P9-5 Punkt 6): zweiter Satz neu, die Inhalte richten sich nach der Wahl
     public const string AusbildungHinweis = "AP1, WiSo und das Abschlussprojekt sind für alle Fachrichtungen gleich. "
-        + "Die beiden Prüfungsbereiche von AE, DPA und DV gibt es noch nicht.";
+        + "Karteikarten, Prüfungsfragen, Szenarien und Testprojekte zeigen die gemeinsamen Inhalte und die deiner Fachrichtung.";
 
     /// <summary>Auswahl in Optionen &gt; Ausbildung, Reihenfolge wie Pruefung.Ausbildung.Werte.</summary>
     public static readonly IReadOnlyList<(string Wert, string Text)> Fachrichtungen =

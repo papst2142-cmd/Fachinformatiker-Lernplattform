@@ -34,7 +34,8 @@ public static class SpielStart
     public static SpielSitzung Laden()
     {
         // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
-        var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult();
+        // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
+        var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
         var projekte = lernen?.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList();
         var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
         var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");

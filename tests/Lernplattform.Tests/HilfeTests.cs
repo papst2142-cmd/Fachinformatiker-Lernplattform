@@ -96,7 +96,7 @@ public class HilfeTests
                     continue;
                 }
                 Assert.True(Texte.TryGetValue(teil.Item1 + eintrag.Name, out var ist), eintrag.Name);
-                Assert.Equal(eintrag.Value.GetString(), ist);
+                Assert.Equal(MitPaaren(teil.Item1 + eintrag.Name, eintrag.Value.GetString()!), ist);
                 namen.Add(teil.Item1 + eintrag.Name);
             }
         }
@@ -111,7 +111,7 @@ public class HilfeTests
         {
             Assert.Equal(seiten[i].GetProperty("id").GetString(), HilfeTexte.Seiten[i].Id);
             Assert.Equal(seiten[i].GetProperty("titel").GetString(), HilfeTexte.Seiten[i].Titel);
-            Assert.Equal(seiten[i].GetProperty("text").GetString(), HilfeTexte.Seiten[i].Text);
+            Assert.Equal(MitPaaren("seite:" + HilfeTexte.Seiten[i].Id, seiten[i].GetProperty("text").GetString()!), HilfeTexte.Seiten[i].Text);
         }
 
         var abschnitte = texte.GetProperty("abschnitte").EnumerateArray().ToList();

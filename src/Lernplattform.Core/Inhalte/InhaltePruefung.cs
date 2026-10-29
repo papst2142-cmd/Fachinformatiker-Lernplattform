@@ -16,7 +16,7 @@ namespace Lernplattform.Core.Inhalte;
 /// Spiel-Kern. Bei fehlerhaften Stichworten der Rahmenplan-Zuordnung nennt
 /// die Meldung den Fehlertext von .NET statt den von Python.
 /// </summary>
-public static class InhaltePruefung
+public static partial class InhaltePruefung
 {
     /// <summary>Bereiche der AP2 im Rahmenplan (fisi_rahmenplan.AP2_AREAS).</summary>
     public static readonly IReadOnlyList<string> Ap2Bereiche = ["Konzeption", "Netzwerke", "Projekt", "WiSo"];

@@ -23,9 +23,10 @@ public sealed class Notizblock(Lerninhalte inhalte)
     {
         Quellen.Karte => inhalte.Karteikarten.Select(k => ((object)(k.Frage ?? ""), k)),
         Quellen.Quiz => inhalte.Quizfragen.Select(q => ((object)(q.Frage ?? ""), q)),
-        Quellen.Ap1 => inhalte.Ap1Szenarien.Select((e, i) => ((object)(long)i, e)),
-        Quellen.Ap2 => inhalte.Ap2Szenarien.Select((e, i) => ((object)(long)i, e)),
-        _ => inhalte.Testprojekte.Select((e, i) => ((object)(long)i, e)),
+        // Phase 9 W2: Schluessel = Position in der ganzen Liste (Nummer - 1), bei SI gleich der Position
+        Quellen.Ap1 => inhalte.Ap1Szenarien.Select(e => ((object)(long)(e.Nummer - 1), e)),
+        Quellen.Ap2 => inhalte.Ap2Szenarien.Select(e => ((object)(long)(e.Nummer - 1), e)),
+        _ => inhalte.Testprojekte.Select(e => ((object)(long)(e.Nummer - 1), e)),
     };
 
     /// <summary>item_title: Frage (Karteikarte, Pruefungsfrage) bzw. Titel.</summary>
