@@ -147,6 +147,9 @@ public static class Nachtlicht
     /// <summary>Abstand des Masts von der Strassenmitte (halbe Strassenbreite und 0,14 Gehweg).</summary>
     public const float Rand = (StadtSzene.StrassenBreite / 2) + 0.14f;
 
+    /// <summary>Kleinster Abstand des Masts zum Kartenrand.</summary>
+    public const float KartenRand = 0.3f;
+
     /// <summary>Kleinster Abstand zwischen zwei Laternen.</summary>
     public const float Zwischen = 1.0f;
 
@@ -155,16 +158,19 @@ public static class Nachtlicht
 
     /// <summary>
     /// Nicos Skizze (Weisung P8-45, Anlagen <c>P8-45_Laternen_Nico/01_Laternen_Position_PC.png</c> und
-    /// <c>02_Laternen_2_PC.png</c>): blaue Kreise einfach, rot-blaue doppelt. Je Kreis der Ort am Strassenrand
-    /// (Westen nach Osten, Norden nach Sueden), uebertragen aus beiden Blickwinkeln.
+    /// <c>02_Laternen_2_PC.png</c>): blaue Kreise einfach, rot-blaue doppelt. Weisung P8-47: je Skizze die Kamera aus
+    /// den Strassenkanten nachgebaut und jeden Kreis auf den Boden zurueckgerechnet. Alle Laternen stehen am Strassenrand im
+    /// gleichen Abstand <see cref="Rand"/> (Nico 29.10.2026); die Stelle laengs der Strasse ist so gewaehlt, dass die
+    /// Laterne in beiden Skizzen in ihrem Kreis steht (bei 9 und 11 zeigt die zweite Skizze die andere Seite bzw. die
+    /// Fahrbahn: dort gilt die erste Skizze). Reihenfolge wie bisher.
     /// </summary>
     public static readonly (float X, float Z, bool Doppelt)[] Skizze =
     [
-        (7.0f, 0.75f, false), (8.0f, 2.5f, false), (7.0f, 4.3f, false), (8.0f, 7.8f, false), (7.0f, 11.3f, true),
-        (8.0f, 13.9f, false), (7.0f, 16.0f, false), (3.6f, 20.3f, true), (0.75f, 21.3f, false), (7.5f, 21.3f, true),
-        (9.9f, 21.3f, false), (11.9f, 20.3f, false), (18.6f, 21.3f, true), (18.9f, 12.0f, true), (17.9f, 14.2f, false),
-        (18.9f, 16.8f, false), (22.9f, 20.3f, false), (27.1f, 21.3f, false), (31.25f, 21.3f, false), (30.3f, 14.65f, false),
-        (30.3f, 18.5f, false),
+        (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (8.00f, 7.72f, false), (7.00f, 12.61f, true),
+        (8.00f, 14.63f, false), (7.00f, 16.87f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
+        (10.16f, 21.30f, false), (11.89f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.19f, false),
+        (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
+        (29.30f, 17.85f, false),
     ];
 
     /// <summary>
@@ -177,55 +183,133 @@ public static class Nachtlicht
     }
 
     /// <summary>
-    /// Plaetze der Laternen: jeder Kreis der Skizze auf den naechsten erlaubten Platz am Strassenrand (Abstand
-    /// <see cref="Rand"/> von der Strassenmitte, Schritt 0,05; <see cref="Regeln"/>), mindestens <see cref="Zwischen"/>
-    /// von den schon gesetzten. Die Plaetze haengen nicht an der Festzeit (die Deko aller Festzeiten bleibt frei) und
-    /// nicht an der Jahreszeit; fest fuer dieselbe Stadt.
+    /// Plaetze der Laternen (Weisung P8-47): jeder Kreis der Skizze bleibt an seiner Strasse und auf seiner
+    /// Strassenseite, immer im Abstand <see cref="Rand"/> von der Strassenmitte. Ist die Stelle nach den <see cref="Regeln"/>
+    /// nicht frei oder naeher als <see cref="Zwischen"/> an einer schon gesetzten Laterne, wandert der Platz in Schritten
+    /// von 0,05 nur laengs der Strasse, bis er frei ist (nie auf die andere Seite oder an eine andere Strasse). Die
+    /// Plaetze haengen nicht an der Festzeit (die Deko aller Festzeiten bleibt frei) und nicht an der Jahreszeit.
     /// </summary>
     public static List<Laterne> Plaetze(StadtSzene szene)
     {
         var regeln = new Regeln(szene);
-        var kandidaten = new List<(Vector2 Q, Vector2 Laengs, Vector2 ZurStrasse)>();
-        foreach (var strasse in szene.Strassen)
-        {
-            for (var i = 0; i + 1 < strasse.Count; i++)
-            {
-                var a = strasse[i];
-                var b = strasse[i + 1];
-                var laenge = Vector2.Distance(a, b);
-                if (laenge < 1e-4f)
-                {
-                    continue;
-                }
-                var d = (b - a) / laenge;
-                var quer = new Vector2(-d.Y, d.X);
-                var schritte = (int)MathF.Floor(laenge / 0.05f);
-                for (var k = 0; k <= schritte; k++)
-                {
-                    var p = a + (d * (k * 0.05f));
-                    foreach (var seite in (float[])[1f, -1f])
-                    {
-                        kandidaten.Add((p + (quer * Rand * seite), d, -quer * seite));
-                    }
-                }
-            }
-        }
         var liste = new List<Laterne>();
         for (var nr = 0; nr < Skizze.Length; nr++)
         {
             var (x, z, doppelt) = Skizze[nr];
             var ziel = new Vector2(x, z);
-            foreach (var (q, laengs, zurStrasse) in kandidaten.OrderBy(k => Vector2.DistanceSquared(k.Q, ziel)))
+            var (strasse, laenge0, seite) = StrasseVon(szene.Strassen, ziel);
+            var gesamt = Laenge(strasse);
+            Laterne? gefunden = null;
+            for (var k = 0; gefunden is null && k * 0.05f <= gesamt; k++)
             {
-                if (liste.Any(l => Vector2.Distance(l.Ort, q) < Zwischen) || !regeln.Pruefen(q).Frei)
+                foreach (var s in k == 0 ? (float[])[laenge0] : [laenge0 + (k * 0.05f), laenge0 - (k * 0.05f)])
+                {
+                    if (s < 0 || s > gesamt)
+                    {
+                        continue;
+                    }
+                    var (p, d) = Punkt(strasse, s);
+                    var quer = new Vector2(-d.Y, d.X) * seite;
+                    var q = p + (quer * Rand);
+                    if (liste.Any(l => Vector2.Distance(l.Ort, q) < Zwischen) || !regeln.Pruefen(q).Frei)
+                    {
+                        continue;
+                    }
+                    gefunden = new Laterne(nr + 1, q, doppelt, doppelt ? d : -quer, ziel);
+                    break;
+                }
+            }
+            liste.Add(gefunden ?? throw new InvalidOperationException($"Laterne {nr + 1}: kein freier Platz an ihrer Strasse"));
+        }
+        return liste;
+    }
+
+    /// <summary>
+    /// Strasse eines Kreises: die naechste Strasse, auf deren Strecke (nicht hinter ihrem Ende) der Lotfuss liegt
+    /// (sonst die naechste ueberhaupt), mit der Laenge bis zum Lotfuss und der Seite (+1 links, -1 rechts der Richtung).
+    /// </summary>
+    public static (IReadOnlyList<Vector2> Strasse, float Laenge, float Seite) StrasseVon(IEnumerable<IReadOnlyList<Vector2>> strassen, Vector2 ziel)
+    {
+        (IReadOnlyList<Vector2> Strasse, float Laenge, float Seite, float Abstand, bool Innen) beste = ([], 0, 1, float.MaxValue, false);
+        foreach (var strasse in strassen)
+        {
+            var bisher = 0f;
+            for (var i = 0; i + 1 < strasse.Count; i++)
+            {
+                var a = strasse[i];
+                var b = strasse[i + 1];
+                var l = Vector2.Distance(a, b);
+                if (l < 1e-4f)
                 {
                     continue;
                 }
-                liste.Add(new Laterne(nr + 1, q, doppelt, doppelt ? laengs : zurStrasse, ziel));
-                break;
+                var d = (b - a) / l;
+                var t = Vector2.Dot(ziel - a, d);
+                var innen = t >= 0 && t <= l;
+                var fuss = a + (d * Math.Clamp(t, 0, l));
+                var abstand = Vector2.Distance(ziel, fuss);
+                if ((innen && !beste.Innen) || (innen == beste.Innen && abstand < beste.Abstand))
+                {
+                    var quer = new Vector2(-d.Y, d.X);
+                    beste = (strasse, bisher + Math.Clamp(t, 0, l), Vector2.Dot(ziel - fuss, quer) >= 0 ? 1 : -1, abstand, innen);
+                }
+                bisher += l;
             }
         }
-        return liste;
+        return (beste.Strasse, beste.Laenge, beste.Seite);
+    }
+
+    /// <summary>Halbe Laenge des Streifens laengs der Strasse, den das Kleingruen um jeden Wunschplatz frei laesst.</summary>
+    public const float WunschStreifen = 0.8f;
+
+    /// <summary>
+    /// Wunschplatz jedes Kreises am Strassenrand (vor jeder Regel) als Streifen laengs der Strasse (je
+    /// <see cref="WunschStreifen"/> vor und hinter dem Kreis): dort setzt das Kleingruen nichts hin (<see cref="StadtSzene"/>),
+    /// damit Grasbueschel, Buesche, Steine und Beete keine Laterne weiter von Nicos Platz schieben, auch wenn eine andere
+    /// Regel (z. B. ein Brueckenpfosten) sie ein Stueck verschiebt.
+    /// </summary>
+    public static IEnumerable<(Vector2 A, Vector2 B)> Wunschplaetze(IReadOnlyList<IReadOnlyList<Vector2>> strassen, float breite, float tiefe)
+    {
+        var min = new Vector2(KartenRand);
+        var max = new Vector2(breite - KartenRand, tiefe - KartenRand);
+        foreach (var (x, z, _) in Skizze)
+        {
+            var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
+            var (p, d) = Punkt(strasse, laenge);
+            var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
+            // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)
+            yield return (Vector2.Clamp(q - (d * WunschStreifen), min, max), Vector2.Clamp(q + (d * WunschStreifen), min, max));
+        }
+    }
+
+    private static float Laenge(IReadOnlyList<Vector2> linie)
+    {
+        var summe = 0f;
+        for (var i = 0; i + 1 < linie.Count; i++)
+        {
+            summe += Vector2.Distance(linie[i], linie[i + 1]);
+        }
+        return summe;
+    }
+
+    /// <summary>Punkt und Richtung (Laenge 1) nach der Laenge <paramref name="s"/> auf der Linie.</summary>
+    private static (Vector2 Punkt, Vector2 Richtung) Punkt(IReadOnlyList<Vector2> linie, float s)
+    {
+        for (var i = 0; i + 1 < linie.Count; i++)
+        {
+            var l = Vector2.Distance(linie[i], linie[i + 1]);
+            if (l < 1e-4f)
+            {
+                continue;
+            }
+            var d = (linie[i + 1] - linie[i]) / l;
+            if (s <= l || i + 2 == linie.Count)
+            {
+                return (linie[i] + (d * MathF.Min(s, l)), d);
+            }
+            s -= l;
+        }
+        return (linie[0], Vector2.UnitX);
     }
 
     /// <summary>
@@ -277,7 +361,7 @@ public static class Nachtlicht
         public (bool Frei, string Grund, float Abstand) Pruefen(Vector2 q)
         {
             var sz = _szene;
-            if (q.X < 0.3f || q.Y < 0.3f || q.X > sz.Breite - 0.3f || q.Y > sz.Tiefe - 0.3f)
+            if (q.X < KartenRand || q.Y < KartenRand || q.X > sz.Breite - KartenRand || q.Y > sz.Tiefe - KartenRand)
             {
                 return (false, "Kartenrand", 0);
             }
@@ -354,9 +438,13 @@ public static class Nachtlicht
                     return (false, "Bahnuebergang", d);
                 }
             }
-            foreach (var b in sz.Bruecken)
+            // Bruecke samt Bruestung und Endpfosten (P8-47: genau am Grundriss gemessen, vorher Kreis 1,2 um die Mitte)
+            foreach (var (mitte, richtung, halbLaenge, halbBreite) in sz.BrueckenKaesten)
             {
-                var d = Vector2.Distance(q, b) - 1.2f;
+                var r = q - mitte;
+                var laengs = MathF.Max(0, MathF.Abs(Vector2.Dot(r, richtung)) - halbLaenge);
+                var quer = MathF.Max(0, MathF.Abs(Vector2.Dot(r, new Vector2(-richtung.Y, richtung.X))) - halbBreite);
+                var d = MathF.Sqrt((laengs * laengs) + (quer * quer));
                 if (d < AbstandModell)
                 {
                     return (false, "Bruecke", d);

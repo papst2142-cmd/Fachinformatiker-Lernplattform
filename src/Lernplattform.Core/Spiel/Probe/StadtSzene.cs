@@ -122,6 +122,12 @@ public sealed class StadtSzene
     public IReadOnlyList<Vector2> Bruecken { get; private init; } = [];
 
     /// <summary>
+    /// Grundriss jeder Bruecke (W11, Weisung P8-47): Mitte, Richtung der Strasse, halbe Laenge bis zur Aussenkante der
+    /// Endpfosten und halbe Breite bis zur Aussenkante der Bruestung.
+    /// </summary>
+    public IReadOnlyList<(Vector2 Mitte, Vector2 Richtung, float HalbLaenge, float HalbBreite)> BrueckenKaesten { get; private init; } = [];
+
+    /// <summary>
     /// Nachtrag 1 zu P7-13 (Wunsch 1): alle Baeume (Landschaft und Modelle) mit Mitte und Radius, so wie
     /// sie stehen; keiner steht auf Strasse, Fussweg, Gleis oder Wasser (<see cref="BaumSperren"/>).
     /// </summary>
@@ -572,6 +578,7 @@ public sealed class StadtSzene
         var sichtbareOrte = stadt.Orte(stand).Select(o => Py.Str(o["id"])).ToHashSet();
         var sichtbareWege = stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)).Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         var bruecken = new List<Vector2>();
+        var brueckenKaesten = new List<(Vector2, Vector2, float, float)>();
         var strassenEnden = new List<(Vector2 Punkt, Vector2 Richtung, float Verlaengert)>();
         var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
@@ -596,6 +603,7 @@ public sealed class StadtSzene
                             {
                                 Bruecke(teile, streifen, mitte, richtung, sinus);
                                 bruecken.Add(mitte);
+                                brueckenKaesten.Add((mitte, richtung, BrueckeHalb(sinus) + 0.07f, (StrassenBreite / 2) + 0.1f));
                             }
                         }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2)
@@ -842,7 +850,7 @@ public sealed class StadtSzene
         var hindernisseVorFest = hindernisse.ToList();
         var festTeileVon = teile.Count;
         var festStueckeVon = stuecke.Count;
-        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse);
+        var festGesetzt = FestDeko.Stadt(teile, stuecke, grafik, FestDeko.Muster(feste, fest), orte, baeume.Sperren, hindernisse, tueren);
         if (fest is not null)
         {
             signatur.Add("fest:" + fest);
@@ -855,18 +863,21 @@ public sealed class StadtSzene
         {
             foreach (var f in Festzeit.Alle)
             {
-                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList()))
+                foreach (var g in FestDeko.Stadt([], [], grafik, FestDeko.Muster(feste, f), orte, baeume.Sperren, hindernisseVorFest.ToList(), tueren))
                 {
                     festPlaetze.Add((new Vector2(g.X, g.Z), Math.Max(g.R, 0.12f)));
                 }
             }
             var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
+            // W11 (Weisung P8-47): die Laternenplaetze aus Nicos Skizze bleiben frei von Kleingruen
+            var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe).ToList();
             bool Frei(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
                 && haeuserKaesten.All(k => x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f)
                 && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
-                && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f);
+                && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
+                && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt);
@@ -878,6 +889,7 @@ public sealed class StadtSzene
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             Bruecken = bruecken,
+            BrueckenKaesten = brueckenKaesten,
             StrassenEnden = strassenEnden,
             Baeume = baeume.Gesetzt,
             BaumSperren = baeume.Sperren,
@@ -1155,9 +1167,11 @@ public sealed class StadtSzene
     /// Bruecke (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt, ein Steinbett unter der
     /// Fahrbahn bis ueber beide Ufer, Bruestungen an beiden Seiten und Pfosten an den Enden.
     /// </summary>
+    private static float BrueckeHalb(float sinus) => (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
+
     private static void Bruecke(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus)
     {
-        var halb = (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
+        var halb = BrueckeHalb(sinus);
         var a = mitte - (richtung * halb);
         var b = mitte + (richtung * halb);
         var stein = Netz.Farbe("#9A94A8");

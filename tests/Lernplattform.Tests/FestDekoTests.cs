@@ -119,8 +119,10 @@ public class FestDekoTests
     {
         // W8b (Weisung P8-20, Nico 4a): die Tuer sitzt jetzt genau am Ende des Fusswegs auf der Wand (vorher Mitte der
         // Rasterzelle); am Haltepunkt Birkenhain ist daneben kein Platz mehr fuer die Osterbeete (vorher ohne birkenhain)
-        [Festzeit.Ostern] = ["talheim_nord", "birkenhain", "gewerbehof", "elektromarkt", "amt", "bank"],
-        [Festzeit.Halloween] = ["talheim_nord", "birkenhain", "gewerbehof"],
+        // W11 (Weisung P8-48): die Deko steht an der Wand der gezeichneten Tuer (vorher an der naechsten Seite des Hauskastens);
+        // Talheim-Nord, Gewerbehof und Elektromarkt haben jetzt Platz, am Kaufhaus reicht er zu Ostern nicht mehr fuer die Beete
+        [Festzeit.Ostern] = ["birkenhain", "amt", "bank", "kaufhaus"],
+        [Festzeit.Halloween] = ["birkenhain"],
         [Festzeit.Weihnachten] = [],
         [Festzeit.Silvester] = [],
     };

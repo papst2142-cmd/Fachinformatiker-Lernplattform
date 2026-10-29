@@ -56,7 +56,8 @@ public static class FestDeko
     public const float FassadeAbstand = 0.13f;
 
     /// <summary>Ein gesetztes Stueck (fuer Tests und Signatur): Art, Modell, Mitte und Radius in der Ebene, Hindernis ja/nein.</summary>
-    public sealed record Gesetzt(string Art, string? Name, float X, float Z, float R, bool IstHindernis);
+    /// <summary>Ein gesetztes Stueck; <paramref name="Ort"/> = Ort der Tuer, an der es steht (null an festen Plaetzen und innen).</summary>
+    public sealed record Gesetzt(string Art, string? Name, float X, float Z, float R, bool IstHindernis, string? Ort = null);
 
     // ---- Daten -------------------------------------------------------------
 
@@ -475,10 +476,13 @@ public static class FestDeko
     /// <paramref name="sperren"/>-Linie (Strasse, Fussweg, Gleis, Wasser) oder einen Stehplatz: die Gruppe links oder
     /// rechts der Tuer rueckt dafuer an der Fassade entlang nach aussen (hoechstens bis zur Hausecke), sonst entfaellt
     /// sie wie ein Platz, der nicht passt. Jedes stehende Stueck kommt als Quadrat in <paramref name="hindernisse"/>
-    /// (freies Gehen). Rueckgabe: alle gesetzten Stuecke.
+    /// (freies Gehen). Rueckgabe: alle gesetzten Stuecke. Mit <paramref name="tueren"/> (P8-48) steht die Deko an der Wand
+    /// der echten Tuer (Mitte und Aussenseite wie gezeichnet, auch fuer Orte mit verlegtem Zugang), sonst an der Seite des
+    /// Kastens, die der Tuer am naechsten liegt.
     /// </summary>
     public static List<Gesetzt> Stadt(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? g, PyObjekt? muster,
-        IReadOnlyList<StadtOrt> orte, IReadOnlyList<(IReadOnlyList<Vector2> Linie, float Halb)> sperren, List<(double, double, double, double)> hindernisse)
+        IReadOnlyList<StadtOrt> orte, IReadOnlyList<(IReadOnlyList<Vector2> Linie, float Halb)> sperren, List<(double, double, double, double)> hindernisse,
+        IReadOnlyList<StadtTuer>? tueren = null)
     {
         var gesetzt = new List<Gesetzt>();
         if (muster is null)
@@ -490,11 +494,11 @@ public static class FestDeko
         bool Frei(float x, float z, float r) =>
             sperren.All(s => Kurve.Abstand(new Vector2(x, z), s.Linie) >= s.Halb + r + WegRand)
             && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= StehRand + r + WegRand);
-        void Setzen(PyObjekt e, float x, float z, float y0, Vector2 blick, int farbVersatz, bool amBoden)
+        void Setzen(PyObjekt e, float x, float z, float y0, Vector2 blick, int farbVersatz, bool amBoden, string? ort = null)
         {
             var r = amBoden ? Radius(e, g, 1f) : 0f;
             Zeichnen(e, x, z, 1f, y0, blick, farbVersatz, teile, stuecke, g, null, stadt: true);
-            gesetzt.Add(new Gesetzt(Py.Str(e["art"]), Get(e, "name") as string, x, z, r, r > 0));
+            gesetzt.Add(new Gesetzt(Py.Str(e["art"]), Get(e, "name") as string, x, z, r, r > 0, ort));
             if (r > 0)
             {
                 hindernisse.Add((x - r, z - r, x + r, z + r));
@@ -512,6 +516,15 @@ public static class FestDeko
                 (MathF.Abs(o.TuerX - o.KastenMin.X), -Vector2.UnitX, Vector2.UnitY, new(o.KastenMin.X, o.TuerZ), o.KastenMin.Z, o.KastenMax.Z, o.TuerZ),
             };
             var (_, n, t, f, von, bis, tuer) = seiten.MinBy(x => x.Abstand);
+            if (tueren?.FirstOrDefault(d => d.Ort == o.Id) is { } echt)
+            {
+                // P8-48: die Wand der gezeichneten Tuer (Mitte auf der Wand, Aussen nach draussen)
+                n = echt.Aussen;
+                t = MathF.Abs(n.X) > MathF.Abs(n.Y) ? Vector2.UnitY : Vector2.UnitX;
+                f = echt.Mitte;
+                (von, bis) = t == Vector2.UnitX ? (o.KastenMin.X, o.KastenMax.X) : (o.KastenMin.Z, o.KastenMax.Z);
+                tuer = Vector2.Dot(echt.Mitte, t);
+            }
             Vector2 Ort(float entlang, float draussen) => f + (t * entlang) + (n * draussen);
             var versatz = (int)(o.TuerX * 10);
             var eintraege = Eintraege(muster, "tueren").ToList();
@@ -522,7 +535,7 @@ public static class FestDeko
                 // ueber der Tuer haengt es an der Wand, in der Mitte liegt nur Flaches (Konfetti): beides kein Hindernis
                 if (ueber || Radius(e, g, 1f) <= 0 || Frei(p.X, p.Y, Radius(e, g, 1f)))
                 {
-                    Setzen(e, p.X, p.Y, ueber ? StadtSzene.TuerHoehe + 0.02f : 0f, n, versatz, !ueber);
+                    Setzen(e, p.X, p.Y, ueber ? StadtSzene.TuerHoehe + 0.02f : 0f, n, versatz, !ueber, o.Id);
                 }
             }
             // links und rechts: die Gruppe ruht vor der Fassade; liegt dort ein Fussweg, rueckt sie an der Fassade entlang nach aussen
@@ -545,7 +558,7 @@ public static class FestDeko
                     {
                         foreach (var p in plaetze)
                         {
-                            Setzen(p.E, p.P.X, p.P.Y, 0f, n, versatz, true);
+                            Setzen(p.E, p.P.X, p.P.Y, 0f, n, versatz, true, o.Id);
                         }
                         break;
                     }

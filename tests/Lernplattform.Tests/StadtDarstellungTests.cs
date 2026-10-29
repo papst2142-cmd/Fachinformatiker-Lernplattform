@@ -93,10 +93,84 @@ public sealed class StadtDarstellungTests
                 Assert.True(naeher < abstand - 0.15f, $"Laterne {l.Nr}: Arm zeigt nicht zur Strasse");
             }
         }
-        // die Skizze ist uebertragen: hoechstens so weit verschoben wie noetig (groesste Verschiebung 2,58 bei Nr. 18)
-        Assert.All(szene.Laternen, l => Assert.True(l.Verschoben < 2.6f, $"Laterne {l.Nr} um {l.Verschoben:F2} verschoben"));
-        Assert.True(szene.Laternen.Count(l => l.Verschoben < 0.3f) >= 15, "zu viele Laternen weit von der Skizze");
+        // die Skizze ist uebertragen (P8-47): nur laengs der Strasse verschoben, auf derselben Seite derselben Strasse,
+        // hoechstens so weit wie noetig (groesste Verschiebung 0,20 bei Nr. 11 und 15)
+        foreach (var l in szene.Laternen)
+        {
+            var (strasse, laenge, seite) = Nachtlicht.StrasseVon(szene.Strassen, l.Ziel);
+            var (strasseOrt, laengeOrt, seiteOrt) = Nachtlicht.StrasseVon(szene.Strassen, l.Ort);
+            Assert.True(ReferenceEquals(strasse, strasseOrt) && seite == seiteOrt, $"Laterne {l.Nr}: andere Strasse oder Seite als der Kreis");
+            Assert.True(MathF.Abs(MathF.Abs(laengeOrt - laenge) - l.Verschoben) < 0.02f, $"Laterne {l.Nr}: nicht nur laengs verschoben");
+            Assert.True(l.Verschoben <= 0.21f, string.Create(CultureInfo.InvariantCulture, $"Laterne {l.Nr} um {l.Verschoben:F2} verschoben"));
+        }
     }
+
+    /// <summary>
+    /// Genau diese 21 Plaetze und Arten (Weisung P8-47, Kamera aus Nicos zwei Skizzen nachgebaut): Ort nach den Regeln,
+    /// D = Doppel-Laterne. Verschoben sind nur 6 (Brueckenpfosten), 7 (Baum), 11 und 12 (Brueckenpfosten), 15 (Tuer Stellwerk).
+    /// </summary>
+    [Fact]
+    public void LaternenGenauDiesePlaetze()
+    {
+        (float X, float Z, bool D)[] soll =
+        [
+            (7.00f, 0.46f, false), (8.00f, 2.55f, false), (7.00f, 5.27f, false), (8.00f, 7.72f, false), (7.00f, 12.61f, true),
+            (8.00f, 14.53f, false), (7.00f, 16.82f, false), (3.52f, 20.30f, true), (0.41f, 21.30f, false), (7.60f, 21.30f, true),
+            (9.96f, 21.30f, false), (11.94f, 20.30f, false), (18.50f, 21.30f, true), (18.90f, 12.66f, true), (17.90f, 15.39f, false),
+            (18.90f, 17.21f, false), (22.83f, 20.30f, false), (26.70f, 21.30f, false), (31.69f, 21.30f, false), (30.30f, 14.76f, false),
+            (29.30f, 17.85f, false),
+        ];
+        var laternen = Sommer.Value.Laternen;
+        Assert.Equal(soll.Length, laternen.Count);
+        Assert.Equal(16, laternen.Count(l => !l.Doppelt));
+        for (var i = 0; i < soll.Length; i++)
+        {
+            var l = laternen[i];
+            Assert.Equal(i + 1, l.Nr);
+            Assert.Equal(soll[i].D, l.Doppelt);
+            Assert.True(Vector2.Distance(l.Ort, new Vector2(soll[i].X, soll[i].Z)) < 0.01f,
+                string.Create(CultureInfo.InvariantCulture, $"Laterne {l.Nr} bei {l.Ort.X:F2};{l.Ort.Y:F2} statt {soll[i].X:F2};{soll[i].Z:F2}"));
+        }
+    }
+
+    /// <summary>
+    /// Fest-Deko an Haustueren (Weisung P8-48): jedes Stueck einer Tuer steht vor der Wand der gezeichneten Tuer (auch bei
+    /// verlegtem Zugang wie Bahnhof und Gewerbehof), hoechstens <see cref="DekoAnDerTuer"/> von ihrer Mitte, und kein stehendes
+    /// Stueck liegt auf dem Weg zur Tuer. In allen vier Festzeiten.
+    /// </summary>
+    [Theory]
+    [InlineData(Festzeit.Ostern)]
+    [InlineData(Festzeit.Halloween)]
+    [InlineData(Festzeit.Weihnachten)]
+    [InlineData(Festzeit.Silvester)]
+    public void FestDekoAnDerTuer(string fest)
+    {
+        var szene = Szene(fest, Jahreszeit.Herbst);
+        var anTueren = szene.FestGesetzt.Where(g => g.Ort is not null).ToList();
+        Assert.NotEmpty(anTueren);
+        foreach (var g in anTueren)
+        {
+            var tuer = szene.Tueren.Single(t => t.Ort == g.Ort);
+            var p = new Vector2(g.X, g.Z);
+            var weite = Vector2.Distance(p, tuer.Mitte);
+            Assert.True(weite <= DekoAnDerTuer, string.Create(CultureInfo.InvariantCulture, $"{fest} {g.Ort}: {g.Art} {weite:F2} von der Tuer"));
+            Assert.True(Vector2.Dot(p - tuer.Mitte, tuer.Aussen) >= 0, $"{fest} {g.Ort}: {g.Art} hinter der Wand der Tuer");
+            if (g.IstHindernis)
+            {
+                // nicht auf Weg, Gehweg, Strasse, Gleis oder Wasser (dieselben Linien wie fuer die Baeume)
+                foreach (var (linie, halb) in szene.BaumSperren)
+                {
+                    var weg = Kurve.Abstand(p, linie);
+                    Assert.True(weg >= halb + g.R, string.Create(CultureInfo.InvariantCulture, $"{fest} {g.Ort}: {g.Art} auf einem Weg ({weg:F2})"));
+                }
+            }
+        }
+        // der Bahnhof (Tuer an der Suedwand, P8-48) hat seine Deko am Eingang
+        Assert.Contains(anTueren, g => g.Ort == "talheim");
+    }
+
+    /// <summary>Groesster Abstand eines Deko-Stuecks von der Mitte seiner Tuer (P8-48).</summary>
+    private const float DekoAnDerTuer = 1.6f;
 
     /// <summary>Die Regeln lehnen die verbotenen Stellen ab: Tuer, Weg zur Tuer, Haus, Baum, Gruen, Fest-Deko, Bruecke, Fahrbahn, Fluss.</summary>
     [Fact]
@@ -116,6 +190,13 @@ public sealed class StadtDarstellungTests
         Verboten(new Vector2((haus.Min.X + haus.Max.X) / 2, (haus.Min.Z + haus.Max.Z) / 2), "im Haus");
         Verboten(szene.Baeume[0].Mitte, "im Baum");
         Verboten(szene.Bruecken[0], "auf der Bruecke");
+        // an der Bruecke: neben dem Endpfosten und neben der Bruestung (Grundriss der Bruecke, P8-47)
+        foreach (var (mitte, richtung, halbLaenge, _) in szene.BrueckenKaesten)
+        {
+            var quer = new Vector2(-richtung.Y, richtung.X) * Nachtlicht.Rand;
+            Verboten(mitte + (richtung * (halbLaenge + 0.1f)) + quer, "am Endpfosten der Bruecke");
+            Verboten(mitte + (richtung * (halbLaenge * 0.5f)) - quer, "an der Bruestung");
+        }
         Verboten(szene.Strassen[0][0] + (Vector2.Normalize(szene.Strassen[0][1] - szene.Strassen[0][0]) * 2), "auf der Fahrbahn");
         Verboten(szene.FestPlaetzeAlle[0].P, "auf der Fest-Deko");
         var gruen = szene.GruenKlein!.Plaetze.First(p => p.Art != "gras");
