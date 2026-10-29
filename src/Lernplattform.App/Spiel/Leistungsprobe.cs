@@ -17,6 +17,9 @@ public static class Leistungsprobe
     /// <summary>Knopf "Leistungsprobe" in der Stadt zeigen (nur Probe-APK).</summary>
     public static bool An { get; set; }
 
+    /// <summary>Bildschirm waehrend der Probe anlassen (Android: Fenster mit KeepScreenOn), sonst null.</summary>
+    public static Action<bool>? BildschirmAn { get; set; }
+
     public const double StufeSekunden = 10;
 
     /// <summary>Die Stufen: (Name, Stadt so oft, mindestens so viele Zeichenaufrufe).</summary>
@@ -47,6 +50,7 @@ public static class Leistungsprobe
             return zeilen;
         }
         Laeuft = true;
+        BildschirmAn?.Invoke(true);
         var vorher = StadtFlaeche.Mitschnitt;
         var bilder = new List<BildZeiten.Bild>();
         var abstand = kamera.Abstand;
@@ -89,6 +93,7 @@ public static class Leistungsprobe
             kamera.Zoomen(kamera.Abstand / abstand);
             kamera.Setzen(zielX, zielZ);
             flaeche.AnfordernBild();
+            BildschirmAn?.Invoke(false);
             Laeuft = false;
         }
         return zeilen;
