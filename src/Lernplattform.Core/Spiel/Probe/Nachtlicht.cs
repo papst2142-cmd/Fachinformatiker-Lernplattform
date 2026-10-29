@@ -430,6 +430,14 @@ public static class Nachtlicht
                     return (false, "Fest-Deko", d);
                 }
             }
+            foreach (var k in sz.Andreaskreuze)
+            {
+                var d = Bahnuebergang.Grundpunkte(k).Min(p => Vector2.Distance(q, p));
+                if (d < AbstandModell)
+                {
+                    return (false, "Andreaskreuz", d);
+                }
+            }
             foreach (var u in sz.Uebergaenge)
             {
                 var d = Vector2.Distance(q, u.Mitte) - 0.5f;

@@ -551,7 +551,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 vec3 ton = vec3(uTonR, uTonG, uTonB);
                 vec3 normal = farbe * (0.48 + 0.52 * d) * hell * ton;
-                vec3 leuchten = vec3(0.99, 0.86, 0.55);
+                // P8-49: die Lichter am Bahnuebergang (Bahnuebergang.Licht, dunkelrot) leuchten nachts rot, alles andere im Lampenlicht
+                vec3 leuchten = distance(farbe, vec3(0.55, 0.07, 0.06)) < 0.02 ? vec3(1.0, 0.12, 0.08) : vec3(0.99, 0.86, 0.55);
                 fFarbe = vec4(mix(normal, leuchten, glut * uNacht), 1.0);
             }
             """;

@@ -133,6 +133,81 @@ public sealed class StadtDarstellungTests
         }
     }
 
+    private static List<Vector2> Ecken(Bahnuebergang.Kreuz k) => Bahnuebergang.Grundpunkte(k);
+
+    private static List<string> ImLichtraum(StadtSzene szene, IEnumerable<Bahnuebergang.Kreuz> kreuze) =>
+        [.. kreuze.SelectMany(k => Ecken(k).Where(p => szene.Gleise.Any(g => Kurve.Abstand(p, g) < Bahnuebergang.LichtraumHalb))
+            .Select(p => string.Create(CultureInfo.InvariantCulture, $"{p.X:F2};{p.Y:F2}")))];
+
+    /// <summary>
+    /// Bahnuebergang (Weisung P8-49, Variante c): kein Teil der Ausstattung (Sockel, Mast, Kreuz, Lichtkasten, Antrieb,
+    /// Schranke offen und spaeter geschlossen) im Lichtraum eines Gleises (<see cref="Bahnuebergang.LichtraumHalb"/> von
+    /// der Gleismitte, breitester Zugwagen plus 0,15). Gegenprobe: an der alten Stelle aus P8-44 ist der Test rot.
+    /// </summary>
+    [Fact]
+    public void BahnuebergangAusserhalbDesGleises()
+    {
+        var szene = Sommer.Value;
+        Assert.Equal(2 * szene.Uebergaenge.Count(u => u.Strasse), szene.Andreaskreuze.Count);
+        Assert.NotEmpty(szene.Andreaskreuze);
+        Assert.Empty(ImLichtraum(szene, szene.Andreaskreuze));
+        // der Lichtraum deckt den breitesten Wagen des Zugmodells (alle drei Wagen gleich skaliert wie im Bild)
+        var wagen = new[] { "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" }.Select(n => Grafik.Modell(n)!).ToList();
+        var skala = StadtSzene.ZugBreite / (wagen[0].Max.X - wagen[0].Min.X);
+        Assert.All(wagen, w => Assert.True((w.Max.X - w.Min.X) * skala <= Bahnuebergang.BreitesterWagen, $"{w.Name} breiter als BreitesterWagen"));
+        Assert.Contains(wagen, w => (w.Max.X - w.Min.X) * skala > Bahnuebergang.BreitesterWagen - 0.002f);
+        Assert.Equal((Bahnuebergang.BreitesterWagen / 2) + 0.15f, Bahnuebergang.LichtraumHalb);
+        // Gegenprobe: dieselbe Ausstattung an der Stelle der alten Kreuze (P8-44: halbe Gleisbreite + 0,12 + 0,2 vor der Mitte)
+        var alt = new List<Bahnuebergang.Kreuz>();
+        foreach (var g in szene.Gleise)
+        {
+            foreach (var strasse in szene.Strassen)
+            {
+                foreach (var (mitte, richtung, sinus) in StadtSzene.Kreuzungen(g, strasse))
+                {
+                    var quer = new Vector2(-richtung.Y, richtung.X);
+                    var halb = ((StadtSzene.GleisBreite / 2) + 0.12f) / sinus;
+                    foreach (var vor in (float[])[-1f, 1f])
+                    {
+                        alt.Add(new Bahnuebergang.Kreuz(mitte + (richtung * vor * (halb + 0.2f)) + (quer * -vor * ((StadtSzene.StrassenBreite / 2) + 0.14f)), richtung * vor, quer * vor));
+                    }
+                }
+            }
+        }
+        Assert.NotEmpty(alt);
+        Assert.NotEmpty(ImLichtraum(szene, alt));
+    }
+
+    /// <summary>Die Ausstattung steht nicht auf Fahrbahn oder Weg und nicht in Laterne, Baum, Gruen oder Deko einer Festzeit.</summary>
+    [Fact]
+    public void BahnuebergangFrei()
+    {
+        foreach (var szene in Festzeit.Alle.Select(f => Szene(f, Jahreszeit.Herbst)).Prepend(Sommer.Value))
+        {
+            foreach (var k in szene.Andreaskreuze)
+            {
+                var ecken = Ecken(k).SkipLast(1).ToList();
+                foreach (var strasse in szene.Strassen)
+                {
+                    Assert.All(ecken, p => Assert.True(Kurve.Abstand(p, strasse) >= Nachtlicht.Rand - 0.01f,
+                        string.Create(CultureInfo.InvariantCulture, $"Ausstattung bei {p.X:F2};{p.Y:F2} auf Fahrbahn oder Rand")));
+                }
+                Assert.All(szene.Laternen, l => Assert.True(ecken.Min(p => Vector2.Distance(p, l.Ort)) >= Nachtlicht.AbstandModell, $"Laterne {l.Nr} an der Ausstattung"));
+                Assert.All(szene.Baeume, b => Assert.True(Vector2.Distance(b.Mitte, k.Fuss) >= b.R + Bahnuebergang.Grundriss, "Baum an der Ausstattung"));
+                Assert.All(szene.GruenKlein!.Plaetze, g => Assert.True(Vector2.Distance(new Vector2(g.X, g.Z), k.Fuss) >= g.R + Bahnuebergang.Grundriss, $"{g.Art} an der Ausstattung"));
+                Assert.All(szene.FestGesetzt, g => Assert.True(Vector2.Distance(new Vector2(g.X, g.Z), k.Fuss) >= g.R + Bahnuebergang.Grundriss, $"{g.Art} an der Ausstattung"));
+                // nur die zwei Lichter tragen die Nachtmarke, tagsueber dunkelrot
+                var (netz, von, bis) = Bahnuebergang.Bauen();
+                Assert.Equal(48, bis - von);
+                Assert.All(Enumerable.Range(von, bis - von), e => Assert.Equal(Bahnuebergang.Licht, netz.FarbeAn(e)));
+            }
+            // nachts leuchten am Uebergang genau die Lichter (je Ausstattung 48 Ecken), nichts sonst
+            var alle = new Netz();
+            Bahnuebergang.Hinzu(alle, szene.Andreaskreuze);
+            Assert.Equal(48 * szene.Andreaskreuze.Count, Enumerable.Range(0, alle.AnzahlEcken).Count(e => Nachtlicht.Leuchtet(alle.FarbeAn(e))));
+        }
+    }
+
     /// <summary>
     /// Fest-Deko an Haustueren (Weisung P8-48): jedes Stueck einer Tuer steht vor der Wand der gezeichneten Tuer (auch bei
     /// verlegtem Zugang wie Bahnhof und Gewerbehof), hoechstens <see cref="DekoAnDerTuer"/> von ihrer Mitte, und kein stehendes

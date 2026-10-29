@@ -151,6 +151,12 @@ public sealed class StadtSzene
     /// <summary>Mitten der Bahnuebergaenge; Strasse = mit Warnkreuzen, sonst Fussweg.</summary>
     public IReadOnlyList<(Vector2 Mitte, bool Strasse)> Uebergaenge { get; private init; } = [];
 
+    /// <summary>Ausstattung der Bahnuebergaenge an Strassen (P8-49): Andreaskreuz, Lichter, Halbschranke.</summary>
+    public IReadOnlyList<Bahnuebergang.Kreuz> Andreaskreuze { get; private init; } = [];
+
+    /// <summary>Mittellinien der Gleise (geglaettet), z. B. fuer den Lichtraum (<see cref="Bahnuebergang.LichtraumHalb"/>).</summary>
+    public IReadOnlyList<IReadOnlyList<Vector2>> Gleise { get; private init; } = [];
+
     /// <summary>Fluss, Ufer und Gleis als glatte Baender (P7-10 Nachtrag 1).</summary>
     public IReadOnlyList<Streifen> Streifen { get; }
 
@@ -313,13 +319,15 @@ public sealed class StadtSzene
     public static bool ImPaket(string modell) => modell.StartsWith("gy-", StringComparison.Ordinal);
 
     /// <summary>
-    /// Phase 8 W11 (Nico 5a, P8-42): eigenes Netz fuer Laternen, Tannen und Kuerbisse (ein Zeichenaufruf mehr, die
+    /// Phase 8 W11 (Nico 5a, P8-42): eigenes Netz fuer Laternen, Tannen, Kuerbisse und Bahnuebergaenge (P8-49) (ein Zeichenaufruf mehr, die
     /// Grenze der Gesamtansicht bleibt): nah die Paket-Modelle, fern (<paramref name="fern"/>) einfache Kaesten.
     /// Tannen nach der Jahreszeit gefaerbt (im Herbst das orange Modell), Kuerbisse und Laternen behalten ihre Farben.
     /// </summary>
     public Netz PaketNetzBauen(bool fern)
     {
         var netz = new Netz();
+        // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
+        Bahnuebergang.Hinzu(netz, Andreaskreuze);
         if (Grafik is null)
         {
             return netz;
@@ -567,8 +575,11 @@ public sealed class StadtSzene
         var wasser = new List<List<Vector2>>();
         var parkFlaechen = new List<(float X1, float Z1, float X2, float Z2)>();
         var gleise = new List<List<Vector2>>();
+        var andreaskreuze = new List<Bahnuebergang.Kreuz>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+        // die Ausstattung der Bahnuebergaenge haelt Abstand zu den Laternenplaetzen aus Nicos Skizze (P8-49)
+        var laternenZiele = Nachtlicht.Wunschplaetze(strassen, breite, tiefe).Select(w => (w.A + w.B) / 2).ToList();
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -647,7 +658,7 @@ public sealed class StadtSzene
                     case "bahn":
                     {
                         var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
-                        uebergaenge.AddRange(Gleis(teile, streifen, glatt, strassen, sichtbareWege));
+                        uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, laternenZiele, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
                         break;
                     }
@@ -877,7 +888,8 @@ public sealed class StadtSzene
                 && haeuserKaesten.All(k => x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f)
                 && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
                 && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
-                && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f);
+                && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f)
+                && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt);
@@ -894,6 +906,8 @@ public sealed class StadtSzene
             Baeume = baeume.Gesetzt,
             BaumSperren = baeume.Sperren,
             Uebergaenge = uebergaenge,
+            Andreaskreuze = andreaskreuze,
+            Gleise = gleise,
             Fest = fest,
             FestGesetzt = festGesetzt,
             FestPlaetzeAlle = festPlaetze,
@@ -1066,7 +1080,7 @@ public sealed class StadtSzene
     /// Fussweg das Gleis kreuzt, liegt ein Belag in Richtung der Strasse (so breit wie sie) ueber dem
     /// Schotter, die Schienen schauen heraus; an Strassen stehen davor Warnkreuze.
     /// </summary>
-    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
+    private static List<(Vector2 Mitte, bool Strasse)> Gleis(List<Teil> teile, List<Streifen> streifen, List<Bahnuebergang.Kreuz> andreaskreuze, List<Vector2> laternen, List<Vector2> p, List<List<Vector2>> strassen, List<List<Vector2>> wege)
     {
         streifen.Add(new Streifen(p, GleisBreite, 0.004f, Hoehe.Gleisbett, Farben.Gleisbett));
         var uebergaenge = new List<(Vector2 Mitte, Vector2 Richtung, float Breite)>();
@@ -1077,7 +1091,7 @@ public sealed class StadtSzene
             {
                 foreach (var (mitte, richtung, sinus) in Kreuzungen(p, linie))
                 {
-                    Uebergang(teile, streifen, mitte, richtung, sinus, breite, farbe, kreuze);
+                    Uebergang(streifen, andreaskreuze, laternen, p, mitte, richtung, sinus, breite, farbe, kreuze);
                     uebergaenge.Add((mitte, richtung, breite));
                 }
             }
@@ -1144,23 +1158,17 @@ public sealed class StadtSzene
     }
 
     /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>
-    private static void Uebergang(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool kreuze)
+    private static void Uebergang(List<Streifen> streifen, List<Bahnuebergang.Kreuz> kreuze, IReadOnlyList<Vector2> laternen, IReadOnlyList<Vector2> gleis, Vector2 mitte, Vector2 richtung, float sinus, float breite, Vector3 farbe, bool mitKreuzen)
     {
         var halb = ((GleisBreite / 2) + 0.12f) / sinus;
         streifen.Add(new Streifen([mitte - (richtung * halb), mitte + (richtung * halb)], breite, Hoehe.Gleisbett, Hoehe.Uebergang, farbe));
-        if (!kreuze)
+        if (!mitKreuzen)
         {
             return;
         }
-        // Warnkreuz (Andreaskreuz) rechts der Fahrbahn vor dem Gleis, je Seite eins
-        var quer = new Vector2(-richtung.Y, richtung.X);
-        foreach (var vor in (float[])[-1f, 1f])
-        {
-            var fuss = mitte + (richtung * vor * (halb + 0.2f)) + (quer * -vor * ((breite / 2) + 0.14f));
-            teile.Add(Quader(fuss.X - 0.025f, 0f, fuss.Y - 0.025f, fuss.X + 0.025f, 0.62f, fuss.Y + 0.025f, Weiss));
-            teile.Add(Quader(fuss.X - 0.13f, 0.5f, fuss.Y - 0.03f, fuss.X + 0.13f, 0.56f, fuss.Y + 0.03f, Farben.Rot));
-            teile.Add(Quader(fuss.X - 0.03f, 0.4f, fuss.Y - 0.13f, fuss.X + 0.03f, 0.66f, fuss.Y + 0.13f, Farben.Rot));
-        }
+        // P8-49 (Nico, Variante c): Andreaskreuz mit Lichtern und Halbschranke rechts der Fahrbahn (links, wenn rechts eine Laterne steht) vor dem Gleis, je
+        // Seite eins, ausserhalb des Lichtraums (mit den Laternen im Paket-Netz, Bahnuebergang.Hinzu in PaketNetzBauen; im Netz der Stadt leuchtet nichts)
+        kreuze.AddRange(Bahnuebergang.Plaetze(mitte, richtung, sinus, gleis, laternen));
     }
 
     /// <summary>
