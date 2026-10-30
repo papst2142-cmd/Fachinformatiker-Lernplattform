@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.27.0
+Erste eigene Lerninhalte für die Fachrichtung Digitale Vernetzung und der Umzug in eine größere Wohnung im Spiel.
+
+- Wer in den „Optionen“ unter „Ausbildung“ Digitale Vernetzung gewählt hat, bekommt 300 neue Karteikarten, 370 neue Prüfungsfragen und 330 neue Aufgaben für die AP2, dazu die gemeinsamen Inhalte aller Fachrichtungen wie bisher.
+- Die neuen Inhalte sind in elf Themen eingeteilt, zum Beispiel „Cyber-physische Systeme & Industrie 4.0“, „Sensorik & Aktorik“, „Feldbusse & industrielle Kommunikation“, „IoT-Protokolle & Funk“, „Sicherheit vernetzter Systeme“ und „Betrieb, Überwachung & Wartung“. Viele Aufgaben enthalten eine Rechnung, eine Konfiguration oder ein kurzes Programm mit vollständigem Lösungsweg.
+- Die Klausursimulation für Digitale Vernetzung ist jetzt voll nutzbar: „Diagnose und Störungsbeseitigung in vernetzten Systemen“ und „Betrieb und Erweiterung von vernetzten Systemen“ ziehen je vier Aufgaben aus den neuen Prüfungsaufgaben. Damit gibt es für jede Fachrichtung eigene Prüfungsaufgaben, der Hinweis, dass es noch keine Aufgaben gibt, fällt ganz weg.
+- Für Systemintegration, Anwendungsentwicklung und Daten- und Prozessanalyse ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen.
+- Im Spiel kannst du jetzt umziehen: In deiner Wohnung auf „Einrichten“ tippen, darunter steht die Karte „Wohnung“ mit allen größeren Wohnungen, ihrem Preis und dem Knopf „Umziehen“. Nach einer Rückfrage ziehst du um, alle Möbel kommen dabei in Umzugskartons. Ob du kaufst oder mietest, wählst du vorher in den „Optionen“ unter „Spiel“.
+- Am Lernstand und am Spielstand ändert sich nichts.
+
 ## A 0.26.0
 Erste eigene Lerninhalte für die Fachrichtung Daten- und Prozessanalyse und die Einstellungen zum Spiel in den „Optionen“.
 
