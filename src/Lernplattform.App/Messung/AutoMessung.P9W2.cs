@@ -15,9 +15,10 @@ namespace Lernplattform.Messung;
 /// Phase 9 W2 (Weisung P9-5 Punkt 5, Plan Phase 9 Abschnitt 12.4 Antwort 3a): Messpunkte "Inhalte laden" (alle
 /// Ordner, kalt, einmalig und streng 400 ms), "Fachrichtung wechseln" (si -> ae bis die Inhalte, das Dashboard und
 /// das Bild fertig sind; wiederholbar, 400 ms) und "Klausurauswahl AE" (erste Auswahl der Klausursimulation in der
-/// Sicht AE, streng 400 ms). Dazu die Zahlen der Sicht AE (gemeinsame Inhalte nach einteilung_bisher.json) und die
-/// Layoutpruefung der Seiten, die AE anders zeigt (Klausurauswahl, AP2-Szenarien und Testprojekte ohne Aufgaben,
-/// Optionen "Lerninhalte"). Nichts wird gespeichert: die Sicht wird nur angezeigt, am Ende wieder SI.
+/// Sicht AE, streng 400 ms). Dazu die Zahlen der Sicht AE (gemeinsame Inhalte nach einteilung_bisher.json und ab W3
+/// die eigenen AE-Inhalte), ab W3 (Weisung P9-8) das erste Oeffnen von Karteikarten und Pruefungstrainer bei AE (streng
+/// 400 ms) und die Layoutpruefung der Seiten, die AE anders zeigt (Klausurauswahl, AP2-Szenarien, Testprojekte ohne
+/// Aufgaben, Optionen "Lerninhalte"). Nichts wird gespeichert: die Sicht wird nur angezeigt, am Ende wieder SI.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -61,17 +62,44 @@ public static partial class AutoMessung
             return funde;
         }
 
-        // 3. Zahlen der Sicht AE: genau die gemeinsamen bisherigen Inhalte, keine AP2-Szenarien und Testprojekte
+        // 3. Zahlen der Sicht AE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
+        //    AE-Inhalte (W3, Weisung P9-8), keine Testprojekte
         var einteilung = ae.Einteilung;
-        var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam),
-            Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam),
+        var eigene = (Karten: ae.Karteikarten.Count(e => e.Zugehoerigkeit == "ae"), Quiz: ae.Quizfragen.Count(e => e.Zugehoerigkeit == "ae"),
+            Ap2: ae.Ap2Szenarien.Count(e => e.Zugehoerigkeit == "ae"));
+        var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam) + eigene.Karten,
+            Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam) + eigene.Quiz,
             Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam));
         Messwerte.Notiere(string.Create(inv,
-            $"Sicht AE: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien, {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));
+            $"Sicht AE: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}, davon AE {eigene.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}, davon AE {eigene.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien (davon AE {eigene.Ap2}), {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));
         if (ae.Karteikarten.Count != soll.Karten || ae.Quizfragen.Count != soll.Quiz || ae.Ap1Szenarien.Count != soll.Ap1
-            || ae.Ap2Szenarien.Count != 0 || ae.Testprojekte.Count != 0 || soll.Karten == 0)
+            || ae.Ap2Szenarien.Count != eigene.Ap2 || ae.Testprojekte.Count != 0 || soll.Karten == 0
+            || eigene.Karten == 0 || eigene.Quiz == 0 || eigene.Ap2 == 0)
         {
-            Fund("Sicht AE: Zahlen weichen von einteilung_bisher.json ab");
+            Fund("Sicht AE: Zahlen weichen von einteilung_bisher.json und den AE-Inhalten ab");
+        }
+
+        // 3a. Karteikarten und Pruefungstrainer bei AE: erstes Oeffnen in der neuen Sicht bis zum Bild (streng)
+        foreach (var (id, name) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer") })
+        {
+            if (ansicht.GebauteSeiten.ContainsKey(id))
+            {
+                Fund(name + " AE: Seite war vor dem ersten Oeffnen schon gebaut");
+                continue;
+            }
+            var uhr = Stopwatch.StartNew();
+            await ansicht.ZeigeAsync(id);
+            switch (ansicht.GebauteSeiten[id])
+            {
+                case KarteikartenSeite karten:
+                    await karten.Geladen;
+                    break;
+                case TrainerSeite neu:
+                    await neu.Geladen;
+                    break;
+            }
+            await ansicht.BildFertigAsync();
+            funde += Ergebnis(name + " AE (erstes Oeffnen, bis zum Bild)", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
         }
 
         // 4. Klausurauswahl AE: Pruefungstrainer neu gebaut (Sicht AE), Wechsel zu "Prüfung" bis zum Bild (streng)
@@ -85,9 +113,10 @@ public static partial class AutoMessung
         await ansicht.BildFertigAsync();
         funde += Ergebnis("Klausurauswahl AE (Wechsel zu \"Prüfung\", bis zum Bild)",
             await BildMessenAsync(ansicht, () => trainer.ArtWaehlen(TrainerTexte.Pruefung), grenze: Geraetegrenze));
-        if (!Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
+        // W3: AE hat eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
+        if (Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
         {
-            Fund("Klausurauswahl AE: Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" fehlt");
+            Fund("Klausurauswahl AE: Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" noch zu sehen");
         }
 
         // 5. Layout der Ansichten, die AE anders zeigt, in jeder Schriftstufe schmal und am PC
