@@ -53,6 +53,14 @@ public sealed class KlausurTeil
 
     public Control Teil => _koerper;
 
+    /// <summary>Phase 9 W2: vor dem Verwerfen der Seite (Wechsel der Fachrichtung) festhalten und abmelden.</summary>
+    public void Abmelden()
+    {
+        Verbergen();
+        Zustand.BeimBeenden -= Verbergen;
+        Zustand.BeiEingabenSpeichern -= Festhalten;
+    }
+
     /// <summary>Gespeicherte laufende Pruefung (auch "bewertung")? (fp.load_running() is not None)</summary>
     public bool Laeuft => _a.Laeuft;
 
@@ -61,7 +69,7 @@ public sealed class KlausurTeil
 
     private KlausurInhalte Inhalte => _a.Inhalte;
 
-    private Fachrichtung Fachrichtung => Fachrichtung.Nach(Ausbildung.Aktuell(Zustand.Schreiber));
+    private Fachrichtung Fachrichtung => Fachrichtung.Nach(Zustand.Sicht);    // Phase 9 W2: gezeigte Sicht (gleich der gespeicherten Wahl)
 
     // -- Allgemein ----------------------------------------------------------------------------
 
@@ -173,15 +181,18 @@ public sealed class KlausurTeil
                 Schrift.Text(angabe, "Klein", FontWeight.Normal, "Pinsel.muted"),
             },
         };
-        if (Klausur.Art(bereich.Art) is { } art && bereich.Quelle != "keine")
+        // Phase 9 W2: b1/b2 von AE, DPA und DV erst, wenn jedes Thema mindestens eine Aufgabe hat
+        var eigene = Klausur.QuelleFachrichtung(bereich.Quelle) is not null;
+        if (Klausur.Art(bereich.Art) is { } art && bereich.Quelle != "keine" && (!eigene || Inhalte.Spielbar(art.Art)))
         {
             var knopf = LernTeile.Knopf(Beschriftungen.Einsetzen(PruefungTexte.Starten, art.Kurz), true);
             knopf.VerticalAlignment = VerticalAlignment.Center;
             knopf.Click += async (_, _) => await StartenAsync(art.Art);
             return Zeile(new NebenOderUnter(220, 14) { Children = { text, knopf } }, "Pinsel.card_alt", new Thickness(14, 10));
         }
-        // AE, DPA, DV: die Bereiche b1/b2 gibt es noch nicht (Wortliste W2 Abschnitt 6)
-        text.Children.Add(Schrift.Text(Beschriftungen.Platzhalter, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        // AE, DPA, DV: fuer die Bereiche b1/b2 gibt es noch keine Aufgaben (Phase 9 W2: eigener Text)
+        text.Children.Add(new LernText(eigene ? FachrichtungTexte.KlausurOhneAufgaben : Beschriftungen.Platzhalter, "Klein",
+            FontWeight.Normal, "Pinsel.text_dim"));
         return Zeile(text, "Pinsel.card_alt", new Thickness(14, 10));
     }
 

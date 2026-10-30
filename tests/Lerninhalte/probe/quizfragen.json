@@ -1,0 +1,44 @@
+[
+ {
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "fachrichtung": "ae",
+  "q": "Probe AE: Welches Diagramm zeigt den zeitlichen Ablauf von Nachrichten zwischen Objekten?",
+  "options": [
+   "Sequenzdiagramm",
+   "Klassendiagramm",
+   "Komponentendiagramm",
+   "Verteilungsdiagramm"
+  ],
+  "a": "Sequenzdiagramm",
+  "exp": "Das Sequenzdiagramm ordnet Nachrichten auf Lebenslinien zeitlich an."
+ },
+ {
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "fachrichtung": "ae",
+  "q": "Probe AE: Welche Testart prüft eine einzelne Methode isoliert?",
+  "options": [
+   "Modultest",
+   "Systemtest",
+   "Abnahmetest",
+   "Lasttest"
+  ],
+  "a": "Modultest",
+  "exp": "Der Modultest (Unit-Test) prüft die kleinste Einheit isoliert, oft mit Testdoubles."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv4",
+  "fachrichtung": "dv",
+  "q": "Probe DV: Welches Protokoll nutzt MQTT als Transportschicht?",
+  "options": [
+   "TCP",
+   "UDP",
+   "ICMP",
+   "ARP"
+  ],
+  "a": "TCP",
+  "exp": "MQTT läuft standardmäßig über TCP (Port 1883, mit TLS 8883)."
+ }
+]

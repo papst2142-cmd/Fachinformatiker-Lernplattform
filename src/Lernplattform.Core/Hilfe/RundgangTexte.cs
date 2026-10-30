@@ -18,8 +18,9 @@ public static class RundgangTexte
     public const string Name = "Dein Name";                                // SETUP_NAME
     public const string NameZusatz = "freiwillig";                         // SETUP_NAME_HINT
     public const string Plan = "Rahmenplan";                               // SETUP_PLAN
+    // SETUP_PLAN_HINT, Phase 9 W2: Paar P9b (HilfePaare)
     public const string PlanHinweis = "Die Abschnitte B, D und E gehören zu anderen Fachrichtungen. "
-        + "Für Systemintegration kannst du sie ausgeschaltet lassen.";      // SETUP_PLAN_HINT
+        + "Schalte den Abschnitt deiner Fachrichtung ein; für Systemintegration bleiben alle drei aus.";
     public const string Termine = "Prüfungstermine";                       // SETUP_DATES
 
     public const string OptionenTitel = "Rundgang und Hilfe";              // OPTIONS_TITLE

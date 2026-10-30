@@ -1,0 +1,464 @@
+{
+ "_hinweis": [
+  "Rahmenplan-Zusatz der C#-Linie (Phase 9 W2): Lernfelder 10c-12c (Daten- und Prozessanalyse) und 10d-12d (Digitale Vernetzung), AP2-Zuordnung der Punkte aus B, D und E und die Themen der Prüfungsbereiche b1/b2 je Fachrichtung.",
+  "ap2: Kurznamen der Prüfungsbereiche (Fachrichtung.cs) oder Projekt; beleg nennt den Paragrafen der FIAusbV (2020) und die Nummer der Anforderung in seiner Aufzählung.",
+  "Nur anhängen; Themen der Prüfungsbereiche sind die Werte des Feldes theme der AP2-Szenarien dieser Fachrichtung."
+ ],
+ "lernfelder": [
+  {
+   "id": "LF 10c",
+   "titel": "Werkzeuge des maschinellen Lernens einsetzen",
+   "stunden": 80,
+   "jahr": 3,
+   "abschnitt": "D",
+   "fachrichtung": "dpa",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 10c (Daten- und Prozessanalyse)"
+  },
+  {
+   "id": "LF 11c",
+   "titel": "Prozesse analysieren und gestalten",
+   "stunden": 80,
+   "jahr": 3,
+   "abschnitt": "D",
+   "fachrichtung": "dpa",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 11c (Daten- und Prozessanalyse)"
+  },
+  {
+   "id": "LF 12c",
+   "titel": "Kundenspezifische Prozess- und Datenanalyse durchführen",
+   "stunden": 120,
+   "jahr": 3,
+   "abschnitt": "D",
+   "fachrichtung": "dpa",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 12c (Daten- und Prozessanalyse)"
+  },
+  {
+   "id": "LF 10d",
+   "titel": "Cyber-physische Systeme entwickeln",
+   "stunden": 80,
+   "jahr": 3,
+   "abschnitt": "E",
+   "fachrichtung": "dv",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 10d (Digitale Vernetzung)"
+  },
+  {
+   "id": "LF 11d",
+   "titel": "Betrieb und Sicherheit vernetzter Systeme gewährleisten",
+   "stunden": 80,
+   "jahr": 3,
+   "abschnitt": "E",
+   "fachrichtung": "dv",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 11d (Digitale Vernetzung)"
+  },
+  {
+   "id": "LF 12d",
+   "titel": "Kundenspezifisches cyber-physisches System optimieren",
+   "stunden": 120,
+   "jahr": 3,
+   "abschnitt": "E",
+   "fachrichtung": "dv",
+   "beleg": "KMK-Rahmenlehrplan Fachinformatiker/Fachinformatikerin (Beschluss vom 13.12.2019), Lernfeld 12d (Digitale Vernetzung)"
+  }
+ ],
+ "ap2": {
+  "ae": {
+   "B1a": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 1"
+   },
+   "B1b": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 2"
+   },
+   "B1c": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 3"
+   },
+   "B1d": {
+    "bereiche": [
+     "Softwareprodukt",
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 2; FIAusbV § 14 Anforderung 1"
+   },
+   "B1e": {
+    "bereiche": [
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 14 Anforderung 1"
+   },
+   "B1f": {
+    "bereiche": [
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 14 Anforderung 4"
+   },
+   "B1g": {
+    "bereiche": [
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 14 Anforderung 4"
+   },
+   "B2a": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 4"
+   },
+   "B2b": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 4"
+   },
+   "B2c": {
+    "bereiche": [
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 14 Anforderung 3"
+   },
+   "B2d": {
+    "bereiche": [
+     "Softwareprodukt"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 1"
+   },
+   "B2e": {
+    "bereiche": [
+     "Softwareprodukt",
+     "Algorithmen"
+    ],
+    "beleg": "FIAusbV § 13 Anforderung 4; FIAusbV § 14 Anforderung 3"
+   },
+   "B2f": {
+    "bereiche": [
+     "Projekt"
+    ],
+    "beleg": "FIAusbV § 12 (Projekt)"
+   }
+  },
+  "dpa": {
+   "D1a": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 1"
+   },
+   "D1b": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 1"
+   },
+   "D1c": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 3"
+   },
+   "D2a": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 1"
+   },
+   "D2b": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 4"
+   },
+   "D2c": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 1"
+   },
+   "D3a": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 2"
+   },
+   "D3b": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 3"
+   },
+   "D3c": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 2"
+   },
+   "D3d": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 2"
+   },
+   "D3e": {
+    "bereiche": [
+     "Prozessanalyse",
+     "Projekt"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 2; FIAusbV § 28 (Projekt)"
+   },
+   "D3f": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 2"
+   },
+   "D3g": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 2"
+   },
+   "D3h": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 3"
+   },
+   "D3i": {
+    "bereiche": [
+     "Prozessanalyse"
+    ],
+    "beleg": "FIAusbV § 29 Anforderung 4"
+   },
+   "D4a": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 4"
+   },
+   "D4b": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 3; FIAusbV § 30 Anforderung 4"
+   },
+   "D4c": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 4"
+   },
+   "D4d": {
+    "bereiche": [
+     "Datenqualität"
+    ],
+    "beleg": "FIAusbV § 30 Anforderung 4"
+   }
+  },
+  "dv": {
+   "E1a": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 2"
+   },
+   "E1b": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 1"
+   },
+   "E1c": {
+    "bereiche": [
+     "Diagnose",
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 4; FIAusbV § 38 Anforderung 4"
+   },
+   "E1d": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 4"
+   },
+   "E1e": {
+    "bereiche": [
+     "Betrieb",
+     "Projekt"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 1; FIAusbV § 36 (Projekt)"
+   },
+   "E1f": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 3"
+   },
+   "E2a": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 1"
+   },
+   "E2b": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 2"
+   },
+   "E2c": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 4"
+   },
+   "E2d": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 4"
+   },
+   "E2e": {
+    "bereiche": [
+     "Diagnose",
+     "Projekt"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 1; FIAusbV § 36 (Projekt)"
+   },
+   "E2f": {
+    "bereiche": [
+     "Betrieb",
+     "Projekt"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 2; FIAusbV § 36 (Projekt)"
+   },
+   "E3a": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 3"
+   },
+   "E3b": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 2"
+   },
+   "E3c": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 3"
+   },
+   "E3d": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 3"
+   },
+   "E3e": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 4"
+   },
+   "E3f": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 4"
+   },
+   "E3g": {
+    "bereiche": [
+     "Diagnose"
+    ],
+    "beleg": "FIAusbV § 37 Anforderung 4"
+   },
+   "E3h": {
+    "bereiche": [
+     "Betrieb"
+    ],
+    "beleg": "FIAusbV § 38 Anforderung 3"
+   }
+  }
+ },
+ "pruefungsbereiche": {
+  "ae": {
+   "b1": {
+    "art": "softwareprodukt",
+    "kurz": "Softwareprodukt",
+    "themen": [
+     "Entwicklungsumgebungen und Bibliotheken",
+     "Programmspezifikation",
+     "Bedienoberflächen",
+     "Qualitätskontrolle"
+    ],
+    "beleg": "FIAusbV § 13 (Planen eines Softwareproduktes); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   },
+   "b2": {
+    "art": "algorithmen",
+    "kurz": "Algorithmen",
+    "themen": [
+     "Programmcode und Programmiersprache",
+     "Algorithmen und Programmlogik",
+     "Testszenarien und Testdaten",
+     "Datenabfragen"
+    ],
+    "beleg": "FIAusbV § 14 (Entwicklung und Umsetzung von Algorithmen); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   }
+  },
+  "dpa": {
+   "b1": {
+    "art": "prozessanalyse",
+    "kurz": "Prozessanalyse",
+    "themen": [
+     "Prozessdarstellung und Anforderungen",
+     "Analysewerkzeuge",
+     "Prozessoptimierung",
+     "Qualitäts- und Wirtschaftlichkeitskontrolle"
+    ],
+    "beleg": "FIAusbV § 29 (Durchführen einer Prozessanalyse); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   },
+   "b2": {
+    "art": "datenqualitaet",
+    "kurz": "Datenqualität",
+    "themen": [
+     "Daten identifizieren und bereitstellen",
+     "Datenqualität prüfen",
+     "Datenzugriff und Verfügbarkeit",
+     "Datenschutz und Datensicherheit"
+    ],
+    "beleg": "FIAusbV § 30 (Sicherstellen der Datenqualität); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   }
+  },
+  "dv": {
+   "b1": {
+    "art": "diagnose",
+    "kurz": "Diagnose",
+    "themen": [
+     "Betriebssicherung und Testauswertung",
+     "Störungen eingrenzen und beheben",
+     "Diagnose- und Prozessdaten",
+     "IT-Sicherheit im Gesamtsystem"
+    ],
+    "beleg": "FIAusbV § 37 (Diagnose und Störungsbeseitigung in vernetzten Systemen); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   },
+   "b2": {
+    "art": "betrieb",
+    "kurz": "Betrieb",
+    "themen": [
+     "Heterogene Systeme einbinden",
+     "Kommunikation der Systeme",
+     "Systemressourcen überwachen",
+     "Netzinfrastruktur und Protokolle"
+    ],
+    "beleg": "FIAusbV § 38 (Betrieb und Erweiterung von vernetzten Systemen); je Thema eine der vier Anforderungen in Reihenfolge des Paragrafen"
+   }
+  }
+ }
+}

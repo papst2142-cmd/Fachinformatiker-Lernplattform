@@ -1,0 +1,170 @@
+[
+ {
+  "title": "Probe AE 1: Entwicklungsumgebungen und Bibliotheken",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Entwicklungsumgebungen und Bibliotheken",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Entwicklungsumgebungen und Bibliotheken.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 2: Programmspezifikation",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Programmspezifikation",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Programmspezifikation.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 3: Bedienoberflächen",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Bedienoberflächen",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Bedienoberflächen.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 4: Qualitätskontrolle",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Qualitätskontrolle",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Qualitätskontrolle.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 5: Programmcode und Programmiersprache",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Programmcode und Programmiersprache",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Programmcode und Programmiersprache.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 6: Algorithmen und Programmlogik",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Algorithmen und Programmlogik",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Algorithmen und Programmlogik.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 7: Testszenarien und Testdaten",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Testszenarien und Testdaten",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Testszenarien und Testdaten.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ },
+ {
+  "title": "Probe AE 8: Datenabfragen",
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "theme": "Datenabfragen",
+  "fachrichtung": "ae",
+  "text": [
+   "Die Muster GmbH entwickelt eine Software zur Raumbuchung.",
+   "",
+   "1. Nennen Sie zwei Punkte zum Thema Datenabfragen.",
+   "2. Begründen Sie Ihre Wahl."
+  ],
+  "solution": [
+   "1. Zwei passende Punkte:",
+   "  - Punkt eins",
+   "  - Punkt zwei",
+   "",
+   "2. Begründung:",
+   "  - nachvollziehbar und auf den Fall bezogen"
+  ]
+ }
+]

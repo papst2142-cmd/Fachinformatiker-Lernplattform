@@ -1,0 +1,397 @@
+{
+ "_hinweis": [
+  "Phase 9 W2: Fehlerfaelle der Ladepruefung inhalte_csharp/lernen. Jede Aenderung [datei, pfad, art, wert] auf einer Kopie der Probe (tests/Lerninhalte/probe, dazu einteilung_bisher.json und rahmenplan_zusatz.json aus inhalte_csharp/lernen); art setze oder entferne. Gelesen von LerninhalteTests und werkzeuge/vergleich/pruefe_lerninhalte.py."
+ ],
+ "faelle": [
+  {
+   "name": "karte_ohne_fachrichtung",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      0,
+      "fachrichtung"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "karte_fachrichtung_unbekannt",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      1,
+      "fachrichtung"
+     ],
+     "setze",
+     "xx"
+    ]
+   ]
+  },
+  {
+   "name": "karte_wie_bisherige",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      0,
+      "q"
+     ],
+     "setze",
+     "  was ist der STANDARD-PORT für https?  "
+    ]
+   ]
+  },
+  {
+   "name": "karte_doppelt_neu",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      1,
+      "q"
+     ],
+     "setze",
+     "probe ae: WOFÜR steht UML?"
+    ]
+   ]
+  },
+  {
+   "name": "quiz_alter_text",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      0,
+      "q"
+     ],
+     "setze",
+     "Was ist ein Floating Static Route?"
+    ]
+   ]
+  },
+  {
+   "name": "quiz_drei_antworten",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      1,
+      "options",
+      3
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "quiz_antwort_fehlt",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      2,
+      "a"
+     ],
+     "setze",
+     "gibt es nicht"
+    ]
+   ]
+  },
+  {
+   "name": "quiz_thema_falsch",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      0,
+      "thema"
+     ],
+     "setze",
+     "gibtsnicht"
+    ]
+   ]
+  },
+  {
+   "name": "karte_thema_fremd",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      2,
+      "cat"
+     ],
+     "setze",
+     "systeme"
+    ],
+    [
+     "karteikarten",
+     [
+      2,
+      "thema"
+     ],
+     "setze",
+     "ae_entwurf"
+    ]
+   ]
+  },
+  {
+   "name": "ap2_thema_falsch",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      0,
+      "theme"
+     ],
+     "setze",
+     "Subnetting & Routing"
+    ]
+   ]
+  },
+  {
+   "name": "ap2_loesung_leer",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      1,
+      "solution"
+     ],
+     "setze",
+     []
+    ]
+   ]
+  },
+  {
+   "name": "ap2_fachrichtung_si",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      2,
+      "fachrichtung"
+     ],
+     "setze",
+     "si"
+    ]
+   ]
+  },
+  {
+   "name": "projekt_hinweis_fehlt",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      0,
+      "hinweise",
+      1
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "rahmenplan_punkt_unbekannt",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      0,
+      "rahmenplan"
+     ],
+     "setze",
+     [
+      "A1a",
+      "Z9z"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "thema_ohne_fachrichtung",
+   "aenderungen": [
+    [
+     "themen",
+     [
+      "themen",
+      "systeme",
+      0,
+      "fachrichtung"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "thema_doppelt",
+   "aenderungen": [
+    [
+     "themen",
+     [
+      "themen",
+      "datenbanken",
+      0,
+      "id"
+     ],
+     "setze",
+     "ae_entwurf"
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_lernfeld_doppelt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "lernfelder",
+      0,
+      "id"
+     ],
+     "setze",
+     "LF 9"
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_lernfeld_abschnitt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "lernfelder",
+      3,
+      "abschnitt"
+     ],
+     "setze",
+     "D"
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_ap2_fremder_punkt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "ap2",
+      "ae",
+      "C1a"
+     ],
+     "setze",
+     {
+      "bereiche": [
+       "Softwareprodukt"
+      ],
+      "beleg": "Probe"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_ap2_bereich_unbekannt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "ap2",
+      "dv",
+      "E1a",
+      "bereiche"
+     ],
+     "setze",
+     [
+      "Konzeption"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_ap2_ohne_zuordnung",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "ap2",
+      "ae",
+      "B1a"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_drei_themen",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "pruefungsbereiche",
+      "dpa",
+      "b1",
+      "themen",
+      3
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_thema_doppelt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "pruefungsbereiche",
+      "dv",
+      "b2",
+      "themen",
+      0
+     ],
+     "setze",
+     "Storage & RAID"
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_bereich_fehlt",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "pruefungsbereiche",
+      "ae",
+      "b2"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "zusatz_art_falsch",
+   "aenderungen": [
+    [
+     "rahmenplan_zusatz",
+     [
+      "pruefungsbereiche",
+      "ae",
+      "b1",
+      "art"
+     ],
+     "setze",
+     "konzeption"
+    ]
+   ]
+  }
+ ]
+}

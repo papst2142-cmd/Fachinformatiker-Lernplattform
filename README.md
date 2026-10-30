@@ -1,7 +1,7 @@
 # Fachinformatiker Lernplattform
 
-Lernprogramm für die Prüfungsvorbereitung zum Fachinformatiker (Schwerpunkt Systemintegration).
-Neubau in C# (.NET 10, Avalonia) der bisherigen Python-Version. Stand: **A 0.1.0, Phase 0 (Fundament)**. Noch keine Lernfunktionen.
+Lernprogramm für die Prüfungsvorbereitung zum Fachinformatiker (alle vier Fachrichtungen wählbar).
+Neubau in C# (.NET 10, Avalonia) der bisherigen Python-Version. Stand: **A 0.24.0, Phase 9 (Fachrichtungen)**.
 
 Copyright (c) 2026 Nico H – Alle Rechte vorbehalten (siehe [LICENSE.txt](LICENSE.txt)).
 Bestandteile Dritter: siehe [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).

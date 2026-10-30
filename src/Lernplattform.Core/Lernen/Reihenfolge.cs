@@ -63,6 +63,9 @@ public sealed class RahmenplanGewicht
     private readonly Dictionary<(string, string), List<string>> _inhaltPunkte = [];
     private readonly Dictionary<(string, string), string?> _thema = [];
 
+    /// <summary>Phase 9 W2: uebersetzte Stichwort-Muster je Programmlauf einmal (eine neue Sicht baut das Gewicht neu).</summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Regex> Muster = new(StringComparer.Ordinal);
+
     public RahmenplanGewicht(Lerninhalte inhalte)
     {
         var plan = inhalte.Rahmenplan;
@@ -92,7 +95,8 @@ public sealed class RahmenplanGewicht
                 ? liste.Select(t => (string)t!).ToHashSet(StringComparer.Ordinal)
                 : null;
             // Python re: Muster auf Kleinschreibung; Gleichheit belegt G16 fuer alle Inhalte
-            return ((string)r["id"]!, themen, new Regex((string)r["stichworte"]!, RegexOptions.CultureInvariant | RegexOptions.Compiled));
+            return ((string)r["id"]!, themen, Muster.GetOrAdd((string)r["stichworte"]!,
+                m => new Regex(m, RegexOptions.CultureInvariant | RegexOptions.Compiled)));
         }).ToList();
 
         // _compute_item_points: gleicher Fragetext spaeter ueberschreibt frueher (dict wie Python)

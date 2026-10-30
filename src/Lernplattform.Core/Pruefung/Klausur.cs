@@ -31,7 +31,8 @@ public sealed class KlausurInhalte
     public KlausurInhalte(Lerninhalte inhalte, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen)
     {
         Inhalte = inhalte;
-        foreach (var frage in inhalte.Quizfragen)
+        // Phase 9 W2: auch Fragen, die die gewaehlte Fachrichtung nicht sieht (Pruefungen von vor einem Wechsel)
+        foreach (var frage in inhalte.Alle.Quizfragen)
         {
             _frage[frage.Frage ?? ""] = frage;      // {q["q"]: q} - die letzte gewinnt
         }
@@ -46,8 +47,47 @@ public sealed class KlausurInhalte
 
     public Lerninhalte Inhalte { get; }
 
-    /// <summary>source_data: AP1-Szenarien fuer "ap1", sonst AP2.</summary>
-    public IReadOnlyList<Lerninhalt> Quelle(string? quelle) => quelle == "ap1" ? Inhalte.Ap1Szenarien : Inhalte.Ap2Szenarien;
+    /// <summary>
+    /// source_data: AP1-Szenarien fuer "ap1", sonst AP2. Phase 9 W2: "ap2_ae", "ap2_dpa", "ap2_dv" sind
+    /// die AP2-Szenarien genau dieser Fachrichtung (Index = Position in ihrer Liste, nur angehaengt);
+    /// jede andere Quelle ist wie in Python die AP2-Liste der Systemintegration. Immer aus allen
+    /// Inhalten, damit Pruefungen von vor einem Wechsel der Fachrichtung lesbar bleiben.
+    /// </summary>
+    public IReadOnlyList<Lerninhalt> Quelle(string? quelle) => quelle == "ap1" ? Inhalte.Alle.Ap1Szenarien
+        : Inhalte.Alle.Ap2SzenarienFuer(Klausur.QuelleFachrichtung(quelle) ?? Fachrichtungen.Systemintegration);
+
+    /// <summary>
+    /// EXAM[art] mit den Themen der Pruefungsbereiche b1/b2 von AE, DPA und DV aus
+    /// rahmenplan_zusatz.json (je Thema eine Aufgabe); SI wie <see cref="Klausur.Art"/>.
+    /// </summary>
+    public KlausurArt? Art(string? art)
+    {
+        if (Klausur.Art(art) is not { } grund || Klausur.QuelleFachrichtung(grund.Quelle) is not { } fr)
+        {
+            return Klausur.Art(art);
+        }
+        var rolle = Fachrichtung.Nach(fr).Bereiche.First(b => b.Art == grund.Art).Rolle;
+        var themen = Inhalte.Alle.RahmenplanZusatz["pruefungsbereiche"]?[fr]?[rolle]?["themen"] as JsonArray;
+        return grund with
+        {
+            Themen = themen?.Select(t => (IReadOnlyList<string>)[t!.GetValue<string>()]).ToList() ?? [],
+        };
+    }
+
+    /// <summary>Phase 9 W2: hat jedes Thema des Bereichs mindestens eine brauchbare Aufgabe? Sonst bleibt der Platzhalter.</summary>
+    public bool Spielbar(string art)
+    {
+        if (Art(art) is not { } bereich)
+        {
+            return false;
+        }
+        if (bereich.Art == Klausur.Wiso)
+        {
+            return WisoPool(bereich).Count > 0;
+        }
+        var themen = bereich.Themen ?? bereich.Pool!.Select(t => (IReadOnlyList<string>)[t]).ToList();
+        return themen.Count > 0 && themen.All(wahl => wahl.Any(t => Nutzbar(bereich.Quelle, t).Count > 0));
+    }
 
     /// <summary>scenario_parts(source_data(quelle)[index]); IndexOutOfRange wie Python bei falschem Index.</summary>
     public Aufgabe? Teile(string? quelle, int index)
@@ -57,7 +97,7 @@ public sealed class KlausurInhalte
         {
             throw new IndexOutOfRangeException("Aufgabe " + index.ToString(CultureInfo.InvariantCulture) + " fehlt");
         }
-        var schluessel = (quelle == "ap1" ? "ap1" : "ap2", index);
+        var schluessel = (quelle == "ap1" ? "ap1" : Klausur.QuelleFachrichtung(quelle) is { } fr ? "ap2_" + fr : "ap2", index);
         lock (_sperre)
         {
             if (_teile.TryGetValue(schluessel, out var fertig))
@@ -141,8 +181,23 @@ public static class Klausur
         new(Wiso, "WiSo", 60, "quiz", "AP2 · Wirtschafts- und Sozialkunde", null, null, ["recht", "arbeitswelt"]),
     ];
 
-    /// <summary>EXAM[art] oder null.</summary>
-    public static KlausurArt? Art(string? art) => Arten.FirstOrDefault(a => a.Art == art);
+    /// <summary>
+    /// Phase 9 W2: Bereiche b1/b2 von AE, DPA und DV (Fachrichtung.cs), Quelle "ap2_&lt;fr&gt;"; die Themen
+    /// kommen aus den Inhalten (<see cref="KlausurInhalte.Art"/>), hier ohne Themen.
+    /// </summary>
+    public static readonly IReadOnlyList<KlausurArt> FachrichtungsArten = Fachrichtung.Alle
+        .Where(f => f.Id != Fachrichtungen.Systemintegration)
+        .SelectMany(f => f.Bereiche.Where(b => b.Rolle is "b1" or "b2")
+            .Select(b => new KlausurArt(b.Art, b.Kurz, b.Minuten, b.Quelle, b.Name, null, null, null)))
+        .ToList();
+
+    /// <summary>EXAM[art] oder null; dazu die Bereiche von AE, DPA und DV (ohne Themen).</summary>
+    public static KlausurArt? Art(string? art) => Arten.FirstOrDefault(a => a.Art == art) ?? FachrichtungsArten.FirstOrDefault(a => a.Art == art);
+
+    /// <summary>Fachrichtung einer Quelle "ap2_ae", "ap2_dpa" oder "ap2_dv"; sonst null.</summary>
+    public static string? QuelleFachrichtung(string? quelle) =>
+        quelle is { Length: > 4 } && quelle.StartsWith("ap2_", StringComparison.Ordinal)
+        && Fachrichtungen.Werte.Contains(quelle[4..]) && quelle[4..] != Fachrichtungen.Systemintegration ? quelle[4..] : null;
 
     /// <summary>Wie ExamPanel.start: new_exam(..., seed=random.randrange(1 << 30)).</summary>
     public static PythonZufall Zufall() => new(RandomNumberGenerator.GetInt32(1 << 30));
@@ -220,7 +275,7 @@ public static class Klausur
     private static JsonObject Neu(KlausurInhalte inhalte, string art, IEnumerable<KlausurEintrag> verlauf, PythonZufall zufall,
         string start, long startUtc)
     {
-        var bereich = Art(art) ?? throw new ArgumentException("Unbekannter Pruefungsbereich " + art, nameof(art));
+        var bereich = inhalte.Art(art) ?? throw new ArgumentException("Unbekannter Pruefungsbereich " + art, nameof(art));
         var benutzt = Gestellt(inhalte, verlauf, art);
         var zustand = new JsonObject
         {

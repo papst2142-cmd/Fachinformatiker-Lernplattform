@@ -147,8 +147,9 @@ public static class UeberTexte
 {
     public const string Programmname = "Fachinformatiker Lernplattform";
     public const string Copyright = "Copyright (c) 2026 Nico H – Alle Rechte vorbehalten";
+    // Phase 9 W2 (Weisung P9-5 Punkt 6): "(Schwerpunkt Systemintegration)" entfaellt (Abweichung zu Python, BeschriftungenTests)
     public const string Beschreibung = "Lernprogramm für die Prüfungsvorbereitung zum Fachinformatiker "
-        + "(Schwerpunkt Systemintegration) mit Karteikarten, Prüfungstrainer, "
+        + "mit Karteikarten, Prüfungstrainer, "
         + "AP1-/AP2-Szenarien, Testprojekten und Praxis-Rechnern.";
     public const string Hinweis = "Die Fachinformatiker Lernplattform ist ein privates Lernprogramm. Sie ist "
         + "kein Angebot und kein Produkt einer Industrie- und Handelskammer (IHK) oder "

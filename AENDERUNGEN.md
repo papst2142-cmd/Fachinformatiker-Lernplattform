@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.24.0
+Vorbereitung für alle vier Fachrichtungen: Wer Anwendungsentwicklung, Daten- und Prozessanalyse oder Digitale Vernetzung lernt, sieht jetzt nur die Inhalte, die zur eigenen Fachrichtung passen.
+
+- Deine Fachrichtung wählst du wie bisher in den „Optionen“ unter „Ausbildung“. Für Systemintegration bleibt alles genau wie bisher: dieselben Karteikarten, Prüfungsfragen, Szenarien, Testprojekte, Zahlen und Prüfungen.
+- Bei Anwendungsentwicklung, Daten- und Prozessanalyse und Digitaler Vernetzung zeigen Karteikarten, Prüfungsfragen, Prüfungstrainer, Suche, AP1, AP2, Testprojekte und Fachgespräch die gemeinsamen Inhalte aller Fachrichtungen, also zum Beispiel Wirtschaft und Sozialkunde, Datenschutz oder Grundlagen der IT. Reine Systemintegrations-Inhalte wie Netzwerktechnik im Detail sind dort ausgeblendet.
+- Auch die Zahlen „x von y“ auf dem Dashboard, in der Seitenleiste und im Fortschritt zählen nur die Inhalte deiner Fachrichtung. In den „Optionen“ unter „Lerninhalte“ steht jetzt, wie viele Inhalte es für deine Fachrichtung gibt.
+- Die Klausursimulation kennt jetzt die beiden Prüfungsbereiche der AP2 jeder Fachrichtung, zum Beispiel „Planen eines Softwareproduktes“ und „Entwicklung und Umsetzung von Algorithmen“ bei Anwendungsentwicklung. Solange es dafür noch keine Aufgaben gibt, steht dort ein Hinweis. Die eigenen Inhalte der drei Fachrichtungen kommen mit den nächsten Versionen.
+- Wechselst du die Fachrichtung, geht nichts verloren: Dein Lernstand bleibt vollständig erhalten, und beim Zurückwechseln ist alles wieder zu sehen. Das gilt auch, wenn PC und Handy verschiedene Fachrichtungen eingestellt hatten; nach dem Abgleich gilt die zuletzt gewählte.
+- Das Spiel ändert sich nicht.
+
 ## A 0.23.1
 Kleine Verbesserungen: ein genauerer Hinweis zum Vollbild, eine strengere Prüfung der Spielinhalte und aufgeräumte Räume im Spiel.
 

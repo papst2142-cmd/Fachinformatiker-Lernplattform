@@ -4,7 +4,9 @@ Gesamtergebnis und Ergaenzung) als tests/Vergleich/fachrichtungen.json.
 Das Skript ist unabhaengig entstanden, nur aus der Spezifikation
 Fi-Austausch/anlagen/P4-5_Spezifikation_G32_G36.md (Stand 22.10.2026),
 ohne Code der Python-Linie oder der C#-Linie zu lesen. Es ist der zweite
-Beleg neben dem Python-Erzeuger von G32 (Abschnitt 6 nur SI).
+Beleg neben dem Python-Erzeuger von G32 (Abschnitt 6 nur SI). Phase 9 W2
+(Weisung P9-5 Punkt 4): Quelle der Bereiche b1/b2 von AE, DPA und DV ist
+"ap2_<fachrichtung>" statt "keine".
 
 Aufruf aus dem Repo-Wurzelordner (Python 3.12, nur Standardbibliothek):
     python3 -I werkzeuge/vergleich/erzeuge_fachrichtungen.py inhalte tests/Vergleich/fachrichtungen.json
@@ -31,15 +33,15 @@ FR_DATEN = [
      ("konzeption", "Konzeption", "AP2 · Konzeption und Administration von IT-Systemen"),
      ("netzwerke", "Netzwerke", "AP2 · Analyse und Entwicklung von Netzwerken")),
     ("ae", "Anwendungsentwicklung",
-     "Planen und Umsetzen eines Softwareprojektes", 80, "keine",
+     "Planen und Umsetzen eines Softwareprojektes", 80, "ap2_ae",
      ("softwareprodukt", "Softwareprodukt", "AP2 · Planen eines Softwareproduktes"),
      ("algorithmen", "Algorithmen", "AP2 · Entwicklung und Umsetzung von Algorithmen")),
     ("dpa", "Daten- und Prozessanalyse",
-     "Planen und Durchführen eines Projektes der Datenanalyse", 40, "keine",
+     "Planen und Durchführen eines Projektes der Datenanalyse", 40, "ap2_dpa",
      ("prozessanalyse", "Prozessanalyse", "AP2 · Durchführen einer Prozessanalyse"),
      ("datenqualitaet", "Datenqualität", "AP2 · Sicherstellen der Datenqualität")),
     ("dv", "Digitale Vernetzung",
-     "Planen und Umsetzen eines Projektes der digitalen Vernetzung", 40, "keine",
+     "Planen und Umsetzen eines Projektes der digitalen Vernetzung", 40, "ap2_dv",
      ("diagnose", "Diagnose", "AP2 · Diagnose und Störungsbeseitigung in vernetzten Systemen"),
      ("betrieb", "Betrieb", "AP2 · Betrieb und Erweiterung von vernetzten Systemen")),
 ]

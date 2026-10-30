@@ -60,13 +60,20 @@ public static class Fachbereiche
 }
 
 /// <summary>
-/// Fachrichtung eines Lerninhalts (Vorbereitung fuer die Fachrichtungen,
-/// Gesamtplan Abschnitt 8). Die Inhaltsdateien bleiben unveraendert: Ohne
-/// Feld "fachrichtung" gilt die Vorgabe Systemintegration.
+/// Fachrichtung eines Lerninhalts (Gesamtplan Abschnitt 8, Phase 9 W2). Die Dateien in
+/// "inhalte" bleiben unveraendert: ohne Feld "fachrichtung" gilt die Vorgabe Systemintegration.
+/// Neue Inhalte in inhalte_csharp/lernen tragen das Feld als Pflicht (Kennungen wie
+/// <see cref="Pruefung.Ausbildung.Werte"/>).
 /// </summary>
 public static class Fachrichtungen
 {
     public const string Feld = "fachrichtung";
-    public const string Systemintegration = "systemintegration";
+    public const string Systemintegration = "si";
     public const string Vorgabe = Systemintegration;
+
+    /// <summary>Einteilung der bisherigen Inhalte: fuer alle Fachrichtungen.</summary>
+    public const string Gemeinsam = "gemeinsam";
+
+    /// <summary>Erlaubte Werte des Feldes "fachrichtung" in inhalte_csharp/lernen.</summary>
+    public static readonly IReadOnlyList<string> Werte = ["si", "ae", "dpa", "dv"];
 }

@@ -1,0 +1,44 @@
+[
+ {
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "fachrichtung": "ae",
+  "q": "Probe AE: Wofür steht UML?",
+  "a": "Unified Modeling Language",
+  "a_full": "UML (Unified Modeling Language) ist eine grafische Sprache zur Modellierung von Software.",
+  "options": [
+   "Unified Modeling Language",
+   "Universal Machine Language",
+   "User Mode Linux",
+   "Unified Markup Layer"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "ae_entwurf",
+  "fachrichtung": "ae",
+  "q": "Probe AE: Was beschreibt ein Klassendiagramm?",
+  "a": "Klassen mit Attributen, Methoden und Beziehungen",
+  "a_full": "Ein Klassendiagramm zeigt die statische Struktur: Klassen, ihre Attribute und Methoden und die Beziehungen zwischen ihnen.",
+  "options": [
+   "Klassen mit Attributen, Methoden und Beziehungen",
+   "Den zeitlichen Ablauf von Nachrichten",
+   "Die Verteilung auf Server",
+   "Die Zustände eines Objekts"
+  ]
+ },
+ {
+  "cat": "datenbanken",
+  "thema": "dpa_datenqualitaet",
+  "fachrichtung": "dpa",
+  "q": "Probe DPA: Was prüft die Plausibilität von Daten?",
+  "a": "Ob Werte sachlich möglich und stimmig sind",
+  "a_full": "Plausibilität: Werte liegen im möglichen Bereich und passen zueinander (z. B. kein Geburtsdatum in der Zukunft).",
+  "options": [
+   "Ob Werte sachlich möglich und stimmig sind",
+   "Ob Daten verschlüsselt sind",
+   "Ob Daten doppelt gespeichert sind",
+   "Ob die Datenbank erreichbar ist"
+  ]
+ }
+]

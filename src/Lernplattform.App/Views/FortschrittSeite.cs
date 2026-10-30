@@ -344,7 +344,7 @@ internal sealed class AbdeckungKarte
         _punktUeben = punktUeben;
         _themaUeben = themaUeben;
         _ansicht = new Pillen(FortschrittTexte.Ansichten, FortschrittTexte.AnsichtPlan, _ => Zeichnen());
-        _filter = new Pillen(FortschrittTexte.Filter, FortschrittTexte.FilterAlle, _ => Zeichnen());
+        _filter = new Pillen(FortschrittTexte.FilterFuer(Zustand.Sicht), FortschrittTexte.FilterAlle, _ => Zeichnen());
         _hinweis.IsVisible = false;
         Karte = FortschrittSeite.Karte(FortschrittTexte.AbdeckungTitel, FortschrittTexte.AbdeckungUnter,
             new StackPanel { Spacing = 6, Children = { _ansicht, _filter, _hinweis, _zeilen } });

@@ -60,6 +60,17 @@ public sealed class Lerninhalt
     /// <summary>Fachrichtung; ohne Feld "fachrichtung" gilt Systemintegration.</summary>
     public string Fachrichtung => Text(Fachrichtungen.Feld) ?? Fachrichtungen.Vorgabe;
 
+    /// <summary>
+    /// Phase 9 W2: wer den Inhalt sieht, "gemeinsam" (alle Fachrichtungen) oder eine Fachrichtung
+    /// (si, ae, dpa, dv). Bisherige Inhalte nach einteilung_bisher.json (ohne Eintrag si), neue
+    /// Inhalte aus inhalte_csharp/lernen nach ihrem Feld "fachrichtung".
+    /// </summary>
+    public string Zugehoerigkeit { get; internal set; } = Fachrichtungen.Vorgabe;
+
+    /// <summary>Sieht die Fachrichtung <paramref name="fachrichtung"/> diesen Inhalt?</summary>
+    public bool SichtbarFuer(string fachrichtung) =>
+        Zugehoerigkeit == Fachrichtungen.Gemeinsam || Zugehoerigkeit == fachrichtung;
+
     /// <summary>Textwert eines Feldes oder null, wenn es fehlt oder kein Text ist.</summary>
     public string? Text(string feld) =>
         Daten[feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : null;
@@ -78,7 +89,7 @@ public sealed class Lerninhalt
 /// build_quiz_database, _load_topics, fisi_rahmenplan._load). Die Dateien
 /// werden nur gelesen, nie veraendert.
 /// </summary>
-public sealed class Lerninhalte
+public sealed partial class Lerninhalte
 {
     /// <summary>Felder, die in den JSON-Dateien auch als Liste von Zeilen stehen duerfen (TEXT_FIELDS).</summary>
     public static readonly IReadOnlyList<string> TextFelder = ["text", "solution", "ausgangssituation", "auftrag", "a_full", "exp"];

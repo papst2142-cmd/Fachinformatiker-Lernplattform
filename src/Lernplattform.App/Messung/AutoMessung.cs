@@ -236,6 +236,7 @@ public static partial class AutoMessung
         funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
         funde += await LizenzenMesspunkteAsync(ansicht);   // Phase 8 W2: Knopf "Lizenzen"
         funde += RingVerlaufPruefen();   // Phase 8 W2 Nachtrag (P8-3b): Farbverlauf der Fortschrittsringe
+        funde += await P9W2MesspunkteAsync(ansicht);   // Phase 9 W2: Inhalte laden, Fachrichtung wechseln, Klausurauswahl AE
         return funde;
     }
 

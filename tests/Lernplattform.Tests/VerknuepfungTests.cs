@@ -85,7 +85,7 @@ public sealed class VerknuepfungTests : IDisposable
     public void InhaltWieWortliste()
     {
         Assert.Equal("[Desktop Entry]\nType=Application\nName=Fachinformatiker Lernplattform\nGenericName=Lernprogramm\n"
-            + "Comment=Lernprogramm fuer die Pruefungsvorbereitung zum Fachinformatiker (Schwerpunkt Systemintegration)\n"
+            + "Comment=Lernprogramm fuer die Pruefungsvorbereitung zum Fachinformatiker\n"
             + "Exec=\"/a b/x.AppImage\"\nIcon=/i.png\nTerminal=false\nCategories=Education;\n"
             + "Keywords=Fachinformatiker;FI;FISI;IHK;Lernen;Netzwerk;Subnetting;RAID;\nStartupWMClass=Lernplattform\n"
             + "X-Lernplattform-Verknuepfung=true\n", Verknuepfung.Inhalt("/a b/x.AppImage", "/i.png"));

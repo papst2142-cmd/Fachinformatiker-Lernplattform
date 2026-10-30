@@ -72,6 +72,13 @@ internal static class HilfePaare
         ("T1", "spiel",
             "Die Häuser haben Öffnungszeiten, ab 20 Uhr geht es nur noch nach Hause.",
             "Die Häuser haben Öffnungszeiten. Abends kannst du weiter durch die Stadt gehen; um 23 Uhr bleibt die Uhr stehen, bis du zu Hause schlafen gehst."),
+        // Phase 9 W2 (Weisung P9-5 Punkt 6): "Schwerpunkt Systemintegration" neutral (Seite des Rundgangs, Rahmenplan-Hinweis)
+        ("P9a", "seite:willkommen",
+            " (Schwerpunkt Systemintegration).\n",
+            ". Deine Fachrichtung wählst du in den „Optionen“ unter „Ausbildung“.\n"),
+        ("P9b", "k:SETUP_PLAN_HINT",
+            "Für Systemintegration kannst du sie ausgeschaltet lassen.",
+            "Schalte den Abschnitt deiner Fachrichtung ein; für Systemintegration bleiben alle drei aus."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),

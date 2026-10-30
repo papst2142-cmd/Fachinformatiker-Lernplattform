@@ -1,0 +1,215 @@
+{
+ "echt": [],
+ "probe": [],
+ "faelle": {
+  "karte_ohne_fachrichtung": [
+   "lernen/karteikarten.json Nr. 1: Feld 'fachrichtung' fehlt oder ist leer",
+   "lernen/karteikarten.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung"
+  ],
+  "karte_fachrichtung_unbekannt": [
+   "lernen/karteikarten.json Nr. 2: unbekannte Fachrichtung 'xx'",
+   "lernen/karteikarten.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung"
+  ],
+  "karte_wie_bisherige": [
+   "lernen/karteikarten.json Nr. 1: doppelt vorhanden (was ist der standard-port für https?)"
+  ],
+  "karte_doppelt_neu": [
+   "lernen/karteikarten.json Nr. 2: doppelt vorhanden (probe ae: wofür steht uml?)"
+  ],
+  "quiz_alter_text": [
+   "lernen/quizfragen.json Nr. 1: Fragetext steht als alter Text in umbenennungen.json"
+  ],
+  "quiz_drei_antworten": [
+   "lernen/quizfragen.json Nr. 2: braucht genau 4 verschiedene Antworten"
+  ],
+  "quiz_antwort_fehlt": [
+   "lernen/quizfragen.json Nr. 3: richtige Antwort steht nicht in den Optionen"
+  ],
+  "quiz_thema_falsch": [
+   "lernen/quizfragen.json Nr. 1: Thema 'gibtsnicht' fehlt oder gehoert nicht zum Fachbereich"
+  ],
+  "karte_thema_fremd": [
+   "lernen/karteikarten.json Nr. 3: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung"
+  ],
+  "ap2_thema_falsch": [
+   "lernen/szenarien_ap2.json Nr. 1: unbekanntes Thema 'Subnetting & Routing' (Themen der Prüfungsbereiche)"
+  ],
+  "ap2_loesung_leer": [
+   "lernen/szenarien_ap2.json Nr. 2: Feld 'solution' fehlt oder ist leer"
+  ],
+  "ap2_fachrichtung_si": [
+   "lernen/szenarien_ap2.json Nr. 3: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 3: unbekanntes Thema 'Bedienoberflächen' (Themen der Prüfungsbereiche)"
+  ],
+  "projekt_hinweis_fehlt": [
+   "lernen/projektarbeiten.json Nr. 1: je Aufgabe wird genau ein Hinweis gebraucht"
+  ],
+  "rahmenplan_punkt_unbekannt": [
+   "lernen/karteikarten.json Nr. 1: unbekannter Rahmenplan-Punkt Z9z"
+  ],
+  "thema_ohne_fachrichtung": [
+   "lernen/karteikarten.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/karteikarten.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/quizfragen.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/quizfragen.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 3: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 4: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 5: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 6: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 7: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 8: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/projektarbeiten.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/themen.json ae_entwurf: unbekannte Fachrichtung 'None'"
+  ],
+  "thema_doppelt": [
+   "lernen/karteikarten.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/karteikarten.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/karteikarten.json Nr. 3: Thema 'dpa_datenqualitaet' fehlt oder gehoert nicht zum Fachbereich",
+   "lernen/quizfragen.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/quizfragen.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 3: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 4: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 5: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 6: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 7: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/szenarien_ap2.json Nr. 8: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/projektarbeiten.json Nr. 1: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung",
+   "lernen/themen.json ae_entwurf: Thema doppelt"
+  ],
+  "zusatz_lernfeld_doppelt": [
+   "rahmenplan_zusatz.json: Lernfeld LF 9 doppelt"
+  ],
+  "zusatz_lernfeld_abschnitt": [
+   "rahmenplan_zusatz.json: Lernfeld LF 10d: Abschnitt passt nicht zur Fachrichtung"
+  ],
+  "zusatz_ap2_fremder_punkt": [
+   "rahmenplan_zusatz.json: AP2 ae C1a: Punkt fehlt oder gehoert nicht zu Abschnitt B"
+  ],
+  "zusatz_ap2_bereich_unbekannt": [
+   "rahmenplan_zusatz.json: AP2 dv E1a: unbekannter Prüfungsbereich Konzeption"
+  ],
+  "zusatz_ap2_ohne_zuordnung": [
+   "rahmenplan_zusatz.json: AP2 ae: Punkt B1a ohne Zuordnung"
+  ],
+  "zusatz_drei_themen": [
+   "rahmenplan_zusatz.json: Prüfungsbereich dpa b1: braucht genau 4 verschiedene Themen"
+  ],
+  "zusatz_thema_doppelt": [
+   "rahmenplan_zusatz.json: Prüfungsbereich dv b2: Thema Storage & RAID doppelt"
+  ],
+  "zusatz_bereich_fehlt": [
+   "lernen/szenarien_ap2.json Nr. 5: unbekanntes Thema 'Programmcode und Programmiersprache' (Themen der Prüfungsbereiche)",
+   "lernen/szenarien_ap2.json Nr. 6: unbekanntes Thema 'Algorithmen und Programmlogik' (Themen der Prüfungsbereiche)",
+   "lernen/szenarien_ap2.json Nr. 7: unbekanntes Thema 'Testszenarien und Testdaten' (Themen der Prüfungsbereiche)",
+   "lernen/szenarien_ap2.json Nr. 8: unbekanntes Thema 'Datenabfragen' (Themen der Prüfungsbereiche)",
+   "rahmenplan_zusatz.json: Prüfungsbereich ae b2 fehlt"
+  ],
+  "zusatz_art_falsch": [
+   "rahmenplan_zusatz.json: Prüfungsbereich ae b1: Art oder Kurzname passt nicht"
+  ]
+ },
+ "sichten": {
+  "echt": {
+   "si": {
+    "karteikarten": 1565,
+    "quizfragen": 2174,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 330,
+    "projektarbeiten": 50,
+    "fachgespraech": 60
+   },
+   "ae": {
+    "karteikarten": 1084,
+    "quizfragen": 1615,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 0,
+    "projektarbeiten": 0,
+    "fachgespraech": 42
+   },
+   "dpa": {
+    "karteikarten": 1084,
+    "quizfragen": 1615,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 0,
+    "projektarbeiten": 0,
+    "fachgespraech": 42
+   },
+   "dv": {
+    "karteikarten": 1084,
+    "quizfragen": 1615,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 0,
+    "projektarbeiten": 0,
+    "fachgespraech": 42
+   }
+  },
+  "probe": {
+   "si": {
+    "karteikarten": 1565,
+    "quizfragen": 2174,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 330,
+    "projektarbeiten": 50,
+    "fachgespraech": 60
+   },
+   "ae": {
+    "karteikarten": 1086,
+    "quizfragen": 1617,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 8,
+    "projektarbeiten": 1,
+    "fachgespraech": 42
+   },
+   "dpa": {
+    "karteikarten": 1085,
+    "quizfragen": 1615,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 0,
+    "projektarbeiten": 0,
+    "fachgespraech": 42
+   },
+   "dv": {
+    "karteikarten": 1084,
+    "quizfragen": 1616,
+    "szenarien_ap1": 265,
+    "szenarien_ap2": 0,
+    "projektarbeiten": 0,
+    "fachgespraech": 42
+   }
+  }
+ },
+ "einteilung": {
+  "karteikarten": {
+   "si": 481,
+   "gemeinsam": 1084
+  },
+  "quizfragen": {
+   "si": 559,
+   "gemeinsam": 1561
+  },
+  "quizfragen_erzeugt": {
+   "si": 0,
+   "gemeinsam": 54
+  },
+  "szenarien_ap1": {
+   "si": 0,
+   "gemeinsam": 265
+  },
+  "szenarien_ap2": {
+   "si": 330,
+   "gemeinsam": 0
+  },
+  "projektarbeiten": {
+   "si": 50,
+   "gemeinsam": 0
+  },
+  "fachgespraech": {
+   "si": 18,
+   "gemeinsam": 42
+  }
+ }
+}

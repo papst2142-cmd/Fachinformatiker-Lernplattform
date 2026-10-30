@@ -101,6 +101,14 @@ public static class Diagnosedienst
         {
             Einschalten();
             Messung.Aufzeichnen(Leistungsmessung.EreignisStart, elemente: Elemente());
+            // Phase 9 W2: derselbe Wert wie der Messpunkt "Inhalte laden" im Start-Test
+            _ = Zustand.AlleInhalte.ContinueWith(_ =>
+            {
+                if (Zustand.InhalteLadenMs is { } ms && Messung.Aktiv)
+                {
+                    Messung.Aufzeichnen(Leistungsmessung.EreignisInhalte, nach: "inhalte", dauerMs: ms);
+                }
+            }, TaskScheduler.Default);
         }
         if (Haenger.Eingerichtet)
         {

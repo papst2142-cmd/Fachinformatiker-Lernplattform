@@ -308,6 +308,7 @@ public sealed class Navigationsleisten
     {
         if (Interlocked.Exchange(ref _statusLaeuft, 1) == 1)
         {
+            Volatile.Write(ref _statusNochmal, 1);    // Phase 9 W2: nach der laufenden Lesung noch einmal (z. B. neue Sicht)
             return;
         }
         _ = Task.Run(async () =>
@@ -328,9 +329,15 @@ public sealed class Navigationsleisten
             finally
             {
                 Interlocked.Exchange(ref _statusLaeuft, 0);
+                if (Interlocked.Exchange(ref _statusNochmal, 0) == 1)
+                {
+                    LernstatusLesen();
+                }
             }
         });
     }
+
+    private int _statusNochmal;
 
     /// <summary>Start-Test: Unterpunkte eines Eintrags auf- bzw. zuklappen (ohne die Seite zu oeffnen).</summary>
     public void Umschalten(string id)

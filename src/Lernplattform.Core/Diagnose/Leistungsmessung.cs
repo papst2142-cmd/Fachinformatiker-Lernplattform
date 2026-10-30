@@ -51,6 +51,9 @@ public sealed class Leistungsmessung
     public const string EreignisVorladen = "vorladen";
     public const string EreignisVorladenFertig = "vorladen_fertig";
 
+    /// <summary>Phase 9 W2: Messpunkt "Inhalte laden" (alle Ordner, kalt, einmal je Start), wie im Start-Test.</summary>
+    public const string EreignisInhalte = "inhalte_laden";
+
     private readonly object _sperre = new();
     private readonly Func<DateTime> _uhr;
     private readonly Func<(double? Speicher, double? Privat)> _speicher;

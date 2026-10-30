@@ -96,7 +96,7 @@ public class HilfeTests
                     continue;
                 }
                 Assert.True(Texte.TryGetValue(teil.Item1 + eintrag.Name, out var ist), eintrag.Name);
-                Assert.Equal(eintrag.Value.GetString(), ist);
+                Assert.Equal(MitPaaren(teil.Item1 + eintrag.Name, eintrag.Value.GetString()!), ist);
                 namen.Add(teil.Item1 + eintrag.Name);
             }
         }
@@ -111,7 +111,7 @@ public class HilfeTests
         {
             Assert.Equal(seiten[i].GetProperty("id").GetString(), HilfeTexte.Seiten[i].Id);
             Assert.Equal(seiten[i].GetProperty("titel").GetString(), HilfeTexte.Seiten[i].Titel);
-            Assert.Equal(seiten[i].GetProperty("text").GetString(), HilfeTexte.Seiten[i].Text);
+            Assert.Equal(MitPaaren("seite:" + HilfeTexte.Seiten[i].Id, seiten[i].GetProperty("text").GetString()!), HilfeTexte.Seiten[i].Text);
         }
 
         var abschnitte = texte.GetProperty("abschnitte").EnumerateArray().ToList();
@@ -136,8 +136,9 @@ public class HilfeTests
             .Select(p => (p.GetProperty("nr").GetString(), p.GetProperty("thema").GetString(), p.GetProperty("alt").GetString(), p.GetProperty("neu").GetString()))
             .ToList();
         Assert.Equal(soll, HilfePaare.Paare.Select(p => ((string?)p.Nr, (string?)p.Thema, (string?)p.Alt, (string?)p.Neu)).ToList());
-        Assert.Equal(16, soll.Count); // 9 aus Phase 4, S1 Spielzeit (Phase 7 W6, StadtTexte.HilfeSatz), W5 ohne "Vorladen" (Phase 8 W2),
-        // H1 Stadt in 3D, H2 Spielstand im Abgleich, L1 Knopf "Lizenzen" (Phase 8 W5), F1 Festzeiten (Phase 8 W6), T1 Uhr steht um 23 Uhr (Phase 8 W10)
+        Assert.Equal(18, soll.Count); // 9 aus Phase 4, S1 Spielzeit (Phase 7 W6, StadtTexte.HilfeSatz), W5 ohne "Vorladen" (Phase 8 W2),
+        // H1 Stadt in 3D, H2 Spielstand im Abgleich, L1 Knopf "Lizenzen" (Phase 8 W5), F1 Festzeiten (Phase 8 W6), T1 Uhr steht um 23 Uhr (Phase 8 W10),
+        // P9a Fachrichtung auf der Willkommensseite, P9b Rahmenplan-Hinweis neutral (Phase 9 W2)
         // keine Python-Eigenheiten in der gezeigten Hilfe (Weisung P4-10 Punkt 2)
         foreach (var verboten in new[] { "fisi-lernplattf", "FISI_XIM", "kill -USR1", "0.59.", "fisi-lernstand", "Fisi-Lernplattform", "Vorladen" })
         {

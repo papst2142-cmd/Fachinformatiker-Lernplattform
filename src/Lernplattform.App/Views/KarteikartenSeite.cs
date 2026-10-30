@@ -50,7 +50,17 @@ public sealed class KarteikartenSeite : UserControl
         _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Content = new ScrollViewer { Content = _liste };
         Geladen = LadenAsync();
-        Zustand.BeimBeenden += () => _k?.Beenden();
+        _beimBeenden = () => _k?.Beenden();
+        Zustand.BeimBeenden += _beimBeenden;
+    }
+
+    private readonly Action _beimBeenden;
+
+    /// <summary>Phase 9 W2: vor dem Verwerfen der Seite (Wechsel der Fachrichtung) speichern und abmelden.</summary>
+    public void Abmelden()
+    {
+        _k?.Beenden();
+        Zustand.BeimBeenden -= _beimBeenden;
     }
 
     /// <summary>Fertig aufgebaut (Lernstand gelesen, erste Karte gezeigt).</summary>
