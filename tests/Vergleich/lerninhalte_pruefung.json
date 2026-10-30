@@ -1,5 +1,4 @@
 {
- "python": "3.12.3",
  "echt": [],
  "probe": [],
  "faelle": {
@@ -124,24 +123,24 @@
     "fachgespraech": 60
    },
    "ae": {
-    "karteikarten": 1062,
-    "quizfragen": 1590,
+    "karteikarten": 1084,
+    "quizfragen": 1615,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dpa": {
-    "karteikarten": 1062,
-    "quizfragen": 1590,
+    "karteikarten": 1084,
+    "quizfragen": 1615,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dv": {
-    "karteikarten": 1062,
-    "quizfragen": 1590,
+    "karteikarten": 1084,
+    "quizfragen": 1615,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
@@ -158,24 +157,24 @@
     "fachgespraech": 60
    },
    "ae": {
-    "karteikarten": 1064,
-    "quizfragen": 1592,
+    "karteikarten": 1086,
+    "quizfragen": 1617,
     "szenarien_ap1": 265,
     "szenarien_ap2": 8,
     "projektarbeiten": 1,
     "fachgespraech": 42
    },
    "dpa": {
-    "karteikarten": 1063,
-    "quizfragen": 1590,
+    "karteikarten": 1085,
+    "quizfragen": 1615,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
     "fachgespraech": 42
    },
    "dv": {
-    "karteikarten": 1062,
-    "quizfragen": 1591,
+    "karteikarten": 1084,
+    "quizfragen": 1616,
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
@@ -185,12 +184,12 @@
  },
  "einteilung": {
   "karteikarten": {
-   "si": 503,
-   "gemeinsam": 1062
+   "si": 481,
+   "gemeinsam": 1084
   },
   "quizfragen": {
-   "si": 584,
-   "gemeinsam": 1536
+   "si": 559,
+   "gemeinsam": 1561
   },
   "quizfragen_erzeugt": {
    "si": 0,

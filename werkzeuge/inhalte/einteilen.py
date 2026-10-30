@@ -21,6 +21,8 @@ Regeln (12.4 Punkt 2):
      b) Sind die einzigen Treffer ausserhalb von C die Punkte A8a, A8b oder
         A9a (Netzwerkkonzepte, Datenaustausch, Netzdienste) und gibt es dazu
         einen C-Treffer, ist der Inhalt si (Netz-/Server-Spezialwissen).
+        Ausgenommen davon sind die Themen grundlagen und zugriff (AP1-Stoff
+        fuer alle, Weisung P9-7): sie folgen den uebrigen Regeln.
   3b. Die 54 im Programm erzeugten Subnetz-Aufgaben (QUIZ_QUESTIONS hinter
      quizfragen.json) sind gemeinsam (Art quizfragen_erzeugt, Weisung P9-6).
   4. Fachgespraech: allgemeine Fragen (cat null) und die Faecher Wirtschaft
@@ -43,6 +45,7 @@ import tempfile
 WISO_THEMEN = ("recht", "arbeitswelt")
 GEMEINSAM_THEMEN = ("ipv4",)
 NUR_NETZ_A = ("A8a", "A8b", "A9a")
+NUR_NETZ_A_OHNE = ("grundlagen", "zugriff")
 FACH_GEMEINSAM = (None, "wirtschaft", "datenbanken")
 FACH_SI = ("netzwerk", "sicherheit", "systeme")
 
@@ -104,7 +107,8 @@ def main():
                 wert, grund = "gemeinsam", "WiSo-Thema"
             elif eintrag.get("thema") in GEMEINSAM_THEMEN:
                 wert, grund = "gemeinsam", "Thema ipv4"
-            elif "C" in bereiche and ausser_c and all(p in NUR_NETZ_A for p in ausser_c):
+            elif ("C" in bereiche and ausser_c and all(p in NUR_NETZ_A for p in ausser_c)
+                  and eintrag.get("thema") not in NUR_NETZ_A_OHNE):
                 wert, grund = "si", "nur " + "/".join(ausser_c) + " und C"
             elif bereiche == ["C"]:
                 wert, grund = "si", "nur Abschnitt C"
