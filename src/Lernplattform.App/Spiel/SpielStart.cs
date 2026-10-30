@@ -33,11 +33,7 @@ public static class SpielStart
 
     public static SpielSitzung Laden()
     {
-        // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
-        // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
-        var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
-        var projekte = lernen?.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList();
-        var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
+        var (inhalt, lernen) = InhaltLaden();
         var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");
         var stadt = new Stadt(inhalt, daten);
         var innenraeume = Py.Lesen(Muss("inhalte_csharp/spiel/innenraeume.json")) as PyObjekt;
@@ -48,6 +44,42 @@ public static class SpielStart
         var feste = Py.Lesen(Muss("inhalte_csharp/spiel/festzeiten.json")) as PyObjekt;
         return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
     }
+
+    /// <summary>Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).</summary>
+    private static (PyObjekt Inhalt, Core.Inhalte.Lerninhalte? Lernen) InhaltLaden()
+    {
+        // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
+        // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
+        var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
+        var projekte = lernen?.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList();
+        return (SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte), lernen);
+    }
+
+    /// <summary>
+    /// Phase 9 W4 (Sammelliste 178): Zeile der Karte "Spiel" in den Optionen wie slot_options_text nach game.reload()
+    /// ("Platz 1 · Schwierigkeitsgrad: Normal · ändern nur durch „Spielstand zurücksetzen“"). Liest den Spielstand
+    /// aus lernplattform.db (vorher werden alle Spielschritte geschrieben), ohne das laufende Spiel anzufassen.
+    /// "" wie Python, wenn das Spiel nicht geladen werden kann. Laeuft im Hintergrund.
+    /// </summary>
+    public static string OptionenZeile()
+    {
+        try
+        {
+            Spielschlange.AlleLeeren();
+            _optionenInhalt ??= InhaltLaden().Inhalt;
+            var geraet = Pc ? "PC" : "Handy";
+            return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).OptionenZeile();
+        }
+        catch (Exception fehler) when (fehler is IOException or InvalidDataException or Microsoft.Data.Sqlite.SqliteException or SpielFehler or KeyNotFoundException)
+        {
+            return "";
+        }
+    }
+
+    private static PyObjekt? _optionenInhalt;
+
+    /// <summary>balancing.json des Spiels (Kaution in Prozent fuer den Erklaertext der Karte "Spiel").</summary>
+    public static PyObjekt Balancing() => Py.Lesen(Muss("inhalte/spiel/balancing.json")) as PyObjekt ?? throw new InvalidDataException("balancing.json ist kein Objekt");
 
     /// <summary>
     /// CC0-Modelle (inhalte_csharp/grafik, Weisung P7-9 Nachtrag 3/4). Fehlen sie oder stimmt die

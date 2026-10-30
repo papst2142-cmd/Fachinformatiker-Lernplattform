@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.26.0
+Erste eigene Lerninhalte für die Fachrichtung Daten- und Prozessanalyse und die Einstellungen zum Spiel in den „Optionen“.
+
+- Wer in den „Optionen“ unter „Ausbildung“ Daten- und Prozessanalyse gewählt hat, bekommt 300 neue Karteikarten, 370 neue Prüfungsfragen und 330 neue Aufgaben für die AP2, dazu die gemeinsamen Inhalte aller Fachrichtungen wie bisher.
+- Die neuen Inhalte sind in elf Themen eingeteilt, zum Beispiel „Prozessmodelle (BPMN, EPK)“, „Statistik & Analyseverfahren“, „Datenqualität & Bereinigung“, „SQL-Auswertungen“, „Maschinelles Lernen & Vorhersage“ und „Kennzahlen & Monitoring“. Viele Aufgaben enthalten SQL, ein Prozessmodell oder eine Rechnung mit vollständigem Lösungsweg.
+- Die Klausursimulation für Daten- und Prozessanalyse ist jetzt voll nutzbar: „Durchführen einer Prozessanalyse“ und „Sicherstellen der Datenqualität“ ziehen je vier Aufgaben aus den neuen Prüfungsaufgaben. Der Hinweis, dass es noch keine Aufgaben gibt, fällt weg.
+- Für Systemintegration, Anwendungsentwicklung und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen.
+- In den „Optionen“ unter „Spiel“ steht jetzt, auf welchem Platz du spielst und welchen Schwierigkeitsgrad dein Spielstand hat. Darunter wählst du unter „Wohnungen“, ob du eine größere Wohnung im Spiel kaufst („Einmalzahlung“) oder mietest („Miete“). Die Einstellung gilt nur für das Gerät, auf dem du sie wählst. Der Umzug selbst kommt in einer späteren Version ins Spiel.
+- Am Lernstand und am Spielstand ändert sich nichts.
+
 ## A 0.25.0
 Erste eigene Lerninhalte für die Fachrichtung Anwendungsentwicklung: 1 000 neue Karteikarten, Prüfungsfragen und Prüfungsaufgaben.
 

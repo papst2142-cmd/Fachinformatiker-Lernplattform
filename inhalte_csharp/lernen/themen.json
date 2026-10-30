@@ -9,6 +9,12 @@
     "name": "Sichere Softwareentwicklung",
     "kurz": "Sichere Entwicklung",
     "fachrichtung": "ae"
+   },
+   {
+    "id": "dpa_datenschutz",
+    "name": "Datenschutz & Datensicherheit in der Analyse",
+    "kurz": "Datensicherheit",
+    "fachrichtung": "dpa"
    }
   ],
   "systeme": [
@@ -59,6 +65,30 @@
     "name": "Architektur & Schnittstellen",
     "kurz": "Schnittstellen",
     "fachrichtung": "ae"
+   },
+   {
+    "id": "dpa_modellierung",
+    "name": "Prozessmodelle (BPMN, EPK)",
+    "kurz": "Prozessmodelle",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_statistik",
+    "name": "Statistik & Analyseverfahren",
+    "kurz": "Statistik",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_ml",
+    "name": "Maschinelles Lernen & Vorhersage",
+    "kurz": "ML",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_auswertung",
+    "name": "Auswertung, Visualisierung & Programmierung",
+    "kurz": "Auswertung",
+    "fachrichtung": "dpa"
    }
   ],
   "wirtschaft": [
@@ -67,6 +97,24 @@
     "name": "Vorgehensmodelle & Aufwand",
     "kurz": "Vorgehen",
     "fachrichtung": "ae"
+   },
+   {
+    "id": "dpa_prozesse",
+    "name": "Geschäftsprozesse & Prozessanalyse",
+    "kurz": "Prozesse",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_optimierung",
+    "name": "Prozessoptimierung & Methoden",
+    "kurz": "Optimierung",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_kennzahlen",
+    "name": "Kennzahlen & Monitoring",
+    "kurz": "Kennzahlen",
+    "fachrichtung": "dpa"
    }
   ],
   "datenbanken": [
@@ -75,6 +123,24 @@
     "name": "Datenabfragen & Datenzugriff",
     "kurz": "Datenzugriff",
     "fachrichtung": "ae"
+   },
+   {
+    "id": "dpa_datenquellen",
+    "name": "Datenquellen & Datenintegration",
+    "kurz": "Datenquellen",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_datenqualitaet",
+    "name": "Datenqualität & Bereinigung",
+    "kurz": "Datenqualität",
+    "fachrichtung": "dpa"
+   },
+   {
+    "id": "dpa_sql",
+    "name": "SQL-Auswertungen",
+    "kurz": "SQL-Auswertung",
+    "fachrichtung": "dpa"
    }
   ]
  }

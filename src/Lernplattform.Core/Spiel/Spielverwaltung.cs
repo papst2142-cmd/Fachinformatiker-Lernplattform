@@ -115,6 +115,14 @@ public sealed class Spielverwaltung
         return name == Spielstaende.Standardname(platz) ? name : Prozent("%s · %s", Spielstaende.Standardname(platz), name);
     }
 
+    /// <summary>slot_options_text: Zeile zum Schwierigkeitsgrad in den Optionen, mit dem aktiven Platz (Phase 9 W4).</summary>
+    public string OptionenZeile()
+    {
+        var platz = AktivAnzeige();
+        var text = Spielstaende.SchwierigkeitOptionen(Stand);
+        return platz.Length > 0 ? Prozent("%s · %s", platz, text) : text;
+    }
+
     /// <summary>slots: die drei Plaetze fuer den Auswahlbildschirm, dazu seltene Extras.</summary>
     public List<PyObjekt> Plaetze() => Lesen(v => Spielstaende.Uebersicht(v, Lauf, Inhalt), []);
 

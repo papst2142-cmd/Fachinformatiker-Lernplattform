@@ -193,6 +193,17 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             _updateKurz = kurzText;
         }
         var klappe = Klappkarte.Bauen(bereich.Titel, kurzText, inhalt, Akzent(bereich.Id));
+        if (bereich.Id == Optionen.Spiel)
+        {
+            // Phase 9 W4: wie _show_difficulty beim Zeigen den Spielstand neu lesen
+            klappe.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == Expander.IsExpandedProperty && klappe.IsExpanded)
+                {
+                    SpielZeileNeu();
+                }
+            };
+        }
         _klappen.Add(klappe);
         _bereiche[bereich.Id] = (klappe, klappe);
         return klappe;
@@ -213,6 +224,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         Optionen.Datenbank => Datenbank(),
         Optionen.Updates => Updates(),
         Optionen.Spiel when Lernplattform.Spiel.TonProbe.Geraet is { } probe => TonProbeTeil(probe),
+        Optionen.Spiel => SpielKarte(),
         Optionen.Ton => Ton(),
         Optionen.Vollbild => VollbildKarte(),
         Optionen.Tasten => Tasten(),
