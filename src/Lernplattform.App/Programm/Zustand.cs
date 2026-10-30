@@ -140,9 +140,52 @@ public static class Zustand
             (Inhalte, Gewicht, Suchtext, DashboardInhalte) = gemerkt;
             return true;
         }
-        Inhalte = AlleInhalte.ContinueWith(t => t.IsCompletedSuccessfully ? t.Result?.Fuer(fachrichtung) : null, TaskScheduler.Default);
+        // Phase 10 W1 (Weisung P9-13, Nico 5): neue Inhalte einer noch nicht geladenen Fachrichtung nachladen; die
+        // Oberflaeche zeigt solange die Ladeanzeige (LaedtNach), der Lernstand bleibt
+        var uhr = Stopwatch.StartNew();
+        var nachladen = AlleInhalte.IsCompletedSuccessfully && AlleInhalte.Result is { } geladen && !geladen.HatFachrichtung(fachrichtung)
+            || !AlleInhalte.IsCompleted;
+        AlleInhalte = AlleInhalte.ContinueWith(t => t.IsCompletedSuccessfully && t.Result is { } alle ? Nachladen(alle, fachrichtung) : null,
+            TaskScheduler.Default);
+        Inhalte = AlleInhalte.ContinueWith(t =>
+        {
+            var sicht = t.IsCompletedSuccessfully ? t.Result?.Fuer(fachrichtung) : null;
+            if (nachladen && sicht is not null)
+            {
+                NachladenMs[fachrichtung] = uhr.Elapsed.TotalMilliseconds;
+                Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Fachrichtung {fachrichtung} nachgeladen (bis die Sicht steht): {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+            }
+            return sicht;
+        }, TaskScheduler.Default);
+        NachladenUhr = nachladen ? uhr : null;
         AbgeleiteteStarten();
         return true;
+    }
+
+    /// <summary>Phase 10 W1: Messpunkt "Fachrichtung nachladen" je Fachrichtung (Wechsel bis die Sicht steht), ms.</summary>
+    public static System.Collections.Concurrent.ConcurrentDictionary<string, double> NachladenMs { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Phase 10 W1: Uhr des laufenden Nachladens (null = keins); die Ladeanzeige richtet sich danach.</summary>
+    private static Stopwatch? NachladenUhr { get; set; }
+
+    /// <summary>Phase 10 W1: wird gerade eine Fachrichtung nachgeladen, und seit wie vielen Sekunden?</summary>
+    public static (bool Laedt, double Sekunden) Nachladestand => NachladenUhr is { } uhr && !Inhalte.IsCompleted
+        ? (true, uhr.Elapsed.TotalSeconds) : (false, 0);
+
+    private static Lerninhalte Nachladen(Lerninhalte alle, string fachrichtung)
+    {
+        try
+        {
+            return alle.MitFachrichtung(fachrichtung);
+        }
+        catch (Exception fehler)
+        {
+            // eine kaputte Datei in inhalte_csharp/lernen nimmt die geladenen Inhalte nie mit (wie beim Start)
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            Messwerte.Notiere("Lerninhalte: FEHLER beim Nachladen " + fehler.GetType().Name + ", Fachrichtung ohne eigene Inhalte");
+            return alle;
+        }
     }
 
     private static readonly Dictionary<string, (Task<Lerninhalte?> Inhalte, Task<RahmenplanGewicht?> Gewicht,
@@ -239,16 +282,21 @@ public static class Zustand
         var uhr = Stopwatch.StartNew();
         try
         {
-            var inhalte = Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(EingebauteDatei), LernenDatei, fehler =>
-            {
-                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
-                Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
-            });
+            // Phase 10 W1 (Weisung P9-13, Nico 5): erst die bisherigen Inhalte, dann die Wahl, dann aus
+            // inhalte_csharp/lernen nur die neuen Inhalte der gewaehlten Fachrichtung (die anderen beim Wechsel)
+            var lernen = new LernenOrdner(LernenDatei);
+            lernen.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
+            var bisher = Lerninhalte.Laden(EingebauteDatei);
             uhr.Stop();
             var wahlUhr = Stopwatch.StartNew();
             Sicht = Wahl();
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Fachrichtung aus dem Lernstand gelesen: {wahlUhr.ElapsedMilliseconds} ms"));
             uhr.Start();
+            var inhalte = Lerninhalte.MitLernenSicher(() => bisher, lernen, fehler =>
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
+            }, Sicht == Fachrichtungen.Systemintegration ? [Sicht] : [Fachrichtungen.Systemintegration, Sicht]);
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,

@@ -176,21 +176,52 @@ public sealed partial class Lerninhalte
         foreach (var knoten in liste.ToList())
         {
             liste.Remove(knoten);
-            var eintrag = knoten as JsonObject ?? throw new InvalidDataException(name + ".json: Eintrag ist kein Objekt");
-            var kurz = eintrag["cat"] is JsonValue c && c.GetValueKind() == JsonValueKind.String ? c.GetValue<string>() : null;
-            if (kurz is null || !Fachbereiche.Schluessel.TryGetValue(kurz, out var voll))
+            ergebnis.Add(Umwandeln(knoten as JsonObject ?? throw new InvalidDataException(name + ".json: Eintrag ist kein Objekt"), name));
+        }
+        return ergebnis;
+    }
+
+    /// <summary>Ein Eintrag wie load_content: Fachbereich-Kurzname -> Name, Zeilenlisten -> Text.</summary>
+    private static JsonObject Umwandeln(JsonObject eintrag, string name)
+    {
+        var kurz = eintrag["cat"] is JsonValue c && c.GetValueKind() == JsonValueKind.String ? c.GetValue<string>() : null;
+        if (kurz is null || !Fachbereiche.Schluessel.TryGetValue(kurz, out var voll))
+        {
+            throw new InvalidDataException(name + ".json: unbekannter Fachbereich " + (kurz ?? eintrag["cat"]?.ToJsonString() ?? "None"));
+        }
+        eintrag["cat"] = voll;
+        foreach (var feld in TextFelder)
+        {
+            if (eintrag[feld] is JsonArray zeilen)
             {
-                throw new InvalidDataException(name + ".json: unbekannter Fachbereich " + (kurz ?? eintrag["cat"]?.ToJsonString() ?? "None"));
+                eintrag[feld] = string.Join("\n", zeilen.Select(z => z!.GetValue<string>()));
             }
-            eintrag["cat"] = voll;
-            foreach (var feld in TextFelder)
+        }
+        return eintrag;
+    }
+
+    /// <summary>
+    /// Phase 10 W1 (Weisung P9-13, Nico 5): nur die Eintraege einer Liste aus inhalte_csharp/lernen, deren Feld
+    /// "fachrichtung" in <paramref name="fachrichtungen"/> steht, mit ihrer Position in der ganzen Datei. Die
+    /// uebrigen werden nur gelesen, nicht umgewandelt (das spart beim Start die Zeit der anderen Fachrichtungen).
+    /// Ein Eintrag ohne gueltiges Feld wird uebersprungen (er waere fuer niemanden sichtbar, die Pruefung meldet ihn).
+    /// </summary>
+    private static List<(int Index, JsonObject Daten)> LadeListeFuer(JsonDocument dokument, string name, IReadOnlySet<string> fachrichtungen)
+    {
+        if (dokument.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException(name + ".json enthaelt keine Liste");
+        }
+        var ergebnis = new List<(int, JsonObject)>();
+        var index = 0;
+        foreach (var element in dokument.RootElement.EnumerateArray())
+        {
+            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(Fachrichtungen.Feld, out var wert)
+                && wert.ValueKind == JsonValueKind.String && wert.GetString() is { } fr && fachrichtungen.Contains(fr))
             {
-                if (eintrag[feld] is JsonArray zeilen)
-                {
-                    eintrag[feld] = string.Join("\n", zeilen.Select(z => z!.GetValue<string>()));
-                }
+                ergebnis.Add((index, Umwandeln(JsonObject.Create(element)!, name)));
             }
-            ergebnis.Add(eintrag);
+            index++;
         }
         return ergebnis;
     }

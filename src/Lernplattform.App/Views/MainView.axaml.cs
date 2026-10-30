@@ -116,7 +116,23 @@ public partial class MainView : UserControl
         // W4: Ebene fuer den Rundgang ueber allen Seiten, unter den Hinweisfenstern
         var rundgang = new Panel { IsVisible = false };
         RundgangEbene.Ebene(rundgang);
-        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), hinweise, rundgang, ebene } };
+        // Phase 10 W1 (Weisung P9-13, Nico 5): kleine Ladeanzeige beim Nachladen einer Fachrichtung (ab 0,3 s wie beim
+        // Spiel, ein schnelles Nachladen blitzt nicht auf); sperrt nichts, Klicks gehen durch
+        _nachladeRing = new VerlaufRing(0, "accent", "accent2", 5) { Width = 28, Height = 28 };
+        var nachladeText = Schrift.Text(Core.Texte.FachrichtungTexte.Nachladen, "Normal", FontWeight.SemiBold);
+        nachladeText.TextWrapping = TextWrapping.Wrap;     // grosse Schrift am Handy: Umbruch statt ueber den Rand
+        nachladeText.VerticalAlignment = VerticalAlignment.Center;
+        _nachladeRing.Margin = new Thickness(0, 0, 12, 0);
+        DockPanel.SetDock(_nachladeRing, Dock.Left);
+        _nachladeAnzeige = Schrift.Karte(new DockPanel { Children = { _nachladeRing, nachladeText } });
+        _nachladeAnzeige.Padding = new Thickness(18, 12);
+        _nachladeAnzeige.Margin = new Thickness(16);
+        _nachladeAnzeige.HorizontalAlignment = HorizontalAlignment.Center;
+        _nachladeAnzeige.VerticalAlignment = VerticalAlignment.Center;
+        _nachladeAnzeige.IsHitTestVisible = false;
+        _nachladeAnzeige.IsVisible = false;
+        _nachladeTakt = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) => NachladeanzeigeSetzen());
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _nachladeAnzeige, hinweise, rundgang, ebene } };
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
@@ -317,8 +333,48 @@ public partial class MainView : UserControl
             Zeige(AktuelleSeite);
         }
         _leisten.LernstatusLesen();
+        NachladeanzeigeSetzen();
         return true;
     }
+
+    private readonly Border _nachladeAnzeige;
+    private readonly VerlaufRing _nachladeRing;
+    private readonly DispatcherTimer _nachladeTakt;
+
+    /// <summary>Phase 10 W1: Ladeanzeige nach dem Stand des Nachladens (Ring dreht sich als Zeichen, dass es weitergeht).</summary>
+    private void NachladeanzeigeSetzen()
+    {
+        var (laedt, sekunden) = Programm.Zustand.Nachladestand;
+        _nachladeAnzeige.IsVisible = NachladeanzeigeErzwungen || Core.Spiel.Probe.Ladeanzeige.Zeigen(laedt, sekunden);
+        _nachladeRing.Anteil = laedt ? sekunden % 1 : 0;
+        if (laedt)
+        {
+            _nachladeTakt.Start();
+        }
+        else
+        {
+            _nachladeTakt.Stop();
+        }
+    }
+
+    /// <summary>Phase 10 W1: ist die Ladeanzeige gerade zu sehen (Start-Test)?</summary>
+    public bool NachladeanzeigeSichtbar => _nachladeAnzeige.IsVisible;
+
+    /// <summary>Phase 10 W1: die Ladeanzeige selbst (Start-Test: Layoutpruefung, Fotos).</summary>
+    public Border NachladeanzeigeKarte => _nachladeAnzeige;
+
+    /// <summary>Phase 10 W1, nur Start-Test und Fotos: Ladeanzeige stehen lassen, um sie in jeder Schriftstufe zu pruefen.</summary>
+    public bool NachladeanzeigeErzwungen
+    {
+        get => _nachladeErzwungen;
+        set
+        {
+            _nachladeErzwungen = value;
+            NachladeanzeigeSetzen();
+        }
+    }
+
+    private bool _nachladeErzwungen;
 
     private void SchriftGeaendert()
     {

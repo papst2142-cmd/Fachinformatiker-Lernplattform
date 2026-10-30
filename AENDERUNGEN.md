@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.28.0
+Das Programm startet schneller, weil es nur die Lerninhalte deiner Fachrichtung lädt.
+
+- Beim Start lädt das Programm jetzt nur die gemeinsamen Lerninhalte und die deiner Fachrichtung. Die Inhalte der anderen Fachrichtungen bleiben zunächst liegen. So bleibt der Start auch dann schnell, wenn später noch viele neue Inhalte dazukommen.
+- Wechselst du in den „Optionen“ unter „Ausbildung“ die Fachrichtung, lädt das Programm deren Inhalte nach. Dauert das etwas länger, siehst du solange die kleine Anzeige „Lerninhalte werden geladen …“. Danach zeigen Karteikarten, Prüfungsfragen, Szenarien und Klausursimulation die neue Fachrichtung.
+- Eine Prüfung, die du vor einem Wechsel geschrieben hast, bleibt lesbar: ihre Aufgaben werden bei Bedarf nachgeladen.
+- Am Lernstand, am Spiel und an den Lerninhalten selbst ändert sich nichts.
+
 ## A 0.27.0
 Erste eigene Lerninhalte für die Fachrichtung Digitale Vernetzung und der Umzug in eine größere Wohnung im Spiel.
 

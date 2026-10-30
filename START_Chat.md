@@ -15,12 +15,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.27.0** (W5 gemergt, PR #74, main 57173e0). Release vA0.27.0 macht Chat; Release nur nach Nicos Merge-OK, CC startet `release.yml` nie. Nächster Sprung laut Plan Phase 10: A 0.27.1 |
+| Version | Auf `main` **A 0.27.0** (W5, PR #74, main 57173e0). Zweig `claude/project-thread-ioalqc` **A 0.28.0** (Phase 10 W1). Release vA0.27.0 macht Chat; Release nur nach Nicos Merge-OK, CC startet `release.yml` nie |
 | Phase | 0–8 abgenommen. **Phase 9** fertig: W1 Prüfstand A 0.23.1, W2 Gerüst A 0.24.0 (Sicht je Fachrichtung, Lader `inhalte_csharp/lernen/`, Einteilung per `einteilen.py`, Klausur b1/b2), W3 bis W5 Runde 1 AE, DPA, DV (je 1 000 Inhalte, A 0.25.0 bis 0.27.0), dazu Optionen > Spiel und Umziehen. Abnahme durch Nico offen |
-| Jetzt | Weisung P9-12 erledigt: Bericht Phase 9 und Entwurf Plan Phase 10 (W1 „Inhalte schneller laden“ A 0.27.1, danach Runden 2–4 je Fachrichtung A 0.28.0 bis 0.36.0, 5 Fragen an Nico). Doku-Zweig `claude/project-thread-ioalqc`. Bau der Phase 10 erst nach Abnahme und Planfreigabe |
+| Jetzt | Plan Phase 10 freigegeben (Nico 30.10.2026 15:23 MEZ, Weisung P9-13: Wellen nach Fachrichtung, je eine Welle mit Runden 2–4). W1 A 0.28.0: beim Start nur die gewählte Fachrichtung laden, beim Wechsel nachladen mit Ladeanzeige. Danach W2 AE, W3 DPA, W4 DV (A 0.29.0 bis 0.31.0). Bericht Phase 9 wartet auf Nicos Abnahme |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P9-12** / P9-13 (bzw. P10-1) |
+| Letzte/nächste Meldung | **P9-12** / P9-13 (W1 Phase 10) |
 | Sammelliste | nächste freie Nummer **181** (164 Spiel je Fachrichtung in der Beta; 169–176 Funde und Einzelfälle der Einteilung aus W2; 177 Tabellen in Szenarien mit Proportionalschrift; 178 Optionen > Spiel und 179 Umziehen, in W4/W5 gebaut; 180 Platzhalter Löschen/Tagesziel); offen für Nico: 24 (Rechnername im Gerätenamen) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 

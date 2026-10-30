@@ -33,7 +33,8 @@ public static partial class AutoMessung
         }
 
         // 1. Inhalte laden (beim Start im Hintergrund gemessen, Zustand.InhalteLaden)
-        funde += Ergebnis("Inhalte laden (alle Ordner, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze));
+        // Phase 10 W1 (Weisung P9-13, Nico 5): beim Start nur die bisherigen Inhalte und die gewaehlte Fachrichtung
+        funde += Ergebnis("Inhalte laden (bisherige + gewaehlte Fachrichtung, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze));
 
         var gebaut = ansicht.GebauteSeiten.Keys.ToList();
         var vorher = ansicht.AktuelleSeite;
@@ -56,6 +57,16 @@ public static partial class AutoMessung
         {
             // 2. Fachrichtung wechseln (Sicht si -> fr), zurueck = Sicht si (nicht gemessen)
             var erste = await Wechsel(fr);
+            // Phase 10 W1: der erste Wechsel laedt die Fachrichtung nach (einmalig und streng, bis die Sicht steht)
+            if (Zustand.NachladenMs.TryGetValue(fr, out var nachgeladen))
+            {
+                funde += Ergebnis("Fachrichtung nachladen " + name + " (Wechsel bis die Sicht steht, einmalig)",
+                    Messwiederholung.Einmal(nachgeladen, Geraetegrenze));
+            }
+            else
+            {
+                Fund("Fachrichtung nachladen " + name + ": beim ersten Wechsel nicht nachgeladen");
+            }
             var reihe = await Messwiederholung.MessenAsync(erste, Geraetegrenze, () => Wechsel(fr),
                 async () => { await Wechsel("si"); }, Task.Delay);
             funde += Ergebnis("Fachrichtung wechseln SI -> " + name + " (Inhalte, Dashboard, Bild)", reihe);
@@ -152,6 +163,17 @@ public static partial class AutoMessung
                         await ansicht.BildFertigAsync();
                         layout.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => $"{groesse} {stufe} {name} {id}: {f}"));
                     }
+                    // Phase 10 W1: Ladeanzeige beim Nachladen (ueber der Seite, nie breiter als das Fenster)
+                    ansicht.NachladeanzeigeErzwungen = true;
+                    await ansicht.BildFertigAsync();
+                    await ansicht.BildFertigAsync();
+                    var karte = ansicht.NachladeanzeigeKarte;
+                    layout.AddRange(Layoutpruefung.Pruefe(karte).Select(f => $"{groesse} {stufe} {name} Ladeanzeige: {f}"));
+                    if (!ansicht.NachladeanzeigeSichtbar || karte.Bounds.Width > ansicht.Bounds.Width + 0.5 || karte.Bounds.Width <= 0)
+                    {
+                        layout.Add(string.Create(inv, $"{groesse} {stufe} {name} Ladeanzeige: Breite {karte.Bounds.Width:F0} bei Fenster {ansicht.Bounds.Width:F0}"));
+                    }
+                    ansicht.NachladeanzeigeErzwungen = false;
                 }
             }
             Zustand.DesignAnwenden();
@@ -160,7 +182,7 @@ public static partial class AutoMessung
                 fenster.Width = breiteVorher;
                 fenster.Height = hoeheVorher;
             }
-            Messwerte.Notiere(string.Create(inv, $"Sicht {name} Layout (Klausurauswahl, AP2-Szenarien, Testprojekte, Optionen; {Einstellungen.Schriftgroessen.Count} Schriftstufen): {layout.Count} Funde"));
+            Messwerte.Notiere(string.Create(inv, $"Sicht {name} Layout (Klausurauswahl, AP2-Szenarien, Testprojekte, Optionen, Ladeanzeige; {Einstellungen.Schriftgroessen.Count} Schriftstufen): {layout.Count} Funde"));
             foreach (var fund in layout.Distinct().Take(20))
             {
                 Fund("Layout " + fund);
