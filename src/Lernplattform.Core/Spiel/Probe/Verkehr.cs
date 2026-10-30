@@ -257,8 +257,12 @@ public sealed class Verkehr
             var feldJetzt = Feld(ort);
             var feldVoraus = Feld(a.Lage(a.Weg + Front + FeldVorlauf).Ort);
             var kreuzung = feldVoraus >= 0 && feldVoraus != feldJetzt && belegt.TryGetValue(feldVoraus, out var anderes) && anderes != a;
-            // Rundlauf: am Ende der Strecke wieder an den Anfang nur, wenn dort kein anderes Auto steht
-            var anfang = a.Weg + schritt + Front >= a.Laenge && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front));
+            // Rundlauf: am Ende der Strecke wieder an den Anfang nur, wenn dort kein anderes Auto steht. Patch A 0.29.2
+            // (Sammelliste 182): ein Fahrzeug, das selbst am Ende seiner Strecke steht und dort hinausfaehrt (Gegenrichtung
+            // zum Anfang), zaehlt nicht; sonst warten zwei am Kartenrand fuer immer aufeinander (Ende der einen Strecke
+            // = Anfang der anderen).
+            var anfang = AmEnde(a, sekunden) && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front)
+                && !(AmEnde(b, sekunden) && Vector2.Dot(b.Lage().Richtung, a.Lage(0).Richtung) < 0.5f));
             a.Haelt = figur || vorne || kreuzung || anfang;
             if (a.Haelt)
             {
@@ -269,8 +273,17 @@ public sealed class Verkehr
             {
                 belegt.TryAdd(neu, a);
             }
+            // Patch A 0.29.2: wer auf ein Feld zufaehrt, belegt es schon fuer die folgenden (sonst fahren zwei, die im
+            // selben Schritt frei sehen, gleichzeitig hinein)
+            if (Feld(a.Lage(a.Weg + Front + FeldVorlauf).Ort) is var feldNeu and >= 0)
+            {
+                belegt.TryAdd(feldNeu, a);
+            }
         }
     }
+
+    /// <summary>Faehrt das Auto im naechsten Schritt (<paramref name="sekunden"/>) ueber das Ende seiner Strecke?</summary>
+    private static bool AmEnde(Auto a, double sekunden) => a.Weg + (float)(sekunden * a.Tempo) + Front >= a.Laenge;
 
     /// <summary>Start-Test und Tests: fester Stand nach <paramref name="sekunden"/> Fahrzeit in Schritten von 1/60 s.</summary>
     public void Probe(double sekunden, float fx, float fz)

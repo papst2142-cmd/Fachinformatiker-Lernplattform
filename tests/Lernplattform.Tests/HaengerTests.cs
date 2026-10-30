@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Texte;
 
@@ -36,11 +37,25 @@ public sealed class HaengerTests : IDisposable
         return leser.ReadToEnd();
     }
 
+    /// <summary>
+    /// A 0.29.2 (Weisung P10-4, Lauf 377 auf macOS einmal rot): eigener, leerer Datenordner, die Datei wird gleich nach
+    /// dem Pruefen geschlossen und erst dann gelesen. Ein auf macOS spaet verarbeitetes Signal aus
+    /// <see cref="SignalSchreibtAbruf"/> schreibt sonst eine Abruf-Zeile in die noch offene haenger.log dieses Tests (Vermutung wie bei
+    /// <see cref="ZustandTextOhneHaenger"/>, A 0.12.2, nicht belegt). Aussage unveraendert: genau die Startzeile, ohne Herzschlag nichts.
+    /// </summary>
     [Fact]
     public void StartzeileUndOhneHerzschlagNichts()
     {
-        Assert.Matches(@"^=== \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Start \| Version A 0\.10\.0 \| linux \| pid \d+ \| x11 ===\n$", Log());
+        using var eigener = new TempOrdner();
+        Haenger.FuerTests(() => "1 lp T S wartet", text => _fehlerlog.Add(text));
+        Assert.True(Haenger.Einrichten("A 0.10.0", eigener.Pfad, plattform: "linux", zusatz: "x11", waechter: false));
         Assert.Null(Haenger.Pruefen(1000));
+        Haenger.FuerTests(() => "1 lp T S wartet", text => _fehlerlog.Add(text));
+        var log = File.ReadAllText(Haenger.Pfad(eigener.Pfad));
+        // bei Rot den ganzen Log zeigen (Assert.Matches kuerzt den Wert)
+        Assert.True(Regex.IsMatch(log, @"^=== \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Start \| Version A 0\.10\.0 \| linux \| pid \d+ \| x11 ===\n$"),
+            "voller Log:\n" + log);
+        Assert.Empty(_fehlerlog);
     }
 
     /// <summary>Kontrollfehler: bei laufendem Herzschlag schreibt der Waechter nie, auch nicht ueber Stunden.</summary>
@@ -174,7 +189,10 @@ public sealed class HaengerTests : IDisposable
         Assert.True(Haenger.Einrichten("A 0.10.0", eigener.Pfad, plattform: "linux", zusatz: "x11", waechter: false));
         Haenger.FuerTests(() => "1 lp T S wartet", text => _fehlerlog.Add(text));
         var pfad = Haenger.Pfad(eigener.Pfad);
-        Assert.Matches(@"^=== \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Start \| Version A 0\.10\.0 \| linux \| pid \d+ \| x11 ===\n$", File.ReadAllText(pfad));
+        // A 0.29.2: bei Rot den ganzen Log zeigen (Assert.Matches kuerzt den Wert; Lauf 383 auf macOS einmal rot)
+        var log = File.ReadAllText(pfad);
+        Assert.True(Regex.IsMatch(log, @"^=== \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Start \| Version A 0\.10\.0 \| linux \| pid \d+ \| x11 ===\n$"),
+            "voller Log:\n" + log);
         Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(pfad));
         Assert.Equal(HaengerTexte.Keine, Haenger.ZustandText(Path.Combine(eigener.Pfad, "fehlt.log")));
     }
