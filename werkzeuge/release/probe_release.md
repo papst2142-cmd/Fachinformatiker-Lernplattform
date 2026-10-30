@@ -1,20 +1,22 @@
-Das Programm startet schneller, weil es nur die Lerninhalte deiner Fachrichtung lädt.
+Viele neue Lerninhalte für die Fachrichtung Anwendungsentwicklung, dazu die ersten eigenen Testprojekte und Fragen fürs Fachgespräch.
 
-- Beim Start lädt das Programm jetzt nur die gemeinsamen Lerninhalte und die deiner Fachrichtung. Die Inhalte der anderen Fachrichtungen bleiben zunächst liegen. So bleibt der Start auch dann schnell, wenn später noch viele neue Inhalte dazukommen.
-- Wechselst du in den „Optionen“ unter „Ausbildung“ die Fachrichtung, lädt das Programm deren Inhalte nach. Dauert das etwas länger, siehst du solange die kleine Anzeige „Lerninhalte werden geladen …“. Danach zeigen Karteikarten, Prüfungsfragen, Szenarien und Klausursimulation die neue Fachrichtung.
-- Eine Prüfung, die du vor einem Wechsel geschrieben hast, bleibt lesbar: ihre Aufgaben werden bei Bedarf nachgeladen.
-- Am Lernstand, am Spiel und an den Lerninhalten selbst ändert sich nichts.
+- Wer in den „Optionen“ unter „Ausbildung“ Anwendungsentwicklung gewählt hat, bekommt 1 200 neue Karteikarten und 1 750 neue Prüfungsfragen. Zusammen mit den gemeinsamen Inhalten aller Fachrichtungen sind es jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen.
+- Die neuen Inhalte gehen in die Breite und in die Tiefe: von Entwicklungsumgebung, UML und Bedienoberflächen über Testen, Programmiersprachen, Objektorientierung und Algorithmen bis zu Schnittstellen, SQL-Abfragen und sicherer Softwareentwicklung. Viele Aufgaben enthalten ein kurzes Programm, eine SQL-Abfrage oder eine Rechnung mit vollständigem Lösungsweg.
+- Unter „Testprojekte“ stehen für Anwendungsentwicklung jetzt 50 eigene Übungsprojekte zum Abschlussprojekt, jeweils mit Ausgangslage, Auftrag, Rahmenbedingungen, Aufgaben und Lösungshinweisen.
+- Im Abschlussprojekt unter „Fachgespräch“ kommen 18 neue Fragen zu Entwurf, Datenbank und Sicherheit dazu, wie sie der Prüfungsausschuss zu einem Softwareprojekt stellt.
+- Für Systemintegration, Daten- und Prozessanalyse und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen und werden dort auch nicht geladen.
+- Am Lernstand und am Spiel ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.28.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.29.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.28.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.28.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.28.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.29.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.29.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.29.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

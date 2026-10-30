@@ -329,7 +329,8 @@ public static class Zustand
 
     /// <summary>
     /// Phase 9 W2: Fragen fuers Fachgespraech der aktuellen Sicht (SI alle, sonst die gemeinsamen nach
-    /// einteilung_bisher.json); die Liste liest bei jedem Zugriff die aktuelle Sicht.
+    /// einteilung_bisher.json); die Liste liest bei jedem Zugriff die aktuelle Sicht. Phase 10 W2: dahinter die
+    /// eigenen neuen Fragen der Fachrichtung aus inhalte_csharp/lernen/fachgespraech.json.
     /// </summary>
     public static IReadOnlyList<Core.Projekt.ProjektFrage> FachfragenSicht { get; } = new Core.Projekt.SichtListe<Core.Projekt.ProjektFrage>(() =>
     {
@@ -338,7 +339,7 @@ public static class Zustand
         {
             return alle;
         }
-        return alle.Where(f => inhalte.Einteilung.Wert(Einteilung.Fachgespraech, f.Id) == Core.Inhalte.Fachrichtungen.Gemeinsam).ToList();
+        return inhalte.FachgespraechFuer(alle, Sicht);
     });
 
     /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>

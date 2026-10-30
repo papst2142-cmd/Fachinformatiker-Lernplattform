@@ -111,6 +111,52 @@
   ],
   "zusatz_art_falsch": [
    "rahmenplan_zusatz.json: Prüfungsbereich ae b1: Art oder Kurzname passt nicht"
+  ],
+  "fachgespraech_ohne_fachrichtung": [
+   "lernen/fachgespraech.json Nr. 1: Feld 'fachrichtung' fehlt oder ist leer"
+  ],
+  "fachgespraech_kennung_wie_bisherige": [
+   "lernen/fachgespraech.json Nr. 2: Kennung a01 doppelt"
+  ],
+  "fachgespraech_kennung_doppelt_neu": [
+   "lernen/fachgespraech.json Nr. 3: Kennung probe_ae01 doppelt"
+  ],
+  "fachgespraech_frage_wie_bisherige": [
+   "lernen/fachgespraech.json Nr. 1: doppelt vorhanden (wie würden sie ihr projekt einem laien in zwei sätzen erklär)"
+  ],
+  "fachgespraech_fachbereich_unbekannt": [
+   "lernen/fachgespraech.json Nr. 3: unbekannter Fachbereich 'statistik'"
+  ],
+  "fachgespraech_hinweis_leer": [
+   "lernen/fachgespraech.json Nr. 2: Feld 'hinweis' fehlt oder ist leer"
+  ],
+  "fachgespraech_fachrichtung_unbekannt": [
+   "lernen/fachgespraech.json Nr. 2: unbekannte Fachrichtung 'fisi'"
+  ],
+  "projekt_aufgaben_text": [
+   "lernen/projektarbeiten.json Nr. 1: Feld 'aufgaben' ist keine Liste",
+   "lernen/projektarbeiten.json Nr. 1: je Aufgabe wird genau ein Hinweis gebraucht"
+  ],
+  "projekt_titel_wie_bisheriges": [
+   "lernen/projektarbeiten.json Nr. 1: doppelt vorhanden (netzwerk-rollout für eine neue filiale)"
+  ],
+  "projekt_ohne_branche": [
+   "lernen/projektarbeiten.json Nr. 1: Feld 'branche' fehlt oder ist leer"
+  ],
+  "karte_rahmenplan_text": [
+   "lernen/karteikarten.json Nr. 1: Feld 'rahmenplan' ist keine Liste"
+  ],
+  "quiz_optionen_text": [
+   "lernen/quizfragen.json Nr. 1: Feld 'options' ist keine Liste",
+   "lernen/quizfragen.json Nr. 1: braucht genau 4 verschiedene Antworten",
+   "lernen/quizfragen.json Nr. 1: richtige Antwort steht nicht in den Optionen"
+  ],
+  "karte_fachrichtung_liste": [
+   "lernen/karteikarten.json Nr. 2: unbekannte Fachrichtung '[\"ae\",\"dpa\"]'",
+   "lernen/karteikarten.json Nr. 2: Thema 'ae_entwurf' gehoert zu einer anderen Fachrichtung"
+  ],
+  "ap2_rahmenplan_text": [
+   "lernen/szenarien_ap2.json Nr. 1: Feld 'rahmenplan' ist keine Liste"
   ]
  },
  "sichten": {
@@ -124,12 +170,12 @@
     "fachgespraech": 60
    },
    "ae": {
-    "karteikarten": 1384,
-    "quizfragen": 1985,
+    "karteikarten": 2584,
+    "quizfragen": 3735,
     "szenarien_ap1": 265,
     "szenarien_ap2": 330,
-    "projektarbeiten": 0,
-    "fachgespraech": 42
+    "projektarbeiten": 50,
+    "fachgespraech": 60
    },
    "dpa": {
     "karteikarten": 1384,
@@ -163,7 +209,7 @@
     "szenarien_ap1": 265,
     "szenarien_ap2": 8,
     "projektarbeiten": 1,
-    "fachgespraech": 42
+    "fachgespraech": 44
    },
    "dpa": {
     "karteikarten": 1085,
@@ -171,7 +217,7 @@
     "szenarien_ap1": 265,
     "szenarien_ap2": 0,
     "projektarbeiten": 0,
-    "fachgespraech": 42
+    "fachgespraech": 43
    },
    "dv": {
     "karteikarten": 1084,

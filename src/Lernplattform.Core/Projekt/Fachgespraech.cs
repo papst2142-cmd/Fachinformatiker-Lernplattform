@@ -17,14 +17,16 @@ public static class Fachgespraech
     {
         var daten = JsonNode.Parse(datei) as JsonObject ?? throw new InvalidDataException("fachgespraech.json enthaelt kein Objekt");
         var fragen = daten["fragen"] as JsonArray ?? throw new InvalidDataException("fachgespraech.json: Feld 'fragen' fehlt");
-        return fragen.Select(f =>
-        {
-            var eintrag = f as JsonObject ?? throw new InvalidDataException("fachgespraech.json: Eintrag ist kein Objekt");
-            var kurz = eintrag["cat"]?.GetValue<string>();
-            var kategorie = string.IsNullOrEmpty(kurz) ? null : Fachbereiche.Schluessel.GetValueOrDefault(kurz);
-            return new ProjektFrage(eintrag["id"]!.GetValue<string>(), kategorie, eintrag["q"]!.GetValue<string>(),
-                eintrag["hinweis"]!.GetValue<string>());
-        }).ToList();
+        return fragen.Select(f => Frage(f as JsonObject ?? throw new InvalidDataException("fachgespraech.json: Eintrag ist kein Objekt"))).ToList();
+    }
+
+    /// <summary>Ein Eintrag der Liste "fragen" (auch inhalte_csharp/lernen/fachgespraech.json, Phase 10 W2).</summary>
+    public static ProjektFrage Frage(JsonObject eintrag)
+    {
+        var kurz = eintrag["cat"]?.GetValue<string>();
+        var kategorie = string.IsNullOrEmpty(kurz) ? null : Fachbereiche.Schluessel.GetValueOrDefault(kurz);
+        return new ProjektFrage(eintrag["id"]!.GetValue<string>(), kategorie, eintrag["q"]!.GetValue<string>(),
+            eintrag["hinweis"]!.GetValue<string>());
     }
 
     public static List<ProjektFrage> Laden(string inhalteOrdner) => Laden(File.ReadAllBytes(Path.Combine(inhalteOrdner, "fachgespraech.json")));

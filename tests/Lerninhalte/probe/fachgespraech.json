@@ -1,0 +1,28 @@
+{
+ "_hinweis": [
+  "Probe-Inhalte (Phase 10 W2): neue Fragen fuers Fachgespraech je Fachrichtung, nur fuer Tests."
+ ],
+ "fragen": [
+  {
+   "id": "probe_ae01",
+   "cat": "systeme",
+   "q": "Probe AE: Welches Entwurfsmuster haben Sie gewählt?",
+   "hinweis": "Muster nennen und begründen.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "probe_ae02",
+   "cat": null,
+   "q": "Probe AE: Wie haben Sie Ihre Software getestet?",
+   "hinweis": "Teststufen und Testfälle.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "probe_dpa01",
+   "cat": "datenbanken",
+   "q": "Probe DPA: Wie haben Sie die Datenqualität gemessen?",
+   "hinweis": "Dimensionen und Quoten.",
+   "fachrichtung": "dpa"
+  }
+ ]
+}

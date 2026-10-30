@@ -22,21 +22,30 @@ public static partial class InhaltePruefung
         ["si"] = "C", ["ae"] = "B", ["dpa"] = "D", ["dv"] = "E",
     };
 
-    private static readonly (InhaltArt Art, string Datei, string[] Felder, bool Auswahl, string? Tabelle)[] NeueListen =
+    private static readonly (InhaltArt Art, string Datei, string[] Felder, bool Auswahl, string? Tabelle, string[] ListenFelder)[] NeueListen =
     [
-        (InhaltArt.Karteikarte, "karteikarten", KartenFelder, true, "card_events"),
-        (InhaltArt.Quizfrage, "quizfragen", QuizFelder, true, "quiz_answers"),
-        (InhaltArt.Ap2Szenario, "szenarien_ap2", ["cat", "title", "theme", "text", "solution"], false, null),
-        (InhaltArt.Testprojekt, "projektarbeiten", ProjektFelder, false, null),
+        (InhaltArt.Karteikarte, "karteikarten", KartenFelder, true, "card_events", ["rahmenplan", "options"]),
+        (InhaltArt.Quizfrage, "quizfragen", QuizFelder, true, "quiz_answers", ["rahmenplan", "options"]),
+        (InhaltArt.Ap2Szenario, "szenarien_ap2", ["cat", "title", "theme", "text", "solution"], false, null, ["rahmenplan"]),
+        (InhaltArt.Testprojekt, "projektarbeiten", ProjektFelder, false, null, ["rahmenplan", "rahmenbedingungen", "aufgaben", "hinweise"]),
     ];
+
+    /// <summary>Pflichtfelder einer neuen Frage fuers Fachgespraech (Phase 10 W2), dazu "fachrichtung".</summary>
+    private static readonly string[] FachfrageFelder = ["id", "q", "hinweis"];
+
+    /// <summary>Wie unten; die bisherigen Fragen fuers Fachgespraech kommen aus dem Ordner der Inhalte (leer ohne Ordner).</summary>
+    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen) =>
+        PruefenLernen(alle, umbenennungen, alle.Bisher.Ordner.Length > 0 ? Projekt.Fachgespraech.Laden(alle.Bisher.Ordner) : []);
 
     /// <param name="alle">Gesamtinhalte aus <see cref="Lerninhalte.MitLernen"/>.</param>
     /// <param name="umbenennungen">inhalte/umbenennungen.json (Tabelle, alter Text, neuer Text).</param>
-    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen)
+    /// <param name="bisherigeFachfragen">inhalte/fachgespraech.json (Kennung und Frage muessen bei neuen Fragen neu sein).</param>
+    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen,
+        IReadOnlyList<Projekt.ProjektFrage> bisherigeFachfragen)
     {
         var meldungen = new List<string>();
         var bisher = alle.Bisher;
-        foreach (var (art, datei, felder, auswahl, tabelle) in NeueListen)
+        foreach (var (art, datei, felder, auswahl, tabelle, listenFelder) in NeueListen)
         {
             var alteListe = art switch
             {
@@ -52,6 +61,15 @@ public static partial class InhaltePruefung
             {
                 var eintrag = neue[k];
                 var wo = $"lernen/{datei}.json Nr. {k + 1}";
+                // Phase 10 W2 (Sammelliste 173): ein Text statt einer Liste wird als solcher gemeldet, die weiteren
+                // Pruefungen sehen dann eine leere Liste (C# und Skript gleich)
+                foreach (var feld in listenFelder)
+                {
+                    if (eintrag.Daten.ContainsKey(feld) && eintrag.Daten[feld] is not JsonArray)
+                    {
+                        meldungen.Add($"{wo}: Feld '{feld}' ist keine Liste");
+                    }
+                }
                 foreach (var feld in felder.Append(Fachrichtungen.Feld))
                 {
                     if (!Einstellungen.PythonBool(eintrag.Daten[feld]))
@@ -62,7 +80,7 @@ public static partial class InhaltePruefung
                 var fr = eintrag.Daten[Fachrichtungen.Feld];
                 if (Einstellungen.PythonBool(fr) && eintrag.Zugehoerigkeit == Lerninhalte.Ungueltig)
                 {
-                    meldungen.Add($"{wo}: unbekannte Fachrichtung '{PythonText(fr)}'");
+                    meldungen.Add($"{wo}: unbekannte Fachrichtung '{SkriptText(fr)}'");
                 }
                 var schluessel = DoppelSchluessel(eintrag.Daten);
                 if (!gesehen.Add(schluessel))
@@ -92,7 +110,7 @@ public static partial class InhaltePruefung
                     && themen.Any(x => x.Id == themaText);
                 if (!passend)
                 {
-                    meldungen.Add($"{wo}: Thema '{PythonText(thema)}' fehlt oder gehoert nicht zum Fachbereich");
+                    meldungen.Add($"{wo}: Thema '{SkriptText(thema)}' fehlt oder gehoert nicht zum Fachbereich");
                 }
                 else if (alle.NeueThemen.TryGetValue(themaText!, out var themaFr) && themaFr != eintrag.Zugehoerigkeit)
                 {
@@ -100,14 +118,14 @@ public static partial class InhaltePruefung
                 }
                 if (art == InhaltArt.Ap2Szenario && !Ap2ThemaPasst(alle.RahmenplanZusatz, eintrag))
                 {
-                    meldungen.Add($"{wo}: unbekanntes Thema '{PythonText(eintrag.Daten["theme"])}' (Themen der Prüfungsbereiche)");
+                    meldungen.Add($"{wo}: unbekanntes Thema '{SkriptText(eintrag.Daten["theme"])}' (Themen der Prüfungsbereiche)");
                 }
-                if (art == InhaltArt.Testprojekt && Laenge(eintrag.Daten["aufgaben"]) != Laenge(eintrag.Daten["hinweise"]))
+                if (art == InhaltArt.Testprojekt && ListenLaenge(eintrag.Daten["aufgaben"]) != ListenLaenge(eintrag.Daten["hinweise"]))
                 {
                     meldungen.Add($"{wo}: je Aufgabe wird genau ein Hinweis gebraucht");
                 }
-                var punkte = Objekte(alle.Rahmenplan["punkte"]).Select(p => PythonText(p["id"])).ToHashSet(StringComparer.Ordinal);
-                foreach (var punkt in Texte(eintrag.Daten["rahmenplan"]))
+                var punkte = Objekte(alle.Rahmenplan["punkte"]).Select(p => SkriptText(p["id"])).ToHashSet(StringComparer.Ordinal);
+                foreach (var punkt in SkriptTexte(eintrag.Daten["rahmenplan"]))
                 {
                     if (!punkte.Contains(punkt))
                     {
@@ -116,6 +134,8 @@ public static partial class InhaltePruefung
                 }
             }
         }
+
+        meldungen.AddRange(PruefeFachfragen(alle, bisherigeFachfragen));
 
         var themaGesehen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var id in alle.ThemenReihenfolge)
@@ -135,6 +155,64 @@ public static partial class InhaltePruefung
         return meldungen;
     }
 
+    /// <summary>
+    /// Phase 10 W2 (Weisung P10-1): neue Fragen fuers Fachgespraech in lernen/fachgespraech.json. Pflichtfelder und
+    /// "fachrichtung", Fachbereich leer oder bekannt, Kennung (an ihr haengt die Selbsteinschaetzung) und Fragetext
+    /// neu gegenueber inhalte/fachgespraech.json und den anderen neuen Fragen.
+    /// </summary>
+    private static List<string> PruefeFachfragen(Lerninhalte alle, IReadOnlyList<Projekt.ProjektFrage> bisherige)
+    {
+        var meldungen = new List<string>();
+        var kennungen = bisherige.Select(f => f.Id).ToHashSet(StringComparer.Ordinal);
+        var gesehen = bisherige.Select(f => DoppelText(f.Frage)).ToHashSet(StringComparer.Ordinal);
+        foreach (var neu in alle.NeueFachfragen)
+        {
+            var daten = neu.Daten;
+            var wo = $"lernen/{Lerninhalte.FachgespraechDatei}.json Nr. {neu.Nummer}";
+            foreach (var feld in FachfrageFelder.Append(Fachrichtungen.Feld))
+            {
+                if (!Einstellungen.PythonBool(daten[feld]))
+                {
+                    meldungen.Add($"{wo}: Feld '{feld}' fehlt oder ist leer");
+                }
+            }
+            var fr = daten[Fachrichtungen.Feld];
+            if (Einstellungen.PythonBool(fr) && neu.Zugehoerigkeit == Lerninhalte.Ungueltig)
+            {
+                meldungen.Add($"{wo}: unbekannte Fachrichtung '{SkriptText(fr)}'");
+            }
+            var kategorie = daten["cat"];
+            if (Einstellungen.PythonBool(kategorie) && !(kategorie is JsonValue c && c.GetValueKind() == JsonValueKind.String
+                && Fachbereiche.Schluessel.ContainsKey(c.GetValue<string>())))
+            {
+                meldungen.Add($"{wo}: unbekannter Fachbereich '{SkriptText(kategorie)}'");
+            }
+            if (Einstellungen.PythonBool(daten["id"]) && !kennungen.Add(SkriptText(daten["id"])))
+            {
+                meldungen.Add($"{wo}: Kennung {SkriptText(daten["id"])} doppelt");
+            }
+            var schluessel = DoppelText(ErsterText(daten["q"]) ?? "");
+            if (!gesehen.Add(schluessel))
+            {
+                meldungen.Add($"{wo}: doppelt vorhanden ({Anfang(schluessel, 60)})");
+            }
+        }
+        return meldungen;
+    }
+
+    private static readonly JsonSerializerOptions Kompakt = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    /// <summary>
+    /// Wert in einer Meldung: Text, Zahl, True/False und None wie Pythons "%s", Liste und Objekt als kompaktes JSON
+    /// (Phase 10 W2, Sammelliste 173: das Skript schreibt sie ebenso, json.dumps ohne Leerzeichen).
+    /// </summary>
+    private static string SkriptText(JsonNode? wert) => wert is JsonArray or JsonObject ? wert.ToJsonString(Kompakt) : PythonText(wert);
+
+    private static IEnumerable<string> SkriptTexte(JsonNode? wert) => wert is JsonArray a ? a.Select(SkriptText) : [];
+
+    /// <summary>Laenge einer Liste, alles andere 0 (Phase 10 W2, wie das Skript).</summary>
+    private static int ListenLaenge(JsonNode? wert) => wert is JsonArray a ? a.Count : 0;
+
     /// <summary>Themen der Pruefungsbereiche b1/b2 einer Fachrichtung aus dem Zusatz (si: die AP2-Bloecke wie Python).</summary>
     public static IReadOnlyList<string> Ap2Themen(JsonObject zusatz, string fachrichtung)
     {
@@ -144,7 +222,7 @@ public static partial class InhaltePruefung
         }
         var bereiche = zusatz["pruefungsbereiche"]?[fachrichtung] as JsonObject;
         return Pruefung.Fachrichtung.Teil2.Where(r => r is "b1" or "b2")
-            .SelectMany(r => Texte(bereiche?[r]?["themen"])).ToList();
+            .SelectMany(r => SkriptTexte(bereiche?[r]?["themen"])).ToList();
     }
 
     private static bool Ap2ThemaPasst(JsonObject zusatz, Lerninhalt szenario)
@@ -163,11 +241,11 @@ public static partial class InhaltePruefung
         var meldungen = new List<string>();
         var zusatz = alle.RahmenplanZusatz;
         var plan = alle.Rahmenplan;
-        var lernfelder = Objekte(plan["lernfelder"]).Select(l => PythonText(l["id"])).ToHashSet(StringComparer.Ordinal);
+        var lernfelder = Objekte(plan["lernfelder"]).Select(l => SkriptText(l["id"])).ToHashSet(StringComparer.Ordinal);
         foreach (var feld in Objekte(zusatz["lernfelder"]))
         {
-            var id = PythonText(feld["id"]);
-            var fr = PythonText(feld[Fachrichtungen.Feld]);
+            var id = SkriptText(feld["id"]);
+            var fr = SkriptText(feld[Fachrichtungen.Feld]);
             if (!lernfelder.Add(id))
             {
                 meldungen.Add($"{Datei}: Lernfeld {id} doppelt");
@@ -176,7 +254,7 @@ public static partial class InhaltePruefung
             {
                 meldungen.Add($"{Datei}: Lernfeld {id}: unbekannte Fachrichtung {fr}");
             }
-            else if (PythonText(feld["abschnitt"]) != abschnitt)
+            else if (SkriptText(feld["abschnitt"]) != abschnitt)
             {
                 meldungen.Add($"{Datei}: Lernfeld {id}: Abschnitt passt nicht zur Fachrichtung");
             }
@@ -197,12 +275,12 @@ public static partial class InhaltePruefung
             var eigene = zuordnung[fr] as JsonObject ?? [];
             foreach (var (id, eintrag) in eigene)
             {
-                var punkt = punkte.FirstOrDefault(p => PythonText(p["id"]) == id);
-                if (punkt is null || PythonText(punkt["abschnitt"]) != abschnitt)
+                var punkt = punkte.FirstOrDefault(p => SkriptText(p["id"]) == id);
+                if (punkt is null || SkriptText(punkt["abschnitt"]) != abschnitt)
                 {
                     meldungen.Add($"{Datei}: AP2 {fr} {id}: Punkt fehlt oder gehoert nicht zu Abschnitt {abschnitt}");
                 }
-                var bereiche = Texte(eintrag?["bereiche"]).ToList();
+                var bereiche = SkriptTexte(eintrag?["bereiche"]).ToList();
                 if (bereiche.Count == 0)
                 {
                     meldungen.Add($"{Datei}: AP2 {fr} {id}: ohne Prüfungsbereich");
@@ -216,11 +294,11 @@ public static partial class InhaltePruefung
                     meldungen.Add($"{Datei}: AP2 {fr} {id}: Beleg fehlt");
                 }
             }
-            foreach (var punkt in punkte.Where(p => PythonText(p["abschnitt"]) == abschnitt))
+            foreach (var punkt in punkte.Where(p => SkriptText(p["abschnitt"]) == abschnitt))
             {
-                if (!eigene.ContainsKey(PythonText(punkt["id"])))
+                if (!eigene.ContainsKey(SkriptText(punkt["id"])))
                 {
-                    meldungen.Add($"{Datei}: AP2 {fr}: Punkt {PythonText(punkt["id"])} ohne Zuordnung");
+                    meldungen.Add($"{Datei}: AP2 {fr}: Punkt {SkriptText(punkt["id"])} ohne Zuordnung");
                 }
             }
 
@@ -233,11 +311,11 @@ public static partial class InhaltePruefung
                     meldungen.Add($"{Datei}: Prüfungsbereich {fr} {rolle} fehlt");
                     continue;
                 }
-                if (PythonText(bereich["art"]) != soll.Art || PythonText(bereich["kurz"]) != soll.Kurz)
+                if (SkriptText(bereich["art"]) != soll.Art || SkriptText(bereich["kurz"]) != soll.Kurz)
                 {
                     meldungen.Add($"{Datei}: Prüfungsbereich {fr} {rolle}: Art oder Kurzname passt nicht");
                 }
-                var liste = Texte(bereich["themen"]).ToList();
+                var liste = SkriptTexte(bereich["themen"]).ToList();
                 if (liste.Count != 4 || liste.Distinct(StringComparer.Ordinal).Count() != 4 || liste.Any(x => x.Length == 0))
                 {
                     meldungen.Add($"{Datei}: Prüfungsbereich {fr} {rolle}: braucht genau 4 verschiedene Themen");

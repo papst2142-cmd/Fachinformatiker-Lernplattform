@@ -11,7 +11,8 @@ namespace Lernplattform.Tests;
 /// gewaehlte Fachrichtung laden, eine andere Fachrichtung beim Wechsel nachladen. Jede Sicht nach dem Nachladen ist
 /// gleich der Sicht beim Laden aller Fachrichtungen (Nummern, Daten, Themen, Rahmenplan), eine Klausur von vor einem
 /// Wechsel findet ihre Szenarien, und die Lastprobe (+3 000 Inhalte je Fachrichtung, nur in einer Temp-Kopie)
-/// schreibt die Ladezeiten ins Testprotokoll. Nur Testdaten (A3).
+/// schreibt die Ladezeiten ins Testprotokoll. Phase 10 W2 (Weisung P10-1): dasselbe fuer die Testprojekte und die neuen
+/// Fragen fuers Fachgespraech; die Lastprobe fuellt jede Fachrichtung auf den Endstand von Phase 10 auf. Nur Testdaten (A3).
 /// </summary>
 public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
 {
@@ -25,6 +26,11 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
 
     private static Lerninhalte Start(string ordner, string fr) =>
         Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), Ordner(ordner), fr == "si" ? ["si"] : ["si", fr]);
+
+    private static readonly IReadOnlyList<Core.Projekt.ProjektFrage> BisherigeFachfragen = Core.Projekt.Fachgespraech.Laden(Pfade.Inhalte);
+
+    private static List<string> Fachfragen(Lerninhalte sicht) =>
+        [.. sicht.FachgespraechFuer(BisherigeFachfragen, sicht.Sicht).Select(f => f.Id + "|" + f.Kategorie + "|" + f.Frage + "|" + f.Hinweis)];
 
     private static List<string> Schluessel(IEnumerable<Lerninhalt> liste) =>
         [.. liste.Select(e => e.Nummer.ToString(CultureInfo.InvariantCulture) + "|" + e.Zugehoerigkeit + "|" + e.Daten.ToJsonString())];
@@ -42,6 +48,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         Assert.Equal(soll.ThemenReihenfolge, ist.ThemenReihenfolge);
         Assert.Equal(soll.Rahmenplan.ToJsonString(), ist.Rahmenplan.ToJsonString());
         Assert.Equal(soll.Bisher.Karteikarten.Count, ist.Bisher.Karteikarten.Count);
+        Assert.Equal(Fachfragen(soll), Fachfragen(ist));
     }
 
     [Theory]
@@ -54,8 +61,9 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         var start = Start(Lernen, fr);
         Gleich(Voll(Lernen).Fuer(fr), start.Fuer(fr));
         // von den neuen Inhalten ist nur die gewaehlte Fachrichtung geladen
-        Assert.All(start.Karteikarten.Concat(start.Quizfragen).Concat(start.Ap2Szenarien).Skip(0)
+        Assert.All(start.Karteikarten.Concat(start.Quizfragen).Concat(start.Ap2Szenarien).Concat(start.Testprojekte)
             .Where(e => e.Zugehoerigkeit is not ("si" or "gemeinsam")), e => Assert.Equal(fr, e.Zugehoerigkeit));
+        Assert.All(start.NeueFachfragen, f => Assert.Equal(fr, f.Zugehoerigkeit));
         foreach (var andere in Neue.Where(n => n != fr))
         {
             Assert.False(start.HatFachrichtung(andere));
@@ -110,7 +118,8 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
     [Fact]
     public void Lastprobe_DreitausendJeFachrichtung_ZeitenImProtokoll()
     {
-        // Endstand Phase 10 je Fachrichtung: +1 200 Karten, +1 750 Fragen, +50 Testprojekte (Plan Abschnitt 3);
+        // Endstand Phase 10 je Fachrichtung: eigene 1 500 Karten, 2 120 Fragen, 50 Testprojekte, 18 Fragen fuers
+        // Fachgespraech (Plan Abschnitt 3); was eine Fachrichtung schon hat, zaehlt mit (W2: AE ist schon fertig).
         // Probe-Inhalte nur in dieser Temp-Kopie, nie im Programm
         var ordner = Directory.CreateTempSubdirectory("lastprobe_").FullName;
         try
@@ -119,9 +128,10 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
             {
                 File.Copy(datei, Path.Combine(ordner, Path.GetFileName(datei)));
             }
-            Vergroessern(ordner, "karteikarten", 1200, "q");
-            Vergroessern(ordner, "quizfragen", 1750, "q");
+            Vergroessern(ordner, "karteikarten", 1500, "q");
+            Vergroessern(ordner, "quizfragen", 2120, "q");
             Projekte(ordner, 50);
+            Fachfragen(ordner, 18);
 
             var zeiten = new List<string>();
             foreach (var fr in new[] { "si", "ae", "dpa", "dv" })
@@ -136,11 +146,13 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
                 zeiten.Add(string.Create(CultureInfo.InvariantCulture, $"Start {fr} {startMs:F0} ms, nachladen {andere} {uhr.Elapsed.TotalMilliseconds:F0} ms"));
                 if (fr != "si")
                 {
-                    Assert.Equal(1084 + 300 + 1200, sicht.Karteikarten.Count);
-                    Assert.Equal(1615 + 370 + 1750, sicht.Quizfragen.Count);
+                    Assert.Equal(1084 + 1500, sicht.Karteikarten.Count);
+                    Assert.Equal(1615 + 2120, sicht.Quizfragen.Count);
                     Assert.Equal(50, sicht.Testprojekte.Count);
+                    Assert.Equal(42 + 18, Fachfragen(sicht).Count);
                 }
-                Assert.Equal(1084 + 300 + 1200, nach.Karteikarten.Count);
+                Assert.Equal(1084 + 1500, nach.Karteikarten.Count);
+                Assert.Equal(42 + 18, Fachfragen(nach).Count);
             }
             var voll = Stopwatch.StartNew();
             _ = Voll(ordner).Fuer("ae");
@@ -153,7 +165,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         }
     }
 
-    /// <summary>Je Fachrichtung <paramref name="anzahl"/> Kopien vorhandener Eintraege mit eindeutigem Text anhaengen.</summary>
+    /// <summary>Je Fachrichtung Kopien vorhandener Eintraege mit eindeutigem Text anhaengen, bis sie <paramref name="anzahl"/> eigene hat.</summary>
     private static void Vergroessern(string ordner, string name, int anzahl, string feld)
     {
         var pfad = Path.Combine(ordner, name + ".json");
@@ -162,7 +174,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         foreach (var fr in Neue)
         {
             var eigene = vorlagen.Where(e => (string?)e["fachrichtung"] == fr).ToList();
-            for (var i = 0; i < anzahl; i++)
+            for (var i = eigene.Count; i < anzahl; i++)
             {
                 var kopie = (JsonObject)eigene[i % eigene.Count].DeepClone();
                 kopie[feld] = (string?)kopie[feld] + " (Lastprobe " + i.ToString(CultureInfo.InvariantCulture) + ")";
@@ -175,10 +187,11 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
     private static void Projekte(string ordner, int anzahl)
     {
         var vorlagen = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Pfade.Inhalte, "projektarbeiten.json")))!.AsArray().OfType<JsonObject>().ToList();
-        var liste = new JsonArray();
+        var pfad = Path.Combine(ordner, "projektarbeiten.json");
+        var liste = File.Exists(pfad) ? JsonNode.Parse(File.ReadAllBytes(pfad))!.AsArray() : [];
         foreach (var fr in Neue)
         {
-            for (var i = 0; i < anzahl; i++)
+            for (var i = liste.OfType<JsonObject>().Count(e => (string?)e["fachrichtung"] == fr); i < anzahl; i++)
             {
                 var kopie = (JsonObject)vorlagen[i % vorlagen.Count].DeepClone();
                 kopie["title"] = (string?)kopie["title"] + " (Lastprobe " + fr + " " + i.ToString(CultureInfo.InvariantCulture) + ")";
@@ -186,6 +199,27 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
                 liste.Add(kopie);
             }
         }
-        File.WriteAllText(Path.Combine(ordner, "projektarbeiten.json"), liste.ToJsonString());
+        File.WriteAllText(pfad, liste.ToJsonString());
+    }
+
+    /// <summary>Fragen fuers Fachgespraech je Fachrichtung bis <paramref name="anzahl"/> eigene (Kopien der bisherigen mit eigener Kennung).</summary>
+    private static void Fachfragen(string ordner, int anzahl)
+    {
+        var vorlagen = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Pfade.Inhalte, "fachgespraech.json")))!["fragen"]!.AsArray().OfType<JsonObject>().ToList();
+        var pfad = Path.Combine(ordner, Lerninhalte.FachgespraechDatei + ".json");
+        var datei = File.Exists(pfad) ? JsonNode.Parse(File.ReadAllBytes(pfad))!.AsObject() : new JsonObject { ["fragen"] = new JsonArray() };
+        var liste = datei["fragen"]!.AsArray();
+        foreach (var fr in Neue)
+        {
+            for (var i = liste.OfType<JsonObject>().Count(e => (string?)e["fachrichtung"] == fr); i < anzahl; i++)
+            {
+                var kopie = (JsonObject)vorlagen[i % vorlagen.Count].DeepClone();
+                kopie["id"] = "last_" + fr + i.ToString(CultureInfo.InvariantCulture);
+                kopie["q"] = (string?)kopie["q"] + " (Lastprobe " + fr + " " + i.ToString(CultureInfo.InvariantCulture) + ")";
+                kopie["fachrichtung"] = fr;
+                liste.Add(kopie);
+            }
+        }
+        File.WriteAllText(pfad, datei.ToJsonString());
     }
 }

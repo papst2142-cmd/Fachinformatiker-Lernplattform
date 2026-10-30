@@ -43,13 +43,16 @@ AP2_THEMEN = ["Subnetting & Routing", "IT-Sicherheit", "Storage & RAID", "Netzwe
 THEMEN_BLOCK = {"Virtualisierung": "Storage & RAID", "Projektmanagement": "Wirtschaft & Beratung",
                 "Systemadministration": "Storage & RAID", "Automatisierung & Skripte": "Storage & RAID",
                 "Arbeitsplatz einrichten: Bedarf, Beschaffung, Übergabe": "Projektplanung"}
-LISTEN = [  # Datei, Pflichtfelder, Auswahl, Tabelle in umbenennungen.json
-    ("karteikarten", ("cat", "q", "a", "a_full", "options"), True, "karte"),
-    ("quizfragen", ("cat", "q", "a", "exp", "options"), True, "quiz"),
-    ("szenarien_ap2", ("cat", "title", "theme", "text", "solution"), False, None),
+LISTEN = [  # Datei, Pflichtfelder, Auswahl, Tabelle in umbenennungen.json, Felder, die Listen sein muessen
+    ("karteikarten", ("cat", "q", "a", "a_full", "options"), True, "karte", ("rahmenplan", "options")),
+    ("quizfragen", ("cat", "q", "a", "exp", "options"), True, "quiz", ("rahmenplan", "options")),
+    ("szenarien_ap2", ("cat", "title", "theme", "text", "solution"), False, None, ("rahmenplan",)),
     ("projektarbeiten", ("cat", "title", "branche", "schwierigkeit", "ausgangssituation", "auftrag",
-                         "rahmenbedingungen", "aufgaben", "hinweise"), False, None),
+                         "rahmenbedingungen", "aufgaben", "hinweise"), False, None,
+     ("rahmenplan", "rahmenbedingungen", "aufgaben", "hinweise")),
 ]
+# Phase 10 W2 (Weisung P10-1): neue Fragen fuers Fachgespraech in lernen/fachgespraech.json
+FACHFRAGE_FELDER = ("id", "q", "hinweis")
 
 
 def lesen(pfad):
@@ -58,7 +61,9 @@ def lesen(pfad):
 
 
 def py(wert):
-    """'%s' % wert fuer die Meldungen (nur Text, Zahl, None kommen vor)."""
+    """'%s' % wert fuer die Meldungen; Listen und Objekte als kompaktes JSON (Phase 10 W2, Sammelliste 173)."""
+    if isinstance(wert, (list, dict)):
+        return json.dumps(wert, ensure_ascii=False, separators=(",", ":"))
     if wert is None:
         return "None"
     if isinstance(wert, bool):
@@ -66,8 +71,16 @@ def py(wert):
     return str(wert)
 
 
+def text_oder_leer(wert):
+    return wert if isinstance(wert, str) and wert else ""
+
+
 def schluessel(eintrag):
-    return (eintrag.get("q") or eintrag.get("title") or "").strip().lower()
+    return (text_oder_leer(eintrag.get("q")) or text_oder_leer(eintrag.get("title"))).strip().lower()
+
+
+def als_liste(wert):
+    return wert if isinstance(wert, list) else []
 
 
 def pools(zusatz, fr):
@@ -97,12 +110,15 @@ def pruefen(bisher, quiz_alle, lernen, umbenennungen):
     punkte_plan = bisher["rahmenplan"]["punkte"]
     punkt_ids = {p["id"] for p in punkte_plan}
     meldungen = []
-    for datei, felder, auswahl, tabelle in LISTEN:
+    for datei, felder, auswahl, tabelle, listenfelder in LISTEN:
         alte = quiz_alle if datei == "quizfragen" else bisher[datei]
         gesehen = {schluessel(e) for e in alte}
         alte_texte = {t.strip().lower() for t in (umbenennungen.get(tabelle) or {})} if tabelle else set()
         for k, e in enumerate(lernen.get(datei) or [], start=1):
             wo = "lernen/%s.json Nr. %d" % (datei, k)
+            for feld in listenfelder:
+                if feld in e and not isinstance(e[feld], list):
+                    meldungen.append("%s: Feld '%s' ist keine Liste" % (wo, feld))
             for feld in felder + ("fachrichtung",):
                 if not e.get(feld):
                     meldungen.append("%s: Feld '%s' fehlt oder ist leer" % (wo, feld))
@@ -117,7 +133,7 @@ def pruefen(bisher, quiz_alle, lernen, umbenennungen):
             if tabelle and s in alte_texte:
                 meldungen.append("%s: Fragetext steht als alter Text in umbenennungen.json" % wo)
             if auswahl:
-                optionen = e.get("options") or []
+                optionen = als_liste(e.get("options"))
                 if len(optionen) != 4 or len({json.dumps(o, ensure_ascii=False) for o in optionen}) != 4:
                     meldungen.append("%s: braucht genau 4 verschiedene Antworten" % wo)
                 if e.get("a") not in optionen:
@@ -135,11 +151,35 @@ def pruefen(bisher, quiz_alle, lernen, umbenennungen):
                     passt = isinstance(theme, str) and theme in pools(zusatz, gueltig)
                 if not passt:
                     meldungen.append("%s: unbekanntes Thema '%s' (Themen der Prüfungsbereiche)" % (wo, py(theme)))
-            if datei == "projektarbeiten" and len(e.get("aufgaben") or []) != len(e.get("hinweise") or []):
+            if datei == "projektarbeiten" and len(als_liste(e.get("aufgaben"))) != len(als_liste(e.get("hinweise"))):
                 meldungen.append("%s: je Aufgabe wird genau ein Hinweis gebraucht" % wo)
-            for punkt in e.get("rahmenplan") or []:
+            for punkt in als_liste(e.get("rahmenplan")):
                 if punkt not in punkt_ids:
                     meldungen.append("%s: unbekannter Rahmenplan-Punkt %s" % (wo, py(punkt)))
+
+    fragen_alt = bisher["fachgespraech"]["fragen"]
+    kennungen = {f["id"] for f in fragen_alt}
+    gesehen = {f["q"].strip().lower() for f in fragen_alt}
+    for k, e in enumerate((lernen.get("fachgespraech") or {}).get("fragen") or [], start=1):
+        wo = "lernen/fachgespraech.json Nr. %d" % k
+        for feld in FACHFRAGE_FELDER + ("fachrichtung",):
+            if not e.get(feld):
+                meldungen.append("%s: Feld '%s' fehlt oder ist leer" % (wo, feld))
+        fr = e.get("fachrichtung")
+        if fr and not (isinstance(fr, str) and fr in FACHRICHTUNGEN):
+            meldungen.append("%s: unbekannte Fachrichtung '%s'" % (wo, py(fr)))
+        cat = e.get("cat")
+        if cat and not (isinstance(cat, str) and cat in KATEGORIEN):
+            meldungen.append("%s: unbekannter Fachbereich '%s'" % (wo, py(cat)))
+        if e.get("id"):
+            kennung = py(e["id"])
+            if kennung in kennungen:
+                meldungen.append("%s: Kennung %s doppelt" % (wo, kennung))
+            kennungen.add(kennung)
+        s = text_oder_leer(e.get("q")).strip().lower()
+        if s in gesehen:
+            meldungen.append("%s: doppelt vorhanden (%s)" % (wo, s[:60]))
+        gesehen.add(s)
 
     gesehen = set()
     for fb in FB_REIHE:
@@ -229,7 +269,8 @@ def sichten(bisher, quiz_alle, lernen):
             "szenarien_ap1": zahl("szenarien_ap1", bisher["szenarien_ap1"], "title"),
             "szenarien_ap2": zahl("szenarien_ap2", bisher["szenarien_ap2"], "title") + neue("szenarien_ap2"),
             "projektarbeiten": zahl("projektarbeiten", bisher["projektarbeiten"], "title") + neue("projektarbeiten"),
-            "fachgespraech": sum(1 for f in bisher["fachgespraech"]["fragen"] if wert("fachgespraech", f["id"]) in ("gemeinsam", fr)),
+            "fachgespraech": sum(1 for f in bisher["fachgespraech"]["fragen"] if wert("fachgespraech", f["id"]) in ("gemeinsam", fr))
+            + sum(1 for f in (lernen.get("fachgespraech") or {}).get("fragen") or [] if f.get("fachrichtung") == fr),
         }
     return erg
 
@@ -270,7 +311,7 @@ def main():
         return {n: lesen(os.path.join(pfad, n + ".json")) for n in namen
                 if os.path.exists(os.path.join(pfad, n + ".json"))}
 
-    namen = ["karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten", "themen",
+    namen = ["karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten", "fachgespraech", "themen",
              "rahmenplan_zusatz", "einteilung_bisher"]
     echt = ordner(os.path.join(repo, "inhalte_csharp", "lernen"), namen)
     probe = ordner(os.path.join(repo, "tests", "Lerninhalte", "probe"), namen)

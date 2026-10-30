@@ -392,6 +392,212 @@
      "konzeption"
     ]
    ]
+  },
+  {
+   "name": "fachgespraech_ohne_fachrichtung",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      0,
+      "fachrichtung"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_kennung_wie_bisherige",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      1,
+      "id"
+     ],
+     "setze",
+     "a01"
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_kennung_doppelt_neu",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      2,
+      "id"
+     ],
+     "setze",
+     "probe_ae01"
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_frage_wie_bisherige",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      0,
+      "q"
+     ],
+     "setze",
+     "  wie würden sie ihr projekt einem LAIEN in zwei sätzen erklären? "
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_fachbereich_unbekannt",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      2,
+      "cat"
+     ],
+     "setze",
+     "statistik"
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_hinweis_leer",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      1,
+      "hinweis"
+     ],
+     "setze",
+     ""
+    ]
+   ]
+  },
+  {
+   "name": "fachgespraech_fachrichtung_unbekannt",
+   "aenderungen": [
+    [
+     "fachgespraech",
+     [
+      "fragen",
+      1,
+      "fachrichtung"
+     ],
+     "setze",
+     "fisi"
+    ]
+   ]
+  },
+  {
+   "name": "projekt_aufgaben_text",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      0,
+      "aufgaben"
+     ],
+     "setze",
+     "Erstellen Sie ein Lastenheft."
+    ]
+   ]
+  },
+  {
+   "name": "projekt_titel_wie_bisheriges",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      0,
+      "title"
+     ],
+     "setze",
+     "Netzwerk-Rollout für eine neue Filiale"
+    ]
+   ]
+  },
+  {
+   "name": "projekt_ohne_branche",
+   "aenderungen": [
+    [
+     "projektarbeiten",
+     [
+      0,
+      "branche"
+     ],
+     "entferne",
+     null
+    ]
+   ]
+  },
+  {
+   "name": "karte_rahmenplan_text",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      0,
+      "rahmenplan"
+     ],
+     "setze",
+     "B1a"
+    ]
+   ]
+  },
+  {
+   "name": "quiz_optionen_text",
+   "aenderungen": [
+    [
+     "quizfragen",
+     [
+      0,
+      "options"
+     ],
+     "setze",
+     "abcd"
+    ]
+   ]
+  },
+  {
+   "name": "karte_fachrichtung_liste",
+   "aenderungen": [
+    [
+     "karteikarten",
+     [
+      1,
+      "fachrichtung"
+     ],
+     "setze",
+     [
+      "ae",
+      "dpa"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "ap2_rahmenplan_text",
+   "aenderungen": [
+    [
+     "szenarien_ap2",
+     [
+      0,
+      "rahmenplan"
+     ],
+     "setze",
+     "B2c"
+    ]
+   ]
   }
  ]
 }
