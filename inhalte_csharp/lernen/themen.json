@@ -2,5 +2,80 @@
  "_hinweis": [
   "Neue Themen der C#-Linie je Fachbereich (Kurzname wie inhalte/themen.json), Feld fachrichtung Pflicht. Nur anhängen."
  ],
- "themen": {}
+ "themen": {
+  "sicherheit": [
+   {
+    "id": "ae_sicherheit",
+    "name": "Sichere Softwareentwicklung",
+    "kurz": "Sichere Entwicklung",
+    "fachrichtung": "ae"
+   }
+  ],
+  "systeme": [
+   {
+    "id": "ae_werkzeuge",
+    "name": "Entwicklungsumgebung & Bibliotheken",
+    "kurz": "Werkzeuge",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_spezifikation",
+    "name": "Anforderungen & UML",
+    "kurz": "UML",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_oberflaechen",
+    "name": "Bedienoberflächen & Ergonomie",
+    "kurz": "Oberflächen",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_qualitaet",
+    "name": "Softwarequalität & Test",
+    "kurz": "Test",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_sprachen",
+    "name": "Programmiersprachen & Paradigmen",
+    "kurz": "Sprachen",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_oop",
+    "name": "Objektorientierung & Entwurfsmuster",
+    "kurz": "OOP",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_algorithmen",
+    "name": "Algorithmen & Datenstrukturen",
+    "kurz": "Algorithmen",
+    "fachrichtung": "ae"
+   },
+   {
+    "id": "ae_schnittstellen",
+    "name": "Architektur & Schnittstellen",
+    "kurz": "Schnittstellen",
+    "fachrichtung": "ae"
+   }
+  ],
+  "wirtschaft": [
+   {
+    "id": "ae_vorgehen",
+    "name": "Vorgehensmodelle & Aufwand",
+    "kurz": "Vorgehen",
+    "fachrichtung": "ae"
+   }
+  ],
+  "datenbanken": [
+   {
+    "id": "ae_datenzugriff",
+    "name": "Datenabfragen & Datenzugriff",
+    "kurz": "Datenzugriff",
+    "fachrichtung": "ae"
+   }
+  ]
+ }
 }
