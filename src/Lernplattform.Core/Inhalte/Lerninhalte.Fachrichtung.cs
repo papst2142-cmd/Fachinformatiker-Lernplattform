@@ -60,9 +60,107 @@ public sealed partial class Lerninhalte
     /// (Name ohne ".json") oder null, wenn es sie nicht gibt. Die Zugehoerigkeit der bisherigen
     /// Eintraege wird nach der Einteilung gesetzt (die 54 erzeugten Subnetz-Aufgaben unter quizfragen_erzeugt).
     /// </summary>
-    public static Lerninhalte MitLernen(Lerninhalte bisher, Func<string, byte[]?> lernen)
+    public static Lerninhalte MitLernen(Lerninhalte bisher, Func<string, byte[]?> lernen) => MitLernen(bisher, lernen, null);
+
+    /// <summary>
+    /// Phase 10 W1 (Weisung P9-13, Nico 5): wie <see cref="MitLernen(Lerninhalte, Func{string, byte[]?})"/>, von den
+    /// neuen Eintraegen aber nur die der <paramref name="fachrichtungen"/> (null = alle). Die bisherigen Inhalte sind
+    /// immer ganz da. Jeder Eintrag behaelt die Nummer, die er beim Laden aller Fachrichtungen haette, und jede Sicht
+    /// einer geladenen Fachrichtung ist gleich der Sicht beim Laden aller. Eine weitere Fachrichtung kommt mit
+    /// <see cref="MitFachrichtung"/> dazu.
+    /// </summary>
+    public static Lerninhalte MitLernen(Lerninhalte bisher, Func<string, byte[]?> lernen, IReadOnlyCollection<string>? fachrichtungen) =>
+        MitLernen(bisher, new LernenOrdner(lernen), fachrichtungen, null);
+
+    /// <summary>Wie oben mit einem <see cref="LernenOrdner"/>, dessen Listen schon im Hintergrund gelesen werden.</summary>
+    public static Lerninhalte MitLernen(Lerninhalte bisher, LernenOrdner ordner, IReadOnlyCollection<string>? fachrichtungen) =>
+        MitLernen(bisher, ordner, fachrichtungen, null);
+
+    private static Lerninhalte MitLernen(Lerninhalte bisher, LernenOrdner ordner, IReadOnlyCollection<string>? fachrichtungen,
+        Lerninhalte? vorher)
     {
-        var einteilung = lernen(EinteilungDatei) is { } e ? Einteilung.Laden(e) : Einteilung.Leer;
+        var lernen = ordner.Lesen;
+        var geladen = fachrichtungen?.ToHashSet(StringComparer.Ordinal);
+        var einteilung = vorher?.Einteilung ?? (lernen(EinteilungDatei) is { } e ? Einteilung.Laden(e) : Einteilung.Leer);
+        if (vorher is null)
+        {
+            Einteilen(bisher, einteilung);
+        }
+
+        var neue = new Dictionary<InhaltArt, IReadOnlyList<Lerninhalt>>();
+        foreach (var (art, name) in LernenListen)
+        {
+            var vorherAnzahl = art switch
+            {
+                InhaltArt.Karteikarte => bisher.Karteikarten.Count,
+                InhaltArt.Quizfrage => bisher.Quizfragen.Count,
+                InhaltArt.Ap2Szenario => bisher.Ap2Szenarien.Count,
+                _ => bisher.Testprojekte.Count,
+            };
+            List<(int Index, JsonObject Daten)> daten = geladen is null
+                ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
+                : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, geladen) : [];
+            neue[art] = daten.Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
+            {
+                Zugehoerigkeit = d.Daten[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
+                    && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
+            }).ToList();
+        }
+
+        var (themen, neueThemen) = vorher is not null ? (vorher.Themen.ToDictionary(p => p.Key, p => p.Value), vorher.NeueThemen.ToDictionary(p => p.Key, p => p.Value))
+            : ThemenMitLernen(bisher, lernen(ThemenDatei));
+        return new Lerninhalte
+        {
+            Ordner = bisher.Ordner,
+            Karteikarten = [.. bisher.Karteikarten, .. neue[InhaltArt.Karteikarte]],
+            Quizfragen = [.. bisher.Quizfragen, .. neue[InhaltArt.Quizfrage]],
+            AnzahlQuizfragenDatei = bisher.AnzahlQuizfragenDatei,
+            Ap2Szenarien = [.. bisher.Ap2Szenarien, .. neue[InhaltArt.Ap2Szenario]],
+            Ap1Szenarien = bisher.Ap1Szenarien,
+            Testprojekte = [.. bisher.Testprojekte, .. neue[InhaltArt.Testprojekt]],
+            Themen = themen,
+            ThemenReihenfolge = Reihenfolge(themen),
+            ThemaNach = ThemenNachId(themen),
+            Rahmenplan = bisher.Rahmenplan,
+            RahmenplanZuordnung = bisher.RahmenplanZuordnung,
+            _bisher = bisher,
+            Einteilung = einteilung,
+            RahmenplanZusatz = vorher?.RahmenplanZusatz ?? (lernen(ZusatzDatei) is { } z ? LadeObjekt(_ => z, ZusatzDatei) : []),
+            NeueThemen = neueThemen,
+            Neue = neue,
+            Geladen = geladen,
+            _lernen = ordner,
+        };
+    }
+
+    /// <summary>Phase 10 W1: die geladenen Fachrichtungen der neuen Inhalte (null = alle).</summary>
+    public IReadOnlySet<string>? Geladen { get; private init; }
+
+    private LernenOrdner? _lernen;
+    private readonly ConcurrentDictionary<string, Lazy<Lerninhalte>> _mit = new(StringComparer.Ordinal);
+
+    /// <summary>Ist <paramref name="fachrichtung"/> in diesen Inhalten (alle Fachrichtungen geladen oder diese)?</summary>
+    public bool HatFachrichtung(string fachrichtung) => Alle.Geladen is not { } g || g.Contains(fachrichtung);
+
+    /// <summary>
+    /// Phase 10 W1 (Weisung P9-13, Nico 5): alle Inhalte plus die neuen Eintraege von <paramref name="fachrichtung"/>
+    /// (nachladen beim Wechsel). Schon geladen: dieselben Inhalte. Je Fachrichtung wird nur einmal nachgeladen,
+    /// auch wenn mehrere gleichzeitig fragen; die bisherigen Inhalte werden nicht neu gelesen.
+    /// </summary>
+    public Lerninhalte MitFachrichtung(string fachrichtung)
+    {
+        var alle = Alle;
+        if (alle.HatFachrichtung(fachrichtung) || alle._lernen is not { } lernen)
+        {
+            return alle;
+        }
+        return alle._mit.GetOrAdd(fachrichtung, fr => new Lazy<Lerninhalte>(
+            () => MitLernen(alle.Bisher, lernen, [.. alle.Geladen!, fr], alle))).Value;
+    }
+
+    /// <summary>Zugehoerigkeit der bisherigen Eintraege nach der Einteilung (einmal je Laden der bisherigen Inhalte).</summary>
+    private static void Einteilen(Lerninhalte bisher, Einteilung einteilung)
+    {
         foreach (var karte in bisher.Karteikarten)
         {
             karte.Zugehoerigkeit = einteilung.Wert(Einteilung.Karteikarten, karte.Frage);
@@ -80,47 +178,6 @@ public sealed partial class Lerninhalte
                 eintrag.Zugehoerigkeit = einteilung.Wert(art, eintrag.Titel);
             }
         }
-
-        var neue = new Dictionary<InhaltArt, IReadOnlyList<Lerninhalt>>();
-        foreach (var (art, name) in LernenListen)
-        {
-            var dateiInhalt = lernen(name);
-            var daten = dateiInhalt is null ? [] : LadeListe(_ => dateiInhalt, name);
-            var vorher = art switch
-            {
-                InhaltArt.Karteikarte => bisher.Karteikarten.Count,
-                InhaltArt.Quizfrage => bisher.Quizfragen.Count,
-                InhaltArt.Ap2Szenario => bisher.Ap2Szenarien.Count,
-                _ => bisher.Testprojekte.Count,
-            };
-            neue[art] = daten.Select((d, i) => new Lerninhalt(art, vorher + i + 1, d)
-            {
-                Zugehoerigkeit = d[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
-                    && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
-            }).ToList();
-        }
-
-        var (themen, neueThemen) = ThemenMitLernen(bisher, lernen(ThemenDatei));
-        return new Lerninhalte
-        {
-            Ordner = bisher.Ordner,
-            Karteikarten = [.. bisher.Karteikarten, .. neue[InhaltArt.Karteikarte]],
-            Quizfragen = [.. bisher.Quizfragen, .. neue[InhaltArt.Quizfrage]],
-            AnzahlQuizfragenDatei = bisher.AnzahlQuizfragenDatei,
-            Ap2Szenarien = [.. bisher.Ap2Szenarien, .. neue[InhaltArt.Ap2Szenario]],
-            Ap1Szenarien = bisher.Ap1Szenarien,
-            Testprojekte = [.. bisher.Testprojekte, .. neue[InhaltArt.Testprojekt]],
-            Themen = themen,
-            ThemenReihenfolge = Reihenfolge(themen),
-            ThemaNach = ThemenNachId(themen),
-            Rahmenplan = bisher.Rahmenplan,
-            RahmenplanZuordnung = bisher.RahmenplanZuordnung,
-            _bisher = bisher,
-            Einteilung = einteilung,
-            RahmenplanZusatz = lernen(ZusatzDatei) is { } z ? LadeObjekt(_ => z, ZusatzDatei) : [],
-            NeueThemen = neueThemen,
-            Neue = neue,
-        };
     }
 
     /// <summary>
@@ -128,11 +185,16 @@ public sealed partial class Lerninhalte
     /// Inhalte mit: dann gelten nur die bisherigen (alles si, AE/DPA/DV sehen nichts), der Fehler geht an
     /// <paramref name="fehler"/>. Ein Fehler in inhalte/ selbst wirft wie bisher.
     /// </summary>
-    public static Lerninhalte MitLernenSicher(Func<Lerninhalte> bisher, Func<string, byte[]?> lernen, Action<Exception> fehler)
+    public static Lerninhalte MitLernenSicher(Func<Lerninhalte> bisher, Func<string, byte[]?> lernen, Action<Exception> fehler,
+        IReadOnlyCollection<string>? fachrichtungen = null) => MitLernenSicher(bisher, new LernenOrdner(lernen), fehler, fachrichtungen);
+
+    /// <summary>Wie oben mit einem <see cref="LernenOrdner"/> (Phase 10 W1: Listen schon im Hintergrund gelesen).</summary>
+    public static Lerninhalte MitLernenSicher(Func<Lerninhalte> bisher, LernenOrdner lernen, Action<Exception> fehler,
+        IReadOnlyCollection<string>? fachrichtungen)
     {
         try
         {
-            return MitLernen(bisher(), lernen);
+            return MitLernen(bisher(), lernen, fachrichtungen);
         }
         catch (Exception ausnahme) when (ausnahme is not OutOfMemoryException)
         {
@@ -192,9 +254,12 @@ public sealed partial class Lerninhalte
         };
     }
 
-    /// <summary>AP2-Szenarien genau einer Fachrichtung (Quelle der Klausur: "ap2" = si, "ap2_&lt;fr&gt;"), nur angehaengt.</summary>
+    /// <summary>
+    /// AP2-Szenarien genau einer Fachrichtung (Quelle der Klausur: "ap2" = si, "ap2_&lt;fr&gt;"), nur angehaengt.
+    /// Phase 10 W1: ist die Fachrichtung noch nicht geladen (Pruefung von vor einem Wechsel), wird sie hier nachgeladen.
+    /// </summary>
     public IReadOnlyList<Lerninhalt> Ap2SzenarienFuer(string fachrichtung) =>
-        Alle._ap2Je.GetOrAdd(fachrichtung, fr => Alle.Ap2Szenarien.Where(e => e.Zugehoerigkeit == fr).ToList());
+        Alle._ap2Je.GetOrAdd(fachrichtung, fr => MitFachrichtung(fr).Ap2Szenarien.Where(e => e.Zugehoerigkeit == fr).ToList());
 
     /// <summary>
     /// Rahmenplan der Sicht AE, DPA oder DV: Kopie des bisherigen Plans, dazu die Lernfelder der
@@ -319,4 +384,39 @@ public sealed class Einteilung
 
     /// <summary>Anzahl der Eintraege mit einem Wert je Art.</summary>
     public int Anzahl(string art, string wert) => _werte.TryGetValue(art, out var teil) ? teil.Values.Count(w => w == wert) : 0;
+}
+
+/// <summary>
+/// Phase 10 W1 (Weisung P9-13): Dateien aus inhalte_csharp/lernen (Name ohne ".json" -> Inhalt, null = fehlt). Die
+/// Listen werden je Datei einmal gelesen und als JSON-Dokument gemerkt, damit das Nachladen einer Fachrichtung sie nicht
+/// neu zerlegt; <see cref="Vorab"/> beginnt damit im Hintergrund, waehrend die bisherigen Inhalte laden.
+/// </summary>
+public sealed class LernenOrdner(Func<string, byte[]?> lesen)
+{
+    private readonly ConcurrentDictionary<string, Lazy<JsonDocument?>> _dokumente = new(StringComparer.Ordinal);
+
+    public Func<string, byte[]?> Lesen { get; } = lesen;
+
+    /// <summary>Liste <paramref name="name"/> als Dokument (null = Datei fehlt); ein Lesefehler kommt hier an.</summary>
+    public JsonDocument? Dokument(string name) =>
+        _dokumente.GetOrAdd(name, n => new Lazy<JsonDocument?>(() => Lesen(n) is { } datei ? JsonDocument.Parse(datei) : null)).Value;
+
+    /// <summary>Alle Listen schon im Hintergrund lesen (je Datei eine Aufgabe); Fehler zeigen sich erst bei <see cref="Dokument"/>.</summary>
+    public void Vorab()
+    {
+        foreach (var (_, name) in Lerninhalte.LernenListen)
+        {
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    Dokument(name);
+                }
+                catch (Exception)
+                {
+                    // Lazy merkt sich den Fehler, MitLernen meldet ihn
+                }
+            });
+        }
+    }
 }

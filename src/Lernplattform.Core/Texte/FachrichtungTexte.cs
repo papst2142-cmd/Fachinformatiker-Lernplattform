@@ -12,6 +12,9 @@ public static class FachrichtungTexte
     /// <summary>Klausursimulation, Bereich b1/b2 ohne Aufgaben (ersetzt bei AE, DPA und DV den allgemeinen Platzhalter).</summary>
     public const string KlausurOhneAufgaben = "Für diesen Prüfungsbereich gibt es noch keine Aufgaben. Sie kommen mit den nächsten Lerninhalten.";
 
+    /// <summary>Phase 10 W1 (Weisung P9-13, Nico 5): kleine Ladeanzeige, solange nach einem Wechsel die Inhalte der neuen Fachrichtung nachladen.</summary>
+    public const string Nachladen = "Lerninhalte werden geladen …";
+
     /// <summary>Optionen &gt; Lerninhalte, erste Zeile des Zaehlteils (Sammelliste 54).</summary>
     public const string GezaehltFuer = "Gezählt für: %s";
 
