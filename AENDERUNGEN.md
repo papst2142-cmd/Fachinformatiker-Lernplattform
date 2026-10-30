@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.29.1
+Im Spiel wechseln an Festtagen die Autos und die Festgestalten jetzt von selbst mit der Uhrzeit.
+
+- An Halloween und Weihnachten laufen ab der Dämmerung Gestalten statt der Autos über die Straßen, an Ostern tagsüber Hasen und Hühner. Bisher kam der Wechsel erst, wenn du ein Haus betreten und wieder verlassen hattest. Jetzt wechselt der Verkehr auch, wenn du die ganze Zeit draußen in der Stadt bist.
+- Der Wechsel geschieht nach und nach und nie vor deinen Augen: Ein Auto oder eine Gestalt wird nur getauscht, wenn es gerade nicht im Bild ist, oder am Kartenrand, wo der Verkehr ohnehin hinaus- und hereinfährt. Für kurze Zeit fahren deshalb Autos und Gestalten gemeinsam.
+- Spätestens nach zwei Minuten, in denen der Verkehr fährt, ist der Wechsel ganz fertig. Gehst du in ein Haus, ist er sofort fertig.
+- Am Lernstand, am Spielstand und an den Lerninhalten ändert sich nichts.
+
 ## A 0.29.0
 Viele neue Lerninhalte für die Fachrichtung Anwendungsentwicklung, dazu die ersten eigenen Testprojekte und Fragen fürs Fachgespräch.
 

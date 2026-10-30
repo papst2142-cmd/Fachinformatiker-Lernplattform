@@ -154,9 +154,10 @@ public static class FestVerkehr
     /// Lagen aller Netze aus <see cref="Netze"/> (gleiche Reihenfolge); nicht gezeigte Schrittbilder und Gestalten
     /// ohne Strecke liegen unsichtbar (auf einen Punkt verkleinert). Bewegung je Art aus dem Weg (Zeit = Weg / Tempo):
     /// Geist schwebt, Hexe fliegt eine Handbreit hoch, Hase hoppelt, Huhn pickt, Geschenke huepfen.
-    /// Rueckgabe: Zahl der Lagen.
+    /// Rueckgabe: Zahl der Lagen. <paramref name="zeigen"/> (Patch A 0.29.1, Uebergang): nur Gestalten, deren Fahrzeug
+    /// gerade faehrt, alle anderen liegen unsichtbar (null = alle).
     /// </summary>
-    public static int Lagen(IReadOnlyList<Gestalt> gestalten, Verkehr verkehr, bool fern, Matrix4x4[] lagen)
+    public static int Lagen(IReadOnlyList<Gestalt> gestalten, Verkehr verkehr, bool fern, Matrix4x4[] lagen, Func<Verkehr.Auto, bool>? zeigen = null)
     {
         var n = 0;
         var weg = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
@@ -164,7 +165,8 @@ public static class FestVerkehr
         {
             var g = gestalten[i];
             var anzahl = fern ? 1 : g.Bilder.Count;
-            var lage = Lage(g, verkehr);
+            var lage = zeigen is null || verkehr.Autos.FirstOrDefault(a => a.Nummer == g.Platz.Strecke) is { } auto && zeigen(auto)
+                ? Lage(g, verkehr) : null;
             var bild = anzahl > 1 && lage is { } l0 ? Bild(l0.Weg) : 0;
             for (var b = 0; b < anzahl && n < lagen.Length; b++, n++)
             {
