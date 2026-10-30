@@ -164,6 +164,9 @@ public sealed class Spielablauf
     /// <summary>topic_knowledge(): Wissensstand je Thema aus dem Lernstand.</summary>
     public Func<PyObjekt> ThemenWissen { get; set; } = () => [];
 
+    /// <summary>rent_mode(): Schalter "Miete" der Optionen dieses Geraets (Phase 9 W4; die Oberflaeche liest einstellungen.json).</summary>
+    public Func<bool> MieteSchalter { get; set; } = () => false;
+
     /// <summary>learned_projects(): im Lernbereich bearbeitete Testprojekte.</summary>
     public Func<PySet> LernProjekte { get; set; } = () => [];
 
@@ -578,6 +581,13 @@ public sealed class Spielablauf
 
     /// <summary>W7b: Firma auf dem Amt gruenden (nur auf dem geoeffneten Amt, sonst wie Gruenden).</summary>
     public PyObjekt AmtGruenden(Stadt stadt, string? name) => Ausfuehren(Schalter.Gruenden(stadt, Stand, name));
+
+    /// <summary>
+    /// move_home: Umzug in eine groessere Wohnung, alle Moebel kommen in Kartons. miete true mietet, false kauft;
+    /// null nimmt den Schalter aus den Optionen (<see cref="MieteSchalter"/>), wie Python move_home(rent=None).
+    /// </summary>
+    public PyObjekt Umziehen(object? wohnung, bool? miete = null) =>
+        Ausfuehren(SpielAktionen.Umziehen(Stand, wohnung, miete ?? MieteSchalter()));
 
     public PyObjekt Feierabend() =>
         Ausfuehren(SpielAktionen.Feierabend(Stand, Py.Wahr(Stand.Firma) ? FirmenWissen() : null));

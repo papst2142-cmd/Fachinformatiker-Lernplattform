@@ -105,6 +105,8 @@ public sealed class SpielSitzung
 
     private void Einrichten(Spielablauf ablauf)
     {
+        // Phase 9 W4 (Sammelliste 178): ein Umzug ohne Angabe nimmt den Schalter "Miete" aus den Optionen dieses Geraets
+        ablauf.MieteSchalter = () => Wohnung.MieteGewaehlt(Programm.Zustand.Einstellungen.Laden());
         if (Wissen is { } wissen)
         {
             ablauf.Wissen = wissen.Fachbereiche;

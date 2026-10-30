@@ -51,120 +51,135 @@ public static partial class AutoMessung
             return uhr.Elapsed.TotalMilliseconds;
         }
 
-        // 2. Fachrichtung wechseln (Sicht si -> ae), zurueck = Sicht si (nicht gemessen)
-        var erste = await Wechsel("ae");
-        var reihe = await Messwiederholung.MessenAsync(erste, Geraetegrenze, () => Wechsel("ae"),
-            async () => { await Wechsel("si"); }, Task.Delay);
-        funde += Ergebnis("Fachrichtung wechseln SI -> AE (Inhalte, Dashboard, Bild)", reihe);
-        if (Zustand.Sicht != "ae" || await Zustand.Inhalte is not { } ae)
+        // 2. bis 5. je Fachrichtung mit eigenen Inhalten: AE (W3), DPA (W4, Weisung P9-10)
+        async Task<TrainerSeite?> SichtPruefen(string fr, string name)
         {
-            Fund("Fachrichtung wechseln: Sicht AE nicht gesetzt");
-            return funde;
-        }
-
-        // 3. Zahlen der Sicht AE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
-        //    AE-Inhalte (W3, Weisung P9-8), keine Testprojekte
-        var einteilung = ae.Einteilung;
-        var eigene = (Karten: ae.Karteikarten.Count(e => e.Zugehoerigkeit == "ae"), Quiz: ae.Quizfragen.Count(e => e.Zugehoerigkeit == "ae"),
-            Ap2: ae.Ap2Szenarien.Count(e => e.Zugehoerigkeit == "ae"));
-        var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam) + eigene.Karten,
-            Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam) + eigene.Quiz,
-            Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam));
-        Messwerte.Notiere(string.Create(inv,
-            $"Sicht AE: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}, davon AE {eigene.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}, davon AE {eigene.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien (davon AE {eigene.Ap2}), {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));
-        if (ae.Karteikarten.Count != soll.Karten || ae.Quizfragen.Count != soll.Quiz || ae.Ap1Szenarien.Count != soll.Ap1
-            || ae.Ap2Szenarien.Count != eigene.Ap2 || ae.Testprojekte.Count != 0 || soll.Karten == 0
-            || eigene.Karten == 0 || eigene.Quiz == 0 || eigene.Ap2 == 0)
-        {
-            Fund("Sicht AE: Zahlen weichen von einteilung_bisher.json und den AE-Inhalten ab");
-        }
-
-        // 3a. Karteikarten und Pruefungstrainer bei AE: erstes Oeffnen in der neuen Sicht bis zum Bild (streng)
-        foreach (var (id, name) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer") })
-        {
-            if (ansicht.GebauteSeiten.ContainsKey(id))
+            // 2. Fachrichtung wechseln (Sicht si -> fr), zurueck = Sicht si (nicht gemessen)
+            var erste = await Wechsel(fr);
+            var reihe = await Messwiederholung.MessenAsync(erste, Geraetegrenze, () => Wechsel(fr),
+                async () => { await Wechsel("si"); }, Task.Delay);
+            funde += Ergebnis("Fachrichtung wechseln SI -> " + name + " (Inhalte, Dashboard, Bild)", reihe);
+            if (Zustand.Sicht != fr || await Zustand.Inhalte is not { } ae)
             {
-                Fund(name + " AE: Seite war vor dem ersten Oeffnen schon gebaut");
-                continue;
+                Fund("Fachrichtung wechseln: Sicht " + name + " nicht gesetzt");
+                return null;
             }
-            var uhr = Stopwatch.StartNew();
-            await ansicht.ZeigeAsync(id);
-            switch (ansicht.GebauteSeiten[id])
+
+            // 3. Zahlen der Sicht AE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
+            //    AE-Inhalte (W3, Weisung P9-8), keine Testprojekte
+            var einteilung = ae.Einteilung;
+            var eigene = (Karten: ae.Karteikarten.Count(e => e.Zugehoerigkeit == fr), Quiz: ae.Quizfragen.Count(e => e.Zugehoerigkeit == fr),
+                Ap2: ae.Ap2Szenarien.Count(e => e.Zugehoerigkeit == fr));
+            var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam) + eigene.Karten,
+                Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam) + eigene.Quiz,
+                Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam));
+            Messwerte.Notiere(string.Create(inv,
+                $"Sicht {name}: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}, davon {name} {eigene.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}, davon {name} {eigene.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien (davon {name} {eigene.Ap2}), {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));
+            if (ae.Karteikarten.Count != soll.Karten || ae.Quizfragen.Count != soll.Quiz || ae.Ap1Szenarien.Count != soll.Ap1
+                || ae.Ap2Szenarien.Count != eigene.Ap2 || ae.Testprojekte.Count != 0 || soll.Karten == 0
+                || eigene.Karten == 0 || eigene.Quiz == 0 || eigene.Ap2 == 0)
             {
-                case KarteikartenSeite karten:
-                    await karten.Geladen;
-                    break;
-                case TrainerSeite neu:
-                    await neu.Geladen;
-                    break;
+                Fund("Sicht " + name + ": Zahlen weichen von einteilung_bisher.json und den eigenen Inhalten ab");
             }
+
+            // 3a. Karteikarten und Pruefungstrainer der Fachrichtung: erstes Oeffnen in der neuen Sicht bis zum Bild (streng)
+            foreach (var (id, seite) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer") })
+            {
+                if (ansicht.GebauteSeiten.ContainsKey(id))
+                {
+                    Fund(seite + " " + name + ": Seite war vor dem ersten Oeffnen schon gebaut");
+                    continue;
+                }
+                var uhr = Stopwatch.StartNew();
+                await ansicht.ZeigeAsync(id);
+                switch (ansicht.GebauteSeiten[id])
+                {
+                    case KarteikartenSeite karten:
+                        await karten.Geladen;
+                        break;
+                    case TrainerSeite neu:
+                        await neu.Geladen;
+                        break;
+                }
+                await ansicht.BildFertigAsync();
+                funde += Ergebnis(seite + " " + name + " (erstes Oeffnen, bis zum Bild)", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
+            }
+
+            // 4. Klausurauswahl: Pruefungstrainer neu gebaut (Sicht der Fachrichtung), Wechsel zu "Prüfung" bis zum Bild (streng)
+            await ansicht.ZeigeAsync(Seiten.Trainer);
+            if (ansicht.GebauteSeiten[Seiten.Trainer] is not TrainerSeite trainer)
+            {
+                Fund("Klausurauswahl " + name + ": Pruefungstrainer nicht gebaut");
+                return null;
+            }
+            await trainer.Geladen;
             await ansicht.BildFertigAsync();
-            funde += Ergebnis(name + " AE (erstes Oeffnen, bis zum Bild)", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
-        }
-
-        // 4. Klausurauswahl AE: Pruefungstrainer neu gebaut (Sicht AE), Wechsel zu "Prüfung" bis zum Bild (streng)
-        await ansicht.ZeigeAsync(Seiten.Trainer);
-        if (ansicht.GebauteSeiten[Seiten.Trainer] is not TrainerSeite trainer)
-        {
-            Fund("Klausurauswahl AE: Pruefungstrainer nicht gebaut");
-            return funde;
-        }
-        await trainer.Geladen;
-        await ansicht.BildFertigAsync();
-        funde += Ergebnis("Klausurauswahl AE (Wechsel zu \"Prüfung\", bis zum Bild)",
-            await BildMessenAsync(ansicht, () => trainer.ArtWaehlen(TrainerTexte.Pruefung), grenze: Geraetegrenze));
-        // W3: AE hat eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
-        if (Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
-        {
-            Fund("Klausurauswahl AE: Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" noch zu sehen");
-        }
-
-        // 5. Layout der Ansichten, die AE anders zeigt, in jeder Schriftstufe schmal und am PC
-        var fenster = TopLevel.GetTopLevel(ansicht) as Window;
-        var (breiteVorher, hoeheVorher) = fenster is null ? (0d, 0d) : (fenster.Width, fenster.Height);
-        var layout = new List<string>();
-        foreach (var stufe in Einstellungen.Schriftgroessen)
-        {
-            Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
-            foreach (var (name, breite, hoehe) in fenster is null ? [("wie gestartet", 0d, 0d)] : new[] { ("schmal", SchmalBreite, SchmalHoehe), ("pc", PcBreite, PcHoehe) })
+            funde += Ergebnis("Klausurauswahl " + name + " (Wechsel zu \"Prüfung\", bis zum Bild)",
+                await BildMessenAsync(ansicht, () => trainer.ArtWaehlen(TrainerTexte.Pruefung), grenze: Geraetegrenze));
+            // W3/W4: AE und DPA haben eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
+            if (Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
             {
-                if (fenster is not null)
+                Fund("Klausurauswahl " + name + ": Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" noch zu sehen");
+            }
+
+            // 5. Layout der Ansichten, die die Fachrichtung anders zeigt, in jeder Schriftstufe schmal und am PC
+            var fenster = TopLevel.GetTopLevel(ansicht) as Window;
+            var (breiteVorher, hoeheVorher) = fenster is null ? (0d, 0d) : (fenster.Width, fenster.Height);
+            var layout = new List<string>();
+            foreach (var stufe in Einstellungen.Schriftgroessen)
+            {
+                Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
+                foreach (var (groesse, breite, hoehe) in fenster is null ? [("wie gestartet", 0d, 0d)] : new[] { ("schmal", SchmalBreite, SchmalHoehe), ("pc", PcBreite, PcHoehe) })
                 {
-                    var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
-                    fenster.Width = Math.Min(breite, hoechstB);
-                    fenster.Height = Math.Min(hoehe, hoechstH);
-                }
-                foreach (var id in new[] { Seiten.Trainer, Seiten.Ap2Szenarien, Seiten.Testprojekt, Seiten.Optionen })
-                {
-                    await ansicht.ZeigeAsync(id);
-                    if (ansicht.GebauteSeiten[id] is SzenarioSeite szenarien)
+                    if (fenster is not null)
                     {
-                        await szenarien.Geladen;
+                        var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
+                        fenster.Width = Math.Min(breite, hoechstB);
+                        fenster.Height = Math.Min(hoehe, hoechstH);
                     }
-                    if (ansicht.GebauteSeiten[id] is IAufklappbar klappbar)
+                    foreach (var id in new[] { Seiten.Trainer, Seiten.Ap2Szenarien, Seiten.Testprojekt, Seiten.Optionen })
                     {
-                        klappbar.AllesAufklappen();
+                        await ansicht.ZeigeAsync(id);
+                        if (ansicht.GebauteSeiten[id] is SzenarioSeite szenarien)
+                        {
+                            await szenarien.Geladen;
+                        }
+                        if (ansicht.GebauteSeiten[id] is IAufklappbar klappbar)
+                        {
+                            klappbar.AllesAufklappen();
+                        }
+                        await ansicht.BildFertigAsync();
+                        await ansicht.BildFertigAsync();
+                        layout.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => $"{groesse} {stufe} {name} {id}: {f}"));
                     }
-                    await ansicht.BildFertigAsync();
-                    await ansicht.BildFertigAsync();
-                    layout.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => $"{name} {stufe} AE {id}: {f}"));
                 }
             }
+            Zustand.DesignAnwenden();
+            if (fenster is not null)
+            {
+                fenster.Width = breiteVorher;
+                fenster.Height = hoeheVorher;
+            }
+            Messwerte.Notiere(string.Create(inv, $"Sicht {name} Layout (Klausurauswahl, AP2-Szenarien, Testprojekte, Optionen; {Einstellungen.Schriftgroessen.Count} Schriftstufen): {layout.Count} Funde"));
+            foreach (var fund in layout.Distinct().Take(20))
+            {
+                Fund("Layout " + fund);
+            }
+            return trainer;
         }
-        Zustand.DesignAnwenden();
-        if (fenster is not null)
+
+        TrainerSeite? trainer = null;
+        foreach (var (fr, name) in new[] { ("ae", "AE"), ("dpa", "DPA") })
         {
-            fenster.Width = breiteVorher;
-            fenster.Height = hoeheVorher;
-        }
-        Messwerte.Notiere(string.Create(inv, $"Sicht AE Layout (Klausurauswahl, AP2-Szenarien, Testprojekte, Optionen; {Einstellungen.Schriftgroessen.Count} Schriftstufen): {layout.Count} Funde"));
-        foreach (var fund in layout.Distinct().Take(20))
-        {
-            Fund("Layout " + fund);
+            if (await SichtPruefen(fr, name) is not { } t)
+            {
+                return funde;
+            }
+            trainer = t;
+            t.ArtWaehlen(TrainerTexte.Uebung);
         }
 
         // 6. zurueck auf SI (wie gespeichert) und die vorher gebauten Seiten wieder bauen
-        trainer.ArtWaehlen(TrainerTexte.Uebung);
         await Wechsel("si");
         foreach (var id in gebaut.Where(id => !ansicht.GebauteSeiten.ContainsKey(id)))
         {
@@ -182,6 +197,45 @@ public static partial class AutoMessung
                     break;
             }
         }
+        // 7. W4 (Weisung P9-10 Teil B): Optionen > Spiel aufklappen bis zum Bild (wiederholbar, 400 ms), die Zeile zum
+        //    Platz und Schwierigkeitsgrad wird im Hintergrund gelesen; Auswahl Einmalzahlung/Miete und Erklaertext zu sehen
+        await ansicht.ZeigeAsync(Seiten.Optionen);
+        if (ansicht.GebauteSeiten[Seiten.Optionen] is OptionenSeite optionen && optionen.Klappe(Optionen.Spiel) is { } spielKarte)
+        {
+            async Task<double?> Aufklappen()
+            {
+                var uhr = Stopwatch.StartNew();
+                spielKarte.IsExpanded = true;
+                await ansicht.BildFertigAsync();
+                return uhr.Elapsed.TotalMilliseconds;
+            }
+            spielKarte.IsExpanded = false;
+            await ansicht.BildFertigAsync();
+            var offen = await Aufklappen();
+            funde += Ergebnis("Optionen > Spiel aufklappen (bis zum Bild)", await Messwiederholung.MessenAsync(offen, Geraetegrenze, Aufklappen,
+                async () => { spielKarte.IsExpanded = false; await ansicht.BildFertigAsync(); }, Task.Delay));
+            spielKarte.IsExpanded = true;
+            var lesen = Stopwatch.StartNew();
+            await optionen.SpielZeileGelesen;
+            await ansicht.BildFertigAsync();
+            var zeile = optionen.SpielZeile ?? "";
+            Messwerte.Notiere(string.Create(inv, $"Optionen > Spiel: Zeile \"{zeile}\" (gelesen nach {lesen.Elapsed.TotalMilliseconds:F0} ms im Hintergrund)"));
+            var text = Textbaum(spielKarte);
+            if (!(zeile.StartsWith("Schwierigkeitsgrad: ", StringComparison.Ordinal) || zeile.StartsWith("Platz ", StringComparison.Ordinal))
+                || !text.Contains(Beschriftungen.Gross(Core.Spiel.Wohnung.MieteTitel), StringComparison.Ordinal)
+                || Core.Spiel.Wohnung.MieteWahl.Any(w => !text.Contains(w.Text, StringComparison.Ordinal))
+                || !text.Contains("Gilt für den nächsten Umzug im Spiel.", StringComparison.Ordinal)
+                || text.Contains(Beschriftungen.Platzhalter, StringComparison.Ordinal))
+            {
+                Fund("Optionen > Spiel: Zeile, WOHNUNGEN, Auswahl oder Erklaertext fehlen (oder Platzhalter zu sehen)");
+            }
+            spielKarte.IsExpanded = false;
+        }
+        else
+        {
+            Fund("Optionen > Spiel: Karte nicht gefunden");
+        }
+
         await ansicht.ZeigeAsync(vorher);
         return funde;
     }
