@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.29.2
+Im Spiel bleibt der Verkehr am Kartenrand nicht mehr stehen.
+
+- Bisher konnte es passieren, dass nach einigen Minuten alle Autos am Rand der Karte stehen blieben und sich nicht mehr bewegten. Zwei Autos warteten dort gegenseitig aufeinander: Wo die Strecke des einen endet, beginnt die Strecke des anderen. Jetzt fahren sie weiter, und der Verkehr läuft dauerhaft.
+- Dasselbe gilt für die Gestalten an Halloween, Weihnachten und Ostern.
+- Fahren zwei Autos gleichzeitig auf eine Kreuzung zu, fährt jetzt immer nur eines hinein, das andere wartet kurz davor.
+- Wechselt der Verkehr an Festtagen mit der Uhrzeit, ist der Wechsel jetzt auch dann bald fertig, wenn du schon länger draußen in der Stadt bist.
+- Am Lernstand, am Spielstand und an den Lerninhalten ändert sich nichts.
+
 ## A 0.29.1
 Im Spiel wechseln an Festtagen die Autos und die Festgestalten jetzt von selbst mit der Uhrzeit.
 
