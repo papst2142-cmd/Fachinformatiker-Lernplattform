@@ -74,9 +74,26 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private bool _satzInnen = true;
     private long? _satzUhr;
     private readonly Dictionary<bool, GlNetz> _paket = [];
+    // Patch A 0.29.1 (Weisung P10-3): Uebergang zwischen Autos und Festgestalten mit der Uhr, ohne Hausbesuch
+    private FestUebergang? _uebergang;
+    private List<FestVerkehr.Gestalt>? _neuGestalten;
+    private readonly Dictionary<bool, GlNetz> _neuNetze = [];
+    private SatzVorrat? _uebergangBau;
+    private bool _satzPruefen = true;
+    private bool _spielNeu = true;
+    private string? _szeneFest;
 
-    /// <summary>Phase 8 W11: wer gerade auf den Strassen faehrt bzw. laeuft (Start-Test).</summary>
+    /// <summary>Phase 8 W11: wer gerade auf den Strassen faehrt bzw. laeuft (Start-Test); im Uebergang der alte Satz.</summary>
     public FestVerkehr.Satz Satz => _satz;
+
+    /// <summary>Patch A 0.29.1: der laufende Uebergang zum neuen Satz (null = keiner).</summary>
+    public FestUebergang? Uebergang => _uebergang;
+
+    /// <summary>
+    /// Patch A 0.29.1, nur Start-Test: eine geaenderte feste Uhr (<see cref="Tageslicht.FesteUhr"/>) wechselt den Satz
+    /// nach und nach wie die Uhr des Spiels (sonst sofort, wie bisher).
+    /// </summary>
+    public static bool UhrSanft { get; set; }
 
     /// <summary>Phase 8 W11: die Festgestalten (null = Autos).</summary>
     public IReadOnlyList<FestVerkehr.Gestalt>? Gestalten => _gestalten;
@@ -217,6 +234,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 value.SzeneGeaendert += SzeneNeu;
                 value.InnenGeaendert += InnenNeu;
                 _szeneNeu = true;
+                _spielNeu = true;
                 _innenNeu = true;
                 InnenNeu();
                 if (_glFrisch)
@@ -250,6 +268,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private void SpielGeaendert()
     {
         _lichtNeu = true;
+        _satzPruefen = true;
         _figurZuletzt.Clear();
         _ringAussehen = null;
         AnfordernBild();
@@ -258,6 +277,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private void SzeneNeu()
     {
         _lichtNeu = true;
+        _satzPruefen = true;
         _szeneNeu = true;
         AnfordernBild();
     }
@@ -473,6 +493,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _autoProgramm = 0;
         _gruen = null;
         _autoNetze.Clear();
+        _neuNetze.Clear();
         _paket.Clear();
         base.OnOpenGlLost();
     }
@@ -480,7 +501,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
-            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_paket.Values))
+            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values))
         {
             netz?.Freigeben(gl);
         }
@@ -491,6 +512,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _laedtVor = false;
         _gruen = null;
         _autoNetze.Clear();
+        _neuNetze.Clear();
         _paket.Clear();
         if (_autoProgramm != 0)
         {
@@ -689,13 +711,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 _paket[true] = GlNetz.Laden(gl, fernNetz);
             }
             // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar); eine Szene mit
-            // anderer Festzeit (neuer Tag) bekommt ihren eigenen Satz
+            // anderer Festzeit (neuer Tag) oder ein neues Spiel bekommt sofort seinen eigenen Satz; aendert sich draussen
+            // in derselben Stadt nur die Uhr, wechselt der Satz nach und nach (Patch A 0.29.1)
             if (spiel.Grafik is not null
                 && FestVerkehr.Fuer(spiel.Szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, spiel.Szene.Jahreszeit) is var satzNeu
-                && (_verkehr is null || satzNeu != _satz))
+                && (_verkehr is null || (satzNeu != (_uebergang?.Neu ?? _satz) && (spiel.ImInnenraum || _spielNeu || _szeneFest != spiel.Szene.Fest))))
             {
                 SatzSetzen(gl, spiel, satzNeu, jetzt);
             }
+            _spielNeu = false;
+            _szeneFest = spiel.Szene.Fest;
             _szeneNeu = false;
         }
         if (_spiel is { } s2 && _innenNeu && GlBereit)
@@ -716,16 +741,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _innenGeladen = s2.Innen;
             _innenNeu = false;
         }
-        if (_spiel is { } s3 && GlBereit && _verkehr is not null && s3.Grafik is not null
-            && ((_satzInnen && !s3.ImInnenraum) || Tageslicht.FesteUhr != _satzUhr))
+        if (UhrSanft && Tageslicht.FesteUhr != _satzUhr)
         {
-            // W11 (Teilplan 1): Wechsel der Gestalten nur beim Betreten der Stadt (oder fester Uhr im Start-Test),
-            // nie mitten im Bild
+            _satzPruefen = true;
+        }
+        if (_spiel is { } s3 && GlBereit && _verkehr is not null && s3.Grafik is not null
+            && ((_satzInnen && !s3.ImInnenraum) || (Tageslicht.FesteUhr != _satzUhr && !UhrSanft)))
+        {
+            // W11 (Teilplan 1): beim Betreten der Stadt (oder fester Uhr im Start-Test) sofort der richtige Satz
             var neu = FestVerkehr.Fuer(s3.Szene.Fest, Tageslicht.FesteUhr ?? s3.Jetzt.Uhr, s3.Szene.Jahreszeit);
-            if (neu != _satz)
+            if (neu != _satz || _uebergang is not null)
             {
                 SatzSetzen(gl, s3, neu, jetzt);
             }
+            _satzPruefen = false;
+        }
+        else if (_spiel is { } s4 && GlBereit && _verkehr is not null && s4.Grafik is { } grafikU && !_laedtVor)
+        {
+            UebergangTakt(gl, s4, grafikU, jetzt);
         }
         _satzInnen = _spiel?.ImInnenraum ?? true;
         _satzUhr = Tageslicht.FesteUhr;
@@ -751,7 +784,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             // Phase 8 W8: Schleifen der Stadt nach der Bildmitte (Fluss, Autos nach Naehe, Voegel)
             TonDienst.Takt(tonSpiel.ImInnenraum, tonSpiel.ImInnenraum ? null
-                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, _verkehr, _verkehr?.Faehrt(jetzt) == true && _gestalten is null));
+                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, TonVerkehr(), _verkehr?.Faehrt(jetzt) == true && (_gestalten is null || _uebergang is not null)));
         }
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
@@ -797,41 +830,27 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
             {
-                if (AutoSchritt > 0 || _verkehr.Faehrt(jetzt))
+                var schritt = AutoSchritt > 0 ? AutoSchritt : _verkehr.Faehrt(jetzt) ? dt : 0;
+                if (_uebergang is { } u)
                 {
-                    _verkehr.Weiter(AutoSchritt > 0 ? AutoSchritt : dt, _spiel.FigurX, _spiel.FigurZ);
+                    // Patch A 0.29.1: tauschen nur ausserhalb des Sichtkegels, am Rundlauf oder nach der Hoechstzeit
+                    u.Schritt(schritt, _spiel.FigurX, _spiel.FigurZ, (p, halb) => FestUebergang.ImSichtkegel(sichtProj, p, halb));
+                    if (u.Fertig)
+                    {
+                        UebergangAbschliessen(gl);
+                    }
+                }
+                else if (schritt > 0)
+                {
+                    _verkehr.Weiter(schritt, _spiel.FigurX, _spiel.FigurZ);
                 }
                 // ab AutoFern Abstand eine einfache Fernform (zwei Kaesten in der Hauptfarbe des Autos)
                 var fern = kamera.Abstand > AutoFern;
-                if (_gestalten is { } gestalten)
+                Func<Verkehr.Auto, bool>? zeigen = _uebergang is { } u2 ? u2.Aktiv : null;
+                SatzZeichnen(gl, _autoNetze, _gestalten, _uebergang?.AltVerkehr ?? _verkehr, zeigen, fern, grafikA, sichtProj);
+                if (_uebergang is { } u3)
                 {
-                    // W11: Festgestalten im selben Zeichenaufruf wie die Autos (nah alle Schrittbilder, das gezeigte je Gestalt)
-                    if (!_autoNetze.TryGetValue(fern, out var festNetz))
-                    {
-                        festNetz = GlNetz.LadenMitNummern(gl, FestVerkehr.Netze(gestalten, fern));
-                        _autoNetze[fern] = festNetz;
-                    }
-                    ZeichnenAutos(gl, festNetz, FestVerkehr.Lagen(gestalten, _verkehr, fern, _autoLagen), sichtProj);
-                }
-                else
-                {
-                if (!_autoNetze.TryGetValue(fern, out var autosNetz))
-                {
-                    autosNetz = GlNetz.LadenMitNummern(gl, _verkehr.Autos.Take(AutosHoechstens).Select(a => AutoNetz(grafikA, a.Modell, fern)).ToList());
-                    _autoNetze[fern] = autosNetz;
-                }
-                var anzahl = Math.Min(_verkehr.Autos.Count, AutosHoechstens);
-                for (var i = 0; i < anzahl; i++)
-                {
-                    var auto = _verkehr.Autos[i];
-                    if (grafikA.Modell(auto.Modell) is { } am)
-                    {
-                        var (ort, richtung) = auto.Lage(auto.Weg);
-                        var anker = new Vector3((am.Min.X + am.Max.X) / 2, am.Min.Y, (am.Min.Z + am.Max.Z) / 2);
-                        _autoLagen[i] = StadtSzene.Lage(am, anker, new Vector3(StadtSzene.Meter * 1.1f), new Vector3(ort.X, StadtSzene.Hoehe.Strasse, ort.Y), richtung);
-                    }
-                }
-                ZeichnenAutos(gl, autosNetz, anzahl, sichtProj);
+                    SatzZeichnen(gl, _neuNetze, _neuGestalten, u3.NeuVerkehr, zeigen, fern, grafikA, sichtProj);
                 }
             }
             if (_spiel.Ziel is { } ziel && _marke is not null)
@@ -1003,7 +1022,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var grafik = spiel.Grafik;
         var satz = grafik is null ? FestVerkehr.Satz.Autos : FestVerkehr.Fuer(szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
         // gleicher Satz: die Autos behalten ihre Lage, nur die Netze werden neu hochgeladen
-        var verkehrAlt = _verkehr is not null && satz == _satz ? _verkehr : null;
+        var verkehrAlt = _verkehr is not null && satz == _satz && _uebergang is null ? _verkehr : null;
         var gestaltenAlt = _gestalten;
         var aussehen = spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
         var kleidung = spiel.Kleidung;
@@ -1472,11 +1491,16 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Satz einsetzen: alte Netze frei, neuer Verkehr (oder der alte bei <paramref name="verkehrBleibt"/>), beide Netze hochladen.</summary>
     private void SatzEinsetzen(GlInterface gl, SatzPaket paket, double jetzt, bool verkehrBleibt = false)
     {
-        foreach (var alt in _autoNetze.Values)
+        foreach (var alt in _autoNetze.Values.Concat(_neuNetze.Values))
         {
             alt.Freigeben(gl);
         }
         _autoNetze.Clear();
+        // Patch A 0.29.1: ein laufender Uebergang endet (der Satz ist sofort ganz da)
+        _neuNetze.Clear();
+        _uebergang = null;
+        _neuGestalten = null;
+        _uebergangBau = null;
         if (!verkehrBleibt)
         {
             _satz = paket.Satz;
@@ -1486,6 +1510,143 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         _autoNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
         _autoNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+    }
+
+    /// <summary>
+    /// Patch A 0.29.1 (Weisung P10-3, Nico "Nach und nach, unsichtbar"): je Bild pruefen, ob sich draussen der Satz mit
+    /// der Uhr aendert (nur nach einer Aenderung des Spiels oder der Szene); dann den neuen Satz im Hintergrund bauen
+    /// und, sobald er fertig ist, den Uebergang beginnen (<see cref="FestUebergang"/>). Im Haus endet ein Uebergang
+    /// sofort (dort sieht niemand die Strassen).
+    /// </summary>
+    private void UebergangTakt(GlInterface gl, StadtSpiel spiel, GrafikBibliothek grafik, double jetzt)
+    {
+        if (spiel.ImInnenraum)
+        {
+            if (_uebergang is { } innenU)
+            {
+                innenU.Abschliessen();
+                UebergangAbschliessen(gl);
+            }
+            return;
+        }
+        if (_uebergangBau is { } bau && bau.Aufgabe.IsCompleted)
+        {
+            _uebergangBau = null;
+            if (bau.Aufgabe.IsCompletedSuccessfully && ReferenceEquals(bau.Szene, spiel.Szene) && _verkehr is { } alt)
+            {
+                var paket = bau.Aufgabe.Result;
+                _neuNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
+                _neuNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+                _neuGestalten = paket.Gestalten;
+                _uebergang = new FestUebergang(_satz, alt, paket.Satz, paket.Verkehr);
+                _verkehr = _uebergang.Verkehr;
+            }
+            _satzPruefen = true;
+        }
+        if (!_satzPruefen)
+        {
+            return;
+        }
+        _satzPruefen = false;
+        var ziel = FestVerkehr.Fuer(spiel.Szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, spiel.Szene.Jahreszeit);
+        if (ziel == (_uebergangBau?.Satz ?? _uebergang?.Neu ?? _satz))
+        {
+            return;
+        }
+        if (_uebergang is { } laufend)
+        {
+            // die Uhr hat sich waehrend eines Uebergangs noch einmal geaendert: den laufenden sofort fertig machen
+            laufend.Abschliessen();
+            UebergangAbschliessen(gl);
+            if (ziel == _satz)
+            {
+                return;
+            }
+        }
+        if (_satz != FestVerkehr.Satz.Autos && ziel != FestVerkehr.Satz.Autos)
+        {
+            // von einem Fest zu einem anderen gibt es in einer Stadt nicht (eine Szene hat ein Fest); sicherheitshalber sofort
+            SatzSetzen(gl, spiel, ziel, jetzt);
+            return;
+        }
+        var szene = spiel.Szene;
+        _uebergangBau = new SatzVorrat(szene, ziel, Task.Run(() => SatzPaketBauen(szene, grafik, ziel)));
+    }
+
+    /// <summary>Patch A 0.29.1: Uebergang fertig, der neue Satz ist ganz da (Netze, Gestalten, Verkehr).</summary>
+    private void UebergangAbschliessen(GlInterface gl)
+    {
+        if (_uebergang is not { } u)
+        {
+            return;
+        }
+        foreach (var alt in _autoNetze.Values)
+        {
+            alt.Freigeben(gl);
+        }
+        _autoNetze.Clear();
+        foreach (var (fern, netz) in _neuNetze)
+        {
+            _autoNetze[fern] = netz;
+        }
+        _neuNetze.Clear();
+        _satz = u.Neu;
+        _gestalten = _neuGestalten;
+        _verkehr = u.NeuVerkehr;
+        _neuGestalten = null;
+        _uebergang = null;
+    }
+
+    /// <summary>
+    /// Autos oder Festgestalten eines Satzes in einem Zeichenaufruf; <paramref name="vorlage"/> = Verkehr des Satzes (gleiche
+    /// Reihenfolge wie die Netze), <paramref name="zeigen"/> = nur diese Fahrzeuge zeigen (Uebergang, sonst alle).
+    /// </summary>
+    private void SatzZeichnen(GlInterface gl, Dictionary<bool, GlNetz> netze, List<FestVerkehr.Gestalt>? gestalten, Verkehr vorlage,
+        Func<Verkehr.Auto, bool>? zeigen, bool fern, GrafikBibliothek grafik, Matrix4x4 sichtProj)
+    {
+        if (!netze.TryGetValue(fern, out var netz))
+        {
+            netz = GlNetz.LadenMitNummern(gl, AutoNetze(vorlage, gestalten, grafik, fern));
+            netze[fern] = netz;
+        }
+        if (gestalten is not null)
+        {
+            // W11: Festgestalten im selben Zeichenaufruf wie die Autos (nah alle Schrittbilder, das gezeigte je Gestalt)
+            ZeichnenAutos(gl, netz, FestVerkehr.Lagen(gestalten, vorlage, fern, _autoLagen, zeigen), sichtProj);
+            return;
+        }
+        var anzahl = Math.Min(vorlage.Autos.Count, AutosHoechstens);
+        for (var i = 0; i < anzahl; i++)
+        {
+            var auto = vorlage.Autos[i];
+            if (zeigen is not null && !zeigen(auto))
+            {
+                _autoLagen[i] = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
+            }
+            else if (grafik.Modell(auto.Modell) is { } am)
+            {
+                var (ort, richtung) = auto.Lage(auto.Weg);
+                var anker = new Vector3((am.Min.X + am.Max.X) / 2, am.Min.Y, (am.Min.Z + am.Max.Z) / 2);
+                _autoLagen[i] = StadtSzene.Lage(am, anker, new Vector3(StadtSzene.Meter * 1.1f), new Vector3(ort.X, StadtSzene.Hoehe.Strasse, ort.Y), richtung);
+            }
+        }
+        ZeichnenAutos(gl, netz, anzahl, sichtProj);
+    }
+
+    /// <summary>Patch A 0.29.1: fuer die Toene nur die Autos, die gerade fahren (im Uebergang ohne die Gestalten).</summary>
+    private Verkehr? TonVerkehr()
+    {
+        if (_uebergang is not { } u)
+        {
+            return _verkehr;
+        }
+        var autos = u.Alt == FestVerkehr.Satz.Autos ? u.AltVerkehr : u.Neu == FestVerkehr.Satz.Autos ? u.NeuVerkehr : null;
+        var v = new Verkehr();
+        if (autos is not null)
+        {
+            v.Autos.AddRange(u.Verkehr.Autos.Where(autos.Autos.Contains));
+        }
+        return v;
     }
 
     private sealed record SatzVorrat(StadtSzene Szene, FestVerkehr.Satz Satz, Task<SatzPaket> Aufgabe);

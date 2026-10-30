@@ -156,6 +156,7 @@ public static partial class AutoMessung
             funde += await P8W10SpielAsync(ansicht);           // Phase 8 W10: Hinweisfeld, Tag und Nacht, Laternen
             funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 22 Laternen
             funde += await P8W12SpielAsync(ansicht);           // Phase 8 W12: Vorladen, Fest im Haus, alle Orte
+            funde += await P10P1SpielAsync(ansicht);           // Patch A 0.29.1: Festverkehr wechselt mit der Uhr
         }
         if (MitLernen)
         {
