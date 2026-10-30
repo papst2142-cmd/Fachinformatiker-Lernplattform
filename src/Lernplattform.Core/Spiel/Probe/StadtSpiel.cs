@@ -926,13 +926,15 @@ public sealed class StadtSpiel
         Knoepfe = [];
         // Phase 8 W6: Stadt betreten = Aufbau einer Ansicht, die Festzeit neu fragen
         // Phase 8 W9: ebenso die Jahreszeit der Farben
-        if ((FestJetzt() is var fest && fest != Szene.Fest) | (JahreszeitJetzt() is var jahreszeit && jahreszeit != Szene.Jahreszeit))
+        // Phase 9 W5: nach einem Umzug zeigt die Stadt die neue Wohnung (Modellteile mit Bedingung "wohnung")
+        if ((FestJetzt() is var fest && fest != Szene.Fest) | (JahreszeitJetzt() is var jahreszeit && jahreszeit != Szene.Jahreszeit) | _szeneNachUmzug)
         {
             // Weisung P8-55 (W12): im Haus schon im Hintergrund gebaut (SzeneVorbereiten), sonst wie bisher jetzt
             Szene = SzeneVorbereitet(fest, jahreszeit) ?? StadtSzene.Bauen(Stadt, Ablauf.Stand, Grafik, fest, Feste, jahreszeit);
             SzeneGeaendert?.Invoke();
         }
         _szeneVorbereitung = null;
+        _szeneNachUmzug = false;
         InnenGeaendert?.Invoke();
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
@@ -943,6 +945,9 @@ public sealed class StadtSpiel
     }
 
     private (string? Fest, Jahreszeit Jahreszeit, string Signatur, Task<StadtSzene> Aufgabe)? _szeneVorbereitung;
+
+    /// <summary>Phase 9 W5: im Haus umgezogen, die Szene draussen ist neu zu bauen (im Hintergrund vorbereitet).</summary>
+    private bool _szeneNachUmzug;
 
     /// <summary>
     /// Weisung P8-55 (W12, Teilplan 3.5): hat sich im Haus die Festzeit oder die Jahreszeit geaendert (Geraetedatum
@@ -957,7 +962,7 @@ public sealed class StadtSpiel
         }
         var fest = FestJetzt();
         var jahreszeit = JahreszeitJetzt();
-        if (fest == Szene.Fest && jahreszeit == Szene.Jahreszeit)
+        if (fest == Szene.Fest && jahreszeit == Szene.Jahreszeit && !_szeneNachUmzug)
         {
             return;
         }
@@ -1199,15 +1204,18 @@ public sealed class StadtSpiel
     /// Eine Aenderung des Spielstands ausfuehren (Ereignisse ueber den Spielablauf, also ueber den Weg
     /// aus W8). Fehler des Spiels stehen in der Zeile; laeuft ein anderer Vorgang, AbgleichTexte.Belegt.
     /// </summary>
-    private bool Aendern(Func<List<(string Art, PyObjekt Daten)>> aktion)
+    private bool Aendern(Func<List<(string Art, PyObjekt Daten)>> aktion) => AendernMit(() =>
+    {
+        var ereignisse = aktion();
+        return ereignisse.Count > 0 ? Ablauf.Ausfuehren(ereignisse) : null;
+    });
+
+    /// <summary>Wie <see cref="Aendern"/>, aber mit einer Aktion des Spielablaufs (z. B. <see cref="Spielablauf.Umziehen"/>).</summary>
+    private bool AendernMit(Func<PyObjekt?> schreiben)
     {
         try
         {
-            MitEreignis(() =>
-            {
-                var ereignisse = aktion();
-                return ereignisse.Count > 0 ? Ablauf.Ausfuehren(ereignisse) : null;
-            });
+            MitEreignis(schreiben);
         }
         catch (SpielBelegtAusnahme)
         {
@@ -1222,6 +1230,43 @@ public sealed class StadtSpiel
             return false;
         }
         InnenNeu();
+        return true;
+    }
+
+    // ---- Umziehen (Phase 9 W5, Weisung P9-11 Teil B, Sammelliste 179) ------------
+
+    /// <summary>
+    /// Umzug beim Einrichten wie Python _move (fisi_game_gui.py, mobile/src/spiel.py): <paramref name="miete"/> ist
+    /// der Schalter aus Optionen &gt; Spiel, den die Oberflaeche einmal liest und auch fuer die Rueckfrage nimmt.
+    /// Der Umzug laeuft ueber <see cref="Spielablauf.Umziehen"/> (Ereignis move_home); danach stehen alle Moebel
+    /// im Karton, die Figur steht wieder an der Wohnungstuer (positions.pop(SITE_HOME)), nichts ist gewaehlt und
+    /// der Modus "Einrichten" bleibt an. Fehler (zu wenig Geld) stehen in der Zeile.
+    /// </summary>
+    public bool Umziehen(object? wohnung, bool miete)
+    {
+        if (!Einrichten || Ort != SpielDaten.OrtZuhause)
+        {
+            return false;
+        }
+        if (!AendernMit(() => Ablauf.Umziehen(wohnung, miete)))
+        {
+            return false;
+        }
+        Ausgewaehlt = null;
+        Vorschau = null;
+        _vorschauPunkt = null;
+        if (Innen is { } innen)
+        {
+            _weg.Clear();
+            FigurX = innen.StartX;
+            FigurZ = innen.StartZ;
+            FigurRichtung = 90;
+        }
+        // die Stadt zeigt die neue Wohnung erst beim Hinausgehen: Szene jetzt im Hintergrund bauen (wie W12)
+        _szeneNachUmzug = true;
+        SzeneVorbereiten();
+        Zeile = Wohnung.Bleibe(Ablauf.Stand.Wohnung, Ablauf.Stand.Inhalt)?["name"] as string ?? "";
+        Geaendert?.Invoke();
         return true;
     }
 

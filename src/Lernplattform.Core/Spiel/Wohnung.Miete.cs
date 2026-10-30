@@ -48,6 +48,21 @@ public static partial class Wohnung
         _ => false,
     };
 
+    // Phase 9 W5 (Weisung P9-11 Teil B, Sammelliste 179): Karte "Wohnung" beim Einrichten wie Python
+    // _build_below (fisi_game_gui.py Z. 4956-4978) und _home_editor (mobile/src/spiel.py Z. 4586-4611), Ablauf _move.
+
+    /// <summary>Titel der Karte "Wohnung".</summary>
+    public const string WohnungTitel = "Wohnung";
+
+    /// <summary>"Du wohnst in: %s"</summary>
+    public static string WohntIn(PyObjekt bleibe) => Prozent("Du wohnst in: %s", bleibe["name"]);
+
+    /// <summary>Knopf je Wohnung und Titel der Rueckfrage.</summary>
+    public const string UmziehenKnopf = "Umziehen";
+
+    /// <summary>Keine groessere Wohnung mehr.</summary>
+    public const string GroessteWohnung = "Du wohnst schon in der größten Wohnung.";
+
     /// <summary>set_rent_mode: der Wert, den die Optionen speichern (settings[RENT_SETTING] = bool(flag)).</summary>
     public static void MieteSetzen(JsonObject einstellungen, bool miete) => einstellungen[MieteSchluessel] = miete;
 }

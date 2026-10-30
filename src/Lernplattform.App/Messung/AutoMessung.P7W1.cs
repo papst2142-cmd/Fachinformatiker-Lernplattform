@@ -177,6 +177,8 @@ public static partial class AutoMessung
         }
 
         funde += await P7W5Async(ansicht, seite);
+        // Phase 9 W5 (Weisung P9-11 Teil B): Umziehen ueber die Oberflaeche mit Kauf und mit Miete
+        funde += await P9W5UmzugAsync(ansicht, seite);
 
         // Zeit je Bild beim Kameraschwenk: Median <= 50 ms, 95 % <= 100 ms (bis zu 3 Laeufe, rot nur, wenn alle rot)
         var laeufe = new List<(double Median, double P95)>();

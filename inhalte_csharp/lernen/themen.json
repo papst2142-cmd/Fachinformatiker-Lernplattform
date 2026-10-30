@@ -15,6 +15,18 @@
     "name": "Datenschutz & Datensicherheit in der Analyse",
     "kurz": "Datensicherheit",
     "fachrichtung": "dpa"
+   },
+   {
+    "id": "dv_ot_sicherheit",
+    "name": "Sicherheit vernetzter Systeme",
+    "kurz": "OT-Sicherheit",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_anomalie",
+    "name": "Angriffe & Anomalieerkennung",
+    "kurz": "Anomalien",
+    "fachrichtung": "dv"
    }
   ],
   "systeme": [
@@ -89,6 +101,42 @@
     "name": "Auswertung, Visualisierung & Programmierung",
     "kurz": "Auswertung",
     "fachrichtung": "dpa"
+   },
+   {
+    "id": "dv_cps",
+    "name": "Cyber-physische Systeme & Industrie 4.0",
+    "kurz": "CPS",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_sensorik",
+    "name": "Sensorik & Aktorik",
+    "kurz": "Sensorik",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_signale",
+    "name": "Signale & Messdatenerfassung",
+    "kurz": "Signale",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_steuerung",
+    "name": "Steuern, Regeln & Programmieren",
+    "kurz": "Steuerung",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_betrieb",
+    "name": "Betrieb, Überwachung & Wartung",
+    "kurz": "Betrieb",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_diagnose",
+    "name": "Inbetriebnahme, Test & Diagnose",
+    "kurz": "Diagnose",
+    "fachrichtung": "dv"
    }
   ],
   "wirtschaft": [
@@ -141,6 +189,26 @@
     "name": "SQL-Auswertungen",
     "kurz": "SQL-Auswertung",
     "fachrichtung": "dpa"
+   }
+  ],
+  "netzwerk": [
+   {
+    "id": "dv_feldbus",
+    "name": "Feldbusse & industrielle Kommunikation",
+    "kurz": "Feldbusse",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_iot",
+    "name": "IoT-Protokolle & Funk",
+    "kurz": "IoT",
+    "fachrichtung": "dv"
+   },
+   {
+    "id": "dv_netze",
+    "name": "Netzplanung & Netzkomponenten",
+    "kurz": "Netzplanung",
+    "fachrichtung": "dv"
    }
   ]
  }

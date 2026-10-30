@@ -116,7 +116,7 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             funde += Ergebnis("Klausurauswahl " + name + " (Wechsel zu \"Prüfung\", bis zum Bild)",
                 await BildMessenAsync(ansicht, () => trainer.ArtWaehlen(TrainerTexte.Pruefung), grenze: Geraetegrenze));
-            // W3/W4: AE und DPA haben eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
+            // W3/W4/W5: AE, DPA und DV haben eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
             if (Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
             {
                 Fund("Klausurauswahl " + name + ": Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" noch zu sehen");
@@ -169,7 +169,7 @@ public static partial class AutoMessung
         }
 
         TrainerSeite? trainer = null;
-        foreach (var (fr, name) in new[] { ("ae", "AE"), ("dpa", "DPA") })
+        foreach (var (fr, name) in new[] { ("ae", "AE"), ("dpa", "DPA"), ("dv", "DV") })
         {
             if (await SichtPruefen(fr, name) is not { } t)
             {

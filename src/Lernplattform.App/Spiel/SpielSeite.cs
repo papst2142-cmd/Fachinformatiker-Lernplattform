@@ -7,9 +7,11 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
+using Lernplattform.Views;
 
 namespace Lernplattform.Spiel;
 
@@ -930,7 +932,8 @@ public sealed class SpielSeite : Grid
     {
         var karton = spiel.Einrichten ? spiel.ImKarton() : [];
         var schluessel = string.Join("|", spiel.Knoepfe.Select(k => k.Aktion + k.Name)) + "#" + spiel.Einrichten + "#" + spiel.Ausgewaehlt
-            + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck));
+            + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck))
+            + "#" + (spiel.Einrichten ? WohnungSchluessel(spiel) : "") + "#" + Schrift.Gross;
         if (schluessel == _tafelSchluessel)
         {
             return;
@@ -989,5 +992,95 @@ public sealed class SpielSeite : Grid
             reihe.Children.Add(aufstellen);
             _einrichtenTafel.Children.Add(reihe);
         }
+        WohnungKarte(spiel);
+    }
+
+    // -- Phase 9 W5 (Weisung P9-11 Teil B, Sammelliste 179): Umziehen beim Einrichten wie Python --------
+
+    /// <summary>Was die Karte "Wohnung" zeigt (neu bauen, wenn sich Wohnung, Geld, Miete oder der Schalter aendern).</summary>
+    private static string WohnungSchluessel(StadtSpiel spiel)
+    {
+        var stand = spiel.Ablauf.Stand;
+        return string.Join(",", Py.Str(stand.Wohnung), Py.Str(stand.Geld), Py.Str(stand.Miete), Py.Str(stand.Kaution), spiel.Ablauf.MieteSchalter());
+    }
+
+    /// <summary>
+    /// Karte "Wohnung" wie Python (fisi_game_gui.py _build_below, mobile/src/spiel.py _home_editor): Untertitel
+    /// HOME_SUBTITLE zum Schalter aus Optionen &gt; Spiel, "Du wohnst in: ...", rent_text, Beschreibung der
+    /// Wohnung, je groessere Wohnung Name, Beschreibung, Preiszeile (move_texts[0]) und "Umziehen" (nur mit genug
+    /// Geld), sonst "Du wohnst schon in der größten Wohnung.".
+    /// </summary>
+    private void WohnungKarte(StadtSpiel spiel)
+    {
+        var stand = spiel.Ablauf.Stand;
+        if (Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is not { } jetzt)
+        {
+            return;
+        }
+        var miete = spiel.Ablauf.MieteSchalter();
+        var teile = _einrichtenTafel.Children;
+        teile.Add(Schrift.Text(Wohnung.WohnungTitel, "Klein", FontWeight.Bold, "Pinsel.muted"));
+        teile.Add(Schrift.Text(Wohnung.WohnungUntertitel(miete), "Klein", FontWeight.Normal, "Pinsel.muted"));
+        teile.Add(Schrift.Text(Wohnung.WohntIn(jetzt), "Normal", FontWeight.Bold));
+        if (Wohnung.MietText(stand) is { Length: > 0 } mietText)
+        {
+            teile.Add(Schrift.Text(mietText, "Klein", FontWeight.Bold, "Pinsel.orange"));
+        }
+        if (Py.Str(SpielDaten.Get(jetzt, "text", "")) is { Length: > 0 } beschreibung)
+        {
+            teile.Add(Schrift.Text(beschreibung, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        }
+        var ziele = Wohnung.Umzuege(stand);
+        foreach (var ziel in ziele)
+        {
+            var zeilen = new StackPanel { Spacing = 2 };
+            zeilen.Children.Add(Schrift.Text(Py.Str(ziel["name"]), "Normal", FontWeight.SemiBold));
+            if (Py.Str(SpielDaten.Get(ziel, "text", "")) is { Length: > 0 } text)
+            {
+                zeilen.Children.Add(Schrift.Text(text, "Klein", FontWeight.Normal, "Pinsel.muted"));
+            }
+            zeilen.Children.Add(Schrift.Text(Wohnung.UmzugTexte(stand, ziel, miete).Preis, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+            var knopf = Schrift.Knopf(Wohnung.UmziehenKnopf);
+            knopf.IsEnabled = !Py.Wahr(Wohnung.UmzugAngebot(stand, ziel, miete)["fehlt"]);
+            knopf.VerticalAlignment = VerticalAlignment.Center;
+            var id = ziel["id"];
+            knopf.Click += async (_, _) => await UmziehenAsync(spiel, id);
+            if (Schrift.Gross)
+            {
+                // ab 160 % untereinander (lange Namen wie "Loft mit Dachterrasse" sonst getrennt)
+                knopf.HorizontalAlignment = HorizontalAlignment.Left;
+                zeilen.Children.Add(knopf);
+                teile.Add(zeilen);
+                continue;
+            }
+            var reihe = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+            reihe.Children.Add(zeilen);
+            Grid.SetColumn(knopf, 1);
+            reihe.Children.Add(knopf);
+            teile.Add(reihe);
+        }
+        if (ziele.Count == 0)
+        {
+            teile.Add(Schrift.Text(Wohnung.GroessteWohnung, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
+        }
+    }
+
+    /// <summary>
+    /// _move: den Schalter einmal lesen, mit ihm fragen (move_texts[1]) und umziehen; "Ja" zieht um
+    /// (<see cref="StadtSpiel.Umziehen"/>), Fehler stehen in der Zeile.
+    /// </summary>
+    internal async Task<bool> UmziehenAsync(StadtSpiel spiel, object? wohnung)
+    {
+        var stand = spiel.Ablauf.Stand;
+        if (Wohnung.Bleibe(wohnung, stand.Inhalt) is not { } ziel)
+        {
+            return false;
+        }
+        var miete = spiel.Ablauf.MieteSchalter();
+        if (await Dialog.Zeigen(Wohnung.UmziehenKnopf, Wohnung.UmzugTexte(stand, ziel, miete).Frage, "Abbrechen", "Ja") != 1)
+        {
+            return false;
+        }
+        return spiel.Umziehen(wohnung, miete);
     }
 }

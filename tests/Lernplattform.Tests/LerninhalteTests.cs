@@ -264,11 +264,12 @@ public class LerninhalteTests
         Assert.Contains(werte.Kennzahlen, k => k.Gesamt == ae.Karteikarten.Count);
     }
 
-    // -- Runde 1 AE (W3, Weisung P9-8) und DPA (W4, Weisung P9-10) ---------------------------
+    // -- Runde 1 AE (W3, Weisung P9-8), DPA (W4, Weisung P9-10) und DV (W5, Weisung P9-11) ------
 
     [Theory]
     [InlineData("ae")]
     [InlineData("dpa")]
+    [InlineData("dv")]
     public void Runde1_ZahlenJeArt_AndereSehenNichtsDavon(string eigen)
     {
         var alle = Echt();
@@ -310,22 +311,40 @@ public class LerninhalteTests
         Assert.Equal(ae.Ap2Szenarien.Count, ae.Ap2Szenarien.Count(s => s.Zugehoerigkeit == "ae"));
     }
 
+    [Fact]
+    public void Runde1Dv_AeUndDpaBleibenWieW4()
+    {
+        // W5 (Weisung P9-11): die Sichten AE und DPA zaehlen genau wie nach W4 (1 084 + 300 Karten, 1 615 + 370 Fragen,
+        // 330 eigene AP2), die Sicht DV ebenso mit den eigenen DV-Inhalten
+        var alle = Echt();
+        foreach (var fr in new[] { "ae", "dpa", "dv" })
+        {
+            var sicht = alle.Fuer(fr);
+            Assert.Equal(1384, sicht.Karteikarten.Count);
+            Assert.Equal(1985, sicht.Quizfragen.Count);
+            Assert.Equal(330, sicht.Ap2Szenarien.Count);
+            Assert.Equal(330, sicht.Ap2Szenarien.Count(s => s.Zugehoerigkeit == fr));
+            Assert.Equal(300, sicht.Karteikarten.Count(e => e.Zugehoerigkeit == fr));
+        }
+    }
+
     // -- Klausur AE mit Probe-Inhalten ---------------------------------------------------------
 
     [Fact]
-    public void KlausurAeDpa_EchtSpielbar_DvNoch_MitProbeVierAufgaben()
+    public void KlausurAeDpaDv_EchtSpielbar_MitProbeVierAufgaben()
     {
-        // W3 (Weisung P9-8) AE, W4 (Weisung P9-10) DPA: eigene AP2-Szenarien, DV noch nicht (Hinweis bleibt dort)
+        // W3 (Weisung P9-8) AE, W4 (Weisung P9-10) DPA, W5 (Weisung P9-11) DV: eigene AP2-Szenarien, alle spielbar
+        // (der Hinweis "noch keine Aufgaben" kommt bei keiner Fachrichtung mehr)
         foreach (var fr in new[] { "ae", "dpa", "dv" })
         {
             var echt = new KlausurInhalte(Echt().Fuer(fr), Umbenennungen);
             foreach (var art in Fachrichtung.Nach(fr).Bereiche.Where(b => b.Rolle is "b1" or "b2"))
             {
-                Assert.Equal(fr is "ae" or "dpa", echt.Spielbar(art.Art));
+                Assert.True(echt.Spielbar(art.Art), fr + " " + art.Art);
                 Assert.Equal(4, echt.Art(art.Art)!.Themen!.Count);
             }
         }
-        foreach (var (fr, arten) in new[] { ("ae", new[] { "softwareprodukt", "algorithmen" }), ("dpa", new[] { "prozessanalyse", "datenqualitaet" }) })
+        foreach (var (fr, arten) in new[] { ("ae", new[] { "softwareprodukt", "algorithmen" }), ("dpa", new[] { "prozessanalyse", "datenqualitaet" }), ("dv", new[] { "diagnose", "betrieb" }) })
         {
             var echt = new KlausurInhalte(Echt().Fuer(fr), Umbenennungen);
             foreach (var art in arten)
@@ -491,6 +510,56 @@ public class LerninhalteTests
             "6abdc9648952e19c", "c85f9609c39121ff", "60a7581396a0a80d", "313ca843d50d3fe0", "58db33840ff4bbaf", "1fbdf53df44e160e",
             "1c211e5bdd0f9893", "6330fe9918351bb1", "f453432115bbfe63", "3a898db99a65010b", "2ee5dadb1bd220d8", "671b8efae467761b",
             "c1c04ab73a2e0fa8", "5c01dc9a2919207a", "a1d26f5185f81038", "346545a05b7bbd90", "697ba97857872aad", "785c7eb28ae9dde6",
+            "ed0877df855f0055", "c758383c7cfb7f5a", "e4360427daf6516e", "366e1b3ae3437052", "c44ffd558794ec51", "6ef08bf2b2c5855e",
+            "e2bc6202814ccdad", "5119bf118f8ba189", "48b8827152db9594", "20a68be6d45d909d", "dcfb3008c35dab31", "1df3051ba2a8dbfc",
+            "dbb02103df099aea", "35a99a91f9fee0db", "ee4f43b62e14b4c3", "3300df7a4329d5a0", "046b70a5e3d82e20", "ac8e29864701fc0d",
+            "8991f6c8fa7ca586", "fa2267568a0e5eb0", "1071698abd3b7fe3", "011543c0993d0ab5", "c9b1af83256ab31b", "41432c257f8dbe9d",
+            "a68b3d36fefef668", "ffed12a5d275f539", "1a1207091441fa7c", "88520b75c05173f1", "2be31eb9cef51005", "92d32e5a0c7503ce",
+            "f5b7dfc6139bd231", "867b41b1fe3f5d6e", "b79dae113bb410b5", "5efd7397150b7ac0", "1f584b6f95672f00", "ed9c92173226a4fc",
+            "4aea7c961d691a5f", "1f7143f248dad233", "420619c3d00e41c6", "31a4c340479f131b", "331e67ad7709a818", "ba3e294968c238a4",
+            "fcd0956c0d21f75b", "23d5ea5dee6dafbc", "46dafcddf523f629", "e68c4af04e77ee48", "cf179a3cee74b3f0", "e26b86f806d92577",
+            "d8158d1ccc2350d2", "de30a441308542d4", "3e58a6673d90f6f3", "ac2d49dd86ef9139", "ab9b7d80ec8787a1", "4f9bcb3783ffdaf0",
+            "79d02640b6e5a1c4", "119b22f37b85a4c3", "4957524ad91e3641", "ac77fbc7376e0ede", "19ff57509a954786", "c380953cdace18c7",
+            "11d89e3e503851f9", "94eaf6ebe43f6c7b", "e04300c397210bfd", "72fdbb0dd85be2ab", "a69a097a2d6224f2", "98fa6a7cfef4f535",
+            "66f9b8c158634d66", "6636a1a59e57ed26", "b49c4ea992e03c9b", "6016a0cdcb2c99b3", "f854fbdd3d6c5a4b", "55d023de635b33b7",
+            "eb42a9ab55e6c388", "8b52e84c0f5f0de4", "2e41320c8615e718", "86ca109655671faf", "1e3c3232ce7d828c", "dd566267e7783b4b",
+            "967caa6d6a4103b1", "5f9ef95ded172dbe", "17a84f2954b7119b", "e2b48810dfc6a06f", "209441edbdd62733", "a795b31f970e5f7b",
+            "cbceb46a52614766", "5790d2d5af8b496a", "5a585b455c0a0c17", "70ab188e72f5d42a", "1a4754f61cf7bf25", "8d47d6d46549701b",
+            "cb2f044a30416faf", "57e5dac8e73dadf4", "58eb62570fdac47a", "3401fb615ed3df97", "b46bcfee10315ecf", "0072b1d0b8e159b5",
+            "e8fbdf8ec3faf562", "f70031a01545128d", "e4dbccbc593daa21", "c45799514e5aab5e", "6592157e4f8ceb06", "e767d19b7b58a1bf",
+            "5c0bac11e85bd5a8", "9b991ecdc7400889", "e8c6e0008dc3a8a9", "d7f5be7859651ccb", "8342806c06a4639e", "563bbfa7473f560e",
+            "2960df1c2c148df0", "c5908a989c49c58e", "3787863e4abe14e0", "7257ff0d70d85ab3", "a8b9fda33b5b0ebc", "204a3eb249954fd1",
+            "b3820721ed65d984", "e9d459f60461ac6d", "8addcc12b0b5343b", "d16dc6a3ad93884a", "6b890763ff45f437", "51f78604c42f7c29",
+            "b5be707b0cec3472", "baf711447bdc31ce", "95c0b32cb574c562", "338ec51048164c3b", "edafab8d3661c4e7", "24ad0d5bd96ab100",
+            "cbb52e6dc1eba18f", "ea28dbe27f97b1be", "7561db5bcb6b4dad", "34226cf4f0586441", "84aab13d8a336fdf", "092af5344d48915d",
+            "3259a42c87b88ace", "c407afd34f300cac", "e43f30c8ae62d88f", "4c2f3069fec47fe4", "c0ecd118e2f7d0c6", "b78bf729720fde55",
+            "e2b6a92499b5d9ad", "d41786960fc66b7d", "72323db269db1f39", "6523000e98697c6b", "1b12b2f5c8c429dc", "70a9925d804fe29e",
+            "d46dfe9c4e3b7841", "aaf855f8c609ce04", "8d21f7cf7d6f11f3", "8f39a4c5ce906550", "6f1c0e3bc38b1118", "526a2c35d131f785",
+            "0052b3218f37d727", "5520ddbca7d35c45", "4c41a206aa15d4dd", "644a0657c7048acd", "61ebea8342cb31f1", "2bb18008af43f706",
+            "4627fedd1754937f", "905540b1e9d9f55e", "212bfbbe4a1a933d", "6e6f0309ba16cdcf", "843e5a6cd2676534", "e3f239d08cb4f1c9",
+            "9ea7d50df88d0db2", "fb52787f4d2a6652", "e3cdbd3b0fffbf9e", "4f795bf9e936f60b", "13e5c3c17dc55d85", "b67db6c423ea6e77",
+            "c2a1de4bb755d59f", "eb026258235dbef5", "681ae90f6e18b3ba", "85774100484f6052", "a50589626c209307", "a43f9bf5c57bbe7c",
+            "5cc60e72cdd85f5e", "8238a65359147546", "dcc6ae43cc943693", "aeba53e0df441fd9", "5c3534e3cc43042a", "09936f410ee7e7fb",
+            "e65640c9c8919114", "34337aa54e48ced3", "bbc01d13b0ec7d74", "adceca515784ab0e", "5340585bbd39f985", "c6d85a49f258d517",
+            "e594e852af0c0b42", "264bb5132e02e903", "d5b86b73cae55c6f", "dc86232483946912", "d492786c6e3762b6", "da521df815aec34a",
+            "3e51a2896e500956", "4d18015d4cb540f7", "995168ca01c2d26b", "7184ba4a615f5eec", "e80336e58ad41c83", "bbbeae9ac54cf611",
+            "96c19f10d9f9d084", "88264766e1a508b7", "5c3204d256b6e0b9", "858019dd83118518", "aec9ab0633fbefa4", "5632cb2c020263dd",
+            "01eae7162064517e", "bd6264ecb758ba80", "f0abda8784cd2707", "6de30ae4a0511923", "31e27cc1e0b8044f", "e61a82fd5c85bd12",
+            "7017ebed008ff3fd", "309b9cc304f8164d", "a0b021aa196d4591", "52ea8438722cbd47", "cb8b82004576126a", "7f17d36f79ff971d",
+            "cd5c2400b21604ba", "bde292548fc539ab", "ed43b20959cb6ba0", "2002c88171a287cd", "06cfd75a28994213", "79fdbb04ea11b66e",
+            "28e5401776659e81", "8b44485775fff671", "304ac44f18b55fc9", "e5cde4e690f525d8", "c4c78b33a41f3c72", "3d0471a03041b9e7",
+            "98595f5af2a18261", "89052922c76b7759", "c880bdf16af03983", "e7cccd211cde49e6", "627cd2061489f3e9", "c2c4a35f8933a263",
+            "a9d7bafd964288b5", "543e498e7b51b7e2", "ddd555434f2371c4", "9f690e5b5a01f0b0", "c8e243730150c5a1", "ade090734a3b18dc",
+            "4cc456016b4be9f8", "7e6c3c46585e2452", "1d46054b473675a2", "2bce4d50c29dcf56", "797ea25d489fa7e2", "fc0dd914a61c476a",
+            "e4608bebe36937dd", "fa3ec6aed0799ef6", "ead17f77d5644052", "9a786eda53909239", "965e9130b08649d6", "042a7b3040fa683a",
+            "55402ddf386abfa6", "d35ed23486bda474", "282ea65e9a9bb331", "cb3e8c70815b666f", "991b495d673d58a6", "11bdfe3193b442e3",
+            "94c55c68afce4bfe", "b88733fa417e8e1c", "a36c58af3b50fed7", "213a316710925b6c", "c9230277be5bbd80", "811418429192ee00",
+            "8ddd370897add1e0", "7e5140221de6f90c", "50570c3e8d04f75b", "af8ef485053b60cc", "10192624e9402015", "7bb37b13ec6868b6",
+            "b3015bf496ed3d5b", "618b886a8c7a4f8a", "6f93e09594a788d6", "d0c1e4e8dc18264d", "879ccb2ee6cfa1ca", "78b1f47ab6f7d9c2",
+            "b9f6754b5d85d8e0", "3a43782dec30a3fe", "492bca001a41f913", "3e7f5a46d8c881a1", "08faf37889bbafd4", "b2e150fc323d7b76",
+            "6ed9f510ba5f7a36", "3a6e12000d1e005b", "0601d4bf22ddf4ea", "5fdf5d525a297633", "d3e23e06e94aae96", "87ec5934d56aad7f",
+            "2ccf0c9291ae9d0f", "52e60e2833d02dd5", "bab61ec6234fc969", "0d8d2f1aae1787b9", "6b3b25093db6ff73", "d32d599acd3a47a3",
+            "020ac6d956868b9f", "b3e54d12fe3d2ee0", "322d2a03cb415b42", "4e4c33396b9bbe11", "b6af17fa0147fa92", "bfd2bbd99ddd9d33",
         ],
         ["quizfragen"] =
         [
@@ -617,7 +686,68 @@ public class LerninhalteTests
             "7263eaeb0fa4e113", "7e4162d501783d45", "9fe3d71449d4cff7", "97e939153eb417ea", "0549569e32b1862c", "9a70227d8c36774d",
             "fe5d093cf650bf23", "f04385ee80e361e9", "abd9ecc8d5d0f688", "3d579579929537e0", "c8f1c084ed5f6c50", "0159f0237085738b",
             "7a62b183236d7736", "8eb689bc69441fd5", "e0d05aaef39b463a", "81df02b6c5a087fd", "bffc3ca2a9b81e5f", "af5d562be0e1d0a0",
-            "efcf62f8dd11bbe8", "6da0c9d7603bb78f",
+            "efcf62f8dd11bbe8", "6da0c9d7603bb78f", "4253db59c1f17c5d", "6ff147e8eabb017c", "c95a78b8fb93e842", "de6d1f34be523850",
+            "438db4ad5e59c4e0", "4e7835906ce2a682", "998250589bd2f74d", "5862fc4b9a611b33", "8d3435de49861df6", "46843b76cf8fbfee",
+            "eca7096fb896878c", "2fe67a3ee8066445", "fd3f73f898b993be", "d69f0cb2f5eed2ae", "30e83f12c52cad42", "a992897ec2f334b2",
+            "b227ed22b2d68224", "a8853346f5c24e1c", "c8d829be889f7e43", "a29b0a2fbaab17ef", "8b6e41a3ee104a16", "578740400146a1fc",
+            "e88f2c07f04c8c4b", "c27d12cef857c471", "804219cad3209926", "16cb3c8064bc4d0a", "87f0b6c024d3eb51", "c410da7026dd3b69",
+            "b721cffa64b05c50", "99b1595ef9042c1f", "2f49afe1793bb702", "7374bb3744459073", "95b0f127acc30bb3", "28fb46f045efaa71",
+            "8671c2ee14c68bb5", "054bdf2c4ed4104f", "3cb76738616394e4", "27eb1da82ce47149", "302770728544366a", "b089250784dc0efa",
+            "4caa9bc12763aed1", "a4ce5b35e222728f", "fdb6b4247cf16c3c", "78a64ee7b34d07fa", "ecabcb6191f3411f", "9b7160bb22f24228",
+            "7d5ea4c25928bc23", "e13c7ff99747c390", "e4c9c0f123485470", "57afaede6a173c04", "1c8a69ec2481fac5", "0fc22568fa749951",
+            "87b41a1f1943d4f0", "c9b08fa24b152c5b", "fe80b8752b2bec59", "aab3df111a765c9f", "549354edb2b673a9", "8ec7ca6a1e498478",
+            "09ba0f5512ed0fc6", "ebc2fc51b732bb64", "feeda5407ec4f435", "db53b8db93e455ba", "5a258f68f3288d90", "2404a167f677ef07",
+            "5e8a02e2586c2c11", "a9f482cfe8349e69", "5c0b8dda06a270e7", "aafb8629d1c1ba84", "1823f5bf3b1f572d", "69b7ee346d5eb9aa",
+            "16373af656e58dff", "7d6ac54d5ca8f853", "334b0feefd234bae", "7289ae30bb59b98c", "d1b845aea9cafc34", "9ec92107acc805e7",
+            "ec146dcf9a835a99", "9416d789a60092ab", "31a7d664f8fc918c", "4d92a2438e4c0b36", "b2b3f340f5939426", "7899b93a00917b7b",
+            "3c66f48b985940b4", "f8c8e6ff3402527c", "1ffc1cb2211d8e54", "52fe81dabd11f007", "83e9d6a97594e416", "0e82ee4ee0b3cc75",
+            "75dbbdd50b782ac6", "3f0d0618e0b6cd8d", "87e935d1f84d0365", "4349cfb569df9a48", "0a4a7f058f194ab8", "dae3fa0e7598e89a",
+            "188d574ed4a8871a", "154c74b0fc76244e", "69cbe64724a3c654", "6d941056dec8f459", "865fd67f9a27831d", "256db0564a80a1b1",
+            "dcfbc460b475adce", "9acb87ad3de500e4", "f880f7fdd435e1f3", "753a103fe148f09f", "36c6845f6af1125d", "9fb0673e69ed5bf6",
+            "49a9d816dc36615b", "c734f93af6bcd250", "2da1cbd5641f2f6d", "f2b99f16b5aaeb58", "9d99f07236887676", "55b399ca7508012c",
+            "f48030c44310111c", "1d5576469f7819bc", "9e6fc4adf0f40218", "1720d904e8d3138e", "d846a69a2d658202", "b0c9f2126a96fec6",
+            "706904a0cc5b9be0", "663a3b134293b77a", "ce4f55221b2baee3", "70a2b7cfb14ff5c7", "2aa4419071242da1", "742106300b037529",
+            "e83f46048192a530", "1ea174b31c5f482d", "9243b74ffd2f2293", "2a8768e5d19f696d", "f70d92b5bcfe2670", "98f8f175ab56c3b8",
+            "3fdfae91f8c9c1d0", "21a7ae0e8b0d2665", "5b992b3ae7673af4", "e48ae5f121d6f306", "297b54818ba43818", "2748ba77b36f71b6",
+            "c7640fc36f51ef06", "d490884a4c247f56", "9c0f355423378c1e", "6379deb14afae5cd", "5ce0560fe7ade1d4", "84ff130863b9385c",
+            "443cc37c160b862c", "3e765ccc401bfab1", "cad2f0578f392a52", "44cb93f76ae912c1", "db33972064bb017a", "12ccdeb323076221",
+            "ac95be8159c350ce", "00a29fdb4ed969de", "e3c454717ef1cb03", "3da2b516d5e4b4ef", "e2d5692cc6386868", "6882c2f86873fff8",
+            "da00c74b641ef2c5", "6f9c8237804c4672", "1d45071891846f7a", "1eb4e4aa759e08cf", "9c89ecf8d87e298e", "8d8701296ec446b9",
+            "390ff11417f14f36", "2fda18f315861a6a", "655d05b3811c3fa2", "68cd36220ca5cea2", "620efbf8463191b0", "36224ef9eb291afd",
+            "b66c7a77b3df43b4", "2e587dbd5caaefe7", "6a2c04810b7dcc69", "76ff50e411badf7a", "7aac3f892b172928", "8a6bbdcb3382a5b7",
+            "74c47dd7308c044a", "f5028acd670c33ab", "20d18f32fc55bc0a", "6700a28c72a0984d", "9438bf58cd1f0521", "43fc103853c2a1ed",
+            "19e672b45f7d2ad8", "25f6fd2305795360", "a4babe8d9b6c27d4", "af0b88599bb4904c", "137859f0b36b998d", "4110aaab1b2a4aa8",
+            "b2566491f6be4077", "dec601ca52513dac", "b0e77cbd779e973e", "25d46117813993c7", "06d54f3e316c5a7a", "cb5614ad99f5758a",
+            "34754f29cd76abeb", "0c31512d1b49a4fd", "acfd8a72dbb08cfd", "671834040624fa8a", "456b317d29af0666", "34d6d8000b318539",
+            "c27caf48808a9bcf", "8c6c39044af5cf45", "ae8621509448b0f7", "b669a3b66fc3cc95", "fbebf6f24c402a78", "fbafd9dc745f8f69",
+            "abe52a191fdfb1d4", "434129885ff401cc", "4a728c9e3369e14f", "95b24b7f21119634", "440c9eae79c7f4d1", "29fa2e6661875172",
+            "34e071164a653d8e", "de15cb7f03739960", "4cb6eb2b9b03d305", "613c723478f16685", "9c331fdff9f496c0", "1cd0dc8f6aa905d7",
+            "fd9030dcfa0ed098", "e529a63f654d4fae", "c2caa0caf1e9a8eb", "40c3ce190e74f866", "7f335631d8dda74e", "e9d91c320a4b9622",
+            "97471594ef153ea6", "a1bbaad2e9bb0280", "c684f4ad10313a1d", "47010b1709ff6cc4", "8e961462016c4996", "b9503416b33d1290",
+            "106e68bcec8f5668", "53c1bacb9edc4d4c", "8eb3e506c3d2104a", "d309831bc45bcb97", "d92dff09494e0571", "ece182b27b29a84a",
+            "bc48ddf9e7f6359c", "fbbd199f1e4beb44", "d2d7a1866b60bdaa", "92b0f97f0b0e3485", "f84a0908d59349e6", "bc872b46df50a208",
+            "443eadfa0ec50957", "d142cfbdff6ae282", "dd21409aff0a8b26", "8165939eb25dd97c", "2730d6d5c8c202d3", "5a5a4fa513117fba",
+            "d1578cd3067325e5", "2843e06b37660d28", "6105453b8574cb66", "bcba27a1b118d89a", "ad7e1bc2d7bee805", "a6368267c251379e",
+            "82e16a52b26d3d65", "98f3a9d94238c9ab", "f108047a51d4d267", "3d455f5a2af64572", "528ba1089ef2770c", "f2d11fa447722f73",
+            "7357700b48354684", "ef95d256487eda2a", "8769174540049a0c", "571cd002dbce972d", "f13c8a3ed4b5e935", "876e81bdbdbc6127",
+            "e00e378e328474d9", "54c7ce845eaeff19", "0621c3c71562eade", "0f426117331f7294", "f5bb542a3c13d527", "c942284db39af422",
+            "931fec0f09066fb4", "89d28c121e6b8dec", "616b35abed4379bf", "cda8f82c6e0df4b4", "d101503299fcc739", "d3d5fcae6aa6fa91",
+            "beeec0db9cc5c731", "4017f7f21ee7802a", "cdf8157d17888c8f", "3d5be73f75280e74", "c8b7417fbbcabc2a", "99269e99c165cb93",
+            "cbbcf1dbf76666be", "bda82656806f39f5", "0a031033e2ad0a72", "3a3ddcd9fa5d9895", "fd7db0213f5a3409", "58b673b69ae9b300",
+            "476fdc0d5901ba67", "4bba47086f07fc1e", "e65b9b22f3556c6c", "3bf3ac45cd5b2ea4", "72815ffe7b890d98", "cfbed863089f5c67",
+            "420b777801d2766d", "d7c9476605e3891e", "e58d987450c2ba10", "8539adf30fad526f", "3dcf92595093298b", "109bfe060ee74252",
+            "f6722544483fedfc", "021e4bf709687a36", "f08918d4c3d85336", "1568652c380f0010", "278ab679537bc36a", "1e09f992b786a90c",
+            "c6214a0a196434ff", "f33862b9f5f2930e", "28c4437bb1e45f30", "dd5a240a1b7b25c7", "e37da0476da488bf", "8574291891e04e4e",
+            "7673a6cb62307687", "68fcbd1ac3dfa866", "1213e2714d1e6a71", "2cf7538b4f88cf42", "0f717c9cd6e35a65", "9b8ffcecf2cbecde",
+            "672ffd8f22b257b9", "bc64a18f0cb85095", "10237bc5779f521e", "1645cf94e5afff85", "bf26a4cf03b2808e", "432b6d0cd5d43c83",
+            "9301bd95541764b6", "4179bd1a30987f55", "9c6c46f658fcb894", "456587d20877343d", "f52d3c4f69234d5b", "30f8badae2359003",
+            "de6b87235377dfb2", "cf1644bf9bc27291", "4b8655d93726e61e", "0684bd79e1cea3b2", "cd1375383fd820cf", "d64593ad3f70eae8",
+            "fe59c138acd27578", "4d121ddd091a6245", "55b14deaa3453b9b", "bcdfe6d8e780f8db", "b2c2a6ee7d6a070f", "8d8348e2cc80efd0",
+            "6dcba5a3640e2dc8", "f70263ccace8acf9", "2f7475d1898a1ed6", "6ca3c66830634bf0", "8bfd12e7e229d9e4", "72c7361ebe629187",
+            "9abec21268fc373f", "33c704aa8fc4b29e", "614d46ee8313d1f2", "bc64fa1c80817654", "418de7e209977756", "5404c93fc9d790ef",
+            "38dc42d6ff484ea7", "ec6386a5bd62fef5", "9fb13e79c477542c", "5d88786b5aa4d92f", "a1a1ea17a2d27111", "a1bbec6a1a08eeb7",
+            "fd3bb9151fe26c71", "51e0493547be7783", "334247b7d876e6cc", "e4b0ad1e19db729c", "d27278bbc53f9dda", "bb9d0251b98e45a9",
+            "7cfaacbadc9811b7", "d704fdcc3ea7b302", "3ea0a3f4650bf68b", "37508622861855ab", "a78c82c2df6f9b7c", "ea7749a4b6b1d82d",
         ],
         ["szenarien_ap2"] =
         [
@@ -731,6 +861,61 @@ public class LerninhalteTests
             "77cf18bf5c19df13", "8c4db985ad2d6e53", "d2421be9db0e3fe4", "11e45a14eb283d66", "8e77fddb4f419354", "7820d1c48e47370f",
             "62e6fabeb05fbc46", "9c884d9c5c431c17", "b56080120800fda5", "f649acefb9121900", "a5d5c06149541bf3", "91349dfeada15702",
             "6f67f1e5fed61185", "a45d0b9492825529", "616ca096e16afd6c", "042506a3fa5b0eff", "7402848d201c8c5b", "7f01da77a1c3a867",
+            "407b1d8df727cd4b", "c2d32fc406e1479c", "e58af411336f4090", "ff385da7c1452806", "3517e571b560e8df", "930941419d3c64f8",
+            "f649bb75b69b73cc", "0076b80a59292a4c", "7bf9859d40fe82bb", "2ea1b1653ea2959a", "9df7a8ff7a3a9eb9", "25c296fa2818329f",
+            "5e3b7fc6a1e6efda", "2869fd138c651957", "c37cfc5badf65f56", "a723f0d2c390367d", "e238d0f5aef77d14", "8992b3de07d1ec2e",
+            "5f8d9f50206d1509", "20e3f31c44dc6603", "7d606f5ce1544c55", "d2d6fe0173ae64be", "6861bb346ae6acea", "ba52d3e60eb38f23",
+            "f38005b0d8396c02", "0a305ad63ecf5872", "0840b8301dcc5a05", "cad20087c4ec77d9", "2cc0d7a6c770efaf", "fb57187b0122cd16",
+            "a6570d400474463b", "949dd8da4d99c2e5", "b7b18a4ec0f362ae", "f5f290822429a720", "697c7dbd77d6f61d", "7641859f4364a745",
+            "74f032bf990da699", "a4fd8d4b2753a450", "b0a12015d01001d3", "6981a9d59e9136a6", "f84cbeea61947f19", "ead542b02add845a",
+            "cafb7f8b8783cc5c", "6102fe28906e548a", "12a3cb3a494b0374", "156e066dafd98cfe", "7dd0c11ca96c50a7", "8b99949998369c59",
+            "63092f5ca0d78244", "890eb4c54b57ff93", "30b458dd724d5779", "fd1269537fc57d33", "6dc109c4fba17c32", "929b3100c8456378",
+            "b1804abc25fd66da", "88f14ef8a2a1b5da", "0923d8036b97d733", "f826afac87aceb88", "4f82493a692eb053", "9d435bd73b27ea54",
+            "0e6509073f662562", "29c4125031d53061", "268a4f8212ae2b15", "9556fc7856a4ab95", "c77c5f99dfb1049c", "1ffe2d01f0b0f4bb",
+            "54c598d5acd3d260", "1bdf60916e5396ce", "919595e9b723a1d4", "72c6f74e852c519f", "d58f27da39a5eb92", "3b0d254199f403e9",
+            "1e8d00112ba7bf91", "34a7dccfbd6b0413", "cb3f72858e7ca3b1", "6b4f04ec5966a017", "c003eb2971c7aaa7", "6f9aca892381d44b",
+            "f4c5a44eefe6736a", "19f5ab5708b58140", "1b183b9e2a7b5833", "4989d04f8bd12676", "f2832e13dc094efe", "45f39d4ccf4f6799",
+            "9018f2b36d1d38f3", "f0aa98de15c90ddb", "5ee516430bd59dbe", "0c140c6b0e8b18c1", "6f51920c90c9e0ca", "16a30517234d54a5",
+            "8ea5cf3b77284c69", "8d93d26ffafdd7f5", "d279a24da6919685", "3a3e4c2a4676a98c", "753e3878a25d6965", "b24c82afd8a35141",
+            "e04d8ff330029a64", "d6c6032f6b43642e", "49f8a45b6a61a1be", "ff9d2db284beeee3", "ac81cf20e18a98b2", "538009528f448c82",
+            "4f4b24303b3f26b8", "b65a497bb660254f", "7bda2d39d8c9d696", "236a8991d75fa2df", "0e8118f3e0f15fdf", "03888793ec6f5326",
+            "17dc05b778318667", "129dd5212019c123", "832bcea0b389162c", "ca27d0868f50d483", "2931810f1f7d8b1f", "41db38daac672cf3",
+            "6d00010d073b6c45", "31a9543f727783b5", "e4d305335852b2f7", "f3c63b5b4da63383", "1c2ddb9c44e3feb7", "b34fc780cb4fee77",
+            "78598d85f8984d1f", "65a3763e37178248", "6f40d81fc7b300d1", "1f1b9ae512a9f4f3", "1f8ea8d9e515491e", "2844503dc13b9240",
+            "d22faa38afd8b8a0", "ee1689cb179352f9", "f5234ae506506451", "62af5ab1e14509b2", "a093741d04eb2c36", "00664efbc0a9daf6",
+            "addb0ada0224c450", "e93274777cae2a30", "21057e341b186461", "fdca1ade13b101e2", "7ec3efeacf22f043", "7ee1621f114bc662",
+            "8264482b7c24faaa", "6f2c2bd6c614dbff", "7568636dba2c672a", "7fb10e6e9a422e73", "10903747bc6857ef", "9b3508dc251319be",
+            "c3a5a3197b83df48", "9d1008a158b8a8c8", "59ad753f16b6683d", "6ca0d82bae1cc762", "ca65d0259ed1dbc3", "3e84828213f67503",
+            "7eb47723692fe06c", "72237baa32d09f3c", "708f9d3c4ae0106d", "b5bf6b3e980a6ff0", "49dc48a6802ebddd", "5c203ab3b0a4e12f",
+            "d64ca879f517e375", "e3006b972b0c01c1", "f08df9b5061a0b72", "ee50810a029cd8fd", "89a4cb5e02b925c1", "0841d1e25566916c",
+            "67d3f9f1ad1ff9d8", "aae1e76720da5af4", "c210d1c88d5f943d", "7b17503561aaf451", "58832e9ac9b5318b", "b85a5710f3e236c2",
+            "a12611c7c3d83e11", "006ad44f04388145", "bde0f713402db444", "41daf16e1bac5744", "ed2af389b504c59f", "082e67746c1b7f1d",
+            "f3e6e8f606217bc8", "e77745294038237e", "6f7c201080f27609", "8939c7d511d8a49f", "619884e9a108bfdf", "fb0a837aed6338ed",
+            "7ebec460bb7b1c1f", "2c2b8eac265fca1c", "9130af5d3ac4605b", "2550491e1ba52404", "0955682dce9b4caa", "ad4a4d7433481d49",
+            "d9efec319d0d49a1", "32eb36d8ceddabfe", "eb350bb7662519f9", "b1a35c2db0bfafac", "007a45667b6da7d4", "12f2878db26772c6",
+            "a81bea8a5556d431", "d5857178aeb2b570", "e0a3fde92836b65d", "5e3533e8c73473e8", "03f946f4edfba382", "90d67dab89aa32a6",
+            "bb8dfd4a91c33b3b", "18543169a0c91ab6", "1db63b166c02885e", "fb855af5a3c63f9d", "30824e15896f8a18", "6d98f4d28f20b0be",
+            "85d42be7e276ef88", "d8653de260612ffe", "5fa6fc5bffbd9afe", "b7c6762f5993d513", "4234002f809e62fe", "ff9669968227c2cf",
+            "07b4e948d95d0a65", "0251a5899a7d3c36", "1e72045c6f44e61b", "86b6085379f75df4", "087f69622ad6379c", "a848ac32886701e5",
+            "f886f5121f149cb2", "06c1f11a4ea4f066", "bd4eced27d9bddb8", "ed740d4cfea3380a", "d46ee4d8fc3d0344", "04fbf1be6295d461",
+            "74acdb9861c305fd", "7ff4253848151307", "c0451c3141479549", "342a9a14168d2559", "b808e0e473260292", "17fa1a4a21c964b3",
+            "c0c3aa741401383c", "ed0e17b52fbcca6d", "f90c854167af49f7", "a9c1673f554b573f", "56600e640d4303d7", "aabd8c65a2cb67dc",
+            "74c5f44c960119bc", "9a6c8ce9c64422c3", "55d4bf4b3c8de339", "c9649bc32da86dcf", "af8715d6a4f2081b", "c94a471ff07f7d10",
+            "2e21879fb34daa32", "4bc25b68ef56eb7a", "cf975d24cb1411f5", "6ef7c5dcfc6195cd", "e49de711fe843f41", "27a1198731e0537f",
+            "0a2683fad2c208e4", "495d2093a5776369", "4a629c177ef413a7", "3b959827230a5038", "e2facd37c8f00e8e", "9437728b4b2468ea",
+            "aed22778df2a761f", "d193967fef7b4915", "34c9f0835f57704e", "e2074290f9fb6d2f", "62d88e96948a863c", "6ab14593af03795a",
+            "ace6d987550064ae", "f83cead6a61479a7", "58b106f732ea9431", "48632b0234b5d0c1", "b27141408852bc35", "56eb6df73f696673",
+            "2c7a4644c178f38f", "45c8ef5d04c82115", "b76208ae08d15baa", "47078c102951f16d", "ffdd00b7dfc86394", "c81ff251342e93bf",
+            "07a67b7047539a5a", "717bb52950c782ae", "5a21ff4a0995df63", "965cf0d446418f17", "3f089324ceab7ff8", "a782bda9acf71969",
+            "e9010f606f59f90b", "c4f4c3ca3b8b7f0f", "8cfbe93cc58d390e", "015910a79b84a671", "7163c89bdd83e552", "3c21cb95c63bc374",
+            "355a9d2f2bd31eb5", "30d51949332eceac", "307ee49b92094ac3", "1175ba6002d8b24c", "a4dde104fe8c349f", "7b2c4e7fba0df626",
+            "3ff4d8927ecf195d", "58a59921c3a48aa4", "adc9a002cf380679", "c21ed5848f9880a8", "eb3becc9db5c7100", "3e0f8df9a1cd36ae",
+            "4c35d5eb0a421b0d", "2be09acae757d13c", "07fb73b2938d0895", "4a55436e1dba3007", "c2d4d323d55c557d", "6e0c9ef9bbe958eb",
+            "39dfb654235e2bc2", "962b614585c0cb4f", "f1edcb2aacd8f856", "6fa527f7d59cffcd", "55b9da50b1a8342d", "af20ec94d08887f1",
+            "42e7783fbcadb757", "5e09fc2577566f58", "994ee0f12a2950e5", "30f9bc31d5907197", "f62f3cfe23d22cdb", "36627398541306e0",
+            "79adafdcb5bc86eb", "4636eb35eca819eb", "ddbbfe8a1a6a10f9", "e88e554c2c4682e9", "4bd489017ded3c01", "ee9fe0568230f686",
+            "bd88767b151cf9cc", "5ccf9f319d94ca2c", "3897a75864bbd37d", "49ed0951fa4345e9", "48f92e8255b3a651", "165a2407d1a60b4f",
+            "e7f7e3c48fbabc01", "a64dd6eab27ba4f2", "30163df24638dcee", "9e7521fd8e32d830", "b8c56a83702caf13", "8c7565dc8f95980b",
         ],
         ["projektarbeiten"] = [],
         ["themen"] =
@@ -740,7 +925,10 @@ public class LerninhalteTests
             "systeme/fbda39307f0aea56", "wirtschaft/b30c1d23f01656f8", "datenbanken/efaa526411d5adf0", "sicherheit/d14e4c1756d6c7e5",
             "systeme/35008919a3e48fdc", "systeme/d98b5a81d6c0a881", "systeme/3625b34fc4104db5", "systeme/330e059ce7870b71",
             "wirtschaft/31287aff87a0b156", "wirtschaft/9f2c7dd9d43c8562", "wirtschaft/69c3bbe745446294", "datenbanken/543220eea22dfc66",
-            "datenbanken/f92ae8c4ac138d82", "datenbanken/7a2179fcbde911cd",
+            "datenbanken/f92ae8c4ac138d82", "datenbanken/7a2179fcbde911cd", "sicherheit/cf352f93e189daac", "sicherheit/044fad1404a7eaf9",
+            "systeme/05e00dec4d8ffcbf", "systeme/89b58edc44e36007", "systeme/e8017b61c3851add", "systeme/c3d09f1870040a0b",
+            "systeme/f49dbf48a34f479c", "systeme/2687f04e3f61997d", "netzwerk/337ffa1ef21fc5fd", "netzwerk/eb32f15571a761f3",
+            "netzwerk/1347d70e91cc0a41",
         ],
     };
 

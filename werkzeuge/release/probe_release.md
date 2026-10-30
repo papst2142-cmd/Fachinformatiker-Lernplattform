@@ -1,22 +1,22 @@
-Erste eigene Lerninhalte für die Fachrichtung Daten- und Prozessanalyse und die Einstellungen zum Spiel in den „Optionen“.
+Erste eigene Lerninhalte für die Fachrichtung Digitale Vernetzung und der Umzug in eine größere Wohnung im Spiel.
 
-- Wer in den „Optionen“ unter „Ausbildung“ Daten- und Prozessanalyse gewählt hat, bekommt 300 neue Karteikarten, 370 neue Prüfungsfragen und 330 neue Aufgaben für die AP2, dazu die gemeinsamen Inhalte aller Fachrichtungen wie bisher.
-- Die neuen Inhalte sind in elf Themen eingeteilt, zum Beispiel „Prozessmodelle (BPMN, EPK)“, „Statistik & Analyseverfahren“, „Datenqualität & Bereinigung“, „SQL-Auswertungen“, „Maschinelles Lernen & Vorhersage“ und „Kennzahlen & Monitoring“. Viele Aufgaben enthalten SQL, ein Prozessmodell oder eine Rechnung mit vollständigem Lösungsweg.
-- Die Klausursimulation für Daten- und Prozessanalyse ist jetzt voll nutzbar: „Durchführen einer Prozessanalyse“ und „Sicherstellen der Datenqualität“ ziehen je vier Aufgaben aus den neuen Prüfungsaufgaben. Der Hinweis, dass es noch keine Aufgaben gibt, fällt weg.
-- Für Systemintegration, Anwendungsentwicklung und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen.
-- In den „Optionen“ unter „Spiel“ steht jetzt, auf welchem Platz du spielst und welchen Schwierigkeitsgrad dein Spielstand hat. Darunter wählst du unter „Wohnungen“, ob du eine größere Wohnung im Spiel kaufst („Einmalzahlung“) oder mietest („Miete“). Die Einstellung gilt nur für das Gerät, auf dem du sie wählst. Der Umzug selbst kommt in einer späteren Version ins Spiel.
+- Wer in den „Optionen“ unter „Ausbildung“ Digitale Vernetzung gewählt hat, bekommt 300 neue Karteikarten, 370 neue Prüfungsfragen und 330 neue Aufgaben für die AP2, dazu die gemeinsamen Inhalte aller Fachrichtungen wie bisher.
+- Die neuen Inhalte sind in elf Themen eingeteilt, zum Beispiel „Cyber-physische Systeme & Industrie 4.0“, „Sensorik & Aktorik“, „Feldbusse & industrielle Kommunikation“, „IoT-Protokolle & Funk“, „Sicherheit vernetzter Systeme“ und „Betrieb, Überwachung & Wartung“. Viele Aufgaben enthalten eine Rechnung, eine Konfiguration oder ein kurzes Programm mit vollständigem Lösungsweg.
+- Die Klausursimulation für Digitale Vernetzung ist jetzt voll nutzbar: „Diagnose und Störungsbeseitigung in vernetzten Systemen“ und „Betrieb und Erweiterung von vernetzten Systemen“ ziehen je vier Aufgaben aus den neuen Prüfungsaufgaben. Damit gibt es für jede Fachrichtung eigene Prüfungsaufgaben, der Hinweis, dass es noch keine Aufgaben gibt, fällt ganz weg.
+- Für Systemintegration, Anwendungsentwicklung und Daten- und Prozessanalyse ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen.
+- Im Spiel kannst du jetzt umziehen: In deiner Wohnung auf „Einrichten“ tippen, darunter steht die Karte „Wohnung“ mit allen größeren Wohnungen, ihrem Preis und dem Knopf „Umziehen“. Nach einer Rückfrage ziehst du um, alle Möbel kommen dabei in Umzugskartons. Ob du kaufst oder mietest, wählst du vorher in den „Optionen“ unter „Spiel“.
 - Am Lernstand und am Spielstand ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.26.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.27.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.26.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.26.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.26.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.27.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.27.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.27.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
