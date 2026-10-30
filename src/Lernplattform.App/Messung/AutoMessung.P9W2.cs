@@ -77,24 +77,30 @@ public static partial class AutoMessung
             }
 
             // 3. Zahlen der Sicht AE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
-            //    AE-Inhalte (W3, Weisung P9-8), keine Testprojekte
+            //    AE-Inhalte (W3, Weisung P9-8); Phase 10 W2 (Weisung P10-1): dazu die eigenen Testprojekte und Fragen
+            //    fuers Fachgespraech (die bisherigen Testprojekte sind alle si, vom Fachgespraech sind 42 gemeinsam)
             var einteilung = ae.Einteilung;
             var eigene = (Karten: ae.Karteikarten.Count(e => e.Zugehoerigkeit == fr), Quiz: ae.Quizfragen.Count(e => e.Zugehoerigkeit == fr),
-                Ap2: ae.Ap2Szenarien.Count(e => e.Zugehoerigkeit == fr));
+                Ap2: ae.Ap2Szenarien.Count(e => e.Zugehoerigkeit == fr), Tp: ae.Testprojekte.Count(e => e.Zugehoerigkeit == fr),
+                Fg: ae.NeueFachfragen.Count(f => f.Zugehoerigkeit == fr));
             var soll = (Karten: einteilung.Anzahl(Einteilung.Karteikarten, Fachrichtungen.Gemeinsam) + eigene.Karten,
                 Quiz: einteilung.Anzahl(Einteilung.Quizfragen, Fachrichtungen.Gemeinsam) + einteilung.Anzahl(Einteilung.QuizErzeugt, Fachrichtungen.Gemeinsam) + eigene.Quiz,
-                Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam));
+                Ap1: einteilung.Anzahl(Einteilung.Ap1, Fachrichtungen.Gemeinsam),
+                Tp: einteilung.Anzahl(Einteilung.Projekte, Fachrichtungen.Gemeinsam) + eigene.Tp,
+                Fg: einteilung.Anzahl(Einteilung.Fachgespraech, Fachrichtungen.Gemeinsam) + eigene.Fg);
+            var fachfragen = Zustand.FachfragenSicht.Count;
             Messwerte.Notiere(string.Create(inv,
-                $"Sicht {name}: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}, davon {name} {eigene.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}, davon {name} {eigene.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien (davon {name} {eigene.Ap2}), {ae.Testprojekte.Count} Testprojekte, {ae.ThemenReihenfolge.Count} Themen"));
+                $"Sicht {name}: {ae.Karteikarten.Count} Karteikarten (Soll {soll.Karten}, davon {name} {eigene.Karten}), {ae.Quizfragen.Count} Pruefungsfragen (Soll {soll.Quiz}, davon {name} {eigene.Quiz}), {ae.Ap1Szenarien.Count} AP1-Szenarien (Soll {soll.Ap1}), {ae.Ap2Szenarien.Count} AP2-Szenarien (davon {name} {eigene.Ap2}), {ae.Testprojekte.Count} Testprojekte (Soll {soll.Tp}), {fachfragen} Fragen fuers Fachgespraech (Soll {soll.Fg}, davon {name} {eigene.Fg}), {ae.ThemenReihenfolge.Count} Themen"));
             if (ae.Karteikarten.Count != soll.Karten || ae.Quizfragen.Count != soll.Quiz || ae.Ap1Szenarien.Count != soll.Ap1
-                || ae.Ap2Szenarien.Count != eigene.Ap2 || ae.Testprojekte.Count != 0 || soll.Karten == 0
+                || ae.Ap2Szenarien.Count != eigene.Ap2 || ae.Testprojekte.Count != soll.Tp || fachfragen != soll.Fg || soll.Karten == 0
                 || eigene.Karten == 0 || eigene.Quiz == 0 || eigene.Ap2 == 0)
             {
                 Fund("Sicht " + name + ": Zahlen weichen von einteilung_bisher.json und den eigenen Inhalten ab");
             }
 
-            // 3a. Karteikarten und Pruefungstrainer der Fachrichtung: erstes Oeffnen in der neuen Sicht bis zum Bild (streng)
-            foreach (var (id, seite) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer") })
+            // 3a. Karteikarten und Pruefungstrainer der Fachrichtung: erstes Oeffnen in der neuen Sicht bis zum Bild (streng);
+            //     Phase 10 W2 (Weisung P10-1): ebenso die Testprojekte (Liste der Sicht, AE mit eigenen Projekten)
+            foreach (var (id, seite) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer"), (Seiten.Testprojekt, "Testprojekte") })
             {
                 if (ansicht.GebauteSeiten.ContainsKey(id))
                 {
@@ -110,6 +116,9 @@ public static partial class AutoMessung
                         break;
                     case TrainerSeite neu:
                         await neu.Geladen;
+                        break;
+                    case SzenarioSeite szenarien:
+                        await szenarien.Geladen;
                         break;
                 }
                 await ansicht.BildFertigAsync();

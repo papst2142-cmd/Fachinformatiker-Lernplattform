@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.29.0
+Viele neue Lerninhalte für die Fachrichtung Anwendungsentwicklung, dazu die ersten eigenen Testprojekte und Fragen fürs Fachgespräch.
+
+- Wer in den „Optionen“ unter „Ausbildung“ Anwendungsentwicklung gewählt hat, bekommt 1 200 neue Karteikarten und 1 750 neue Prüfungsfragen. Zusammen mit den gemeinsamen Inhalten aller Fachrichtungen sind es jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen.
+- Die neuen Inhalte gehen in die Breite und in die Tiefe: von Entwicklungsumgebung, UML und Bedienoberflächen über Testen, Programmiersprachen, Objektorientierung und Algorithmen bis zu Schnittstellen, SQL-Abfragen und sicherer Softwareentwicklung. Viele Aufgaben enthalten ein kurzes Programm, eine SQL-Abfrage oder eine Rechnung mit vollständigem Lösungsweg.
+- Unter „Testprojekte“ stehen für Anwendungsentwicklung jetzt 50 eigene Übungsprojekte zum Abschlussprojekt, jeweils mit Ausgangslage, Auftrag, Rahmenbedingungen, Aufgaben und Lösungshinweisen.
+- Im Abschlussprojekt unter „Fachgespräch“ kommen 18 neue Fragen zu Entwurf, Datenbank und Sicherheit dazu, wie sie der Prüfungsausschuss zu einem Softwareprojekt stellt.
+- Für Systemintegration, Daten- und Prozessanalyse und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen und werden dort auch nicht geladen.
+- Am Lernstand und am Spiel ändert sich nichts.
+
 ## A 0.28.0
 Das Programm startet schneller, weil es nur die Lerninhalte deiner Fachrichtung lädt.
 

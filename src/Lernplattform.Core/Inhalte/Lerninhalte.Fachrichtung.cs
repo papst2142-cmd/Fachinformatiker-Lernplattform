@@ -25,6 +25,9 @@ public sealed partial class Lerninhalte
         (InhaltArt.Testprojekt, "projektarbeiten"),
     ];
 
+    /// <summary>Phase 10 W2: neue Fragen fuers Fachgespraech (Objekt mit Liste "fragen" wie inhalte/fachgespraech.json, dazu "fachrichtung").</summary>
+    public const string FachgespraechDatei = "fachgespraech";
+
     public const string EinteilungDatei = "einteilung_bisher";
     public const string ThemenDatei = "themen";
     public const string ZusatzDatei = "rahmenplan_zusatz";
@@ -128,9 +131,56 @@ public sealed partial class Lerninhalte
             RahmenplanZusatz = vorher?.RahmenplanZusatz ?? (lernen(ZusatzDatei) is { } z ? LadeObjekt(_ => z, ZusatzDatei) : []),
             NeueThemen = neueThemen,
             Neue = neue,
+            NeueFachfragen = NeueFachfragenLaden(ordner, geladen),
             Geladen = geladen,
             _lernen = ordner,
         };
+    }
+
+    /// <summary>
+    /// Phase 10 W2 (Weisung P10-1): neue Fragen fuers Fachgespraech aus inhalte_csharp/lernen/fachgespraech.json in
+    /// Dateireihenfolge, nur die der geladenen Fachrichtungen (wie die Listen). Die bisherigen Fragen aus
+    /// inhalte/fachgespraech.json liest das Programm weiter selbst (<see cref="FachgespraechFuer"/>).
+    /// </summary>
+    public IReadOnlyList<NeueFachfrage> NeueFachfragen { get; private init; } = [];
+
+    /// <summary>
+    /// Fragen fuers Fachgespraech der Sicht <paramref name="fachrichtung"/> (unbekannt = si): die bisherigen mit
+    /// Einteilung gemeinsam oder dieser Fachrichtung (SI damit alle wie Python), dahinter die eigenen neuen.
+    /// </summary>
+    public IReadOnlyList<Projekt.ProjektFrage> FachgespraechFuer(IReadOnlyList<Projekt.ProjektFrage> bisherige, string? fachrichtung)
+    {
+        var alle = Alle;
+        var fr = fachrichtung is not null && Fachrichtungen.Werte.Contains(fachrichtung) ? fachrichtung : Fachrichtungen.Vorgabe;
+        return bisherige.Where(f => alle.Einteilung.Wert(Einteilung.Fachgespraech, f.Id) is var w && (w == Fachrichtungen.Gemeinsam || w == fr))
+            .Concat(alle.NeueFachfragen.Where(f => f.Zugehoerigkeit == fr).Select(f => f.Frage)).ToList();
+    }
+
+    private static List<NeueFachfrage> NeueFachfragenLaden(LernenOrdner ordner, HashSet<string>? geladen)
+    {
+        if (ordner.Dokument(FachgespraechDatei) is not { } dokument)
+        {
+            return [];
+        }
+        var wurzel = JsonNode.Parse(dokument.RootElement.GetRawText()) as JsonObject
+            ?? throw new InvalidDataException("lernen/fachgespraech.json enthaelt kein Objekt");
+        var fragen = wurzel["fragen"] as JsonArray ?? throw new InvalidDataException("lernen/fachgespraech.json: Feld 'fragen' fehlt");
+        static string Text(JsonNode? wert) => wert is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : "";
+        var erg = new List<NeueFachfrage>();
+        foreach (var (eintrag, index) in fragen.Select((f, i) => (f as JsonObject ?? throw new InvalidDataException("lernen/fachgespraech.json: Eintrag ist kein Objekt"), i)))
+        {
+            var fr = Text(eintrag[Fachrichtungen.Feld]);
+            var zugehoerigkeit = Fachrichtungen.Werte.Contains(fr) ? fr : Ungueltig;
+            if (geladen is not null && !geladen.Contains(zugehoerigkeit))
+            {
+                continue;
+            }
+            var kurz = Text(eintrag["cat"]);
+            var frage = new Projekt.ProjektFrage(Text(eintrag["id"]), kurz.Length == 0 ? null : Fachbereiche.Schluessel.GetValueOrDefault(kurz),
+                Text(eintrag["q"]), Text(eintrag["hinweis"]));
+            erg.Add(new NeueFachfrage(frage, zugehoerigkeit, index + 1, eintrag));
+        }
+        return erg;
     }
 
     /// <summary>Phase 10 W1: die geladenen Fachrichtungen der neuen Inhalte (null = alle).</summary>
@@ -251,6 +301,7 @@ public sealed partial class Lerninhalte
             RahmenplanZusatz = alle.RahmenplanZusatz,
             NeueThemen = alle.NeueThemen,
             Neue = alle.Neue,
+            NeueFachfragen = alle.NeueFachfragen,
         };
     }
 
@@ -404,7 +455,7 @@ public sealed class LernenOrdner(Func<string, byte[]?> lesen)
     /// <summary>Alle Listen schon im Hintergrund lesen (je Datei eine Aufgabe); Fehler zeigen sich erst bei <see cref="Dokument"/>.</summary>
     public void Vorab()
     {
-        foreach (var (_, name) in Lerninhalte.LernenListen)
+        foreach (var name in Lerninhalte.LernenListen.Select(l => l.Name).Append(Lerninhalte.FachgespraechDatei))
         {
             _ = Task.Run(() =>
             {
@@ -420,3 +471,9 @@ public sealed class LernenOrdner(Func<string, byte[]?> lesen)
         }
     }
 }
+
+/// <summary>
+/// Phase 10 W2: eine neue Frage fuers Fachgespraech; <paramref name="Nummer"/> = Stelle in lernen/fachgespraech.json
+/// (ab 1), <paramref name="Daten"/> der Eintrag fuer die Ladepruefung.
+/// </summary>
+public sealed record NeueFachfrage(Projekt.ProjektFrage Frage, string Zugehoerigkeit, int Nummer, JsonObject Daten);

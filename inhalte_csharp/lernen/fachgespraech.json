@@ -1,0 +1,134 @@
+{
+ "_hinweis": [
+  "Neue Fragen fuers Fachgespraech der C#-Linie (Phase 10 W2): Felder wie inhalte/fachgespraech.json (id, cat, q, hinweis), dazu fachrichtung (Pflicht). Nur anhaengen, die id bleibt fest - an ihr haengt die Selbsteinschaetzung.",
+  "Die Sicht einer Fachrichtung zeigt die bisherigen Fragen mit Einteilung gemeinsam (einteilung_bisher.json) und dahinter die eigenen."
+ ],
+ "fragen": [
+  {
+   "id": "ae01",
+   "cat": "systeme",
+   "q": "Wie haben Sie die Architektur Ihrer Anwendung aufgeteilt, und warum haben Sie sich für diese Schichten oder Komponenten entschieden?",
+   "hinweis": "Schichten bzw. Komponenten mit klaren Aufgaben (Präsentation, Fachlogik, Datenzugriff), Abhängigkeiten nur in eine Richtung, Begründung mit Wartbarkeit, Testbarkeit und Vorgaben der bestehenden Systemlandschaft.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae02",
+   "cat": "systeme",
+   "q": "Welches Entwurfsmuster haben Sie in Ihrem Projekt eingesetzt, und welches Problem hat es dort konkret gelöst?",
+   "hinweis": "Muster benennen und einordnen (Erzeugung, Struktur, Verhalten), die Stelle im eigenen Code zeigen, den Nutzen gegenüber der Lösung ohne Muster und einen möglichen Nachteil wie zusätzliche Klassen nennen.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae03",
+   "cat": "systeme",
+   "q": "Wie sind Ihre Unit-Tests aufgebaut, und wie haben Sie Abhängigkeiten wie Datenbank oder externe Dienste im Test ersetzt?",
+   "hinweis": "Aufbau nach Arrange-Act-Assert, Testframework, Mock oder Stub über Schnittstellen und Dependency Injection, erreichte Codeabdeckung und welche Fälle bewusst durch Integrationstests geprüft wurden.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae04",
+   "cat": "systeme",
+   "q": "Wie haben Sie die Versionsverwaltung in Ihrem Projekt genutzt, und wie sah Ihr Ablauf mit Branches und Commits aus?",
+   "hinweis": "Repository mit Git, Branch-Strategie (z. B. Feature-Branches, Pull Request oder Trunk-Based), kleine aussagekräftige Commits, Tags für Versionen, .gitignore für Build-Ergebnisse und Geheimnisse.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae05",
+   "cat": "systeme",
+   "q": "Erklären Sie den zentralen Algorithmus Ihrer Anwendung. Wie verhält sich seine Laufzeit, wenn die Datenmenge wächst?",
+   "hinweis": "Ablauf in eigenen Worten oder als Pseudocode, Laufzeitklasse in O-Notation, Messung mit realistischen Datenmengen, ggf. Begründung für eine gewählte Datenstruktur oder Näherung.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae06",
+   "cat": "systeme",
+   "q": "Wie haben Sie die Schnittstelle zu anderen Systemen beschrieben, und wie reagiert Ihre Anwendung, wenn die Gegenseite fehlerhaft antwortet oder nicht erreichbar ist?",
+   "hinweis": "Schnittstellenbeschreibung (z. B. OpenAPI oder XSD), Datenformat, Statuscodes und Fehlerobjekte, Zeitlimits, Wiederholungen mit Wartezeit, idempotente Verarbeitung und verständliche Meldungen statt Absturz.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae07",
+   "cat": "datenbanken",
+   "q": "Warum haben Sie für Ihr Projekt eine relationale Datenbank bzw. eine NoSQL-Datenbank gewählt?",
+   "hinweis": "Abwägung nach Datenstruktur, Beziehungen, Konsistenzbedarf (Transaktionen), Abfragearten und Mengen; Vorgaben des Betriebs wie vorhandene Datenbanksysteme, Lizenzen und Know-how.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae08",
+   "cat": "datenbanken",
+   "q": "Wie greift Ihr Programmcode auf die Datenbank zu, und warum haben Sie sich für ein ORM bzw. für eigenes SQL entschieden?",
+   "hinweis": "ORM mit Abbildung der Entitäten oder SQL mit Parametern, Vor- und Nachteile (Produktivität, Kontrolle, Leistung), Lazy und Eager Loading, Erkennen und Vermeiden des N+1-Problems.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae09",
+   "cat": "datenbanken",
+   "q": "Nach welchen Kriterien haben Sie Spalten und Spaltenreihenfolge Ihrer Indizes gewählt, und welchen Preis zahlen Sie dafür beim Schreiben?",
+   "hinweis": "Selektivität und Häufigkeit der Filter- und Verknüpfungsspalten, bei zusammengesetzten Indizes Gleichheitsbedingungen zuerst und Nutzung nur über das linke Präfix, ggf. abdeckender Index; Preis: langsameres INSERT und UPDATE, mehr Speicher, Pflege bei Datenänderungen.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae10",
+   "cat": "datenbanken",
+   "q": "Zeigen Sie uns die aufwendigste SQL-Abfrage Ihres Projekts und erklären Sie Schritt für Schritt, was sie liefert.",
+   "hinweis": "JOIN-Arten und warum gerade diese, Gruppierung mit GROUP BY und HAVING, Umgang mit NULL-Werten, ggf. Unterabfragen oder Fensterfunktionen, Prüfung des Ergebnisses an Testdaten mit bekanntem Ergebnis.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae11",
+   "cat": "datenbanken",
+   "q": "Mit welchen Mitteln stellen Sie sicher, dass in Ihrer Datenbank keine widersprüchlichen oder unvollständigen Daten entstehen?",
+   "hinweis": "Constraints (PRIMARY KEY, FOREIGN KEY mit passender ON-DELETE-Regel, UNIQUE, CHECK, NOT NULL), Prüfung der Eingaben schon in der Anwendung, Transaktionen für zusammengehörige Änderungen, Plausibilitätsprüfungen.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae12",
+   "cat": "datenbanken",
+   "q": "Was passiert in Ihrer Anwendung, wenn zwei Benutzer gleichzeitig denselben Datensatz ändern?",
+   "hinweis": "Problem der verlorenen Änderung erkennen, optimistisches Sperren mit Versionsspalte oder Zeitstempel bzw. pessimistisches Sperren, Isolationsstufe der Transaktion, verständliche Rückmeldung an den zweiten Benutzer.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae13",
+   "cat": "sicherheit",
+   "q": "Wie haben Sie Ihre Anwendung gegen SQL-Injection geschützt? Zeigen Sie eine Stelle im Code.",
+   "hinweis": "Prepared Statements bzw. parametrisierte Abfragen oder ein ORM ohne zusammengesetzte Zeichenketten, keine Verkettung von Benutzereingaben ins SQL, Datenbankkonto mit minimalen Rechten, ein Test mit typischer Angriffseingabe.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae14",
+   "cat": "sicherheit",
+   "q": "Wie speichert Ihre Anwendung Kennwörter, und warum genügt dafür kein einfacher Hash wie SHA-256?",
+   "hinweis": "Langsames Verfahren mit Salt wie Argon2, bcrypt oder PBKDF2, einstellbarer Aufwand gegen Ausprobieren, Salt gegen vorberechnete Tabellen, nie Klartext oder umkehrbare Verschlüsselung.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae15",
+   "cat": "sicherheit",
+   "q": "Wie prüfen Sie Eingaben, und wie verhindern Sie, dass eingegebene Inhalte bei der Ausgabe als Skript ausgeführt werden?",
+   "hinweis": "Serverseitige Validierung nach Allowlist (Typ, Länge, Format), clientseitige Prüfung nur für den Komfort, kontextgerechte Ausgabekodierung gegen Cross-Site Scripting, ggf. Content Security Policy als zusätzliche Schutzschicht.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae16",
+   "cat": "sicherheit",
+   "q": "Wie stellt Ihre Anwendung sicher, dass ein angemeldeter Benutzer nur auf seine eigenen Daten zugreifen kann?",
+   "hinweis": "Autorisierung bei jedem Zugriff auf dem Server, nicht nur durch ausgeblendete Knöpfe; Prüfung von Besitz oder Rolle in der Abfrage, Schutz gegen unsichere direkte Objektreferenzen (IDOR), Test mit zwei Testkonten.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae17",
+   "cat": "sicherheit",
+   "q": "Wo liegen Verbindungsdaten, Kennwörter und API-Schlüssel Ihrer Anwendung, und wie verhindern Sie, dass sie im Repository landen?",
+   "hinweis": "Konfiguration außerhalb des Quellcodes (Umgebungsvariablen, Secret-Store, Schlüsseltresor), Eintrag in .gitignore, Secret-Scanning, getrennte Werte je Umgebung und Austausch eines versehentlich veröffentlichten Geheimnisses.",
+   "fachrichtung": "ae"
+  },
+  {
+   "id": "ae18",
+   "cat": "sicherheit",
+   "q": "Wie stellen Sie sicher, dass die eingesetzten Bibliotheken keine bekannten Sicherheitslücken mitbringen?",
+   "hinweis": "Liste der Abhängigkeiten bzw. SBOM, Prüfung gegen bekannte Schwachstellen (CVE) mit einem Werkzeug in der Build-Pipeline, Lock-Datei für feste Versionen, regelmäßige Aktualisierung und Bewertung der Lizenz.",
+   "fachrichtung": "ae"
+  }
+ ]
+}
