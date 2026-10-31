@@ -1,21 +1,22 @@
-Im Spiel bleibt der Verkehr am Kartenrand nicht mehr stehen.
+Viele neue Lerninhalte für die Fachrichtung Daten- und Prozessanalyse, dazu eigene Testprojekte und Fragen fürs Fachgespräch.
 
-- Bisher konnte es passieren, dass nach einigen Minuten alle Autos am Rand der Karte stehen blieben und sich nicht mehr bewegten. Zwei Autos warteten dort gegenseitig aufeinander: Wo die Strecke des einen endet, beginnt die Strecke des anderen. Jetzt fahren sie weiter, und der Verkehr läuft dauerhaft.
-- Dasselbe gilt für die Gestalten an Halloween, Weihnachten und Ostern.
-- Fahren zwei Autos gleichzeitig auf eine Kreuzung zu, fährt jetzt immer nur eines hinein, das andere wartet kurz davor.
-- Wechselt der Verkehr an Festtagen mit der Uhrzeit, ist der Wechsel jetzt auch dann bald fertig, wenn du schon länger draußen in der Stadt bist.
-- Am Lernstand, am Spielstand und an den Lerninhalten ändert sich nichts.
+- Wer in den „Optionen“ unter „Ausbildung“ Daten- und Prozessanalyse gewählt hat, bekommt 1 200 neue Karteikarten und 1 750 neue Prüfungsfragen. Zusammen mit den gemeinsamen Inhalten aller Fachrichtungen sind es jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen.
+- Die neuen Inhalte gehen in die Breite und in die Tiefe: von Geschäftsprozessen, Prozessmodellen (BPMN, EPK), Prozessoptimierung und Kennzahlen über Statistik, maschinelles Lernen und Auswertung mit Python bis zu Datenquellen, Datenqualität, SQL-Auswertungen und Datenschutz in der Analyse. Viele Aufgaben enthalten eine Rechnung, ein kurzes Programm oder eine SQL-Abfrage mit vollständigem Lösungsweg.
+- Unter „Testprojekte“ stehen für Daten- und Prozessanalyse jetzt 50 eigene Übungsprojekte zum Abschlussprojekt, jeweils mit Ausgangslage, Auftrag, Rahmenbedingungen, Aufgaben und Lösungshinweisen.
+- Im Abschlussprojekt unter „Fachgespräch“ kommen 18 neue Fragen zu Prozessanalyse, Auswertung, Daten und Datenschutz dazu, wie sie der Prüfungsausschuss zu einem Analyseprojekt stellt.
+- Für Systemintegration, Anwendungsentwicklung und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen und werden dort auch nicht geladen.
+- Am Lernstand und am Spiel ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.29.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.30.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.29.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.29.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.29.2-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.30.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.30.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.30.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
