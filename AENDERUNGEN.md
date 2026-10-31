@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.30.0
+Viele neue Lerninhalte für die Fachrichtung Daten- und Prozessanalyse, dazu eigene Testprojekte und Fragen fürs Fachgespräch.
+
+- Wer in den „Optionen“ unter „Ausbildung“ Daten- und Prozessanalyse gewählt hat, bekommt 1 200 neue Karteikarten und 1 750 neue Prüfungsfragen. Zusammen mit den gemeinsamen Inhalten aller Fachrichtungen sind es jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen.
+- Die neuen Inhalte gehen in die Breite und in die Tiefe: von Geschäftsprozessen, Prozessmodellen (BPMN, EPK), Prozessoptimierung und Kennzahlen über Statistik, maschinelles Lernen und Auswertung mit Python bis zu Datenquellen, Datenqualität, SQL-Auswertungen und Datenschutz in der Analyse. Viele Aufgaben enthalten eine Rechnung, ein kurzes Programm oder eine SQL-Abfrage mit vollständigem Lösungsweg.
+- Unter „Testprojekte“ stehen für Daten- und Prozessanalyse jetzt 50 eigene Übungsprojekte zum Abschlussprojekt, jeweils mit Ausgangslage, Auftrag, Rahmenbedingungen, Aufgaben und Lösungshinweisen.
+- Im Abschlussprojekt unter „Fachgespräch“ kommen 18 neue Fragen zu Prozessanalyse, Auswertung, Daten und Datenschutz dazu, wie sie der Prüfungsausschuss zu einem Analyseprojekt stellt.
+- Für Systemintegration, Anwendungsentwicklung und Digitale Vernetzung ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen und werden dort auch nicht geladen.
+- Am Lernstand und am Spiel ändert sich nichts.
+
 ## A 0.29.2
 Im Spiel bleibt der Verkehr am Kartenrand nicht mehr stehen.
 

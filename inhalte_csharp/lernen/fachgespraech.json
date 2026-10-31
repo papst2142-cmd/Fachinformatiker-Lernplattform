@@ -129,6 +129,132 @@
    "q": "Wie stellen Sie sicher, dass die eingesetzten Bibliotheken keine bekannten Sicherheitslücken mitbringen?",
    "hinweis": "Liste der Abhängigkeiten bzw. SBOM, Prüfung gegen bekannte Schwachstellen (CVE) mit einem Werkzeug in der Build-Pipeline, Lock-Datei für feste Versionen, regelmäßige Aktualisierung und Bewertung der Lizenz.",
    "fachrichtung": "ae"
+  },
+  {
+   "id": "dpa01",
+   "cat": "wirtschaft",
+   "q": "Warum haben Sie Ihren Prozess mit dieser Notation, etwa BPMN oder EPK, und auf genau diesem Detaillierungsgrad modelliert?",
+   "hinweis": "Zweck und Zielgruppe des Modells, Ebenen von der Prozesslandkarte bis zum Arbeitsschritt, Modellierungskonventionen und Abstimmung des Modells mit den Beteiligten; Grenzen der gewählten Notation benennen.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa02",
+   "cat": "wirtschaft",
+   "q": "Wie haben Sie Bearbeitungs-, Liege- und Wartezeiten Ihres Ist-Prozesses gemessen, und wie genau waren die Werte?",
+   "hinweis": "Messung über Zeitstempel im System, Selbstaufschreibung oder Multimomentaufnahme mit Zahl der Beobachtungen und Fehlerspanne, Abgrenzung von Bearbeitungs- und Liegezeit, Mittelwert und Streuung statt Einzelwert und Grenzen der Methode wie geschönte Angaben.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa03",
+   "cat": "wirtschaft",
+   "q": "Welche Methode der Prozessoptimierung haben Sie eingesetzt, und warum passte sie zu Ihrer Ausgangslage besser als andere Methoden?",
+   "hinweis": "Vergleich etwa von Lean, Six Sigma, KVP und Neugestaltung nach Problemart, Datenlage und Umfang, Begründung mit Kriterien oder Nutzwertanalyse und die erwartete Wirkung auf die Prozesskennzahlen.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa04",
+   "cat": "wirtschaft",
+   "q": "An welcher Kennzahl erkennt Ihr Auftraggeber, ob der Soll-Prozess wirkt, und wie haben Sie Zielwert und Schwellen festgelegt?",
+   "hinweis": "Kennzahlensteckbrief mit Formel, Datenquelle, Aktualisierung und Verantwortlichem, Zielwert aus dem Ist-Wert und einer SMART-Vereinbarung, Ampelgrenzen und eine Gegenkennzahl gegen Fehlanreize.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa05",
+   "cat": "wirtschaft",
+   "q": "Welche Annahmen stecken in Ihrer Nutzenrechnung, und wie ändert sich das Ergebnis, wenn sie nicht eintreffen?",
+   "hinweis": "Eingesparte Zeit mal Stundensatz, vermiedene Fehlerkosten oder freiwerdendes Kapital; Annahmen offen nennen und mit einem vorsichtigen und einem günstigen Fall prüfen (Sensitivitätsbetrachtung).",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa06",
+   "cat": "systeme",
+   "q": "Welche statistischen Kennwerte haben Sie zur Beschreibung Ihrer Daten gewählt, und warum passen sie zu Skalenniveau und Verteilung?",
+   "hinweis": "Skalenniveau von nominal bis verhältnisskaliert, Median und Quartilsabstand bei schiefen Verteilungen oder Ausreißern, Mittelwert und Standardabweichung bei annähernd symmetrischen Daten; Ausreißer begründet behandeln statt stillschweigend löschen.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa07",
+   "cat": "systeme",
+   "q": "Wie haben Sie geprüft, dass ein gefundener Zusammenhang in Ihren Daten nicht nur zufällig ist oder durch eine Störgröße entsteht?",
+   "hinweis": "Korrelation ist keine Kausalität, mögliche Drittvariablen und Simpson-Paradoxon bedacht, ausreichende Stichprobe, Hypothesentest mit p-Wert oder Konfidenzintervall und Bestätigung an Daten aus einem anderen Zeitraum.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa08",
+   "cat": "systeme",
+   "q": "Wie haben Sie Ihr Vorhersage- oder Klassifikationsmodell bewertet, und warum haben Sie gerade diese Metrik gewählt?",
+   "hinweis": "Trennung in Trainings-, Validierungs- und Testdaten oder Kreuzvalidierung, bei Zeitreihen zeitliche Trennung, Metrik nach Ziel und Fehlerkosten (z. B. MAE, RMSE, Precision, Recall), Vergleich mit einer einfachen Basislösung und vermiedenes Datenleck.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa09",
+   "cat": "systeme",
+   "q": "Wie stellen Sie sicher, dass eine andere Person Ihre Auswertung später mit neuen Daten genauso wiederholen kann?",
+   "hinweis": "Skript oder Notebook statt Handarbeit, Versionsverwaltung für den Code, festgehaltene Paketversionen, unveränderte Rohdaten, im Code dokumentierte Bereinigungsschritte und fester Startwert für Zufallszahlen.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa10",
+   "cat": "systeme",
+   "q": "Warum haben Sie für Ihre wichtigste Aussage genau diese Diagrammart gewählt, und wie haben Sie die Darstellung an Ihre Zielgruppe angepasst?",
+   "hinweis": "Diagrammart nach Aussage (Vergleich, Verlauf, Verteilung, Zusammenhang), Säulenachse ab null, wenige Farben mit Bedeutung und ausreichendem Kontrast, Titel mit der Kernaussage; für das Management verdichtet, für die Fachabteilung mit Details.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa11",
+   "cat": "datenbanken",
+   "q": "Aus welchen Quellen stammen Ihre Daten, und wie haben Sie geklärt, ob Sie diese für Ihre Analyse nutzen und miteinander verknüpfen dürfen?",
+   "hinweis": "Quellen nach intern und extern sowie strukturiert, semistrukturiert und unstrukturiert eingeordnet, Lizenzen und Nutzungsbedingungen der Quelle, vertragliche und urheberrechtliche Grenzen, Freigabe durch den Data Owner und technische Verknüpfbarkeit über gemeinsame Schlüssel.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa12",
+   "cat": "datenbanken",
+   "q": "Welche Datenqualitätsprobleme haben Sie gefunden, und nach welchen Regeln haben Sie entschieden, einen Wert zu korrigieren, zu ersetzen oder auszuschließen?",
+   "hinweis": "Data Profiling entlang der Qualitätsdimensionen (Vollständigkeit, Korrektheit, Konsistenz, Eindeutigkeit), Art des Fehlens (MCAR, MAR, MNAR), Ersetzen nur begründet, jede Bereinigung protokolliert und ihre Wirkung auf das Ergebnis geprüft.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa13",
+   "cat": "datenbanken",
+   "q": "Wie haben Sie die Daten für die Auswertung bereitgestellt, und warum haben Sie sich für dieses Datenmodell und diesen Ladeweg entschieden?",
+   "hinweis": "ETL oder ELT, Sternschema mit Fakten- und Dimensionstabellen und festgelegter Granularität, vollständiges oder inkrementelles Laden, Ladeprotokoll mit Kontrollsummen; Abwägung gegenüber der direkten Abfrage des Quellsystems.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa14",
+   "cat": "datenbanken",
+   "q": "Woran haben Sie erkannt, dass Ihre SQL-Auswertungen die richtigen Zahlen liefern?",
+   "hinweis": "Abgleich mit Kontrollsummen der Quelle, Test an kleinen Daten mit bekanntem Ergebnis, Prüfung von Joins auf vervielfachte Zeilen, richtige NULL-Behandlung (COUNT(*) gegenüber COUNT(spalte), LEFT JOIN) und Plausibilisierung mit der Fachabteilung.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa15",
+   "cat": "sicherheit",
+   "q": "Auf welcher Rechtsgrundlage durften Sie personenbezogene Daten für Ihre Analyse verarbeiten, und war der Analysezweck mit dem ursprünglichen Erhebungszweck vereinbar?",
+   "hinweis": "Rechtsgrundlage nach Art. 6 Abs. 1 DSGVO, bei Gesundheits- oder anderen besonderen Daten zusätzlich Art. 9, Prüfung der Zweckänderung nach Art. 6 Abs. 4, Einbindung des Datenschutzbeauftragten und Eintrag im Verzeichnis von Verarbeitungstätigkeiten.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa16",
+   "cat": "sicherheit",
+   "q": "Haben Sie die Daten pseudonymisiert oder anonymisiert, und wie haben Sie geprüft, dass einzelne Personen in Ihren Ergebnissen nicht wiedererkannt werden können?",
+   "hinweis": "Unterschied der Begriffe (pseudonymisierte Daten bleiben personenbezogen), Verfahren wie Schlüssel-Hash, Generalisierung und Unterdrückung, k-Anonymität oder Mindestfallzahl in Berichten und das Risiko einer Verknüpfung mit anderen Quellen.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa17",
+   "cat": "sicherheit",
+   "q": "Welche Schutzklasse haben Sie Ihren Analysedaten zugeordnet, und welche Maßnahmen folgen daraus für Speicherung und Weitergabe der Ergebnisse?",
+   "hinweis": "Klassifizierung (öffentlich, intern, vertraulich, streng vertraulich) nach Schutzbedarf, daraus Speicherort, Empfängerkreis nach Need-to-know, Kennzeichnung von Berichten und Löschfristen für Zwischenstände und Exporte.",
+   "fachrichtung": "dpa"
+  },
+  {
+   "id": "dpa18",
+   "cat": "sicherheit",
+   "q": "Wie haben Sie die Daten Ihres Projekts bei Übertragung und Speicherung geschützt, und wo liegen die dafür nötigen Schlüssel?",
+   "hinweis": "Verschlüsselung bei der Übertragung (TLS) und im Ruhezustand (z. B. AES), Schlüsselverwaltung getrennt von den Daten mit eingeschränkten Rechten, Schlüsseltausch und -rotation, verschlüsselte Sicherungen und Festplattenverschlüsselung der Laptops für Exporte.",
+   "fachrichtung": "dpa"
   }
  ]
 }
