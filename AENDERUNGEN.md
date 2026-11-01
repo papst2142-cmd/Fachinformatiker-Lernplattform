@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.31.0
+Viele neue Lerninhalte für die Fachrichtung Digitale Vernetzung, dazu die ersten eigenen Testprojekte und Fragen fürs Fachgespräch.
+
+- Wer in den „Optionen“ unter „Ausbildung“ Digitale Vernetzung gewählt hat, bekommt 1 200 neue Karteikarten und 1 750 neue Prüfungsfragen. Zusammen mit den gemeinsamen Inhalten aller Fachrichtungen sind es jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen.
+- Die neuen Inhalte gehen in die Breite und in die Tiefe: von cyber-physischen Systemen, Sensoren, Aktoren und Messsignalen über Steuern, Regeln und Programmieren bis zu Feldbussen, IoT-Protokollen, Funk und Netzplanung, dazu Inbetriebnahme, Fehlersuche, Überwachung, Wartung und die Sicherheit vernetzter Anlagen. Viele Aufgaben enthalten eine Rechnung oder ein kurzes Programm mit vollständigem Lösungsweg.
+- Unter „Testprojekte“ stehen für Digitale Vernetzung jetzt 50 eigene Übungsprojekte zum Abschlussprojekt, jeweils mit Ausgangslage, Auftrag, Rahmenbedingungen, Aufgaben und Lösungshinweisen.
+- Im Abschlussprojekt unter „Fachgespräch“ kommen 18 neue Fragen zu Vernetzung, Anlagen, Sicherheit und Wirtschaftlichkeit dazu, wie sie der Prüfungsausschuss zu einem Projekt der digitalen Vernetzung stellt.
+- Für Systemintegration, Anwendungsentwicklung und Daten- und Prozessanalyse ändert sich bei den Lerninhalten nichts. Die neuen Inhalte sind dort nicht zu sehen und werden dort auch nicht geladen.
+- Am Lernstand und am Spiel ändert sich nichts.
+
 ## A 0.30.0
 Viele neue Lerninhalte für die Fachrichtung Daten- und Prozessanalyse, dazu eigene Testprojekte und Fragen fürs Fachgespräch.
 
