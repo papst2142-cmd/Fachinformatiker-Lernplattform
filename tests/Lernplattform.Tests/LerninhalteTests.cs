@@ -318,12 +318,12 @@ public class LerninhalteTests
     {
         // W5 (Weisung P9-11): die Sichten DPA und DV zaehlen genau wie nach W4/W5 (1 084 + 300 Karten,
         // 1 615 + 370 Fragen, 330 eigene AP2); AE dazu mit den Runden 2 bis 4 (Phase 10 W2: +1 200 / +1 750),
-        // DPA ebenso (Phase 10 W3)
+        // DPA ebenso (Phase 10 W3), DV ebenso (Phase 10 W4)
         var alle = Echt();
         foreach (var fr in new[] { "ae", "dpa", "dv" })
         {
             var sicht = alle.Fuer(fr);
-            var dazu = fr is "ae" or "dpa" ? (Karten: 1200, Fragen: 1750) : (Karten: 0, Fragen: 0);
+            var dazu = (Karten: 1200, Fragen: 1750);
             Assert.Equal(1384 + dazu.Karten, sicht.Karteikarten.Count);
             Assert.Equal(1985 + dazu.Fragen, sicht.Quizfragen.Count);
             Assert.Equal(330, sicht.Ap2Szenarien.Count);
@@ -354,12 +354,12 @@ public class LerninhalteTests
         Assert.Equal(50, ae.Testprojekte.Count);
         Assert.All(ae.Testprojekte, e => Assert.Equal("ae", e.Zugehoerigkeit));
         Assert.Equal(60, Fachfragen(alle, "ae"));
-        // SI, DPA und DV sehen nichts davon; SI und DV zaehlen wie vor der Welle (DPA siehe Phase 10 W3)
+        // SI, DPA und DV sehen nichts davon; SI zaehlt wie vor der Welle (DPA siehe Phase 10 W3, DV Phase 10 W4)
         var si = alle.Fuer("si");
         Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "ae");
-        var dv = alle.Fuer("dv");
-        Assert.Equal((1384, 1985, 0, 42), (dv.Karteikarten.Count, dv.Quizfragen.Count, dv.Testprojekte.Count, Fachfragen(alle, "dv")));
+        Assert.DoesNotContain(alle.Fuer("dv").Karteikarten, e => e.Zugehoerigkeit == "ae");
+        Assert.DoesNotContain(alle.Fuer("dv").Testprojekte, e => e.Zugehoerigkeit == "ae");
         Assert.DoesNotContain(alle.Fuer("dpa").Karteikarten, e => e.Zugehoerigkeit == "ae");
         Assert.DoesNotContain(alle.Fuer("dpa").Testprojekte, e => e.Zugehoerigkeit == "ae");
     }
@@ -371,14 +371,15 @@ public class LerninhalteTests
     {
         var alle = Echt();
         // die neuen Eintraege haengen hinter AE Runden 2 bis 4 an (2 100 Karten, 2 860 Fragen) und gehoeren alle zu DPA
-        Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(2100).Count());
-        Assert.All(NeueEintraege(alle.Karteikarten).Skip(2100), e => Assert.Equal("dpa", e.Zugehoerigkeit));
-        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(2860).Count());
-        Assert.All(NeueEintraege(alle.Quizfragen).Skip(2860), e => Assert.Equal("dpa", e.Zugehoerigkeit));
+        // (Phase 10 W4 haengt DV dahinter an)
+        Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200).Count());
+        Assert.All(NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200), e => Assert.Equal("dpa", e.Zugehoerigkeit));
+        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(2860).Take(1750).Count());
+        Assert.All(NeueEintraege(alle.Quizfragen).Skip(2860).Take(1750), e => Assert.Equal("dpa", e.Zugehoerigkeit));
         Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "dpa"));
-        Assert.Equal(36, alle.NeueFachfragen.Count);
-        Assert.All(alle.NeueFachfragen.Skip(18), f => Assert.Equal("dpa", f.Zugehoerigkeit));
-        Assert.Equal(Enumerable.Range(1, 18).Select(i => "dpa" + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture)), alle.NeueFachfragen.Skip(18).Select(f => f.Frage.Id));
+        Assert.Equal(18, alle.NeueFachfragen.Skip(18).Take(18).Count());
+        Assert.All(alle.NeueFachfragen.Skip(18).Take(18), f => Assert.Equal("dpa", f.Zugehoerigkeit));
+        Assert.Equal(Enumerable.Range(1, 18).Select(i => "dpa" + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture)), alle.NeueFachfragen.Skip(18).Take(18).Select(f => f.Frage.Id));
         // Sicht DPA: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
         var dpa = alle.Fuer("dpa");
         Assert.Equal(2584, dpa.Karteikarten.Count);
@@ -386,7 +387,7 @@ public class LerninhalteTests
         Assert.Equal(50, dpa.Testprojekte.Count);
         Assert.All(dpa.Testprojekte, e => Assert.Equal("dpa", e.Zugehoerigkeit));
         Assert.Equal(60, Fachfragen(alle, "dpa"));
-        // SI, AE und DV sehen nichts davon und zaehlen wie vor der Welle
+        // SI, AE und DV sehen nichts davon; SI und AE zaehlen wie vor der Welle (DV siehe Phase 10 W4)
         var si = alle.Fuer("si");
         Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dpa");
@@ -394,8 +395,44 @@ public class LerninhalteTests
         Assert.Equal((2584, 3735, 50, 60), (ae.Karteikarten.Count, ae.Quizfragen.Count, ae.Testprojekte.Count, Fachfragen(alle, "ae")));
         Assert.DoesNotContain(ae.Karteikarten, e => e.Zugehoerigkeit == "dpa");
         Assert.DoesNotContain(ae.Testprojekte, e => e.Zugehoerigkeit == "dpa");
+        Assert.DoesNotContain(alle.Fuer("dv").Karteikarten, e => e.Zugehoerigkeit == "dpa");
+        Assert.DoesNotContain(alle.Fuer("dv").Testprojekte, e => e.Zugehoerigkeit == "dpa");
+    }
+
+    // -- DV Runden 2 bis 4 (Phase 10 W4, Weisung P10-6) -------------------------------------------
+
+    [Fact]
+    public void DvRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
+    {
+        var alle = Echt();
+        // die neuen Eintraege haengen hinter DPA Runden 2 bis 4 an (3 300 Karten, 4 610 Fragen) und gehoeren alle zu DV
+        Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(3300).Count());
+        Assert.All(NeueEintraege(alle.Karteikarten).Skip(3300), e => Assert.Equal("dv", e.Zugehoerigkeit));
+        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(4610).Count());
+        Assert.All(NeueEintraege(alle.Quizfragen).Skip(4610), e => Assert.Equal("dv", e.Zugehoerigkeit));
+        Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "dv"));
+        Assert.Equal(54, alle.NeueFachfragen.Count);
+        Assert.All(alle.NeueFachfragen.Skip(36), f => Assert.Equal("dv", f.Zugehoerigkeit));
+        Assert.Equal(Enumerable.Range(1, 18).Select(i => "dv" + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture)), alle.NeueFachfragen.Skip(36).Select(f => f.Frage.Id));
+        // Sicht DV: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
         var dv = alle.Fuer("dv");
-        Assert.Equal((1384, 1985, 0, 42), (dv.Karteikarten.Count, dv.Quizfragen.Count, dv.Testprojekte.Count, Fachfragen(alle, "dv")));
+        Assert.Equal(2584, dv.Karteikarten.Count);
+        Assert.Equal(3735, dv.Quizfragen.Count);
+        Assert.Equal(50, dv.Testprojekte.Count);
+        Assert.All(dv.Testprojekte, e => Assert.Equal("dv", e.Zugehoerigkeit));
+        Assert.Equal(60, Fachfragen(alle, "dv"));
+        // SI, AE und DPA sehen nichts davon und zaehlen wie vor der Welle
+        var si = alle.Fuer("si");
+        Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
+        Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dv");
+        foreach (var fr in new[] { "ae", "dpa" })
+        {
+            var sicht = alle.Fuer(fr);
+            Assert.Equal((2584, 3735, 50, 60), (sicht.Karteikarten.Count, sicht.Quizfragen.Count, sicht.Testprojekte.Count, Fachfragen(alle, fr)));
+            Assert.DoesNotContain(sicht.Karteikarten, e => e.Zugehoerigkeit == "dv");
+            Assert.DoesNotContain(sicht.Quizfragen, e => e.Zugehoerigkeit == "dv");
+            Assert.DoesNotContain(sicht.Testprojekte, e => e.Zugehoerigkeit == "dv");
+        }
     }
 
     /// <summary>Nur die Eintraege aus inhalte_csharp/lernen/ (die bisherigen sind si oder gemeinsam), in Dateireihenfolge.</summary>
