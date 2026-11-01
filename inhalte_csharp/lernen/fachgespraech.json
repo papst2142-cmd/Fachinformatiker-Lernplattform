@@ -255,6 +255,132 @@
    "q": "Wie haben Sie die Daten Ihres Projekts bei Übertragung und Speicherung geschützt, und wo liegen die dafür nötigen Schlüssel?",
    "hinweis": "Verschlüsselung bei der Übertragung (TLS) und im Ruhezustand (z. B. AES), Schlüsselverwaltung getrennt von den Daten mit eingeschränkten Rechten, Schlüsseltausch und -rotation, verschlüsselte Sicherungen und Festplattenverschlüsselung der Laptops für Exporte.",
    "fachrichtung": "dpa"
+  },
+  {
+   "id": "dv01",
+   "cat": "netzwerk",
+   "q": "Warum haben Sie für die Anbindung der Feldgeräte in Ihrem Projekt genau dieses Feldbus- oder Industrial-Ethernet-Protokoll gewählt?",
+   "hinweis": "Anforderungen an Zykluszeit und Determinismus, vorhandene Geräte und Gerätebeschreibungen (z. B. GSDML, IODD), Diagnosefähigkeit; Vergleich mit mindestens einer Alternative wie Modbus TCP oder PROFINET.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv02",
+   "cat": "netzwerk",
+   "q": "Wie haben Sie die Nachrichten zwischen Ihren IoT-Geräten und der Plattform gestaltet, und was passiert bei einem Verbindungsabbruch?",
+   "hinweis": "Bei MQTT z. B. Topic-Struktur, QoS-Stufe je Nachrichtenart, Retained Message und Last Will; bei anderen Protokollen wie OPC UA PubSub oder LoRaWAN entsprechend Nachrichtenaufbau, Bestätigung und Wiederholung. Dazu Pufferung im Gerät, Nutzlastformat und Zeitstempel begründen.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv03",
+   "cat": "netzwerk",
+   "q": "Welche Laufzeit und welchen Jitter verlangt Ihre Anwendung, und wie haben Sie nachgewiesen, dass Ihr Netz diese Werte einhält?",
+   "hinweis": "Anforderung aus dem Prozess ableiten (z. B. Zykluszeit 10 ms), Messung mit Busdiagnose oder Wireshark, Priorisierung über 802.1p bzw. DSCP, Reserve bei Volllast.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv04",
+   "cat": "netzwerk",
+   "q": "Nach welchen Kriterien haben Sie Switches und Steckverbinder für Temperatur, Staub, Feuchte, Vibration und elektromagnetische Störungen an der Anlage ausgewählt?",
+   "hinweis": "Erweiterter Temperaturbereich, Schutzart (z. B. IP67), Hutschienenmontage, M12-Stecker statt RJ45 bei Vibration, Schirmung und Erdung nahe Frequenzumrichtern, schleppkettentaugliche Leitungen an bewegten Teilen, managed mit Ringredundanz (MRP); Angaben aus Datenblättern.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv05",
+   "cat": "netzwerk",
+   "q": "Wie haben Sie Geräte mit unterschiedlichen Protokollen miteinander verbunden, und wo liegen die Grenzen des eingesetzten Gateways?",
+   "hinweis": "Protokollumsetzer (z. B. Modbus RTU nach OPC UA), Abbildungstabelle der Datenpunkte, Datentypen und Byte-Reihenfolge, zusätzliche Latenz, Gateway als einzelner Ausfallpunkt.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv06",
+   "cat": "systeme",
+   "q": "Zeigen Sie anhand Ihres Blockschaltbilds, wie Sensoren, Steuerung, Edge-Gerät und übergeordnete Systeme in Ihrem Projekt zusammenwirken.",
+   "hinweis": "Ebenen der Automatisierungspyramide, Datenflüsse mit Richtung, Schnittstellen und Protokolle je Verbindung, harte und weiche Echtzeit je Ebene.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv07",
+   "cat": "systeme",
+   "q": "Wie haben Sie die Sensoren für Ihr Projekt ausgewählt, und wie haben Sie geprüft, dass die angezeigten Messwerte stimmen?",
+   "hinweis": "Messbereich, Genauigkeit, Ausgangssignal (4 bis 20 mA, IO-Link), Schutzart; Vergleichsmessung mit Referenzgerät, Kalibrierung und Prüfung der Skalierung im Programm.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv08",
+   "cat": "systeme",
+   "q": "Erklären Sie einen Programmteil Ihrer Steuerung oder Ihres Edge-Programms und wie Sie ihn vor dem Einsatz an der Anlage getestet haben.",
+   "hinweis": "Baustein oder Funktion, Zustände, Timer und Flanken; Simulation, Testfälle mit erwartetem Ergebnis, erster Test an der Anlage im sicheren Zustand.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv09",
+   "cat": "systeme",
+   "q": "In welcher Reihenfolge sind Sie bei der Inbetriebnahme vorgegangen, und was steht in Ihrem Inbetriebnahmeprotokoll?",
+   "hinweis": "Sichtprüfung, Versorgung, Kommunikation, Signaltest je Datenpunkt (Loop-Check), Funktionstest, Probebetrieb; Messwerte, Abweichungen, Freigabe mit Unterschrift.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv10",
+   "cat": "systeme",
+   "q": "Was geschieht in Ihrer Anlage, wenn das Edge-Gerät oder die Verbindung zur übergeordneten Plattform ausfällt?",
+   "hinweis": "Steuerung arbeitet eigenständig weiter, Messdaten werden zwischengespeichert und mit Zeitstempel nachgesendet (Store and Forward), Meldung an den Betrieb; durch gezieltes Trennen getestet.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv11",
+   "cat": "sicherheit",
+   "q": "In welche Zonen haben Sie die Anlage aufgeteilt, und welche Verbindungen erlaubt Ihr Regelwerk zwischen diesen Zonen?",
+   "hinweis": "Zonen und Conduits nach IEC 62443, Ebenen des Purdue-Modells, DMZ zwischen IT und OT; nur benötigte Verbindungen mit Richtung, Protokoll und Port, sonst alles gesperrt.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv12",
+   "cat": "sicherheit",
+   "q": "Wie ist der Fernzugriff von Herstellern und Dienstleistern auf die Anlage in Ihrem Projekt geregelt?",
+   "hinweis": "Zugang über Jump-Host und VPN mit MFA, Freigabe nur auf Anforderung und zeitlich begrenzt, persönliche Konten, Protokollierung oder Aufzeichnung der Sitzung.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv13",
+   "cat": "sicherheit",
+   "q": "Woran würden Sie in Ihrem System erkennen, dass ein Gerät manipuliert wurde oder ungewöhnlich kommuniziert?",
+   "hinweis": "Baseline und Allowlist der Kommunikationsbeziehungen, neue Verbindungen oder Funktionscodes, Plausibilitätsprüfung der Messwerte, passives IDS am SPAN-Port, Alarm im SIEM.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv14",
+   "cat": "sicherheit",
+   "q": "Wie haben Sie in Ihrem Projekt verhindert, dass Steuerungsprogramme und Parameter unbemerkt oder unbefugt geändert werden?",
+   "hinweis": "Schutzstufe und Passwort der Steuerung (Lese- und Schreibschutz), Schlüsselschalter oder Betriebsartenwahl RUN/PROG, Freigabeverfahren für Programmänderungen, protokollierte Online-Änderungen und Vergleich mit dem freigegebenen Stand; minimale Rechte nur als Grundsatz dahinter.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv15",
+   "cat": "wirtschaft",
+   "q": "Welche Leistungen Ihres Projekts haben Sie an Fachfirmen vergeben, und wie sind diese in Ihre Kostenrechnung eingegangen?",
+   "hinweis": "Arbeiten an elektrischen Anlagen durch eine Elektrofachkraft, Montage, Kalibrierung; Angebote eingeholt, Fremdleistung getrennt von eigenen Stunden mal Stundensatz und Material ausgewiesen.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv16",
+   "cat": "wirtschaft",
+   "q": "Welche Wünsche des Kunden haben Sie im Projekt nicht umgesetzt, und wie haben Sie das mit ihm abgestimmt?",
+   "hinweis": "Muss- und Kann-Anforderungen, Auswirkung auf Kosten, Termin und Sicherheit, Änderungsantrag, schriftliche Bestätigung des Kunden.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv17",
+   "cat": "wirtschaft",
+   "q": "Wie hilft Ihre Lösung dem Betreiber, ungeplante Stillstände zu verringern und Wartungsintervalle anzupassen?",
+   "hinweis": "Zustandsorientierte oder vorausschauende Wartung, Kennzahlen wie MTBF, MTTR und Verfügbarkeit, Einsparung in Euro je Jahr, Intervalle aus erfassten Daten abgeleitet.",
+   "fachrichtung": "dv"
+  },
+  {
+   "id": "dv18",
+   "cat": "wirtschaft",
+   "q": "Was muss der Betreiber nach Ihrer Übergabe regelmäßig tun, damit die vernetzte Anlage sicher und aktuell bleibt?",
+   "hinweis": "Updates nach Herstellerfreigabe im Wartungsfenster, Sicherung von Steuerungsprogramm und Konfiguration, Zertifikate erneuern, Asset-Inventar pflegen, Zuständigkeiten festgelegt.",
+   "fachrichtung": "dv"
   }
  ]
 }
