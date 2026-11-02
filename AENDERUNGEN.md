@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.32.7
+Breite Tabellen lassen sich am Handy seitlich wischen, lange Hinweisfenster beginnen oben, und im Rundgang liegt die Bildlaufleiste nicht mehr über den Seitenpunkten.
+
+- Tabellen in Aufgaben und Musterlösungen (zum Beispiel Nutzwertanalysen oder Regelwerke) brechen jetzt nie mehr um, auch nicht am Handy oder bei großer Schrift. Ist eine Tabelle breiter als der Bildschirm, kannst du sie seitlich wischen, und darunter steht „→ wischen“ wie bei den Ergebnissen der Rechner.
+- Ein Hinweisfenster mit langem Text (zum Beispiel nach der Wahl der Fachrichtung bei großer Schrift am Handy) beginnt jetzt oben bei der Überschrift. Bisher stand es gleich am Ende des Textes, und die Überschrift war nicht zu sehen.
+- Im Rundgang liegt die Bildlaufleiste bei großer Schrift nicht mehr über dem letzten der fünf Seitenpunkte.
+
 ## A 0.32.6
 Das Dashboard zeigt bei Anwendungsentwicklung, Daten- und Prozessanalyse und Digitaler Vernetzung nur noch deine Fachrichtung, alte Klausur-Einträge werden berichtigt, und eine Frage zu Entwurfsmustern ist neu gefasst.
 

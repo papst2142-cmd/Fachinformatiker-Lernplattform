@@ -16,6 +16,9 @@ public static class Dialog
 {
     public const string Ok = "OK";
 
+    /// <summary>FW6 (Sammelliste 61/62): Abstand rechts in Fenstern mit Bildlauf (Dialog, Rundgang), breiter als die Scrollleiste (6).</summary>
+    public const double RandFuerLeiste = 12;
+
     private static Panel? _ebene;
 
     /// <summary>Gerade offenes Fenster (fuer die Layoutpruefung im Start ohne Bedienung).</summary>
@@ -85,7 +88,10 @@ public static class Dialog
             Spacing = 10,
             Children = { Schrift.Text(titel, "Gross", FontWeight.Bold), inhalt, reihe },
         };
-        var karte = Schrift.Karte(new ScrollViewer { Content = koerper });
+        // FW6 (Sammelliste 61/62): rechts Platz fuer die Scrollleiste, sonst liegt sie ueber dem Text
+        koerper.Margin = new Thickness(0, 0, RandFuerLeiste, 0);
+        var rollen = new ScrollViewer { Content = koerper };
+        var karte = Schrift.Karte(rollen);
         karte.MaxWidth = 560;
         karte.Margin = new Thickness(16);
         karte.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -107,10 +113,27 @@ public static class Dialog
         ebene.Children.Add(fenster);
         ebene.IsVisible = true;
         Offen = fenster;
-        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen, Phase 5: die Vorgabe
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            (vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled))?.Focus());
+        // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen, Phase 5: die Vorgabe;
+        // FW6 (Sammelliste 62): das Fenster beginnt trotzdem oben beim Titel
+        FokusOhneRollen(rollen, () =>
+            vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled));
         return fertig.Task;
+    }
+
+    /// <summary>
+    /// FW6 (Sammelliste 62, Weisung P11-12): Fokus auf ein Element setzen, ohne dass der Bereich dorthin rollt. Sonst
+    /// steht ein langes Fenster (Handy, grosse Schrift) beim Oeffnen am Textende, weil der Knopf mit dem Fokus unten
+    /// liegt, und der Titel ist nicht zu sehen. Danach rollt der Bereich wieder mit dem Fokus (Tab).
+    /// </summary>
+    internal static void FokusOhneRollen(ScrollViewer rollen, Func<Control?> ziel, NavigationMethod art = NavigationMethod.Unspecified)
+    {
+        rollen.SetValue(ScrollViewer.BringIntoViewOnFocusChangeProperty, false);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            ziel()?.Focus(art);
+            rollen.Offset = default;
+            rollen.ClearValue(ScrollViewer.BringIntoViewOnFocusChangeProperty);
+        });
     }
 
     /// <summary>

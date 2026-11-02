@@ -34,9 +34,12 @@ public sealed class SzenarioSeite : UserControl
     private TextBlock _statuszeile = null!;
     private LernText _titel = null!;
     private LernText _kopfzeile = null!;
-    private LernText _aufgabe = null!;
+    private TabellenText _aufgabe = null!;
+
+    /// <summary>Text der Aufgabe (Start ohne Bedienung, FW6: Tabellen am Handy).</summary>
+    public TabellenText Aufgabe => _aufgabe;
     private TextBox _eigene = null!;
-    private LernText _loesung = null!;
+    private TabellenText _loesung = null!;
     private WrapPanel _bewerten = null!;
     private Button _umschalten = null!;
     private bool? _breit;
@@ -211,9 +214,9 @@ public sealed class SzenarioSeite : UserControl
 
         _statuszeile = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.muted");
         _titel = new LernText("", "Gross", FontWeight.SemiBold, "Pinsel.text");
-        // Sammelliste 177: Tabellenzeilen in fester Zeichenbreite
-        _aufgabe = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true };
-        _loesung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true };
+        // Sammelliste 177: Tabellen in fester Zeichenbreite, am Handy seitlich wischbar (Teil 2)
+        _aufgabe = new TabellenText("", "Normal", FontWeight.Normal, "Pinsel.text_soft");
+        _loesung = new TabellenText("", "Normal", FontWeight.Normal, "Pinsel.text_soft");
         _detail.Children.Clear();
         if (Projekt)
         {

@@ -46,6 +46,33 @@ public class TabellenzeilenTests
         Assert.Equal([3], Tabellenzeilen.Bloecke("Vergleich:\n  K  G\n  P 3\n  K  2\nFazit").Select(b => b.Count));
     }
 
+    /// <summary>FW6 (Sammelliste 177 Teil 2): Fliesstext und Tabellen als Teile; mit "\n" verbunden wieder der ganze Text.</summary>
+    [Fact]
+    public void TeileErgebenDenText()
+    {
+        var text = "Vergleich:\n\n  K  G\n  P 3\nFazit\n  x | y\n";
+        var teile = Tabellenzeilen.Teile(text);
+        Assert.Equal([("Vergleich:\n", false), ("  K  G\n  P 3", true), ("Fazit", false), ("  x | y", true), ("", false)], teile);
+        Assert.Equal(text, string.Join("\n", teile.Select(t => t.Text)));
+        Assert.Equal([("  a  b", true)], Tabellenzeilen.Teile("  a  b"));
+        Assert.Equal([("nur Text\n  - Punkt", false)], Tabellenzeilen.Teile("nur Text\n  - Punkt"));
+        Assert.Equal([("", false)], Tabellenzeilen.Teile(null));
+        // "\r\n" (Windows): die trennenden "\r" fallen weg, Tabellenzeilen ohne "\r"
+        Assert.Equal([("A", false), ("  a  b", true), ("B", false)], Tabellenzeilen.Teile("A\r\n  a  b\r\nB"));
+    }
+
+    /// <summary>FW6 (Sammelliste 177 Teil 2): Groesse der Tabelle; erst kleiner bis zur Untergrenze, dann wischen.</summary>
+    [Fact]
+    public void SchriftgroesseErstKleinerDannWischen()
+    {
+        // 40 Zeichen zu 0,6 je Punkt: bei 14 pt 336 breit
+        Assert.Equal((14.0, false), Tabellenzeilen.Schriftgroesse(14, 11, 40, 0.6, 400));
+        Assert.Equal((12.4, false), Tabellenzeilen.Schriftgroesse(14, 11, 40, 0.6, 300));   // 300 / 24 = 12,5, abgerundet minus 0,1
+        Assert.Equal((11.0, true), Tabellenzeilen.Schriftgroesse(14, 11, 40, 0.6, 200));    // passt erst unter 11: wischen
+        Assert.Equal((14.0, false), Tabellenzeilen.Schriftgroesse(14, 11, 40, 0.6, double.PositiveInfinity));
+        Assert.Equal((14.0, false), Tabellenzeilen.Schriftgroesse(14, 11, 0, 0.6, 200));
+    }
+
     /// <summary>In jeder Fachrichtung gibt es Szenarien mit Tabellen; eingerueckte Aufzaehlungen bleiben normal.</summary>
     [Fact]
     public void BestandJeFachrichtung()

@@ -49,6 +49,10 @@ public static class Haenger
     private static readonly object Sperre = new();
     private static FileStream? _log;
     private static PosixSignalRegistration? _signal;
+
+    // FW6 (Sammelliste 191): nimmt der Signal-Abruf an? Im Programm immer; in Tests nur, wenn ein Test ihn freigibt
+    // (sonst schreibt ein spaet zugestelltes Signal in die haenger.log eines anderen Tests)
+    private static volatile bool _signalAbruf = true;
     private static Thread? _waechter;
 
     private sealed class Blockade
@@ -118,7 +122,10 @@ public static class Haenger
                 _signal = PosixSignalRegistration.Create((PosixSignal)nummer, kontext =>
                 {
                     kontext.Cancel = true;   // nicht beenden
-                    Abruf();
+                    if (_signalAbruf)
+                    {
+                        Abruf();
+                    }
                 });
             }
         }
@@ -525,11 +532,15 @@ public static class Haenger
         }
     }
 
-    /// <summary>Nur fuer Tests: Zustand zuruecksetzen, Datei schliessen, Wartepunkte und fehler.log ersetzen.</summary>
+    /// <summary>FW6 (Sammelliste 191): Signal-Abruf in Tests freigeben (true) oder wieder sperren; <see cref="FuerTests"/> sperrt ihn.</summary>
+    internal static void SignalAbrufFuerTests(bool an) => _signalAbruf = an;
+
+    /// <summary>Nur fuer Tests: Zustand zuruecksetzen, Datei schliessen, Wartepunkte und fehler.log ersetzen, Signal-Abruf sperren.</summary>
     internal static void FuerTests(Func<string>? wartepunkte = null, Action<string>? fehlerlog = null)
     {
         lock (Sperre)
         {
+            _signalAbruf = false;
             _log?.Dispose();
             _log = null;
             _herzschlag = null;
