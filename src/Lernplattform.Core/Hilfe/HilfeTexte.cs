@@ -137,7 +137,7 @@ public static partial class HilfeTexte
             + "ihn mit „Sicherung erstellen“ als Datei, zum Beispiel vor einem Gerätewechsel. Mit „Sicherung "
             + "einspielen“ holst du ihn zurück, auch auf einem anderen Gerät. Dabei wählst du „Zusammenführen“ "
             + "(nur Fehlendes ergänzen) oder „Alles ersetzen“. In der Sicherungsdatei steht auch der Name des "
-            + "Geräts, am PC mit dem Rechnernamen.\n"
+            + "Geräts (PC oder Handy).\n"
             + "\nMit „Abgleich PC und Handy“ haben PC und Handy denselben Lernstand. Wie du ihn einrichtest, steht im"
             + " nächsten Thema."),
         new("abgleich", "Abgleich einrichten", ["Optionen"],
@@ -151,8 +151,8 @@ public static partial class HilfeTexte
             + "„Speichern und abgleichen“. Auf dem anderen Gerät genauso.\n"
             + "\nÜbertragen werden: was du wann gelernt hast, die Ergebnisse deiner Tests und Prüfungen (Punkte und N"
             + "ote, nicht deine Antworten), die Texte deines Abschlussprojekts, deine Spielstände und die "
-            + "Bestenliste. In jeder Änderung im Repository steht außerdem der Name des Geräts, am PC mit dem "
-            + "Rechnernamen.\n\nAchtung: Auch Löschen wird abgeglichen."),
+            + "Bestenliste. In jeder Änderung im Repository steht außerdem der Name des Geräts "
+            + "(PC oder Handy).\n\nAchtung: Auch Löschen wird abgeglichen."),
         new("update", "Update", ["Optionen"],
             "In den „Optionen“ unter „Updates“ prüft „Nach Updates suchen“, ob es eine neue Version gibt. Ist "
             + "„Beim Start automatisch nach Updates suchen“ an, sucht die App beim Start von selbst.\n"

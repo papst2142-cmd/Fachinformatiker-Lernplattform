@@ -275,7 +275,7 @@ public class LerninhalteTests
         // Runde 1 = die ersten 900 Karten und 1 110 Fragen in inhalte_csharp/lernen/ (je Fachrichtung 300 und 370);
         // AE Runden 2 bis 4 (Phase 10 W2) haengen dahinter an und zaehlen hier nicht
         Assert.Equal(300, NeueEintraege(alle.Karteikarten).Take(900).Count(e => e.Zugehoerigkeit == eigen));
-        Assert.Equal(370, NeueEintraege(alle.Quizfragen).Take(1110).Count(e => e.Zugehoerigkeit == eigen));
+        Assert.Equal(370, QuizDatei(alle, 0, 1110).Count(e => e.Zugehoerigkeit == eigen) + (eigen == "ae" ? Ausgeschlossen(alle, 0, 1110) : 0));
         Assert.Equal(330, alle.Ap2Szenarien.Count(e => e.Zugehoerigkeit == eigen));
         Assert.Equal(330, alle.Ap2SzenarienFuer(eigen).Count);
         var eigeneThemen = alle.NeueThemen.Where(p => p.Value == eigen).Select(p => p.Key).ToList();
@@ -342,8 +342,8 @@ public class LerninhalteTests
         // (Phase 10 W3 haengt DPA dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(900).Take(1200).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(900).Take(1200), e => Assert.Equal("ae", e.Zugehoerigkeit));
-        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(1110).Take(1750).Count());
-        Assert.All(NeueEintraege(alle.Quizfragen).Skip(1110).Take(1750), e => Assert.Equal("ae", e.Zugehoerigkeit));
+        Assert.Equal(1750, QuizDatei(alle, 1110, 1750).Count() + Ausgeschlossen(alle, 1110, 1750));
+        Assert.All(QuizDatei(alle, 1110, 1750), e => Assert.Equal("ae", e.Zugehoerigkeit));
         Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "ae"));
         Assert.Equal(18, alle.NeueFachfragen.Take(18).Count());
         Assert.All(alle.NeueFachfragen.Take(18), f => Assert.Equal("ae", f.Zugehoerigkeit));
@@ -374,8 +374,8 @@ public class LerninhalteTests
         // (Phase 10 W4 haengt DV dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200), e => Assert.Equal("dpa", e.Zugehoerigkeit));
-        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(2860).Take(1750).Count());
-        Assert.All(NeueEintraege(alle.Quizfragen).Skip(2860).Take(1750), e => Assert.Equal("dpa", e.Zugehoerigkeit));
+        Assert.Equal(1750, QuizDatei(alle, 2860, 1750).Count() + Ausgeschlossen(alle, 2860, 1750));
+        Assert.All(QuizDatei(alle, 2860, 1750), e => Assert.Equal("dpa", e.Zugehoerigkeit));
         Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "dpa"));
         Assert.Equal(18, alle.NeueFachfragen.Skip(18).Take(18).Count());
         Assert.All(alle.NeueFachfragen.Skip(18).Take(18), f => Assert.Equal("dpa", f.Zugehoerigkeit));
@@ -443,8 +443,8 @@ public class LerninhalteTests
         // die neuen Eintraege haengen hinter DPA Runden 2 bis 4 an (3 300 Karten, 4 610 Fragen) und gehoeren alle zu DV
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(3300).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(3300), e => Assert.Equal("dv", e.Zugehoerigkeit));
-        Assert.Equal(1750, NeueEintraege(alle.Quizfragen).Skip(4610).Count());
-        Assert.All(NeueEintraege(alle.Quizfragen).Skip(4610), e => Assert.Equal("dv", e.Zugehoerigkeit));
+        Assert.Equal(1750, QuizDatei(alle, 4610, 1750).Count() + Ausgeschlossen(alle, 4610, 1750));
+        Assert.All(QuizDatei(alle, 4610, 1750), e => Assert.Equal("dv", e.Zugehoerigkeit));
         Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "dv"));
         Assert.Equal(54, alle.NeueFachfragen.Count);
         Assert.All(alle.NeueFachfragen.Skip(36), f => Assert.Equal("dv", f.Zugehoerigkeit));
@@ -469,6 +469,21 @@ public class LerninhalteTests
             Assert.DoesNotContain(sicht.Testprojekte, e => e.Zugehoerigkeit == "dv");
         }
     }
+
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 181): Quizfragen aus inhalte_csharp/lernen/quizfragen.json an den Stellen von
+    /// <paramref name="von"/> bis vor von + anzahl (ab 0, ueber die Nummer). Ein ausgeschlossener Eintrag fehlt (siehe
+    /// <see cref="Ausgeschlossen"/>), die Stellen der anderen bleiben; spaeter angehaengte liegen ausserhalb.
+    /// </summary>
+    private static IEnumerable<Lerninhalt> QuizDatei(Lerninhalte alle, int von, int anzahl)
+    {
+        var basis = alle.Quizfragen.Count(e => e.Zugehoerigkeit is not ("ae" or "dpa" or "dv"));
+        return alle.Quizfragen.Where(e => e.Nummer - 1 - basis >= von && e.Nummer - 1 - basis - von < anzahl);
+    }
+
+    /// <summary>Phase 11 FW5b: ausgeschlossene Quizfragen an diesen Stellen der Datei (inhalte_csharp/lernen/ausschluss.json).</summary>
+    private static int Ausgeschlossen(Lerninhalte alle, int von, int anzahl) =>
+        alle.Ausschluss.Count(a => a.Datei == "quizfragen" && a.Stelle >= von && a.Stelle - von < anzahl);
 
     /// <summary>Nur die Eintraege aus inhalte_csharp/lernen/ (die bisherigen sind si oder gemeinsam), in Dateireihenfolge.</summary>
     private static IEnumerable<Lerninhalt> NeueEintraege(IEnumerable<Lerninhalt> liste) =>
@@ -2365,12 +2380,11 @@ public class LerninhalteTests
             "b05812d096d344cb", "c5e3adff77e9e5ae", "e654ca698abab6ff", "e9775fcf33dc62a4", "bf7bfd5ab456c831", "671f73edc1b73acd",
             "13828726c99e50b8", "d382665faf7ce33f", "361d1026369e05d4", "e697bb07993fccd5", "92560717ef20fa5d", "23a8d2a1491b70e4",
             "058b296d48a0574f", "374fd5c885ad85c9", "46d6489d9b72c40d", "bb173917d4ed38ff", "79636f90921f1269", "32c937795c468925",
-            // ee98407d491ce3b2: DV-Quizfrage S59 berichtigt (vorher ed57c1204bd5a317; Sammelliste 184, Nico 02.11.2026
-            // Antwort 184a, Weisung P11-4): einziger ersetzter Eintrag, alle anderen bleiben
             "0579f5e185973a48", "912afa5d33603dc1", "24d757d70ac2dfc7", "92275488b17f95b2", "ee98407d491ce3b2", "ff595e6f8a16e2ea",
             "b4aa237e56f97cba", "d0666586c8ff19d8", "0c1ce73e0a9f0cb8", "ac1ce0ef4a18b3c2", "4a6794c62ffa04ef", "1d39d9e2398b6e53",
             "7ae250eb42818235", "34038f9cba33578d", "fed172cdd308e6e6", "31fecea8df94ca19", "4d669d1cef30823a", "df07f37b7d96d079",
             "580bb6e26d2977bd", "90d8fe14b5a5f4fb", "6e6ee3790451c31c", "be30b3a1dd6c147e", "fdfe59d92e23cb48", "97824e95e9535795",
+            "7af9fbad192435f2",
         ],
         ["szenarien_ap2"] =
         [

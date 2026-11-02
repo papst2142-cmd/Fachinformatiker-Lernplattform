@@ -91,6 +91,9 @@ PAARE = [
     # und Hinweis zum Rahmenplan (P9b), Thema mit Vorsilbe "seite:" bzw. "k:" (nicht in der Hilfe-Suche)
     {"nr": "P9a", "thema": "seite:willkommen", "alt": " (Schwerpunkt Systemintegration).\n", "neu": ". Deine Fachrichtung wählst du in den „Optionen“ unter „Ausbildung“.\n"},
     {"nr": "P9b", "thema": "k:SETUP_PLAN_HINT", "alt": "Für Systemintegration kannst du sie ausgeschaltet lassen.", "neu": "Schalte den Abschnitt deiner Fachrichtung ein; für Systemintegration bleiben alle drei aus."},
+    # Phase 11 FW5b (Weisung P11-11, Sammelliste 24, Nico 02.11.2026 Antwort 24b, Chat 1a): kein Rechnername mehr (G24)
+    {"nr": "G24", "thema": "sicherung", "alt": "der Name des Geräts, am PC mit dem Rechnernamen.", "neu": "der Name des Geräts (PC oder Handy)."},
+    {"nr": "G24", "thema": "abgleich", "alt": "der Name des Geräts, am PC mit dem Rechnernamen.", "neu": "der Name des Geräts (PC oder Handy)."},
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT", "alt": REL_PY, "neu": REL_CS},
 ]
 

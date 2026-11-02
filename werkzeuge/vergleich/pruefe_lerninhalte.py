@@ -95,6 +95,13 @@ def pools(zusatz, fr):
     return erg
 
 
+def ausgeschlossen(lernen, datei, stelle, e):
+    """Phase 11 FW5b (Sammelliste 181): Eintrag laut lernen/ausschluss.json nicht mehr gezogen (Datei, Stelle ab 0,
+    genau der Text von q; wie Lerninhalte.Ausgeschlossen)."""
+    return any(a["datei"] == datei and a["stelle"] == stelle and isinstance(e.get("q"), str) and e["q"] == a["q"]
+               for a in (lernen.get("ausschluss") or {}).get("eintraege") or [])
+
+
 def pruefen(bisher, quiz_alle, lernen, umbenennungen):
     """lernen: {name: inhalt} der Dateien in inhalte_csharp/lernen (fehlt = nicht da)."""
     zusatz = lernen.get("rahmenplan_zusatz") or {}
@@ -115,6 +122,8 @@ def pruefen(bisher, quiz_alle, lernen, umbenennungen):
         gesehen = {schluessel(e) for e in alte}
         alte_texte = {t.strip().lower() for t in (umbenennungen.get(tabelle) or {})} if tabelle else set()
         for k, e in enumerate(lernen.get(datei) or [], start=1):
+            if ausgeschlossen(lernen, datei, k - 1, e):
+                continue
             wo = "lernen/%s.json Nr. %d" % (datei, k)
             for feld in listenfelder:
                 if feld in e and not isinstance(e[feld], list):
@@ -260,7 +269,8 @@ def sichten(bisher, quiz_alle, lernen):
             return sum(1 for e in eintraege if wert(art, e.get(feld)) in ("gemeinsam", fr))
 
         def neue(datei):
-            return sum(1 for e in lernen.get(datei) or [] if e.get("fachrichtung") == fr)
+            return sum(1 for k, e in enumerate(lernen.get(datei) or [])
+                       if e.get("fachrichtung") == fr and not ausgeschlossen(lernen, datei, k, e))
 
         erzeugt = quiz_alle[len(bisher["quizfragen"]):]   # die im Programm erzeugten Subnetz-Aufgaben (Weisung P9-6)
         erg[fr] = {
@@ -312,7 +322,7 @@ def main():
                 if os.path.exists(os.path.join(pfad, n + ".json"))}
 
     namen = ["karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten", "fachgespraech", "themen",
-             "rahmenplan_zusatz", "einteilung_bisher"]
+             "rahmenplan_zusatz", "einteilung_bisher", "ausschluss"]
     echt = ordner(os.path.join(repo, "inhalte_csharp", "lernen"), namen)
     probe = ordner(os.path.join(repo, "tests", "Lerninhalte", "probe"), namen)
     for n in ("rahmenplan_zusatz", "einteilung_bisher"):

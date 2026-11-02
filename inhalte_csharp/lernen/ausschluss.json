@@ -1,0 +1,14 @@
+{
+ "_hinweis": [
+  "Phase 11 FW5b (Sammelliste 181, Nico 02.11.2026 Antwort a): Eintraege in inhalte_csharp/lernen, die das Programm nicht mehr zieht. Die Dateien bleiben nur angehaengt, die richtige Fassung steht am Ende der Datei.",
+  "Je Eintrag: datei (ohne .json), stelle in der Datei (ab 0) und genau der Text des Feldes q. Steht an der Stelle ein anderer Text, wirkt der Ausschluss nicht. Nur anhaengen."
+ ],
+ "eintraege": [
+  {
+   "datei": "quizfragen",
+   "stelle": 231,
+   "q": "Ein Importprogramm soll je nach Dateiendung (.csv, .json, .xml) das passende Leseobjekt liefern. Der restliche Code soll nur das Interface ILeser kennen. Welches Muster passt?",
+   "grund": "Sammelliste 181: nennt eine einfache Fabrik (Auswahl ueber die Dateiendung) eine Fabrikmethode; richtige Fassung als Stelle 6360"
+  }
+ ]
+}

@@ -116,6 +116,23 @@ public static class Zustand
         Inhalte = AlleInhalte.ContinueWith(t => !t.IsCompletedSuccessfully || t.Result is not { } alle ? null
             : _ersteSicht is { } erste && erste.Sicht == Sicht ? erste : alle.Fuer(Sicht), TaskScheduler.Default);
         AbgeleiteteStarten();
+        // Phase 11 FW5b (Sammelliste 186): alte Fehlbuchungen von AE/DPA/DV-Klausuren berichtigen (mit Kopie vorher,
+        // unter Vorgaenge); im Hintergrund, nur wenn es solche Zeilen gibt
+        _ = AlleInhalte.ContinueWith(t =>
+        {
+            if (!t.IsCompletedSuccessfully || t.Result is not { } alle)
+            {
+                return;
+            }
+            try
+            {
+                Core.Daten.Bereinigung.Ausfuehren(Lernstand, alle);
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            }
+        }, CancellationToken.None, TaskContinuationOptions.LongRunning, TaskScheduler.Default);
     }
 
     /// <summary>

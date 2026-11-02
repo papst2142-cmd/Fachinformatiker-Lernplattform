@@ -90,6 +90,7 @@ public sealed partial class Lerninhalte
             Einteilen(bisher, einteilung);
         }
 
+        var ausschluss = vorher?.Ausschluss ?? (lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : []);
         var neue = new Dictionary<InhaltArt, IReadOnlyList<Lerninhalt>>();
         foreach (var (art, name) in LernenListen)
         {
@@ -103,7 +104,7 @@ public sealed partial class Lerninhalte
             List<(int Index, JsonObject Daten)> daten = geladen is null
                 ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
                 : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, geladen) : [];
-            neue[art] = daten.Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
+            neue[art] = daten.Where(d => !Ausgeschlossen(ausschluss, name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
             {
                 Zugehoerigkeit = d.Daten[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
                     && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
@@ -131,6 +132,7 @@ public sealed partial class Lerninhalte
             RahmenplanZusatz = vorher?.RahmenplanZusatz ?? (lernen(ZusatzDatei) is { } z ? LadeObjekt(_ => z, ZusatzDatei) : []),
             NeueThemen = neueThemen,
             Neue = neue,
+            Ausschluss = ausschluss,
             NeueFachfragen = NeueFachfragenLaden(ordner, geladen),
             Geladen = geladen,
             _lernen = ordner,
@@ -155,6 +157,27 @@ public sealed partial class Lerninhalte
         return bisherige.Where(f => alle.Einteilung.Wert(Einteilung.Fachgespraech, f.Id) is var w && (w == Fachrichtungen.Gemeinsam || w == fr))
             .Concat(alle.NeueFachfragen.Where(f => f.Zugehoerigkeit == fr).Select(f => f.Frage)).ToList();
     }
+
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 181, Nico 02.11.2026 Antwort a): inhalte_csharp/lernen/ausschluss.json nennt Eintraege,
+    /// die nicht mehr gezogen werden; die Dateien bleiben nur angehaengt, die richtige Fassung steht am Ende der Datei.
+    /// Je Eintrag Datei (ohne ".json"), Stelle in der Datei (ab 0) und genau der Text des Feldes "q". Steht an der
+    /// Stelle ein anderer Text, wirkt der Ausschluss nicht (das Pruefskript pruefe_lerninhalte.py liest dieselbe Datei).
+    /// Die Nummern der anderen Eintraege bleiben, wie sie sind.
+    /// </summary>
+    public const string AusschlussDatei = "ausschluss";
+
+    /// <summary>Phase 11 FW5b: die Eintraege aus <see cref="AusschlussDatei"/> (leer ohne Datei).</summary>
+    public IReadOnlyList<(string Datei, int Stelle, string Frage)> Ausschluss { get; private init; } = [];
+
+    private static List<(string Datei, int Stelle, string Frage)> AusschlussLaden(byte[] inhalt) =>
+        LadeObjekt(_ => inhalt, AusschlussDatei)["eintraege"]?.AsArray()
+            .Select(e => (e!["datei"]!.GetValue<string>(), e["stelle"]!.GetValue<int>(), e["q"]!.GetValue<string>())).ToList() ?? [];
+
+    /// <summary>Gilt fuer diesen Eintrag ein Ausschluss?</summary>
+    public static bool Ausgeschlossen(IReadOnlyList<(string Datei, int Stelle, string Frage)> ausschluss, string datei, int stelle, JsonObject daten) =>
+        ausschluss.Any(a => a.Datei == datei && a.Stelle == stelle
+            && daten["q"] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>() == a.Frage);
 
     private static List<NeueFachfrage> NeueFachfragenLaden(LernenOrdner ordner, HashSet<string>? geladen)
     {
@@ -301,6 +324,7 @@ public sealed partial class Lerninhalte
             RahmenplanZusatz = alle.RahmenplanZusatz,
             NeueThemen = alle.NeueThemen,
             Neue = alle.Neue,
+            Ausschluss = alle.Ausschluss,
             NeueFachfragen = alle.NeueFachfragen,
         };
     }

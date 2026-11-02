@@ -226,14 +226,19 @@ public static class UpdateAblauf
     /// Kopie der Datenbank nach ordner/vor_update_JJJJ-MM-TT_HHMMSS.db (nie ueberschreiben, sonst Zaehler),
     /// danach quick_check; ohne Datenbank null. Wird nie von allein geloescht.
     /// </summary>
-    public static string? KopieAnlegen(string datenbank, string ordner, Uhr uhr)
+    public static string? KopieAnlegen(string datenbank, string ordner, Uhr uhr) => KopieAnlegen(datenbank, ordner, uhr, KopiePraefix);
+
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 186): dieselbe Kopie mit anderem Namensanfang (vor_bereinigung_*).
+    /// </summary>
+    public static string? KopieAnlegen(string datenbank, string ordner, Uhr uhr, string praefix)
     {
         if (!File.Exists(datenbank))
         {
             return null;
         }
         Directory.CreateDirectory(ordner);
-        var name = KopiePraefix + uhr.Jetzt().ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
+        var name = praefix + uhr.Jetzt().ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
         var datei = Path.Combine(ordner, name + ".db");
         for (var n = 2; File.Exists(datei); n++)
         {

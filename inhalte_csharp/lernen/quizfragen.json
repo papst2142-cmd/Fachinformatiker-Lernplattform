@@ -109570,5 +109570,22 @@
   ],
   "a": "699 Euro",
   "exp": "Kabel 140 x 2,10 = 294 Euro, Lizenzen 9 x 45 = 405 Euro, zusammen 699 Euro. Diesen Betrag stellt man den Kosten eines Stillstands bei Kabelbruch gegenüber."
+ },
+ {
+  "cat": "systeme",
+  "thema": "ae_oop",
+  "fachrichtung": "ae",
+  "rahmenplan": [
+   "B1b"
+  ],
+  "q": "Ein Importprogramm hat eine abstrakte Basisklasse Importer mit dem festen Ablauf importiere(). Welches Leseobjekt (ILeser) gebraucht wird, legen die Unterklassen CsvImporter, JsonImporter und XmlImporter in der überschriebenen Methode erzeugeLeser() fest. Welches Muster ist das?",
+  "options": [
+   "Fabrikmethode",
+   "Dekorierer",
+   "Beobachter",
+   "Strategie mit Singleton"
+  ],
+  "a": "Fabrikmethode",
+  "exp": "Bei der Fabrikmethode überlässt die Basisklasse die Wahl der konkreten Klasse ihren Unterklassen: Jede überschreibt erzeugeLeser() und liefert ihren eigenen Leser, der Ablauf kennt nur ILeser. Eine einzelne Methode, die mit einer Fallunterscheidung über die Dateiendung den Leser auswählt, wäre dagegen eine einfache Fabrik (Simple Factory) und keine Fabrikmethode."
  }
 ]

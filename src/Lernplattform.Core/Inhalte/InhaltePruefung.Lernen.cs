@@ -60,7 +60,8 @@ public static partial class InhaltePruefung
             for (var k = 0; k < neue.Count; k++)
             {
                 var eintrag = neue[k];
-                var wo = $"lernen/{datei}.json Nr. {k + 1}";
+                // Phase 11 FW5b: Nummer = Stelle in der Datei + 1 (ein ausgeschlossener Eintrag fehlt, die anderen behalten ihre)
+                var wo = $"lernen/{datei}.json Nr. {eintrag.Nummer - alteListe.Count}";
                 // Phase 10 W2 (Sammelliste 173): ein Text statt einer Liste wird als solcher gemeldet, die weiteren
                 // Pruefungen sehen dann eine leere Liste (C# und Skript gleich)
                 foreach (var feld in listenFelder)
