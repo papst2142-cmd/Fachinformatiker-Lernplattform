@@ -1851,7 +1851,7 @@
   "ausgangssituation": "Die Stadt Rabenau hat im Frühjahr 2.400 Bürgerinnen und Bürger zur Zufriedenheit mit dem Bürgerservice befragt. Die Antworten liegen als Excel-Datei mit Alter, Geschlecht, Stadtteil, Antworten zu 18 Fragen, einem Freitextfeld und der E-Mail-Adresse für das abgeschlossene Gewinnspiel vor. Eine Hochschule der Region möchte die Daten für ein Forschungsprojekt zur Verwaltungsdigitalisierung auswerten. Die Stabsstelle will die Daten nur so herausgeben, dass keine Person mehr bestimmbar ist.",
   "auftrag": "Erarbeiten Sie ein Verfahren, mit dem die Befragungsdaten vor der Weitergabe anonymisiert werden, prüfen Sie das Ergebnis mit k-Anonymität und l-Diversität und dokumentieren Sie die rechtliche Bewertung.",
   "rahmenbedingungen": [
-   "Projektumfang für Sie: 80 Stunden, der Datenschutzbeauftragte der Stadt steht für zwei Abstimmungstermine bereit",
+   "Projektumfang für Sie: 40 Stunden, der Datenschutzbeauftragte der Stadt steht für zwei Abstimmungstermine bereit",
    "Die Teilnahme an der Befragung war freiwillig, im Hinweistext stand als Zweck „Verbesserung des Bürgerservice“",
    "Die Hochschule verlangt mindestens Altersgruppen, Geschlecht, Stadtteil und alle 18 Antworten",
    "Auszug aus zehn Datensätzen (Alter, Stadtteil, Geschlecht, Wohngeldbezug): 34 Nord w nein, 36 Nord w ja, 38 Nord w nein, 52 Süd m ja, 57 Süd m ja, 71 Altstadt w nein, 23 Nord m nein, 25 Nord m ja, 29 Nord m nein, 55 Süd m ja",
@@ -1892,7 +1892,7 @@
    "Außendienst soll nur eigene Kunden sehen, Niederlassungsleitungen nur ihre Niederlassung",
    "Provisionen sind Beschäftigtendaten, ein Betriebsrat ist vorhanden",
    "Rezertifizierung je Quartal, angesetzt 4 Minuten Prüfaufwand je Konto",
-   "Projektumfang 80 Stunden, Datenbank und Dashboard bleiben im Einsatz"
+   "Projektumfang 40 Stunden, Datenbank und Dashboard bleiben im Einsatz"
   ],
   "aufgaben": [
    "Ordnen Sie die Datenfelder Artikelpreisliste, Umsatz je Niederlassung, Kundenname mit Anschrift, IBAN des Kunden und Provision je Verkäufer einer Schutzklasse zu und begründen Sie.",
@@ -1925,7 +1925,7 @@
   "ausgangssituation": "Die Linden-Apotheke liefert täglich etwa 60 Rezepte an Kundinnen und Kunden nach Hause, die nicht selbst kommen können. Ist ein Arzneimittel nicht vorrätig, wird es beim Großhandel bestellt und mit der nächsten Lieferung gebracht. Die Bestellungen kommen per Telefon, Fax und E-Rezept-App an, die Touren plant eine Mitarbeiterin auf einem Papierzettel. Kunden beklagen, dass sie oft nicht wissen, wann der Bote kommt.",
   "auftrag": "Nehmen Sie den Ablauf der Rezeptbelieferung auf, stellen Sie ihn als BPMN-Diagramm dar, bestimmen Sie Durchlaufzeit und Wartezeitanteil und entwerfen Sie ein Soll-Modell.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Modellierung mit einem kostenlosen BPMN-Werkzeug",
+   "Projektumfang 40 Stunden, Modellierung mit einem kostenlosen BPMN-Werkzeug",
    "Gemessene Zeiten im Ist: Annahme 5 Minuten, Warten auf die Großhandelslieferung 240 Minuten, Kommissionieren 6 Minuten, Warten auf die Tour 90 Minuten, Fahrt 25 Minuten",
    "Der Großhandel liefert dreimal täglich, die Botentour startet um 14 Uhr",
    "Die Abgabe verschreibungspflichtiger Arzneimittel muss durch pharmazeutisches Personal begleitet oder telefonisch beraten werden"
@@ -1959,7 +1959,7 @@
   "ausgangssituation": "Die Betriebskrankenkasse Lindgrund bearbeitet Anträge auf Hilfsmittel wie Rollatoren, Hörgeräte oder Pflegebetten. Laut Qualitätshandbuch läuft jeder Antrag über Eingang, Prüfung, Bewilligung und Versorgung durch einen Leistungserbringer, bei teuren Hilfsmitteln zusätzlich über ein Gutachten des Medizinischen Dienstes. Versicherte beklagen lange Wartezeiten, und die Fachabteilung vermutet, dass der echte Ablauf vom Handbuch abweicht. Das Antragssystem schreibt zu jedem Bearbeitungsschritt einen Eintrag mit Zeitstempel in eine Tabelle.",
   "auftrag": "Bereiten Sie das Ereignisprotokoll datenschutzgerecht auf, decken Sie den tatsächlichen Ablauf mit Discovery auf, prüfen Sie die Übereinstimmung mit dem Soll-Modell und leiten Sie aus den Laufzeiten einen Verbesserungsvorschlag ab.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Auswertung mit einem Process-Mining-Werkzeug oder Python",
+   "Projektumfang 40 Stunden, Auswertung mit einem Process-Mining-Werkzeug oder Python",
    "Auszug aus dem Protokoll: Fall 1 Eingang, Prüfung, Bewilligung, Versorgung; Fall 2 Eingang, Prüfung, Gutachten, Bewilligung, Versorgung; Fall 3 Eingang, Prüfung, Bewilligung, Versorgung; Fall 4 Eingang, Prüfung, Rückfrage, Prüfung, Bewilligung, Versorgung; Fall 5 Eingang, Prüfung, Versorgung",
    "Anteile im Gesamtjahr: Standardablauf 60 %, mit Gutachten 15 %, mit Rückfrage 20 %, Versorgung ohne Bewilligung 5 %",
    "Mittlere Durchlaufzeit je Variante: Standard 6 Tage, Gutachten 21 Tage, Rückfrage 14 Tage, ohne Bewilligung 4 Tage",
@@ -1997,7 +1997,7 @@
   "ausgangssituation": "Die Bürgerstiftung Hohenmoor fördert Vereine und Initiativen der Region. Förderanträge kommen per E-Mail und Post, wer über einen Antrag entscheidet, hängt von der Antragssumme ab und wird oft erst nach Rückfragen geklärt. Neue Beschäftigte kennen die Regeln nur aus Erzählungen, mehrfach wurden Anträge ohne Freistellungsbescheid des Finanzamts bewilligt. Die Geschäftsführung wünscht ein verständliches Prozessmodell mit festen, getrennt pflegbaren Entscheidungsregeln.",
   "auftrag": "Modellieren Sie die Antragsprüfung als erweiterte EPK und legen Sie die Entscheidungsregeln in einem DMN-Modell mit zwei verknüpften Entscheidungen fest.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, das Modell soll in der Geschäftsstelle ausgehängt und im Intranet veröffentlicht werden",
+   "Projektumfang 40 Stunden, das Modell soll in der Geschäftsstelle ausgehängt und im Intranet veröffentlicht werden",
    "Gefördert werden nur gemeinnützige Antragsteller mit Freistellungsbescheid und Sitz im Stiftungsgebiet",
    "Bis 500 Euro entscheidet die Geschäftsstelle, über 500 bis 5.000 Euro die Geschäftsführung, darüber der Vorstand",
    "Zu jedem abgelehnten Antrag sollen alle zutreffenden Ablehnungsgründe im Bescheid stehen",
@@ -2034,7 +2034,7 @@
   "ausgangssituation": "Die Imkergenossenschaft füllt Honig in Gläser mit 500 g Nennfüllmenge ab. Damit kein Glas zu leicht ist, stellt der Schichtleiter die Dosiermaschine bewusst etwas höher ein. Der Vorstand fragt, wie viel Honig dadurch jedes Jahr verschenkt wird und ob die Einstellung gesenkt werden kann. Bisher werden die Kontrollwägungen nur in eine Liste geschrieben und nicht ausgewertet.",
   "auftrag": "Werten Sie eine Stichprobe von Kontrollwägungen mit Lage- und Streumaßen aus, schätzen Sie mit der Normalverteilung den Anteil zu leichter Gläser und berechnen Sie die Kosten der Überfüllung als Entscheidungsgrundlage für den Vorstand.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Auswertung in Python ohne Zusatzpakete oder in einer Tabellenkalkulation",
+   "Projektumfang 40 Stunden, Auswertung in Python ohne Zusatzpakete oder in einer Tabellenkalkulation",
    "Stichprobe von 10 Gläsern in Gramm: 503, 498, 507, 501, 495, 504, 500, 502, 506, 499",
    "Vereinfacht angenommen: Der Mittelwert muss mindestens 500 g betragen, kein Glas darf mehr als 15 g unter der Nennfüllmenge liegen",
    "Wert des Honigs vereinfacht angenommen 12 Euro je Kilogramm",
@@ -2071,7 +2071,7 @@
   "ausgangssituation": "Die Leseinsel Versand GmbH verschickt jeden Donnerstag einen Newsletter mit Neuerscheinungen. Das Marketing hat für eine Ausgabe zwei Betreffzeilen getestet: Variante A wie bisher mit dem Titel des Buchs der Woche, Variante B mit einer persönlichen Frage an die Leserin oder den Leser. Je 10.000 zufällig ausgewählte Abonnenten erhielten eine der beiden Varianten. Die Geschäftsführung möchte wissen, ob B wirklich besser ist oder der Unterschied Zufall sein kann.",
   "auftrag": "Werten Sie den A/B-Test mit einem Hypothesentest für zwei Anteile aus, schätzen Sie den wirtschaftlichen Nutzen und geben Sie eine begründete Empfehlung für künftige Tests.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Auswertung in Python mit der Standardbibliothek",
+   "Projektumfang 40 Stunden, Auswertung in Python mit der Standardbibliothek",
    "Ergebnis: Variante A 10.000 Empfänger und 420 Käufe innerhalb von 7 Tagen, Variante B 10.000 Empfänger und 500 Käufe",
    "Signifikanzniveau 5 %, zweiseitiger Test",
    "Deckungsbeitrag je Kauf vereinfacht angenommen 6 Euro, Newsletter an alle 85.000 Abonnenten",
@@ -2108,7 +2108,7 @@
   "ausgangssituation": "Die Eisenstemmer Fitness GmbH verliert jedes Jahr etwa 12 % ihrer Mitglieder. Das Marketing möchte gefährdete Mitglieder früh erkennen und ihnen ein Angebot machen, etwa ein kostenloses Training mit einem Trainer. Aus dem Zutrittssystem, der Mitgliederverwaltung und der Kursbuchung liegen Daten von drei Jahren vor. Ein erstes Modell mit einem Random Forest wurde bereits trainiert, seine Güte wird intern unterschiedlich bewertet.",
   "auftrag": "Bewerten Sie das vorhandene Klassifikationsmodell mit geeigneten Metriken, decken Sie Schwächen in der Datenaufbereitung auf, prüfen Sie den wirtschaftlichen Nutzen und legen Sie Regeln für Datenschutz und Betrieb fest.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Werkzeuge Python, scikit-learn und Jupyter",
+   "Projektumfang 40 Stunden, Werkzeuge Python, scikit-learn und Jupyter",
    "Testdaten: 2.000 Mitglieder, davon 240 tatsächlich gekündigt; das Modell meldet 360 als gefährdet, davon 150 richtig",
    "Merkmale unter anderem: Besuche der letzten 8 Wochen, Vertragslaufzeit, Alter, gebuchte Kurse, Status „Kündigungsbestätigung versendet“",
    "Vereinfacht angenommen: Angebot kostet 15 Euro je angesprochenes Mitglied, es hält 30 % der echten Kündiger, ein gehaltenes Mitglied bringt im Mittel 240 Euro Beitrag",
@@ -2145,7 +2145,7 @@
   "ausgangssituation": "Die Kantinen der Kantinenbetrieb Nordpark GmbH kochen jeden Tag drei Tagesgerichte. Die Menge legt die Küchenleitung bisher nach dem Absatz desselben Wochentags der Vorwoche fest. Übrig gebliebene Portionen müssen entsorgt werden, fehlende Portionen ärgern die Gäste. Aus dem Kassensystem liegen Verkaufszahlen je Gericht von zwei Jahren vor, dazu Speiseplan, Ferientermine und Wetterdaten.",
   "auftrag": "Entwickeln Sie ein Regressionsmodell für die tägliche Portionszahl, vergleichen Sie es mit dem bisherigen Verfahren über MAE und RMSE und schätzen Sie die Einsparung bei Lebensmittelabfällen.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Werkzeuge Python, scikit-learn und Jupyter",
+   "Projektumfang 40 Stunden, Werkzeuge Python, scikit-learn und Jupyter",
    "Testwoche Gericht 1, tatsächlicher Absatz Montag bis Freitag: 410, 380, 455, 430, 300",
    "Prognose bisher (Vorwoche): 400, 395, 430, 445, 320; Prognose des Modells: 405, 385, 440, 425, 310",
    "Vereinfacht angenommen: eine zu viel gekochte Portion kostet 2,80 Euro, die Kantine ist 46 Wochen im Jahr geöffnet",
@@ -2182,7 +2182,7 @@
   "ausgangssituation": "Die Zentrale der Drogerie Sanddorn schickt jede Woche eine Excel-Liste mit rund 40 Seiten aller Artikelumsätze an jede Filiale. Die Filialleitungen lesen die Liste kaum und erfahren von schwachen Warengruppen oft erst Wochen später. Die Geschäftsführung möchte wissen, welche Filialen stark vom Plan abweichen, ohne selbst Tabellen zu durchsuchen. Die Umsätze stehen als CSV-Export der Warenwirtschaft je Woche, Filiale und Warengruppe bereit.",
   "auftrag": "Ordnen Sie das Berichtswesen nach Standard-, Ad-hoc- und Ausnahmeberichten neu, berechnen Sie die Planabweichungen mit pandas und gestalten Sie kurze Berichte für Filialleitungen und Geschäftsführung.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Werkzeuge Python mit pandas und Excel",
+   "Projektumfang 40 Stunden, Werkzeuge Python mit pandas und Excel",
    "Spalten des Exports: filiale, warengruppe, woche, umsatz, plan",
    "Beispiel Woche 23, Plan und Ist in Euro: Nord 20.000 und 21.000, Süd 18.000 und 15.300, West 15.000 und 15.600, Ost 12.000 und 13.500",
    "Ausnahmeregel: Eine Filiale erscheint im Ausnahmebericht, wenn sie mehr als 10 % über oder unter dem Plan liegt",
@@ -2217,7 +2217,7 @@
   "ausgangssituation": "Das Prüflabor Kornblum nimmt mehrmals im Jahr an Ringversuchen teil, bei denen viele Labore dieselbe Probe untersuchen. Die Ergebnisse werden heute in mehreren Tabellen mit unterschiedlichen Formeln ausgewertet; bei einem Audit konnte eine Bewertung aus dem Vorjahr nicht mehr nachvollzogen werden. Die Qualitätsleitung möchte eine Auswertung, die bei gleichen Daten immer dasselbe Ergebnis liefert und in einem Jahr noch verständlich ist.",
   "auftrag": "Erstellen Sie eine reproduzierbare Auswertung der Ringversuchsergebnisse als Jupyter-Notebook mit Versionierung, nachvollziehbaren Daten und einem Bericht für die Qualitätsleitung.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Werkzeuge Python, pandas, Jupyter und Git",
+   "Projektumfang 40 Stunden, Werkzeuge Python, pandas, Jupyter und Git",
    "Ringversuch Aflatoxin: zugewiesener Wert 12,0 µg/kg, Standardabweichung für die Eignungsbeurteilung 0,8 µg/kg",
    "Eigene Ergebnisse der letzten drei Runden: 12,9, 10,1 und 14,6 µg/kg",
    "Bewertung vereinfacht nach z-Score: Betrag bis 2 zufriedenstellend, über 2 bis unter 3 fragwürdig, ab 3 unzufriedenstellend",
@@ -2253,7 +2253,7 @@
   "ausgangssituation": "Bei der Schreinerei Wendelin Holzbau dauert es oft zwei Wochen, bis ein Kunde nach seiner Anfrage ein Angebot erhält. Mehrere Kunden haben in dieser Zeit bei einem anderen Betrieb bestellt. Das Aufmaß beim Kunden wird auf Papier skizziert, im Büro in eine Tabellenkalkulation übertragen und das Angebot in einem Textprogramm geschrieben. Der Meister vermutet, dass vor allem das Warten auf Termine Zeit kostet.",
   "auftrag": "Nehmen Sie den Ist-Prozess der Angebotserstellung auf, bestimmen Sie Bearbeitungs- und Durchlaufzeit und zeigen Sie Schwachstellen auf, die ein späteres Soll-Konzept angehen soll.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Prozessaufnahme in der Werkstatt, im Büro und bei zwei Kundenterminen",
+   "Projektumfang 40 Stunden, Prozessaufnahme in der Werkstatt, im Büro und bei zwei Kundenterminen",
    "Beobachtete Werte: Warten auf den Aufmaßtermin 6 Arbeitstage, Aufmaß 2 Stunden, Warten auf die Bearbeitung im Büro 4 Arbeitstage, Kalkulation und Angebot 3 Stunden",
    "Ein Arbeitstag hat 8 Stunden",
    "Beteiligte: Kunde, Meister, Bürokraft, Geselle für das Aufmaß"
@@ -2287,7 +2287,7 @@
   "ausgangssituation": "Die Papierkontor Ellerbrock KG verteilt die Kosten des Wareneingangs bisher pauschal mit einem Zuschlag auf den Wareneinsatz. Dadurch wirken kleine Lieferanten mit vielen Positionen günstiger, als sie sind. Der Einkaufsleiter möchte wissen, was eine Lieferung tatsächlich kostet, und Lieferanten zu digitalen Lieferavisen bewegen. Die Kostenstelle Wareneingang verursacht im Jahr 186.000 Euro.",
   "auftrag": "Führen Sie für den Wareneingang eine Prozesskostenrechnung durch, berechnen Sie Prozesskostensätze und die Kosten einer typischen Lieferung und bewerten Sie den Nutzen digitaler Lieferavise.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Daten aus Warenwirtschaft und Kostenrechnung des Vorjahres",
+   "Projektumfang 40 Stunden, Daten aus Warenwirtschaft und Kostenrechnung des Vorjahres",
    "Teilprozess Lieferung annehmen: 54.000 Euro, Kostentreiber Anzahl Lieferungen (6.000)",
    "Teilprozess Ware prüfen: 66.000 Euro, Kostentreiber Anzahl Positionen (30.000); Teilprozess Einlagern: 48.000 Euro, Kostentreiber Anzahl Paletten (16.000)",
    "Leitung des Wareneingangs: 18.000 Euro, leistungsmengenneutral",
@@ -2324,7 +2324,7 @@
   "ausgangssituation": "Die Holzspielwaren Fichtelried GmbH fertigt Bauklötze, Kugelbahnen und Steckspiele in Serien. Die drei CNC-Fräsen sind fast immer belegt, trotzdem kommen im Herbst Aufträge für das Weihnachtsgeschäft zu spät. Der Fertigungsleiter legt die Losgrößen seit Jahren gleich fest, beim Bauklotz-Set immer 500 Stück. Häufiges Umrüsten kostet viel Zeit, große Lose binden dagegen Lagerfläche und Kapital.",
   "auftrag": "Analysieren Sie Rüstkosten, Lagerkosten und Kapazität der Fräsen, berechnen Sie die kostengünstige Losgröße für das Bauklotz-Set und zeigen Sie, wie kürzere Rüstzeiten Losgröße und Auslastung verändern.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Daten aus Fertigungsaufträgen und Rückmeldungen des ERP-Systems",
+   "Projektumfang 40 Stunden, Daten aus Fertigungsaufträgen und Rückmeldungen des ERP-Systems",
    "Bauklotz-Set: Jahresbedarf 12.000 Stück, Rüstkosten 150 Euro je Rüstvorgang, Lagerkosten vereinfacht angenommen 1,60 Euro je Stück und Jahr",
    "Fräsen: 3 Maschinen, 2 Schichten mit je 7,5 Stunden an 220 Tagen im Jahr",
    "Jahreswerte aller Produkte: 7.200 Stunden reine Bearbeitungszeit, 900 Rüstvorgänge mit je 2 Stunden",
@@ -2361,7 +2361,7 @@
   "ausgangssituation": "Das Platinenwerk Ammertal bestückt Steuerplatinen für Heizungshersteller. Die Kunden verlangen kürzere Lieferzeiten, intern liegen aber zwischen den Arbeitsschritten große Mengen halbfertiger Baugruppen. Am Handlötplatz stauen sich die Platinen regelmäßig, während die Endprüfung immer wieder auf Arbeit wartet. Die Fertigungsleitung möchte den Materialfluss sichtbar machen und Engpässe gezielt beheben.",
   "auftrag": "Nehmen Sie den Wertstrom der Baugruppe auf, berechnen Sie Kundentakt, Durchlaufzeit und Flussgrad, bestimmen Sie den Engpass und entwerfen Sie einen Soll-Wertstrom.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Aufnahme direkt in der Fertigung mit Stoppuhr und Bestandszählung",
+   "Projektumfang 40 Stunden, Aufnahme direkt in der Fertigung mit Stoppuhr und Bestandszählung",
    "Kundenbedarf 4.800 Baugruppen im Monat bei 20 Arbeitstagen, 2 Schichten mit je 7,5 Stunden Nettoarbeitszeit",
    "Zykluszeiten je Baugruppe: Pastendruck 40 s, Bestücken 180 s, Reflow-Löten 60 s, optische Prüfung 90 s, Handlöten 260 s, Endprüfung 120 s",
    "Gezählte Bestände vor den Schritten: Bestücken 480, Löten 240, optische Prüfung 120, Handlöten 920, Endprüfung 40 Stück",
@@ -2399,7 +2399,7 @@
   "ausgangssituation": "Die Faltenwurf Modeversand GmbH erhält jedes Jahr 20.000 Retouren mit angegebenem Grund. Jede Retoure kostet einschließlich Rückversand, Prüfung und Wiedereinlagerung im Mittel 12 Euro. Die Geschäftsführung will die Retourenquote senken, weiß aber nicht, wo sie anfangen soll. Im Lager wurde zudem mehrfach ein falscher Artikel verschickt, ohne dass die Ursache klar ist.",
   "auftrag": "Ermitteln Sie mit einer Pareto-Analyse die wichtigsten Retourengründe, untersuchen Sie Ursachen mit einem Ishikawa-Diagramm und bewerten Sie Fehler im Versandprozess mit einer FMEA.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Retourengründe aus dem Shopsystem des Vorjahres",
+   "Projektumfang 40 Stunden, Retourengründe aus dem Shopsystem des Vorjahres",
    "Retouren nach Grund: Größe passt nicht 9.600, gefällt nicht 4.800, falscher Artikel 1.800, Farbe weicht ab 1.400, beschädigt 1.200, Lieferung zu spät 800, sonstige 400",
    "FMEA-Bewertung je 1 bis 10 für Bedeutung, Auftreten und Entdeckung",
    "Fehler „Etikett vertauscht“: Bedeutung 7, Auftreten 3, Entdeckung 5; Fehler „Artikel aus falschem Fach“: Bedeutung 6, Auftreten 5, Entdeckung 4",
@@ -2436,7 +2436,7 @@
   "ausgangssituation": "Die Landwarenhandel Kornfeld eG prüft jährlich rund 27.000 Lieferscheine von Saatgut, Dünger und Futtermitteln gegen die Bestellungen. Eine Sachbearbeiterin öffnet dafür jede Lieferung im Warenwirtschaftssystem, vergleicht Mengen und Preise mit dem eingescannten Lieferschein und gibt die Rechnung frei. Der Vorstand hat zwei Angebote erhalten: einen Softwareroboter, der die Bildschirmarbeit nachahmt, und eine Workflow-Engine, die über Schnittstellen arbeitet. Die Mitarbeiterinnen der Buchhaltung befürchten, dass ihre Arbeit wegfällt.",
   "auftrag": "Vergleichen Sie Robotic Process Automation und Workflow-Engine mit einer Nutzwertanalyse und einer Wirtschaftlichkeitsrechnung, prüfen Sie das Ergebnis auf Empfindlichkeit und planen Sie die Einführung mit Blick auf die Akzeptanz.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Entscheidung durch den Vorstand",
+   "Projektumfang 40 Stunden, Entscheidung durch den Vorstand",
    "Heute 4 Minuten Prüfzeit je Lieferschein, interner Stundensatz 38 Euro",
    "Softwareroboter: Einführung 18.000 Euro, laufend 9.000 Euro im Jahr, automatisiert vereinfacht angenommen 60 % der Prüfzeit",
    "Workflow-Engine: Einführung 38.000 Euro, laufend 6.000 Euro im Jahr, automatisiert vereinfacht angenommen 70 % der Prüfzeit",
@@ -2474,7 +2474,7 @@
   "ausgangssituation": "Das Brauhaus Lerchenbräu berichtet seinen Gesellschaftern bisher nur Umsatz und Gewinn. Die Gesellschafter fragen, ob sich das eingesetzte Kapital lohnt und warum der Gewinn trotz steigenden Absatzes stagniert. Die Geschäftsführung möchte außerdem neben Finanzzahlen sehen, wie zufrieden Kunden sind, wie zuverlässig geliefert wird und wie gut die Belegschaft qualifiziert ist. Die Zahlen liegen in Buchhaltung, Warenwirtschaft und Personalverwaltung verteilt vor.",
   "auftrag": "Bauen Sie ein Kennzahlensystem mit dem DuPont-Schema und einer Balanced Scorecard auf, berechnen Sie Rentabilitäts- und Leistungskennzahlen für das letzte Geschäftsjahr und bereiten Sie das Ergebnis für die Gesellschafter auf.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Daten des abgeschlossenen Geschäftsjahres",
+   "Projektumfang 40 Stunden, Daten des abgeschlossenen Geschäftsjahres",
    "Umsatz 9.000.000 Euro, Gewinn 450.000 Euro, Fremdkapitalzinsen 150.000 Euro",
    "Gesamtkapital 7.500.000 Euro, davon Eigenkapital 3.000.000 Euro",
    "3.000 Auslieferungen, davon 2.880 zum zugesagten Termin; Absatz im Basisjahr 56.000 Hektoliter, im letzten Jahr 60.000 Hektoliter",
@@ -2511,7 +2511,7 @@
   "ausgangssituation": "Die Blütenkurier Haselbach GmbH verschickt jeden Monat einen Strauß an Abonnentinnen und Abonnenten. Das Marketing berichtet stolz über steigende Besucherzahlen im Shop, die Geschäftsführung sieht aber kaum mehr Abonnements. Bisher gibt es keine festen Kennzahlen und keinen Plan, mit dem die Ergebnisse verglichen werden. Shopsystem und Abo-Verwaltung liefern die nötigen Zahlen monatlich als Export.",
   "auftrag": "Legen Sie Kennzahlen für Gewinnung und Bindung von Abonnenten fest, berechnen Sie sie für den letzten Monat, werten Sie die Kündigungen nach Abo-Alter aus und entwerfen Sie einen Monatsbericht mit Soll-Ist-Vergleich und Ampel.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Daten aus Shopsystem und Abo-Verwaltung",
+   "Projektumfang 40 Stunden, Daten aus Shopsystem und Abo-Verwaltung",
    "Letzter Monat: 80.000 Shopbesuche, 1.200 neue Abonnements; aktive Abonnements am Monatsanfang 14.000, im Monat 420 Kündigungen",
    "Aufteilung nach Abo-Alter am Monatsanfang: bis 3 Monate 3.000 Abos mit 180 Kündigungen, 4 bis 12 Monate 5.000 Abos mit 150 Kündigungen, über 12 Monate 6.000 Abos mit 90 Kündigungen",
    "Plan für den Monat: 1.000 neue Abonnements, Kündigungsquote höchstens 2,5 %",
@@ -2546,7 +2546,7 @@
   "ausgangssituation": "Die Grünwerk Gartencenter GmbH nutzt ein Kassensystem je Markt und eine zentrale Warenwirtschaft. Umsatzauswertungen entstehen heute, indem das Controlling Kassenexporte und Artikellisten in einer Tabellenkalkulation zusammenkopiert. Werden Artikel in eine andere Warengruppe verschoben, ändern sich rückwirkend alle alten Auswertungen. Die Geschäftsführung möchte ein Data Warehouse, das Umsätze nach Markt, Warengruppe, Tag und Saison zuverlässig zeigt.",
   "auftrag": "Klassifizieren Sie die Datenquellen, entwerfen Sie ein Sternschema mit passender Granularität und Historisierung der Artikel, planen Sie die Ladestrecke und schätzen Sie die Datenmenge.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Zieldatenbank PostgreSQL, Auswertung mit einem BI-Werkzeug",
+   "Projektumfang 40 Stunden, Zieldatenbank PostgreSQL, Auswertung mit einem BI-Werkzeug",
    "Quellen: Kassensysteme der Märkte (nächtlicher CSV-Export je Markt), Warenwirtschaft (Artikel, Warengruppen, Lieferanten, Datenbankzugriff), Personalsystem (Öffnungszeiten und Besetzung), Wetterdaten eines Anbieters per REST-API",
    "Mengengerüst: je Markt im Mittel 1.100 Bons am Tag mit 4,5 Positionen, 310 Öffnungstage im Jahr",
    "Vereinfacht angenommen: eine Zeile der Faktentabelle belegt 60 Byte",
@@ -2583,7 +2583,7 @@
   "ausgangssituation": "Die Naturkost Grünfink eG beliefert Bioläden und Unverpacktläden. Artikeldaten wie Bezeichnung, Zutaten, Allergene, Preis und Produktbilder kommen von drei Lieferanten in unterschiedlicher Form und werden heute von Hand in die Warenwirtschaft übertragen. Dabei fehlen immer wieder Pflichtangaben, und für den neuen Händlershop sollen auch Bilder und Beschreibungen übernommen werden. Ob die Lieferanten das erlauben, wurde nie geprüft.",
   "auftrag": "Klassifizieren Sie die Datenquellen, prüfen Sie die Nutzungsrechte an den Lieferantendaten, schaffen Sie die technischen Voraussetzungen für die automatische Übernahme und führen Sie die Daten in einem gemeinsamen Artikelbestand zusammen.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Werkzeuge Python und SQLite",
+   "Projektumfang 40 Stunden, Werkzeuge Python und SQLite",
    "Lieferant A: 1.400 Artikel als CSV mit Semikolon, Dezimalkomma und Kodierung Windows-1252",
    "Lieferant B: 1.000 Artikel als XML-Datei mit einem vom Lieferanten veröffentlichten XML-Schema (XSD)",
    "Lieferant C: 1.850 Artikel über eine REST-API mit API-Schlüssel, höchstens 200 Artikel je Abruf",
@@ -2620,7 +2620,7 @@
   "ausgangssituation": "Der Naturschutzbund Silbertal verwaltet seine Spender in einer Vereinssoftware, in die Daten aus Überweisungen, Biotop-Patenschaften und Veranstaltungen einfließen. Viele Spender bekommen Spendenbriefe doppelt, eine Spenderin erhielt zwei Zuwendungsbestätigungen über denselben Betrag. Einige Personen, die keine Post mehr wünschen, werden über einen zweiten Datensatz weiter angeschrieben. Der Vorstand möchte den Bestand bereinigen und künftig sauber halten.",
   "auftrag": "Erkennen Sie exakte und unscharfe Dubletten im Spenderstamm, legen Sie Regeln für die Zusammenführung zu einem Golden Record fest und bewerten Sie Nutzen und Datenschutzfolgen der Bereinigung.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Export der Spenderdaten als CSV, Auswertung in Python",
+   "Projektumfang 40 Stunden, Export der Spenderdaten als CSV, Auswertung in Python",
    "Eine erste Prüfung findet 380 überzählige Datensätze",
    "Zwei Spendenmailings im Jahr, Porto und Druck vereinfacht angenommen 0,95 Euro je Brief",
    "Beispiele: „Meier“ und „Mayer“ unter derselben Anschrift, „Schmidt“ und „Schmitt“, „Müller“ und „Mueller“",
@@ -2657,7 +2657,7 @@
   "ausgangssituation": "Die Kläranlage des Abwasserzweckverbands Mühlbachtal misst im Zulauf und Ablauf alle 15 Minuten Werte wie Ammonium-Stickstoff, pH-Wert und Durchfluss. Die Messreihen dienen der Steuerung der Belüftung und den Berichten an die Wasserbehörde. In den Daten fehlen immer wieder Werte, einzelne Messungen sind offensichtlich falsch, etwa nach der Reinigung eines Sensors. Bisher füllt ein Mitarbeiter Lücken in der Tabellenkalkulation nach Gefühl auf.",
   "auftrag": "Analysieren Sie Art und Ursachen fehlender und auffälliger Werte, legen Sie Plausibilitätsregeln und ein dokumentiertes Verfahren für Ausreißer und Imputation fest und richten Sie Datenqualitätskennzahlen mit Zuständigkeiten ein.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Messdaten aus dem Prozessleitsystem als CSV, Auswertung in Python",
+   "Projektumfang 40 Stunden, Messdaten aus dem Prozessleitsystem als CSV, Auswertung in Python",
    "Ein Messwert je Sensor alle 15 Minuten, Auswertungszeitraum ein Jahr mit 365 Tagen; beim Ammonium-Sensor im Zulauf fehlen 1.752 Werte",
    "Ausschnitt Ammonium-Stickstoff im Zulauf in mg/l: 28, 31, 30, 29, 95, 32, 30, 31",
    "Quartile vereinfacht als Median der unteren und der oberen Hälfte der sortierten Werte",
@@ -2694,7 +2694,7 @@
   "ausgangssituation": "Die Schaumkrone Waschpark GmbH betreibt Waschstraßen an den Standorten Hafen, Markt und Bahnhof. Die Kassenautomaten schreiben jede Wäsche als Verkauf in eine gemeinsame SQLite-Datenbank. Die Geschäftsführerin möchte jeden Monat sehen, wie sich die Umsätze je Standort entwickeln, welcher Standort vorn liegt und wie der geglättete Verlauf aussieht. Bisher rechnet sie die Zahlen mit dem Taschenrechner aus den Tagesabschlüssen zusammen.",
   "auftrag": "Erstellen Sie SQL-Abfragen für einen Monatsbericht mit Monatsumsätzen, Veränderung zum Vormonat, Rangfolge, gleitendem Durchschnitt und Anteilen und legen Sie den Bericht als View an.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Datenbank SQLite, Tabelle verkauf(standort, datum, betrag) mit Datum im Format JJJJ-MM-TT und Betrag in ganzen Euro",
+   "Projektumfang 40 Stunden, Datenbank SQLite, Tabelle verkauf(standort, datum, betrag) mit Datum im Format JJJJ-MM-TT und Betrag in ganzen Euro",
    "Monatsumsätze Hafen April bis Juli: 18.000, 24.000, 30.000, 27.000 Euro",
    "Monatsumsätze Markt: 12.000, 20.000, 22.000, 26.000 Euro; Bahnhof: 10.000, 14.000, 19.000, 26.000 Euro",
    "Alle Abfragen müssen in SQLite laufen",
@@ -2731,7 +2731,7 @@
   "ausgangssituation": "Der Gärtnerhof Erlenau verkauft auf dem Wochenmarkt und liefert Gemüsekisten an Stammkunden aus. Bestellungen des Lieferdienstes werden mit Kundennummer gespeichert, Barverkäufe am Marktstand ohne. Der Vorstand möchte wissen, wie sich der Umsatz auf Markt und Lieferdienst verteilt, welche Stammkunden besonders viel bestellen und bei wem die Bestellungen zurückgehen. Die Daten liegen in einer SQLite-Datenbank der Kassensoftware.",
   "auftrag": "Erstellen Sie SQL-Abfragen, die Kunden mit CASE in Umsatzklassen einteilen, Umsatzanteile berechnen, fehlende Kundennummern richtig behandeln, Veränderungen ohne Division durch null ausweisen und Verkäufe mit unbekannter Kundennummer finden.",
   "rahmenbedingungen": [
-   "Projektumfang 80 Stunden, Datenbank SQLite",
+   "Projektumfang 40 Stunden, Datenbank SQLite",
    "Tabelle verkauf(id, kunde_nr, kanal, monat, betrag); kanal ist 'Markt' oder 'Lieferung', kunde_nr ist bei Barverkäufen NULL",
    "Testdaten: K1 Lieferung Mai 120 und Juni 140, K2 Lieferung Mai 40, K3 Lieferung Juni 70, ohne Kunde Markt Mai 300 und Juni 330",
    "Tabelle kunde(kunde_nr, name) mit den Testkunden K1 und K2; K3 wurde beim Umzug der Kundendaten nicht übernommen",
@@ -2767,7 +2767,7 @@
   "ausgangssituation": "Der Rettungszweckverband Hohenmark muss dem Kreistag jedes Jahr berichten, wie oft die Hilfsfrist eingehalten wurde. Bisher exportiert die Leitstelle dafür alle Einsatzprotokolle mit 34 Spalten nach Excel, darunter Name, Geburtsdatum, Einsatzadresse und Verdachtsdiagnose der Patientinnen und Patienten. Die Datei liegt auf einem Gruppenlaufwerk, auf das neben der Qualitätsbeauftragten auch die Wachleitungen zugreifen. Der externe Datenschutzbeauftragte hat das Verfahren beanstandet und eine datensparsame Lösung verlangt.",
   "auftrag": "Entwerfen Sie ein Verfahren, mit dem die Hilfsfristen je Wache und Tageszeit datenschutzgerecht ausgewertet und veröffentlicht werden können, und berechnen Sie die Kennzahlen für den Bericht.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, die Einsatzdaten liegen im Einsatzleitsystem auf einer PostgreSQL-Datenbank",
+   "Projektumfang: 40 Stunden, die Einsatzdaten liegen im Einsatzleitsystem auf einer PostgreSQL-Datenbank",
    "Hilfsfrist vereinfacht angenommen: 12 Minuten von der Alarmierung bis zum Eintreffen des ersten Rettungsmittels",
    "Der Bericht an den Kreistag ist öffentlich und wird im Internet bereitgestellt",
    "Die Einsatzprotokolle selbst bleiben nach den Vorgaben des Landesrechts im Einsatzleitsystem gespeichert",
@@ -2804,7 +2804,7 @@
   "ausgangssituation": "Die Reinigung Perlweiß speichert seit 2009 jeden Auftrag mit Name, Telefonnummer, Anschrift und den abgegebenen Kleidungsstücken in ihrer Kassensoftware. Inzwischen enthält die Kartei 14.200 Kundinnen und Kunden, von denen 9.100 seit mehr als drei Jahren keinen Auftrag mehr erteilt haben. Gelöscht wurde noch nie etwas. Die Inhaberin möchte nun die Stammkundschaft auswerten und einen Newsletter mit Rabattaktionen starten.",
   "auftrag": "Erstellen Sie ein einfaches Löschkonzept für die Kundenkartei und bereiten Sie die geplante Stammkundenauswertung datenschutzgerecht vor.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden für Analyse, Konzept, Abstimmung mit der Steuerberatung und Test des Löschlaufs, Umsetzung durch den Hersteller der Kassensoftware",
+   "Projektumfang: 40 Stunden für Analyse, Konzept, Abstimmung mit der Steuerberatung und Test des Löschlaufs, Umsetzung durch den Hersteller der Kassensoftware",
    "Die Kassensoftware kann Datensätze nach Datum filtern und automatisch löschen oder anonymisieren",
    "Rechnungen und Kassenbelege müssen nach den steuerlichen Vorschriften aufbewahrt werden",
    "Für den Newsletter gibt es bisher weder E-Mail-Adressen noch Einwilligungen",
@@ -2839,7 +2839,7 @@
   "ausgangssituation": "Die Arbeitskraft Mittelweser GmbH erhält so viele Bewerbungen, dass die Disponentinnen und Disponenten mit dem Sichten kaum nachkommen. Ein Softwareanbieter bietet ein Modell an, das jede Bewerbung mit einem Eignungswert von 0 bis 100 versieht und alle unter 40 automatisch mit einer Absage beantwortet. In einem Probelauf mit 2.000 älteren Bewerbungen hat das Modell 460 Personen zur Einladung vorgeschlagen. Die Geschäftsführung möchte das Modell schnell einführen, der Betriebsrat und der Datenschutzbeauftragte haben Bedenken angemeldet.",
   "auftrag": "Prüfen Sie den geplanten Einsatz des Modells rechtlich und fachlich, werten Sie den Probelauf aus und legen Sie der Geschäftsführung eine begründete Empfehlung zur Gestaltung vor.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, der Anbieter stellt Modellbeschreibung und Probelaufdaten bereit",
+   "Projektumfang: 40 Stunden, der Anbieter stellt Modellbeschreibung und Probelaufdaten bereit",
    "Das Modell nutzt Angaben aus Lebenslauf und Anschreiben, darunter Geburtsdatum, Wohnort, Lücken im Lebenslauf und Freitext",
    "Von den 2.000 Bewerbungen im Probelauf wurden 300 Personen später tatsächlich eingestellt und bewährten sich",
    "Der Anbieter verarbeitet die Bewerbungen in seiner Cloud in einem Rechenzentrum in der EU",
@@ -2876,7 +2876,7 @@
   "ausgangssituation": "Im Tierheim des Tierschutzvereins Schilfwiesen melden sich Interessierte per Telefon, E-Mail oder über ein Formular auf der Webseite. Wer ein Tier kennenlernen möchte, vereinbart ein Gespräch mit der Tierpflege. Bei Hunden, bei Katzen mit Freigang und bei Tieren mit Vorgeschichte besucht ein Ehrenamtlicher vor der Vermittlung das neue Zuhause, danach schließt das Büro einen Schutzvertrag ab. Niemand im Verein kennt den Ablauf vollständig, und Interessierte beklagen lange Wartezeiten zwischen den Schritten.",
   "auftrag": "Modellieren Sie den heutigen Vermittlungsablauf als BPMN-Kollaborationsdiagramm, berechnen Sie die erwartete Durchlaufzeit und entwerfen Sie ein verbessertes Soll-Modell.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Interviews mit Büro, Tierpflege und drei Ehrenamtlichen sind vereinbart",
+   "Projektumfang: 40 Stunden, Interviews mit Büro, Tierpflege und drei Ehrenamtlichen sind vereinbart",
    "Modellierungswerkzeug: Camunda Modeler in der kostenlosen Fassung",
    "Ist-Werte aus den Interviews: im Schnitt 5 Tage bis zum Kennenlerngespräch, 12 Tage für die Vorkontrolle, 3 Tage bis zum Vertrag",
    "Vereinsregel: Vorkontrolle bei Hunden, bei Katzen mit Freigang und bei jedem Tier mit Vorgeschichte (z. B. Rückgabe oder Beschlagnahme); das betrifft 60 Prozent der Vermittlungen",
@@ -2913,7 +2913,7 @@
   "ausgangssituation": "Jede Charge Seife, Creme oder Shampoo des Seifenwerks Lindenhain darf erst verkauft werden, wenn die Qualitätssicherung sie freigegeben hat. Dafür geht eine Probe per Kurier an ein externes Labor, das die Keimzahl bestimmt; den Befund schickt das Labor per Post. Die Leiterin der Qualitätssicherung entscheidet nach Regeln, die nur sie kennt, und trägt die Freigabe auf einem Papierbogen ein. Bis zur Freigabe stehen die Chargen im Quarantänelager, das regelmäßig überfüllt ist. Ein Export aus dem Warenwirtschaftssystem liefert für jede Charge Zeitstempel der wichtigsten Schritte.",
   "auftrag": "Modellieren Sie den Ist-Ablauf der Chargenfreigabe, halten Sie die Freigaberegeln als DMN-Entscheidungstabelle fest und belegen Sie mit Zahlen, wie ein Soll-Prozess das Quarantänelager entlastet.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Werkzeuge Camunda Modeler und ein Jupyter-Notebook für das Ereignisprotokoll",
+   "Projektumfang: 40 Stunden, Werkzeuge Camunda Modeler und ein Jupyter-Notebook für das Ereignisprotokoll",
    "Ist-Zeiten im Mittel: 1,5 Tage bis zur Abholung (Kurier nur dienstags und donnerstags), 3 Tage Laborarbeit, 1 Tag Postlauf des Befunds, 0,5 Tage Prüfung durch die QS",
    "Freigaberegel nach Interview: pH-Wert von 5,0 bis 7,0, Keimzahl unter 100 KbE je Gramm und Sichtprüfung ohne Befund",
    "250 Arbeitstage im Jahr, das Labor bietet eine Befundübermittlung per Schnittstelle an",
@@ -2950,7 +2950,7 @@
   "ausgangssituation": "Der Baustoffhandel Kettler & Sohn wirbt mit dem Satz „Lieferung innerhalb von 24 Stunden“. Ein Großkunde aus dem Hochbau beschwert sich, die Lieferungen kämen oft später. Der Disponent behauptet, im Durchschnitt liege man bei gut einem Tag und das sei in Ordnung. Aus dem Warenwirtschaftssystem lassen sich für jede Lieferung Bestellzeitpunkt und Lieferzeitpunkt exportieren. Zum Einstieg liegen zehn Lieferungen einer typischen Woche vor: 18, 22, 20, 26, 19, 24, 21, 70, 23 und 17 Stunden.",
   "auftrag": "Beschreiben Sie die Lieferzeiten mit geeigneten Lage- und Streumaßen, prüfen Sie die Werbeaussage und bereiten Sie das Ergebnis für die Geschäftsführung verständlich auf.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in einer Tabellenkalkulation oder in Python",
+   "Projektumfang: 40 Stunden, Auswertung in einer Tabellenkalkulation oder in Python",
    "Lieferzeit = Lieferzeitpunkt minus Bestellzeitpunkt in vollen Stunden",
    "Die Lieferung mit 70 Stunden fiel auf ein Wochenende mit Feiertag",
    "Die Geschäftsführung wünscht eine Seite mit höchstens einer Grafik",
@@ -2985,7 +2985,7 @@
   "ausgangssituation": "Das Logistikzentrum Hafenkamp tauscht Gabelstapler bisher nach festen acht Jahren aus. Der Fuhrparkleiter glaubt, dass manche Fahrzeuge schon früher unwirtschaftlich werden, andere aber länger halten. In der Instandhaltungssoftware stehen für jeden Stapler die Reparaturkosten des letzten Jahres, das Alter, die Betriebsstunden, das Einsatzlager und die Zustandsnote der jährlichen Prüfung von 1 bis 5. Zum Einstieg wählen Sie sechs Stapler mit 1, 2, 4, 5, 7 und 8 Jahren Alter und 800, 1.400, 1.500, 2.600, 2.100 und 2.500 Euro Reparaturkosten; der fünf Jahre alte Stapler fährt als einziger im Tiefkühllager.",
   "auftrag": "Untersuchen Sie den Zusammenhang zwischen Alter und Reparaturkosten, leiten Sie eine Prognose ab und schlagen Sie eine begründete Austauschregel vor.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in Python mit der Standardbibliothek",
+   "Projektumfang: 40 Stunden, Auswertung in Python mit der Standardbibliothek",
    "Ein neuer Stapler kostet im Leasing jährlich 3.000 Euro mehr als ein abbezahlter alter, Reparaturen eines neuen Fahrzeugs trägt im ersten Jahr der Hersteller",
    "Im Tiefkühllager arbeiten die Fahrzeuge bei minus 24 Grad, das belastet Akkus und Hydraulik",
    "Die Geschäftsführung möchte eine einfache Regel, kein Modell, das nur Fachleute verstehen",
@@ -3022,7 +3022,7 @@
   "ausgangssituation": "Das Blutspendezentrum Westerau lädt seine Spenderinnen und Spender bisher per Brief zu jedem Spendetermin ein. Das Marketing schlägt vor, den Brief durch eine SMS mit einem Link zum Kalendereintrag zu ersetzen, und verweist auf einen Pilotversuch aus dem Vorjahr, in dem die SMS-Gruppe öfter erschienen sei. Die Geschäftsführung ist skeptisch, weil im Pilot vor allem Spender aus der Stadt eine SMS bekamen. Deshalb wurde für den letzten Termin ein sauberer Versuch durchgeführt: 4.000 zufällig ausgewählte Personen erhielten je zur Hälfte Brief (Gruppe A) oder SMS (Gruppe B). Erschienen sind 360 Personen aus Gruppe A und 430 aus Gruppe B.",
   "auftrag": "Werten Sie den Versuch statistisch aus, erklären Sie, warum der Pilot aus dem Vorjahr nicht beweiskräftig war, und geben Sie eine begründete Empfehlung mit Kosten und Nutzen.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in Python mit der Standardbibliothek",
+   "Projektumfang: 40 Stunden, Auswertung in Python mit der Standardbibliothek",
    "Signifikanzniveau 5 Prozent, zweiseitiger Test",
    "Kosten je Einladung vereinfacht angenommen: Brief 0,95 Euro, SMS 0,09 Euro",
    "Für die SMS liegt bei allen Personen des Versuchs eine Einwilligung zur Kontaktaufnahme per Mobilnummer vor",
@@ -3059,7 +3059,7 @@
   "ausgangssituation": "Der Biohof Erlenwiese verkauft im Hofladen Brot, Käse, Milch, Eier, Gemüse und Fleisch aus eigener Herstellung. Die Inhaberin plant einen Umbau und möchte Waren, die oft zusammen gekauft werden, nebeneinander anordnen. Außerdem will sie Kombiangebote ausprobieren. Das Kassensystem speichert jeden Bon mit Datum, Uhrzeit und Artikeln, aber ohne Kundendaten. Für einen Monat liegen 5.000 Bons vor.",
   "auftrag": "Leiten Sie aus den Kassenbons Assoziationsregeln ab, bewerten Sie sie mit Support, Konfidenz und Lift und machen Sie daraus Vorschläge für Regal und Angebote.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in Python, der Export ist eine CSV-Datei mit einer Zeile je Bonposition",
+   "Projektumfang: 40 Stunden, Auswertung in Python, der Export ist eine CSV-Datei mit einer Zeile je Bonposition",
    "Häufigkeiten im Monat: Brot auf 1.500 Bons, Käse auf 1.000, beides auf 600; Milch auf 2.000, Eier auf 1.250, beides auf 500",
    "Mindestsupport für eine Regel: 5 Prozent, Mindestkonfidenz: 30 Prozent",
    "Das Café bucht über dieselbe Kasse, seine Bons enthalten nur Getränke und Kuchen",
@@ -3096,7 +3096,7 @@
   "ausgangssituation": "Fällt bei der Frischmarkt Moorbach GmbH ein Kühlregal aus, muss die Ware oft entsorgt und ein Notdienst gerufen werden. Alle 410 Kühlmöbel melden alle fünf Minuten Temperatur, Verdichterlaufzeit und Abtauvorgänge an eine zentrale Plattform. Im letzten Jahr gab es in 21.320 Gerätewochen 64 Ausfälle. Die technische Leitung möchte ein Modell, das eine Woche im Voraus warnt, damit ein Techniker planbar vorbeikommen kann.",
   "auftrag": "Entwickeln und bewerten Sie ein Klassifikationsmodell für Ausfälle in der Folgewoche und legen Sie die Warnschwelle wirtschaftlich fest.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Werkzeuge Python mit pandas und scikit-learn",
+   "Projektumfang: 40 Stunden, Werkzeuge Python mit pandas und scikit-learn",
    "Ein ungeplanter Ausfall kostet vereinfacht angenommen 1.800 Euro (Ware und Notdienst)",
    "Ein vorbeugender Technikereinsatz kostet 150 Euro und verhindert einen bevorstehenden Ausfall",
    "Testzeitraum ist das letzte Quartal mit 5.330 Gerätewochen und 16 Ausfällen",
@@ -3133,7 +3133,7 @@
   "ausgangssituation": "Das Weingut Sonnenhalde verschickt zweimal im Jahr denselben Katalog an alle Versandkunden. Die Juniorchefin vermutet, dass es sehr unterschiedliche Kundengruppen gibt: wenige Vielbesteller, Gelegenheitskäufer und Kunden, die selten, aber teure Weine bestellen. Aus dem Shopsystem lassen sich je Kunde die Zahl der Bestellungen im Jahr und der durchschnittliche Bestellwert exportieren. Zum Ausprobieren wählen Sie sechs Kunden: K1 (1 Bestellung, 40 Euro), K2 (2, 60 Euro), K3 (8, 50 Euro), K4 (9, 70 Euro), K5 (2, 300 Euro) und K6 (3, 260 Euro).",
   "auftrag": "Bilden Sie mit k-Means Kundengruppen, beschreiben Sie diese verständlich und schlagen Sie für jede Gruppe ein passendes Angebot vor.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Werkzeuge Jupyter und scikit-learn",
+   "Projektumfang: 40 Stunden, Werkzeuge Jupyter und scikit-learn",
    "Merkmale nur aus den Bestelldaten, keine zugekauften Daten",
    "Die Gruppen werden für Werbung genutzt, eine Einwilligung oder ein berechtigtes Interesse muss geprüft sein",
    "Die Juniorchefin möchte höchstens vier Gruppen, die sie jemandem am Telefon erklären kann"
@@ -3167,7 +3167,7 @@
   "ausgangssituation": "Der Gemeindewehrführer von Wiesenfurt muss dem Gemeinderat jedes Frühjahr die Einsatzstatistik des Vorjahres vorstellen. Bisher zählt er die Einsätze mit Strichlisten aus den Einsatzberichten und baut daraus Diagramme in einer Tabellenkalkulation, was mehrere Abende kostet. Das Einsatzverwaltungsprogramm kann alle Einsätze als CSV-Datei exportieren, mit Datum, Uhrzeit, Löschzug, Einsatzart, Beginn, Ende und Zahl der Einsatzkräfte. Für 2025 enthält der Export 214 Einsätze.",
   "auftrag": "Schreiben Sie ein nachvollziehbares Python-Auswertungsskript für die Einsatzstatistik und gestalten Sie die Diagramme für den Gemeinderat.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Werkzeuge Jupyter-Notebook mit pandas und Matplotlib",
+   "Projektumfang: 40 Stunden, Werkzeuge Jupyter-Notebook mit pandas und Matplotlib",
    "Die CSV-Datei nutzt Semikolon als Trennzeichen, Komma als Dezimalzeichen und die Kodierung Windows-1252",
    "Der Export enthält keine Namen von Betroffenen, nur Einsatzstichwort und Ortsteil",
    "Im nächsten Jahr soll ein Kamerad das Skript ohne Programmierkenntnisse erneut ausführen können",
@@ -3204,7 +3204,7 @@
   "ausgangssituation": "Das Maklerhaus Brandtner erstellt jedes Quartal einen Bericht für die Geschäftsführung und die Kundenberater. Er wird von Hand aus mehreren Tabellen zusammengestellt und enthält zwölf Diagramme, darunter ein Säulendiagramm der Neukunden mit einer Achse ab 95 und ein Kreisdiagramm mit neun Versicherungssparten. Die Kundenberater lesen den Bericht kaum, weil sie die Kunden mit auffälligen Schadenquoten darin nicht finden. Die Geschäftsführung wünscht einen Bericht, der weniger Zeit kostet und klare Aussagen trifft.",
   "auftrag": "Prüfen Sie den bestehenden Bericht auf Darstellungsfehler, ordnen Sie das Berichtswesen nach Berichtsarten und Zielgruppen und automatisieren Sie den Ausnahmebericht mit pandas.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Daten aus dem Maklerverwaltungsprogramm als Excel-Export",
+   "Projektumfang: 40 Stunden, Daten aus dem Maklerverwaltungsprogramm als Excel-Export",
    "Neukunden: 96 im ersten und 104 im zweiten Quartal",
    "Auffällig ist ein Firmenkunde, wenn seine Schäden 80 Prozent der gezahlten Prämie übersteigen",
    "Etwa jeder zwölfte Mann hat eine Rot-Grün-Sehschwäche, im Haus arbeiten zwei Berater damit",
@@ -3241,7 +3241,7 @@
   "ausgangssituation": "Die Gerüstbau Halbritter GmbH vermietet ihre Gerüste für eine vereinbarte Grundstandzeit von vier Wochen, jede weitere Woche wird nachberechnet. Ob ein Gerüst länger steht, merkt bisher nur der Bauleiter, der gelegentlich bei der Baustelle anruft und dem Büro einen Zettel gibt. Die Buchhaltung schreibt dann eine Nachtragsrechnung. Beim Abgleich alter Aufträge fiel auf, dass manche Verlängerungen nie berechnet wurden. Das Lager kennt zwar den Tag des Abbaus, diese Information erreicht aber das Büro nicht.",
   "auftrag": "Analysieren Sie den Prozess der Standzeitabrechnung, beziffern Sie Erlösverluste und Prozesskosten und bewerten Sie einen Soll-Prozess mit automatischer Verlängerungsliste.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden zu einem internen Verrechnungssatz von 55 Euro je Stunde",
+   "Projektumfang: 40 Stunden zu einem internen Verrechnungssatz von 55 Euro je Stunde",
    "35 Prozent der Gerüste stehen länger als vier Wochen, im Mittel 3 Wochen zusätzlich, Mietpreis vereinfacht 180 Euro je Woche",
    "Laut Stichprobe werden 20 Prozent der Verlängerungen nie berechnet",
    "Zeiten je Verlängerung heute: Standzeit klären 0,5 h, Nachtrag schreiben 0,5 h, Rückfragen klären 0,25 h, Stundensatz Büro und Bauleitung 60 Euro; im Soll noch 0,25 h",
@@ -3260,7 +3260,7 @@
    "Auftrag im Büro, Aufbau durch die Kolonne, Standzeit beobachten durch den Bauleiter (Telefon, Zettel), Nachtrag in der Buchhaltung, Abbau und Rückmeldung im Lager. Schnittstellen bestehen zwischen allen vier Stellen, Medienbrüche beim Zettel des Bauleiters und beim Abbautag, der nur im Lagersystem steht. Ein Prozesseigentümer für den Gesamtablauf fehlt; jeder sieht nur seinen Teil, deshalb fällt keinem die fehlende Rechnung auf.",
    "Verlängerungen im Jahr: 600 · 0,35 = 210, davon nicht berechnet 210 · 0,2 = 42. Erlösverlust 42 · 3 Wochen · 180 Euro = 22.680 Euro im Jahr. Das sind entgangene Erlöse ohne zusätzliche Kosten, weil das Material ohnehin auf der Baustelle stand. Der Betrag ist eine Hochrechnung aus der Stichprobe und wird im Bericht mit ihrer Größe angegeben.",
    "Ist: 0,5 + 0,5 + 0,25 = 1,25 h je bearbeiteter Verlängerung, mal 60 Euro = 75 Euro. Bearbeitet werden heute nur 210 - 42 = 168 Verlängerungen, also 168 · 75 = 12.600 Euro im Jahr. Soll: Das Lagersystem erzeugt wöchentlich eine Liste aller Gerüste über der Grundstandzeit, das Büro bearbeitet dann alle 210 Verlängerungen in je 0,25 h, also 15 Euro je Verlängerung oder 210 · 15 = 3.150 Euro im Jahr. Ersparnis 12.600 - 3.150 = 9.450 Euro im Jahr, obwohl mehr Fälle bearbeitet werden.",
-   "Nutzen im Jahr: 22.680 + 9.450 = 32.130 Euro, abzüglich 25 · 12 = 300 Euro laufend ergibt 31.830 Euro oder 2.652,50 Euro im Monat. Einmalig: 80 h · 55 Euro = 4.400 Euro plus 600 Euro Etiketten plus 1.500 Euro Anpassung = 6.500 Euro. Amortisation 6.500 / 2.652,50 = 2,5 Monate (auf eine Nachkommastelle gerundet). Auch ohne die Ersparnis bei den Prozesskosten läge sie unter vier Monaten.",
+   "Nutzen im Jahr: 22.680 + 9.450 = 32.130 Euro, abzüglich 25 · 12 = 300 Euro laufend ergibt 31.830 Euro oder 2.652,50 Euro im Monat. Einmalig: 40 h · 55 Euro = 2.200 Euro plus 600 Euro Etiketten plus 1.500 Euro Anpassung = 4.300 Euro. Amortisation 4.300 / 2.652,50 = 1,6 Monate (auf eine Nachkommastelle gerundet). Auch ohne die Ersparnis bei den Prozesskosten läge sie unter drei Monaten.",
    "Prozesseigentümer der Standzeitabrechnung ist die kaufmännische Leitung; sie verantwortet die Kennzahl „Anteil berechneter Verlängerungen“. Das Lager ist verantwortlich für die Buchung von Aufbau und Abbau per QR-Code am Tag der Ausführung, die Buchhaltung für den Nachtrag innerhalb von drei Arbeitstagen nach der Liste, die Bauleitung wird bei Rückfragen beraten. Ziel ist eine Quote von mindestens 98 Prozent berechneter Verlängerungen, geprüft monatlich gegen die Abbaudaten."
   ]
  },
@@ -3278,7 +3278,7 @@
   "ausgangssituation": "Beim Bühnenkontor Weißbach dauert es lange, bis Geld für gelieferte Ware eingeht. Rechnungen werden nur dienstags und freitags gesammelt geschrieben, oft fehlen Bestellnummern der Kunden, und viele Rechnungen müssen nach Rückfragen korrigiert werden. Die Mitarbeiterinnen der Debitorenbuchhaltung klagen über Dauerunterbrechungen durch Kundenanrufe. Die Geschäftsführung möchte den Ablauf von der Bestellung bis zum Zahlungseingang durchleuchten lassen, weil die Bank wegen des hohen Kontokorrentkredits nachfragt.",
   "auftrag": "Analysieren Sie den Order-to-Cash-Prozess, messen Sie mit geeigneten Methoden Zeitanteile und Forderungslaufzeit und schlagen Sie ein Soll-Konzept mit Wirtschaftlichkeitsnachweis vor.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, ERP-System mit Auftrags-, Lieferschein- und Rechnungsdaten",
+   "Projektumfang: 40 Stunden, ERP-System mit Auftrags-, Lieferschein- und Rechnungsdaten",
    "Jahresumsatz 3.650.000 Euro, offene Forderungen zum Stichtag 410.000 Euro, Zinssatz des Kontokorrentkredits vereinfacht 6 Prozent",
    "Multimomentaufnahme in der Debitorenbuchhaltung: 400 Beobachtungen, davon 120 mit Klärung von Rückfragen zu Rechnungen",
    "9 Prozent der Rechnungen werden korrigiert, eine Korrektur kostet 0,75 Stunden zu 50 Euro",
@@ -3315,7 +3315,7 @@
   "ausgangssituation": "In der Polsterwerkstatt Ahrens arbeiten sechs Polsterinnen und Polsterer an drei Werkbänken. Werkzeuge, Stoffreste, Schaumstoffplatten und Kleinmaterial liegen dort, wo sie zuletzt gebraucht wurden. Immer wieder wird gesucht, und mehrmals im Monat steht die Arbeit still, weil Polsterklammern oder Kleber ausgegangen sind. Die Meisterin möchte Ordnung schaffen, ohne viel Geld auszugeben, und den Erfolg mit Zahlen belegen.",
   "auftrag": "Erfassen Sie die Verschwendung in der Werkstatt, führen Sie 5S ein, steuern Sie Kleinmaterial mit einem Zwei-Behälter-Kanban und belegen Sie den Nutzen.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Werkstatt mit drei Werkbänken und einem Materialraum",
+   "Projektumfang: 40 Stunden, Werkstatt mit drei Werkbänken und einem Materialraum",
    "Selbstaufschreibung über zwei Wochen: im Mittel 25 Minuten Suchzeit je Person und Tag, 220 Arbeitstage, Stundensatz 45 Euro",
    "Material für 5S (Regale, Schattenbretter, Beschriftung): 2.400 Euro, dazu ein Workshop von zwei Stunden für alle sechs",
    "Polsterklammern: Verbrauch 2 Kartons je Woche, Lieferzeit eine Woche",
@@ -3352,7 +3352,7 @@
   "ausgangssituation": "Die Gewürzmühle Kardamon füllt jährlich 1,2 Millionen Gewürzdosen ab. Im Jahr 2025 fielen bei Kontrollen und durch Kundenhinweise 3.600 Etikettierfehler auf: fehlende oder schiefe Etiketten, falsche Chargennummern und unleserliche Mindesthaltbarkeitsdaten. Ein Kunde aus dem Großhandel hat mit Auslistung gedroht, nachdem eine Dose mit einem Etikett ohne Allergenhinweis gefunden wurde. Die Geschäftsführung will das Problem nach Six Sigma strukturiert angehen und hat drei Lösungsvorschläge auf dem Tisch.",
   "auftrag": "Führen Sie ein DMAIC-Projekt zu den Etikettierfehlern durch, bewerten Sie Fehlerarten mit einer FMEA, wählen Sie per Nutzwertanalyse eine Lösung und belegen Sie deren Wirtschaftlichkeit.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Daten aus Prüfprotokollen und dem Reklamationssystem",
+   "Projektumfang: 40 Stunden, Daten aus Prüfprotokollen und dem Reklamationssystem",
    "Je Dose zählen vier Fehlermöglichkeiten: Etikett fehlt oder schief, falsche Charge, falsches MHD, falscher Etiketteninhalt",
    "Kamerasystem mit Code- und Texterkennung: 9.500 Euro je Linie, 2.000 Euro Wartung im Jahr für alle Linien",
    "Nacharbeit und Ausschuss durch Etikettierfehler kosten heute 14.000 Euro im Jahr, das Kamerasystem senkt sie vereinfacht angenommen um 80 Prozent",
@@ -3389,7 +3389,7 @@
   "ausgangssituation": "Die Blechform Rautenberg GmbH möchte eine vierte Laserschneidanlage für rund 600.000 Euro kaufen, weil die Aufträge nicht mehr rechtzeitig fertig werden. Der Werkleiter bezweifelt, dass die drei vorhandenen Anlagen wirklich ausgelastet sind. Die Maschinensteuerungen speichern Laufzeiten, Stillstandsgründe und Stückzahlen, die Qualitätsprüfung erfasst Ausschuss im ERP-System. Eine Kennzahl, die alles zusammenführt, gibt es bisher nicht.",
   "auftrag": "Berechnen Sie die Gesamtanlageneffektivität der drei Anlagen, entwerfen Sie ein Monitoring mit Ampel und leiten Sie Verbesserungen ab, bevor über die neue Anlage entschieden wird.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Maschinendaten über OPC UA, Ausschuss aus dem ERP-System",
+   "Projektumfang: 40 Stunden, Maschinendaten über OPC UA, Ausschuss aus dem ERP-System",
    "Geplante Betriebszeit je Tag: 2 Schichten zu 8 Stunden, also 960 Minuten",
    "Anlage 1 an einem typischen Tag: 70 Minuten Rüsten, 50 Minuten Störungen, ideale Taktzeit 0,5 Minuten je Teil, 1.400 Teile gefertigt, davon 1.344 Gutteile",
    "Anlage 2: Verfügbarkeit 92 Prozent, Leistung 80 Prozent, Qualität 98 Prozent; Anlage 3: 95, 90 und 90 Prozent",
@@ -3426,7 +3426,7 @@
   "ausgangssituation": "Die Wärmetechnik Oberle GmbH betreut Heizungen und seit einigen Jahren auch Wärmepumpen mit Wartungsvertrag. Die Geschäftsführung misst den Kundendienst bisher nur am Umsatz. Kunden beschweren sich über wiederholte Anfahrten, weil Monteure das passende Ersatzteil nicht dabei haben. Für 120 Wärmepumpen mit Wartungsvertrag wurde zugesagt, bei Störungen innerhalb von 24 Stunden vor Ort zu sein. Aus Auftragssystem, Fahrzeuglager und Buchhaltung liegen Daten für 2025 vor.",
   "auftrag": "Entwerfen Sie ein Kennzahlensystem für den Kundendienst, berechnen Sie die Kennzahlen für 2025 und zeigen Sie, wie eine Prämienregel ohne Fehlanreize aussehen kann.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Daten aus Auftragssystem, Fahrzeuglager und Buchhaltung",
+   "Projektumfang: 40 Stunden, Daten aus Auftragssystem, Fahrzeuglager und Buchhaltung",
    "6.500 Einsätze, davon 4.680 beim ersten Besuch abgeschlossen und 5.850 innerhalb von 24 Stunden nach Meldung begonnen",
    "Wärmepumpen mit Vertrag: 120 Anlagen im ganzen Jahr (8.760 Stunden je Anlage), 60 Störungen, zusammen 360 Stunden Ausfallzeit",
    "Umsatz im Kundendienst 2025: 1.430.000 Euro, variable Kosten für Material und Fahrzeuge 520.000 Euro",
@@ -3464,7 +3464,7 @@
   "ausgangssituation": "Das Kulturhaus Am Wehr zeigt Theater, Konzerte, Kabarett und Kinderprogramm in einem großen und einem kleinen Saal. Karten werden an der Abendkasse, online und über Abonnements verkauft, die Gastronomie im Foyer hat eine eigene Kasse. Die Geschäftsführung möchte wissen, welche Sparten die Säle füllen und wie viel die Gastronomie je Besucher einbringt. Dafür müssen Daten aus vier Quellen zusammengeführt werden, die bisher niemand verbunden hat.",
   "auftrag": "Klassifizieren Sie die Datenquellen, entwerfen Sie ein dimensionales Modell mit gemeinsamen Dimensionen für Kartenverkauf und Gastronomie und planen Sie die Datenübernahme.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Zieldatenbank PostgreSQL bei einem städtischen Rechenzentrum",
+   "Projektumfang: 40 Stunden, Zieldatenbank PostgreSQL bei einem städtischen Rechenzentrum",
    "Quellen: Ticketsystem mit SQL-Datenbank, Abo-Verwaltung in einer Desktop-Datenbank, Gastronomiekasse mit täglichem CSV-Export, Spielplan als Tabellenkalkulation",
    "4 Platzkategorien und 3 Verkaufswege (Kasse, online, Abo), im Mittel 380 verkaufte Karten je Vorstellung",
    "Großer Saal 2025: 700 Plätze, 180 Vorstellungen an Abenden ohne Vorstellung im kleinen Saal, 100.800 verkaufte Karten; Gastronomieumsatz an diesen Abenden 302.400 Euro",
@@ -3501,7 +3501,7 @@
   "ausgangssituation": "Beim letzten Hochwasser saß der Krisenstab des Landkreises Auengrund vor drei Bildschirmen: einer Webseite mit Pegelständen, einer Niederschlagsvorhersage und dem Einsatzleitsystem der Feuerwehr. Zahlen wurden von Hand in eine Lagekarte übertragen, die oft eine Stunde alt war. Für das nächste Hochwasser soll ein Lagebild entstehen, das alle Quellen zusammenführt. Die Pegeldaten bietet das Land über eine REST-Schnittstelle an, die Wetterdaten stammen aus einem offenen Angebot eines staatlichen Wetterdienstes, und das Einsatzleitsystem enthält Adressen und Notrufinhalte.",
   "auftrag": "Planen Sie die Übernahme und Verknüpfung der Datenquellen für das Lagebild, klären Sie die Nutzungsrechte und legen Sie Aktualisierung und Verfügbarkeit fest.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Zielsystem ist eine Datenbank im Rechenzentrum des Kreises",
+   "Projektumfang: 40 Stunden, Zielsystem ist eine Datenbank im Rechenzentrum des Kreises",
    "38 Pegel im Kreisgebiet, Messwerte alle 15 Minuten, die Schnittstelle liefert höchstens 500 Werte je Seite und erlaubt 60 Anfragen je Minute",
    "Für den Aufbau wird eine Historie von 30 Tagen benötigt, danach laufend neue Werte",
    "Die Schnittstelle des Landes hat eine zugesagte Verfügbarkeit von 99,5 Prozent",
@@ -3538,7 +3538,7 @@
   "ausgangssituation": "Der Chorverband Talgau sammelt jedes Jahr von 86 Chören die Mitgliederlisten, um Ehrungen, Versicherung und Beiträge abzurechnen. Jeder Chor schickt eine eigene Tabelle mit anderen Spalten, Schreibweisen und Datumsformaten. Zusammengeführt ergeben sich 3.900 Zeilen. Der Verband will auf eine Verbandssoftware umsteigen, die einen sauberen Bestand verlangt, und die Ehrungen für 25 und 40 Jahre Singen sollen künftig automatisch vorgeschlagen werden.",
   "auftrag": "Prüfen Sie die Qualität des zusammengeführten Bestands, bereinigen Sie ihn nachvollziehbar und legen Sie Regeln fest, damit er sauber bleibt.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung mit Python und einer SQLite-Datenbank",
+   "Projektumfang: 40 Stunden, Auswertung mit Python und einer SQLite-Datenbank",
    "Profiling-Ergebnis: Geburtsdatum in 3.354 Zeilen vorhanden, Postleitzahl in 3.688 Zeilen gültig, 117 Zeilen sind Dubletten derselben Mitgliedschaft",
    "Manche Personen singen in zwei Chören und haben zu Recht zwei Mitgliedschaften",
    "Die Verbandssoftware verlangt Datum im Format JJJJ-MM-TT und fünfstellige Postleitzahlen",
@@ -3575,7 +3575,7 @@
   "ausgangssituation": "Das Sägewerk Tannreuth möchte Bretter künftig per Kamera und Bilderkennung nach Fehlern wie Ästen, Rissen und Harzgallen sortieren. Ein Dienstleister soll das Modell trainieren und verlangt dafür einen gut beschrifteten Bilderbestand. Zwei Auszubildende haben in den letzten Monaten 6.000 Bilder aufgenommen und jedes als „Fehler“ oder „ohne Fehler“ markiert. Bevor Geld in das Training fließt, soll geprüft werden, ob die Daten dafür taugen.",
   "auftrag": "Prüfen Sie die Qualität der Trainingsdaten mit geeigneten Kennzahlen, decken Sie Risiken für das spätere Modell auf und legen Sie Regeln für die weitere Datenerfassung fest.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in Python, die Bilder liegen mit einer CSV-Datei der Beschriftungen vor",
+   "Projektumfang: 40 Stunden, Auswertung in Python, die Bilder liegen mit einer CSV-Datei der Beschriftungen vor",
    "Bestand: 6.000 Bilder von 2.000 Brettern (je Brett drei Bilder), 540 Bilder als „Fehler“ markiert",
    "Doppelt beschriftete Stichprobe von 400 Bildern: Person A markiert 120 als Fehler, Person B 100, beide gemeinsam 80, beide „ohne Fehler“ bei 260",
    "Holzart fehlt in 420 Datensätzen; 80 Prozent der Bilder zeigen Fichte, nur 2 Prozent Eiche",
@@ -3612,7 +3612,7 @@
   "ausgangssituation": "Der Onlineshop Maschenglück gewinnt durch Werbung viele Neukunden, doch die Inhaberin weiß nicht, wie viele davon ein zweites Mal bestellen. Im März 2025 lief eine große Rabattaktion für Erstbestellungen, deren Erfolg umstritten ist. Die Bestellungen liegen in einer SQL-Datenbank mit den Tabellen kunde (id, anmeldung, newsletter) und bestellung (id, kunde_id, datum, betrag). Es gibt auch Kundenkonten, die nur für den Newsletter angelegt wurden und noch nie bestellt haben.",
   "auftrag": "Werten Sie die Wiederkaufrate nach Monat der Erstbestellung (Kohorten) mit SQL aus und bewerten Sie die Rabattaktion vom März.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung auf einer Kopie der Datenbank in SQLite",
+   "Projektumfang: 40 Stunden, Auswertung auf einer Kopie der Datenbank in SQLite",
    "Datum im Format JJJJ-MM-TT",
    "Wiederkauf heißt: eine weitere Bestellung innerhalb von 90 Tagen nach der ersten",
    "Kohorte März 2025: 420 Neukunden, davon 147 mit Wiederkauf; Kohorte Februar 2025: 260 Neukunden, davon 117 mit Wiederkauf",
@@ -3649,7 +3649,7 @@
   "ausgangssituation": "Der Mietpark Grauwacke vermietet Rüttelplatten, Bohrhämmer, Stromerzeuger und Hubarbeitsbühnen. Jedes Gerät muss in festen Abständen geprüft werden, bevor es wieder vermietet werden darf. Bei einer Kontrolle durch die Berufsgenossenschaft fiel auf, dass manche Geräte ohne gültige Prüfung vermietet waren. Die Gerätedaten stehen in einer Datenbank mit den Tabellen geraet (id, inventarnr, typ, station, letzte_pruefung) und miete (id, geraet_id, von, bis). Der Bestand ist über Jahre gewachsen und nie bereinigt worden.",
   "auftrag": "Erstellen Sie mit SQL einen Datenbestandsbericht, eine Prüffristenübersicht je Station und eine Warnliste für vermietete Geräte mit abgelaufener Prüfung.",
   "rahmenbedingungen": [
-   "Projektumfang: 80 Stunden, Auswertung in SQLite, Stichtag des Berichts 30.06.2026",
+   "Projektumfang: 40 Stunden, Auswertung in SQLite, Stichtag des Berichts 30.06.2026",
    "Prüfabstand vereinfacht angenommen 12 Monate für alle Gerätearten",
    "Bestand: 1.240 Geräte, bei 62 fehlt das Datum der letzten Prüfung, 93 weitere sind überfällig, die Inventarnummern wurden von Hand vergeben",
    "Datum im Format JJJJ-MM-TT, bei laufenden Mieten ist das Feld bis leer",
