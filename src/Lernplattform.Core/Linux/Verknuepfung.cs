@@ -189,8 +189,18 @@ public static class Verknuepfung
         return null;
     }
 
-    /// <summary>quote_exec(): bei Leer- oder Sonderzeichen in Anfuehrungszeichen, mit \ vor " ` $ \ (Desktop-Entry-Spezifikation).</summary>
-    public static string ExecZeile(string pfad)
+    /// <summary>
+    /// quote_exec(): bei Leer- oder Sonderzeichen in Anfuehrungszeichen, mit \ vor " ` $ \ (Desktop-Entry-Spezifikation,
+    /// Quoting-Regel). Feste Ausnahme von Python (Sammelliste 76, Nico 02.11.2026 Antwort 76a, Weisung P11-4): danach
+    /// zusaetzlich die String-Regel der Spezifikation (jedes \ als \\, auch das vor " ` $; Zeilenumbruch/Tab/
+    /// Wagenruecklauf als \n \t \r) und % als %% (Feldcodes). Sonst startet die Verknuepfung nicht, wenn das AppImage
+    /// in einem Ordner mit "%", "\", '"', "`" oder "$" im Namen liegt. Pfade ohne diese Zeichen ergeben dieselbe Zeile
+    /// wie Python (Test ExecZeileWiePython).
+    /// </summary>
+    public static string ExecZeile(string pfad) => Maskieren(QuoteExec(pfad));
+
+    // fisi_verknuepfung.quote_exec (v0.63.2), unveraendert
+    private static string QuoteExec(string pfad)
     {
         const string besonders = " \t\n\"'\\><~|&;$*?#()`";
         if (pfad.IndexOfAny(besonders.ToCharArray()) < 0)
@@ -207,6 +217,25 @@ public static class Verknuepfung
             text.Append(zeichen);
         }
         return text.Append('"').ToString();
+    }
+
+    // Sammelliste 76: String-Regel (Wert vom Typ string) und Feldcode-Regel der Desktop-Entry-Spezifikation
+    private static string Maskieren(string zeile)
+    {
+        var text = new StringBuilder(zeile.Length);
+        foreach (var zeichen in zeile)
+        {
+            text.Append(zeichen switch
+            {
+                '\\' => "\\\\",
+                '%' => "%%",
+                '\n' => "\\n",
+                '\t' => "\\t",
+                '\r' => "\\r",
+                _ => zeichen.ToString(),
+            });
+        }
+        return text.ToString();
     }
 
     /// <summary>entry_text(): Inhalt der .desktop-Datei.</summary>

@@ -159,8 +159,9 @@ public class TrainerSpeichernTests
     }
 
     /// <summary>
-    /// Dashboard (Kachel "Heute", Lernserie, Zustand) und Fortschritt (Aufgaben je Tag) zaehlen die
-    /// neue Zeile mit; der Kalender "Lerntage" nicht (Python month_activity ohne trainer_aufgaben).
+    /// Dashboard (Kachel "Heute", Lernserie, Zustand), Fortschritt (Aufgaben je Tag) und Kalender "Lerntage" zaehlen
+    /// die neue Zeile mit. Kalender: feste Ausnahme von Python month_activity (ohne trainer_aufgaben), Sammelliste 33,
+    /// Nico 02.11.2026 Antwort 33a, Weisung P11-4.
     /// </summary>
     [Fact]
     public void DashboardUndFortschrittZaehlenMit()
@@ -180,7 +181,9 @@ public class TrainerSpeichernTests
         Assert.Equal(DashboardZustand.Daten, werte.Zustand);
         Assert.Equal(2, werte.Tagesziel.Erledigt);
         Assert.Equal(1, werte.Lernserie);
-        Assert.DoesNotContain(21, DashboardWerte.Monat(pfad, 2026, 10).Lerntage);
+        Assert.Equal([21], DashboardWerte.Monat(pfad, 2026, 10).Lerntage);
+        Assert.Equal([21], werte.Kalender.Lerntage);
+        Assert.Empty(DashboardWerte.Monat(pfad, 2026, 9).Lerntage);
         Assert.Equal(2, Auswertung.Lesen(pfad).Reihe(7, heute, null).Werte[^1]);
     }
 

@@ -2365,7 +2365,9 @@ public class LerninhalteTests
             "b05812d096d344cb", "c5e3adff77e9e5ae", "e654ca698abab6ff", "e9775fcf33dc62a4", "bf7bfd5ab456c831", "671f73edc1b73acd",
             "13828726c99e50b8", "d382665faf7ce33f", "361d1026369e05d4", "e697bb07993fccd5", "92560717ef20fa5d", "23a8d2a1491b70e4",
             "058b296d48a0574f", "374fd5c885ad85c9", "46d6489d9b72c40d", "bb173917d4ed38ff", "79636f90921f1269", "32c937795c468925",
-            "0579f5e185973a48", "912afa5d33603dc1", "24d757d70ac2dfc7", "92275488b17f95b2", "ed57c1204bd5a317", "ff595e6f8a16e2ea",
+            // ee98407d491ce3b2: DV-Quizfrage S59 berichtigt (vorher ed57c1204bd5a317; Sammelliste 184, Nico 02.11.2026
+            // Antwort 184a, Weisung P11-4): einziger ersetzter Eintrag, alle anderen bleiben
+            "0579f5e185973a48", "912afa5d33603dc1", "24d757d70ac2dfc7", "92275488b17f95b2", "ee98407d491ce3b2", "ff595e6f8a16e2ea",
             "b4aa237e56f97cba", "d0666586c8ff19d8", "0c1ce73e0a9f0cb8", "ac1ce0ef4a18b3c2", "4a6794c62ffa04ef", "1d39d9e2398b6e53",
             "7ae250eb42818235", "34038f9cba33578d", "fed172cdd308e6e6", "31fecea8df94ca19", "4d669d1cef30823a", "df07f37b7d96d079",
             "580bb6e26d2977bd", "90d8fe14b5a5f4fb", "6e6ee3790451c31c", "be30b3a1dd6c147e", "fdfe59d92e23cb48", "97824e95e9535795",

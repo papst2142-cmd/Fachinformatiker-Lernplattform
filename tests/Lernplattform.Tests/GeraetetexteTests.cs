@@ -75,7 +75,7 @@ public partial class GeraetetexteTests
                 Liste(Geraetetexte.UebernahmeDateifilter(false).Select(f => f.Name + " " + f.Muster))),
             ("Uebernahme.KopieName", "-", Geraetetexte.KopieName("vor_uebernahme_2026-10-21_0612.db", true),
                 Geraetetexte.KopieName("vor_uebernahme_2026-10-21_0612.db", false)),
-            ("Abgleich.Geraet", "-", Geraetetexte.Geraet(true, "Rechner"), Geraetetexte.Geraet(false, "Rechner")),
+            ("Abgleich.Geraet", "-", Geraetetexte.Geraet(true), Geraetetexte.Geraet(false)),
             ("Pruefung.StartFrage", "-", Geraetetexte.PruefungStartFrage(true), Geraetetexte.PruefungStartFrage(false)),
             ("Rundgang.Tasten", "-", Geraetetexte.RundgangTasten(true) ?? "", Geraetetexte.RundgangTasten(false) ?? ""),
         };
@@ -123,6 +123,24 @@ public partial class GeraetetexteTests
         var erlaubt = ausnahmen.Select(a => a.Stelle).ToHashSet(StringComparer.Ordinal);
         return [.. paare.Where(p => Einheitlich(p.Pc) != Einheitlich(p.Handy) && !erlaubt.Contains(p.Stelle))
             .Select(p => $"{p.Stelle} ({p.Fall}): PC \"{p.Pc}\" / Handy \"{p.Handy}\"")];
+    }
+
+    /// <summary>
+    /// Sammelliste 24 (Nico 02.11.2026 Antwort 24b, Weisung P11-4), feste Ausnahme von Python ("PC %s" %
+    /// platform.node()): Commit-Nachricht des Abgleichs und Sicherung nennen nur "PC" bzw. "Handy"; kein Programmteil
+    /// liest den Rechnernamen.
+    /// </summary>
+    [Fact]
+    public void Geraet_OhneRechnername_AusnahmeVonPython()
+    {
+        Assert.Equal("PC", Geraetetexte.Geraet(true));
+        Assert.Equal("Handy", Geraetetexte.Geraet(false));
+        foreach (var datei in Directory.EnumerateFiles(Path.Combine(Pfade.Wurzel, "src"), "*.cs", SearchOption.AllDirectories))
+        {
+            var text = File.ReadAllText(datei);
+            Assert.False(text.Contains("GetHostName", StringComparison.Ordinal) || text.Contains("MachineName", StringComparison.Ordinal)
+                || text.Contains("COMPUTERNAME", StringComparison.Ordinal) || text.Contains("HOSTNAME", StringComparison.Ordinal), datei);
+        }
     }
 
     [Fact]
@@ -200,7 +218,7 @@ public partial class GeraetetexteTests
         ("Messung/AutoMessung.cs", "var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)", "Messung ueber alle Seiten, keine Anzeige"),
         ("Messung/AutoMessung.cs", ".Concat(Texte.NavigationHandy.Select(p => p.Id))", "Messung ueber alle Seiten, keine Anzeige"),
         ("Programm/AbgleichDienst.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
-        ("Programm/AbgleichDienst.cs", "if (Android)", "Technik: Rechnername nur am PC lesen; Text aus Geraetetexte.Geraet (B11)"),
+        ("Programm/AbgleichDienst.cs", "return Geraetetexte.Geraet(!Android);", "Text aus Geraetetexte.Geraet (B11)"),
         ("Programm/AbgleichDienst.cs", "Android ? AbgleichSteuerung.Handy : AbgleichSteuerung.Pc,", "Verhalten: Ausloeser und Zeiten des Abgleichs (L10, P2-12)"),
         ("Views/DashboardSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/DashboardSeite.cs", "if (Pc || w.Faellig.Wiederholen)", "Verhalten: \"Jetzt wiederholen\" am Handy nur mit Faelligem (R3, P2-6)"),

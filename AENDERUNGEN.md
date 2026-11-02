@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.32.5
+Tabellen in Aufgaben stehen jetzt sauber untereinander, der Kalender zählt den Rechen-Trainer mit, und der Abgleich nennt deinen Rechner nicht mehr beim Namen.
+
+- Tabellen in Aufgaben und Musterlösungen (zum Beispiel Nutzwertanalysen oder Regelwerke) werden jetzt in einer Schrift mit fester Zeichenbreite gezeigt. Dadurch stehen die Spalten genau untereinander. Der Text selbst ist unverändert.
+- Der Kalender „Lerntage“ auf dem Dashboard markiert jetzt auch Tage, an denen du nur im Rechen-Trainer geübt hast. Die Lernserie hat diese Tage schon bisher gezählt.
+- Beim Abgleich zwischen PC und Handy und in einer Sicherungsdatei steht als Gerät jetzt nur noch „PC“ oder „Handy“. Der Name deines Rechners, der oft ein Personenname ist, wird nicht mehr verwendet.
+- Linux: Die Verknüpfung im Anwendungsmenü startet jetzt auch dann, wenn das Programm in einem Ordner liegt, dessen Name ein „%“ oder einen umgekehrten Schrägstrich enthält.
+- Eine Erklärung im Prüfungstrainer (Fachrichtung Digitale Vernetzung, geschirmte Kabel) ist genauer formuliert: Der Schirm wird im Schrank an der Potenzialausgleichsschiene aufgelegt.
+
 ## A 0.32.4
 Sicherungen enthalten nie mehr ein falsches Tagesziel, und beim Einspielen einer Sicherung ohne Tagesziel bleibt dein eigenes erhalten.
 

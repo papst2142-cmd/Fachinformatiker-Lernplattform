@@ -686,7 +686,8 @@ public sealed record DashboardWerte(
 
     private static DashboardKalender LeseKalender(Leser db, int jahr, int monat)
     {
-        // DBManager.month_activity
+        // DBManager.month_activity; feste Ausnahme von Python (Sammelliste 33, Nico 02.11.2026 Antwort 33a, Weisung
+        // P11-4): Tage mit Rechen-Trainer-Aufgaben zaehlen mit wie in der Lernserie (Python kennt trainer_aufgaben nicht)
         var zeilen = db.Abfrage(
             "SELECT DISTINCT substr(timestamp, 1, 10) FROM ("
             + "  SELECT timestamp FROM card_events"
@@ -695,6 +696,7 @@ public sealed record DashboardWerte(
             + "  UNION ALL SELECT timestamp FROM project_events"
             + "  UNION ALL SELECT timestamp FROM ap1_events"
             + "  UNION ALL SELECT timestamp FROM test_results"
+            + "  UNION ALL SELECT timestamp FROM trainer_aufgaben"
             + ") WHERE substr(timestamp, 1, 7) = ?1",
             jahr.ToString("0000", CultureInfo.InvariantCulture) + "-" + monat.ToString("00", CultureInfo.InvariantCulture)) ?? [];
         var tage = new SortedSet<int>();

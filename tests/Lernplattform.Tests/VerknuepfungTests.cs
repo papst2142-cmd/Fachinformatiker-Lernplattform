@@ -77,9 +77,104 @@ public sealed class VerknuepfungTests : IDisposable
     [Theory]
     [InlineData("/home/nico/Fachinformatiker-Lernplattform.AppImage", "/home/nico/Fachinformatiker-Lernplattform.AppImage")]
     [InlineData("/home/nico/Mein Ordner/Lernplattform.AppImage", "\"/home/nico/Mein Ordner/Lernplattform.AppImage\"")]
-    [InlineData("/home/a\"b$c`d\\e/x.AppImage", "\"/home/a\\\"b\\$c\\`d\\\\e/x.AppImage\"")]
     [InlineData("/tmp/ä(1)#x", "\"/tmp/ä(1)#x\"")]
+    [InlineData("/x/'a'~|&;*?<>()/y", "\"/x/'a'~|&;*?<>()/y\"")]
     public void ExecZeileWiePython(string pfad, string soll) => Assert.Equal(soll, Verknuepfung.ExecZeile(pfad));
+
+    /// <summary>
+    /// Sammelliste 76 (Nico 02.11.2026 Antwort 76a, Weisung P11-4), feste Ausnahme von Python: jedes "\" der Zeile
+    /// (auch das vor " ` $ aus der Quoting-Regel), "%" und Steuerzeichen nach der String- und Feldcode-Regel der
+    /// Desktop-Entry-Spezifikation maskiert. Python schrieb "\"/home/a\\\\e/x\"", "\"/home/a\\\"b/x\"" und
+    /// "/home/100%/x" (Leser wie GLib lehnen solche Werte ab, die Verknuepfung startet dann nicht).
+    /// </summary>
+    [Theory]
+    [InlineData("/home/a\"b$c`d\\e/x.AppImage", "\"/home/a\\\\\"b\\\\$c\\\\`d\\\\\\\\e/x.AppImage\"")]
+    [InlineData("/home/nico/100%/Lernplattform.AppImage", "/home/nico/100%%/Lernplattform.AppImage")]
+    [InlineData("/home/nico/100 %/x", "\"/home/nico/100 %%/x\"")]
+    [InlineData("/home/a\\b/x", "\"/home/a\\\\\\\\b/x\"")]
+    [InlineData("/home/a\tb/x", "\"/home/a\\tb/x\"")]
+    [InlineData("/home/%u/x", "/home/%%u/x")]
+    [InlineData("/home/a\"b$c`d/x.AppImage", "\"/home/a\\\\\"b\\\\$c\\\\`d/x.AppImage\"")]
+    public void ExecZeileMaskiert_AusnahmeVonPython(string pfad, string soll)
+    {
+        Assert.Equal(soll, Verknuepfung.ExecZeile(pfad));
+        Assert.Equal([pfad], ExecLesen(Verknuepfung.ExecZeile(pfad)));
+    }
+
+    /// <summary>Jeder Pfad kommt nach den Regeln der Spezifikation genau als ein Argument zurueck.</summary>
+    [Theory]
+    [InlineData("/home/nico/Fachinformatiker-Lernplattform.AppImage")]
+    [InlineData("/home/nico/Mein Ordner/Lernplattform.AppImage")]
+    [InlineData("/tmp/ä(1)#x")]
+    [InlineData("/x/'a'~|&;*?<>()/y")]
+    [InlineData("/x/%%%\\\\$$``\"\"/y")]
+    [InlineData("/x/a\nb\rc/y")]
+    public void ExecZeileLiestSichZurueck(string pfad) => Assert.Equal([pfad], ExecLesen(Verknuepfung.ExecZeile(pfad)));
+
+    // Leser nach der Desktop-Entry-Spezifikation 1.5: erst String-Regel (\s \n \t \r \\), dann Feldcodes (%% = %,
+    // anderes % gilt hier als Fehler), dann Quoting-Regel (Argumente in "", darin \ vor " ` $ \).
+    private static List<string> ExecLesen(string wert)
+    {
+        var s = new System.Text.StringBuilder();
+        for (var i = 0; i < wert.Length; i++)
+        {
+            if (wert[i] == '\\')
+            {
+                Assert.True(i + 1 < wert.Length, "einzelnes \\ am Ende");
+                s.Append(wert[++i] switch { 's' => ' ', 'n' => '\n', 't' => '\t', 'r' => '\r', '\\' => '\\', var z => throw new Xunit.Sdk.XunitException("Escape \\" + z) });
+            }
+            else
+            {
+                s.Append(wert[i]);
+            }
+        }
+        var argumente = new List<string>();
+        var aktuell = new System.Text.StringBuilder();
+        var text = s.ToString();
+        for (var i = 0; i < text.Length; i++)
+        {
+            var z = text[i];
+            if (z == '%')
+            {
+                Assert.True(i + 1 < text.Length && text[i + 1] == '%', "Feldcode im Pfad");
+                aktuell.Append('%');
+                i++;
+            }
+            else if (z == '"')
+            {
+                for (i++; text[i] != '"'; i++)
+                {
+                    if (text[i] == '\\')
+                    {
+                        i++;
+                        Assert.Contains(text[i], "\"`$\\");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContain(text[i], "\"`$");
+                    }
+                    if (text[i] == '%')
+                    {
+                        Assert.Equal('%', text[i + 1]);
+                        i++;
+                    }
+                    aktuell.Append(text[i]);
+                }
+            }
+            else if (z == ' ')
+            {
+                argumente.Add(aktuell.ToString());
+                aktuell.Clear();
+            }
+            else
+            {
+                Assert.DoesNotContain(z, " \t\n\"'\\><~|&;$*?#()`");
+                aktuell.Append(z);
+            }
+        }
+        argumente.Add(aktuell.ToString());
+        return argumente;
+    }
 
     [Fact]
     public void InhaltWieWortliste()
