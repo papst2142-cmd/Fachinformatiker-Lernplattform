@@ -101,6 +101,11 @@ public class SpielSchlangeTests
         Assert.Equal(SpielStadtTests.SollStadtHash, SpielStadtTests.StadtHash(spiel, staende));
         Assert.Equal(0, spiel.Abweichungen);
         Assert.Equal(Tabellen(sofortStand), Tabellen(lernstand));
+        // FW8 (Sammelliste 119, Weisung P11-16): ein Spiel auf einem Geraet schreibt nie den Merker ab_uhr
+        var stadtZeilen = lernstand.Abfragen("SELECT daten FROM spiel_ereignisse WHERE typ IN ($a, $b, $c)",
+            ("$a", Stadt.Gegangen), ("$b", Stadt.Gewartet), ("$c", Stadt.Gelaufen)).Select(z => (string)z[0]!).ToList();
+        Assert.NotEmpty(stadtZeilen);
+        Assert.DoesNotContain(stadtZeilen, d => d.Contains(Stadt.AbUhr, StringComparison.Ordinal));
     }
 
     private sealed class Merker(IDisposable innen) : IDisposable

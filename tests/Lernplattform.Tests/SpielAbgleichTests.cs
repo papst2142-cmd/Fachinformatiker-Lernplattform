@@ -563,6 +563,104 @@ public class SpielAbgleichTests
     }
 
     /// <summary>
+    /// FW8 (Sammelliste 119, Gegenprobe): ohne Abgleich auf beiden Geraeten gespielt, beide stehen am selben Ort und
+    /// der PC ist weiter. Der Schritt des Handys (offline geschrieben, ohne Merker) rechnet ab dem eigenen Stand des
+    /// Handys, nicht ab dem vorderen des PCs (vorher: Teilsumme, rot). Geht ein Geraet nach dem Abgleich vom
+    /// gezeigten Stand eines anderen aus, schreibt es den Merker ab_uhr und rechnet auf jedem Geraet ab diesem;
+    /// offline (nur eigene Zeilen) schreibt es nie einen Merker.
+    /// </summary>
+    [Fact]
+    public void TagesuhrOhneAbgleichAmSelbenOrt()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var n = 0;
+        var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)),
+            () => "ort" + n.ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        const string LaufId = "lort000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "PC"));
+        void Schreiben(string geraet, string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), geraet, LaufId));
+        Schreiben("PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+
+        // offline: das Handy kennt nur seine eigenen Zeilen, sein Schritt hat keinen Merker
+        using (var handyOrdner = new TempOrdner())
+        {
+            var allein = new Lernstand(Path.Combine(handyOrdner.Pfad, Lernstand.DateiName));
+            var handySchreiber = new LernstandSchreiber(allein, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)));
+            Assert.True(handySchreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "Handy"));
+            var offline = new Spielablauf(Inhalt, new SpielDatenbank(handySchreiber, "Handy", LaufId, Vorgaenge.Sperren));
+            offline.Profil("Nico", new PyObjekt());
+            var gang = stadt.GehenPruefen(offline.Stand, "moebelhaus");
+            Assert.True(gang.Ok);
+            Assert.DoesNotContain(gang.Daten!, p => p.Key == Stadt.AbUhr);
+        }
+
+        Schreiben("PC", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 300L } });
+        Schreiben("Handy", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 120L } });
+        Schreiben("Handy", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", "moebelhaus" }, { "nach", "bank" }, { "minuten", 60L } });
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, LaufId, Vorgaenge.Sperren));
+            // PC: Moebelhaus 300; Handy: Moebelhaus 120, dann Bank 180 (nicht 360)
+            Assert.Equal(new StadtStand(1, "moebelhaus", stadt.Beginn + 300), stadt.Stand(spiel.Stand));
+        }
+
+        // nach dem Abgleich geht das Handy vom gezeigten Stand des PCs aus: Merker, auf jedem Geraet ab diesem
+        var handy = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "Handy", LaufId, Vorgaenge.Sperren));
+        var weiter = stadt.GehenPruefen(handy.Stand, "bank");
+        Assert.True(weiter.Ok);
+        Assert.Equal("moebelhaus", weiter.Daten!["von"]);
+        Assert.Equal(stadt.Beginn + 300, weiter.Daten![Stadt.AbUhr]);
+        handy.Log(weiter.Art!, weiter.Daten!);
+        var minuten = Py.Int(weiter.Daten!["minuten"]);
+        Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 300 + minuten), stadt.Stand(handy.Stand));
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, LaufId, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 300 + minuten), stadt.Stand(spiel.Stand));
+        }
+        // der PC geht danach ab dem gezeigten Stand des Handys weiter (wieder mit Merker)
+        var pc = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", LaufId, Vorgaenge.Sperren));
+        var heim = stadt.GehenPruefen(pc.Stand, stadt.Heim);
+        Assert.Equal(stadt.Beginn + 300 + minuten, heim.Daten![Stadt.AbUhr]);
+        // der PC geht dann selbst weiter: ab seinem eigenen (gezeigten) Stand, ohne Merker
+        pc.Log(heim.Art!, heim.Daten!);
+        var nochmal = stadt.GehenPruefen(pc.Stand, "bank");
+        Assert.DoesNotContain(nochmal.Daten!, p => p.Key == Stadt.AbUhr);
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 118b), feste, benannte Ausnahme: zwei Geraete mit demselben Namen (seit 24b heisst jedes
+    /// Geraet nur "PC" oder "Handy", z. B. zwei PCs) sind fuer die Tagesuhr ein Geraet. Spielen beide offline am selben
+    /// Tag, zaehlen ihre Schritte als eine Folge (die Uhr laeuft weiter als auf jedem einzelnen). Ohne eine Kennung je
+    /// Installation nicht zu trennen (Weisung P11-16).
+    /// </summary>
+    [Fact]
+    public void TagesuhrGleichnamigeGeraeteSindEinGeraet_Ausnahme()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var n = 0;
+        var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)),
+            () => "pcs" + n.ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        const string LaufId = "lpcs000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "PC"));
+        void Schreiben(string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), "PC", LaufId));
+        Schreiben(Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        // PC 1 und PC 2 offline: je ein Gang ab zu Hause
+        Schreiben(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 300L } });
+        Schreiben(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "elektromarkt" }, { "minuten", 120L } });
+        var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", LaufId, Vorgaenge.Sperren));
+        Assert.Equal(new StadtStand(1, "elektromarkt", stadt.Beginn + 420), stadt.Stand(spiel.Stand));
+    }
+
+    /// <summary>
     /// L4 (Sammelliste 92): laeuft gerade ein Abgleich (Sperre der Vorgaenge belegt), darf das Spiel lesen und
     /// Erfolge pruefen, wenn nichts zu schreiben ist; erst ein Schreiben meldet "belegt" und schreibt nichts.
     /// </summary>
