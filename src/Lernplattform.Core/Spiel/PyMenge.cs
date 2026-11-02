@@ -85,10 +85,10 @@ public sealed class PyMenge : IEnumerable<(long Spalte, long Zeile)>
                         return;
                     }
                     Setzen((int)j, zelle, hash);
-                    gefuellt++;
+                    gefuellt = checked(gefuellt + 1);
                     if ((ulong)gefuellt * 5 >= maske * 3)
                     {
-                        Umbauen(Count > 50000 ? Count * 2L : Count * 4L);
+                        Umbauen(Count > 50000 ? checked(Count * 2L) : checked(Count * 4L));
                     }
                     return;
                 }
@@ -195,9 +195,9 @@ public sealed class PyMenge : IEnumerable<(long Spalte, long Zeile)>
         {
             return neu;
         }
-        if ((ulong)(neu.gefuellt + Count) * 5 >= neu.maske * 3)
+        if ((ulong)(checked(neu.gefuellt + Count)) * 5 >= neu.maske * 3)
         {
-            neu.Umbauen((neu.Count + Count) * 2L);
+            neu.Umbauen(checked((neu.Count + Count) * 2L));
         }
         if (neu.maske == maske && gefuellt == Count)
         {

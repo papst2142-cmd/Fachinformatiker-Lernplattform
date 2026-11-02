@@ -239,7 +239,7 @@ public static partial class Bewertung
         var plaetze = BedarfPlaetze(bedarf, inhalt);
         var menge = Py.Int(bedarf["menge"]);
         var gruppen = new List<long[]>();
-        foreach (var zahlen in Produkt(zeilen.Select(z => z.Anzahl + 1).ToArray()))
+        foreach (var zahlen in Produkt(zeilen.Select(z => checked(z.Anzahl + 1)).ToArray()))
         {
             var groesse = Py.Summe(zeilen.Select((z, i) => (object?)Py.Mal(z.Teil[k], zahlen[i])));
             var module = Py.Summe(zeilen.Select((z, i) => (object?)Py.Mal(Get(z.Teil, "module", 1L), zahlen[i])));
@@ -273,8 +273,8 @@ public static partial class Bewertung
                 {
                     if (gruppe.Zip(uebrig).All(p => p.First <= p.Second))
                     {
-                        var rest = gruppe.Zip(uebrig).Select(p => p.Second - p.First).ToArray();
-                        ergebnis = Math.Max(ergebnis, 1 + Beste(rest));
+                        var rest = gruppe.Zip(uebrig).Select(p => checked(p.Second - p.First)).ToArray();
+                        ergebnis = Math.Max(ergebnis, checked(1 + Beste(rest)));
                         if (ergebnis >= menge)
                         {
                             break;
@@ -300,7 +300,7 @@ public static partial class Bewertung
         {
             yield return (long[])zahlen.Clone();
             var i = grenzen.Length - 1;
-            while (i >= 0 && ++zahlen[i] == grenzen[i])
+            while (i >= 0 && checked(++zahlen[i]) == grenzen[i])
             {
                 zahlen[i] = 0;
                 i--;
@@ -328,7 +328,7 @@ public static partial class Bewertung
         }
         for (var i = 0; i < zeilen.Count; i++)
         {
-            var weniger = zeilen.Take(i).Concat(zeilen[i].Anzahl > 1 ? [(zeilen[i].Teil, zeilen[i].Anzahl - 1)] : []).Concat(zeilen.Skip(i + 1)).ToList();
+            var weniger = zeilen.Take(i).Concat(zeilen[i].Anzahl > 1 ? [(zeilen[i].Teil, checked(zeilen[i].Anzahl - 1))] : []).Concat(zeilen.Skip(i + 1)).ToList();
             if (ZusammenGedeckt(bedarf, weniger, inhalt) >= menge)
             {
                 return [Prozent("Zu viel bestellt: %s. Einmal „%s“ weniger reicht auch.", bedarf["text"], zeilen[i].Teil["name"])];
@@ -398,7 +398,7 @@ public static partial class Bewertung
             else
             {
                 var i = index.Value;
-                gedeckt[i] += anzahl;
+                gedeckt[i] = checked(gedeckt[i] + anzahl);
                 if (Zusammen.TryGetValue(Py.Str(bedarfe[i]["typ"]), out var k)
                     && Py.Wahr(Get(bedarfe[i], "min")) && Py.Hat(Objekt(bedarfe[i]["min"]), k))
                 {

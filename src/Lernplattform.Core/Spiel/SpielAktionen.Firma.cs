@@ -54,7 +54,7 @@ public static partial class SpielAktionen
             throw new SpielFehler(Prozent("Für die Gründung fehlt noch: %s.", string.Join(", ", fehlt)));
         }
         var kosten = Py.Int(Objekt(Objekt(stand.Inhalt["firma"])["gruendung"])["kosten"]);
-        return Eins(Ereignisse.Gegruendet, new PyObjekt { { "tag", stand.Tag }, { "name", kurz }, { "geld", -kosten } });
+        return Eins(Ereignisse.Gegruendet, new PyObjekt { { "tag", stand.Tag }, { "name", kurz }, { "geld", checked(-kosten) } });
     }
 
     /// <summary>hire: eine vorliegende Bewerbung annehmen.</summary>
@@ -197,7 +197,7 @@ public static partial class SpielAktionen
             }
             else if (Py.Gleich(wahl, Betrieb.RueckholBonus))
             {
-                daten.Add("geld", -Py.Int(eintrag["bonus"]));
+                daten.Add("geld", checked(-Py.Int(eintrag["bonus"])));
             }
             return Eins(Ereignisse.Rueckhol, daten);
         }
@@ -217,7 +217,7 @@ public static partial class SpielAktionen
         {
             throw new SpielFehler(GeldFehlt(stufe["preis"], stand.Geld));
         }
-        return Eins(Ereignisse.Erweitert, new PyObjekt { { "stufe", stufe["stufe"] }, { "geld", -Py.Int(stufe["preis"]) }, { "tag", stand.Tag } });
+        return Eins(Ereignisse.Erweitert, new PyObjekt { { "stufe", stufe["stufe"] }, { "geld", checked(-Py.Int(stufe["preis"])) }, { "tag", stand.Tag } });
     }
 
     /// <summary>build_room: einen Sonderraum ausbauen.</summary>
@@ -230,7 +230,7 @@ public static partial class SpielAktionen
         {
             throw new SpielFehler(Py.Str(status["problem"]));
         }
-        return Eins(Ereignisse.Raum, new PyObjekt { { "raum", raum }, { "geld", -Py.Int(status["preis"]) }, { "tag", stand.Tag } });
+        return Eins(Ereignisse.Raum, new PyObjekt { { "raum", raum }, { "geld", checked(-Py.Int(status["preis"])) }, { "tag", stand.Tag } });
     }
 
     /// <summary>open_branch: die Filiale (Stufe 1) eroeffnen.</summary>
@@ -256,7 +256,7 @@ public static partial class SpielAktionen
         {
             throw new SpielFehler(GeldFehlt(stufe["preis"], stand.Geld));
         }
-        return Eins(Ereignisse.Filiale, new PyObjekt { { "stufe", 1L }, { "name", kurz }, { "geld", -Py.Int(stufe["preis"]) }, { "tag", stand.Tag } });
+        return Eins(Ereignisse.Filiale, new PyObjekt { { "stufe", 1L }, { "name", kurz }, { "geld", checked(-Py.Int(stufe["preis"])) }, { "tag", stand.Tag } });
     }
 
     /// <summary>expand_branch</summary>
@@ -272,7 +272,7 @@ public static partial class SpielAktionen
         {
             throw new SpielFehler(GeldFehlt(stufe["preis"], stand.Geld));
         }
-        return Eins(Ereignisse.Filiale, new PyObjekt { { "stufe", stufe["stufe"] }, { "geld", -Py.Int(stufe["preis"]) }, { "tag", stand.Tag } });
+        return Eins(Ereignisse.Filiale, new PyObjekt { { "stufe", stufe["stufe"] }, { "geld", checked(-Py.Int(stufe["preis"])) }, { "tag", stand.Tag } });
     }
 
     /// <summary>transfer: an den anderen Standort versetzen.</summary>
@@ -397,7 +397,7 @@ public static partial class SpielAktionen
             throw new SpielFehler(Py.Str(angebot["problem"]));
         }
         var tag = stand.Tag;
-        var daten = new PyObjekt { { "werbung", werbung }, { "art", art }, { "tag", tag }, { "ab_tag", tag + 1 } };
+        var daten = new PyObjekt { { "werbung", werbung }, { "art", art }, { "tag", tag }, { "ab_tag", checked(tag + 1) } };
         if (Py.Gleich(art, Wirtschaft.WerbungEinmalig))
         {
             daten.Add("bis_tag", Py.Plus(tag, angebot["tage"]));

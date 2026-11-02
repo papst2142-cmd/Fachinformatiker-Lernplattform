@@ -26,7 +26,7 @@ public static partial class Bewertung
         var verlust = Skaliert(balancing["verschieben_verlust"], faktor);
         var daten = new PyObjekt
         {
-            { "aufgabe", auftrag["id"] }, { "tag", tag }, { "reputation", new PyObjekt { { "zuverlaessigkeit", -verlust } } },
+            { "aufgabe", auftrag["id"] }, { "tag", tag }, { "reputation", new PyObjekt { { "zuverlaessigkeit", checked(-verlust) } } },
         };
         if (Py.Wahr(auftrag["zwischenfall"]))
         {
@@ -137,9 +137,9 @@ public static partial class Bewertung
                 {
                     throw new NotSupportedException("valid_carts: Groesse ist keine ganze Zahl");
                 }
-                meiste *= Math.Max(1, -PyDiv(-Py.Int(min[k]), Math.Max(1, Py.Int(groesse))));
+                meiste = checked(meiste * Math.Max(1, -PyDiv(-Py.Int(min[k]), Math.Max(1, Py.Int(groesse)))));
             }
-            grenzen[i] = meiste + 1;
+            grenzen[i] = checked(meiste + 1);
         }
         var ergebnis = new List<(PyObjekt Korb, (object, object) Summe)>();
         foreach (var zahlen in Produkt(grenzen))

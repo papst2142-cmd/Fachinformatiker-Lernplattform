@@ -27,16 +27,16 @@ public static partial class Betrieb
             return [];
         }
         var (abstand, gilt) = (Py.Int(regeln["abstand_tage"]), Py.Int(regeln["gilt_tage"]));
-        var erster = Py.Int(Objekt(stand.Firma)["tag"]) + Py.Int(Get(regeln, "versatz", 0L));
+        var erster = checked(Py.Int(Objekt(stand.Firma)["tag"]) + Py.Int(Get(regeln, "versatz", 0L)));
         var start = stand.FirmenStartwert;
         var benutzt = new Dictionary<string, long>();
         var ergebnis = new List<PyObjekt>();
         var platz = 0L;
         object? zuletzt = null;
         var liste = Liste(regeln["liste"]).Select(Objekt).ToList();
-        while (erster + platz * abstand <= tag)
+        while (checked(erster + platz * abstand) <= tag)
         {
-            var beginn = erster + platz * abstand;
+            var beginn = checked(erster + platz * abstand);
             var fertig = stand.ZertifikateFertig(beginn);
             var belegt = new PySet(stand.Projekte.Values.Select(Objekt).Where(p =>
                 Py.Int(Py.Wahr(Get(p, "tag", 0L)) ? p["tag"] : 0L) < beginn
@@ -60,14 +60,14 @@ public static partial class Betrieb
                         (eintrag, bester) = (e, w);
                     }
                 }
-                benutzt[Py.Str(eintrag["id"])] = Oft(eintrag) + 1;
+                benutzt[Py.Str(eintrag["id"])] = checked(Oft(eintrag) + 1);
                 zuletzt = eintrag["id"];
-                if (beginn + gilt - 1 >= tag)
+                if (checked(beginn + gilt - 1) >= tag)
                 {
                     ergebnis.Add(GrossAusschreibung(stand, eintrag, platz, beginn, inhalt));
                 }
             }
-            platz++;
+            platz = checked(platz + 1);
         }
         return ergebnis;
     }
@@ -81,12 +81,12 @@ public static partial class Betrieb
         var start = stand.FirmenStartwert;
         var spanne = Liste(stufe["material"]);
         var (unten, oben) = (Py.F(spanne[0]), Py.F(spanne[1]));
-        var material = PythonRunden.Runde((unten + Wurf(start, beginn, salz + "material") * (oben - unten)) / 10.0) * 10;
+        var material = checked(PythonRunden.Runde((unten + Wurf(start, beginn, salz + "material") * (oben - unten)) / 10.0) * 10);
         var lage = MarktVerschiebung(stand, beginn, inhalt);
         var (gebote, ausgefallen) = MitbewerberGebote("projekt", "normal", eintrag["cat"], start, beginn, salz, inhalt,
             extra: Py.Int(Get(regeln, "mitbieter_extra", 0L)), schub: Py.Int(lage["shift"]));
         var billigst = Billigst(gebote);
-        var kennung = Prozent("%s%d", Wirtschaft.GrossPrefix, platz + 1);
+        var kennung = Prozent("%s%d", Wirtschaft.GrossPrefix, checked(platz + 1));
         var was = Py.Wahr(eintrag["oeffentlich"]) ? "Öffentliche Ausschreibung" : "Großauftrag";
         var namen = ListeOderLeer(eintrag, "braucht").Select(z => Get(Wirtschaft.Zertifikat(z, inhalt) ?? [], "kurz", z)).ToList();
         return new PyObjekt
@@ -98,7 +98,7 @@ public static partial class Betrieb
             { "aufwand", Py.Int(stufe["aufwand"]) }, { "anforderung", Py.Int(stufe["anforderung"]) },
             { "material", Rabatt(material, stand.RaumEffekt("material_rabatt")) },
             { "material_markt", material }, { "frist", Py.Int(stufe["frist"]) }, { "von_tag", beginn },
-            { "bis_tag", beginn + Py.Int(regeln["gilt_tage"]) - 1 },
+            { "bis_tag", checked(beginn + Py.Int(regeln["gilt_tage"]) - 1) },
             { "markt", billigst["zuschlag"] }, { "laune", billigst["laune"] },
             { "konkurrent", billigst["id"] }, { "bieter", gebote.Cast<object?>().ToList() }, { "ausgefallen", ausgefallen },
             { "text", Prozent("%s von „%s“: %s", was, eintrag["kunde"], eintrag["auftrag"]) },
@@ -166,7 +166,7 @@ public static partial class Betrieb
             }
         }
         // Eigener Serverraum (ab 0.36): ein Projekt mehr
-        return bester + Py.Int(stand.RaumEffekt("projekte_plus"));
+        return checked(bester + Py.Int(stand.RaumEffekt("projekte_plus")));
     }
 
     /// <summary>customer_short: kurzer Kundenname aus der Branche des Testprojekts.</summary>
@@ -199,16 +199,16 @@ public static partial class Betrieb
         var index = reihe[(int)PyMod(platz, reihe.Count)];
         var vorlage = Objekt(vorlagen[index]);
         var stufe = Objekt(Objekt(regeln["stufen"])[Py.Str(vorlage["schwierigkeit"])]);
-        var beginn = Py.Int(Objekt(stand.Firma)["tag"]) + platz * Py.Int(regeln["abstand_tage"]);
+        var beginn = checked(Py.Int(Objekt(stand.Firma)["tag"]) + platz * Py.Int(regeln["abstand_tage"]));
         var salz = Prozent("projekt%d-", platz);
         var spanne = Liste(stufe["material"]);
         var (unten, oben) = (Py.F(spanne[0]), Py.F(spanne[1]));
-        var material = PythonRunden.Runde((unten + Wurf(start, beginn, salz + "material") * (oben - unten)) / 10.0) * 10;
+        var material = checked(PythonRunden.Runde((unten + Wurf(start, beginn, salz + "material") * (oben - unten)) / 10.0) * 10);
         var fach = vorlage["cat"] is string c && T.Kurz.TryGetValue(c, out var k) ? k : vorlage["cat"];
         var lage = MarktVerschiebung(stand, beginn, inhalt);
         var (gebote, ausgefallen) = MitbewerberGebote("projekt", "normal", fach, start, beginn, salz, inhalt, schub: Py.Int(lage["shift"]));
         var billigst = Billigst(gebote);
-        var kennung = Prozent("%s%d", ProjektPrefix, platz + 1);
+        var kennung = Prozent("%s%d", ProjektPrefix, checked(platz + 1));
         var kunde = KundeKurz(Py.Str(vorlage["branche"]));
         var text = Py.Format(Py.Str(Waehle(Liste(regeln["texte"]), start, beginn, salz + "text")),
             new PyObjekt { { "kunde", kunde }, { "auftrag", vorlage["auftrag"] } });
@@ -223,7 +223,7 @@ public static partial class Betrieb
             { "material", Rabatt(material, stand.RaumEffekt("material_rabatt")) },
             { "material_markt", material },
             { "frist", Py.Int(stufe["frist"]) }, { "von_tag", beginn },
-            { "bis_tag", beginn + Py.Int(regeln["gilt_tage"]) - 1 },
+            { "bis_tag", checked(beginn + Py.Int(regeln["gilt_tage"]) - 1) },
             { "markt", billigst["zuschlag"] }, { "laune", billigst["laune"] },
             { "konkurrent", billigst["id"] }, { "bieter", gebote.Cast<object?>().ToList() }, { "ausgefallen", ausgefallen },
             { "text", text }, { "ausgangssituation", vorlage["ausgangssituation"] },
@@ -243,13 +243,13 @@ public static partial class Betrieb
             return [];
         }
         var (abstand, gilt) = (Py.Int(regeln["abstand_tage"]), Py.Int(regeln["gilt_tage"]));
-        var seit = tag - Py.Int(Objekt(stand.Firma)["tag"]);
+        var seit = checked(tag - Py.Int(Objekt(stand.Firma)["tag"]));
         if (seit < 0)
         {
             return [];
         }
         var ergebnis = new List<PyObjekt>();
-        for (var platz = Math.Max(0, PyDiv(seit - gilt, abstand)); platz < PyDiv(seit, abstand) + 1; platz++)
+        for (var platz = Math.Max(0, PyDiv(checked(seit - gilt), abstand)); platz < checked(PyDiv(seit, abstand) + 1); platz = checked(platz + 1))
         {
             var eintrag = ProjektFuerPlatz(stand, platz, inhalt);
             if (Py.Int(eintrag["von_tag"]) <= tag && tag <= Py.Int(eintrag["bis_tag"]))
@@ -315,8 +315,8 @@ public static partial class Betrieb
             { "kunde", projekt["kunde"] }, { "kunde_kurz", projekt["kunde_kurz"] }, { "cat", projekt["cat"] },
             { "schwierigkeit", projekt["schwierigkeit"] }, { "tag", tag }, { "aufwand", projekt["aufwand"] },
             { "anforderung", projekt["anforderung"] }, { "material", gewonnen ? projekt["material"] : 0L },
-            { "anzahlung", anzahlung }, { "frist", projekt["frist"] }, { "frist_tag", tag + Py.Int(projekt["frist"]) - 1 },
-            { "geld", gewonnen ? anzahlung - Py.Int(projekt["material"]) : 0L },
+            { "anzahlung", anzahlung }, { "frist", projekt["frist"] }, { "frist_tag", checked(tag + Py.Int(projekt["frist"]) - 1) },
+            { "geld", gewonnen ? checked(anzahlung - Py.Int(projekt["material"])) : 0L },
         })
         {
             Py.Setzen(daten, p.Key, p.Value);
@@ -472,7 +472,7 @@ public static partial class Betrieb
     /// <summary>project_status_text: "Tag 2 von 5 · 21 von 35 Punkten · ..."</summary>
     public static string ProjektStandText(Spielstand stand, PyObjekt projekt, PyObjekt? stufen, PyObjekt inhalt)
     {
-        var tag = stand.Tag - Py.Int(projekt["tag"]) + 1;
+        var tag = checked(stand.Tag - Py.Int(projekt["tag"]) + 1);
         var punkteText = Num(PythonRundenStellen.Runde(Py.F(projekt["stand"]), 1));
         var text = Prozent("Tag %d von %d · %s von %d Punkten", tag, projekt["frist"], punkteText, projekt["aufwand"]);
         if (tag > Py.Int(projekt["frist"]))
@@ -489,7 +489,7 @@ public static partial class Betrieb
             if (punkte > 0)
             {
                 var rest = Math.Max(0.0, Py.F(projekt["aufwand"]) - Py.F(projekt["stand"]));
-                var tage = (long)Math.Ceiling(rest / punkte);
+                var tage = checked((long)Math.Ceiling(rest / punkte));
                 text += Prozent(" · Team schafft etwa %s Punkte am Tag, %s", Num(punkte),
                     tage <= 1 ? "heute fertig" : Prozent("noch etwa %d Arbeitstage", tage));
             }
@@ -572,9 +572,9 @@ public static partial class Betrieb
             };
             if (Py.Wahr(eintrag["fertig"]))
             {
-                var spaet = Math.Max(0, stand.Tag - Py.Int(projekt["frist_tag"]));
+                var spaet = Math.Max(0, checked(stand.Tag - Py.Int(projekt["frist_tag"])));
                 var verzug = OderLeer(regeln["verzug"]);
-                var abzug = Math.Min(Py.Int(Get(verzug, "max_prozent", 30L)), spaet * Py.Int(Get(verzug, "prozent_je_tag", 5L)));
+                var abzug = Math.Min(Py.Int(Get(verzug, "max_prozent", 30L)), checked(spaet * Py.Int(Get(verzug, "prozent_je_tag", 5L))));
                 var rest = Py.F(projekt["netto"]) - Py.F(projekt["anzahlung"]) - Py.F(projekt["netto"]) * abzug / 100.0;
                 Py.Setzen(eintrag, "verzug", spaet);
                 Py.Setzen(eintrag, "abzug", abzug);
@@ -583,7 +583,7 @@ public static partial class Betrieb
                 {
                     Py.Setzen(eintrag, "reputation", new PyObjekt
                     {
-                        { "kundenzufriedenheit", Math.Max(-20, spaet * Py.Int(Get(verzug, "kundenzufriedenheit_je_tag", -2L))) },
+                        { "kundenzufriedenheit", Math.Max(-20, checked(spaet * Py.Int(Get(verzug, "kundenzufriedenheit_je_tag", -2L)))) },
                     });
                 }
                 else
@@ -633,8 +633,8 @@ public static partial class Betrieb
     {
         if (projekt["ergebnis"] is not PyObjekt ergebnis || !Py.Wahr(ergebnis))
         {
-            var rest = Py.Int(projekt["bis_tag"]) - stand.Tag;
-            return Prozent("Angebot möglich %s", rest <= 0 ? "nur noch heute" : Prozent("noch %d Arbeitstage", rest + 1));
+            var rest = checked(Py.Int(projekt["bis_tag"]) - stand.Tag);
+            return Prozent("Angebot möglich %s", rest <= 0 ? "nur noch heute" : Prozent("noch %d Arbeitstage", checked(rest + 1)));
         }
         if (Py.Wahr(ergebnis["gewonnen"]))
         {

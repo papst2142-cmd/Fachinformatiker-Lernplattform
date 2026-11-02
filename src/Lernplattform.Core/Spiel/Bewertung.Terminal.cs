@@ -94,18 +94,18 @@ public static partial class Bewertung
                 }
                 if (Py.Wahr(Get(befehl, "gefaehrlich")))
                 {
-                    gefahr++;
+                    gefahr = checked(gefahr + 1);
                     probleme.Add(Prozent("%s: „%s“ ist gefährlich. %s", wo, befehl["befehl"], hinweis));
                 }
                 else
                 {
-                    fehler++;
+                    fehler = checked(fehler + 1);
                     probleme.Add(Prozent("%s: „%s“ war falsch. %s", wo, befehl["befehl"], hinweis));
                 }
             }
             if (RichtigerBefehl(schritte[n]) is not int r || !versuche[n].Contains(r))
             {
-                offen++;
+                offen = checked(offen + 1);
                 probleme.Add(wo + " wurde nicht abgeschlossen.");
             }
         }
@@ -338,7 +338,7 @@ public static partial class Bewertung
             {
                 if (soll == BewertungAuffaellig)
                 {
-                    uebersehen++;
+                    uebersehen = checked(uebersehen + 1);
                     probleme.Add(Prozent("„%s“ ist auffällig: %s", text, punkt["ergebnis"]));
                 }
                 else

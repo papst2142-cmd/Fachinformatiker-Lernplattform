@@ -86,12 +86,12 @@ internal sealed class FreiFeld
         return Runde;
     }
 
-    public int Index(long spalte, long zeile) => (int)(((spalte - _spalte0) * _zeilen) + (zeile - _zeile0));
+    public int Index(long spalte, long zeile) => (int)(checked(((spalte - _spalte0) * _zeilen) + (zeile - _zeile0)));
 
     public bool Frei(long spalte, long zeile) =>
-        (ulong)(spalte - _spalte0) < (ulong)_spalten && (ulong)(zeile - _zeile0) < (ulong)_zeilen && _frei[Index(spalte, zeile)];
+        (ulong)(checked(spalte - _spalte0)) < (ulong)_spalten && (ulong)(checked(zeile - _zeile0)) < (ulong)_zeilen && _frei[Index(spalte, zeile)];
 
-    public (long, long) Zelle(int index) => ((index / _zeilen) + _spalte0, (index % _zeilen) + _zeile0);
+    public (long, long) Zelle(int index) => (checked((index / _zeilen) + _spalte0), checked((index % _zeilen) + _zeile0));
 }
 
 /// <summary>
@@ -209,21 +209,21 @@ public static class Wege
     /// </summary>
     public static PyMenge BasisRaster(PyObjekt gebaeude)
     {
-        var spalten = (long)(Py.F(gebaeude["breite"]) / Schritt);
-        var zeilen = (long)(Py.F(gebaeude["hoehe"]) / Schritt);
+        var spalten = checked((long)(Py.F(gebaeude["breite"]) / Schritt));
+        var zeilen = checked((long)(Py.F(gebaeude["hoehe"]) / Schritt));
         var rechtecke = Hindernisse(gebaeude);
         var grenze = Koerper * Koerper;
-        var gesperrt = new bool[Math.Max(0, spalten) * Math.Max(0, zeilen)];
+        var gesperrt = new bool[checked(Math.Max(0, spalten) * Math.Max(0, zeilen))];
         foreach (var (x1, y1, x2, y2) in rechtecke)
         {
             var (s1, s2) = Bereich(x1, x2, spalten);
             var (z1, z2) = Bereich(y1, y2, zeilen);
-            for (var spalte = s1; spalte <= s2; spalte++)
+            for (var spalte = s1; spalte <= s2; spalte = checked(spalte + 1))
             {
                 var cx = (spalte + 0.5) * Schritt;
-                for (var zeile = z1; zeile <= z2; zeile++)
+                for (var zeile = z1; zeile <= z2; zeile = checked(zeile + 1))
                 {
-                    var index = spalte * zeilen + zeile;
+                    var index = checked(spalte * zeilen + zeile);
                     if (gesperrt[index])
                     {
                         continue;
@@ -239,11 +239,11 @@ public static class Wege
             }
         }
         var frei = new PyMenge();
-        for (long spalte = 0; spalte < spalten; spalte++)
+        for (long spalte = 0; spalte < spalten; spalte = checked(spalte + 1))
         {
-            for (long zeile = 0; zeile < zeilen; zeile++)
+            for (long zeile = 0; zeile < zeilen; zeile = checked(zeile + 1))
             {
-                if (!gesperrt[spalte * zeilen + zeile])
+                if (!gesperrt[checked(spalte * zeilen + zeile)])
                 {
                     frei.Add((spalte, zeile));
                 }
@@ -262,9 +262,9 @@ public static class Wege
         var bis = Math.Ceiling((b + Koerper) / Schritt) + 1;
         if (double.IsNaN(von) || double.IsNaN(bis))
         {
-            return (0, anzahl - 1);   // nie bei echten Inhalten: dann wie vorher jede Zelle pruefen
+            return (0, checked(anzahl - 1));   // nie bei echten Inhalten: dann wie vorher jede Zelle pruefen
         }
-        return ((long)Math.Max(von, 0), (long)Math.Min(bis, anzahl - 1));
+        return (checked((long)Math.Max(von, 0)), checked((long)Math.Min(bis, anzahl - 1)));
     }
 
     /// <summary>_walk_grid (ohne Zwischenspeicher): Zellen um jede Person sind gesperrt.</summary>
@@ -280,9 +280,9 @@ public static class Wege
                 continue;
             }
             var (spalte0, zeile0) = Zelle(px, py);
-            for (var spalte = spalte0 - reichweite; spalte <= spalte0 + reichweite; spalte++)
+            for (var spalte = checked(spalte0 - reichweite); spalte <= checked(spalte0 + reichweite); spalte = checked(spalte + 1))
             {
-                for (var zeile = zeile0 - reichweite; zeile <= zeile0 + reichweite; zeile++)
+                for (var zeile = checked(zeile0 - reichweite); zeile <= checked(zeile0 + reichweite); zeile = checked(zeile + 1))
                 {
                     double cx = (spalte + 0.5) * Schritt, cy = (zeile + 0.5) * Schritt;
                     if (PythonPow.Pow(px - cx, 2) + PythonPow.Pow(py - cy, 2) < grenze)
@@ -303,7 +303,7 @@ public static class Wege
     }
 
     /// <summary>_cell</summary>
-    public static (long, long) Zelle(double x, double y) => ((long)(x / Schritt), (long)(y / Schritt));
+    public static (long, long) Zelle(double x, double y) => (checked((long)(x / Schritt)), checked((long)(y / Schritt)));
 
     /// <summary>_center</summary>
     public static (double, double) Mitte((long, long) zelle) => ((zelle.Item1 + 0.5) * Schritt, (zelle.Item2 + 0.5) * Schritt);
@@ -324,7 +324,7 @@ public static class Wege
         foreach (var zelle in frei)
         {
             // int ** 2 in Python: ganze Zahl, exakt
-            long ds = zelle.Spalte - start.Item1, dz = zelle.Zeile - start.Item2;
+            long ds = checked(zelle.Spalte - start.Item1), dz = checked(zelle.Zeile - start.Item2);
             var abstand = checked(ds * ds + dz * dz);
             if (beste is null || abstand < besterAbstand)
             {
@@ -338,8 +338,8 @@ public static class Wege
     /// <summary>_line_free: geht die gerade Strecke a -> b nur ueber begehbare Zellen?</summary>
     public static bool StreckeFrei((double, double) a, (double, double) b, PyMenge frei)
     {
-        var schritte = (long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1;
-        for (long i = 0; i <= schritte; i++)
+        var schritte = checked((long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1);
+        for (long i = 0; i <= schritte; i = checked(i + 1))
         {
             var t = i / (double)schritte;
             if (!frei.Contains(Zelle(a.Item1 + (b.Item1 - a.Item1) * t, a.Item2 + (b.Item2 - a.Item2) * t)))
@@ -353,8 +353,8 @@ public static class Wege
     /// <summary>Wie <see cref="StreckeFrei((double, double), (double, double), PyMenge)"/> ueber das Feld derselben Zellen (Weisung P8-6, 109).</summary>
     internal static bool StreckeFrei((double, double) a, (double, double) b, FreiFeld frei)
     {
-        var schritte = (long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1;
-        for (long i = 0; i <= schritte; i++)
+        var schritte = checked((long)(Math.Max(Math.Abs(b.Item1 - a.Item1), Math.Abs(b.Item2 - a.Item2)) / (Schritt / 3.0)) + 1);
+        for (long i = 0; i <= schritte; i = checked(i + 1))
         {
             var t = i / (double)schritte;
             var (spalte, zeile) = Zelle(a.Item1 + (b.Item1 - a.Item1) * t, a.Item2 + (b.Item2 - a.Item2) * t);
@@ -429,7 +429,7 @@ public static class Wege
                 var (spalte, zeile) = feld.Zelle(i);
                 foreach (var (dx, dy) in Richtungen)
                 {
-                    long ns = spalte + dx, nz = zeile + dy;
+                    long ns = checked(spalte + dx), nz = checked(zeile + dy);
                     if (!feld.Frei(ns, nz))
                     {
                         continue;
@@ -440,7 +440,7 @@ public static class Wege
                         continue;
                     }
                     // diagonal nur, wenn beide Nachbarn frei sind (keine Ecken schneiden)
-                    if (dx != 0 && dy != 0 && (!feld.Frei(spalte + dx, zeile) || !feld.Frei(spalte, zeile + dy)))
+                    if (dx != 0 && dy != 0 && (!feld.Frei(checked(spalte + dx), zeile) || !feld.Frei(spalte, checked(zeile + dy))))
                     {
                         continue;
                     }

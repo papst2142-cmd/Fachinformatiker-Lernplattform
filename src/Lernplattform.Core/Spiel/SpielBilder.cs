@@ -91,7 +91,7 @@ public static class SpielBilder
         {
             foreach (var x in (long[])[28, 38, 48, 58])
             {
-                s.Add(("oval", (x, 12, x + 16, 30), haar));
+                s.Add(("oval", (x, 12, checked(x + 16), 30), haar));
             }
             s.Add(("oval", (24, 22, 38, 38), haar));
             s.Add(("oval", (62, 22, 76, 38), haar));

@@ -90,7 +90,7 @@ public sealed class Wegsuche
                     continue;
                 }
                 long dy = z + _zeile0 - start.Zeile;
-                var weite = (dx * dx) + (dy * dy);
+                var weite = checked((dx * dx) + (dy * dy));
                 if (weite < besteWeite)
                 {
                     beste = (s + _spalte0, z + _zeile0);

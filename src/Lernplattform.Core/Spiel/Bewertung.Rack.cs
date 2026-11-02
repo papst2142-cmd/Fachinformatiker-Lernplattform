@@ -19,7 +19,7 @@ public static partial class Bewertung
 
     private static string HeText(long unten, long hoehe)
     {
-        var oben = unten + hoehe - 1;
+        var oben = checked(unten + hoehe - 1);
         return oben == unten ? Prozent("HE %d", unten) : Prozent("HE %d–%d", unten, oben);
     }
 
@@ -79,13 +79,13 @@ public static partial class Bewertung
         var benutzt = new Dictionary<long, PyObjekt>();
         foreach (var r in belegt)
         {
-            var oben = r.Unten + He(r.Geraet) - 1;
+            var oben = checked(r.Unten + He(r.Geraet) - 1);
             if (oben > groesse)
             {
                 probleme.Add(Prozent("%s (%d HE) passt ab HE %d nicht mehr in den Schrank, er hat nur %d HE.", r.Geraet["name"], r.Geraet["he"], r.Unten, groesse));
                 continue;
             }
-            for (var he = r.Unten; he <= oben; he++)
+            for (var he = r.Unten; he <= oben; he = checked(he + 1))
             {
                 if (benutzt.TryGetValue(he, out var anderes))
                 {
@@ -93,7 +93,7 @@ public static partial class Bewertung
                     break;
                 }
             }
-            for (var he = r.Unten; he <= oben; he++)
+            for (var he = r.Unten; he <= oben; he = checked(he + 1))
             {
                 benutzt.TryAdd(he, r.Geraet);
             }
@@ -115,8 +115,8 @@ public static partial class Bewertung
         }
         bool Nachbar(RackPlatz r, string art)
         {
-            var oben = r.Unten + He(r.Geraet) - 1;
-            return belegt.Any(o => Typ(o.Geraet) == art && (o.Unten == oben + 1 || o.Unten + He(o.Geraet) - 1 == r.Unten - 1));
+            var oben = checked(r.Unten + He(r.Geraet) - 1);
+            return belegt.Any(o => Typ(o.Geraet) == art && (o.Unten == checked(oben + 1) || checked(o.Unten + He(o.Geraet) - 1) == checked(r.Unten - 1)));
         }
         foreach (var r in belegt)
         {
@@ -136,7 +136,7 @@ public static partial class Bewertung
     private static long PyDiv(long a, long b)
     {
         var q = a / b;
-        return (a % b != 0 && ((a < 0) ^ (b < 0))) ? q - 1 : q;
+        return (a % b != 0 && ((a < 0) ^ (b < 0))) ? checked(q - 1) : q;
     }
 
     private static List<string> LastProbleme(PyObjekt auftrag, List<RackPlatz> belegt, PyObjekt inhalt)
@@ -232,7 +232,7 @@ public static partial class Bewertung
                     foreach (var i in folge)
                     {
                         antwort.Add(i.ToString(System.Globalization.CultureInfo.InvariantCulture), unten);
-                        unten += He(RackGeraet(geraete[i], inhalt)!);
+                        unten = checked(unten + He(RackGeraet(geraete[i], inhalt)!));
                     }
                     if (RackProbleme(auftrag, antwort, inhalt).Count == 0)
                     {

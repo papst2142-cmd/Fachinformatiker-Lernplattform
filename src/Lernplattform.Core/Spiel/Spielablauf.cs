@@ -70,7 +70,7 @@ public sealed class SpielSpeicher(Func<string>? uhr = null) : ISpielSpeicher
     public string? Schreiben(string art, string daten)
     {
         var zeit = uhr();
-        ereignisse.Add((++nummer, zeit, art, daten));
+        ereignisse.Add((checked(++nummer), zeit, art, daten));
         return zeit;
     }
 
@@ -83,7 +83,7 @@ public sealed class SpielSpeicher(Func<string>? uhr = null) : ISpielSpeicher
 
     public bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten)
     {
-        bestenliste.Add((++nummer, new BestenZeile(uhr(), lauf, art, schluessel, wert is null ? null : Py.F(wert),
+        bestenliste.Add((checked(++nummer), new BestenZeile(uhr(), lauf, art, schluessel, wert is null ? null : Py.F(wert),
             Py.Lesen(daten) as PyObjekt ?? [])));
         return true;
     }
@@ -324,7 +324,7 @@ public sealed class Spielablauf
     /// </summary>
     private bool Nachtragen(SpielStempel? vorher, string art, string text)
     {
-        if (vorher is not { } alt || Speicher.Stempel() is not { } nach || nach.Anzahl != alt.Anzahl + 1)
+        if (vorher is not { } alt || Speicher.Stempel() is not { } nach || nach.Anzahl != checked(alt.Anzahl + 1))
         {
             return false;
         }

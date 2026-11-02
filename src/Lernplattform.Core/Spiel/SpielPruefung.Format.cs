@@ -289,11 +289,11 @@ public static partial class SpielPruefung
                 {
                     return null;
                 }
-                if (w > (long.MaxValue - z) / 10)
+                if (w > (checked(long.MaxValue - z)) / 10)
                 {
                     throw new FormatFehler();     // Too many decimal digits in format string
                 }
-                w = w * 10 + z;
+                w = checked(w * 10 + z);
             }
             return w;
         }

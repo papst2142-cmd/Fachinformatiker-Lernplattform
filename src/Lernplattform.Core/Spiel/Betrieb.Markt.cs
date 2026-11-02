@@ -39,7 +39,7 @@ public static partial class Betrieb
         var regeln = AngebotRegeln(inhalt);
         var kunden = Liste(FirmaRegeln(inhalt)["kunden"]);
         var start = stand.FirmenStartwert;
-        var erster = (long)(Wurf(start, tag, "anfrage-kunde") * kunden.Count);
+        var erster = checked((long)(Wurf(start, tag, "anfrage-kunde") * kunden.Count));
         var ergebnis = new List<PyObjekt>();
         var rabatt = stand.RaumEffekt("material_rabatt");
         // Ab 0.42: Werbung bringt mehr Anfragen (Menge) und groessere Bestellungen
@@ -48,29 +48,29 @@ public static partial class Betrieb
         // Ab 0.44: Konjunktur, Trend-Anfragen und Gegenwind der Mitbewerber
         var lage = MarktVerschiebung(stand, tag, inhalt);
         var markt = Objekt(lage["markt"]);
-        var gesamt = Math.Max(1, Py.Int(regeln["pro_tag"]) + Py.Int(stand.RaumEffekt("anfragen_plus")) + extra
-            + Py.Int(Get(Objekt(markt["phase_info"]), "anfragen", 0L)) + FilialAnfragen(stand, inhalt));
+        var gesamt = Math.Max(1, checked(Py.Int(regeln["pro_tag"]) + Py.Int(stand.RaumEffekt("anfragen_plus")) + extra
+            + Py.Int(Get(Objekt(markt["phase_info"]), "anfragen", 0L)) + FilialAnfragen(stand, inhalt)));
         var trend = markt["trend"] as PyObjekt;
         var hype = Py.Wahr(trend) ? OderLeer(MarktRegeln(inhalt)["trends"]) : [];
         var mitTrend = Py.Wahr(trend) && Wurf(start, tag, "trend-anfrage") * 100 < Py.F(Get(hype, "chance", 0L));
-        for (var nummer = 0L; nummer < gesamt + (mitTrend ? 1 : 0); nummer++)
+        for (var nummer = 0L; nummer < checked(gesamt + (mitTrend ? 1 : 0)); nummer = checked(nummer + 1))
         {
             var salz = Prozent("anfrage%d-", nummer);
             var istTrend = mitTrend && nummer == gesamt;
             // Verschiedene Kunden am selben Tag
-            var kunde = Objekt(kunden[(int)PyMod(erster + nummer * Math.Max(1, PyDiv(kunden.Count, 2) - 1), kunden.Count)]);
+            var kunde = Objekt(kunden[(int)PyMod(checked(erster + nummer * Math.Max(1, PyDiv(kunden.Count, 2) - 1)), kunden.Count)]);
             var artikel = Objekt(Waehle(Liste(istTrend ? trend!["artikel"] : regeln["artikel"]), start, tag, salz + "artikel"));
             var preisSpanne = Paar(artikel["preis"]);
             var (unten, oben) = (Py.F(preisSpanne[0]), Py.F(preisSpanne[1]));
-            var preis = PythonRunden.Runde((unten + Wurf(start, tag, salz + "preis") * (oben - unten)) / 5.0) * 5;
+            var preis = checked(PythonRunden.Runde((unten + Wurf(start, tag, salz + "preis") * (oben - unten)) / 5.0) * 5);
             var mengeSpanne = Paar(artikel["menge"]);
             var menge = Zwischen(start, tag, salz + "menge", Py.Int(mengeSpanne[0]), Py.Int(mengeSpanne[1]));
             if (Py.Wahr(werbung["groesse"]))
             {
-                menge = (long)Math.Ceiling(menge * (1 + Py.F(werbung["groesse"]) / 100.0));
+                menge = checked((long)Math.Ceiling(menge * (1 + Py.F(werbung["groesse"]) / 100.0)));
             }
             var fach = istTrend ? trend!["cat"] : null;
-            var schub = Py.Int(lage["shift"]) + (istTrend ? Py.Int(Get(hype, "zuschlag", 0L)) : 0);
+            var schub = checked(Py.Int(lage["shift"]) + (istTrend ? Py.Int(Get(hype, "zuschlag", 0L)) : 0));
             var (gebote, ausgefallen) = MitbewerberGebote("anfrage", kunde["art"], fach, start, tag, salz, inhalt,
                 schub: schub, zweiter: Py.F(lage["zweiter"]));
             var billigst = Billigst(gebote);
@@ -84,7 +84,7 @@ public static partial class Betrieb
             {
                 text = Prozent("%s „%s“", text, trend["satz"]);
             }
-            var kennung = Prozent("%s%d:%d", AnfragePrefix, tag, nummer + 1);
+            var kennung = Prozent("%s%d:%d", AnfragePrefix, tag, checked(nummer + 1));
             var eintrag = new PyObjekt();
             if (istTrend)
             {
@@ -118,7 +118,7 @@ public static partial class Betrieb
     }
 
     /// <summary>a % b wie Python (Ergebnis mit dem Vorzeichen von b).</summary>
-    internal static long PyMod(long a, long b) => a - PyDiv(a, b) * b;
+    internal static long PyMod(long a, long b) => checked(a - PyDiv(a, b) * b);
 
     private static PyObjekt Billigst(List<PyObjekt> gebote)
     {
@@ -138,7 +138,7 @@ public static partial class Betrieb
     {
         var (unten, oben) = (Py.Int(art["von"]), Py.Int(art["bis"]));
         var mitte = (Wurf(start, tag, salz + "markt") + Wurf(start, tag, salz + "markt2")) / 2.0;
-        var markt = unten + Math.Min(oben - unten, (long)(mitte * (oben - unten + 1)));
+        var markt = checked(unten + Math.Min(oben - unten, (long)(mitte * (oben - unten + 1))));
         var launen = OderLeer(regeln["laune"]);
         var wurf = Wurf(start, tag, salz + "laune");
         var kampf = launen["kampfpreis"] as PyObjekt;
@@ -149,7 +149,7 @@ public static partial class Betrieb
         }
         if (Py.Wahr(voll) && wurf > 1 - Py.F(voll!["chance"]))
         {
-            return (markt + Zwischen(start, tag, salz + "teuer", Py.Int(voll["plus_von"]), Py.Int(voll["plus_bis"])), "ausgelastet");
+            return (checked(markt + Zwischen(start, tag, salz + "teuer", Py.Int(voll["plus_von"]), Py.Int(voll["plus_bis"]))), "ausgelastet");
         }
         return (markt, "");
     }
@@ -262,11 +262,11 @@ public static partial class Betrieb
         {
             // Im Gegenwind zaehlt der Preisvorteil nur anteilig (ab 0.44, fester Faktor)
             var faktor = Get(OderLeer(RivalRegeln(inhalt)["gegenwind"]), "vorteil_faktor", 1L);
-            vorteil = (long)(vorteil * Py.F(faktor));
+            vorteil = checked((long)(vorteil * Py.F(faktor)));
         }
         // Ab 0.45: Naehe zum Kunden durch die Filiale (zaehlt immer voll)
         var naehe = FilialNaehe(stand, angebot["kunde"] is PyObjekt k ? k["id"] : angebot["kunde"], inhalt);
-        vorteil += naehe;
+        vorteil = checked(vorteil + naehe);
         var richtig = probleme.Count == 0;
         var billig = Py.F(zahlen["netto"]) <= Geld(markt * (1 + vorteil / 100.0)) + 0.001;
         var gewonnen = richtig && billig;
@@ -296,9 +296,9 @@ public static partial class Betrieb
         if (Py.Wahr(angebot["gegenwind"]))
         {
             Py.Setzen(daten, "gegenwind", angebot["gegenwind"]);
-            if (vorteil - naehe < voll)
+            if (checked(vorteil - naehe) < voll)
             {
-                Py.Setzen(daten, "vorteil_voll", voll + naehe);
+                Py.Setzen(daten, "vorteil_voll", checked(voll + naehe));
             }
         }
         if (probleme.Count > 0)
@@ -465,8 +465,8 @@ public static partial class Betrieb
     /// <summary>own_ticket_limit: einer weniger im Projekt und nach einem Schlichtungsgespraech.</summary>
     public static long EigeneTicketGrenze(Spielstand stand, PyObjekt inhalt)
     {
-        var grenze = Math.Max(1, TicketGrenze(Selbst, inhalt) - (Py.Wahr(stand.ProjektVon(Selbst)) ? 1 : 0));
-        return grenze - (stand.SchlichtTage.Contains(stand.Tag) ? 1 : 0);
+        var grenze = Math.Max(1, checked(TicketGrenze(Selbst, inhalt) - (Py.Wahr(stand.ProjektVon(Selbst)) ? 1 : 0)));
+        return checked(grenze - (stand.SchlichtTage.Contains(stand.Tag) ? 1 : 0));
     }
 
     /// <summary>ticket_chance: Erfolgschance in Prozent (ganze Zahl).</summary>
@@ -486,9 +486,9 @@ public static partial class Betrieb
         }
         var regeln = TicketRegeln(inhalt);
         var start = stand.FirmenStartwert;
-        var anzahl = Math.Max(Py.Int(regeln["mindestens"]), Py.Int(regeln["grundzahl"]) + Py.Int(regeln["je_mitarbeiter"]) * stand.Personal.Count);
+        var anzahl = Math.Max(Py.Int(regeln["mindestens"]), checked(Py.Int(regeln["grundzahl"]) + Py.Int(regeln["je_mitarbeiter"]) * stand.Personal.Count));
         // Ab 0.42: Werbung bringt mehr Kundentickets
-        anzahl += Wirtschaft.ExtraAnzahl(Wirtschaft.WerbeWirkung(stand, tag, inhalt)["tickets"], start, tag, "werbung-tickets");
+        anzahl = checked(anzahl + Wirtschaft.ExtraAnzahl(Wirtschaft.WerbeWirkung(stand, tag, inhalt)["tickets"], start, tag, "werbung-tickets"));
         var reihe = Liste(regeln["vorlagen"]).Select(Objekt).OrderBy(v => Wurf(start, tag, "kt|" + Py.Str(v["id"]))).ToList();
         var gewaehlt = reihe.Take((int)Math.Max(0, anzahl)).ToList();
         // Schon verteilte Tickets bleiben, auch wenn inzwischen jemand gegangen ist
@@ -730,10 +730,10 @@ public static partial class Betrieb
         var (unten, oben) = (Py.Int(Get(rivale, "von", 5L)), Py.Int(Get(rivale, "bis", 25L)));
         var mitte = Py.Wahr(rivale["gleichmaessig"]) ? Wurf(start, tag, salz + "markt")
             : (Wurf(start, tag, salz + "markt") + Wurf(start, tag, salz + "markt2")) / 2.0;
-        var zuschlag = unten + Math.Min(oben - unten, (long)(mitte * (oben - unten + 1)));
+        var zuschlag = checked(unten + Math.Min(oben - unten, (long)(mitte * (oben - unten + 1))));
         if (Py.Wahr(fach))
         {
-            zuschlag += Py.Int(Get(OderLeer(rivale["fach"]), Py.Str(fach), 0L));
+            zuschlag = checked(zuschlag + Py.Int(Get(OderLeer(rivale["fach"]), Py.Str(fach), 0L)));
         }
         var launen = OderLeer(rivale["laune"]);
         var wurf = Wurf(start, tag, salz + "laune");
@@ -749,7 +749,7 @@ public static partial class Betrieb
             {
                 return null;
             }
-            zuschlag += Zwischen(start, tag, salz + "teuer", Py.Int(Get(voll, "plus_von", 10L)), Py.Int(Get(voll, "plus_bis", 20L)));
+            zuschlag = checked(zuschlag + Zwischen(start, tag, salz + "teuer", Py.Int(Get(voll, "plus_von", 10L)), Py.Int(Get(voll, "plus_bis", 20L))));
             return (Math.Max(0, zuschlag), "ausgelastet");
         }
         return (Math.Max(0, zuschlag), "");
@@ -773,7 +773,7 @@ public static partial class Betrieb
             var einer = Py.F(Get(OderLeer(aufbau["anfrage_bieter"]), "eins", 1.0)) - zweiter;
             anzahl = Wurf(start, tag, salz + "bieterzahl") < einer ? 1 : 2;
         }
-        anzahl += extra;
+        anzahl = checked(anzahl + extra);
         var reihe = GewichteteReihe(rivalen, [.. rivalen.Select(r => Get(OderLeer(r["gewicht"]), art, 1L))], start, tag, salz + "bieter");
         var gebote = new List<PyObjekt>();
         var aus = new List<object?>();
@@ -785,14 +785,14 @@ public static partial class Betrieb
                 aus.Add(rivale["id"]);
                 continue;
             }
-            gebote.Add(new PyObjekt { { "id", rivale["id"] }, { "zuschlag", Math.Max(0, z.Value.Zuschlag + schub) }, { "laune", z.Value.Laune } });
+            gebote.Add(new PyObjekt { { "id", rivale["id"] }, { "zuschlag", Math.Max(0, checked(z.Value.Zuschlag + schub)) }, { "laune", z.Value.Laune } });
         }
         if (gebote.Count == 0)
         {
             // Niemand da? Bitweiche bietet immer
             var z = RivalZuschlag(Mitbewerber(Bitweiche, inhalt), regeln, kundenart, fach, start, tag, salz)
                 ?? throw new InvalidOperationException("Bitweiche bietet nicht");
-            gebote.Add(new PyObjekt { { "id", Bitweiche }, { "zuschlag", Math.Max(0, z.Zuschlag + schub) }, { "laune", z.Laune } });
+            gebote.Add(new PyObjekt { { "id", Bitweiche }, { "zuschlag", Math.Max(0, checked(z.Zuschlag + schub)) }, { "laune", z.Laune } });
         }
         return (gebote, aus);
     }
@@ -806,7 +806,7 @@ public static partial class Betrieb
         var hype = trend ? Py.Int(Get(OderLeer(MarktRegeln(inhalt)["trends"]), "zuschlag", 0L)) : 0;
         return new PyObjekt
         {
-            { "shift", boom + hype - Py.Int(druck["minus"]) }, { "konjunktur", boom }, { "trend", hype },
+            { "shift", checked(boom + hype - Py.Int(druck["minus"])) }, { "konjunktur", boom }, { "trend", hype },
             { "gegenwind", druck["minus"] }, { "zweiter", druck["zweiter"] }, { "phase", markt["phase"] }, { "markt", markt },
         };
     }
@@ -822,10 +822,10 @@ public static partial class Betrieb
                 continue;
             }
             var r = Py.Wahr(e["konkurrent"]) ? e["konkurrent"] : Bitweiche;
-            zaehler[r] = Py.Int(zaehler.Get(r, 0L)) + 1;
+            zaehler[r] = checked(Py.Int(zaehler.Get(r, 0L)) + 1);
         }
         var reihe = AlleMitbewerber(inhalt).Select(r => r["id"]).ToList();
-        return [.. zaehler.OrderBy(p => -Py.Int(p.Value)).ThenBy(p => reihe.FindIndex(x => Py.Gleich(x, p.Key)) is var i && i >= 0 ? i : 99)
+        return [.. zaehler.OrderBy(p => checked(-Py.Int(p.Value))).ThenBy(p => reihe.FindIndex(x => Py.Gleich(x, p.Key)) is var i && i >= 0 ? i : 99)
             .Select(p => (Mitbewerber(p.Key, inhalt)["name"], Py.Int(p.Value)))];
     }
 
@@ -881,10 +881,10 @@ public static partial class Betrieb
 
     /// <summary>recall_raise: neues Gehalt beim Gegenangebot (ganze Euro, mindestens +1).</summary>
     public static long RueckholGehaltNeu(object? gehalt, PyObjekt regel) =>
-        Math.Max(Py.Int(gehalt) + 1, PythonRunden.Runde(Py.Int(gehalt) * (1 + Py.F(Get(regel, "gehalt_plus", 10L)) / 100.0)));
+        Math.Max(checked(Py.Int(gehalt) + 1), PythonRunden.Runde(Py.Int(gehalt) * (1 + Py.F(Get(regel, "gehalt_plus", 10L)) / 100.0)));
 
     /// <summary>recall_bonus</summary>
-    public static long RueckholPraemie(object? gehalt, PyObjekt regel) => Py.Int(gehalt) * Py.Int(Get(regel, "bonus_tage", 10L));
+    public static long RueckholPraemie(object? gehalt, PyObjekt regel) => checked(Py.Int(gehalt) * Py.Int(Get(regel, "bonus_tage", 10L)));
 
     /// <summary>_recall_events: hoechstens ein Rueckhol-Angebot pro Feierabend (fest gewuerfelt).</summary>
     internal static List<PyObjekt> RueckholEreignisse(Spielstand stand, long tag, IEnumerable<object?> anwesend, ICollection<object?> vergeben, PyObjekt inhalt)
@@ -897,7 +897,7 @@ public static partial class Betrieb
         var start = stand.FirmenStartwert;
         var protokoll = stand.PersonalProtokoll.Cast<PyTupel>().Select(t => (Tag: Py.Int(t[0]), Eintrag: Objekt(t[1]))).ToList();
         var zuletzt = protokoll.Where(p => Py.Gleich(p.Eintrag["art"], PersonalRueckhol)).Select(p => p.Tag).DefaultIfEmpty(-1000).Max();
-        if (tag - zuletzt < Py.Int(Get(regel!, "abstand_firma", 0L)))
+        if (checked(tag - zuletzt) < Py.Int(Get(regel!, "abstand_firma", 0L)))
         {
             return [];
         }
@@ -909,12 +909,12 @@ public static partial class Betrieb
             {
                 continue;
             }
-            if (tag - Py.Int(Py.Wahr(Get(daten, "tag", 0L)) ? daten["tag"] : 0L) < Py.Int(regel!["ab_tagen"]))
+            if (checked(tag - Py.Int(Py.Wahr(Get(daten, "tag", 0L)) ? daten["tag"] : 0L)) < Py.Int(regel!["ab_tagen"]))
             {
                 continue;
             }
             var gefragt = protokoll.Where(p => Py.Gleich(p.Eintrag["art"], PersonalRueckhol) && Py.Gleich(p.Eintrag["id"], person)).Select(p => p.Tag).ToList();
-            if (gefragt.Count > 0 && tag - gefragt[^1] < Py.Int(regel["abstand"]))
+            if (gefragt.Count > 0 && checked(tag - gefragt[^1]) < Py.Int(regel["abstand"]))
             {
                 continue;
             }
@@ -997,7 +997,7 @@ public static partial class Betrieb
         }
         if (Py.Gleich(daten["wahl"], RueckholBonus))
         {
-            return Prozent("%s wollte %s zurück. Du hast eine Halteprämie von %s gezahlt.", firma, name, Wohnung.GanzeEuro(-Py.Int(Get(daten, "geld", 0L))));
+            return Prozent("%s wollte %s zurück. Du hast eine Halteprämie von %s gezahlt.", firma, name, Wohnung.GanzeEuro(checked(-Py.Int(Get(daten, "geld", 0L)))));
         }
         return Prozent("%s hat das Angebot von %s angenommen.", name, firma);
     }
@@ -1041,24 +1041,24 @@ public static partial class Betrieb
         var gegruendet = Py.Int(Objekt(stand.Firma)["tag"]);
         var seit = 0L;
         var bekannt = speicher.Keys.OfType<long>().Where(k => k < tag).ToList();
-        var beginn = bekannt.Count > 0 ? bekannt.Max() + 1 : gegruendet;
+        var beginn = bekannt.Count > 0 ? checked(bekannt.Max() + 1) : gegruendet;
         if (bekannt.Count > 0)
         {
             seit = Py.Int(Objekt(speicher[bekannt.Max()])["seit"]);
         }
         var ergebnis = KeinGegenwind();
         var fenster = (int)Py.Int(regel!["fenster"]);
-        for (var jetzt = beginn; jetzt <= Math.Max(beginn, tag); jetzt++)
+        for (var jetzt = beginn; jetzt <= Math.Max(beginn, tag); jetzt = checked(jetzt + 1))
         {
             var vorher = angebote.Where(a => (long)a[0]! < jetzt).ToList();
             var auswahl = fenster == 0 ? vorher : vorher.Skip(Math.Max(0, vorher.Count - fenster)).ToList();
             var gewonnen = (long)auswahl.Count(a => (bool)a[2]!);
-            var heiss = auswahl.Count >= Py.Int(regel["mindestens"]) && gewonnen * 100 >= Py.F(regel["ab_quote"]) * auswahl.Count;
+            var heiss = auswahl.Count >= Py.Int(regel["mindestens"]) && checked(gewonnen * 100) >= Py.F(regel["ab_quote"]) * auswahl.Count;
             if (heiss && seit == 0)
             {
                 seit = jetzt;
             }
-            else if (!heiss && seit != 0 && jetzt - seit >= Py.Int(Get(regel, "mindest_tage", 0L)))
+            else if (!heiss && seit != 0 && checked(jetzt - seit) >= Py.Int(Get(regel, "mindest_tage", 0L)))
             {
                 seit = 0;
             }
@@ -1113,9 +1113,9 @@ public static partial class Betrieb
         {
             var spanne = Liste(nummer == 0 ? aufbau["start_tage"] : Objekt(phasen[art])["tage"]);
             var laenge = Math.Max(1, Zwischen(start, nummer, "konjunktur-dauer", Py.Int(spanne[0]), Py.Int(spanne[1])));
-            ergebnis.Add((tag, tag + laenge, art));
-            tag += laenge;
-            nummer++;
+            ergebnis.Add((tag, checked(tag + laenge), art));
+            tag = checked(tag + laenge);
+            nummer = checked(nummer + 1);
             if (art != "neutral")
             {
                 schwung = art;
@@ -1150,7 +1150,7 @@ public static partial class Betrieb
             return [];
         }
         var erst = Liste(aufbau["erster_nach"]);
-        var tag = Py.Int(Get(regel, "ab_tag", 101L)) + Zwischen(start, 0, "trend-erster", Py.Int(erst[0]), Py.Int(erst[1]));
+        var tag = checked(Py.Int(Get(regel, "ab_tag", 101L)) + Zwischen(start, 0, "trend-erster", Py.Int(erst[0]), Py.Int(erst[1])));
         var ergebnis = new List<(long, long, PyObjekt)>();
         object? zuletzt = null;
         var nummer = 0L;
@@ -1165,10 +1165,10 @@ public static partial class Betrieb
             }
             var trend = Waehle(auswahl, start, nummer, "trend-art");
             var laenge = Math.Max(1, Zwischen(start, nummer, "trend-dauer", Py.Int(dauer[0]), Py.Int(dauer[1])));
-            ergebnis.Add((tag, tag + laenge, trend));
+            ergebnis.Add((tag, checked(tag + laenge), trend));
             zuletzt = trend["id"];
-            tag += laenge + Zwischen(start, nummer, "trend-pause", Py.Int(pause[0]), Py.Int(pause[1]));
-            nummer++;
+            tag = checked(tag + (laenge + Zwischen(start, nummer, "trend-pause", Py.Int(pause[0]), Py.Int(pause[1]))));
+            nummer = checked(nummer + 1);
         }
         return ergebnis;
     }
@@ -1238,7 +1238,7 @@ public static partial class Betrieb
         {
             var fach = trend["cat"];
             zeilen.Add((Prozent("Trend: %s", trend["name"]), Prozent("Noch %s · dazu Trend-Anfragen (%s)",
-                TageText(Py.Int(jetzt["trend_bis"]) - stand.Tag),
+                TageText(checked(Py.Int(jetzt["trend_bis"]) - stand.Tag)),
                 fach is string f && T.Name.TryGetValue(f, out var n) ? n : Get(trend, "cat", ""))));
         }
         var druck = GegenwindText(Gegenwind(stand, stand.Tag, inhalt));
@@ -1290,7 +1290,7 @@ public static partial class Betrieb
         if (RivalRegeln(inhalt)["gegenwind"] is PyObjekt wind && Py.Wahr(wind))
         {
             var vorher = false;
-            for (var tag = gegruendet + 1; tag <= stand.Tag; tag++)
+            for (var tag = checked(gegruendet + 1); tag <= stand.Tag; tag = checked(tag + 1))
             {
                 var jetzt = Py.Wahr(Gegenwind(stand, tag, inhalt)["aktiv"]);
                 if (jetzt != vorher)

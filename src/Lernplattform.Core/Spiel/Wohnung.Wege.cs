@@ -27,12 +27,12 @@ public static partial class Wohnung
             var (s, z) = schlange[i];
             foreach (var (ds, dz) in Nachbarn)
             {
-                var naechste = (s + ds, z + dz);
+                var naechste = (checked(s + ds), checked(z + dz));
                 if (!frei.Contains(naechste) || gesehen.Contains(naechste))
                 {
                     continue;
                 }
-                if (ds != 0 && dz != 0 && (!frei.Contains((s + ds, z)) || !frei.Contains((s, z + dz))))
+                if (ds != 0 && dz != 0 && (!frei.Contains((checked(s + ds), z)) || !frei.Contains((s, checked(z + dz)))))
                 {
                     continue;
                 }
@@ -50,9 +50,9 @@ public static partial class Wohnung
         var reichweite = (long)(Wege.Koerper / Wege.Schritt) + 1;
         var (s0, z0) = Wege.Zelle(x, y);
         var (s1, z1) = Wege.Zelle(x + w, y + h);
-        for (var s = s0 - reichweite; s <= s1 + reichweite; s++)
+        for (var s = checked(s0 - reichweite); s <= checked(s1 + reichweite); s = checked(s + 1))
         {
-            for (var z = z0 - reichweite; z <= z1 + reichweite; z++)
+            for (var z = checked(z0 - reichweite); z <= checked(z1 + reichweite); z = checked(z + 1))
             {
                 var (cx, cy) = Wege.Mitte((s, z));
                 var dx = Math.Max(Math.Max(x - cx, 0), cx - x - w);
@@ -167,7 +167,7 @@ public static partial class Wohnung
         var (x, y) = Andocken(stand, kennung, cx, cy, dreh);
         var ergebnis = new PyObjekt
         {
-            { "x", x }, { "y", y }, { "w", w }, { "h", h }, { "dreh", ((dreh % 4) + 4) % 4 }, { "gesperrt", new List<object?>() },
+            { "x", x }, { "y", y }, { "w", w }, { "h", h }, { "dreh", (checked((dreh % 4) + 4)) % 4 }, { "gesperrt", new List<object?>() },
             { "problem", PlatzProblem(stand, stueck, kennung, x, y, dreh) },
         };
         if (Py.Wahr(ergebnis["problem"]))
@@ -196,7 +196,7 @@ public static partial class Wohnung
         {
             mit.Add(k, v);
         }
-        mit.Add(stueck, new List<object?> { x, y, ((dreh % 4) + 4) % 4 });
+        mit.Add(stueck, new List<object?> { x, y, (checked((dreh % 4) + 4)) % 4 });
         Py.Setzen(rest, "moebel", mit);
         Py.Setzen(ergebnis, "gesperrt", Unerreichbar(frei, Startplatz(gebaeude), WegZiele(stand, rest)).Cast<object?>().ToList());
         return ergebnis;

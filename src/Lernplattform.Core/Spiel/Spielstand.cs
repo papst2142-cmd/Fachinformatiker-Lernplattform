@@ -191,7 +191,7 @@ public sealed partial class Spielstand
         var heute = Py.IstInt(daten["tag"]) ? (Py.Wahr(daten["tag"]) ? Py.Int(daten["tag"]) : 0) : 0;
         if (heute == 0)
         {
-            heute = TageFertig + 1;
+            heute = checked(TageFertig + 1);
         }
         if (Ereignisse.Firma.Contains(art))
         {
@@ -224,7 +224,7 @@ public sealed partial class Spielstand
         }
         if (art == Ereignisse.Ersatzteil)
         {
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(heute, Ereignisse.BuchWaren, Get(daten, "geld", 0L));
             Lieferungen.Add(new PyObjekt
             {
@@ -239,19 +239,19 @@ public sealed partial class Spielstand
         }
         if (art == Ereignisse.Umzug)
         {
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Wohnung = Get(daten, "wohnung", Wohnung);
             Miete = Py.Int(Get(daten, "miete", 0L));
             Kaution = Py.Int(Get(daten, "kaution", 0L));
         }
         else if (art == Ereignisse.MoebelGekauft)
         {
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Moebel[daten["stueck"]] = daten["moebel"];
         }
         else if (art == Ereignisse.MoebelVerkauft)
         {
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Moebel.Pop(daten["stueck"]);
         }
         else if (art == Ereignisse.Einrichtung)
@@ -261,7 +261,7 @@ public sealed partial class Spielstand
         else if (art == Geschaefte.TeilGekauft)
         {
             // W7 (nur C#, Weisung P7-12): Teil im Elektromarkt gekauft, liegt sofort im Lager
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(heute, Ereignisse.BuchWaren, Get(daten, "geld", 0L));
             Lieferungen.Add(new PyObjekt
             {
@@ -275,7 +275,7 @@ public sealed partial class Spielstand
             // (zwei Geraete ohne Abgleich) zaehlt nicht, kein zweites Mal Geld ab (wie E-5, Nico Frage 5a)
             if (daten["stueck"] is string { Length: > 0 } stueck && !Kleider.ContainsKey(stueck))
             {
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(heute, Kleidung.BuchKleidung, Get(daten, "geld", 0L));
                 Kleider[stueck] = heute;
             }
@@ -293,7 +293,7 @@ public sealed partial class Spielstand
         else if (art is Ereignisse.Erledigt or Ereignisse.Verschoben)
         {
             ReputationAendern(Py.Wahr(daten["reputation"]) ? Objekt(daten["reputation"]) : new PyObjekt());
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(heute, Ereignisse.BuchAuftraege, Get(daten, "geld", 0L));
             if (art == Ereignisse.Erledigt)
             {
@@ -309,7 +309,7 @@ public sealed partial class Spielstand
 
     private void ErledigtAnwenden(PyObjekt daten)
     {
-        TicketsFertig += 1;
+        TicketsFertig = checked(TicketsFertig + 1);
         if (Py.Wahr(daten["fehllieferung"]))
         {
             // Falsch bestellt - die Ware kommt trotzdem ins Lager
@@ -327,7 +327,7 @@ public sealed partial class Spielstand
         {
             foreach (var (teil, anzahl) in Objekt(daten["ruecksendung"]))
             {
-                Verbaut[teil] = Py.Int(Verbaut.Get(teil, 0L)) + Py.Int(anzahl);
+                Verbaut[teil] = checked(Py.Int(Verbaut.Get(teil, 0L)) + Py.Int(anzahl));
             }
         }
         if (Py.Wahr(daten["richtig"]) && Py.Wahr(daten["falschlieferung"]))
@@ -346,17 +346,17 @@ public sealed partial class Spielstand
             }
             foreach (var teil in ListeOderLeer(daten, "aus_lager"))
             {
-                Verbaut[teil] = Py.Int(Verbaut.Get(teil, 0L)) + 1;
+                Verbaut[teil] = checked(Py.Int(Verbaut.Get(teil, 0L)) + 1);
             }
         }
     }
 
     private void FeierabendAnwenden(PyObjekt daten, long heute)
     {
-        TageFertig += 1;
-        Geld += Py.Int(Get(daten, "gehalt", 0L)) - Py.Int(Get(daten, "miete", 0L));
+        TageFertig = checked(TageFertig + 1);
+        Geld = checked(Geld + (Py.Int(Get(daten, "gehalt", 0L)) - Py.Int(Get(daten, "miete", 0L))));
         Buchen(heute, Ereignisse.BuchGehalt, Get(daten, "gehalt", 0L));
-        Buchen(heute, Ereignisse.BuchWohnen, -Py.Int(Get(daten, "miete", 0L)));
+        Buchen(heute, Ereignisse.BuchWohnen, checked(-Py.Int(Get(daten, "miete", 0L))));
         var firma = Py.Wahr(daten["firma"]) ? Objekt(daten["firma"]) : new PyObjekt();
         // Ab 0.43 wirken Macken beim Lernen und die Stimmung aendert sich - nur bei Feierabenden
         // mit firma.personal (alte Tage bleiben, wie sie waren)
@@ -367,10 +367,10 @@ public sealed partial class Spielstand
         {
             beschaeftigt.Add(person);
         }
-        Geld += Py.Int(Get(firma, "umsatz", 0L)) - Py.Int(Get(firma, "gehaelter", 0L)) - Py.Int(Get(firma, "nebenkosten", 0L));
+        Geld = checked(Geld + (Py.Int(Get(firma, "umsatz", 0L)) - Py.Int(Get(firma, "gehaelter", 0L)) - Py.Int(Get(firma, "nebenkosten", 0L))));
         Buchen(heute, Ereignisse.BuchUmsatz, Get(firma, "umsatz", 0L));
-        Buchen(heute, Ereignisse.BuchGehaelter, -Py.Int(Get(firma, "gehaelter", 0L)));
-        Buchen(heute, Ereignisse.BuchNebenkosten, -Py.Int(Get(firma, "nebenkosten", 0L)));
+        Buchen(heute, Ereignisse.BuchGehaelter, checked(-Py.Int(Get(firma, "gehaelter", 0L))));
+        Buchen(heute, Ereignisse.BuchNebenkosten, checked(-Py.Int(Get(firma, "nebenkosten", 0L))));
         foreach (var eintrag in ListeOderLeer(firma, "tickets").Select(Objekt))
         {
             if (TicketErgebnisse.ContainsKey(eintrag["ticket"]))
@@ -378,7 +378,7 @@ public sealed partial class Spielstand
                 continue;
             }
             TicketErgebnisse[eintrag["ticket"]] = Py.Flach(eintrag);
-            Geld += Py.Int(Get(eintrag, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(eintrag, "geld", 0L)));
             Buchen(heute, Ereignisse.BuchKundentickets, Get(eintrag, "geld", 0L));
             ReputationAendern(Py.Wahr(eintrag["reputation"]) ? Objekt(eintrag["reputation"]) : new PyObjekt());
             if (Py.Wahr(eintrag["erfolg"]))
@@ -494,7 +494,7 @@ public sealed partial class Spielstand
         }
         var eintrag = (PyObjekt)Kassenbuch.SetDefault(tag, new PyObjekt { { "ein", new PyObjekt() }, { "aus", new PyObjekt() } })!;
         var seite = Objekt(eintrag[euro > 0 ? "ein" : "aus"]);
-        Py.Setzen(seite, art, Py.Int(Get(seite, art, 0L)) + Math.Abs(euro));
+        Py.Setzen(seite, art, checked(Py.Int(Get(seite, art, 0L)) + Math.Abs(euro)));
     }
 
     /// <summary>_apply_reputation: je Achse zwischen 0 und 100.</summary>
@@ -504,7 +504,7 @@ public sealed partial class Spielstand
         {
             if (Py.Hat(Reputation, achse))
             {
-                Py.Setzen(Reputation, achse, Math.Max(0, Math.Min(100, Py.Int(Reputation[achse]) + Py.Int(wert))));
+                Py.Setzen(Reputation, achse, Math.Max(0, Math.Min(100, checked(Py.Int(Reputation[achse]) + Py.Int(wert)))));
             }
         }
     }
@@ -512,7 +512,7 @@ public sealed partial class Spielstand
     // -- Kennzahlen ---------------------------------------------------------
 
     /// <summary>day</summary>
-    public long Tag => TageFertig + 1;
+    public long Tag => checked(TageFertig + 1);
 
     /// <summary>mean_reputation</summary>
     public double MittlereReputation => Py.F(Py.Summe(Reputation.Select(p => p.Value))) / Reputation.Count;
@@ -578,8 +578,8 @@ public sealed partial class Spielstand
             return null;
         }
         var rang = raenge[index + 1];
-        return new PyTupel(rang["name"], Math.Max(0, (long)Math.Ceiling(Py.F(rang["ab"]) - wert)),
-            Math.Max(0, Py.Int(Get(rang, "ab_tag", 1L)) - tag));
+        return new PyTupel(rang["name"], Math.Max(0, checked((long)Math.Ceiling(Py.F(rang["ab"]) - wert))),
+            Math.Max(0, checked(Py.Int(Get(rang, "ab_tag", 1L)) - tag)));
     }
 
     /// <summary>difficulty_rule: Wert einer Einfach-Regel (sonst der Normal-Wert).</summary>
