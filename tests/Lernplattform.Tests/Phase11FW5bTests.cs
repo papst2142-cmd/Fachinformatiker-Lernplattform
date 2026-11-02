@@ -1,5 +1,6 @@
 using Lernplattform.Core.Dashboard;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Hilfe;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Pruefung;
 using System.Text.Json.Nodes;
@@ -246,5 +247,23 @@ public class Phase11FW5bTests
         Assert.False(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 231, anders));
         Assert.False(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 230, datei[231]!.AsObject()));
         Assert.True(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 231, datei[231]!.AsObject()));
+    }
+
+    // -- 24 Hilfe-Text --------------------------------------------------------------------------
+
+    [Fact]
+    public void Hilfe_GeraetOhneRechnernamen_FesteAusnahmeUeberPaare()
+    {
+        // Sammelliste 24 (Nico 02.11.2026 Antwort 24b, Chat 1a): Abgleich und Sicherung nennen nur "PC" oder "Handy"
+        foreach (var thema in new[] { "sicherung", "abgleich" })
+        {
+            var text = HilfeTexte.Abschnitte.Single(a => a.Id == thema).Text;
+            Assert.Contains("der Name des Geräts (PC oder Handy).", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Rechnername", text, StringComparison.Ordinal);
+            Assert.Single(HilfePaare.Paare, p => p.Nr == "G24" && p.Thema == thema
+                && p.Alt == "der Name des Geräts, am PC mit dem Rechnernamen." && p.Neu == "der Name des Geräts (PC oder Handy).");
+        }
+        Assert.Equal("PC", Lernplattform.Core.Texte.Geraetetexte.Geraet(true));
+        Assert.Equal("Handy", Lernplattform.Core.Texte.Geraetetexte.Geraet(false));
     }
 }

@@ -79,6 +79,13 @@ internal static class HilfePaare
         ("P9b", "k:SETUP_PLAN_HINT",
             "Für Systemintegration kannst du sie ausgeschaltet lassen.",
             "Schalte den Abschnitt deiner Fachrichtung ein; für Systemintegration bleiben alle drei aus."),
+        // Phase 11 FW5b (Weisung P11-11, Sammelliste 24, Nico 02.11.2026 Antwort 24b, Chat 1a): kein Rechnername mehr (G24)
+        ("G24", "sicherung",
+            "der Name des Geräts, am PC mit dem Rechnernamen.",
+            "der Name des Geräts (PC oder Handy)."),
+        ("G24", "abgleich",
+            "der Name des Geräts, am PC mit dem Rechnernamen.",
+            "der Name des Geräts (PC oder Handy)."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),
