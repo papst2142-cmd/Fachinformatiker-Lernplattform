@@ -401,6 +401,41 @@ public class LerninhalteTests
 
     // -- DV Runden 2 bis 4 (Phase 10 W4, Weisung P10-6) -------------------------------------------
 
+    /// <summary>
+    /// Weisung P10-9: Kein Testprojekt nennt mehr Projektumfang, als die Ausbildungsverordnung seiner Fachrichtung erlaubt
+    /// (Grenze aus <see cref="Fachrichtung.ProjektStunden"/>: si, dpa, dv 40, ae 80). Geprueft werden alle Texte eines Projekts,
+    /// die "Projektumfang" mit einer Stundenzahl nennen; die SI-Projekte aus inhalte/ gehoeren zu si.
+    /// </summary>
+    [Fact]
+    public void Testprojekte_ProjektumfangHoechstensWieFachrichtung()
+    {
+        var umfang = new System.Text.RegularExpressions.Regex(@"Projektumfang[^.;]*?(\d+)\s*(?:Stunden|h\b)");
+        var projekte = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Pfade.Inhalte, "projektarbeiten.json")))!.AsArray()
+            .Select(e => (Fr: "si", E: e!))
+            .Concat(JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "projektarbeiten.json")))!.AsArray()
+                .Select(e => (Fr: (string)e!["fachrichtung"]!, E: e!)))
+            .ToList();
+        var gefunden = new Dictionary<string, int>();
+        foreach (var (fr, e) in projekte)
+        {
+            var grenze = Fachrichtung.Nach(fr).ProjektStunden;
+            Assert.Equal(fr, Fachrichtung.Nach(fr).Id);
+            var texte = e.AsObject().SelectMany(p => p.Value is JsonArray a ? a.Select(x => x?.GetValue<string>() ?? "") : p.Value is JsonValue v && v.TryGetValue<string>(out var t) ? [t] : []);
+            foreach (var text in texte)
+            {
+                foreach (System.Text.RegularExpressions.Match m in umfang.Matches(text))
+                {
+                    var stunden = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+                    Assert.True(stunden <= grenze, $"{fr}: \"{(string)e["title"]!}\" nennt {stunden} Stunden Projektumfang, erlaubt sind hoechstens {grenze}");
+                    gefunden[fr] = gefunden.GetValueOrDefault(fr) + 1;
+                }
+            }
+        }
+        // die Pruefung muss die Angaben wirklich finden (sonst waere sie still gruen): alle 50 DPA- und alle DV-Projekte nennen einen Umfang
+        Assert.Equal(50, gefunden.GetValueOrDefault("dpa"));
+        Assert.True(gefunden.GetValueOrDefault("dv") >= 50, "dv: " + gefunden.GetValueOrDefault("dv"));
+    }
+
     [Fact]
     public void DvRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
@@ -2503,6 +2538,8 @@ public class LerninhalteTests
             "bd88767b151cf9cc", "5ccf9f319d94ca2c", "3897a75864bbd37d", "49ed0951fa4345e9", "48f92e8255b3a651", "165a2407d1a60b4f",
             "e7f7e3c48fbabc01", "a64dd6eab27ba4f2", "30163df24638dcee", "9e7521fd8e32d830", "b8c56a83702caf13", "8c7565dc8f95980b",
         ],
+        // Weisung P10-9 (Nico 02.11.2026, einmalige Ausnahme von "nur anhaengen"): die 50 DPA-Testprojekte (Eintraege 51 bis 100)
+        // nennen jetzt 40 statt 80 Stunden Projektumfang; nur ihre Hashes wurden ersetzt, alle anderen bleiben.
         ["projektarbeiten"] =
         [
             "65ac6d42be1fa2cb", "4df4352104f071bc", "28472cf3e7ec3b28", "7363c4eb747088dd", "88a10bf9d397b6e8", "7d591dff89d84271",
@@ -2513,15 +2550,15 @@ public class LerninhalteTests
             "db42e3fbbdd63f51", "c5ab5892e0fcd77e", "ac135f94e12d48ec", "2a66a04feef59f71", "5723332566255af5", "0aecdbd69000b26c",
             "4b978abb0047d26e", "e01caa8c44a91183", "935cc1be2f882e76", "59efa198c1ddf06e", "12683fff7e6d31d8", "9ded3351cc8bd646",
             "146f0c3134f1e6b2", "37eff202da21c9b3", "6e7c639722dddc7b", "531751ff3421419e", "e95c48c110a427cd", "daf64dd383056ec4",
-            "6d4bdc39b1751d41", "7fed85ac4ee96369", "93d1abddd83a4886", "257b032ae26a4629", "4e887a6773be8392", "11f9430ed325c9e9",
-            "8606e4163fb565a3", "ae96681dad4dd46e", "a43e25bf2f3fa904", "e7619676bec69473", "6a7e5e0428e1dfa6", "131dcd85cf1905b0",
-            "cef0451be51d85d9", "7d6c1ea572af29fb", "154b1c2aff4e8eef", "c5b8f5f3e8596eb0", "170456f18b7d6dce", "e2219839b8843d37",
-            "a73ee8392cd2761f", "d542ccdea97d120c", "16bac985276fd54e", "ca9ba5dc8dcce42c", "1d520f8590546352", "81508b320ebe6af7",
-            "de229dddb0014dc7", "116c946c8039dcb2", "859fefad927c9189", "a49b8c6221544ba6", "09b553499baa7e1c", "c4283021fb9a4389",
-            "4574a6dfd6b8edda", "72baf60dcfcffe4b", "c2e0446345f7b599", "f32a16a64ec85742", "b6eec4cbe4312a0e", "148cf74eb78abcb0",
-            "7cdb392199eace64", "8406db84f9ac5a03", "2d2bc290580b33c0", "6c8dad7bd36276c3", "a4698400b9659b12", "9fc973a968b2bd61",
-            "20bab20ab6095ce7", "d10e04d0773c49b0", "9107ef5f7bee0d04", "b9362b287efc365c", "0812a5b3eca5248f", "c2cd686edd86b617",
-            "3015fbf94f8d1392", "babdde91a744cee1", "0ad3ddee021a8add", "81dc35fa5f424ba3", "d8494e3b9f78db47", "023b4493b6b61dde",
+            "6d4bdc39b1751d41", "7fed85ac4ee96369", "a94a4b133253d595", "bbabc7d81dd77686", "0e43ab61410f5af2", "186072aaf4e6206f",
+            "3598fd3b3e2cc722", "3e81be774dd9d7f2", "3598bcca6d71f7b4", "ea2156802e238ac7", "1a8d95ae7223fce6", "eaffe43eda21eac4",
+            "ac35a7f81007f2a8", "f0ddd61ce7dfaba9", "d92805ed6c84b43a", "45af34a01774e4c7", "c3c5404c15651798", "c19abc300f38623c",
+            "dd2ddfb4623a7be4", "953dc146d18cf327", "77c125fbb7e3db6e", "7a1d29e35c0165d7", "43b5e3e061e4a294", "01352546e1618393",
+            "4117bbc125b9120c", "892478d820b25c23", "4d8ee4e83aa4e57f", "92ae0abe9e58bcb3", "6f3fca0051f5916c", "2614726c370ef9c1",
+            "8735b495f836ded6", "edb78cca4f91deba", "352619f9c5f68361", "af1d8f5cc0bdc338", "e74c2f53a109c5c2", "58da29762eb6d223",
+            "766c442b14ac7668", "8481cf7f3c3b3982", "443dddb3898a7cd8", "860d4a9fcf4b2860", "9fa3363cc947f2a7", "d3f67a588d65d90f",
+            "8f2d274fe377ef8d", "7f5619321ba77f64", "e2153047f3eea55d", "099ef26ce851b403", "5fabc1352485090f", "bea6afd01e24ad85",
+            "0175c9d670f5ed1d", "a4732a066aa14441", "c33a0f846806184e", "8937674feb557b18", "d8494e3b9f78db47", "023b4493b6b61dde",
             "9fa5f07059e9f7e2", "fb36d0ce3de5d629", "dd0011026611e840", "cd6f5f8e24f9e3a1", "285a18e162c44cf1", "c2ab1bf91c7406fd",
             "7e3bc779d566a060", "951bd77e8e784df8", "259e59120da109b2", "b897f4fe192e90b2", "ea6c5628e9c1fd01", "504dc70de60ce762",
             "6428ce004ad1d8a2", "c439a0f19c7f819c", "e5ce17523d2d47a8", "ac3613116c3c0e40", "e4340387b0f89f1e", "ed61441a6ffb4bd7",

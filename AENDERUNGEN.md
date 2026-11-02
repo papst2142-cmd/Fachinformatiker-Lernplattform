@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.31.1
+Die Testprojekte der Fachrichtung Daten- und Prozessanalyse nennen jetzt den richtigen Projektumfang.
+
+- In allen 50 Testprojekten für Daten- und Prozessanalyse stand bisher ein Projektumfang von 80 Stunden. Laut Ausbildungsverordnung hat die betriebliche Projektarbeit in dieser Fachrichtung aber höchstens 40 Stunden, so wie in Systemintegration und Digitaler Vernetzung. Nur in Anwendungsentwicklung sind es 80 Stunden. Alle 50 Projekte nennen jetzt 40 Stunden.
+- In einem Projekt, in dem der eigene Projektaufwand in die Wirtschaftlichkeitsrechnung eingeht, sind Kosten und Amortisationszeit in den Lösungshinweisen passend neu berechnet.
+- Eine zusätzliche Prüfung stellt sicher, dass kein Testprojekt mehr Stunden nennt, als für seine Fachrichtung erlaubt sind.
+- Sonst ändert sich an den Lerninhalten nichts. Am Lernstand und am Spiel ändert sich nichts.
+
 ## A 0.31.0
 Viele neue Lerninhalte für die Fachrichtung Digitale Vernetzung, dazu die ersten eigenen Testprojekte und Fragen fürs Fachgespräch.
 
