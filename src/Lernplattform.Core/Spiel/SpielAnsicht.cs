@@ -343,19 +343,19 @@ public static class SpielAnsicht
         bool ueberlappt = false, draussen = false;
         foreach (var r in belegt)
         {
-            var oben = r.Unten + Py.Int(r.Geraet["he"]) - 1;
+            var oben = checked(r.Unten + Py.Int(r.Geraet["he"]) - 1);
             if (oben > groesse)
             {
                 draussen = true;
                 continue;
             }
-            for (var he = r.Unten; he <= oben; he++)
+            for (var he = r.Unten; he <= oben; he = checked(he + 1))
             {
                 ueberlappt |= !benutzt.Add(he);
             }
         }
         Neu("Alles im Schrank, nichts überlappt", !ueberlappt && !draussen);
-        var grenze = Math.Max(1, (long)Math.Floor(groesse / 3.0));
+        var grenze = Math.Max(1, checked((long)Math.Floor(groesse / 3.0)));
         var schwer = belegt.Where(r => !Py.Kleiner(r.Geraet["gewicht"], regeln["schwer_ab_kg"])).ToList();
         if (schwer.Count > 0)
         {

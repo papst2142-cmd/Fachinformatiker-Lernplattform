@@ -183,13 +183,13 @@ public static class Py
     };
 
     /// <summary>a + b fuer Zahlen (int bleibt int, sonst float).</summary>
-    public static object Plus(object? a, object? b) => Rechnen(a, b, (x, y) => x + y, (x, y) => x + y);
+    public static object Plus(object? a, object? b) => Rechnen(a, b, (x, y) => checked(x + y), (x, y) => x + y);
 
     /// <summary>a * b fuer Zahlen (int bleibt int, sonst float).</summary>
-    public static object Mal(object? a, object? b) => Rechnen(a, b, (x, y) => x * y, (x, y) => x * y);
+    public static object Mal(object? a, object? b) => Rechnen(a, b, (x, y) => checked(x * y), (x, y) => x * y);
 
     /// <summary>a - b fuer Zahlen (int bleibt int, sonst float).</summary>
-    public static object Minus(object? a, object? b) => Rechnen(a, b, (x, y) => x - y, (x, y) => x - y);
+    public static object Minus(object? a, object? b) => Rechnen(a, b, (x, y) => checked(x - y), (x, y) => x - y);
 
     /// <summary>a &lt; b fuer Zahlen.</summary>
     public static bool Kleiner(object? a, object? b) => Zahl(a, out var x) && Zahl(b, out var y)

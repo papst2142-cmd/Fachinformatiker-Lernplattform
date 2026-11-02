@@ -1,5 +1,4 @@
 using Lernplattform.Core.Daten;
-using Lernplattform.Core.Suche;
 using Microsoft.Data.Sqlite;
 using static Lernplattform.Core.Spiel.PyFormat;
 using static Lernplattform.Core.Spiel.SpielDaten;
@@ -252,7 +251,8 @@ public static class Spielstaende
         {
             return Py.Str(treffer["name"]);
         }
-        return kennung.Length == 0 ? "" : Kurz(kennung, 1).ToUpperInvariant() + PythonKlein.Klein(kennung[Kurz(kennung, 1).Length..]);
+        // (level or DIFF_NORMAL).capitalize(): "ß" am Anfang wird "Ss" wie in Python (Sammelliste 80)
+        return PyTitel.Capitalize(kennung);
     }
 
     private static PyObjekt SchwierigkeitRegeln(PyObjekt inhalt) =>
@@ -327,7 +327,7 @@ public static class Spielstaende
             ? Kurzinfo(new Spielstand(LaufEreignisse(verbindung, lauf), inhalt))
             : Kurzinfo(null);
         var ergebnis = new List<PyObjekt>();
-        for (var platz = 1L; platz <= Anzahl; platz++)
+        for (var platz = 1L; platz <= Anzahl; platz = checked(platz + 1))
         {
             var lauf = belegung.LaufAuf(platz);
             var eintrag = new PyObjekt

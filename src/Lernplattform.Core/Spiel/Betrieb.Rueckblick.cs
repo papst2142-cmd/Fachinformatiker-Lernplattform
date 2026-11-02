@@ -67,7 +67,7 @@ public static partial class Betrieb
         if (firma && Py.Wahr(f["feierabend"]))
         {
             var liste = Liste(f["feierabend"]);
-            return liste[(int)PyMod(tag - 1, liste.Count)];
+            return liste[(int)PyMod(checked(tag - 1), liste.Count)];
         }
         var story = Objekt(inhalt["story"]);
         var texte = Py.Wahr(story["feierabend"]) ? story["feierabend"] : new List<object?> { story["tagesende"] };
@@ -76,7 +76,7 @@ public static partial class Betrieb
             return text;
         }
         var t = Liste(texte);
-        return t[(int)PyMod(tag - 1, t.Count)];
+        return t[(int)PyMod(checked(tag - 1), t.Count)];
     }
 
     /// <summary>journey: das Ereignistagebuch, aelteste zuerst; je Eintrag {"tag", "gruppe", "art", "titel", "text"}.</summary>
@@ -118,7 +118,7 @@ public static partial class Betrieb
                 string titel;
                 if (Py.Wahr(d["richtig"]))
                 {
-                    zwischenfaelle += 1;
+                    zwischenfaelle = checked(zwischenfaelle + 1);
                     titel = zwischenfaelle == 1 ? "Erster Zwischenfall gemeistert" : "Zwischenfall gemeistert";
                 }
                 else
@@ -129,7 +129,7 @@ public static partial class Betrieb
             }
             else if (art == Ereignisse.Erledigt && Py.Wahr(d["richtig"]))
             {
-                geloest += 1;
+                geloest = checked(geloest + 1);
                 if (TicketMeilensteine.Contains(geloest))
                 {
                     Neu(tag, ReiseKarriere, "meilenstein", geloest == 1 ? "Erstes Ticket gelöst" : Prozent("%d Tickets gelöst", geloest),
@@ -170,7 +170,7 @@ public static partial class Betrieb
                 beantwortet.Add(d["anfrage"]);
                 var ok = art == Ereignisse.UrlaubJa;
                 Neu(tag, ReiseFirma, art, Prozent("Urlaub %s: %s", ok ? "genehmigt" : "abgelehnt", Name(d)),
-                    Prozent("Arbeitstag %s bis %s.", d["von"], Py.Int(Get(d, "bis", 1L)) - 1));
+                    Prozent("Arbeitstag %s bis %s.", d["von"], checked(Py.Int(Get(d, "bis", 1L)) - 1)));
             }
             else if (art == Ereignisse.Rueckhol && Py.Wahr(d["rueckhol"]) && !beantwortet.Contains(d["rueckhol"]))
             {
@@ -245,7 +245,7 @@ public static partial class Betrieb
                 var was = Prozent("%s × %s", Get(d, "menge", 1L), Get(d, "artikel", "Artikel"));
                 if (art == Ereignisse.AngebotGewonnen)
                 {
-                    gewonnen += 1;
+                    gewonnen = checked(gewonnen + 1);
                     Neu(tag, ReiseFirma, "angebot", gewonnen == 1 ? "Erstes Angebot gewonnen" : "Angebot gewonnen",
                         Prozent("%s für %s, Gewinn %s.", was, kunde, Wohnung.GanzeEuro(Get(d, "geld", 0L))));
                 }
@@ -266,7 +266,7 @@ public static partial class Betrieb
             }
             else if (art == Ereignisse.Feierabend)
             {
-                tagNr += 1;
+                tagNr = checked(tagNr + 1);
                 var firma = Py.Wahr(d["firma"]) ? Objekt(d["firma"]) : [];
                 foreach (var eintrag in (Py.Wahr(firma["personal"]) ? Liste(firma["personal"]) : []).Select(Objekt))
                 {
@@ -274,7 +274,7 @@ public static partial class Betrieb
                     if (Py.Gleich(was, PersonalKrank))
                     {
                         Neu(tag, ReiseFirma, PersonalKrank, Prozent("Krank: %s", Get(eintrag, "name", "")),
-                            Prozent("Fällt %s aus.", TageText(Py.Int(eintrag["bis"]) - Py.Int(eintrag["von"]))));
+                            Prozent("Fällt %s aus.", TageText(checked(Py.Int(eintrag["bis"]) - Py.Int(eintrag["von"])))));
                     }
                     else if (Py.Gleich(was, PersonalKuendigt))
                     {
@@ -336,7 +336,7 @@ public static partial class Betrieb
         {
             var form = Wirtschaft.WerbeForm(d["werbung"], inhalt) ?? [];
             Neu(Get(d, "tag", 1L), ReiseFirma, "werbung", Prozent("Werbung gebucht: %s", Get(form, "kurz", d["werbung"])),
-                Py.Gleich(d["art"], Wirtschaft.WerbungEinmalig) ? Prozent("Einmalig für %s.", Wohnung.GanzeEuro(-Py.Int(Get(d, "geld", 0L))))
+                Py.Gleich(d["art"], Wirtschaft.WerbungEinmalig) ? Prozent("Einmalig für %s.", Wohnung.GanzeEuro(checked(-Py.Int(Get(d, "geld", 0L)))))
                     : Prozent("Dauerhaft für %s pro Arbeitstag.", Wohnung.GanzeEuro(Get(d, "kosten", 0L))));
         }
         foreach (var (kennung, wert) in stand.Zertifikate)
@@ -345,7 +345,7 @@ public static partial class Betrieb
             if (Py.Int(Get(d, "bis_tag", 0L)) <= stand.Tag)
             {
                 var zert = Wirtschaft.Zertifikat(kennung, inhalt) ?? [];
-                Neu(Py.Int(d["bis_tag"]) - 1, ReiseFirma, "zertifizierung", Prozent("Zertifiziert: %s", Get(zert, "name", kennung)),
+                Neu(checked(Py.Int(d["bis_tag"]) - 1), ReiseFirma, "zertifizierung", Prozent("Zertifiziert: %s", Get(zert, "name", kennung)),
                     Wirtschaft.VorteilText(Py.Wahr(zert["vorteil"]) ? Objekt(zert["vorteil"]) : []));
             }
         }
@@ -422,7 +422,7 @@ public static partial class Betrieb
             var d = e.Daten;
             if (e.Art == Ereignisse.Verschoben)
             {
-                verschoben += 1;
+                verschoben = checked(verschoben + 1);
             }
             if (e.Art != Ereignisse.Erledigt)
             {
@@ -431,28 +431,28 @@ public static partial class Betrieb
             var tag = Py.IstInt(d["tag"]) ? Py.Int(d["tag"]) : 0;
             if (Py.Wahr(d["zwischenfall"]))
             {
-                zwischenfaelle += 1;
-                zwischenRichtig += Py.Wahr(d["richtig"]) ? 1 : 0;
+                zwischenfaelle = checked(zwischenfaelle + 1);
+                zwischenRichtig = checked(zwischenRichtig + (Py.Wahr(d["richtig"]) ? 1 : 0));
                 continue;
             }
-            tickets += 1;
+            tickets = checked(tickets + 1);
             if (!jeTag.TryGetValue(tag, out var eimer))
             {
                 jeTag[tag] = eimer = [0, 0];
             }
             if (Py.Wahr(d["richtig"]))
             {
-                richtig += 1;
-                eimer[0] += 1;
+                richtig = checked(richtig + 1);
+                eimer[0] = checked(eimer[0] + 1);
                 var auftrag = Auftrag(d["aufgabe"], inhalt) ?? [];
                 if (auftrag["cat"] is string cat && Py.Hat(jeBereich, cat))
                 {
-                    Py.Setzen(jeBereich, cat, Py.Int(jeBereich[cat]) + 1);
+                    Py.Setzen(jeBereich, cat, checked(Py.Int(jeBereich[cat]) + 1));
                 }
             }
             else
             {
-                eimer[1] += 1;
+                eimer[1] = checked(eimer[1] + 1);
             }
         }
         var kunden = stand.TicketErgebnisse.Values.Select(Objekt).Count(e => Py.Wahr(e["erfolg"]));

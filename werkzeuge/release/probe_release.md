@@ -1,19 +1,20 @@
-Kleine Fehler sind behoben: Riesige Eingaben im Rechen-Trainer werden nicht mehr als falsch gezählt, und das Programm bereitet beim Start schneller vor.
+Im Lernspiel verhalten sich einige seltene Eingaben und sehr große Zahlen jetzt genau wie in der bisherigen Python-Fassung.
 
-- Rechen-Trainer: Eine Zahl mit mehr als 4 300 Ziffern wird nicht mehr als falsche Antwort gespeichert. Die Aufgabe bleibt offen, und nichts wird gezählt, genau wie in der bisherigen Python-Fassung.
-- Beim Start wird die Zuordnung der Lerninhalte zum Ausbildungsrahmenplan jetzt auf mehrere Prozessorkerne verteilt. Diese Vorbereitung im Hintergrund ist dadurch spürbar schneller fertig, das Ergebnis bleibt genau gleich.
-- Griechische Wörter in Lerninhalten werden bei der Prüfung von Freitext-Antworten jetzt genau wie in der Python-Fassung kleingeschrieben (Schluss-Sigma). In den deutschen Lerninhalten ändert sich dadurch nichts.
+- Netzwerk-Formulare im Spiel: Wird beim Präfix eine hochgestellte oder eingekreiste Ziffer eingegeben (zum Beispiel „²“), wird die Eingabe wie in der Python-Fassung nicht ausgewertet; der Auftrag bleibt offen. Ziffern aus anderen Schriften werden weiter gelesen.
+- Namen, die im Spiel mit großem Anfangsbuchstaben gezeigt werden, schreiben ein „ß“ am Anfang jetzt als „Ss“ und behandeln auch andere Sonderzeichen wie die Python-Fassung.
+- Rechnungen mit Spielgeld und Spielzählern laufen bei unvorstellbar großen Zahlen (über neun Trillionen) nicht mehr still in falsche Werte über, sondern brechen mit einem Eintrag im Fehlerprotokoll ab. Im normalen Spiel werden solche Zahlen nie erreicht.
+- Am Lernteil ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.1-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.2-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

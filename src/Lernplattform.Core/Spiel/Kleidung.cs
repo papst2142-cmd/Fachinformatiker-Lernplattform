@@ -133,9 +133,9 @@ public static class Kleidung
         }
         if (stand.Geld < ware.Preis)
         {
-            throw new SpielFehler(Prozent("Dafür reicht dein Geld noch nicht (%d € fehlen).", ware.Preis - Math.Max(0, stand.Geld)));
+            throw new SpielFehler(Prozent("Dafür reicht dein Geld noch nicht (%d € fehlen).", checked(ware.Preis - Math.Max(0, stand.Geld))));
         }
-        var gekauft = (Gekauft, new PyObjekt { { "stueck", ware.Id }, { "geld", -ware.Preis }, { "tag", stand.Tag }, { "laden", laden } });
+        var gekauft = (Gekauft, new PyObjekt { { "stueck", ware.Id }, { "geld", checked(-ware.Preis) }, { "tag", stand.Tag }, { "laden", laden } });
         return [gekauft, Tragen(stand, daten, ware.Slot, ware.Id)];
     }
 

@@ -47,7 +47,7 @@ public static class SpielTexte
 
     private static string HeText(long unten, long hoehe)
     {
-        var oben = unten + hoehe - 1;
+        var oben = checked(unten + hoehe - 1);
         return oben == unten ? Prozent("HE %d", unten) : Prozent("HE %d–%d", unten, oben);
     }
 
@@ -150,8 +150,8 @@ public static class SpielTexte
         var geraet = RackGeraet(geraete[(int)index], inhalt)!;
         var groesse = Py.Int(Objekt(auftrag["schrank"])["he"]);
         var hoehe = Py.Int(geraet["he"]);
-        var u = Math.Max(1, Math.Min(Py.Int(unten), groesse - hoehe + 1));
-        var oben = u + hoehe - 1;
+        var u = Math.Max(1, Math.Min(Py.Int(unten), checked(groesse - hoehe + 1)));
+        var oben = checked(u + hoehe - 1);
         var ergebnis = new PyObjekt();
         foreach (var (k, anderesUnten) in antwort ?? [])
         {
@@ -161,7 +161,7 @@ public static class SpielTexte
             }
             var anderes = RackGeraet(geraete[(int)Py.Int(k)], inhalt)!;
             var au = Py.Int(anderesUnten);
-            var anderesOben = au + Py.Int(anderes["he"]) - 1;
+            var anderesOben = checked(au + Py.Int(anderes["he"]) - 1);
             if (anderesOben < u || au > oben)
             {
                 Py.Setzen(ergebnis, k, au);
@@ -179,7 +179,7 @@ public static class SpielTexte
         {
             var geraet = RackGeraet(geraete[(int)Py.Int(k)], inhalt)!;
             var u = Py.Int(unten);
-            if (u <= einheit && einheit < u + Py.Int(geraet["he"]))
+            if (u <= einheit && einheit < checked(u + Py.Int(geraet["he"])))
             {
                 return Py.Int(k);
             }
@@ -267,7 +267,7 @@ public static class SpielTexte
     // ------------------------------------------------- Terminal und Diagnose
 
     /// <summary>terminal_step_label: "Schritt 2 von 5".</summary>
-    public static string TerminalSchritt(PyObjekt auftrag, long index) => Prozent("Schritt %d von %d", index + 1, (long)Liste(auftrag["schritte"]).Count);
+    public static string TerminalSchritt(PyObjekt auftrag, long index) => Prozent("Schritt %d von %d", checked(index + 1), (long)Liste(auftrag["schritte"]).Count);
 
     /// <summary>terminal_try: (art, befehl, ausgabe, hinweis); art richtig, falsch oder gefaehrlich.</summary>
     public static (string Art, string Befehl, List<string> Ausgabe, object? Hinweis) TerminalVersuch(PyObjekt auftrag, int schritt, int befehl)
@@ -458,7 +458,7 @@ public static class SpielTexte
         long anzahl = 0;
         foreach (var (_, v) in korb ?? [])
         {
-            anzahl += Py.Wahr(v) ? Py.Int(v) : 0;
+            anzahl = checked(anzahl + (Py.Wahr(v) ? Py.Int(v) : 0));
         }
         if (anzahl == 0)
         {

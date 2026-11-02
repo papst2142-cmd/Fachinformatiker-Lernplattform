@@ -55,7 +55,7 @@ public static partial class Wohnung
     public static (object? W, object? H) Groesse(PyObjekt moebel, object? dreh) =>
         PyMod(Py.Int(dreh), 2) != 0 ? (moebel["h"], moebel["w"]) : (moebel["w"], moebel["h"]);
 
-    private static long PyMod(long a, long b) => ((a % b) + b) % b;
+    private static long PyMod(long a, long b) => (checked((a % b) + b)) % b;
 
     /// <summary>home_layout: {"moebel": {stueck: [x, y, dreh]}, "boeden": {raum: [art, farbe]}}, nur Moebel, die man besitzt.</summary>
     public static PyObjekt Einrichtung(Spielstand stand)
@@ -414,7 +414,7 @@ public static partial class Wohnung
             return s;
         }
         var liste = Liste(texte);
-        return Py.Str(liste[(int)(((stand.Tag % liste.Count) + liste.Count) % liste.Count)]);
+        return Py.Str(liste[(int)((checked((stand.Tag % liste.Count) + liste.Count)) % liste.Count)]);
     }
 
     /// <summary>rent_terms: (Miete pro Arbeitstag, Kaution) laut balancing.json.</summary>
@@ -431,7 +431,7 @@ public static partial class Wohnung
     {
         var (proTag, kosten) = miete ? MietBedingungen(bleibe, stand.Inhalt) : (0L, Py.Int(Get(bleibe, "preis", 0L)));
         var zurueck = stand.Kaution;
-        var fehlt = Math.Max(0, kosten - Math.Max(0, stand.Geld + zurueck));
+        var fehlt = Math.Max(0, checked(kosten - Math.Max(0, stand.Geld + zurueck)));
         return new PyObjekt { { "kosten", kosten }, { "miete", proTag }, { "zurueck", zurueck }, { "fehlt", fehlt } };
     }
 

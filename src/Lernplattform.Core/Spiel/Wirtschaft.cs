@@ -46,7 +46,7 @@ public static class Wirtschaft
     {
         var regel = Objekt(KreditRegeln(inhalt)["zins"]);
         var basis = Py.F(Objekt(regel["basis"])[laufzeit.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
-        var schritte = Betrieb.PyDiv(Math.Max(0, summe - Py.Int(regel["groesse_ab"])), Py.Int(regel["groesse_schritt"]));
+        var schritte = Betrieb.PyDiv(Math.Max(0, checked(summe - Py.Int(regel["groesse_ab"]))), Py.Int(regel["groesse_schritt"]));
         return PythonRundenStellen.Runde(basis + schritte * Py.F(regel["groesse_plus"]), 2);
     }
 
@@ -60,9 +60,9 @@ public static class Wirtschaft
         var zins = TagesZins(jahresZins, inhalt);
         if (zins <= 0)
         {
-            return (long)Math.Ceiling(summe / (double)laufzeit);
+            return checked((long)Math.Ceiling(summe / (double)laufzeit));
         }
-        return (long)Math.Ceiling(summe * zins / (1.0 - PythonPow.Pow(1.0 + zins, -laufzeit)));
+        return checked((long)Math.Ceiling(summe * zins / (1.0 - PythonPow.Pow(1.0 + zins, -laufzeit))));
     }
 
     /// <summary>dunning_step: Regeln der Mahnstufe (1 bis 3) oder null bei Stufe 0.</summary>
@@ -83,18 +83,18 @@ public static class Wirtschaft
     public static long KreditFaellig(PyObjekt kredit, long mahnstufe, PyObjekt inhalt)
     {
         var zinsen = PythonRunden.Runde(Py.F(kredit["rest"]) * TagesZins(KreditZins(kredit, mahnstufe, inhalt), inhalt));
-        return Math.Min(Py.Int(kredit["rate"]), Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"]) + zinsen);
+        return Math.Min(Py.Int(kredit["rate"]), checked(Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"]) + zinsen));
     }
 
     /// <summary>loan_payoff: Restschuld, offene Zinsen und Gebuehren plus Vorfaelligkeit.</summary>
     public static PyObjekt KreditAbloese(PyObjekt kredit, PyObjekt inhalt)
     {
-        var gebuehr = (long)Math.Ceiling(Py.F(kredit["rest"]) * Py.F(KreditRegeln(inhalt)["abloesen_prozent"]) / 100.0);
+        var gebuehr = checked((long)Math.Ceiling(Py.F(kredit["rest"]) * Py.F(KreditRegeln(inhalt)["abloesen_prozent"]) / 100.0));
         var ergebnis = new PyObjekt
         {
-            { "tilgung", kredit["rest"] }, { "zinsen", kredit["zins_offen"] }, { "gebuehren", Py.Int(kredit["gebuehren"]) + gebuehr }, { "vorfaelligkeit", gebuehr },
+            { "tilgung", kredit["rest"] }, { "zinsen", kredit["zins_offen"] }, { "gebuehren", checked(Py.Int(kredit["gebuehren"]) + gebuehr) }, { "vorfaelligkeit", gebuehr },
         };
-        ergebnis.Add("gesamt", Py.Int(ergebnis["tilgung"]) + Py.Int(ergebnis["zinsen"]) + Py.Int(ergebnis["gebuehren"]));
+        ergebnis.Add("gesamt", checked(Py.Int(ergebnis["tilgung"]) + Py.Int(ergebnis["zinsen"]) + Py.Int(ergebnis["gebuehren"])));
         return ergebnis;
     }
 
@@ -107,14 +107,14 @@ public static class Wirtschaft
         var tag = startTag;
         while ((rest > 0 || zinsOffen > 0 || gebuehren > 0) && zeilen.Count < grenze)
         {
-            zinsOffen += PythonRunden.Runde(rest * tagesZins);
-            var faellig = Math.Min(Py.Int(kredit["rate"]), rest + zinsOffen + gebuehren);
+            zinsOffen = checked(zinsOffen + PythonRunden.Runde(rest * tagesZins));
+            var faellig = Math.Min(Py.Int(kredit["rate"]), checked(rest + zinsOffen + gebuehren));
             var bezahltGebuehren = Math.Min(faellig, gebuehren);
-            var bezahltZinsen = Math.Min(faellig - bezahltGebuehren, zinsOffen);
-            var tilgung = faellig - bezahltGebuehren - bezahltZinsen;
-            gebuehren -= bezahltGebuehren;
-            zinsOffen -= bezahltZinsen;
-            rest -= tilgung;
+            var bezahltZinsen = Math.Min(checked(faellig - bezahltGebuehren), zinsOffen);
+            var tilgung = checked(faellig - bezahltGebuehren - bezahltZinsen);
+            gebuehren = checked(gebuehren - bezahltGebuehren);
+            zinsOffen = checked(zinsOffen - bezahltZinsen);
+            rest = checked(rest - tilgung);
             zeilen.Add(new PyObjekt
             {
                 { "tag", tag }, { "rate", faellig }, { "zinsen", bezahltZinsen }, { "tilgung", tilgung }, { "gebuehren", bezahltGebuehren }, { "rest", Math.Max(0, rest) },
@@ -123,7 +123,7 @@ public static class Wirtschaft
             {
                 break;
             }
-            tag += 1;
+            tag = checked(tag + 1);
         }
         return zeilen;
     }
@@ -137,7 +137,7 @@ public static class Wirtschaft
         var zinsen = TilgungsPlan(kredit, 1, 0, inhalt).Sum(z => Py.Int(z["zinsen"]));
         return new PyObjekt
         {
-            { "summe", summe }, { "laufzeit", laufzeit }, { "zins", jahresZins }, { "rate", rate }, { "zinsen_gesamt", zinsen }, { "gesamt", summe + zinsen },
+            { "summe", summe }, { "laufzeit", laufzeit }, { "zins", jahresZins }, { "rate", rate }, { "zinsen_gesamt", zinsen }, { "gesamt", checked(summe + zinsen) },
         };
     }
 
@@ -146,13 +146,13 @@ public static class Wirtschaft
     /// <summary>firm_income_recent: Umsatz der letzten abgeschlossenen Arbeitstage (ohne Kredite).</summary>
     public static long UmsatzZuletzt(Spielstand stand, long tage)
     {
-        var erster = stand.Tag - tage;
+        var erster = checked(stand.Tag - tage);
         long summe = 0;
         foreach (var (tag, eintrag) in stand.Kassenbuch)
         {
             if (erster <= Py.Int(tag) && Py.Int(tag) < stand.Tag)
             {
-                summe += Objekt(Objekt(eintrag)["ein"]).Where(p => UmsatzArten.Contains(p.Key)).Sum(p => Py.Int(p.Value));
+                summe = checked(summe + Objekt(Objekt(eintrag)["ein"]).Where(p => UmsatzArten.Contains(p.Key)).Sum(p => Py.Int(p.Value)));
             }
         }
         return summe;
@@ -164,16 +164,16 @@ public static class Wirtschaft
     /// <summary>firm_profit_recent: durchschnittlicher Gewinn pro Arbeitstag vor Kreditkosten.</summary>
     public static double GewinnZuletzt(Spielstand stand, long tage)
     {
-        var erster = stand.Tag - tage;
+        var erster = checked(stand.Tag - tage);
         long summe = 0;
         foreach (var (tag, eintrag) in stand.Kassenbuch)
         {
             if (erster <= Py.Int(tag) && Py.Int(tag) < stand.Tag)
             {
                 var ein = Objekt(Objekt(eintrag)["ein"]);
-                summe += ein.Where(p => UmsatzArten.Contains(p.Key)).Sum(p => Py.Int(p.Value));
-                summe -= Objekt(Objekt(eintrag)["aus"]).Where(p => KostenArten.Contains(p.Key)).Sum(p => Py.Int(p.Value));
-                summe += Py.Int(Get(ein, Ereignisse.BuchSteuer, 0L));
+                summe = checked(summe + ein.Where(p => UmsatzArten.Contains(p.Key)).Sum(p => Py.Int(p.Value)));
+                summe = checked(summe - Objekt(Objekt(eintrag)["aus"]).Where(p => KostenArten.Contains(p.Key)).Sum(p => Py.Int(p.Value)));
+                summe = checked(summe + Py.Int(Get(ein, Ereignisse.BuchSteuer, 0L)));
             }
         }
         return summe / (double)Math.Max(1, tage);
@@ -184,7 +184,7 @@ public static class Wirtschaft
     {
         var regeln = KreditRegeln(inhalt);
         var gewinn = GewinnZuletzt(stand, Py.Int(Objekt(regeln["bonitaet"])["umsatz_tage"]));
-        var oben = Math.Max(0, (long)Math.Truncate(gewinn * Py.F(Get(Objekt(regeln["rahmen"]), "raten_anteil", 1.0))));
+        var oben = Math.Max(0, checked((long)Math.Truncate(gewinn * Py.F(Get(Objekt(regeln["rahmen"]), "raten_anteil", 1.0)))));
         return (oben, stand.LaufendeKredite().Sum(k => Py.Int(k["rate"])));
     }
 
@@ -204,8 +204,8 @@ public static class Wirtschaft
             return ergebnis;
         }
         var firma = Objekt(stand.Firma);
-        var seit = stand.Tag - Py.Int(firma["tag"]);
-        Py.Setzen(ergebnis, "ab_tag", Py.Int(firma["tag"]) + Py.Int(regel["firmentage"]));
+        var seit = checked(stand.Tag - Py.Int(firma["tag"]));
+        Py.Setzen(ergebnis, "ab_tag", checked(Py.Int(firma["tag"]) + Py.Int(regel["firmentage"])));
         var umsatz = UmsatzZuletzt(stand, Py.Int(regel["umsatz_tage"]));
         Py.Setzen(ergebnis, "umsatz", umsatz);
         var punkte = new List<object?>
@@ -249,9 +249,9 @@ public static class Wirtschaft
             }
         }
         var schritt = Py.Int(rahmen["runden"]);
-        var grenze = Math.Min(Py.Int(rahmen["hoechstens"]), Betrieb.PyDiv((long)Math.Truncate(umsatz * faktor), schritt) * schritt);
+        var grenze = Math.Min(Py.Int(rahmen["hoechstens"]), checked(Betrieb.PyDiv((long)Math.Truncate(umsatz * faktor), schritt) * schritt));
         Py.Setzen(ergebnis, "rahmen", Py.Wahr(ergebnis["ok"]) ? grenze : 0L);
-        Py.Setzen(ergebnis, "frei", Math.Max(0, Py.Int(ergebnis["rahmen"]) - stand.LaufendeKredite().Sum(k => Py.Int(k["rest"]))));
+        Py.Setzen(ergebnis, "frei", Math.Max(0, checked(Py.Int(ergebnis["rahmen"]) - stand.LaufendeKredite().Sum(k => Py.Int(k["rest"])))));
         var (hoechstens, belegt) = RatenGrenze(stand, inhalt);
         Py.Setzen(ergebnis, "raten_max", hoechstens);
         Py.Setzen(ergebnis, "raten_belegt", belegt);
@@ -310,7 +310,7 @@ public static class Wirtschaft
         {
             problem = Prozent("Dein Kreditrahmen reicht dafür nicht (frei: %s).", Euro(pruefung["frei"]));
         }
-        else if (Py.Int(angebot["rate"]) + Py.Int(pruefung["raten_belegt"]) > Py.Int(pruefung["raten_max"]))
+        else if (checked(Py.Int(angebot["rate"]) + Py.Int(pruefung["raten_belegt"])) > Py.Int(pruefung["raten_max"]))
         {
             problem = Prozent("Die Rate ist zu hoch: Alle Raten zusammen dürfen höchstens %s pro Arbeitstag sein (die Hälfte deines Gewinns), %s sind schon belegt. Eine längere Laufzeit senkt die Rate.",
                 Euro(pruefung["raten_max"]), Euro(pruefung["raten_belegt"]));
@@ -321,7 +321,7 @@ public static class Wirtschaft
         return angebot;
     }
 
-    private static long PyMod(long a, long b) => ((a % b) + b) % b;
+    private static long PyMod(long a, long b) => (checked((a % b) + b)) % b;
 
     /// <summary>loan_packages: die festen Kreditpakete mit Zins, Rate und ob sie gerade gehen.</summary>
     public static List<PyObjekt> KreditPakete(Spielstand stand, PyObjekt inhalt)
@@ -343,7 +343,7 @@ public static class Wirtschaft
         var regel = Objekt(KreditRegeln(inhalt)["frei"]);
         var pruefung = Bonitaet(stand, inhalt);
         var schritt = Py.Int(regel["schritt"]);
-        var oben = Betrieb.PyDiv(Py.Int(pruefung["frei"]), schritt) * schritt;
+        var oben = checked(Betrieb.PyDiv(Py.Int(pruefung["frei"]), schritt) * schritt);
         return (Py.Int(regel["min"]), Math.Max(Py.Int(regel["min"]), oben), schritt);
     }
 
@@ -351,7 +351,7 @@ public static class Wirtschaft
     public static long SummeBegrenzen(Spielstand stand, object? summe, PyObjekt inhalt)
     {
         var (unten, oben, schritt) = FreiGrenzen(stand, inhalt);
-        return Math.Max(unten, Math.Min(oben, Betrieb.PyDiv(Py.Int(summe), schritt) * schritt));
+        return Math.Max(unten, Math.Min(oben, checked(Betrieb.PyDiv(Py.Int(summe), schritt) * schritt)));
     }
 
     /// <summary>percent_text: 8.5 -> "8,5 %", 10.0 -> "10 %"; nan und inf als "–".</summary>
@@ -395,7 +395,7 @@ public static class Wirtschaft
         return new PyObjekt
         {
             { "id", kredit["id"] }, { "name", kredit["name"] }, { "summe", kredit["summe"] }, { "tag", kredit["tag"] },
-            { "rest", Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"]) }, { "tilgung_offen", kredit["rest"] },
+            { "rest", checked(Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"])) }, { "tilgung_offen", kredit["rest"] },
             { "zins", KreditZins(kredit, stand.Mahnstufe, inhalt) }, { "zins_vereinbart", kredit["zins"] }, { "rate", kredit["rate"] },
             { "naechste_rate", zeilen.Count > 0 ? zeilen[0]["rate"] : 0L }, { "raten_bezahlt", kredit["raten"] }, { "raten_offen", (long)zeilen.Count },
             { "ausfaelle", kredit["ausfaelle"] }, { "gebuehren", kredit["gebuehren"] }, { "bezahlt_zins", kredit["bezahlt_zins"] },
@@ -442,7 +442,7 @@ public static class Wirtschaft
     public static string AbloeseText(PyObjekt e, PyObjekt inhalt)
     {
         var abloese = Objekt(e["abloesen"]);
-        var offen = Py.Int(abloese["zinsen"]) + Py.Int(abloese["gebuehren"]) - Py.Int(abloese["vorfaelligkeit"]);
+        var offen = checked(Py.Int(abloese["zinsen"]) + Py.Int(abloese["gebuehren"]) - Py.Int(abloese["vorfaelligkeit"]));
         return Prozent("„%s“ jetzt ablösen? Du zahlst %s: Restschuld %s%s und %s Vorfälligkeitsentschädigung (%s der Restschuld).",
             e["name"], Euro(abloese["gesamt"]), Euro(abloese["tilgung"]), offen != 0 ? ", offene Zinsen und Gebühren " + Euro(offen) : "",
             Euro(abloese["vorfaelligkeit"]), ProzentText(KreditRegeln(inhalt)["abloesen_prozent"]));
@@ -457,7 +457,7 @@ public static class Wirtschaft
             return "";
         }
         var regeln = Objekt(KreditRegeln(inhalt)["mahnung"]);
-        var rest = Math.Max(1, Py.Int(regeln["abbau_tage"]) - (stand.Tag - 1 - stand.MahnTag));
+        var rest = Math.Max(1, checked(Py.Int(regeln["abbau_tage"]) - (stand.Tag - 1 - stand.MahnTag)));
         var folgen = new List<string> { "jede weitere geplatzte Zahlung (Kreditrate oder Umsatzsteuer) kostet Gebühren und Ansehen" };
         if (Py.Wahr(stufe["zins_plus"]))
         {
@@ -570,7 +570,7 @@ public static class Wirtschaft
     public static long NaechsteVoranmeldung(Spielstand stand, PyObjekt inhalt)
     {
         var alle = Math.Max(1, Py.Int(SteuerRegeln(inhalt)["faellig_tage"]));
-        return stand.Tag + alle - PyMod(stand.SteuerTage, alle) - 1;
+        return checked(stand.Tag + alle - PyMod(stand.SteuerTage, alle) - 1);
     }
 
     /// <summary>tax_active: Umsatzsteuer im Spiel? (auf "Einfach" nicht)</summary>
@@ -591,8 +591,8 @@ public static class Wirtschaft
             { "zahllast", SteuerZahllast(zeitraum) }, { "umsatz", zeitraum["umsatz"] }, { "ausgaben", zeitraum["ausgaben"] }, { "tage", zeitraum["tage"] },
             { "faellig_tage", Py.Int(regeln["faellig_tage"]) }, { "naechste", NaechsteVoranmeldung(stand, inhalt) },
             { "letzte", letzte }, { "anzahl", (long)gemeldet.Count },
-            { "gezahlt", gemeldet.Sum(e => Py.Int(Get(e, "aus_ruecklage", 0L)) + Py.Int(Get(e, "vom_konto", 0L)))
-                + protokoll.Where(t => Py.Gleich(t[1], "nachgezahlt")).Sum(t => Py.Int(Objekt(t[2])["betrag"])) },
+            { "gezahlt", checked(gemeldet.Sum(e => Py.Int(Get(e, "aus_ruecklage", 0L)) + Py.Int(Get(e, "vom_konto", 0L)))
+                + protokoll.Where(t => Py.Gleich(t[1], "nachgezahlt")).Sum(t => Py.Int(Objekt(t[2])["betrag"]))) },
             { "erstattet", gemeldet.Sum(e => Py.Int(Get(e, "erstattung", 0L))) },
         };
     }
@@ -607,7 +607,7 @@ public static class Wirtschaft
             Prozent("Dieser Zeitraum (%s): Umsatzsteuer %s aus %s Einnahmen, Vorsteuer %s aus %s Ausgaben, Zahllast bisher %s",
                 !Py.Wahr(e["tage"]) ? "noch kein Feierabend" : LaufzeitText(e["tage"]), anzeige(e["ust"]), anzeige(e["umsatz"]),
                 anzeige(e["vorsteuer"]), anzeige(e["ausgaben"]),
-                Py.Int(e["zahllast"]) < 0 ? "Erstattung " + anzeige(-Py.Int(e["zahllast"])) : anzeige(e["zahllast"])),
+                Py.Int(e["zahllast"]) < 0 ? "Erstattung " + anzeige(checked(-Py.Int(e["zahllast"]))) : anzeige(e["zahllast"])),
         };
         if (Py.Wahr(e["anzahl"]))
         {
@@ -658,7 +658,7 @@ public static class Wirtschaft
             {
                 zeilen.Add(Py.Int(e["betrag"]) > 0
                     ? Prozent("In die Steuerrücklage: %s (jetzt %s)", Euro(e["betrag"]), Euro(e["ruecklage"]))
-                    : "Aus der Steuerrücklage zurück (Vorsteuer): " + Euro(-Py.Int(e["betrag"])));
+                    : "Aus der Steuerrücklage zurück (Vorsteuer): " + Euro(checked(-Py.Int(e["betrag"]))));
             }
             else if (Py.Gleich(art, "voranmeldung"))
             {
@@ -754,7 +754,7 @@ public static class Wirtschaft
     public static long ExtraAnzahl(object? wert, string startwert, long tag, string salz)
     {
         var ganz = Py.Int(wert);
-        return ganz + (Betrieb.Wurf(startwert, tag, salz) < Py.F(wert) - ganz ? 1 : 0);
+        return checked(ganz + (Betrieb.Wurf(startwert, tag, salz) < Py.F(wert) - ganz ? 1 : 0));
     }
 
     /// <summary>_share_text</summary>
@@ -822,7 +822,7 @@ public static class Wirtschaft
         }
         else if (Py.Gleich(art, WerbungEinmalig) && stand.Geld < Py.Int(ergebnis["preis"]))
         {
-            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld nicht (%s fehlen).", Euro(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld))));
+            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld nicht (%s fehlen).", Euro(checked(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld)))));
         }
         else if (Py.Gleich(art, WerbungLaufend) && stand.Geld <= 0)
         {
@@ -861,10 +861,10 @@ public static class Wirtschaft
                 }
                 else
                 {
-                    var rest = Py.Int(buchung["bis_tag"]) - Math.Max(stand.Tag, start - 1);
+                    var rest = checked(Py.Int(buchung["bis_tag"]) - Math.Max(stand.Tag, start - 1));
                     status = start > stand.Tag
                         ? "Einmalig gebucht · wirkt ab dem nächsten Arbeitstag für " + LaufzeitText(rest)
-                        : Prozent("Einmalig gebucht · wirkt noch %s (bis Arbeitstag %d)", rest <= 0 ? "heute" : LaufzeitText(rest + 1), buchung["bis_tag"]);
+                        : Prozent("Einmalig gebucht · wirkt noch %s (bis Arbeitstag %d)", rest <= 0 ? "heute" : LaufzeitText(checked(rest + 1)), buchung["bis_tag"]);
                 }
             }
             var angebote = new PyObjekt();
@@ -936,10 +936,10 @@ public static class Wirtschaft
         foreach (var kennung in stand.ZertifikateFertig(tag))
         {
             var vorteil = Get(Zertifikat(kennung, inhalt ?? stand.Inhalt) ?? [], "vorteil") is PyObjekt v ? v : [];
-            summe += Py.Int(Get(vorteil, "alle", 0L));
+            summe = checked(summe + Py.Int(Get(vorteil, "alle", 0L)));
             if (Py.Wahr(fach))
             {
-                summe += Py.Int(Get(vorteil, Py.Str(fach), 0L));
+                summe = checked(summe + Py.Int(Get(vorteil, Py.Str(fach), 0L)));
             }
         }
         return summe;
@@ -967,16 +967,16 @@ public static class Wirtschaft
         }
         else if (stand.Zertifikate.ContainsKey(kennung))
         {
-            Py.Setzen(ergebnis, "problem", Prozent("Läuft schon, fertig beim Feierabend von Arbeitstag %d.", Py.Int(Objekt(stand.Zertifikate[kennung])["bis_tag"]) - 1));
+            Py.Setzen(ergebnis, "problem", Prozent("Läuft schon, fertig beim Feierabend von Arbeitstag %d.", checked(Py.Int(Objekt(stand.Zertifikate[kennung])["bis_tag"]) - 1)));
         }
         else if (laufend.Count >= grenze)
         {
             var anderes = Zertifikat(laufend[0]["zert"], inhalt) ?? [];
-            Py.Setzen(ergebnis, "problem", Prozent("Es läuft schon eine Zertifizierung (%s, bis Arbeitstag %d).", Get(anderes, "kurz", ""), Py.Int(laufend[0]["bis_tag"]) - 1));
+            Py.Setzen(ergebnis, "problem", Prozent("Es läuft schon eine Zertifizierung (%s, bis Arbeitstag %d).", Get(anderes, "kurz", ""), checked(Py.Int(laufend[0]["bis_tag"]) - 1)));
         }
         else if (stand.Geld < Py.Int(ergebnis["preis"]))
         {
-            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld nicht (%s fehlen).", Euro(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld))));
+            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld nicht (%s fehlen).", Euro(checked(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld)))));
         }
         return ergebnis;
     }
@@ -999,7 +999,7 @@ public static class Wirtschaft
             else if (daten is not null && Py.Wahr(daten))
             {
                 zustand = "laeuft";
-                var rest = Py.Int(daten["bis_tag"]) - stand.Tag;
+                var rest = checked(Py.Int(daten["bis_tag"]) - stand.Tag);
                 text = "Läuft · fertig " + (rest <= 1 ? "beim heutigen Feierabend" : Prozent("in %d Arbeitstagen", rest));
             }
             else

@@ -21,7 +21,7 @@ public static partial class SpielAktionen
 
     private static List<(string Art, PyObjekt Daten)> Eins(string art, PyObjekt daten) => [(art, daten)];
 
-    private static long PyMod(long a, long b) => ((a % b) + b) % b;
+    private static long PyMod(long a, long b) => (checked((a % b) + b)) % b;
 
     private static string Codepunkte(string text, int max)
     {
@@ -87,8 +87,8 @@ public static partial class SpielAktionen
         var nach = Get(Objekt(stand.Inhalt["hardware"]), "nachbestellung") as PyObjekt ?? [];
         return Eins(Ereignisse.Ersatzteil, new PyObjekt
         {
-            { "aufgabe", aufgabe }, { "tag", stand.Tag }, { "teil", teil }, { "geld", -Py.Int(ware["preis"]) },
-            { "haendler", Get(nach, "haendler", "") }, { "ankunft", stand.Tag + Py.Int(Get(nach, "lieferzeit", 1L)) },
+            { "aufgabe", aufgabe }, { "tag", stand.Tag }, { "teil", teil }, { "geld", checked(-Py.Int(ware["preis"])) },
+            { "haendler", Get(nach, "haendler", "") }, { "ankunft", checked(stand.Tag + Py.Int(Get(nach, "lieferzeit", 1L))) },
         });
     }
 
@@ -270,7 +270,7 @@ public static partial class SpielAktionen
         {
             throw new SpielFehler("Dieses Möbelstück steht nicht in der Wohnung.");
         }
-        var dreh = PyMod(Py.Int(platz[2]) + 1, 4);
+        var dreh = PyMod(checked(Py.Int(platz[2]) + 1), 4);
         var (x, y) = Wohnung.Gedreht(stand, moebel, platz, dreh);
         return Setzen(stand, stueck, x, y, dreh);
     }

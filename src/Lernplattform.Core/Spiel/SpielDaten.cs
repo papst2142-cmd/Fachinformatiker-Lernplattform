@@ -186,7 +186,7 @@ public static class SpielDaten
         var jeModul = Math.DivRem(groesse, module).Quotient;
         if ((groesse % module != 0) && ((groesse < 0) ^ (module < 0)))
         {
-            jeModul--;   // // rundet in Python nach unten
+            jeModul = checked(jeModul - 1);   // // rundet in Python nach unten
         }
         var text = module == 1
             ? anzahl + " × " + jeModul + " GB, Einzelmodule"
@@ -194,9 +194,9 @@ public static class SpielDaten
         var neu = Py.Flach(t);
         Py.Setzen(neu, "id", KombiKennung((string)t["id"]!, anzahl));
         Py.Setzen(neu, "preis", Py.Mal(t["preis"], anzahl));
-        Py.Setzen(neu, "groesse", groesse * anzahl);
-        Py.Setzen(neu, "module", module * anzahl);
-        Py.Setzen(neu, "name", Py.Str(t["ram_typ"]) + " " + (groesse * anzahl) + " GB (" + text + ")");
+        Py.Setzen(neu, "groesse", checked(groesse * anzahl));
+        Py.Setzen(neu, "module", checked(module * anzahl));
+        Py.Setzen(neu, "name", Py.Str(t["ram_typ"]) + " " + (checked(groesse * anzahl)) + " GB (" + text + ")");
         return neu;
     }
 
@@ -227,9 +227,9 @@ public static class SpielDaten
             {
                 continue;
             }
-            for (long n = 2; n <= Py.Int(anzahl); n++)
+            for (long n = 2; n <= Py.Int(anzahl); n = checked(n + 1))
             {
-                if (n * Py.Int(t["module"]) > MaxRamPlaetze(inhalt))
+                if (checked(n * Py.Int(t["module"])) > MaxRamPlaetze(inhalt))
                 {
                     break;
                 }

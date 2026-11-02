@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.32.2
+Im Lernspiel verhalten sich einige seltene Eingaben und sehr große Zahlen jetzt genau wie in der bisherigen Python-Fassung.
+
+- Netzwerk-Formulare im Spiel: Wird beim Präfix eine hochgestellte oder eingekreiste Ziffer eingegeben (zum Beispiel „²“), wird die Eingabe wie in der Python-Fassung nicht ausgewertet; der Auftrag bleibt offen. Ziffern aus anderen Schriften werden weiter gelesen.
+- Namen, die im Spiel mit großem Anfangsbuchstaben gezeigt werden, schreiben ein „ß“ am Anfang jetzt als „Ss“ und behandeln auch andere Sonderzeichen wie die Python-Fassung.
+- Rechnungen mit Spielgeld und Spielzählern laufen bei unvorstellbar großen Zahlen (über neun Trillionen) nicht mehr still in falsche Werte über, sondern brechen mit einem Eintrag im Fehlerprotokoll ab. Im normalen Spiel werden solche Zahlen nie erreicht.
+- Am Lernteil ändert sich nichts.
+
 ## A 0.32.1
 Kleine Fehler sind behoben: Riesige Eingaben im Rechen-Trainer werden nicht mehr als falsch gezählt, und das Programm bereitet beim Start schneller vor.
 

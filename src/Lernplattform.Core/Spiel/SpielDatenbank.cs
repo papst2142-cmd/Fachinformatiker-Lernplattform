@@ -143,7 +143,7 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
         var stempel = DatenbankStempel() ?? new SpielStempel(0, null, null);
         var naechste = Lernstand.Abfragen(
             "SELECT MAX(COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'spiel_ereignisse'), 0),"
-            + " COALESCE((SELECT MAX(id) FROM spiel_ereignisse), 0))") is [var z, ..] && z[0] is long n ? n + 1 : 1;
+            + " COALESCE((SELECT MAX(id) FROM spiel_ereignisse), 0))") is [var z, ..] && z[0] is long n ? checked(n + 1) : 1;
         return new Zwischenstand
         {
             Stempel = stempel,
@@ -207,9 +207,9 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
             }
             var z = zwischen ??= ZwischenAnlegen();
             var marke = schreiber.SpielMarkeJetzt(z.Uhrabweichung);
-            var nummer = z.Naechste++;
+            var nummer = checked(z.Naechste++);
             z.Zeilen.Add(new SpielZeile(nummer, marke.Zeit, art, daten));
-            z.Stempel = new SpielStempel(z.Stempel.Anzahl + 1, nummer, Spaeter(z.Stempel.Zeit, marke.Zeit));
+            z.Stempel = new SpielStempel(checked(z.Stempel.Anzahl + 1), nummer, Spaeter(z.Stempel.Zeit, marke.Zeit));
             schlange.Anhaengen(new Spielschlange.Eintrag(this, art, () => schreiber.SpielEreignisSpeichern(art, daten, Geraet, Lauf, marke) is not null));
             return marke.Zeit;
         }

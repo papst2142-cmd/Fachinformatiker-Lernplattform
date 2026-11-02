@@ -114,7 +114,7 @@ public sealed class SpielWissen(string datenbank, Lerninhalte lernen, PyObjekt b
         {
             if (ThemaVon(zeile[0], zeile[1]) is { } thema)
             {
-                gesehen[thema] = gesehen.GetValueOrDefault(thema) + 1;
+                gesehen[thema] = checked(gesehen.GetValueOrDefault(thema) + 1);
             }
         }
         var abdeckung = lernen.ThemenReihenfolge.ToDictionary(t => t,
@@ -148,10 +148,10 @@ public sealed class SpielWissen(string datenbank, Lerninhalte lernen, PyObjekt b
                 for (var i = 0; i < juengste.Count; i++)
                 {
                     var gewicht = juengste.Count - i;
-                    summe += gewicht;
+                    summe = checked(summe + gewicht);
                     if (juengste[i])
                     {
-                        richtig += gewicht;
+                        richtig = checked(richtig + gewicht);
                     }
                 }
                 quote = richtig / (double)summe;

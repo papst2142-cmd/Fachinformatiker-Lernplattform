@@ -53,7 +53,7 @@ public static partial class Betrieb
             else if (stand.Geld < Py.Int(regel["preis"]))
             {
                 problem = Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).",
-                    Wohnung.GanzeEuro(Py.Int(regel["preis"]) - Math.Max(0, stand.Geld)));
+                    Wohnung.GanzeEuro(checked(Py.Int(regel["preis"]) - Math.Max(0, stand.Geld))));
             }
             else
             {
@@ -140,7 +140,7 @@ public static partial class Betrieb
         {
             fehlt.Add(Prozent("mindestens %d Mitarbeiter (jetzt %d)", braucht["mitarbeiter"], (long)stand.Personal.Count));
         }
-        var alter = stand.Tag - Py.Int(firma["tag"]);
+        var alter = checked(stand.Tag - Py.Int(firma["tag"]));
         if (alter < Py.Int(Get(braucht, "firmentage", 0L)))
         {
             fehlt.Add(Prozent("Firma mindestens %d Arbeitstage alt (jetzt %d)", braucht["firmentage"], alter));
@@ -201,7 +201,7 @@ public static partial class Betrieb
         else if (stand.Geld < Py.Int(naechste["preis"]))
         {
             Py.Setzen(eintrag, "problem", Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).",
-                Wohnung.GanzeEuro(Py.Int(naechste["preis"]) - Math.Max(0, stand.Geld))));
+                Wohnung.GanzeEuro(checked(Py.Int(naechste["preis"]) - Math.Max(0, stand.Geld)))));
         }
         return eintrag;
     }
@@ -302,7 +302,7 @@ public static partial class Betrieb
     public static string FirmenZeile(Spielstand stand)
     {
         var zahlen = stand.FirmenTag();
-        var gewinn = Py.Int(zahlen["umsatz"]) - Py.Int(zahlen["gehaelter"]) - Py.Int(zahlen["nebenkosten"]) - stand.KreditRaten() - stand.WerbeKosten();
+        var gewinn = checked(Py.Int(zahlen["umsatz"]) - Py.Int(zahlen["gehaelter"]) - Py.Int(zahlen["nebenkosten"]) - stand.KreditRaten() - stand.WerbeKosten());
         return Prozent("%d von %d Plätzen besetzt · heute %s%s", (long)stand.Personal.Count, stand.Kapazitaet,
             gewinn >= 0 ? "+" : "-", Wohnung.GanzeEuro(Math.Abs(gewinn)));
     }

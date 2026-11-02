@@ -85,7 +85,7 @@ public static partial class Betrieb
 
     /// <summary>_between: ganze Zahl von unten bis oben (beide einschliesslich), fest gewuerfelt.</summary>
     internal static long Zwischen(string startwert, long tag, string salz, long unten, long oben) =>
-        unten + Math.Min(oben - unten, (long)(Wurf(startwert, tag, salz) * (oben - unten + 1)));
+        checked(unten + Math.Min(oben - unten, (long)(Wurf(startwert, tag, salz) * (oben - unten + 1))));
 
     /// <summary>firm_tabs: vor der Gruendung gibt es nur die Finanzen.</summary>
     public static List<(string Id, string Name)> Reiter(Spielstand stand) =>
@@ -113,7 +113,7 @@ public static partial class Betrieb
             return AbwesenheitText(eintrag);
         }
         var w = Objekt(eintrag["weiterbildung"]);
-        var rest = Py.Int(w["bis_tag"]) - stand.Tag;
+        var rest = checked(Py.Int(w["bis_tag"]) - stand.Tag);
         if (Py.Gleich(w["art"], Coaching))
         {
             return Prozent("Im Coaching (Macke „%s“) · noch %s", Get(OderLeer(eintrag["macke_info"]), "name", ""), TageText(rest));
@@ -343,7 +343,7 @@ public static partial class Betrieb
         foreach (var k in T.Fachbereiche)
         {
             var roh = Py.Plus(unten, Py.Mal(Wurf(startwert, runde, salz + k), Py.Minus(oben, unten)));
-            werte.Add(k, PythonRunden.Runde(Py.F(roh) / 5.0) * 5);
+            werte.Add(k, checked(PythonRunden.Runde(Py.F(roh) / 5.0) * 5));
         }
         var fokus = Waehle(T.Fachbereiche, startwert, runde, salz + "schwerpunkt");
         Py.Setzen(werte, fokus, Py.Min(90L, Py.Plus(werte[fokus], regel["schwerpunkt_plus"])));
@@ -399,8 +399,8 @@ public static partial class Betrieb
         var ergebnis = new List<(PyObjekt, long, long)>();
         foreach (var e in (Get(FirmaRegeln(inhalt), "wechsel", new List<object?>()) as List<object?> ?? []).Select(Objekt))
         {
-            var erster = start + Py.Int(e["nach_tagen"]);
-            var letzter = erster + Py.Int(Get(e, "offen_tage", 10L)) - 1;
+            var erster = checked(start + Py.Int(e["nach_tagen"]));
+            var letzter = checked(erster + Py.Int(Get(e, "offen_tage", 10L)) - 1);
             ergebnis.Add((e, erster, letzter));
         }
         return ergebnis;
@@ -418,7 +418,7 @@ public static partial class Betrieb
         var bewerbung = Objekt(regeln["bewerbung"]);
         var schritt = Py.Int(bewerbung["abstand_tage"]);
         var start = Py.Int(Objekt(stand.Firma)["tag"]);
-        var runde = PyDiv(Math.Max(0, stand.Tag - start), schritt);
+        var runde = PyDiv(Math.Max(0, checked(stand.Tag - start)), schritt);
         var startwert = Py.Str(Objekt(stand.Firma)["name"]) + "|" + start;
         var ergebnis = new List<PyObjekt>();
         foreach (var (e, erster, letzter) in Wechsler(stand, inhalt))
@@ -442,14 +442,14 @@ public static partial class Betrieb
                 { "rolle", Prozent("bisher %s bei Bitweiche", person["rolle"]) }, { "bis_tag", letzter },
             });
         }
-        for (long nummer = 0; nummer < Py.Int(bewerbung["anzahl"]); nummer++)
+        for (long nummer = 0; nummer < Py.Int(bewerbung["anzahl"]); nummer = checked(nummer + 1))
         {
             var e = Bewerber(regeln, startwert, runde, nummer, inhalt);
             if (stand.JeEingestellt.Contains(e["id"]))
             {
                 continue;
             }
-            Py.Setzen(e, "bis_tag", start + (runde + 1) * schritt - 1);
+            Py.Setzen(e, "bis_tag", checked(start + (runde + 1) * schritt - 1));
             ergebnis.Add(e);
         }
         var schwaecher = stand.Erleichterung("macken_schwaeche_faktor", 1.0);
@@ -472,7 +472,7 @@ public static partial class Betrieb
     internal static long PyDiv(long a, long b)
     {
         var q = a / b;
-        return a % b != 0 && (a < 0) != (b < 0) ? q - 1 : q;
+        return a % b != 0 && (a < 0) != (b < 0) ? checked(q - 1) : q;
     }
 
     /// <summary>switch_news: Story-Moment am Morgen, ein Bitweiche-Kollege will wechseln.</summary>
@@ -489,9 +489,9 @@ public static partial class Betrieb
         var gemacht = stand.WeiterbildungenVon(person).Count(e => !Py.Gleich(e["art"], Coaching));
         // Eigener Schulungsraum (ab 0.36): guenstiger und kuerzer
         var preis = Rabatt(Py.Int(Py.Plus(regel["preis"], Py.Mal(regeln["aufschlag"], (long)gemacht))), stand.RaumEffekt("weiterbildung_rabatt"));
-        var tage = Math.Max(1, Py.Int(regel["tage"]) - Py.Int(stand.RaumEffekt("weiterbildung_tage_minus")));
+        var tage = Math.Max(1, checked(Py.Int(regel["tage"]) - Py.Int(stand.RaumEffekt("weiterbildung_tage_minus"))));
         // Ab 0.43: Manche Macken lernen lieber mit den Haenden
-        tage += PythonRunden.Runde(stand.MackeWert(person, "weiterbildung_tage"));
+        tage = checked(tage + PythonRunden.Runde(stand.MackeWert(person, "weiterbildung_tage")));
         string? fach = ganz ? ziel : T.FachbereichVon.TryGetValue(ziel, out var lang) && T.Kurz.TryGetValue(lang, out var kurz) ? kurz : null;
         var ergebnis = new PyObjekt
         {
@@ -517,7 +517,7 @@ public static partial class Betrieb
         }
         else
         {
-            Py.Setzen(ergebnis, "plus", Math.Max(0, Math.Min(Py.Int(regel["plus"]), (long)(oben - Py.F(Get(werte, ziel, 0L))))));
+            Py.Setzen(ergebnis, "plus", Math.Max(0, Math.Min(Py.Int(regel["plus"]), checked((long)(oben - Py.F(Get(werte, ziel, 0L)))))));
         }
         if (stand.WeiterbildungVon(person) is not null)
         {
@@ -533,7 +533,7 @@ public static partial class Betrieb
         }
         else if (stand.Geld < Py.Int(ergebnis["preis"]))
         {
-            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).", Wohnung.GanzeEuro(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld))));
+            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).", Wohnung.GanzeEuro(checked(Py.Int(ergebnis["preis"]) - Math.Max(0, stand.Geld)))));
         }
         return ergebnis;
     }
@@ -592,8 +592,8 @@ public static partial class Betrieb
         var regeln = Objekt(PersonalRegeln(inhalt)["macken"]);
         var alle = Math.Max(1, Py.Int(regeln["abschwaechen_tage"]));
         var start = MackeStartStufe(person, daten);
-        var dabei = Py.Wahr(daten["tag"]) ? Math.Max(0, tag - Py.Int(Py.Wahr(Get(daten, "tag", tag)) ? Get(daten, "tag", tag) : tag)) : 0;
-        var stufe = Math.Max(1, start - dabei / alle - gecoacht);
+        var dabei = Py.Wahr(daten["tag"]) ? Math.Max(0, checked(tag - Py.Int(Py.Wahr(Get(daten, "tag", tag)) ? Get(daten, "tag", tag) : tag))) : 0;
+        var stufe = Math.Max(1, checked(start - dabei / alle - gecoacht));
         var eintrag = Liste(Objekt(regeln["stufen"])[stufe.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
         var (name, prozent) = (eintrag[0], eintrag[1]);
         var ergebnis = new PyObjekt
@@ -602,7 +602,7 @@ public static partial class Betrieb
             { "plus", Py.Flach(OderLeer(macke["plus"])) }, { "minus", Py.Flach(OderLeer(macke["minus"])) },
             { "start", start }, { "stufe", stufe }, { "stufe_name", name },
             { "faktor", Py.F(prozent) / 100.0 * Py.F(schwaecher ?? 1.0) },
-            { "naechste_in", stufe > 1 ? alle - dabei % alle : null },
+            { "naechste_in", stufe > 1 ? checked(alle - dabei % alle) : null },
         };
         Py.Setzen(ergebnis, "plus_texte", Objekt(ergebnis["plus"]).Select(p => (object?)MackeWirkungText(p.Key, p.Value)).ToList());
         Py.Setzen(ergebnis, "minus_texte", Objekt(ergebnis["minus"]).Select(p => (object?)MackeWirkungText(p.Key, Py.Mal(p.Value, ergebnis["faktor"]))).ToList());
@@ -727,7 +727,7 @@ public static partial class Betrieb
             return "";
         }
         var weg = Objekt(eintrag["abwesend"]);
-        return Prozent("%s bis einschließlich Arbeitstag %d", Py.Gleich(weg["art"], AbwesendKrank) ? "Krank" : "Im Urlaub", Py.Int(weg["bis"]) - 1);
+        return Prozent("%s bis einschließlich Arbeitstag %d", Py.Gleich(weg["art"], AbwesendKrank) ? "Krank" : "Im Urlaub", checked(Py.Int(weg["bis"]) - 1));
     }
 
     /// <summary>_days_text</summary>
@@ -738,7 +738,7 @@ public static partial class Betrieb
     {
         var regeln = Objekt(PersonalRegeln(inhalt)["coaching"]);
         var preis = Rabatt(Py.Int(regeln["preis"]), stand.RaumEffekt("weiterbildung_rabatt"));
-        var tage = Math.Max(1, Py.Int(regeln["tage"]) - Py.Int(stand.RaumEffekt("weiterbildung_tage_minus")));
+        var tage = Math.Max(1, checked(Py.Int(regeln["tage"]) - Py.Int(stand.RaumEffekt("weiterbildung_tage_minus"))));
         var macke = stand.MackeVon(person);
         var ergebnis = new PyObjekt
         {
@@ -764,7 +764,7 @@ public static partial class Betrieb
         }
         else if (stand.Geld < preis)
         {
-            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).", Wohnung.GanzeEuro(preis - Math.Max(0, stand.Geld))));
+            Py.Setzen(ergebnis, "problem", Prozent("Dafür reicht dein Geld noch nicht (%s fehlen).", Wohnung.GanzeEuro(checked(preis - Math.Max(0, stand.Geld)))));
         }
         return ergebnis;
     }
@@ -882,7 +882,7 @@ public static partial class Betrieb
         inhalt ??= stand.Inhalt;
         var regeln = PersonalRegeln(inhalt);
         var startwert = stand.FirmenStartwert;
-        var morgen = tag + 1;
+        var morgen = checked(tag + 1);
         var ergebnis = new List<PyObjekt>();
         var namen = new PyDict();
         foreach (var (person, daten) in stand.Personal)
@@ -912,7 +912,7 @@ public static partial class Betrieb
             if (Wurf(startwert, tag, "krank|" + Py.Str(person)) * 100 < chance)
             {
                 var tage = Zwischen(startwert, tag, "krank-tage|" + Py.Str(person), Py.Int(regel["tage_min"]), Py.Int(regel["tage_max"]));
-                ergebnis.Add(new PyObjekt { { "art", PersonalKrank }, { "id", person }, { "name", namen[person] }, { "von", morgen }, { "bis", morgen + tage } });
+                ergebnis.Add(new PyObjekt { { "art", PersonalKrank }, { "id", person }, { "name", namen[person] }, { "von", morgen }, { "bis", checked(morgen + tage) } });
             }
         }
         var krank = new PySet(ergebnis.Where(e => Py.Gleich(e["art"], PersonalKrank)).Select(e => e["id"]));
@@ -923,13 +923,13 @@ public static partial class Betrieb
         foreach (var person in da)
         {
             var eingestellt = Py.Int(Py.Wahr(Get(Objekt(stand.Personal[person]), "tag", 0L)) ? Get(Objekt(stand.Personal[person]), "tag", 0L) : 0L);
-            if (krank.Contains(person) || tag - eingestellt < Py.Int(regel["ab_tagen"]) || tag - zuletzt < Py.Int(Get(regel, "abstand_firma", 0L))
+            if (krank.Contains(person) || checked(tag - eingestellt) < Py.Int(regel["ab_tagen"]) || checked(tag - zuletzt) < Py.Int(Get(regel, "abstand_firma", 0L))
                 || ergebnis.Any(e => Py.Gleich(e["art"], PersonalUrlaub)))
             {
                 continue;
             }
             var gefragt = protokoll.Where(p => Py.Gleich(p.Eintrag["art"], PersonalUrlaub) && Py.Gleich(p.Eintrag["id"], person)).Select(p => p.Tag).ToList();
-            if (gefragt.Count > 0 && tag - gefragt[^1] < Py.Int(regel["abstand"]))
+            if (gefragt.Count > 0 && checked(tag - gefragt[^1]) < Py.Int(regel["abstand"]))
             {
                 continue;
             }
@@ -940,12 +940,12 @@ public static partial class Betrieb
             var chance = Py.F(regel["chance"]) * Math.Max(0.0, 1 + stand.MackeWert(person, "urlaub", morgen) / 100.0);
             if (Wurf(startwert, tag, "urlaub|" + Py.Str(person)) * 100 < chance)
             {
-                var start = morgen + Py.Int(regel["vorlauf"]);
+                var start = checked(morgen + Py.Int(regel["vorlauf"]));
                 var tage = Zwischen(startwert, tag, "urlaub-tage|" + Py.Str(person), Py.Int(regel["tage_min"]), Py.Int(regel["tage_max"]));
                 var e = new PyObjekt
                 {
                     { "art", PersonalUrlaub }, { "anfrage", Prozent("urlaub:%d:%s", tag, person) }, { "id", person }, { "name", namen[person] },
-                    { "von", start }, { "bis", start + tage },
+                    { "von", start }, { "bis", checked(start + tage) },
                 };
                 if (Py.Gleich((stand.MackeVon(person, morgen) ?? [])["id"], "talbahn"))
                 {
@@ -957,7 +957,7 @@ public static partial class Betrieb
         regel = Objekt(regeln["konflikt"]);
         var leute = da.Where(p => !krank.Contains(p)).ToList();
         zuletzt = protokoll.Where(p => Py.Gleich(p.Eintrag["art"], PersonalKonflikt)).Select(p => p.Tag).DefaultIfEmpty(-1000).Max();
-        if (leute.Count >= Py.Int(regel["ab_mitarbeiter"]) && tag - zuletzt >= Py.Int(regel["abstand"]))
+        if (leute.Count >= Py.Int(regel["ab_mitarbeiter"]) && checked(tag - zuletzt) >= Py.Int(regel["abstand"]))
         {
             var schub = leute.Select(p => stand.MackeWert(p, "konflikt", morgen)).Max();
             var chance = Py.F(regel["chance"]) * Math.Max(0.0, 1 + schub / 100.0) * Py.F(stand.Erleichterung("konflikt_faktor", 1.0));
@@ -1016,8 +1016,8 @@ public static partial class Betrieb
                 var regel = Objekt(regeln["urlaub"]);
                 var vorher = stand.Antworten.Values.Select(Objekt).Where(a => Py.Gleich(a["id"], e["id"]) && Py.Wahr(a["anfrage"])).ToList();
                 var wieder = vorher.Count > 0 && Py.Gleich(vorher[^1]["art"], Ereignisse.UrlaubNein);
-                var anzahl = Py.Int(e["bis"]) - Py.Int(e["von"]);
-                var text = Prozent("%s fragt, ob %s von Arbeitstag %d bis %d Urlaub nehmen darf (%s).", e["name"], erster, e["von"], Py.Int(e["bis"]) - 1, TageText(anzahl));
+                var anzahl = checked(Py.Int(e["bis"]) - Py.Int(e["von"]));
+                var text = Prozent("%s fragt, ob %s von Arbeitstag %d bis %d Urlaub nehmen darf (%s).", e["name"], erster, e["von"], checked(Py.Int(e["bis"]) - 1), TageText(anzahl));
                 var zeile = UrlaubZeile(e, inhalt);
                 if (zeile.Length > 0)
                 {
@@ -1039,7 +1039,7 @@ public static partial class Betrieb
             }
             else if (Py.Gleich(art, PersonalRueckhol))
             {
-                if (stand.Antworten.ContainsKey(e["rueckhol"]) || tag != stand.Tag - 1 || !stand.Personal.ContainsKey(e["id"]))
+                if (stand.Antworten.ContainsKey(e["rueckhol"]) || tag != checked(stand.Tag - 1) || !stand.Personal.ContainsKey(e["id"]))
                 {
                     continue;
                 }
@@ -1048,7 +1048,7 @@ public static partial class Betrieb
             else if (Py.Gleich(art, PersonalKonflikt))
             {
                 var schluessel = e["konflikt"];
-                if (stand.Antworten.ContainsKey(schluessel) || tag != stand.Tag - 1 || !stand.Personal.ContainsKey(e["a"]) || !stand.Personal.ContainsKey(e["b"]))
+                if (stand.Antworten.ContainsKey(schluessel) || tag != checked(stand.Tag - 1) || !stand.Personal.ContainsKey(e["a"]) || !stand.Personal.ContainsKey(e["b"]))
                 {
                     continue;
                 }
@@ -1095,7 +1095,7 @@ public static partial class Betrieb
         var zeilen = new List<string>();
         foreach (var paar in stand.PersonalProtokoll.Cast<PyTupel>())
         {
-            if (Py.Int(paar[0]) != stand.Tag - 1)
+            if (Py.Int(paar[0]) != checked(stand.Tag - 1))
             {
                 continue;
             }
@@ -1105,7 +1105,7 @@ public static partial class Betrieb
             if (Py.Gleich(art, PersonalKrank))
             {
                 zeilen.Add(Prozent("%s hat sich krankgemeldet und fällt %s aus (bis einschließlich Arbeitstag %d).", e["name"],
-                    TageText(Py.Int(e["bis"]) - Py.Int(e["von"])), Py.Int(e["bis"]) - 1));
+                    TageText(checked(Py.Int(e["bis"]) - Py.Int(e["von"]))), checked(Py.Int(e["bis"]) - 1)));
             }
             else if (Py.Gleich(art, PersonalUrlaub))
             {
@@ -1135,7 +1135,7 @@ public static partial class Betrieb
         foreach (var wert in stand.Zurueckgekehrt.Values)
         {
             var t = (PyTupel)wert!;
-            if (Py.Int(t[0]) == stand.Tag - 1)
+            if (Py.Int(t[0]) == checked(stand.Tag - 1))
             {
                 zeilen.Add(Prozent("%s arbeitet ab heute wieder bei %s. Der Platz ist frei.", t[2], Mitbewerber(Py.Wahr(t[1]) ? t[1] : Bitweiche, inhalt)["kurz"]));
             }
@@ -1144,7 +1144,7 @@ public static partial class Betrieb
         {
             if (Py.Gleich(e["art"], AbwesendUrlaub) && Py.Int(e["von"]) == stand.Tag && stand.Personal.ContainsKey(e["id"]))
             {
-                zeilen.Add(Prozent("%s ist ab heute im Urlaub (bis einschließlich Arbeitstag %d).", Get(Objekt(stand.Personal[e["id"]]), "name", ""), Py.Int(e["bis"]) - 1));
+                zeilen.Add(Prozent("%s ist ab heute im Urlaub (bis einschließlich Arbeitstag %d).", Get(Objekt(stand.Personal[e["id"]]), "name", ""), checked(Py.Int(e["bis"]) - 1)));
             }
         }
         if (stand.OffeneEntscheidungen().Count > 0)

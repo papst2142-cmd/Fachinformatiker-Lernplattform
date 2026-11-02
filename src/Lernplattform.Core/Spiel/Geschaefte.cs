@@ -114,11 +114,11 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
         }
         if (stand.Geld < ware.Preis)
         {
-            throw new SpielFehler(Prozent("Dafür reicht dein Geld noch nicht (%d € fehlen).", ware.Preis - Math.Max(0, stand.Geld)));
+            throw new SpielFehler(Prozent("Dafür reicht dein Geld noch nicht (%d € fehlen).", checked(ware.Preis - Math.Max(0, stand.Geld))));
         }
         return [(TeilGekauft, new PyObjekt
         {
-            { "teil", ware.Id }, { "menge", 1L }, { "geld", -ware.Preis }, { "tag", stand.Tag }, { "laden", laden },
+            { "teil", ware.Id }, { "menge", 1L }, { "geld", checked(-ware.Preis) }, { "tag", stand.Tag }, { "laden", laden },
         })];
     }
 

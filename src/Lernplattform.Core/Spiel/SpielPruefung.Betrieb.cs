@@ -308,7 +308,7 @@ public static partial class SpielPruefung
                 p.Add(Prozent("%s: Titel fehlt oder Text zu lang", wo));
             }
         }
-        var noetig = Math.Max(Py.Int(Get(tickets, "mindestens", 0L)), Py.Int(Get(tickets, "grundzahl", 0L)) + Py.Int(Get(tickets, "je_mitarbeiter", 0L)) * 10);
+        var noetig = Math.Max(Py.Int(Get(tickets, "mindestens", 0L)), checked(Py.Int(Get(tickets, "grundzahl", 0L)) + Py.Int(Get(tickets, "je_mitarbeiter", 0L)) * 10));
         if (gesehen.Count < noetig)
         {
             p.Add(Prozent("Spiel-Firma: zu wenige Kundentickets (mindestens %d)", noetig));

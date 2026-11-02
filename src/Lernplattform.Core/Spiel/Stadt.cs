@@ -89,8 +89,8 @@ public sealed class Stadt
         Heim = Py.Str(uhr["heim"]);
         var karte = Objekt(inhalt["orte"]);
         var welt = Objekt(karte["welt"]);
-        Breite = (long)Math.Ceiling(Py.F(welt["breite"]) / Zelle);
-        Hoehe = (long)Math.Ceiling(Py.F(welt["hoehe"]) / Zelle);
+        Breite = checked((long)Math.Ceiling(Py.F(welt["breite"]) / Zelle));
+        Hoehe = checked((long)Math.Ceiling(Py.F(welt["hoehe"]) / Zelle));
         Regeln = [.. ListeOderLeer(karte, "orte").Select(Objekt), .. ListeOderLeer(stadt, "neue_orte").Select(Objekt)];
 
         var strecken = new List<((double, double), (double, double))>();
@@ -114,9 +114,9 @@ public sealed class Stadt
             var (x, y) = Punkt(z["tuer"]);
             tueren[id] = ZelleBei(x, y);
         }
-        for (long i = 0; i < Breite; i++)
+        for (long i = 0; i < Breite; i = checked(i + 1))
         {
-            for (long j = 0; j < Hoehe; j++)
+            for (long j = 0; j < Hoehe; j = checked(j + 1))
             {
                 var mitte = ((i + 0.5) * Zelle, (j + 0.5) * Zelle);
                 if (strecken.Any(s => Abstand(mitte, s.Item1, s.Item2) <= radius))
@@ -202,7 +202,7 @@ public sealed class Stadt
     public const long UhrSteht = 1380;
 
     /// <summary>Minuten eines Wegs, gekappt auf die Zeit bis <see cref="UhrSteht"/> (danach 0).</summary>
-    private static long Gekappt(long uhr, long minuten) => Math.Max(0, Math.Min(minuten, UhrSteht - uhr));
+    private static long Gekappt(long uhr, long minuten) => Math.Max(0, Math.Min(minuten, checked(UhrSteht - uhr)));
 
     public long MinutenJeSchritt { get; }
 
@@ -230,7 +230,7 @@ public sealed class Stadt
     }
 
     /// <summary>Die Zelle zu einem Punkt der Karte.</summary>
-    public (long, long) ZelleBei(double x, double y) => ((long)Math.Floor(x / Zelle), (long)Math.Floor(y / Zelle));
+    public (long, long) ZelleBei(double x, double y) => (checked((long)Math.Floor(x / Zelle)), checked((long)Math.Floor(y / Zelle)));
 
     /// <summary>Die Regel eines Ortes (orte.json oder neu), null = unbekannt.</summary>
     public PyObjekt? Regel(string? id) => Regeln.FirstOrDefault(r => Py.Gleich(r["id"], id));
@@ -373,7 +373,7 @@ public sealed class Stadt
             }
             foreach (var (dx, dy) in Nachbarn)
             {
-                var neu = (zelle.Item1 + dx, zelle.Item2 + dy);
+                var neu = (checked(zelle.Item1 + dx), checked(zelle.Item2 + dy));
                 if (begehbar.Contains(neu) && vorher.TryAdd(neu, zelle))
                 {
                     schlange.Enqueue(neu);
@@ -436,7 +436,7 @@ public sealed class Stadt
                 }
                 ort = nach;
             }
-            je[geraet] = (ort, uhr + Py.Int(minuten), nummer);
+            je[geraet] = (ort, checked(uhr + Py.Int(minuten)), nummer);
         }
         if (je.Count == 0)
         {
@@ -476,7 +476,7 @@ public sealed class Stadt
         long anzahl;
         if (schritte is { } frei)
         {
-            if (frei < 0 || frei * MinutenJeSchritt > TagMinuten || Tuer(ziel) is null)
+            if (frei < 0 || checked(frei * MinutenJeSchritt) > TagMinuten || Tuer(ziel) is null)
             {
                 return new(StadtGrund.KeinWeg);
             }
@@ -494,7 +494,7 @@ public sealed class Stadt
             }
             anzahl = weg.Schritte;
         }
-        var minuten = Gekappt(jetzt.Uhr, anzahl * MinutenJeSchritt);
+        var minuten = Gekappt(jetzt.Uhr, checked(anzahl * MinutenJeSchritt));
         return new(StadtGrund.Ok, Gegangen, new PyObjekt
         {
             { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", anzahl }, { "minuten", minuten },
@@ -511,12 +511,12 @@ public sealed class Stadt
         {
             return new(StadtGrund.KeinProfil);
         }
-        if (schritte <= 0 || schritte * MinutenJeSchritt > TagMinuten)
+        if (schritte <= 0 || checked(schritte * MinutenJeSchritt) > TagMinuten)
         {
             return new(StadtGrund.KeinWeg);
         }
         var jetzt = Stand(stand);
-        var minuten = Gekappt(jetzt.Uhr, schritte * MinutenJeSchritt);
+        var minuten = Gekappt(jetzt.Uhr, checked(schritte * MinutenJeSchritt));
         return new(StadtGrund.Ok, Gelaufen, new PyObjekt
         {
             { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", schritte }, { "minuten", minuten },
@@ -540,7 +540,7 @@ public sealed class Stadt
         {
             return new(StadtGrund.OeffnetNichtMehr);
         }
-        return new(StadtGrund.Ok, Gewartet, new PyObjekt { { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "minuten", zeit.Auf - jetzt.Uhr } });
+        return new(StadtGrund.Ok, Gewartet, new PyObjekt { { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "minuten", checked(zeit.Auf - jetzt.Uhr) } });
     }
 
     /// <summary>Darf die Figur den Ort betreten, vor dem sie steht? (schreibt nichts)</summary>
@@ -716,7 +716,7 @@ public sealed class Stadt
         {
             // auch der laengste Heimweg nach dem Abend endet vor Mitternacht
             var weiteste = ids.Where(id => id != Heim).Select(id => Weg(id, Heim)?.Schritte ?? 0).DefaultIfEmpty(0).Max();
-            if (Abend + weiteste * MinutenJeSchritt >= TagMinuten)
+            if (checked(Abend + weiteste * MinutenJeSchritt) >= TagMinuten)
             {
                 fehler.Add("Heimweg nach dem Abend endet nach Mitternacht");
             }

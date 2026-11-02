@@ -195,7 +195,7 @@ public static partial class Bewertung
         var (von, bis) = (Py.Int(bereich[0]), Py.Int(bereich[1]));
         var belegt = new PySet(ListeOderLeer(daten, "belegt"));
         var frei = new List<long>();
-        for (var z = von; z <= bis; z++)
+        for (var z = von; z <= bis; z = checked(z + 1))
         {
             if (!belegt.Contains(z))
             {
@@ -384,11 +384,15 @@ public static partial class Bewertung
             return bits.Contains("01", StringComparison.Ordinal) ? null : bits.Count(c => c == '1');
         }
         text = text.TrimStart('/');
-        if (text.Length == 0 || !text.All(c => char.GetUnicodeCategory(c) == UnicodeCategory.DecimalDigitNumber))
+        // text.isdigit() and int(text) <= 32: isdigit nimmt auch "²" an, int() wirft dann ValueError (wie Python)
+        if (!PythonZeichen.IstZiffernText(text))
         {
             return null;
         }
-        var wert = BigInteger.Parse(string.Concat(text.Select(c => (char)('0' + (int)char.GetNumericValue(c)))), CultureInfo.InvariantCulture);
+        if (!PythonZeichen.Ganzzahl(text, out var wert))
+        {
+            throw new FormatException("invalid literal for int() with base 10: '" + text + "'");
+        }
         return wert <= 32 ? (long)wert : null;
     }
 

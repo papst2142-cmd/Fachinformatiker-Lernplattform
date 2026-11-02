@@ -88,7 +88,7 @@ public sealed partial class Spielstand
         }
         var jeTag = TicketsHeute;
         var regulaer = Bearbeitet.Keys.Count(k => !IstZwischenfall(k, Inhalt));
-        var ergebnis = Vorrat().Take((int)Math.Max(0, jeTag - regulaer)).ToList();
+        var ergebnis = Vorrat().Take((int)Math.Max(0, checked(jeTag - regulaer))).ToList();
         var fall = ZwischenfallHeute();
         if (fall is not null && !Bearbeitet.ContainsKey(fall["id"]))
         {
@@ -202,7 +202,7 @@ public sealed partial class Spielstand
             var geraet = RackGeraet(kennung, Inhalt);
             if (geraet is not null && Py.Enthaelt(auftrag["aus_lager"], geraet["typ"]))
             {
-                for (long i = 0; i < Py.Int(anzahl); i++)
+                for (long i = 0; i < Py.Int(anzahl); i = checked(i + 1))
                 {
                     geraete.Add(kennung);
                 }
@@ -251,7 +251,7 @@ public sealed partial class Spielstand
         foreach (var auftrag in OffeneTickets())
         {
             var ort = AuftragOrt(auftrag, Inhalt);
-            zaehler[ort] = Py.Int(zaehler.Get(ort, 0L)) + 1;
+            zaehler[ort] = checked(Py.Int(zaehler.Get(ort, 0L)) + 1);
         }
         return zaehler;
     }
@@ -262,7 +262,7 @@ public sealed partial class Spielstand
         var zaehler = new PyDict();
         foreach (var auftrag in OffeneTickets())
         {
-            zaehler[auftrag["raum"]] = Py.Int(zaehler.Get(auftrag["raum"], 0L)) + 1;
+            zaehler[auftrag["raum"]] = checked(Py.Int(zaehler.Get(auftrag["raum"], 0L)) + 1);
         }
         return zaehler;
     }

@@ -91,7 +91,7 @@ public static partial class Betrieb
         long beste = 0, lauf = 0;
         foreach (var m in merker)
         {
-            lauf = m ? lauf + 1 : 0;
+            lauf = m ? checked(lauf + 1) : 0;
             beste = Math.Max(beste, lauf);
         }
         return beste;
@@ -157,14 +157,14 @@ public static partial class Betrieb
                 {
                     jeTag[tag] = eimer = [0, 0];
                 }
-                eimer[Py.Wahr(d["richtig"]) ? 0 : 1] += 1;
+                checked { eimer[Py.Wahr(d["richtig"]) ? 0 : 1] += 1; }
                 if (Py.Wahr(d["zwischenfall"]))
                 {
-                    S("zwischenfaelle", Z("zwischenfaelle") + (Py.Wahr(d["richtig"]) ? 1 : 0));
+                    S("zwischenfaelle", checked(Z("zwischenfaelle") + (Py.Wahr(d["richtig"]) ? 1 : 0)));
                 }
                 else if (Py.Wahr(d["richtig"]))
                 {
-                    S("tickets", Z("tickets") + 1);
+                    S("tickets", checked(Z("tickets") + 1));
                 }
             }
             else if (e.Art == Ereignisse.Umzug && Py.Wahr(d["wohnung"]) && !Py.Wahr(d["miete"]))
@@ -227,10 +227,10 @@ public static partial class Betrieb
             return Py.Summe(FirmenEinnahmen.Select(k => Get(ein, k, 0L)));
         }).Append(0L)));
         var kunden = (long)stand.TicketErgebnisse.Values.Select(Objekt).Count(t => Py.Wahr(t["erfolg"]));
-        S("auftraege", Z("tickets") + kunden + Z("projekte"));
+        S("auftraege", checked(Z("tickets") + kunden + Z("projekte")));
         S("tage_gruendung", hatFirma ? Py.Int(firma!["tag"]) : null);
-        S("tage_stufe5", hatFirma && stand.AusbauTage.ContainsKey(5L) ? Py.Int(stand.AusbauTage.Get(5L)) - Py.Int(firma!["tag"]) : null);
-        S("tage_filiale", hatFirma && Py.Wahr(zweig) ? Py.Int(zweig!["tag"]) - Py.Int(firma!["tag"]) : null);
+        S("tage_stufe5", hatFirma && stand.AusbauTage.ContainsKey(5L) ? checked(Py.Int(stand.AusbauTage.Get(5L)) - Py.Int(firma!["tag"])) : null);
+        S("tage_filiale", hatFirma && Py.Wahr(zweig) ? checked(Py.Int(zweig!["tag"]) - Py.Int(firma!["tag"])) : null);
         S("kredit_getilgt", (long)stand.KreditProtokoll.Cast<PyTupel>().Count(k => Py.Str(k[1]) is "zurueckgezahlt" or "abgeloest"));
         S("mahnung_vorbei", (long)stand.MahnUeberstanden.Count);
         S("mahnung_hoch_vorbei", (long)stand.MahnUeberstanden.Count(s => !Py.Kleiner(s, 2L)));
@@ -253,9 +253,9 @@ public static partial class Betrieb
         {
             var tag = Py.Int(eintrag[0]);
             var gut = !Py.Kleiner(eintrag[1], (long)StimmungGut);
-            if (gut && vorher is not null && tag == vorher + 1)
+            if (gut && vorher is not null && tag == checked(vorher + 1))
             {
-                serie += 1;
+                serie = checked(serie + 1);
             }
             else
             {
@@ -319,7 +319,7 @@ public static partial class Betrieb
         {
             if (!Py.Kleiner(wert, Get(s, "ab", 1L)))
             {
-                stufe += 1;
+                stufe = checked(stufe + 1);
             }
             else
             {
@@ -429,7 +429,7 @@ public static partial class Betrieb
             laeufe.Add(aktuell!);
             laeufe.Sort(StringComparer.Ordinal);
         }
-        var nummer = laeufe.Select((l, i) => (l, i)).ToDictionary(p => p.l, p => (long)p.i + 1);
+        var nummer = laeufe.Select((l, i) => (l, i)).ToDictionary(p => p.l, p => checked((long)p.i + 1));
         var werte = Py.Wahr(aktuell) ? LaufWerte(stand!, null, inhalt) : [];
         var tage = new Dictionary<string, long>();
         var reihe = new List<string>();
@@ -445,7 +445,7 @@ public static partial class Betrieb
         {
             if (z.Art == BestWert && z.Schluessel == "diensttage" && z.Wert is { } w)
             {
-                Tage(z.Lauf, (long)w);
+                Tage(z.Lauf, checked((long)w));
             }
         }
         if (Py.Wahr(aktuell))
@@ -614,7 +614,7 @@ public static partial class Betrieb
             for (var i = 0; i < regelStufen.Count; i++)
             {
                 var s = regelStufen[i];
-                var erreicht = stand.Erfolge.Get(new PyTupel(regel["id"], (long)i + 1)) as PyObjekt;
+                var erreicht = stand.Erfolge.Get(new PyTupel(regel["id"], checked((long)i + 1))) as PyObjekt;
                 if (Py.Wahr(erreicht))
                 {
                     erreichtStufe = i + 1;
@@ -689,11 +689,11 @@ public static partial class Betrieb
         foreach (var e in eintraege)
         {
             var liste = Liste(e["stufen"]).Select(Objekt).ToList();
-            alle += liste.Count;
+            alle = checked(alle + liste.Count);
             foreach (var s in liste.Where(s => s["erreicht"] is not null))
             {
-                erreicht += 1;
-                Py.Setzen(stufen, Py.Str(s["tier"]), Py.Int(stufen[Py.Str(s["tier"])]) + 1);
+                erreicht = checked(erreicht + 1);
+                Py.Setzen(stufen, Py.Str(s["tier"]), checked(Py.Int(stufen[Py.Str(s["tier"])]) + 1));
             }
         }
         return (erreicht, alle, stufen);
@@ -774,7 +774,7 @@ public static partial class Betrieb
             {
                 continue;
             }
-            for (long stufe = 1; stufe <= ErfolgStufe(regel, werte[Py.Str(regel["wert"])]); stufe++)
+            for (long stufe = 1; stufe <= ErfolgStufe(regel, werte[Py.Str(regel["wert"])]); stufe = checked(stufe + 1))
             {
                 if (!stand.Erfolge.ContainsKey(new PyTupel(regel["id"], stufe)))
                 {
@@ -818,7 +818,7 @@ public static partial class Betrieb
             var (beste, _, _) = BestenBester(meine, id, regel);
             var letzte = meine.Where(z => z.Art == BestWert && z.Schluessel == id)
                 .Select(z => Py.Int(Py.Wahr(z.Daten["tag"]) ? z.Daten["tag"] : 0L)).Append(-BestenAbstand).Max();
-            var faellig = erzwingen || beste is null || stand.TageFertig - letzte >= BestenAbstand;
+            var faellig = erzwingen || beste is null || checked(stand.TageFertig - letzte) >= BestenAbstand;
             if (faellig && Besser(regel, wert, beste))
             {
                 ergebnis.Add((BestWert, id, wert, new PyObjekt

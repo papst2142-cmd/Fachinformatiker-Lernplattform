@@ -27,7 +27,7 @@ public sealed partial class Spielstand
             if (Firma is null)
             {
                 Firma = new PyObjekt { { "name", Get(daten, "name", "") }, { "tag", Py.Int(Get(daten, "tag", tag)) }, { "stufe", 1L } };
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchGruendung, Get(daten, "geld", 0L));
             }
             return;
@@ -56,7 +56,7 @@ public sealed partial class Spielstand
         {
             var nummer = Py.Int(Get(daten, "stufe", 0L));
             var jetzt = Zweigstelle is PyObjekt z ? Py.Int(z["stufe"]) : 0;
-            if (nummer == jetzt + 1 && Betrieb.FilialStufe(nummer, Inhalt) is not null)
+            if (nummer == checked(jetzt + 1) && Betrieb.FilialStufe(nummer, Inhalt) is not null)
             {
                 if (Zweigstelle is null)
                 {
@@ -70,7 +70,7 @@ public sealed partial class Spielstand
                 {
                     Py.Setzen(Objekt(Zweigstelle), "stufe", nummer);
                 }
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchAusbau, Get(daten, "geld", 0L));
             }
         }
@@ -92,14 +92,14 @@ public sealed partial class Spielstand
         else if (art == Ereignisse.Weiterbildung && Personal.ContainsKey(daten["id"]))
         {
             Weiterbildungen.Add(Py.Flach(daten));
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchWeiterbildung, Get(daten, "geld", 0L));
         }
-        else if (art == Ereignisse.Erweitert && Py.Int(Get(daten, "stufe", 0L)) == Py.Int(FirmaD["stufe"]) + 1)
+        else if (art == Ereignisse.Erweitert && Py.Int(Get(daten, "stufe", 0L)) == checked(Py.Int(FirmaD["stufe"]) + 1))
         {
-            Py.Setzen(FirmaD, "stufe", Py.Int(FirmaD["stufe"]) + 1);
+            Py.Setzen(FirmaD, "stufe", checked(Py.Int(FirmaD["stufe"]) + 1));
             AusbauTage[FirmaD["stufe"]] = tag;
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchAusbau, Get(daten, "geld", 0L));
         }
         else if (art == Ereignisse.Raum && !Raeume.ContainsKey(daten["raum"]))
@@ -108,7 +108,7 @@ public sealed partial class Spielstand
             if (Py.Wahr(regel) && Py.Int(FirmaD["stufe"]) >= Py.Int(regel!["ab_stufe"]))
             {
                 Raeume[daten["raum"]] = Py.Flach(daten);
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchAusbau, Get(daten, "geld", 0L));
             }
         }
@@ -118,7 +118,7 @@ public sealed partial class Spielstand
             var neu = Py.Flach(daten);
             Py.Setzen(neu, "gewonnen", art == Ereignisse.AngebotGewonnen);
             Angebote[daten["anfrage"]] = neu;
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchAngebote, Get(daten, "geld", 0L));
             ReputationAendern(Py.Wahr(daten["reputation"]) ? Objekt(daten["reputation"]) : new PyObjekt());
         }
@@ -146,9 +146,9 @@ public sealed partial class Spielstand
                 Py.Setzen(projekt, "fertig", null);
                 Py.Setzen(projekt, "tage", new List<object?>());
                 Projekte[daten["projekt"]] = projekt;
-                Geld += Py.Int(Get(daten, "anzahlung", 0L)) - Py.Int(Get(daten, "material", 0L));
+                Geld = checked(Geld + (Py.Int(Get(daten, "anzahlung", 0L)) - Py.Int(Get(daten, "material", 0L))));
                 Buchen(tag, Ereignisse.BuchProjekte, Get(daten, "anzahlung", 0L));
-                Buchen(tag, Ereignisse.BuchMaterial, -Py.Int(Get(daten, "material", 0L)));
+                Buchen(tag, Ereignisse.BuchMaterial, checked(-Py.Int(Get(daten, "material", 0L))));
             }
         }
         else if (art == Ereignisse.Kredit && Py.Wahr(daten["kredit"]) && !Kredite.ContainsKey(daten["kredit"]))
@@ -165,7 +165,7 @@ public sealed partial class Spielstand
                 { "ausfaelle", 0L }, { "bezahlt_zins", 0L }, { "bezahlt_tilgung", 0L },
                 { "bezahlt_gebuehren", 0L }, { "ende", null }, { "ende_art", "" },
             };
-            Geld += summe;
+            Geld = checked(Geld + summe);
             Buchen(tag, Ereignisse.BuchKredit, summe);
             KreditProtokoll.Add(new PyTupel(tag, "aufgenommen", daten["kredit"], Py.Flach(daten)));
         }
@@ -177,10 +177,10 @@ public sealed partial class Spielstand
                 return;
             }
             var abloese = Wirtschaft.KreditAbloese(kredit, Inhalt);
-            Geld -= Py.Int(abloese["gesamt"]);
-            Buchen(tag, Ereignisse.BuchTilgung, -Py.Int(abloese["tilgung"]));
-            Buchen(tag, Ereignisse.BuchZinsen, -Py.Int(abloese["zinsen"]));
-            Buchen(tag, Ereignisse.BuchKreditGebuehren, -Py.Int(abloese["gebuehren"]));
+            Geld = checked(Geld - Py.Int(abloese["gesamt"]));
+            Buchen(tag, Ereignisse.BuchTilgung, checked(-Py.Int(abloese["tilgung"])));
+            Buchen(tag, Ereignisse.BuchZinsen, checked(-Py.Int(abloese["zinsen"])));
+            Buchen(tag, Ereignisse.BuchKreditGebuehren, checked(-Py.Int(abloese["gebuehren"])));
             Py.Setzen(kredit, "bezahlt_tilgung", Py.Plus(kredit["bezahlt_tilgung"], abloese["tilgung"]));
             Py.Setzen(kredit, "bezahlt_zins", Py.Plus(kredit["bezahlt_zins"], abloese["zinsen"]));
             Py.Setzen(kredit, "bezahlt_gebuehren", Py.Plus(kredit["bezahlt_gebuehren"], abloese["gebuehren"]));
@@ -199,7 +199,7 @@ public sealed partial class Spielstand
                 var neu = Py.Flach(daten);
                 Py.Setzen(neu, "ende", null);
                 Werbungen.Add(neu);
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchWerbung, Get(daten, "geld", 0L));
             }
         }
@@ -216,7 +216,7 @@ public sealed partial class Spielstand
             if (Py.Wahr(Wirtschaft.Zertifikat(daten["zert"], Inhalt)))
             {
                 Zertifikate[daten["zert"]] = Py.Flach(daten);
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchZertifikat, Get(daten, "geld", 0L));
             }
         }
@@ -260,7 +260,7 @@ public sealed partial class Spielstand
         {
             Py.Setzen(projekt, "fertig", schluessel[1]);
             Py.Setzen(projekt, "team", new List<object?>());
-            Geld += Py.Int(Get(eintrag, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(eintrag, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchProjekte, Get(eintrag, "geld", 0L));
             ReputationAendern(Py.Wahr(eintrag["reputation"]) ? Objekt(eintrag["reputation"]) : new PyObjekt());
         }
@@ -296,10 +296,10 @@ public sealed partial class Spielstand
                 return;
             }
             Py.Setzen(aufgaben, (string)aufgabe!, Py.Flach(daten));
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchProjekte, Get(daten, "anzahlung", 0L));
-            Buchen(tag, Ereignisse.BuchMaterial, -Py.Int(Get(daten, "kosten", 0L)));
-            Buchen(tag, Ereignisse.BuchNacharbeit, -Py.Int(Get(daten, "strafe", 0L)));
+            Buchen(tag, Ereignisse.BuchMaterial, checked(-Py.Int(Get(daten, "kosten", 0L))));
+            Buchen(tag, Ereignisse.BuchNacharbeit, checked(-Py.Int(Get(daten, "strafe", 0L))));
             ReputationAendern(Py.Wahr(daten["reputation"]) ? Objekt(daten["reputation"]) : new PyObjekt());
         }
         else if (art == Ereignisse.FarmTeam)
@@ -351,13 +351,13 @@ public sealed partial class Spielstand
         }
         if (Py.Wahr(eintrag["nacharbeit_geld"]))
         {
-            Geld -= Py.Int(eintrag["nacharbeit_geld"]);
-            Buchen(tag, Ereignisse.BuchNacharbeit, -Py.Int(eintrag["nacharbeit_geld"]));
+            Geld = checked(Geld - Py.Int(eintrag["nacharbeit_geld"]));
+            Buchen(tag, Ereignisse.BuchNacharbeit, checked(-Py.Int(eintrag["nacharbeit_geld"])));
         }
         if (Py.Hat(eintrag, "verzug"))
         {
             Py.Setzen(farm, "verzug", Py.Int(eintrag["verzug"]));
-            Py.Setzen(farm, "liefertag", Py.Int(Py.Wahr(eintrag["liefertag"]) ? eintrag["liefertag"] : tag + 1));
+            Py.Setzen(farm, "liefertag", Py.Int(Py.Wahr(eintrag["liefertag"]) ? eintrag["liefertag"] : checked(tag + 1)));
         }
         if (Py.Wahr(eintrag["fertig"]))
         {
@@ -378,7 +378,7 @@ public sealed partial class Spielstand
             Py.Setzen(farm, "abnahme", Py.Flach(daten));
             Py.Setzen(farm, "fertig", schluessel);
             Py.Setzen(farm, "team", new List<object?>());
-            Geld += Py.Int(Get(daten, "geld", 0L));
+            Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
             Buchen(tag, Ereignisse.BuchProjekte, Get(daten, "geld", 0L));
             ReputationAendern(Py.Wahr(daten["reputation"]) ? Objekt(daten["reputation"]) : new PyObjekt());
         }
@@ -404,25 +404,25 @@ public sealed partial class Spielstand
             {
                 continue;
             }
-            Py.Setzen(kredit, "zins_offen", Py.Int(kredit["zins_offen"]) + Mathe.PythonRunden.Runde(Py.F(kredit["rest"])
-                * Wirtschaft.TagesZins(Wirtschaft.KreditZins(kredit, Mahnstufe, Inhalt), Inhalt)));
-            var faellig = Math.Min(Py.Int(kredit["rate"]), Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"]));
+            Py.Setzen(kredit, "zins_offen", checked(Py.Int(kredit["zins_offen"]) + Mathe.PythonRunden.Runde(Py.F(kredit["rest"])
+                * Wirtschaft.TagesZins(Wirtschaft.KreditZins(kredit, Mahnstufe, Inhalt), Inhalt))));
+            var faellig = Math.Min(Py.Int(kredit["rate"]), checked(Py.Int(kredit["rest"]) + Py.Int(kredit["zins_offen"]) + Py.Int(kredit["gebuehren"])));
             if (Geld >= faellig)
             {
                 var gebuehren = Math.Min(faellig, Py.Int(kredit["gebuehren"]));
-                var zinsen = Math.Min(faellig - gebuehren, Py.Int(kredit["zins_offen"]));
-                var tilgung = faellig - gebuehren - zinsen;
-                Py.Setzen(kredit, "gebuehren", Py.Int(kredit["gebuehren"]) - gebuehren);
-                Py.Setzen(kredit, "zins_offen", Py.Int(kredit["zins_offen"]) - zinsen);
-                Py.Setzen(kredit, "rest", Py.Int(kredit["rest"]) - tilgung);
-                Py.Setzen(kredit, "raten", Py.Int(kredit["raten"]) + 1);
-                Py.Setzen(kredit, "bezahlt_gebuehren", Py.Int(kredit["bezahlt_gebuehren"]) + gebuehren);
-                Py.Setzen(kredit, "bezahlt_zins", Py.Int(kredit["bezahlt_zins"]) + zinsen);
-                Py.Setzen(kredit, "bezahlt_tilgung", Py.Int(kredit["bezahlt_tilgung"]) + tilgung);
-                Geld -= faellig;
-                Buchen(tag, Ereignisse.BuchKreditGebuehren, -gebuehren);
-                Buchen(tag, Ereignisse.BuchZinsen, -zinsen);
-                Buchen(tag, Ereignisse.BuchTilgung, -tilgung);
+                var zinsen = Math.Min(checked(faellig - gebuehren), Py.Int(kredit["zins_offen"]));
+                var tilgung = checked(faellig - gebuehren - zinsen);
+                Py.Setzen(kredit, "gebuehren", checked(Py.Int(kredit["gebuehren"]) - gebuehren));
+                Py.Setzen(kredit, "zins_offen", checked(Py.Int(kredit["zins_offen"]) - zinsen));
+                Py.Setzen(kredit, "rest", checked(Py.Int(kredit["rest"]) - tilgung));
+                Py.Setzen(kredit, "raten", checked(Py.Int(kredit["raten"]) + 1));
+                Py.Setzen(kredit, "bezahlt_gebuehren", checked(Py.Int(kredit["bezahlt_gebuehren"]) + gebuehren));
+                Py.Setzen(kredit, "bezahlt_zins", checked(Py.Int(kredit["bezahlt_zins"]) + zinsen));
+                Py.Setzen(kredit, "bezahlt_tilgung", checked(Py.Int(kredit["bezahlt_tilgung"]) + tilgung));
+                Geld = checked(Geld - faellig);
+                Buchen(tag, Ereignisse.BuchKreditGebuehren, checked(-gebuehren));
+                Buchen(tag, Ereignisse.BuchZinsen, checked(-zinsen));
+                Buchen(tag, Ereignisse.BuchTilgung, checked(-tilgung));
                 KreditProtokoll.Add(new PyTupel(tag, "rate", kredit["id"], new PyObjekt
                 {
                     { "rate", faellig }, { "zinsen", zinsen }, { "tilgung", tilgung }, { "gebuehren", gebuehren }, { "rest", kredit["rest"] },
@@ -456,7 +456,7 @@ public sealed partial class Spielstand
             {
                 if (art == "kredit")
                 {
-                    Py.Setzen(posten!, "ausfaelle", Py.Int(posten!["ausfaelle"]) + 1);
+                    Py.Setzen(posten!, "ausfaelle", checked(Py.Int(posten!["ausfaelle"]) + 1));
                     KreditProtokoll.Add(new PyTupel(tag, "ausfall", posten["id"], new PyObjekt
                     {
                         { "rate", faellig }, { "stufe", 0L }, { "gebuehr", 0L }, { "reputation", new PyObjekt() }, { "einfach", true },
@@ -468,7 +468,7 @@ public sealed partial class Spielstand
         if (geplatzt.Count > 0)
         {
             // Hoechstens eine Stufe pro Feierabend, auch wenn mehreres platzt
-            Mahnstufe = Math.Min(stufen.Count, Mahnstufe + 1);
+            Mahnstufe = Math.Min(stufen.Count, checked(Mahnstufe + 1));
             MahnTag = tag;
             MahnHoechst = Math.Max(MahnHoechst, Mahnstufe);
             var stufe = Objekt(stufen[(int)Mahnstufe - 1]);
@@ -481,8 +481,8 @@ public sealed partial class Spielstand
                 var reputation = nummer == 0 ? Py.Flach(Py.Wahr(stufe["reputation"]) ? Objekt(stufe["reputation"]) : new PyObjekt()) : new PyObjekt();
                 if (art == "kredit")
                 {
-                    Py.Setzen(posten!, "gebuehren", Py.Int(posten!["gebuehren"]) + gebuehr);
-                    Py.Setzen(posten, "ausfaelle", Py.Int(posten["ausfaelle"]) + 1);
+                    Py.Setzen(posten!, "gebuehren", checked(Py.Int(posten!["gebuehren"]) + gebuehr));
+                    Py.Setzen(posten, "ausfaelle", checked(Py.Int(posten["ausfaelle"]) + 1));
                     KreditProtokoll.Add(new PyTupel(tag, "ausfall", posten["id"], new PyObjekt
                     {
                         { "rate", faellig }, { "stufe", Mahnstufe }, { "gebuehr", gebuehr }, { "reputation", reputation },
@@ -490,7 +490,7 @@ public sealed partial class Spielstand
                 }
                 else
                 {
-                    SteuerSchuld += gebuehr;
+                    SteuerSchuld = checked(SteuerSchuld + gebuehr);
                     SteuerProtokoll.Add(new PyTupel(tag, "ausfall", new PyObjekt
                     {
                         { "betrag", faellig }, { "stufe", Mahnstufe }, { "gebuehr", gebuehr }, { "reputation", reputation }, { "schuld", SteuerSchuld },
@@ -498,9 +498,9 @@ public sealed partial class Spielstand
                 }
             }
         }
-        else if (Mahnstufe != 0 && tag - MahnTag >= Py.Int(mahnung["abbau_tage"]))
+        else if (Mahnstufe != 0 && checked(tag - MahnTag) >= Py.Int(mahnung["abbau_tage"]))
         {
-            Mahnstufe -= 1;
+            Mahnstufe = checked(Mahnstufe - 1);
             MahnTag = tag;
             KreditProtokoll.Add(new PyTupel(tag, "mahnstufe", "", new PyObjekt { { "stufe", Mahnstufe } }));
             if (Mahnstufe == 0)
@@ -521,8 +521,8 @@ public sealed partial class Spielstand
             if (Py.Gleich(buchung["art"], Wirtschaft.WerbungLaufend) && Wirtschaft.WerbungAktiv(buchung, tag))
             {
                 var kosten = Py.Int(Get(buchung, "kosten", 0L));
-                Geld -= kosten;
-                Buchen(tag, Ereignisse.BuchWerbung, -kosten);
+                Geld = checked(Geld - kosten);
+                Buchen(tag, Ereignisse.BuchWerbung, checked(-kosten));
                 WerbeProtokoll.Add(new PyTupel(tag, buchung["werbung"], kosten));
             }
         }
@@ -545,23 +545,23 @@ public sealed partial class Spielstand
         }
         Py.Setzen(zeitraum, "ust", Py.F(zeitraum["ust"]) + bruttoEin * satz / (100.0 + satz));
         Py.Setzen(zeitraum, "vst", Py.F(zeitraum["vst"]) + bruttoAus * satz / (100.0 + satz));
-        Py.Setzen(zeitraum, "umsatz", Py.Int(zeitraum["umsatz"]) + bruttoEin);
-        Py.Setzen(zeitraum, "ausgaben", Py.Int(zeitraum["ausgaben"]) + bruttoAus);
-        Py.Setzen(zeitraum, "tage", Py.Int(zeitraum["tage"]) + 1);
-        SteuerTage += 1;
+        Py.Setzen(zeitraum, "umsatz", checked(Py.Int(zeitraum["umsatz"]) + bruttoEin));
+        Py.Setzen(zeitraum, "ausgaben", checked(Py.Int(zeitraum["ausgaben"]) + bruttoAus));
+        Py.Setzen(zeitraum, "tage", checked(Py.Int(zeitraum["tage"]) + 1));
+        SteuerTage = checked(SteuerTage + 1);
         var faellig = Wirtschaft.SteuerZahllast(zeitraum);
         // Ruecklage: so viel, wie bisher an Zahllast aufgelaufen ist
         var ziel = Math.Max(0, Mathe.PythonRunden.Runde(faellig * Py.F(Get(regeln, "ruecklage_prozent", 100L)) / 100.0));
-        var verschieben = ziel - SteuerRuecklage;
+        var verschieben = checked(ziel - SteuerRuecklage);
         if (verschieben > 0)
         {
             verschieben = Math.Min(verschieben, Math.Max(0, Geld));
         }
         if (verschieben != 0)
         {
-            Geld -= verschieben;
-            SteuerRuecklage += verschieben;
-            Buchen(tag, Ereignisse.BuchSteuer, -verschieben);
+            Geld = checked(Geld - verschieben);
+            SteuerRuecklage = checked(SteuerRuecklage + verschieben);
+            Buchen(tag, Ereignisse.BuchSteuer, checked(-verschieben));
             SteuerProtokoll.Add(new PyTupel(tag, "ruecklage", new PyObjekt { { "betrag", verschieben }, { "ruecklage", SteuerRuecklage } }));
         }
         if (SteuerTage % Math.Max(1, Py.Int(regeln["faellig_tage"])) == 0)
@@ -575,31 +575,31 @@ public sealed partial class Spielstand
             if (faellig >= 0)
             {
                 var ausRuecklage = Math.Min(SteuerRuecklage, faellig);
-                SteuerRuecklage -= ausRuecklage;
-                var rest = faellig - ausRuecklage;
+                SteuerRuecklage = checked(SteuerRuecklage - ausRuecklage);
+                var rest = checked(faellig - ausRuecklage);
                 Py.Setzen(daten, "aus_ruecklage", ausRuecklage);
                 Py.Setzen(daten, "vom_konto", 0L);
                 if (rest > 0)
                 {
                     var bezahlt = Math.Min(rest, Math.Max(0, Geld));
-                    Geld -= bezahlt;
-                    Buchen(tag, Ereignisse.BuchSteuer, -bezahlt);
+                    Geld = checked(Geld - bezahlt);
+                    Buchen(tag, Ereignisse.BuchSteuer, checked(-bezahlt));
                     Py.Setzen(daten, "vom_konto", bezahlt);
-                    SteuerSchuld += rest - bezahlt;
-                    Py.Setzen(daten, "offen", rest - bezahlt);
+                    SteuerSchuld = checked(SteuerSchuld + (rest - bezahlt));
+                    Py.Setzen(daten, "offen", checked(rest - bezahlt));
                 }
             }
             else
             {
-                Geld -= faellig;
-                Buchen(tag, Ereignisse.BuchSteuer, -faellig);
-                Py.Setzen(daten, "erstattung", -faellig);
+                Geld = checked(Geld - faellig);
+                Buchen(tag, Ereignisse.BuchSteuer, checked(-faellig));
+                Py.Setzen(daten, "erstattung", checked(-faellig));
             }
             if (SteuerRuecklage != 0)
             {
                 // Was in der Ruecklage uebrig ist, kommt aufs Konto zurueck
                 Py.Setzen(daten, "frei", SteuerRuecklage);
-                Geld += SteuerRuecklage;
+                Geld = checked(Geld + SteuerRuecklage);
                 Buchen(tag, Ereignisse.BuchSteuer, SteuerRuecklage);
                 SteuerRuecklage = 0;
             }
@@ -611,9 +611,9 @@ public sealed partial class Spielstand
             var bezahlt = Math.Min(SteuerSchuld, Math.Max(0, Geld));
             if (bezahlt != 0)
             {
-                Geld -= bezahlt;
-                SteuerSchuld -= bezahlt;
-                Buchen(tag, Ereignisse.BuchSteuer, -bezahlt);
+                Geld = checked(Geld - bezahlt);
+                SteuerSchuld = checked(SteuerSchuld - bezahlt);
+                Buchen(tag, Ereignisse.BuchSteuer, checked(-bezahlt));
                 SteuerProtokoll.Add(new PyTupel(tag, "nachgezahlt", new PyObjekt { { "betrag", bezahlt }, { "schuld", SteuerSchuld } }));
             }
             if (SteuerSchuld != 0)
@@ -656,7 +656,7 @@ public sealed partial class Spielstand
     public List<PyObjekt> FertigeKredite() => Kredite.Values.Select(Objekt).Where(k => k["ende"] is not null).ToList();
 
     /// <summary>loan_debt: Restschuld aller laufenden Kredite (mit offenen Zinsen und Gebuehren).</summary>
-    public long KreditSchuld() => LaufendeKredite().Sum(k => Py.Int(k["rest"]) + Py.Int(k["zins_offen"]) + Py.Int(k["gebuehren"]));
+    public long KreditSchuld() => LaufendeKredite().Sum(k => checked(Py.Int(k["rest"]) + Py.Int(k["zins_offen"]) + Py.Int(k["gebuehren"])));
 
     /// <summary>loan_rates: faellige Raten beim naechsten Feierabend.</summary>
     public long KreditRaten() => LaufendeKredite().Sum(k => Wirtschaft.KreditFaellig(k, Mahnstufe, Inhalt));
@@ -742,7 +742,7 @@ public sealed partial class Spielstand
             {
                 continue;
             }
-            var anzahl = Py.Int(PersonalRoutine.Get(person, 0L)) + 1;
+            var anzahl = checked(Py.Int(PersonalRoutine.Get(person, 0L)) + 1);
             PersonalRoutine[person] = anzahl;
             if (anzahl % alle == 0)
             {
@@ -831,7 +831,7 @@ public sealed partial class Spielstand
     }
 
     /// <summary>capacity: alle Arbeitsplaetze (Gewerbehof plus Filiale).</summary>
-    public long Kapazitaet => OrtKapazitaet(OrtBuero) + OrtKapazitaet(OrtFiliale);
+    public long Kapazitaet => checked(OrtKapazitaet(OrtBuero) + OrtKapazitaet(OrtFiliale));
 
     /// <summary>site_capacity</summary>
     public long OrtKapazitaet(string ort)
@@ -851,7 +851,7 @@ public sealed partial class Spielstand
     public PyObjekt? FilialStufe() => Zweigstelle is PyObjekt z && Py.Wahr(z) ? Betrieb.FilialStufe(z["stufe"], Inhalt) : null;
 
     /// <summary>next_branch_stage</summary>
-    public PyObjekt? NaechsteFilialStufe() => Betrieb.FilialStufe((Zweigstelle is PyObjekt z && Py.Wahr(z) ? Py.Int(z["stufe"]) : 0) + 1, Inhalt);
+    public PyObjekt? NaechsteFilialStufe() => Betrieb.FilialStufe(checked((Zweigstelle is PyObjekt z && Py.Wahr(z) ? Py.Int(z["stufe"]) : 0) + 1), Inhalt);
 
     /// <summary>site_of</summary>
     public object? OrtVon(object? person) => PersonalOrt.Get(person, OrtBuero);
@@ -860,7 +860,7 @@ public sealed partial class Spielstand
     public List<object?> PersonalAm(string ort) => Personal.Keys.Where(p => Py.Gleich(OrtVon(p), ort)).ToList();
 
     /// <summary>site_free: freie Arbeitsplaetze an einem Standort.</summary>
-    public long OrtFrei(string ort) => OrtKapazitaet(ort) - PersonalAm(ort).Count;
+    public long OrtFrei(string ort) => checked(OrtKapazitaet(ort) - PersonalAm(ort).Count);
 
     /// <summary>has_room</summary>
     public bool HatRaum(object? raum) => Raeume.ContainsKey(raum);
@@ -895,7 +895,7 @@ public sealed partial class Spielstand
         }
         var raeume = Raeume.Keys.Sum(r => Py.Int(Get(Betrieb.SonderRaum(r, Inhalt) ?? new PyObjekt(), "nebenkosten", 0L)));
         var filiale = Py.Int(Get(FilialStufe() ?? new PyObjekt(), "nebenkosten", 0L));
-        return Py.Int(Get(FirmenStufe(), "nebenkosten", 0L)) + raeume + filiale;
+        return checked(Py.Int(Get(FirmenStufe(), "nebenkosten", 0L)) + raeume + filiale);
     }
 
     // -- Mitarbeiter -------------------------------------------------------------
@@ -1105,7 +1105,7 @@ public sealed partial class Spielstand
             }
             else
             {
-                var bis = Py.Int(Get(daten, "tag", tag)) + Py.Int(regel["verstimmt_tage"]);
+                var bis = checked(Py.Int(Get(daten, "tag", tag)) + Py.Int(regel["verstimmt_tage"]));
                 foreach (var person in new[] { erster, zweiter })
                 {
                     StimmungAendern(person, regel["ignorieren"]);
@@ -1126,7 +1126,7 @@ public sealed partial class Spielstand
             }
             else if (Py.Gleich(wahl, Betrieb.RueckholBonus))
             {
-                Geld += Py.Int(Get(daten, "geld", 0L));
+                Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
                 Buchen(tag, Ereignisse.BuchGehaelter, Get(daten, "geld", 0L));
                 StimmungAendern(person, Get(regel, "bonus_stimmung", 0L));
             }
@@ -1157,7 +1157,7 @@ public sealed partial class Spielstand
                 wert = Math.Max(ziel, wert - Py.F(regeln["erholung"]));
             }
             Stimmung[person] = wert;
-            StimmungTief[person] = wert < Py.F(regeln["kritisch"]) ? Py.Int(StimmungTief.Get(person, 0L)) + 1 : 0L;
+            StimmungTief[person] = wert < Py.F(regeln["kritisch"]) ? checked(Py.Int(StimmungTief.Get(person, 0L)) + 1) : 0L;
         }
         foreach (var e in eintraege.Select(Objekt))
         {

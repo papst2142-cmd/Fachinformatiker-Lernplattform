@@ -89,7 +89,7 @@ public static partial class Betrieb
 
     /// <summary>_eased_days: Tage auf Einfach mal serverfarm_verzug_faktor (aufgerundet).</summary>
     private static long LeichtTage(Spielstand stand, object? tage) =>
-        (long)Math.Ceiling(Py.F(Py.Mal(tage, stand.Erleichterung("serverfarm_verzug_faktor", 1.0))));
+        checked((long)Math.Ceiling(Py.F(Py.Mal(tage, stand.Erleichterung("serverfarm_verzug_faktor", 1.0)))));
 
     /// <summary>farm_unlock_missing: was fuer den Lokschuppen noch fehlt (leer = alles da).</summary>
     public static List<string> FarmFehlt(Spielstand stand, PyObjekt inhalt)
@@ -140,7 +140,7 @@ public static partial class Betrieb
     };
 
     /// <summary>farm_deadline</summary>
-    public static long FarmFrist(PyObjekt farm, PyObjekt inhalt) => Py.Int(farm["start"]) + Py.Int(Get(FarmRegeln(inhalt), "tage", 25L)) - 1;
+    public static long FarmFrist(PyObjekt farm, PyObjekt inhalt) => checked(Py.Int(farm["start"]) + Py.Int(Get(FarmRegeln(inhalt), "tage", 25L)) - 1);
 
     /// <summary>farm_current_phase: die laufende Phase oder null, wenn fertig.</summary>
     public static PyObjekt? FarmAktuellePhase(PyObjekt? farm, PyObjekt inhalt)
@@ -167,7 +167,7 @@ public static partial class Betrieb
                     return Py.Int(farm["start"]);
                 }
                 var fertig = ((PyDict)farm["fertig_phasen"]!).Get(vorher);
-                return fertig is not null ? Py.Int(fertig) + 1 : null;
+                return fertig is not null ? checked(Py.Int(fertig) + 1) : null;
             }
             vorher = p["id"];
             erste = false;
@@ -328,7 +328,7 @@ public static partial class Betrieb
             }
             Py.Setzen(daten, "kosten", Py.Int(kosten));
         }
-        Py.Setzen(daten, "geld", Py.Int(daten["anzahlung"]) - Py.Int(daten["kosten"]) - Py.Int(daten["strafe"]));
+        Py.Setzen(daten, "geld", checked(Py.Int(daten["anzahlung"]) - Py.Int(daten["kosten"]) - Py.Int(daten["strafe"])));
         return daten;
     }
 
@@ -487,7 +487,7 @@ public static partial class Betrieb
     {
         var regeln = FarmRegeln(inhalt);
         var farm = (PyObjekt)stand.Farm!;
-        var spaet = Math.Max(0, tag - FarmFrist(farm, inhalt));
+        var spaet = Math.Max(0, checked(tag - FarmFrist(farm, inhalt)));
         var regel = OderLeer(regeln["strafe"]);
         var hoechst = Py.F(Get(regel, "max_prozent", 10L));
         var roh = spaet * Py.F(Get(regel, "prozent_je_tag", 1L));
@@ -507,8 +507,8 @@ public static partial class Betrieb
         }
         if (spaet != 0)
         {
-            Py.Setzen(rep, "kundenzufriedenheit", Py.Int(Get(rep, "kundenzufriedenheit", 0L)) + PythonRunden.Runde(
-                spaet * Py.F(Get(regel, "kundenzufriedenheit_je_tag", -3L)) * Py.F(stand.Erleichterung("reputation_verlust_faktor", 1.0))));
+            Py.Setzen(rep, "kundenzufriedenheit", checked(Py.Int(Get(rep, "kundenzufriedenheit", 0L)) + PythonRunden.Runde(
+                spaet * Py.F(Get(regel, "kundenzufriedenheit_je_tag", -3L)) * Py.F(stand.Erleichterung("reputation_verlust_faktor", 1.0)))));
         }
         var reputation = new PyObjekt();
         foreach (var p in rep.Where(p => Py.Wahr(p.Value)))
@@ -517,10 +517,10 @@ public static partial class Betrieb
         }
         return new PyObjekt
         {
-            { "tag", tag }, { "dauer", tag - Py.Int(farm["start"]) + 1 }, { "verzug", spaet },
+            { "tag", tag }, { "dauer", checked(tag - Py.Int(farm["start"]) + 1) }, { "verzug", spaet },
             { "strafe_prozent", PythonRundenStellen.Runde(prozent, 1) }, { "strafe", strafe }, { "rest", rest },
             { "bonus", bonus }, { "fehlerfrei", fehlerfrei }, { "puenktlich", spaet == 0 },
-            { "richtig", richtig }, { "aufgaben", (long)aufgaben.Count }, { "geld", rest + bonus },
+            { "richtig", richtig }, { "aufgaben", (long)aufgaben.Count }, { "geld", checked(rest + bonus) },
             { "reputation", reputation }, { "stufe", stand.Stufe },
         };
     }
@@ -571,7 +571,7 @@ public static partial class Betrieb
                 {
                     Py.Setzen(eintrag, "nacharbeit_geld", PythonRunden.Runde(kaputt.Count * Py.F(Get(regel, "geld", 400L))
                         * Py.F(stand.Erleichterung("fehlerkosten_faktor", 1.0))));
-                    Py.Setzen(eintrag, "nacharbeit_bis", tag + kaputt.Count * Py.Int(Get(regel, "tage", 1L)));
+                    Py.Setzen(eintrag, "nacharbeit_bis", checked(tag + kaputt.Count * Py.Int(Get(regel, "tage", 1L))));
                     bereit = false;
                 }
             }
@@ -587,9 +587,9 @@ public static partial class Betrieb
             {
                 var bestellung = OderLeer(aufgaben[FarmBestellung]);
                 var verzug = FarmVerzugWuerfeln(stand, tag, inhalt);
-                var ankunft = Py.Int(Get(bestellung, "tag", tag)) + Py.Int(Get(bestellung, "lieferzeit", 0L)) + verzug;
+                var ankunft = checked(Py.Int(Get(bestellung, "tag", tag)) + Py.Int(Get(bestellung, "lieferzeit", 0L)) + verzug);
                 Py.Setzen(eintrag, "verzug", verzug);
-                Py.Setzen(eintrag, "liefertag", Math.Max(tag + 1, ankunft));
+                Py.Setzen(eintrag, "liefertag", Math.Max(checked(tag + 1), ankunft));
             }
             var phasen = FarmPhasen(inhalt);
             if (ReferenceEquals(phase, phasen[^1]) || Py.Gleich(phase["id"], phasen[^1]["id"]))
@@ -617,7 +617,7 @@ public static partial class Betrieb
         var phase = FarmAktuellePhase(farm, inhalt);
         foreach (var p in new PyObjekt
         {
-            { "tag", stand.Tag - Py.Int(farm["start"]) + 1 }, { "frist_tag", FarmFrist(farm, inhalt) },
+            { "tag", checked(stand.Tag - Py.Int(farm["start"]) + 1) }, { "frist_tag", FarmFrist(farm, inhalt) },
             { "phase", phase }, { "phasen", FarmPhasenListe(stand, inhalt).Cast<object?>().ToList() },
             { "offen", FarmOffen(stand, inhalt).Cast<object?>().ToList() }, { "heute", FarmHeute(stand) },
             { "limit", Py.Int(Get(FarmRegeln(inhalt), "aufgaben_pro_tag", 3L)) },
@@ -651,7 +651,7 @@ public static partial class Betrieb
         {
             return 0;
         }
-        var rest = Py.Int(Get(FarmRegeln(inhalt), "aufgaben_pro_tag", 3L)) - FarmHeute(stand);
+        var rest = checked(Py.Int(Get(FarmRegeln(inhalt), "aufgaben_pro_tag", 3L)) - FarmHeute(stand));
         return Math.Max(0, Math.Min(rest, FarmOffen(stand, inhalt).Count));
     }
 
@@ -667,7 +667,7 @@ public static partial class Betrieb
             return "Rechenzentrum in Betrieb, von deiner Firma gebaut.";
         }
         var phase = FarmAktuellePhase(farm, inhalt) ?? [];
-        return Prozent("Serverfarm: Tag %d von %d · Phase %s", stand.Tag - Py.Int(farm["start"]) + 1,
+        return Prozent("Serverfarm: Tag %d von %d · Phase %s", checked(stand.Tag - Py.Int(farm["start"]) + 1),
             Py.Int(Get(FarmRegeln(inhalt), "tage", 25L)), Get(phase, "kurz", ""));
     }
 
@@ -689,7 +689,7 @@ public static partial class Betrieb
         }
         if (Py.Wahr(eintrag["kabelfehler"]))
         {
-            var tage = Py.Int(eintrag["nacharbeit_bis"]) - Py.Int(eintrag["tag"]);
+            var tage = checked(Py.Int(eintrag["nacharbeit_bis"]) - Py.Int(eintrag["tag"]));
             var namen = Liste(eintrag["kabelfehler"]).Select(a => Py.Str(Get(FarmAufgabe(a, inhalt) ?? [], "titel", a)).Split(':')[0]);
             zeilen.Add(Prozent("Kabeltest: Fehler in %s. Die Nacharbeit kostet %s und %d Tag%s.", string.Join(" und ", namen),
                 Euro(Get(eintrag, "nacharbeit_geld", 0L)), tage, tage == 1 ? "" : "e"));
@@ -823,7 +823,7 @@ public static partial class Betrieb
         }
         if (Py.Wahr(farm["kabelfehler"]))
         {
-            var tag = Py.Wahr(farm["nacharbeit_bis"]) ? Py.Int(farm["nacharbeit_bis"]) - 1 : Py.Int(farm["start"]);
+            var tag = Py.Wahr(farm["nacharbeit_bis"]) ? checked(Py.Int(farm["nacharbeit_bis"]) - 1) : Py.Int(farm["start"]);
             var n = (long)Liste(farm["kabelfehler"]).Count;
             eintraege.Add((tag, "serverfarm_kabel", "Serverfarm: Kabelfehler", Prozent("Nacharbeit an %d Rack%s.", n, n == 1 ? "" : "s")));
         }
@@ -904,7 +904,7 @@ public static partial class Betrieb
             _ => 1,
         };
         var liste = new List<long>();
-        for (var i = 1L; i <= oben; i++)
+        for (var i = 1L; i <= oben; i = checked(i + 1))
         {
             liste.Add(i);
         }
@@ -1007,7 +1007,7 @@ public static partial class Betrieb
     public static long FitNetzteilNoetig(object? watt, PyObjekt inhalt)
     {
         var reserve = Get(OderLeer(Objekt(inhalt["hardware"])["regeln"]), "netzteil_reserve", 1.3);
-        return (long)Math.Ceiling(Py.F(Py.Mal(watt, reserve)));
+        return checked((long)Math.Ceiling(Py.F(Py.Mal(watt, reserve))));
     }
 
     /// <summary>fit_server_checks: Lastenheft einer Vorlage mit Haken.</summary>

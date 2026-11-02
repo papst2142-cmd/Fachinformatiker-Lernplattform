@@ -41,7 +41,7 @@ public sealed class PyVergleich : IEqualityComparer<object?>
         bool b => (b ? 1L : 0L).GetHashCode(),
         int n => ((long)n).GetHashCode(),
         long n => n.GetHashCode(),
-        double d when d == Math.Floor(d) && Math.Abs(d) < 9.2e18 => ((long)d).GetHashCode(),
+        double d when d == Math.Floor(d) && Math.Abs(d) < 9.2e18 => (checked((long)d)).GetHashCode(),
         double d => d.GetHashCode(),
         string s => StringComparer.Ordinal.GetHashCode(s),
         PyTupel t => t.GetHashCode(),
