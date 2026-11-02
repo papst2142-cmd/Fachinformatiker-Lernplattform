@@ -65,15 +65,25 @@ public sealed class Spielschlange
         return n;
     }
 
-    /// <summary>Eine Zeile anhaengen; nur unter <see cref="Sperre"/>.</summary>
-    internal void Anhaengen(Eintrag eintrag)
+    /// <summary>
+    /// Eine Zeile anhaengen; nur unter <see cref="Sperre"/>. FW8 (Sammelliste 187, Weisung P11-8): ist ihr Besitzer
+    /// gestoert (eine seiner Zeilen ist nicht geschrieben, der Stand noch nicht neu aus der Datenbank gelesen), lehnt
+    /// die Schlange sie ab (false) und schreibt sie nie: sie baute auf der fehlenden Zeile auf. Die Pruefung liegt
+    /// hier, unter derselben Sperre wie das Verwerfen nach einem Schreibfehler, damit kein Aufrufer sie umgehen kann.
+    /// </summary>
+    internal bool Anhaengen(Eintrag eintrag)
     {
+        if (eintrag.Besitzer.IstGestoert)
+        {
+            return false;
+        }
         offen.Enqueue(eintrag);
         if (!arbeitet)
         {
             arbeitet = true;
             ThreadPool.UnsafeQueueUserWorkItem(_ => Arbeiten(), null);
         }
+        return true;
     }
 
     /// <summary>Wartet, bis alle angehaengten Zeilen geschrieben (oder nach einem Fehler verworfen) sind.</summary>

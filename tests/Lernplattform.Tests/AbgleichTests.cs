@@ -24,7 +24,7 @@ public class AbgleichTests
     private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> KeineUmbenennungen = [];
 
     /// <summary>Ein Geraet: eigener Datenordner, Lernstand, Einstellungen, feste Uhr (Berlin).</summary>
-    private sealed class Geraet : IDisposable
+    internal sealed class Geraet : IDisposable
     {
         private readonly TempOrdner _ordner = new();
 
@@ -76,9 +76,9 @@ public class AbgleichTests
         public void Dispose() => _ordner.Dispose();
     }
 
-    private static readonly DateTimeOffset Zeit = new(2026, 10, 20, 10, 0, 0, TimeSpan.Zero);
+    internal static readonly DateTimeOffset Zeit = new(2026, 10, 20, 10, 0, 0, TimeSpan.Zero);
 
-    private static GitHubAttrappe Attrappe(DateTimeOffset? server = null)
+    internal static GitHubAttrappe Attrappe(DateTimeOffset? server = null)
     {
         var a = new GitHubAttrappe();
         var s = server ?? Zeit;
@@ -86,7 +86,7 @@ public class AbgleichTests
         return a;
     }
 
-    private static string[] Fragen(Geraet g) =>
+    internal static string[] Fragen(Geraet g) =>
         [.. g.Zeilen("SELECT question FROM card_events ORDER BY question").Select(z => (string)z[0]!)];
 
     // -- Ablauf ----------------------------------------------------------------
@@ -482,56 +482,7 @@ public class AbgleichTests
         Assert.Null(attrappe.Roh);
     }
 
-    // -- P2-12 A1: keine Schreibsperre waehrend des Netzes ------------------------------
-
-    /// <summary>
-    /// Waehrend das Hochladen mehrere Sekunden dauert, speichert ein zweiter Schreiber (die Lernseite)
-    /// eine Antwort. Sie gelingt sofort und ist nach dem Abgleich in der Datenbank.
-    /// </summary>
-    [Fact]
-    public async Task LernenWaehrendDesHochladens()
-    {
-        using var attrappe = Attrappe();
-        using var pc = new Geraet("PC Test", Zeit);
-        pc.Schreiber.KarteSpeichern("Netzwerk", "Vorher", "karte", true);
-        attrappe.PutVerzoegerung = TimeSpan.FromSeconds(4);
-        var abbruch = TestContext.Current.CancellationToken;
-
-        var abgleich = Task.Run(() => pc.Abgleichen(attrappe, warten: TimeSpan.FromSeconds(30)), abbruch);
-        Assert.True(attrappe.PutBegonnen.Wait(TimeSpan.FromSeconds(20), abbruch));
-        var lernen = new LernstandSchreiber(new Lernstand(pc.Lernstand.Pfad), pc.Uhr, null, pc.Abweichung);
-        var uhr = System.Diagnostics.Stopwatch.StartNew();
-        Assert.True(lernen.KarteSpeichern("Netzwerk", "Waehrend", "karte", true));
-        uhr.Stop();
-        Assert.False(abgleich.IsCompleted);                    // das Hochladen laeuft noch
-        Assert.True(uhr.Elapsed < TimeSpan.FromSeconds(2), "Schreiben wartete " + uhr.Elapsed);
-        await abgleich;
-        Assert.Equal(["Vorher", "Waehrend"], Fragen(pc));
-    }
-
-    /// <summary>Kontrollfehler A1: haelt jemand die Schreibsperre ueber das Hochladen, scheitert das Lernschreiben (der Test oben wird rot).</summary>
-    [Fact]
-    public async Task KontrollfehlerSperreUeberDasHochladen()
-    {
-        using var attrappe = Attrappe();
-        using var pc = new Geraet("PC Test", Zeit);
-        pc.Schreiber.KarteSpeichern("Netzwerk", "Vorher", "karte", true);
-        attrappe.PutVerzoegerung = TimeSpan.FromSeconds(8);
-        var abbruch = TestContext.Current.CancellationToken;
-
-        var abgleich = Task.Run(() => pc.Abgleichen(attrappe, warten: TimeSpan.FromSeconds(30)), abbruch);
-        Assert.True(attrappe.PutBegonnen.Wait(TimeSpan.FromSeconds(20), abbruch));
-        // Fehler nachgestellt: Schreibsperre (BEGIN IMMEDIATE) waehrend des Hochladens
-        using (var gesperrt = pc.Lernstand.Verbindung())
-        using (var tx = gesperrt.BeginTransaction(deferred: false))
-        {
-            var lernen = new LernstandSchreiber(new Lernstand(pc.Lernstand.Pfad), pc.Uhr, null, pc.Abweichung);
-            Assert.False(lernen.KarteSpeichern("Netzwerk", "Waehrend", "karte", true));
-            tx.Rollback();
-        }
-        await abgleich;
-        Assert.Equal(["Vorher"], Fragen(pc));
-    }
+    // -- P2-12 A1: keine Schreibsperre waehrend des Netzes: AbgleichHochladenTests (FW8, allein) --------
 
     [Fact]
     public void ZaehlerBeiGleicherSekunde()

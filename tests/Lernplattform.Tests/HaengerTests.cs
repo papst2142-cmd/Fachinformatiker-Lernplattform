@@ -7,6 +7,15 @@ using Lernplattform.Core.Texte;
 namespace Lernplattform.Tests;
 
 /// <summary>
+/// FW8 (Sammelliste 101, Weisung P11-15): die Tests mit dem gemeinsamen Zustand der Haenger-Diagnose (Seite, Vorgang,
+/// Wartepunkte, offene haenger.log, Signal USR1 im ganzen Prozess) laufen allein, nicht neben anderen Tests. Unter der
+/// Last paralleler Tests stellt macOS das Signal sonst spaet zu oder der Faden des Abrufs kommt spaet dran (Lauf
+/// 40172014126; Lauf 423 mit Sammelliste 191). Fristen und Wortlaut bleiben gleich.
+/// </summary>
+[CollectionDefinition("Haenger", DisableParallelization = true)]
+public sealed class HaengerSammlung;
+
+/// <summary>
 /// Phase 5 BE8 Haenger-Diagnose wie fisi_haenger (ohne Python-Sollwert, Zeiten haengen an der Uhr):
 /// feste Uhr ueber die Parameter von Herzschlag und Pruefen, nachgestellter Herzschlag.
 /// Kontrollfehler: Waechter schreibt bei laufendem Herzschlag.
@@ -262,6 +271,46 @@ public sealed class HaengerTests : IDisposable
         }
         var log = Log();
         Assert.True(log == vorher, "voller Log:\n" + log);
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 101), Gegenprobe mit festem Ablauf: ein Signal hat die Freigabe schon gesehen, da schliesst der
+    /// naechste Test die Datei (FuerTests) und oeffnet seine eigene haenger.log. Das Signal schreibt nie in diese neue
+    /// Datei: FuerTests wartet, bis der Abruf fertig ist. Ohne die gemeinsame Sperre stuende die Abruf-Zeile im Log des
+    /// naechsten Tests (rot). Ohne echtes Signal, darum auf jedem System.
+    /// </summary>
+    [Fact]
+    public async Task AbrufNachFreigabeSchreibtNichtInDieNaechsteDatei()
+    {
+        using var naechster = new TempOrdner();
+        Haenger.Seite("optionen");
+        Haenger.SignalAbrufFuerTests(true);
+        using var gesehen = new ManualResetEventSlim();
+        using var weiter = new ManualResetEventSlim();
+        Haenger.NachFreigabeFuerTests = () =>
+        {
+            gesehen.Set();
+            weiter.Wait(TimeSpan.FromSeconds(1));   // mit der Sperre kommt der naechste Test hier nicht weiter
+        };
+        var signal = Task.Run(Haenger.SignalEmpfangen, TestContext.Current.CancellationToken);
+        Assert.True(gesehen.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        var umstieg = Task.Run(() =>
+        {
+            Haenger.FuerTests(() => "2 lp T S wartet", _fehlerlog.Add);
+            Assert.True(Haenger.Einrichten("A 0.10.0", naechster.Pfad, plattform: "linux", zusatz: "x11", waechter: false));
+            weiter.Set();
+        }, TestContext.Current.CancellationToken);
+        await umstieg.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        await signal.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        Haenger.FuerTests();   // Datei des "naechsten Tests" schliessen, bevor sein Ordner geloescht wird (Windows)
+        string neu;
+        using (var datei = new FileStream(Haenger.Pfad(naechster.Pfad), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+        using (var leser = new StreamReader(datei, Encoding.UTF8))
+        {
+            neu = leser.ReadToEnd();
+        }
+        Assert.DoesNotContain("Abruf (Signal", neu, StringComparison.Ordinal);
+        Assert.Contains("| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", Log(), StringComparison.Ordinal);
     }
 
     /// <summary>kill -USR1 schreibt die Angaben, das Programm laeuft weiter (Linux und macOS).</summary>
