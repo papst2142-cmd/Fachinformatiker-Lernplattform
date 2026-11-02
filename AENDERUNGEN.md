@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.32.0
+Die Erinnerung ans Tagesziel ist da, Spielstand und Bestenliste lassen sich in den Optionen löschen, und einige Anzeigen für Anwendungsentwicklung, Daten- und Prozessanalyse und Digitale Vernetzung sind richtiggestellt.
+
+- In den „Optionen“ unter „Tagesziel“ gibt es jetzt den Schalter „An das Tagesziel erinnern“ und das Feld „Erinnerung um“ (Vorgabe 18:00 Uhr). Ist das Tagesziel ab dieser Uhrzeit noch nicht erreicht, erscheint einmal am Tag ein Hinweis, wie viele Aufgaben noch fehlen. Am PC wird alle 5 Minuten nachgesehen, solange das Programm geöffnet ist, am Handy beim Öffnen und beim Zurückholen der App.
+- In den „Optionen“ unter „Löschen und zurücksetzen“ lassen sich jetzt der Spielstand des aktiven Platzes zurücksetzen und die Bestenliste des Spiels löschen. Beides fragt vorher nach. Beim Zurücksetzen bleiben die anderen Plätze, die Bestenliste und der Lernfortschritt erhalten.
+- Im „Fortschritt“ steht eine abgeschlossene Klausur aus Anwendungsentwicklung, Daten- und Prozessanalyse oder Digitaler Vernetzung jetzt mit ihrem Namen da (zum Beispiel „AP2 · Planen eines Softwareproduktes“) statt mit einem internen Kürzel.
+- Im „Notizblock“ tragen Szenarien und Testprojekte jetzt dieselbe Nummer wie in ihrer Liste.
+- Wer eine Klausur dieser drei Fachrichtungen abgeschlossen hat, sieht das Ergebnis der einzelnen Aufgaben jetzt beim richtigen Szenario. Bisher landete es bei einem Szenario der Systemintegration. Was bisher so gespeichert wurde, bleibt unverändert stehen.
+- Für Systemintegration ändert sich an den Lerninhalten und Anzeigen nichts.
+
 ## A 0.31.1
 Die Testprojekte der Fachrichtung Daten- und Prozessanalyse nennen jetzt den richtigen Projektumfang.
 

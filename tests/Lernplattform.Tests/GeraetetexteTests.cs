@@ -240,6 +240,9 @@ public partial class GeraetetexteTests
         // Phase 7 W6 (Weisung P7-11): Geraet im Spielprotokoll (Spalte geraet von spiel_ereignisse und spiel_plaetze)
         ("Spiel/SpielStart.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Spiel/SpielStart.cs", "var geraet = Pc ? \"PC\" : \"Handy\";", "Daten: Geraet im Spielprotokoll wie fg.Game(app.db, device=\"PC\"/\"Handy\") (fisi_game_gui 2863, spiel.py 1801), kein Anzeigetext"),
+        // Phase 11 W1 (Sammelliste 180): Erinnerung ans Tagesziel
+        ("Programm/ErinnerungDienst.cs", "if (UpdateDienst.Pc) // alle 5 Minuten nur am PC", "Verhalten: PC prueft alle 5 Minuten (app_gui 11093), Handy beim Start und beim Zurueckholen (main.py 5983, 6044)"),
+        ("Views/OptionenSeite.cs", "if (!Pc) // Uhrzeit beim Tippen", "Verhalten: Uhrzeit der Erinnerung am Handy beim Tippen speichern, sobald gueltig (main.py 4176, _reminder_changed 4474)"),
         // Phase 5 W3 (BE10); Texte des Fensters ueber Geraetetexte.UpdateKnopf/UpdateHinweis (B14)
         ("Programm/UpdateDienst.cs", "public static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Programm/UpdateDienst.cs", "if (Pc)", "Verhalten: PC prueft nach 1 s das letzte Update und sucht nach 3 s (app_gui 8675), Handy sucht nach 3 s (main.py 6077)"),

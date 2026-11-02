@@ -96,6 +96,8 @@ public partial class App : Application
                 if (e.Kind == ActivationKind.Background)
                 {
                     Programm.UpdateDienst.Zurueck();
+                    // Phase 11 W1 (Sammelliste 180): Erinnerung ans Tagesziel beim Zurueckholen (main.py 5983)
+                    Programm.ErinnerungDienst.Zurueck();
                 }
             };
             leben.Deactivated += (_, e) =>

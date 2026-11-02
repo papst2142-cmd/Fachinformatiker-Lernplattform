@@ -433,7 +433,7 @@ public sealed class NotizblockSeite : UserControl
                 new TextBlock { Text = statusText, TextWrapping = TextWrapping.Wrap }.Groesse("Klein").Farbe(TextBlock.ForegroundProperty, farbe),
             },
         };
-        var inhalt = new StackPanel { Spacing = 4, Children = { kopf, new LernText(NotizblockTexte.EintragTitel(eintrag), "Normal", FontWeight.Bold, "Pinsel.text") } };
+        var inhalt = new StackPanel { Spacing = 4, Children = { kopf, new LernText(NotizblockTexte.EintragTitel(eintrag, _notiz), "Normal", FontWeight.Bold, "Pinsel.text") } };
         var kennung = (eintrag.Quelle, eintrag.Schluessel);
         var offen = _offen.Contains(kennung);
         if (offen)

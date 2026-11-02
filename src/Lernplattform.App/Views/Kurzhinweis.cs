@@ -28,7 +28,8 @@ public static class Kurzhinweis
     internal static void Ebene(Panel ebene) => _ebene = ebene;
 
     /// <param name="farbe">Rand des Hinweises (Phase 7 W6: wie toast(message, color) im Spiel), Vorgabe gelb.</param>
-    public static void Zeigen(string text, string farbe = "Pinsel.yellow")
+    /// <param name="dauer">Millisekunden bis zum Schliessen (Phase 11 W1: Erinnerung ans Tagesziel 9 000), Vorgabe <see cref="Dauer"/>.</param>
+    public static void Zeigen(string text, string farbe = "Pinsel.yellow", int dauer = Dauer)
     {
         Schliessen();
         if (_ebene is not { } ebene)
@@ -57,7 +58,7 @@ public static class Kurzhinweis
         ebene.Children.Add(hinweis);
         ebene.IsVisible = true;
         Offen = hinweis;
-        _uhr = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Dauer) };
+        _uhr = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(dauer) };
         _uhr.Tick += (_, _) => Schliessen();
         _uhr.Start();
     }
