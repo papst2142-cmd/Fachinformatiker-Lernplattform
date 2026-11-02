@@ -1,19 +1,19 @@
-Breite Tabellen lassen sich am Handy seitlich wischen, lange Hinweisfenster beginnen oben, und im Rundgang liegt die Bildlaufleiste nicht mehr über den Seitenpunkten.
+Die Rechner brechen Zahlen und Rechenwege am Handy jetzt sauberer um: eine Einheit bleibt bei ihrer Zahl, sehr lange Zahlen bleiben ganz, und Rechenzeichen stehen nicht mehr allein am Zeilenende.
 
-- Tabellen in Aufgaben und Musterlösungen (zum Beispiel Nutzwertanalysen oder Regelwerke) brechen jetzt nie mehr um, auch nicht am Handy oder bei großer Schrift. Ist eine Tabelle breiter als der Bildschirm, kannst du sie seitlich wischen, und darunter steht „→ wischen“ wie bei den Ergebnissen der Rechner.
-- Ein Hinweisfenster mit langem Text (zum Beispiel nach der Wahl der Fachrichtung bei großer Schrift am Handy) beginnt jetzt oben bei der Überschrift. Bisher stand es gleich am Ende des Textes, und die Überschrift war nicht zu sehen.
-- Im Rundgang liegt die Bildlaufleiste bei großer Schrift nicht mehr über dem letzten der fünf Seitenpunkte.
+- Im Aufgabentext des Rechen-Trainers bleibt eine Einheit immer bei ihrer Zahl, zum Beispiel „50 %“, „994 MB“ oder „16 Mbit/s“. Bisher konnte am Handy die Zahl am Ende einer Zeile stehen und das Prozentzeichen oder die Einheit erst in der nächsten.
+- Sehr lange Zahlen in den Ergebnissen und Rechenwegen (zum Beispiel die Dauer einer riesigen Datei bei sehr langsamer Leitung) werden nicht mehr mitten in der Zahl getrennt. Passt die Zahl nicht in die Breite, kannst du den Kasten seitlich wischen, und darunter steht „→ wischen“.
+- In den Rechenwegen (zum Beispiel der Verkaufskalkulation) steht ein Betrag immer mit seinem „€“ zusammen, Rechenzeichen wie „x“, „/“ oder „+“ rücken mit in die nächste Zeile, eine kurze Klammer wie „(im Hundert)“ bleibt zusammen, und ein Erklärsatz über zwei Zeilen wird bei großer Schrift als ein Satz umbrochen. Die Texte und Ergebnisse selbst sind unverändert.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.7**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.8**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.7-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.7-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.7-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.8-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.8-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.8-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

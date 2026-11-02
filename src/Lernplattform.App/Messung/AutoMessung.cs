@@ -231,6 +231,7 @@ public static partial class AutoMessung
         funde += Festbreitenschrift();
         funde += await P11Fw6TabellenAsync(ansicht);   // FW6: breite Tabellen am Handy wischbar (Sammelliste 177 Teil 2)
         funde += await RechnerMesspunkteAsync(ansicht);
+        funde += await P11Fw7RechnerTexteAsync(ansicht);   // FW7: Zahl und Einheit, lange Zahlen, Rechenweg am Handy (Sammelliste 40, 41, 43)
         funde += await W1MesspunkteAsync(ansicht, inhalte);
         funde += await KlausurMesspunkteAsync(ansicht);
         funde += await ProjektMesspunkteAsync(ansicht);

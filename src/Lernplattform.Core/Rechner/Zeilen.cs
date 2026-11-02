@@ -219,7 +219,7 @@ public static partial class Zeilen
     }
 
     /// <summary>_fit_sentence: Satz an Leerzeichen umbrechen; Spalten und einzelne Woerter bleiben.</summary>
-    internal static List<string> Satz(string zeile, int zeichen)
+    internal static List<string> Satz(string zeile, int zeichen, bool anzeige = false)
     {
         var koerper = zeile.TrimStart(' ');
         var einzug = zeile[..(zeile.Length - koerper.Length)];
@@ -237,6 +237,10 @@ public static partial class Zeilen
             {
                 woerter[^1] += " " + wort;
             }
+            else if (anzeige && woerter.Count > 0 && AnzeigeKleben(woerter[^1], wort))
+            {
+                woerter[^1] += " " + wort;
+            }
             else
             {
                 woerter.Add(wort);
@@ -247,7 +251,7 @@ public static partial class Zeilen
             var wort = w;
             if (aktuell.Length > 0 && L(einzug) + L(aktuell) + 1 + L(wort) > zeichen)
             {
-                (aktuell, wort) = Loesen(aktuell, wort, zeichen - L(einzug));
+                (aktuell, wort) = Loesen(aktuell, wort, zeichen - L(einzug), anzeige);
                 zeilen.Add(einzug + aktuell);
                 aktuell = wort;
             }
@@ -261,11 +265,12 @@ public static partial class Zeilen
     }
 
     /// <summary>_fit_unbind: Bindewoerter ("=", "->", "→", "hex") am Zeilenende mit in die neue Zeile.</summary>
-    private static (string, string) Loesen(string aktuell, string wort, int platz)
+    private static (string, string) Loesen(string aktuell, string wort, int platz, bool anzeige = false)
     {
         var kopf = aktuell;
         var schwanz = new List<string>();
-        while (kopf.Contains(' ', StringComparison.Ordinal) && Bindewoerter.Contains(kopf[(kopf.LastIndexOf(' ') + 1)..]))
+        var binder = anzeige ? AnzeigeBindewoerter : Bindewoerter;
+        while (kopf.Contains(' ', StringComparison.Ordinal) && binder.Contains(kopf[(kopf.LastIndexOf(' ') + 1)..]))
         {
             var i = kopf.LastIndexOf(' ');
             schwanz.Insert(0, kopf[(i + 1)..]);
@@ -440,7 +445,7 @@ public static partial class Zeilen
     }
 
     /// <summary>_fit_value: Wert auf Zeilen zu hoechstens platz Zeichen verteilen.</summary>
-    internal static List<string> Wert(string wert, int platz)
+    internal static List<string> Wert(string wert, int platz, bool anzeige = false)
     {
         if (platz <= 0 || L(wert) <= platz || wert.Contains("  ", StringComparison.Ordinal))
         {
@@ -454,6 +459,10 @@ public static partial class Zeilen
                 woerter[^1] += " " + wort;
             }
             else if (woerter.Count > 0 && woerter[^1].EndsWith("RFC", StringComparison.Ordinal) && BeginntMitZiffer(wort))
+            {
+                woerter[^1] += " " + wort;
+            }
+            else if (anzeige && woerter.Count > 0 && AnzeigeKleben(woerter[^1], wort))
             {
                 woerter[^1] += " " + wort;
             }
@@ -474,7 +483,8 @@ public static partial class Zeilen
         var aktuell = "";
         foreach (var wort in woerter)
         {
-            var stuecke = L(wort) > platz ? WertStuecke(wort) : [wort];
+            // Anzeige (Sammelliste 41): eine grosse Zahl bleibt ganz (der Kasten ist dann wischbar)
+            var stuecke = L(wort) > platz && !(anzeige && !wort.Contains(':', StringComparison.Ordinal)) ? WertStuecke(wort) : [wort];
             for (var nummer = 0; nummer < stuecke.Count; nummer++)
             {
                 var stueck = stuecke[nummer];
@@ -483,7 +493,7 @@ public static partial class Zeilen
                 {
                     if (kleber.Length > 0)
                     {
-                        (aktuell, stueck) = Loesen(aktuell, stueck, platz);
+                        (aktuell, stueck) = Loesen(aktuell, stueck, platz, anzeige);
                     }
                     zeilen.Add(aktuell);
                     aktuell = stueck;
@@ -502,13 +512,15 @@ public static partial class Zeilen
     /// fit_lines(text, zeichen, einheitlich): Text fuer einen Kasten mit zeichen Zeichen Breite.
     /// einheitlich (Handy): muss in einem Abschnitt eine Zeile umbrechen, stehen alle zweizeilig.
     /// </summary>
-    public static string Kasten(string text, int zeichen, bool einheitlich = false)
+    public static string Kasten(string text, int zeichen, bool einheitlich = false) => Kasten(text, zeichen, einheitlich, false);
+
+    private static string Kasten(string text, int zeichen, bool einheitlich, bool anzeige)
     {
         if (string.IsNullOrEmpty(text) || zeichen <= 0)
         {
             return text;
         }
-        var zeilen = text.Split('\n');
+        var zeilen = anzeige ? AbsaetzeVerbinden(text.Split('\n'), zeichen) : text.Split('\n');
         var erzwungen = new HashSet<int>();
         if (einheitlich)
         {
@@ -564,11 +576,11 @@ public static partial class Zeilen
             {
                 if (teile is not null && L(zeile) > zeichen)
                 {
-                    aus.AddRange(Wert(teile.Wert, zeichen - 2).Select(z => "  " + z));
+                    aus.AddRange(Wert(teile.Wert, zeichen - 2, anzeige).Select(z => "  " + z));
                 }
                 else if (teile is null && L(zeile) > zeichen)
                 {
-                    aus.AddRange(Satz(zeile, zeichen));
+                    aus.AddRange(Satz(zeile, zeichen, anzeige));
                 }
                 else
                 {
@@ -604,7 +616,7 @@ public static partial class Zeilen
             aus.Add(teile.Einzug + teile.Beschriftung + ":");
             foreach (var (_, t) in block)
             {
-                aus.AddRange(Wert(t.Wert, zeichen - L(teile.Einzug) - 2).Select(z => teile.Einzug + "  " + z));
+                aus.AddRange(Wert(t.Wert, zeichen - L(teile.Einzug) - 2, anzeige).Select(z => teile.Einzug + "  " + z));
             }
         }
         return string.Join("\n", aus);
