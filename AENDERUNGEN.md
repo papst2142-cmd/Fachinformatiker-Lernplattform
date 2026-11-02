@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.32.6
+Das Dashboard zeigt bei Anwendungsentwicklung, Daten- und Prozessanalyse und Digitaler Vernetzung nur noch deine Fachrichtung, alte Klausur-Einträge werden berichtigt, und eine Frage zu Entwurfsmustern ist neu gefasst.
+
+- Hast du Anwendungsentwicklung, Daten- und Prozessanalyse oder Digitale Vernetzung gewählt, zählen auf dem Dashboard die Erfolgsquote, der Lernverlauf und die Antworten je Fachbereich jetzt nur die Karten, Fragen, Szenarien und Testprojekte deiner Fachrichtung. Bisher flossen dort auch Antworten aus anderen Fachrichtungen ein. Bei Systemintegration bleibt alles wie bisher.
+- Vor Version A 0.32.0 hat der Abschluss einer Klausur in Anwendungsentwicklung, Daten- und Prozessanalyse oder Digitaler Vernetzung die Aufgaben beim falschen Szenario eingetragen (bei einem Szenario der Systemintegration). Beim ersten Start nach diesem Update berichtigt das Programm solche Einträge einmal von selbst. Vorher legt es eine Kopie deines Lernstands im Ordner „sicherungen“ an (Name beginnt mit „vor_bereinigung_“). Ohne Kopie ändert es nichts. Andere Einträge bleiben unverändert.
+- Im Prüfungstrainer (Anwendungsentwicklung) ist die Frage zum Importprogramm mit verschiedenen Lesern neu gefasst: Sie beschreibt jetzt wirklich eine Fabrikmethode. Die alte Fassung wird nicht mehr gestellt.
+- Die Hilfe zu Sicherung und Abgleich sagt jetzt richtig, dass als Gerät nur „PC“ oder „Handy“ gespeichert wird.
+
 ## A 0.32.5
 Tabellen in Aufgaben stehen jetzt sauber untereinander, der Kalender zählt den Rechen-Trainer mit, und der Abgleich nennt deinen Rechner nicht mehr beim Namen.
 
