@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.32.4
+Sicherungen enthalten nie mehr ein falsches Tagesziel, und beim Einspielen einer Sicherung ohne Tagesziel bleibt dein eigenes erhalten.
+
+- „Sicherung erstellen“ in den Optionen liest das Tagesziel jetzt jedes Mal frisch aus deinen Einstellungen. War die Einstellungsdatei nicht lesbar (zum Beispiel weil ein anderes Programm sie gesperrt hielt), kam bisher das voreingestellte Tagesziel in die Sicherung. Jetzt steht in diesem Fall gar kein Tagesziel darin, nur der Lernstand.
+- Spielst du mit „Alles ersetzen“ eine Sicherung ein, die kein Tagesziel enthält (das kann nur bei einer gesperrten Einstellungsdatei entstehen), bleibt dein jetziges Tagesziel unverändert. Bisher wurde es auf die Vorgaben zurückgesetzt. Sicherungen mit Tagesziel spielen es wie bisher mit ein.
+- Sonst ändert sich nichts.
+
 ## A 0.32.3
 Die Sicherheitskopie, die vor „Alles ersetzen“ angelegt wird, enthält kein falsches Tagesziel mehr.
 

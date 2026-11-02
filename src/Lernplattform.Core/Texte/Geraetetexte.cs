@@ -20,7 +20,7 @@ public static class Geraetetexte
     public static readonly IReadOnlyList<GeraeteAusnahme> Ausnahmen =
     [
         new("B1", "Navigation", "Menuepunkt 1 \"Dashboard\" (Seitenleiste) / \"Start\" (untere Leiste), Nico 20.10."),
-        new("B3", "Tagesziel.Hinweis", "Erinnerung verhaelt sich verschieden (in C# noch nicht angezeigt, Beleg mit dem Bau der Erinnerung)"),
+        new("B3", "Tagesziel.Hinweis", "Erinnerung verhaelt sich verschieden (PC: Hinweis, solange das Programm geoeffnet ist; Handy: beim Oeffnen und Zurueckholen der App; gebaut seit A 0.32.0)"),
         new("B4", "Optionen.Bereiche", "\"Datenbank\" gibt es nur am PC"),
         new("B4", "Optionen.Abschnitte", "\"Hänger\" gibt es nur am PC (N3)"),
         new("B4", "Optionen.Suchwoerter", "Suchwoerter von \"Hänger\" nur am PC (N3)"),

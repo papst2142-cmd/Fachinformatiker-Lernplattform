@@ -52,7 +52,7 @@ public static class Ruecksicherung
     internal static Action<string>? NachTabelle { get; set; }
 
     /// <summary>Tagesziel-Schluessel in Python-Reihenfolge (fisi_lernen.GOAL_SETTINGS).</summary>
-    private static readonly string[] Zielschluessel = ["ziel_an", "ziel_anzahl", "serie_an", "erinnerung_an", "erinnerung_zeit"];
+    internal static readonly string[] Zielschluessel = ["ziel_an", "ziel_anzahl", "serie_an", "erinnerung_an", "erinnerung_zeit"];
 
     private static readonly string[] Ereignistabellen =
         ["test_results", "card_events", "quiz_answers", "scenario_events", "project_events", "ap1_events", "trainer_aufgaben", "pruefungen"];
@@ -349,12 +349,34 @@ public static class Ruecksicherung
     /// Die fertige Sicherungsdatei als Bytes: Lernstand lesen (NichtLesbar), Huelle bilden, packen
     /// und zur Probe wieder einlesen (gleiche Pruefung wie „Lernstand übernehmen“).
     /// </summary>
-    public static byte[] Erstellen(Lernstand lernstand, JsonObject einstellungen, string appVersion, string geraet, DateTime erstellt)
+    public static byte[] Erstellen(Lernstand lernstand, JsonObject einstellungen, string appVersion, string geraet, DateTime erstellt) =>
+        Erstellen(lernstand, () => Tagesziel(einstellungen), appVersion, geraet, erstellt);
+
+    /// <summary>
+    /// Wie oben, das Tagesziel aber frisch aus einstellungen.json wie create_backup (load_settings), mit
+    /// <see cref="TageszielGelesen"/>: gesperrte Datei = kein Tagesziel in der Sicherung (Sammelliste 188).
+    /// </summary>
+    public static byte[] Erstellen(Lernstand lernstand, Einstellungen einstellungen, string appVersion, string geraet, DateTime erstellt) =>
+        Erstellen(lernstand, () => TageszielGelesen(einstellungen), appVersion, geraet, erstellt);
+
+    private static byte[] Erstellen(Lernstand lernstand, Func<PyObjekt> tagesziel, string appVersion, string geraet, DateTime erstellt)
     {
         var daten = Lesen(lernstand);
-        var bytes = Packen(Huelle(daten, Tagesziel(einstellungen), appVersion, erstellt, geraet));
+        var bytes = Packen(Huelle(daten, tagesziel(), appVersion, erstellt, geraet));
         Pruefen(bytes);
         return bytes;
+    }
+
+    /// <summary>
+    /// _goal_values(load_settings()) fuer eine neue Sicherung oder Sicherheitskopie. Feste Ausnahme von Python
+    /// (Sammelliste 67 und 188): ist einstellungen.json vorhanden, aber nicht lesbar (gesperrt, kein Zugriff),
+    /// schrieb Python die Vorgabewerte als Tagesziel in die Datei. Hier enthaelt sie dann kein Tagesziel
+    /// (leeres Objekt), nie einen erfundenen Wert; sonst das echte wie Python. Lesezustand je Aufruf.
+    /// </summary>
+    public static PyObjekt TageszielGelesen(Einstellungen einstellungen)
+    {
+        var (werte, gesperrt) = einstellungen.LadenMitLesezustand();
+        return gesperrt ? new PyObjekt() : Tagesziel(werte);
     }
 
     /// <summary>Zur Probe einlesen wie read_backup (Pruefsumme nachgerechnet); sonst Unbekannt.</summary>

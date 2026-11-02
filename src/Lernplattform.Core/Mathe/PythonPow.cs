@@ -14,7 +14,8 @@ namespace Lernplattform.Core.Mathe;
 /// Tabellen als Bitmuster aus den uebersetzten Original-Tabellen.
 ///
 /// Copyright (c) 2018-2026, Arm Limited. SPDX-License-Identifier: MIT OR Apache-2.0 WITH
-/// LLVM-exception. Genutzt unter MIT; Lizenztext in THIRD_PARTY_NOTICES.txt.
+/// LLVM-exception. Genutzt unter MIT; voller Lizenztext in THIRD_PARTY_LICENSES.txt (Abschnitt ARM_MIT.txt),
+/// Eintrag in THIRD_PARTY_NOTICES.txt.
 /// </summary>
 public static class PythonPow
 {

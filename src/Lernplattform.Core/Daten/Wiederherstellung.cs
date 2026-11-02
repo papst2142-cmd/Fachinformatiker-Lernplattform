@@ -103,9 +103,12 @@ public static class Wiederherstellung
         var daten = sicherung.Daten;
         var marken = daten.Marken.Where(m => Loeschmarken.Schluessel.Contains(m.Key) && Loeschmarken.Wahr(m.Value))
             .ToDictionary(m => m.Key, m => m.Value);
+        // Feste Ausnahme von Python (Sammelliste 189): eine Sicherung ganz ohne Tagesziel (Kopie bei gesperrter
+        // einstellungen.json, Sammelliste 67/188) laesst das eigene Tagesziel stehen; Python setzte die Vorgaben.
+        // Sicherungen mit Tagesziel (von Python immer alle Schluessel) wie Python.
+        var mitTagesziel = MitTagesziel(sicherung.Einstellungen);
         var werte = einstellungen.Laden();
-        var ziele = Ziele(sicherung.Einstellungen);
-        foreach (var (schluessel, wert) in ziele)
+        foreach (var (schluessel, wert) in mitTagesziel ? Ziele(sicherung.Einstellungen) : [])
         {
             werte[schluessel] = wert;
         }
@@ -144,7 +147,7 @@ public static class Wiederherstellung
             }
             // Tagesziel schon vor dem commit in die Hilfsdatei, direkt danach an ihren Platz: ein Absturz
             // dazwischen liesse sonst den neuen Lernstand mit dem alten Tagesziel zurueck
-            hilfsdatei = einstellungen.HilfsdateiSchreiben(werte);
+            hilfsdatei = mitTagesziel && einstellungen.HilfsdateiSchreiben(werte);   // ohne Tagesziel: einstellungen.json bleibt
             Haltepunkt?.Invoke("vor-commit");
             tx.Commit();
         }
@@ -161,7 +164,7 @@ public static class Wiederherstellung
             throw new WiederherstellungAusnahme(WiederherstellungFehler.EinspielenGescheitert);
         }
         // Sehr selten scheitert das: Lernstand neu, Tagesziel bleibt alt (wie Python); die Rueckmeldung sagt es (P5-4 A1)
-        var tagesziel = hilfsdatei && einstellungen.HilfsdateiEinsetzen();
+        var tagesziel = !mitTagesziel || (hilfsdatei && einstellungen.HilfsdateiEinsetzen());
         return new ErsetzenErgebnis(kopie, tagesziel);
     }
 
@@ -172,6 +175,9 @@ public static class Wiederherstellung
             throw new WiederherstellungAusnahme(WiederherstellungFehler.NurLesen);
         }
     }
+
+    /// <summary>Enthaelt die Sicherung ueberhaupt ein Tagesziel (mindestens einen Tagesziel-Schluessel)?</summary>
+    internal static bool MitTagesziel(JsonObject einstellungen) => Ruecksicherung.Zielschluessel.Any(einstellungen.ContainsKey);
 
     /// <summary>_goal_values der Sicherung als Einstellungswerte (Vorgaben und Grenzen wie goal_settings).</summary>
     internal static List<(string Schluessel, JsonNode Wert)> Ziele(JsonObject einstellungen)
@@ -218,7 +224,7 @@ public static class Wiederherstellung
                 daten = Ruecksicherung.Austausch(db, tx);
                 tx.Commit();
             }
-            var bytes = Ruecksicherung.Packen(Ruecksicherung.Huelle(daten, KopieTagesziel(einstellungen), appVersion, jetzt.DateTime, geraet));
+            var bytes = Ruecksicherung.Packen(Ruecksicherung.Huelle(daten, Ruecksicherung.TageszielGelesen(einstellungen), appVersion, jetzt.DateTime, geraet));
             Ruecksicherung.Speichern(pfad, bytes);
             geschrieben = pfad;
             // Erst wenn die Kopie an ihrem Platz wieder lesbar ist (gleiche Pruefung wie beim Einspielen), wird ersetzt
@@ -242,18 +248,6 @@ public static class Wiederherstellung
             Uebernahme.Protokoll(ziel.Pfad, "Sicherheitskopie vor Alles ersetzen gescheitert, nichts geaendert: " + e.GetType().Name);
             throw new WiederherstellungAusnahme(WiederherstellungFehler.KopieGescheitert, Ruecksicherung.Fehlerart(e));
         }
-    }
-
-    /// <summary>
-    /// Tagesziel fuer die Sicherheitskopie. Feste Ausnahme von Python (Sammelliste 67, Weisung P11-8): ist
-    /// einstellungen.json vorhanden, aber nicht lesbar (gesperrt, kein Zugriff), schrieb create_backup die
-    /// Vorgabewerte als Tagesziel in die Kopie. Die Kopie enthaelt dann kein Tagesziel (leeres Objekt), nie
-    /// einen erfundenen Wert; sonst das echte wie Python (_goal_values(load_settings())).
-    /// </summary>
-    internal static PyObjekt KopieTagesziel(Einstellungen einstellungen)
-    {
-        var (werte, gesperrt) = einstellungen.LadenMitLesezustand();
-        return gesperrt ? new PyObjekt() : Ruecksicherung.Tagesziel(werte);
     }
 
     /// <summary>Nur die eben geschriebene Kopie, deren Probe gescheitert ist (nie eine fremde Datei).</summary>
