@@ -2,6 +2,7 @@ using Lernplattform.Core.Texte;
 using Lernplattform.Core.Update;
 using Lernplattform.Programm;
 using Lernplattform.Views;
+using Update = Lernplattform.Aktualisierung.Aktualisierung;
 
 namespace Lernplattform.Messung;
 
@@ -19,11 +20,19 @@ public static partial class AutoMessung
     /// <summary>Fehlender Update-Bereich (zaehlt als Fund im Urteil).</summary>
     private static int _w3Fehlt;
 
+    /// <summary>
+    /// Phase 11 FW1 (Sammelliste 78): die Probe nennt die laufende Version als installiert und den naechsten Fix
+    /// als angeboten (vorher fest "A 0.11.0" und "A 0.11.1"); die Texte wachsen mit der Version nicht mehr auseinander.
+    /// </summary>
+    private static UpdateVersion ProbeInstalliert => UpdateVersion.Lesen(Update.Anzeige) ?? new UpdateVersion(UpdateVersion.StufeA, 0, 0, 0);
+
+    private static UpdateVersion ProbeNeu => ProbeInstalliert with { Fix = ProbeInstalliert.Fix + 1 };
+
     // laengste Notizen wie ein echtes Release (Abschnitt "### Herunterladen" faellt weg)
-    private static UpdateAngebot ProbeAngebot(bool mitDatei) => new("A 0.11.1",
-        "## A 0.11.1\n\n- **Neu:** Update im Programm mit Kopie des Lernstands vor jedem Update\n- Fix: Abgleich zwischen PC und Handy nach langer Pause\n- Fix: Sehr lange Themennamen im Prüfungstrainer brechen sauber um\n\nAlle Änderungen stehen in AENDERUNGEN.md.\n\n### Herunterladen\n- Datei sha256 …",
-        GithubSuche.ReleaseSeite, mitDatei ? "Fachinformatiker-Lernplattform-1.0.0-a.0.11.1-full.nupkg" : null,
-        mitDatei ? "Fachinformatiker-Lernplattform-1.0.0-a.0.11.1-full.nupkg" : null, 89_128_960);
+    private static UpdateAngebot ProbeAngebot(bool mitDatei) => new(ProbeNeu.Anzeige,
+        "## " + ProbeNeu.Anzeige + "\n\n- **Neu:** Update im Programm mit Kopie des Lernstands vor jedem Update\n- Fix: Abgleich zwischen PC und Handy nach langer Pause\n- Fix: Sehr lange Themennamen im Prüfungstrainer brechen sauber um\n\nAlle Änderungen stehen in AENDERUNGEN.md.\n\n### Herunterladen\n- Datei sha256 …",
+        GithubSuche.ReleaseSeite, mitDatei ? "Fachinformatiker-Lernplattform-" + ProbeNeu.Paket + "-full.nupkg" : null,
+        mitDatei ? "Fachinformatiker-Lernplattform-" + ProbeNeu.Paket + "-full.nupkg" : null, 89_128_960);
 
     private static async IAsyncEnumerable<string> P5W3Ansichten(MainView ansicht)
     {
@@ -67,7 +76,7 @@ public static partial class AutoMessung
         // fester langer Windows-Pfad statt des Datenordners: beide Laeufe und alle Systeme pruefen denselben Text
         const string ordner = @"C:\Users\Auszubildender\AppData\Roaming\Fachinformatiker-Lernplattform";
         _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel,
-            UpdateDienst.FehlschlagAnzeige(UpdateMerker.Fehlschlag("A 0.11.1", "A 0.11.0", "windows", ordner), ordner), Dialog.Ok);
+            UpdateDienst.FehlschlagAnzeige(UpdateMerker.Fehlschlag(ProbeNeu.Anzeige, ProbeInstalliert.Anzeige, "windows", ordner), ordner), Dialog.Ok);
         await ansicht.BildFertigAsync();
         yield return "update/nicht-abgeschlossen";
         Dialog.AlleSchliessen();

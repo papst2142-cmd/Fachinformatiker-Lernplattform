@@ -10,6 +10,15 @@ namespace Lernplattform.Core.Rechner;
 public sealed class RechnerFehler(string meldung) : Exception(meldung);
 
 /// <summary>
+/// Phase 11 FW1 (Sammelliste 34): int() mit mehr als 4300 Ziffern wie Python 3.12 (ValueError, Pruefen bricht ab).
+/// </summary>
+public sealed class ZuVieleZiffern(int ziffern) : Exception(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+    $"Exceeds the limit ({RechenTrainer.HoechstensZiffern} digits) for integer string conversion: value has {ziffern} digits"))
+{
+    public int Ziffern { get; } = ziffern;
+}
+
+/// <summary>
 /// Phase 3, R1: Zahlen lesen und schreiben genau wie Python v0.63.2 (fisi_core 2568-2679,
 /// 4072-4098, plural 2526). Leseregel: Komma = Dezimalzeichen, Punkt vor Dreiergruppen =
 /// Tausenderpunkt, sonst Dezimalpunkt; nie double.Parse mit Laendereinstellung. Zahltext:

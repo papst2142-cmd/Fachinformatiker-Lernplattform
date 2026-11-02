@@ -1,22 +1,19 @@
-Die Erinnerung ans Tagesziel ist da, Spielstand und Bestenliste lassen sich in den Optionen löschen, und einige Anzeigen für Anwendungsentwicklung, Daten- und Prozessanalyse und Digitale Vernetzung sind richtiggestellt.
+Kleine Fehler sind behoben: Riesige Eingaben im Rechen-Trainer werden nicht mehr als falsch gezählt, und das Programm bereitet beim Start schneller vor.
 
-- In den „Optionen“ unter „Tagesziel“ gibt es jetzt den Schalter „An das Tagesziel erinnern“ und das Feld „Erinnerung um“ (Vorgabe 18:00 Uhr). Ist das Tagesziel ab dieser Uhrzeit noch nicht erreicht, erscheint einmal am Tag ein Hinweis, wie viele Aufgaben noch fehlen. Am PC wird alle 5 Minuten nachgesehen, solange das Programm geöffnet ist, am Handy beim Öffnen und beim Zurückholen der App.
-- In den „Optionen“ unter „Löschen und zurücksetzen“ lassen sich jetzt der Spielstand des aktiven Platzes zurücksetzen und die Bestenliste des Spiels löschen. Beides fragt vorher nach. Beim Zurücksetzen bleiben die anderen Plätze, die Bestenliste und der Lernfortschritt erhalten.
-- Im „Fortschritt“ steht eine abgeschlossene Klausur aus Anwendungsentwicklung, Daten- und Prozessanalyse oder Digitaler Vernetzung jetzt mit ihrem Namen da (zum Beispiel „AP2 · Planen eines Softwareproduktes“) statt mit einem internen Kürzel.
-- Im „Notizblock“ tragen Szenarien und Testprojekte jetzt dieselbe Nummer wie in ihrer Liste.
-- Wer eine Klausur dieser drei Fachrichtungen abgeschlossen hat, sieht das Ergebnis der einzelnen Aufgaben jetzt beim richtigen Szenario. Bisher landete es bei einem Szenario der Systemintegration. Was bisher so gespeichert wurde, bleibt unverändert stehen.
-- Für Systemintegration ändert sich an den Lerninhalten und Anzeigen nichts.
+- Rechen-Trainer: Eine Zahl mit mehr als 4 300 Ziffern wird nicht mehr als falsche Antwort gespeichert. Die Aufgabe bleibt offen, und nichts wird gezählt, genau wie in der bisherigen Python-Fassung.
+- Beim Start wird die Zuordnung der Lerninhalte zum Ausbildungsrahmenplan jetzt auf mehrere Prozessorkerne verteilt. Diese Vorbereitung im Hintergrund ist dadurch spürbar schneller fertig, das Ergebnis bleibt genau gleich.
+- Griechische Wörter in Lerninhalten werden bei der Prüfung von Freitext-Antworten jetzt genau wie in der Python-Fassung kleingeschrieben (Schluss-Sigma). In den deutschen Lerninhalten ändert sich dadurch nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.1-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

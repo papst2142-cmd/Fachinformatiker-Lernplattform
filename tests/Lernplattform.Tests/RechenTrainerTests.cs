@@ -186,23 +186,27 @@ public class RechenTrainerTests
     }
 
     /// <summary>
-    /// Eingaben um Pythons Grenze von 4300 Ziffern: bis dahin wie Python; wo Python einen ValueError
-    /// wirft (Pruefen bricht ab), wertet C# nach Weisung P3-12 Frage 3 "falsch" (Sammelliste 34).
+    /// Eingaben um Pythons Grenze von 4300 Ziffern: bis dahin wie Python; wo Python einen ValueError wirft
+    /// (Pruefen bricht ab), wirft C# seit Phase 11 FW1 ebenfalls (ZuVieleZiffern, Sammelliste 34).
     /// </summary>
     [Fact]
-    public void GrosseEingabenFalschStattAbsturz()
+    public void GrosseEingabenWiePython()
     {
         var a = new Abweichungen();
         var absturz = 0;
         foreach (var f in G27.GetProperty("gross").EnumerateArray())
         {
             string art = f[0].GetString()!, erwartet = f[1].GetString()!, eingabe = f[3].GetString()!;
-            var python = f[4].ValueKind == JsonValueKind.String ? "falsch (Python: ValueError)" : f[4].GetBoolean() ? "richtig" : "falsch";
+            var python = f[4].ValueKind == JsonValueKind.String ? "Ausnahme " + f[4].GetString() : f[4].GetBoolean() ? "richtig" : "falsch";
             absturz += f[4].ValueKind == JsonValueKind.String ? 1 : 0;
             string ist;
             try
             {
-                ist = Pruefer(art, erwartet)(eingabe) ? "richtig" : python.StartsWith("falsch (", StringComparison.Ordinal) ? python : "falsch";
+                ist = Pruefer(art, erwartet)(eingabe) ? "richtig" : "falsch";
+            }
+            catch (ZuVieleZiffern)
+            {
+                ist = "Ausnahme ValueError";
             }
             catch (Exception fehler)
             {
@@ -211,7 +215,7 @@ public class RechenTrainerTests
             a.Gleich(python, ist, $"{art}({erwartet}) mit {f[2].GetInt32()} Zeichen");
         }
         Assert.True(absturz >= 10, "zu wenige Faelle ueber der Grenze");
-        a.Pruefen(70);
+        a.Pruefen(72);
     }
 
     /// <summary>Kein Sollwert fuer den Startwert einer neuen Runde (Python ohne festen Startwert): nur die Regel.</summary>

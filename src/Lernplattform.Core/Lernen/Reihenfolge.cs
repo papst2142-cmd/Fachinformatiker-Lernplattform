@@ -99,32 +99,40 @@ public sealed class RahmenplanGewicht
                 m => new Regex(m, RegexOptions.CultureInvariant | RegexOptions.Compiled)));
         }).ToList();
 
-        // _compute_item_points: gleicher Fragetext spaeter ueberschreibt frueher (dict wie Python)
-        foreach (var (quelle, liste, felder) in new[]
-                 {
-                     (Quellen.Karte, inhalte.Karteikarten, new[] { "q", "a", "a_full" }),
-                     (Quellen.Quiz, inhalte.Quizfragen, new[] { "q", "a", "exp" }),
-                 })
-        {
-            foreach (var eintrag in liste)
+        // _compute_item_points: gleicher Fragetext spaeter ueberschreibt frueher (dict wie Python).
+        // Phase 11 FW1 (Sammelliste 175): die Stichwort-Suche je Inhalt (Kleinschreibung und Muster, rein lesend)
+        // laeuft parallel, eingetragen wird danach in der Reihenfolge der Inhalte; das Ergebnis bleibt gleich (G16).
+        var eintraege = new[]
             {
-                var schluessel = (quelle, eintrag.Frage!);
-                _thema[schluessel] = eintrag.Thema;
-                if (eintrag.Daten["rahmenplan"] is JsonArray eigene && eigene.Count > 0)
-                {
-                    _inhaltPunkte[schluessel] = eigene.Select(p => p is JsonValue w && w.TryGetValue<string>(out var id) ? id : "").ToList();
-                    continue;
-                }
-                var thema = eintrag.Thema;
-                var text = Klein(string.Join(" ", felder.Select(eintrag.Text).OfType<string>()));
-                var treffer = regeln.Where(r => (r.themen is null || (thema is not null && r.themen.Contains(thema))) && r.Item3.IsMatch(text))
-                    .Select(r => r.Item1).ToList();
-                if (treffer.Count == 0 && thema is not null && standard.TryGetValue(thema, out var vorgabe))
-                {
-                    treffer = [vorgabe];
-                }
-                _inhaltPunkte[schluessel] = treffer;
+                (Quellen.Karte, inhalte.Karteikarten, new[] { "q", "a", "a_full" }),
+                (Quellen.Quiz, inhalte.Quizfragen, new[] { "q", "a", "exp" }),
             }
+            .SelectMany(q => q.Item2.Select(eintrag => (Quelle: q.Item1, Eintrag: eintrag, Felder: q.Item3)))
+            .ToList();
+        var punkte = new List<string>[eintraege.Count];
+        Parallel.For(0, eintraege.Count, i =>
+        {
+            var (_, eintrag, felder) = eintraege[i];
+            if (eintrag.Daten["rahmenplan"] is JsonArray eigene && eigene.Count > 0)
+            {
+                punkte[i] = eigene.Select(p => p is JsonValue w && w.TryGetValue<string>(out var id) ? id : "").ToList();
+                return;
+            }
+            var thema = eintrag.Thema;
+            var text = Klein(string.Join(" ", felder.Select(eintrag.Text).OfType<string>()));
+            var treffer = regeln.Where(r => (r.themen is null || (thema is not null && r.themen.Contains(thema))) && r.Item3.IsMatch(text))
+                .Select(r => r.Item1).ToList();
+            if (treffer.Count == 0 && thema is not null && standard.TryGetValue(thema, out var vorgabe))
+            {
+                treffer = [vorgabe];
+            }
+            punkte[i] = treffer;
+        });
+        for (var i = 0; i < eintraege.Count; i++)
+        {
+            var schluessel = (eintraege[i].Quelle, eintraege[i].Eintrag.Frage!);
+            _thema[schluessel] = eintraege[i].Eintrag.Thema;
+            _inhaltPunkte[schluessel] = punkte[i];
         }
     }
 
@@ -138,8 +146,33 @@ public sealed class RahmenplanGewicht
     /// <summary>Alle Inhalte mit ihren Punkten (fuer den Vergleich mit Python).</summary>
     public IReadOnlyDictionary<(string Quelle, string Schluessel), List<string>> AllePunkte => _inhaltPunkte;
 
-    /// <summary>str.lower() wie Python fuer die Texte der Inhalte (U+0130 wird "i" + Punkt oben).</summary>
-    internal static string Klein(string text) => text.Replace("İ", "i̇", StringComparison.Ordinal).ToLowerInvariant();
+    /// <summary>
+    /// str.lower() wie Python fuer die Texte der Inhalte. Phase 11 FW1 (Sammelliste 17): ueber
+    /// <see cref="Suche.PythonKlein"/>, damit auch das griechische Schluss-Sigma wie in Python "ς" wird
+    /// (vorher ToLowerInvariant mit "σ"; U+0130 wird weiter "i" + Punkt oben).
+    /// </summary>
+    internal static string Klein(string text) => SchnellGleich(text)
+        ? text.Replace("İ", "i̇", StringComparison.Ordinal).ToLowerInvariant()
+        : Suche.PythonKlein.Klein(text);
+
+    /// <summary>
+    /// Nur Zeichen unter U+0180 (Lateinisch bis Erweiterung A): dort ist ToLowerInvariant (mit "İ") Zeichen fuer
+    /// Zeichen gleich Python (Test KleinSchnellwegGleichPython); sonst die volle Nachbildung (Schluss-Sigma u. a.).
+    /// </summary>
+    internal static bool SchnellGleich(string text)
+    {
+        foreach (var zeichen in text)
+        {
+            if (zeichen >= SchnellGrenze)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>Grenze des Schnellwegs von <see cref="Klein"/>.</summary>
+    internal const char SchnellGrenze = '\u0180';
 
     /// <summary>enabled_sections: A, C, F immer, B/D/E nach Einstellung.</summary>
     public List<string> Abschnitte(RahmenplanWerte werte) => _abschnitte.Where(a => !AbschnittSchalter.ContainsKey(a) || a switch
