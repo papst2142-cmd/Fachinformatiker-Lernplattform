@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.32.9
+Spielst du die Stadt auf zwei Geräten, zeigt die Uhr nach dem Abgleich jetzt in Sonderfällen die richtige Zeit, und ein seltener Speicherfehler im Spiel wird noch sicherer abgefangen.
+
+- Hast du am selben Spieltag auf PC und Handy ohne Abgleich gespielt und standen beide Figuren am selben Ort, lief die Uhr der Stadt nach dem Abgleich manchmal zu weit vor. Jetzt rechnet jeder Schritt ab dem Stand des Geräts, auf dem er gemacht wurde. Gehst du nach dem Abgleich von dem gezeigten Stand des anderen Geräts aus weiter, merkt sich das Spiel diesen Stand, damit beide Geräte dieselbe Uhrzeit zeigen.
+- Haben zwei Geräte genau in derselben Sekunde einen Schritt in der Stadt gemacht, ordnet das Spiel jeden Schritt jetzt dem richtigen Gerät zu. Bisher konnten die Minuten beider Schritte zusammengezählt werden.
+- Zwei Geräte gleicher Art (zum Beispiel zwei PCs) gelten für die Uhr der Stadt weiterhin als ein Gerät, weil das Programm nur „PC“ oder „Handy“ speichert. Spielst du auf zwei PCs am selben Tag ohne Abgleich, kann die Uhr dort weiter vorlaufen.
+- Konnte ein Spielschritt einmal nicht gespeichert werden, nimmt das Spiel bis zum Neuladen des Spielstands sicher keine weiteren Schritte dieses Spielstands mehr an, die auf dem fehlenden aufbauen.
+- Interne Prüfungen des Programms laufen zuverlässiger; an der Bedienung ändert sich dadurch nichts.
+
 ## A 0.32.8
 Die Rechner brechen Zahlen und Rechenwege am Handy jetzt sauberer um: eine Einheit bleibt bei ihrer Zahl, sehr lange Zahlen bleiben ganz, und Rechenzeichen stehen nicht mehr allein am Zeilenende.
 
