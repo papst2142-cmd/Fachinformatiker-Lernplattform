@@ -1,20 +1,18 @@
-Im Lernspiel verhalten sich einige seltene Eingaben und sehr große Zahlen jetzt genau wie in der bisherigen Python-Fassung.
+Die Sicherheitskopie, die vor „Alles ersetzen“ angelegt wird, enthält kein falsches Tagesziel mehr.
 
-- Netzwerk-Formulare im Spiel: Wird beim Präfix eine hochgestellte oder eingekreiste Ziffer eingegeben (zum Beispiel „²“), wird die Eingabe wie in der Python-Fassung nicht ausgewertet; der Auftrag bleibt offen. Ziffern aus anderen Schriften werden weiter gelesen.
-- Namen, die im Spiel mit großem Anfangsbuchstaben gezeigt werden, schreiben ein „ß“ am Anfang jetzt als „Ss“ und behandeln auch andere Sonderzeichen wie die Python-Fassung.
-- Rechnungen mit Spielgeld und Spielzählern laufen bei unvorstellbar großen Zahlen (über neun Trillionen) nicht mehr still in falsche Werte über, sondern brechen mit einem Eintrag im Fehlerprotokoll ab. Im normalen Spiel werden solche Zahlen nie erreicht.
-- Am Lernteil ändert sich nichts.
+- Vor „Alles ersetzen“ legt das Programm den bisherigen Lernstand als Sicherheitskopie im Ordner „sicherungen“ ab. War die Datei mit den Einstellungen in diesem Moment nicht lesbar (zum Beispiel weil ein anderes Programm sie gesperrt hielt), stand in der Kopie bisher das voreingestellte Tagesziel statt deines eigenen. Jetzt enthält die Kopie in diesem Fall gar kein Tagesziel, nur den Lernstand. Ist die Datei lesbar, steht wie bisher dein echtes Tagesziel in der Kopie.
+- Der Lernstand in der Kopie war schon vorher immer richtig. Sonst ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.3**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.2-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.3-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.3-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.3-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
