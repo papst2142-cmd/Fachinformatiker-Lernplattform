@@ -402,13 +402,19 @@ public sealed class Stadt
     public StadtStand Stand(Spielstand stand)
     {
         var tag = stand.Tag;
-        var geraete = SpielGeraete.Von(stand);
+        var geraete = SpielGeraete.Von(stand)?.Durchlauf();
         var je = new Dictionary<string, (string Ort, long Uhr, int Letzter)>(StringComparer.Ordinal);
         var nummer = 0;
         foreach (var e in stand.Verlauf)
         {
             nummer++;
-            if ((e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen) || !Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
+            if (e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen)
+            {
+                continue;
+            }
+            // FW8 (Sammelliste 118): jede Stadt-Zeile der Reihe nach zuordnen, auch die, die heute nicht zaehlen
+            var geraet = geraete?.Invoke(e) ?? "";
+            if (!Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
             {
                 continue;
             }
@@ -417,7 +423,6 @@ public sealed class Stadt
             {
                 continue;
             }
-            var geraet = geraete?.Von(e) ?? "";
             var (ort, uhr, _) = je.TryGetValue(geraet, out var bisher) ? bisher : (Heim, Beginn, 0);
             if (je.Count > 0 && Get(e.Daten, e.Art == Gegangen ? "von" : "ort") is string ab)
             {

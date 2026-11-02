@@ -420,6 +420,54 @@ public class SpielAbgleichTests
     }
 
     /// <summary>
+    /// FW8 (Sammelliste 118, Gegenprobe): PC und Handy schreiben in derselben Sekunde dieselbe Art. Mit
+    /// verschiedenen Daten gehoert jede Zeile ihrem Geraet (Tagesuhr wie bei verschiedenen Sekunden, keine Summe);
+    /// mit gleichen Daten bekommt jedes Geraet einen der beiden gleichen Schritte. Vorher galten beide Zeilen als
+    /// eigenes Geraet und die Minuten wurden addiert (rot).
+    /// </summary>
+    [Fact]
+    public void TagesuhrGleicheSekundeZweierGeraete()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var jetzt = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var n = 0;
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => jetzt),
+            () => "sek" + (++n).ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        void Schreiben(string lauf, string geraet, string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), geraet, lauf));
+        PyObjekt Gang(string nach, long minuten) => new() { { "tag", 1L }, { "von", stadt.Heim }, { "nach", nach }, { "minuten", minuten } };
+
+        // verschiedene Daten in derselben Sekunde
+        const string Verschieden = "lsek000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, Verschieden, Spielstaende.Angelegt, "{}", "PC"));
+        Schreiben(Verschieden, "PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Verschieden, "PC", Stadt.Gegangen, Gang("moebelhaus", 300));
+        Schreiben(Verschieden, "Handy", Stadt.Gegangen, Gang("elektromarkt", 120));
+        foreach (var geraet in new[] { "PC", "Handy" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, Verschieden, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "moebelhaus", stadt.Beginn + 300), stadt.Stand(spiel.Stand));
+        }
+
+        // gleiche Daten in derselben Sekunde: zwei gleiche Schritte, je einer je Geraet
+        const string Gleich = "lsek000000000002";
+        Assert.True(schreiber.SpielPlatzSpeichern(2, Gleich, Spielstaende.Angelegt, "{}", "PC"));
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Gleich, "PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Gleich, "PC", Stadt.Gegangen, Gang("bank", 60));
+        Schreiben(Gleich, "Handy", Stadt.Gegangen, Gang("bank", 60));
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, Gleich, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 60), stadt.Stand(spiel.Stand));
+        }
+    }
+
+    /// <summary>
     /// L4 (Sammelliste 92): laeuft gerade ein Abgleich (Sperre der Vorgaenge belegt), darf das Spiel lesen und
     /// Erfolge pruefen, wenn nichts zu schreiben ist; erst ein Schreiben meldet "belegt" und schreibt nichts.
     /// </summary>
