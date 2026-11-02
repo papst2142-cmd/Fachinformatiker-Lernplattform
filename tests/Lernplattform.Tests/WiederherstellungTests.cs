@@ -440,6 +440,44 @@ public class WiederherstellungTests
     }
 
     /// <summary>
+    /// Sammelliste 189 (Weisung P11-9), feste Ausnahme von Python: eine Sicherung ganz ohne Tagesziel (hier die
+    /// Kopie aus 67 bei gesperrter einstellungen.json) laesst beim Einspielen das eigene Tagesziel stehen
+    /// (einstellungen.json bytegleich, keine Hilfsdatei, kein Satz W13); der Lernstand wird ersetzt. Python setzte
+    /// die Vorgaben. Sicherungen mit Tagesziel bleiben wie Python (ErsetzenWiePython, G37).
+    /// Gegenprobe: ohne Fix steht danach das Vorgabe-Tagesziel (20) in einstellungen.json = rot.
+    /// </summary>
+    [Fact]
+    public void SicherungOhneTageszielBehaeltEigenes()
+    {
+        using var a = new Aufbau("gefuellt");
+        string kopie;
+        using (new FileStream(a.Einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            kopie = a.Ersetzen("a");   // Kopie des gefuellten Stands ohne Tagesziel
+        }
+        var ohneZiel = Sicherungsinhalt.Lesen(File.ReadAllBytes(kopie));
+        Assert.Empty(ohneZiel.Einstellungen);
+        var vorher = File.ReadAllBytes(a.Einstellungen.Pfad);
+        var ergebnis = Wiederherstellung.Ersetzen(new Lernstand(a.Pfad), ohneZiel, a.Einstellungen, App, Geraet, null, Uhr);
+        Assert.True(ergebnis.TageszielUebernommen);
+        Assert.Equal(vorher, File.ReadAllBytes(a.Einstellungen.Pfad));
+        Assert.Equal(10, (int)JsonNode.Parse(File.ReadAllText(a.Einstellungen.Pfad))!["ziel_anzahl"]!);
+        Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+        // wieder die Eintraege und Loeschmarken der Kopie (Austauschformat mit uid; Nummern und Aufhebungen zaehlen weiter)
+        var jetzt = Ruecksicherung.Erstellen(new Lernstand(a.Pfad), [], App, Geraet, new DateTime(2026, 10, 20, 12, 0, 0));
+        using (var gz = new GZipStream(new MemoryStream(jetzt), CompressionMode.Decompress))
+        {
+            var daten = JsonNode.Parse(gz)!["daten"]!;
+            Assert.Equal(Entpackt(kopie)!["daten"]!["tables"]!.ToJsonString(), daten["tables"]!.ToJsonString());
+            Assert.Equal(Entpackt(kopie)!["daten"]!["markers"]!.ToJsonString(), daten["markers"]!.ToJsonString());
+        }
+        Assert.DoesNotContain("\n", SicherungTexte.ErsetztMeldung(ohneZiel, "k.fisisicherung", ergebnis.TageszielUebernommen));
+        // Eine Sicherung mit nur einem Teil der Schluessel bleibt wie Python (fehlende = Vorgabe)
+        Assert.True(Wiederherstellung.MitTagesziel(new JsonObject { ["ziel_anzahl"] = 5 }));
+        Assert.False(Wiederherstellung.MitTagesziel(new JsonObject { ["darstellung"] = "hell" }));
+    }
+
+    /// <summary>
     /// Weisung P5-4 A1, Weg (b): die Hilfsdatei laesst sich nach dem commit nicht an ihren Platz bringen
     /// (an der Stelle von einstellungen.json liegt ein Ordner mit Inhalt). Lernstand ersetzt, Hilfsdatei weg,
     /// Rueckmeldung mit dem Satz W13. Kontrollfehler: Satz fehlt = rot.

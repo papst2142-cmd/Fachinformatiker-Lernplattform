@@ -109,6 +109,43 @@ public class RuecksicherungTests
         Assert.Contains("\"Frage ä \\\"B\\\"\"", text, StringComparison.Ordinal);      // ensure_ascii=False
     }
 
+    /// <summary>
+    /// Sammelliste 188 (Weisung P11-9), feste Ausnahme von Python wie 67: „Sicherung erstellen“ liest das Tagesziel
+    /// frisch aus einstellungen.json; ist sie gesperrt, steht kein Tagesziel in der Sicherung (leeres Objekt) statt
+    /// der Vorgaben, die Datei bleibt bytegleich und eine gueltige Sicherung. Lesbar: das echte Tagesziel.
+    /// Gegenprobe: ohne Fix stehen die Vorgaben (Ziel 20) drin = rot.
+    /// </summary>
+    [Fact]
+    public void SicherungOhneErfundenesTagesziel()
+    {
+        var (ordner, lernstand) = Beispiel();
+        using var _ = ordner;
+        var einstellungen = new Einstellungen(ordner.Pfad);
+        Assert.True(einstellungen.Aendern(w =>
+        {
+            w["ziel_anzahl"] = 30;
+            w["erinnerung_zeit"] = "07:30";
+            w["sync_token"] = "geheim123456";
+        }));
+        var erstellt = new DateTime(2026, 10, 20, 12, 0, 5);
+        var lesbar = JsonNode.Parse(Entpacken(Ruecksicherung.Erstellen(lernstand, einstellungen, "A 0.5.0", "PC", erstellt)))!;
+        Assert.Equal("{\"ziel_an\":true,\"ziel_anzahl\":30,\"serie_an\":true,\"erinnerung_an\":true,\"erinnerung_zeit\":\"07:30\"}",
+            lesbar["einstellungen"]!.ToJsonString());
+
+        var vorher = File.ReadAllBytes(einstellungen.Pfad);
+        byte[] bytes;
+        using (new FileStream(einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            bytes = Ruecksicherung.Erstellen(lernstand, einstellungen, "A 0.5.0", "PC", erstellt);
+            Assert.True(einstellungen.NurAnzeige);
+        }
+        Assert.Equal(vorher, File.ReadAllBytes(einstellungen.Pfad));
+        var gesperrt = JsonNode.Parse(Entpacken(bytes))!;
+        Assert.Equal("{}", gesperrt["einstellungen"]!.ToJsonString());
+        Assert.True(JsonNode.DeepEquals(lesbar["daten"], gesperrt["daten"]));   // Lernstand gleich
+        Assert.Empty(Sicherungsinhalt.Lesen(bytes).Einstellungen);               // gueltige Sicherung
+    }
+
     [Fact]
     public void SchreiberBleibtFest()
     {

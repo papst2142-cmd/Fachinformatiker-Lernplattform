@@ -1,18 +1,19 @@
-Die Sicherheitskopie, die vor „Alles ersetzen“ angelegt wird, enthält kein falsches Tagesziel mehr.
+Sicherungen enthalten nie mehr ein falsches Tagesziel, und beim Einspielen einer Sicherung ohne Tagesziel bleibt dein eigenes erhalten.
 
-- Vor „Alles ersetzen“ legt das Programm den bisherigen Lernstand als Sicherheitskopie im Ordner „sicherungen“ ab. War die Datei mit den Einstellungen in diesem Moment nicht lesbar (zum Beispiel weil ein anderes Programm sie gesperrt hielt), stand in der Kopie bisher das voreingestellte Tagesziel statt deines eigenen. Jetzt enthält die Kopie in diesem Fall gar kein Tagesziel, nur den Lernstand. Ist die Datei lesbar, steht wie bisher dein echtes Tagesziel in der Kopie.
-- Der Lernstand in der Kopie war schon vorher immer richtig. Sonst ändert sich nichts.
+- „Sicherung erstellen“ in den Optionen liest das Tagesziel jetzt jedes Mal frisch aus deinen Einstellungen. War die Einstellungsdatei nicht lesbar (zum Beispiel weil ein anderes Programm sie gesperrt hielt), kam bisher das voreingestellte Tagesziel in die Sicherung. Jetzt steht in diesem Fall gar kein Tagesziel darin, nur der Lernstand.
+- Spielst du mit „Alles ersetzen“ eine Sicherung ein, die kein Tagesziel enthält (das kann nur bei einer gesperrten Einstellungsdatei entstehen), bleibt dein jetziges Tagesziel unverändert. Bisher wurde es auf die Vorgaben zurückgesetzt. Sicherungen mit Tagesziel spielen es wie bisher mit ein.
+- Sonst ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.3**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.4**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.3-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.3-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.3-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.4-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.4-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.4-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

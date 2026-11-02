@@ -102,7 +102,7 @@ public sealed class RuecksicherungTeil
         }
         Zeige(RuecksicherungTexte.Warten);
         var lernstand = Zustand.Lernstand;
-        var einstellungen = Zustand.Werte;
+        var einstellungen = Zustand.Einstellungen;   // frisch gelesen wie create_backup, gesperrt: kein Tagesziel (188)
         var geraet = AbgleichDienst.Geraet();
         var bytes = await Task.Run(() => Ruecksicherung.Erstellen(lernstand, einstellungen, Aktualisierung.Aktualisierung.Anzeige, geraet, DateTime.Now));
         var pfad = datei.TryGetLocalPath();
