@@ -60,6 +60,7 @@ def main():
     os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")
     sys.path.insert(0, repo)
     import fisi_core as core
+    import fisi_game as game
     import fisi_lernen as lernen
     import fisi_optionen as fo
     import fisi_sync as sync
@@ -183,6 +184,15 @@ def main():
         "spielstand_knopf": "Spielstand zurücksetzen",
         "bestenliste": "BESTENLISTE",
         "bestenliste_knopf": "Bestenliste löschen",
+        # Phase 11 W1 (Sammelliste 180): Rueckfragen und Rueckmeldungen zu Spielstand und Bestenliste
+        "spielstand_frage_titel": "Spielstand zurücksetzen",
+        "spielstand_erfolg_titel": "Zurückgesetzt",
+        "spielstand_erfolg": "Der Spielstand wurde zurückgesetzt.",
+        "bestenliste_frage_titel": "Bestenliste löschen",
+        "bestenliste_erfolg_titel": "Gelöscht",
+        "bestenliste_erfolg": "Die Bestenliste wurde gelöscht.",
+        "bestenliste_text": game.RECORDS_HELP,
+        "bestenliste_frage": game.RECORDS_ASK,
         "datenbank_titel": "Speicherort der Lernfortschritte:",
         "datenbank_hinweis": "Der Pfad lässt sich über die Umgebungsvariable FISI_DB_PATH überschreiben, "
                              "zum Beispiel um die Datenbank auf einem Netzlaufwerk abzulegen.",
@@ -193,10 +203,26 @@ def main():
         assert texte[name] in app, name + " steht nicht in app_gui.py"
     for name in ("lerndaten_knopf", "lerndaten_frage_titel", "lerndaten_frage", "lerndaten_erfolg", "historie_frage_titel"):
         assert texte[name] in handy, name + " steht nicht in mobile/src/main.py"
+    for name in ("spielstand_frage_titel", "spielstand_erfolg_titel", "spielstand_erfolg", "bestenliste_frage_titel",
+                 "bestenliste_erfolg_titel", "bestenliste_erfolg"):
+        assert texte[name] in app, name + " steht nicht in app_gui.py"
+    for name in ("spielstand_frage_titel", "spielstand_erfolg", "bestenliste_frage_titel", "bestenliste_erfolg"):
+        assert texte[name] in handy, name + " steht nicht in mobile/src/main.py"
+
+    # Phase 11 W1: reset_help und reset_question je Platzanzeige (active_label; "" = kein Platz)
+    class Spiel:
+        def __init__(self, anzeige):
+            self.anzeige = anzeige
+
+        def active_label(self):
+            return self.anzeige
+
+    spielstand_texte = [[anzeige, game.reset_help(Spiel(anzeige)), game.reset_question(Spiel(anzeige))]
+                        for anzeige in ("", "Platz 1", "Platz 2 · Mein Spiel")]
 
     daten = {
         "quelle": "fisi_core.DBManager.reset_all, clear_history, _marker_now, clock_deviation, clock_jump_unknown; "
-                  "fisi_sync.clock_fix_text; fisi_optionen, fisi_lernen, app_gui (Python v0.63.2)",
+                  "fisi_sync.clock_fix_text; fisi_optionen, fisi_lernen, fisi_game, app_gui (Python v0.63.2)",
         "python": sys.version.split()[0],
         "zone": ZONE,
         "jetzt_utc": JETZT_UTC,
@@ -209,6 +235,7 @@ def main():
         "loeschen": loeschen,
         "uhrtexte": uhrtexte,
         "texte": texte,
+        "spielstand_texte": spielstand_texte,
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(daten, handle, ensure_ascii=False, indent=1)

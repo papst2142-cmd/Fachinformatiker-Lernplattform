@@ -332,6 +332,13 @@ public sealed class Spielverwaltung
     });
 
     /// <summary>
+    /// Phase 11 W1 (Sammelliste 180): reset_records fuer Optionen > Loeschen. Mit aktivem Durchgang ueber dessen
+    /// Spielablauf (der laufende Spielstand traegt sich gleich neu ein, check_achievements), sonst nur die Loeschung
+    /// (Python: ohne Spielstand prueft check_achievements nichts). Mit der Sperre der Vorgaenge.
+    /// </summary>
+    public bool BestenlisteLoeschen() => Halten(() => Ablauf is { } ablauf ? ablauf.BestenlisteLoeschen() : Direkt().BestenlisteLoeschen());
+
+    /// <summary>
     /// reset: den aktiven Spielstand zuruecksetzen. Der Durchgang endet (seine Bestwerte kommen in
     /// die Bestenliste), auf demselben Platz beginnt ein neuer; der Name des Platzes bleibt.
     /// </summary>

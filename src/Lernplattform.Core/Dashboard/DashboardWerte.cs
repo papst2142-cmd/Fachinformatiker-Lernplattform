@@ -377,6 +377,28 @@ public sealed record DashboardWerte(
         }
     }
 
+    /// <summary>
+    /// Phase 11 W1 (Sammelliste 180): erledigte Aufgaben eines Tages wie DailyGoal.from_db(db, ...).done (gleiche
+    /// Zaehlung wie die Kachel "Heute"), fuer die Erinnerung ans Tagesziel. null, wenn die Datei fehlt oder sich nicht
+    /// oeffnen laesst (dann keine Erinnerung; Python faengt den Fehler in check_reminder ab).
+    /// </summary>
+    public static long? ErledigtAm(string dbPfad, DateOnly tag)
+    {
+        if (!File.Exists(dbPfad))
+        {
+            return null;
+        }
+        try
+        {
+            using var leser = Leser.Oeffnen(dbPfad);
+            return AktivitaetTage(leser).GetValueOrDefault(Iso(tag));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     /// <summary>Kalender "Lerntage" fuer einen anderen Monat (Blaettern); bei fehlender oder kaputter Datei ohne Lerntage.</summary>
     public static DashboardKalender Monat(string dbPfad, int jahr, int monat)
     {

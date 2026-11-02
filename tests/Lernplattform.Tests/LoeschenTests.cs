@@ -157,6 +157,23 @@ public class LoeschenTests
         Assert.Equal(LoeschenTexte.Bestenliste, T("bestenliste"));
         Assert.Equal(LoeschenTexte.BestenlisteKnopf, T("bestenliste_knopf"));
         Assert.Equal(LoeschenTexte.DatenbankTitel, T("datenbank_titel"));
+        // Phase 11 W1 (Sammelliste 180): Spielstand und Bestenliste wie Python
+        Assert.Equal(LoeschenTexte.SpielstandFrageTitel, T("spielstand_frage_titel"));
+        Assert.Equal(LoeschenTexte.SpielstandErfolgTitel, T("spielstand_erfolg_titel"));
+        Assert.Equal(LoeschenTexte.SpielstandErfolg, T("spielstand_erfolg"));
+        Assert.Equal(LoeschenTexte.BestenlisteFrageTitel, T("bestenliste_frage_titel"));
+        Assert.Equal(LoeschenTexte.BestenlisteErfolgTitel, T("bestenliste_erfolg_titel"));
+        Assert.Equal(LoeschenTexte.BestenlisteErfolg, T("bestenliste_erfolg"));
+        Assert.Equal(LoeschenTexte.BestenlisteText, T("bestenliste_text"));
+        Assert.Equal(LoeschenTexte.BestenlisteFrage, T("bestenliste_frage"));
+        var spielstand = G40.GetProperty("spielstand_texte").EnumerateArray().ToList();
+        Assert.Equal(3, spielstand.Count);
+        foreach (var zeile in spielstand)
+        {
+            var platz = zeile[0].GetString()!;
+            Assert.Equal(zeile[1].GetString(), LoeschenTexte.SpielstandText(platz));
+            Assert.Equal(zeile[2].GetString(), LoeschenTexte.SpielstandFrage(platz));
+        }
         var bereich = Optionen.Bereich(Optionen.Loeschen);
         Assert.Equal(bereich.Titel, T("bereich_titel"));
         Assert.Equal(bereich.UntertitelPc, T("bereich_untertitel"));

@@ -266,6 +266,36 @@ public static partial class AutoMessung
         {
             Fund("Optionen > Spiel: Karte nicht gefunden");
         }
+        // 8. Phase 11 W1 (Sammelliste 180): Optionen > Löschen zeigt „Spielstand zurücksetzen“ mit dem Text zum aktiven
+        //    Platz (im Hintergrund gelesen) und „Bestenliste löschen“, Tagesziel den dritten Schalter und „Erinnerung um“;
+        //    nirgends mehr der Platzhalter
+        if (ansicht.GebauteSeiten[Seiten.Optionen] is OptionenSeite seiteOptionen
+            && seiteOptionen.Klappe(Optionen.Loeschen) is { } loeschKarte && seiteOptionen.Klappe(Optionen.Tagesziel) is { } zielKarte)
+        {
+            loeschKarte.IsExpanded = true;
+            zielKarte.IsExpanded = true;
+            await seiteOptionen.SpielstandTextGelesen;
+            await ansicht.BildFertigAsync();
+            var text = Textbaum(loeschKarte) + "\n" + Textbaum(zielKarte);
+            var spielstand = seiteOptionen.SpielstandText ?? "";
+            Messwerte.Notiere("Optionen > Löschen: Spielstand \"" + spielstand + "\"");
+            if (!spielstand.StartsWith("Setzt nur den aktiven Spielstand zurück (", StringComparison.Ordinal)
+                || !text.Contains(LoeschenTexte.SpielstandKnopf, StringComparison.Ordinal)
+                || !text.Contains(LoeschenTexte.BestenlisteKnopf, StringComparison.Ordinal)
+                || !text.Contains(LoeschenTexte.BestenlisteText, StringComparison.Ordinal)
+                || !text.Contains(TageszielTexte.Schalter[2].Text, StringComparison.Ordinal)
+                || !text.Contains(TageszielTexte.ErinnerungUm, StringComparison.Ordinal)
+                || text.Contains(Beschriftungen.Platzhalter, StringComparison.Ordinal))
+            {
+                Fund("Optionen > Löschen/Tagesziel: Spielstand, Bestenliste, Erinnerung fehlen (oder Platzhalter zu sehen)");
+            }
+            loeschKarte.IsExpanded = false;
+            zielKarte.IsExpanded = false;
+        }
+        else
+        {
+            Fund("Optionen > Löschen/Tagesziel: Karte nicht gefunden");
+        }
 
         await ansicht.ZeigeAsync(vorher);
         return funde;

@@ -35,7 +35,11 @@ public static class Abschluss
             var quelle = aufgabe["quelle"] as string;
             var index = (int)KlausurErgebnis.Zahl(aufgabe["index"]);
             var szenario = inhalte.Quelle(quelle)[index];
-            zeilen.Add(new AufgabeAntwort(quelle == "ap1", index, szenario.Titel ?? "", szenario.SzenarioThema ?? "",
+            // Phase 11 W1 (Sammelliste 172): Aufgaben von AE, DPA und DV zaehlen in der Klausur ab 0 in der
+            // Liste ihrer Fachrichtung; der Lernstand der Szenarien speichert aber die Stelle in der ganzen
+            // Liste (Nummer - 1, wie Szenarioablauf). Sonst traefe die Zeile ein SI-Szenario. SI bleibt gleich.
+            var stelle = Klausur.QuelleFachrichtung(quelle) is null ? index : szenario.Nummer - 1;
+            zeilen.Add(new AufgabeAntwort(quelle == "ap1", stelle, szenario.Titel ?? "", szenario.SzenarioThema ?? "",
                 punkte * 2 >= maximum));
         }
         return zeilen;

@@ -42,7 +42,59 @@ public static class SpielStart
         var geraet = Pc ? "PC" : "Handy";
         var geschaefte = Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt;
         var feste = Py.Lesen(Muss("inhalte_csharp/spiel/festzeiten.json")) as PyObjekt;
-        return new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
+        var sitzung = new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
+        Aktiv = sitzung;
+        return sitzung;
+    }
+
+    /// <summary>
+    /// Phase 11 W1 (Sammelliste 180): die zuletzt geladene Sitzung der Spielseite (null, solange das Spiel nicht
+    /// betreten wurde). Optionen > Loeschen setzt ueber ihre Verwaltung zurueck, damit die Spielseite danach
+    /// denselben Stand zeigt (Python nutzt dasselbe Game-Objekt der Spielansicht).
+    /// </summary>
+    public static SpielSitzung? Aktiv { get; private set; }
+
+    /// <summary>
+    /// Phase 11 W1: eine Verwaltung der Spielstaende fuer Optionen > Loeschen, ohne Sitzung eine neue (laeuft im
+    /// Hintergrund; danach nur auf dem Oberflaechen-Faden benutzen). null, wenn das Spiel nicht geladen werden kann.
+    /// </summary>
+    public static Spielverwaltung? LoeschVerwaltung()
+    {
+        if (Aktiv is { } sitzung)
+        {
+            return sitzung.Verwaltung;
+        }
+        try
+        {
+            Spielschlange.AlleLeeren();
+            _optionenInhalt ??= InhaltLaden().Inhalt;
+            var geraet = Pc ? "PC" : "Handy";
+            return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt);
+        }
+        catch (Exception fehler) when (fehler is IOException or InvalidDataException or Microsoft.Data.Sqlite.SqliteException or SpielFehler or KeyNotFoundException)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Optionen > Loeschen: Spiel nicht geladen: " + fehler.GetType().Name);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Phase 11 W1: active_label fuer den Text zu „Spielstand zurücksetzen“ (nach game.reload(), wie _show_difficulty);
+    /// "" ohne Platz oder wenn das Spiel nicht geladen werden kann. Laeuft im Hintergrund, ohne die Sitzung anzufassen.
+    /// </summary>
+    public static string PlatzAnzeige()
+    {
+        try
+        {
+            Spielschlange.AlleLeeren();
+            _optionenInhalt ??= InhaltLaden().Inhalt;
+            var geraet = Pc ? "PC" : "Handy";
+            return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).AktivAnzeige();
+        }
+        catch (Exception fehler) when (fehler is IOException or InvalidDataException or Microsoft.Data.Sqlite.SqliteException or SpielFehler or KeyNotFoundException)
+        {
+            return "";
+        }
     }
 
     /// <summary>Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).</summary>

@@ -1,5 +1,5 @@
 {
- "quelle": "fisi_core.DBManager.reset_all, clear_history, _marker_now, clock_deviation, clock_jump_unknown; fisi_sync.clock_fix_text; fisi_optionen, fisi_lernen, app_gui (Python v0.63.2)",
+ "quelle": "fisi_core.DBManager.reset_all, clear_history, _marker_now, clock_deviation, clock_jump_unknown; fisi_sync.clock_fix_text; fisi_optionen, fisi_lernen, fisi_game, app_gui (Python v0.63.2)",
  "python": "3.12.3",
  "zone": "Europe/Berlin",
  "jetzt_utc": "2026-10-20T10:00:00+00:00",
@@ -1276,7 +1276,32 @@
   "spielstand_knopf": "Spielstand zurücksetzen",
   "bestenliste": "BESTENLISTE",
   "bestenliste_knopf": "Bestenliste löschen",
+  "spielstand_frage_titel": "Spielstand zurücksetzen",
+  "spielstand_erfolg_titel": "Zurückgesetzt",
+  "spielstand_erfolg": "Der Spielstand wurde zurückgesetzt.",
+  "bestenliste_frage_titel": "Bestenliste löschen",
+  "bestenliste_erfolg_titel": "Gelöscht",
+  "bestenliste_erfolg": "Die Bestenliste wurde gelöscht.",
+  "bestenliste_text": "Die Bestenliste unter Spiel > Reise > Erfolge sammelt Bestwerte und Abzeichen über alle Spielstände. Sie bleibt beim Zurücksetzen des Spielstands und beim Löschen der Lerndaten erhalten.",
+  "bestenliste_frage": "Wirklich die Bestenliste löschen? Bestwerte und Abzeichen früherer Spielstände sind danach weg. Der laufende Spielstand trägt sich gleich wieder ein.",
   "datenbank_titel": "Speicherort der Lernfortschritte:",
   "datenbank_hinweis": "Der Pfad lässt sich über die Umgebungsvariable FISI_DB_PATH überschreiben, zum Beispiel um die Datenbank auf einem Netzlaufwerk abzulegen."
- }
+ },
+ "spielstand_texte": [
+  [
+   "",
+   "Setzt nur den aktiven Spielstand zurück (noch kein Platz gewählt): Spielfigur, Spielgeld, Reputation, Arbeitstage und erledigte Tickets. Auf dem Platz beginnt danach ein neuer Durchgang. Die anderen Plätze und der Lernfortschritt bleiben erhalten. Mit eingerichtetem Abgleich gilt das auf PC und Handy.",
+   "Wirklich den Spielstand zurücksetzen? Der Spielstand dieses Platzes ist danach weg, Bestwerte und Abzeichen bleiben in der Bestenliste. Die anderen Plätze und der Lernfortschritt bleiben erhalten."
+  ],
+  [
+   "Platz 1",
+   "Setzt nur den aktiven Spielstand zurück (Platz 1): Spielfigur, Spielgeld, Reputation, Arbeitstage und erledigte Tickets. Auf dem Platz beginnt danach ein neuer Durchgang. Die anderen Plätze und der Lernfortschritt bleiben erhalten. Mit eingerichtetem Abgleich gilt das auf PC und Handy.",
+   "Wirklich Platz 1 zurücksetzen? Der Spielstand dieses Platzes ist danach weg, Bestwerte und Abzeichen bleiben in der Bestenliste. Die anderen Plätze und der Lernfortschritt bleiben erhalten."
+  ],
+  [
+   "Platz 2 · Mein Spiel",
+   "Setzt nur den aktiven Spielstand zurück (Platz 2 · Mein Spiel): Spielfigur, Spielgeld, Reputation, Arbeitstage und erledigte Tickets. Auf dem Platz beginnt danach ein neuer Durchgang. Die anderen Plätze und der Lernfortschritt bleiben erhalten. Mit eingerichtetem Abgleich gilt das auf PC und Handy.",
+   "Wirklich Platz 2 · Mein Spiel zurücksetzen? Der Spielstand dieses Platzes ist danach weg, Bestwerte und Abzeichen bleiben in der Bestenliste. Die anderen Plätze und der Lernfortschritt bleiben erhalten."
+  ]
+ ]
 }

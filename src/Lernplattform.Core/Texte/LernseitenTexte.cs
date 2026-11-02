@@ -204,10 +204,13 @@ public static class NotizblockTexte
         QuelleName[quelle] + "  ·  " + Fachbereiche.Kurzname.GetValueOrDefault(eintrag.Fachbereich ?? "", "")
         + (themaKurz.Length > 0 ? "  ·  " + themaKurz : "");
 
-    /// <summary>Titel eines Eintrags; Szenarien und Testprojekte mit Nummer (5452-5454).</summary>
-    public static string EintragTitel(NotizEintrag eintrag) =>
+    /// <summary>
+    /// Titel eines Eintrags; Szenarien und Testprojekte mit Nummer (5452-5454). Phase 11 W1 (Sammelliste 171):
+    /// die Nummer zaehlt wie die Liste der Seite (<see cref="Notizblock.Nummer"/>), bei SI wie Python.
+    /// </summary>
+    public static string EintragTitel(NotizEintrag eintrag, Notizblock notiz) =>
         eintrag.Quelle is Quellen.Ap1 or Quellen.Ap2 or Quellen.Projekt
-            ? (Convert.ToInt64(eintrag.Schluessel, CultureInfo.InvariantCulture) + 1).ToString(CultureInfo.InvariantCulture) + ". " + eintrag.Titel
+            ? notiz.Nummer(eintrag.Quelle, eintrag.Schluessel).ToString(CultureInfo.InvariantCulture) + ". " + eintrag.Titel
             : eintrag.Titel;
 
     /// <summary>Musterantwort, ab 1 200 Zeichen am letzten Leerzeichen gekuerzt mit " …" (5460-5461).</summary>

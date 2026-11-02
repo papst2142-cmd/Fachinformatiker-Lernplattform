@@ -7,7 +7,8 @@ namespace Lernplattform.Core.Texte;
 /// Phase 5 BE4: Texte der Bereiche „Löschen und zurücksetzen“ und „Datenbank“. Mit (Py) markierte
 /// Teile zeichengleich aus Python v0.63.2 (fisi_optionen, fisi_lernen, app_gui; Vergleichswerte
 /// G40). Rückfragen und Rückmeldungen wie am PC (PC-Wortlaut überall, Nico P2-2). (W9) weicht ab
-/// und steht in der Wortliste W1. Spielstand und Bestenliste bleiben bis zum Spiel Platzhalter.
+/// und steht in der Wortliste W1. Phase 11 W1 (Sammelliste 180): Spielstand und Bestenliste wie Python
+/// (_build_loeschen, reset_game, reset_records; fisi_game.reset_help, reset_question, RECORDS_HELP, RECORDS_ASK).
 /// </summary>
 public static class LoeschenTexte
 {
@@ -43,6 +44,30 @@ public static class LoeschenTexte
     public const string SpielstandKnopf = "Spielstand zurücksetzen";                          // (Py)
     public const string Bestenliste = "BESTENLISTE";                                          // (Py)
     public const string BestenlisteKnopf = "Bestenliste löschen";                             // (Py)
+
+    public const string SpielstandFrageTitel = "Spielstand zurücksetzen";                     // (Py)
+    public const string SpielstandErfolgTitel = "Zurückgesetzt";                              // (Py)
+    public const string SpielstandErfolg = "Der Spielstand wurde zurückgesetzt.";             // (Py)
+    public const string BestenlisteFrageTitel = "Bestenliste löschen";                        // (Py)
+    public const string BestenlisteErfolgTitel = "Gelöscht";                                  // (Py)
+    public const string BestenlisteErfolg = "Die Bestenliste wurde gelöscht.";                // (Py)
+    /// <summary>(Py) RECORDS_HELP</summary>
+    public const string BestenlisteText = Spiel.Betrieb.BestenHilfe;
+    /// <summary>(Py) RECORDS_ASK</summary>
+    public const string BestenlisteFrage = Spiel.Betrieb.BestenFrage;
+
+    /// <summary>(Py) fisi_game.reset_help: Text zu „Spielstand zurücksetzen“ mit dem aktiven Platz (active_label).</summary>
+    public static string SpielstandText(string platz) =>
+        "Setzt nur den aktiven Spielstand zurück (" + (platz.Length > 0 ? platz : "noch kein Platz gewählt") + "): Spielfigur, Spielgeld, "
+        + "Reputation, Arbeitstage und erledigte Tickets. Auf dem Platz beginnt danach "
+        + "ein neuer Durchgang. Die anderen Plätze und der Lernfortschritt bleiben "
+        + "erhalten. Mit eingerichtetem Abgleich gilt das auf PC und Handy.";
+
+    /// <summary>(Py) fisi_game.reset_question</summary>
+    public static string SpielstandFrage(string platz) =>
+        "Wirklich " + (platz.Length > 0 ? platz : "den Spielstand") + " zurücksetzen? Der Spielstand dieses Platzes ist danach weg, "
+        + "Bestwerte und Abzeichen bleiben in der Bestenliste. Die anderen Plätze und "
+        + "der Lernfortschritt bleiben erhalten.";
 
     public const string DatenbankTitel = "Speicherort der Lernfortschritte:";                 // (Py)
 

@@ -29,6 +29,29 @@ public sealed class Notizblock(Lerninhalte inhalte)
         _ => inhalte.Testprojekte.Select(e => ((object)(long)(e.Nummer - 1), e)),
     };
 
+    private readonly Dictionary<(string, object), int> _nummern = [];
+
+    /// <summary>
+    /// Phase 11 W1 (Sammelliste 171): Nummer eines Szenarios oder Testprojekts wie in der Liste der Seite,
+    /// also die Stelle in der Sicht der gewaehlten Fachrichtung ab 1 (bei SI gleich Schluessel + 1).
+    /// </summary>
+    public int Nummer(string quelle, object schluessel)
+    {
+        if (_nummern.Count == 0)
+        {
+            foreach (var q in new[] { Quellen.Ap1, Quellen.Ap2, Quellen.Projekt })
+            {
+                var stelle = 0;
+                foreach (var (s, _) in Fragen(q))
+                {
+                    _nummern[(q, s)] = ++stelle;
+                }
+            }
+        }
+        return _nummern.TryGetValue((quelle, schluessel), out var nummer)
+            ? nummer : (int)Convert.ToInt64(schluessel, CultureInfo.InvariantCulture) + 1;
+    }
+
     /// <summary>item_title: Frage (Karteikarte, Pruefungsfrage) bzw. Titel.</summary>
     public static string Titel(string quelle, Lerninhalt eintrag) =>
         (quelle is Quellen.Karte or Quellen.Quiz ? eintrag.Frage : eintrag.Titel) ?? "";

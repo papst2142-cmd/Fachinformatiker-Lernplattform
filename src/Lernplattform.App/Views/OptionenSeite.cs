@@ -204,6 +204,17 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
                 }
             };
         }
+        if (bereich.Id == Optionen.Loeschen)
+        {
+            // Phase 11 W1 (Sammelliste 180): ebenso den Text zu „Spielstand zurücksetzen“ (lbl_reset)
+            klappe.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == Expander.IsExpandedProperty && klappe.IsExpanded)
+                {
+                    SpielstandTextNeu();
+                }
+            };
+        }
         _klappen.Add(klappe);
         _bereiche[bereich.Id] = (klappe, klappe);
         return klappe;
@@ -818,17 +829,19 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         var panel = new StackPanel { Spacing = 10 };
         var ziel = Einstellungen.Ziel(Zustand.Werte);
         var schalterListe = new List<(string Schluessel, ToggleSwitch Schalter)>();
+        // Phase 11 W1 (Sammelliste 180): alle drei Schalter wie Python, auch "An das Tagesziel erinnern"
+        static bool Wert(Einstellungen.Tagesziel z, string schluessel) => schluessel switch
+        {
+            "ziel_an" => z.ZielAn,
+            "serie_an" => z.SerieAn,
+            _ => z.ErinnerungAn,
+        };
         foreach (var (schluessel, text) in TageszielTexte.Schalter)
         {
-            if (schluessel == "erinnerung_an")
-            {
-                // Die Erinnerung kommt mit dem Lernen (Phase 2); bis dahin kein Schalter ohne Wirkung
-                continue;
-            }
             var schalter = new ToggleSwitch
             {
                 Content = Schrift.Text(text),
-                IsChecked = schluessel == "ziel_an" ? ziel.ZielAn : ziel.SerieAn,
+                IsChecked = Wert(ziel, schluessel),
                 OnContent = null,
                 OffContent = null,
             };
@@ -842,8 +855,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
                 if (!Ergebnis(Zustand.Setze(schluessel, schalter.IsChecked == true)))
                 {
                     _setzen = true;
-                    var jetzt = Einstellungen.Ziel(Zustand.Werte);
-                    schalter.IsChecked = schluessel == "ziel_an" ? jetzt.ZielAn : jetzt.SerieAn;
+                    schalter.IsChecked = Wert(Einstellungen.Ziel(Zustand.Werte), schluessel);
                     _setzen = false;
                 }
             };
@@ -883,8 +895,68 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
                 anzahl,
             },
         });
-        panel.Children.Add(Schrift.Text(TageszielTexte.Schalter[2].Text + ": " + Beschriftungen.Platzhalter, "Klein", FontWeight.Normal, "Pinsel.muted"));
-        panel.Children.Add(Schrift.Text(TageszielTexte.HinweisGezaehlt, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Phase 11 W1 (Sammelliste 180): "Erinnerung um" wie _build_tagesziel (PC: speichern beim Verlassen des Felds
+        // oder mit Enter, ungueltig = der gespeicherte Wert kommt zurueck; Handy zusaetzlich beim Tippen, sobald gueltig)
+        var uhrzeit = new TextBox
+        {
+            Text = ziel.ErinnerungZeit,
+            PlaceholderText = TageszielTexte.ErinnerungPlatzhalter,
+            MinWidth = 110,
+            HorizontalAlignment = HorizontalAlignment.Left,
+        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text");
+        Avalonia.Automation.AutomationProperties.SetName(uhrzeit, TageszielTexte.ErinnerungUm);
+        void UhrzeitSpeichern(bool beimTippen)
+        {
+            var wert = Einstellungen.Uhrzeit(uhrzeit.Text ?? "");
+            if (wert is null)
+            {
+                if (!beimTippen)
+                {
+                    _setzen = true;
+                    uhrzeit.Text = Einstellungen.Ziel(Zustand.Werte).ErinnerungZeit;
+                    _setzen = false;
+                }
+                return;
+            }
+            if (wert != Einstellungen.Ziel(Zustand.Werte).ErinnerungZeit && !Ergebnis(Zustand.Setze("erinnerung_zeit", wert)))
+            {
+                wert = Einstellungen.Ziel(Zustand.Werte).ErinnerungZeit;
+            }
+            if (!beimTippen)
+            {
+                _setzen = true;
+                uhrzeit.Text = wert;
+                _setzen = false;
+            }
+        }
+        uhrzeit.LostFocus += (_, _) => UhrzeitSpeichern(false);
+        uhrzeit.KeyDown += (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Enter)
+            {
+                UhrzeitSpeichern(false);
+            }
+        };
+        if (!Pc) // Uhrzeit beim Tippen
+        {
+            uhrzeit.TextChanged += (_, _) =>
+            {
+                if (!_setzen)
+                {
+                    UhrzeitSpeichern(true);
+                }
+            };
+        }
+        panel.Children.Add(new WrapPanel
+        {
+            Children =
+            {
+                new Border { Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center,
+                    Child = Schrift.Text(TageszielTexte.ErinnerungUm, "Normal", FontWeight.Normal, "Pinsel.text_dim") },
+                uhrzeit,
+            },
+        });
+        panel.Children.Add(Schrift.Text(Geraetetexte.TageszielHinweis(Pc), "Klein", FontWeight.Normal, "Pinsel.muted"));
         // Phase 5 BE3 (_after_restore): nach „Alles ersetzen“ die Werte aus der Sicherung zeigen
         _tageszielNeu = () =>
         {
@@ -892,9 +964,10 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             _setzen = true;
             foreach (var (schluessel, schalter) in schalterListe)
             {
-                schalter.IsChecked = schluessel == "ziel_an" ? jetzt.ZielAn : jetzt.SerieAn;
+                schalter.IsChecked = Wert(jetzt, schluessel);
             }
             anzahl.Value = jetzt.ZielAnzahl;
+            uhrzeit.Text = jetzt.ErinnerungZeit;
             _setzen = false;
         };
         return panel;
@@ -926,10 +999,145 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         historie.Click += async (_, _) => await LoeschenAsync(LoeschenTexte.HistorieFrageTitel, LoeschenTexte.HistorieFrage,
             s => s.HistorieLoeschen(), LoeschenTexte.HistorieErfolgTitel, LoeschenTexte.HistorieErfolg);
         Teil(LoeschenTexte.Historie, LoeschenTexte.HistorieText, historie, false);
-        // Spielstand und Bestenliste kommen mit dem Spiel (Phase 7)
-        Teil(LoeschenTexte.Spielstand, Beschriftungen.Platzhalter, new Border(), false);
-        Teil(LoeschenTexte.Bestenliste, Beschriftungen.Platzhalter, new Border(), false);
+        // Phase 11 W1 (Sammelliste 180): Spielstand und Bestenliste wie _build_loeschen; der Text zum Spielstand nennt
+        // den aktiven Platz und wird beim Aufklappen der Karte gelesen (wie lbl_reset in _show_difficulty)
+        var spielstand = Schrift.Gefahrknopf(LoeschenTexte.SpielstandKnopf);
+        spielstand.Click += async (_, _) => await SpielstandZuruecksetzenAsync();
+        Teil(LoeschenTexte.Spielstand, "", spielstand, false);
+        _spielstandText = (TextBlock)panel.Children[^2];
+        var bestenliste = Schrift.Gefahrknopf(LoeschenTexte.BestenlisteKnopf);
+        bestenliste.Click += async (_, _) => await BestenlisteLoeschenAsync();
+        Teil(LoeschenTexte.Bestenliste, LoeschenTexte.BestenlisteText, bestenliste, false);
         return panel;
+    }
+
+    private TextBlock? _spielstandText;
+    private int _spielstandLauf;
+
+    /// <summary>Start-Test: der angezeigte Text zu „Spielstand zurücksetzen“ (null ohne Karte).</summary>
+    public string? SpielstandText => _spielstandText?.Text;
+
+    /// <summary>Start-Test: wird fertig, wenn der Text nach dem letzten Anstoss gelesen ist.</summary>
+    public Task SpielstandTextGelesen { get; private set; } = Task.CompletedTask;
+
+    /// <summary>reset_help neu lesen (Hintergrund); nur das Ergebnis des letzten Anstosses wird gezeigt.</summary>
+    private void SpielstandTextNeu()
+    {
+        if (_spielstandText is null)
+        {
+            return;
+        }
+        var lauf = ++_spielstandLauf;
+        SpielstandTextGelesen = LesenAsync();
+
+        async Task LesenAsync()
+        {
+            var platz = await Task.Run(Lernplattform.Spiel.SpielStart.PlatzAnzeige);
+            if (lauf == _spielstandLauf && _spielstandText is not null)
+            {
+                _spielstandText.Text = LoeschenTexte.SpielstandText(platz);
+            }
+        }
+    }
+
+    /// <summary>
+    /// reset_game: game.reload(), Rueckfrage reset_question, game.reset(); danach Rueckmeldung, Fortschritt
+    /// (notify_progress) und Text neu. Ueber die Verwaltung der Spielseite, damit sie danach denselben Stand zeigt.
+    /// Laeuft ein anderer Vorgang (Abgleich, Uebernahme), wird nichts geschrieben und das gesagt.
+    /// </summary>
+    private async Task SpielstandZuruecksetzenAsync()
+    {
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
+        var sitzung = Lernplattform.Spiel.SpielStart.Aktiv;
+        var verwaltung = sitzung?.Verwaltung ?? await Task.Run(Lernplattform.Spiel.SpielStart.LoeschVerwaltung);
+        if (verwaltung is null)
+        {
+            await Dialog.Zeigen(LoeschenTexte.SpielstandFrageTitel, LoeschenTexte.NichtsGeloescht, Dialog.Ok);
+            return;
+        }
+        string platz;
+        try
+        {
+            verwaltung.Neuladen();
+            platz = verwaltung.AktivAnzeige();
+        }
+        catch (Core.Spiel.SpielFehler)
+        {
+            platz = "";
+        }
+        if (await Dialog.Zeigen(LoeschenTexte.SpielstandFrageTitel, LoeschenTexte.SpielstandFrage(platz), TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        {
+            return;
+        }
+        if (!await SpielLoeschenAsync(LoeschenTexte.SpielstandFrageTitel, verwaltung.Zuruecksetzen))
+        {
+            return;
+        }
+        sitzung?.Abgleichen();
+        AbgleichDienst.NachDemLernen();
+        await Dialog.Zeigen(LoeschenTexte.SpielstandErfolgTitel, LoeschenTexte.SpielstandErfolg, Dialog.Ok);
+        SpielstandTextNeu();
+        SpielZeileNeu();
+    }
+
+    /// <summary>reset_records: Rueckfrage RECORDS_ASK, game.reset_records(); Rueckmeldung mit clock_fix_text.</summary>
+    private async Task BestenlisteLoeschenAsync()
+    {
+        if (await Dialog.Zeigen(LoeschenTexte.BestenlisteFrageTitel, LoeschenTexte.BestenlisteFrage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        {
+            return;
+        }
+        Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
+        var sitzung = Lernplattform.Spiel.SpielStart.Aktiv;
+        var verwaltung = sitzung?.Verwaltung ?? await Task.Run(Lernplattform.Spiel.SpielStart.LoeschVerwaltung);
+        if (verwaltung is null)
+        {
+            await Dialog.Zeigen(LoeschenTexte.BestenlisteFrageTitel, LoeschenTexte.NichtsGeloescht, Dialog.Ok);
+            return;
+        }
+        if (!await SpielLoeschenAsync(LoeschenTexte.BestenlisteFrageTitel, verwaltung.BestenlisteLoeschen))
+        {
+            return;
+        }
+        sitzung?.Abgleichen();
+        AbgleichDienst.NachDemLernen();
+        await Dialog.Zeigen(LoeschenTexte.BestenlisteErfolgTitel,
+            LoeschenTexte.MitUhrHinweis(LoeschenTexte.BestenlisteErfolg, Zustand.Schreiber.LetzteUhrkorrektur), Dialog.Ok);
+    }
+
+    /// <summary>
+    /// Eine Loeschung im Spiel wie <see cref="LoeschenAsync"/>: Datenbanktexte werden gesammelt und bei false als ein
+    /// Fenster gezeigt („Es wurde nichts gelöscht.“); haelt ein anderer Vorgang die Sperre, steht dort
+    /// <see cref="AbgleichTexte.Belegt"/>. true = gelungen.
+    /// </summary>
+    private static async Task<bool> SpielLoeschenAsync(string titel, Func<bool> loeschen)
+    {
+        bool geloescht;
+        IReadOnlyList<string> gesammelt;
+        try
+        {
+            (geloescht, gesammelt) = Loeschablauf.Ausfuehren(loeschen, () => Zustand.Fehlermeldung, e => Zustand.Fehlermeldung = e);
+        }
+        catch (Core.Spiel.SpielBelegtAusnahme)
+        {
+            await Dialog.Zeigen(titel, AbgleichTexte.Belegt, Dialog.Ok);
+            return false;
+        }
+        catch (Core.Spiel.SpielFehler fehler)
+        {
+            await Dialog.Zeigen(titel, fehler.Message, Dialog.Ok);
+            return false;
+        }
+        catch (Exception fehler)
+        {
+            Fehlerprotokoll.Schreiben(fehler);
+            (geloescht, gesammelt) = (false, []);
+        }
+        if (!geloescht)
+        {
+            await Dialog.Zeigen(titel, LoeschenTexte.NichtsGeloeschtMit(gesammelt), Dialog.Ok);
+        }
+        return geloescht;
     }
 
     /// <summary>

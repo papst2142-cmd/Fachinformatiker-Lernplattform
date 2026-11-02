@@ -113,9 +113,9 @@ public sealed class Auswertung
                      + " FROM pruefungen ORDER BY timestamp DESC, id DESC") ?? [])
         {
             var art = PyText.Str(z[1]);
-            var bekannt = z[1] is string a && FortschrittTexte.Pruefungen.ContainsKey(a);
+            var bekannt = PruefungName(z[1]);
             pruefungen.Add(new PruefungZeile(PyText.Str(z[0]),
-                bekannt ? FortschrittTexte.Pruefungen[art].Name : art, bekannt ? FortschrittTexte.Pruefungen[art].Kurz : null,
+                bekannt?.Name ?? art, bekannt?.Kurz,
                 PythonRunden.PunkteText(PyText.Zahl(z[2])), z[3] is null ? "" : PyText.Str(z[3]), Dauer(PyText.Zahl(z[4]))));
             if (!erste.Da)
             {
@@ -244,11 +244,31 @@ public sealed class Auswertung
         {
             return null;
         }
-        var kurz = art is string a && FortschrittTexte.Pruefungen.TryGetValue(a, out var p) ? p.Kurz : PyText.Str(art);
+        var kurz = PruefungName(art)?.Kurz ?? PyText.Str(art);
         var stempel = zeit is null ? "" : PyText.Str(zeit);
         var tag = PyText.Laenge(stempel) >= 10
             ? PyText.Teil(stempel, 8, 10) + "." + PyText.Teil(stempel, 5, 7) + "." + PyText.Teil(stempel, 0, 4) : "";
         return new Schwaeche(Beschriftungen.Einsetzen(FortschrittTexte.SchwachTitel, kurz, tag.Length > 0 ? ", " + tag : ""), schwach);
+    }
+
+    /// <summary>
+    /// Name und Kurzname einer Pruefungsart: die Pruefungen von Python (EXAMS, SI bleibt exakt gleich),
+    /// Phase 11 W1 (Sammelliste 170) dazu die Bereiche b1/b2 von AE, DPA und DV aus <see cref="Pruefung.Fachrichtung"/>;
+    /// unbekannt null (dann zeigt die Zeile wie Python die rohe Kennung).
+    /// </summary>
+    public static (string Name, string Kurz)? PruefungName(object? art)
+    {
+        if (art is not string a)
+        {
+            return null;
+        }
+        if (FortschrittTexte.Pruefungen.TryGetValue(a, out var python))
+        {
+            return python;
+        }
+        return Lernplattform.Core.Pruefung.Fachrichtung.Alle.Where(f => f.Id != Lernplattform.Core.Inhalte.Fachrichtungen.Systemintegration)
+            .SelectMany(f => f.Bereiche).Where(b => b.Rolle is "b1" or "b2" && b.Art == a)
+            .Select(b => ((string, string)?)(b.Name, b.Kurz)).FirstOrDefault();
     }
 
     private static bool PyWahr(JsonNode? wert) => wert switch

@@ -203,6 +203,46 @@ public class SpielVerwaltungTests
         }
     }
 
+    /// <summary>
+    /// Phase 11 W1 (Sammelliste 180): Bestenliste loeschen aus Optionen > Loeschen wie reset_records, mit und ohne
+    /// aktiven Durchgang; die Marke bestenliste_reset_at wird gesetzt, ist die Sperre belegt, wird nichts geschrieben.
+    /// </summary>
+    [Fact]
+    public void BestenlisteLoeschenMitUndOhneDurchgang()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var schreiber = new LernstandSchreiber(lernstand);
+        long Zeilen() => (long)lernstand.Abfragen("SELECT COUNT(*) FROM spiel_bestenliste").First()[0]!;
+        object? Marke() => lernstand.Abfragen("SELECT value FROM sync_meta WHERE key = 'bestenliste_reset_at'").FirstOrDefault()?[0];
+
+        // ohne Durchgang: nur die Loeschung
+        var leer = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        Assert.Null(leer.Lauf);
+        Assert.True(leer.BestenlisteLoeschen());
+        Assert.Equal(0, Zeilen());
+        Assert.NotNull(Marke());
+
+        // mit Durchgang: der laufende Spielstand traegt sich gleich wieder ein (check_achievements)
+        var spiel = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: Vorgaenge.Sperren);
+        spiel.ZumSchreiben().Profil("Anna", Aussehen());
+        spiel.Ablauf!.ErfolgePruefen(erzwingen: true);
+        Assert.NotEqual(0, Zeilen());
+        var lauf = spiel.Lauf;
+        Assert.True(spiel.BestenlisteLoeschen());
+        Assert.Equal(lauf, spiel.Lauf);
+        Assert.NotNull(Marke());
+        // alles, was jetzt noch dasteht, hat der laufende Spielstand nach der Marke neu eingetragen
+        Assert.All(lernstand.Abfragen("SELECT timestamp FROM spiel_bestenliste"),
+            z => Assert.True(string.CompareOrdinal((string)z[0]!, (string)Marke()!) >= 0, (string)z[0]!));
+
+        // belegt: nichts geschrieben
+        var belegt = new Spielverwaltung(schreiber, "PC", Inhalt, sperre: () => null);
+        var vorher = T(Tabellen(lernstand));
+        Assert.Throws<SpielBelegtAusnahme>(() => belegt.BestenlisteLoeschen());
+        Assert.Equal(vorher, T(Tabellen(lernstand)));
+    }
+
     [Fact]
     public void BelegtSchreibtNichts()
     {

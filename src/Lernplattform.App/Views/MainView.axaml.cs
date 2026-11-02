@@ -184,6 +184,8 @@ public partial class MainView : UserControl
             Programm.Diagnosedienst.Verbinden(this);
             // Phase 5 BE10: Pruefung des letzten Updates und Suche beim Start (einmal je Programmstart)
             Programm.UpdateDienst.Starten();
+            // Phase 11 W1 (Sammelliste 180): Erinnerung ans Tagesziel (einmal je Programmstart)
+            Programm.ErinnerungDienst.Starten();
             if (AutoModus)
             {
                 Dispatcher.UIThread.Post(async () => await AutoLaufAsync(), DispatcherPriority.Background);
