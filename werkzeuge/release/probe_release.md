@@ -3,6 +3,7 @@ Die Rechner brechen Zahlen und Rechenwege am Handy jetzt sauberer um: eine Einhe
 - Im Aufgabentext des Rechen-Trainers bleibt eine Einheit immer bei ihrer Zahl, zum Beispiel „50 %“, „994 MB“ oder „16 Mbit/s“. Bisher konnte am Handy die Zahl am Ende einer Zeile stehen und das Prozentzeichen oder die Einheit erst in der nächsten.
 - Sehr lange Zahlen in den Ergebnissen und Rechenwegen (zum Beispiel die Dauer einer riesigen Datei bei sehr langsamer Leitung) werden nicht mehr mitten in der Zahl getrennt. Passt die Zahl nicht in die Breite, kannst du den Kasten seitlich wischen, und darunter steht „→ wischen“.
 - In den Rechenwegen (zum Beispiel der Verkaufskalkulation) steht ein Betrag immer mit seinem „€“ zusammen, Rechenzeichen wie „x“, „/“ oder „+“ rücken mit in die nächste Zeile, eine kurze Klammer wie „(im Hundert)“ bleibt zusammen, und ein Erklärsatz über zwei Zeilen wird bei großer Schrift als ein Satz umbrochen. Die Texte und Ergebnisse selbst sind unverändert.
+- Lässt sich ein Ergebnis- oder Rechenweg-Kasten seitlich wischen, liegt die Bildlaufleiste jetzt unter der letzten Zeile und verdeckt sie nicht mehr.
 
 ### Herunterladen
 

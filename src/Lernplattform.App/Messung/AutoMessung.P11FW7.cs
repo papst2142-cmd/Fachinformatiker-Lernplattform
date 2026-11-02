@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Rechner;
 using Lernplattform.Core.Texte;
@@ -19,6 +20,8 @@ namespace Lernplattform.Messung;
 /// kbit/s) bleibt ganz, keine Zeile beginnt mit einem Tausenderpunkt, der Kasten ist dann
 /// wischbar und zeigt "→ wischen". (43) Im Rechenweg Verkauf steht keine Einheit allein und kein
 /// Rechenzeichen am Zeilenende.
+/// Nachbesserung (Weisung P11-14): in beiden Kaesten (Ergebnis Uebertragung, Rechenweg Verkauf) liegt die
+/// waagrechte Scrollleiste unter der letzten Zeile (Layoutpruefung (9)); mindestens eine Stufe zeigt die Leiste.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -55,6 +58,20 @@ public static partial class AutoMessung
         var felderVorher = r.Daten.DauerFelder;
         var ungeschuetztGebrochen = 0;
         var notizen = new List<string>();
+        var mitLeiste = 0;
+        // Nachbesserung (Weisung P11-14): Scrollleiste nie ueber dem Text des Kastens
+        void LeisteUeberText(Ergebniskasten k, string name)
+        {
+            if (k.Rollen.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ScrollBar>()
+                .Any(l => l.Orientation == Avalonia.Layout.Orientation.Horizontal && l.IsEffectivelyVisible && l.Bounds.Height > 0))
+            {
+                mitLeiste++;
+            }
+            foreach (var f in Layoutpruefung.Pruefe(k).Where(f => f.StartsWith("Scrollleiste ueber", StringComparison.Ordinal)))
+            {
+                Fund($"{name}: {f}");
+            }
+        }
         foreach (var stufe in Einstellungen.Schriftgroessen)
         {
             Schrift.Anwenden(Zustand.SchriftFaktor(stufe));
@@ -113,6 +130,7 @@ public static partial class AutoMessung
                 Fund($"{stufe}: Uebertragung {(breiter ? "ohne" : "mit")} Hinweis wischen");
             }
             notizen.Add(string.Create(inv, $"{stufe} {kasten.Zeichen} Zeichen{(kasten.WischHinweis ? " wischen" : "")}"));
+            LeisteUeberText(kasten, "Uebertragung");
 
             // (43) Rechenweg Verkauf
             r.Waehle("wiso");
@@ -134,14 +152,19 @@ public static partial class AutoMessung
                     Fund($"{stufe}: Rechenzeichen am Zeilenende: \"{t}\"");
                 }
             }
+            LeisteUeberText(weg.Kasten, "Rechenweg Verkauf");
             weg.Zeigen(false);
+        }
+        if (mitLeiste == 0)
+        {
+            Fund("in keiner Stufe eine waagrechte Scrollleiste im Kasten, die Pruefung (9) prueft nichts");
         }
         if (ungeschuetztGebrochen == 0)
         {
             Fund("ohne Schutz bricht der Aufgabentext in keiner Breite zwischen Zahl und Einheit, der Punkt prueft nichts");
         }
         Messwerte.Notiere("Rechner-Texte am Handy (FW7): " + string.Join("; ", notizen)
-            + string.Create(inv, $"; ohne Schutz {ungeschuetztGebrochen} Brueche") + (funde == 0 ? "" : " FEHLER"));
+            + string.Create(inv, $"; ohne Schutz {ungeschuetztGebrochen} Brueche; Kaesten mit Leiste {mitLeiste}") + (funde == 0 ? "" : " FEHLER"));
         r.Daten.DauerEingabe(felderVorher.Groesse, felderVorher.Einheit, felderVorher.Rate, felderVorher.RateEinheit, felderVorher.Prozent);
         r.Daten.DauerRechnen();
         r.Wiso.Waehle(wisoVorher);

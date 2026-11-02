@@ -134,7 +134,7 @@ public sealed class Ergebniskasten : StackPanel
         if (breite <= 1)
         {
             _text.Text = _roh;
-            _hinweis.IsVisible = false;
+            Wischbar(false);
             return;
         }
         var zeichen = Math.Max(1, (int)Math.Floor((breite + 0.01) / Festbreite.Zeichenbreite(_text.FontSize)));
@@ -145,7 +145,17 @@ public sealed class Ergebniskasten : StackPanel
         _zeichen = zeichen;
         // FW7 (Sammelliste 41, 43): Umbruch fuer die Anzeige, feste Ausnahme von Python fit_lines
         _text.Text = Zeilen.KastenAnzeige(_roh, zeichen, _einheitlich);
-        _hinweis.IsVisible = Wischhinweis.Noetig(_text.Text, zeichen);
+        Wischbar(Wischhinweis.Noetig(_text.Text, zeichen));
+    }
+
+    /// <summary>
+    /// Hinweis "→ wischen" und, wie bei den Tabellen (FW6), Platz unter der letzten Zeile fuer die waagrechte
+    /// Scrollleiste, sonst liegt sie ueber der Zeile (Weisung P11-14).
+    /// </summary>
+    private void Wischbar(bool wischen)
+    {
+        _hinweis.IsVisible = wischen;
+        _text.Padding = wischen ? new Thickness(0, 0, 0, Dialog.RandFuerLeiste) : default;
     }
 }
 
