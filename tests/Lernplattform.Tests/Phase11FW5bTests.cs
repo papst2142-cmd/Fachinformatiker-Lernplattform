@@ -1,6 +1,8 @@
+using Lernplattform.Core.Dashboard;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Pruefung;
+using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 
 namespace Lernplattform.Tests;
@@ -147,5 +149,57 @@ public class Phase11FW5bTests
         Assert.Equal((0, 0, null), (ergebnis.Gefunden, ergebnis.Berichtigt, ergebnis.Kopie));
         Assert.False(Directory.Exists(Path.Combine(ordner.Pfad, "sicherungen")));
         Assert.False(File.Exists(Path.Combine(ordner.Pfad, "update.log")));
+    }
+
+    // -- 169 ------------------------------------------------------------------------------------
+
+    [Fact]
+    public void Dashboard_AeZaehltQuoteVerlaufUndFachbereicheNurInDerSicht_SiAlles()
+    {
+        var alle = Echt();
+        var si = alle.Fuer("si");
+        var ae = alle.Fuer("ae");
+        var fragenAe = ae.Quizfragen.Select(q => q.Frage).ToHashSet();
+        var kartenAe = ae.Karteikarten.Select(k => k.Frage).ToHashSet();
+        var frageAe = ae.Quizfragen[0];
+        var frageSi = si.Quizfragen.First(q => !fragenAe.Contains(q.Frage));
+        var karteAe = ae.Karteikarten[0];
+        var karteSi = si.Karteikarten.First(k => !kartenAe.Contains(k.Frage));
+        var szenarioAe = ae.Ap2Szenarien.First(s => s.Zugehoerigkeit == "ae");
+        using var ordner = new TempOrdner();
+        var pfad = Path.Combine(ordner.Pfad, Lernstand.DateiName);
+        _ = new Lernstand(pfad);
+        const string Zeit = "2026-11-02 09:00:00";
+        void Frage(Lerninhalt f, int richtig) => Ausfuehren(pfad, "INSERT INTO quiz_answers (timestamp, category, question, correct, uid)"
+            + " VALUES ($t, $c, $q, $r, lower(hex(randomblob(8))))", ("$t", Zeit), ("$c", f.Fachbereich), ("$q", f.Frage), ("$r", richtig));
+        void Karte(Lerninhalt k, int richtig) => Ausfuehren(pfad, "INSERT INTO card_events (timestamp, category, question, mode, correct, uid)"
+            + " VALUES ($t, $c, $q, 'lernen', $r, lower(hex(randomblob(8))))", ("$t", Zeit), ("$c", k.Fachbereich), ("$q", k.Frage), ("$r", richtig));
+        Frage(frageAe, 1);
+        Frage(frageSi, 0);
+        Frage(frageSi, 0);
+        Karte(karteAe, 1);
+        Karte(karteSi, 0);
+        Ereignis(pfad, "s1", Zeit, 60, szenarioAe.Nummer - 1, szenarioAe);
+        Ereignis(pfad, "s2", Zeit, 60, 0, si.Ap2Szenarien[0]);
+        Ausfuehren(pfad, "INSERT INTO trainer_aufgaben (timestamp, art, stufe, correct, uid) VALUES ($t, 'subnetz', 1, 1, 't1')", ("$t", Zeit));
+
+        var heute = new DateOnly(2026, 11, 2);
+        var ziel = Einstellungen.Ziel(new JsonObject());
+        DashboardWerte Lies(Lerninhalte sicht) => DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(sicht), ziel, null,
+            Path.Combine(ordner.Pfad, "fehler.log"));
+        long Fach(DashboardWerte w) => w.Fachbereiche.Sum(f => f.Antworten);
+        long Erwartet(params Lerninhalt[] beantwortet) => beantwortet.Count(e => Fachbereiche.Alle.Contains(e.Fachbereich!));
+
+        var wAe = Lies(ae);
+        Assert.Equal((1L, 1.0, 100.0), (wAe.Quote.Antworten, wAe.Quote.Richtig, wAe.Quote.Wert));
+        Assert.Equal(4, wAe.Verlauf[^1].Anzahl);        // Frage, Karte, Szenario der Sicht und die Rechner-Aufgabe
+        Assert.Equal(Erwartet(frageAe, karteAe), Fach(wAe));
+        Assert.Contains("100", wAe.Banner.TextPc, StringComparison.Ordinal);
+
+        // SI wie Python: alle Zeilen
+        var wSi = Lies(si);
+        Assert.Equal((3L, 1.0), (wSi.Quote.Antworten, wSi.Quote.Richtig));
+        Assert.Equal(8, wSi.Verlauf[^1].Anzahl);
+        Assert.Equal(Erwartet(frageAe, frageSi, frageSi, karteAe, karteSi), Fach(wSi));
     }
 }

@@ -258,6 +258,7 @@ public sealed class DashboardInhalte
             SichtFragen = inhalte.Quizfragen.Select(q => q.Frage ?? "").ToHashSet(StringComparer.Ordinal);
             SichtAp1 = inhalte.Ap1Szenarien.Select(s => (long)(s.Nummer - 1)).ToHashSet();
             SichtAp2 = inhalte.Ap2Szenarien.Select(s => (long)(s.Nummer - 1)).ToHashSet();
+            SichtProjekte = inhalte.Testprojekte.Select(s => (long)(s.Nummer - 1)).ToHashSet();
             Ap2Themen = InhaltePruefung.Ap2Themen(inhalte.RahmenplanZusatz, sicht);
         }
         WissenFenster = (int)Zahl(parameter["letzte_antworten"]);
@@ -290,6 +291,9 @@ public sealed class DashboardInhalte
     internal HashSet<long>? SichtAp1 { get; }
 
     internal HashSet<long>? SichtAp2 { get; }
+
+    /// <summary>Phase 11 FW5b (Sammelliste 169): Testprojekte der Sicht (Lernverlauf), null bei SI.</summary>
+    internal HashSet<long>? SichtProjekte { get; }
 
     /// <summary>Themenbloecke der AP2 auf dem Dashboard (SI wie Python, sonst die Themen von b1/b2 der Fachrichtung).</summary>
     internal IReadOnlyList<string> Ap2Themen { get; } = Fachbereiche.Ap2Themen;
@@ -432,7 +436,7 @@ public sealed record DashboardWerte(
             : Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM ap1_events");
         var ap2 = inhalte.SichtAp2 is { } s2 ? AnzahlIn(db, "SELECT DISTINCT scenario_index FROM scenario_events", s2)
             : Anzahl(db, "SELECT COUNT(DISTINCT scenario_index) FROM scenario_events");
-        var (rate, richtig, beantwortet) = Erfolgsquote(db);
+        var (rate, richtig, beantwortet) = Erfolgsquote(db, inhalte.SichtFragen);
         var gelernt = karten + fragen;
 
         // Kachel "Heute"
@@ -469,7 +473,7 @@ public sealed record DashboardWerte(
 
         var werte = new DashboardWerte(
             DashboardZustand.Daten, banner, gelernt, inhalte.Summe, serie, tagesziel, faellig, kennzahlen, quote,
-            LeseVerlauf(db, heute), LeseFachbereiche(db, inhalte), LeseAktivitaeten(db), LeseKalender(db, heute.Year, heute.Month),
+            LeseVerlauf(db, heute, inhalte), LeseFachbereiche(db, inhalte), LeseAktivitaeten(db), LeseKalender(db, heute.Year, heute.Month),
             LeseThemen(db, "ap1_events", inhalte.Ap1JeBlock, Inhalte.Fachbereiche.Ap1Themen, inhalte.SichtAp1),
             LeseThemen(db, "scenario_events", inhalte.Ap2JeBlock, inhalte.Ap2Themen, inhalte.SichtAp2),
             LeseReinzoom(db, heute, inhalte));
@@ -500,9 +504,12 @@ public sealed record DashboardWerte(
     private static long AnzahlIn<T>(Leser db, string sql, HashSet<T> sichtbar) =>
         (db.Abfrage(sql) ?? []).Count(z => z[0] is T wert && sichtbar.Contains(wert));
 
-    private static (double Rate, double Richtig, long Gesamt) Erfolgsquote(Leser db)
+    private static (double Rate, double Richtig, long Gesamt) Erfolgsquote(Leser db, HashSet<string>? sichtFragen)
     {
-        var zeilen = db.Abfrage("SELECT COUNT(*), SUM(correct) FROM quiz_answers");
+        // Phase 11 FW5b (Sammelliste 169, Nico 02.11.2026 Antwort b): AE, DPA und DV zaehlen nur die Antworten
+        // auf Fragen ihrer Sicht (wie COUNT(*) und SUM(correct), nur gefiltert); SI wie Python
+        var zeilen = sichtFragen is null ? db.Abfrage("SELECT COUNT(*), SUM(correct) FROM quiz_answers")
+            : Gefiltert(db.Abfrage("SELECT question, correct FROM quiz_answers"), sichtFragen);
         if (zeilen is not { Count: > 0 } || zeilen[0][0] is not long gesamt || gesamt == 0)
         {
             return (0.0, 0, 0);
@@ -550,10 +557,48 @@ public sealed record DashboardWerte(
         return anzahl;
     }
 
-    private static List<DashboardVerlaufTag> LeseVerlauf(Leser db, DateOnly heute)
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 169): COUNT(*) und SUM(correct) nur ueber Zeilen (Frage, correct), deren Frage
+    /// in der Sicht liegt.
+    /// </summary>
+    private static List<object?[]>? Gefiltert(List<object?[]>? zeilen, HashSet<string> sicht) =>
+        zeilen is null ? null : [Zaehlen(zeilen.Where(z => z[0] is string frage && sicht.Contains(frage)).Select(z => z[1]))];
+
+    /// <summary>COUNT(*) und SUM(correct) wie SQLite: NULL zaehlt nicht zur Summe, ohne einen Wert ist sie NULL.</summary>
+    private static object?[] Zaehlen(IEnumerable<object?> richtig)
+    {
+        long anzahl = 0;
+        object? summe = null;
+        foreach (var wert in richtig)
+        {
+            anzahl++;
+            if (wert is not null)
+            {
+                summe = PyText.Zahl(summe) + PyText.Zahl(wert);
+            }
+        }
+        return [anzahl, summe];
+    }
+
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 169): gehoert eine Zeile des Lernverlaufs zur Sicht? Karten und Fragen ueber
+    /// den Fragetext, Szenarien und Testprojekte ueber die gespeicherte Stelle; Rechner-Aufgaben gehoeren zu jeder
+    /// Fachrichtung.
+    /// </summary>
+    private static bool InSicht(DashboardInhalte inhalte, string tabelle, object? schluessel) => tabelle switch
+    {
+        "card_events" => schluessel is string k && inhalte.SichtKarten!.Contains(k),
+        "quiz_answers" => schluessel is string q && inhalte.SichtFragen!.Contains(q),
+        "scenario_events" => schluessel is long s && inhalte.SichtAp2!.Contains(s),
+        "ap1_events" => schluessel is long a && inhalte.SichtAp1!.Contains(a),
+        "project_events" => schluessel is long p && inhalte.SichtProjekte!.Contains(p),
+        _ => true,
+    };
+
+    private static List<DashboardVerlaufTag> LeseVerlauf(Leser db, DateOnly heute, DashboardInhalte inhalte)
     {
         var start = heute.AddDays(-(Tage - 1));
-        var zeilen = db.Abfrage(
+        var zeilen = inhalte.SichtKarten is not null ? VerlaufInSicht(db, start, inhalte) : db.Abfrage(
             "SELECT substr(timestamp, 1, 10) AS tag, COUNT(*) FROM ("
             + "  SELECT timestamp FROM card_events"
             + "  UNION ALL SELECT timestamp FROM quiz_answers"
@@ -574,6 +619,56 @@ public sealed record DashboardWerte(
             .Select(i => start.AddDays(i))
             .Select(tag => new DashboardVerlaufTag(tag, tag.ToString("dd.MM", CultureInfo.InvariantCulture), nach.GetValueOrDefault(Iso(tag))))
             .ToList();
+    }
+
+    /// <summary>Phase 11 FW5b (Sammelliste 169): wie die Abfrage in LeseVerlauf, nur Zeilen der Sicht (Tag, Anzahl).</summary>
+    private static List<object?[]> VerlaufInSicht(Leser db, DateOnly start, DashboardInhalte inhalte)
+    {
+        var zeilen = db.Abfrage(
+            "SELECT substr(timestamp, 1, 10) AS tag, tabelle, schluessel FROM ("
+            + "  SELECT timestamp, 'card_events' AS tabelle, question AS schluessel FROM card_events"
+            + "  UNION ALL SELECT timestamp, 'quiz_answers', question FROM quiz_answers"
+            + "  UNION ALL SELECT timestamp, 'scenario_events', scenario_index FROM scenario_events"
+            + "  UNION ALL SELECT timestamp, 'project_events', project_index FROM project_events"
+            + "  UNION ALL SELECT timestamp, 'ap1_events', scenario_index FROM ap1_events"
+            + "  UNION ALL SELECT timestamp, 'trainer_aufgaben', NULL FROM trainer_aufgaben"
+            + ") WHERE substr(timestamp, 1, 10) >= ?1", Iso(start)) ?? [];
+        var nach = new Dictionary<string, long>(StringComparer.Ordinal);
+        foreach (var zeile in zeilen)
+        {
+            if (zeile[0] is string tag && zeile[1] is string tabelle && InSicht(inhalte, tabelle, zeile[2]))
+            {
+                nach[tag] = nach.GetValueOrDefault(tag) + 1;
+            }
+        }
+        return nach.Select(p => new object?[] { p.Key, p.Value }).ToList();
+    }
+
+    /// <summary>
+    /// Phase 11 FW5b (Sammelliste 169): category_stats nur ueber Antworten auf Karten und Fragen der Sicht
+    /// (Fachbereich, Anzahl, Summe richtig).
+    /// </summary>
+    private static List<object?[]> StatistikInSicht(Leser db, DashboardInhalte inhalte)
+    {
+        var zeilen = db.Abfrage(
+            "SELECT category, 'quiz_answers', question, correct FROM quiz_answers"
+            + "  UNION ALL"
+            + "  SELECT category, 'card_events', question, correct FROM card_events WHERE correct IS NOT NULL") ?? [];
+        var je = new Dictionary<string, List<object?>>(StringComparer.Ordinal);
+        var reihenfolge = new List<string>();
+        foreach (var zeile in zeilen)
+        {
+            if (zeile[0] is string kategorie && zeile[1] is string tabelle && InSicht(inhalte, tabelle, zeile[2]))
+            {
+                if (!je.TryGetValue(kategorie, out var liste))
+                {
+                    je[kategorie] = liste = [];
+                    reihenfolge.Add(kategorie);
+                }
+                liste.Add(zeile[3]);
+            }
+        }
+        return reihenfolge.Select(k => (object?[])[k, .. Zaehlen(je[k])]).ToList();
     }
 
     private static List<DashboardFachbereich> LeseFachbereiche(Leser db, DashboardInhalte inhalte)
@@ -611,7 +706,7 @@ public sealed record DashboardWerte(
         }
         // category_stats
         var werte = new Dictionary<string, (long Antworten, double Richtig)>(StringComparer.Ordinal);
-        foreach (var zeile in db.Abfrage(
+        foreach (var zeile in inhalte.SichtKarten is not null ? StatistikInSicht(db, inhalte) : db.Abfrage(
             "SELECT category, COUNT(*), SUM(correct) FROM ("
             + "  SELECT category, correct FROM quiz_answers"
             + "  UNION ALL"
