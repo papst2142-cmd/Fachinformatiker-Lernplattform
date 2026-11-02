@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.32.3
+Die Sicherheitskopie, die vor „Alles ersetzen“ angelegt wird, enthält kein falsches Tagesziel mehr.
+
+- Vor „Alles ersetzen“ legt das Programm den bisherigen Lernstand als Sicherheitskopie im Ordner „sicherungen“ ab. War die Datei mit den Einstellungen in diesem Moment nicht lesbar (zum Beispiel weil ein anderes Programm sie gesperrt hielt), stand in der Kopie bisher das voreingestellte Tagesziel statt deines eigenen. Jetzt enthält die Kopie in diesem Fall gar kein Tagesziel, nur den Lernstand. Ist die Datei lesbar, steht wie bisher dein echtes Tagesziel in der Kopie.
+- Der Lernstand in der Kopie war schon vorher immer richtig. Sonst ändert sich nichts.
+
 ## A 0.32.2
 Im Lernspiel verhalten sich einige seltene Eingaben und sehr große Zahlen jetzt genau wie in der bisherigen Python-Fassung.
 

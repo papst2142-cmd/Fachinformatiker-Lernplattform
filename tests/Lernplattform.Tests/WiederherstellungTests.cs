@@ -399,6 +399,47 @@ public class WiederherstellungTests
     }
 
     /// <summary>
+    /// Sammelliste 67 (Weisung P11-8), feste Ausnahme von Python: ist einstellungen.json beim Ersetzen gesperrt,
+    /// enthaelt die Sicherheitskopie kein Tagesziel (leeres Objekt) statt der Vorgabewerte; sie bleibt eine
+    /// gueltige Sicherung (Pruefsumme, Lesen wie "Lernstand übernehmen") mit dem echten Lernstand von vorher.
+    /// Lesbar: das echte Tagesziel aus der Datei (wie Python). Gegenprobe: ohne Fix stehen die Vorgaben drin = rot.
+    /// </summary>
+    [Fact]
+    public void KopieOhneErfundenesTagesziel()
+    {
+        // Gesperrt: die Kopie hat kein Tagesziel, die Datei bleibt bytegleich, nichts Halbes liegt herum
+        using (var a = new Aufbau("gefuellt"))
+        {
+            var vorher = File.ReadAllBytes(a.Einstellungen.Pfad);
+            string kopie;
+            using (new FileStream(a.Einstellungen.Pfad, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                kopie = a.Ersetzen("a");
+                Assert.True(a.Einstellungen.NurAnzeige);
+            }
+            Assert.Equal(vorher, File.ReadAllBytes(a.Einstellungen.Pfad));
+            Assert.False(File.Exists(a.Einstellungen.Hilfsdatei));
+            var huelle = Entpackt(kopie)!.AsObject();
+            Assert.Equal("{}", huelle["einstellungen"]!.ToJsonString());
+            Assert.Empty(Sicherungsinhalt.Lesen(File.ReadAllBytes(kopie)).Einstellungen);   // gueltige Sicherung
+            // Lernstand von vorher wie bei Python (create_backup des Stands davor)
+            var python = JsonNode.Parse(Fall("a_gefuellt").GetProperty("kopie").GetRawText())!;
+            Assert.True(JsonNode.DeepEquals(python["daten"], huelle["daten"]));
+            Assert.True(JsonNode.DeepEquals(python["zusammenfassung"], huelle["zusammenfassung"]));
+            Assert.NotEqual("{}", python["einstellungen"]!.ToJsonString());   // Python schrieb hier Werte hinein
+        }
+        // Lesbar: das echte Tagesziel wie Python (einstellungen_vorher: serie_an false, erinnerung_zeit 07:30)
+        using (var a = new Aufbau("gefuellt"))
+        {
+            var kopie = a.Ersetzen("a");
+            var einstellungen = Entpackt(kopie)!["einstellungen"]!;
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse(Fall("a_gefuellt").GetProperty("kopie").GetRawText())!["einstellungen"], einstellungen));
+            Assert.Equal("07:30", (string)einstellungen["erinnerung_zeit"]!);
+            Assert.False((bool)einstellungen["serie_an"]!);
+        }
+    }
+
+    /// <summary>
     /// Weisung P5-4 A1, Weg (b): die Hilfsdatei laesst sich nach dem commit nicht an ihren Platz bringen
     /// (an der Stelle von einstellungen.json liegt ein Ordner mit Inhalt). Lernstand ersetzt, Hilfsdatei weg,
     /// Rueckmeldung mit dem Satz W13. Kontrollfehler: Satz fehlt = rot.

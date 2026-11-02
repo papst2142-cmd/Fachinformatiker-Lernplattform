@@ -218,8 +218,7 @@ public static class Wiederherstellung
                 daten = Ruecksicherung.Austausch(db, tx);
                 tx.Commit();
             }
-            var bytes = Ruecksicherung.Packen(Ruecksicherung.Huelle(daten, Ruecksicherung.Tagesziel(einstellungen.Laden()), appVersion,
-                jetzt.DateTime, geraet));
+            var bytes = Ruecksicherung.Packen(Ruecksicherung.Huelle(daten, KopieTagesziel(einstellungen), appVersion, jetzt.DateTime, geraet));
             Ruecksicherung.Speichern(pfad, bytes);
             geschrieben = pfad;
             // Erst wenn die Kopie an ihrem Platz wieder lesbar ist (gleiche Pruefung wie beim Einspielen), wird ersetzt
@@ -243,6 +242,18 @@ public static class Wiederherstellung
             Uebernahme.Protokoll(ziel.Pfad, "Sicherheitskopie vor Alles ersetzen gescheitert, nichts geaendert: " + e.GetType().Name);
             throw new WiederherstellungAusnahme(WiederherstellungFehler.KopieGescheitert, Ruecksicherung.Fehlerart(e));
         }
+    }
+
+    /// <summary>
+    /// Tagesziel fuer die Sicherheitskopie. Feste Ausnahme von Python (Sammelliste 67, Weisung P11-8): ist
+    /// einstellungen.json vorhanden, aber nicht lesbar (gesperrt, kein Zugriff), schrieb create_backup die
+    /// Vorgabewerte als Tagesziel in die Kopie. Die Kopie enthaelt dann kein Tagesziel (leeres Objekt), nie
+    /// einen erfundenen Wert; sonst das echte wie Python (_goal_values(load_settings())).
+    /// </summary>
+    internal static PyObjekt KopieTagesziel(Einstellungen einstellungen)
+    {
+        var (werte, gesperrt) = einstellungen.LadenMitLesezustand();
+        return gesperrt ? new PyObjekt() : Ruecksicherung.Tagesziel(werte);
     }
 
     /// <summary>Nur die eben geschriebene Kopie, deren Probe gescheitert ist (nie eine fremde Datei).</summary>

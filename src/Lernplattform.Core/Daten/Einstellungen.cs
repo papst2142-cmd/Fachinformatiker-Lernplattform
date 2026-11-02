@@ -76,6 +76,18 @@ public sealed class Einstellungen
     }
 
     /// <summary>
+    /// Wie <see cref="Laden"/>, dazu der Lesezustand genau dieses Aufrufs (true: Datei vorhanden, aber nicht
+    /// lesbar; die Werte sind dann nur Vorgaben). Fuer Leser, die Vorgaben nicht als echte Werte weitergeben
+    /// duerfen (Sicherheitskopie vor "Alles ersetzen", Sammelliste 67).
+    /// </summary>
+    internal (JsonObject Werte, bool Gesperrt) LadenMitLesezustand()
+    {
+        var ergebnis = LadenMitZustand();
+        NurAnzeige = ergebnis.Gesperrt;
+        return ergebnis;
+    }
+
+    /// <summary>
     /// Laden mit dem Lesezustand dieses einen Aufrufs. Setze und Aendern entscheiden danach und nicht
     /// ueber NurAnzeige, das ein gleichzeitiges Laden in einem anderen Faden umsetzen kann
     /// (Gegenpruefung W2 Fund 3: sonst ueberschrieben Vorgaben die Datei).
