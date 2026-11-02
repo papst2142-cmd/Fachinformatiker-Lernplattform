@@ -233,6 +233,37 @@ public sealed class HaengerTests : IDisposable
         Assert.Contains(Environment.ProcessId + " ", text, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// FW6 (Sammelliste 191, Weisung P11-12): Lauf 423 (macOS) war <see cref="LaufenderHerzschlagSchreibtNichts"/> rot, weil im Log
+    /// dieses Tests eine weitere Zeile "=== 2026-11-02 14:34:34 | …" stand, in derselben Sekunde wie seine Startzeile. Ausser dem Waechter
+    /// schreibt nur der Abruf (Signal USR1) in eine fremde, gerade offene haenger.log; ein Signal, das macOS erst nach
+    /// <see cref="SignalSchreibtAbruf"/> zustellt, landet so im Log des naechsten Tests (wie Sammelliste 101 und 107). Deshalb nimmt der
+    /// Signal-Abruf in Tests nur noch <see cref="SignalSchreibtAbruf"/> an (Haenger.SignalAbrufFuerTests); im Programm gilt er immer.
+    /// Gegenprobe: ein Signal ohne Freigabe schreibt nichts in den Log eines anderen Tests (ohne den Schalter rot).
+    /// </summary>
+    [Fact]
+    public void SpaetesSignalSchreibtNichtInFremdenLog()
+    {
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+        var vorher = Log();
+        using (var kill = Process.Start(new ProcessStartInfo("kill", "-USR1 " + Environment.ProcessId) { UseShellExecute = false })!)
+        {
+            kill.WaitForExit();
+            Assert.Equal(0, kill.ExitCode);
+        }
+        // so lange wie SignalSchreibtAbruf hoechstens auf seine Zeile wartet, hier aber auf keine
+        var uhr = Stopwatch.StartNew();
+        while (Log() == vorher && uhr.Elapsed < TimeSpan.FromSeconds(2))
+        {
+            Thread.Sleep(50);
+        }
+        var log = Log();
+        Assert.True(log == vorher, "voller Log:\n" + log);
+    }
+
     /// <summary>kill -USR1 schreibt die Angaben, das Programm laeuft weiter (Linux und macOS).</summary>
     [Fact]
     public void SignalSchreibtAbruf()
@@ -242,6 +273,7 @@ public sealed class HaengerTests : IDisposable
             return;
         }
         Haenger.Seite("optionen");
+        Haenger.SignalAbrufFuerTests(true);
         using (var kill = Process.Start(new ProcessStartInfo("kill", "-USR1 " + Environment.ProcessId) { UseShellExecute = false })!)
         {
             kill.WaitForExit();

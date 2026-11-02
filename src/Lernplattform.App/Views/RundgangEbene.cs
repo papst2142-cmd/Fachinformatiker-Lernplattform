@@ -168,7 +168,10 @@ public sealed class RundgangEbene
         {
             koerper.Children.Add(Schrift.Text(tasten, "Klein", FontWeight.Normal, "Pinsel.muted"));
         }
-        var karte = Schrift.Karte(new ScrollViewer { Content = koerper });
+        // FW6 (Sammelliste 61): rechts Platz fuer die Scrollleiste, sonst liegt sie ueber den Seitenpunkten
+        koerper.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);
+        var rollen = new ScrollViewer { Content = koerper };
+        var karte = Schrift.Karte(rollen);
         karte.BorderThickness = new Thickness(2);
         karte.Farbe(Border.BorderBrushProperty, "Pinsel.accent");
         karte.CornerRadius = new CornerRadius(22);
@@ -179,7 +182,7 @@ public sealed class RundgangEbene
         Avalonia.Automation.AutomationProperties.SetName(karte, RundgangTexte.Titel);
         _fenster.Child = karte;
         // Fokus: erstes Eingabefeld der Einrichtung, sonst "Weiter"
-        Dispatcher.UIThread.Post(() => _elemente[_ablauf.Reihenfolge[0]].Focus(NavigationMethod.Tab));
+        Dialog.FokusOhneRollen(rollen, () => _elemente[_ablauf.Reihenfolge[0]], NavigationMethod.Tab);
         _top?.RequestAnimationFrame(_ => Messwerte.Reihe(_ablauf.Letzte ? "Rundgang: Seite 5 bauen" : "Rundgang: Schritt", uhr.Elapsed.TotalMilliseconds));
     }
 
