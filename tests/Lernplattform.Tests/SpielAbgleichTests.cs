@@ -83,14 +83,19 @@ public class SpielAbgleichTests
         private string? server;
         private int n;
 
-        public Aufbau()
+        public Aufbau() : this(Soll.GetProperty("vorher"), Geraete)
+        {
+        }
+
+        /// <summary>FW8 (Sammelliste 120): dieselben Geraete ab einem anderen Stand vor dem Abgleich (G51 sonderfaelle).</summary>
+        public Aufbau(JsonElement vorher, string[] geraete)
         {
             var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
             // ein gemeinsamer Takt fuer alle Geraete: die Spielschritte stehen in derselben Reihenfolge wie in Python
             var uhr = SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n));
-            foreach (var g in Geraete)
+            foreach (var g in geraete)
             {
-                var lernstand = Baue(Soll.GetProperty("vorher").GetProperty(g),
+                var lernstand = Baue(vorher.GetProperty(g),
                     Path.Combine(Directory.CreateDirectory(Path.Combine(ordner.Pfad, g)).FullName, Lernstand.DateiName));
                 Lernstaende[g] = lernstand;
                 var schreiber = new LernstandSchreiber(lernstand, uhr, () => g.ToLowerInvariant() + (++n).ToString("D6", CultureInfo.InvariantCulture));
@@ -122,13 +127,14 @@ public class SpielAbgleichTests
     }
 
     /// <summary>Eine Runde Abgleich (PC, Handy, Tablet, PC, Handy) wie in Python.</summary>
-    private static void RundeWiePython(Aufbau a, JsonElement soll, bool mitExport)
+    private static void RundeWiePython(Aufbau a, JsonElement soll, bool mitExport, string[]? runde = null)
     {
+        runde ??= Runde;
         var schritte = soll.EnumerateArray().ToList();
-        Assert.Equal(Runde.Length, schritte.Count);
-        for (var i = 0; i < Runde.Length; i++)
+        Assert.Equal(runde.Length, schritte.Count);
+        for (var i = 0; i < runde.Length; i++)
         {
-            var g = Runde[i];
+            var g = runde[i];
             Assert.Equal(g, schritte[i].GetProperty("geraet").GetString());
             var r = a.Abgleichen(g);
             var wo = "Schritt " + i + " " + g + ": ";
@@ -286,6 +292,95 @@ public class SpielAbgleichTests
             }
         }
         Assert.Empty(LaufEreignisse(a.Lernstaende["Handy"], drei));
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 120): Sonderfaelle wie Python (G51 sonderfaelle, nur angehaengt). Zwei Geraete schrieben in
+    /// derselben Sekunde (je ein Zwischenfall und Feierabend 2, E-5), der PC hat alte Ereignisse ohne Durchgang;
+    /// nach dem Abgleich loest der PC ohne Neuladen ein Ticket: Neuaufbau mit den fremden Zeilen und dabei das
+    /// Abzeichen "krisenfest", das erst beide Geraete zusammen erreichen. Exporte, Ereignisse, Abzeichen,
+    /// Bestenliste, Kurzstand je Geraet (die Reihenfolge gleicher Sekunden folgt der id des Geraets, darum
+    /// unterscheiden sich PC und Handy wie in Python), der alte Durchgang und die Belegung der Plaetze.
+    /// </summary>
+    [Fact]
+    public void SonderfaelleWiePython()
+    {
+        var sf = Soll.GetProperty("sonderfaelle");
+        string[] zwei = ["PC", "Handy"];
+        using var a = new Aufbau(sf.GetProperty("vorher"), zwei);
+        var lauf = sf.GetProperty("lauf").GetString()!;
+        foreach (var g in zwei)
+        {
+            Assert.Equal(g + " " + T(sf.GetProperty("oeffnen").GetProperty(g)), g + " " + T(a.Verwaltung[g].Lauf));
+        }
+        RundeWiePython(a, sf.GetProperty("runde1"), mitExport: true, ["PC", "Handy", "PC"]);
+
+        // der PC loest ohne Neuladen einen Zwischenfall: Neuaufbau mit den fremden Zeilen, dann das Abzeichen
+        var vorSchritt = LaufEreignisse(a.Lernstaende["PC"], lauf).Count;
+        var daten = Geloest(6, 3);
+        Py.Setzen(daten, "zwischenfall", true);
+        a.Verwaltung["PC"].ZumSchreiben().Log(Ereignisse.Erledigt, daten);
+        a.Schlange.Leeren();
+        var schritt = sf.GetProperty("schritt");
+        KurzWiePython(a, "PC", schritt.GetProperty("kurz"));
+        Assert.Equal(T(schritt.GetProperty("neu")), T(LaufEreignisse(a.Lernstaende["PC"], lauf).Skip(vorSchritt)
+            .Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()));
+        var abzeichen = a.Verwaltung["PC"].Stand.Verlauf.Where(e => e.Art == Ereignisse.Erfolg)
+            .Select(e => (object?)new List<object?> { e.Daten["erfolg"], e.Daten["stufe"] }).Distinct(new TextGleich()).ToList();
+        abzeichen.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        Assert.Equal(T(schritt.GetProperty("abzeichen")), T(abzeichen));
+        // Bestenliste ohne die Zeit der Zeile (die neuen Zeilen haben die Zeit von C#), sortiert wie in Python
+        var besten = SpielDatenbank.Bestenzeilen(a.Lernstaende["PC"])
+            .Select(z => (object?)new List<object?> { z.Lauf, z.Art, z.Schluessel, z.Wert }).ToList();
+        besten.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        var bestenSoll = schritt.GetProperty("bestenliste").EnumerateArray().Select(z => (object?)Py.Lesen(z.GetRawText())).ToList();
+        bestenSoll.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        Assert.Equal(T(bestenSoll), T(besten));
+
+        a.Verwaltung["Handy"].Neuladen();
+        KurzWiePython(a, "Handy", sf.GetProperty("handy"));
+        RundeWiePython(a, sf.GetProperty("runde2"), mitExport: false, zwei);
+
+        foreach (var g in zwei)
+        {
+            var ende = sf.GetProperty("ende").GetProperty(g);
+            a.Verwaltung[g].Neuladen();
+            KurzWiePython(a, g, ende.GetProperty("kurz"));
+            foreach (var (name, spalten) in SpielTabellen)
+            {
+                Assert.Equal(g + " " + name + " " + ende.GetProperty("tabellen").GetProperty(name).GetInt32(),
+                    g + " " + name + " " + Zeilen(a.Lernstaende[g], name, spalten).Count);
+            }
+            // der alte Durchgang ohne lauf (wie vor 0.48)
+            var alt = LaufEreignisse(a.Lernstaende[g], LernstandSchreiber.AlterLauf);
+            var altStand = new Spielstand(alt, Inhalt);
+            var altSoll = ende.GetProperty("alt");
+            Assert.Equal(g + " " + T(altSoll), g + " " + T(new PyObjekt
+            {
+                { "anzahl", (long)alt.Count },
+                { "ereignisse", Sha(T(alt.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList())) },
+                { "geld", altStand.Felder()["money"] }, { "tag", altStand.Tag }, { "history", (long)altStand.Verlauf.Count },
+                { "fingerabdruck", SpielFingerabdruckTests.Hash(altStand) },
+            }));
+            using (var v = a.Lernstaende[g].Verbindung())
+            {
+                var belegung = Spielstaende.Belegung(Spielstaende.Zeilen(v), Spielstaende.HatAlteEreignisse(v));
+                Assert.Equal(g + " " + T(ende.GetProperty("belegung")), g + " " + T(new PyObjekt
+                {
+                    { "plaetze", belegung.Plaetze.Select(p => (object?)new List<object?> { p.Platz, p.Lauf }).ToList() },
+                    { "extra", belegung.Extra.Cast<object?>().ToList() },
+                    { "geloescht", belegung.Geloescht.Order(StringComparer.Ordinal).Cast<object?>().ToList() },
+                }));
+            }
+            Assert.Equal(g + " " + T(ende.GetProperty("plaetze")), g + " " + T(a.Verwaltung[g].Plaetze().Cast<object?>().ToList()));
+        }
+    }
+
+    private sealed class TextGleich : IEqualityComparer<object?>
+    {
+        public new bool Equals(object? x, object? y) => T(x) == T(y);
+
+        public int GetHashCode(object? obj) => StringComparer.Ordinal.GetHashCode(T(obj));
     }
 
     private static SpielStempel? Spielstempel(Lernstand lernstand, string lauf) =>

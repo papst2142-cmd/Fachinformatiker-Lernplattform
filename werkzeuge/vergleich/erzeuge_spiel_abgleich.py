@@ -32,6 +32,17 @@ Dazu:
               und ob record_board wirft (Sammelliste 93)
   unbekannte_arten - ein Durchgang mit den C#-Ereignissen stadt_gegangen, stadt_gewartet,
               teil_gekauft: was GameState 0.63.2 daraus macht (Weisung P8-5 Punkt 4)
+  sonderfaelle - FW8 (Sammelliste 120, nur angehaengt): zwei neue Geraete (PC, Handy) mit eigener
+              Datenbank und eigenem Server. Vor dem Abgleich (festgehalten als fertige Datenbanken):
+              der PC hat alte Ereignisse ohne Durchgang (lauf leer, wie vor 0.48) und spielt einen
+              Durchgang "zwei" auf Platz 2; Abgleich PC, Handy; offline loesen beide je zwei Zwischenfaelle
+              richtig, den ersten in derselben Sekunde (gleicher Zeitstempel auf beiden Geraeten), und
+              machen beide Feierabend 2 in derselben Sekunde (E-5). Ab hier rechnet C# dasselbe:
+              oeffnen, runde1 (PC, Handy, PC mit Export), danach loest der PC ohne reload ein Ticket:
+              Neuaufbau mit den fremden Zeilen, dabei das Abzeichen "krisenfest" (erst mit beiden
+              Geraeten 5 Zwischenfaelle); Kurzstand, neue Ereignisse, Abzeichen und Bestenliste; das Handy
+              reload; runde2 (PC, Handy); danach reload auf beiden: Kurzstand, Spieltabellen, der alte
+              Durchgang (Ereignisse, Kurzstand) und die Belegung der Plaetze.
 
 Keine Lerndaten (Auflage A3); alle Daten- und Einstellungsordner zeigen in einen leeren
 Temp-Ordner. Uhr, Zeitstempel und uuid4 sind fest, damit die Datei bei jedem Lauf gleich ist.
@@ -178,7 +189,11 @@ def main():
     uhr = [0]
     start = datetime.datetime(2026, 10, 2, 0, 0, 0)
 
+    stempel_fest = [None]
+
     def stempel(_self=None):
+        if stempel_fest[0] is not None:
+            return stempel_fest[0], 120
         uhr[0] += 7
         return (start + datetime.timedelta(seconds=uhr[0])).strftime("%Y-%m-%d %H:%M:%S"), 120
 
@@ -349,6 +364,8 @@ def main():
         "stand": stand(zustand),
     }
 
+    sonderfaelle = sonderfall_lauf(tmp, core, fg, sync, sz, uhr, stempel_fest, aufgaben, rep)
+
     daten = {
         "jetzt_utc": JETZT_UTC,
         "laeufe_namen": {"gemein": gemein, "drei": drei, "pc": eigen},
@@ -363,6 +380,7 @@ def main():
         "ende": {"stand": ende, "anzahl": anzahl3, "bestenliste": besten3},
         "bestenliste_text": bestenliste_text,
         "unbekannte_arten": unbekannte_arten,
+        "sonderfaelle": sonderfaelle,
     }
     os.makedirs(os.path.dirname(os.path.abspath(ziel)), exist_ok=True)
     with open(ziel, "w", encoding="utf-8", newline="\n") as handle:
@@ -371,6 +389,116 @@ def main():
     print("G51 Spiel-Abgleich: %d Durchgaenge, %d Ereignisse nach Runde 3, Handy waehlt %s -> %s" % (
         len(laeufe), anzahl3["spiel_ereignisse"], nach1["aktiv"]["Handy"], ziel))
     return 0
+
+
+def sonderfall_lauf(tmp, core, fg, sync, sz, uhr, stempel_fest, aufgaben, rep):
+    """FW8 (Sammelliste 120): gleiche Zeitstempel zweier Geraete, alte Ereignisse ohne Durchgang,
+    Abzeichen beim Neuaufbau nach dem Abgleich (siehe Kopf der Datei, sonderfaelle)."""
+    geraete = ("PC", "Handy")
+    start = datetime.datetime(2026, 10, 2, 0, 0, 0)
+    pfade = {g: os.path.join(tmp, "s_" + g.lower() + ".db") for g in geraete}
+    dbs = {g: core.DBManager(pfade[g]) for g in geraete}
+    server = [None]
+
+    def versuch(geraet):
+        db = dbs[geraet]
+        sync._SERVER_CLOCK.update(server=None, device=None)
+        remote = json.loads(server[0]) if server[0] is not None else None
+        stats = sync.MergeStats()
+        deviation = sync._clock_deviation()
+        mixed = sync._note_mixed(db, remote, deviation)
+        received = 0
+        if remote:
+            received = sync.merge_into_local(db, remote, check_future=False, stats=stats, mixed=mixed)
+        text = json.dumps(sync.export_local(db), ensure_ascii=False, separators=(",", ":"))
+        server[0] = text
+        return {"geraet": geraet, "export": text, "received": received, "gone": stats.removed}
+
+    def loesen(game, nummer, tag, zwischenfall=False):
+        daten = {"aufgabe": aufgaben[nummer], "tag": tag, "richtig": True, "geld": 60, "reputation": rep}
+        if zwischenfall:
+            daten["zwischenfall"] = True
+        game._log(fg.EV_SOLVED, daten)
+
+    def jetzt():
+        uhr[0] += 7
+        return (start + datetime.timedelta(seconds=uhr[0])).strftime("%Y-%m-%d %H:%M:%S")
+
+    # -- vor dem Abgleich (nur Python) -------------------------------------------------
+    # alte Ereignisse ohne Durchgang (wie vor 0.48: Spalte lauf leer), nur auf dem PC
+    conn = sqlite3.connect(pfade["PC"])
+    alt = [(fg.EV_PROFILE, {"name": "Alt", "aussehen": sz.LOOK}),
+           (fg.EV_SOLVED, {"aufgabe": aufgaben[30], "tag": 1, "richtig": True, "geld": 60, "reputation": rep}),
+           (fg.EV_DAY_END, {"tag": 1, "gehalt": 140})]
+    for nummer, (art, daten) in enumerate(alt):
+        conn.execute("INSERT INTO spiel_ereignisse (timestamp, utc_offset, typ, daten, geraet, uid, lauf)"
+                     " VALUES (?, 120, ?, ?, 'PC', ?, NULL)",
+                     (jetzt(), art, json.dumps(daten, ensure_ascii=False), "altes_ereignis_%d" % nummer))
+    conn.commit()
+    conn.close()
+    pc = fg.Game(dbs["PC"], "PC")
+    zwei = pc.new_run(2)
+    pc.set_profile("Nico", sz.LOOK, fg.DIFF_NORMAL)
+    loesen(pc, 1, 1)
+    pc._log(fg.EV_DAY_END, {"tag": 1, "gehalt": 140})
+    versuch("PC")
+    versuch("Handy")
+    handy = fg.Game(dbs["Handy"], "Handy")
+    handy.select_run(zwei)
+    # offline: das erste Ticket loesen beide in derselben Sekunde, dann je eins, Feierabend 2 in derselben Sekunde
+    pc.reload()
+    handy.reload()
+    stempel_fest[0] = jetzt()
+    loesen(pc, 2, 2, zwischenfall=True)
+    loesen(handy, 3, 2, zwischenfall=True)
+    stempel_fest[0] = None
+    loesen(pc, 4, 2, zwischenfall=True)
+    loesen(handy, 5, 2, zwischenfall=True)
+    stempel_fest[0] = jetzt()
+    pc._log(fg.EV_DAY_END, {"tag": 2, "gehalt": 140})
+    handy._log(fg.EV_DAY_END, {"tag": 2, "gehalt": 140})
+    stempel_fest[0] = None
+    del pc, handy
+    vorher = {g: datenbank(pfade[g]) for g in geraete}
+
+    # -- ab hier rechnet C# dasselbe ---------------------------------------------------
+    spiele = {g: fg.Game(dbs[g], g) for g in geraete}
+    oeffnen = {g: spiele[g].run for g in geraete}
+    r1 = [versuch(g) for g in ("PC", "Handy", "PC")]
+    vor_schritt = len(dbs["PC"].game_events(zwei))
+    loesen(spiele["PC"], 6, 3, zwischenfall=True)   # ohne reload: Neuaufbau mit den fremden Zeilen, dann Abzeichen
+    pc_ereignisse = dbs["PC"].game_events(zwei)
+    schritt = {
+        "kurz": kurzstand(spiele["PC"]),
+        "neu": [[k, d] for _t, k, d in pc_ereignisse[vor_schritt:]],
+        "abzeichen": sorted([[k[0], k[1]] for k in spiele["PC"].state.achievements]),
+        "bestenliste": sorted([[d, a, s, w] for _t, d, a, s, w, _x in spiele["PC"].records()],
+                              key=lambda z: json.dumps(z, ensure_ascii=False)),
+    }
+    spiele["Handy"].reload()
+    handy_kurz = kurzstand(spiele["Handy"])
+    r2 = [versuch(g) for g in ("PC", "Handy")]
+    for r in r2:
+        r.pop("export")
+    ende = {}
+    for g in geraete:
+        spiele[g].reload()
+        events = dbs[g].game_events(fg.LEGACY_RUN)
+        state = fg.GameState(events, fg.GAME)
+        layout = spiele[g].layout()
+        ende[g] = {
+            "kurz": kurzstand(spiele[g]),
+            # Anzahl je Tabelle (die neuen Zeilen haben in C# eigene Zeiten und uids)
+            "tabellen": {name: len(zeilen) for name, zeilen in spiel_tabellen(pfade[g]).items()},
+            "alt": {"anzahl": len(events), "ereignisse": pruefsumme([[k, d] for _t, k, d in events]),
+                    "geld": state.money, "tag": state.day, "history": len(state.history),
+                    "fingerabdruck": fingerabdruck(state)},
+            "belegung": {"plaetze": [[k, v] for k, v in layout["plaetze"].items()],
+                         "extra": layout["extra"], "geloescht": sorted(layout["geloescht"])},
+            "plaetze": spiele[g].slots(),
+        }
+    return {"lauf": zwei, "vorher": vorher, "oeffnen": oeffnen, "runde1": r1, "schritt": schritt,
+            "handy": handy_kurz, "runde2": r2, "ende": ende}
 
 
 if __name__ == "__main__":
