@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lernplattform.Core.Rechner;
+using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Programm;
 using static Lernplattform.Core.Texte.RechnerTexte;
@@ -91,6 +92,9 @@ public sealed class RechenTrainerTeil : StackPanel
 
     /// <summary>Der Ergebniskasten des Rechenwegs (fuer den Start ohne Bedienung).</summary>
     internal Ergebniskasten Rechenweg => _rechenweg;
+
+    /// <summary>Der Aufgabentext (fuer den Start ohne Bedienung, FW7).</summary>
+    internal TextBlock AufgabeText => _aufgabe;
 
     /// <summary>Reiter "Trainer" wird gezeigt: beim ersten Mal Ablauf anlegen und Statistik lesen (Tabellenzeile 1).</summary>
     public void Gezeigt()
@@ -293,8 +297,9 @@ public sealed class RechenTrainerTeil : StackPanel
         _statistik.IsVisible = _statistik.Text.Length > 0;
         _kopf.Text = a?.Kopf ?? "";
         _kopf.IsVisible = _kopf.Text.Length > 0;
-        _aufgabe.Text = a?.AufgabeText ?? Lernplattform.Core.Texte.Beschriftungen.Einsetzen(TrainerStart, RechenTrainer.Runde);
-        _rueckmeldung.Text = a?.Rueckmeldung ?? "";
+        // FW7 (Sammelliste 40): Einheit bleibt in der Anzeige bei ihrer Zahl ("50 %")
+        _aufgabe.Text = Zahlbindung.Binden(a?.AufgabeText ?? Lernplattform.Core.Texte.Beschriftungen.Einsetzen(TrainerStart, RechenTrainer.Runde));
+        _rueckmeldung.Text = Zahlbindung.Binden(a?.Rueckmeldung ?? "");
         _rueckmeldung.IsVisible = _rueckmeldung.Text.Length > 0;
         var zustand = a?.Zustand ?? TrainerZustand.KeineRunde;
         _rueckmeldung.Farbe(TextBlock.ForegroundProperty, zustand switch

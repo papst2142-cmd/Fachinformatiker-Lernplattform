@@ -16,6 +16,9 @@ namespace Lernplattform.Messung;
 /// FW6 (Weisung P11-12): (6) nichts Sichtbares liegt unter der senkrechten Scrollleiste eines Fensters (Sammelliste 61),
 /// (7) ein Fenster (Dialog) beginnt oben beim Titel (Sammelliste 62), (8) Tabellen brechen nie um und zeigen
 /// "→ wischen" genau dann, wenn sie breiter als ihr Bereich sind (Sammelliste 177 Teil 2).
+/// FW7 Nachbesserung (Weisung P11-14): (9) die waagrechte Scrollleiste jedes wischbaren Kastens (Tabelle,
+/// Ergebnis- und Rechenweg-Kasten der Rechner, jeder andere seitlich verschiebbare Bereich) liegt unter dem Text,
+/// nie ueber einer Zeile.
 /// </summary>
 public static class Layoutpruefung
 {
@@ -42,6 +45,7 @@ public static class Layoutpruefung
                 case ScrollBar leiste:
                     PruefeLeiste(leiste, funde);
                     PruefeUnterLeiste(leiste, wurzel, funde);
+                    PruefeUeberText(leiste, funde);
                     break;
                 case Views.Tabellenkasten tabelle:
                     PruefeTabelle(tabelle, funde);
@@ -92,6 +96,45 @@ public static class Layoutpruefung
         }
     }
 
+    /// <summary>
+    /// FW7 Nachbesserung (Weisung P11-14): eine sichtbare waagrechte Scrollleiste liegt unter dem Text ihres Bereichs,
+    /// nicht ueber einer Zeile (Unterlaengen und Kommas abgeschnitten). Gilt fuer jeden seitlich verschiebbaren Bereich.
+    /// </summary>
+    private static void PruefeUeberText(ScrollBar leiste, List<string> funde)
+    {
+        if (leiste.Orientation != Avalonia.Layout.Orientation.Horizontal || leiste.Bounds.Height <= 0
+            || leiste.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault() is not { Content: Control inhalt } rollen
+            || leiste.TranslatePoint(default, rollen) is not { } oben)
+        {
+            return;
+        }
+        var flaeche = new Rect(oben, leiste.Bounds.Size);
+        var sichtbar = new Rect(rollen.Bounds.Size);
+        foreach (var text in inhalt.GetSelfAndVisualDescendants().OfType<TextBlock>())
+        {
+            if (!text.IsEffectivelyVisible || string.IsNullOrEmpty(text.Text) || text.Bounds.Width <= 0
+                || text.TranslatePoint(new Point(text.Padding.Left, text.Padding.Top), rollen) is not { } p)
+            {
+                continue;
+            }
+            var zeilen = new Rect(p, new Size(text.TextLayout.Width, text.TextLayout.Height)).Intersect(sichtbar);
+            var schnitt = zeilen.Intersect(flaeche);
+            if (schnitt.Width > Toleranz && schnitt.Height > Toleranz)
+            {
+                funde.Add($"Scrollleiste ueber {Bereich(rollen)}: \"{Kurz(text.Text)}\" ({zeilen.Bottom:F0} > {flaeche.Y:F0})");
+            }
+        }
+    }
+
+    private static string Bereich(ScrollViewer rollen) =>
+        rollen.GetVisualAncestors().FirstOrDefault(a => a is Views.Tabellenkasten or Views.Ergebniskasten) switch
+        {
+            Views.Tabellenkasten => "der Tabelle",
+            Views.Ergebniskasten k when k.GetVisualAncestors().OfType<Views.RechenTrainerTeil>().Any(t => t.Rechenweg == k) => "dem Rechenweg",
+            Views.Ergebniskasten => "dem Ergebniskasten",
+            _ => "dem Bereich",
+        };
+
     /// <summary>FW6 (Sammelliste 177 Teil 2): Tabelle ohne Umbruch, Hinweis "→ wischen" genau wenn noetig.</summary>
     private static void PruefeTabelle(Views.Tabellenkasten tabelle, List<string> funde)
     {
@@ -99,15 +142,6 @@ public static class Layoutpruefung
         if (tabelle.Zeilen.TextLayout.TextLines.Count != zeilen)
         {
             funde.Add($"Tabelle umgebrochen: \"{Kurz(tabelle.Zeilen.Text ?? "")}\" ({tabelle.Zeilen.TextLayout.TextLines.Count} statt {zeilen} Zeilen)");
-        }
-        // die waagrechte Scrollleiste liegt unter der letzten Zeile, nicht darueber
-        if (tabelle.Rollen.GetVisualDescendants().OfType<ScrollBar>().FirstOrDefault(l => l.Orientation == Avalonia.Layout.Orientation.Horizontal
-                && l.IsEffectivelyVisible && l.Bounds.Height > 0) is { } leiste
-            && leiste.TranslatePoint(default, tabelle.Rollen) is { } oben
-            && tabelle.Zeilen.TranslatePoint(default, tabelle.Rollen) is { } text
-            && text.Y + tabelle.Zeilen.Padding.Top + tabelle.Zeilen.TextLayout.Height > oben.Y + Toleranz)
-        {
-            funde.Add($"Scrollleiste ueber der Tabelle: \"{Kurz(tabelle.Zeilen.Text ?? "")}\" ({text.Y + tabelle.Zeilen.TextLayout.Height:F0} > {oben.Y:F0})");
         }
         var breiter = tabelle.Rollen.Extent.Width > tabelle.Rollen.Viewport.Width + Toleranz;
         if (breiter != tabelle.WischHinweis)
