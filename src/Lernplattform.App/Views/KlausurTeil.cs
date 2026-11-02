@@ -360,13 +360,13 @@ public sealed class KlausurTeil
         var inhalt = new StackPanel { Spacing = 6 };
         if (details.Einleitung.Length > 0)
         {
-            inhalt.Children.Add(new LernText(details.Einleitung, "Normal", FontWeight.Normal, "Pinsel.text_soft"));
+            inhalt.Children.Add(new LernText(details.Einleitung, "Normal", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true });
         }
         for (var teil = 0; teil < details.Teile.Count; teil++)
         {
             var t = details.Teile[teil];
             var schluessel = Klausur.Schluessel(_aufgabe, teil);
-            inhalt.Children.Add(Abstand(new LernText(Teiltitel(teil, t), "Normal", FontWeight.Bold, "Pinsel.text"), 14));
+            inhalt.Children.Add(Abstand(new LernText(Teiltitel(teil, t), "Normal", FontWeight.Bold, "Pinsel.text") { Tabellen = true }, 14));
             var feld = new TextBox
             {
                 AcceptsReturn = true,
@@ -569,7 +569,7 @@ public sealed class KlausurTeil
             var t = details.Teile[teil];
             var nr = teil;
             var schluessel = Klausur.Schluessel(aufgabe, teil);
-            inhalt.Children.Add(Abstand(new LernText(Teiltitel(teil, t), "Normal", FontWeight.Bold, "Pinsel.text"), 14));
+            inhalt.Children.Add(Abstand(new LernText(Teiltitel(teil, t), "Normal", FontWeight.Bold, "Pinsel.text") { Tabellen = true }, 14));
             inhalt.Children.Add(Abstand(LernTeile.Label(PruefungTexte.DeineAntwort), 6));
             var eigene = Klausur.Antwort(zustand, schluessel);
             inhalt.Children.Add(new Border
@@ -598,7 +598,7 @@ public sealed class KlausurTeil
                 var index = k;
                 var wahl = new CheckBox
                 {
-                    Content = new LernText(t.Kriterien[k], "Klein", FontWeight.Normal, "Pinsel.text_soft"),
+                    Content = new LernText(t.Kriterien[k], "Klein", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true },
                     IsChecked = index < haken.Count && Json.Zahl(haken[index]) is > 0,
                 };
                 Avalonia.Automation.AutomationProperties.SetName(wahl, t.Kriterien[k]);

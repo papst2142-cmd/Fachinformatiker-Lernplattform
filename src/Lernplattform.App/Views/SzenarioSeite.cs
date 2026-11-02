@@ -211,8 +211,9 @@ public sealed class SzenarioSeite : UserControl
 
         _statuszeile = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.muted");
         _titel = new LernText("", "Gross", FontWeight.SemiBold, "Pinsel.text");
-        _aufgabe = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft");
-        _loesung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft");
+        // Sammelliste 177: Tabellenzeilen in fester Zeichenbreite
+        _aufgabe = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true };
+        _loesung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_soft") { Tabellen = true };
         _detail.Children.Clear();
         if (Projekt)
         {

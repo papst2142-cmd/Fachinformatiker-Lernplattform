@@ -51,7 +51,8 @@ public static class Layoutpruefung
 
     private static void PruefeText(TextBlock text, List<string> funde)
     {
-        var inhalt = text.Text ?? "";
+        // Sammelliste 177: ein LernText mit Tabellen zeigt seinen Text als Abschnitte (Text leer, Rohtext voll)
+        var inhalt = text is Views.LernText lern ? lern.Rohtext : text.Text ?? "";
         if (inhalt.Length == 0)
         {
             return;
@@ -116,6 +117,7 @@ public static class Layoutpruefung
 
     private static string Name(Control element) => element switch
     {
+        Views.LernText t => "\"" + Kurz(t.Rohtext) + "\"",
         TextBlock t => "\"" + Kurz(t.Text ?? "") + "\"",
         Button { Content: TextBlock t } => "\"" + Kurz(t.Text ?? "") + "\"",
         Button { Content: string s } => "\"" + Kurz(s) + "\"",

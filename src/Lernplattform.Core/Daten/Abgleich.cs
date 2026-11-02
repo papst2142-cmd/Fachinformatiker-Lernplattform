@@ -138,7 +138,7 @@ public static class Abgleich
 
     /// <summary>
     /// sync: gleicht den Lernstand mit dem Repository ab. Wirft AbgleichAusnahme. geraet steht
-    /// in der Commit-Nachricht („PC &lt;Rechnername&gt;“ oder „Handy“).
+    /// in der Commit-Nachricht („PC“ oder „Handy“, ohne Rechnernamen, Sammelliste 24).
     /// </summary>
     public static AbgleichErgebnis Ausfuehren(Lernstand lernstand, Einstellungen einstellungen, string geraet, GitHubZugang netz,
         IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null, Uhrabweichung? abweichung = null,

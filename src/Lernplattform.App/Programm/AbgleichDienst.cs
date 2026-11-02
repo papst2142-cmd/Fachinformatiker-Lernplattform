@@ -23,21 +23,10 @@ public static class AbgleichDienst
 
     private static bool Aus => Views.MainView.AutoModus;
 
-    /// <summary>Gerät in der Commit-Nachricht und in der Sicherung: „PC &lt;Rechnername&gt;“ bzw. „Handy“.</summary>
+    /// <summary>Gerät in der Commit-Nachricht und in der Sicherung: „PC“ bzw. „Handy“ (ohne Rechnernamen, Sammelliste 24).</summary>
     public static string Geraet()
     {
-        if (Android)
-        {
-            return Geraetetexte.Geraet(false, "");
-        }
-        try
-        {
-            return Geraetetexte.Geraet(true, System.Net.Dns.GetHostName());
-        }
-        catch (System.Net.Sockets.SocketException)
-        {
-            return Geraetetexte.Geraet(true, "");
-        }
+        return Geraetetexte.Geraet(!Android);
     }
 
     private static AbgleichSteuerung Steuerung => _steuerung ??= new AbgleichSteuerung(

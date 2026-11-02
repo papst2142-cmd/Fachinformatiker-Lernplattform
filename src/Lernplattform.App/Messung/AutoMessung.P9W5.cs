@@ -99,7 +99,7 @@ public static partial class AutoMessung
 
     /// <summary>Alle Texte der sichtbaren TextBlocks unter <paramref name="wurzel"/>.</summary>
     private static string SichtbareTexte(Control wurzel) => string.Join("\n",
-        wurzel.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text));
+        wurzel.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t is LernText l ? l.Rohtext : t.Text));
 
     /// <summary>Sichtbarer Knopf mit genau dieser Beschriftung (erster Treffer) oder null.</summary>
     private static Button? KnopfMit(Control wurzel, string beschriftung) =>

@@ -29,7 +29,7 @@ public static class Geraetetexte
         new("B8", "Dashboard.Ring", "gleiches Wort; nur bei kaputten Daten (ueber 100 %) zeigt der PC die gekappte Zahl wie Python"),
         new("B9", "Diagnose.Knoepfe", "\"Ordner öffnen\" gibt es nur am PC"),
         new("B10", "Uebernahme.Dateifilter", "Android kennt den Dateityp .fisisicherung nicht"),
-        new("B11", "Abgleich.Geraet", "\"PC <Rechnername>\" / \"Handy\" (Sammelliste 24)"),
+        new("B11", "Abgleich.Geraet", "\"PC\" / \"Handy\" (ohne Rechnernamen, Sammelliste 24, Nico 02.11.2026 Antwort 24b)"),
         new("B12", "Pruefung.StartFrage", "\"das Programm\" / \"die App\" (Wortliste W2 Nr 24, Weisung P4-6)"),
         new("B13", "Rundgang.Tasten", "Tastenzeile des Rundgangs nur am PC (fisi_hilfe.TOUR_KEYS, Wortliste W4)"),
         new("B14", "Update.Knopf", "PC laedt und installiert selbst (\"Jetzt aktualisieren\", ohne Installation \"Zur Download-Seite\"), Handy laedt die APK im Browser (\"Herunterladen\", main.py 6163, Wortliste W3)"),
@@ -93,8 +93,12 @@ public static class Geraetetexte
     /// <summary>Tastenzeile unter dem Rundgang (B13): nur am PC, am Handy keine.</summary>
     public static string? RundgangTasten(bool pc) => pc ? Hilfe.HilfeTexte.TourTasten : null;
 
-    /// <summary>Geraet in Commit-Nachricht und Sicherung (B11).</summary>
-    public static string Geraet(bool pc, string rechnername) => pc ? ("PC " + rechnername.Trim()).Trim() : "Handy";
+    /// <summary>
+    /// Geraet in Commit-Nachricht und Sicherung (B11): "PC" bzw. "Handy". Feste Ausnahme von Python (app_gui
+    /// "PC %s" % platform.node(), Sammelliste 24, Nico 02.11.2026 Antwort 24b, Weisung P11-4): ohne Rechnernamen,
+    /// der ein Personenname sein kann.
+    /// </summary>
+    public static string Geraet(bool pc) => pc ? "PC" : "Handy";
 
     /// <summary>Hauptknopf im Fenster "Update verfügbar" (B14, Phase 5 BE10).</summary>
     public static string UpdateKnopf(bool installierbar, bool pc) =>

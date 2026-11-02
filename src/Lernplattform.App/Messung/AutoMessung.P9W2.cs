@@ -303,5 +303,5 @@ public static partial class AutoMessung
 
     /// <summary>Alle Texte der sichtbaren TextBlocks (fuer die Pruefung, ob ein Hinweis zu sehen ist).</summary>
     private static string Textbaum(Control wurzel) => string.Join("\n",
-        Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(wurzel).OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text));
+        Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(wurzel).OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t is LernText l ? l.Rohtext : t.Text));
 }
