@@ -165,7 +165,21 @@ public sealed class RechenTrainerAblauf
         {
             case TrainerZustand.Offen:
                 Eingabefehler = _breit[Index].EingabeFehler(antworten) ?? "";
-                return Eingabefehler.Length > 0 ? null : PruefenUndSpeichern(antworten, schmal);
+                if (Eingabefehler.Length > 0)
+                {
+                    return null;
+                }
+                try
+                {
+                    return PruefenUndSpeichern(antworten, schmal);
+                }
+                catch (ZuVieleZiffern fehler)
+                {
+                    // wie Python: der ValueError bricht das Pruefen vor log_trainer ab, nichts wird gespeichert,
+                    // die Aufgabe bleibt offen; der Fehler landet nur im Fehlerprotokoll (Sammelliste 34)
+                    Diagnose.Fehlerprotokoll.Schreiben("Rechen-Trainer: " + fehler.Message);
+                    return null;
+                }
             case TrainerZustand.Geprueft:
                 Weiter();
                 return null;

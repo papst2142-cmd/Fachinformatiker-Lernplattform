@@ -240,11 +240,22 @@ public static class RechenTrainer
     private static BigInteger Ganz(string ziffern) => BigInteger.Parse(ziffern, NumberStyles.None, CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// _digits(text) and int(text) == erwartet. Mehr als 4300 Ziffern: Python wirft dort einen
-    /// ValueError (Pruefen bricht ab); C# wertet bewusst "falsch" (Weisung P3-12 Frage 3, Sammelliste 34).
+    /// _digits(text) and int(text) == erwartet. Mehr als 4300 Ziffern: Python wirft dort einen ValueError
+    /// ("Exceeds the limit (4300 digits)"), Pruefen bricht ab und nichts wird gespeichert. Phase 11 FW1
+    /// (Sammelliste 34): C# wirft wie Python <see cref="ZuVieleZiffern"/> (vorher bewusst "falsch" und gespeichert).
     /// </summary>
-    private static bool ZiffernGleich(string text, BigInteger erwartet) =>
-        Ziffern(text) && text.Length <= HoechstensZiffern && Ganz(text) == erwartet;
+    private static bool ZiffernGleich(string text, BigInteger erwartet)
+    {
+        if (!Ziffern(text))
+        {
+            return false;
+        }
+        if (text.Length > HoechstensZiffern)
+        {
+            throw new ZuVieleZiffern(text.Length);
+        }
+        return Ganz(text) == erwartet;
+    }
 
     /// <summary>Gleiche Adresse wie Python: Version, Wert und Zone (scope_id) gleich.</summary>
     private static bool Gleich(IpAdresse a, IpAdresse b) =>

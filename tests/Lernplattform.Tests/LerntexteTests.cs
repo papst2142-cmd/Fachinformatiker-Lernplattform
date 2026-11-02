@@ -156,26 +156,24 @@ public class LerntexteTests
     }
 
     /// <summary>
-    /// Weisung P2-4: Freitext-Pruefung mit Python-lower(). Gleich bis auf das griechische
-    /// Schluss-Sigma: Python schreibt am Wortende "ς", .NET "σ" (gemeldet, nicht angepasst).
+    /// Weisung P2-4: Freitext-Pruefung mit Python-lower(). Phase 11 FW1 (Sammelliste 17): jetzt ohne
+    /// Ausnahme gleich, auch das griechische Schluss-Sigma ("ς" am Wortende wie Python).
     /// </summary>
     [Fact]
-    public void KleinschreibungWiePythonAusserSchlussSigma()
+    public void KleinschreibungWiePython()
     {
         var abweichend = new List<string>();
         foreach (var fall in G22.GetProperty("klein").EnumerateArray())
         {
             var text = fall.GetProperty("text").GetString()!;
-            var erwartet = fall.GetProperty("klein").GetString()!;
-            var ist = RahmenplanGewicht.Klein(text);
-            if (ist != erwartet)
+            if (RahmenplanGewicht.Klein(text) != fall.GetProperty("klein").GetString())
             {
-                // Die einzige bekannte Abweichung: genau die Schluss-Sigmas
-                Assert.Equal(erwartet.Replace('ς', 'σ'), ist);
                 abweichend.Add(text);
             }
         }
-        Assert.Equal(["ΟΔΟΣ", "ΟΔΟΣ ΚΑΙ", "ΑΣ.", "ΪΣ"], abweichend);
+        Assert.Empty(abweichend);
+        // die vier Faelle, die vorher abwichen, stehen weiter in G22
+        Assert.Equal(4, G22.GetProperty("klein").EnumerateArray().Count(f => f.GetProperty("klein").GetString()!.Contains('ς')));
     }
 
     [Fact]

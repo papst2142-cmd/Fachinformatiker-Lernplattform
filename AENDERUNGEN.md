@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.32.1
+Kleine Fehler sind behoben: Riesige Eingaben im Rechen-Trainer werden nicht mehr als falsch gezählt, und das Programm bereitet beim Start schneller vor.
+
+- Rechen-Trainer: Eine Zahl mit mehr als 4 300 Ziffern wird nicht mehr als falsche Antwort gespeichert. Die Aufgabe bleibt offen, und nichts wird gezählt, genau wie in der bisherigen Python-Fassung.
+- Beim Start wird die Zuordnung der Lerninhalte zum Ausbildungsrahmenplan jetzt auf mehrere Prozessorkerne verteilt. Diese Vorbereitung im Hintergrund ist dadurch spürbar schneller fertig, das Ergebnis bleibt genau gleich.
+- Griechische Wörter in Lerninhalten werden bei der Prüfung von Freitext-Antworten jetzt genau wie in der Python-Fassung kleingeschrieben (Schluss-Sigma). In den deutschen Lerninhalten ändert sich dadurch nichts.
+
 ## A 0.32.0
 Die Erinnerung ans Tagesziel ist da, Spielstand und Bestenliste lassen sich in den Optionen löschen, und einige Anzeigen für Anwendungsentwicklung, Daten- und Prozessanalyse und Digitale Vernetzung sind richtiggestellt.
 

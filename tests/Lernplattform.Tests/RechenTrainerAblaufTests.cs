@@ -55,6 +55,30 @@ public class RechenTrainerAblaufTests
 
     private static readonly Dictionary<string, string> Leer = [];
 
+    /// <summary>
+    /// Phase 11 FW1 (Sammelliste 34): mehr als 4300 Ziffern in einem Zahlenfeld bricht das Pruefen ab wie Pythons
+    /// ValueError: nichts gespeichert, kein Anstoss, die Aufgabe bleibt offen. Mit 4300 Ziffern wird normal gespeichert.
+    /// </summary>
+    [Fact]
+    public void MehrAls4300ZiffernSpeichertNichts()
+    {
+        using var t = new Aufbau(123456789);
+        var a = t.Ablauf;
+        a.SetzeArt("ipv4");
+        a.SetzeStufe(1);
+        a.RundeStarten();
+        var zuLang = a.Aufgabe!.Felder.ToDictionary(f => f.Schluessel, _ => new string('1', 4301));
+        Assert.Null(a.Druecken(zuLang, false));
+        Assert.Equal("", a.Eingabefehler);
+        Assert.Equal(TrainerZustand.Offen, a.Zustand);
+        Assert.Empty(a.Ergebnisse);
+        Assert.Empty(t.Zeilen());
+        Assert.Equal(0, t.Anstoesse);
+        var grenze = a.Aufgabe!.Felder.ToDictionary(f => f.Schluessel, _ => new string('1', 4300));
+        Assert.NotNull(a.Druecken(grenze, false));
+        Assert.Equal(["ipv4:1:0"], t.Zeilen());
+    }
+
     /// <summary>Zustand A: Start-Satz, Knopf "Prüfen" gesperrt (PC und Handy), Druecken tut nichts (Zeile 8).</summary>
     [Fact]
     public void OhneRundeGesperrtUndOhneWirkung()
