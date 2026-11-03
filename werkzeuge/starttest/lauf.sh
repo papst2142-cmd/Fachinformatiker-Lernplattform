@@ -40,8 +40,86 @@ if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
   export LERNPLATTFORM_VOLLE_PC_GROESSE=1
   befehl=(xvfb-run -a -s "-screen 0 1600x1000x24" "${befehl[@]}")
 fi
-"${befehl[@]}"
-rc=$?
+# Sammelliste 199 (Weisung P11-22): Wachhund VOR dem Schrittzeitlimit der CI. Lauf 458 (Intel-Mac, 2. Lauf) stand
+# 25 Minuten ohne Ausgabe, bis GitHub den Schritt abbrach; der Prozess lebte danach weiter (bis Jobende) und es
+# gab keine Angabe, wo er stand. STARTTEST_WACHHUND_MINUTEN (setzt ci.yml: Schrittzeit minus 3 Minuten) beendet
+# den Lauf vorher selbst: Zeile "FEHLER: HAENGER", Abruf ueber USR1 (Haenger.cs schreibt Seite, Vorgang und
+# Wartepunkte nach haenger.log), unter macOS zusaetzlich die Faden-Stapel ueber "sample", Ausgabe von haenger.log
+# und fehler.log, dann den ganzen Prozessbaum beenden. Rueckgabe 4 = Haenger (urteil.py: sofort rot, kein
+# Neustart). Nur strenger: ohne Wachhund waere der Schritt genauso rot (Zeitlimit), nur ohne Angaben.
+nachkommen() {
+  # alle Nachkommen eines Prozesses (ps gibt es unter Linux und macOS gleich)
+  local kinder k
+  kinder=$(ps -A -o pid= -o ppid= | awk -v p="$1" '$2 == p { print $1 }')
+  for k in $kinder; do
+    echo "$k"
+    nachkommen "$k"
+  done
+}
+haenger_angaben() {
+  local wurzel=$1 pid name ordner
+  pid=""
+  for k in $(nachkommen "$wurzel"); do
+    name=$(ps -o comm= -p "$k" 2>/dev/null)
+    if [ "${name##*/}" = "Lernplattform" ]; then
+      pid=$k
+    fi
+  done
+  echo "Wachhund: Programm-Prozess ${pid:-nicht gefunden}, Prozessbaum:"
+  ps -o pid=,ppid=,pcpu=,rss=,etime=,comm= -p "$(nachkommen "$wurzel" | tr '\n' ',' | sed 's/,$//')" 2>/dev/null || true
+  if [ -n "$pid" ]; then
+    # Abruf: Linux USR1 = 10, macOS USR1 = 30; kill -USR1 waehlt die richtige Nummer selbst
+    kill -USR1 "$pid" 2>/dev/null || true
+    sleep 5
+    if [ "$(uname)" = "Darwin" ] && command -v sample >/dev/null 2>&1; then
+      echo "Wachhund: Faden-Stapel (sample, 5 s):"
+      sample "$pid" 5 -mayDie 2>/dev/null | head -n 400 || true
+    fi
+  fi
+  for ordner in "${LERNPLATTFORM_DATEN:-}" "$HOME/Library/Application Support/Fachinformatiker-Lernplattform" \
+    "$HOME/.local/share/fachinformatiker-lernplattform"; do
+    [ -n "$ordner" ] || continue
+    for log in haenger.log fehler.log messpunkte.log; do
+      if [ -s "$ordner/$log" ]; then
+        echo "Wachhund: $ordner/$log (letzte 80 Zeilen):"
+        tail -n 80 "$ordner/$log"
+      fi
+    done
+  done
+}
+baum_beenden() {
+  local liste
+  liste=$(nachkommen "$1")
+  [ -n "$liste" ] && kill -TERM $liste 2>/dev/null
+  sleep 5
+  liste=$(nachkommen "$1")
+  [ -n "$liste" ] && kill -KILL $liste 2>/dev/null
+  kill -KILL "$1" 2>/dev/null
+  return 0
+}
+wachhund=${STARTTEST_WACHHUND_MINUTEN:-0}
+if [ "$wachhund" -gt 0 ] 2>/dev/null && [ "${RUNNER_OS:-Linux}" != "Windows" ]; then
+  "${befehl[@]}" &
+  wurzel=$!
+  frist=$(( $(date +%s) + wachhund * 60 ))
+  while kill -0 "$wurzel" 2>/dev/null && [ "$(date +%s)" -lt "$frist" ]; do
+    sleep 5
+  done
+  if kill -0 "$wurzel" 2>/dev/null; then
+    echo "FEHLER: HAENGER: Start-Test nach $wachhund Minuten nicht beendet (Wachhund vor dem Schrittzeitlimit, Sammelliste 199)"
+    haenger_angaben "$wurzel"
+    baum_beenden "$wurzel"
+    wait "$wurzel" 2>/dev/null
+    : > "$rcdatei"
+    rc=4
+  else
+    wait "$wurzel"
+    rc=$?
+  fi
+else
+  "${befehl[@]}"
+  rc=$?
+fi
 if [ -s "$rcdatei" ]; then
   programm=$(cat "$rcdatei")
   if [ "$programm" != "$rc" ]; then
