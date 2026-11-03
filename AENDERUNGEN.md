@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.36.0
+Einen Problembericht kannst du jetzt mit einem Knopfdruck direkt an den Herausgeber der Lernplattform schicken.
+
+- Unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“ gibt es den neuen Knopf „Bericht senden“, am PC und am Handy. Gesendet wird nur, wenn du ihn drückst, und erst nach einer Rückfrage. Nie sendet das Programm von allein.
+- Gesendet wird genau der Bericht, den du dort siehst. Er enthält keine Passwörter, keine Zugangsschlüssel, nicht deinen Benutzernamen in Pfaden und nicht deinen Lernstand. Er wird in einem nicht öffentlichen Speicher abgelegt.
+- In der Rückfrage kannst du in das Feld „Was ist passiert? (freiwillig)“ kurz beschreiben, was du gemacht hast (höchstens 2000 Zeichen). Dein Text steht dann über dem Bericht. Schreibe keine Passwörter oder Namen hinein.
+- Nach dem Senden siehst du den Namen der abgelegten Datei. Klappt das Senden nicht (zum Beispiel ohne Internet), sagt dir ein Fenster warum; der Bericht lässt sich dann wie bisher als Datei speichern oder kopieren.
+
 ## A 0.35.0
 Auf dem Mac gibt es jetzt das Update im Programm, und das Spiel zeigt die Stadt dort von allein in 3D.
 

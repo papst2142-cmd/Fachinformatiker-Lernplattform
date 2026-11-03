@@ -136,11 +136,15 @@ jobs:
         run: |
           dotnet tool install -g vpk --version 1.2.161
           if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get install -y -q squashfs-tools; fi
+      # BEFRISTET bis 1.0 (Weisung P11-29): Schluessel fuer "Bericht senden" nur beim Bau, maskiert, nie in einer Ausgabe
       - name: Release-Dateien bauen
         shell: bash
         env:
           PYTHON: python
-        run: bash werkzeuge/release/baue_release.sh ${{ matrix.rid }} release
+          FEHLERBERICHT_TOKEN: ${{ secrets.FEHLERBERICHT_TOKEN }}
+        run: |
+          if [ -z "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLER: Geheimnis FEHLERBERICHT_TOKEN fehlt"; exit 1; fi
+          bash werkzeuge/release/baue_release.sh ${{ matrix.rid }} release
       - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.rid }}
@@ -182,7 +186,10 @@ jobs:
           LERNPLATTFORM_SCHLUESSEL_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           LERNPLATTFORM_SCHLUESSEL_PASSWORT: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           LERNPLATTFORM_SCHLUESSEL_KEY_PASSWORT: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: bash werkzeuge/release/baue_release.sh android release
+          FEHLERBERICHT_TOKEN: ${{ secrets.FEHLERBERICHT_TOKEN }}
+        run: |
+          if [ -z "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLER: Geheimnis FEHLERBERICHT_TOKEN fehlt"; exit 1; fi
+          bash werkzeuge/release/baue_release.sh android release
       - name: Schluesseldatei loeschen
         if: always()
         run: rm -f "$RUNNER_TEMP/release.keystore"

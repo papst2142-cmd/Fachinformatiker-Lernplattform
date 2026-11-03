@@ -255,6 +255,7 @@ public partial class GeraetetexteTests
         ("Views/DiagnoseTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/DiagnoseTeil.cs", "foreach (var text in DiagnoseTexte.Knoepfe(Pc))", "Verhalten: \"Datenordner öffnen\" nur am PC (app_gui 7624, main.py 4108); Liste in DiagnoseTexte (Phase 1)"),
         ("Views/DiagnoseTeil.cs", "Problembericht.Bauen(Zustand.Lernstand, Update.Anzeige, Pc ? \"PC\" : \"Handy\", Zustand.Werte, DateTime.Now);", "Daten: Geraet im Bericht wie build_report(db, APP_VERSION, \"PC\"/\"Handy\") (G38)"),
+        ("Views/DiagnoseTeil.cs", "await BerichtSenden.AusfuehrenAsync(BerichtText, Pc ? \"PC\" : \"Handy\", Update.Anzeige);", "Daten: Geraet im Dateinamen des gesendeten Berichts wie im Bericht (Weisung P11-29, nur C#)"),
         ("Views/DiagnoseTeil.cs", "if (Pc && pfad is not null)", "Technik: Speicherweg (Handy ueber Datenstrom mit Zuruecklesen)"),
         ("Views/DiagnoseTeil.cs", "if (Pc)", "Verhalten: Messdatei zeigen PC Datenordner, Handy Datei speichern (app_gui 8566, main.py 4585)"),
         // Phase 7 W6 (Weisung P7-11): Geraet im Spielprotokoll (Spalte geraet von spiel_ereignisse und spiel_plaetze)
