@@ -1,20 +1,20 @@
-Eingabefelder bleiben bei großer Schrift am Handy jetzt immer in ihrer Karte und sind dadurch auch im dunklen Modus klar umrandet zu sehen.
+Für Macs mit Intel-Prozessor gibt es jetzt ein eigenes Installationspaket.
 
-- Im Rechen-Trainer ragten die Felder für die Antwort (zum Beispiel Stunden, Minuten und Sekunden) bei der Schrift „Extra groß“ und „Maximal“ am Handy links und rechts über die Karte hinaus; ihr Rahmen war dadurch nur oben und unten zu sehen, und im dunklen Modus wirkten sie blass. Jetzt passen sie sich der Breite der Karte an und haben rundum einen Rahmen.
-- Dasselbe gilt für das Feld „Dein Name“ unter „Optionen“ → „Rundgang und Hilfe“ und für das Feld einer weiteren Phase im Zeitplan des Abschlussprojekts.
-- Im Spiel liegt die Bildlaufleiste der Ortsliste und des Hinweistexts unten (auch beim Einrichten der Wohnung) jetzt neben dem Text und verdeckt die letzten Buchstaben nicht mehr.
-- Interne Prüfungen des Programms prüfen jetzt auf allen Seiten, dass nichts unter der Bildlaufleiste liegt und kein Eingabefeld aus seiner Karte ragt; an der Bedienung ändert sich dadurch nichts.
+- Neben dem Paket für Macs mit Apple-Chip (M1 bis M4) liegt auf der Release-Seite jetzt auch ein Paket für Macs mit Intel-Prozessor (macOS 14 oder neuer). Der Dateiname endet auf „osx-x64.pkg“, das Paket für Apple-Chips weiter auf „osx-arm64.pkg“.
+- Beide Mac-Pakete sind nicht signiert: Beim ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ auf „Dennoch öffnen“ klicken. Das Update im Programm gibt es auf macOS noch nicht.
+- Die Liste der Fremdbestandteile („Lizenzen“ in den Optionen) nennt jetzt auch die Teile des Intel-Pakets. Am Programm selbst ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.10**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.11**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.10-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.10-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.10-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.11-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.11-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.32.11-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.32.11-osx-x64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

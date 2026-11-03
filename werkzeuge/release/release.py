@@ -13,7 +13,7 @@
                                          des Textes im Update-Fenster, so schreibt ihn die Update-Probe).
   release.py pruefe-feed <json> [<paket>]  Rueckgabe 1, wenn ein Paket (Vorgabe: Paketversion im Repo) in
                                          releases.<os>.json keine Notizen hat oder sie nicht den Abschnitt zeigen.
-  release.py zusammen <eingang> <aus>    sammelt die Dateien der vier Bauteile (Unterordner von <eingang>),
+  release.py zusammen <eingang> <aus>    sammelt die Dateien der fuenf Bauteile (Unterordner von <eingang>),
                                          schreibt Lizenz-Uebersicht und Volltexte, prueft die Uebersicht im
                                          Repo, schreibt den Release-Text <aus>/../release.md und prueft alles (T2).
   release.py pruefe <aus> <release.md>   T2: Pflichtdateien, Namen, Velopack-Feeds, Pruefsummen im Text.
@@ -43,6 +43,12 @@ SEITE = "https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform/release
 ENDE_NOTIZEN = "### Herunterladen"
 PROBE = os.path.join(WURZEL, "werkzeuge", "release", "probe_release.md")
 PROBE_DATEIEN = {"Probe-1.txt": b"Probe 1\n", "Probe-2.txt": b"Probe 2\n"}
+# Phase 11 FW10 (Weisung P11-18): ein Release hat 15 Dateien (Windows 4, Linux 5, macOS Apple-Chip 1,
+# macOS Intel 1, Android 1, gemeinsam 3); der Selbsttest prueft die Zahl und beide Mac-Pakete
+DATEIEN_JE_RELEASE = 15
+MAC_HINWEIS = ("Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter "
+               "„Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im "
+               "Programm gibt es auf macOS noch nicht.")
 
 
 def fehler(text):
@@ -89,6 +95,8 @@ def pflichtdateien(k):
         "linux-x64": [ID + ".AppImage", ID + "-" + k["PAKET"] + "-linux-full.nupkg", "RELEASES-linux",
                       "releases.linux.json", ID + "-" + k["NAME"] + "-AppImage.tar.gz"],
         "osx-arm64": [ID + "-" + k["NAME"] + "-osx-arm64.pkg"],
+        # Phase 11 FW10 (Weisung P11-18): Intel-Mac, eigener Velopack-Kanal osx-x64 (nur das .pkg wie arm64)
+        "osx-x64": [ID + "-" + k["NAME"] + "-osx-x64.pkg"],
         "android": [ID + "-" + k["NAME"] + "-android-arm64.apk"],
         "gemeinsam": ["LICENSE.txt", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt"],
     }
@@ -169,9 +177,10 @@ def release_text(k, aus):
          "du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.",
          "- **Android** (64-Bit, arm64-v8a): `" + ID + "-" + k["NAME"] + "-android-arm64.apk` am Handy herunterladen "
          "und öffnen. Android fragt, ob der Browser Apps installieren darf.",
-         "- **macOS** (nur Apple-Chips): `" + ID + "-" + k["NAME"] + "-osx-arm64.pkg`. Nur gebaut, nicht auf einem "
-         "Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & "
-         "Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.",
+         # Phase 11 FW10 (Weisung P11-18): zwei Mac-Pakete, je Prozessor eines
+         "- **macOS mit Apple-Chip (M1 bis M4):** `" + ID + "-" + k["NAME"] + "-osx-arm64.pkg`. " + MAC_HINWEIS,
+         "- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `" + ID + "-" + k["NAME"] + "-osx-x64.pkg`. "
+         + MAC_HINWEIS,
          "- Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. "
          "Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` "
          "(volle Texte).", "",
@@ -265,7 +274,7 @@ def zusammen(eingang, aus):
         d.write(lizenzen.uebersicht(alle, wo))
     with open(os.path.join(aus, "THIRD_PARTY_LICENSES.txt"), "w", encoding="utf-8", newline="\n") as d:
         d.write(lizenzen.volltexte(alle))
-    rot = 1 if len(sammlungen) != 4 else 0
+    rot = 1 if len(sammlungen) != len(pflichtdateien(k)) - 1 else 0
     rot |= lizenzen.main_pruefen(os.path.join(WURZEL, "THIRD_PARTY_NOTICES.txt"), sammlungen,
                                  os.path.join(WURZEL, "THIRD_PARTY_LICENSES.txt"))
     text_pfad = os.path.join(os.path.dirname(os.path.abspath(aus)), "release.md")
@@ -322,6 +331,14 @@ def selbsttest():
         fehler("Version im Repo ergibt keinen Tag")
         rot = 1
     print("Selbsttest Tag-Regel: %d Faelle, Repo %s -> %s, %s" % (len(faelle), k["ANZEIGE"], k["TAG"], "rot" if rot else "gruen"))
+    # Phase 11 FW10: genau 15 Release-Dateien, beide Mac-Pakete mit eigenem Namen, keine doppelt
+    alle = [n for liste in pflichtdateien(k).values() for n in liste]
+    mac = sorted(n for n in alle if n.endswith(".pkg"))
+    if len(alle) != DATEIEN_JE_RELEASE or len(set(alle)) != len(alle) or mac != [
+            ID + "-" + k["NAME"] + "-osx-arm64.pkg", ID + "-" + k["NAME"] + "-osx-x64.pkg"]:
+        fehler("Release-Dateien: %d statt %d oder Mac-Pakete %r" % (len(alle), DATEIEN_JE_RELEASE, mac))
+        rot = 1
+    print("Selbsttest Release-Dateien: %d, macOS %s" % (len(alle), ", ".join(mac)))
     probe = probe_text(k)
     rot_probe = pruefe_notizen(k, probe)
     with open(PROBE, encoding="utf-8") as d:

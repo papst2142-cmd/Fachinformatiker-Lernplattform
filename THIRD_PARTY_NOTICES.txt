@@ -12,109 +12,111 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 
 - AppImage type2-runtime (vpk 1.2.161) | MIT | https://github.com/AppImage/type2-runtime | linux-x64
   Startteil jedes AppImage (Linux), von vpk vorangestellt
-- ARM Optimized Routines (f67e7da) | MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception) | https://github.com/ARM-software/optimized-routines | android-arm64, linux-x64, osx-arm64, win-x64
+- ARM Optimized Routines (f67e7da) | MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception) | https://github.com/ARM-software/optimized-routines | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   math/pow.c, pow_log_data.c, exp_data.c, nachgebaut in C# als Core/Mathe/PythonPow.cs
-- Avalonia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
+- Avalonia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - Avalonia.Android (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64
 - Avalonia.Angle.Windows.Natives (2.1.27548.20260419) | Datei LICENSE im Paket | https://github.com/AvaloniaUI/angle/ | win-x64
 - Avalonia.BuildServices (11.3.2) | MIT | https://github.com/AvaloniaUI/Avalonia.BuildServices | android-arm64
-- Avalonia.Desktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Fonts.Inter (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
-- Avalonia.FreeDesktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.FreeDesktop.AtSpi (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.HarfBuzz (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
-- Avalonia.Native (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.Remote.Protocol (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
-- Avalonia.Skia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
-- Avalonia.Themes.Fluent (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, win-x64
-- Avalonia.Win32 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- Avalonia.X11 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, win-x64
-- CommunityToolkit.Mvvm (8.4.2) | MIT | https://github.com/CommunityToolkit/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
-- Grafik KayKit Forest Nature Pack (1.0) | CC0-1.0 | https://kaylousberg.itch.io (KayKit Forest Nature Pack, Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+- Avalonia.Desktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Fonts.Inter (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.FreeDesktop (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.FreeDesktop.AtSpi (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.HarfBuzz (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Native (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Remote.Protocol (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Skia (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Themes.Fluent (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.Win32 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- Avalonia.X11 (12.1.4) | MIT | https://github.com/AvaloniaUI/Avalonia/ | linux-x64, osx-arm64, osx-x64, win-x64
+- CommunityToolkit.Mvvm (8.4.2) | MIT | https://github.com/CommunityToolkit/dotnet | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Grafik KayKit Forest Nature Pack (1.0) | CC0-1.0 | https://kaylousberg.itch.io (KayKit Forest Nature Pack, Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Baeume, Buesche, Graeser und Steine in der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik KayKit Furniture Bits (1.0) | CC0-1.0 | https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0 (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik KayKit Furniture Bits (1.0) | CC0-1.0 | https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0 (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Wartestuehle, Sessel und Bild in Bank und Amt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik KayKit Halloween Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/halloween-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik KayKit Halloween Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/halloween-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Deko zur Festzeit Halloween im Spiel (Kuerbisse, Laterne, Grabsteine, kahler Baum, Totenkopf-Kerze), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik KayKit Holiday Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/holiday-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik KayKit Holiday Bits (1.0) | CC0-1.0 | https://kaylousberg.itch.io/holiday-bits (Kay Lousberg, www.kaylousberg.com) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Deko zur Festzeit Weihnachten im Spiel (Weihnachtsbaum, Geschenke, Schneemaenner, Laterne, Lebkuchenhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Animated Characters 3 (1.1) | CC0-1.0 | https://kenney-assets.itch.io/animated-characters-3 (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Animated Characters 3 (1.1) | CC0-1.0 | https://kenney-assets.itch.io/animated-characters-3 (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Spielfigur und Personen im Spiel (feste Haltung), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Car Kit (2.0) | CC0-1.0 | https://kenney.nl/assets/car-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Car Kit (2.0) | CC0-1.0 | https://kenney.nl/assets/car-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Fahrende Autos in der Stadt im Spiel (Taxi, Lieferwagen, Limousine, Polizei, Krankenwagen, Muellwagen), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney City Kit Commercial (2.1) | CC0-1.0 | https://opengameart.org/content/city-kit-commercial (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney City Kit Commercial (2.1) | CC0-1.0 | https://opengameart.org/content/city-kit-commercial (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Haeuser der Stadt im Spiel (Buero, Laeden, Wohnhaus), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney City Kit Suburban (1.0) | CC0-1.0 | https://kenney-assets.itch.io/city-kit-suburban (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney City Kit Suburban (1.0) | CC0-1.0 | https://kenney-assets.itch.io/city-kit-suburban (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Wohnhaeuser und Baeume der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Cube Pets (2.0) | CC0-1.0 | https://kenney.nl/assets/cube-pets (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Cube Pets (2.0) | CC0-1.0 | https://kenney.nl/assets/cube-pets (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Osterhase und Kueken zur Festzeit Ostern im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Furniture Kit (1.0) | CC0-1.0 | https://opengameart.org/content/furniture-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Furniture Kit (1.0) | CC0-1.0 | https://opengameart.org/content/furniture-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Moebel der Innenraeume im Spiel (Buero, Wohnung, Kunden), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Graveyard Kit (5.0) | CC0-1.0 | https://kenney.nl/assets/graveyard-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Graveyard Kit (5.0) | CC0-1.0 | https://kenney.nl/assets/graveyard-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Strassenlaternen, Tannen und Halloween-Kuerbisse in der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Modular Buildings (2.1) | CC0-1.0 | https://kenney-assets.itch.io/modular-buildings (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Modular Buildings (2.1) | CC0-1.0 | https://kenney-assets.itch.io/modular-buildings (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Haus des Kaufhauses in der Stadt im Spiel (aus Bauteilen zusammengesetzt), gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- Grafik Kenney Train Kit (1.1) | CC0-1.0 | https://kenney.nl/assets/train-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Grafik Kenney Train Kit (1.1) | CC0-1.0 | https://kenney.nl/assets/train-kit (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Stehender Zug der Stadt im Spiel, gewandelt von werkzeuge/grafik/wandle_modelle.py nach inhalte_csharp/grafik, eingebettet in Lernplattform.App.dll
-- HarfBuzzSharp (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, win-x64
+- HarfBuzzSharp (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - HarfBuzzSharp.NativeAssets.Android (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - HarfBuzzSharp.NativeAssets.Linux (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64
-- HarfBuzzSharp.NativeAssets.macOS (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64
+- HarfBuzzSharp.NativeAssets.macOS (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64, osx-x64
 - HarfBuzzSharp.NativeAssets.WebAssembly (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - HarfBuzzSharp.NativeAssets.Win32 (8.3.1.3) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | win-x64
-- MicroCom.Runtime (0.11.6) | MIT | https://github.com/kekekeks/MicroCom | android-arm64, linux-x64, osx-arm64, win-x64
+- MicroCom.Runtime (0.11.6) | MIT | https://github.com/kekekeks/MicroCom | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - Microsoft.Android.Runtime.36.android (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
 - Microsoft.Android.Sdk.Linux (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
 - Microsoft.Data.Sqlite (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
-- Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, win-x64
+- Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - Microsoft.NET.ILLink.Tasks (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Host.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
 - Microsoft.NETCore.App.Host.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Host.osx-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-x64
 - Microsoft.NETCore.App.Host.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
 - Microsoft.NETCore.App.Runtime.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
 - Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Runtime.osx-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-x64
 - Microsoft.NETCore.App.Runtime.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
-- miniaudio (0.11.24 (in SoundFlow 1.4.1)) | MIT-0 oder Unlicense (Public Domain) | https://github.com/mackron/miniaudio (David Reid), gebaut von SoundFlow (https://github.com/LSXPrime/SoundFlow) | android-arm64, linux-x64, osx-arm64, win-x64
+- miniaudio (0.11.24 (in SoundFlow 1.4.1)) | MIT-0 oder Unlicense (Public Domain) | https://github.com/mackron/miniaudio (David Reid), gebaut von SoundFlow (https://github.com/LSXPrime/SoundFlow) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Tonausgabe auf allen Systemen, enthalten in libminiaudio (miniaudio.dll, libminiaudio.so, libminiaudio.dylib) aus dem Paket SoundFlow
-- NVorbis (0.10.5) | Datei LICENSE im Paket | https://github.com/NVorbis/NVorbis | android-arm64, linux-x64, osx-arm64, win-x64
-- Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, win-x64
+- NVorbis (0.10.5) | Datei LICENSE im Paket | https://github.com/NVorbis/NVorbis | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Schrift Inter (in Avalonia.Fonts.Inter 12.1.4) | OFL-1.1 | https://github.com/rsms/inter | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Ersatzschrift fuer Zeichen, die Roboto nicht hat (z. B. Pfeile, Haken), eingebettet in Avalonia.Fonts.Inter.dll
-- Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, win-x64
+- Schrift JetBrains Mono (2.304) | OFL-1.1 | https://github.com/JetBrains/JetBrainsMono | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Festbreitenschrift der Rechner (nur Regular), eingebettet in Lernplattform.App.dll
-- Schrift Material Icons (aus flet-web 1.0.1) | Apache-2.0 | https://github.com/google/material-design-icons | android-arm64, linux-x64, osx-arm64, win-x64
+- Schrift Material Icons (aus flet-web 1.0.1) | Apache-2.0 | https://github.com/google/material-design-icons | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Symbole der Oberflaeche (Teilschrift fisi_symbole.otf mit 35 Zeichen aus MaterialIcons-Regular.otf, erzeugt von werkzeuge/symbole/erzeuge_symbole.py), eingebettet in Lernplattform.App.dll
-- Schrift Roboto (2.138) | Apache-2.0 | https://github.com/googlefonts/roboto (Release v2.138, roboto-unhinted.zip) | android-arm64, linux-x64, osx-arm64, win-x64
+- Schrift Roboto (2.138) | Apache-2.0 | https://github.com/googlefonts/roboto (Release v2.138, roboto-unhinted.zip) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Schrift der Oberflaeche (Regular und Bold, unveraendert), eingebettet in Lernplattform.App.dll
-- SkiaSharp (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, win-x64
+- SkiaSharp (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - SkiaSharp.NativeAssets.Android (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - SkiaSharp.NativeAssets.Linux (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64, linux-x64
-- SkiaSharp.NativeAssets.macOS (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64
+- SkiaSharp.NativeAssets.macOS (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | osx-arm64, osx-x64
 - SkiaSharp.NativeAssets.WebAssembly (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | android-arm64
 - SkiaSharp.NativeAssets.Win32 (3.119.4) | MIT | https://go.microsoft.com/fwlink/?linkid=868515 | win-x64
-- SoundFlow (1.4.1) | Datei LICENSE.md im Paket | https://github.com/LSXPrime/SoundFlow | android-arm64, linux-x64, osx-arm64, win-x64
-- SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13) | gemeinfrei | https://sqlite.org/copyright.html | android-arm64, linux-x64, osx-arm64, win-x64
+- SoundFlow (1.4.1) | Datei LICENSE.md im Paket | https://github.com/LSXPrime/SoundFlow | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- SQLite (in SQLitePCLRaw.lib.e_sqlite3 2.1.13) | gemeinfrei | https://sqlite.org/copyright.html | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Datenbank, in e_sqlite3
-- SQLitePCLRaw.bundle_e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
-- SQLitePCLRaw.core (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
-- SQLitePCLRaw.lib.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, win-x64
+- SQLitePCLRaw.bundle_e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- SQLitePCLRaw.core (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- SQLitePCLRaw.lib.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | linux-x64, osx-arm64, osx-x64, win-x64
 - SQLitePCLRaw.lib.e_sqlite3.android (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64
-- SQLitePCLRaw.provider.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, win-x64
-- Tmds.DBus.Protocol (0.94.1) | MIT | https://github.com/tmds/Tmds.DBus.git | linux-x64, osx-arm64, win-x64
-- Toene Bird chirping sounds (syncopika) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/bird-chirping-sounds (syncopika) | android-arm64, linux-x64, osx-arm64, win-x64
+- SQLitePCLRaw.provider.e_sqlite3 (2.1.13) | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
+- Tmds.DBus.Protocol (0.94.1) | MIT | https://github.com/tmds/Tmds.DBus.git | linux-x64, osx-arm64, osx-x64, win-x64
+- Toene Bird chirping sounds (syncopika) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/bird-chirping-sounds (syncopika) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Einzelne Vogelrufe in Parks im Spiel, umgewandelt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
-- Toene Kenney Impact Sounds (1.0) | CC0-1.0 | https://kenney.nl/assets/impact-sounds (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Toene Kenney Impact Sounds (1.0) | CC0-1.0 | https://kenney.nl/assets/impact-sounds (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Schritte auf Stein, Gras, Holz und Teppich im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
-- Toene Kenney Music Jingles (1.0) | CC0-1.0 | https://kenney.nl/assets/music-jingles (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Toene Kenney Music Jingles (1.0) | CC0-1.0 | https://kenney.nl/assets/music-jingles (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Kurze Melodien (Feierabend, Erfolg, Ticket) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
-- Toene Kenney RPG Audio (1.0) | CC0-1.0 | https://kenney.nl/assets/rpg-audio (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, win-x64
+- Toene Kenney RPG Audio (1.0) | CC0-1.0 | https://kenney.nl/assets/rpg-audio (Kenney, www.kenney.nl) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Tueren und Muenzen (Kasse) im Spiel, unveraendert in Assets/Toene, eingebettet in Lernplattform.App.dll
-- Toene Park ambiences (Thimras) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/park-ambiences (Thimras) | android-arm64, linux-x64, osx-arm64, win-x64
+- Toene Park ambiences (Thimras) (OpenGameArt) | CC0-1.0 | https://opengameart.org/content/park-ambiences (Thimras) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Voegel, Wind und Fluss in der Stadt im Spiel (je Jahreszeit), zugeschnitten von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
-- Toene racing car engine sound loops (domasx2) (OpenGameArt) | CC0-1.0 | https://opengameart.org/node/5633 (domasx2) | android-arm64, linux-x64, osx-arm64, win-x64
+- Toene racing car engine sound loops (domasx2) (OpenGameArt) | CC0-1.0 | https://opengameart.org/node/5633 (domasx2) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Motoren der Autos in der Stadt im Spiel, Tonhoehe abgesenkt von werkzeuge/toene/erzeuge_toene.py nach Assets/Toene, eingebettet in Lernplattform.App.dll
-- Velopack (1.2.161) | MIT | https://github.com/velopack/velopack | linux-x64, osx-arm64, win-x64
-- Velopack-Programme (1.2.161) | MIT | https://github.com/velopack/velopack (Tag 1.2.161) | linux-x64, osx-arm64, win-x64
+- Velopack (1.2.161) | MIT | https://github.com/velopack/velopack | linux-x64, osx-arm64, osx-x64, win-x64
+- Velopack-Programme (1.2.161) | MIT | https://github.com/velopack/velopack (Tag 1.2.161) | linux-x64, osx-arm64, osx-x64, win-x64
   Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt
 - Xamarin.AndroidX.Activity (1.12.4.1) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
 - Xamarin.AndroidX.Annotation (1.9.1.7) | MIT AND Apache-2.0 | https://github.com/xamarin/AndroidX.git | android-arm64
