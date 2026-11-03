@@ -118,14 +118,14 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
         }
     }
 
+    /// <summary>FW8 (Sammelliste 187): eine Zeile ist nicht geschrieben und der Stand noch nicht neu gelesen; nur unter der Sperre der Schlange.</summary>
+    internal bool IstGestoert => gestoert;
+
     /// <summary>
     /// Vom Schreiber (unter der Sperre der Schlange): eine Zeile ist nicht geschrieben. Bis der Stand aus der
     /// Datenbank neu gelesen ist (<see cref="Ereignisse"/>), schreibt keine Aktion mehr (sie baute auf der
     /// fehlenden Zeile auf): Schreiben gibt null wie ein Schreibfehler beim sofortigen Schreiben.
     /// </summary>
-    /// <summary>FW8 (Sammelliste 187): eine Zeile ist nicht geschrieben und der Stand noch nicht neu gelesen; nur unter der Sperre der Schlange.</summary>
-    internal bool IstGestoert => gestoert;
-
     internal void Gestoert()
     {
         gestoert = true;

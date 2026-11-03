@@ -378,7 +378,8 @@ public sealed class AbschlussprojektSeite : UserControl
                 {
                     Children =
                     {
-                        Feld("phase_name_" + p.Schluessel, breite: 300, name: ProjektTexte.Weitere),
+                        // FW9 (Weisung P11-17): nie breiter als die Karte (schmal, grosse Schrift)
+                        new BisZumRand(Feld("phase_name_" + p.Schluessel, breite: 300, name: ProjektTexte.Weitere)) { HorizontalAlignment = HorizontalAlignment.Left },
                         Abstand(Hinweis(ProjektTexte.WeiterePhase), 10),
                     },
                 }

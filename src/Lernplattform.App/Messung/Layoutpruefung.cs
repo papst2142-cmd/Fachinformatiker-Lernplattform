@@ -19,6 +19,8 @@ namespace Lernplattform.Messung;
 /// FW7 Nachbesserung (Weisung P11-14): (9) die waagrechte Scrollleiste jedes wischbaren Kastens (Tabelle,
 /// Ergebnis- und Rechenweg-Kasten der Rechner, jeder andere seitlich verschiebbare Bereich) liegt unter dem Text,
 /// nie ueber einer Zeile.
+/// FW9 (Weisung P11-17): (6) gilt auch fuer die Seiten selbst (Sammelliste 192); (10) kein Eingabefeld ragt aus
+/// seiner Karte (Sammelliste 194).
 /// </summary>
 public static class Layoutpruefung
 {
@@ -41,6 +43,9 @@ public static class Layoutpruefung
                     break;
                 case Button knopf:
                     PruefeKnopf(knopf, funde);
+                    break;
+                case TextBox feld:
+                    PruefeFeld(feld, funde);
                     break;
                 case ScrollBar leiste:
                     PruefeLeiste(leiste, funde);
@@ -68,11 +73,9 @@ public static class Layoutpruefung
     /// <summary>FW6 (Sammelliste 61): Text, Knopf, Feld oder Form unter einer sichtbaren senkrechten Scrollleiste.</summary>
     private static void PruefeUnterLeiste(ScrollBar leiste, Control wurzel, List<string> funde)
     {
-        // nur in Fenstern ueber der Seite (Rundgang, Dialog: Karte mit Bildlauf direkt im Fenster); auf den Seiten
-        // selbst reicht der Inhalt bis an den Rand (Sammelliste 192)
+        // FW9 (Weisung P11-17, Sammelliste 192): in Fenstern (Rundgang, Dialog) und auf allen Seiten
         if (leiste.Orientation != Avalonia.Layout.Orientation.Vertical || leiste.Bounds.Height <= 0
             || leiste.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault() is not { Content: Control inhalt } rollen
-            || rollen.Parent is not Border { Parent: Border } karte || !karte.Classes.Contains("karte")
             || rollen.Extent.Height <= rollen.Viewport.Height + Toleranz
             || leiste.TranslatePoint(default, wurzel) is not { } oben)
         {
@@ -83,17 +86,38 @@ public static class Layoutpruefung
         foreach (var element in inhalt.GetSelfAndVisualDescendants().OfType<Control>())
         {
             if (element is not (TextBlock or Button or TextBox or Avalonia.Controls.Shapes.Shape) || !element.IsEffectivelyVisible
-                || element.Bounds.Width <= 0 || element.TranslatePoint(default, wurzel) is not { } p)
+                || element.Bounds.Width <= 0 || Flaeche(element, wurzel, rollen) is not { } stelle)
             {
                 continue;
             }
-            var stelle = new Rect(p, element.Bounds.Size).Intersect(sichtbar);
+            stelle = stelle.Intersect(sichtbar);
             var schnitt = stelle.Intersect(flaeche);
             if (schnitt.Width > Toleranz && schnitt.Height > Toleranz)
             {
                 funde.Add($"liegt unter der Scrollleiste: {Name(element)} ({stelle.Right:F0} > {flaeche.X:F0})");
             }
         }
+    }
+
+    /// <summary>
+    /// FW9 (Sammelliste 192): gezeichnete Flaeche eines Elements im Bild (mit Skalierung, z. B. Symbole in einer Viewbox,
+    /// deren Bounds ungeschnitten 2010 breit sind), beschnitten von jedem Vorfahren mit ClipToBounds bis zum Bereich.
+    /// </summary>
+    private static Rect? Flaeche(Control element, Control wurzel, Control bis)
+    {
+        if (element.TransformToVisual(wurzel) is not { } matrix)
+        {
+            return null;
+        }
+        var flaeche = new Rect(element.Bounds.Size).TransformToAABB(matrix);
+        foreach (var vorfahr in element.GetVisualAncestors().OfType<Control>().TakeWhile(v => v != bis))
+        {
+            if (vorfahr.ClipToBounds && vorfahr.TransformToVisual(wurzel) is { } m)
+            {
+                flaeche = flaeche.Intersect(new Rect(vorfahr.Bounds.Size).TransformToAABB(m));
+            }
+        }
+        return flaeche;
     }
 
     /// <summary>
@@ -208,6 +232,27 @@ public static class Layoutpruefung
         if (links.X < -Toleranz || rechts > karte.Bounds.Width + Toleranz)
         {
             funde.Add($"Knopf ragt aus der Karte: {Name(knopf)} ({links.X:F0}..{rechts:F0} von 0..{karte.Bounds.Width:F0})");
+        }
+    }
+
+    /// <summary>
+    /// FW9 (Weisung P11-17, Sammelliste 194): ein Eingabefeld ragt nie ueber den Rand seiner Karte, auch nicht bei
+    /// grosser Schrift (wie Knoepfe in (2); innerhalb des Kartenrands, ohne dessen Strich).
+    /// </summary>
+    private static void PruefeFeld(TextBox feld, List<string> funde)
+    {
+        var karte = feld.GetVisualAncestors().OfType<Border>().FirstOrDefault(b => b.Classes.Contains("karte"));
+        if (karte is null || feld.TranslatePoint(default, karte) is not { } links)
+        {
+            return;
+        }
+        var innenLinks = karte.BorderThickness.Left;
+        var innenRechts = karte.Bounds.Width - karte.BorderThickness.Right;
+        var rechts = links.X + feld.Bounds.Width;
+        if (links.X < innenLinks - Toleranz || rechts > innenRechts + Toleranz)
+        {
+            funde.Add($"Feld ragt aus der Karte: {Name(feld)} {Kurz(Avalonia.Automation.AutomationProperties.GetName(feld) ?? "")} "
+                + $"({links.X:F0}..{rechts:F0} von {innenLinks:F0}..{innenRechts:F0})");
         }
     }
 

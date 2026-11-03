@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.32.8** (Phase 11 FW7, PR #92, main 398db2b). Zweig FW8 **A 0.32.9** (Spiel-Abgleich und Tests). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
-| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW7 gemergt (A 0.32.0 bis 0.32.8) |
-| Jetzt | FW8 A 0.32.9 (Weisungen P11-15/P11-16): 187 Spielschlange, 101 Hänger-Test, 193 Windows-Abgleichtest, 190 macOS-Messschritt, 118a/119 Stadt-Uhr mehrerer Geräte (Merker `ab_uhr`), 118b feste Ausnahme, 120 G51 Sonderfälle. Danach FW9 (A 0.32.10, 36, 192, 194), FW10 Intel-Mac `osx-x64` (A 0.32.11), W2 Screenreader, W3 Prüfstand, Gerätetest, Bericht |
+| Version | Auf `main` **A 0.32.9** (Phase 11 FW8, PR #93, main 2f870de). Zweig FW9 **A 0.32.10** (Grafik-Feinschliff). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW8 gemergt (A 0.32.0 bis 0.32.9) |
+| Jetzt | FW9 A 0.32.10 (Weisung P11-17): 194 Eingabefelder bleiben in der Karte (`FeldZeile`, `BisZumRand`), 192 Layoutprüfung (6) auf allen Seiten, (10) Feld ragt aus der Karte, 36 Fotos an Nico; Merge nur nach Nicos eigenem Optik-OK. Danach FW10 Intel-Mac `osx-x64` (A 0.32.11), W2 Screenreader, W3 Prüfstand, Gerätetest, Bericht |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-13** (FW8) / P11-14 |
-| Sammelliste | nächste freie Nummer **195** (192 und 194 in FW9) |
+| Letzte/nächste Meldung | **P11-14** (FW9) / P11-15 |
+| Sammelliste | nächste freie Nummer **195** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.32.10
+Eingabefelder bleiben bei großer Schrift am Handy jetzt immer in ihrer Karte und sind dadurch auch im dunklen Modus klar umrandet zu sehen.
+
+- Im Rechen-Trainer ragten die Felder für die Antwort (zum Beispiel Stunden, Minuten und Sekunden) bei der Schrift „Extra groß“ und „Maximal“ am Handy links und rechts über die Karte hinaus; ihr Rahmen war dadurch nur oben und unten zu sehen, und im dunklen Modus wirkten sie blass. Jetzt passen sie sich der Breite der Karte an und haben rundum einen Rahmen.
+- Dasselbe gilt für das Feld „Dein Name“ unter „Optionen“ → „Rundgang und Hilfe“ und für das Feld einer weiteren Phase im Zeitplan des Abschlussprojekts.
+- Im Spiel liegt die Bildlaufleiste der Ortsliste und des Hinweistexts unten (auch beim Einrichten der Wohnung) jetzt neben dem Text und verdeckt die letzten Buchstaben nicht mehr.
+- Interne Prüfungen des Programms prüfen jetzt auf allen Seiten, dass nichts unter der Bildlaufleiste liegt und kein Eingabefeld aus seiner Karte ragt; an der Bedienung ändert sich dadurch nichts.
+
 ## A 0.32.9
 Spielst du die Stadt auf zwei Geräten, zeigt die Uhr nach dem Abgleich jetzt in Sonderfällen die richtige Zeit, und ein seltener Speicherfehler im Spiel wird noch sicherer abgefangen.
 
