@@ -181,6 +181,13 @@ public sealed class FeldZeile : Panel
 
     protected override Size MeasureOverride(Size verfuegbar)
     {
+        // FW9 (Weisung P11-17, Sammelliste 194): ein Feld mit fester Breite (260 x Schriftfaktor) ist bei grosser
+        // Schrift breiter als die Karte; Arrange gibt ihm weniger Platz, gezeichnet wird es aber in seiner Breite
+        // (ragt links und rechts ueber die Karte). Hoechstbreite = verfuegbare Breite, die feste Breite bleibt sonst.
+        if (!double.IsNaN(Feld.Width))
+        {
+            BisZumRand.Begrenzen(Feld, verfuegbar.Width);
+        }
         Feld.Measure(verfuegbar);
         Beschriftung.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         var natuerlich = Beschriftung.DesiredSize.Width;
@@ -222,6 +229,43 @@ public sealed class LinksBuendig : Decorator
     {
         Child?.Arrange(new Rect(0, 0, Math.Min(endgroesse.Width, Child.MaxWidth), endgroesse.Height));
         return endgroesse;
+    }
+}
+
+/// <summary>
+/// FW9 (Weisung P11-17): haelt ein Feld mit fester Breite (waechst mit der Schrift) in der verfuegbaren Breite;
+/// bei grosser Schrift am Handy ragt es sonst ueber seine Karte (Arrange gibt weniger Platz, gezeichnet wird die
+/// feste Breite). <paramref name="hoechst"/> ist eine zusaetzliche feste Hoechstbreite.
+/// </summary>
+public sealed class BisZumRand : Decorator
+{
+    private readonly double _hoechst;
+
+    public BisZumRand(Control kind, double hoechst = double.PositiveInfinity)
+    {
+        _hoechst = hoechst;
+        Child = kind;
+    }
+
+    /// <summary>Setzt die Hoechstbreite eines Felds auf die verfuegbare Breite (nur wenn sie sich aendert).</summary>
+    public static void Begrenzen(Control feld, double verfuegbar, double hoechst = double.PositiveInfinity)
+    {
+        var grenze = Math.Min(hoechst, double.IsFinite(verfuegbar) ? Math.Max(0, verfuegbar) : double.PositiveInfinity);
+        if (feld.MaxWidth != grenze)
+        {
+            feld.MaxWidth = grenze;
+        }
+    }
+
+    protected override Size MeasureOverride(Size verfuegbar)
+    {
+        if (Child is null)
+        {
+            return default;
+        }
+        Begrenzen(Child, verfuegbar.Width, _hoechst);
+        Child.Measure(verfuegbar);
+        return Child.DesiredSize;
     }
 }
 

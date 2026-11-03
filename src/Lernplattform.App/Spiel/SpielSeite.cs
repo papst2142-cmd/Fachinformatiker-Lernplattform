@@ -186,13 +186,16 @@ public sealed class SpielSeite : Grid
         klappZeile.Children.Add(_knoepfe);
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
+        // FW9 (Weisung P11-17, Sammelliste 192): rechts Platz fuer die Scrollleiste (Layoutpruefung (6)); der Rand
+        // kommt aus dem Innenabstand der Karte, die Textbreite bleibt gleich
         _zeileRolle = new ScrollViewer
         {
-            Content = new StackPanel { Spacing = 8, Children = { _zeile, _einrichtenTafel } },
+            Content = new StackPanel { Spacing = 8, Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0), Children = { _zeile, _einrichtenTafel } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
+        klappZeile.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);
         var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, klappZeile } });
-        unten.Padding = new Thickness(14, 10, 14, 2);
+        unten.Padding = new Thickness(14, 10, 14 - Dialog.RandFuerLeiste, 2);
         unten.MaxWidth = UntenBreite;
         unten.HorizontalAlignment = HorizontalAlignment.Left;
         _unten = unten;
@@ -202,7 +205,8 @@ public sealed class SpielSeite : Grid
             Content = _liste,
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         });
-        _ortsliste.Padding = new Thickness(14, 10);
+        _liste.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);    // FW9 (Sammelliste 192) wie oben
+        _ortsliste.Padding = new Thickness(14, 10, 14 - Dialog.RandFuerLeiste, 10);
         _ortsliste.Width = OrtslisteBreite;
         _ortsliste.HorizontalAlignment = HorizontalAlignment.Right;
         _ortsliste.Margin = new Thickness(Rand, Rand, 0, Rand);

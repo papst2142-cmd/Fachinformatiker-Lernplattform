@@ -389,7 +389,6 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             Text = Core.Hilfe.Einrichten.NameLesen(Zustand.Werte),
             PlaceholderText = RundgangTexte.NameZusatz,
             HorizontalAlignment = HorizontalAlignment.Left,
-            MaxWidth = 520,
         }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Breite(380);
         Avalonia.Automation.AutomationProperties.SetName(_name, RundgangTexte.Name);
         _name.LostFocus += (_, _) => NameSpeichern();
@@ -400,7 +399,8 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
                 NameSpeichern();
             }
         };
-        panel.Children.Add(_name);
+        // FW9 (Sammelliste 192): hoechstens 520 breit wie bisher und nie breiter als die Karte (schmal, grosse Schrift)
+        panel.Children.Add(new BisZumRand(_name, 520) { HorizontalAlignment = HorizontalAlignment.Left });
         panel.Children.Add(new LernText(Core.Hilfe.HilfeTexte.NameHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
         return panel;
     }

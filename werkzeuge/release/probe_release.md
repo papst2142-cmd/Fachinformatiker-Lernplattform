@@ -1,21 +1,20 @@
-Spielst du die Stadt auf zwei Geräten, zeigt die Uhr nach dem Abgleich jetzt in Sonderfällen die richtige Zeit, und ein seltener Speicherfehler im Spiel wird noch sicherer abgefangen.
+Eingabefelder bleiben bei großer Schrift am Handy jetzt immer in ihrer Karte und sind dadurch auch im dunklen Modus klar umrandet zu sehen.
 
-- Hast du am selben Spieltag auf PC und Handy ohne Abgleich gespielt und standen beide Figuren am selben Ort, lief die Uhr der Stadt nach dem Abgleich manchmal zu weit vor. Jetzt rechnet jeder Schritt ab dem Stand des Geräts, auf dem er gemacht wurde. Gehst du nach dem Abgleich von dem gezeigten Stand des anderen Geräts aus weiter, merkt sich das Spiel diesen Stand, damit beide Geräte dieselbe Uhrzeit zeigen.
-- Haben zwei Geräte genau in derselben Sekunde einen Schritt in der Stadt gemacht, ordnet das Spiel jeden Schritt jetzt dem richtigen Gerät zu. Bisher konnten die Minuten beider Schritte zusammengezählt werden.
-- Zwei Geräte gleicher Art (zum Beispiel zwei PCs) gelten für die Uhr der Stadt weiterhin als ein Gerät, weil das Programm nur „PC“ oder „Handy“ speichert. Spielst du auf zwei PCs am selben Tag ohne Abgleich, kann die Uhr dort weiter vorlaufen.
-- Konnte ein Spielschritt einmal nicht gespeichert werden, nimmt das Spiel bis zum Neuladen des Spielstands sicher keine weiteren Schritte dieses Spielstands mehr an, die auf dem fehlenden aufbauen.
-- Interne Prüfungen des Programms laufen zuverlässiger; an der Bedienung ändert sich dadurch nichts.
+- Im Rechen-Trainer ragten die Felder für die Antwort (zum Beispiel Stunden, Minuten und Sekunden) bei der Schrift „Extra groß“ und „Maximal“ am Handy links und rechts über die Karte hinaus; ihr Rahmen war dadurch nur oben und unten zu sehen, und im dunklen Modus wirkten sie blass. Jetzt passen sie sich der Breite der Karte an und haben rundum einen Rahmen.
+- Dasselbe gilt für das Feld „Dein Name“ unter „Optionen“ → „Rundgang und Hilfe“ und für das Feld einer weiteren Phase im Zeitplan des Abschlussprojekts.
+- Im Spiel liegt die Bildlaufleiste der Ortsliste und des Hinweistexts unten (auch beim Einrichten der Wohnung) jetzt neben dem Text und verdeckt die letzten Buchstaben nicht mehr.
+- Interne Prüfungen des Programms prüfen jetzt auf allen Seiten, dass nichts unter der Bildlaufleiste liegt und kein Eingabefeld aus seiner Karte ragt; an der Bedienung ändert sich dadurch nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.32.9**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.32.10**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.9-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.9-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.9-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.32.10-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.32.10-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS** (nur Apple-Chips): `Fachinformatiker-Lernplattform-A-0.32.10-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
