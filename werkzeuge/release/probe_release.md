@@ -1,21 +1,21 @@
-Das Programm schreibt jetzt ein paar Ladezeiten selbst auf, damit du sie bei einem Problem mitschicken kannst.
+Auf dem Mac gibt es jetzt das Update im Programm, und das Spiel zeigt die Stadt dort von allein in 3D.
 
-- Bei jedem Programmstart merkt sich das Programm einmal, wie lange diese Schritte gedauert haben: Inhalte laden, erste Karte bei den Karteikarten, Fachrichtung wechseln und Spiel betreten (bis die Stadt zu sehen ist). Die Werte stehen in der Datei „messpunkte.log“ im Datenordner und im Bericht unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“.
-- In der Datei stehen nur Datum und Uhrzeit, die Programmversion, der Name des Schritts und die Dauer in Millisekunden, bei der Fachrichtung nur ihr Kürzel. Lerninhalte, Antworten oder dein Lernstand kommen nie hinein. Die Datei bleibt klein: Ältere Zeilen fallen weg. Es wird nichts gesendet.
-- Interne Prüfungen des Programms prüfen das Aussehen jetzt auch in der vollen Fenstergröße am PC und unter Windows mit einer Bildschirm-Skalierung von 150 %; an der Bedienung ändert sich dadurch nichts.
-- Unter Windows mit 150 % Skalierung, großer Schrift und schmalem Fenster wurde auf der Startseite der Untertitel „bearbeitete Grundlagenaufgaben“ neben „AP1 Prüfungsthemen“ mitten im Wort getrennt. Jetzt steht er in diesem Fall unter der Überschrift.
+- Mac: Unter „Optionen“ → „Updates“ sucht das Programm jetzt auch auf dem Mac nach einer neuen Version und spielt sie mit „Jetzt aktualisieren“ ein, wie unter Windows und Linux. Vorher legt es eine Kopie deines Lernstands im Datenordner an (Ordner „sicherungen“, Name beginnt mit „vor_update_“). Macs mit Apple-Chip und Macs mit Intel-Prozessor bekommen jeweils ihr eigenes Paket.
+- Mac: Bisher meldete die Suche „Du hast die neueste Version“, obwohl es eine neuere gab. Findet das Programm auf dem Mac kein Paket zum Einspielen, schaut es jetzt zusätzlich auf der Release-Seite nach und bietet dort die neue Version zum Herunterladen an.
+- Mac: Das Spiel zeigt die Stadt jetzt ohne zusätzliche Einstellung in 3D. Kann der Mac keine 3D-Grafik zeigen, erscheinen wie bisher ein Hinweis und die Liste der Orte.
+- Interne Prüfungen des Programms installieren das fertige Mac-Paket jetzt auf Macs mit Apple-Chip und mit Intel-Prozessor, starten es und spielen ein Update ein; an der Bedienung ändert sich dadurch nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.34.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.35.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.34.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.34.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.34.0-osx-arm64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.34.0-osx-x64.pkg`. Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im Programm gibt es auf macOS noch nicht.
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.35.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.35.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.35.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.35.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

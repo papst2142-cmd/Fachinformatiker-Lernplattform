@@ -102,6 +102,7 @@ public class ReleaseTests
     /// <summary>
     /// Phase 11 FW10 (Weisung P11-18): Der Release-Text nennt zwei Mac-Pakete, je Prozessor eine Zeile mit eigenem
     /// Dateinamen und dem Hinweis "Dennoch öffnen"; ein Release hat 15 Dateien (release.py selbsttest zaehlt sie).
+    /// Mac-Welle (Weisung P11-28): 19 Dateien, je Mac der eigene Update-Feed, und die Zeile nennt das Update im Programm.
     /// </summary>
     [Fact]
     public void ReleaseTextNenntBeideMacPakete()
@@ -118,13 +119,17 @@ public class ReleaseTests
         Assert.StartsWith("- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-" + name + "-osx-x64.pkg`.", mac[1], StringComparison.Ordinal);
         foreach (var zeile in mac)
         {
-            Assert.Contains("nicht signiert", zeile, StringComparison.Ordinal);
+            Assert.Contains("Nicht signiert", zeile, StringComparison.Ordinal);
+            Assert.Contains("Update im Programm", zeile, StringComparison.Ordinal);
+            Assert.DoesNotContain("gibt es auf macOS noch nicht", zeile, StringComparison.Ordinal);
             Assert.Contains("„Dennoch öffnen“", zeile, StringComparison.Ordinal);
         }
         Assert.DoesNotContain(zeilen, z => z.Contains("nur Apple-Chips", StringComparison.Ordinal));
         var py = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "release.py"));
-        Assert.Contains("DATEIEN_JE_RELEASE = 15\n", py.Replace("\r\n", "\n", StringComparison.Ordinal), StringComparison.Ordinal);
-        Assert.Contains("\"osx-x64\": [ID + \"-\" + k[\"NAME\"] + \"-osx-x64.pkg\"]", py, StringComparison.Ordinal);
+        Assert.Contains("DATEIEN_JE_RELEASE = 19\n", py.Replace("\r\n", "\n", StringComparison.Ordinal), StringComparison.Ordinal);
+        Assert.Contains("\"releases.osx.json\"", py, StringComparison.Ordinal);
+        Assert.Contains("\"releases.osx-x64.json\"", py, StringComparison.Ordinal);
+        Assert.Contains("\"osx-x64\": [ID + \"-\" + k[\"NAME\"] + \"-osx-x64.pkg\", ID + \"-\" + k[\"PAKET\"] + \"-osx-x64-full.nupkg\",", py, StringComparison.Ordinal);
     }
 
     /// <summary>Abschnitt "## &lt;Anzeige&gt;" aus AENDERUNGEN.md ohne Ueberschrift, wie release.py neuerungen().</summary>

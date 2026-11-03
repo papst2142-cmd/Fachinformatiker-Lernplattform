@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.34.0 (Paketversion 1.0.0-a.0.34.0) -> A 0.34.1 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.34.1 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.35.0 (Paketversion 1.0.0-a.0.35.0) -> A 0.35.1 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.35.1 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 #   Phase 5 W3 (Weisung P5-8): jedes Update laeuft wie der Knopf "Jetzt aktualisieren"
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
@@ -10,8 +10,10 @@
 #   unter Windows) wird nur beobachtet und am Ende gezaehlt (Phase 6 T5).
 #   Phase 6 T4: unter Windows zum Schluss deinstallieren; beide Datenordner bleiben gleich.
 # Aufruf: werkzeuge/pakete/pakete_und_update.sh <rid> <ausgabeordner>
-#   rid: win-x64 | linux-x64 | osx-arm64 | osx-x64 (macOS: nur Pakete, keine Update-Probe;
-#   osx-x64 = Intel-Mac mit eigenem Velopack-Kanal osx-x64, Phase 11 FW10)
+#   rid: win-x64 | linux-x64 | osx-arm64 | osx-x64 (osx-x64 = Intel-Mac mit eigenem Velopack-Kanal
+#   osx-x64, Phase 11 FW10). Phase 11 Mac-Welle (Weisungen P11-28, P11-27): auch macOS mit Update-Probe;
+#   vorher Startprobe der fertigen .pkg (Installation nach ~/Applications wie bei Nico, Start der installierten
+#   App ohne Oberflaeche, codesign -dv und spctl -a -vv ins Log).
 # Braucht: dotnet, vpk (dotnet tool), unter Linux mksquashfs.
 set -euo pipefail
 RID="$1"
@@ -60,8 +62,8 @@ baue() { # Stufe Version
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.34.0
-baue A 0.34.1
+baue A 0.35.0
+baue A 0.35.1
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -70,14 +72,11 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.34.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.34.0-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.34.0-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.35.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.35.0-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.35.0-AppImage.tar.gz"
     ;;
 esac
 
-case "$RID" in
-  osx-*) echo "macOS: nur Pakete (Plan: kein Geraet)"; exit 0 ;;
-esac
 
 # --- Update-Probe ---
 export LERNPLATTFORM_DATEN="$AUS/daten"
@@ -85,7 +84,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.34.0/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.35.0/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -93,8 +92,36 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.34.0/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.35.0/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
+    ;;
+  osx-*)
+    # Startprobe (Weisung P11-27): die fertige .pkg ohne Administrator in den Benutzerordner installieren,
+    # wie es das Paket erlaubt (enable_currentUserHome) und wie es bei Nico landet (Sammelliste 201)
+    if [ "${CI:-}" != "true" ]; then echo "FEHLER: die Mac-Probe installiert nach ~/Applications und laeuft nur in der CI (CI=true)"; exit 1; fi
+    PKGS=("$AUS/feed-A-0.35.0"/*.pkg)
+    if [ "${#PKGS[@]}" -ne 1 ] || [ ! -f "${PKGS[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in feed-A-0.35.0"; exit 1; fi
+    BUNDLE="$HOME/Applications/Fachinformatiker Lernplattform.app"
+    if [ -e "$BUNDLE" ]; then echo "FEHLER: $BUNDLE besteht schon (keine frische Probe)"; exit 1; fi
+    if ! installer -pkg "${PKGS[0]}" -target CurrentUserHomeDirectory; then
+      # Ersatzweg nur fuer die CI (kein Administrator-Dialog moeglich): Paket entpacken und die App an dieselbe
+      # Stelle legen; das Update danach laeuft genauso ueber Velopack. Steht als INFO im Log.
+      echo "INFO Mac-Probe: installer ohne Administrator abgelehnt, Ersatzweg pkgutil --expand-full nach ~/Applications"
+      pkgutil --expand-full "${PKGS[0]}" "$AUS/pkg-entpackt"
+      mkdir -p "$HOME/Applications"
+      cp -R "$(find "$AUS/pkg-entpackt" -maxdepth 3 -name "Fachinformatiker Lernplattform.app" -type d | head -n 1)" "$BUNDLE"
+    fi
+    # das Paket startet die App nach der Installation selbst (postinstall von Velopack, mit Oberflaeche);
+    # fuer die Probe ohne Oberflaeche wieder beenden
+    sleep 10
+    pkill -f "$BUNDLE/Contents/MacOS/" || true
+    sleep 3
+    test -d "$BUNDLE" || { echo "FEHLER: .pkg hat nicht nach $BUNDLE installiert"; ls -la "$HOME/Applications" /Applications || true; exit 1; }
+    APP="$BUNDLE/Contents/MacOS/$EXE"
+    echo "Mac-Startprobe $RID ($(uname -m)): installiert nach $BUNDLE"
+    echo "--- codesign -dv (Bundle) ---"; codesign -dv "$BUNDLE" 2>&1 || true
+    echo "--- codesign -dv (Programmdatei) ---"; codesign -dv "$APP" 2>&1 || true
+    echo "--- spctl -a -vv ---"; spctl -a -vv "$BUNDLE" 2>&1 || true
     ;;
 esac
 
@@ -139,20 +166,21 @@ pruefe_notizen() { # Weisung P8-53: das angebotene Paket hat Notizen, das Update
 }
 
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.34.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
+grep -q "bericht: Version 1.0.0-a.0.35.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
+case "$RID" in osx-*) echo "Mac-Startprobe $RID: installierte App gestartet, Version 1.0.0-a.0.35.0, Datenordner-Probe angelegt" ;; esac
 letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
-starte suchen "$AUS/feed-A-0.34.1"
+starte suchen "$AUS/feed-A-0.35.1"
 pruefe_notizen
-warte_auf 1.0.0-a.0.34.1
-pruefe_abschluss "A 0.34.1" 1
+warte_auf 1.0.0-a.0.35.1
+pruefe_abschluss "A 0.35.1" 1
 starte suchen "$AUS/feed-B-0.1.0"
 pruefe_notizen
 warte_auf 1.0.0-b.0.1.0
 pruefe_abschluss "B 0.1.0" 2
-starte suchen "$AUS/feed-A-0.34.1"
+starte suchen "$AUS/feed-A-0.35.1"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.34.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.35.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
 test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq 2
 # T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,

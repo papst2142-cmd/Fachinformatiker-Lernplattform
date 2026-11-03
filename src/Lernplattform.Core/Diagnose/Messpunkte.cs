@@ -42,7 +42,7 @@ public static class Messpunkte
     private static readonly HashSet<string> Geschrieben = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Eine Zeile, z. B. "03.11.2026 12:40 · A 0.34.0 · Fachrichtung wechseln ae: 312 ms". Eine unbekannte
+    /// Eine Zeile, z. B. "03.11.2026 12:40 · A 0.35.0 · Fachrichtung wechseln ae: 312 ms". Eine unbekannte
     /// Fachrichtung steht als "?", ein ungueltiger Wert (negativ, NaN, unendlich) als "?" ms.
     /// </summary>
     public static string Zeile(DateTime jetzt, string version, Punkt punkt, double ms, string? fachrichtung = null)
@@ -57,7 +57,7 @@ public static class Messpunkte
         return jetzt.ToString("dd.MM.yyyy HH:mm", inv) + " · " + VersionText(version) + " · " + name + ": " + wert + " ms";
     }
 
-    // nur Zeichen einer Versionsanzeige (A 0.34.0), damit nie etwas anderes in die Datei kommt
+    // nur Zeichen einer Versionsanzeige (A 0.35.0), damit nie etwas anderes in die Datei kommt
     private static string VersionText(string version)
     {
         var text = new string(version.Where(z => char.IsAsciiLetterOrDigit(z) || z is '.' or ' ' or '-').Take(32).ToArray()).Trim();
