@@ -58,6 +58,9 @@ internal sealed class GitHubAttrappe : IDisposable
 
     public List<JsonObject> PutKoerper { get; } = [];
 
+    /// <summary>Angelegte Berichte: "repos/o/r/contents/berichte/name" -> Inhalt (Phase 11, Sammelliste 202).</summary>
+    public Dictionary<string, byte[]> Berichte { get; } = [];
+
     // -- Steuerung (wie die Steuerschluessel der Python-Attrappe) ------------
 
     public int? GetStatus { get; set; }
@@ -327,6 +330,23 @@ internal sealed class GitHubAttrappe : IDisposable
                 }
                 return ergebnis;
             }
+            // Phase 11 (Sammelliste 202): "Bericht senden" legt Dateien unter contents/berichte/<name> an
+            if (methode == "PUT" && teile.Length == 6 && teile[0] == "repos" && teile[3] == "contents" && teile[4] == "berichte")
+            {
+                var body = JsonNode.Parse(koerper)!.AsObject();
+                PutKoerper.Add(body);
+                if (PutStatus is { } ps)
+                {
+                    return Json(ps, new JsonObject { ["message"] = "Attrappe" });
+                }
+                var ort = string.Join('/', teile);
+                if (Berichte.ContainsKey(ort))
+                {
+                    return Json(422, new JsonObject { ["message"] = "Invalid request. \"sha\" wasn't supplied." });
+                }
+                Berichte[ort] = Convert.FromBase64String((string)body["content"]!);
+                return Json(201, new JsonObject { ["content"] = new JsonObject { ["path"] = string.Join('/', teile[4..]) } });
+            }
             if (methode == "PUT")
             {
                 if (!istDatei)
@@ -385,6 +405,7 @@ internal sealed class GitHubAttrappe : IDisposable
     private static string Grund(int code) => code switch
     {
         200 => "OK",
+        201 => "Created",
         401 => "Unauthorized",
         403 => "Forbidden",
         404 => "Not Found",

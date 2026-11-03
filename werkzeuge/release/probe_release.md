@@ -1,21 +1,21 @@
-Auf dem Mac gibt es jetzt das Update im Programm, und das Spiel zeigt die Stadt dort von allein in 3D.
+Einen Problembericht kannst du jetzt mit einem Knopfdruck direkt an den Herausgeber der Lernplattform schicken.
 
-- Mac: Unter „Optionen“ → „Updates“ sucht das Programm jetzt auch auf dem Mac nach einer neuen Version und spielt sie mit „Jetzt aktualisieren“ ein, wie unter Windows und Linux. Vorher legt es eine Kopie deines Lernstands im Datenordner an (Ordner „sicherungen“, Name beginnt mit „vor_update_“). Macs mit Apple-Chip und Macs mit Intel-Prozessor bekommen jeweils ihr eigenes Paket.
-- Mac: Bisher meldete die Suche „Du hast die neueste Version“, obwohl es eine neuere gab. Findet das Programm auf dem Mac kein Paket zum Einspielen, schaut es jetzt zusätzlich auf der Release-Seite nach und bietet dort die neue Version zum Herunterladen an.
-- Mac: Das Spiel zeigt die Stadt jetzt ohne zusätzliche Einstellung in 3D. Kann der Mac keine 3D-Grafik zeigen, erscheinen wie bisher ein Hinweis und die Liste der Orte.
-- Interne Prüfungen des Programms installieren das fertige Mac-Paket jetzt auf Macs mit Apple-Chip und mit Intel-Prozessor, starten es und spielen ein Update ein; an der Bedienung ändert sich dadurch nichts.
+- Unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“ gibt es den neuen Knopf „Bericht senden“, am PC und am Handy. Gesendet wird nur, wenn du ihn drückst, und erst nach einer Rückfrage. Nie sendet das Programm von allein.
+- Gesendet wird genau der Bericht, den du dort siehst. Er enthält keine Passwörter, keine Zugangsschlüssel, nicht deinen Benutzernamen in Pfaden und nicht deinen Lernstand. Er wird in einem nicht öffentlichen Speicher abgelegt.
+- In der Rückfrage kannst du in das Feld „Was ist passiert? (freiwillig)“ kurz beschreiben, was du gemacht hast (höchstens 2000 Zeichen). Dein Text steht dann über dem Bericht. Schreibe keine Passwörter oder Namen hinein.
+- Nach dem Senden siehst du den Namen der abgelegten Datei. Klappt das Senden nicht (zum Beispiel ohne Internet), sagt dir ein Fenster warum; der Bericht lässt sich dann wie bisher als Datei speichern oder kopieren.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.35.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.36.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.35.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.35.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.35.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.35.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.36.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.36.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.36.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.36.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

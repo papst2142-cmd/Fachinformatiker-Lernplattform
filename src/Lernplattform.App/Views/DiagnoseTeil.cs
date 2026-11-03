@@ -84,7 +84,14 @@ public sealed class DiagnoseTeil
                         knopf.Click += async (_, _) => await ProblemKnopfAsync(text);
                         reihe.Children.Add(knopf);
                     }
+                    // Phase 11 (Weisung P11-29, Sammelliste 202): nur in C#, PC und Handy; BEFRISTET bis 1.0
+                    var senden = Schrift.Knopf(BerichtSendenTexte.Knopf);
+                    senden.Margin = new Thickness(0, 0, 10, 6);
+                    senden.Click += async (_, _) => await SendenAsync();
+                    reihe.Children.Add(senden);
+                    SendenKnopf = senden;
                     panel.Children.Add(reihe);
+                    panel.Children.Add(Hilfe(BerichtSendenTexte.Hinweis));
                     break;
                 case Optionen.AbschnittLeistung:
                     panel.Children.Add(Hilfe(LeistungTexte.Hilfe));
@@ -206,6 +213,21 @@ public sealed class DiagnoseTeil
         // Tagesziel und Abgleich stehen im Bericht: auch die Einstellungen gehoeren zum Schluessel
         teile.Add(Zustand.Werte.ToJsonString());
         return string.Join("|", teile);
+    }
+
+    /// <summary>Knopf "Bericht senden" (fuer den Start ohne Bedienung).</summary>
+    public Button? SendenKnopf { get; private set; }
+
+    private static async Task SendenAsync()
+    {
+        try
+        {
+            await BerichtSenden.AusfuehrenAsync(BerichtText, Pc ? "PC" : "Handy", Update.Anzeige);
+        }
+        catch (Exception fehler)
+        {
+            Fehlerprotokoll.Schreiben(fehler);
+        }
     }
 
     private async Task ProblemKnopfAsync(string knopf)

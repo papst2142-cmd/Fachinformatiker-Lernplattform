@@ -19,6 +19,11 @@ sealed class Program
         // Phase 5 W3: ein geladenes Paket nie von allein beim Start einspielen; ein Update laeuft nur
         // ueber UpdateAblauf.Installieren (vorher Kopie des Lernstands und Merker, Gegenpruefung W3 Fund 1).
         VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
+        // Phase 11 (Weisung P11-29): Probe der CI fuer "Bericht senden" mit dem eingebauten Schluessel, ohne Fenster
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_BERICHT_PROBE") is { Length: > 0 } lauf)
+        {
+            return BerichtProbe(lauf);
+        }
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_AUTO") is { Length: > 0 } modus)
         {
             return Updater.Auto(modus);
@@ -37,6 +42,28 @@ sealed class Program
         var (imeAus, software) = Schalter();
         Haenger.Einrichten(version, zusatz: "Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard"));
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    /// <summary>
+    /// Sendet berichte/_probe_&lt;Lauf&gt;.md ueber denselben Weg wie der Knopf. Rueckgabe 0 gesendet, 2 ohne Schluessel
+    /// gebaut (nichts gesendet), 1 Fehler. Die Ausgabe nennt nie den Schluessel.
+    /// </summary>
+    private static int BerichtProbe(string lauf)
+    {
+        Fehlerprotokoll.Einrichten(Lernplattform.Aktualisierung.Aktualisierung.Anzeige);
+        var ergebnis = Lernplattform.Core.Diagnose.BerichtVersand.Probe(lauf, Lernplattform.Aktualisierung.Aktualisierung.Anzeige, DateTime.Now);
+        switch (ergebnis.Art)
+        {
+            case Lernplattform.Core.Diagnose.VersandArt.Gesendet:
+                Console.WriteLine("Bericht-Probe: gesendet " + ergebnis.Datei);
+                return 0;
+            case Lernplattform.Core.Diagnose.VersandArt.NichtVerfuegbar:
+                Console.WriteLine("Bericht-Probe: nicht verfuegbar (ohne Schluessel gebaut), nichts gesendet");
+                return 2;
+            default:
+                Console.WriteLine("Bericht-Probe: FEHLER " + ergebnis.Art + (ergebnis.Code > 0 ? " HTTP " + ergebnis.Code : ""));
+                return 1;
+        }
     }
 
     /// <summary>Ausweichschalter (Umgebung oder Startschalter): Eingabemethode aus, Zeichnen ohne Grafikkarte.</summary>
