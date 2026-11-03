@@ -18,7 +18,18 @@ Aufruf:
       schreibt lauf.sh (eine Quelle, ohne \r).
   python -I werkzeuge/starttest/urteil.py lauf2 <rueckgabe_lauf2> <messdatei_lauf1> <messdatei_lauf2>
       Rueckgabe 0 = gruen, 3 = derselbe Punkt in beiden Laeufen rot, 1 = Absturz im 2. Lauf.
+  python -I werkzeuge/starttest/urteil.py selbsttest
+      feste Faelle der Neustart-Regel und der Ausnahme Intel-Mac (Rueckgabe 0 = alle richtig).
+
+Feste, benannte Ausnahme Intel-Mac (Weisung P11-19, Nico 03.11.2026, Antwort 1a): nur wenn
+LERNPLATTFORM_ZEITEN_NUR_INFO genau "macos-15-intel" ist (setzt ci.yml nur fuer tests (macos-15-intel)),
+zaehlen Messzeiten ueber ihrer Grenze nicht als Rot. Sie stehen mit Wert, Grenze und allen
+Einzelmessungen als INFO-Zeile in der Ausgabe. Layout-, Kontrast- und alle anderen Funde und jeder
+Absturz bleiben rot. Messzeit = FEHLER-Zeile mit "<n> ms ueber [Grenze] <n> ms" (Messwiederholung,
+Farbreglerregel) oder "(Grenze Median <n> ms" (Spiel Zeit je Bild).
 """
+import os
+import tempfile
 import re
 import sys
 
@@ -31,6 +42,17 @@ FEHLER = re.compile(r"FEHLER(?: \(([^)]*)\))?: ?(.*)")
 OHNE_ZEILE = "Rueckgabe 3 ohne erkannte Fehlerzeile"
 KONTRAST = re.compile(r"\s*(Kontrast [^:]*): .* UNTER ")
 ZIFFERN = re.compile(r"[0-9]")
+AUSNAHME_INTEL_MAC = "macos-15-intel"
+MESSZEIT = re.compile(r"[0-9][0-9.,]* ms ueber (?:Grenze )?[0-9][0-9.,]* ms|\(Grenze Median [0-9][0-9.,]* ms")
+
+
+def zeiten_nur_info():
+    """Ausnahme Intel-Mac aktiv? Nur bei genau diesem Wert (Weisung P11-19)."""
+    return os.environ.get("LERNPLATTFORM_ZEITEN_NUR_INFO", "") == AUSNAHME_INTEL_MAC
+
+
+def messzeit(zeile):
+    return "FEHLER" in zeile and MESSZEIT.search(zeile) is not None
 
 
 def lesen(datei):
@@ -94,7 +116,10 @@ def lauf1(rc, datei):
         return 0
     print("1. Lauf rot (Rueckgabe 3), es folgt ein 2. Lauf in neuem Prozess mit frischem Datenordner:")
     for punkt, zeile in punkte(zeilen).items():
-        print("  1. Lauf rot: " + zeile)
+        if zeiten_nur_info() and messzeit(zeile):
+            print("  INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): " + zeile)
+        else:
+            print("  1. Lauf rot: " + zeile)
     return 0
 
 
@@ -109,6 +134,13 @@ def lauf2(rc, datei1, datei2):
     if rc == 3 and not zweite:
         zweite = {OHNE_ZEILE: OHNE_ZEILE}
     beide = [p for p in erste if p in zweite]
+    if zeiten_nur_info():
+        # Ausnahme Intel-Mac: Messzeiten ueber der Grenze nur als Information, alles andere bleibt rot
+        for punkt in [p for p in beide if messzeit(erste[p]) and messzeit(zweite[p])]:
+            print("INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): in beiden Laeufen ueber der Grenze: %s" % punkt)
+            print("    1. Lauf: " + erste[punkt])
+            print("    2. Lauf: " + zweite[punkt])
+            beide.remove(punkt)
     for punkt in erste:
         if punkt not in zweite:
             print("im 1. Lauf rot, im 2. Lauf gruen: %s, Einzelwerte: %s" % (punkt, erste[punkt]))
@@ -126,11 +158,55 @@ def lauf2(rc, datei1, datei2):
     return 0
 
 
+def selbsttest():
+    """Feste Faelle (Weisung P11-19): Intel-Mac Messzeit-Rot = gruen mit INFO, Layout-Rot = rot; dasselbe
+    ohne Ausnahme (macos-15 und alle anderen) bleibt rot."""
+    zeit = "  FEHLER: Inhalte laden (kalt, einmalig): 1073 ms ueber Grenze 400 ms; Einzelmessungen 1073 ms (einmaliger Messpunkt, nicht wiederholt)"
+    hoechst = "  FEHLER: Seitenwechsel (gebaute Seite) (Hoechstwert): 1341 ms ueber Grenze 1000 ms; Einzelmessungen 1341 ms (einmaliger Messpunkt, nicht wiederholt)"
+    farbe = "  FEHLER: Farbregler Schritt 7: 120.5 ms ueber 100 ms; Einzelmessungen 120.5, 118.0, 130.2 ms"
+    bild = "  FEHLER: Spiel Zeit je Bild: Median 61 ms, 95 % 90 ms (Grenze Median 50 ms, 95 % 80 ms; Einzelmessungen 61/90)"
+    layout = ["Layoutpruefung (Woerter, Knoepfe, Rand), 5 Schriftstufen x 25 Seiten x 3 Groessen: 1 Funde",
+              '  pc 1360x880 gross dashboard: Wort getrennt: "Netzwerkdesig|n" in "Netzwerkdesign"']
+    andere = "  FEHLER: Spiel Gesamtansicht: 45 Zeichenaufrufe, 170000 Dreiecke (Grenzen 40, 160000)"
+    faelle = [  # (Ausnahme, Zeilen beider Laeufe, erwartete Rueckgabe von lauf2)
+        ("macos-15-intel", [zeit, hoechst, farbe, bild], 0),
+        ("macos-15-intel", [zeit] + layout, 3),
+        ("macos-15-intel", [andere], 3),
+        ("", [zeit, hoechst, farbe, bild], 3),
+        ("macos-15", [zeit], 3),
+        ("MACOS-15-INTEL", [zeit], 3),
+        ("", layout, 3),
+    ]
+    rot = 0
+    alt = os.environ.get("LERNPLATTFORM_ZEITEN_NUR_INFO")
+    with tempfile.TemporaryDirectory() as ordner:
+        for nr, (wert, zeilen, soll) in enumerate(faelle, 1):
+            os.environ["LERNPLATTFORM_ZEITEN_NUR_INFO"] = wert
+            dateien = []
+            for lauf in (1, 2):
+                pfad = os.path.join(ordner, "fall%d_lauf%d.txt" % (nr, lauf))
+                with open(pfad, "w", encoding="utf-8") as d:
+                    d.write("\n".join(zeilen + ["URTEIL: rot (%d Funde)" % len(zeilen)]) + "\n")
+                dateien.append(pfad)
+            ist = lauf2(3, dateien[0], dateien[1])
+            if ist != soll:
+                print("FEHLER: Selbsttest Fall %d (Ausnahme '%s'): Rueckgabe %d statt %d" % (nr, wert, ist, soll))
+                rot = 1
+    if alt is None:
+        os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
+    else:
+        os.environ["LERNPLATTFORM_ZEITEN_NUR_INFO"] = alt
+    print("Selbsttest Urteil: %d Faelle, %s" % (len(faelle), "rot" if rot else "gruen"))
+    return rot
+
+
 def main():
     # Windows: Ausgabe ohne \r (Weisung P4-14 b)
     sys.stdout.reconfigure(newline="\n")
     if len(sys.argv) == 4 and sys.argv[1] == "lauf1":
         return lauf1(int(sys.argv[2]), sys.argv[3])
+    if len(sys.argv) == 2 and sys.argv[1] == "selbsttest":
+        return selbsttest()
     if len(sys.argv) == 5 and sys.argv[1] == "lauf2":
         return lauf2(int(sys.argv[2]), sys.argv[3], sys.argv[4])
     print(__doc__)

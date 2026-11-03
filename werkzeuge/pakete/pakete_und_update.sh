@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.32.10 (Paketversion 1.0.0-a.0.32.10) -> A 0.32.11 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.32.11 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.32.11 (Paketversion 1.0.0-a.0.32.11) -> A 0.32.12 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.32.12 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 #   Phase 5 W3 (Weisung P5-8): jedes Update laeuft wie der Knopf "Jetzt aktualisieren"
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
@@ -10,7 +10,8 @@
 #   unter Windows) wird nur beobachtet und am Ende gezaehlt (Phase 6 T5).
 #   Phase 6 T4: unter Windows zum Schluss deinstallieren; beide Datenordner bleiben gleich.
 # Aufruf: werkzeuge/pakete/pakete_und_update.sh <rid> <ausgabeordner>
-#   rid: win-x64 | linux-x64 | osx-arm64 (macOS: nur Pakete, keine Update-Probe)
+#   rid: win-x64 | linux-x64 | osx-arm64 | osx-x64 (macOS: nur Pakete, keine Update-Probe;
+#   osx-x64 = Intel-Mac mit eigenem Velopack-Kanal osx-x64, Phase 11 FW10)
 # Braucht: dotnet, vpk (dotnet tool), unter Linux mksquashfs.
 set -euo pipefail
 RID="$1"
@@ -41,7 +42,9 @@ PY="${PYTHON:-python3}"
 NOTIZEN="$AUS/notizen.md"
 NOTIZEN_SHA256="$("$PY" -I "$WURZEL/werkzeuge/release/release.py" notizen "$NOTIZEN" | tr -d '\r' | grep '^NOTIZEN_SHA256=' | cut -d= -f2)"
 test -n "$NOTIZEN_SHA256"
-case "$RID" in win-*) KANAL=win ;; linux-*) KANAL=linux ;; osx-*) KANAL=osx ;; esac
+# Phase 11 FW10 (Weisung P11-18): Intel-Mac eigener Kanal, die anderen behalten die Vorgabe von vpk
+KANAL_ARG=()
+case "$RID" in win-*) KANAL=win ;; linux-*) KANAL=linux ;; osx-x64) KANAL=osx-x64; KANAL_ARG=(-c osx-x64) ;; osx-*) KANAL=osx ;; esac
 
 baue() { # Stufe Version
   local stufe="$1" version="$2"
@@ -51,14 +54,14 @@ baue() { # Stufe Version
     -p:Version="$version" -p:Stufe="$stufe" -p:DebugType=none -o "$pub"
   vpk pack -u "$ID" -v "$paket" -p "$pub" -e "$EXE" \
     -i "$ICON" --packTitle "Fachinformatiker Lernplattform" \
-    --releaseNotes "$NOTIZEN" -o "$feed"
+    --releaseNotes "$NOTIZEN" ${KANAL_ARG[@]+"${KANAL_ARG[@]}"} -o "$feed"
   rm -rf "$pub"
   "$PY" -I "$WURZEL/werkzeuge/release/release.py" pruefe-feed "$feed/releases.$KANAL.json" "$paket"
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.32.10
 baue A 0.32.11
+baue A 0.32.12
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -67,8 +70,8 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.32.10" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.32.10-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.32.10-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.32.11" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.32.11-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.32.11-AppImage.tar.gz"
     ;;
 esac
 
@@ -82,7 +85,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.32.10/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.32.11/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -90,7 +93,7 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.32.10/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.32.11/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
     ;;
 esac
@@ -136,20 +139,20 @@ pruefe_notizen() { # Weisung P8-53: das angebotene Paket hat Notizen, das Update
 }
 
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.32.10;" "$LERNPLATTFORM_UPDATE_BERICHT"
+grep -q "bericht: Version 1.0.0-a.0.32.11;" "$LERNPLATTFORM_UPDATE_BERICHT"
 letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
-starte suchen "$AUS/feed-A-0.32.11"
+starte suchen "$AUS/feed-A-0.32.12"
 pruefe_notizen
-warte_auf 1.0.0-a.0.32.11
-pruefe_abschluss "A 0.32.11" 1
+warte_auf 1.0.0-a.0.32.12
+pruefe_abschluss "A 0.32.12" 1
 starte suchen "$AUS/feed-B-0.1.0"
 pruefe_notizen
 warte_auf 1.0.0-b.0.1.0
 pruefe_abschluss "B 0.1.0" 2
-starte suchen "$AUS/feed-A-0.32.11"
+starte suchen "$AUS/feed-A-0.32.12"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.32.10" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.32.11" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
 test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq 2
 # T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,

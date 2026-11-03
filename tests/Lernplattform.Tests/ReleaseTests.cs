@@ -99,6 +99,34 @@ public class ReleaseTests
         Assert.NotEqual(fenster, UpdateNotizen.Lesbar("# Fachinformatiker Lernplattform " + anzeige + "\n\n## Neu in dieser Version\n\n" + probe));
     }
 
+    /// <summary>
+    /// Phase 11 FW10 (Weisung P11-18): Der Release-Text nennt zwei Mac-Pakete, je Prozessor eine Zeile mit eigenem
+    /// Dateinamen und dem Hinweis "Dennoch öffnen"; ein Release hat 15 Dateien (release.py selbsttest zaehlt sie).
+    /// </summary>
+    [Fact]
+    public void ReleaseTextNenntBeideMacPakete()
+    {
+        var props = XDocument.Load(Path.Combine(Pfade.Wurzel, "Directory.Build.props"));
+        var stufe = props.Descendants("Stufe").Single().Value.Trim();
+        var version = props.Descendants("Version").Single().Value.Trim();
+        var name = stufe == "" ? version : stufe + "-" + version;
+        var zeilen = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "probe_release.md"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var mac = zeilen.Where(z => z.StartsWith("- **macOS", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, mac.Count);
+        Assert.StartsWith("- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-" + name + "-osx-arm64.pkg`.", mac[0], StringComparison.Ordinal);
+        Assert.StartsWith("- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-" + name + "-osx-x64.pkg`.", mac[1], StringComparison.Ordinal);
+        foreach (var zeile in mac)
+        {
+            Assert.Contains("nicht signiert", zeile, StringComparison.Ordinal);
+            Assert.Contains("„Dennoch öffnen“", zeile, StringComparison.Ordinal);
+        }
+        Assert.DoesNotContain(zeilen, z => z.Contains("nur Apple-Chips", StringComparison.Ordinal));
+        var py = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "release.py"));
+        Assert.Contains("DATEIEN_JE_RELEASE = 15\n", py.Replace("\r\n", "\n", StringComparison.Ordinal), StringComparison.Ordinal);
+        Assert.Contains("\"osx-x64\": [ID + \"-\" + k[\"NAME\"] + \"-osx-x64.pkg\"]", py, StringComparison.Ordinal);
+    }
+
     /// <summary>Abschnitt "## &lt;Anzeige&gt;" aus AENDERUNGEN.md ohne Ueberschrift, wie release.py neuerungen().</summary>
     private static string Abschnitt(string anzeige)
     {

@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.32.11
+Für Macs mit Intel-Prozessor gibt es jetzt ein eigenes Installationspaket.
+
+- Neben dem Paket für Macs mit Apple-Chip (M1 bis M4) liegt auf der Release-Seite jetzt auch ein Paket für Macs mit Intel-Prozessor (macOS 14 oder neuer). Der Dateiname endet auf „osx-x64.pkg“, das Paket für Apple-Chips weiter auf „osx-arm64.pkg“.
+- Beide Mac-Pakete sind nicht signiert: Beim ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ auf „Dennoch öffnen“ klicken. Das Update im Programm gibt es auf macOS noch nicht.
+- Im Dashboard wird der Name eines Prüfungsthemas (zum Beispiel „Netzwerkdesign“) bei großer Schrift am PC nicht mehr mitten im Wort getrennt. Passt das Wort nicht in seine Spalte, wird nur dieser Name etwas kleiner geschrieben.
+- Die Liste der Fremdbestandteile („Lizenzen“ in den Optionen) nennt jetzt auch die Teile des Intel-Pakets.
+
 ## A 0.32.10
 Eingabefelder bleiben bei großer Schrift am Handy jetzt immer in ihrer Karte und sind dadurch auch im dunklen Modus klar umrandet zu sehen.
 

@@ -4,7 +4,8 @@
 # Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
 # - schnell: vergleichswerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
 #   Laeuft bei jedem Push auf einen Pull Request und auf main.
-# - voll: dazu tests (windows-latest, macos-15), pakete x3 und android (8 Teile). Laeuft nur
+# - voll: dazu tests (windows-latest, macos-15, macos-15-intel), pakete x4 und android (10 Teile).
+#   Phase 11 FW10 (Weisung P11-18): macos-15-intel und pakete (osx-x64) fuer Intel-Macs. Laeuft nur
 #   ueber workflow_dispatch (Vorgabe voll) oder bei einem Pull Request mit dem Label "voll".
 #   Der volle Lauf auf dem Kopf des Pull Requests ist das Merge-Tor.
 # Phase 6 W1 (Weisung P6-2): im vollen Lauf bauen pakete x3 und android zusaetzlich die Release-Dateien
@@ -24,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       stufe:
-        description: "Stufe: voll (alle 8 Teile) oder schnell"
+        description: "Stufe: voll (alle 10 Teile) oder schnell"
         type: choice
         options: [voll, schnell]
         default: voll
@@ -53,8 +54,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '["ubuntu-latest", "windows-latest", "macos-15"]' || '["ubuntu-latest"]') }}
+        os: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '["ubuntu-latest", "windows-latest", "macos-15", "macos-15-intel"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
+    # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Versuch>. runner.os ist auf
+    # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
+    env:
+      MESS_OS: ${{ matrix.os == 'macos-15-intel' && 'macOS-intel' || (startsWith(matrix.os, 'macos') && 'macOS' || (startsWith(matrix.os, 'windows') && 'Windows' || 'Linux')) }}
+      # Weisung P11-19 (Nico 03.11.2026, Antwort 1a): feste Ausnahme NUR fuer den Intel-Mac. Messzeiten ueber
+      # der Grenze stehen dort als INFO-Zeile (Wert, Grenze, Einzelmessungen) und machen den Lauf nicht rot;
+      # Layout-, Kontrast-, Absturzfunde und Unit-Tests bleiben rot (werkzeuge/starttest/urteil.py). Alle anderen
+      # Systeme: leer = unveraendert streng.
+      LERNPLATTFORM_ZEITEN_NUR_INFO: ${{ matrix.os == 'macos-15-intel' && 'macos-15-intel' || '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
@@ -75,6 +85,10 @@ jobs:
         with:
           python-version: "3.12"
       # Phase 6 W1 (T1): Tag-Regel in Python gleich der C#-Regel (dieselben Faelle wie ReleaseTests)
+      # Weisung P11-19: Neustart-Regel und Ausnahme Intel-Mac mit festen Faellen (Gegenprobe: ohne Ausnahme rot)
+      - name: Urteil des Start-Tests (urteil.py selbsttest)
+        shell: bash
+        run: python -I werkzeuge/starttest/urteil.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
         if: runner.os == 'Linux'
         run: python3 -I werkzeuge/release/release.py selbsttest
@@ -106,38 +120,39 @@ jobs:
       # 15 Minuten, bis ein zweiter voller Lauf alle unter 9 Minuten zeigt (dann W3).
       # Weisung P8-5 (W3): Lauf 40351299271 zeigte ubuntu 476 s, windows 540 s, macOS 594 s, nicht
       # alle unter 540 s; darum bleiben die Lernschritte bei 15 Minuten.
+      # Weisung P11-19: nur der Intel-Mac (macos-15-intel, langsamer, Lauf 450: 15 min) 25 bzw. Spiel 20 Minuten.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
-        timeout-minutes: 15
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: lernen
-        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: steps.lauf1.outputs.rc == '3'
-        timeout-minutes: 15
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: lernen
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
-        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_lauf1_versuch${{ github.run_attempt }}.txt
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
         id: spiel1
         if: always() && steps.lauf1.outcome != 'skipped'
-        timeout-minutes: 10
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel1
-        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ runner.os }}_spiel1_versuch${{ github.run_attempt }}.txt
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: always() && steps.spiel1.outputs.rc == '3'
-        timeout-minutes: 10
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel2
-        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ runner.os }}_spiel2_versuch${{ github.run_attempt }}.txt messung_${{ runner.os }}_spiel1_versuch${{ github.run_attempt }}.txt
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_spiel2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
       # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
       - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
@@ -149,7 +164,7 @@ jobs:
           LERNPLATTFORM_MESSUNG_TEIL: spiel-ersatz
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_ersatz
         run: |
-          datei=messung_${{ runner.os }}_ersatz_versuch${{ github.run_attempt }}.txt
+          datei=messung_${{ env.MESS_OS }}_ersatz_versuch${{ github.run_attempt }}.txt
           bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           cat "$datei" || true
           grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
@@ -163,13 +178,13 @@ jobs:
           LERNPLATTFORM_MAC_OPENGL: "1"
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_opengl
         run: |
-          datei=messung_${{ runner.os }}_macopengl_versuch${{ github.run_attempt }}.txt
+          datei=messung_${{ env.MESS_OS }}_macopengl_versuch${{ github.run_attempt }}.txt
           GITHUB_OUTPUT=/dev/null bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           grep -E "^(Schalter|Spiel|URTEIL)|FEHLER" "$datei" || true
       - uses: actions/upload-artifact@v7
         with:
-          name: messung-${{ runner.os }}-${{ github.run_attempt }}
-          path: messung_${{ runner.os }}_*_versuch${{ github.run_attempt }}.txt
+          name: messung-${{ env.MESS_OS }}-${{ github.run_attempt }}
+          path: messung_${{ env.MESS_OS }}_*_versuch${{ github.run_attempt }}.txt
         if: always()
       # Sicherungsschritt (Weisung P4-14 c): 1. Lauf ohne Fehler, aber Rueckgabe weder 0 noch 3
       # (leer, mit \r, verlorene Ausgabe) -> rot. Ein verschwiegenes Rot darf nie gruen enden.
@@ -188,7 +203,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.32.10 -> A 0.32.11 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.32.11 -> A 0.32.12 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -199,6 +214,8 @@ jobs:
           - { os: windows-latest, rid: win-x64 }
           - { os: ubuntu-latest, rid: linux-x64 }
           - { os: macos-15, rid: osx-arm64 }
+          # Phase 11 FW10 (Weisung P11-18): Intel-Mac, eigener Velopack-Kanal osx-x64
+          - { os: macos-15-intel, rid: osx-x64 }
     runs-on: ${{ matrix.os }}
     # Phase 6 W1: 30 -> 45 Minuten, weil der Release-Bau (zweites publish und pack) dazukommt
     timeout-minutes: 45
@@ -222,16 +239,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.32.10
-          path: pakete/feed-A-0.32.10/
+          name: paket-${{ matrix.rid }}-A-0.32.11
+          path: pakete/feed-A-0.32.11/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.32.11
-          path: pakete/feed-A-0.32.11/
+          name: updateprobe-${{ matrix.rid }}-A-0.32.12
+          path: pakete/feed-A-0.32.12/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.32.10-tar
+          name: appimage-linux-x64-A-0.32.11-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -451,10 +468,10 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.32.11 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.32.10 installierbar.
-      - name: Update-APK A 0.32.11 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.32.11 -o apk-update
+      # Spike D (A4b): zweite APK A 0.32.12 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.32.11 installierbar.
+      - name: Update-APK A 0.32.12 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.32.12 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -504,21 +521,21 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1003210'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1003211'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1003211'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1003212'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.32.10
+          name: lernplattform-android-A-0.32.11
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.32.11
+          name: updateprobe-android-A-0.32.12
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
-      # dann alle vier Bauteile zusammenstellen und pruefen. Ergebnis nur als Artefakt, nichts hochgeladen.
+      # dann alle fuenf Bauteile zusammenstellen und pruefen. Ergebnis nur als Artefakt, nichts hochgeladen.
       - name: Release-APK bauen (Testschluessel)
         env:
           PYTHON: python

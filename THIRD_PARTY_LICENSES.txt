@@ -7916,6 +7916,11 @@ Microsoft.NETCore.App.Host.osx-arm64 (10.0.14), Lizenz MIT
 [DotNet_MIT.txt: gleicher Text wie bei Microsoft.Data.Sqlite, DotNet_MIT.txt]
 
 ##############################################################################
+Microsoft.NETCore.App.Host.osx-x64 (10.0.14), Lizenz MIT
+
+[DotNet_MIT.txt: gleicher Text wie bei Microsoft.Data.Sqlite, DotNet_MIT.txt]
+
+##############################################################################
 Microsoft.NETCore.App.Host.win-x64 (10.0.14), Lizenz MIT
 
 [DotNet_MIT.txt: gleicher Text wie bei Microsoft.Data.Sqlite, DotNet_MIT.txt]
@@ -7943,6 +7948,14 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 [Paket Microsoft.NETCore.App.Runtime.osx-arm64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
 [Paket Microsoft.NETCore.App.Runtime.osx-arm64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+
+##############################################################################
+Microsoft.NETCore.App.Runtime.osx-x64 (10.0.14), Lizenz MIT
+Copyright laut Paket: © Microsoft Corporation. All rights reserved.
+
+[Paket Microsoft.NETCore.App.Runtime.osx-x64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
+
+[Paket Microsoft.NETCore.App.Runtime.osx-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 Microsoft.NETCore.App.Runtime.win-x64 (10.0.14), Lizenz MIT

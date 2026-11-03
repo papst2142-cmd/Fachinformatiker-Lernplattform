@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Phase 6 W1 (Weisung P6-2, VE1/VE3/VE4): baut die Release-Dateien eines Bauteils aus dem Stand im Repo
 # (Version und Stufe nur aus Directory.Build.props, nichts wird ueberschrieben).
-# Aufruf: werkzeuge/release/baue_release.sh <win-x64|linux-x64|osx-arm64|android> <ausgabeordner>
+# Aufruf: werkzeuge/release/baue_release.sh <win-x64|linux-x64|osx-arm64|osx-x64|android> <ausgabeordner>
 # Ergebnis: <aus>/release-<teil>/ mit den Release-Dateien dieses Bauteils und lizenzen-<teil>.json
 #   (jede ausgelieferte Datei einem Bestandteil zugeordnet, sonst Abbruch). release.py zusammen fuegt
-#   die vier Bauteile zu einem Release zusammen. Dieses Skript laedt nichts hoch und legt keinen Tag an.
+#   die fuenf Bauteile zu einem Release zusammen. Dieses Skript laedt nichts hoch und legt keinen Tag an.
 # Android (VE3): Signieren mit dem Release-Schluessel nur ueber Umgebungsvariablen aus Geheimnissen:
 #   LERNPLATTFORM_SCHLUESSEL_DATEI (Pfad zur .keystore-Datei), LERNPLATTFORM_SCHLUESSEL_ALIAS,
 #   LERNPLATTFORM_SCHLUESSEL_PASSWORT, LERNPLATTFORM_SCHLUESSEL_KEY_PASSWORT (Passwoerter nur als env:,
@@ -57,11 +57,13 @@ desktop() {
   "${LIZENZEN[@]}" schreiben "$ARBEIT/uebersicht.txt" "$pub/THIRD_PARTY_LICENSES.txt" "$ARBEIT/vorab.json"
   # Weisung P8-53: Notizen fuer das Update-Fenster (derselbe Abschnitt wie der Release-Text, Schnitt in release.py)
   "$PY" -I "$WURZEL/werkzeuge/release/release.py" notizen "$ARBEIT/notizen.md"
+  # Phase 11 FW10 (Weisung P11-18): Kanal je Bauteil; Intel-Mac eigener Kanal osx-x64, sonst die
+  # Vorgabe von vpk (win, linux, osx), damit die Namen der bisherigen Pakete gleich bleiben
+  local kanal kanal_arg=()
+  case "$rid" in win-*) kanal=win ;; linux-*) kanal=linux ;; osx-x64) kanal=osx-x64; kanal_arg=(-c osx-x64) ;; osx-*) kanal=osx ;; esac
   vpk pack -u "$ID" -v "$PAKET" -p "$pub" -e "$exe" -i "$icon" --packTitle "Fachinformatiker Lernplattform" \
-    --releaseNotes "$ARBEIT/notizen.md" -o "$feed"
+    --releaseNotes "$ARBEIT/notizen.md" ${kanal_arg[@]+"${kanal_arg[@]}"} -o "$feed"
   ls -la "$feed"
-  local kanal
-  case "$rid" in win-*) kanal=win ;; linux-*) kanal=linux ;; osx-*) kanal=osx ;; esac
   # ohne Notizen im Feed kein Release (das Update-Fenster zeigte sonst "Keine Beschreibung vorhanden.")
   "$PY" -I "$WURZEL/werkzeuge/release/release.py" pruefe-feed "$feed/releases.$kanal.json"
   local inhalt=()
@@ -81,8 +83,10 @@ desktop() {
       # D7: macOS nur das .pkg, ohne Update-Feed; der Inhalt wird ueber das .nupkg gezaehlt
       local pkgs=("$feed"/*.pkg)
       if [ "${#pkgs[@]}" -ne 1 ] || [ ! -f "${pkgs[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in $feed"; exit 1; fi
-      cp "${pkgs[0]}" "$ZIEL/$ID-$NAME-osx-arm64.pkg"
-      inhalt=("$ZIEL/$ID-$NAME-osx-arm64.pkg" "$feed/$ID-$PAKET-osx-full.nupkg")
+      cp "${pkgs[0]}" "$ZIEL/$ID-$NAME-$rid.pkg"
+      local nupkg=("$feed/$ID-$PAKET-$kanal-full.nupkg")
+      if [ ! -f "${nupkg[0]}" ]; then echo "FEHLER: ${nupkg[0]} fehlt (Kanal $kanal)"; ls -la "$feed"; exit 1; fi
+      inhalt=("$ZIEL/$ID-$NAME-$rid.pkg" "${nupkg[0]}")
       ;;
   esac
   "${LIZENZEN[@]}" sammeln desktop "$rid" "$pub" "$ZIEL/lizenzen-$rid.json" "${inhalt[@]}"
@@ -132,7 +136,7 @@ android() {
 }
 
 case "$TEIL" in
-  win-x64|linux-x64|osx-arm64) desktop "$TEIL" ;;
+  win-x64|linux-x64|osx-arm64|osx-x64) desktop "$TEIL" ;;
   android) android ;;
   *) echo "FEHLER: unbekanntes Bauteil $TEIL"; exit 1 ;;
 esac
