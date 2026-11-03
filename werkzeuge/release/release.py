@@ -43,12 +43,13 @@ SEITE = "https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform/release
 ENDE_NOTIZEN = "### Herunterladen"
 PROBE = os.path.join(WURZEL, "werkzeuge", "release", "probe_release.md")
 PROBE_DATEIEN = {"Probe-1.txt": b"Probe 1\n", "Probe-2.txt": b"Probe 2\n"}
-# Phase 11 FW10 (Weisung P11-18): ein Release hat 15 Dateien (Windows 4, Linux 5, macOS Apple-Chip 1,
-# macOS Intel 1, Android 1, gemeinsam 3); der Selbsttest prueft die Zahl und beide Mac-Pakete
-DATEIEN_JE_RELEASE = 15
-MAC_HINWEIS = ("Nur gebaut, nicht auf einem Mac geprüft, nicht signiert: nach dem ersten Öffnen unter "
-               "„Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Das Update im "
-               "Programm gibt es auf macOS noch nicht.")
+# Phase 11 FW10 (Weisung P11-18): ein Release hatte 15 Dateien; Mac-Welle (Weisung P11-28): dazu je Mac der
+# Update-Feed (releases.<kanal>.json und das nupkg), also 19 (Windows 4, Linux 5, macOS Apple-Chip 3,
+# macOS Intel 3, Android 1, gemeinsam 3); der Selbsttest prueft die Zahl, beide Mac-Pakete und beide Mac-Feeds
+DATEIEN_JE_RELEASE = 19
+MAC_HINWEIS = ("Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ "
+               "„Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm "
+               "(„Optionen“ → „Updates“).")
 
 
 def fehler(text):
@@ -89,14 +90,17 @@ def kennzahlen():
 
 
 def pflichtdateien(k):
-    """Release-Dateien je Bauteil (Plan Phase 6: VE5 Linux mit tar.gz, D2 ohne Portable-ZIP, D7 macOS ohne Feed)."""
+    """Release-Dateien je Bauteil (Plan Phase 6: VE5 Linux mit tar.gz, D2 ohne Portable-ZIP; D7 macOS ohne Feed
+    aufgehoben mit der Mac-Welle, Weisung P11-28: je Prozessor ein eigener Kanal mit Feed)."""
     return {
         "win-x64": [ID + "-win-Setup.exe", ID + "-" + k["PAKET"] + "-full.nupkg", "RELEASES", "releases.win.json"],
         "linux-x64": [ID + ".AppImage", ID + "-" + k["PAKET"] + "-linux-full.nupkg", "RELEASES-linux",
                       "releases.linux.json", ID + "-" + k["NAME"] + "-AppImage.tar.gz"],
-        "osx-arm64": [ID + "-" + k["NAME"] + "-osx-arm64.pkg"],
-        # Phase 11 FW10 (Weisung P11-18): Intel-Mac, eigener Velopack-Kanal osx-x64 (nur das .pkg wie arm64)
-        "osx-x64": [ID + "-" + k["NAME"] + "-osx-x64.pkg"],
+        "osx-arm64": [ID + "-" + k["NAME"] + "-osx-arm64.pkg", ID + "-" + k["PAKET"] + "-osx-full.nupkg",
+                      "releases.osx.json"],
+        # Phase 11 FW10 (Weisung P11-18): Intel-Mac, eigener Velopack-Kanal osx-x64; Mac-Welle: mit Feed
+        "osx-x64": [ID + "-" + k["NAME"] + "-osx-x64.pkg", ID + "-" + k["PAKET"] + "-osx-x64-full.nupkg",
+                    "releases.osx-x64.json"],
         "android": [ID + "-" + k["NAME"] + "-android-arm64.apk"],
         "gemeinsam": ["LICENSE.txt", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt"],
     }
@@ -209,7 +213,8 @@ def pruefe(aus, text_pfad):
     for name in sorted(set(ist) - set(soll)):
         fehler("Datei gehoert nicht ins Release: " + name)
         rot = 1
-    for kanal in ("win", "linux"):
+    # Mac-Welle (Weisung P11-28): auch die Mac-Feeds osx (Apple-Chip) und osx-x64 (Intel)
+    for kanal in ("win", "linux", "osx", "osx-x64"):
         feed = os.path.join(aus, "releases." + kanal + ".json")
         if not os.path.isfile(feed):
             continue
@@ -331,12 +336,16 @@ def selbsttest():
         fehler("Version im Repo ergibt keinen Tag")
         rot = 1
     print("Selbsttest Tag-Regel: %d Faelle, Repo %s -> %s, %s" % (len(faelle), k["ANZEIGE"], k["TAG"], "rot" if rot else "gruen"))
-    # Phase 11 FW10: genau 15 Release-Dateien, beide Mac-Pakete mit eigenem Namen, keine doppelt
+    # Phase 11 FW10: genau DATEIEN_JE_RELEASE Release-Dateien, beide Mac-Pakete mit eigenem Namen, keine doppelt;
+    # Mac-Welle (Weisung P11-28): je Mac der eigene Feed, ein Intel-Mac liest nie den Feed des Apple-Chips
     alle = [n for liste in pflichtdateien(k).values() for n in liste]
     mac = sorted(n for n in alle if n.endswith(".pkg"))
+    feeds = {rid: sorted(n for n in liste if n.startswith("releases.")) for rid, liste in pflichtdateien(k).items()
+             if rid.startswith("osx-")}
     if len(alle) != DATEIEN_JE_RELEASE or len(set(alle)) != len(alle) or mac != [
-            ID + "-" + k["NAME"] + "-osx-arm64.pkg", ID + "-" + k["NAME"] + "-osx-x64.pkg"]:
-        fehler("Release-Dateien: %d statt %d oder Mac-Pakete %r" % (len(alle), DATEIEN_JE_RELEASE, mac))
+            ID + "-" + k["NAME"] + "-osx-arm64.pkg", ID + "-" + k["NAME"] + "-osx-x64.pkg"] or feeds != {
+            "osx-arm64": ["releases.osx.json"], "osx-x64": ["releases.osx-x64.json"]}:
+        fehler("Release-Dateien: %d statt %d oder Mac-Pakete %r oder Mac-Feeds %r" % (len(alle), DATEIEN_JE_RELEASE, mac, feeds))
         rot = 1
     print("Selbsttest Release-Dateien: %d, macOS %s" % (len(alle), ", ".join(mac)))
     probe = probe_text(k)

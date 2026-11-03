@@ -29,7 +29,9 @@ internal static class Updater
 
     public static void Verbinden()
     {
-        Aktuell.Quelle = () => new VelopackQuelle(Quelle());
+        // Mac-Welle (Sammelliste 200): nur die echte Quelle (GitHub) fragt am Mac ohne Feed die Release-Seite
+        Aktuell.Quelle = () => new VelopackQuelle(Quelle(), seiteOhneFeed: OperatingSystem.IsMacOS()
+            && Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_QUELLE") is not { Length: > 0 });
         Aktuell.Zustand = () =>
         {
             try
@@ -120,7 +122,7 @@ internal static class Updater
 }
 
 /// <summary>Velopack als <see cref="IUpdateQuelle"/>; Fehler werden zu deutschen Texten wie in fisi_update.py.</summary>
-internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true) : IUpdateQuelle
+internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true, bool seiteOhneFeed = false) : IUpdateQuelle
 {
     /// <summary>Hoechstens so lange ohne Fortschritt (ein Prozent des Pakets), dann DownloadZeit.</summary>
     public static readonly TimeSpan Stillstand = TimeSpan.FromSeconds(60);
@@ -134,9 +136,20 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true)
         if (!Manager.IsInstalled)
         {
             // Ordner-Programm (aus dem Quellcode oder entpackt): nur Hinweis und Download-Seite (asset_url fehlt)
-            using var http = new HttpClient();
-            return await GithubSuche.SuchenAsync(http, Aktuell.Anzeige, "pc", abbruch: abbruch).ConfigureAwait(false);
+            return await SeiteSuchenAsync(abbruch).ConfigureAwait(false);
         }
+        // Mac-Welle (Sammelliste 200): ohne Mac-Feed im Release zusaetzlich die GitHub-Seite fragen
+        return await OhneFeed.SuchenAsync(() => VelopackSuchenAsync(abbruch), () => SeiteSuchenAsync(abbruch), seiteOhneFeed).ConfigureAwait(false);
+    }
+
+    private static async Task<UpdateAngebot?> SeiteSuchenAsync(CancellationToken abbruch)
+    {
+        using var http = new HttpClient();
+        return await GithubSuche.SuchenAsync(http, Aktuell.Anzeige, "pc", abbruch: abbruch).ConfigureAwait(false);
+    }
+
+    private async Task<UpdateAngebot?> VelopackSuchenAsync(CancellationToken abbruch)
+    {
         UpdateInfo? info;
         try
         {

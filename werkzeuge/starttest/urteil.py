@@ -43,6 +43,10 @@ OHNE_ZEILE = "Rueckgabe 3 ohne erkannte Fehlerzeile"
 KONTRAST = re.compile(r"\s*(Kontrast [^:]*): .* UNTER ")
 ZIFFERN = re.compile(r"[0-9]")
 AUSNAHME_INTEL_MAC = "macos-15-intel"
+# Sammelliste 199: Rueckgabe des Wachhunds in lauf.sh (Programm nach STARTTEST_WACHHUND_MINUTEN noch nicht fertig)
+HAENGER = 4
+WACHHUND = re.compile(r"STARTTEST_WACHHUND_MINUTEN: (?:\$\{\{ matrix\.os == 'macos-15-intel' && (\d+) \|\| (\d+) \}\}|(\d+))")
+ZEITLIMIT = re.compile(r"timeout-minutes: (?:\$\{\{ matrix\.os == 'macos-15-intel' && (\d+) \|\| (\d+) \}\}|(\d+))")
 MESSZEIT = re.compile(r"[0-9][0-9.,]* ms ueber (?:Grenze )?[0-9][0-9.,]* ms|\(Grenze Median [0-9][0-9.,]* ms")
 
 
@@ -95,6 +99,8 @@ def punkte(zeilen):
 
 
 def absturz(rc, zeilen, lauf):
+    if rc == HAENGER:
+        return "Haenger im %s. Lauf: der Wachhund von lauf.sh hat den Lauf vor dem Schrittzeitlimit beendet (Rueckgabe 4, Angaben in der Ausgabe darueber), kein Neustart" % lauf
     if rc not in (0, 3):
         return "Rueckgabe %d im %s. Lauf (Absturz oder Abbruch), kein Neustart" % (rc, lauf)
     if zeilen is None:
@@ -158,6 +164,44 @@ def lauf2(rc, datei1, datei2):
     return 0
 
 
+def wachhund_unter_zeitlimit(pfad=".github/workflows/ci.yml"):
+    """Sammelliste 199: jeder Schritt mit STARTTEST_WACHHUND_MINUTEN hat ein Zeitlimit, und der Wachhund liegt fuer
+    jedes System darunter (sonst bricht GitHub wieder ohne Angaben ab). Ohne ci.yml (Aufruf ausserhalb des Repos)
+    keine Pruefung."""
+    if not os.path.exists(pfad):
+        return 0
+    with open(pfad, encoding="utf-8") as f:
+        zeilen = f.read().splitlines()
+    rot = 0
+    limit = None
+    gesehen = 0
+    for zeile in zeilen:
+        if zeile.lstrip().startswith("- name:") or zeile.lstrip().startswith("- uses:"):
+            limit = None
+        z = ZEITLIMIT.search(zeile)
+        if z:
+            limit = z.groups()
+        w = WACHHUND.search(zeile)
+        if w:
+            gesehen += 1
+            wert = w.groups()
+            werte = (int(wert[2]), int(wert[2])) if wert[2] else (int(wert[0]), int(wert[1]))
+            if limit is None:
+                print("FEHLER: Selbsttest Wachhund: Schritt ohne timeout-minutes: " + zeile.strip())
+                rot = 1
+                continue
+            grenzen = (int(limit[2]), int(limit[2])) if limit[2] else (int(limit[0]), int(limit[1]))
+            if not all(0 < w_ < g for w_, g in zip(werte, grenzen)):
+                print("FEHLER: Selbsttest Wachhund %s nicht unter Zeitlimit %s" % (werte, grenzen))
+                rot = 1
+    if gesehen == 0:
+        print("FEHLER: Selbsttest Wachhund: kein STARTTEST_WACHHUND_MINUTEN in " + pfad)
+        rot = 1
+    else:
+        print("Selbsttest Wachhund: %d Schritte, jeder Wachhund unter seinem Zeitlimit" % gesehen)
+    return rot
+
+
 def selbsttest():
     """Feste Faelle (Weisung P11-19): Intel-Mac Messzeit-Rot = gruen mit INFO, Layout-Rot = rot; dasselbe
     ohne Ausnahme (macos-15 und alle anderen) bleibt rot."""
@@ -192,6 +236,14 @@ def selbsttest():
             if ist != soll:
                 print("FEHLER: Selbsttest Fall %d (Ausnahme '%s'): Rueckgabe %d statt %d" % (nr, wert, ist, soll))
                 rot = 1
+        # Sammelliste 199: Rueckgabe 4 (Wachhund) ist in beiden Laeufen sofort rot, auch mit gueltiger Messdatei
+        pfad = os.path.join(ordner, "haenger.txt")
+        with open(pfad, "w", encoding="utf-8") as d:
+            d.write("URTEIL: gruen\n")
+        if lauf1(HAENGER, pfad) != 1 or lauf2(HAENGER, pfad, pfad) != 1:
+            print("FEHLER: Selbsttest Wachhund: Rueckgabe 4 nicht rot")
+            rot = 1
+    rot |= wachhund_unter_zeitlimit()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:

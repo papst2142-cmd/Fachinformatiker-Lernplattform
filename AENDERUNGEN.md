@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.35.0
+Auf dem Mac gibt es jetzt das Update im Programm, und das Spiel zeigt die Stadt dort von allein in 3D.
+
+- Mac: Unter „Optionen“ → „Updates“ sucht das Programm jetzt auch auf dem Mac nach einer neuen Version und spielt sie mit „Jetzt aktualisieren“ ein, wie unter Windows und Linux. Vorher legt es eine Kopie deines Lernstands im Datenordner an (Ordner „sicherungen“, Name beginnt mit „vor_update_“). Macs mit Apple-Chip und Macs mit Intel-Prozessor bekommen jeweils ihr eigenes Paket.
+- Mac: Bisher meldete die Suche „Du hast die neueste Version“, obwohl es eine neuere gab. Findet das Programm auf dem Mac kein Paket zum Einspielen, schaut es jetzt zusätzlich auf der Release-Seite nach und bietet dort die neue Version zum Herunterladen an.
+- Mac: Das Spiel zeigt die Stadt jetzt ohne zusätzliche Einstellung in 3D. Kann der Mac keine 3D-Grafik zeigen, erscheinen wie bisher ein Hinweis und die Liste der Orte.
+- Interne Prüfungen des Programms installieren das fertige Mac-Paket jetzt auf Macs mit Apple-Chip und mit Intel-Prozessor, starten es und spielen ein Update ein; an der Bedienung ändert sich dadurch nichts.
+
 ## A 0.34.0
 Das Programm schreibt jetzt ein paar Ladezeiten selbst auf, damit du sie bei einem Problem mitschicken kannst.
 

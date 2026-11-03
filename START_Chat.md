@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.33.0** (Phase 11 W2, PR #96, main ccae906). Zweig W3 **A 0.34.0** (Prüfstand). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
-| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10 und W2 gemergt (A 0.32.0 bis 0.33.0) |
-| Jetzt | W3 A 0.34.0 (Weisung P11-21): Messpunkte des Programms in `messpunkte.log` und im Problembericht, Layoutprüfung in voller PC-Größe (196: Xvfb 1600x1000) und unter Windows mit 150 % (Start-Test-Teil `layout`), Test Handy-Sicherung zurücklesen (26), Prüfliste `Fi-Austausch/anlagen/P11-21_Pruefliste_Geraetetest.md`. Merge erst nach Veröffentlichung von A 0.33.0. Danach Gerätetest Nico, Patches A 0.34.x, Bericht Phase 11 |
+| Version | Auf `main` **A 0.34.0** (Phase 11 W3, PR #97, main 00e7289). Zweig Mac-Welle **A 0.35.0**. Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10, W2 und W3 gemergt (A 0.32.0 bis 0.34.0) |
+| Jetzt | Mac-Welle A 0.35.0 (Weisung P11-28, Plan `Fi-Austausch/anlagen/P11-19_Plan_Mac_Welle.md`): Update im Programm auch am Mac (Feeds `osx`, `osx-x64`, 19 Release-Dateien; M4 = Sammelliste 200 über `OhneFeed`), Spiel am Mac von allein in 3D (OpenGL, Rückfall Ortsliste, Notschalter `LERNPLATTFORM_MAC_METAL=1`), CI-Startprobe der `.pkg` auf beiden Macs, Wachhund im Start-Test (199). Danach Gerätetest Nico auf A 0.35.0 (Prüfliste `P11-21`, Mac-Update `P11-28_Test_Mac_Update.md`), Patches, Bericht Phase 11 |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-18** (W3) / P11-19 |
-| Sammelliste | nächste freie Nummer **198** |
+| Letzte/nächste Meldung | **P11-20** (Mac-Signatur) / P11-21 (Mac-Welle) |
+| Sammelliste | nächste freie Nummer **202** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

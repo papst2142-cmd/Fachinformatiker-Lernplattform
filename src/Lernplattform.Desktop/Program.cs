@@ -71,21 +71,30 @@ sealed class Program
             x11.GlxRendererBlacklist = [];
         }
         // Phase 7 W1 (Plan Abschnitt 3, Weg 1): macOS zeichnet in Avalonia 12.1.4 standardmaessig mit Metal,
-        // dort gibt es kein OpenGL fuer die 3D-Flaeche. Nur zur Messung fuer Nicos Entscheidung stellt
-        // LERNPLATTFORM_MAC_OPENGL=1 die ganze App auf OpenGL um (sonst bleibt alles wie bisher).
-        var macOpenGl = Environment.GetEnvironmentVariable("LERNPLATTFORM_MAC_OPENGL") == "1";
+        // dort gibt es kein OpenGL fuer die 3D-Flaeche. Mac-Welle (Weisung P11-28, Nico 03.11.2026 16:57 MEZ, Test
+        // auf dem Intel-MacBook 30 bis 61 Bilder je Sekunde): am Mac zeichnet die App jetzt von allein mit OpenGL,
+        // damit die Stadt in 3D erscheint. Kommt OpenGL nicht zustande, zeichnet Avalonia mit Metal (dann Software),
+        // und das Spiel zeigt wie bisher Hinweis und Ortsliste. Notschalter LERNPLATTFORM_MAC_METAL=1: der alte Weg
+        // (nur Metal, Ortsliste). LERNPLATTFORM_MAC_OPENGL=1 aus alten Anleitungen bleibt erlaubt (gleich der Vorgabe).
+        var macMetal = OperatingSystem.IsMacOS() && Environment.GetEnvironmentVariable("LERNPLATTFORM_MAC_METAL") == "1";
+        var macOpenGl = OperatingSystem.IsMacOS() && !macMetal;
         var native = new AvaloniaNativePlatformOptions();
         if (macOpenGl)
         {
-            native.RenderingMode = [AvaloniaNativeRenderingMode.OpenGl, AvaloniaNativeRenderingMode.Software];
+            native.RenderingMode = [AvaloniaNativeRenderingMode.OpenGl, AvaloniaNativeRenderingMode.Metal, AvaloniaNativeRenderingMode.Software];
+        }
+        else if (macMetal)
+        {
+            native.RenderingMode = [AvaloniaNativeRenderingMode.Metal, AvaloniaNativeRenderingMode.Software];
         }
         Messwerte.Notiere("Schalter: Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard")
-            + (llvmpipe ? ", llvmpipe erlaubt" : "") + (macOpenGl ? ", macOS mit OpenGL statt Metal" : ""));
+            + (llvmpipe ? ", llvmpipe erlaubt" : "") + (macOpenGl ? ", macOS mit OpenGL (Vorgabe, Rueckfall Metal)" : "")
+            + (macMetal ? ", macOS nur Metal (Notschalter LERNPLATTFORM_MAC_METAL)" : ""));
         var builder = AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .With(x11)
             .With(win32);
-        if (macOpenGl)
+        if (macOpenGl || macMetal)
         {
             builder = builder.With(native);
         }

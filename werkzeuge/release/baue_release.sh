@@ -80,13 +80,15 @@ desktop() {
       inhalt=("$ZIEL/$ID.AppImage" "$ZIEL/$ID-$PAKET-linux-full.nupkg" "$ZIEL/$ID-$NAME-AppImage.tar.gz")
       ;;
     osx-*)
-      # D7: macOS nur das .pkg, ohne Update-Feed; der Inhalt wird ueber das .nupkg gezaehlt
+      # Mac-Welle (Weisung P11-28, D7 aufgehoben): das .pkg zum Installieren und der Update-Feed des eigenen
+      # Kanals (osx = Apple-Chip, osx-x64 = Intel), damit das Update im Programm die neue Version findet
       local pkgs=("$feed"/*.pkg)
       if [ "${#pkgs[@]}" -ne 1 ] || [ ! -f "${pkgs[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in $feed"; exit 1; fi
       cp "${pkgs[0]}" "$ZIEL/$ID-$NAME-$rid.pkg"
-      local nupkg=("$feed/$ID-$PAKET-$kanal-full.nupkg")
-      if [ ! -f "${nupkg[0]}" ]; then echo "FEHLER: ${nupkg[0]} fehlt (Kanal $kanal)"; ls -la "$feed"; exit 1; fi
-      inhalt=("$ZIEL/$ID-$NAME-$rid.pkg" "${nupkg[0]}")
+      local nupkg="$feed/$ID-$PAKET-$kanal-full.nupkg"
+      if [ ! -f "$nupkg" ]; then echo "FEHLER: $nupkg fehlt (Kanal $kanal)"; ls -la "$feed"; exit 1; fi
+      cp "$nupkg" "$feed/releases.$kanal.json" "$ZIEL/"
+      inhalt=("$ZIEL/$ID-$NAME-$rid.pkg" "$ZIEL/$ID-$PAKET-$kanal-full.nupkg")
       ;;
   esac
   "${LIZENZEN[@]}" sammeln desktop "$rid" "$pub" "$ZIEL/lizenzen-$rid.json" "${inhalt[@]}"
