@@ -183,6 +183,11 @@ public static class Bau
     public static TextBox Eingabe(string wert, string? hinweis = null, Action<string>? geaendert = null, int laenge = 0)
     {
         var feld = new TextBox { Text = wert, PlaceholderText = hinweis, TextWrapping = TextWrapping.Wrap }.Groesse();
+        // Phase 11 W2: der Hinweis ("Wie heißt deine Firma?") ist der Name fuer den Screenreader
+        if (!string.IsNullOrWhiteSpace(hinweis))
+        {
+            Avalonia.Automation.AutomationProperties.SetName(feld, hinweis);
+        }
         if (laenge > 0)
         {
             feld.MaxLength = laenge;
@@ -201,13 +206,13 @@ public static class Bau
     public static Border Flaeche(Control inhalt, string hinten = "card_alt", string rand = "border", Action? klick = null,
         double ecken = 12, Thickness? innen = null, double randBreite = 1)
     {
-        var flaeche = new Border
-        {
-            Child = inhalt,
-            CornerRadius = new CornerRadius(ecken),
-            Padding = innen ?? new Thickness(12, 10),
-            BorderThickness = new Thickness(randBreite),
-        }.Farbe(Border.BackgroundProperty, Ton(hinten)).Farbe(Border.BorderBrushProperty, Ton(rand));
+        // Phase 11 W2: antippbar als Klickflaeche (der Screenreader liest die Texte darin und kann sie ausloesen)
+        var flaeche = klick is null ? new Border() : new Views.Klickflaeche { Klick = klick };
+        flaeche.Child = inhalt;
+        flaeche.CornerRadius = new CornerRadius(ecken);
+        flaeche.Padding = innen ?? new Thickness(12, 10);
+        flaeche.BorderThickness = new Thickness(randBreite);
+        flaeche.Farbe(Border.BackgroundProperty, Ton(hinten)).Farbe(Border.BorderBrushProperty, Ton(rand));
         if (klick is not null)
         {
             flaeche.Cursor = new Cursor(StandardCursorType.Hand);
@@ -228,7 +233,6 @@ public static class Bau
                     klick();
                 }
             };
-            Avalonia.Automation.AutomationProperties.SetControlTypeOverride(flaeche, Avalonia.Automation.Peers.AutomationControlType.Button);
         }
         return flaeche;
     }

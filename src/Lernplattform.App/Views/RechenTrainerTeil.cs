@@ -33,7 +33,8 @@ public sealed class RechenTrainerTeil : StackPanel
     private readonly TextBlock _kopf = RechnerTeile.Unterschrift("");
     private readonly TextBlock _aufgabe = Schrift.Text("", "Mittel", FontWeight.Bold, "Pinsel.text_soft");
     private readonly StackPanel _felder = new() { Spacing = 10 };
-    private readonly TextBlock _rueckmeldung = Schrift.Text("", "Normal", FontWeight.Bold, "Pinsel.text");
+    // Phase 11 W2: die Rueckmeldung liest der Screenreader vor
+    private readonly TextBlock _rueckmeldung = Ansage.Lebend(Schrift.Text("", "Normal", FontWeight.Bold, "Pinsel.text"));
     private readonly Ergebniskasten _rechenweg = new();
     private readonly Fehlerhinweis _fehler = new();
     private readonly Button _knopf;

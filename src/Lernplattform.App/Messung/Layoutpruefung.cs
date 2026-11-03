@@ -21,6 +21,8 @@ namespace Lernplattform.Messung;
 /// nie ueber einer Zeile.
 /// FW9 (Weisung P11-17): (6) gilt auch fuer die Seiten selbst (Sammelliste 192); (10) kein Eingabefeld ragt aus
 /// seiner Karte (Sammelliste 194).
+/// Phase 11 W2 (Weisung P11-20): (11) jedes bedienbare Element hat einen Namen fuer den Screenreader
+/// (<see cref="Namenspruefung"/>).
 /// </summary>
 public static class Layoutpruefung
 {
@@ -62,6 +64,8 @@ public static class Layoutpruefung
                 funde.Add($"ragt ueber den Rand: {Name(element)} ({rechts.X:F0} > {breite:F0})");
             }
         }
+        // Phase 11 W2 (Weisung P11-20): (11) jedes bedienbare Element hat einen Namen fuer den Screenreader
+        Namenspruefung.Pruefe(wurzel, funde);
         if (Views.Dialog.Offen is { IsEffectivelyVisible: true } fenster && fenster.GetVisualAncestors().Contains(wurzel)
             && fenster.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault() is { } rollen && rollen.Offset.Y > Toleranz)
         {

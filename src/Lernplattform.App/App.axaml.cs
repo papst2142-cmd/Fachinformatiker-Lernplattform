@@ -25,6 +25,10 @@ public partial class App : Application
             e.Handled = true;
         };
         AvaloniaXamlLoader.Load(this);
+        // Phase 11 W2 (Weisung P11-20): Namen fuer den Screenreader an Expander-Koepfen
+        Views.Vorlesen.Einrichten();
+        // Phase 11 W2: sichtbarer Fokusrahmen bei Bedienung mit der Tastatur
+        Views.Fokusrahmen.Einrichten(this);
         // Phase 1: Einstellungen lesen, Farbwelt und Schriftstufe anwenden, Inhalte im Hintergrund laden
         Programm.Zustand.Starten();
         // Phase 5 W2 (BE7): Leistungsmessung nach dem gespeicherten Schalter (aus = keine Datei)

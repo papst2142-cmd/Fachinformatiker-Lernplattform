@@ -104,6 +104,15 @@ internal static class EinzelstartProbe
 }
 
 /// <summary>
+/// Phase 11 W2 (Sammelliste 197, Weisung P11-20): die Tests mit echtem zweitem Prozess und harter Zeitgrenze (1 s fuer
+/// das Freiwerden der Sperre nach hartem Ende des Halters) laufen allein, nicht neben anderen Tests. Unter der Last
+/// paralleler Tests kam der Kindprozess auf Windows zu spaet dran (Lauf 451 Versuch 1,
+/// HartBeendeterHalterGibtSperreFrei). Grenze und Wortlaut bleiben gleich.
+/// </summary>
+[CollectionDefinition("Einzelstart", DisableParallelization = true)]
+public sealed class EinzelstartSammlung;
+
+/// <summary>
 /// Phase 5 BE8 Sperre gegen Mehrfachstart wie fisi_einzelstart, mit echtem zweitem Prozess.
 /// Kontrollfehler: zweiter Start beendet sich ohne "da"; Sperre bleibt nach hartem Ende des Halters
 /// belegt; ein zweiter Start verhindert den Start (Grundsatz: nie).

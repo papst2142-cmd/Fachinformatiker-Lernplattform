@@ -298,8 +298,10 @@ public sealed class AbschlussprojektSeite : UserControl
         var bereich = LernTeile.Themenliste();
         bereich.Margin = new Thickness(0, 0, 8, 8);
         bereich.ItemsSource = Fachbereiche.Alle;
+        bereich.Vorlese(VorleseTexte.VorlageFachbereich);
         var auftrag = LernTeile.Themenliste();
         auftrag.Margin = new Thickness(0, 0, 8, 8);
+        auftrag.Vorlese(VorleseTexte.VorlageTestprojekt);
         List<Lerninhalt> auswahl = [];
         void Fuellen()
         {

@@ -274,7 +274,7 @@ public sealed class TrainerSeite : UserControl
                 Schrift.Text(TrainerTexte.Katalog(inhalte.Quizfragen.Count), "Klein", FontWeight.Normal, "Pinsel.muted"),
                 LernTeile.Label(KartenTexte.Fachbereich), _bereich,
                 LernTeile.Label(KartenTexte.Status), _status,
-                LernTeile.Label(KartenTexte.Thema), _themen,
+                LernTeile.Label(KartenTexte.Thema).Fuer(_themen), _themen,
                 new WrapPanel { Margin = new Thickness(0, 8, 0, 0), Children = { anzahlText, weniger, anzahlFeld, mehr, _starten } },
                 _pool,
             },
@@ -291,7 +291,8 @@ public sealed class TrainerSeite : UserControl
         // Fix A 0.14.2 (Weisung P8-9): LernText wie bei den Karteikarten, sehr lange Woerter bleiben ganz
         _frage = new LernText(TrainerTexte.StartHinweis, "Gross", FontWeight.SemiBold, "Pinsel.text_soft");
         _optionen = new StackPanel { Spacing = 6 };
-        _erklaerung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
+        // Phase 11 W2: die Erklaerung nach dem Einreichen liest der Screenreader vor
+        _erklaerung = Ansage.Lebend(new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         _hinweisKurz = Schrift.Text(TrainerTexte.HinweisKurz, "Klein", FontWeight.Normal, "Pinsel.muted");
         _hinweisKurz.IsVisible = false;
         _uebungTeil.Children.Add(Schrift.Karte(new StackPanel

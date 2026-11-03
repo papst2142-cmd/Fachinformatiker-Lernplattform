@@ -180,7 +180,7 @@ public sealed class NotizblockSeite : UserControl
                 Ueberschrift(NotizblockTexte.Suche), _suche,
                 Ueberschrift(NotizblockTexte.Fachbereich), _fachbereich,
                 Ueberschrift(NotizblockTexte.Bereich), _bereich,
-                Ueberschrift(NotizblockTexte.Thema), _thema,
+                Ueberschrift(NotizblockTexte.Thema).Fuer(_thema), _thema,
                 Ueberschrift(NotizblockTexte.Status), _status,
                 Ueberschrift(NotizblockTexte.Musterantworten), _antworten,
             },

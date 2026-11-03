@@ -68,15 +68,15 @@ public sealed class ListenTeil : StackPanel
         if (mitFachbereich)
         {
             _fachbereich = Auswahl(Fachbereiche.Alle.Select(f => Fachbereiche.Kurzname[f]).Prepend(FragenStatus.Alle));
-            Children.Add(Ueberschrift(SzenarienTexte.Fachbereich));
+            Children.Add(Ueberschrift(SzenarienTexte.Fachbereich).Fuer(_fachbereich));
             Children.Add(_fachbereich);
         }
         _gruppen = Listen.Gruppenwerte(eintraege, gruppenFeld);
         _gruppe = Auswahl(_gruppen.Prepend(FragenStatus.Alle));
-        Children.Add(Ueberschrift(Beschriftungen.Gross(gruppenName)));
+        Children.Add(Ueberschrift(Beschriftungen.Gross(gruppenName)).Fuer(_gruppe));
         Children.Add(_gruppe);
         _status = Auswahl(Listen.StatusFilter);
-        Children.Add(Ueberschrift(SzenarienTexte.Status));
+        Children.Add(Ueberschrift(SzenarienTexte.Status).Fuer(_status));
         Children.Add(_status);
 
         _zaehler.Margin = new Thickness(0, 12, 0, 2);
@@ -229,7 +229,8 @@ public sealed class ListenTeil : StackPanel
             .Farbe(Border.BackgroundProperty, Farben.GetValueOrDefault(eintrag.Fachbereich ?? "", "Pinsel.muted"));
         var inhalt = new DockPanel { Children = { streifen, new StackPanel { Spacing = 2, Children = { titel, unter } } } };
         DockPanel.SetDock(streifen, Dock.Left);
-        var zeile = new Border
+        // Phase 11 W2: Klickflaeche, der Screenreader liest Titel und Unterzeile (Stand) und kann die Zeile waehlen
+        var zeile = new Klickflaeche
         {
             Child = inhalt,
             Padding = new Thickness(10, 8),
@@ -237,9 +238,9 @@ public sealed class ListenTeil : StackPanel
             BorderThickness = new Thickness(1),
             Cursor = new Cursor(StandardCursorType.Hand),
             Focusable = true,
+            Klick = () => _gewaehlt(position),
         }.Farbe(Border.BackgroundProperty, aktiv ? "Pinsel.card_hi" : "Pinsel.card_alt")
             .Farbe(Border.BorderBrushProperty, aktiv ? "Pinsel.purple" : "Pinsel.border");
-        Avalonia.Automation.AutomationProperties.SetName(zeile, titel.Text);
         zeile.PointerReleased += (_, e) =>
         {
             if (e.InitialPressMouseButton == MouseButton.Left)

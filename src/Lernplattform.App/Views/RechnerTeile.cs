@@ -80,6 +80,7 @@ public sealed class Ergebniskasten : StackPanel
         _hinweis.Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
         Children.Add(_rahmen);
         Children.Add(_hinweis);
+        _text.Focusable = text.Length > 0;
         _rollen.SizeChanged += (_, _) => Einpassen();
         _text.PropertyChanged += (_, e) =>
         {
@@ -108,6 +109,13 @@ public sealed class Ergebniskasten : StackPanel
     /// <summary>Text setzen (Rohtext merken, umbrechen).</summary>
     public void Setzen(string text)
     {
+        // Phase 11 W2 (Weisung P11-20): ein neues Ergebnis liest der Screenreader vor; ein leerer Kasten ist mit der
+        // Tastatur nicht erreichbar (er haette nichts vorzulesen)
+        if (text.Length > 0 && text != _roh)
+        {
+            Ansage.Sagen(text);
+        }
+        _text.Focusable = text.Length > 0;
         _roh = text;
         _zeichen = null;
         Einpassen();

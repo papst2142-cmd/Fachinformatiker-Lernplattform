@@ -96,6 +96,9 @@ public sealed class SpielSeite : Grid
         _verlassen = verlassen;
         Flaeche = new StadtFlaeche();
         Focusable = true;
+        // Phase 11 W2 (Antwort 2a): die Seite traegt den Fokus fuer die Tasten der Stadt; die 3D-Stadt selbst liest der
+        // Screenreader nicht vor
+        Avalonia.Automation.AutomationProperties.SetName(this, Core.Texte.VorleseTexte.Stadt);
         _flaecheRahmen = new Border { Child = Flaeche, ClipToBounds = true };
         Children.Add(_flaecheRahmen);
         Children.Add(_schilder);
@@ -384,6 +387,8 @@ public sealed class SpielSeite : Grid
         _ladeanzeige.IsVisible = Core.Spiel.Probe.Ladeanzeige.Zeigen(laedt, Flaeche.VorladenSekunden);
         _ladeRing.Anteil = Flaeche.VorladenAnteil;
         _schilder.Opacity = laedt ? 0 : 1;
+        // Phase 11 W2: unsichtbare Schilder (Vorladen) sind mit der Tab-Taste nicht erreichbar
+        KeyboardNavigation.SetTabNavigation(_schilder, laedt ? KeyboardNavigationMode.None : KeyboardNavigationMode.Continue);
         if (laedt)
         {
             _ladeTakt.Start();
@@ -436,6 +441,10 @@ public sealed class SpielSeite : Grid
         _sitzung = sitzung;
         _tafelAn = true;
         Children.Add(tafel);
+        // Phase 11 W2 (Weisung P11-20): auch beim ersten Zeigen der Tafel treten Ebene und Namensschilder zurueck; sonst
+        // landete die Tab-Taste auf verdeckten Knoepfen und Schildern unter der Tafel (Fokusrahmen mitten im Spielmenue)
+        Ebene.IsVisible = !tafel.IsVisible;
+        _schilder.IsVisible = !tafel.IsVisible && !_ersatz.IsVisible;
         sitzung.SpielGewechselt += () =>
         {
             if (_tafelAn)
