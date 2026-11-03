@@ -94,6 +94,8 @@ public sealed class KarteikartenSeite : UserControl
                 _wartend.Clear();
                 Anzeigen();
                 InhaltMs = _uhr.Elapsed.TotalMilliseconds;
+                // Phase 11 W3 (Weisung P11-21): Messpunkt "Erste Karte" fuer "Problem melden" (einmal je Programmstart)
+                Programm.Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.ErsteKarte, InhaltMs.Value);
             });
         }
         catch (Exception fehler)

@@ -122,6 +122,11 @@ public static partial class AutoMessung
         {
             return await W12LaufAsync(ansicht);
         }
+        // Phase 11 W3 (Weisung P11-21): nur die Layoutpruefung, z. B. mit Windows-Skalierung 150 % (ci.yml)
+        if (Teil == TeilLayout)
+        {
+            return await P11W3LayoutLaufAsync(ansicht);
+        }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
         // Phase 8 W6 (Teilplan P8-11 Abschnitt 4): festes Datum aus lauf.sh; ein ungueltiger Wert bricht den Start-Test ab
@@ -168,6 +173,7 @@ public static partial class AutoMessung
         {
             funde += await OptionenZweimalAsync(ansicht);
         }
+        funde += await P11W3MesspunkteAsync(ansicht);         // Phase 11 W3: Messpunkte fuer "Problem melden"
         funde += AbschlussAuswerten(reihenRot);
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
@@ -184,7 +190,7 @@ public static partial class AutoMessung
     /// <summary>Ohne Angabe (lokal) misst der Start-Test alles in einem Lauf wie bisher.</summary>
     private static bool MitLernen => Teil != TeilSpiel;
 
-    private static bool MitSpiel => Teil != TeilLernen;
+    private static bool MitSpiel => Teil is not (TeilLernen or TeilLayout);
 
     /// <summary>Erstes Oeffnen jeder Seite und die Messpunkte des Lernteils (Phasen 1 bis 6).</summary>
     private static async Task<int> LernteilMessenAsync(MainView ansicht, Lerninhalte? inhalte, List<string> reihenRot)
@@ -309,6 +315,13 @@ public static partial class AutoMessung
                     await ansicht.BildFertigAsync();
                 }
                 var ist = string.Create(inv, $"{name} {ansicht.Bounds.Width:0}x{ansicht.Bounds.Height:0}");
+                // Phase 11 W3 (Sammelliste 196): wo der Pruefstand einen grossen Bildschirm hat (Linux-Xvfb, Windows im
+                // Layout-Lauf), muss die PC-Groesse wirklich erreicht werden; sonst prueft "pc" still eine kleinere Groesse
+                if (fenster is not null && name == "pc" && VollePcGroesse
+                    && (ansicht.Bounds.Width < breite - 0.5 || ansicht.Bounds.Height < hoehe - 0.5))
+                {
+                    layoutFunde.Add(string.Create(inv, $"{ist} {stufe}: PC-Groesse {breite:0}x{hoehe:0} nicht erreicht (Bildschirm zu klein)"));
+                }
                 gepruefteGroessen.Add(stufe + " " + ist);
                 // Sammelliste 106: der Lernteil prueft alle Seiten ausser dem Spiel, der Spielteil nur das Spiel
                 // (nach der 3D-Stichprobe wie im ganzen Lauf); zusammen genau die Seiten des ganzen Laufs

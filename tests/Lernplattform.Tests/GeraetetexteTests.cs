@@ -217,6 +217,8 @@ public partial class GeraetetexteTests
         ("App.axaml.cs", "if (OperatingSystem.IsAndroid() && this.TryGetFeature<IActivatableLifetime>() is { } leben)", "Technik: Android-Lebenszyklus (Verlassen/Zurueckholen)"),
         ("Messung/AutoMessung.cs", "var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)", "Messung ueber alle Seiten, keine Anzeige"),
         ("Messung/AutoMessung.cs", ".Concat(Texte.NavigationHandy.Select(p => p.Id))", "Messung ueber alle Seiten, keine Anzeige"),
+        ("Messung/AutoMessung.P11W3.cs", "foreach (var id in Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)", "Start-Test Teil layout: alle Seiten oeffnen wie im Lernteil, keine Anzeige"),
+        ("Messung/AutoMessung.P11W3.cs", ".Concat(Texte.NavigationHandy.Select(p => p.Id)).Concat([Seiten.Lernen, Seiten.Hilfe, Seiten.Suche])", "Start-Test Teil layout: alle Seiten oeffnen wie im Lernteil, keine Anzeige"),
         ("Programm/AbgleichDienst.cs", "private static readonly bool Android = OperatingSystem.IsAndroid();", "Schalter"),
         ("Programm/AbgleichDienst.cs", "return Geraetetexte.Geraet(!Android);", "Text aus Geraetetexte.Geraet (B11)"),
         ("Programm/AbgleichDienst.cs", "Android ? AbgleichSteuerung.Handy : AbgleichSteuerung.Pc,", "Verhalten: Ausloeser und Zeiten des Abgleichs (L10, P2-12)"),

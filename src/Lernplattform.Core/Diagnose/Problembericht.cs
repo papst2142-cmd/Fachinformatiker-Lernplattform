@@ -17,7 +17,7 @@ namespace Lernplattform.Core.Diagnose;
 /// und speichern denselben Text.
 /// Abweichung (Wortliste W2): Zeile "Python: …" heisst "Laufzeit: …" (.NET); eine nicht lesbare
 /// Datenbank nennt statt des Systemtexts nur die Fehlerart. Ab Nachtrag 1 zu P7-13 folgt, wenn vorhanden,
-/// spiel_bilder.log (Bildzeiten des Spiels).
+/// spiel_bilder.log (Bildzeiten des Spiels). Ab Phase 11 W3 folgt, wenn vorhanden, messpunkte.log (<see cref="Messpunkte"/>).
 /// </summary>
 public static class Problembericht
 {
@@ -216,6 +216,12 @@ public static class Problembericht
         if (bilder.Length > 0)
         {
             zeilen.AddRange(["", "--- " + Spiel.Probe.BildZeiten.DateiName + " ---", bilder]);
+        }
+        // Phase 11 W3 (Weisung P11-21, ohne Vorlage in Python): Messpunkte des Programms, nur wenn vorhanden
+        var punkte = Fehlerprotokoll.Anzeigen(Path.Combine(logOrdner, Messpunkte.DateiName), Messpunkte.DateiMax);
+        if (punkte.Length > 0)
+        {
+            zeilen.AddRange(["", "--- " + Messpunkte.DateiName + " ---", punkte]);
         }
         var text = Datenschutz.Schwaerzen(string.Join("\n", zeilen), Datenschutz.Geheimnisse(Paare(einstellungen)));
         return Datenschutz.PfadeAnonymisieren(text, umgebung, heim);

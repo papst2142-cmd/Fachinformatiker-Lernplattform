@@ -170,6 +170,7 @@ public static class Zustand
             if (nachladen && sicht is not null)
             {
                 NachladenMs[fachrichtung] = uhr.Elapsed.TotalMilliseconds;
+                Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.FachrichtungWechseln, uhr.Elapsed.TotalMilliseconds, fachrichtung);
                 Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                     $"Fachrichtung {fachrichtung} nachgeladen (bis die Sicht steht): {uhr.Elapsed.TotalMilliseconds:F0} ms"));
             }
@@ -316,6 +317,7 @@ public static class Zustand
             }, Sicht == Fachrichtungen.Systemintegration ? [Sicht] : [Fachrichtungen.Systemintegration, Sicht]);
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
+            Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.InhalteLaden, uhr.Elapsed.TotalMilliseconds);
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"Lerninhalte im Hintergrund geladen: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
             return inhalte;

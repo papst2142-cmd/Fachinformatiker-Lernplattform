@@ -192,9 +192,15 @@ public static class Schrift
         bool WortZuLang()
         {
             var breite = kopf.Bounds.Width - strich.Width - (aktion?.DesiredSize.Width ?? 0);
+            // Phase 11 W3 (Windows 150 %): die Spalten stehen auf ganzen Bildpunkten des Geraets (Layout-Rundung, bei
+            // 150 % in Schritten von 2/3 Punkt). Die fruehere feste Zugabe von 0,5 Punkten passte nur bei 100 %; bei 150 %
+            // stand ein Wort, das knapp nicht passte, nebeneinander ("Grundlagenaufgabe|n"). Jetzt zaehlt der Platz, den
+            // die Spalte nach der Rundung wirklich hat (bei 100 % im ganzen Layoutlauf dieselbe Entscheidung wie vorher).
+            var skalierung = TopLevel.GetTopLevel(kopf)?.RenderScaling is > 0 and var s ? s : 1;
+            double Platz(double punkte) => Math.Round(punkte * skalierung) / skalierung;
             return breite > 0
-                && (LaengstesWort(titelText) > breite * 3 / 5 - KopfAbstand + 0.5
-                    || LaengstesWort(unterBlock) > breite * 2 / 5 - KopfAbstand + 0.5);
+                && (LaengstesWort(titelText) > Platz(breite * 3 / 5 - KopfAbstand)
+                    || LaengstesWort(unterBlock) > Platz(breite * 2 / 5 - KopfAbstand));
         }
         void Anordnen()
         {
