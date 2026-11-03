@@ -171,7 +171,8 @@ public static class BerichtVersand
     public static (string Titel, string Text) Rueckmeldung(VersandErgebnis ergebnis) => ergebnis.Art switch
     {
         VersandArt.Gesendet => (BerichtSendenTexte.GesendetTitel,
-            Beschriftungen.Einsetzen(BerichtSendenTexte.Gesendet, Path.GetFileName(ergebnis.Datei ?? ""))),
+            // Umbruchstellen nach "_" (wie UebernahmeTexte): sonst trennt eine schmale Anzeige mit grosser Schrift mitten im Namen
+            Beschriftungen.Einsetzen(BerichtSendenTexte.Gesendet, Path.GetFileName(ergebnis.Datei ?? "").Replace("_", "_\u200B", StringComparison.Ordinal))),
         VersandArt.NichtVerfuegbar => (BerichtSendenTexte.RueckfrageTitel, BerichtSendenTexte.NichtVerfuegbar),
         VersandArt.KeineVerbindung => (BerichtSendenTexte.FehlerTitel,
             Beschriftungen.Einsetzen(BerichtSendenTexte.Fehler, BerichtSendenTexte.GrundVerbindung)),

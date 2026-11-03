@@ -71,7 +71,7 @@ public sealed class BerichtVersandTests : IDisposable
         Assert.Contains("Authorization: Bearer " + Schluessel, anfrage, StringComparison.Ordinal);
         Assert.Equal(1, Regex.Count(anfrage, Regex.Escape(Schluessel)));
         Assert.False(File.Exists(Log));
-        Assert.Equal((BerichtSendenTexte.GesendetTitel, "Danke! Der Bericht ist angekommen. Dateiname: 2026-11-04_101500_Handy_A0.36.0.md"),
+        Assert.Equal((BerichtSendenTexte.GesendetTitel, "Danke! Der Bericht ist angekommen. Dateiname: 2026-11-04_\u200B101500_\u200BHandy_\u200BA0.36.0.md"),
             BerichtVersand.Rueckmeldung(ergebnis));
     }
 
