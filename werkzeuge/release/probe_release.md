@@ -3,6 +3,7 @@ Das Programm schreibt jetzt ein paar Ladezeiten selbst auf, damit du sie bei ein
 - Bei jedem Programmstart merkt sich das Programm einmal, wie lange diese Schritte gedauert haben: Inhalte laden, erste Karte bei den Karteikarten, Fachrichtung wechseln und Spiel betreten (bis die Stadt zu sehen ist). Die Werte stehen in der Datei „messpunkte.log“ im Datenordner und im Bericht unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“.
 - In der Datei stehen nur Datum und Uhrzeit, die Programmversion, der Name des Schritts und die Dauer in Millisekunden, bei der Fachrichtung nur ihr Kürzel. Lerninhalte, Antworten oder dein Lernstand kommen nie hinein. Die Datei bleibt klein: Ältere Zeilen fallen weg. Es wird nichts gesendet.
 - Interne Prüfungen des Programms prüfen das Aussehen jetzt auch in der vollen Fenstergröße am PC und unter Windows mit einer Bildschirm-Skalierung von 150 %; an der Bedienung ändert sich dadurch nichts.
+- Unter Windows mit 150 % Skalierung, großer Schrift und schmalem Fenster wurde auf der Startseite der Untertitel „bearbeitete Grundlagenaufgaben“ neben „AP1 Prüfungsthemen“ mitten im Wort getrennt. Jetzt steht er in diesem Fall unter der Überschrift.
 
 ### Herunterladen
 
