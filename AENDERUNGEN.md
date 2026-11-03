@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.33.0
+Das Programm lässt sich jetzt besser mit einem Vorleseprogramm (Screenreader wie NVDA am PC oder TalkBack am Handy) und mit der Tastatur bedienen.
+
+- Jede Schaltfläche, jedes Eingabefeld und jede Auswahlliste hat jetzt einen Namen, den ein Vorleseprogramm ansagt. Bisher las es bei manchen Auswahllisten und Feldern nichts und bei den aufklappbaren Abschnitten (zum Beispiel in der Hilfe und im Fortschritt) einen technischen Namen vor.
+- Meldungen werden vorgelesen: kurze Hinweise unten am Rand, Fenster mit Titel und Text, das Ergebnis eines Rechners sowie die Rückmeldung nach einer Antwort bei Karteikarten, im Prüfungstrainer und im Rechen-Trainer.
+- Im Spiel lesen Vorleseprogramme Menüs, Karten und Fenster vor und können die antippbaren Karten auslösen; die Stadt in 3D selbst wird nicht vorgelesen.
+- Wer mit der Tastatur arbeitet, sieht jetzt einen deutlichen, runden Rahmen in der Textfarbe um das gewählte Element; er erscheint nur bei Bedienung mit der Tastatur, nicht beim Klicken oder Tippen. Ist ein Fenster offen, bleibt die Tab-Taste in diesem Fenster.
+- Interne Prüfungen des Programms prüfen jetzt auf allen Seiten, dass jedes bedienbare Element einen Namen hat und mit der Tab-Taste erreichbar ist; an der Bedienung ändert sich dadurch nichts.
+
 ## A 0.32.11
 Für Macs mit Intel-Prozessor gibt es jetzt ein eigenes Installationspaket.
 

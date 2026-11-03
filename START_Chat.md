@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.32.10** (Phase 11 FW9, PR #94, main 150e423). Zweig FW10 **A 0.32.11** (Mac-Paket für Intel `osx-x64`). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
-| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW9 gemergt (A 0.32.0 bis 0.32.10) |
-| Jetzt | FW10 A 0.32.11 (Weisung P11-18): `pakete (osx-x64)` auf `macos-15-intel`, `tests (macos-15-intel)` im vollen Lauf, Kanal `osx-x64`, Release 15 Dateien mit zwei Mac-Zeilen, Merge-Tor jetzt **10/10**; Testanleitung `Fi-Austausch/anlagen/P11-18_Test_Intel_Mac.md`. Nachbesserung P11-19 (1a 2a): Intel-Mac Messzeiten nur Information (`urteil.py`), Themenname im Dashboard bei Bedarf kleiner (195). Merge erst nach Veröffentlichung von A 0.32.10. Danach W2 Screenreader (A 0.33.0), W3 Prüfstand, Gerätetest, Bericht |
+| Version | Auf `main` **A 0.32.11** (Phase 11 FW10, PR #95, main 16980f9). Zweig W2 **A 0.33.0** (Screenreader). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10 gemergt (A 0.32.0 bis 0.32.11) |
+| Jetzt | W2 A 0.33.0 (Weisung P11-20): Namen für den Screenreader an jedem Bedienelement (Layoutprüfung (11), Gegenprobe), Ansagen, Tab bleibt im Fenster und erreicht alles, runder Fokusrahmen (Fotos `Fi-Austausch/bilder/A0.33.0_Fokusrahmen/`, Merge nur mit Nicos Optik-OK), 197 Einzelstart allein. Merge erst nach Veröffentlichung von A 0.32.11. Danach W3 Prüfstand (A 0.34.0, mit 196 und NVDA-Punkten für Nicos Prüfliste), Gerätetest, Bericht |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-15** (FW10) / P11-16 (FW10 Nachbesserung) |
-| Sammelliste | nächste freie Nummer **197** |
+| Letzte/nächste Meldung | **P11-17** (W2) / P11-18 |
+| Sammelliste | nächste freie Nummer **198** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

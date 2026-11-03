@@ -165,7 +165,7 @@ public sealed class KarteikartenSeite : UserControl
             {
                 LernTeile.Label(KartenTexte.Fachbereich), _bereich,
                 LernTeile.Label(KartenTexte.Status), _status,
-                LernTeile.Label(KartenTexte.Thema), _themen,
+                LernTeile.Label(KartenTexte.Thema).Fuer(_themen), _themen,
                 _zaehltext,
                 LernTeile.Label(KartenTexte.Lernmodus), _modus,
             },
@@ -196,7 +196,8 @@ public sealed class KarteikartenSeite : UserControl
         _freitext = new StackPanel { Spacing = 8, Children = { Schrift.Text(KartenTexte.FreitextHinweis, "Normal", FontWeight.Normal, "Pinsel.text_dim"), _eingabe } };
         _optionen = new StackPanel { Spacing = 6 };
         _aufdecken = Schrift.Text(KartenTexte.AufdeckenHinweis, "Normal", FontWeight.Normal, "Pinsel.text_dim");
-        _rueckmeldung = new LernText("", "Normal", FontWeight.Bold, "Pinsel.text");
+        // Phase 11 W2: die Rueckmeldung liest der Screenreader vor
+        _rueckmeldung = Ansage.Lebend(new LernText("", "Normal", FontWeight.Bold, "Pinsel.text"));
         _loesung = new LernText("", "Normal", FontWeight.Normal, "Pinsel.text_dim");
         var gewusst = LernTeile.Knopf(KartenTexte.Gewusst, true);
         gewusst.Click += (_, _) => Bewerten(true);

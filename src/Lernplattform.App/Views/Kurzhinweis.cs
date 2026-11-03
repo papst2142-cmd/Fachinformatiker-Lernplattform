@@ -56,6 +56,8 @@ public static class Kurzhinweis
         };
         Avalonia.Automation.AutomationProperties.SetName(hinweis, text);
         ebene.Children.Add(hinweis);
+        // Phase 11 W2: der Screenreader liest den Hinweis vor
+        Ansage.Sagen(text);
         ebene.IsVisible = true;
         Offen = hinweis;
         _uhr = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(dauer) };

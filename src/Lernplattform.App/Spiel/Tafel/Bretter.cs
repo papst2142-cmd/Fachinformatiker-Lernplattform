@@ -558,7 +558,7 @@ public sealed class RackBrett : Brett
             IsEnabled = !Gesperrt,
             ItemsSource = _geraete.Select((g, i) => PyFormat.Prozent("%s · %s", Geraet(i)["name"], Wo(i))).ToList(),
             SelectedIndex = _aktuell is { } a ? (int)a : -1,
-        }.Groesse();
+        }.Groesse().Vorlese(Core.Texte.VorleseTexte.RackGeraet);
         liste.SelectionChanged += (_, _) =>
         {
             if (!Gesperrt && liste.SelectedIndex != (_aktuell ?? -1))
@@ -796,7 +796,7 @@ public sealed class FormularBrett : Brett
             eingabe.InnerRightContent = T(feld.Einheit, 14, "muted");
         }
         _eingaben[feld.Id] = eingabe;
-        return Stapel(4, [T(feld.Label, 13, "text_dim"), eingabe, marke]);
+        return Stapel(4, [T(feld.Label, 13, "text_dim").Fuer(eingabe), eingabe, marke]);
     }
 
     private void PillenMalen(Bewertung.FormFeld feld)

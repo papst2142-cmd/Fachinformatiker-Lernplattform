@@ -1346,7 +1346,8 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             AcceptsReturn = true,
             MaxHeight = 360,
             IsVisible = false,
-        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
+        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt")
+            .Vorlese(VorleseTexte.Lizenztext);
         // Phase 8 W2 (Sammelliste 74, Nico 5a): volle Lizenztexte, erst beim ersten Klick aufgebaut
         var lizenzen = new StackPanel { Spacing = 10, IsVisible = false };
         // A 0.12.2: Knoepfe volle Breite als Rahmenknoepfe (GradientButton kind="ghost", expand)

@@ -132,7 +132,8 @@ public partial class MainView : UserControl
         _nachladeAnzeige.IsHitTestVisible = false;
         _nachladeAnzeige.IsVisible = false;
         _nachladeTakt = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) => NachladeanzeigeSetzen());
-        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _nachladeAnzeige, hinweise, rundgang, ebene } };
+        // Phase 11 W2 (Weisung P11-20): unsichtbarer Ansagetext fuer den Screenreader (Kurzhinweise, Fenster)
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _nachladeAnzeige, hinweise, rundgang, ebene, Ansage.Ziel() } };
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);
@@ -896,7 +897,8 @@ public partial class MainView : UserControl
         panel.Children.Add(Text("Linux: Zeigt das Fenster Bildfehler (z. B. ueber eine VNC-Konsole), das Programm mit --software starten (oder LERNPLATTFORM_SOFTWARE=1). Haengt das Tippen, mit --ohne-eingabemethode starten (oder LERNPLATTFORM_IME=0)."));
         panel.Children.Add(_zustand);
         _ergebnis.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card");
-        panel.Children.Add(_ergebnis);
+        // Phase 11 W2: Name fuer den Screenreader (das Feld hat keine sichtbare Beschriftung)
+        panel.Children.Add(_ergebnis.Vorlese(Core.Texte.VorleseTexte.SicherungErgebnis));
         _ergebnis.Text = BerichtText();
         return panel;
     }

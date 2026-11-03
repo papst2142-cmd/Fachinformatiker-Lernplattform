@@ -132,7 +132,7 @@ public sealed partial class SpielTafel
         var standard = Spielstaende.Standardname(platz);
         var name = Py.Str(item["name"]);
         var feld = Eingabe(name != standard ? name : "", standard, laenge: Spielstaende.NameMax);
-        var inhalt = Stapel(10, [T(PyFormat.Prozent("Neuer Name für Platz %d (leer lassen = „%s“):", platz, standard), 14, "text_dim"), feld]);
+        var inhalt = Stapel(10, [T(PyFormat.Prozent("Neuer Name für Platz %d (leer lassen = „%s“):", platz, standard), 14, "text_dim").Fuer(feld), feld]);
         if (await Dialog.Zeigen("Platz umbenennen", inhalt, "Abbrechen", "Speichern") == 1)
         {
             Verwalten(() => _s.Verwaltung.PlatzUmbenennen(platz, feld.Text));

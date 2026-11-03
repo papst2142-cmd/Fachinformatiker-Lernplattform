@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lernplattform.Design;
@@ -110,14 +111,27 @@ public static class Dialog
                 }
             }
         };
+        // Phase 11 W2 (Weisung P11-20): Tab bleibt im Fenster (springt vom letzten zum ersten Knopf, nie auf die Seite
+        // darunter), der Screenreader liest Titel und Text vor
+        KeyboardNavigation.SetTabNavigation(fenster, KeyboardNavigationMode.Cycle);
         ebene.Children.Add(fenster);
         ebene.IsVisible = true;
         Offen = fenster;
+        Ansage.Sagen(Vorlesetext(titel, inhalt));
         // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen, Phase 5: die Vorgabe;
         // FW6 (Sammelliste 62): das Fenster beginnt trotzdem oben beim Titel
         FokusOhneRollen(rollen, () =>
             vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled));
         return fertig.Task;
+    }
+
+    /// <summary>Phase 11 W2: Titel und alle Texte des Inhalts (ohne Knoepfe und Felder) zum Vorlesen beim Oeffnen.</summary>
+    internal static string Vorlesetext(string titel, Control inhalt)
+    {
+        IEnumerable<TextBlock> bloecke = inhalt is TextBlock t ? [t] : inhalt.GetLogicalDescendants().OfType<TextBlock>();
+        var texte = bloecke.Where(b => b.FindLogicalAncestorOfType<Button>() is null && b.FindLogicalAncestorOfType<TextBox>() is null)
+            .Select(b => b.Inlines?.Text ?? b.Text).Where(x => !string.IsNullOrWhiteSpace(x));
+        return string.Join(". ", texte.Prepend(titel)).Replace("\u200B", "", StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -153,11 +167,13 @@ public static class Dialog
         karte.VerticalAlignment = VerticalAlignment.Center;
         Avalonia.Automation.AutomationProperties.SetName(karte, text);
         var fenster = new Border { Child = karte, Focusable = true, Background = new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0)) };
+        Avalonia.Automation.AutomationProperties.SetName(fenster, text);
         // Jede Taste bleibt hier (auch Tab, Escape, Strg+F): nichts darunter laesst sich bedienen
         fenster.AddHandler(InputElement.KeyDownEvent, (_, e) => e.Handled = true, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ebene.Children.Add(fenster);
         ebene.IsVisible = true;
         Offen = fenster;
+        Ansage.Sagen(text);
         fenster.Focus();
         return new Weg(() =>
         {
