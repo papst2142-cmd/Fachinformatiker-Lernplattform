@@ -60,6 +60,11 @@ jobs:
     # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
     env:
       MESS_OS: ${{ matrix.os == 'macos-15-intel' && 'macOS-intel' || (startsWith(matrix.os, 'macos') && 'macOS' || (startsWith(matrix.os, 'windows') && 'Windows' || 'Linux')) }}
+      # Weisung P11-19 (Nico 03.11.2026, Antwort 1a): feste Ausnahme NUR fuer den Intel-Mac. Messzeiten ueber
+      # der Grenze stehen dort als INFO-Zeile (Wert, Grenze, Einzelmessungen) und machen den Lauf nicht rot;
+      # Layout-, Kontrast-, Absturzfunde und Unit-Tests bleiben rot (werkzeuge/starttest/urteil.py). Alle anderen
+      # Systeme: leer = unveraendert streng.
+      LERNPLATTFORM_ZEITEN_NUR_INFO: ${{ matrix.os == 'macos-15-intel' && 'macos-15-intel' || '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
@@ -80,6 +85,10 @@ jobs:
         with:
           python-version: "3.12"
       # Phase 6 W1 (T1): Tag-Regel in Python gleich der C#-Regel (dieselben Faelle wie ReleaseTests)
+      # Weisung P11-19: Neustart-Regel und Ausnahme Intel-Mac mit festen Faellen (Gegenprobe: ohne Ausnahme rot)
+      - name: Urteil des Start-Tests (urteil.py selbsttest)
+        shell: bash
+        run: python -I werkzeuge/starttest/urteil.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
         if: runner.os == 'Linux'
         run: python3 -I werkzeuge/release/release.py selbsttest
@@ -111,16 +120,17 @@ jobs:
       # 15 Minuten, bis ein zweiter voller Lauf alle unter 9 Minuten zeigt (dann W3).
       # Weisung P8-5 (W3): Lauf 40351299271 zeigte ubuntu 476 s, windows 540 s, macOS 594 s, nicht
       # alle unter 540 s; darum bleiben die Lernschritte bei 15 Minuten.
+      # Weisung P11-19: nur der Intel-Mac (macos-15-intel, langsamer, Lauf 450: 15 min) 25 bzw. Spiel 20 Minuten.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
-        timeout-minutes: 15
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: lernen
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: steps.lauf1.outputs.rc == '3'
-        timeout-minutes: 15
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: lernen
@@ -129,7 +139,7 @@ jobs:
       - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
         id: spiel1
         if: always() && steps.lauf1.outcome != 'skipped'
-        timeout-minutes: 10
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel
@@ -137,7 +147,7 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: always() && steps.spiel1.outputs.rc == '3'
-        timeout-minutes: 10
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel

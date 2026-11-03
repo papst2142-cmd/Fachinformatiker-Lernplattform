@@ -459,8 +459,8 @@ public sealed class DashboardSeite : UserControl
             }.Farbe(Shape.FillProperty, t.Prozent > 0 ? "Pinsel." + farbe : "Pinsel.ring_bg").Farbe(Shape.StrokeProperty, "Pinsel.card");
             Grid.SetColumnSpan(punkt, 2);
             achse.Children.Add(punkt);
-            var name = Schrift.Pt(t.Name, 11, FontWeight.Normal, "Pinsel.text_dim");
-            name.TextWrapping = TextWrapping.Wrap;
+            // Weisung P11-19 (Sammelliste 195): passt das laengste Wort nicht in die Spalte, nur diesen Namen verkleinern
+            var name = new ThemenNameText(t.Name, 11, "Pinsel.text_dim");
             name.TextAlignment = TextAlignment.Center;
             name.HorizontalAlignment = HorizontalAlignment.Center;
             name.Margin = new Thickness(4, 0);
