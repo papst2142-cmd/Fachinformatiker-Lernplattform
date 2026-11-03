@@ -394,21 +394,36 @@ public sealed class Stadt
     /// Stand der Stadt aus dem Ereignisprotokoll: Ort und Uhr des laufenden Arbeitstags. Weisung P8-5 (L3,
     /// Nicos Antwort 1a): haben mehrere Geraete am selben Tag gespielt (nach einem Abgleich), zaehlt das
     /// Geraet, das an diesem Tag am weitesten gespielt hat (hoechste Uhr, bei Gleichstand der spaetere
-    /// Schritt), mit seinem Ort; die Minuten der Geraete werden nicht addiert. Ein Schritt rechnet ab dem
-    /// Stand weiter, von dem er ausging: steht im Schritt ("von" beim Gehen, "ort" beim Warten und Laufen) der
-    /// Ort des bis dahin gezeigten Stands, ab diesem (das Geraet hatte ihn nach dem Abgleich gesehen), sonst
-    /// ab dem eigenen Stand des Geraets (ohne Abgleich dazwischen gespielt). Ein Geraet: wie bisher.
+    /// Schritt), mit seinem Ort; die Minuten der Geraete werden nicht addiert. Ein Ein-Geraet-Spiel: wie bisher.
+    /// FW8 (Sammelliste 119, Weisung P11-16, Antwort a): ein Schritt rechnet ab dem eigenen Stand seines Geraets. Ging er vom
+    /// gezeigten Stand eines anderen Geraets aus (das Geraet hatte ihn nach dem Abgleich gesehen), steht in seinen
+    /// Daten <see cref="AbUhr"/> (die Uhr, ab der er rechnet; der Ort steht schon in "von" bzw. "ort"); dann ab
+    /// diesem. Das schreibt nur ein Schritt, der wirklich von einem anderen Geraet ausgeht: Spiel auf einem Geraet
+    /// schreibt den Merker nie (Fingerabdruecke gleich).
     /// </summary>
-    public StadtStand Stand(Spielstand stand)
+    public StadtStand Stand(Spielstand stand) => StandUndHerkunft(stand).Stand;
+
+    /// <summary>FW8 (Sammelliste 119): Merker in den Daten eines Stadt-Schritts, der vom gezeigten Stand eines anderen Geraets ausgeht.</summary>
+    public const string AbUhr = "ab_uhr";
+
+    /// <summary>Der Stand und ob er von einem anderen Geraet als diesem stammt (nur mit Zuordnung der Geraete).</summary>
+    private (StadtStand Stand, bool Fremd) StandUndHerkunft(Spielstand stand)
     {
         var tag = stand.Tag;
-        var geraete = SpielGeraete.Von(stand);
+        var zuordnung = SpielGeraete.Von(stand);
+        var geraete = zuordnung?.Durchlauf();
         var je = new Dictionary<string, (string Ort, long Uhr, int Letzter)>(StringComparer.Ordinal);
         var nummer = 0;
         foreach (var e in stand.Verlauf)
         {
             nummer++;
-            if ((e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen) || !Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
+            if (e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen)
+            {
+                continue;
+            }
+            // FW8 (Sammelliste 118): jede Stadt-Zeile der Reihe nach zuordnen, auch die, die heute nicht zaehlen
+            var geraet = geraete?.Invoke(e) ?? "";
+            if (!Py.IstNurInt(Get(e.Daten, "tag")) || Py.Int(e.Daten["tag"]) != tag)
             {
                 continue;
             }
@@ -417,15 +432,12 @@ public sealed class Stadt
             {
                 continue;
             }
-            var geraet = geraete?.Von(e) ?? "";
             var (ort, uhr, _) = je.TryGetValue(geraet, out var bisher) ? bisher : (Heim, Beginn, 0);
-            if (je.Count > 0 && Get(e.Daten, e.Art == Gegangen ? "von" : "ort") is string ab)
+            // FW8 (Sammelliste 119): vom Stand eines anderen Geraets aus (Merker), sonst ab dem eigenen
+            if (Get(e.Daten, AbUhr) is var ab && Py.IstNurInt(ab) && Py.Int(ab) >= Beginn && Py.Int(ab) <= TagMinuten
+                && Get(e.Daten, e.Art == Gegangen ? "von" : "ort") is string abOrt)
             {
-                var gezeigt = je.Values.MaxBy(g => (g.Uhr, g.Letzter));
-                if (gezeigt.Ort == ab && gezeigt.Uhr > uhr)
-                {
-                    (ort, uhr) = (gezeigt.Ort, gezeigt.Uhr);
-                }
+                (ort, uhr) = (abOrt, Py.Int(ab));
             }
             if (e.Art == Gegangen)
             {
@@ -440,10 +452,20 @@ public sealed class Stadt
         }
         if (je.Count == 0)
         {
-            return new StadtStand(tag, Heim, Beginn);
+            return (new StadtStand(tag, Heim, Beginn), false);
         }
-        var weitester = je.Values.MaxBy(g => (g.Uhr, g.Letzter));
-        return new StadtStand(tag, weitester.Ort, weitester.Uhr);
+        var weitester = je.MaxBy(g => (g.Value.Uhr, g.Value.Letzter));
+        return (new StadtStand(tag, weitester.Value.Ort, weitester.Value.Uhr), zuordnung is not null && weitester.Key != zuordnung.Eigenes);
+    }
+
+    /// <summary>FW8 (Sammelliste 119): die Daten eines neuen Schritts; geht er vom Stand eines anderen Geraets aus, mit dem Merker.</summary>
+    private static PyObjekt MitHerkunft(PyObjekt daten, (StadtStand Stand, bool Fremd) jetzt)
+    {
+        if (jetzt.Fremd)
+        {
+            daten.Add(AbUhr, jetzt.Stand.Uhr);
+        }
+        return daten;
     }
 
     /// <summary>Uhrzeit zur Anzeige: 425 = "07:05".</summary>
@@ -472,7 +494,8 @@ public sealed class Stadt
         {
             return new(StadtGrund.Gesperrt);
         }
-        var jetzt = Stand(stand);
+        var herkunft = StandUndHerkunft(stand);
+        var jetzt = herkunft.Stand;
         long anzahl;
         if (schritte is { } frei)
         {
@@ -495,10 +518,10 @@ public sealed class Stadt
             anzahl = weg.Schritte;
         }
         var minuten = Gekappt(jetzt.Uhr, checked(anzahl * MinutenJeSchritt));
-        return new(StadtGrund.Ok, Gegangen, new PyObjekt
+        return new(StadtGrund.Ok, Gegangen, MitHerkunft(new PyObjekt
         {
             { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", anzahl }, { "minuten", minuten },
-        });
+        }, herkunft));
     }
 
     /// <summary>
@@ -515,12 +538,13 @@ public sealed class Stadt
         {
             return new(StadtGrund.KeinWeg);
         }
-        var jetzt = Stand(stand);
+        var herkunft = StandUndHerkunft(stand);
+        var jetzt = herkunft.Stand;
         var minuten = Gekappt(jetzt.Uhr, checked(schritte * MinutenJeSchritt));
-        return new(StadtGrund.Ok, Gelaufen, new PyObjekt
+        return new(StadtGrund.Ok, Gelaufen, MitHerkunft(new PyObjekt
         {
             { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", schritte }, { "minuten", minuten },
-        });
+        }, herkunft));
     }
 
     /// <summary>Kann die Figur vor dem geschlossenen Ort warten, bis er heute oeffnet?</summary>
@@ -530,7 +554,8 @@ public sealed class Stadt
         {
             return new(StadtGrund.KeinProfil);
         }
-        var jetzt = Stand(stand);
+        var herkunft = StandUndHerkunft(stand);
+        var jetzt = herkunft.Stand;
         if (Offen(jetzt.Ort, jetzt.Uhr))
         {
             return new(StadtGrund.NichtGeschlossen);
@@ -540,7 +565,8 @@ public sealed class Stadt
         {
             return new(StadtGrund.OeffnetNichtMehr);
         }
-        return new(StadtGrund.Ok, Gewartet, new PyObjekt { { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "minuten", checked(zeit.Auf - jetzt.Uhr) } });
+        return new(StadtGrund.Ok, Gewartet, MitHerkunft(new PyObjekt { { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "minuten", checked(zeit.Auf - jetzt.Uhr) } },
+            herkunft));
     }
 
     /// <summary>Darf die Figur den Ort betreten, vor dem sie steht? (schreibt nichts)</summary>

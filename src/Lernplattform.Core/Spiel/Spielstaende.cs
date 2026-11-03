@@ -90,15 +90,16 @@ public static class Spielstaende
     }
 
     /// <summary>
-    /// Weisung P8-5 (L3): Zeitstempel, Art und Geraet der Stadt-Zeilen eines Durchgangs (nur C#-Ereignisse,
-    /// Python liest sie nicht). Siehe <see cref="SpielGeraete"/>.
+    /// Weisung P8-5 (L3): Zeitstempel, Art, Daten und Geraet der Stadt-Zeilen eines Durchgangs (nur C#-Ereignisse,
+    /// Python liest sie nicht), in derselben Reihenfolge und mit demselben Filter wie <see cref="LaufEreignisse"/>
+    /// (FW8, Sammelliste 118). Siehe <see cref="SpielGeraete"/>.
     /// </summary>
-    public static List<(string Zeit, string Art, string Geraet)> StadtGeraete(SqliteConnection verbindung, string? lauf)
+    public static List<(string Zeit, string Art, PyObjekt Daten, string Geraet)> StadtGeraete(SqliteConnection verbindung, string? lauf)
     {
         var (wo, wert) = Bedingung(lauf);
         using var befehl = verbindung.CreateCommand();
-        befehl.CommandText = "SELECT timestamp, typ, geraet FROM spiel_ereignisse WHERE (" + wo
-            + ") AND typ IN ($a, $b, $c)";
+        befehl.CommandText = "SELECT timestamp, typ, daten, geraet FROM spiel_ereignisse WHERE (" + wo
+            + ") AND typ IN ($a, $b, $c) ORDER BY timestamp, id";
         if (wert is not null)
         {
             befehl.Parameters.AddWithValue("$lauf", wert);
@@ -106,15 +107,16 @@ public static class Spielstaende
         befehl.Parameters.AddWithValue("$a", Stadt.Gegangen);
         befehl.Parameters.AddWithValue("$b", Stadt.Gewartet);
         befehl.Parameters.AddWithValue("$c", Stadt.Gelaufen);
-        var ergebnis = new List<(string, string, string)>();
+        var ergebnis = new List<(string, string, PyObjekt, string)>();
         using var leser = befehl.ExecuteReader();
         while (leser.Read())
         {
-            if (leser.IsDBNull(0) || leser.IsDBNull(1))
+            // wie LaufEreignisse: kaputte Daten sind kein Ereignis
+            if (AlsDict(leser.IsDBNull(2) ? null : leser.GetString(2)) is not { } daten)
             {
-                continue;   // ohne Zeitstempel nicht zuzuordnen: zaehlt als eigenes Geraet
+                continue;
             }
-            ergebnis.Add((leser.GetValue(0).ToString() ?? "", leser.GetString(1), leser.IsDBNull(2) ? "" : leser.GetValue(2).ToString() ?? ""));
+            ergebnis.Add((leser.GetString(0), leser.GetString(1), daten, leser.IsDBNull(3) ? "" : leser.GetValue(3).ToString() ?? ""));
         }
         return ergebnis;
     }

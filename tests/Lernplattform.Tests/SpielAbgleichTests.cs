@@ -83,14 +83,19 @@ public class SpielAbgleichTests
         private string? server;
         private int n;
 
-        public Aufbau()
+        public Aufbau() : this(Soll.GetProperty("vorher"), Geraete)
+        {
+        }
+
+        /// <summary>FW8 (Sammelliste 120): dieselben Geraete ab einem anderen Stand vor dem Abgleich (G51 sonderfaelle).</summary>
+        public Aufbau(JsonElement vorher, string[] geraete)
         {
             var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
             // ein gemeinsamer Takt fuer alle Geraete: die Spielschritte stehen in derselben Reihenfolge wie in Python
             var uhr = SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n));
-            foreach (var g in Geraete)
+            foreach (var g in geraete)
             {
-                var lernstand = Baue(Soll.GetProperty("vorher").GetProperty(g),
+                var lernstand = Baue(vorher.GetProperty(g),
                     Path.Combine(Directory.CreateDirectory(Path.Combine(ordner.Pfad, g)).FullName, Lernstand.DateiName));
                 Lernstaende[g] = lernstand;
                 var schreiber = new LernstandSchreiber(lernstand, uhr, () => g.ToLowerInvariant() + (++n).ToString("D6", CultureInfo.InvariantCulture));
@@ -122,13 +127,14 @@ public class SpielAbgleichTests
     }
 
     /// <summary>Eine Runde Abgleich (PC, Handy, Tablet, PC, Handy) wie in Python.</summary>
-    private static void RundeWiePython(Aufbau a, JsonElement soll, bool mitExport)
+    private static void RundeWiePython(Aufbau a, JsonElement soll, bool mitExport, string[]? runde = null)
     {
+        runde ??= Runde;
         var schritte = soll.EnumerateArray().ToList();
-        Assert.Equal(Runde.Length, schritte.Count);
-        for (var i = 0; i < Runde.Length; i++)
+        Assert.Equal(runde.Length, schritte.Count);
+        for (var i = 0; i < runde.Length; i++)
         {
-            var g = Runde[i];
+            var g = runde[i];
             Assert.Equal(g, schritte[i].GetProperty("geraet").GetString());
             var r = a.Abgleichen(g);
             var wo = "Schritt " + i + " " + g + ": ";
@@ -288,6 +294,95 @@ public class SpielAbgleichTests
         Assert.Empty(LaufEreignisse(a.Lernstaende["Handy"], drei));
     }
 
+    /// <summary>
+    /// FW8 (Sammelliste 120): Sonderfaelle wie Python (G51 sonderfaelle, nur angehaengt). Zwei Geraete schrieben in
+    /// derselben Sekunde (je ein Zwischenfall und Feierabend 2, E-5), der PC hat alte Ereignisse ohne Durchgang;
+    /// nach dem Abgleich loest der PC ohne Neuladen ein Ticket: Neuaufbau mit den fremden Zeilen und dabei das
+    /// Abzeichen "krisenfest", das erst beide Geraete zusammen erreichen. Exporte, Ereignisse, Abzeichen,
+    /// Bestenliste, Kurzstand je Geraet (die Reihenfolge gleicher Sekunden folgt der id des Geraets, darum
+    /// unterscheiden sich PC und Handy wie in Python), der alte Durchgang und die Belegung der Plaetze.
+    /// </summary>
+    [Fact]
+    public void SonderfaelleWiePython()
+    {
+        var sf = Soll.GetProperty("sonderfaelle");
+        string[] zwei = ["PC", "Handy"];
+        using var a = new Aufbau(sf.GetProperty("vorher"), zwei);
+        var lauf = sf.GetProperty("lauf").GetString()!;
+        foreach (var g in zwei)
+        {
+            Assert.Equal(g + " " + T(sf.GetProperty("oeffnen").GetProperty(g)), g + " " + T(a.Verwaltung[g].Lauf));
+        }
+        RundeWiePython(a, sf.GetProperty("runde1"), mitExport: true, ["PC", "Handy", "PC"]);
+
+        // der PC loest ohne Neuladen einen Zwischenfall: Neuaufbau mit den fremden Zeilen, dann das Abzeichen
+        var vorSchritt = LaufEreignisse(a.Lernstaende["PC"], lauf).Count;
+        var daten = Geloest(6, 3);
+        Py.Setzen(daten, "zwischenfall", true);
+        a.Verwaltung["PC"].ZumSchreiben().Log(Ereignisse.Erledigt, daten);
+        a.Schlange.Leeren();
+        var schritt = sf.GetProperty("schritt");
+        KurzWiePython(a, "PC", schritt.GetProperty("kurz"));
+        Assert.Equal(T(schritt.GetProperty("neu")), T(LaufEreignisse(a.Lernstaende["PC"], lauf).Skip(vorSchritt)
+            .Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()));
+        var abzeichen = a.Verwaltung["PC"].Stand.Verlauf.Where(e => e.Art == Ereignisse.Erfolg)
+            .Select(e => (object?)new List<object?> { e.Daten["erfolg"], e.Daten["stufe"] }).Distinct(new TextGleich()).ToList();
+        abzeichen.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        Assert.Equal(T(schritt.GetProperty("abzeichen")), T(abzeichen));
+        // Bestenliste ohne die Zeit der Zeile (die neuen Zeilen haben die Zeit von C#), sortiert wie in Python
+        var besten = SpielDatenbank.Bestenzeilen(a.Lernstaende["PC"])
+            .Select(z => (object?)new List<object?> { z.Lauf, z.Art, z.Schluessel, z.Wert }).ToList();
+        besten.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        var bestenSoll = schritt.GetProperty("bestenliste").EnumerateArray().Select(z => (object?)Py.Lesen(z.GetRawText())).ToList();
+        bestenSoll.Sort((x, y) => string.CompareOrdinal(T(x), T(y)));
+        Assert.Equal(T(bestenSoll), T(besten));
+
+        a.Verwaltung["Handy"].Neuladen();
+        KurzWiePython(a, "Handy", sf.GetProperty("handy"));
+        RundeWiePython(a, sf.GetProperty("runde2"), mitExport: false, zwei);
+
+        foreach (var g in zwei)
+        {
+            var ende = sf.GetProperty("ende").GetProperty(g);
+            a.Verwaltung[g].Neuladen();
+            KurzWiePython(a, g, ende.GetProperty("kurz"));
+            foreach (var (name, spalten) in SpielTabellen)
+            {
+                Assert.Equal(g + " " + name + " " + ende.GetProperty("tabellen").GetProperty(name).GetInt32(),
+                    g + " " + name + " " + Zeilen(a.Lernstaende[g], name, spalten).Count);
+            }
+            // der alte Durchgang ohne lauf (wie vor 0.48)
+            var alt = LaufEreignisse(a.Lernstaende[g], LernstandSchreiber.AlterLauf);
+            var altStand = new Spielstand(alt, Inhalt);
+            var altSoll = ende.GetProperty("alt");
+            Assert.Equal(g + " " + T(altSoll), g + " " + T(new PyObjekt
+            {
+                { "anzahl", (long)alt.Count },
+                { "ereignisse", Sha(T(alt.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList())) },
+                { "geld", altStand.Felder()["money"] }, { "tag", altStand.Tag }, { "history", (long)altStand.Verlauf.Count },
+                { "fingerabdruck", SpielFingerabdruckTests.Hash(altStand) },
+            }));
+            using (var v = a.Lernstaende[g].Verbindung())
+            {
+                var belegung = Spielstaende.Belegung(Spielstaende.Zeilen(v), Spielstaende.HatAlteEreignisse(v));
+                Assert.Equal(g + " " + T(ende.GetProperty("belegung")), g + " " + T(new PyObjekt
+                {
+                    { "plaetze", belegung.Plaetze.Select(p => (object?)new List<object?> { p.Platz, p.Lauf }).ToList() },
+                    { "extra", belegung.Extra.Cast<object?>().ToList() },
+                    { "geloescht", belegung.Geloescht.Order(StringComparer.Ordinal).Cast<object?>().ToList() },
+                }));
+            }
+            Assert.Equal(g + " " + T(ende.GetProperty("plaetze")), g + " " + T(a.Verwaltung[g].Plaetze().Cast<object?>().ToList()));
+        }
+    }
+
+    private sealed class TextGleich : IEqualityComparer<object?>
+    {
+        public new bool Equals(object? x, object? y) => T(x) == T(y);
+
+        public int GetHashCode(object? obj) => StringComparer.Ordinal.GetHashCode(T(obj));
+    }
+
     private static SpielStempel? Spielstempel(Lernstand lernstand, string lauf) =>
         lernstand.Abfragen("SELECT COUNT(*), MAX(id), MAX(timestamp) FROM spiel_ereignisse WHERE lauf = $lauf", ("$lauf", lauf)) is [var z, ..]
             ? new SpielStempel((long)z[0]!, z[1] as long?, z[2])
@@ -417,6 +512,152 @@ public class SpielAbgleichTests
         Assert.True(weiter.Ok);
         tablet.Log(weiter.Art!, weiter.Daten!);
         Assert.Equal(new StadtStand(1, "bank", vorher.Uhr + Py.Int(weiter.Daten!["minuten"])), stadt.Stand(tablet.Stand));
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 118, Gegenprobe): PC und Handy schreiben in derselben Sekunde dieselbe Art. Mit
+    /// verschiedenen Daten gehoert jede Zeile ihrem Geraet (Tagesuhr wie bei verschiedenen Sekunden, keine Summe);
+    /// mit gleichen Daten bekommt jedes Geraet einen der beiden gleichen Schritte. Vorher galten beide Zeilen als
+    /// eigenes Geraet und die Minuten wurden addiert (rot).
+    /// </summary>
+    [Fact]
+    public void TagesuhrGleicheSekundeZweierGeraete()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var jetzt = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var n = 0;
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => jetzt),
+            () => "sek" + (++n).ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        void Schreiben(string lauf, string geraet, string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), geraet, lauf));
+        PyObjekt Gang(string nach, long minuten) => new() { { "tag", 1L }, { "von", stadt.Heim }, { "nach", nach }, { "minuten", minuten } };
+
+        // verschiedene Daten in derselben Sekunde
+        const string Verschieden = "lsek000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, Verschieden, Spielstaende.Angelegt, "{}", "PC"));
+        Schreiben(Verschieden, "PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Verschieden, "PC", Stadt.Gegangen, Gang("moebelhaus", 300));
+        Schreiben(Verschieden, "Handy", Stadt.Gegangen, Gang("elektromarkt", 120));
+        foreach (var geraet in new[] { "PC", "Handy" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, Verschieden, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "moebelhaus", stadt.Beginn + 300), stadt.Stand(spiel.Stand));
+        }
+
+        // gleiche Daten in derselben Sekunde: zwei gleiche Schritte, je einer je Geraet
+        const string Gleich = "lsek000000000002";
+        Assert.True(schreiber.SpielPlatzSpeichern(2, Gleich, Spielstaende.Angelegt, "{}", "PC"));
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Gleich, "PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        jetzt = jetzt.AddSeconds(5);
+        Schreiben(Gleich, "PC", Stadt.Gegangen, Gang("bank", 60));
+        Schreiben(Gleich, "Handy", Stadt.Gegangen, Gang("bank", 60));
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, Gleich, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 60), stadt.Stand(spiel.Stand));
+        }
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 119, Gegenprobe): ohne Abgleich auf beiden Geraeten gespielt, beide stehen am selben Ort und
+    /// der PC ist weiter. Der Schritt des Handys (offline geschrieben, ohne Merker) rechnet ab dem eigenen Stand des
+    /// Handys, nicht ab dem vorderen des PCs (vorher: Teilsumme, rot). Geht ein Geraet nach dem Abgleich vom
+    /// gezeigten Stand eines anderen aus, schreibt es den Merker ab_uhr und rechnet auf jedem Geraet ab diesem;
+    /// offline (nur eigene Zeilen) schreibt es nie einen Merker.
+    /// </summary>
+    [Fact]
+    public void TagesuhrOhneAbgleichAmSelbenOrt()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var n = 0;
+        var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)),
+            () => "ort" + n.ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        const string LaufId = "lort000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "PC"));
+        void Schreiben(string geraet, string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), geraet, LaufId));
+        Schreiben("PC", Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+
+        // offline: das Handy kennt nur seine eigenen Zeilen, sein Schritt hat keinen Merker
+        using (var handyOrdner = new TempOrdner())
+        {
+            var allein = new Lernstand(Path.Combine(handyOrdner.Pfad, Lernstand.DateiName));
+            var handySchreiber = new LernstandSchreiber(allein, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)));
+            Assert.True(handySchreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "Handy"));
+            var offline = new Spielablauf(Inhalt, new SpielDatenbank(handySchreiber, "Handy", LaufId, Vorgaenge.Sperren));
+            offline.Profil("Nico", new PyObjekt());
+            var gang = stadt.GehenPruefen(offline.Stand, "moebelhaus");
+            Assert.True(gang.Ok);
+            Assert.DoesNotContain(gang.Daten!, p => p.Key == Stadt.AbUhr);
+        }
+
+        Schreiben("PC", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 300L } });
+        Schreiben("Handy", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 120L } });
+        Schreiben("Handy", Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", "moebelhaus" }, { "nach", "bank" }, { "minuten", 60L } });
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, LaufId, Vorgaenge.Sperren));
+            // PC: Moebelhaus 300; Handy: Moebelhaus 120, dann Bank 180 (nicht 360)
+            Assert.Equal(new StadtStand(1, "moebelhaus", stadt.Beginn + 300), stadt.Stand(spiel.Stand));
+        }
+
+        // nach dem Abgleich geht das Handy vom gezeigten Stand des PCs aus: Merker, auf jedem Geraet ab diesem
+        var handy = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "Handy", LaufId, Vorgaenge.Sperren));
+        var weiter = stadt.GehenPruefen(handy.Stand, "bank");
+        Assert.True(weiter.Ok);
+        Assert.Equal("moebelhaus", weiter.Daten!["von"]);
+        Assert.Equal(stadt.Beginn + 300, weiter.Daten![Stadt.AbUhr]);
+        handy.Log(weiter.Art!, weiter.Daten!);
+        var minuten = Py.Int(weiter.Daten!["minuten"]);
+        Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 300 + minuten), stadt.Stand(handy.Stand));
+        foreach (var geraet in new[] { "PC", "Handy", "Tablet" })
+        {
+            var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, geraet, LaufId, Vorgaenge.Sperren));
+            Assert.Equal(new StadtStand(1, "bank", stadt.Beginn + 300 + minuten), stadt.Stand(spiel.Stand));
+        }
+        // der PC geht danach ab dem gezeigten Stand des Handys weiter (wieder mit Merker)
+        var pc = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", LaufId, Vorgaenge.Sperren));
+        var heim = stadt.GehenPruefen(pc.Stand, stadt.Heim);
+        Assert.Equal(stadt.Beginn + 300 + minuten, heim.Daten![Stadt.AbUhr]);
+        // der PC geht dann selbst weiter: ab seinem eigenen (gezeigten) Stand, ohne Merker
+        pc.Log(heim.Art!, heim.Daten!);
+        var nochmal = stadt.GehenPruefen(pc.Stand, "bank");
+        Assert.DoesNotContain(nochmal.Daten!, p => p.Key == Stadt.AbUhr);
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 118b), feste, benannte Ausnahme: zwei Geraete mit demselben Namen (seit 24b heisst jedes
+    /// Geraet nur "PC" oder "Handy", z. B. zwei PCs) sind fuer die Tagesuhr ein Geraet. Spielen beide offline am selben
+    /// Tag, zaehlen ihre Schritte als eine Folge (die Uhr laeuft weiter als auf jedem einzelnen). Ohne eine Kennung je
+    /// Installation nicht zu trennen (Weisung P11-16).
+    /// </summary>
+    [Fact]
+    public void TagesuhrGleichnamigeGeraeteSindEinGeraet_Ausnahme()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var n = 0;
+        var start = DateTimeOffset.Parse("2026-10-03T06:00:00+00:00", CultureInfo.InvariantCulture);
+        var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => start.AddSeconds(5 * ++n)),
+            () => "pcs" + n.ToString("D6", CultureInfo.InvariantCulture));
+        var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
+        const string LaufId = "lpcs000000000001";
+        Assert.True(schreiber.SpielPlatzSpeichern(1, LaufId, Spielstaende.Angelegt, "{}", "PC"));
+        void Schreiben(string art, PyObjekt daten) =>
+            Assert.NotNull(schreiber.SpielEreignisSpeichern(art, PythonJson.Standard(daten), "PC", LaufId));
+        Schreiben(Ereignisse.Profil, new PyObjekt { { "name", "Nico" }, { "aussehen", new PyObjekt() } });
+        // PC 1 und PC 2 offline: je ein Gang ab zu Hause
+        Schreiben(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "moebelhaus" }, { "minuten", 300L } });
+        Schreiben(Stadt.Gegangen, new PyObjekt { { "tag", 1L }, { "von", stadt.Heim }, { "nach", "elektromarkt" }, { "minuten", 120L } });
+        var spiel = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", LaufId, Vorgaenge.Sperren));
+        Assert.Equal(new StadtStand(1, "elektromarkt", stadt.Beginn + 420), stadt.Stand(spiel.Stand));
     }
 
     /// <summary>

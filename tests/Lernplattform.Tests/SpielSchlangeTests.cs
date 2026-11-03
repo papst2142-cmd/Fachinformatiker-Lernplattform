@@ -101,6 +101,11 @@ public class SpielSchlangeTests
         Assert.Equal(SpielStadtTests.SollStadtHash, SpielStadtTests.StadtHash(spiel, staende));
         Assert.Equal(0, spiel.Abweichungen);
         Assert.Equal(Tabellen(sofortStand), Tabellen(lernstand));
+        // FW8 (Sammelliste 119, Weisung P11-16): ein Spiel auf einem Geraet schreibt nie den Merker ab_uhr
+        var stadtZeilen = lernstand.Abfragen("SELECT daten FROM spiel_ereignisse WHERE typ IN ($a, $b, $c)",
+            ("$a", Stadt.Gegangen), ("$b", Stadt.Gewartet), ("$c", Stadt.Gelaufen)).Select(z => (string)z[0]!).ToList();
+        Assert.NotEmpty(stadtZeilen);
+        Assert.DoesNotContain(stadtZeilen, d => d.Contains(Stadt.AbUhr, StringComparison.Ordinal));
     }
 
     private sealed class Merker(IDisposable innen) : IDisposable
@@ -382,6 +387,71 @@ public class SpielSchlangeTests
         Assert.Empty(neu.Unterschiede(new Spielstand(spiel.Speicher.Ereignisse(), Inhalt)));
         Assert.Equal(vorFehler + 2, neu.Verlauf.Count);
         Assert.Single(gemeldet);
+    }
+
+    /// <summary>
+    /// FW8 (Sammelliste 187, Weisung P11-8), Gegenprobe mit festem Ablauf: eine Zeile scheitert, der Schreiber meldet
+    /// den Fehler und verwirft den Rest. Haengt danach noch jemand eine Zeile desselben (gestoerten) Besitzers an
+    /// (so, als haette er vor dem Fehler geprueft), lehnt die Schlange sie unter ihrer Sperre ab und schreibt sie
+    /// nie; eine Zeile eines anderen Besitzers nimmt sie an. Nach dem Neuaufbau (Stand aus der Datenbank) nimmt
+    /// sie wieder an. Ohne die Pruefung in Anhaengen landet die Zeile in der Datenbank (rot).
+    /// </summary>
+    [Fact]
+    public void GestoerterBesitzerHaengtNichtsMehrAn()
+    {
+        using var ordner = new TempOrdner();
+        var lernstand = Neu(ordner);
+        var schreiber = Schreiber(lernstand);
+        var schlange = new Spielschlange();
+        var scheitern = false;
+        schlange.VorZeile = _ => !scheitern;
+        using var gemeldet = new ManualResetEventSlim();
+        schlange.Fehler += _ => gemeldet.Set();
+        var datenbank = new SpielDatenbank(schreiber, "PC", Lauf, Vorgaenge.Sperren, schlange);
+        var andere = new SpielDatenbank(schreiber, "PC", "lprobe0000000002", Vorgaenge.Sperren, schlange);
+        var spiel = new Spielablauf(Inhalt, datenbank);
+        spiel.Profil("Probe", new PyObjekt());
+        schlange.Leeren();
+        var vorher = Ereigniszeilen(lernstand);
+
+        // 1. die naechste Zeile scheitert; warten, bis der Schreiber den Fehler gemeldet hat
+        scheitern = true;
+        Gehen(spiel, 1);
+        Assert.True(gemeldet.Wait(TimeSpan.FromMinutes(2), TestContext.Current.CancellationToken));
+        schlange.Leeren();
+        scheitern = false;
+        Assert.Equal(vorher, Ereigniszeilen(lernstand));
+
+        // 2. fester Ablauf: eine Zeile desselben Besitzers kommt erst nach dem Fehler an
+        var geschrieben = 0;
+        bool Zeile(SpielDatenbank besitzer, string art)
+        {
+            lock (schlange.Sperre)
+            {
+                return schlange.Anhaengen(new Spielschlange.Eintrag(besitzer, art, () =>
+                {
+                    Interlocked.Increment(ref geschrieben);
+                    return schreiber.SpielEreignisSpeichern(art, "{}", "PC", besitzer.Lauf) is not null;
+                }));
+            }
+        }
+        Assert.False(Zeile(datenbank, "nach_dem_fehler"));
+        schlange.Leeren();
+        Assert.Equal(0, geschrieben);
+        Assert.Equal(vorher, Ereigniszeilen(lernstand));
+
+        // ein anderer Besitzer derselben Schlange schreibt weiter
+        Assert.True(Zeile(andere, "anderer_besitzer"));
+        schlange.Leeren();
+        Assert.Equal(1, geschrieben);
+
+        // 3. nach dem Neuaufbau (Stand aus der Datenbank) nimmt die Schlange wieder an
+        datenbank.Ereignisse();
+        Assert.True(Zeile(datenbank, "nach_dem_neuaufbau"));
+        schlange.Leeren();
+        Assert.Equal(2, geschrieben);
+        Assert.Equal(["anderer_besitzer", "nach_dem_neuaufbau"],
+            lernstand.Abfragen("SELECT typ FROM spiel_ereignisse ORDER BY id").Skip(vorher.Count).Select(z => (string)z[0]!));
     }
 
     /// <summary>

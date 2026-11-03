@@ -123,6 +123,9 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
     /// Datenbank neu gelesen ist (<see cref="Ereignisse"/>), schreibt keine Aktion mehr (sie baute auf der
     /// fehlenden Zeile auf): Schreiben gibt null wie ein Schreibfehler beim sofortigen Schreiben.
     /// </summary>
+    /// <summary>FW8 (Sammelliste 187): eine Zeile ist nicht geschrieben und der Stand noch nicht neu gelesen; nur unter der Sperre der Schlange.</summary>
+    internal bool IstGestoert => gestoert;
+
     internal void Gestoert()
     {
         gestoert = true;
@@ -207,10 +210,15 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
             }
             var z = zwischen ??= ZwischenAnlegen();
             var marke = schreiber.SpielMarkeJetzt(z.Uhrabweichung);
-            var nummer = checked(z.Naechste++);
+            var nummer = z.Naechste;
+            // FW8 (Sammelliste 187): erst wenn die Schlange die Zeile angenommen hat, gilt sie im Zwischenstand
+            if (!schlange.Anhaengen(new Spielschlange.Eintrag(this, art, () => schreiber.SpielEreignisSpeichern(art, daten, Geraet, Lauf, marke) is not null)))
+            {
+                return null;
+            }
+            z.Naechste = checked(nummer + 1);
             z.Zeilen.Add(new SpielZeile(nummer, marke.Zeit, art, daten));
             z.Stempel = new SpielStempel(checked(z.Stempel.Anzahl + 1), nummer, Spaeter(z.Stempel.Zeit, marke.Zeit));
-            schlange.Anhaengen(new Spielschlange.Eintrag(this, art, () => schreiber.SpielEreignisSpeichern(art, daten, Geraet, Lauf, marke) is not null));
             return marke.Zeit;
         }
     }
@@ -300,9 +308,13 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
             // die Zeile gilt sofort in der Bestenliste des Spiels, genau wie sie geschrieben wird (ORDER BY timestamp, id)
             var zeile = Zeile(LernstandSchreiber.BestenZeit(marke, z.Loeschmarke).Zeit, lauf, art, schluessel, Gelesen(wert),
                 string.IsNullOrEmpty(daten) ? "{}" : daten);
+            // FW8 (Sammelliste 187): erst wenn die Schlange die Zeile angenommen hat, gilt sie in der Bestenliste des Spiels
+            if (!schlange.Anhaengen(new Spielschlange.Eintrag(this, "bestenliste", () => schreiber.BestenSpeichern(lauf, art, schluessel, wert, daten, marke))))
+            {
+                return false;
+            }
             var stelle = z.Besten.FindLastIndex(b => string.CompareOrdinal(b.Zeit, zeile.Zeit) <= 0) + 1;
             z.Besten.Insert(stelle, zeile);
-            schlange.Anhaengen(new Spielschlange.Eintrag(this, "bestenliste", () => schreiber.BestenSpeichern(lauf, art, schluessel, wert, daten, marke)));
             return true;
         }
     }

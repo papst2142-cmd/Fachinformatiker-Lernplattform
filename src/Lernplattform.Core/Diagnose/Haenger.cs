@@ -122,10 +122,7 @@ public static class Haenger
                 _signal = PosixSignalRegistration.Create((PosixSignal)nummer, kontext =>
                 {
                     kontext.Cancel = true;   // nicht beenden
-                    if (_signalAbruf)
-                    {
-                        Abruf();
-                    }
+                    SignalEmpfangen();
                 });
             }
         }
@@ -441,6 +438,27 @@ public static class Haenger
         return ergebnis;
     }
 
+    /// <summary>
+    /// Das Signal USR1 ist angekommen. FW8 (Sammelliste 101): Freigabe pruefen und schreiben unter derselben Sperre,
+    /// mit der <see cref="FuerTests"/> die Freigabe zuruecknimmt und die Datei schliesst; ein Signal, das zwischen
+    /// Pruefen und Schreiben lag, schreibt so nie in die haenger.log, die erst danach geoeffnet wurde.
+    /// </summary>
+    internal static void SignalEmpfangen()
+    {
+        lock (Sperre)
+        {
+            if (!_signalAbruf)
+            {
+                return;
+            }
+            NachFreigabeFuerTests?.Invoke();
+            Abruf();
+        }
+    }
+
+    /// <summary>Nur fuer Tests (Gegenprobe Sammelliste 101): wird nach der Pruefung der Freigabe und vor dem Schreiben gerufen.</summary>
+    internal static Action? NachFreigabeFuerTests { get; set; }
+
     /// <summary>Abruf ueber das Signal USR1 (Linux, macOS): Seite, Vorgang und Wartepunkte nach haenger.log.</summary>
     public static void Abruf()
     {
@@ -541,6 +559,7 @@ public static class Haenger
         lock (Sperre)
         {
             _signalAbruf = false;
+            NachFreigabeFuerTests = null;
             _log?.Dispose();
             _log = null;
             _herzschlag = null;
