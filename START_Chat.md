@@ -15,12 +15,12 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.32.11** (Phase 11 FW10, PR #95, main 16980f9). Zweig W2 **A 0.33.0** (Screenreader). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
-| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10 gemergt (A 0.32.0 bis 0.32.11) |
-| Jetzt | W2 A 0.33.0 (Weisung P11-20): Namen für den Screenreader an jedem Bedienelement (Layoutprüfung (11), Gegenprobe), Ansagen, Tab bleibt im Fenster und erreicht alles, runder Fokusrahmen (Fotos `Fi-Austausch/bilder/A0.33.0_Fokusrahmen/`, Merge nur mit Nicos Optik-OK), 197 Einzelstart allein. Merge erst nach Veröffentlichung von A 0.32.11. Danach W3 Prüfstand (A 0.34.0, mit 196 und NVDA-Punkten für Nicos Prüfliste), Gerätetest, Bericht |
+| Version | Auf `main` **A 0.33.0** (Phase 11 W2, PR #96, main ccae906). Zweig W3 **A 0.34.0** (Prüfstand). Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10 und W2 gemergt (A 0.32.0 bis 0.33.0) |
+| Jetzt | W3 A 0.34.0 (Weisung P11-21): Messpunkte des Programms in `messpunkte.log` und im Problembericht, Layoutprüfung in voller PC-Größe (196: Xvfb 1600x1000) und unter Windows mit 150 % (Start-Test-Teil `layout`), Test Handy-Sicherung zurücklesen (26), Prüfliste `Fi-Austausch/anlagen/P11-21_Pruefliste_Geraetetest.md`. Merge erst nach Veröffentlichung von A 0.33.0. Danach Gerätetest Nico, Patches A 0.34.x, Bericht Phase 11 |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-17** (W2) / P11-18 |
+| Letzte/nächste Meldung | **P11-18** (W3) / P11-19 |
 | Sammelliste | nächste freie Nummer **198** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 

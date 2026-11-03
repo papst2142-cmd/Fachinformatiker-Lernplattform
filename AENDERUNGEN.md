@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.34.0
+Das Programm schreibt jetzt ein paar Ladezeiten selbst auf, damit du sie bei einem Problem mitschicken kannst.
+
+- Bei jedem Programmstart merkt sich das Programm einmal, wie lange diese Schritte gedauert haben: Inhalte laden, erste Karte bei den Karteikarten, Fachrichtung wechseln und Spiel betreten (bis die Stadt zu sehen ist). Die Werte stehen in der Datei „messpunkte.log“ im Datenordner und im Bericht unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“.
+- In der Datei stehen nur Datum und Uhrzeit, die Programmversion, der Name des Schritts und die Dauer in Millisekunden, bei der Fachrichtung nur ihr Kürzel. Lerninhalte, Antworten oder dein Lernstand kommen nie hinein. Die Datei bleibt klein: Ältere Zeilen fallen weg. Es wird nichts gesendet.
+- Interne Prüfungen des Programms prüfen das Aussehen jetzt auch in der vollen Fenstergröße am PC und unter Windows mit einer Bildschirm-Skalierung von 150 %; an der Bedienung ändert sich dadurch nichts.
+
 ## A 0.33.0
 Das Programm lässt sich jetzt besser mit einem Vorleseprogramm (Screenreader wie NVDA am PC oder TalkBack am Handy) und mit der Tastatur bedienen.
 

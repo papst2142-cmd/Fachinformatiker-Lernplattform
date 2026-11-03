@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Programm;
 using Lernplattform.Views;
+using Lernplattform.Core.Texte;
 using Update = Lernplattform.Aktualisierung.Aktualisierung;
 
 namespace Lernplattform.Messung;
@@ -65,6 +66,65 @@ public static partial class AutoMessung
         }
         Messwerte.Notiere("Messpunkte (W3): " + zeilen.Length + " Zeilen, erwartet " + string.Join(", ", erwartet)
             + (funde == 0 ? " (gruen)" : " (rot)"));
+        return funde;
+    }
+}
+
+/// <summary>
+/// Phase 11 W3 (Weisung P11-21): eigener Lauf nur mit der Layoutpruefung (Teil "layout"), fuer die CI mit
+/// Windows-Skalierung 100 % auf 1920 x 1080 (volle PC-Groesse 1360 x 880, Sammelliste 196) und 150 % (Punkt
+/// "Windows > 100 % Skalierung"). Erst jede Seite einmal oeffnen wie im Lernteil, dann die ganze Layoutpruefung
+/// (alle Schriftstufen, Groessen, Ansichten, Namen fuer den Screenreader). LERNPLATTFORM_SKALIERUNG_ERWARTET
+/// (z. B. 1.5) prueft, dass das Programm die Skalierung wirklich sieht (sonst falsches Gruen). Zeiten sind hier nur
+/// Angabe, geurteilt wird allein ueber Layoutfunde und die Skalierung.
+/// </summary>
+public static partial class AutoMessung
+{
+    public const string TeilLayout = "layout";
+
+    /// <summary>Schalter: die PC-Groesse 1360 x 880 muss erreicht werden (lauf.sh unter Linux, ci.yml Windows 100 %).</summary>
+    private static bool VollePcGroesse => Environment.GetEnvironmentVariable("LERNPLATTFORM_VOLLE_PC_GROESSE") == "1";
+
+    private static async Task<int> P11W3LayoutLaufAsync(MainView ansicht)
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var funde = 0;
+        Messwerte.Notiere("Start-Test Teil: " + TeilLayout);
+        var inhalte = await Zustand.Inhalte;
+        foreach (var id in Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
+            .Concat(Texte.NavigationHandy.Select(p => p.Id)).Concat([Seiten.Lernen, Seiten.Hilfe, Seiten.Suche])
+            .Where(id => id != Seiten.Spiel).Distinct().ToList())
+        {
+            await ansicht.ZeigeAsync(id);
+        }
+        await ansicht.ZeigeAsync(Seiten.Dashboard);
+        if (ansicht.GebauteSeiten[Seiten.Dashboard] is DashboardSeite dashboard)
+        {
+            await dashboard.Fertig.Task;
+        }
+        if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Karteikarten) is KarteikartenSeite karten)
+        {
+            await karten.Geladen;
+        }
+        if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Trainer) is TrainerSeite trainer)
+        {
+            await trainer.Geladen;
+        }
+        await ansicht.BildFertigAsync();
+        var skalierung = Avalonia.Controls.TopLevel.GetTopLevel(ansicht)?.RenderScaling ?? 1;
+        var bildschirm = Avalonia.Controls.TopLevel.GetTopLevel(ansicht) is Avalonia.Controls.Window fenster
+            ? fenster.Screens.ScreenFromVisual(fenster) ?? fenster.Screens.Primary : null;
+        Messwerte.Notiere(string.Create(inv, $"Skalierung des Programms: {skalierung * 100:0} %, Bildschirm {bildschirm?.Bounds.Width ?? 0}x{bildschirm?.Bounds.Height ?? 0}"));
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_SKALIERUNG_ERWARTET") is { Length: > 0 } soll)
+        {
+            if (!double.TryParse(soll, System.Globalization.NumberStyles.Float, inv, out var erwartet) || Math.Abs(erwartet - skalierung) > 0.01)
+            {
+                Messwerte.Notiere(string.Create(inv, $"  FEHLER: Skalierung {skalierung:0.##} statt {soll}"));
+                funde++;
+            }
+        }
+        funde += await LayoutAsync(ansicht, inhalte);
+        Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
     }
 }

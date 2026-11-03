@@ -34,7 +34,11 @@ if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
   # Phase 7 W1: Xvfb hat nur den Mesa-Softwaretreiber llvmpipe, den Avalonia fuer OpenGL sperrt;
   # der Start-Test erlaubt ihn, damit der Pflicht-Messpunkt "GL-Zusammenhang erzeugt" messbar ist
   export LERNPLATTFORM_GL_LLVMPIPE=1
-  befehl=(xvfb-run -a -s "-screen 0 1280x800x24" "${befehl[@]}")
+  # Phase 11 W3 (Sammelliste 196): der Bildschirm ist groesser als die PC-Groesse 1360 x 880. Bei 1280 x 800
+  # kappte das Programm das Fenster still auf 1280 x 800, und "pc" pruefte nie die echte PC-Groesse (der Wort-Umbruch
+  # "Netzwerkdesig|n" blieb unter Linux gruen). LERNPLATTFORM_VOLLE_PC_GROESSE macht ein Kappen zum Layoutfund.
+  export LERNPLATTFORM_VOLLE_PC_GROESSE=1
+  befehl=(xvfb-run -a -s "-screen 0 1600x1000x24" "${befehl[@]}")
 fi
 "${befehl[@]}"
 rc=$?

@@ -253,6 +253,28 @@ public class RuecksicherungTests
         Assert.False(File.Exists(arbeit + ".tmp"));
     }
 
+    /// <summary>
+    /// Phase 11 W3 (Weisung P11-21, Sammelliste 26): ganzer Weg am Handy wie RuecksicherungTeil: erstellen, ueber den
+    /// Dateiwaehler-Strom schreiben, vom gewaehlten Ort zuruecklesen, dann die zurueckgelesene Datei als Sicherung
+    /// oeffnen (wie "Sicherung einspielen"): dieselben Zeilen der Vorschau wie die erstellte Sicherung.
+    /// </summary>
+    [Fact]
+    public async Task HandyWegErstellenZuruecklesenEinspielbar()
+    {
+        var (ordner, lernstand) = Beispiel();
+        using var _ = ordner;
+        var abbruch = TestContext.Current.CancellationToken;
+        var bytes = Ruecksicherung.Erstellen(lernstand, [], "A 0.34.0", "Handy", new DateTime(2026, 11, 3, 12, 0, 0));
+        var ziel = new MemoryStream();
+        await Ruecksicherung.SpeichernUeberAsync(Path.Combine(ordner.Pfad, "ruecksicherung.fisisicherung"), bytes,
+            () => Task.FromResult<Stream>(new HalteOffen(ziel)), abbruch);
+        var amOrt = ziel.ToArray();
+        await Ruecksicherung.ZuruecklesenAsync(bytes, () => Task.FromResult<Stream>(new MemoryStream(amOrt)), abbruch);
+        var gelesen = Sicherungsinhalt.Lesen(amOrt);
+        Assert.Equal(Sicherungsinhalt.Lesen(bytes).Zeilen, gelesen.Zeilen);
+        Assert.Equal("03.11.2026, 12:00 Uhr", gelesen.ErstelltText);
+    }
+
     /// <summary>Kontrollfehler A5 „Android-Kopie scheitert“: T4 mit Grund, Arbeitsdatei entfernt.</summary>
     [Fact]
     public async Task KopieScheitert()
