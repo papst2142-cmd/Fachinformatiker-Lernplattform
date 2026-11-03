@@ -168,6 +168,7 @@ public static partial class AutoMessung
         {
             funde += await OptionenZweimalAsync(ansicht);
         }
+        funde += await P11W3MesspunkteAsync(ansicht);         // Phase 11 W3: Messpunkte fuer "Problem melden"
         funde += AbschlussAuswerten(reihenRot);
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;

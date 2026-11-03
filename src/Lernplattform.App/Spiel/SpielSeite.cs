@@ -258,7 +258,12 @@ public sealed class SpielSeite : Grid
 
         Flaeche.BildGezeichnet += () =>
         {
-            ErstesBildMs ??= Stopwatch.GetElapsedTime(_gebaut).TotalMilliseconds;
+            if (ErstesBildMs is null)
+            {
+                ErstesBildMs = Stopwatch.GetElapsedTime(_gebaut).TotalMilliseconds;
+                // Phase 11 W3 (Weisung P11-21): Messpunkt "Spiel betreten" (Seite gebaut bis zum ersten 3D-Bild)
+                Programm.Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.SpielBetreten, ErstesBildMs.Value);
+            }
             OeffnenMs ??= Stopwatch.GetElapsedTime(_angehaengt).TotalMilliseconds;
             SchilderSetzen();
         };
