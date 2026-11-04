@@ -259,7 +259,7 @@ def tests_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
 
 
 def still(aufruf, *argumente, ausgabe=None):
-    """Fall des Selbsttests ohne seine Ausgabe (Sammelliste 211: die festen Zeilen wie "Netzwerkdesig|n" standen im
+    """Fall des Selbsttests ohne seine Ausgabe (Sammelliste 212: die festen Zeilen wie "Netzwerkdesig|n" standen im
     Protokoll und sahen wie echte Funde aus); Rueckgabe und Text, der Text nur bei einem falschen Ergebnis gezeigt.
     GITHUB_OUTPUT des Schritts bleibt unberuehrt; ausgabe = eigene Datei fuer die Zeile zweiter_lauf."""
     puffer = io.StringIO()
