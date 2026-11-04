@@ -4,7 +4,8 @@
 # Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
 # - schnell: vergleichswerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
 #   Laeuft bei jedem Push auf einen Pull Request und auf main.
-# - voll: dazu tests (windows-latest, macos-15, macos-15-intel), pakete x4 und android (10 Teile).
+# - voll: dazu tests (windows-latest x4, macos-15 x2, macos-15-intel x3), pakete x4 und android (16 Jobs;
+#   bis A 0.38.0 10 Teile, Welle CI schneller Weisung P11-38: lange Jobs in parallele Teile).
 #   Phase 11 FW10 (Weisung P11-18): macos-15-intel und pakete (osx-x64) fuer Intel-Macs. Laeuft nur
 #   ueber workflow_dispatch (Vorgabe voll) oder bei einem Pull Request mit dem Label "voll".
 #   Der volle Lauf auf dem Kopf des Pull Requests ist das Merge-Tor.
@@ -25,7 +26,7 @@ on:
   workflow_dispatch:
     inputs:
       stufe:
-        description: "Stufe: voll (alle 10 Teile) oder schnell"
+        description: "Stufe: voll (alle 16 Jobs) oder schnell"
         type: choice
         options: [voll, schnell]
         default: voll
@@ -48,15 +49,21 @@ env:
 
 jobs:
   tests:
-    name: tests (${{ matrix.os }})
+    name: tests (${{ matrix.os }}${{ matrix.teil != '' && format(', {0}', matrix.teil) || '' }})
     # schnell nur ubuntu-latest, voll alle drei Systeme
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
+    # Welle CI schneller (Weisung P11-38, Sammelliste 209): die langen Teile laufen als eigene Jobs nebeneinander
+    # (gleiche Pruefungen, gleiche Grenzen, Wachhund und Neustart-Regel je Teil wie vorher). Jeder Eintrag sagt, welche
+    # Teile er prueft: einzel = Unit-Tests und Python-Pruefungen, lernen/spiel = Start-Test, metal = Messung macOS nur
+    # Metal, layout100/layout150 = Layout Windows. ubuntu-latest bleibt ein Job mit allen Teilen (Stufe schnell
+    # unveraendert). Hoechstens 5 Mac-Jobs laufen bei GitHub gleichzeitig: darum 2 Jobs fuer macos-15, 3 fuer den
+    # Intel-Mac, dazu die 2 Mac-Pakete. Merge-Tor = alle 16 Jobs des vollen Laufs gruen (release.yml).
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '["ubuntu-latest", "windows-latest", "macos-15", "macos-15-intel"]' || '["ubuntu-latest"]') }}
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]') }}
     runs-on: ${{ matrix.os }}
-    # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Versuch>. runner.os ist auf
+    # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Teil>-<Versuch>. runner.os ist auf
     # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
     env:
       MESS_OS: ${{ matrix.os == 'macos-15-intel' && 'macOS-intel' || (startsWith(matrix.os, 'macos') && 'macOS' || (startsWith(matrix.os, 'windows') && 'Windows' || 'Linux')) }}
@@ -71,11 +78,12 @@ jobs:
         with:
           global-json-file: global.json
       - name: Tests
+        if: matrix.einzel
         run: dotnet test --project tests/Lernplattform.Tests -c Release
       # Welle 4 (Weisung P2-11, R16/A3/A4/F5): Python 0.63.2 liest die Sicherungen fuer die
       # alte App, die der Test BelegDateienFuerPython eben geschrieben hat, und fuehrt sie zusammen
       - uses: actions/checkout@v7
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         with:
           repository: papst2142-cmd/Fisi-Lernplattform
           ref: v0.63.2
@@ -87,27 +95,32 @@ jobs:
       # Phase 6 W1 (T1): Tag-Regel in Python gleich der C#-Regel (dieselben Faelle wie ReleaseTests)
       # Weisung P11-19: Neustart-Regel und Ausnahme Intel-Mac mit festen Faellen (Gegenprobe: ohne Ausnahme rot)
       - name: Urteil des Start-Tests (urteil.py selbsttest)
+        if: matrix.einzel
         shell: bash
         run: python -I werkzeuge/starttest/urteil.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/release/release.py selbsttest
       - name: Sicherung fuer die alte App in Python 0.63.2 einlesen
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/vergleich/pruefe_ruecksicherung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ruecksicherung
       # Phase 4, W2: C#-Sicherung mit der Fachrichtung (zz-einstellungen) in Python 0.63.2 (+1 Projekt, dokumentiert)
       - name: Sicherung mit Fachrichtung in Python 0.63.2 einlesen
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/vergleich/pruefe_ausbildung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_ausbildung
       # Phase 5, W1 (Plan Risiko 1): Stand nach "Alles ersetzen" der C#-Linie, unabhaengig mit Python 0.63.2 geprueft
       - name: Alles ersetzen mit Python 0.63.2 pruefen
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/vergleich/pruefe_wiederherstellung.py python-linie tests/Lernplattform.Tests/bin/Release/net10.0/beleg_wiederherstellung
+      # Weisung P11-38: nur Jobs mit einem Start-Test-Teil bauen das Programm; alle Start-Test-Schritte haengen an
+      # diesem Schritt (vorher am 1. Lauf des Lernteils, der jetzt nicht in jedem Job laeuft)
       - name: Desktop bauen
+        id: bauen
+        if: matrix.einzel || matrix.lernen || matrix.spiel || matrix.metal || matrix.layout100 || matrix.layout150
         run: dotnet build src/Lernplattform.Desktop -c Release
       # Phase 11 (Weisung P11-29): Gegenprobe ohne Schluessel, das Programm sendet nichts und meldet "nicht verfuegbar"
       - name: Fehlerbericht-Gegenprobe ohne Schluessel
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.einzel
         shell: bash
         run: |
           set +e
@@ -134,8 +147,12 @@ jobs:
       # Sammelliste 199 (Weisung P11-22): STARTTEST_WACHHUND_MINUTEN = Schrittzeit minus 1 Minute; lauf.sh beendet einen
       # haengenden Lauf vorher selbst mit Angaben (USR1, macOS sample, haenger.log) und Rueckgabe 4 (sofort rot).
       # urteil.py selbsttest prueft, dass jeder Wachhund unter seiner Schrittzeit liegt.
+      # Weisung P11-38: ein 2. Lauf folgt nur, wenn urteil.py ihn verlangt (Ausgabe zweiter_lauf). Am Intel-Mac
+      # verlangt es ihn nicht, wenn der 1. Lauf nur Messzeiten der festen Ausnahme P11-19 hat; jeder andere Fund
+      # (Layout, Kontrast, Absturz, Grenzen Dreiecke/Aufrufe) und jedes andere System: 2. Lauf wie bisher.
       - name: Start ohne Bedienung (1. Lauf)
         id: lauf1
+        if: matrix.lernen && steps.bauen.outcome == 'success'
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
@@ -143,7 +160,7 @@ jobs:
           STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 24 || 14 }}
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
-        if: steps.lauf1.outputs.rc == '3'
+        if: steps.lauf1.outputs.rc == '3' && steps.lauf1.outputs.zweiter_lauf != 'nein'
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
@@ -153,7 +170,7 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
         id: spiel1
-        if: always() && steps.lauf1.outcome != 'skipped'
+        if: always() && matrix.spiel && steps.bauen.outcome == 'success'
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
@@ -162,7 +179,7 @@ jobs:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel1
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
-        if: always() && steps.spiel1.outputs.rc == '3'
+        if: always() && steps.spiel1.outputs.rc == '3' && steps.spiel1.outputs.zweiter_lauf != 'nein'
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
         shell: bash
         env:
@@ -173,7 +190,7 @@ jobs:
       # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
       # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
       - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
-        if: always() && runner.os != 'macOS' && steps.lauf1.outcome != 'skipped'
+        if: always() && runner.os != 'macOS' && matrix.spiel && steps.bauen.outcome == 'success'
         timeout-minutes: 5
         shell: bash
         env:
@@ -190,7 +207,7 @@ jobs:
       # Vorgabe (der Standard-Start-Test oben misst sie, Rueckfall Ortsliste, weil die CI-Macs kein GL haben); dieser
       # Schritt misst umgekehrt den alten Weg mit dem Notschalter LERNPLATTFORM_MAC_METAL=1. Aendert kein Urteil.
       - name: Nur Messung macOS nur Metal (Notschalter, ohne Urteil)
-        if: always() && runner.os == 'macOS' && steps.lauf1.outcome != 'skipped'
+        if: always() && runner.os == 'macOS' && matrix.metal && steps.bauen.outcome == 'success'
         timeout-minutes: 20
         shell: bash
         env:
@@ -210,12 +227,12 @@ jobs:
       # erreicht (LERNPLATTFORM_VOLLE_PC_GROESSE). Neustart-Regel wie oben.
       - name: Windows-Anzeige 1920 x 1080
         id: anzeige
-        if: always() && runner.os == 'Windows' && steps.lauf1.outcome != 'skipped'
+        if: always() && runner.os == 'Windows' && (matrix.layout100 || matrix.layout150) && steps.bauen.outcome == 'success'
         shell: pwsh
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Layout Windows 100 % (1. Lauf, frischer Datenordner)
         id: layout100
-        if: always() && steps.anzeige.outcome == 'success'
+        if: always() && matrix.layout100 && steps.anzeige.outcome == 'success'
         timeout-minutes: 15
         shell: bash
         env:
@@ -225,7 +242,7 @@ jobs:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_layout100_1
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_layout100a_versuch${{ github.run_attempt }}.txt
       - name: Layout Windows 100 % (2. Lauf, neuer Prozess, frischer Datenordner)
-        if: always() && steps.layout100.outputs.rc == '3'
+        if: always() && steps.layout100.outputs.rc == '3' && steps.layout100.outputs.zweiter_lauf != 'nein'
         timeout-minutes: 15
         shell: bash
         env:
@@ -236,7 +253,7 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_layout100b_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_layout100a_versuch${{ github.run_attempt }}.txt
       - name: Windows-Skalierung 150 %
         id: skalierung
-        if: always() && steps.anzeige.outcome == 'success'
+        if: always() && matrix.layout150 && steps.anzeige.outcome == 'success'
         shell: pwsh
         run: |
           Add-Type -TypeDefinition @'
@@ -260,7 +277,7 @@ jobs:
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_layout150_1
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_layout150a_versuch${{ github.run_attempt }}.txt
       - name: Layout Windows 150 % (2. Lauf, neuer Prozess, frischer Datenordner)
-        if: always() && steps.layout150.outputs.rc == '3'
+        if: always() && steps.layout150.outputs.rc == '3' && steps.layout150.outputs.zweiter_lauf != 'nein'
         timeout-minutes: 15
         shell: bash
         env:
@@ -270,8 +287,9 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_layout150b_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_layout150a_versuch${{ github.run_attempt }}.txt
       - uses: actions/upload-artifact@v7
         with:
-          name: messung-${{ env.MESS_OS }}-${{ github.run_attempt }}
+          name: messung-${{ env.MESS_OS }}-${{ matrix.kurz }}-${{ github.run_attempt }}
           path: messung_${{ env.MESS_OS }}_*_versuch${{ github.run_attempt }}.txt
+          if-no-files-found: ignore
         if: always()
       # Sicherungsschritt (Weisung P4-14 c): 1. Lauf ohne Fehler, aber Rueckgabe weder 0 noch 3
       # (leer, mit \r, verlorene Ausgabe) -> rot. Ein verschwiegenes Rot darf nie gruen enden.

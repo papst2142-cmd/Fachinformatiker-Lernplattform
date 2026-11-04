@@ -7,6 +7,7 @@
 #   bash werkzeuge/starttest/lauf.sh 1 <messdatei_lauf1>
 #   bash werkzeuge/starttest/lauf.sh 2 <messdatei_lauf2> <messdatei_lauf1>
 # Der 2. Lauf braucht einen frischen Datenordner in LERNPLATTFORM_DATEN (setzt ci.yml).
+# Ob ein 2. Lauf folgt, sagt urteil.py lauf1 ueber die Ausgabe zweiter_lauf=ja|nein (Weisung P11-38).
 # PYTHON waehlt den Python-Befehl (Vorgabe python).
 set -u
 nr=$1
