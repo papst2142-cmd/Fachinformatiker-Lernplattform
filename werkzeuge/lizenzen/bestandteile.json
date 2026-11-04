@@ -25,7 +25,7 @@
      "beschreibung": "Festbreitenschrift der Rechner (nur Regular), eingebettet in Lernplattform.App.dll", "dateien": [],
      "texte": ["JetBrainsMono_OFL-1.1.txt"]},
     {"id": "Schrift Material Icons", "version": "aus flet-web 1.0.1", "lizenz": "Apache-2.0", "quelle": "https://github.com/google/material-design-icons",
-     "beschreibung": "Symbole der Oberflaeche (Teilschrift fisi_symbole.otf mit 35 Zeichen aus MaterialIcons-Regular.otf, erzeugt von werkzeuge/symbole/erzeuge_symbole.py), eingebettet in Lernplattform.App.dll", "dateien": [],
+     "beschreibung": "Symbole der Oberflaeche (Teilschrift fisi_symbole.otf mit 36 Zeichen aus MaterialIcons-Regular.otf, erzeugt von werkzeuge/symbole/erzeuge_symbole.py), eingebettet in Lernplattform.App.dll", "dateien": [],
      "texte": ["MaterialIcons_Apache-2.0.txt"]},
     {"id": "ARM Optimized Routines", "version": "f67e7da", "lizenz": "MIT (gewaehlt aus MIT OR Apache-2.0 WITH LLVM-exception)",
      "quelle": "https://github.com/ARM-software/optimized-routines",

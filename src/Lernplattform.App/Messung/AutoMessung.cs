@@ -112,6 +112,9 @@ public static partial class AutoMessung
         var inv = CultureInfo.InvariantCulture;
         var funde = 0;
         UeberAbbruch.Clear();
+        // Weisung P11-35: das X oben rechts gibt es nur auf Android im schmalen Aufbau; der Start-Test zeigt es auch
+        // unter Windows, Linux und macOS in den Handy-Groessen, damit Layout-, Namens- und Tab-Pruefung es erfassen
+        ansicht.BeendenObenFuerTests(true);
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
         {
@@ -323,6 +326,10 @@ public static partial class AutoMessung
                     layoutFunde.Add(string.Create(inv, $"{ist} {stufe}: PC-Groesse {breite:0}x{hoehe:0} nicht erreicht (Bildschirm zu klein)"));
                 }
                 gepruefteGroessen.Add(stufe + " " + ist);
+                if (fenster is not null && ansicht.BeendenObenFund() is { } xFund)
+                {
+                    layoutFunde.Add($"{ist} {stufe}: {xFund}");
+                }
                 // Sammelliste 106: der Lernteil prueft alle Seiten ausser dem Spiel, der Spielteil nur das Spiel
                 // (nach der 3D-Stichprobe wie im ganzen Lauf); zusammen genau die Seiten des ganzen Laufs
                 foreach (var id in ansicht.GebauteSeiten.Keys.Where(id => id == Seiten.Spiel ? MitSpiel : MitLernen).ToList())

@@ -43,6 +43,13 @@ public static partial class AutoMessung
         {
             Fehler("Seitenleiste: Knopf \"" + Navigation.ProgrammBeenden + "\" fehlt");
         }
+        // Weisung P11-35: im breiten Aufbau (PC, Tablet quer) kein X oben rechts, dort steht "Programm beenden" in der
+        // Seitenleiste; im schmalen Aufbau prueft die Layoutpruefung das X in jeder Schriftstufe
+        Messwerte.Notiere("X oben rechts im breiten Aufbau: " + (ansicht.BeendenOben.IsVisible ? "sichtbar" : "verborgen"));
+        if (ansicht.BeendenObenFund() is { } xFund)
+        {
+            Fehler(xFund);
+        }
         if (TopLevel.GetTopLevel(ansicht) is { } top)
         {
             Lernplattform.Spiel.Vollbild.DauerhaftSetzen(true);

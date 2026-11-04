@@ -51,6 +51,61 @@ public partial class MainView : UserControl
     private bool _vollbild;
     private StackPanel? _kopfTitel;
     private bool? _breit;
+    private readonly Button _beendenOben;
+    // Weisung P11-35: X nur auf Android im schmalen Aufbau (am PC und am Tablet quer steht "Programm beenden" in der
+    // Seitenleiste bzw. es gibt das Fensterkreuz); der Start-Test schaltet es unter Linux fuer die Handy-Groessen ein
+    private bool _beendenAmGeraet = OperatingSystem.IsAndroid();
+
+    /// <summary>Weisung P11-35: X oben rechts (Start-Test, Fotos).</summary>
+    public Button BeendenOben => _beendenOben;
+
+    /// <summary>Nur Start-Test und Fotos: X wie auf Android zeigen (Handy-Groessen unter Linux).</summary>
+    public void BeendenObenFuerTests(bool an)
+    {
+        _beendenAmGeraet = an;
+        BeendenObenSichtbar();
+    }
+
+    private void BeendenObenSichtbar()
+    {
+        _beendenOben.IsVisible = _beendenAmGeraet && _breit == false;
+        KopfAnordnen();
+    }
+
+    /// <summary>
+    /// Weisung P11-35, Start-Test (Layoutpruefung je Schriftstufe und Groesse): im schmalen Aufbau ist das X sichtbar,
+    /// hat den Namen "Programm beenden", liegt ganz im Fenster und ueberdeckt weder die Lupe noch den Seitentitel;
+    /// im breiten Aufbau ist es verborgen. Rueckgabe null = in Ordnung, sonst der Fund.
+    /// </summary>
+    public string? BeendenObenFund()
+    {
+        if (_breit != false)
+        {
+            return _beendenOben.IsVisible ? "X oben rechts im breiten Aufbau sichtbar" : null;
+        }
+        if (!_beendenOben.IsVisible || _beendenOben.Bounds.Width <= 0)
+        {
+            return "X oben rechts fehlt im schmalen Aufbau";
+        }
+        if (Avalonia.Automation.AutomationProperties.GetName(_beendenOben) != Core.Texte.VorleseTexte.ProgrammBeenden)
+        {
+            return "X oben rechts ohne Namen";
+        }
+        Rect? Lage(Control c) => c.IsVisible && c.TranslatePoint(default, this) is { } p ? new Rect(p, c.Bounds.Size) : null;
+        var x = Lage(_beendenOben)!.Value;
+        if (x.X < -0.5 || x.Right > Bounds.Width + 0.5 || x.Y < -0.5)
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"X oben rechts ragt aus dem Fenster ({x.X:0.#}..{x.Right:0.#} von {Bounds.Width:0.#})");
+        }
+        foreach (var (name, anderes) in ((string, Control?)[])[("Lupe", (_beendenOben.Parent as Panel)?.Children[1]), ("Seitentitel", _kopfTitel)])
+        {
+            if (anderes is not null && Lage(anderes) is { } r && r.Intersects(x.Deflate(0.5)))
+            {
+                return "X oben rechts ueberdeckt " + name;
+            }
+        }
+        return null;
+    }
 
     public static bool AutoModus => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_AUTO") == "1";
 
@@ -75,7 +130,11 @@ public partial class MainView : UserControl
         var hilfe = Symbolknopf("HELP_OUTLINE_ROUNDED", Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
         var suche = Symbolknopf("SEARCH_ROUNDED", Seiten.Titel(Seiten.Suche), Seiten.Suche);
         var kopf = new DockPanel { Margin = new Thickness(0, 0, 6, 0) };
-        var symbole = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Children = { hilfe, suche } };
+        // Patch A 0.37.0 (Weisung P11-35, Nico): am Handy (Kopfleiste ohne Seitenleiste) X rechts neben der Lupe,
+        // beendet das Programm wie der Knopf "Programm beenden" (gleiche Schritte, ohne Rueckfrage)
+        _beendenOben = Symbolknopf("CLOSE_ROUNDED", Core.Texte.VorleseTexte.ProgrammBeenden, null);
+        _beendenOben.IsVisible = false;
+        var symbole = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Children = { hilfe, suche, _beendenOben } };
         DockPanel.SetDock(symbole, Dock.Right);
         kopf.Children.Add(symbole);
         DockPanel.SetDock(_logo, Dock.Left);
@@ -432,6 +491,10 @@ public partial class MainView : UserControl
         var breit = breite >= BreitGrenze;
         if (_breit == breit || _vollbild)
         {
+            if (!_vollbild)
+            {
+                KopfAnordnen();   // Weisung P11-35: andere Breite im selben Aufbau (Platz neben dem X)
+            }
             return;
         }
         _breit = breit;
@@ -439,6 +502,7 @@ public partial class MainView : UserControl
         _leisten.UntereLeiste.IsVisible = !breit;
         // Logo-Ring der Kopfleiste nur im schmalen Aufbau (breit steht das Logo in der Seitenleiste)
         _logo.IsVisible = !breit;
+        BeendenObenSichtbar();
         KopfAnordnen();
         _leisten.Markiere(AktuelleSeite);
         Brotkrumen(AktuelleSeite);
@@ -451,7 +515,7 @@ public partial class MainView : UserControl
         {
             return;
         }
-        var unten = _breit == false && Schrift.Gross;
+        var unten = _breit == false && (Schrift.Gross || TitelNebenXZuLang());
         if (unten == (_kopfTitel.Parent == _kopfUnten))
         {
             return;
@@ -461,8 +525,26 @@ public partial class MainView : UserControl
         (unten ? _kopfUnten.Children : _kopf.Children).Add(_kopfTitel);
     }
 
+    /// <summary>
+    /// Weisung P11-35: mit dem X oben rechts bleibt neben Logo, Hilfe, Lupe und X weniger Platz; passt das laengste
+    /// Wort der Brotkrumen dort nicht (z. B. "ABSCHLUSSPROJEKT" bei 130 % auf 384 Punkten), stehen die Brotkrumen wie
+    /// ab 160 % in der Zeile darunter. Ohne X (PC, schmales Fenster) bleibt alles wie bisher.
+    /// </summary>
+    private bool TitelNebenXZuLang()
+    {
+        if (!_beendenOben.IsVisible || Bounds.Width <= 0 || _kopfTitel is null)
+        {
+            return false;
+        }
+        // Kopf rechts 6, Logo 30 mit 16 + 6, drei Symbolknoepfe je 48, Brotkrumen links 16 und rechts 12 Abstand
+        var platz = Bounds.Width - 6 - (_logo.IsVisible ? 52 : 0) - 3 * 48 - 28;
+        var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling is > 0 and var s ? s : 1;
+        platz = Math.Floor(platz * skalierung) / skalierung;
+        return Math.Max(Schrift.LaengstesWort(_krumeBereich), Schrift.LaengstesWort(_krumeSeite)) > platz;
+    }
+
     /// <summary>Symbolknopf wie ft.IconButton (48 x 48, Symbol 24, text_dim).</summary>
-    private Button Symbolknopf(string symbol, string name, string ziel)
+    private Button Symbolknopf(string symbol, string name, string? ziel)
     {
         var knopf = new Button
         {
@@ -474,7 +556,15 @@ public partial class MainView : UserControl
         };
         ToolTip.SetTip(knopf, name);
         Avalonia.Automation.AutomationProperties.SetName(knopf, name);
-        knopf.Click += async (_, _) => await ZeigeAsync(ziel);
+        knopf.Click += async (_, _) =>
+        {
+            if (ziel is null)
+            {
+                Programm.Programmende.Beenden();
+                return;
+            }
+            await ZeigeAsync(ziel);
+        };
         return knopf;
     }
 
@@ -498,6 +588,7 @@ public partial class MainView : UserControl
         _krumeBereich.Text = titel?.Bereich ?? "";
         _krumeSeite.Text = titel?.Seite ?? Seiten.Titel(id);
         _versionZeile.IsVisible = id == Seiten.Dashboard;
+        KopfAnordnen();   // Weisung P11-35: ob die Brotkrumen neben dem X passen, haengt vom Seitentitel ab
     }
 
     /// <summary>Wartet, bis das naechste Bild fertig gezeichnet ist (zwei Bildaufrufe).</summary>

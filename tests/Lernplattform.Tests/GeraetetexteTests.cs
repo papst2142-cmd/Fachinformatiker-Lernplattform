@@ -279,6 +279,9 @@ public partial class GeraetetexteTests
         ("Views/OptionenSeite.Ton.cs", "_bildschirme = OperatingSystem.IsAndroid() ? [] : Vollbild.AlleBildschirme();", "Verhalten: Auswahl des Bildschirms nur am PC, kein anderer Text"),
         // Patch A 0.37.0 (Sammelliste 203): Hinweis zur Passwortabfrage nur am PC (Mac), das Handy installiert nicht selbst
         ("Views/UpdateFenster.cs", "if (Pc && installierbar)", "Verhalten: Mac-Hinweis vor dem Installieren nur am PC, kein anderer Text"),
+        // Weisung P11-35 (Nico): X oben rechts in der Kopfleiste nur auf Android im schmalen Aufbau; am PC beendet das Fensterkreuz
+        // bzw. "Programm beenden" in der Seitenleiste, am Tablet quer ebenso (nichts doppelt). Name gleich "Programm beenden"
+        ("Views/MainView.axaml.cs", "private bool _beendenAmGeraet = OperatingSystem.IsAndroid();", "Verhalten: X oben rechts nur auf Android im schmalen Aufbau, kein anderer Text"),
         ("Messung/AutoMessung.P8W2b.cs", "if (!OperatingSystem.IsAndroid() && (leisten.BeendenKnopf is not { } beenden || !beenden.IsEffectivelyVisible", "Start-Test: prueft den Knopf nur dort, wo er steht (PC)"),
         ("Views/UpdateFenster.cs", "return Pc;", "Verhalten: PC-Fenster bleibt nach \"Zur Download-Seite\" offen (app_gui 9416), Handy schliesst nach \"Herunterladen\" (main.py 6163)"),
     ];
