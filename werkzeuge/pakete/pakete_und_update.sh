@@ -281,34 +281,27 @@ case "$RID" in
     echo "T4 Deinstallation: Programm entfernt, $(echo "$nachher" | wc -l) Dateien in beiden Datenordnern unveraendert"
     ;;
   osx-*)
-    # Patch A 0.37.0 (Sammelliste 203, Probe (a)): das Paket darf nicht mehr "fuer alle Benutzer" nach /Applications
-    # (dorthin legte der grafische Installer A 0.35.0 bei Nico). Erst die Benutzer-Installation entfernen, damit der
-    # Installer nichts an ihre Stelle umlenkt. Gegenprobe: das unbearbeitete Paket von vpk installiert dorthin.
-    ALLE="/Applications/Fachinformatiker Lernplattform.app"
-    if [ -e "$ALLE" ]; then echo "FEHLER: $ALLE besteht schon (keine frische Probe)"; exit 1; fi
-    pkill -f "$BUNDLE/Contents/MacOS/" || true
-    rm -rf "$BUNDLE"
-    # ohne Treffer gibt grep 1 zurueck; mit pipefail beendete das die Probe still (voller Lauf 476)
-    vergiss() { { pkgutil --pkgs | grep -i "lernplattform" || true; } | while read -r k; do sudo pkgutil --forget "$k" >/dev/null || true; done; }
-    vergiss
-    echo "--- Probe (a) Gegenprobe: unbearbeitetes Paket von vpk fuer alle Benutzer (-target /) ---"
-    if sudo installer -pkg "$AUS/pkg-original-A-0.37.0.pkg" -target / && [ -d "$ALLE" ]; then
-      echo "Gegenprobe (a): unbearbeitetes Paket liegt in /Applications (wie bei Nico), die Probe erkennt den Fall"
-    else
-      echo "FEHLER: Gegenprobe (a) unbearbeitetes Paket nicht in /Applications, die Probe waere nicht empfindlich"; ls -la /Applications | head -40; exit 1
+    # Patch A 0.37.0 (Sammelliste 203, Probe (a)): das Paket darf "fuer alle Benutzer" (/Applications, dorthin legte
+    # der grafische Installer A 0.35.0 bei Nico) nicht mehr anbieten. Geprueft wird, welche Orte der Installer selbst
+    # fuer das Paket erlaubt (installer -dominfo). Ein Einbau mit "sudo installer -target /" taugt nicht als Probe:
+    # als root uebergeht der Befehl die Auswahl der Distribution (voller Lauf 479: auch das bearbeitete Paket landete
+    # in /Applications); der grafische Installer zeigt nur die erlaubten Orte. Gegenprobe: unbearbeitetes Paket.
+    echo "--- Probe (a): erlaubte Installationsorte (installer -dominfo) ---"
+    orig="$(installer -dominfo -pkg "$AUS/pkg-original-A-0.37.0.pkg" 2>&1 || true)"
+    bearb="$(installer -dominfo -pkg "${PKGS[0]}" 2>&1 || true)"
+    echo "unbearbeitetes Paket: $(echo $orig)"
+    echo "bearbeitetes Paket:   $(echo $bearb)"
+    if ! grep -q "LocalSystem" <<<"$orig"; then
+      echo "FEHLER: Gegenprobe (a) unbearbeitetes Paket bietet LocalSystem nicht an, die Probe waere nicht empfindlich"; exit 1
     fi
-    sleep 10
-    pkill -f "$ALLE/Contents/MacOS/" || true
-    sleep 3
-    sudo rm -rf "$ALLE"
-    vergiss
-    echo "--- Probe (a): bearbeitetes Paket fuer alle Benutzer (-target /) muss abgelehnt werden ---"
-    if sudo installer -pkg "${PKGS[0]}" -target /; then
-      echo "FEHLER: Probe (a) bearbeitetes Paket liess sich fuer alle Benutzer installieren"; ls -la /Applications | head -40
-      sudo rm -rf "$ALLE"; exit 1
+    echo "Gegenprobe (a): unbearbeitetes Paket bietet \"fuer alle Benutzer\" (LocalSystem) an, wie bei Nico"
+    if ! grep -q "CurrentUserHomeDirectory" <<<"$bearb"; then
+      echo "FEHLER: Probe (a) bearbeitetes Paket bietet \"Nur fuer mich\" (CurrentUserHomeDirectory) nicht an"; exit 1
     fi
-    if [ -e "$ALLE" ]; then echo "FEHLER: Probe (a) $ALLE angelegt"; sudo rm -rf "$ALLE"; exit 1; fi
-    echo "Probe (a): Installation fuer alle Benutzer abgelehnt, nur noch \"Nur fuer mich\" (~/Applications)"
+    if grep -q "LocalSystem" <<<"$bearb"; then
+      echo "FEHLER: Probe (a) bearbeitetes Paket bietet weiter \"fuer alle Benutzer\" (LocalSystem) an"; exit 1
+    fi
+    echo "Probe (a): bearbeitetes Paket bietet nur noch \"Nur fuer mich\" (~/Applications) an"
     ;;
 esac
 echo "UPDATE-PROBE GRUEN"
