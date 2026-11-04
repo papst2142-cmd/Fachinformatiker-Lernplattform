@@ -1,0 +1,38 @@
+# Nur Probe fuer Sammelliste 211 (Zweig claude/probe-211, nie nach main): alle Unit-Tests mehrfach auf windows-latest,
+# um den Wackler AbsturzBeimLoeschen_AllesOderNichts mit den neuen Angaben (fehler.log, Rueckgabe) zu fangen.
+name: Probe 211
+on:
+  push:
+    branches: [claude/probe-211]
+permissions:
+  contents: read
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  LERNPLATTFORM_TON: "aus"
+jobs:
+  probe:
+    name: probe 211 (${{ matrix.nr }})
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        nr: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Bauen
+        run: dotnet build tests/Lernplattform.Tests -c Release
+      - name: Alle Tests, Durchgang 1
+        continue-on-error: true
+        run: dotnet test --project tests/Lernplattform.Tests -c Release --no-build
+      - name: Alle Tests, Durchgang 2
+        continue-on-error: true
+        run: dotnet test --project tests/Lernplattform.Tests -c Release --no-build
+      - name: Nur AbsturzBeimLoeschen, 20 Mal
+        continue-on-error: true
+        shell: bash
+        run: for i in $(seq 1 20); do dotnet test --project tests/Lernplattform.Tests -c Release --no-build -- --filter-method "*AbsturzBeimLoeschen_AllesOderNichts" | grep -E "Absturzprobe|duration|failed:" ; done
