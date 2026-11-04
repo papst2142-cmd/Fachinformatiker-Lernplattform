@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Pruefung;
 
 namespace Lernplattform.Tests;
@@ -285,7 +287,7 @@ internal static class AbsturzProbe
                 {
                     // Weisung P11-38 (Lauf 494, neues Windows-Abbild): Angaben zum Kind, damit ein Rot eine Ursache nennt
                     throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet ("
-                        + Angaben(kind, art, zeile.IsCompleted, gemeldet.Count, uhr.Elapsed, fehlerText) + ")");
+                        + Angaben(kind, art, argumente, zeile.IsCompleted, gemeldet.Count, uhr.Elapsed, fehlerText) + ")");
                 }
                 if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung && art != ArtKlausurFesthalten && art != ArtEinrichten
                     && art != ArtProjektLoeschen && art != ArtProjektfelderViele
@@ -311,10 +313,22 @@ internal static class AbsturzProbe
         return gemeldet;
     }
 
-    /// <summary>Art, Zeit, bisherige Meldungen, ob das Kind noch lebt (sonst Rueckgabe) und die letzten Zeilen seines
-    /// Fehlerkanals (nur bei einem Rot im Testprotokoll).</summary>
-    private static string Angaben(Process kind, string art, bool zeileFertig, int meldungen, TimeSpan zeit, Task<string> fehlerText)
+    /// <summary>Art, Zeit, bisherige Meldungen, ob das Kind noch lebt (sonst Rueckgabe), die letzten Zeilen seines
+    /// Fehlerkanals und das fehler.log neben einer Datenbank des Kindes (dort meldet Lernstand jeden Datenbankfehler;
+    /// danach speichert es womoeglich nichts mehr und meldet keine Zeile). Nur bei einem Rot im Testprotokoll.</summary>
+    private static string Angaben(Process kind, string art, string[] argumente, bool zeileFertig, int meldungen, TimeSpan zeit, Task<string> fehlerText)
     {
+        var protokolle = new StringBuilder();
+        foreach (var ordner in argumente.Where(a => a.Length > 0 && Path.IsPathFullyQualified(a)).Select(Path.GetDirectoryName).Distinct())
+        {
+            var log = Path.Combine(ordner!, Fehlerprotokoll.DateiName);
+            if (File.Exists(log))
+            {
+                using var datei = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                var inhalt = new StreamReader(datei).ReadToEnd();
+                protokolle.Append(", ").Append(log).Append(": ").Append(inhalt.Length > 2000 ? "..." + inhalt[^2000..] : inhalt.Trim());
+            }
+        }
         var lebt = !kind.HasExited;
         var ende = lebt ? "lebt noch" : "beendet mit Rueckgabe " + kind.ExitCode;
         var fehler = fehlerText.Wait(TimeSpan.FromSeconds(lebt ? 0 : 5)) ? fehlerText.Result : "(Fehlerkanal noch offen)";
@@ -323,6 +337,7 @@ internal static class AbsturzProbe
             fehler = "..." + fehler[^2000..];
         }
         return "Art " + art + ", " + (zeileFertig ? "Ausgabe zu Ende" : "60 s ohne Zeile") + ", nach " + (int)zeit.TotalSeconds
-            + " s, " + meldungen + " Meldungen, Kind " + ende + ", Fehlerkanal: " + (fehler.Length == 0 ? "leer" : fehler.Trim());
+            + " s, " + meldungen + " Meldungen, Kind " + ende + ", Fehlerkanal: " + (fehler.Length == 0 ? "leer" : fehler.Trim())
+            + (protokolle.Length == 0 ? ", kein fehler.log" : protokolle.ToString());
     }
 }
