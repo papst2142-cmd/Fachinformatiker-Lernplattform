@@ -15,7 +15,8 @@ Programm (Messwiederholung, Farbreglerregel) und werden hier nicht beruehrt.
 Aufruf:
   python -I werkzeuge/starttest/urteil.py lauf1 <rueckgabe> <messdatei_lauf1>
       Rueckgabe 0 = gruen oder Neustart noetig, sonst rot. Die Zeile "rc=<n>" nach $GITHUB_OUTPUT
-      schreibt lauf.sh (eine Quelle, ohne \r).
+      schreibt lauf.sh (eine Quelle, ohne \r); dieses Skript schreibt dorthin "zweiter_lauf=ja|nein"
+      (Weisung P11-38: nein nur am Intel-Mac, wenn der 1. Lauf nur Messzeiten der Ausnahme P11-19 hat).
   python -I werkzeuge/starttest/urteil.py lauf2 <rueckgabe_lauf2> <messdatei_lauf1> <messdatei_lauf2>
       Rueckgabe 0 = gruen, 3 = derselbe Punkt in beiden Laeufen rot, 1 = Absturz im 2. Lauf.
   python -I werkzeuge/starttest/urteil.py selbsttest
@@ -27,7 +28,14 @@ zaehlen Messzeiten ueber ihrer Grenze nicht als Rot. Sie stehen mit Wert, Grenze
 Einzelmessungen als INFO-Zeile in der Ausgabe. Layout-, Kontrast- und alle anderen Funde und jeder
 Absturz bleiben rot. Messzeit = FEHLER-Zeile mit "<n> ms ueber [Grenze] <n> ms" (Messwiederholung,
 Farbreglerregel) oder "(Grenze Median <n> ms" (Spiel Zeit je Bild).
+
+2. Lauf am Intel-Mac (Weisung P11-38, Nico 04.11.2026): hat der 1. Lauf dort NUR solche Messzeiten (jede andere
+Zeile, z. B. Layout, Kontrast, Grenzen Dreiecke/Aufrufe, Rueckgabe 3 ohne erkannte Fehlerzeile, ist ein Fund),
+folgt kein 2. Lauf: diese Messzeiten koennen den Lauf nicht rot machen, der 2. Lauf aenderte am Urteil nichts.
+Jeder andere Fund und jedes andere System: 2. Lauf wie bisher.
 """
+import contextlib
+import io
 import os
 import tempfile
 import re
@@ -111,14 +119,38 @@ def absturz(rc, zeilen, lauf):
     return None
 
 
+def zweiter_lauf_noetig(zeilen):
+    """Weisung P11-38: nach Rueckgabe 3 ein 2. Lauf, ausser am Intel-Mac bei nur Messzeiten der Ausnahme P11-19."""
+    gefunden = punkte(zeilen)
+    if not gefunden or not zeiten_nur_info():
+        return True
+    return not all(messzeit(zeile) for zeile in gefunden.values())
+
+
+def ausgabe_setzen(name, wert):
+    """Zeile fuer GitHub Actions (steps.<id>.outputs.<name>); ohne GITHUB_OUTPUT nichts."""
+    ziel = os.environ.get("GITHUB_OUTPUT", "")
+    if ziel:
+        with open(ziel, "a", encoding="utf-8", newline="\n") as f:
+            f.write("%s=%s\n" % (name, wert))
+
+
 def lauf1(rc, datei):
     zeilen = lesen(datei)
     grund = absturz(rc, zeilen, 1)
     if grund:
         print("Start-Test ROT: " + grund)
+        ausgabe_setzen("zweiter_lauf", "nein")
         return 1
     if rc == 0:
         print("Start-Test gruen im 1. Lauf")
+        ausgabe_setzen("zweiter_lauf", "nein")
+        return 0
+    if not zweiter_lauf_noetig(zeilen):
+        print("Start-Test gruen im 1. Lauf: nur Messzeiten der Ausnahme Intel-Mac, kein 2. Lauf (Weisung P11-38):")
+        for zeile in punkte(zeilen).values():
+            print("  INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): " + zeile)
+        ausgabe_setzen("zweiter_lauf", "nein")
         return 0
     print("1. Lauf rot (Rueckgabe 3), es folgt ein 2. Lauf in neuem Prozess mit frischem Datenordner:")
     for punkt, zeile in punkte(zeilen).items():
@@ -126,6 +158,7 @@ def lauf1(rc, datei):
             print("  INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): " + zeile)
         else:
             print("  1. Lauf rot: " + zeile)
+    ausgabe_setzen("zweiter_lauf", "ja")
     return 0
 
 
@@ -202,6 +235,47 @@ def wachhund_unter_zeitlimit(pfad=".github/workflows/ci.yml"):
     return rot
 
 
+def tests_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/workflows/release.yml"):
+    """Weisung P11-38: die Namen der tests-Jobs des vollen Laufs (Matrix in ci.yml) stehen genau so in der Liste,
+    die release.yml vor dem Release als gruen verlangt (sonst wuerde ein Teil still fehlen oder das Release nie
+    starten). Ohne beide Dateien keine Pruefung."""
+    if not (os.path.exists(ci) and os.path.exists(release)):
+        return 0
+    import json
+    with open(ci, encoding="utf-8") as f:
+        text = f.read()
+    treffer = re.search(r"include: \$\{\{ fromJSON\(.*? && '(\[.*?\])' \|\| '(\[.*?\])'\) \}\}", text)
+    if not treffer:
+        print("FEHLER: Selbsttest Jobs: Matrix der tests-Jobs in " + ci + " nicht gefunden")
+        return 1
+    voll = sorted("tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "") for e in json.loads(treffer.group(1)))
+    with open(release, encoding="utf-8") as f:
+        soll = sorted(z.strip().strip("'") for z in f.read().splitlines() if re.match(r"\s*(soll=')?tests \(", z))
+    if voll != soll:
+        print("FEHLER: Selbsttest Jobs: ci.yml %s, release.yml %s" % (voll, soll))
+        return 1
+    print("Selbsttest Jobs: %d tests-Jobs im vollen Lauf, gleich der Liste in release.yml" % len(voll))
+    return 0
+
+
+def still(aufruf, *argumente, ausgabe=None):
+    """Fall des Selbsttests ohne seine Ausgabe (Sammelliste 212: die festen Zeilen wie "Netzwerkdesig|n" standen im
+    Protokoll und sahen wie echte Funde aus); Rueckgabe und Text, der Text nur bei einem falschen Ergebnis gezeigt.
+    GITHUB_OUTPUT des Schritts bleibt unberuehrt; ausgabe = eigene Datei fuer die Zeile zweiter_lauf."""
+    puffer = io.StringIO()
+    alt = os.environ.pop("GITHUB_OUTPUT", None)
+    if ausgabe:
+        os.environ["GITHUB_OUTPUT"] = ausgabe
+    try:
+        with contextlib.redirect_stdout(puffer):
+            ist = aufruf(*argumente)
+    finally:
+        os.environ.pop("GITHUB_OUTPUT", None)
+        if alt is not None:
+            os.environ["GITHUB_OUTPUT"] = alt
+    return ist, puffer.getvalue()
+
+
 def selbsttest():
     """Feste Faelle (Weisung P11-19): Intel-Mac Messzeit-Rot = gruen mit INFO, Layout-Rot = rot; dasselbe
     ohne Ausnahme (macos-15 und alle anderen) bleibt rot."""
@@ -232,23 +306,54 @@ def selbsttest():
                 with open(pfad, "w", encoding="utf-8") as d:
                     d.write("\n".join(zeilen + ["URTEIL: rot (%d Funde)" % len(zeilen)]) + "\n")
                 dateien.append(pfad)
-            ist = lauf2(3, dateien[0], dateien[1])
+            ist, text = still(lauf2, 3, dateien[0], dateien[1])
             if ist != soll:
+                print(text, end="")
                 print("FEHLER: Selbsttest Fall %d (Ausnahme '%s'): Rueckgabe %d statt %d" % (nr, wert, ist, soll))
                 rot = 1
+            else:
+                print("Selbsttest Fall %d (Ausnahme '%s', feste Zeilen, kein Programmfund): Rueckgabe %d wie erwartet" % (nr, wert, ist))
+        # Weisung P11-38: 2. Lauf nach Rueckgabe 3; nur am Intel-Mac bei nur Messzeiten keiner (Gegenprobe ohne Ausnahme)
+        neustart = [  # (Ausnahme, Zeilen des 1. Laufs, 2. Lauf erwartet)
+            ("macos-15-intel", [zeit, hoechst, farbe, bild], False),
+            ("macos-15-intel", [zeit] + layout, True),
+            ("macos-15-intel", [zeit, andere], True),
+            ("macos-15-intel", ["  Kontrast Text auf Karte: 3.9 UNTER 4.5"], True),
+            ("macos-15-intel", [], True),
+            ("", [zeit, hoechst, farbe, bild], True),
+            ("macos-15", [zeit], True),
+            ("MACOS-15-INTEL", [zeit], True),
+        ]
+        for nr, (wert, zeilen, soll) in enumerate(neustart, 1):
+            os.environ["LERNPLATTFORM_ZEITEN_NUR_INFO"] = wert
+            pfad = os.path.join(ordner, "neustart%d.txt" % nr)
+            with open(pfad, "w", encoding="utf-8") as d:
+                d.write("\n".join(zeilen + ["URTEIL: rot (%d Funde)" % len(zeilen)]) + "\n")
+            ausgabe = os.path.join(ordner, "ausgabe%d.txt" % nr)
+            ist, text = still(lauf1, 3, pfad, ausgabe=ausgabe)
+            with open(ausgabe, encoding="utf-8") as f:
+                gesetzt = f.read()
+            erwartet = "zweiter_lauf=%s\n" % ("ja" if soll else "nein")
+            if ist != 0 or gesetzt != erwartet:
+                print(text, end="")
+                print("FEHLER: Selbsttest Neustart Fall %d (Ausnahme '%s'): Rueckgabe %d, Ausgabe %r statt %r" % (nr, wert, ist, gesetzt, erwartet))
+                rot = 1
+            else:
+                print("Selbsttest Neustart Fall %d (Ausnahme '%s'): %s" % (nr, wert, "2. Lauf" if soll else "kein 2. Lauf"))
         # Sammelliste 199: Rueckgabe 4 (Wachhund) ist in beiden Laeufen sofort rot, auch mit gueltiger Messdatei
         pfad = os.path.join(ordner, "haenger.txt")
         with open(pfad, "w", encoding="utf-8") as d:
             d.write("URTEIL: gruen\n")
-        if lauf1(HAENGER, pfad) != 1 or lauf2(HAENGER, pfad, pfad) != 1:
+        if still(lauf1, HAENGER, pfad)[0] != 1 or still(lauf2, HAENGER, pfad, pfad)[0] != 1:
             print("FEHLER: Selbsttest Wachhund: Rueckgabe 4 nicht rot")
             rot = 1
     rot |= wachhund_unter_zeitlimit()
+    rot |= tests_jobs_gleich_release()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:
         os.environ["LERNPLATTFORM_ZEITEN_NUR_INFO"] = alt
-    print("Selbsttest Urteil: %d Faelle, %s" % (len(faelle), "rot" if rot else "gruen"))
+    print("Selbsttest Urteil: %d Faelle, %d Neustart-Faelle, %s" % (len(faelle), len(neustart), "rot" if rot else "gruen"))
     return rot
 
 
