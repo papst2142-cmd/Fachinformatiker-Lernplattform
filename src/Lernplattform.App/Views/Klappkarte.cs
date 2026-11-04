@@ -109,6 +109,82 @@ public static class Klappkarte
         return klappe;
     }
 
+    /// <summary>
+    /// Welle A 0.38.0 (Sammelliste 207): zuklappbare Gruppe der Optionen-Seite. Kopf als flache Zeile ohne
+    /// eigene Karte: Pfeil 28 und Titel (Grossbuchstaben, Klein fett) in der Farbe der Gruppe, darunter die
+    /// Namen der Karten (Winzig, muted), rechts "aufklappen"/"zuklappen"; darunter die Karten wie bisher.
+    /// Bleibt ein <see cref="Expander"/> (Bildschirmleser "LERNEN, zugeklappt").
+    /// </summary>
+    public static Expander Gruppe(string titel, string unter, Control inhalt, string akzent)
+    {
+        var klappe = new Expander
+        {
+            Content = inhalt,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+        };
+        klappe.Template = new FuncControlTemplate<Expander>((e, _) =>
+        {
+            var pfeil = Symbole.Block("ARROW_RIGHT", 28, akzent);
+            var titelText = Schrift.Text(titel, "Klein", FontWeight.Bold, akzent);
+            var unterText = Schrift.Text(unter, "Winzig", FontWeight.Normal, "Pinsel.muted");
+            unterText.TextWrapping = TextWrapping.Wrap;
+            var texte = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center, Children = { titelText, unterText } };
+            var zustand = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.text_dim");
+            zustand.TextWrapping = TextWrapping.NoWrap;
+            zustand.VerticalAlignment = VerticalAlignment.Center;
+            var zustandRahmen = new Border { Padding = new Thickness(8, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center, Child = zustand };
+            var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 6 };
+            Grid.SetColumn(texte, 1);
+            Grid.SetColumn(zustandRahmen, 2);
+            zeile.Children.Add(pfeil);
+            zeile.Children.Add(texte);
+            zeile.Children.Add(zustandRahmen);
+            Schrift.BeiStufe(zeile, () =>
+            {
+                var untereinander = Schrift.Gross;
+                if (untereinander == texte.Children.Contains(zustandRahmen) && zustandRahmen.Parent is not null)
+                {
+                    return;
+                }
+                (zustandRahmen.Parent as Panel)?.Children.Remove(zustandRahmen);
+                zustandRahmen.Padding = new Thickness(untereinander ? 0 : 8, 0, 4, 0);
+                zustandRahmen.HorizontalAlignment = HorizontalAlignment.Left;
+                (untereinander ? texte.Children : zeile.Children).Add(zustandRahmen);
+            });
+            var kopf = new Button
+            {
+                Content = zeile,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                Padding = new Thickness(4, 10),
+                CornerRadius = new CornerRadius(12),
+                BorderThickness = new Thickness(1),
+            }.Farbe(Button.BackgroundProperty, "Pinsel.card_hi").Farbe(Button.BorderBrushProperty, "Pinsel.border");
+            kopf.Click += (_, _) => e.IsExpanded = !e.IsExpanded;
+            var koerper = new ContentPresenter
+            {
+                Name = "PART_ContentPresenter",
+                Margin = new Thickness(0, 10, 0, 4),
+                [!ContentPresenter.ContentProperty] = e[!ContentControl.ContentProperty],
+                [!ContentPresenter.ContentTemplateProperty] = e[!ContentControl.ContentTemplateProperty],
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            };
+            void Zeigen()
+            {
+                pfeil.Text = Symbole.Text(e.IsExpanded ? "ARROW_DROP_DOWN" : "ARROW_RIGHT");
+                zustand.Text = e.IsExpanded ? KlappTexte.Zuklappen : KlappTexte.Aufklappen;
+                koerper.IsVisible = e.IsExpanded;
+                Avalonia.Automation.AutomationProperties.SetName(kopf, KlappTexte.Name(titel, e.IsExpanded));
+            }
+            Zeigen();
+            e.GetObservable(Expander.IsExpandedProperty).Subscribe(new Beobachter(Zeigen));
+            return new StackPanel { Children = { kopf, koerper } };
+        });
+        Avalonia.Automation.AutomationProperties.SetName(klappe, titel);
+        return klappe;
+    }
+
     private sealed class Beobachter(Action aktion) : IObserver<bool>
     {
         public void OnCompleted() { }

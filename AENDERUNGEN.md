@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.38.0
+Die Seitenleiste am PC und die Optionen sind aufgeräumt: Alles steht zugeklappt unter seiner Überschrift und klappt erst auf, wenn du darauf klickst.
+
+- Die Seitenleiste ist jetzt gegliedert wie die Leiste unten am Handy: Start, Lernen, Rechner, Spiel, Fortschritt, Optionen. Darunter stehen wie bisher Hilfe und Programm beenden. Das gilt am PC und am Tablet im Querformat.
+- Unter „Lernen“ stehen Karteikarten (mit den Fachbereichen), Prüfungstrainer, AP1-Szenarien, AP2-Szenarien, Testprojekt, Abschlussprojekt und Notizblock. Ein Klick auf „Lernen“ klappt die Liste auf und zeigt die Übersicht mit allen Lernbereichen. „Start“ öffnet das Dashboard.
+- Beim Programmstart ist alles zugeklappt. Es ist immer nur eine Gruppe offen: Öffnest du eine andere, klappt die offene zu. Wechselst du auf eine Seite ohne Gruppe (zum Beispiel den Rechner), klappt alles zu. Kommst du über die Suche oder eine Kachel des Dashboards auf eine Seite, öffnet sich ihre Gruppe von selbst.
+- Optionen (PC, Tablet und Handy): Die Gruppen Lernen, Aussehen, Spiel, Daten und Programm sind beim Öffnen zugeklappt. Unter jedem Gruppennamen steht, welche Bereiche darin sind. Auch hier ist immer nur eine Gruppe offen. Die Bereiche darin und ihre Einstellungen sind unverändert.
+
 ## A 0.37.0
 Nach dem Test auf allen Geräten: Das Update am Mac klappt jetzt auch im Ordner „Programme“ für alle Benutzer, am PC lässt sich der Bildschirm für das Vollbild wählen, und am Handy gibt es „Programm beenden“.
 

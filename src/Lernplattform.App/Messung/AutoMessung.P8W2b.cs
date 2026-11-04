@@ -11,8 +11,8 @@ namespace Lernplattform.Messung;
 /// Optionen in Gruppen mit zugeklappten Karten. Prueft: jeder Eintrag hat ein Symbol, der Lernstatus zeigt
 /// "x / y", alle Optionen-Karten sind nach dem Bauen zu, die Suche (OeffneBereich) klappt jede auf, die
 /// Kurzzeile "Updates" zeigt eine gefundene Version. Messpunkte (wiederholbar, Grenze 400 ms): Karteikarten
-/// und Spiel in der Seitenleiste aufklappen. Fuer die Layoutpruefung: Seitenleiste mit beiden Eintraegen offen
-/// und Optionen ganz oben (alle Karten zu). Speichert nichts.
+/// und Spiel in der Seitenleiste aufklappen. Fuer die Layoutpruefung: Seitenleiste mit allen Gruppen offen
+/// (A 0.38.0) und Optionen ganz oben (alle Gruppen und Karten zu). Speichert nichts.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -100,6 +100,9 @@ public static partial class AutoMessung
                 }
             }
             await ansicht.ZeigeAsync(Seiten.Optionen);
+            // A 0.38.0: Karten stehen in zugeklappten Gruppen; fuer die Farbpruefung alle Gruppen zeigen
+            optionen.AlleGruppenAufFuerTests();
+            await ansicht.BildFertigAsync();
             // Weisung P8-5b: Titel jeder Karte in der Farbe ihrer Gruppe, "Loeschen und zuruecksetzen" rot
             foreach (var bereich in bereiche)
             {
@@ -111,6 +114,7 @@ public static partial class AutoMessung
                     Fehler("Optionen: " + bereich.Titel + " nicht in der Farbe " + Optionen.Farbe(bereich.Id));
                 }
             }
+            optionen.GruppenZu();
             foreach (var bereich in bereiche)
             {
                 // wie die Suche (open_area): jede Karte aufklappen und wieder zu
@@ -143,20 +147,15 @@ public static partial class AutoMessung
     {
         await ansicht.ZeigeAsync(Seiten.Dashboard);
         var leisten = ansicht.Leisten;
-        var zu = ((string[])["cards", "game"]).Where(id => !leisten.Offen(id)).ToList();
-        foreach (var id in zu)
-        {
-            leisten.Umschalten(id);
-        }
+        // A 0.38.0: alle Gruppen (Lernen mit Karteikarten, Spiel) zugleich, damit die Layoutpruefung jeden Eintrag sieht
+        leisten.AlleZeigenFuerTests(true);
         await ansicht.BildFertigAsync();
-        yield return "seitenleiste/karteikarten-und-spiel-offen";
-        foreach (var id in zu)
-        {
-            leisten.Umschalten(id);
-        }
+        yield return "seitenleiste/alle-gruppen-offen";
+        leisten.AlleZeigenFuerTests(false);
         await ansicht.ZeigeAsync(Seiten.Optionen);
         if (ansicht.GebauteSeiten[Seiten.Optionen] is OptionenSeite optionen)
         {
+            optionen.GruppenZu();
             foreach (var bereich in optionen.Angezeigt)
             {
                 if (optionen.Klappe(bereich.Id) is { } klappe)

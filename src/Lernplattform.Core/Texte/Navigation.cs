@@ -130,25 +130,18 @@ public static class Navigation
     public const string BeendenSatz = "Schließt das Programm ganz. Dein Lernstand ist gespeichert. Das X oben rechts neben der Lupe beendet das Programm ebenfalls.";
     public const string BeendenWarten = "Programm wird beendet …";
 
-    // Phase 8 W2b (Sammelliste 115, Nico 26.10.2026): Gruppen der Seitenleiste am PC
-    public const string GruppeLernen = "LERNEN";
-    public const string GruppeSpiel = "SPIEL";
-    public const string GruppeWerkzeuge = "WERKZEUGE";
+    // Welle A 0.38.0 (Sammelliste 207, Nico 04.11.2026, Antworten 1a bis 5a): Seitenleiste gegliedert wie die
+    // untere Leiste am Handy (Titel aus Handy, "Start" = Dashboard), Gruppen zugeklappt, nur eine offen
+    // (Regeln in Seitenleiste.cs); ersetzt die Gruppen LERNEN/SPIEL/WERKZEUGE von Phase 8 W2b.
+    /// <summary>Kennung der Gruppe "Lernen" (Sammelseite am Handy).</summary>
+    public const string LernenId = "learn";
 
-    /// <summary>
-    /// Gruppen der Seitenleiste am PC (Titel null = ohne Ueberschrift) mit den Kennungen aus <see cref="Pc"/>;
-    /// <see cref="Pc"/> bleibt in der Python-Reihenfolge (G9). Darunter angeheftet <see cref="PcUnten"/>.
-    /// </summary>
-    public static readonly IReadOnlyList<(string? Titel, IReadOnlyList<string> Ids)> PcGruppen =
-    [
-        (null, ["dashboard"]),
-        (GruppeLernen, ["cards", "quiz", "ap1scenarios", "scenarios", "testproject", "abschluss", "progress"]),
-        (GruppeSpiel, ["game"]),
-        (GruppeWerkzeuge, ["notebook", "calc"]),
-    ];
-
-    /// <summary>Unten angeheftet (ausserhalb des Rollbereichs), darunter Lernstatus und Version.</summary>
-    public static readonly IReadOnlyList<string> PcUnten = ["help", "settings"];
+    /// <summary>Eintraege der Seitenleiste (Kennungen der unteren Leiste am Handy).</summary>
+    public static readonly IReadOnlyList<string> PcLeiste = ["dashboard", "learn", "calc", "game", "progress", "settings"];
+    /// <summary>Unterpunkte von "Lernen" in der Seitenleiste (Reihenfolge wie die Sammelseite Lernen am Handy).</summary>
+    public static readonly IReadOnlyList<string> PcLernen = ["cards", "quiz", "ap1scenarios", "scenarios", "testproject", "abschluss", "notebook"];
+    /// <summary>Unten angeheftet (ausserhalb des Rollbereichs), darunter "Programm beenden", Lernstatus und Version.</summary>
+    public static readonly IReadOnlyList<string> PcLeisteUnten = ["help"];
 
     /// <summary>Brotkrumen am PC (VIEW_TITLES, Reihenfolge wie dort).</summary>
     public static readonly IReadOnlyList<Kopftitel> KopfPc =

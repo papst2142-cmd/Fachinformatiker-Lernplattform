@@ -107,6 +107,9 @@ public static partial class AutoMessung
         }
     }
 
+    /// <summary>A 0.38.0: offene Gruppen der Seitenleiste gleich nach dem Programmstart (erwartet: keine).</summary>
+    private static IReadOnlyList<string> GruppenBeimStart = [];
+
     public static async Task<int> LaufAsync(MainView ansicht)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -115,6 +118,8 @@ public static partial class AutoMessung
         // Weisung P11-35: das X oben rechts gibt es nur auf Android im schmalen Aufbau; der Start-Test zeigt es auch
         // unter Windows, Linux und macOS in den Handy-Groessen, damit Layout-, Namens- und Tab-Pruefung es erfassen
         ansicht.BeendenObenFuerTests(true);
+        // A 0.38.0 (Sammelliste 207): Gruppen der Seitenleiste gleich nach dem Programmstart (alle zu)
+        GruppenBeimStart = ansicht.Leisten.OffeneGruppen;
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
         {
@@ -217,6 +222,7 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"Dashboard mit Werten fertig: {Messwerte.SeitStart.Elapsed.TotalMilliseconds:F0} ms nach Start"));
         }
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
+        funde += await P11SeitenleisteAsync(ansicht, GruppenBeimStart);   // A 0.38.0: Seitenleiste wie Handy, Gruppen zu, nur eine offen
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
         funde += await P8W9HoerprobeAsync(ansicht);     // Phase 8 W9: Hoerprobe an jedem Ton-Regler
         funde += await P8W10DashboardAsync(ansicht);    // Phase 8 W10: Dashboard breit, Kacheln auf einer Hoehe
@@ -566,7 +572,7 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  und {P5W3AnsichtenAnzahl} Ansichten der Welle W3 (Phase 5, ohne Netz und ohne Speichern): Optionen \"Updates\" mit Fehlerzeile; Fenster \"Update verfügbar\" installiert, als Ordner-Programm, am Handy, beim Laden mit Balken, nach einem Fehler; \"Update nicht abgeschlossen\""));
             Messwerte.Notiere(string.Create(inv, $"  und {P6W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 6, ohne Anlegen und ohne Speichern): Optionen \"Updates\" mit \"Verknüpfung anlegen\" (Stand, langes Ergebnis mit zwei Pfaden und Hinweis \"Start erlauben\"), Rueckfrage \"Verknüpfung\" beim Start, Ergebnis ohne Desktop-Ordner"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 8): Optionen \"Über das Programm\" mit der Liste \"Lizenzen\" (alle zu, erster Bestandteil offen)"));
-            Messwerte.Notiere(string.Create(inv, $"  und {P8W2bAnsichtenAnzahl} Ansichten der Welle W2b (Phase 8): Seitenleiste mit offenen Unterpunkten Karteikarten und Spiel, Optionen in Gruppen mit allen Karten zu"));
+            Messwerte.Notiere(string.Create(inv, $"  und {P8W2bAnsichtenAnzahl} Ansichten der Welle W2b (Phase 8): Seitenleiste mit allen Gruppen offen, Optionen mit allen Gruppen und Karten zu"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W8AnsichtenAnzahl} Ansichten der Welle W8 (Phase 8): Optionen \"Musik und Geräusche\" mit einem eigenen Lied, \"Vollbild\", \"Tastenbelegung\" mit Meldung \"schon belegt\""));
             Messwerte.Notiere(string.Create(inv, $"  und je Schriftstufe {P8W10DashboardAnsichtenAnzahl} Ansichten der Welle W10 (Phase 8): Dashboard bei 1280 x 720 und 1920 x 1080 (hoechstens Bildschirmgroesse)"));
         }

@@ -272,11 +272,16 @@ public static partial class AutoMessung
         if (ansicht.GebauteSeiten[Seiten.Optionen] is OptionenSeite seiteOptionen
             && seiteOptionen.Klappe(Optionen.Loeschen) is { } loeschKarte && seiteOptionen.Klappe(Optionen.Tagesziel) is { } zielKarte)
         {
-            loeschKarte.IsExpanded = true;
-            zielKarte.IsExpanded = true;
+            // A 0.38.0: Loeschen (DATEN) und Tagesziel (LERNEN) liegen in verschiedenen Gruppen, nur eine ist offen:
+            // nacheinander aufklappen und lesen
+            seiteOptionen.OeffneBereich(Optionen.Loeschen, false);   // oeffnet Gruppe und Karte (wie die Suche)
             await seiteOptionen.SpielstandTextGelesen;
             await ansicht.BildFertigAsync();
-            var text = Textbaum(loeschKarte) + "\n" + Textbaum(zielKarte);
+            var text = Textbaum(loeschKarte);
+            loeschKarte.IsExpanded = false;
+            seiteOptionen.OeffneBereich(Optionen.Tagesziel, false);
+            await ansicht.BildFertigAsync();
+            text += "\n" + Textbaum(zielKarte);
             var spielstand = seiteOptionen.SpielstandText ?? "";
             Messwerte.Notiere("Optionen > Löschen: Spielstand \"" + spielstand + "\"");
             if (!spielstand.StartsWith("Setzt nur den aktiven Spielstand zurück (", StringComparison.Ordinal)
