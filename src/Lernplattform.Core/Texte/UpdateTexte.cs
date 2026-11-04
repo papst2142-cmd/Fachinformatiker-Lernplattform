@@ -31,6 +31,9 @@ public static class UpdateTexte
 
     /// <summary>W3-3: Fehlertext von install ohne Systemtext.</summary>
     public const string StartFehler = "Die Installation konnte nicht gestartet werden. Einzelheiten stehen in update.log.";
+    // Patch A 0.37.0 (Sammelliste 203, Weisung P11-34 Antwort 2a, Wortlaut von Chat freigegeben)
+    public const string MacPasswort = "Das Programm liegt im Ordner „Programme“ für alle Benutzer. Für das Update fragt macOS gleich nach dem Passwort eines Administrators. Ohne Passwort bleibt die bisherige Version.";
+    public const string MacPasswortProtokoll = "Mac: Programmordner nicht beschreibbar, Update mit Passwortabfrage.";
     public const string NurInstalliert = "Automatische Updates sind nur in der installierten Anwendung möglich.";
 
     /// <summary>W3-4 (neu, Nico Frage 3): die Kopie des Lernstands vor dem Update liess sich nicht anlegen.</summary>

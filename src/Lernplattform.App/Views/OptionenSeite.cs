@@ -239,8 +239,29 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         Optionen.Ton => Ton(),
         Optionen.Vollbild => VollbildKarte(),
         Optionen.Tasten => Tasten(),
+        Optionen.Beenden => BeendenKarte(),
         _ => Platzhalterzeile(),
     };
+
+    /// <summary>Start-Test: Knopf "Programm beenden" der Karte am Handy, sonst null.</summary>
+    public Button? BeendenKnopf { get; private set; }
+
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 206, Weisung P11-34 Antwort 4a): "Programm beenden" am Handy und Tablet, auch im Vollbild
+    /// erreichbar; ohne Rueckfrage wie der Knopf der Seitenleiste am PC (<see cref="Programmende.Beenden"/>).
+    /// </summary>
+    private Control BeendenKarte()
+    {
+        var knopf = Schrift.Knopf(Navigation.ProgrammBeenden, betont: true);
+        knopf.HorizontalAlignment = HorizontalAlignment.Left;
+        knopf.Click += (_, _) => Programmende.Beenden();
+        BeendenKnopf = knopf;
+        return new StackPanel
+        {
+            Spacing = 8,
+            Children = { new LernText(Navigation.BeendenSatz, "Normal", FontWeight.Normal, "Pinsel.text_dim"), knopf },
+        };
+    }
 
     /// <summary>
     /// Weisung P8-16 a: Ton-Probe nur in der Probe-APK (sonst ist <see cref="Lernplattform.Spiel.TonProbe.Geraet"/> null):

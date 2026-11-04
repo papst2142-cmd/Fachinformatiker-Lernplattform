@@ -481,6 +481,24 @@ public class UpdateTests
     }
 
     [Fact]
+    public void MacOhneSchreibrechtSchreibtZeileInsUpdateLog()
+    {
+        // Patch A 0.37.0 (Sammelliste 203): mit Hinweis (Mac, Bundle nicht beschreibbar) steht die Passwortabfrage
+        // vor dem Start des Installers im update.log; ohne Hinweis nicht (Gegenprobe)
+        using var temp = new TempOrdner();
+        LernstandAnlegen(temp.Pfad);
+        var einstellungen = new Einstellungen(temp.Pfad);
+        var angebot = new UpdateAngebot("A 0.11.1", "", "s", "p.nupkg");
+        UpdateAblauf.Installieren(new Quelle(), angebot, einstellungen, temp.Pfad, FesteUhr);
+        Assert.DoesNotContain(UpdateTexte.MacPasswortProtokoll, LogLesen(temp.Pfad), StringComparison.Ordinal);
+        UpdateAblauf.Installieren(new Quelle { Hinweis = UpdateTexte.MacPasswort }, angebot, einstellungen, temp.Pfad, FesteUhr);
+        var log = LogLesen(temp.Pfad);
+        var zeile = log.IndexOf("| Programm | " + UpdateTexte.MacPasswortProtokoll + "\n", StringComparison.Ordinal);
+        Assert.True(zeile >= 0, log);
+        Assert.True(zeile < log.LastIndexOf("| Programm | Installer wird gestartet: Velopack", StringComparison.Ordinal), log);
+    }
+
+    [Fact]
     public void OhneKopieKeinUpdate()
     {
         // Kontrollfehler "keine Kopie vor dem Update": scheitert die Kopie, startet der Updater nie
@@ -583,6 +601,7 @@ public class UpdateTests
         public Action? BeimInstallieren { get; set; }
         public int Installationen { get; private set; }
         public bool SperreFrei { get; private set; } = true;
+        public string? Hinweis { get; init; }
 
         public Task<UpdateAngebot?> SuchenAsync(CancellationToken abbruch) =>
             Fehler is not null ? throw Fehler : Task.FromResult<UpdateAngebot?>(null);

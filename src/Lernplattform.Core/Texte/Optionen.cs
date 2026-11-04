@@ -136,7 +136,7 @@ public static class Optionen
 
     /// <summary>Bereich zur Kennung (KeyNotFoundException, wenn es ihn nicht gibt).</summary>
     public static OptionenBereich Bereich(string id) =>
-        Bereiche.Append(AusbildungBereich).Append(TonBereich).Append(VollbildBereich).Append(TastenBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
+        Bereiche.Append(AusbildungBereich).Append(TonBereich).Append(VollbildBereich).Append(TastenBereich).Append(BeendenBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
 
     // -- Phase 4, W2: Bereich "Ausbildung" (nur C#, Wortliste W2 Abschnitt 7) -----------------
 
@@ -156,6 +156,14 @@ public static class Optionen
     public static readonly OptionenBereich VollbildBereich = new(Vollbild, "Vollbild", null, null,
         false, false, false, [], ["Vollbild", "Fenster", "F11"], []);
 
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 206, Weisung P11-34 Antwort 4a): Karte "Programm beenden" nur am Handy und Tablet
+    /// (am PC steht der Knopf in der Seitenleiste); nur in C#, <see cref="Bereiche"/> bleibt wie G9.
+    /// </summary>
+    public const string Beenden = "beenden";
+    public static readonly OptionenBereich BeendenBereich = new(Beenden, Navigation.ProgrammBeenden, null, null,
+        false, false, false, [], ["Beenden", "schließen", "Programm beenden"], []);
+
     /// <summary>Neu in C# (Python hat ihn nicht); <see cref="Bereiche"/> bleibt wie G9.</summary>
     public static readonly OptionenBereich AusbildungBereich = new(Ausbildung, PruefungTexte.AusbildungReiter, null, null,
         false, false, false, [], PruefungTexte.AusbildungSuchwoerter, []);
@@ -168,6 +176,10 @@ public static class Optionen
         liste.Insert(liste.FindIndex(b => b.Id == Spiel) + 1, TonBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Ton) + 1, TastenBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Optik) + 1, VollbildBereich);
+        if (!pc)
+        {
+            liste.Add(BeendenBereich);
+        }
         return liste;
     }
 
@@ -186,7 +198,7 @@ public static class Optionen
         (GruppeAussehen, [Optik, Vollbild]),
         (GruppeSpiel, [Spiel, Ton, Tasten]),
         (GruppeDaten, [Abgleich, Sicherung, Datenbank, Loeschen]),
-        (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber]),
+        (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber, Beenden]),
     ];
 
     /// <summary>
@@ -229,6 +241,7 @@ public static class Optionen
         Tasten => TastenKurz,
         Vollbild => VollbildKurz,
         Ueber => UeberKurz,
+        Beenden => Navigation.BeendenKurz,
         _ => throw new KeyNotFoundException(bereich.Id),
     };
 }

@@ -38,6 +38,11 @@ public static class TonTexte
 
     // Vollbild
     public const string Vollbild = "Vollbild";
+    // Patch A 0.37.0 (Sammelliste 205, Plan P11-24 von Chat angenommen): Bildschirm fuer das Vollbild (nur PC, ab zwei Bildschirmen)
+    public const string VollbildBildschirm = "Bildschirm für Vollbild";
+    public const string VollbildFenster = "Bildschirm des Fensters";
+    public const string VollbildNummer = "Bildschirm %d";
+    public const string VollbildHaupt = ", Hauptbildschirm";
     public const string VollbildSatz = "Das Programm füllt den ganzen Bildschirm, ohne Fensterrahmen und Leisten. Die Wahl gilt auch beim nächsten Start. Am PC schaltet auch die Taste F11 um, Esc verlässt das Vollbild.";
 
     // Tastenbelegung

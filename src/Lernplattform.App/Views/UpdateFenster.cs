@@ -52,6 +52,21 @@ public sealed class UpdateFenster
         var farbe = Pc ? "Pinsel.text_dim" : "Pinsel.accent";
         _zustand = Schrift.Text(Geraetetexte.UpdateHinweis(installierbar, angebot.DateiUrl is not null, Pc), "Klein", FontWeight.Normal, farbe);
         _zustand.IsVisible = !string.IsNullOrEmpty(_zustand.Text);
+        // Patch A 0.37.0 (Sammelliste 203): Mac, Programmordner nicht beschreibbar -> macOS fragt gleich nach dem Passwort
+        string? hinweis = null;
+        if (Pc && installierbar)
+        {
+            try
+            {
+                hinweis = Aktuell.Quelle?.Invoke().Hinweis;
+            }
+            catch (Exception e)
+            {
+                Fehlerprotokoll.Schreiben(e);
+            }
+        }
+        var passwort = Schrift.Text(hinweis ?? "", "Klein", FontWeight.Bold, "Pinsel.text");
+        passwort.IsVisible = hinweis is not null;
         _balken = new ProgressBar { Minimum = 0, Maximum = 1, Height = 10, IsVisible = false }
             .Farbe(ProgressBar.ForegroundProperty, "Pinsel.purple").Farbe(ProgressBar.BackgroundProperty, "Pinsel.ring_bg");
         Inhalt = new StackPanel
@@ -64,6 +79,7 @@ public sealed class UpdateFenster
                 Schrift.Text(Beschriftungen.Gross(UpdateTexte.Neuerungen), "Klein", FontWeight.Bold, "Pinsel.muted"),
                 neuerungen,
                 _zustand,
+                passwort,
                 _balken,
                 Schrift.Text(RundgangTexte.UpdateSchutzHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"),
             },

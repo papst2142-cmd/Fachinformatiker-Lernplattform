@@ -40,6 +40,16 @@ public sealed partial class OptionenSeite
 
     public ToggleSwitch? VollbildSchalter => _vollbild;
 
+    // Patch A 0.37.0 (Sammelliste 205): Auswahl "Bildschirm für Vollbild" (nur PC, ab zwei Bildschirmen)
+    private ComboBox? _bildschirm;
+    private Control? _bildschirmZeile;
+    private IReadOnlyList<Core.Spiel.Ton.Bildschirm> _bildschirme = [];
+
+    /// <summary>Start-Test: die Auswahl und ihre Zeile.</summary>
+    public ComboBox? BildschirmAuswahl => _bildschirm;
+
+    public Control? BildschirmZeile => _bildschirmZeile;
+
     public IReadOnlyDictionary<string, RadioButton> LiedOrte => _orte;
 
     public StackPanel? LiedListe => _liedListe;
@@ -305,6 +315,31 @@ public sealed partial class OptionenSeite
         _vollbild = schalter;
         panel.Children.Add(schalter);
         panel.Children.Add(new LernText(TonTexte.VollbildSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        var auswahl = new ComboBox { MinWidth = 220, HorizontalAlignment = HorizontalAlignment.Left }
+            .Farbe(ComboBox.BackgroundProperty, "Pinsel.card_alt").Farbe(ComboBox.ForegroundProperty, "Pinsel.text");
+        Avalonia.Automation.AutomationProperties.SetName(auswahl, TonTexte.VollbildBildschirm);
+        auswahl.SelectionChanged += (_, _) =>
+        {
+            if (_setzen || auswahl.SelectedIndex < 0)
+            {
+                return;
+            }
+            var wahl = auswahl.SelectedIndex == 0 || auswahl.SelectedIndex > _bildschirme.Count ? null : _bildschirme[auswahl.SelectedIndex - 1];
+            if (Ergebnis(Zustand.Aendere(w => Core.Spiel.Ton.VollbildBildschirm.Wert(w, wahl))))
+            {
+                Vollbild.BildschirmNeu();
+            }
+            else
+            {
+                VollbildNeu();
+            }
+        };
+        _bildschirm = auswahl;
+        var titel = LernTeile.Label(Beschriftungen.Gross(TonTexte.VollbildBildschirm));
+        _bildschirmZeile = new StackPanel { Spacing = 4, Children = { titel, auswahl } };
+        panel.Children.Add(_bildschirmZeile);
+        panel.AttachedToVisualTree += (_, _) => VollbildNeu();
+        VollbildNeu();
         return panel;
     }
 
@@ -316,6 +351,15 @@ public sealed partial class OptionenSeite
         }
         _setzen = true;
         _vollbild.IsChecked = Vollbild.Dauerhaft;
+        if (_bildschirm is not null && _bildschirmZeile is not null)
+        {
+            // nur am PC und nur bei mehr als einem Bildschirm; die Wahl zeigt den gemerkten, sonst "Bildschirm des Fensters"
+            _bildschirme = OperatingSystem.IsAndroid() ? [] : Vollbild.AlleBildschirme();
+            _bildschirmZeile.IsVisible = _bildschirme.Count > 1;
+            _bildschirm.ItemsSource = Core.Spiel.Ton.VollbildBildschirm.Eintraege(_bildschirme);
+            var stelle = Core.Spiel.Ton.VollbildBildschirm.Finden(_bildschirme, Core.Spiel.Ton.VollbildBildschirm.Lesen(Zustand.Werte));
+            _bildschirm.SelectedIndex = stelle is { } i ? i + 1 : 0;
+        }
         _setzen = false;
     }
 

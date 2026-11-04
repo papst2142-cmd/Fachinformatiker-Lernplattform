@@ -202,7 +202,23 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
         return Path.Combine(VelopackLocator.Current.PackagesDir!, info.TargetFullRelease.FileName);
     }
 
-    public void Installieren(UpdateAngebot angebot) =>
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 203, Antwort 1c): am Mac ein Bundle, das der Benutzer nicht aendern darf
+    /// (Installation "fuer alle Benutzer" in /Applications): der Updater laeuft ohne --silent und fragt nach dem
+    /// Passwort, statt still zu scheitern. Sonst, und unter Windows und Linux, still wie bisher.
+    /// </summary>
+    public string? Hinweis => MitPasswort() ? UpdateTexte.MacPasswort : null;
+
+    private static bool MitPasswort() =>
+        OperatingSystem.IsMacOS() && MacBundle.Von(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)) is { } bundle
+            && !MacBundle.Beschreibbar(bundle);
+
+    public void Installieren(UpdateAngebot angebot)
+    {
+        // Gegenprobe der Update-Probe in der CI (pakete_und_update.sh): erzwingt den alten stillen Weg, der bei einem
+        // nicht beschreibbaren Bundle scheitern muss
+        var still = !MitPasswort() || Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_GEGENPROBE_STILL") == "1";
         // wartet, bis das Programm beendet ist, ersetzt dann und startet die neue Version
-        Manager.WaitExitThenApplyUpdates(((UpdateInfo)angebot.Intern!).TargetFullRelease, silent: true, restart: neustart, Array.Empty<string>());
+        Manager.WaitExitThenApplyUpdates(((UpdateInfo)angebot.Intern!).TargetFullRelease, silent: still, restart: neustart, Array.Empty<string>());
+    }
 }

@@ -1,21 +1,22 @@
-Einen Problembericht kannst du jetzt mit einem Knopfdruck direkt an den Herausgeber der Lernplattform schicken.
+Nach dem Test auf allen Geräten: Das Update am Mac klappt jetzt auch im Ordner „Programme“ für alle Benutzer, am PC lässt sich der Bildschirm für das Vollbild wählen, und am Handy gibt es „Programm beenden“.
 
-- Unter „Optionen“ → „Diagnose und Werkzeuge“ → „Problem melden“ gibt es den neuen Knopf „Bericht senden“, am PC und am Handy. Gesendet wird nur, wenn du ihn drückst, und erst nach einer Rückfrage. Nie sendet das Programm von allein.
-- Gesendet wird genau der Bericht, den du dort siehst. Er enthält keine Passwörter, keine Zugangsschlüssel, nicht deinen Benutzernamen in Pfaden und nicht deinen Lernstand. Er wird in einem nicht öffentlichen Speicher abgelegt.
-- In der Rückfrage kannst du in das Feld „Was ist passiert? (freiwillig)“ kurz beschreiben, was du gemacht hast (höchstens 2000 Zeichen). Dein Text steht dann über dem Bericht. Schreibe keine Passwörter oder Namen hinein.
-- Nach dem Senden siehst du den Namen der abgelegten Datei. Klappt das Senden nicht (zum Beispiel ohne Internet), sagt dir ein Fenster warum; der Bericht lässt sich dann wie bisher als Datei speichern oder kopieren.
+- Mac: Lag das Programm im Ordner „Programme“ für alle Benutzer, scheiterte das Update im Programm still, und die alte Version startete wieder. Jetzt fragt macOS in diesem Fall nach dem Passwort eines Administrators; vorher erklärt ein Hinweis im Update-Fenster, warum. Ohne Passwort bleibt die bisherige Version.
+- Mac: Das Installationspaket installiert nur noch für den eigenen Benutzer (in „Benutzer“ → „Programme“). Dort klappt das Update ohne Passwort. Eine schon vorhandene Version im Ordner „Programme“ für alle Benutzer kann sich ab dieser Version selbst aktualisieren; ältere Versionen dort bitte einmal neu installieren.
+- Mac: Die Diagnose meldete Hänger, während das Programm verdeckt im Hintergrund lag. macOS bremst dann die Zeitgeber eines Programms, das war kein echter Hänger. Solche Fälle stehen jetzt nur noch mit dem Zusatz „Programm verdeckt“ in „haenger.log“ und nicht mehr im Fehlerprotokoll. Hängt das Programm, während es zu sehen ist, wird das wie bisher gemeldet.
+- PC: In „Optionen“ → „Vollbild“ gibt es bei mehr als einem Bildschirm die Auswahl „Bildschirm für Vollbild“. Vorgabe ist wie bisher der Bildschirm, auf dem das Fenster liegt. Wählst du einen festen Bildschirm, geht das Vollbild immer dorthin; ist er nicht angeschlossen, bleibt es beim Bildschirm des Fensters.
+- Handy und Tablet: „Programm beenden“ gibt es jetzt auch hier, auch im Vollbild. Am Handy steht der Knopf in „Optionen“ → „Programm beenden“, am Tablet im Querformat zusätzlich unten in der Seitenleiste wie am PC. Vorher werden alle Eingaben gespeichert und, wenn eingerichtet, ein letzter Abgleich gemacht.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.36.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.37.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.36.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.36.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.36.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.36.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.37.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.37.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.37.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.37.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
