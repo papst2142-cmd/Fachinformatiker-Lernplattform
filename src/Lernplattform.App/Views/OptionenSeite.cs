@@ -30,6 +30,16 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
     private static readonly bool Pc = !OperatingSystem.IsAndroid();
 
     private readonly List<Expander> _klappen = [];
+    private readonly List<Expander> _gruppen = [];
+    private bool _alleZugleich;
+    private readonly Dictionary<string, Expander> _gruppeVon = new(StringComparer.Ordinal);
+
+    private sealed class Aktion<T>(Action<T> aktion) : IObserver<T>
+    {
+        public void OnCompleted() { }
+        public void OnError(Exception error) { }
+        public void OnNext(T value) => aktion(value);
+    }
     private readonly Dictionary<string, (Control Karte, Expander? Klappe)> _bereiche = new(StringComparer.Ordinal);
     private Expander? _vorlagen;
     private readonly Border _fehler;
@@ -78,7 +88,37 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             {
                 karten.Children.Add(Bereich(bereich, Inhalt(bereich)));
             }
-            liste.Children.Add(new StackPanel { Spacing = 8, Children = { Gruppe(titel), karten } });
+            // Welle A 0.38.0 (Sammelliste 207, Antworten 4a 5a): Gruppe selbst zuklappbar, beim Oeffnen alle zu, nur eine
+            // offen; der Kopf nennt die Karten der Gruppe (vorhandene Titel, kein neuer Text)
+            var gruppenKlappe = Klappkarte.Gruppe(titel, string.Join(" · ", gruppe.Select(b => b.Titel)), karten,
+                "Pinsel." + Optionen.GruppenFarben[titel]);
+            foreach (var bereich in gruppe)
+            {
+                _gruppeVon[bereich.Id] = gruppenKlappe;
+                // eine Karte, die aufklappt (Suche, Hilfe, Rundgang), oeffnet ihre Gruppe, sonst bliebe sie unsichtbar
+                if (_bereiche.TryGetValue(bereich.Id, out var teil) && teil.Klappe is { } karte)
+                {
+                    karte.GetObservable(Expander.IsExpandedProperty).Subscribe(new Aktion<bool>(auf =>
+                    {
+                        if (auf)
+                        {
+                            gruppenKlappe.IsExpanded = true;
+                        }
+                    }));
+                }
+            }
+            _gruppen.Add(gruppenKlappe);
+            gruppenKlappe.GetObservable(Expander.IsExpandedProperty).Subscribe(new Aktion<bool>(offen =>
+            {
+                if (offen && !_alleZugleich)
+                {
+                    foreach (var andere in _gruppen.Where(g => g != gruppenKlappe))
+                    {
+                        andere.IsExpanded = false;
+                    }
+                }
+            }));
+            liste.Children.Add(gruppenKlappe);
         }
         if (bereiche.FirstOrDefault(b => !_bereiche.ContainsKey(b.Id)) is { } fehlt)
         {
@@ -92,11 +132,40 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         }
     }
 
+    /// <summary>A 0.38.0: die zuklappbaren Gruppen (LERNEN, AUSSEHEN, SPIEL, DATEN, PROGRAMM) in Anzeigereihenfolge (Start-Test).</summary>
+    public IReadOnlyList<Expander> GruppenKlappen => _gruppen;
+
+    /// <summary>Start-Test: alle Gruppen zugleich offen (Karten bleiben, wie sie sind); <see cref="GruppenZu"/> stellt die Regel wieder her.</summary>
+    public void AlleGruppenAufFuerTests()
+    {
+        _alleZugleich = true;
+        foreach (var gruppe in _gruppen)
+        {
+            gruppe.IsExpanded = true;
+        }
+    }
+
+    /// <summary>A 0.38.0: alle Gruppen zu (die Karten darin bleiben, wie sie sind); danach wieder nur eine offen.</summary>
+    public void GruppenZu()
+    {
+        _alleZugleich = false;
+        foreach (var gruppe in _gruppen)
+        {
+            gruppe.IsExpanded = false;
+        }
+    }
+
     /// <summary>Klappbereich eines Bereichs (Start ohne Bedienung), null bei offenen Bereichen.</summary>
     public Expander? Klappe(string id) => _bereiche.TryGetValue(id, out var bereich) ? bereich.Klappe : null;
 
     public void AllesAufklappen()
     {
+        // Start-Test (Layoutpruefung): alle Gruppen zugleich offen, ohne dass eine die andere zuklappt
+        _alleZugleich = true;
+        foreach (var gruppe in _gruppen)
+        {
+            gruppe.IsExpanded = true;
+        }
         foreach (var klappe in _klappen)
         {
             klappe.IsExpanded = true;
@@ -114,6 +183,10 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             return;
         }
         Control ziel = bereich.Karte;
+        if (_gruppeVon.TryGetValue(id, out var gruppe))
+        {
+            gruppe.IsExpanded = true;
+        }
         if (bereich.Klappe is { } klappe)
         {
             klappe.IsExpanded = true;
@@ -135,14 +208,6 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
 
     /// <summary>Farbe je Bereich: die seiner Gruppe (Weisung P8-5b), "Loeschen und zuruecksetzen" rot.</summary>
     private static string Akzent(string id) => "Pinsel." + Optionen.Farbe(id);
-
-    /// <summary>Gruppen-Ueberschrift wie in der Seitenleiste (11 fett, Grossbuchstaben), seit P8-5b in der Farbe der Gruppe.</summary>
-    private static TextBlock Gruppe(string titel)
-    {
-        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel." + Optionen.GruppenFarben[titel]);
-        text.Margin = new Thickness(4, 6, 0, 0);
-        return text;
-    }
 
     private TextBlock? _updateKurz;
 
@@ -375,6 +440,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
     /// <summary>on_show: die Fachrichtung kann per Abgleich gekommen sein; W4: Name und Rahmenplan (refresh_plan).</summary>
     public void Gezeigt()
     {
+        GruppenZu();   // A 0.38.0 (Sammelliste 207): beim Oeffnen der Seite alle Gruppen zu; ein Sprung aus der Suche oeffnet danach die Gruppe
         _ = ZaehlteilAsync();
         if (_fachrichtung.Count > 0)
         {

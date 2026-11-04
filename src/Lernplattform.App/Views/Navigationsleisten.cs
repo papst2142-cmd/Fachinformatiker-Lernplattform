@@ -37,33 +37,37 @@ public sealed class Navigationsleisten
 
     /// <summary>
     /// Phase 8 W2b (Sammelliste 114/115): Seitenleiste wie Python 0.63.2 PC (Sidebar, NavRow): Logo-Ring 34
-    /// (Dicke 5, Punkt 12) mit "FI" (21 fett) und "Lernplattform" (11 muted); Eintraege in Gruppen mit kleiner
-    /// Ueberschrift (11 fett muted wie MENÜ), je Zeile Symbol 22 (Unterpunkte 20) und Text 14 fett text_dim
-    /// (Unterpunkte 13 muted), Aufklapp-Pfeil bei Karteikarten und Spiel; unten angeheftet Hilfe, Optionen,
+    /// (Dicke 5, Punkt 12) mit "FI" (21 fett) und "Lernplattform" (11 muted); je Zeile Symbol 22 (Unterpunkte 20)
+    /// und Text 14 fett text_dim (Unterpunkte 13 muted, je Ebene 12 eingerueckt), Aufklapp-Pfeil bei Gruppen.
+    /// A 0.38.0 (Sammelliste 207): Eintraege wie die untere Leiste am Handy (Start, Lernen, Rechner, Spiel,
+    /// Fortschritt, Optionen), Gruppen zugeklappt, nur eine offen; unten angeheftet Hilfe, Programm beenden,
     /// Kasten LERNSTATUS (11 fett muted, Balken "Karten und Fragen bearbeitet" mit x / y) und Version (11 muted).
     /// </summary>
     private Control BaueSeitenleiste()
     {
-        foreach (var punkt in Texte.NavigationPc)
+        // Welle A 0.38.0 (Sammelliste 207): Eintraege wie die untere Leiste am Handy, Gruppen zugeklappt
+        // (Regeln der Gruppen in Core/Texte/Seitenleiste.cs)
+        void Merken(NavPunkt punkt)
         {
             _punkte[punkt.Id] = punkt;
+            foreach (var u in punkt.Unter)
+            {
+                Merken(u);
+            }
+        }
+        foreach (var punkt in Texte.Seitenleiste.Concat(Texte.NavigationPc.Where(p => Navigation.PcLeisteUnten.Contains(p.Id))))
+        {
+            Merken(punkt);
         }
         var oben = new StackPanel { Spacing = 1, Margin = new Thickness(12, 0, 12, 8) };
-        foreach (var (titel, ids) in Navigation.PcGruppen)
+        foreach (var punkt in Texte.Seitenleiste)
         {
-            if (titel is not null)
-            {
-                oben.Children.Add(Gruppe(titel));
-            }
-            foreach (var id in ids)
-            {
-                EintragMitUnterpunkten(_punkte[id], oben);
-            }
+            EintragMitUnterpunkten(punkt, oben, 0);
         }
         var unten = new StackPanel { Spacing = 1, Margin = new Thickness(12, 8, 12, 0) };
-        foreach (var id in Navigation.PcUnten)
+        foreach (var id in Navigation.PcLeisteUnten)
         {
-            EintragMitUnterpunkten(_punkte[id], unten);
+            EintragMitUnterpunkten(_punkte[id], unten, 0);
         }
         // Weisung P8-56: "Programm beenden" immer; Patch A 0.37.0 (Sammelliste 206, Antwort 4a) auch auf Android (Tablet quer)
         BeendenKnopf = BeendenEintrag();
@@ -131,10 +135,10 @@ public sealed class Navigationsleisten
         return knopf;
     }
     private readonly Dictionary<string, NavPunkt> _punkte = new(StringComparer.Ordinal);
+    private readonly Core.Texte.Seitenleiste _gruppen = new();
 
     /// <summary>Beschriftung eines Eintrags der Seitenleiste (Start-Test).</summary>
     public string Titel(string id) => _punkte[id].Titel;
-    private readonly HashSet<string> _offen = new(StringComparer.Ordinal);
     private readonly Dictionary<string, TextBlock> _pfeile = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (Border Strich, TextBlock Symbol, TextBlock Text, bool Unter)> _seitenTeile = new(StringComparer.Ordinal);
     private TextBlock? _statusWert;
@@ -174,23 +178,15 @@ public sealed class Navigationsleisten
         element.Bind(Layoutable.HeightProperty, element.GetResourceObservable("Schrift.Normal", v => v is double d ? basis * d / Schrift.Grundgroessen["Normal"] : basis));
     }
 
-    /// <summary>Kleine Gruppen-Ueberschrift wie "MENÜ" (label 11 fett, muted, links 24 bzw. 12 im Rand der Liste).</summary>
-    private static TextBlock Gruppe(string titel)
+    private void EintragMitUnterpunkten(NavPunkt punkt, Panel ziel, int ebene)
     {
-        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel.muted");
-        text.Margin = new Thickness(12, 10, 0, 6);
-        return text;
-    }
-
-    private void EintragMitUnterpunkten(NavPunkt punkt, Panel ziel)
-    {
-        ziel.Children.Add(Eintrag(punkt, _seitenKnoepfe, 0));
+        ziel.Children.Add(Eintrag(punkt, _seitenKnoepfe, ebene));
         if (punkt.Unter.Count > 0)
         {
             var unter = new StackPanel { Spacing = 1, IsVisible = false };
             foreach (var u in punkt.Unter)
             {
-                unter.Children.Add(Eintrag(u, _seitenKnoepfe, 1));
+                EintragMitUnterpunkten(u, unter, ebene + 1);
             }
             _unterpunkte[punkt.Id] = unter;
             ziel.Children.Add(unter);
@@ -208,7 +204,7 @@ public sealed class Navigationsleisten
         var symbol = Symbole.Block(punkt.Symbol, unter ? 20 : 22, "Pinsel.muted");
         SymbolMitwachsen(symbol, unter ? 20 : 22);
         // Abstand als Rand eines Rahmens, nicht des Symbols (sonst gilt es in der Layoutpruefung als abgeschnitten)
-        var symbolRahmen = new Border { Padding = new Thickness(unter ? 20 : 8, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
+        var symbolRahmen = new Border { Padding = new Thickness(8 + 12 * ebene, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
         var text = unter ? Schrift.Pt(punkt.Titel, 13, FontWeight.Normal, "Pinsel.muted") : Schrift.Pt(punkt.Titel, 14, FontWeight.Bold, "Pinsel.text_dim");
         text.VerticalAlignment = VerticalAlignment.Center;
         text.TextWrapping = TextWrapping.NoWrap;
@@ -240,14 +236,21 @@ public sealed class Navigationsleisten
         Avalonia.Automation.AutomationProperties.SetName(knopf, punkt.Titel);
         knopf.Click += (_, _) =>
         {
-            // wie Sidebar._on_nav: Eintrag mit Unterpunkten klappt auf bzw. zu und oeffnet die Seite
-            if (_unterpunkte.ContainsKey(punkt.Id) && !_offen.Remove(punkt.Id))
-            {
-                _offen.Add(punkt.Id);
-            }
+            // wie Sidebar._on_nav: Eintrag mit Unterpunkten klappt auf bzw. zu und oeffnet die Seite;
+            // A 0.38.0: auf der obersten Ebene nur eine Gruppe offen (Core/Texte/Seitenleiste.cs)
+            _gruppen.Klick(punkt.Id);
             _oeffnen(punkt.Id);
+            if (_gruppen.Offen(punkt.Id) && _unterpunkte.TryGetValue(punkt.Id, out var geoeffnet))
+            {
+                // Hinweis Chat (Weisung P11-37): die aufgeklappte Gruppe so weit wie moeglich ins Bild rollen
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    geoeffnet.BringIntoView(new Rect(0, 0, geoeffnet.Bounds.Width, Math.Min(geoeffnet.Bounds.Height, _rollen?.Viewport.Height ?? double.MaxValue))),
+                    Avalonia.Threading.DispatcherPriority.Loaded);
+            }
             Aufklappen();
         };
+        // Weisung P11-37: ein Eintrag, der den Fokus bekommt (Tab), rollt ganz ins Bild (nicht halb unter "Hilfe")
+        knopf.GotFocus += (_, _) => knopf.BringIntoView();
         ablage[punkt.Id] = knopf;
         _seitenTeile[punkt.Id] = (strich, symbol, text, unter);
         return knopf;
@@ -339,10 +342,7 @@ public sealed class Navigationsleisten
     /// <summary>Start-Test: Unterpunkte eines Eintrags auf- bzw. zuklappen (ohne die Seite zu oeffnen).</summary>
     public void Umschalten(string id)
     {
-        if (!_offen.Remove(id))
-        {
-            _offen.Add(id);
-        }
+        _gruppen.Umschalten(id);
         Aufklappen();
     }
 
@@ -355,12 +355,36 @@ public sealed class Navigationsleisten
     /// <summary>Start-Test: Eintraege der Seitenleiste mit Symbol (Kennung, Symboltext).</summary>
     public IEnumerable<(string Id, string Symbol)> SeitenSymbole => _seitenTeile.Select(t => (t.Key, t.Value.Symbol.Text ?? ""));
 
+    /// <summary>Start-Test: Klick auf einen Eintrag der Seitenleiste wie mit der Maus.</summary>
+    public void KlickFuerTests(string id) => _seitenKnoepfe[id].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+
+    /// <summary>Start-Test (Layoutpruefung): alle Gruppen zugleich zeigen, ohne die Regel "nur eine offen".</summary>
+    public void AlleZeigenFuerTests(bool alle)
+    {
+        if (!alle)
+        {
+            Aufklappen();
+            return;
+        }
+        foreach (var (eltern, unter) in _unterpunkte)
+        {
+            unter.IsVisible = true;
+            if (_pfeile.TryGetValue(eltern, out var pfeil))
+            {
+                pfeil.RenderTransform = new RotateTransform(-90);
+            }
+        }
+    }
+
+    /// <summary>Start-Test: offene Gruppen (sortiert).</summary>
+    public IReadOnlyList<string> OffeneGruppen => _gruppen.OffeneGruppen;
+
     /// <summary>Unterpunkte zeigen bzw. verbergen, Pfeil drehen (offen: nach oben).</summary>
     private void Aufklappen()
     {
         foreach (var (eltern, unter) in _unterpunkte)
         {
-            var offen = _offen.Contains(eltern);
+            var offen = _gruppen.Offen(eltern);
             unter.IsVisible = offen;
             if (_pfeile.TryGetValue(eltern, out var pfeil))
             {
@@ -426,15 +450,9 @@ public sealed class Navigationsleisten
         {
             Hervorheben(knopf, kennung == id);
         }
-        // wie Sidebar.set_active: eine Unterseite klappt ihren Eintrag auf; der Eintrag selbst klappt per Tippen
-        foreach (var eltern in _unterpunkte.Keys)
-        {
-            var punkt = Texte.NavigationPc.First(p => p.Id == eltern);
-            if (punkt.Unter.Any(u => u.Id == id))
-            {
-                _offen.Add(eltern);
-            }
-        }
+        // wie Sidebar.set_active: eine Unterseite klappt ihre Gruppe auf (A 0.38.0: die andere zu); eine Seite
+        // ohne Gruppe (Start, Rechner, Fortschritt, Optionen, Hilfe) klappt alle Gruppen zu
+        _gruppen.Seite(id);
         Aufklappen();
         var unten = Texte.HandyZiel(id);
         foreach (var (kennung, (pille, aus, an)) in _untenTeile)
