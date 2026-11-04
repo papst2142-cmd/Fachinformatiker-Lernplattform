@@ -249,8 +249,6 @@ public sealed class Navigationsleisten
             }
             Aufklappen();
         };
-        // Weisung P11-37: ein Eintrag, der den Fokus bekommt (Tab), rollt ganz ins Bild (nicht halb unter "Hilfe")
-        knopf.GotFocus += (_, _) => knopf.BringIntoView();
         ablage[punkt.Id] = knopf;
         _seitenTeile[punkt.Id] = (strich, symbol, text, unter);
         return knopf;
@@ -374,6 +372,28 @@ public sealed class Navigationsleisten
                 pfeil.RenderTransform = new RotateTransform(-90);
             }
         }
+    }
+
+    /// <summary>
+    /// Start-Test (Hinweis Chat, Weisung P11-37): bekommt der Eintrag den Fokus wie per Tab, steht er danach ganz im
+    /// sichtbaren Teil des Rollbereichs? Liefert oben und unten (Bildpunkte relativ zum sichtbaren Teil) und die Hoehe.
+    /// </summary>
+    public async Task<(double Oben, double Unten, double Sichtbar)?> FokusSichtbarFuerTestsAsync(string id)
+    {
+        if (_rollen is null || !_seitenKnoepfe.TryGetValue(id, out var knopf) || !knopf.IsEffectivelyVisible)
+        {
+            return null;
+        }
+        knopf.Focus(Avalonia.Input.NavigationMethod.Tab);
+        for (var i = 0; i < 3; i++)
+        {
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+        if (knopf.TranslatePoint(new Point(0, 0), _rollen) is not { } p)
+        {
+            return null;
+        }
+        return (p.Y, p.Y + knopf.Bounds.Height, _rollen.Viewport.Height);
     }
 
     /// <summary>Start-Test: offene Gruppen (sortiert).</summary>

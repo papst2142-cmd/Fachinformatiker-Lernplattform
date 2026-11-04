@@ -63,6 +63,17 @@ public static partial class AutoMessung
         }
         await Klick("cards");
         Erwarte("Klick Karteikarten", ["cards", "learn"]);
+        // Hinweis Chat (Weisung P11-37): jeder Eintrag der offenen Gruppen rollt mit dem Fokus (Tab) ganz ins Bild
+        // (Avalonia rollt den Fokus selbst ins Bild; hier wird das fuer die Seitenleiste festgehalten)
+        foreach (var id in Navigation.PcLernen.Concat(Core.Inhalte.Fachbereiche.Alle).Concat(["calc", "game", "progress", "settings", "dashboard"]))
+        {
+            if (await leisten.FokusSichtbarFuerTestsAsync(id) is { } lage && (lage.Oben < -0.5 || lage.Unten > lage.Sichtbar + 0.5))
+            {
+                Fehler(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Seitenleiste: {leisten.Titel(id)} mit Fokus nicht ganz sichtbar (oben {lage.Oben:F1}, unten {lage.Unten:F1}, sichtbar {lage.Sichtbar:F1})"));
+            }
+        }
+        ansicht.Focus();
         await Klick("quiz");
         Erwarte("Klick Pruefungstrainer", ["cards", "learn"]);
         await Klick(Navigation.LernenId);
