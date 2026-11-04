@@ -288,7 +288,8 @@ case "$RID" in
     if [ -e "$ALLE" ]; then echo "FEHLER: $ALLE besteht schon (keine frische Probe)"; exit 1; fi
     pkill -f "$BUNDLE/Contents/MacOS/" || true
     rm -rf "$BUNDLE"
-    vergiss() { pkgutil --pkgs | grep -i "lernplattform" | while read -r k; do sudo pkgutil --forget "$k" >/dev/null || true; done; }
+    # ohne Treffer gibt grep 1 zurueck; mit pipefail beendete das die Probe still (voller Lauf 476)
+    vergiss() { { pkgutil --pkgs | grep -i "lernplattform" || true; } | while read -r k; do sudo pkgutil --forget "$k" >/dev/null || true; done; }
     vergiss
     echo "--- Probe (a) Gegenprobe: unbearbeitetes Paket von vpk fuer alle Benutzer (-target /) ---"
     if sudo installer -pkg "$AUS/pkg-original-A-0.37.0.pkg" -target / && [ -d "$ALLE" ]; then
