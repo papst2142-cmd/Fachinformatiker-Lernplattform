@@ -84,6 +84,8 @@ desktop() {
       # Kanals (osx = Apple-Chip, osx-x64 = Intel), damit das Update im Programm die neue Version findet
       local pkgs=("$feed"/*.pkg)
       if [ "${#pkgs[@]}" -ne 1 ] || [ ! -f "${pkgs[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in $feed"; exit 1; fi
+      # Patch A 0.37.0 (Sammelliste 203): nur "Nur fuer mich" (~/Applications), nie mehr fuer alle Benutzer nach /Applications
+      bash "$WURZEL/werkzeuge/pakete/pkg_nur_benutzer.sh" "${pkgs[0]}"
       cp "${pkgs[0]}" "$ZIEL/$ID-$NAME-$rid.pkg"
       local nupkg="$feed/$ID-$PAKET-$kanal-full.nupkg"
       if [ ! -f "$nupkg" ]; then echo "FEHLER: $nupkg fehlt (Kanal $kanal)"; ls -la "$feed"; exit 1; fi

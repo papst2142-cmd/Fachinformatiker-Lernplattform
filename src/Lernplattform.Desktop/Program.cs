@@ -41,6 +41,11 @@ sealed class Program
         // Haenger-Diagnose (haenger.log, Waechter, kill -USR1); still aus, wenn der Datenordner nicht beschreibbar ist
         var (imeAus, software) = Schalter();
         Haenger.Einrichten(version, zusatz: "Eingabemethode " + (imeAus ? "aus" : "an") + ", Zeichnen " + (software ? "Software" : "Standard"));
+        if (OperatingSystem.IsMacOS())
+        {
+            // Patch A 0.37.0 (Sammelliste 204): verdeckt (App Nap) nur in haenger.log, sichtbar wie bisher
+            Haenger.Sichtbarkeit(MacSichtbarkeit.Abfragen);
+        }
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

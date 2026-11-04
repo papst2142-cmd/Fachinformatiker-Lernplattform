@@ -1,5 +1,5 @@
 Quelle: https://github.com/google/material-design-icons/blob/master/LICENSE (abgerufen 2026-10-24)
-Copyright 2019 Google LLC. Teilschrift src/Lernplattform.App/Assets/Fonts/fisi_symbole.otf (35 Zeichen aus MaterialIcons-Regular.otf im Paket flet-web 1.0.1, Erzeuger werkzeuge/symbole/erzeuge_symbole.py).
+Copyright 2019 Google LLC. Teilschrift src/Lernplattform.App/Assets/Fonts/fisi_symbole.otf (36 Zeichen aus MaterialIcons-Regular.otf im Paket flet-web 1.0.1, Erzeuger werkzeuge/symbole/erzeuge_symbole.py).
 
 
                                  Apache License

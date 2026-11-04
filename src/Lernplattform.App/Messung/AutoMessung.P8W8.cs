@@ -355,6 +355,37 @@ public static partial class AutoMessung
             {
                 Pruefe("Vollbild", false, "kein Schalter");
             }
+            // Patch A 0.37.0 (Sammelliste 205): "Bildschirm für Vollbild" nur ab zwei Bildschirmen (hier einer), mit zwei
+            // vorgetaeuschten sichtbar, mit Namen, Wahl gespeichert und wieder Vorgabe
+            Pruefe("Bildschirm für Vollbild bei einem Bildschirm verborgen", optionen.BildschirmZeile is { IsVisible: false },
+                $"{Vollbild.AlleBildschirme().Count} Bildschirm(e), Zeile sichtbar {optionen.BildschirmZeile?.IsVisible}");
+            Vollbild.BildschirmeFuerTests = [new Bildschirm(0, 0, 1920, 1080, true, "A"), new Bildschirm(1920, 0, 2560, 1440, false, "B")];
+            try
+            {
+                Vollbild.BildschirmNeu();
+                await ansicht.BildFertigAsync();
+                var auswahl = optionen.BildschirmAuswahl;
+                var eintraege = auswahl?.ItemsSource?.Cast<object>().Select(o => o.ToString()).ToList() ?? [];
+                Pruefe("Bildschirm für Vollbild bei zwei Bildschirmen", optionen.BildschirmZeile is { IsVisible: true } && auswahl is { SelectedIndex: 0 }
+                    && eintraege.SequenceEqual([TonTexte.VollbildFenster, "Bildschirm 1 (1920 × 1080, Hauptbildschirm)", "Bildschirm 2 (2560 × 1440)"])
+                    && Avalonia.Automation.AutomationProperties.GetName(auswahl) == TonTexte.VollbildBildschirm,
+                    string.Join(" | ", eintraege));
+                if (auswahl is not null)
+                {
+                    auswahl.SelectedIndex = 2;
+                    await ansicht.BildFertigAsync();
+                    var gemerkt = VollbildBildschirm.Lesen(Zustand.Werte);
+                    auswahl.SelectedIndex = 0;
+                    await ansicht.BildFertigAsync();
+                    Pruefe("Bildschirm für Vollbild gemerkt und zurück", gemerkt is { X: 1920, Breite: 2560, Hoehe: 1440, Name: "B" }
+                        && Zustand.Werte[VollbildBildschirm.Schluessel] is null, $"gemerkt {gemerkt}, danach {Zustand.Werte[VollbildBildschirm.Schluessel]?.ToJsonString() ?? "Vorgabe"}");
+                }
+            }
+            finally
+            {
+                Vollbild.BildschirmeFuerTests = null;
+                Vollbild.BildschirmNeu();
+            }
         }
         finally
         {

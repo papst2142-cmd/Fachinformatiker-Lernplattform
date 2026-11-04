@@ -199,8 +199,9 @@ public class SucheTests
 
     private static bool IstAusbildung(SuchTreffer t) => t.Art == Optionen.SucheArt && t.Titel == PruefungTexte.AusbildungReiter;
 
-    /// <summary>Phase 8 W8: "Musik und Geräusche", "Vollbild" und "Tastenbelegung" gibt es nur in C# (wie "Ausbildung").</summary>
-    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.TastenBereich];
+    /// <summary>Phase 8 W8: "Musik und Geräusche", "Vollbild" und "Tastenbelegung" gibt es nur in C# (wie "Ausbildung").
+    /// Patch A 0.37.0 (Sammelliste 206): "Programm beenden" (nur Handy) gibt es ebenfalls nur in C#.</summary>
+    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.TastenBereich, Optionen.BeendenBereich];
 
     private static bool IstW8(SuchTreffer t) => t.Art == Optionen.SucheArt && W8Bereiche.Any(b => b.Titel == t.Titel);
 
@@ -209,7 +210,7 @@ public class SucheTests
     public void W8BereicheNurWoSiePassen()
     {
         var anfragen = G19.GetProperty("suche").EnumerateArray().Select(f => f.GetProperty("begriff").GetString()!)
-            .Concat(["Musik", "Ton", "stumm", "Vollbild", "F11", "Tastatur", "Tasten", "Geräusche"]);
+            .Concat(["Musik", "Ton", "stumm", "Vollbild", "F11", "Tastatur", "Tasten", "Geräusche", "Beenden", "schließen"]);
         var gesehen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var begriff in anfragen)
         {
@@ -223,7 +224,8 @@ public class SucheTests
                 var nadel = PythonKlein.Klein(Lernregeln.Strip(anfrage));
                 foreach (var bereich in W8Bereiche)
                 {
-                    var passt = nadel.Length > 0 && (PythonKlein.Klein(bereich.Titel).Contains(nadel, StringComparison.Ordinal)
+                    // Patch A 0.37.0: "Programm beenden" gibt es nur am Handy
+                    var passt = nadel.Length > 0 && Optionen.AlleFuer(pc).Any(b => b.Id == bereich.Id) && (PythonKlein.Klein(bereich.Titel).Contains(nadel, StringComparison.Ordinal)
                         || bereich.StichwoerterFuer(pc).Any(w => PythonKlein.Klein(w).Contains(nadel, StringComparison.Ordinal)));
                     Assert.Equal(passt ? 1 : 0, treffer.Count(t => t.Art == Optionen.SucheArt && t.Titel == bereich.Titel));
                     if (passt)
@@ -238,6 +240,7 @@ public class SucheTests
         }
         Assert.Equal(W8Bereiche.Select(b => b.Id).Order(StringComparer.Ordinal), gesehen.Order(StringComparer.Ordinal));
         Assert.Equal((Optionen.Tasten, false), GlobaleSuche.Ziel(Optionen.TastenBereich.Titel, "Tastatur"));
+        Assert.Equal((Optionen.Beenden, false), GlobaleSuche.Ziel(Optionen.BeendenBereich.Titel, "Beenden"));   // Treffer am Handy fuehrt zur Karte
         Assert.DoesNotContain(Optionen.Bereiche, b => W8Bereiche.Any(w => w.Id == b.Id));      // G9 bleibt wie Python
     }
 

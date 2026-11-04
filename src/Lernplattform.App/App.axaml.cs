@@ -49,11 +49,21 @@ public partial class App : Application
                 DataContext = new MainViewModel()
             };
             // Phase 8 W8 (Sammelliste 131): Vollbild vor dem ersten Zeigen (kein Aufblitzen), Toene aus, solange minimiert
+            // Patch A 0.37.0 (Sammelliste 205): Bildschirm fuer das Vollbild aus den Optionen
+            Spiel.Vollbild.Bildschirme = () => Spiel.VollbildZiel.Liste(fenster);
             if (Spiel.Vollbild.Dauerhaft)
             {
+                Spiel.VollbildZiel.Setzen(fenster, beimStart: true);
                 fenster.WindowState = WindowState.FullScreen;
             }
-            Spiel.Vollbild.Fenster = an => fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            Spiel.Vollbild.Fenster = an =>
+            {
+                if (an)
+                {
+                    Spiel.VollbildZiel.Setzen(fenster, beimStart: false);
+                }
+                fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            };
             fenster.PropertyChanged += (_, e) =>
             {
                 if (e.Property == Window.WindowStateProperty)
@@ -63,21 +73,7 @@ public partial class App : Application
             };
             desktop.MainWindow = fenster;
             // Wie Python flush_inputs beim Schliessen: Aufgedecktes als angesehen speichern
-            desktop.Exit += (_, _) =>
-            {
-                // Weisung P7-17: zuerst alle Spielschritte fertig schreiben
-                Core.Spiel.Spielschlange.AlleLeeren();
-                // Phase 5 W2 (BE8): ab jetzt "endet" fuer einen zweiten Start, Messdatei schreiben
-                Programm.Diagnosedienst.Beenden();
-                Programm.Zustand.Beenden();
-                // L10: letzter Abgleich, wenn seither gelernt wurde (run_before_exit, hoechstens 12 s);
-                // Phase 5 BE10: nicht, wenn das Programm fuer ein Update schliesst (on_close(final_sync=False))
-                if (!Programm.UpdateDienst.FuerUpdateBeendet)
-                {
-                    Programm.AbgleichDienst.VorDemBeenden();
-                }
-                Programm.Diagnosedienst.NachDemAbgleich();
-            };
+            desktop.Exit += (_, _) => Programm.Programmende.Aufraeumen();
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactoryApplicationLifetime)
         {

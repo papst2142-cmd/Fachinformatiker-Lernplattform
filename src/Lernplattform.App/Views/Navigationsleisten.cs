@@ -65,12 +65,9 @@ public sealed class Navigationsleisten
         {
             EintragMitUnterpunkten(_punkte[id], unten);
         }
-        // Weisung P8-56 (Nico, Wahl b): "Programm beenden" immer, aber nur am PC (auf Android nicht zeigen)
-        if (!OperatingSystem.IsAndroid())
-        {
-            BeendenKnopf = BeendenEintrag();
-            unten.Children.Add(BeendenKnopf);
-        }
+        // Weisung P8-56: "Programm beenden" immer; Patch A 0.37.0 (Sammelliste 206, Antwort 4a) auch auf Android (Tablet quer)
+        BeendenKnopf = BeendenEintrag();
+        unten.Children.Add(BeendenKnopf);
         var fuss = new StackPanel { Children = { unten, LernstatusKasten(), Version() } };
         var rollen = new ScrollViewer { Content = oben, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         var aufbau = new DockPanel();
@@ -94,7 +91,7 @@ public sealed class Navigationsleisten
 
     private ScrollViewer? _rollen;
 
-    /// <summary>Knopf "Programm beenden" (nur PC; Start-Test), sonst null.</summary>
+    /// <summary>Knopf "Programm beenden" der Seitenleiste (Start-Test).</summary>
     public Button? BeendenKnopf { get; private set; }
 
     /// <summary>Symbol "Ausschalten" (eigene Umrisse: Strich und offener Ring, 24 x 24).</summary>
@@ -130,7 +127,7 @@ public sealed class Navigationsleisten
             Background = Brushes.Transparent,
         };
         Avalonia.Automation.AutomationProperties.SetName(knopf, Navigation.ProgrammBeenden);
-        knopf.Click += (_, _) => Programmende.Fenster();
+        knopf.Click += (_, _) => Programmende.Beenden();
         return knopf;
     }
     private readonly Dictionary<string, NavPunkt> _punkte = new(StringComparer.Ordinal);

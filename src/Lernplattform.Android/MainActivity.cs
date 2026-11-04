@@ -43,6 +43,14 @@ public class MainActivity : AvaloniaMainActivity
             }
         });
 #endif
+        // Patch A 0.37.0 (Sammelliste 206): "Programm beenden" schliesst die Aufgabe (auch aus der Liste der letzten Apps)
+        // und beendet danach den Prozess, damit der naechste Start ein Kaltstart ist wie am PC
+        Lernplattform.Programm.Programmende.Geraet = () => RunOnUiThread(() =>
+        {
+            FinishAndRemoveTask();
+            new global::Android.OS.Handler(global::Android.OS.Looper.MainLooper!).PostDelayed(
+                () => global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid()), 500);
+        });
         // Phase 8 W8 (Nico 3a): "leisten" = Systemleisten aus, im Spiel immer, sonst mit dem Schalter "Vollbild"
         Lernplattform.Spiel.Vollbild.Geraet = (an, leisten) => RunOnUiThread(() =>
         {

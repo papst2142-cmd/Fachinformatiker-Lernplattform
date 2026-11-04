@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.36.0 (Paketversion 1.0.0-a.0.36.0) -> A 0.36.1 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.36.1 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.37.0 (Paketversion 1.0.0-a.0.37.0) -> A 0.37.1 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.37.1 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 #   Phase 5 W3 (Weisung P5-8): jedes Update laeuft wie der Knopf "Jetzt aktualisieren"
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
@@ -58,12 +58,22 @@ baue() { # Stufe Version
     -i "$ICON" --packTitle "Fachinformatiker Lernplattform" \
     --releaseNotes "$NOTIZEN" ${KANAL_ARG[@]+"${KANAL_ARG[@]}"} -o "$feed"
   rm -rf "$pub"
+  case "$RID" in
+    osx-*)
+      # Patch A 0.37.0 (Sammelliste 203): .pkg nur "Nur fuer mich"; das unbearbeitete Paket der ersten Version
+      # bleibt fuer die Gegenprobe (a) liegen
+      local pkgs=("$feed"/*.pkg)
+      if [ "${#pkgs[@]}" -ne 1 ] || [ ! -f "${pkgs[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in $feed"; exit 1; fi
+      cp "${pkgs[0]}" "$AUS/pkg-original-$stufe-$version.pkg"
+      bash "$WURZEL/werkzeuge/pakete/pkg_nur_benutzer.sh" "${pkgs[0]}"
+      ;;
+  esac
   "$PY" -I "$WURZEL/werkzeuge/release/release.py" pruefe-feed "$feed/releases.$KANAL.json" "$paket"
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.36.0
-baue A 0.36.1
+baue A 0.37.0
+baue A 0.37.1
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -72,8 +82,8 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.36.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.36.0-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.36.0-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.37.0" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.37.0-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.37.0-AppImage.tar.gz"
     ;;
 esac
 
@@ -84,7 +94,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.36.0/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.37.0/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -92,15 +102,15 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.36.0/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.37.0/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
     ;;
   osx-*)
     # Startprobe (Weisung P11-27): die fertige .pkg ohne Administrator in den Benutzerordner installieren,
     # wie es das Paket erlaubt (enable_currentUserHome) und wie es bei Nico landet (Sammelliste 201)
     if [ "${CI:-}" != "true" ]; then echo "FEHLER: die Mac-Probe installiert nach ~/Applications und laeuft nur in der CI (CI=true)"; exit 1; fi
-    PKGS=("$AUS/feed-A-0.36.0"/*.pkg)
-    if [ "${#PKGS[@]}" -ne 1 ] || [ ! -f "${PKGS[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in feed-A-0.36.0"; exit 1; fi
+    PKGS=("$AUS/feed-A-0.37.0"/*.pkg)
+    if [ "${#PKGS[@]}" -ne 1 ] || [ ! -f "${PKGS[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in feed-A-0.37.0"; exit 1; fi
     BUNDLE="$HOME/Applications/Fachinformatiker Lernplattform.app"
     if [ -e "$BUNDLE" ]; then echo "FEHLER: $BUNDLE besteht schon (keine frische Probe)"; exit 1; fi
     if ! installer -pkg "${PKGS[0]}" -target CurrentUserHomeDirectory; then
@@ -166,23 +176,83 @@ pruefe_notizen() { # Weisung P8-53: das angebotene Paket hat Notizen, das Update
 }
 
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.36.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
-case "$RID" in osx-*) echo "Mac-Startprobe $RID: installierte App gestartet, Version 1.0.0-a.0.36.0, Datenordner-Probe angelegt" ;; esac
+grep -q "bericht: Version 1.0.0-a.0.37.0;" "$LERNPLATTFORM_UPDATE_BERICHT"
+case "$RID" in osx-*) echo "Mac-Startprobe $RID: installierte App gestartet, Version 1.0.0-a.0.37.0, Datenordner-Probe angelegt" ;; esac
 letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
-starte suchen "$AUS/feed-A-0.36.1"
+# Patch A 0.37.0 (Sammelliste 203, Probe (b)): Bundle, das der Benutzer nicht aendern darf (wie eine Installation
+# "fuer alle Benutzer" in /Applications, Dateien gehoeren root). Gegenprobe: der alte stille Weg muss scheitern
+# ("Not allowed to ask for elevated permissions"); mit dem Fix startet der Updater ohne --silent und will nach dem
+# Passwort fragen ("will attempt to elevate"). Die Passwort-Eingabe kann die CI nicht vornehmen: Dialog beenden,
+# Besitz zurueck, dann die normale Update-Kette. Jeder Versuch legt eine Kopie vor_update_* an (ZUSATZ).
+ZUSATZ=0
+case "$RID" in
+  osx-*)
+    VLOG="$HOME/Library/Logs/velopack_$ID.log"
+    zeilen() { if [ -f "$VLOG" ]; then wc -l < "$VLOG" | tr -d ' '; else echo 0; fi; }
+    warte_log() { # Text, ab Zeile
+      for _ in $(seq 1 45); do
+        if [ -f "$VLOG" ] && tail -n +"$(($2 + 1))" "$VLOG" | grep -q "$1"; then return 0; fi
+        sleep 2
+      done
+      echo "FEHLER: im Velopack-Log fehlt nach Zeile $2: $1"; tail -n +"$(($2 + 1))" "$VLOG" 2>/dev/null | tail -n 40 || true; return 1
+    }
+    aufraeumen() { # Updater, Passwort-Dialog und eine vom Updater neu geoeffnete alte App beenden
+      sleep 5
+      pkill -f "$BUNDLE/Contents/MacOS/UpdateMac" || true
+      pkill -x osascript || true
+      pkill -f "$BUNDLE/Contents/MacOS/$EXE" || true
+      sleep 3
+    }
+    sudo chown -R root:wheel "$BUNDLE"
+    sudo chmod -R go-w "$BUNDLE"
+    if touch "$BUNDLE/Contents/MacOS/.schreibtest" 2>/dev/null; then echo "FEHLER: Probe (b) Bundle ist noch beschreibbar"; exit 1; fi
+    echo "--- Probe (b) Gegenprobe: alter stiller Weg bei nicht beschreibbarem Bundle ---"
+    ab="$(zeilen)"
+    export LERNPLATTFORM_UPDATE_GEGENPROBE_STILL=1
+    starte suchen "$AUS/feed-A-0.37.1"
+    unset LERNPLATTFORM_UPDATE_GEGENPROBE_STILL
+    warte_log "Not allowed to ask for elevated permissions" "$ab"
+    aufraeumen
+    starte version "$AUS"
+    tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | grep -q "Version 1.0.0-a.0.37.0;" || { echo "FEHLER: Gegenprobe (b) hat doch aktualisiert"; exit 1; }
+    echo "Gegenprobe (b): still gescheitert wie bei Nico (Version bleibt 1.0.0-a.0.37.0)"
+    echo "--- Probe (b): mit Fix fragt der Updater nach dem Passwort ---"
+    ab="$(zeilen)"
+    starte suchen "$AUS/feed-A-0.37.1"
+    warte_log "will attempt to elevate permissions" "$ab"
+    # diese Zeile schreibt der Updater auch auf dem stillen Weg; entscheidend ist, dass danach kein "Not allowed" folgt
+    sleep 8
+    echo "Probe (b): laeuft der Updater noch (wartet auf das Passwort)? $(pgrep -f "$BUNDLE/Contents/MacOS/UpdateMac" >/dev/null && echo ja || echo nein)"
+    echo "--- Velopack-Log ab Probe (b) ---"; tail -n +"$((ab + 1))" "$VLOG" | grep -E "\[update:" | tail -n 15 || true
+    if tail -n +"$((ab + 1))" "$VLOG" | grep -q "Not allowed to ask for elevated permissions"; then
+      echo "FEHLER: Probe (b) Updater lief trotz nicht beschreibbarem Bundle still"; tail -n +"$((ab + 1))" "$VLOG" | tail -n 40; exit 1
+    fi
+    grep -q "Mac: Programmordner nicht beschreibbar, Update mit Passwortabfrage." "$LERNPLATTFORM_DATEN/update.log" \
+      || { echo "FEHLER: Probe (b) Zeile in update.log fehlt"; cat "$LERNPLATTFORM_DATEN/update.log"; exit 1; }
+    aufraeumen
+    sudo chown -R "$(id -un)":staff "$BUNDLE"
+    chmod -R u+w "$BUNDLE"
+    echo "Probe (b): Updater ohne --silent gestartet (Passwortabfrage), Zeile in update.log"
+    # Merker der beiden abgebrochenen Versuche wie beim naechsten Programmstart abschliessen (Meldung "nicht abgeschlossen")
+    starte bericht "$AUS"
+    letzte | grep -q "Abschluss FEHLER" || { echo "FEHLER: Probe (b) Merker nicht als gescheitert gemeldet"; cat "$LERNPLATTFORM_UPDATE_BERICHT"; exit 1; }
+    ZUSATZ=2
+    ;;
+esac
+starte suchen "$AUS/feed-A-0.37.1"
 pruefe_notizen
-warte_auf 1.0.0-a.0.36.1
-pruefe_abschluss "A 0.36.1" 1
+warte_auf 1.0.0-a.0.37.1
+pruefe_abschluss "A 0.37.1" $((1 + ZUSATZ))
 starte suchen "$AUS/feed-B-0.1.0"
 pruefe_notizen
 warte_auf 1.0.0-b.0.1.0
-pruefe_abschluss "B 0.1.0" 2
-starte suchen "$AUS/feed-A-0.36.1"
+pruefe_abschluss "B 0.1.0" $((2 + ZUSATZ))
+starte suchen "$AUS/feed-A-0.37.1"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.36.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.37.0" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
-test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq 2
+test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq $((2 + ZUSATZ))
 # T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,
 # die auch Nutzer traefe); "Version nicht erreicht" bleibt oben rot
 echo "T5 Velopack-Sperre (Sammelliste 46): $(grep -c "AcquireLockFailed" "$LERNPLATTFORM_UPDATE_BERICHT" || true) mal im Bericht"
@@ -209,6 +279,29 @@ case "$RID" in
       echo "FEHLER: T4 Datenordner nach der Deinstallation veraendert"; diff <(echo "$vorher") <(echo "$nachher") || true; exit 1
     fi
     echo "T4 Deinstallation: Programm entfernt, $(echo "$nachher" | wc -l) Dateien in beiden Datenordnern unveraendert"
+    ;;
+  osx-*)
+    # Patch A 0.37.0 (Sammelliste 203, Probe (a)): das Paket darf "fuer alle Benutzer" (/Applications, dorthin legte
+    # der grafische Installer A 0.35.0 bei Nico) nicht mehr anbieten. Geprueft wird, welche Orte der Installer selbst
+    # fuer das Paket erlaubt (installer -dominfo). Ein Einbau mit "sudo installer -target /" taugt nicht als Probe:
+    # als root uebergeht der Befehl die Auswahl der Distribution (voller Lauf 479: auch das bearbeitete Paket landete
+    # in /Applications); der grafische Installer zeigt nur die erlaubten Orte. Gegenprobe: unbearbeitetes Paket.
+    echo "--- Probe (a): erlaubte Installationsorte (installer -dominfo) ---"
+    orig="$(installer -dominfo -pkg "$AUS/pkg-original-A-0.37.0.pkg" 2>&1 || true)"
+    bearb="$(installer -dominfo -pkg "${PKGS[0]}" 2>&1 || true)"
+    echo "unbearbeitetes Paket: $(echo $orig)"
+    echo "bearbeitetes Paket:   $(echo $bearb)"
+    if ! grep -q "LocalSystem" <<<"$orig"; then
+      echo "FEHLER: Gegenprobe (a) unbearbeitetes Paket bietet LocalSystem nicht an, die Probe waere nicht empfindlich"; exit 1
+    fi
+    echo "Gegenprobe (a): unbearbeitetes Paket bietet \"fuer alle Benutzer\" (LocalSystem) an, wie bei Nico"
+    if ! grep -q "CurrentUserHomeDirectory" <<<"$bearb"; then
+      echo "FEHLER: Probe (a) bearbeitetes Paket bietet \"Nur fuer mich\" (CurrentUserHomeDirectory) nicht an"; exit 1
+    fi
+    if grep -q "LocalSystem" <<<"$bearb"; then
+      echo "FEHLER: Probe (a) bearbeitetes Paket bietet weiter \"fuer alle Benutzer\" (LocalSystem) an"; exit 1
+    fi
+    echo "Probe (a): bearbeitetes Paket bietet nur noch \"Nur fuer mich\" (~/Applications) an"
     ;;
 esac
 echo "UPDATE-PROBE GRUEN"

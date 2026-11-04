@@ -32,6 +32,8 @@ public static class Symbole
         ["school_rounded"] = 0xF012E, ["calculate_outlined"] = 0xEF10, ["sports_esports_outlined"] = 0xF3CA,
         ["insights_outlined"] = 0xF132, ["settings_outlined"] = 0xF36E, ["search_rounded"] = 0xF013D,
         ["chevron_right"] = 0xE15F, ["chevron_left"] = 0xE15E, ["arrow_right"] = 0xE09E, ["arrow_drop_down"] = 0xE098,
+        // Patch A 0.37.0 (Weisung P11-35): X oben rechts beendet das Programm am Handy
+        ["close_rounded"] = 0xF647,
     };
 
     /// <summary>

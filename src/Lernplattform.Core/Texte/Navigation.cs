@@ -119,10 +119,16 @@ public static class Navigation
     public const string Menue = "MENÜ";
     public const string Lernstatus = "LERNSTATUS";
     /// <summary>
-    /// Weisung P8-56 (Nico, Wahl b): Knopf unten in der Seitenleiste, nur am PC (Android beendet Apps selbst);
+    /// Weisung P8-56: Knopf unten in der Seitenleiste; Patch A 0.37.0 (Sammelliste 206) auch auf Android, am Handy als Karte in den Optionen;
     /// beendet wie das Schliessen des Fensters, auch im Vollbild.
     /// </summary>
     public const string ProgrammBeenden = "Programm beenden";
+
+    // Patch A 0.37.0 (Sammelliste 206, Weisung P11-34 Antwort 4a, Wortlaut aus Plan P11-24): Karte in den Optionen am Handy
+    public const string BeendenKurz = "Programm ganz schließen";
+    // Weisung P11-35 (Nico, Wortlaut Chat): Hinweis auf das X oben rechts in der Kopfleiste am Handy
+    public const string BeendenSatz = "Schließt das Programm ganz. Dein Lernstand ist gespeichert. Das X oben rechts neben der Lupe beendet das Programm ebenfalls.";
+    public const string BeendenWarten = "Programm wird beendet …";
 
     // Phase 8 W2b (Sammelliste 115, Nico 26.10.2026): Gruppen der Seitenleiste am PC
     public const string GruppeLernen = "LERNEN";

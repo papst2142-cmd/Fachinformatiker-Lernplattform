@@ -404,7 +404,19 @@ public class SpielSchlangeTests
         var schreiber = Schreiber(lernstand);
         var schlange = new Spielschlange();
         var scheitern = false;
-        schlange.VorZeile = _ => !scheitern;
+        // Die Zeile scheitert erst, wenn der Schritt fertig ist (Tor): scheiterte sie schon waehrend Log, saehe der
+        // Schritt danach einen geaenderten Stand, laese ihn neu aus der Datenbank (Neuaufbau, Stoerung aufgehoben)
+        // und Teil 2 hinge je nach Reihenfolge der Faeden an oder nicht (lokal einmal rot, A 0.37.0).
+        using var tor = new ManualResetEventSlim();
+        schlange.VorZeile = _ =>
+        {
+            if (!scheitern)
+            {
+                return true;
+            }
+            tor.Wait(TimeSpan.FromMinutes(2));
+            return false;
+        };
         using var gemeldet = new ManualResetEventSlim();
         schlange.Fehler += _ => gemeldet.Set();
         var datenbank = new SpielDatenbank(schreiber, "PC", Lauf, Vorgaenge.Sperren, schlange);
@@ -414,9 +426,10 @@ public class SpielSchlangeTests
         schlange.Leeren();
         var vorher = Ereigniszeilen(lernstand);
 
-        // 1. die naechste Zeile scheitert; warten, bis der Schreiber den Fehler gemeldet hat
+        // 1. die naechste Zeile scheitert (erst nach dem Schritt); warten, bis der Schreiber den Fehler gemeldet hat
         scheitern = true;
         Gehen(spiel, 1);
+        tor.Set();
         Assert.True(gemeldet.Wait(TimeSpan.FromMinutes(2), TestContext.Current.CancellationToken));
         schlange.Leeren();
         scheitern = false;

@@ -33,6 +33,12 @@ public interface IUpdateQuelle
     Task<string> LadenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, CancellationToken abbruch);
 
     void Installieren(UpdateAngebot angebot);
+
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 203): Hinweis vor dem Installieren (Mac: Programmordner nicht beschreibbar,
+    /// macOS fragt nach dem Passwort), sonst null. Steht im Update-Fenster und als Zeile in update.log.
+    /// </summary>
+    string? Hinweis => null;
 }
 
 /// <summary>
@@ -206,6 +212,10 @@ public static class UpdateAblauf
         if (!UpdateMerker.Merken(einstellungen, angebot.Version))
         {
             Updateprotokoll.Schreiben("Der Merker für das Update ließ sich nicht speichern.", ordner);
+        }
+        if (quelle.Hinweis is not null)
+        {
+            Updateprotokoll.Schreiben(UpdateTexte.MacPasswortProtokoll, ordner);
         }
         Updateprotokoll.Schreiben("Installer wird gestartet: Velopack, Version " + angebot.Version + ", " + angebot.DateiName, ordner);
         try

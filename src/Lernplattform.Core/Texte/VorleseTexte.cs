@@ -24,4 +24,7 @@ public static class VorleseTexte
 
     /// <summary>Spiel, Rack: Auswahl des Geraets.</summary>
     public const string RackGeraet = "Gerät wählen";
+
+    /// <summary>Patch A 0.37.0 (Weisung P11-35): X oben rechts in der Kopfleiste am Handy, beendet das Programm.</summary>
+    public const string ProgrammBeenden = Navigation.ProgrammBeenden;
 }

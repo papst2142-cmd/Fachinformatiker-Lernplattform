@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.35.0** (Mac-Welle, PR #98, main 9d405fc). Zweig Fehlerberichte **A 0.36.0**. Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
-| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10, W2, W3 und Mac-Welle gemergt (A 0.32.0 bis 0.35.0) |
-| Jetzt | Welle „Fehlerberichte senden“ A 0.36.0 (Weisungen P11-29/P11-30, Sammelliste 202): Knopf „Bericht senden“ unter „Problem melden“, Ziel privates Repo `fi-fehlerberichte`, Schlüssel `FEHLERBERICHT_TOKEN` nur beim CI-Bau (Release und Dispatch-Lauf), **befristet bis 1.0**. Danach Gerätetest Nico auf A 0.36.0 (Prüfliste `P11-21`, Mac-Update `P11-28_Test_Mac_Update.md`), Patches, Bericht Phase 11 |
+| Version | Auf `main` **A 0.36.0** (Fehlerberichte senden, PR #99, main 485b740, Release vA0.36.0). Zweig Patch-Welle **A 0.37.0**. Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10, W2, W3, Mac-Welle und Fehlerberichte gemergt (A 0.32.0 bis 0.36.0); Gerätetest auf allen 5 Geräten gelaufen (04.11.2026), NVDA und TalkBack in Ordnung |
+| Jetzt | Patch-Welle nach dem Gerätetest A 0.37.0 (Weisungen P11-33/P11-34, Sammelliste 203–206): Mac-Update in `/Applications` (Paket nur „Nur für mich“, Passwortabfrage), Hänger-Diagnose verdeckt nur `haenger.log`, Bildschirm für Vollbild am PC, „Programm beenden“ am Handy/Tablet. Danach Bericht Phase 11 mit 0 offenen F |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-22** (Plan Fehlerberichte) / P11-23 (Bau Fehlerberichte) |
-| Sammelliste | nächste freie Nummer **203** |
+| Letzte/nächste Meldung | **P11-24** (Plan Patch-Welle) / P11-25 (Bau Patch-Welle) |
+| Sammelliste | nächste freie Nummer **207** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

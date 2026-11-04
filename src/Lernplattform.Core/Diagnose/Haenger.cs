@@ -63,6 +63,9 @@ public static class Haenger
         public int Stellen;
         public string Seite = "";
         public string Vorgang = Bereit;
+        // Patch A 0.37.0 (Sammelliste 204): nur mit Zusatz "verdeckt" in haenger.log gemeldet; seit wann sichtbar
+        public bool Verdeckt;
+        public double? SichtbarSeit;
     }
 
     // Zeitpunkte als Objekte (Referenzen werden ganz gelesen): Waechter und Oberflaeche lesen nie einen halben Wert (Gegenpruefung W2 Fund 9)
@@ -80,6 +83,31 @@ public static class Haenger
     private sealed record Zeitpunkt(double Wert);
     private static Func<string> _wartepunkte = () => FaedenText();
     private static Action<string> _fehlerlog = text => Fehlerprotokoll.Schreiben(text);
+    private static Func<bool?> _sichtbar = () => null;
+
+    /// <summary>Patch A 0.37.0 (Sammelliste 204): Zusatz einer Blockade, waehrend das Programm am Mac verdeckt ist.</summary>
+    public const string VerdecktZusatz = " – Programm verdeckt (macOS drosselt Zeitgeber)";
+
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 204, Weisung P11-34 Antwort 3a): Abfrage, ob das Programm sichtbar ist (macOS:
+    /// NSApp.occlusionState, liest nur; true sichtbar, false verdeckt, null unbekannt = wie sichtbar). macOS drosselt
+    /// die Zeitgeber eines verdeckten Programms (App Nap), der Herzschlag bleibt dann ohne Haenger aus. Eine
+    /// Blockade, waehrend der das Programm verdeckt ist, kommt nur mit Zusatz in haenger.log; ist es sichtbar und der
+    /// Herzschlag steht weiter so lange wie die Grenze, wird gemeldet wie bisher (fehler.log). Keine Grenze aendert sich.
+    /// </summary>
+    public static void Sichtbarkeit(Func<bool?>? abfrage) => _sichtbar = abfrage ?? (() => null);
+
+    private static bool Verdeckt()
+    {
+        try
+        {
+            return _sichtbar() == false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Monotone Uhr in Sekunden (time.monotonic).</summary>
     public static double Jetzt() => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
@@ -354,6 +382,13 @@ public static class Haenger
         return zeile;
     }
 
+    /// <summary>Zusatz "verdeckt" ans Ende der ersten Zeile (vor den Wartepunkten).</summary>
+    private static string ZusatzEinfuegen(string text)
+    {
+        var ende = text.IndexOf('\n', StringComparison.Ordinal);
+        return ende < 0 ? text + VerdecktZusatz : text[..ende] + VerdecktZusatz + text[ende..];
+    }
+
     /// <summary>check: ein Durchlauf des Waechters. Ergebnis "frei", "blockiert", "stelle" oder null.</summary>
     public static string? Pruefen(double? jetzt = null)
     {
@@ -377,7 +412,7 @@ public static class Haenger
                 if (blockade.Gemeldet || blockade.Stellen > 0)
                 {
                     var text = Meldung("Hauptfaden wieder frei nach %(s)s s", nun - blockade.Start, blockade.Seite, blockade.Vorgang);
-                    Schreiben(text);
+                    Schreiben(blockade.Verdeckt && !blockade.Notiert ? ZusatzEinfuegen(text) : text);
                     if (blockade.Notiert)
                     {
                         _fehlerlog(text);
@@ -398,9 +433,30 @@ public static class Haenger
             blockade.Vorgang = _vorgang;
         }
         var grenze = IstBekannt(blockade.Vorgang) ? BekanntSekunden : BlockSekunden;
-        if (!blockade.Gemeldet && alter >= grenze)
+        var verdeckt = Verdeckt();
+        if (verdeckt)
+        {
+            blockade.SichtbarSeit = null;
+        }
+        else
+        {
+            blockade.SichtbarSeit ??= nun;
+        }
+        if (!blockade.Gemeldet && alter >= grenze && verdeckt)
+        {
+            // Sammelliste 204: verdeckt (App Nap) nur in haenger.log; die Zeilen je Sitzung zaehlen nicht mit
+            blockade.Gemeldet = true;
+            blockade.Verdeckt = true;
+            Schreiben(ZusatzEinfuegen(Meldung("Hauptfaden seit %(s)s s ohne Rückruf", alter, blockade.Seite, blockade.Vorgang)));
+            ergebnis = "verdeckt";
+        }
+        // sichtbar: wie bisher; war die Blockade verdeckt gemeldet und steht der Herzschlag seit dem Sichtbarwerden
+        // so lange wie die Grenze, jetzt melden (ein echter Haenger im sichtbaren Fenster wird nie verschluckt)
+        if (!verdeckt && alter >= grenze && (!blockade.Gemeldet || (blockade.Verdeckt && !blockade.Notiert
+            && nun - blockade.SichtbarSeit!.Value >= grenze)))
         {
             blockade.Gemeldet = true;
+            blockade.Verdeckt = false;
             var text = Meldung("Hauptfaden seit %(s)s s ohne Rückruf", alter, blockade.Seite, blockade.Vorgang);
             Schreiben(text);
             if (_zeilen < ZeilenJeSitzung)
@@ -574,6 +630,7 @@ public static class Haenger
             _zuletzt = null;
             _wartepunkte = wartepunkte ?? (() => FaedenText());
             _fehlerlog = fehlerlog ?? (text => Fehlerprotokoll.Schreiben(text));
+            _sichtbar = () => null;
         }
     }
 }

@@ -104,6 +104,82 @@ public sealed class HaengerTests : IDisposable
         Assert.StartsWith("haenger.log: ", Haenger.ZustandText(Haenger.Pfad(_ordner.Pfad)), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 204, Weisung P11-34 Antwort 3a): am Mac drosselt macOS die Zeitgeber eines verdeckten
+    /// Programms (App Nap). Gegenprobe zu <see cref="BlockadeAbFuenfSekundenUndWiederFrei"/>: dieselbe Blockade, nur
+    /// verdeckt, steht allein in haenger.log (mit Zusatz), nie in fehler.log.
+    /// </summary>
+    [Fact]
+    public void VerdecktNurInHaengerLog()
+    {
+        Haenger.Sichtbarkeit(() => false);
+        Haenger.Seite("settings");
+        Haenger.Herzschlag(100);
+        Assert.Null(Haenger.Pruefen(104.9));
+        Assert.Equal("verdeckt", Haenger.Pruefen(105));
+        Assert.Equal("stelle", Haenger.Pruefen(240));   // Stelle wie bisher nur in haenger.log
+        Haenger.Herzschlag(241);
+        Assert.Equal("frei", Haenger.Pruefen(241.5));
+        Assert.Empty(_fehlerlog);
+        var log = Log();
+        Assert.Contains("| Hänger-Diagnose: Hauptfaden seit 5,0 s ohne Rückruf (Seite: settings, Vorgang: bereit)" + Haenger.VerdecktZusatz
+            + "\nWartepunkte: 1 lp T S wartet ===\n", log, StringComparison.Ordinal);
+        Assert.Contains("| Hänger-Diagnose: Hauptfaden wieder frei nach 141,5 s (Seite: settings, Vorgang: bereit)" + Haenger.VerdecktZusatz,
+            log, StringComparison.Ordinal);
+        // verdeckte Blockaden zaehlen nicht zu den zehn Zeilen je Sitzung: die naechste sichtbare kommt in fehler.log
+        Haenger.Sichtbarkeit(() => true);
+        Haenger.Herzschlag(300);
+        Assert.Equal("blockiert", Haenger.Pruefen(305));
+        Assert.Single(_fehlerlog);
+    }
+
+    /// <summary>Sichtbar (oder unbekannt) bleibt alles wie bisher: Gegenprobe, dass die Sichtbarkeit nur bei "verdeckt" wirkt.</summary>
+    [Fact]
+    public void SichtbarWieBisher()
+    {
+        Haenger.Sichtbarkeit(() => true);
+        Haenger.Seite("settings");
+        Haenger.Herzschlag(100);
+        Assert.Equal("blockiert", Haenger.Pruefen(105));
+        Haenger.Herzschlag(107.5);
+        Assert.Equal("frei", Haenger.Pruefen(108));
+        Assert.Equal(2, _fehlerlog.Count);
+        Assert.DoesNotContain(Haenger.VerdecktZusatz, Log(), StringComparison.Ordinal);
+        Haenger.Sichtbarkeit(() => throw new InvalidOperationException("Abfrage kaputt"));
+        Haenger.Herzschlag(200);
+        Assert.Equal("blockiert", Haenger.Pruefen(205));
+        Assert.Equal(3, _fehlerlog.Count);
+    }
+
+    /// <summary>
+    /// Ein echter Haenger wird nie verschluckt: verdeckt begonnen, dann sichtbar und der Herzschlag steht weiter so lange
+    /// wie die Grenze (5 s seit dem Sichtbarwerden) -> Meldung in fehler.log; vorher nicht (macOS braucht einen Augenblick,
+    /// bis der gedrosselte Zeitgeber wieder laeuft).
+    /// </summary>
+    [Fact]
+    public void VerdecktDannSichtbarUndWeiterBlockiertMeldet()
+    {
+        var sichtbar = false;
+        Haenger.Sichtbarkeit(() => sichtbar);
+        Haenger.Seite("settings");
+        Haenger.Herzschlag(100);
+        Assert.Equal("verdeckt", Haenger.Pruefen(105));
+        Assert.Equal("stelle", Haenger.Pruefen(150));
+        sichtbar = true;
+        Assert.Null(Haenger.Pruefen(151));
+        Assert.Null(Haenger.Pruefen(155.9));
+        Assert.Empty(_fehlerlog);
+        Assert.Equal("blockiert", Haenger.Pruefen(156));
+        Assert.Null(Haenger.Pruefen(157));
+        Haenger.Herzschlag(160);
+        Assert.Equal("frei", Haenger.Pruefen(160.5));
+        Assert.Equal(
+        [
+            "Hänger-Diagnose: Hauptfaden seit 56,0 s ohne Rückruf (Seite: settings, Vorgang: bereit)\nWartepunkte: 1 lp T S wartet",
+            "Hänger-Diagnose: Hauptfaden wieder frei nach 60,5 s (Seite: settings, Vorgang: bereit)\nWartepunkte: 1 lp T S wartet",
+        ], _fehlerlog);
+    }
+
     [Fact]
     public void BekannterVorgangErstAbDreissigSekunden()
     {

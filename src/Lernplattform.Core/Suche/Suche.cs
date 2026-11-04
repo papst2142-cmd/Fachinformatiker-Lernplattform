@@ -177,7 +177,8 @@ public static class GlobaleSuche
     /// <summary>hit_target: Bereich zu einem Optionen-Treffer und ob "Vorlagen" mit aufklappt.</summary>
     public static (string? Bereich, bool Vorlagen) Ziel(string titel, string anfrage)
     {
-        var bereich = Texte.Optionen.AlleFuer(true).FirstOrDefault(b => b.Titel == titel);
+        // Patch A 0.37.0: auch Bereiche, die es nur am Handy gibt ("Programm beenden")
+        var bereich = Texte.Optionen.AlleFuer(true).Concat(Texte.Optionen.AlleFuer(false)).FirstOrDefault(b => b.Titel == titel);
         if (bereich is null)
         {
             return (null, false);

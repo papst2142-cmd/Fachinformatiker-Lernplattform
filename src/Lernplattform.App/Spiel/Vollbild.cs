@@ -17,6 +17,41 @@ public static class Vollbild
     /// <summary>PC: Fenster in den Vollbildmodus (MainWindow); am Handy null.</summary>
     public static Action<bool>? Fenster { get; set; }
 
+    /// <summary>
+    /// Patch A 0.37.0 (Sammelliste 205): Bildschirme des PCs (MainWindow, Reihenfolge von Avalonia); am Handy null.
+    /// Der Start-Test setzt <see cref="BildschirmeFuerTests"/>, um zwei Bildschirme vorzutaeuschen.
+    /// </summary>
+    public static Func<IReadOnlyList<Core.Spiel.Ton.Bildschirm>>? Bildschirme { get; set; }
+
+    public static IReadOnlyList<Core.Spiel.Ton.Bildschirm>? BildschirmeFuerTests { get; set; }
+
+    /// <summary>Bildschirme fuer die Auswahl (leer am Handy oder ohne Fenster).</summary>
+    public static IReadOnlyList<Core.Spiel.Ton.Bildschirm> AlleBildschirme()
+    {
+        if (BildschirmeFuerTests is { } test)
+        {
+            return test;
+        }
+        try
+        {
+            return Bildschirme?.Invoke() ?? [];
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>Die Wahl "Bildschirm für Vollbild" hat gewechselt: laeuft das Vollbild, auf den neuen Bildschirm setzen.</summary>
+    public static void BildschirmNeu()
+    {
+        if (Dauerhaft)
+        {
+            Fenster?.Invoke(true);
+        }
+        Geaendert?.Invoke();
+    }
+
     /// <summary>Zuletzt gesetzter Zustand des Spiels (Start-Test und Rueckweg).</summary>
     public static bool An { get; private set; }
 
