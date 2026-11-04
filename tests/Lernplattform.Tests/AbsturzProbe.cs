@@ -273,7 +273,7 @@ internal static class AbsturzProbe
             start.Environment[name] = wert;
         }
         using var kind = Process.Start(start)!;
-        _ = kind.StandardError.ReadToEndAsync();
+        var fehlerText = kind.StandardError.ReadToEndAsync();
         var gemeldet = new List<string>();
         var uhr = Stopwatch.StartNew();
         try
@@ -283,7 +283,9 @@ internal static class AbsturzProbe
                 var zeile = kind.StandardOutput.ReadLineAsync();
                 if (!zeile.Wait(TimeSpan.FromSeconds(60)) || zeile.Result is null)
                 {
-                    throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet");
+                    // Weisung P11-38 (Lauf 494, neues Windows-Abbild): Angaben zum Kind, damit ein Rot eine Ursache nennt
+                    throw new InvalidOperationException("Absturzprobe: Kind ohne erwartete Meldung beendet ("
+                        + Angaben(kind, art, zeile.IsCompleted, gemeldet.Count, uhr.Elapsed, fehlerText) + ")");
                 }
                 if (art != ArtSpeichern && art != ArtTrainer && art != ArtProjektfeld && art != ArtAbschluss && art != ArtAusbildung && art != ArtKlausurFesthalten && art != ArtEinrichten
                     && art != ArtProjektLoeschen && art != ArtProjektfelderViele
@@ -307,5 +309,20 @@ internal static class AbsturzProbe
             kind.WaitForExit();
         }
         return gemeldet;
+    }
+
+    /// <summary>Art, Zeit, bisherige Meldungen, ob das Kind noch lebt (sonst Rueckgabe) und die letzten Zeilen seines
+    /// Fehlerkanals (nur bei einem Rot im Testprotokoll).</summary>
+    private static string Angaben(Process kind, string art, bool zeileFertig, int meldungen, TimeSpan zeit, Task<string> fehlerText)
+    {
+        var lebt = !kind.HasExited;
+        var ende = lebt ? "lebt noch" : "beendet mit Rueckgabe " + kind.ExitCode;
+        var fehler = fehlerText.Wait(TimeSpan.FromSeconds(lebt ? 0 : 5)) ? fehlerText.Result : "(Fehlerkanal noch offen)";
+        if (fehler.Length > 2000)
+        {
+            fehler = "..." + fehler[^2000..];
+        }
+        return "Art " + art + ", " + (zeileFertig ? "Ausgabe zu Ende" : "60 s ohne Zeile") + ", nach " + (int)zeit.TotalSeconds
+            + " s, " + meldungen + " Meldungen, Kind " + ende + ", Fehlerkanal: " + (fehler.Length == 0 ? "leer" : fehler.Trim());
     }
 }
