@@ -56,6 +56,9 @@ public sealed class SpielSeite : Grid
     private readonly Button _einrichten;
     private readonly Button _uebersicht;
     private readonly WrapPanel _ortKnoepfe = new();
+    // Phase 12 Welle 2: ohne 3D die Knoepfe der Moebel am Ort oben in der Ortsliste (sie rollt; unten in der Karte
+    // passten sie bei grosser Schrift am Handy nicht mehr ins Bild)
+    private readonly WrapPanel _ortAktionen = new() { IsVisible = false, Margin = new Thickness(0, 0, 0, 8) };
     private readonly StackPanel _einrichtenTafel = new() { Spacing = 6 };
     private string _tafelSchluessel = "";
     private readonly StackPanel _liste = new() { Spacing = 8 };
@@ -205,10 +208,11 @@ public sealed class SpielSeite : Grid
 
         _ortsliste = Schrift.Karte(new ScrollViewer
         {
-            Content = _liste,
+            Content = new StackPanel { Children = { _ortAktionen, _liste } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         });
         _liste.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);    // FW9 (Sammelliste 192) wie oben
+        _ortAktionen.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 8);
         _ortsliste.Padding = new Thickness(14, 10, 14 - Dialog.RandFuerLeiste, 10);
         _ortsliste.Width = OrtslisteBreite;
         _ortsliste.HorizontalAlignment = HorizontalAlignment.Right;
@@ -993,17 +997,19 @@ public sealed class SpielSeite : Grid
             knopf.Click += (_, _) => spiel.Knopf(aktion);
             _ortKnoepfe.Children.Add(knopf);
         }
+        _ortAktionen.Children.Clear();
         if (_ersatz.IsVisible && !spiel.Einrichten && spiel.ImInnenraum)
         {
             // Phase 12 Welle 1/2: ohne 3D geht die Figur nicht zu den Moebeln; Kleiderschrank, PC, Regal, Bett, Paket,
-            // Firma und Feierabend stehen dann immer am Ort (Spielwelt.ErsatzKnoepfe)
+            // Firma und Feierabend stehen dann immer am Ort (Spielwelt.ErsatzKnoepfe), oben in der Ortsliste
             foreach (var (aktion, name) in Spielwelt.ErsatzKnoepfe(spiel.Ablauf.Stand, spiel.Ort, [.. spiel.Knoepfe.Select(k => k.Aktion)]))
             {
                 var knopf = Schrift.Knopf(name, true);
                 knopf.Click += (_, _) => Tafel?.AktionAusfuehren(aktion);
-                _ortKnoepfe.Children.Add(knopf);
+                _ortAktionen.Children.Add(knopf);
             }
         }
+        _ortAktionen.IsVisible = _ortAktionen.Children.Count > 0;
         _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
         // neue Knoepfe: Textrolle wieder voll hoch, ZeileKuerzen kuerzt sie beim naechsten Layout, falls noetig
         _zeileRolle.MaxHeight = ZeileHoehe;
