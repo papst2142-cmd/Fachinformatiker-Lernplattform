@@ -233,6 +233,14 @@ public partial class MainView : UserControl
         // behalten ihr Esc
         AttachedToVisualTree += (_, _) => TopLevel.GetTopLevel(this)?.AddHandler(KeyDownEvent, EscVollbild, Avalonia.Interactivity.RoutingStrategies.Bubble);
         DetachedFromVisualTree += (_, e) => (e.RootVisual as TopLevel)?.RemoveHandler(KeyDownEvent, EscVollbild);
+        // Patch A 0.41.1 (Sammelliste 218): am Handy den Wunsch "Systemleisten aus" an Avalonia geben, damit er nach dem
+        // Start und nach der Rueckkehr aus dem Hintergrund bleibt (Lernplattform.Spiel.Vollbild.Leisten). Am PC hat
+        // Avalonia keinen InsetsManager (Windows, X11, macOS: null), dort aendert sich nichts.
+        AttachedToVisualTree += (_, _) =>
+        {
+            Lernplattform.Spiel.Vollbild.Leisten = TopLevel.GetTopLevel(this)?.InsetsManager;
+            Lernplattform.Spiel.Vollbild.LeistenMerken();
+        };
 
         SizeChanged += (_, e) => AufbauWaehlen(e.NewSize.Width);
         Schrift.Geaendert += SchriftGeaendert;

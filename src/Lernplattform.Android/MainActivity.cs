@@ -24,6 +24,15 @@ public class MainActivity : AvaloniaMainActivity
     /// </summary>
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
+#if UPDATEPROBE
+        // Patch A 0.41.1 (Sammelliste 218): Gegenprobe der Emulator-Probe, Start mit "--ez vollbild_gegenprobe true"
+        // verhaelt sich wie vor dem Fix (Avalonia erfaehrt nichts vom Wunsch "Systemleisten aus"); vor base.OnCreate,
+        // weil MainView dort schon in die Ansicht kommt
+        if (Intent?.GetBooleanExtra(UpdateProbe.Gegenprobe, false) == true)
+        {
+            Lernplattform.Spiel.Vollbild.LeistenUeberAvalonia = false;
+        }
+#endif
         base.OnCreate(savedInstanceState);
         SystemmessungEinrichten();
 #if PROBE
@@ -209,6 +218,9 @@ public class MainActivity : AvaloniaMainActivity
 #if !PROBE
         // A 0.39.0: Rueckkehr aus der Einstellung "Unbekannte Apps installieren"
         _installer?.Zurueck();
+#endif
+#if UPDATEPROBE
+        UpdateProbe.LeistenMelden(this);
 #endif
     }
 

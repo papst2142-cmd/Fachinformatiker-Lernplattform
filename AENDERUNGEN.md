@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.41.1
+Am Handy und am Tablet bleibt das Vollbild jetzt auch nach einem Neustart an.
+
+- Hast du in den Optionen „Vollbild“ eingeschaltet, blendet die App die Leisten von Android oben und unten beim nächsten Start wieder aus. Bisher kamen sie nach dem Start zurück, und erst Aus- und wieder Einschalten in den Optionen half.
+- Das gilt auch, wenn du die App kurz verlässt und wieder öffnest.
+
 ## A 0.41.0
 Im Spiel findest du die Menüs jetzt dort, wo sie hingehören: am PC zu Hause, am Bücherregal, am Schreibtisch im Büro, in der Bank und auf dem Amt. Neu ist der Online-Shop am PC zu Hause; bestellte Möbel stehen nach der Lieferzeit als Paket vor deiner Haustür.
 
