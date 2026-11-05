@@ -433,12 +433,20 @@ jobs:
       - name: Liste vollstaendig und Aenderungsnummer (sollwerte.py)
         run: python3 -I werkzeuge/vergleich/sollwerte.py pruefen
       # G52 haengt an den Inhalten in inhalte_csharp/lernen: das Werkzeug (ohne Python-Linie, liest die eingefrorene
-      # tests/Vergleich/quiz_python.json) muss die gespeicherte Datei bytegleich ergeben. So faellt eine Inhalte-Aenderung
-      # ohne neue G52 (Sollwert-Aenderung) sofort auf.
-      - name: G52 bytegleich aus den Inhalten
+      # tests/Vergleich/quiz_python.json) muss die gespeicherte Datei ergeben, bis auf die Zeile "python" (Fassung des
+      # Interpreters, wie im frueheren Vergleich) Zeichen fuer Zeichen gleich. So faellt eine Inhalte-Aenderung ohne
+      # neue G52 (Sollwert-Aenderung) sofort auf.
+      - name: G52 gleich aus den Inhalten
         run: |
           python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py . "$RUNNER_TEMP/lerninhalte_pruefung.json"
-          cmp tests/Vergleich/lerninhalte_pruefung.json "$RUNNER_TEMP/lerninhalte_pruefung.json"
+          python3 -I - "$RUNNER_TEMP/lerninhalte_pruefung.json" <<'PY'
+          import json, sys
+          alt = json.load(open("tests/Vergleich/lerninhalte_pruefung.json", encoding="utf-8"))
+          neu = json.load(open(sys.argv[1], encoding="utf-8"))
+          alt.pop("python"); neu.pop("python")
+          assert json.dumps(alt, ensure_ascii=False, indent=1) == json.dumps(neu, ensure_ascii=False, indent=1), "G52 weicht ab: neue G52 ist eine Sollwert-Aenderung"
+          print("G52 gleich")
+          PY
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)
