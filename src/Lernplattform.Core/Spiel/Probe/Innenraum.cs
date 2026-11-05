@@ -14,6 +14,15 @@ namespace Lernplattform.Core.Spiel.Probe;
 public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen);
 
 /// <summary>Phase 9 W1 (Weisung P9-3): Stelle (X, Z) und Blick (Bogenmass wie die Figur) einer sitzenden Person, Stuhl = Mitte des Stuhls.</summary>
+/// <summary>Weisung P12-6: gezeichnete Teile eines Einrichtungsstuecks (Pruefung auf Ueberschneidung und Verdecken).</summary>
+public sealed record DekoUmriss(PyObjekt Deko, IReadOnlyList<Teil> Teile)
+{
+    /// <summary>Grundflaeche aller Teile (x1, z1, x2, z2) und die groesste Hoehe.</summary>
+    public (float X1, float Z1, float X2, float Z2, float Oben) Flaeche => Teile.Count == 0
+        ? (0, 0, 0, 0, 0)
+        : (Teile.Min(t => Math.Min(t.X1, t.X2)), Teile.Min(t => Math.Min(t.Z1, t.Z2)), Teile.Max(t => Math.Max(t.X1, t.X2)), Teile.Max(t => Math.Max(t.Z1, t.Z2)), Teile.Max(t => Math.Max(t.Y1, t.Y2)));
+}
+
 public sealed record Sitzplatz(float X, float Z, float Blick, Vector2 Stuhl);
 
 public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObjekt? Aussehen, bool Auftrag, PyObjekt Daten);
@@ -121,6 +130,39 @@ public sealed class Innenraum
     public IReadOnlyList<Teil> Teile => _teile;
 
     public IReadOnlyList<ModellStueck> Stuecke => _stuecke;
+
+    /// <summary>
+    /// Weisung P12-6 (nur fuer Pruefungen): je Einrichtungsstueck die gezeichneten Teile als achsparallele Quader
+    /// (Modelle mit ihrer Lage umgerechnet, Ersatz-Quader ohne Grafik). Aendert nichts an der Darstellung.
+    /// </summary>
+    public IReadOnlyList<DekoUmriss> DekoUmrisse => _dekoUmrisse;
+
+    private readonly List<DekoUmriss> _dekoUmrisse = [];
+
+    private IEnumerable<Teil> StueckeAlsTeile(IEnumerable<ModellStueck> stuecke)
+    {
+        foreach (var st in stuecke)
+        {
+            if (Grafik?.Modell(st.Name) is not { } gm)
+            {
+                continue;
+            }
+            Vector3 min = new(float.MaxValue), max = new(float.MinValue);
+            foreach (var x in new[] { gm.Min.X, gm.Max.X })
+            {
+                foreach (var y in new[] { gm.Min.Y, gm.Max.Y })
+                {
+                    foreach (var z in new[] { gm.Min.Z, gm.Max.Z })
+                    {
+                        var p = Vector3.Transform(new Vector3(x, y, z), st.Lage);
+                        min = Vector3.Min(min, p);
+                        max = Vector3.Max(max, p);
+                    }
+                }
+            }
+            yield return new Teil(TeilArt.Quader, min.X, min.Y, min.Z, max.X, max.Y, max.Z, Vector3.Zero);
+        }
+    }
 
     /// <summary>Welche Moebel wo stehen (aendert sie sich, laedt die Darstellung neu).</summary>
     public string Signatur { get; private set; } = "";
@@ -782,7 +824,9 @@ public sealed class Innenraum
         }
         foreach (var d in deko)
         {
+            var (teileVorher, stueckeVorher) = (_teile.Count, _stuecke.Count);
             Deko(d);
+            _dekoUmrisse.Add(new DekoUmriss(d, _teile.Skip(teileVorher).Concat(StueckeAlsTeile(_stuecke.Skip(stueckeVorher))).ToList()));
             signatur.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{d["typ"]}@{Py.F(d["x"])},{Py.F(d["y"])},{Py.Int(Get(d, "dreh", 0L))}"));
         }
         if (_festPlan is not null && _festMuster is not null)

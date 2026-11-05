@@ -17,11 +17,11 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 |---|---|
 | Version | Auf `main` **A 0.39.0** (Doku-PR #104, main d9b2f10). Zweig der Welle 1 Phase 12: **A 0.40.0** (Android 1004000). Releases macht Chat; CC startet `release.yml` nie |
 | Phase | 0–11 abgenommen (Phase 11: Nico 05.11.2026 08:41 MEZ). **Phase 11**: W1, FW1–FW10, W2, W3, Mac-Welle, Fehlerberichte, Patch-Welle, Seitenleiste, CI schneller und Handy-Update gemergt (A 0.32.0 bis 0.39.0, PR #84 bis #103); Gerätetest auf allen 5 Geräten (04.11.2026), NVDA und TalkBack in Ordnung; 0 offene F |
-| Jetzt | Phase 12 Welle 1 Kleiderschrank (A 0.40.0, Weisung P12-5): Hinweis beim Anlegen, Name und Aussehen nur am Kleiderschrank (Hautton, Frisur, Haarfarbe gesperrt), vier Schränke 100/400/600/1000 € mit 8/16/28/unbegrenzt Plätzen, Kaufgrenze im Kaufhaus, Zurückverkaufen zum halben Preis, einmaliges Fenster für alte Spielstände. PR mit Meldung P12-5 wartet auf Diff-Lesung (Chat), Optik-OK und Merge-OK (Nico). Danach Welle 2 (A 0.41.0) im neuen Thread |
+| Jetzt | Phase 12 Welle 1 Kleiderschrank (A 0.40.0, Weisung P12-5): Hinweis beim Anlegen, Name und Aussehen nur am Kleiderschrank (Hautton, Frisur, Haarfarbe gesperrt), vier Schränke 100/400/600/1000 € mit 8/16/28/unbegrenzt Plätzen, Kaufgrenze im Kaufhaus, Zurückverkaufen zum halben Preis, einmaliges Fenster für alte Spielstände. Diff von Chat gelesen (Weisung P12-6); Nachbesserung mit Meldung P12-6 (Schränke an der unteren Wand, Prüfung Überschneiden/Verdecken/Erreichbar) wartet auf Optik-OK und Merge-OK (Nico). Danach Welle 2 (A 0.41.0) im neuen Thread |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-5** (Welle 1 Phase 12) / P12-6 |
-| Sammelliste | nächste freie Nummer **215**; 214 (Ladezeit S24 und Tab A9+) unter „Offen bis 1.0“, 122/123 K |
+| Letzte/nächste Meldung | **P12-6** (Welle 1 Phase 12, Nachbesserung) / P12-7 |
+| Sammelliste | nächste freie Nummer **216** (215 Elektromarkt obere Reihe nicht erreichbar, offen); 214 (Ladezeit S24 und Tab A9+) unter „Offen bis 1.0“, 122/123 K |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
