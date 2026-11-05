@@ -254,7 +254,11 @@ public sealed class SpielSeite : Grid
         Children.Add(ebene);
         Ebene = ebene;
         // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
-        ebene.LayoutUpdated += (_, _) => FreiSetzen();
+        ebene.LayoutUpdated += (_, _) =>
+        {
+            ZeileKuerzen();
+            FreiSetzen();
+        };
 
         Flaeche.BildGezeichnet += () =>
         {
@@ -634,6 +638,28 @@ public sealed class SpielSeite : Grid
         return groesse;
     }
 
+    /// <summary>
+    /// Phase 12 Welle 1: ragt die untere Karte unten aus der Seite (viele Knoepfe, grosse Schrift, schmales Handy), wird die
+    /// Textrolle darueber kuerzer (der Text rollt, die Knoepfe bleiben ganz im Bild); hoechstens bis 40 Punkte.
+    /// </summary>
+    private void ZeileKuerzen()
+    {
+        var hoehe = Ebene.Bounds.Height;
+        var ueber = _unten.Bounds.Bottom - hoehe;
+        if (!_unten.IsVisible || !_zeileRolle.IsVisible || hoehe <= 0 || ueber <= 0.5)
+        {
+            return;
+        }
+        var neu = Math.Max(40, Math.Floor(_zeileRolle.Bounds.Height - ueber));
+        if (neu < _zeileRolle.MaxHeight - 0.5)
+        {
+            _zeileRolle.MaxHeight = neu;
+        }
+    }
+
+    /// <summary>Hoechste Hoehe der Textrolle ohne Kuerzung (ein Viertel der Seite).</summary>
+    private double ZeileHoehe => Math.Max(40, Ebene.Bounds.Size.Height / 4);
+
     private void FreiSetzen()
     {
         if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben
@@ -656,7 +682,7 @@ public sealed class SpielSeite : Grid
         _unten.MaxWidth = nebeneinander && _ortsliste.IsVisible
             ? Math.Min(UntenBreite, groesse.Width - _ortsliste.Width - (2 * Rand))
             : UntenBreite;
-        _zeileRolle.MaxHeight = Math.Max(40, groesse.Height / 4);
+        _zeileRolle.MaxHeight = ZeileHoehe;
     }
 
     public bool ErsatzSichtbar => _ersatz.IsVisible;
@@ -974,6 +1000,8 @@ public sealed class SpielSeite : Grid
             _ortKnoepfe.Children.Add(schrank);
         }
         _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
+        // neue Knoepfe: Textrolle wieder voll hoch, ZeileKuerzen kuerzt sie beim naechsten Layout, falls noetig
+        _zeileRolle.MaxHeight = ZeileHoehe;
         _einrichtenTafel.Children.Clear();
         _einrichtenTafel.IsVisible = spiel.Einrichten;
         if (!spiel.Einrichten)
