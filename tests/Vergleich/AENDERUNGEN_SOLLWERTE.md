@@ -55,3 +55,7 @@ Regeln:
 ## Nr. 12
 - Was: Start der festen Sollwerte (Welle Sammelliste 217). Neu `quiz_python.json` (Fragetexte von `fisi_core.QUIZ_QUESTIONS` v0.63.2, einmalig mit `werkzeuge/vergleich/erzeuge_quiz_python.py` erzeugt); `pruefe_lerninhalte.py` (G52) liest sie statt der Python-Linie und erzeugt `lerninhalte_pruefung.json` bytegleich. Kein Sollwert hat sich im Inhalt geändert.
 - Freigabe: Weisung P12-14 (Nico 05.11.2026 20:52 MEZ, 1a 2a 3a 4a 5a). Test: `SollwerteTests`.
+
+## Nr. 13
+- Was: Neu geschützt die Stadt-Fassungen in `inhalte_csharp/spiel/stadtbau/` (Phase 13 Welle 1 „Stadt aus Daten“): `stadt1_fassung0.fistadt` (Stadt 1 bis A 0.41.1: Karte aus `inhalte/spiel/orte.json`, `stadt.json`, `innenraeume.json` unverändert, dazu die 22 Laternenplätze und das Beet, die vorher fest im Programm standen) und `aktiv.json` (Stadt 1 → Fassung 0). Vorher: keine Datei, die Szene kam aus den drei Dateien und den festen Werten. Nachher: das Spiel zeichnet aus der Fassung; Szene-Prüfsumme in allen Jahres- und Festzeiten, alle Innenräume und alle Fingerabdrücke unverändert. Kein bisheriger Sollwert hat sich geändert.
+- Freigabe: Plan Phase 13 (Weisung P12-16, Nico 05.11.2026 22:22 MEZ, 1a 2a 3a 4a 5a). Test: `StadtbauFassungTests`.

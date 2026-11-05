@@ -179,6 +179,13 @@ public sealed class Stadt
 
     public PyObjekt Daten { get; }
 
+    /// <summary>
+    /// Phase 13 Welle 1 (Weisung P12-16): die Stadt-Fassung, aus der diese Stadt stammt (das Spiel setzt immer die geltende
+    /// Fassung, <see cref="Stadtbau.AktiveFassung"/>); die Darstellung nimmt daraus die Laternen und Beete. null nur in Tests,
+    /// die die Stadt direkt aus den Dateien bauen (dann gelten die Werte der Fassung 0 aus dem Programm).
+    /// </summary>
+    public Stadtbau.StadtFassung? Fassung { get; init; }
+
     /// <summary>Kantenlaenge einer Zelle in Karteneinheiten.</summary>
     public double Zelle { get; }
 
