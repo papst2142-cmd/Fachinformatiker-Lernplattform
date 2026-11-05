@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 # Erzeugt die Vergleichswerte G28 (Datenmengen umrechnen, Uebertragungsdauer)
 # fuer Phase 3 / Welle W4. Unabhaengig geschrieben nur aus Plan P3-15
 # Abschnitt 4 (4.1/4.2) und den Praezisierungen der Spezifikation G28.

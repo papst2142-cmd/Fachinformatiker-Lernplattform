@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt die Vergleichswerte G47 (Phase 7, W3 "Spiel-Kern Teil 2": die eigene
 Firma ueber viele Tage), gerechnet vom echten Python-Code der Python-Linie

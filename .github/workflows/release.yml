@@ -94,7 +94,7 @@ jobs:
           tests (windows-latest, Layout 100)
           tests (windows-latest, Layout 150)
           tests (windows-latest, Lernteil und Spiel)
-          vergleichswerte (Python 3.12)'
+          sollwerte (Pruefsummen)'
           soll="$(echo "$soll" | sed 's/^ *//' | sort)"
           gefunden=0
           for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do

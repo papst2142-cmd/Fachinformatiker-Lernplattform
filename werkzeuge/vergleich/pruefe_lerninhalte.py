@@ -6,10 +6,13 @@ Gegenkontrolle der Ladepruefung von inhalte_csharp/lernen. Erzeugt die
 Vergleichswerte G52 (tests/Vergleich/lerninhalte_pruefung.json).
 
 Geschrieben nur aus der Weisung, dem Plan (Abschnitte 5 und 12) und den
-Pruefregeln von fisi_core.validate_content; liest keinen C#-Code. Aus der
-Python-Linie v0.63.2 nimmt es nur die Lerninhalte (inhalte/) und die Liste
-QUIZ_QUESTIONS (mit den im Programm erzeugten Aufgaben, die ebenfalls
-eindeutig bleiben muessen).
+Pruefregeln von fisi_core.validate_content; liest keinen C#-Code. Es nimmt
+die Lerninhalte (inhalte/, byte-gleich mit v0.63.2) aus dem Repo und die
+Fragetexte von QUIZ_QUESTIONS (mit den im Programm erzeugten Aufgaben, die
+ebenfalls eindeutig bleiben muessen) aus tests/Vergleich/quiz_python.json.
+Welle Sammelliste 217 (Weisung P12-14): seitdem ohne Python-Linie; die
+eingefrorene Liste erzeugte einmalig erzeuge_quiz_python.py. Eine neue G52
+ist eine Sollwert-Aenderung (tests/Vergleich/AENDERUNGEN_SOLLWERTE.md).
 
 Inhalt:
   echt    - Meldungen fuer die echten Dateien in inhalte_csharp/lernen
@@ -19,15 +22,12 @@ Inhalt:
   einteilung - Zahl der Eintraege je Art und Wert in einteilung_bisher.json
 
 Aufruf (Python 3.12, nur Standardbibliothek):
-  python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <python_linie> <repo> <ziel.json>
+  python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <repo> <ziel.json>
 """
-import atexit
 import copy
 import json
 import os
-import shutil
 import sys
-import tempfile
 
 FACHRICHTUNGEN = ["si", "ae", "dpa", "dv"]
 ABSCHNITT = {"si": "C", "ae": "B", "dpa": "D", "dv": "E"}
@@ -298,18 +298,11 @@ def setzen(daten, pfad, art, wert):
 
 
 def main():
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print(__doc__)
         return 2
-    linie, repo, ziel = sys.argv[1:]
-    tmp = tempfile.mkdtemp(prefix="lerninhalte_")
-    atexit.register(shutil.rmtree, tmp, True)
-    for name in ("HOME", "APPDATA", "LOCALAPPDATA", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
-        os.environ[name] = tmp
-    os.environ["FISI_DB_PATH"] = os.path.join(tmp, "unbenutzt.db")
-    sys.path.insert(0, linie)
-    import fisi_core as core
-    quiz_alle = [{"q": q["q"]} for q in core.QUIZ_QUESTIONS]
+    repo, ziel = sys.argv[1:]
+    quiz_alle = [{"q": q} for q in lesen(os.path.join(repo, "tests", "Vergleich", "quiz_python.json"))["fragen"]]
 
     inhalte = os.path.join(repo, "inhalte")
     bisher = {name: lesen(os.path.join(inhalte, name + ".json"))

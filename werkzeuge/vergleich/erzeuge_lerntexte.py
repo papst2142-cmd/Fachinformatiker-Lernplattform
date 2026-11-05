@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt die Vergleichswerte G22 (Phase 2, Welle 2, Pakete L4/L5/L6): Texte und
 Textregeln der Karteikarten, des Pruefungstrainers (Uebung) und des Dialogs

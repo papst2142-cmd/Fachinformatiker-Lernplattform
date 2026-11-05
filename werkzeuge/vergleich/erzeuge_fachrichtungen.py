@@ -1,3 +1,4 @@
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """Erzeugt die Vergleichswerte G36 (Fachrichtungen, Klausur-Bewertung,
 Gesamtergebnis und Ergaenzung) als tests/Vergleich/fachrichtungen.json.
 

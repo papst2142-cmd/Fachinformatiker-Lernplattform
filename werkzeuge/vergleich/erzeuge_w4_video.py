@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 # Erzeugt die Vergleichswerte G29 (Bild und Video mit Dauer und Kompression,
 # Uebernahme in den Rechner Uebertragungsdauer) fuer Phase 3 / Welle W4b.
 # Unabhaengig geschrieben nur aus Plan P3-15 Abschnitt 4.3 und den

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 # Erzeugt die Vergleichswerte G31 (Rechentrainer, Aufgabenarten "einheiten",
 # "dauer" und "video", Stufen 1-3) fuer Phase 3 / Welle W4. Unabhaengig
 # geschrieben nur aus der Spezifikation "Auftrag 2, Teil B" (ohne C#-Code).

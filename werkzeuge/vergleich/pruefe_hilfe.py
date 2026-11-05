@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Welle Sammelliste 217 (Weisung P12-14): laeuft nicht mehr in der CI; unabhaengige Gegenrechnung nur bei einer freigegebenen Sollwert-Aenderung (tests/Vergleich/AENDERUNGEN_SOLLWERTE.md).
 """Unabhaengige Gegenkontrolle G35 (hilfe.json).
 
 Geschrieben nur aus P4-10_Spezifikation_G35.md, P4-10_Wortliste_W4.md und

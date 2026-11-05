@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt src/Lernplattform.Core/Spiel/PyTitel.Tabelle.cs (Phase 11 FW2, Sammelliste 80):
 die Tabelle, mit der C# den ersten Buchstaben von Pythons str.capitalize() nachbaut

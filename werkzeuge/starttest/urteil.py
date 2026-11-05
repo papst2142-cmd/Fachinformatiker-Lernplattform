@@ -276,6 +276,55 @@ def still(aufruf, *argumente, ausgabe=None):
     return ist, puffer.getvalue()
 
 
+def feste_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/workflows/release.yml"):
+    """Welle Sammelliste 217 (Weisung P12-14): die Jobs mit festem Namen (ohne Matrix, z. B. "sollwerte (Pruefsummen)"
+    und android) stehen genau so in der Liste von release.yml; ein umbenannter oder entfernter Job (vorher
+    "vergleichswerte") wuerde sonst das Release nie starten lassen. Ohne beide Dateien keine Pruefung."""
+    if not (os.path.exists(ci) and os.path.exists(release)):
+        return 0
+    with open(ci, encoding="utf-8") as f:
+        fest = sorted(set(m.strip() for m in re.findall(r"^    name: (.+)$", f.read(), re.M) if "${{" not in m))
+    with open(release, encoding="utf-8") as f:
+        block = re.search(r"soll='(.*?)'", f.read(), re.S)
+    if not block:
+        print("FEHLER: Selbsttest feste Jobs: Liste soll='...' in " + release + " nicht gefunden")
+        return 1
+    soll = sorted(z.strip() for z in block.group(1).splitlines()
+                  if z.strip() and not z.strip().startswith(("tests (", "pakete (")))
+    if fest != soll:
+        print("FEHLER: Selbsttest feste Jobs: ci.yml %s, release.yml %s" % (fest, soll))
+        return 1
+    print("Selbsttest feste Jobs: %s gleich der Liste in release.yml" % ", ".join(fest))
+    return 0
+
+
+def selbsttest_feste_jobs_gegenprobe():
+    """Gegenprobe: eine release.yml mit dem alten Job "vergleichswerte (Python 3.12)" ist rot."""
+    import tempfile
+    ci, release = ".github/workflows/ci.yml", ".github/workflows/release.yml"
+    if not (os.path.exists(ci) and os.path.exists(release)):
+        return 0
+    with open(release, encoding="utf-8") as f:
+        text = f.read()
+    falsch = text.replace("sollwerte (Pruefsummen)'", "vergleichswerte (Python 3.12)'")
+    if falsch == text:
+        print("FEHLER: Selbsttest feste Jobs: Gegenprobe ohne Job sollwerte in " + release)
+        return 1
+    with tempfile.TemporaryDirectory() as ordner:
+        pfad = os.path.join(ordner, "release.yml")
+        with open(pfad, "w", encoding="utf-8") as f:
+            f.write(falsch)
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = feste_jobs_gleich_release(ci, pfad)
+    if rc != 1:
+        print("FEHLER: Selbsttest feste Jobs: Gegenprobe mit altem Job nicht rot")
+        return 1
+    print("Selbsttest feste Jobs: Gegenprobe mit altem Job rot")
+    return 0
+
+
 def selbsttest():
     """Feste Faelle (Weisung P11-19): Intel-Mac Messzeit-Rot = gruen mit INFO, Layout-Rot = rot; dasselbe
     ohne Ausnahme (macos-15 und alle anderen) bleibt rot."""
@@ -349,6 +398,8 @@ def selbsttest():
             rot = 1
     rot |= wachhund_unter_zeitlimit()
     rot |= tests_jobs_gleich_release()
+    rot |= feste_jobs_gleich_release()
+    rot |= selbsttest_feste_jobs_gegenprobe()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:

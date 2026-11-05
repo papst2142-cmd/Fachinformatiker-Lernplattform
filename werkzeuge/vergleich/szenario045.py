@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """Spielstaende fuer die Screenshots 0.45 (PC und Handy).
 frueh(game): Tag 12, noch angestellt bei Bitweiche.
 spaet(game): eigene Firma auf Stufe 4 mit 7 Mitarbeitern, 40+ Firmentage,
