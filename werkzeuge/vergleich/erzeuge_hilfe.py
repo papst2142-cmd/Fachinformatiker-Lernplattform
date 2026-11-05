@@ -94,6 +94,8 @@ PAARE = [
     # Phase 11 FW5b (Weisung P11-11, Sammelliste 24, Nico 02.11.2026 Antwort 24b, Chat 1a): kein Rechnername mehr (G24)
     {"nr": "G24", "thema": "sicherung", "alt": "der Name des Geräts, am PC mit dem Rechnernamen.", "neu": "der Name des Geräts (PC oder Handy)."},
     {"nr": "G24", "thema": "abgleich", "alt": "der Name des Geräts, am PC mit dem Rechnernamen.", "neu": "der Name des Geräts (PC oder Handy)."},
+    # A 0.39.0 (Weisung P11-40, Wortlaut Meldung P11-31): Update im Programm auch am Handy (P39)
+    {"nr": "P39", "thema": "update", "alt": "Am Handy wird die neue Version im Browser heruntergeladen. Danach die Datei öffnen und „Installieren“ tippen. Dein Lernstand bleibt erhalten.", "neu": "Am Handy lädt „Jetzt aktualisieren“ die neue Version selbst, prüft sie und übergibt sie an Android. Beim ersten Mal fragt die App nach der Erlaubnis „Unbekannte Apps installieren“. Android schließt die App beim Installieren; öffne sie danach wieder. Dein Lernstand bleibt erhalten."},
     {"nr": "N2", "thema": "RELEASE_PAGE_TEXT", "alt": REL_PY, "neu": REL_CS},
 ]
 

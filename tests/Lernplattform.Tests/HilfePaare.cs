@@ -86,6 +86,10 @@ internal static class HilfePaare
         ("G24", "abgleich",
             "der Name des Geräts, am PC mit dem Rechnernamen.",
             "der Name des Geräts (PC oder Handy)."),
+        // A 0.39.0 (Weisung P11-40, Wortlaut Meldung P11-31): Update im Programm auch am Handy
+        ("P39", "update",
+            "Am Handy wird die neue Version im Browser heruntergeladen. Danach die Datei öffnen und „Installieren“ tippen. Dein Lernstand bleibt erhalten.",
+            "Am Handy lädt „Jetzt aktualisieren“ die neue Version selbst, prüft sie und übergibt sie an Android. Beim ersten Mal fragt die App nach der Erlaubnis „Unbekannte Apps installieren“. Android schließt die App beim Installieren; öffne sie danach wieder. Dein Lernstand bleibt erhalten."),
         ("N2", "RELEASE_PAGE_TEXT",
             "github.com/papst2142-cmd/Fisi-Lernplattform/releases",
             "github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases"),

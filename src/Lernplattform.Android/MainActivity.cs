@@ -82,7 +82,57 @@ public class MainActivity : AvaloniaMainActivity
         });
         // Phase 8 W8: Schalter "Vollbild" schon beim Start an
         Lernplattform.Spiel.Vollbild.GeraetAnwenden();
+#if !PROBE
+        UpdateEinrichten();
+#endif
     }
+
+#if !PROBE
+    private static readonly Lazy<System.Net.Http.HttpClient> Netz = new(() => new System.Net.Http.HttpClient());
+    private HandyInstaller? _installer;
+    private HandyInstaller.Empfaenger? _empfaenger;
+
+    /// <summary>
+    /// A 0.39.0 (Weisung P11-40): Update im Programm wie am PC. Die Probe-APK bleibt beim Weg ueber den Browser
+    /// (eigene Kennung, die Pruefung des Paketnamens liesse ihr Update ohnehin nie zu).
+    /// </summary>
+    private void UpdateEinrichten()
+    {
+        _installer = new HandyInstaller(this);
+        var installer = _installer;
+        var url = Lernplattform.Core.Update.GithubSuche.NeuesteUrl;
+        var fingerabdruck = Lernplattform.Core.Update.HandyPruefung.Fingerabdruck;
+#if UPDATEPROBE
+        (url, fingerabdruck) = UpdateProbe.Ziel();
+#endif
+        Lernplattform.Aktualisierung.Aktualisierung.Handy = installer;
+        Lernplattform.Aktualisierung.Aktualisierung.Quelle = () => new Lernplattform.Core.Update.HandyQuelle(Netz.Value, installer,
+            Lernplattform.Aktualisierung.Aktualisierung.Anzeige, url, fingerabdruck);
+        _empfaenger = new HandyInstaller.Empfaenger(this);
+        var filter = new global::Android.Content.IntentFilter(HandyInstaller.Aktion);
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            RegisterReceiver(_empfaenger, filter, global::Android.Content.ReceiverFlags.NotExported);
+        }
+        else
+        {
+            RegisterReceiver(_empfaenger, filter);
+        }
+#if UPDATEPROBE
+        UpdateProbe.Starten(installer);
+#endif
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_empfaenger is not null)
+        {
+            UnregisterReceiver(_empfaenger);
+            _empfaenger = null;
+        }
+        base.OnDestroy();
+    }
+#endif
 
     private Systemmessung? _messung;
 
@@ -156,6 +206,10 @@ public class MainActivity : AvaloniaMainActivity
     {
         base.OnResume();
         Lernplattform.Spiel.TonDienst.Hintergrund(false);
+#if !PROBE
+        // A 0.39.0: Rueckkehr aus der Einstellung "Unbekannte Apps installieren"
+        _installer?.Zurueck();
+#endif
     }
 
     protected override void OnStop()

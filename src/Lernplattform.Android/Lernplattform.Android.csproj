@@ -27,6 +27,19 @@
     <AndroidManifest>Properties\AndroidManifest.Probe.xml</AndroidManifest>
   </PropertyGroup>
 
+  <!-- A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm, NUR in der CI (-p:UpdateProbe=true),
+       nie ausgeliefert. x86_64 fuer den Emulator, Testserver und Fingerabdruck des Testschluessels aus dem Lauf;
+       die App sucht beim Start ueber den Testserver und aktualisiert sich ohne Bedienung (UpdateProbe.cs). -->
+  <PropertyGroup Condition="'$(UpdateProbe)' == 'true'">
+    <DefineConstants>$(DefineConstants);UPDATEPROBE</DefineConstants>
+    <RuntimeIdentifiers>android-x64</RuntimeIdentifiers>
+    <AndroidManifest>Properties\AndroidManifest.UpdateProbe.xml</AndroidManifest>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UpdateProbe)' == 'true'">
+    <AssemblyMetadata Include="UpdateProbeUrl" Value="$(UpdateProbeUrl)" />
+    <AssemblyMetadata Include="UpdateProbeFingerabdruck" Value="$(UpdateProbeFingerabdruck)" />
+  </ItemGroup>
+
   <ItemGroup>
     <AndroidResource Include="Icon.png">
       <Link>Resources\drawable\Icon.png</Link>

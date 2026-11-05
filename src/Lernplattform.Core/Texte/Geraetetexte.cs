@@ -19,21 +19,22 @@ public static class Geraetetexte
     // B6/B7 und N5 sind nur Abstand, Umbruch und Umbruchschutz: der Vergleich vereinheitlicht sie.
     public static readonly IReadOnlyList<GeraeteAusnahme> Ausnahmen =
     [
-        new("B1", "Navigation", "Menuepunkt 1 \"Dashboard\" (Seitenleiste) / \"Start\" (untere Leiste), Nico 20.10."),
+        new("B1", "Navigation", "Daten wie Python (G9): Menuepunkt 1 \"Dashboard\" (NAV_ITEMS) / \"Start\" (NAV), Nico 20.10.; angezeigt wird seit A 0.38.0 auch in der Seitenleiste \"Start\" (Navigation.PcLeiste, Weisung P11-36)"),
         new("B3", "Tagesziel.Hinweis", "Erinnerung verhaelt sich verschieden (PC: Hinweis, solange das Programm geoeffnet ist; Handy: beim Oeffnen und Zurueckholen der App; gebaut seit A 0.32.0)"),
         new("B4", "Optionen.Bereiche", "\"Datenbank\" gibt es nur am PC"),
         new("B4", "Optionen.Abschnitte", "\"Hänger\" gibt es nur am PC (N3)"),
         new("B4", "Optionen.Suchwoerter", "Suchwoerter von \"Hänger\" nur am PC (N3)"),
-        new("B5", "Navigation", "Seitenleiste mit 14 Punkten / untere Leiste mit 6 Punkten und Sammelseite \"Lernen\""),
-        new("B5", "Kopfzeilen", "Sammelseite \"Lernen\" nur im schmalen Aufbau; Spiel-Seiten fehlen dort noch (N7)"),
+        new("B5", "Navigation", "Daten wie Python (G9): Seitenleiste wie NAV_ITEMS / untere Leiste mit 6 Punkten und Sammelseite \"Lernen\"; angezeigt wird seit A 0.38.0 am PC eine Seitenleiste mit denselben 6 Punkten plus Hilfe, Lernen und Spiel als klappbare Gruppen (Navigation.PcLeiste, PcLernen, PcLeisteUnten; Sammelliste 207/208)"),
+        new("B5", "Kopfzeilen", "Brotkrumen wie Python (VIEW_TITLES / crumbs): \"LERNEN > ÜBERSICHT\" nur in der Liste des Handys (der breite Aufbau nimmt sie seit A 0.38.0 von dort), Spiel-Seiten nur in der Liste des PCs (N7)"),
         new("B8", "Dashboard.Ring", "gleiches Wort; nur bei kaputten Daten (ueber 100 %) zeigt der PC die gekappte Zahl wie Python"),
         new("B9", "Diagnose.Knoepfe", "\"Ordner öffnen\" gibt es nur am PC"),
         new("B10", "Uebernahme.Dateifilter", "Android kennt den Dateityp .fisisicherung nicht"),
         new("B11", "Abgleich.Geraet", "\"PC\" / \"Handy\" (ohne Rechnernamen, Sammelliste 24, Nico 02.11.2026 Antwort 24b)"),
         new("B12", "Pruefung.StartFrage", "\"das Programm\" / \"die App\" (Wortliste W2 Nr 24, Weisung P4-6)"),
         new("B13", "Rundgang.Tasten", "Tastenzeile des Rundgangs nur am PC (fisi_hilfe.TOUR_KEYS, Wortliste W4)"),
-        new("B14", "Update.Knopf", "PC laedt und installiert selbst (\"Jetzt aktualisieren\", ohne Installation \"Zur Download-Seite\"), Handy laedt die APK im Browser (\"Herunterladen\", main.py 6163, Wortliste W3)"),
-        new("B14", "Update.Hinweis", "PC ohne Installation Hinweis auf die Download-Seite, Handy Hinweis zum Browser bzw. Release ohne APK (main.py 6141, Wortliste W3)"),
+        new("B14", "Update.Knopf", "beide \"Jetzt aktualisieren\", wenn die App selbst installieren kann (Handy seit A 0.39.0, Weisung P11-40); ohne Installation PC \"Zur Download-Seite\", Handy \"Herunterladen\" im Browser (main.py 6163, Wortliste W3; Probe-APK)"),
+        new("B14", "Update.Hinweis", "PC installiert ohne Hinweis, Handy nennt Laden, Pruefen und Groesse (A 0.39.0); ohne Installation PC Hinweis auf die Download-Seite, Handy Hinweis zum Browser bzw. Release ohne APK (main.py 6141, Wortliste W3)"),
+        new("B14", "Update.Schutz", "PC Schutzprogramm (UPDATE_PROTECTION_HINT, G35), Handy Play Protect (A 0.39.0, Weisung P11-40 Punkt 2)"),
     ];
 
     // -- Aufbau (pc = breiter Aufbau) -----------------------------------------
@@ -102,9 +103,13 @@ public static class Geraetetexte
 
     /// <summary>Hauptknopf im Fenster "Update verfügbar" (B14, Phase 5 BE10).</summary>
     public static string UpdateKnopf(bool installierbar, bool pc) =>
-        pc ? (installierbar ? UpdateTexte.Jetzt : UpdateTexte.ZurSeite) : UpdateTexte.Herunterladen;
+        pc ? (installierbar ? UpdateTexte.Jetzt : UpdateTexte.ZurSeite) : (installierbar ? UpdateTexte.Jetzt : UpdateTexte.Herunterladen);
 
     /// <summary>Hinweiszeile im Fenster "Update verfügbar" (B14): leer, wenn der PC selbst installieren kann.</summary>
     public static string UpdateHinweis(bool installierbar, bool mitDatei, bool pc) =>
-        pc ? (installierbar ? "" : UpdateTexte.NichtInstalliert) : (mitDatei ? UpdateTexte.HandyHinweis : UpdateTexte.HandyOhneDatei);
+        pc ? (installierbar ? "" : UpdateTexte.NichtInstalliert)
+            : installierbar && mitDatei ? UpdateTexte.HandyJetztHinweis : (mitDatei ? UpdateTexte.HandyHinweis : UpdateTexte.HandyOhneDatei);
+
+    /// <summary>A 0.39.0 (B14, Weisung P11-40 Punkt 2): Hinweis zum Schutzprogramm (PC) bzw. Play Protect (Handy) im Update-Fenster.</summary>
+    public static string UpdateSchutz(bool pc) => pc ? Hilfe.RundgangTexte.UpdateSchutzHinweis : UpdateTexte.HandySchutzHinweis;
 }

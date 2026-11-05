@@ -74,4 +74,24 @@ public static class UpdateTexte
     public const string Herunterladen = "Herunterladen";
     public const string HandyHinweis = "Die neue Version wird im Browser heruntergeladen. Danach die Datei öffnen und „Installieren“ tippen - dein Lernstand bleibt erhalten.";
     public const string HandyOhneDatei = "Für Android ist in diesem Release keine App-Datei dabei.";
+
+    // -- A 0.39.0 (Weisung P11-40, Nico 1a 2a 3a 4a; Wortlaut Meldung P11-31): Update im Programm am Handy ----------
+    public const string HandyJetztHinweis = "Die App lädt die neue Version selbst (etwa %s MB), prüft sie und installiert sie. Dein Lernstand bleibt erhalten.";
+    public const string HandyMobileDaten = "Du bist gerade nicht im WLAN. Das Update lädt etwa %s MB über mobile Daten.";
+    public const string HandyPruefe = "Update wird geprüft …";
+    public const string HandyLaeuft = "Die neue Version ist geprüft und wird installiert. Android schließt die App dafür kurz; öffne sie danach einfach wieder. Dein Lernstand bleibt erhalten.";
+    public const string HandySchutzHinweis = "Warnt Android (Play Protect) vor der App, ist das bei neuen Versionen normal. Mehr in der Hilfe unter Update und Schutzprogramm.";
+    public const string ErlaubnisTitel = "Erlaubnis für Updates";
+    public const string ErlaubnisText = "Damit sich die Lernplattform selbst aktualisieren kann, braucht sie einmalig die Erlaubnis „Unbekannte Apps installieren“. "
+        + "Tippe auf „Zur Einstellung“, schalte dort „Von dieser Quelle zulassen“ ein und tippe dann auf „Zurück“. Das Update geht danach von allein weiter.";
+    public const string ZurEinstellung = "Zur Einstellung";
+    public const string Abbrechen = "Abbrechen";
+    public const string KeineErlaubnis = "Ohne die Erlaubnis „Unbekannte Apps installieren“ kann sich die App nicht selbst aktualisieren. Die neue Version gibt es auch über „Zur Download-Seite“.";
+    public const string HandyAbgebrochen = "Die Installation wurde abgebrochen. Dein Lernstand ist unverändert. Du kannst es später erneut versuchen.";
+    public const string KeinPlatz = "Auf dem Gerät ist nicht genug Speicher frei (nötig etwa %s MB). Bitte Platz schaffen und erneut versuchen.";
+    public const string FremdeDatei = "Die geladene Datei stammt nicht von der Lernplattform (Signatur stimmt nicht). Sie wurde gelöscht und nicht installiert. Dein Lernstand ist unverändert.";
+    public const string NichtNeuer = "Die geladene Datei ist nicht neuer als die installierte Version. Sie wurde gelöscht und nicht installiert. Dein Lernstand ist unverändert.";
+    public const string KeinePruefsumme = "Für diese Version fehlt eine Prüfsumme. Zur Sicherheit wird sie nicht installiert. Die neue Version gibt es auf der Download-Seite.";
+    public const string AndroidGesperrt = "Android hat die Installation gesperrt, zum Beispiel durch die „Automatische Sperre“ in den Samsung-Einstellungen. Dein Lernstand ist unverändert.";
+    public const string TippAndroid = "Tipp: Das Update später erneut versuchen. Klappt es dann nicht, über „Zur Download-Seite“ die App-Datei im Browser laden und öffnen.";
 }

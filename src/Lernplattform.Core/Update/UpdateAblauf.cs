@@ -10,10 +10,11 @@ namespace Lernplattform.Core.Update;
 /// <summary>
 /// Ein verfuegbares Update (UpdateInfo in fisi_update.py). Version als Anzeige ("A 0.11.1"), Notizen
 /// roh (Markdown), Seite = Release-Seite; Datei nur, wenn es fuer dieses System eine gibt.
-/// Intern: Gegenstueck des Updaters (PC: Velopack-UpdateInfo), sonst null.
+/// Intern: Gegenstueck des Updaters (PC: Velopack-UpdateInfo), sonst null. TabellenPruefsumme: SHA-256 der Datei
+/// aus der Tabelle "Prüfsummen (SHA-256)" im Release-Text (Handy, A 0.39.0: zweite Quelle neben dem digest von GitHub).
 /// </summary>
 public sealed record UpdateAngebot(string Version, string Notizen, string Seite, string? DateiName = null, string? DateiUrl = null,
-    long Groesse = 0, string? Pruefsumme = null, object? Intern = null);
+    long Groesse = 0, string? Pruefsumme = null, object? Intern = null, string? TabellenPruefsumme = null);
 
 /// <summary>Fehler beim Suchen, Laden oder Installieren; der Text ist fuer die Anzeige (UpdateError).</summary>
 public sealed class UpdateFehler(string text) : Exception(text);
@@ -39,6 +40,9 @@ public interface IUpdateQuelle
     /// macOS fragt nach dem Passwort), sonst null. Steht im Update-Fenster und als Zeile in update.log.
     /// </summary>
     string? Hinweis => null;
+
+    /// <summary>A 0.39.0: Name des Installers fuer update.log (PC Velopack, Handy Android).</summary>
+    string Name => "Velopack";
 }
 
 /// <summary>
@@ -192,7 +196,15 @@ public static class UpdateAblauf
     }
 
     /// <summary>Nach einem gestarteten Update gehaltene Sperre (gibt das Ende des Programms frei).</summary>
-    internal static IDisposable? GehalteneSperre { get; set; }
+    internal static IDisposable? GehalteneSperre { get => _gehalten; set => _gehalten = value; }
+
+    private static IDisposable? _gehalten;
+
+    /// <summary>
+    /// A 0.39.0: am Handy kommt das Ergebnis der Installation spaeter von Android. Scheitert sie, endet das
+    /// Programm nicht: die gehaltene Sperre wird wieder frei (Abgleich, Sicherung usw. gehen wieder).
+    /// </summary>
+    public static void SperreFreigeben() => Interlocked.Exchange(ref _gehalten, null)?.Dispose();
 
     private static string InstallierenGesperrt(IUpdateQuelle quelle, UpdateAngebot angebot, Einstellungen einstellungen, string? ordner, Uhr? uhr)
     {
@@ -217,7 +229,7 @@ public static class UpdateAblauf
         {
             Updateprotokoll.Schreiben(UpdateTexte.MacPasswortProtokoll, ordner);
         }
-        Updateprotokoll.Schreiben("Installer wird gestartet: Velopack, Version " + angebot.Version + ", " + angebot.DateiName, ordner);
+        Updateprotokoll.Schreiben("Installer wird gestartet: " + quelle.Name + ", Version " + angebot.Version + ", " + angebot.DateiName, ordner);
         try
         {
             quelle.Installieren(angebot);

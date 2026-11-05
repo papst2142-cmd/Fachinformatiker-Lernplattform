@@ -206,16 +206,35 @@ jobs:
       # Phase 7 W1, nur Messung (Plan Abschnitt 3, Weg 1). Mac-Welle (Weisung P11-28): am Mac ist OpenGL jetzt die
       # Vorgabe (der Standard-Start-Test oben misst sie, Rueckfall Ortsliste, weil die CI-Macs kein GL haben); dieser
       # Schritt misst umgekehrt den alten Weg mit dem Notschalter LERNPLATTFORM_MAC_METAL=1. Aendert kein Urteil.
-      - name: Nur Messung macOS nur Metal (Notschalter, ohne Urteil)
+      # Sammelliste 213 (Weisung P11-40): bis A 0.38.0 lief hier der ganze Start-Test (Lernteil und Spiel) in einem
+      # Prozess unter einer Schrittzeit von 20 min, die nur fuer den Spielteil bemessen war; am Intel-Mac dauert allein
+      # der Lernteil rund 17,5 min (Lauf 499), der ganze Lauf 18,6 bis ueber 19 min, Versuch 1 lief in den Wachhund.
+      # Jetzt zwei Schritte mit denselben Teilen, Schrittzeiten und Wachhund-Minuten wie die gewerteten Schritte oben
+      # (lernen 25/15, spiel 20/10); gemessen wird dasselbe wie vorher, nur getrennt, jeder mit frischem Datenordner.
+      - name: Nur Messung macOS nur Metal, Lernteil (Notschalter, ohne Urteil)
         if: always() && runner.os == 'macOS' && matrix.metal && steps.bauen.outcome == 'success'
-        timeout-minutes: 20
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
         shell: bash
         env:
           LERNPLATTFORM_MAC_METAL: "1"
-          STARTTEST_WACHHUND_MINUTEN: 19
-          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_metal
+          LERNPLATTFORM_MESSUNG_TEIL: lernen
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 24 || 14 }}
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_metal_lernen
         run: |
-          datei=messung_${{ env.MESS_OS }}_macmetal_versuch${{ github.run_attempt }}.txt
+          datei=messung_${{ env.MESS_OS }}_macmetal_lernen_versuch${{ github.run_attempt }}.txt
+          GITHUB_OUTPUT=/dev/null bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
+          grep -E "^(Schalter|Spiel|URTEIL)|FEHLER" "$datei" || true
+      - name: Nur Messung macOS nur Metal, Spiel (Notschalter, ohne Urteil)
+        if: always() && runner.os == 'macOS' && matrix.metal && steps.bauen.outcome == 'success'
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
+        shell: bash
+        env:
+          LERNPLATTFORM_MAC_METAL: "1"
+          LERNPLATTFORM_MESSUNG_TEIL: spiel
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 9 }}
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_mac_metal_spiel
+        run: |
+          datei=messung_${{ env.MESS_OS }}_macmetal_spiel_versuch${{ github.run_attempt }}.txt
           GITHUB_OUTPUT=/dev/null bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           grep -E "^(Schalter|Spiel|URTEIL)|FEHLER" "$datei" || true
       # Phase 11 W3 (Weisung P11-21): Layoutpruefung unter Windows in voller PC-Groesse und mit Skalierung 150 %.
@@ -314,7 +333,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.38.0 -> A 0.38.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.39.0 -> A 0.39.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -354,16 +373,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.38.0
-          path: pakete/feed-A-0.38.0/
+          name: paket-${{ matrix.rid }}-A-0.39.0
+          path: pakete/feed-A-0.39.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.38.1
-          path: pakete/feed-A-0.38.1/
+          name: updateprobe-${{ matrix.rid }}-A-0.39.1
+          path: pakete/feed-A-0.39.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.38.0-tar
+          name: appimage-linux-x64-A-0.39.0-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -603,11 +622,12 @@ jobs:
       - name: Android-Workload
         run: dotnet workload install android
       - name: APK bauen
+        id: apkbau
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.38.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.38.0 installierbar.
-      - name: Update-APK A 0.38.1 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.38.1 -o apk-update
+      # Spike D (A4b): zweite APK A 0.39.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.39.0 installierbar.
+      - name: Update-APK A 0.39.1 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.39.1 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -657,17 +677,17 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1003800'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1003801'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1003900'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1003901'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.38.0
+          name: lernplattform-android-A-0.39.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.38.1
+          name: updateprobe-android-A-0.39.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
@@ -709,3 +729,45 @@ jobs:
           path: |
             release/entwurf/
             release/release.md
+      # A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm (Android 14, x86_64). Drei
+      # Probe-APKs n, n+1, n+2 (-p:UpdateProbe=true, nur hier, nie ausgeliefert) mit dem Testschluessel dieses Laufs;
+      # die App sucht ueber einen Testserver auf dem Runner, laedt, prueft (Pruefsummen, Paket, Zertifikat, Versionscode)
+      # und uebergibt an Android wie auf dem echten Handy. Haelt fest, ob Android nachfragt. Ablauf und Urteil:
+      # werkzeuge/android/update_probe.sh. Kommt nach dem Release-Bau, damit dessen obj-Ordner unberuehrt bleibt.
+      - name: Emulator-Probe Update, APKs bauen (x86_64, Testschluessel)
+        id: probebau
+        if: "!cancelled() && steps.apkbau.outcome == 'success'"
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          fp=$("$BT/apksigner" verify --print-certs apk/*-Signed.apk | grep "SHA-256" | head -n 1 | awk '{print $NF}')
+          test -n "$fp"
+          v=$(sed -nE 's:.*<Version>([0-9]+\.[0-9]+\.[0-9]+)</Version>.*:\1:p' Directory.Build.props | head -n 1)
+          basis=${v%.*}; fix=${v##*.}
+          for i in 0 1 2; do
+            dotnet publish src/Lernplattform.Android -c Release -p:UpdateProbe=true -p:Version=$basis.$((fix + i)) \
+              -p:UpdateProbeUrl=http://10.0.2.2:8765/latest.json -p:UpdateProbeFingerabdruck=$fp -o updateprobe-$i
+            "$BT/aapt2" dump badging updateprobe-$i/*-Signed.apk | head -n 1
+          done
+      - name: Emulator-Probe Update, KVM freigeben
+        if: "!cancelled() && steps.probebau.outcome == 'success'"
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emulator-Probe Update (n -> n+1 -> n+2, Android 14)
+        if: "!cancelled() && steps.probebau.outcome == 'success'"
+        timeout-minutes: 30
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash werkzeuge/android/update_probe.sh updateprobe-0/*-Signed.apk updateprobe-1/*-Signed.apk updateprobe-2/*-Signed.apk emulator_probe_update.txt
+      - uses: actions/upload-artifact@v7
+        if: "!cancelled() && steps.probebau.outcome == 'success'"
+        with:
+          name: emulator-probe-update
+          path: emulator_probe_update.txt
+          if-no-files-found: warn

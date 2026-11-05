@@ -61,6 +61,11 @@ public static class UpdateDienst
         }
         else
         {
+            if (Aktuell.Handy is not null)
+            {
+                // A 0.39.0: das Handy installiert selbst, also auch dort pruefen, ob das letzte Update angekommen ist
+                DispatcherTimer.RunOnce(LetztesUpdatePruefen, PruefungNach);
+            }
             Automatisch(SucheNach);
         }
     }
@@ -213,7 +218,7 @@ public static class UpdateDienst
     /// "Jetzt aktualisieren": laden, pruefen, installieren (im Hintergrund). Danach schliesst das
     /// Programm nach 1,5 s (der Updater wartet darauf und startet die neue Version).
     /// </summary>
-    internal static async Task<string> AktualisierenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, Action installiere)
+    public static async Task<string> AktualisierenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, Action installiere)
     {
         Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         if (Vorgaenge.Belegt)
@@ -227,7 +232,41 @@ public static class UpdateDienst
         var quelle = Aktuell.Quelle!();
         await Task.Run(() => UpdateAblauf.LadenAsync(quelle, angebot, fortschritt));
         installiere();
-        return await Task.Run(() => UpdateAblauf.Installieren(quelle, angebot, Zustand.Einstellungen, sperreHalten: true));
+        _handyAngebot = angebot;
+        var text = await Task.Run(() => UpdateAblauf.Installieren(quelle, angebot, Zustand.Einstellungen, sperreHalten: true));
+        // A 0.39.0: am Handy endet die App nicht selbst, Android schliesst sie beim Ersetzen (Nico 3a)
+        return quelle is HandyQuelle ? UpdateTexte.HandyLaeuft : text;
+    }
+
+    private static UpdateAngebot? _handyAngebot;
+
+    /// <summary>
+    /// A 0.39.0: Rueckmeldung von Android zur Installation (vom Android-Teil auf dem UI-Faden gerufen). Bei einem
+    /// Fehler sind Merker, Sperre und Datei weg; der Text erscheint im offenen Update-Fenster oder in einem eigenen.
+    /// </summary>
+    public static void HandyRueckmeldung(int status, string? meldung)
+    {
+        try
+        {
+            var text = HandyQuelle.Rueckmeldung(status, meldung, _handyAngebot?.Groesse ?? 0, Zustand.Einstellungen,
+                Aktuell.Handy?.LadeOrdner ?? Path.GetTempPath());
+            if (text is null)
+            {
+                return;
+            }
+            if (Fenster is { } fenster)
+            {
+                fenster.HandyFehler(text);
+            }
+            else
+            {
+                _ = Dialog.Zeigen(UpdateTexte.FensterTitel, text, Dialog.Ok);
+            }
+        }
+        catch (Exception e)
+        {
+            Fehlerprotokoll.Schreiben(e);
+        }
     }
 
     /// <summary>Nach dem Start des Updaters: Programm schliessen (ohne letzten Abgleich).</summary>

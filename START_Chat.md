@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.38.0** (Seitenleiste, PR #101, main 1633c84). Welle „CI schneller“ ohne Version. Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
+| Version | Auf `main` **A 0.38.0** (Seitenleiste, PR #101; Welle „CI schneller“ PR #102, main 5054bf1). Zweig der Welle Handy-Update: **A 0.39.0**. Release nur nach Nicos Merge-OK durch Chat, CC startet `release.yml` nie |
 | Phase | 0–10 abgenommen (Phase 10: Nico 02.11.2026 06:58 MEZ). **Phase 11** läuft (Plan `Fi-Austausch/weisungen/Plan_Phase11_CSharp.md` mit Nachtrag Fehlerwellen): W1, FW1–FW10, W2, W3, Mac-Welle, Fehlerberichte, Patch-Welle und Seitenleiste gemergt (A 0.32.0 bis 0.38.0); Gerätetest auf allen 5 Geräten gelaufen (04.11.2026), NVDA und TalkBack in Ordnung |
-| Jetzt | Welle „CI schneller“ (Weisung P11-38, Sammelliste 209): lange CI-Jobs in parallele Teile (voller Lauf 16 Jobs, Merge-Tor 16/16), Intel-Mac 2. Start-Test-Lauf nur bei echtem Fund. Danach Handy-Update A 0.39.0 (Sammelliste 208, 210), dann Bericht Phase 11 mit 0 offenen F |
+| Jetzt | Handy-Update A 0.39.0 (Weisungen P11-39/P11-40, Sammelliste 208, 210, 213): die App lädt am Handy selbst, prüft (Prüfsummen, Paket, Zertifikat, Version) und übergibt an Android; Emulator-Probe n → n+1 → n+2 im Job `android`; Metal-Messung am Mac in zwei Schritten. Bau-Meldung P11-32 mit Anleitung für Nicos Gerätetest. Danach Bericht Phase 11 mit 0 offenen F |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Vergleichswerte | G1–G52 bestehen, CI erzeugt alle neu (G52 `lerninhalte_pruefung.json`: Ladeprüfung mit Fachgespräch und Sichten AE/DPA/DV). Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P11-28** (Seitenleiste) / P11-29 (CI schneller) |
-| Sammelliste | nächste freie Nummer **213** |
+| Letzte/nächste Meldung | **P11-32** (Bau Handy-Update) / P11-33 |
+| Sammelliste | nächste freie Nummer **214** |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
