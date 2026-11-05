@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt src/Lernplattform.Core/Texte/RechnerTexte.Python.cs (Phase 3, Welle 1,
 Pakete R1-R3): alle Texte und festen Werte des Abschnitts "PRAXIS-RECHNER" aus

@@ -1,3 +1,4 @@
+# Welle Sammelliste 217 (Weisung P12-14): laeuft nicht mehr in der CI; unabhaengige Gegenrechnung nur bei einer freigegebenen Sollwert-Aenderung (tests/Vergleich/AENDERUNGEN_SOLLWERTE.md).
 """Unabhaengiges Pruefskript G34 (abschlussprojekt.json).
 
 Nur aus der Spezifikation P4-8 (Teil D) und dem Nachtrag P4-9 geschrieben,

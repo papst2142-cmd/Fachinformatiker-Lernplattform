@@ -2,7 +2,7 @@
 # Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
 #
 # Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
-# - schnell: vergleichswerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
+# - schnell: sollwerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
 #   Laeuft bei jedem Push auf einen Pull Request und auf main.
 # - voll: dazu tests (windows-latest x4, macos-15 x2, macos-15-intel x3), pakete x4 und android (16 Jobs;
 #   bis A 0.38.0 10 Teile, Welle CI schneller Weisung P11-38: lange Jobs in parallele Teile).
@@ -413,192 +413,32 @@ jobs:
           if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
           echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
 
-  vergleichswerte:
-    # Erzeugt die Vergleichswerte mit Python 3.12 (wie die Python-Linie) aus
-    # dem eingefrorenen Stand v0.63.2 neu und prueft, dass sie gleich sind.
-    name: vergleichswerte (Python 3.12)
+  sollwerte:
+    # Welle Sammelliste 217 (Weisung P12-14, Nico 1a 2a 3a 4a 5a): die Vergleichswerte G1-G52 (tests/Vergleich),
+    # inhalte/ (byte-gleich mit Python v0.63.2), die fuenf Zeichen-Tabellen und einteilung_bisher.json sind feste
+    # Sollwerte "Stand C#". Die CI erzeugt sie nicht mehr aus der Python-Linie (vorher Job "vergleichswerte"), sondern
+    # prueft ihre SHA-256 gegen tests/Vergleich/SOLLWERTE.sha256. Aenderung nur mit Nicos Freigabe und Eintrag in
+    # tests/Vergleich/AENDERUNGEN_SOLLWERTE.md (gleiche Regeln prueft SollwerteTests auf allen Systemen).
+    # Stufe schnell und voll.
+    name: sollwerte (Pruefsummen)
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/checkout@v7
-        with:
-          repository: papst2142-cmd/Fisi-Lernplattform
-          ref: v0.63.2
-          path: python-linie
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Inhalte gleich wie v0.63.2
-        run: diff -r python-linie/inhalte inhalte
-      - name: Zufall und Inhalte neu erzeugen
+      - name: Pruefsummen (sha256sum)
+        run: grep -v '^#' tests/Vergleich/SOLLWERTE.sha256 | sha256sum -c --strict --quiet -
+      - name: Liste vollstaendig und Aenderungsnummer (sollwerte.py)
+        run: python3 -I werkzeuge/vergleich/sollwerte.py pruefen
+      # G52 haengt an den Inhalten in inhalte_csharp/lernen: das Werkzeug (ohne Python-Linie, liest die eingefrorene
+      # tests/Vergleich/quiz_python.json) muss die gespeicherte Datei bytegleich ergeben. So faellt eine Inhalte-Aenderung
+      # ohne neue G52 (Sollwert-Aenderung) sofort auf.
+      - name: G52 bytegleich aus den Inhalten
         run: |
-          mkdir -p neu
-          python3 -I werkzeuge/vergleich/erzeuge_zufall.py python-linie neu/zufall.json
-          python3 -I werkzeuge/vergleich/erzeuge_daten.py python-linie inhalte neu
-          python3 -I werkzeuge/vergleich/erzeuge_farbwelten.py python-linie neu/farbwelten.json
-          # Phase 1 (Weisung P1-2): G10 Fehlerprotokoll, G11 Datenbank/Einstellungen, G12 Inhalte-Pruefung
-          python3 -I werkzeuge/vergleich/erzeuge_fehlerprotokoll.py python-linie neu/fehlerprotokoll.json
-          python3 -I werkzeuge/vergleich/erzeuge_datenbank.py python-linie neu/datenbank.json
-          python3 -I werkzeuge/vergleich/erzeuge_inhalte_pruefung.py python-linie inhalte neu/inhalte_pruefung.json
-          # Welle 2: G6b eigene Farben, G9 Beschriftungen, G13 Dashboard
-          python3 -I werkzeuge/vergleich/erzeuge_eigene_farben.py python-linie neu/eigene_farben.json
-          python3 -I werkzeuge/vergleich/erzeuge_beschriftungen.py python-linie neu/beschriftungen.json
-          python3 -I werkzeuge/vergleich/erzeuge_dashboard.py python-linie tests/Vergleich/testdaten.db neu/dashboard.json
-          # G14 Potenz x ** y wie Python unter Linux (Core/Mathe/PythonPow)
-          python3 -I werkzeuge/vergleich/erzeuge_potenz.py neu/potenz.json
-          # Phase 2 Welle 1 (Weisung P2-2): G15 Wiederholung, G16 Reihenfolge, G17 Trainer/Speichern,
-          # G20 Uebernahme; Erzeuger fuer den Pruefsummen-Sonderfall (Sammelliste 15)
-          python3 -I werkzeuge/vergleich/erzeuge_wiederholung.py python-linie tests/Vergleich/testdaten.db neu/wiederholung.json
-          python3 -I werkzeuge/vergleich/erzeuge_reihenfolge.py python-linie neu/reihenfolge.json
-          python3 -I werkzeuge/vergleich/erzeuge_trainer.py python-linie neu/trainer.json
-          python3 -I werkzeuge/vergleich/erzeuge_uebernahme.py python-linie neu/uebernahme.json
-          python3 -I werkzeuge/vergleich/erzeuge_pruefsumme_sonderfall.py python-linie neu/pruefsumme_sonderfall.json
-          # Phase 2 Welle 2 (Weisung P2-4): G22 Texte der Karteikarten, des Pruefungstrainers und der Uebernahme
-          python3 -I werkzeuge/vergleich/erzeuge_lerntexte.py python-linie tests/Vergleich/uebernahme.json neu/lerntexte.json
-          # Phase 2 Welle 3 (Weisung P2-7): G18 Fortschritt (L7), G19 Suche (L8) und die Tabelle fuer
-          # Pythons str.lower() (Core/Suche/PythonKlein.Tabelle.cs, muss bytegleich neu entstehen)
-          python3 -I werkzeuge/vergleich/erzeuge_auswertung.py python-linie tests/Vergleich/testdaten.db neu/auswertung.json
-          python3 -I werkzeuge/vergleich/erzeuge_suche.py python-linie neu/suche.json
-          python3 -I werkzeuge/tabellen/erzeuge_python_klein.py neu/PythonKlein.Tabelle.cs
-          # Phase 11 FW2 (Sammelliste 80): Tabelle fuer Pythons str.capitalize() im Spiel (Core/Spiel/PyTitel.Tabelle.cs)
-          python3 -I werkzeuge/tabellen/erzeuge_py_titel.py neu/PyTitel.Tabelle.cs
-          # Phase 2 Welle 4 (Weisung P2-11): G21 Abgleich (ein Versuch ohne Netz) und Sicherung fuer die alte App
-          python3 -I werkzeuge/vergleich/erzeuge_abgleich.py python-linie neu/abgleich.json
-          # Phase 2 Welle 5 (Weisung P2-14 A5): G23 Reglerspur der eigenen Farben
-          python3 -I werkzeuge/vergleich/erzeuge_reglerspur.py python-linie neu/reglerspur.json
-          # Phase 3 Welle 1 (Weisung P3-2): G24 Zahlen und Zeilen, G25 Subnetting, G26 RAID/Bildschirm/USV;
-          # die Tabellen fuer Pythons Textregeln und die Rechner-Texte muessen bytegleich neu entstehen
-          python3 -I werkzeuge/vergleich/erzeuge_rechner_zahlen.py python-linie neu/rechner_zahlen.json
-          python3 -I werkzeuge/vergleich/erzeuge_subnetting.py python-linie neu/subnetting.json
-          python3 -I werkzeuge/vergleich/erzeuge_rechner.py python-linie neu/rechner.json
-          # Phase 3 Welle 3 (Weisung P3-10): G27 Rechen-Trainer
-          python3 -I werkzeuge/vergleich/erzeuge_rechentrainer.py python-linie neu/rechentrainer.json
-          # Phase 3 W4a (Weisungen P3-16/P3-17): G28 Datenmengen und Uebertragungsdauer, G31 Trainer einheiten/dauer,
-          # unabhaengige Skripte ohne Python-Linie
-          python3 -I werkzeuge/vergleich/erzeuge_w4_datenmengen.py neu/datenmengen.json
-          python3 -I werkzeuge/vergleich/erzeuge_w4_rechentrainer.py neu/rechentrainer_w4.json
-          # Phase 3 W4b (Weisung P3-20): G29 Bild und Video mit Uebernahme, unabhaengiges Skript
-          python3 -I werkzeuge/vergleich/erzeuge_w4_video.py neu/video.json
-          # Phase 3 W4c (Weisung P3-22): G30 WiSo-Rechner, unabhaengiges Skript
-          python3 -I werkzeuge/vergleich/erzeuge_w4_wiso.py neu/wiso.json
-          # Phase 4 W1 (Weisung P4-3): G33 Notizblock und Listen, G34 Abschlussprojekt (Teil speichern)
-          python3 -I werkzeuge/vergleich/erzeuge_notizblock.py python-linie tests/Vergleich/testdaten.db neu/notizblock.json
-          python3 -I werkzeuge/vergleich/erzeuge_abschlussprojekt.py python-linie neu/abschlussprojekt.json
-          # Phase 4 W2 (Weisung P4-6): G32 Klausur aus Python, G36 Fachrichtungen (unabhaengiges Skript)
-          python3 -I werkzeuge/vergleich/erzeuge_pruefung.py python-linie neu/pruefung.json
-          python3 -I werkzeuge/vergleich/erzeuge_fachrichtungen.py inhalte neu/fachrichtungen.json
-          python3 -I werkzeuge/tabellen/erzeuge_python_zeichen.py neu/PythonZeichen.Tabelle.cs
-          python3 -I werkzeuge/tabellen/erzeuge_rechner_texte.py python-linie neu/RechnerTexte.Python.cs
-          # Phase 4 W3 (Weisung P4-8): Zeichentabelle des PDF-Exports und G34 aus dem unabhaengigen Skript
-          python3 -I werkzeuge/tabellen/erzeuge_pdf_zeichen.py python-linie neu/PdfZeichen.Tabelle.cs
-          python3 -I werkzeuge/vergleich/pruefe_abschlussprojekt.py inhalte neu/abschlussprojekt_skript.json
-          # Phase 4 W4 (Weisung P4-10/P4-11): G35 Hilfe aus Python und aus dem unabhaengigen Skript
-          python3 -I werkzeuge/vergleich/erzeuge_hilfe.py python-linie neu/hilfe.json
-          python3 -I werkzeuge/vergleich/pruefe_hilfe.py neu/hilfe_skript.json
-          # Phase 5 W1 (Weisung P5-3): G37 Alles ersetzen und Zusammenfuehren, G40 Loeschen und Marke mit Uhrabweichung
-          python3 -I werkzeuge/vergleich/erzeuge_sicherung_ersetzen.py python-linie tests/Vergleich/uebernahme.json neu/sicherung_ersetzen.json
-          python3 -I werkzeuge/vergleich/erzeuge_loeschen.py python-linie tests/Vergleich/uebernahme.json neu/loeschen.json
-          # Phase 5 W2 (Weisung P5-6): G38 Problembericht, G39 Leistungsmessung
-          python3 -I werkzeuge/vergleich/erzeuge_problembericht.py python-linie neu/problembericht.json
-          python3 -I werkzeuge/vergleich/erzeuge_leistungsmessung.py python-linie neu/leistungsmessung.json
-          # Phase 5 W3 (Weisung P5-8): G41 Update (fisi_update.py)
-          python3 -I werkzeuge/vergleich/erzeuge_update.py python-linie neu/update.json
-          # Phase 7 W2: Spiel-Kern (G42 Spielinhalte)
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_inhalte.py python-linie neu/spiel_inhalte.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_wege.py python-linie neu/spiel_wege.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_neuaufbau.py python-linie neu/spiel_neuaufbau.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_tickets.py python-linie neu/spiel_tickets.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_bewertung.py python-linie neu/spiel_bewertung.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_texte.py python-linie neu/spiel_texte.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_aktionen.py python-linie neu/spiel_aktionen.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_pruefung.py python-linie neu/spiel_pruefung.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_plaetze.py python-linie neu/spiel_plaetze.json
-          # Phase 7 W3 (Weisung P7-4): G43 Spielwerte-Fingerabdruck f2b59ce8, G47 Firma
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_fingerabdruck.py python-linie neu/spiel_fingerabdruck.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_firma.py python-linie neu/spiel_firma.json
-          # Phase 7 W8 (Weisung P7-5): G44 Spielstand aus einer echten Python-Datenbank ueber die Uebernahme
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_uebernahme.py python-linie neu/spiel_uebernahme.json
-          # Phase 7 (Weisung P7-6): G44 Platzverwaltung (Sammelliste 94), G48 Orte der Stadt-Karte
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_verwaltung.py python-linie neu/spiel_verwaltung.json
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_stadt.py python-linie neu/spiel_stadt.json
-          # Phase 7 W5 (Weisung P7-10): G49 Innenraeume (Grundriss, Personen, Texte, Moebel-Vorschau) auf den Staenden von G44/G47
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_orte.py python-linie neu/spiel_aktionen.json neu/spiel_firma.json neu/spiel_orte.json
-          # Phase 7 W6 (Weisung P7-11): G50 Spiel-Ansichten (Rueckmeldungen, Rack-Balken, Formular, Ersatzteile, Wissen, Figur)
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_ansichten.py python-linie neu/spiel_ansichten.json
-          # Phase 8 W3 (Weisung P8-5): G51 Spiel-Abgleich (drei Geraete offline, fisi_sync ohne Netz, Neuaufbau)
-          python3 -I werkzeuge/vergleich/erzeuge_spiel_abgleich.py python-linie neu/spiel_abgleich.json
-          # Phase 9 W2 (Weisung P9-5): Einteilung der bisherigen Inhalte byte-gleich, G52 Ladepruefung inhalte_csharp/lernen
-          python3 -I werkzeuge/inhalte/einteilen.py python-linie neu/einteilung_bisher.json
-          diff inhalte_csharp/lernen/einteilung_bisher.json neu/einteilung_bisher.json
-          python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py python-linie . neu/lerninhalte_pruefung.json
-          diff src/Lernplattform.Core/Suche/PythonKlein.Tabelle.cs neu/PythonKlein.Tabelle.cs
-          diff src/Lernplattform.Core/Spiel/PyTitel.Tabelle.cs neu/PyTitel.Tabelle.cs
-          diff src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs neu/PythonZeichen.Tabelle.cs
-          diff src/Lernplattform.Core/Texte/RechnerTexte.Python.cs neu/RechnerTexte.Python.cs
-          diff src/Lernplattform.Core/Projekt/PdfZeichen.Tabelle.cs neu/PdfZeichen.Tabelle.cs
-      - name: Vergleich
-        run: |
-          python3 -I - <<'PY'
-          import json
-          for name in ("zufall.json", "inhalte.json", "testdaten.json", "farbwelten.json",
-                       "fehlerprotokoll.json", "datenbank.json", "inhalte_pruefung.json",
-                       "eigene_farben.json", "beschriftungen.json", "dashboard.json",
-                       "potenz.json", "wiederholung.json", "reihenfolge.json", "trainer.json",
-                       "uebernahme.json", "pruefsumme_sonderfall.json", "lerntexte.json",
-                       "auswertung.json", "suche.json", "abgleich.json", "reglerspur.json",
-                       "rechner_zahlen.json", "subnetting.json", "rechner.json",
-                       "rechentrainer.json", "datenmengen.json", "rechentrainer_w4.json",
-                       "video.json", "wiso.json", "notizblock.json", "abschlussprojekt.json",
-                       "pruefung.json", "fachrichtungen.json", "hilfe.json",
-                       "sicherung_ersetzen.json", "loeschen.json", "problembericht.json",
-                       "leistungsmessung.json", "update.json", "spiel_inhalte.json", "spiel_wege.json",
-                       "spiel_neuaufbau.json", "spiel_tickets.json", "spiel_bewertung.json",
-                       "spiel_texte.json", "spiel_aktionen.json", "spiel_pruefung.json",
-                       "spiel_plaetze.json", "spiel_fingerabdruck.json", "spiel_firma.json",
-                       "spiel_uebernahme.json", "spiel_verwaltung.json", "spiel_stadt.json",
-                       "spiel_orte.json", "spiel_ansichten.json", "spiel_abgleich.json",
-                       "lerninhalte_pruefung.json"):
-              alt = json.load(open("tests/Vergleich/" + name, encoding="utf-8"))
-              neu = json.load(open("neu/" + name, encoding="utf-8"))
-              alt.pop("python", None); neu.pop("python", None)
-              assert alt == neu, name + " weicht ab"
-              if name.startswith("spiel_"):  # streng: 1 und 1.0 sind fuer C# verschieden
-                  assert json.dumps(alt) == json.dumps(neu), name + " weicht ab (Zahlart)"
-              print(name, "gleich")
-          # G36 (Skript nur aus der Spezifikation) muss bei SI gleich G32 (Python) sein
-          g32 = json.load(open("neu/pruefung.json", encoding="utf-8"))
-          g36 = json.load(open("neu/fachrichtungen.json", encoding="utf-8"))
-          for a, b in zip(g32["kriterien"]["szenarien"], g36["kriterien"], strict=True):
-              assert [a["quelle"], a["index"], a["teile"] is not None] == b[:3], (a["quelle"], a["index"])
-              if a["teile"] is not None:
-                  assert [a["teile"]["einleitung"], a["teile"]["teile"]] == b[3:], (a["quelle"], a["index"])
-          for a, b in zip(g32["gesamt"]["faelle"], g36["gesamt"], strict=True):
-              assert a[:6] == b[:6], a[0]
-          si = [f for f in g32["gesamt"]["faelle"] if not f[4]]
-          texte = {tuple(t[0]): t for t in g36["texte"]["si"]}
-          for f in si:
-              if tuple(f[0]) in texte:
-                  assert texte[tuple(f[0])][2] == f[7] and texte[tuple(f[0])][1][2] == f[6], f[0]
-          assert [t[1] for t in g32["kriterien"]["teilpunkte"]] == [t[1] for t in g36["teilpunkte"]]
-          print("G36 SI gleich G32")
-          # G34 (W3): das Skript nur aus der Spezifikation muss in allen seinen Teilen gleich Python sein
-          g34 = json.load(open("neu/abschlussprojekt.json", encoding="utf-8"))
-          skript = json.load(open("neu/abschlussprojekt_skript.json", encoding="utf-8"))
-          teile = ("zahl", "rechnen", "export", "projekte", "fragen", "rueckfrage", "pdf", "texte", "grenze")
-          assert sorted(skript) == sorted(teile), sorted(skript)
-          for teil in teile:
-              assert skript[teil] == g34[teil], "G34 " + teil + ": Skript weicht von Python ab"
-          print("G34 Skript gleich Python")
-          # G35 (W4): das Skript nur aus der Spezifikation muss in allen Teilen gleich Python sein
-          g35 = json.load(open("neu/hilfe.json", encoding="utf-8"))
-          skript = json.load(open("neu/hilfe_skript.json", encoding="utf-8"))
-          teile = ("texte", "datum", "suche", "name", "einstellungen", "rundgang", "oberflaeche", "paare")
-          assert sorted(skript) == sorted(teile), sorted(skript)
-          for teil in teile:
-              assert skript[teil] == g35[teil], "G35 " + teil + ": Skript weicht von Python ab"
-          print("G35 Skript gleich Python")
-          PY
+          python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py . "$RUNNER_TEMP/lerninhalte_pruefung.json"
+          cmp tests/Vergleich/lerninhalte_pruefung.json "$RUNNER_TEMP/lerninhalte_pruefung.json"
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)

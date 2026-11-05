@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt die Vergleichswerte G41 (Phase 5, Paket BE9 "Update"), gerechnet vom echten Python-Code
 der Python-Linie (fisi_update.py, v0.63.2). Kein Netz: _open wird durch feste Antworten ersetzt,

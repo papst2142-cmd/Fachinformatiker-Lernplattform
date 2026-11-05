@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """
 Erzeugt tests/Vergleich/pruefsumme_sonderfall.json (Phase 1, G11 Teil
 "Pruefsumme der Sicherung"; Erzeuger nachgereicht in Phase 2, Paket L3,

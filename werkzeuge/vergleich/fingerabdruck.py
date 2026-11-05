@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# eingefroren, nur Nachweis (Welle Sammelliste 217, Weisung P12-14): laeuft nicht mehr in der CI; die Ergebnisse sind feste Sollwerte (tests/Vergleich/SOLLWERTE.sha256).
 """Spielwerte-Fingerabdruck: spielt den spaeten Demo-Stand (szenario045.spaet + 8
 Tage) durch und hasht Ereignisprotokoll und Spielstand-Werte (ohne Texte).
 python3.12 mit_home.py fingerabdruck.py <repo>"""
