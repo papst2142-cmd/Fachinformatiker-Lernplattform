@@ -534,6 +534,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _ring = null;
         _ringAussehen = null;
         _ringSchluessel = "";
+        // Phase 12 Welle 2: oben freigegeben, beim naechsten Start neu laden (sonst zeichnet er einen geloeschten Puffer)
+        _lieferpaket = null;
+        _lieferpaketZahl = 0;
         if (_programm != 0)
         {
             gl.DeleteProgram(_programm);
@@ -982,7 +985,6 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _hochladenErledigt;
     private long _vorladenBeginn;
 
-    /// <summary>Alles, was das Vorladen auf dem Prozessor baut (im Hintergrund).</summary>
     /// <summary>
     /// Phase 12 Welle 2 (Weisung P12-5 Abschnitt 2): angekommene Pakete als Kartonstapel vor der Haustuer der Wohnung
     /// (<see cref="Lieferpaket"/>), ein Zeichenaufruf fuer den ganzen Stapel; ohne Paket nichts.
@@ -1007,6 +1009,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Phase 12 Welle 2: Zahl der zuletzt gezeichneten Pakete vor der Haustuer (Start-Test, Fotos).</summary>
     public int LieferpaketZahl { get; private set; }
 
+    /// <summary>Alles, was das Vorladen auf dem Prozessor baut (im Hintergrund).</summary>
     private sealed record Vorladepaket(StadtSzene Szene, StadtSzene.Fertig Netze, SatzPaket? Satz, bool VerkehrBleibt,
         IReadOnlyList<string> Figuren, IReadOnlyList<Innenraum> Innen, PyObjekt? Aussehen);
 

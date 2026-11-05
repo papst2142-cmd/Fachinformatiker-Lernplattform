@@ -64,8 +64,9 @@ public sealed partial class SpielTafel
         var bestellt = Spielwelt.Bestellungen(stand);
         if (bestellt.Count > 0)
         {
-            var zeilen = bestellt.Select(b => (Control?)Zeile(T(Py.Str(Wohnung.MoebelStueck(b.Moebel, I)?["name"]), 14, "text", true),
-                T(Spielwelt.Ankunft(b.Liefertag, stand.Tag), 12, b.Liefertag <= stand.Tag ? "green" : "accent", true))).ToList();
+            // Name und Ankunft untereinander (nebeneinander trennte die grosse Schrift „Zimmerpflanze“ am Handy)
+            var zeilen = bestellt.Select(b => (Control?)Stapel(2, [T(Py.Str(Wohnung.MoebelStueck(b.Moebel, I)?["name"]), 14, "text", true),
+                T(Spielwelt.Ankunft(b.Liefertag, stand.Tag), 12, b.Liefertag <= stand.Tag ? "green" : "accent", true)])).ToList();
             yield return Karte(Spielwelt.Unterwegs, zeilen, "orange", PyFormat.Prozent("%d bestellt", bestellt.Count));
         }
         foreach (var laden in Spielwelt.ShopLaeden)
