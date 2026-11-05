@@ -66,6 +66,38 @@ public static class Vollbild
         }
         An = an;
         Geraet?.Invoke(an, an || Dauerhaft);
+        LeistenMerken();
+    }
+
+    /// <summary>
+    /// Patch A 0.41.1 (Sammelliste 218, Fund Nico 05.11.2026): Avalonia (Android) setzt die Systemleisten bei jedem
+    /// Sichtbarwerden der Ansicht auf den Wert, den es sich selbst gemerkt hat (<c>IsSystemBarVisible</c> des
+    /// InsetsManagers, ohne Wert = zeigen). Beim Start blendete <see cref="GeraetAnwenden"/> die Leisten in OnCreate aus,
+    /// gleich danach zeigte Avalonia sie wieder (ebenso nach der Rueckkehr aus dem Hintergrund); nur Aus/An in den
+    /// Optionen wirkte bis zum naechsten Mal. Darum bekommt Avalonia den Wunsch jetzt auch selbst mit. Setzt MainView,
+    /// sobald es eine Ansicht gibt; am PC ist er null (dort gilt der Fensterzustand <see cref="Fenster"/>).
+    /// </summary>
+    public static Avalonia.Controls.Platform.IInsetsManager? Leisten { get; set; }
+
+    /// <summary>Nur Emulator-Probe der CI (Gegenprobe): false = Avalonia nichts mitteilen (Verhalten vor A 0.41.1).</summary>
+    public static bool LeistenUeberAvalonia { get; set; } = true;
+
+    /// <summary>Den Wunsch (Leisten aus im Spiel oder mit dem Schalter) an Avalonia geben, damit es ihn behaelt.</summary>
+    public static void LeistenMerken()
+    {
+        if (Leisten is not { } rand || !LeistenUeberAvalonia)
+        {
+            return;
+        }
+        var sichtbar = !(An || Dauerhaft);
+        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        {
+            rand.IsSystemBarVisible = sichtbar;
+        }
+        else
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => rand.IsSystemBarVisible = !(An || Dauerhaft));
+        }
     }
 
     public static void DauerhaftSetzen(bool an)
@@ -77,6 +109,7 @@ public static class Vollbild
         Dauerhaft = an;
         Fenster?.Invoke(an);
         Geraet?.Invoke(An, An || an);
+        LeistenMerken();
         Geaendert?.Invoke();
     }
 
@@ -87,6 +120,7 @@ public static class Vollbild
         {
             Geraet?.Invoke(An, true);
         }
+        LeistenMerken();
     }
 
     /// <summary>Schalter oder Taste haben gewechselt (Karte "Vollbild" frischt sich auf).</summary>
