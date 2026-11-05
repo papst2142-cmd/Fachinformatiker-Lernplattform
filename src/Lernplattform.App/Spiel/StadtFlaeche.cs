@@ -60,6 +60,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private GlNetz? _markierung;
     private string _markierungSchluessel = "";
     private GlNetz? _ausruf;
+    // Phase 12 Welle 2: Stapel der Pakete vor der Haustuer (neu geladen, wenn sich die Zahl aendert)
+    private GlNetz? _lieferpaket;
+    private int _lieferpaketZahl;
     private GlNetz? _marke;
     private GlNetz? _ring;
 
@@ -487,6 +490,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _ring = null;
         _ringAussehen = null;
         _ringSchluessel = "";
+        _lieferpaket = null;
+        _lieferpaketZahl = 0;
         _szeneNeu = true;
         _innenNeu = true;
         _programm = 0;
@@ -501,7 +506,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
-            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values))
+            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_lieferpaket).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values))
         {
             netz?.Freigeben(gl);
         }
@@ -529,6 +534,9 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _ring = null;
         _ringAussehen = null;
         _ringSchluessel = "";
+        // Phase 12 Welle 2: oben freigegeben, beim naechsten Start neu laden (sonst zeichnet er einen geloeschten Puffer)
+        _lieferpaket = null;
+        _lieferpaketZahl = 0;
         if (_programm != 0)
         {
             gl.DeleteProgram(_programm);
@@ -910,6 +918,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             else
             {
+                LieferpaketZeichnen(gl, sichtProj);
                 // Haeuser; wer zwischen Auge und Figur steht, halb durchsichtig (Sammelliste 102)
                 var v0 = _uhr.Elapsed.TotalSeconds;
                 _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe, _verdeckt);
@@ -975,6 +984,30 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _hochladenGesamt;
     private int _hochladenErledigt;
     private long _vorladenBeginn;
+
+    /// <summary>
+    /// Phase 12 Welle 2 (Weisung P12-5 Abschnitt 2): angekommene Pakete als Kartonstapel vor der Haustuer der Wohnung
+    /// (<see cref="Lieferpaket"/>), ein Zeichenaufruf fuer den ganzen Stapel; ohne Paket nichts.
+    /// </summary>
+    private void LieferpaketZeichnen(GlInterface gl, Matrix4x4 sichtProj)
+    {
+        var zahl = _spiel!.PaketeVorDerTuer;
+        LieferpaketZahl = zahl;
+        if (zahl <= 0 || Lieferpaket.Lage(_spiel.Szene, _spiel.Stadt) is not { } lage)
+        {
+            return;
+        }
+        if (_lieferpaket is null || _lieferpaketZahl != zahl)
+        {
+            _lieferpaket?.Freigeben(gl);
+            _lieferpaket = GlNetz.Laden(gl, Lieferpaket.Bauen(_spiel.Grafik, zahl));
+            _lieferpaketZahl = zahl;
+        }
+        Zeichnen(gl, _lieferpaket, Lieferpaket.Welt(lage.Mitte, lage.Aussen), sichtProj);
+    }
+
+    /// <summary>Phase 12 Welle 2: Zahl der zuletzt gezeichneten Pakete vor der Haustuer (Start-Test, Fotos).</summary>
+    public int LieferpaketZahl { get; private set; }
 
     /// <summary>Alles, was das Vorladen auf dem Prozessor baut (im Hintergrund).</summary>
     private sealed record Vorladepaket(StadtSzene Szene, StadtSzene.Fertig Netze, SatzPaket? Satz, bool VerkehrBleibt,

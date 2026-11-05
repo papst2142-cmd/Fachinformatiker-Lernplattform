@@ -106,6 +106,60 @@ public sealed partial class SpielTafel
         return Charakter.SchrankAufgestellt(a.Stand) && !Charakter.Plaetze(a.Stand).Frei;
     }
 
+    /// <summary>
+    /// Phase 12 Welle 2: im Durchgang von <see cref="ProbeFirmaAnlegen"/> den „Schreibtisch mit PC“ und das Buecherregal
+    /// kaufen und aufstellen und zwei Moebel online bestellen (Pflanze: 1 Arbeitstag, Sofa: 3), damit der Online-Shop die
+    /// Karte „Unterwegs zu dir“ zeigt. Nur einmal; nur angehaengte Zeilen. false ohne Durchgang, Geschaefte oder Platz.
+    /// </summary>
+    internal bool ProbePcAnlegen()
+    {
+        var v = _s.Verwaltung;
+        if (v.Ablauf?.Stand.Profil is null || _s.Geschaefte is not { } g)
+        {
+            return false;
+        }
+        var a = v.ZumSchreiben();
+        foreach (var typ in new[] { Spielwelt.PcTyp, Spielwelt.RegalTyp })
+        {
+            if (Spielwelt.Aufgestellt(a.Stand, typ))
+            {
+                continue;
+            }
+            var stueck = "probe-" + typ;
+            if (!a.Stand.Moebel.ContainsKey(stueck))
+            {
+                a.Ausfuehren(SpielAktionen.MoebelKaufen(a.Stand, typ, stueck));
+            }
+            var gestellt = false;
+            for (var y = 1.0; y < 12 && !gestellt; y += 0.5)
+            {
+                for (var x = 1.0; x < 16 && !gestellt; x += 0.5)
+                {
+                    try
+                    {
+                        a.Ausfuehren(SpielAktionen.AufstellenBei(a.Stand, stueck, x, y, 0L));
+                        gestellt = true;
+                    }
+                    catch (SpielFehler)
+                    {
+                        // naechste Stelle
+                    }
+                }
+            }
+            if (!gestellt)
+            {
+                return false;
+            }
+        }
+        if (Spielwelt.Bestellungen(a.Stand).Count == 0)
+        {
+            a.Bestellen(g, "moebelhaus", "pflanze");
+            a.Bestellen(g, "moebelhaus", "sofa");
+        }
+        _s.Abgleichen();
+        return Spielwelt.Aufgestellt(a.Stand, Spielwelt.PcTyp) && Spielwelt.Bestellungen(a.Stand).Count > 0;
+    }
+
     internal void ProbeUebersicht()
     {
         _waehlen = false;

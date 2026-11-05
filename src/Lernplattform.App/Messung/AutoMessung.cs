@@ -525,6 +525,16 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 12, Welle 2: PC zu Hause (Online-Shop, Kredite, Gezahltes), Uebersicht, Paket vor der Haustuer
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? P12W2Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W8b: neue Tueren (Bahnhof, Moebelhaus), Stellwerk mit Schild, Bahnhof innen als Wartehalle
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>())

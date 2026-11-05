@@ -758,6 +758,12 @@
    "arme": 72,
    "bewegung": "sitzen",
    "sitz": 0.9
+  },
+  {
+   "name": "coatRackStanding",
+   "paket": "furniture",
+   "datei": "Models/coatRackStanding.obj",
+   "drehen": 180
   }
  ]
 }
