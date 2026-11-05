@@ -43,6 +43,9 @@ public sealed class SpielSeite : Grid
     private readonly TextBlock _klappSymbol;
     private readonly TextBlock _kurz;
     private readonly WrapPanel _knoepfe;
+    // Phase 12 Welle 2: passen die Knoepfe auch mit gekuerztem Text nicht mehr ins Bild (riesige Schrift, niedriges
+    // Fenster, viele Knoepfe), rollen sie in der Karte (Layoutpruefung: Knoepfe in einer Rolle erreicht man durch Rollen)
+    private readonly ScrollViewer _knoepfeRolle;
     private bool _hinweisZu = Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte);
     private string _letzteZeile = "";
     private long _kurzBis;
@@ -188,8 +191,13 @@ public sealed class SpielSeite : Grid
         klappZeile.Children.Add(_klapp);
         Grid.SetColumn(_kurz, 1);
         klappZeile.Children.Add(_kurz);
-        Grid.SetColumn(_knoepfe, 1);
-        klappZeile.Children.Add(_knoepfe);
+        _knoepfeRolle = new ScrollViewer
+        {
+            Content = _knoepfe,
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        };
+        Grid.SetColumn(_knoepfeRolle, 1);
+        klappZeile.Children.Add(_knoepfeRolle);
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
         // FW9 (Weisung P11-17, Sammelliste 192): rechts Platz fuer die Scrollleiste (Layoutpruefung (6)); der Rand
@@ -658,7 +666,22 @@ public sealed class SpielSeite : Grid
         if (neu < _zeileRolle.MaxHeight - 0.5)
         {
             _zeileRolle.MaxHeight = neu;
+            return;
         }
+        // Phase 12 Welle 2: der Text ist schon so kurz wie moeglich, dann rollen die Knoepfe (rechts Platz fuer die Leiste)
+        var knoepfe = Math.Max(60, Math.Floor(_knoepfeRolle.Bounds.Height - ueber));
+        if (_zeileRolle.IsVisible && knoepfe < _knoepfeRolle.MaxHeight - 0.5)
+        {
+            _knoepfeRolle.MaxHeight = knoepfe;
+            _knoepfe.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);
+        }
+    }
+
+    /// <summary>Phase 12 Welle 2: Knoepfe wieder ohne Rolle (neue Knoepfe oder neue Groesse).</summary>
+    private void KnoepfeVoll()
+    {
+        _knoepfeRolle.MaxHeight = double.PositiveInfinity;
+        _knoepfe.Margin = default;
     }
 
     /// <summary>Hoechste Hoehe der Textrolle ohne Kuerzung (ein Viertel der Seite).</summary>
@@ -687,6 +710,7 @@ public sealed class SpielSeite : Grid
             ? Math.Min(UntenBreite, groesse.Width - _ortsliste.Width - (2 * Rand))
             : UntenBreite;
         _zeileRolle.MaxHeight = ZeileHoehe;
+        KnoepfeVoll();
     }
 
     public bool ErsatzSichtbar => _ersatz.IsVisible;
@@ -1013,6 +1037,7 @@ public sealed class SpielSeite : Grid
         _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
         // neue Knoepfe: Textrolle wieder voll hoch, ZeileKuerzen kuerzt sie beim naechsten Layout, falls noetig
         _zeileRolle.MaxHeight = ZeileHoehe;
+        KnoepfeVoll();
         _einrichtenTafel.Children.Clear();
         _einrichtenTafel.IsVisible = spiel.Einrichten;
         if (!spiel.Einrichten)
