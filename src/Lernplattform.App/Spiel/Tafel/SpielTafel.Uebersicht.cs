@@ -76,7 +76,8 @@ public sealed partial class SpielTafel
         var hinweis = mitFirma ? "" : SpielTexte.RangHinweis(stand);
         var geld = mitFirma ? "Kontostand: " + Euro(stand.Geld)
             : PyFormat.Prozent("Kontostand: %s · Gehalt: %s/Tag", Euro(stand.Geld), Euro(stand.Gehalt));
-        var knoepfe = new List<Control?> { Knopf("Figur bearbeiten", FigurAendern, "ghost", 38) };
+        // Phase 12 Welle 1 (Nico 3b): „Figur bearbeiten“ entfaellt, Name und Aussehen nur am Kleiderschrank
+        var knoepfe = new List<Control?>();
         if (mitFirma || stand.GruendungBereit())
         {
             knoepfe.Add(Knopf(mitFirma ? "Firma öffnen" : "Firma gründen", () => FirmaOeffnen(), mitFirma ? "ghost" : "primary", 38));
@@ -89,6 +90,7 @@ public sealed partial class SpielTafel
         knoepfe.Add(Knopf("Meine Reise", () => ReiseOeffnen(), "ghost", 38));
         var zeilen = Stapel(3, [
             T(Py.Str(stand.Profil["name"]), 22, "text", true),
+            T(Charakter.HinweisUebersicht, 12, "muted"),
             T(stelle, 14, "accent", true),
             hinweis.Length > 0 ? T(hinweis, 12, "muted") : null,
             T(geld, 12, "text_dim"),
@@ -315,6 +317,11 @@ public sealed partial class SpielTafel
         else if (aktion == "schlafen")
         {
             _ = SchlafenAsync();
+        }
+        else if (aktion == Charakter.Aktion)
+        {
+            // Phase 12 Welle 1: am Kleiderschrank Name und Aussehen aendern
+            KleiderschrankOeffnen();
         }
     }
 

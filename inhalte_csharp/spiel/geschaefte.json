@@ -131,5 +131,19 @@
       {"id": "hasenohren", "name": "Hasenohren", "slot": "kopf", "preis": 10, "form": "hasenohren", "farbe": "#F8FAFC", "festzeit": "ostern"},
       {"id": "fruehlingsshirt", "name": "T-Shirt hellgrün", "slot": "oberteil", "preis": 15, "form": "shirt", "farbe": "#86EFAC", "festzeit": "ostern"}
     ]
+  },
+  "moebel_neu": {
+    "_hinweis": [
+      "Phase 12 Welle 1 (Weisung P12-5, Nico 05.11.2026: 1c 2a 3b 4a): Moebel nur der C#-Linie, beim Laden an wohnungen.json moebel angehaengt (Core/Spiel/Geschaefte.cs NeueMoebelEinfuegen); Preis, Kauf als moebel_gekauft und Rueckkauf wie bei den Python-Moebeln.",
+      "moebel: id, name, typ (Einrichtung wie in wohnungen.json), w, h, preis, geschaeft (Sortiment dieses Geschaefts, angehaengt), plaetze (Kleiderschrank: Plaetze fuer gekaufte Kleidung, eine Zahl oder \"unbegrenzt\"; Core/Spiel/Charakter.cs).",
+      "ohne: diese Moebel verkauft das Geschaeft nicht mehr (wer sie hat, behaelt sie); der alte Kleiderschrank (340 EUR) zaehlt wie der mittlere (16 Plaetze, Nico 4a)."
+    ],
+    "moebel": [
+      {"id": "kleiderschrank_klein", "name": "Kleiderschrank klein", "typ": "kleiderschrank", "w": 2.0, "h": 0.9, "preis": 100, "geschaeft": "moebelhaus", "plaetze": 8},
+      {"id": "kleiderschrank_mittel", "name": "Kleiderschrank mittel", "typ": "kleiderschrank", "w": 2.8, "h": 1.0, "preis": 400, "geschaeft": "moebelhaus", "plaetze": 16},
+      {"id": "kleiderschrank_gross", "name": "Kleiderschrank groß", "typ": "kleiderschrank", "w": 3.6, "h": 1.0, "preis": 600, "geschaeft": "moebelhaus", "plaetze": 28},
+      {"id": "kleiderschrank_begehbar", "name": "Begehbarer Kleiderschrank", "typ": "kleiderschrank", "w": 4.4, "h": 1.2, "preis": 1000, "geschaeft": "moebelhaus", "plaetze": "unbegrenzt"}
+    ],
+    "ohne": {"moebelhaus": ["kleiderschrank"]}
   }
 }

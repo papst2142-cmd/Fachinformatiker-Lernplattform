@@ -31,12 +31,79 @@ public sealed partial class SpielTafel
         Zeichnen();
     }
 
-    /// <summary>"Figur bearbeiten" (Aussehen, Name, Schwierigkeit).</summary>
+    /// <summary>Phase 12 Welle 1: der Kleiderschrank (Name, Aussehen mit gesperrten Teilen, Kleidung); vorher „Figur bearbeiten“.</summary>
     internal void ProbeFigur()
     {
         _waehlen = false;
         _s.PlatzGewaehlt = true;
-        FigurAendern();
+        KleiderschrankOeffnen();
+    }
+
+    /// <summary>Phase 12 Welle 1: neue Figur anlegen mit Nicos Hinweis „Einmalig“ (leerer Spielstand, nichts geschrieben).</summary>
+    internal void ProbeAnlegen()
+    {
+        _waehlen = false;
+        _entwurf.Clear();
+        _stapel.Clear();
+        var leer = new Spielstand([], I);
+        Oeffnen(Krumen("PRAXIS", "SPIEL"), () => FigurBearbeiten(leer));
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 1: im Durchgang von <see cref="ProbeFirmaAnlegen"/> einen kleinen Kleiderschrank kaufen, aufstellen und
+    /// so viel Kleidung eintragen, wie er Plaetze hat (Kaufhaus „voll“, Kleiderschrank mit Kleidung). Nur einmal; nur
+    /// angehaengte Zeilen. false, wenn es keinen Durchgang, keine Geschaefte oder keinen freien Platz gibt.
+    /// </summary>
+    internal bool ProbeSchrankAnlegen()
+    {
+        var v = _s.Verwaltung;
+        if (v.Ablauf?.Stand.Profil is null || _s.Geschaefte is not { } g)
+        {
+            return false;
+        }
+        if (Charakter.SchrankAufgestellt(v.Ablauf.Stand) && !Charakter.Plaetze(v.Ablauf.Stand).Frei)
+        {
+            return true;
+        }
+        var a = v.ZumSchreiben();
+        if (!Charakter.SchrankAufgestellt(a.Stand))
+        {
+            var stueck = "probe-schrank";
+            if (!a.Stand.Moebel.ContainsKey(stueck))
+            {
+                a.Ausfuehren(SpielAktionen.MoebelKaufen(a.Stand, "kleiderschrank_klein", stueck));
+            }
+            var gestellt = false;
+            for (var y = 1.0; y < 12 && !gestellt; y += 0.5)
+            {
+                for (var x = 1.0; x < 16 && !gestellt; x += 0.5)
+                {
+                    try
+                    {
+                        a.Ausfuehren(SpielAktionen.AufstellenBei(a.Stand, stueck, x, y, 0L));
+                        gestellt = true;
+                    }
+                    catch (SpielFehler)
+                    {
+                        // naechste Stelle
+                    }
+                }
+            }
+            if (!gestellt)
+            {
+                return false;
+            }
+        }
+        foreach (var ware in Kleidung.Alle(g.Daten).Where(k => !a.Stand.Kleider.ContainsKey(k.Id) && k.Festzeit is null))
+        {
+            if (!Charakter.Plaetze(a.Stand).Frei)
+            {
+                break;
+            }
+            a.Log(Kleidung.Gekauft, new PyObjekt { { "stueck", ware.Id }, { "geld", checked(-ware.Preis) }, { "tag", a.Stand.Tag }, { "laden", Kleidung.Laden } });
+        }
+        _s.Abgleichen();
+        return Charakter.SchrankAufgestellt(a.Stand) && !Charakter.Plaetze(a.Stand).Frei;
     }
 
     internal void ProbeUebersicht()

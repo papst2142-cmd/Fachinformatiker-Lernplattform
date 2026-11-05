@@ -34,6 +34,55 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
     public const string GibtEsNicht = "Das gibt es hier nicht.";
     public const string NurMitFirma = "Teile für die Firma gibt es erst mit eigener Firma.";
 
+    /// <summary>
+    /// Phase 12 Welle 1 (Weisung P12-5): Abschnitt "moebel_neu" in geschaefte.json, nur angehaengt. "moebel" sind Moebel
+    /// nur der C#-Linie (wie die Eintraege in wohnungen.json, dazu "geschaeft" und bei Kleiderschraenken "plaetze"), die
+    /// <see cref="NeueMoebelEinfuegen"/> beim Laden an die Moebel der Python-Inhalte haengt; "ohne" nimmt Moebel aus dem
+    /// Sortiment eines Geschaefts (wer sie hat, behaelt sie).
+    /// </summary>
+    public const string NeueMoebelAbschnitt = "moebel_neu";
+
+    /// <summary>
+    /// Phase 12 Welle 1: die neuen Moebel aus <paramref name="daten"/> (geschaefte.json) an <c>inhalt["wohnungen"]["moebel"]</c>
+    /// haengen (Kopien, in der Reihenfolge der Datei). Schon vorhandene Kennungen bleiben unveraendert (zweimal laden aendert
+    /// nichts). Danach kennen Kauf, Karton, Einrichtung und Rueckkauf die neuen Moebel wie die aus Python.
+    /// </summary>
+    public static PyObjekt NeueMoebelEinfuegen(PyObjekt inhalt, PyObjekt? daten)
+    {
+        if (daten is null || Get(daten, NeueMoebelAbschnitt) is not PyObjekt neu)
+        {
+            return inhalt;
+        }
+        var liste = (List<object?>)Objekt(inhalt["wohnungen"])["moebel"]!;
+        foreach (var m in ListeOderLeer(neu, "moebel").OfType<PyObjekt>())
+        {
+            if (Wohnung.MoebelStueck(m["id"], inhalt) is null)
+            {
+                liste.Add(Py.Kopie(m));
+            }
+        }
+        return inhalt;
+    }
+
+    /// <summary>Phase 12 Welle 1: Moebel, die <paramref name="laden"/> laut "moebel_neu" > "ohne" nicht mehr verkauft.</summary>
+    public IReadOnlySet<string> Ohne(string laden) =>
+        Get(Daten, NeueMoebelAbschnitt) is PyObjekt neu && Get(neu, "ohne") is PyObjekt ohne && Get(ohne, laden) is List<object?> weg
+            ? weg.Select(Py.Str).ToHashSet(StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>Phase 12 Welle 1: Kennungen der neuen Moebel fuer <paramref name="laden"/> (Feld "geschaeft").</summary>
+    public List<string> NeueMoebel(string laden) =>
+        Get(Daten, NeueMoebelAbschnitt) is PyObjekt neu
+            ? [.. ListeOderLeer(neu, "moebel").OfType<PyObjekt>().Where(m => Py.Gleich(Get(m, "geschaeft"), laden)).Select(m => Py.Str(m["id"]))]
+            : [];
+
+    /// <summary>Moebel im Sortiment von <paramref name="laden"/>: die Liste des Geschaefts ohne "ohne", dann die neuen.</summary>
+    private List<object?> MoebelIds(PyObjekt eintrag, string laden)
+    {
+        var ohne = Ohne(laden);
+        return [.. ListeOderLeer(eintrag, "moebel").Where(id => !ohne.Contains(Py.Str(id))), .. NeueMoebel(laden)];
+    }
+
     public static PyObjekt Laden(string ordner) =>
         Py.Lesen(File.ReadAllBytes(Path.Combine(ordner, "geschaefte.json"))) as PyObjekt
         ?? throw new InvalidDataException("geschaefte.json ist kein Objekt");
@@ -56,7 +105,7 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
         {
             return waren;
         }
-        foreach (var id in ListeOderLeer(eintrag, "moebel"))
+        foreach (var id in MoebelIds(eintrag, laden))
         {
             if (Wohnung.MoebelStueck(id, Inhalt) is { } m)
             {
@@ -132,6 +181,11 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             {
                 continue;
             }
+            if (laden == NeueMoebelAbschnitt)
+            {
+                fehler.AddRange(NeueMoebelPruefen(wert));
+                continue;
+            }
             if (!Laeden.Contains(laden) || wert is not PyObjekt eintrag)
             {
                 fehler.Add("unbekanntes Geschaeft: " + laden);
@@ -149,7 +203,7 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
                 fehler.AddRange(Kleidung.Pruefen(eintrag));
             }
             var gesehen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var id in ListeOderLeer(eintrag, "moebel"))
+            foreach (var id in MoebelIds(eintrag, laden))
             {
                 var m = Wohnung.MoebelStueck(id, Inhalt);
                 if (m is null || !Py.Wahr(Get(m, "laden", true)))
@@ -187,7 +241,9 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             var typen = Waren(laden).Where(w => w.Art == ArtTeil).Select(w => w.Typ).ToHashSet(StringComparer.Ordinal);
             var stellen = Waren(laden).Where(w => w.Art == Kleidung.Art).Select(w => w.Typ).ToHashSet(StringComparer.Ordinal);
             var ausgestellt = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var d in Auslage(raum))
+            // Phase 12 Welle 1: die Auslage so, wie sie im Laden steht (mit allen angehaengten Zusaetzen)
+            var gebaeude = Probe.Innenraum.LadenGebaeude(innenraeume!, laden);
+            foreach (var d in Auslage(new PyObjekt { { "gebaeude", gebaeude } }))
             {
                 var ware = Py.Str(d["ware"]);
                 if (ware.StartsWith("teile:", StringComparison.Ordinal) ? !typen.Contains(ware["teile:".Length..])
@@ -198,7 +254,7 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
                 }
                 ausgestellt.Add(ware);
             }
-            foreach (var id in ListeOderLeer(eintrag, "moebel").Select(Py.Str).Where(id => !ausgestellt.Contains(id)))
+            foreach (var id in MoebelIds(eintrag, laden).Select(Py.Str).Where(id => !ausgestellt.Contains(id)))
             {
                 fehler.Add(laden + ": Moebel nicht ausgestellt: " + id);
             }
@@ -218,6 +274,106 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
         foreach (var laden in Laeden.Where(l => !Py.Hat(Daten, l)))
         {
             fehler.Add("Geschaeft fehlt: " + laden);
+        }
+        return fehler;
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 1: Fehler im Abschnitt "moebel_neu" (leer = alles gut). Jedes Moebel: neue Kennung (nicht in
+    /// wohnungen.json und nicht doppelt), Name, bekannter Einrichtungs-Typ, Groesse &gt; 0, ganzer Preis &gt; 0, ein
+    /// bekanntes Geschaeft mit Moebeln; ein Kleiderschrank braucht "plaetze" (ganze Zahl &gt; 0 oder "unbegrenzt"), andere
+    /// Moebel haben keine. "ohne": nur bekannte Geschaefte und Moebel aus deren Liste.
+    /// </summary>
+    public List<string> NeueMoebelPruefen(object? wert)
+    {
+        var fehler = new List<string>();
+        if (wert is not PyObjekt neu)
+        {
+            return ["moebel_neu ist kein Objekt"];
+        }
+        foreach (var (k, _) in neu)
+        {
+            if (k is not ("_hinweis" or "moebel" or "ohne"))
+            {
+                fehler.Add("moebel_neu: unbekanntes Feld " + k);
+            }
+        }
+        var gesehen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var roh in ListeOderLeer(neu, "moebel"))
+        {
+            if (roh is not PyObjekt m || Get(m, "id") is not string id || id.Length == 0)
+            {
+                fehler.Add("moebel_neu: Moebel ohne Kennung");
+                continue;
+            }
+            var wo = "moebel_neu " + id + ": ";
+            // ein Python-Moebel hat kein Feld "geschaeft" (die eingefuegten Kopien schon)
+            if (!gesehen.Add(id) || (Wohnung.MoebelStueck(id, Inhalt) is { } da && !Py.Hat(da, "geschaeft")))
+            {
+                fehler.Add(wo + "Kennung doppelt oder schon in wohnungen.json");
+            }
+            foreach (var (k, _) in m)
+            {
+                if (k is not ("id" or "name" or "typ" or "w" or "h" or "preis" or "geschaeft" or "plaetze"))
+                {
+                    fehler.Add(wo + "unbekanntes Feld " + k);
+                }
+            }
+            if (Get(m, "name") is not string { Length: > 0 })
+            {
+                fehler.Add(wo + "Name fehlt");
+            }
+            if (Get(m, "typ") is not string typ || !SpielPruefung.Einrichtung.Contains(typ))
+            {
+                fehler.Add(wo + "unbekannter Typ " + Py.Str(Get(m, "typ")));
+            }
+            if (!(Get(m, "w") is long or double && Py.F(m["w"]) > 0 && Get(m, "h") is long or double && Py.F(m["h"]) > 0))
+            {
+                fehler.Add(wo + "Groesse fehlt oder ungueltig");
+            }
+            if (!Py.IstNurInt(Get(m, "preis")) || Py.Int(m["preis"]) <= 0)
+            {
+                fehler.Add(wo + "Preis fehlt oder ungueltig");
+            }
+            if (Get(m, "geschaeft") is not string g || !Laeden.Contains(g) || g == Kleidung.Laden)
+            {
+                fehler.Add(wo + "unbekanntes Geschaeft " + Py.Str(Get(m, "geschaeft")));
+            }
+            var schrank = Py.Gleich(Get(m, "typ"), Charakter.SchrankTyp);
+            if (schrank && !Charakter.PlaetzeGueltig(Get(m, "plaetze")))
+            {
+                fehler.Add(wo + "Plaetze fehlen oder ungueltig");
+            }
+            if (!schrank && Py.Hat(m, "plaetze"))
+            {
+                fehler.Add(wo + "Plaetze nur bei Kleiderschraenken");
+            }
+        }
+        if (Get(neu, "ohne") is { } ohneWert)
+        {
+            if (ohneWert is not PyObjekt ohne)
+            {
+                fehler.Add("moebel_neu: ohne ist kein Objekt");
+            }
+            else
+            {
+                foreach (var (laden, ids) in ohne)
+                {
+                    var liste = Get(Daten, laden) is PyObjekt e ? ListeOderLeer(e, "moebel").Select(Py.Str).ToHashSet(StringComparer.Ordinal) : null;
+                    if (liste is null || !Laeden.Contains(laden))
+                    {
+                        fehler.Add("moebel_neu ohne: unbekanntes Geschaeft " + laden);
+                        continue;
+                    }
+                    foreach (var id in ids as List<object?> ?? [ids])
+                    {
+                        if (!liste.Contains(Py.Str(id)))
+                        {
+                            fehler.Add("moebel_neu ohne " + laden + ": nicht im Sortiment " + Py.Str(id));
+                        }
+                    }
+                }
+            }
         }
         return fehler;
     }

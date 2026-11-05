@@ -18,7 +18,8 @@ public class SpielKaufhausTests
     /// <summary>Vierter Fingerabdruck (nur C#): Szenario <see cref="KaufhausSzenario"/>, Ereignisse und Werte.</summary>
     internal const string SollKaufhausHash = "a3ec3cdf792700e39471b756c0454183b74b21c20354e0da33e06c777a0d4144";
 
-    private static PyObjekt Inhalt => SpielInhaltTests.Inhalt;
+    /// <summary>Phase 12 Welle 1: wie im Programm mit den Moebeln aus geschaefte.json moebel_neu.</summary>
+    private static PyObjekt Inhalt => SpielCharakterTests.InhaltMitNeuen.Value;
 
     private static PyObjekt Daten => SpielGeschaefteTests.Daten.Value;
 

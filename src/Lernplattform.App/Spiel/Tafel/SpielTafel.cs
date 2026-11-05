@@ -285,6 +285,7 @@ public sealed partial class SpielTafel : Grid
         Geaendert?.Invoke();
         Zeichnen();
         Freischaltungen();
+        UpdateHinweis();
     }
 
     // -- Abzeichen (show_unlocks) -------------------------------------------

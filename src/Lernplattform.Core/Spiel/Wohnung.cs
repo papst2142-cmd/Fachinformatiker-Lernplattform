@@ -47,6 +47,14 @@ public static partial class Wohnung
     public static PyObjekt? MoebelStueck(object? kennung, PyObjekt inhalt) =>
         Liste(Wohnungen(inhalt)["moebel"]).Select(Objekt).FirstOrDefault(m => Py.Gleich(m["id"], kennung));
 
+    /// <summary>
+    /// Phase 12 Welle 1 (Nico 3b, Weisung P12-7 1b): Rueckkaufpreis wie sell_furniture (int(preis * rueckkauf), also
+    /// abgerundet, Faktor aus wohnungen.json, sonst 0,5) fuer jedes Moebel, auch die Startmatratze (Preis 0, also 0 EUR;
+    /// Python bucht dann nichts ins Kassenbuch und nimmt sie nur aus den Moebeln).
+    /// </summary>
+    public static long Rueckkauf(PyObjekt moebel, PyObjekt inhalt) =>
+        Py.Int(Py.Mal(moebel["preis"], Get(Wohnungen(inhalt), "rueckkauf", 0.5)));
+
     /// <summary>shop_items</summary>
     public static List<PyObjekt> Laden(PyObjekt inhalt) =>
         [.. Liste(Wohnungen(inhalt)["moebel"]).Select(Objekt).Where(m => Py.Wahr(Get(m, "laden", true)))];

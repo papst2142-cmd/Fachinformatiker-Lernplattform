@@ -49,7 +49,7 @@ public sealed partial class SpielTafel
             yield break;
         }
         var moebel = waren.Where(w => w.Art == Geschaefte.ArtMoebel)
-            .Select(w => (Control?)WarenZeile(w, stand.Geld >= w.Preis, () => MoebelKaufen(w))).ToList();
+            .Select(w => (Control?)WarenZeile(w, stand.Geld >= w.Preis, () => MoebelKaufen(w), zusatz: SchrankZusatz(w))).ToList();
         if (moebel.Count > 0)
         {
             yield return Karte(laden == "moebelhaus" ? "Möbelhaus" : "Für die Wohnung", moebel, "purple", "Einmal bezahlen, für immer behalten");
@@ -78,16 +78,21 @@ public sealed partial class SpielTafel
         yield return Karte("Für die Firma", zeilen, "cyan", "Sofort im Lager, etwas teurer als beim Versand");
     }
 
-    /// <summary>_item_row: Name und Preis links, Knopf rechts.</summary>
-    private static Border WarenZeile(Ware ware, bool frei, Action kaufen, string knopf = "Kaufen")
+    /// <summary>_item_row: Name und Preis links, Knopf rechts; Phase 12 Welle 1: darunter ein Zusatz (Plaetze eines Schranks).</summary>
+    private static Border WarenZeile(Ware ware, bool frei, Action kaufen, string knopf = "Kaufen", string? zusatz = null)
     {
-        var text = Stapel(2, [T(ware.Name, 14, "text", true), T(Euro(ware.Preis), 12, "text_dim")]);
+        var text = Stapel(2, [T(ware.Name, 14, "text", true), T(Euro(ware.Preis), 12, "text_dim"), zusatz is null ? null : T(zusatz, 12, "accent")]);
         return Flaeche(Zeile(text, Knopf(knopf, kaufen, "ghost", 36, frei)), "card_alt", "border", innen: new Avalonia.Thickness(12, 8));
     }
 
+    /// <summary>Phase 12 Welle 1: Plaetze fuer Kleidung bei einem Kleiderschrank (sonst null).</summary>
+    private string? SchrankZusatz(Ware ware) =>
+        ware.Typ == Charakter.SchrankTyp && Wohnung.MoebelStueck(ware.Id, I) is { } m ? Charakter.PlaetzeText(Charakter.Plaetze(m)) : null;
+
     /// <summary>
-    /// Phase 8 W5 (Weisung P8-8c): Kleidung im Kaufhaus je Abteilung. Noch nicht gekauft: "Kaufen" (zieht gleich an),
-    /// gekauft: "Anziehen" oder, wenn getragen, "Ablegen".
+    /// Phase 8 W5 (Weisung P8-8c): Kleidung im Kaufhaus je Abteilung. Noch nicht gekauft: "Kaufen" (zieht gleich an).
+    /// Phase 12 Welle 1 (Nico 2a): gekauft steht „Im Schrank“ (an- und ausziehen nur am Kleiderschrank); ohne Kleiderschrank
+    /// oder bei vollem Schrank ein Hinweis und „Kaufen“ ist aus.
     /// </summary>
     private Control KleidungKarte(Spielstand stand, Geschaefte g)
     {
@@ -96,32 +101,27 @@ public sealed partial class SpielTafel
         {
             _kleiderSlot = stellen.Count > 0 ? stellen[0].Id : "";
         }
-        var angezogen = Kleidung.Angezogen(stand, g.Daten);
         var zeilen = new List<Control?>
         {
             Pillen(stellen.Select(s => (s.Id, s.Abteilung)), _kleiderSlot, s => { _kleiderSlot = s; Neu(); }),
         };
+        var grund = Charakter.KaufGrund(stand);
+        if (grund.Length > 0)
+        {
+            zeilen.Add(Flaeche(T(grund, 13, "text"), "card_alt", "orange", innen: new Avalonia.Thickness(12, 8)));
+        }
         foreach (var ware in g.Waren(Kleidung.Laden).Where(w => w.Art == Kleidung.Art && w.Typ == _kleiderSlot))
         {
-            if (!stand.Kleider.ContainsKey(ware.Id))
-            {
-                zeilen.Add(WarenZeile(ware, stand.Geld >= ware.Preis, () => KleidungKaufen(ware)));
-            }
-            else if (angezogen.TryGetValue(ware.Typ, out var traegt) && traegt.Id == ware.Id)
-            {
-                zeilen.Add(WarenZeile(ware, true, () => KleidungAnziehen(ware.Typ, null), Kleidung.KnopfAblegen));
-            }
-            else
-            {
-                zeilen.Add(WarenZeile(ware, true, () => KleidungAnziehen(ware.Typ, ware.Id), Kleidung.KnopfAnziehen));
-            }
+            zeilen.Add(stand.Kleider.ContainsKey(ware.Id)
+                ? WarenZeile(ware, false, () => { }, Charakter.ImSchrank)
+                : WarenZeile(ware, grund.Length == 0 && stand.Geld >= ware.Preis, () => KleidungKaufen(ware)));
         }
         return Karte(Kleidung.Ueberschrift, zeilen, "pink", Kleidung.FuerDieFigur);
     }
 
     private void KleidungKaufen(Ware ware)
     {
-        if (Tun(a => a.KleidungKaufen(_s.Geschaefte!, _s.Stadt, _laden!, ware.Id)) is null)
+        if (Tun(a => a.KleidungKaufenMitPlatz(_s.Geschaefte!, _s.Stadt, _laden!, ware.Id)) is null)
         {
             return;
         }
@@ -129,7 +129,7 @@ public sealed partial class SpielTafel
         Gekauft();
     }
 
-    /// <summary>Kleidung anziehen oder ablegen (stueck null), im Kaufhaus und in der Tafel "Figur".</summary>
+    /// <summary>Kleidung anziehen oder ablegen (stueck null), seit Phase 12 Welle 1 nur am Kleiderschrank.</summary>
     private void KleidungAnziehen(string slot, string? stueck)
     {
         if (_s.Geschaefte is not { } g || Tun(a => a.KleidungAnziehen(g, slot, stueck)) is null)

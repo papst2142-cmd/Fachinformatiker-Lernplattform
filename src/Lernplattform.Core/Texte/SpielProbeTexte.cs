@@ -63,6 +63,19 @@ public static class SpielProbeTexte
     public const string Fertig = "Fertig";
     public const string Drehen = "Drehen";
     public const string InDenKarton = "In den Karton";
+
+    /// <summary>Phase 12 Welle 1 (Nico 3b): Knopf beim Einrichten, %s = Rueckkaufpreis („Zurückverkaufen (170 €)“).</summary>
+    public const string Zurueckverkaufen = "Zurückverkaufen (%s)";
+
+    public const string VerkaufenTitel = "Zurückverkaufen";
+
+    /// <summary>Rueckfrage: %s = Name, %s = Preis.</summary>
+    public const string VerkaufenFrage = "„%s“ für %s zurückverkaufen? Das Möbelstück ist danach weg.";
+
+    public const string VerkaufenJa = "Verkaufen";
+
+    /// <summary>Zeile nach dem Verkauf, %s = Name.</summary>
+    public const string Verkauft = "Verkauft: %s.";
     public const string Aufstellen = "Aufstellen";
     public const string Ausgewaehlt = "Ausgewählt";
     public const string ImKarton = "Im Karton";
