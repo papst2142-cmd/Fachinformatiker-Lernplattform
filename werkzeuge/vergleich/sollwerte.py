@@ -5,7 +5,8 @@ Welle Sammelliste 217 (Weisung P12-14): feste Sollwerte "Stand C#".
 
 Die Dateien in tests/Vergleich/ (G1-G52 und Testdaten), alle Dateien unter
 inhalte/ (byte-gleich mit Python v0.63.2), die fuenf erzeugten Zeichen-Tabellen
-und inhalte_csharp/lernen/einteilung_bisher.json sind feste Sollwerte. Ihre
+und inhalte_csharp/lernen/einteilung_bisher.json sind feste Sollwerte, seit
+Nr. 13 (Phase 13 Welle 1) auch die Stadt-Fassungen in inhalte_csharp/spiel/stadtbau/. Ihre
 SHA-256 stehen in tests/Vergleich/SOLLWERTE.sha256 (Format von sha256sum, dazu
 Kopfzeilen mit '#'). Ein Sollwert aendert sich nur mit Nicos Freigabe und einem
 neuen Abschnitt '## Nr. <n>' in tests/Vergleich/AENDERUNGEN_SOLLWERTE.md; die
@@ -24,7 +25,7 @@ import sys
 
 LISTE = "tests/Vergleich/SOLLWERTE.sha256"
 AENDERUNGEN = "tests/Vergleich/AENDERUNGEN_SOLLWERTE.md"
-ORDNER = ("tests/Vergleich", "inhalte")
+ORDNER = ("tests/Vergleich", "inhalte", "inhalte_csharp/spiel/stadtbau")
 EINZELN = (
     "inhalte_csharp/lernen/einteilung_bisher.json",
     "src/Lernplattform.Core/Projekt/PdfZeichen.Tabelle.cs",

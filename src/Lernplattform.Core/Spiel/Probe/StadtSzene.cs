@@ -612,6 +612,9 @@ public sealed class StadtSzene
     {
         var stuecke = new List<ModellStueck>();
         var inhalt = stadt.Inhalt;
+        // Phase 13 Welle 1 (Weisung P12-16): Laternenplaetze und Beete aus der Stadt-Fassung (vorher fest im Programm)
+        var laternenSkizze = stadt.Fassung?.Laternen ?? Nachtlicht.Skizze;
+        var beeteFest = stadt.Fassung?.Beete ?? Nachtlicht.Beete;
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
         var breite = (float)Py.F(welt["breite"]);
         var tiefe = (float)Py.F(welt["hoehe"]);
@@ -941,7 +944,7 @@ public sealed class StadtSzene
             }
             var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
             // W11 (Weisung P8-47): die Laternenplaetze aus Nicos Skizze bleiben frei von Kleingruen
-            var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe).ToList();
+            var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe, laternenSkizze).ToList();
             bool Frei(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
@@ -952,7 +955,7 @@ public sealed class StadtSzene
                 && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
-            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, Nachtlicht.Beete);
+            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest);
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
@@ -976,6 +979,7 @@ public sealed class StadtSzene
             Jahreszeit = jahreszeit,
             GruenKlein = gruen,
             Strassen = strassen,
+            LaternenSkizze = laternenSkizze,
             // W10 (Nico 3b): Fenster mit Licht (nicht die dunklen und nicht die an der Tuer in Wandfarbe)
             // W11: dazu das Zifferblatt der Bahnhofsuhr
             LichtTeile = alleFenster.Where(f => teile[f.Teil].Farbe != Farben.Fenster && teile[f.Teil].Farbe != f.Wand).Select(f => f.Teil)
@@ -1337,6 +1341,9 @@ public sealed class StadtSzene
     public IReadOnlyList<Nachtlicht.Laterne> Laternen => _laternen ??= Nachtlicht.Plaetze(this);
 
     private List<Nachtlicht.Laterne>? _laternen;
+
+    /// <summary>Phase 13 Welle 1: Wunschplaetze der Laternen (x, z, doppelt) aus der Stadt-Fassung, Reihenfolge = Nummer.</summary>
+    public IReadOnlyList<(float X, float Z, bool Doppelt)> LaternenSkizze { get; private init; } = Nachtlicht.Skizze;
 
     /// <summary>Phase 8 W7/W11: Plaetze der Fest-Deko aller Festzeiten (Mitte, Radius); frei fuer Gruen und Laternen.</summary>
     public IReadOnlyList<(Vector2 P, float R)> FestPlaetzeAlle { get; private init; } = [];

@@ -16,7 +16,7 @@ public class SollwerteTests
 {
     private const string Liste = "tests/Vergleich/SOLLWERTE.sha256";
     private const string Aenderungen = "tests/Vergleich/AENDERUNGEN_SOLLWERTE.md";
-    private static readonly string[] Ordner = ["tests/Vergleich", "inhalte"];
+    private static readonly string[] Ordner = ["tests/Vergleich", "inhalte", "inhalte_csharp/spiel/stadtbau"];
 
     internal static readonly string[] Einzeln =
     [
@@ -41,8 +41,9 @@ public class SollwerteTests
         var wurzel = Wurzel();
         var zeilen = Zeilen(wurzel).Keys.Order(StringComparer.Ordinal).ToList();
         Assert.Equal(Geschuetzt(wurzel), zeilen);
-        // alle G-Dateien und Testdaten (59) plus quiz_python.json, 24 Dateien unter inhalte/, 6 einzelne
-        Assert.Equal(90, zeilen.Count);
+        // alle G-Dateien und Testdaten (59) plus quiz_python.json, 24 Dateien unter inhalte/, 6 einzelne,
+        // seit Sollwert-Aenderung Nr. 13 die 2 Dateien der Stadt-Fassung 0 (inhalte_csharp/spiel/stadtbau/)
+        Assert.Equal(92, zeilen.Count);
     }
 
     [Fact]
@@ -52,7 +53,7 @@ public class SollwerteTests
         var block = Regex.Match(text, @"EINZELN = \((.*?)\n\)", RegexOptions.Singleline).Groups[1].Value;
         var python = Regex.Matches(block, "\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToArray();
         Assert.Equal(Einzeln, python);
-        Assert.Contains("ORDNER = (\"tests/Vergleich\", \"inhalte\")", text, StringComparison.Ordinal);
+        Assert.Contains("ORDNER = (\"tests/Vergleich\", \"inhalte\", \"inhalte_csharp/spiel/stadtbau\")", text, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -207,9 +207,10 @@ public static class Nachtlicht
     {
         var regeln = new Regeln(szene);
         var liste = new List<Laterne>();
-        for (var nr = 0; nr < Skizze.Length; nr++)
+        var skizze = szene.LaternenSkizze;
+        for (var nr = 0; nr < skizze.Count; nr++)
         {
-            var (x, z, doppelt) = Skizze[nr];
+            var (x, z, doppelt) = skizze[nr];
             var ziel = new Vector2(x, z);
             var (strasse, laenge0, seite) = StrasseVon(szene.Strassen, ziel);
             var gesamt = Laenge(strasse);
@@ -282,11 +283,12 @@ public static class Nachtlicht
     /// damit Grasbueschel, Buesche, Steine und Beete keine Laterne weiter von Nicos Platz schieben, auch wenn eine andere
     /// Regel (z. B. ein Brueckenpfosten) sie ein Stueck verschiebt.
     /// </summary>
-    public static IEnumerable<(Vector2 A, Vector2 B)> Wunschplaetze(IReadOnlyList<IReadOnlyList<Vector2>> strassen, float breite, float tiefe)
+    public static IEnumerable<(Vector2 A, Vector2 B)> Wunschplaetze(IReadOnlyList<IReadOnlyList<Vector2>> strassen, float breite, float tiefe,
+        IReadOnlyList<(float X, float Z, bool Doppelt)> skizze)
     {
         var min = new Vector2(KartenRand);
         var max = new Vector2(breite - KartenRand, tiefe - KartenRand);
-        foreach (var (x, z, _) in Skizze)
+        foreach (var (x, z, _) in skizze)
         {
             var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
             var (p, d) = Punkt(strasse, laenge);

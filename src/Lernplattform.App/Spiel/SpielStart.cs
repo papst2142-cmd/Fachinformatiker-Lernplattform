@@ -1,6 +1,7 @@
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 
 namespace Lernplattform.Spiel;
 
@@ -34,9 +35,11 @@ public static class SpielStart
     public static SpielSitzung Laden()
     {
         var (inhalt, lernen) = InhaltLaden();
-        var daten = Py.Lesen(Muss("inhalte_csharp/spiel/stadt.json")) as PyObjekt ?? throw new InvalidDataException("stadt.json ist kein Objekt");
-        var stadt = new Stadt(inhalt, daten);
-        var innenraeume = Py.Lesen(Muss("inhalte_csharp/spiel/innenraeume.json")) as PyObjekt;
+        // Phase 13 Welle 1 (Weisung P12-16): Stadt und Innenraeume aus der geltenden Stadt-Fassung (aktiv.json);
+        // die Karte (orte) hat schon InhaltLaden aus derselben Fassung genommen
+        var fassung = Fassung();
+        var stadt = fassung.StadtFuer(inhalt);
+        var innenraeume = fassung.Innenraeume;
         var suche = Programm.Zustand.Suchtext.GetAwaiter().GetResult();
         // Geraet im Spielprotokoll wie fg.Game(app.db, device="PC"/"Handy") (fisi_game_gui 2863, spiel.py 1801)
         var geraet = Pc ? "PC" : "Handy";
@@ -97,14 +100,35 @@ public static class SpielStart
         }
     }
 
-    /// <summary>Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).</summary>
+    /// <summary>
+    /// Phase 13 Welle 1 (Weisung P12-16): die geltende Fassung von Stadt 1 (<c>inhalte_csharp/spiel/stadtbau/</c>), einmal je
+    /// Programmlauf gelesen und im Aufbau geprueft (<see cref="StadtbauPruefung.Format"/>, Pruefsumme).
+    /// </summary>
+    public static StadtFassung Fassung()
+    {
+        lock (FassungSperre)
+        {
+            return _fassung ??= AktiveFassung.Laden(Lesen);
+        }
+    }
+
+    private static readonly Lock FassungSperre = new();
+
+    private static StadtFassung? _fassung;
+
+    /// <summary>
+    /// Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).
+    /// Phase 13 Welle 1: der Abschnitt "orte" (Karte) kommt aus der geltenden Stadt-Fassung und durchlaeuft dieselbe
+    /// Ladepruefung wie vorher orte.json.
+    /// </summary>
     private static (PyObjekt Inhalt, Core.Inhalte.Lerninhalte? Lernen) InhaltLaden()
     {
+        var karte = PythonJson.Utf8(PythonJson.Standard(Fassung().Karte));
         // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
         // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
         var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
         var projekte = lernen?.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList();
-        var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
+        var inhalt = SpielInhalt.Laden(name => name == "orte" ? karte : Lesen("inhalte/spiel/" + name + ".json"), projekte);
         // Phase 12 Welle 1: die Moebel nur der C#-Linie (geschaefte.json moebel_neu, z. B. die vier Kleiderschraenke)
         return (Geschaefte.NeueMoebelEinfuegen(inhalt, Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt), lernen);
     }

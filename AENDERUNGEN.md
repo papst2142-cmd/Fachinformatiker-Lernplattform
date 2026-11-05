@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.42.0
+Im Spiel sieht die Stadt genauso aus wie bisher. Im Hintergrund liest das Spiel sie jetzt aus einer eigenen Stadt-Datei. Das ist die Vorbereitung für das Stadtbau-Werkzeug, mit dem Städte, Häuser und Innenräume künftig ohne Programmieren gebaut werden.
+
+- Die heutige Stadt ist als erste Fassung dieser Datei festgehalten und geschützt. Spätere Änderungen kommen als neue Fassung dazu.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.41.1
 Am Handy und am Tablet bleibt das Vollbild jetzt auch nach einem Neustart an.
 
