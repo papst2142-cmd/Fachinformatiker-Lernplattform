@@ -100,15 +100,24 @@ public static class BerichtVersand
         Senden(inhalt, zeit, geraet, version, null);
 
     internal static VersandErgebnis Senden(string inhalt, DateTime zeit, string geraet, string version, Zugriff? test) =>
-        Hochladen(inhalt, n => DateiName(zeit, geraet, version, n), "Problembericht " + geraet + " " + version, test);
+        Hochladen(Encoding.UTF8.GetBytes(inhalt), n => DateiName(zeit, geraet, version, n), "Problembericht " + geraet + " " + version, test);
+
+    /// <summary>
+    /// Phase 13 Welle 2 (Weisung P12-17, Plan Abschnitt 5): eine Datei des Stadtbau-Werkzeugs ("An CC senden") ueber
+    /// dieselbe Strecke und denselben befristeten Schluessel nach <c>fi-fehlerberichte</c> ablegen; <paramref name="name"/>
+    /// liefert den Pfad im Repo je Versuch (1, 2, ... bei vergebenem Namen). Blockiert bis zur Antwort.
+    /// </summary>
+    public static VersandErgebnis Ablegen(byte[] daten, Func<int, string> name, string nachricht) => Hochladen(daten, name, nachricht, null);
+
+    internal static VersandErgebnis Ablegen(byte[] daten, Func<int, string> name, string nachricht, Zugriff? test) => Hochladen(daten, name, nachricht, test);
 
     /// <summary>Probe der CI mit derselben Strecke (Datei berichte/_probe_&lt;Lauf&gt;.md).</summary>
     public static VersandErgebnis Probe(string lauf, string version, DateTime zeit) =>
-        Hochladen("Probe der CI\n\nLauf: " + lauf + "\nVersion: " + version + "\nZeit: "
-            + zeit.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "\n",
+        Hochladen(Encoding.UTF8.GetBytes("Probe der CI\n\nLauf: " + lauf + "\nVersion: " + version + "\nZeit: "
+            + zeit.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "\n"),
             n => ProbeName(lauf, n), "Probe " + lauf, null);
 
-    private static VersandErgebnis Hochladen(string inhalt, Func<int, string> name, string nachricht, Zugriff? test)
+    private static VersandErgebnis Hochladen(byte[] inhalt, Func<int, string> name, string nachricht, Zugriff? test)
     {
         GitHubZugang zugang;
         string? schluessel;
@@ -132,7 +141,7 @@ public static class BerichtVersand
         }
         using (zugang)
         {
-            var b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(inhalt));
+            var b64 = Convert.ToBase64String(inhalt);
             for (var n = 1; ; n++)
             {
                 var datei = name(n);

@@ -58,7 +58,8 @@ internal static class Updater
                 ? new SimpleWebSource(angabe)
                 : new SimpleFileSource(new DirectoryInfo(angabe));
         }
-        return new GithubSource(Repo, null, false);
+        // Phase 13 W2 (Weisung P12-17): nur Releases der Lernplattform (vA, vB, v1), nie die des Stadtbau-Werkzeugs (vS)
+        return new LinienQuelle(Repo, Core.Update.ReleaseLinie.Linie.Lernplattform);
     }
 
     /// <summary>
