@@ -27,6 +27,8 @@ public sealed class UpdateFenster
     private readonly bool _installierbar;
     private readonly TextBlock _zustand;
     private readonly ProgressBar _balken;
+    private readonly TextBlock _mobil;
+    private bool _zurSeite;
     private IReadOnlyList<Button> _knoepfe = [];
     private bool _laeuft;
     private long _geladen;
@@ -50,7 +52,9 @@ public sealed class UpdateFenster
         }.Farbe(TextBox.ForegroundProperty, "Pinsel.text_dim").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
         Avalonia.Automation.AutomationProperties.SetName(neuerungen, UpdateTexte.Neuerungen);
         var farbe = Pc ? "Pinsel.text_dim" : "Pinsel.accent";
-        _zustand = Schrift.Text(Geraetetexte.UpdateHinweis(installierbar, angebot.DateiUrl is not null, Pc), "Klein", FontWeight.Normal, farbe);
+        // A 0.39.0: Hinweis am Handy nennt die Groesse (etwa %s MB)
+        _zustand = Schrift.Text(Geraetetexte.UpdateHinweis(installierbar, angebot.DateiUrl is not null, Pc)
+            .Replace("%s", HandyPruefung.Mb(angebot.Groesse), StringComparison.Ordinal), "Klein", FontWeight.Normal, farbe);
         _zustand.IsVisible = !string.IsNullOrEmpty(_zustand.Text);
         // Patch A 0.37.0 (Sammelliste 203): Mac, Programmordner nicht beschreibbar -> macOS fragt gleich nach dem Passwort
         string? hinweis = null;
@@ -67,6 +71,10 @@ public sealed class UpdateFenster
         }
         var passwort = Schrift.Text(hinweis ?? "", "Klein", FontWeight.Bold, "Pinsel.text");
         passwort.IsVisible = hinweis is not null;
+        // A 0.39.0 (Nico 2a): Hinweis auf mobile Daten, wenn das Handy gerade nicht im WLAN ist
+        _mobil = Schrift.Text(UpdateTexte.HandyMobileDaten.Replace("%s", HandyPruefung.Mb(angebot.Groesse), StringComparison.Ordinal),
+            "Klein", FontWeight.Bold, "Pinsel.text");
+        _mobil.IsVisible = installierbar && NichtImWlan();
         _balken = new ProgressBar { Minimum = 0, Maximum = 1, Height = 10, IsVisible = false }
             .Farbe(ProgressBar.ForegroundProperty, "Pinsel.purple").Farbe(ProgressBar.BackgroundProperty, "Pinsel.ring_bg");
         Inhalt = new StackPanel
@@ -79,9 +87,10 @@ public sealed class UpdateFenster
                 Schrift.Text(Beschriftungen.Gross(UpdateTexte.Neuerungen), "Klein", FontWeight.Bold, "Pinsel.muted"),
                 neuerungen,
                 _zustand,
+                _mobil,
                 passwort,
                 _balken,
-                Schrift.Text(RundgangTexte.UpdateSchutzHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"),
+                Schrift.Text(Geraetetexte.UpdateSchutz(Pc), "Klein", FontWeight.Normal, "Pinsel.muted"),
             },
         };
     }
@@ -111,6 +120,12 @@ public sealed class UpdateFenster
         }
         if (nummer != 0)
         {
+            return false;
+        }
+        if (_zurSeite)
+        {
+            // A 0.39.0 (Nico 4a): nach einem Fehler am Handy fuehrt der Knopf zur Download-Seite
+            _ = SeiteOeffnenAsync(_angebot.Seite);
             return false;
         }
         if (_installierbar)
@@ -150,6 +165,12 @@ public sealed class UpdateFenster
         {
             knopf.IsEnabled = false;
         }
+        if (Aktuell.Handy is { } geraet && !await ErlaubnisAsync(geraet))
+        {
+            _laeuft = false;
+            HandyFehler(UpdateTexte.KeineErlaubnis);
+            return;
+        }
         _balken.Value = 0;
         _balken.IsVisible = true;
         Zeile(UpdateTexte.Laedt, "Pinsel.text_dim");
@@ -171,6 +192,16 @@ public sealed class UpdateFenster
             });
             takt.Stop();
             Zeile(text, "Pinsel.green");
+            if (Aktuell.Handy is not null)
+            {
+                // A 0.39.0: Android uebernimmt; "Später" schliesst das Fenster, ein Fehler kommt spaeter (HandyFehler)
+                _laeuft = false;
+                if (_knoepfe.Count == 2)
+                {
+                    _knoepfe[1].IsEnabled = true;
+                }
+                return;
+            }
             // Programm schliessen, damit der Updater ersetzen kann; die 1,5 s sind zum Lesen der Meldung
             DispatcherTimer.RunOnce(UpdateDienst.Schliessen, TimeSpan.FromMilliseconds(1500));
         }
@@ -182,6 +213,13 @@ public sealed class UpdateFenster
             {
                 Fehlerprotokoll.Schreiben(e);
             }
+            _balken.IsVisible = false;
+            _laeuft = false;
+            if (Aktuell.Handy is not null)
+            {
+                HandyFehler(_zustand.Text ?? "");
+                return;
+            }
             if (_knoepfe.Count == 2)
             {
                 ((TextBlock)_knoepfe[0].Content!).Text = UpdateTexte.Erneut;
@@ -190,8 +228,54 @@ public sealed class UpdateFenster
             {
                 knopf.IsEnabled = true;
             }
-            _balken.IsVisible = false;
-            _laeuft = false;
+        }
+    }
+
+    /// <summary>
+    /// A 0.39.0 (Nico 4a): Fehler am Handy (auch spaeter von Android gemeldet): Text rot, Knopf "Zur Download-Seite".
+    /// </summary>
+    internal void HandyFehler(string text)
+    {
+        Zeile(text, "Pinsel.red");
+        _balken.IsVisible = false;
+        _zurSeite = true;
+        if (_knoepfe.Count == 2)
+        {
+            ((TextBlock)_knoepfe[0].Content!).Text = UpdateTexte.ZurSeite;
+        }
+        foreach (var knopf in _knoepfe)
+        {
+            knopf.IsEnabled = true;
+        }
+    }
+
+    /// <summary>A 0.39.0: Erlaubnis "Unbekannte Apps installieren" einmalig holen (eigenes Fenster, dann die Einstellung).</summary>
+    private static async Task<bool> ErlaubnisAsync(IHandyGeraet geraet)
+    {
+        if (geraet.DarfInstallieren)
+        {
+            return true;
+        }
+        Updateprotokoll.Schreiben("Erlaubnis „Unbekannte Apps installieren“ fehlt, Erklärung gezeigt.");
+        if (await Dialog.Zeigen(UpdateTexte.ErlaubnisTitel, UpdateTexte.ErlaubnisText, UpdateTexte.ZurEinstellung, UpdateTexte.Abbrechen) != 0)
+        {
+            return false;
+        }
+        var erteilt = await geraet.ErlaubnisHolenAsync();
+        Updateprotokoll.Schreiben(erteilt ? "Erlaubnis „Unbekannte Apps installieren“ erteilt." : "Erlaubnis „Unbekannte Apps installieren“ nicht erteilt.");
+        return erteilt;
+    }
+
+    private static bool NichtImWlan()
+    {
+        try
+        {
+            return Aktuell.Handy?.ImWlan == false;
+        }
+        catch (Exception e)
+        {
+            Fehlerprotokoll.Schreiben(e);
+            return false;
         }
     }
 
@@ -200,6 +284,12 @@ public sealed class UpdateFenster
         var geladen = Interlocked.Read(ref _geladen);
         var gesamt = Interlocked.Read(ref _gesamt);
         _balken.Value = Math.Min(1, (double)geladen / gesamt);
+        if (Aktuell.Handy is not null && geladen >= gesamt)
+        {
+            // A 0.39.0: nach dem Laden prueft das Handy Pruefsummen, Name, Version und Schluessel
+            Zeile(UpdateTexte.HandyPruefe, "Pinsel.text_dim");
+            return;
+        }
         Zeile(Beschriftungen.Einsetzen(UpdateTexte.LaedtMb, Zahlen.DeZahl(geladen / 1048576.0, 1), Zahlen.DeZahl(gesamt / 1048576.0, 1)), "Pinsel.text_dim");
     }
 

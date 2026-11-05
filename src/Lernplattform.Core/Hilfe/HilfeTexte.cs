@@ -157,8 +157,9 @@ public static partial class HilfeTexte
             "In den „Optionen“ unter „Updates“ prüft „Nach Updates suchen“, ob es eine neue Version gibt. Ist "
             + "„Beim Start automatisch nach Updates suchen“ an, sucht die App beim Start von selbst.\n"
             + "\nAm PC führt „Jetzt aktualisieren“ durch Download und Installation, danach startet das Programm neu. "
-            + "Am Handy wird die neue Version im Browser heruntergeladen. Danach die Datei öffnen und "
-            + "„Installieren“ tippen. Dein Lernstand bleibt erhalten.\n"
+            + "Am Handy lädt „Jetzt aktualisieren“ die neue Version selbst, prüft sie und übergibt sie an Android. "
+            + "Beim ersten Mal fragt die App nach der Erlaubnis „Unbekannte Apps installieren“. Android schließt die App "
+            + "beim Installieren; öffne sie danach wieder. Dein Lernstand bleibt erhalten.\n"
             + "\nUnter Linux legt „Verknüpfung anlegen“ eine Verknüpfung im Anwendungsmenü und auf dem Desktop an "
             + "oder erneuert sie, zum Beispiel nachdem du das AppImage verschoben hast."),
         new("farben", "Eigene Farben", ["Optionen"],

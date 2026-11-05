@@ -19,10 +19,14 @@ public static class Aktualisierung
     public static Func<string>? Zustand { get; set; }
 
     /// <summary>
-    /// Phase 5 BE9: Quelle des Updates am PC (Velopack), vom Desktop-Start gesetzt. Am Handy null:
-    /// dort sucht <see cref="Core.Update.GithubSuche"/> und die APK kommt ueber den Browser.
+    /// Phase 5 BE9: Quelle des Updates am PC (Velopack), vom Desktop-Start gesetzt. Seit A 0.39.0 setzt auch der
+    /// Android-Start sie (<see cref="Core.Update.HandyQuelle"/>); nur die Probe-APK laesst sie leer, dort sucht
+    /// <see cref="Core.Update.GithubSuche"/> und die APK kommt ueber den Browser.
     /// </summary>
     public static Func<Core.Update.IUpdateQuelle>? Quelle { get; set; }
+
+    /// <summary>A 0.39.0: Geraetezugriffe fuer das Update am Handy (Erlaubnis, WLAN, Installieren), sonst null.</summary>
+    public static Core.Update.IHandyGeraet? Handy { get; set; }
 
     private static string Metadaten(string schluessel) => typeof(Aktualisierung).Assembly
         .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == schluessel)?.Value ?? "";

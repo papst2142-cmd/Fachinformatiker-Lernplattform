@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.39.0
+Am Handy und am Tablet aktualisiert sich die App jetzt selbst, wie am PC: ein Tipp auf „Jetzt aktualisieren“ genügt, der Umweg über den Browser fällt weg.
+
+- Gibt es eine neue Version, zeigt das Update-Fenster am Handy den Knopf „Jetzt aktualisieren“ und die ungefähre Größe des Downloads. Die App lädt die neue Version selbst, prüft sie und gibt sie zur Installation an Android weiter. Dein Lernstand bleibt erhalten, vorher legt die App wie am PC eine Sicherheitskopie an.
+- Beim ersten Update fragt die App einmal nach der Erlaubnis „Unbekannte Apps installieren“. Ein Tipp auf „Zur Einstellung“ öffnet die passende Einstellung; danach geht das Update von allein weiter. Ohne Erlaubnis bleibt alles, wie es ist, und die neue Version gibt es weiter über „Zur Download-Seite“.
+- Bist du nicht im WLAN, weist das Fenster darauf hin, dass das Update über mobile Daten lädt, und nennt die Größe. Du entscheidest selbst, ob du jetzt oder später aktualisierst.
+- Vor der Installation prüft die App die geladene Datei: Prüfsumme aus zwei Quellen, Name der App, Signatur des Herausgebers und dass die Version neuer ist. Passt etwas nicht, wird die Datei gelöscht und nichts installiert.
+- Android schließt die App während der Installation kurz. Das Fenster sagt das vorher; öffne die App danach einfach wieder. Beim nächsten Start steht im Update-Protokoll, ob das Update angekommen ist.
+- Klappt die Installation nicht (zu wenig Speicher, abgebrochen, von Android gesperrt), nennt ein Fenster den Grund und bietet „Zur Download-Seite“ an. Dein Lernstand bleibt dabei unverändert.
+- Die Hilfe unter „Update“ beschreibt den neuen Ablauf am Handy, auch was eine Warnung von Play Protect bedeutet.
+
 ## A 0.38.0
 Die Seitenleiste am PC und die Optionen sind aufgeräumt: Alles steht zugeklappt unter seiner Überschrift und klappt erst auf, wenn du darauf klickst.
 

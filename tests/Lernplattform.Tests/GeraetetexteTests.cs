@@ -79,6 +79,7 @@ public partial class GeraetetexteTests
             ("Pruefung.StartFrage", "-", Geraetetexte.PruefungStartFrage(true), Geraetetexte.PruefungStartFrage(false)),
             ("Rundgang.Tasten", "-", Geraetetexte.RundgangTasten(true) ?? "", Geraetetexte.RundgangTasten(false) ?? ""),
         };
+        paare.Add(("Update.Schutz", "-", Geraetetexte.UpdateSchutz(true), Geraetetexte.UpdateSchutz(false)));
         foreach (var installierbar in new[] { true, false })
         {
             paare.Add(("Update.Knopf", "installierbar " + installierbar, Geraetetexte.UpdateKnopf(installierbar, true), Geraetetexte.UpdateKnopf(installierbar, false)));
@@ -282,6 +283,14 @@ public partial class GeraetetexteTests
         // bzw. "Programm beenden" in der Seitenleiste, am Tablet quer ebenso (nichts doppelt). Name gleich "Programm beenden"
         ("Views/MainView.axaml.cs", "private bool _beendenAmGeraet = OperatingSystem.IsAndroid();", "Verhalten: X oben rechts nur auf Android im schmalen Aufbau, kein anderer Text"),
         ("Messung/AutoMessung.P8W2b.cs", "if (!OperatingSystem.IsAndroid() && (leisten.BeendenKnopf is not { } beenden || !beenden.IsEffectivelyVisible", "Start-Test: prueft den Knopf nur dort, wo er steht (PC)"),
+        // A 0.39.0 (Weisung P11-40): Update im Programm am Handy; die Texte kommen ueber Geraetetexte (B14), hier nur Ablauf
+        ("Aktualisierung/Aktualisierung.cs", "public static Core.Update.IHandyGeraet? Handy { get; set; }", "Schalter: Geraetezugriffe des Handys (Android setzt ihn, Probe-APK nicht)"),
+        ("Programm/UpdateDienst.cs", "if (Aktuell.Handy is not null)", "Verhalten: das Handy prueft beim Start auch, ob das letzte Update angekommen ist (installiert seit A 0.39.0 selbst)"),
+        ("Programm/UpdateDienst.cs", "Aktuell.Handy?.LadeOrdner ?? Path.GetTempPath());", "Technik: Ladeordner der APK im App-Speicher"),
+        ("Views/UpdateFenster.cs", "if (Aktuell.Handy is { } geraet && !await ErlaubnisAsync(geraet))", "Verhalten: Erlaubnis \"Unbekannte Apps installieren\" gibt es nur auf Android"),
+        ("Views/UpdateFenster.cs", "if (Aktuell.Handy is not null)", "Verhalten: am Handy schliesst Android die App (Nico 3a), Fehler fuehren zur Download-Seite (Nico 4a)"),
+        ("Views/UpdateFenster.cs", "return Aktuell.Handy?.ImWlan == false;", "Verhalten: Hinweis auf mobile Daten nur am Handy (Nico 2a)"),
+        ("Views/UpdateFenster.cs", "if (Aktuell.Handy is not null && geladen >= gesamt)", "Verhalten: Zeile \"Update wird geprüft\" nur am Handy (Pruefung nach dem Laden)"),
         ("Views/UpdateFenster.cs", "return Pc;", "Verhalten: PC-Fenster bleibt nach \"Zur Download-Seite\" offen (app_gui 9416), Handy schliesst nach \"Herunterladen\" (main.py 6163)"),
     ];
 

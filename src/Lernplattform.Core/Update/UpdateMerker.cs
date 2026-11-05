@@ -56,7 +56,12 @@ public static class UpdateMerker
         .Replace("%(alt)s", aktuell, StringComparison.Ordinal)
         .Replace("%(grund)s", UpdateTexte.GrundUnbekannt, StringComparison.Ordinal)
         .Replace("%(pfad)s", Updateprotokoll.Pfad(ordner), StringComparison.Ordinal)
-        .Replace("%(tipp)s", system == "linux" ? UpdateTexte.TippAppImage : UpdateTexte.TippWindows, StringComparison.Ordinal);
+        .Replace("%(tipp)s", system switch
+        {
+            "linux" => UpdateTexte.TippAppImage,
+            "android" => UpdateTexte.TippAndroid,   // A 0.39.0: Update im Programm auch am Handy
+            _ => UpdateTexte.TippWindows,
+        }, StringComparison.Ordinal);
 
     // str(pending.get("version") or ""): leer bei fehlendem, leerem oder falschem Wert
     private static string Text(JsonNode? wert) => wert switch

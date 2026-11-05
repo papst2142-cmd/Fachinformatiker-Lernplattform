@@ -86,7 +86,8 @@ public static class GithubSuche
             datei is null ? null : Zeichen(datei["name"]),
             datei is null ? null : Zeichen(datei["browser_download_url"]),
             groesse,
-            datei is null ? null : Zeichen(datei["digest"]));
+            datei is null ? null : Zeichen(datei["digest"]),
+            TabellenPruefsumme: datei is null || Zeichen(datei["name"]) is not { } name ? null : HandyPruefung.AusReleaseText(Zeichen(release["body"]), name));
     }
 
     /// <summary>pick_asset fuer art "android" (Endung .apk); Eintraege ungewohnter Form werden uebersprungen.</summary>
