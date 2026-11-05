@@ -21,11 +21,14 @@ zeile() { echo "$*" | tee -a "$ERGEBNIS"; }
 
 BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
 badging() { "$BT/aapt2" dump badging "$1" > "$SERVER/badging.txt"; head -n 1 "$SERVER/badging.txt"; }
-PAKET=$(badging "$APK0" | sed -E "s/.*name='([^']+)'.*/\1/")
-code() { badging "$1" | sed -E "s/.*versionCode='([0-9]+)'.*/\1/"; }
-version() { badging "$1" | sed -E "s/.*versionName='([^']+)'.*/\1/"; }
+# Lauf 502: ".*name=" traf gierig "compileSdkVersionCodename='16'"; deshalb mit Anfang bzw. Leerzeichen davor
+PAKET=$(badging "$APK0" | sed -nE "s/^package: name='([^']+)'.*/\1/p")
+code() { badging "$1" | sed -nE "s/.* versionCode='([0-9]+)'.*/\1/p"; }
+version() { badging "$1" | sed -nE "s/.* versionName='([^']+)'.*/\1/p"; }
 C0=$(code "$APK0"); C1=$(code "$APK1"); C2=$(code "$APK2")
 zeile "Paket $PAKET, Versionscodes $C0 -> $C1 -> $C2"
+case "$PAKET" in io.github.papst2142cmd.lernplattform) ;; *) zeile "FEHLER: Paketname nicht gelesen ($PAKET)"; exit 1;; esac
+[ -n "$C0" ] && [ -n "$C1" ] && [ -n "$C2" ] && [ "$C0" -lt "$C1" ] && [ "$C1" -lt "$C2" ] || { zeile "FEHLER: Versionscodes nicht gelesen"; exit 1; }
 
 # Testserver: latest.json wie die GitHub-API, APK unter ihrem Namen
 python3 -I -m http.server "$PORT" --bind 0.0.0.0 --directory "$SERVER" > "$SERVER/../server_$PORT.log" 2>&1 &
@@ -56,7 +59,7 @@ PY
   zeile "Angebot: Version $ver ($name)"
 }
 
-installiert() { adb shell dumpsys package "$PAKET" | sed -nE 's/.*versionCode=([0-9]+).*/\1/p' | head -n 1; }
+installiert() { adb shell dumpsys package "$PAKET" | grep -m 1 -oE "versionCode=[0-9]+" | cut -d= -f2; }
 
 starten() {
   adb logcat -c
