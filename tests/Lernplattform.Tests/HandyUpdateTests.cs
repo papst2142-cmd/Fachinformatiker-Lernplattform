@@ -172,7 +172,7 @@ public class HandyUpdateTests
     }
 
     [Fact]
-    public void FehlerVonAndroidGibtSperreUndMerkerFrei()
+    public async Task FehlerVonAndroidGibtSperreUndMerkerFrei()
     {
         using var temp = new TempOrdner();
         var einstellungen = new Einstellungen(temp.Pfad);
@@ -190,8 +190,12 @@ public class HandyUpdateTests
             // abgebrochen: Text, Merker weg, Sperre frei, Datei weg, Zeile in update.log
             Assert.Equal(UpdateTexte.HandyAbgebrochen, HandyQuelle.Rueckmeldung(HandyPruefung.StatusAbgebrochen, "INSTALL_FAILED_ABORTED: User rejected\n/data/x",
                 Inhalt.Length, einstellungen, geraet.LadeOrdner, temp.Pfad));
-            Assert.False(Vorgaenge.Belegt);
+            // Vorgaenge gilt prozessweit: parallel laufende Tests anderer Sammlungen duerfen die Sperre kurz halten
+            // (Lauf 501 sah dort ein Belegt). Beleg der Freigabe: die Sperre ist wieder zu bekommen; ohne
+            // SperreFreigeben bliebe sie bis zum finally gehalten und Sperren() kaeme nie zurueck.
             Assert.Null(UpdateAblauf.GehalteneSperre);
+            var wieder = Task.Run(Vorgaenge.Sperren, TestContext.Current.CancellationToken);
+            (await wieder.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken)).Dispose();
             Assert.Null(einstellungen.Laden()[UpdateMerker.Schluessel]);
             Assert.Empty(Directory.GetFiles(geraet.LadeOrdner));
             var log = Log(temp.Pfad);
