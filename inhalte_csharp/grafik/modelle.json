@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "2cd70224e363c00ee925b1d2c5738e1040c337f0e47f8e9e8c4be2c9101d7015",
- "bytes": 7300946,
+ "sha256": "052e3fd8fc373654e0216b841b533700bd8fe6a69e853051873c61d5eddb13ff",
+ "bytes": 7308568,
  "modelle": [
   {
    "name": "building-e",
@@ -2546,6 +2546,23 @@
     0.662,
     3.7124,
     1.2712
+   ]
+  },
+  {
+   "name": "coatRackStanding",
+   "paket": "furniture",
+   "datei": "Models/coatRackStanding.obj",
+   "atlas": null,
+   "dreiecke": 190,
+   "min": [
+    -1.364,
+    0.0,
+    -1.364
+   ],
+   "max": [
+    1.364,
+    7.7,
+    1.364
    ]
   }
  ]

@@ -62,7 +62,9 @@ public sealed partial class SpielTafel
     {
         yield return PlatzLeiste();
         yield return Py.Wahr(stand.Firma) ? FirmenKopf(stand) : FirmenGruendung(stand);
-        var reiter = Betrieb.Reiter(stand);
+        // Phase 12 Welle 2 (P12-3, Nico 1): der Reiter „Kredite“ faellt in der Oberflaeche weg (Bank-Schalter, PC zu Hause);
+        // Betrieb.Reiter bleibt wie Python (G47), feste Ausnahme mit eigenem Test
+        var reiter = Spielwelt.FirmaReiter(stand);
         if (!reiter.Any(r => r.Id == _firmaReiter))
         {
             _firmaReiter = reiter[0].Id;

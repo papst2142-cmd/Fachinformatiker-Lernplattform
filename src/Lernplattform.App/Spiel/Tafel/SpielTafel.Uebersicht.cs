@@ -76,21 +76,13 @@ public sealed partial class SpielTafel
         var hinweis = mitFirma ? "" : SpielTexte.RangHinweis(stand);
         var geld = mitFirma ? "Kontostand: " + Euro(stand.Geld)
             : PyFormat.Prozent("Kontostand: %s · Gehalt: %s/Tag", Euro(stand.Geld), Euro(stand.Gehalt));
-        // Phase 12 Welle 1 (Nico 3b): „Figur bearbeiten“ entfaellt, Name und Aussehen nur am Kleiderschrank
-        var knoepfe = new List<Control?>();
-        if (mitFirma || stand.GruendungBereit())
-        {
-            knoepfe.Add(Knopf(mitFirma ? "Firma öffnen" : "Firma gründen", () => FirmaOeffnen(), mitFirma ? "ghost" : "primary", 38));
-        }
-        // in 3D ist die Stadt die Karte; ihre Knoepfe ("Firma öffnen", "Meine Reise") stehen hier
-        if (!mitFirma)
-        {
-            knoepfe.Add(Knopf("Firma öffnen", () => FirmaOeffnen(), "ghost", 38));
-        }
-        knoepfe.Add(Knopf("Meine Reise", () => ReiseOeffnen(), "ghost", 38));
+        // Phase 12 Welle 1 (Nico 3b): „Figur bearbeiten“ entfaellt, Name und Aussehen nur am Kleiderschrank.
+        // Phase 12 Welle 2 (P12-3, Nico 5a): „Firma gründen“, „Firma öffnen“ und „Meine Reise“ entfallen hier (Amt, Buero-PC,
+        // Buecherregal); unter dem Namen steht, wo es die Sachen jetzt gibt. Der Fortschrittsbalken bleibt.
         var zeilen = Stapel(3, [
             T(Py.Str(stand.Profil["name"]), 22, "text", true),
             T(Charakter.HinweisUebersicht, 12, "muted"),
+            T(Spielwelt.HinweisUebersicht, 12, "muted"),
             T(stelle, 14, "accent", true),
             hinweis.Length > 0 ? T(hinweis, 12, "muted") : null,
             T(geld, 12, "text_dim"),
@@ -100,7 +92,7 @@ public sealed partial class SpielTafel
         var figur = new Avatar(stand.Profil["aussehen"] as PyObjekt, 84);
         Control kopf = Schrift.Gross ? Stapel(8, [figur, zeilen]) : Zeile(zeilen, null, 14, figur);
         yield return PlatzLeiste();
-        yield return Karte("Spielfigur", [kopf, gruendung, Reihe(knoepfe)], "accent2", PyFormat.Prozent("Arbeitstag %d", stand.Tag));
+        yield return Karte("Spielfigur", [kopf, gruendung], "accent2", PyFormat.Prozent("Arbeitstag %d", stand.Tag));
         yield return TicketKarte(stand);
 
         var balken = new List<Control?>();
@@ -176,19 +168,19 @@ public sealed partial class SpielTafel
                     wartend == 1 ? "1 Auftrag wartet" : PyFormat.Prozent("%d Aufträge warten", wartend))
                 : "Heute stehen keine Tickets an.";
             teile.Add(T(text, 14, "text_soft"));
-            if (Raum is null && mitFirma && stand.FirmaOffen() != 0)
-            {
-                teile.Add(Knopf("Aufträge öffnen", () => FirmaOeffnen("auftraege")));
-            }
+            // Phase 12 Welle 2 (P12-3): Auftraege und Projekte oeffnet man am Schreibtisch im Buero, gegruendet wird auf dem Amt
             if (Raum is null && mitFirma && Betrieb.ProjekteZeile(stand) is { Length: > 0 } projekte)
             {
                 teile.Add(T(projekte, 14, "text_soft"));
-                teile.Add(Knopf("Projekte öffnen", () => FirmaOeffnen("projekte")));
+            }
+            if (Raum is null && mitFirma && (stand.FirmaOffen() != 0 || Betrieb.ProjekteZeile(stand).Length > 0))
+            {
+                teile.Add(T(Spielwelt.FirmaWo, 12, "muted"));
             }
             if (Raum is null && stand.GruendungBereit())
             {
                 teile.Add(T(Betrieb.GruendungLockText, 14, "green", true));
-                teile.Add(Knopf("Firma gründen", () => FirmaOeffnen()));
+                teile.Add(T(Spielwelt.GruendenWo, 12, "muted"));
             }
         }
         foreach (var (auftrag, status) in tickets)
@@ -197,7 +189,8 @@ public sealed partial class SpielTafel
         }
         if (Raum is null)
         {
-            teile.Add(Knopf("Feierabend machen", () => AktionAusfuehren("feierabend"), "accent", frei: stand.FeierabendMoeglich()));
+            // Phase 12 Welle 2 (P12-3, Nico 4): Feierabend an der Eingangstuer im Buero oder zu Hause im Bett
+            teile.Add(T(Spielwelt.FeierabendWo, 12, "muted"));
         }
         return Karte(titel, teile, akzent, unter);
     }
@@ -286,6 +279,11 @@ public sealed partial class SpielTafel
     /// <summary>run_action: Knoepfe unter den Orten (Auftrag, Personal, Feierabend, Lernen, Schlafen).</summary>
     public void AktionAusfuehren(string aktion)
     {
+        if (SpielweltAktion(aktion))
+        {
+            // Phase 12 Welle 2: PC zu Hause, Meine Reise am Regal, Firma am Schreibtisch im Buero, Paket mitnehmen
+            return;
+        }
         if (IstSchalterAktion(aktion))
         {
             // W7b: Schalter in Bank und Amt

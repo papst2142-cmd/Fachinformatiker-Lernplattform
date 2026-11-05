@@ -214,7 +214,7 @@ public sealed partial class SpielTafel
     // -- Finanzen -----------------------------------------------------------------
 
     /// <summary>_firm_finanzen</summary>
-    private IEnumerable<Control?> FirmaFinanzen(Spielstand stand)
+    private IEnumerable<Control?> FirmaFinanzen(Spielstand stand, bool amPc = false)
     {
         var (namen, werte) = Betrieb.KontoVerlauf(stand);
         var diagramm = new LinienDiagramm(180, "green");
@@ -260,6 +260,11 @@ public sealed partial class SpielTafel
             yield return SteuerKarte(stand);
             // W7b, Text 5 (Nachtrag 2 zu P7-13)
             yield return T("Die Umsatzsteuer siehst du auch auf dem Amt.", 12, "text_dim");
+        }
+        if (amPc && !Py.Wahr(stand.Firma))
+        {
+            // Phase 12 Welle 2: am PC zu Hause ohne Firma nur Kontostand und Einnahmen/Ausgaben
+            yield break;
         }
         yield return Karte("Gegen wen verloren", verloren, "pink", "an Mitbewerber");
     }
@@ -532,7 +537,7 @@ public sealed partial class SpielTafel
     }
 
     /// <summary>_running_loans</summary>
-    private Control LaufendeKredite(Spielstand stand)
+    private Control LaufendeKredite(Spielstand stand, bool ansehen = false)
     {
         var kredite = stand.LaufendeKredite().Select(k => Wirtschaft.KreditStand(stand, k, I)).ToList();
         if (kredite.Count == 0)
@@ -567,7 +572,8 @@ public sealed partial class SpielTafel
                 }
                 Neu();
             }, "ghost", 38);
-            teile.Add(Knopfreihe(plan, abloesen));
+            // Phase 12 Welle 2 (P12-3, Nico 1): am PC zu Hause nur ansehen, abloesen am Schalter der Bank
+            teile.Add(ansehen ? Knopfreihe(plan) : Knopfreihe(plan, abloesen));
             kaesten.Add(PersonKasten(teile, Py.Wahr(eintrag["ausfaelle"]) ? "red" : "border"));
         }
         return Karte("Laufende Kredite", kaesten, "orange");

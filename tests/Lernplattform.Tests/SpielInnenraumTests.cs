@@ -145,7 +145,8 @@ public class SpielInnenraumTests
         {
             typen.UnionWith(Deko(g).Select(d => Py.Str(d["typ"])));
         }
-        var moebel = SpielDaten.Liste(SpielDaten.Objekt(Inhalt["wohnungen"])["moebel"]).Select(SpielDaten.Objekt).ToList();
+        // Phase 12: mit den neuen Moebeln (moebel_neu, u. a. begehbarer Kleiderschrank mit eigenem Modell)
+        var moebel = SpielDaten.Liste(SpielDaten.Objekt(SpielCharakterTests.InhaltMitNeuen.Value["wohnungen"])["moebel"]).Select(SpielDaten.Objekt).ToList();
         var deko = new List<object?>();
         var x = 0.5;
         foreach (var typ in typen)
@@ -155,7 +156,7 @@ public class SpielInnenraumTests
         }
         foreach (var m in moebel)
         {
-            deko.Add(new PyObjekt { { "typ", m["typ"] }, { "x", x }, { "y", 1.0 }, { "w", m["w"] }, { "h", m["h"] }, { "dreh", 0L } });
+            deko.Add(new PyObjekt { { "typ", m["typ"] }, { "moebel", m["id"] }, { "x", x }, { "y", 1.0 }, { "w", m["w"] }, { "h", m["h"] }, { "dreh", 0L } });
             x += 4;
         }
         var gebaeude = new PyObjekt

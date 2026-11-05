@@ -99,6 +99,8 @@ public sealed partial class Spielstand
     // nur C# (Phase 8 W5, Weisung P8-8c): Kleidung aus dem Kaufhaus
     public PyDict Kleider = new();                        // gekaufte Stuecke (Stueck -> Tag des Kaufs)
     public PyObjekt? Getragen;                            // juengstes kleidung_getragen (Slot -> Stueck oder null)
+    // nur C# (Phase 12 Welle 2, Weisung P12-8): online bestellt, noch vor der Haustuer (Stueck -> {moebel, liefertag})
+    public PyDict Pakete = new();
 
     public PyObjekt Balancing => Objekt(Inhalt["balancing"]);
 
@@ -247,7 +249,28 @@ public sealed partial class Spielstand
         else if (art == Ereignisse.MoebelGekauft)
         {
             Geld = checked(Geld + Py.Int(Get(daten, "geld", 0L)));
-            Moebel[daten["stueck"]] = daten["moebel"];
+            if (Spielwelt.IstBestellung(daten))
+            {
+                // Phase 12 Welle 2 (nur C#): online bestellt, bis zum Abholen im Paket vor der Haustuer (Geld schon weg)
+                Pakete[daten["stueck"]] = new PyObjekt { { "moebel", daten["moebel"] }, { "liefertag", Py.Int(daten["liefertag"]) } };
+            }
+            else
+            {
+                Moebel[daten["stueck"]] = daten["moebel"];
+            }
+        }
+        else if (art == Spielwelt.PaketAbgeholt)
+        {
+            // Phase 12 Welle 2 (nur C#): Pakete mitgenommen, die Stuecke liegen im Karton; ein schon abgeholtes Stueck
+            // (zweites Geraet ohne Abgleich) zaehlt kein zweites Mal
+            foreach (var stueck in daten["stuecke"] as List<object?> ?? [])
+            {
+                if (Pakete.ContainsKey(stueck))
+                {
+                    Moebel[stueck] = Get(Objekt(Pakete[stueck]), "moebel");
+                    Pakete.Pop(stueck);
+                }
+            }
         }
         else if (art == Ereignisse.MoebelVerkauft)
         {

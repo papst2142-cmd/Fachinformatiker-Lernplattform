@@ -595,6 +595,20 @@ public sealed class Spielablauf
     /// </summary>
     public PyObjekt MoebelVerkaufen(string stueck) => Ausfuehren(SpielAktionen.MoebelVerkaufen(Stand, stueck));
 
+    /// <summary>
+    /// Phase 12 Welle 2 (Nico 5b, 1a): im Online-Shop am PC zu Hause bestellen (moebel_gekauft mit „weg“ und „liefertag“,
+    /// Geld sofort weg, das Stueck kommt als Paket vor die Haustuer). Rueckgabe: das neue Stueck.
+    /// </summary>
+    public string Bestellen(Geschaefte geschaefte, string laden, string moebel, string? stueck = null)
+    {
+        stueck ??= "m" + Guid.NewGuid().ToString("N")[..10];
+        Ausfuehren(Spielwelt.Bestellen(Stand, geschaefte, laden, moebel, stueck));
+        return stueck;
+    }
+
+    /// <summary>Phase 12 Welle 2 (Nico 4a): alle angekommenen Pakete mitnehmen (paket_abgeholt), danach im Karton.</summary>
+    public PyObjekt PaketAbholen() => Ausfuehren(Spielwelt.Abholen(Stand));
+
     /// <summary>Phase 8 W5: gekaufte Kleidung anziehen oder einen Slot ablegen (stueck null), ueberall (Tafel "Figur").</summary>
     public PyObjekt KleidungAnziehen(Geschaefte geschaefte, string slot, string? stueck) =>
         Ausfuehren(Kleidung.Anziehen(Stand, geschaefte.Daten, slot, stueck));

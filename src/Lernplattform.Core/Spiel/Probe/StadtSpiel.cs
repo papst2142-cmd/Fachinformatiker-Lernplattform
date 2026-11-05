@@ -208,6 +208,7 @@ public sealed class StadtSpiel
             return ergebnis.Grund;
         }
         _weg.Clear();
+        Knoepfe = [];
         if (frei is not null)
         {
             _weg.AddRange(frei);
@@ -328,6 +329,7 @@ public sealed class StadtSpiel
         _weg.AddRange(weg);
         _zielOrt = null;
         ImFreien = true;
+        Knoepfe = [];
         Zeile = string.Format(CultureInfo.InvariantCulture, StadtTexte.Wegdauer, ergebnis.Daten!["schritte"], ergebnis.Daten["minuten"]) + ".";
         Geaendert?.Invoke();
         return true;
@@ -525,6 +527,7 @@ public sealed class StadtSpiel
         {
             Zeile = MitUhrHinweis(OrtZeile(ort));
             _zielOrt = null;
+            AussenKnoepfe(ort);
             NeueSzene();
             Vorbereiten(ort);
             if (_danachZu is { } weiter && weiter == ort)
@@ -804,7 +807,80 @@ public sealed class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. knoepfe];
+        Knoepfe = [.. SpielweltKnoepfe(innen, knoepfe)];
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 2 (Weisungen P12-3/P12-4): Knoepfe der Spielwelt im Innenraum. Zu Hause am Schreibtisch mit PC
+    /// „PC benutzen“ (neben „Lernen“), am Buecherregal „Meine Reise“, an der Wohnungstuer mit angekommenen Paketen
+    /// „Paket mitnehmen“; im eigenen Buero (und in der Filiale) an einem freien Schreibtisch „Firma öffnen“.
+    /// </summary>
+    private List<(string Aktion, string Name)> SpielweltKnoepfe(Innenraum innen, List<(string Aktion, string Name)> knoepfe)
+    {
+        var stand = Ablauf.Stand;
+        if (Ort == SpielDaten.OrtZuhause)
+        {
+            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, FigurX, FigurZ) is not null)
+            {
+                knoepfe = [.. knoepfe, (Spielwelt.AktionComputer, Spielwelt.KnopfComputer)];
+            }
+            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, FigurX, FigurZ) is not null)
+            {
+                if (knoepfe.Count == 0)
+                {
+                    Zeile = Zeile + "\n" + Spielwelt.AmRegalText;
+                }
+                knoepfe = [.. knoepfe, (Spielwelt.AktionReise, Spielwelt.KnopfReise)];
+            }
+            if (knoepfe.Any(k => k.Aktion == "buero") && Spielwelt.Angekommen(stand).Count is > 0 and var pakete)
+            {
+                // an der Wohnungstuer: das Paket steht draussen davor
+                Zeile = Zeile + "\n" + Spielwelt.PaketText(pakete);
+                knoepfe = [.. knoepfe, (Spielwelt.AktionPaket, Spielwelt.KnopfPaket)];
+            }
+        }
+        else if ((Ort == SpielDaten.OrtBuero || Ort == SpielDaten.OrtFiliale) && Py.Wahr(stand.Firma) && knoepfe.Count == 0
+            && innen.DekoNahe(Spielwelt.BueroTischTyp, FigurX, FigurZ) is not null)
+        {
+            Zeile = Spielwelt.BueroTischTitel + "\n" + Spielwelt.AmBueroTischText;
+            knoepfe = [(Spielwelt.AktionFirma, Spielwelt.KnopfFirma)];
+        }
+        return knoepfe;
+    }
+
+    /// <summary>Phase 12 Welle 2 (Nico 4a): Zahl der angekommenen Pakete vor der Haustuer (3D: Stapel, sonst 0).</summary>
+    public int PaketeVorDerTuer => Spielwelt.Angekommen(Ablauf.Stand).Count;
+
+    /// <summary>
+    /// Phase 12 Welle 2: draussen vor der Wohnung mit angekommenen Paketen die Zeile „Paket vor der Haustür“ und der Knopf
+    /// „Paket mitnehmen“; sonst keine Knoepfe (die Stadt hat ihre eigenen Knoepfe Betreten und Warten).
+    /// </summary>
+    private void AussenKnoepfe(string ort)
+    {
+        Knoepfe = [];
+        if (Szene.Ort(ort)?.Ansicht == SpielDaten.OrtZuhause && PaketeVorDerTuer is > 0 and var pakete)
+        {
+            Zeile = Zeile + "\n" + Spielwelt.PaketText(pakete);
+            Knoepfe = [(Spielwelt.AktionPaket, Spielwelt.KnopfPaket)];
+        }
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 2: Pakete mitgenommen; im Haus Text und Knoepfe neu, draussen die Zeile mit dem Hinweis.
+    /// </summary>
+    public void PaketGenommen(int anzahl)
+    {
+        if (ImInnenraum)
+        {
+            InnenText();
+            Zeile = Spielwelt.Mitgenommen(anzahl) + "\n\n" + Zeile;
+        }
+        else
+        {
+            Zeile = Spielwelt.Mitgenommen(anzahl);
+            Knoepfe = [];
+        }
+        Geaendert?.Invoke();
     }
 
     private (string Titel, string Text)? _notiz;
@@ -950,6 +1026,7 @@ public sealed class StadtSpiel
         FigurZ = hier?.StehZ ?? 0;
         FigurRichtung = 0;
         Zeile = OrtZeile(Jetzt.Ort);
+        AussenKnoepfe(Jetzt.Ort);
         Geaendert?.Invoke();
     }
 

@@ -51,7 +51,7 @@ public sealed class Innenraum
     public const string Serverfarm = "serverfarm";
 
     /// <summary>Alle CC0-Modelle, die Innenraeume nutzen (Pruefung: jedes Modell in modelle.bin wird gebraucht).</summary>
-    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB"];
+    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB", Begehbar.Modell];
 
     private readonly List<Teil> _teile = [];
     private readonly List<ModellStueck> _stuecke = [];
@@ -606,6 +606,19 @@ public sealed class Innenraum
         Wege.PersonBei(x, z, Lauf) is { } p ? Personen.FirstOrDefault(q => ReferenceEquals(q.Daten, p)) : null;
 
     /// <summary>Person in Reichweite der Figur (zum Ansprechen), wie person_near.</summary>
+    /// <summary>
+    /// Phase 12 Welle 2: Einrichtungsstueck des Grundrisses (Raeume und Flur) mit diesem Typ in Reichweite der Figur
+    /// (<see cref="Wohnung.MoebelReichweite"/> vom Rand), das naechste; sonst null. Nur Lesen, die Darstellung bleibt.
+    /// </summary>
+    public PyObjekt? DekoNahe(string typ, double x, double z)
+    {
+        var alle = ListeOderLeer(Gebaeude, "raeume").Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko").Select(Objekt))
+            .Concat(Gebaeude["flur"] is PyObjekt flur ? ListeOderLeer(flur, "deko").Select(Objekt) : []);
+        return alle.Where(d => Py.Gleich(d["typ"], typ))
+            .Select(d => (d, a: Spielwelt.Abstand(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]), x, z)))
+            .Where(p => p.a <= Wohnung.MoebelReichweite).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault();
+    }
+
     public InnenPerson? PersonNahe(double x, double z) =>
         Wege.PersonNahe(x, z, Lauf) is { } p ? Personen.FirstOrDefault(q => ReferenceEquals(q.Daten, p)) : null;
 
@@ -1184,6 +1197,10 @@ public sealed class Innenraum
             case "hochregal":
                 Modell(r, "bookcaseOpen", 0, 0, b, tt, 2.4f * M, 0, Farben.Metall);
                 break;
+            case "kleiderschrank" when Py.Gleich(Get(d, "moebel"), Begehbar.Id):
+                // Phase 12 Welle 2 (Nico 2b, Weisung P12-8): eigenes Bild fuer den begehbaren Kleiderschrank
+                BegehbarerSchrank(r, b, tt);
+                break;
             case "kleiderschrank":
                 Modell(r, "bookcaseClosedDoors", 0, 0, b, tt, 2.0f * M, 0, Farben.Holz);
                 break;
@@ -1370,6 +1387,48 @@ public sealed class Innenraum
             {
                 Kasten(r, lx, (t / 2) - 0.15f, breite, 0.3f, tisch, tisch + hoehe, i % 3 == 1 ? zweite : farbe);
             }
+        }
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 2 (Nico 2b): begehbarer Kleiderschrank als offenes Ankleide-Regal. Links und rechts je ein offenes
+    /// Regal (Kenney „bookcaseOpen“) mit gefalteten Stapeln und Schuhen, dazwischen eine Kleiderstange auf zwei
+    /// Garderobenstaendern (Kenney „coatRackStanding“, CC0, nur angehaengt in modelle.bin) mit haengenden Oberteilen und
+    /// Hosen. Gleiche Grundflaeche wie im Laden (w × h aus geschaefte.json), Rueckseite an der Wand.
+    /// </summary>
+    private void BegehbarerSchrank(Rahmen r, float b, float t)
+    {
+        const float M = Meter;
+        var seite = MathF.Min(1.1f, b * 0.26f);
+        Modell(r, "bookcaseOpen", 0, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
+        Modell(r, "bookcaseOpen", b - seite, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
+        var boden = 2.1f * M;
+        var stapel = Begehbar.Farben;
+        var nr = 0;
+        foreach (var anteil in (ReadOnlySpan<float>)[0.04f, 0.37f, 0.7f])
+        {
+            var unten = boden * anteil;
+            for (var i = 0; i < 2; i++)
+            {
+                // links gefaltete Stapel, rechts Schuhe
+                Kasten(r, 0.1f + (i * ((seite - 0.2f) / 2)), t * 0.35f, (seite - 0.3f) / 2, t * 0.5f, unten, unten + 0.16f, stapel[nr++ % stapel.Count]);
+                Kasten(r, b - seite + 0.1f + (i * ((seite - 0.2f) / 2)), t * 0.4f, (seite - 0.3f) / 2, t * 0.45f, unten, unten + 0.1f,
+                    stapel[(nr + 3) % stapel.Count] * 0.8f);
+            }
+        }
+        // Kleiderstange zwischen zwei Garderobenstaendern
+        var links = seite + 0.25f;
+        var rechts = b - seite - 0.25f;
+        var stange = 1.75f * M;
+        Modell(r, Begehbar.Modell, links - 0.22f, (t / 2) - 0.22f, 0.44f, 0.44f, 1.9f * M, 0, Farben.HolzDunkel);
+        Modell(r, Begehbar.Modell, rechts - 0.22f, (t / 2) - 0.22f, 0.44f, 0.44f, 1.9f * M, 0, Farben.HolzDunkel);
+        Kasten(r, links, (t / 2) - 0.02f, rechts - links, 0.04f, stange - 0.04f, stange, Farben.Metall);
+        var anzahl = Math.Max(1, (int)((rechts - links - 0.2f) / 0.14f));
+        for (var i = 0; i < anzahl; i++)
+        {
+            var lx = links + 0.1f + (i * (rechts - links - 0.2f) / anzahl);
+            var lang = i % 3 == 2 ? 0.95f : 0.7f;
+            Kasten(r, lx, (t / 2) - 0.22f, 0.06f, 0.44f, stange - (lang * M), stange - 0.06f, stapel[i % stapel.Count]);
         }
     }
 

@@ -978,7 +978,9 @@ public sealed class SpielSeite : Grid
         var schluessel = string.Join("|", spiel.Knoepfe.Select(k => k.Aktion + k.Name)) + "#" + spiel.Einrichten + "#" + spiel.Ausgewaehlt
             + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck))
             + "#" + (spiel.Einrichten ? WohnungSchluessel(spiel) : "") + "#" + Schrift.Gross + "#" + _ersatz.IsVisible + "#" + spiel.AusgewaehltRueckkauf
-            + "#" + (spiel.Ort == SpielDaten.OrtZuhause && Charakter.SchrankAufgestellt(spiel.Ablauf.Stand));
+            + "#" + (_ersatz.IsVisible && spiel.ImInnenraum
+                ? string.Join(",", Spielwelt.ErsatzKnoepfe(spiel.Ablauf.Stand, spiel.Ort, [.. spiel.Knoepfe.Select(k => k.Aktion)]).Select(k => k.Aktion))
+                : "");
         if (schluessel == _tafelSchluessel)
         {
             return;
@@ -991,13 +993,16 @@ public sealed class SpielSeite : Grid
             knopf.Click += (_, _) => spiel.Knopf(aktion);
             _ortKnoepfe.Children.Add(knopf);
         }
-        if (_ersatz.IsVisible && !spiel.Einrichten && spiel.Ort == SpielDaten.OrtZuhause && !spiel.Knoepfe.Any(k => k.Aktion == Charakter.Aktion)
-            && Charakter.SchrankAufgestellt(spiel.Ablauf.Stand))
+        if (_ersatz.IsVisible && !spiel.Einrichten && spiel.ImInnenraum)
         {
-            // Phase 12 Welle 1: ohne 3D geht die Figur nicht zum Schrank; der Knopf steht dann immer in der Wohnung
-            var schrank = Schrift.Knopf(Charakter.KnopfOeffnen, true);
-            schrank.Click += (_, _) => Tafel?.AktionAusfuehren(Charakter.Aktion);
-            _ortKnoepfe.Children.Add(schrank);
+            // Phase 12 Welle 1/2: ohne 3D geht die Figur nicht zu den Moebeln; Kleiderschrank, PC, Regal, Bett, Paket,
+            // Firma und Feierabend stehen dann immer am Ort (Spielwelt.ErsatzKnoepfe)
+            foreach (var (aktion, name) in Spielwelt.ErsatzKnoepfe(spiel.Ablauf.Stand, spiel.Ort, [.. spiel.Knoepfe.Select(k => k.Aktion)]))
+            {
+                var knopf = Schrift.Knopf(name, true);
+                knopf.Click += (_, _) => Tafel?.AktionAusfuehren(aktion);
+                _ortKnoepfe.Children.Add(knopf);
+            }
         }
         _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
         // neue Knoepfe: Textrolle wieder voll hoch, ZeileKuerzen kuerzt sie beim naechsten Layout, falls noetig

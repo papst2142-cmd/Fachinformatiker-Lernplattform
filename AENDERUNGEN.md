@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 0.41.0
+Im Spiel findest du die Menüs jetzt dort, wo sie hingehören: am PC zu Hause, am Bücherregal, am Schreibtisch im Büro, in der Bank und auf dem Amt. Neu ist der Online-Shop am PC zu Hause; bestellte Möbel stehen nach der Lieferzeit als Paket vor deiner Haustür.
+
+- Stellst du den „Schreibtisch mit PC“ in deiner Wohnung auf, erscheint daneben „PC benutzen“. Der PC hat drei Reiter: Online-Shop, Kredite und Gezahltes.
+- Im Online-Shop gibt es alle Möbel aus dem Möbelhaus und dem Elektromarkt zum gleichen Preis wie im Laden. Du bezahlst sofort. Kleine Möbel kommen am nächsten Arbeitstag, mittelgroße nach zwei und große nach drei Arbeitstagen.
+- Ist eine Bestellung angekommen, steht ein Karton vor deiner Haustür, bei mehreren Paketen ein Stapel. An der Wohnungstür erscheint „Paket mitnehmen“; danach liegen die Möbel in deinem Karton und du stellst sie wie gewohnt beim Einrichten auf.
+- Unter „Kredite“ am PC siehst du deine laufenden Kredite. Neue Kredite aufnehmen und ablösen geht nur am Schalter der Bank. Unter „Gezahltes“ siehst du deinen Kontostand, Einnahmen und Ausgaben, mit Firma auch die Umsatzsteuer.
+- „Meine Reise“ öffnest du am Bücherregal in deiner Wohnung. Deine Firma führst du am Schreibtisch in deinem Büro („Firma öffnen“), gegründet wird sie auf dem Amt. Feierabend machst du an der Eingangstür im Büro oder zu Hause im Bett.
+- Die Knöpfe dafür sind aus der Übersicht verschwunden. Unter deinem Namen steht dort jetzt, wo du was findest. Fehlt dir noch der PC oder das Regal, sagt dir ein Hinweis, wo du es kaufen kannst.
+- Ohne 3D-Ansicht stehen dieselben Knöpfe unter der Ortsliste, sobald du in deiner Wohnung oder in deinem Büro bist.
+- Der begehbare Kleiderschrank sieht jetzt auch so aus: mit offenen Regalen, Kleiderstangen und Kleidung darin.
+
 ## A 0.40.0
 Im Spiel bestimmst du das Aussehen deiner Figur jetzt einmal beim Anlegen. Danach änderst du Name und Aussehen am Kleiderschrank in deiner Wohnung, und neue Kleidung braucht Platz im Schrank.
 
