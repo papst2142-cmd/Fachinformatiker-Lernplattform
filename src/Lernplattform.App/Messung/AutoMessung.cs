@@ -515,6 +515,16 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 12, Welle 1: Kleiderschrank (Anlegen mit Hinweis, Schrank, Kaufhaus ohne/voll, Wohnung, Zurueckverkaufen)
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? P12W1Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W8b: neue Tueren (Bahnhof, Moebelhaus), Stellwerk mit Schild, Bahnhof innen als Wartehalle
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>())
@@ -705,6 +715,11 @@ public static partial class AutoMessung
             ("spiel/bett_offen", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenOffen(12), Dialog.Ok)),
             ("spiel/bett_trotzdem", () => Dialog.Zeigen(Core.Spiel.Wohnung.SchlafenTitel, Core.Spiel.Wohnung.SchlafenTrotzdem(12),
                 Core.Spiel.Wohnung.SchlafenNein, Core.Spiel.Wohnung.SchlafenJa)),
+            // Phase 12 Welle 1: einmaliges Fenster fuer alte Spielstaende und Rueckfrage beim Zurueckverkaufen
+            ("spiel/kleiderschrank_neu", () => Dialog.Zeigen(Core.Spiel.Charakter.UpdateTitel, Core.Spiel.Charakter.UpdateText, Core.Spiel.Charakter.UpdateKnopf)),
+            ("spiel/zurueckverkaufen", () => Dialog.Zeigen(Core.Texte.SpielProbeTexte.VerkaufenTitel,
+                Core.Spiel.PyFormat.Prozent(Core.Texte.SpielProbeTexte.VerkaufenFrage, "Begehbarer Kleiderschrank", Core.Spiel.Wohnung.GanzeEuro(500L)), "Abbrechen",
+                Core.Texte.SpielProbeTexte.VerkaufenJa)),
         };
         for (var i = 0; i < fenster.Length; i++)
         {

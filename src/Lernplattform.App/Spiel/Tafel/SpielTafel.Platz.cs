@@ -113,6 +113,52 @@ public sealed partial class SpielTafel
         Geaendert?.Invoke();
         Zeichnen();
         Freischaltungen();
+        UpdateHinweis();
+    }
+
+    // -- Phase 12 Welle 1 (Nico 5a): einmal je Spielstand mit Figur das Fenster „Neu: Kleiderschrank“ --------
+
+    private bool _updateHinweisOffen;
+
+    /// <summary>
+    /// Zeigt das Fenster „Neu: Kleiderschrank“ einmal je Spielstand, der schon eine Figur hat. Gemerkt wird der Spielstand
+    /// (lauf) in einstellungen.json (<see cref="Charakter.UpdateMerker"/>, nur ueber Einstellungen.Aendern); laesst sich
+    /// der Merker nicht schreiben (Lesefehler), kommt kein Fenster, damit es nicht bei jedem Start wiederkommt.
+    /// </summary>
+    private void UpdateHinweis()
+    {
+        if (OhneFenster || _updateHinweisOffen || !_s.PlatzGewaehlt || Stand.Profil is null || _s.Verwaltung.Lauf is not { } lauf
+            || Charakter.UpdateGezeigt(Programm.Zustand.Werte, lauf))
+        {
+            return;
+        }
+        if (!Programm.Zustand.Aendere(w => Charakter.UpdateMerken(w, lauf)))
+        {
+            return;
+        }
+        _ = UpdateHinweisAsync();
+    }
+
+    private async Task UpdateHinweisAsync()
+    {
+        _updateHinweisOffen = true;
+        try
+        {
+            await Dialog.Zeigen(Charakter.UpdateTitel, Charakter.UpdateText, Charakter.UpdateKnopf);
+        }
+        finally
+        {
+            _updateHinweisOffen = false;
+        }
+    }
+
+    /// <summary>Neuer Spielstand: gleich merken, dass er das Fenster nicht braucht.</summary>
+    private void UpdateHinweisGezeigt()
+    {
+        if (_s.Verwaltung.Lauf is { } lauf && !Charakter.UpdateGezeigt(Programm.Zustand.Werte, lauf))
+        {
+            Programm.Zustand.Aendere(w => Charakter.UpdateMerken(w, lauf));
+        }
     }
 
     private async Task PlatzLoeschenAsync(PyObjekt item)
@@ -142,8 +188,14 @@ public sealed partial class SpielTafel
 
     // -- Spielfigur ----------------------------------------------------------
 
+    /// <summary>
+    /// Neue Figur anlegen (alles waehlbar, darueber Nicos Hinweistext) oder, seit Phase 12 Welle 1 (Nico 3b), der
+    /// Kleiderschrank: Name, Plaetze, Hautton/Frisur/Haarfarbe gesperrt als Text (3a), der Rest waehlbar, darunter die
+    /// gekaufte Kleidung. „Figur bearbeiten“ gibt es nach dem Anlegen nicht mehr.
+    /// </summary>
     private IEnumerable<Control?> FigurBearbeiten(Spielstand stand)
     {
+        var schrank = stand.Profil is not null;
         var profil = stand.Profil ?? new PyObjekt { { "name", "" }, { "aussehen", Aussehen.Voreinstellung() } };
         var aussehen = Aussehen.Normalisieren(Get(_entwurf, "aussehen") ?? profil["aussehen"]);
         Py.Setzen(_entwurf, "aussehen", aussehen);
@@ -151,9 +203,24 @@ public sealed partial class SpielTafel
         var name = Eingabe(Get(_entwurf, "name") as string ?? Py.Str(profil["name"]), "Wie heißt deine Figur?",
             text => Py.Setzen(_entwurf, "name", text));
         var teile = new List<Control?> { vorschau, Label("Name"), name };
+        if (schrank)
+        {
+            teile.Add(T(Charakter.Belegt(Charakter.Plaetze(stand)), 13, "accent", true));
+        }
         foreach (var (teil, beschriftung) in SpielBilder.AussehenNamen)
         {
             var wahl = Aussehen.Teile.First(t => t.Teil == teil).Wahl;
+            if (schrank && Charakter.GesperrteTeile.Contains(teil))
+            {
+                // gesperrt: nur der heutige Wert als Text (nicht bedienbar), unter der Haarfarbe der Satz zum Friseur
+                teile.Add(Label(beschriftung + Charakter.GesperrtZusatz));
+                teile.Add(T(wahl.FirstOrDefault(w => w.Kennung == Py.Str(aussehen[teil])).Name ?? Py.Str(aussehen[teil]), 14, "text", true));
+                if (teil == Charakter.GesperrteTeile[^1])
+                {
+                    teile.Add(T(Charakter.Gesperrt, 12, "muted"));
+                }
+                continue;
+            }
             teile.Add(Label(beschriftung));
             teile.Add(Pillen(wahl.Select(w => (w.Kennung, w.Name)), Py.Str(aussehen[teil]), wert =>
             {
@@ -181,9 +248,10 @@ public sealed partial class SpielTafel
                 T(Py.Str(Objekt(I["story"])["intro"]), 14, "text_soft"),
                 T(PyFormat.Prozent("%s · Kunde: %s", gebaeude["firma"], gebaeude["kunde"]), 11, "muted"),
             ], "accent2");
+            yield return Karte(Charakter.HinweisTitel, [T(Charakter.HinweisAnlegen, 14, "text")], "orange");
         }
-        yield return Karte("Deine Spielfigur", teile, "accent");
-        if (stand.Profil is not null && stand.Kleider.Count > 0 && _s.Geschaefte is { } g)
+        yield return Karte(schrank ? Charakter.Ueberschrift : "Deine Spielfigur", teile, "accent");
+        if (schrank && stand.Kleider.Count > 0 && _s.Geschaefte is { } g)
         {
             yield return KleidungTragenKarte(stand, g);
         }
@@ -244,17 +312,27 @@ public sealed partial class SpielTafel
 
     private void FigurSpeichern(string name, PyObjekt aussehen)
     {
-        if (Tun(a => a.Profil(name, aussehen, Get(_entwurf, "schwierigkeit"))) is null)
+        var neu = Stand.Profil is null;
+        if (Tun(a => neu ? a.Profil(name, aussehen, Get(_entwurf, "schwierigkeit")) : a.AmSchrank(name, aussehen)) is null)
         {
             return;
+        }
+        if (neu)
+        {
+            // Phase 12 Welle 1 (Nico 5a): ein neuer Spielstand kennt die Regel schon, kein Fenster „Neu: Kleiderschrank“
+            UpdateHinweisGezeigt();
         }
         _entwurf.Clear();
         Fortschritt();
     }
 
-    /// <summary>_edit_profile</summary>
-    private void FigurAendern()
+    /// <summary>Phase 12 Welle 1 (Nico 3b): Kleiderschrank oeffnen (Name, Aussehen ohne gesperrte Teile, Kleidung).</summary>
+    private void KleiderschrankOeffnen()
     {
+        if (Stand.Profil is null)
+        {
+            return;
+        }
         _entwurf.Clear();
         Py.Setzen(_entwurf, "edit", true);
         _stapel.Clear();

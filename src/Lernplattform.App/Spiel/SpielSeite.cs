@@ -951,7 +951,8 @@ public sealed class SpielSeite : Grid
         var karton = spiel.Einrichten ? spiel.ImKarton() : [];
         var schluessel = string.Join("|", spiel.Knoepfe.Select(k => k.Aktion + k.Name)) + "#" + spiel.Einrichten + "#" + spiel.Ausgewaehlt
             + "#" + spiel.AusgewaehltSteht + "#" + (spiel.Vorschau is null) + "#" + string.Join(",", karton.Select(k => k.Stueck))
-            + "#" + (spiel.Einrichten ? WohnungSchluessel(spiel) : "") + "#" + Schrift.Gross;
+            + "#" + (spiel.Einrichten ? WohnungSchluessel(spiel) : "") + "#" + Schrift.Gross + "#" + _ersatz.IsVisible + "#" + spiel.AusgewaehltRueckkauf
+            + "#" + (spiel.Ort == SpielDaten.OrtZuhause && Charakter.SchrankAufgestellt(spiel.Ablauf.Stand));
         if (schluessel == _tafelSchluessel)
         {
             return;
@@ -963,6 +964,14 @@ public sealed class SpielSeite : Grid
             var knopf = Schrift.Knopf(name, true);
             knopf.Click += (_, _) => spiel.Knopf(aktion);
             _ortKnoepfe.Children.Add(knopf);
+        }
+        if (_ersatz.IsVisible && !spiel.Einrichten && spiel.Ort == SpielDaten.OrtZuhause && !spiel.Knoepfe.Any(k => k.Aktion == Charakter.Aktion)
+            && Charakter.SchrankAufgestellt(spiel.Ablauf.Stand))
+        {
+            // Phase 12 Welle 1: ohne 3D geht die Figur nicht zum Schrank; der Knopf steht dann immer in der Wohnung
+            var schrank = Schrift.Knopf(Charakter.KnopfOeffnen, true);
+            schrank.Click += (_, _) => Tafel?.AktionAusfuehren(Charakter.Aktion);
+            _ortKnoepfe.Children.Add(schrank);
         }
         _ortKnoepfe.IsVisible = _ortKnoepfe.Children.Count > 0;
         _einrichtenTafel.Children.Clear();
@@ -990,6 +999,21 @@ public sealed class SpielSeite : Grid
                 var karton2 = Schrift.Knopf(SpielProbeTexte.InDenKarton);
                 karton2.Click += (_, _) => spiel.InDenKarton();
                 reihe.Children.Add(karton2);
+            }
+            if (spiel.AusgewaehltRueckkauf is { } preis)
+            {
+                // Phase 12 Welle 1 (Nico 3b): jedes Moebel zum halben Preis zurueckverkaufen, mit Rueckfrage
+                var euro = Wohnung.GanzeEuro(preis);
+                var verkaufen = Schrift.Knopf(PyFormat.Prozent(SpielProbeTexte.Zurueckverkaufen, euro));
+                verkaufen.Click += async (_, _) =>
+                {
+                    if (await Dialog.Zeigen(SpielProbeTexte.VerkaufenTitel, PyFormat.Prozent(SpielProbeTexte.VerkaufenFrage, name2, euro),
+                        "Abbrechen", SpielProbeTexte.VerkaufenJa) == 1)
+                    {
+                        spiel.Verkaufen();
+                    }
+                };
+                reihe.Children.Add(verkaufen);
             }
             _einrichtenTafel.Children.Add(reihe);
         }

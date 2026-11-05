@@ -1,24 +1,25 @@
-Am Handy und am Tablet aktualisiert sich die App jetzt selbst, wie am PC: ein Tipp auf „Jetzt aktualisieren“ genügt, der Umweg über den Browser fällt weg.
+Im Spiel bestimmst du das Aussehen deiner Figur jetzt einmal beim Anlegen. Danach änderst du Name und Aussehen am Kleiderschrank in deiner Wohnung, und neue Kleidung braucht Platz im Schrank.
 
-- Gibt es eine neue Version, zeigt das Update-Fenster am Handy den Knopf „Jetzt aktualisieren“ und die ungefähre Größe des Downloads. Die App lädt die neue Version selbst, prüft sie und gibt sie zur Installation an Android weiter. Dein Lernstand bleibt erhalten, vorher legt die App wie am PC eine Sicherheitskopie an.
-- Beim ersten Update fragt die App einmal nach der Erlaubnis „Unbekannte Apps installieren“. Ein Tipp auf „Zur Einstellung“ öffnet die passende Einstellung; danach geht das Update von allein weiter. Ohne Erlaubnis bleibt alles, wie es ist, und die neue Version gibt es weiter über „Zur Download-Seite“.
-- Bist du nicht im WLAN, weist das Fenster darauf hin, dass das Update über mobile Daten lädt, und nennt die Größe. Du entscheidest selbst, ob du jetzt oder später aktualisierst.
-- Vor der Installation prüft die App die geladene Datei: Prüfsumme aus zwei Quellen, Name der App, Signatur des Herausgebers und dass die Version neuer ist. Passt etwas nicht, wird die Datei gelöscht und nichts installiert.
-- Android schließt die App während der Installation kurz. Das Fenster sagt das vorher; öffne die App danach einfach wieder. Beim nächsten Start steht im Update-Protokoll, ob das Update angekommen ist.
-- Klappt die Installation nicht (zu wenig Speicher, abgebrochen, von Android gesperrt), nennt ein Fenster den Grund und bietet „Zur Download-Seite“ an. Dein Lernstand bleibt dabei unverändert.
-- Die Hilfe unter „Update“ beschreibt den neuen Ablauf am Handy, auch was eine Warnung von Play Protect bedeutet.
+- Beim Anlegen eines neuen Spielstands wählst du Name und Aussehen wie bisher. Ein Hinweis erklärt, dass du die Figur später nur noch über einen gekauften Kleiderschrank ändern kannst und Frisur, Haarfarbe und Hautton in einer anderen Stadt beim Friseur.
+- Den Knopf „Figur bearbeiten“ in der Übersicht gibt es nicht mehr. Unter dem Namen steht, wo du Name und Aussehen jetzt änderst.
+- Im Möbelhaus gibt es vier Kleiderschränke: klein für 100 € mit 8 Plätzen, mittel für 400 € mit 16 Plätzen, groß für 600 € mit 28 Plätzen und den begehbaren Kleiderschrank für 1.000 € mit unbegrenzt Platz. Jedes gekaufte Kleidungsstück belegt einen Platz. Hast du mehrere Schränke, zählt der größte, auch wenn er noch im Karton liegt.
+- Steht der Schrank in deiner Wohnung, erscheint daneben „Kleiderschrank öffnen“. Dort änderst du deinen Namen, Oberteil, Accessoire, die Farbe deines Kreises und ziehst gekaufte Kleidung an oder ab. Hautton, Frisur und Haarfarbe sind dort gesperrt.
+- Im Kaufhaus kaufst du neue Kleidung nur mit Kleiderschrank und freiem Platz; sonst sagt ein Hinweis, was fehlt. Was du schon hast, bleibt dir immer und steht dort als „Im Schrank“.
+- Beim Einrichten der Wohnung kannst du jedes gekaufte Möbelstück zum halben Preis zurückverkaufen („Zurückverkaufen“, mit Rückfrage). Die Matratze vom Anfang gehört nicht dazu.
+- Der bisherige Kleiderschrank für 340 € wird nicht mehr verkauft. Wer ihn hat, behält ihn; er zählt wie der mittlere mit 16 Plätzen und bringt beim Zurückverkaufen 170 €.
+- Vorhandene Spielstände behalten Name, Aussehen und alle Kleidung. Beim ersten Öffnen nach dem Update erklärt ein Fenster einmal die neue Regel.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.39.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.40.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.39.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.39.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.39.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.39.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.40.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.40.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.40.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.40.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

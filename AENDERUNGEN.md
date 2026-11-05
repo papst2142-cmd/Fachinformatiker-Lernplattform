@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 0.40.0
+Im Spiel bestimmst du das Aussehen deiner Figur jetzt einmal beim Anlegen. Danach änderst du Name und Aussehen am Kleiderschrank in deiner Wohnung, und neue Kleidung braucht Platz im Schrank.
+
+- Beim Anlegen eines neuen Spielstands wählst du Name und Aussehen wie bisher. Ein Hinweis erklärt, dass du die Figur später nur noch über einen gekauften Kleiderschrank ändern kannst und Frisur, Haarfarbe und Hautton in einer anderen Stadt beim Friseur.
+- Den Knopf „Figur bearbeiten“ in der Übersicht gibt es nicht mehr. Unter dem Namen steht, wo du Name und Aussehen jetzt änderst.
+- Im Möbelhaus gibt es vier Kleiderschränke: klein für 100 € mit 8 Plätzen, mittel für 400 € mit 16 Plätzen, groß für 600 € mit 28 Plätzen und den begehbaren Kleiderschrank für 1.000 € mit unbegrenzt Platz. Jedes gekaufte Kleidungsstück belegt einen Platz. Hast du mehrere Schränke, zählt der größte, auch wenn er noch im Karton liegt.
+- Steht der Schrank in deiner Wohnung, erscheint daneben „Kleiderschrank öffnen“. Dort änderst du deinen Namen, Oberteil, Accessoire, die Farbe deines Kreises und ziehst gekaufte Kleidung an oder ab. Hautton, Frisur und Haarfarbe sind dort gesperrt.
+- Im Kaufhaus kaufst du neue Kleidung nur mit Kleiderschrank und freiem Platz; sonst sagt ein Hinweis, was fehlt. Was du schon hast, bleibt dir immer und steht dort als „Im Schrank“.
+- Beim Einrichten der Wohnung kannst du jedes gekaufte Möbelstück zum halben Preis zurückverkaufen („Zurückverkaufen“, mit Rückfrage). Die Matratze vom Anfang gehört nicht dazu.
+- Der bisherige Kleiderschrank für 340 € wird nicht mehr verkauft. Wer ihn hat, behält ihn; er zählt wie der mittlere mit 16 Plätzen und bringt beim Zurückverkaufen 170 €.
+- Vorhandene Spielstände behalten Name, Aussehen und alle Kleidung. Beim ersten Öffnen nach dem Update erklärt ein Fenster einmal die neue Regel.
+
 ## A 0.39.0
 Am Handy und am Tablet aktualisiert sich die App jetzt selbst, wie am PC: ein Tipp auf „Jetzt aktualisieren“ genügt, der Umweg über den Browser fällt weg.
 

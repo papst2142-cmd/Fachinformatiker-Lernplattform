@@ -407,11 +407,53 @@ public sealed class Innenraum
     /// </summary>
     private static Eingaben MitMoebeln(PyObjekt? innenraeume, Eingaben e)
     {
-        if (innenraeume is null || Get(innenraeume, "zusatz_moebel") is not PyObjekt zm || Get(zm, e.Ort) is not PyObjekt zusatz)
+        var (gebaeude, plaetze) = MoebelZusatz(innenraeume, e.Ort, e.Gebaeude);
+        gebaeude = MitZusatz(gebaeude, SchrankZusatz(innenraeume, e.Ort));
+        if (plaetze.Count == 0)
         {
-            return e;
+            return ReferenceEquals(gebaeude, e.Gebaeude) ? e : e with { Gebaeude = gebaeude };
         }
-        var vorhanden = Liste(e.Gebaeude["raeume"]).Select(r => Py.Str(Objekt(r)["id"])).ToHashSet();
+        var personen = e.Personen.Select(p =>
+        {
+            if (!plaetze.TryGetValue(p.Id, out var platz))
+            {
+                return p;
+            }
+            var kopie = Py.Flach(p.Daten);
+            Py.Setzen(kopie, "platz", new List<object?> { Py.F(platz[0]), Py.F(platz[1]) });
+            return Person(kopie, p.Auftrag);
+        }).ToList();
+        return e with { Gebaeude = gebaeude, Personen = personen };
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 1 (Weisung P12-5): Zusatz "zusatz_schraenke" je Ort, nur angehaengt, wirkt nach "zusatz_moebel"
+    /// wie <see cref="MitZusatz"/> (Moebelhaus: der alte Kleiderschrank weg, die vier neuen als Auslage).
+    /// </summary>
+    private static PyObjekt? SchrankZusatz(PyObjekt? innenraeume, string ort) =>
+        innenraeume is not null && Get(innenraeume, "zusatz_schraenke") is PyObjekt zs ? Get(zs, ort) as PyObjekt : null;
+
+    /// <summary>
+    /// Phase 12 Welle 1: der Grundriss eines Geschaefts (Moebelhaus, Elektromarkt, Kaufhaus) mit allen angehaengten
+    /// Zusaetzen in derselben Reihenfolge wie beim Betreten (Ladepruefung der Auslage in <see cref="Geschaefte.Pruefen"/>).
+    /// </summary>
+    public static PyObjekt LadenGebaeude(PyObjekt innenraeume, string ort)
+    {
+        var laden = Objekt(innenraeume[ort]);
+        var zusatz = Get(innenraeume, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
+        var nachtrag = Get(innenraeume, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
+        var (gebaeude, _) = MoebelZusatz(innenraeume, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag));
+        return MitZusatz(gebaeude, SchrankZusatz(innenraeume, ort));
+    }
+
+    /// <summary>"zusatz_moebel" je Ort: Grundriss mit dem Zusatz und die Plaetze der Personen (leer = keine).</summary>
+    private static (PyObjekt Gebaeude, Dictionary<string, List<object?>> Plaetze) MoebelZusatz(PyObjekt? innenraeume, string ort, PyObjekt gebaeude)
+    {
+        if (innenraeume is null || Get(innenraeume, "zusatz_moebel") is not PyObjekt zm || Get(zm, ort) is not PyObjekt zusatz)
+        {
+            return (gebaeude, []);
+        }
+        var vorhanden = Liste(gebaeude["raeume"]).Select(r => Py.Str(Objekt(r)["id"])).ToHashSet();
         var einrichtung = new PyObjekt();
         var plaetze = new Dictionary<string, List<object?>>();
         foreach (var (k, v) in zusatz)
@@ -447,17 +489,7 @@ public sealed class Innenraum
             }
             Py.Setzen(einrichtung, k, raeume);
         }
-        var personen = e.Personen.Select(p =>
-        {
-            if (!plaetze.TryGetValue(p.Id, out var platz))
-            {
-                return p;
-            }
-            var kopie = Py.Flach(p.Daten);
-            Py.Setzen(kopie, "platz", new List<object?> { Py.F(platz[0]), Py.F(platz[1]) });
-            return Person(kopie, p.Auftrag);
-        }).ToList();
-        return e with { Gebaeude = MitZusatz(e.Gebaeude, einrichtung), Personen = personen };
+        return (MitZusatz(gebaeude, einrichtung), plaetze);
     }
 
     /// <summary>
@@ -612,6 +644,11 @@ public sealed class Innenraum
                 var texte = ListeOderLeer(m, "texte");
                 var zeilen = PyFormat.Prozent("Preis: %s", Wohnung.GanzeEuro(m["preis"]))
                     + (texte.Count > 0 ? "\n" + Py.Str(texte[0]) : "");
+                if (Py.Gleich(Get(m, "typ"), Charakter.SchrankTyp))
+                {
+                    // Phase 12 Welle 1: Plaetze fuer Kleidung und wozu der Schrank da ist
+                    zeilen += "\n" + Charakter.PlaetzeText(Charakter.Plaetze(m)) + ". " + Charakter.ImMoebelhaus;
+                }
                 var knoepfe = new List<(string, string)>();
                 if (stand.Geld >= Py.Int(m["preis"]))
                 {

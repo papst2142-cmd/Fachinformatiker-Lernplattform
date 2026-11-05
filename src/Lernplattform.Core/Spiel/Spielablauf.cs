@@ -568,6 +568,33 @@ public sealed class Spielablauf
     public PyObjekt KleidungKaufen(Geschaefte geschaefte, Stadt stadt, string laden, string stueck) =>
         Ausfuehren(Kleidung.Kaufen(stadt, Stand, geschaefte.Daten, laden, stueck, geschaefte.Festzeit));
 
+    /// <summary>
+    /// Phase 12 Welle 1 (Nico 2a): Kleidung kaufen wie <see cref="KleidungKaufen"/>, aber nur mit Kleiderschrank und freiem
+    /// Platz (<see cref="Charakter.KaufGrund"/>); sonst <see cref="SpielFehler"/> mit dem Hinweis, nichts geschrieben. Diesen
+    /// Weg nutzt die Oberflaeche; der alte Weg ohne Platzpruefung bleibt fuer den Kaufhaus-Fingerabdruck.
+    /// </summary>
+    public PyObjekt KleidungKaufenMitPlatz(Geschaefte geschaefte, Stadt stadt, string laden, string stueck)
+    {
+        if (Stand.Kleider.ContainsKey(stueck))
+        {
+            throw new SpielFehler(Charakter.SchonGekauft);
+        }
+        if (Charakter.KaufGrund(Stand) is { Length: > 0 } grund)
+        {
+            throw new SpielFehler(grund);
+        }
+        return KleidungKaufen(geschaefte, stadt, laden, stueck);
+    }
+
+    /// <summary>Phase 12 Welle 1 (Nico 3b): Name und Aussehen am Kleiderschrank (gesperrte Teile bleiben, profil_gesetzt).</summary>
+    public PyObjekt AmSchrank(string? name, object? aussehen) => Ausfuehren(Charakter.AmSchrank(Stand, name, aussehen));
+
+    /// <summary>
+    /// Phase 12 Welle 1 (Nico 3b): ein Moebel zum Rueckkaufpreis zurueckverkaufen (sell_furniture wie Python: halber Preis,
+    /// abgerundet; steht es, wird es vorher aus der Einrichtung genommen). Ereignisart moebel_verkauft, keine neue.
+    /// </summary>
+    public PyObjekt MoebelVerkaufen(string stueck) => Ausfuehren(SpielAktionen.MoebelVerkaufen(Stand, stueck));
+
     /// <summary>Phase 8 W5: gekaufte Kleidung anziehen oder einen Slot ablegen (stueck null), ueberall (Tafel "Figur").</summary>
     public PyObjekt KleidungAnziehen(Geschaefte geschaefte, string slot, string? stueck) =>
         Ausfuehren(Kleidung.Anziehen(Stand, geschaefte.Daten, slot, stueck));

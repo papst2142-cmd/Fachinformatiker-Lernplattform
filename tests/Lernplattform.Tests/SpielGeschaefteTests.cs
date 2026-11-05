@@ -18,11 +18,20 @@ public class SpielGeschaefteTests
     /// <summary>Dritter Fingerabdruck (nur C#): Szenario <see cref="EinkaufSzenario"/>, Ereignisse und Werte.</summary>
     internal const string SollEinkaufHash = "185dee1b2feb625cd9b2d4f9af285b82800f82b8eb868e1b96025e0da01ae237";
 
-    private static PyObjekt Inhalt => SpielInhaltTests.Inhalt;
+    /// <summary>Phase 12 Welle 1: wie im Programm mit den Moebeln aus geschaefte.json moebel_neu.</summary>
+    private static PyObjekt Inhalt => SpielCharakterTests.InhaltMitNeuen.Value;
 
     private static string Ordner => Path.Combine(Pfade.Wurzel, "inhalte_csharp", "spiel");
 
     internal static readonly Lazy<PyObjekt> Daten = new(() => Geschaefte.Laden(Ordner));
+
+    /// <summary>geschaefte.json ohne den Abschnitt moebel_neu (Phase 12 Welle 1): das Sortiment, mit dem 185dee1b entstand.</summary>
+    internal static readonly Lazy<PyObjekt> VorPhase12 = new(() =>
+    {
+        var kopie = (PyObjekt)Py.Lesen(PythonJson.Text(Daten.Value))!;
+        Assert.Equal(1, kopie.RemoveAll(p => p.Key == Geschaefte.NeueMoebelAbschnitt));
+        return kopie;
+    });
 
     private static readonly Lazy<PyObjekt> Innenraeume = new(() =>
         (PyObjekt)Py.Lesen(File.ReadAllBytes(Path.Combine(Ordner, "innenraeume.json")))!);
@@ -78,12 +87,17 @@ public class SpielGeschaefteTests
                 Assert.True(w.Preis >= Py.F(teil["preis"]), w.Id + " billiger als beim Versand");
             }
         }
-        // jedes Moebel aus dem Laden der Handy-App gibt es in genau einem Geschaeft
+        // jedes Moebel aus dem Laden der Handy-App gibt es in genau einem Geschaeft; feste Ausnahme seit Phase 12 Welle 1
+        // (Nico 4a): der alte Kleiderschrank steht in keinem Laden mehr, dafuer die vier neuen (moebel_neu) im Moebelhaus
         var alle = Geschaefte.Laeden.SelectMany(g.Waren).Where(w => w.Art == Geschaefte.ArtMoebel).Select(w => w.Id).ToList();
         Assert.Equal(alle.Count, alle.Distinct().Count());
         var python = SpielDaten.ListeOderLeer(SpielDaten.Objekt(Inhalt["wohnungen"]), "moebel").Select(SpielDaten.Objekt)
-            .Where(m => Py.Wahr(SpielDaten.Get(m, "laden", true))).Select(m => Py.Str(m["id"])).Order(StringComparer.Ordinal);
+            .Where(m => Py.Wahr(SpielDaten.Get(m, "laden", true))).Select(m => Py.Str(m["id"]))
+            .Where(id => id != Charakter.AlterSchrank).Order(StringComparer.Ordinal);
         Assert.Equal(python, alle.Order(StringComparer.Ordinal));
+        Assert.DoesNotContain(Charakter.AlterSchrank, alle);
+        Assert.Equal(["kleiderschrank_klein", "kleiderschrank_mittel", "kleiderschrank_gross", "kleiderschrank_begehbar"],
+            g.Waren("moebelhaus").Where(w => w.Typ == Charakter.SchrankTyp).Select(w => w.Id));
     }
 
     [Fact]
@@ -112,7 +126,8 @@ public class SpielGeschaefteTests
         var stadt = NeueStadt();
         var g = Neu();
         // mit dem Startgeld reicht es fuer kein Moebel: sechs Arbeitstage aus dem Stadt-Szenario
-        var spiel = SpielStadtTests.StadtSzenario().Spiel;
+        // (Phase 12 Welle 1: derselbe Verlauf mit den Inhalten wie im Programm, also mit den neuen Moebeln)
+        var spiel = new Spielablauf(Inhalt, SpielStadtTests.StadtSzenario().Spiel.Speicher);
         var ware = g.Waren("moebelhaus").Where(w => w.Art == Geschaefte.ArtMoebel).MinBy(w => w.Preis)!;
         // zu Hause geht nichts
         Assert.Equal(Geschaefte.NurImLaden, Assert.Throws<SpielFehler>(() => spiel.MoebelKaufen(g, stadt, "moebelhaus", ware.Id, "mtest000001")).Message);
@@ -205,7 +220,9 @@ public class SpielGeschaefteTests
     internal static (Spielablauf Spiel, List<object?> Stadtstaende) EinkaufSzenario(PyObjekt? daten = null)
     {
         var (spiel, stadt, _) = MitFirma();
-        var g = Neu(daten);
+        // Phase 12 Welle 1: das Szenario waehlt Moebel nach ihrer Stelle im Sortiment; es kauft im Sortiment von Phase 7
+        // (geschaefte.json ohne den angehaengten Abschnitt moebel_neu), sonst verschieben die neuen Schraenke die Stellen
+        var g = Neu(daten ?? VorPhase12.Value);
         var staende = new List<object?>();
         void Merken(string was)
         {

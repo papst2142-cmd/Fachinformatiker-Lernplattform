@@ -104,7 +104,9 @@ public static class SpielStart
         // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
         var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
         var projekte = lernen?.Testprojekte.Select(p => Py.AusKnoten(p.Daten)).ToList();
-        return (SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte), lernen);
+        var inhalt = SpielInhalt.Laden(name => Lesen("inhalte/spiel/" + name + ".json"), projekte);
+        // Phase 12 Welle 1: die Moebel nur der C#-Linie (geschaefte.json moebel_neu, z. B. die vier Kleiderschraenke)
+        return (Geschaefte.NeueMoebelEinfuegen(inhalt, Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt), lernen);
     }
 
     /// <summary>

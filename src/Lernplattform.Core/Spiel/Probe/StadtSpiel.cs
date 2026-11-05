@@ -795,6 +795,15 @@ public sealed class StadtSpiel
             Zeile = notiz.Titel + "\n" + notiz.Text + "\n\n" + Zeile;
             _notiz = null;
         }
+        // Phase 12 Welle 1 (Nico 3b): am aufgestellten Kleiderschrank Text und Knopf (Name und Aussehen aendern)
+        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, FigurX, FigurZ) is not null)
+        {
+            if (knoepfe.Count == 0)
+            {
+                Zeile = Charakter.Ueberschrift + "\n" + Charakter.TextAmSchrank;
+            }
+            knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
+        }
         Knoepfe = [.. knoepfe];
     }
 
@@ -1176,6 +1185,37 @@ public sealed class StadtSpiel
             Waehlen(stueck);
         }
         return ok;
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 1 (Nico 3b): Rueckkaufpreis des gewaehlten Moebels (halber Preis, abgerundet wie Python sell_furniture);
+    /// null, wenn nichts gewaehlt ist oder das Moebel nie im Laden zu kaufen war (Startmatratze).
+    /// </summary>
+    public long? AusgewaehltRueckkauf =>
+        Einrichten && Ausgewaehlt is { } s && Wohnung.MoebelStueck(Ablauf.Stand.Moebel.Get(s), Ablauf.Stand.Inhalt) is { } m
+            ? Wohnung.Rueckkauf(m, Ablauf.Stand.Inhalt) : null;
+
+    /// <summary>
+    /// Phase 12 Welle 1 (Nico 3b): das gewaehlte Moebel zum halben Preis zurueckverkaufen (aufgestellt oder im Karton,
+    /// Ereignis moebel_verkauft wie Python). Danach ist nichts gewaehlt; Fehler stehen in der Zeile.
+    /// </summary>
+    public bool Verkaufen()
+    {
+        if (AusgewaehltRueckkauf is null || Ausgewaehlt is not { } stueck)
+        {
+            return false;
+        }
+        var name = AusgewaehltName ?? stueck;
+        if (!AendernMit(() => Ablauf.MoebelVerkaufen(stueck)))
+        {
+            return false;
+        }
+        Ausgewaehlt = null;
+        Vorschau = null;
+        _vorschauPunkt = null;
+        Zeile = PyFormat.Prozent(SpielProbeTexte.Verkauft, name);
+        Geaendert?.Invoke();
+        return true;
     }
 
     /// <summary>
