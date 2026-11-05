@@ -5,8 +5,9 @@ using Lernplattform.Core.Spiel.Probe;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// Weisung P12-6 (Chat-Fund Bild 06): in jedem Geschaeft (Moebelhaus, Elektromarkt, Kaufhaus, mit allen Zusaetzen
-/// wie beim Betreten) beruehrt kein Stueck der Auslage ein anderes und keines verdeckt ein anderes in der Kamera.
+/// Weisungen P12-6/P12-7 (Fund Bild 06): in jedem Geschaeft (Moebelhaus, Elektromarkt, Kaufhaus, mit allen Zusaetzen
+/// wie beim Betreten) beruehrt kein Stueck der Auslage ein anderes, jede Ware ist zu Fuss erreichbar, und hinter den
+/// Kleiderschraenken bleibt ein Gang frei.
 /// Gemessen wird, was gezeichnet ist (<see cref="Innenraum.DekoUmrisse"/>, Modelle mit ihrer Lage), nicht nur das
 /// Rechteck aus innenraeume.json (Stuehle am Esstisch, Bildschirme auf dem Schreibtisch ragen darueber hinaus).
 /// Grenze 0, Toleranz 0,02 wie <see cref="SpielSitzenTests"/>.
@@ -14,9 +15,6 @@ namespace Lernplattform.Tests;
 public class SpielAuslageTests
 {
     private const float Toleranz = 0.02f;
-
-    /// <summary>Neigung der Kamera im Innenraum (<see cref="Kamera.Neigung"/>, Blick nach -Z bei Drehung 0).</summary>
-    private static readonly float Neigung = new Kamera(0, 0, 10).Neigung;
 
     internal static IEnumerable<(string Ort, List<DekoUmriss> Auslage, List<DekoUmriss> Alle)> Geschaefte()
     {
@@ -67,41 +65,29 @@ public class SpielAuslageTests
     }
 
     /// <summary>
-    /// Kein Stueck verdeckt ein Auslage-Stueck in der Kamera (Drehung 0, Blick nach Norden, Neigung wie
-    /// <see cref="Kamera.Neigung"/>): jedes gezeichnete Teil wirft auf die Hoehe der Oberseite des hinteren Stuecks
-    /// einen Sichtschatten von (eigene Hoehe - Hoehe hinten) / tan(Neigung) nach hinten; er beruehrt keine Auslage.
+    /// Weisung P12-7 (Nico): hinter den vier Kleiderschraenken des Moebelhauses bleibt ein Gang frei. Die Figur geht von
+    /// links neben dem kleinen bis rechts neben den begehbaren Schrank, ohne nach vorn um die Schraenke herum zu muessen
+    /// und ohne durch die Reihe dahinter auszuweichen (jeder Punkt des Wegs liegt zwischen Auslage und Rueckseite der Schraenke).
     /// </summary>
     [Fact]
-    public void AuslageVerdecktSichNicht()
+    public void GangHinterDenSchraenkenFrei()
     {
-        var tan = MathF.Tan(Neigung * MathF.PI / 180f);
-        var funde = new List<string>();
-        foreach (var (ort, auslage, alle) in Geschaefte())
-        {
-            foreach (var vorn in alle)
-            {
-                foreach (var hinten in auslage.Where(h => !ReferenceEquals(h, vorn)))
-                {
-                    var fh = hinten.Flaeche;
-                    foreach (var teil in vorn.Teile)
-                    {
-                        float x1 = Math.Min(teil.X1, teil.X2), x2 = Math.Max(teil.X1, teil.X2), z1 = Math.Min(teil.Z1, teil.Z2);
-                        var tiefe = (Math.Max(teil.Y1, teil.Y2) - fh.Oben) / tan;
-                        // nur wenn das Teil hoeher ist und das hintere Stueck hinter seiner Hinterkante beginnt
-                        if (tiefe > Toleranz && fh.Z1 < z1 - Toleranz && Ueberlappt((x1, z1 - tiefe, x2, z1), (fh.X1, fh.Z1, fh.X2, fh.Z2)))
-                        {
-                            funde.Add(ort + ": " + Name(vorn) + " verdeckt " + Name(hinten));
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        Assert.True(funde.Count == 0, string.Join("\n", funde));
+        var stand = new Spielablauf(SpielInhaltTests.Inhalt).Stand;
+        var innen = Innenraum.Bauen("geschaeft:moebelhaus", stand, SpielInnenraumTests.Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
+        var schraenke = innen.DekoUmrisse.Where(u => Py.Gleich(u.Deko["typ"], "kleiderschrank")).Select(u => u.Flaeche).ToList();
+        Assert.Equal(4, schraenke.Count);
+        float links = schraenke.Min(f => f.X1), rechts = schraenke.Max(f => f.X2), hinten = schraenke.Min(f => f.Z1);
+        var vor = innen.DekoUmrisse.Where(u => Py.Hat(u.Deko, "ware") && u.Flaeche.Z2 <= hinten && u.Flaeche.X2 > links && u.Flaeche.X1 < rechts)
+            .Max(u => u.Flaeche.Z2);
+        var mitte = (vor + hinten) / 2;
+        var weg = innen.Weg(links - 0.6, mitte, rechts + 0.6, mitte);
+        Assert.NotEmpty(weg);
+        Assert.True(Math.Abs(weg[^1].X - (rechts + 0.6)) < 0.3, "Weg endet bei " + weg[^1]);
+        Assert.All(weg, p => Assert.True(p.Y > vor && p.Y < hinten, "Weg verlaesst den Gang zwischen Auslage und Schraenken: " + p));
     }
 
     /// <summary>
-    /// Bekannt und nicht Teil dieser Welle (Sammelliste 215): im Elektromarkt sperrt die durchgehende zweite Reihe
+    /// Bekannt und nicht Teil dieser Welle (Sammelliste 216): im Elektromarkt sperrt die durchgehende zweite Reihe
     /// (Regale y 4,2 mit 0,5 Abstand, rechts die Auslage 20,7/4,2) den Gang zur oberen Reihe; deren Regale erreicht die Figur nicht.
     /// Feste Tabelle: wird sie behoben, Tabelle leeren.
     /// </summary>

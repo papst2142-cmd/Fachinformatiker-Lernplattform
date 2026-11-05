@@ -1189,7 +1189,7 @@ public sealed class StadtSpiel
 
     /// <summary>
     /// Phase 12 Welle 1 (Nico 3b): Rueckkaufpreis des gewaehlten Moebels (halber Preis, abgerundet wie Python sell_furniture);
-    /// null, wenn nichts gewaehlt ist oder das Moebel nie im Laden zu kaufen war (Startmatratze).
+    /// null, wenn nichts gewaehlt ist (die Startmatratze bringt 0 EUR, Weisung P12-7 1b).
     /// </summary>
     public long? AusgewaehltRueckkauf =>
         Einrichten && Ausgewaehlt is { } s && Wohnung.MoebelStueck(Ablauf.Stand.Moebel.Get(s), Ablauf.Stand.Inhalt) is { } m

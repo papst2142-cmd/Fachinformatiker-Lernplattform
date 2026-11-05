@@ -336,10 +336,10 @@
     "_hinweis": ["Phase 12 Welle 1 (Weisung P12-5, Nico 05.11.2026): nur angehaengt, wirkt nach zusatz_moebel; Moebelhaus: der alte Kleiderschrank (340 EUR) steht nicht mehr aus, die vier neuen Kleiderschraenke stehen in einer Reihe (Ware aus geschaefte.json moebel_neu)."],
     "moebelhaus": {
       "raeume": {"ausstellung": {"ohne": ["kleiderschrank"], "deko": [
-        {"typ": "kleiderschrank", "x": 10.0, "y": 9.9, "dreh": 2, "w": 2.0, "h": 0.9, "ware": "kleiderschrank_klein"},
-        {"typ": "kleiderschrank", "x": 12.6, "y": 9.8, "dreh": 2, "w": 2.8, "h": 1.0, "ware": "kleiderschrank_mittel"},
-        {"typ": "kleiderschrank", "x": 16.0, "y": 9.8, "dreh": 2, "w": 3.6, "h": 1.0, "ware": "kleiderschrank_gross"},
-        {"typ": "kleiderschrank", "x": 20.2, "y": 9.6, "dreh": 2, "w": 4.4, "h": 1.2, "ware": "kleiderschrank_begehbar"}
+        {"typ": "kleiderschrank", "x": 10.0, "y": 6.5, "dreh": 0, "w": 2.0, "h": 0.9, "ware": "kleiderschrank_klein"},
+        {"typ": "kleiderschrank", "x": 12.6, "y": 6.5, "dreh": 0, "w": 2.8, "h": 1.0, "ware": "kleiderschrank_mittel"},
+        {"typ": "kleiderschrank", "x": 16.0, "y": 6.5, "dreh": 0, "w": 3.6, "h": 1.0, "ware": "kleiderschrank_gross"},
+        {"typ": "kleiderschrank", "x": 20.2, "y": 6.5, "dreh": 0, "w": 4.4, "h": 1.2, "ware": "kleiderschrank_begehbar"}
       ]}}
     }
   }

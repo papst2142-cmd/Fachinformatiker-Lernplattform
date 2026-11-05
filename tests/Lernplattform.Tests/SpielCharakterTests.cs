@@ -370,11 +370,39 @@ public class SpielCharakterTests
             Assert.False(spiel.Stand.Moebel.ContainsKey(stueck));
         }
         Assert.Equal([50L, 200L, 300L, 500L, 170L], new[] { "kleiderschrank_klein", "kleiderschrank_mittel", "kleiderschrank_gross", "kleiderschrank_begehbar", "kleiderschrank" }
-            .Select(id => Wohnung.Rueckkauf(Wohnung.MoebelStueck(id, Inhalt)!, Inhalt)!.Value));
+            .Select(id => Wohnung.Rueckkauf(Wohnung.MoebelStueck(id, Inhalt)!, Inhalt)));
         // abgerundet wie Python int(): 35 EUR -> 17 EUR (Zimmerpflanze)
         Assert.Equal(17, Wohnung.Rueckkauf(Wohnung.MoebelStueck("pflanze", Inhalt)!, Inhalt));
-        // die Startmatratze gab es nie im Laden: kein Rueckkauf (Frage an Nico in Meldung P12-5)
-        Assert.Null(Wohnung.Rueckkauf(Wohnung.MoebelStueck("matratze", Inhalt)!, Inhalt));
+        // Weisung P12-7 (Nico 1b): die Startmatratze bringt 0 EUR
+        Assert.Equal(0, Wohnung.Rueckkauf(Wohnung.MoebelStueck("matratze", Inhalt)!, Inhalt));
+    }
+
+    /// <summary>
+    /// Weisung P12-7 (Nico 1b, 3a): die Startmatratze laesst sich beim Einrichten fuer 0 EUR zurueckverkaufen wie Python
+    /// sell_furniture (moebel_verkauft mit geld 0, kein Eintrag im Kassenbuch, aus Einrichtung und Moebeln weg); danach
+    /// hat man kein Bett, nichts sperrt.
+    /// </summary>
+    [Fact]
+    public void StartmatratzeFuerNullEuro()
+    {
+        var spiel = NeuesSpiel();
+        var geld = spiel.Stand.Geld;
+        var buch = spiel.Stand.Kassenbuch.Count;
+        Assert.Contains(Wohnung.AufgestellteMoebel(spiel.Stand), m => m.Stueck == "start-matratze");
+        var stadt = StadtSpielMit(spiel);
+        stadt.EinrichtenUmschalten();
+        stadt.Waehlen("start-matratze");
+        Assert.Equal(0, stadt.AusgewaehltRueckkauf);
+        Assert.True(stadt.Verkaufen());
+        var letzte = spiel.Stand.Verlauf[^1];
+        Assert.Equal(Ereignisse.MoebelVerkauft, letzte.Art);
+        Assert.Equal(0L, letzte.Daten["geld"]);
+        Assert.Equal("matratze", letzte.Daten["moebel"]);
+        Assert.Equal(geld, spiel.Stand.Geld);
+        Assert.Equal(buch, spiel.Stand.Kassenbuch.Count);   // Python _book: Betrag 0 bucht nichts
+        Assert.False(spiel.Stand.Moebel.ContainsKey("start-matratze"));
+        Assert.DoesNotContain(Wohnung.AufgestellteMoebel(spiel.Stand), m => m.Stueck == "start-matratze");
+        Assert.Empty(spiel.Stand.Unterschiede(spiel.Neuaufbau()));
     }
 
     [Fact]
