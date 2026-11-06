@@ -85,7 +85,7 @@ public sealed class Spieldaten
             }
             else if (w.Art == Kleidung.Art && typen.Add(Kleidung.Art + ":" + w.Typ))
             {
-                liste.Add((Kleidung.Art + ":" + w.Typ, w.Typ));
+                liste.Add((Kleidung.Art + ":" + w.Typ, Warennamen.Name(Geschaefte, ort, Kleidung.Art + ":" + w.Typ)));
             }
         }
         return liste;

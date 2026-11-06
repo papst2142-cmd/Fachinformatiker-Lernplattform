@@ -8,7 +8,11 @@ using Lernplattform.Core.Stadtbau;
 
 namespace Stadtbau.Core;
 
-/// <summary>Ein Schritt im Verlauf: Ort, was getan wurde, Grundriss vorher und nachher (JSON-Text).</summary>
+/// <summary>
+/// Ein Schritt im Verlauf: Ort, was getan wurde, Grundriss vorher und nachher (JSON-Text). Ort <see cref="Projekt.StadtOrt"/>
+/// = Stadt draussen: vorher und nachher halten nur die geaenderten Teile (<see cref="Aussen.Teile"/>) als Objekt
+/// { Pfad: [Wert] } (leere Liste = Teil fehlt).
+/// </summary>
 public sealed record Schritt(string Ort, string Was, string Vorher, string Nachher);
 
 /// <summary>
@@ -23,25 +27,56 @@ public sealed class Projekt
 {
     public const string Format = "fisbau";
 
-    public const long FormatVersion = 1;
+    /// <summary>2 seit Welle 3 (Felder "aussen" und "leer"); Dateien mit Formatnummer 1 lassen sich weiter oeffnen.</summary>
+    public const long FormatVersion = 2;
+
+    /// <summary>Ort der Schritte an der Stadt draussen.</summary>
+    public const string StadtOrt = "_stadt";
 
     public const string Endung = ".fisbau";
 
     public const int GespeicherteSchritte = 200;
 
-    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "stadt", "basis", "ort", "nachricht", "grundrisse", "verlauf", "zeiger"];
+    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "stadt", "basis", "leer", "ort", "nachricht", "grundrisse", "aussen", "verlauf", "zeiger"];
+
+    /// <summary>Felder der Formatnummer 1 (Welle 2).</summary>
+    public static readonly string[] FelderVersion1 = ["format", "formatversion", "werkzeug", "name", "stadt", "basis", "ort", "nachricht", "grundrisse", "verlauf", "zeiger"];
 
     private readonly List<Schritt> _verlauf = [];
     private readonly Dictionary<string, PyObjekt> _grundrisse = new(StringComparer.Ordinal);
     private int _zeiger;
+    private PyObjekt? _aussen;
+    private Dictionary<string, string>? _basisTeile;
+    private string? _datei;
 
-    private Projekt(string name, Spieldaten daten, Werkzeugordner ablage)
+    private Projekt(string name, Spieldaten daten, Werkzeugordner ablage, (double Breite, double Hoehe)? leer = null)
     {
         Name = name;
         Daten = daten;
         Werkzeugordner = ablage;
-        Ort = daten.Orte.FirstOrDefault() ?? "";
+        Leer = leer;
+        Basis = leer is { } l ? Aussen.Leer(daten.Fassung, LeerStadtId(name), l.Breite, l.Hoehe) : daten.Fassung;
+        Ort = Orte.FirstOrDefault() ?? "";
     }
+
+    /// <summary>Fassung, auf der das Projekt aufbaut: die eingebaute Fassung von Stadt 1 oder eine leere Stadt.</summary>
+    public StadtFassung Basis { get; }
+
+    /// <summary>Groesse einer leeren Stadt (null = Stadt 1).</summary>
+    public (double Breite, double Hoehe)? Leer { get; }
+
+    /// <summary>
+    /// Kennung einer leeren Stadt: "neu_" und der Projektname in ASCII, klein, jedes andere Zeichen als _, hoechstens 32
+    /// Zeichen (Regel der Fassung fuer "stadt.id").
+    /// </summary>
+    public static string LeerStadtId(string name)
+    {
+        var id = "neu_" + new string([.. DateiName(name).ToLowerInvariant().Select(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' ? c : '_')]);
+        return id.Length > 32 ? id[..32] : id;
+    }
+
+    /// <summary>Orte mit bearbeitbarem Innenraum in der Basis (leere Stadt: keine).</summary>
+    public IReadOnlyList<string> Orte => InnenGrundriss.Orte(Basis.Innenraeume);
 
     public string Name { get; }
 
@@ -58,7 +93,28 @@ public sealed class Projekt
     /// <summary>Datei aus einer neueren Werkzeug-Version: nur lesen, nie speichern.</summary>
     public bool NurLesen { get; private set; }
 
-    public string Datei => Path.Combine(Werkzeugordner.Projekte, Name + Endung);
+    /// <summary>Projektdatei: geoeffnete Datei, sonst der Name in ASCII (<see cref="DateiName"/>).</summary>
+    public string Datei => _datei ?? Path.Combine(Werkzeugordner.Projekte, DateiName(Name) + Endung);
+
+    /// <summary>
+    /// Projektname als Dateiname (Sammelliste 219 Punkt 3): Umlaute und ß als ae, oe, ue, ss, Leerzeichen bleiben; andere
+    /// Zeichen ausserhalb von ASCII werden ohne Akzent geschrieben, was dann noch fehlt, wird _.
+    /// </summary>
+    public static string DateiName(string name)
+    {
+        var text = new StringBuilder();
+        foreach (var c in name)
+        {
+            var ersatz = c switch
+            {
+                'ä' => "ae", 'ö' => "oe", 'ü' => "ue", 'Ä' => "Ae", 'Ö' => "Oe", 'Ü' => "Ue", 'ß' => "ss",
+                _ when c < 128 => c.ToString(),
+                _ => new string([.. c.ToString().Normalize(NormalizationForm.FormD).Where(z => z < 128)]),
+            };
+            text.Append(ersatz.Length == 0 ? "_" : ersatz);
+        }
+        return text.ToString();
+    }
 
     public int SchritteZurueck => _zeiger;
 
@@ -68,7 +124,7 @@ public sealed class Projekt
 
     /// <summary>Orte, deren Grundriss sich gegenueber der Basis geaendert hat.</summary>
     public IReadOnlyList<string> GeaenderteOrte =>
-        [.. Daten.Orte.Where(o => _grundrisse.TryGetValue(o, out var g) && PythonJson.Standard(g) != PythonJson.Standard(Original(o)))];
+        [.. Orte.Where(o => _grundrisse.TryGetValue(o, out var g) && PythonJson.Standard(g) != PythonJson.Standard(Original(o)))];
 
     /// <summary>Wird nach jeder Aenderung, jedem Rueckgaengig und Wiederholen gerufen (Oberflaeche zeichnet neu).</summary>
     public event Action? Geaendert;
@@ -77,14 +133,18 @@ public sealed class Projekt
     public static bool NameGueltig(string name) =>
         name.Trim().Length is > 0 and <= 40 && name.Trim() == name && name.All(c => char.IsLetterOrDigit(c) || c is ' ' or '-' or '_');
 
-    public static Projekt Neu(string name, Spieldaten daten, Werkzeugordner ablage, string? ort = null)
+    public static Projekt Neu(string name, Spieldaten daten, Werkzeugordner ablage, string? ort = null, (double Breite, double Hoehe)? leer = null)
     {
         if (!NameGueltig(name))
         {
             throw new ArgumentException("Projektname ungültig", nameof(name));
         }
-        var p = new Projekt(name, daten, ablage.Anlegen());
-        if (ort is not null && daten.Orte.Contains(ort))
+        if (leer is { } l && !Aussen.GroesseGueltig(l.Breite, l.Hoehe))
+        {
+            throw new ArgumentException("Größe ungültig", nameof(leer));
+        }
+        var p = new Projekt(name, daten, ablage.Anlegen(), leer);
+        if (ort is not null && p.Orte.Contains(ort))
         {
             p.Ort = ort;
         }
@@ -97,7 +157,7 @@ public sealed class Projekt
     }
 
     /// <summary>Der unveraenderte Grundriss eines Orts in der Basis-Fassung (flach, mit allen Zusaetzen).</summary>
-    public PyObjekt Original(string ort) => InnenGrundriss.Grundriss(Daten.Fassung.Innenraeume, ort);
+    public PyObjekt Original(string ort) => InnenGrundriss.Grundriss(Basis.Innenraeume, ort);
 
     /// <summary>Der aktuelle Grundriss eines Orts (bearbeitet oder die Basis). Nur ueber <see cref="Aendern"/> veraendern.</summary>
     public PyObjekt Grundriss(string ort)
@@ -110,7 +170,85 @@ public sealed class Projekt
         return g;
     }
 
-    public List<PyObjekt> Personen(string ort) => InnenGrundriss.Personen(Daten.Fassung.Innenraeume, ort);
+    public List<PyObjekt> Personen(string ort) => InnenGrundriss.Personen(Basis.Innenraeume, ort);
+
+    // ---- Stadt draussen ---------------------------------------------------------------------------
+
+    /// <summary>Die Stadt draussen (Kopie der Basis mit allen Aenderungen). Nur ueber <see cref="AussenAendern{T}"/> veraendern.</summary>
+    public PyObjekt AussenStand => _aussen ??= Aussen.Aus(Basis);
+
+    private Dictionary<string, string> BasisTeile => _basisTeile ??= Aussen.TeileText(Aussen.Aus(Basis));
+
+    /// <summary>Teile der Stadt draussen, die sich gegenueber der Basis geaendert haben (Pfade wie <see cref="Aussen.Teile"/>).</summary>
+    public IReadOnlyList<string> GeaenderteTeile
+    {
+        get
+        {
+            if (_aussen is null)
+            {
+                return [];
+            }
+            var jetzt = Aussen.TeileText(_aussen);
+            var basis = BasisTeile;
+            return [.. jetzt.Keys.Union(basis.Keys).Where(k => !jetzt.TryGetValue(k, out var a) || !basis.TryGetValue(k, out var b) || a != b).Order(StringComparer.Ordinal)];
+        }
+    }
+
+    public bool AussenGeaendert => GeaenderteTeile.Count > 0;
+
+    /// <summary>
+    /// Eine Aenderung an der Stadt draussen: die geaenderten Teile vorher und nachher kommen in den Verlauf (Ort
+    /// <see cref="StadtOrt"/>), danach wird automatisch gespeichert. Aendert <paramref name="aenderung"/> nichts, gibt es keinen Schritt.
+    /// </summary>
+    public T AussenAendern<T>(string was, Func<PyObjekt, T> aenderung)
+    {
+        if (NurLesen)
+        {
+            throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
+        }
+        var a = AussenStand;
+        var vorher = Aussen.TeileText(a);
+        var ergebnis = aenderung(a);
+        var nachher = Aussen.TeileText(a);
+        var pfade = vorher.Keys.Union(nachher.Keys).Where(k => !vorher.TryGetValue(k, out var v) || !nachher.TryGetValue(k, out var n) || v != n).Order(StringComparer.Ordinal).ToList();
+        if (pfade.Count > 0)
+        {
+            _verlauf.RemoveRange(_zeiger, _verlauf.Count - _zeiger);
+            _verlauf.Add(new Schritt(StadtOrt, was, TeileObjekt(vorher, pfade), TeileObjekt(nachher, pfade)));
+            _zeiger = _verlauf.Count;
+            Gespeichert();
+        }
+        return ergebnis;
+    }
+
+    public void AussenAendern(string was, Action<PyObjekt> aenderung) => AussenAendern(was, a =>
+    {
+        aenderung(a);
+        return 0;
+    });
+
+    /// <summary>{ Pfad: [Wert] } als Text (Werte liegen schon als json.dumps vor; leere Liste = Teil fehlt).</summary>
+    private static string TeileObjekt(Dictionary<string, string> teile, List<string> pfade)
+    {
+        var text = new StringBuilder("{");
+        foreach (var pfad in pfade)
+        {
+            text.Append(text.Length > 1 ? ", " : "").Append(PythonJson.Standard(pfad)).Append(": ").Append(teile.TryGetValue(pfad, out var w) ? "[" + w + "]" : "[]");
+        }
+        return text.Append('}').ToString();
+    }
+
+    private static void TeileAnwenden(PyObjekt aussen, PyObjekt teile)
+    {
+        foreach (var (pfad, wert) in teile)
+        {
+            var liste = wert as List<object?>;
+            Aussen.TeilSetzen(aussen, pfad, liste is { Count: > 0 } ? liste[0] : null, liste is { Count: > 0 });
+        }
+    }
+
+    /// <summary>Wurde zuletzt (Rueckgaengig/Wiederholen) ein Schritt der Stadt draussen angewandt?</summary>
+    public bool LetzterSchrittDraussen { get; private set; }
 
     /// <summary>
     /// Eine Aenderung am Grundriss von <paramref name="ort"/>: vorher und nachher kommen in den Verlauf (Schritte nach dem
@@ -148,9 +286,7 @@ public sealed class Projekt
         {
             return false;
         }
-        var s = _verlauf[--_zeiger];
-        _grundrisse[s.Ort] = Lesen(s.Vorher);
-        Ort = s.Ort;
+        Anwenden(_verlauf[--_zeiger], vorher: true);
         Gespeichert();
         return true;
     }
@@ -161,11 +297,22 @@ public sealed class Projekt
         {
             return false;
         }
-        var s = _verlauf[_zeiger++];
-        _grundrisse[s.Ort] = Lesen(s.Nachher);
-        Ort = s.Ort;
+        Anwenden(_verlauf[_zeiger++], vorher: false);
         Gespeichert();
         return true;
+    }
+
+    private void Anwenden(Schritt s, bool vorher)
+    {
+        var text = vorher ? s.Vorher : s.Nachher;
+        LetzterSchrittDraussen = s.Ort == StadtOrt;
+        if (LetzterSchrittDraussen)
+        {
+            TeileAnwenden(AussenStand, Lesen(text));
+            return;
+        }
+        _grundrisse[s.Ort] = Lesen(text);
+        Ort = s.Ort;
     }
 
     private static PyObjekt Lesen(string text) => (PyObjekt)Py.Lesen(Encoding.UTF8.GetBytes(text))!;
@@ -208,10 +355,20 @@ public sealed class Projekt
     public byte[] Schreiben()
     {
         var grundrisse = new PyObjekt();
-        foreach (var ort in Daten.Orte.Where(_grundrisse.ContainsKey))
+        foreach (var ort in Orte.Where(_grundrisse.ContainsKey))
         {
             grundrisse.Add(ort, _grundrisse[ort]);
         }
+        var aussen = new StringBuilder("{");
+        if (_aussen is not null)
+        {
+            var jetzt = Aussen.TeileText(_aussen);
+            foreach (var pfad in GeaenderteTeile)
+            {
+                aussen.Append(aussen.Length > 1 ? ", " : "").Append(PythonJson.Standard(pfad)).Append(": ").Append(jetzt.TryGetValue(pfad, out var w) ? "[" + w + "]" : "[]");
+            }
+        }
+        object? leer = Leer is { } l ? new PyObjekt { { "breite", Bearbeitung.Zahl(l.Breite) }, { "hoehe", Bearbeitung.Zahl(l.Hoehe) } } : null;
         var start = Math.Max(0, _verlauf.Count - GespeicherteSchritte);
         // Verlauf: Vorher und Nachher liegen schon als Text in der Form von json.dumps vor (kein neues Lesen beim Speichern)
         var verlauf = new StringBuilder("[");
@@ -223,9 +380,9 @@ public sealed class Projekt
         var objekt = new List<(string, string)>
         {
             ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatVersion)), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
-            ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Daten.Fassung.StadtId)), ("basis", PythonJson.Standard(Daten.Fassung.Nummer)),
-            ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
-            ("verlauf", verlauf.Append(']').ToString()), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
+            ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Basis.StadtId)), ("basis", PythonJson.Standard(Leer is null ? Basis.Nummer : null)),
+            ("leer", PythonJson.Standard(leer)), ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
+            ("aussen", aussen.Append('}').ToString()), ("verlauf", verlauf.Append(']').ToString()), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
         };
         var text = new StringBuilder("{\n");
         for (var i = 0; i < objekt.Count; i++)
@@ -256,33 +413,53 @@ public sealed class Projekt
             throw new StadtbauFehler(["Das ist keine Projektdatei des Stadtbau-Werkzeugs."]);
         }
         var neuer = Py.IstNurInt(d["formatversion"]) && Py.Int(d["formatversion"]) > FormatVersion;
-        var fehlend = Felder.Where(f => !Py.Hat(d, f)).ToList();
+        var version1 = Py.IstNurInt(d["formatversion"]) && Py.Int(d["formatversion"]) == 1;
+        var fehlend = (version1 ? FelderVersion1 : Felder).Where(f => !Py.Hat(d, f)).ToList();
         if (!neuer && fehlend.Count > 0)
         {
             throw new StadtbauFehler([.. fehlend.Select(f => $"Feld „{f}“ fehlt.")]);
         }
-        if (!Py.Gleich(d["stadt"], daten.Fassung.StadtId) || !Py.IstNurInt(d["basis"]) || Py.Int(d["basis"]) != daten.Fassung.Nummer)
+        var name = Path.GetFileNameWithoutExtension(datei);
+        name = Py.Str(d["name"]) is { Length: > 0 } n && NameGueltig(n) ? n : name;
+        (double, double)? leer = null;
+        if (Py.Hat(d, "leer") && d["leer"] is PyObjekt lo)
+        {
+            if (lo["breite"] is not (long or double) || lo["hoehe"] is not (long or double) || !Aussen.GroesseGueltig(Py.F(lo["breite"]), Py.F(lo["hoehe"])) || !Py.Gleich(d["stadt"], LeerStadtId(name)) || d["basis"] is not null)
+            {
+                throw new StadtbauFehler(["Die Angaben zur leeren Stadt (Feld „leer“) passen nicht."]);
+            }
+            leer = (Py.F(lo["breite"]), Py.F(lo["hoehe"]));
+        }
+        else if (!Py.Gleich(d["stadt"], daten.Fassung.StadtId) || !Py.IstNurInt(d["basis"]) || Py.Int(d["basis"]) != daten.Fassung.Nummer)
         {
             throw new StadtbauFehler([string.Create(CultureInfo.InvariantCulture,
                 $"Das Projekt baut auf {Py.Str(d["stadt"])} Fassung {Py.Str(d["basis"])} auf; dieses Werkzeug kennt {daten.Fassung.StadtId} Fassung {daten.Fassung.Nummer}.")]);
         }
-        var name = Path.GetFileNameWithoutExtension(datei);
-        var p = new Projekt(Py.Str(d["name"]) is { Length: > 0 } n && NameGueltig(n) ? n : name, daten, ablage) { NurLesen = neuer };
+        var p = new Projekt(name, daten, ablage, leer) { NurLesen = neuer, _datei = Path.GetFullPath(datei) };
         if (d["grundrisse"] is PyObjekt g)
         {
             foreach (var (ort, grundriss) in g)
             {
-                if (daten.Orte.Contains(ort) && grundriss is PyObjekt go)
+                if (p.Orte.Contains(ort) && grundriss is PyObjekt go)
                 {
                     p._grundrisse[ort] = go;
                 }
             }
         }
+        if (Py.Hat(d, "aussen") && d["aussen"] is PyObjekt ao && ao.Count > 0)
+        {
+            var bekannt = p.BasisTeile;
+            if (ao.Any(t => (!bekannt.ContainsKey(t.Key) && !GueltigerTeil(t.Key)) || t.Value is not List<object?> { Count: <= 1 }))
+            {
+                throw new StadtbauFehler(["Die Änderungen an der Stadt draußen (Feld „aussen“) passen nicht."]);
+            }
+            TeileAnwenden(p.AussenStand, ao);
+        }
         if (d["verlauf"] is List<object?> v)
         {
             foreach (var s in v.OfType<PyObjekt>())
             {
-                if (s["ort"] is string ort && daten.Orte.Contains(ort))
+                if (s["ort"] is string ort && (p.Orte.Contains(ort) || (ort == StadtOrt && s["vorher"] is PyObjekt && s["nachher"] is PyObjekt)))
                 {
                     p._verlauf.Add(new Schritt(ort, Py.Str(s["was"]), PythonJson.Standard(s["vorher"]), PythonJson.Standard(s["nachher"])));
                 }
@@ -290,11 +467,35 @@ public sealed class Projekt
         }
         p._zeiger = Py.IstNurInt(d["zeiger"]) ? (int)Math.Clamp(Py.Int(d["zeiger"]), 0, p._verlauf.Count) : p._verlauf.Count;
         p.Nachricht = d["nachricht"] as string ?? "";
-        if (d["ort"] is string o && daten.Orte.Contains(o))
+        if (d["ort"] is string o && p.Orte.Contains(o))
         {
             p.Ort = o;
         }
         return p;
+    }
+
+    /// <summary>Ein Teil der Stadt draussen, den es in der Basis nicht gibt, aber geben darf (neuer Schluessel in Karte oder Stadtdaten).</summary>
+    private static bool GueltigerTeil(string pfad) =>
+        pfad.Split('/', 2) is [var a, var k] && a is "karte" or "stadtdaten" && k.Length > 0;
+
+    /// <summary>Name eines Projekts fuer die Anzeige (Feld "name" der Datei, sonst der Dateiname).</summary>
+    public static string AnzeigeName(string datei)
+    {
+        try
+        {
+            using var lesen = new StreamReader(new FileStream(datei, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete), Encoding.UTF8);
+            for (var i = 0; i < 8 && lesen.ReadLine() is { } zeile; i++)
+            {
+                if (zeile.StartsWith(" \"name\": ", StringComparison.Ordinal) && Py.Lesen(Encoding.UTF8.GetBytes(zeile[9..].TrimEnd(','))) is string n && NameGueltig(n))
+                {
+                    return n;
+                }
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+        }
+        return Path.GetFileNameWithoutExtension(datei);
     }
 
     /// <summary>Alle Projekte im Ordner (neueste zuerst).</summary>
@@ -308,7 +509,7 @@ public sealed class Projekt
     /// <summary>Innenraeume der Basis mit allen geaenderten Grundrissen (flach geschrieben).</summary>
     public PyObjekt Innenraeume()
     {
-        var innen = Daten.Fassung.Innenraeume;
+        var innen = Basis.Innenraeume;
         foreach (var ort in GeaenderteOrte)
         {
             innen = InnenGrundriss.MitGrundriss(innen, ort, _grundrisse[ort]);
@@ -320,13 +521,34 @@ public sealed class Projekt
         Personen(ort), Daten.Grafik, Geschaefte.Laeden.Contains(ort) ? Daten.Geschaefte.Daten : null);
 
     public List<StadtbauFund> Pruefen(string ort) =>
-        StadtbauPruefung.Innen(ort, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Daten.Fassung.Innenraeume);
+        StadtbauPruefung.Innen(ort, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume);
 
     public (long Dreiecke, int Aufrufe) Grenzen(string ort) => StadtbauGrenzen.Innen(Innenraum(ort));
 
-    /// <summary>Rote Funde aller geaenderten Orte (Export gesperrt, solange es welche gibt).</summary>
-    public List<(string Ort, StadtbauFund Fund)> RoteFunde() =>
-        [.. GeaenderteOrte.SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f)))];
+    /// <summary>Die Stadt (draussen und alle Innenraeume) als Fassung, wie sie ein Export schreiben wuerde (Pruefung, 3D).</summary>
+    public StadtFassung Stand(string erstellt = "") =>
+        Aussen.Fassung(AussenStand, Basis, Innenraeume(), Leer is null ? Basis.Nummer + 1 : 1, Leer is null ? Basis.Nummer : null, Werkzeug.Kennzeile, erstellt,
+            Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht);
+
+    /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
+    public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten);
+
+    public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten) =>
+        StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik);
+
+    /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
+    public List<(string Ort, StadtbauFund Fund)> RoteFunde()
+    {
+        var rot = GeaenderteOrte.SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
+        if (AussenGeaendert || Leer is not null)
+        {
+            rot.AddRange(PruefenAussen().Where(f => f.Rot).Select(f => (StadtOrt, f)));
+        }
+        return rot;
+    }
+
+    /// <summary>Name eines Orts fuer die Anzeige (Stadt draussen: "Stadt draußen").</summary>
+    public string OrtName(string ort) => ort == StadtOrt ? "Stadt draußen" : Daten.OrtName(ort);
 
     /// <summary>
     /// Export-Datei (.fistadt) mit allen Aenderungen als neue Fassung (Nummer = Basis + 1, CC vergibt beim Einbau die
@@ -335,39 +557,24 @@ public sealed class Projekt
     /// </summary>
     public byte[] Exportieren(DateTimeOffset zeit)
     {
-        if (GeaenderteOrte.Count == 0)
+        if (GeaenderteOrte.Count == 0 && !AussenGeaendert)
         {
             throw new StadtbauFehler(["Es gibt noch keine Änderung zum Exportieren."]);
         }
         var rot = RoteFunde();
         if (rot.Count > 0)
         {
-            throw new StadtbauFehler([.. rot.Select(r => Daten.OrtName(r.Ort) + ": " + r.Fund.Text)]);
+            throw new StadtbauFehler([.. rot.Select(r => OrtName(r.Ort) + ": " + r.Fund.Text)]);
         }
-        var f = Daten.Fassung;
-        var neu = new StadtFassung
-        {
-            StadtId = f.StadtId,
-            Nummer = f.Nummer + 1,
-            Basis = f.Nummer,
-            Werkzeug = Werkzeug.Kennzeile,
-            Erstellt = zeit.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture),
-            Nachricht = Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht,
-            Karte = f.Karte,
-            Stadtdaten = f.Stadtdaten,
-            Innenraeume = Innenraeume(),
-            Laternen = f.Laternen,
-            Beete = f.Beete,
-        };
-        var datei = neu.Schreiben();
+        var datei = Stand(zeit.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture)).Schreiben();
         var gelesen = StadtFassung.Lesen(datei);
         var funde = StadtbauPruefung.Inhalt(gelesen, Daten.Inhalt);
         return funde.Count > 0 ? throw new StadtbauFehler(funde) : datei;
     }
 
-    /// <summary>Dateiname eines Exports: stadt1_&lt;Projekt&gt;_&lt;JJJJ-MM-TT_HHMM&gt;.fistadt (Leerzeichen als _).</summary>
+    /// <summary>Dateiname eines Exports: stadt1_&lt;Projekt&gt;_&lt;JJJJ-MM-TT_HHMM&gt;.fistadt (ASCII, Leerzeichen als _).</summary>
     public string ExportName(DateTimeOffset zeit) =>
-        Daten.Fassung.StadtId + "_" + Name.Replace(' ', '_') + "_" + zeit.ToString("yyyy-MM-dd_HHmm", CultureInfo.InvariantCulture) + StadtFassung.Endung;
+        Basis.StadtId + "_" + DateiName(Name).Replace(' ', '_') + "_" + zeit.ToString("yyyy-MM-dd_HHmm", CultureInfo.InvariantCulture) + StadtFassung.Endung;
 
     /// <summary>Export in den Ordner exporte/ des Werkzeugs schreiben (nie ueberschreiben: _2, _3, ...). Rueckgabe: Pfad.</summary>
     public string ExportSpeichern(DateTimeOffset zeit, string? ordner = null)

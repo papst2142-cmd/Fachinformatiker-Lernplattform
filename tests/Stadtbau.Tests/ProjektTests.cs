@@ -136,14 +136,14 @@ public class ProjektTests
         var ablage = Daten.NeueAblage();
         var p = Projekt.Neu("Neuer", D, ablage, "bank");
         var text = File.ReadAllText(p.Datei, Encoding.UTF8);
-        File.WriteAllText(p.Datei, text.Replace("\"formatversion\": 1,", "\"formatversion\": 2,", StringComparison.Ordinal), new UTF8Encoding(false));
+        File.WriteAllText(p.Datei, text.Replace("\"formatversion\": 2,", "\"formatversion\": 3,", StringComparison.Ordinal), new UTF8Encoding(false));
         var nur = Projekt.Oeffnen(p.Datei, D, ablage);
         Assert.True(nur.NurLesen);
         Assert.Throws<InvalidOperationException>(() => nur.Aendern("bank", "x", _ => { }));
         var vorher = File.ReadAllBytes(p.Datei);
         nur.Speichern(vonHand: true);
         Assert.Equal(vorher, File.ReadAllBytes(p.Datei));
-        // Gegenprobe: Formatnummer 1 laesst sich bearbeiten
+        // Gegenprobe: Formatnummer 2 laesst sich bearbeiten
         File.WriteAllText(p.Datei, text, new UTF8Encoding(false));
         Assert.False(Projekt.Oeffnen(p.Datei, D, ablage).NurLesen);
         File.WriteAllText(p.Datei, text.Replace("\"basis\": 0,", "\"basis\": 7,", StringComparison.Ordinal), new UTF8Encoding(false));

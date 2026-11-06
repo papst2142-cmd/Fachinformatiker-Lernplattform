@@ -59,7 +59,7 @@ public static partial class StadtbauPruefung
             return funde;
         }
         Ueberschneidung(innen, funde);
-        Erreichbarkeit(innen, funde);
+        Erreichbarkeit(innen, ort, geschaefte, funde);
         HinterDemTresen(innen, funde);
         if (geschaefte is not null && innenraeume is not null && Geschaefte.Laeden.Contains(ort))
         {
@@ -238,7 +238,7 @@ public static partial class StadtbauPruefung
     /// Jede Ware ist zu Fuss erreichbar (Rechnung wie <c>SpielAuslageTests.JedeWareErreichbar</c>: Weg vom Eingang bis
     /// Reichweite 0,9 + halbe kleinere Seite, Ende in 0,9 + 0,3 vom Rand); jede Person ebenso (bis zu ihr hin, Reichweite des Spiels).
     /// </summary>
-    private static void Erreichbarkeit(Innenraum innen, List<StadtbauFund> funde)
+    private static void Erreichbarkeit(Innenraum innen, string ort, Geschaefte? geschaefte, List<StadtbauFund> funde)
     {
         foreach (var d in Geschaefte.Auslage(new PyObjekt { { "gebaeude", innen.Gebaeude } }))
         {
@@ -248,8 +248,10 @@ public static partial class StadtbauPruefung
             var dz = Math.Max(Math.Max(z - ez, 0), ez - z - t);
             if (Math.Sqrt((dx * dx) + (dz * dz)) > Wohnung.MoebelReichweite + 0.3)
             {
-                funde.Add(new StadtbauFund($"Die Ware „{Py.Str(d["ware"])}“ ({InnenKatalog.Name(Py.Str(d["typ"]))}) ist zu Fuß nicht erreichbar.",
-                    "Einen Gang frei machen: davorstehende Stücke verschieben.", true, x + (w / 2), z + (t / 2)));
+                var kennung = Py.Str(d["ware"]);
+                var name = geschaefte is null ? kennung : Warennamen.Name(geschaefte, ort, kennung);
+                funde.Add(new StadtbauFund($"Die Ware „{name}“ ({InnenKatalog.Name(Py.Str(d["typ"]))}) ist zu Fuß nicht erreichbar.",
+                    "Einen Gang frei machen: davorstehende Stücke verschieben." + Warennamen.Kennung(name, kennung), true, x + (w / 2), z + (t / 2)));
             }
         }
         foreach (var p in innen.Personen)
@@ -284,16 +286,23 @@ public static partial class StadtbauPruefung
         foreach (var fehler in geschaefte.Pruefen(mit).Where(f => f.StartsWith(ort + ": ", StringComparison.Ordinal)))
         {
             var rest = fehler[(ort.Length + 2)..];
+            // Sammelliste 219 Punkt 2: der Name wie im Spiel, die Kennung nur klein im Tipp
+            string Ware(int ab, string vorne)
+            {
+                var kennung = vorne + rest[ab..];
+                return Warennamen.Name(geschaefte, ort, kennung);
+            }
+            string Kennung(int ab, string vorne) => Warennamen.Kennung(Ware(ab, vorne), vorne + rest[ab..]);
             var (text, tipp) = rest switch
             {
                 _ when rest.StartsWith("Auslage ohne Ware im Sortiment: ", StringComparison.Ordinal) =>
-                    ($"Die Ware „{rest[32..]}“ gibt es im Sortiment nicht.", "Eine Ware aus der Liste zuordnen."),
+                    ($"Die Ware „{Ware(32, "")}“ gibt es im Sortiment nicht.", "Eine Ware aus der Liste zuordnen." + Kennung(32, "")),
                 _ when rest.StartsWith("Moebel nicht ausgestellt: ", StringComparison.Ordinal) =>
-                    ($"Das Möbel „{rest[26..]}“ steht nirgends aus.", "Ein Stück mit dieser Ware setzen."),
+                    ($"Das Möbel „{Ware(26, "")}“ steht nirgends aus.", "Ein Stück mit dieser Ware setzen." + Kennung(26, "")),
                 _ when rest.StartsWith("Teile-Typ ohne Regal: ", StringComparison.Ordinal) =>
-                    ($"Für „{rest[22..]}“ gibt es kein Regal.", "Ein Regal mit dieser Ware setzen."),
+                    ($"Für „{Ware(22, "teile:")}“ gibt es kein Regal.", "Ein Regal mit dieser Ware setzen." + Kennung(22, "teile:")),
                 _ when rest.StartsWith("Kleidung ohne Auslage: ", StringComparison.Ordinal) =>
-                    ($"Für „{rest[23..]}“ gibt es keine Auslage.", "Eine Auslage mit dieser Ware setzen."),
+                    ($"Für „{Ware(23, Kleidung.Art + ":")}“ gibt es keine Auslage.", "Eine Auslage mit dieser Ware setzen." + Kennung(23, Kleidung.Art + ":")),
                 _ => (rest, "Letzten Schritt rückgängig machen."),
             };
             funde.Add(new StadtbauFund(text, tipp, true));
