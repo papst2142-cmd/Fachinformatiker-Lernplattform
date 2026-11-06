@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 
 namespace Stadtbau.Core;
 
@@ -193,6 +194,43 @@ public sealed class Katalog
 
     /// <summary>Das Modell eines Eintrags (null bei einem Effekt).</summary>
     public GrafikModell? Modell(KatalogEintrag e) => e.Art == KatalogArt.Modell ? Modelle(e.Paket).GetValueOrDefault(e.Name) : null;
+
+    /// <summary>
+    /// Phase 13 Welle 4a (Weisung P12-28): das Modell eines Eintrags fuer die 3D-Zeichnung des Spiels, mit dem Namen
+    /// "cc0:paket/name" wie in <c>katalog_verbaut.bin</c>; ein Effekt ist der leuchtende Stern des Spiels
+    /// (<see cref="Katalogstueck.Stern"/>). Gleiche Dreiecke wie die mitgelieferte Datei (Test bytegleich).
+    /// </summary>
+    public GrafikModell? SpielModell(KatalogEintrag e) =>
+        e.Art == KatalogArt.Effekt ? Katalogstueck.Stern(e.Typ, e.Farbe ?? "#FFFFFF")
+        : Modell(e) is { } m ? new GrafikModell(e.Typ, m.Ecken, m.Farben) : null;
+
+    /// <summary>
+    /// Phase 13 Welle 4a: <paramref name="basis"/> (Spielgrafik) mit allen Stuecken aus dem Katalog, auf die
+    /// <paramref name="stand"/> verweist (innen und draussen) und die <paramref name="basis"/> noch nicht hat. So zeichnet die
+    /// 3D-Ansicht des Werkzeugs dieselben Modelle an derselben Stelle wie das Spiel nach dem Einbau.
+    /// </summary>
+    public GrafikBibliothek? MitStuecken(GrafikBibliothek? basis, StadtFassung stand)
+    {
+        if (basis is null)
+        {
+            return null;
+        }
+        var typen = new SortedSet<string>(StringComparer.Ordinal);
+        StadtbauPruefung.KatalogVerweise(stand.Innenraeume, typen);
+        try
+        {
+            foreach (var k in Katalogstueck.AusStadtdaten(stand.Stadtdaten))
+            {
+                typen.Add(k.Typ);
+            }
+        }
+        catch (InvalidDataException)
+        {
+            // falscher Aufbau ist ein Fund der Pruefung; gezeichnet wird, was sich lesen laesst
+        }
+        var neu = typen.Where(t => basis.Modell(t) is null).Select(t => Eintrag(t) is { } e ? SpielModell(e) : null).OfType<GrafikModell>().ToList();
+        return neu.Count == 0 ? basis : basis.Mit(neu);
+    }
 
     /// <summary>Pakete, deren Modelle schon gelesen sind (Test: der Katalog laedt nur, was gezeigt wird).</summary>
     public IReadOnlyCollection<string> GeleseneModellPakete => [.. _modelle.Where(p => p.Value.IsValueCreated).Select(p => p.Key)];

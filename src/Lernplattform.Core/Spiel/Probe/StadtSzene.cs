@@ -73,6 +73,8 @@ public sealed partial class StadtSzene
         public const float Wasser = 0.034f;
         public const float Gleisbett = 0.034f;
         public const float Weg = 0.046f;
+        /// <summary>Phase 13 Welle 4a: Gehweg neben der Strasse (unter der Strasse, ueber dem Fussweg zur Tuer).</summary>
+        public const float Gehweg = 0.052f;
         public const float Strasse = 0.058f;
         public const float Mittellinie = 0.068f;
 
@@ -248,7 +250,13 @@ public sealed partial class StadtSzene
             {
                 if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
                 {
+                    var von = netz.AnzahlEcken;
                     netz.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? null : FestLicht(modell));
+                    if (Katalogstueck.IstEffekt(modell.Name))
+                    {
+                        // Phase 13 Welle 4a: ein Effekt leuchtet nachts wie die Laternen
+                        netz.Leuchten(von, netz.AnzahlEcken);
+                    }
                 }
             }
             foreach (var baum in GruenKlein?.Baeume ?? [])
@@ -288,6 +296,14 @@ public sealed partial class StadtSzene
         {
             if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
             {
+                if (Katalogstueck.IstEffekt(modell.Name))
+                {
+                    // Phase 13 Welle 4a: ein Effekt behaelt seine Farbe (kein Schnee) und leuchtet nachts
+                    var von = gefaerbt.AnzahlEcken;
+                    gefaerbt.Hinzu(modell, Stuecke[i].Lage, null);
+                    gefaerbt.Leuchten(von, gefaerbt.AnzahlEcken);
+                    continue;
+                }
                 gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : FestLicht(modell));
             }
         }
@@ -659,6 +675,11 @@ public sealed partial class StadtSzene
         var andreaskreuze = new List<Bahnuebergang.Kreuz>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+        // Phase 13 Welle 4a (Weisung P12-28): Strassen mit Gehweg (Feld "gehweg" = Breite je Seite, nur aus dem Stadtbau-
+        // Werkzeug; Fassung 0 hat keine): Gehweg gezeichnet, frei zum Gehen, kein Kleingruen darauf (Laternen stehen wie
+        // bisher 0,5 neben der Strassenmitte, also auf dem Gehweg)
+        var gehwege = landschaft.Where(t => Py.Gleich(t["typ"], "strasse") && GehwegBreite(t) > 0)
+            .Select(t => (Linie: Vektoren(t["punkte"]), Halb: (StrassenBreite / 2) + GehwegBreite(t))).ToList();
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -729,6 +750,11 @@ public sealed partial class StadtSzene
                                 if (i + 2 == pp.Count)
                                 {
                                     strassenEnden.Add((b2, r, eb));
+                                }
+                                if (GehwegBreite(item) is var gw and > 0)
+                                {
+                                    teile.Add(Band(a.X - (r.X * ea), a.Y - (r.Y * ea), b2.X + (r.X * eb), b2.Y + (r.Y * eb), Hoehe.Gehweg,
+                                        StrassenBreite + (2 * gw), Mischen(Farben.Strasse, Weiss, 0.45f)));
                                 }
                                 teile.Add(Band(a.X - (r.X * ea), a.Y - (r.Y * ea), b2.X + (r.X * eb), b2.Y + (r.Y * eb), Hoehe.Strasse, StrassenBreite, Farben.Strasse));
                             }
@@ -962,6 +988,22 @@ public sealed partial class StadtSzene
         {
             Zug(stuecke, grafik, gleise);
         }
+        // Phase 13 Welle 4a (Weisung P12-28): Stuecke aus dem Katalog des Stadtbau-Werkzeugs (stadtdaten.katalog) mit den
+        // mitgelieferten Modellen; ein Modell versperrt den Weg mit seinem Rechteck, ein Effekt (Stern) nichts. Fehlt ein
+        // Modell, zeichnet die Stadt nichts dafuer (die Ladepruefung StadtbauPruefung.Verbaut meldet das vorher rot).
+        foreach (var k2 in Katalogstueck.AusStadtdaten(stadt.Daten))
+        {
+            if (grafik?.Modell(k2.Typ) is not { } km)
+            {
+                continue;
+            }
+            stuecke.Add(new ModellStueck(k2.Typ, Katalogstueck.Lage(km, k2.X, k2.Z, k2.W, k2.T, k2.Dreh, 0f, k2.Effekt)));
+            if (!k2.Effekt)
+            {
+                var (x1, z1, x2, z2) = k2.Rechteck;
+                hindernisse.Add((x1, z1, x2, z2));
+            }
+        }
         // Hindernisse vor der Fest-Deko: das Gruen haengt so nicht an der heutigen Festzeit
         var hindernisseVorFest = hindernisse.ToList();
         var festTeileVon = teile.Count;
@@ -1000,6 +1042,7 @@ public sealed partial class StadtSzene
             var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe, laternenSkizze).ToList();
             bool Frei(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
+                && gehwege.All(g => Kurve.Abstand(new Vector2(x, z), g.Linie) >= g.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
                 && haeuserKaesten.All(k => x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f)
                 && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
@@ -1013,7 +1056,7 @@ public sealed partial class StadtSzene
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1046,6 +1089,9 @@ public sealed partial class StadtSzene
         };
     }
 
+    /// <summary>Phase 13 Welle 4a: Breite des Gehwegs je Seite einer Strasse (Feld "gehweg", fehlt = 0).</summary>
+    public static float GehwegBreite(PyObjekt strasse) => Py.Hat(strasse, "gehweg") ? (float)Py.F(strasse["gehweg"]) : 0f;
+
     private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 
     /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
@@ -1076,7 +1122,8 @@ public sealed partial class StadtSzene
     /// ueber Fluss und Gleis), Fusswege und die Stehplaetze vor den Tueren sind immer frei.
     /// </summary>
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
-        List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte)
+        List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
+        List<(List<Vector2> Linie, float Halb)>? gehwege = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1113,6 +1160,10 @@ public sealed partial class StadtSzene
             }
         }
         Linien(strassen, StrassenBreite / 2, immer);
+        foreach (var (linie, halb) in gehwege ?? [])
+        {
+            Linien([linie], halb, immer);
+        }
         Linien(wege, 0.25f, immer);
         foreach (var o in orte)
         {

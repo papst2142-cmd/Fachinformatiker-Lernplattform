@@ -1303,10 +1303,27 @@ public sealed class Innenraum
             case "platznummer":
                 Platznummer(r, b, tt, (int)Py.Int(Get(d, "nummer", 1L)), (float)Py.F(Get(d, "unten", 0.75)) * M);
                 break;
+            case var _ when Katalogstueck.IstTyp(typ):
+                KatalogStueck(typ, x, z, w, t, dreh);
+                break;
             default:
                 Eigen(typ, r, b, tt);
                 break;
         }
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 4a (Weisung P12-28): ein Stueck aus dem Katalog des Stadtbau-Werkzeugs ("cc0:paket/name") im Rechteck
+    /// der Einrichtung, mit seinem Verhaeltnis (<see cref="Katalogstueck.Lage"/>); ein Effekt schwebt als leuchtender Stern.
+    /// Ohne mitgeliefertes Modell zeichnet der Raum nichts dafuer (die Ladepruefung meldet das vorher rot).
+    /// </summary>
+    private void KatalogStueck(string typ, float x, float z, float w, float t, int dreh)
+    {
+        if (Grafik?.Modell(typ) is not { } gm)
+        {
+            return;
+        }
+        _stuecke.Add(new ModellStueck(typ, Katalogstueck.Lage(gm, x + (w / 2), z + (t / 2), w, t, dreh, 0f, Katalogstueck.IstEffekt(typ))));
     }
 
     /// <summary>Aussehen einer Teile-Art im Laden: Breite und Hoehe eines Stuecks, zwei Farben im Wechsel.</summary>

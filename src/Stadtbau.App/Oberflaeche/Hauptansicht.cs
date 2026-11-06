@@ -1159,8 +1159,8 @@ public sealed class Hauptansicht : UserControl
         kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
         await Drei.NaechstesBildAsync();
         await Drei.NaechstesBildAsync();
-        // Stuecke aus dem vollen Katalog zeichnet die 3D-Ansicht erst ab Welle 4; ihre echten Dreiecke zaehlen schon jetzt mit
-        GrenzenDraussen = (Drei.LetzteDreiecke + KatalogPruefung.DreieckeAussen(Katalog.Aktiv, _projekt.AussenStand), Drei.LetzteZeichenaufrufe);
+        // Phase 13 Welle 4a: die 3D-Ansicht zeichnet die Stuecke aus dem Katalog selbst (wie das Spiel); gezaehlt wird das Bild
+        GrenzenDraussen = (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe);
         kamera.Setzen(ax, az);
         kamera.Zoomen(kamera.Abstand / ab);
         var (dreiecke, aufrufe) = GrenzenDraussen.Value;

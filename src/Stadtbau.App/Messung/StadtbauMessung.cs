@@ -333,14 +333,18 @@ public static class StadtbauMessung
         return Ende();
     }
 
+    /// <summary>Der eine bekannte rote Fund in Stadt 1 (Fassung 0, Weisung P12-30): Nico verschiebt Laterne 20 in seinem Projekt.</summary>
+    internal const string Laterne20Fund = "Laterne Nr. 20 muss um 0,4 verschoben werden, sobald alle Orte zu sehen sind (erlaubt 0,2).";
+
     private static async Task DraussenAsync(Hauptansicht a, Window? f)
     {
         a.NeuAnlegen("Starttest Straßen und Grün", null);
         await a.AussenGeprueft;
         var p = a.Projekt!;
-        if (a.AussenFunde.Any(x => x.Rot))
+        // Weisung P12-30 (Sammelliste 220): in Stadt 1 (Fassung 0) ist genau Laterne 20 im spaeten Spielstand rot, sonst nichts
+        if (a.AussenFunde.Count(x => x.Rot) != 1 || !a.AussenFunde.Any(x => x.Rot && x.Text == Laterne20Fund))
         {
-            Fund("Draussen Stadt 1: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
+            Fund("Draussen Stadt 1: rote Funde (erwartet genau Laterne 20): " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
         }
         Messwerte.Notiere("Draussen Stadt 1: " + a.AussenFunde.Count.ToString(Inv) + " Funde (gelb)");
         a.ReiterZeigen(innen: false);
@@ -696,16 +700,16 @@ public static class StadtbauMessung
         {
             Fund("Katalog: nach der Wahl eines Stuecks bleibt der Katalog offen");
         }
-        if (a.Karte.SetzenAn(16, 12) is not { Art: AussenArt.Katalog })
+        if (a.Karte.SetzenAn(2, 7) is not { Art: AussenArt.Katalog })
         {
             Fund("Katalog draussen: " + baum.Anzeige + " nicht gesetzt");
         }
         var effekt = kat.Eintraege.First(e => e.Art == KatalogArt.Effekt);
         a.KatalogOeffnen(innen: false).Waehlen(effekt);
-        a.Karte.SetzenAn(17, 12);
+        a.Karte.SetzenAn(2, 12);
         a.Karte.SetzenArt = null;
         await a.AussenGeprueft;
-        if (a.AussenFunde.Any(x => x.Rot))
+        if (a.AussenFunde.Any(x => x.Rot && x.Text != Laterne20Fund))
         {
             Fund("Katalog draussen: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
         }

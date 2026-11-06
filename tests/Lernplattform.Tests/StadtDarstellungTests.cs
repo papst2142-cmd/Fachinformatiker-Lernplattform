@@ -34,6 +34,67 @@ public sealed class StadtDarstellungTests
         { Festzeit.Silvester, Jahreszeit.Winter },
     };
 
+    /// <summary>
+    /// Weisung P12-30 (Sammelliste 220): die einzige feste Ausnahme der Verschiebung im spaeten Spielstand. Laterne 20 in
+    /// Fassung 0 von Stadt 1 rueckt 0,4 vor die Tuer der Betriebswerkstatt (erscheint ab Tag 22); Nico setzt sie in seiner
+    /// Fassung um. Jede andere Laterne und jede andere Fassung ist streng (0,2).
+    /// </summary>
+    internal static readonly (string Stadt, long Fassung, int Laterne, float X, float Z) AusnahmeSpaet = ("stadt1", 0, 20, 30.30f, 14.76f);
+
+    /// <summary>Laternen, die im spaeten Spielstand weiter als 0,2 (Regel 0,21 mit Rundung) von ihrem Platz ruecken, ohne die Ausnahme.</summary>
+    internal static List<string> SpaetZuWeit(IReadOnlyList<Nachtlicht.Laterne> laternen, string stadt, long fassung) =>
+        [.. laternen.Where(l => l.Verschoben > Lernplattform.Core.Stadtbau.StadtbauPruefung.LaterneVerschoben
+                && !(stadt == AusnahmeSpaet.Stadt && fassung == AusnahmeSpaet.Fassung && l.Nr == AusnahmeSpaet.Laterne
+                     && Vector2.Distance(l.Ziel, new Vector2(AusnahmeSpaet.X, AusnahmeSpaet.Z)) < 0.01f))
+            .Select(l => string.Create(CultureInfo.InvariantCulture, $"Laterne {l.Nr} um {l.Verschoben:F2}"))];
+
+    internal static Spielstand SpaeterStandFuerTests() => SpaeterStand();
+
+    private static Spielstand SpaeterStand()
+    {
+        var ablauf = new Spielablauf(SpielInhaltTests.Inhalt);
+        ablauf.Profil("Probe", new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
+        ablauf.Stand.TageFertig = 200;
+        ablauf.Stand.Firma = new PyObjekt { { "stufe", 5L }, { "name", "Probe" }, { "tag", 1L } };
+        ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L }, { "tag", 1L } };
+        return ablauf.Stand;
+    }
+
+    /// <summary>
+    /// Weisung P12-30: im spaeten Spielstand (alle Orte zu sehen) bleibt jede Laterne hoechstens 0,2 von ihrem Platz, in
+    /// jeder Jahres- und Festzeit; einzige Ausnahme <see cref="AusnahmeSpaet"/> (Fassung 0, Laterne 20, genau 0,4).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Zeiten))]
+    public void LaternenSpaeterStand_NurAusnahmeLaterne20(string? fest, Jahreszeit j)
+    {
+        var laternen = Szene(fest, j, SpaeterStand()).Laternen;
+        Assert.Equal(22, laternen.Count);
+        var zuWeit = SpaetZuWeit(laternen, "stadt1", 0);
+        Assert.True(zuWeit.Count == 0, string.Join(", ", zuWeit));
+        // die Ausnahme ist genau diese eine Verschiebung (rueckt sie anders, ist der Test rot und die Ausnahme neu zu klaeren)
+        var l20 = laternen[AusnahmeSpaet.Laterne - 1];
+        Assert.Equal(0.4f, l20.Verschoben, 0.01f);
+    }
+
+    /// <summary>Gegenprobe zur Ausnahme: eine zweite Laterne mit derselben Verschiebung in Fassung 0 und Laterne 20 in einer neuen Fassung sind rot.</summary>
+    [Fact]
+    public void LaternenSpaeterStand_Gegenprobe()
+    {
+        var laternen = Szene(null, Jahreszeit.Sommer, SpaeterStand()).Laternen.ToList();
+        Assert.Empty(SpaetZuWeit(laternen, "stadt1", 0));
+        Assert.Equal(["Laterne 20 um 0.40"], SpaetZuWeit(laternen, "stadt1", 1));
+        Assert.Equal(["Laterne 20 um 0.40"], SpaetZuWeit(laternen, "stadt2", 0));
+        var l19 = laternen[18];
+        laternen[18] = l19 with { Ort = l19.Ziel + new Vector2(0, 0.4f) };
+        Assert.Equal(["Laterne 19 um 0.40"], SpaetZuWeit(laternen, "stadt1", 0));
+        // Laterne 20 mit derselben Verschiebung an einem anderen Platz gilt nicht als Ausnahme
+        var l20 = laternen[19];
+        laternen[18] = l19;
+        laternen[19] = l20 with { Ziel = l20.Ziel + new Vector2(1, 0), Ort = l20.Ort + new Vector2(1, 0) };
+        Assert.Equal(["Laterne 20 um 0.40"], SpaetZuWeit(laternen, "stadt1", 0));
+    }
+
     /// <summary>Genau 22 Laternen (17 einfach, 5 doppelt; P8-56) an denselben Plaetzen in jeder Jahres- und Festzeit; jede frei nach den Regeln.</summary>
     [Theory]
     [MemberData(nameof(Zeiten))]

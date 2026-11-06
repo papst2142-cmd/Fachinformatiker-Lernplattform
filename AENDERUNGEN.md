@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.43.0
+Das Spiel kann jetzt alles zeigen, was mit dem Stadtbau-Werkzeug gebaut wird. Die Stadt selbst sieht in dieser Version noch genauso aus wie bisher; die neuen Teile erscheinen erst, wenn eine neue, gebaute Fassung der Stadt eingebaut wird.
+
+- Neu können Straßen einen Gehweg haben. Er wird neben der Fahrbahn gezeichnet, und deine Figur kann darauf gehen.
+- Neu können Stücke aus dem großen Vorrat an freien Grafiken in der Stadt und in den Häusern stehen, zum Beispiel Autos, Stühle oder Pflanzen. Sie versperren den Weg wie jedes andere Möbel.
+- Effekte wie ein leuchtender Stern sind nur Aussehen: sie leuchten nachts und versperren nichts.
+- Bevor das Spiel eine neue Fassung der Stadt zeigt, prüft es, ob jedes Stück darin mitgeliefert ist. Fehlt eines, zeigt es die Stadt nicht halb, sondern meldet den Fehler.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.42.2
 Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich einige Prüfregeln mit dem Stadtbau-Werkzeug, und diese Regeln sind für die neue Fassung des Werkzeugs erweitert worden.
 

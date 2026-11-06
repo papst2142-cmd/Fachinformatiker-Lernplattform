@@ -31,7 +31,9 @@ public static class Ansicht3D
     {
         var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt));
         var ablauf = StadtbauPruefung.Probestand(stadt.Inhalt);
-        var spiel = new StadtSpiel(stadt, ablauf, daten.Grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
+        // Phase 13 Welle 4a: Stuecke aus dem Katalog zeichnet die 3D-Ansicht wie das Spiel nach dem Einbau
+        var grafik = Katalog.Aktiv?.MitStuecken(daten.Grafik, stand) ?? daten.Grafik;
+        var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
             () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
         spiel.Szene.Vorbereiten();
         return spiel;
