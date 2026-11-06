@@ -75,6 +75,7 @@ public class PruefungAussenTests
         { "Katalog_Laterne", "„cc0:car_kit/sedan“ steht an einer Laterne" },
         { "Katalog_Fahrbahn", "„cc0:car_kit/sedan“ steht auf der Fahrbahn" },
         { "Katalog_Gleis", "„cc0:car_kit/sedan“ steht auf dem Gleis" },
+        { "Strassen_Aufeinander", "Länge übereinander oder dicht nebeneinander" },
     };
 
     /// <summary>Ein Stueck aus dem Katalog draussen (Mitte x, y; Breite und Tiefe 0,3).</summary>
@@ -127,6 +128,9 @@ public class PruefungAussenTests
         "Katalog_Laterne" => (a => Kat(a, "car_kit/sedan", P(8.0, 0.75)), a => Kat(a, "car_kit/sedan", P(22, 2))),
         "Katalog_Fahrbahn" => (a => Kat(a, "car_kit/sedan", P(24, 20.8)), a => Kat(a, "car_kit/sedan", P(22, 2))),
         "Katalog_Gleis" => (a => Kat(a, "car_kit/sedan", P(2, 5.97)), a => Kat(a, "car_kit/sedan", P(2, 6.6))),
+        // Weisung P12-40 Punkt 3: dicht neben Strasse 5 (0,3 daneben) ist rot, quer darueber (Kreuzung) gruen
+        "Strassen_Aufeinander" => (a => Aussen.Landschaft(a).Add(new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { P(9.0, 12.9), P(14.0, 12.9) } } }),
+            a => Aussen.Landschaft(a).Add(new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { P(12.0, 9.0), P(12.0, 16.0) } } })),
         _ => throw new ArgumentException(regel),
     };
 
@@ -141,6 +145,33 @@ public class PruefungAussenTests
     {
         var (x, y, w, h) = AussenBearbeitung.HausFlaeche(a, new AussenStelle(AussenArt.Haus, -1, 0, "zuhause"));
         return P(x + (w / 2), y + (h / 2));
+    }
+
+    /// <summary>Weisung P12-40 Punkt 3: Kreuzung und Einmuendung liegen unter der Grenze, Aufeinander und schraeg flach darueber.</summary>
+    [Theory]
+    [InlineData("kreuzung", false)]
+    [InlineData("einmuendung", false)]
+    [InlineData("verlaengerung", false)]
+    [InlineData("kreuzung45", false)]
+    [InlineData("aufeinander", true)]
+    [InlineData("nebeneinander", true)]
+    [InlineData("flach", true)]
+    public void StrassenNaehe_KreuzungErlaubtAufeinanderNicht(string fall, bool rot)
+    {
+        System.Numerics.Vector2 V(float x, float y) => new(x, y);
+        List<System.Numerics.Vector2> a = [V(0, 10), V(20, 10)];
+        List<System.Numerics.Vector2> b = fall switch
+        {
+            "kreuzung" => [V(10, 5), V(10, 15)],
+            "einmuendung" => [V(10, 10), V(10, 15)],
+            "verlaengerung" => [V(20, 10), V(30, 10)],
+            "kreuzung45" => [V(5, 5), V(15, 15)],
+            "aufeinander" => [V(4, 10), V(9, 10)],
+            "nebeneinander" => [V(4, 10.5f), V(9, 10.5f)],
+            _ => [V(0, 9), V(20, 11)],
+        };
+        var laenge = Math.Max(StadtbauPruefung.StrassenNaehe(a, b).Laenge, StadtbauPruefung.StrassenNaehe(b, a).Laenge);
+        Assert.Equal(rot, laenge >= StadtbauPruefung.StrassenAufeinanderAb);
     }
 
     [Fact]

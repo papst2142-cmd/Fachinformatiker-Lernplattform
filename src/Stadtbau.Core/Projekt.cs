@@ -56,13 +56,14 @@ public sealed class Projekt
     private Dictionary<string, string>? _basisTeile;
     private string? _datei;
 
-    private Projekt(string name, Spieldaten daten, Werkzeugordner ablage, (double Breite, double Hoehe)? leer = null)
+    private Projekt(string name, Spieldaten daten, Werkzeugordner ablage, (double Breite, double Hoehe)? leer = null, bool frei = false)
     {
         Name = name;
         Daten = daten;
         Werkzeugordner = ablage;
         Leer = leer;
-        Basis = leer is { } l ? Aussen.Leer(daten.Fassung, LeerStadtId(name), l.Breite, l.Hoehe) : daten.Fassung;
+        Frei = leer is not null && frei;
+        Basis = leer is { } l ? Aussen.Leer(daten.Fassung, LeerStadtId(name), l.Breite, l.Hoehe, Frei) : daten.Fassung;
         Ort = Orte.FirstOrDefault() ?? "";
     }
 
@@ -71,6 +72,14 @@ public sealed class Projekt
 
     /// <summary>Groesse einer leeren Stadt (null = Stadt 1).</summary>
     public (double Breite, double Hoehe)? Leer { get; }
+
+    /// <summary>
+    /// Patch S 0.5.1 (Weisungen P12-37/P12-38/P12-39): leere Stadt ganz frei (Schalter darstellung.kleingruen = false,
+    /// kein Gestruepp, keine Steine, kein Kleingruen). Jede neue leere Stadt ist frei (ohne Wahl, Nico); in der
+    /// Projektdatei steht dafuer "frei": true im Feld "leer". Aeltere Projekte ohne diese Angabe bleiben unveraendert
+    /// (mit Kleingruen wie bisher), sie werden nie still umgestellt.
+    /// </summary>
+    public bool Frei { get; }
 
     /// <summary>
     /// Kennung einer leeren Stadt: "neu_" und der Projektname in ASCII, klein, jedes andere Zeichen als _, hoechstens 32
@@ -175,7 +184,7 @@ public sealed class Projekt
         {
             throw new ArgumentException("Größe ungültig", nameof(leer));
         }
-        var p = new Projekt(name, daten, ablage.Anlegen(), leer);
+        var p = new Projekt(name, daten, ablage.Anlegen(), leer, frei: true);
         if (ort is not null && p.Orte.Contains(ort))
         {
             p.Ort = ort;
@@ -381,9 +390,40 @@ public sealed class Projekt
 
     private void Gespeichert()
     {
-        Speichern(vonHand: false);
+        _aenderungen++;
+        SpeicherFehler = null;
+        try
+        {
+            Speichern(vonHand: false);
+        }
+        catch (Exception e) when (!SpeichernAltFuerTests && e is IOException or UnauthorizedAccessException)
+        {
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 5): scheitert das automatische Speichern (Datei kurz gesperrt,
+            // etwa durch einen Virenscanner oder das Hochladen in eine Wolke), steht der Schritt trotzdem im Verlauf.
+            // Vorher lief der Fehler bis zur Oberflaeche, "Geaendert" kam nie an, und "Rueckgaengig" blieb grau, bis die
+            // Ansicht wechselte. Jetzt meldet die Oberflaeche den Fehler, der naechste Schritt versucht es wieder, und
+            // "Werkzeug beenden" fragt nach (Ungespeichert).
+            SpeicherFehler = e.Message;
+            Werkzeugordner.Fehler("Automatisch speichern: " + e.GetType().Name + ": " + e.Message);
+        }
         Geaendert?.Invoke();
     }
+
+    /// <summary>Fehler des letzten automatischen Speicherns (null = gespeichert).</summary>
+    public string? SpeicherFehler { get; private set; }
+
+    /// <summary>Gegenprobe (Start-Test, Tests): Speicherfehler laufen wie vor der Nachbesserung bis zur Oberflaeche.</summary>
+    public static bool SpeichernAltFuerTests { get; set; }
+
+    private long _aenderungen;
+    private long _gespeichert;
+
+    /// <summary>
+    /// Patch S 0.5.1 (Weisung P12-35): gibt es eine Aenderung, die noch nicht in der Projektdatei steht? Jede Aenderung wird
+    /// sofort gespeichert; offen bleibt sie nur, wenn dieses Speichern scheiterte (Datei gesperrt, Platte voll). Dann fragt
+    /// "Werkzeug beenden" nach.
+    /// </summary>
+    public bool Ungespeichert => !NurLesen && _gespeichert != _aenderungen;
 
     /// <summary>
     /// Projektdatei schreiben (automatisch nach jeder Aenderung, von Hand ueber "Speichern"). Von Hand, beim ersten
@@ -395,8 +435,10 @@ public sealed class Projekt
         {
             return;
         }
+        var stand = _aenderungen;
         var daten = Schreiben();
         Werkzeugordner.SicherSchreiben(Datei, daten);
+        _gespeichert = stand;
         var jetzt = Uhr();
         if (vonHand || jetzt - _letzteSicherung >= SicherungAlle)
         {
@@ -422,7 +464,16 @@ public sealed class Projekt
                 aussen.Append(aussen.Length > 1 ? ", " : "").Append(PythonJson.Standard(pfad)).Append(": ").Append(jetzt.TryGetValue(pfad, out var w) ? "[" + w + "]" : "[]");
             }
         }
-        object? leer = Leer is { } l ? new PyObjekt { { "breite", Bearbeitung.Zahl(l.Breite) }, { "hoehe", Bearbeitung.Zahl(l.Hoehe) } } : null;
+        object? leer = null;
+        if (Leer is { } l)
+        {
+            var lo = new PyObjekt { { "breite", Bearbeitung.Zahl(l.Breite) }, { "hoehe", Bearbeitung.Zahl(l.Hoehe) } };
+            if (Frei)
+            {
+                lo.Add("frei", true);
+            }
+            leer = lo;
+        }
         var start = Math.Max(0, _verlauf.Count - GespeicherteSchritte);
         // Verlauf: Vorher und Nachher liegen schon als Text in der Form von json.dumps vor (kein neues Lesen beim Speichern)
         var verlauf = new StringBuilder("[");
@@ -476,9 +527,12 @@ public sealed class Projekt
         var name = Path.GetFileNameWithoutExtension(datei);
         name = Py.Str(d["name"]) is { Length: > 0 } n && NameGueltig(n) ? n : name;
         (double, double)? leer = null;
+        var frei = false;
         if (Py.Hat(d, "leer") && d["leer"] is PyObjekt lo)
         {
-            if (lo["breite"] is not (long or double) || lo["hoehe"] is not (long or double) || !Aussen.GroesseGueltig(Py.F(lo["breite"]), Py.F(lo["hoehe"])) || !Py.Gleich(d["stadt"], LeerStadtId(name)) || d["basis"] is not null)
+            frei = lo["frei"] is true;
+            if (lo["breite"] is not (long or double) || lo["hoehe"] is not (long or double) || !Aussen.GroesseGueltig(Py.F(lo["breite"]), Py.F(lo["hoehe"])) || !Py.Gleich(d["stadt"], LeerStadtId(name)) || d["basis"] is not null
+                || (Py.Hat(lo, "frei") && lo["frei"] is not bool))
             {
                 throw new StadtbauFehler(["Die Angaben zur leeren Stadt (Feld „leer“) passen nicht."]);
             }
@@ -489,7 +543,7 @@ public sealed class Projekt
             throw new StadtbauFehler([string.Create(CultureInfo.InvariantCulture,
                 $"Das Projekt baut auf {Py.Str(d["stadt"])} Fassung {Py.Str(d["basis"])} auf; dieses Werkzeug kennt {daten.Fassung.StadtId} Fassung {daten.Fassung.Nummer}.")]);
         }
-        var p = new Projekt(name, daten, ablage, leer) { NurLesen = neuer, _datei = Path.GetFullPath(datei) };
+        var p = new Projekt(name, daten, ablage, leer, frei) { NurLesen = neuer, _datei = Path.GetFullPath(datei) };
         if (d["grundrisse"] is PyObjekt g)
         {
             foreach (var (ort, grundriss) in g)

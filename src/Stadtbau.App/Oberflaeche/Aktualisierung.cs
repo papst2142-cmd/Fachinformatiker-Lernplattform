@@ -1,16 +1,20 @@
 using Lernplattform.Views;
+using Stadtbau.Core;
+using Texte = Stadtbau.Core.Texte;
 
 namespace Stadtbau.Oberflaeche;
 
 /// <summary>
 /// Phase 13 Welle 2: Update des Werkzeugs am PC. Das Startprogramm setzt <see cref="Pruefen"/> (Velopack, nur Releases
-/// der Linie vS); nach dem Laden fragt das Werkzeug einmal nach. Projekte sind nach jeder Aenderung gespeichert, das
-/// Update braucht deshalb keine Kopie wie in der Lernplattform.
+/// der Linie vS); nach dem Laden fragt das Werkzeug einmal nach (nur bei einer neuen Version). Seit der Nachbesserung
+/// S 0.5.1 (Weisung P12-42 Punkt 1) gibt es dazu den Knopf "Nach Updates suchen", der immer antwortet
+/// (<see cref="UpdateSuche.Antwort"/>). Projekte sind nach jeder Aenderung gespeichert, das Update braucht deshalb
+/// keine Kopie wie in der Lernplattform.
 /// </summary>
 public static class Aktualisierung
 {
-    /// <summary>Sucht eine neue Version; Rueckgabe: Schritt "laden und neu starten" oder null.</summary>
-    public static Func<Task<Func<Task>?>>? Pruefen { get; set; }
+    /// <summary>Sucht eine neue Version (null = am Geraet gibt es kein Update von selbst, z. B. am Tablet bis S 0.6.0).</summary>
+    public static Func<Task<UpdateErgebnis>>? Pruefen { get; set; }
 
     internal static async Task NachLadenAsync(Action<string> fehler)
     {
@@ -18,21 +22,60 @@ public static class Aktualisierung
         {
             return;
         }
+        var e = await Task.Run(() => UpdateSuche.SuchenAsync(pruefen));
+        if (e.Art == UpdateArt.Fehler)
+        {
+            fehler("Update: " + e.Grund);
+        }
+        if (UpdateSuche.BeimStartZeigen(e))
+        {
+            await AnbietenAsync(e, fehler);
+        }
+    }
+
+    /// <summary>Knopf "Nach Updates suchen": sucht und antwortet immer mit einem Fenster.</summary>
+    internal static async Task VonHandAsync(Action<string> fehler)
+    {
+        if (Pruefen is not { } pruefen)
+        {
+            return;
+        }
+        UpdateErgebnis e;
+        using (Dialog.Warten(Texte.UpdateSucht))
+        {
+            e = await Task.Run(() => UpdateSuche.SuchenAsync(pruefen));
+        }
+        if (e.Art == UpdateArt.Fehler)
+        {
+            fehler("Update: " + e.Grund);
+        }
+        if (e.Art == UpdateArt.Neu)
+        {
+            await AnbietenAsync(e, fehler);
+            return;
+        }
+        var (titel, text) = UpdateSuche.Antwort(e);
+        await Dialog.Zeigen(titel, text, Texte.Ok);
+    }
+
+    private static async Task AnbietenAsync(UpdateErgebnis e, Action<string> fehler)
+    {
+        var (titel, text) = UpdateSuche.Antwort(e);
+        if (e.Einspielen is null || await Dialog.Zeigen(titel, text, Texte.UpdateJetzt, Texte.UpdateSpaeter) != 0)
+        {
+            return;
+        }
         try
         {
-            if (await Task.Run(pruefen) is { } einspielen
-                && await Dialog.Zeigen("Neue Version", "Es gibt eine neue Version des Stadtbau-Werkzeugs. Deine Projekte bleiben erhalten.",
-                    "Jetzt aktualisieren", "Später") == 0)
+            using (Dialog.Warten(Texte.UpdateLaedt))
             {
-                using (Dialog.Warten("Neue Version wird geladen …"))
-                {
-                    await einspielen();
-                }
+                await e.Einspielen();
             }
         }
-        catch (Exception e) when (e is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
+        catch (Exception x) when (x is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
         {
-            fehler("Update: " + e.GetType().Name + ": " + e.Message);
+            fehler("Update: " + x.GetType().Name + ": " + x.Message);
+            await Dialog.Zeigen(Texte.UpdateSuchen, Texte.UpdateFehler, Texte.Ok);
         }
     }
 }

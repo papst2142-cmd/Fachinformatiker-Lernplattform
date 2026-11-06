@@ -129,6 +129,7 @@ public static partial class StadtbauPruefung
         }
         Lichtraum(stadt, stand, szene, fassung, funde);
         Ueberschneidung(szene, fassung, funde);
+        StrassenAufeinander(fassung, funde);
         KatalogDraussen(szene, fassung, funde);
         Paketplatz(stadt, szene, funde);
         return funde;
@@ -245,6 +246,12 @@ public static partial class StadtbauPruefung
         var namen = new[] { Get(fassung.Karte, "orte"), Get(fassung.Stadtdaten, "neue_orte") }.SelectMany(q => q as List<object?> ?? []).OfType<PyObjekt>()
             .GroupBy(o => Py.Str(o["id"])).ToDictionary(g => g.Key, g => g.First()["name"] as string ?? g.Key, StringComparer.Ordinal);
         var darstellung = Get(fassung.Stadtdaten, "darstellung") as PyObjekt;
+        // A 0.43.1 (Weisung P12-39): Schalter "kleingruen" nur true oder false (sonst bliebe unklar, was das Spiel zeichnet)
+        if (darstellung is not null && Py.Hat(darstellung, "kleingruen") && darstellung["kleingruen"] is not bool)
+        {
+            funde.Add(new StadtbauFund("Der Schalter „kleingruen“ hat den Wert " + PythonJson.Text(darstellung["kleingruen"]) + " statt true oder false.",
+                "In der Stadt-Datei „kleingruen“ auf true (mit Kleingrün) oder false (ganz frei) setzen.", true));
+        }
         var zugaenge = new[] { "zugaenge", "zugaenge_neu" }.Select(k => Get(fassung.Stadtdaten, k) as PyObjekt ?? []).SelectMany(z => z)
             .Select(z => (Name: namen.GetValueOrDefault(z.Key, z.Key), Zugang: z.Value))
             .Concat((darstellung is null ? [] : ListeOderLeer(darstellung, "zierwege")).OfType<PyObjekt>().Select(z => (Name: z["name"] as string ?? Py.Str(z["modell"]), Zugang: (object?)z)));
@@ -555,6 +562,79 @@ public static partial class StadtbauPruefung
             if (szene.Gleise.Any(l => AbstandLinie(r, l) < (StadtSzene.GleisBreite / 2) - Toleranz))
             {
                 funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf dem Gleis.", "Stück neben das Gleis schieben.", true, k.X, k.Z));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Patch S 0.5.1 Nachbesserung (Weisung P12-40 Punkt 3): laengste Strecke von <paramref name="a"/>, auf der sich die
+    /// Fahrbahnen beider Strassen ueberdecken (Mitten naeher als eine Strassenbreite). Das Spiel laesst die Striche der
+    /// Mittellinie weg, wo eine andere Strasse naeher als die halbe Breite (plus 0,05) liegt (sonst laegen auf einer
+    /// Kreuzung zwei Striche als "+" uebereinander); liegen zwei Strassen aufeinander, fehlt sie deshalb auf der ganzen
+    /// Strecke. Eine Kreuzung im rechten Winkel ergibt 1,44, eine Einmuendung ebenso, eine Verlaengerung 0,72; ab
+    /// <see cref="StrassenAufeinanderAb"/> ist es ein roter Fund.
+    /// </summary>
+    public static (float Laenge, Vector2 Mitte) StrassenNaehe(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b)
+    {
+        const float Schritt = 0.02f;
+        var grenze = StadtSzene.StrassenBreite;
+        var beste = (Laenge: 0f, Mitte: Vector2.Zero);
+        var lauf = 0f;
+        var start = Vector2.Zero;
+        for (var i = 0; i + 1 < a.Count; i++)
+        {
+            var laenge = Vector2.Distance(a[i], a[i + 1]);
+            var schritte = Math.Max(1, (int)MathF.Ceiling(laenge / Schritt));
+            for (var k = i == 0 ? 0 : 1; k <= schritte; k++)
+            {
+                var q = Vector2.Lerp(a[i], a[i + 1], k / (float)schritte);
+                if (Kurve.Abstand(q, b) <= grenze)
+                {
+                    if (lauf == 0)
+                    {
+                        start = q;
+                    }
+                    lauf += k == 0 && i == 0 ? 0 : laenge / schritte;
+                    if (lauf > beste.Laenge)
+                    {
+                        beste = (lauf, (start + q) / 2);
+                    }
+                }
+                else
+                {
+                    lauf = 0;
+                }
+            }
+        }
+        return beste;
+    }
+
+    /// <summary>Ab dieser Strecke liegen zwei Strassen aufeinander (dreifache Breite; eine Kreuzung bis 45 Grad bleibt erlaubt).</summary>
+    public const float StrassenAufeinanderAb = 3 * StadtSzene.StrassenBreite;
+
+    /// <summary>Zwei Strassen duerfen sich nur kreuzen oder ineinander muenden, nie aufeinander liegen.</summary>
+    private static void StrassenAufeinander(StadtFassung fassung, List<StadtbauFund> funde)
+    {
+        var strassen = ListeOderLeer(Objekt(fassung.Karte["welt"]), "landschaft").OfType<PyObjekt>()
+            .Where(l => Py.Gleich(l["typ"], "strasse"))
+            .Select(l => ListeOderLeer(l, "punkte").OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1]))).ToList())
+            .ToList();
+        for (var i = 0; i < strassen.Count; i++)
+        {
+            for (var j = i + 1; j < strassen.Count; j++)
+            {
+                if (strassen[i].Count < 2 || strassen[j].Count < 2)
+                {
+                    continue;
+                }
+                var ab = StrassenNaehe(strassen[i], strassen[j]);
+                var ba = StrassenNaehe(strassen[j], strassen[i]);
+                var n = ab.Laenge >= ba.Laenge ? ab : ba;
+                if (n.Laenge >= StrassenAufeinanderAb)
+                {
+                    funde.Add(new StadtbauFund($"Straße Nr. {i + 1} und Straße Nr. {j + 1} liegen auf {Zf(n.Laenge)} Länge übereinander oder dicht nebeneinander, die Fahrbahnen überdecken sich. Dort fehlt im Spiel die Mittellinie.",
+                        "Erlaubt sind nur Kreuzungen und Einmündungen: eine der beiden Straßen verschieben, drehen oder kürzen.", true, n.Mitte.X, n.Mitte.Y));
+                }
             }
         }
     }

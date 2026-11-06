@@ -76,7 +76,7 @@ public static class Gruen
     /// </summary>
     public static Ergebnis Verteilen(GrafikBibliothek grafik, float breite, float tiefe, IEnumerable<(float X, float Z, float W, float H)> parks,
         IEnumerable<IReadOnlyList<Vector2>> strassen, Func<float, float, float, bool> frei, List<(Vector2 Mitte, float R)> baeume,
-        IEnumerable<Vector2>? beete = null)
+        IEnumerable<Vector2>? beete = null, bool kleingruen = true)
     {
         var erg = new Ergebnis();
         var belegt = new List<(Vector2 P, float R)>();
@@ -155,6 +155,12 @@ public static class Gruen
                     Setzen(w < 0.1f ? "baum" : w < 0.38f ? "busch" : w < 0.62f ? "gras" : w < 0.72f ? "stein" : w < 0.88f ? "beet" : "", x, z);
                 }
             }
+        }
+        // A 0.43.1 (Weisung P12-39): Schalter darstellung.kleingruen = false (neue leere Stadt des Werkzeugs) laesst die
+        // Strassenraender und freien Flaechen frei; Parks und fest gesetzte Beete bleiben. Ohne Schalter wie bisher.
+        if (!kleingruen)
+        {
+            return erg;
         }
         // Strassenraender, beide Seiten
         foreach (var strasse in strassen)

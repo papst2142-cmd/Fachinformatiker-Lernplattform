@@ -27,9 +27,22 @@ public sealed class KartenFlaeche : Control
     private double _zoom = 20;
     private Point _versatz;
     private bool _eingepasst;
-    private Point? _druck;
+    private Fingergeste _geste = new();
     private Point _ziehWelt;
     private bool _gezogen;
+
+    /// <summary>Gegenprobe im Start-Test: Fingerauswertung wie vor S 0.5.1 (jeder Druck beginnt neu).</summary>
+    public bool GesteAltFuerTests { set => _geste = new Fingergeste(altFuerTests: value); }
+
+    /// <summary>Massstab (Bildpunkte je Feld), fuer den Start-Test der Finger.</summary>
+    public double Zoom => _zoom;
+
+    /// <summary>Lage der Ansicht (Start-Test: Schieben).</summary>
+    public Point Versatz => _versatz;
+
+    /// <summary>Liegt an dieser Stelle des Bilds ein Stueck, das ein Finger ziehen wuerde? (Start-Test)</summary>
+    public bool StueckAnFuerTests(Point bild) =>
+        Stand is { } a && AussenBearbeitung.StueckBei(a, WeltPunkt(bild).X, WeltPunkt(bild).Y, Math.Max(0.3, 10 / _zoom)) is not null;
 
     public KartenFlaeche()
     {
@@ -48,6 +61,42 @@ public sealed class KartenFlaeche : Control
 
     /// <summary>Stueck aus dem Katalog, das beim naechsten Tipp gesetzt wird (null = waehlen).</summary>
     public AussenArt? SetzenArt { get; set; }
+
+    /// <summary>
+    /// Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Vierteldrehungen fuer das naechste gesetzte Stueck (Strasse
+    /// waagerecht oder senkrecht, Park und Katalog-Stueck in 90-Grad-Schritten). Bleibt stehen, bis es wieder geaendert
+    /// wird (mehrere senkrechte Strassen hintereinander). Knopf "Drehen" beim Setzen und Taste R.
+    /// </summary>
+    public int SetzenDreh { get; set; }
+
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste gehalten (setzt die Hauptansicht), dann schiebt die Maus.</summary>
+    public static bool LeertasteGehalten { get; set; }
+
+    private bool _nurSchieben;
+
+    /// <summary>Schiebt dieser Druck nur die Ansicht? (Maus mit rechter oder mittlerer Taste oder bei gehaltener Leertaste.)</summary>
+    internal static bool NurSchiebenDruck(PointerPressedEventArgs e, Visual v)
+    {
+        if (e.Pointer.Type != PointerType.Mouse)
+        {
+            return false;
+        }
+        var k = e.GetCurrentPoint(v).Properties;
+        return k.IsRightButtonPressed || k.IsMiddleButtonPressed || LeertasteGehalten;
+    }
+
+    /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog;
+
+    /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
+    public void SetzenDrehen()
+    {
+        if (DrehbarBeimSetzen(SetzenArt))
+        {
+            SetzenDreh = (SetzenDreh + 1) % 4;
+            AuswahlGeaendert?.Invoke();
+        }
+    }
 
     /// <summary>Modell fuer ein neues Haus ohne Ort.</summary>
     public string? SetzenModell { get; set; }
@@ -382,7 +431,17 @@ public sealed class KartenFlaeche : Control
         {
             return BlueprintSetzen(x, y);
         }
-        var neu = _projekt.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, art, x, y, raster, modell));
+        var dreh = DrehbarBeimSetzen(art) ? SetzenDreh : 0;
+        var neu = _projekt.AussenAendern("Setzen", a =>
+        {
+            // gedreht setzen ist ein einziger Schritt im Verlauf
+            var s = AussenBearbeitung.Setzen(a, art, x, y, raster, modell);
+            for (var i = 0; s is not null && i < dreh; i++)
+            {
+                AussenBearbeitung.Drehen(a, s);
+            }
+            return s;
+        });
         SetzenArt = null;
         if (neu is not null)
         {
@@ -493,6 +552,9 @@ public sealed class KartenFlaeche : Control
             case Key.Delete or Key.Back when Auswahl is not null:
                 Loeschen();
                 return true;
+            case Key.R when !strg && DrehbarBeimSetzen(SetzenArt):
+                SetzenDrehen();
+                return true;
             case Key.R when !strg && Auswahl is not null:
                 Drehen();
                 return true;
@@ -527,12 +589,23 @@ public sealed class KartenFlaeche : Control
         var p = e.GetPosition(this);
         var w = WeltPunkt(p);
         e.Handled = true;
-        if (SetzenArt is not null)
+        e.Pointer.Capture(this);
+        var erster = !_geste.Aktiv;
+        if (erster && NurSchiebenDruck(e, this))
         {
-            SetzenAn(w.X, w.Y);
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): rechte oder mittlere Maustaste oder Leertaste schiebt
+            // die Ansicht auch ueber Stuecken, waehlt nichts und setzt nichts
+            _nurSchieben = true;
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
             return;
         }
-        var s = AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom));
+        var s = SetzenArt is null ? AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom)) : null;
+        Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, s is not null && _projekt?.NurLesen == false));
+        // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie)
+        if (!erster || SetzenArt is not null)
+        {
+            return;
+        }
         if (e.ClickCount == 2 && s is not null && _projekt!.InnenortVon(s) is { } innenort)
         {
             OrtGewaehlt?.Invoke(innenort);
@@ -542,29 +615,72 @@ public sealed class KartenFlaeche : Control
         if (s is not null)
         {
             Gemeldet?.Invoke(AussenBearbeitung.Beschreibung(a, s, OrtName));
-            _druck = p;
-            _ziehWelt = default;
-            _gezogen = false;
-            e.Pointer.Capture(this);
         }
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        TippZeigen(e.GetPosition(this));
-        if (_druck is not { } start || Auswahl is null || _projekt?.NurLesen != false)
-        {
-            return;
-        }
         var p = e.GetPosition(this);
-        if (!_gezogen && Math.Abs(p.X - start.X) + Math.Abs(p.Y - start.Y) < 6)
+        TippZeigen(p);
+        Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
+    }
+
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+        // zuerst auswerten, dann die Erfassung freigeben: Capture(null) loest sofort PointerCaptureLost aus, und
+        // "Verloren" haette den Finger schon vergessen (Tippen setzte nichts, Ziehen schob nichts)
+        Anwenden(_geste.Loslassen(e.Pointer.Id));
+        e.Pointer.Capture(null);
+        if (!_geste.Aktiv)
         {
-            return;
+            _nurSchieben = false;
         }
-        _gezogen = true;
-        _ziehWelt = new Point((p.X - start.X) / _zoom, (p.Y - start.Y) / _zoom);
-        InvalidateVisual();
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        Anwenden(_geste.Verloren(e.Pointer.Id));
+    }
+
+    /// <summary>Ergebnis der Fingerauswertung (S 0.5.1): Setzen beim Loslassen ohne Bewegung, ein Finger auf freier
+    /// Flaeche schiebt die Ansicht, zwei Finger zoomen und schieben.</summary>
+    private void Anwenden(Fingergeste.Schritt s)
+    {
+        switch (s.Art)
+        {
+            case Fingergeste.Art.Tippen when SetzenArt is not null && !_nurSchieben:
+                var w = WeltPunkt(new Point(s.X, s.Y));
+                SetzenAn(w.X, w.Y);
+                break;
+            case Fingergeste.Art.StueckZiehen when Auswahl is not null:
+                _gezogen = true;
+                _ziehWelt = new Point(s.Dx / _zoom, s.Dy / _zoom);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckFertig when _gezogen:
+                _gezogen = false;
+                var (dx, dy) = (s.Dx / _zoom, s.Dy / _zoom);
+                _ziehWelt = default;
+                Verschieben(dx, dy);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckAbbrechen:
+                _gezogen = false;
+                _ziehWelt = default;
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.AnsichtSchieben:
+                _versatz += new Vector(s.Dx, s.Dy);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.Zoomen:
+                _versatz += new Vector(s.Dx, s.Dy);
+                ZoomUm(new Point(s.X, s.Y), s.Faktor);
+                break;
+        }
     }
 
     private string? _tipp;
@@ -586,25 +702,6 @@ public sealed class KartenFlaeche : Control
             _tipp = text;
             ToolTip.SetTip(this, text);
         }
-    }
-
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
-    {
-        base.OnPointerReleased(e);
-        if (_druck is null)
-        {
-            return;
-        }
-        _druck = null;
-        e.Pointer.Capture(null);
-        if (_gezogen)
-        {
-            _gezogen = false;
-            var (dx, dy) = (_ziehWelt.X, _ziehWelt.Y);
-            _ziehWelt = default;
-            Verschieben(dx, dy);
-        }
-        InvalidateVisual();
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)

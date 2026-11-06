@@ -7,22 +7,37 @@ namespace Stadtbau.Core;
 public static class Texte
 {
     // ---- Kopfleiste ----
-    public const string Neu = "Neu";
-    public const string Oeffnen = "Öffnen";
-    public const string Speichern = "Speichern";
+    // Patch S 0.5.1 (Weisung P12-35, Nico: "Die Beschreibungen sind zu ungenau"): jeder Knopf sagt, womit er arbeitet
+    public const string Neu = "Neues Projekt";
+    public const string Oeffnen = "Projekt öffnen";
+    public const string Speichern = "Projekt speichern";
     public const string Rueckgaengig = "Rückgängig";
     public const string Wiederholen = "Wiederholen";
-    public const string DateiSpeichern = "Datei speichern";
-    public const string AnCcSenden = "An CC senden";
-    public const string Hell = "Hell";
-    public const string Dunkel = "Dunkel";
-    public const string Draufsicht = "Draufsicht";
+    public const string DateiSpeichern = "Stadt-Datei für das Spiel speichern";
+    public const string AnCcSenden = "Stadt-Datei an CC senden";
+    public const string Hell = "Helle Farben";
+    public const string Dunkel = "Dunkle Farben";
+    public const string Draufsicht = "Stadt von oben";
     public const string Innenraeume = "Innenräume";
+
+    /// <summary>Patch S 0.5.1 (Weisung P12-35 Punkt 1): Kopfleiste ganz rechts, am PC wie das Fensterkreuz.</summary>
+    public const string WerkzeugBeenden = "Werkzeug beenden";
+
+    /// <summary>Patch S 0.5.1 (Weisung P12-37 Punkt 2): ganzer Bildschirm, am PC auch F11, nach einem Neustart gemerkt.</summary>
+    public const string Vollbild = "Vollbild";
+    public const string VollbildBeenden = "Vollbild beenden";
+    public const string VollbildFehler = "Die Einstellung „Vollbild“ konnte nicht gespeichert werden; beim nächsten Start gilt wieder die alte.";
 
     // ---- Start ----
     public const string Willkommen = "Willkommen im Stadtbau-Werkzeug";
     public const string WillkommenText =
-        "Hier baust du die Stadt und ihre Innenräume um. Lege ein neues Projekt an oder öffne ein vorhandenes. Jede Änderung wird sofort gespeichert, die letzten 20 Stände liegen zusätzlich als Sicherung bereit.";
+        "Hier baust du die Stadt des Lernspiels und ihre Innenräume um. Lege ein neues Projekt an oder öffne ein vorhandenes. Jede Änderung wird sofort gespeichert, die letzten 20 Stände liegen zusätzlich als Sicherung bereit.";
+
+    /// <summary>Patch S 0.5.1 (Weisung P12-35): was ein Projekt ist und was man darin bauen kann.</summary>
+    public const string WasIstEinProjekt = "Was ist ein Projekt?";
+
+    public const string WasIstEinProjektText =
+        "Ein Projekt ist deine Baustelle: eine eigene Kopie einer Stadt. Was du darin änderst, ändert das Spiel erst, wenn du die Stadt-Datei an CC schickst und sie eingebaut ist. In einem Projekt kannst du die Stadt von oben umbauen (Straßen, Häuser, Bäume, Laternen, Stücke aus dem Katalog), die Innenräume der Häuser einrichten, Gebäude als Blueprint (Vorlage) speichern und wieder setzen und alles in 3D ansehen.";
     public const string LetzteProjekte = "Zuletzt bearbeitet";
     public const string KeineProjekte = "Noch kein Projekt vorhanden.";
     public const string NurHandy = "Das Werkzeug ist für Tablet und PC gedacht";
@@ -35,9 +50,9 @@ public static class Texte
     public const string NeuArt = "Was möchtest du bauen?";
     public const string NeuStadt = "Stadt 1 überarbeiten";
     public const string NeuInnenraum = "Innenraum überarbeiten";
-    public const string NeuLeer = "Leere Stadt";
+    public const string NeuLeer = "Leere Stadt neu bauen";
     public const string NeuOrt = "Welcher Innenraum?";
-    public const string Anlegen = "Anlegen";
+    public const string Anlegen = "Projekt anlegen";
     public const string Abbrechen = "Abbrechen";
     public const string VorschlagLeer = "Neue Stadt";
 
@@ -56,7 +71,7 @@ public static class Texte
 
     // ---- Oeffnen ----
     public const string OeffnenTitel = "Projekt öffnen";
-    public const string OeffnenDatei = "Datei von woanders holen";
+    public const string OeffnenDatei = "Projekt-Datei von woanders holen";
     public const string NurLesen = "Diese Datei kommt von einer neueren Version des Werkzeugs. Du kannst sie ansehen, aber nicht ändern. Bitte aktualisiere das Werkzeug.";
 
     // ---- Innenraeume ----
@@ -70,7 +85,17 @@ public static class Texte
     /// <summary>Draufsicht draussen ohne Auswahl (Weisung P12-25: draussen heisst es "auf der Karte").</summary>
     public const string NichtsGewaehltDraussen = "Tippe ein Stück auf der Karte an, um es zu bearbeiten.";
     public const string Drehen = "Drehen";
-    public const string Kopie = "Kopie";
+
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Drehen leicht finden, auch beim Setzen.</summary>
+    public const string DrehenTipp = "Dreht das Stück um 90 Grad, am PC auch mit der Taste R.";
+
+    public const string SetzenWaagerecht = "Die Straße wird waagerecht gesetzt. „Drehen“ (oder Taste R) setzt sie senkrecht.";
+    public const string SetzenSenkrecht = "Die Straße wird senkrecht gesetzt. „Drehen“ (oder Taste R) setzt sie waagerecht.";
+
+    public static string SetzenGedreht(int vierteldrehungen) =>
+        vierteldrehungen == 0 ? "Das Stück wird nicht gedreht gesetzt. „Drehen“ (oder Taste R) dreht es um 90 Grad."
+        : "Das Stück wird um " + (vierteldrehungen * 90).ToString(System.Globalization.CultureInfo.InvariantCulture) + " Grad gedreht gesetzt. „Drehen“ (oder Taste R) dreht weiter.";
+    public const string Kopie = "Kopieren";
     public const string Loeschen = "Löschen";
     public const string Ware = "Ware";
     public const string KeineWare = "keine Ware";
@@ -90,6 +115,13 @@ public static class Texte
     public const string Vergroessern = "Vergrößern";
     public const string Verkleinern = "Verkleinern";
     public const string Einpassen = "Ganz zeigen";
+
+    // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): die Ansicht frei bewegen
+    public const string GanzeStadtZeigen = "Ganze Stadt zeigen";
+    public const string GanzenRaumZeigen = "Ganzen Raum zeigen";
+    public const string GanzeStadtZeigenTipp = "Zeigt die ganze Stadt. Verschieben: auf freier Fläche ziehen, mit der rechten oder mittleren Maustaste oder mit gehaltener Leertaste überall; am Tablet mit einem Finger auf freier Fläche oder mit zwei Fingern.";
+    public const string GanzenRaumZeigenTipp = "Zeigt den ganzen Raum. Verschieben: auf freier Fläche ziehen, mit der rechten oder mittleren Maustaste oder mit gehaltener Leertaste überall; am Tablet mit einem Finger auf freier Fläche oder mit zwei Fingern.";
+    public const string ZoomTipp = "Vergrößert oder verkleinert die Ansicht; dasselbe geht mit dem Mausrad und am Tablet mit zwei Fingern.";
     public const string Grundriss = "Grundriss";
     public const string DraufsichtHinweis = "Tippe ein Stück der Stadt an, um es zu bearbeiten, oder wähle links ein neues Stück. Ein Doppeltipp auf ein Haus mit Innenraum öffnet den Innenraum.";
 
@@ -99,7 +131,7 @@ public static class Texte
     public const string HausOhneOrt = "Gebäude ohne Innenraum";
 
     /// <summary>Gebaeude aus einem Blueprint mit Innenraum (nur im Werkzeug, Meldung P12-23 Frage 1 a).</summary>
-    public const string NeuesGebaeude = "Neues Gebäude";
+    public const string NeuesGebaeude = "Gebäude aus Blueprint";
     public const string Laterne = "Laterne";
     public const string LaterneDoppelt = "Doppellaterne";
     public const string Beet = "Beet";
@@ -157,7 +189,7 @@ public static class Texte
     public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut, mit Gehwegen, Stücken aus dem Katalog und Effekten.";
     public const string PruefungenDraussen = "Prüfungen draußen";
     public const string PruefungLaeuft = "Prüfung läuft …";
-    public const string HausSetzen = "Haus setzen";
+    public const string HausSetzen = "Gebäude setzen";
     public const string KeineInnenraeume = "Diese Stadt hat noch keine Häuser mit Innenraum.";
     public const string LeerBreite = "Breite der Stadt (8 bis 64)";
     public const string LeerHoehe = "Tiefe der Stadt (8 bis 64)";
@@ -167,11 +199,11 @@ public static class Texte
     public const string ExportGesperrt = "Datei kann noch nicht gespeichert werden";
     public const string ExportOk = "Datei gespeichert";
     public const string SendenFrage = "Die Datei geht an CC, der sie ins Spiel einbaut und prüft. Möchtest du eine Nachricht dazuschreiben? (freiwillig)";
-    public const string SendenTitel = "An CC senden";
+    public const string SendenTitel = AnCcSenden;
     public const string Senden = "Senden";
     public const string Gesendet = "Gesendet";
     public const string SendenFehler = "Senden hat nicht geklappt";
-    public const string SendenNichtVerfuegbar = "Senden ist in dieser Fassung nicht verfügbar. Nimm „Datei speichern“ und gib die Datei an CC.";
+    public const string SendenNichtVerfuegbar = "Senden ist in dieser Fassung nicht verfügbar. Nimm „" + DateiSpeichern + "“ und gib die Datei an CC.";
     public const string Ok = "OK";
     public const string Gespeichert = "Gespeichert";
 
@@ -201,7 +233,7 @@ public static class Texte
     public const string BlueprintSchonDa = "Dieses Gebäude steht schon in der Stadt.";
     public const string BlueprintSchonDaTipp = "Das Spiel zeichnet die Tür nur am ersten Gebäude dieses Modells. Eines der beiden löschen.";
 
-    public const string NeueGebaeude = "Neue Gebäude (aus Blueprints)";
+    public const string NeueGebaeude = "Gebäude aus Blueprints";
     public const string BauInnenNochNichtTipp = "Nichts geht verloren: der Innenraum bleibt im Projekt und im Blueprint.";
 
     public static string BauInnenNochNicht(string name) =>
@@ -218,4 +250,63 @@ public static class Texte
     public static string Grenzzeile(long dreiecke, int aufrufe, long grenzeDreiecke, int grenzeAufrufe) =>
         string.Create(System.Globalization.CultureInfo.GetCultureInfo("de-DE"),
             $"{dreiecke:N0} von {grenzeDreiecke:N0} Dreiecken, {aufrufe} von {grenzeAufrufe} Zeichenaufrufen");
+
+    // ---- Updates (Nachbesserung S 0.5.1, Weisung P12-42 Punkt 1) ----
+    public const string UpdateSuchen = "Nach Updates suchen";
+    public const string UpdateSuchenTipp = "Fragt bei GitHub nach, ob es eine neuere Version des Werkzeugs gibt. Deine Projekte bleiben beim Update erhalten.";
+    public const string UpdateSucht = "Suche nach einer neuen Version …";
+    public const string UpdateNeuTitel = "Neue Version";
+
+    public static string UpdateNeuText(string? version) =>
+        "Es gibt eine neue Version des Stadtbau-Werkzeugs" + (version is { Length: > 0 } v ? " (S " + v + ")" : "") + ". Deine Projekte bleiben erhalten.";
+
+    public const string UpdateJetzt = "Jetzt aktualisieren";
+    public const string UpdateSpaeter = "Später";
+    public const string UpdateLaedt = "Neue Version wird geladen …";
+
+    public static string UpdateAktuell(string anzeige) => "Du hast die neueste Version (" + anzeige + ").";
+
+    public const string UpdateNichtInstalliert = "Dieses Werkzeug wurde nicht mit dem Installationsprogramm eingerichtet. Updates kommen nur in die installierte Fassung; lade die neue Version von der Download-Seite.";
+    public const string UpdateFehler = "Die Suche hat nicht geklappt, vielleicht fehlt gerade das Internet. Versuche es später noch einmal.";
+
+    // ---- Beenden (Patch S 0.5.1, Weisung P12-35 Punkt 1) ----
+    public const string BeendenTitel = "Werkzeug beenden?";
+    public const string BeendenFrage = "Die letzte Änderung ist noch nicht gespeichert. Soll sie vor dem Beenden gespeichert werden?";
+    public const string SpeichernUndBeenden = "Speichern und beenden";
+    public const string OhneSpeichernBeenden = "Ohne Speichern beenden";
+    public const string BeendenWartet = "Einen Moment, die Arbeit im Hintergrund wird fertig …";
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 5): automatisches Speichern gescheitert, der Schritt bleibt.</summary>
+    public const string AutoSpeichernFehler = "Speichern hat gerade nicht geklappt, deine Änderung ist aber da und kann zurückgenommen werden. Der nächste Schritt versucht es wieder. Grund: ";
+    public const string BeendenSpeichernFehler = "Speichern hat nicht geklappt, das Werkzeug bleibt offen: ";
+
+    // ---- Tipps (Patch S 0.5.1, Weisung P12-35 Punkt 2): ein Satz je Knopf der Kopfleiste und je Gruppe links ----
+    // Am PC beim Zeigen mit der Maus, am Tablet bei langem Druck; der Screenreader liest sie als Hilfetext.
+
+    /// <summary>Tipp je Knopf der Kopfleiste (Schluessel = Beschriftung; Test: jeder Knopf hat einen).</summary>
+    public static readonly IReadOnlyDictionary<string, string> KopfTipps = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [Draufsicht] = "Zeigt die ganze Stadt von oben: Straßen, Häuser, Bäume und Laternen setzen, verschieben und löschen.",
+        [Innenraeume] = "Zeigt den Grundriss eines Hauses von innen: Regale, Möbel und Waren einrichten.",
+        [Ansicht3D] = "Zeigt die Stadt so, wie das Spiel sie zeichnet, bei Tag oder Nacht und zu jeder Jahreszeit.",
+        [Neu] = "Legt ein neues Projekt an: Stadt 1 überarbeiten, einen Innenraum umbauen oder eine leere Stadt neu bauen.",
+        [Oeffnen] = "Öffnet ein Projekt, an dem du schon gearbeitet hast.",
+        [Speichern] = "Speichert das Projekt und legt zusätzlich eine Sicherung an (jede Änderung wird ohnehin sofort gespeichert).",
+        [Rueckgaengig] = "Nimmt die letzte Änderung zurück.",
+        [Wiederholen] = "Macht die zuletzt zurückgenommene Änderung wieder.",
+        [DateiSpeichern] = "Prüft die Stadt und speichert sie als Datei, die CC ins Spiel einbauen kann.",
+        [AnCcSenden] = "Prüft die Stadt und schickt die Datei für das Spiel direkt an CC.",
+        [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
+        [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
+        [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
+    };
+
+    /// <summary>Tipp je Gruppe der Liste links (Stadt von oben und Innenräume).</summary>
+    public const string TippAussenKatalog = "Einfache Stücke für die Stadt: antippen, dann die Stelle auf der Karte antippen.";
+    public const string TippVollerKatalog = "Öffnet alle rund 1 500 freien Grafiken (CC0) zum Suchen und Setzen.";
+    public const string TippHausOhneOrt = "Setzt ein Gebäude ohne Innenraum, zum Beispiel ein Wohnhaus als Kulisse.";
+    public const string TippMeineBlueprints = "Deine gespeicherten Gebäude-Vorlagen: antippen und auf die Karte setzen.";
+    public const string TippOrt = "Wähle das Haus, dessen Innenraum du einrichten willst.";
+    public const string TippKatalog = "Möbel und Regale für den Innenraum: antippen, dann die Stelle im Grundriss antippen.";
+
+    public static string TippGruppe(string gruppe) => $"Stücke der Gruppe „{gruppe}“ für den Innenraum.";
 }

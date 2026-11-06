@@ -3,6 +3,24 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.5.1
+
+Das Werkzeug lässt sich jetzt richtig beenden, und alle Knöpfe sagen genauer, was sie tun.
+
+- Oben rechts gibt es den Knopf „Werkzeug beenden“, am PC und am Tablet. Deine Arbeit ist dabei gespeichert, denn jede Änderung wird sofort gespeichert. Läuft gerade noch eine Prüfung oder die 3D-Ansicht wird neu gebaut, wartet das Werkzeug kurz darauf. Konnte eine Änderung nicht gespeichert werden, fragt es nach: „Speichern und beenden“, „Ohne Speichern beenden“ oder „Abbrechen“. Am PC macht das Fensterkreuz dasselbe. Am Tablet wird die App wirklich geschlossen.
+- Klarere Namen für die Knöpfe oben: „Neues Projekt“, „Projekt öffnen“ und „Projekt speichern“ statt „Neu“, „Öffnen“ und „Speichern“. Aus „Datei speichern“ wird „Stadt-Datei für das Spiel speichern“, aus „An CC senden“ wird „Stadt-Datei an CC senden“, aus „Draufsicht“ wird „Stadt von oben“, und der Farbknopf heißt „Dunkle Farben“ bzw. „Helle Farben“.
+- Gebäude, die aus einem Blueprint gesetzt wurden, heißen jetzt „Gebäude aus Blueprint“ (vorher „Neues Gebäude“). Außerdem: „Gebäude setzen“ statt „Haus setzen“, „Kopieren“ statt „Kopie“, „Projekt anlegen“ statt „Anlegen“ und „Leere Stadt neu bauen“ statt „Leere Stadt“.
+- Jeder Knopf oben und jede Gruppe in der Liste links hat einen kurzen Tipp, was sie tut. Am PC erscheint er, wenn die Maus darauf zeigt. Am Tablet erscheint er, wenn du den Finger etwas länger darauf hältst. Der Knopf wird dabei nicht ausgelöst.
+- Auf der Startseite erklärt ein kurzer Text, was ein Projekt ist und was du darin bauen kannst.
+- Eine neue leere Stadt ist jetzt ganz frei: nur der Boden, ohne Gras, Büsche und Steine, auch in der 3D-Ansicht. Parks, die du selbst setzt, haben weiter Bäume und Büsche. Leere Städte, die du schon vorher angelegt hast, bleiben, wie sie waren (mit Grün); sie werden nicht still umgestellt.
+- Neuer Knopf „Vollbild“ oben: das Werkzeug füllt den ganzen Bildschirm, am PC geht das auch mit der Taste F11, am Tablet verschwinden die Leisten von Android. Beim nächsten Start ist das Vollbild wieder so, wie du es zuletzt hattest.
+- Zoomen mit zwei Fingern klappt jetzt immer, in der Ansicht „Stadt von oben“ und im Grundriss, auch wenn der zweite Finger etwas später kommt oder der erste auf einem Stück liegt. Ein Finger auf einer freien Stelle schiebt die Ansicht. Mit zwei Fingern wird nie ein Stück verschoben.
+- Die Ansicht „Stadt von oben“ und der Grundriss lassen sich frei bewegen: auf einer freien Stelle ziehen, mit der rechten oder mittleren Maustaste oder mit gehaltener Leertaste auch über Häusern und Bäumen, am Tablet mit zwei Fingern. Zoomen geht mit dem Mausrad, mit zwei Fingern und mit „+“ und „−“. Die Knöpfe „Ganze Stadt zeigen“ und „Ganzen Raum zeigen“ holen alles wieder ins Bild.
+- Drehen ist leicht zu finden: Beim gewählten Stück steht „Drehen“ vorn, am PC geht auch die Taste R. Schon beim Setzen einer Straße, eines Parks oder eines Stücks aus dem Katalog gibt es „Drehen“, so lassen sich Straßen auch senkrecht bauen. Häuser und Gebäude aus Blueprints kann das Spiel noch nicht drehen; dort ist der Knopf grau, und ein Satz sagt, warum. Laternen richten sich selbst zur Straße aus, Bäume und Beete sehen von allen Seiten gleich aus.
+- Liegen zwei Straßen aufeinander oder so dicht nebeneinander, dass sich die Fahrbahnen überdecken, ist das jetzt ein roter Fund in der Prüfung. Dort hätte im Spiel die Mittellinie gefehlt. Erlaubt sind Kreuzungen und Einmündungen.
+- „Rückgängig“ und „Wiederholen“ stehen nach jedem Schritt sofort richtig. Konnte eine Änderung gerade nicht gespeichert werden (zum Beispiel weil ein anderes Programm die Datei kurz festhielt), bleibt sie trotzdem da und kann zurückgenommen werden; unten steht ein Hinweis, und der nächste Schritt speichert wieder.
+- Am PC gibt es auf der Startseite den Knopf „Nach Updates suchen“. Er sagt immer, was los ist: neue Version gefunden, du hast die neueste Version, oder warum die Suche nicht geklappt hat.
+
 ## S 0.5.0
 
 Ein fertig gestaltetes Gebäude lässt sich jetzt als Blueprint (Vorlage) speichern und in jedes Projekt setzen, auch in eine leere Stadt.
