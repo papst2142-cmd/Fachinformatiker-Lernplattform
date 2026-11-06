@@ -13,7 +13,15 @@
 #   (werkzeuge/release/baue_release.sh, Android mit Testschluessel); android fuegt sie zum Artefakt
 #   "release-entwurf" zusammen und prueft Lizenzliste und Pruefsummen (T2). Nichts wird hochgeladen;
 #   das echte Release macht nur release.yml (nur von Hand, nur von main).
-# Ein Label ausser "voll" startet nichts und bricht nichts ab (alle Teile uebersprungen).
+# - werkzeug (Weisung P12-20, Nico 06.11.2026 08:13 MEZ): kleiner Lauf fuer Staende, die NUR das Stadtbau-Werkzeug
+#   aendern: sollwerte, tests (ubuntu-latest) mit Start-Test-Teil stadtbau, tests (windows-latest, Einzeltests),
+#   pakete (stadtbau win-x64) und android nur mit Werkzeug-APK und Werkzeug-Release-Pruefung; keine Mac-Jobs, keine
+#   Pakete der Lernplattform. Ueber workflow_dispatch (stufe: werkzeug) oder das Label "werkzeug" (ohne "voll").
+#   Erster Schritt jedes Jobs ist der Waechter werkzeuge/stadtbau/nur_werkzeug.py: jede Datei ausser den Werkzeug-
+#   Dateien (src/Stadtbau.*, tests/Stadtbau.Tests, werkzeuge/stadtbau, AENDERUNGEN_STADTBAU.md, Zeile StadtbauVersion,
+#   .md) macht ihn sofort rot ("voller Lauf noetig: <Datei>"). Merge-Tor eines reinen Werkzeug-PRs = werkzeug 5/5,
+#   sonst voll 17/17; release.yml der Lernplattform verlangt immer 17/17.
+# Ein Label ausser "voll" und "werkzeug" startet nichts und bricht nichts ab (alle Teile uebersprungen).
 name: CI
 
 on:
@@ -26,9 +34,9 @@ on:
   workflow_dispatch:
     inputs:
       stufe:
-        description: "Stufe: voll (alle 16 Jobs) oder schnell"
+        description: "Stufe: voll (alle 17 Jobs), schnell oder werkzeug (nur Werkzeug, 5 Jobs)"
         type: choice
-        options: [voll, schnell]
+        options: [voll, schnell, werkzeug]
         default: voll
 
 permissions:
@@ -37,7 +45,7 @@ permissions:
 # B3: je Pull Request eine Gruppe, ein neuer Push bricht den alten Lauf ab. Laeufe auf main,
 # ueber workflow_dispatch und Label ausser "voll" bekommen eine eigene Gruppe (nie abgebrochen).
 concurrency:
-  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
+  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll' && github.event.label.name != 'werkzeug')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -46,12 +54,14 @@ env:
   AVALONIA_TELEMETRY_OPTOUT: "1"
   # Phase 8 W8 (Teilplan P8-15 4): Pruefstand stumm, der stille Tondienst zaehlt nur die Anlaesse
   LERNPLATTFORM_TON: "aus"
+  # Weisung P12-20: Stufe dieses Laufs fuer Schritte (voll, werkzeug oder schnell; Jobs pruefen sie in ihrem if selbst)
+  CI_STUFE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && 'voll' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && 'werkzeug' || 'schnell') }}
 
 jobs:
   tests:
     name: tests (${{ matrix.os }}${{ matrix.teil != '' && format(', {0}', matrix.teil) || '' }})
     # schnell nur ubuntu-latest, voll alle drei Systeme
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug')
     # Welle CI schneller (Weisung P11-38, Sammelliste 209): die langen Teile laufen als eigene Jobs nebeneinander
     # (gleiche Pruefungen, gleiche Grenzen, Wachhund und Neustart-Regel je Teil wie vorher). Jeder Eintrag sagt, welche
     # Teile er prueft: einzel = Unit-Tests und Python-Pruefungen, lernen/spiel = Start-Test, metal = Messung macOS nur
@@ -62,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]') }}
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]')) }}
     runs-on: ${{ matrix.os }}
     # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Teil>-<Versuch>. runner.os ist auf
     # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
@@ -75,6 +85,19 @@ jobs:
       LERNPLATTFORM_ZEITEN_NUR_INFO: ${{ matrix.os == 'macos-15-intel' && 'macos-15-intel' || '' }}
     steps:
       - uses: actions/checkout@v7
+      # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
+      #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
+      - uses: actions/setup-python@v7
+        if: env.CI_STUFE == 'werkzeug'
+        with:
+          python-version: "3.12"
+      - name: Waechter nur Werkzeug (nur_werkzeug.py)
+        if: env.CI_STUFE == 'werkzeug'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+          python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -103,6 +126,10 @@ jobs:
         if: matrix.einzel
         shell: bash
         run: python -I werkzeuge/starttest/urteil.py selbsttest
+      # Weisung P12-20: Waechter der Stufe werkzeug mit festen Faellen und Gegenprobe (in jeder Stufe)
+      - name: Waechter Stufe werkzeug (nur_werkzeug.py selbsttest)
+        if: runner.os == 'Linux' && matrix.einzel
+        run: python3 -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/release/release.py selbsttest
@@ -382,7 +409,7 @@ jobs:
     # Update-Probe A 0.42.2 -> A 0.42.3 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
     strategy:
       fail-fast: false
       matrix:
@@ -464,7 +491,7 @@ jobs:
     # stadtbau-win, Kennung Fachinformatiker-Stadtbau), jede Datei in der Lizenzliste; nichts hochgeladen.
     name: pakete (stadtbau win-x64)
     # nur Stufe voll
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && (((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
     runs-on: windows-latest
     timeout-minutes: 30
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30): Schluessel fuer "An CC senden" nur im Dispatch-Lauf, nie in PR-Laeufen
@@ -472,6 +499,19 @@ jobs:
       FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v7
+      # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
+      #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
+      - uses: actions/setup-python@v7
+        if: env.CI_STUFE == 'werkzeug'
+        with:
+          python-version: "3.12"
+      - name: Waechter nur Werkzeug (nur_werkzeug.py)
+        if: env.CI_STUFE == 'werkzeug'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+          python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -500,10 +540,23 @@ jobs:
     # tests/Vergleich/AENDERUNGEN_SOLLWERTE.md (gleiche Regeln prueft SollwerteTests auf allen Systemen).
     # Stufe schnell und voll.
     name: sollwerte (Pruefsummen)
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll')
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
+      #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
+      - uses: actions/setup-python@v7
+        if: env.CI_STUFE == 'werkzeug'
+        with:
+          python-version: "3.12"
+      - name: Waechter nur Werkzeug (nur_werkzeug.py)
+        if: env.CI_STUFE == 'werkzeug'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+          python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -533,7 +586,7 @@ jobs:
     # baut und prueft es auch bei rotem pakete-Teil (!cancelled), nur das Zusammenstellen braucht pakete gruen.
     # Phase 13 Welle 2: wartet auch auf das Werkzeug-Paket, um den Werkzeug-Release zusammenzustellen
     needs: [pakete, pakete-stadtbau]
-    if: "!cancelled() && ((github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))))"
+    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && (((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))))"
     runs-on: ubuntu-latest
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
     # (Stufe voll), nie in PR-Laeufen; der Bau maskiert ihn (Lernplattform.Core.csproj), keine Ausgabe nennt ihn.
@@ -541,6 +594,19 @@ jobs:
       FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v7
+      # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
+      #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
+      - uses: actions/setup-python@v7
+        if: env.CI_STUFE == 'werkzeug'
+        with:
+          python-version: "3.12"
+      - name: Waechter nur Werkzeug (nur_werkzeug.py)
+        if: env.CI_STUFE == 'werkzeug'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+          python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -551,16 +617,20 @@ jobs:
         run: dotnet workload install android
       - name: APK bauen
         id: apkbau
+        if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
       # Spike D (A4b): zweite APK A 0.42.3 im selben Lauf, also mit demselben
       # Testschluessel; auf dem S24 als Update ueber A 0.42.2 installierbar.
       - name: Update-APK A 0.42.3 bauen
+        if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.42.3 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
+        if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -p:Probe=true -o apk-probe
       - name: Probe-APK pruefen (eigene Kennung, Testschluessel, nie Release-Schluessel)
+        if: env.CI_STUFE != 'werkzeug'
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
           a=$(ls apk-probe/*-Signed.apk)
@@ -588,11 +658,13 @@ jobs:
           done
           mv "$a" apk-probe/Lernplattform-Probe-3D-arm64.apk
       - uses: actions/upload-artifact@v7
+        if: env.CI_STUFE != 'werkzeug'
         with:
           name: lernplattform-probe-3d-android
           path: apk-probe/Lernplattform-Probe-3D-arm64.apk
           if-no-files-found: error
       - name: Versionscode und Schluessel pruefen
+        if: env.CI_STUFE != 'werkzeug'
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
           for a in apk/*-Signed.apk apk-update/*-Signed.apk; do
@@ -609,11 +681,13 @@ jobs:
           "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1004203'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
+        if: env.CI_STUFE != 'werkzeug'
         with:
           name: lernplattform-android-A-0.42.2
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
+        if: env.CI_STUFE != 'werkzeug'
         with:
           name: updateprobe-android-A-0.42.3
           path: apk-update/*-Signed.apk
@@ -621,6 +695,7 @@ jobs:
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
       # dann alle fuenf Bauteile zusammenstellen und pruefen. Ergebnis nur als Artefakt, nichts hochgeladen.
       - name: Release-APK bauen (Testschluessel)
+        if: env.CI_STUFE != 'werkzeug'
         env:
           PYTHON: python
         run: |
@@ -640,6 +715,7 @@ jobs:
           pattern: release-*-*
           path: release
       - name: Release zusammenstellen und pruefen (T2, Lizenzliste)
+        if: env.CI_STUFE != 'werkzeug'
         run: |
           if [ "${{ needs.pakete.result }}" != "success" ]; then
             echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
@@ -651,7 +727,7 @@ jobs:
           if [ -f release/release.md ]; then echo "===== ANFANG release.md ====="; cat release/release.md; echo "===== ENDE release.md ====="; fi
           exit "$rc"
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && env.CI_STUFE != 'werkzeug'
         with:
           name: release-entwurf
           path: |
@@ -661,7 +737,8 @@ jobs:
       # dann der Werkzeug-Release aus beiden Teilen (eigene Linie S, nie ein Feed oder Paket der Lernplattform)
       - name: Werkzeug-APK bauen (Testschluessel)
         id: werkzeug_apk
-        if: "!cancelled() && steps.apkbau.outcome == 'success'"
+        # Stufe werkzeug (Weisung P12-20): ohne die Lernplattform-APKs davor, nur Werkzeug-APK und Werkzeug-Release
+        if: "!cancelled() && (steps.apkbau.outcome == 'success' || env.CI_STUFE == 'werkzeug')"
         env:
           PYTHON: python
         run: bash werkzeuge/stadtbau/baue_stadtbau.sh android stadtbau
