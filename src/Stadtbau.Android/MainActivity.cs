@@ -16,4 +16,16 @@ namespace Stadtbau.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
+    protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        // Patch S 0.5.1 (Weisung P12-35): "Werkzeug beenden" schliesst die Aufgabe (auch aus der Liste der letzten Apps)
+        // und beendet danach den Prozess, wie "Programm beenden" der Lernplattform
+        StadtbauApp.GeraetBeenden = () => RunOnUiThread(() =>
+        {
+            FinishAndRemoveTask();
+            new global::Android.OS.Handler(global::Android.OS.Looper.MainLooper!).PostDelayed(
+                () => global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid()), 500);
+        });
+    }
 }

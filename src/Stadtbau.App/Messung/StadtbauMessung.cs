@@ -314,6 +314,7 @@ public static class StadtbauMessung
         await KatalogAsync(a, f);
         await LeereStadtAsync(a, f);
         await BlueprintsAsync(a, f);
+        await BedienungAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();
@@ -968,6 +969,159 @@ public static class StadtbauMessung
             Fund("Blueprint loeschen: Liste nicht leer");
         }
         Messwerte.Notiere("Blueprints: gespeichert, gesetzt, umbenannt, geloescht; Sicherungen " + Directory.GetFiles(Path.Combine(a.Ablage.Sicherungen, Sicherungen.BlueprintOrdner), "*", SearchOption.AllDirectories).Length.ToString(Inv));
+    }
+
+    /// <summary>
+    /// Patch S 0.5.1 (Weisung P12-35): Knopf "Werkzeug beenden" ganz rechts in der Kopfleiste mit Namen und Tipp; jeder
+    /// Knopf der Kopfleiste und jede Gruppe links hat einen Tipp; langer Druck zeigt nur den Tipp; Rueckfrage beim Beenden
+    /// nur bei einer nicht gespeicherten Aenderung, mit "Abbrechen" bleibt das Werkzeug offen.
+    /// </summary>
+    private static List<string> BeendenKnopfPruefen(Hauptansicht a)
+    {
+        var funde = new List<string>();
+        var k = a.BeendenKnopfElement;
+        if (!k.IsEffectivelyVisible || k.TranslatePoint(new Point(0, 0), a) is not { } p)
+        {
+            funde.Add("Knopf \"" + Texte.WerkzeugBeenden + "\" fehlt in der Kopfleiste");
+            return funde;
+        }
+        var rechts = p.X + k.Bounds.Width;
+        if (rechts < a.Bounds.Width - 40 || rechts > a.Bounds.Width)
+        {
+            funde.Add(string.Create(Inv, $"Knopf \"{Texte.WerkzeugBeenden}\" nicht ganz rechts (rechter Rand {rechts:F0} von {a.Bounds.Width:F0})"));
+        }
+        foreach (var (text, knopf) in a.KopfKnoepfe)
+        {
+            if (knopf != k && knopf.IsEffectivelyVisible && knopf.TranslatePoint(new Point(knopf.Bounds.Width, 0), a) is { } r && r.X > rechts)
+            {
+                funde.Add("Knopf \"" + text + "\" liegt rechts von \"" + Texte.WerkzeugBeenden + "\"");
+            }
+        }
+        if (Avalonia.Automation.AutomationProperties.GetName(k) is not { Length: > 0 } && k.Content is not TextBlock { Text: Texte.WerkzeugBeenden })
+        {
+            funde.Add("Knopf \"" + Texte.WerkzeugBeenden + "\" ohne Namen fuer den Screenreader");
+        }
+        return funde;
+    }
+
+    private static async Task BedienungAsync(Hauptansicht a, Window? f)
+    {
+        a.NeuAnlegen("Starttest Beenden", null);
+        await a.AussenGeprueft;
+        a.ReiterZeigen(innen: false);
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        foreach (var (name, b, h) in Groessen)
+        {
+            await GroesseAsync(a, f, b, h);
+            foreach (var x in BeendenKnopfPruefen(a))
+            {
+                Fund("Beenden " + name + ": " + x);
+            }
+        }
+        // Gegenprobe: Kopfleiste ohne den Knopf (wie S 0.5.0) muss auffallen
+        a.BeendenKnopfElement.IsVisible = false;
+        await BildAsync(a);
+        var ohne = BeendenKnopfPruefen(a).Count;
+        a.BeendenKnopfElement.IsVisible = true;
+        await BildAsync(a);
+        Messwerte.Notiere("Beenden-Knopf Gegenprobe (ohne Knopf): " + ohne.ToString(Inv) + " Funde");
+        if (ohne == 0)
+        {
+            Fund("Beenden-Knopf Gegenprobe: Kopfleiste ohne Knopf ohne Fund (Probe taugt nicht)");
+        }
+
+        // Tipps: jeder Knopf der Kopfleiste, jede Gruppe links (beide Reiter gebaut)
+        foreach (var (text, knopf) in a.KopfKnoepfe)
+        {
+            if (Tipp.Von(knopf) is not { Length: > 0 } t || !Texte.KopfTipps.TryGetValue(text, out var soll) || t != soll)
+            {
+                Fund("Tipp fehlt am Knopf \"" + text + "\"");
+            }
+        }
+        var gruppen = a.GruppenMitTipp.Where(g => Tipp.Von(g) is { Length: > 0 }).Count();
+        Messwerte.Notiere("Tipps: Kopfleiste " + a.KopfKnoepfe.Count().ToString(Inv) + " Knoepfe, Gruppen links " + gruppen.ToString(Inv));
+        if (gruppen < 7 || gruppen != a.GruppenMitTipp.Count)
+        {
+            Fund("Tipps: Gruppen links mit Tipp " + gruppen.ToString(Inv) + " von " + a.GruppenMitTipp.Count.ToString(Inv) + " (erwartet mindestens 7)");
+        }
+        // langer Druck mit dem Finger: Tipp, kein Klick; Gegenprobe: ein normaler Klick schaltet die Farben um
+        var farbe = a.KopfKnoepfe.First(k => k.Text == Texte.Dunkel).Knopf;
+        var vorher = a.Dunkel;
+        Tipp.Halten(farbe);
+        farbe.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        if (a.Dunkel != vorher)
+        {
+            Fund("Tipp: langer Druck auf \"" + Texte.Dunkel + "\" hat den Knopf ausgeloest");
+        }
+        farbe.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        if (a.Dunkel == vorher)
+        {
+            Fund("Tipp Gegenprobe: normaler Klick auf \"" + Texte.Dunkel + "\" schaltet nicht um");
+        }
+        if (a.Dunkel != vorher)
+        {
+            a.FarbeWechseln();
+        }
+        ToolTip.SetIsOpen(farbe, false);
+
+        // Rueckfrage nur bei nicht gespeicherter Aenderung
+        if (a.Ungespeichert)
+        {
+            Fund("Beenden: frisches Projekt gilt als nicht gespeichert");
+        }
+        var ohneFrage = a.BeendenPruefenAsync();
+        await BildAsync(a);
+        if (Lernplattform.Views.Dialog.Offen is not null || !ohneFrage.IsCompleted || !await ohneFrage)
+        {
+            Fund("Beenden: ohne offene Aenderung kommt eine Rueckfrage oder das Werkzeug bleibt offen");
+            Waehle(Texte.Abbrechen);
+        }
+        Hauptansicht.UngespeichertFuerTests = true;
+        try
+        {
+            foreach (var (wahl, erwartet) in new[] { (Texte.Abbrechen, false), (Texte.OhneSpeichernBeenden, true) })
+            {
+                var frage = a.BeendenPruefenAsync();
+                await BildAsync(a);
+                var knoepfe = DialogKnoepfe();
+                if (!knoepfe.SequenceEqual([Texte.SpeichernUndBeenden, Texte.OhneSpeichernBeenden, Texte.Abbrechen]))
+                {
+                    Fund("Beenden: Rueckfrage zeigt \"" + string.Join(" | ", knoepfe) + "\"");
+                }
+                if (wahl == Texte.Abbrechen)
+                {
+                    foreach (var (name, b, h) in Groessen)
+                    {
+                        await GroesseAsync(a, f, b, h);
+                        Layout(a, "Rueckfrage Beenden " + name);
+                    }
+                }
+                Waehle(wahl);
+                await BildAsync(a);
+                if (!frage.IsCompleted || await frage != erwartet)
+                {
+                    Fund("Beenden: \"" + wahl + "\" " + (erwartet ? "beendet nicht" : "beendet trotzdem"));
+                }
+            }
+        }
+        finally
+        {
+            Hauptansicht.UngespeichertFuerTests = false;
+        }
+        Messwerte.Notiere("Beenden: Knopf rechts, Rueckfrage nur bei nicht gespeicherter Aenderung, Abbrechen haelt offen");
+
+        static List<string> DialogKnoepfe() => Lernplattform.Views.Dialog.Offen is { } d
+            ? [.. Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(d).OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : "")]
+            : [];
+
+        static void Waehle(string text)
+        {
+            if (Lernplattform.Views.Dialog.Offen is { } d
+                && Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(d).OfType<Button>().FirstOrDefault(k => k.Content is TextBlock { } t && t.Text == text) is { } k)
+            {
+                k.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            }
+        }
     }
 
     private static void ListePruefen(Hauptansicht a, bool rotErwartet)

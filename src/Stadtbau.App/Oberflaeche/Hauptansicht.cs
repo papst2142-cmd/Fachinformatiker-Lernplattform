@@ -34,7 +34,7 @@ namespace Stadtbau.Oberflaeche;
 /// die 3D-Ansicht zeigt die Stadt wie das Spiel (Tag/Nacht, Jahreszeit, Fest, Probe laufen, Grenzen der Gesamtansicht).
 /// Auf einem Handy nur der Hinweis <see cref="Texte.NurHandy"/>.
 /// </summary>
-public sealed class Hauptansicht : UserControl
+public sealed partial class Hauptansicht : UserControl
 {
     public static readonly CultureInfo De = CultureInfo.GetCultureInfo("de-DE");
 
@@ -72,6 +72,7 @@ public sealed class Hauptansicht : UserControl
     private readonly TextBlock _status = Ansage.Lebend(Schrift.Text("", "Klein", farbe: "Pinsel.muted"));
     private readonly Border _handy;
     private readonly Dictionary<string, Button> _kopf = new(StringComparer.Ordinal);
+    private readonly Button _beenden;
 
     // Innenraeume
     public GrundrissFlaeche Flaeche { get; } = new();
@@ -199,7 +200,16 @@ public sealed class Hauptansicht : UserControl
         Dialog.Ebene(_ebene);
         _handy = HandyHinweis();
         _raster.RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        var kopf = new StackPanel { Spacing = 8, Children = { _titel, _knoepfe } };
+        // Patch S 0.5.1 (Weisung P12-35 Punkt 1): "Werkzeug beenden" ganz rechts in der Titelzeile der Kopfleiste
+        var titelZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        _titel.VerticalAlignment = VerticalAlignment.Center;
+        titelZeile.Children.Add(_titel);
+        _beenden = Schrift.Knopf(Texte.WerkzeugBeenden).Mit(Texte.KopfTipps[Texte.WerkzeugBeenden]);
+        _beenden.Click += (_, _) => BeendenKnopf();
+        _beenden.Margin = new Thickness(12, 0, 0, 0);
+        Grid.SetColumn(_beenden, 1);
+        titelZeile.Children.Add(_beenden);
+        var kopf = new StackPanel { Spacing = 8, Children = { titelZeile, _knoepfe } };
         var kopfRahmen = new Border { Padding = new Thickness(16, 12, 16, 4), Child = kopf }.Farbe(Border.BackgroundProperty, "Pinsel.card");
         _raster.Children.Add(kopfRahmen);
         Grid.SetRow(_inhalt, 1);
@@ -312,7 +322,8 @@ public sealed class Hauptansicht : UserControl
     {
         void Knopf(string text, Action aktion, bool betont = false)
         {
-            var k = Schrift.Knopf(text, betont);
+            // Tipp vor dem Klick-Handler (ein langer Druck am Tablet zeigt nur den Tipp, siehe Tipp.Mit)
+            var k = Schrift.Knopf(text, betont).Mit(Texte.KopfTipps[text]);
             k.Click += (_, _) => aktion();
             _kopf[text] = k;
             _knoepfe.Children.Add(k);
@@ -384,6 +395,8 @@ public sealed class Hauptansicht : UserControl
             {
                 Schrift.Text(Texte.Willkommen, "Titel", FontWeight.Bold),
                 Schrift.Text(Texte.WillkommenText),
+                Schrift.Text(Texte.WasIstEinProjekt, "Mittel", FontWeight.Bold),
+                Schrift.Text(Texte.WasIstEinProjektText),
                 new WrapPanel { Children = { neu, oeffnen } },
                 Schrift.Text(Texte.LetzteProjekte, "Mittel", FontWeight.Bold),
                 liste,
@@ -566,8 +579,9 @@ public sealed class Hauptansicht : UserControl
             Spacing = 8,
             Children =
             {
-                Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, VollerKatalogKnopf(false), Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus,
-                Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
+                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, reihe, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
+                Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
             },
         };
         var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
@@ -611,6 +625,7 @@ public sealed class Hauptansicht : UserControl
     private Button VollerKatalogKnopf(bool innen)
     {
         var k = Schrift.Knopf(Texte.VollerKatalogOeffnen, betont: true).Vorlese(Texte.VollerKatalog);
+        Gruppe(k, Texte.TippVollerKatalog);
         k.HorizontalAlignment = HorizontalAlignment.Stretch;
         k.IsEnabled = Katalog.Aktiv is not null;
         k.Click += (_, _) => KatalogOeffnen(innen);
@@ -1164,7 +1179,7 @@ public sealed class Hauptansicht : UserControl
         var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
         AussenPruefungLaeuft();
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Hintergrund(Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -1375,7 +1390,7 @@ public sealed class Hauptansicht : UserControl
         _dreiBaut = true;
         _dreiStatus.Text = Texte.Ansicht3DBaut;
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() => Ansicht3D.Bauen(fassung, daten, einstellung, _vorrat3D)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Hintergrund(Task.Run(() => Ansicht3D.Bauen(fassung, daten, einstellung, _vorrat3D))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             _dreiBaut = false;
             Messwerte.Reihe("3D bauen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
@@ -1494,8 +1509,8 @@ public sealed class Hauptansicht : UserControl
         {
             _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt?.OrtName(o) ?? _daten!.OrtName(o), Tag = o });
         }
-        var ortTitel = Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl);
-        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), _katalogHinweis, VollerKatalogKnopf(true) } };
+        var ortTitel = Gruppe(Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl), Texte.TippOrt);
+        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();
@@ -1512,6 +1527,7 @@ public sealed class Hauptansicht : UserControl
             }
             var klappe = new Expander { Header = Schrift.Text(gruppe.Key, farbe: "Pinsel.text"), Content = reihe, IsExpanded = gruppe.Key == "Regale", HorizontalAlignment = HorizontalAlignment.Stretch }
                 .Vorlese(Texte.Katalog + " " + gruppe.Key);
+            Gruppe(klappe, Texte.TippGruppe(gruppe.Key));
             links.Children.Add(klappe);
         }
         var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
@@ -1812,11 +1828,11 @@ public sealed class Hauptansicht : UserControl
             _geprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() =>
+        _ = Hintergrund(Task.Run(() =>
         {
             // Regeln des gemeinsamen Teils plus Katalog-Stuecke; Grenzen mit deren echten Dreiecken
             return KatalogPruefung.Innen(Katalog.Aktiv, ort, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume);
-        }).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _pruefStand || ort != _ort)
             {
@@ -2228,7 +2244,7 @@ public sealed class Hauptansicht : UserControl
         {
             VersandArt.Gesendet => "Die Datei ist bei CC angekommen: " + Umbruch(ergebnis.Datei ?? ""),
             VersandArt.NichtVerfuegbar => Texte.SendenNichtVerfuegbar,
-            _ => "Fehler: " + ergebnis.Art + (ergebnis.Code > 0 ? " (HTTP " + ergebnis.Code.ToString(De) + ")" : "") + ". Nimm „Datei speichern“ und gib die Datei an CC.",
+            _ => "Fehler: " + ergebnis.Art + (ergebnis.Code > 0 ? " (HTTP " + ergebnis.Code.ToString(De) + ")" : "") + ". Nimm „" + Texte.DateiSpeichern + "“ und gib die Datei an CC.",
         };
         if (ergebnis.Art is not (VersandArt.Gesendet or VersandArt.NichtVerfuegbar))
         {

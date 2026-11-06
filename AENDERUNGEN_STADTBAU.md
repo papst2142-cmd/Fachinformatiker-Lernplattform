@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.5.1
+
+Das Werkzeug lässt sich jetzt richtig beenden, und alle Knöpfe sagen genauer, was sie tun.
+
+- Oben rechts gibt es den Knopf „Werkzeug beenden“, am PC und am Tablet. Deine Arbeit ist dabei gespeichert, denn jede Änderung wird sofort gespeichert. Läuft gerade noch eine Prüfung oder die 3D-Ansicht wird neu gebaut, wartet das Werkzeug kurz darauf. Konnte eine Änderung nicht gespeichert werden, fragt es nach: „Speichern und beenden“, „Ohne Speichern beenden“ oder „Abbrechen“. Am PC macht das Fensterkreuz dasselbe. Am Tablet wird die App wirklich geschlossen.
+- Klarere Namen für die Knöpfe oben: „Neues Projekt“, „Projekt öffnen“ und „Projekt speichern“ statt „Neu“, „Öffnen“ und „Speichern“. Aus „Datei speichern“ wird „Stadt-Datei für das Spiel speichern“, aus „An CC senden“ wird „Stadt-Datei an CC senden“, aus „Draufsicht“ wird „Stadt von oben“, und der Farbknopf heißt „Dunkle Farben“ bzw. „Helle Farben“.
+- Gebäude, die aus einem Blueprint gesetzt wurden, heißen jetzt „Gebäude aus Blueprint“ (vorher „Neues Gebäude“). Außerdem: „Gebäude setzen“ statt „Haus setzen“, „Kopieren“ statt „Kopie“, „Projekt anlegen“ statt „Anlegen“ und „Leere Stadt neu bauen“ statt „Leere Stadt“.
+- Jeder Knopf oben und jede Gruppe in der Liste links hat einen kurzen Tipp, was sie tut. Am PC erscheint er, wenn die Maus darauf zeigt. Am Tablet erscheint er, wenn du den Finger etwas länger darauf hältst. Der Knopf wird dabei nicht ausgelöst.
+- Auf der Startseite erklärt ein kurzer Text, was ein Projekt ist und was du darin bauen kannst.
+
 ## S 0.5.0
 
 Ein fertig gestaltetes Gebäude lässt sich jetzt als Blueprint (Vorlage) speichern und in jedes Projekt setzen, auch in eine leere Stadt.

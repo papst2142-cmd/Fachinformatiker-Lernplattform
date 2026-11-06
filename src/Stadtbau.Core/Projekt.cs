@@ -381,9 +381,20 @@ public sealed class Projekt
 
     private void Gespeichert()
     {
+        _aenderungen++;
         Speichern(vonHand: false);
         Geaendert?.Invoke();
     }
+
+    private long _aenderungen;
+    private long _gespeichert;
+
+    /// <summary>
+    /// Patch S 0.5.1 (Weisung P12-35): gibt es eine Aenderung, die noch nicht in der Projektdatei steht? Jede Aenderung wird
+    /// sofort gespeichert; offen bleibt sie nur, wenn dieses Speichern scheiterte (Datei gesperrt, Platte voll). Dann fragt
+    /// "Werkzeug beenden" nach.
+    /// </summary>
+    public bool Ungespeichert => !NurLesen && _gespeichert != _aenderungen;
 
     /// <summary>
     /// Projektdatei schreiben (automatisch nach jeder Aenderung, von Hand ueber "Speichern"). Von Hand, beim ersten
@@ -395,8 +406,10 @@ public sealed class Projekt
         {
             return;
         }
+        var stand = _aenderungen;
         var daten = Schreiben();
         Werkzeugordner.SicherSchreiben(Datei, daten);
+        _gespeichert = stand;
         var jetzt = Uhr();
         if (vonHand || jetzt - _letzteSicherung >= SicherungAlle)
         {

@@ -19,6 +19,12 @@ public partial class StadtbauApp : Application
     /// <summary>Ordner des Werkzeugs (Projekte, Sicherungen, Exporte); Vorgabe aus <see cref="Werkzeugordner.Standard"/>.</summary>
     public static Werkzeugordner Ordner { get; set; } = Werkzeugordner.Standard();
 
+    /// <summary>
+    /// Patch S 0.5.1 (Weisung P12-35): Ende der App unter Android (setzt MainActivity: Aufgabe schliessen, dann Prozessende,
+    /// wie "Programm beenden" der Lernplattform).
+    /// </summary>
+    public static Action? GeraetBeenden { get; set; }
+
     /// <summary>Wird nach dem Aufbau gerufen (Start-Test).</summary>
     public static Action<Hauptansicht, Window?>? NachStart { get; set; }
 
@@ -51,6 +57,23 @@ public partial class StadtbauApp : Application
                 Content = ansicht,
             };
             desktop.MainWindow = fenster;
+            // Patch S 0.5.1: Knopf "Werkzeug beenden" und Fensterkreuz laufen ueber dieselbe Pruefung (Rueckfrage nur bei
+            // einer nicht gespeicherten Aenderung); beim Herunterfahren des Systems oder der App wird nicht gefragt
+            var frei = false;
+            fenster.Closing += async (_, e) =>
+            {
+                if (frei || e.CloseReason is WindowCloseReason.ApplicationShutdown or WindowCloseReason.OSShutdown)
+                {
+                    return;
+                }
+                e.Cancel = true;
+                if (await ansicht.BeendenPruefenAsync())
+                {
+                    frei = true;
+                    fenster.Close();
+                }
+            };
+            ansicht.Schliessen = fenster.Close;
             NachStart?.Invoke(ansicht, fenster);
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime aktivitaet)
@@ -58,6 +81,7 @@ public partial class StadtbauApp : Application
             aktivitaet.MainViewFactory = () =>
             {
                 var ansicht = new Hauptansicht(Ordner);
+                ansicht.Schliessen = () => _ = ansicht.BeendenAsync(GeraetBeenden);
                 NachStart?.Invoke(ansicht, null);
                 return ansicht;
             };
