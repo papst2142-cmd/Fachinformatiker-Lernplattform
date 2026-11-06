@@ -98,8 +98,12 @@ public sealed class Hauptansicht : UserControl
 
     /// <summary>Texte der Karte "Ausgewaehltes Stueck" draussen (Start-Test, Weisung P12-25).</summary>
     public IEnumerable<string> AussenAuswahlTexte => _aussenAuswahl.Children.OfType<TextBlock>().Select(t => t.Text ?? "");
+
+    /// <summary>Beschriftungen der Knoepfe in der Karte "Auswahl" draussen (Start-Test).</summary>
+    public List<string> AussenAuswahlKnoepfe => [.. _aussenAuswahl.GetLogicalDescendants().OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "")];
     private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
+    private readonly StackPanel _blueprintListe = new() { Spacing = 10 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
     private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
     private readonly ComboBox _modellWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -218,7 +222,7 @@ public sealed class Hauptansicht : UserControl
         _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked != true;
         _ortWahl.SelectionChanged += (_, _) =>
         {
-            if (_ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
+            if (!_ortWahlFuellt && _ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
             {
                 OrtOeffnen(o);
             }
@@ -334,7 +338,7 @@ public sealed class Hauptansicht : UserControl
         var mit = _projekt is not null;
         var schreiben = mit && !_projekt!.NurLesen;
         _kopf[Texte.Draufsicht].IsEnabled = mit;
-        _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Orte.Count > 0;
+        _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Innenorte.Count > 0;
         _kopf[Texte.Ansicht3D].IsEnabled = mit;
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
@@ -435,6 +439,7 @@ public sealed class Hauptansicht : UserControl
         _dreiGrenzBalken.Value = 0;
         Karte.Waehlen(null);
         OrtListeZeigen();
+        BlueprintsZeigen();
         _modellWahl.Items.Clear();
         foreach (var m in AussenBearbeitung.HausModelle(projekt.AussenStand))
         {
@@ -442,7 +447,7 @@ public sealed class Hauptansicht : UserControl
         }
         _modellWahl.SelectedIndex = _modellWahl.Items.Count > 0 ? 0 : -1;
         TitelSetzen();
-        ReiterZeigen(innen && projekt.Orte.Count > 0);
+        ReiterZeigen(innen && projekt.Innenorte.Count > 0);
         AussenPruefenStarten();
         if (projekt.NurLesen)
         {
@@ -471,6 +476,17 @@ public sealed class Hauptansicht : UserControl
 
     private void ProjektGeaendert()
     {
+        if (_projekt is not null && string.Join("|", _projekt.Bauten.Select(_projekt.OrtName)) != _bautenText)
+        {
+            // ein Blueprint mit Innenraum gesetzt oder das Gebaeude geloescht: Ortsliste neu; ist der offene Innenraum weg, nach draussen
+            OrtListeZeigen();
+            if (_innen && _ort is { } offen && !_projekt.Innenorte.Contains(offen))
+            {
+                _ort = null;
+                ReiterZeigen(innen: false);
+            }
+            KnoepfeFreigeben();
+        }
         _aussenStand++;
         _dreiAenderung = Stopwatch.GetTimestamp();
         Karte.InvalidateVisual();
@@ -506,14 +522,14 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
-        innen = innen && _projekt.Orte.Count > 0;
+        innen = innen && _projekt.Innenorte.Count > 0;
         _innen = innen;
         _drei = false;
         if (innen)
         {
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
-            OrtOeffnen(_ort is { } o && _projekt.Orte.Contains(o) ? o : _projekt.Orte[0]);
+            OrtOeffnen(_ort is { } o && _projekt.Innenorte.Contains(o) ? o : _projekt.Innenorte[0]);
         }
         else
         {
@@ -548,7 +564,11 @@ public sealed class Hauptansicht : UserControl
         var links = new StackPanel
         {
             Spacing = 8,
-            Children = { Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, VollerKatalogKnopf(false), Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus, _aussenRasterAus },
+            Children =
+            {
+                Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, VollerKatalogKnopf(false), Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus,
+                Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
+            },
         };
         var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
 
@@ -652,19 +672,58 @@ public sealed class Hauptansicht : UserControl
     private void OrtListeZeigen()
     {
         _ortListe.Children.Clear();
-        if (_projekt is null || _projekt.Orte.Count == 0)
+        _bautenText = _projekt is null ? "" : string.Join("|", _projekt.Bauten.Select(_projekt.OrtName));
+        OrtWahlFuellen();
+        if (_projekt is null || _projekt.Innenorte.Count == 0)
         {
             _ortListe.Children.Add(Schrift.Text(Texte.KeineInnenraeume, "Klein", farbe: "Pinsel.muted"));
             return;
         }
         foreach (var o in _projekt.Orte)
         {
-            var k = Schrift.Knopf(_daten!.OrtName(o));
+            _ortListe.Children.Add(OrtKnopf(o));
+        }
+        if (_projekt.Bauten.Count > 0)
+        {
+            // Meldung P12-23 Frage 1 a: Innenraeume gesetzter Blueprints, nur im Werkzeug
+            _ortListe.Children.Add(Schrift.Text(Texte.NeueGebaeude, "Mittel", FontWeight.Bold));
+            _ortListe.Children.Add(Schrift.Text(Texte.BauInnenNochNichtTipp, "Klein", farbe: "Pinsel.muted"));
+            foreach (var o in _projekt.Bauten)
+            {
+                _ortListe.Children.Add(OrtKnopf(o));
+            }
+        }
+
+        Button OrtKnopf(string o)
+        {
+            var k = Schrift.Knopf(_projekt!.OrtName(o));
             k.HorizontalAlignment = HorizontalAlignment.Stretch;
             k.Click += (_, _) => OrtOeffnen(o);
-            _ortListe.Children.Add(k);
+            return k;
         }
     }
+
+    /// <summary>Namen der neuen Gebaeude beim letzten Fuellen der Ortsliste (aendern sie sich, wird die Liste neu gefuellt).</summary>
+    private string _bautenText = "";
+
+    /// <summary>Auswahl "Ort" im Innenraum: Orte der Basis und neue Gebaeude des Projekts.</summary>
+    private void OrtWahlFuellen()
+    {
+        if (_innenAnsicht is null || _projekt is null)
+        {
+            return;
+        }
+        _ortWahlFuellt = true;
+        _ortWahl.Items.Clear();
+        foreach (var o in _projekt.Innenorte)
+        {
+            _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt.OrtName(o), Tag = o });
+        }
+        _ortWahl.SelectedItem = _ortWahl.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == _ort);
+        _ortWahlFuellt = false;
+    }
+
+    private bool _ortWahlFuellt;
 
     private void AussenSetzenWaehlen(AussenArt art, string? modell)
     {
@@ -691,6 +750,7 @@ public sealed class Hauptansicht : UserControl
         AussenArt.Beet => Texte.Beet,
         AussenArt.Laterne => Texte.Laterne,
         AussenArt.Katalog => Texte.VollerKatalog,
+        AussenArt.Blueprint => Texte.BlueprintSetzen,
         _ => Texte.HausOhneOrt,
     };
 
@@ -809,19 +869,270 @@ public sealed class Hauptansicht : UserControl
         {
             _aussenAuswahl.Children.Add(Schrift.Text(grund, "Klein", farbe: "Pinsel.muted"));
         }
-        if (s.Art == AussenArt.Haus && _projekt.Orte.Contains(s.Ort))
+        var innenort = _projekt.InnenortVon(s);
+        var oeffnenText = innenort is null ? null : Texte.Innenraeume + ": " + _projekt.OrtName(innenort);
+        if (innenort is not null)
         {
-            var oeffnen = Schrift.Knopf(Texte.Innenraeume + ": " + _daten.OrtName(s.Ort));
-            oeffnen.Click += (_, _) => OrtOeffnen(s.Ort);
+            var oeffnen = Schrift.Knopf(oeffnenText!);
+            oeffnen.Click += (_, _) => OrtOeffnen(innenort);
             _aussenAuswahl.Children.Add(oeffnen);
         }
-        foreach (var k in _aussenAuswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is TextBox or CheckBox || (c is Button b && b.Content is TextBlock t && t.Text != Texte.Innenraeume + ": " + _daten.OrtName(s.Ort))))
+        if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
+        {
+            // Phase 13 Welle 4c (Weisung P12-32): das Gebaeude als Vorlage unter eigenem Namen
+            var bp = Schrift.Knopf(Texte.AlsBlueprintSpeichern);
+            bp.Click += (_, _) => _ = AlsBlueprintSpeichernAsync(s);
+            _aussenAuswahl.Children.Add(bp);
+        }
+        foreach (var k in _aussenAuswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is TextBox or CheckBox || (c is Button b && b.Content is TextBlock t && t.Text != oeffnenText)))
         {
             if (_projekt.NurLesen)
             {
                 k.IsEnabled = false;
             }
         }
+    }
+
+    // ---- Blueprints (Phase 13 Welle 4c, Weisung P12-32) -------------------------------------------
+
+    /// <summary>Die Blueprints der Liste "Meine Blueprints" (auch unlesbare, mit Grund).</summary>
+    public IReadOnlyList<Blueprint.Eintrag> Blueprints { get; private set; } = [];
+
+    /// <summary>Datenordner des Werkzeugs (Start-Test).</summary>
+    public Werkzeugordner Ablage => _ordner;
+
+    /// <summary>Uhr fuer Sicherungen der Blueprints.</summary>
+    private static DateTime Jetzt => DateTime.Now;
+
+    /// <summary>Liste "Meine Blueprints" neu lesen und zeigen.</summary>
+    /// <summary>Je Eintrag der Liste "Meine Blueprints": sein Kasten und die Knoepfe darin (Start-Test: Knoepfe im Kasten).</summary>
+    public List<(Border Kasten, List<Button> Knoepfe)> BlueprintKaesten { get; } = [];
+
+    /// <summary>Nur Start-Test (Gegenprobe Weisung P12-33): Liste wie vor der Nachbesserung, Knoepfe ausserhalb der Kaesten.</summary>
+    internal static bool BlueprintListeAltFuerTests { get; set; }
+
+    public void BlueprintsZeigen()
+    {
+        _blueprintListe.Children.Clear();
+        BlueprintKaesten.Clear();
+        try
+        {
+            Blueprints = Blueprint.Alle(_ordner);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _ordner.Fehler("Blueprints lesen: " + e.GetType().Name + ": " + e.Message);
+            Blueprints = [];
+        }
+        if (Blueprints.Count == 0)
+        {
+            _blueprintListe.Children.Add(Schrift.Text(Texte.KeineBlueprints, "Klein", farbe: "Pinsel.muted"));
+            return;
+        }
+        var nurLesen = _projekt is null || _projekt.NurLesen;
+        foreach (var e in Blueprints)
+        {
+            // Weisung P12-33: je Eintrag ein Kasten mit Rahmen; oben der Name (antippen = setzen), darunter Umbenennen
+            // und Loeschen nebeneinander. Eine kaputte Datei: Name als Text, roter Hinweis, nur Loeschen.
+            var eintrag = new StackPanel { Spacing = 6 };
+            var knoepfe = new List<Button>();
+            if (e.Vorlage is { } b)
+            {
+                var setzen = Schrift.Knopf(e.Name).Vorlese(Texte.BlueprintSetzen + " „" + e.Name + "“");
+                setzen.HorizontalAlignment = HorizontalAlignment.Stretch;
+                setzen.Margin = new Thickness(0);
+                setzen.IsEnabled = !nurLesen;
+                setzen.Click += (_, _) => BlueprintSetzenWaehlen(b);
+                eintrag.Children.Add(setzen);
+                knoepfe.Add(setzen);
+            }
+            else
+            {
+                eintrag.Children.Add(Schrift.Text(e.Name, "Klein", FontWeight.Bold));
+                eintrag.Children.Add(Schrift.Text(e.Fehler ?? "", "Klein", farbe: "Pinsel.red"));
+            }
+            var loeschen = Klein(Schrift.Gefahrknopf(Texte.Loeschen).Vorlese(Texte.Loeschen + " „" + e.Name + "“"));
+            loeschen.Click += (_, _) => _ = BlueprintLoeschenAsync(e);
+            var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,*") };
+            if (e.Vorlage is not null)
+            {
+                var umbenennen = Klein(Schrift.Knopf(Texte.Umbenennen).Vorlese(Texte.Umbenennen + " „" + e.Name + "“"));
+                umbenennen.Click += (_, _) => _ = BlueprintUmbenennenAsync(e);
+                zeile.Children.Add(umbenennen);
+                knoepfe.Add(umbenennen);
+            }
+            Grid.SetColumn(loeschen, 2);
+            zeile.Children.Add(loeschen);
+            knoepfe.Add(loeschen);
+            var kasten = new Border
+            {
+                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(12),
+                BorderThickness = new Thickness(1),
+                Child = BlueprintListeAltFuerTests ? eintrag : new StackPanel { Spacing = 8, Children = { eintrag, zeile } },
+            }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
+            _blueprintListe.Children.Add(kasten);
+            if (BlueprintListeAltFuerTests)
+            {
+                _blueprintListe.Children.Add(zeile);
+            }
+            BlueprintKaesten.Add((kasten, knoepfe));
+        }
+
+        static Button Klein(Button k)
+        {
+            k.Padding = new Thickness(10, 4);
+            if (k.Content is TextBlock t)
+            {
+                t.Groesse("Klein");
+            }
+            k.Margin = new Thickness(0);
+            k.HorizontalAlignment = HorizontalAlignment.Stretch;
+            return k;
+        }
+    }
+
+    /// <summary>Blueprint zum Setzen waehlen: das naechste Tippen auf die Karte setzt ihn.</summary>
+    public void BlueprintSetzenWaehlen(Blueprint b)
+    {
+        if (_projekt is null || _projekt.NurLesen)
+        {
+            return;
+        }
+        Karte.SetzenArt = AussenArt.Blueprint;
+        Karte.SetzenBlueprint = b;
+        Karte.SetzenModell = null;
+        _aussenHinweis.Text = Texte.BlueprintSetzen + " „" + b.Name + "“: " + Texte.AussenSetzenAktiv;
+        Melden(_aussenHinweis.Text);
+    }
+
+    /// <summary>Vorschlag fuer den Namen: Name des Orts bzw. des Gebaeudes, sonst leer.</summary>
+    private string BlueprintVorschlag(AussenStelle s)
+    {
+        var a = _projekt!.AussenStand;
+        var v = s.Art == AussenArt.Haus ? _daten!.OrtName(s.Ort)
+            : Aussen.Landschaft(a).ElementAtOrDefault(s.Nummer) is PyObjekt g && Blueprint.Zierweg(a, Py.Str(g["modell"]))?["name"] is string n ? n : "";
+        return Blueprint.NameGueltig(v) ? v : "";
+    }
+
+    /// <summary>Gebaeude als Blueprint speichern (ohne Fenster, fuer den Start-Test): null = gespeichert, sonst der Grund.</summary>
+    public string? BlueprintSpeichern(AussenStelle s, string name)
+    {
+        if (_projekt is null)
+        {
+            return Texte.BlueprintNurHaus;
+        }
+        if (!Blueprint.NameGueltig(name))
+        {
+            return Texte.NameUngueltig;
+        }
+        try
+        {
+            if (Blueprint.Aus(_projekt, s, name) is not { } b)
+            {
+                return Texte.BlueprintNurHaus;
+            }
+            b.Speichern(_ordner, Jetzt);
+        }
+        catch (IOException e)
+        {
+            return e.Message;
+        }
+        BlueprintsZeigen();
+        Melden(Texte.BlueprintGespeichert + ": „" + name + "“");
+        return null;
+    }
+
+    private async Task AlsBlueprintSpeichernAsync(AussenStelle s)
+    {
+        var name = new TextBox { Text = BlueprintVorschlag(s), MaxLength = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var fehler = Schrift.Text("", "Klein", farbe: "Pinsel.red");
+        var inhalt = new StackPanel
+        {
+            Spacing = 8,
+            Children = { Schrift.Text(Texte.BlueprintName, gewicht: FontWeight.Bold).Fuer(name), name, Schrift.Text(Texte.BlueprintNameHinweis, "Klein", farbe: "Pinsel.muted"), fehler },
+        };
+        while (true)
+        {
+            if (await Dialog.Zeigen(Texte.BlueprintTitel, inhalt, Texte.Speichern, Texte.Abbrechen) != 0)
+            {
+                return;
+            }
+            if (BlueprintSpeichern(s, (name.Text ?? "").Trim()) is not { } grund)
+            {
+                return;
+            }
+            fehler.Text = grund;
+        }
+    }
+
+    /// <summary>Umbenennen ohne Fenster (Start-Test): null = umbenannt, sonst der Grund.</summary>
+    public string? BlueprintUmbenennen(Blueprint.Eintrag e, string name)
+    {
+        if (!Blueprint.NameGueltig(name))
+        {
+            return Texte.NameUngueltig;
+        }
+        try
+        {
+            Blueprint.Umbenennen(_ordner, e.Datei, name, Jetzt);
+        }
+        catch (Exception x) when (x is IOException or UnauthorizedAccessException)
+        {
+            return x is StadtbauFehler f ? string.Join(" ", f.Funde) : x.Message;
+        }
+        BlueprintsZeigen();
+        Melden(Texte.Umbenennen + ": „" + name + "“");
+        return null;
+    }
+
+    private async Task BlueprintUmbenennenAsync(Blueprint.Eintrag e)
+    {
+        var name = new TextBox { Text = e.Name, MaxLength = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var fehler = Schrift.Text("", "Klein", farbe: "Pinsel.red");
+        var inhalt = new StackPanel
+        {
+            Spacing = 8,
+            Children = { Schrift.Text(Texte.BlueprintName, gewicht: FontWeight.Bold).Fuer(name), name, Schrift.Text(Texte.BlueprintNameHinweis, "Klein", farbe: "Pinsel.muted"), fehler },
+        };
+        while (true)
+        {
+            if (await Dialog.Zeigen(Texte.UmbenennenTitel, inhalt, Texte.Umbenennen, Texte.Abbrechen) != 0)
+            {
+                return;
+            }
+            if (BlueprintUmbenennen(e, (name.Text ?? "").Trim()) is not { } grund)
+            {
+                return;
+            }
+            fehler.Text = grund;
+        }
+    }
+
+    /// <summary>Loeschen nach der Rueckfrage (die Datei kommt vorher in die Sicherungen).</summary>
+    private async Task BlueprintLoeschenAsync(Blueprint.Eintrag e)
+    {
+        if (await Dialog.Zeigen(Texte.BlueprintLoeschenTitel, Texte.BlueprintLoeschenFrage(e.Name), Texte.Loeschen, Texte.Abbrechen) != 0)
+        {
+            return;
+        }
+        BlueprintLoeschen(e);
+    }
+
+    /// <summary>Loeschen ohne Rueckfrage (nur nach der Rueckfrage und im Start-Test).</summary>
+    public void BlueprintLoeschen(Blueprint.Eintrag e)
+    {
+        try
+        {
+            Blueprint.Loeschen(_ordner, e.Datei, Jetzt);
+            Melden(Texte.BlueprintGeloescht + ": „" + e.Name + "“");
+        }
+        catch (Exception x) when (x is IOException or UnauthorizedAccessException)
+        {
+            _ordner.Fehler("Blueprint löschen: " + x.GetType().Name + ": " + x.Message);
+            Melden(x.Message);
+        }
+        BlueprintsZeigen();
     }
 
     // ---- Pruefung draussen ------------------------------------------------------------------------
@@ -850,9 +1161,10 @@ public sealed class Hauptansicht : UserControl
         var daten = _daten;
         // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
         var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
+        var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
         AussenPruefungLaeuft();
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -1178,9 +1490,9 @@ public sealed class Hauptansicht : UserControl
     private Control InnenBauen()
     {
         _ortWahl.Items.Clear();
-        foreach (var o in _daten!.Orte)
+        foreach (var o in _projekt?.Innenorte ?? _daten!.Orte)
         {
-            _ortWahl.Items.Add(new ComboBoxItem { Content = _daten.OrtName(o), Tag = o });
+            _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt?.OrtName(o) ?? _daten!.OrtName(o), Tag = o });
         }
         var ortTitel = Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl);
         var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), _katalogHinweis, VollerKatalogKnopf(true) } };
@@ -1259,7 +1571,7 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
-        if (!_projekt.Orte.Contains(ort))
+        if (!_projekt.Innenorte.Contains(ort))
         {
             return;
         }
@@ -1284,7 +1596,7 @@ public sealed class Hauptansicht : UserControl
         RaumZeigen();
         KnoepfeFreigeben();
         PruefenStarten();
-        Melden(_daten.OrtName(ort) + " geöffnet");
+        Melden(_projekt.OrtName(ort) + " geöffnet");
     }
 
     private void SetzenWaehlen(string typ)

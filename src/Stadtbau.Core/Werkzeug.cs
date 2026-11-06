@@ -18,7 +18,7 @@ public static class Werkzeug
     /// <summary>Version "0.1.0" aus der Baugruppe (Directory.Build.props, StadtbauVersion).</summary>
     public static string Version { get; } = typeof(Werkzeug).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
-    /// <summary>Anzeige "S 0.4.0".</summary>
+    /// <summary>Anzeige "S 0.5.0".</summary>
     public static string Anzeige => "S " + Version;
 
     /// <summary>Release-Tag "vS0.1.0" (Linie des Werkzeugs, Lernplattform.Core.Update.ReleaseLinie).</summary>

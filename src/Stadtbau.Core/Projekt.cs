@@ -27,8 +27,15 @@ public sealed class Projekt
 {
     public const string Format = "fisbau";
 
-    /// <summary>2 seit Welle 3 (Felder "aussen" und "leer"); Dateien mit Formatnummer 1 lassen sich weiter oeffnen.</summary>
-    public const long FormatVersion = 2;
+    /// <summary>
+    /// 3 seit Welle 4c (Teil "bauten" in "aussen": Innenraeume gesetzter Blueprints, Meldung P12-23 Frage 1 a; ein Werkzeug S 0.4.0
+    /// oeffnet die Datei damit nur zum Lesen), 2 seit Welle 3 (Felder "aussen" und "leer"). Dateien mit Formatnummer 1 und 2
+    /// lassen sich weiter oeffnen.
+    /// </summary>
+    public const long FormatVersion = 3;
+
+    /// <summary>Kennung des Innenraums eines gesetzten Blueprints: "bau:" und der Modellname (Teil "bauten" der Stadt draussen).</summary>
+    public const string BauPraefix = "bau:";
 
     /// <summary>Ort der Schritte an der Stadt draussen.</summary>
     public const string StadtOrt = "_stadt";
@@ -77,6 +84,31 @@ public sealed class Projekt
 
     /// <summary>Orte mit bearbeitbarem Innenraum in der Basis (leere Stadt: keine).</summary>
     public IReadOnlyList<string> Orte => InnenGrundriss.Orte(Basis.Innenraeume);
+
+    /// <summary>Innenraeume neuer Gebaeude aus Blueprints ("bau:modell", nur im Werkzeug, kommen noch nicht in den Export).</summary>
+    public IReadOnlyList<string> Bauten => [.. Aussen.Bauten(AussenStand).Select(b => BauPraefix + b.Key)];
+
+    /// <summary>Alle bearbeitbaren Innenraeume: Orte der Basis, dann neue Gebaeude.</summary>
+    public IReadOnlyList<string> Innenorte => [.. Orte, .. Bauten];
+
+    /// <summary>Innenraum zu einem Haus oder Gebaeude draussen (Ort der Basis oder neues Gebaeude), sonst null.</summary>
+    public string? InnenortVon(AussenStelle s)
+    {
+        if (s.Art == AussenArt.Haus)
+        {
+            return Orte.Contains(s.Ort) ? s.Ort : null;
+        }
+        if (s.Art == AussenArt.Gebaeude && Aussen.Landschaft(AussenStand).ElementAtOrDefault(s.Nummer) is PyObjekt g && g["modell"] is string m
+            && Aussen.Bauten(AussenStand)[m] is PyObjekt)
+        {
+            return BauPraefix + m;
+        }
+        return null;
+    }
+
+    public static bool IstBau(string ort) => ort.StartsWith(BauPraefix, StringComparison.Ordinal);
+
+    private PyObjekt? Bau(string ort) => IstBau(ort) ? Aussen.Bauten(AussenStand)[ort[BauPraefix.Length..]] as PyObjekt : null;
 
     public string Name { get; }
 
@@ -162,6 +194,10 @@ public sealed class Projekt
     /// <summary>Der aktuelle Grundriss eines Orts (bearbeitet oder die Basis). Nur ueber <see cref="Aendern"/> veraendern.</summary>
     public PyObjekt Grundriss(string ort)
     {
+        if (IstBau(ort))
+        {
+            return Bau(ort)?["grundriss"] as PyObjekt ?? throw new KeyNotFoundException(ort);
+        }
         if (!_grundrisse.TryGetValue(ort, out var g))
         {
             g = Original(ort);
@@ -170,7 +206,9 @@ public sealed class Projekt
         return g;
     }
 
-    public List<PyObjekt> Personen(string ort) => InnenGrundriss.Personen(Basis.Innenraeume, ort);
+    public List<PyObjekt> Personen(string ort) => IstBau(ort)
+        ? [.. (Bau(ort)?["personen"] as List<object?> ?? []).OfType<PyObjekt>()]
+        : InnenGrundriss.Personen(Basis.Innenraeume, ort);
 
     // ---- Stadt draussen ---------------------------------------------------------------------------
 
@@ -200,7 +238,9 @@ public sealed class Projekt
     /// Eine Aenderung an der Stadt draussen: die geaenderten Teile vorher und nachher kommen in den Verlauf (Ort
     /// <see cref="StadtOrt"/>), danach wird automatisch gespeichert. Aendert <paramref name="aenderung"/> nichts, gibt es keinen Schritt.
     /// </summary>
-    public T AussenAendern<T>(string was, Func<PyObjekt, T> aenderung)
+    public T AussenAendern<T>(string was, Func<PyObjekt, T> aenderung) => AussenAendern(StadtOrt, was, aenderung);
+
+    private T AussenAendern<T>(string schrittOrt, string was, Func<PyObjekt, T> aenderung)
     {
         if (NurLesen)
         {
@@ -214,7 +254,7 @@ public sealed class Projekt
         if (pfade.Count > 0)
         {
             _verlauf.RemoveRange(_zeiger, _verlauf.Count - _zeiger);
-            _verlauf.Add(new Schritt(StadtOrt, was, TeileObjekt(vorher, pfade), TeileObjekt(nachher, pfade)));
+            _verlauf.Add(new Schritt(schrittOrt, was, TeileObjekt(vorher, pfade), TeileObjekt(nachher, pfade)));
             _zeiger = _verlauf.Count;
             Gespeichert();
         }
@@ -259,6 +299,11 @@ public sealed class Projekt
         if (NurLesen)
         {
             throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
+        }
+        if (IstBau(ort))
+        {
+            // Innenraum eines neuen Gebaeudes: liegt in der Stadt draussen (Teil "bauten"), der Schritt merkt sich den Innenraum
+            return AussenAendern(ort, was, a => aenderung(Grundriss(ort)));
         }
         var g = Grundriss(ort);
         var vorher = PythonJson.Standard(g);
@@ -306,9 +351,18 @@ public sealed class Projekt
     {
         var text = vorher ? s.Vorher : s.Nachher;
         LetzterSchrittDraussen = s.Ort == StadtOrt;
-        if (LetzterSchrittDraussen)
+        if (LetzterSchrittDraussen || IstBau(s.Ort))
         {
             TeileAnwenden(AussenStand, Lesen(text));
+            if (IstBau(s.Ort))
+            {
+                // Schritt in einem neuen Gebaeude: dorthin wechseln (gibt es das Gebaeude danach nicht mehr: nach draussen)
+                LetzterSchrittDraussen = !Bauten.Contains(s.Ort);
+                if (!LetzterSchrittDraussen)
+                {
+                    Ort = s.Ort;
+                }
+            }
             return;
         }
         _grundrisse[s.Ort] = Lesen(text);
@@ -459,7 +513,7 @@ public sealed class Projekt
         {
             foreach (var s in v.OfType<PyObjekt>())
             {
-                if (s["ort"] is string ort && (p.Orte.Contains(ort) || (ort == StadtOrt && s["vorher"] is PyObjekt && s["nachher"] is PyObjekt)))
+                if (s["ort"] is string ort && (p.Orte.Contains(ort) || ((ort == StadtOrt || IstBau(ort)) && s["vorher"] is PyObjekt && s["nachher"] is PyObjekt)))
                 {
                     p._verlauf.Add(new Schritt(ort, Py.Str(s["was"]), PythonJson.Standard(s["vorher"]), PythonJson.Standard(s["nachher"])));
                 }
@@ -467,7 +521,7 @@ public sealed class Projekt
         }
         p._zeiger = Py.IstNurInt(d["zeiger"]) ? (int)Math.Clamp(Py.Int(d["zeiger"]), 0, p._verlauf.Count) : p._verlauf.Count;
         p.Nachricht = d["nachricht"] as string ?? "";
-        if (d["ort"] is string o && p.Orte.Contains(o))
+        if (d["ort"] is string o && p.Innenorte.Contains(o))
         {
             p.Ort = o;
         }
@@ -535,15 +589,26 @@ public sealed class Projekt
             Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht);
 
     /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
-    public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten);
+    public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand));
 
-    public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten) =>
-        [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => KatalogPruefung.Umbenannt(Katalog.Aktiv, f)), .. KatalogPruefung.Aussen(Katalog.Aktiv, Aussen.Aus(stand))];
+    /// <summary>
+    /// Pruefung draussen zu einem Stand. <paramref name="bauten"/>: Innenraeume neuer Gebaeude (Teil "bauten", steht nicht in
+    /// der Fassung; fuer den gelben Hinweis, dass sie noch nicht ins Spiel kommen).
+    /// </summary>
+    public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten, PyObjekt? bauten = null)
+    {
+        var aussen = Aussen.Aus(stand);
+        if (bauten is not null)
+        {
+            Py.Setzen(aussen, "bauten", Py.Kopie(bauten));
+        }
+        return [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => KatalogPruefung.Umbenannt(Katalog.Aktiv, f)), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen), .. Blueprint.Pruefen(aussen)];
+    }
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
     public List<(string Ort, StadtbauFund Fund)> RoteFunde()
     {
-        var rot = GeaenderteOrte.SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
+        var rot = GeaenderteOrte.Concat(Bauten).SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
         if (AussenGeaendert || Leer is not null)
         {
             rot.AddRange(PruefenAussen().Where(f => f.Rot).Select(f => (StadtOrt, f)));
@@ -552,7 +617,9 @@ public sealed class Projekt
     }
 
     /// <summary>Name eines Orts fuer die Anzeige (Stadt draussen: "Stadt draußen").</summary>
-    public string OrtName(string ort) => ort == StadtOrt ? "Stadt draußen" : Daten.OrtName(ort);
+    public string OrtName(string ort) => ort == StadtOrt ? "Stadt draußen"
+        : IstBau(ort) ? Texte.BauName(Bau(ort)?["name"] as string ?? ort[BauPraefix.Length..])
+        : Daten.OrtName(ort);
 
     /// <summary>
     /// Export-Datei (.fistadt) mit allen Aenderungen als neue Fassung (Nummer = Basis + 1, CC vergibt beim Einbau die

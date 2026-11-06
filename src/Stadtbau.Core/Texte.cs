@@ -97,6 +97,9 @@ public static class Texte
     public const string Strasse = "Straße";
     public const string Haus = "Haus";
     public const string HausOhneOrt = "Gebäude ohne Innenraum";
+
+    /// <summary>Gebaeude aus einem Blueprint mit Innenraum (nur im Werkzeug, Meldung P12-23 Frage 1 a).</summary>
+    public const string NeuesGebaeude = "Neues Gebäude";
     public const string Laterne = "Laterne";
     public const string LaterneDoppelt = "Doppellaterne";
     public const string Beet = "Beet";
@@ -171,6 +174,46 @@ public static class Texte
     public const string SendenNichtVerfuegbar = "Senden ist in dieser Fassung nicht verfügbar. Nimm „Datei speichern“ und gib die Datei an CC.";
     public const string Ok = "OK";
     public const string Gespeichert = "Gespeichert";
+
+    // ---- Blueprints (Phase 13 Welle 4c, Weisung P12-32) ----
+    public const string MeineBlueprints = "Meine Blueprints";
+    public const string BlueprintsHinweis = "Ein Blueprint ist ein Gebäude, das du gestaltet hast, als Vorlage. Antippen, dann auf die Karte tippen: dort steht es als neues Gebäude.";
+    public const string KeineBlueprints = "Noch kein Blueprint. Wähle ein Haus und tippe auf „Als Blueprint speichern“.";
+    public const string AlsBlueprintSpeichern = "Als Blueprint speichern";
+    public const string BlueprintTitel = "Als Blueprint speichern";
+    public const string BlueprintName = "Name des Blueprints";
+    public const string BlueprintNameHinweis = "Buchstaben (auch ä, ö, ü, ß), Ziffern, Leerzeichen, - und _ (höchstens 40 Zeichen).";
+    public const string BlueprintGespeichert = "Blueprint gespeichert";
+    public const string BlueprintSetzen = "Blueprint setzen";
+    public const string BlueprintGesetzt = "Blueprint gesetzt";
+    public const string Umbenennen = "Umbenennen";
+    public const string UmbenennenTitel = "Blueprint umbenennen";
+    public const string BlueprintLoeschenTitel = "Blueprint löschen?";
+    public const string BlueprintGeloescht = "Blueprint gelöscht";
+    public const string BlueprintGibtEs = "Einen Blueprint mit diesem Namen gibt es schon.";
+    public const string BlueprintKaputt = "Die Datei ist beschädigt und lässt sich nicht lesen.";
+    public const string BlueprintKeiner = "Das ist keine Blueprint-Datei des Stadtbau-Werkzeugs.";
+    public const string BlueprintNeuer = "Die Datei stammt aus einer neueren Version des Werkzeugs. Bitte das Werkzeug aktualisieren.";
+    public const string BlueprintPruefsumme = "Die Datei wurde verändert oder ist beschädigt (Prüfsumme passt nicht).";
+    public const string BlueprintNichtLesbar = "Die Datei lässt sich gerade nicht öffnen.";
+    public const string BlueprintAusserhalb = "Die Stelle liegt außerhalb der Karte.";
+    public const string BlueprintNurHaus = "Als Blueprint lassen sich Häuser und Gebäude speichern.";
+    public const string BlueprintSchonDa = "Dieses Gebäude steht schon in der Stadt.";
+    public const string BlueprintSchonDaTipp = "Das Spiel zeichnet die Tür nur am ersten Gebäude dieses Modells. Eines der beiden löschen.";
+
+    public const string NeueGebaeude = "Neue Gebäude (aus Blueprints)";
+    public const string BauInnenNochNichtTipp = "Nichts geht verloren: der Innenraum bleibt im Projekt und im Blueprint.";
+
+    public static string BauInnenNochNicht(string name) =>
+        $"Der Innenraum von „{name}“ kommt erst mit den neuen Städten ins Spiel.";
+
+    public static string BauName(string name) => name + " (neu)";
+
+    public static string BlueprintModellAnders(string modell) =>
+        $"In dieser Stadt gibt es schon ein anderes Modell mit dem Namen „{modell}“. Der Blueprint lässt sich hier nicht setzen.";
+
+    public static string BlueprintLoeschenFrage(string name) =>
+        $"Soll der Blueprint „{name}“ gelöscht werden? Die Datei kommt vorher in die Sicherungen.";
 
     public static string Grenzzeile(long dreiecke, int aufrufe, long grenzeDreiecke, int grenzeAufrufe) =>
         string.Create(System.Globalization.CultureInfo.GetCultureInfo("de-DE"),

@@ -313,6 +313,7 @@ public static class StadtbauMessung
         await DraussenAsync(a, f);
         await KatalogAsync(a, f);
         await LeereStadtAsync(a, f);
+        await BlueprintsAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();
@@ -805,6 +806,168 @@ public static class StadtbauMessung
         }
         await AlleGroessenAsync(a, f, "Leere Stadt 3D");
         a.ReiterZeigen(innen: false);
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 4c (Weisung P12-32): Moebelhaus aus Stadt 1 als Blueprint speichern, eine kaputte Datei steht mit
+    /// Hinweis in der Liste, Blueprint in einer leeren Stadt setzen (Messpunkt, 400 ms), Pruefung gruen, Layout und
+    /// Namen in allen Groessen, Umbenennen und Loeschen.
+    /// </summary>
+    /// <summary>Knoepfe eines Eintrags der Liste "Meine Blueprints", die nicht ganz in seinem Kasten liegen.</summary>
+    private static List<string> KaestenPruefen(Hauptansicht a)
+    {
+        var funde = new List<string>();
+        foreach (var (kasten, knoepfe) in a.BlueprintKaesten)
+        {
+            var innen = new Rect(kasten.Bounds.Size);
+            foreach (var k in knoepfe)
+            {
+                var name = k.Content is TextBlock t ? t.Text : "?";
+                if (k.TranslatePoint(new Point(0, 0), kasten) is not { } p || !k.IsEffectivelyVisible
+                    || !innen.Contains(new Rect(p, k.Bounds.Size).Deflate(0.5)))
+                {
+                    funde.Add("Knopf \"" + name + "\" liegt nicht im Kasten seines Eintrags");
+                }
+            }
+        }
+        return funde;
+    }
+
+    private static async Task BlueprintsAsync(Hauptansicht a, Window? f)
+    {
+        const string Name = "Starttest Möbelhaus";
+        a.NeuAnlegen("Starttest Blueprint Quelle", null);
+        await a.AussenGeprueft;
+        var haus = new AussenStelle(AussenArt.Haus, -1, 0, "moebelhaus");
+        a.Karte.Waehlen(haus);
+        if (!a.AussenAuswahlKnoepfe.Contains(Texte.AlsBlueprintSpeichern))
+        {
+            Fund("Blueprint: Knopf \"" + Texte.AlsBlueprintSpeichern + "\" fehlt am Moebelhaus");
+        }
+        if (a.BlueprintSpeichern(haus, Name) is { } grund)
+        {
+            Fund("Blueprint: Moebelhaus nicht gespeichert: " + grund);
+            return;
+        }
+        if (a.BlueprintSpeichern(haus, Name) is null)
+        {
+            Fund("Blueprint: gleicher Name ein zweites Mal gespeichert");
+        }
+        File.WriteAllText(Path.Combine(a.Ablage.Blueprints, "Starttest kaputt" + Blueprint.Endung), "{");
+        a.BlueprintsZeigen();
+        if (a.Blueprints.Count != 2 || a.Blueprints.Count(e => e.Fehler is not null) != 1)
+        {
+            Fund("Blueprint: Liste zeigt " + a.Blueprints.Count.ToString(Inv) + " Eintraege (erwartet 2, einer kaputt)");
+        }
+        // Weisung P12-33: jeder Knopf liegt im Kasten seines Eintrags (Gegenprobe: alte Liste ohne Kaesten um die Knoepfe)
+        await BildAsync(a);
+        foreach (var fund in KaestenPruefen(a))
+        {
+            Fund("Blueprint-Liste: " + fund);
+        }
+        Hauptansicht.BlueprintListeAltFuerTests = true;
+        a.BlueprintsZeigen();
+        await BildAsync(a);
+        if (KaestenPruefen(a).Count == 0)
+        {
+            Fund("Blueprint-Liste: Gegenprobe (Knoepfe ausserhalb der Kaesten) ohne Fund");
+        }
+        Hauptansicht.BlueprintListeAltFuerTests = false;
+        a.BlueprintsZeigen();
+        var b = a.Blueprints.First(e => e.Vorlage is not null).Vorlage!;
+
+        // leere Stadt mit einer Strasse, Blueprint davor setzen (Fussweg wird bis zur Strasse verlaengert)
+        a.NeuAnlegen("Starttest Blueprint leer", null, (24, 18));
+        a.Karte.SetzenArt = AussenArt.Strasse;
+        a.Karte.SetzenAn(12, 8);
+        await a.AussenGeprueft;
+        var ende = SpielDaten.Liste(b.Weg[^1]);
+        var richtung = Math.Sign(Py.F(ende[1]) - Py.F(b.Tuer![1]));
+        var x = 12.0;
+        var y = 8 - Py.F(ende[1]) + b.Mitte().Y - richtung;
+        AussenStelle? gesetzt = null;
+        await MessenAsync("Blueprint setzen", a, () =>
+        {
+            a.BlueprintSetzenWaehlen(b);
+            gesetzt = a.Karte.SetzenAn(x, y);
+            if (gesetzt is not { Art: AussenArt.Gebaeude })
+            {
+                Fund("Blueprint setzen: nicht gesetzt");
+            }
+            return Task.CompletedTask;
+        }, () =>
+        {
+            a.Rueckgaengig();
+            return Task.CompletedTask;
+        });
+        await a.AussenGeprueft;
+        if (a.AussenFunde.Any(z => z.Rot))
+        {
+            Fund("Blueprint gesetzt: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(z => z.Rot).Select(z => z.Text)));
+        }
+        // ein zweites Mal: rot (das Spiel zeichnet die Tuer nur am ersten Gebaeude dieses Modells)
+        a.BlueprintSetzenWaehlen(b);
+        a.Karte.SetzenAn(x + 6, y);
+        await a.AussenGeprueft;
+        if (!a.AussenFunde.Any(z => z.Rot && z.Text.StartsWith(Texte.BlueprintSchonDa, StringComparison.Ordinal)))
+        {
+            Fund("Blueprint zweimal gesetzt: kein roter Fund \"" + Texte.BlueprintSchonDa + "\"");
+        }
+        a.Rueckgaengig();
+        await a.AussenGeprueft;
+        a.Karte.Waehlen(gesetzt);
+        await BildAsync(a);
+        await AlleGroessenAsync(a, f, "Blueprints");
+        a.DreiZeigen();
+        await a.DreiFertig;
+        if (a.Drei.Spiel is null)
+        {
+            Fund("Blueprint: 3D-Ansicht nicht gebaut");
+        }
+        a.ReiterZeigen(innen: false);
+
+        // Innenraum des neuen Gebaeudes (Meldung P12-23 Frage 1 a): kommt mit, gelber Hinweis draussen, Reiter Innenraeume
+        const string bau = Projekt.BauPraefix + "moebelhaus";
+        if (!a.Projekt!.Innenorte.Contains(bau))
+        {
+            Fund("Blueprint: Innenraum des neuen Gebaeudes fehlt im Projekt");
+        }
+        else
+        {
+            if (!a.AussenFunde.Any(z => !z.Rot && z.Text == Texte.BauInnenNochNicht(Name)))
+            {
+                Fund("Blueprint: gelber Hinweis \"" + Texte.BauInnenNochNicht(Name) + "\" fehlt");
+            }
+            a.OrtOeffnen(bau);
+            await a.Geprueft;
+            if (a.Funde.Any(z => z.Rot))
+            {
+                Fund("Neues Gebaeude innen: rote Funde: " + string.Join(" | ", a.Funde.Where(z => z.Rot).Select(z => z.Text)));
+            }
+            await BildAsync(a);
+            await AlleGroessenAsync(a, f, "Neues Gebaeude innen");
+            a.ReiterZeigen(innen: false);
+        }
+
+        // Umbenennen und Loeschen (Rueckfrage ist ein Fenster; hier der Schritt danach)
+        var eintrag = a.Blueprints.First(e => e.Vorlage is not null);
+        if (a.BlueprintUmbenennen(eintrag, "Starttest Möbelhaus Süd") is { } nicht)
+        {
+            Fund("Blueprint umbenennen: " + nicht);
+        }
+        if (!a.Blueprints.Any(e => e.Name == "Starttest Möbelhaus Süd"))
+        {
+            Fund("Blueprint umbenennen: neuer Name fehlt in der Liste");
+        }
+        foreach (var e in a.Blueprints.ToList())
+        {
+            a.BlueprintLoeschen(e);
+        }
+        if (a.Blueprints.Count != 0)
+        {
+            Fund("Blueprint loeschen: Liste nicht leer");
+        }
+        Messwerte.Notiere("Blueprints: gespeichert, gesetzt, umbenannt, geloescht; Sicherungen " + Directory.GetFiles(Path.Combine(a.Ablage.Sicherungen, Sicherungen.BlueprintOrdner), "*", SearchOption.AllDirectories).Length.ToString(Inv));
     }
 
     private static void ListePruefen(Hauptansicht a, bool rotErwartet)

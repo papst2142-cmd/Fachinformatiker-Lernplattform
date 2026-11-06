@@ -21,6 +21,12 @@ public enum AussenArt
 
     /// <summary>Phase 13 Welle 3b: Stueck aus dem vollen CC0-Katalog (Modell oder Effekt), in <c>stadtdaten.katalog</c>.</summary>
     Katalog,
+
+    /// <summary>
+    /// Phase 13 Welle 4c (Weisung P12-32): nur zum Setzen eines Blueprints (<see cref="Blueprint.Setzen"/>); das gesetzte
+    /// Stueck ist danach ein <see cref="Gebaeude"/>, keine Stelle hat diese Art.
+    /// </summary>
+    Blueprint,
 }
 
 /// <summary>
@@ -40,14 +46,30 @@ public static class Aussen
 {
     public static readonly string[] Abschnitte = ["karte", "stadtdaten", "laternen", "beete"];
 
-    /// <summary>Kopie der Stadt draussen aus einer Fassung.</summary>
+    /// <summary>
+    /// Kopie der Stadt draussen aus einer Fassung. Seit Welle 4c (Weisung P12-32, Meldung P12-23 Frage 1 a) dazu der Teil
+    /// <c>bauten</c>, nur im Werkzeug: Innenraeume gesetzter Blueprints je Modell { name, grundriss, personen }. Er kommt
+    /// nicht in die Fassung (<see cref="Fassung"/>), das Spiel kennt ihn noch nicht.
+    /// </summary>
     public static PyObjekt Aus(StadtFassung f) => new()
     {
         { "karte", Py.Kopie(f.Karte) },
         { "stadtdaten", Py.Kopie(f.Stadtdaten) },
         { "laternen", f.Laternen.Select(l => (object?)new List<object?> { Zahl(l.X), Zahl(l.Z), l.Doppelt }).ToList() },
         { "beete", f.Beete.Select(b => (object?)new List<object?> { Zahl(b.X), Zahl(b.Y) }).ToList() },
+        { "bauten", new PyObjekt() },
     };
+
+    /// <summary>Innenraeume gesetzter Blueprints (nur Werkzeug), je Modell { name, grundriss, personen }.</summary>
+    public static PyObjekt Bauten(PyObjekt aussen)
+    {
+        if (Get(aussen, "bauten") is not PyObjekt b)
+        {
+            b = new PyObjekt();
+            Py.Setzen(aussen, "bauten", b);
+        }
+        return b;
+    }
 
     /// <summary>float als kuerzeste Dezimalzahl (wie <see cref="StadtFassung"/> beim Schreiben).</summary>
     public static double Zahl(float f) => double.Parse(f.ToString("R", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
@@ -128,6 +150,7 @@ public static class Aussen
         }
         yield return ("laternen", aussen["laternen"]);
         yield return ("beete", aussen["beete"]);
+        yield return ("bauten", Get(aussen, "bauten") ?? new PyObjekt());
     }
 
     /// <summary>Teile als Text (json.dumps), fuer den Vergleich vorher/nachher.</summary>

@@ -775,6 +775,11 @@ public static class AussenBearbeitung
                 {
                     zw.RemoveAll(z => z is PyObjekt o && Py.Gleich(o["modell"], modell));
                 }
+                // Welle 4c: der Innenraum eines gesetzten Blueprints geht mit dem letzten Gebaeude seines Modells (Rueckgaengig holt beides)
+                if (!land.OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell)) && Get(aussen, "bauten") is PyObjekt bauten)
+                {
+                    bauten.RemoveAll(b => b.Key == modell);
+                }
                 break;
             }
             default:
@@ -838,6 +843,11 @@ public static class AussenBearbeitung
             : "„" + id + "“";
 
     /// <summary>Kurztext eines Stuecks fuer Anzeige und Screenreader.</summary>
+    /// <summary>Name eines Gebaeudes aus einem Blueprint mit Innenraum (Teil "bauten"), sonst null.</summary>
+    public static string? BauName(PyObjekt aussen, AussenStelle s) =>
+        s.Art == AussenArt.Gebaeude && Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is PyObjekt g && g["modell"] is string m
+            && Get(aussen, "bauten") is PyObjekt bauten && bauten[m] is PyObjekt bau && bau["name"] is string n ? n : null;
+
     public static string Beschreibung(PyObjekt aussen, AussenStelle s, Func<string, string> ortName)
     {
         var (x, y) = Lage(aussen, s);
@@ -846,7 +856,8 @@ public static class AussenBearbeitung
         {
             AussenArt.Strasse => string.Create(De, $"{Texte.Strasse}, {Laenge(aussen, s):0.##} lang") + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Haus => Texte.Haus + " „" + ortName(s.Ort) + "“" + lage,
-            AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]) + ")" + lage,
+            AussenArt.Gebaeude => (BauName(aussen, s) is { } bau ? Texte.NeuesGebaeude + " „" + bau + "“" : Texte.HausOhneOrt)
+                + " (" + Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]) + ")" + lage,
             AussenArt.Laterne => (Liste(Aussen.Laternen(aussen)[s.Nummer])[2] is true ? Texte.LaterneDoppelt : Texte.Laterne) + " Nr. " + (s.Nummer + 1).ToString(De) + lage,
             AussenArt.Beet => Texte.Beet + lage,
             AussenArt.Baum => Texte.Baum + lage,

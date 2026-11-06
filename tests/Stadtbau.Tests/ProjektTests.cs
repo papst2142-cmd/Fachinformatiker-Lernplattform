@@ -136,14 +136,14 @@ public class ProjektTests
         var ablage = Daten.NeueAblage();
         var p = Projekt.Neu("Neuer", D, ablage, "bank");
         var text = File.ReadAllText(p.Datei, Encoding.UTF8);
-        File.WriteAllText(p.Datei, text.Replace("\"formatversion\": 2,", "\"formatversion\": 3,", StringComparison.Ordinal), new UTF8Encoding(false));
+        File.WriteAllText(p.Datei, text.Replace("\"formatversion\": 3,", "\"formatversion\": 4,", StringComparison.Ordinal), new UTF8Encoding(false));
         var nur = Projekt.Oeffnen(p.Datei, D, ablage);
         Assert.True(nur.NurLesen);
         Assert.Throws<InvalidOperationException>(() => nur.Aendern("bank", "x", _ => { }));
         var vorher = File.ReadAllBytes(p.Datei);
         nur.Speichern(vonHand: true);
         Assert.Equal(vorher, File.ReadAllBytes(p.Datei));
-        // Gegenprobe: Formatnummer 2 laesst sich bearbeiten
+        // Gegenprobe: Formatnummer 3 laesst sich bearbeiten
         File.WriteAllText(p.Datei, text, new UTF8Encoding(false));
         Assert.False(Projekt.Oeffnen(p.Datei, D, ablage).NurLesen);
         File.WriteAllText(p.Datei, text.Replace("\"basis\": 0,", "\"basis\": 7,", StringComparison.Ordinal), new UTF8Encoding(false));
@@ -210,8 +210,8 @@ public class ProjektTests
     public void Senden_Name_UndWegVonBerichtSenden()
     {
         var zeit = new DateTimeOffset(2026, 11, 6, 9, 30, 5, TimeSpan.FromHours(1));
-        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.4.0.fistadt", Projekt.SendeName(zeit, "PC", 1));
-        Assert.Equal("stadtbau/2026-11-06_093005_Tablet_S0.4.0_3.fistadt", Projekt.SendeName(zeit, "Tablet", 3));
+        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.5.0.fistadt", Projekt.SendeName(zeit, "PC", 1));
+        Assert.Equal("stadtbau/2026-11-06_093005_Tablet_S0.5.0_3.fistadt", Projekt.SendeName(zeit, "Tablet", 3));
         var p = Projekt.Neu("Senden", D, Daten.NeueAblage(), "moebelhaus");
         p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "teppich"));
         var datei = p.Exportieren(zeit);
@@ -225,8 +225,8 @@ public class ProjektTests
             return new VersandErgebnis(VersandArt.Gesendet, n(1), 201);
         });
         Assert.Equal(VersandArt.Gesendet, ergebnis.Art);
-        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.4.0.fistadt", name);
-        Assert.Equal("Stadtbau S 0.4.0 PC", nachricht);
+        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.5.0.fistadt", name);
+        Assert.Equal("Stadtbau S 0.5.0 PC", nachricht);
         // ohne eingebauten Schluessel (Tests, PR-Laeufe): nichts gesendet, kein Netz
         Assert.Equal(VersandArt.NichtVerfuegbar, Projekt.Senden(datei, zeit, "PC", null).Art);
     }
@@ -234,10 +234,10 @@ public class ProjektTests
     [Fact]
     public void Werkzeug_VersionUndStufe()
     {
-        Assert.Equal("0.4.0", Werkzeug.Version);
+        Assert.Equal("0.5.0", Werkzeug.Version);
         Assert.Equal("S", Werkzeug.Stufe);
-        Assert.Equal("vS0.4.0", Werkzeug.Tag);
-        Assert.Equal("Fachinformatiker Stadtbau S 0.4.0", Werkzeug.Kennzeile);
+        Assert.Equal("vS0.5.0", Werkzeug.Tag);
+        Assert.Equal("Fachinformatiker Stadtbau S 0.5.0", Werkzeug.Kennzeile);
         Assert.True(Lernplattform.Core.Update.ReleaseLinie.IstStadtbau(Werkzeug.Tag));
         Assert.False(Lernplattform.Core.Update.ReleaseLinie.IstLernplattform(Werkzeug.Tag));
     }

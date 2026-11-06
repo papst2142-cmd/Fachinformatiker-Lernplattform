@@ -52,6 +52,9 @@ public sealed class KartenFlaeche : Control
     /// <summary>Modell fuer ein neues Haus ohne Ort.</summary>
     public string? SetzenModell { get; set; }
 
+    /// <summary>Phase 13 Welle 4c: der Blueprint, der beim naechsten Tippen gesetzt wird (mit <see cref="AussenArt.Blueprint"/>).</summary>
+    public Blueprint? SetzenBlueprint { get; set; }
+
     /// <summary>Raster 0,5 (aus: 0,1 fuer Gruen, Laternen und Paketplatz).</summary>
     public bool Raster { get; set; } = true;
 
@@ -190,8 +193,10 @@ public sealed class KartenFlaeche : Control
         {
             var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, s);
             var r = new Rect(P(hx + Dx(s), hy + Dy(s)), P(hx + hw + Dx(s), hy + hh + Dy(s)));
-            var mitInnen = s.Art == AussenArt.Haus && bearbeitbar.Contains(s.Ort);
-            if (s.Art == AussenArt.Haus && AussenBearbeitung.Zugang(a, s.Ort) is { } z)
+            var mitInnen = (s.Art == AussenArt.Haus && bearbeitbar.Contains(s.Ort)) || (s.Art == AussenArt.Gebaeude && _projekt.InnenortVon(s) is not null);
+            // Fussweg und Tuer: Haus mit Ort aus dem Zugang, Gebaeude ohne Ort aus dem Zierweg seines Modells (gehoert wie im
+            // Spiel zum ersten Gebaeude dieses Modells; Sammelliste 225, Weisung P12-33)
+            if ((s.Art == AussenArt.Haus ? AussenBearbeitung.Zugang(a, s.Ort) : Blueprint.ZierwegVon(a, s)) is { } z)
             {
                 Linie(ctx, z["weg"], new Pen(Pinsel("#EFEBE2"), StadtSzene.WegBreite * _zoom, lineCap: PenLineCap.Flat), Dx(s), Dy(s));
                 if (z["tuer"] is List<object?> t && t.Count >= 2)
@@ -200,7 +205,7 @@ public sealed class KartenFlaeche : Control
                 }
             }
             ctx.DrawRectangle(Pinsel(s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C"), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
-            var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : Py.Str(Objekt(land[s.Nummer])["modell"]);
+            var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : AussenBearbeitung.BauName(a, s) ?? Py.Str(Objekt(land[s.Nummer])["modell"]);
             if (r.Width > 30)
             {
                 Text(ctx, schrift, name, r.TopLeft + new Point(3, 2), 11, Brushes.Black, r.Width - 6);
@@ -373,12 +378,33 @@ public sealed class KartenFlaeche : Control
         }
         var modell = SetzenModell;
         var raster = Raster;
+        if (art == AussenArt.Blueprint)
+        {
+            return BlueprintSetzen(x, y);
+        }
         var neu = _projekt.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, art, x, y, raster, modell));
         SetzenArt = null;
         if (neu is not null)
         {
             Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell) : ArtName(art)) + " gesetzt");
         }
+        Waehlen(neu);
+        return neu;
+    }
+
+    /// <summary>Phase 13 Welle 4c: den gewaehlten Blueprint setzen (ein Schritt im Verlauf, danach ein normales Gebaeude).</summary>
+    private AussenStelle? BlueprintSetzen(double x, double y)
+    {
+        var b = SetzenBlueprint;
+        SetzenArt = null;
+        SetzenBlueprint = null;
+        if (b is null || _projekt is null)
+        {
+            return null;
+        }
+        string? grund = null;
+        var neu = _projekt.AussenAendern(Texte.BlueprintSetzen + " „" + b.Name + "“", a => b.Setzen(a, x, y, out grund));
+        Gemeldet?.Invoke(neu is null ? grund ?? Texte.BlueprintAusserhalb : Texte.BlueprintGesetzt + ": „" + b.Name + "“");
         Waehlen(neu);
         return neu;
     }
@@ -393,6 +419,7 @@ public sealed class KartenFlaeche : Control
         AussenArt.Beet => Texte.Beet,
         AussenArt.Laterne => Texte.Laterne,
         AussenArt.Katalog => Texte.VollerKatalog,
+        AussenArt.Blueprint => Texte.BlueprintSetzen,
         _ => Texte.Paketplatz,
     };
 
@@ -506,9 +533,9 @@ public sealed class KartenFlaeche : Control
             return;
         }
         var s = AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom));
-        if (e.ClickCount == 2 && s is { Art: AussenArt.Haus } haus && _projekt!.Orte.Contains(haus.Ort))
+        if (e.ClickCount == 2 && s is not null && _projekt!.InnenortVon(s) is { } innenort)
         {
-            OrtGewaehlt?.Invoke(haus.Ort);
+            OrtGewaehlt?.Invoke(innenort);
             return;
         }
         Waehlen(s);
