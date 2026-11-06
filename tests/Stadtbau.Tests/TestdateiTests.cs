@@ -40,6 +40,9 @@ public class TestdateiTests
         // Gehweg an der langen Strasse x 7,5 (an den anderen stuenden Haeuser auf dem Gehweg: Regel der Pruefung)
         var strasse = AussenBearbeitung.Alle(p.AussenStand).First(a => a.Stelle is { Art: AussenArt.Strasse, Nummer: 4 }).Stelle;
         p.AussenAendern("Gehweg", a => AussenBearbeitung.GehwegSetzen(a, strasse, AussenBearbeitung.NeuerGehweg));
+        // Paketplatz auf die andere Seite der Wohnungstuer
+        p.AussenAendern("Paketplatz", a => Py.Setzen(Objekt(Aussen.Stadtdaten(a)["darstellung"]), Lieferpaket.Abschnitt,
+            new PyObjekt { { "vor", 0.5 }, { "seitlich", -0.42 } }));
         p.AussenAendern("Auto", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 2, 7, modell: "car_kit/sedan"));
         p.AussenAendern("Effekt", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 2, 12, modell: Effekt));
         p.Aendern("moebelhaus", "Stuhl", g => Bearbeitung.Setzen(g, Katalogstueck.Praefix + "furniture/chair", 1.5, 11.5));
@@ -85,6 +88,7 @@ public class TestdateiTests
         StadtbauPruefung.KatalogVerweise(f.Innenraeume, innen);
         Assert.Contains("cc0:furniture/chair", innen);
         Assert.Contains(Katalogstueck.Praefix + Effekt, innen);
+        Assert.Equal(-0.42, Py.F(Objekt(Objekt(f.Stadtdaten!["darstellung"])[Lieferpaket.Abschnitt])["seitlich"]), 6);
         Assert.Equal(15.16, Py.F(((List<object?>)Aussen.Laternen(aussen)[19]!)[1]), 6);
         // Gegenprobe: eine falsche Pruefsumme ist ein Fund
         var falsch = (PyObjekt)Py.Lesen(datei)!;

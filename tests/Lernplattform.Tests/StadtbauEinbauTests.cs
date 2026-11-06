@@ -8,7 +8,7 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// Phase 13 Welle 4a (Weisung P12-28): das Spiel zeichnet, was das Stadtbau-Werkzeug baut. Grundlage ist die Testdatei
-/// "Fassung 1" des Werkzeugs (<c>tests/Stadtbau.Tests/Testdaten</c>: Gehweg an der Strasse x 7,5, Auto und Stern draussen,
+/// "Fassung 1" des Werkzeugs (<c>tests/Stadtbau.Tests/Testdaten</c>: Gehweg an der Strasse x 7,5, Paketplatz, Auto und Stern draussen,
 /// Stuhl und Stern im Moebelhaus, Laterne 20 frei) mit ihren mitgelieferten Modellen. Geprueft: Gehweg gezeichnet und frei
 /// zum Gehen, Stuecke gezeichnet, versperren den Weg (ein Effekt nicht), der Effekt leuchtet, kein neuer Zeichenaufruf und die
 /// Grenzen 160 000 / 40 bleiben; Ladepruefung mit Gegenprobe. Die mitgelieferte Stadt bleibt Fassung 0.
@@ -146,6 +146,13 @@ public sealed class StadtbauEinbauTests
         Assert.NotEqual(d0, d1);
         Assert.True(d1 <= StadtbauGrenzen.Dreiecke, d1.ToString(System.Globalization.CultureInfo.InvariantCulture));
         Assert.True(a1 <= StadtbauGrenzen.Aufrufe);
+    }
+
+    [Fact]
+    public void Paketplatz_AusDerFassung()
+    {
+        Assert.Equal((0.5f, 0.42f), Lieferpaket.Platz(Fassung0.StadtFuer(Fassung0.MitKarte(SpielInhaltTests.Inhalt))));
+        Assert.Equal((0.5f, -0.42f), Lieferpaket.Platz(Fassung1.Value.StadtFuer(Fassung1.Value.MitKarte(SpielInhaltTests.Inhalt))));
     }
 
     // ---- innen ---------------------------------------------------------------------------------------------

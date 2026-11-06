@@ -788,7 +788,7 @@ public static class AussenBearbeitung
     public static float Gehweg(PyObjekt aussen, AussenStelle s) =>
         s.Art == AussenArt.Strasse && Get(Objekt(Aussen.Landschaft(aussen)[s.Nummer]), "gehweg") is { } g ? (float)Py.F(g) : 0f;
 
-    /// <summary>Gehweg setzen (0 nimmt ihn weg). Nur Daten: das Spiel zeichnet Gehwege mit dem Einbau (Welle 4).</summary>
+    /// <summary>Gehweg setzen (0 nimmt ihn weg). Spiel und 3D-Ansicht zeichnen ihn seit Welle 4a (StadtSzene, Feld "gehweg").</summary>
     public static void GehwegSetzen(PyObjekt aussen, AussenStelle s, double breite)
     {
         var l = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
