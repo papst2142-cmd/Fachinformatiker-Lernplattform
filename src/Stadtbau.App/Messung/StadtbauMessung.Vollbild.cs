@@ -48,11 +48,10 @@ public static partial class StadtbauMessung
             Fund("Vollbild: das Fenster bekommt kein Vollbild");
         }
         Messwerte.Notiere("Vollbild: Fensterzustand laut System " + (f?.WindowState.ToString() ?? "(Tablet)"));
-        foreach (var (name, b, h) in Groessen)
-        {
-            await GroesseAsync(a, f, b, h);
-            Layout(a, "Vollbild " + name);
-        }
+        // im Vollbild bestimmt der Bildschirm die Groesse (Windows-CI 1920 x 1080, unter Xvfb ohne Fensterverwaltung bleibt
+        // sie): Layout in der Groesse pruefen, die das Fenster wirklich hat (Lauf 576: feste Groesse war dort ein Fehlfund)
+        await BildAsync(a);
+        Layout(a, string.Create(Inv, $"Vollbild {a.Bounds.Width:F0}x{a.Bounds.Height:F0}"));
 
         // Neustart: das neue Programm kennt nur die Datei
         WerkzeugVollbild.VergessenFuerTests();
