@@ -465,10 +465,17 @@ public sealed class Hauptansicht : UserControl
         _dreiAenderung = Stopwatch.GetTimestamp();
         Karte.InvalidateVisual();
         AussenAuswahlZeigen();
-        AussenPruefenStarten();
         if (_drei)
         {
+            // Bei sichtbarer 3D-Ansicht zuerst die Szene bauen, die Pruefung draussen danach (sonst teilen sich beide den
+            // Prozessor, und das Bild kommt spaeter; CI Windows Lauf 550: 590 bis 710 ms statt rund 430)
+            _pruefungWartet = true;
+            AussenPruefungLaeuft();
             DreiAktualisieren();
+        }
+        else
+        {
+            AussenPruefenStarten();
         }
         if (_projekt is not null && _projekt.Ort != _ort && _projekt.Ort.Length > 0 && _innen)
         {
@@ -727,22 +734,31 @@ public sealed class Hauptansicht : UserControl
 
     // ---- Pruefung draussen ------------------------------------------------------------------------
 
-    private void AussenPruefenStarten()
+    /// <summary>Pruefung draussen wartet auf den Bau der 3D-Szene (nur bei sichtbarer 3D-Ansicht).</summary>
+    private bool _pruefungWartet;
+
+    private void AussenPruefungLaeuft()
     {
-        if (_projekt is null || _daten is null)
-        {
-            return;
-        }
-        var stand = ++_aussenPruefStand;
-        var daten = _daten;
-        // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
-        var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
         if (_aussenGeprueft.Task.IsCompleted)
         {
             _aussenGeprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         _aussenPruefungen.Children.Clear();
         _aussenPruefungen.Children.Add(Schrift.Text(Texte.PruefungLaeuft, "Klein", farbe: "Pinsel.muted"));
+    }
+
+    private void AussenPruefenStarten()
+    {
+        if (_projekt is null || _daten is null)
+        {
+            return;
+        }
+        _pruefungWartet = false;
+        var stand = ++_aussenPruefStand;
+        var daten = _daten;
+        // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
+        var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
+        AussenPruefungLaeuft();
         var uhr = Stopwatch.StartNew();
         _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
@@ -762,6 +778,8 @@ public sealed class Hauptansicht : UserControl
             Messwerte.Reihe("Prüfen draußen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             AussenPruefungZeigen(fertig: true);
             _aussenGeprueft.TrySetResult();
+            // danach die 3D-Szene im Voraus bauen: "3D-Ansicht" zeigt sie dann ohne Wartezeit
+            DreiAktualisieren();
         }), TaskScheduler.Default);
     }
 
@@ -876,7 +894,22 @@ public sealed class Hauptansicht : UserControl
         _inhalt.Content = _dreiAnsicht;
         KnoepfeFreigeben();
         _dreiAenderung = Stopwatch.GetTimestamp();
-        DreiAktualisieren();
+        if (DreiAktuell && Drei.Spiel is not null && !_dreiBaut)
+        {
+            // im Voraus gebaut: nur noch zeigen
+            if (_dreiFertig.Task.IsCompleted)
+            {
+                _dreiFertig = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+            Tageslicht.FesteUhr = _einstellung.Uhr;
+            _dreiWartetAufBild = true;
+            DispatcherTimer.RunOnce(DreiOhneGrafikPruefen, TimeSpan.FromSeconds(1));
+            Drei.AnfordernBild();
+        }
+        else
+        {
+            DreiAktualisieren();
+        }
         Drei.Focus();
     }
 
@@ -895,16 +928,36 @@ public sealed class Hauptansicht : UserControl
     /// Die Szene neu bauen, wenn sich Stadt oder Einstellung seit dem letzten Bau geaendert haben (nur, solange die 3D-Ansicht
     /// zu sehen ist; im Hintergrund, ein Bau zur Zeit, danach der neueste Stand).
     /// </summary>
+    private bool DreiAktuell => _dreiGebaut == _aussenStand && _dreiEinstellung == _einstellung;
+
+    /// <summary>Kommt eine Sekunde nach dem Zeigen kein Bild und gibt es kein OpenGL: Hinweis zeigen und nicht weiter warten.</summary>
+    private void DreiOhneGrafikPruefen()
+    {
+        if (_drei && _dreiWartetAufBild && !Drei.GlBereit)
+        {
+            _dreiWartetAufBild = false;
+            _dreiStatus.Text = Texte.Ansicht3DOhneGrafik;
+            _dreiFertig.TrySetResult();
+        }
+    }
+
     private void DreiAktualisieren()
     {
         if (_projekt is null || _daten is null || _dreiBaut)
         {
             return;
         }
-        if (_dreiGebaut == _aussenStand && _dreiEinstellung == _einstellung)
+        if (DreiAktuell)
         {
             Tageslicht.FesteUhr = _einstellung.Uhr;
-            Drei.AnfordernBild();
+            if (_drei)
+            {
+                Drei.AnfordernBild();
+            }
+            else if (_pruefungWartet)
+            {
+                AussenPruefenStarten();
+            }
             return;
         }
         if (_dreiFertig.Task.IsCompleted)
@@ -929,6 +982,10 @@ public sealed class Hauptansicht : UserControl
                 _dreiGebaut = stand;
                 _dreiEinstellung = einstellung;
                 _dreiFertig.TrySetResult();
+                if (_pruefungWartet)
+                {
+                    AussenPruefenStarten();
+                }
                 return;
             }
             var alt = Drei.AktuelleKamera;
@@ -944,16 +1001,20 @@ public sealed class Hauptansicht : UserControl
             }
             _dreiGebaut = stand;
             _dreiEinstellung = einstellung;
-            _dreiWartetAufBild = true;
-            _dreiStatus.Text = Drei.GlBereit ? "" : Texte.Ansicht3DOhneGrafik;
-            if (!Drei.GlBereit)
+            _dreiStatus.Text = "";
+            if (_drei)
             {
-                _dreiWartetAufBild = false;
-                _dreiFertig.TrySetResult();
+                _dreiWartetAufBild = true;
+                DispatcherTimer.RunOnce(DreiOhneGrafikPruefen, TimeSpan.FromSeconds(1));
             }
-            if (_drei && (stand != _aussenStand || einstellung != _einstellung))
+            if (!DreiAktuell)
             {
+                // inzwischen geaendert: den neuesten Stand bauen (die Pruefung wartet weiter)
                 DreiAktualisieren();
+            }
+            else if (_pruefungWartet)
+            {
+                AussenPruefenStarten();
             }
         }), TaskScheduler.Default);
     }
