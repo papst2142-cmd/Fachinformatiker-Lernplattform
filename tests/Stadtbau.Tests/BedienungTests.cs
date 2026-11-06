@@ -23,7 +23,9 @@ public class BedienungTests
         // Projektdatei gesperrt (an ihrer Stelle liegt ein Ordner): das Speichern scheitert, die Aenderung ist offen
         File.Delete(p.Datei);
         Directory.CreateDirectory(p.Datei);
-        Assert.ThrowsAny<IOException>(() => p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "fliesen")));
+        // Linux/macOS: IOException, Windows: UnauthorizedAccessException (Datei an die Stelle eines Ordners verschieben)
+        var fehler = Record.Exception(() => p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "fliesen")));
+        Assert.True(fehler is IOException or UnauthorizedAccessException, fehler?.GetType().Name ?? "kein Fehler");
         Assert.True(p.Ungespeichert);
 
         // wieder frei: "Speichern und beenden" schreibt sie, danach ist nichts mehr offen
