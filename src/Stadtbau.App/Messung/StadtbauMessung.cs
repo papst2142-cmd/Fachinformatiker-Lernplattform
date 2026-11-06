@@ -344,6 +344,11 @@ public static class StadtbauMessung
         }
         Messwerte.Notiere("Draussen Stadt 1: " + a.AussenFunde.Count.ToString(Inv) + " Funde (gelb)");
         a.ReiterZeigen(innen: false);
+        // Text ohne Auswahl draussen (Weisung P12-25): "auf der Karte", nie "im Grundriss"
+        if (!a.AussenAuswahlTexte.Contains(Texte.NichtsGewaehltDraussen) || a.AussenAuswahlTexte.Contains(Texte.NichtsGewaehlt))
+        {
+            Fund("Draussen: Karte \"" + Texte.Auswahl + "\" zeigt \"" + string.Join(" ", a.AussenAuswahlTexte) + "\" statt \"" + Texte.NichtsGewaehltDraussen + "\"");
+        }
         var vorher = PythonJson.Text(p.AussenStand);
         var k = a.Karte;
         await MessenAsync("Draussen setzen (Laterne)", a, () =>
@@ -498,6 +503,92 @@ public static class StadtbauMessung
         return draussen;
     }
 
+    /// <summary>Form der Effekte in der Draufsicht: genau eine, verschieden von der Laterne (Weisung P12-25).</summary>
+    private static string? EffektFormPruefen(Hauptansicht a, string wo)
+    {
+        var effekte = a.Karte.Formen.Where(x => x.Effekt).Select(x => x.Form).Distinct().ToList();
+        var laterne = a.Karte.Formen.Where(x => !x.Effekt).Select(x => x.Form).FirstOrDefault();
+        if (effekte.Count != 1)
+        {
+            Fund("Effekt-Zeichen " + wo + ": " + effekte.Count.ToString(Inv) + " Formen statt einer");
+            return effekte.FirstOrDefault();
+        }
+        if (laterne is null)
+        {
+            Fund("Effekt-Zeichen " + wo + ": keine Laterne zum Vergleich gezeichnet");
+        }
+        else if (laterne == effekte[0])
+        {
+            Fund("Effekt-Zeichen " + wo + ": Effekt sieht aus wie eine Laterne (" + laterne + ")");
+        }
+        return effekte[0];
+    }
+
+    /// <summary>
+    /// Weisung P12-25 Abschnitt 3 Punkt 1: alle Kacheln des Katalogs gleich breit und gleich hoch, die Kacheln einer Reihe
+    /// mit gleicher Ober- und Unterkante, das Bild in jeder Kachel an derselben Stelle. Gibt die Zahl der Funde zurueck.
+    /// </summary>
+    private static int RasterPruefen(KatalogAnsicht ansicht, string wo, bool melden = true)
+    {
+        var funde = new List<string>();
+        Size? mass = null;
+        Point? bildLage = null;
+        foreach (var gruppe in ansicht.KachelGruppen)
+        {
+            // Reihen: eine neue Reihe beginnt, wenn eine Kachel nicht rechts der vorigen steht
+            var reihe = new List<Button>();
+            void ReiheAbschliessen()
+            {
+                if (reihe.Count > 1)
+                {
+                    var oben = reihe.Select(k => Math.Round(k.Bounds.Top, 1)).Distinct().Count();
+                    var unten = reihe.Select(k => Math.Round(k.Bounds.Bottom, 1)).Distinct().Count();
+                    if (oben > 1 || unten > 1)
+                    {
+                        funde.Add(string.Create(Inv, $"Reihe ab \"{((KatalogEintrag)reihe[0].Tag!).Anzeige}\": {oben} Oberkanten, {unten} Unterkanten ({string.Join(" ", reihe.Select(k => k.Bounds.Top.ToString("F1", Inv) + "-" + k.Bounds.Bottom.ToString("F1", Inv)))})"));
+                    }
+                }
+                reihe.Clear();
+            }
+            foreach (var k in gruppe)
+            {
+                if (reihe.Count > 0 && k.Bounds.Left <= reihe[^1].Bounds.Left)
+                {
+                    ReiheAbschliessen();
+                }
+                reihe.Add(k);
+                var groesse = new Size(Math.Round(k.Bounds.Width, 1), Math.Round(k.Bounds.Height, 1));
+                mass ??= groesse;
+                if (groesse != mass)
+                {
+                    funde.Add(string.Create(Inv, $"Kachel \"{((KatalogEintrag)k.Tag!).Anzeige}\" {groesse.Width:F1}x{groesse.Height:F1} statt {mass.Value.Width:F1}x{mass.Value.Height:F1}"));
+                }
+                if (KatalogAnsicht.KachelBild(k)?.TranslatePoint(default, k) is { } lage)
+                {
+                    lage = new Point(Math.Round(lage.X, 1), Math.Round(lage.Y, 1));
+                    bildLage ??= lage;
+                    if (lage != bildLage)
+                    {
+                        funde.Add(string.Create(Inv, $"Kachel \"{((KatalogEintrag)k.Tag!).Anzeige}\": Bild bei {lage.X:F1},{lage.Y:F1} statt {bildLage.Value.X:F1},{bildLage.Value.Y:F1}"));
+                    }
+                }
+            }
+            ReiheAbschliessen();
+        }
+        if (mass is null)
+        {
+            funde.Add("keine Kachel gezeigt");
+        }
+        if (melden)
+        {
+            foreach (var x in funde.Take(5))
+            {
+                Fund("Layout " + wo + ": Katalog-Raster: " + x);
+            }
+        }
+        return funde.Count;
+    }
+
     /// <summary>Phase 13 Welle 3b: voller Katalog (oeffnen, Gruppe, Suche, setzen innen und draussen, Grenzen, Layout).</summary>
     private static async Task KatalogAsync(Hauptansicht a, Window? f)
     {
@@ -566,6 +657,34 @@ public static class StadtbauMessung
                 Fund("Katalog Suche: \"" + wort + "\" findet nichts");
             }
         }
+        // Raster (Weisung P12-25): Gegenprobe mit den alten Kacheln, dann jede Gruppe in PC- und Tablet-Groesse
+        var mitNamen = kat.Gruppen.First(g => kat.InGruppe(g).Any(e => e.Art == KatalogArt.Modell));
+        KatalogAnsicht.UngleichFuerTests = true;
+        ansicht.GruppeZeigen(kat.Gruppen.First(g => kat.InGruppe(g).Any(e => e.Art == KatalogArt.Effekt)));
+        await BildAsync(a);
+        var ungleich = RasterPruefen(ansicht, "Gegenprobe Effekte", melden: false);
+        ansicht.GruppeZeigen(mitNamen);
+        await BildAsync(a);
+        ungleich += RasterPruefen(ansicht, "Gegenprobe " + mitNamen, melden: false);
+        KatalogAnsicht.UngleichFuerTests = false;
+        Messwerte.Notiere("Katalog-Raster Gegenprobe (alte Kacheln): " + ungleich.ToString(Inv) + " Funde");
+        if (ungleich == 0)
+        {
+            Fund("Katalog-Raster Gegenprobe: alte Kacheln ohne Fund (Probe taugt nicht)");
+        }
+        var rasterFunde = 0;
+        foreach (var (_, b, h) in Groessen)
+        {
+            await GroesseAsync(a, f, b, h);
+            foreach (var g in kat.Gruppen)
+            {
+                ansicht.GruppeZeigen(g);
+                await BildAsync(a);
+                rasterFunde += RasterPruefen(ansicht, string.Create(Inv, $"{b}x{h} {g}"));
+            }
+        }
+        Messwerte.Notiere("Katalog-Raster: " + kat.Gruppen.Count.ToString(Inv) + " Gruppen in " + Groessen.Length.ToString(Inv) + " Groessen, " + rasterFunde.ToString(Inv) + " Funde");
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         ansicht.Suchen("baum");
         await AlleGroessenAsync(a, f, "Katalog draussen");
 
@@ -597,6 +716,20 @@ public static class StadtbauMessung
         }
         await BildAsync(a);
         BeschriftungPruefen(a, "Katalog draussen gesetzt");
+        // Effekt-Zeichen (Weisung P12-25): eigene Form, nie wie eine Laterne; Gegenprobe mit dem alten Punkt
+        var formDraussen = EffektFormPruefen(a, "Draufsicht");
+        EffektZeichen.AltFuerTests = true;
+        a.Karte.InvalidateVisual();
+        await BildAsync(a);
+        var alteGleich = a.Karte.Formen.Where(x => x.Effekt).All(x => a.Karte.Formen.Any(l => !l.Effekt && l.Form == x.Form));
+        EffektZeichen.AltFuerTests = false;
+        a.Karte.InvalidateVisual();
+        await BildAsync(a);
+        Messwerte.Notiere("Effekt-Zeichen: Draufsicht " + (formDraussen ?? "-") + ", Gegenprobe alter Punkt wie Laterne: " + (alteGleich ? "ja" : "nein"));
+        if (!alteGleich)
+        {
+            Fund("Effekt-Zeichen Gegenprobe: der alte Punkt gilt nicht als gleich der Laterne (Probe taugt nicht)");
+        }
 
         // innen: Stuhl aus dem Katalog im Moebelhaus, gilt als Teil aus dem Katalog
         a.NeuAnlegen("Starttest Katalog innen", "moebelhaus");
@@ -624,6 +757,20 @@ public static class StadtbauMessung
             Fund("Katalog innen: " + x.Text);
         }
         Messwerte.Notiere(string.Create(Inv, $"Katalog innen: {stuhl.Anzeige} gesetzt, {a.Funde.Count} Funde, Grenzen {a.GrenzenStand.Dreiecke} Dreiecke / {a.GrenzenStand.Aufrufe} Aufrufe"));
+        // Effekt im Grundriss: dasselbe Zeichen wie in der Draufsicht
+        a.KatalogOeffnen(innen: true).Waehlen(effekt);
+        if (a.Flaeche.SetzenAn(3, 12) is null)
+        {
+            Fund("Katalog innen: Effekt " + effekt.Anzeige + " nicht gesetzt");
+        }
+        a.Flaeche.SetzenTyp = null;
+        a.Flaeche.InvalidateVisual();
+        await BildAsync(a);
+        var innenFormen = a.Flaeche.EffektFormen.Distinct().ToList();
+        if (innenFormen.Count != 1 || innenFormen[0] != formDraussen)
+        {
+            Fund("Effekt-Zeichen: Grundriss zeigt " + (innenFormen.Count == 0 ? "keinen Effekt" : string.Join(", ", innenFormen)) + ", Draufsicht " + (formDraussen ?? "keinen"));
+        }
     }
 
     private static async Task LeereStadtAsync(Hauptansicht a, Window? f)

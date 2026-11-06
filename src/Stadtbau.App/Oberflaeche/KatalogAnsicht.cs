@@ -203,6 +203,14 @@ public sealed class KatalogAnsicht : Border
         }
     }
 
+    /// <summary>Gegenprobe des Start-Tests: Kacheln wie vor der Nachbesserung (Hoehe nach Namen, "Effekt" als eigene Zeile).</summary>
+    public static bool UngleichFuerTests { get; set; }
+
+    /// <summary>
+    /// Eine Kachel (Weisung P12-25 Abschnitt 3 Punkt 1): alle gleich breit und gleich hoch, oben buendig, das Bild an
+    /// derselben Stelle. Der Name hat immer Platz fuer genau 2 Zeilen (laenger: mit "…" gekuerzt, voll im Tipp); ein
+    /// Effekt ist ein Schild auf dem Bild, keine eigene Zeile.
+    /// </summary>
     private Button KachelBauen(KatalogEintrag e)
     {
         var bild = KatalogBilder.Bild(e);
@@ -211,24 +219,62 @@ public sealed class KatalogAnsicht : Border
         name.TextAlignment = TextAlignment.Center;
         name.MaxLines = 2;
         name.TextTrimming = TextTrimming.CharacterEllipsis;
-        var inhalt = new StackPanel { Spacing = 2, Width = Kachel - 12 };
-        inhalt.Children.Add(new Border
+        // Platz fuer genau 2 Zeilen: ein unsichtbarer Platzhalter mit 2 Zeilen in derselben Zelle (gleiche Schrift und
+        // Stufe, waechst also mit der Schriftgroesse mit), darueber der Name
+        Control namensFeld = name;
+        if (!UngleichFuerTests)
         {
-            Width = 72, Height = 72, CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Center,
+            var platz = Schrift.Text("X\nX", "Klein");
+            platz.Opacity = 0;
+            platz.IsHitTestVisible = false;
+            Avalonia.Automation.AutomationProperties.SetAccessibilityView(platz, Avalonia.Automation.AccessibilityView.Raw);
+            namensFeld = new Grid { Children = { platz, name } };
+        }
+        var flaeche = new Grid { Width = 72, Height = 72, HorizontalAlignment = HorizontalAlignment.Center };
+        flaeche.Children.Add(new Border
+        {
+            CornerRadius = new CornerRadius(6),
             Child = bild is null ? null : new Image { Source = bild, Width = 72, Height = 72 },
         }.Farbe(BackgroundProperty, "Pinsel.bg"));
-        inhalt.Children.Add(name);
+        var inhalt = new StackPanel { Spacing = 2, Width = Kachel - 12, VerticalAlignment = VerticalAlignment.Top };
+        inhalt.Children.Add(flaeche);
+        inhalt.Children.Add(namensFeld);
         if (e.Art == KatalogArt.Effekt)
         {
-            inhalt.Children.Add(Schrift.Text(Texte.Effekt, "Klein", farbe: "Pinsel.orange"));
+            if (UngleichFuerTests)
+            {
+                inhalt.Children.Add(Schrift.Text(Texte.Effekt, "Klein", farbe: "Pinsel.orange"));
+            }
+            else
+            {
+                flaeche.Children.Add(new Border
+                {
+                    CornerRadius = new CornerRadius(4), Padding = new Thickness(4, 0), Margin = new Thickness(2),
+                    HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom,
+                    Child = Schrift.Text(Texte.Effekt, "Klein", FontWeight.Bold, "Pinsel.text"),
+                }.Farbe(BackgroundProperty, "Pinsel.card"));
+            }
         }
         var art = e.Art == KatalogArt.Effekt ? Texte.Effekt + ", " + Texte.EffektHinweis : Texte.KatalogDreiecke(e.Dreiecke);
-        var k = new Button { Content = inhalt, Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(4), Width = Kachel }
-            .Vorlese(e.Anzeige + " setzen");
+        var k = new Button
+        {
+            Content = inhalt, Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(4), Width = Kachel,
+            VerticalAlignment = UngleichFuerTests ? VerticalAlignment.Center : VerticalAlignment.Top,
+            VerticalContentAlignment = VerticalAlignment.Top,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            Tag = e,
+        }.Vorlese(e.Anzeige + " setzen");
         ToolTip.SetTip(k, e.Anzeige + " (" + e.Name + "), " + art);
         k.Click += (_, _) => Gewaehlt?.Invoke(e);
         return k;
     }
+
+    /// <summary>Kacheln je Reihe des Katalogs (je Paket ein WrapPanel; Start-Test, Weisung P12-25).</summary>
+    public IEnumerable<IReadOnlyList<Button>> KachelGruppen =>
+        _liste.Children.OfType<WrapPanel>().Select(w => (IReadOnlyList<Button>)[.. w.Children.OfType<Button>()]);
+
+    /// <summary>Bildflaeche (72 x 72) einer Kachel.</summary>
+    public static Control? KachelBild(Button kachel) => (kachel.Content as StackPanel)?.Children.FirstOrDefault();
 
     /// <summary>Ein Stueck waehlen wie mit einem Tipp auf seine Kachel (Start-Test).</summary>
     public void Waehlen(KatalogEintrag e) => Gewaehlt?.Invoke(e);

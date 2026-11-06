@@ -117,6 +117,9 @@ public sealed class KartenFlaeche : Control
     /// <summary>Beschriftungen (Ortsnamen) mit ihrem Rechteck beim letzten Zeichnen (Start-Test: nie ueber den Kartenrand).</summary>
     public IReadOnlyList<(string Text, Rect Flaeche)> Beschriftungen { get; private set; } = [];
 
+    /// <summary>Formen beim letzten Zeichnen: Laterne (Effekt false) und je Effekt seine Form (Start-Test, Weisung P12-25).</summary>
+    public IReadOnlyList<(string Form, bool Effekt)> Formen { get; private set; } = [];
+
     private Point WeltPunkt(Point bild) => new((bild.X - _versatz.X) / _zoom, (bild.Y - _versatz.Y) / _zoom);
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
@@ -231,6 +234,11 @@ public sealed class KartenFlaeche : Control
             }
         }
         // Katalog-Stuecke (Phase 13 Welle 3b): Rechteck mit Vorschaubild, Effekt als leuchtendes Zeichen
+        var formen = new List<(string Form, bool Effekt)>();
+        if (AussenBearbeitung.Alle(a).Any(x => x.Stelle.Art == AussenArt.Laterne))
+        {
+            formen.Add((EffektZeichen.Punkt, false));
+        }
         foreach (var (s, _, _) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art == AussenArt.Katalog).ToList())
         {
             var (kx, ky, kw, kh) = AussenBearbeitung.KatalogFlaeche(a, s);
@@ -239,13 +247,9 @@ public sealed class KartenFlaeche : Control
             var eintrag = Katalog.Aktiv?.Eintrag(typ);
             if (eintrag is { Art: KatalogArt.Effekt })
             {
-                // leuchtendes Zeichen: goldener Schein, innen die Hauptfarbe des Effekts
-                var farbe = Color.TryParse(eintrag.Farbe ?? "", out var f) ? f : Color.Parse("#FFD54F");
-                var mitte = r.Center;
+                // eigenes Zeichen (Stern mit Leuchtrand), nie wie eine Laterne (Weisung P12-25)
                 var radius = Math.Max(7, Math.Min(r.Width, r.Height) / 2);
-                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.30), null, mitte, radius * 1.5, radius * 1.5);
-                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.55), null, mitte, radius, radius);
-                ctx.DrawEllipse(new SolidColorBrush(farbe), new Pen(Pinsel("#7A5A00"), 1.5), mitte, radius * 0.5, radius * 0.5);
+                formen.Add((EffektZeichen.Zeichnen(ctx, r.Center, radius, eintrag.Farbe), true));
                 continue;
             }
             ctx.DrawRectangle(Pinsel("#E8E2D6", 0.85), new Pen(eintrag is null ? Pinsel("#C62828") : Pinsel("#5C554B"), 1), r);
@@ -270,6 +274,7 @@ public sealed class KartenFlaeche : Control
             beschriftungen.Add((text, new Rect(bx, by, Math.Min(bb, ft.Width), ft.Height)));
         }
         Beschriftungen = beschriftungen;
+        Formen = formen;
 
         // Auswahl
         if (Auswahl is { } aw && AussenBearbeitung.Gueltig(a, aw))

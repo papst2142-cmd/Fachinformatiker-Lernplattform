@@ -3,7 +3,8 @@
 
 Die Stufe werkzeug ist ein kleiner Lauf ohne Mac-Jobs und ohne Pakete der Lernplattform. Sie gilt nur, wenn ein Stand
 ausschliesslich das Stadtbau-Werkzeug aendert. Dieser Waechter vergleicht den Kopf mit origin/main und laesst nur zu:
-  src/Stadtbau.*/**, tests/Stadtbau.Tests/**, werkzeuge/stadtbau/**, AENDERUNGEN_STADTBAU.md,
+  src/Stadtbau.*/**, tests/Stadtbau.Tests/**, werkzeuge/stadtbau/**, inhalte_stadtbau/** (Katalog, Weisung P12-25
+  Frage 1 = a; nur genau dieser Ordner, inhalte/ und inhalte_csharp/ bleiben rot), AENDERUNGEN_STADTBAU.md,
   in Directory.Build.props nur Zeilen mit <StadtbauVersion>, und .md-Dateien.
 Jede andere Datei (besonders src/Lernplattform.* mit Core/Stadtbau/ und Spiel/Probe, inhalte*/, tests/Lernplattform.Tests,
 Directory.Packages.props, die Workflows) macht die Stufe sofort rot mit der Zeile "voller Lauf noetig: <Datei>".
@@ -26,7 +27,7 @@ import tempfile
 # zuerst verboten (gilt auch fuer .md-Dateien darin), dann erlaubt
 VERBOTEN = (
     re.compile(r"^src/Lernplattform\.[^/]+/"),
-    re.compile(r"^inhalte[^/]*/"),
+    re.compile(r"^inhalte(?!_stadtbau/)[^/]*/"),
     re.compile(r"^tests/(?!Stadtbau\.Tests/)"),
     re.compile(r"^\.github/"),
     re.compile(r"^AENDERUNGEN\.md$"),
@@ -35,6 +36,7 @@ ERLAUBT = (
     re.compile(r"^src/Stadtbau\.[^/]+/"),
     re.compile(r"^tests/Stadtbau\.Tests/"),
     re.compile(r"^werkzeuge/stadtbau/"),
+    re.compile(r"^inhalte_stadtbau/"),
     re.compile(r"^AENDERUNGEN_STADTBAU\.md$"),
     re.compile(r"\.md$"),
 )
@@ -115,7 +117,11 @@ FAELLE = [
     ("Gegenprobe App", ["src/Lernplattform.App/Views/Dialog.cs"], [], True),
     ("Gegenprobe Inhalte", ["inhalte/quizfragen.json"], [], True),
     ("Gegenprobe Inhalte C#", ["inhalte_csharp/spiel/stadt.json"], [], True),
-    ("Gegenprobe Inhalte Stadtbau", ["inhalte_stadtbau/grafik/liste.json"], [], True),
+    ("Katalog inhalte_stadtbau", ["inhalte_stadtbau/grafik/x.bin", "inhalte_stadtbau/grafik/katalog.json"], [], False),
+    ("Gegenprobe Inhalte C# Spiel", ["inhalte_csharp/spiel/x.json"], [], True),
+    ("Gegenprobe Inhalte x.json", ["inhalte/x.json"], [], True),
+    ("Gegenprobe aehnlicher Ordner", ["inhalte_stadtbauX/a"], [], True),
+    ("Gegenprobe inhalte_stadtbau ohne Schraegstrich", ["inhalte_stadtbau"], [], True),
     ("Gegenprobe Inhalte .md", ["inhalte_csharp/LIESMICH.md"], [], True),
     ("Gegenprobe Tests Lernplattform", ["tests/Lernplattform.Tests/SpielTests.cs"], [], True),
     ("Gegenprobe Sollwerte", ["tests/Vergleich/SOLLWERTE.sha256"], [], True),

@@ -162,8 +162,14 @@ public sealed class GrundrissFlaeche : Control
         ["Sonstiges"] = "#7A7A7A",
     };
 
+    private readonly List<string> _effektFormen = [];
+
+    /// <summary>Formen der Effekte beim letzten Zeichnen (Start-Test: gleich der Draufsicht, Weisung P12-25).</summary>
+    public IReadOnlyList<string> EffektFormen => _effektFormen;
+
     public override void Render(DrawingContext ctx)
     {
+        _effektFormen.Clear();
         ctx.FillRectangle(Farbe("bg"), new Rect(Bounds.Size));
         if (Gebaeude is not { } g)
         {
@@ -256,12 +262,9 @@ public sealed class GrundrissFlaeche : Control
         {
             if (Katalog.Aktiv?.Eintrag(typ) is { Art: KatalogArt.Effekt } effekt)
             {
-                // Effekt "Nur Aussehen" (Antwort P12-23 3a): leuchtendes Zeichen statt eines Moebels
-                var kern = Color.TryParse(effekt.Farbe ?? "", out var kf) ? kf : Color.Parse("#FFD54F");
+                // Effekt "Nur Aussehen" (Antwort P12-23 3a): dasselbe Zeichen wie in der Draufsicht (Weisung P12-25)
                 var radius = Math.Max(7, Math.Min(r.Width, r.Height) / 2);
-                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.30), null, r.Center, radius * 1.5, radius * 1.5);
-                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.55), null, r.Center, radius, radius);
-                ctx.DrawEllipse(new SolidColorBrush(kern), new Pen(new SolidColorBrush(Color.Parse("#7A5A00")), 1.5), r.Center, radius * 0.5, radius * 0.5);
+                _effektFormen.Add(EffektZeichen.Zeichnen(ctx, r.Center, radius, effekt.Farbe));
                 return;
             }
             ctx.DrawRectangle(new SolidColorBrush(farbe, 0.85), rand, r);

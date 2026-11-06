@@ -7,9 +7,9 @@ Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft u
 
 Jetzt steht der ganze Vorrat an freien Grafiken (CC0) zum Bauen bereit: rund 1 500 Stücke aus 23 Paketen.
 
-- „Voller Katalog“ links in der Draufsicht und bei den Innenräumen: Gruppen wie Möbel, Küche und Restaurant, Bäume und Natur, Häuser und Bauteile, Straßen und Schienen, Fahrzeuge, Technik und Freizeit, Feste, Tiere, Figuren und Effekte, jeweils mit kleinem Vorschaubild. Die Suche findet Stücke mit deutschen und englischen Wörtern (zum Beispiel „Stuhl“ oder „chair“).
+- „Voller Katalog“ links in der Draufsicht und bei den Innenräumen: Gruppen wie Möbel, Küche und Restaurant, Bäume und Natur, Häuser und Bauteile, Straßen und Schienen, Fahrzeuge, Technik und Freizeit, Feste, Tiere, Figuren und Effekte, jeweils mit kleinem Vorschaubild in gleich großen Kacheln. Die Suche findet Stücke mit deutschen und englischen Wörtern (zum Beispiel „Stuhl“ oder „chair“).
 - Ein Stück antippen und dann die Stelle im Grundriss oder auf der Karte: es wird gesetzt und lässt sich wie alle anderen Stücke verschieben, drehen, kopieren und löschen. Draußen lassen sich Breite und Tiefe ändern.
-- Effekte (Funken, Rauch, Feuer und Ähnliches) sind nur Aussehen: sie versperren keinen Weg und erscheinen im Plan als leuchtendes Zeichen.
+- Effekte (Funken, Rauch, Feuer und Ähnliches) sind nur Aussehen: sie versperren keinen Weg und erscheinen im Plan als leuchtender Stern, klar anders als eine Laterne.
 - Die Prüfungen kennen die neuen Stücke: Überschneidungen und Wege werden wie bei den anderen Möbeln geprüft, und die Grenzen der Grafik zählen jedes Stück mit seiner echten Größe.
 - In der 3D-Ansicht erscheinen die neuen Stücke erst, wenn sie ins Spiel eingebaut werden; ihre Größe zählt aber schon jetzt in den Grenzen.
 - Ortsnamen in der Draufsicht bleiben immer ganz auf der Karte (vorher ragte „TALHEIM“ am Tablet über den Rand). Gekürzte Hausnamen zeigen ihren vollen Namen, wenn du mit der Maus darüber fährst oder das Haus antippst.

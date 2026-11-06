@@ -66,6 +66,9 @@ public static class Texte
     public const string SetzenAktiv = "Tippe auf die Stelle im Grundriss, an die das Stück soll.";
     public const string Auswahl = "Ausgewähltes Stück";
     public const string NichtsGewaehlt = "Tippe ein Stück im Grundriss an, um es zu bearbeiten.";
+
+    /// <summary>Draufsicht draussen ohne Auswahl (Weisung P12-25: draussen heisst es "auf der Karte").</summary>
+    public const string NichtsGewaehltDraussen = "Tippe ein Stück auf der Karte an, um es zu bearbeiten.";
     public const string Drehen = "Drehen";
     public const string Kopie = "Kopie";
     public const string Loeschen = "Löschen";
@@ -114,7 +117,7 @@ public static class Texte
     public const string KatalogLaedt = "Katalog wird geladen …";
     public const string KatalogFehlt = "Der volle Katalog ist in diesem Paket nicht enthalten.";
     public const string Effekt = "Effekt";
-    public const string EffektHinweis = "Nur Aussehen: versperrt keinen Weg. Im Plan ein leuchtendes Zeichen; in der 3D-Ansicht ab dem Einbau ins Spiel.";
+    public const string EffektHinweis = "Nur Aussehen: versperrt keinen Weg. Im Plan ein leuchtender Stern; in der 3D-Ansicht ab dem Einbau ins Spiel.";
     public const string KatalogIn3D = "Stücke aus dem vollen Katalog zeichnet die 3D-Ansicht ab dem Einbau ins Spiel (Welle 4); ihre Dreiecke zählen schon jetzt in den Grenzen.";
 
     public static string KatalogTreffer(int zahl) => zahl == 1 ? "1 Stück" : zahl.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Stücke";

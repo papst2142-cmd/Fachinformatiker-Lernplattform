@@ -299,4 +299,47 @@ public class KatalogTests
             Beschriftung.OhneRandFuerTests = false;
         }
     }
+    /// <summary>
+    /// Weisung P12-25 Frage 1 = a: der Katalog-Ordner gehoert nur zum Werkzeug. Kein Projekt der Lernplattform bindet ihn
+    /// ein oder liest ihn (csproj, Code, gemeinsame Bau-Dateien), und keine Lernplattform-DLL traegt eine Datei daraus.
+    /// Gegenprobe: Stadtbau.Core bindet ihn ein und traegt die Dateien.
+    /// </summary>
+    [Fact]
+    public void KatalogOrdner_NurImWerkzeug_NieInDerLernplattform()
+    {
+        const string ordner = "inhalte_stadtbau";
+        var wurzel = Daten.Wurzel;
+        var endungen = new[] { ".csproj", ".cs", ".props", ".targets", ".axaml", ".xml", ".json" };
+        bool Nennt(string datei) => File.ReadAllText(datei).Contains(ordner, StringComparison.OrdinalIgnoreCase);
+        IEnumerable<string> Dateien(string projekt) => Directory.EnumerateFiles(projekt, "*", SearchOption.AllDirectories)
+            .Where(d => endungen.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase))
+            .Where(d => !d.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(t => t is "bin" or "obj"));
+        var projekte = Directory.GetDirectories(Path.Combine(wurzel, "src"), "Lernplattform.*");
+        Assert.Equal(4, projekte.Length);
+        var funde = projekte.SelectMany(Dateien).Where(Nennt).Select(d => Path.GetRelativePath(wurzel, d)).ToList();
+        foreach (var gemeinsam in new[] { "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })
+        {
+            var d = Path.Combine(wurzel, gemeinsam);
+            if (File.Exists(d) && Nennt(d))
+            {
+                funde.Add(gemeinsam);
+            }
+        }
+        Assert.Empty(funde);
+        // Gegenprobe: das Werkzeug bindet den Ordner ein (sonst prueft die Suche oben nichts)
+        Assert.Contains(Dateien(Path.Combine(wurzel, "src", "Stadtbau.Core")), Nennt);
+
+        // gebaute DLLs (die Tests binden Lernplattform.Core ein; App, Desktop und Android deckt die Suche in den Quellen
+        // oben ab): Lernplattform ohne Datei aus dem Ordner, Stadtbau.Core mit allen
+        var lp = Directory.GetFiles(AppContext.BaseDirectory, "Lernplattform.*.dll");
+        Assert.Contains(lp, d => Path.GetFileName(d) == "Lernplattform.Core.dll");
+        foreach (var dll in lp)
+        {
+            var namen = System.Reflection.Assembly.LoadFrom(dll).GetManifestResourceNames();
+            Assert.DoesNotContain(namen, n => n.Contains(ordner, StringComparison.OrdinalIgnoreCase));
+        }
+        var werkzeug = typeof(Katalog).Assembly.GetManifestResourceNames();
+        Assert.Contains(Katalog.Ordner + "katalog.json", werkzeug);
+        Assert.Equal(K.PaketTitel.Count, werkzeug.Count(n => n.StartsWith(Katalog.Ordner, StringComparison.Ordinal) && n.EndsWith(".png", StringComparison.Ordinal)));
+    }
 }

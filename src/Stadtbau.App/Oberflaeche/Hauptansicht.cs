@@ -95,6 +95,9 @@ public sealed class Hauptansicht : UserControl
     // Stadt draussen und 3D
     public StadtFlaeche Drei { get; } = new();
     private readonly StackPanel _aussenAuswahl = new() { Spacing = 6 };
+
+    /// <summary>Texte der Karte "Ausgewaehltes Stueck" draussen (Start-Test, Weisung P12-25).</summary>
+    public IEnumerable<string> AussenAuswahlTexte => _aussenAuswahl.Children.OfType<TextBlock>().Select(t => t.Text ?? "");
     private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
@@ -697,7 +700,7 @@ public sealed class Hauptansicht : UserControl
         _aussenHinweis.Text = Karte.SetzenArt is { } art ? KatalogName(art) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
         if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))
         {
-            _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehlt, "Klein", farbe: "Pinsel.muted"));
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehltDraussen, "Klein", farbe: "Pinsel.muted"));
             return;
         }
         var a = _projekt.AussenStand;
