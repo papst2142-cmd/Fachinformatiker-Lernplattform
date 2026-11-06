@@ -235,26 +235,109 @@ def wachhund_unter_zeitlimit(pfad=".github/workflows/ci.yml"):
     return rot
 
 
+def matrix_listen(ci):
+    """Weisung P12-20: die Listen der tests-Matrix in ci.yml in der Reihenfolge voll, werkzeug, schnell."""
+    import json
+    with open(ci, encoding="utf-8") as f:
+        text = f.read()
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*)\) \}\}", text)
+    listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
+    if len(listen) != 3:
+        return None
+    return [sorted("tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "") for e in json.loads(l)) for l in listen]
+
+
+def soll_liste(release, name="soll"):
+    """Liste <name>='...' (eine Zeile je Job) aus einem Release-Workflow, None ohne Liste."""
+    with open(release, encoding="utf-8") as f:
+        block = re.search(r"(?<![A-Za-z_])" + name + r"='(.*?)'", f.read(), re.S)
+    return None if not block else [z.strip() for z in block.group(1).splitlines() if z.strip()]
+
+
 def tests_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/workflows/release.yml"):
     """Weisung P11-38: die Namen der tests-Jobs des vollen Laufs (Matrix in ci.yml) stehen genau so in der Liste,
     die release.yml vor dem Release als gruen verlangt (sonst wuerde ein Teil still fehlen oder das Release nie
     starten). Ohne beide Dateien keine Pruefung."""
     if not (os.path.exists(ci) and os.path.exists(release)):
         return 0
-    import json
-    with open(ci, encoding="utf-8") as f:
-        text = f.read()
-    treffer = re.search(r"include: \$\{\{ fromJSON\(.*? && '(\[.*?\])' \|\| '(\[.*?\])'\) \}\}", text)
-    if not treffer:
-        print("FEHLER: Selbsttest Jobs: Matrix der tests-Jobs in " + ci + " nicht gefunden")
+    listen = matrix_listen(ci)
+    if not listen:
+        print("FEHLER: Selbsttest Jobs: Matrix der tests-Jobs (voll, werkzeug, schnell) in " + ci + " nicht gefunden")
         return 1
-    voll = sorted("tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "") for e in json.loads(treffer.group(1)))
-    with open(release, encoding="utf-8") as f:
-        soll = sorted(z.strip().strip("'") for z in f.read().splitlines() if re.match(r"\s*(soll=')?tests \(", z))
+    voll = listen[0]
+    soll = sorted(z for z in (soll_liste(release) or []) if z.startswith("tests ("))
     if voll != soll:
         print("FEHLER: Selbsttest Jobs: ci.yml %s, release.yml %s" % (voll, soll))
         return 1
     print("Selbsttest Jobs: %d tests-Jobs im vollen Lauf, gleich der Liste in %s" % (len(voll), os.path.basename(release)))
+    return 0
+
+
+def jobs_werkzeug(ci):
+    """Weisung P12-20: alle Jobs der Stufe werkzeug laut ci.yml: die tests-Jobs der Werkzeug-Matrix und jeder Job mit
+    festem Namen, dessen if die Stufe werkzeug nennt oder keine Stufe einschraenkt (sollwerte)."""
+    listen = matrix_listen(ci)
+    if not listen:
+        return None
+    with open(ci, encoding="utf-8") as f:
+        text = f.read()
+    jobs = list(listen[1])
+    teile = re.split(r"^  [a-z][a-z0-9_-]*:\n", text.split("\njobs:\n", 1)[1], flags=re.M)[1:]
+    for teil in teile:
+        name = re.search(r"^    name: (.+)$", teil, re.M)
+        bedingung = re.search(r"^    if: (.+)$", teil, re.M)
+        if not name or "${{" in name.group(1):
+            continue
+        b = bedingung.group(1) if bedingung else ""
+        if "inputs.stufe == 'werkzeug'" in b or "inputs.stufe" not in b:
+            jobs.append(name.group(1).strip())
+    return sorted(jobs)
+
+
+def werkzeug_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/workflows/stadtbau_release.yml"):
+    """Weisung P12-20: der Werkzeug-Release nimmt auch den gruenen Lauf werkzeug; seine Liste soll_werkzeug in
+    stadtbau_release.yml ist genau die Jobs der Stufe werkzeug in ci.yml (keine Mac-Jobs, keine Lernplattform-Pakete)."""
+    if not (os.path.exists(ci) and os.path.exists(release)):
+        return 0
+    ist = jobs_werkzeug(ci)
+    soll = soll_liste(release, "soll_werkzeug")
+    if ist is None or soll is None:
+        print("FEHLER: Selbsttest Werkzeug-Jobs: Matrix in %s oder Liste soll_werkzeug in %s nicht gefunden" % (ci, release))
+        return 1
+    soll = sorted(soll)
+    if ist != soll:
+        print("FEHLER: Selbsttest Werkzeug-Jobs: ci.yml %s, %s %s" % (ist, os.path.basename(release), soll))
+        return 1
+    mac = [j for j in ist if "macos" in j or re.fullmatch(r"pakete \((win-x64|linux-x64|osx-arm64|osx-x64)\)", j)]
+    if mac:
+        print("FEHLER: Selbsttest Werkzeug-Jobs: Mac-Jobs oder Lernplattform-Pakete in der Stufe werkzeug: %s" % mac)
+        return 1
+    print("Selbsttest Werkzeug-Jobs: %d Jobs der Stufe werkzeug, gleich der Liste in %s" % (len(ist), os.path.basename(release)))
+    return 0
+
+
+def selbsttest_werkzeug_gegenprobe():
+    """Gegenprobe: eine stadtbau_release.yml, deren Liste soll_werkzeug einen Mac-Job nennt, ist rot."""
+    import tempfile
+    ci, release = ".github/workflows/ci.yml", ".github/workflows/stadtbau_release.yml"
+    if not (os.path.exists(ci) and os.path.exists(release)):
+        return 0
+    with open(release, encoding="utf-8") as f:
+        text = f.read()
+    falsch = text.replace("soll_werkzeug='", "soll_werkzeug='tests (macos-15, Spiel und Metal)\n", 1)
+    if falsch == text:
+        print("FEHLER: Selbsttest Werkzeug-Jobs: Gegenprobe ohne Liste soll_werkzeug in " + release)
+        return 1
+    with tempfile.TemporaryDirectory() as ordner:
+        pfad = os.path.join(ordner, "stadtbau_release.yml")
+        with open(pfad, "w", encoding="utf-8") as f:
+            f.write(falsch)
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = werkzeug_jobs_gleich_release(ci, pfad)
+    if rc != 1:
+        print("FEHLER: Selbsttest Werkzeug-Jobs: Gegenprobe mit Mac-Job nicht rot")
+        return 1
+    print("Selbsttest Werkzeug-Jobs: Gegenprobe mit Mac-Job rot")
     return 0
 
 
@@ -284,16 +367,14 @@ def feste_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
         return 0
     with open(ci, encoding="utf-8") as f:
         fest = sorted(set(m.strip() for m in re.findall(r"^    name: (.+)$", f.read(), re.M) if "${{" not in m))
-    with open(release, encoding="utf-8") as f:
-        block = re.search(r"soll='(.*?)'", f.read(), re.S)
-    if not block:
+    liste = soll_liste(release)
+    if liste is None:
         print("FEHLER: Selbsttest feste Jobs: Liste soll='...' in " + release + " nicht gefunden")
         return 1
     # Matrix-Jobs (tests (...), pakete (<rid>)) prueft tests_jobs_gleich_release bzw. die Matrix; feste Namen wie
     # "pakete (stadtbau win-x64)" (Phase 13 Welle 2, mit Leerzeichen in der Klammer) zaehlen hier mit
-    soll = sorted(z.strip() for z in block.group(1).splitlines()
-                  if z.strip() and not z.strip().startswith("tests (")
-                  and not re.fullmatch(r"pakete \([a-z0-9-]+\)", z.strip()))
+    soll = sorted(z for z in liste
+                  if not z.startswith("tests (") and not re.fullmatch(r"pakete \([a-z0-9-]+\)", z))
     if fest != soll:
         print("FEHLER: Selbsttest feste Jobs: ci.yml %s, release.yml %s" % (fest, soll))
         return 1
@@ -406,6 +487,9 @@ def selbsttest():
     rot |= tests_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
     rot |= feste_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
     rot |= selbsttest_feste_jobs_gegenprobe()
+    # Weisung P12-20: Stufe werkzeug, Liste soll_werkzeug in stadtbau_release.yml gleich den Jobs der Stufe, mit Gegenprobe
+    rot |= werkzeug_jobs_gleich_release()
+    rot |= selbsttest_werkzeug_gegenprobe()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:

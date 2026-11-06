@@ -18,6 +18,9 @@ public enum AussenArt
     Beet,
     Laterne,
     Paketplatz,
+
+    /// <summary>Phase 13 Welle 3b: Stueck aus dem vollen CC0-Katalog (Modell oder Effekt), in <c>stadtdaten.katalog</c>.</summary>
+    Katalog,
 }
 
 /// <summary>
@@ -67,6 +70,24 @@ public static class Aussen
     }
 
     public static List<object?> Laternen(PyObjekt aussen) => Liste(aussen["laternen"]);
+
+    /// <summary>
+    /// Phase 13 Welle 3b (Weisung P12-19): Stuecke aus dem vollen CC0-Katalog draussen, Liste <c>stadtdaten.katalog</c> mit
+    /// je {id "paket/name", x, y (Mitte), w, t, dreh (Vierteldrehungen)}. Das Spiel liest den Schluessel noch nicht (Einbau
+    /// ab Welle 4); ohne Stuecke fehlt er (leere Liste beim Lesen, angelegt erst beim ersten Setzen).
+    /// </summary>
+    public static List<object?> KatalogStuecke(PyObjekt aussen) => Get(Stadtdaten(aussen), "katalog") as List<object?> ?? [];
+
+    /// <summary>Liste der Katalog-Stuecke draussen, bei Bedarf angelegt.</summary>
+    public static List<object?> KatalogStueckeAnlegen(PyObjekt aussen)
+    {
+        if (Get(Stadtdaten(aussen), "katalog") is not List<object?> l)
+        {
+            l = [];
+            Py.Setzen(Stadtdaten(aussen), "katalog", l);
+        }
+        return l;
+    }
 
     public static List<object?> Beete(PyObjekt aussen) => Liste(aussen["beete"]);
 

@@ -104,8 +104,10 @@ def lies(pfad):
 
 
 def zusaetze(bestand, rid):
+    # Phase 13 Welle 3b (Weisung P12-19 Abschnitt 2.6): Feld "programme" (ohne = beide Programme) ordnet einen Zusatz nur
+    # einem Programm zu; die Pakete des vollen Katalogs liefert nur das Stadtbau-Werkzeug aus
     for z in bestand["zusaetze"]:
-        if rid in z.get("plattformen", [rid]):
+        if rid in z.get("plattformen", [rid]) and PROGRAMM in z.get("programme", [PROGRAMM]):
             yield z
 
 

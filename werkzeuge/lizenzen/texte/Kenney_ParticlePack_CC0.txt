@@ -1,0 +1,25 @@
+Quelle: License.txt aus kenney_particle-pack.zip (SHA-256 der ZIP b631d4b07f7002549fdcf155f01141ad482f79f3440e4e301eed49ce5f1d8958), im Grafik-Vorrat (Fi-Austausch anlagen/grafik_cc0), fuer den vollen Katalog des Stadtbau-Werkzeugs (Weisung P12-19).
+
+	
+
+	Particle Pack (1.1)
+
+	by Kenney Vleugels (Kenney.nl)
+
+	Additional credit for creating filter templates:
+	Indigo Ray, Craig Nisbet, Zoltan Erdokovy, Heliagon, ThreeDee, Killst4r and Tim2501
+
+			------------------------------
+
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+
+	Follow on Twitter for updates: @KenneyNL (www.twitter.com/kenneynl)

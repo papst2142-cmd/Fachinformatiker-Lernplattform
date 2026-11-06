@@ -1,0 +1,35 @@
+Quelle: License.txt aus KayKit_City_Builder_Bits_1.0_FREE.zip (SHA-256 der ZIP aff444e1d083ddac331be94ea4a7590e5604ef49715ae23df71cd2e9659bd33f), im Grafik-Vorrat (Fi-Austausch anlagen/grafik_cc0), fuer den vollen Katalog des Stadtbau-Werkzeugs (Weisung P12-19).
+
+	
+
+	KayKit : City Builder Bits (1.0)
+
+	Created/distributed by Kay Lousberg (www.kaylousberg.com)
+	Creation date: 25/08/2023 12:00
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+
+	Support me by crediting Kay Lousberg, www.kaylousberg.com (this is not mandatory)
+
+			------------------------------
+
+	This asset pack is here thanks to all the wonderful people who support KayKit on Patreon and those who buy our EXTRA or SOURCE packs on itch.io.
+
+	And a big, special thank you to my Super Supporters:
+
+	- Brian McBarron
+
+
+
+			------------------------------
+
+
+	Patreon:  http://patreon.com/kaylousberg
+
+	Follow on Twitter for updates:
+	http://twitter.com/KayLousberg

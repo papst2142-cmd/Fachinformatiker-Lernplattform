@@ -7,7 +7,7 @@
 #   art = veroeffentlichen: baut nichts neu, prueft den Entwurf gegen die Pruefsummen-Tabelle und veroeffentlicht
 #         ihn NIE als "latest" (make_latest=false): "latest" bleibt immer die Lernplattform. Die Update-Suche der
 #         Lernplattform nimmt nur vA/vB/v1, die des Werkzeugs nur vS (Core/Update/ReleaseLinie.cs, Tests mit Gegenprobe).
-# Abbruch vor jedem Hochladen: nicht von main; Version ergibt keinen Tag; kein voller CI-Lauf 17/17 auf genau diesem
+# Abbruch vor jedem Hochladen: nicht von main; Version ergibt keinen Tag; kein voller CI-Lauf 17/17 und kein Lauf werkzeug 5/5 (Weisung P12-20) auf genau diesem
 # Commit; Tag oder veroeffentlichtes Release gibt es schon; mehr als ein Werkzeug-Entwurf oder einer mit anderem Tag;
 # Android ohne Release-Schluessel oder mit anderem Fingerabdruck.
 # Geheimnisse wie release.yml (traegt nur Nico ein); Rechte nur lesen, nur Entwurf/Veroeffentlichen mit contents: write.
@@ -39,7 +39,7 @@ env:
 
 jobs:
   pruefen:
-    name: pruefen (main, 17/17, Tag vS, Entwurf)
+    name: pruefen (main, 17/17 oder werkzeug, Tag vS, Entwurf)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -68,7 +68,9 @@ jobs:
           case "$tag" in vS*) ;; *) echo "FEHLER: Tag '$tag' ist kein Werkzeug-Tag vS"; exit 1 ;; esac
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
-      - name: Voller CI-Lauf 17/17 auf diesem Commit
+      # Weisung P12-20: Merge-Nachweis ist der volle Lauf 17/17 ODER der gruene Lauf werkzeug (5 Jobs, Waechter
+      # nur_werkzeug.py) auf demselben Commit; urteil.py selbsttest prueft beide Listen gegen ci.yml
+      - name: Voller CI-Lauf 17/17 oder Lauf werkzeug 5/5 auf diesem Commit
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -89,14 +91,21 @@ jobs:
           tests (windows-latest, Layout 150)
           tests (windows-latest, Lernteil und Spiel)
           sollwerte (Pruefsummen)'
+          soll_werkzeug='android (APK, nur arm64-v8a, Testsignatur)
+          pakete (stadtbau win-x64)
+          tests (ubuntu-latest)
+          tests (windows-latest, Einzeltests)
+          sollwerte (Pruefsummen)'
           soll="$(echo "$soll" | sed 's/^ *//' | sort)"
+          soll_werkzeug="$(echo "$soll_werkzeug" | sed 's/^ *//' | sort)"
           gefunden=0
           for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do
             ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success") | .name' | sort)"
             if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 17/17 gruen"; gefunden=1; break; fi
-            echo "Lauf $id ist nicht 17/17 gruen:"; echo "$ist"
+            if [ "$ist" = "$soll_werkzeug" ]; then echo "Lauf werkzeug $id: 5/5 gruen"; gefunden=1; break; fi
+            echo "Lauf $id ist weder 17/17 noch werkzeug 5/5 gruen:"; echo "$ist"
           done
-          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 17/17 (Dispatch, Stufe voll) auf $GITHUB_SHA"; exit 1; fi
+          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 17/17 und kein Lauf werkzeug 5/5 (Dispatch) auf $GITHUB_SHA"; exit 1; fi
       - name: Tag gibt es noch nicht
         env:
           TAG: ${{ steps.version.outputs.tag }}

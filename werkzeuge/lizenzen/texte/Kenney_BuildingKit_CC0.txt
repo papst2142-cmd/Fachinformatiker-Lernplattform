@@ -1,0 +1,30 @@
+Quelle: License.txt aus kenney_building-kit.zip (SHA-256 der ZIP b46e4fc873d02dad2ab2153846ede6cc242208e751b778d37f4e75bce23cb2be), im Grafik-Vorrat (Fi-Austausch anlagen/grafik_cc0), fuer den vollen Katalog des Stadtbau-Werkzeugs (Weisung P12-19).
+
+	
+
+	Building Kit (1.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 19-06-2024 14:56
+	
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+	
+	Follow on social media for updates:
+
+	• Twitter:   twitter.com/KenneyNL
+	• Instagram: instagram.com/kenney_nl
+	• Mastodon:  mastodon.gamedev.place/@kenney
