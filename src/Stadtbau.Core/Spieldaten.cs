@@ -20,6 +20,9 @@ public sealed class Spieldaten
 
     public required GrafikBibliothek? Grafik { get; init; }
 
+    /// <summary>Fest-Deko (festzeiten.json) fuer die 3D-Ansicht, null = ohne.</summary>
+    public PyObjekt? Feste { get; init; }
+
     /// <summary>Orte mit bearbeitbarem Innenraum (Geschaefte und Schalter).</summary>
     public IReadOnlyList<string> Orte => InnenGrundriss.Orte(Fassung.Innenraeume);
 
@@ -35,7 +38,8 @@ public sealed class Spieldaten
         {
             grafik = GrafikBibliothek.Laden(bin, System.Text.Encoding.UTF8.GetString(mj), System.Text.Encoding.UTF8.GetString(zj));
         }
-        return new Spieldaten { Fassung = fassung, Inhalt = inhalt, Geschaefte = new Geschaefte(inhalt, daten), Grafik = grafik };
+        var feste = lesen("inhalte_csharp/spiel/festzeiten.json") is { } fz ? Py.Lesen(fz) as PyObjekt : null;
+        return new Spieldaten { Fassung = fassung, Inhalt = inhalt, Geschaefte = new Geschaefte(inhalt, daten), Grafik = grafik, Feste = feste };
     }
 
     /// <summary>Name eines Orts fuer die Anzeige (Karte der Fassung, sonst die Kennung).</summary>
@@ -85,7 +89,7 @@ public sealed class Spieldaten
             }
             else if (w.Art == Kleidung.Art && typen.Add(Kleidung.Art + ":" + w.Typ))
             {
-                liste.Add((Kleidung.Art + ":" + w.Typ, w.Typ));
+                liste.Add((Kleidung.Art + ":" + w.Typ, Warennamen.Name(Geschaefte, ort, Kleidung.Art + ":" + w.Typ)));
             }
         }
         return liste;

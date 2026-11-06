@@ -15,6 +15,7 @@
   <ItemGroup>
     <!-- Update-Quelle beider Programme (Filter nach Release-Linie) -->
     <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
+    <Compile Include="..\Lernplattform.Tests\StadtSzeneHash.cs" Link="StadtSzeneHash.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Stadtbau.Core\Stadtbau.Core.csproj" />

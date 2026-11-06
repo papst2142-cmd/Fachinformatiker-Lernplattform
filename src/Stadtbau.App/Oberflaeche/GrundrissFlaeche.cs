@@ -173,22 +173,14 @@ public sealed class GrundrissFlaeche : Control
         double breite = Py.F(g["breite"]), hoehe = Py.F(g["hoehe"]);
         ctx.FillRectangle(new SolidColorBrush(Color.Parse("#2B2B2B")), Bild(-0.15, -0.15, breite + 0.3, hoehe + 0.3));
 
-        // Boeden: Flur, dann die Raeume
-        void BodenZeichnen(string bereich, string name)
+        // Boeden: Flur, dann die Raeume (Namen erst nach der Einrichtung, Sammelliste 219 Punkt 1)
+        var bereiche = Bearbeitung.Bereiche(g);
+        foreach (var (bereich, _) in bereiche)
         {
             var (x, y, w, h) = Bearbeitung.Flaeche(g, bereich);
             var b = Bearbeitung.Bereich(g, bereich);
             var boden = b["boden"] is string s && BodenFarben.TryGetValue(s, out var f) ? f : "#D0CCC0";
             ctx.FillRectangle(new SolidColorBrush(Color.Parse(boden)), Bild(x, y, w, h));
-            if (name.Length > 0)
-            {
-                Schreiben(ctx, schrift, name, Bild(x, y, w, h).TopLeft + new Point(6, 4), 12, Brushes.Black, 0.55);
-            }
-        }
-        BodenZeichnen("flur", Get(Objekt(g["flur"]), "name") as string ?? "Flur");
-        foreach (var r in Liste(g["raeume"]).OfType<PyObjekt>())
-        {
-            BodenZeichnen(Py.Str(r["id"]), Get(r, "name") as string ?? Py.Str(r["id"]));
         }
 
         // Waende mit Tueroeffnungen (wie das Spiel sie baut)
@@ -221,6 +213,12 @@ public sealed class GrundrissFlaeche : Control
                     Schreiben(ctx, schrift, Get(p, "name") as string ?? "", m + new Point(0.32 * _zoom, -8), 11, Brushes.Black, 0.7);
                 }
             }
+        }
+
+        // Namen der Raeume ueber der oberen Wand auf einem Schild, zuletzt gezeichnet: kein Stueck verdeckt sie
+        foreach (var (bereich, name) in bereiche.Where(b => b.Name.Length > 0))
+        {
+            NamenSchild(ctx, schrift, name, Bearbeitung.NamenLage(g, bereich));
         }
 
         // Ausgewaehltes Stueck (beim Ziehen an der neuen Stelle)
@@ -266,6 +264,24 @@ public sealed class GrundrissFlaeche : Control
                 Schreiben(ctx, schrift, InnenKatalog.Name(typ), r.TopLeft + new Point(3, 1), 10, Brushes.White, 1, r.Width - 6);
             }
         }
+    }
+
+    /// <summary>Groesse der Raumnamen in Bildpunkten.</summary>
+    public const double NamenGroesse = 12;
+
+    /// <summary>Lage des Namensschilds eines Bereichs im Bild (fuer Zeichnen und Start-Test).</summary>
+    public Rect NamenRechteck(string name, (double X, double Unterkante) lage)
+    {
+        var ft = new FormattedText(name, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, new Typeface(FontFamily.Default), NamenGroesse, Brushes.Black);
+        var unten = Bild(lage.X, lage.Unterkante, 0, 0).TopLeft;
+        return new Rect(unten.X - 3, unten.Y - ft.Height - 2, ft.Width + 6, ft.Height + 2);
+    }
+
+    private void NamenSchild(DrawingContext ctx, Typeface schrift, string name, (double X, double Unterkante) lage)
+    {
+        var r = NamenRechteck(name, lage);
+        ctx.DrawRectangle(new SolidColorBrush(Color.Parse(FarbenAnwenden.Aktuell.Farben["card"]), 0.92), new Pen(Farbe("border"), 1), r, 4, 4);
+        Schreiben(ctx, schrift, name, r.TopLeft + new Point(3, 1), NamenGroesse, Farbe("text"), 1);
     }
 
     private static void Schreiben(DrawingContext ctx, Typeface schrift, string text, Point ort, double groesse, IBrush pinsel, double deckkraft, double? breite = null)

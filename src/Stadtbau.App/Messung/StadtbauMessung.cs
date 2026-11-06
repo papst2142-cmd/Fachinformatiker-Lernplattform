@@ -184,7 +184,7 @@ public static class StadtbauMessung
         // 1. Elektromarkt: Fund 216 rot, Export gesperrt
         await MessenAsync("Projekt anlegen (Elektromarkt)", a, () =>
         {
-            a.NeuAnlegen("Starttest Elektromarkt", "elektromarkt");
+            a.NeuAnlegen("Starttest Elektromarkt prüfen", "elektromarkt");
             return Task.CompletedTask;
         }, einmalig: true);
         await a.Geprueft;
@@ -269,7 +269,7 @@ public static class StadtbauMessung
         await AlleGroessenAsync(a, f, "Draufsicht");
 
         // 3. Moebelhaus: kleine Aenderung, Datei speichern, wie beim Einbau pruefen
-        a.NeuAnlegen("Starttest Moebelhaus", "moebelhaus");
+        a.NeuAnlegen("Starttest Möbelhaus", "moebelhaus");
         await MessenAsync("Innenraum oeffnen", a, () =>
         {
             a.OrtOeffnen("bank");
@@ -308,7 +308,15 @@ public static class StadtbauMessung
         }
         Messwerte.Notiere("Export Moebelhaus: " + Path.GetFileName(pfad) + ", Fassung " + fassung.Nummer.ToString(Inv) + " auf Basis " + (fassung.Basis ?? -1).ToString(Inv));
 
-        // 4. Handy: nur der Hinweis
+        // 4. Stadt draussen (Welle 3): setzen, schieben, drehen, loeschen, Pruefung, 3D-Ansicht
+        await DraussenAsync(a, f);
+        await LeereStadtAsync(a, f);
+        if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
+        {
+            return Ende();
+        }
+
+        // 5. Handy: nur der Hinweis
         await GroesseAsync(a, f, 412, 915);
         if (!a.HandyHinweisSichtbar)
         {
@@ -321,6 +329,198 @@ public static class StadtbauMessung
             Fund("Handy: Hinweis bleibt in PC-Groesse sichtbar");
         }
         return Ende();
+    }
+
+    private static async Task DraussenAsync(Hauptansicht a, Window? f)
+    {
+        a.NeuAnlegen("Starttest Straßen und Grün", null);
+        await a.AussenGeprueft;
+        var p = a.Projekt!;
+        if (a.AussenFunde.Any(x => x.Rot))
+        {
+            Fund("Draussen Stadt 1: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
+        }
+        Messwerte.Notiere("Draussen Stadt 1: " + a.AussenFunde.Count.ToString(Inv) + " Funde (gelb)");
+        a.ReiterZeigen(innen: false);
+        var vorher = PythonJson.Text(p.AussenStand);
+        var k = a.Karte;
+        await MessenAsync("Draussen setzen (Laterne)", a, () =>
+        {
+            k.SetzenArt = AussenArt.Laterne;
+            if (k.SetzenAn(12, 20.3) is null)
+            {
+                Fund("Draussen setzen: Laterne an der Strasse nicht gesetzt");
+            }
+            k.SetzenArt = null;
+            return Task.CompletedTask;
+        }, () =>
+        {
+            a.Rueckgaengig();
+            return Task.CompletedTask;
+        });
+        a.Rueckgaengig();
+        var baum = AussenBearbeitung.Alle(p.AussenStand).First(x => x.Stelle.Art == AussenArt.Baum).Stelle;
+        k.Waehlen(baum);
+        await MessenAsync("Draussen verschieben (Baum)", a, () =>
+        {
+            k.Verschieben(0.5, 0);
+            return Task.CompletedTask;
+        }, () =>
+        {
+            a.Rueckgaengig();
+            k.Waehlen(baum);
+            return Task.CompletedTask;
+        });
+        a.Rueckgaengig();
+        var park = AussenBearbeitung.Alle(p.AussenStand).First(x => x.Stelle.Art == AussenArt.Park).Stelle;
+        k.Waehlen(park);
+        await MessenAsync("Draussen drehen (Park)", a, () =>
+        {
+            k.Drehen();
+            return Task.CompletedTask;
+        }, () =>
+        {
+            a.Rueckgaengig();
+            k.Waehlen(park);
+            return Task.CompletedTask;
+        });
+        a.Rueckgaengig();
+        k.Waehlen(baum);
+        await MessenAsync("Draussen loeschen (Baum)", a, () =>
+        {
+            k.Loeschen();
+            return Task.CompletedTask;
+        }, () =>
+        {
+            a.Rueckgaengig();
+            k.Waehlen(baum);
+            return Task.CompletedTask;
+        });
+        a.Rueckgaengig();
+        if (PythonJson.Text(p.AussenStand) != vorher)
+        {
+            Fund("Draussen: nach Setzen, Schieben, Drehen, Loeschen und Rueckgaengig nicht wie vorher");
+        }
+        var uhr = Stopwatch.StartNew();
+        await a.AussenGeprueft;
+        Messwerte.Notiere(string.Create(Inv, $"Pruefung draussen bis fertig (Angabe): {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+        // Liste der Funde: nach der Pruefung nie mehr "Pruefung laeuft", ein roter Fund steht in der Liste
+        k.SetzenArt = AussenArt.Laterne;
+        k.SetzenAn(12, 8);
+        k.SetzenArt = null;
+        await a.AussenGeprueft;
+        await BildAsync(a);
+        ListePruefen(a, rotErwartet: true);
+        a.Rueckgaengig();
+        await a.AussenGeprueft;
+        await BildAsync(a);
+        ListePruefen(a, rotErwartet: false);
+        k.Waehlen(new AussenStelle(AussenArt.Laterne, 0));
+        await AlleGroessenAsync(a, f, "Draussen");
+
+        // 3D: erstes Oeffnen (einmalig), nach einer Aenderung (wiederholbar), Grenzen der Gesamtansicht
+        a.DreiZeigen();
+        await a.DreiFertig;
+        DreiGrenze("3D-Ansicht oeffnen (bis zum Bild)", [a.DreiZeitMs], einmalig: true);
+        if (!a.Drei.GlBereit)
+        {
+            Messwerte.Notiere("3D-Ansicht: kein OpenGL auf diesem Rechner, Hinweis gezeigt (keine Messung der Grenzen)");
+        }
+        var werte = new List<double>();
+        for (var i = 0; i < 3; i++)
+        {
+            k.Waehlen(baum);
+            k.Verschieben(i % 2 == 0 ? 0.5 : -0.5, 0);
+            await a.DreiFertig;
+            werte.Add(a.DreiZeitMs);
+            if (a.DreiZeitMs <= Grenze)
+            {
+                break;
+            }
+            await Task.Delay(200);
+        }
+        DreiGrenze("3D nach Aenderung (bis zum Bild)", werte, einmalig: false);
+        var nacht = new Ansicht3D.Einstellung(true, Jahreszeit.Winter, Festzeit.Weihnachten);
+        a.EinstellungSetzen(nacht);
+        await a.DreiFertig;
+        if (a.DreiWahlText != "Nacht / Winter / Weihnachten")
+        {
+            Fund("3D-Ansicht: Auswahl zeigt \"" + a.DreiWahlText + "\" statt \"Nacht / Winter / Weihnachten\"");
+        }
+        a.EinstellungSetzen(Ansicht3D.Einstellung.Standard);
+        await a.DreiFertig;
+        if (a.Drei.GlBereit)
+        {
+            await a.GrenzenMessenAsync();
+            if (a.GrenzenDraussen is { } gz)
+            {
+                Messwerte.Notiere(string.Create(Inv, $"Grenzen Gesamtansicht Stadt 1 (Nacht, Winter, Weihnachten): {gz.Dreiecke} Dreiecke, {gz.Aufrufe} Aufrufe"));
+                if (gz.Dreiecke > StadtbauGrenzen.Dreiecke || gz.Aufrufe > StadtbauGrenzen.Aufrufe)
+                {
+                    Fund(string.Create(Inv, $"Grenzen Gesamtansicht: {gz.Dreiecke} Dreiecke / {gz.Aufrufe} Aufrufe ueber {StadtbauGrenzen.Dreiecke} / {StadtbauGrenzen.Aufrufe}"));
+                }
+            }
+            else
+            {
+                Fund("Grenzen Gesamtansicht: keine Messung");
+            }
+        }
+        await AlleGroessenAsync(a, f, "3D-Ansicht");
+        a.ReiterZeigen(innen: false);
+    }
+
+    private static async Task LeereStadtAsync(Hauptansicht a, Window? f)
+    {
+        a.NeuAnlegen("Starttest Leere Stadt", null, (16, 12));
+        await a.AussenGeprueft;
+        Messwerte.Notiere("Leere Stadt: " + a.AussenFunde.Count.ToString(Inv) + " Funde (" + string.Join(" | ", a.AussenFunde.Select(x => x.Text)) + ")");
+        if (a.AussenFunde.Any(x => x.Rot))
+        {
+            Fund("Leere Stadt: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
+        }
+        await AlleGroessenAsync(a, f, "Leere Stadt Draufsicht");
+        a.DreiZeigen();
+        await a.DreiFertig;
+        if (a.Drei.Spiel is null)
+        {
+            Fund("Leere Stadt: 3D-Ansicht nicht gebaut");
+        }
+        Messwerte.Reihe("3D-Ansicht leere Stadt (Angabe)", a.DreiZeitMs);
+        a.Karte.SetzenArt = AussenArt.Strasse;
+        a.Karte.SetzenAn(8, 6);
+        a.Karte.SetzenArt = null;
+        await a.DreiFertig;
+        await a.AussenGeprueft;
+        if (a.Drei.Spiel is null)
+        {
+            Fund("Leere Stadt mit Strasse: 3D-Ansicht nicht gebaut");
+        }
+        await AlleGroessenAsync(a, f, "Leere Stadt 3D");
+        a.ReiterZeigen(innen: false);
+    }
+
+    private static void ListePruefen(Hauptansicht a, bool rotErwartet)
+    {
+        var text = a.AussenPruefungText;
+        Messwerte.Notiere("Liste Pruefungen draussen: " + text);
+        if (text.Contains(Texte.PruefungLaeuft, StringComparison.Ordinal))
+        {
+            Fund("Pruefungen draussen: Liste zeigt nach der Pruefung noch \"" + Texte.PruefungLaeuft + "\"");
+        }
+        if (rotErwartet != text.Contains("Rot: ", StringComparison.Ordinal))
+        {
+            Fund("Pruefungen draussen: Liste " + (rotErwartet ? "ohne" : "mit") + " rotem Fund: " + text);
+        }
+    }
+
+    private static void DreiGrenze(string name, List<double> werte, bool einmalig)
+    {
+        Messwerte.Reihe(name, werte[^1]);
+        if (werte.Count > 0 && werte.All(w => w > Grenze) && (einmalig || werte.Count == 3))
+        {
+            Fund(string.Create(Inv, $"{name}: {werte.Min():F0} ms ueber Grenze {Grenze:F0} ms; Einzelmessungen {string.Join(", ", werte.Select(w => w.ToString("F0", Inv)))} ms")
+                + (einmalig ? " (einmaliger Messpunkt, nicht wiederholt)" : ""));
+        }
     }
 
     private static int Ende()

@@ -80,4 +80,33 @@ public class BearbeitungTests
         Bearbeitung.Raum(g, id, 0.5, 0, Py.F(raum["w"]) - 0.5, Py.F(raum["h"]));
         Assert.Equal(2.5, Py.F(SpielDaten.Objekt(raum["tuer"])["von"]));
     }
+
+    [Fact]
+    public void Raumname_UeberDerWand_KeinStueckDarueber()
+    {
+        // Sammelliste 219 Punkt 1: der Name stand oben links innen im Raum und lag unter dem ersten Stueck an der Wand.
+        // Jetzt steht seine Unterkante auf der Aussenkante der oberen Wand: kein Stueck des Bereichs reicht darueber.
+        var vorherVerdeckt = 0;
+        foreach (var ort in Daten.Spiel.Orte)
+        {
+            var g = Grundriss(ort);
+            foreach (var (bereich, _) in Bearbeitung.Bereiche(g))
+            {
+                var (bx, by, bw, _) = Bearbeitung.Flaeche(g, bereich);
+                var (x, unten) = Bearbeitung.NamenLage(g, bereich);
+                Assert.True(unten <= by - (Wege.WandInnen / 2) + 1e-9, ort + "/" + bereich);
+                Assert.InRange(x, bx, bx + bw);
+                foreach (var (stelle, d) in Bearbeitung.Alle(g).Where(s => s.Stelle.Bereich == bereich))
+                {
+                    Assert.True(Py.F(d["y"]) >= unten, ort + "/" + bereich + ": " + Py.Str(d["typ"]));
+                    // Gegenprobe alte Lage: Schrift von y bis y + 0,4 innen links, Stueck an der oberen Wand links
+                    if (Py.F(d["y"]) < by + 0.4 && Py.F(d["x"]) < bx + 1.5)
+                    {
+                        vorherVerdeckt++;
+                    }
+                }
+            }
+        }
+        Assert.True(vorherVerdeckt > 0, "In Fassung 0 lag kein Stueck unter der alten Namenslage (Gegenprobe ohne Wirkung)");
+    }
 }

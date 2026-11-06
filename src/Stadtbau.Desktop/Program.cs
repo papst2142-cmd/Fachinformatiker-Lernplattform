@@ -30,7 +30,14 @@ internal static class Program
         {
             Oberflaeche.Aktualisierung.Pruefen = Pruefen;
         }
-        return AppBuilder.Configure<StadtbauApp>().UsePlatformDetect().WithInterFont().LogToTrace().StartWithClassicDesktopLifetime(args);
+        // Phase 13 Welle 3: wie in der Lernplattform erlaubt nur der Start-Test (Xvfb der CI) den Mesa-Softwaretreiber
+        // llvmpipe, damit die 3D-Ansicht dort OpenGL bekommt. Ohne Schalter gilt die Vorgabe von Avalonia.
+        var x11 = new X11PlatformOptions();
+        if (Environment.GetEnvironmentVariable("LERNPLATTFORM_GL_LLVMPIPE") == "1")
+        {
+            x11.GlxRendererBlacklist = [];
+        }
+        return AppBuilder.Configure<StadtbauApp>().UsePlatformDetect().With(x11).WithInterFont().LogToTrace().StartWithClassicDesktopLifetime(args);
     }
 
     /// <summary>Neue Version der Linie vS suchen und laden; Rueckgabe: Anzeige der neuen Version oder null.</summary>

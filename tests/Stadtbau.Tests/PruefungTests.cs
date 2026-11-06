@@ -38,8 +38,12 @@ public class PruefungTests
                 Assert.Equal(8, rot.Count);
                 Assert.All(rot, f => Assert.Contains("zu Fuß nicht erreichbar", f.Text, StringComparison.Ordinal));
                 Assert.All(rot, f => Assert.NotNull(f.X));
+                // Sammelliste 219 Punkt 2: der Name wie im Spiel im Text, die Kennung nur klein im Tipp
+                var kennungen = rot.Select(f => f.Tipp.Split("(Kennung: ")[1].TrimEnd(')')).Order(StringComparer.Ordinal).ToList();
+                Assert.Equal(["teile:cpu", "teile:gehaeuse", "teile:gpu", "teile:mainboard", "teile:netzteil", "teile:notebook", "teile:ram", "teile:ssd"], kennungen);
                 var waren = rot.Select(f => f.Text.Split('„', '“')[1]).Order(StringComparer.Ordinal).ToList();
-                Assert.Equal(["teile:cpu", "teile:gehaeuse", "teile:gpu", "teile:mainboard", "teile:netzteil", "teile:notebook", "teile:ram", "teile:ssd"], waren);
+                Assert.Equal(["Arbeitsspeicher", "CPU", "Gehäuse", "Grafikkarte", "Mainboard", "Netzteil", "Notebook", "SSD"], waren);
+                Assert.All(rot, f => Assert.DoesNotContain("teile:", f.Text, StringComparison.Ordinal));
             }
             else
             {
@@ -125,6 +129,45 @@ public class PruefungTests
         Bearbeitung.Ware(g, stelle, null);
         var rot = Pruefen("moebelhaus", g).Where(f => f.Rot).ToList();
         Assert.NotEmpty(rot);
+    }
+
+    [Fact]
+    public void Sortiment_ZeigtNamenWieImSpiel_KennungNurImTipp()
+    {
+        // Sammelliste 219 Punkt 2: Moebel ohne Auslage (Moebelhaus) und Teile-Typ ohne Regal (Elektromarkt)
+        var g = Grundriss("moebelhaus");
+        var (stelle, d) = Bearbeitung.Alle(g).First(s => Py.Hat(s.Deko, "ware") && !Py.Str(s.Deko["ware"]).Contains(':', StringComparison.Ordinal));
+        var kennung = Py.Str(d["ware"]);
+        var name = D.Geschaefte.Finden("moebelhaus", Geschaefte.ArtMoebel, kennung)!.Name;
+        Assert.NotEqual(kennung, name);
+        foreach (var andere in Bearbeitung.Alle(g).Where(s => Py.Gleich(s.Deko["ware"], kennung)).Select(s => s.Stelle).Reverse().ToList())
+        {
+            Bearbeitung.Ware(g, andere, null);
+        }
+        var fund = Assert.Single(Pruefen("moebelhaus", g), f => f.Text.Contains("steht nirgends aus", StringComparison.Ordinal));
+        Assert.Contains("„" + name + "“", fund.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain(kennung, fund.Text, StringComparison.Ordinal);
+        Assert.EndsWith("(Kennung: " + kennung + ")", fund.Tipp, StringComparison.Ordinal);
+
+        var e = Grundriss("elektromarkt");
+        foreach (var s in Bearbeitung.Alle(e).Where(s => Py.Gleich(s.Deko["ware"], "teile:mainboard")).Select(s => s.Stelle).Reverse().ToList())
+        {
+            Bearbeitung.Ware(e, s, null);
+        }
+        var regal = Assert.Single(Pruefen("elektromarkt", e), f => f.Text.Contains("kein Regal", StringComparison.Ordinal));
+        Assert.Equal("Für „Mainboard“ gibt es kein Regal.", regal.Text);
+        Assert.EndsWith("(Kennung: teile:mainboard)", regal.Tipp, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("elektromarkt", "teile:ram", "Arbeitsspeicher")]
+    [InlineData("kaufhaus", "kleidung:kopf", "Kappen und Mützen")]
+    [InlineData("moebelhaus", "gibt_es_nicht", "gibt_es_nicht")]
+    public void Warennamen_WieImSpiel(string ort, string kennung, string erwartet)
+    {
+        var name = Warennamen.Name(D.Geschaefte, ort, kennung);
+        Assert.Equal(erwartet, name);
+        Assert.Equal(name == kennung ? "" : " (Kennung: " + kennung + ")", Warennamen.Kennung(name, kennung));
     }
 
     [Fact]

@@ -22,7 +22,7 @@ public static class Texte
     // ---- Start ----
     public const string Willkommen = "Willkommen im Stadtbau-Werkzeug";
     public const string WillkommenText =
-        "Hier baust du Innenräume der Stadt um. Lege ein neues Projekt an oder öffne ein vorhandenes. Jede Änderung wird sofort gespeichert, die letzten 20 Stände liegen zusätzlich als Sicherung bereit.";
+        "Hier baust du die Stadt und ihre Innenräume um. Lege ein neues Projekt an oder öffne ein vorhandenes. Jede Änderung wird sofort gespeichert, die letzten 20 Stände liegen zusätzlich als Sicherung bereit.";
     public const string LetzteProjekte = "Zuletzt bearbeitet";
     public const string KeineProjekte = "Noch kein Projekt vorhanden.";
     public const string NurHandy = "Das Werkzeug ist für Tablet und PC gedacht";
@@ -35,10 +35,23 @@ public static class Texte
     public const string NeuArt = "Was möchtest du bauen?";
     public const string NeuStadt = "Stadt 1 überarbeiten";
     public const string NeuInnenraum = "Innenraum überarbeiten";
-    public const string NeuLeer = "Leere Stadt (kommt mit der nächsten Version)";
+    public const string NeuLeer = "Leere Stadt";
     public const string NeuOrt = "Welcher Innenraum?";
     public const string Anlegen = "Anlegen";
     public const string Abbrechen = "Abbrechen";
+    public const string VorschlagLeer = "Neue Stadt";
+
+    /// <summary>
+    /// Vorgegebener Projektname im Fenster "Neues Projekt" (Sammelliste 219 Punkt 3, mit Umlauten; die Datei heisst in ASCII,
+    /// <see cref="Projekt.DateiName"/>): Stadt 1 = "Stadt 1 überarbeiten", Innenraum = "&lt;Ort&gt; umbauen", leer = "Neue Stadt".
+    /// </summary>
+    public static string Vorschlag(string art, string? ortName) => art switch
+    {
+        NeuInnenraum => (ortName ?? "Innenraum") + " umbauen",
+        NeuLeer => VorschlagLeer,
+        _ => NeuStadt,
+    };
+
     public const string NameUngueltig = "Der Name passt nicht. Erlaubt sind Buchstaben, Ziffern, Leerzeichen, - und _ (1 bis 40 Zeichen).";
 
     // ---- Oeffnen ----
@@ -75,7 +88,55 @@ public static class Texte
     public const string Verkleinern = "Verkleinern";
     public const string Einpassen = "Ganz zeigen";
     public const string Grundriss = "Grundriss";
-    public const string DraufsichtHinweis = "Tippe auf ein Haus mit Innenraum, um ihn zu bearbeiten. Die Stadt außen kommt mit der nächsten Version.";
+    public const string DraufsichtHinweis = "Tippe ein Stück der Stadt an, um es zu bearbeiten, oder wähle links ein neues Stück. Ein Doppeltipp auf ein Haus mit Innenraum öffnet den Innenraum.";
+
+    // ---- Stadt aussen (Welle 3) ----
+    public const string Strasse = "Straße";
+    public const string Haus = "Haus";
+    public const string HausOhneOrt = "Gebäude ohne Innenraum";
+    public const string Laterne = "Laterne";
+    public const string LaterneDoppelt = "Doppellaterne";
+    public const string Beet = "Beet";
+    public const string Baum = "Baum";
+    public const string Park = "Park";
+    public const string Paketplatz = "Paketplatz";
+    public const string Gehweg = "Gehweg";
+    public const string GehwegBreite = "Gehweg je Seite (0 bis 0,6)";
+    public const string Laenge = "Länge";
+    public const string Modell = "Modell";
+    public const string PaketVor = "Abstand vor der Tür";
+    public const string PaketSeitlich = "Abstand zur Seite";
+    public const string Doppelt = "Doppellaterne (zwei Lampen)";
+    public const string AussenKatalog = "Stücke für draußen";
+    public const string AussenSetzenAktiv = "Tippe auf die Stelle in der Karte, an die das Stück soll.";
+    public const string HausDrehenNicht = "Häuser schauen im Spiel immer mit der Vorderseite nach Süden. Drehen kann das Spiel noch nicht.";
+    public const string LaterneDrehenNicht = "Laternen richten sich im Spiel selbst zur Straße aus.";
+    public const string DrehenNichtNoetig = "Dieses Stück sieht von allen Seiten gleich aus.";
+    public const string OrtLoeschenNicht = "Ein Haus mit Innenraum gehört zum Spiel und bleibt. Du kannst es verschieben.";
+    public const string KopieNicht = "Ein Haus mit Innenraum und den Paketplatz gibt es nur einmal.";
+    public const string PaketLoeschenNicht = "Den Paketplatz gibt es genau einmal. Du kannst ihn verschieben.";
+    public const string Ansicht3D = "3D-Ansicht";
+    public const string Tag = "Tag";
+    public const string Nacht = "Nacht";
+    public const string Jahreszeit = "Jahreszeit";
+    public const string Fest = "Fest";
+    public const string KeinFest = "kein Fest";
+    public const string ProbeLaufen = "Probe laufen";
+    public const string ProbeLaufenHinweis = "Tippe in der 3D-Ansicht auf eine Stelle, die Figur läuft dorthin wie im Spiel.";
+    public const string Ansicht3DBaut = "Die 3D-Ansicht wird neu gebaut …";
+    public const string Ansicht3DFehler = "Die 3D-Ansicht lässt sich gerade nicht bauen. Schau bei den Prüfungen nach.";
+    public const string Ansicht3DOhneGrafik = "Auf diesem Gerät gibt es keine 3D-Grafik.";
+    public const string GrenzenGesamt = "Grenzen in der Gesamtansicht (Nacht, Winter, Weihnachten)";
+    public const string GrenzenMessen = "Grenzen messen";
+    public const string GrenzenNochNicht = "Noch nicht gemessen. Tippe auf „Grenzen messen“.";
+    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut. Gehwege zeichnet das Spiel erst mit dem Einbau.";
+    public const string PruefungenDraussen = "Prüfungen draußen";
+    public const string PruefungLaeuft = "Prüfung läuft …";
+    public const string HausSetzen = "Haus setzen";
+    public const string KeineInnenraeume = "Diese Stadt hat noch keine Häuser mit Innenraum.";
+    public const string LeerBreite = "Breite der Stadt (8 bis 64)";
+    public const string LeerHoehe = "Tiefe der Stadt (8 bis 64)";
+    public const string LeerGroesseUngueltig = "Die Größe passt nicht. Erlaubt sind 8 bis 64 in Schritten von 0,5.";
 
     // ---- Export und Senden ----
     public const string ExportGesperrt = "Datei kann noch nicht gespeichert werden";

@@ -13,7 +13,7 @@ namespace Lernplattform.Core.Update;
 /// </summary>
 public static partial class ReleaseLinie
 {
-    /// <summary>Linie der Lernplattform: vA0.42.1, vB0.1.0, ab 1.0 v1.0.0 (Hauptnummer ab 1).</summary>
+    /// <summary>Linie der Lernplattform: vA0.42.2, vB0.1.0, ab 1.0 v1.0.0 (Hauptnummer ab 1).</summary>
     [GeneratedRegex(@"^v(?:[AB](?:0|[1-9][0-9]*)|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\z", RegexOptions.CultureInvariant)]
     private static partial Regex LernplattformMuster();
 

@@ -52,6 +52,28 @@ public static class Bearbeitung
         return (Py.F(r["x"]), Py.F(r["y"]), Py.F(r["w"]), Py.F(r["h"]));
     }
 
+    /// <summary>
+    /// Sammelliste 219 Punkt 1: der Name eines Bereichs steht im Grundriss ueber seiner oberen Wand (Unterkante der Schrift =
+    /// Aussenkante der Wand, links 0,1 nach der Ecke), damit ihn kein Stueck an der Wand verdeckt. Die Draufsicht zeichnet
+    /// ihn zuletzt auf einem Schild.
+    /// </summary>
+    public static (double X, double Unterkante) NamenLage(PyObjekt gebaeude, string bereich)
+    {
+        var (x, y, _, _) = Flaeche(gebaeude, bereich);
+        return (Runden(x + 0.1), Runden(y - (Lernplattform.Core.Spiel.Wege.WandInnen / 2)));
+    }
+
+    /// <summary>Alle Bereiche (Flur, dann die Raeume) mit ihrem Namen fuer die Anzeige.</summary>
+    public static List<(string Bereich, string Name)> Bereiche(PyObjekt gebaeude)
+    {
+        var liste = new List<(string, string)> { ("flur", Get(Objekt(gebaeude["flur"]), "name") as string ?? "Flur") };
+        foreach (var r in Liste(gebaeude["raeume"]).OfType<PyObjekt>())
+        {
+            liste.Add((Py.Str(r["id"]), Get(r, "name") as string ?? Py.Str(r["id"])));
+        }
+        return liste;
+    }
+
     /// <summary>Bereich, in dem ein Punkt liegt (Raum vor Flur), sonst null.</summary>
     public static string? BereichBei(PyObjekt gebaeude, double x, double y)
     {
