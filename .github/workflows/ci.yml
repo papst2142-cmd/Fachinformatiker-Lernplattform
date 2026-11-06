@@ -745,7 +745,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: "!cancelled() && steps.werkzeug_apk.outcome == 'success'"
         with:
-          name: stadtbau-android-S-0.2.0
+          name: stadtbau-android-S-0.3.0
           path: stadtbau/stadtbau-android/
           if-no-files-found: error
       - uses: actions/download-artifact@v8

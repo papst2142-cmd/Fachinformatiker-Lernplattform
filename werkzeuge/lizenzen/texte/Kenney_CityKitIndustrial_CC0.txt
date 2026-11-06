@@ -1,0 +1,30 @@
+Quelle: License.txt aus kenney_city-kit-industrial_2.0.zip (SHA-256 der ZIP 5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2), im Grafik-Vorrat (Fi-Austausch anlagen/grafik_cc0), fuer den vollen Katalog des Stadtbau-Werkzeugs (Weisung P12-19).
+
+	
+
+	City Kit Industrial (2.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 31-08-2026 12:22
+	
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+	
+	Follow on social media for updates:
+
+	• Twitter:	 twitter.com/KenneyNL
+	• BlueSky:	 kenney.bsky.social
+	• Instagram: instagram.com/kenney_nl

@@ -85,6 +85,10 @@ public sealed class Hauptansicht : UserControl
     private readonly TextBlock _katalogHinweis = Schrift.Text(Texte.KatalogHinweis, "Klein", farbe: "Pinsel.muted");
     private readonly CheckBox _rasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
     private Control? _innenAnsicht;
+    private KatalogAnsicht? _katalogInnen;
+    private KatalogAnsicht? _katalogAussen;
+    private readonly Grid _innenRaster = new() { ColumnDefinitions = new ColumnDefinitions("260,*,340") };
+    private readonly Grid _aussenRaster = new() { ColumnDefinitions = new ColumnDefinitions("260,*,340") };
     private Control? _kartenAnsicht;
     private Control? _dreiAnsicht;
 
@@ -541,7 +545,7 @@ public sealed class Hauptansicht : UserControl
         var links = new StackPanel
         {
             Spacing = 8,
-            Children = { Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus, _aussenRasterAus },
+            Children = { Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, VollerKatalogKnopf(false), Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus, _aussenRasterAus },
         };
         var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
 
@@ -570,13 +574,76 @@ public sealed class Hauptansicht : UserControl
             },
         };
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("260,*,340") };
+        var g = _aussenRaster;
         g.Children.Add(linksRollen);
         Grid.SetColumn(mitte, 1);
         g.Children.Add(mitte);
         Grid.SetColumn(rechtsRollen, 2);
         g.Children.Add(rechtsRollen);
         return g;
+    }
+
+    // ---- voller Katalog (Phase 13 Welle 3b) -------------------------------------------------------
+
+    private Button VollerKatalogKnopf(bool innen)
+    {
+        var k = Schrift.Knopf(Texte.VollerKatalogOeffnen, betont: true).Vorlese(Texte.VollerKatalog);
+        k.HorizontalAlignment = HorizontalAlignment.Stretch;
+        k.IsEnabled = Katalog.Aktiv is not null;
+        k.Click += (_, _) => KatalogOeffnen(innen);
+        return k;
+    }
+
+    /// <summary>Der Katalog der Seite (innen oder draussen), sobald er einmal geoeffnet wurde.</summary>
+    public KatalogAnsicht? KatalogFuer(bool innen) => innen ? _katalogInnen : _katalogAussen;
+
+    /// <summary>Den vollen Katalog ueber Katalog und Flaeche legen (rechts bleiben Auswahl und Pruefungen sichtbar).</summary>
+    public KatalogAnsicht KatalogOeffnen(bool innen)
+    {
+        var k = innen ? _katalogInnen : _katalogAussen;
+        if (k is null)
+        {
+            k = new KatalogAnsicht { Margin = new Thickness(12) };
+            Grid.SetColumnSpan(k, 2);
+            k.Geschlossen += () => KatalogSchliessen(innen);
+            k.Gewaehlt += e =>
+            {
+                KatalogSchliessen(innen);
+                if (innen)
+                {
+                    SetzenWaehlen(e.Typ);
+                }
+                else
+                {
+                    AussenSetzenWaehlen(AussenArt.Katalog, e.Id);
+                }
+            };
+            (innen ? _innenRaster : _aussenRaster).Children.Add(k);
+            if (innen)
+            {
+                _katalogInnen = k;
+            }
+            else
+            {
+                _katalogAussen = k;
+            }
+            if (Katalog.Aktiv is { Gruppen.Count: > 0 } kat)
+            {
+                k.GruppeZeigen(kat.Gruppen[0]);
+            }
+        }
+        k.IsVisible = true;
+        k.SucheFokus();
+        Melden(Texte.VollerKatalog);
+        return k;
+    }
+
+    private void KatalogSchliessen(bool innen)
+    {
+        if ((innen ? _katalogInnen : _katalogAussen) is { } k)
+        {
+            k.IsVisible = false;
+        }
     }
 
     private void OrtListeZeigen()
@@ -604,7 +671,12 @@ public sealed class Hauptansicht : UserControl
         }
         Karte.SetzenArt = art;
         Karte.SetzenModell = modell;
-        _aussenHinweis.Text = (art == AussenArt.Gebaeude ? Texte.HausOhneOrt + " (" + modell + ")" : KatalogName(art)) + ": " + Texte.AussenSetzenAktiv;
+        _aussenHinweis.Text = (art switch
+        {
+            AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
+            AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
+            _ => KatalogName(art),
+        }) + ": " + Texte.AussenSetzenAktiv;
         Melden(_aussenHinweis.Text);
     }
 
@@ -615,6 +687,7 @@ public sealed class Hauptansicht : UserControl
         AussenArt.Park => Texte.Park,
         AussenArt.Beet => Texte.Beet,
         AussenArt.Laterne => Texte.Laterne,
+        AussenArt.Katalog => Texte.VollerKatalog,
         _ => Texte.HausOhneOrt,
     };
 
@@ -633,8 +706,16 @@ public sealed class Hauptansicht : UserControl
         var x = Feld(lx);
         var y = Feld(ly);
         var zeilen = new List<(string, Control)> { (Texte.X, x), (Texte.Y, y) };
-        TextBox? gehweg = null, laenge = null, vor = null, seitlich = null;
+        TextBox? gehweg = null, laenge = null, vor = null, seitlich = null, kw = null, kt = null;
         CheckBox? doppelt = null;
+        if (s.Art == AussenArt.Katalog)
+        {
+            var (gw, gt) = AussenBearbeitung.KatalogGroesse(a, s);
+            kw = Feld(gw);
+            kt = Feld(gt);
+            zeilen.Add((Texte.Breite, kw));
+            zeilen.Add((Texte.Tiefe, kt));
+        }
         if (s.Art == AussenArt.Strasse)
         {
             gehweg = Feld(AussenBearbeitung.Gehweg(a, s));
@@ -678,7 +759,8 @@ public sealed class Hauptansicht : UserControl
                 }
                 return;
             }
-            if (!Zahl(x, out var nx) || !Zahl(y, out var ny) || (gehweg is not null && !Zahl(gehweg, out _)) || (laenge is not null && !Zahl(laenge, out _)))
+            if (!Zahl(x, out var nx) || !Zahl(y, out var ny) || (gehweg is not null && !Zahl(gehweg, out _)) || (laenge is not null && !Zahl(laenge, out _))
+                || (kw is not null && !Zahl(kw, out _)) || (kt is not null && !Zahl(kt, out _)))
             {
                 Melden("Bitte nur Zahlen eintragen (z. B. 2,5).");
                 return;
@@ -699,6 +781,10 @@ public sealed class Hauptansicht : UserControl
                     {
                         AussenBearbeitung.LaengeSetzen(aa, s, nl);
                     }
+                }
+                if (kw is not null && kt is not null && Zahl(kw, out var nw) && Zahl(kt, out var nt))
+                {
+                    AussenBearbeitung.KatalogGroesseSetzen(aa, s, nw, nt);
                 }
                 AussenBearbeitung.Platzieren(aa, s, nx, ny);
             });
@@ -1070,7 +1156,8 @@ public sealed class Hauptansicht : UserControl
         kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
         await Drei.NaechstesBildAsync();
         await Drei.NaechstesBildAsync();
-        GrenzenDraussen = (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe);
+        // Stuecke aus dem vollen Katalog zeichnet die 3D-Ansicht erst ab Welle 4; ihre echten Dreiecke zaehlen schon jetzt mit
+        GrenzenDraussen = (Drei.LetzteDreiecke + KatalogPruefung.DreieckeAussen(Katalog.Aktiv, _projekt.AussenStand), Drei.LetzteZeichenaufrufe);
         kamera.Setzen(ax, az);
         kamera.Zoomen(kamera.Abstand / ab);
         var (dreiecke, aufrufe) = GrenzenDraussen.Value;
@@ -1093,7 +1180,7 @@ public sealed class Hauptansicht : UserControl
             _ortWahl.Items.Add(new ComboBoxItem { Content = _daten.OrtName(o), Tag = o });
         }
         var ortTitel = Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl);
-        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), _katalogHinweis } };
+        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), _katalogHinweis, VollerKatalogKnopf(true) } };
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();
@@ -1154,7 +1241,7 @@ public sealed class Hauptansicht : UserControl
         };
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
 
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("260,*,340") };
+        var g = _innenRaster;
         g.Children.Add(linksRollen);
         Grid.SetColumn(mitte, 1);
         g.Children.Add(mitte);
@@ -1204,7 +1291,7 @@ public sealed class Hauptansicht : UserControl
             return;
         }
         Flaeche.SetzenTyp = typ;
-        _katalogHinweis.Text = InnenKatalog.Name(typ) + ": " + Texte.SetzenAktiv;
+        _katalogHinweis.Text = Bearbeitung.TeilName(typ) + ": " + Texte.SetzenAktiv;
         Melden(_katalogHinweis.Text);
     }
 
@@ -1233,7 +1320,7 @@ public sealed class Hauptansicht : UserControl
     private void AuswahlZeigen()
     {
         _auswahl.Children.Clear();
-        _katalogHinweis.Text = Flaeche.SetzenTyp is { } typ ? InnenKatalog.Name(typ) + ": " + Texte.SetzenAktiv : Texte.KatalogHinweis;
+        _katalogHinweis.Text = Flaeche.SetzenTyp is { } typ ? Bearbeitung.TeilName(typ) + ": " + Texte.SetzenAktiv : Texte.KatalogHinweis;
         if (_projekt is null || _ort is null || Flaeche.Auswahl is not { } a)
         {
             _auswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehlt, "Klein", farbe: "Pinsel.muted"));
@@ -1412,10 +1499,8 @@ public sealed class Hauptansicht : UserControl
         var uhr = Stopwatch.StartNew();
         _ = Task.Run(() =>
         {
-            var funde = StadtbauPruefung.Innen(ort, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume);
-            var raum = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), g, personen, daten.Grafik,
-                Geschaefte.Laeden.Contains(ort) ? daten.Geschaefte.Daten : null);
-            return (funde, StadtbauGrenzen.Innen(raum));
+            // Regeln des gemeinsamen Teils plus Katalog-Stuecke; Grenzen mit deren echten Dreiecken
+            return KatalogPruefung.Innen(Katalog.Aktiv, ort, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume);
         }).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _pruefStand || ort != _ort)

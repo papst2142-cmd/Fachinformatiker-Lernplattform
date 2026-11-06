@@ -135,6 +135,7 @@ public static class StadtbauMessung
             {
                 await GroesseAsync(a, f, b, h);
                 Layout(a, seite + " " + name + " " + (dunkel ? "dunkel" : "hell"));
+                BeschriftungPruefen(a, seite + " " + name + " " + (dunkel ? "dunkel" : "hell"));
             }
         }
         if (a.Dunkel)
@@ -310,6 +311,7 @@ public static class StadtbauMessung
 
         // 4. Stadt draussen (Welle 3): setzen, schieben, drehen, loeschen, Pruefung, 3D-Ansicht
         await DraussenAsync(a, f);
+        await KatalogAsync(a, f);
         await LeereStadtAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
@@ -467,6 +469,161 @@ public static class StadtbauMessung
         }
         await AlleGroessenAsync(a, f, "3D-Ansicht");
         a.ReiterZeigen(innen: false);
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 3b (Weisung P12-19 Abschnitt 2, P12-24): Beschriftungen der Draufsicht liegen ganz in der Karte
+    /// (Fund Chat: "TALHEIM" ragte am Tablet ueber den Rand). Gilt nur, wenn die Draufsicht zu sehen ist.
+    /// </summary>
+    private static int BeschriftungPruefen(Hauptansicht a, string wo, bool melden = true)
+    {
+        var k = a.Karte;
+        if (!k.IsEffectivelyVisible || k.Bounds.Width < 10)
+        {
+            return 0;
+        }
+        var r = k.KartenRand;
+        var draussen = 0;
+        foreach (var (text, b) in k.Beschriftungen)
+        {
+            if (!Beschriftung.Innen(b.X, b.Y, b.Width, b.Height, r.Left, r.Top, r.Right, r.Bottom))
+            {
+                draussen++;
+                if (melden)
+                {
+                    Fund(string.Create(Inv, $"Layout {wo}: Beschriftung \"{text}\" ragt ueber den Kartenrand ({b.X:F0},{b.Y:F0} {b.Width:F0}x{b.Height:F0}, Karte {r.Left:F0},{r.Top:F0} bis {r.Right:F0},{r.Bottom:F0})"));
+                }
+            }
+        }
+        return draussen;
+    }
+
+    /// <summary>Phase 13 Welle 3b: voller Katalog (oeffnen, Gruppe, Suche, setzen innen und draussen, Grenzen, Layout).</summary>
+    private static async Task KatalogAsync(Hauptansicht a, Window? f)
+    {
+        var kat = Katalog.Aktiv;
+        if (kat is null)
+        {
+            Fund("Katalog: voller Katalog nicht geladen");
+            return;
+        }
+        Messwerte.Notiere("Katalog: " + kat.Eintraege.Count.ToString(Inv) + " Stuecke in " + kat.PaketTitel.Count.ToString(Inv) + " Paketen, " + kat.Gruppen.Count.ToString(Inv) + " Gruppen");
+
+        // Gegenprobe Beschriftung: ohne Rand-Regel ragt am Tablet mindestens eine ueber den Rand (sonst taugt die Probe nicht)
+        a.ReiterZeigen(innen: false);
+        await GroesseAsync(a, f, Groessen[1].B, Groessen[1].H);
+        a.Karte.Einpassen();
+        Beschriftung.OhneRandFuerTests = true;
+        a.Karte.InvalidateVisual();
+        await BildAsync(a);
+        var ohne = BeschriftungPruefen(a, "Gegenprobe", melden: false);
+        Beschriftung.OhneRandFuerTests = false;
+        a.Karte.InvalidateVisual();
+        await BildAsync(a);
+        var mit = BeschriftungPruefen(a, "Tablet nach Gegenprobe");
+        Messwerte.Notiere("Beschriftung Gegenprobe Tablet: ohne Rand-Regel " + ohne.ToString(Inv) + " ueber dem Rand, mit Regel " + mit.ToString(Inv));
+        if (ohne == 0)
+        {
+            Fund("Beschriftung Gegenprobe: ohne Rand-Regel ragt keine Beschriftung ueber den Kartenrand (Probe taugt nicht)");
+        }
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+
+        // draussen: erstes Oeffnen (einmalig), dann nur gelesen, was gezeigt wird
+        KatalogAnsicht? ansicht = null;
+        await MessenAsync("Katalog oeffnen (erstes Oeffnen, bis zum Bild)", a, () =>
+        {
+            ansicht = a.KatalogOeffnen(innen: false);
+            return Task.CompletedTask;
+        }, einmalig: true);
+        var gezeigtePakete = ansicht!.GezeigteStuecke.Select(e => e.Paket).ToHashSet(StringComparer.Ordinal);
+        if (kat.GeleseneModellPakete.Count > 0 || kat.GeleseneVorschauPakete.Any(p => !gezeigtePakete.Contains(p)))
+        {
+            Fund("Katalog laedt mehr als er zeigt: Modelle " + string.Join(", ", kat.GeleseneModellPakete) + "; Vorschau " + string.Join(", ", kat.GeleseneVorschauPakete));
+        }
+        Messwerte.Notiere("Katalog nach dem Oeffnen gelesen: Vorschaubilder " + string.Join(", ", kat.GeleseneVorschauPakete) + "; Modelle " + kat.GeleseneModellPakete.Count.ToString(Inv));
+        var gruppe = kat.Gruppen.FirstOrDefault(g => g != ansicht.Gruppe && kat.InGruppe(g).All(e => !kat.GeleseneVorschauPakete.Contains(e.Paket)))
+            ?? kat.Gruppen.First(g => g != ansicht.Gruppe);
+        await MessenAsync("Katalog Gruppe oeffnen (erstes Oeffnen, bis zum Bild)", a, () =>
+        {
+            ansicht.GruppeZeigen(gruppe);
+            return Task.CompletedTask;
+        }, einmalig: true);
+        Messwerte.Notiere("Katalog Gruppe " + gruppe + ": " + ansicht.Treffer.ToString(Inv) + " Stuecke, gezeigt " + ansicht.Gezeigt.ToString(Inv));
+        await MessenAsync("Katalog Suche (bis zum Bild)", a, () =>
+        {
+            ansicht.Suchen("baum");
+            return Task.CompletedTask;
+        }, () =>
+        {
+            ansicht.Suchen("");
+            return Task.CompletedTask;
+        });
+        foreach (var wort in new[] { "Baum", "tree", "Stuhl", "chair", "Kürbis", "Auto" })
+        {
+            ansicht.Suchen(wort);
+            if (ansicht.Treffer == 0)
+            {
+                Fund("Katalog Suche: \"" + wort + "\" findet nichts");
+            }
+        }
+        ansicht.Suchen("baum");
+        await AlleGroessenAsync(a, f, "Katalog draussen");
+
+        // draussen setzen: ein Baum aus dem Katalog und ein Effekt, Grenzen mit echten Dreiecken
+        var p = a.Projekt!;
+        var baum = ansicht.GezeigteStuecke.First(e => e.Art == KatalogArt.Modell);
+        ansicht.Waehlen(baum);
+        if (ansicht.IsVisible)
+        {
+            Fund("Katalog: nach der Wahl eines Stuecks bleibt der Katalog offen");
+        }
+        if (a.Karte.SetzenAn(16, 12) is not { Art: AussenArt.Katalog })
+        {
+            Fund("Katalog draussen: " + baum.Anzeige + " nicht gesetzt");
+        }
+        var effekt = kat.Eintraege.First(e => e.Art == KatalogArt.Effekt);
+        a.KatalogOeffnen(innen: false).Waehlen(effekt);
+        a.Karte.SetzenAn(17, 12);
+        a.Karte.SetzenArt = null;
+        await a.AussenGeprueft;
+        if (a.AussenFunde.Any(x => x.Rot))
+        {
+            Fund("Katalog draussen: rote Funde: " + string.Join(" | ", a.AussenFunde.Where(x => x.Rot).Select(x => x.Text)));
+        }
+        var dreiecke = KatalogPruefung.DreieckeAussen(kat, p.AussenStand);
+        if (dreiecke != baum.Dreiecke + KatalogPruefung.EffektDreiecke)
+        {
+            Fund(string.Create(Inv, $"Katalog draussen: Grenzen zaehlen {dreiecke} Dreiecke statt {baum.Dreiecke + KatalogPruefung.EffektDreiecke}"));
+        }
+        await BildAsync(a);
+        BeschriftungPruefen(a, "Katalog draussen gesetzt");
+
+        // innen: Stuhl aus dem Katalog im Moebelhaus, gilt als Teil aus dem Katalog
+        a.NeuAnlegen("Starttest Katalog innen", "moebelhaus");
+        a.OrtOeffnen("moebelhaus");
+        var innen = a.KatalogOeffnen(innen: true);
+        innen.Suchen("Stuhl");
+        await BildAsync(a);
+        await AlleGroessenAsync(a, f, "Katalog innen");
+        var stuhl = innen.GezeigteStuecke.FirstOrDefault(e => e.Art == KatalogArt.Modell);
+        if (stuhl is null)
+        {
+            Fund("Katalog innen: kein Stuhl gefunden");
+            return;
+        }
+        innen.Waehlen(stuhl);
+        if (a.Flaeche.SetzenAn(2, 12) is null)
+        {
+            Fund("Katalog innen: " + stuhl.Anzeige + " nicht gesetzt");
+        }
+        a.Flaeche.SetzenTyp = null;
+        await a.Geprueft;
+        var falsch = a.Funde.Where(x => x.Text.Contains(Katalog.Praefix, StringComparison.Ordinal) || x.Text.Contains("kein Teil aus dem Katalog", StringComparison.Ordinal)).ToList();
+        foreach (var x in falsch)
+        {
+            Fund("Katalog innen: " + x.Text);
+        }
+        Messwerte.Notiere(string.Create(Inv, $"Katalog innen: {stuhl.Anzeige} gesetzt, {a.Funde.Count} Funde, Grenzen {a.GrenzenStand.Dreiecke} Dreiecke / {a.GrenzenStand.Aufrufe} Aufrufe"));
     }
 
     private static async Task LeereStadtAsync(Hauptansicht a, Window? f)

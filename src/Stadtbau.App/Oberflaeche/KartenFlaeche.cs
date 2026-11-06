@@ -111,6 +111,12 @@ public sealed class KartenFlaeche : Control
 
     private Point P(double x, double y) => new(_versatz.X + (x * _zoom), _versatz.Y + (y * _zoom));
 
+    /// <summary>Rand der Karte in Bildpunkten beim letzten Zeichnen (Start-Test).</summary>
+    public Rect KartenRand { get; private set; }
+
+    /// <summary>Beschriftungen (Ortsnamen) mit ihrem Rechteck beim letzten Zeichnen (Start-Test: nie ueber den Kartenrand).</summary>
+    public IReadOnlyList<(string Text, Rect Flaeche)> Beschriftungen { get; private set; } = [];
+
     private Point WeltPunkt(Point bild) => new((bild.X - _versatz.X) / _zoom, (bild.Y - _versatz.Y) / _zoom);
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
@@ -224,10 +230,46 @@ public sealed class KartenFlaeche : Control
                     break;
             }
         }
+        // Katalog-Stuecke (Phase 13 Welle 3b): Rechteck mit Vorschaubild, Effekt als leuchtendes Zeichen
+        foreach (var (s, _, _) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art == AussenArt.Katalog).ToList())
+        {
+            var (kx, ky, kw, kh) = AussenBearbeitung.KatalogFlaeche(a, s);
+            var r = new Rect(P(kx + Dx(s), ky + Dy(s)), P(kx + kw + Dx(s), ky + kh + Dy(s)));
+            var typ = Katalog.Praefix + AussenBearbeitung.KatalogId(a, s);
+            var eintrag = Katalog.Aktiv?.Eintrag(typ);
+            if (eintrag is { Art: KatalogArt.Effekt })
+            {
+                // leuchtendes Zeichen: goldener Schein, innen die Hauptfarbe des Effekts
+                var farbe = Color.TryParse(eintrag.Farbe ?? "", out var f) ? f : Color.Parse("#FFD54F");
+                var mitte = r.Center;
+                var radius = Math.Max(7, Math.Min(r.Width, r.Height) / 2);
+                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.30), null, mitte, radius * 1.5, radius * 1.5);
+                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.55), null, mitte, radius, radius);
+                ctx.DrawEllipse(new SolidColorBrush(farbe), new Pen(Pinsel("#7A5A00"), 1.5), mitte, radius * 0.5, radius * 0.5);
+                continue;
+            }
+            ctx.DrawRectangle(Pinsel("#E8E2D6", 0.85), new Pen(eintrag is null ? Pinsel("#C62828") : Pinsel("#5C554B"), 1), r);
+            if (KatalogBilder.Feld(typ) is { } bild && r.Width > 6 && r.Height > 6)
+            {
+                var seite = Math.Min(r.Width, r.Height);
+                ctx.DrawImage(bild.Bild, bild.Quelle, new Rect(r.Center.X - (seite / 2), r.Center.Y - (seite / 2), seite, seite));
+            }
+        }
+
+        // Beschriftungen bleiben ganz in der Karte (Fund Chat zu S 0.2.0: "TALHEIM" ragte am Tablet ueber den Rand)
+        var rand = new Rect(P(0, 0), P(b, h));
+        KartenRand = rand;
+        var beschriftungen = new List<(string, Rect)>();
         foreach (var l in land.OfType<PyObjekt>().Where(l => l["typ"] as string is "ortsname" or "beschriftung"))
         {
-            Text(ctx, schrift, l["text"] as string ?? "", P(Py.F(l["x"]), Py.F(l["y"])), 12, Brushes.Black, null);
+            var text = l["text"] as string ?? "";
+            var ft = new FormattedText(text, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, schrift, 12, Brushes.Black);
+            var p = P(Py.F(l["x"]), Py.F(l["y"]));
+            var (bx, by, bb) = Beschriftung.InKarte(p.X, p.Y, ft.Width, ft.Height, rand.Left, rand.Top, rand.Right, rand.Bottom);
+            Text(ctx, schrift, text, new Point(bx, by), 12, Brushes.Black, bb < ft.Width ? bb : null);
+            beschriftungen.Add((text, new Rect(bx, by, Math.Min(bb, ft.Width), ft.Height)));
         }
+        Beschriftungen = beschriftungen;
 
         // Auswahl
         if (Auswahl is { } aw && AussenBearbeitung.Gueltig(a, aw))
@@ -241,6 +283,10 @@ public sealed class KartenFlaeche : Control
                 case AussenArt.Haus or AussenArt.Gebaeude:
                     var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, aw);
                     ctx.DrawRectangle(null, stift, new Rect(P(hx + dx, hy + dy), P(hx + hw + dx, hy + hh + dy)).Inflate(3));
+                    break;
+                case AussenArt.Katalog:
+                    var (kx, ky, kw, kh) = AussenBearbeitung.KatalogFlaeche(a, aw);
+                    ctx.DrawRectangle(null, stift, new Rect(P(kx + dx, ky + dy), P(kx + kw + dx, ky + kh + dy)).Inflate(3));
                     break;
                 case AussenArt.Park:
                     var l = Objekt(land[aw.Nummer]);
@@ -326,7 +372,7 @@ public sealed class KartenFlaeche : Control
         SetzenArt = null;
         if (neu is not null)
         {
-            Gemeldet?.Invoke(ArtName(art) + " gesetzt");
+            Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell) : ArtName(art)) + " gesetzt");
         }
         Waehlen(neu);
         return neu;
@@ -341,6 +387,7 @@ public sealed class KartenFlaeche : Control
         AussenArt.Park => Texte.Park,
         AussenArt.Beet => Texte.Beet,
         AussenArt.Laterne => Texte.Laterne,
+        AussenArt.Katalog => Texte.VollerKatalog,
         _ => Texte.Paketplatz,
     };
 
@@ -473,6 +520,7 @@ public sealed class KartenFlaeche : Control
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+        TippZeigen(e.GetPosition(this));
         if (_druck is not { } start || Auswahl is null || _projekt?.NurLesen != false)
         {
             return;
@@ -485,6 +533,27 @@ public sealed class KartenFlaeche : Control
         _gezogen = true;
         _ziehWelt = new Point((p.X - start.X) / _zoom, (p.Y - start.Y) / _zoom);
         InvalidateVisual();
+    }
+
+    private string? _tipp;
+
+    /// <summary>Voller Name des Stuecks unter dem Zeiger als Tooltip (gekuerzte Hausnamen, Katalog-Stuecke).</summary>
+    private void TippZeigen(Point bild)
+    {
+        string? text = null;
+        if (Stand is { } a && _projekt is not null)
+        {
+            var w = WeltPunkt(bild);
+            if (AussenBearbeitung.StueckBei(a, w.X, w.Y, 6 / _zoom) is { } s && s.Art is AussenArt.Haus or AussenArt.Gebaeude or AussenArt.Katalog)
+            {
+                text = AussenBearbeitung.Beschreibung(a, s, OrtName);
+            }
+        }
+        if (text != _tipp)
+        {
+            _tipp = text;
+            ToolTip.SetTip(this, text);
+        }
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)

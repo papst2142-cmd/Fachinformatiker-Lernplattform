@@ -122,10 +122,22 @@ public static class Bearbeitung
         return treffer;
     }
 
+    /// <summary>
+    /// Teil des einfachen Katalogs oder, seit Welle 3b, Stueck aus dem vollen CC0-Katalog ("cc0:paket/name") mit seiner
+    /// Vorgabegroesse innen (null = unbekannt).
+    /// </summary>
+    public static KatalogTeil? Teil(string typ) =>
+        InnenKatalog.Teil(typ) ?? (Katalog.Aktiv?.Eintrag(typ) is { } e && Katalog.IstKatalogTyp(typ)
+            ? new KatalogTeil(typ, e.Anzeige, e.Innen[0], e.Innen[1], e.Gruppe)
+            : null);
+
+    /// <summary>Name eines Typs fuer die Anzeige (einfacher Katalog, voller Katalog oder die Kennung).</summary>
+    public static string TeilName(string typ) => KatalogPruefung.Name(Katalog.Aktiv, typ);
+
     /// <summary>Neues Stueck aus dem Katalog mit der Mitte bei (x, y), auf das Raster gelegt; Rueckgabe: seine Stelle oder null (ausserhalb).</summary>
     public static Stelle? Setzen(PyObjekt gebaeude, string typ, double x, double y, bool raster = true)
     {
-        var teil = InnenKatalog.Teil(typ) ?? throw new ArgumentException("unbekannter Typ " + typ, nameof(typ));
+        var teil = Teil(typ) ?? throw new ArgumentException("unbekannter Typ " + typ, nameof(typ));
         var bereich = BereichBei(gebaeude, x, y);
         if (bereich is null)
         {
@@ -270,6 +282,6 @@ public static class Bearbeitung
 
     /// <summary>Kurztext eines Stuecks fuer Anzeige und Screenreader.</summary>
     public static string Beschreibung(PyObjekt d) =>
-        InnenKatalog.Name(Py.Str(d["typ"])) + (Py.Hat(d, "ware") ? " (Ware " + Py.Str(d["ware"]) + ")" : "")
+        TeilName(Py.Str(d["typ"])) + (Py.Hat(d, "ware") ? " (Ware " + Py.Str(d["ware"]) + ")" : "")
         + string.Create(CultureInfo.GetCultureInfo("de-DE"), $", x {Py.F(d["x"]):0.##}, y {Py.F(d["y"]):0.##}, {Py.F(d["w"]):0.##} × {Py.F(d["h"]):0.##}");
 }

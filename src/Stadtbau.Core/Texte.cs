@@ -100,6 +100,26 @@ public static class Texte
     public const string Baum = "Baum";
     public const string Park = "Park";
     public const string Paketplatz = "Paketplatz";
+
+    // Phase 13 Welle 3b (Weisung P12-19): voller CC0-Katalog
+    public const string VollerKatalog = "Voller Katalog (CC0)";
+    public const string VollerKatalogOeffnen = "Voller Katalog";
+    public const string VollerKatalogHinweis = "Alle Modelle aller CC0-Pakete. Wähle eine Gruppe oder suche nach einem Namen (deutsch oder englisch), dann tippe ein Stück an.";
+    public const string KatalogSuche = "Suche im Katalog";
+    public const string KatalogSucheHinweis = "z. B. Stuhl, Baum, Auto, Kürbis";
+    public const string KatalogSchliessen = "Katalog schließen";
+    public const string KatalogGruppen = "Gruppen";
+    public const string KatalogKeinTreffer = "Kein Stück gefunden. Versuche ein anderes Wort.";
+    public const string KatalogMehr = "Weitere anzeigen";
+    public const string KatalogLaedt = "Katalog wird geladen …";
+    public const string KatalogFehlt = "Der volle Katalog ist in diesem Paket nicht enthalten.";
+    public const string Effekt = "Effekt";
+    public const string EffektHinweis = "Nur Aussehen: versperrt keinen Weg. Im Plan ein leuchtendes Zeichen; in der 3D-Ansicht ab dem Einbau ins Spiel.";
+    public const string KatalogIn3D = "Stücke aus dem vollen Katalog zeichnet die 3D-Ansicht ab dem Einbau ins Spiel (Welle 4); ihre Dreiecke zählen schon jetzt in den Grenzen.";
+
+    public static string KatalogTreffer(int zahl) => zahl == 1 ? "1 Stück" : zahl.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Stücke";
+
+    public static string KatalogDreiecke(int dreiecke) => dreiecke.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Dreiecke";
     public const string Gehweg = "Gehweg";
     public const string GehwegBreite = "Gehweg je Seite (0 bis 0,6)";
     public const string Laenge = "Länge";

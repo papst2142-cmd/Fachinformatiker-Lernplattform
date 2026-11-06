@@ -520,10 +520,14 @@ public sealed class Projekt
     public Innenraum Innenraum(string ort) => Lernplattform.Core.Spiel.Probe.Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort),
         Personen(ort), Daten.Grafik, Geschaefte.Laeden.Contains(ort) ? Daten.Geschaefte.Daten : null);
 
-    public List<StadtbauFund> Pruefen(string ort) =>
-        StadtbauPruefung.Innen(ort, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume);
+    /// <summary>Funde eines Innenraums (Regeln des gemeinsamen Teils plus Katalog-Stuecke, <see cref="KatalogPruefung"/>).</summary>
+    public List<StadtbauFund> Pruefen(string ort) => PruefenMitGrenzen(ort).Funde;
 
-    public (long Dreiecke, int Aufrufe) Grenzen(string ort) => StadtbauGrenzen.Innen(Innenraum(ort));
+    /// <summary>Funde und Grenzen eines Innenraums (Grenzen mit den echten Dreiecken der Katalog-Stuecke).</summary>
+    public (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) PruefenMitGrenzen(string ort) =>
+        KatalogPruefung.Innen(Katalog.Aktiv, ort, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume);
+
+    public (long Dreiecke, int Aufrufe) Grenzen(string ort) => PruefenMitGrenzen(ort).Grenzen;
 
     /// <summary>Die Stadt (draussen und alle Innenraeume) als Fassung, wie sie ein Export schreiben wuerde (Pruefung, 3D).</summary>
     public StadtFassung Stand(string erstellt = "") =>
@@ -534,7 +538,7 @@ public sealed class Projekt
     public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten);
 
     public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten) =>
-        StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik);
+        [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik), .. KatalogPruefung.Aussen(Katalog.Aktiv, Aussen.Aus(stand))];
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
     public List<(string Ort, StadtbauFund Fund)> RoteFunde()

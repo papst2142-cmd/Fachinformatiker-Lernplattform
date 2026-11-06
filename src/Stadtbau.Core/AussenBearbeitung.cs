@@ -205,7 +205,39 @@ public static class AussenBearbeitung
         {
             yield return (new AussenStelle(AussenArt.Paketplatz, 0), paket.Mitte.X, paket.Mitte.Y);
         }
+        var katalog = Aussen.KatalogStuecke(aussen);
+        for (var i = 0; i < katalog.Count; i++)
+        {
+            var k = Objekt(katalog[i]);
+            yield return (new AussenStelle(AussenArt.Katalog, i), Py.F(k["x"]), Py.F(k["y"]));
+        }
     }
+
+    /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
+    public static (double X, double Y, double W, double H) KatalogFlaeche(PyObjekt aussen, AussenStelle s)
+    {
+        var k = Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer]);
+        double w = Py.F(k["w"]), t = Py.F(k["t"]);
+        return (Py.F(k["x"]) - (w / 2), Py.F(k["y"]) - (t / 2), w, t);
+    }
+
+    /// <summary>Groesse eines Katalog-Stuecks draussen (Breite, Tiefe in Karten-Einheiten).</summary>
+    public static (double W, double T) KatalogGroesse(PyObjekt aussen, AussenStelle s)
+    {
+        var k = Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer]);
+        return (Py.F(k["w"]), Py.F(k["t"]));
+    }
+
+    /// <summary>Groesse eines Katalog-Stuecks draussen setzen (Mitte bleibt; 0 oder weniger zeigt die Pruefung rot).</summary>
+    public static void KatalogGroesseSetzen(PyObjekt aussen, AussenStelle s, double w, double t)
+    {
+        var k = Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer]);
+        Py.Setzen(k, "w", Bearbeitung.Zahl(w));
+        Py.Setzen(k, "t", Bearbeitung.Zahl(t));
+    }
+
+    /// <summary>Kennung "paket/name" eines Katalog-Stuecks draussen.</summary>
+    public static string KatalogId(PyObjekt aussen, AussenStelle s) => Py.Str(Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer])["id"]);
 
     /// <summary>Gibt es dieses Stueck (noch)?</summary>
     public static bool Gueltig(PyObjekt aussen, AussenStelle s) => Alle(aussen).Any(a => a.Stelle == s);
@@ -225,6 +257,15 @@ public static class AussenBearbeitung
             if (naechstes is not null)
             {
                 return naechstes;
+            }
+        }
+        // Katalog-Stuecke (zuletzt gesetztes oben) vor den Haeusern: sie stehen oft auf oder an ihnen
+        foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Katalog).Reverse())
+        {
+            var (kx, ky, kw, kh) = KatalogFlaeche(aussen, s);
+            if (x >= kx - 0.05 && x <= kx + kw + 0.05 && y >= ky - 0.05 && y <= ky + kh + 0.05)
+            {
+                return s;
             }
         }
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).Reverse())
@@ -315,6 +356,18 @@ public static class AussenBearbeitung
             case AussenArt.Laterne:
                 Aussen.Laternen(aussen).Add(new List<object?> { Bearbeitung.Zahl(Auf(x)), Bearbeitung.Zahl(Auf(y)), false });
                 return new AussenStelle(AussenArt.Laterne, Aussen.Laternen(aussen).Count - 1);
+            case AussenArt.Katalog:
+            {
+                // Phase 13 Welle 3b: modell = Kennung "paket/name" aus dem vollen Katalog, Vorgabegroesse des Katalogs
+                if (modell is null || Katalog.Aktiv?.Eintrag(modell) is not { } e)
+                {
+                    return null;
+                }
+                double w = e.Aussen[0], t = e.Aussen[1];
+                var liste = Aussen.KatalogStueckeAnlegen(aussen);
+                liste.Add(new PyObjekt { { "id", e.Id }, { "x", Bearbeitung.Zahl(Auf(x)) }, { "y", Bearbeitung.Zahl(Auf(y)) }, { "w", Bearbeitung.Zahl(w) }, { "t", Bearbeitung.Zahl(t) }, { "dreh", 0L } });
+                return new AussenStelle(AussenArt.Katalog, liste.Count - 1);
+            }
             default:
                 return null;
         }
@@ -425,6 +478,9 @@ public static class AussenBearbeitung
                 break;
             case AussenArt.Laterne:
                 Schieben(Aussen.Laternen(aussen)[s.Nummer]);
+                break;
+            case AussenArt.Katalog:
+                Feld(Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer]), "x", "y");
                 break;
             case AussenArt.Paketplatz:
                 if (PaketLage(aussen) is { } lage)
@@ -569,7 +625,7 @@ public static class AussenBearbeitung
     /// <summary>Warum sich das Stueck nicht drehen laesst (null = es geht).</summary>
     public static string? DrehenNicht(AussenStelle s) => s.Art switch
     {
-        AussenArt.Strasse or AussenArt.Park => null,
+        AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog => null,
         AussenArt.Haus or AussenArt.Gebaeude => Texte.HausDrehenNicht,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
@@ -581,6 +637,16 @@ public static class AussenBearbeitung
         if (DrehenNicht(s) is not null)
         {
             return false;
+        }
+        if (s.Art == AussenArt.Katalog)
+        {
+            // Vierteldrehung um die Mitte: Breite und Tiefe tauschen, dreh zaehlt die Vierteldrehungen (0 bis 3)
+            var k = Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer]);
+            var (kw, kt) = (k["w"], k["t"]);
+            Py.Setzen(k, "w", kt);
+            Py.Setzen(k, "t", kw);
+            Py.Setzen(k, "dreh", (Py.Int(Get(k, "dreh", 0L)) + 1) % 4);
+            return true;
         }
         var l = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         if (s.Art == AussenArt.Park)
@@ -651,6 +717,14 @@ public static class AussenBearbeitung
                 Aussen.Beete(aussen).Add(Punkt(Py.F(p[0]) + Bearbeitung.Raster, Py.F(p[1])));
                 return new AussenStelle(AussenArt.Beet, Aussen.Beete(aussen).Count - 1);
             }
+            case AussenArt.Katalog:
+            {
+                var liste = Aussen.KatalogStuecke(aussen);
+                var kopie = (PyObjekt)Py.Kopie(liste[s.Nummer])!;
+                Py.Setzen(kopie, "x", Bearbeitung.Zahl(Py.F(kopie["x"]) + Py.F(kopie["w"]) + Bearbeitung.Raster));
+                liste.Add(kopie);
+                return new AussenStelle(AussenArt.Katalog, liste.Count - 1);
+            }
             case AussenArt.Laterne:
             {
                 var p = Liste(Aussen.Laternen(aussen)[s.Nummer]);
@@ -687,6 +761,9 @@ public static class AussenBearbeitung
                 break;
             case AussenArt.Laterne:
                 Aussen.Laternen(aussen).RemoveAt(s.Nummer);
+                break;
+            case AussenArt.Katalog:
+                Aussen.KatalogStuecke(aussen).RemoveAt(s.Nummer);
                 break;
             case AussenArt.Gebaeude:
             {
@@ -754,6 +831,12 @@ public static class AussenBearbeitung
         punkte[^1] = PunktObjekt(Einrasten(ende, andere));
     }
 
+    /// <summary>Name eines Katalog-Stuecks mit Gruppe und Paket (unbekannt: die Kennung).</summary>
+    public static string KatalogBeschreibung(string id) =>
+        Katalog.Aktiv?.Eintrag(id) is { } e
+            ? (e.Art == KatalogArt.Effekt ? Texte.Effekt + " „" : "„") + e.Anzeige + "“ (" + e.Gruppe + ", " + Katalog.Aktiv.PaketTitel.GetValueOrDefault(e.Paket, e.Paket) + ")"
+            : "„" + id + "“";
+
     /// <summary>Kurztext eines Stuecks fuer Anzeige und Screenreader.</summary>
     public static string Beschreibung(PyObjekt aussen, AussenStelle s, Func<string, string> ortName)
     {
@@ -768,6 +851,7 @@ public static class AussenBearbeitung
             AussenArt.Beet => Texte.Beet + lage,
             AussenArt.Baum => Texte.Baum + lage,
             AussenArt.Park => Texte.Park + lage,
+            AussenArt.Katalog => KatalogBeschreibung(KatalogId(aussen, s)) + lage,
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

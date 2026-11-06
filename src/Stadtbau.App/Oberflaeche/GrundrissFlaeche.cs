@@ -249,19 +249,35 @@ public sealed class GrundrissFlaeche : Control
     private void StueckZeichnen(DrawingContext ctx, Typeface schrift, PyObjekt d, Pen rand, double dx, double dy, double deckkraft)
     {
         var typ = Py.Str(d["typ"]);
-        var teil = InnenKatalog.Teil(typ);
+        var teil = Bearbeitung.Teil(typ);
         var farbe = Color.Parse(teil is not null && GruppenFarben.TryGetValue(teil.Gruppe, out var f) ? f : "#7A7A7A");
         var r = Bild(Py.F(d["x"]) + dx, Py.F(d["y"]) + dy, Py.F(d["w"]), Py.F(d["h"]));
         using (ctx.PushOpacity(deckkraft))
         {
+            if (Katalog.Aktiv?.Eintrag(typ) is { Art: KatalogArt.Effekt } effekt)
+            {
+                // Effekt "Nur Aussehen" (Antwort P12-23 3a): leuchtendes Zeichen statt eines Moebels
+                var kern = Color.TryParse(effekt.Farbe ?? "", out var kf) ? kf : Color.Parse("#FFD54F");
+                var radius = Math.Max(7, Math.Min(r.Width, r.Height) / 2);
+                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.30), null, r.Center, radius * 1.5, radius * 1.5);
+                ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFC107"), 0.55), null, r.Center, radius, radius);
+                ctx.DrawEllipse(new SolidColorBrush(kern), new Pen(new SolidColorBrush(Color.Parse("#7A5A00")), 1.5), r.Center, radius * 0.5, radius * 0.5);
+                return;
+            }
             ctx.DrawRectangle(new SolidColorBrush(farbe, 0.85), rand, r);
             if (Py.Hat(d, "ware"))
             {
                 ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#FFD54F")), new Pen(Brushes.Black, 1), r.TopRight + new Point(-6, 6), 4, 4);
             }
+            // Phase 13 Welle 3b: Stueck aus dem vollen Katalog mit seinem Vorschaubild
+            if (Katalog.IstKatalogTyp(typ) && KatalogBilder.Feld(typ) is { } bild && r.Width > 8 && r.Height > 8)
+            {
+                var seite = Math.Min(r.Width, r.Height);
+                ctx.DrawImage(bild.Bild, bild.Quelle, new Rect(r.Center.X - (seite / 2), r.Center.Y - (seite / 2), seite, seite));
+            }
             if (r.Width > 46 && r.Height > 14)
             {
-                Schreiben(ctx, schrift, InnenKatalog.Name(typ), r.TopLeft + new Point(3, 1), 10, Brushes.White, 1, r.Width - 6);
+                Schreiben(ctx, schrift, Bearbeitung.TeilName(typ), r.TopLeft + new Point(3, 1), 10, Brushes.White, 1, r.Width - 6);
             }
         }
     }
@@ -475,7 +491,7 @@ public sealed class GrundrissFlaeche : Control
         if (neu is not null)
         {
             Waehlen(neu);
-            Gemeldet?.Invoke(InnenKatalog.Name(typ) + " gesetzt");
+            Gemeldet?.Invoke(Bearbeitung.TeilName(typ) + " gesetzt");
         }
         return neu;
     }
