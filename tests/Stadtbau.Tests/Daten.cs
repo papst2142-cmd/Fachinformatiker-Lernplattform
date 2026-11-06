@@ -38,5 +38,11 @@ internal static class Daten
         return new Werkzeugordner(ordner).Anlegen();
     }
 
+    /// <summary>
+    /// Weisung P12-30: Laterne 20 an die Stelle, an die sie im spaeten Spielstand rueckt (30,3; 15,16), wie Nico es im
+    /// Werkzeug tut; danach steht sie in jedem Spielstand frei. <paramref name="aussen"/> = Zustand draussen.
+    /// </summary>
+    public static void Laterne20Frei(PyObjekt aussen) => ((List<object?>)Aussen.Laternen(aussen)[19]!)[1] = 15.16;
+
     public static PyObjekt Kopie(PyObjekt o) => (PyObjekt)Lernplattform.Core.Spiel.Py.Kopie(o)!;
 }

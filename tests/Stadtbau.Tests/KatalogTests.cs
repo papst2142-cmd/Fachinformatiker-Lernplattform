@@ -262,7 +262,8 @@ public class KatalogTests
     public void Aussen_ProjektPrueftKatalogMit_UndExportBestehtDieEinbaupruefung()
     {
         var p = Projekt.Neu("Katalog draussen", D, Daten.NeueAblage(), null, null);
-        p.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 16, 12, modell: "car_kit/sedan"));
+        p.AussenAendern("Laterne 20", Daten.Laterne20Frei);
+        p.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 2, 7, modell: "car_kit/sedan"));
         Assert.DoesNotContain(p.PruefenAussen(), f => f.Rot);
         var datei = p.Exportieren(DateTimeOffset.Parse("2026-11-06T10:00:00+01:00", System.Globalization.CultureInfo.InvariantCulture));
         var f = StadtFassung.Lesen(datei);
@@ -270,7 +271,7 @@ public class KatalogTests
         Assert.Empty(StadtbauPruefung.Inhalt(f, D.Inhalt));
         Assert.Single(Aussen.KatalogStuecke(Aussen.Aus(f)));
         // Gegenprobe: ein unbekanntes Stueck sperrt den Export
-        p.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 18, 12, modell: "car_kit/sedan"));
+        p.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, AussenArt.Katalog, 2, 13, modell: "car_kit/sedan"));
         p.AussenAendern("Name", a => Py.Setzen(Objekt(Aussen.KatalogStuecke(a)[1]), "id", "car_kit/gibtesnicht"));
         Assert.Throws<StadtbauFehler>(() => p.Exportieren(DateTimeOffset.Now));
     }

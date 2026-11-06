@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.4.0
+
+Was du baust, siehst du jetzt in der 3D-Ansicht genau so, wie es später im Spiel aussieht.
+
+- Gehwege an Straßen, Stücke aus dem vollen Katalog und Effekte erscheinen in der 3D-Ansicht, bei Tag und Nacht; ein Effekt leuchtet nachts. Die Grenzen zählen dabei genau das, was gezeichnet wird.
+- Neue Prüfungen draußen: ein Stück aus dem Katalog darf nicht in einem Haus, auf einem Baum, an einer Laterne, auf der Fahrbahn oder auf dem Gleis stehen. Ein Effekt darf nicht in einem Haus stehen.
+- Die Laternen werden jetzt auch für einen späten Spielstand geprüft, in dem alle Orte zu sehen sind. In der heutigen Stadt 1 ist dabei die Laterne Nr. 20 rot: sie muss an eine freie Stelle geschoben werden, bevor die Stadt exportiert werden kann.
+
 ## S 0.3.0
 
 Jetzt steht der ganze Vorrat an freien Grafiken (CC0) zum Bauen bereit: rund 1 500 Stücke aus 23 Paketen.

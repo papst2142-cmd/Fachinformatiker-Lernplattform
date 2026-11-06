@@ -69,7 +69,17 @@ public class PruefungAussenTests
         { "Paket_Baum", "Der Paketplatz liegt in einem Baum" },
         { "Paket_HinterTuer", "Der Paketplatz liegt hinter der Haustür" },
         { "Stadt_Laden", "Die Stadt lässt sich nicht laden" },
+        { "Katalog_Haus", "„cc0:car_kit/sedan“ steht im Haus „Zuhause“" },
+        { "Effekt_Haus", "„cc0:particles/flame_05_rotated“ steht im Haus „Zuhause“" },
+        { "Katalog_Baum", "„cc0:car_kit/sedan“ steht auf einem Baum" },
+        { "Katalog_Laterne", "„cc0:car_kit/sedan“ steht an einer Laterne" },
+        { "Katalog_Fahrbahn", "„cc0:car_kit/sedan“ steht auf der Fahrbahn" },
+        { "Katalog_Gleis", "„cc0:car_kit/sedan“ steht auf dem Gleis" },
     };
+
+    /// <summary>Ein Stueck aus dem Katalog draussen (Mitte x, y; Breite und Tiefe 0,3).</summary>
+    private static void Kat(PyObjekt a, string id, List<object?> p) =>
+        Aussen.KatalogStueckeAnlegen(a).Add(new PyObjekt { { "id", id }, { "x", p[0] }, { "y", p[1] }, { "w", 0.3 }, { "t", 0.3 }, { "dreh", 0L } });
 
     private static (Action<PyObjekt> Rot, Action<PyObjekt> Gruen) Fall(string regel) => regel switch
     {
@@ -109,6 +119,14 @@ public class PruefungAussenTests
         "Paket_Baum" => (a => Liste(Land(a, BaumNr(a))["punkte"]).Add(PaketMitte(a)), a => Liste(Land(a, BaumNr(a))["punkte"]).Add(P(22, 2))),
         "Paket_HinterTuer" => (a => Paket(a, -0.05, 0.6), a => Paket(a, 0.1, 0.6)),
         "Stadt_Laden" => (a => Liste(Aussen.Karte(a)["orte"]).Add(new PyObjekt { { "id", "kaputt" } }), a => { }),
+        // Sammelliste 223: Stuecke aus dem Katalog nicht im Haus (auch kein Effekt), Modelle nicht auf Baum, Laterne, Fahrbahn
+        "Katalog_Haus" => (a => Kat(a, "car_kit/sedan", WohnungMitte(a)), a => Kat(a, "car_kit/sedan", P(22, 2))),
+        "Effekt_Haus" => (a => Kat(a, "particles/flame_05_rotated", WohnungMitte(a)), a => Kat(a, "particles/flame_05_rotated", P(24, 20.8))),
+        "Katalog_Baum" => (a => { Liste(Land(a, BaumNr(a))["punkte"]).Add(P(22, 2)); Kat(a, "car_kit/sedan", P(22.1, 2)); },
+            a => { Liste(Land(a, BaumNr(a))["punkte"]).Add(P(22, 2)); Kat(a, "car_kit/sedan", P(22.7, 2)); }),
+        "Katalog_Laterne" => (a => Kat(a, "car_kit/sedan", P(8.0, 0.75)), a => Kat(a, "car_kit/sedan", P(22, 2))),
+        "Katalog_Fahrbahn" => (a => Kat(a, "car_kit/sedan", P(24, 20.8)), a => Kat(a, "car_kit/sedan", P(22, 2))),
+        "Katalog_Gleis" => (a => Kat(a, "car_kit/sedan", P(2, 5.97)), a => Kat(a, "car_kit/sedan", P(2, 6.6))),
         _ => throw new ArgumentException(regel),
     };
 
@@ -155,11 +173,31 @@ public class PruefungAussenTests
         Assert.True(StadtbauPruefung.AufWand(2, 3, 4, 2, new System.Numerics.Vector2(9, 9)) > 1);
     }
 
+    /// <summary>
+    /// Weisung P12-30 (Sammelliste 220): Fassung 0 draussen hat genau einen Fund, Laterne 20 im spaeten Spielstand (vor der
+    /// Tuer der Betriebswerkstatt, die erst ab Tag 22 steht). Nico verschiebt sie in seinem Projekt; sonst kein Fund.
+    /// </summary>
     [Fact]
-    public void Fassung0_DraussenOhneFund()
+    public void Fassung0_DraussenNurLaterne20()
     {
         var funde = Pruefen(_ => { });
-        Assert.True(funde.Count == 0, string.Join(" | ", funde.Select(f => f.Text)));
+        Assert.True(funde.Count == 1 && funde[0].Rot && funde[0].Text == "Laterne Nr. 20 muss um 0,4 verschoben werden, sobald alle Orte zu sehen sind (erlaubt 0,2).",
+            string.Join(" | ", funde.Select(f => f.Text)));
+        // verschoben (wie Nico im Werkzeug): kein Fund mehr
+        var frei = Pruefen(Daten.Laterne20Frei);
+        Assert.True(frei.Count == 0, string.Join(" | ", frei.Select(f => f.Text)));
+    }
+
+    /// <summary>Gegenprobe zu 220: ohne die Pruefung im spaeten Spielstand faende das Werkzeug Laterne 20 nicht (nur neuer Stand).</summary>
+    [Fact]
+    public void Laternen_SpaeterStand_FindetWasDerNeueStandNichtFindet()
+    {
+        var d = Daten.Spiel;
+        var stadt = d.Fassung.StadtFuer(d.Fassung.MitKarte(d.Inhalt));
+        var neu = StadtSzene.Bauen(stadt, null, d.Grafik).Laternen[19];
+        var spaet = StadtSzene.Bauen(stadt, StadtbauPruefung.Probestand(stadt.Inhalt).Stand, d.Grafik).Laternen[19];
+        Assert.True(neu.Verschoben <= 0.2f);
+        Assert.True(spaet.Verschoben > 0.2f);
     }
 
     [Theory]

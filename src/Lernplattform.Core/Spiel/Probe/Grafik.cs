@@ -86,6 +86,50 @@ public sealed class GrafikBibliothek
         return new GrafikBibliothek(modelle, bloecke);
     }
 
+    /// <summary>Phase 13 Welle 4a: eine Bibliothek nur aus diesen Modellen (ohne Zuordnung), z. B. fuer die Ladepruefung.</summary>
+    public static GrafikBibliothek Aus(IEnumerable<GrafikModell> modelle) =>
+        new(modelle.ToDictionary(m => m.Name, StringComparer.Ordinal), []);
+
+    /// <summary>
+    /// Phase 13 Welle 4a (Weisung P12-28): diese Bibliothek mit weiteren Modellen (Stuecke aus dem Katalog des Stadtbau-
+    /// Werkzeugs, Name "cc0:paket/name"); ein Name, den es schon gibt, ist ein Fehler. Die Zuordnung bleibt.
+    /// </summary>
+    public GrafikBibliothek Mit(IEnumerable<GrafikModell> zusatz)
+    {
+        var alle = new Dictionary<string, GrafikModell>(_modelle);
+        foreach (var m in zusatz)
+        {
+            if (!alle.TryAdd(m.Name, m))
+            {
+                throw new InvalidDataException("Grafik " + m.Name + " gibt es schon");
+            }
+        }
+        return new GrafikBibliothek(alle, new Dictionary<string, string>(Bloecke));
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 4a: die mitgelieferten Stuecke aus dem Katalog (<c>inhalte_csharp/grafik/katalog_verbaut.bin</c>, Aufbau
+    /// wie modelle.bin, Erzeuger <c>werkzeuge/stadtbau/verbaut.py</c>) mit der SHA-256 aus <c>katalog_verbaut.json</c>; jeder
+    /// Name beginnt mit "cc0:" und steht genau so in der Liste "modelle" der json-Datei.
+    /// </summary>
+    public static List<GrafikModell> KatalogLaden(byte[] bin, string indexJson)
+    {
+        using var index = JsonDocument.Parse(indexJson);
+        var soll = index.RootElement.GetProperty("sha256").GetString();
+        var ist = Convert.ToHexStringLower(SHA256.HashData(bin));
+        if (ist != soll)
+        {
+            throw new InvalidDataException("katalog_verbaut.bin: Pruefsumme " + ist + " statt " + soll);
+        }
+        var modelle = Lesen(bin);
+        var namen = index.RootElement.GetProperty("modelle").EnumerateArray().Select(e => e.GetString()!).ToList();
+        if (!namen.SequenceEqual(modelle.Keys) || namen.Any(n => !Katalogstueck.IstTyp(n)))
+        {
+            throw new InvalidDataException("katalog_verbaut.bin: Liste der Modelle passt nicht zu katalog_verbaut.json");
+        }
+        return [.. modelle.Values];
+    }
+
     private static Dictionary<string, GrafikModell> Lesen(byte[] bin)
     {
         using var leser = new BinaryReader(new MemoryStream(bin));

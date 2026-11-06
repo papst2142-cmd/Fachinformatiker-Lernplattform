@@ -117,8 +117,7 @@ public static class Texte
     public const string KatalogLaedt = "Katalog wird geladen …";
     public const string KatalogFehlt = "Der volle Katalog ist in diesem Paket nicht enthalten.";
     public const string Effekt = "Effekt";
-    public const string EffektHinweis = "Nur Aussehen: versperrt keinen Weg. Im Plan ein leuchtender Stern; in der 3D-Ansicht ab dem Einbau ins Spiel.";
-    public const string KatalogIn3D = "Stücke aus dem vollen Katalog zeichnet die 3D-Ansicht ab dem Einbau ins Spiel (Welle 4); ihre Dreiecke zählen schon jetzt in den Grenzen.";
+    public const string EffektHinweis = "Nur Aussehen: versperrt keinen Weg. Im Plan und in der 3D-Ansicht ein leuchtender Stern.";
 
     public static string KatalogTreffer(int zahl) => zahl == 1 ? "1 Stück" : zahl.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Stücke";
 
@@ -152,7 +151,7 @@ public static class Texte
     public const string GrenzenGesamt = "Grenzen in der Gesamtansicht (Nacht, Winter, Weihnachten)";
     public const string GrenzenMessen = "Grenzen messen";
     public const string GrenzenNochNicht = "Noch nicht gemessen. Tippe auf „Grenzen messen“.";
-    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut. Gehwege zeichnet das Spiel erst mit dem Einbau.";
+    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut, mit Gehwegen, Stücken aus dem Katalog und Effekten.";
     public const string PruefungenDraussen = "Prüfungen draußen";
     public const string PruefungLaeuft = "Prüfung läuft …";
     public const string HausSetzen = "Haus setzen";

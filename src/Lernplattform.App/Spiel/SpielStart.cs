@@ -108,8 +108,18 @@ public static class SpielStart
     {
         lock (FassungSperre)
         {
-            return _fassung ??= AktiveFassung.Laden(Lesen);
+            return _fassung ??= MitVerbautPruefen(AktiveFassung.Laden(Lesen));
         }
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 4a (Weisung P12-28 Punkt 1): jedes Stueck aus dem Katalog, auf das die Fassung verweist, muss
+    /// mitgeliefert sein (<see cref="StadtbauPruefung.Verbaut"/>); sonst laedt die Fassung nicht (roter Fund, nie still weg).
+    /// </summary>
+    private static StadtFassung MitVerbautPruefen(StadtFassung fassung)
+    {
+        var funde = StadtbauPruefung.Verbaut(fassung, GrafikBibliothek.Aus(KatalogVerbaut()));
+        return funde.Count == 0 ? fassung : throw new StadtbauFehler(funde);
     }
 
     private static readonly Lock FassungSperre = new();
@@ -169,9 +179,10 @@ public static class SpielStart
         try
         {
             GrafikFehler = null;
+            // Phase 13 Welle 4a (Weisung P12-28): dazu die mitgelieferten Stuecke aus dem Katalog des Stadtbau-Werkzeugs
             return GrafikBibliothek.Laden(Muss("inhalte_csharp/grafik/modelle.bin"),
                 System.Text.Encoding.UTF8.GetString(Muss("inhalte_csharp/grafik/modelle.json")),
-                System.Text.Encoding.UTF8.GetString(Muss("inhalte_csharp/grafik/zuordnung.json")));
+                System.Text.Encoding.UTF8.GetString(Muss("inhalte_csharp/grafik/zuordnung.json"))).Mit(KatalogVerbaut());
         }
         catch (Exception e) when (e is IOException or InvalidDataException or System.Text.Json.JsonException or KeyNotFoundException)
         {
@@ -179,6 +190,14 @@ public static class SpielStart
             return null;
         }
     }
+
+    /// <summary>
+    /// Phase 13 Welle 4a: die mitgelieferten Stuecke aus dem Katalog (<c>inhalte_csharp/grafik/katalog_verbaut.bin</c>, nur
+    /// Verbautes, Erzeuger <c>werkzeuge/stadtbau/verbaut.py</c>), Pruefsumme aus <c>katalog_verbaut.json</c>.
+    /// </summary>
+    public static List<GrafikModell> KatalogVerbaut() =>
+        GrafikBibliothek.KatalogLaden(Muss("inhalte_csharp/grafik/katalog_verbaut.bin"),
+            System.Text.Encoding.UTF8.GetString(Muss("inhalte_csharp/grafik/katalog_verbaut.json")));
 
     /// <summary>Warum die CC0-Modelle nicht geladen wurden (null = geladen oder noch nicht versucht).</summary>
     public static string? GrafikFehler { get; private set; }

@@ -41,7 +41,7 @@ public static partial class StadtbauPruefung
         Geschaefte? geschaefte = null, PyObjekt? innenraeume = null)
     {
         var funde = new List<StadtbauFund>();
-        Grundriss(gebaeude, funde);
+        Grundriss(gebaeude, funde, grafik);
         if (funde.Any(f => f.Rot))
         {
             // ohne gueltigen Grundriss lassen sich Wege und Grenzen nicht rechnen
@@ -88,7 +88,7 @@ public static partial class StadtbauPruefung
         }
     }
 
-    private static void Grundriss(PyObjekt g, List<StadtbauFund> funde)
+    private static void Grundriss(PyObjekt g, List<StadtbauFund> funde, GrafikBibliothek? grafik = null)
     {
         double breite = Py.F(g["breite"]), hoehe = Py.F(g["hoehe"]);
         if (breite < 4 || hoehe < 4)
@@ -156,7 +156,9 @@ public static partial class StadtbauPruefung
         {
             var typ = Py.Str(d["typ"]);
             double x = Py.F(d["x"]), y = Py.F(d["y"]), w = Py.F(d["w"]), h = Py.F(d["h"]);
-            if (!InnenKatalog.Bekannt(typ))
+            // Phase 13 Welle 4a (Weisung P12-28): ein Stueck aus dem Katalog des Werkzeugs gilt, wenn sein Modell in der
+            // Grafik ist (im Spiel: mitgeliefert in katalog_verbaut.bin); sonst bleibt es rot
+            if (!InnenKatalog.Bekannt(typ) && !(Katalogstueck.IstTyp(typ) && grafik?.Modell(typ) is not null))
             {
                 funde.Add(new StadtbauFund($"„{typ}“ ist kein Teil aus dem Katalog.", "Stück löschen und aus dem Katalog neu setzen.", true, x + (w / 2), y + (h / 2)));
             }
@@ -211,7 +213,8 @@ public static partial class StadtbauPruefung
                 }
             }
         }
-        var fest = InnenGrundriss.Einrichtung(innen.Gebaeude).Select(e => e.Deko).Where(d => !Wege.Begehbar.Contains(Py.Str(d["typ"]))).ToList();
+        var fest = InnenGrundriss.Einrichtung(innen.Gebaeude).Select(e => e.Deko)
+            .Where(d => !Wege.Begehbar.Contains(Py.Str(d["typ"])) && !Katalogstueck.IstEffekt(Py.Str(d["typ"]))).ToList();
         for (var i = 0; i < fest.Count; i++)
         {
             for (var j = i + 1; j < fest.Count; j++)

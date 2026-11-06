@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 
 namespace Lernplattform.Core.Stadtbau;
 
@@ -219,5 +220,68 @@ public static partial class StadtbauPruefung
             }
         }
         return funde;
+    }
+    /// <summary>
+    /// Phase 13 Welle 4a (Weisung P12-28 Punkt 1): Ladepruefung der Stuecke aus dem Katalog des Stadtbau-Werkzeugs. Jeder
+    /// Verweis einer Fassung (innen eine Einrichtung mit Typ "cc0:paket/name" in allen Abschnitten, draussen jeder Eintrag
+    /// von stadtdaten.katalog) braucht sein Modell in <paramref name="grafik"/> (im Spiel: mitgeliefert in
+    /// <c>katalog_verbaut.bin</c>). Fehlt es, ist das ein Fund, nie ein stilles Weglassen. Dazu der Aufbau der Eintraege
+    /// draussen. Leer = in Ordnung.
+    /// </summary>
+    public static List<string> Verbaut(StadtFassung fassung, GrafikBibliothek? grafik)
+    {
+        var funde = new List<string>();
+        var innen = new SortedSet<string>(StringComparer.Ordinal);
+        KatalogVerweise(fassung.Innenraeume, innen);
+        foreach (var typ in innen)
+        {
+            if (grafik?.Modell(typ) is null)
+            {
+                funde.Add($"Innen: das Stück „{typ}“ ist im Spiel nicht mitgeliefert (katalog_verbaut.bin).");
+            }
+        }
+        try
+        {
+            foreach (var k in Katalogstueck.AusStadtdaten(fassung.Stadtdaten))
+            {
+                if (grafik?.Modell(k.Typ) is null)
+                {
+                    funde.Add($"Draußen: das Stück „{k.Typ}“ ist im Spiel nicht mitgeliefert (katalog_verbaut.bin).");
+                }
+                if (!(k.W > 0 && k.T > 0))
+                {
+                    funde.Add($"Draußen: das Stück „{k.Typ}“ hat keine Größe.");
+                }
+            }
+        }
+        catch (InvalidDataException fehler)
+        {
+            funde.Add("Draußen: " + fehler.Message);
+        }
+        return funde;
+    }
+
+    /// <summary>Alle Typen "cc0:..." unter <paramref name="knoten"/> (jedes Objekt mit Feld "typ", auch in Zusaetzen).</summary>
+    public static void KatalogVerweise(object? knoten, ISet<string> menge)
+    {
+        switch (knoten)
+        {
+            case PyObjekt o:
+                foreach (var (schluessel, wert) in o)
+                {
+                    if (schluessel == "typ" && wert is string t && Katalogstueck.IstTyp(t))
+                    {
+                        menge.Add(t);
+                    }
+                    KatalogVerweise(wert, menge);
+                }
+                break;
+            case List<object?> liste:
+                foreach (var wert in liste)
+                {
+                    KatalogVerweise(wert, menge);
+                }
+                break;
+        }
     }
 }

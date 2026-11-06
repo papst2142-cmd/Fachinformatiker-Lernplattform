@@ -37,6 +37,11 @@ public sealed class Spieldaten
         if (lesen("inhalte_csharp/grafik/modelle.bin") is { } bin && lesen("inhalte_csharp/grafik/modelle.json") is { } mj && lesen("inhalte_csharp/grafik/zuordnung.json") is { } zj)
         {
             grafik = GrafikBibliothek.Laden(bin, System.Text.Encoding.UTF8.GetString(mj), System.Text.Encoding.UTF8.GetString(zj));
+            // Phase 13 Welle 4a: wie im Spiel dazu die mitgelieferten Stuecke aus dem Katalog (katalog_verbaut.bin)
+            if (lesen("inhalte_csharp/grafik/katalog_verbaut.bin") is { } kb && lesen("inhalte_csharp/grafik/katalog_verbaut.json") is { } kj)
+            {
+                grafik = grafik.Mit(GrafikBibliothek.KatalogLaden(kb, System.Text.Encoding.UTF8.GetString(kj)));
+            }
         }
         var feste = lesen("inhalte_csharp/spiel/festzeiten.json") is { } fz ? Py.Lesen(fz) as PyObjekt : null;
         return new Spieldaten { Fassung = fassung, Inhalt = inhalt, Geschaefte = new Geschaefte(inhalt, daten), Grafik = grafik, Feste = feste };

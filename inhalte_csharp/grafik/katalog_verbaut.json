@@ -1,0 +1,8 @@
+{
+ "_hinweis": [
+  "Phase 13 Welle 4a (Weisung P12-28): nur die Stuecke aus dem Katalog des Stadtbau-Werkzeugs, auf die eine Fassung in inhalte_csharp/spiel/stadtbau/ verweist; erzeugt mit werkzeuge/stadtbau/verbaut.py, nie von Hand."
+ ],
+ "sha256": "64c0888b6c4b2c84fdab0dd13645202ef1745959842452fc1e0fb584dd40070c",
+ "modelle": [],
+ "pakete": {}
+}

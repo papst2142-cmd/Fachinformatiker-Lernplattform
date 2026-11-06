@@ -304,6 +304,7 @@ public class AussenTests
         var f = Assert.Throws<StadtbauFehler>(() => p.Exportieren(DateTimeOffset.Now));
         Assert.Contains(f.Funde, t => t.StartsWith("Stadt draußen: Ein Baum steht im Haus", StringComparison.Ordinal));
         p.Rueckgaengig();
+        p.AussenAendern("Laterne 20", Daten.Laterne20Frei);
         p.AussenAendern("Baum", a => AussenBearbeitung.Setzen(a, AussenArt.Baum, 22, 2));
         var neu = StadtFassung.Lesen(p.Exportieren(DateTimeOffset.Now));
         Assert.Equal(1, neu.Nummer);

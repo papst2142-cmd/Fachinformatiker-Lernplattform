@@ -121,8 +121,15 @@ public static partial class StadtbauPruefung
         {
             Laternen(neu, funde);
         }
+        // Phase 13 Welle 4a (Weisung P12-30, Sammelliste 220): auch im spaeten Spielstand (alle Orte zu sehen), sonst
+        // rueckt eine Laterne erst spaeter vor die Tuer eines neuen Orts
+        if (!ReferenceEquals(neu, szene))
+        {
+            Laternen(szene, funde, spaet: true);
+        }
         Lichtraum(stadt, stand, szene, fassung, funde);
         Ueberschneidung(szene, fassung, funde);
+        KatalogDraussen(szene, fassung, funde);
         Paketplatz(stadt, szene, funde);
         return funde;
     }
@@ -356,7 +363,7 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>Laternen nach den Regeln des Spiels (Rand, laengs verschoben, nicht im Lichtraum).</summary>
-    private static void Laternen(StadtSzene szene, List<StadtbauFund> funde)
+    private static void Laternen(StadtSzene szene, List<StadtbauFund> funde, bool spaet = false)
     {
         if (szene.LaternenSkizze.Count == 0)
         {
@@ -372,14 +379,20 @@ public static partial class StadtbauPruefung
             // "Laterne n: kein freier Platz an ihrer Strasse"
             var nr = fehler.Message.Split(' ', ':')[1];
             var (x, z, _) = int.TryParse(nr, out var n) && n >= 1 && n <= szene.LaternenSkizze.Count ? szene.LaternenSkizze[n - 1] : (0f, 0f, false);
-            funde.Add(new StadtbauFund($"Laterne Nr. {nr} findet an ihrer Straße keinen freien Platz.", "Laterne an eine freie Stelle der Straße schieben.", true, x, z));
+            if (!funde.Any(f => f.Text.StartsWith($"Laterne Nr. {nr} ", StringComparison.Ordinal)))
+            {
+                funde.Add(new StadtbauFund($"Laterne Nr. {nr} findet an ihrer Straße keinen freien Platz{(spaet ? ", sobald alle Orte zu sehen sind" : "")}.",
+                    "Laterne an eine freie Stelle der Straße schieben.", true, x, z));
+            }
             return;
         }
         foreach (var l in laternen)
         {
-            if (l.Verschoben > LaterneVerschoben)
+            if (l.Verschoben > LaterneVerschoben && !funde.Any(f => f.Text.StartsWith($"Laterne Nr. {l.Nr} ", StringComparison.Ordinal)))
             {
-                funde.Add(new StadtbauFund($"Laterne Nr. {l.Nr} muss um {Zf(l.Verschoben)} verschoben werden, damit sie frei steht (erlaubt {Zf(0.2)}).",
+                funde.Add(new StadtbauFund(spaet
+                        ? $"Laterne Nr. {l.Nr} muss um {Zf(l.Verschoben)} verschoben werden, sobald alle Orte zu sehen sind (erlaubt {Zf(0.2)})."
+                        : $"Laterne Nr. {l.Nr} muss um {Zf(l.Verschoben)} verschoben werden, damit sie frei steht (erlaubt {Zf(0.2)}).",
                     "Laterne an eine freie Stelle neben der Straße schieben.", true, l.Ziel.X, l.Ziel.Y));
             }
             if (szene.Gleise.Any(g => Kurve.Abstand(l.Ort, g) < Bahnuebergang.LichtraumHalb + Nachtlicht.AbstandModell))
@@ -459,6 +472,93 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>Haeuser ueberschneiden sich nicht, stehen nicht auf Strassen und Gehwegen; nichts steht in einem Haus.</summary>
+    /// <summary>So nah darf ein Stueck aus dem Katalog dem Stamm eines Baums oder dem Mast einer Laterne kommen (Sammelliste 223).</summary>
+    public const float KatalogStammAbstand = 0.15f;
+
+    /// <summary>
+    /// Phase 13 Welle 4a (Sammelliste 223, Fund Chat): ein Stueck aus dem Katalog draussen steht nicht in einem Haus (auch
+    /// ein Effekt nicht, er waere nicht zu sehen), und ein Modell steht nicht auf dem Stamm eines Baums, am Mast einer
+    /// Laterne oder auf der Fahrbahn (auf dem Gehweg darf es stehen). Texte mit der Kennung "cc0:..." (das Werkzeug setzt
+    /// den Anzeigenamen ein).
+    /// </summary>
+    private static void KatalogDraussen(StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
+    {
+        List<Katalogstueck.Draussen> stuecke;
+        try
+        {
+            stuecke = Katalogstueck.AusStadtdaten(fassung.Stadtdaten);
+        }
+        catch (InvalidDataException fehler)
+        {
+            funde.Add(new StadtbauFund("Ein Stück aus dem Katalog ist falsch gespeichert (" + fehler.Message + ").", "Stück löschen und neu setzen.", true));
+            return;
+        }
+        if (stuecke.Count == 0)
+        {
+            return;
+        }
+        static float Abstand((float X1, float Z1, float X2, float Z2) r, Vector2 p)
+        {
+            var dx = MathF.Max(MathF.Max(r.X1 - p.X, 0), p.X - r.X2);
+            var dz = MathF.Max(MathF.Max(r.Z1 - p.Y, 0), p.Y - r.Z2);
+            return MathF.Sqrt((dx * dx) + (dz * dz));
+        }
+        static float AbstandLinie((float X1, float Z1, float X2, float Z2) r, IReadOnlyList<Vector2> linie)
+        {
+            var best = float.MaxValue;
+            for (var i = 0; i + 1 < linie.Count; i++)
+            {
+                var (a, b) = (linie[i], linie[i + 1]);
+                var schritte = Math.Max(1, (int)MathF.Ceiling(Vector2.Distance(a, b) / 0.02f));
+                for (var k = 0; k <= schritte; k++)
+                {
+                    best = MathF.Min(best, Abstand(r, Vector2.Lerp(a, b, (float)k / schritte)));
+                }
+            }
+            return best;
+        }
+        string HausName(StadtHaus h) => szene.Ort(h.Id)?.Name ?? h.Id.Split('#')[0];
+        IReadOnlyList<Nachtlicht.Laterne> laternen;
+        try
+        {
+            laternen = szene.LaternenSkizze.Count == 0 ? [] : szene.Laternen;
+        }
+        catch (InvalidOperationException)
+        {
+            laternen = [];   // schon ein Fund der Laternen-Regel
+        }
+        foreach (var k in stuecke)
+        {
+            var r = k.Rechteck;
+            if (szene.Haeuser.FirstOrDefault(h => MathF.Min(r.X2, h.Max.X) - MathF.Max(r.X1, h.Min.X) > Toleranz
+                    && MathF.Min(r.Z2, h.Max.Z) - MathF.Max(r.Z1, h.Min.Z) > Toleranz) is { } haus)
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht im Haus „{HausName(haus)}“.", "Stück neben das Haus schieben.", true, k.X, k.Z));
+                continue;
+            }
+            if (k.Effekt)
+            {
+                continue;
+            }
+            if (szene.Baeume.Any(b => Abstand(r, b.Mitte) < KatalogStammAbstand))
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf einem Baum.", "Stück neben den Baum schieben.", true, k.X, k.Z));
+            }
+            if (laternen.Any(l => Abstand(r, l.Ort) < KatalogStammAbstand))
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht an einer Laterne.", "Stück neben die Laterne schieben.", true, k.X, k.Z));
+            }
+            if (szene.Strassen.Any(l => AbstandLinie(r, l) < (StadtSzene.StrassenBreite / 2) - Toleranz))
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf der Fahrbahn.", "Stück auf den Gehweg oder neben die Straße schieben.", true, k.X, k.Z));
+            }
+            if (szene.Gleise.Any(l => AbstandLinie(r, l) < (StadtSzene.GleisBreite / 2) - Toleranz))
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf dem Gleis.", "Stück neben das Gleis schieben.", true, k.X, k.Z));
+            }
+        }
+    }
+
     private static void Ueberschneidung(StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
     {
         string Name(StadtHaus h) => szene.Ort(h.Id)?.Name ?? h.Id.Split('#')[0];

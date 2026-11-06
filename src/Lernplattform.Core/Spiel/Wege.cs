@@ -188,7 +188,8 @@ public static class Wege
         deko.AddRange(DekoListe((PyObjekt)gebaeude["flur"]!));
         foreach (var d in deko)
         {
-            if (Begehbar.Contains((string)d["typ"]!))
+            // Phase 13 Welle 4a: ein Effekt aus dem Katalog des Stadtbau-Werkzeugs (nur Aussehen) versperrt nichts
+            if (Begehbar.Contains((string)d["typ"]!) || Probe.Katalogstueck.IstEffekt((string)d["typ"]!))
             {
                 continue;
             }
