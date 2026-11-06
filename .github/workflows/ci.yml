@@ -406,7 +406,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.43.1 -> A 0.43.2 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.43.2 -> A 0.43.3 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -446,16 +446,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.43.1
-          path: pakete/feed-A-0.43.1/
+          name: paket-${{ matrix.rid }}-A-0.43.2
+          path: pakete/feed-A-0.43.2/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.43.2
-          path: pakete/feed-A-0.43.2/
+          name: updateprobe-${{ matrix.rid }}-A-0.43.3
+          path: pakete/feed-A-0.43.3/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.43.1-tar
+          name: appimage-linux-x64-A-0.43.2-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -619,11 +619,11 @@ jobs:
         id: apkbau
         if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.43.2 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.43.1 installierbar.
-      - name: Update-APK A 0.43.2 bauen
+      # Spike D (A4b): zweite APK A 0.43.3 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.43.2 installierbar.
+      - name: Update-APK A 0.43.3 bauen
         if: env.CI_STUFE != 'werkzeug'
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.43.2 -o apk-update
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.43.3 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -677,19 +677,19 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1004301'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1004302'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1004302'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1004303'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: lernplattform-android-A-0.43.1
+          name: lernplattform-android-A-0.43.2
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: updateprobe-android-A-0.43.2
+          name: updateprobe-android-A-0.43.3
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
@@ -789,15 +789,32 @@ jobs:
               -p:UpdateProbeUrl=http://10.0.2.2:8765/latest.json -p:UpdateProbeFingerabdruck=$fp -o updateprobe-$i
             "$BT/aapt2" dump badging updateprobe-$i/*-Signed.apk | head -n 1
           done
+      # S 0.6.0 (Weisung P12-42 Punkt 2): Probe-APKs des Werkzeugs n, n+1 (-p:UpdateProbe=true, x86_64, Testschluessel
+      # dieses Laufs, nie ausgeliefert), auch in der Stufe werkzeug; Ablauf und Urteil werkzeuge/stadtbau/update_probe.sh
+      - name: Emulator-Probe Update Werkzeug, APKs bauen (x86_64, Testschluessel)
+        id: probebau_stadtbau
+        if: "!cancelled() && steps.werkzeug_apk.outcome == 'success'"
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          fp=$("$BT/apksigner" verify --print-certs stadtbau/stadtbau-android/*.apk | grep "SHA-256" | head -n 1 | awk '{print $NF}')
+          test -n "$fp"
+          v=$(sed -nE 's:.*<StadtbauVersion>([0-9]+\.[0-9]+\.[0-9]+)</StadtbauVersion>.*:\1:p' Directory.Build.props | head -n 1)
+          test -n "$v"
+          basis=${v%.*}; fix=${v##*.}
+          for i in 0 1; do
+            dotnet publish src/Stadtbau.Android -c Release -p:UpdateProbe=true -p:StadtbauVersion=$basis.$((fix + i)) \
+              -p:UpdateProbeUrl=http://10.0.2.2:8766/releases.json -p:UpdateProbeFingerabdruck=$fp -o stadtbau-probe-$i
+            "$BT/aapt2" dump badging stadtbau-probe-$i/*-Signed.apk | head -n 1
+          done
       - name: Emulator-Probe Update, KVM freigeben
-        if: "!cancelled() && steps.probebau.outcome == 'success'"
+        if: "!cancelled() && (steps.probebau.outcome == 'success' || steps.probebau_stadtbau.outcome == 'success')"
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Emulator-Probe Update (n -> n+1 -> n+2, Android 14)
-        if: "!cancelled() && steps.probebau.outcome == 'success'"
-        timeout-minutes: 30
+      - name: Emulator-Probe Update (n -> n+1 -> n+2, Werkzeug n -> n+1, Android 14)
+        if: "!cancelled() && (steps.probebau.outcome == 'success' || steps.probebau_stadtbau.outcome == 'success')"
+        timeout-minutes: 40
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -805,10 +822,16 @@ jobs:
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: bash werkzeuge/android/update_probe.sh updateprobe-0/*-Signed.apk updateprobe-1/*-Signed.apk updateprobe-2/*-Signed.apk emulator_probe_update.txt
+          script: bash werkzeuge/android/emulator_proben.sh ${{ steps.probebau.outcome }} ${{ steps.probebau_stadtbau.outcome }}
       - uses: actions/upload-artifact@v7
         if: "!cancelled() && steps.probebau.outcome == 'success'"
         with:
           name: emulator-probe-update
           path: emulator_probe_update.txt
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v7
+        if: "!cancelled() && steps.probebau_stadtbau.outcome == 'success'"
+        with:
+          name: emulator-probe-stadtbau
+          path: emulator_probe_stadtbau.txt
           if-no-files-found: warn

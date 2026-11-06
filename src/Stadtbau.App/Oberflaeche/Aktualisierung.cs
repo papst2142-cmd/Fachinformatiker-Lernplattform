@@ -13,7 +13,10 @@ namespace Stadtbau.Oberflaeche;
 /// </summary>
 public static class Aktualisierung
 {
-    /// <summary>Sucht eine neue Version (null = am Geraet gibt es kein Update von selbst, z. B. am Tablet bis S 0.6.0).</summary>
+    /// <summary>
+    /// Sucht eine neue Version (null = am Geraet gibt es kein Update von selbst). PC: Velopack (Stadtbau.Desktop), Tablet
+    /// seit S 0.6.0: <see cref="TabletUpdate.SuchenAsync"/> (MainActivity des Werkzeugs).
+    /// </summary>
     public static Func<Task<UpdateErgebnis>>? Pruefen { get; set; }
 
     internal static async Task NachLadenAsync(Action<string> fehler)
@@ -60,6 +63,12 @@ public static class Aktualisierung
 
     private static async Task AnbietenAsync(UpdateErgebnis e, Action<string> fehler)
     {
+        if (e.Angebot is not null)
+        {
+            // S 0.6.0: am Tablet laedt und prueft das Werkzeug selbst (Fenster fuer Erlaubnis und Fehler)
+            await TabletUpdate.AnbietenAsync(e, fehler);
+            return;
+        }
         var (titel, text) = UpdateSuche.Antwort(e);
         if (e.Einspielen is null || await Dialog.Zeigen(titel, text, Texte.UpdateJetzt, Texte.UpdateSpaeter) != 0)
         {

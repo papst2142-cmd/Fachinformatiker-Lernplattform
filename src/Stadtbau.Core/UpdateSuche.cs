@@ -17,7 +17,10 @@ public enum UpdateArt
 }
 
 /// <summary>Ergebnis einer Suche; bei <see cref="UpdateArt.Neu"/> mit Version und Schritt "laden und neu starten".</summary>
-public sealed record UpdateErgebnis(UpdateArt Art, string? Version = null, Func<Task>? Einspielen = null, string? Grund = null);
+/// S 0.6.0: am Tablet traegt das Ergebnis das Angebot von GitHub (<paramref name="Angebot"/>); Laden, Pruefen und Installieren
+/// macht dann die Oberflaeche (TabletUpdate) mit Fenstern fuer Erlaubnis und Fehler statt <paramref name="Einspielen"/>.
+public sealed record UpdateErgebnis(UpdateArt Art, string? Version = null, Func<Task>? Einspielen = null, string? Grund = null,
+    Lernplattform.Core.Update.UpdateAngebot? Angebot = null);
 
 /// <summary>
 /// Patch S 0.5.1 Nachbesserung (Weisung P12-42 Punkt 1): Knopf "Nach Updates suchen" am PC. Er gibt immer eine Antwort:
@@ -38,10 +41,24 @@ public static class UpdateSuche
         {
             return new UpdateErgebnis(UpdateArt.Fehler, Grund: e.GetType().Name + ": " + e.Message);
         }
+        catch (Lernplattform.Core.Update.UpdateFehler e)
+        {
+            // S 0.6.0: die Suche am Tablet (gemeinsamer Teil) meldet Netz- und GitHub-Fehler so
+            return new UpdateErgebnis(UpdateArt.Fehler, Grund: e.Message);
+        }
     }
 
     /// <summary>Zeigt der Start ein Fenster? Nur bei einer neuen Version (wie vor S 0.5.1).</summary>
     public static bool BeimStartZeigen(UpdateErgebnis e) => e.Art == UpdateArt.Neu;
+
+    /// <summary>
+    /// S 0.6.0: Ergebnis der Suche am Tablet aus dem Angebot des gemeinsamen Teils (HandyQuelle mit Linie Stadtbau):
+    /// null = neueste Version, sonst neu mit der Nummer ohne "S " (wie die Version von Velopack am PC).
+    /// </summary>
+    public static UpdateErgebnis AusAngebot(Lernplattform.Core.Update.UpdateAngebot? angebot) => angebot is null
+        ? new UpdateErgebnis(UpdateArt.Aktuell)
+        : new UpdateErgebnis(UpdateArt.Neu, angebot.Version.StartsWith("S ", StringComparison.Ordinal) ? angebot.Version[2..] : angebot.Version,
+            Angebot: angebot);
 
     /// <summary>Titel und Text des Fensters nach "Nach Updates suchen" (jedes Ergebnis bekommt eine Antwort).</summary>
     public static (string Titel, string Text) Antwort(UpdateErgebnis e) => e.Art switch

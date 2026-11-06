@@ -23,7 +23,21 @@ public static class GithubSuche
 
     /// <summary>Neueres Release oder null; UpdateFehler bei Netzproblemen oder unerwarteter Antwort. url nur fuer Tests.</summary>
     public static async Task<UpdateAngebot?> SuchenAsync(HttpClient http, string aktuell, string art = "android", string url = NeuesteUrl,
-        CancellationToken abbruch = default)
+        CancellationToken abbruch = default) =>
+        Auswerten(await AbrufenAsync(http, url, abbruch).ConfigureAwait(false), aktuell, art);
+
+    /// <summary>
+    /// S 0.6.0 (Weisung P12-42 Punkt 2): Suche einer Linie ohne "latest" (das Stadtbau-Werkzeug wird nie "latest").
+    /// Fragt die Liste der Releases ab (<see cref="ListeUrl"/>) und nimmt nur Releases der Linie (<see cref="AuswertenLinie"/>).
+    /// </summary>
+    public static async Task<UpdateAngebot?> SuchenLinieAsync(HttpClient http, string aktuell, ReleaseLinie.Linie linie, string url = ListeUrl,
+        CancellationToken abbruch = default) =>
+        AuswertenLinie(await AbrufenAsync(http, url, abbruch).ConfigureAwait(false), aktuell, linie, "android");
+
+    /// <summary>Liste der Releases (neueste zuerst, 30 je Seite wie die Velopack-Quelle LinienQuelle am PC).</summary>
+    public const string ListeUrl = "https://api.github.com/repos/" + Repository + "/releases?per_page=30";
+
+    private static async Task<string> AbrufenAsync(HttpClient http, string url, CancellationToken abbruch)
     {
         string text;
         try
@@ -44,7 +58,7 @@ public static class GithubSuche
         {
             throw new UpdateFehler(UpdateTexte.KeineVerbindung);
         }
-        return Auswerten(text, aktuell, art);
+        return text;
     }
 
     /// <summary>Auswertung der Antwort (ohne Netz, fuer Tests und G41).</summary>
@@ -78,10 +92,67 @@ public static class GithubSuche
         {
             return null;
         }
+        return Bauen(release, UpdateVersion.Lesen(tag)!.Anzeige, dateien, art);
+    }
+
+    /// <summary>
+    /// S 0.6.0 (Weisung P12-42 Punkt 2): Antwort von <c>GET /repos/…/releases</c> fuer eine Linie ohne "latest". Nimmt nur
+    /// Releases der Linie (<see cref="ReleaseLinie.Filtern"/>, nie ein Release der anderen Linie), ohne Entwuerfe und
+    /// Vorab-Releases, davon die hoechste Version; ist sie neuer als <paramref name="aktuell"/>, das Angebot, sonst null.
+    /// Heute nur fuer das Stadtbau-Werkzeug (Anzeige "S 0.6.0"); die Lernplattform sucht weiter ueber "latest".
+    /// </summary>
+    public static UpdateAngebot? AuswertenLinie(string antwort, string aktuell, ReleaseLinie.Linie linie, string art)
+    {
+        if (linie != ReleaseLinie.Linie.Stadtbau)
+        {
+            throw new ArgumentException("Die Lernplattform sucht ueber releases/latest (SuchenAsync).", nameof(linie));
+        }
+        JsonNode? wurzel;
+        try
+        {
+            wurzel = JsonNode.Parse(antwort);
+        }
+        catch (JsonException)
+        {
+            throw new UpdateFehler(UpdateTexte.KeineVerbindung);
+        }
+        if (wurzel is not JsonArray)
+        {
+            throw new UpdateFehler(UpdateTexte.Unerwartet);
+        }
+        var eigene = ReleaseLinie.StadtbauNummer(aktuell) ?? throw new ArgumentException("Version " + aktuell, nameof(aktuell));
+        JsonObject? bestes = null;
+        (int, int, int) beste = default;
+        foreach (var release in ReleaseLinie.Filtern(antwort, linie))
+        {
+            if (Wahr(release["prerelease"]) || Wahr(release["draft"]) || ReleaseLinie.StadtbauNummer(Zeichen(release["tag_name"])) is not { } nummer)
+            {
+                continue;
+            }
+            if (bestes is null || nummer.CompareTo(beste) > 0)
+            {
+                bestes = release;
+                beste = nummer;
+            }
+        }
+        if (bestes is null || beste.CompareTo(eigene) <= 0)
+        {
+            return null;
+        }
+        var dateien = bestes.ContainsKey("assets") ? bestes["assets"] as JsonArray : [];
+        if (dateien is null)
+        {
+            throw new UpdateFehler(UpdateTexte.Unerwartet);
+        }
+        return Bauen(bestes, ReleaseLinie.StadtbauAnzeige(beste), dateien, art);
+    }
+
+    private static UpdateAngebot Bauen(JsonObject release, string anzeige, JsonArray dateien, string art)
+    {
         var datei = DateiWaehlen(dateien, art);
         var groesse = datei?["size"] is JsonValue g && g.GetValueKind() == JsonValueKind.Number && g.TryGetValue<long>(out var l) ? l : 0;
         return new UpdateAngebot(
-            UpdateVersion.Lesen(tag)!.Anzeige,
+            anzeige,
             Zeichen(release["body"]) is { } notiz ? Rechner.PythonZeichen.Strip(notiz) : "",
             Wahr(release["html_url"]) ? Zeichen(release["html_url"]) ?? ReleaseSeite : ReleaseSeite,
             datei is null ? null : Zeichen(datei["name"]),

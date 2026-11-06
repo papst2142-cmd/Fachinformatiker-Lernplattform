@@ -43,9 +43,13 @@ public interface IHandyGeraet
 /// A 0.39.0 (Weisung P11-39/P11-40): Update im Programm am Handy wie am PC. Suche ueber GitHub (wie bisher),
 /// Laden in den App-Speicher mit Fortschritt, Pruefung (<see cref="HandyPruefung"/>), dann Uebergabe an Android.
 /// Kopie vor_update_*, Merker und Sperre macht wie am PC <see cref="UpdateAblauf.Installieren"/>.
+/// S 0.6.0 (Weisung P12-42 Punkt 2): auch das Stadtbau-Werkzeug am Tablet nutzt diese Quelle mit
+/// <paramref name="linie"/> = Stadtbau (Suche ueber die Liste der Releases, nur vS, <see cref="GithubSuche.SuchenLinieAsync"/>);
+/// die Lernplattform uebergibt nichts und sucht wie bisher ueber "latest". Paketname und Versionscode kommen vom Geraet.
 /// </summary>
 public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string aktuell, string url = GithubSuche.NeuesteUrl,
-    string fingerabdruck = HandyPruefung.Fingerabdruck, string? datenordner = null) : IUpdateQuelle
+    string fingerabdruck = HandyPruefung.Fingerabdruck, string? datenordner = null,
+    ReleaseLinie.Linie linie = ReleaseLinie.Linie.Lernplattform) : IUpdateQuelle
 {
     private string? _datei;
 
@@ -55,7 +59,11 @@ public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string akt
 
     public IHandyGeraet Geraet => geraet;
 
-    public Task<UpdateAngebot?> SuchenAsync(CancellationToken abbruch) => GithubSuche.SuchenAsync(http, aktuell, "android", url, abbruch);
+    public ReleaseLinie.Linie Linie => linie;
+
+    public Task<UpdateAngebot?> SuchenAsync(CancellationToken abbruch) => linie == ReleaseLinie.Linie.Lernplattform
+        ? GithubSuche.SuchenAsync(http, aktuell, "android", url, abbruch)
+        : GithubSuche.SuchenLinieAsync(http, aktuell, linie, url, abbruch);
 
     public async Task<string> LadenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, CancellationToken abbruch)
     {
@@ -128,8 +136,9 @@ public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string akt
     /// <summary>
     /// Rueckmeldung von Android (aus dem Android-Teil gerufen): Zeile in update.log; bei einem Fehler Merker weg,
     /// gehaltene Sperre frei, Datei weg. Liefert den Text fuer das Fenster oder null (Erfolg, Rueckfrage).
+    /// S 0.6.0: das Werkzeug hat keine Einstellungen der Lernplattform und keinen Merker (<paramref name="einstellungen"/> null).
     /// </summary>
-    public static string? Rueckmeldung(int status, string? meldung, long groesse, Daten.Einstellungen einstellungen, string ordner, string? datenordner = null)
+    public static string? Rueckmeldung(int status, string? meldung, long groesse, Daten.Einstellungen? einstellungen, string ordner, string? datenordner = null)
     {
         Updateprotokoll.Schreiben("Android meldet: " + HandyPruefung.StatusName(status)
             + (string.IsNullOrEmpty(meldung) ? "" : ", " + Kuerzen(meldung)), datenordner);
@@ -138,7 +147,10 @@ public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string akt
         {
             return null;
         }
-        UpdateMerker.Vergessen(einstellungen);
+        if (einstellungen is not null)
+        {
+            UpdateMerker.Vergessen(einstellungen);
+        }
         UpdateAblauf.SperreFreigeben();
         AlteEntfernen(ordner);
         return text;
