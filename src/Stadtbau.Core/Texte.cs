@@ -23,6 +23,11 @@ public static class Texte
     /// <summary>Patch S 0.5.1 (Weisung P12-35 Punkt 1): Kopfleiste ganz rechts, am PC wie das Fensterkreuz.</summary>
     public const string WerkzeugBeenden = "Werkzeug beenden";
 
+    /// <summary>Patch S 0.5.1 (Weisung P12-37 Punkt 2): ganzer Bildschirm, am PC auch F11, nach einem Neustart gemerkt.</summary>
+    public const string Vollbild = "Vollbild";
+    public const string VollbildBeenden = "Vollbild beenden";
+    public const string VollbildFehler = "Die Einstellung „Vollbild“ konnte nicht gespeichert werden; beim nächsten Start gilt wieder die alte.";
+
     // ---- Start ----
     public const string Willkommen = "Willkommen im Stadtbau-Werkzeug";
     public const string WillkommenText =
@@ -254,6 +259,7 @@ public static class Texte
         [DateiSpeichern] = "Prüft die Stadt und speichert sie als Datei, die CC ins Spiel einbauen kann.",
         [AnCcSenden] = "Prüft die Stadt und schickt die Datei für das Spiel direkt an CC.",
         [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
+        [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
     };
 

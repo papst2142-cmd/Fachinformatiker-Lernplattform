@@ -27,9 +27,19 @@ public sealed class KartenFlaeche : Control
     private double _zoom = 20;
     private Point _versatz;
     private bool _eingepasst;
-    private Point? _druck;
+    private Fingergeste _geste = new();
     private Point _ziehWelt;
     private bool _gezogen;
+
+    /// <summary>Gegenprobe im Start-Test: Fingerauswertung wie vor S 0.5.1 (jeder Druck beginnt neu).</summary>
+    public bool GesteAltFuerTests { set => _geste = new Fingergeste(altFuerTests: value); }
+
+    /// <summary>Massstab (Bildpunkte je Feld), fuer den Start-Test der Finger.</summary>
+    public double Zoom => _zoom;
+
+    /// <summary>Liegt an dieser Stelle des Bilds ein Stueck, das ein Finger ziehen wuerde? (Start-Test)</summary>
+    public bool StueckAnFuerTests(Point bild) =>
+        Stand is { } a && AussenBearbeitung.StueckBei(a, WeltPunkt(bild).X, WeltPunkt(bild).Y, Math.Max(0.3, 10 / _zoom)) is not null;
 
     public KartenFlaeche()
     {
@@ -527,12 +537,15 @@ public sealed class KartenFlaeche : Control
         var p = e.GetPosition(this);
         var w = WeltPunkt(p);
         e.Handled = true;
-        if (SetzenArt is not null)
+        e.Pointer.Capture(this);
+        var erster = !_geste.Aktiv;
+        var s = SetzenArt is null ? AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom)) : null;
+        Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, s is not null && _projekt?.NurLesen == false));
+        // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie)
+        if (!erster || SetzenArt is not null)
         {
-            SetzenAn(w.X, w.Y);
             return;
         }
-        var s = AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom));
         if (e.ClickCount == 2 && s is not null && _projekt!.InnenortVon(s) is { } innenort)
         {
             OrtGewaehlt?.Invoke(innenort);
@@ -542,29 +555,66 @@ public sealed class KartenFlaeche : Control
         if (s is not null)
         {
             Gemeldet?.Invoke(AussenBearbeitung.Beschreibung(a, s, OrtName));
-            _druck = p;
-            _ziehWelt = default;
-            _gezogen = false;
-            e.Pointer.Capture(this);
         }
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        TippZeigen(e.GetPosition(this));
-        if (_druck is not { } start || Auswahl is null || _projekt?.NurLesen != false)
-        {
-            return;
-        }
         var p = e.GetPosition(this);
-        if (!_gezogen && Math.Abs(p.X - start.X) + Math.Abs(p.Y - start.Y) < 6)
+        TippZeigen(p);
+        Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
+    }
+
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+        e.Pointer.Capture(null);
+        Anwenden(_geste.Loslassen(e.Pointer.Id));
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        Anwenden(_geste.Verloren(e.Pointer.Id));
+    }
+
+    /// <summary>Ergebnis der Fingerauswertung (S 0.5.1): Setzen beim Loslassen ohne Bewegung, ein Finger auf freier
+    /// Flaeche schiebt die Ansicht, zwei Finger zoomen und schieben.</summary>
+    private void Anwenden(Fingergeste.Schritt s)
+    {
+        switch (s.Art)
         {
-            return;
+            case Fingergeste.Art.Tippen when SetzenArt is not null:
+                var w = WeltPunkt(new Point(s.X, s.Y));
+                SetzenAn(w.X, w.Y);
+                break;
+            case Fingergeste.Art.StueckZiehen when Auswahl is not null:
+                _gezogen = true;
+                _ziehWelt = new Point(s.Dx / _zoom, s.Dy / _zoom);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckFertig when _gezogen:
+                _gezogen = false;
+                var (dx, dy) = (s.Dx / _zoom, s.Dy / _zoom);
+                _ziehWelt = default;
+                Verschieben(dx, dy);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckAbbrechen:
+                _gezogen = false;
+                _ziehWelt = default;
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.AnsichtSchieben:
+                _versatz += new Vector(s.Dx, s.Dy);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.Zoomen:
+                _versatz += new Vector(s.Dx, s.Dy);
+                ZoomUm(new Point(s.X, s.Y), s.Faktor);
+                break;
         }
-        _gezogen = true;
-        _ziehWelt = new Point((p.X - start.X) / _zoom, (p.Y - start.Y) / _zoom);
-        InvalidateVisual();
     }
 
     private string? _tipp;
@@ -586,25 +636,6 @@ public sealed class KartenFlaeche : Control
             _tipp = text;
             ToolTip.SetTip(this, text);
         }
-    }
-
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
-    {
-        base.OnPointerReleased(e);
-        if (_druck is null)
-        {
-            return;
-        }
-        _druck = null;
-        e.Pointer.Capture(null);
-        if (_gezogen)
-        {
-            _gezogen = false;
-            var (dx, dy) = (_ziehWelt.X, _ziehWelt.Y);
-            _ziehWelt = default;
-            Verschieben(dx, dy);
-        }
-        InvalidateVisual();
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)

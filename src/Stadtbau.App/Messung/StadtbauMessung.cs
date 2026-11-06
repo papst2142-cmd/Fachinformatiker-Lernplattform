@@ -22,7 +22,7 @@ namespace Stadtbau.Messung;
 /// Messpunkte: Grenze 400 ms (Abbruch ab 1000 ms); ein wiederholbarer Punkt zaehlt erst rot, wenn drei Messungen darueber
 /// liegen. Ergebnis wie beim Start-Test der Lernplattform (Zeilen "FEHLER: ...", Rueckgabe 0 oder 3).
 /// </summary>
-public static class StadtbauMessung
+public static partial class StadtbauMessung
 {
     public const double Grenze = 400;
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
@@ -315,6 +315,8 @@ public static class StadtbauMessung
         await LeereStadtAsync(a, f);
         await BlueprintsAsync(a, f);
         await BedienungAsync(a, f);
+        await FingerAsync(a, f);
+        await VollbildAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

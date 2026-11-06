@@ -12,6 +12,9 @@ Das Werkzeug lässt sich jetzt richtig beenden, und alle Knöpfe sagen genauer, 
 - Gebäude, die aus einem Blueprint gesetzt wurden, heißen jetzt „Gebäude aus Blueprint“ (vorher „Neues Gebäude“). Außerdem: „Gebäude setzen“ statt „Haus setzen“, „Kopieren“ statt „Kopie“, „Projekt anlegen“ statt „Anlegen“ und „Leere Stadt neu bauen“ statt „Leere Stadt“.
 - Jeder Knopf oben und jede Gruppe in der Liste links hat einen kurzen Tipp, was sie tut. Am PC erscheint er, wenn die Maus darauf zeigt. Am Tablet erscheint er, wenn du den Finger etwas länger darauf hältst. Der Knopf wird dabei nicht ausgelöst.
 - Auf der Startseite erklärt ein kurzer Text, was ein Projekt ist und was du darin bauen kannst.
+- Eine neue leere Stadt ist jetzt ganz frei: nur der Boden, ohne Gras, Büsche und Steine, auch in der 3D-Ansicht. Parks, die du selbst setzt, haben weiter Bäume und Büsche. Leere Städte, die du schon vorher angelegt hast, bleiben, wie sie waren (mit Grün); sie werden nicht still umgestellt.
+- Neuer Knopf „Vollbild“ oben: das Werkzeug füllt den ganzen Bildschirm, am PC geht das auch mit der Taste F11, am Tablet verschwinden die Leisten von Android. Beim nächsten Start ist das Vollbild wieder so, wie du es zuletzt hattest.
+- Zoomen mit zwei Fingern klappt jetzt immer, in der Ansicht „Stadt von oben“ und im Grundriss, auch wenn der zweite Finger etwas später kommt oder der erste auf einem Stück liegt. Ein Finger auf einer freien Stelle schiebt die Ansicht. Mit zwei Fingern wird nie ein Stück verschoben.
 
 ## S 0.5.0
 

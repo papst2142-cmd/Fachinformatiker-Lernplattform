@@ -338,7 +338,34 @@ public sealed partial class Hauptansicht : UserControl
         Knopf(Texte.Wiederholen, Wiederholen);
         Knopf(Texte.DateiSpeichern, () => _ = DateiSpeichernAsync());
         Knopf(Texte.AnCcSenden, () => _ = SendenAsync());
+        Knopf(Texte.Vollbild, VollbildUmschalten);
         Knopf(Texte.Dunkel, FarbeWechseln);
+        WerkzeugVollbild.Geaendert += VollbildText;
+        VollbildText();
+    }
+
+    /// <summary>Patch S 0.5.1 (Weisung P12-37 Punkt 2): Knopf "Vollbild" und F11; gemerkt in einstellungen.json.</summary>
+    public void VollbildUmschalten()
+    {
+        var neu = !WerkzeugVollbild.An;
+        try
+        {
+            WerkzeugEinstellungen.VollbildSetzen(_ordner, neu);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _ordner.Fehler("Vollbild merken: " + e.Message);
+            Melden(Texte.VollbildFehler);
+        }
+        WerkzeugVollbild.Setzen(neu);
+    }
+
+    private void VollbildText()
+    {
+        if (_kopf.TryGetValue(Texte.Vollbild, out var k) && k.Content is TextBlock t)
+        {
+            t.Text = WerkzeugVollbild.An ? Texte.VollbildBeenden : Texte.Vollbild;
+        }
     }
 
     private void TitelSetzen() =>
@@ -2261,11 +2288,20 @@ public sealed partial class Hauptansicht : UserControl
         if (TopLevel.GetTopLevel(this) is { } top)
         {
             top.AddHandler(KeyDownEvent, TasteGedrueckt, RoutingStrategies.Tunnel);
+            // Tablet: Wunsch "Systemleisten aus" an Avalonia geben (am PC gibt es keinen InsetsManager)
+            WerkzeugVollbild.Leisten = top.InsetsManager;
+            WerkzeugVollbild.LeistenMerken();
         }
     }
 
     private void TasteGedrueckt(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.F11 && e.KeyModifiers == KeyModifiers.None)
+        {
+            VollbildUmschalten();
+            e.Handled = true;
+            return;
+        }
         if (Dialog.Offen is not null || _projekt is null)
         {
             return;

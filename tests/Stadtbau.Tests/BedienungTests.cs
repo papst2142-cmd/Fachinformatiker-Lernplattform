@@ -49,7 +49,7 @@ public class BedienungTests
     private static readonly string[] Kopf =
     [
         Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.Rueckgaengig,
-        Texte.Wiederholen, Texte.DateiSpeichern, Texte.AnCcSenden, Texte.Dunkel, Texte.WerkzeugBeenden,
+        Texte.Wiederholen, Texte.DateiSpeichern, Texte.AnCcSenden, Texte.Vollbild, Texte.Dunkel, Texte.WerkzeugBeenden,
     ];
 
     /// <summary>Woerter, die allein nicht sagen, womit ein Knopf arbeitet (Nico: "Neu" kann auch ein Gebaeude meinen).</summary>

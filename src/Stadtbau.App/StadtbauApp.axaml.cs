@@ -28,6 +28,9 @@ public partial class StadtbauApp : Application
     /// <summary>Wird nach dem Aufbau gerufen (Start-Test).</summary>
     public static Action<Hauptansicht, Window?>? NachStart { get; set; }
 
+    /// <summary>Patch S 0.5.1: gemerktes Vollbild beim Start anwenden (der Start-Test ruft es fuer den Neustart).</summary>
+    public static void VollbildBeimStart() => WerkzeugVollbild.Setzen(WerkzeugEinstellungen.Vollbild(Ordner));
+
     public override void Initialize()
     {
         Dispatcher.UIThread.UnhandledException += (_, e) =>
@@ -74,6 +77,9 @@ public partial class StadtbauApp : Application
                 }
             };
             ansicht.Schliessen = fenster.Close;
+            // Patch S 0.5.1 (Weisung P12-37 Punkt 2): Vollbild vor dem ersten Zeigen, wenn es beim letzten Mal an war
+            WerkzeugVollbild.Fenster = an => fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            VollbildBeimStart();
             NachStart?.Invoke(ansicht, fenster);
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime aktivitaet)
@@ -82,6 +88,7 @@ public partial class StadtbauApp : Application
             {
                 var ansicht = new Hauptansicht(Ordner);
                 ansicht.Schliessen = () => _ = ansicht.BeendenAsync(GeraetBeenden);
+                VollbildBeimStart();
                 NachStart?.Invoke(ansicht, null);
                 return ansicht;
             };

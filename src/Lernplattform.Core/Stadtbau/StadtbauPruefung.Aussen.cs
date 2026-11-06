@@ -245,6 +245,12 @@ public static partial class StadtbauPruefung
         var namen = new[] { Get(fassung.Karte, "orte"), Get(fassung.Stadtdaten, "neue_orte") }.SelectMany(q => q as List<object?> ?? []).OfType<PyObjekt>()
             .GroupBy(o => Py.Str(o["id"])).ToDictionary(g => g.Key, g => g.First()["name"] as string ?? g.Key, StringComparer.Ordinal);
         var darstellung = Get(fassung.Stadtdaten, "darstellung") as PyObjekt;
+        // A 0.43.1 (Weisung P12-39): Schalter "kleingruen" nur true oder false (sonst bliebe unklar, was das Spiel zeichnet)
+        if (darstellung is not null && Py.Hat(darstellung, "kleingruen") && darstellung["kleingruen"] is not bool)
+        {
+            funde.Add(new StadtbauFund("Der Schalter „kleingruen“ hat den Wert " + PythonJson.Text(darstellung["kleingruen"]) + " statt true oder false.",
+                "In der Stadt-Datei „kleingruen“ auf true (mit Kleingrün) oder false (ganz frei) setzen.", true));
+        }
         var zugaenge = new[] { "zugaenge", "zugaenge_neu" }.Select(k => Get(fassung.Stadtdaten, k) as PyObjekt ?? []).SelectMany(z => z)
             .Select(z => (Name: namen.GetValueOrDefault(z.Key, z.Key), Zugang: z.Value))
             .Concat((darstellung is null ? [] : ListeOderLeer(darstellung, "zierwege")).OfType<PyObjekt>().Select(z => (Name: z["name"] as string ?? Py.Str(z["modell"]), Zugang: (object?)z)));

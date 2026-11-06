@@ -1051,7 +1051,7 @@ public sealed partial class StadtSzene
                 && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
-            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest);
+            gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest, KleingruenAn(stadt.Daten));
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
@@ -1481,6 +1481,14 @@ public sealed partial class StadtSzene
             return best;
         }
     }
+
+    /// <summary>
+    /// A 0.43.1 (Weisung P12-39, Nico P12-37/P12-38: leere Stadt ganz frei): <c>stadtdaten.darstellung.kleingruen</c>.
+    /// Nur der Wert false schaltet das Kleingruen an Strassenraendern und auf freien Flaechen ab; fehlt er (Fassung 0 und
+    /// jede Stadt vor A 0.43.1), gilt "an" wie bisher. Einen anderen Wert meldet <c>StadtbauPruefung.Aussen</c> rot.
+    /// </summary>
+    public static bool KleingruenAn(PyObjekt? stadtDaten) =>
+        !(stadtDaten?["darstellung"] is PyObjekt dar && dar["kleingruen"] is false);
 
     /// <summary>Phase 8 W7: Kleingruen (Buesche, Graeser, Steine, Beete; eigenes Netz), null ohne Grafik.</summary>
     public Gruen.Ergebnis? GruenKlein { get; private init; }

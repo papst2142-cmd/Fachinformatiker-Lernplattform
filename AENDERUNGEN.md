@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.43.1
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf neue Städte vor, die mit dem Stadtbau-Werkzeug gebaut werden.
+
+- Eine neue Stadt kann jetzt festlegen, dass sie ganz frei ist: ohne Gras, Büsche und Steine am Straßenrand und auf freien Flächen. Parks behalten ihre Bäume und Büsche.
+- Die heutige Stadt hat diese Angabe nicht und behält ihr Grün wie bisher.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.0
 Das Spiel kann jetzt alles zeigen, was mit dem Stadtbau-Werkzeug gebaut wird. Die Stadt selbst sieht in dieser Version noch genauso aus wie bisher; die neuen Teile erscheinen erst, wenn eine neue, gebaute Fassung der Stadt eingebaut wird.
 

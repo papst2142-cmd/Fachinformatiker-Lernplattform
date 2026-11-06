@@ -182,8 +182,10 @@ public static class Aussen
     /// <summary>
     /// Leere Stadt (Plan Abschnitt 3 "Leere Stadt", Vorbereitung fuer Beta 1): Karte mit frei waehlbarer Groesse ohne Orte,
     /// Raster und Uhr wie Stadt 1, die Haus-Modelle von Stadt 1 zum Setzen von Haeusern, keine Laternen, keine Beete.
+    /// Patch S 0.5.1 (Weisung P12-39): frei = Schalter darstellung.kleingruen = false (nur der Boden, kein Kleingruen an
+    /// Strassen und auf freien Flaechen; Parks, die Nico setzt, behalten Baeume und Bueschel).
     /// </summary>
-    public static StadtFassung Leer(StadtFassung vorlage, string stadtId, double breite, double hoehe)
+    public static StadtFassung Leer(StadtFassung vorlage, string stadtId, double breite, double hoehe, bool frei = false)
     {
         var sd = (PyObjekt)Py.Kopie(vorlage.Stadtdaten)!;
         var rest = new PyObjekt();
@@ -197,7 +199,9 @@ public static class Aussen
             {
                 "zugaenge" or "oeffnungszeiten" or "zugaenge_neu" => new PyObjekt(),
                 "neue_orte" => new List<object?>(),
-                "darstellung" => new PyObjekt { { "modell_tuer", new PyObjekt() }, { "zierwege", new List<object?>() }, { "paket_platz", Get(Objekt(v), "paket_platz") } },
+                "darstellung" => frei
+                    ? new PyObjekt { { "modell_tuer", new PyObjekt() }, { "zierwege", new List<object?>() }, { "paket_platz", Get(Objekt(v), "paket_platz") }, { "kleingruen", false } }
+                    : new PyObjekt { { "modell_tuer", new PyObjekt() }, { "zierwege", new List<object?>() }, { "paket_platz", Get(Objekt(v), "paket_platz") } },
                 _ => v,
             });
         }

@@ -27,29 +27,22 @@ public sealed class GrundrissFlaeche : Control
     private bool _eingepasst;
 
     // Ziehen
-    private Point? _start;
-    private Point _letzter;
-    private bool _verschiebeStueck;
     private Vector _ziehWelt;
-    private bool _gezogen;
-    private double _pinchStart = 1;
-    private double _pinchZoom = 30;
+
+    /// <summary>Wird gerade ein Stueck mit einem Finger (oder der Maus) gezogen?</summary>
+    private bool ZiehtStueck => _ziehen;
+    private bool _ziehen;
+
+    /// <summary>Patch S 0.5.1 (Weisung P12-37 Punkt 3): Maus und Finger, zwei Finger zoomen und schieben.</summary>
+    private Fingergeste _geste = new();
+
+    /// <summary>Nur Start-Test (Gegenprobe): Fingerauswertung wie vor S 0.5.1.</summary>
+    public bool GesteAltFuerTests { set => _geste = new Fingergeste(altFuerTests: value); }
 
     public GrundrissFlaeche()
     {
         Focusable = true;
         ClipToBounds = true;
-        GestureRecognizers.Add(new PinchGestureRecognizer());
-        AddHandler(InputElement.PinchEvent, (_, e) =>
-        {
-            if (_pinchStart <= 0)
-            {
-                return;
-            }
-            ZoomUm(new Point(Bounds.Width / 2, Bounds.Height / 2), _pinchZoom * e.Scale / _zoom);
-            e.Handled = true;
-        });
-        AddHandler(InputElement.PinchEndedEvent, (_, _) => _pinchZoom = _zoom);
     }
 
     /// <summary>Stueck, das gerade gewaehlt ist (Feld rechts zeigt es).</summary>
@@ -70,6 +63,9 @@ public sealed class GrundrissFlaeche : Control
     public event Action<string>? Gemeldet;
 
     public double Zoom => _zoom;
+
+    /// <summary>Liegt an dieser Stelle des Bilds ein Stueck? (Start-Test der Finger)</summary>
+    public bool StueckAnFuerTests(Point bild) => Gebaeude is { } g && Bearbeitung.StueckBei(g, Welt(bild).X, Welt(bild).Y) is not null;
 
     public void Zeigen(Projekt? projekt, string? ort)
     {
@@ -105,7 +101,6 @@ public sealed class GrundrissFlaeche : Control
         double b = Py.F(g["breite"]), h = Py.F(g["hoehe"]);
         const double rand = 24;
         _zoom = Math.Max(4, Math.Min((Bounds.Width - (2 * rand)) / b, (Bounds.Height - (2 * rand)) / h));
-        _pinchZoom = _zoom;
         _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (Bounds.Height - (h * _zoom)) / 2);
         _eingepasst = true;
         InvalidateVisual();
@@ -200,7 +195,7 @@ public sealed class GrundrissFlaeche : Control
         var rand = new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 1);
         foreach (var (stelle, d) in Bearbeitung.Alle(g))
         {
-            if (_gezogen && _verschiebeStueck && stelle == Auswahl)
+            if (ZiehtStueck && stelle == Auswahl)
             {
                 continue;
             }
@@ -231,8 +226,8 @@ public sealed class GrundrissFlaeche : Control
         if (Auswahl is { } a && Gueltig(g, a))
         {
             var d = Bearbeitung.Deko(g, a);
-            var (dx, dy) = _gezogen && _verschiebeStueck ? (_ziehWelt.X, _ziehWelt.Y) : (0, 0);
-            if (_gezogen && _verschiebeStueck)
+            var (dx, dy) = ZiehtStueck ? (_ziehWelt.X, _ziehWelt.Y) : (0, 0);
+            if (ZiehtStueck)
             {
                 StueckZeichnen(ctx, schrift, d, rand, dx, dy, 0.85);
             }
@@ -343,19 +338,11 @@ public sealed class GrundrissFlaeche : Control
         }
         var p = e.GetPosition(this);
         var w = Welt(p);
-        if (SetzenTyp is not null)
-        {
-            SetzenAn(w.X, w.Y);
-            e.Handled = true;
-            return;
-        }
-        var treffer = Bearbeitung.StueckBei(g, w.X, w.Y);
-        _start = p;
-        _letzter = p;
-        _gezogen = false;
-        _ziehWelt = default;
-        _verschiebeStueck = treffer is not null;
-        if (treffer != Auswahl)
+        var treffer = SetzenTyp is null ? Bearbeitung.StueckBei(g, w.X, w.Y) : null;
+        var erster = !_geste.Aktiv;
+        Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, treffer is not null));
+        // der erste Finger waehlt sofort (wie bisher); ein zweiter Finger aendert die Auswahl nie
+        if (erster && SetzenTyp is null && treffer != Auswahl)
         {
             Waehlen(treffer);
         }
@@ -366,47 +353,67 @@ public sealed class GrundrissFlaeche : Control
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        if (_start is not { } s)
-        {
-            return;
-        }
         var p = e.GetPosition(this);
-        if (!_gezogen && Math.Abs(p.X - s.X) + Math.Abs(p.Y - s.Y) < 6)
-        {
-            return;
-        }
-        _gezogen = true;
-        if (_verschiebeStueck)
-        {
-            _ziehWelt = new Vector((p.X - s.X) / _zoom, (p.Y - s.Y) / _zoom);
-        }
-        else
-        {
-            _versatz += p - _letzter;
-        }
-        _letzter = p;
-        InvalidateVisual();
+        Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        if (_start is null)
-        {
-            return;
-        }
-        _start = null;
         e.Pointer.Capture(null);
-        if (_gezogen && _verschiebeStueck && Auswahl is { } a && _projekt is not null && _ort is not null)
+        Anwenden(_geste.Loslassen(e.Pointer.Id));
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        Anwenden(_geste.Verloren(e.Pointer.Id));
+    }
+
+    /// <summary>Ergebnis der Fingerauswertung umsetzen (Setzen erst beim Loslassen, damit zwei Finger nichts setzen).</summary>
+    private void Anwenden(Fingergeste.Schritt s)
+    {
+        switch (s.Art)
         {
-            var (dx, dy) = (_ziehWelt.X, _ziehWelt.Y);
-            _gezogen = false;
-            var neu = _projekt.Aendern(_ort, "Verschieben", g => Bearbeitung.Verschieben(g, a, dx, dy, Raster));
-            Waehlen(neu);
-            Gemeldet?.Invoke("Verschoben");
+            case Fingergeste.Art.Tippen when SetzenTyp is not null:
+                var w = Welt(new Point(s.X, s.Y));
+                SetzenAn(w.X, w.Y);
+                break;
+            case Fingergeste.Art.StueckZiehen:
+                _ziehWelt = new Vector(s.Dx / _zoom, s.Dy / _zoom);
+                _ziehen = true;
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckAbbrechen:
+                _ziehWelt = default;
+                _ziehen = false;
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.StueckFertig when Auswahl is { } a && _projekt is not null && _ort is not null && !_projekt.NurLesen:
+                var (dx, dy) = (s.Dx / _zoom, s.Dy / _zoom);
+                _ziehWelt = default;
+                _ziehen = false;
+                var neu = _projekt.Aendern(_ort, "Verschieben", g => Bearbeitung.Verschieben(g, a, dx, dy, Raster));
+                Waehlen(neu);
+                Gemeldet?.Invoke("Verschoben");
+                break;
+            case Fingergeste.Art.AnsichtSchieben:
+                _versatz += new Vector(s.Dx, s.Dy);
+                InvalidateVisual();
+                break;
+            case Fingergeste.Art.Zoomen:
+                _versatz += new Vector(s.Dx, s.Dy);
+                ZoomUm(new Point(s.X, s.Y), s.Faktor);
+                break;
+            default:
+                if (s.Art == Fingergeste.Art.StueckFertig)
+                {
+                    _ziehWelt = default;
+                    _ziehen = false;
+                    InvalidateVisual();
+                }
+                break;
         }
-        _gezogen = false;
-        InvalidateVisual();
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
