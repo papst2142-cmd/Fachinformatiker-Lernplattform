@@ -3,7 +3,7 @@ namespace Stadtbau.Core;
 /// <summary>
 /// Datenordner des Werkzeugs (getrennt von der Lernplattform): Windows %LOCALAPPDATA%\Fachinformatiker-Stadtbau, Linux
 /// ~/.local/share/fachinformatiker-stadtbau, macOS ~/Library/Application Support/Fachinformatiker-Stadtbau, Android der
-/// Ordner der App. STADTBAU_DATEN setzt ihn fuer Tests und den Start-Test. Darin: projekte/, sicherungen/, exporte/.
+/// Ordner der App. STADTBAU_DATEN setzt ihn fuer Tests und den Start-Test. Darin: projekte/, sicherungen/, exporte/ und seit Welle 4c blueprints/.
 /// </summary>
 public sealed class Werkzeugordner(string wurzel)
 {
@@ -16,6 +16,9 @@ public sealed class Werkzeugordner(string wurzel)
     public string Sicherungen => Path.Combine(Wurzel, "sicherungen");
 
     public string Exporte => Path.Combine(Wurzel, "exporte");
+
+    /// <summary>Phase 13 Welle 4c (Weisung P12-32): je Blueprint eine Datei (<see cref="Blueprint"/>).</summary>
+    public string Blueprints => Path.Combine(Wurzel, "blueprints");
 
     public string FehlerLog => Path.Combine(Wurzel, "fehler.log");
 
@@ -43,12 +46,13 @@ public sealed class Werkzeugordner(string wurzel)
         return new Werkzeugordner(Path.Combine(daten, Werkzeug.Kennung.ToLowerInvariant()));
     }
 
-    /// <summary>Ordner anlegen (alle drei).</summary>
+    /// <summary>Ordner anlegen (alle vier).</summary>
     public Werkzeugordner Anlegen()
     {
         Directory.CreateDirectory(Projekte);
         Directory.CreateDirectory(Sicherungen);
         Directory.CreateDirectory(Exporte);
+        Directory.CreateDirectory(Blueprints);
         return this;
     }
 

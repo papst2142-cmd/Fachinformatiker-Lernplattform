@@ -538,7 +538,7 @@ public sealed class Projekt
     public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten);
 
     public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten) =>
-        [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => KatalogPruefung.Umbenannt(Katalog.Aktiv, f)), .. KatalogPruefung.Aussen(Katalog.Aktiv, Aussen.Aus(stand))];
+        [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => KatalogPruefung.Umbenannt(Katalog.Aktiv, f)), .. KatalogPruefung.Aussen(Katalog.Aktiv, Aussen.Aus(stand)), .. Blueprint.Pruefen(Aussen.Aus(stand))];
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
     public List<(string Ort, StadtbauFund Fund)> RoteFunde()

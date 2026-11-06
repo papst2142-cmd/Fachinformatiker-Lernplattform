@@ -21,6 +21,12 @@ public enum AussenArt
 
     /// <summary>Phase 13 Welle 3b: Stueck aus dem vollen CC0-Katalog (Modell oder Effekt), in <c>stadtdaten.katalog</c>.</summary>
     Katalog,
+
+    /// <summary>
+    /// Phase 13 Welle 4c (Weisung P12-32): nur zum Setzen eines Blueprints (<see cref="Blueprint.Setzen"/>); das gesetzte
+    /// Stueck ist danach ein <see cref="Gebaeude"/>, keine Stelle hat diese Art.
+    /// </summary>
+    Blueprint,
 }
 
 /// <summary>
