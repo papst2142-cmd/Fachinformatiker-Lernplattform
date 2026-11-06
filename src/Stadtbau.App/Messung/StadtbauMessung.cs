@@ -39,6 +39,8 @@ public static partial class StadtbauMessung
         StadtbauApp.Ordner = new Werkzeugordner(ordner);
         Hauptansicht.Automatisch = true;
         Hauptansicht.HandyRegelImmer = true;
+        // Nachbesserung S 0.5.1 (Weisung P12-42): Testquelle fuer "Nach Updates suchen" (beim Start still, weil aktuell)
+        Aktualisierung.Pruefen = () => Task.FromResult(UpdateTestErgebnis);
         StadtbauApp.NachStart = (ansicht, fenster) => Dispatcher.UIThread.Post(() => _ = AusfuehrenAsync(ansicht, fenster));
     }
 
@@ -317,6 +319,9 @@ public static partial class StadtbauMessung
         await BedienungAsync(a, f);
         await FingerAsync(a, f);
         await VollbildAsync(a, f);
+        await RueckgaengigKnopfAsync(a, f);
+        await BewegenAsync(a, f);
+        await UpdateKnopfAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

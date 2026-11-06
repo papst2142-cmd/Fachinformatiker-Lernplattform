@@ -37,6 +37,9 @@ public sealed class KartenFlaeche : Control
     /// <summary>Massstab (Bildpunkte je Feld), fuer den Start-Test der Finger.</summary>
     public double Zoom => _zoom;
 
+    /// <summary>Lage der Ansicht (Start-Test: Schieben).</summary>
+    public Point Versatz => _versatz;
+
     /// <summary>Liegt an dieser Stelle des Bilds ein Stueck, das ein Finger ziehen wuerde? (Start-Test)</summary>
     public bool StueckAnFuerTests(Point bild) =>
         Stand is { } a && AussenBearbeitung.StueckBei(a, WeltPunkt(bild).X, WeltPunkt(bild).Y, Math.Max(0.3, 10 / _zoom)) is not null;
@@ -58,6 +61,42 @@ public sealed class KartenFlaeche : Control
 
     /// <summary>Stueck aus dem Katalog, das beim naechsten Tipp gesetzt wird (null = waehlen).</summary>
     public AussenArt? SetzenArt { get; set; }
+
+    /// <summary>
+    /// Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Vierteldrehungen fuer das naechste gesetzte Stueck (Strasse
+    /// waagerecht oder senkrecht, Park und Katalog-Stueck in 90-Grad-Schritten). Bleibt stehen, bis es wieder geaendert
+    /// wird (mehrere senkrechte Strassen hintereinander). Knopf "Drehen" beim Setzen und Taste R.
+    /// </summary>
+    public int SetzenDreh { get; set; }
+
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste gehalten (setzt die Hauptansicht), dann schiebt die Maus.</summary>
+    public static bool LeertasteGehalten { get; set; }
+
+    private bool _nurSchieben;
+
+    /// <summary>Schiebt dieser Druck nur die Ansicht? (Maus mit rechter oder mittlerer Taste oder bei gehaltener Leertaste.)</summary>
+    internal static bool NurSchiebenDruck(PointerPressedEventArgs e, Visual v)
+    {
+        if (e.Pointer.Type != PointerType.Mouse)
+        {
+            return false;
+        }
+        var k = e.GetCurrentPoint(v).Properties;
+        return k.IsRightButtonPressed || k.IsMiddleButtonPressed || LeertasteGehalten;
+    }
+
+    /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog;
+
+    /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
+    public void SetzenDrehen()
+    {
+        if (DrehbarBeimSetzen(SetzenArt))
+        {
+            SetzenDreh = (SetzenDreh + 1) % 4;
+            AuswahlGeaendert?.Invoke();
+        }
+    }
 
     /// <summary>Modell fuer ein neues Haus ohne Ort.</summary>
     public string? SetzenModell { get; set; }
@@ -392,7 +431,17 @@ public sealed class KartenFlaeche : Control
         {
             return BlueprintSetzen(x, y);
         }
-        var neu = _projekt.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, art, x, y, raster, modell));
+        var dreh = DrehbarBeimSetzen(art) ? SetzenDreh : 0;
+        var neu = _projekt.AussenAendern("Setzen", a =>
+        {
+            // gedreht setzen ist ein einziger Schritt im Verlauf
+            var s = AussenBearbeitung.Setzen(a, art, x, y, raster, modell);
+            for (var i = 0; s is not null && i < dreh; i++)
+            {
+                AussenBearbeitung.Drehen(a, s);
+            }
+            return s;
+        });
         SetzenArt = null;
         if (neu is not null)
         {
@@ -503,6 +552,9 @@ public sealed class KartenFlaeche : Control
             case Key.Delete or Key.Back when Auswahl is not null:
                 Loeschen();
                 return true;
+            case Key.R when !strg && DrehbarBeimSetzen(SetzenArt):
+                SetzenDrehen();
+                return true;
             case Key.R when !strg && Auswahl is not null:
                 Drehen();
                 return true;
@@ -539,6 +591,14 @@ public sealed class KartenFlaeche : Control
         e.Handled = true;
         e.Pointer.Capture(this);
         var erster = !_geste.Aktiv;
+        if (erster && NurSchiebenDruck(e, this))
+        {
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): rechte oder mittlere Maustaste oder Leertaste schiebt
+            // die Ansicht auch ueber Stuecken, waehlt nichts und setzt nichts
+            _nurSchieben = true;
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            return;
+        }
         var s = SetzenArt is null ? AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom)) : null;
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, s is not null && _projekt?.NurLesen == false));
         // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie)
@@ -569,8 +629,14 @@ public sealed class KartenFlaeche : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        e.Pointer.Capture(null);
+        // zuerst auswerten, dann die Erfassung freigeben: Capture(null) loest sofort PointerCaptureLost aus, und
+        // "Verloren" haette den Finger schon vergessen (Tippen setzte nichts, Ziehen schob nichts)
         Anwenden(_geste.Loslassen(e.Pointer.Id));
+        e.Pointer.Capture(null);
+        if (!_geste.Aktiv)
+        {
+            _nurSchieben = false;
+        }
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
@@ -585,7 +651,7 @@ public sealed class KartenFlaeche : Control
     {
         switch (s.Art)
         {
-            case Fingergeste.Art.Tippen when SetzenArt is not null:
+            case Fingergeste.Art.Tippen when SetzenArt is not null && !_nurSchieben:
                 var w = WeltPunkt(new Point(s.X, s.Y));
                 SetzenAn(w.X, w.Y);
                 break;

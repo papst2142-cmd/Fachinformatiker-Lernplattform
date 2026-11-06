@@ -64,6 +64,9 @@ public sealed class GrundrissFlaeche : Control
 
     public double Zoom => _zoom;
 
+    /// <summary>Lage der Ansicht (Start-Test: Schieben).</summary>
+    public Point Versatz => _versatz;
+
     /// <summary>Liegt an dieser Stelle des Bilds ein Stueck? (Start-Test der Finger)</summary>
     public bool StueckAnFuerTests(Point bild) => Gebaeude is { } g && Bearbeitung.StueckBei(g, Welt(bild).X, Welt(bild).Y) is not null;
 
@@ -328,6 +331,8 @@ public sealed class GrundrissFlaeche : Control
 
     // ---- Bedienung -------------------------------------------------------------------------------
 
+    private bool _nurSchieben;
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
@@ -338,6 +343,15 @@ public sealed class GrundrissFlaeche : Control
         }
         var p = e.GetPosition(this);
         var w = Welt(p);
+        if (!_geste.Aktiv && KartenFlaeche.NurSchiebenDruck(e, this))
+        {
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): wie in der Draufsicht nur die Ansicht schieben
+            _nurSchieben = true;
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            e.Pointer.Capture(this);
+            e.Handled = true;
+            return;
+        }
         var treffer = SetzenTyp is null ? Bearbeitung.StueckBei(g, w.X, w.Y) : null;
         var erster = !_geste.Aktiv;
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, treffer is not null));
@@ -360,8 +374,14 @@ public sealed class GrundrissFlaeche : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        e.Pointer.Capture(null);
+        // zuerst auswerten, dann die Erfassung freigeben: Capture(null) loest sofort PointerCaptureLost aus, und
+        // "Verloren" haette den Finger schon vergessen (Tippen setzte nichts, Ziehen schob nichts)
         Anwenden(_geste.Loslassen(e.Pointer.Id));
+        e.Pointer.Capture(null);
+        if (!_geste.Aktiv)
+        {
+            _nurSchieben = false;
+        }
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
@@ -375,7 +395,7 @@ public sealed class GrundrissFlaeche : Control
     {
         switch (s.Art)
         {
-            case Fingergeste.Art.Tippen when SetzenTyp is not null:
+            case Fingergeste.Art.Tippen when SetzenTyp is not null && !_nurSchieben:
                 var w = Welt(new Point(s.X, s.Y));
                 SetzenAn(w.X, w.Y);
                 break;

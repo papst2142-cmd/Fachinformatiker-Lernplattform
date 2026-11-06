@@ -23,9 +23,30 @@ public class BedienungTests
         // Projektdatei gesperrt (an ihrer Stelle liegt ein Ordner): das Speichern scheitert, die Aenderung ist offen
         File.Delete(p.Datei);
         Directory.CreateDirectory(p.Datei);
-        // Linux/macOS: IOException, Windows: UnauthorizedAccessException (Datei an die Stelle eines Ordners verschieben)
-        var fehler = Record.Exception(() => p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "fliesen")));
-        Assert.True(fehler is IOException or UnauthorizedAccessException, fehler?.GetType().Name ?? "kein Fehler");
+        // Nachbesserung S 0.5.1 (P12-40 Punkt 5): der Schritt steht im Verlauf, "Geaendert" kommt an (Knoepfe der
+        // Oberflaeche), der Fehler steht in SpeicherFehler und fehler.log; vorher lief er bis zur Oberflaeche
+        var gemeldet = 0;
+        p.Geaendert += () => gemeldet++;
+        var zurueck = p.SchritteZurueck;
+        p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "fliesen"));
+        Assert.Equal(1, gemeldet);
+        Assert.Equal(zurueck + 1, p.SchritteZurueck);
+        Assert.NotNull(p.SpeicherFehler);
+        Assert.True(p.Ungespeichert);
+        Assert.Contains("Automatisch speichern", File.ReadAllText(p.Werkzeugordner.FehlerLog), StringComparison.Ordinal);
+        // Gegenprobe: wie vorher (Linux/macOS IOException, Windows UnauthorizedAccessException), "Geaendert" bleibt aus
+        Projekt.SpeichernAltFuerTests = true;
+        try
+        {
+            var fehler = Record.Exception(() => p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "teppich")));
+            Assert.True(fehler is IOException or UnauthorizedAccessException, fehler?.GetType().Name ?? "kein Fehler");
+            Assert.Equal(1, gemeldet);
+        }
+        finally
+        {
+            Projekt.SpeichernAltFuerTests = false;
+        }
+        p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "fliesen"));
         Assert.True(p.Ungespeichert);
 
         // wieder frei: "Speichern und beenden" schreibt sie, danach ist nichts mehr offen

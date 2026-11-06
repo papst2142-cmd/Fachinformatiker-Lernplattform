@@ -391,9 +391,29 @@ public sealed class Projekt
     private void Gespeichert()
     {
         _aenderungen++;
-        Speichern(vonHand: false);
+        SpeicherFehler = null;
+        try
+        {
+            Speichern(vonHand: false);
+        }
+        catch (Exception e) when (!SpeichernAltFuerTests && e is IOException or UnauthorizedAccessException)
+        {
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 5): scheitert das automatische Speichern (Datei kurz gesperrt,
+            // etwa durch einen Virenscanner oder das Hochladen in eine Wolke), steht der Schritt trotzdem im Verlauf.
+            // Vorher lief der Fehler bis zur Oberflaeche, "Geaendert" kam nie an, und "Rueckgaengig" blieb grau, bis die
+            // Ansicht wechselte. Jetzt meldet die Oberflaeche den Fehler, der naechste Schritt versucht es wieder, und
+            // "Werkzeug beenden" fragt nach (Ungespeichert).
+            SpeicherFehler = e.Message;
+            Werkzeugordner.Fehler("Automatisch speichern: " + e.GetType().Name + ": " + e.Message);
+        }
         Geaendert?.Invoke();
     }
+
+    /// <summary>Fehler des letzten automatischen Speicherns (null = gespeichert).</summary>
+    public string? SpeicherFehler { get; private set; }
+
+    /// <summary>Gegenprobe (Start-Test, Tests): Speicherfehler laufen wie vor der Nachbesserung bis zur Oberflaeche.</summary>
+    public static bool SpeichernAltFuerTests { get; set; }
 
     private long _aenderungen;
     private long _gespeichert;

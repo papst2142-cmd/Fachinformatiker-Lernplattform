@@ -101,6 +101,12 @@ public sealed partial class Hauptansicht : UserControl
     public IEnumerable<string> AussenAuswahlTexte => _aussenAuswahl.Children.OfType<TextBlock>().Select(t => t.Text ?? "");
 
     /// <summary>Beschriftungen der Knoepfe in der Karte "Auswahl" draussen (Start-Test).</summary>
+    /// <summary>Knoepfe der Karte "Auswahl" draussen mit an/aus (Start-Test, Weisung P12-40 Punkt 4).</summary>
+    public List<(string Text, bool An)> AussenAuswahlKnoepfeAn => [.. _aussenAuswahl.GetLogicalDescendants().OfType<Button>().Select(k => (k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "", k.IsEnabled))];
+
+    /// <summary>Alle Knoepfe der Ansicht mit Beschriftung (Start-Test: "Ganze Stadt zeigen").</summary>
+    public List<Button> KnoepfeMit(string text) => [.. this.GetLogicalDescendants().OfType<Button>().Where(k => k.Content is TextBlock t && t.Text == text)];
+
     public List<string> AussenAuswahlKnoepfe => [.. _aussenAuswahl.GetLogicalDescendants().OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "")];
     private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
@@ -396,6 +402,9 @@ public sealed partial class Hauptansicht : UserControl
         }
     }
 
+    /// <summary>Start-Test: das Startbild zeigen (Knopf "Nach Updates suchen").</summary>
+    public void StartZeigenFuerTests() => StartZeigen();
+
     private void StartZeigen()
     {
         var liste = new StackPanel { Spacing = 4 };
@@ -415,6 +424,10 @@ public sealed partial class Hauptansicht : UserControl
         neu.Click += (_, _) => _ = NeuAsync();
         var oeffnen = Schrift.Knopf(Texte.OeffnenTitel);
         oeffnen.Click += (_, _) => _ = OeffnenAsync();
+        // Nachbesserung S 0.5.1 (Weisung P12-42 Punkt 1): nur wo es ein Update gibt (PC aus der Installation, Start-Test)
+        var update = Schrift.Knopf(Texte.UpdateSuchen).Mit(Texte.UpdateSuchenTipp);
+        update.Click += (_, _) => _ = Aktualisierung.VonHandAsync(_ordner.Fehler);
+        update.IsVisible = Aktualisierung.Pruefen is not null;
         var karte = Schrift.Karte(new StackPanel
         {
             Spacing = 10,
@@ -424,7 +437,7 @@ public sealed partial class Hauptansicht : UserControl
                 Schrift.Text(Texte.WillkommenText),
                 Schrift.Text(Texte.WasIstEinProjekt, "Mittel", FontWeight.Bold),
                 Schrift.Text(Texte.WasIstEinProjektText),
-                new WrapPanel { Children = { neu, oeffnen } },
+                new WrapPanel { Children = { neu, oeffnen, update } },
                 Schrift.Text(Texte.LetzteProjekte, "Mittel", FontWeight.Bold),
                 liste,
             },
@@ -516,6 +529,12 @@ public sealed partial class Hauptansicht : UserControl
 
     private void ProjektGeaendert()
     {
+        // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 5): Rueckgaengig/Wiederholen zuerst, vor allem anderen
+        KnoepfeFreigeben();
+        if (_projekt?.SpeicherFehler is { } fehler)
+        {
+            Melden(Texte.AutoSpeichernFehler + fehler);
+        }
         if (_projekt is not null && string.Join("|", _projekt.Bauten.Select(_projekt.OrtName)) != _bautenText)
         {
             // ein Blueprint mit Innenraum gesetzt oder das Gebaeude geloescht: Ortsliste neu; ist der offene Innenraum weg, nach draussen
@@ -620,7 +639,7 @@ public sealed partial class Hauptansicht : UserControl
             k.Click += (_, _) => a();
             return k;
         }
-        var zoom = new WrapPanel { Children = { Klein("+", Texte.Vergroessern, Karte.Vergroessern), Klein("−", Texte.Verkleinern, Karte.Verkleinern), Klein(Texte.Einpassen, Texte.Einpassen, Karte.Einpassen) } };
+        var zoom = new WrapPanel { Children = { Klein("+", Texte.Vergroessern, Karte.Vergroessern).Mit(Texte.ZoomTipp), Klein("−", Texte.Verkleinern, Karte.Verkleinern).Mit(Texte.ZoomTipp), Klein(Texte.GanzeStadtZeigen, Texte.GanzeStadtZeigen, Karte.Einpassen).Mit(Texte.GanzeStadtZeigenTipp) } };
         var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
         mitte.Children.Add(new Border { Child = Karte, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }.Farbe(Border.BorderBrushProperty, "Pinsel.border"));
         Grid.SetRow(zoom, 1);
@@ -767,6 +786,12 @@ public sealed partial class Hauptansicht : UserControl
 
     private bool _ortWahlFuellt;
 
+    /// <summary>Name des Stuecks, das gerade gesetzt wird (mit Modell), fuer den Hinweis ueber der Karte.</summary>
+    private string? _setzenName;
+
+    /// <summary>Start-Test: ein Stueck zum Setzen waehlen wie mit dem Knopf links.</summary>
+    public void AussenSetzenWaehlenFuerTests(AussenArt art, string? modell = null) => AussenSetzenWaehlen(art, modell);
+
     private void AussenSetzenWaehlen(AussenArt art, string? modell)
     {
         if (_projekt is null || _projekt.NurLesen)
@@ -775,13 +800,15 @@ public sealed partial class Hauptansicht : UserControl
         }
         Karte.SetzenArt = art;
         Karte.SetzenModell = modell;
-        _aussenHinweis.Text = (art switch
+        _setzenName = art switch
         {
             AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
             _ => KatalogName(art),
-        }) + ": " + Texte.AussenSetzenAktiv;
-        Melden(_aussenHinweis.Text);
+        };
+        // zeigt beim Setzen den Knopf "Drehen" (Strasse, Park, Katalog-Stueck)
+        AussenAuswahlZeigen();
+        Melden(_aussenHinweis.Text ?? "");
     }
 
     private static string KatalogName(AussenArt art) => art switch
@@ -799,7 +826,21 @@ public sealed partial class Hauptansicht : UserControl
     private void AussenAuswahlZeigen()
     {
         _aussenAuswahl.Children.Clear();
-        _aussenHinweis.Text = Karte.SetzenArt is { } art ? KatalogName(art) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
+        _aussenHinweis.Text = Karte.SetzenArt is { } art ? (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
+        if (Karte.SetzenArt is null)
+        {
+            _setzenName = null;
+        }
+        if (_projekt is not null && !_projekt.NurLesen && KartenFlaeche.DrehbarBeimSetzen(Karte.SetzenArt))
+        {
+            // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): schon beim Setzen drehen, ein Knopf statt einer versteckten Geste
+            var lage = Karte.SetzenArt == AussenArt.Strasse ? (Karte.SetzenDreh % 2 == 0 ? Texte.SetzenWaagerecht : Texte.SetzenSenkrecht) : Texte.SetzenGedreht(Karte.SetzenDreh);
+            var setzenDrehen = Schrift.Knopf(Texte.Drehen, betont: true).Mit(Texte.DrehenTipp);
+            setzenDrehen.Click += (_, _) => Karte.SetzenDrehen();
+            _aussenAuswahl.Children.Add(Schrift.Text(lage, "Klein"));
+            _aussenAuswahl.Children.Add(setzenDrehen);
+            return;
+        }
         if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))
         {
             _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehltDraussen, "Klein", farbe: "Pinsel.muted"));
@@ -896,16 +937,20 @@ public sealed partial class Hauptansicht : UserControl
             Karte.Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
             Melden("Werte übernommen");
         };
-        var drehen = Schrift.Knopf(Texte.Drehen);
+        // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): "Drehen" vorn und hervorgehoben; was das Spiel nicht drehen kann,
+        // ist grau, der Grund steht als Tipp am Knopf (auch grau sichtbar) und klein darunter
+        var drehenNicht = AussenBearbeitung.DrehenNicht(s);
+        var drehen = Schrift.Knopf(Texte.Drehen, betont: drehenNicht is null).Mit(drehenNicht ?? Texte.DrehenTipp);
+        ToolTip.SetShowOnDisabled(drehen, true);
         drehen.Click += (_, _) => Karte.Drehen();
-        drehen.IsEnabled = AussenBearbeitung.DrehenNicht(s) is null;
+        drehen.IsEnabled = drehenNicht is null;
         var kopie = Schrift.Knopf(Texte.Kopie);
         kopie.Click += (_, _) => Karte.Kopieren();
         kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz);
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Karte.Loeschen();
         weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;
-        _aussenAuswahl.Children.Add(new WrapPanel { Children = { neu, drehen, kopie, weg } });
+        _aussenAuswahl.Children.Add(new WrapPanel { Children = { drehen, neu, kopie, weg } });
         // warum etwas nicht geht, steht klein darunter
         foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
         {
@@ -1570,9 +1615,9 @@ public sealed partial class Hauptansicht : UserControl
         {
             Children =
             {
-                Klein("+", Texte.Vergroessern, Flaeche.Vergroessern),
-                Klein("−", Texte.Verkleinern, Flaeche.Verkleinern),
-                Klein(Texte.Einpassen, Texte.Einpassen, Flaeche.Einpassen),
+                Klein("+", Texte.Vergroessern, Flaeche.Vergroessern).Mit(Texte.ZoomTipp),
+                Klein("−", Texte.Verkleinern, Flaeche.Verkleinern).Mit(Texte.ZoomTipp),
+                Klein(Texte.GanzenRaumZeigen, Texte.GanzenRaumZeigen, Flaeche.Einpassen).Mit(Texte.GanzenRaumZeigenTipp),
                 _rasterAus,
             },
         };
@@ -1719,13 +1764,13 @@ public sealed partial class Hauptansicht : UserControl
                 Melden("Bitte nur Zahlen eintragen (z. B. 2,5).");
             }
         };
-        var drehen = Schrift.Knopf(Texte.Drehen);
+        var drehen = Schrift.Knopf(Texte.Drehen, betont: true).Mit(Texte.DrehenTipp);
         drehen.Click += (_, _) => Flaeche.Drehen();
         var kopie = Schrift.Knopf(Texte.Kopie);
         kopie.Click += (_, _) => Flaeche.Kopieren();
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Flaeche.Loeschen();
-        _auswahl.Children.Add(new WrapPanel { Children = { neu, drehen, kopie, weg } });
+        _auswahl.Children.Add(new WrapPanel { Children = { drehen, neu, kopie, weg } });
         var waren = _daten!.Waren(ort);
         if (waren.Count > 0)
         {
@@ -1933,6 +1978,10 @@ public sealed partial class Hauptansicht : UserControl
 
     private void Melden(string text)
     {
+        if (_projekt?.SpeicherFehler is { } fehler && !text.StartsWith(Texte.AutoSpeichernFehler, StringComparison.Ordinal))
+        {
+            text += " – " + Texte.AutoSpeichernFehler + fehler;
+        }
         _status.Text = text;
         Ansage.Sagen(text);
     }
@@ -2288,9 +2337,18 @@ public sealed partial class Hauptansicht : UserControl
         if (TopLevel.GetTopLevel(this) is { } top)
         {
             top.AddHandler(KeyDownEvent, TasteGedrueckt, RoutingStrategies.Tunnel);
+            top.AddHandler(KeyUpEvent, TasteLos, RoutingStrategies.Tunnel);
             // Tablet: Wunsch "Systemleisten aus" an Avalonia geben (am PC gibt es keinen InsetsManager)
             WerkzeugVollbild.Leisten = top.InsetsManager;
             WerkzeugVollbild.LeistenMerken();
+        }
+    }
+
+    private static void TasteLos(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Space)
+        {
+            KartenFlaeche.LeertasteGehalten = false;
         }
     }
 
@@ -2324,6 +2382,13 @@ public sealed partial class Hauptansicht : UserControl
         }
         else if (e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
         {
+            if (e.Key == Key.Space && !_drei)
+            {
+                // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste halten und mit der Maus ziehen schiebt die Ansicht
+                KartenFlaeche.LeertasteGehalten = true;
+                e.Handled = true;
+                return;
+            }
             if (_innen)
             {
                 e.Handled = Flaeche.Taste(e.Key, e.KeyModifiers);

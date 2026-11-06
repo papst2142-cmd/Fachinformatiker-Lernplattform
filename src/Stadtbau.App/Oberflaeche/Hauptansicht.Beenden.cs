@@ -35,6 +35,9 @@ public sealed partial class Hauptansicht
     public IEnumerable<(string Text, Button Knopf)> KopfKnoepfe =>
         _kopf.Select(k => (k.Key, k.Value)).Append((Texte.WerkzeugBeenden, _beenden));
 
+    /// <summary>Text der Zeile unten (Start-Test).</summary>
+    public string StatusText => _status.Text ?? "";
+
     /// <summary>Gibt es eine Aenderung, die noch nicht in der Projektdatei steht?</summary>
     public bool Ungespeichert => UngespeichertFuerTests || _projekt?.Ungespeichert == true;
 

@@ -40,23 +40,23 @@ internal static class Program
         return AppBuilder.Configure<StadtbauApp>().UsePlatformDetect().With(x11).WithInterFont().LogToTrace().StartWithClassicDesktopLifetime(args);
     }
 
-    /// <summary>Neue Version der Linie vS suchen und laden; Rueckgabe: Anzeige der neuen Version oder null.</summary>
-    private static async Task<Func<Task>?> Pruefen()
+    /// <summary>Neue Version der Linie vS suchen (Ergebnis fuer den Start und fuer "Nach Updates suchen").</summary>
+    private static async Task<UpdateErgebnis> Pruefen()
     {
         var mgr = new UpdateManager(new LinienQuelle(Werkzeug.Repository, ReleaseLinie.Linie.Stadtbau), new UpdateOptions { ExplicitChannel = Kanal });
         if (!mgr.IsInstalled)
         {
-            return null;
+            return new UpdateErgebnis(UpdateArt.NichtInstalliert);
         }
         var neu = await mgr.CheckForUpdatesAsync();
         if (neu is null)
         {
-            return null;
+            return new UpdateErgebnis(UpdateArt.Aktuell);
         }
-        return async () =>
+        return new UpdateErgebnis(UpdateArt.Neu, neu.TargetFullRelease.Version.ToString(), async () =>
         {
             await mgr.DownloadUpdatesAsync(neu);
             mgr.ApplyUpdatesAndRestart(neu);
-        };
+        });
     }
 }

@@ -85,6 +85,16 @@ public static class Texte
     /// <summary>Draufsicht draussen ohne Auswahl (Weisung P12-25: draussen heisst es "auf der Karte").</summary>
     public const string NichtsGewaehltDraussen = "Tippe ein Stück auf der Karte an, um es zu bearbeiten.";
     public const string Drehen = "Drehen";
+
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Drehen leicht finden, auch beim Setzen.</summary>
+    public const string DrehenTipp = "Dreht das Stück um 90 Grad, am PC auch mit der Taste R.";
+
+    public const string SetzenWaagerecht = "Die Straße wird waagerecht gesetzt. „Drehen“ (oder Taste R) setzt sie senkrecht.";
+    public const string SetzenSenkrecht = "Die Straße wird senkrecht gesetzt. „Drehen“ (oder Taste R) setzt sie waagerecht.";
+
+    public static string SetzenGedreht(int vierteldrehungen) =>
+        vierteldrehungen == 0 ? "Das Stück wird nicht gedreht gesetzt. „Drehen“ (oder Taste R) dreht es um 90 Grad."
+        : "Das Stück wird um " + (vierteldrehungen * 90).ToString(System.Globalization.CultureInfo.InvariantCulture) + " Grad gedreht gesetzt. „Drehen“ (oder Taste R) dreht weiter.";
     public const string Kopie = "Kopieren";
     public const string Loeschen = "Löschen";
     public const string Ware = "Ware";
@@ -105,6 +115,13 @@ public static class Texte
     public const string Vergroessern = "Vergrößern";
     public const string Verkleinern = "Verkleinern";
     public const string Einpassen = "Ganz zeigen";
+
+    // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): die Ansicht frei bewegen
+    public const string GanzeStadtZeigen = "Ganze Stadt zeigen";
+    public const string GanzenRaumZeigen = "Ganzen Raum zeigen";
+    public const string GanzeStadtZeigenTipp = "Zeigt die ganze Stadt. Verschieben: auf freier Fläche ziehen, mit der rechten oder mittleren Maustaste oder mit gehaltener Leertaste überall; am Tablet mit einem Finger auf freier Fläche oder mit zwei Fingern.";
+    public const string GanzenRaumZeigenTipp = "Zeigt den ganzen Raum. Verschieben: auf freier Fläche ziehen, mit der rechten oder mittleren Maustaste oder mit gehaltener Leertaste überall; am Tablet mit einem Finger auf freier Fläche oder mit zwei Fingern.";
+    public const string ZoomTipp = "Vergrößert oder verkleinert die Ansicht; dasselbe geht mit dem Mausrad und am Tablet mit zwei Fingern.";
     public const string Grundriss = "Grundriss";
     public const string DraufsichtHinweis = "Tippe ein Stück der Stadt an, um es zu bearbeiten, oder wähle links ein neues Stück. Ein Doppeltipp auf ein Haus mit Innenraum öffnet den Innenraum.";
 
@@ -234,12 +251,32 @@ public static class Texte
         string.Create(System.Globalization.CultureInfo.GetCultureInfo("de-DE"),
             $"{dreiecke:N0} von {grenzeDreiecke:N0} Dreiecken, {aufrufe} von {grenzeAufrufe} Zeichenaufrufen");
 
+    // ---- Updates (Nachbesserung S 0.5.1, Weisung P12-42 Punkt 1) ----
+    public const string UpdateSuchen = "Nach Updates suchen";
+    public const string UpdateSuchenTipp = "Fragt bei GitHub nach, ob es eine neuere Version des Werkzeugs gibt. Deine Projekte bleiben beim Update erhalten.";
+    public const string UpdateSucht = "Suche nach einer neuen Version …";
+    public const string UpdateNeuTitel = "Neue Version";
+
+    public static string UpdateNeuText(string? version) =>
+        "Es gibt eine neue Version des Stadtbau-Werkzeugs" + (version is { Length: > 0 } v ? " (S " + v + ")" : "") + ". Deine Projekte bleiben erhalten.";
+
+    public const string UpdateJetzt = "Jetzt aktualisieren";
+    public const string UpdateSpaeter = "Später";
+    public const string UpdateLaedt = "Neue Version wird geladen …";
+
+    public static string UpdateAktuell(string anzeige) => "Du hast die neueste Version (" + anzeige + ").";
+
+    public const string UpdateNichtInstalliert = "Dieses Werkzeug wurde nicht mit dem Installationsprogramm eingerichtet. Updates kommen nur in die installierte Fassung; lade die neue Version von der Download-Seite.";
+    public const string UpdateFehler = "Die Suche hat nicht geklappt, vielleicht fehlt gerade das Internet. Versuche es später noch einmal.";
+
     // ---- Beenden (Patch S 0.5.1, Weisung P12-35 Punkt 1) ----
     public const string BeendenTitel = "Werkzeug beenden?";
     public const string BeendenFrage = "Die letzte Änderung ist noch nicht gespeichert. Soll sie vor dem Beenden gespeichert werden?";
     public const string SpeichernUndBeenden = "Speichern und beenden";
     public const string OhneSpeichernBeenden = "Ohne Speichern beenden";
     public const string BeendenWartet = "Einen Moment, die Arbeit im Hintergrund wird fertig …";
+    /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 5): automatisches Speichern gescheitert, der Schritt bleibt.</summary>
+    public const string AutoSpeichernFehler = "Speichern hat gerade nicht geklappt, deine Änderung ist aber da und kann zurückgenommen werden. Der nächste Schritt versucht es wieder. Grund: ";
     public const string BeendenSpeichernFehler = "Speichern hat nicht geklappt, das Werkzeug bleibt offen: ";
 
     // ---- Tipps (Patch S 0.5.1, Weisung P12-35 Punkt 2): ein Satz je Knopf der Kopfleiste und je Gruppe links ----
