@@ -324,6 +324,7 @@ public class BlueprintTests
         Assert.Equal([bau], p.Bauten);
         Assert.Equal([bau], p.Innenorte);
         Assert.Equal(bau, p.InnenortVon(s));
+        Assert.StartsWith(Texte.NeuesGebaeude + " „Mein Möbelhaus“ (moebelhaus)", AussenBearbeitung.Beschreibung(p.AussenStand, s, o => o), StringComparison.Ordinal);
         Assert.Equal("Mein Möbelhaus (neu)", p.OrtName(bau));
         Assert.Equal(Json(b.Innenraum), Json(p.Grundriss(bau)));
         Assert.Equal(Json(b.Personen), Json(p.Personen(bau)));
@@ -413,6 +414,8 @@ public class BlueprintTests
         var (x, y) = MitteAnStrasse(b, 10);
         p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _));
         Assert.Empty(p.Bauten);
+        // Gegenprobe Beschreibung: ohne Innenraum bleibt es ein Gebaeude ohne Innenraum
+        Assert.StartsWith(Texte.HausOhneOrt + " (", AussenBearbeitung.Beschreibung(p.AussenStand, AussenBearbeitung.Alle(p.AussenStand).Last(t => t.Stelle.Art == AussenArt.Gebaeude).Stelle, o => o), StringComparison.Ordinal);
         Assert.DoesNotContain(p.PruefenAussen(), f => f.Text.StartsWith(Texte.BauInnenNochNicht(""), StringComparison.Ordinal));
     }
 

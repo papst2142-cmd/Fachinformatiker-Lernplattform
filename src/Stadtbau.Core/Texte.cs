@@ -97,6 +97,9 @@ public static class Texte
     public const string Strasse = "Straße";
     public const string Haus = "Haus";
     public const string HausOhneOrt = "Gebäude ohne Innenraum";
+
+    /// <summary>Gebaeude aus einem Blueprint mit Innenraum (nur im Werkzeug, Meldung P12-23 Frage 1 a).</summary>
+    public const string NeuesGebaeude = "Neues Gebäude";
     public const string Laterne = "Laterne";
     public const string LaterneDoppelt = "Doppellaterne";
     public const string Beet = "Beet";
