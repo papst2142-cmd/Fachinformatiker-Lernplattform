@@ -198,6 +198,14 @@ public static class Texte
     public const string BlueprintSchonDa = "Dieses Gebäude steht schon in der Stadt.";
     public const string BlueprintSchonDaTipp = "Das Spiel zeichnet die Tür nur am ersten Gebäude dieses Modells. Eines der beiden löschen.";
 
+    public const string NeueGebaeude = "Neue Gebäude (aus Blueprints)";
+    public const string BauInnenNochNichtTipp = "Nichts geht verloren: der Innenraum bleibt im Projekt und im Blueprint.";
+
+    public static string BauInnenNochNicht(string name) =>
+        $"Der Innenraum von „{name}“ kommt erst mit den neuen Städten ins Spiel.";
+
+    public static string BauName(string name) => name + " (neu)";
+
     public static string BlueprintModellAnders(string modell) =>
         $"In dieser Stadt gibt es schon ein anderes Modell mit dem Namen „{modell}“. Der Blueprint lässt sich hier nicht setzen.";
 

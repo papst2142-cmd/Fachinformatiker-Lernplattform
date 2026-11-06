@@ -101,6 +101,12 @@ public sealed class Blueprint
             if (Zierweg(a, Py.Str(g["modell"])) is { } z)
             {
                 (tuer, weg) = (Liste(z["tuer"]), Liste(z["weg"]));
+                // ein gesetzter Blueprint bringt seinen Innenraum aus dem Projekt mit (Teil "bauten")
+                if (Get(Aussen.Bauten(a), Py.Str(g["modell"])) is PyObjekt bau)
+                {
+                    innen = (PyObjekt)Py.Kopie(bau["grundriss"])!;
+                    personen = (List<object?>)Py.Kopie(Get(bau, "personen") ?? new List<object?>())!;
+                }
             }
         }
         else
@@ -192,6 +198,13 @@ public sealed class Blueprint
             var weg = Weg.Select(p => (object?)Absolut(Liste(p), hx, hy)).ToList();
             zw.Add(new PyObjekt { { "name", Name }, { "modell", Modell }, { "tuer", Absolut(Tuer, hx, hy) }, { "weg", weg } });
             AussenBearbeitung.WegAnschliessen(weg, AussenBearbeitung.Strassen(aussen));
+            // Meldung P12-23 Frage 1 a: der Innenraum kommt ins Projekt (Teil "bauten", nur Werkzeug). Steht das Modell schon
+            // mit Innenraum in der Stadt, bleibt dieser (das zweite Gebaeude ist ohnehin rot, Pruefen).
+            var bauten = Aussen.Bauten(aussen);
+            if (Innenraum is not null && Get(bauten, Modell) is null)
+            {
+                Py.Setzen(bauten, Modell, new PyObjekt { { "name", Name }, { "grundriss", Py.Kopie(Innenraum) }, { "personen", Py.Kopie(Personen) } });
+            }
         }
         return new AussenStelle(AussenArt.Gebaeude, land.Count - 1);
     }
@@ -210,6 +223,14 @@ public sealed class Blueprint
             foreach (var g in gruppe.Skip(1))
             {
                 funde.Add(new StadtbauFund(Texte.BlueprintSchonDa + " („" + (Zierweg(aussen, gruppe.Key)?["name"] as string ?? gruppe.Key) + "“)", Texte.BlueprintSchonDaTipp, true, Py.F(g["x"]), Py.F(g["y"])));
+            }
+        }
+        // gelb: der Innenraum eines gesetzten Blueprints kommt noch nicht ins Spiel (nichts geht verloren: Projekt und Blueprint)
+        foreach (var (modell, bau) in Aussen.Bauten(aussen))
+        {
+            if (Aussen.Landschaft(aussen).OfType<PyObjekt>().FirstOrDefault(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell)) is { } g)
+            {
+                funde.Add(new StadtbauFund(Texte.BauInnenNochNicht(Get(Objekt(bau), "name") as string ?? modell), Texte.BauInnenNochNichtTipp, false, Py.F(g["x"]), Py.F(g["y"])));
             }
         }
         return funde;

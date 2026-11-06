@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.5.0
+
+Ein fertig gestaltetes Gebäude lässt sich jetzt als Blueprint (Vorlage) speichern und in jedes Projekt setzen, auch in eine leere Stadt.
+
+- Gebäude in der Draufsicht antippen, dann „Als Blueprint speichern“ und einen Namen eingeben (Umlaute erlaubt). Gespeichert werden Modell, Tür, Fußweg, Schild und der Innenraum mit der ganzen Einrichtung und den Stücken aus dem Katalog.
+- Links in der Draufsicht steht die Gruppe „Meine Blueprints“: antippen und dann die Stelle auf der Karte wählen. Das Gebäude wird dort gesetzt, der Fußweg reicht bis zur Straße. Es ist ein ganz normales Gebäude: verschieben, löschen und Rückgängig gehen wie bei jedem anderen, und dieselben Prüfungen gelten. Eine belegte Stelle ist rot.
+- Blueprints lassen sich umbenennen und löschen (mit Rückfrage). Jede Änderung legt vorher eine Sicherung an. Eine kaputte Datei oder eine Datei aus einer neueren Werkzeug-Version bleibt mit einem Hinweis in der Liste stehen; nichts verschwindet still.
+- Der Innenraum eines gesetzten Gebäudes steht im Reiter „Innenräume“ unter „Neue Gebäude“ und lässt sich dort wie jeder Innenraum einrichten und prüfen. Ins Spiel kommt er erst mit den neuen Städten; ein gelber Hinweis sagt das. Projekt und Blueprint behalten ihn.
+- Dasselbe Gebäude mit Tür kann vorerst nur einmal je Stadt stehen (ein zweites Mal ist rot), weil das Spiel Aussehen und Tür über den Namen des Modells findet.
+- Projekte aus S 0.4.0 lassen sich weiter öffnen. Ein Projekt, das mit S 0.5.0 gespeichert wurde, öffnet S 0.4.0 nur noch zum Lesen.
+
 ## S 0.4.0
 
 Was du baust, siehst du jetzt in der 3D-Ansicht genau so, wie es später im Spiel aussieht.

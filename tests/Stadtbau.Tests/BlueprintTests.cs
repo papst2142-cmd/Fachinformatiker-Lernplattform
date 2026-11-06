@@ -133,10 +133,12 @@ public class BlueprintTests
         var a = p.AussenStand;
         var haus = Objekt(Aussen.Landschaft(a)[s.Nummer]);
         Assert.Equal("moebelhaus", Py.Str(haus["modell"]));
-        // gleiches Gebaeude, nur andere Lage: aus dem gesetzten Gebaeude wieder ein Blueprint, dann gleich (ohne Innenraum,
-        // der kommt in die Datei nicht ueber das Gebaeude ohne Ort)
+        // gleiches Gebaeude, nur andere Lage: aus dem gesetzten Gebaeude wieder ein Blueprint, dann gleich (auch der Innenraum,
+        // er liegt im Projekt, Meldung P12-23 Frage 1 a)
         var wieder = Blueprint.Aus(p, s, "Wieder")!;
         Assert.Equal(b.Modell, wieder.Modell);
+        Assert.Equal(Json(b.Innenraum), Json(wieder.Innenraum));
+        Assert.Equal(Json(b.Personen), Json(wieder.Personen));
         Assert.Equal(Json(b.Teile), Json(wieder.Teile));
         Assert.Equal(Json(b.Tuer), Json(wieder.Tuer));
         Assert.Equal(Json(b.Weg[0]), Json(wieder.Weg[0]));
@@ -302,5 +304,147 @@ public class BlueprintTests
         Assert.All(Directory.GetFiles(Path.Combine(ablage.Sicherungen), "*", SearchOption.TopDirectoryOnly), f => Assert.Fail(f));
         Assert.All(Directory.GetDirectories(ablage.Sicherungen).Where(d => !d.EndsWith(Sicherungen.BlueprintOrdner, StringComparison.Ordinal)),
             d => Assert.All(Directory.GetFiles(d), f => Assert.Equal(Projekt.Endung, Path.GetExtension(f))));
+    }
+
+    /// <summary>Blueprint des unveraenderten Moebelhauses aus Stadt 1 (ohne roten Fund im Innenraum).</summary>
+    private static Blueprint MoebelhausUnveraendert(Werkzeugordner ablage) =>
+        Blueprint.Aus(Projekt.Neu("Quelle " + Guid.NewGuid().ToString("N")[..6], D, ablage), Moebelhaus, "Mein Möbelhaus")!;
+
+    [Fact]
+    public void Bau_InnenraumKommtMitInsProjekt_Bearbeiten_Rueckgaengig_Oeffnen_NichtImExport()
+    {
+        var ablage = Daten.NeueAblage();
+        var b = MoebelhausUnveraendert(ablage);
+        var p = LeereStadt(ablage);
+        Assert.Empty(p.Bauten);
+        Assert.Empty(p.Innenorte);
+        var (x, y) = MitteAnStrasse(b, 10);
+        var s = p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _))!;
+        const string bau = Projekt.BauPraefix + "moebelhaus";
+        Assert.Equal([bau], p.Bauten);
+        Assert.Equal([bau], p.Innenorte);
+        Assert.Equal(bau, p.InnenortVon(s));
+        Assert.Equal("Mein Möbelhaus (neu)", p.OrtName(bau));
+        Assert.Equal(Json(b.Innenraum), Json(p.Grundriss(bau)));
+        Assert.Equal(Json(b.Personen), Json(p.Personen(bau)));
+        // dieselben Regeln wie fuer jeden Innenraum: gruen; gelber Hinweis draussen, dass er noch nicht ins Spiel kommt
+        Assert.Equal("", string.Join(" | ", p.Pruefen(bau).Where(f => f.Rot).Select(f => f.Text)));
+        var hinweis = Assert.Single(p.PruefenAussen(), f => f.Text == Texte.BauInnenNochNicht("Mein Möbelhaus"));
+        Assert.False(hinweis.Rot);
+        Assert.Empty(p.RoteFunde());
+        // bearbeiten wie jeden Innenraum, Rueckgaengig und Wiederholen bleiben im Gebaeude
+        var regal = Bearbeitung.Alle(p.Grundriss(bau)).First(t => Py.Str(t.Deko["typ"]) == "regal" && t.Stelle.Bereich != "flur").Stelle;
+        p.Aendern(bau, "Drehen", g => Bearbeitung.Drehen(g, regal));
+        var bearbeitet = Json(p.Grundriss(bau));
+        Assert.NotEqual(Json(b.Innenraum), bearbeitet);
+        p.Ort = "";
+        Assert.True(p.Rueckgaengig());
+        Assert.False(p.LetzterSchrittDraussen);
+        Assert.Equal(bau, p.Ort);
+        Assert.Equal(Json(b.Innenraum), Json(p.Grundriss(bau)));
+        Assert.True(p.Wiederholen());
+        Assert.Equal(bearbeitet, Json(p.Grundriss(bau)));
+        // gespeichert und wieder geoeffnet: Innenraum und Verlauf bleiben, Formatnummer 3
+        p.Speichern(vonHand: true);
+        Assert.Contains("\"formatversion\": 3,", File.ReadAllText(p.Datei, Encoding.UTF8), StringComparison.Ordinal);
+        var q = Projekt.Oeffnen(p.Datei, D, ablage);
+        Assert.False(q.NurLesen);
+        Assert.Equal([bau], q.Innenorte);
+        Assert.Equal(bau, q.Ort);
+        Assert.Equal(bearbeitet, Json(q.Grundriss(bau)));
+        // aus dem gesetzten Gebaeude wieder ein Blueprint: mit dem bearbeiteten Innenraum
+        Assert.Equal(bearbeitet, Json(Blueprint.Aus(q, s, "Wieder")!.Innenraum));
+        // das gedrehte Regal steht im Bett: rot wie in jedem Innenraum, Export gesperrt; Rueckgaengig macht es gruen
+        Assert.Contains(q.RoteFunde(), r => r.Ort == bau);
+        Assert.True(q.Rueckgaengig());
+        Assert.Equal(Json(b.Innenraum), Json(q.Grundriss(bau)));
+        Assert.Empty(q.RoteFunde());
+        // nicht im Export: die Fassung kennt Innenraeume nur fuer feste Orte (kein Feld "bauten", Innenraeume wie die Basis)
+        Assert.Equal(Json(q.Basis.Innenraeume), Json(q.Stand().Innenraeume));
+        Assert.DoesNotContain("bauten", Encoding.UTF8.GetString(q.Exportieren(DateTimeOffset.Now)), StringComparison.Ordinal);
+        // Gebaeude loeschen nimmt den Innenraum mit, Rueckgaengig bringt ihn wieder
+        q.AussenAendern("Löschen", a => AussenBearbeitung.Loeschen(a, s));
+        Assert.Empty(q.Bauten);
+        Assert.DoesNotContain(q.PruefenAussen(), f => f.Text == Texte.BauInnenNochNicht("Mein Möbelhaus"));
+        q.Rueckgaengig();
+        Assert.Equal(Json(b.Innenraum), Json(q.Grundriss(bau)));
+        // Rueckgaengig des Setzens: Innenraum weg, der naechste Schritt zurueck war draussen
+        var r = LeereStadt(ablage, "Leer drei");
+        r.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _));
+        r.Rueckgaengig();
+        Assert.True(r.LetzterSchrittDraussen);
+        Assert.Empty(r.Bauten);
+    }
+
+    [Fact]
+    public void Bau_RoterFundImInnenraum_SperrtDenExport_Gegenprobe()
+    {
+        var ablage = Daten.NeueAblage();
+        var b = MoebelhausUnveraendert(ablage);
+        var p = LeereStadt(ablage);
+        var (x, y) = MitteAnStrasse(b, 10);
+        p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _));
+        const string bau = Projekt.BauPraefix + "moebelhaus";
+        Assert.Empty(p.RoteFunde());
+        // zwei Stuecke an dieselbe Stelle: Ueberschneidung, rot wie in jedem Innenraum
+        var regale = Bearbeitung.Alle(p.Grundriss(bau)).Take(2).ToList();
+        var ziel = regale[0].Deko;
+        p.Aendern(bau, "Schieben", g =>
+        {
+            var d = Bearbeitung.Alle(g).First(t => t.Stelle == regale[1].Stelle).Deko;
+            Py.Setzen(d, "x", ziel["x"]);
+            Py.Setzen(d, "y", ziel["y"]);
+        });
+        Assert.Contains(p.RoteFunde(), r => r.Ort == bau);
+        Assert.Throws<StadtbauFehler>(() => p.Exportieren(DateTimeOffset.Now));
+    }
+
+    [Fact]
+    public void Gebaeude_OhneInnenraum_KeinNeuesGebaeudeInDerListe_Gegenprobe()
+    {
+        var ablage = Daten.NeueAblage();
+        var stellwerk = Projekt.Neu("Stellwerk Quelle", D, ablage);
+        var g = AussenBearbeitung.Alle(stellwerk.AussenStand).First(t => t.Stelle.Art == AussenArt.Gebaeude
+            && Blueprint.Zierweg(stellwerk.AussenStand, Py.Str(Objekt(Aussen.Landschaft(stellwerk.AussenStand)[t.Stelle.Nummer])["modell"])) is not null).Stelle;
+        var b = Blueprint.Aus(stellwerk, g, "Stellwerk")!;
+        Assert.Null(b.Innenraum);
+        Assert.Null(stellwerk.InnenortVon(g));
+        var p = LeereStadt(ablage);
+        var (x, y) = MitteAnStrasse(b, 10);
+        p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _));
+        Assert.Empty(p.Bauten);
+        Assert.DoesNotContain(p.PruefenAussen(), f => f.Text.StartsWith(Texte.BauInnenNochNicht(""), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Projekt_AusS040_LaesstSichOeffnenUndBearbeiten()
+    {
+        // echte Datei aus dem Werkzeug S 0.4.0 (main 365533e): Moebelhaus bearbeitet, ein Baum draussen
+        var ablage = Daten.NeueAblage();
+        var quelle = Daten.Lesen(TestdateiTests.Ordner + "projekt_S0.4.0.fisbau")!;
+        Assert.Contains("\"formatversion\": 2,", Encoding.UTF8.GetString(quelle), StringComparison.Ordinal);
+        Assert.Contains("S 0.4.0", Encoding.UTF8.GetString(quelle), StringComparison.Ordinal);
+        Directory.CreateDirectory(ablage.Projekte);
+        var datei = Path.Combine(ablage.Projekte, "Projekt aus S 040" + Projekt.Endung);
+        File.WriteAllBytes(datei, quelle);
+        var p = Projekt.Oeffnen(datei, D, ablage);
+        Assert.False(p.NurLesen);
+        Assert.Equal("moebelhaus", p.Ort);
+        Assert.Equal(["moebelhaus"], p.GeaenderteOrte);
+        Assert.True(p.AussenGeaendert);
+        Assert.Empty(p.Bauten);
+        Assert.Equal("Testprojekt aus S 0.4.0", p.Nachricht);
+        Assert.True(p.Rueckgaengig());
+        Assert.True(p.Rueckgaengig());
+        Assert.Empty(p.GeaenderteOrte);
+        Assert.False(p.AussenGeaendert);
+        Assert.True(p.Wiederholen());
+        Assert.True(p.Wiederholen());
+        // beim Speichern Formatnummer 3, sonst gleich
+        p.Speichern(vonHand: true);
+        var neu = Projekt.Oeffnen(datei, D, ablage);
+        Assert.Contains("\"formatversion\": 3,", File.ReadAllText(datei, Encoding.UTF8), StringComparison.Ordinal);
+        Assert.Equal(Json(Projekt.Oeffnen(datei, D, ablage).Grundriss("moebelhaus")), Json(neu.Grundriss("moebelhaus")));
+        Assert.Equal(p.GeaenderteTeile, neu.GeaenderteTeile);
     }
 }

@@ -775,6 +775,11 @@ public static class AussenBearbeitung
                 {
                     zw.RemoveAll(z => z is PyObjekt o && Py.Gleich(o["modell"], modell));
                 }
+                // Welle 4c: der Innenraum eines gesetzten Blueprints geht mit dem letzten Gebaeude seines Modells (Rueckgaengig holt beides)
+                if (!land.OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell)) && Get(aussen, "bauten") is PyObjekt bauten)
+                {
+                    bauten.RemoveAll(b => b.Key == modell);
+                }
                 break;
             }
             default:

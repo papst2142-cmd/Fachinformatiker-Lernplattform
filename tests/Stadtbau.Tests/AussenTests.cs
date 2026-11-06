@@ -259,13 +259,13 @@ public class AussenTests
         // Datei so, wie Welle 2 (S 0.1.0) sie schrieb: Formatnummer 1 ohne "leer" und "aussen"
         var zeilen = File.ReadAllText(p.Datei, Encoding.UTF8).Split('\n')
             .Where(z => !z.StartsWith(" \"leer\"", StringComparison.Ordinal) && !z.StartsWith(" \"aussen\"", StringComparison.Ordinal))
-            .Select(z => z.Replace("\"formatversion\": 2,", "\"formatversion\": 1,", StringComparison.Ordinal));
+            .Select(z => z.Replace("\"formatversion\": 3,", "\"formatversion\": 1,", StringComparison.Ordinal));
         File.WriteAllText(p.Datei, string.Join('\n', zeilen), new UTF8Encoding(false));
         var alt = Projekt.Oeffnen(p.Datei, D, ablage);
         Assert.False(alt.NurLesen);
         Assert.Equal("bank", alt.Ort);
         // Gegenprobe: Formatnummer 2 ohne "aussen" fehlt ein Feld
-        File.WriteAllText(p.Datei, string.Join('\n', zeilen).Replace("\"formatversion\": 1,", "\"formatversion\": 2,", StringComparison.Ordinal), new UTF8Encoding(false));
+        File.WriteAllText(p.Datei, string.Join('\n', zeilen).Replace("\"formatversion\": 1,", "\"formatversion\": 3,", StringComparison.Ordinal), new UTF8Encoding(false));
         var f = Assert.Throws<StadtbauFehler>(() => Projekt.Oeffnen(p.Datei, D, ablage));
         Assert.Contains("Feld „leer“ fehlt.", f.Funde);
     }

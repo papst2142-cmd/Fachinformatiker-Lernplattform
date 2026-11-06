@@ -222,7 +222,7 @@ public sealed class Hauptansicht : UserControl
         _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked != true;
         _ortWahl.SelectionChanged += (_, _) =>
         {
-            if (_ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
+            if (!_ortWahlFuellt && _ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
             {
                 OrtOeffnen(o);
             }
@@ -338,7 +338,7 @@ public sealed class Hauptansicht : UserControl
         var mit = _projekt is not null;
         var schreiben = mit && !_projekt!.NurLesen;
         _kopf[Texte.Draufsicht].IsEnabled = mit;
-        _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Orte.Count > 0;
+        _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Innenorte.Count > 0;
         _kopf[Texte.Ansicht3D].IsEnabled = mit;
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
@@ -447,7 +447,7 @@ public sealed class Hauptansicht : UserControl
         }
         _modellWahl.SelectedIndex = _modellWahl.Items.Count > 0 ? 0 : -1;
         TitelSetzen();
-        ReiterZeigen(innen && projekt.Orte.Count > 0);
+        ReiterZeigen(innen && projekt.Innenorte.Count > 0);
         AussenPruefenStarten();
         if (projekt.NurLesen)
         {
@@ -476,6 +476,17 @@ public sealed class Hauptansicht : UserControl
 
     private void ProjektGeaendert()
     {
+        if (_projekt is not null && string.Join("|", _projekt.Bauten.Select(_projekt.OrtName)) != _bautenText)
+        {
+            // ein Blueprint mit Innenraum gesetzt oder das Gebaeude geloescht: Ortsliste neu; ist der offene Innenraum weg, nach draussen
+            OrtListeZeigen();
+            if (_innen && _ort is { } offen && !_projekt.Innenorte.Contains(offen))
+            {
+                _ort = null;
+                ReiterZeigen(innen: false);
+            }
+            KnoepfeFreigeben();
+        }
         _aussenStand++;
         _dreiAenderung = Stopwatch.GetTimestamp();
         Karte.InvalidateVisual();
@@ -511,14 +522,14 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
-        innen = innen && _projekt.Orte.Count > 0;
+        innen = innen && _projekt.Innenorte.Count > 0;
         _innen = innen;
         _drei = false;
         if (innen)
         {
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
-            OrtOeffnen(_ort is { } o && _projekt.Orte.Contains(o) ? o : _projekt.Orte[0]);
+            OrtOeffnen(_ort is { } o && _projekt.Innenorte.Contains(o) ? o : _projekt.Innenorte[0]);
         }
         else
         {
@@ -661,19 +672,58 @@ public sealed class Hauptansicht : UserControl
     private void OrtListeZeigen()
     {
         _ortListe.Children.Clear();
-        if (_projekt is null || _projekt.Orte.Count == 0)
+        _bautenText = _projekt is null ? "" : string.Join("|", _projekt.Bauten.Select(_projekt.OrtName));
+        OrtWahlFuellen();
+        if (_projekt is null || _projekt.Innenorte.Count == 0)
         {
             _ortListe.Children.Add(Schrift.Text(Texte.KeineInnenraeume, "Klein", farbe: "Pinsel.muted"));
             return;
         }
         foreach (var o in _projekt.Orte)
         {
-            var k = Schrift.Knopf(_daten!.OrtName(o));
+            _ortListe.Children.Add(OrtKnopf(o));
+        }
+        if (_projekt.Bauten.Count > 0)
+        {
+            // Meldung P12-23 Frage 1 a: Innenraeume gesetzter Blueprints, nur im Werkzeug
+            _ortListe.Children.Add(Schrift.Text(Texte.NeueGebaeude, "Mittel", FontWeight.Bold));
+            _ortListe.Children.Add(Schrift.Text(Texte.BauInnenNochNichtTipp, "Klein", farbe: "Pinsel.muted"));
+            foreach (var o in _projekt.Bauten)
+            {
+                _ortListe.Children.Add(OrtKnopf(o));
+            }
+        }
+
+        Button OrtKnopf(string o)
+        {
+            var k = Schrift.Knopf(_projekt!.OrtName(o));
             k.HorizontalAlignment = HorizontalAlignment.Stretch;
             k.Click += (_, _) => OrtOeffnen(o);
-            _ortListe.Children.Add(k);
+            return k;
         }
     }
+
+    /// <summary>Namen der neuen Gebaeude beim letzten Fuellen der Ortsliste (aendern sie sich, wird die Liste neu gefuellt).</summary>
+    private string _bautenText = "";
+
+    /// <summary>Auswahl "Ort" im Innenraum: Orte der Basis und neue Gebaeude des Projekts.</summary>
+    private void OrtWahlFuellen()
+    {
+        if (_innenAnsicht is null || _projekt is null)
+        {
+            return;
+        }
+        _ortWahlFuellt = true;
+        _ortWahl.Items.Clear();
+        foreach (var o in _projekt.Innenorte)
+        {
+            _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt.OrtName(o), Tag = o });
+        }
+        _ortWahl.SelectedItem = _ortWahl.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == _ort);
+        _ortWahlFuellt = false;
+    }
+
+    private bool _ortWahlFuellt;
 
     private void AussenSetzenWaehlen(AussenArt art, string? modell)
     {
@@ -819,10 +869,12 @@ public sealed class Hauptansicht : UserControl
         {
             _aussenAuswahl.Children.Add(Schrift.Text(grund, "Klein", farbe: "Pinsel.muted"));
         }
-        if (s.Art == AussenArt.Haus && _projekt.Orte.Contains(s.Ort))
+        var innenort = _projekt.InnenortVon(s);
+        var oeffnenText = innenort is null ? null : Texte.Innenraeume + ": " + _projekt.OrtName(innenort);
+        if (innenort is not null)
         {
-            var oeffnen = Schrift.Knopf(Texte.Innenraeume + ": " + _daten.OrtName(s.Ort));
-            oeffnen.Click += (_, _) => OrtOeffnen(s.Ort);
+            var oeffnen = Schrift.Knopf(oeffnenText!);
+            oeffnen.Click += (_, _) => OrtOeffnen(innenort);
             _aussenAuswahl.Children.Add(oeffnen);
         }
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
@@ -832,7 +884,7 @@ public sealed class Hauptansicht : UserControl
             bp.Click += (_, _) => _ = AlsBlueprintSpeichernAsync(s);
             _aussenAuswahl.Children.Add(bp);
         }
-        foreach (var k in _aussenAuswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is TextBox or CheckBox || (c is Button b && b.Content is TextBlock t && t.Text != Texte.Innenraeume + ": " + _daten.OrtName(s.Ort))))
+        foreach (var k in _aussenAuswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is TextBox or CheckBox || (c is Button b && b.Content is TextBlock t && t.Text != oeffnenText)))
         {
             if (_projekt.NurLesen)
             {
@@ -1066,9 +1118,10 @@ public sealed class Hauptansicht : UserControl
         var daten = _daten;
         // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
         var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
+        var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
         AussenPruefungLaeuft();
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -1394,9 +1447,9 @@ public sealed class Hauptansicht : UserControl
     private Control InnenBauen()
     {
         _ortWahl.Items.Clear();
-        foreach (var o in _daten!.Orte)
+        foreach (var o in _projekt?.Innenorte ?? _daten!.Orte)
         {
-            _ortWahl.Items.Add(new ComboBoxItem { Content = _daten.OrtName(o), Tag = o });
+            _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt?.OrtName(o) ?? _daten!.OrtName(o), Tag = o });
         }
         var ortTitel = Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl);
         var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), _katalogHinweis, VollerKatalogKnopf(true) } };
@@ -1475,7 +1528,7 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
-        if (!_projekt.Orte.Contains(ort))
+        if (!_projekt.Innenorte.Contains(ort))
         {
             return;
         }
@@ -1500,7 +1553,7 @@ public sealed class Hauptansicht : UserControl
         RaumZeigen();
         KnoepfeFreigeben();
         PruefenStarten();
-        Melden(_daten.OrtName(ort) + " geöffnet");
+        Melden(_projekt.OrtName(ort) + " geöffnet");
     }
 
     private void SetzenWaehlen(string typ)

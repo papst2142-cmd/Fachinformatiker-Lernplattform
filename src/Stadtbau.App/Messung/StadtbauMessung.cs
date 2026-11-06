@@ -891,6 +891,29 @@ public static class StadtbauMessung
         }
         a.ReiterZeigen(innen: false);
 
+        // Innenraum des neuen Gebaeudes (Meldung P12-23 Frage 1 a): kommt mit, gelber Hinweis draussen, Reiter Innenraeume
+        const string bau = Projekt.BauPraefix + "moebelhaus";
+        if (!a.Projekt!.Innenorte.Contains(bau))
+        {
+            Fund("Blueprint: Innenraum des neuen Gebaeudes fehlt im Projekt");
+        }
+        else
+        {
+            if (!a.AussenFunde.Any(z => !z.Rot && z.Text == Texte.BauInnenNochNicht(Name)))
+            {
+                Fund("Blueprint: gelber Hinweis \"" + Texte.BauInnenNochNicht(Name) + "\" fehlt");
+            }
+            a.OrtOeffnen(bau);
+            await a.Geprueft;
+            if (a.Funde.Any(z => z.Rot))
+            {
+                Fund("Neues Gebaeude innen: rote Funde: " + string.Join(" | ", a.Funde.Where(z => z.Rot).Select(z => z.Text)));
+            }
+            await BildAsync(a);
+            await AlleGroessenAsync(a, f, "Neues Gebaeude innen");
+            a.ReiterZeigen(innen: false);
+        }
+
         // Umbenennen und Loeschen (Rueckfrage ist ein Fenster; hier der Schritt danach)
         var eintrag = a.Blueprints.First(e => e.Vorlage is not null);
         if (a.BlueprintUmbenennen(eintrag, "Starttest Möbelhaus Süd") is { } nicht)

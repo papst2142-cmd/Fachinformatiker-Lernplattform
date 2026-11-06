@@ -193,7 +193,7 @@ public sealed class KartenFlaeche : Control
         {
             var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, s);
             var r = new Rect(P(hx + Dx(s), hy + Dy(s)), P(hx + hw + Dx(s), hy + hh + Dy(s)));
-            var mitInnen = s.Art == AussenArt.Haus && bearbeitbar.Contains(s.Ort);
+            var mitInnen = (s.Art == AussenArt.Haus && bearbeitbar.Contains(s.Ort)) || (s.Art == AussenArt.Gebaeude && _projekt.InnenortVon(s) is not null);
             if (s.Art == AussenArt.Haus && AussenBearbeitung.Zugang(a, s.Ort) is { } z)
             {
                 Linie(ctx, z["weg"], new Pen(Pinsel("#EFEBE2"), StadtSzene.WegBreite * _zoom, lineCap: PenLineCap.Flat), Dx(s), Dy(s));
@@ -531,9 +531,9 @@ public sealed class KartenFlaeche : Control
             return;
         }
         var s = AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom));
-        if (e.ClickCount == 2 && s is { Art: AussenArt.Haus } haus && _projekt!.Orte.Contains(haus.Ort))
+        if (e.ClickCount == 2 && s is not null && _projekt!.InnenortVon(s) is { } innenort)
         {
-            OrtGewaehlt?.Invoke(haus.Ort);
+            OrtGewaehlt?.Invoke(innenort);
             return;
         }
         Waehlen(s);
