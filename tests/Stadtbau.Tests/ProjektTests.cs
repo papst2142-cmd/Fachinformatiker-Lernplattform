@@ -226,7 +226,7 @@ public class ProjektTests
         });
         Assert.Equal(VersandArt.Gesendet, ergebnis.Art);
         Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.1.0.fistadt", name);
-        Assert.Equal("Stadtbau S 0.1.0 PC", nachricht);
+        Assert.Equal("Stadtbau S 0.2.0 PC", nachricht);
         // ohne eingebauten Schluessel (Tests, PR-Laeufe): nichts gesendet, kein Netz
         Assert.Equal(VersandArt.NichtVerfuegbar, Projekt.Senden(datei, zeit, "PC", null).Art);
     }
@@ -237,7 +237,7 @@ public class ProjektTests
         Assert.Equal("0.1.0", Werkzeug.Version);
         Assert.Equal("S", Werkzeug.Stufe);
         Assert.Equal("vS0.1.0", Werkzeug.Tag);
-        Assert.Equal("Fachinformatiker Stadtbau S 0.1.0", Werkzeug.Kennzeile);
+        Assert.Equal("Fachinformatiker Stadtbau S 0.2.0", Werkzeug.Kennzeile);
         Assert.True(Lernplattform.Core.Update.ReleaseLinie.IstStadtbau(Werkzeug.Tag));
         Assert.False(Lernplattform.Core.Update.ReleaseLinie.IstLernplattform(Werkzeug.Tag));
     }

@@ -1,6 +1,7 @@
 using System.Text;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Stadtbau;
 using Stadtbau.Core;
 using static Lernplattform.Core.Spiel.SpielDaten;
@@ -328,5 +329,28 @@ public class AussenTests
         var p = Projekt.Neu(Texte.Vorschlag(Texte.NeuInnenraum, D.OrtName("moebelhaus")), D, Daten.NeueAblage(), "moebelhaus");
         Assert.Equal("Möbelhaus umbauen", p.Name);
         Assert.EndsWith("Moebelhaus umbauen.fisbau", p.Datei, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Ansicht3D_Stadt1_UndLeereStadt_ProbeLaufen()
+    {
+        var spiel = Ansicht3D.Bauen(D.Fassung, D, Ansicht3D.Einstellung.Grenzen);
+        Assert.Equal(Festzeit.Weihnachten, spiel.Szene.Fest);
+        Assert.Equal(Jahreszeit.Winter, spiel.Szene.Jahreszeit);
+        Assert.NotEmpty(spiel.Szene.Haeuser);
+        // Probe laufen: zur Bank gehen wie im Spiel (nur im Speicher)
+        Assert.Equal(StadtGrund.Ok, spiel.GeheZu("bitweiche"));
+        // leere Stadt: ohne alles und mit einer Strasse
+        var p = Projekt.Neu("Leer 3D", D, Daten.NeueAblage(), leer: (20, 16));
+        var leer = Ansicht3D.Bauen(p.Stand(), D, Ansicht3D.Einstellung.Standard);
+        Assert.Empty(leer.Szene.Haeuser);
+        p.AussenAendern("Straße", a => AussenBearbeitung.Setzen(a, AussenArt.Strasse, 10, 8));
+        var mitStrasse = Ansicht3D.Bauen(p.Stand(), D, new Ansicht3D.Einstellung(true, Jahreszeit.Herbst, null));
+        Assert.Single(mitStrasse.Szene.Strassen);
+        Assert.True(mitStrasse.GeheZu(10.0, 8.0));
+        for (var i = 0; i < 200 && mitStrasse.Fortschreiten(0.05); i++)
+        {
+        }
+        Assert.InRange(mitStrasse.FigurX, 9.0, 11.0);
     }
 }

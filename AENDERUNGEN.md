@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.42.2
+Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich einige Prüfregeln mit dem Stadtbau-Werkzeug, und diese Regeln sind für die neue Fassung des Werkzeugs erweitert worden.
+
+- Neu sind Prüfregeln für die Stadt draußen, zum Beispiel für Straßen, Laternen und Gehwege. Das Spiel nutzt sie nicht; es zeigt die Stadt genauso wie bisher.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.42.1
 Neben der Lernplattform gibt es jetzt ein eigenes Programm, das Stadtbau-Werkzeug. Damit die beiden sich nicht in die Quere kommen, sucht die Lernplattform bei „Nach Updates suchen“ nur noch nach neuen Fassungen der Lernplattform.
 

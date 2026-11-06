@@ -60,7 +60,7 @@ public static partial class StadtbauPruefung
         ablauf.Profil("Probe", new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
         ablauf.Stand.TageFertig = 200;
         ablauf.Stand.Firma = new PyObjekt { { "stufe", 5L }, { "name", "Probe" }, { "tag", 1L } };
-        ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L } };
+        ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L }, { "tag", 1L } };
         return ablauf;
     }
 

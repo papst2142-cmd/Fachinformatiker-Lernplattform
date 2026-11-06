@@ -113,6 +113,7 @@ public static class Texte
     public const string LaterneDrehenNicht = "Laternen richten sich im Spiel selbst zur Straße aus.";
     public const string DrehenNichtNoetig = "Dieses Stück sieht von allen Seiten gleich aus.";
     public const string OrtLoeschenNicht = "Ein Haus mit Innenraum gehört zum Spiel und bleibt. Du kannst es verschieben.";
+    public const string KopieNicht = "Ein Haus mit Innenraum und den Paketplatz gibt es nur einmal.";
     public const string PaketLoeschenNicht = "Den Paketplatz gibt es genau einmal. Du kannst ihn verschieben.";
     public const string Ansicht3D = "3D-Ansicht";
     public const string Tag = "Tag";
@@ -125,7 +126,14 @@ public static class Texte
     public const string Ansicht3DBaut = "Die 3D-Ansicht wird neu gebaut …";
     public const string Ansicht3DFehler = "Die 3D-Ansicht lässt sich gerade nicht bauen. Schau bei den Prüfungen nach.";
     public const string Ansicht3DOhneGrafik = "Auf diesem Gerät gibt es keine 3D-Grafik.";
-    public const string GrenzenGesamt = "Grenzen in der Gesamtansicht (Nacht, Winter, Fest)";
+    public const string GrenzenGesamt = "Grenzen in der Gesamtansicht (Nacht, Winter, Weihnachten)";
+    public const string GrenzenMessen = "Grenzen messen";
+    public const string GrenzenNochNicht = "Noch nicht gemessen. Tippe auf „Grenzen messen“.";
+    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut. Gehwege zeichnet das Spiel erst mit dem Einbau.";
+    public const string PruefungenDraussen = "Prüfungen draußen";
+    public const string PruefungLaeuft = "Prüfung läuft …";
+    public const string HausSetzen = "Haus setzen";
+    public const string KeineInnenraeume = "Diese Stadt hat noch keine Häuser mit Innenraum.";
     public const string LeerBreite = "Breite der Stadt (8 bis 64)";
     public const string LeerHoehe = "Tiefe der Stadt (8 bis 64)";
     public const string LeerGroesseUngueltig = "Die Größe passt nicht. Erlaubt sind 8 bis 64 in Schritten von 0,5.";

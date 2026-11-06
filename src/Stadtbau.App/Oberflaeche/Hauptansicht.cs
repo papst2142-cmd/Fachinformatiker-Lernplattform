@@ -18,6 +18,7 @@ using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Stadtbau;
 using Lernplattform.Design;
 using Lernplattform.Messung;
+using Lernplattform.Spiel;
 using Lernplattform.Views;
 using Stadtbau.Core;
 
@@ -27,9 +28,11 @@ namespace Stadtbau.Oberflaeche;
 
 /// <summary>
 /// Phase 13 Welle 2 (Weisung P12-17, Plan Abschnitte 3 bis 5): Hauptansicht des Werkzeugs. Kopfleiste mit Neu, Oeffnen,
-/// Speichern, Rueckgaengig, Wiederholen, Datei speichern, An CC senden und Hell/Dunkel; Reiter Draufsicht (Stadt nur
-/// ansehen, Ort antippen) und Innenraeume (Katalog links, Grundriss in der Mitte, Auswahl, Raum, Grenzen und Pruefungen
-/// rechts). Auf einem Handy nur der Hinweis <see cref="Texte.NurHandy"/>.
+/// Speichern, Rueckgaengig, Wiederholen, Datei speichern, An CC senden und Hell/Dunkel; Reiter Draufsicht, Innenraeume
+/// (Katalog links, Grundriss in der Mitte, Auswahl, Raum, Grenzen und Pruefungen rechts) und seit Welle 3 (Weisung P12-18)
+/// 3D-Ansicht. Die Draufsicht bearbeitet die Stadt draussen (Katalog links, Karte, Auswahl und Pruefungen draussen rechts),
+/// die 3D-Ansicht zeigt die Stadt wie das Spiel (Tag/Nacht, Jahreszeit, Fest, Probe laufen, Grenzen der Gesamtansicht).
+/// Auf einem Handy nur der Hinweis <see cref="Texte.NurHandy"/>.
 /// </summary>
 public sealed class Hauptansicht : UserControl
 {
@@ -47,7 +50,15 @@ public sealed class Hauptansicht : UserControl
     private string? _ort;
     private bool _dunkel;
     private bool _innen;
+    private bool _drei;
     private int _pruefStand;
+    private int _aussenPruefStand;
+    private int _aussenStand;
+    private int _dreiGebaut = -1;
+    private Ansicht3D.Einstellung _einstellung = Ansicht3D.Einstellung.Standard;
+    private Ansicht3D.Einstellung? _dreiEinstellung;
+    private bool _dreiBaut;
+    private long _dreiAenderung;
 
     // Aufbau
     private readonly Panel _ebene = new() { IsVisible = false };
@@ -72,6 +83,80 @@ public sealed class Hauptansicht : UserControl
     private readonly CheckBox _rasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
     private Control? _innenAnsicht;
     private Control? _kartenAnsicht;
+    private Control? _dreiAnsicht;
+
+    // Stadt draussen und 3D
+    public StadtFlaeche Drei { get; } = new();
+    private readonly StackPanel _aussenAuswahl = new() { Spacing = 6 };
+    private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
+    private readonly StackPanel _ortListe = new() { Spacing = 6 };
+    private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
+    private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
+    private readonly ComboBox _modellWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly TextBlock _dreiStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
+    private readonly TextBlock _dreiGrenzText = Schrift.Text(Texte.GrenzenNochNicht, "Klein");
+    private readonly ProgressBar _dreiGrenzBalken = new() { Minimum = 0, Maximum = 100, Height = 10, MinHeight = 10 };
+
+    /// <summary>Letzte Pruefung draussen (fuer Start-Test und Anzeige).</summary>
+    public List<StadtbauFund> AussenFunde { get; private set; } = [];
+
+    /// <summary>Grenzen der Gesamtansicht aus der letzten Messung (null = noch nicht gemessen).</summary>
+    public (long Dreiecke, int Aufrufe)? GrenzenDraussen { get; private set; }
+
+    /// <summary>Letzte Pruefung draussen fertig (Start-Test wartet darauf).</summary>
+    public Task AussenGeprueft => _aussenGeprueft.Task;
+
+    private TaskCompletionSource _aussenGeprueft = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>3D-Ansicht mit dem aktuellen Stand gezeigt (Start-Test wartet darauf).</summary>
+    public Task DreiFertig => _dreiFertig.Task;
+
+    private TaskCompletionSource _dreiFertig = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>Zeit von der Aenderung (oder dem Oeffnen) bis zum ersten Bild der neuen Szene in ms.</summary>
+    public double DreiZeitMs { get; private set; }
+
+    public bool DreiZeigt => _drei;
+
+    private ComboBox? _lichtWahl, _jahrWahl, _festWahl;
+    private bool _wahlSetzen;
+
+    /// <summary>Die drei Auswahlfelder zeigen die Einstellung (auch wenn sie nicht ueber die Felder kam, z. B. Grenzen messen).</summary>
+    private void WahlZeigen(Ansicht3D.Einstellung e)
+    {
+        _wahlSetzen = true;
+        try
+        {
+            Waehle(_lichtWahl, e.Nacht);
+            Waehle(_jahrWahl, e.Jahreszeit);
+            Waehle(_festWahl, e.Fest ?? "");
+        }
+        finally
+        {
+            _wahlSetzen = false;
+        }
+
+        static void Waehle(ComboBox? c, object wert)
+        {
+            if (c?.Items.OfType<ComboBoxItem>().FirstOrDefault(i => Equals(i.Tag, wert)) is { } item)
+            {
+                c.SelectedItem = item;
+            }
+        }
+    }
+
+    /// <summary>Was die drei Auswahlfelder der 3D-Ansicht zeigen (Start-Test: gleich der Einstellung).</summary>
+    public string DreiWahlText => string.Join(" / ", new[] { _lichtWahl, _jahrWahl, _festWahl }.Select(c => (c?.SelectedItem as ComboBoxItem)?.Content as string ?? "-"));
+
+    /// <summary>Texte der Liste "Pruefungen draussen" (Start-Test: nach der Pruefung nie mehr "Pruefung laeuft").</summary>
+    public string AussenPruefungText => string.Join(" | ", _aussenPruefungen.Children.Select(c => c switch
+    {
+        TextBlock t => t.Text,
+        Button { Content: StackPanel sp } => string.Join(" ", sp.Children.OfType<TextBlock>().Select(t => t.Text)),
+        _ => "",
+    }));
+
+    public bool InnenZeigt => _innen;
 
     /// <summary>Letzte Pruefung des gezeigten Orts (fuer Start-Test und Anzeige).</summary>
     public List<StadtbauFund> Funde { get; private set; } = [];
@@ -116,6 +201,10 @@ public sealed class Hauptansicht : UserControl
         Flaeche.AuswahlGeaendert += AuswahlZeigen;
         Flaeche.Gemeldet += Melden;
         Karte.OrtGewaehlt += o => OrtOeffnen(o);
+        Karte.AuswahlGeaendert += AussenAuswahlZeigen;
+        Karte.Gemeldet += Melden;
+        _aussenRasterAus.IsCheckedChanged += (_, _) => Karte.Raster = _aussenRasterAus.IsChecked != true;
+        Drei.BildGezeichnet += DreiBildGezeichnet;
         _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked != true;
         _ortWahl.SelectionChanged += (_, _) =>
         {
@@ -143,6 +232,7 @@ public sealed class Hauptansicht : UserControl
             // Innenraums bleibt so unter der Grenze von 400 ms (Start-Test, Messpunkt "Projekt anlegen")
             _innenAnsicht = InnenBauen();
             _kartenAnsicht = KarteBauen();
+            _dreiAnsicht = DreiBauen();
             var daten = _daten;
             await Task.Run(() => Vorwaermen(daten));
             await AnsichtVorwaermenAsync(_kartenAnsicht);
@@ -215,6 +305,7 @@ public sealed class Hauptansicht : UserControl
         }
         Knopf(Texte.Draufsicht, () => ReiterZeigen(innen: false));
         Knopf(Texte.Innenraeume, () => ReiterZeigen(innen: true));
+        Knopf(Texte.Ansicht3D, DreiZeigen);
         Knopf(Texte.Neu, () => _ = NeuAsync());
         Knopf(Texte.Oeffnen, () => _ = OeffnenAsync());
         Knopf(Texte.Speichern, SpeichernVonHand);
@@ -233,7 +324,8 @@ public sealed class Hauptansicht : UserControl
         var mit = _projekt is not null;
         var schreiben = mit && !_projekt!.NurLesen;
         _kopf[Texte.Draufsicht].IsEnabled = mit;
-        _kopf[Texte.Innenraeume].IsEnabled = mit;
+        _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Orte.Count > 0;
+        _kopf[Texte.Ansicht3D].IsEnabled = mit;
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
         _kopf[Texte.Speichern].IsEnabled = schreiben;
@@ -243,7 +335,7 @@ public sealed class Hauptansicht : UserControl
         _kopf[Texte.AnCcSenden].IsEnabled = mit;
         foreach (var (name, k) in _kopf)
         {
-            var aktiv = (name == Texte.Innenraeume && _innen && mit) || (name == Texte.Draufsicht && !_innen && mit);
+            var aktiv = mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei) || (name == Texte.Ansicht3D && _drei));
             k.Farbe(Button.BackgroundProperty, aktiv ? "VerlaufW.primary" : "Pinsel.card_alt");
             if (k.Content is TextBlock t)
             {
@@ -262,7 +354,7 @@ public sealed class Hauptansicht : UserControl
         }
         foreach (var datei in projekte.Take(8))
         {
-            var k = Schrift.Knopf(Path.GetFileNameWithoutExtension(datei));
+            var k = Schrift.Knopf(Projekt.AnzeigeName(datei));
             k.HorizontalAlignment = HorizontalAlignment.Left;
             k.Click += (_, _) => ProjektLaden(datei);
             liste.Children.Add(k);
@@ -325,9 +417,23 @@ public sealed class Hauptansicht : UserControl
         }
         _projekt = projekt;
         _projekt.Geaendert += ProjektGeaendert;
-        _ort = ort ?? projekt.Ort;
+        _ort = ort ?? (projekt.Ort.Length > 0 ? projekt.Ort : null);
+        _aussenStand++;
+        _dreiGebaut = -1;
+        GrenzenDraussen = null;
+        _dreiGrenzText.Text = Texte.GrenzenNochNicht;
+        _dreiGrenzBalken.Value = 0;
+        Karte.Waehlen(null);
+        OrtListeZeigen();
+        _modellWahl.Items.Clear();
+        foreach (var m in AussenBearbeitung.HausModelle(projekt.AussenStand))
+        {
+            _modellWahl.Items.Add(new ComboBoxItem { Content = m, Tag = m });
+        }
+        _modellWahl.SelectedIndex = _modellWahl.Items.Count > 0 ? 0 : -1;
         TitelSetzen();
-        ReiterZeigen(innen);
+        ReiterZeigen(innen && projekt.Orte.Count > 0);
+        AussenPruefenStarten();
         if (projekt.NurLesen)
         {
             _ = Dialog.Zeigen(Texte.OeffnenTitel, Texte.NurLesen, Texte.Ok);
@@ -355,7 +461,16 @@ public sealed class Hauptansicht : UserControl
 
     private void ProjektGeaendert()
     {
-        if (_projekt is not null && _projekt.Ort != _ort && _projekt.Ort.Length > 0)
+        _aussenStand++;
+        _dreiAenderung = Stopwatch.GetTimestamp();
+        Karte.InvalidateVisual();
+        AussenAuswahlZeigen();
+        AussenPruefenStarten();
+        if (_drei)
+        {
+            DreiAktualisieren();
+        }
+        if (_projekt is not null && _projekt.Ort != _ort && _projekt.Ort.Length > 0 && _innen)
         {
             // Rueckgaengig in einem anderen Ort: dorthin wechseln
             OrtOeffnen(_projekt.Ort);
@@ -374,40 +489,534 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
+        innen = innen && _projekt.Orte.Count > 0;
         _innen = innen;
+        _drei = false;
         if (innen)
         {
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
-            OrtOeffnen(_ort ?? _daten!.Orte[0]);
+            OrtOeffnen(_ort is { } o && _projekt.Orte.Contains(o) ? o : _projekt.Orte[0]);
         }
         else
         {
             _kartenAnsicht ??= KarteBauen();
             _inhalt.Content = _kartenAnsicht;
-            Karte.Zeigen(_daten);
+            Karte.Zeigen(_projekt);
+            AussenAuswahlZeigen();
+            AussenPruefungZeigen();
         }
         KnoepfeFreigeben();
     }
 
     private Control KarteBauen()
     {
-        var liste = new StackPanel { Spacing = 6 };
-        liste.Children.Add(Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted"));
-        foreach (var o in _daten!.Orte)
+        // links: Stuecke fuer draussen
+        Button KatalogKnopf(string text, AussenArt art, Func<string?>? modell = null)
         {
-            var k = Schrift.Knopf(_daten.OrtName(o));
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen");
+            k.Click += (_, _) => AussenSetzenWaehlen(art, modell?.Invoke());
+            return k;
+        }
+        var reihe = new WrapPanel
+        {
+            Children =
+            {
+                KatalogKnopf(Texte.Strasse, AussenArt.Strasse), KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park),
+                KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne),
+            },
+        };
+        var modellTitel = Schrift.Text(Texte.Modell, "Klein").Fuer(_modellWahl);
+        var haus = KatalogKnopf(Texte.HausSetzen, AussenArt.Gebaeude, () => _modellWahl.SelectedItem is ComboBoxItem { Tag: string m } ? m : null);
+        var links = new StackPanel
+        {
+            Spacing = 8,
+            Children = { Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), _aussenHinweis, reihe, Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), modellTitel, _modellWahl, haus, _aussenRasterAus },
+        };
+        var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
+
+        Karte.Vorlese(Texte.Draufsicht);
+        Button Klein(string text, string name, Action a)
+        {
+            var k = Schrift.Knopf(text).Vorlese(name);
+            k.Click += (_, _) => a();
+            return k;
+        }
+        var zoom = new WrapPanel { Children = { Klein("+", Texte.Vergroessern, Karte.Vergroessern), Klein("−", Texte.Verkleinern, Karte.Verkleinern), Klein(Texte.Einpassen, Texte.Einpassen, Karte.Einpassen) } };
+        var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
+        mitte.Children.Add(new Border { Child = Karte, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }.Farbe(Border.BorderBrushProperty, "Pinsel.border"));
+        Grid.SetRow(zoom, 1);
+        zoom.Margin = new Thickness(0, 8, 0, 0);
+        mitte.Children.Add(zoom);
+
+        var rechts = new StackPanel
+        {
+            Spacing = 12,
+            Children =
+            {
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _aussenAuswahl } }),
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.PruefungenDraussen, "Mittel", FontWeight.Bold), _aussenPruefungen } }),
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Innenraeume, "Mittel", FontWeight.Bold), _ortListe } }),
+            },
+        };
+        var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("260,*,340") };
+        g.Children.Add(linksRollen);
+        Grid.SetColumn(mitte, 1);
+        g.Children.Add(mitte);
+        Grid.SetColumn(rechtsRollen, 2);
+        g.Children.Add(rechtsRollen);
+        return g;
+    }
+
+    private void OrtListeZeigen()
+    {
+        _ortListe.Children.Clear();
+        if (_projekt is null || _projekt.Orte.Count == 0)
+        {
+            _ortListe.Children.Add(Schrift.Text(Texte.KeineInnenraeume, "Klein", farbe: "Pinsel.muted"));
+            return;
+        }
+        foreach (var o in _projekt.Orte)
+        {
+            var k = Schrift.Knopf(_daten!.OrtName(o));
             k.HorizontalAlignment = HorizontalAlignment.Stretch;
             k.Click += (_, _) => OrtOeffnen(o);
-            liste.Children.Add(k);
+            _ortListe.Children.Add(k);
         }
-        var rechts = new ScrollViewer { Content = Schrift.Karte(new StackPanel { Spacing = 8, Children = { Schrift.Text(Texte.Innenraeume, "Mittel", FontWeight.Bold), liste } }), Margin = new Thickness(0, 12, 12, 12) };
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,300") };
-        Karte.Margin = new Thickness(12);
-        g.Children.Add(Karte);
-        Grid.SetColumn(rechts, 1);
-        g.Children.Add(rechts);
+    }
+
+    private void AussenSetzenWaehlen(AussenArt art, string? modell)
+    {
+        if (_projekt is null || _projekt.NurLesen)
+        {
+            return;
+        }
+        Karte.SetzenArt = art;
+        Karte.SetzenModell = modell;
+        _aussenHinweis.Text = (art == AussenArt.Gebaeude ? Texte.HausOhneOrt + " (" + modell + ")" : KatalogName(art)) + ": " + Texte.AussenSetzenAktiv;
+        Melden(_aussenHinweis.Text);
+    }
+
+    private static string KatalogName(AussenArt art) => art switch
+    {
+        AussenArt.Strasse => Texte.Strasse,
+        AussenArt.Baum => Texte.Baum,
+        AussenArt.Park => Texte.Park,
+        AussenArt.Beet => Texte.Beet,
+        AussenArt.Laterne => Texte.Laterne,
+        _ => Texte.HausOhneOrt,
+    };
+
+    private void AussenAuswahlZeigen()
+    {
+        _aussenAuswahl.Children.Clear();
+        _aussenHinweis.Text = Karte.SetzenArt is { } art ? KatalogName(art) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
+        if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehlt, "Klein", farbe: "Pinsel.muted"));
+            return;
+        }
+        var a = _projekt.AussenStand;
+        _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _daten!.OrtName), "Klein"));
+        var (lx, ly) = AussenBearbeitung.Lage(a, s);
+        var x = Feld(lx);
+        var y = Feld(ly);
+        var zeilen = new List<(string, Control)> { (Texte.X, x), (Texte.Y, y) };
+        TextBox? gehweg = null, laenge = null, vor = null, seitlich = null;
+        CheckBox? doppelt = null;
+        if (s.Art == AussenArt.Strasse)
+        {
+            gehweg = Feld(AussenBearbeitung.Gehweg(a, s));
+            laenge = Feld(AussenBearbeitung.Laenge(a, s));
+            zeilen.Add((Texte.GehwegBreite, gehweg));
+            zeilen.Add((Texte.Laenge, laenge));
+        }
+        if (s.Art == AussenArt.Paketplatz)
+        {
+            var (v, sw) = AussenBearbeitung.PaketWerte(a);
+            vor = Feld(v);
+            seitlich = Feld(sw);
+            zeilen = [(Texte.PaketVor, vor), (Texte.PaketSeitlich, seitlich)];
+        }
+        _aussenAuswahl.Children.Add(Zeilen([.. zeilen]));
+        if (s.Art == AussenArt.Laterne)
+        {
+            doppelt = new CheckBox { Content = Schrift.Text(Texte.Doppelt, "Klein"), IsChecked = SpielDaten.Liste(Aussen.Laternen(a)[s.Nummer]) is { Count: > 2 } l && l[2] is true };
+            doppelt.IsCheckedChanged += (_, _) =>
+            {
+                var an = doppelt.IsChecked == true;
+                _projekt.AussenAendern("Laterne", aa => AussenBearbeitung.LaterneDoppelt(aa, s, an));
+                Melden(an ? Texte.LaterneDoppelt : Texte.Laterne);
+            };
+            _aussenAuswahl.Children.Add(doppelt);
+        }
+        var neu = Schrift.Knopf(Texte.Uebernehmen);
+        neu.Click += (_, _) =>
+        {
+            if (s.Art == AussenArt.Paketplatz)
+            {
+                if (Zahl(vor!, out var nv) && Zahl(seitlich!, out var ns))
+                {
+                    _projekt.AussenAendern("Werte", aa => Py.Setzen(SpielDaten.Objekt(Aussen.Stadtdaten(aa)["darstellung"]), Lieferpaket.Abschnitt,
+                        new PyObjekt { { "vor", Bearbeitung.Zahl(nv) }, { "seitlich", Bearbeitung.Zahl(ns) } }));
+                    Melden("Werte übernommen");
+                }
+                else
+                {
+                    Melden("Bitte nur Zahlen eintragen (z. B. 2,5).");
+                }
+                return;
+            }
+            if (!Zahl(x, out var nx) || !Zahl(y, out var ny) || (gehweg is not null && !Zahl(gehweg, out _)) || (laenge is not null && !Zahl(laenge, out _)))
+            {
+                Melden("Bitte nur Zahlen eintragen (z. B. 2,5).");
+                return;
+            }
+            var ng = 0.0;
+            var nl = 0.0;
+            if (gehweg is not null && laenge is not null)
+            {
+                Zahl(gehweg, out ng);
+                Zahl(laenge, out nl);
+            }
+            _projekt.AussenAendern("Werte", aa =>
+            {
+                if (s.Art == AussenArt.Strasse)
+                {
+                    AussenBearbeitung.GehwegSetzen(aa, s, ng);
+                    if (Math.Abs(nl - AussenBearbeitung.Laenge(aa, s)) > 0.005)
+                    {
+                        AussenBearbeitung.LaengeSetzen(aa, s, nl);
+                    }
+                }
+                AussenBearbeitung.Platzieren(aa, s, nx, ny);
+            });
+            Karte.Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
+            Melden("Werte übernommen");
+        };
+        var drehen = Schrift.Knopf(Texte.Drehen);
+        drehen.Click += (_, _) => Karte.Drehen();
+        drehen.IsEnabled = AussenBearbeitung.DrehenNicht(s) is null;
+        var kopie = Schrift.Knopf(Texte.Kopie);
+        kopie.Click += (_, _) => Karte.Kopieren();
+        kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz);
+        var weg = Schrift.Gefahrknopf(Texte.Loeschen);
+        weg.Click += (_, _) => Karte.Loeschen();
+        weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;
+        _aussenAuswahl.Children.Add(new WrapPanel { Children = { neu, drehen, kopie, weg } });
+        // warum etwas nicht geht, steht klein darunter
+        foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(grund, "Klein", farbe: "Pinsel.muted"));
+        }
+        if (s.Art == AussenArt.Haus && _projekt.Orte.Contains(s.Ort))
+        {
+            var oeffnen = Schrift.Knopf(Texte.Innenraeume + ": " + _daten.OrtName(s.Ort));
+            oeffnen.Click += (_, _) => OrtOeffnen(s.Ort);
+            _aussenAuswahl.Children.Add(oeffnen);
+        }
+        foreach (var k in _aussenAuswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is TextBox or CheckBox || (c is Button b && b.Content is TextBlock t && t.Text != Texte.Innenraeume + ": " + _daten.OrtName(s.Ort))))
+        {
+            if (_projekt.NurLesen)
+            {
+                k.IsEnabled = false;
+            }
+        }
+    }
+
+    // ---- Pruefung draussen ------------------------------------------------------------------------
+
+    private void AussenPruefenStarten()
+    {
+        if (_projekt is null || _daten is null)
+        {
+            return;
+        }
+        var stand = ++_aussenPruefStand;
+        var daten = _daten;
+        // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
+        var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
+        if (_aussenGeprueft.Task.IsCompleted)
+        {
+            _aussenGeprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        _aussenPruefungen.Children.Clear();
+        _aussenPruefungen.Children.Add(Schrift.Text(Texte.PruefungLaeuft, "Klein", farbe: "Pinsel.muted"));
+        var uhr = Stopwatch.StartNew();
+        _ = Task.Run(() => Projekt.PruefenAussen(fassung, daten)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        {
+            if (stand != _aussenPruefStand)
+            {
+                return;
+            }
+            if (t.IsFaulted)
+            {
+                _ordner.Fehler("Prüfung draußen: " + t.Exception?.InnerException);
+                AussenFunde = [new StadtbauFund("Die Prüfung ist abgebrochen: " + t.Exception?.InnerException?.Message, "Bitte CC Bescheid geben.", true)];
+            }
+            else
+            {
+                AussenFunde = t.Result;
+            }
+            Messwerte.Reihe("Prüfen draußen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
+            AussenPruefungZeigen(fertig: true);
+            _aussenGeprueft.TrySetResult();
+        }), TaskScheduler.Default);
+    }
+
+    /// <summary>Funde in Karte und Liste zeigen; die Liste nur mit fertigem Ergebnis (sonst bleibt "Pruefung laeuft").</summary>
+    private void AussenPruefungZeigen(bool fertig = false)
+    {
+        Karte.Funde = AussenFunde;
+        Karte.InvalidateVisual();
+        if (_aussenPruefStand == 0 || (!fertig && !_aussenGeprueft.Task.IsCompleted))
+        {
+            return;
+        }
+        _aussenPruefungen.Children.Clear();
+        if (AussenFunde.Count == 0)
+        {
+            _aussenPruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
+            return;
+        }
+        foreach (var f in AussenFunde.OrderByDescending(f => f.Rot))
+        {
+            var zeile = new StackPanel
+            {
+                Spacing = 2,
+                Children =
+                {
+                    Schrift.Text((f.Rot ? "Rot: " : "Gelb: ") + f.Text, "Klein", FontWeight.Bold, f.Rot ? "Pinsel.red" : "Pinsel.orange"),
+                    Schrift.Text(f.Tipp, "Klein", farbe: "Pinsel.muted"),
+                },
+            };
+            var k = new Button { Content = zeile, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) }
+                .Vorlese((f.Rot ? "Rot: " : "Gelb: ") + f.Text + ". " + f.Tipp);
+            k.Click += (_, _) =>
+            {
+                if (_projekt is not null && f.X is { } fx && f.Y is { } fy)
+                {
+                    Karte.Waehlen(AussenBearbeitung.StueckBei(_projekt.AussenStand, fx, fy, 0.6));
+                    Karte.Focus();
+                }
+            };
+            _aussenPruefungen.Children.Add(k);
+        }
+    }
+
+    // ---- 3D-Ansicht -------------------------------------------------------------------------------
+
+    private Control DreiBauen()
+    {
+        ComboBox Wahl(IEnumerable<(string Name, object Wert)> werte, int start)
+        {
+            var c = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+            foreach (var (n, w) in werte)
+            {
+                c.Items.Add(new ComboBoxItem { Content = n, Tag = w });
+            }
+            c.SelectedIndex = start;
+            return c;
+        }
+        var licht = _lichtWahl = Wahl([(Texte.Tag, false), (Texte.Nacht, true)], 0);
+        var jahr = _jahrWahl = Wahl([("Frühling", Jahreszeit.Fruehling), ("Sommer", Jahreszeit.Sommer), ("Herbst", Jahreszeit.Herbst), ("Winter", Jahreszeit.Winter)], 1);
+        var fest = _festWahl = Wahl([(Texte.KeinFest, ""), ("Ostern", Festzeit.Ostern), ("Halloween", Festzeit.Halloween), ("Weihnachten", Festzeit.Weihnachten), ("Silvester", Festzeit.Silvester)], 0);
+        void Wechsel()
+        {
+            if (_wahlSetzen)
+            {
+                return;
+            }
+            if (licht.SelectedItem is ComboBoxItem { Tag: bool nacht } && jahr.SelectedItem is ComboBoxItem { Tag: Jahreszeit j } && fest.SelectedItem is ComboBoxItem { Tag: string f })
+            {
+                EinstellungSetzen(new Ansicht3D.Einstellung(nacht, j, f.Length > 0 ? f : null));
+            }
+        }
+        licht.SelectionChanged += (_, _) => Wechsel();
+        jahr.SelectionChanged += (_, _) => Wechsel();
+        fest.SelectionChanged += (_, _) => Wechsel();
+        var messen = Schrift.Knopf(Texte.GrenzenMessen);
+        messen.Click += (_, _) => _ = GrenzenMessenAsync();
+        _dreiGrenzBalken.Farbe(ProgressBar.ForegroundProperty, "Pinsel.green");
+        var rechts = new StackPanel
+        {
+            Spacing = 12,
+            Children =
+            {
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Ansicht3D, "Mittel", FontWeight.Bold), Schrift.Text(Texte.Ansicht3DHinweis, "Klein", farbe: "Pinsel.muted"), _dreiStatus } }),
+                Schrift.Karte(new StackPanel
+                {
+                    Spacing = 6,
+                    Children = { Zeilen((Texte.Tag + " / " + Texte.Nacht, licht), (Texte.Jahreszeit, jahr), (Texte.Fest, fest)) },
+                }),
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.ProbeLaufen, "Mittel", FontWeight.Bold), Schrift.Text(Texte.ProbeLaufenHinweis, "Klein", farbe: "Pinsel.muted") } }),
+                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.GrenzenGesamt, "Mittel", FontWeight.Bold), _dreiGrenzBalken, _dreiGrenzText, messen } }),
+            },
+        };
+        var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
+        var mitte = new Border { Child = Drei, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1), Margin = new Thickness(12) }
+            .Farbe(Border.BorderBrushProperty, "Pinsel.border");
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,340") };
+        g.Children.Add(mitte);
+        Grid.SetColumn(rechtsRollen, 1);
+        g.Children.Add(rechtsRollen);
         return g;
+    }
+
+    public void DreiZeigen()
+    {
+        if (_projekt is null)
+        {
+            return;
+        }
+        _drei = true;
+        _innen = false;
+        _dreiAnsicht ??= DreiBauen();
+        _inhalt.Content = _dreiAnsicht;
+        KnoepfeFreigeben();
+        _dreiAenderung = Stopwatch.GetTimestamp();
+        DreiAktualisieren();
+        Drei.Focus();
+    }
+
+    public void EinstellungSetzen(Ansicht3D.Einstellung einstellung)
+    {
+        _einstellung = einstellung;
+        WahlZeigen(einstellung);
+        _dreiAenderung = Stopwatch.GetTimestamp();
+        if (_drei)
+        {
+            DreiAktualisieren();
+        }
+    }
+
+    /// <summary>
+    /// Die Szene neu bauen, wenn sich Stadt oder Einstellung seit dem letzten Bau geaendert haben (nur, solange die 3D-Ansicht
+    /// zu sehen ist; im Hintergrund, ein Bau zur Zeit, danach der neueste Stand).
+    /// </summary>
+    private void DreiAktualisieren()
+    {
+        if (_projekt is null || _daten is null || _dreiBaut)
+        {
+            return;
+        }
+        if (_dreiGebaut == _aussenStand && _dreiEinstellung == _einstellung)
+        {
+            Tageslicht.FesteUhr = _einstellung.Uhr;
+            Drei.AnfordernBild();
+            return;
+        }
+        if (_dreiFertig.Task.IsCompleted)
+        {
+            _dreiFertig = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        var stand = _aussenStand;
+        var einstellung = _einstellung;
+        var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
+        var daten = _daten;
+        _dreiBaut = true;
+        _dreiStatus.Text = Texte.Ansicht3DBaut;
+        var uhr = Stopwatch.StartNew();
+        _ = Task.Run(() => Ansicht3D.Bauen(fassung, daten, einstellung)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        {
+            _dreiBaut = false;
+            Messwerte.Reihe("3D bauen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
+            if (t.IsFaulted)
+            {
+                _ordner.Fehler("3D-Ansicht: " + t.Exception?.InnerException);
+                _dreiStatus.Text = Texte.Ansicht3DFehler;
+                _dreiGebaut = stand;
+                _dreiEinstellung = einstellung;
+                _dreiFertig.TrySetResult();
+                return;
+            }
+            var alt = Drei.AktuelleKamera;
+            var (ax, az, ab, ad) = alt is null ? (float.NaN, 0f, 0f, 0f) : (alt.ZielX, alt.ZielZ, alt.Abstand, alt.Drehung);
+            Tageslicht.FesteUhr = einstellung.Uhr;
+            Drei.Spiel = t.Result;
+            if (!float.IsNaN(ax) && Drei.AktuelleKamera is { } neu)
+            {
+                // die Kamera bleibt, wo sie war (sonst springt sie nach jeder Aenderung auf die Figur)
+                neu.Setzen(ax, az);
+                neu.Zoomen(neu.Abstand / ab);
+                neu.Drehung = ad;
+            }
+            _dreiGebaut = stand;
+            _dreiEinstellung = einstellung;
+            _dreiWartetAufBild = true;
+            _dreiStatus.Text = Drei.GlBereit ? "" : Texte.Ansicht3DOhneGrafik;
+            if (!Drei.GlBereit)
+            {
+                _dreiWartetAufBild = false;
+                _dreiFertig.TrySetResult();
+            }
+            if (_drei && (stand != _aussenStand || einstellung != _einstellung))
+            {
+                DreiAktualisieren();
+            }
+        }), TaskScheduler.Default);
+    }
+
+    private bool _dreiWartetAufBild;
+
+    private void DreiBildGezeichnet()
+    {
+        if (!_dreiWartetAufBild)
+        {
+            return;
+        }
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_dreiWartetAufBild)
+            {
+                return;
+            }
+            _dreiWartetAufBild = false;
+            DreiZeitMs = Stopwatch.GetElapsedTime(_dreiAenderung).TotalMilliseconds;
+            Messwerte.Reihe("3D bis zum Bild (Angabe)", DreiZeitMs);
+            if (_dreiGebaut == _aussenStand && _dreiEinstellung == _einstellung)
+            {
+                _dreiFertig.TrySetResult();
+            }
+        });
+    }
+
+    /// <summary>
+    /// Grenzen wie die Gesamtansicht des Spiels (Start-Test GesamtansichtAsync): Nacht, Winter, Weihnachten, Kamera ganz
+    /// weit weg ueber der Mitte, zwei Bilder, dann Dreiecke und Zeichenaufrufe des letzten Bilds. Danach wie vorher.
+    /// </summary>
+    public async Task GrenzenMessenAsync()
+    {
+        if (_projekt is null || !_drei)
+        {
+            return;
+        }
+        var vorher = _einstellung;
+        EinstellungSetzen(Ansicht3D.Einstellung.Grenzen);
+        await DreiFertig;
+        if (!Drei.GlBereit || Drei.AktuelleKamera is not { } kamera || Drei.Spiel is not { } spiel)
+        {
+            _dreiGrenzText.Text = Texte.Ansicht3DOhneGrafik;
+            EinstellungSetzen(vorher);
+            return;
+        }
+        var (ax, az, ab) = (kamera.ZielX, kamera.ZielZ, kamera.Abstand);
+        kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
+        kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
+        await Drei.NaechstesBildAsync();
+        await Drei.NaechstesBildAsync();
+        GrenzenDraussen = (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe);
+        kamera.Setzen(ax, az);
+        kamera.Zoomen(kamera.Abstand / ab);
+        var (dreiecke, aufrufe) = GrenzenDraussen.Value;
+        var anteil = StadtbauGrenzen.Anteil(dreiecke, aufrufe);
+        _dreiGrenzBalken.Value = Math.Min(100, anteil * 100);
+        _dreiGrenzBalken.Farbe(ProgressBar.ForegroundProperty, anteil > 1 ? "Pinsel.red" : anteil >= StadtbauPruefung.GelbAb ? "Pinsel.yellow" : "Pinsel.green");
+        _dreiGrenzText.Text = Texte.Grenzzeile(dreiecke, aufrufe, StadtbauGrenzen.Dreiecke, StadtbauGrenzen.Aufrufe);
+        AutomationProperties.SetName(_dreiGrenzBalken, Texte.GrenzenGesamt + ": " + _dreiGrenzText.Text);
+        Melden(Texte.GrenzenGesamt + ": " + _dreiGrenzText.Text);
+        EinstellungSetzen(vorher);
     }
 
     // ---- Innenraeume ------------------------------------------------------------------------------
@@ -496,11 +1105,16 @@ public sealed class Hauptansicht : UserControl
         {
             return;
         }
+        if (!_projekt.Orte.Contains(ort))
+        {
+            return;
+        }
         _ort = ort;
         _projekt.Ort = ort;
         if (!_innen)
         {
             _innen = true;
+            _drei = false;
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
         }
@@ -820,7 +1434,7 @@ public sealed class Hauptansicht : UserControl
     {
         if (_projekt?.Rueckgaengig() == true)
         {
-            Flaeche.Waehlen(null);
+            NachVerlauf();
             Melden("Rückgängig gemacht");
         }
     }
@@ -829,8 +1443,19 @@ public sealed class Hauptansicht : UserControl
     {
         if (_projekt?.Wiederholen() == true)
         {
-            Flaeche.Waehlen(null);
+            NachVerlauf();
             Melden("Wiederholt");
+        }
+    }
+
+    /// <summary>Nach Rueckgaengig/Wiederholen: Auswahl weg; ein Schritt draussen zeigt die Draufsicht, wenn der Innenraum offen war.</summary>
+    private void NachVerlauf()
+    {
+        Flaeche.Waehlen(null);
+        Karte.Waehlen(null);
+        if (_projekt!.LetzterSchrittDraussen && _innen)
+        {
+            ReiterZeigen(innen: false);
         }
     }
 
@@ -867,6 +1492,10 @@ public sealed class Hauptansicht : UserControl
         {
             PruefungZeigen();
         }
+        if (_kartenAnsicht is not null && _aussenGeprueft.Task.IsCompleted)
+        {
+            AussenPruefungZeigen();
+        }
     }
 
     public bool Dunkel => _dunkel;
@@ -880,14 +1509,39 @@ public sealed class Hauptansicht : UserControl
         var name = new TextBox { Text = "", MaxLength = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
         var stadt = new RadioButton { Content = Schrift.Text(Texte.NeuStadt), GroupName = "art", IsChecked = true };
         var innen = new RadioButton { Content = Schrift.Text(Texte.NeuInnenraum), GroupName = "art" };
-        var leer = new RadioButton { Content = Schrift.Text(Texte.NeuLeer), GroupName = "art", IsEnabled = false };
+        var leer = new RadioButton { Content = Schrift.Text(Texte.NeuLeer), GroupName = "art" };
         var ort = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, IsEnabled = false };
         foreach (var o in _daten.Orte)
         {
             ort.Items.Add(new ComboBoxItem { Content = _daten.OrtName(o), Tag = o });
         }
         ort.SelectedIndex = 0;
-        innen.IsCheckedChanged += (_, _) => ort.IsEnabled = innen.IsChecked == true;
+        var breite = new TextBox { Text = "32", MaxLength = 5, IsEnabled = false };
+        var hoehe = new TextBox { Text = "24", MaxLength = 5, IsEnabled = false };
+        // Sammelliste 219 Punkt 3: Vorschlag fuer den Namen (mit Umlauten), solange der Name nicht selbst getippt wurde.
+        var vorschlag = "";
+        void Vorschlagen()
+        {
+            var art = innen.IsChecked == true ? Texte.NeuInnenraum : leer.IsChecked == true ? Texte.NeuLeer : Texte.NeuStadt;
+            var ortName = ort.SelectedItem is ComboBoxItem { Content: string on } ? on : null;
+            var v = Texte.Vorschlag(art, ortName);
+            if ((name.Text ?? "") == vorschlag)
+            {
+                name.Text = v;
+            }
+            vorschlag = v;
+        }
+        void Umschalten()
+        {
+            ort.IsEnabled = innen.IsChecked == true;
+            breite.IsEnabled = hoehe.IsEnabled = leer.IsChecked == true;
+            Vorschlagen();
+        }
+        innen.IsCheckedChanged += (_, _) => Umschalten();
+        leer.IsCheckedChanged += (_, _) => Umschalten();
+        stadt.IsCheckedChanged += (_, _) => Umschalten();
+        ort.SelectionChanged += (_, _) => Vorschlagen();
+        Vorschlagen();
         var fehler = Schrift.Text("", "Klein", farbe: "Pinsel.red");
         var inhalt = new StackPanel
         {
@@ -897,7 +1551,10 @@ public sealed class Hauptansicht : UserControl
                 Schrift.Text(Texte.NeuName, gewicht: FontWeight.Bold).Fuer(name), name,
                 Schrift.Text(Texte.NeuNameHinweis, "Klein", farbe: "Pinsel.muted"),
                 Schrift.Text(Texte.NeuArt, gewicht: FontWeight.Bold), stadt, innen, leer,
-                Schrift.Text(Texte.NeuOrt, "Klein").Fuer(ort), ort, fehler,
+                Schrift.Text(Texte.NeuOrt, "Klein").Fuer(ort), ort,
+                Schrift.Text(Texte.LeerBreite, "Klein").Fuer(breite), breite,
+                Schrift.Text(Texte.LeerHoehe, "Klein").Fuer(hoehe), hoehe,
+                fehler,
             },
         };
         while (true)
@@ -913,10 +1570,20 @@ public sealed class Hauptansicht : UserControl
                 fehler.Text = Texte.NameUngueltig;
                 continue;
             }
+            (double, double)? groesse = null;
+            if (leer.IsChecked == true)
+            {
+                if (!Zahl(breite, out var bw) || !Zahl(hoehe, out var hw) || !Aussen.GroesseGueltig(bw, hw))
+                {
+                    fehler.Text = Texte.LeerGroesseUngueltig;
+                    continue;
+                }
+                groesse = (bw, hw);
+            }
             try
             {
                 var gewaehlt = innen.IsChecked == true && ort.SelectedItem is ComboBoxItem { Tag: string o } ? o : null;
-                NeuAnlegen(n, gewaehlt);
+                NeuAnlegen(n, gewaehlt, groesse);
                 return;
             }
             catch (IOException e)
@@ -927,10 +1594,10 @@ public sealed class Hauptansicht : UserControl
     }
 
     /// <summary>Neues Projekt anlegen und zeigen (Ort gesetzt: gleich im Innenraum, sonst Draufsicht).</summary>
-    public void NeuAnlegen(string name, string? ort)
+    public void NeuAnlegen(string name, string? ort, (double Breite, double Hoehe)? leer = null)
     {
-        var p = Projekt.Neu(name, _daten!, _ordner, ort);
-        ProjektSetzen(p, ort ?? _daten!.Orte[0], innen: ort is not null);
+        var p = Projekt.Neu(name, _daten!, _ordner, ort, leer);
+        ProjektSetzen(p, ort ?? p.Orte.FirstOrDefault(), innen: ort is not null);
         Melden("Projekt „" + name + "“ angelegt");
     }
 
@@ -949,7 +1616,7 @@ public sealed class Hauptansicht : UserControl
         }
         foreach (var datei in projekte)
         {
-            var k = Schrift.Knopf(Path.GetFileNameWithoutExtension(datei) + " (" + File.GetLastWriteTime(datei).ToString("dd.MM.yyyy HH:mm", De) + ")");
+            var k = Schrift.Knopf(Projekt.AnzeigeName(datei) + " (" + File.GetLastWriteTime(datei).ToString("dd.MM.yyyy HH:mm", De) + ")");
             k.HorizontalAlignment = HorizontalAlignment.Stretch;
             k.Click += (_, _) =>
             {
@@ -1139,9 +1806,16 @@ public sealed class Hauptansicht : UserControl
             SpeichernVonHand();
             e.Handled = true;
         }
-        else if (_innen && e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
+        else if (e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
         {
-            e.Handled = Flaeche.Taste(e.Key, e.KeyModifiers);
+            if (_innen)
+            {
+                e.Handled = Flaeche.Taste(e.Key, e.KeyModifiers);
+            }
+            else if (!_drei)
+            {
+                e.Handled = Karte.Taste(e.Key, e.KeyModifiers);
+            }
         }
     }
 }
