@@ -47,7 +47,7 @@ public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int Stueck
 /// Front zeichnet (Tor, Schild, Geruest, Kreis), liegen auf dieser Front in der Hoehe
 /// Front - y. Nichts davon geht in den Spielstand.
 /// </summary>
-public sealed class StadtSzene
+public sealed partial class StadtSzene
 {
     /// <summary>
     /// Massstab der Stadt (Nachtrag 1 zu P7-12, Wunsch 2): eine Karteneinheit sind 5 m. Damit passen die
@@ -191,12 +191,25 @@ public sealed class StadtSzene
         {
             return fertig;
         }
-        var haeuser = new Dictionary<StadtHaus, Netz>();
-        foreach (var haus in Haeuser)
+        // Phase 13 W3 (Weisung P12-21): mit Vorrat (nur Werkzeug) werden unveraenderte Hausnetze und das Paket-Netz uebernommen
+        var vorrat = _vorrat;
+        lock (vorrat?.Sperre ?? new object())
         {
-            haeuser[haus] = HausNetz(haus);
+            var haeuser = new Dictionary<StadtHaus, Netz>();
+            var neu = new Dictionary<string, (HausEingang, Netz)>();
+            foreach (var haus in Haeuser)
+            {
+                haeuser[haus] = HausNetzMitVorrat(haus, neu);
+            }
+            var stadtNetz = NetzBauen();
+            var gruenNetz = GruenNetzBauen();
+            var (nah, fern) = PaketMitVorrat();
+            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern);
+            if (vorrat is not null)
+            {
+                vorrat.Haeuser = neu;
+            }
         }
-        fertig = new Fertig(NetzBauen(), haeuser, GruenNetzBauen(), Grafik is null ? null : PaketNetzBauen(false), Grafik is null ? null : PaketNetzBauen(true));
         _fertig = fertig;
         return fertig;
     }
@@ -608,7 +621,21 @@ public sealed class StadtSzene
     /// selbst (Teile, Modelle, Laufraster, Signatur) bleibt gleich.
     /// </remarks>
     public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null,
-        Jahreszeit jahreszeit = Jahreszeit.Sommer)
+        Jahreszeit jahreszeit = Jahreszeit.Sommer, Vorrat? vorrat = null)
+    {
+        if (vorrat is null)
+        {
+            return BauenOhneSperre(stadt, stand, grafik, fest, feste, jahreszeit, null);
+        }
+        lock (vorrat.Sperre)
+        {
+            vorrat.Beginnen(grafik);
+            return BauenOhneSperre(stadt, stand, grafik, fest, feste, jahreszeit, vorrat);
+        }
+    }
+
+    private static StadtSzene BauenOhneSperre(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik, string? fest, PyObjekt? feste,
+        Jahreszeit jahreszeit, Vorrat? vorrat)
     {
         var stuecke = new List<ModellStueck>();
         var inhalt = stadt.Inhalt;
@@ -852,11 +879,28 @@ public sealed class StadtSzene
                 haus.Min, haus.Max, ende.X, ende.Y));
         }
         var orte = new List<StadtOrt>();
+        // Phase 13 W3 (Weisung P12-21): mit Vorrat (nur Werkzeug) kommt ein Ort mit genau gleichen Eingaben aus dem letzten Bau
+        var sperrenText = vorrat is null ? "" : SperrenText(baeume.Sperren);
+        var orteNeu = new Dictionary<string, OrtBau>();
         foreach (var ort in stadt.Orte(stand))
         {
             var id = Py.Str(ort["id"]);
             var modell = Py.Str(ort["modell"]);
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
+            string? ortSchluessel = null;
+            var (ortTv, ortSv, ortHv, ortBv, ortFv, ortTuer, ortHaus) = (teile.Count, stuecke.Count, hindernisse.Count, baeume.Gesetzt.Count, alleFenster.Count, tueren.Count, haeuser.Count);
+            if (vorrat is not null)
+            {
+                ortSchluessel = OrtSchluessel(stadt, ort, id, sichtbar, StadtTueren.ModellVersatz(stadt, id), sichtbareOrte.Contains(id), sperrenText);
+                if (vorrat.Orte.TryGetValue(id, out var alt) && (alt.Schluessel == ortSchluessel || (vorrat.FalschUebernehmenFuerTests && orteNeu.Count == 0)))
+                {
+                    OrtEinsetzen(alt, teile, stuecke, hindernisse, baeume, alleFenster, umgefaerbt, tueren, haeuser, orte, signatur);
+                    orteNeu[id] = alt;
+                    vorrat.Uebernommen++;
+                    continue;
+                }
+                vorrat.NeuGebaut++;
+            }
             float ox = (float)Py.F(ort["x"]), oz = (float)Py.F(ort["y"]);
             var rolle = ort["rolle"] as string ?? "";
             var vorher = stuecke.Count;
@@ -904,6 +948,15 @@ public sealed class StadtSzene
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
                 tx, tz, min, max, schild) { StehX = sx, StehZ = sz, Ansicht = ort["ansicht"] as string });
             signatur.Add(id + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
+            if (ortSchluessel is not null)
+            {
+                orteNeu[id] = OrtFesthalten(ortSchluessel, ortTv, ortSv, ortHv, ortBv, ortFv, ortTuer, ortHaus, teile, stuecke, hindernisse, baeume,
+                    alleFenster, umgefaerbt, tueren, haeuser, orte, signatur);
+            }
+        }
+        if (vorrat is not null)
+        {
+            vorrat.Orte = orteNeu;
         }
         if (grafik is not null)
         {
@@ -963,6 +1016,7 @@ public sealed class StadtSzene
         var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
+            _vorrat = vorrat,
             Bruecken = bruecken,
             BrueckenKaesten = brueckenKaesten,
             StrassenEnden = strassenEnden,
@@ -1024,41 +1078,87 @@ public sealed class StadtSzene
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte)
     {
-        var frei = new List<(int, int)>();
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
         var grenze = LaufKoerper * LaufKoerper;
+        // Phase 13 Welle 3 (Weisung P12-21): gleiches Ergebnis wie die Pruefung jeder Zelle gegen jede Linie und jedes
+        // Hindernis, aber jede Linie und jedes Hindernis prueft nur die Zellen in seinem Umkreis (die Bedingungen je Zelle
+        // sind dieselben Ausdruecke; ausserhalb des Umkreises kann keine zutreffen)
+        Vector2 Mitte(int s, int z) => new((float)((s + 0.5) * LaufSchritt), (float)((z + 0.5) * LaufSchritt));
+        (int Von, int Bis) Bereich(double min, double max, int anzahl) =>
+            (Math.Max(0, (int)Math.Floor((min / LaufSchritt) - 0.5) - 1), Math.Min(anzahl - 1, (int)Math.Ceiling((max / LaufSchritt) - 0.5) + 1));
+        var immer = new bool[spalten * zeilen];
+        var gesperrt = new bool[spalten * zeilen];
+        void Linien(List<List<Vector2>> linien, float weite, bool[] ziel)
+        {
+            foreach (var l in linien)
+            {
+                if (l.Count == 0)
+                {
+                    continue;
+                }
+                float x1 = l.Min(p => p.X), x2 = l.Max(p => p.X), z1 = l.Min(p => p.Y), z2 = l.Max(p => p.Y);
+                var (s0, s1) = Bereich(x1 - weite, x2 + weite, spalten);
+                var (r0, r1) = Bereich(z1 - weite, z2 + weite, zeilen);
+                for (var s = s0; s <= s1; s++)
+                {
+                    for (var z = r0; z <= r1; z++)
+                    {
+                        if (!ziel[(s * zeilen) + z] && Kurve.Abstand(Mitte(s, z), l) <= weite)
+                        {
+                            ziel[(s * zeilen) + z] = true;
+                        }
+                    }
+                }
+            }
+        }
+        Linien(strassen, StrassenBreite / 2, immer);
+        Linien(wege, 0.25f, immer);
+        foreach (var o in orte)
+        {
+            var steh = new Vector2(o.StehX, o.StehZ);
+            var (s0, s1) = Bereich(o.StehX - 0.25, o.StehX + 0.25, spalten);
+            var (r0, r1) = Bereich(o.StehZ - 0.25, o.StehZ + 0.25, zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    if (Vector2.Distance(Mitte(s, z), steh) <= 0.25f)
+                    {
+                        immer[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
+        Linien(wasser, (FlussBreite / 2) + 0.1f, gesperrt);
+        Linien(gleise, (GleisBreite / 2) + 0.1f, gesperrt);
+        foreach (var (x1, z1, x2, z2) in hindernisse)
+        {
+            var (s0, s1) = Bereich(Math.Min(x1, x2) - LaufKoerper, Math.Max(x1, x2) + LaufKoerper, spalten);
+            var (r0, r1) = Bereich(Math.Min(z1, z2) - LaufKoerper, Math.Max(z1, z2) + LaufKoerper, zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    var c = Mitte(s, z);
+                    var dx = Math.Max(Math.Max(x1 - c.X, 0), c.X - x2);
+                    var dz = Math.Max(Math.Max(z1 - c.Y, 0), c.Y - z2);
+                    if ((dx * dx) + (dz * dz) < grenze)
+                    {
+                        gesperrt[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
+        var frei = new List<(int, int)>();
         for (var s = 0; s < spalten; s++)
         {
             for (var z = 0; z < zeilen; z++)
             {
-                var c = new Vector2((float)((s + 0.5) * LaufSchritt), (float)((z + 0.5) * LaufSchritt));
-                bool Auf(List<List<Vector2>> linien, float weite) => linien.Any(l => Kurve.Abstand(c, l) <= weite);
-                var immer = Auf(strassen, StrassenBreite / 2) || Auf(wege, 0.25f)
-                    || orte.Any(o => Vector2.Distance(c, new Vector2(o.StehX, o.StehZ)) <= 0.25f);
-                if (!immer)
+                if (immer[(s * zeilen) + z] || !gesperrt[(s * zeilen) + z])
                 {
-                    if (Auf(wasser, (FlussBreite / 2) + 0.1f) || Auf(gleise, (GleisBreite / 2) + 0.1f))
-                    {
-                        continue;
-                    }
-                    var imHaus = false;
-                    foreach (var (x1, z1, x2, z2) in hindernisse)
-                    {
-                        var dx = Math.Max(Math.Max(x1 - c.X, 0), c.X - x2);
-                        var dz = Math.Max(Math.Max(z1 - c.Y, 0), c.Y - z2);
-                        if ((dx * dx) + (dz * dz) < grenze)
-                        {
-                            imHaus = true;
-                            break;
-                        }
-                    }
-                    if (imHaus)
-                    {
-                        continue;
-                    }
+                    frei.Add((s, z));
                 }
-                frei.Add((s, z));
             }
         }
         return new Wegsuche(frei, LaufSchritt);

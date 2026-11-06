@@ -51,6 +51,9 @@ public sealed class Hauptansicht : UserControl
     private bool _dunkel;
     private bool _innen;
     private bool _drei;
+
+    /// <summary>Weisung P12-21 (Teilbau): Vorrat des letzten 3D-Baus, Unveraendertes wird uebernommen.</summary>
+    private readonly StadtSzene.Vorrat _vorrat3D = new();
     private int _pruefStand;
     private int _aussenPruefStand;
     private int _aussenStand;
@@ -971,7 +974,7 @@ public sealed class Hauptansicht : UserControl
         _dreiBaut = true;
         _dreiStatus.Text = Texte.Ansicht3DBaut;
         var uhr = Stopwatch.StartNew();
-        _ = Task.Run(() => Ansicht3D.Bauen(fassung, daten, einstellung)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Task.Run(() => Ansicht3D.Bauen(fassung, daten, einstellung, _vorrat3D)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             _dreiBaut = false;
             Messwerte.Reihe("3D bauen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);

@@ -34,7 +34,7 @@ public sealed class StadtSpiel
     /// <see cref="Festzeit.Heute"/>; ohne (Tests) nie eine Festzeit.
     /// </remarks>
     public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null,
-        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null)
+        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null, StadtSzene.Vorrat? vorrat = null)
     {
         Stadt = stadt;
         Ablauf = ablauf;
@@ -44,7 +44,8 @@ public sealed class StadtSpiel
         Feste = feste;
         _festzeit = festzeit;
         _jahreszeit = jahreszeit;
-        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik, FestJetzt(), feste, JahreszeitJetzt());
+        // Phase 13 W3 (Weisung P12-21): Vorrat nur im Stadtbau-Werkzeug (Teilbau), das Spiel baut ohne
+        Szene = StadtSzene.Bauen(stadt, ablauf.Stand, grafik, FestJetzt(), feste, JahreszeitJetzt(), vorrat);
         var hier = Szene.Ort(Jetzt.Ort);
         FigurX = hier?.StehX ?? 0;
         FigurZ = hier?.StehZ ?? 0;
