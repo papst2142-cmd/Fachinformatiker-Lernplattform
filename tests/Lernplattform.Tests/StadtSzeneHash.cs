@@ -55,6 +55,71 @@ internal static class StadtSzeneHash
         return Convert.ToHexStringLower(h.GetHashAndReset());
     }
 
+    /// <summary>
+    /// Phase 13 Welle 2 (Zusatz Chat zu Weisung P12-17): rechnerunabhaengige Pruefsumme der Stadt. Alles Ganzzahlige
+    /// (Indizes und Anzahl der Ecken jedes Netzes, Tueren mit Ort und Modell, Orte, Laternen mit Nummer und Art, freie Zellen
+    /// des Laufrasters) geht genau in den Hash; die Gleitkommawerte jedes Netzes gehen als Summe und Summe der Betraege
+    /// (double) ein, die der Test mit einer Toleranz von 1e-6 je Ecke vergleicht. So gilt der feste Wert auch auf Rechnern,
+    /// deren Vektor-Befehle im letzten Bit abweichen (GitHub), und jede echte Aenderung an Geometrie oder Ablauf faellt auf.
+    /// </summary>
+    internal static (string Hash, List<(string Netz, int Werte, double Summe, double Betraege)> Summen) StadtRechnerfest(StadtSzene szene)
+    {
+        using var h = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var summen = new List<(string, int, double, double)>();
+        void NetzFest(string name, Netz? netz)
+        {
+            Text(h, name + ":" + (netz is null ? "null" : string.Create(CultureInfo.InvariantCulture, $"{netz.EckenFeld.Length}:{netz.IndizesFeld.Length}")));
+            if (netz is null)
+            {
+                return;
+            }
+            var pi = new byte[netz.IndizesFeld.Length * 4];
+            for (var i = 0; i < netz.IndizesFeld.Length; i++)
+            {
+                BitConverter.TryWriteBytes(pi.AsSpan(i * 4), netz.IndizesFeld[i]);
+            }
+            h.AppendData(pi);
+            double summe = 0, betraege = 0;
+            foreach (var e in netz.EckenFeld)
+            {
+                summe += e;
+                betraege += Math.Abs(e);
+            }
+            summen.Add((name, netz.EckenFeld.Length, summe, betraege));
+        }
+        var f = szene.Vorbereiten();
+        NetzFest("stadt", f.Stadt);
+        foreach (var haus in szene.Haeuser)
+        {
+            NetzFest("haus:" + haus.Id, f.Haeuser[haus]);
+        }
+        NetzFest("gruen", f.Gruen);
+        NetzFest("paket-nah", f.PaketNah);
+        NetzFest("paket-fern", f.PaketFern);
+        foreach (var t in szene.Tueren)
+        {
+            Text(h, "tuer:" + t.Ort + ":" + t.Modell);
+        }
+        foreach (var o in szene.Orte)
+        {
+            Text(h, string.Create(CultureInfo.InvariantCulture, $"ort:{o}"));
+        }
+        foreach (var l in szene.Laternen)
+        {
+            Text(h, string.Create(CultureInfo.InvariantCulture, $"laterne:{l.Nr}:{l.Doppelt}:{Math.Round(l.Ort.X, 1):F1}:{Math.Round(l.Ort.Y, 1):F1}"));
+        }
+        var frei = 0;
+        for (var s = 0; s < 200; s++)
+        {
+            for (var z = 0; z < 200; z++)
+            {
+                frei += szene.Laufraster.IstFrei((s, z)) ? 1 : 0;
+            }
+        }
+        Text(h, string.Create(CultureInfo.InvariantCulture, $"raster:{frei}"));
+        return (Convert.ToHexStringLower(h.GetHashAndReset()), summen);
+    }
+
     internal static string Innen(Innenraum innen)
     {
         using var h = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);

@@ -5,13 +5,16 @@
     "dateien": ["Lernplattform.dll", "Lernplattform.App.dll", "Lernplattform.Core.dll", "Lernplattform.deps.json",
                 "Lernplattform.runtimeconfig.json", "THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_LICENSES.txt", "LICENSE.txt",
                 "Fachinformatiker-Lernplattform.desktop", "Fachinformatiker-Lernplattform.png", ".DirIcon", "AppRun",
-                "setup.ico", "sq.version", "Info.plist", "PkgInfo", "icon.icns", "Lernplattform.icns"]
+                "setup.ico", "sq.version", "Info.plist", "PkgInfo", "icon.icns", "Lernplattform.icns",
+                "Stadtbau.dll", "Stadtbau.App.dll", "Stadtbau.Core.dll", "Stadtbau.deps.json", "Stadtbau.runtimeconfig.json"]
   },
   "zusaetze": [
     {"id": "Velopack-Programme", "version": "1.2.161", "plattformen": ["win-x64", "linux-x64", "osx-arm64", "osx-x64"], "lizenz": "MIT", "quelle": "https://github.com/velopack/velopack (Tag 1.2.161)",
      "beschreibung": "Installations- und Update-Programme von Velopack, beim Packen mit vpk hinzugefuegt",
      "dateien": ["Squirrel.exe", "Update.exe", "Setup.exe", "Fachinformatiker-Lernplattform_ExecutionStub.exe", "Fachinformatiker Lernplattform_ExecutionStub.exe",
-                 "Fachinformatiker-Lernplattform.exe", "UpdateNix", "UpdateMac", "Fachinformatiker-Lernplattform-win-Setup.exe"],
+                 "Fachinformatiker-Lernplattform.exe", "UpdateNix", "UpdateMac", "Fachinformatiker-Lernplattform-win-Setup.exe",
+                 "Fachinformatiker-Stadtbau_ExecutionStub.exe", "Fachinformatiker Stadtbau_ExecutionStub.exe", "Fachinformatiker-Stadtbau.exe",
+                 "Fachinformatiker-Stadtbau-stadtbau-win-Setup.exe", "Fachinformatiker-Stadtbau-win-Setup.exe"],
      "texte": ["Velopack_MIT.txt", "Velopack_Rust_1.2.161.txt"]},
     {"id": "AppImage type2-runtime", "version": "vpk 1.2.161", "plattformen": ["linux-x64"], "lizenz": "MIT", "quelle": "https://github.com/AppImage/type2-runtime",
      "beschreibung": "Startteil jedes AppImage (Linux), von vpk vorangestellt",

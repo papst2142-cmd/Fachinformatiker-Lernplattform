@@ -6,8 +6,15 @@
     <Project Path="src/Lernplattform.Android/Lernplattform.Android.csproj">
       <Deploy />
     </Project>
+    <Project Path="src/Stadtbau.Core/Stadtbau.Core.csproj" />
+    <Project Path="src/Stadtbau.App/Stadtbau.App.csproj" />
+    <Project Path="src/Stadtbau.Desktop/Stadtbau.Desktop.csproj" />
+    <Project Path="src/Stadtbau.Android/Stadtbau.Android.csproj">
+      <Deploy />
+    </Project>
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Lernplattform.Tests/Lernplattform.Tests.csproj" />
+    <Project Path="tests/Stadtbau.Tests/Stadtbau.Tests.csproj" />
   </Folder>
 </Solution>

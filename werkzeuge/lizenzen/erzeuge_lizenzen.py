@@ -35,6 +35,11 @@ ANDROID_SIGNATUR = re.compile(r"^META-INF/([^/]+\.(SF|RSA|EC|DSA)|MANIFEST\.MF)$
 ANDROID_BAU = re.compile(r"^(AndroidManifest\.xml|resources\.arsc|classes[0-9]*\.dex|res/.+)$")
 # eigene Dateien mit allgemeinem Namen zaehlen nur in den von vpk erzeugten Paketen (Pfad "paket:innen")
 NUR_IM_PAKET = {"AppRun", ".DirIcon", "Info.plist", "PkgInfo", "sq.version", "setup.ico"}
+# Phase 13 Welle 2 (Weisung P12-17): dasselbe Werkzeug sammelt auch fuer das Stadtbau-Werkzeug (LIZENZ_PROGRAMM=Stadtbau:
+# Stadtbau.deps.json, Programmdatei Stadtbau.exe, Titel der Texte); ohne Angabe wie bisher die Lernplattform
+PROGRAMM = os.environ.get("LIZENZ_PROGRAMM", "Lernplattform")
+TITEL = "Fachinformatiker Stadtbau" if PROGRAMM == "Stadtbau" else "Fachinformatiker Lernplattform"
+PLATTFORMEN = "Windows und Android" if PROGRAMM == "Stadtbau" else "Windows, Linux, macOS und Android"
 
 
 def fehler(text):
@@ -121,8 +126,8 @@ def ergebnis(art, rid, dateien, pakete, bestand, ohne):
 
 
 def zuordnung_deps(ordner, rid):
-    """Datei (Name) -> (Paket, Version) aus Lernplattform.deps.json."""
-    with open(os.path.join(ordner, "Lernplattform.deps.json"), encoding="utf-8") as d:
+    """Datei (Name) -> (Paket, Version) aus <Programm>.deps.json (Lernplattform oder Stadtbau)."""
+    with open(os.path.join(ordner, PROGRAMM + ".deps.json"), encoding="utf-8") as d:
         deps = json.load(d)
     ziel = deps["targets"][deps["runtimeTarget"]["name"]]
     karte, laufzeit = {}, None
@@ -140,8 +145,8 @@ def zuordnung_deps(ordner, rid):
     if laufzeit is None:
         raise SystemExit("FEHLER: keine Laufzeit in deps.json (nicht self-contained?)")
     host = ("Microsoft.NETCore.App.Host." + rid, laufzeit)
-    karte["Lernplattform"] = host
-    karte["Lernplattform.exe"] = host
+    karte[PROGRAMM] = host
+    karte[PROGRAMM + ".exe"] = host
     # native Symboldateien (z. B. libSkiaSharp.pdb) gehoeren zum Paket der gleichnamigen Bibliothek
     for name, wert in list(karte.items()):
         stamm, endung = os.path.splitext(name)
@@ -267,7 +272,7 @@ def sammeln_android(assets, apk, aus):
         elif pfad.startswith("lib/arm64-v8a/libaot-") and name.endswith(".so"):
             # vorab uebersetzte .NET-Bibliothek (AOT): gehoert zum Bestandteil der Bibliothek
             bibliothek = name[len("libaot-"):-len(".so")]
-            if bibliothek.startswith("Lernplattform."):
+            if bibliothek.startswith(("Lernplattform.", "Stadtbau.")):
                 dateien[pfad] = "eigen"
             elif bibliothek in karte:
                 dateien[pfad] = karte[bibliothek]
@@ -401,11 +406,11 @@ def vereinigen(sammlungen):
 
 
 def uebersicht(alle, wo):
-    z = ["Fachinformatiker Lernplattform - Hinweise zu Fremdbestandteilen",
+    z = [TITEL + " - Hinweise zu Fremdbestandteilen",
          "================================================================",
          "",
          "Diese Liste entsteht beim Bau (werkzeuge/lizenzen/erzeuge_lizenzen.py) aus den Dateien, die mit dem",
-         "Programm ausgeliefert werden: Windows, Linux, macOS und Android. Jede ausgelieferte Datei gehoert zu",
+         "Programm ausgeliefert werden: " + PLATTFORMEN + ". Jede ausgelieferte Datei gehoert zu",
          "genau einem der Bestandteile unten. Lizenz und Quelle stammen aus der Paketbeschreibung (.nuspec) bzw.",
          "aus werkzeuge/lizenzen/bestandteile.json. Die vollstaendigen Lizenztexte stehen in der Datei",
          "THIRD_PARTY_LICENSES.txt neben dem Programm und auf der Release-Seite",
@@ -423,7 +428,7 @@ def uebersicht(alle, wo):
 
 
 def volltexte(alle):
-    z = ["Fachinformatiker Lernplattform - Lizenztexte der Fremdbestandteile", "=" * 66, "",
+    z = [TITEL + " - Lizenztexte der Fremdbestandteile", "=" * (len(TITEL) + 36), "",
          "Uebersicht: THIRD_PARTY_NOTICES.txt. Gleiche Texte stehen nur einmal, spaeter mit Verweis.", ""]
     bekannt = {}
     for i in sorted(alle, key=str.lower):

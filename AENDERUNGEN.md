@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.42.1
+Neben der Lernplattform gibt es jetzt ein eigenes Programm, das Stadtbau-Werkzeug. Damit die beiden sich nicht in die Quere kommen, sucht die Lernplattform bei „Nach Updates suchen“ nur noch nach neuen Fassungen der Lernplattform.
+
+- Erscheint eine neue Fassung des Stadtbau-Werkzeugs, bietet die Lernplattform sie dir nie als Update an, weder am PC noch am Handy.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.42.0
 Im Spiel sieht die Stadt genauso aus wie bisher. Im Hintergrund liest das Spiel sie jetzt aus einer eigenen Stadt-Datei. Das ist die Vorbereitung für das Stadtbau-Werkzeug, mit dem Städte, Häuser und Innenräume künftig ohne Programmieren gebaut werden.
 

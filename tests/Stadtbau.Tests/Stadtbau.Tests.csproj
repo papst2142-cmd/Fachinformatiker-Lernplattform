@@ -9,7 +9,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Velopack" />
     <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Update-Quelle beider Programme (Filter nach Release-Linie) -->
+    <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Stadtbau.Core\Stadtbau.Core.csproj" />

@@ -68,7 +68,7 @@ public sealed class Projekt
 
     /// <summary>Orte, deren Grundriss sich gegenueber der Basis geaendert hat.</summary>
     public IReadOnlyList<string> GeaenderteOrte =>
-        [.. Daten.Orte.Where(o => _grundrisse.TryGetValue(o, out var g) && PythonJson.Text(g) != PythonJson.Text(Original(o)))];
+        [.. Daten.Orte.Where(o => _grundrisse.TryGetValue(o, out var g) && PythonJson.Standard(g) != PythonJson.Standard(Original(o)))];
 
     /// <summary>Wird nach jeder Aenderung, jedem Rueckgaengig und Wiederholen gerufen (Oberflaeche zeichnet neu).</summary>
     public event Action? Geaendert;
@@ -123,9 +123,9 @@ public sealed class Projekt
             throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
         }
         var g = Grundriss(ort);
-        var vorher = PythonJson.Text(g);
+        var vorher = PythonJson.Standard(g);
         var ergebnis = aenderung(g);
-        var nachher = PythonJson.Text(g);
+        var nachher = PythonJson.Standard(g);
         if (vorher != nachher)
         {
             _verlauf.RemoveRange(_zeiger, _verlauf.Count - _zeiger);
@@ -213,20 +213,24 @@ public sealed class Projekt
             grundrisse.Add(ort, _grundrisse[ort]);
         }
         var start = Math.Max(0, _verlauf.Count - GespeicherteSchritte);
-        var verlauf = _verlauf.Skip(start).Select(s => (object?)new PyObjekt
+        // Verlauf: Vorher und Nachher liegen schon als Text in der Form von json.dumps vor (kein neues Lesen beim Speichern)
+        var verlauf = new StringBuilder("[");
+        foreach (var s in _verlauf.Skip(start))
         {
-            { "ort", s.Ort }, { "was", s.Was }, { "vorher", Lesen(s.Vorher) }, { "nachher", Lesen(s.Nachher) },
-        }).ToList();
-        var objekt = new PyObjekt
+            verlauf.Append(verlauf.Length > 1 ? ", " : "").Append("{\"ort\": ").Append(PythonJson.Standard(s.Ort)).Append(", \"was\": ").Append(PythonJson.Standard(s.Was))
+                .Append(", \"vorher\": ").Append(s.Vorher).Append(", \"nachher\": ").Append(s.Nachher).Append('}');
+        }
+        var objekt = new List<(string, string)>
         {
-            { "format", Format }, { "formatversion", FormatVersion }, { "werkzeug", Werkzeug.Kennzeile }, { "name", Name },
-            { "stadt", Daten.Fassung.StadtId }, { "basis", Daten.Fassung.Nummer }, { "ort", Ort }, { "nachricht", Nachricht },
-            { "grundrisse", grundrisse }, { "verlauf", verlauf }, { "zeiger", (long)Math.Max(0, _zeiger - start) },
+            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatVersion)), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
+            ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Daten.Fassung.StadtId)), ("basis", PythonJson.Standard(Daten.Fassung.Nummer)),
+            ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
+            ("verlauf", verlauf.Append(']').ToString()), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
         };
         var text = new StringBuilder("{\n");
         for (var i = 0; i < objekt.Count; i++)
         {
-            text.Append(' ').Append(PythonJson.Standard(objekt[i].Key)).Append(": ").Append(PythonJson.Standard(objekt[i].Value));
+            text.Append(' ').Append(PythonJson.Standard(objekt[i].Item1)).Append(": ").Append(objekt[i].Item2);
             text.Append(i + 1 < objekt.Count ? ",\n" : "\n");
         }
         return PythonJson.Utf8(text.Append("}\n").ToString());
@@ -280,7 +284,7 @@ public sealed class Projekt
             {
                 if (s["ort"] is string ort && daten.Orte.Contains(ort))
                 {
-                    p._verlauf.Add(new Schritt(ort, Py.Str(s["was"]), PythonJson.Text(s["vorher"]), PythonJson.Text(s["nachher"])));
+                    p._verlauf.Add(new Schritt(ort, Py.Str(s["was"]), PythonJson.Standard(s["vorher"]), PythonJson.Standard(s["nachher"])));
                 }
             }
         }

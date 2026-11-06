@@ -254,7 +254,7 @@ def tests_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
     if voll != soll:
         print("FEHLER: Selbsttest Jobs: ci.yml %s, release.yml %s" % (voll, soll))
         return 1
-    print("Selbsttest Jobs: %d tests-Jobs im vollen Lauf, gleich der Liste in release.yml" % len(voll))
+    print("Selbsttest Jobs: %d tests-Jobs im vollen Lauf, gleich der Liste in %s" % (len(voll), os.path.basename(release)))
     return 0
 
 
@@ -289,12 +289,15 @@ def feste_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
     if not block:
         print("FEHLER: Selbsttest feste Jobs: Liste soll='...' in " + release + " nicht gefunden")
         return 1
+    # Matrix-Jobs (tests (...), pakete (<rid>)) prueft tests_jobs_gleich_release bzw. die Matrix; feste Namen wie
+    # "pakete (stadtbau win-x64)" (Phase 13 Welle 2, mit Leerzeichen in der Klammer) zaehlen hier mit
     soll = sorted(z.strip() for z in block.group(1).splitlines()
-                  if z.strip() and not z.strip().startswith(("tests (", "pakete (")))
+                  if z.strip() and not z.strip().startswith("tests (")
+                  and not re.fullmatch(r"pakete \([a-z0-9-]+\)", z.strip()))
     if fest != soll:
         print("FEHLER: Selbsttest feste Jobs: ci.yml %s, release.yml %s" % (fest, soll))
         return 1
-    print("Selbsttest feste Jobs: %s gleich der Liste in release.yml" % ", ".join(fest))
+    print("Selbsttest feste Jobs: %s gleich der Liste in %s" % (", ".join(fest), os.path.basename(release)))
     return 0
 
 
@@ -399,6 +402,9 @@ def selbsttest():
     rot |= wachhund_unter_zeitlimit()
     rot |= tests_jobs_gleich_release()
     rot |= feste_jobs_gleich_release()
+    # Phase 13 Welle 2 (Weisung P12-17): der Werkzeug-Release verlangt denselben vollen Lauf 17/17
+    rot |= tests_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
+    rot |= feste_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
     rot |= selbsttest_feste_jobs_gegenprobe()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)

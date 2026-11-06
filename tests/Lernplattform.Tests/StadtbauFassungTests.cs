@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Lernplattform.Core.Daten;
@@ -152,6 +153,47 @@ public sealed class StadtbauFassungTests
             Assert.Equal(vorher, ausFassung);
         }
     }
+
+    /// <summary>
+    /// Phase 13 Welle 2 (Zusatz Chat zu Weisung P12-17): fester Wert der Stadt aus Fassung 0, der auf jedem Rechner gilt
+    /// (auch auf den GitHub-Rechnern, deren Gleitkomma im letzten Bit abweicht): Ganzzahliges genau, Gleitkomma als Summen
+    /// mit Toleranz 1e-6 je Wert (<see cref="StadtSzeneHash.StadtRechnerfest"/>). Sommer ohne Festzeit.
+    /// </summary>
+    [Fact]
+    public void SzeneRechnerunabhaengig_FesterWert()
+    {
+        var (hash, summen) = StadtSzeneHash.StadtRechnerfest(SzeneAusFassung(null, Jahreszeit.Sommer));
+        var text = string.Join("\n", summen.Select(s => string.Create(CultureInfo.InvariantCulture, $"{s.Netz} {s.Werte} {s.Summe:R} {s.Betraege:R}")));
+        Assert.True(RechnerfestHash == hash, "Hash " + hash + "\n" + text);
+        Assert.Equal(RechnerfestSummen.Length, summen.Count);
+        for (var i = 0; i < summen.Count; i++)
+        {
+            var (netz, werte, summe, betraege) = RechnerfestSummen[i];
+            Assert.Equal(netz, summen[i].Netz);
+            Assert.Equal(werte, summen[i].Werte);
+            Assert.True(Math.Abs(summe - summen[i].Summe) <= 1e-6 * werte && Math.Abs(betraege - summen[i].Betraege) <= 1e-6 * werte,
+                string.Create(CultureInfo.InvariantCulture, $"{netz}: Summe {summen[i].Summe:R} (Soll {summe:R}), Betraege {summen[i].Betraege:R} (Soll {betraege:R})"));
+        }
+    }
+
+    private const string RechnerfestHash = "4cc4f16cff0f3ab7932ff13b19eee0095501695051706f7714ea62bbd5d098bc";
+
+    private static readonly (string Netz, int Werte, double Summe, double Betraege)[] RechnerfestSummen =
+    [
+        ("stadt", 414612, 1372687.1576774246, 1427916.2503907015),
+        ("haus:stellwerk#0", 8424, 30548.10409075847, 31880.311249242914),
+        ("haus:zuhause", 122670, 672228.839014919, 687477.5541591337),
+        ("haus:bitweiche", 171270, 679673.5366078183, 699421.7377756998),
+        ("haus:talheim", 23742, 87682.90385822974, 90516.58266314254),
+        ("haus:moebelhaus", 79902, 357871.5418382092, 367630.3298729811),
+        ("haus:elektromarkt", 279486, 1531297.3462660608, 1563271.824889451),
+        ("haus:amt", 4662, 13803.735612288117, 14317.061688557267),
+        ("haus:bank", 6480, 23133.987797632813, 23853.987797632813),
+        ("haus:kaufhaus", 69048, 411912.6019895077, 421796.02244877815),
+        ("gruen", 573912, 1767293.4133009168, 1853402.6206465403),
+        ("paket-nah", 696384, 2397953.4632801553, 2493027.46411033),
+        ("paket-fern", 27000, 81547.90074151754, 84668.8502959609),
+    ];
 
     [Fact]
     public void SzeneGespieltGleichVorher()

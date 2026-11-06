@@ -30,7 +30,14 @@ fi
 # Die Rueckgabe des Programms selbst zaehlt (eine Datei aus der inneren Huelle), nicht die von
 # xvfb-run: das meldet z. B. 5, wenn nur sein eigenes Aufraeumen misslingt
 rcdatei=$(mktemp)
-befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" dotnet run --no-build -c Release --project src/Lernplattform.Desktop)
+# Phase 13 Welle 2 (Weisung P12-17): Teil "stadtbau" startet das Stadtbau-Werkzeug statt der Lernplattform
+projekt=src/Lernplattform.Desktop
+programm_name=Lernplattform
+if [ "${LERNPLATTFORM_MESSUNG_TEIL:-}" = "stadtbau" ]; then
+  projekt=src/Stadtbau.Desktop
+  programm_name=Stadtbau
+fi
+befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" dotnet run --no-build -c Release --project "$projekt")
 if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
   # Phase 7 W1: Xvfb hat nur den Mesa-Softwaretreiber llvmpipe, den Avalonia fuer OpenGL sperrt;
   # der Start-Test erlaubt ihn, damit der Pflicht-Messpunkt "GL-Zusammenhang erzeugt" messbar ist
@@ -62,7 +69,7 @@ haenger_angaben() {
   pid=""
   for k in $(nachkommen "$wurzel"); do
     name=$(ps -o comm= -p "$k" 2>/dev/null)
-    if [ "${name##*/}" = "Lernplattform" ]; then
+    if [ "${name##*/}" = "$programm_name" ]; then
       pid=$k
     fi
   done
@@ -77,7 +84,7 @@ haenger_angaben() {
       sample "$pid" 5 -mayDie 2>/dev/null | head -n 400 || true
     fi
   fi
-  for ordner in "${LERNPLATTFORM_DATEN:-}" "$HOME/Library/Application Support/Fachinformatiker-Lernplattform" \
+  for ordner in "${LERNPLATTFORM_DATEN:-}" "${LERNPLATTFORM_DATEN:-/nicht}/stadtbau" "$HOME/Library/Application Support/Fachinformatiker-Lernplattform" \
     "$HOME/.local/share/fachinformatiker-lernplattform"; do
     [ -n "$ordner" ] || continue
     for log in haenger.log fehler.log messpunkte.log; do

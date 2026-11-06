@@ -17,6 +17,13 @@ public class ReleaseTests
         return JsonDocument.Parse(datei).RootElement.GetProperty("faelle").Clone();
     }
 
+    /// <summary>
+    /// Wert aus Directory.Build.props, nur aus Gruppen ohne Bedingung (Phase 13 Welle 2: die Gruppe mit Bedingung
+    /// IstStadtbau gilt den Projekten Stadtbau.*, eigene Linie S; release.py liest genauso).
+    /// </summary>
+    private static XElement Wert(XDocument props, string name) =>
+        props.Root!.Elements("PropertyGroup").Where(g => g.Attribute("Condition") is null).Elements(name).Single();
+
     [Fact]
     public void TagRegelWieTabelle()
     {
@@ -63,8 +70,8 @@ public class ReleaseTests
     {
         var props = XDocument.Load(Path.Combine(Pfade.Wurzel, "Directory.Build.props"));
         // gleich release.py props(): Werte ohne Leerraum am Rand
-        var version = props.Descendants("Version").Single().Value.Trim();
-        var stufe = props.Descendants("Stufe").Single().Value.Trim();
+        var version = Wert(props, "Version").Value.Trim();
+        var stufe = Wert(props, "Stufe").Value.Trim();
         var tag = UpdateVersion.ReleaseTag(stufe, version);
         Assert.NotNull(tag);
         // Paketversion nach der Formel in Directory.Build.props (PaketVersion)
@@ -82,7 +89,7 @@ public class ReleaseTests
     public void UpdateFensterZeigtNurNeuInDieserVersion()
     {
         var props = XDocument.Load(Path.Combine(Pfade.Wurzel, "Directory.Build.props"));
-        var anzeige = (props.Descendants("Stufe").Single().Value.Trim() + " " + props.Descendants("Version").Single().Value.Trim()).Trim();
+        var anzeige = (Wert(props, "Stufe").Value.Trim() + " " + Wert(props, "Version").Value.Trim()).Trim();
         var probe = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "probe_release.md")).Replace("\r\n", "\n", StringComparison.Ordinal);
         var abschnitt = Abschnitt(anzeige);
         var fenster = UpdateNotizen.Lesbar(probe);
@@ -108,8 +115,8 @@ public class ReleaseTests
     public void ReleaseTextNenntBeideMacPakete()
     {
         var props = XDocument.Load(Path.Combine(Pfade.Wurzel, "Directory.Build.props"));
-        var stufe = props.Descendants("Stufe").Single().Value.Trim();
-        var version = props.Descendants("Version").Single().Value.Trim();
+        var stufe = Wert(props, "Stufe").Value.Trim();
+        var version = Wert(props, "Version").Value.Trim();
         var name = stufe == "" ? version : stufe + "-" + version;
         var zeilen = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "release", "probe_release.md"))
             .Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');

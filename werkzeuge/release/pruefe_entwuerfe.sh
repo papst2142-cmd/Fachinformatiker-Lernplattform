@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 6 W1 (Weisung P6-2 Punkt 2): Regeln fuer Entwuerfe und Releases vor jedem Hochladen in release.yml.
 # Laeuft nur in den Jobs mit contents: write, weil GitHub Entwuerfe nur mit Schreibrecht auflistet.
-# Aufruf: pruefe_entwuerfe.sh <entwurf|veroeffentlichen> <tag> <commit>
+# Aufruf: pruefe_entwuerfe.sh <entwurf|veroeffentlichen> <tag> <commit> (Tag vS...: Entwuerfe nur des Stadtbau-Werkzeugs)
 # Schreibt die id des Entwurfs (oder leer) nach entwurf_id.txt. Loescht und aendert nichts.
 set -euo pipefail
 ART="$1"; TAG="$2"; SHA="$3"
@@ -17,7 +17,11 @@ def stopp(text):
     sys.exit(1)
 if any(r["tag_name"] == tag and not r["draft"] for r in alle):
     stopp("ein veroeffentlichtes Release %s gibt es schon" % tag)
-entwuerfe = [r for r in alle if r["draft"]]
+# Phase 13 Welle 2 (Weisung P12-17): zwei Linien teilen sich die Releases (Lernplattform vA/vB/v1, Stadtbau-Werkzeug vS);
+# die Regel "hoechstens ein Entwurf" gilt je Linie, die Linie folgt aus dem Tag
+def linie(t):
+    return "stadtbau" if str(t).startswith("vS") else "lernplattform"
+entwuerfe = [r for r in alle if r["draft"] and linie(r["tag_name"]) == linie(tag)]
 if len(entwuerfe) > 1:
     stopp("mehr als ein Entwurf (hoechstens einer; Loeschen macht nur Nico)")
 if entwuerfe and entwuerfe[0]["tag_name"] != tag:

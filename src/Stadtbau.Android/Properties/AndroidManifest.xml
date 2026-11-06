@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+	<!-- Phase 13 Welle 2: Internet nur fuer "An CC senden" -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<application android:label="Fachinformatiker Stadtbau" android:icon="@drawable/Icon" />
+</manifest>
