@@ -450,4 +450,33 @@ public class BlueprintTests
         Assert.Equal(Json(Projekt.Oeffnen(datei, D, ablage).Grundriss("moebelhaus")), Json(neu.Grundriss("moebelhaus")));
         Assert.Equal(p.GeaenderteTeile, neu.GeaenderteTeile);
     }
+
+    [Fact]
+    public void Draufsicht_ZierwegNurAmErstenGebaeude_FundInDerMitte_NichtAufDemSchild()
+    {
+        // Weisung P12-33 (Sammelliste 225): Tuer und Fussweg eines Gebaeudes ohne Ort; die Fund-Markierung liegt in der Mitte
+        var ablage = Daten.NeueAblage();
+        var b = MoebelhausUnveraendert(ablage);
+        var p = LeereStadt(ablage);
+        var (x, y) = MitteAnStrasse(b, 7);
+        var erstes = p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x, y, out _))!;
+        var zweites = p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, x + 8, y, out _))!;
+        var a = p.AussenStand;
+        Assert.Same(Blueprint.Zierweg(a, "moebelhaus"), Blueprint.ZierwegVon(a, erstes));
+        Assert.Null(Blueprint.ZierwegVon(a, zweites));
+        Assert.Null(Blueprint.ZierwegVon(a, Moebelhaus));
+        // Stadt 1: das Stellwerk hat seinen Zierweg
+        var stadt1 = Projekt.Neu("Stadt eins", D, ablage).AussenStand;
+        Assert.Contains(AussenBearbeitung.Alle(stadt1), t => Blueprint.ZierwegVon(stadt1, t.Stelle) is not null);
+        foreach (var f in Blueprint.Pruefen(a))
+        {
+            var stelle = f.Rot ? zweites : erstes;
+            var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, stelle);
+            Assert.Equal(hx + (hw / 2), f.X!.Value, 6);
+            Assert.Equal(hy + (hh / 2), f.Y!.Value, 6);
+            // Gegenprobe: nicht die Ecke oben links (dort steht das Namensschild)
+            Assert.NotEqual(hx, f.X!.Value, 3);
+        }
+        Assert.Equal(2, Blueprint.Pruefen(a).Count);
+    }
 }

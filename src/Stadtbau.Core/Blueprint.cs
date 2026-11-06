@@ -213,6 +213,28 @@ public sealed class Blueprint
     /// Pruefung im Werkzeug (Nachtrag zu Meldung P12-23): das Spiel setzt die Tuer eines Zierwegs an das erste Gebaeude
     /// seines Modells. Steht dasselbe Modell mit Tuer zweimal als Gebaeude ohne Ort, ist das zweite rot.
     /// </summary>
+    /// <summary>
+    /// Zierweg (Tuer und Fussweg) eines Gebaeudes ohne Ort: der des Modells, aber nur am ersten Gebaeude dieses Modells (dort
+    /// zeichnet ihn das Spiel), sonst null.
+    /// </summary>
+    public static PyObjekt? ZierwegVon(PyObjekt aussen, AussenStelle s)
+    {
+        if (s.Art != AussenArt.Gebaeude || Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is not PyObjekt g || g["modell"] is not string modell)
+        {
+            return null;
+        }
+        var erstes = Aussen.Landschaft(aussen).OfType<PyObjekt>().First(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell));
+        return ReferenceEquals(erstes, g) ? Zierweg(aussen, modell) : null;
+    }
+
+    /// <summary>Mitte eines Gebaeudes der Landschaft (Stelle eines Funds: die Ecke oben links traegt das Namensschild).</summary>
+    private static (double X, double Y) GebaeudeMitte(PyObjekt aussen, PyObjekt g)
+    {
+        var nummer = Aussen.Landschaft(aussen).IndexOf(g);
+        var (x, y, w, h) = AussenBearbeitung.HausFlaeche(aussen, new AussenStelle(AussenArt.Gebaeude, nummer));
+        return (x + (w / 2), y + (h / 2));
+    }
+
     public static List<StadtbauFund> Pruefen(PyObjekt aussen)
     {
         var funde = new List<StadtbauFund>();
@@ -222,7 +244,8 @@ public sealed class Blueprint
         {
             foreach (var g in gruppe.Skip(1))
             {
-                funde.Add(new StadtbauFund(Texte.BlueprintSchonDa + " („" + (Zierweg(aussen, gruppe.Key)?["name"] as string ?? gruppe.Key) + "“)", Texte.BlueprintSchonDaTipp, true, Py.F(g["x"]), Py.F(g["y"])));
+                var (mx, my) = GebaeudeMitte(aussen, g);
+                funde.Add(new StadtbauFund(Texte.BlueprintSchonDa + " („" + (Zierweg(aussen, gruppe.Key)?["name"] as string ?? gruppe.Key) + "“)", Texte.BlueprintSchonDaTipp, true, mx, my));
             }
         }
         // gelb: der Innenraum eines gesetzten Blueprints kommt noch nicht ins Spiel (nichts geht verloren: Projekt und Blueprint)
@@ -230,7 +253,8 @@ public sealed class Blueprint
         {
             if (Aussen.Landschaft(aussen).OfType<PyObjekt>().FirstOrDefault(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell)) is { } g)
             {
-                funde.Add(new StadtbauFund(Texte.BauInnenNochNicht(Get(Objekt(bau), "name") as string ?? modell), Texte.BauInnenNochNichtTipp, false, Py.F(g["x"]), Py.F(g["y"])));
+                var (mx, my) = GebaeudeMitte(aussen, g);
+                funde.Add(new StadtbauFund(Texte.BauInnenNochNicht(Get(Objekt(bau), "name") as string ?? modell), Texte.BauInnenNochNichtTipp, false, mx, my));
             }
         }
         return funde;

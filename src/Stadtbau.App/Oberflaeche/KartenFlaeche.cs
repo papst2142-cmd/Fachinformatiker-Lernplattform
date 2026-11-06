@@ -194,7 +194,9 @@ public sealed class KartenFlaeche : Control
             var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, s);
             var r = new Rect(P(hx + Dx(s), hy + Dy(s)), P(hx + hw + Dx(s), hy + hh + Dy(s)));
             var mitInnen = (s.Art == AussenArt.Haus && bearbeitbar.Contains(s.Ort)) || (s.Art == AussenArt.Gebaeude && _projekt.InnenortVon(s) is not null);
-            if (s.Art == AussenArt.Haus && AussenBearbeitung.Zugang(a, s.Ort) is { } z)
+            // Fussweg und Tuer: Haus mit Ort aus dem Zugang, Gebaeude ohne Ort aus dem Zierweg seines Modells (gehoert wie im
+            // Spiel zum ersten Gebaeude dieses Modells; Sammelliste 225, Weisung P12-33)
+            if ((s.Art == AussenArt.Haus ? AussenBearbeitung.Zugang(a, s.Ort) : Blueprint.ZierwegVon(a, s)) is { } z)
             {
                 Linie(ctx, z["weg"], new Pen(Pinsel("#EFEBE2"), StadtSzene.WegBreite * _zoom, lineCap: PenLineCap.Flat), Dx(s), Dy(s));
                 if (z["tuer"] is List<object?> t && t.Count >= 2)

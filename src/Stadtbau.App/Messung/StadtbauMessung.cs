@@ -813,6 +813,26 @@ public static class StadtbauMessung
     /// Hinweis in der Liste, Blueprint in einer leeren Stadt setzen (Messpunkt, 400 ms), Pruefung gruen, Layout und
     /// Namen in allen Groessen, Umbenennen und Loeschen.
     /// </summary>
+    /// <summary>Knoepfe eines Eintrags der Liste "Meine Blueprints", die nicht ganz in seinem Kasten liegen.</summary>
+    private static List<string> KaestenPruefen(Hauptansicht a)
+    {
+        var funde = new List<string>();
+        foreach (var (kasten, knoepfe) in a.BlueprintKaesten)
+        {
+            var innen = new Rect(kasten.Bounds.Size);
+            foreach (var k in knoepfe)
+            {
+                var name = k.Content is TextBlock t ? t.Text : "?";
+                if (k.TranslatePoint(new Point(0, 0), kasten) is not { } p || !k.IsEffectivelyVisible
+                    || !innen.Contains(new Rect(p, k.Bounds.Size).Deflate(0.5)))
+                {
+                    funde.Add("Knopf \"" + name + "\" liegt nicht im Kasten seines Eintrags");
+                }
+            }
+        }
+        return funde;
+    }
+
     private static async Task BlueprintsAsync(Hauptansicht a, Window? f)
     {
         const string Name = "Starttest Möbelhaus";
@@ -839,6 +859,21 @@ public static class StadtbauMessung
         {
             Fund("Blueprint: Liste zeigt " + a.Blueprints.Count.ToString(Inv) + " Eintraege (erwartet 2, einer kaputt)");
         }
+        // Weisung P12-33: jeder Knopf liegt im Kasten seines Eintrags (Gegenprobe: alte Liste ohne Kaesten um die Knoepfe)
+        await BildAsync(a);
+        foreach (var fund in KaestenPruefen(a))
+        {
+            Fund("Blueprint-Liste: " + fund);
+        }
+        Hauptansicht.BlueprintListeAltFuerTests = true;
+        a.BlueprintsZeigen();
+        await BildAsync(a);
+        if (KaestenPruefen(a).Count == 0)
+        {
+            Fund("Blueprint-Liste: Gegenprobe (Knoepfe ausserhalb der Kaesten) ohne Fund");
+        }
+        Hauptansicht.BlueprintListeAltFuerTests = false;
+        a.BlueprintsZeigen();
         var b = a.Blueprints.First(e => e.Vorlage is not null).Vorlage!;
 
         // leere Stadt mit einer Strasse, Blueprint davor setzen (Fussweg wird bis zur Strasse verlaengert)

@@ -103,7 +103,7 @@ public sealed class Hauptansicht : UserControl
     public List<string> AussenAuswahlKnoepfe => [.. _aussenAuswahl.GetLogicalDescendants().OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "")];
     private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
-    private readonly StackPanel _blueprintListe = new() { Spacing = 6 };
+    private readonly StackPanel _blueprintListe = new() { Spacing = 10 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
     private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
     private readonly ComboBox _modellWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -905,9 +905,16 @@ public sealed class Hauptansicht : UserControl
     private static DateTime Jetzt => DateTime.Now;
 
     /// <summary>Liste "Meine Blueprints" neu lesen und zeigen.</summary>
+    /// <summary>Je Eintrag der Liste "Meine Blueprints": sein Kasten und die Knoepfe darin (Start-Test: Knoepfe im Kasten).</summary>
+    public List<(Border Kasten, List<Button> Knoepfe)> BlueprintKaesten { get; } = [];
+
+    /// <summary>Nur Start-Test (Gegenprobe Weisung P12-33): Liste wie vor der Nachbesserung, Knoepfe ausserhalb der Kaesten.</summary>
+    internal static bool BlueprintListeAltFuerTests { get; set; }
+
     public void BlueprintsZeigen()
     {
         _blueprintListe.Children.Clear();
+        BlueprintKaesten.Clear();
         try
         {
             Blueprints = Blueprint.Alle(_ordner);
@@ -925,27 +932,63 @@ public sealed class Hauptansicht : UserControl
         var nurLesen = _projekt is null || _projekt.NurLesen;
         foreach (var e in Blueprints)
         {
-            var eintrag = new StackPanel { Spacing = 4 };
+            // Weisung P12-33: je Eintrag ein Kasten mit Rahmen; oben der Name (antippen = setzen), darunter Umbenennen
+            // und Loeschen nebeneinander. Eine kaputte Datei: Name als Text, roter Hinweis, nur Loeschen.
+            var eintrag = new StackPanel { Spacing = 6 };
+            var knoepfe = new List<Button>();
             if (e.Vorlage is { } b)
             {
                 var setzen = Schrift.Knopf(e.Name).Vorlese(Texte.BlueprintSetzen + " „" + e.Name + "“");
                 setzen.HorizontalAlignment = HorizontalAlignment.Stretch;
+                setzen.Margin = new Thickness(0);
                 setzen.IsEnabled = !nurLesen;
                 setzen.Click += (_, _) => BlueprintSetzenWaehlen(b);
                 eintrag.Children.Add(setzen);
+                knoepfe.Add(setzen);
             }
             else
             {
                 eintrag.Children.Add(Schrift.Text(e.Name, "Klein", FontWeight.Bold));
                 eintrag.Children.Add(Schrift.Text(e.Fehler ?? "", "Klein", farbe: "Pinsel.red"));
             }
-            var umbenennen = Schrift.Knopf(Texte.Umbenennen).Vorlese(Texte.Umbenennen + " „" + e.Name + "“");
-            umbenennen.IsEnabled = e.Vorlage is not null;
-            umbenennen.Click += (_, _) => _ = BlueprintUmbenennenAsync(e);
-            var loeschen = Schrift.Gefahrknopf(Texte.Loeschen).Vorlese(Texte.Loeschen + " „" + e.Name + "“");
+            var loeschen = Klein(Schrift.Gefahrknopf(Texte.Loeschen).Vorlese(Texte.Loeschen + " „" + e.Name + "“"));
             loeschen.Click += (_, _) => _ = BlueprintLoeschenAsync(e);
-            eintrag.Children.Add(new WrapPanel { Children = { umbenennen, loeschen } });
-            _blueprintListe.Children.Add(eintrag);
+            var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,*") };
+            if (e.Vorlage is not null)
+            {
+                var umbenennen = Klein(Schrift.Knopf(Texte.Umbenennen).Vorlese(Texte.Umbenennen + " „" + e.Name + "“"));
+                umbenennen.Click += (_, _) => _ = BlueprintUmbenennenAsync(e);
+                zeile.Children.Add(umbenennen);
+                knoepfe.Add(umbenennen);
+            }
+            Grid.SetColumn(loeschen, 2);
+            zeile.Children.Add(loeschen);
+            knoepfe.Add(loeschen);
+            var kasten = new Border
+            {
+                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(12),
+                BorderThickness = new Thickness(1),
+                Child = BlueprintListeAltFuerTests ? eintrag : new StackPanel { Spacing = 8, Children = { eintrag, zeile } },
+            }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
+            _blueprintListe.Children.Add(kasten);
+            if (BlueprintListeAltFuerTests)
+            {
+                _blueprintListe.Children.Add(zeile);
+            }
+            BlueprintKaesten.Add((kasten, knoepfe));
+        }
+
+        static Button Klein(Button k)
+        {
+            k.Padding = new Thickness(10, 4);
+            if (k.Content is TextBlock t)
+            {
+                t.Groesse("Klein");
+            }
+            k.Margin = new Thickness(0);
+            k.HorizontalAlignment = HorizontalAlignment.Stretch;
+            return k;
         }
     }
 
