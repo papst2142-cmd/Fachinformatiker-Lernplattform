@@ -179,28 +179,6 @@ jobs:
           STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 24 || 14 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_lauf2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_lauf2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_lauf1_versuch${{ github.run_attempt }}.txt
-      # Phase 13 Welle 2 (Weisung P12-17): Start-Test des Werkzeugs (Layoutpruefung PC 1440 x 810 und Tablet
-      # 1280 x 800 hell und dunkel, Namen fuer den Screenreader, Messpunkte 400 ms, Fund 216 rot im Elektromarkt,
-      # Export geprueft). Gleiche Neustart-Regel und gleicher Wachhund wie die anderen Teile.
-      - name: Werkzeug ohne Bedienung (1. Lauf, frischer Datenordner)
-        id: werkzeug1
-        if: always() && steps.bauen_werkzeug.outcome == 'success'
-        timeout-minutes: 10
-        shell: bash
-        env:
-          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
-          STARTTEST_WACHHUND_MINUTEN: 9
-          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug1
-        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
-      - name: Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
-        if: always() && steps.werkzeug1.outputs.rc == '3' && steps.werkzeug1.outputs.zweiter_lauf != 'nein'
-        timeout-minutes: 10
-        shell: bash
-        env:
-          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
-          STARTTEST_WACHHUND_MINUTEN: 9
-          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug2
-        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_werkzeug2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
         id: spiel1
         if: always() && matrix.spiel && steps.bauen.outcome == 'success'
@@ -236,6 +214,35 @@ jobs:
           bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           cat "$datei" || true
           grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
+      # Phase 13 Welle 2 (Weisung P12-17): Start-Test des Werkzeugs (Layoutpruefung PC 1440 x 810 und Tablet
+      # 1280 x 800 hell und dunkel, Namen fuer den Screenreader, Messpunkte 400 ms, Fund 216 rot im Elektromarkt,
+      # Export geprueft). Gleiche Neustart-Regel und gleicher Wachhund wie die anderen Teile. Nach den Teilen der
+      # Lernplattform, weil Windows dafuer die Anzeige auf 1920 x 1080 stellt (Vorgabe des Runners 1024 x 768 ist
+      # kleiner als die PC-Groesse 1440 x 810, Lauf 545); die Lernplattform-Teile laufen so unveraendert.
+      - name: Windows-Anzeige 1920 x 1080 (Werkzeug)
+        id: anzeige_werkzeug
+        if: always() && runner.os == 'Windows' && steps.bauen_werkzeug.outcome == 'success'
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+      - name: Werkzeug ohne Bedienung (1. Lauf, frischer Datenordner)
+        id: werkzeug1
+        if: always() && steps.bauen_werkzeug.outcome == 'success' && (runner.os != 'Windows' || steps.anzeige_werkzeug.outcome == 'success')
+        timeout-minutes: 10
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
+          STARTTEST_WACHHUND_MINUTEN: 9
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug1
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
+      - name: Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: always() && steps.werkzeug1.outputs.rc == '3' && steps.werkzeug1.outputs.zweiter_lauf != 'nein'
+        timeout-minutes: 10
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
+          STARTTEST_WACHHUND_MINUTEN: 9
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug2
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_werkzeug2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1, nur Messung (Plan Abschnitt 3, Weg 1). Mac-Welle (Weisung P11-28): am Mac ist OpenGL jetzt die
       # Vorgabe (der Standard-Start-Test oben misst sie, Rueckfall Ortsliste, weil die CI-Macs kein GL haben); dieser
       # Schritt misst umgekehrt den alten Weg mit dem Notschalter LERNPLATTFORM_MAC_METAL=1. Aendert kein Urteil.
