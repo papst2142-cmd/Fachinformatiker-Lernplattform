@@ -8,7 +8,7 @@ Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft u
 Was du baust, siehst du jetzt in der 3D-Ansicht genau so, wie es später im Spiel aussieht.
 
 - Gehwege an Straßen, Stücke aus dem vollen Katalog und Effekte erscheinen in der 3D-Ansicht, bei Tag und Nacht; ein Effekt leuchtet nachts. Die Grenzen zählen dabei genau das, was gezeichnet wird.
-- Neue Prüfungen draußen: ein Stück aus dem Katalog darf nicht in einem Haus, auf einem Baum, an einer Laterne oder auf der Fahrbahn stehen. Ein Effekt darf nicht in einem Haus stehen.
+- Neue Prüfungen draußen: ein Stück aus dem Katalog darf nicht in einem Haus, auf einem Baum, an einer Laterne, auf der Fahrbahn oder auf dem Gleis stehen. Ein Effekt darf nicht in einem Haus stehen.
 - Die Laternen werden jetzt auch für einen späten Spielstand geprüft, in dem alle Orte zu sehen sind. In der heutigen Stadt 1 ist dabei die Laterne Nr. 20 rot: sie muss an eine freie Stelle geschoben werden, bevor die Stadt exportiert werden kann.
 
 ## S 0.3.0

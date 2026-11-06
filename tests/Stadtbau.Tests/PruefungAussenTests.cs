@@ -74,6 +74,7 @@ public class PruefungAussenTests
         { "Katalog_Baum", "„cc0:car_kit/sedan“ steht auf einem Baum" },
         { "Katalog_Laterne", "„cc0:car_kit/sedan“ steht an einer Laterne" },
         { "Katalog_Fahrbahn", "„cc0:car_kit/sedan“ steht auf der Fahrbahn" },
+        { "Katalog_Gleis", "„cc0:car_kit/sedan“ steht auf dem Gleis" },
     };
 
     /// <summary>Ein Stueck aus dem Katalog draussen (Mitte x, y; Breite und Tiefe 0,3).</summary>
@@ -125,6 +126,7 @@ public class PruefungAussenTests
             a => { Liste(Land(a, BaumNr(a))["punkte"]).Add(P(22, 2)); Kat(a, "car_kit/sedan", P(22.7, 2)); }),
         "Katalog_Laterne" => (a => Kat(a, "car_kit/sedan", P(8.0, 0.75)), a => Kat(a, "car_kit/sedan", P(22, 2))),
         "Katalog_Fahrbahn" => (a => Kat(a, "car_kit/sedan", P(24, 20.8)), a => Kat(a, "car_kit/sedan", P(22, 2))),
+        "Katalog_Gleis" => (a => Kat(a, "car_kit/sedan", P(2, 5.97)), a => Kat(a, "car_kit/sedan", P(2, 6.6))),
         _ => throw new ArgumentException(regel),
     };
 

@@ -815,9 +815,15 @@ public static class StadtbauMessung
         {
             Fund("Pruefungen draussen: Liste zeigt nach der Pruefung noch \"" + Texte.PruefungLaeuft + "\"");
         }
-        if (rotErwartet != text.Contains("Rot: ", StringComparison.Ordinal))
+        // Weisung P12-30: in Stadt 1 (Fassung 0) steht immer der rote Fund Laterne 20; gezaehlt werden die anderen
+        var rotAndere = a.AussenFunde.Any(x => x.Rot && x.Text != Laterne20Fund);
+        if (rotErwartet != rotAndere)
         {
             Fund("Pruefungen draussen: Liste " + (rotErwartet ? "ohne" : "mit") + " rotem Fund: " + text);
+        }
+        if (a.AussenFunde.Any(x => x.Rot) != text.Contains("Rot: ", StringComparison.Ordinal))
+        {
+            Fund("Pruefungen draussen: Liste zeigt die roten Funde nicht richtig: " + text);
         }
     }
 

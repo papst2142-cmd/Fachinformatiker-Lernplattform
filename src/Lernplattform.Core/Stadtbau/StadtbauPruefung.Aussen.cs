@@ -552,6 +552,10 @@ public static partial class StadtbauPruefung
             {
                 funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf der Fahrbahn.", "Stück auf den Gehweg oder neben die Straße schieben.", true, k.X, k.Z));
             }
+            if (szene.Gleise.Any(l => AbstandLinie(r, l) < (StadtSzene.GleisBreite / 2) - Toleranz))
+            {
+                funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf dem Gleis.", "Stück neben das Gleis schieben.", true, k.X, k.Z));
+            }
         }
     }
 
