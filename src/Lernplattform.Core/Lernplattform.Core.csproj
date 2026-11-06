@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lernplattform.Tests" />
+    <InternalsVisibleTo Include="Stadtbau.Tests" />
   </ItemGroup>
   <!-- BEFRISTET bis 1.0 (Weisung P11-29): Schluessel fuer "Bericht senden" nur beim Bau aus der Umgebungsvariable
        FEHLERBERICHT_TOKEN (setzen nur release.yml und der Dispatch-Lauf "voll"), maskiert in obj/.../BerichtSchluessel.g.cs,

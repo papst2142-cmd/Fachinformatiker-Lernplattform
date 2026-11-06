@@ -165,6 +165,22 @@ public class UpdateTests
         Assert.Null(GithubSuche.Auswerten("{\"tag_name\": \"vA0.11.1\", \"assets\": [{\"name\": \"a.apk\"}]}", "A 0.11.0", "pc")!.DateiName);
     }
 
+    /// <summary>
+    /// Phase 13 Welle 2 (Weisung P12-16 Abschnitt 3): ein Release des Stadtbau-Werkzeugs (Tag vS...) ersetzt nie die
+    /// Lernplattform, auch wenn es falsch als neuestes markiert ist. Gegenprobe: dieselbe Antwort mit Tag vA wird angeboten.
+    /// </summary>
+    [Fact]
+    public void HandySuche_IgnoriertWerkzeugRelease_Gegenprobe()
+    {
+        static UpdateAngebot? Angebot(string tag) =>
+            GithubSuche.Auswerten("{\"tag_name\": \"" + tag + "\", \"assets\": [{\"name\": \"a.apk\", \"browser_download_url\": \"u\", \"size\": 3}]}", "A 0.42.1", "android");
+        Assert.Null(Angebot("vS0.50.0"));
+        Assert.Null(Angebot("vS1.0.0"));
+        Assert.NotNull(Angebot("vA0.50.0"));
+        Assert.True(Lernplattform.Core.Update.ReleaseLinie.IstLernplattform("vA0.50.0"));
+        Assert.False(Lernplattform.Core.Update.ReleaseLinie.IstLernplattform("vS0.50.0"));
+    }
+
     // ---- eigene Tabelle: Versionen ------------------------------------------------------------
 
     [Theory]

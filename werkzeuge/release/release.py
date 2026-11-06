@@ -72,8 +72,10 @@ def tag_fuer(stufe, version):
 def props():
     wurzel = ET.parse(os.path.join(WURZEL, "Directory.Build.props")).getroot()
     werte = {}
+    # Phase 13 Welle 2: nur Gruppen ohne Bedingung (die Gruppe mit Bedingung gilt den Projekten Stadtbau.*, Linie S)
+    gruppen = [g for g in wurzel.iter("PropertyGroup") if "Condition" not in g.attrib]
     for name in ("Version", "Stufe"):
-        treffer = [e.text or "" for e in wurzel.iter(name)]
+        treffer = [e.text or "" for g in gruppen for e in g.iter(name)]
         if len(treffer) != 1:
             raise SystemExit("FEHLER: " + name + " nicht genau einmal in Directory.Build.props")
         werte[name] = treffer[0].strip()

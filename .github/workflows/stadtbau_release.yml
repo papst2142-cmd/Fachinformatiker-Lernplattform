@@ -1,0 +1,288 @@
+# Phase 13 Welle 2 (Weisung P12-17, Plan Phase 13): Release des Stadtbau-Werkzeugs (eigene Linie S, Tag vS<Version>,
+# Version <StadtbauVersion> in Directory.Build.props, Text aus AENDERUNGEN_STADTBAU.md). Startet NUR von Hand
+# (workflow_dispatch) und nur durch Chat (mit Nicos OK); CC startet diesen Ablauf nie.
+#   art = entwurf (Vorgabe): baut Windows-Setup mit Feed (Kanal stadtbau-win) und Tablet-APK (Release-Schluessel,
+#         gleicher Fingerabdruck wie die Lernplattform), prueft alles und legt einen ENTWURF an (kein Tag).
+#         Hoechstens ein Werkzeug-Entwurf (die Entwuerfe der Lernplattform zaehlen getrennt).
+#   art = veroeffentlichen: baut nichts neu, prueft den Entwurf gegen die Pruefsummen-Tabelle und veroeffentlicht
+#         ihn NIE als "latest" (make_latest=false): "latest" bleibt immer die Lernplattform. Die Update-Suche der
+#         Lernplattform nimmt nur vA/vB/v1, die des Werkzeugs nur vS (Core/Update/ReleaseLinie.cs, Tests mit Gegenprobe).
+# Abbruch vor jedem Hochladen: nicht von main; Version ergibt keinen Tag; kein voller CI-Lauf 17/17 auf genau diesem
+# Commit; Tag oder veroeffentlichtes Release gibt es schon; mehr als ein Werkzeug-Entwurf oder einer mit anderem Tag;
+# Android ohne Release-Schluessel oder mit anderem Fingerabdruck.
+# Geheimnisse wie release.yml (traegt nur Nico ein); Rechte nur lesen, nur Entwurf/Veroeffentlichen mit contents: write.
+name: Stadtbau-Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      art:
+        description: "entwurf (bauen, Entwurf anlegen) oder veroeffentlichen (vorhandenen Entwurf veroeffentlichen)"
+        type: choice
+        options: [entwurf, veroeffentlichen]
+        default: entwurf
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  AVALONIA_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  pruefen:
+    name: pruefen (main, 17/17, Tag vS, Entwurf)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      anzeige: ${{ steps.version.outputs.anzeige }}
+    steps:
+      - name: Nur von main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "FEHLER: Release nur von refs/heads/main (gestartet von $GITHUB_REF)"; exit 1
+          fi
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Version und Tag
+        id: version
+        run: |
+          python -I werkzeuge/stadtbau/stadtbau_release.py selbsttest
+          python -I werkzeuge/stadtbau/stadtbau_release.py version | tee kennzahlen.txt
+          tag="$(grep -m1 '^TAG=' kennzahlen.txt | cut -d= -f2-)"
+          case "$tag" in vS*) ;; *) echo "FEHLER: Tag '$tag' ist kein Werkzeug-Tag vS"; exit 1 ;; esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+      - name: Voller CI-Lauf 17/17 auf diesem Commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          soll='android (APK, nur arm64-v8a, Testsignatur)
+          pakete (linux-x64)
+          pakete (osx-arm64)
+          pakete (osx-x64)
+          pakete (stadtbau win-x64)
+          pakete (win-x64)
+          tests (macos-15, Einzeltests und Lernteil)
+          tests (macos-15, Spiel und Metal)
+          tests (macos-15-intel, Einzeltests und Spiel)
+          tests (macos-15-intel, Lernteil)
+          tests (macos-15-intel, Metal)
+          tests (ubuntu-latest)
+          tests (windows-latest, Einzeltests)
+          tests (windows-latest, Layout 100)
+          tests (windows-latest, Layout 150)
+          tests (windows-latest, Lernteil und Spiel)
+          sollwerte (Pruefsummen)'
+          soll="$(echo "$soll" | sed 's/^ *//' | sort)"
+          gefunden=0
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do
+            ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success") | .name' | sort)"
+            if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 17/17 gruen"; gefunden=1; break; fi
+            echo "Lauf $id ist nicht 17/17 gruen:"; echo "$ist"
+          done
+          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 17/17 (Dispatch, Stufe voll) auf $GITHUB_SHA"; exit 1; fi
+      - name: Tag gibt es noch nicht
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: bash werkzeuge/release/pruefe_tag.sh fehlt "$TAG"
+
+  windows:
+    name: bauen (stadtbau win-x64)
+    needs: pruefen
+    if: inputs.art == 'entwurf'
+    permissions:
+      contents: read
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Werkzeuge
+        run: dotnet tool install -g vpk --version 1.2.161
+      # BEFRISTET bis 1.0 (Weisung P11-29): Schluessel fuer "An CC senden" nur beim Bau, maskiert, nie in einer Ausgabe
+      - name: Werkzeug-Paket bauen
+        env:
+          PYTHON: python
+          FEHLERBERICHT_TOKEN: ${{ secrets.FEHLERBERICHT_TOKEN }}
+        run: |
+          if [ -z "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLER: Geheimnis FEHLERBERICHT_TOKEN fehlt"; exit 1; fi
+          bash werkzeuge/stadtbau/baue_stadtbau.sh win-x64 stadtbau
+      - uses: actions/upload-artifact@v7
+        with:
+          name: stadtbau-win-x64
+          path: stadtbau/stadtbau-win-x64/
+          if-no-files-found: error
+
+  android:
+    name: android (stadtbau, Release-Schluessel)
+    needs: pruefen
+    if: inputs.art == 'entwurf'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Android-Workload
+        run: dotnet workload install android
+      - name: Schluesseldatei aus dem Geheimnis
+        env:
+          SCHLUESSEL_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$SCHLUESSEL_BASE64" ]; then echo "FEHLER: Geheimnis ANDROID_KEYSTORE_BASE64 fehlt"; exit 1; fi
+          umask 077
+          printf '%s' "$SCHLUESSEL_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+      - name: Werkzeug-APK bauen und Fingerabdruck pruefen
+        env:
+          PYTHON: python
+          STADTBAU_RELEASE_STRENG: "1"
+          LERNPLATTFORM_SCHLUESSEL_DATEI: ${{ runner.temp }}/release.keystore
+          LERNPLATTFORM_SCHLUESSEL_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          LERNPLATTFORM_SCHLUESSEL_PASSWORT: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          LERNPLATTFORM_SCHLUESSEL_KEY_PASSWORT: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          FEHLERBERICHT_TOKEN: ${{ secrets.FEHLERBERICHT_TOKEN }}
+        run: |
+          if [ -z "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLER: Geheimnis FEHLERBERICHT_TOKEN fehlt"; exit 1; fi
+          bash werkzeuge/stadtbau/baue_stadtbau.sh android stadtbau
+      - name: Schluesseldatei loeschen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: stadtbau-android
+          path: stadtbau/stadtbau-android/
+          if-no-files-found: error
+
+  entwurf:
+    name: Entwurf anlegen oder ersetzen
+    needs: [pruefen, windows, android]
+    if: inputs.art == 'entwurf'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v8
+        with:
+          name: stadtbau-win-x64
+          path: stadtbau/stadtbau-win-x64
+      - uses: actions/download-artifact@v8
+        with:
+          name: stadtbau-android
+          path: stadtbau/stadtbau-android
+      - name: Zusammenstellen und pruefen
+        run: python -I werkzeuge/stadtbau/stadtbau_release.py zusammen stadtbau stadtbau/entwurf
+      - name: Entwuerfe pruefen (hoechstens ein Werkzeug-Entwurf, gleicher Tag)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash werkzeuge/release/pruefe_entwuerfe.sh entwurf "${{ needs.pruefen.outputs.tag }}" "$GITHUB_SHA"
+      - name: Entwurf anlegen oder ersetzen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.pruefen.outputs.tag }}
+          TITEL: Fachinformatiker Stadtbau ${{ needs.pruefen.outputs.anzeige }}
+        run: |
+          id="$(cat entwurf_id.txt)"
+          if [ -z "$id" ]; then
+            gh release create "$TAG" stadtbau/entwurf/* --draft --latest=false --target "$GITHUB_SHA" --title "$TITEL" --notes-file stadtbau/release.md
+          else
+            gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets?per_page=100" --paginate --jq '.[].name' | sort > alt.txt
+            ls stadtbau/entwurf | sort > neu.txt
+            if comm -23 alt.txt neu.txt | grep .; then echo "FEHLER: diese Dateien im Entwurf hat der neue Bau nicht"; exit 1; fi
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" -f target_commitish="$GITHUB_SHA" -f name="$TITEL" -F body=@stadtbau/release.md >/dev/null
+            gh release upload "$TAG" stadtbau/entwurf/* --clobber
+          fi
+      - name: Hochgeladene Dateien pruefen (Digest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash werkzeuge/release/pruefe_entwuerfe.sh entwurf "${{ needs.pruefen.outputs.tag }}" "$GITHUB_SHA"
+          id="$(cat entwurf_id.txt)"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets?per_page=100" --paginate --slurp > seiten.json
+          python -I -c "import json; json.dump([a for s in json.load(open('seiten.json')) for a in s], open('assets.json', 'w'))"
+          python -I werkzeuge/release/release.py digest stadtbau/entwurf assets.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: stadtbau-release-entwurf
+          path: |
+            stadtbau/entwurf/
+            stadtbau/release.md
+
+  veroeffentlichen:
+    name: Entwurf veroeffentlichen (nie latest)
+    needs: pruefen
+    if: inputs.art == 'veroeffentlichen'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Entwurf pruefen (gleicher Commit, Dateien gleich der Pruefsummen-Tabelle)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash werkzeuge/release/pruefe_entwuerfe.sh veroeffentlichen "${{ needs.pruefen.outputs.tag }}" "$GITHUB_SHA"
+          id="$(cat entwurf_id.txt)"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$id" --jq '.body' > release.md
+          gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets?per_page=100" --paginate --slurp > seiten.json
+          python -I -c "import json; json.dump([a for s in json.load(open('seiten.json')) for a in s], open('assets.json', 'w'))"
+          python -I werkzeuge/release/release.py digest-text assets.json release.md
+          echo "ID=$id" >> "$GITHUB_ENV"
+      - name: Veroeffentlichen (normales Release, nie latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.pruefen.outputs.tag }}
+        run: |
+          bash werkzeuge/release/pruefe_tag.sh fehlt "$TAG"
+          latest_vorher="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name' || true)"
+          echo "latest vorher: $latest_vorher"
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -F prerelease=false -f make_latest=false -f target_commitish="$GITHUB_SHA" >/dev/null
+          latest_nachher="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name' || true)"
+          echo "latest nachher: $latest_nachher"
+          case "$latest_nachher" in vS*) echo "FEHLER: das Werkzeug-Release ist latest (Nico und Chat melden, nichts loeschen)"; exit 1 ;; esac
+      - name: Tag zeigt auf diesen Commit
+        env:
+          TAG: ${{ needs.pruefen.outputs.tag }}
+        run: bash werkzeuge/release/pruefe_tag.sh zeigt-auf "$TAG" "$GITHUB_SHA"

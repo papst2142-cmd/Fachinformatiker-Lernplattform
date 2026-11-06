@@ -37,6 +37,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Phase 13 Welle 2: das Stadtbau-Werkzeug nutzt dieselben Fenster, Ansagen und Screenreader-Bausteine -->
+    <InternalsVisibleTo Include="Stadtbau.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Lernplattform.Core\Lernplattform.Core.csproj" />
   </ItemGroup>
 </Project>

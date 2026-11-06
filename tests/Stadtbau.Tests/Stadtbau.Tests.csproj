@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Phase 13 Welle 2 (Weisung P12-17): Tests des Stadtbau-Werkzeugs (Format, Pruefregeln rot und gruen, Zaehlung wie
+       das Spiel, Rueckgaengig ueber 200 Schritte, Sicherungen, Export, Senden, Trennung der Releases) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Stadtbau.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Velopack" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Update-Quelle beider Programme (Filter nach Release-Linie) -->
+    <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Stadtbau.Core\Stadtbau.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Phase 13 Welle 2 (Weisung P12-17): Logik des Stadtbau-Werkzeugs ohne Oberflaeche (Projekt, Verlauf, Sicherungen,
+       Bearbeitung, Export, Senden). Format und Pruefung liegen im gemeinsamen Teil Lernplattform.Core/Stadtbau. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Stadtbau.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Stadtbau.Tests" />
+    <InternalsVisibleTo Include="Stadtbau.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lernplattform.Core\Lernplattform.Core.csproj" />
+  </ItemGroup>
+</Project>

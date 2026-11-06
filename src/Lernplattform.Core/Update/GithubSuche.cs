@@ -73,7 +73,8 @@ public static class GithubSuche
         {
             throw new UpdateFehler(UpdateTexte.Unerwartet);
         }
-        if (!UpdateVersion.IstNeuer(tag, aktuell))
+        // Phase 13 W2 (Weisung P12-17): ein Release des Stadtbau-Werkzeugs (vS...) ist nie ein Update der Lernplattform
+        if (ReleaseLinie.IstStadtbau(tag) || !UpdateVersion.IstNeuer(tag, aktuell))
         {
             return null;
         }

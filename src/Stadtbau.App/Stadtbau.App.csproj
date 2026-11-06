@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Phase 13 Welle 2 (Weisung P12-17): Oberflaeche des Stadtbau-Werkzeugs fuer PC und Tablet (eine Codebasis).
+       Nutzt die Bausteine der Lernplattform-Oberflaeche (Schrift, Farben, Screenreader-Namen, Layoutpruefung) und die
+       dort eingebetteten Spielinhalte; die Lernplattform selbst enthaelt vom Werkzeug nichts. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Stadtbau</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lernplattform.App\Lernplattform.App.csproj" />
+    <ProjectReference Include="..\Stadtbau.Core\Stadtbau.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -57,7 +57,8 @@ jobs:
     # Teile er prueft: einzel = Unit-Tests und Python-Pruefungen, lernen/spiel = Start-Test, metal = Messung macOS nur
     # Metal, layout100/layout150 = Layout Windows. ubuntu-latest bleibt ein Job mit allen Teilen (Stufe schnell
     # unveraendert). Hoechstens 5 Mac-Jobs laufen bei GitHub gleichzeitig: darum 2 Jobs fuer macos-15, 3 fuer den
-    # Intel-Mac, dazu die 2 Mac-Pakete. Merge-Tor = alle 16 Jobs des vollen Laufs gruen (release.yml).
+    # Intel-Mac, dazu die 2 Mac-Pakete. Merge-Tor = alle 17 Jobs des vollen Laufs gruen (release.yml; seit Phase 13
+    # Welle 2 mit pakete (stadtbau win-x64)).
     strategy:
       fail-fast: false
       matrix:
@@ -80,6 +81,10 @@ jobs:
       - name: Tests
         if: matrix.einzel
         run: dotnet test --project tests/Lernplattform.Tests -c Release
+      # Phase 13 Welle 2 (Weisung P12-17): Unit-Tests des Stadtbau-Werkzeugs (Projekt, Pruefungen, Grenzen, Export)
+      - name: Tests Stadtbau-Werkzeug
+        if: matrix.einzel
+        run: dotnet test --project tests/Stadtbau.Tests -c Release
       # Welle 4 (Weisung P2-11, R16/A3/A4/F5): Python 0.63.2 liest die Sicherungen fuer die
       # alte App, die der Test BelegDateienFuerPython eben geschrieben hat, und fuehrt sie zusammen
       - uses: actions/checkout@v7
@@ -118,6 +123,12 @@ jobs:
         id: bauen
         if: matrix.einzel || matrix.lernen || matrix.spiel || matrix.metal || matrix.layout100 || matrix.layout150
         run: dotnet build src/Lernplattform.Desktop -c Release
+      # Phase 13 Welle 2 (Weisung P12-17): das Werkzeug ist nur fuer Windows-PC und Android-Tablet; sein Start-Test
+      # (Teil stadtbau) laeuft darum unter Linux (Xvfb wie die Lernplattform) und Windows, im Job mit dem Lernteil
+      - name: Werkzeug bauen
+        id: bauen_werkzeug
+        if: matrix.lernen && runner.os != 'macOS'
+        run: dotnet build src/Stadtbau.Desktop -c Release
       # Phase 11 (Weisung P11-29): Gegenprobe ohne Schluessel, das Programm sendet nichts und meldet "nicht verfuegbar"
       - name: Fehlerbericht-Gegenprobe ohne Schluessel
         if: runner.os == 'Linux' && matrix.einzel
@@ -203,6 +214,35 @@ jobs:
           bash werkzeuge/starttest/lauf.sh 1 "$datei" || true
           cat "$datei" || true
           grep -q "^URTEIL: gruen" "$datei" || { echo "FEHLER: Spiel ohne OpenGL nicht gruen"; exit 1; }
+      # Phase 13 Welle 2 (Weisung P12-17): Start-Test des Werkzeugs (Layoutpruefung PC 1440 x 810 und Tablet
+      # 1280 x 800 hell und dunkel, Namen fuer den Screenreader, Messpunkte 400 ms, Fund 216 rot im Elektromarkt,
+      # Export geprueft). Gleiche Neustart-Regel und gleicher Wachhund wie die anderen Teile. Nach den Teilen der
+      # Lernplattform, weil Windows dafuer die Anzeige auf 1920 x 1080 stellt (Vorgabe des Runners 1024 x 768 ist
+      # kleiner als die PC-Groesse 1440 x 810, Lauf 545); die Lernplattform-Teile laufen so unveraendert.
+      - name: Windows-Anzeige 1920 x 1080 (Werkzeug)
+        id: anzeige_werkzeug
+        if: always() && runner.os == 'Windows' && steps.bauen_werkzeug.outcome == 'success'
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+      - name: Werkzeug ohne Bedienung (1. Lauf, frischer Datenordner)
+        id: werkzeug1
+        if: always() && steps.bauen_werkzeug.outcome == 'success' && (runner.os != 'Windows' || steps.anzeige_werkzeug.outcome == 'success')
+        timeout-minutes: 10
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
+          STARTTEST_WACHHUND_MINUTEN: 9
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug1
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
+      - name: Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: always() && steps.werkzeug1.outputs.rc == '3' && steps.werkzeug1.outputs.zweiter_lauf != 'nein'
+        timeout-minutes: 10
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: stadtbau
+          STARTTEST_WACHHUND_MINUTEN: 9
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug2
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_werkzeug2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1, nur Messung (Plan Abschnitt 3, Weg 1). Mac-Welle (Weisung P11-28): am Mac ist OpenGL jetzt die
       # Vorgabe (der Standard-Start-Test oben misst sie, Rueckfall Ortsliste, weil die CI-Macs kein GL haben); dieser
       # Schritt misst umgekehrt den alten Weg mit dem Notschalter LERNPLATTFORM_MAC_METAL=1. Aendert kein Urteil.
@@ -324,6 +364,12 @@ jobs:
         run: |
           echo "Rueckgabe eines Layout-Laufs unbekannt, kein Urteil moeglich (100 %: '${{ steps.layout100.outputs.rc }}', 150 %: '${{ steps.layout150.outputs.rc }}')"
           exit 1
+      - name: Werkzeug Rueckgabe pruefen
+        if: always() && steps.werkzeug1.outcome == 'success' && steps.werkzeug1.outputs.rc != '0' && steps.werkzeug1.outputs.rc != '3'
+        shell: bash
+        run: |
+          echo "Rueckgabe des 1. Laufs des Werkzeugs unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.werkzeug1.outputs.rc }}')"
+          exit 1
       - name: Spielansichten Rueckgabe pruefen
         if: always() && steps.spiel1.outcome == 'success' && steps.spiel1.outputs.rc != '0' && steps.spiel1.outputs.rc != '3'
         shell: bash
@@ -333,7 +379,7 @@ jobs:
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.42.0 -> A 0.42.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.42.1 -> A 0.42.2 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # nur Stufe voll
     if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
@@ -373,16 +419,16 @@ jobs:
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.42.0
-          path: pakete/feed-A-0.42.0/
+          name: paket-${{ matrix.rid }}-A-0.42.1
+          path: pakete/feed-A-0.42.1/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.42.1
-          path: pakete/feed-A-0.42.1/
+          name: updateprobe-${{ matrix.rid }}-A-0.42.2
+          path: pakete/feed-A-0.42.2/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.42.0-tar
+          name: appimage-linux-x64-A-0.42.1-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -412,6 +458,39 @@ jobs:
           if [ "$rc" != "$soll" ]; then echo "FEHLER: Bericht-Probe Rueckgabe $rc, erwartet $soll"; cat "$DATEN"/fehler.log 2>/dev/null; exit 1; fi
           if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
           echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
+
+  pakete-stadtbau:
+    # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
+    # stadtbau-win, Kennung Fachinformatiker-Stadtbau), jede Datei in der Lizenzliste; nichts hochgeladen.
+    name: pakete (stadtbau win-x64)
+    # nur Stufe voll
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    runs-on: windows-latest
+    timeout-minutes: 30
+    # BEFRISTET bis 1.0 (Weisung P11-29/P11-30): Schluessel fuer "An CC senden" nur im Dispatch-Lauf, nie in PR-Laeufen
+    env:
+      FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Werkzeuge
+        shell: bash
+        run: dotnet tool install -g vpk --version 1.2.161
+      - name: Werkzeug-Paket bauen (Setup, Feed, Lizenzen)
+        shell: bash
+        env:
+          PYTHON: python
+        run: bash werkzeuge/stadtbau/baue_stadtbau.sh win-x64 stadtbau
+      - uses: actions/upload-artifact@v7
+        with:
+          name: stadtbau-win-x64
+          path: stadtbau/stadtbau-win-x64/
+          if-no-files-found: error
 
   sollwerte:
     # Welle Sammelliste 217 (Weisung P12-14, Nico 1a 2a 3a 4a 5a): die Vergleichswerte G1-G52 (tests/Vergleich),
@@ -452,7 +531,8 @@ jobs:
     name: android (APK, nur arm64-v8a, Testsignatur)
     # nur Stufe voll; wartet auf pakete, weil es am Ende den Release-Entwurf zusammenstellt. Die APK
     # baut und prueft es auch bei rotem pakete-Teil (!cancelled), nur das Zusammenstellen braucht pakete gruen.
-    needs: pakete
+    # Phase 13 Welle 2: wartet auch auf das Werkzeug-Paket, um den Werkzeug-Release zusammenzustellen
+    needs: [pakete, pakete-stadtbau]
     if: "!cancelled() && ((github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))))"
     runs-on: ubuntu-latest
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
@@ -472,10 +552,10 @@ jobs:
       - name: APK bauen
         id: apkbau
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.42.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.42.0 installierbar.
-      - name: Update-APK A 0.42.1 bauen
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.42.1 -o apk-update
+      # Spike D (A4b): zweite APK A 0.42.2 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.42.1 installierbar.
+      - name: Update-APK A 0.42.2 bauen
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.42.2 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -525,17 +605,17 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1004200'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1004201'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1004201'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1004202'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         with:
-          name: lernplattform-android-A-0.42.0
+          name: lernplattform-android-A-0.42.1
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-android-A-0.42.1
+          name: updateprobe-android-A-0.42.2
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
@@ -577,6 +657,42 @@ jobs:
           path: |
             release/entwurf/
             release/release.md
+      # Phase 13 Welle 2 (Weisung P12-17): Tablet-APK des Werkzeugs (io.github.papst2142cmd.stadtbau, Testschluessel),
+      # dann der Werkzeug-Release aus beiden Teilen (eigene Linie S, nie ein Feed oder Paket der Lernplattform)
+      - name: Werkzeug-APK bauen (Testschluessel)
+        id: werkzeug_apk
+        if: "!cancelled() && steps.apkbau.outcome == 'success'"
+        env:
+          PYTHON: python
+        run: bash werkzeuge/stadtbau/baue_stadtbau.sh android stadtbau
+      - uses: actions/upload-artifact@v7
+        if: "!cancelled() && steps.werkzeug_apk.outcome == 'success'"
+        with:
+          name: stadtbau-android-S-0.1.0
+          path: stadtbau/stadtbau-android/
+          if-no-files-found: error
+      - uses: actions/download-artifact@v8
+        if: "!cancelled() && needs.pakete-stadtbau.result == 'success' && steps.werkzeug_apk.outcome == 'success'"
+        with:
+          name: stadtbau-win-x64
+          path: stadtbau/stadtbau-win-x64
+      - name: Werkzeug-Release zusammenstellen und pruefen
+        if: "!cancelled() && steps.werkzeug_apk.outcome == 'success'"
+        run: |
+          if [ "${{ needs.pakete-stadtbau.result }}" != "success" ]; then
+            echo "FEHLER: pakete (stadtbau win-x64) nicht gruen (${{ needs.pakete-stadtbau.result }}), kein Werkzeug-Release"; exit 1
+          fi
+          python -I werkzeuge/stadtbau/stadtbau_release.py selbsttest
+          python -I werkzeuge/stadtbau/stadtbau_release.py zusammen stadtbau stadtbau/entwurf
+          echo "===== ANFANG release.md (Werkzeug) ====="; cat stadtbau/release.md; echo "===== ENDE release.md (Werkzeug) ====="
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: stadtbau-release-entwurf
+          path: |
+            stadtbau/entwurf/
+            stadtbau/release.md
+          if-no-files-found: ignore
       # A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm (Android 14, x86_64). Drei
       # Probe-APKs n, n+1, n+2 (-p:UpdateProbe=true, nur hier, nie ausgeliefert) mit dem Testschluessel dieses Laufs;
       # die App sucht ueber einen Testserver auf dem Runner, laedt, prueft (Pruefsummen, Paket, Zertifikat, Versionscode)

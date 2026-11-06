@@ -300,6 +300,15 @@ public sealed class Innenraum
     public static Innenraum AusGrundriss(string ansicht, PyObjekt gebaeude, GrafikBibliothek? grafik) =>
         new(ansicht, OrtFuer(ansicht) ?? ansicht, gebaeude, [], grafik, null);
 
+    /// <summary>
+    /// Phase 13 Welle 2 (Weisung P12-17): Innenraum aus einem bearbeiteten Grundriss mit den Personen des Orts (Daten mit
+    /// "platz") und der Kleidung des Kaufhauses (<paramref name="kleider"/> = geschaefte.json), wie das Spiel ihn beim
+    /// Betreten eines Geschaefts oder Schalters baut (Stadtbau-Werkzeug, gemeinsame Pruefung). Aendert nichts am Spiel.
+    /// </summary>
+    public static Innenraum AusGrundrissMitPersonen(string ansicht, PyObjekt gebaeude, IEnumerable<PyObjekt> personen, GrafikBibliothek? grafik,
+        PyObjekt? kleider = null) =>
+        new(ansicht, OrtFuer(ansicht) ?? ansicht, gebaeude, [.. personen.Select(p => Person(p, false))], grafik, null, kleider);
+
     /// <summary>Ort (Python site) zur Ansicht eines Stadt-Orts; null = (noch) kein Innenraum.</summary>
     public static string? OrtFuer(string? ansicht) => ansicht switch
     {

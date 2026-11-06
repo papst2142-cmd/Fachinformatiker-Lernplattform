@@ -9,8 +9,9 @@
 #         Dateien genau der Pruefsummen-Tabelle im Text entsprechen, und veroeffentlicht ihn als normales
 #         Release (Entscheidung 3a); erst dabei legt GitHub den Tag auf diesen Commit an.
 # Abbruch (vor jedem Hochladen; Entwurfsregeln in werkzeuge/release/pruefe_entwuerfe.sh): nicht von refs/heads/main gestartet; Version ergibt keinen gueltigen Tag
-# (T1, Sammelliste 73); kein erfolgreicher voller CI-Lauf 16/16 (workflow_dispatch, Stufe voll; bis A 0.32.10 8/8,
-# Phase 11 FW10 mit Intel-Mac 10/10, seit Weisung P11-38 lange Jobs in parallelen Teilen 16/16) auf genau
+# (T1, Sammelliste 73); kein erfolgreicher voller CI-Lauf 17/17 (workflow_dispatch, Stufe voll; bis A 0.32.10 8/8,
+# Phase 11 FW10 mit Intel-Mac 10/10, seit Weisung P11-38 lange Jobs in parallelen Teilen 16/16, seit Phase 13 Welle 2
+# mit dem Werkzeug-Paket 17/17) auf genau
 # diesem Commit; Tag oder veroeffentlichtes Release gibt es schon (vor dem Veroeffentlichen noch einmal geprueft,
 # danach muss der neue Tag auf genau diesen Commit zeigen, werkzeuge/release/pruefe_tag.sh); mehr als ein Entwurf oder ein Entwurf mit
 # anderem Tag; Android ohne Release-Schluessel oder mit anderem Fingerabdruck als
@@ -48,7 +49,7 @@ env:
 
 jobs:
   pruefen:
-    name: pruefen (main, 16/16, Tag, Entwurf)
+    name: pruefen (main, 17/17, Tag, Entwurf)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,7 +76,7 @@ jobs:
           python -I werkzeuge/release/release.py version | tee kennzahlen.txt
           echo "tag=$(grep -m1 '^TAG=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
           echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
-      - name: Voller CI-Lauf 16/16 auf diesem Commit
+      - name: Voller CI-Lauf 17/17 auf diesem Commit
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -83,6 +84,7 @@ jobs:
           pakete (linux-x64)
           pakete (osx-arm64)
           pakete (osx-x64)
+          pakete (stadtbau win-x64)
           pakete (win-x64)
           tests (macos-15, Einzeltests und Lernteil)
           tests (macos-15, Spiel und Metal)
@@ -99,10 +101,10 @@ jobs:
           gefunden=0
           for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do
             ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success") | .name' | sort)"
-            if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 16/16 gruen"; gefunden=1; break; fi
-            echo "Lauf $id ist nicht 16/16 gruen:"; echo "$ist"
+            if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 17/17 gruen"; gefunden=1; break; fi
+            echo "Lauf $id ist nicht 17/17 gruen:"; echo "$ist"
           done
-          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 16/16 (Dispatch, Stufe voll) auf $GITHUB_SHA"; exit 1; fi
+          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 17/17 (Dispatch, Stufe voll) auf $GITHUB_SHA"; exit 1; fi
       - name: Tag gibt es noch nicht
         env:
           TAG: ${{ steps.version.outputs.tag }}
