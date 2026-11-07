@@ -151,6 +151,22 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>Start-Test: der Schalter „Eis im Winter“.</summary>
     internal CheckBox EisSchalterFuerTests => _eisImWinter;
     private readonly ComboBox _modellWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
+
+    /// <summary>Welle K1 (Weisung P12-55): Radius der naechsten Kurve 90° (1, 2 oder 3, Vorgabe 2).</summary>
+    private readonly ComboBox _kurvenRadius = new()
+    {
+        HorizontalAlignment = HorizontalAlignment.Stretch,
+        ItemsSource = new[] { "1", "2", "3" },
+        SelectedIndex = 1,
+    };
+
+    /// <summary>Start-Test: Auswahl Radius der Kurve 90°.</summary>
+    internal ComboBox KurvenRadiusWahl => _kurvenRadius;
+
+    /// <summary>Start-Test: die Knoepfe Kurve 90°, Kurve 45°, S-Kurve.</summary>
+    internal List<Button> KurvenKnoepfe { get; } = [];
+
+    private double KurvenRadiusGewaehlt => _kurvenRadius.SelectedIndex switch { 0 => 1, 2 => 3, _ => 2 };
     private readonly TextBlock _dreiStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
     private readonly TextBlock _dreiGrenzText = Schrift.Text(Texte.GrenzenNochNicht, "Klein");
     private readonly ProgressBar _dreiGrenzBalken = new() { Minimum = 0, Maximum = 100, Height = 10, MinHeight = 10 };
@@ -688,6 +704,35 @@ public sealed partial class Hauptansicht : UserControl
                 KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne),
             },
         };
+        // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
+        Button KurvenKnopf(string text, string tipp, Func<string> kennung)
+        {
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(tipp + " " + Texte.SetzenKnopfTipp);
+            k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(AussenArt.Kurve, kennung()));
+            KurvenKnoepfe.Add(k);
+            return k;
+        }
+        var kurven = new WrapPanel
+        {
+            Children =
+            {
+                KurvenKnopf(Texte.Kurve90, Texte.Kurve90Tipp, () => Strassenkurve.Kennung(Strassenkurve.Bogen, 90, KurvenRadiusGewaehlt, false)),
+                KurvenKnopf(Texte.Kurve45, Texte.Kurve45Tipp, () => Strassenkurve.Kennung(Strassenkurve.Bogen, 45, 2, false)),
+                KurvenKnopf(Texte.SKurve, Texte.SKurveTipp, () => Strassenkurve.Kennung(Strassenkurve.S, 45, 2, false)),
+            },
+        };
+        var radiusTitel = Schrift.Text(Texte.KurvenRadius, "Klein").Fuer(_kurvenRadius);
+        _kurvenRadius.Vorlese(Texte.KurvenRadius).Mit(Texte.KurvenRadiusTipp);
+        _kurvenRadius.SelectionChanged += (_, _) =>
+        {
+            // eine Kurve 90° im Setzen nimmt den neuen Radius gleich mit
+            if (Karte.SetzenArt == AussenArt.Kurve && Strassenkurve.Lesen(Karte.SetzenModell) is { Form: Strassenkurve.Bogen, Winkel: 90 } k)
+            {
+                Karte.SetzenModell = Strassenkurve.Kennung(k.Form, 90, KurvenRadiusGewaehlt, k.Gespiegelt);
+                _setzenName = Strassenkurve.Name(k.Form, 90, KurvenRadiusGewaehlt);
+                AussenAuswahlZeigen();
+            }
+        };
         // S 0.8.0 (Weisung P12-47): Wasser, jeder Knopf mit Tipp
         Button WasserKnopf(string text, string tipp, AussenArt art, string? form = null)
         {
@@ -710,7 +755,7 @@ public sealed partial class Hauptansicht : UserControl
             Spacing = 8,
             Children =
             {
-                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, kurven, radiusTitel, _kurvenRadius, VollerKatalogKnopf(false),
                 Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
@@ -891,6 +936,7 @@ public sealed partial class Hauptansicht : UserControl
             AussenArt.Teich when modell == "rund" => Texte.TeichRund,
             AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
+            AussenArt.Kurve when Strassenkurve.Lesen(modell) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius),
             _ => KatalogName(art),
         };
         // zeigt beim Setzen den Knopf "Drehen" (Strasse, Park, Katalog-Stueck)
@@ -1024,10 +1070,23 @@ public sealed partial class Hauptansicht : UserControl
         if (_projekt is not null && !_projekt.NurLesen && KartenFlaeche.DrehbarBeimSetzen(Karte.SetzenArt))
         {
             // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): schon beim Setzen drehen, ein Knopf statt einer versteckten Geste
-            var lage = Karte.SetzenArt == AussenArt.Strasse ? (Karte.SetzenDreh % 2 == 0 ? Texte.SetzenWaagerecht : Texte.SetzenSenkrecht) : Texte.SetzenGedreht(Karte.SetzenDreh);
+            var lage = Karte.SetzenArt switch
+            {
+                AussenArt.Strasse => Karte.SetzenDreh % 2 == 0 ? Texte.SetzenWaagerecht : Texte.SetzenSenkrecht,
+                AussenArt.Kurve => Texte.SetzenKurveLage(Karte.SetzenDreh, Karte.SetzenGespiegelt),
+                _ => Texte.SetzenGedreht(Karte.SetzenDreh),
+            };
             var setzenDrehen = Schrift.Knopf(Texte.Drehen, betont: true).Mit(Texte.DrehenTipp);
             setzenDrehen.Click += (_, _) => Karte.SetzenDrehen();
             _aussenAuswahl.Children.Add(Schrift.Text(lage, "Klein"));
+            if (Karte.SetzenArt == AussenArt.Kurve)
+            {
+                // Welle K1: Spiegeln (Taste M) neben Drehen
+                var setzenSpiegeln = Schrift.Knopf(Texte.Spiegeln).Mit(Texte.SpiegelnTipp);
+                setzenSpiegeln.Click += (_, _) => Karte.SetzenSpiegeln();
+                _aussenAuswahl.Children.Add(new WrapPanel { Children = { setzenDrehen, setzenSpiegeln } });
+                return;
+            }
             _aussenAuswahl.Children.Add(setzenDrehen);
             return;
         }
@@ -1060,12 +1119,17 @@ public sealed partial class Hauptansicht : UserControl
             zeilen.Add((Texte.StegLaenge, kw));
             zeilen.Add((Texte.StegBreite, kt));
         }
+        var istKurve = AussenBearbeitung.IstKurve(a, s);
         if (s.Art == AussenArt.Strasse)
         {
             gehweg = Feld(AussenBearbeitung.Gehweg(a, s));
-            laenge = Feld(AussenBearbeitung.Laenge(a, s));
             zeilen.Add((Texte.GehwegBreite, gehweg));
-            zeilen.Add((Texte.Laenge, laenge));
+            if (!istKurve)
+            {
+                // Welle K1: eine Kurve hat eine feste Laenge (Radius und Winkel)
+                laenge = Feld(AussenBearbeitung.Laenge(a, s));
+                zeilen.Add((Texte.Laenge, laenge));
+            }
         }
         if (s.Art == AussenArt.Paketplatz)
         {
@@ -1111,9 +1175,12 @@ public sealed partial class Hauptansicht : UserControl
             }
             var ng = 0.0;
             var nl = 0.0;
-            if (gehweg is not null && laenge is not null)
+            if (gehweg is not null)
             {
                 Zahl(gehweg, out ng);
+            }
+            if (laenge is not null)
+            {
                 Zahl(laenge, out nl);
             }
             _projekt.AussenAendern("Werte", aa =>
@@ -1121,7 +1188,7 @@ public sealed partial class Hauptansicht : UserControl
                 if (s.Art == AussenArt.Strasse)
                 {
                     AussenBearbeitung.GehwegSetzen(aa, s, ng);
-                    if (Math.Abs(nl - AussenBearbeitung.Laenge(aa, s)) > 0.005)
+                    if (laenge is not null && Math.Abs(nl - AussenBearbeitung.Laenge(aa, s)) > 0.005)
                     {
                         AussenBearbeitung.LaengeSetzen(aa, s, nl);
                     }
@@ -1155,7 +1222,37 @@ public sealed partial class Hauptansicht : UserControl
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Karte.Loeschen();
         weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;
-        _aussenAuswahl.Children.Add(new WrapPanel { Children = { drehen, neu, kopie, weg } });
+        var reiheKnoepfe = new WrapPanel { Children = { drehen, neu, kopie, weg } };
+        if (istKurve)
+        {
+            // Welle K1: Spiegeln nur an Kurven (Taste M)
+            var spiegeln = Schrift.Knopf(Texte.Spiegeln).Mit(Texte.SpiegelnTipp);
+            spiegeln.Click += (_, _) => Karte.Spiegeln();
+            reiheKnoepfe.Children.Insert(1, spiegeln);
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.KurveLaengeFest, "Klein", farbe: "Pinsel.muted"));
+        }
+        _aussenAuswahl.Children.Add(reiheKnoepfe);
+        if (AussenBearbeitung.RadiusWaehlbar(a, s))
+        {
+            // Welle K1: Radius am gewaehlten Eckpunkt des Flusses (2, 3 oder 5)
+            var jetzt = AussenBearbeitung.FlussRadius(a, s);
+            var radien = new WrapPanel();
+            foreach (var r in Strassenkurve.FlussRadien)
+            {
+                var text = r.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
+                var k = Schrift.Knopf(text, betont: Math.Abs(r - jetzt) < 1e-9).Vorlese(Texte.RadiusHier + " " + text).Mit(Texte.RadiusHierTipp);
+                var wert = r;
+                k.Click += (_, _) =>
+                {
+                    _projekt.AussenAendern(Texte.RadiusHier, aa => AussenBearbeitung.FlussRadiusSetzen(aa, s, wert));
+                    Melden(Texte.RadiusHier + " " + text);
+                    Karte.Waehlen(s);
+                };
+                radien.Children.Add(k);
+            }
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.RadiusHier, "Klein"));
+            _aussenAuswahl.Children.Add(radien);
+        }
         if (AussenBearbeitung.MitEckpunkten(s.Art))
         {
             // S 0.8.0: Eckpunkte von Teich und Fluss dazu und weg (Ziehen geht direkt an den Griffen)

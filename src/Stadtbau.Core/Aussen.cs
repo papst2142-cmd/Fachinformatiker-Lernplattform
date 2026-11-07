@@ -28,6 +28,12 @@ public enum AussenArt
     /// </summary>
     Blueprint,
 
+    /// <summary>
+    /// Welle K1 (S 0.10.0, Weisung P12-55): nur zum Setzen einer Kurve (Kennung <see cref="Lernplattform.Core.Stadtbau.Strassenkurve.Kennung"/>
+    /// als Modell); das gesetzte Stueck ist danach eine <see cref="Strasse"/> mit dem Feld <c>kurve</c>.
+    /// </summary>
+    Kurve,
+
     /// <summary>S 0.8.0 (Weisung P12-47): Fluss in <c>karte.welt.landschaft</c> (Typ <c>fluss</c>, Punkte wie eine Strasse, Breite fest).</summary>
     Fluss,
 

@@ -3,6 +3,7 @@ using System.Numerics;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
@@ -329,6 +330,8 @@ public static partial class AussenBearbeitung
         double Auf(double w) => Bearbeitung.AufRaster(w, r);
         switch (art)
         {
+            case AussenArt.Kurve:
+                return KurveSetzen(aussen, x, y, modell);
             case AussenArt.Strasse:
             {
                 var mx = Bearbeitung.AufRaster(x, Bearbeitung.Raster);
@@ -459,6 +462,12 @@ public static partial class AussenBearbeitung
                 foreach (var p in punkte)
                 {
                     Schieben(p);
+                }
+                if (Strassenkurve.IstKurve(l))
+                {
+                    // Welle K1: eine Kurve bleibt ganz, ihre Enden rasten zusammen ein
+                    KurveEinrasten(aussen, s);
+                    break;
                 }
                 var andere = Strassen(aussen).Where((_, i) => !ReferenceEquals(StrasseNr(aussen, i), l)).ToList();
                 foreach (var k in new[] { 0, punkte.Count - 1 })
@@ -699,6 +708,11 @@ public static partial class AussenBearbeitung
             var d = linie[i] - m;
             punkte[i] = Punkt(m.X - d.Y, m.Y + d.X);
         }
+        if (Strassenkurve.IstKurve(l))
+        {
+            // Welle K1: die gedrehte Kurve rastet wieder an einem Strassenende ein
+            KurveEinrasten(aussen, s);
+        }
         return true;
     }
 
@@ -894,6 +908,7 @@ public static partial class AussenBearbeitung
         var lage = string.Create(De, $", x {x:0.##}, y {y:0.##}");
         return s.Art switch
         {
+            AussenArt.Strasse when KurveVon(aussen, s) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius) + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Strasse => string.Create(De, $"{Texte.Strasse}, {Laenge(aussen, s):0.##} lang") + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Haus => Texte.Haus + " „" + ortName(s.Ort) + "“" + lage,
             AussenArt.Gebaeude => (BauName(aussen, s) is { } bau ? Texte.NeuesGebaeude + " „" + bau + "“" : Texte.HausOhneOrt)

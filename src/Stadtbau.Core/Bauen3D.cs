@@ -195,7 +195,7 @@ public static class Bauen3D
             case AussenArt.Fluss when s.Punkt < 0:
             {
                 // S 0.8.0: Fluss samt Ufer je Stueck des geglaetteten Bogens (wie die Strasse)
-                var glatt = Kurve.Glatt(AussenBearbeitung.EckpunkteWerte(aussen, s));
+                var glatt = AussenBearbeitung.FlussGlatt(aussen, s);
                 var halb = (StadtSzene.FlussBreite + 0.3f) / 2;
                 var teile = new List<Vector2[]>();
                 for (var i = 0; i + 1 < glatt.Count; i++)

@@ -152,6 +152,40 @@ public static class Texte
     public const string EckpunktWenigstens = "Ein Teich braucht mindestens drei Eckpunkte, ein Fluss zwei.";
     public const string EisImWinter = "Eis im Winter (Fluss und Teiche frieren zu)";
     public const string WasserGruppe = "Wasser";
+    // ---- Welle K1 (S 0.10.0, Weisung P12-55): Kurven und Radien -------------------------------------------
+    public const string Kurve90 = "Kurve 90°";
+
+    public const string Kurve45 = "Kurve 45°";
+
+    public const string SKurve = "S-Kurve";
+
+    public const string Kurve90Tipp = "Setzt eine Kurve um 90 Grad mit dem gewählten Radius. Liegt ein Ende bis 0,5 neben einem Straßenende, rastet die Kurve dort ein.";
+
+    public const string Kurve45Tipp = "Setzt eine Kurve um 45 Grad (Radius 2). Liegt ein Ende bis 0,5 neben einem Straßenende, rastet die Kurve dort ein.";
+
+    public const string SKurveTipp = "Setzt eine S-Kurve aus zwei Bögen von 45 Grad (Radius 2): die Straße versetzt sich seitlich und läuft gerade weiter.";
+
+    public const string KurvenRadius = "Radius der Kurve 90°";
+
+    public const string KurvenRadiusTipp = "Radius in der Mitte der Fahrbahn: 1 ist eng, 3 ist weit. Gilt für die nächste Kurve 90°.";
+
+    public const string Spiegeln = "Spiegeln";
+
+    public const string SpiegelnTipp = "Tauscht links und rechts: die Kurve biegt in die andere Richtung, am PC auch mit der Taste M.";
+
+    public const string KurveGespiegelt = "Kurve gespiegelt";
+
+    public const string SpiegelnNurKurve = "Nur Kurven lassen sich spiegeln.";
+
+    public const string KurveLaengeFest = "Eine Kurve hat eine feste Länge: Radius und Winkel bestimmen sie.";
+
+    public static string SetzenKurveLage(int vierteldrehungen, bool gespiegelt) =>
+        SetzenGedreht(vierteldrehungen) + (gespiegelt ? " Gespiegelt." : "");
+
+    public const string RadiusHier = "Radius an diesem Eckpunkt";
+
+    public const string RadiusHierTipp = "So eng biegt der Fluss an diesem Eckpunkt: 2 ist eng, 3 wie bisher, 5 ist weit.";
+
     public const string FlussTipp = "Setzt einen Fluss. Ziehe seine Punkte wie bei einer Straße, er bleibt gleich breit. Wo eine Straße ihn quert, baut das Spiel eine Brücke.";
     public const string TeichTipp = "Setzt einen Teich mit Ufer. Ziehe die runden Griffe an den Ecken; die Ecken werden rund gezeichnet.";
     public const string TeichRundTipp = "Setzt einen runden Teich (acht Eckpunkte). Die Griffe lassen sich danach frei ziehen.";
