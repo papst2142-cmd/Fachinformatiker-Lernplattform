@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.43.4
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Teiche und Stege vor, die mit dem Stadtbau-Werkzeug gebaut werden.
+
+- Eine neue Stadt kann jetzt Teiche mit einem schmalen Ufer und Holzstege haben. Deine Figur geht nicht ins Wasser und nicht aufs Ufer, auf einem Steg kann sie gehen.
+- Eine neue Stadt kann festlegen, dass ihr Wasser im Winter zufriert. Dann ist es im Winter hellblau wie Eis.
+- Die heutige Stadt hat keine Teiche und kein Eis und sieht deshalb aus wie bisher. Der Fluss bleibt, wie er ist.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.3
 Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich die Kamera der Stadt mit dem Stadtbau-Werkzeug, und dort lässt sich die Kamera jetzt steiler oder flacher kippen.
 

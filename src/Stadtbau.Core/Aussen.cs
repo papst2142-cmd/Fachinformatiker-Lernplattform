@@ -27,6 +27,15 @@ public enum AussenArt
     /// Stueck ist danach ein <see cref="Gebaeude"/>, keine Stelle hat diese Art.
     /// </summary>
     Blueprint,
+
+    /// <summary>S 0.8.0 (Weisung P12-47): Fluss in <c>karte.welt.landschaft</c> (Typ <c>fluss</c>, Punkte wie eine Strasse, Breite fest).</summary>
+    Fluss,
+
+    /// <summary>S 0.8.0: Teich in <c>stadtdaten.wasser.teiche</c>; <see cref="AussenStelle.Punkt"/> = Eckpunkt (-1 = ganzer Teich).</summary>
+    Teich,
+
+    /// <summary>S 0.8.0: Steg in <c>stadtdaten.wasser.stege</c>.</summary>
+    Steg,
 }
 
 /// <summary>
@@ -112,6 +121,35 @@ public static class Aussen
     }
 
     public static List<object?> Beete(PyObjekt aussen) => Liste(aussen["beete"]);
+
+    /// <summary>S 0.8.0 (Weisung P12-47): Teiche in <c>stadtdaten.wasser.teiche</c> (leer, wenn es kein Wasser gibt).</summary>
+    public static List<object?> Teiche(PyObjekt aussen) =>
+        Get(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Wasser.Abschnitt) is PyObjekt w && Get(w, "teiche") is List<object?> l ? l : [];
+
+    /// <summary>S 0.8.0: Stege in <c>stadtdaten.wasser.stege</c>.</summary>
+    public static List<object?> Stege(PyObjekt aussen) =>
+        Get(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Wasser.Abschnitt) is PyObjekt w && Get(w, "stege") is List<object?> l ? l : [];
+
+    /// <summary>S 0.8.0: der Teil <c>stadtdaten.wasser</c> mit den Listen teiche und stege, bei Bedarf angelegt (erst beim ersten Setzen).</summary>
+    public static PyObjekt WasserAnlegen(PyObjekt aussen)
+    {
+        if (Get(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Wasser.Abschnitt) is not PyObjekt w)
+        {
+            w = new PyObjekt();
+            Py.Setzen(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Wasser.Abschnitt, w);
+        }
+        foreach (var k in (string[])["teiche", "stege"])
+        {
+            if (Get(w, k) is not List<object?>)
+            {
+                Py.Setzen(w, k, new List<object?>());
+            }
+        }
+        return w;
+    }
+
+    /// <summary>S 0.8.0 (Frage 6 = a): Schalter „Eis im Winter“ (<c>stadtdaten.wasser.eis</c>).</summary>
+    public static bool Eis(PyObjekt aussen) => Lernplattform.Core.Spiel.Probe.Wasser.EisAn(Stadtdaten(aussen));
 
     public static (double Breite, double Hoehe) Groesse(PyObjekt aussen) => (Py.F(Welt(aussen)["breite"]), Py.F(Welt(aussen)["hoehe"]));
 

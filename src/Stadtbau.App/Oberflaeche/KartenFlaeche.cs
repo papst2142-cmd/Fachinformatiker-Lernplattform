@@ -86,7 +86,7 @@ public sealed class KartenFlaeche : Control
     }
 
     /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
-    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog;
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg;
 
     /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
     public void SetzenDrehen()
@@ -214,8 +214,35 @@ public sealed class KartenFlaeche : Control
                     break;
                 }
                 case "fluss":
-                    Linie(ctx, l["punkte"], new Pen(Pinsel("#5B9BD5"), 0.9 * _zoom, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), 0, 0);
+                {
+                    // S 0.8.0: glatter Bogen mit Ufer wie im Spiel (vorher eine Linie durch die Punkte)
+                    var glatt = Kurve.Glatt(WasserPunkte(a, new AussenStelle(AussenArt.Fluss, i, -1)));
+                    Linie(ctx, glatt, new Pen(Pinsel(UferFarbe), (StadtSzene.FlussBreite + 0.3) * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
+                    Linie(ctx, glatt, new Pen(Pinsel(WasserFarbe), StadtSzene.FlussBreite * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
                     break;
+                }
+            }
+        }
+        // S 0.8.0: Teiche (Ufer, Wasser mit gerundeten Ecken) und Stege
+        var teiche = Aussen.Teiche(a);
+        for (var i = 0; i < teiche.Count; i++)
+        {
+            var punkte = WasserPunkte(a, new AussenStelle(AussenArt.Teich, i, -1));
+            if (punkte.Count >= 3)
+            {
+                var t = new Teich(punkte);
+                Flaeche(ctx, t.MitUfer, Pinsel(UferFarbe));
+                Flaeche(ctx, t.Rund, Pinsel(WasserFarbe));
+            }
+        }
+        var stege = Aussen.Stege(a);
+        for (var i = 0; i < stege.Count; i++)
+        {
+            if (Wasser.Steg(stege[i]) is { } steg)
+            {
+                var st = new AussenStelle(AussenArt.Steg, i);
+                var (x1, z1, x2, z2) = steg.Rechteck;
+                ctx.DrawRectangle(Pinsel("#9A6B3F"), new Pen(Pinsel("#6E4A2A"), 1), new Rect(P(x1 + Dx(st), z1 + Dy(st)), P(x2 + Dx(st), z2 + Dy(st))));
             }
         }
         for (var i = 0; i < land.Count; i++)
@@ -351,6 +378,33 @@ public sealed class KartenFlaeche : Control
                     var l = Objekt(land[aw.Nummer]);
                     ctx.DrawRectangle(null, stift, new Rect(P(Py.F(l["x"]) + dx, Py.F(l["y"]) + dy), P(Py.F(l["x"]) + Py.F(l["w"]) + dx, Py.F(l["y"]) + Py.F(l["h"]) + dy)).Inflate(3));
                     break;
+                case AussenArt.Steg:
+                    if (Wasser.Steg(Aussen.Stege(a)[aw.Nummer]) is { } sg)
+                    {
+                        var (x1, z1, x2, z2) = sg.Rechteck;
+                        ctx.DrawRectangle(null, stift, new Rect(P(x1 + dx, z1 + dy), P(x2 + dx, z2 + dy)).Inflate(3));
+                    }
+                    break;
+                case AussenArt.Teich or AussenArt.Fluss:
+                {
+                    // S 0.8.0: Rand und Griffe an den Eckpunkten (Weisung P12-47: am Tablet mit einem Finger ziehen)
+                    var ganz = AussenBearbeitung.Ganz(aw);
+                    var punkte = WasserPunkte(a, ganz);
+                    if (aw.Art == AussenArt.Teich)
+                    {
+                        Flaeche(ctx, new Teich(punkte).MitUfer, null, stift);
+                    }
+                    else
+                    {
+                        Linie(ctx, Kurve.Glatt(punkte), stift);
+                    }
+                    var r = Math.Max(GriffRadius, 0.15 * _zoom);
+                    for (var k = 0; k < punkte.Count; k++)
+                    {
+                        ctx.DrawEllipse(k == aw.Punkt ? Farbe("accent") : Brushes.White, new Pen(Farbe("accent"), 2), P(punkte[k].X, punkte[k].Y), r, r);
+                    }
+                    break;
+                }
                 default:
                     var (x, y) = AussenBearbeitung.Alle(a).First(z => z.Stelle == aw) is var t ? (t.X, t.Y) : (0, 0);
                     ctx.DrawEllipse(null, stift, P(x + dx, y + dy), Math.Max(9, 0.5 * _zoom), Math.Max(9, 0.5 * _zoom));
@@ -367,6 +421,70 @@ public sealed class KartenFlaeche : Control
                 ctx.DrawEllipse(null, stift, P(fx, fy), Math.Max(10, 0.45 * _zoom), Math.Max(10, 0.45 * _zoom));
             }
         }
+    }
+
+    /// <summary>Farben des Wassers in der Draufsicht (wie im Spiel, etwas kraeftiger).</summary>
+    private const string WasserFarbe = "#5B9BD5";
+
+    private const string UferFarbe = "#C9B98A";
+
+    /// <summary>Halbmesser der Griffe an den Eckpunkten in Bildpunkten (gut mit dem Finger zu treffen).</summary>
+    public const double GriffRadius = 7;
+
+    /// <summary>Eckpunkte eines Teichs oder Flusses, waehrend des Ziehens mit dem gezogenen Punkt oder ganz verschoben.</summary>
+    private List<System.Numerics.Vector2> WasserPunkte(PyObjekt a, AussenStelle ganz)
+    {
+        var punkte = AussenBearbeitung.EckpunkteWerte(a, ganz);
+        if (_gezogen && Auswahl is { } aw && AussenBearbeitung.Ganz(aw) == ganz)
+        {
+            var d = new System.Numerics.Vector2((float)_ziehWelt.X, (float)_ziehWelt.Y);
+            for (var k = 0; k < punkte.Count; k++)
+            {
+                if (aw.Punkt < 0 || aw.Punkt == k)
+                {
+                    punkte[k] += d;
+                }
+            }
+        }
+        return punkte;
+    }
+
+    private void Flaeche(DrawingContext ctx, IReadOnlyList<System.Numerics.Vector2> punkte, IBrush? fuellung, Pen? stift = null)
+    {
+        if (punkte.Count < 3)
+        {
+            return;
+        }
+        var geo = new StreamGeometry();
+        using (var g = geo.Open())
+        {
+            g.BeginFigure(P(punkte[0].X, punkte[0].Y), true);
+            foreach (var q in punkte.Skip(1))
+            {
+                g.LineTo(P(q.X, q.Y));
+            }
+            g.EndFigure(true);
+        }
+        ctx.DrawGeometry(fuellung, stift, geo);
+    }
+
+    private void Linie(DrawingContext ctx, IReadOnlyList<System.Numerics.Vector2> punkte, Pen stift)
+    {
+        if (punkte.Count < 2)
+        {
+            return;
+        }
+        var geo = new StreamGeometry();
+        using (var g = geo.Open())
+        {
+            g.BeginFigure(P(punkte[0].X, punkte[0].Y), false);
+            foreach (var q in punkte.Skip(1))
+            {
+                g.LineTo(P(q.X, q.Y));
+            }
+            g.EndFigure(false);
+        }
+        ctx.DrawGeometry(null, stift, geo);
     }
 
     private void Linie(DrawingContext ctx, object? punkte, Pen stift, double dx, double dy)
@@ -500,6 +618,9 @@ public sealed class KartenFlaeche : Control
         AussenArt.Laterne => Texte.Laterne,
         AussenArt.Katalog => Texte.VollerKatalog,
         AussenArt.Blueprint => Texte.BlueprintSetzen,
+        AussenArt.Fluss => Texte.Fluss,
+        AussenArt.Teich => Texte.Teich,
+        AussenArt.Steg => Texte.Steg,
         _ => Texte.Paketplatz,
     };
 
@@ -514,6 +635,34 @@ public sealed class KartenFlaeche : Control
         _projekt.AussenAendern("Verschieben", a => AussenBearbeitung.Verschieben(a, s, dx, dy, raster));
         Gemeldet?.Invoke(ArtName(s.Art) + " verschoben");
         Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
+    }
+
+    /// <summary>S 0.8.0: Eckpunkt dazu (Teich, Fluss), der neue Punkt ist danach gewaehlt.</summary>
+    public void EckpunktDazu()
+    {
+        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s || !AussenBearbeitung.MitEckpunkten(s.Art))
+        {
+            return;
+        }
+        var neu = _projekt.AussenAendern(Texte.EckpunktDazu, a => AussenBearbeitung.EckpunktDazu(a, s));
+        Gemeldet?.Invoke(Texte.EckpunktDazu);
+        Waehlen(neu ?? s);
+    }
+
+    /// <summary>S 0.8.0: gewaehlten Eckpunkt weg; danach ist das ganze Stueck gewaehlt.</summary>
+    public void EckpunktWeg()
+    {
+        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s || AussenBearbeitung.EckpunktWegNicht(_projekt.AussenStand, s) is { } grund)
+        {
+            if (Auswahl is not null && _projekt is not null)
+            {
+                Gemeldet?.Invoke(AussenBearbeitung.EckpunktWegNicht(_projekt.AussenStand, Auswahl) ?? "");
+            }
+            return;
+        }
+        _projekt.AussenAendern(Texte.EckpunktWeg, a => AussenBearbeitung.EckpunktWeg(a, s));
+        Gemeldet?.Invoke(Texte.EckpunktWeg);
+        Waehlen(AussenBearbeitung.Ganz(s));
     }
 
     public void Drehen()
