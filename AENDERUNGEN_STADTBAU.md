@@ -3,6 +3,19 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.10.0
+
+Straßen können jetzt Kurven haben, und am Fluss wählst du den Bogen an jeder Biegung selbst.
+
+- Links unter „Straße“ gibt es die Knöpfe „Kurve 90°“, „Kurve 45°“ und „S-Kurve“. Bei der Kurve 90° wählst du daneben den Radius 1, 2 oder 3; die Kurve 45° und die S-Kurve haben den Radius 2.
+- Eine Kurve ist ein ganzes Stück: Schieben, Drehen und Kopieren nehmen sie immer ganz mit. Ihre Länge ist fest.
+- Mit „Spiegeln“ (Taste M) biegt die Kurve zur anderen Seite ab, beim Setzen und bei einer gewählten Kurve. Drehen geht wie bisher mit „Drehen“ (Taste R).
+- Liegt ein Ende der Kurve höchstens einen halben Schritt neben dem Ende einer anderen Straße, rastet die Kurve dort ein. So schließt sie ohne Lücke an.
+- Kreuzungen und Einmündungen gehen nur auf geraden Stücken. Die Prüfung meldet rot, wenn eine Straße in den Bogen einer Kurve mündet, eine Kurve über den Fluss oder die Bahn führt oder ein Baum oder eine Laterne auf der Kurve steht. Gelb meldet sie ein Kurvenende, das knapp neben einer Straße endet, ohne anzuschließen.
+- Am Fluss wählst du einen Eckpunkt und rechts den Bogen dort: 2 (eng), 3 (wie bisher) oder 5 (weit). Ist der Bogen zu eng für das Ufer, meldet die Prüfung das.
+- Alles geht in der Draufsicht und in der 3D-Ansicht, mit der Maus und mit dem Finger.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.9.1
 
 Die Häuser und Bauteile sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen sie den sanften Farbverlauf, den die Grafik eigentlich hat.

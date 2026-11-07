@@ -72,7 +72,9 @@ public static partial class StadtbauPruefung
         {
             var welt = Objekt(fassung.Karte["welt"]);
             var (breite, hoehe) = (Py.F(welt["breite"]), Py.F(welt["hoehe"]));
-            if (!DatenPruefen(fassung, welt, breite, hoehe, funde))
+            // Welle K1: Radien und Kurven auf den Daten (kaputtes Feld "radien" = Szene nicht bauen)
+            var kurvenHeil = KurvenDaten(welt, funde);
+            if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil)
             {
                 // ohne Fussweg baut das Spiel die Stadt nicht: erst diese Funde loesen
                 return funde;
@@ -133,6 +135,7 @@ public static partial class StadtbauPruefung
         KatalogDraussen(szene, fassung, funde);
         Paketplatz(stadt, szene, funde);
         WasserRegeln(stadt, stand, szene, fassung, funde);
+        KurvenRegeln(szene, fassung, funde);
         return funde;
     }
 

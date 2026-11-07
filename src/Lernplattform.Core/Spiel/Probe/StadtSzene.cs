@@ -739,15 +739,15 @@ public sealed partial class StadtSzene
                         // Bruecken (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt
                         foreach (var strasse in strassen)
                         {
-                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Kurve.Glatt(Vektoren(item["punkte"])), strasse))
+                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Linienzug(item), strasse))
                             {
                                 Bruecke(teile, streifen, mitte, richtung, sinus);
                                 bruecken.Add(mitte);
                                 brueckenKaesten.Add((mitte, richtung, BrueckeHalb(sinus) + 0.07f, (StrassenBreite / 2) + 0.1f));
                             }
                         }
-                        // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2)
-                        var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
+                        // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2); Welle K1: Radius je Eckpunkt
+                        var glatt = Linienzug(item);
                         streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, Hoehe.Ufer, Hoehe.Ufer, Farben.Ufer));
                         streifen.Add(new Streifen(glatt, FlussBreite, Hoehe.Wasser, Hoehe.Wasser, Farben.Wasser));
                         wasser.Add(glatt);
@@ -765,13 +765,37 @@ public sealed partial class StadtSzene
                                 var anStrasse = alleStr.Any(a => !a.SequenceEqual(Vektoren(item["punkte"])) && Kurve.Abstand(e, a) <= 0.05f);
                                 return amRand || anStrasse ? StrassenBreite / 2 : WegBreite / 2;
                             }
+                            var eigeneLinie = Vektoren(item["punkte"]);
+                            if (AlsBand(eigeneLinie))
+                            {
+                                // Welle K1 (Weisung P12-55): Kurve als ein Band mit Gehrung, Enden wie bei der geraden Strasse
+                                var r0 = Vector2.Normalize(eigeneLinie[1] - eigeneLinie[0]);
+                                var rn = Vector2.Normalize(eigeneLinie[^1] - eigeneLinie[^2]);
+                                var w0 = Weiter(eigeneLinie[0], -r0, eigeneLinie, alleStr);
+                                var wn = Weiter(eigeneLinie[^1], rn, eigeneLinie, alleStr);
+                                var e0 = w0 is null ? Ende(eigeneLinie[0]) : 0f;
+                                var en = wn is null ? Ende(eigeneLinie[^1]) : 0f;
+                                strassenEnden.Add((eigeneLinie[0], -r0, e0));
+                                strassenEnden.Add((eigeneLinie[^1], rn, en));
+                                var band = new List<Vector2>(eigeneLinie);
+                                // stumpf angesetzt: ein kurzes Stueck (StumpfZugabe) in Richtung der anschliessenden Strasse, damit
+                                // die Kante genau quer zu ihr liegt wie das Ende ihres Bands (sonst ein Keil von 3,75 Grad)
+                                band.Insert(0, w0 is { } a0 ? eigeneLinie[0] + (a0 * StumpfZugabe) : eigeneLinie[0] - (r0 * e0));
+                                band.Add(wn is { } an ? eigeneLinie[^1] + (an * StumpfZugabe) : eigeneLinie[^1] + (rn * en));
+                                if (GehwegBreite(item) is var gwk and > 0)
+                                {
+                                    streifen.Add(new Streifen(band, StrassenBreite + (2 * gwk), Hoehe.Gehweg, Hoehe.Gehweg, Mischen(Farben.Strasse, Weiss, 0.45f)));
+                                }
+                                streifen.Add(new Streifen(band, StrassenBreite, Hoehe.Strasse, Hoehe.Strasse, Farben.Strasse));
+                                break;
+                            }
                             for (var i = 0; i + 1 < pp.Count; i++)
                             {
                                 var a = new Vector2(pp[i].X, pp[i].Z);
                                 var b2 = new Vector2(pp[i + 1].X, pp[i + 1].Z);
                                 var r = Vector2.Normalize(b2 - a);
-                                var ea = i == 0 ? Ende(a) : StrassenBreite / 2;
-                                var eb = i + 2 == pp.Count ? Ende(b2) : StrassenBreite / 2;
+                                var ea = i == 0 ? (Fortgesetzt(a, -r, eigeneLinie, alleStr) ? 0f : Ende(a)) : StrassenBreite / 2;
+                                var eb = i + 2 == pp.Count ? (Fortgesetzt(b2, r, eigeneLinie, alleStr) ? 0f : Ende(b2)) : StrassenBreite / 2;
                                 if (i == 0)
                                 {
                                     strassenEnden.Add((a, -r, ea));
@@ -791,7 +815,7 @@ public sealed partial class StadtSzene
                         break;
                     case "bahn":
                     {
-                        var glatt = Kurve.Glatt(Vektoren(item["punkte"]));
+                        var glatt = Linienzug(item);
                         uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
                         break;
@@ -1138,6 +1162,64 @@ public sealed partial class StadtSzene
 
     /// <summary>Phase 13 Welle 4a: Breite des Gehwegs je Seite einer Strasse (Feld "gehweg", fehlt = 0).</summary>
     public static float GehwegBreite(PyObjekt strasse) => Py.Hat(strasse, "gehweg") ? (float)Py.F(strasse["gehweg"]) : 0f;
+
+    /// <summary>
+    /// Welle K1 (A 0.44.0, Weisung P12-55): Wunschradius je Eckpunkt eines Flusses oder Gleises (Feld "radien", gleich viele
+    /// Zahlen wie Punkte, nur aus dem Stadtbau-Werkzeug); ohne Feld null (dann gilt <see cref="Kurve.Radius"/> wie bisher).
+    /// </summary>
+    public static List<float>? Radien(PyObjekt linie) =>
+        Py.Hat(linie, "radien") && linie["radien"] is List<object?> r ? [.. r.Select(w => (float)Py.F(w))] : null;
+
+    /// <summary>Welle K1: der geglaettete Linienzug eines Flusses oder Gleises (Boegen mit dem Radius je Eckpunkt).</summary>
+    public static List<Vector2> Linienzug(PyObjekt linie) => Kurve.Glatt(Vektoren(linie["punkte"]), Radien(linie));
+
+    /// <summary>
+    /// Welle K1: eine Strasse mit mehr als zwei Punkten (Kurve aus dem Stadtbau-Werkzeug, Feld "kurve") zeichnet das Spiel
+    /// als ein Band mit Gehrung (wie Fluss und Gleis), damit zwischen den kurzen Stuecken kein Spalt bleibt; eine Strasse
+    /// mit zwei Punkten (alle Strassen der Fassung 0) bleibt ein gerades Band wie bisher.
+    /// </summary>
+    public static bool AlsBand(IReadOnlyList<Vector2> strasse) => strasse.Count > 2;
+
+    /// <summary>
+    /// Welle K1: so weit reicht eine stumpf angesetzte Kurve in die anschliessende Strasse (auf gleicher Hoehe und in
+    /// gleicher Farbe). Mehr als der Versatz der Gehrung am ersten Punkt (halbe Breite samt Gehweg mal tan 2,5 Grad, unter
+    /// 0,04), sonst ueberschlaegt sich das erste Viereck.
+    /// </summary>
+    public const float StumpfZugabe = 0.05f;
+
+    /// <summary>
+    /// Welle K1: trifft ein Strassenende genau das Ende einer anderen Strasse in gleicher Richtung (Kurve an gerade Strasse,
+    /// so setzt das Werkzeug sie), stossen beide Baender stumpf aneinander (keine Verlaengerung um die halbe Breite, die
+    /// sonst als Ecke ueber den Bogen ragt). Nur an Kurven (mehr als zwei Punkte auf einer der beiden Seiten).
+    /// </summary>
+    /// <param name="richtung">Richtung aus der eigenen Strasse heraus (Laenge 1).</param>
+    public static bool Fortgesetzt(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene, IEnumerable<List<Vector2>> alle) =>
+        Weiter(ende, richtung, eigene, alle) is not null;
+
+    /// <summary>
+    /// Die Richtung, in der die anschliessende Strasse vom gemeinsamen Ende weg laeuft (<see cref="Fortgesetzt"/>), sonst
+    /// null. Erlaubt sind bis 5 Grad Unterschied: das erste Stueck einer Kurve ist eine Sehne von 7,5 Grad und weicht um
+    /// die Haelfte von der Tangente ab.
+    /// </summary>
+    public static Vector2? Weiter(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene, IEnumerable<List<Vector2>> alle)
+    {
+        foreach (var a in alle)
+        {
+            if (a.Count < 2 || ReferenceEquals(a, eigene) || a.SequenceEqual(eigene) || (!AlsBand(a) && !AlsBand(eigene)))
+            {
+                continue;
+            }
+            foreach (var (p, weiter) in new[] { (a[0], a[1] - a[0]), (a[^1], a[^2] - a[^1]) })
+            {
+                if (Vector2.Distance(p, ende) <= 0.02f && weiter.LengthSquared() > 1e-10f
+                    && Vector2.Dot(Vector2.Normalize(weiter), richtung) >= MathF.Cos(MathF.PI / 36))
+                {
+                    return Vector2.Normalize(weiter);
+                }
+            }
+        }
+        return null;
+    }
 
     private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 

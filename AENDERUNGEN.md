@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.44.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Straßen mit Kurven und auf Flüsse mit engeren oder weiteren Bögen vor, die mit dem Stadtbau-Werkzeug gebaut werden.
+
+- Eine neue Stadt kann jetzt Straßen haben, die in einem runden Bogen abbiegen: um 90 Grad oder um 45 Grad, dazu eine S-Kurve. Straße und Gehweg laufen ohne Lücke durch den Bogen, auch dort, wo die Kurve an eine gerade Straße anschließt.
+- Die Mittellinie folgt der Kurve, und deine Figur kann durch die Kurve gehen.
+- Ein Fluss kann an jeder Biegung einen eigenen Bogen haben, enger oder weiter als bisher.
+- Die heutige Stadt hat keine Kurven und sieht deshalb aus wie bisher.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.6
 Die Häuser im Spiel sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen die Wände den sanften Farbverlauf, den die Grafik eigentlich hat.
 

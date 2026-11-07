@@ -26,14 +26,25 @@ public static class Kurve
     public const float GradJeStueck = 4f;
 
     /// <summary>Linienzug mit Kreisboegen an den Ecken (Anfang und Ende bleiben, gerade Stuecke als zwei Punkte).</summary>
-    public static List<Vector2> Glatt(IReadOnlyList<Vector2> p, float radius = Radius)
+    public static List<Vector2> Glatt(IReadOnlyList<Vector2> p, float radius = Radius) => Glatt(p, null, radius);
+
+    /// <summary>
+    /// Welle K1 (A 0.44.0, Weisung P12-55): wie <see cref="Glatt(IReadOnlyList{Vector2}, float)"/>, der Wunschradius je
+    /// Eckpunkt aus <paramref name="radien"/> (gleich viele Werte wie Punkte, Anfang und Ende ohne Wirkung; null = ueberall
+    /// <paramref name="radius"/>). Ohne Feld <c>radien</c> rechnet es Zahl fuer Zahl wie vorher.
+    /// </summary>
+    public static List<Vector2> Glatt(IReadOnlyList<Vector2> p, IReadOnlyList<float>? radien, float radius = Radius)
     {
         var punkte = new List<Vector2>();
-        foreach (var q in p)
+        // doppelte Punkte fallen weg; der Wunschradius gehoert zum Punkt, der bleibt
+        var rJe = new List<float>();
+        for (var i = 0; i < p.Count; i++)
         {
+            var q = p[i];
             if (punkte.Count == 0 || Vector2.DistanceSquared(punkte[^1], q) > 1e-10f)
             {
                 punkte.Add(q);
+                rJe.Add(radien is not null && i < radien.Count ? radien[i] : radius);
             }
         }
         if (punkte.Count < 3)
@@ -43,6 +54,7 @@ public static class Kurve
         var ergebnis = new List<Vector2> { punkte[0] };
         for (var i = 1; i + 1 < punkte.Count; i++)
         {
+            var wunsch = rJe[i];
             var a = punkte[i - 1];
             var b = punkte[i];
             var c = punkte[i + 1];
@@ -55,7 +67,7 @@ public static class Kurve
                 continue;   // gerade weiter: kein Bogen
             }
             // Laenge vom Eckpunkt bis zum Bogenanfang; hoechstens das halbe Nachbarstueck
-            var t = MathF.Min(radius * MathF.Tan(winkel / 2), MathF.Min((b - a).Length(), (c - b).Length()) / 2);
+            var t = MathF.Min(wunsch * MathF.Tan(winkel / 2), MathF.Min((b - a).Length(), (c - b).Length()) / 2);
             var r = t / MathF.Tan(winkel / 2);
             var anfang = b - (rein * t);
             var ende = b + (raus * t);
@@ -86,6 +98,37 @@ public static class Kurve
         }
         ergebnis.Add(punkte[^1]);
         return ergebnis;
+    }
+
+    /// <summary>
+    /// Welle K1: der Radius, den <see cref="Glatt(IReadOnlyList{Vector2}, IReadOnlyList{float}?, float)"/> an jeder Ecke
+    /// wirklich zeichnet (kleiner als gewuenscht, wenn ein Nachbarstueck zu kurz ist), mit dem Eckpunkt.
+    /// </summary>
+    public static List<(Vector2 Ecke, float Radius)> Boegen(IReadOnlyList<Vector2> p, IReadOnlyList<float>? radien, float radius = Radius)
+    {
+        var punkte = new List<Vector2>();
+        var rJe = new List<float>();
+        for (var i = 0; i < p.Count; i++)
+        {
+            if (punkte.Count == 0 || Vector2.DistanceSquared(punkte[^1], p[i]) > 1e-10f)
+            {
+                punkte.Add(p[i]);
+                rJe.Add(radien is not null && i < radien.Count ? radien[i] : radius);
+            }
+        }
+        var liste = new List<(Vector2, float)>();
+        for (var i = 1; i + 1 < punkte.Count; i++)
+        {
+            var (a, b, c) = (punkte[i - 1], punkte[i], punkte[i + 1]);
+            var winkel = MathF.Acos(Math.Clamp(Vector2.Dot(Vector2.Normalize(b - a), Vector2.Normalize(c - b)), -1f, 1f));
+            if (winkel < 1e-3f)
+            {
+                continue;
+            }
+            var t = MathF.Min(rJe[i] * MathF.Tan(winkel / 2), MathF.Min((b - a).Length(), (c - b).Length()) / 2);
+            liste.Add((b, t / MathF.Tan(winkel / 2)));
+        }
+        return liste;
     }
 
     private static float Kreuz(Vector2 a, Vector2 b) => (a.X * b.Y) - (a.Y * b.X);

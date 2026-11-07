@@ -117,7 +117,7 @@ public sealed class KartenFlaeche : Control
     }
 
     /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
-    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg;
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg;
 
     /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
     public void SetzenDrehen()
@@ -129,8 +129,38 @@ public sealed class KartenFlaeche : Control
         }
     }
 
-    /// <summary>Modell fuer ein neues Haus ohne Ort.</summary>
+    /// <summary>Modell fuer ein neues Haus ohne Ort; bei einer Kurve ihre Kennung (<see cref="Strassenkurve.Kennung"/>).</summary>
     public string? SetzenModell { get; set; }
+
+    /// <summary>Welle K1 (Weisung P12-55): wird die naechste Kurve gespiegelt gesetzt?</summary>
+    public bool SetzenGespiegelt => SetzenArt == AussenArt.Kurve && Strassenkurve.Lesen(SetzenModell) is { Gespiegelt: true };
+
+    /// <summary>Welle K1: beim Setzen einer Kurve links und rechts tauschen (Knopf „Spiegeln“ und Taste M).</summary>
+    public void SetzenSpiegeln()
+    {
+        if (SetzenArt == AussenArt.Kurve && Strassenkurve.Lesen(SetzenModell) is { } k)
+        {
+            SetzenModell = Strassenkurve.Kennung(k.Form, k.Winkel, k.Radius, !k.Gespiegelt);
+            AuswahlGeaendert?.Invoke();
+        }
+    }
+
+    /// <summary>Welle K1: die gewaehlte Kurve spiegeln (ein Schritt im Verlauf).</summary>
+    public void Spiegeln()
+    {
+        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s)
+        {
+            return;
+        }
+        if (AussenBearbeitung.SpiegelnNicht(_projekt.AussenStand, s) is { } grund)
+        {
+            Gemeldet?.Invoke(grund);
+            return;
+        }
+        _projekt.AussenAendern(Texte.Spiegeln, a => AussenBearbeitung.Spiegeln(a, s));
+        Gemeldet?.Invoke(Texte.KurveGespiegelt);
+        Waehlen(s);
+    }
 
     /// <summary>Phase 13 Welle 4c: der Blueprint, der beim naechsten Tippen gesetzt wird (mit <see cref="AussenArt.Blueprint"/>).</summary>
     public Blueprint? SetzenBlueprint { get; set; }
@@ -247,7 +277,7 @@ public sealed class KartenFlaeche : Control
                 case "fluss":
                 {
                     // S 0.8.0: glatter Bogen mit Ufer wie im Spiel (vorher eine Linie durch die Punkte)
-                    var glatt = Kurve.Glatt(WasserPunkte(a, new AussenStelle(AussenArt.Fluss, i, -1)));
+                    var glatt = Kurve.Glatt(WasserPunkte(a, new AussenStelle(AussenArt.Fluss, i, -1)), StadtSzene.Radien(l));
                     Linie(ctx, glatt, new Pen(Pinsel(UferFarbe), (StadtSzene.FlussBreite + 0.3) * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
                     Linie(ctx, glatt, new Pen(Pinsel(WasserFarbe), StadtSzene.FlussBreite * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
                     break;
@@ -427,7 +457,7 @@ public sealed class KartenFlaeche : Control
                     }
                     else
                     {
-                        Linie(ctx, Kurve.Glatt(punkte), stift);
+                        Linie(ctx, Kurve.Glatt(punkte, StadtSzene.Radien(SpielDaten.Objekt(Aussen.Landschaft(a)[aw.Nummer]))), stift);
                     }
                     var r = Math.Max(GriffRadius, 0.15 * _zoom);
                     for (var k = 0; k < punkte.Count; k++)
@@ -615,7 +645,8 @@ public sealed class KartenFlaeche : Control
         SetzenArt = null;
         if (neu is not null)
         {
-            Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell) : ArtName(art)) + " gesetzt");
+            Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell)
+                : art == AussenArt.Kurve && Strassenkurve.Lesen(modell) is { } k ? Strassenkurve.Name(k.Form, k.Winkel, k.Radius) : ArtName(art)) + " gesetzt");
         }
         Waehlen(neu);
         return neu;
@@ -641,6 +672,7 @@ public sealed class KartenFlaeche : Control
     private static string ArtName(AussenArt art) => art switch
     {
         AussenArt.Strasse => Texte.Strasse,
+        AussenArt.Kurve => Texte.Kurve90,
         AussenArt.Haus => Texte.Haus,
         AussenArt.Gebaeude => Texte.HausOhneOrt,
         AussenArt.Baum => Texte.Baum,
@@ -761,6 +793,12 @@ public sealed class KartenFlaeche : Control
                 return true;
             case Key.D when strg && Auswahl is not null:
                 Kopieren();
+                return true;
+            case Key.M when !strg && SetzenArt == AussenArt.Kurve:
+                SetzenSpiegeln();
+                return true;
+            case Key.M when !strg && Auswahl is { } kurve && _projekt is not null && AussenBearbeitung.IstKurve(_projekt.AussenStand, kurve):
+                Spiegeln();
                 return true;
             case Key.Left when Auswahl is not null:
                 Verschieben(-schritt, 0);

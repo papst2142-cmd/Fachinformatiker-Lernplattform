@@ -1,22 +1,22 @@
-Die Häuser im Spiel sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen die Wände den sanften Farbverlauf, den die Grafik eigentlich hat.
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Straßen mit Kurven und auf Flüsse mit engeren oder weiteren Bögen vor, die mit dem Stadtbau-Werkzeug gebaut werden.
 
-- Betroffen waren vor allem das Kaufhaus, die Bitweiche, die Bahnhöfe, der Gewerbehof, die Filiale, das Möbelhaus, der Elektromarkt, die Betriebswerkstatt und die Wohnung von außen. Dort sind die Flecken weg.
-- Auch Autos, Züge, Bäume, Laternen und die Fest-Deko zeigen jetzt ihren Farbverlauf.
-- Häuser ohne Farbverlauf (zum Beispiel die Wohnhäuser am Stadtrand) sehen genauso aus wie bisher.
-- Nachts leuchten dieselben Fenster und Laternen wie vorher, Schnee und die Farben der Jahreszeiten bleiben, wie sie waren.
+- Eine neue Stadt kann jetzt Straßen haben, die in einem runden Bogen abbiegen: um 90 Grad oder um 45 Grad, dazu eine S-Kurve. Straße und Gehweg laufen ohne Lücke durch den Bogen, auch dort, wo die Kurve an eine gerade Straße anschließt.
+- Die Mittellinie folgt der Kurve, und deine Figur kann durch die Kurve gehen.
+- Ein Fluss kann an jeder Biegung einen eigenen Bogen haben, enger oder weiter als bisher.
+- Die heutige Stadt hat keine Kurven und sieht deshalb aus wie bisher.
 - Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.43.6**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.44.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.43.6-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.43.6-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.43.6-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.43.6-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.44.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.44.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.44.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.44.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

@@ -134,7 +134,7 @@ public static partial class AussenBearbeitung
             return null;
         }
         return alle.Where(a => a.Stelle.Art == AussenArt.Fluss)
-            .Select(a => (a.Stelle, D: Kurve.Abstand(p, Kurve.Glatt(EckpunkteWerte(aussen, a.Stelle)))))
+            .Select(a => (a.Stelle, D: Kurve.Abstand(p, FlussGlatt(aussen, a.Stelle))))
             .Where(a => a.D <= ((StadtSzene.FlussBreite + 0.3f) / 2) + 0.05f).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
     }
 
@@ -327,6 +327,7 @@ public static partial class AussenBearbeitung
         }
         var m = (l[nach] + l[(nach + 1) % l.Count]) / 2;
         punkte.Insert(nach + 1, Punkt(m.X, m.Y));
+        RadienNachEinfuegen(aussen, s, nach + 1);
         return Ganz(s) with { Punkt = nach + 1 };
     }
 
@@ -344,6 +345,7 @@ public static partial class AussenBearbeitung
             return false;
         }
         Eckpunkte(aussen, s).RemoveAt(s.Punkt);
+        RadienNachEntfernen(aussen, s, s.Punkt);
         return true;
     }
 
