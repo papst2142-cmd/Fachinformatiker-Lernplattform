@@ -319,6 +319,19 @@ public sealed class KartenFlaeche : Control
                 Linie(ctx, l["punkte"], new Pen(Pinsel("#6B6B6B"), StadtSzene.StrassenBreite * _zoom, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), Dx(s), Dy(s));
             }
         }
+        // Welle K3: Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum) wie im Spiel
+        for (var i = 0; i < land.Count; i++)
+        {
+            if (land[i] is PyObjekt l && Kreisverkehr.Radius(l) is { } kr && Kreisverkehr.Linie(l["punkte"]) is var ring && Kreisverkehr.Rund(ring, kr))
+            {
+                var s = new AussenStelle(AussenArt.Strasse, i);
+                var m = Kreisverkehr.Mitte(ring) + new System.Numerics.Vector2((float)Dx(s), (float)Dy(s));
+                var ri = Kreisverkehr.InselRadius(kr);
+                Flaeche(ctx, Kreisverkehr.Kreis(m, ri), Pinsel("#D8D4CA"));
+                Flaeche(ctx, Kreisverkehr.Kreis(m, ri - Kreisverkehr.RandBreite), Pinsel("#7FB069"));
+                ctx.DrawEllipse(Pinsel("#3F7D3A", 0.85), new Pen(Pinsel("#2A5527"), 1), P(m.X, m.Y), Kreisverkehr.BaumRadius * _zoom, Kreisverkehr.BaumRadius * _zoom);
+            }
+        }
         foreach (var l in land.OfType<PyObjekt>().Where(l => Py.Gleich(l["typ"], "bahn")))
         {
             Linie(ctx, l["punkte"], new Pen(Pinsel("#5A4632"), 0.25 * _zoom, new DashStyle([2, 1], 0)), 0, 0);
@@ -646,7 +659,8 @@ public sealed class KartenFlaeche : Control
         if (neu is not null)
         {
             Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell)
-                : art == AussenArt.Kurve && Strassenkurve.Lesen(modell) is { } k ? Strassenkurve.Name(k.Form, k.Winkel, k.Radius) : ArtName(art)) + " gesetzt");
+                : art == AussenArt.Kurve && Strassenkurve.Lesen(modell) is { } k ? Strassenkurve.Name(k.Form, k.Winkel, k.Radius)
+                : art == AussenArt.Kreisverkehr && AussenBearbeitung.KreisverkehrRadius(modell) is { } kr ? Texte.KreisverkehrName(kr) : ArtName(art)) + " gesetzt");
         }
         Waehlen(neu);
         return neu;
@@ -673,6 +687,7 @@ public sealed class KartenFlaeche : Control
     {
         AussenArt.Strasse => Texte.Strasse,
         AussenArt.Kurve => Texte.Kurve90,
+        AussenArt.Kreisverkehr => Texte.KreisverkehrKlein,
         AussenArt.Haus => Texte.Haus,
         AussenArt.Gebaeude => Texte.HausOhneOrt,
         AussenArt.Baum => Texte.Baum,

@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.45.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Kreisverkehre vor, die mit dem Stadtbau-Werkzeug gebaut werden, und verbessert die Mittellinie in Kurven.
+
+- Eine neue Stadt kann jetzt Kreisverkehre haben: einen runden Ring mit Gehweg und in der Mitte eine Insel mit Rasen und einem Baum. Deine Figur geht auf dem Ring und dem Gehweg und läuft um die Insel herum.
+- Dort, wo eine Kurve an eine gerade Straße oder an eine andere Kurve anschließt, läuft die Mittellinie jetzt ohne Lücke im gleichen Takt weiter. Auch im Kreisverkehr läuft sie rundum.
+- Die heutige Stadt hat keine Kurven und keinen Kreisverkehr und sieht deshalb aus wie bisher.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.44.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Straßen mit Kurven und auf Flüsse mit engeren oder weiteren Bögen vor, die mit dem Stadtbau-Werkzeug gebaut werden.
 

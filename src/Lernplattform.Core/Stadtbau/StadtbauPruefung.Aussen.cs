@@ -136,6 +136,7 @@ public static partial class StadtbauPruefung
         Paketplatz(stadt, szene, funde);
         WasserRegeln(stadt, stand, szene, fassung, funde);
         KurvenRegeln(szene, fassung, funde);
+        KreisverkehrRegeln(szene, fassung, funde);
         return funde;
     }
 

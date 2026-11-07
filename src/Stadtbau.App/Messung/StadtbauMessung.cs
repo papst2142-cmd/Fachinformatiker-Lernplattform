@@ -327,6 +327,7 @@ public static partial class StadtbauMessung
         await UpdateKnopfAsync(a, f);
         await AbwaehlenAsync(a, f);
         await KurvenAsync(a, f);
+        await KreisverkehrAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

@@ -34,6 +34,12 @@ public enum AussenArt
     /// </summary>
     Kurve,
 
+    /// <summary>
+    /// Welle K3 (S 0.11.0, Weisung P12-59): nur zum Setzen eines Kreisverkehrs (Kennung <see cref="AussenBearbeitung.Kennung(double)"/>
+    /// als Modell); der gesetzte Ring ist danach eine <see cref="Strasse"/> mit dem Feld <c>kreisverkehr</c>.
+    /// </summary>
+    Kreisverkehr,
+
     /// <summary>S 0.8.0 (Weisung P12-47): Fluss in <c>karte.welt.landschaft</c> (Typ <c>fluss</c>, Punkte wie eine Strasse, Breite fest).</summary>
     Fluss,
 

@@ -332,6 +332,8 @@ public static partial class AussenBearbeitung
         {
             case AussenArt.Kurve:
                 return KurveSetzen(aussen, x, y, modell);
+            case AussenArt.Kreisverkehr:
+                return KreisverkehrSetzen(aussen, x, y, modell);
             case AussenArt.Strasse:
             {
                 var mx = Bearbeitung.AufRaster(x, Bearbeitung.Raster);
@@ -459,9 +461,17 @@ public static partial class AussenBearbeitung
             {
                 var l = Objekt(land[s.Nummer]);
                 var punkte = Liste(l["punkte"]);
+                // Welle K3: ein Kreisverkehr nimmt Zufahrten und Laternen mit (vorher bestimmen, solange sie am Ring liegen)
+                var kreis = Kreisverkehr.IstRing(l) ? KreisverkehrTeile(aussen, s) : default;
                 foreach (var p in punkte)
                 {
                     Schieben(p);
+                }
+                if (kreis.Zufahrten is not null)
+                {
+                    var weg = new Vector2((float)dx, (float)dy);
+                    KreisverkehrMitnehmen(aussen, kreis, p => p + weg);
+                    break;
                 }
                 if (Strassenkurve.IstKurve(l))
                 {
@@ -703,10 +713,21 @@ public static partial class AussenBearbeitung
         var linie = Linie(punkte);
         var m = new Vector2((float)Bearbeitung.AufRaster((linie.Min(p => p.X) + linie.Max(p => p.X)) / 2, Bearbeitung.Raster),
             (float)Bearbeitung.AufRaster((linie.Min(p => p.Y) + linie.Max(p => p.Y)) / 2, Bearbeitung.Raster));
+        // Welle K3: ein Kreisverkehr dreht sich um seine Mitte mit Zufahrten und Laternen
+        var kreis = Kreisverkehr.IstRing(l) ? KreisverkehrTeile(aussen, s) : default;
+        if (kreis.Zufahrten is not null)
+        {
+            m = Kreisverkehr.Mitte(linie);
+        }
         for (var i = 0; i < punkte.Count; i++)
         {
             var d = linie[i] - m;
             punkte[i] = Punkt(m.X - d.Y, m.Y + d.X);
+        }
+        if (kreis.Zufahrten is not null)
+        {
+            KreisverkehrMitnehmen(aussen, kreis, p => new Vector2(m.X - (p - m).Y, m.Y + (p - m).X));
+            return true;
         }
         if (Strassenkurve.IstKurve(l))
         {
@@ -726,6 +747,8 @@ public static partial class AussenBearbeitung
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
         {
+            case AussenArt.Strasse when IstKreisverkehr(aussen, s):
+                return KreisverkehrKopieren(aussen, s);
             case AussenArt.Strasse:
             case AussenArt.Park:
             case AussenArt.Gebaeude:
@@ -908,6 +931,7 @@ public static partial class AussenBearbeitung
         var lage = string.Create(De, $", x {x:0.##}, y {y:0.##}");
         return s.Art switch
         {
+            AussenArt.Strasse when KreisverkehrVon(aussen, s) is { } kr => Texte.KreisverkehrName(kr) + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Strasse when KurveVon(aussen, s) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius) + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Strasse => string.Create(De, $"{Texte.Strasse}, {Laenge(aussen, s):0.##} lang") + (Gehweg(aussen, s) > 0 ? string.Create(De, $", Gehweg {Gehweg(aussen, s):0.##}") : "") + lage,
             AussenArt.Haus => Texte.Haus + " „" + ortName(s.Ort) + "“" + lage,
