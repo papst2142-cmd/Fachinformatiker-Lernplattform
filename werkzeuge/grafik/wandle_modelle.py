@@ -9,11 +9,16 @@ kleines eigenes Format, damit das Programm keine Grafik-Bibliothek braucht:
 Die Original-ZIPs kommen nie ins Repo (liegen auf Fi-Austausch anlagen/grafik_cc0/, Lizenz CC0). Welche Modelle
 gewandelt werden, steht in auswahl.json (neben diesem Werkzeug); "atlas" waehlt dort eine Farbvariante des
 Pakets (z. B. variation-a.png der Commercial-Haeuser). Farbe je Dreieck: Kd des Materials; hat das
-Material einen Farbatlas (map_Kd), die Farbe des Atlas an der Mitte der UV-Koordinaten des Dreiecks (die
-Pakete malen jede Flaeche einfarbig aus dem Atlas). Nur Python-Standardbibliothek.
+Material einen Farbatlas (map_Kd), die Farbe des Atlas an der Mitte der UV-Koordinaten des Dreiecks (zum Erkennen
+von Glas, Tueren, Licht, Pflanzen im Programm). Farbe je Ecke (A 0.43.6, Weisung P12-50): dieselbe Abtastung an der
+UV-Stelle jeder Ecke (Kenney und KayKit malen Waende mit einem Farbverlauf im Atlas; mit nur einer Farbe je Dreieck
+entstanden Flecken in X-Form). Ohne Atlas oder ohne UV einer Ecke: die Farbe des Dreiecks. Die Figur (FBX) behaelt eine
+Farbe je Dreieck auch an den Ecken (Haut, Haare und Kleidung faerbt das Programm je Dreieck um).
+Nur Python-Standardbibliothek.
 
-Aufbau modelle.bin (Little Endian): "FLGM", uint32 Version 1, uint32 Anzahl Modelle; je Modell: uint16 Laenge
-+ Name (UTF-8), uint32 Dreiecke, je Dreieck 9 x float32 (drei Ecken x, y, z) und 4 Byte Farbe (R, G, B, 0).
+Aufbau modelle.bin (Little Endian): "FLGM", uint32 Version 2, uint32 Anzahl Modelle; je Modell: uint16 Laenge
++ Name (UTF-8), uint32 Dreiecke, je Dreieck 9 x float32 (drei Ecken x, y, z), 4 Byte Farbe (R, G, B, 0) und
+12 Byte Eckfarben (je Ecke R, G, B, 0). Version 1 (bis A 0.43.5) hatte keine Eckfarben.
 Koordinaten wie im Paket (Y nach oben, Vorderseite +Z); "drehen": 180 in auswahl.json dreht ein Modell um die
 Hochachse, wenn das Paket die Vorderseite nach -Z legt (Furniture Kit: Lehnen liegen bei +Z).
 
@@ -36,6 +41,7 @@ import zipfile
 import zlib
 
 HIER = os.path.dirname(os.path.abspath(__file__))
+VERSION = 2  # Aufbau von modelle.bin (2 = mit Eckfarben, Weisung P12-50); der Leser im Programm prueft sie
 REPO = os.path.dirname(os.path.dirname(HIER))
 
 
@@ -113,7 +119,8 @@ def mtl_lesen(text):
 
 
 def obj_wandeln(z, pfad, atlas=None):
-    """Ein OBJ aus dem ZIP -> Liste von Dreiecken ((x, y, z) * 3, (r, g, b)); atlas ersetzt den Farbatlas (Pfad im ZIP)."""
+    """Ein OBJ aus dem ZIP -> Liste von Dreiecken ((x, y, z) * 3, (r, g, b), ((r, g, b) * 3 je Ecke)); atlas ersetzt den
+    Farbatlas (Pfad im ZIP)."""
     ordner = os.path.dirname(pfad)
     text = z.read(pfad).decode("utf-8", "replace")
     ecken, uvs, materialien, material, dreiecke, atlanten = [], [], {}, None, [], {}
@@ -139,8 +146,9 @@ def obj_wandeln(z, pfad, atlas=None):
                 t = int(nummern[1]) if len(nummern) > 1 and nummern[1] else None
                 punkte.append((ecken[v - 1 if v > 0 else v], uvs[t - 1 if t > 0 else t] if t else None))
             farbe = farbe_fuer(z, ordner, materialien.get(material), punkte, atlanten, atlas)
+            je_ecke = eckfarben_fuer(z, ordner, materialien.get(material), punkte, atlanten, farbe, atlas)
             for i in range(1, len(punkte) - 1):
-                dreiecke.append(((punkte[0][0], punkte[i][0], punkte[i + 1][0]), farbe))
+                dreiecke.append(((punkte[0][0], punkte[i][0], punkte[i + 1][0]), farbe, (je_ecke[0], je_ecke[i], je_ecke[i + 1])))
     return dreiecke
 
 
@@ -162,6 +170,37 @@ def farbe_fuer(z, ordner, mat, punkte, atlanten, ersatz=None):
             r, g, b = pixel(int(u * breite), int((1 - v) * hoehe))
             return (round(r * kd[0]), round(g * kd[1]), round(b * kd[2]))
     return tuple(min(255, max(0, round(c * 255))) for c in kd)
+
+
+def eckfarben_fuer(z, ordner, mat, punkte, atlanten, farbe, ersatz=None):
+    """Weisung P12-50: Farbe je Ecke mit derselben Abtastung wie farbe_fuer, nur an der UV-Stelle der Ecke statt an der
+    Mitte; ohne Atlas oder ohne UV der Ecke die Farbe der Flaeche (farbe)."""
+    if mat is None or not mat["map"]:
+        return [farbe] * len(punkte)
+    kd = mat["kd"]
+    atlas = ersatz or os.path.normpath(os.path.join(ordner, mat["map"])).replace(os.sep, "/")
+    if atlas not in atlanten:
+        atlanten[atlas] = png_lesen(z.read(atlas))
+    breite, hoehe, pixel = atlanten[atlas]
+    erg = []
+    for _, uv in punkte:
+        if uv is None:
+            erg.append(farbe)
+            continue
+        u, v = uv
+        u -= int(u // 1)
+        v -= int(v // 1)
+        r, g, b = pixel(int(u * breite), int((1 - v) * hoehe))
+        erg.append((round(r * kd[0]), round(g * kd[1]), round(b * kd[2])))
+    return erg
+
+
+def dreieck_bytes(dreieck):
+    """Ein Dreieck (ecken, farbe[, eckfarben]) im Aufbau Version 2; ohne Eckfarben (Figur) jede Ecke in der Farbe."""
+    ecken, farbe = dreieck[0], dreieck[1]
+    je_ecke = dreieck[2] if len(dreieck) > 2 else (farbe, farbe, farbe)
+    return (struct.pack("<9f", *[w for p in ecken for w in p]) + bytes((farbe[0], farbe[1], farbe[2], 0))
+            + b"".join(bytes((f[0], f[1], f[2], 0)) for f in je_ecke))
 
 
 def fbx_lesen(daten):
@@ -553,7 +592,7 @@ def gedreht(dreiecke, grad):
         return dreiecke
     if grad % 360 != 180:
         raise ValueError("drehen: nur 180 Grad")
-    return [(tuple((-p[0], p[1], -p[2]) for p in e), f) for e, f in dreiecke]
+    return [(tuple((-p[0], p[1], -p[2]) for p in d[0]),) + tuple(d[1:]) for d in dreiecke]
 
 
 def main():
@@ -564,7 +603,7 @@ def main():
     aus = sys.argv[2] if len(sys.argv) > 2 else os.path.join(REPO, "inhalte_csharp", "grafik")
     with open(os.path.join(HIER, "auswahl.json"), encoding="utf-8") as f:
         auswahl = json.load(f)
-    bin_teile = [b"FLGM", struct.pack("<II", 1, len(auswahl["modelle"]))]
+    bin_teile = [b"FLGM", struct.pack("<II", VERSION, len(auswahl["modelle"]))]
     liste = []
     ausgabe = []
     zips = {}
@@ -578,8 +617,8 @@ def main():
             dreiecke = []
             for teil in eintrag["teile"]:
                 dx, dy, dz = teil["v"]
-                for ecken, farbe in gedreht(obj_wandeln(z, teil["datei"], eintrag.get("atlas")), teil.get("drehen", 0)):
-                    dreiecke.append((tuple((q[0] + dx, q[1] + dy, q[2] + dz) for q in ecken), farbe))
+                for d in gedreht(obj_wandeln(z, teil["datei"], eintrag.get("atlas")), teil.get("drehen", 0)):
+                    dreiecke.append((tuple((q[0] + dx, q[1] + dy, q[2] + dz) for q in d[0]),) + tuple(d[1:]))
         elif "bewegung" in eintrag:
             # Phase 8 W7: je Bild ein eigenes Modell name00, name01, ...
             for nr, dreiecke in enumerate(bewegung_bilder(z, eintrag)):
@@ -590,13 +629,13 @@ def main():
         else:
             dreiecke = obj_wandeln(z, eintrag["datei"], eintrag.get("atlas"))
         ausgabe.append((eintrag, eintrag["name"], gedreht(dreiecke, eintrag.get("drehen", 0))))
-    bin_teile[1] = struct.pack("<II", 1, len(ausgabe))
+    bin_teile[1] = struct.pack("<II", VERSION, len(ausgabe))
     for eintrag, modellname, dreiecke in ausgabe:
         name = modellname.encode("utf-8")
         bin_teile.append(struct.pack("<H", len(name)) + name + struct.pack("<I", len(dreiecke)))
         alle = [p for d in dreiecke for p in d[0]]
-        for ecken, farbe in dreiecke:
-            bin_teile.append(struct.pack("<9f", *[w for p in ecken for w in p]) + bytes((farbe[0], farbe[1], farbe[2], 0)))
+        for dreieck in dreiecke:
+            bin_teile.append(dreieck_bytes(dreieck))
         liste.append({
             "name": modellname, "paket": eintrag["paket"], "datei": eintrag["datei"], "atlas": eintrag.get("atlas") or eintrag.get("haut"), "dreiecke": len(dreiecke),
             "min": [round(min(p[i] for p in alle), 4) for i in range(3)],

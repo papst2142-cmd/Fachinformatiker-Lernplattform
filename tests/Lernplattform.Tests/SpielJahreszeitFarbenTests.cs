@@ -212,7 +212,11 @@ public sealed class SpielJahreszeitFarbenTests
                     {
                         for (var d = 0; d < baum.Dreiecke; d++)
                         {
-                            baumfarben.Add(new Vector3(baum.Farben[d * 3], baum.Farben[(d * 3) + 1], baum.Farben[(d * 3) + 2]) / 255f);
+                            // seit A 0.43.6 (Weisung P12-50) traegt das Netz die Farbe jeder Ecke
+                            for (var k = 0; k < 3; k++)
+                            {
+                                baumfarben.Add(baum.EckFarbe(d, k));
+                            }
                         }
                     }
                 }

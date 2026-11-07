@@ -203,17 +203,17 @@ public static class Jahreszeitfarben
     private static Vector3 Farbe(GrafikModell m, int d) => new Vector3(m.Farben[d * 3], m.Farben[(d * 3) + 1], m.Farben[(d * 3) + 2]) / 255f;
 
     /// <summary>
-    /// Faerbung je Dreieck eines Modells fuer <see cref="Netz.Hinzu(GrafikModell, System.Numerics.Matrix4x4, Func{int, float, float, Vector3}?)"/>;
+    /// Faerbung eines Modells fuer <see cref="Netz.Hinzu(GrafikModell, System.Numerics.Matrix4x4, Modellfaerbung?, List{Vector3}?)"/> (Art je Dreieck aus der Farbe des Dreiecks, Farbe je Ecke);
     /// null im Sommer (dann bitgleich wie vorher).
     /// </summary>
-    public static Func<int, float, float, Vector3>? FuerModell(Jahreszeit j, Faerbeart art, GrafikModell m, int samen, bool nadel)
+    public static Modellfaerbung? FuerModell(Jahreszeit j, Faerbeart art, GrafikModell m, int samen, bool nadel)
     {
         if (j == Jahreszeit.Sommer)
         {
             return null;
         }
         var mm = MerkmaleVon(m);
-        return (d, oben, hoehe) => Faerben(j, art, Farbe(m, d), mm.Boden[d], mm.Pflanze[d], oben, hoehe, samen, nadel);
+        return (d, grund, oben, hoehe) => Faerben(j, art, grund, mm.Boden[d], mm.Pflanze[d], oben, hoehe, samen, nadel);
     }
 
     /// <summary>Faerbung eigener Teile (<see cref="Netz.Faerbung"/>); null im Sommer.</summary>

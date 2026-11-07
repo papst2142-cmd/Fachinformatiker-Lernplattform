@@ -202,7 +202,7 @@ public sealed class Katalog
     /// </summary>
     public GrafikModell? SpielModell(KatalogEintrag e) =>
         e.Art == KatalogArt.Effekt ? Katalogstueck.Stern(e.Typ, e.Farbe ?? "#FFFFFF")
-        : Modell(e) is { } m ? new GrafikModell(e.Typ, m.Ecken, m.Farben) : null;
+        : Modell(e) is { } m ? new GrafikModell(e.Typ, m.Ecken, m.Farben, m.EckFarben) : null;
 
     /// <summary>
     /// Phase 13 Welle 4a: <paramref name="basis"/> (Spielgrafik) mit allen Stuecken aus dem Katalog, auf die
@@ -244,37 +244,8 @@ public sealed class Katalog
 
     public IReadOnlyCollection<string> GeleseneVorschauPakete => [.. _vorschau.Where(p => p.Value.IsValueCreated).Select(p => p.Key)];
 
-    /// <summary>Aufbau wie modelle.bin der Spielgrafik ("FLGM", Version 1).</summary>
-    internal static Dictionary<string, GrafikModell> Lesen(byte[] bin)
-    {
-        using var leser = new BinaryReader(new MemoryStream(bin));
-        if (Encoding.ASCII.GetString(leser.ReadBytes(4)) != "FLGM" || leser.ReadUInt32() != 1)
-        {
-            throw new InvalidDataException("Katalog: unbekannter Aufbau einer Modell-Datei");
-        }
-        var anzahl = leser.ReadUInt32();
-        var modelle = new Dictionary<string, GrafikModell>(StringComparer.Ordinal);
-        for (var m = 0; m < anzahl; m++)
-        {
-            var name = Encoding.UTF8.GetString(leser.ReadBytes(leser.ReadUInt16()));
-            var dreiecke = (int)leser.ReadUInt32();
-            var ecken = new float[dreiecke * 9];
-            var farben = new byte[dreiecke * 3];
-            for (var d = 0; d < dreiecke; d++)
-            {
-                for (var i = 0; i < 9; i++)
-                {
-                    ecken[(d * 9) + i] = leser.ReadSingle();
-                }
-                var rgba = leser.ReadBytes(4);
-                farben[d * 3] = rgba[0];
-                farben[(d * 3) + 1] = rgba[1];
-                farben[(d * 3) + 2] = rgba[2];
-            }
-            modelle[name] = new GrafikModell(name, ecken, farben);
-        }
-        return modelle;
-    }
+    /// <summary>Aufbau wie modelle.bin der Spielgrafik (gleicher Leser, "FLGM" Version 2 mit Eckfarben seit S 0.9.1).</summary>
+    internal static Dictionary<string, GrafikModell> Lesen(byte[] bin) => GrafikBibliothek.Lesen(bin, "Katalog: Modell-Datei");
 
     /// <summary>Anzahl Eintraege je Gruppe (fuer die Anzeige im Katalog).</summary>
     public int AnzahlIn(string gruppe) => Eintraege.Count(e => e.Gruppe == gruppe);

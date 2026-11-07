@@ -357,7 +357,7 @@ public static class Bauteile
     public const float DachDetailHoehe = 0.1062f;
 
     /// <summary>
-    /// Die Teile zu EINEM Modell zusammensetzen (Reihenfolge der Teile = Reihenfolge der Dreiecke, Farben wie das Teil).
+    /// Die Teile zu EINEM Modell zusammensetzen (Reihenfolge der Teile = Reihenfolge der Dreiecke, Farben und Eckfarben wie das Teil).
     /// <paramref name="modell"/> liefert zu einer Kennung "cc0:modular/&lt;name&gt;" das Modell; fehlt eines oder ist ein
     /// Teil unbekannt: <see cref="InvalidDataException"/> (nie still weglassen).
     /// </summary>
@@ -365,6 +365,7 @@ public static class Bauteile
     {
         var ecken = new List<float>();
         var farben = new List<byte>();
+        var eckFarben = new List<byte>();
         foreach (var t in teile)
         {
             if (t.Art is null)
@@ -381,8 +382,22 @@ public static class Bauteile
                 ecken.Add(p.Z);
             }
             farben.AddRange(m.Farben);
+            if (m.EckFarben is { } eck)
+            {
+                eckFarben.AddRange(eck);
+            }
+            else
+            {
+                for (var d = 0; d < m.Dreiecke; d++)
+                {
+                    for (var k = 0; k < 3; k++)
+                    {
+                        eckFarben.AddRange(m.Farben.AsSpan(d * 3, 3));
+                    }
+                }
+            }
         }
-        return new GrafikModell(name, [.. ecken], [.. farben]);
+        return new GrafikModell(name, [.. ecken], [.. farben], [.. eckFarben]);
     }
 
     /// <summary>Dreiecke aller Teile (unbekannte oder fehlende zaehlen 0).</summary>

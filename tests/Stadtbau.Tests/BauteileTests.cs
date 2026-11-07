@@ -253,6 +253,9 @@ public class BauteileTests
         var gm = Bauteile.Zusammensetzen("bau:test", teile, Katalog.Bauteil);
         Assert.Equal(teile.Sum(t => M(t.Name).Dreiecke), gm.Dreiecke);
         Assert.Equal(Bauteile.Dreiecke(teile, Katalog.Bauteil), gm.Dreiecke);
+        // S 0.9.1 (Weisung P12-50): Farbe je Ecke wie das Teil, in der Reihenfolge der Teile (der Farbverlauf bleibt)
+        Assert.Equal(teile.SelectMany(t => M(t.Name).EckFarben!).ToArray(), gm.EckFarben);
+        Assert.Contains(Enumerable.Range(0, gm.Dreiecke), d => gm.EckFarbe(d, 0) != gm.Farbe(d));
         var block = Assert.IsType<PyObjekt>(Assert.Single(Bauteile.Block(gm)));
         // der Block umschliesst das Modell genau: das Spiel zeichnet es dann ohne Streckung (Massstab 1)
         Assert.Equal((double)gm.Min.X, Lernplattform.Core.Spiel.Py.F(block["x"]), 4);

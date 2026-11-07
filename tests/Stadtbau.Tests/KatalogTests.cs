@@ -96,6 +96,7 @@ public class KatalogTests
             Assert.Equal(spiel.Dreiecke, e.Dreiecke);
             Assert.Equal(spiel.Ecken, katalog.Ecken);
             Assert.Equal(spiel.Farben, katalog.Farben);
+            Assert.Equal(spiel.EckFarben, katalog.EckFarben);   // S 0.9.1: auch die Farbe je Ecke (Weisung P12-50)
             gleich++;
         }
         Assert.Equal(49, gleich);

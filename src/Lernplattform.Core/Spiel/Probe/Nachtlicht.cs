@@ -49,15 +49,17 @@ public static class Nachtlicht
     /// <see cref="Netz.Indizes"/>) markieren:
     /// Dreiecke mit Glasfarbe (<see cref="StadtTueren.IstGlas"/>), die eine Ecke teilen und in dieselbe Richtung
     /// zeigen, bilden eine Scheibe; der Wuerfel aus <paramref name="seed"/> und der Mitte entscheidet je Scheibe.
-    /// Rueckgabe: Zahl der leuchtenden Scheiben.
+    /// Rueckgabe: Zahl der leuchtenden Scheiben. <paramref name="dreiecksfarben"/> (aus <see cref="Netz.Hinzu(GrafikModell,
+    /// Matrix4x4, Modellfaerbung?, List{Vector3}?)"/>): Glas wird an der Farbe des Dreiecks erkannt, nicht an einer Ecke
+    /// (Weisung P12-50: mit Farbverlauf kann die erste Ecke anders aussehen als die Flaeche); ohne Liste die erste Ecke.
     /// </summary>
-    public static int GlasMarkieren(Netz netz, int von, string seed)
+    public static int GlasMarkieren(Netz netz, int von, string seed, IReadOnlyList<Vector3>? dreiecksfarben = null)
     {
         var indizes = netz.IndizesFeld;
         var dreiecke = new List<int>();
         for (var i = von; i + 2 < indizes.Length; i += 3)
         {
-            if (StadtTueren.IstGlas(netz.FarbeAn((int)indizes[i])))
+            if (StadtTueren.IstGlas(dreiecksfarben is null ? netz.FarbeAn((int)indizes[i]) : dreiecksfarben[(i - von) / 3]))
             {
                 dreiecke.Add(i);
             }
@@ -526,11 +528,8 @@ public static class Nachtlicht
             }
             return;
         }
-        netz.Hinzu(m, lage, (i, _, _) =>
-        {
-            var f = new Vector3(m.Farben[i * 3], m.Farben[(i * 3) + 1], m.Farben[(i * 3) + 2]) / 255f;
-            return IstGlas(f) ? f + new Vector3(Marke) : f;
-        });
+        // Glas an der Farbe des Dreiecks erkannt, die Marke kommt auf die Farbe jeder Ecke (Weisung P12-50)
+        netz.Hinzu(m, lage, (i, grund, _, _) => IstGlas(m.Farbe(i)) ? grund + new Vector3(Marke) : grund);
         foreach (var (kmin, kmax) in kaesten)
         {
             var mitte = (kmin + kmax) / 2;

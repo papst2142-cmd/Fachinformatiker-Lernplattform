@@ -23,7 +23,7 @@
    "sha256_zip": "68afa4e6dc8a53942379fb47f1e84ec735d46b77bb1c1ceb968e245693dde067",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "furniture.bin": "418b6838402cb2a99f6c45a1fe5af613f8d29db0748e824f8957b5759d2cdb5f",
+    "furniture.bin": "d6b5edb68bad877d06b42dbd7338e1ded9125ea8a36e87cce6422f13a5a2144a",
     "furniture.png": "65996b6f4ccbbd641ed50be70d552b3a3018723a32a267295d910ce8c83d97c1"
    }
   },
@@ -33,7 +33,7 @@
    "sha256_zip": "84be044ad8aa6d7b2e5e6e01ce6f2cc97133c07c04f9de7d98dc2677a0234242",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_moebel.bin": "3d9ad92f1ad89976ca89438640fe118c663d5ff4ef9c6d44e08909057b12331c",
+    "kaykit_moebel.bin": "a4fee617b3a0793f743156c9d420b45fa837979fe9550d5daee74bbad33ce04a",
     "kaykit_moebel.png": "b8bfbcfa86bdb115c38b7d5e11ef56278eada2ed28245c2db7ddbc1c22532061"
    }
   },
@@ -43,7 +43,7 @@
    "sha256_zip": "75f75f0a1ae569f3f2348fa7a04ccd45d2f010d419045755c70ae43289b68e4b",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_restaurant.bin": "91a21a78f66ef956ca84e4c0867046282257a4c67d5175c5141f626ae41e1094",
+    "kaykit_restaurant.bin": "7dc25af55149e5e2175edb277d136baaed74d903e316cfcd60640dbc59fa3b8e",
     "kaykit_restaurant.png": "ef8d9bb6b6ea0e927d092848a01e4ee7a7c4d7a7134a8f089e63e1ff1d20827d"
    }
   },
@@ -53,7 +53,7 @@
    "sha256_zip": "f8b09b081c2bb88bcc126e2dec1cb40fd0dad7e7e591b6c26aaefe96fb35276b",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "commercial.bin": "29c721431d60b0141fb427d5ab26d9433cd6f29687b3d918705a35c0b54c6674",
+    "commercial.bin": "923a39f8eb9450dbb1a08ec6c772228101fd1f9b4850f329e1de18b8e693bef6",
     "commercial.png": "5f5bf741973a545d46a8ffe6d101859dd738342c00c534fc581fca7ae544417c"
    }
   },
@@ -63,7 +63,7 @@
    "sha256_zip": "f19ce43dd738720ff2095e3b357fae35879a320cf0bd6b3c10c1099d5fba2cb3",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "suburban.bin": "d7cc4d63e711e9ed7676938236e99787153f527ee82b17e7bf9d96a9bfb9fd02",
+    "suburban.bin": "aec5fe2f09e037d410b32cfe8c2a885a7680f16a800599e1ac7cc89dbd8399fc",
     "suburban.png": "8123ada019c7c3a1e00128aa349f7ff6be287312be8c76fa4d83184ec550f1a8"
    }
   },
@@ -73,7 +73,7 @@
    "sha256_zip": "5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "industrial.bin": "5a0035108684c1913b16eb420c91052628cdd9cf774122d8e7199bf8b0e525bc",
+    "industrial.bin": "bcb80751c57bd40f72414305fc3e60ff14eaa5a5a68bd0420bd035678887fad8",
     "industrial.png": "6e89add3173f0afe588da2f59285b727d81a596a2dcb8f3575fbd8071b7a4d37"
    }
   },
@@ -83,7 +83,7 @@
    "sha256_zip": "47e1614686b4c0fe55190e88b22ff2b8b10935edf61f37f478a9b6a99477edc6",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "modular.bin": "8831eb0cc69067cb38d13398fd01db70736c3a0ff167d0e97f175d1f9641cc1a",
+    "modular.bin": "cee14688a662ecf2e98c35352a907925b6da914d31358617e6f25a2c5c18468d",
     "modular.png": "06dd72ff400180c0aa08959d500a2e1177b03884b631545b35387a44b7a3f34f"
    }
   },
@@ -93,7 +93,7 @@
    "sha256_zip": "b46e4fc873d02dad2ab2153846ede6cc242208e751b778d37f4e75bce23cb2be",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "building_kit.bin": "b6e6846a6b7db3d5cf70f825e93ca7b4d6eac004775cfbc2bb5934bf7e2af3c0",
+    "building_kit.bin": "4e042391d27b55f23ce7098459a1749769691bc991b77915d57a4b4b4b2a3991",
     "building_kit.png": "92a8f140dc0eeb0f1e7c935da5f6a3c5ce3745544fe6ac16f1ad5cb4101e9cb9"
    }
   },
@@ -103,7 +103,7 @@
    "sha256_zip": "aff444e1d083ddac331be94ea4a7590e5604ef49715ae23df71cd2e9659bd33f",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_stadt.bin": "76a2b50e4414abe913d01169d2c97dab4b37f35a1aa93eeb714ca2f8bd328c95",
+    "kaykit_stadt.bin": "9e41a90b1a1acb9c3e04ca52735d73cf73f9294d7176a7cc49c2e549e9743fae",
     "kaykit_stadt.png": "358570e456f053931e0ba79517f40efccae85548889450c0f0f337fb6f00f34e"
    }
   },
@@ -113,7 +113,7 @@
    "sha256_zip": "1d9774097021b8cbc04b3f803789bd4f9bf9095a7847a7f89426345c71701008",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "roads.bin": "cc8f7c99a59296946512b6dc64b87a01601e5dea76458c9b918c907b40b4bb7f",
+    "roads.bin": "8eb3fb76dad2e901917bd0d5041a2fb7c365414269b5098adfa73f6948dc6bb0",
     "roads.png": "6699e0d699be58d5fdf01e3902d077e8db7cda91f66f2e84f6d76cc343909114"
    }
   },
@@ -123,7 +123,7 @@
    "sha256_zip": "cf50d77e8cbacbf38dd50826d4bce5392db8e4f67373d3c4e583b0ed0e474475",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "train.bin": "909e51c0d59a85e7936b2991f67181c19af06bcf00109e8634c5d576a1f3863f",
+    "train.bin": "01b3ef24f6035445125018a024c011fecc4ebd9efadbdd27ff8dd2682b3159b2",
     "train.png": "8f429dec7a8cfe364d61c454b37328740310abf3d2fceaa224a3e076d535da57"
    }
   },
@@ -133,7 +133,7 @@
    "sha256_zip": "f8a69b83fbf94c9850079bc6e078ea3d8ba4c7393dd9f57f8ba544963d1b1d14",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "car_kit.bin": "647a6f2d187682a65fabe3042742ef4ffc974c493b1b27d89922846938adb454",
+    "car_kit.bin": "0a61a79c252fa56ca0849b055abbb72699945c095bbf7c805b980c0b36cac1b9",
     "car_kit.png": "c15f73a2cbc846c108d3ef7dc6b653fda1a4ae5451482a4b1fcf7e382573e165"
    }
   },
@@ -143,7 +143,7 @@
    "sha256_zip": "5ae214fb473cc5d4aa75828da2a61310c0f88abefbfb1fb6c7da592b18d0ee50",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "conveyor.bin": "dc3917b55a203385fe2bb27c1ad59d66fbb49e1694e486abb3862bba43c2fbb2",
+    "conveyor.bin": "2668db8a10a570e7a32e44e238b5b5cc4856674730d61c68ea133dda35d87f4d",
     "conveyor.png": "74e8b5a10687452d104b0aea80b619f08baff39ede3d3efa33d9087652d5aea6"
    }
   },
@@ -153,7 +153,7 @@
    "sha256_zip": "2acfe5cb44d392e834f77cf5488528c7cd45427cdf5fb941ce99856276158c19",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "arcade.bin": "cbb689f48709380c3ab560ee00d34d3ef4c5d66fada398cf67df94e312af4d24",
+    "arcade.bin": "ae134feb5d2a155564d9134e8484e4dc5f51e36c50a35ead42f03e0389d020eb",
     "arcade.png": "029076f0c3cde9af40abd8f0d3522ae998548258050c5e8f4159dbcd69aa5e15"
    }
   },
@@ -163,7 +163,7 @@
    "sha256_zip": "2ee83e63bb7695f2d884ec27ddf6fce020789a452e7d5c5b0bbdfc4f6ea1fc8c",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_wald.bin": "3fd8a644b23fdb8c188081fa25905497e22b11575d04ddd37b33e62899420c0e",
+    "kaykit_wald.bin": "e6662e716a82dc0260fd00c5c2ac752a8efcb24eb78c648932bb9565b6495447",
     "kaykit_wald.png": "dad5561d2daf2318f02bdddf45ab3ead71c996f1bf8a55f3a0fa987e630f7bed"
    }
   },
@@ -173,7 +173,7 @@
    "sha256_zip": "a55598dab64af822c5819aa71b326fcba7448e52a6c2bcc13667168b69be1aa4",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_halloween.bin": "b2e1b28fbe4755a4fc61f67d6862bd3098ec0d77245ffc77cf69af6fd7d9305f",
+    "kaykit_halloween.bin": "250f32081b10c7d9afc6931be22c55544cc354b5de2a24f4e79c34a185efef3a",
     "kaykit_halloween.png": "462c4b3e801a9d899499675a3f6e1c01744c7bc17f69ce7a14c5b761c915a76e"
    }
   },
@@ -183,7 +183,7 @@
    "sha256_zip": "2b72b9209455f7fde90ff0696d1ed1ac80dc49fcb85d246662c6f544741ac49a",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_holiday.bin": "894b591514a439e181f8fb8886da896718891314be2feca93a0fc96b1194f1a9",
+    "kaykit_holiday.bin": "6bc07ed3fb92ccac4a0b22c23c901c7558bb46b192cfedeb552de3ce044127c6",
     "kaykit_holiday.png": "37078d88136c128b995278fc6608afa9f9dac1850afdfa5355d607cac7d0e97c"
    }
   },
@@ -193,7 +193,7 @@
    "sha256_zip": "1a93613f2e5675f3310acf49ec9ef13ae7adeb756ac3b205bfb6cc9311a81062",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "graveyard.bin": "d68347d88897bdfa8269cf6d0772dc9f507809f7a19a5658cea7ff92281a44d2",
+    "graveyard.bin": "48549cc2da6b025532ebafbaf9426267ad885cd6ba636a1a1e8c4edf880ec71b",
     "graveyard.png": "46a1dad71dfccb7396deb254f88370a69b1e1f13582eb125d02059caa34edea0"
    }
   },
@@ -203,7 +203,7 @@
    "sha256_zip": "b3bdc99a2ec92c687b875718c5d01e9231d2711ed0e2845f295b474bb42a1283",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "cube_pets.bin": "b276205b5d041072046971e09d9cd58eb7031b7cb7cc996420fe70ad0f78dcaf",
+    "cube_pets.bin": "c10b79917e7de2fb108425177a59c6c768996fbe56608745baa28c5cc6d5c732",
     "cube_pets.png": "305ddb7e757d979b8d38813b45cb37ec3228cf0686d9e7e4881c6d7b8611046d"
    }
   },
@@ -213,7 +213,7 @@
    "sha256_zip": "abe48f4763fba0896bab486ee9e6d08ca6b5b3884b9601f235c8847ae94dc479",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_abenteurer.bin": "c2c8c2a6014a73d7c1fa6d716abf061904a08629e28326608466b44e87a66f2d",
+    "kaykit_abenteurer.bin": "736b8523bd8d6f2a144fce3477b16b56a8e8167a01b6858efa22610d0f67de77",
     "kaykit_abenteurer.png": "492e034f57b835545874cbd0c0ee2a44eaaf30c76225857e5770800ce3149c18"
    }
   },
@@ -223,7 +223,7 @@
    "sha256_zip": "21fbad59ee6cc1d7bed12d0e425acab8ebe564b8620bbc1d017aedb29dd8a3d2",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "kaykit_skelette.bin": "8da1a2db350191153cf1f2ea103bdcad7a8faf0a54cd7d68c662800c5fb1bca4",
+    "kaykit_skelette.bin": "506d488498fdfc5b4a267e82bfcedf8153dd24dd23a659300cfe6359c25523ca",
     "kaykit_skelette.png": "e2f17a5b087a410cef807b1755669b4bd7e9ffe2723ba4b20d3df4757cdfd4b2"
    }
   },
@@ -233,7 +233,7 @@
    "sha256_zip": "6c197462dc9976b522a07d11e0fb42b9caa7cf71d39abbc3ca708b69f13a40dd",
    "lizenz": "CC0 1.0",
    "dateien": {
-    "characters.bin": "c16d5638589e48d563d8036a3c520cb118dbc33a8c295e6854060efc8541838e",
+    "characters.bin": "f2b022d8509caf7df7fff1e821848f4f5483fa148243b31ae3a7c4050f56b7bb",
     "characters.png": "951f485e7b2836fa43fb7f069c9f98595a19e4d19508ae619edcd5a770460269"
    }
   },

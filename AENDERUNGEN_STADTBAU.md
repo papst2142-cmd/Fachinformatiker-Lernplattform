@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.9.1
+
+Die Häuser und Bauteile sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen sie den sanften Farbverlauf, den die Grafik eigentlich hat.
+
+- Das gilt in der 3D-Ansicht der Stadt, im Gebäude-Editor und für alle Stücke aus dem Katalog.
+- Die Bilder im Katalog bleiben, wie sie waren.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.9.0
 
 Du kannst jetzt eigene Gebäude entwerfen: aus Wänden, Ecken, Türen, Dächern und Fenstern, Stockwerk für Stockwerk.

@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.43.6
+Die Häuser im Spiel sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen die Wände den sanften Farbverlauf, den die Grafik eigentlich hat.
+
+- Betroffen waren vor allem das Kaufhaus, die Bitweiche, die Bahnhöfe, der Gewerbehof, die Filiale, das Möbelhaus, der Elektromarkt, die Betriebswerkstatt und die Wohnung von außen. Dort sind die Flecken weg.
+- Auch Autos, Züge, Bäume, Laternen und die Fest-Deko zeigen jetzt ihren Farbverlauf.
+- Häuser ohne Farbverlauf (zum Beispiel die Wohnhäuser am Stadtrand) sehen genauso aus wie bisher.
+- Nachts leuchten dieselben Fenster und Laternen wie vorher, Schnee und die Farben der Jahreszeiten bleiben, wie sie waren.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.5
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Gebäude vor, die im Stadtbau-Werkzeug aus einzelnen Wänden, Dächern und Fenstern gebaut werden.
 

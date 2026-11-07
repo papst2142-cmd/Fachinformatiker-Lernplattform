@@ -348,8 +348,8 @@ public sealed partial class StadtSzene
     /// Weisung P8-56 (Nico, Bild 4): die Lampen der Fest-Deko an den Tueren leuchten nachts wie die Laternen: bei
     /// Laternen-Modellen nur Glas und Kerze (<see cref="FestVerkehr.Glut"/>), alles andere behaelt seine Farbe.
     /// </summary>
-    private static Func<int, float, float, Vector3>? FestLicht(GrafikModell modell) =>
-        modell.Name.Contains("lantern", StringComparison.Ordinal) ? (d, _, _) => FestVerkehr.Glut(modell, d) : null;
+    private static Modellfaerbung? FestLicht(GrafikModell modell) =>
+        modell.Name.Contains("lantern", StringComparison.Ordinal) ? (d, grund, _, _) => FestVerkehr.Glut(modell, d, grund) : null;
 
     /// <summary>Das Netz eines Hauses (eigene Teile und CC0-Modelle).</summary>
     public Netz HausNetz(StadtHaus haus)
@@ -366,8 +366,9 @@ public sealed partial class StadtSzene
                 if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
                 {
                     var von = netz.Indizes.Count;
-                    netz.Hinzu(modell, Stuecke[i].Lage);
-                    Nachtlicht.GlasMarkieren(netz, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture));
+                    var flaechen = new List<Vector3>();
+                    netz.Hinzu(modell, Stuecke[i].Lage, null, flaechen);
+                    Nachtlicht.GlasMarkieren(netz, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture), flaechen);
                 }
             }
             return netz;
@@ -385,8 +386,9 @@ public sealed partial class StadtSzene
             {
                 var art = Stuecke[i].Name.Contains("tree", StringComparison.Ordinal) ? Faerbeart.Stadt : Faerbeart.Haus;
                 var von = gefaerbt.Indizes.Count;
-                gefaerbt.Hinzu(modell, Stuecke[i].Lage, ModellFaerbung(modell, Stuecke[i].Lage, art));
-                Nachtlicht.GlasMarkieren(gefaerbt, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture));
+                var flaechen = new List<Vector3>();
+                gefaerbt.Hinzu(modell, Stuecke[i].Lage, ModellFaerbung(modell, Stuecke[i].Lage, art), flaechen);
+                Nachtlicht.GlasMarkieren(gefaerbt, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture), flaechen);
             }
         }
         return gefaerbt;
@@ -464,7 +466,7 @@ public sealed partial class StadtSzene
     }
 
     /// <summary>Ferne-Form eines Modells: untere und obere Haelfte als Kasten in der mittleren Farbe der Haelfte (oben schmaler).</summary>
-    private static void FernKaesten(Netz netz, GrafikModell m, Matrix4x4 lage, Func<int, float, float, Vector3>? faerbung)
+    private static void FernKaesten(Netz netz, GrafikModell m, Matrix4x4 lage, Modellfaerbung? faerbung)
     {
         var mitteY = (m.Min.Y + m.Max.Y) / 2;
         var summe = new Vector3[2];
@@ -474,8 +476,8 @@ public sealed partial class StadtSzene
             var y = (m.Ecken[(d * 9) + 1] + m.Ecken[(d * 9) + 4] + m.Ecken[(d * 9) + 7]) / 3;
             var h = y < mitteY ? 0 : 1;
             summe[h] += faerbung is null
-                ? new Vector3(m.Farben[d * 3], m.Farben[(d * 3) + 1], m.Farben[(d * 3) + 2]) / 255f
-                : faerbung(d, 0.5f, Vector3.Transform(new Vector3(0, y, 0), lage).Y);
+                ? m.Farbe(d)
+                : faerbung(d, m.Farbe(d), 0.5f, Vector3.Transform(new Vector3(0, y, 0), lage).Y);
             zahl[h]++;
         }
         var unten = Vector3.Transform(new Vector3((m.Min.X + m.Max.X) / 2, m.Min.Y, (m.Min.Z + m.Max.Z) / 2), lage);
@@ -494,7 +496,7 @@ public sealed partial class StadtSzene
     }
 
     /// <summary>Phase 8 W9: Faerbung eines Modells an seiner Lage (Samen und Nadelbaum je Modell); null im Sommer.</summary>
-    private Func<int, float, float, Vector3>? ModellFaerbung(GrafikModell modell, Matrix4x4 lage, Faerbeart art) =>
+    private Modellfaerbung? ModellFaerbung(GrafikModell modell, Matrix4x4 lage, Faerbeart art) =>
         Jahreszeitfarben.FuerModell(Jahreszeit, art, modell, Jahreszeitfarben.Samen(lage.Translation), Jahreszeitfarben.Nadel(modell));
 
     /// <summary>
