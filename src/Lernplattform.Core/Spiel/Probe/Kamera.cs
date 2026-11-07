@@ -27,8 +27,11 @@ public sealed class Kamera
 
     public float Abstand { get; private set; }
 
-    /// <summary>Neigung ueber dem Boden in Grad.</summary>
-    public float Neigung { get; init; } = 52f;
+    /// <summary>
+    /// Neigung ueber dem Boden in Grad. S 0.7.0 (Weisung P12-45, Plan P12-26b Abschnitt 9): setzbar, damit das
+    /// Stadtbau-Werkzeug die Kamera kippen kann; das Spiel setzt sie nur beim Anlegen (unveraendert).
+    /// </summary>
+    public float Neigung { get; set; } = 52f;
 
     /// <summary>Drehung um die Hochachse in Grad (0 = Blick nach -Z), W4: per zwei Finger oder Tasten Q/E.</summary>
     public float Drehung { get; set; } = 0f;

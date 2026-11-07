@@ -179,14 +179,30 @@ public static class Texte
     public const string Fest = "Fest";
     public const string KeinFest = "kein Fest";
     public const string ProbeLaufen = "Probe laufen";
-    public const string ProbeLaufenHinweis = "Tippe in der 3D-Ansicht auf eine Stelle, die Figur läuft dorthin wie im Spiel.";
+    public const string ProbeLaufenHinweis = "Schalte „Figur laufen lassen“ ein und tippe in der 3D-Ansicht auf eine Stelle: die Figur läuft dorthin wie im Spiel. Solange der Schalter an ist, baust du nichts.";
+    public const string FigurLaufen = "Figur laufen lassen";
     public const string Ansicht3DBaut = "Die 3D-Ansicht wird neu gebaut …";
     public const string Ansicht3DFehler = "Die 3D-Ansicht lässt sich gerade nicht bauen. Schau bei den Prüfungen nach.";
     public const string Ansicht3DOhneGrafik = "Auf diesem Gerät gibt es keine 3D-Grafik.";
     public const string GrenzenGesamt = "Grenzen in der Gesamtansicht (Nacht, Winter, Weihnachten)";
     public const string GrenzenMessen = "Grenzen messen";
     public const string GrenzenNochNicht = "Noch nicht gemessen. Tippe auf „Grenzen messen“.";
-    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Nach jeder Änderung wird sie neu gebaut, mit Gehwegen, Stücken aus dem Katalog und Effekten.";
+    public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Du baust hier wie in „Stadt von oben“: Stück links wählen und tippen setzt es, ein Stück antippen wählt es, ziehen verschiebt es. Auf freier Fläche ziehen bewegt die Kamera. Mit der rechten Maustaste drehst du sie (links und rechts) und kippst sie (hoch und runter); am Tablet drehst du sie mit zwei Fingern.";
+
+    // S 0.7.0 (Weisung P12-45, Plan P12-26b Abschnitt 9): Bauen in der 3D-Ansicht
+    public const string Bauen3DGehtNicht = "Hier geht das nicht.";
+    public const string Bauen3DPasst = "Passt hier.";
+    public const string Bauen3DPrueft = "Wird geprüft …";
+    public const string Steiler = "Steiler";
+    public const string Flacher = "Flacher";
+    public const string KippenTipp = "Kippt die Kamera: steiler schaut mehr von oben, flacher mehr von der Seite. Dasselbe geht mit der rechten Maustaste hoch und runter und am Tablet mit zwei Fingern gemeinsam hoch und runter.";
+    public const string GanzeStadt3DTipp = "Zeigt die ganze Stadt von oben. Bewegen: auf freier Fläche ziehen; Mausrad oder zwei Finger zoomen.";
+    public static string Schatten(bool? passt, string? grund) => passt switch
+    {
+        true => Bauen3DPasst,
+        false => "Geht hier nicht: " + grund,
+        null => Bauen3DPrueft,
+    };
     public const string PruefungenDraussen = "Prüfungen draußen";
     public const string PruefungLaeuft = "Prüfung läuft …";
     public const string HausSetzen = "Gebäude setzen";

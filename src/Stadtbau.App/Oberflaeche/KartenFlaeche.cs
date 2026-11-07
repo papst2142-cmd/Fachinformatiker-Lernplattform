@@ -418,6 +418,27 @@ public sealed class KartenFlaeche : Control
         InvalidateVisual();
     }
 
+    /// <summary>S 0.7.0: waehlen wie ein Tipp in der Draufsicht (mit Beschreibung in der Meldezeile), auch aus der 3D-Ansicht.</summary>
+    public void WaehlenMitMeldung(AussenStelle? s)
+    {
+        Waehlen(s);
+        if (s is not null && Stand is { } a)
+        {
+            Gemeldet?.Invoke(AussenBearbeitung.Beschreibung(a, s, OrtName));
+        }
+    }
+
+    /// <summary>S 0.7.0: Innenraum des Hauses oeffnen wie ein Doppeltipp (true = es hat einen).</summary>
+    public bool InnenOeffnen(AussenStelle s)
+    {
+        if (_projekt?.InnenortVon(s) is not { } innenort)
+        {
+            return false;
+        }
+        OrtGewaehlt?.Invoke(innenort);
+        return true;
+    }
+
     /// <summary>Stueck aus dem Katalog an diese Stelle setzen (Start-Test und Tipp).</summary>
     public AussenStelle? SetzenAn(double x, double y)
     {

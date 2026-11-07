@@ -77,6 +77,18 @@ public sealed partial class Hauptansicht : UserControl
     // Innenraeume
     public GrundrissFlaeche Flaeche { get; } = new();
     public KartenFlaeche Karte { get; } = new();
+
+    private DreiBedienung? _bedienung3D;
+
+    /// <summary>S 0.7.0: Bauen in der 3D-Ansicht (Ebene ueber der Spiel-Flaeche).</summary>
+    public DreiBedienung Bedienung3D => _bedienung3D ??= new DreiBedienung(Drei, Karte);
+
+    private readonly ContentControl _aussenMitte = new();
+    private Control? _karteMitte;
+    private Control? _dreiMitte;
+    private readonly StackPanel _aussenRechts = new() { Spacing = 12 };
+    private readonly List<Control> _dreiKarten = [];
+    private readonly CheckBox _figurLaufen = new() { Content = Schrift.Text(Texte.FigurLaufen, "Klein") };
     private readonly ComboBox _ortWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel _auswahl = new() { Spacing = 6 };
     private readonly StackPanel _raum = new() { Spacing = 6 };
@@ -548,6 +560,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         _aussenStand++;
         _dreiAenderung = Stopwatch.GetTimestamp();
+        _bedienung3D?.StandGeaendert();
         Karte.InvalidateVisual();
         AussenAuswahlZeigen();
         if (_drei)
@@ -594,6 +607,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             _kartenAnsicht ??= KarteBauen();
             _inhalt.Content = _kartenAnsicht;
+            DreiTeileZeigen(false);
             Karte.Zeigen(_projekt);
             AussenAuswahlZeigen();
             AussenPruefungZeigen();
@@ -645,22 +659,19 @@ public sealed partial class Hauptansicht : UserControl
         Grid.SetRow(zoom, 1);
         zoom.Margin = new Thickness(0, 8, 0, 0);
         mitte.Children.Add(zoom);
+        // S 0.7.0: die Mitte zeigt die Draufsicht oder die 3D-Ansicht; links und rechts bleiben dieselben
+        _karteMitte = mitte;
+        _aussenMitte.Content = mitte;
 
-        var rechts = new StackPanel
-        {
-            Spacing = 12,
-            Children =
-            {
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _aussenAuswahl } }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.PruefungenDraussen, "Mittel", FontWeight.Bold), _aussenPruefungen } }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Innenraeume, "Mittel", FontWeight.Bold), _ortListe } }),
-            },
-        };
+        var rechts = _aussenRechts;
+        rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _aussenAuswahl } }));
+        rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.PruefungenDraussen, "Mittel", FontWeight.Bold), _aussenPruefungen } }));
+        rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Innenraeume, "Mittel", FontWeight.Bold), _ortListe } }));
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
         var g = _aussenRaster;
         g.Children.Add(linksRollen);
-        Grid.SetColumn(mitte, 1);
-        g.Children.Add(mitte);
+        Grid.SetColumn(_aussenMitte, 1);
+        g.Children.Add(_aussenMitte);
         Grid.SetColumn(rechtsRollen, 2);
         g.Children.Add(rechtsRollen);
         return g;
@@ -1348,29 +1359,79 @@ public sealed partial class Hauptansicht : UserControl
         var messen = Schrift.Knopf(Texte.GrenzenMessen);
         messen.Click += (_, _) => _ = GrenzenMessenAsync();
         _dreiGrenzBalken.Farbe(ProgressBar.ForegroundProperty, "Pinsel.green");
-        var rechts = new StackPanel
+        _figurLaufen.IsCheckedChanged += (_, _) =>
         {
-            Spacing = 12,
+            Bedienung3D.FigurLaufen = _figurLaufen.IsChecked == true;
+            Bedienung3D.SchattenWeg();
+        };
+        _figurLaufen.Vorlese(Texte.FigurLaufen);
+        // S 0.7.0 (Plan P12-26b Abschnitt 9): rechts dieselbe Spalte wie in der Draufsicht, die Karten der 3D-Ansicht
+        // kommen dazu (oben die 3D-Karte, unter „Ausgewähltes Stück“ Tag/Nacht, Jahreszeit, Fest, Probe und Grenzen)
+        Control[] oben = [Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Ansicht3D, "Mittel", FontWeight.Bold), Schrift.Text(Texte.Ansicht3DHinweis, "Klein", farbe: "Pinsel.muted"), _dreiStatus } })];
+        Control[] unter =
+        [
+            Schrift.Karte(new StackPanel
+            {
+                Spacing = 6,
+                Children = { Zeilen((Texte.Tag + " / " + Texte.Nacht, licht), (Texte.Jahreszeit, jahr), (Texte.Fest, fest)) },
+            }),
+            Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.ProbeLaufen, "Mittel", FontWeight.Bold), Schrift.Text(Texte.ProbeLaufenHinweis, "Klein", farbe: "Pinsel.muted"), _figurLaufen } }),
+            Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.GrenzenGesamt, "Mittel", FontWeight.Bold), _dreiGrenzBalken, _dreiGrenzText, messen } }),
+        ];
+        _kartenAnsicht ??= KarteBauen();
+        _aussenRechts.Children.Insert(0, oben[0]);
+        for (var i = 0; i < unter.Length; i++)
+        {
+            _aussenRechts.Children.Insert(2 + i, unter[i]);
+        }
+        _dreiKarten.AddRange(oben);
+        _dreiKarten.AddRange(unter);
+
+        Button Klein(string text, string name, string tipp, Action a)
+        {
+            var k = Schrift.Knopf(text).Vorlese(name).Mit(tipp);
+            k.Click += (_, _) => a();
+            return k;
+        }
+        var knoepfe = new WrapPanel
+        {
+            Margin = new Thickness(0, 8, 0, 0),
             Children =
             {
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Ansicht3D, "Mittel", FontWeight.Bold), Schrift.Text(Texte.Ansicht3DHinweis, "Klein", farbe: "Pinsel.muted"), _dreiStatus } }),
-                Schrift.Karte(new StackPanel
-                {
-                    Spacing = 6,
-                    Children = { Zeilen((Texte.Tag + " / " + Texte.Nacht, licht), (Texte.Jahreszeit, jahr), (Texte.Fest, fest)) },
-                }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.ProbeLaufen, "Mittel", FontWeight.Bold), Schrift.Text(Texte.ProbeLaufenHinweis, "Klein", farbe: "Pinsel.muted") } }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.GrenzenGesamt, "Mittel", FontWeight.Bold), _dreiGrenzBalken, _dreiGrenzText, messen } }),
+                Klein("+", Texte.Vergroessern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(1.25f)),
+                Klein("−", Texte.Verkleinern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(0.8f)),
+                Klein(Texte.GanzeStadtZeigen, Texte.GanzeStadtZeigen, Texte.GanzeStadt3DTipp, Bedienung3D.GanzeStadt),
+                Klein(Texte.Steiler, Texte.Steiler, Texte.KippenTipp, () => Bedienung3D.Kippen(8)),
+                Klein(Texte.Flacher, Texte.Flacher, Texte.KippenTipp, () => Bedienung3D.Kippen(-8)),
             },
         };
-        var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
-        var mitte = new Border { Child = Drei, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1), Margin = new Thickness(12) }
+        var ebene = new Grid();
+        ebene.Children.Add(Drei);
+        // ohne Tipp: ein Tipp ueber der ganzen Ansicht laege beim Bauen ueber der Stadt (Foto S 0.7.0)
+        ebene.Children.Add(Bedienung3D.Vorlese(Texte.Ansicht3D));
+        var flaeche = new Border { Child = ebene, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
             .Farbe(Border.BorderBrushProperty, "Pinsel.border");
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,340") };
-        g.Children.Add(mitte);
-        Grid.SetColumn(rechtsRollen, 1);
-        g.Children.Add(rechtsRollen);
-        return g;
+        var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
+        mitte.Children.Add(flaeche);
+        Grid.SetRow(knoepfe, 1);
+        mitte.Children.Add(knoepfe);
+        _dreiMitte = mitte;
+        DreiTeileZeigen(_drei);
+        return mitte;
+    }
+
+    /// <summary>S 0.7.0: Mitte (Draufsicht oder 3D) und die Karten der 3D-Ansicht rechts umschalten.</summary>
+    private void DreiTeileZeigen(bool drei)
+    {
+        _aussenMitte.Content = drei ? _dreiMitte : _karteMitte;
+        foreach (var k in _dreiKarten)
+        {
+            k.IsVisible = drei;
+        }
+        if (!drei)
+        {
+            _bedienung3D?.SchattenWeg();
+        }
     }
 
     public void DreiZeigen()
@@ -1381,8 +1442,13 @@ public sealed partial class Hauptansicht : UserControl
         }
         _drei = true;
         _innen = false;
+        _kartenAnsicht ??= KarteBauen();
         _dreiAnsicht ??= DreiBauen();
-        _inhalt.Content = _dreiAnsicht;
+        _inhalt.Content = _kartenAnsicht;
+        DreiTeileZeigen(true);
+        Karte.Zeigen(_projekt);
+        AussenAuswahlZeigen();
+        AussenPruefungZeigen();
         KnoepfeFreigeben();
         _dreiAenderung = Stopwatch.GetTimestamp();
         if (DreiAktuell && Drei.Spiel is not null && !_dreiBaut)
@@ -1401,7 +1467,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             DreiAktualisieren();
         }
-        Drei.Focus();
+        Bedienung3D.Focus();
     }
 
     public void EinstellungSetzen(Ansicht3D.Einstellung einstellung)
@@ -1480,7 +1546,7 @@ public sealed partial class Hauptansicht : UserControl
                 return;
             }
             var alt = Drei.AktuelleKamera;
-            var (ax, az, ab, ad) = alt is null ? (float.NaN, 0f, 0f, 0f) : (alt.ZielX, alt.ZielZ, alt.Abstand, alt.Drehung);
+            var (ax, az, ab, ad, an) = alt is null ? (float.NaN, 0f, 0f, 0f, 0f) : (alt.ZielX, alt.ZielZ, alt.Abstand, alt.Drehung, alt.Neigung);
             Tageslicht.FesteUhr = einstellung.Uhr;
             Drei.Spiel = t.Result;
             if (!float.IsNaN(ax) && Drei.AktuelleKamera is { } neu)
@@ -1489,6 +1555,7 @@ public sealed partial class Hauptansicht : UserControl
                 neu.Setzen(ax, az);
                 neu.Zoomen(neu.Abstand / ab);
                 neu.Drehung = ad;
+                neu.Neigung = an;
             }
             _dreiGebaut = stand;
             _dreiEinstellung = einstellung;
@@ -1553,7 +1620,9 @@ public sealed partial class Hauptansicht : UserControl
             EinstellungSetzen(vorher);
             return;
         }
-        var (ax, az, ab) = (kamera.ZielX, kamera.ZielZ, kamera.Abstand);
+        var (ax, az, ab, an) = (kamera.ZielX, kamera.ZielZ, kamera.Abstand, kamera.Neigung);
+        // gemessen wird wie im Spiel (Neigung der Stadt), auch wenn die Kamera gekippt ist
+        kamera.Neigung = Bauen3D.NeigungSpiel;
         kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
         kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
         await Drei.NaechstesBildAsync();
@@ -1562,6 +1631,7 @@ public sealed partial class Hauptansicht : UserControl
         GrenzenDraussen = (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe);
         kamera.Setzen(ax, az);
         kamera.Zoomen(kamera.Abstand / ab);
+        kamera.Neigung = an;
         var (dreiecke, aufrufe) = GrenzenDraussen.Value;
         var anteil = StadtbauGrenzen.Anteil(dreiecke, aufrufe);
         _dreiGrenzBalken.Value = Math.Min(100, anteil * 100);
@@ -2344,6 +2414,21 @@ public sealed partial class Hauptansicht : UserControl
         }
     }
 
+    private bool Drei3DTaste(Key taste)
+    {
+        switch (taste)
+        {
+            case Key.PageUp:
+                Bedienung3D.Kippen(8);
+                return true;
+            case Key.PageDown:
+                Bedienung3D.Kippen(-8);
+                return true;
+            default:
+                return Drei.Taste(taste);
+        }
+    }
+
     private static void TasteLos(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -2382,7 +2467,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         else if (e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
         {
-            if (e.Key == Key.Space && !_drei)
+            if (e.Key == Key.Space)
             {
                 // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste halten und mit der Maus ziehen schiebt die Ansicht
                 KartenFlaeche.LeertasteGehalten = true;
@@ -2396,6 +2481,12 @@ public sealed partial class Hauptansicht : UserControl
             else if (!_drei)
             {
                 e.Handled = Karte.Taste(e.Key, e.KeyModifiers);
+            }
+            else
+            {
+                // S 0.7.0: in 3D zuerst die Tasten der Draufsicht (Auswahl schieben, drehen, loeschen, kopieren), dann
+                // Bild hoch/runter kippt, sonst die Kamera-Tasten des Spiels
+                e.Handled = Karte.Taste(e.Key, e.KeyModifiers) || Drei3DTaste(e.Key);
             }
         }
     }
