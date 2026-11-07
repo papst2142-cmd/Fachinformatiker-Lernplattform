@@ -76,6 +76,15 @@ public sealed class DreiBedienung : Control
             }
             InvalidateVisual();
         };
+        // S 0.9.1 (Weisung P12-53 Teil A): Setzen abgewaehlt, dann verschwindet der Schatten sofort
+        _karte.SetzenGeaendert += () =>
+        {
+            if (_karte.SetzenArt is null && !_ziehen)
+            {
+                SchattenWeg();
+            }
+            InvalidateVisual();
+        };
     }
 
     /// <summary>Schalter „Figur laufen lassen“: Tippen laesst die Figur laufen, gebaut wird nichts.</summary>

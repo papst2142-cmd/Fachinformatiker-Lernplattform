@@ -60,7 +60,38 @@ public sealed class KartenFlaeche : Control
     public AussenStelle? Auswahl { get; private set; }
 
     /// <summary>Stueck aus dem Katalog, das beim naechsten Tipp gesetzt wird (null = waehlen).</summary>
-    public AussenArt? SetzenArt { get; set; }
+    public AussenArt? SetzenArt
+    {
+        get => _setzenArt;
+        set
+        {
+            if (_setzenArt == value)
+            {
+                return;
+            }
+            _setzenArt = value;
+            SetzenGeaendert?.Invoke();
+        }
+    }
+
+    private AussenArt? _setzenArt;
+
+    /// <summary>S 0.9.1 (Weisung P12-53 Teil A): das Setzen beginnt oder endet (Markierung des Knopfs links,
+    /// Knopf "Setzen beenden", Schatten in 3D).</summary>
+    public event Action? SetzenGeaendert;
+
+    /// <summary>
+    /// S 0.9.1 (Weisung P12-53 Teil A, Nico: "Man kann Strassen oder Fluesse nicht wieder abwaehlen"): das Setzen
+    /// beenden, ohne etwas zu setzen. Kein Schritt im Verlauf, die Karte bleibt, wie sie ist. Vorher ging das nur mit
+    /// Escape (am Tablet gar nicht), sonst endete das Setzen erst mit dem naechsten gesetzten Stueck.
+    /// </summary>
+    public void SetzenBeenden()
+    {
+        SetzenBlueprint = null;
+        SetzenModell = null;
+        SetzenArt = null;
+        InvalidateVisual();
+    }
 
     /// <summary>
     /// Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Vierteldrehungen fuer das naechste gesetzte Stueck (Strasse
@@ -716,7 +747,7 @@ public sealed class KartenFlaeche : Control
         switch (taste)
         {
             case Key.Escape:
-                SetzenArt = null;
+                SetzenBeenden();
                 Waehlen(null);
                 return true;
             case Key.Delete or Key.Back when Auswahl is not null:

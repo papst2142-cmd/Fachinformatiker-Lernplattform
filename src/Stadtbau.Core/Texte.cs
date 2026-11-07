@@ -190,6 +190,13 @@ public static class Texte
     public const string Doppelt = "Doppellaterne (zwei Lampen)";
     public const string AussenKatalog = "Stücke für draußen";
     public const string AussenSetzenAktiv = "Tippe auf die Stelle in der Karte, an die das Stück soll.";
+
+    // S 0.9.1 (Weisung P12-53 Teil A): Setzen abwaehlen
+    public const string SetzenBeenden = "Setzen beenden";
+    public const string SetzenBeendenTipp = "Beendet das Setzen, ohne etwas auf die Karte zu stellen. Danach kannst du wieder Stücke antippen und die Karte frei bewegen. Am PC geht das auch mit der Taste Escape.";
+    public const string SetzenBeendet = "Setzen beendet, nichts gesetzt.";
+    public const string SetzenKnopfTipp = "Antippen wählt das Stück zum Setzen, nochmal antippen wählt es wieder ab.";
+    public const string SetzenGewaehlt = "gewählt";
     public const string HausDrehenNicht = "Häuser schauen im Spiel immer mit der Vorderseite nach Süden. Drehen kann das Spiel noch nicht.";
     public const string LaterneDrehenNicht = "Laternen richten sich im Spiel selbst zur Straße aus.";
     public const string DrehenNichtNoetig = "Dieses Stück sieht von allen Seiten gleich aus.";
