@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.8.0
+
+Du kannst jetzt Wasser bauen: Teiche, Stege und den Fluss.
+
+- Links gibt es die neue Gruppe „Wasser“ mit „Fluss“, „Teich“, „Runder Teich“ und „Steg“. Setzen, Verschieben, Drehen, Kopieren und Löschen gehen wie bei jedem anderen Stück, von oben und in der 3D-Ansicht.
+- Ein Teich hat eine freie Form mit runden Ecken. Wählst du ihn, siehst du an jeder Ecke einen kleinen Kreis. Den ziehst du mit der Maus oder mit einem Finger an eine neue Stelle. Mit „Eckpunkt dazu“ und „Eckpunkt weg“ machst du die Form feiner oder einfacher; ein Teich behält mindestens drei Ecken. Beim Fluss gehen die Eckpunkte genauso.
+- Ein Steg ist ein Holzsteg am Ufer. Länge und Breite stellst du rechts ein.
+- Der Schalter „Eis im Winter“ lässt alles Wasser der Stadt im Winter zufrieren. Ist er aus, bleibt das Wasser auch im Winter blau.
+- Die Prüfung achtet jetzt auch auf das Wasser: kein Haus, kein Baum, keine Laterne und kein Stück im Wasser oder auf dem Ufer, keine Straße durch einen Teich und nicht längs durch den Fluss (quer als Brücke ist erlaubt), jeder Steg berührt das Ufer, und jeder Ort bleibt zu Fuß erreichbar. Wo etwas nicht geht, zeigt der Schatten in der 3D-Ansicht rot.
+- Alles ist ein Schritt, den du mit „Rückgängig“ zurücknehmen kannst.
+
 ## S 0.7.0
 
 Du kannst jetzt direkt in der 3D-Ansicht bauen, so wie in „Stadt von oben“.

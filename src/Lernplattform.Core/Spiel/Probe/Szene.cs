@@ -160,6 +160,29 @@ public sealed class Netz
         }
     }
 
+    /// <summary>
+    /// S 0.8.0 (Weisung P12-47): eine flache Flaeche am Boden (Teich, Ufer) in Dreiecken (<see cref="Wasser.Dreiecke"/>),
+    /// Normale nach oben, Faerbung wie bei den Streifen (Winter, Nacht wie der Boden).
+    /// </summary>
+    public void Hinzu(Bodenflaeche f)
+    {
+        var p = f.Punkte;
+        if (p.Count < 3)
+        {
+            return;
+        }
+        var farbe = Faerbung is { } faerbung ? faerbung(f.Farbe, 1f, f.Hoehe) : f.Farbe;
+        foreach (var (ia, ib, ic) in Wasser.Dreiecke(p))
+        {
+            // gegen den Uhrzeigersinn in (x, z) zeigt das Kreuzprodukt nach unten: b und c tauschen (Normale nach oben)
+            var basis = (uint)AnzahlEcken;
+            Ecke(new Vector3(p[ia].X, f.Hoehe, p[ia].Y), Vector3.UnitY, farbe);
+            Ecke(new Vector3(p[ic].X, f.Hoehe, p[ic].Y), Vector3.UnitY, farbe);
+            Ecke(new Vector3(p[ib].X, f.Hoehe, p[ib].Y), Vector3.UnitY, farbe);
+            _indizes.AddRange([basis, basis + 1, basis + 2]);
+        }
+    }
+
     /// <summary>Viereck mit fester Normale (oben) oder aus den Ecken; ohne Flaeche (entartet) nichts.</summary>
     private void Flaeche(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 farbe, Vector3? normale)
     {

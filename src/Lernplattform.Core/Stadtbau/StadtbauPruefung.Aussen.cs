@@ -132,6 +132,7 @@ public static partial class StadtbauPruefung
         StrassenAufeinander(fassung, funde);
         KatalogDraussen(szene, fassung, funde);
         Paketplatz(stadt, szene, funde);
+        WasserRegeln(stadt, stand, szene, fassung, funde);
         return funde;
     }
 

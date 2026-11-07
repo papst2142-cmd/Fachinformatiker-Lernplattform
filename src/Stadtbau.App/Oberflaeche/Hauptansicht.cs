@@ -125,6 +125,14 @@ public sealed partial class Hauptansicht : UserControl
     private readonly StackPanel _blueprintListe = new() { Spacing = 10 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
     private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
+
+    /// <summary>S 0.8.0 (Weisung P12-47, Frage 6 = a): Schalter „Eis im Winter“ (<c>stadtdaten.wasser.eis</c>).</summary>
+    private readonly CheckBox _eisImWinter = new() { Content = Schrift.Text(Texte.EisImWinter, "Klein") };
+
+    private bool _eisSetzen;
+
+    /// <summary>Start-Test: der Schalter „Eis im Winter“.</summary>
+    internal CheckBox EisSchalterFuerTests => _eisImWinter;
     private readonly ComboBox _modellWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock _dreiStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
     private readonly TextBlock _dreiGrenzText = Schrift.Text(Texte.GrenzenNochNicht, "Klein");
@@ -246,6 +254,20 @@ public sealed partial class Hauptansicht : UserControl
         Karte.AuswahlGeaendert += AussenAuswahlZeigen;
         Karte.Gemeldet += Melden;
         _aussenRasterAus.IsCheckedChanged += (_, _) => Karte.Raster = _aussenRasterAus.IsChecked != true;
+        _eisImWinter.Vorlese(Texte.EisImWinter).Mit(Texte.EisTipp);
+        _eisImWinter.IsCheckedChanged += (_, _) =>
+        {
+            if (_eisSetzen || _projekt is null || _projekt.NurLesen)
+            {
+                return;
+            }
+            var an = _eisImWinter.IsChecked == true;
+            if (an != Aussen.Eis(_projekt.AussenStand))
+            {
+                _projekt.AussenAendern(Texte.EisImWinter, aa => AussenBearbeitung.EisSetzen(aa, an));
+                Melden(Texte.EisImWinter + (an ? ": an" : ": aus"));
+            }
+        };
         Drei.BildGezeichnet += DreiBildGezeichnet;
         _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked != true;
         _ortWahl.SelectionChanged += (_, _) =>
@@ -632,6 +654,21 @@ public sealed partial class Hauptansicht : UserControl
                 KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne),
             },
         };
+        // S 0.8.0 (Weisung P12-47): Wasser, jeder Knopf mit Tipp
+        Button WasserKnopf(string text, string tipp, AussenArt art, string? form = null)
+        {
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(tipp);
+            k.Click += (_, _) => AussenSetzenWaehlen(art, form);
+            return k;
+        }
+        var wasser = new WrapPanel
+        {
+            Children =
+            {
+                WasserKnopf(Texte.Fluss, Texte.FlussTipp, AussenArt.Fluss), WasserKnopf(Texte.Teich, Texte.TeichTipp, AussenArt.Teich),
+                WasserKnopf(Texte.TeichRund, Texte.TeichRundTipp, AussenArt.Teich, "rund"), WasserKnopf(Texte.Steg, Texte.StegTipp, AussenArt.Steg),
+            },
+        };
         var modellTitel = Schrift.Text(Texte.Modell, "Klein").Fuer(_modellWahl);
         var haus = KatalogKnopf(Texte.HausSetzen, AussenArt.Gebaeude, () => _modellWahl.SelectedItem is ComboBoxItem { Tag: string m } ? m : null);
         var links = new StackPanel
@@ -640,6 +677,7 @@ public sealed partial class Hauptansicht : UserControl
             Children =
             {
                 Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, reihe, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
             },
@@ -813,6 +851,7 @@ public sealed partial class Hauptansicht : UserControl
         Karte.SetzenModell = modell;
         _setzenName = art switch
         {
+            AussenArt.Teich when modell == "rund" => Texte.TeichRund,
             AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
             _ => KatalogName(art),
@@ -831,12 +870,19 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Laterne => Texte.Laterne,
         AussenArt.Katalog => Texte.VollerKatalog,
         AussenArt.Blueprint => Texte.BlueprintSetzen,
+        AussenArt.Fluss => Texte.Fluss,
+        AussenArt.Teich => Texte.Teich,
+        AussenArt.Steg => Texte.Steg,
         _ => Texte.HausOhneOrt,
     };
 
     private void AussenAuswahlZeigen()
     {
         _aussenAuswahl.Children.Clear();
+        _eisSetzen = true;
+        _eisImWinter.IsChecked = _projekt is not null && Aussen.Eis(_projekt.AussenStand);
+        _eisImWinter.IsEnabled = _projekt is not null && !_projekt.NurLesen;
+        _eisSetzen = false;
         _aussenHinweis.Text = Karte.SetzenArt is { } art ? (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
         if (Karte.SetzenArt is null)
         {
@@ -872,6 +918,14 @@ public sealed partial class Hauptansicht : UserControl
             kt = Feld(gt);
             zeilen.Add((Texte.Breite, kw));
             zeilen.Add((Texte.Tiefe, kt));
+        }
+        if (s.Art == AussenArt.Steg)
+        {
+            var (sw, st) = AussenBearbeitung.StegGroesse(a, s);
+            kw = Feld(sw);
+            kt = Feld(st);
+            zeilen.Add((Texte.StegLaenge, kw));
+            zeilen.Add((Texte.StegBreite, kt));
         }
         if (s.Art == AussenArt.Strasse)
         {
@@ -941,7 +995,14 @@ public sealed partial class Hauptansicht : UserControl
                 }
                 if (kw is not null && kt is not null && Zahl(kw, out var nw) && Zahl(kt, out var nt))
                 {
-                    AussenBearbeitung.KatalogGroesseSetzen(aa, s, nw, nt);
+                    if (s.Art == AussenArt.Steg)
+                    {
+                        AussenBearbeitung.StegGroesseSetzen(aa, s, nw, nt);
+                    }
+                    else
+                    {
+                        AussenBearbeitung.KatalogGroesseSetzen(aa, s, nw, nt);
+                    }
                 }
                 AussenBearbeitung.Platzieren(aa, s, nx, ny);
             });
@@ -962,6 +1023,18 @@ public sealed partial class Hauptansicht : UserControl
         weg.Click += (_, _) => Karte.Loeschen();
         weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;
         _aussenAuswahl.Children.Add(new WrapPanel { Children = { drehen, neu, kopie, weg } });
+        if (AussenBearbeitung.MitEckpunkten(s.Art))
+        {
+            // S 0.8.0: Eckpunkte von Teich und Fluss dazu und weg (Ziehen geht direkt an den Griffen)
+            var dazu = Schrift.Knopf(Texte.EckpunktDazu).Mit(Texte.EckpunktDazuTipp);
+            dazu.Click += (_, _) => Karte.EckpunktDazu();
+            var wegNicht = AussenBearbeitung.EckpunktWegNicht(a, s);
+            var eckWeg = Schrift.Knopf(Texte.EckpunktWeg).Mit(wegNicht ?? Texte.EckpunktWegTipp);
+            ToolTip.SetShowOnDisabled(eckWeg, true);
+            eckWeg.Click += (_, _) => Karte.EckpunktWeg();
+            eckWeg.IsEnabled = wegNicht is null;
+            _aussenAuswahl.Children.Add(new WrapPanel { Children = { dazu, eckWeg } });
+        }
         // warum etwas nicht geht, steht klein darunter
         foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
         {

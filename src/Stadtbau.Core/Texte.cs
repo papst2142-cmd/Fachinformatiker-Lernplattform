@@ -139,6 +139,30 @@ public static class Texte
     public const string Park = "Park";
     public const string Paketplatz = "Paketplatz";
 
+    // S 0.8.0 (Weisung P12-47, Plan P12-26b Abschnitt 10): Wasser
+    public const string Fluss = "Fluss";
+    public const string Teich = "Teich";
+    public const string TeichRund = "Runder Teich";
+    public const string Steg = "Steg";
+    public const string Eckpunkt = "Eckpunkt";
+    public const string Eckpunkte = "Eckpunkte";
+    public const string EckpunktDazu = "Eckpunkt dazu";
+    public const string EckpunktWeg = "Eckpunkt weg";
+    public const string EckpunktWaehlen = "Tippe zuerst einen Eckpunkt an (die runden Griffe am Rand).";
+    public const string EckpunktWenigstens = "Ein Teich braucht mindestens drei Eckpunkte, ein Fluss zwei.";
+    public const string EisImWinter = "Eis im Winter (Fluss und Teiche frieren zu)";
+    public const string WasserGruppe = "Wasser";
+    public const string FlussTipp = "Setzt einen Fluss. Ziehe seine Punkte wie bei einer Straße, er bleibt gleich breit. Wo eine Straße ihn quert, baut das Spiel eine Brücke.";
+    public const string TeichTipp = "Setzt einen Teich mit Ufer. Ziehe die runden Griffe an den Ecken; die Ecken werden rund gezeichnet.";
+    public const string TeichRundTipp = "Setzt einen runden Teich (acht Eckpunkte). Die Griffe lassen sich danach frei ziehen.";
+    public const string StegTipp = "Setzt einen Holzsteg. Ein Ende muss auf dem Ufer liegen; über den Fluss gelegt ist er eine Fußgängerbrücke.";
+    public const string EckpunktDazuTipp = "Setzt einen neuen Eckpunkt neben den gewählten (sonst in die Mitte der längsten Kante).";
+    public const string EckpunktWegTipp = "Nimmt den gewählten Eckpunkt weg.";
+    public const string EisTipp = "Nur im Winter: Fluss und Teiche frieren zu, Brücken und Stege bleiben. Ohne Haken sieht das Wasser im Winter aus wie bisher.";
+    public const string StegLaenge = "Länge";
+    public const string TippWasser = "Fluss, Teich und Steg. Wasser sperrt den Weg; über einen Fluss führen nur Brücken (Straße quer darüber) und Stege.";
+    public const string StegBreite = "Breite";
+
     // Phase 13 Welle 3b (Weisung P12-19): voller CC0-Katalog
     public const string VollerKatalog = "Voller Katalog (CC0)";
     public const string VollerKatalogOeffnen = "Voller Katalog";

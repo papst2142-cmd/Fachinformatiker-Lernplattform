@@ -17,7 +17,7 @@ namespace Stadtbau.Core;
 /// Was das Spiel noch nicht kann, bietet das Werkzeug nicht an: Haeuser drehen (das Spiel zeichnet jedes Haus mit der
 /// Front nach Sueden) und Orte des Spiels loeschen oder neu setzen (das aendert Spielregeln, Plan Abschnitt 1).
 /// </summary>
-public static class AussenBearbeitung
+public static partial class AussenBearbeitung
 {
     /// <summary>So nah muss ein Strassenende an einer anderen Strasse liegen, damit es dort einrastet.</summary>
     public const double EinrastenAb = 0.6;
@@ -211,6 +211,10 @@ public static class AussenBearbeitung
             var k = Objekt(katalog[i]);
             yield return (new AussenStelle(AussenArt.Katalog, i), Py.F(k["x"]), Py.F(k["y"]));
         }
+        foreach (var w in AlleWasser(aussen))
+        {
+            yield return w;
+        }
     }
 
     /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
@@ -240,7 +244,8 @@ public static class AussenBearbeitung
     public static string KatalogId(PyObjekt aussen, AussenStelle s) => Py.Str(Objekt(Aussen.KatalogStuecke(aussen)[s.Nummer])["id"]);
 
     /// <summary>Gibt es dieses Stueck (noch)?</summary>
-    public static bool Gueltig(PyObjekt aussen, AussenStelle s) => Alle(aussen).Any(a => a.Stelle == s);
+    public static bool Gueltig(PyObjekt aussen, AussenStelle s) =>
+        MitEckpunkten(s.Art) && s.Punkt >= 0 ? EckpunktGueltig(aussen, s) : Alle(aussen).Any(a => a.Stelle == s);
 
     /// <summary>
     /// Oberstes Stueck an einem Punkt: zuerst kleine (Laterne, Paketplatz, Beet, Baum), dann Haeuser, dann Parks, dann
@@ -250,6 +255,11 @@ public static class AussenBearbeitung
     {
         var p = new Vector2((float)x, (float)y);
         var alle = Alle(aussen).ToList();
+        // S 0.8.0: Eckpunkte von Teich und Fluss zuerst (sonst liesse sich eine Ecke neben einem Baum nicht greifen)
+        if (EckpunktBei(aussen, x, y, greifen) is { } ecke)
+        {
+            return ecke;
+        }
         foreach (var art in new[] { AussenArt.Laterne, AussenArt.Paketplatz, AussenArt.Beet, AussenArt.Baum })
         {
             var naechstes = alle.Where(a => a.Stelle.Art == art).Select(a => (a.Stelle, D: Vector2.Distance(p, new Vector2((float)a.X, (float)a.Y))))
@@ -276,6 +286,11 @@ public static class AussenBearbeitung
                 return s;
             }
         }
+        // S 0.8.0: Steg und Teich vor dem Park (ein Steg liegt auf dem Wasser)
+        if ((WasserBei(aussen, p, AussenArt.Steg) ?? WasserBei(aussen, p, AussenArt.Teich)) is { } wasser)
+        {
+            return wasser;
+        }
         var land = Aussen.Landschaft(aussen);
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Park).Reverse())
         {
@@ -287,7 +302,8 @@ public static class AussenBearbeitung
         }
         return alle.Where(a => a.Stelle.Art == AussenArt.Strasse)
             .Select(a => (a.Stelle, D: Kurve.Abstand(p, Linie(Objekt(land[a.Stelle.Nummer])["punkte"])), Halb: (StadtSzene.StrassenBreite / 2) + Gehweg(aussen, a.Stelle)))
-            .Where(a => a.D <= a.Halb + 0.05).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
+            .Where(a => a.D <= a.Halb + 0.05).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault()
+            ?? WasserBei(aussen, p, AussenArt.Fluss);
     }
 
     // ---- Setzen ---------------------------------------------------------------------------------------
@@ -303,6 +319,10 @@ public static class AussenBearbeitung
         if (x < 0 || y < 0 || x > breite || y > hoehe)
         {
             return null;
+        }
+        if (IstWasser(art))
+        {
+            return WasserSetzen(aussen, art, x, y, raster, modell);
         }
         var land = Aussen.Landschaft(aussen);
         var r = raster ? Bearbeitung.Raster : Bearbeitung.RasterFein;
@@ -411,6 +431,11 @@ public static class AussenBearbeitung
         (dx, dy) = (Schritt(dx, grob), Schritt(dy, grob));
         if (dx == 0 && dy == 0)
         {
+            return;
+        }
+        if (IstWasser(s.Art))
+        {
+            WasserVerschieben(aussen, s, dx, dy);
             return;
         }
         var land = Aussen.Landschaft(aussen);
@@ -614,6 +639,8 @@ public static class AussenBearbeitung
             case AussenArt.Haus:
                 var o = Ort(aussen, s.Ort)!;
                 return (Py.F(o["x"]), Py.F(o["y"]));
+            case AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg:
+                return WasserLage(aussen, s);
             default:
                 var a = Alle(aussen).First(x => x.Stelle == s);
                 return (a.X, a.Y);
@@ -625,7 +652,7 @@ public static class AussenBearbeitung
     /// <summary>Warum sich das Stueck nicht drehen laesst (null = es geht).</summary>
     public static string? DrehenNicht(AussenStelle s) => s.Art switch
     {
-        AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog => null,
+        AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => null,
         AussenArt.Haus or AussenArt.Gebaeude => Texte.HausDrehenNicht,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
@@ -637,6 +664,10 @@ public static class AussenBearbeitung
         if (DrehenNicht(s) is not null)
         {
             return false;
+        }
+        if (IstWasser(s.Art))
+        {
+            return WasserDrehen(aussen, s);
         }
         if (s.Art == AussenArt.Katalog)
         {
@@ -674,6 +705,10 @@ public static class AussenBearbeitung
     /// <summary>Kopie daneben (versetzt um einen Rasterschritt bzw. die eigene Breite); Haeuser mit Ort und Paketplatz nicht.</summary>
     public static AussenStelle? Kopieren(PyObjekt aussen, AussenStelle s)
     {
+        if (IstWasser(s.Art))
+        {
+            return WasserKopieren(aussen, s);
+        }
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
         {
@@ -749,6 +784,11 @@ public static class AussenBearbeitung
         if (LoeschenNicht(s) is not null)
         {
             return false;
+        }
+        if (IstWasser(s.Art))
+        {
+            WasserLoeschen(aussen, s);
+            return true;
         }
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
@@ -863,6 +903,7 @@ public static class AussenBearbeitung
             AussenArt.Baum => Texte.Baum + lage,
             AussenArt.Park => Texte.Park + lage,
             AussenArt.Katalog => KatalogBeschreibung(KatalogId(aussen, s)) + lage,
+            AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => WasserBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

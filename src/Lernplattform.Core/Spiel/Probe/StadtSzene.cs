@@ -138,6 +138,21 @@ public sealed partial class StadtSzene
     /// <summary>Phase 8 W8 (Toene): Parks als Rechtecke (Schritte auf Gras, Vogelrufe).</summary>
     public IReadOnlyList<(float X1, float Z1, float X2, float Z2)> Parks { get; private init; } = [];
 
+    /// <summary>S 0.8.0 (Weisung P12-47): Teiche aus <c>stadtdaten.wasser</c> (leer ohne Wasser, Fassung 0).</summary>
+    public IReadOnlyList<Teich> Teiche { get; private init; } = [];
+
+    /// <summary>S 0.8.0: Stege aus <c>stadtdaten.wasser</c>.</summary>
+    public IReadOnlyList<Steg> Stege { get; private init; } = [];
+
+    /// <summary>S 0.8.0: Flaechen am Boden (Ufer und Wasser der Teiche) im Netz der Stadt.</summary>
+    public IReadOnlyList<Bodenflaeche> Flaechen { get; private init; } = [];
+
+    /// <summary>S 0.8.0 (Frage 6 = a): Schalter <c>stadtdaten.wasser.eis</c>; nur im Winter friert das Wasser zu.</summary>
+    public bool Eis { get; private init; }
+
+    /// <summary>Farbe des Eises im Netz (mit Schneemarke: im dunklen Design nicht abgedunkelt wie Schnee).</summary>
+    public static readonly Vector3 EisFarbe = Wasser.Eis + new Vector3(Jahreszeitfarben.SchneeMarke);
+
     /// <summary>Phase 8 W8 (Toene, P8-17c Punkt 2): Mittellinien des Flusses (geglaettet).</summary>
     public IReadOnlyList<IReadOnlyList<Vector2>> Fluesse { get; private init; } = [];
 
@@ -246,6 +261,11 @@ public sealed partial class StadtSzene
             {
                 netz.Hinzu(streifen);
             }
+            // S 0.8.0 (Weisung P12-47): Ufer und Wasser der Teiche im selben Netz (ohne Teiche nichts, bitgleich wie vorher)
+            foreach (var flaeche in Flaechen)
+            {
+                netz.Hinzu(flaeche);
+            }
             for (var i = 0; i < Stuecke.Count; i++)
             {
                 if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
@@ -287,9 +307,16 @@ public sealed partial class StadtSzene
             }
         }
         gefaerbt.Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Stadt);
+        // S 0.8.0 (Weisung P12-47, Frage 6 = a): mit dem Schalter eis friert im Winter das Wasser (Fluss und Teiche) zu,
+        // das Ufer ist im Winter weiss wie bisher; ohne Schalter bleibt alles wie vorher
+        var eis = Eis && Jahreszeit == Jahreszeit.Winter;
         foreach (var streifen in Streifen)
         {
-            gefaerbt.Hinzu(streifen);
+            gefaerbt.Hinzu(eis && streifen.Farbe == Farben.Wasser ? streifen with { Farbe = EisFarbe } : streifen);
+        }
+        foreach (var flaeche in Flaechen)
+        {
+            gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
         }
         gefaerbt.Faerbung = null;
         for (var i = 0; i < Stuecke.Count; i++)
@@ -770,6 +797,19 @@ public sealed partial class StadtSzene
                 }
             }
         }
+        // S 0.8.0 (Weisung P12-47): Teiche (Ufer und Wasser als Flaechen im Netz der Stadt) und Stege (Holzkaesten)
+        var teiche = Wasser.Teiche(stadt.Daten);
+        var stege = Wasser.Stege(stadt.Daten);
+        var flaechen = new List<Bodenflaeche>();
+        foreach (var teich in teiche)
+        {
+            flaechen.Add(new Bodenflaeche(teich.MitUfer, Hoehe.Ufer, Farben.Ufer));
+            flaechen.Add(new Bodenflaeche(teich.Rund, Hoehe.Wasser, Farben.Wasser));
+        }
+        foreach (var steg in stege)
+        {
+            teile.AddRange(Wasser.StegTeile(steg));
+        }
         // Mittellinien und Fusswege der Stadt (Zugaenge von der Tuer zur Strasse); keine Striche
         // mitten auf einer Kreuzung (dort lagen sonst zwei Striche als "+" uebereinander)
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "strasse")))
@@ -1048,7 +1088,8 @@ public sealed partial class StadtSzene
                 && hindernisseVorFest.All(h => x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4)
                 && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
                 && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f)
-                && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f);
+                && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f)
+                && teiche.All(t => !Wasser.Drin(t.MitUfer, new Vector2(x, z)) && Wasser.RandAbstand(t.MitUfer, new Vector2(x, z)) >= r + 0.02f);
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest, KleingruenAn(stadt.Daten));
@@ -1056,7 +1097,7 @@ public sealed partial class StadtSzene
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1086,6 +1127,10 @@ public sealed partial class StadtSzene
             Umgefaerbt = umgefaerbt,
             Parks = parkFlaechen,
             Fluesse = [.. wasser],
+            Teiche = teiche,
+            Stege = stege,
+            Flaechen = flaechen,
+            Eis = Wasser.EisAn(stadt.Daten),
         };
     }
 
@@ -1123,7 +1168,7 @@ public sealed partial class StadtSzene
     /// </summary>
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
-        List<(List<Vector2> Linie, float Halb)>? gehwege = null)
+        List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1183,6 +1228,50 @@ public sealed partial class StadtSzene
         }
         Linien(wasser, (FlussBreite / 2) + 0.1f, gesperrt);
         Linien(gleise, (GleisBreite / 2) + 0.1f, gesperrt);
+        // S 0.8.0 (Weisung P12-47): Teich und Ufer gesperrt, Stege frei (laengs bis eine halbe Zelle ueber die Enden,
+        // damit der Steg an das Land anschliesst)
+        foreach (var teich in teiche ?? [])
+        {
+            var u = teich.MitUfer;
+            var (s0, s1) = Bereich(u.Min(p => p.X), u.Max(p => p.X), spalten);
+            var (r0, r1) = Bereich(u.Min(p => p.Y), u.Max(p => p.Y), zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    if (Wasser.Drin(u, Mitte(s, z)))
+                    {
+                        gesperrt[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
+        foreach (var steg in stege ?? [])
+        {
+            var (x1, z1, x2, z2) = steg.Rechteck;
+            var zug = (float)(LaufSchritt / 2);
+            if (steg.Quer)
+            {
+                (z1, z2) = (z1 - zug, z2 + zug);
+            }
+            else
+            {
+                (x1, x2) = (x1 - zug, x2 + zug);
+            }
+            var (s0, s1) = Bereich(x1, x2, spalten);
+            var (r0, r1) = Bereich(z1, z2, zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    var c = Mitte(s, z);
+                    if (c.X >= x1 && c.X <= x2 && c.Y >= z1 && c.Y <= z2)
+                    {
+                        immer[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
         foreach (var (x1, z1, x2, z2) in hindernisse)
         {
             var (s0, s1) = Bereich(Math.Min(x1, x2) - LaufKoerper, Math.Max(x1, x2) + LaufKoerper, spalten);

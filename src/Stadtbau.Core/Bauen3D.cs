@@ -190,6 +190,41 @@ public static class Bauen3D
                 }
                 return teile;
             }
+            case AussenArt.Teich when s.Punkt < 0:
+                return Wasser.Punkte(Aussen.Teiche(aussen)[s.Nummer]) is { Count: >= 3 } eck ? [[.. new Teich(eck).MitUfer]] : [];
+            case AussenArt.Fluss when s.Punkt < 0:
+            {
+                // S 0.8.0: Fluss samt Ufer je Stueck des geglaetteten Bogens (wie die Strasse)
+                var glatt = Kurve.Glatt(AussenBearbeitung.EckpunkteWerte(aussen, s));
+                var halb = (StadtSzene.FlussBreite + 0.3f) / 2;
+                var teile = new List<Vector2[]>();
+                for (var i = 0; i + 1 < glatt.Count; i++)
+                {
+                    var (a, b) = (glatt[i], glatt[i + 1]);
+                    if (Vector2.DistanceSquared(a, b) < 1e-8f)
+                    {
+                        continue;
+                    }
+                    var q = new Vector2(-(b - a).Y, (b - a).X) / Vector2.Distance(a, b) * halb;
+                    teile.Add([a + q, b + q, b - q, a - q]);
+                }
+                return teile;
+            }
+            case AussenArt.Teich or AussenArt.Fluss:
+            {
+                // Eckpunkt: der Umriss des ganzen Stuecks und ein Kreis am Griff
+                var p = AussenBearbeitung.EckpunkteWerte(aussen, s)[s.Punkt];
+                return [.. Umriss(aussen, AussenBearbeitung.Ganz(s)), Kreis(p.X, p.Y, 0.2)];
+            }
+            case AussenArt.Steg:
+            {
+                if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)
+                {
+                    return [];
+                }
+                var (x1, z1, x2, z2) = steg.Rechteck;
+                return [Rechteck((x1, z1, x2 - x1, z2 - z1))];
+            }
             default:
             {
                 var t = AussenBearbeitung.Alle(aussen).First(z => z.Stelle == s);

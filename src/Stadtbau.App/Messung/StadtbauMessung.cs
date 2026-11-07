@@ -319,6 +319,7 @@ public static partial class StadtbauMessung
         await BedienungAsync(a, f);
         await FingerAsync(a, f);
         await Bauen3DAsync(a, f);
+        await WasserAsync(a, f);
         await VollbildAsync(a, f);
         await RueckgaengigKnopfAsync(a, f);
         await BewegenAsync(a, f);
