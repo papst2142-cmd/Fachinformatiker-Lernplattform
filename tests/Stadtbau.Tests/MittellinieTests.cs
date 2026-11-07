@@ -69,8 +69,16 @@ public class MittellinieTests
                 p = [.. roh.Select(q => start + Vector2.Transform(q, dreh))];
                 feld = KurveFeld(k.Form, k.Winkel, k.Radius);
             }
-            var ende = Vector2.Normalize(p[^1] - p[^2]);
-            richtung = MathF.Atan2(ende.Y, ende.X);
+            if (feld is not null)
+            {
+                // weiter in Richtung der Tangente am Ende (wie das Werkzeug setzt), nicht der letzten Sehne: die erste
+                // Sehne einer Kurve weicht um den halben Schritt von der Tangente ab, die letzte ebenso (S-Kurve: gerade weiter)
+                var k = Strassenkurve.Lesen(teil)!.Value;
+                var roh = Strassenkurve.Mittellinie(k.Form, k.Winkel, k.Radius, k.Gespiegelt);
+                var erste = MathF.Atan2(roh[1].Y - roh[0].Y, roh[1].X - roh[0].X);
+                var letzte = MathF.Atan2(roh[^1].Y - roh[^2].Y, roh[^1].X - roh[^2].X);
+                richtung += k.Form == "s" ? 0 : letzte + erste;
+            }
             Strasse(a, umgedreht && nr % 2 == 1 ? Enumerable.Reverse(p) : p, feld);
             ganz.AddRange(p.Skip(1));
             nr++;
@@ -119,6 +127,8 @@ public class MittellinieTests
         { "bogen:90:2 bogen:90:2:m", false },
         { "g3 bogen:45:2 bogen:45:2 g3", true },
         { "g2.7 s:45:2 bogen:90:3 g3", false },
+        { "g3 bogen:90:2 bogen:90:2 g3", false },
+        { "g3 bogen:90:1:m bogen:45:2:m bogen:90:3:m g3", true },
     };
 
     [Theory]

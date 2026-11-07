@@ -1210,6 +1210,9 @@ public sealed partial class StadtSzene
     /// </summary>
     public const float StumpfZugabe = 0.05f;
 
+    /// <summary>So weit duerfen die Richtungen zweier aneinander stossender Strassen abweichen (Grad, <see cref="Anschluss"/>).</summary>
+    public const float AnschlussGrad = 8f;
+
     /// <summary>
     /// Welle K1: trifft ein Strassenende genau das Ende einer anderen Strasse in gleicher Richtung (Kurve an gerade Strasse,
     /// so setzt das Werkzeug sie), stossen beide Baender stumpf aneinander (keine Verlaengerung um die halbe Breite, die
@@ -1221,8 +1224,10 @@ public sealed partial class StadtSzene
 
     /// <summary>
     /// Die Richtung, in der die anschliessende Strasse vom gemeinsamen Ende weg laeuft (<see cref="Fortgesetzt"/>), sonst
-    /// null. Erlaubt sind bis 5 Grad Unterschied: das erste Stueck einer Kurve ist eine Sehne von 7,5 Grad und weicht um
-    /// die Haelfte von der Tangente ab.
+    /// null. Erlaubt sind bis <see cref="AnschlussGrad"/> Grad Unterschied: das erste und das letzte Stueck einer Kurve
+    /// sind Sehnen von 7,5 Grad und weichen um die Haelfte von der Tangente ab; treffen zwei Kurven mit gleicher
+    /// Drehrichtung aufeinander, liegen ihre Sehnen am Stoss 7,5 Grad auseinander (Welle K3, vorher 5 Grad: dort fehlte
+    /// der Anschluss, die Baender hatten Endkappen und die Mittellinie eine Luecke).
     /// </summary>
     public static Vector2? Weiter(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene, IEnumerable<List<Vector2>> alle) =>
         Anschluss(ende, richtung, eigene, [.. alle]) is { } t ? t.Richtung : null;
@@ -1245,7 +1250,7 @@ public sealed partial class StadtSzene
             foreach (var (p, weiter, anfang) in new[] { (a[0], a[1] - a[0], true), (a[^1], a[^2] - a[^1], false) })
             {
                 if (Vector2.Distance(p, ende) <= 0.02f && weiter.LengthSquared() > 1e-10f
-                    && Vector2.Dot(Vector2.Normalize(weiter), richtung) >= MathF.Cos(MathF.PI / 36))
+                    && Vector2.Dot(Vector2.Normalize(weiter), richtung) >= MathF.Cos(AnschlussGrad * MathF.PI / 180))
                 {
                     return (k, anfang, Vector2.Normalize(weiter));
                 }
