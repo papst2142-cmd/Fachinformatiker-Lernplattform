@@ -340,8 +340,10 @@ public static partial class AussenBearbeitung
                 var my = Bearbeitung.AufRaster(y, Bearbeitung.Raster);
                 var a = new Vector2((float)Math.Max(0, mx - (NeueStrasse / 2)), (float)my);
                 var b = new Vector2((float)Math.Min(breite, mx + (NeueStrasse / 2)), (float)my);
-                var andere = Strassen(aussen);
-                land.Add(new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { PunktObjekt(Einrasten(a, andere)), PunktObjekt(Einrasten(b, andere)) } }, { "gehweg", Bearbeitung.Zahl(NeuerGehweg) } });
+                var neu = new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { PunktObjekt(a), PunktObjekt(b) } }, { "gehweg", Bearbeitung.Zahl(NeuerGehweg) } };
+                land.Add(neu);
+                // Patch S 0.12.1: an ein freies Ende mit Lage und Richtung, sonst Einmuendung nur auf einer Strasse ohne Bogen
+                GeradeEinrasten(aussen, neu);
                 return new AussenStelle(AussenArt.Strasse, land.Count - 1);
             }
             case AussenArt.Gebaeude:
@@ -463,8 +465,17 @@ public static partial class AussenBearbeitung
                 var punkte = Liste(l["punkte"]);
                 // Welle K3: ein Kreisverkehr nimmt Zufahrten und Laternen mit (vorher bestimmen, solange sie am Ring liegen)
                 var kreis = Kreisverkehr.IstRing(l) ? KreisverkehrTeile(aussen, s) : default;
+                var fein = Strassenkurve.IstKurve(l);
                 foreach (var p in punkte)
                 {
+                    if (fein)
+                    {
+                        // Kurve: Punkte auf 0,0001 (S 0.12.1, sonst knickt die erste Sehne durch die Rundung)
+                        var q = Liste(p);
+                        q[0] = KurvenZahl(Py.F(q[0]) + dx);
+                        q[1] = KurvenZahl(Py.F(q[1]) + dy);
+                        continue;
+                    }
                     Schieben(p);
                 }
                 if (kreis.Zufahrten is not null)
@@ -479,12 +490,7 @@ public static partial class AussenBearbeitung
                     KurveEinrasten(aussen, s);
                     break;
                 }
-                var andere = Strassen(aussen).Where((_, i) => !ReferenceEquals(StrasseNr(aussen, i), l)).ToList();
-                foreach (var k in new[] { 0, punkte.Count - 1 })
-                {
-                    var e = Einrasten(new Vector2((float)Py.F(Liste(punkte[k])[0]), (float)Py.F(Liste(punkte[k])[1])), andere);
-                    punkte[k] = PunktObjekt(e);
-                }
+                GeradeEinrasten(aussen, l);
                 break;
             }
             case AussenArt.Park:
@@ -534,9 +540,6 @@ public static partial class AussenBearbeitung
                 break;
         }
     }
-
-    private static PyObjekt? StrasseNr(PyObjekt aussen, int n) =>
-        Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "strasse")).ElementAtOrDefault(n);
 
     /// <summary>Tuer und Fussweg mitnehmen, dann das Ende des Wegs wieder an eine Strasse legen (<see cref="WegAnschliessen"/>).</summary>
     private static void WegMitnehmen(PyObjekt aussen, PyObjekt zugang, double dx, double dy)
@@ -719,10 +722,11 @@ public static partial class AussenBearbeitung
         {
             m = Kreisverkehr.Mitte(linie);
         }
+        var fein = Strassenkurve.IstKurve(l);
         for (var i = 0; i < punkte.Count; i++)
         {
             var d = linie[i] - m;
-            punkte[i] = Punkt(m.X - d.Y, m.Y + d.X);
+            punkte[i] = fein ? KurvenPunkt(new Vector2(m.X - d.Y, m.Y + d.X)) : Punkt(m.X - d.Y, m.Y + d.X);
         }
         if (kreis.Zufahrten is not null)
         {
@@ -767,7 +771,7 @@ public static partial class AussenBearbeitung
                     foreach (var p in Liste(kopie["punkte"]))
                     {
                         var q = Liste(p);
-                        q[1] = Bearbeitung.Zahl(Py.F(q[1]) + versatz);
+                        q[1] = Strassenkurve.IstKurve(kopie) ? KurvenZahl(Py.F(q[1]) + versatz) : Bearbeitung.Zahl(Py.F(q[1]) + versatz);
                     }
                 }
                 else
@@ -909,7 +913,8 @@ public static partial class AussenBearbeitung
         var rest = Math.Max(1, laenge - ohneLetztes);
         var d = Vector2.Normalize(l[^1] - l[^2]);
         var ende = l[^2] + (d * (float)rest);
-        var andere = Strassen(aussen).Where(x => !(x.Count == l.Count && x.SequenceEqual(l))).ToList();
+        var eigene = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
+        var andere = EinrastenAltFuerTests ? Strassen(aussen).Where(x => !(x.Count == l.Count && x.SequenceEqual(l))).ToList() : GeradeLinien(aussen, eigene);
         punkte[^1] = PunktObjekt(Einrasten(ende, andere));
     }
 

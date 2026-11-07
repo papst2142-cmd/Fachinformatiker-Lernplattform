@@ -216,10 +216,12 @@ public static partial class StadtbauMessung
         var ende = linie[^1];
         KurveWaehlen(a, 1);
         k.SetzenDreh = 1;
-        var mitte45 = Strassenkurve.Mittellinie(Strassenkurve.Bogen, 45, 2);
-        var umriss = new Vector2((mitte45.Min(q => q.X) + mitte45.Max(q => q.X)) / 2, (mitte45.Min(q => q.Y) + mitte45.Max(q => q.Y)) / 2);
-        // gedreht um 90 Grad: aus (x, y) wird (-y, x) um die Mitte; der Anfang liegt dann links oben der Mitte um (umriss.Y, -umriss.X)
-        var setzen = new Vector2(ende.X + umriss.Y + 0.3f, ende.Y - umriss.X + 0.2f);
+        // gedreht um 90 Grad: aus (x, y) wird (-y, x); der ANFANG zeigt dann nach unten wie das Ende der Kurve 90° und
+        // soll 0,3 / 0,2 neben diesem Ende liegen (S 0.12.1: vorher lag hier das Ende der Kurve 45° in Gegenrichtung, das
+        // alte Einrasten schob es trotzdem auf das Ende, die Kurven lagen dann rueckwaerts aufeinander)
+        var gedreht45 = Strassenkurve.Mittellinie(Strassenkurve.Bogen, 45, 2, k.SetzenGespiegelt).Select(q => new Vector2(-q.Y, q.X)).ToList();
+        var mitte45 = new Vector2((gedreht45.Min(q => q.X) + gedreht45.Max(q => q.X)) / 2, (gedreht45.Min(q => q.Y) + gedreht45.Max(q => q.Y)) / 2);
+        var setzen = ende - (gedreht45[0] - mitte45) + new Vector2(0.3f, 0.2f);
         var tipp = Bild(a, setzen.X, setzen.Y);
         Druck(b3, fingerDrei, tipp);
         Los(b3, fingerDrei, tipp);
@@ -233,9 +235,9 @@ public static partial class StadtbauMessung
         else
         {
             var l3 = KurvenLinie(p, neu);
-            var naechst = MathF.Min(Vector2.Distance(l3[0], ende), Vector2.Distance(l3[^1], ende));
-            Messwerte.Notiere(string.Create(Inv, $"Kurven 3D: Kurve 45° gesetzt, naechstes Ende {naechst:F2} vom Ende der Kurve 90°"));
-            if (naechst > 0.011f && naechst <= AussenBearbeitung.KurveEinrastenAb)
+            var naechst = Vector2.Distance(l3[0], ende);
+            Messwerte.Notiere(string.Create(Inv, $"Kurven 3D: Kurve 45° gesetzt, Anfang {naechst:F2} vom Ende der Kurve 90°"));
+            if (naechst > 0.011f)
             {
                 Fund(string.Create(Inv, $"Kurven 3D: Ende {naechst:F2} neben dem Strassenende rastet nicht ein"));
             }

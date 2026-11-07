@@ -12,13 +12,11 @@ namespace Stadtbau.Core;
 /// ist eine Strasse mit vielen Punkten und dem Feld <c>kurve</c> (<see cref="Strassenkurve"/>); gesetzt wird sie als
 /// <see cref="AussenArt.Kurve"/> mit der Kennung aus <see cref="Strassenkurve.Kennung"/> (Form, Winkel, Radius, gespiegelt),
 /// danach ist sie eine <see cref="AussenArt.Strasse"/>. Sie bleibt beim Schieben, Drehen und Spiegeln ganz (alle Punkte
-/// zusammen); liegt ein Ende bis <see cref="KurveEinrastenAb"/> neben einem Strassenende, rastet die ganze Kurve dort ein.
+/// zusammen); liegt ein Ende bis <see cref="EndeFangweite"/> neben einem freien Strassenende, rastet die ganze Kurve dort mit Lage und
+/// Richtung ein (Patch S 0.12.1, <see cref="KurveEinrasten"/>).
 /// </summary>
 public static partial class AussenBearbeitung
 {
-    /// <summary>So nah muss ein Kurvenende an einem Strassenende liegen, damit die Kurve dort einrastet (Plan: 0,5).</summary>
-    public const double KurveEinrastenAb = 0.5;
-
     /// <summary>Ist das Stueck eine Kurve (Strasse mit Feld <c>kurve</c>)?</summary>
     public static bool IstKurve(PyObjekt aussen, AussenStelle s) =>
         s.Art == AussenArt.Strasse && Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is PyObjekt l && Strassenkurve.IstKurve(l);
@@ -54,7 +52,7 @@ public static partial class AussenBearbeitung
         }
         versatz.X += MathF.Max(0, -(min.X + versatz.X)) - MathF.Max(0, max.X + versatz.X - (float)breite);
         versatz.Y += MathF.Max(0, -(min.Y + versatz.Y)) - MathF.Max(0, max.Y + versatz.Y - (float)hoehe);
-        var punkte = new List<object?>(linie.Select(p => (object?)PunktObjekt(p + versatz)));
+        var punkte = new List<object?>(linie.Select(p => (object?)KurvenPunkt(p + versatz)));
         var land = Aussen.Landschaft(aussen);
         land.Add(new PyObjekt
         {
@@ -66,47 +64,6 @@ public static partial class AussenBearbeitung
         var s = new AussenStelle(AussenArt.Strasse, land.Count - 1);
         KurveEinrasten(aussen, s);
         return s;
-    }
-
-    /// <summary>
-    /// Liegt ein Ende der Kurve bis <see cref="KurveEinrastenAb"/> neben dem Ende einer anderen Strasse, rueckt die ganze
-    /// Kurve dorthin (das naehere Ende gewinnt). true = eingerastet.
-    /// </summary>
-    public static bool KurveEinrasten(PyObjekt aussen, AussenStelle s)
-    {
-        var l = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
-        var punkte = Liste(l["punkte"]);
-        var linie = Linie(punkte);
-        if (linie.Count < 2)
-        {
-            return false;
-        }
-        var andere = Aussen.Landschaft(aussen).OfType<PyObjekt>()
-            .Where(t => !ReferenceEquals(t, l) && Py.Gleich(t["typ"], "strasse")).Select(t => Linie(t["punkte"])).Where(t => t.Count >= 2).ToList();
-        var bester = (Weg: Vector2.Zero, Abstand: float.MaxValue);
-        foreach (var ende in new[] { linie[0], linie[^1] })
-        {
-            foreach (var a in andere)
-            {
-                foreach (var e in new[] { a[0], a[^1] })
-                {
-                    var d = Vector2.Distance(ende, e);
-                    if (d <= KurveEinrastenAb && d < bester.Abstand)
-                    {
-                        bester = (e - ende, d);
-                    }
-                }
-            }
-        }
-        if (bester.Abstand == float.MaxValue || bester.Abstand < 1e-4f)
-        {
-            return bester.Abstand < 1e-4f;
-        }
-        for (var i = 0; i < punkte.Count; i++)
-        {
-            punkte[i] = PunktObjekt(linie[i] + bester.Weg);
-        }
-        return true;
     }
 
     /// <summary>Warum sich das Stueck nicht spiegeln laesst (null = es geht; nur Kurven).</summary>
@@ -127,7 +84,7 @@ public static partial class AussenBearbeitung
         {
             var v = linie[i] - a;
             var laengs = Vector2.Dot(v, d) * d;
-            punkte[i] = PunktObjekt(a + laengs - (v - laengs));
+            punkte[i] = KurvenPunkt(a + laengs - (v - laengs));
         }
         KurveEinrasten(aussen, s);
         return true;

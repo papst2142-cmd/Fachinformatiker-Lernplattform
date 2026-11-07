@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.12.1
+
+Kurven und Straßen rasten jetzt sauber aneinander ein, auch wenn du sie mit dem Finger nur ungefähr an das Ende ziehst.
+
+- Ziehst oder setzt du eine Kurve oder eine gerade Straße bis knapp an das Ende einer anderen Straße (bis knapp ein Feld daneben), springt sie genau an dieses Ende und dreht sich in dieselbe Richtung. Eine Kurve dreht sich dabei um höchstens 45 Grad, eine gerade Straße um höchstens 15 Grad.
+- Eine gerade Straße rastet nicht mehr mitten in einen Bogen ein, sondern nur an das Ende der Kurve oder auf eine andere gerade Straße.
+- Kurve an Kurve schließt jetzt ohne Lücke an: die Mittellinie läuft weiter.
+- Stößt eine Kurve trotzdem quer an das Ende einer Straße, meldet die Prüfung das rot und sagt dir, was zu tun ist.
+- Der Schatten einer Kurve in der 3D-Ansicht ist jetzt ein glatter Streifen ohne Zacken.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.12.0
 
 In der 3D-Ansicht fahren jetzt Autos auf deinen Straßen. Ihre Wege legt das Werkzeug von selbst aus deinem Straßennetz an.
