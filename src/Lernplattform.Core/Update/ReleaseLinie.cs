@@ -32,6 +32,34 @@ public static partial class ReleaseLinie
         Stadtbau,
     }
 
+    [GeneratedRegex(@"^v?S ?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\z", RegexOptions.CultureInvariant)]
+    private static partial Regex StadtbauNummerMuster();
+
+    /// <summary>
+    /// S 0.6.0: Nummer einer Werkzeug-Version aus Tag ("vS0.6.0") oder Anzeige ("S 0.6.0") fuer den Vergleich; sonst null
+    /// (auch jede Zahl, die nicht in int passt).
+    /// </summary>
+    public static (int Haupt, int Neben, int Fix)? StadtbauNummer(string? text)
+    {
+        if (text is null || StadtbauNummerMuster().Match(text) is not { Success: true } m)
+        {
+            return null;
+        }
+        var z = new int[3];
+        for (var i = 0; i < 3; i++)
+        {
+            if (!int.TryParse(m.Groups[i + 1].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out z[i]))
+            {
+                return null;
+            }
+        }
+        return (z[0], z[1], z[2]);
+    }
+
+    /// <summary>Anzeige "S 0.6.0" zu einer Nummer.</summary>
+    public static string StadtbauAnzeige((int Haupt, int Neben, int Fix) nummer) =>
+        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"S {nummer.Haupt}.{nummer.Neben}.{nummer.Fix}");
+
     public static bool Gehoert(string? tag, Linie linie) => linie == Linie.Stadtbau ? IstStadtbau(tag) : IstLernplattform(tag);
 
     /// <summary>

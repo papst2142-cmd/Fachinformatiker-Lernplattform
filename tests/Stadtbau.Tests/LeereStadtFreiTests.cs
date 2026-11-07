@@ -60,6 +60,38 @@ public class LeereStadtFreiTests
         Assert.Equal(gruen.Count, gruenMit.Count(g => ImPark(mit, g.X, g.Z) && gruen.Contains(g)));
     }
 
+    /// <summary>
+    /// S 0.6.0 (Weisung P12-44 Punkt 4): ein Park in der freien Stadt hat genau dasselbe Kleingruen wie ohne Schalter
+    /// (gleiche Stuecke an gleicher Stelle, gleiche Parkbaeume). Die Parks werden vor dem Schalter verteilt; der Schalter
+    /// laesst nur Strassenraender und freie Flaechen weg. Dass ein Park in der Gesamtansicht leer aussieht, liegt an der
+    /// Sichtweite: Kleingruen zeichnet die 3D-Ansicht nur bis zum Kameraabstand StadtFlaeche.GruenWeite (18).
+    /// </summary>
+    [Fact]
+    public void ParkInFreierStadt_GleichesKleingruenWieOhneSchalter()
+    {
+        var p = MitStrasseUndPark(Daten.NeueAblage(), "Parkvergleich");
+        p.AussenAendern("Park", a => AussenBearbeitung.Setzen(a, AussenArt.Park, 18, 12));
+        var frei = p.Stand();
+        var mit = StadtFassung.Lesen(frei.Schreiben());
+        ((PyObjekt)mit.Stadtdaten["darstellung"]!).RemoveAll(kv => kv.Key == "kleingruen");
+        Assert.False(StadtSzene.KleingruenAn(frei.Stadtdaten));
+        Assert.True(StadtSzene.KleingruenAn(mit.Stadtdaten));
+        var a = Ansicht3D.Bauen(frei, D, Ansicht3D.Einstellung.Standard).Szene.GruenKlein!;
+        var b = Ansicht3D.Bauen(mit, D, Ansicht3D.Einstellung.Standard).Szene.GruenKlein!;
+        // genug Stuecke, damit der Vergleich etwas sagt
+        var parks = ((List<object?>)((PyObjekt)frei.Karte["welt"]!)["landschaft"]!).OfType<PyObjekt>().Count(l => Py.Gleich(l["typ"], "park"));
+        Assert.Equal(2, parks);
+        Assert.True(a.Plaetze.Count >= 10, $"nur {a.Plaetze.Count} Stuecke in den Parks");
+        // die Parks werden zuerst verteilt: dieselben Stuecke in derselben Reihenfolge
+        Assert.Equal(a.Plaetze, b.Plaetze.Take(a.Plaetze.Count));
+        Assert.Equal(a.Baeume.Count, b.Baeume.Count);
+        // gleiche Anzahl je Art im Park (ohne Schalter kommen nur Stuecke ausserhalb der Parks oder danach hinzu)
+        foreach (var art in a.Plaetze.Select(g => g.Art).Distinct())
+        {
+            Assert.Equal(a.Plaetze.Count(g => g.Art == art), b.Plaetze.Take(a.Plaetze.Count).Count(g => g.Art == art));
+        }
+    }
+
     [Fact]
     public void AeltereLeereStadt_BleibtWieSieWar()
     {

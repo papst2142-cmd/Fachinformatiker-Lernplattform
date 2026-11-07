@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
-	<!-- Phase 13 Welle 2: Internet nur fuer "An CC senden" -->
+	<!-- Phase 13 Welle 2: Internet fuer "An CC senden"; S 0.6.0 auch fuer die Update-Suche -->
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- S 0.6.0 (Weisung P12-42 Punkt 2): Update im Werkzeug wie in der Lernplattform seit A 0.39.0 (Installieren,
+	     Folge-Updates ohne Rueckfrage ab Android 12, WLAN-Hinweis) -->
+	<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+	<uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<application android:label="Fachinformatiker Stadtbau" android:icon="@drawable/Icon" />
 </manifest>

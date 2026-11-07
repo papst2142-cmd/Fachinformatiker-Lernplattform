@@ -47,5 +47,67 @@ public class MainActivity : AvaloniaMainActivity
             }
         });
         global::Stadtbau.Oberflaeche.WerkzeugVollbild.Anwenden();
+        UpdateEinrichten();
+    }
+
+    private static readonly Lazy<System.Net.Http.HttpClient> Netz = new(() => new System.Net.Http.HttpClient());
+    private Lernplattform.Android.HandyInstaller? _installer;
+    private Lernplattform.Android.HandyInstaller.Empfaenger? _empfaenger;
+
+    /// <summary>Aktion des Broadcasts mit dem Ergebnis der Installation (eigene des Werkzeugs, nur an dieses Paket).</summary>
+    public const string UpdateAktion = "io.github.papst2142cmd.stadtbau.UPDATE_ERGEBNIS";
+
+    /// <summary>
+    /// S 0.6.0 (Weisung P12-42 Punkt 2): das Werkzeug aktualisiert sich am Tablet selbst, nur aus Releases der Linie vS
+    /// (HandyQuelle mit Linie Stadtbau), gleiche Pruefungen wie die Lernplattform seit A 0.39.0 (TabletUpdate).
+    /// </summary>
+    private void UpdateEinrichten()
+    {
+        var ordner = StadtbauApp.Ordner;
+        _installer = new Lernplattform.Android.HandyInstaller(this, UpdateAktion, "stadtbau.apk", global::Stadtbau.Oberflaeche.TabletUpdate.Rueckmeldung,
+            e => ordner.Fehler("Update: " + e.GetType().Name + ": " + e.Message));
+        var installer = _installer;
+        var url = Lernplattform.Core.Update.GithubSuche.ListeUrl;
+        var fingerabdruck = Lernplattform.Core.Update.HandyPruefung.Fingerabdruck;
+#if UPDATEPROBE
+        (url, fingerabdruck) = UpdateProbe.Ziel();
+#endif
+        global::Stadtbau.Oberflaeche.TabletUpdate.Geraet = installer;
+        global::Stadtbau.Oberflaeche.TabletUpdate.Quelle = () => global::Stadtbau.Core.TabletAktualisierung.Quelle(Netz.Value, installer,
+            ordner.Wurzel, url, fingerabdruck);
+#if !UPDATEPROBE
+        // die Probe sucht selbst (ohne Fenster), sonst kaeme das Fenster "Neue Version" dazwischen
+        global::Stadtbau.Oberflaeche.Aktualisierung.Pruefen = global::Stadtbau.Oberflaeche.TabletUpdate.SuchenAsync;
+#endif
+        _empfaenger = new Lernplattform.Android.HandyInstaller.Empfaenger(this, installer);
+        var filter = new global::Android.Content.IntentFilter(installer.Aktion);
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            RegisterReceiver(_empfaenger, filter, global::Android.Content.ReceiverFlags.NotExported);
+        }
+        else
+        {
+            RegisterReceiver(_empfaenger, filter);
+        }
+#if UPDATEPROBE
+        UpdateProbe.Starten(installer);
+#endif
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        // Rueckkehr aus der Einstellung "Unbekannte Apps installieren"
+        _installer?.Zurueck();
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_empfaenger is not null)
+        {
+            UnregisterReceiver(_empfaenger);
+            _empfaenger = null;
+        }
+        base.OnDestroy();
     }
 }

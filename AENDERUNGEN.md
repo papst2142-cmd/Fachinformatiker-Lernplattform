@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.43.2
+Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich das Update am Handy jetzt mit dem Stadtbau-Werkzeug, damit sich auch das Werkzeug am Tablet selbst aktualisieren kann.
+
+- Das Update am Handy läuft genauso wie bisher: die App lädt die neue Version selbst, prüft sie und installiert sie.
+- Die Lernplattform bekommt dabei nie eine Fassung des Stadtbau-Werkzeugs angeboten, und das Werkzeug nie eine Fassung der Lernplattform.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.1
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf neue Städte vor, die mit dem Stadtbau-Werkzeug gebaut werden.
 

@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.6.0
+
+Das Werkzeug aktualisiert sich jetzt auch am Android-Tablet selbst, so wie die Lernplattform am Handy.
+
+- Nach dem Start fragt das Werkzeug bei GitHub nach, ob es eine neuere Version gibt. Gibt es eine, erscheint das Fenster „Neue Version“ mit „Jetzt aktualisieren“ und „Später“. Mit „Nach Updates suchen“ auf der Startseite kannst du jederzeit selbst nachsehen, jetzt auch am Tablet.
+- „Jetzt aktualisieren“ lädt die neue Version, prüft sie und übergibt sie an Android. Android schließt das Werkzeug dafür kurz; danach öffnest du es einfach wieder. Deine Projekte bleiben erhalten.
+- Geprüft wird alles, bevor etwas installiert wird: die Prüfsumme der Datei (sie muss bei GitHub und in der Liste im Release-Text gleich sein), der Name der App, die Signatur und dass die Version wirklich neuer ist. Stimmt etwas nicht, wird die Datei gelöscht und nichts installiert.
+- Beim ersten Update braucht das Werkzeug einmalig die Erlaubnis „Unbekannte Apps installieren“. Ein eigenes Fenster erklärt, wo du sie einschaltest.
+- Geht etwas schief (kein Internet, zu wenig Speicher, Android bricht ab), sagt ein Fenster, was los ist, und bietet „Zur Download-Seite“ an. Dort kannst du die neue Version auch von Hand laden.
+- Das Werkzeug nimmt nur eigene Versionen, nie eine Fassung der Lernplattform.
+- Diese Version (S 0.6.0) installierst du am Tablet noch einmal von Hand. Ab dann kommen neue Versionen von selbst.
+
 ## S 0.5.1
 
 Das Werkzeug lässt sich jetzt richtig beenden, und alle Knöpfe sagen genauer, was sie tun.

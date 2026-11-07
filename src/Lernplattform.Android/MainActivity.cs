@@ -101,13 +101,17 @@ public class MainActivity : AvaloniaMainActivity
     private HandyInstaller? _installer;
     private HandyInstaller.Empfaenger? _empfaenger;
 
+    /// <summary>Aktion des Broadcasts mit dem Ergebnis der Installation (seit A 0.39.0 unveraendert).</summary>
+    public const string UpdateAktion = "io.github.papst2142cmd.lernplattform.UPDATE_ERGEBNIS";
+
     /// <summary>
     /// A 0.39.0 (Weisung P11-40): Update im Programm wie am PC. Die Probe-APK bleibt beim Weg ueber den Browser
     /// (eigene Kennung, die Pruefung des Paketnamens liesse ihr Update ohnehin nie zu).
     /// </summary>
     private void UpdateEinrichten()
     {
-        _installer = new HandyInstaller(this);
+        _installer = new HandyInstaller(this, UpdateAktion, "lernplattform.apk", Lernplattform.Programm.UpdateDienst.HandyRueckmeldung,
+            e => Lernplattform.Core.Diagnose.Fehlerprotokoll.Schreiben(e));
         var installer = _installer;
         var url = Lernplattform.Core.Update.GithubSuche.NeuesteUrl;
         var fingerabdruck = Lernplattform.Core.Update.HandyPruefung.Fingerabdruck;
@@ -117,8 +121,8 @@ public class MainActivity : AvaloniaMainActivity
         Lernplattform.Aktualisierung.Aktualisierung.Handy = installer;
         Lernplattform.Aktualisierung.Aktualisierung.Quelle = () => new Lernplattform.Core.Update.HandyQuelle(Netz.Value, installer,
             Lernplattform.Aktualisierung.Aktualisierung.Anzeige, url, fingerabdruck);
-        _empfaenger = new HandyInstaller.Empfaenger(this);
-        var filter = new global::Android.Content.IntentFilter(HandyInstaller.Aktion);
+        _empfaenger = new HandyInstaller.Empfaenger(this, installer);
+        var filter = new global::Android.Content.IntentFilter(installer.Aktion);
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
             RegisterReceiver(_empfaenger, filter, global::Android.Content.ReceiverFlags.NotExported);

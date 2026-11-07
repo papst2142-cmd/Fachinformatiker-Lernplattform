@@ -269,6 +269,40 @@ public static class Texte
     public const string UpdateNichtInstalliert = "Dieses Werkzeug wurde nicht mit dem Installationsprogramm eingerichtet. Updates kommen nur in die installierte Fassung; lade die neue Version von der Download-Seite.";
     public const string UpdateFehler = "Die Suche hat nicht geklappt, vielleicht fehlt gerade das Internet. Versuche es später noch einmal.";
 
+    // ---- Update am Tablet (S 0.6.0, Weisung P12-42 Punkt 2; Wortlaut nach dem Update der Lernplattform am Handy, A 0.39.0) ----
+    public static string TabletJetztHinweis(string mb) =>
+        "Das Werkzeug lädt die neue Version selbst (etwa " + mb + " MB), prüft sie und installiert sie.";
+
+    public static string TabletMobileDaten(string mb) => "Du bist gerade nicht im WLAN. Das Update lädt etwa " + mb + " MB über mobile Daten.";
+
+    public const string TabletLaeuft = "Die neue Version ist geprüft und wird installiert. Android schließt das Werkzeug dafür kurz; öffne es danach einfach wieder. Deine Projekte bleiben erhalten.";
+    public const string TabletErlaubnisTitel = "Erlaubnis für Updates";
+    public const string TabletErlaubnisText = "Damit sich das Werkzeug selbst aktualisieren kann, braucht es einmalig die Erlaubnis „Unbekannte Apps installieren“. "
+        + "Tippe auf „Zur Einstellung“, schalte dort „Von dieser Quelle zulassen“ ein und tippe dann auf „Zurück“. Das Update geht danach von allein weiter.";
+    public const string TabletZurEinstellung = "Zur Einstellung";
+    public const string TabletAbbrechen = "Abbrechen";
+    public const string TabletKeineErlaubnis = "Ohne die Erlaubnis „Unbekannte Apps installieren“ kann sich das Werkzeug nicht selbst aktualisieren. Die neue Version gibt es auch über „Zur Download-Seite“.";
+    public const string TabletFehlerTitel = "Update hat nicht geklappt";
+    public const string TabletZurSeite = "Zur Download-Seite";
+    public const string TabletAbgebrochen = "Die Installation wurde abgebrochen. Deine Projekte sind unverändert. Du kannst es später erneut versuchen.";
+    public const string TabletFremdeDatei = "Die geladene Datei stammt nicht vom Stadtbau-Werkzeug (Signatur stimmt nicht). Sie wurde gelöscht und nicht installiert. Deine Projekte sind unverändert.";
+    public const string TabletNichtNeuer = "Die geladene Datei ist nicht neuer als die installierte Version. Sie wurde gelöscht und nicht installiert. Deine Projekte sind unverändert.";
+    public const string TabletGesperrt = "Android hat die Installation gesperrt, zum Beispiel durch die „Automatische Sperre“ in den Samsung-Einstellungen. Deine Projekte sind unverändert.";
+
+    /// <summary>
+    /// Texte des gemeinsamen Update-Teils (Lernplattform.Core.Update, Wortlaut der Lernplattform) fuer das Werkzeug:
+    /// wo die Lernplattform von sich oder vom Lernstand spricht, steht hier der Text des Werkzeugs; alle anderen bleiben.
+    /// </summary>
+    public static string TabletText(string text) => text switch
+    {
+        Lernplattform.Core.Texte.UpdateTexte.HandyAbgebrochen => TabletAbgebrochen,
+        Lernplattform.Core.Texte.UpdateTexte.FremdeDatei => TabletFremdeDatei,
+        Lernplattform.Core.Texte.UpdateTexte.NichtNeuer => TabletNichtNeuer,
+        Lernplattform.Core.Texte.UpdateTexte.AndroidGesperrt => TabletGesperrt,
+        Lernplattform.Core.Texte.UpdateTexte.KeineErlaubnis => TabletKeineErlaubnis,
+        _ => text,
+    };
+
     // ---- Beenden (Patch S 0.5.1, Weisung P12-35 Punkt 1) ----
     public const string BeendenTitel = "Werkzeug beenden?";
     public const string BeendenFrage = "Die letzte Änderung ist noch nicht gespeichert. Soll sie vor dem Beenden gespeichert werden?";

@@ -13,11 +13,18 @@ namespace Lernplattform.Android;
 /// Android ueber eine PackageInstaller-Session. Ab Android 12 ohne Rueckfrage, wenn Android es erlaubt
 /// (Selbst-Update, UPDATE_PACKAGES_WITHOUT_USER_ACTION). Das Ergebnis kommt als Broadcast an <see cref="Empfaenger"/>.
 /// Nicht in der Probe-APK (dort bleibt der Weg ueber den Browser).
+/// S 0.6.0 (Weisung P12-42 Punkt 2): dieselbe Datei baut auch das Stadtbau-Werkzeug (verlinkt in Stadtbau.Android).
+/// Was je Programm verschieden ist, kommt als Wert: Aktion des Broadcasts, Name der Datei in der Session, wohin die
+/// Rueckmeldung geht und wohin ein Fehler geschrieben wird. Die Lernplattform uebergibt genau ihre Werte von A 0.39.0.
 /// </summary>
-public sealed class HandyInstaller(Activity activity) : IHandyGeraet
+public sealed class HandyInstaller(Activity activity, string aktion, string sitzungsDatei, Action<int, string?> rueckmeldung,
+    Action<Exception> fehler) : IHandyGeraet
 {
     /// <summary>Aktion des Broadcasts mit dem Ergebnis der Session (nur an dieses Paket).</summary>
-    public const string Aktion = "io.github.papst2142cmd.lernplattform.UPDATE_ERGEBNIS";
+    public string Aktion => aktion;
+
+    /// <summary>Rueckmeldung von Android zur Installation (auf dem UI-Faden).</summary>
+    public Action<int, string?> Rueckmeldung => rueckmeldung;
 
     // PackageInstaller.EXTRA_STATUS / EXTRA_STATUS_MESSAGE, Intent.EXTRA_INTENT
     private const string ExtraStatus = "android.content.pm.extra.STATUS";
@@ -28,7 +35,7 @@ public sealed class HandyInstaller(Activity activity) : IHandyGeraet
 
     private TaskCompletionSource<bool>? _erlaubnis;
 
-    /// <summary>Wird aus <see cref="MainActivity.OnResume"/> gerufen (Rueckkehr aus der Einstellung).</summary>
+    /// <summary>Wird aus <c>MainActivity.OnResume</c> (beider Programme) gerufen (Rueckkehr aus der Einstellung).</summary>
     public void Zurueck() => _erlaubnis?.TrySetResult(DarfInstallieren);
 
     public string LadeOrdner => Path.Combine(activity.CacheDir!.AbsolutePath, "update");
@@ -114,7 +121,7 @@ public sealed class HandyInstaller(Activity activity) : IHandyGeraet
         }
         catch (Exception e)
         {
-            Lernplattform.Core.Diagnose.Fehlerprotokoll.Schreiben(e);
+            fehler(e);
             return null;
         }
     }
@@ -137,13 +144,13 @@ public sealed class HandyInstaller(Activity activity) : IHandyGeraet
         using var sitzung = installer.OpenSession(nummer);
         try
         {
-            using (var ziel = sitzung.OpenWrite("lernplattform.apk", 0, laenge))
+            using (var ziel = sitzung.OpenWrite(sitzungsDatei, 0, laenge))
             using (var quelle = File.OpenRead(pfad))
             {
                 quelle.CopyTo(ziel);
                 sitzung.Fsync(ziel);
             }
-            var antwort = new Intent(Aktion).SetPackage(activity.PackageName);
+            var antwort = new Intent(aktion).SetPackage(activity.PackageName);
             var art = PendingIntentFlags.UpdateCurrent | (OperatingSystem.IsAndroidVersionAtLeast(31) ? PendingIntentFlags.Mutable : 0);
             var rueckweg = PendingIntent.GetBroadcast(activity, nummer, antwort, art)!;
             sitzung.Commit(rueckweg.IntentSender!);
@@ -156,7 +163,7 @@ public sealed class HandyInstaller(Activity activity) : IHandyGeraet
     }
 
     /// <summary>Empfaengt das Ergebnis der Session (dynamisch registriert, nicht exportiert).</summary>
-    public sealed class Empfaenger(Activity activity) : BroadcastReceiver
+    public sealed class Empfaenger(Activity activity, HandyInstaller installer) : BroadcastReceiver
     {
         public override void OnReceive(Context? context, Intent? intent)
         {
@@ -181,7 +188,7 @@ public sealed class HandyInstaller(Activity activity) : IHandyGeraet
                 }
             }
             Melden?.Invoke(status, meldung);
-            activity.RunOnUiThread(() => Lernplattform.Programm.UpdateDienst.HandyRueckmeldung(status, meldung));
+            activity.RunOnUiThread(() => installer.Rueckmeldung(status, meldung));
         }
 
         /// <summary>Nur fuer die Emulator-Probe (UPDATEPROBE): jede Rueckmeldung mitlesen.</summary>
