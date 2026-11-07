@@ -232,6 +232,13 @@ public sealed class Katalog
         return neu.Count == 0 ? basis : basis.Mit(neu);
     }
 
+    /// <summary>
+    /// S 0.9.0: ein Teil fuer den Gebaeude-Editor ("cc0:modular/&lt;name&gt;") aus dem aktiven Katalog, sonst null (gleiche
+    /// Dreiecke wie das Paket).
+    /// </summary>
+    public static GrafikModell? Bauteil(string id) =>
+        id.StartsWith(Bauteile.Praefix, StringComparison.Ordinal) ? Aktiv?.Modelle(Bauteile.Paket).GetValueOrDefault(id[Bauteile.Praefix.Length..]) : null;
+
     /// <summary>Pakete, deren Modelle schon gelesen sind (Test: der Katalog laedt nur, was gezeigt wird).</summary>
     public IReadOnlyCollection<string> GeleseneModellPakete => [.. _modelle.Where(p => p.Value.IsValueCreated).Select(p => p.Key)];
 

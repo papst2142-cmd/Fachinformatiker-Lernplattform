@@ -229,7 +229,7 @@ public class BlueprintTests
         Datei("abgeschnitten", gut[..(gut.Length / 2)]);
         var text = Encoding.UTF8.GetString(gut);
         Datei("veraendert", Encoding.UTF8.GetBytes(text.Replace("\"Mein Möbelhaus\"", "\"Dein Möbelhaus\"", StringComparison.Ordinal)));
-        Datei("neuer", Encoding.UTF8.GetBytes(text.Replace("\"formatversion\": 1", "\"formatversion\": 2", StringComparison.Ordinal)));
+        Datei("neuer", Encoding.UTF8.GetBytes(text.Replace("\"formatversion\": " + Blueprint.FormatVersion, "\"formatversion\": " + (Blueprint.FormatVersion + 1), StringComparison.Ordinal)));
         Datei("fremd", Encoding.UTF8.GetBytes("{\"format\": \"fisbau\"}"));
         Datei("feldfehlt", Encoding.UTF8.GetBytes(text.Replace(" \"schild\":", " \"schildx\":", StringComparison.Ordinal)));
         var liste = Blueprint.Alle(ablage).ToDictionary(e => Path.GetFileNameWithoutExtension(e.Datei));

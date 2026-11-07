@@ -71,7 +71,7 @@ public class BedienungTests
     /// <summary>Beschriftungen der Kopfleiste (Reihenfolge wie im Werkzeug).</summary>
     private static readonly string[] Kopf =
     [
-        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.Rueckgaengig,
+        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.GebaeudeEntwerfen, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.Rueckgaengig,
         Texte.Wiederholen, Texte.DateiSpeichern, Texte.AnCcSenden, Texte.Vollbild, Texte.Dunkel, Texte.WerkzeugBeenden,
     ];
 

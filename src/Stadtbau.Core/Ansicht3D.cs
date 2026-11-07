@@ -33,9 +33,27 @@ public static class Ansicht3D
         var ablauf = StadtbauPruefung.Probestand(stadt.Inhalt);
         // Phase 13 Welle 4a: Stuecke aus dem Katalog zeichnet die 3D-Ansicht wie das Spiel nach dem Einbau
         var grafik = Katalog.Aktiv?.MitStuecken(daten.Grafik, stand) ?? daten.Grafik;
+        // S 0.9.0: selbst gebaute Gebaeude (stadtdaten.bauteile) mit demselben Code wie das Spiel nach dem Einbau
+        grafik = MitGebaeuden(grafik, stand);
         var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
             () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
         spiel.Szene.Vorbereiten();
         return spiel;
+    }
+
+    /// <summary>
+    /// S 0.9.0: die Grafik mit den zusammengesetzten selbst gebauten Gebaeuden (<see cref="Bauteile.MitGebaeuden"/>). Fehlt
+    /// ein Teil im Katalog oder ist der Aufbau falsch, bleibt das Gebaeude ein schlichter Block (die Pruefung meldet es).
+    /// </summary>
+    public static GrafikBibliothek? MitGebaeuden(GrafikBibliothek? grafik, StadtFassung stand)
+    {
+        try
+        {
+            return Bauteile.MitGebaeuden(grafik, stand.Stadtdaten, Katalog.Bauteil);
+        }
+        catch (InvalidDataException)
+        {
+            return grafik;
+        }
     }
 }

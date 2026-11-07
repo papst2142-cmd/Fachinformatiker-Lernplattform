@@ -20,11 +20,16 @@ public sealed class Blueprint
 {
     public const string Format = "fisblueprint";
 
-    public const long FormatVersion = 1;
+    /// <summary>S 0.9.0 (Weisung P12-48): Format 2 mit den Feldern <c>bauteile</c> und <c>eingang</c> (Gebaeude aus dem
+    /// Editor); Format 1 (bis S 0.8.0) bleibt lesbar.</summary>
+    public const long FormatVersion = 2;
 
     public const string Endung = ".fisblueprint";
 
-    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "pruefsumme"];
+    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "bauteile", "eingang", "pruefsumme"];
+
+    /// <summary>Felder von Format 1 (bis S 0.8.0).</summary>
+    public static readonly string[] Felder1 = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "pruefsumme"];
 
     /// <summary>Name fuer die Anzeige (Buchstaben mit Umlauten, Ziffern, Leerzeichen, - und _, wie ein Projektname).</summary>
     public required string Name { get; init; }
@@ -52,6 +57,15 @@ public sealed class Blueprint
 
     /// <summary>Personen des Innenraums mit Platz (Verkaeufer, Schalter), leer ohne Innenraum.</summary>
     public List<object?> Personen { get; init; } = [];
+
+    /// <summary>
+    /// S 0.9.0: die Teile eines selbst gebauten Gebaeudes (<c>[{teil, x, y, stockwerk, dreh}]</c>, <see cref="Bauteile"/>);
+    /// null bei einem Gebaeude der Stadt (Format 1 oder aus einem Haus gespeichert).
+    /// </summary>
+    public List<object?>? Bauteile { get; init; }
+
+    /// <summary>S 0.9.0: Eingang des selbst gebauten Gebaeudes (<c>[{x, y, seite}]</c>), null ohne <see cref="Bauteile"/>.</summary>
+    public List<object?>? Eingang { get; init; }
 
     /// <summary>Datei, aus der er gelesen wurde (null = noch nicht gespeichert).</summary>
     public string? Datei { get; private set; }
@@ -118,6 +132,8 @@ public sealed class Blueprint
         {
             return null;
         }
+        // S 0.9.0: ein selbst gebautes Gebaeude bringt seine Teile mit (stadtdaten.bauteile)
+        var gebaut = s.Art == AussenArt.Gebaeude ? Get(Lernplattform.Core.Stadtbau.Bauteile.Gebaeude(Aussen.Stadtdaten(a)), modell) as PyObjekt : null;
         double hx = Py.F(haus["x"]), hy = Py.F(haus["y"]);
         return new Blueprint
         {
@@ -130,6 +146,8 @@ public sealed class Blueprint
             Schild = schild is null ? null : Relativ(schild, hx, hy),
             Innenraum = innen,
             Personen = personen,
+            Bauteile = gebaut is null ? null : (List<object?>)Py.Kopie(gebaut["teile"])!,
+            Eingang = gebaut is null ? null : (List<object?>)Py.Kopie(gebaut["eingang"])!,
         };
     }
 
@@ -163,12 +181,24 @@ public sealed class Blueprint
             return null;
         }
         var vorhanden = Get(AussenBearbeitung.Modelle(aussen), Modell);
-        if (vorhanden is not null && PythonJson.Standard(vorhanden) != PythonJson.Standard(Teile))
+        var sd = Aussen.Stadtdaten(aussen);
+        var gebaut = Get(Lernplattform.Core.Stadtbau.Bauteile.Gebaeude(sd), Modell);
+        if ((vorhanden is not null && PythonJson.Standard(vorhanden) != PythonJson.Standard(Teile))
+            || (gebaut is not null && PythonJson.Standard(gebaut) != PythonJson.Standard(BauteileEintrag())))
         {
             grund = Texte.BlueprintModellAnders(Modell);
             return null;
         }
-        var sd = Aussen.Stadtdaten(aussen);
+        if (Bauteile is not null && gebaut is null)
+        {
+            // S 0.9.0: die Teile des selbst gebauten Gebaeudes kommen in die Stadt (stadtdaten.bauteile)
+            if (Get(sd, "bauteile") is not PyObjekt alle)
+            {
+                alle = new PyObjekt();
+                Py.Setzen(sd, "bauteile", alle);
+            }
+            Py.Setzen(alle, Modell, BauteileEintrag());
+        }
         if (vorhanden is null)
         {
             if (Get(sd, "neue_modelle") is not PyObjekt neu)
@@ -235,9 +265,37 @@ public sealed class Blueprint
         return (x + (w / 2), y + (h / 2));
     }
 
+    /// <summary>Eintrag in <c>stadtdaten.bauteile</c> ({teile, eingang}), null bei einem Gebaeude der Stadt.</summary>
+    private PyObjekt? BauteileEintrag() => Bauteile is null ? null : new PyObjekt { { "teile", Py.Kopie(Bauteile) }, { "eingang", Py.Kopie(Eingang ?? []) } };
+
+    /// <summary>
+    /// S 0.9.0 (Weisung P12-48): stehende Gebaeude, deren Modell selbst gebaut ist (<c>stadtdaten.bauteile</c>). Das Spiel
+    /// zeichnet sie erst mit dem Einbau (W4b); bis dahin ist der Export damit gesperrt (gelber Fund, <see cref="Projekt.Exportieren"/>).
+    /// </summary>
+    public static List<(string Modell, string Name, PyObjekt Gebaeude)> EigeneGebaeude(PyObjekt aussen)
+    {
+        var gebaut = Lernplattform.Core.Stadtbau.Bauteile.Gebaeude(Aussen.Stadtdaten(aussen));
+        var liste = new List<(string, string, PyObjekt)>();
+        foreach (var g in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "gebaeude") && Py.Hat(gebaut, Py.Str(t["modell"]))))
+        {
+            var modell = Py.Str(g["modell"]);
+            if (liste.Any(e => e.Item1 == modell))
+            {
+                continue;
+            }
+            liste.Add((modell, Zierweg(aussen, modell)?["name"] as string ?? modell, g));
+        }
+        return liste;
+    }
+
     public static List<StadtbauFund> Pruefen(PyObjekt aussen)
     {
         var funde = new List<StadtbauFund>();
+        foreach (var (_, name, g) in EigeneGebaeude(aussen))
+        {
+            var (mx, my) = GebaeudeMitte(aussen, g);
+            funde.Add(new StadtbauFund(Texte.EigenesGebaeudeNochNicht(name), Texte.EigenesGebaeudeTipp, false, mx, my));
+        }
         var mitTuer = Zierwege(aussen).Select(z => Py.Str(z["modell"])).ToHashSet(StringComparer.Ordinal);
         foreach (var gruppe in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "gebaeude") && mitTuer.Contains(Py.Str(t["modell"])))
             .GroupBy(t => Py.Str(t["modell"]), StringComparer.Ordinal))
@@ -276,6 +334,8 @@ public sealed class Blueprint
         { "schild", Schild },
         { "innenraum", Innenraum },
         { "personen", Personen },
+        { "bauteile", Bauteile },
+        { "eingang", Eingang },
     };
 
     /// <summary>Inhalt der Datei: je Feld eine Zeile (json.dumps), Pruefsumme sha256 wie bei der Fassung.</summary>
@@ -319,9 +379,14 @@ public sealed class Blueprint
         {
             throw new StadtbauFehler([Texte.BlueprintNeuer]);
         }
+        if (Py.Int(d["formatversion"]) < 1)
+        {
+            throw new StadtbauFehler([Texte.BlueprintKaputt]);
+        }
+        var felder = Py.Int(d["formatversion"]) == 1 ? Felder1 : Felder;
         var funde = new List<string>();
-        funde.AddRange(Felder.Where(f => !Py.Hat(d, f)).Select(f => $"Feld „{f}“ fehlt."));
-        funde.AddRange(d.Select(p => p.Key).Where(k => !Felder.Contains(k)).Select(k => $"Feld „{k}“ ist unbekannt."));
+        funde.AddRange(felder.Where(f => !Py.Hat(d, f)).Select(f => $"Feld „{f}“ fehlt."));
+        funde.AddRange(d.Select(p => p.Key).Where(k => !felder.Contains(k)).Select(k => $"Feld „{k}“ ist unbekannt."));
         if (funde.Count > 0)
         {
             throw new StadtbauFehler(funde);
@@ -340,6 +405,24 @@ public sealed class Blueprint
         {
             throw new StadtbauFehler([Texte.BlueprintKaputt]);
         }
+        var bauteile = Get(d, "bauteile");
+        var eingang = Get(d, "eingang");
+        if ((bauteile is null) != (eingang is null))
+        {
+            throw new StadtbauFehler([Texte.BlueprintKaputt]);
+        }
+        if (bauteile is not null)
+        {
+            try
+            {
+                Lernplattform.Core.Stadtbau.Bauteile.TeileLesen(bauteile);
+                Lernplattform.Core.Stadtbau.Bauteile.EingaengeLesen(eingang);
+            }
+            catch (InvalidDataException)
+            {
+                throw new StadtbauFehler([Texte.BlueprintKaputt]);
+            }
+        }
         return new Blueprint
         {
             Name = name,
@@ -351,13 +434,15 @@ public sealed class Blueprint
             Schild = d["schild"] as List<object?>,
             Innenraum = d["innenraum"] as PyObjekt,
             Personen = personen,
+            Bauteile = bauteile as List<object?>,
+            Eingang = eingang as List<object?>,
         };
     }
 
     /// <summary>Gleiches Gebaeude (alles ausser Name, Herkunft und Datei)?</summary>
     public bool GleichesGebaeude(Blueprint b) =>
-        Modell == b.Modell && PythonJson.Standard(new List<object?> { Teile, Tuer, Weg, Schild, Innenraum, Personen })
-            == PythonJson.Standard(new List<object?> { b.Teile, b.Tuer, b.Weg, b.Schild, b.Innenraum, b.Personen });
+        Modell == b.Modell && PythonJson.Standard(new List<object?> { Teile, Tuer, Weg, Schild, Innenraum, Personen, Bauteile, Eingang })
+            == PythonJson.Standard(new List<object?> { b.Teile, b.Tuer, b.Weg, b.Schild, b.Innenraum, b.Personen, b.Bauteile, b.Eingang });
 
     /// <summary>Mitte der Grundflaeche relativ zur Ecke (fuer Tests und Anzeige).</summary>
     public Vector2 Mitte()
@@ -462,6 +547,8 @@ public sealed class Blueprint
             Schild = alt.Schild,
             Innenraum = alt.Innenraum,
             Personen = alt.Personen,
+            Bauteile = alt.Bauteile,
+            Eingang = alt.Eingang,
         };
         var ziel = Path.Combine(ablage.Blueprints, DateiName(neuerName));
         // nur Gross-/Kleinschreibung anders: unter Windows dieselbe Datei, unter Linux und Android eine andere
@@ -491,6 +578,21 @@ public sealed class Blueprint
         SicherungenFuer(ablage, neuerName).Anlegen(daten, zeit);
         neu.Datei = ziel;
         return neu;
+    }
+
+    /// <summary>
+    /// S 0.9.0 (Weiterbauen im Editor): die Datei eines vorhandenen Blueprints mit diesem (gleich benannten) ersetzen. Die
+    /// alte Fassung kommt vorher in die Sicherungen, die neue danach auch. Rueckgabe: Pfad.
+    /// </summary>
+    public string Ersetzen(Werkzeugordner ablage, string datei, DateTime zeit)
+    {
+        var alt = File.ReadAllBytes(datei);
+        SicherungenFuer(ablage, Name).Anlegen(alt, zeit);
+        var daten = Schreiben();
+        Werkzeugordner.SicherSchreiben(datei, daten);
+        SicherungenFuer(ablage, Name).Anlegen(daten, zeit);
+        Datei = datei;
+        return datei;
     }
 
     /// <summary>Loeschen (nach der Rueckfrage in der Oberflaeche): die Datei kommt vorher in die Sicherungen, auch eine kaputte.</summary>
