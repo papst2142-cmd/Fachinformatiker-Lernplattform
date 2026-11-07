@@ -108,6 +108,25 @@ public sealed class GrafikBibliothek
     }
 
     /// <summary>
+    /// S 0.9.0 (Weisung P12-48): wie <see cref="Mit(IEnumerable{GrafikModell})"/> und dazu weitere Zuordnungen
+    /// "modell:teilnr" -&gt; Grafik (selbst gebaute Gebaeude, <c>Stadtbau.Bauteile.MitGebaeuden</c>). Eine Zuordnung, die es
+    /// schon gibt oder deren Grafik fehlt, ist ein Fehler.
+    /// </summary>
+    public GrafikBibliothek Mit(IEnumerable<GrafikModell> zusatz, IReadOnlyDictionary<string, string> bloecke)
+    {
+        var mit = Mit(zusatz);
+        var alle = new Dictionary<string, string>(Bloecke);
+        foreach (var (k, v) in bloecke)
+        {
+            if (mit.Modell(v) is null || !alle.TryAdd(k, v))
+            {
+                throw new InvalidDataException("Zuordnung " + k + " gibt es schon oder Grafik " + v + " fehlt");
+            }
+        }
+        return new GrafikBibliothek(mit._modelle, alle);
+    }
+
+    /// <summary>
     /// Phase 13 Welle 4a: die mitgelieferten Stuecke aus dem Katalog (<c>inhalte_csharp/grafik/katalog_verbaut.bin</c>, Aufbau
     /// wie modelle.bin, Erzeuger <c>werkzeuge/stadtbau/verbaut.py</c>) mit der SHA-256 aus <c>katalog_verbaut.json</c>; jeder
     /// Name beginnt mit "cc0:" und steht genau so in der Liste "modelle" der json-Datei.

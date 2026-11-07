@@ -3,6 +3,20 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.9.0
+
+Du kannst jetzt eigene Gebäude entwerfen: aus Wänden, Ecken, Türen, Dächern und Fenstern, Stockwerk für Stockwerk.
+
+- Oben gibt es den neuen Knopf „Gebäude entwerfen“. Du baust ein neues Gebäude oder baust einen deiner eigenen Blueprints weiter.
+- Links stehen die Teile in Gruppen (Wände, Ecken, Türen, Dächer, Fenster und Details), jedes mit Bild und deutschem Namen. Teil antippen, dann das Feld im Raster antippen setzt es. Ein Schatten zeigt vorher, ob es dort passt: grün heißt „passt“, rot heißt „geht hier nicht“, mit dem Grund darunter.
+- Oben wählst du die Ebene: Erdgeschoss, 1. bis 4. Obergeschoss und eine Ebene nur für das Dach. Die Ebenen darüber werden ausgeblendet, damit du gut hineinsiehst.
+- Ein Teil antippen wählt es. Rechts drehst, kopierst und löschst du es, stellst es eine Ebene höher oder tiefer und schiebst es mit den Pfeilen um ein Feld. Eine Tür im Erdgeschoss legst du dort als Eingang fest.
+- Die Kamera bewegst du wie in der 3D-Ansicht der Stadt: am Tablet mit zwei Fingern, am PC mit der rechten Maustaste und dem Mausrad, dazu die Knöpfe unter dem Bild. Mit dem Schalter „Nacht“ siehst du die Fenster leuchten.
+- Rechts zeigt ein Balken, wie viele Dreiecke das Gebäude hat (höchstens 8 000). Die Prüfung meldet rot, was nicht geht (zum Beispiel ein Teil in der Luft, ein Dach ohne Wand, kein Eingang, vor dem Eingang steht etwas), und gelb, was du noch ansehen solltest (ein Feld oben offen, ein Fenster zeigt in ein Nachbarteil).
+- „Als Blueprint speichern“ legt das Gebäude in „Meine Blueprints“ ab. Für das Erdgeschoss bekommt es gleich einen Innenraum mit Flur und Raum als Vorschlag, den du wie jeden Innenraum umbauen kannst.
+- Ein eigenes Gebäude kannst du in die Stadt setzen und in der 3D-Ansicht ansehen. Ins Spiel kommt es erst mit dem Einbau; bis dahin lässt sich eine Stadt mit eigenem Gebäude noch nicht als Datei für das Spiel speichern.
+- Jede Änderung ist ein Schritt, den du mit „Rückgängig“ zurücknehmen kannst.
+
 ## S 0.8.0
 
 Du kannst jetzt Wasser bauen: Teiche, Stege und den Fluss.

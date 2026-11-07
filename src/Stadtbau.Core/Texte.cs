@@ -372,6 +372,7 @@ public static class Texte
         [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
         [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
+        [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
     };
 
     /// <summary>Tipp je Gruppe der Liste links (Stadt von oben und Innenräume).</summary>
@@ -383,4 +384,130 @@ public static class Texte
     public const string TippKatalog = "Möbel und Regale für den Innenraum: antippen, dann die Stelle im Grundriss antippen.";
 
     public static string TippGruppe(string gruppe) => $"Stücke der Gruppe „{gruppe}“ für den Innenraum.";
+
+    // ---- Gebaeude entwerfen (S 0.9.0, Weisung P12-48, Plan P12-26b Abschnitte 1 bis 5) ----
+    public const string GebaeudeEntwerfen = "Gebäude entwerfen";
+    public const string EntwurfFrage = "Ein neues Gebäude bauen oder einen eigenen Blueprint weiterbauen?";
+    public const string EntwurfNeu = "Neues Gebäude";
+    public const string EntwurfWeiter = "Weiterbauen";
+    public const string EntwurfKeineEigenen = "Noch kein eigenes Gebäude als Blueprint gespeichert.";
+    public const string EntwurfZurueck = "Zurück zur Stadt";
+    public const string EntwurfZurueckFrage = "Das Gebäude ist noch nicht als Blueprint gespeichert. Trotzdem zurück zur Stadt? Was du gebaut hast, geht dann verloren.";
+    public const string EntwurfVerwerfen = "Ja, verwerfen";
+    public const string EntwurfTitelNeu = "Neues Gebäude";
+    public const string EntwurfHinweis = "Teil links antippen, dann das Feld im Raster antippen. Ein Finger setzt oder wählt, zwei Finger bewegen die Kamera.";
+    public const string EntwurfEbene = "Ebene";
+    public const string EbeneDach = "5. Ebene (nur Dach)";
+    public const string EntwurfTeile = "Bauteile";
+    public const string EntwurfGruppeWaende = "Wände";
+    public const string EntwurfGruppeEcken = "Ecken";
+    public const string EntwurfGruppeTueren = "Türen";
+    public const string EntwurfGruppeDaecher = "Dächer";
+    public const string EntwurfGruppeDetails = "Fenster, Türen und Kleines";
+    public const string EntwurfAuswahl = "Ausgewähltes Teil";
+    public const string EntwurfNichtsGewaehlt = "Kein Teil gewählt. Tippe auf ein Teil im Gebäude.";
+    public static string EntwurfGewaehlt(string name) => "Gewählt: " + name;
+    public const string EntwurfNichtImRaster = "außerhalb des Bauplatzes";
+    public const string EntwurfDrehen = "Drehen 90°";
+    public const string EntwurfKopieren = "Kopieren";
+    public const string EntwurfLoeschen = "Löschen";
+    public const string EntwurfHoeher = "Ebene ▲";
+    public const string EntwurfTiefer = "Ebene ▼";
+    public const string EntwurfNord = "↑";
+    public const string EntwurfSued = "↓";
+    public const string EntwurfWest = "←";
+    public const string EntwurfOst = "→";
+    public const string EntwurfNachNord = "Ein Feld nach oben schieben";
+    public const string EntwurfNachSued = "Ein Feld nach unten schieben";
+    public const string EntwurfNachWest = "Ein Feld nach links schieben";
+    public const string EntwurfNachOst = "Ein Feld nach rechts schieben";
+    public const string EntwurfAlsEingang = "Als Eingang festlegen";
+    public const string EntwurfIstEingang = "Das ist der Eingang.";
+    public const string EntwurfGrenzen = "Grenzen dieses Gebäudes";
+    public const string EntwurfPruefungen = "Prüfungen";
+    public const string EntwurfAllesGut = "Alles in Ordnung.";
+    public const string EntwurfNacht = "Nacht zeigen";
+    public const string EntwurfSpeichern = "Als Blueprint speichern";
+    public const string EntwurfGespeichert = "Gebäude als Blueprint gespeichert";
+    public const string EntwurfGrundrissNeu = "Der Innenraum im Erdgeschoss wurde aus der Grundfläche neu vorgeschlagen.";
+    public const string EntwurfRotSpeichern = "Mit roten Prüfungen lässt sich das Gebäude noch nicht speichern:";
+    public const string EntwurfGanzZeigen = "Ganz zeigen";
+    public const string EntwurfKameraDrehen = "Kamera drehen";
+
+    public const string TippEntwurfWaende = "Wände mit Fenstern, Balkonen und Markisen: die Fassade zeigt nach außen.";
+    public const string TippEntwurfEcken = "Ecken haben zwei Fassaden: mit „Drehen 90°“ an jede Ecke des Hauses anpassen.";
+    public const string TippEntwurfTueren = "Wände mit Tür. Eine Tür im Erdgeschoss wird mit „Als Eingang festlegen“ der Eingang.";
+    public const string TippEntwurfDaecher = "Dächer kommen auf die Ebene über den Wänden.";
+    public const string TippEntwurfDetails = "Fensterrahmen, Haustüren und Klimageräte an eine Wand oder auf ein Flachdach setzen.";
+    public const string TippEntwurfEbene = "Wählt die Ebene, auf der du baust; die Ebenen darüber sind ausgeblendet.";
+    public const string TippEntwurfDrehen = "Dreht das Teil um 90 Grad im Uhrzeigersinn (Taste R).";
+    public const string TippEntwurfKopieren = "Legt eine Kopie ins nächste freie Feld daneben.";
+    public const string TippEntwurfLoeschen = "Nimmt das Teil weg (Taste Entf).";
+    public const string TippEntwurfEbeneWechseln = "Schiebt das Teil eine Ebene höher oder tiefer.";
+    public const string TippEntwurfPfeile = "Schiebt das Teil ein Feld weiter.";
+    public const string TippEntwurfEingang = "Diese Tür wird der Eingang: hier kommen Tür und Fußweg in der Stadt hin.";
+    public const string TippEntwurfSpeichern = "Prüft das Gebäude und speichert es unter einem Namen als Blueprint.";
+    public const string TippEntwurfZurueck = "Schließt den Editor und zeigt wieder die Stadt.";
+    public const string TippEntwurfNacht = "Zeigt das Gebäude bei Nacht: die Fenster leuchten wie im Spiel.";
+    public const string TippEntwurfKamera = "Dreht die Kamera um das Gebäude.";
+
+    /// <summary>Zahl mit Tausenderpunkt wie im Deutschen (1.528), unabhaengig von der Sprache des Geraets.</summary>
+    public static string Tsd(int n) => n.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
+
+    public static string EntwurfTitel(string name) => $"Gebäude entwerfen: {name}";
+
+    public static string EntwurfStelle(int ebene, int x, int y) => $"{Entwurf.EbeneName(ebene)}, Feld {x + 1} · {y + 1}: ";
+
+    public static string EntwurfTeilStelle(int ebene, int x, int y, string seite) => $"{Entwurf.EbeneName(ebene)}, Feld {x + 1} · {y + 1}, Fassade {seite}";
+
+    public static string EntwurfGrenzText(int dreiecke) => $"{Tsd(dreiecke)} von {Tsd(Lernplattform.Core.Stadtbau.Bauteile.GrenzeDreiecke)} Dreiecken. Im Spiel ein Haus wie jedes andere, kein Zeichenaufruf je Teil.";
+
+    public static string SeiteName(Lernplattform.Core.Stadtbau.Bauteile.Seiten s) => s switch
+    {
+        Lernplattform.Core.Stadtbau.Bauteile.Seiten.Nord => "oben (Norden)",
+        Lernplattform.Core.Stadtbau.Bauteile.Seiten.Ost => "rechts (Osten)",
+        Lernplattform.Core.Stadtbau.Bauteile.Seiten.Sued => "unten (Süden)",
+        Lernplattform.Core.Stadtbau.Bauteile.Seiten.West => "links (Westen)",
+        Lernplattform.Core.Stadtbau.Bauteile.Seiten.Keine => "keine",
+        _ => string.Join(" und ", Lernplattform.Core.Stadtbau.Bauteile.Alle.Where(a => (s & a) != 0).Select(SeiteName)),
+    };
+
+    // Pruefungen im Editor (Plan Abschnitt 4)
+    public const string EntwurfLeer = "Im Erdgeschoss steht noch kein Teil.";
+    public const string EntwurfLeerTipp = "Eine Wand im Erdgeschoss setzen.";
+    public const string EntwurfDoppelt = "Hier stehen zwei Teile im selben Feld.";
+    public const string EntwurfDoppeltTipp = "Eines der beiden Teile löschen oder verschieben.";
+    public const string EntwurfInDerLuft = "Das Teil hängt in der Luft.";
+    public const string EntwurfInDerLuftTipp = "Unter einer Wand muss auf der Ebene darunter eine Wand stehen.";
+    public const string EntwurfDetailTipp = "Fensterrahmen und Haustüren brauchen eine Wand im selben Feld, Klimageräte auf dem Dach ein Dach.";
+    public const string EntwurfDachOhneWand = "Unter dem Dach steht keine Wand.";
+    public const string EntwurfDachOhneWandTipp = "Ein Dach kommt auf die Ebene über einer Wand.";
+    public const string EntwurfZuHoch = "Wände gehen höchstens bis zum 4. OG.";
+    public const string EntwurfZuHochTipp = "Auf der 5. Ebene stehen nur Dächer.";
+    public const string EntwurfKeinEingang = "Das Gebäude hat noch keinen Eingang.";
+    public const string EntwurfKeinEingangTipp = "Eine Tür im Erdgeschoss wählen und „Als Eingang festlegen“ antippen.";
+    public const string EntwurfMehrEingaenge = "Das Gebäude hat mehr als einen Eingang.";
+    public const string EntwurfMehrEingaengeTipp = "Ein Gebäude hat genau einen Eingang; eine Tür neu als Eingang festlegen.";
+    public const string EntwurfEingangOhneTuer = "Am Eingang ist keine Tür.";
+    public const string EntwurfEingangOhneTuerTipp = "Eine Tür an diese Stelle setzen oder eine andere Tür als Eingang festlegen.";
+    public const string EntwurfVorEingangBelegt = "Vor dem Eingang steht ein Teil.";
+    public const string EntwurfVorEingangBelegtTipp = "Das Feld vor der Tür muss frei bleiben, dort beginnt der Fußweg.";
+    public const string EntwurfZuVieleDreieckeTipp = "Weniger oder einfachere Teile verwenden (eine glatte Wand hat weniger Dreiecke als eine mit Fenstern).";
+    public const string EntwurfZerfaellt = "Die Grundfläche zerfällt in zwei Teile.";
+    public const string EntwurfZerfaelltTipp = "Alle Felder im Erdgeschoss müssen über eine Seite zusammenhängen.";
+    public const string EntwurfUnbekanntTipp = "Das Teil gibt es in dieser Werkzeug-Version nicht; bitte löschen.";
+    public const string EntwurfObenOffenTipp = "Auf die Ebene darüber ein Dach oder eine weitere Wand setzen.";
+    public const string EntwurfFensterZuNachbar = "Ein Fenster zeigt in ein Nachbarteil.";
+    public const string EntwurfFensterZuNachbarTipp = "Das Teil drehen, bis das Fenster nach außen zeigt, oder eine Wand ohne Fenster nehmen.";
+
+    public static string EntwurfZuVieleDreiecke(int n) => $"Das Gebäude hat {Tsd(n)} Dreiecke, erlaubt sind höchstens {Tsd(Lernplattform.Core.Stadtbau.Bauteile.GrenzeDreiecke)}.";
+
+    public static string EntwurfUnbekannt(string name) => $"Unbekanntes Teil „{name}“.";
+
+    public static string EntwurfObenOffen(int n) => n == 1 ? "Ein Feld ist oben offen (kein Dach)." : $"{n} Felder sind oben offen (kein Dach).";
+
+    // in der Stadt (bis zum Einbau W4b)
+    public const string EigenesGebaeudeTipp = "Das Spiel zeichnet selbst gebaute Gebäude erst mit dem Einbau; bis dahin lässt sich die Stadt mit ihnen nicht als Datei speichern. Nichts geht verloren.";
+
+    public static string EigenesGebaeudeNochNicht(string name) => $"Selbst gebautes Gebäude „{name}“: kommt mit dem Einbau ins Spiel.";
 }

@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.43.5
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Gebäude vor, die im Stadtbau-Werkzeug aus einzelnen Wänden, Dächern und Fenstern gebaut werden.
+
+- Ein solches Gebäude wird aus seinen Teilen zu einem Haus zusammengesetzt, mit derselben Grafik, demselben Licht und denselben leuchtenden Fenstern wie die Häuser der Stadt.
+- Die heutige Stadt hat keine eigenen Gebäude und sieht deshalb aus wie bisher.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.4
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Teiche und Stege vor, die mit dem Stadtbau-Werkzeug gebaut werden.
 

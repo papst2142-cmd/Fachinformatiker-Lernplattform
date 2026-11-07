@@ -371,6 +371,7 @@ public sealed partial class Hauptansicht : UserControl
         Knopf(Texte.Draufsicht, () => ReiterZeigen(innen: false));
         Knopf(Texte.Innenraeume, () => ReiterZeigen(innen: true));
         Knopf(Texte.Ansicht3D, DreiZeigen);
+        Knopf(Texte.GebaeudeEntwerfen, () => _ = EntwerfenAsync());
         Knopf(Texte.Neu, () => _ = NeuAsync());
         Knopf(Texte.Oeffnen, () => _ = OeffnenAsync());
         Knopf(Texte.Speichern, SpeichernVonHand);
@@ -425,9 +426,20 @@ public sealed partial class Hauptansicht : UserControl
         _kopf[Texte.Wiederholen].IsEnabled = schreiben && _projekt!.SchritteVor > 0;
         _kopf[Texte.DateiSpeichern].IsEnabled = mit;
         _kopf[Texte.AnCcSenden].IsEnabled = mit;
+        _kopf[Texte.GebaeudeEntwerfen].IsEnabled = _daten is not null;
+        if (_entwurf is { } entwurf)
+        {
+            // S 0.9.0: im Editor gelten nur Rueckgaengig/Wiederholen des Entwurfs; Projekt-Knoepfe erst nach "Zurück zur Stadt"
+            foreach (var name in new[] { Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden })
+            {
+                _kopf[name].IsEnabled = false;
+            }
+            _kopf[Texte.Rueckgaengig].IsEnabled = entwurf.Entwurf.KannZurueck;
+            _kopf[Texte.Wiederholen].IsEnabled = entwurf.Entwurf.KannWiederholen;
+        }
         foreach (var (name, k) in _kopf)
         {
-            var aktiv = mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei) || (name == Texte.Ansicht3D && _drei));
+            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei) || (name == Texte.Ansicht3D && _drei));
             k.Farbe(Button.BackgroundProperty, aktiv ? "VerlaufW.primary" : "Pinsel.card_alt");
             if (k.Content is TextBlock t)
             {
@@ -2131,6 +2143,16 @@ public sealed partial class Hauptansicht : UserControl
 
     public void Rueckgaengig()
     {
+        if (_entwurf is { } e)
+        {
+            if (e.Entwurf.KannZurueck)
+            {
+                e.Entwurf.Zurueck();
+                e.Waehlen(-1);
+                Melden("Rückgängig gemacht");
+            }
+            return;
+        }
         if (_projekt?.Rueckgaengig() == true)
         {
             NachVerlauf();
@@ -2140,6 +2162,16 @@ public sealed partial class Hauptansicht : UserControl
 
     public void Wiederholen()
     {
+        if (_entwurf is { } e)
+        {
+            if (e.Entwurf.KannWiederholen)
+            {
+                e.Entwurf.Wiederholen();
+                e.Waehlen(-1);
+                Melden("Wiederholt");
+            }
+            return;
+        }
         if (_projekt?.Wiederholen() == true)
         {
             NachVerlauf();
@@ -2516,6 +2548,11 @@ public sealed partial class Hauptansicht : UserControl
         {
             VollbildUmschalten();
             e.Handled = true;
+            return;
+        }
+        if (Dialog.Offen is null && _entwurf is not null)
+        {
+            e.Handled = EntwurfTaste(e);
             return;
         }
         if (Dialog.Offen is not null || _projekt is null)

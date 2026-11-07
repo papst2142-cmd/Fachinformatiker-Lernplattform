@@ -691,6 +691,11 @@ public sealed class Projekt
         {
             throw new StadtbauFehler([.. rot.Select(r => OrtName(r.Ort) + ": " + r.Fund.Text)]);
         }
+        // S 0.9.0 (Weisung P12-48): selbst gebaute Gebaeude zeichnet das Spiel erst mit dem Einbau (gelb gesperrt)
+        if (Blueprint.EigeneGebaeude(AussenStand) is { Count: > 0 } eigene)
+        {
+            throw new StadtbauFehler([.. eigene.Select(e => OrtName(StadtOrt) + ": " + Texte.EigenesGebaeudeNochNicht(e.Name))]);
+        }
         var datei = Stand(zeit.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture)).Schreiben();
         var gelesen = StadtFassung.Lesen(datei);
         var funde = StadtbauPruefung.Inhalt(gelesen, Daten.Inhalt);

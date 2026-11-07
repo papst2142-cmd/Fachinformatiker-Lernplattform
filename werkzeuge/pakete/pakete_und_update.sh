@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phase 0, Spike D: baut die Pakete fuer ein System und prueft das Update.
-#   A 0.43.4 (Paketversion 1.0.0-a.0.43.4) -> A 0.43.5 -> B 0.1.0, danach muss
-#   ein Rueckschritt auf A 0.43.5 abgelehnt werden. Die Datenordner-Probe aus
+#   A 0.43.5 (Paketversion 1.0.0-a.0.43.5) -> A 0.43.6 -> B 0.1.0, danach muss
+#   ein Rueckschritt auf A 0.43.6 abgelehnt werden. Die Datenordner-Probe aus
 #   der ersten Version muss nach jedem Update unveraendert da sein.
 #   Phase 5 W3 (Weisung P5-8): jedes Update laeuft wie der Knopf "Jetzt aktualisieren"
 #   (Laden mit Pruefsumme, Kopie sicherungen/vor_update_*.db, Merker); nach jedem
@@ -72,8 +72,8 @@ baue() { # Stufe Version
   echo "gebaut: $stufe $version = $paket"
 }
 
-baue A 0.43.4
 baue A 0.43.5
+baue A 0.43.6
 baue B 0.1.0
 ls -la "$AUS"/feed-*
 
@@ -82,8 +82,8 @@ ls -la "$AUS"/feed-*
 case "$RID" in
   linux-*)
     mkdir -p "$AUS/appimage"
-    tar -C "$AUS/feed-A-0.43.4" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.43.4-AppImage.tar.gz" "$ID.AppImage"
-    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.43.4-AppImage.tar.gz"
+    tar -C "$AUS/feed-A-0.43.5" -czf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.43.5-AppImage.tar.gz" "$ID.AppImage"
+    tar -tvzf "$AUS/appimage/Fachinformatiker-Lernplattform-A-0.43.5-AppImage.tar.gz"
     ;;
 esac
 
@@ -94,7 +94,7 @@ export LERNPLATTFORM_UPDATE_BERICHT="$AUS/update_bericht.txt"
 rm -rf "$LERNPLATTFORM_DATEN" "$LERNPLATTFORM_UPDATE_BERICHT"
 case "$RID" in
   win-*)
-    "$AUS/feed-A-0.43.4/$ID-win-Setup.exe" --silent
+    "$AUS/feed-A-0.43.5/$ID-win-Setup.exe" --silent
     APP="$(cygpath -u "$LOCALAPPDATA")/$ID/current/$EXE"
     ;;
   linux-*)
@@ -102,15 +102,15 @@ case "$RID" in
     # neueres Paket beim naechsten Start selbst ein; fuer eine saubere Probe leeren.
     rm -rf /var/tmp/velopack/Fachinformatiker-Lernplattform
     mkdir -p "$AUS/installiert"
-    cp "$AUS/feed-A-0.43.4/$ID.AppImage" "$AUS/installiert/"
+    cp "$AUS/feed-A-0.43.5/$ID.AppImage" "$AUS/installiert/"
     APP="$AUS/installiert/$ID.AppImage"
     ;;
   osx-*)
     # Startprobe (Weisung P11-27): die fertige .pkg ohne Administrator in den Benutzerordner installieren,
     # wie es das Paket erlaubt (enable_currentUserHome) und wie es bei Nico landet (Sammelliste 201)
     if [ "${CI:-}" != "true" ]; then echo "FEHLER: die Mac-Probe installiert nach ~/Applications und laeuft nur in der CI (CI=true)"; exit 1; fi
-    PKGS=("$AUS/feed-A-0.43.4"/*.pkg)
-    if [ "${#PKGS[@]}" -ne 1 ] || [ ! -f "${PKGS[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in feed-A-0.43.4"; exit 1; fi
+    PKGS=("$AUS/feed-A-0.43.5"/*.pkg)
+    if [ "${#PKGS[@]}" -ne 1 ] || [ ! -f "${PKGS[0]}" ]; then echo "FEHLER: nicht genau ein .pkg in feed-A-0.43.5"; exit 1; fi
     BUNDLE="$HOME/Applications/Fachinformatiker Lernplattform.app"
     if [ -e "$BUNDLE" ]; then echo "FEHLER: $BUNDLE besteht schon (keine frische Probe)"; exit 1; fi
     if ! installer -pkg "${PKGS[0]}" -target CurrentUserHomeDirectory; then
@@ -176,8 +176,8 @@ pruefe_notizen() { # Weisung P8-53: das angebotene Paket hat Notizen, das Update
 }
 
 starte bericht "$AUS"
-grep -q "bericht: Version 1.0.0-a.0.43.4;" "$LERNPLATTFORM_UPDATE_BERICHT"
-case "$RID" in osx-*) echo "Mac-Startprobe $RID: installierte App gestartet, Version 1.0.0-a.0.43.4, Datenordner-Probe angelegt" ;; esac
+grep -q "bericht: Version 1.0.0-a.0.43.5;" "$LERNPLATTFORM_UPDATE_BERICHT"
+case "$RID" in osx-*) echo "Mac-Startprobe $RID: installierte App gestartet, Version 1.0.0-a.0.43.5, Datenordner-Probe angelegt" ;; esac
 letzte | grep -qx "bericht: Abschluss keiner; Kopien vor dem Update: 0"
 # Patch A 0.39.0 (Sammelliste 203, Probe (b)): Bundle, das der Benutzer nicht aendern darf (wie eine Installation
 # "fuer alle Benutzer" in /Applications, Dateien gehoeren root). Gegenprobe: der alte stille Weg muss scheitern
@@ -209,16 +209,16 @@ case "$RID" in
     echo "--- Probe (b) Gegenprobe: alter stiller Weg bei nicht beschreibbarem Bundle ---"
     ab="$(zeilen)"
     export LERNPLATTFORM_UPDATE_GEGENPROBE_STILL=1
-    starte suchen "$AUS/feed-A-0.43.5"
+    starte suchen "$AUS/feed-A-0.43.6"
     unset LERNPLATTFORM_UPDATE_GEGENPROBE_STILL
     warte_log "Not allowed to ask for elevated permissions" "$ab"
     aufraeumen
     starte version "$AUS"
-    tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | grep -q "Version 1.0.0-a.0.43.4;" || { echo "FEHLER: Gegenprobe (b) hat doch aktualisiert"; exit 1; }
-    echo "Gegenprobe (b): still gescheitert wie bei Nico (Version bleibt 1.0.0-a.0.43.4)"
+    tail -n 1 "$LERNPLATTFORM_UPDATE_BERICHT" | grep -q "Version 1.0.0-a.0.43.5;" || { echo "FEHLER: Gegenprobe (b) hat doch aktualisiert"; exit 1; }
+    echo "Gegenprobe (b): still gescheitert wie bei Nico (Version bleibt 1.0.0-a.0.43.5)"
     echo "--- Probe (b): mit Fix fragt der Updater nach dem Passwort ---"
     ab="$(zeilen)"
-    starte suchen "$AUS/feed-A-0.43.5"
+    starte suchen "$AUS/feed-A-0.43.6"
     warte_log "will attempt to elevate permissions" "$ab"
     # diese Zeile schreibt der Updater auch auf dem stillen Weg; entscheidend ist, dass danach kein "Not allowed" folgt
     sleep 8
@@ -239,18 +239,18 @@ case "$RID" in
     ZUSATZ=2
     ;;
 esac
-starte suchen "$AUS/feed-A-0.43.5"
+starte suchen "$AUS/feed-A-0.43.6"
 pruefe_notizen
-warte_auf 1.0.0-a.0.43.5
-pruefe_abschluss "A 0.43.5" $((1 + ZUSATZ))
+warte_auf 1.0.0-a.0.43.6
+pruefe_abschluss "A 0.43.6" $((1 + ZUSATZ))
 starte suchen "$AUS/feed-B-0.1.0"
 pruefe_notizen
 warte_auf 1.0.0-b.0.1.0
 pruefe_abschluss "B 0.1.0" $((2 + ZUSATZ))
-starte suchen "$AUS/feed-A-0.43.5"
+starte suchen "$AUS/feed-A-0.43.6"
 grep -q "suchen: kein neueres Paket" "$LERNPLATTFORM_UPDATE_BERICHT"
 # Probe stammt immer noch aus der ersten Version
-test "$(grep -c "Probe: angelegt von 1.0.0-a.0.43.4" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
+test "$(grep -c "Probe: angelegt von 1.0.0-a.0.43.5" "$LERNPLATTFORM_UPDATE_BERICHT")" -eq "$(grep -c "Probe:" "$LERNPLATTFORM_UPDATE_BERICHT")"
 # update.log im Datenordner: beide Kopien und beide Starts des Updaters stehen drin
 test "$(grep -c "| Programm | Installer wird gestartet: Velopack" "$LERNPLATTFORM_DATEN/update.log")" -eq $((2 + ZUSATZ))
 # T5 (Phase 6, Sammelliste 46): nur zaehlen, keine Wiederholung (sie wuerde eine Sperre verdecken,
@@ -287,7 +287,7 @@ case "$RID" in
     # als root uebergeht der Befehl die Auswahl der Distribution (voller Lauf 479: auch das bearbeitete Paket landete
     # in /Applications); der grafische Installer zeigt nur die erlaubten Orte. Gegenprobe: unbearbeitetes Paket.
     echo "--- Probe (a): erlaubte Installationsorte (installer -dominfo) ---"
-    orig="$(installer -dominfo -pkg "$AUS/pkg-original-A-0.43.4.pkg" 2>&1 || true)"
+    orig="$(installer -dominfo -pkg "$AUS/pkg-original-A-0.43.5.pkg" 2>&1 || true)"
     bearb="$(installer -dominfo -pkg "${PKGS[0]}" 2>&1 || true)"
     echo "unbearbeitetes Paket: $(echo $orig)"
     echo "bearbeitetes Paket:   $(echo $bearb)"
