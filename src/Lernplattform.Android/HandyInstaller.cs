@@ -35,7 +35,7 @@ public sealed class HandyInstaller(Activity activity, string aktion, string sitz
 
     private TaskCompletionSource<bool>? _erlaubnis;
 
-    /// <summary>Wird aus <see cref="MainActivity.OnResume"/> gerufen (Rueckkehr aus der Einstellung).</summary>
+    /// <summary>Wird aus <c>MainActivity.OnResume</c> (beider Programme) gerufen (Rueckkehr aus der Einstellung).</summary>
     public void Zurueck() => _erlaubnis?.TrySetResult(DarfInstallieren);
 
     public string LadeOrdner => Path.Combine(activity.CacheDir!.AbsolutePath, "update");
