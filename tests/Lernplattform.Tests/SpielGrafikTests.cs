@@ -113,11 +113,14 @@ public class SpielGrafikTests
     public void ModelleNurAngehaengt()
     {
         var bin = File.ReadAllBytes(Path.Combine(Ordner, "modelle.bin"));
-        const int laengeW6 = 4182209;
-        Assert.True(bin.Length > laengeW6);
-        Assert.Equal("464c474d01000000", Convert.ToHexStringLower(bin.AsSpan(0, 8)));
-        Assert.Equal("76fc0177abd57897a02061c1fbb2f0ae1f20d2ad256308a9da3c82f48e96f022",
-            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bin.AsSpan(12, laengeW6 - 12))));
+        // A 0.43.6 (Weisung P12-50, Nico c): modelle.bin einmal neu geschrieben (Version 2 mit Eckfarben, gleiche 146 Modelle
+        // in gleicher Reihenfolge); vorher galt "nur anhaengen" ab Phase 7 W6 (4 182 209 Bytes, Version 1). Ab hier wieder:
+        // die ersten Bytes bleiben, Neues nur angehaengt.
+        const int laenge0436 = 9500284;
+        Assert.True(bin.Length >= laenge0436);
+        Assert.Equal("464c474d02000000", Convert.ToHexStringLower(bin.AsSpan(0, 8)));
+        Assert.Equal("d6c5c56e4c7ace6f062da01778edf2e3cbe5da699b68b6965d702c43c4f1f065",
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bin.AsSpan(12, laenge0436 - 12))));
         Assert.Equal(Bibliothek.Value.Modelle.Count, BitConverter.ToInt32(bin, 8));
     }
 

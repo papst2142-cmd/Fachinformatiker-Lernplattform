@@ -4,7 +4,7 @@ Liest alle Fassungen der Staedte (inhalte_csharp/spiel/stadtbau/*.fistadt) und s
 Katalog des Stadtbau-Werkzeugs (inhalte_stadtbau/grafik/), auf die eine Fassung verweist, in eine eigene Datei der
 Spielgrafik:
 
-  inhalte_csharp/grafik/katalog_verbaut.bin   Aufbau wie modelle.bin ("FLGM", Version 1), je Modell der Name
+  inhalte_csharp/grafik/katalog_verbaut.bin   Aufbau wie modelle.bin ("FLGM", Version 2), je Modell der Name
                                               "cc0:paket/name", die Dreiecke Byte fuer Byte aus <paket>.bin
   inhalte_csharp/grafik/katalog_verbaut.json  SHA-256 der .bin, Liste der Modelle (sortiert), Quelle je Paket
 
@@ -35,6 +35,7 @@ STERN = [
     (0.5, 0.0, 0.0, 0.0669873, 0.0, 0.75, 0.9330127, 0.0, 0.75),
     (0.5, 0.0, 1.0, 0.9330127, 0.0, 0.25, 0.0669873, 0.0, 0.25),
 ]
+VERSION = 2  # Aufbau der FLGM-Dateien (2 = mit Eckfarben, Weisung P12-50), gleich wandle_modelle.VERSION
 
 
 def verweise_innen(knoten, menge):
@@ -65,7 +66,7 @@ def verweise(repo, fassungen=FASSUNGEN):
 
 def paket_lesen(daten):
     """Name -> Bytes der Dreiecke (ab der Zahl der Dreiecke) aus einer FLGM-Datei."""
-    if daten[:4] != b"FLGM" or struct.unpack("<I", daten[4:8])[0] != 1:
+    if daten[:4] != b"FLGM" or struct.unpack("<I", daten[4:8])[0] != VERSION:
         raise SystemExit("unbekannter Aufbau einer Paket-Datei")
     anzahl = struct.unpack("<I", daten[8:12])[0]
     pos = 12
@@ -75,7 +76,7 @@ def paket_lesen(daten):
         name = daten[pos + 2:pos + 2 + laenge].decode("utf-8")
         pos += 2 + laenge
         dreiecke = struct.unpack("<I", daten[pos:pos + 4])[0]
-        ende = pos + 4 + dreiecke * 40
+        ende = pos + 4 + dreiecke * 52  # Version 2: 9 x float32, Farbe, drei Eckfarben
         modelle[name] = daten[pos:ende]
         pos = ende
     return modelle
@@ -86,7 +87,7 @@ def stern(farbe):
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     teile = [struct.pack("<I", len(STERN))]
     for d in STERN:
-        teile.append(struct.pack("<9f", *d) + bytes((r, g, b, 0)))
+        teile.append(struct.pack("<9f", *d) + bytes((r, g, b, 0)) * 4)  # Farbe und drei gleiche Eckfarben
     return b"".join(teile)
 
 
@@ -122,7 +123,7 @@ def erzeugen(repo, fassungen=FASSUNGEN):
         quellen.setdefault(paket, katalog["pakete"][paket]["titel"])
         kodiert = (PRAEFIX + kennung).encode("utf-8")
         binteile.append(struct.pack("<H", len(kodiert)) + kodiert + dreiecke)
-    daten = b"FLGM" + struct.pack("<II", 1, len(binteile)) + b"".join(binteile)
+    daten = b"FLGM" + struct.pack("<II", VERSION, len(binteile)) + b"".join(binteile)
     index = {
         "_hinweis": ["Phase 13 Welle 4a (Weisung P12-28): nur die Stuecke aus dem Katalog des Stadtbau-Werkzeugs, auf die eine "
                      "Fassung in inhalte_csharp/spiel/stadtbau/ verweist; erzeugt mit werkzeuge/stadtbau/verbaut.py, nie von Hand."],

@@ -19,6 +19,12 @@ public enum TeilArt
     Band,
 }
 
+/// <summary>
+/// Faerbung eines CC0-Modells je Ecke (Phase 8 W9, je Ecke seit Weisung P12-50): Nummer des Dreiecks, Grundfarbe der Ecke,
+/// Betrag der Normale nach oben, mittlere Hoehe des Dreiecks -&gt; Farbe der Ecke.
+/// </summary>
+public delegate Vector3 Modellfaerbung(int dreieck, Vector3 grund, float oben, float hoehe);
+
 /// <summary>Ein Teil der Szene in Weltkoordinaten (X nach rechts, Y nach oben, Z zum Betrachter).</summary>
 public readonly record struct Teil(TeilArt Art, float X1, float Y1, float Z1, float X2, float Y2, float Z2, Vector3 Farbe);
 
@@ -96,14 +102,18 @@ public sealed class Netz
         Viereck(new(b.X, a.Y, b.Z), new(b.X, a.Y, a.Z), new(b.X, b.Y, a.Z), new(b.X, b.Y, b.Z), t.Farbe);   // rechts
     }
 
-    /// <summary>Ein CC0-Modell an seiner Lage einfuegen (flache Normale je Dreieck, Farbe des Dreiecks).</summary>
+    /// <summary>Ein CC0-Modell an seiner Lage einfuegen (flache Normale je Dreieck, Farbe je Ecke, Weisung P12-50).</summary>
     public void Hinzu(GrafikModell modell, Matrix4x4 lage) => Hinzu(modell, lage, null);
 
     /// <summary>
-    /// Phase 8 W9: wie <see cref="Hinzu(GrafikModell, Matrix4x4)"/>, die Farbe jedes Dreiecks aus
-    /// <paramref name="faerbung"/> (Nummer des Dreiecks im Modell, Betrag der Normale nach oben, mittlere Hoehe).
+    /// Phase 8 W9: wie <see cref="Hinzu(GrafikModell, Matrix4x4)"/>, jede Ecke in der Farbe aus <paramref name="faerbung"/>
+    /// (Nummer des Dreiecks im Modell, Farbe der Ecke, Betrag der Normale nach oben, mittlere Hoehe des Dreiecks). Seit
+    /// A 0.43.6 (Weisung P12-50) wird die Faerbung je Ecke mit der Eckfarbe gerufen; alles, was sie entscheidet (Schnee,
+    /// Licht, Pflanze), haengt nur am Dreieck, damit bleibt jedes Dreieck in einer Art gefaerbt.
+    /// <paramref name="dreiecksfarben"/> (wenn angegeben) bekommt je eingefuegtem Dreieck die Farbe des Dreiecks nach der
+    /// Faerbung (zum Erkennen von Glas wie vor dem Farbverlauf, <see cref="Nachtlicht.GlasMarkieren"/>).
     /// </summary>
-    public void Hinzu(GrafikModell modell, Matrix4x4 lage, Func<int, float, float, Vector3>? faerbung)
+    public void Hinzu(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben = null)
     {
         var e = modell.Ecken;
         for (var d = 0; d < modell.Dreiecke; d++)
@@ -116,10 +126,23 @@ public sealed class Netz
             {
                 continue;
             }
-            var farbe = faerbung is null
-                ? new Vector3(modell.Farben[d * 3], modell.Farben[(d * 3) + 1], modell.Farben[(d * 3) + 2]) / 255f
-                : faerbung(d, MathF.Abs(kreuz.Y) / MathF.Sqrt(kreuz.LengthSquared()), (a.Y + b.Y + c.Y) / 3);
-            Dreieck(a, b, c, farbe);
+            var grund = modell.Farbe(d);
+            float oben = 0, hoehe = 0;
+            if (faerbung is not null)
+            {
+                oben = MathF.Abs(kreuz.Y) / MathF.Sqrt(kreuz.LengthSquared());
+                hoehe = (a.Y + b.Y + c.Y) / 3;
+            }
+            Vector3 Farbe(Vector3 f) => faerbung is null ? f : faerbung(d, f, oben, hoehe);
+            dreiecksfarben?.Add(Farbe(grund));
+            if (modell.EckFarben is null)
+            {
+                Dreieck(a, b, c, Farbe(grund));
+            }
+            else
+            {
+                Dreieck(a, b, c, Farbe(modell.EckFarbe(d, 0)), Farbe(modell.EckFarbe(d, 1)), Farbe(modell.EckFarbe(d, 2)));
+            }
         }
     }
 
@@ -287,13 +310,16 @@ public sealed class Netz
         }
     }
 
-    private void Dreieck(Vector3 a, Vector3 b, Vector3 c, Vector3 farbe)
+    private void Dreieck(Vector3 a, Vector3 b, Vector3 c, Vector3 farbe) => Dreieck(a, b, c, farbe, farbe, farbe);
+
+    /// <summary>Weisung P12-50: ein Dreieck mit einer Farbe je Ecke (die Grafikkarte verlaeuft dazwischen).</summary>
+    private void Dreieck(Vector3 a, Vector3 b, Vector3 c, Vector3 fa, Vector3 fb, Vector3 fc)
     {
         var n = Vector3.Normalize(Vector3.Cross(b - a, c - a));
         var basis = (uint)AnzahlEcken;
-        Ecke(a, n, farbe);
-        Ecke(b, n, farbe);
-        Ecke(c, n, farbe);
+        Ecke(a, n, fa);
+        Ecke(b, n, fb);
+        Ecke(c, n, fc);
         _indizes.AddRange([basis, basis + 1, basis + 2]);
     }
 

@@ -4,8 +4,8 @@ Wandelt ALLE Modelle aller Pakete aus Fi-Austausch anlagen/grafik_cc0/ (Kenney u
 aus animated-characters-3 nur als FBX) mit denselben Lesern wie die Spielgrafik (werkzeuge/grafik/wandle_modelle.py:
 obj_wandeln, fbx_figur) und schreibt je Paket eine eigene Datei des Werkzeugs:
 
-  inhalte_stadtbau/grafik/<paket>.bin   Modelle des Pakets, Aufbau wie modelle.bin ("FLGM", Version 1, je Modell Name,
-                                        Dreiecke mit 9 x float32 und 4 Byte Farbe)
+  inhalte_stadtbau/grafik/<paket>.bin   Modelle des Pakets, Aufbau wie modelle.bin ("FLGM", Version 2, je Modell Name,
+                                        Dreiecke mit 9 x float32, 4 Byte Farbe und 12 Byte Eckfarben, S 0.9.1)
   inhalte_stadtbau/grafik/<paket>.png   Vorschaubilder des Pakets, je Modell ein Feld 96 x 96 (16 je Zeile, gleiche
                                         Farben und Blickrichtung: schraeg von vorn rechts oben, flach beleuchtet)
   inhalte_stadtbau/grafik/katalog.json  Liste: Pakete (ZIP, SHA-256, Quelle, Lizenz, Pruefsummen der Dateien) und je Modell
@@ -182,11 +182,12 @@ def _ansicht(p):
 
 
 def vorschau(dreiecke):
-    """Dreiecke ((p1, p2, p3), farbe) -> FELD x FELD Bildpunkte RGBA (bytes)."""
+    """Dreiecke ((p1, p2, p3), farbe[, eckfarben]) -> FELD x FELD Bildpunkte RGBA (bytes); je Dreieck seine Farbe (die
+    Vorschaubilder bleiben wie vor dem Farbverlauf)."""
     g = FELD * UEBER
     if not dreiecke:
         return bytes(FELD * FELD * 4)
-    ansicht = [tuple(_ansicht(p) for p in e) for e, _ in dreiecke]
+    ansicht = [tuple(_ansicht(p) for p in d[0]) for d in dreiecke]
     xs = [p[0] for e in ansicht for p in e]
     ys = [p[1] for e in ansicht for p in e]
     breite = max(max(xs) - min(xs), max(ys) - min(ys), 1e-6)
@@ -197,7 +198,7 @@ def vorschau(dreiecke):
     lx, ly, lz = _LICHT
     ll = math.sqrt(lx * lx + ly * ly + lz * lz)
     lx, ly, lz = lx / ll, ly / ll, lz / ll
-    for (a, b, c), (_, farbe) in zip(ansicht, dreiecke):
+    for (a, b, c), (_, farbe, *_) in zip(ansicht, dreiecke):
         ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
         vx, vy, vz = c[0] - a[0], c[1] - a[1], c[2] - a[2]
         nx, ny, nz = uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx
@@ -391,8 +392,8 @@ def paket_wandeln(arg):
             felder.append(vorschau(dreiecke))
             kodiert = name.encode("utf-8")
             teil = [struct.pack("<H", len(kodiert)) + kodiert + struct.pack("<I", len(dreiecke))]
-            for ecken, farbe in dreiecke:
-                teil.append(struct.pack("<9f", *[w for q in ecken for w in q]) + bytes((farbe[0], farbe[1], farbe[2], 0)))
+            for dreieck in dreiecke:
+                teil.append(wm.dreieck_bytes(dreieck))
             binteile.append(b"".join(teil))
             alle = [q for d in dreiecke for q in d[0]] or [(0.0, 0.0, 0.0)]
             mn = [min(q[i] for q in alle) for i in range(3)]
@@ -402,7 +403,7 @@ def paket_wandeln(arg):
     z.close()
     dateien = {}
     if binteile:
-        daten = b"FLGM" + struct.pack("<II", 1, len(binteile)) + b"".join(binteile)
+        daten = b"FLGM" + struct.pack("<II", wm.VERSION, len(binteile)) + b"".join(binteile)
         dateien[schluessel + ".bin"] = daten
     dateien[schluessel + ".png"] = atlas(felder)
     return schluessel, zip_sha, eintraege, dateien

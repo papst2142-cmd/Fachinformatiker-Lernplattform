@@ -87,7 +87,7 @@ public sealed partial class Hauptansicht
         {
             return null;
         }
-        var ansicht = new EntwurfAnsicht(e, _daten, Melden);
+        var ansicht = new EntwurfAnsicht(e, _daten, Melden, _ordner);
         ansicht.SpeichernGewuenscht += () => _ = EntwurfSpeichernAsync();
         ansicht.ZurueckGewuenscht += () => _ = EntwurfZurueckAsync();
         ansicht.VerlaufGeaendert += KnoepfeFreigeben;

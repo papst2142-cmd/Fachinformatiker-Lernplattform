@@ -141,11 +141,14 @@ public class BauteileTests
             {
                 case Bauteile.Art.Wand or Bauteile.Art.Ecke or Bauteile.Art.Tuer or Bauteile.Art.Block:
                     // steht genau im Feld und auf der Ebene, Fassade(n) dort, wo die Tabelle sagt
-                    // (Simse und Balkone duerfen bis 0,1 vor die Fassade ragen)
-                    Assert.InRange(min.X, x - 0.1f, x + 0.01f);
-                    Assert.InRange(max.X, x + 0.99f, x + 1.1f);
-                    Assert.InRange(min.Z, y - 0.1f, y + 0.01f);
-                    Assert.InRange(max.Z, y + 0.99f, y + 1.1f);
+                    // (Simse, Markisen und Balkone duerfen bis 0,16 vor die Fassade ragen, nie nach hinten; Weisung P12-52:
+                    // vorher durften sie auf allen Seiten 0,1 ueberstehen, darum fiel der Versatz um den halben Ueberstand
+                    // nicht auf; streng prueft BauteileBuendigTests)
+                    float Vor(Bauteile.Seiten s) => t.Fassade.HasFlag(s) ? 0.16f : 0.01f;
+                    Assert.InRange(min.X, x - Vor(Bauteile.Seiten.West), x + 0.01f);
+                    Assert.InRange(max.X, x + 0.99f, x + 1 + Vor(Bauteile.Seiten.Ost));
+                    Assert.InRange(min.Z, y - Vor(Bauteile.Seiten.Nord), y + 0.01f);
+                    Assert.InRange(max.Z, y + 0.99f, y + 1 + Vor(Bauteile.Seiten.Sued));
                     Assert.InRange(min.Y, boden - 0.01f, boden + 0.01f);
                     var flaechen = Wert(m, lage, x, y);
                     if (t.Fassade == Bauteile.Seiten.Keine)
@@ -253,6 +256,9 @@ public class BauteileTests
         var gm = Bauteile.Zusammensetzen("bau:test", teile, Katalog.Bauteil);
         Assert.Equal(teile.Sum(t => M(t.Name).Dreiecke), gm.Dreiecke);
         Assert.Equal(Bauteile.Dreiecke(teile, Katalog.Bauteil), gm.Dreiecke);
+        // S 0.9.1 (Weisung P12-50): Farbe je Ecke wie das Teil, in der Reihenfolge der Teile (der Farbverlauf bleibt)
+        Assert.Equal(teile.SelectMany(t => M(t.Name).EckFarben!).ToArray(), gm.EckFarben);
+        Assert.Contains(Enumerable.Range(0, gm.Dreiecke), d => gm.EckFarbe(d, 0) != gm.Farbe(d));
         var block = Assert.IsType<PyObjekt>(Assert.Single(Bauteile.Block(gm)));
         // der Block umschliesst das Modell genau: das Spiel zeichnet es dann ohne Streckung (Massstab 1)
         Assert.Equal((double)gm.Min.X, Lernplattform.Core.Spiel.Py.F(block["x"]), 4);

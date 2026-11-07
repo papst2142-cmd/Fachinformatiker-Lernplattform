@@ -190,6 +190,13 @@ public static class Texte
     public const string Doppelt = "Doppellaterne (zwei Lampen)";
     public const string AussenKatalog = "Stücke für draußen";
     public const string AussenSetzenAktiv = "Tippe auf die Stelle in der Karte, an die das Stück soll.";
+
+    // S 0.9.1 (Weisung P12-53 Teil A): Setzen abwaehlen
+    public const string SetzenBeenden = "Setzen beenden";
+    public const string SetzenBeendenTipp = "Beendet das Setzen, ohne etwas auf die Karte zu stellen. Danach kannst du wieder Stücke antippen und die Karte frei bewegen. Am PC geht das auch mit der Taste Escape.";
+    public const string SetzenBeendet = "Setzen beendet, nichts gesetzt.";
+    public const string SetzenKnopfTipp = "Antippen wählt das Stück zum Setzen, nochmal antippen wählt es wieder ab.";
+    public const string SetzenGewaehlt = "gewählt";
     public const string HausDrehenNicht = "Häuser schauen im Spiel immer mit der Vorderseite nach Süden. Drehen kann das Spiel noch nicht.";
     public const string LaterneDrehenNicht = "Laternen richten sich im Spiel selbst zur Straße aus.";
     public const string DrehenNichtNoetig = "Dieses Stück sieht von allen Seiten gleich aus.";
@@ -449,6 +456,13 @@ public static class Texte
     public const string TippEntwurfSpeichern = "Prüft das Gebäude und speichert es unter einem Namen als Blueprint.";
     public const string TippEntwurfZurueck = "Schließt den Editor und zeigt wieder die Stadt.";
     public const string TippEntwurfNacht = "Zeigt das Gebäude bei Nacht: die Fenster leuchten wie im Spiel.";
+
+    /// <summary>Weisung P12-52 (Wunsch Nico): Schalter im Gebaeude-Editor, Vorgabe an, gemerkt.</summary>
+    public const string EntwurfRaster = "Raster zeigen";
+
+    public const string TippEntwurfRaster = "Blendet die Linien des Bauraster ein oder aus (Taste G), damit du das Gebäude ungestört ansehen kannst. Setzen und Wählen gehen auch ohne Raster.";
+
+    public const string RasterFehler = "Die Einstellung „Raster zeigen“ konnte nicht gespeichert werden. Sie gilt bis zum Beenden.";
     public const string TippEntwurfKamera = "Dreht die Kamera um das Gebäude.";
 
     /// <summary>Zahl mit Tausenderpunkt wie im Deutschen (1.528), unabhaengig von der Sprache des Geraets.</summary>

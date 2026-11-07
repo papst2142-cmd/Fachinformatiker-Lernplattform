@@ -273,7 +273,7 @@ public static class FestVerkehr
         {
             var s = 0.16f * H / (k.Max.Y - k.Min.Y);
             var m = (k.Min + k.Max) / 2;
-            n.Hinzu(k, Matrix4x4.CreateTranslation(-m.X, -k.Max.Y, -m.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(0, y, 0.5f * H), (d, _, _) => Glut(k, d));
+            n.Hinzu(k, Matrix4x4.CreateTranslation(-m.X, -k.Max.Y, -m.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(0, y, 0.5f * H), (d, grund, _, _) => Glut(k, d, grund));
         }
         return n;
     }
@@ -321,7 +321,7 @@ public static class FestVerkehr
         public void In(Netz n, bool leuchten = false)
         {
             var von = n.AnzahlEcken;
-            n.Hinzu(new GrafikModell("form", [.. _e], new byte[_f.Count * 3]), Matrix4x4.Identity, (d, _, _) => _f[d]);
+            n.Hinzu(new GrafikModell("form", [.. _e], new byte[_f.Count * 3]), Matrix4x4.Identity, (d, _, _, _) => _f[d]);
             if (leuchten)
             {
                 n.Leuchten(von, n.AnzahlEcken);
@@ -385,7 +385,7 @@ public static class FestVerkehr
         {
             var s = 0.2f * H / (la.Max.Y - la.Min.Y);
             var m = (la.Min + la.Max) / 2;
-            n.Hinzu(la, Matrix4x4.CreateTranslation(-m.X, -la.Max.Y, -m.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(oben), (d, _, _) => Glut(la, d));
+            n.Hinzu(la, Matrix4x4.CreateTranslation(-m.X, -la.Max.Y, -m.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(oben), (d, grund, _, _) => Glut(la, d, grund));
         }
     }
 
@@ -463,7 +463,7 @@ public static class FestVerkehr
                 f[(d * 3) + 2] = (byte)(neu.Z * 255);
             }
         }
-        n.Hinzu(new GrafikModell(m.Name, m.Ecken, f), lage);
+        n.Hinzu(m.MitFarben(f), lage);
         return n;
     }
 
@@ -650,11 +650,10 @@ public static class FestVerkehr
     /// P8-43: nur das Licht leuchtet nachts: Glas und Kerze (hell gelb-orange) bzw. das ausgeschnittene Gesicht
     /// (grau beim KayKit-Kuerbis); Rahmen, Griff, Dach und Schale behalten ihre Farbe.
     /// </summary>
-    public static Vector3 Glut(GrafikModell m, int d)
-    {
-        var f = new Vector3(m.Farben[d * 3], m.Farben[(d * 3) + 1], m.Farben[(d * 3) + 2]) / 255f;
-        return IstLicht(m, d) ? f + new Vector3(Nachtlicht.Marke) : f;
-    }
+    public static Vector3 Glut(GrafikModell m, int d) => Glut(m, d, m.Farbe(d));
+
+    /// <summary>Wie <see cref="Glut(GrafikModell, int)"/> fuer eine Ecke mit Farbe <paramref name="grund"/> (Weisung P12-50; Licht je Dreieck).</summary>
+    public static Vector3 Glut(GrafikModell m, int d, Vector3 grund) => IstLicht(m, d) ? grund + new Vector3(Nachtlicht.Marke) : grund;
 
     /// <summary>Ist das Dreieck d des Modells ein Licht (Glas, Kerze, ausgeschnittenes Gesicht)? Siehe <see cref="Glut"/>.</summary>
     public static bool IstLicht(GrafikModell m, int d)
@@ -673,7 +672,7 @@ public static class FestVerkehr
         {
             var s = hoehe * H / (k.Max.Y - k.Min.Y);
             var mitte = (k.Min + k.Max) / 2;
-            n.Hinzu(k, Matrix4x4.CreateTranslation(-mitte.X, -k.Min.Y, -mitte.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(m), (d, _, _) => Glut(k, d));
+            n.Hinzu(k, Matrix4x4.CreateTranslation(-mitte.X, -k.Min.Y, -mitte.Z) * Matrix4x4.CreateScale(s) * Matrix4x4.CreateTranslation(m), (d, grund, _, _) => Glut(k, d, grund));
         }
     }
 

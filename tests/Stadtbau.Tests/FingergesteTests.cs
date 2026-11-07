@@ -115,4 +115,43 @@ public class FingergesteTests
         Assert.Equal(A.StueckAbbrechen, g.Verloren(1).Art);
         Assert.False(g.Aktiv);
     }
+    /// <summary>
+    /// S 0.9.1 (Weisung P12-53 Teil A): im Setzen-Zustand druecken alle Finger wie in der Ansicht "auf ein Stueck"
+    /// (3D: der Finger zieht den Schatten) oder "auf freie Flaeche" (Draufsicht). Zwei Finger bewegen nur die Ansicht:
+    /// weder Tippen noch Stueck fertig (beides wuerde setzen). Gegenprobe: die Auswertung vor S 0.5.1 setzt.
+    /// </summary>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void ImSetzenZustand_ZweiFinger_SetzenNichts(bool zweiterSpaeter, bool dreiD)
+    {
+        List<Fingergeste.Schritt> Folge(Fingergeste g)
+        {
+            var s = new List<Fingergeste.Schritt> { g.Druecken(1, 100, 100, dreiD) };
+            if (zweiterSpaeter)
+            {
+                s.Add(g.Bewegen(1, 90, 100));
+            }
+            s.Add(g.Druecken(2, 200, 100, dreiD));
+            for (var i = 1; i <= 5; i++)
+            {
+                s.Add(g.Bewegen(1, 100 - (10 * i), 100));
+                s.Add(g.Bewegen(2, 200 + (10 * i), 100));
+            }
+            s.Add(g.Loslassen(2));
+            s.Add(g.Loslassen(1));
+            return s;
+        }
+        var neu = Folge(new Fingergeste());
+        Assert.DoesNotContain(neu, x => x.Art is A.Tippen or A.StueckFertig);
+        Assert.True(Zoom(neu) > 1.5);
+
+        // Gegenprobe (nur 3D, dort zieht jeder Finger den Schatten): die Auswertung vor S 0.5.1 vergass den ersten
+        // Finger und setzte beim Loslassen des zweiten. In der Draufsicht setzte auch die alte Auswertung mit zwei
+        // bewegten Fingern nichts; dort prueft der Start-Test das Abwaehlen mit eigener Gegenprobe.
+        var alt = Folge(new Fingergeste(altFuerTests: true));
+        Assert.Equal(dreiD, alt.Any(x => x.Art is A.Tippen or A.StueckFertig));
+    }
 }

@@ -3,6 +3,20 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.9.1
+
+Die Häuser und Bauteile sehen jetzt sauberer aus: Viele Wände zeigten bisher schräge Flecken in Form eines X, weil jede Fläche nur eine einzige Farbe bekam. Jetzt zeigen sie den sanften Farbverlauf, den die Grafik eigentlich hat.
+
+- Das gilt in der 3D-Ansicht der Stadt, im Gebäude-Editor und für alle Stücke aus dem Katalog.
+- Die Bilder im Katalog bleiben, wie sie waren.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+- Im Gebäude-Editor sitzen die Wände „Fenster mit Markisen“, „Fenster mit Balkon“, „Breites Fenster mit Sims“ und „Zwei Rundfenster mit Sims“ jetzt bündig mit den Wänden darüber und darunter. Vorher standen sie ein Stück zu weit hinten, dadurch wirkten Dach und Tür versetzt.
+- Ein schon gespeichertes Gebäude mit diesen Wänden bleibt lesbar und lässt sich weiterbauen. Speichere es einmal neu, dann passt auch sein Umriss in der Stadt genau.
+- Im Gebäude-Editor gibt es den Schalter „Raster zeigen“ (Taste G). Ohne Raster siehst du das Gebäude ungestört; Setzen und Wählen gehen trotzdem. Das Werkzeug merkt sich deine Wahl.
+- Ein gewähltes Stück zum Setzen (zum Beispiel Straße, Fluss oder Teich) lässt sich wieder abwählen: Tippe den Knopf links ein zweites Mal an oder tippe auf „Setzen beenden“. Dann wird nichts gesetzt. Der gewählte Knopf ist farbig markiert.
+- Während du ein Stück setzen willst, bewegen zwei Finger, die rechte oder mittlere Maustaste und die Leertaste die Ansicht, ohne etwas zu setzen.
+- Das Werkzeug hat jetzt ein eigenes Symbol.
+
 ## S 0.9.0
 
 Du kannst jetzt eigene Gebäude entwerfen: aus Wänden, Ecken, Türen, Dächern und Fenstern, Stockwerk für Stockwerk.

@@ -206,7 +206,7 @@ public static class StadtTueren
                 farben[(d * 3) + 1] = (byte)MathF.Round(farbe.Y * 255);
                 farben[(d * 3) + 2] = (byte)MathF.Round(farbe.Z * 255);
             }
-            umgefaerbt[i] = new GrafikModell(gm.Name, gm.Ecken, farben);
+            umgefaerbt[i] = gm.MitFarben(farben);
         }
     }
 
@@ -330,7 +330,7 @@ public static class StadtTueren
                 farben[(d * 3) + 1] = (byte)MathF.Round(farbe.Y * 255);
                 farben[(d * 3) + 2] = (byte)MathF.Round(farbe.Z * 255);
             }
-            umgefaerbt[t.Stueck] = new GrafikModell(gm.Name, gm.Ecken, farben);
+            umgefaerbt[t.Stueck] = gm.MitFarben(farben);
         }
     }
 

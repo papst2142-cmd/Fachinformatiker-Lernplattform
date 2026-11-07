@@ -370,7 +370,10 @@ public sealed class EntwurfBedienung : Control
         {
             return;
         }
-        RasterZeichnen(ctx, k);
+        if (_ansicht.RasterZeigen)
+        {
+            RasterZeichnen(ctx, k);
+        }
         if (_ansicht.Auswahl is var a and >= 0 && a < _ansicht.Entwurf.Teile.Count)
         {
             var (min, max) = EntwurfAnsicht3D.Kasten(_ansicht.Entwurf.Teile[a]);

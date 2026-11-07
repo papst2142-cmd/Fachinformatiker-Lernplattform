@@ -124,6 +124,23 @@ public sealed partial class Hauptansicht : UserControl
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
     private readonly StackPanel _blueprintListe = new() { Spacing = 10 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
+
+    /// <summary>S 0.9.1 (Weisung P12-53 Teil A): Knopf „Setzen beenden“ links bei den Setzen-Knoepfen, nur beim Setzen sichtbar.</summary>
+    private readonly Button _setzenBeendenLinks = Schrift.Knopf(Texte.SetzenBeenden).Vorlese(Texte.SetzenBeenden);
+
+    /// <summary>Der Knopf links, mit dem das Setzen gewaehlt wurde (markiert, nochmal antippen waehlt ab); null = keiner.</summary>
+    private Button? _setzenKnopf;
+
+    /// <summary>Hat der markierte Knopf die Form von <see cref="Schrift.Knopf"/> (Flaeche "Pinsel.card_alt")?</summary>
+    private bool _setzenKnopfRund;
+
+    /// <summary>Gegenprobe im Start-Test und in Tests: Verhalten vor S 0.9.1 (zweites Antippen waehlt erneut, nichts wird abgewaehlt).</summary>
+    public static bool AbwaehlenAltFuerTests { get; set; }
+
+    /// <summary>Start-Test: der markierte Setzen-Knopf (null = keiner) und der Knopf „Setzen beenden“ links.</summary>
+    public Button? SetzenKnopfMarkiert => _setzenKnopf;
+
+    public Button SetzenBeendenKnopf => _setzenBeendenLinks;
     private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
 
     /// <summary>S 0.8.0 (Weisung P12-47, Frage 6 = a): Schalter „Eis im Winter“ (<c>stadtdaten.wasser.eis</c>).</summary>
@@ -253,6 +270,11 @@ public sealed partial class Hauptansicht : UserControl
         Karte.OrtGewaehlt += o => OrtOeffnen(o);
         Karte.AuswahlGeaendert += AussenAuswahlZeigen;
         Karte.Gemeldet += Melden;
+        Karte.SetzenGeaendert += SetzenZustandZeigen;
+        _setzenBeendenLinks.IsVisible = false;
+        _setzenBeendenLinks.HorizontalAlignment = HorizontalAlignment.Stretch;
+        _setzenBeendenLinks.Mit(Texte.SetzenBeendenTipp);
+        _setzenBeendenLinks.Click += (_, _) => SetzenBeenden();
         _aussenRasterAus.IsCheckedChanged += (_, _) => Karte.Raster = _aussenRasterAus.IsChecked != true;
         _eisImWinter.Vorlese(Texte.EisImWinter).Mit(Texte.EisTipp);
         _eisImWinter.IsCheckedChanged += (_, _) =>
@@ -654,8 +676,8 @@ public sealed partial class Hauptansicht : UserControl
         // links: Stuecke fuer draussen
         Button KatalogKnopf(string text, AussenArt art, Func<string?>? modell = null)
         {
-            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen");
-            k.Click += (_, _) => AussenSetzenWaehlen(art, modell?.Invoke());
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(Texte.SetzenKnopfTipp);
+            k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(art, modell?.Invoke()));
             return k;
         }
         var reihe = new WrapPanel
@@ -669,8 +691,8 @@ public sealed partial class Hauptansicht : UserControl
         // S 0.8.0 (Weisung P12-47): Wasser, jeder Knopf mit Tipp
         Button WasserKnopf(string text, string tipp, AussenArt art, string? form = null)
         {
-            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(tipp);
-            k.Click += (_, _) => AussenSetzenWaehlen(art, form);
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(tipp + " " + Texte.SetzenKnopfTipp);
+            k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(art, form));
             return k;
         }
         var wasser = new WrapPanel
@@ -688,7 +710,7 @@ public sealed partial class Hauptansicht : UserControl
             Spacing = 8,
             Children =
             {
-                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, reihe, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, VollerKatalogKnopf(false),
                 Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
@@ -859,6 +881,9 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        // ein anderes Stueck (auch aus dem vollen Katalog): die alte Markierung links geht weg
+        KnopfMarkieren(false);
+        _setzenKnopf = null;
         Karte.SetzenArt = art;
         Karte.SetzenModell = modell;
         _setzenName = art switch
@@ -871,6 +896,95 @@ public sealed partial class Hauptansicht : UserControl
         // zeigt beim Setzen den Knopf "Drehen" (Strasse, Park, Katalog-Stueck)
         AussenAuswahlZeigen();
         Melden(_aussenHinweis.Text ?? "");
+    }
+
+    /// <summary>
+    /// S 0.9.1 (Weisung P12-53 Teil A, Sammelliste 228): ein Setzen-Knopf links wurde angetippt. Ist er schon der
+    /// gewaehlte, waehlt das zweite Antippen ihn ab (nichts gesetzt, kein Schritt im Verlauf); sonst waehlt er das
+    /// Stueck und wird sichtbar markiert.
+    /// </summary>
+    private void SetzenKnopfGedrueckt(Button knopf, bool rund, Action waehlen)
+    {
+        if (!AbwaehlenAltFuerTests && ReferenceEquals(_setzenKnopf, knopf) && Karte.SetzenArt is not null)
+        {
+            SetzenBeenden();
+            return;
+        }
+        waehlen();
+        if (Karte.SetzenArt is null)
+        {
+            return;
+        }
+        if (!ReferenceEquals(_setzenKnopf, knopf))
+        {
+            KnopfMarkieren(false);
+            _setzenKnopf = knopf;
+            _setzenKnopfRund = rund;
+            KnopfMarkieren(true);
+        }
+    }
+
+    /// <summary>Start-Test: einen Setzen-Knopf links antippen wie mit dem Finger.</summary>
+    public void SetzenKnopfDrueckenFuerTests(Button knopf) => knopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+
+    /// <summary>Setzen beenden ohne zu setzen (Knopf „Setzen beenden“, zweites Antippen des Knopfs, Escape).</summary>
+    public void SetzenBeenden()
+    {
+        if (Karte.SetzenArt is null)
+        {
+            return;
+        }
+        Karte.SetzenBeenden();
+        Melden(Texte.SetzenBeendet);
+    }
+
+    /// <summary>Markierung des gewaehlten Knopfs wie ein betonter Knopf (Verlauf, helle Schrift), Name mit „gewählt“.</summary>
+    private void KnopfMarkieren(bool an)
+    {
+        if (_setzenKnopf is not { } k)
+        {
+            return;
+        }
+        var text = k.Content as TextBlock;
+        var name = Avalonia.Automation.AutomationProperties.GetName(k) ?? "";
+        const string marke = ", " + Texte.SetzenGewaehlt;
+        if (an)
+        {
+            k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
+            text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+            if (!name.EndsWith(marke, StringComparison.Ordinal))
+            {
+                k.Vorlese(name + marke);
+            }
+            return;
+        }
+        if (_setzenKnopfRund)
+        {
+            k.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+        }
+        else
+        {
+            k.ClearValue(Button.BackgroundProperty);
+            k.ClearValue(Button.ForegroundProperty);
+        }
+        text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+        if (name.EndsWith(marke, StringComparison.Ordinal))
+        {
+            k.Vorlese(name[..^marke.Length]);
+        }
+    }
+
+    /// <summary>Das Setzen hat begonnen oder geendet (auch durch Setzen eines Stuecks oder Escape).</summary>
+    private void SetzenZustandZeigen()
+    {
+        var setzen = Karte.SetzenArt is not null;
+        _setzenBeendenLinks.IsVisible = setzen;
+        if (!setzen)
+        {
+            KnopfMarkieren(false);
+            _setzenKnopf = null;
+            AussenAuswahlZeigen();
+        }
     }
 
     private static string KatalogName(AussenArt art) => art switch
@@ -899,6 +1013,13 @@ public sealed partial class Hauptansicht : UserControl
         if (Karte.SetzenArt is null)
         {
             _setzenName = null;
+        }
+        if (Karte.SetzenArt is not null && _projekt is not null && !_projekt.NurLesen)
+        {
+            // S 0.9.1 (Weisung P12-53 Teil A): auch rechts bei der Auswahl, gut erreichbar am Tablet
+            var beenden = Schrift.Knopf(Texte.SetzenBeenden).Vorlese(Texte.SetzenBeenden).Mit(Texte.SetzenBeendenTipp);
+            beenden.Click += (_, _) => SetzenBeenden();
+            _aussenAuswahl.Children.Add(beenden);
         }
         if (_projekt is not null && !_projekt.NurLesen && KartenFlaeche.DrehbarBeimSetzen(Karte.SetzenArt))
         {
@@ -1125,7 +1246,7 @@ public sealed partial class Hauptansicht : UserControl
                 setzen.HorizontalAlignment = HorizontalAlignment.Stretch;
                 setzen.Margin = new Thickness(0);
                 setzen.IsEnabled = !nurLesen;
-                setzen.Click += (_, _) => BlueprintSetzenWaehlen(b);
+                setzen.Click += (_, _) => SetzenKnopfGedrueckt(setzen, true, () => BlueprintSetzenWaehlen(b));
                 eintrag.Children.Add(setzen);
                 knoepfe.Add(setzen);
             }
@@ -1182,9 +1303,14 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        KnopfMarkieren(false);
+        _setzenKnopf = null;
         Karte.SetzenArt = AussenArt.Blueprint;
         Karte.SetzenBlueprint = b;
         Karte.SetzenModell = null;
+        _setzenName = Texte.BlueprintSetzen + " „" + b.Name + "“";
+        // rechts bei der Auswahl: Knopf "Setzen beenden" (S 0.9.1)
+        AussenAuswahlZeigen();
         _aussenHinweis.Text = Texte.BlueprintSetzen + " „" + b.Name + "“: " + Texte.AussenSetzenAktiv;
         Melden(_aussenHinweis.Text);
     }
