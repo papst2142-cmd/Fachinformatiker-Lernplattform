@@ -33,7 +33,7 @@ public static partial class AussenBearbeitung
     }
 
     /// <summary>Neue Kurve mit der Mitte bei (x, y) auf dem Raster 0,5 (Kennung siehe <see cref="Strassenkurve.Kennung"/>).</summary>
-    private static AussenStelle? KurveSetzen(PyObjekt aussen, double x, double y, string? kennung)
+    private static AussenStelle? KurveSetzen(PyObjekt aussen, double x, double y, string? kennung, bool einrasten = true)
     {
         if (Strassenkurve.Lesen(kennung) is not { } k)
         {
@@ -62,7 +62,10 @@ public static partial class AussenBearbeitung
             { Strassenkurve.Feld, new PyObjekt { { "form", k.Form }, { "winkel", (long)k.Winkel }, { "radius", Bearbeitung.Zahl(k.Radius) } } },
         });
         var s = new AussenStelle(AussenArt.Strasse, land.Count - 1);
-        KurveEinrasten(aussen, s);
+        if (einrasten)
+        {
+            KurveEinrasten(aussen, s);
+        }
         return s;
     }
 

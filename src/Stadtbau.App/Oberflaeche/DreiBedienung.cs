@@ -186,6 +186,19 @@ public sealed class DreiBedienung : Control
         e.Handled = true;
         var p = e.GetPosition(this);
         e.Pointer.Capture(this);
+        if (_drehZeiger is not null)
+        {
+            return;
+        }
+        if (!_geste.Aktiv && !FigurLaufen && GriffMitte is { } gm && Drehgriff.Getroffen(gm.X, gm.Y, p.X, p.Y)
+            && !(e.Pointer.Type == PointerType.Mouse && !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed))
+        {
+            // Welle E: Drehgriff wie in der Draufsicht (ein Finger dreht in Rasten, zwei Finger bleiben bei der Kamera)
+            _drehZeiger = e.Pointer.Id;
+            _drehPunkt = p;
+            InvalidateVisual();
+            return;
+        }
         if (e.Pointer.Type == PointerType.Mouse && !_geste.Aktiv)
         {
             var k = e.GetCurrentPoint(this).Properties;
@@ -247,6 +260,15 @@ public sealed class DreiBedienung : Control
     {
         base.OnPointerMoved(e);
         var p = e.GetPosition(this);
+        if (_drehZeiger is { } dz)
+        {
+            if (dz == e.Pointer.Id)
+            {
+                _drehPunkt = p;
+                InvalidateVisual();
+            }
+            return;
+        }
         switch (_griff)
         {
             case Griff.Drehen when Kamera is { } k:
@@ -279,6 +301,15 @@ public sealed class DreiBedienung : Control
     {
         base.OnPointerReleased(e);
         var p = e.GetPosition(this);
+        if (_drehZeiger is { } dz)
+        {
+            if (dz == e.Pointer.Id)
+            {
+                GriffLoslassen(p);
+                e.Pointer.Capture(null);
+            }
+            return;
+        }
         if (_griff is Griff.Drehen or Griff.Schieben)
         {
             _griff = Griff.Keiner;
@@ -298,6 +329,12 @@ public sealed class DreiBedienung : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (_drehZeiger == e.Pointer.Id)
+        {
+            _drehZeiger = null;
+            InvalidateVisual();
+            return;
+        }
         Anwenden(_geste.Verloren(e.Pointer.Id), default);
         _finger.Remove(e.Pointer.Id);
         if (!_geste.Aktiv)
@@ -519,6 +556,74 @@ public sealed class DreiBedienung : Control
         }), TaskScheduler.Default);
     }
 
+    // ---- Drehgriff (Welle E) -----------------------------------------------------------------------
+
+    private long? _drehZeiger;
+    private Point _drehPunkt;
+
+    /// <summary>Mitte des gewaehlten Stuecks im Bild, wenn es einen Drehgriff hat.</summary>
+    public Point? GriffMitte
+    {
+        get
+        {
+            if (Kamera is not { } k || Projekt is not { NurLesen: false } proj || _karte.SetzenArt is not null || _ziehen || _karte.Auswahl is not { } s
+                || !AussenBearbeitung.Gueltig(proj.AussenStand, s) || AussenBearbeitung.DrehenNicht(s) is not null
+                || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
+            {
+                return null;
+            }
+            var m = AussenBearbeitung.Alle(proj.AussenStand).FirstOrDefault(z => z.Stelle == s);
+            return k.Bildpunkt(new Vector3((float)m.X, Bauen3D.SchattenHoehe, (float)m.Y), (float)Bounds.Width, (float)Bounds.Height) is { } b ? new Point(b.X, b.Y) : null;
+        }
+    }
+
+    /// <summary>Lage des Drehgriffs im Bild (Start-Test).</summary>
+    public Point? Griff3D => GriffMitte is { } m ? new Point(Drehgriff.Lage(m.X, m.Y).X, Drehgriff.Lage(m.X, m.Y).Y) : null;
+
+    private void GriffLoslassen(Point p)
+    {
+        _drehZeiger = null;
+        if (GriffMitte is { } m && _karte.Auswahl is { } s)
+        {
+            _karte.DrehenUm(Drehgriff.Grad(m.X, m.Y, p.X, p.Y, AussenBearbeitung.DrehSchritt(s.Art)));
+        }
+        InvalidateVisual();
+    }
+
+    /// <summary>Start-Test: Drehgriff von seiner Lage bis (x, y) ziehen.</summary>
+    internal void GriffZiehenFuerTests(double x, double y)
+    {
+        if (Griff3D is { } g)
+        {
+            _drehZeiger = -1;
+            _drehPunkt = g;
+            GriffLoslassen(new Point(x, y));
+        }
+    }
+
+    private void GriffZeichnen(DrawingContext ctx)
+    {
+        if (GriffMitte is not { } m)
+        {
+            return;
+        }
+        var (gx, gy) = Drehgriff.Lage(m.X, m.Y);
+        var akzent = new SolidColorBrush(Color.Parse(Lernplattform.Design.FarbenAnwenden.Aktuell.Farben["accent"]));
+        var stift = new Pen(akzent, 2);
+        ctx.DrawLine(new Pen(akzent, 1.5, new DashStyle([3, 2], 0)), m, new Point(gx, gy));
+        ctx.DrawEllipse(Brushes.White, stift, new Point(gx, gy), Drehgriff.Halbmesser, Drehgriff.Halbmesser);
+        if (_drehZeiger is not null && _karte.Auswahl is { } s)
+        {
+            var grad = Drehgriff.Grad(m.X, m.Y, _drehPunkt.X, _drehPunkt.Y, AussenBearbeitung.DrehSchritt(s.Art));
+            var w = (-90 + grad) * Math.PI / 180;
+            ctx.DrawLine(new Pen(akzent, 3), m, new Point(m.X + (Drehgriff.Abstand * Math.Cos(w)), m.Y + (Drehgriff.Abstand * Math.Sin(w))));
+            var ft = new FormattedText((grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°", CultureInfo.GetCultureInfo("de-DE"),
+                FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 13, Brushes.White);
+            ctx.DrawRectangle(new SolidColorBrush(Color.Parse("#111827"), 0.8), null, new Rect(gx + 14, gy - 10, ft.Width + 8, ft.Height + 4), 4, 4);
+            ctx.DrawText(ft, new Point(gx + 18, gy - 8));
+        }
+    }
+
     // ---- Zeichnen ---------------------------------------------------------------------------------
 
     private static readonly IBrush Gruen = new SolidColorBrush(Color.Parse("#34D399"), 0.5);
@@ -575,6 +680,7 @@ public sealed class DreiBedienung : Control
                 ctx.DrawText(ft, ort);
             }
         }
+        GriffZeichnen(ctx);
     }
 
     private StreamGeometry? Geometrie(Kamera k, Vector2[] vieleck)

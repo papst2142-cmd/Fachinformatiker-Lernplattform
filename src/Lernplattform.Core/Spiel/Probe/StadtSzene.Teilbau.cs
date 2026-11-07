@@ -145,6 +145,8 @@ public sealed partial class StadtSzene
         sb.Append(stadt.Tuer(id) is { } zelle ? zelle.Item1.ToString(CultureInfo.InvariantCulture) + "," + zelle.Item2.ToString(CultureInfo.InvariantCulture) : "-");
         sb.Append('|').Append(BitConverter.DoubleToInt64Bits(stadt.Zelle).ToString(CultureInfo.InvariantCulture));
         sb.Append('|').Append(modellTuer is { } v ? Bits(v) : "-").Append('|').Append(sichtbarerWeg).Append('|').Append(sperren);
+        // Welle E: die Drehung steht nicht am Ort, sondern in stadtdaten.darstellung.hausdreh
+        sb.Append("|dreh").Append(Hausdrehung.VonOrt(stadt.Daten, id).ToString(CultureInfo.InvariantCulture));
         return sb.ToString();
     }
 

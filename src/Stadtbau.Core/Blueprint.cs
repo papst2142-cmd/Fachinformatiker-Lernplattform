@@ -171,7 +171,24 @@ public sealed class Blueprint
     /// ganz normales Gebaeude, unabhaengig von der Vorlage. Gibt es das Modell in der Stadt schon mit anderen Teilen, wird
     /// nichts gesetzt (Grund in <paramref name="grund"/>).
     /// </summary>
-    public AussenStelle? Setzen(PyObjekt aussen, double x, double y, out string? grund)
+    public AussenStelle? Setzen(PyObjekt aussen, double x, double y, out string? grund) => SetzenUndDrehen(aussen, x, y, false, 0, out grund);
+
+    /// <summary>Welle E: setzen, in Vierteln drehen (mit Tuer und Fussweg), dann mit <paramref name="einrasten"/> an den Gehweg legen.</summary>
+    public AussenStelle? SetzenUndDrehen(PyObjekt aussen, double x, double y, bool einrasten, int dreh, out string? grund)
+    {
+        var s = SetzenRoh(aussen, x, y, out grund);
+        for (var i = 0; s is not null && i < dreh % 4; i++)
+        {
+            AussenBearbeitung.Drehen(aussen, s);
+        }
+        if (s is not null && einrasten)
+        {
+            AussenBearbeitung.NachSetzenEinrasten(aussen, s);
+        }
+        return s;
+    }
+
+    private AussenStelle? SetzenRoh(PyObjekt aussen, double x, double y, out string? grund)
     {
         grund = null;
         var (breite, hoehe) = Aussen.Groesse(aussen);

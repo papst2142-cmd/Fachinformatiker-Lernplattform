@@ -269,18 +269,9 @@ public static class Bauen3D
         var kopie = (PyObjekt)Py.Kopie(aussen)!;
         string? grund = null;
         AussenStelle? s;
-        if (art == AussenArt.Blueprint)
-        {
-            s = blueprint?.Setzen(kopie, x, y, out grund);
-        }
-        else
-        {
-            s = AussenBearbeitung.Setzen(kopie, art, x, y, raster, modell);
-            for (var i = 0; s is not null && i < dreh; i++)
-            {
-                AussenBearbeitung.Drehen(kopie, s);
-            }
-        }
+        s = art == AussenArt.Blueprint
+            ? blueprint?.SetzenUndDrehen(kopie, x, y, raster, dreh, out grund)
+            : AussenBearbeitung.SetzenUndDrehen(kopie, art, x, y, raster, modell, dreh);
         return new Vorschau(kopie, s, s is null ? [] : Umriss(kopie, s), s is null ? grund ?? Texte.Bauen3DGehtNicht : null);
     }
 

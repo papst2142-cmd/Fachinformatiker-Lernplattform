@@ -88,7 +88,7 @@ public static class Texte
     public const string Drehen = "Drehen";
 
     /// <summary>Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): Drehen leicht finden, auch beim Setzen.</summary>
-    public const string DrehenTipp = "Dreht das Stück um 90 Grad, am PC auch mit der Taste R.";
+    public const string DrehenTipp = "Dreht das Stück: Straßen, Kurven, Flüsse und Teiche um 15 Grad, alles andere um 90 Grad. Am PC auch mit der Taste R, mit Umschalt+R zurück.";
 
     public const string SetzenWaagerecht = "Die Straße wird waagerecht gesetzt. „Drehen“ (oder Taste R) setzt sie senkrecht.";
     public const string SetzenSenkrecht = "Die Straße wird senkrecht gesetzt. „Drehen“ (oder Taste R) setzt sie waagerecht.";
@@ -105,7 +105,19 @@ public static class Texte
     public const string X = "Links (x)";
     public const string Y = "Oben (y)";
     public const string Uebernehmen = "Übernehmen";
-    public const string RasterAus = "Raster aus (feiner schieben)";
+    /// <summary>Welle E (S 0.13.0): Schalter "Einrasten" (ersetzt "Raster aus (feiner schieben)"), Taste E.</summary>
+    public const string Einrasten = "Einrasten";
+
+    /// <summary>Welle E: Feld "Winkel" (Grad) an Strassen, Kurven und Fluessen.</summary>
+    public const string Winkel = "Winkel (Grad)";
+
+    public const string WinkelTipp = "Richtung vom Anfang zum Ende in Grad: 0 = nach rechts, 90 = nach unten. Ganze Grad, dann „Übernehmen“.";
+
+    public const string DrehgriffHinweis = "Am Kreis über dem Stück ziehen dreht es (Straßen, Kurven, Flüsse und Teiche in 15-Grad-Schritten, alles andere in 90-Grad-Schritten).";
+
+    public const string EinrastenTipp = "An: Stücke rasten im Raster 0,5 ein, Straßen an Straßenenden, Flüsse an Flüsse und den Kartenrand, Häuser und Bänke an den Gehweg. Aus: frei setzen und schieben im feinen Raster 0,1. Taste E.";
+
+    public const string EinrastenInnenTipp = "An: Einrichtung rastet im Raster 0,5 ein. Aus: feiner schieben im Raster 0,1. Taste E.";
     public const string Raum = "Raum";
     public const string RaumAendern = "Raum ändern";
     public const string Tuer = "Tür von / bis";
@@ -245,7 +257,6 @@ public static class Texte
     public const string SetzenBeendet = "Setzen beendet, nichts gesetzt.";
     public const string SetzenKnopfTipp = "Antippen wählt das Stück zum Setzen, nochmal antippen wählt es wieder ab.";
     public const string SetzenGewaehlt = "gewählt";
-    public const string HausDrehenNicht = "Häuser schauen im Spiel immer mit der Vorderseite nach Süden. Drehen kann das Spiel noch nicht.";
     public const string LaterneDrehenNicht = "Laternen richten sich im Spiel selbst zur Straße aus.";
     public const string DrehenNichtNoetig = "Dieses Stück sieht von allen Seiten gleich aus.";
     public const string OrtLoeschenNicht = "Ein Haus mit Innenraum gehört zum Spiel und bleibt. Du kannst es verschieben.";

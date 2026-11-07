@@ -70,6 +70,8 @@ public class TeilbauTests
             ("Baum setzen", x => AussenBearbeitung.Setzen(x, AussenArt.Baum, 3, 3)),
             ("Laterne setzen", x => AussenBearbeitung.Setzen(x, AussenArt.Laterne, 12, 20.3)),
             ("Strasse drehen", x => AussenBearbeitung.Drehen(x, strasse)),
+            ("Haus drehen", x => AussenBearbeitung.Drehen(x, haus)),
+            ("Strasse fein drehen", x => AussenBearbeitung.Drehen(x, strasse, 15)),
             ("Baum loeschen", x => AussenBearbeitung.Loeschen(x, baum)),
         };
         foreach (var (was, tun) in schritte)

@@ -107,11 +107,16 @@ public static partial class StadtbauMessung
             a.Rueckgaengig();
         }
         a.Karte.SetzenDreh = 0;
-        // ein Haus dreht das Spiel nicht: der Knopf ist grau, der Grund steht dabei
+        // Welle E: ein Haus dreht sich in Vierteln (Knopf an); eine Laterne nicht (grau mit Grund)
         a.Karte.Waehlen(new AussenStelle(AussenArt.Haus, -1, 0, "moebelhaus"));
-        if (!a.AussenAuswahlKnoepfeAn.Any(k => k.Text == Texte.Drehen && !k.An) || !a.AussenAuswahlTexte.Contains(Texte.HausDrehenNicht))
+        if (!a.AussenAuswahlKnoepfeAn.Any(k => k.Text == Texte.Drehen && k.An))
         {
-            Fund("Drehen: am Haus fehlt der graue Knopf \"" + Texte.Drehen + "\" mit Grund");
+            Fund("Drehen: am Haus ist der Knopf \"" + Texte.Drehen + "\" nicht an");
+        }
+        a.Karte.Waehlen(new AussenStelle(AussenArt.Laterne, 0));
+        if (!a.AussenAuswahlKnoepfeAn.Any(k => k.Text == Texte.Drehen && !k.An) || !a.AussenAuswahlTexte.Contains(Texte.LaterneDrehenNicht))
+        {
+            Fund("Drehen: an der Laterne fehlt der graue Knopf \"" + Texte.Drehen + "\" mit Grund");
         }
         // eine Strasse dreht sich: Knopf an
         var erste = AussenBearbeitung.Alle(p.AussenStand).First(x => x.Stelle.Art == AussenArt.Strasse).Stelle;

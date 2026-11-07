@@ -95,7 +95,8 @@ public class AussenTests
         var a = Stadt1();
         var haus = new AussenStelle(AussenArt.Haus, -1, 0, "zuhause");
         var tuerVorher = Json(AussenBearbeitung.Zugang(a, "zuhause")!["tuer"]);
-        AussenBearbeitung.Verschieben(a, haus, -1.04, -0.51);
+        // Welle E: mit Einrasten legte sich das Haus an die Strasse (eigener Test DrehenEinrastenTests), hier frei
+        AussenBearbeitung.Verschieben(a, haus, -1.04, -0.51, raster: false);
         var o = AussenBearbeitung.Ort(a, "zuhause")!;
         Assert.Equal(25.0, Py.F(o["x"]));
         Assert.Equal(17.5, Py.F(o["y"]));
@@ -130,7 +131,7 @@ public class AussenTests
     }
 
     [Fact]
-    public void Drehen_StrasseUndPark_HaeuserUndLaternenNicht()
+    public void Drehen_StrasseParkUndHaus_LaternenNicht()
     {
         var a = Stadt1();
         var s = AussenBearbeitung.Setzen(a, AussenArt.Strasse, 22, 2)!;
@@ -141,8 +142,10 @@ public class AussenTests
         var park = Objekt(Aussen.Landschaft(a)[1]);
         Assert.Equal((7.2, 7.0), (Py.F(park["w"]), Py.F(park["h"])));
         var haus = new AussenStelle(AussenArt.Haus, -1, 0, "zuhause");
-        Assert.Equal(Texte.HausDrehenNicht, AussenBearbeitung.DrehenNicht(haus));
-        Assert.False(AussenBearbeitung.Drehen(a, haus));
+        // Welle E (Weisung P12-67 Frage 1 = a): Haeuser drehen in Vierteln
+        Assert.Null(AussenBearbeitung.DrehenNicht(haus));
+        Assert.True(AussenBearbeitung.Drehen(a, haus));
+        Assert.Equal(1, AussenBearbeitung.HausDreh(a, haus));
         Assert.Equal(Texte.LaterneDrehenNicht, AussenBearbeitung.DrehenNicht(new AussenStelle(AussenArt.Laterne, 0)));
         Assert.Equal(Texte.DrehenNichtNoetig, AussenBearbeitung.DrehenNicht(new AussenStelle(AussenArt.Baum, 0)));
     }

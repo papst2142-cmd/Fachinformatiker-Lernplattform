@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.47.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf gedrehte Häuser aus dem Stadtbau-Werkzeug vor.
+
+- In einer neuen Stadt kann ein Haus mit seiner Vorderseite nach Süden, Westen, Norden oder Osten stehen. Das Spiel zeichnet es gedreht, mit der Tür auf der richtigen Wand, dem Fußweg zur Straße, der Festdeko an der Tür und dem Licht in den Fenstern; die Figur geht um das gedrehte Haus herum.
+- Die Prüfung für neue Städte meldet rot, wenn eine Drehung in der Datei keinen erlaubten Wert hat.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.46.1
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version verbessert die Prüfung für neue Städte aus dem Stadtbau-Werkzeug.
 

@@ -197,6 +197,12 @@ public static partial class StadtbauPruefung
                     {
                         funde.Add(new StadtbauFund($"Ein Haus („{gm}“) liegt außerhalb der Karte.", "Haus zurück auf die Karte schieben.", true, Py.F(l["x"]), Py.F(l["y"])));
                     }
+                    // Welle E (Weisung P12-67 Frage 1 = a): Haeuser nur in Vierteln gedreht (sonst zeichnete das Spiel es ungedreht)
+                    if (Py.Hat(l, Hausdrehung.Feld) && !Hausdrehung.Erlaubt(l[Hausdrehung.Feld]))
+                    {
+                        funde.Add(new StadtbauFund($"Das Haus „{gm}“ hat die Drehung " + PythonJson.Text(l[Hausdrehung.Feld]) + " statt 0, 1, 2 oder 3 Vierteln.",
+                            "Haus auswählen und mit „Drehen“ neu drehen.", true, Py.F(l["x"]), Py.F(l["y"])));
+                    }
                     break;
                 case "baum":
                     foreach (var p in ListeOderLeer(l, "punkte").OfType<List<object?>>())
@@ -257,6 +263,29 @@ public static partial class StadtbauPruefung
         {
             funde.Add(new StadtbauFund("Der Schalter „kleingruen“ hat den Wert " + PythonJson.Text(darstellung["kleingruen"]) + " statt true oder false.",
                 "In der Stadt-Datei „kleingruen“ auf true (mit Kleingrün) oder false (ganz frei) setzen.", true));
+        }
+        // Welle E: Drehung je Ort (darstellung.hausdreh) nur fuer vorhandene Orte und nur 1 bis 3 Viertel
+        if (darstellung is not null && Py.Hat(darstellung, Hausdrehung.Abschnitt))
+        {
+            if (darstellung[Hausdrehung.Abschnitt] is not PyObjekt hd)
+            {
+                funde.Add(new StadtbauFund("Der Abschnitt „" + Hausdrehung.Abschnitt + "“ ist keine Liste von Orten.", "Bitte CC Bescheid geben.", true));
+            }
+            else
+            {
+                foreach (var (id, wert) in hd)
+                {
+                    if (!namen.ContainsKey(id))
+                    {
+                        funde.Add(new StadtbauFund($"Die Drehung gilt für den Ort „{id}“, den es in der Stadt nicht gibt.", "Bitte CC Bescheid geben.", true));
+                    }
+                    else if (!Hausdrehung.Erlaubt(wert) || Py.F(wert) == 0)
+                    {
+                        funde.Add(new StadtbauFund($"„{namen[id]}“ hat die Drehung " + PythonJson.Text(wert) + " statt 1, 2 oder 3 Vierteln.",
+                            "Haus auswählen und mit „Drehen“ neu drehen.", true));
+                    }
+                }
+            }
         }
         var zugaenge = new[] { "zugaenge", "zugaenge_neu" }.Select(k => Get(fassung.Stadtdaten, k) as PyObjekt ?? []).SelectMany(z => z)
             .Select(z => (Name: namen.GetValueOrDefault(z.Key, z.Key), Zugang: z.Value))
@@ -452,16 +481,24 @@ public static partial class StadtbauPruefung
         var modelle = StadtModelle.Modelle(stadt.Inhalt, stadt.Daten);
         var kontext = StadtModelle.Kontext(stand, stadt.Inhalt);
         var gleis = szene.Gleise.SelectMany(Abgetastet).ToList();
-        var haeuser = stadt.Regeln.Where(r => szene.Ort(Py.Str(r["id"])) is not null).Select(r => (Name: szene.Ort(Py.Str(r["id"]))!.Name, Modell: Py.Str(r["modell"]), X: Py.F(r["x"]), Y: Py.F(r["y"])))
+        var haeuser = stadt.Regeln.Where(r => szene.Ort(Py.Str(r["id"])) is not null).Select(r => (Name: szene.Ort(Py.Str(r["id"]))!.Name, Modell: Py.Str(r["modell"]), X: Py.F(r["x"]), Y: Py.F(r["y"]),
+                Dreh: Hausdrehung.VonOrt(stadt.Daten, Py.Str(r["id"]))))
             .Concat(ListeOderLeer(Objekt(Objekt(stadt.Inhalt["orte"])["welt"]), "landschaft").OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "gebaeude"))
-                .Select(t => (Name: Py.Str(t["modell"]), Modell: Py.Str(t["modell"]), X: Py.F(t["x"]), Y: Py.F(t["y"]))));
-        foreach (var (name, modell, ox, oz) in haeuser)
+                .Select(t => (Name: Py.Str(t["modell"]), Modell: Py.Str(t["modell"]), X: Py.F(t["x"]), Y: Py.F(t["y"]), Dreh: Hausdrehung.Von(t))));
+        foreach (var (name, modell, ox, oz, dreh) in haeuser)
         {
+            var mitte = new Vector2((float)ox, (float)oz) + Hausdrehung.Mitte(Get(modelle, modell));
             foreach (var t in StadtModelle.Teile(modelle, modell, kontext).Where(t => Py.Gleich(t.Teil["art"], "block") && StadtSzene.Darstellung(modell, t.Nr) is not null))
             {
                 var x = (float)(ox + Py.F(t.Teil["x"]) + StadtSzene.Darstellung(modell, t.Nr)!.Value);
                 var z = (float)(oz + Py.F(t.Teil["y"]));
                 var (w, tief) = ((float)Py.F(t.Teil["w"]), (float)Py.F(t.Teil["t"]));
+                if (dreh != 0)
+                {
+                    // Welle E: gedrehtes Haus wie im Spiel (Block um die Mitte des Modells gedreht)
+                    var (a, b) = (Hausdrehung.Drehen(new Vector2(x, z), mitte, dreh), Hausdrehung.Drehen(new Vector2(x + w, z + tief), mitte, dreh));
+                    (x, z, w, tief) = (MathF.Min(a.X, b.X), MathF.Min(a.Y, b.Y), MathF.Abs(a.X - b.X), MathF.Abs(a.Y - b.Y));
+                }
                 if (gleis.FirstOrDefault(p => p.X > x + 0.05f && p.X < x + w - 0.05f && p.Y > z + 0.05f && p.Y < z + tief - 0.05f) is var treffer && treffer != default)
                 {
                     funde.Add(new StadtbauFund($"„{name}“ steht auf dem Gleis.", "Haus vom Gleis weg schieben.", true, treffer.X, treffer.Y));

@@ -908,7 +908,8 @@ public sealed partial class StadtSzene
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
             var (tv, sv) = (teile.Count, stuecke.Count);
             var fenster = new List<(int, Vector3)>();
-            var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume, fenster: fenster);
+            var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume, fenster: fenster,
+                dreh: Hausdrehung.Von(item), drehMitte: Hausdrehung.Mitte(Get(modelle, modell)));
             alleFenster.AddRange(fenster);
             if (hmin.X <= hmax.X)
             {
@@ -1023,7 +1024,8 @@ public sealed partial class StadtSzene
             var hindernisVorher = hindernisse.Count;
             var modellTuer = StadtTueren.ModellVersatz(stadt, id);
             var fenster = new List<(int, Vector3)>();
-            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f, fenster);
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f, fenster,
+                Hausdrehung.VonOrt(stadt.Daten, id), Hausdrehung.Mitte(Get(modelle, modell)));
             alleFenster.AddRange(fenster);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
@@ -2021,8 +2023,12 @@ public sealed partial class StadtSzene
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
         List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
-        BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null)
+        BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null, int dreh = 0, Vector2 drehMitte = default)
     {
+        // Welle E (Weisung P12-67 Frage 1 = a): gedrehtes Haus = ungedreht bauen, dann alle neuen Teile, Modelle und
+        // Hindernisse um die Mitte drehen; Baeume des Modells erst danach an der gedrehten Stelle setzen. dreh 0 = wie vorher.
+        var (drehTv, drehSv, drehHv) = (teile.Count, stuecke.Count, hindernisse.Count);
+        var spaeteBaeume = dreh != 0 ? new List<(float X, float Z, float R)>() : null;
         var bloecke = new List<Block>();
         foreach (var (blockNr, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
         {
@@ -2216,6 +2222,11 @@ public sealed partial class StadtSzene
                     break;
                 }
                 case "baum":
+                    if (spaeteBaeume is not null)
+                    {
+                        spaeteBaeume.Add((x, y, Zahl(teil, "r", 0.4f)));
+                        break;
+                    }
                     Baum(teile, stuecke, grafik, baeume, x, y, Zahl(teil, "r", 0.4f));
                     break;
                 case "geruest":
@@ -2241,6 +2252,31 @@ public sealed partial class StadtSzene
         {
             min = new Vector3(ox, 0, oz);
             max = new Vector3(ox + 1, 1, oz + 1);
+        }
+        if (spaeteBaeume is not null)
+        {
+            var m = new Vector2(ox, oz) + drehMitte;
+            for (var i = drehTv; i < teile.Count; i++)
+            {
+                teile[i] = Hausdrehung.Drehen(teile[i], m, dreh);
+            }
+            var lage = Hausdrehung.Matrix(m, dreh);
+            for (var i = drehSv; i < stuecke.Count; i++)
+            {
+                stuecke[i] = stuecke[i] with { Lage = stuecke[i].Lage * lage };
+            }
+            for (var i = drehHv; i < hindernisse.Count; i++)
+            {
+                var (h1, h2) = (Hausdrehung.Drehen(hindernisse[i].Item1, hindernisse[i].Item2, m.X, m.Y, dreh), Hausdrehung.Drehen(hindernisse[i].Item3, hindernisse[i].Item4, m.X, m.Y, dreh));
+                hindernisse[i] = (Math.Min(h1.X, h2.X), Math.Min(h1.Y, h2.Y), Math.Max(h1.X, h2.X), Math.Max(h1.Y, h2.Y));
+            }
+            var (k1, k2) = (Hausdrehung.Drehen(new Vector2(min.X, min.Z), m, dreh), Hausdrehung.Drehen(new Vector2(max.X, max.Z), m, dreh));
+            (min, max) = (new Vector3(MathF.Min(k1.X, k2.X), min.Y, MathF.Min(k1.Y, k2.Y)), new Vector3(MathF.Max(k1.X, k2.X), max.Y, MathF.Max(k1.Y, k2.Y)));
+            foreach (var (bx, bz, br) in spaeteBaeume)
+            {
+                var p = Hausdrehung.Drehen(new Vector2(bx, bz), m, dreh);
+                Baum(teile, stuecke, grafik, baeume, p.X, p.Y, br);
+            }
         }
         return (min, max);
     }
