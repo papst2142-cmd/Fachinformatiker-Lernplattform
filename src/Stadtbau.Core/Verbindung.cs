@@ -80,6 +80,20 @@ public static class Verbindung
             // geradeaus: das Ende auf die Richtung legen (Vorschau und Ergebnis zeigen dieselbe Lage)
             return new Plan(p0, [], p0 + (d0 * Vector2.Dot(zu, d0)), null);
         }
+        // zuerst nur Boegen bis 90 Grad (sonst gewaenne ein grosser Radius mit einem Bogen, der ueber das Ende hinaus
+        // ausholt und zurueckkommt), erst wenn keiner passt auch staerkere
+        foreach (var grenze in new[] { 90.0, 180.0 })
+        {
+            if (EinEnde(p0, d0, p1, zu, radien, stufig, grenze) is { } plan)
+            {
+                return plan;
+            }
+        }
+        return new Plan(p0, [], p1, Math.Abs(peil) > 90 ? Texte.ZiehenHinten : Texte.ZiehenZuEng);
+    }
+
+    private static Plan? EinEnde(Vector2 p0, Vector2 d0, Vector2 p1, Vector2 zu, IReadOnlyList<double> radien, bool stufig, double grenze)
+    {
         Plan? best = null;
         var bestGrad = double.MaxValue;
         foreach (var r in radien)
@@ -89,7 +103,7 @@ public static class Verbindung
                 foreach (var seite in new[] { 1, -1 })
                 {
                     var grad = seite * k * Strassenkurve.SchrittGrad;
-                    if (Math.Abs(grad) < Mindestens(stufig) - 1e-9 || Math.Abs(grad) >= bestGrad)
+                    if (Math.Abs(grad) < Mindestens(stufig) - 1e-9 || Math.Abs(grad) >= bestGrad || Math.Abs(grad) > grenze + 1e-9)
                     {
                         continue;
                     }
@@ -111,7 +125,7 @@ public static class Verbindung
                 return best;
             }
         }
-        return new Plan(p0, [], p1, Math.Abs(peil) > 90 ? Texte.ZiehenHinten : Texte.ZiehenZuEng);
+        return null;
     }
 
     /// <summary>Beide Enden mit Richtung: eine Ecke, sonst zwei.</summary>

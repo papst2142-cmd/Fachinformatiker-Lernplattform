@@ -130,6 +130,9 @@ public class ZiehenTests
         {
             var kurve = Objekt(k[Strassenkurve.Feld]);
             Assert.True(Strassenkurve.ZugBogen((string)kurve["form"]!, Py.F(kurve["winkel"]), Py.F(kurve["radius"])));
+            // ganze Winkel als ganze Zahl wie bei den festen Kurven (json.dumps 45, nicht 45.0), halbe als Kommazahl
+            var w = Py.F(kurve["winkel"]);
+            Assert.True(w % 1 == 0 ? kurve["winkel"] is long : kurve["winkel"] is double, $"winkel {kurve["winkel"]?.GetType().Name} {w}");
         }
         // alle Stuecke liegen in EINER Kette der Mittellinie (Anschluss wie im Spiel), keine roten Funde
         var linien = AussenBearbeitung.Strassen(a);
@@ -269,5 +272,34 @@ public class ZiehenTests
         var b = Leer();
         var t = AussenBearbeitung.Ziehen(b, ZiehArt.Fluss, 0.3, 18, 16, 23.7, false, out _);
         Assert.NotEqual(0, Linie(b, t!.Nummer)[0].X, 3);
+    }
+
+    [Fact]
+    public void EinEnde_BogenBis90Grad_VorStaerkeremMitGroesseremRadius()
+    {
+        // Fund im Foto: vom Fussweg-Ende nach unten zu (15; 13) gewann Radius 3 mit 120 Grad (Ecke weit unter dem Ziel,
+        // ausserhalb der Karte); jetzt zuerst Boegen bis 90 Grad (hier 90 Grad mit Radius 2)
+        var a = Aussen.Aus(Aussen.Leer(D.Fassung, "neu_ziehen", 24, 16));
+        AussenBearbeitung.Ziehen(a, ZiehArt.Strasse, 3, 6, 21, 6, true, out _);
+        AussenBearbeitung.Ziehen(a, ZiehArt.Fussweg, 9, 6.8, 9, 11, true, out _);
+        var (_, _, plan) = AussenBearbeitung.ZiehPlan(a, ZiehArt.Fussweg, 9, 11, 15, 13, true);
+        Assert.True(plan.Gefunden, plan.Grund);
+        Assert.All(plan.Ecken, e => Assert.True(Math.Abs(e.Grad) <= 90, $"{e.Grad} Grad"));
+        Assert.All(plan.Eckzug, q => Assert.True(q.Y <= 16, $"Ecke {q} ausserhalb"));
+        // ist das Ende hinter dem Anfang, gibt es weiter staerkere Boegen
+        var hinten = Verbindung.Rechnen(new Vector2(10, 10), Vector2.UnitX, new Vector2(8, 16), null, Radien, true);
+        Assert.True(hinten.Gefunden, hinten.Grund);
+        Assert.Contains(hinten.Ecken, e => Math.Abs(e.Grad) > 90);
+    }
+
+    [Fact]
+    public void Fluss_Verlaengern_StossInGeraderLinieKeinEckpunkt()
+    {
+        var a = Leer();
+        AussenBearbeitung.Ziehen(a, ZiehArt.Fluss, 0.3, 5, 9, 5, true, out _);
+        var s = AussenBearbeitung.Ziehen(a, ZiehArt.Fluss, 9, 5, 15, 12, true, out _)!;
+        var linie = Linie(a, s.Nummer);
+        Assert.DoesNotContain(new Vector2(9, 5), linie);
+        Assert.Equal(3, linie.Count);
     }
 }

@@ -342,7 +342,9 @@ public static partial class AussenBearbeitung
             };
             if (grad > 0)
             {
-                object winkel = Math.Abs(grad - Math.Round(grad)) < 1e-9 ? (long)Math.Round(grad) : grad;
+                // ganze Zahl als long wie die festen Kurven (json.dumps: 45 statt 45.0); der Cast auf object vor dem ?: ist noetig,
+                // sonst macht C# aus beiden Zweigen double
+                var winkel = Math.Abs(grad - Math.Round(grad)) < 1e-9 ? (object)(long)Math.Round(grad) : grad;
                 l.Add(Strassenkurve.Feld, new PyObjekt { { "form", Strassenkurve.Bogen }, { "winkel", winkel }, { "radius", Bearbeitung.Zahl(radius) } });
             }
             land.Add(l);
@@ -381,10 +383,12 @@ public static partial class AussenBearbeitung
             return (p, r);
         }
         int? ziel = null;
+        var stoesse = new List<int>();
         if (a.Nummer is { } na)
         {
             // an das Ende des Stuecks anhaengen (der Stoss ist ein Eckpunkt in gerader Linie)
             var (p, r) = Vorhanden(na, a.AmAnfang);
+            stoesse.Add(p.Count - 1);
             p.AddRange(punkte.Skip(1));
             r[^1] = ende;
             r.AddRange(radien.Skip(1));
@@ -394,9 +398,19 @@ public static partial class AussenBearbeitung
         if (b.Nummer is { } nb && nb != a.Nummer)
         {
             var (p, r) = Vorhanden(nb, !b.AmAnfang);
+            stoesse.Add(punkte.Count - 1);
             punkte.AddRange(p.Skip(1));
             radien[^1] = ende;
             radien.AddRange(r.Skip(1));
+        }
+        // ein Stoss in gerader Linie ist kein Eckpunkt (er faellt weg, sonst bliebe ein unnoetiger Punkt im Stueck)
+        foreach (var i in stoesse.OrderByDescending(i => i))
+        {
+            if (i > 0 && i < punkte.Count - 1 && Math.Abs(Verbindung.Grad(punkte[i] - punkte[i - 1], punkte[i + 1] - punkte[i])) < Verbindung.GleichGrad)
+            {
+                punkte.RemoveAt(i);
+                radien.RemoveAt(i);
+            }
         }
         var neu = new PyObjekt();
         if (!fussweg)
