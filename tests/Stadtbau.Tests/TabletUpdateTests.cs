@@ -155,6 +155,27 @@ public class TabletUpdateTests
         Assert.Contains("Installer wird gestartet: Android, Version S 0.6.0, " + Name, log, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Selbst gefunden (Emulator-Probe Lauf 587): am frischen Tablet fehlt der Werkzeugordner bis zum ersten Projekt;
+    /// update.log muss trotzdem entstehen (vorher schrieb das Protokoll still nichts).
+    /// </summary>
+    [Fact]
+    public async Task Uebergeben_OhneWerkzeugordner_UpdateLogEntsteht()
+    {
+        using var temp = new Temp();
+        var geraet = new Geraet(temp.Pfad);
+        var (quelle, angebot) = await AngebotAsync(geraet, temp.Pfad);
+        var frisch = Path.Combine(temp.Pfad, "frisch", "Fachinformatiker-Stadtbau");
+        Assert.False(Directory.Exists(frisch));
+        Assert.Null(await TabletAktualisierung.UebergebenAsync(quelle, angebot, frisch, _ => { }));
+        var log = await File.ReadAllTextAsync(Updateprotokoll.Pfad(frisch), TestContext.Current.CancellationToken);
+        Assert.Contains("Download fertig: " + Name, log, StringComparison.Ordinal);
+        Assert.Contains("Installer läuft", log, StringComparison.Ordinal);
+        var frisch2 = Path.Combine(temp.Pfad, "frisch2");
+        Assert.Null(TabletAktualisierung.Rueckmeldung(HandyPruefung.StatusRueckfrage, null, Inhalt.Length, geraet.LadeOrdner, frisch2));
+        Assert.True(File.Exists(Updateprotokoll.Pfad(frisch2)));
+    }
+
     [Fact]
     public async Task Uebergeben_ApkDerLernplattform_NieInstalliert()
     {

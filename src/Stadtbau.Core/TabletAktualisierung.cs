@@ -26,6 +26,7 @@ public static class TabletAktualisierung
     /// </summary>
     public static async Task<string?> UebergebenAsync(HandyQuelle quelle, UpdateAngebot angebot, string protokollordner, Action<string> fehler)
     {
+        OrdnerAnlegen(protokollordner);
         try
         {
             await UpdateAblauf.LadenAsync(quelle, angebot, null, protokollordner).ConfigureAwait(false);
@@ -48,5 +49,27 @@ public static class TabletAktualisierung
 
     /// <summary>Rueckmeldung von Android: Zeile in update.log, bei einem Fehler Datei weg und der Text fuer das Fenster.</summary>
     public static string? Rueckmeldung(int status, string? meldung, long groesse, string ladeordner, string protokollordner) =>
-        HandyQuelle.Rueckmeldung(status, meldung, groesse, null, ladeordner, protokollordner) is { } text ? Texte.TabletText(text) : null;
+        OrdnerAnlegen(protokollordner) is var _ && HandyQuelle.Rueckmeldung(status, meldung, groesse, null, ladeordner, protokollordner) is { } text ? Texte.TabletText(text) : null;
+
+    /// <summary>
+    /// Selbst gefunden (Emulator-Probe, Lauf 587): am frischen Tablet gibt es den Werkzeugordner erst mit dem ersten
+    /// Projekt; update.log (Updateprotokoll schreibt still nichts, wenn der Ordner fehlt) ging dann verloren. Deshalb
+    /// legt das Update den Ordner vor der ersten Zeile an. Scheitert das, schreibt das Protokoll wie bisher nichts.
+    /// </summary>
+    private static bool OrdnerAnlegen(string ordner)
+    {
+        try
+        {
+            Directory.CreateDirectory(ordner);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
 }
