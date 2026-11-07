@@ -414,11 +414,21 @@ public sealed class EntwurfBedienung : Control
     private Point? Punkt(Kamera k, Vector3 v) =>
         k.Bildpunkt(v, (float)Bounds.Width, (float)Bounds.Height) is { } b ? new Point(b.X, b.Y) : null;
 
+    /// <summary>
+    /// Linie des Rasters feldweise: liegt ein Ende hinter der Kamera (nah herangezoomt), fehlen nur die Stuecke dort,
+    /// nicht die ganze Linie.
+    /// </summary>
     private void Linie(DrawingContext ctx, Kamera k, IPen stift, Vector3 a, Vector3 b)
     {
-        if (Punkt(k, a) is { } p && Punkt(k, b) is { } q)
+        var vorher = Punkt(k, a);
+        for (var i = 1; i <= Entwurf.Raster; i++)
         {
-            ctx.DrawLine(stift, p, q);
+            var jetzt = Punkt(k, Vector3.Lerp(a, b, i / (float)Entwurf.Raster));
+            if (vorher is { } p && jetzt is { } q)
+            {
+                ctx.DrawLine(stift, p, q);
+            }
+            vorher = jetzt;
         }
     }
 
