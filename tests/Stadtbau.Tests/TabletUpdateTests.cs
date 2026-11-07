@@ -237,6 +237,16 @@ public class TabletUpdateTests
             await File.ReadAllTextAsync(Updateprotokoll.Pfad(temp.Pfad), TestContext.Current.CancellationToken), StringComparison.Ordinal);
     }
 
+    /// <summary>Selbst gefunden (Foto des Angebots): jeder Satz steht im Fenster "Neue Version" nur einmal.</summary>
+    [Fact]
+    public void Angebot_JederSatzNurEinmal()
+    {
+        var text = Texte.UpdateNeuText("0.6.1") + " " + Texte.TabletJetztHinweis("80,1") + " " + Texte.TabletMobileDaten("80,1");
+        var saetze = text.Split(". ", StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim().TrimEnd('.')).ToList();
+        Assert.Equal(saetze.Count, saetze.Distinct().Count());
+        Assert.Single(saetze, t => t == "Deine Projekte bleiben erhalten");
+    }
+
     [Fact]
     public void Texte_NieVonDerLernplattform()
     {

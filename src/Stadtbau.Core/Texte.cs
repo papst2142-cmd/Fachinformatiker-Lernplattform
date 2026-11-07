@@ -271,7 +271,7 @@ public static class Texte
 
     // ---- Update am Tablet (S 0.6.0, Weisung P12-42 Punkt 2; Wortlaut nach dem Update der Lernplattform am Handy, A 0.39.0) ----
     public static string TabletJetztHinweis(string mb) =>
-        "Das Werkzeug lädt die neue Version selbst (etwa " + mb + " MB), prüft sie und installiert sie. Deine Projekte bleiben erhalten.";
+        "Das Werkzeug lädt die neue Version selbst (etwa " + mb + " MB), prüft sie und installiert sie.";
 
     public static string TabletMobileDaten(string mb) => "Du bist gerade nicht im WLAN. Das Update lädt etwa " + mb + " MB über mobile Daten.";
 
