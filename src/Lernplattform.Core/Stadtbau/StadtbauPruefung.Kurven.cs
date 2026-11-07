@@ -22,7 +22,9 @@ namespace Lernplattform.Core.Stadtbau;
 /// Strasse schon, hier kommen Baum und Laterne dazu);</item>
 /// <item>zwei Strassen aufeinander, auch entlang des Bogens (<see cref="StrassenNaehe"/> misst Linienzuege);</item>
 /// <item>Bruecke nur, wo eine gerade Strasse den Fluss quert;</item>
-/// <item>gelb: ein offenes Kurvenende liegt neben einer Strasse, schliesst aber nicht an.</item>
+/// <item>gelb: ein offenes Kurvenende liegt neben einer Strasse, schliesst aber nicht an;</item>
+/// <item>(10, Patch A 0.46.1) ein Kurvenende liegt genau auf dem Ende einer anderen Strasse, aber quer (kein Anschluss nach
+/// <see cref="StadtSzene.Anschluss"/>).</item>
 /// </list>
 /// Fassung 0 hat keine Kurve und kein Feld <c>radien</c>: hier kein Fund.
 /// </summary>
@@ -193,6 +195,32 @@ public static partial class StadtbauPruefung
                 if (Kurve.Abstand(new Vector2(x, z), kurve) < StadtSzene.StrassenBreite / 2)
                 {
                     funde.Add(new StadtbauFund($"Laterne Nr. {lnr} steht auf der Fahrbahn der Kurve (Straße Nr. {nr}).", "Laterne an den Rand der Kurve setzen.", true, x, z));
+                }
+            }
+
+            // 10 (Patch A 0.46.1, Sammelliste 233): ein Ende liegt genau auf dem Ende einer anderen Strasse, aber quer (mehr
+            // als StadtSzene.AnschlussGrad): kein Anschluss, die Mittellinie fehlt, die Gehwege ueberlappen
+            var alleLinien = strassen.Select(s => s.Linie).ToList();
+            foreach (var anfang in new[] { true, false })
+            {
+                var ende = anfang ? kurve[0] : kurve[^1];
+                var hinaus = Vector2.Normalize(anfang ? kurve[0] - kurve[1] : kurve[^1] - kurve[^2]);
+                if (StadtSzene.Anschluss(ende, hinaus, kurve, alleLinien) is not null)
+                {
+                    continue;
+                }
+                foreach (var (s, j) in strassen.Select((s, j) => (s, j)).Where(x => x.j != i && x.s.Linie.Count >= 2 && !Kreisverkehr.IstRing(x.s.Daten)))
+                {
+                    var amAnfang = Vector2.Distance(s.Linie[0], ende) <= 0.02f;
+                    if (!amAnfang && Vector2.Distance(s.Linie[^1], ende) > 0.02f)
+                    {
+                        continue;
+                    }
+                    var hinein = Vector2.Normalize(amAnfang ? s.Linie[1] - s.Linie[0] : s.Linie[^2] - s.Linie[^1]);
+                    var grad = Math.Round(Math.Acos(Math.Clamp(Vector2.Dot(hinaus, hinein), -1, 1)) * 180 / Math.PI);
+                    funde.Add(new StadtbauFund($"Die Kurve (Straße Nr. {nr}) stößt quer an das Ende von Straße Nr. {j + 1} (die Richtungen weichen um {grad:0} Grad ab): dort fehlt die Mittellinie und die Gehwege überlappen.",
+                        "Kurve drehen oder neu an das Ende ziehen, sie rastet dann in Richtung ein.", true, ende.X, ende.Y));
+                    break;
                 }
             }
 

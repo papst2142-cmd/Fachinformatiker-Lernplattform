@@ -111,10 +111,10 @@ public class KurvenTests
         var s = AussenBearbeitung.Setzen(a, AussenArt.Kurve, 7.2, 6.2, modell: "bogen:90:2")!;
         var p = Linie(a, s);
         Assert.True(Vector2.Distance(p[0], new Vector2(6, 5)) < 0.011f, $"Anfang {p[0]}");
-        // Gegenprobe: zu weit weg (0,7), kein Einrasten
+        // Gegenprobe: zu weit weg (1,0, Fangweite seit S 0.12.1 eine Strassenbreite 0,95), kein Einrasten
         var b = Leer();
         Strasse(b, 2, 5, 6, 5);
-        var t = AussenBearbeitung.Setzen(b, AussenArt.Kurve, 7.5, 6.5, modell: "bogen:90:2")!;
+        var t = AussenBearbeitung.Setzen(b, AussenArt.Kurve, 8, 6, modell: "bogen:90:2")!;
         Assert.True(Vector2.Distance(Linie(b, t)[0], new Vector2(6, 5)) > 0.4f);
     }
 

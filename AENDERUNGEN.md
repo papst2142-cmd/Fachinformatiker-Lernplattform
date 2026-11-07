@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.46.1
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version verbessert die Prüfung für neue Städte aus dem Stadtbau-Werkzeug.
+
+- Stößt eine Kurve schräg an das Ende einer anderen Straße, meldet die Prüfung das jetzt rot. Dort würden sonst die Mittellinie fehlen und die Gehwege übereinander liegen.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.46.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf neue Städte aus dem Stadtbau-Werkzeug vor: dort fahren die Autos jetzt von selbst auf allen Straßen.
 

@@ -152,6 +152,11 @@ public static class Bauen3D
 
     // ---- Umrisse (Schatten am Boden) --------------------------------------------------------------
 
+    /// <summary>Nur fuer die Gegenprobe in Tests: Umriss einer Kurve je Stueck wie vor S 0.12.1.</summary>
+    internal static bool UmrissJeStueckFuerTests { get => JeStueck.Value; set => JeStueck.Value = value; }
+
+    private static readonly AsyncLocal<bool> JeStueck = new();
+
     /// <summary>Umriss eines Stuecks am Boden: ein oder mehrere Vielecke in Kartenpunkten (x, y).</summary>
     public static List<Vector2[]> Umriss(PyObjekt aussen, AussenStelle s)
     {
@@ -175,15 +180,20 @@ public static class Bauen3D
                 var l = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
                 var halb = (StadtSzene.StrassenBreite / 2) + AussenBearbeitung.Gehweg(aussen, s);
                 var punkte = (l["punkte"] as List<object?> ?? []).OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1]))).ToList();
-                var teile = new List<Vector2[]>();
-                for (var i = 0; i + 1 < punkte.Count; i++)
+                // Patch S 0.12.1 (Fund 233): eine Kurve (mehr als 2 Punkte) ist EIN Band mit Gehrung wie im Spiel; vorher je
+                // Stueck ein Rechteck, 13 Rechtecke ueberlappten sich und wirkten unruhig
+                var ohneDoppelte = punkte.Where((p, i) => i == 0 || Vector2.DistanceSquared(p, punkte[i - 1]) >= 1e-8f).ToList();
+                if (ohneDoppelte.Count > 2 && !UmrissJeStueckFuerTests)
                 {
-                    var a = punkte[i];
-                    var b = punkte[i + 1];
-                    if (Vector2.DistanceSquared(a, b) < 1e-8f)
-                    {
-                        continue;
-                    }
+                    var links = Kurve.Versetzt(ohneDoppelte, halb);
+                    var rechts = Kurve.Versetzt(ohneDoppelte, -halb);
+                    return [[.. links, .. Enumerable.Reverse(rechts)]];
+                }
+                var teile = new List<Vector2[]>();
+                for (var i = 0; i + 1 < ohneDoppelte.Count; i++)
+                {
+                    var a = ohneDoppelte[i];
+                    var b = ohneDoppelte[i + 1];
                     var d = Vector2.Normalize(b - a);
                     var q = new Vector2(-d.Y, d.X) * halb;
                     teile.Add([a + q, b + q, b - q, a - q]);
