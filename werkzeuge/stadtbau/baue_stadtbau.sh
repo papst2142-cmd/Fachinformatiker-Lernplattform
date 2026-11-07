@@ -43,7 +43,7 @@ windows() {
   "${LIZENZEN[@]}" schreiben "$ARBEIT/uebersicht.txt" "$pub/THIRD_PARTY_LICENSES.txt" "$ARBEIT/vorab.json"
   # die Uebersicht im Programm (Lernplattform.App.dll) gilt der Lernplattform; die des Werkzeugs liegt daneben
   cp "$ARBEIT/uebersicht.txt" "$pub/THIRD_PARTY_NOTICES.txt"
-  vpk pack -u "$ID" -v "$VERSION" -p "$pub" -e Stadtbau.exe -i "$WURZEL/src/Lernplattform.App/Assets/icon.ico" \
+  vpk pack -u "$ID" -v "$VERSION" -p "$pub" -e Stadtbau.exe -i "$WURZEL/src/Stadtbau.App/Assets/icon.ico" \
     --packTitle "Fachinformatiker Stadtbau" --releaseNotes "$ARBEIT/notizen.md" -c "$KANAL" -o "$feed"
   ls -la "$feed"
   local setup nupkg="$feed/$ID-$VERSION-$KANAL-full.nupkg" json="$feed/releases.$KANAL.json"

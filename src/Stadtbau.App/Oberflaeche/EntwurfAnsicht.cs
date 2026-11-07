@@ -38,6 +38,17 @@ public sealed class EntwurfAnsicht : Grid
     private readonly TextBlock _titel = Schrift.Text("", "Mittel", FontWeight.Bold);
     private readonly TextBlock _status = Ansage.Lebend(Schrift.Text("", "Klein", farbe: "Pinsel.muted"));
     private readonly CheckBox _nacht = new() { Content = Schrift.Text(Texte.EntwurfNacht, "Klein") };
+
+    /// <summary>Weisung P12-52: Raster zeigen (Vorgabe an, gemerkt in einstellungen.json des Werkzeugordners).</summary>
+    private readonly CheckBox _raster = new() { Content = Schrift.Text(Texte.EntwurfRaster, "Klein") };
+
+    private readonly Werkzeugordner? _ordner;
+
+    /// <summary>Rasterlinien in der 3D-Ansicht zeigen? (Setzen und Waehlen gehen immer.)</summary>
+    public bool RasterZeigen => _raster.IsChecked != false;
+
+    /// <summary>Raster ein- oder ausblenden (Schalter und Taste G).</summary>
+    public void RasterUmschalten() => _raster.IsChecked = !RasterZeigen;
     private readonly Dictionary<string, ToggleButton> _teilKnoepfe = new(StringComparer.Ordinal);
     private int _stand;
     private int _gebaut = -1;
@@ -88,11 +99,13 @@ public sealed class EntwurfAnsicht : Grid
     /// <summary>Verlauf des Entwurfs geaendert (Kopfleiste: Rueckgaengig/Wiederholen).</summary>
     public event Action? VerlaufGeaendert;
 
-    public EntwurfAnsicht(Entwurf entwurf, Spieldaten daten, Action<string> melden)
+    public EntwurfAnsicht(Entwurf entwurf, Spieldaten daten, Action<string> melden, Werkzeugordner? ordner = null)
     {
         Entwurf = entwurf;
         _daten = daten;
         _melden = melden;
+        _ordner = ordner;
+        _raster.IsChecked = ordner is null || WerkzeugEinstellungen.RasterZeigen(ordner);
         Bedienung = new EntwurfBedienung(this);
         ColumnDefinitions = new ColumnDefinitions("260,*,340");
         Entwurf.Geaendert += () =>
@@ -113,6 +126,25 @@ public sealed class EntwurfAnsicht : Grid
         {
             _gebaut = -1;
             Aktualisieren();
+        };
+        _raster.Mit(Texte.TippEntwurfRaster);
+        _raster.Vorlese(Texte.EntwurfRaster);
+        _raster.IsCheckedChanged += (_, _) =>
+        {
+            Bedienung.InvalidateVisual();
+            if (_ordner is null)
+            {
+                return;
+            }
+            try
+            {
+                WerkzeugEinstellungen.RasterZeigenSetzen(_ordner, RasterZeigen);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                _ordner.Fehler("Raster merken: " + e.Message);
+                _melden(Texte.RasterFehler);
+            }
         };
 
         Children.Add(Links());
@@ -288,7 +320,7 @@ public sealed class EntwurfAnsicht : Grid
     {
         var grenzen = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.EntwurfGrenzen, "Mittel", FontWeight.Bold), _grenzBalken, _grenzText } });
         var pruefung = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.EntwurfPruefungen, "Mittel", FontWeight.Bold), _pruefungen } });
-        var licht = Schrift.Karte(new StackPanel { Spacing = 6, Children = { _nacht } });
+        var licht = Schrift.Karte(new StackPanel { Spacing = 6, Children = { _nacht, _raster } });
         return new StackPanel { Spacing = 12, Children = { Schrift.Karte(_auswahl), grenzen, pruefung, licht } };
     }
 
@@ -527,7 +559,8 @@ public sealed class EntwurfAnsicht : Grid
         return i;
     }
 
-    /// <summary>Tasten des Editors (Hauptansicht gibt sie weiter): R dreht, Entf loescht, Pfeile schieben, Esc hoert auf zu setzen.</summary>
+    /// <summary>Tasten des Editors (Hauptansicht gibt sie weiter): R dreht, Entf loescht, Pfeile schieben, Esc hoert auf zu setzen,
+    /// G blendet das Raster ein oder aus.</summary>
     public bool Taste(Avalonia.Input.Key taste)
     {
         switch (taste)
@@ -554,6 +587,9 @@ public sealed class EntwurfAnsicht : Grid
                 return Entwurf.Verschieben(Auswahl, 0, -1);
             case Avalonia.Input.Key.Down when Auswahl >= 0:
                 return Entwurf.Verschieben(Auswahl, 0, 1);
+            case Avalonia.Input.Key.G:
+                RasterUmschalten();
+                return true;
             case Avalonia.Input.Key.PageUp:
                 Bedienung.Kippen(8);
                 return true;

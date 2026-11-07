@@ -449,6 +449,13 @@ public static class Texte
     public const string TippEntwurfSpeichern = "Prüft das Gebäude und speichert es unter einem Namen als Blueprint.";
     public const string TippEntwurfZurueck = "Schließt den Editor und zeigt wieder die Stadt.";
     public const string TippEntwurfNacht = "Zeigt das Gebäude bei Nacht: die Fenster leuchten wie im Spiel.";
+
+    /// <summary>Weisung P12-52 (Wunsch Nico): Schalter im Gebaeude-Editor, Vorgabe an, gemerkt.</summary>
+    public const string EntwurfRaster = "Raster zeigen";
+
+    public const string TippEntwurfRaster = "Blendet die Linien des Bauraster ein oder aus (Taste G), damit du das Gebäude ungestört ansehen kannst. Setzen und Wählen gehen auch ohne Raster.";
+
+    public const string RasterFehler = "Die Einstellung „Raster zeigen“ konnte nicht gespeichert werden. Sie gilt bis zum Beenden.";
     public const string TippEntwurfKamera = "Dreht die Kamera um das Gebäude.";
 
     /// <summary>Zahl mit Tausenderpunkt wie im Deutschen (1.528), unabhaengig von der Sprache des Geraets.</summary>

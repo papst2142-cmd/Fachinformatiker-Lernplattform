@@ -12,6 +12,11 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Weisung P12-51: eigenes Symbol des Werkzeugs (icon.png = freigegebenes Bild, icon.ico daraus mit
+         werkzeuge/stadtbau/erzeuge_symbol_ico.py) -->
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Lernplattform.App\Lernplattform.App.csproj" />
     <ProjectReference Include="..\Stadtbau.Core\Stadtbau.Core.csproj" />
   </ItemGroup>

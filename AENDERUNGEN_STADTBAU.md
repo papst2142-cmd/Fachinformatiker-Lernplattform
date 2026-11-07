@@ -10,6 +10,10 @@ Die Häuser und Bauteile sehen jetzt sauberer aus: Viele Wände zeigten bisher s
 - Das gilt in der 3D-Ansicht der Stadt, im Gebäude-Editor und für alle Stücke aus dem Katalog.
 - Die Bilder im Katalog bleiben, wie sie waren.
 - Deine Projekte und Blueprints bleiben, wie sie sind.
+- Im Gebäude-Editor sitzen die Wände „Fenster mit Markisen“, „Fenster mit Balkon“, „Breites Fenster mit Sims“ und „Zwei Rundfenster mit Sims“ jetzt bündig mit den Wänden darüber und darunter. Vorher standen sie ein Stück zu weit hinten, dadurch wirkten Dach und Tür versetzt.
+- Ein schon gespeichertes Gebäude mit diesen Wänden bleibt lesbar und lässt sich weiterbauen. Speichere es einmal neu, dann passt auch sein Umriss in der Stadt genau.
+- Im Gebäude-Editor gibt es den Schalter „Raster zeigen“ (Taste G). Ohne Raster siehst du das Gebäude ungestört; Setzen und Wählen gehen trotzdem. Das Werkzeug merkt sich deine Wahl.
+- Das Werkzeug hat jetzt ein eigenes Symbol.
 
 ## S 0.9.0
 

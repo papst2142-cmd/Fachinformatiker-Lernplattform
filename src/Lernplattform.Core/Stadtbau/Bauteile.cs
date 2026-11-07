@@ -349,9 +349,25 @@ public static class Bauteile
                 return auf * drehung * feld;
             }
             default:
-                return drehung * feld;
+                return (RasterVersatz.TryGetValue(t.Name, out var v) ? Matrix4x4.CreateTranslation(0, 0, v) : Matrix4x4.Identity) * drehung * feld;
         }
     }
+
+    /// <summary>
+    /// Weisung P12-52 (Nico-Fund 07.11.2026, Dach und Tuer wirkten versetzt): Kenney hat diese vier Wandteile beim Ausliefern
+    /// nach ihrem umschliessenden Kasten mittig gesetzt (Datei selbst, OBJ/GLB/FBX gleich). Markise, Balkon oder Sims ragen
+    /// vorne heraus, darum liegt der Baukoerper um den halben Ueberstand zu weit hinten (Rueckwand bei z = -0,5 - Versatz,
+    /// Fassade bei 0,5 - Versatz). Der Versatz (Drehung 0, in z nach vorne) setzt Rueck- und Fassadenwand wieder genau auf die
+    /// Feldkanten; der Ueberstand ragt dann nur nach vorne. Alle anderen Teile stehen schon im Raster ihres Pakets (Test
+    /// je Teil und Drehung, Grenze 0,01).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, float> RasterVersatz = new Dictionary<string, float>(StringComparer.Ordinal)
+    {
+        ["building-window-awnings"] = 0.064125f,   // Markisen ragen 0,128 vor die Fassade, Datei von z -0,564 bis 0,564
+        ["building-window-balcony"] = 0.075f,      // Balkon ragt 0,15 vor die Fassade, Datei von z -0,575 bis 0,575
+        ["building-window-wide-sill"] = 0.025f,    // Sims ragt 0,05 vor die Fassade, Datei von z -0,525 bis 0,525
+        ["building-windows-sills-round"] = 0.025f, // Sims ragt 0,05 vor die Fassade, Datei von z -0,525 bis 0,525
+    };
 
     /// <summary>Hoehe ueber dem Boden der Ebene, auf der ein Dach-Teil steht (Oberseite des Flachdachs „Flachdach Mitte“).</summary>
     public const float DachDetailHoehe = 0.1062f;

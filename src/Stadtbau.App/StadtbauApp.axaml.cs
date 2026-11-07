@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Lernplattform.Core.Design;
 using Lernplattform.Design;
@@ -45,6 +46,13 @@ public partial class StadtbauApp : Application
         Schrift.Anwenden(1.0);
     }
 
+    /// <summary>Weisung P12-51: Fenster- und Taskleisten-Symbol des Werkzeugs (eigenes Bild, nicht das der Lernplattform).</summary>
+    internal static WindowIcon Symbol()
+    {
+        using var strom = AssetLoader.Open(new Uri("avares://Stadtbau.App/Assets/icon.ico"));
+        return new WindowIcon(strom);
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -58,6 +66,7 @@ public partial class StadtbauApp : Application
                 MinWidth = 900,
                 MinHeight = 600,
                 Content = ansicht,
+                Icon = Symbol(),
             };
             desktop.MainWindow = fenster;
             // Patch S 0.5.1: Knopf "Werkzeug beenden" und Fensterkreuz laufen ueber dieselbe Pruefung (Rueckfrage nur bei

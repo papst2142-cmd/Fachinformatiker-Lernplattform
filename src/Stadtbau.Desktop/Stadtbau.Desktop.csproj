@@ -6,7 +6,7 @@
     <AssemblyName>Stadtbau</AssemblyName>
     <RootNamespace>Stadtbau.Desktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>..\Lernplattform.App\Assets\icon.ico</ApplicationIcon>
+    <ApplicationIcon>..\Stadtbau.App\Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

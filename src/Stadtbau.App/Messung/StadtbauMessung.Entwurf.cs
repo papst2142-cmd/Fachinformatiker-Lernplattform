@@ -92,6 +92,33 @@ public static partial class StadtbauMessung
             }
             a.Rueckgaengig();
             await e.Fertig;
+
+            // Weisung P12-52: Raster zeigen (Vorgabe an), Taste G blendet aus, Setzen geht auch ohne Raster; gemerkt
+            if (!e.RasterZeigen)
+            {
+                Fund("Raster zeigen: Vorgabe nicht an");
+            }
+            e.Taste(Avalonia.Input.Key.G);
+            await BildAsync(a);
+            if (e.RasterZeigen || WerkzeugEinstellungen.RasterZeigen(StadtbauApp.Ordner))
+            {
+                Fund("Raster zeigen: Taste G blendet nicht aus oder wird nicht gemerkt");
+            }
+            var ohne = e.Entwurf.Teile.Count;
+            if (BildpunktVon(e, 7, 7, 0) is not { } q || e.Bedienung.SetzenAn(q) < 0 || e.Entwurf.Teile.Count != ohne + 1)
+            {
+                Fund("Raster aus: Teil setzen geht nicht");
+            }
+            await e.Fertig;
+            await AlleGroessenAsync(a, f, "Gebaeude entwerfen ohne Raster");
+            a.Rueckgaengig();
+            await e.Fertig;
+            e.Taste(Avalonia.Input.Key.G);
+            if (!e.RasterZeigen || !WerkzeugEinstellungen.RasterZeigen(StadtbauApp.Ordner))
+            {
+                Fund("Raster zeigen: Taste G blendet nicht wieder ein");
+            }
+            e.TeilWaehlen(null);
         }
 
         // Probehaus: 20 Teile, kein Fund, unter der Grenze

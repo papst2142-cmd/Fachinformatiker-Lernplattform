@@ -189,4 +189,75 @@ public class BlueprintEntwurfTests
         Assert.Empty(Blueprint.EigeneGebaeude(p.AussenStand));
         Assert.NotEmpty(p.Exportieren(DateTimeOffset.Now));
     }
+
+    /// <summary>
+    /// Weisung P12-52 Punkt 5: ein in S 0.9.0 gespeicherter Blueprint mit einem der vier korrigierten Teile (Fenster mit
+    /// Balkon) hat noch den Block aus der alten Lage gespeichert. Er bleibt lesbar, laesst sich weiterbauen und setzen, die
+    /// 3D-Ansicht zeichnet die Teile jetzt buendig; erst beim naechsten Speichern bekommt er den neuen Block.
+    /// </summary>
+    [Fact]
+    public void BlueprintAusS090_MitBalkon_BleibtLesbarUndSetzbar_NeuerBlockErstBeimSpeichern()
+    {
+        var ablage = Daten.NeueAblage();
+        var e = new Entwurf();
+        var balkon = Bauteile.Praefix + "building-window-balcony";
+        for (var x = 0; x < 3; x++)
+        {
+            for (var y = 0; y < 2; y++)
+            {
+                e.Setzen(x == 1 && y == 1 ? Tuer : Fenster, x, y, 0, y == 1 ? 0 : 2);
+                e.Setzen(x == 1 && y == 1 ? balkon : Fenster, x, y, 1, y == 1 ? 0 : 2);
+                e.Setzen(Dach, x, y, 2, 0);
+            }
+        }
+        Assert.True(e.EingangFestlegen(e.Teile.FindIndex(t => t.Id == Tuer)));
+        Assert.DoesNotContain(e.Pruefen(Katalog.Bauteil), f => f.Rot);
+        var b = e.AlsBlueprint("Altes Haus", Katalog.Bauteil, "Projekt", "neu_x", out _);
+        // Block wie in S 0.9.0: Balkon um den halben Ueberstand (0,075) nach hinten
+        GrafikModellAlt(e, out var altBlock);
+        var alt = new Blueprint
+        {
+            Name = b.Name, Herkunft = b.Herkunft, Modell = b.Modell, Teile = altBlock, Tuer = b.Tuer, Weg = b.Weg, Schild = b.Schild,
+            Innenraum = b.Innenraum, Personen = b.Personen, Bauteile = b.Bauteile, Eingang = b.Eingang,
+        };
+        Assert.NotEqual(Json(b.Teile), Json(alt.Teile));
+        var pfad = alt.Speichern(ablage, Zeit);
+        var gelesen = Blueprint.Lesen(File.ReadAllBytes(pfad));
+        Assert.Equal(Json(altBlock), Json(gelesen.Teile));
+        // weiterbauen: gleiche Teile; neu speichern gibt den neuen Block
+        var weiter = Entwurf.Aus(Assert.Single(Blueprint.Alle(ablage)).Vorlage!)!;
+        Assert.Equal(e.Teile, weiter.Teile);
+        Assert.Equal(Json(b.Teile), Json(weiter.AlsBlueprint("Altes Haus", Katalog.Bauteil, "Projekt", "neu_x", out _).Teile));
+        // setzen in eine Stadt: kein Fund, 3D kennt das Modell
+        var p = Projekt.Neu("Eigenbau", Daten.Spiel, ablage, leer: (32, 24));
+        p.AussenAendern("Straße", a =>
+        {
+            var s = AussenBearbeitung.Setzen(a, AussenArt.Strasse, 4, 12)!;
+            AussenBearbeitung.LaengeSetzen(a, s, 28);
+        });
+        string? grund = null;
+        Assert.NotNull(p.AussenAendern(Texte.BlueprintSetzen, a => gelesen.Setzen(a, 10, 8.5, out grund)));
+        Assert.Null(grund);
+        Assert.DoesNotContain(p.PruefenAussen(), f => f.Rot);
+        var g = Ansicht3D.MitGebaeuden(Daten.Spiel.Grafik, Aussen.Fassung(p.AussenStand, p.Basis, new PyObjekt(), 0, null, "", "", ""))!;
+        Assert.Equal(Bauteile.Dreiecke(e.Teile, Katalog.Bauteil), g.Modell("bau:altes_haus")!.Dreiecke);
+    }
+
+    /// <summary>Block des Gebaeudes mit der Lage von S 0.9.0 (ohne Versatz der vier Teile).</summary>
+    private static void GrafikModellAlt(Entwurf e, out List<object?> block)
+    {
+        var ecken = new List<float>();
+        foreach (var t in e.Teile)
+        {
+            var m = Katalog.Bauteil(t.Id)!;
+            var lage = System.Numerics.Matrix4x4.CreateTranslation(0, 0, -Bauteile.RasterVersatz.GetValueOrDefault(t.Name)) * Bauteile.Lage(t, m);
+            for (var i = 0; i + 2 < m.Ecken.Length; i += 3)
+            {
+                var q = System.Numerics.Vector3.Transform(new System.Numerics.Vector3(m.Ecken[i], m.Ecken[i + 1], m.Ecken[i + 2]), lage);
+                ecken.AddRange([q.X, q.Y, q.Z]);
+            }
+        }
+        var n = ecken.Count / 9;
+        block = Bauteile.Block(new Lernplattform.Core.Spiel.Probe.GrafikModell("alt", [.. ecken], new byte[n * 3]));
+    }
 }
