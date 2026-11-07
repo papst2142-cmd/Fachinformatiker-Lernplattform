@@ -330,6 +330,7 @@ public static partial class StadtbauMessung
         await KreisverkehrAsync(a, f);
         await StreckenAsync(a, f);
         await EinrastenAsync(a, f);
+        await DrehenAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

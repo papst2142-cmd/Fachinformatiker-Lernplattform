@@ -3,6 +3,19 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.13.0
+
+Häuser lassen sich jetzt drehen, Straßen und Flüsse fein drehen, und vieles rastet von selbst an der richtigen Stelle ein.
+
+- Häuser, Gebäude ohne Ort und Blueprints drehen in Vierteldrehungen (Taste R oder Knopf „Drehen“, auch schon beim Setzen). Tür, Fußweg und Schild drehen mit, der Fußweg läuft danach wieder zur nächsten Straße. Im Spiel steht das Haus genauso gedreht.
+- Straßen, Kurven, Kreisverkehre, Flüsse und Teiche drehen in Schritten von 15 Grad (R vorwärts, Umschalt+R rückwärts). Straßen, Kurven und Flüsse haben in der Auswahl rechts ein Feld „Winkel (Grad)“: dort stellst du den Winkel auf 1 Grad genau ein.
+- Am Tablet (und mit der Maus) erscheint über dem gewählten Stück ein runder Drehgriff, in der Draufsicht und in der 3D-Ansicht. Ziehst du ihn mit einem Finger um das Stück, dreht es sich in Rasten (Linien 15 Grad, alles andere 90 Grad). Zwei Finger bewegen wie bisher die Ansicht.
+- Katalog-Stücke, Stege und Parks drehen weiter in Vierteldrehungen.
+- Ein Haus legt sich beim Setzen und Schieben mit der Türseite genau an die Gehwegkante einer Straße davor (ohne Gehweg im Abstand wie die Läden in Stadt 1). Ein Katalog-Stück stellt sich mit der Rückseite an die äußere Gehwegkante.
+- Ein Fluss rastet Ende an Ende an einen anderen Fluss ein oder rechtwinklig an den Kartenrand. Ziehst du einen Eckpunkt so, dass der Fluss eine Straße fast quer kreuzt, legt er sich genau quer: die Brücke wird so kurz wie möglich.
+- Der Schalter „Einrasten“ (Taste E) schaltet all das aus: dann setzt und schiebst du frei in feinen Schritten von 0,1. Er ersetzt den bisherigen Schalter „Raster aus (feiner schieben)“.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.12.1
 
 Kurven und Straßen rasten jetzt sauber aneinander ein, auch wenn du sie mit dem Finger nur ungefähr an das Ende ziehst.

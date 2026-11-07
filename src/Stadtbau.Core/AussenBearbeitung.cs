@@ -15,8 +15,8 @@ namespace Stadtbau.Core;
 /// den Nachbarn bleibt). Strassen rasten mit ihren Enden an andere Strassen an (<see cref="EinrastenAb"/>). Ein Haus nimmt
 /// beim Verschieben Tuer, Schild und Fussweg mit; der Fussweg wird bis zur naechsten Strasse verlaengert oder gekuerzt.
 /// Alle Werte werden auf 0,01 gerundet.
-/// Was das Spiel noch nicht kann, bietet das Werkzeug nicht an: Haeuser drehen (das Spiel zeichnet jedes Haus mit der
-/// Front nach Sueden) und Orte des Spiels loeschen oder neu setzen (das aendert Spielregeln, Plan Abschnitt 1).
+/// Was das Spiel noch nicht kann, bietet das Werkzeug nicht an: Orte des Spiels loeschen oder neu setzen (das aendert
+/// Spielregeln, Plan Abschnitt 1). Haeuser drehen seit Welle E in Vierteln (<see cref="Hausdrehung"/>).
 /// </summary>
 public static partial class AussenBearbeitung
 {
@@ -122,6 +122,12 @@ public static partial class AussenBearbeitung
     {
         var o = s.Art == AussenArt.Haus ? Ort(aussen, s.Ort)! : Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         var (gx, gy, gw, gh) = Grundflaeche(aussen, Py.Str(o["modell"]));
+        if (HausDreh(aussen, s) % 2 == 1)
+        {
+            // Welle E: eine Vierteldrehung tauscht Breite und Tiefe um die Mitte
+            var (mx, my) = (Py.F(o["x"]) + gx + (gw / 2), Py.F(o["y"]) + gy + (gh / 2));
+            return (mx - (gh / 2), my - (gw / 2), gh, gw);
+        }
         return (Py.F(o["x"]) + gx, Py.F(o["y"]) + gy, gw, gh);
     }
 
@@ -314,7 +320,50 @@ public static partial class AussenBearbeitung
     /// <see cref="NeuerGehweg"/> je Seite, Enden rasten an Strassen ein; Gebaeude: Modell <paramref name="modell"/>; Baum kommt zur ersten Baumreihe. Haeuser mit Ort und
     /// der Paketplatz lassen sich nicht neu setzen (null).
     /// </summary>
-    public static AussenStelle? Setzen(PyObjekt aussen, AussenArt art, double x, double y, bool raster = true, string? modell = null)
+    public static AussenStelle? Setzen(PyObjekt aussen, AussenArt art, double x, double y, bool raster = true, string? modell = null) =>
+        SetzenUndDrehen(aussen, art, x, y, raster, modell, 0);
+
+    /// <summary>
+    /// Welle E: setzen, <paramref name="dreh"/> Schritte drehen (Vierteldrehungen wie der Knopf „Drehen“ beim Setzen), dann
+    /// einrasten (nur mit <paramref name="raster"/>: Strassenenden, Haeuser und Katalog-Stuecke an den Gehweg, Fluss an Fluss
+    /// oder Kartenrand). Ein einziger Weg fuer die Draufsicht, die 3D-Ansicht und ihre Vorschau.
+    /// </summary>
+    public static AussenStelle? SetzenUndDrehen(PyObjekt aussen, AussenArt art, double x, double y, bool raster, string? modell, int dreh)
+    {
+        var s = SetzenRoh(aussen, art, x, y, raster, modell);
+        for (var i = 0; s is not null && i < dreh; i++)
+        {
+            Drehen(aussen, s);
+        }
+        if (s is not null && raster)
+        {
+            NachSetzenEinrasten(aussen, s, gedreht: dreh % 4 != 0);
+        }
+        return s;
+    }
+
+    /// <summary>Einrasten nach dem Setzen (auch eines Blueprints): Haus/Gebaeude und Katalog an den Gehweg, Fluss, gedrehte Gerade.</summary>
+    public static void NachSetzenEinrasten(PyObjekt aussen, AussenStelle s, bool gedreht = false)
+    {
+        switch (s.Art)
+        {
+            case AussenArt.Haus or AussenArt.Gebaeude:
+                HausAnGehweg(aussen, s);
+                break;
+            case AussenArt.Katalog:
+                KatalogAnGehweg(aussen, s);
+                break;
+            case AussenArt.Fluss:
+                FlussEinrasten(aussen, s);
+                break;
+            case AussenArt.Strasse when gedreht && Objekt(Aussen.Landschaft(aussen)[s.Nummer]) is var l && !Strassenkurve.IstKurve(l) && !Kreisverkehr.IstRing(l):
+                // die gedrehte Gerade rastet wie beim Ziehen ein (vorher nur waagerecht vor dem Drehen)
+                GeradeEinrasten(aussen, l);
+                break;
+        }
+    }
+
+    private static AussenStelle? SetzenRoh(PyObjekt aussen, AussenArt art, double x, double y, bool raster, string? modell)
     {
         var (breite, hoehe) = Aussen.Groesse(aussen);
         if (x < 0 || y < 0 || x > breite || y > hoehe)
@@ -331,7 +380,7 @@ public static partial class AussenBearbeitung
         switch (art)
         {
             case AussenArt.Kurve:
-                return KurveSetzen(aussen, x, y, modell);
+                return KurveSetzen(aussen, x, y, modell, raster);
             case AussenArt.Kreisverkehr:
                 return KreisverkehrSetzen(aussen, x, y, modell);
             case AussenArt.Strasse:
@@ -343,7 +392,10 @@ public static partial class AussenBearbeitung
                 var neu = new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { PunktObjekt(a), PunktObjekt(b) } }, { "gehweg", Bearbeitung.Zahl(NeuerGehweg) } };
                 land.Add(neu);
                 // Patch S 0.12.1: an ein freies Ende mit Lage und Richtung, sonst Einmuendung nur auf einer Strasse ohne Bogen
-                GeradeEinrasten(aussen, neu);
+                if (raster)
+                {
+                    GeradeEinrasten(aussen, neu);
+                }
                 return new AussenStelle(AussenArt.Strasse, land.Count - 1);
             }
             case AussenArt.Gebaeude:
@@ -353,8 +405,8 @@ public static partial class AussenBearbeitung
                     return null;
                 }
                 var (gx, gy, gw, gh) = Grundflaeche(aussen, modell);
-                var hx = Bearbeitung.AufRaster(x - (gw / 2) - gx, Bearbeitung.Raster);
-                var hy = Bearbeitung.AufRaster(y - (gh / 2) - gy, Bearbeitung.Raster);
+                var hx = Bearbeitung.AufRaster(x - (gw / 2) - gx, r);
+                var hy = Bearbeitung.AufRaster(y - (gh / 2) - gy, r);
                 land.Add(new PyObjekt { { "typ", "gebaeude" }, { "modell", modell }, { "x", Bearbeitung.Zahl(hx) }, { "y", Bearbeitung.Zahl(hy) } });
                 return new AussenStelle(AussenArt.Gebaeude, land.Count - 1);
             }
@@ -431,15 +483,43 @@ public static partial class AussenBearbeitung
 
     // ---- Verschieben ----------------------------------------------------------------------------------
 
-    /// <summary>Stueck um (dx, dy) verschieben, in ganzen Rasterschritten (Strassen und Haeuser immer im Raster 0,5).</summary>
+    /// <summary>
+    /// Stueck um (dx, dy) verschieben, in ganzen Rasterschritten 0,5; danach rastet es ein (Strassenenden, Fluesse, Haeuser
+    /// und Katalog-Stuecke an den Gehweg). Welle E: mit <paramref name="raster"/> = false („Einrasten“ aus) frei im feinen
+    /// Raster 0,1 fuer alle Stuecke und ohne Einrasten.
+    /// </summary>
     public static void Verschieben(PyObjekt aussen, AussenStelle s, double dx, double dy, bool raster = true)
     {
-        var grob = s.Art is AussenArt.Strasse or AussenArt.Haus or AussenArt.Gebaeude or AussenArt.Park || raster;
-        (dx, dy) = (Schritt(dx, grob), Schritt(dy, grob));
+        (dx, dy) = (Schritt(dx, raster), Schritt(dy, raster));
         if (dx == 0 && dy == 0)
         {
             return;
         }
+        VerschiebenGenau(aussen, s, dx, dy, raster);
+        if (!raster)
+        {
+            return;
+        }
+        switch (s.Art)
+        {
+            case AussenArt.Haus or AussenArt.Gebaeude:
+                HausAnGehweg(aussen, s);
+                break;
+            case AussenArt.Katalog:
+                KatalogAnGehweg(aussen, s);
+                break;
+            case AussenArt.Fluss:
+                if (!FlussEinrasten(aussen, s))
+                {
+                    BrueckeQuer(aussen, s);
+                }
+                break;
+        }
+    }
+
+    /// <summary>Stueck genau um (dx, dy) verschieben (ohne Raster); Strassen rasten nur mit <paramref name="einrasten"/> ein.</summary>
+    private static void VerschiebenGenau(PyObjekt aussen, AussenStelle s, double dx, double dy, bool einrasten = false)
+    {
         if (IstWasser(s.Art))
         {
             WasserVerschieben(aussen, s, dx, dy);
@@ -482,6 +562,10 @@ public static partial class AussenBearbeitung
                 {
                     var weg = new Vector2((float)dx, (float)dy);
                     KreisverkehrMitnehmen(aussen, kreis, p => p + weg);
+                    break;
+                }
+                if (!einrasten)
+                {
                     break;
                 }
                 if (Strassenkurve.IstKurve(l))
@@ -642,7 +726,8 @@ public static partial class AussenBearbeitung
             return;
         }
         var (ax, ay) = Lage(aussen, s);
-        Verschieben(aussen, s, x - ax, y - ay, raster: false);
+        // Welle E: genau an die Werte (auf 0,01), ohne Raster und ohne Einrasten
+        VerschiebenGenau(aussen, s, R(x - ax), R(y - ay));
     }
 
     /// <summary>Bezugspunkt eines Stuecks fuer die Felder x, y: Strasse = erster Punkt, Haus und Park = Ecke oben links, sonst die Mitte.</summary>
@@ -675,7 +760,7 @@ public static partial class AussenBearbeitung
     public static string? DrehenNicht(AussenStelle s) => s.Art switch
     {
         AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => null,
-        AussenArt.Haus or AussenArt.Gebaeude => Texte.HausDrehenNicht,
+        AussenArt.Haus or AussenArt.Gebaeude => null,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
     };
@@ -690,6 +775,11 @@ public static partial class AussenBearbeitung
         if (IstWasser(s.Art))
         {
             return WasserDrehen(aussen, s);
+        }
+        if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
+        {
+            // Welle E (Weisung P12-67 Frage 1 = a): Haeuser drehen in Vierteln mit Tuer, Fussweg und Schild
+            return HausDrehen(aussen, s, 1);
         }
         if (s.Art == AussenArt.Katalog)
         {

@@ -117,14 +117,15 @@ public sealed class KartenFlaeche : Control
     }
 
     /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
-    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg;
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss
+        or AussenArt.Teich or AussenArt.Steg or AussenArt.Gebaeude or AussenArt.Blueprint;
 
     /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
-    public void SetzenDrehen()
+    public void SetzenDrehen(bool rueckwaerts = false)
     {
         if (DrehbarBeimSetzen(SetzenArt))
         {
-            SetzenDreh = (SetzenDreh + 1) % 4;
+            SetzenDreh = (SetzenDreh + (rueckwaerts ? 3 : 1)) % 4;
             AuswahlGeaendert?.Invoke();
         }
     }
@@ -495,6 +496,7 @@ public sealed class KartenFlaeche : Control
                 ctx.DrawEllipse(null, stift, P(fx, fy), Math.Max(10, 0.45 * _zoom), Math.Max(10, 0.45 * _zoom));
             }
         }
+        GriffZeichnen(ctx);
     }
 
     /// <summary>Farben des Wassers in der Draufsicht (wie im Spiel, etwas kraeftiger).</summary>
@@ -645,16 +647,8 @@ public sealed class KartenFlaeche : Control
             return BlueprintSetzen(x, y);
         }
         var dreh = DrehbarBeimSetzen(art) ? SetzenDreh : 0;
-        var neu = _projekt.AussenAendern("Setzen", a =>
-        {
-            // gedreht setzen ist ein einziger Schritt im Verlauf
-            var s = AussenBearbeitung.Setzen(a, art, x, y, raster, modell);
-            for (var i = 0; s is not null && i < dreh; i++)
-            {
-                AussenBearbeitung.Drehen(a, s);
-            }
-            return s;
-        });
+        // gedreht setzen und einrasten ist ein einziger Schritt im Verlauf (Welle E: gleicher Weg wie die Vorschau in 3D)
+        var neu = _projekt.AussenAendern("Setzen", a => AussenBearbeitung.SetzenUndDrehen(a, art, x, y, raster, modell, dreh));
         SetzenArt = null;
         if (neu is not null)
         {
@@ -677,7 +671,8 @@ public sealed class KartenFlaeche : Control
             return null;
         }
         string? grund = null;
-        var neu = _projekt.AussenAendern(Texte.BlueprintSetzen + " „" + b.Name + "“", a => b.Setzen(a, x, y, out grund));
+        var (raster, dreh) = (Raster, SetzenDreh);
+        var neu = _projekt.AussenAendern(Texte.BlueprintSetzen + " „" + b.Name + "“", a => b.SetzenUndDrehen(a, x, y, raster, dreh, out grund));
         Gemeldet?.Invoke(neu is null ? grund ?? Texte.BlueprintAusserhalb : Texte.BlueprintGesetzt + ": „" + b.Name + "“");
         Waehlen(neu);
         return neu;
@@ -743,9 +738,19 @@ public sealed class KartenFlaeche : Control
         Waehlen(AussenBearbeitung.Ganz(s));
     }
 
-    public void Drehen()
+    /// <summary>Welle E: ein Drehschritt (Linien 15 Grad, sonst 90; Knopf „Drehen“, Taste R, Umschalt+R rueckwaerts).</summary>
+    public void Drehen(bool rueckwaerts = false)
     {
-        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s)
+        if (Auswahl is { } s)
+        {
+            DrehenUm((rueckwaerts ? -1 : 1) * AussenBearbeitung.DrehSchritt(s.Art));
+        }
+    }
+
+    /// <summary>Welle E: um so viele Grad drehen (Drehgriff), ein Schritt im Verlauf.</summary>
+    public void DrehenUm(int grad)
+    {
+        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s || grad % 360 == 0)
         {
             return;
         }
@@ -754,9 +759,83 @@ public sealed class KartenFlaeche : Control
             Gemeldet?.Invoke(grund);
             return;
         }
-        _projekt.AussenAendern("Drehen", a => AussenBearbeitung.Drehen(a, s));
-        Gemeldet?.Invoke(ArtName(s.Art) + " gedreht");
+        var raster = Raster;
+        _projekt.AussenAendern("Drehen", a =>
+        {
+            AussenBearbeitung.Drehen(a, s, grad);
+            // ein Haus legt sich nach dem Drehen wieder an den Gehweg (nur mit "Einrasten")
+            if (raster && s.Art is AussenArt.Haus or AussenArt.Gebaeude)
+            {
+                AussenBearbeitung.HausAnGehweg(a, s);
+            }
+        });
+        Gemeldet?.Invoke(ArtName(s.Art) + " gedreht (" + grad.ToString(CultureInfo.InvariantCulture) + " Grad)");
         Waehlen(s);
+    }
+
+    /// <summary>Welle E: Feld „Winkel“ (1 Grad) einer Linie setzen.</summary>
+    public void WinkelSetzen(int grad)
+    {
+        if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s || !AussenBearbeitung.MitWinkel(_projekt.AussenStand, s))
+        {
+            return;
+        }
+        _projekt.AussenAendern(Texte.Winkel, a => AussenBearbeitung.WinkelSetzen(a, s, grad));
+        Gemeldet?.Invoke(Texte.Winkel + " " + grad.ToString(CultureInfo.InvariantCulture) + " Grad");
+        Waehlen(s);
+    }
+
+    // ---- Drehgriff (Welle E) ----------------------------------------------------------------------
+
+    private bool _griffZiehen;
+    private Point _griffPunkt;
+
+    /// <summary>Mitte des gewaehlten Stuecks im Bild, wenn es einen Drehgriff hat (drehbar, nicht beim Setzen).</summary>
+    public Point? GriffMitte
+    {
+        get
+        {
+            if (Stand is not { } a || _projekt is null || _projekt.NurLesen || SetzenArt is not null || Auswahl is not { } s
+                || !AussenBearbeitung.Gueltig(a, s) || AussenBearbeitung.DrehenNicht(s) is not null || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
+            {
+                return null;
+            }
+            var m = AussenBearbeitung.Alle(a).FirstOrDefault(z => z.Stelle == s);
+            return P(m.X, m.Y);
+        }
+    }
+
+    /// <summary>Lage des Drehgriffs im Bild (Start-Test).</summary>
+    public Point? Griff => GriffMitte is { } m ? new Point(Drehgriff.Lage(m.X, m.Y).X, Drehgriff.Lage(m.X, m.Y).Y) : null;
+
+    private void GriffZeichnen(DrawingContext ctx)
+    {
+        if (GriffMitte is not { } m)
+        {
+            return;
+        }
+        var (gx, gy) = Drehgriff.Lage(m.X, m.Y);
+        var stift = new Pen(Farbe("accent"), 2);
+        ctx.DrawLine(new Pen(Farbe("accent"), 1.5, new DashStyle([3, 2], 0)), m, new Point(gx, gy));
+        ctx.DrawEllipse(Brushes.White, stift, new Point(gx, gy), Drehgriff.Halbmesser, Drehgriff.Halbmesser);
+        // Pfeil im Kreis (Viertelbogen)
+        var geo = new StreamGeometry();
+        using (var g = geo.Open())
+        {
+            var r = Drehgriff.Halbmesser * 0.55;
+            g.BeginFigure(new Point(gx - r, gy), false);
+            g.ArcTo(new Point(gx, gy - r), new Size(r, r), 0, false, SweepDirection.Clockwise);
+            g.EndFigure(false);
+        }
+        ctx.DrawGeometry(null, stift, geo);
+        if (_griffZiehen)
+        {
+            var grad = Drehgriff.Grad(m.X, m.Y, _griffPunkt.X, _griffPunkt.Y, Auswahl is { } s ? AussenBearbeitung.DrehSchritt(s.Art) : 90);
+            var w = (-90 + grad) * Math.PI / 180;
+            var lang = Drehgriff.Abstand;
+            ctx.DrawLine(new Pen(Farbe("accent"), 3), m, new Point(m.X + (lang * Math.Cos(w)), m.Y + (lang * Math.Sin(w))));
+            Text(ctx, new Typeface(FontFamily.Default), (grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°", new Point(gx + 16, gy - 8), 12, Farbe("text"), null);
+        }
     }
 
     public void Kopieren()
@@ -801,10 +880,10 @@ public sealed class KartenFlaeche : Control
                 Loeschen();
                 return true;
             case Key.R when !strg && DrehbarBeimSetzen(SetzenArt):
-                SetzenDrehen();
+                SetzenDrehen(mod.HasFlag(KeyModifiers.Shift));
                 return true;
             case Key.R when !strg && Auswahl is not null:
-                Drehen();
+                Drehen(mod.HasFlag(KeyModifiers.Shift));
                 return true;
             case Key.D when strg && Auswahl is not null:
                 Kopieren();
@@ -845,6 +924,19 @@ public sealed class KartenFlaeche : Control
         e.Handled = true;
         e.Pointer.Capture(this);
         var erster = !_geste.Aktiv;
+        if (erster && !_griffZiehen && GriffMitte is { } gm && Drehgriff.Getroffen(gm.X, gm.Y, p.X, p.Y) && !NurSchiebenDruck(e, this))
+        {
+            // Welle E: Drehgriff (ein Finger dreht in Rasten); weitere Finger zaehlen erst nach dem Loslassen
+            _griffZiehen = true;
+            _griffPunkt = p;
+            _griffZeiger = e.Pointer.Id;
+            InvalidateVisual();
+            return;
+        }
+        if (_griffZiehen)
+        {
+            return;
+        }
         if (erster && NurSchiebenDruck(e, this))
         {
             // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): rechte oder mittlere Maustaste oder Leertaste schiebt
@@ -876,13 +968,55 @@ public sealed class KartenFlaeche : Control
     {
         base.OnPointerMoved(e);
         var p = e.GetPosition(this);
+        if (_griffZiehen)
+        {
+            if (e.Pointer.Id == _griffZeiger)
+            {
+                _griffPunkt = p;
+                InvalidateVisual();
+            }
+            return;
+        }
         TippZeigen(p);
         Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
+    }
+
+    private int _griffZeiger;
+
+    /// <summary>Drehgriff loslassen: um die gerasteten Grad drehen (ein Schritt).</summary>
+    private void GriffLoslassen(Point p)
+    {
+        _griffZiehen = false;
+        if (GriffMitte is { } m && Auswahl is { } s)
+        {
+            DrehenUm(Drehgriff.Grad(m.X, m.Y, p.X, p.Y, AussenBearbeitung.DrehSchritt(s.Art)));
+        }
+        InvalidateVisual();
+    }
+
+    /// <summary>Start-Test: Drehgriff mit dem Finger von seiner Lage bis (x, y) ziehen (wie Druecken, Bewegen, Loslassen).</summary>
+    internal void GriffZiehenFuerTests(double x, double y)
+    {
+        if (Griff is { } g)
+        {
+            _griffZiehen = true;
+            _griffPunkt = g;
+            GriffLoslassen(new Point(x, y));
+        }
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (_griffZiehen)
+        {
+            if (e.Pointer.Id == _griffZeiger)
+            {
+                GriffLoslassen(e.GetPosition(this));
+                e.Pointer.Capture(null);
+            }
+            return;
+        }
         // zuerst auswerten, dann die Erfassung freigeben: Capture(null) loest sofort PointerCaptureLost aus, und
         // "Verloren" haette den Finger schon vergessen (Tippen setzte nichts, Ziehen schob nichts)
         Anwenden(_geste.Loslassen(e.Pointer.Id));
@@ -896,6 +1030,12 @@ public sealed class KartenFlaeche : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (_griffZiehen && e.Pointer.Id == _griffZeiger)
+        {
+            _griffZiehen = false;
+            InvalidateVisual();
+            return;
+        }
         Anwenden(_geste.Verloren(e.Pointer.Id));
     }
 

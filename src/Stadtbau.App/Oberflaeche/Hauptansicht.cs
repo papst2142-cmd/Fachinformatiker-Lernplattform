@@ -96,7 +96,8 @@ public sealed partial class Hauptansicht : UserControl
     private readonly TextBlock _grenzText = Schrift.Text("", "Klein");
     private readonly ProgressBar _grenzBalken = new() { Minimum = 0, Maximum = 100, Height = 10, MinHeight = 10 };
     private readonly TextBlock _katalogHinweis = Schrift.Text(Texte.KatalogHinweis, "Klein", farbe: "Pinsel.muted");
-    private readonly CheckBox _rasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
+    // Welle E: "Raster aus (feiner schieben)" ist jetzt der Schalter "Einrasten" (an = Raster 0,5 und Einrasten, Taste E)
+    private readonly CheckBox _rasterAus = new() { Content = Schrift.Text(Texte.Einrasten, "Klein"), IsChecked = true };
     private Control? _innenAnsicht;
     private KatalogAnsicht? _katalogInnen;
     private KatalogAnsicht? _katalogAussen;
@@ -141,7 +142,10 @@ public sealed partial class Hauptansicht : UserControl
     public Button? SetzenKnopfMarkiert => _setzenKnopf;
 
     public Button SetzenBeendenKnopf => _setzenBeendenLinks;
-    private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.RasterAus, "Klein") };
+    private readonly CheckBox _aussenRasterAus = new() { Content = Schrift.Text(Texte.Einrasten, "Klein"), IsChecked = true };
+
+    /// <summary>Welle E: der Schalter „Einrasten“ draussen (fuer den Start-Test).</summary>
+    internal CheckBox EinrastenSchalter => _aussenRasterAus;
 
     /// <summary>S 0.8.0 (Weisung P12-47, Frage 6 = a): Schalter „Eis im Winter“ (<c>stadtdaten.wasser.eis</c>).</summary>
     private readonly CheckBox _eisImWinter = new() { Content = Schrift.Text(Texte.EisImWinter, "Klein") };
@@ -294,7 +298,8 @@ public sealed partial class Hauptansicht : UserControl
         _setzenBeendenLinks.HorizontalAlignment = HorizontalAlignment.Stretch;
         _setzenBeendenLinks.Mit(Texte.SetzenBeendenTipp);
         _setzenBeendenLinks.Click += (_, _) => SetzenBeenden();
-        _aussenRasterAus.IsCheckedChanged += (_, _) => Karte.Raster = _aussenRasterAus.IsChecked != true;
+        _aussenRasterAus.Vorlese(Texte.Einrasten).Mit(Texte.EinrastenTipp);
+        _aussenRasterAus.IsCheckedChanged += (_, _) => Karte.Raster = _aussenRasterAus.IsChecked == true;
         _eisImWinter.Vorlese(Texte.EisImWinter).Mit(Texte.EisTipp);
         _eisImWinter.IsCheckedChanged += (_, _) =>
         {
@@ -310,7 +315,8 @@ public sealed partial class Hauptansicht : UserControl
             }
         };
         Drei.BildGezeichnet += DreiBildGezeichnet;
-        _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked != true;
+        _rasterAus.Vorlese(Texte.Einrasten).Mit(Texte.EinrastenInnenTipp);
+        _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked == true;
         _ortWahl.SelectionChanged += (_, _) =>
         {
             if (!_ortWahlFuellt && _ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
@@ -1117,7 +1123,7 @@ public sealed partial class Hauptansicht : UserControl
         var x = Feld(lx);
         var y = Feld(ly);
         var zeilen = new List<(string, Control)> { (Texte.X, x), (Texte.Y, y) };
-        TextBox? gehweg = null, laenge = null, vor = null, seitlich = null, kw = null, kt = null;
+        TextBox? gehweg = null, laenge = null, vor = null, seitlich = null, kw = null, kt = null, winkel = null;
         CheckBox? doppelt = null;
         if (s.Art == AussenArt.Katalog)
         {
@@ -1147,6 +1153,13 @@ public sealed partial class Hauptansicht : UserControl
                 laenge = Feld(AussenBearbeitung.Laenge(a, s));
                 zeilen.Add((Texte.Laenge, laenge));
             }
+        }
+        if (AussenBearbeitung.Winkel(a, s) is { } grad)
+        {
+            // Welle E (Weisung P12-67 Frage 2 = a): Winkel auf 1 Grad genau
+            winkel = Feld(grad);
+            winkel.Mit(Texte.WinkelTipp);
+            zeilen.Add((Texte.Winkel, winkel));
         }
         if (s.Art == AussenArt.Paketplatz)
         {
@@ -1185,7 +1198,7 @@ public sealed partial class Hauptansicht : UserControl
                 return;
             }
             if (!Zahl(x, out var nx) || !Zahl(y, out var ny) || (gehweg is not null && !Zahl(gehweg, out _)) || (laenge is not null && !Zahl(laenge, out _))
-                || (kw is not null && !Zahl(kw, out _)) || (kt is not null && !Zahl(kt, out _)))
+                || (kw is not null && !Zahl(kw, out _)) || (kt is not null && !Zahl(kt, out _)) || (winkel is not null && !Zahl(winkel, out _)))
             {
                 Melden("Bitte nur Zahlen eintragen (z. B. 2,5).");
                 return;
@@ -1222,6 +1235,10 @@ public sealed partial class Hauptansicht : UserControl
                     }
                 }
                 AussenBearbeitung.Platzieren(aa, s, nx, ny);
+                if (winkel is not null && Zahl(winkel, out var nwk))
+                {
+                    AussenBearbeitung.WinkelSetzen(aa, s, (int)Math.Round(nwk, MidpointRounding.AwayFromZero));
+                }
             });
             Karte.Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
             Melden("Werte übernommen");
@@ -1283,6 +1300,10 @@ public sealed partial class Hauptansicht : UserControl
             _aussenAuswahl.Children.Add(new WrapPanel { Children = { dazu, eckWeg } });
         }
         // warum etwas nicht geht, steht klein darunter
+        if (AussenBearbeitung.DrehenNicht(s) is null && !_projekt.NurLesen)
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.DrehgriffHinweis, "Klein", farbe: "Pinsel.muted"));
+        }
         foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
         {
             _aussenAuswahl.Children.Add(Schrift.Text(grund, "Klein", farbe: "Pinsel.muted"));
@@ -2821,6 +2842,15 @@ public sealed partial class Hauptansicht : UserControl
             {
                 // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste halten und mit der Maus ziehen schiebt die Ansicht
                 KartenFlaeche.LeertasteGehalten = true;
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.E && e.KeyModifiers == KeyModifiers.None)
+            {
+                // Welle E: Einrasten an/aus (draussen und innen je ein Schalter)
+                var schalter = _innen ? _rasterAus : _aussenRasterAus;
+                schalter.IsChecked = schalter.IsChecked != true;
+                Melden(Texte.Einrasten + (schalter.IsChecked == true ? ": an" : ": aus"));
                 e.Handled = true;
                 return;
             }
