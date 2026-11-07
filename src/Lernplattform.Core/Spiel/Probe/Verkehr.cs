@@ -49,10 +49,19 @@ public sealed class Verkehr
         /// <summary>Phase 8 W11: Nummer der Strecke in <see cref="Strecken"/>.</summary>
         public int Nummer { get; init; }
 
+        /// <summary>Welle K3b: Lage ueber die Summe der Stuecklaengen suchen (lange automatische Strecken); die festen Strecken rechnen wie bisher.</summary>
+        public bool Schnell { get; init; }
+
+        private float[]? _summen;
+
         /// <summary>Ort und Fahrtrichtung bei Weg <paramref name="weg"/> (Rundlauf).</summary>
         public (Vector2 Ort, Vector2 Richtung) Lage(float weg)
         {
             weg = ((weg % Laenge) + Laenge) % Laenge;
+            if (Schnell)
+            {
+                return LageSchnell(weg);
+            }
             for (var i = 1; i < Strecke.Count; i++)
             {
                 var d = Vector2.Distance(Strecke[i - 1], Strecke[i]);
@@ -67,6 +76,24 @@ public sealed class Verkehr
         }
 
         public (Vector2 Ort, Vector2 Richtung) Lage() => Lage(Weg);
+
+        private (Vector2 Ort, Vector2 Richtung) LageSchnell(float weg)
+        {
+            var summen = _summen;
+            if (summen is null)
+            {
+                summen = new float[Strecke.Count];
+                for (var k = 1; k < Strecke.Count; k++)
+                {
+                    summen[k] = summen[k - 1] + Vector2.Distance(Strecke[k - 1], Strecke[k]);
+                }
+                _summen = summen;
+            }
+            var i = Array.BinarySearch(summen, weg);
+            i = Math.Clamp(i < 0 ? ~i : i, 1, Strecke.Count - 1);
+            var r = Vector2.Normalize(Strecke[i] - Strecke[i - 1]);
+            return (Strecke[i - 1] + (r * MathF.Min(weg - summen[i - 1], summen[i] - summen[i - 1])), r);
+        }
     }
 
     public List<Auto> Autos { get; } = [];
@@ -76,6 +103,25 @@ public sealed class Verkehr
 
     /// <summary>Mitten der Kreuzungsfelder (Stellen, an denen sich Strassen treffen).</summary>
     public List<Vector2> Kreuzungen { get; } = [];
+
+    /// <summary>Welle K3b: die Strecken sind geschlossene Rundwege (<see cref="Autostrecken"/>), kein Sprung an den Anfang.</summary>
+    public bool Rundweg { get; init; }
+
+    /// <summary>Welle K3b: Ringe der Kreisverkehre (Mitte, Radius der Mittellinie); wer im Ring faehrt, hat Vorfahrt.</summary>
+    public List<(Vector2 Mitte, float Radius)> Ringe { get; } = [];
+
+    /// <summary>Welle K3b: die Strassen, fuer die dieser Verkehr gebaut ist (null = unbekannt, z. B. im Uebergang der Festzeiten ohne Angabe).</summary>
+    public IReadOnlyList<IReadOnlyList<Vector2>>? FuerStrassen { get; init; }
+
+    /// <summary>
+    /// Welle K3b: passt der Verkehr zu den Strassen der Szene? Nur dann behalten die Autos beim Neubau der Szene ihre
+    /// Lage (im Spiel aendern sich die Strassen einer Stadt nie; im Werkzeug nach jeder Aenderung).
+    /// </summary>
+    public bool Passt(StadtSzene szene) => FuerStrassen is not { } eigene
+        || (eigene.Count == szene.Strassen.Count && eigene.Zip(szene.Strassen).All(p => p.First.SequenceEqual(p.Second)));
+
+    /// <summary>Welle K3b: so weit vor einem Feld am Ring hat ein Auto im Ring Vorfahrt vor einem, das einfahren will.</summary>
+    public const float VorfahrtWeite = 1.2f;
 
     /// <summary>Bis zu dieser Zeit (Sekunden der Bildschleife) fahren die Autos (Nico 3a).</summary>
     public double FahrenBis { get; private set; } = Nachlauf;
@@ -114,7 +160,13 @@ public sealed class Verkehr
     /// </summary>
     public static Verkehr Fuer(StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float abstand, float bogen = 0.6f)
     {
-        var v = new Verkehr { AbstandVorne = abstand };
+        // Welle K3b (Weisung P12-61): Stadt mit Kurve oder Kreisverkehr oder ohne passende feste Strecke = automatische
+        // Strecken aus dem Strassennetz; Fassung 0 (Stadt 1) faehrt wie bisher
+        if (Autostrecken.Automatisch(szene))
+        {
+            return Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen), tempo, abstand, szene.Strassen);
+        }
+        var v = new Verkehr { AbstandVorne = abstand, FuerStrassen = szene.Strassen };
         v.Kreuzungen.AddRange(KreuzungenAus(szene.Strassen));
         for (var nr = 0; nr < Strecken.Length; nr++)
         {
@@ -261,9 +313,13 @@ public sealed class Verkehr
             // (Sammelliste 182): ein Fahrzeug, das selbst am Ende seiner Strecke steht und dort hinausfaehrt (Gegenrichtung
             // zum Anfang), zaehlt nicht; sonst warten zwei am Kartenrand fuer immer aufeinander (Ende der einen Strecke
             // = Anfang der anderen).
-            var anfang = AmEnde(a, sekunden) && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front)
+            var anfang = !Rundweg && AmEnde(a, sekunden) && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front)
                 && !(AmEnde(b, sekunden) && Vector2.Dot(b.Lage().Richtung, a.Lage(0).Richtung) < 0.5f));
-            a.Haelt = figur || vorne || kreuzung || anfang;
+            // Welle K3b: vor einem Feld am Ring wartet, wer noch nicht im Ring ist, solange ein Auto im Ring darauf zufaehrt
+            var vorfahrt = Ringe.Count > 0 && !kreuzung && feldVoraus >= 0 && feldVoraus != feldJetzt && AmRing(Kreuzungen[feldVoraus]) && !ImRing(ort)
+                && Autos.Any(b => b != a && b.Lage() is var (bo, br) && ImRing(bo) && Vector2.Distance(bo, Kreuzungen[feldVoraus]) < FeldRadius + VorfahrtWeite
+                    && Vector2.Dot(br, Kreuzungen[feldVoraus] - bo) > 0);
+            a.Haelt = figur || vorne || kreuzung || anfang || vorfahrt;
             if (a.Haelt)
             {
                 continue;
@@ -281,6 +337,12 @@ public sealed class Verkehr
             }
         }
     }
+
+    /// <summary>Welle K3b: liegt der Punkt auf der Fahrbahn eines Rings?</summary>
+    private bool ImRing(Vector2 p) => Ringe.Any(r => MathF.Abs(Vector2.Distance(p, r.Mitte) - r.Radius) < StadtSzene.StrassenBreite / 2);
+
+    /// <summary>Welle K3b: liegt das Feld auf einem Ring?</summary>
+    private bool AmRing(Vector2 feld) => Ringe.Any(r => MathF.Abs(Vector2.Distance(feld, r.Mitte) - r.Radius) < 0.1f);
 
     /// <summary>Faehrt das Auto im naechsten Schritt (<paramref name="sekunden"/>) ueber das Ende seiner Strecke?</summary>
     private static bool AmEnde(Auto a, double sekunden) => a.Weg + (float)(sekunden * a.Tempo) + Front >= a.Laenge;

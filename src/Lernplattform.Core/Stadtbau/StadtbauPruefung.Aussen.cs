@@ -137,6 +137,7 @@ public static partial class StadtbauPruefung
         WasserRegeln(stadt, stand, szene, fassung, funde);
         KurvenRegeln(szene, fassung, funde);
         KreisverkehrRegeln(szene, fassung, funde);
+        StreckenRegeln(szene, funde);
         return funde;
     }
 
