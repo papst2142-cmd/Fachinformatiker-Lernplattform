@@ -715,6 +715,10 @@ public sealed partial class StadtSzene
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
+        // Welle Z (Weisung P12-71): eigene Fusswege aus stadtdaten.fusswege wie die Wege zu den Tueren (frei zum Gehen,
+        // Baeume und Kleingruen halten Abstand); Fassung 0 hat keine
+        var fusswege = Fusswege.Alle(stadt.Daten);
+        zugangswege.AddRange(fusswege.Select(f => f.Glatt));
         // Nachtrag 1 zu P7-13 (Chat, Foto 02): gezeichnet (mit Bahnuebergang) wird nur der Fussweg eines
         // sichtbaren Orts; Weg zu Talheim-Nord und zur Werkstatt erscheinen mit dem Ort (Tag 12 bzw. 22),
         // vorher lag er als Ring ohne Ziel auf der Wiese. Laufraster und Baumsperren nutzen alle Wege.
@@ -865,6 +869,11 @@ public sealed partial class StadtSzene
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
         {
             Linie(teile, Punkte(Objekt(zugang)["weg"]), Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+        }
+        // Welle Z: eigene Fusswege als ein Band mit Gehrung (gleiche Hoehe und Farbe wie die Wege zu den Tueren)
+        foreach (var f in fusswege)
+        {
+            streifen.Add(new Streifen(f.Glatt, Fusswege.Breite, Hoehe.Weg, Hoehe.Weg, Mischen(Farben.Strasse, Weiss, 0.45f)));
         }
         // Nachtrag 1 zu P7-13 (Wunsch 1): Baeume weichen Strassen, Fusswegen, Gleisen und dem Fluss aus
         var baeume = new BaumPlaner([

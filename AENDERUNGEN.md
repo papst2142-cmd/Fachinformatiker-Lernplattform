@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.48.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Fußwege und neue Straßenbögen aus dem Stadtbau-Werkzeug vor.
+
+- Eine neue Stadt kann eigene Fußwege haben: helle Wege nur zum Gehen, mit runden Ecken. Deine Figur geht auf ihnen, Autos fahren dort nicht, und eine Mittellinie gibt es nicht.
+- Bäume und kleine Pflanzen halten Abstand zu diesen Wegen.
+- Straßenbögen dürfen jetzt auch flacher sein als bisher (von 15 bis 90 Grad in kleinen Schritten); sie schließen genauso ohne Lücke an.
+- Die Prüfung für neue Städte meldet rot, wenn ein Fußweg durch ein Haus, durch Wasser oder über das Gleis führt, wenn ein Baum, eine Laterne oder ein anderes Stück darauf steht oder wenn eine Ecke zu eng ist.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.47.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf gedrehte Häuser aus dem Stadtbau-Werkzeug vor.
 

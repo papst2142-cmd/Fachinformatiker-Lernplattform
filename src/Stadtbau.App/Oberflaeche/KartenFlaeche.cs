@@ -70,6 +70,7 @@ public sealed class KartenFlaeche : Control
                 return;
             }
             _setzenArt = value;
+            ZiehZuruecksetzen();
             SetzenGeaendert?.Invoke();
         }
     }
@@ -87,6 +88,7 @@ public sealed class KartenFlaeche : Control
     /// </summary>
     public void SetzenBeenden()
     {
+        ZiehZuruecksetzen();
         SetzenBlueprint = null;
         SetzenModell = null;
         SetzenArt = null;
@@ -236,6 +238,9 @@ public sealed class KartenFlaeche : Control
 
     private Point WeltPunkt(Point bild) => new((bild.X - _versatz.X) / _zoom, (bild.Y - _versatz.Y) / _zoom);
 
+    /// <summary>Start-Test: Bildpunkt eines Punkts der Karte (Umkehrung von <see cref="WeltPunkt"/>).</summary>
+    internal Point BildPunktFuerTests(double x, double y) => new((x * _zoom) + _versatz.X, (y * _zoom) + _versatz.Y);
+
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
     public Point Bildpunkt(double x, double y) => P(x, y);
 
@@ -319,6 +324,13 @@ public sealed class KartenFlaeche : Control
                 }
                 Linie(ctx, l["punkte"], new Pen(Pinsel("#6B6B6B"), StadtSzene.StrassenBreite * _zoom, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), Dx(s), Dy(s));
             }
+        }
+        // Welle Z: Fusswege (hell wie die Wege zu den Tueren, runde Ecken wie im Spiel)
+        for (var i = 0; i < Aussen.Fusswege(a).Count; i++)
+        {
+            var fs = new AussenStelle(AussenArt.Fussweg, i);
+            var glatt = AussenBearbeitung.FusswegGlatt(a, fs).Select(q => q + new System.Numerics.Vector2((float)Dx(fs), (float)Dy(fs))).ToList();
+            Linie(ctx, glatt, new Pen(Pinsel("#EFEBE2"), Fusswege.Breite * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
         }
         // Welle K3: Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum) wie im Spiel
         for (var i = 0; i < land.Count; i++)
@@ -441,6 +453,9 @@ public sealed class KartenFlaeche : Control
                 case AussenArt.Strasse:
                     Linie(ctx, Objekt(land[aw.Nummer])["punkte"], new Pen(Farbe("accent"), 3), dx, dy);
                     break;
+                case AussenArt.Fussweg:
+                    Linie(ctx, AussenBearbeitung.FusswegGlatt(a, aw).Select(q => q + new System.Numerics.Vector2((float)dx, (float)dy)).ToList(), stift);
+                    break;
                 case AussenArt.Haus or AussenArt.Gebaeude:
                     var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, aw);
                     ctx.DrawRectangle(null, stift, new Rect(P(hx + dx, hy + dy), P(hx + hw + dx, hy + hh + dy)).Inflate(3));
@@ -496,6 +511,7 @@ public sealed class KartenFlaeche : Control
                 ctx.DrawEllipse(null, stift, P(fx, fy), Math.Max(10, 0.45 * _zoom), Math.Max(10, 0.45 * _zoom));
             }
         }
+        ZiehVorschauZeichnen(ctx);
         GriffZeichnen(ctx);
     }
 
@@ -601,6 +617,150 @@ public sealed class KartenFlaeche : Control
             ft.Trimming = TextTrimming.CharacterEllipsis;
         }
         ctx.DrawText(ft, ort);
+    }
+
+    // ---- Ziehen von Punkt zu Punkt (Welle Z) ------------------------------------------------------
+
+    /// <summary>Was gerade von Punkt zu Punkt gezogen wird (null = kein Ziehen gewaehlt).</summary>
+    public ZiehArt? ZiehArtAktiv => SetzenArt == AussenArt.Ziehen ? AussenBearbeitung.ZiehArtVon(SetzenModell) : null;
+
+    /// <summary>Anfang (wie angetippt, Weltpunkt) nach dem ersten Tipp, sonst null.</summary>
+    public Point? ZiehAnfang { get; private set; }
+
+    /// <summary>Wo das Ende gerade laege (Zeiger, Finger), fuer die Vorschau.</summary>
+    public Point? ZiehZiel { get; private set; }
+
+    /// <summary>Grund der letzten Vorschau ohne Verbindung (null = sie passt).</summary>
+    public string? ZiehGrund { get; private set; }
+
+    /// <summary>Anfang oder Vorschau geaendert (Hinweis links, 3D-Schatten).</summary>
+    public event Action? ZiehenGeaendert;
+
+    private bool _anfangInDieserGeste;
+    private bool _rechtsDruck;
+
+    private void ZiehZuruecksetzen()
+    {
+        if (ZiehAnfang is null && ZiehZiel is null)
+        {
+            return;
+        }
+        ZiehAnfang = null;
+        ZiehZiel = null;
+        ZiehGrund = null;
+        ZiehenGeaendert?.Invoke();
+        InvalidateVisual();
+    }
+
+    /// <summary>Ein eben erst in dieser Geste begonnener Anfang faellt weg (zweiter Finger in der 3D-Ansicht), ohne Meldung.</summary>
+    public void ZiehAnfangVerwerfen() => ZiehZuruecksetzen();
+
+    /// <summary>Den Anfang setzen (erster Tipp, auch aus der 3D-Ansicht).</summary>
+    public void ZiehAnfangSetzen(double x, double y)
+    {
+        if (ZiehArtAktiv is null || _projekt is null || _projekt.NurLesen)
+        {
+            return;
+        }
+        ZiehAnfang = new Point(x, y);
+        ZiehZiel = null;
+        ZiehGrund = null;
+        ZiehenGeaendert?.Invoke();
+        InvalidateVisual();
+    }
+
+    /// <summary>Vorschau bis (x, y) (Zeiger schwebt, Finger zieht).</summary>
+    public void ZiehZielSetzen(double x, double y)
+    {
+        ZiehZiel = new Point(x, y);
+        if (ZiehAnfang is { } a && ZiehArtAktiv is { } art && Stand is { } stand)
+        {
+            ZiehGrund = AussenBearbeitung.ZiehPlan(stand, art, a.X, a.Y, x, y, Raster).Plan.Grund;
+        }
+        ZiehenGeaendert?.Invoke();
+        InvalidateVisual();
+    }
+
+    /// <summary>Abbrechen (Escape, Rechtsklick): true = es gab einen Anfang, er ist verworfen; das Ziehen bleibt gewaehlt.</summary>
+    public bool ZiehAbbrechen()
+    {
+        if (ZiehAnfang is null)
+        {
+            return false;
+        }
+        ZiehZuruecksetzen();
+        Gemeldet?.Invoke(Texte.ZiehenAbgebrochen);
+        return true;
+    }
+
+    /// <summary>
+    /// Vom Anfang bis (x, y) ziehen: ein Schritt im Verlauf (einrasten, verbinden, setzen). Passt keine Verbindung, bleibt
+    /// alles, wie es ist, und die Meldung nennt den Grund (der Anfang bleibt fuer einen neuen Versuch). Das Ziehen bleibt
+    /// gewaehlt, der naechste Tipp ist wieder ein Anfang (mehrere Strecken hintereinander).
+    /// </summary>
+    public AussenStelle? ZiehenBis(double x, double y)
+    {
+        if (_projekt is null || _projekt.NurLesen || ZiehArtAktiv is not { } art || ZiehAnfang is not { } a)
+        {
+            return null;
+        }
+        var raster = Raster;
+        var (_, _, plan) = AussenBearbeitung.ZiehPlan(_projekt.AussenStand, art, a.X, a.Y, x, y, raster);
+        if (!plan.Gefunden)
+        {
+            ZiehGrund = plan.Grund;
+            Gemeldet?.Invoke(plan.Grund!);
+            InvalidateVisual();
+            return null;
+        }
+        var stuecke = art == ZiehArt.Strasse ? Verbindung.Stuecke(plan).Count : 1;
+        var neu = _projekt.AussenAendern(AussenBearbeitung.ZiehName(art) + " " + Texte.Gezogen, st => AussenBearbeitung.Ziehen(st, art, a.X, a.Y, x, y, raster, out _));
+        ZiehAnfang = null;
+        ZiehZiel = null;
+        ZiehGrund = null;
+        ZiehenGeaendert?.Invoke();
+        Gemeldet?.Invoke(Texte.ZiehenGesetzt(AussenBearbeitung.ZiehName(art), stuecke));
+        Waehlen(neu);
+        return neu;
+    }
+
+    private void ZiehVorschauZeichnen(DrawingContext ctx)
+    {
+        if (ZiehArtAktiv is not { } art || Stand is not { } a)
+        {
+            return;
+        }
+        var akzent = Farbe("accent");
+        if (ZiehAnfang is { } anfang && ZiehZiel is { } ziel)
+        {
+            var (pa, pb, plan) = AussenBearbeitung.ZiehPlan(a, art, anfang.X, anfang.Y, ziel.X, ziel.Y, Raster);
+            var linie = AussenBearbeitung.ZiehLinie(art, plan);
+            var farbe = plan.Gefunden ? "#34D399" : "#F87171";
+            Linie(ctx, linie, new Pen(Pinsel(farbe, 0.6), 2 * AussenBearbeitung.ZiehHalb(art) * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
+            Linie(ctx, linie, new Pen(Pinsel("#111827"), 1.5, new DashStyle([4, 3], 0)));
+            Fangpunkt(ctx, pa, akzent);
+            Fangpunkt(ctx, pb, akzent);
+        }
+        else if (ZiehAnfang is { } nurAnfang)
+        {
+            Fangpunkt(ctx, AussenBearbeitung.Fangen(a, art, nurAnfang.X, nurAnfang.Y, Raster), akzent);
+        }
+        else if (ZiehZiel is { } schwebt)
+        {
+            // noch kein Anfang: zeigen, wo er einrasten wuerde
+            Fangpunkt(ctx, AussenBearbeitung.Fangen(a, art, schwebt.X, schwebt.Y, Raster), akzent);
+        }
+    }
+
+    /// <summary>Ein eingerasteter Punkt: Kreis, mit Richtung ein kurzer Strich in die neue Verbindung.</summary>
+    private void Fangpunkt(DrawingContext ctx, Ziehpunkt p, IBrush akzent)
+    {
+        var m = P(p.Lage.X, p.Lage.Y);
+        ctx.DrawEllipse(Brushes.White, new Pen(akzent, 2), m, GriffRadius, GriffRadius);
+        if (p.Weg is { } w)
+        {
+            ctx.DrawLine(new Pen(akzent, 3), m, new Point(m.X + (w.X * 22), m.Y + (w.Y * 22)));
+        }
     }
 
     // ---- Bedienen --------------------------------------------------------------------------------
@@ -872,6 +1032,8 @@ public sealed class KartenFlaeche : Control
         var schritt = Raster ? Bearbeitung.Raster : Bearbeitung.RasterFein;
         switch (taste)
         {
+            case Key.Escape when ZiehAbbrechen():
+                return true;
             case Key.Escape:
                 SetzenBeenden();
                 Waehlen(null);
@@ -937,6 +1099,11 @@ public sealed class KartenFlaeche : Control
         {
             return;
         }
+        if (erster)
+        {
+            _anfangInDieserGeste = false;
+            _rechtsDruck = e.Pointer.Type == PointerType.Mouse && e.GetCurrentPoint(this).Properties.IsRightButtonPressed;
+        }
         if (erster && NurSchiebenDruck(e, this))
         {
             // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): rechte oder mittlere Maustaste oder Leertaste schiebt
@@ -946,7 +1113,9 @@ public sealed class KartenFlaeche : Control
             return;
         }
         var s = SetzenArt is null ? AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom)) : null;
-        Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, s is not null && _projekt?.NurLesen == false));
+        // Welle Z: beim Ziehen zieht ein Finger vom Anfang zum Ende (wie ein Stueck), zwei Finger bleiben bei der Ansicht
+        var zieht = ZiehArtAktiv is not null && _projekt?.NurLesen == false;
+        Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, zieht || (s is not null && _projekt?.NurLesen == false)));
         // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie)
         if (!erster || SetzenArt is not null)
         {
@@ -978,6 +1147,12 @@ public sealed class KartenFlaeche : Control
             return;
         }
         TippZeigen(p);
+        if (!_geste.Aktiv && ZiehArtAktiv is not null && e.Pointer.Type == PointerType.Mouse)
+        {
+            // Maus schwebt: die Vorschau folgt
+            var w = WeltPunkt(p);
+            ZiehZielSetzen(w.X, w.Y);
+        }
         Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
     }
 
@@ -1043,6 +1218,10 @@ public sealed class KartenFlaeche : Control
     /// Flaeche schiebt die Ansicht, zwei Finger zoomen und schieben.</summary>
     private void Anwenden(Fingergeste.Schritt s)
     {
+        if (ZiehArtAktiv is not null && ZiehenAnwenden(s))
+        {
+            return;
+        }
         switch (s.Art)
         {
             case Fingergeste.Art.Tippen when SetzenArt is not null && !_nurSchieben:
@@ -1074,6 +1253,58 @@ public sealed class KartenFlaeche : Control
                 _versatz += new Vector(s.Dx, s.Dy);
                 ZoomUm(new Point(s.X, s.Y), s.Faktor);
                 break;
+        }
+    }
+
+    /// <summary>Welle Z: Tippen, Ziehen und Loslassen beim Ziehen von Punkt zu Punkt (true = verarbeitet).</summary>
+    private bool ZiehenAnwenden(Fingergeste.Schritt s)
+    {
+        var w = WeltPunkt(new Point(s.X, s.Y));
+        switch (s.Art)
+        {
+            case Fingergeste.Art.Tippen when _nurSchieben:
+                // Rechtsklick ohne Bewegung bricht ab (mit Bewegung schiebt er nur die Ansicht)
+                if (_rechtsDruck && !ZiehAbbrechen())
+                {
+                    SetzenBeenden();
+                }
+                return true;
+            case Fingergeste.Art.Tippen:
+                if (ZiehAnfang is null)
+                {
+                    ZiehAnfangSetzen(w.X, w.Y);
+                }
+                else
+                {
+                    ZiehenBis(w.X, w.Y);
+                }
+                return true;
+            case Fingergeste.Art.StueckZiehen:
+                if (ZiehAnfang is null)
+                {
+                    var start = WeltPunkt(new Point(s.X - s.Dx, s.Y - s.Dy));
+                    ZiehAnfangSetzen(start.X, start.Y);
+                    _anfangInDieserGeste = true;
+                }
+                ZiehZielSetzen(w.X, w.Y);
+                return true;
+            case Fingergeste.Art.StueckFertig:
+                ZiehenBis(w.X, w.Y);
+                return true;
+            case Fingergeste.Art.StueckAbbrechen:
+                // ein zweiter Finger: die Ansicht bewegt sich, ein eben erst begonnener Anfang faellt weg
+                if (_anfangInDieserGeste)
+                {
+                    ZiehZuruecksetzen();
+                }
+                else
+                {
+                    ZiehZiel = null;
+                    InvalidateVisual();
+                }
+                return true;
+            default:
+                return false;
         }
     }
 

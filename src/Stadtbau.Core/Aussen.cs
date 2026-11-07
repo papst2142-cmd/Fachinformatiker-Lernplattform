@@ -48,6 +48,16 @@ public enum AussenArt
 
     /// <summary>S 0.8.0: Steg in <c>stadtdaten.wasser.stege</c>.</summary>
     Steg,
+
+    /// <summary>
+    /// Welle Z (S 0.14.0, Weisung P12-71): nur zum Ziehen von Punkt zu Punkt (Kennung <see cref="AussenBearbeitung.ZiehKennung"/>
+    /// als Modell: Strasse, Fussweg, Fluss); das Gezogene ist danach eine <see cref="Strasse"/>, ein <see cref="Fussweg"/> oder
+    /// ein <see cref="Fluss"/>.
+    /// </summary>
+    Ziehen,
+
+    /// <summary>Welle Z: Fussweg in <c>stadtdaten.fusswege</c> (Linienzug mit runden Ecken, nur zum Gehen).</summary>
+    Fussweg,
 }
 
 /// <summary>
@@ -133,6 +143,21 @@ public static class Aussen
     }
 
     public static List<object?> Beete(PyObjekt aussen) => Liste(aussen["beete"]);
+
+    /// <summary>Welle Z (Weisung P12-71): Fusswege in <c>stadtdaten.fusswege</c> (leer, wenn es keine gibt).</summary>
+    public static List<object?> Fusswege(PyObjekt aussen) =>
+        Get(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Fusswege.Abschnitt) as List<object?> ?? [];
+
+    /// <summary>Welle Z: Liste der Fusswege, bei Bedarf angelegt (erst beim ersten Ziehen).</summary>
+    public static List<object?> FusswegeAnlegen(PyObjekt aussen)
+    {
+        if (Get(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Fusswege.Abschnitt) is not List<object?> l)
+        {
+            l = [];
+            Py.Setzen(Stadtdaten(aussen), Lernplattform.Core.Spiel.Probe.Fusswege.Abschnitt, l);
+        }
+        return l;
+    }
 
     /// <summary>S 0.8.0 (Weisung P12-47): Teiche in <c>stadtdaten.wasser.teiche</c> (leer, wenn es kein Wasser gibt).</summary>
     public static List<object?> Teiche(PyObjekt aussen) =>

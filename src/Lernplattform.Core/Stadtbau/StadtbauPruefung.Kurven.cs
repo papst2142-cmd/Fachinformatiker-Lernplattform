@@ -10,7 +10,8 @@ namespace Lernplattform.Core.Stadtbau;
 /// Welle K1 (A 0.44.0 / S 0.10.0, Weisung P12-55, Plan P12-36 Abschnitt 5): die Regeln 1 bis 9 fuer Kurven, gerechnet auf
 /// den Daten der Fassung und der Szene wie im Spiel:
 /// <list type="number">
-/// <item>Radius nicht in der Liste (Kurve <see cref="Strassenkurve.Erlaubt"/>, Fluss <see cref="Strassenkurve.FlussRadien"/>,
+/// <item>Radius nicht in der Liste (Kurve <see cref="Strassenkurve.Erlaubt"/> oder gezogener Bogen
+/// <see cref="Strassenkurve.ZugBogen"/> (Welle Z: 15 bis 90 Grad in 7,5-Grad-Schritten, Radius 1, 2, 3), Fluss <see cref="Strassenkurve.FlussRadien"/>,
 /// Bahn <see cref="Strassenkurve.BahnRadien"/>; Feld <c>radien</c> mit so vielen Zahlen wie Punkten);</item>
 /// <item>Kreuzung oder Einmuendung in einer Kurve (nur an ihren Enden darf eine Strasse anschliessen);</item>
 /// <item>Bahnuebergang in einer Kurve: eine Kurve kreuzt das Gleis, oder eine Strasse kreuzt einen Bogen, dessen Radius im
@@ -54,7 +55,7 @@ public static partial class StadtbauPruefung
                 if (Py.Hat(l, Strassenkurve.Feld) && !Strassenkurve.Gueltig(l[Strassenkurve.Feld]))
                 {
                     var p = Linie(l["punkte"]).FirstOrDefault();
-                    funde.Add(new StadtbauFund($"Die Kurve (Straße Nr. {nr}) hat eine Form oder einen Radius, die es nicht gibt. Erlaubt: Kurve 90° mit Radius 1, 2 oder 3, Kurve 45° und S-Kurve mit Radius 2.",
+                    funde.Add(new StadtbauFund($"Die Kurve (Straße Nr. {nr}) hat eine Form oder einen Radius, die es nicht gibt. Erlaubt: Kurve 90° mit Radius 1, 2 oder 3, Kurve 45° und S-Kurve mit Radius 2, gezogene Bögen von 15 bis 90° in Schritten von 7,5° mit Radius 1, 2 oder 3.",
                         "Kurve löschen und aus der Liste links neu setzen.", true, p.X, p.Y));
                 }
             }

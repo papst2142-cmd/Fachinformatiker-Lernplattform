@@ -170,6 +170,33 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>Start-Test: die Knoepfe Kurve 90°, Kurve 45°, S-Kurve.</summary>
     internal List<Button> KurvenKnoepfe { get; } = [];
 
+    /// <summary>Welle Z: die Knoepfe „Straße ziehen“, „Fußweg ziehen“, „Fluss ziehen“ (Start-Test).</summary>
+    internal List<Button> ZiehKnoepfe { get; } = [];
+
+    /// <summary>
+    /// Welle Z (Weisung P12-71): Baustein mit den drei Knoepfen zum Ziehen von Punkt zu Punkt. Ein eigener kleiner Baustein,
+    /// damit Welle Q ihn ohne Umbau an eine andere Stelle setzen kann.
+    /// </summary>
+    private WrapPanel ZiehenBaustein()
+    {
+        Button ZiehKnopf(string text, string tipp, ZiehArt art)
+        {
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text).Mit(tipp);
+            k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(AussenArt.Ziehen, AussenBearbeitung.ZiehKennung(art)));
+            ZiehKnoepfe.Add(k);
+            return k;
+        }
+        return new WrapPanel
+        {
+            Children =
+            {
+                ZiehKnopf(Texte.StrasseZiehen, Texte.StrasseZiehenTipp, ZiehArt.Strasse),
+                ZiehKnopf(Texte.FusswegZiehen, Texte.FusswegZiehenTipp, ZiehArt.Fussweg),
+                ZiehKnopf(Texte.FlussZiehen, Texte.FlussZiehenTipp, ZiehArt.Fluss),
+            },
+        };
+    }
+
     /// <summary>Welle K3: die Knoepfe „Kreisverkehr klein/groß“ (Start-Test).</summary>
     internal List<Button> KreisKnoepfe { get; } = [];
 
@@ -294,6 +321,7 @@ public sealed partial class Hauptansicht : UserControl
         Karte.AuswahlGeaendert += AussenAuswahlZeigen;
         Karte.Gemeldet += Melden;
         Karte.SetzenGeaendert += SetzenZustandZeigen;
+        Karte.ZiehenGeaendert += () => _aussenHinweis.Text = SetzenHinweis();
         _setzenBeendenLinks.IsVisible = false;
         _setzenBeendenLinks.HorizontalAlignment = HorizontalAlignment.Stretch;
         _setzenBeendenLinks.Mit(Texte.SetzenBeendenTipp);
@@ -776,7 +804,7 @@ public sealed partial class Hauptansicht : UserControl
             Spacing = 8,
             Children =
             {
-                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, kurven, radiusTitel, _kurvenRadius, kreise, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, ZiehenBaustein(), kurven, radiusTitel, _kurvenRadius, kreise, VollerKatalogKnopf(false),
                 Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
@@ -959,6 +987,12 @@ public sealed partial class Hauptansicht : UserControl
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
             AussenArt.Kurve when Strassenkurve.Lesen(modell) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius),
             AussenArt.Kreisverkehr when AussenBearbeitung.KreisverkehrRadius(modell) is { } kr => Texte.KreisverkehrName(kr),
+            AussenArt.Ziehen => AussenBearbeitung.ZiehArtVon(modell) switch
+            {
+                ZiehArt.Fussweg => Texte.FusswegZiehen,
+                ZiehArt.Fluss => Texte.FlussZiehen,
+                _ => Texte.StrasseZiehen,
+            },
             _ => KatalogName(art),
         };
         // zeigt beim Setzen den Knopf "Drehen" (Strasse, Park, Katalog-Stueck)
@@ -1067,7 +1101,17 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Fluss => Texte.Fluss,
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
+        AussenArt.Fussweg => Texte.Fussweg,
+        AussenArt.Ziehen => Texte.StrasseZiehen,
         _ => Texte.HausOhneOrt,
+    };
+
+    /// <summary>Hinweis links: beim Ziehen „Anfang antippen“ bzw. „Ende antippen“ (Welle Z), sonst wie bisher.</summary>
+    private string SetzenHinweis() => Karte.SetzenArt switch
+    {
+        null => Texte.DraufsichtHinweis,
+        AussenArt.Ziehen => (_setzenName ?? KatalogName(AussenArt.Ziehen)) + ": " + (Karte.ZiehAnfang is null ? Texte.ZiehenAnfang : Texte.ZiehenEnde),
+        { } art => (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv,
     };
 
     private void AussenAuswahlZeigen()
@@ -1077,7 +1121,7 @@ public sealed partial class Hauptansicht : UserControl
         _eisImWinter.IsChecked = _projekt is not null && Aussen.Eis(_projekt.AussenStand);
         _eisImWinter.IsEnabled = _projekt is not null && !_projekt.NurLesen;
         _eisSetzen = false;
-        _aussenHinweis.Text = Karte.SetzenArt is { } art ? (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv : Texte.DraufsichtHinweis;
+        _aussenHinweis.Text = SetzenHinweis();
         if (Karte.SetzenArt is null)
         {
             _setzenName = null;

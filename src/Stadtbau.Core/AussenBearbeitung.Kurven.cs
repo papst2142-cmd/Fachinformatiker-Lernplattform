@@ -22,14 +22,14 @@ public static partial class AussenBearbeitung
         s.Art == AussenArt.Strasse && Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is PyObjekt l && Strassenkurve.IstKurve(l);
 
     /// <summary>Die Angabe <c>kurve</c> einer Kurve (Form, Winkel, Radius), sonst null.</summary>
-    public static (string Form, int Winkel, double Radius)? KurveVon(PyObjekt aussen, AussenStelle s)
+    public static (string Form, double Winkel, double Radius)? KurveVon(PyObjekt aussen, AussenStelle s)
     {
         if (!IstKurve(aussen, s) || Objekt(Aussen.Landschaft(aussen)[s.Nummer])[Strassenkurve.Feld] is not PyObjekt k
             || k["form"] is not string form || k["winkel"] is not (long or double) || k["radius"] is not (long or double))
         {
             return null;
         }
-        return (form, (int)Py.F(k["winkel"]), Py.F(k["radius"]));
+        return (form, Py.F(k["winkel"]), Py.F(k["radius"]));
     }
 
     /// <summary>Neue Kurve mit der Mitte bei (x, y) auf dem Raster 0,5 (Kennung siehe <see cref="Strassenkurve.Kennung"/>).</summary>

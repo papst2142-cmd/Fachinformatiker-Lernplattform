@@ -222,6 +222,10 @@ public static partial class AussenBearbeitung
         {
             yield return w;
         }
+        foreach (var f in AlleFusswege(aussen))
+        {
+            yield return f;
+        }
     }
 
     /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
@@ -297,6 +301,11 @@ public static partial class AussenBearbeitung
         if ((WasserBei(aussen, p, AussenArt.Steg) ?? WasserBei(aussen, p, AussenArt.Teich)) is { } wasser)
         {
             return wasser;
+        }
+        // Welle Z: ein Fussweg vor dem Park (er fuehrt oft hindurch)
+        if (FusswegBei(aussen, p, greifen) is { } fussweg)
+        {
+            return fussweg;
         }
         var land = Aussen.Landschaft(aussen);
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Park).Reverse())
@@ -523,6 +532,11 @@ public static partial class AussenBearbeitung
         if (IstWasser(s.Art))
         {
             WasserVerschieben(aussen, s, dx, dy);
+            return;
+        }
+        if (s.Art == AussenArt.Fussweg)
+        {
+            FusswegVerschieben(aussen, s, dx, dy);
             return;
         }
         var land = Aussen.Landschaft(aussen);
@@ -762,6 +776,7 @@ public static partial class AussenBearbeitung
         AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => null,
         AussenArt.Haus or AussenArt.Gebaeude => null,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
+        AussenArt.Fussweg => Texte.FusswegDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
     };
 
@@ -837,6 +852,10 @@ public static partial class AussenBearbeitung
         if (IstWasser(s.Art))
         {
             return WasserKopieren(aussen, s);
+        }
+        if (s.Art == AussenArt.Fussweg)
+        {
+            return FusswegKopieren(aussen, s);
         }
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
@@ -919,6 +938,20 @@ public static partial class AussenBearbeitung
         if (IstWasser(s.Art))
         {
             WasserLoeschen(aussen, s);
+            return true;
+        }
+        if (s.Art == AussenArt.Fussweg)
+        {
+            var fusswege = Aussen.Fusswege(aussen);
+            fusswege.RemoveAt(s.Nummer);
+            if (fusswege.Count == 0)
+            {
+                // der letzte Fussweg weg: der Abschnitt faellt weg (wie vor dem ersten Ziehen)
+                var d = Aussen.Stadtdaten(aussen);
+                var rest = d.Where(e => e.Key != Lernplattform.Core.Spiel.Probe.Fusswege.Abschnitt).ToList();
+                d.Clear();
+                d.AddRange(rest);
+            }
             return true;
         }
         var land = Aussen.Landschaft(aussen);
@@ -1038,6 +1071,7 @@ public static partial class AussenBearbeitung
             AussenArt.Park => Texte.Park + lage,
             AussenArt.Katalog => KatalogBeschreibung(KatalogId(aussen, s)) + lage,
             AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => WasserBeschreibung(aussen, s, lage),
+            AussenArt.Fussweg => FusswegBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

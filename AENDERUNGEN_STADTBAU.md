@@ -3,6 +3,19 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.14.0
+
+Straßen, Fußwege und Flüsse lassen sich jetzt von Punkt zu Punkt ziehen: Anfang antippen, Ende antippen, fertig.
+
+- Links gibt es drei neue Knöpfe: „Straße ziehen“, „Fußweg ziehen“ und „Fluss ziehen“. Tippe den Anfang an und dann das Ende. Am Tablet kannst du auch mit einem Finger vom Anfang bis zum Ende ziehen. Bis zum zweiten Tipp zeigt eine Vorschau genau, was entsteht: grün, wenn es passt, rot mit dem Grund, wenn nicht.
+- Das Werkzeug verbindet Anfang und Ende selbst mit Geraden und Bögen und nimmt den größten Radius, der passt. Straßenbögen drehen in Schritten von 7,5 Grad und mindestens 15 Grad, damit sie im Spiel ohne Lücke anschließen.
+- Der Anfang und das Ende rasten ein: eine Straße an ein freies Straßenende oder quer an eine gerade Straße, ein Fußweg an die Gehwegkante oder an das Ende eines anderen Fußwegs, ein Fluss an ein Flussende oder rechtwinklig an den Kartenrand. Mit dem Schalter „Einrasten“ aus liegt alles frei.
+- Jedes Ziehen ist ein Schritt: „Rückgängig“ nimmt alles auf einmal zurück. Passt keine Verbindung, ändert sich nichts.
+- Abbrechen: Escape, Rechtsklick oder „Setzen beenden“; am Tablet zwei Finger, dann bewegt sich nur die Ansicht. Das geht in der Draufsicht und in der 3D-Ansicht.
+- Neu ist die Art „Fußweg“: ein Weg nur zum Gehen, ohne Autos und ohne Mittellinie. Du kannst ihn wählen, schieben, kopieren und löschen. Die Prüfung meldet rot, wenn er durch ein Haus, durch Wasser oder über das Gleis führt, wenn ein Baum, eine Laterne oder ein Katalog-Stück darauf steht oder wenn eine Ecke zu eng ist.
+- Die festen Knöpfe für Kurven und Kreisverkehre bleiben wie bisher.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.13.0
 
 Häuser lassen sich jetzt drehen, Straßen und Flüsse fein drehen, und vieles rastet von selbst an der richtigen Stelle ein.

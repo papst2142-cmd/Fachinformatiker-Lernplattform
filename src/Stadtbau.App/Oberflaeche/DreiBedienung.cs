@@ -45,6 +45,11 @@ public sealed class DreiBedienung : Control
     private Point _letzt;
     private Vector2? _ziehStart;
 
+    // Welle Z: Ziehen von Punkt zu Punkt (Anfang in dieser Geste, Rechtsklick ohne Bewegung bricht ab)
+    private bool _anfangInDieserGeste;
+    private Point? _rechtsStart;
+    private bool _rechtsBewegt;
+
     // Schatten
     private Bauen3D.Vorschau? _vorschau;
     private bool _ziehen;
@@ -71,6 +76,15 @@ public sealed class DreiBedienung : Control
         _karte.AuswahlGeaendert += () =>
         {
             if (_karte.SetzenArt is null && !_ziehen)
+            {
+                SchattenWeg();
+            }
+            InvalidateVisual();
+        };
+        // Welle Z: ohne Anfang gibt es keinen Schatten (gesetzt, abgebrochen)
+        _karte.ZiehenGeaendert += () =>
+        {
+            if (_karte.ZiehAnfang is null)
             {
                 SchattenWeg();
             }
@@ -206,6 +220,8 @@ public sealed class DreiBedienung : Control
             {
                 _griff = Griff.Drehen;
                 _letzt = p;
+                _rechtsStart = p;
+                _rechtsBewegt = false;
                 return;
             }
             if (k.IsMiddleButtonPressed || KartenFlaeche.LeertasteGehalten)
@@ -225,6 +241,10 @@ public sealed class DreiBedienung : Control
             }
         }
         var erster = !_geste.Aktiv;
+        if (erster)
+        {
+            _anfangInDieserGeste = false;
+        }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
         AussenStelle? s = null;
         if (!FigurLaufen && _karte.SetzenArt is null && erster)
@@ -272,6 +292,10 @@ public sealed class DreiBedienung : Control
         switch (_griff)
         {
             case Griff.Drehen when Kamera is { } k:
+                if (_rechtsStart is { } rs && Math.Abs(p.X - rs.X) + Math.Abs(p.Y - rs.Y) > 4)
+                {
+                    _rechtsBewegt = true;
+                }
                 k.Drehen((float)((p.X - _letzt.X) * 0.4));
                 k.Neigung = Bauen3D.Kippen(k.Neigung, (float)((p.Y - _letzt.Y) * 0.3));
                 _letzt = p;
@@ -312,6 +336,12 @@ public sealed class DreiBedienung : Control
         }
         if (_griff is Griff.Drehen or Griff.Schieben)
         {
+            // Welle Z: Rechtsklick ohne Bewegung bricht das Ziehen ab (erst den Anfang, dann das Ziehen selbst)
+            if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.ZiehArtAktiv is not null && !_karte.ZiehAbbrechen())
+            {
+                _karte.SetzenBeenden();
+            }
+            _rechtsStart = null;
             _griff = Griff.Keiner;
             e.Pointer.Capture(null);
             return;
@@ -363,6 +393,29 @@ public sealed class DreiBedienung : Control
             case Fingergeste.Art.Tippen when FigurLaufen:
                 _drei.Tippen(new Point(s.X, s.Y));
                 break;
+            case Fingergeste.Art.Tippen when Zieht && BodenAn(new Point(s.X, s.Y)) is { } b:
+                ZiehenTippen(b);
+                break;
+            case Fingergeste.Art.StueckZiehen when Zieht:
+                if (_karte.ZiehAnfang is null && BodenAn(new Point(s.X - s.Dx, s.Y - s.Dy)) is { } start)
+                {
+                    _karte.ZiehAnfangSetzen(start.X, start.Y);
+                    _anfangInDieserGeste = true;
+                }
+                SchattenAn(new Point(s.X, s.Y));
+                break;
+            case Fingergeste.Art.StueckFertig when Zieht && BodenAn(new Point(s.X, s.Y)) is { } b:
+                SchattenWeg();
+                _karte.ZiehenBis(b.X, b.Y);
+                break;
+            case Fingergeste.Art.StueckAbbrechen when Zieht:
+                // ein zweiter Finger: die Kamera bewegt sich, ein eben erst begonnener Anfang faellt weg
+                if (_anfangInDieserGeste)
+                {
+                    _karte.ZiehAnfangVerwerfen();
+                }
+                SchattenWeg();
+                break;
             case Fingergeste.Art.Tippen when _karte.SetzenArt is not null:
             case Fingergeste.Art.StueckFertig when _karte.SetzenArt is not null:
                 SetzenAn(new Point(s.X, s.Y));
@@ -411,6 +464,31 @@ public sealed class DreiBedienung : Control
         }
     }
 
+    private bool Zieht => _karte.ZiehArtAktiv is not null && !FigurLaufen && Projekt is { NurLesen: false };
+
+    /// <summary>Welle Z: erster Tipp = Anfang, zweiter Tipp = bis hierher ziehen (ein Schritt ueber die Draufsicht).</summary>
+    private void ZiehenTippen(Vector2 b)
+    {
+        if (_karte.ZiehAnfang is null)
+        {
+            _karte.ZiehAnfangSetzen(b.X, b.Y);
+        }
+        else
+        {
+            SchattenWeg();
+            _karte.ZiehenBis(b.X, b.Y);
+        }
+    }
+
+    /// <summary>Start-Test: Tippen beim Ziehen an einem Bildpunkt (Anfang oder Ende).</summary>
+    internal void ZiehenTippenFuerTests(Point p)
+    {
+        if (BodenAn(p) is { } b)
+        {
+            ZiehenTippen(b);
+        }
+    }
+
     /// <summary>Setzen an einem Bildpunkt (Tippen oder Start-Test): ein Schritt im Verlauf ueber die Draufsicht.</summary>
     public AussenStelle? SetzenAn(Point p)
     {
@@ -449,6 +527,22 @@ public sealed class DreiBedienung : Control
         var schluessel = Runden(x, y);
         if (_schluessel == schluessel && _vorschau is not null)
         {
+            return;
+        }
+        if (_karte.ZiehArtAktiv is { } ziehArt)
+        {
+            // Welle Z: Vorschau vom Anfang bis hier, gleich dem echten Schritt (Bauen3D.Ziehen auf einer Kopie)
+            if (_karte.ZiehAnfang is not { } a)
+            {
+                SchattenWeg();
+                return;
+            }
+            _schluessel = schluessel;
+            var zuhr = Stopwatch.StartNew();
+            _karte.ZiehZielSetzen(x, y);
+            _vorschau = Bauen3D.Ziehen(proj.AussenStand, ziehArt, a.X, a.Y, x, y, _karte.Raster);
+            SchattenMs = zuhr.Elapsed.TotalMilliseconds;
+            PruefungAnstossen();
             return;
         }
         _schluessel = schluessel;
@@ -679,6 +773,12 @@ public sealed class DreiBedienung : Control
                     new Rect(ort.X - 8, ort.Y - 5, ft.Width + 16, ft.Height + 10), 6, 6);
                 ctx.DrawText(ft, ort);
             }
+        }
+        if (_karte.ZiehAnfang is { } za
+            && k.Bildpunkt(new Vector3((float)za.X, Bauen3D.SchattenHoehe, (float)za.Y), (float)Bounds.Width, (float)Bounds.Height) is { } zb)
+        {
+            // Welle Z: der Anfang als Punkt am Boden
+            ctx.DrawEllipse(Brushes.White, RandDunkel, new Point(zb.X, zb.Y), 7, 7);
         }
         GriffZeichnen(ctx);
     }

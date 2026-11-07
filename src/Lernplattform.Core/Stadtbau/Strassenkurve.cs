@@ -46,10 +46,31 @@ public static class Strassenkurve
     /// <summary>Ist die Strasse eine Kurve aus dem Werkzeug (Feld <see cref="Feld"/>)?</summary>
     public static bool IstKurve(PyObjekt strasse) => Py.Gleich(strasse["typ"], "strasse") && Py.Hat(strasse, Feld);
 
-    /// <summary>Gueltige Angabe <c>kurve</c> (Form, Winkel und Radius aus <see cref="Erlaubt"/>)?</summary>
+    /// <summary>
+    /// Welle Z (A 0.48.0, Weisung P12-71, Nico P12-67 Frage 3 = a): Boegen aus dem Ziehen von Punkt zu Punkt haben jeden
+    /// Winkel in Schritten von <see cref="SchrittGrad"/> Grad von <see cref="ZugMindestens"/> bis <see cref="ZugHoechstens"/>
+    /// Grad mit einem der heutigen Radien (<see cref="ZugRadien"/>). Mindestens zwei Schritte: ein Bogen aus nur einem
+    /// Schritt haette zwei Punkte und waere fuer das Spiel eine gerade Strasse (kein Band, kein Anschluss, Sehne schief).
+    /// </summary>
+    public const double ZugMindestens = 2 * SchrittGrad;
+
+    public const double ZugHoechstens = 90;
+
+    /// <summary>Radien der Boegen aus dem Ziehen (wie die Kurve 90°).</summary>
+    public static readonly IReadOnlyList<double> ZugRadien = [1, 2, 3];
+
+    /// <summary>Ein Bogen aus dem Ziehen: Winkel in 7,5-Grad-Schritten von 15 bis 90 Grad, Radius 1, 2 oder 3.</summary>
+    public static bool ZugBogen(string form, double winkel, double radius)
+    {
+        var schritte = winkel / SchrittGrad;
+        return form == Bogen && Math.Abs(schritte - Math.Round(schritte)) < 1e-9 && winkel >= ZugMindestens - 1e-9 && winkel <= ZugHoechstens + 1e-9
+            && ZugRadien.Any(z => Math.Abs(z - radius) < 1e-9);
+    }
+
+    /// <summary>Gueltige Angabe <c>kurve</c> (Form, Winkel und Radius aus <see cref="Erlaubt"/> oder ein Bogen aus dem Ziehen)?</summary>
     public static bool Gueltig(object? kurve) =>
         kurve is PyObjekt k && k["form"] is string form && Zahl(k["winkel"]) is { } w && Zahl(k["radius"]) is { } r
-        && Erlaubt.Any(e => e.Form == form && e.Winkel == w && Math.Abs(e.Radius - r) < 1e-9);
+        && (Erlaubt.Any(e => e.Form == form && e.Winkel == w && Math.Abs(e.Radius - r) < 1e-9) || ZugBogen(form, w, r));
 
     private static double? Zahl(object? wert) => wert is long or double ? Py.F(wert) : null;
 
@@ -74,7 +95,7 @@ public static class Strassenkurve
     /// Mittellinie der Kurve, Anfang bei (0, 0) in Richtung +x, Bogen nach +y (auf der Karte rechts herum; gespiegelt nach
     /// −y). S-Kurve: erst ein Bogen nach +y, dann einer zurueck, das Ende zeigt wieder nach +x.
     /// </summary>
-    public static List<Vector2> Mittellinie(string form, int winkel, double radius, bool gespiegelt = false)
+    public static List<Vector2> Mittellinie(string form, double winkel, double radius, bool gespiegelt = false)
     {
         var seite = gespiegelt ? -1.0 : 1.0;
         var punkte = new List<Vector2> { Vector2.Zero };
@@ -98,7 +119,7 @@ public static class Strassenkurve
     }
 
     /// <summary>Text fuer Anzeige und Screenreader, z. B. „Kurve 90°, Radius 2“.</summary>
-    public static string Name(string form, int winkel, double radius) =>
-        (form == S ? "S-Kurve" : string.Create(CultureInfo.GetCultureInfo("de-DE"), $"Kurve {winkel}°"))
+    public static string Name(string form, double winkel, double radius) =>
+        (form == S ? "S-Kurve" : string.Create(CultureInfo.GetCultureInfo("de-DE"), $"Kurve {winkel:0.#}°"))
         + string.Create(CultureInfo.GetCultureInfo("de-DE"), $", Radius {radius:0.##}");
 }
