@@ -318,6 +318,7 @@ public static partial class StadtbauMessung
         await BlueprintsAsync(a, f);
         await BedienungAsync(a, f);
         await FingerAsync(a, f);
+        await Bauen3DAsync(a, f);
         await VollbildAsync(a, f);
         await RueckgaengigKnopfAsync(a, f);
         await BewegenAsync(a, f);

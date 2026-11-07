@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.43.3
+Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich die Kamera der Stadt mit dem Stadtbau-Werkzeug, und dort lässt sich die Kamera jetzt steiler oder flacher kippen.
+
+- Im Spiel schaut die Kamera genauso schräg auf die Stadt wie bisher; kippen kannst du sie dort nicht.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.43.2
 Diese Version bringt nichts Neues zum Sehen. Die Lernplattform teilt sich das Update am Handy jetzt mit dem Stadtbau-Werkzeug, damit sich auch das Werkzeug am Tablet selbst aktualisieren kann.
 

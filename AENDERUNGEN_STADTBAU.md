@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.7.0
+
+Du kannst jetzt direkt in der 3D-Ansicht bauen, so wie in „Stadt von oben“.
+
+- Links steht dieselbe Liste „Stücke für draußen“, rechts dasselbe „Ausgewähltes Stück“. Darunter findest du wie bisher Tag und Nacht, Jahreszeit, Fest, „Probe laufen“ und die Grenzen.
+- Stück links wählen und in die Stadt tippen setzt es. Schon vorher zeigt ein Schatten am Boden, wo es hinkommt: grün heißt „passt hier“, rot heißt „geht hier nicht“, mit dem Grund darunter. Geprüft wird genauso wie in der Liste „Prüfungen draußen“.
+- Ein Stück antippen wählt es, auch ein Haus an seiner Wand. Ziehen verschiebt es, der Schatten zeigt dabei den neuen Platz. Drehen, Kopieren und Löschen gehen rechts mit den Knöpfen oder mit den Tasten R, Strg+D und Entf. Ein Doppelklick auf ein Haus öffnet seinen Innenraum.
+- Jede Änderung ist ein Schritt, den du mit „Rückgängig“ zurücknehmen kannst, egal ob du sie von oben oder in 3D gemacht hast.
+- Die Kamera bewegst du, indem du auf einer freien Stelle ziehst. Mit der rechten Maustaste nach links und rechts drehst du sie, nach oben und unten kippst du sie. Am Tablet zoomst du mit zwei Fingern, zwei Finger gemeinsam hoch oder runter kippen, zwei Finger drehen die Kamera. Unter dem Bild gibt es „+“, „−“, „Ganze Stadt zeigen“, „Steiler“ und „Flacher“; die Tasten Bild hoch und Bild runter kippen auch.
+- „Probe laufen“ hat jetzt einen Schalter „Figur laufen lassen“. Ist er an, läuft die Figur dorthin, wo du tippst, und es wird nichts gebaut.
+
 ## S 0.6.0
 
 Das Werkzeug aktualisiert sich jetzt auch am Android-Tablet selbst, so wie die Lernplattform am Handy.

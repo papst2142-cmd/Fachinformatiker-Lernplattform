@@ -9,7 +9,7 @@ namespace Stadtbau.Messung;
 
 /// <summary>
 /// Patch S 0.5.1 (Weisung P12-37 Punkt 3, Nico: Zoomen mit zwei Fingern klappte nur manchmal): nachgestellte
-/// Finger (PointerType.Touch) auf der echten Draufsicht, dem Grundriss und der 3D-Ansicht. Je Flaeche vier Faelle:
+/// Finger (PointerType.Touch) auf der echten Draufsicht, dem Grundriss und der 3D-Ansicht (ab S 0.7.0 auf der Ebene zum Bauen). Je Flaeche vier Faelle:
 /// zweiter Finger spaeter oder gleich, Start auf einem Stueck oder auf freier Flaeche. Zwei Finger auseinander muessen
 /// zoomen und duerfen nichts verschieben. Gegenprobe: dieselben Finger mit der Auswertung vor S 0.5.1 zoomen nicht.
 /// </summary>
@@ -33,7 +33,8 @@ public static partial class StadtbauMessung
         await FlaecheAsync(a, "Draufsicht", a.Karte, () => a.Karte.Zoom, a.Karte.StueckAnFuerTests,
             () => PythonJson.Text(p.AussenStand), alt => a.Karte.GesteAltFuerTests = alt);
 
-        // 3D: die Spiel-Flaeche verfolgt die Finger selbst (schon vor S 0.5.1); geprueft wird, dass beide Faelle zoomen
+        // 3D (S 0.7.0): die Finger gehen an die Ebene zum Bauen ueber dem Bild; gleiche vier Faelle und Gegenprobe wie
+        // Draufsicht und Grundriss (Zoom = 1 / Kameraabstand)
         a.DreiZeigen();
         await a.DreiFertig;
         if (!a.Drei.GlBereit || a.Drei.AktuelleKamera is null)
@@ -42,22 +43,17 @@ public static partial class StadtbauMessung
         }
         else
         {
-            foreach (var spaeter in new[] { false, true })
-            {
-                // vorher herauszoomen (Mausrad), damit der Zoom nicht an der kleinsten Entfernung haengt
-                await EinpassenAsync(a.Drei, () => 1 / a.Drei.AktuelleKamera!.Abstand, 1 / 10.0);
-                var vorher = a.Drei.AktuelleKamera!.Abstand;
-                await SpreizenAsync(a.Drei, MitteVon(a.Drei), spaeter);
-                var nachher = a.Drei.AktuelleKamera!.Abstand;
-                Messwerte.Notiere(string.Create(Inv, $"Finger 3D (zweiter Finger {(spaeter ? "spaeter" : "gleich")}): Abstand {vorher:F2} -> {nachher:F2}"));
-                if (Math.Abs((nachher / vorher) - 1) < 0.2)
-                {
-                    Fund(string.Create(Inv, $"Finger 3D: zwei Finger zoomen nicht (zweiter Finger {(spaeter ? "spaeter" : "gleich")}, Abstand {vorher:F2} -> {nachher:F2})"));
-                }
-            }
+            var b = a.Bedienung3D;
+            double Zoom3D() => 1 / a.Drei.AktuelleKamera!.Abstand;
+            await EinpassenAsync(b, Zoom3D, 1 / 10.0);
+            await FlaecheAsync(a, "3D", b, Zoom3D, x => b.TrefferAn(x) is not null,
+                () => PythonJson.Text(p.AussenStand), alt => b.GesteAltFuerTests = alt);
             // Gegenprobe: ein Finger allein zoomt nicht (die Probe unterscheidet Zoomen vom Schieben)
             var ein = a.Drei.AktuelleKamera!.Abstand;
-            await EinFingerAsync(a.Drei, MitteVon(a.Drei));
+            if (Suchen(b, x => b.TrefferAn(x) is null) is { } frei)
+            {
+                await EinFingerAsync(b, frei);
+            }
             if (Math.Abs(a.Drei.AktuelleKamera!.Abstand - ein) > 0.01)
             {
                 Fund("Finger 3D Gegenprobe: ein Finger aendert den Zoom (Probe taugt nicht)");
