@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.46.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf neue Städte aus dem Stadtbau-Werkzeug vor: dort fahren die Autos jetzt von selbst auf allen Straßen.
+
+- In einer neuen Stadt mit Kurven oder Kreisverkehr bekommen die Autos ihre Wege von selbst aus den Straßen: geradeaus, durch Kurven, an Einmündungen und Kreuzungen und durch den Kreisverkehr.
+- Die Autos fahren rechts. Im Kreisverkehr fahren sie gegen den Uhrzeigersinn um die Insel, und wer schon im Kreisverkehr fährt, hat Vorfahrt.
+- Am Ende einer Sackgasse wenden die Autos und fahren zurück.
+- In der heutigen Stadt fahren die Autos genau wie bisher auf ihren festen Wegen.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.45.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Kreisverkehre vor, die mit dem Stadtbau-Werkzeug gebaut werden, und verbessert die Mittellinie in Kurven.
 

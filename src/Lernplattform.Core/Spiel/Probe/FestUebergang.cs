@@ -49,7 +49,7 @@ public sealed class FestUebergang
         Neu = neu;
         AltVerkehr = altVerkehr;
         NeuVerkehr = neuVerkehr;
-        Verkehr = new Verkehr { AbstandVorne = MathF.Max(altVerkehr.AbstandVorne, neuVerkehr.AbstandVorne) };
+        Verkehr = new Verkehr { AbstandVorne = MathF.Max(altVerkehr.AbstandVorne, neuVerkehr.AbstandVorne), FuerStrassen = neuVerkehr.FuerStrassen };
         Verkehr.Kreuzungen.AddRange(neuVerkehr.Kreuzungen);
         Verkehr.Autos.AddRange(altVerkehr.Autos.OrderBy(a => a.Nummer));
         Verkehr.Bedient(altVerkehr.FahrenBis - Verkehr.Nachlauf);

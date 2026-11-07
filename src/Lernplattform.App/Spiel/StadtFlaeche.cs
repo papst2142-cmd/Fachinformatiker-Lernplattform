@@ -723,7 +723,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             // in derselben Stadt nur die Uhr, wechselt der Satz nach und nach (Patch A 0.29.1)
             if (spiel.Grafik is not null
                 && FestVerkehr.Fuer(spiel.Szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, spiel.Szene.Jahreszeit) is var satzNeu
-                && (_verkehr is null || (satzNeu != (_uebergang?.Neu ?? _satz) && (spiel.ImInnenraum || _spielNeu || _szeneFest != spiel.Szene.Fest))))
+                && (_verkehr is null || !_verkehr.Passt(spiel.Szene)
+                    || (satzNeu != (_uebergang?.Neu ?? _satz) && (spiel.ImInnenraum || _spielNeu || _szeneFest != spiel.Szene.Fest))))
             {
                 SatzSetzen(gl, spiel, satzNeu, jetzt);
             }
@@ -1055,7 +1056,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var grafik = spiel.Grafik;
         var satz = grafik is null ? FestVerkehr.Satz.Autos : FestVerkehr.Fuer(szene.Fest, Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
         // gleicher Satz: die Autos behalten ihre Lage, nur die Netze werden neu hochgeladen
-        var verkehrAlt = _verkehr is not null && satz == _satz && _uebergang is null ? _verkehr : null;
+        // Welle K3b: nur, wenn der Verkehr zu den Strassen der Szene passt (im Werkzeug aendern sie sich)
+        var verkehrAlt = _verkehr is not null && satz == _satz && _uebergang is null && _verkehr.Passt(szene) ? _verkehr : null;
         var gestaltenAlt = _gestalten;
         var aussehen = spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
         var kleidung = spiel.Kleidung;
@@ -1568,11 +1570,20 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             if (bau.Aufgabe.IsCompletedSuccessfully && ReferenceEquals(bau.Szene, spiel.Szene) && _verkehr is { } alt)
             {
                 var paket = bau.Aufgabe.Result;
-                _neuNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
-                _neuNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
-                _neuGestalten = paket.Gestalten;
-                _uebergang = new FestUebergang(_satz, alt, paket.Satz, paket.Verkehr);
-                _verkehr = _uebergang.Verkehr;
+                if (alt.Rundweg)
+                {
+                    // Welle K3b: Rundwege haben kein Ende am Kartenrand, an dem die Fahrzeuge tauschen koennten; der
+                    // Satz wechselt sofort
+                    SatzEinsetzen(gl, paket, jetzt);
+                }
+                else
+                {
+                    _neuNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
+                    _neuNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+                    _neuGestalten = paket.Gestalten;
+                    _uebergang = new FestUebergang(_satz, alt, paket.Satz, paket.Verkehr);
+                    _verkehr = _uebergang.Verkehr;
+                }
             }
             _satzPruefen = true;
         }

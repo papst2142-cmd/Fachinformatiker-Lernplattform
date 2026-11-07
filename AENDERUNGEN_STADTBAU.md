@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.12.0
+
+In der 3D-Ansicht fahren jetzt Autos auf deinen Straßen. Ihre Wege legt das Werkzeug von selbst aus deinem Straßennetz an.
+
+- Die Autos fahren auf geraden Straßen, durch Kurven, an Einmündungen und Kreuzungen und durch den Kreisverkehr. Sie fahren rechts, im Kreisverkehr gegen den Uhrzeigersinn, und wer im Kreisverkehr fährt, hat Vorfahrt.
+- Am Ende einer Sackgasse, auch am Rand der Karte, wendet ein Auto und fährt zurück.
+- Wie viele Autos fahren, richtet sich nach der Länge deiner Straßen (ein Auto je 10 Felder Straße), höchstens sechs wie in der heutigen Stadt.
+- Die Prüfung meldet rot, wenn eine Sackgasse zu kurz zum Wenden ist oder wenn ein Auto stecken bleiben würde.
+- Stadt 1 behält ihre festen Autowege, solange sie keine Kurve und keinen Kreisverkehr hat.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.11.0
 
 Du kannst jetzt Kreisverkehre bauen, und die Mittellinie läuft über jeden Kurvenanschluss ohne Lücke.
