@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.11.0
+
+Du kannst jetzt Kreisverkehre bauen, und die Mittellinie läuft über jeden Kurvenanschluss ohne Lücke.
+
+- Links unter den Kurven gibt es die Knöpfe „Kreisverkehr klein“ (Radius 2) und „Kreisverkehr groß“ (Radius 3). Ein Kreisverkehr kommt mit Ring, Gehweg, Insel mit Rasen und Baum, vier geraden Zufahrten und vier Laternen am Rand.
+- Schieben und Drehen nehmen die Zufahrten und die Laternen mit. Eine Zufahrt darf weg, mit drei Zufahrten bleibt der Kreisverkehr in Ordnung. Löschen nimmt nur den Ring, die Zufahrten bleiben als Straßen stehen.
+- Die Prüfung meldet rot, wenn ein Kreisverkehr weniger als drei oder mehr als vier Zufahrten hat, eine Zufahrt nicht gerade auf die Mitte zielt, zwei Zufahrten näher als 60 Grad liegen, eine Straße den Ring kreuzt, ein Haus, Baum, Fluss, Teich oder die Bahn auf dem Kreisverkehr liegt, eine Laterne auf der Insel, auf dem Ring oder in einer Zufahrt steht oder der Kreisverkehr über den Rand der Karte ragt.
+- Wo eine Kurve an eine gerade Straße oder an eine andere Kurve anschließt, läuft die Mittellinie jetzt im gleichen Takt weiter, ohne fehlenden oder doppelten Strich.
+- Alles geht in der Draufsicht und in der 3D-Ansicht, mit der Maus und mit dem Finger.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.10.0
 
 Straßen können jetzt Kurven haben, und am Fluss wählst du den Bogen an jeder Biegung selbst.

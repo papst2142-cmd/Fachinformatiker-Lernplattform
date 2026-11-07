@@ -590,6 +590,9 @@ public sealed partial class StadtSzene
     private static Vector3 Mischen(Vector3 a, Vector3 b, float anteil) => (a * (1 - anteil)) + (b * anteil);
 
     private static readonly Vector3 Weiss = Vector3.One;
+
+    /// <summary>Welle K3: heller Rand (Bordstein) der Mittelinsel eines Kreisverkehrs.</summary>
+    public static readonly Vector3 InselRand = Mischen(Farben.Strasse, Weiss, 0.7f);
     private static readonly Vector3 Schwarz = Vector3.Zero;
 
     private static class Farben
@@ -766,6 +769,20 @@ public sealed partial class StadtSzene
                                 return amRand || anStrasse ? StrassenBreite / 2 : WegBreite / 2;
                             }
                             var eigeneLinie = Vektoren(item["punkte"]);
+                            if (Kreisverkehr.IstRing(item) && Kreisverkehr.Geschlossen(eigeneLinie))
+                            {
+                                // Welle K3 (Weisung P12-59): der Ring als geschlossenes Band mit Gehrung auch am Stoss (je
+                                // ein Stueck ueber Anfang und Ende hinaus, gleiche Hoehe und Farbe), ohne Strassenenden
+                                var ring = new List<Vector2>(eigeneLinie.Count + 2) { eigeneLinie[^2] };
+                                ring.AddRange(eigeneLinie);
+                                ring.Add(eigeneLinie[1]);
+                                if (GehwegBreite(item) is var gwr and > 0)
+                                {
+                                    streifen.Add(new Streifen(ring, StrassenBreite + (2 * gwr), Hoehe.Gehweg, Hoehe.Gehweg, Mischen(Farben.Strasse, Weiss, 0.45f)));
+                                }
+                                streifen.Add(new Streifen(ring, StrassenBreite, Hoehe.Strasse, Hoehe.Strasse, Farben.Strasse));
+                                break;
+                            }
                             if (AlsBand(eigeneLinie))
                             {
                                 // Welle K1 (Weisung P12-55): Kurve als ein Band mit Gehrung, Enden wie bei der geraden Strasse
@@ -838,19 +855,12 @@ public sealed partial class StadtSzene
         }
         // Mittellinien und Fusswege der Stadt (Zugaenge von der Tuer zur Strasse); keine Striche
         // mitten auf einer Kreuzung (dort lagen sonst zwei Striche als "+" uebereinander)
-        foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "strasse")))
+        // Welle K3 (Sammelliste 231): Strassen, die nach Weiter aneinander anschliessen (Kurve an gerade Strasse, Kurve an
+        // Kurve), bekommen EINE Mittellinie im gleichen Takt; vorher lief der Takt je Strasse ab 0 und die Kreuzungsregel nahm
+        // am Anschluss auf beiden Seiten Striche weg (Luecke). Eine Strasse ohne solchen Anschluss (alle in Fassung 0) wie bisher.
+        foreach (var (x1, z1, x2, z2) in MittellinienStriche(strassen))
         {
-            var eigene = Vektoren(item["punkte"]);
-            var andere = strassen.Where(s2 => !s2.SequenceEqual(eigene)).ToList();
-            foreach (var (x1, z1, x2, z2) in Striche(Punkte(item["punkte"]), 0.2f, 0.25f))
-            {
-                var mitte = new Vector2((x1 + x2) / 2, (z1 + z2) / 2);
-                if (andere.Any(a => Kurve.Abstand(mitte, a) <= (StrassenBreite / 2) + 0.05f))
-                {
-                    continue;
-                }
-                teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
-            }
+            teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
         }
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
         {
@@ -870,6 +880,19 @@ public sealed partial class StadtSzene
             {
                 Baum(teile, stuecke, grafik, baeume, x, z, r);
             }
+        }
+        // Welle K3 (Weisung P12-59, Frage 2 = a): Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum in der Mitte),
+        // danach fuer Baeume, Kleingruen und Laufraster gesperrt; Fassung 0 hat keinen Kreisverkehr
+        var inseln = new List<List<Vector2>>();
+        foreach (var (ring, radius) in Kreisverkehr.Alle(landschaft))
+        {
+            var m = Kreisverkehr.Mitte(ring);
+            var ri = Kreisverkehr.InselRadius(radius);
+            flaechen.Add(new Bodenflaeche(Kreisverkehr.Kreis(m, ri), Kreisverkehr.RandHoehe, InselRand));
+            flaechen.Add(new Bodenflaeche(Kreisverkehr.Kreis(m, ri - Kreisverkehr.RandBreite), Kreisverkehr.RasenHoehe, Farben.Park));
+            Baum(teile, stuecke, grafik, baeume, m.X, m.Y, Kreisverkehr.BaumRadius);
+            baeume.Sperren.Add(([m, m], ri));
+            inseln.Add(Kreisverkehr.Kreis(m, ri - 0.02f));
         }
 
         var k = StadtModelle.Kontext(stand, inhalt);
@@ -1123,7 +1146,7 @@ public sealed partial class StadtSzene
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1201,25 +1224,146 @@ public sealed partial class StadtSzene
     /// null. Erlaubt sind bis 5 Grad Unterschied: das erste Stueck einer Kurve ist eine Sehne von 7,5 Grad und weicht um
     /// die Haelfte von der Tangente ab.
     /// </summary>
-    public static Vector2? Weiter(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene, IEnumerable<List<Vector2>> alle)
+    public static Vector2? Weiter(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene, IEnumerable<List<Vector2>> alle) =>
+        Anschluss(ende, richtung, eigene, [.. alle]) is { } t ? t.Richtung : null;
+
+    /// <summary>
+    /// Welle K3: wie <see cref="Weiter"/>, dazu welche Strasse (Stelle in <paramref name="alle"/>) und ob sie mit ihrem
+    /// Anfang (true) oder ihrem Ende anschliesst. Gleiche Regeln, darum gibt <see cref="Weiter"/> genau diese Richtung.
+    /// </summary>
+    public static (int Strasse, bool AmAnfang, Vector2 Richtung)? Anschluss(Vector2 ende, Vector2 richtung, IReadOnlyList<Vector2> eigene,
+        IReadOnlyList<List<Vector2>> alle, Func<int, bool>? erlaubt = null)
     {
-        foreach (var a in alle)
+        for (var k = 0; k < alle.Count; k++)
         {
-            if (a.Count < 2 || ReferenceEquals(a, eigene) || a.SequenceEqual(eigene) || (!AlsBand(a) && !AlsBand(eigene)))
+            var a = alle[k];
+            if (a.Count < 2 || ReferenceEquals(a, eigene) || a.SequenceEqual(eigene) || (!AlsBand(a) && !AlsBand(eigene))
+                || (erlaubt is not null && !erlaubt(k)))
             {
                 continue;
             }
-            foreach (var (p, weiter) in new[] { (a[0], a[1] - a[0]), (a[^1], a[^2] - a[^1]) })
+            foreach (var (p, weiter, anfang) in new[] { (a[0], a[1] - a[0], true), (a[^1], a[^2] - a[^1], false) })
             {
                 if (Vector2.Distance(p, ende) <= 0.02f && weiter.LengthSquared() > 1e-10f
                     && Vector2.Dot(Vector2.Normalize(weiter), richtung) >= MathF.Cos(MathF.PI / 36))
                 {
-                    return Vector2.Normalize(weiter);
+                    return (k, anfang, Vector2.Normalize(weiter));
                 }
             }
         }
         return null;
     }
+
+    /// <summary>
+    /// Die Striche der Mittellinie aller Strassen (Reihenfolge wie gezeichnet). Kein Strich, dessen Mitte bis zur halben
+    /// Strassenbreite + 0,05 an einer Strasse ausserhalb der eigenen Kette liegt (sonst lag auf Kreuzungen ein "+").
+    /// <paramref name="ohneKette"/> = Stand vor K3 (jede Strasse eigener Takt), nur fuer die Gegenprobe in Tests.
+    /// </summary>
+    public static List<(float X1, float Z1, float X2, float Z2)> MittellinienStriche(IReadOnlyList<List<Vector2>> strassen, bool ohneKette = false)
+    {
+        var ergebnis = new List<(float, float, float, float)>();
+        foreach (var zug in MittellinienZuege(strassen, ohneKette))
+        {
+            var eigene = zug.Strassen.Select(k => strassen[k]).ToList();
+            var andere = strassen.Where((s2, k) => !zug.Strassen.Contains(k) && !eigene.Any(e2 => s2.SequenceEqual(e2))).ToList();
+            foreach (var (x1, z1, x2, z2) in Kreisverkehr.Geschlossen([.. zug.Linie.Select(q => new Vector2(q.X, q.Z))])
+                ? RingStriche(zug.Linie) : Striche(zug.Linie, 0.2f, 0.25f))
+            {
+                var mitte = new Vector2((x1 + x2) / 2, (z1 + z2) / 2);
+                if (andere.Any(a => Kurve.Abstand(mitte, a) <= (StrassenBreite / 2) + 0.05f))
+                {
+                    continue;
+                }
+                ergebnis.Add((x1, z1, x2, z2));
+            }
+        }
+        return ergebnis;
+    }
+
+    /// <summary>
+    /// Welle K3 (A 0.45.0, Sammelliste 231): die Linienzuege der Mittellinie. Strassen, die nach <see cref="Anschluss"/>
+    /// aneinander anschliessen, bilden eine Kette in Reihenfolge und Richtung (gemeinsamer Punkt nur einmal); jede Kette
+    /// kommt an der Stelle ihrer ersten Strasse (Reihenfolge der Landschaft). Eine Strasse ohne Anschluss ist eine Kette
+    /// mit ihren eigenen Punkten, unveraendert (Fassung 0 hat nur solche, darum bytegleich).
+    /// </summary>
+    public static List<(List<int> Strassen, List<(float X, float Z)> Linie)> MittellinienZuege(IReadOnlyList<List<Vector2>> strassen, bool ohneKette = false)
+    {
+        var ergebnis = new List<(List<int>, List<(float X, float Z)>)>();
+        var vergeben = new bool[strassen.Count];
+        for (var i = 0; i < strassen.Count; i++)
+        {
+            if (vergeben[i])
+            {
+                continue;
+            }
+            vergeben[i] = true;
+            // Kette als Liste (Strasse, umgedreht)
+            var kette = new LinkedList<(int K, bool Um)>();
+            kette.AddFirst((i, false));
+            var s0 = strassen[i];
+            if (!ohneKette && s0.Count >= 2)
+            {
+                // nach vorn: vom Ende der letzten Strasse weiter
+                while (true)
+                {
+                    var (k, um) = kette.Last!.Value;
+                    var p = Ausgerichtet(strassen[k], um);
+                    if (p.Count < 2 || Vector2.DistanceSquared(p[^1], p[^2]) < 1e-12f
+                        || Anschluss(p[^1], Vector2.Normalize(p[^1] - p[^2]), strassen[k], strassen, j => !vergeben[j]) is not { } t)
+                    {
+                        break;
+                    }
+                    vergeben[t.Strasse] = true;
+                    kette.AddLast((t.Strasse, !t.AmAnfang));
+                }
+                // nach hinten: vom Anfang der ersten Strasse zurueck
+                while (true)
+                {
+                    var (k, um) = kette.First!.Value;
+                    var p = Ausgerichtet(strassen[k], um);
+                    if (p.Count < 2 || Vector2.DistanceSquared(p[0], p[1]) < 1e-12f
+                        || Anschluss(p[0], Vector2.Normalize(p[0] - p[1]), strassen[k], strassen, j => !vergeben[j]) is not { } t)
+                    {
+                        break;
+                    }
+                    vergeben[t.Strasse] = true;
+                    // schliesst mit dem Ende an: in eigener Richtung davor; mit dem Anfang: umgedreht davor
+                    kette.AddFirst((t.Strasse, t.AmAnfang));
+                }
+            }
+            if (kette.Count == 1)
+            {
+                ergebnis.Add(([i], [.. s0.Select(q => (q.X, q.Y))]));
+                continue;
+            }
+            var linie = new List<(float X, float Z)>();
+            foreach (var (k, um) in kette)
+            {
+                var p = Ausgerichtet(strassen[k], um);
+                // der gemeinsame Punkt (bis 0,02 auseinander) nur einmal
+                linie.AddRange(p.Skip(linie.Count == 0 ? 0 : 1).Select(q => (q.X, q.Y)));
+            }
+            ergebnis.Add(([.. kette.Select(e => e.K)], linie));
+        }
+        return ergebnis;
+    }
+
+    /// <summary>
+    /// Welle K3: Striche auf einem geschlossenen Ring im Takt 0,45 (Luecke so angepasst, dass eine ganze Zahl Striche
+    /// rundum passt; sonst laege am Stoss eine kurze Luecke oder zwei Striche aneinander).
+    /// </summary>
+    public static List<(float X1, float Z1, float X2, float Z2)> RingStriche(List<(float X, float Z)> ring)
+    {
+        var laenge = 0f;
+        for (var i = 0; i + 1 < ring.Count; i++)
+        {
+            laenge += MathF.Sqrt(((ring[i + 1].X - ring[i].X) * (ring[i + 1].X - ring[i].X)) + ((ring[i + 1].Z - ring[i].Z) * (ring[i + 1].Z - ring[i].Z)));
+        }
+        var anzahl = Math.Max(1, (int)MathF.Round(laenge / 0.45f));
+        return [.. Striche(ring, 0.2f, (laenge / anzahl) - 0.2f).Take(anzahl)];
+    }
+
+    private static List<Vector2> Ausgerichtet(List<Vector2> p, bool umgedreht) => umgedreht ? [.. Enumerable.Reverse(p)] : p;
 
     private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 
@@ -1252,7 +1396,7 @@ public sealed partial class StadtSzene
     /// </summary>
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
-        List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null)
+        List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null, List<List<Vector2>>? inseln = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1369,6 +1513,24 @@ public sealed partial class StadtSzene
                     var dz = Math.Max(Math.Max(z1 - c.Y, 0), c.Y - z2);
                     if ((dx * dx) + (dz * dz) < grenze)
                     {
+                        gesperrt[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
+        // Welle K3: die Mittelinsel eines Kreisverkehrs ist nie begehbar (auch nicht der innere Gehweg-Rand des Rings),
+        // die Figur geht aussen herum
+        foreach (var insel in inseln ?? [])
+        {
+            var (s0, s1) = Bereich(insel.Min(p => p.X), insel.Max(p => p.X), spalten);
+            var (r0, r1) = Bereich(insel.Min(p => p.Y), insel.Max(p => p.Y), zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    if (Wasser.Drin(insel, Mitte(s, z)))
+                    {
+                        immer[(s * zeilen) + z] = false;
                         gesperrt[(s * zeilen) + z] = true;
                     }
                 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 namespace Stadtbau.Core;
 
 /// <summary>
@@ -181,6 +182,19 @@ public static class Texte
 
     public static string SetzenKurveLage(int vierteldrehungen, bool gespiegelt) =>
         SetzenGedreht(vierteldrehungen) + (gespiegelt ? " Gespiegelt." : "");
+
+    // ---- Welle K3 (S 0.11.0, Weisung P12-59): Kreisverkehr ---------------------------------------------------
+    public static string KreisverkehrName(double radius) => string.Create(CultureInfo.GetCultureInfo("de-DE"), $"Kreisverkehr, Radius {radius:0.##}");
+
+    public const string KreisverkehrKlein = "Kreisverkehr klein";
+
+    public const string KreisverkehrGross = "Kreisverkehr groß";
+
+    public const string KreisverkehrKleinTipp = "Setzt einen Kreisverkehr mit Radius 2: Ring mit Gehweg, Insel mit Rasen und Baum, vier gerade Zufahrten und vier Laternen. Eine Zufahrt darf weg (drei bleiben).";
+
+    public const string KreisverkehrGrossTipp = "Setzt einen Kreisverkehr mit Radius 3: Ring mit Gehweg, Insel mit Rasen und Baum, vier gerade Zufahrten und vier Laternen. Eine Zufahrt darf weg (drei bleiben).";
+
+    public const string KreisverkehrLaengeFest = "Ein Kreisverkehr hat eine feste Größe: der Radius bestimmt sie. Schieben und Drehen nehmen Zufahrten und Laternen mit.";
 
     public const string RadiusHier = "Radius an diesem Eckpunkt";
 

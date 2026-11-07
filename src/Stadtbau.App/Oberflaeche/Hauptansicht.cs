@@ -166,6 +166,9 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>Start-Test: die Knoepfe Kurve 90°, Kurve 45°, S-Kurve.</summary>
     internal List<Button> KurvenKnoepfe { get; } = [];
 
+    /// <summary>Welle K3: die Knoepfe „Kreisverkehr klein/groß“ (Start-Test).</summary>
+    internal List<Button> KreisKnoepfe { get; } = [];
+
     private double KurvenRadiusGewaehlt => _kurvenRadius.SelectedIndex switch { 0 => 1, 2 => 3, _ => 2 };
     private readonly TextBlock _dreiStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
     private readonly TextBlock _dreiGrenzText = Schrift.Text(Texte.GrenzenNochNicht, "Klein");
@@ -721,6 +724,18 @@ public sealed partial class Hauptansicht : UserControl
                 KurvenKnopf(Texte.SKurve, Texte.SKurveTipp, () => Strassenkurve.Kennung(Strassenkurve.S, 45, 2, false)),
             },
         };
+        // Welle K3 (Weisung P12-59, Frage 1 = a): Kreisverkehr mit Radius 2 oder 3
+        Button KreisKnopf(string text, string tipp, double radius)
+        {
+            var k = new Button { Content = Schrift.Text(text, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }.Vorlese(text + " setzen").Mit(tipp + " " + Texte.SetzenKnopfTipp);
+            k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(AussenArt.Kreisverkehr, AussenBearbeitung.Kennung(radius)));
+            KreisKnoepfe.Add(k);
+            return k;
+        }
+        var kreise = new WrapPanel
+        {
+            Children = { KreisKnopf(Texte.KreisverkehrKlein, Texte.KreisverkehrKleinTipp, 2), KreisKnopf(Texte.KreisverkehrGross, Texte.KreisverkehrGrossTipp, 3) },
+        };
         var radiusTitel = Schrift.Text(Texte.KurvenRadius, "Klein").Fuer(_kurvenRadius);
         _kurvenRadius.Vorlese(Texte.KurvenRadius).Mit(Texte.KurvenRadiusTipp);
         _kurvenRadius.SelectionChanged += (_, _) =>
@@ -755,7 +770,7 @@ public sealed partial class Hauptansicht : UserControl
             Spacing = 8,
             Children =
             {
-                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, kurven, radiusTitel, _kurvenRadius, VollerKatalogKnopf(false),
+                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, kurven, radiusTitel, _kurvenRadius, kreise, VollerKatalogKnopf(false),
                 Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
@@ -937,6 +952,7 @@ public sealed partial class Hauptansicht : UserControl
             AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
             AussenArt.Kurve when Strassenkurve.Lesen(modell) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius),
+            AussenArt.Kreisverkehr when AussenBearbeitung.KreisverkehrRadius(modell) is { } kr => Texte.KreisverkehrName(kr),
             _ => KatalogName(art),
         };
         // zeigt beim Setzen den Knopf "Drehen" (Strasse, Park, Katalog-Stueck)
@@ -1119,7 +1135,8 @@ public sealed partial class Hauptansicht : UserControl
             zeilen.Add((Texte.StegLaenge, kw));
             zeilen.Add((Texte.StegBreite, kt));
         }
-        var istKurve = AussenBearbeitung.IstKurve(a, s);
+        // Welle K3: auch ein Kreisverkehr hat eine feste Laenge (der Radius bestimmt sie)
+        var istKurve = AussenBearbeitung.IstKurve(a, s) || AussenBearbeitung.IstKreisverkehr(a, s);
         if (s.Art == AussenArt.Strasse)
         {
             gehweg = Feld(AussenBearbeitung.Gehweg(a, s));
