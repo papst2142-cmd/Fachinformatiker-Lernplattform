@@ -59,3 +59,7 @@ Regeln:
 ## Nr. 13
 - Was: Neu geschützt die Stadt-Fassungen in `inhalte_csharp/spiel/stadtbau/` (Phase 13 Welle 1 „Stadt aus Daten“): `stadt1_fassung0.fistadt` (Stadt 1 bis A 0.41.1: Karte aus `inhalte/spiel/orte.json`, `stadt.json`, `innenraeume.json` unverändert, dazu die 22 Laternenplätze und das Beet, die vorher fest im Programm standen) und `aktiv.json` (Stadt 1 → Fassung 0). Vorher: keine Datei, die Szene kam aus den drei Dateien und den festen Werten. Nachher: das Spiel zeichnet aus der Fassung; Szene-Prüfsumme in allen Jahres- und Festzeiten, alle Innenräume und alle Fingerabdrücke unverändert. Kein bisheriger Sollwert hat sich geändert.
 - Freigabe: Plan Phase 13 (Weisung P12-16, Nico 05.11.2026 22:22 MEZ, 1a 2a 3a 4a 5a). Test: `StadtbauFassungTests`.
+
+## Nr. 14
+- Was: G52 `lerninhalte_pruefung.json` nach der SI-Inhalte-Welle A 0.53.0 (1 019 Karteikarten und 1 561 Prüfungsfragen für Systemintegration, angehängt in `inhalte_csharp/lernen/`). Vorher: Sicht SI 1 565 Karteikarten und 2 174 Prüfungsfragen. Nachher: 2 584 und 3 735 (gleich AE, DPA und DV). Sonst keine Zeile geändert; `inhalte/` unverändert.
+- Freigabe: Weisung P12-97 (Nico: „Erweitere bitte den Aufgaben Pool für Fisis so das sie genau so viele Aufgaben haben wie die anderen Fachinformatiker“, gilt als Freigabe der Sollwert-Änderung Nr. 14). Test: `SollwerteTests`, `LerninhalteTests`.

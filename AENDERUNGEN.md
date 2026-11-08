@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.53.0
+Mehr Lernstoff für die Fachrichtung Systemintegration: Sie hat jetzt genauso viele Karteikarten und Prüfungsfragen wie Anwendungsentwicklung, Daten- und Prozessanalyse und Digitale Vernetzung.
+
+- 1 019 neue Karteikarten und 1 561 neue Prüfungsfragen für Systemintegration, verteilt auf zwölf Themen: IPv6, Routing, Switching & VLAN, WAN & VPN, WLAN, Dienste & Protokolle, Fehlersuche, Netzwerksicherheit, Datensicherung & Notfall, Speicher, Virtualisierung und IT-Betrieb.
+- Viele der neuen Fragen sind kleine Fälle aus dem Arbeitsalltag; Rechenaufgaben (zum Beispiel Subnetze, RAID, Datensicherung, Verfügbarkeit) wurden alle nachgerechnet.
+- Mit Systemintegration siehst du jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen, genauso viele wie die anderen Fachrichtungen.
+- Bisherige Karten, Fragen und dein Lernstand bleiben unverändert. Die anderen Fachrichtungen sehen die neuen Inhalte nicht.
+
 ## A 0.52.1
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Fußwege bis an die Haustür in neuen Städten aus dem Stadtbau-Werkzeug vor.
 
