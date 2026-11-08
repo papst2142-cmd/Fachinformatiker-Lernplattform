@@ -14,7 +14,8 @@ namespace Lernplattform.Core.Stadtbau;
 /// <item>falsch gespeichert (kein Objekt, weniger als zwei Punkte, keine Zahlen, Feld <c>radien</c> nicht je Punkt eine
 /// Zahl aus <see cref="Fusswege.Radien"/>); dann baut die Pruefung die Szene nicht;</item>
 /// <item>ein Punkt liegt nicht auf der Karte;</item>
-/// <item>der Fussweg fuehrt durch ein Haus (Bloecke der gebauten Szene);</item>
+/// <item>der Fussweg fuehrt durch ein Haus (Bloecke der gebauten Szene; das Stueck vor einer Tuer bis an die Wand zaehlt nicht,
+/// Weisung P12-98);</item>
 /// <item>der Fussweg fuehrt durch Wasser (Fluss oder Teich samt Ufer; eine Bruecke gibt es nur fuer Strassen);</item>
 /// <item>der Fussweg kreuzt das Gleis (ein Bahnuebergang gibt es nur fuer Strassen und die Wege zu den Tueren);</item>
 /// <item>ein Baum, eine Laterne oder ein Katalog-Stueck (ausser Effekten) steht auf dem Fussweg (das Spiel liesse den Baum
@@ -94,10 +95,11 @@ public static partial class StadtbauPruefung
             var glatt = fusswege[i].Glatt;
             var proben = Abgetastet(glatt).ToList();
 
-            // 3: durch ein Haus
+            // 3: durch ein Haus (P12-98: ausser auf dem Weg vor einer Tuer bis an die Wand)
             foreach (var h in szene.Haeuser)
             {
-                if (proben.FirstOrDefault(p => p.X > h.Min.X + Toleranz && p.X < h.Max.X - Toleranz && p.Y > h.Min.Z + Toleranz && p.Y < h.Max.Z - Toleranz) is var p
+                if (proben.FirstOrDefault(p => p.X > h.Min.X + Toleranz && p.X < h.Max.X - Toleranz && p.Y > h.Min.Z + Toleranz && p.Y < h.Max.Z - Toleranz
+                        && !AnDerTuer(szene, p)) is var p
                     && p != default)
                 {
                     funde.Add(new StadtbauFund($"Fußweg Nr. {nr} führt durch das Haus „{HausName(h)}“.", "Fußweg um das Haus herum ziehen.", true, p.X, p.Y));
@@ -151,6 +153,20 @@ public static partial class StadtbauPruefung
             }
         }
     }
+
+    /// <summary>
+    /// Patch S 0.23.1 / A 0.52.1 (Weisung P12-98, Sammelliste 244): ein Probepunkt im Block eines Hauses zaehlt nicht als
+    /// „durch das Haus“, wenn er auf dem Stueck vor einer Tuer liegt, das das Spiel selbst als Weg bis an die echte Wand
+    /// zeichnet (<see cref="StadtTuer.WegAnfang"/> bis <see cref="StadtTuer.Mitte"/>, quer hoechstens <see cref="Toleranz"/>).
+    /// Ein Weg durch die Wand neben der Tuer oder quer durchs Haus bleibt rot; die Toleranz wird nicht allgemein groesser.
+    /// </summary>
+    private static bool AnDerTuer(StadtSzene szene, Vector2 p) =>
+        !FusswegTuerAltFuerTests && szene.Tueren.Any(t => Kurve.Abstand(p, (IReadOnlyList<Vector2>)[t.Mitte, t.WegAnfang]) <= Toleranz);
+
+    /// <summary>Nur fuer Tests (Gegenprobe P12-98): Regel 3 ohne Ausnahme an der Tuer.</summary>
+    internal static bool FusswegTuerAltFuerTests { get => FusswegTuerAlt.Value; set => FusswegTuerAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> FusswegTuerAlt = new();
 
     private static float AbstandRechteck((float X1, float Z1, float X2, float Z2) r, Vector2 p)
     {

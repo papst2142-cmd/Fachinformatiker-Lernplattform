@@ -35,7 +35,8 @@ public sealed record Ziehpunkt(Vector2 Lage, Vector2? Weg, int? Nummer = null, b
 /// 3, 2 oder 1); faengt an freien Strassenenden (Lage und Richtung) und quer an geraden Strassen (Einmuendung). Ein
 /// gerades Stueck in Verlaengerung einer geraden Strasse verlaengert diese (sonst fehlte am Stoss die Mittellinie).</item>
 /// <item>Fussweg: ein Linienzug mit runden Ecken in <c>stadtdaten.fusswege</c>; faengt an Fusswegenden und an der
-/// Aussenkante von Gehweg bzw. Strasse (quer). Am Ende eines Fusswegs wird dieser verlaengert.</item>
+/// Aussenkante von Gehweg bzw. Strasse (quer) und seit S 0.23.1 an jeder Haustuer (P12-98). Am Ende eines Fusswegs wird
+/// dieser verlaengert.</item>
 /// <item>Fluss: Eckpunkte mit Radius je Ecke (5, 3, 2); faengt an Flussenden und am Kartenrand (rechtwinklig). Am Ende
 /// eines Flusses wird dieser verlaengert.</item>
 /// <item>Bahn (Welle K2): wie der Fluss mit Radius 4,5 oder 3 je Ecke; faengt an Gleisenden und am Kartenrand; die Bahn
@@ -99,7 +100,7 @@ public static partial class AussenBearbeitung
 
     /// <summary>
     /// Den Punkt (x, y) einrasten: an ein freies Ende (bis <see cref="EndeFangweite"/>) mit Lage und Richtung, sonst an eine
-    /// Kante (Strasse: gerade Strasse quer, Fussweg: Gehwegkante, Fluss: Kartenrand), sonst frei auf das Raster
+    /// Kante (Strasse: gerade Strasse quer, Fussweg: Gehwegkante oder Haustuer, Fluss: Kartenrand), sonst frei auf das Raster
     /// (0,5 bzw. mit „Einrasten“ aus 0,1, dann auch ohne Fangen).
     /// </summary>
     public static Ziehpunkt Fangen(PyObjekt aussen, ZiehArt art, double x, double y, bool raster)
@@ -120,10 +121,54 @@ public static partial class AussenBearbeitung
         return art switch
         {
             ZiehArt.Strasse => Einmuendung(aussen, p) ?? frei,
-            ZiehArt.Fussweg => Gehwegkante(aussen, p) ?? frei,
+            ZiehArt.Fussweg => FusswegFangen(aussen, p) ?? frei,
             _ => Kartenrand(aussen, p) ?? frei,
         };
     }
+
+    /// <summary>
+    /// Patch S 0.23.1 (Weisung P12-98, Sammelliste 244, Fund Nico): ein Fussweg rastet ausser an der Gehwegkante auch an
+    /// der Tuer jedes Hauses ein (Orte und Gebaeude ohne Ort, auch eigene Gebaeude und gedrehte Haeuser), und zwar an der
+    /// naeheren von beiden. Vorher fing nur die Gehwegkante; ein Tipp an der Tuer landete auf dem Raster 0,5 und damit im
+    /// Haus (rot „fuehrt durch das Haus“).
+    /// </summary>
+    private static Ziehpunkt? FusswegFangen(PyObjekt aussen, Vector2 p)
+    {
+        var kante = Gehwegkante(aussen, p);
+        if (TuerFangenAltFuerTests)
+        {
+            return kante;
+        }
+        var tuer = Tuerpunkte(aussen).Select(t => (t, D: Vector2.Distance(t.Lage, p))).Where(t => t.D <= EndeFangweite)
+            .OrderBy(t => t.D).Select(t => t.t).FirstOrDefault();
+        return tuer is not null && (kante is null || Vector2.Distance(tuer.Lage, p) <= Vector2.Distance(kante.Lage, p)) ? tuer : kante;
+    }
+
+    /// <summary>
+    /// Die Tueren aller Haeuser als Fangpunkte: Lage = Tuerpunkt der Daten (Zugang eines Orts bzw. Zierweg eines Gebaeudes
+    /// ohne Ort), das ist im Spiel der Anfang des Tuerwegs (<see cref="StadtTuer.WegAnfang"/>, Aussenkante des Hauses); das
+    /// letzte Stueck bis an die echte Wand zeichnet das Spiel selbst (<c>StadtSzene</c>, P8-28). Richtung = vom Haus weg
+    /// (erstes Stueck des Tuerwegs).
+    /// </summary>
+    public static IEnumerable<Ziehpunkt> Tuerpunkte(PyObjekt aussen)
+    {
+        foreach (var (s, _, _) in Alle(aussen).Where(x => x.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).ToList())
+        {
+            var z = s.Art == AussenArt.Haus ? Zugang(aussen, s.Ort) : Blueprint.ZierwegVon(aussen, s);
+            if (z?["tuer"] is not List<object?> t || t.Count < 2)
+            {
+                continue;
+            }
+            var lage = new Vector2((float)Py.F(t[0]), (float)Py.F(t[1]));
+            var weiter = Linie(z["weg"]).FirstOrDefault(w => Vector2.Distance(w, lage) > 1e-3f);
+            yield return new Ziehpunkt(lage, weiter == default ? null : Vector2.Normalize(weiter - lage));
+        }
+    }
+
+    /// <summary>Nur fuer Tests (Gegenprobe P12-98): der alte Fangweg ohne Tueren.</summary>
+    internal static bool TuerFangenAltFuerTests { get => TuerAlt.Value; set => TuerAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> TuerAlt = new();
 
     /// <summary>Freie Enden der gleichen Art mit der Richtung aus dem Stueck hinaus.</summary>
     private static IEnumerable<Ziehpunkt> ZiehEnden(PyObjekt aussen, ZiehArt art)

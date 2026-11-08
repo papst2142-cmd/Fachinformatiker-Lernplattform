@@ -333,6 +333,7 @@ public static partial class StadtbauMessung
         await EinrastenAsync(a, f);
         await DrehenAsync(a, f);
         await ZiehenAsync(a, f);
+        await FusswegTuerAsync(a, f);
         await BahnAsync(a, f);
         await EtagenAsync(a, f);
         await ObergeschosseAsync(a, f);
