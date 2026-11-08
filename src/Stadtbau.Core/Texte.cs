@@ -353,6 +353,24 @@ public static class Texte
     public const string BlueprintNichtLesbar = "Die Datei lässt sich gerade nicht öffnen.";
     public const string BlueprintAusserhalb = "Die Stelle liegt außerhalb der Karte.";
     public const string BlueprintNurHaus = "Als Blueprint lassen sich Häuser und Gebäude speichern.";
+    // Welle S 0.24.0 (Weisung P12-100, Sammelliste 245): Tuer an Gebaeuden ohne Innenraum auf Wunsch
+    public const string TuerDazu = "Tür dazu";
+    public const string TuerDazuTipp = "Legt eine Tür in der Mitte der Vorderseite und einen Fußweg bis zur nächsten Straße an. Mit „Einrasten“ rückt das Haus mit der Tür an den Gehweg.";
+    public const string TuerEntfernen = "Tür entfernen";
+    public const string TuerEntfernenTipp = "Nimmt die Tür und ihren Fußweg wieder weg. Das Gebäude bleibt stehen.";
+    public const string TuerNurGebaeude = "Eine Tür lässt sich nur an ein Gebäude ohne Innenraum setzen.";
+    public const string TuerSchonDa = "Dieses Gebäude hat schon eine Tür.";
+    public const string TuerWegOhneStrasse = "Der Fußweg von der Tür erreicht keine Straße";
+    public const string TuerWegOhneStrasseTipp = "Eine Straße vor die Tür legen oder das Gebäude näher an eine Straße schieben.";
+    public const string TuerAnHausTipp = "Das Gebäude drehen oder schieben, damit vor der Tür Platz ist.";
+    public const string TuerImWasserTipp = "Das Gebäude drehen oder vom Wasser wegschieben.";
+    public const string BahnhofNichtAmGleisTipp = "Den Bahnhof näher an ein Gleis schieben (höchstens 1,5 entfernt).";
+    public static string TuerAnHaus(string name) => "Die Tür von „" + name + "“ führt direkt in ein anderes Gebäude.";
+    public static string TuerImWasser(string name) => "Die Tür von „" + name + "“ führt ins Wasser.";
+    public static string BahnhofNichtAmGleis(string name) => "„" + name + "“ steht nicht an einem Gleis.";
+    public static string ModellTipp(string kennung) => "Kennung: " + kennung;
+    public static string TuerDazuGemacht(string name) => "Tür an „" + name + "“ gesetzt";
+
     public const string BlueprintSchonDa = "Dieses Gebäude steht schon in der Stadt.";
     public const string BlueprintSchonDaTipp = "Das Spiel zeichnet die Tür nur am ersten Gebäude dieses Modells. Eines der beiden löschen.";
 
