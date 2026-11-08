@@ -85,6 +85,17 @@ public static partial class AutoMessung
             Messwerte.Notiere("  FEHLER: Spiel Etagen: Spielseite nicht gebaut");
             return 1;
         }
+        // ohne GL (macOS Metal/Software: Ortsliste statt 3D) zeichnet die Flaeche kein Bild: dann nur bis zum Bild der Oberflaeche
+        var gl = await GlAbwartenAsync(seite);
+        async Task Bild()
+        {
+            if (gl)
+            {
+                await seite.Flaeche.NaechstesBildAsync();
+            }
+            await ansicht.BildFertigAsync();
+        }
+        Messwerte.Notiere("Spiel: Etagen " + (gl ? "mit 3D" : "ohne 3D (Ortsliste)"));
         var vorher = seite.Spiel;
         try
         {
@@ -95,15 +106,13 @@ public static partial class AutoMessung
                 Pruefe("Etagen: Moebelhaus betreten", false, "nicht hineingekommen");
                 return funde;
             }
-            await seite.Flaeche.NaechstesBildAsync();
-            await ansicht.BildFertigAsync();
+            await Bild();
             var knopf = spiel.Knoepfe.FirstOrDefault(k => k.Aktion.StartsWith(Etagen.AktionEtage, StringComparison.Ordinal));
             Pruefe("Etagen: Knopf vor der Treppe", knopf.Name == "Treppe hoch zum 1. Obergeschoss", knopf.Name ?? "kein Knopf");
             var zahl = spiel.Ablauf.Stand.Verlauf.Count;
             var uhr = Stopwatch.StartNew();
             spiel.EtageWechseln("u1", 1);
-            await seite.Flaeche.NaechstesBildAsync();
-            await ansicht.BildFertigAsync();
+            await Bild();
             funde += Ergebnis("Spiel: Etage wechseln (erstes Mal, ohne Vorrat, bis zum Bild)",
                 Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
             Pruefe("Etagen: oben angekommen", spiel.Etage == 1 && spiel.FlaecheId == "geschaeft:moebelhaus@1" && spiel.EtageVorbereitetGenommen == 0,
@@ -123,14 +132,13 @@ public static partial class AutoMessung
             {
                 await Task.Delay(50);
             }
-            await seite.Flaeche.NaechstesBildAsync();
+            await Bild();
             async Task<double?> Wechseln()
             {
                 var ziel = spiel.Etage == 0 ? 1 : 0;
                 var u = Stopwatch.StartNew();
                 spiel.EtageWechseln("u1", ziel);
-                await seite.Flaeche.NaechstesBildAsync();
-                await ansicht.BildFertigAsync();
+                await Bild();
                 return u.Elapsed.TotalMilliseconds;
             }
             async Task Warten()
