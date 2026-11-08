@@ -774,6 +774,9 @@ public sealed class Projekt
         : AussenBearbeitung.Ort(AussenStand, ort)?["name"] is string n && n.Length > 0 ? n
         : Daten.OrtName(ort);
 
+    /// <summary>Gegenprobe S 0.22.1: Export mit eigenem Gebaeude gesperrt wie bis S 0.22.0 (nur in Tests, je Ablauf).</summary>
+    internal static readonly AsyncLocal<bool> EigeneSperreAltFuerTests = new();
+
     /// <summary>
     /// Export-Datei (.fistadt) mit allen Aenderungen als neue Fassung (Nummer = Basis + 1, CC vergibt beim Einbau die
     /// naechste freie Nummer nur ueber eine neue Datei). Rot oder nichts geaendert: <see cref="StadtbauFehler"/>.
@@ -790,8 +793,9 @@ public sealed class Projekt
         {
             throw new StadtbauFehler([.. rot.Select(r => OrtName(r.Ort) + ": " + r.Fund.Text)]);
         }
-        // S 0.9.0 (Weisung P12-48): selbst gebaute Gebaeude zeichnet das Spiel erst mit dem Einbau (gelb gesperrt)
-        if (Blueprint.EigeneGebaeude(AussenStand) is { Count: > 0 } eigene)
+        // S 0.9.0 (Weisung P12-48) sperrte ein selbst gebautes Gebaeude den Export (gelb). Seit S 0.22.1 (Weisung P12-94,
+        // Nico 1a) geht der Export mit ihnen, der gelbe Hinweis bleibt; die alte Sperre nur noch als Gegenprobe.
+        if (EigeneSperreAltFuerTests.Value && Blueprint.EigeneGebaeude(AussenStand) is { Count: > 0 } eigene)
         {
             throw new StadtbauFehler([.. eigene.Select(e => OrtName(StadtOrt) + ": " + Texte.EigenesGebaeudeNochNicht(e.Name))]);
         }

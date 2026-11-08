@@ -588,7 +588,7 @@ public static class Texte
     public static string EntwurfObenOffen(int n) => n == 1 ? "Ein Feld ist oben offen (kein Dach)." : $"{n} Felder sind oben offen (kein Dach).";
 
     // in der Stadt (bis zum Einbau W4b)
-    public const string EigenesGebaeudeTipp = "Das Spiel zeichnet selbst gebaute Gebäude erst mit dem Einbau; bis dahin lässt sich die Stadt mit ihnen nicht als Datei speichern. Nichts geht verloren.";
+    public const string EigenesGebaeudeTipp = "Das Spiel zeigt selbst gebaute Gebäude erst, wenn CC deine Stadt einbaut. Speichern und Senden gehen schon, nichts geht verloren.";
 
     public static string EigenesGebaeudeNochNicht(string name) => $"Selbst gebautes Gebäude „{name}“: kommt mit dem Einbau ins Spiel.";
 

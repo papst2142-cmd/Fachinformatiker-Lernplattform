@@ -3,6 +3,13 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.22.1
+
+Selbst entworfene Gebäude hindern das Speichern und Senden der Stadt nicht mehr.
+
+- Steht ein Gebäude aus „Gebäude entwerfen“ in der Stadt, frei oder als neues Aussehen eines Orts, lässt sich die Stadt-Datei jetzt speichern und an CC senden. Vorher war das gesperrt.
+- Ein gelber Hinweis erinnert in beiden Fällen daran, dass das Spiel diese Gebäude erst zeigt, wenn CC die Stadt einbaut. Rote Funde sperren weiter wie bisher.
+
 ## S 0.22.0
 
 Du siehst jetzt, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen. Das Werkzeug zeigt das nur an; an der Spielgeschichte ändert sich nichts.

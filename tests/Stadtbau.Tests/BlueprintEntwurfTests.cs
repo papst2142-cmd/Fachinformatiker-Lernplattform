@@ -158,7 +158,7 @@ public class BlueprintEntwurfTests
     }
 
     [Fact]
-    public void Setzen_InLeereStadt_SchreibtBauteile_3DKenntDasModell_ExportGelbGesperrt()
+    public void Setzen_InLeereStadt_SchreibtBauteile_3DKenntDasModell_ExportMitGelbemHinweis()
     {
         var ablage = Daten.NeueAblage();
         var p = Projekt.Neu("Eigenbau", Daten.Spiel, ablage, leer: (32, 24));
@@ -178,13 +178,23 @@ public class BlueprintEntwurfTests
         // 3D: die Grafik kennt das zusammengesetzte Modell
         var g = Ansicht3D.MitGebaeuden(Daten.Spiel.Grafik, Aussen.Fassung(a, p.Basis, new PyObjekt(), 0, null, "", "", ""))!;
         Assert.Equal(Bauteile.Dreiecke(Haus().Teile, Katalog.Bauteil), g.Modell("bau:eigenes_haus")!.Dreiecke);
-        // Pruefung draussen: gelber Hinweis, kein roter Fund; der Export ist gesperrt
+        // Pruefung draussen: gelber Hinweis, kein roter Fund; seit S 0.22.1 (Weisung P12-94) geht der Export trotzdem
         var funde = p.PruefenAussen();
         Assert.Contains(funde, f => !f.Rot && f.Text == Texte.EigenesGebaeudeNochNicht("Eigenes Haus"));
         Assert.DoesNotContain(funde, f => f.Rot);
-        var fehler = Assert.Throws<StadtbauFehler>(() => p.Exportieren(DateTimeOffset.Now));
-        Assert.Contains(fehler.Funde, t => t.EndsWith(Texte.EigenesGebaeudeNochNicht("Eigenes Haus"), StringComparison.Ordinal));
-        // Gegenprobe: Gebaeude wieder weg -> Export geht
+        Assert.NotEmpty(p.Exportieren(DateTimeOffset.Now));
+        // Gegenprobe: mit der Sperre bis S 0.22.0 ist der Export gesperrt
+        Projekt.EigeneSperreAltFuerTests.Value = true;
+        try
+        {
+            var fehler = Assert.Throws<StadtbauFehler>(() => p.Exportieren(DateTimeOffset.Now));
+            Assert.Contains(fehler.Funde, t => t.EndsWith(Texte.EigenesGebaeudeNochNicht("Eigenes Haus"), StringComparison.Ordinal));
+        }
+        finally
+        {
+            Projekt.EigeneSperreAltFuerTests.Value = false;
+        }
+        // Gebaeude wieder weg: kein Hinweis mehr, Export geht
         p.AussenAendern("Löschen", x => AussenBearbeitung.Loeschen(x, stelle!));
         Assert.Empty(Blueprint.EigeneGebaeude(p.AussenStand));
         Assert.NotEmpty(p.Exportieren(DateTimeOffset.Now));

@@ -166,7 +166,7 @@ public sealed class Blueprint
 
     /// <summary>
     /// Den Blueprint mit der Mitte bei (x, y) als eigenstaendiges Gebaeude ohne Ort setzen (Raster 0,5 wie jedes Haus):
-    /// Gebaeude in der Landschaft, Modell (fehlt es in der Stadt, kommt es nach <c>stadtdaten.neue_modelle</c>), Tuer und
+    /// Gebaeude in der Landschaft, Modell (fehlt es in <c>karte.modelle</c>, kommt es dorthin, S 0.22.1), Tuer und
     /// Fussweg als Zierweg (das Ende des Wegs wird an die naechste Strasse gelegt wie beim Verschieben). Danach ist es ein
     /// ganz normales Gebaeude, unabhaengig von der Vorlage. Gibt es das Modell in der Stadt schon mit anderen Teilen, wird
     /// nichts gesetzt (Grund in <paramref name="grund"/>).
@@ -187,6 +187,9 @@ public sealed class Blueprint
         }
         return s;
     }
+
+    /// <summary>Gegenprobe S 0.22.1: fehlendes Modell nach stadtdaten.neue_modelle wie bis S 0.22.0 (nur Tests, je Ablauf).</summary>
+    internal static readonly AsyncLocal<bool> NeueModelleAltFuerTests = new();
 
     private AussenStelle? SetzenRoh(PyObjekt aussen, double x, double y, out string? grund)
     {
@@ -216,7 +219,21 @@ public sealed class Blueprint
             }
             Py.Setzen(alle, Modell, BauteileEintrag());
         }
-        if (vorhanden is null)
+        // S 0.22.1 (Weisung P12-94, selbst gefunden): ein Gebaeude der Landschaft sucht die Ladepruefung des Spiels
+        // (SpielPruefung.Welt) nur in karte.modelle. Bis S 0.22.0 kam ein fehlendes Modell nach stadtdaten.neue_modelle;
+        // in Stadt 1 scheiterte der Export dann an „unbekanntes Modell“ (selbst gebaute Gebaeude, oder ein Laden-Modell wie
+        // das Moebelhaus, das nur in neue_modelle steht). Jetzt steht das Modell immer auch in karte.modelle.
+        var karte = Aussen.Karte(aussen);
+        if (Get(karte, "modelle") is not PyObjekt kartenModelle)
+        {
+            kartenModelle = new PyObjekt();
+            Py.Setzen(karte, "modelle", kartenModelle);
+        }
+        if (Get(kartenModelle, Modell) is null && !NeueModelleAltFuerTests.Value)
+        {
+            Py.Setzen(kartenModelle, Modell, Py.Kopie(vorhanden ?? Teile));
+        }
+        else if (vorhanden is null && NeueModelleAltFuerTests.Value)
         {
             if (Get(sd, "neue_modelle") is not PyObjekt neu)
             {
@@ -287,7 +304,7 @@ public sealed class Blueprint
 
     /// <summary>
     /// S 0.9.0 (Weisung P12-48): stehende Gebaeude, deren Modell selbst gebaut ist (<c>stadtdaten.bauteile</c>). Das Spiel
-    /// zeichnet sie erst mit dem Einbau (W4b); bis dahin ist der Export damit gesperrt (gelber Fund, <see cref="Projekt.Exportieren"/>).
+    /// zeichnet sie erst mit dem Einbau (W4b): gelber Fund. Seit S 0.22.1 (Weisung P12-94) sperrt er den Export nicht mehr.
     /// </summary>
     public static List<(string Modell, string Name, PyObjekt Gebaeude)> EigeneGebaeude(PyObjekt aussen)
     {
@@ -303,6 +320,17 @@ public sealed class Blueprint
             liste.Add((modell, Zierweg(aussen, modell)?["name"] as string ?? modell, g));
         }
         return liste;
+    }
+
+    /// <summary>
+    /// S 0.22.1 (Weisung P12-94, Nico 1a): Orte der Karte, deren Aussehen ein selbst gebautes Gebaeude ist („Aussehen tauschen“).
+    /// Sie bekommen denselben gelben Hinweis wie ein frei stehendes eigenes Gebaeude (<see cref="EigeneGebaeude"/>).
+    /// </summary>
+    public static List<(string Ort, string Name)> EigeneOrte(PyObjekt aussen)
+    {
+        var gebaut = Lernplattform.Core.Stadtbau.Bauteile.Gebaeude(Aussen.Stadtdaten(aussen));
+        return [.. AussenBearbeitung.Orte(aussen).Where(o => Py.Hat(gebaut, Py.Str(o["modell"])))
+            .Select(o => (Py.Str(o["id"]), o["name"] as string is { Length: > 0 } n ? n : Py.Str(o["id"])))];
     }
 
     /// <summary>
@@ -344,6 +372,11 @@ public sealed class Blueprint
         {
             var (mx, my) = GebaeudeMitte(aussen, g);
             funde.Add(new StadtbauFund(Texte.EigenesGebaeudeNochNicht(name), Texte.EigenesGebaeudeTipp, false, mx, my));
+        }
+        foreach (var (ort, name) in EigeneOrte(aussen))
+        {
+            var (x, y, w, h) = AussenBearbeitung.HausFlaeche(aussen, new AussenStelle(AussenArt.Haus, -1, 0, ort));
+            funde.Add(new StadtbauFund(Texte.EigenesGebaeudeNochNicht(name), Texte.EigenesGebaeudeTipp, false, x + (w / 2), y + (h / 2)));
         }
         var mitTuer = Zierwege(aussen).Select(z => Py.Str(z["modell"])).ToHashSet(StringComparer.Ordinal);
         foreach (var gruppe in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "gebaeude") && mitTuer.Contains(Py.Str(t["modell"])))
