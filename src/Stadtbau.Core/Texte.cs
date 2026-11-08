@@ -431,14 +431,18 @@ public static class Texte
         [Neu] = "Legt ein neues Projekt an: Stadt 1 überarbeiten, einen Innenraum umbauen oder eine leere Stadt neu bauen.",
         [Oeffnen] = "Öffnet ein Projekt, an dem du schon gearbeitet hast.",
         [Speichern] = "Speichert das Projekt und legt zusätzlich eine Sicherung an (jede Änderung wird ohnehin sofort gespeichert).",
-        [Rueckgaengig] = "Nimmt die letzte Änderung zurück.",
-        [Wiederholen] = "Macht die zuletzt zurückgenommene Änderung wieder.",
+        [Rueckgaengig] = "Nimmt die letzte Änderung zurück (Strg+Z).",
+        [Wiederholen] = "Macht die zuletzt zurückgenommene Änderung wieder (Strg+Y).",
         [DateiSpeichern] = "Prüft die Stadt und speichert sie als Datei, die CC ins Spiel einbauen kann.",
         [AnCcSenden] = "Prüft die Stadt und schickt die Datei für das Spiel direkt an CC.",
         [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
         [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
+        [MenueProjekt] = TippMenueProjekt,
+        [MenueEinstellungen] = TippMenueEinstellungen,
+        [Tastenkuerzel] = TippTastenkuerzel,
+        [UpdateSuchen] = "Fragt bei GitHub nach, ob es eine neuere Version des Werkzeugs gibt, deine Projekte bleiben dabei erhalten.",
     };
 
     /// <summary>Tipp je Gruppe der Liste links (Stadt von oben und Innenräume).</summary>
@@ -644,4 +648,67 @@ public static class Texte
     public const string AnkunftHinweis = "Der Pfeil vor dem Stück ist die Ankunft: dort steht die Figur nach dem Wechsel und schaut in Pfeilrichtung. Ziehe ihn, um ihn zu verschieben.";
     public const string AnkunftVerschoben = "Ankunft verschoben";
     public const string ZielGesetzt = "Ziel gesetzt";
+
+    // Welle Q (Weisung P12-76, Kurzplan Meldung P12-42): neue Ordnung der Knoepfe
+    public const string MenueProjekt = "Projekt";
+    public const string MenueEinstellungen = "Einstellungen";
+    public const string Tastenkuerzel = "Tastenkürzel anzeigen";
+    public const string TastenTitel = "Tastenkürzel";
+    public const string Schliessen = "Schließen";
+    public const string SpeicherStand = "gespeichert ✓";
+    public const string NichtGespeichert = "nicht gespeichert";
+    public static string ProjektTitel(string name) => "Projekt „" + name + "“";
+    public const string GruppeStrassen = "Straßen und Wege";
+    public const string GruppeNatur = "Natur und Licht";
+    public const string GruppeGebaeude = "Gebäude";
+    public const string TippGruppeStrassen = "Straßen, Kurven, Kreisverkehr, Fußwege und die Bahn; Straßen, Fußwege und Gleise lassen sich auch von Punkt zu Punkt ziehen.";
+    public const string TippGruppeNatur = "Bäume, Parks, Beete und Laternen.";
+    public const string TippGruppeGebaeude = "Gebäude ohne Innenraum und deine gespeicherten Blueprints.";
+    public const string StueckSuchen = "Stück suchen";
+    public const string StueckSuchenPlatzhalter = "Stück suchen …";
+    public const string StueckSuchenTipp = "Zeigt nur die Knöpfe, deren Name den Text enthält, zum Beispiel „Kurve“; ein leeres Feld zeigt wieder alle Gruppen.";
+    public const string SucheKeinTreffer = "Nichts gefunden. Im vollen Katalog gibt es noch viel mehr Stücke.";
+    public const string Pruefen = "Prüfen";
+    public const string PruefenGruen = "Prüfen – alles in Ordnung";
+    public static string PruefenRot(int n) => "Prüfen – " + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot";
+    public const string Vorschau = "Vorschau";
+    public const string InnenraeumeOeffnen = "Innenräume öffnen";
+    public const string Hilfe3D = "So bedienst du die 3D-Ansicht";
+    public const string KameraKarte = "Ansicht";
+    public const string GrenzenKurz = "Grenzen (Nacht, Winter, Weihnachten)";
+
+    public const string Hilfe3DKnopf = "Hilfe zur 3D-Ansicht";
+    public const string Hilfe3DTipp = "Erklärt, wie du in der 3D-Ansicht baust und die Kamera bewegst.";
+    public const string ReiterName = "Ansicht wählen";
+    public const string TastenTablet = "Am Tablet gibt es keine Tasten: Dort zeigt ein langer Druck auf einen Knopf, was er tut, und zwei Finger bewegen die Ansicht.";
+    public const string Version = "Version";
+
+    /// <summary>Tipps der Kopfleiste fuer die Knoepfe, die Welle Q dazubringt (die anderen stehen in <see cref="KopfTipps"/>).</summary>
+    public const string TippMenueProjekt = "Neues Projekt, Projekt öffnen und speichern, die Stadt-Datei für das Spiel speichern oder an CC senden.";
+    public const string TippMenueEinstellungen = "Helle oder dunkle Farben, Vollbild, nach Updates suchen, Tastenkürzel und die Version.";
+    public const string TippTastenkuerzel = "Zeigt alle Tasten, mit denen du schneller arbeitest, am PC auch mit der Taste F1 oder dem Fragezeichen.";
+
+    /// <summary>
+    /// Welle Q: alle Tastenkuerzel des Werkzeugs (Fenster „Tastenkürzel“). Spalte 3 nennt die Tasten des Programms
+    /// (Avalonia-Namen), damit ein Test pruefen kann, dass jede abgefragte Taste hier steht.
+    /// </summary>
+    public static readonly IReadOnlyList<(string Taste, string Wirkung, string[] Tasten)> TastenListe =
+    [
+        ("Strg+Z / Strg+Y", "Rückgängig / Wiederholen", ["Z", "Y"]),
+        ("Strg+S", "Projekt speichern", ["S"]),
+        ("Strg+D", "Ausgewähltes Stück kopieren", ["D"]),
+        ("Entf / Rücktaste", "Ausgewähltes Stück löschen", ["Delete", "Back"]),
+        ("R / Umschalt+R", "Drehen (auch beim Setzen), Umschalt dreht andersherum", ["R"]),
+        ("M", "Kurve spiegeln", ["M"]),
+        ("E", "Einrasten an oder aus", ["E"]),
+        ("Esc", "Setzen beenden, Auswahl aufheben", ["Escape"]),
+        ("Pfeiltasten", "Ausgewähltes Stück verschieben (3D ohne Auswahl: Ansicht schieben)", ["Left", "Right", "Up", "Down"]),
+        ("Leertaste + ziehen", "Ansicht schieben", ["Space"]),
+        ("Bild hoch / runter", "3D-Ansicht steiler / flacher", ["PageUp", "PageDown"]),
+        ("Q", "3D-Ansicht drehen", ["Q"]),
+        ("+ / −", "3D-Ansicht näher / weiter weg", ["OemPlus", "Add", "OemMinus", "Subtract"]),
+        ("G", "Raster zeigen (Gebäude entwerfen)", ["G"]),
+        ("F11", "Vollbild", ["F11"]),
+        ("F1 / ?", "Diese Übersicht", ["F1"]),
+    ];
 }

@@ -317,6 +317,7 @@ public static partial class StadtbauMessung
         await LeereStadtAsync(a, f);
         await BlueprintsAsync(a, f);
         await BedienungAsync(a, f);
+        await OrdnungAsync(a, f);
         await FingerAsync(a, f);
         await Bauen3DAsync(a, f);
         await WasserAsync(a, f);
@@ -880,6 +881,8 @@ public static partial class StadtbauMessung
             Fund("Blueprint: Liste zeigt " + a.Blueprints.Count.ToString(Inv) + " Eintraege (erwartet 2, einer kaputt)");
         }
         // Weisung P12-33: jeder Knopf liegt im Kasten seines Eintrags (Gegenprobe: alte Liste ohne Kaesten um die Knoepfe)
+        // Welle Q: die Liste steht in der Gruppe „Gebäude“ (ein Tippen auf den Kopf oeffnet sie)
+        a.GruppeOeffnenFuer(a.BlueprintListe);
         await BildAsync(a);
         foreach (var fund in KaestenPruefen(a))
         {

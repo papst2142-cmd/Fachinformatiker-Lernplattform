@@ -191,6 +191,37 @@ public class BlueprintEntwurfTests
     }
 
     /// <summary>
+    /// Welle Q (Sammelliste 229): ein Fund draussen an einem eigenen Gebaeude nennt den Namen des Blueprints, nicht den
+    /// Modellnamen „bau:…“. Gegenprobe: mit dem Verhalten bis S 0.16.0 steht „bau:eigenes_haus“ im Fund.
+    /// </summary>
+    [Fact]
+    public void Fund_AmEigenenGebaeude_NenntDenNamen_Gegenprobe()
+    {
+        var ablage = Daten.NeueAblage();
+        var p = Projekt.Neu("Eigenbau Name", Daten.Spiel, ablage, leer: (32, 24));
+        p.AussenAendern("Straße", a =>
+        {
+            var s = AussenBearbeitung.Setzen(a, AussenArt.Strasse, 4, 12)!;
+            AussenBearbeitung.LaengeSetzen(a, s, 28);
+        });
+        var b = Haus().AlsBlueprint("Eigenes Haus", Katalog.Bauteil, p.Name, p.Basis.StadtId, out _);
+        p.AussenAendern(Texte.BlueprintSetzen, a => b.Setzen(a, 10, 8.5, out _));
+        p.AussenAendern("Baum", a => AussenBearbeitung.Setzen(a, AussenArt.Baum, 10, 8.5));
+        var rot = p.PruefenAussen().Where(f => f.Rot).Select(f => f.Text).ToList();
+        Assert.Contains(rot, t => t.Contains("„Eigenes Haus“", StringComparison.Ordinal));
+        Assert.DoesNotContain(rot, t => t.Contains("bau:", StringComparison.Ordinal));
+        Blueprint.ModellnamenAltFuerTests = true;
+        try
+        {
+            Assert.Contains(p.PruefenAussen(), f => f.Rot && f.Text.Contains("„bau:eigenes_haus“", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Blueprint.ModellnamenAltFuerTests = false;
+        }
+    }
+
+    /// <summary>
     /// Weisung P12-52 Punkt 5: ein in S 0.9.0 gespeicherter Blueprint mit einem der vier korrigierten Teile (Fenster mit
     /// Balkon) hat noch den Block aus der alten Lage gespeichert. Er bleibt lesbar, laesst sich weiterbauen und setzen, die
     /// 3D-Ansicht zeichnet die Teile jetzt buendig; erst beim naechsten Speichern bekommt er den neuen Block.

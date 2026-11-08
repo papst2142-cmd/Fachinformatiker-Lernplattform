@@ -3,6 +3,20 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.17.0
+
+Die Knöpfe sind neu geordnet: weniger auf einmal, das Wichtige immer zur Hand.
+
+- Oben links steht dein Projekt mit „gespeichert ✓“. Rechts gibt es zwei Menüs: „Projekt“ (neues Projekt, öffnen, speichern, Stadt-Datei für das Spiel speichern oder an CC senden) und „Einstellungen“ (helle oder dunkle Farben, Vollbild, nach Updates suchen, Tastenkürzel, Version). „Werkzeug beenden“ bleibt ganz rechts.
+- Die Ansichten „Stadt von oben“, „Innenräume“, „3D-Ansicht“ und „Gebäude entwerfen“ stehen als eine Leiste darunter, die gewählte ist farbig. Daneben nehmen zwei Pfeile die letzte Änderung zurück oder machen sie wieder.
+- Links in „Stadt von oben“ gibt es ein Suchfeld und vier Gruppen zum Aufklappen: „Straßen und Wege“ (mit Kurven, Kreisverkehr, Ziehen und Bahn), „Natur und Licht“, „Wasser“ und „Gebäude“ (mit deinen Blueprints). Es ist immer nur eine Gruppe offen, das Werkzeug merkt sich welche. „Voller Katalog“ steht immer unten.
+- Rechts steht „Ausgewähltes Stück“ immer oben. „Prüfen“ zeigt im Kopf, wie viele rote Funde es gibt. „Innenräume öffnen“ ist zugeklappt. In der 3D-Ansicht kommen „Vorschau“ (Tag/Nacht, Jahreszeit, Fest, Figur laufen lassen) und die Grenzen dazu; die Erklärung der 3D-Ansicht steht hinter dem Knopf „?“.
+- Die Knöpfe für die Kamera (näher, weiter, alles zeigen, kippen) und der Schalter „Einrasten“ liegen in einer kleinen Karte unten rechts in der Ansicht. „Ganze Stadt zeigen“ lässt darunter Platz, damit die Karte keinen Hausnamen verdeckt.
+- Im Reiter „Innenräume“ stehen die Etagen jetzt rechts unter „Ausgewähltes Stück“.
+- Das Fenster „Tastenkürzel“ (Taste F1 oder ?, oder im Menü „Einstellungen“) zeigt alle Tasten.
+- Funde an einem eigenen Gebäude nennen jetzt seinen Namen statt „bau:…“.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.16.0
 
 Häuser bekommen Etagen: Obergeschosse mit Treppe oder Fahrstuhl.

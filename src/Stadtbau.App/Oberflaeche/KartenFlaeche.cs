@@ -191,6 +191,43 @@ public sealed class KartenFlaeche : Control
 
     private (double B, double H) Welt() => Stand is { } a ? Aussen.Groesse(a) : (32, 24);
 
+    /// <summary>Welle Q: Platz unten fuer die Kamera-Karte (Bildpunkte). Aendert er sich, passt eine eingepasste Karte neu ein.</summary>
+    public double UntenFrei
+    {
+        get => _untenFrei;
+        set
+        {
+            if (Math.Abs(_untenFrei - value) < 0.5)
+            {
+                return;
+            }
+            _untenFrei = value;
+            // nur neu einpassen, solange die Ansicht noch genau so steht wie nach dem letzten Einpassen (sonst bliebe ein
+            // eigener Zoom beim Wechsel zwischen Draufsicht und 3D nicht stehen)
+            if (_eingepasst && _zoom == _einpassZoom && _versatz == _einpassVersatz)
+            {
+                Einpassen();
+            }
+        }
+    }
+
+    private double _untenFrei;
+    private double _einpassZoom = double.NaN;
+    private Point _einpassVersatz;
+
+    /// <summary>Gegenprobe Welle Q: Einpassen ohne Platz fuer die Kamera-Karte (wie bis S 0.16.0).</summary>
+    internal static bool UntenFreiAltFuerTests { get; set; }
+
+    /// <summary>Rechteck der ganzen Stadt in Bildpunkten der Flaeche (Start-Test).</summary>
+    public Rect WeltFlaeche
+    {
+        get
+        {
+            var (b, h) = Welt();
+            return new Rect(_versatz.X, _versatz.Y, b * _zoom, h * _zoom);
+        }
+    }
+
     public void Einpassen()
     {
         if (Bounds.Width < 10)
@@ -198,9 +235,13 @@ public sealed class KartenFlaeche : Control
             return;
         }
         var (b, h) = Welt();
-        _zoom = Math.Max(4, Math.Min((Bounds.Width - 24) / b, (Bounds.Height - 24) / h));
-        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (Bounds.Height - (h * _zoom)) / 2);
+        // Welle Q (Weisung P12-76 Punkt 8): unten bleibt der Platz der Kamera-Karte frei, sie verdeckt nie einen Hausnamen
+        var hoehe = Math.Max(48, Bounds.Height - (UntenFreiAltFuerTests ? 0 : UntenFrei));
+        _zoom = Math.Max(4, Math.Min((Bounds.Width - 24) / b, (hoehe - 24) / h));
+        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (hoehe - (h * _zoom)) / 2);
         _eingepasst = true;
+        _einpassZoom = _zoom;
+        _einpassVersatz = _versatz;
         InvalidateVisual();
     }
 

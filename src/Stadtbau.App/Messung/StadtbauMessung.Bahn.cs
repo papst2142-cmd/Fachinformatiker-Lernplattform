@@ -29,7 +29,11 @@ public static partial class StadtbauMessung
         var p = a.Projekt!;
         var k = a.Karte;
         int Bahnen() => Aussen.Landschaft(p.AussenStand).OfType<Lernplattform.Core.Daten.PyObjekt>().Count(l => Py.Gleich(l["typ"], "bahn"));
-        if (a.ZiehKnoepfe.Count != 4 || a.BahnKnopf is not { IsEffectivelyVisible: true })
+        if (a.BahnKnopf is { } bk)
+        {
+            a.GruppeOeffnenFuer(bk);
+        }
+        if (a.ZiehKnoepfe.Count != 4 || a.ZiehKnoepfe.Any(b => a.KlicksBis(b) is not (0 or 1)) || a.BahnKnopf is not { IsEffectivelyVisible: true })
         {
             Fund("Bahn: die Knoepfe „Bahn“ und „Bahn ziehen“ fehlen links");
             return;

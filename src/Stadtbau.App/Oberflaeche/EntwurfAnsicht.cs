@@ -241,6 +241,9 @@ public sealed class EntwurfAnsicht : Grid
         Bedienung.SchattenWeg();
     }
 
+    /// <summary>Welle Q: die Kamera-Karte unten rechts in der Ansicht (Start-Test).</summary>
+    internal Border KameraKarte { get; private set; } = new();
+
     private Control Mitte()
     {
         var ebene = new Grid();
@@ -268,9 +271,9 @@ public sealed class EntwurfAnsicht : Grid
                 _status,
             },
         };
+        // Welle Q (Weisung P12-76 Punkt 8): die Kamera-Knoepfe in der Karte unten rechts in der Ansicht
         var knoepfe = new WrapPanel
         {
-            Margin = new Thickness(0, 8, 0, 0),
             Children =
             {
                 Knopf("+", Texte.Vergroessern, Texte.ZoomTipp, () => Bedienung.Zoomen(1.25f)),
@@ -281,12 +284,13 @@ public sealed class EntwurfAnsicht : Grid
                 Knopf(Texte.EntwurfGanzZeigen, Texte.EntwurfGanzZeigen, Texte.GanzeStadt3DTipp, GanzZeigen),
             },
         };
-        var mitte = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(12) };
+        KameraKarte = Kamerakarte.Bauen(knoepfe);
+        KameraKarte.MaxWidth = 640;
+        var ansicht = Kamerakarte.Ueber(flaeche, KameraKarte);
+        var mitte = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Margin = new Thickness(12) };
         mitte.Children.Add(oben);
-        SetRow(flaeche, 1);
-        mitte.Children.Add(flaeche);
-        SetRow(knoepfe, 2);
-        mitte.Children.Add(knoepfe);
+        SetRow(ansicht, 1);
+        mitte.Children.Add(ansicht);
         return mitte;
     }
 
