@@ -310,7 +310,10 @@ public sealed class Innenraum
         new(ansicht, OrtFuer(ansicht) ?? ansicht, gebaeude, [.. personen.Select(p => Person(p, false))], grafik, null, kleider);
 
     /// <summary>Ort (Python site) zur Ansicht eines Stadt-Orts; null = (noch) kein Innenraum.</summary>
-    public static string? OrtFuer(string? ansicht) => ansicht switch
+    public static string? OrtFuer(string? ansicht) => ansicht is not null && Stadtbau.Etagen.Teilen(ansicht) is ({ } basis, > 0)
+        // Phase 13 Welle 5 (Weisung P12-73): Etage eines Geschaefts oder Schalters ("geschaeft:moebelhaus@1"), Ort wie unten
+        ? (basis.StartsWith("geschaeft:", StringComparison.Ordinal) || basis.StartsWith("schalter:", StringComparison.Ordinal) ? OrtFuer(basis) : null)
+        : ansicht switch
     {
         "buero" => OrtBuero,
         "zuhause" => OrtZuhause,
@@ -419,6 +422,14 @@ public sealed class Innenraum
             if ((innenraeume is null ? null : Get(innenraeume, ort)) is not PyObjekt laden)
             {
                 return null;
+            }
+            var etage = Stadtbau.Etagen.Teilen(ansicht!).Etage;
+            if (etage > 0)
+            {
+                // Phase 13 Welle 5 (Weisung P12-73): ein Obergeschoss steht so im Grundriss des Erdgeschosses, wie das
+                // Werkzeug es gebaut hat (ohne Zusaetze, ohne Personen); fehlt es, gibt es keinen Innenraum
+                var eg = Objekt(laden["gebaeude"]);
+                return Stadtbau.Etagen.Gibt(eg, etage) ? new Eingaben(ansicht!, ort, Stadtbau.Etagen.Gebaeude(eg, etage), [], null, geschaefte) : null;
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
@@ -836,7 +847,8 @@ public sealed class Innenraum
         {
             Wand((float)x1, (float)y1, (float)x2, (float)y2);
         }
-        Aussenwaende(Objekt(flur["eingang"]));
+        // Phase 13 Welle 5: ein Obergeschoss hat keine Eingangstuer
+        Aussenwaende(Get(flur, "eingang") as PyObjekt);
         var deko = Liste(Gebaeude["raeume"]).Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko"))
             .Concat(ListeOderLeer(flur, "deko")).Select(Objekt);
         if (Fest is not null && Ort == Kleidung.Laden)
@@ -919,7 +931,7 @@ public sealed class Innenraum
     }
 
     /// <summary>Aussenwaende mit Eingang (links im Flur), Fenstern (Glas ab Bruestung) und Rolltor.</summary>
-    private void Aussenwaende(PyObjekt eingang)
+    private void Aussenwaende(PyObjekt? eingang)
     {
         const float d = 0.15f;
         var fenster = ListeOderLeer(Gebaeude, "fenster").Select(Liste).Select(f => (X1: (float)Py.F(f[0]), Y1: (float)Py.F(f[1]), X2: (float)Py.F(f[2]), Y2: (float)Py.F(f[3]))).ToList();
@@ -950,7 +962,7 @@ public sealed class Innenraum
                     oeffnungen.Add((Math.Min(r.X1, r.X2), Math.Max(r.X1, r.X2), 'r'));
                 }
             }
-            if (!waagerecht && fest == 0)
+            if (!waagerecht && fest == 0 && eingang is not null)
             {
                 oeffnungen.Add(((float)Py.F(eingang["von"]), (float)Py.F(eingang["bis"]), 't'));
             }
@@ -1157,6 +1169,35 @@ public sealed class Innenraum
                     Modell(r, "chair", cx - 0.32f, -0.7f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 0);
                     Modell(r, "chair", cx - 0.32f, tt + 0.06f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 2);
                 }
+                break;
+            }
+            case "treppe":
+            {
+                // Phase 13 Welle 5 (Weisung P12-73): Stufen von vorn (unten) nach hinten (oben), seitlich ein Gelaender
+                const int stufen = 8;
+                for (var i = 0; i < stufen; i++)
+                {
+                    var tiefe = tt / stufen;
+                    Kasten(r, 0, tt - ((i + 1) * tiefe), b, tiefe, 0, (i + 1) * WandHoehe * 0.95f / stufen, i % 2 == 0 ? Farben.Holz : Farben.HolzDunkel);
+                }
+                foreach (var seite in new[] { 0f, b - 0.08f })
+                {
+                    Kasten(r, seite, tt - 0.1f, 0.08f, 0.08f, 0, 0.9f * M, Farben.Metall);
+                    Kasten(r, seite, 0, 0.08f, tt, WandHoehe * 0.95f, (WandHoehe * 0.95f) + 0.08f, Farben.Metall);
+                }
+                break;
+            }
+            case "fahrstuhl":
+            {
+                // Phase 13 Welle 5: Kabine mit Rueckwand, Seitenwaenden, zwei Tueren vorn und Anzeige darueber
+                const float wand = 0.1f;
+                Kasten(r, 0, 0, b, wand, 0, WandHoehe, Farben.Metall);
+                Kasten(r, 0, 0, wand, tt, 0, WandHoehe, Farben.Metall);
+                Kasten(r, b - wand, 0, wand, tt, 0, WandHoehe, Farben.Metall);
+                Kasten(r, wand, tt - wand, (b / 2) - wand - 0.01f, wand, 0, WandHoehe - 0.35f, Farben.Hell);
+                Kasten(r, (b / 2) + 0.01f, tt - wand, (b / 2) - wand - 0.01f, wand, 0, WandHoehe - 0.35f, Farben.Hell);
+                Kasten(r, wand, tt - wand, b - (2 * wand), wand, WandHoehe - 0.35f, WandHoehe, Farben.MetallDunkel);
+                Kasten(r, (b / 2) - 0.2f, tt - 0.02f, 0.4f, 0.04f, WandHoehe - 0.3f, WandHoehe - 0.12f, Farben.Bildschirm);
                 break;
             }
             case "tresen":

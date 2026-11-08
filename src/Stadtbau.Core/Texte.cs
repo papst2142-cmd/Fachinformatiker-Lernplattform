@@ -615,4 +615,33 @@ public static class Texte
     public const string BahnRadiusTipp = "So eng biegt das Gleis an diesem Eckpunkt: 3 ist das engste, 4,5 ist weit.";
 
     public static string ZiehenGesetzt(string art, int stuecke) => stuecke <= 1 ? art + " gezogen" : $"{art} gezogen ({stuecke} Stücke)";
+
+    // Welle W5 (Weisung P12-73, Plan P12-23b): Etagen, Treppe und Fahrstuhl
+    public const string Etagen = "Etagen";
+    public const string TippEtagen = "Die Etagen dieses Hauses. Antippen zeigt ihren Grundriss. Treppe und Fahrstuhl findest du im Katalog unter „Treppe und Fahrstuhl“.";
+    public const string EtageHinzufuegen = "Etage hinzufügen";
+    public const string EtageHinzufuegenTipp = "Legt oben eine neue Etage an. Vorschlag: die Außenwände und der Flur des Erdgeschosses, ohne Einrichtung.";
+    public const string EtageHoechstens = "Mehr als vier Etagen über dem Erdgeschoss gehen nicht. Das Haus hat schon das Erdgeschoss und vier Obergeschosse.";
+    public const string EtageUmbenennen = "Umbenennen";
+    public const string EtageUmbenennenTipp = "Gibt der gezeigten Etage einen eigenen Namen (leer = „1. Obergeschoss“ usw.).";
+    public const string EtageName = "Name der Etage";
+    public const string EtageLoeschen = "Etage löschen";
+    public const string EtageLoeschenTipp = "Löscht die gezeigte Etage. Das geht nur, wenn keine Treppe und kein Fahrstuhl dort steht.";
+    public const string EtageLoeschenNicht = "Auf dieser Etage steht noch eine Treppe oder ein Fahrstuhl. Erst diese Stücke löschen, dann die Etage.";
+    public const string EtageLoeschenTitel = "Etage löschen";
+    public static string EtageLoeschenFrage(string name) => $"„{name}“ mit ihrer ganzen Einrichtung löschen?";
+    public const string EgNichtLoeschen = "Das Erdgeschoss lässt sich nicht löschen.";
+    public static string EtageAngelegt(string name) => name + " angelegt";
+    public static string EtageGezeigt(string name) => name + " gezeigt";
+    public const string Ziel = "Ziel";
+    public const string ZielTipp = "Wohin führt dieses Stück? Das Werkzeug setzt das Gegenstück an dieselbe Stelle auf der gewählten Etage.";
+    public const string ZielKeins = "noch nirgends hin";
+    public const string ZielTreppeNurNachbar = "Eine Treppe führt nur eine Etage hoch oder runter. Lege zuerst mit „Etage hinzufügen“ eine Etage an.";
+    public const string FahrstuhlZiele = "Hält auf";
+    public const string FahrstuhlZieleTipp = "Haken setzen: auf dieser Etage hält der Fahrstuhl (das Werkzeug setzt dort einen Fahrstuhl an dieselbe Stelle).";
+    public const string BlickDrehen = "Blick drehen";
+    public const string BlickDrehenTipp = "Dreht die Blickrichtung der Figur bei der Ankunft um eine Vierteldrehung.";
+    public const string AnkunftHinweis = "Der Pfeil vor dem Stück ist die Ankunft: dort steht die Figur nach dem Wechsel und schaut in Pfeilrichtung. Ziehe ihn, um ihn zu verschieben.";
+    public const string AnkunftVerschoben = "Ankunft verschoben";
+    public const string ZielGesetzt = "Ziel gesetzt";
 }

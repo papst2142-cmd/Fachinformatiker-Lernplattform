@@ -945,7 +945,8 @@ public sealed class SpielSeite : Grid
         _zeile.Text = spiel.Zeile;
         HinweisfeldZeigen(spiel);
         _betreten.IsVisible = spiel.KannBetreten;
-        _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten;
+        // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
+        _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten && spiel.Etage == 0;
         _warten.IsVisible = spiel.KannWarten;
         _orteKnopf.IsVisible = !spiel.ImInnenraum;
         _einrichten.IsVisible = spiel.KannEinrichten;
@@ -1008,6 +1009,7 @@ public sealed class SpielSeite : Grid
             + "#" + (spiel.Einrichten ? WohnungSchluessel(spiel) : "") + "#" + Schrift.Gross + "#" + _ersatz.IsVisible + "#" + spiel.AusgewaehltRueckkauf
             + "#" + (_ersatz.IsVisible && spiel.ImInnenraum
                 ? string.Join(",", Spielwelt.ErsatzKnoepfe(spiel.Ablauf.Stand, spiel.Ort, [.. spiel.Knoepfe.Select(k => k.Aktion)]).Select(k => k.Aktion))
+                    + "#" + string.Join(",", spiel.EtagenErsatzKnoepfe().Select(k => k.Aktion))
                 : "");
         if (schluessel == _tafelSchluessel)
         {
@@ -1027,6 +1029,13 @@ public sealed class SpielSeite : Grid
             // Phase 12 Welle 1/2: ohne 3D geht die Figur nicht zu den Moebeln; Kleiderschrank, PC, Regal, Bett, Paket,
             // Firma und Feierabend stehen dann immer am Ort (Spielwelt.ErsatzKnoepfe), oben in der Ortsliste
             foreach (var (aktion, name) in Spielwelt.ErsatzKnoepfe(spiel.Ablauf.Stand, spiel.Ort, [.. spiel.Knoepfe.Select(k => k.Aktion)]))
+            {
+                var knopf = Schrift.Knopf(name, true);
+                knopf.Click += (_, _) => Tafel?.AktionAusfuehren(aktion);
+                _ortAktionen.Children.Add(knopf);
+            }
+            // Phase 13 Welle 5: Treppen und Fahrstuehle der Etage ebenso (ohne 3D geht die Figur nicht hin)
+            foreach (var (aktion, name) in spiel.EtagenErsatzKnoepfe().Where(k => !spiel.Knoepfe.Any(v => v.Aktion == k.Aktion)))
             {
                 var knopf = Schrift.Knopf(name, true);
                 knopf.Click += (_, _) => Tafel?.AktionAusfuehren(aktion);

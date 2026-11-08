@@ -3,6 +3,7 @@ using Lernplattform.Core.Daten;
 using Lernplattform.Core.Texte;
 
 using Lernplattform.Core.Spiel.Ton;
+using Lernplattform.Core.Stadtbau;
 
 namespace Lernplattform.Core.Spiel.Probe;
 
@@ -18,7 +19,7 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// Werk (<see cref="SpielBelegtAusnahme"/>), steht <see cref="AbgleichTexte.Belegt"/> in der Zeile.
 /// Die Darstellung ruft <see cref="Fortschreiten"/> je Bild.
 /// </summary>
-public sealed class StadtSpiel
+public sealed partial class StadtSpiel
 {
     /// <summary>Gehgeschwindigkeit in Karteneinheiten je Sekunde (fisi_game_gui 7.0 / 2).</summary>
     public const float Tempo = 3.5f;
@@ -34,8 +35,10 @@ public sealed class StadtSpiel
     /// <see cref="Festzeit.Heute"/>; ohne (Tests) nie eine Festzeit.
     /// </remarks>
     public StadtSpiel(Stadt stadt, Spielablauf ablauf, GrafikBibliothek? grafik = null, PyObjekt? innenraeume = null, PyObjekt? geschaefte = null,
-        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null, StadtSzene.Vorrat? vorrat = null)
+        PyObjekt? feste = null, Func<string?>? festzeit = null, Func<Jahreszeit>? jahreszeit = null, StadtSzene.Vorrat? vorrat = null,
+        string? fehlerLog = null)
     {
+        _fehlerLog = fehlerLog;
         Stadt = stadt;
         Ablauf = ablauf;
         Grafik = grafik;
@@ -60,6 +63,8 @@ public sealed class StadtSpiel
                 Ton?.Invoke(new Tonanlass(anlass));
             }
         };
+        // Phase 13 Welle 5 (Nico 2b): stand die Figur zuletzt auf einer Etage, steht sie nach dem Neustart wieder dort
+        EtageNachNeustart();
     }
 
     /// <summary>Phase 8 W8: Anlass fuer einen Ton (Schritt, Tuer, Kasse, Melodie); nur Darstellung.</summary>
@@ -171,6 +176,13 @@ public sealed class StadtSpiel
 
     private StadtGrund GeheZuOrt(string ziel)
     {
+        if (Etage > 0)
+        {
+            // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss an der Tuer
+            Zeile = Etagen.NurUnten;
+            Geaendert?.Invoke();
+            return StadtGrund.KeinWeg;
+        }
         if (ImInnenraum)
         {
             Verlassen();
@@ -634,6 +646,8 @@ public sealed class StadtSpiel
         InnenGeaendert?.Invoke();
         Geaendert?.Invoke();
         SzeneVorbereiten();
+        // Phase 13 W5: die Etagen, die man von hier aus erreicht, im Hintergrund vorbereiten (ohne Etagen: nichts)
+        EtagenVorbereiten();
         return true;
     }
 
@@ -808,7 +822,7 @@ public sealed class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. SpielweltKnoepfe(innen, knoepfe)];
+        Knoepfe = [.. EtagenKnoepfe(SpielweltKnoepfe(innen, knoepfe))];
     }
 
     /// <summary>
@@ -971,6 +985,11 @@ public sealed class StadtSpiel
         {
             return false;
         }
+        if (EtagenAktion(aktion))
+        {
+            // Phase 13 Welle 5: Treppe sofort, Fahrstuhl ueber das Fenster der Oberflaeche (Aktion)
+            return true;
+        }
         if (aktion is not ("zuhause" or "buero"))
         {
             // W6: Auftrag, Feierabend, Lernen, Schlafen, Personal fuehrt die Oberflaeche aus (run_action)
@@ -1005,6 +1024,14 @@ public sealed class StadtSpiel
         {
             return;
         }
+        if (Etage > 0)
+        {
+            // Phase 13 Welle 5 (Plan P12-23b Abschnitt 5): hinaus geht es nur im Erdgeschoss an der Tuer
+            Zeile = Etagen.NurUnten;
+            Geaendert?.Invoke();
+            return;
+        }
+        AufenthaltDraussen();
         _weg.Clear();
         Innen = null;
         Ton?.Invoke(new Tonanlass(Anlass.TuerZu));

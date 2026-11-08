@@ -243,7 +243,8 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
             var ausgestellt = new HashSet<string>(StringComparer.Ordinal);
             // Phase 12 Welle 1: die Auslage so, wie sie im Laden steht (mit allen angehaengten Zusaetzen)
             var gebaeude = Probe.Innenraum.LadenGebaeude(innenraeume!, laden);
-            foreach (var d in Auslage(new PyObjekt { { "gebaeude", gebaeude } }))
+            // Phase 13 Welle 5 (Weisung P12-73): Waren auf den Etagen zaehlen mit (ohne Etagen wie bisher)
+            foreach (var d in AuslageMitEtagen(gebaeude))
             {
                 var ware = Py.Str(d["ware"]);
                 if (ware.StartsWith("teile:", StringComparison.Ordinal) ? !typen.Contains(ware["teile:".Length..])
@@ -379,6 +380,11 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
     }
 
     /// <summary>Einrichtung eines Ladens mit "ware" (Auslage), aus Flur und Raeumen.</summary>
+    /// <summary>Phase 13 Welle 5: Auslage des Erdgeschosses und aller Etagen (in dieser Reihenfolge).</summary>
+    public static IEnumerable<PyObjekt> AuslageMitEtagen(PyObjekt gebaeude) =>
+        Auslage(new PyObjekt { { "gebaeude", gebaeude } }).Concat(Enumerable.Range(1, Stadtbau.Etagen.Anzahl(gebaeude))
+            .Where(k => Stadtbau.Etagen.Gibt(gebaeude, k)).SelectMany(k => Auslage(new PyObjekt { { "gebaeude", Stadtbau.Etagen.Gebaeude(gebaeude, k) } })));
+
     public static IEnumerable<PyObjekt> Auslage(PyObjekt laden)
     {
         var gebaeude = Objekt(laden["gebaeude"]);

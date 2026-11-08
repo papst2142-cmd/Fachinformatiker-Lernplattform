@@ -211,6 +211,8 @@ public static class Bearbeitung
     {
         var d = Deko(gebaeude, stelle);
         var kopie = (PyObjekt)Py.Kopie(d)!;
+        // Phase 13 Welle 5: die Kopie einer Treppe oder eines Fahrstuhls fuehrt noch nirgends hin (eigenes Ziel waehlen)
+        kopie.RemoveAll(p => p.Key == Etagen.FeldLink);
         var (bx, _, bw, _) = Flaeche(gebaeude, stelle.Bereich);
         var rechts = Py.F(d["x"]) + (2 * Py.F(d["w"])) + Raster <= bx + bw;
         Py.Setzen(kopie, "x", Zahl(Py.F(d["x"]) + (rechts ? Py.F(d["w"]) + Raster : 0)));

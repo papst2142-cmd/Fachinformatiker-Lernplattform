@@ -54,14 +54,14 @@ public static class KatalogPruefung
     /// (Dreiecke, Aufrufe) mit den echten Dreiecken der Katalog-Stuecke.
     /// </summary>
     public static (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) Innen(Katalog? k, string ort, PyObjekt gebaeude,
-        IReadOnlyList<PyObjekt> personen, GrafikBibliothek? grafik, Geschaefte? geschaefte, PyObjekt? innenraeume)
+        IReadOnlyList<PyObjekt> personen, GrafikBibliothek? grafik, Geschaefte? geschaefte, PyObjekt? innenraeume, int etage = 0)
     {
         var ohneEffekte = Ohne(gebaeude, t => IstEffekt(k, t));
         // Der gemeinsame Teil kennt keine Katalog-Stuecke: ein unbekannter Typ ist dort ein roter Grundriss-Fund, und danach
         // rechnet er weder Ueberschneidung noch Wege. Deshalb zwei Laeufe: (a) wie gebaut (alles ausser bekannten Katalog-
         // Stuecken genau wie bisher), (b) jedes bekannte Katalog-Stueck als Stellvertreter "kartons" mit seinem Rechteck
         // (ein festes Teil ohne Aufliegen); was nur (b) findet, kommt von den Katalog-Stuecken und nennt sie beim Namen.
-        var gemeinsam = StadtbauPruefung.Innen(ort, ohneEffekte, personen, grafik, geschaefte, innenraeume);
+        var gemeinsam = StadtbauPruefung.Innen(ort, ohneEffekte, personen, grafik, geschaefte, innenraeume, etage);
         var funde = new List<StadtbauFund>();
         foreach (var f in gemeinsam)
         {
@@ -78,7 +78,7 @@ public static class KatalogPruefung
         {
             var (mit, zuordnung) = (stellvertreter[0].Gebaeude, stellvertreter.Skip(1).Select(s => (s.Typ, s.Rechteck)).ToList());
             var vorhanden = new HashSet<string>(gemeinsam.Select(Schluessel), StringComparer.Ordinal);
-            foreach (var f in StadtbauPruefung.Innen(ort, mit, personen, grafik, geschaefte, innenraeume))
+            foreach (var f in StadtbauPruefung.Innen(ort, mit, personen, grafik, geschaefte, innenraeume, etage))
             {
                 if (f.Text.StartsWith("Die Grenzen sind", StringComparison.Ordinal) || vorhanden.Contains(Schluessel(f)))
                 {
@@ -106,7 +106,7 @@ public static class KatalogPruefung
             try
             {
                 var ohneKatalog = Ohne(gebaeude, Katalog.IstKatalogTyp);
-                var raum = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), ohneKatalog, personen, grafik,
+                var raum = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort, etage), ohneKatalog, personen, grafik,
                     Geschaefte.Laeden.Contains(ort) ? geschaefte?.Daten : null);
                 var (dreiecke, aufrufe) = StadtbauGrenzen.Innen(raum);
                 grenzen = (dreiecke + Dreiecke(k, gebaeude), aufrufe);

@@ -258,6 +258,8 @@ public static partial class StadtbauPruefung
         {
             funde.Add("Draußen: " + fehler.Message);
         }
+        // Phase 13 Welle 5 (Weisung P12-73): Etagen und Uebergaenge der Innenraeume (ohne Etagen kein Fund, Fassung 0 unveraendert)
+        funde.AddRange(EtagenAlle(fassung.Innenraeume, grafik));
         return funde;
     }
 

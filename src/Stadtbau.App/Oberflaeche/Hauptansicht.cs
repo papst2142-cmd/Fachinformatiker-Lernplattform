@@ -357,7 +357,7 @@ public sealed partial class Hauptansicht : UserControl
         _rasterAus.IsCheckedChanged += (_, _) => Flaeche.Raster = _rasterAus.IsChecked == true;
         _ortWahl.SelectionChanged += (_, _) =>
         {
-            if (!_ortWahlFuellt && _ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != _ort)
+            if (!_ortWahlFuellt && _ortWahl.SelectedItem is ComboBoxItem { Tag: string o } && o != (_ort is null ? null : Etagen.Teilen(_ort).Ort))
             {
                 OrtOeffnen(o);
             }
@@ -670,7 +670,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             // ein Blueprint mit Innenraum gesetzt oder das Gebaeude geloescht: Ortsliste neu; ist der offene Innenraum weg, nach draussen
             OrtListeZeigen();
-            if (_innen && _ort is { } offen && !_projekt.Innenorte.Contains(offen))
+            if (_innen && _ort is { } offen && !_projekt.GibtInnenort(offen))
             {
                 _ort = null;
                 ReiterZeigen(innen: false);
@@ -701,6 +701,7 @@ public sealed partial class Hauptansicht : UserControl
             return;
         }
         Flaeche.InvalidateVisual();
+        EtagenZeigen();
         AuswahlZeigen();
         RaumZeigen();
         KnoepfeFreigeben();
@@ -720,7 +721,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
-            OrtOeffnen(_ort is { } o && _projekt.Innenorte.Contains(o) ? o : _projekt.Innenorte[0]);
+            OrtOeffnen(_ort is { } o && _projekt.GibtInnenort(o) ? o : _projekt.Innenorte[0]);
         }
         else
         {
@@ -971,7 +972,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt.OrtName(o), Tag = o });
         }
-        _ortWahl.SelectedItem = _ortWahl.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == _ort);
+        _ortWahl.SelectedItem = _ortWahl.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == (_ort is null ? null : Etagen.Teilen(_ort).Ort));
         _ortWahlFuellt = false;
     }
 
@@ -2064,7 +2065,8 @@ public sealed partial class Hauptansicht : UserControl
             _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt?.OrtName(o) ?? _daten!.OrtName(o), Tag = o });
         }
         var ortTitel = Gruppe(Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl), Texte.TippOrt);
-        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
+        // Welle W5: Etagenliste links ueber dem Katalog (Plan P12-23b Abschnitt 1)
+        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, EtagenBaustein(), Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();
@@ -2141,7 +2143,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
-        if (!_projekt.Innenorte.Contains(ort))
+        if (!_projekt.GibtInnenort(ort))
         {
             return;
         }
@@ -2154,14 +2156,17 @@ public sealed partial class Hauptansicht : UserControl
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
         }
+        _ortWahlFuellt = true;
         foreach (var item in _ortWahl.Items.OfType<ComboBoxItem>())
         {
-            if (item.Tag as string == ort)
+            if (item.Tag as string == Etagen.Teilen(ort).Ort)
             {
                 _ortWahl.SelectedItem = item;
             }
         }
+        _ortWahlFuellt = false;
         Flaeche.Zeigen(_projekt, ort);
+        EtagenZeigen();
         AuswahlZeigen();
         RaumZeigen();
         KnoepfeFreigeben();
@@ -2253,7 +2258,7 @@ public sealed partial class Hauptansicht : UserControl
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Flaeche.Loeschen();
         _auswahl.Children.Add(new WrapPanel { Children = { drehen, neu, kopie, weg } });
-        var waren = _daten!.Waren(ort);
+        var waren = _daten!.Waren(Etagen.Teilen(ort).Ort);
         if (waren.Count > 0)
         {
             var wahl = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -2275,6 +2280,8 @@ public sealed partial class Hauptansicht : UserControl
             };
             _auswahl.Children.Add(Zeilen((Texte.Ware, wahl)));
         }
+        // Welle W5: Treppe und Fahrstuhl: Ziel und Blick der Ankunft
+        EtagenAuswahl(d, ort, a);
         foreach (var k in _auswahl.GetLogicalDescendants().OfType<Control>().Where(c => c is Button or TextBox or ComboBox))
         {
             k.IsEnabled = !_projekt.NurLesen;
