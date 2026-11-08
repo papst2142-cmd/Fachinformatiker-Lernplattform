@@ -2384,6 +2384,9 @@ public sealed partial class Hauptansicht : UserControl
         var g = (PyObjekt)Py.Kopie(_projekt.Grundriss(ort))!;
         var personen = _projekt.Personen(ort);
         var daten = _daten;
+        // Welle W5: eine Etage „ort@k“ prueft mit dem Ort und der Etage, dazu die Regeln zwischen den Etagen (wie Projekt.PruefenMitGrenzen)
+        var (basis, etage) = Etagen.Teilen(ort);
+        var eg = Etagen.Hat(_projekt.Grundriss(basis)) ? (PyObjekt)Py.Kopie(_projekt.Grundriss(basis))! : null;
         if (_geprueft.Task.IsCompleted)
         {
             _geprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -2392,7 +2395,12 @@ public sealed partial class Hauptansicht : UserControl
         _ = Hintergrund(Task.Run(() =>
         {
             // Regeln des gemeinsamen Teils plus Katalog-Stuecke; Grenzen mit deren echten Dreiecken
-            return KatalogPruefung.Innen(Katalog.Aktiv, ort, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume);
+            var (funde, grenzen) = KatalogPruefung.Innen(Katalog.Aktiv, basis, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume, etage);
+            if (eg is not null)
+            {
+                funde.AddRange(StadtbauPruefung.Etagen(basis, eg, daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
+            }
+            return (funde, grenzen);
         })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _pruefStand || ort != _ort)

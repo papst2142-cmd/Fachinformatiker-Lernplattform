@@ -90,7 +90,13 @@ public static partial class StadtbauMessung
 
         // 1. Obergeschoss: Ankunft ziehen = ein Schritt, Rueckgaengig bringt sie zurueck
         a.OrtOeffnen("moebelhaus@1");
+        await a.Geprueft;
         await BildAsync(a);
+        // die Pruefung rechts laeuft fuer die Etage (vorher brach sie mit „dict erwartet“ ab) und zaehlt die Grenzen
+        if (a.Funde.Any(x => x.Rot) || a.GrenzenStand.Dreiecke <= 0)
+        {
+            Fund("Etagen: Pruefung im 1. Obergeschoss: " + string.Join(" | ", a.Funde.Select(x => x.Text)) + $" (Dreiecke {a.GrenzenStand.Dreiecke})");
+        }
         var schritte = p.Verlauf.Count;
         a.Flaeche.AnkunftZiehenFuerTests("u1", 12, 13.5);
         await BildAsync(a);
