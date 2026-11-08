@@ -285,7 +285,7 @@ public sealed class KartenFlaeche : Control
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
     public Point Bildpunkt(double x, double y) => P(x, y);
 
-    private string OrtName(string id) => _projekt?.Daten.OrtName(id) ?? id;
+    private string OrtName(string id) => _projekt?.OrtName(id) ?? id;
 
     // ---- Zeichnen --------------------------------------------------------------------------------
 

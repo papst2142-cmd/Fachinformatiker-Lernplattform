@@ -710,6 +710,17 @@ public static class Texte
     /// (Avalonia-Namen), damit ein Test pruefen kann, dass jede abgefragte Taste hier steht.
     /// </summary>
     // ---- Aussehen eines Orts tauschen (Welle S 0.21.0, Weisungen P12-87/P12-88, Kurzplan Meldung P12-56) ----
+    /// <summary>Weisung P12-89: Feld „Name des Orts“ bei einem gewaehlten Ort.</summary>
+    public const string OrtNameFeld = "Name des Orts";
+
+    public const string OrtNameUebernehmen = "Namen übernehmen";
+
+    public const string OrtNameTipp = "Neuen Namen eingeben und „Namen übernehmen“ antippen. Die Kennung, der Kunde, die Aufgaben und der Innenraum bleiben gleich; Rückgängig geht.";
+
+    public const string OrtUmbenannt = "Ort umbenannt";
+
+    public const string OrtNichtGefunden = "Diesen Ort gibt es in der Stadt nicht.";
+
     public const string AussehenTauschen = "Aussehen tauschen";
     public const string AussehenTauschenTipp = "Dem Ort ein anderes Haus geben. Name, Aufgaben, Innenraum und Spielstände bleiben.";
     public const string AussehenHinweis = "Vorlage antippen: das neue Haus erscheint als Schatten an der Stelle des Orts. „Übernehmen“ tauscht es (ein Schritt, Rückgängig geht).";

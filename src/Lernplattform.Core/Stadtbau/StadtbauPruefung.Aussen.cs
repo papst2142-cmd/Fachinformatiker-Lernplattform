@@ -161,6 +161,7 @@ public static partial class StadtbauPruefung
         StreckenRegeln(szene, funde);
         FusswegRegeln(szene, fassung, funde);
         AussehenRegeln(fassung, inhalt, szene, funde);
+        OrtsnamenRegeln(fassung, funde);
         return funde;
     }
 

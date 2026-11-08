@@ -52,6 +52,27 @@ public static partial class AussenBearbeitung
 
     public static PyObjekt? Ort(PyObjekt aussen, string id) => Orte(aussen).FirstOrDefault(o => Py.Gleich(o["id"], id));
 
+    /// <summary>
+    /// Weisung P12-89: Namen eines Orts aendern (nur das Feld <c>name</c> der Karte bzw. der neuen Orte; Kennung, Kunde,
+    /// Aufgaben und Innenraum bleiben). Gibt den Grund zurueck, wenn der Name nicht geht (dann bleibt alles), sonst null.
+    /// Die Regeln sind dieselben wie in der Pruefung (<see cref="StadtbauPruefung.OrtNameNicht"/>).
+    /// </summary>
+    public static string? OrtUmbenennen(PyObjekt aussen, string id, string name)
+    {
+        if (Ort(aussen, id) is not { } ort)
+        {
+            return Texte.OrtNichtGefunden;
+        }
+        var n = (name ?? "").Trim();
+        var andere = Orte(aussen).Where(o => !Py.Gleich(o["id"], id)).Select(o => Get(o, "name") as string).OfType<string>();
+        if (StadtbauPruefung.OrtNameNicht(n, andere) is { } grund)
+        {
+            return grund;
+        }
+        Py.Setzen(ort, "name", n);
+        return null;
+    }
+
     /// <summary>Alle Haus-Modelle (Karte und neue Modelle), nach Namen.</summary>
     public static PyObjekt Modelle(PyObjekt aussen)
     {

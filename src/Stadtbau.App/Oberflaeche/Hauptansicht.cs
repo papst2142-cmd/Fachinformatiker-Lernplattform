@@ -1206,7 +1206,9 @@ public sealed partial class Hauptansicht : UserControl
             return;
         }
         var a = _projekt.AussenStand;
-        _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _daten!.OrtName), "Klein"));
+        _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _projekt.OrtName), "Klein"));
+        // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
+        OrtNameTeil(s);
         var (lx, ly) = AussenBearbeitung.Lage(a, s);
         var x = Feld(lx);
         var y = Feld(ly);
@@ -1550,7 +1552,7 @@ public sealed partial class Hauptansicht : UserControl
     private string BlueprintVorschlag(AussenStelle s)
     {
         var a = _projekt!.AussenStand;
-        var v = s.Art == AussenArt.Haus ? _daten!.OrtName(s.Ort)
+        var v = s.Art == AussenArt.Haus ? _projekt.OrtName(s.Ort)
             : Aussen.Landschaft(a).ElementAtOrDefault(s.Nummer) is PyObjekt g && Blueprint.Zierweg(a, Py.Str(g["modell"]))?["name"] is string n ? n : "";
         return Blueprint.NameGueltig(v) ? v : "";
     }

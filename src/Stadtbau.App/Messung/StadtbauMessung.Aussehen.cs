@@ -12,7 +12,7 @@ namespace Stadtbau.Messung;
 /// steht, ist die Vorschau rot mit Grund (Gegenprobe); nach dem Loeschen gruen, „Übernehmen“ tauscht, der Bahnsteig bleibt als
 /// eigenes Stueck. Gegenproben: Zuhause nicht tauschbar; Bahnsteig-Stueck aufs Gleis geschoben = rot; geloescht = gelb ohne
 /// Rot. „Altes Aussehen zurück“ bringt den Bahnhof wieder. Messpunkt „Aussehen tauschen Vorschau (bis zum Bild)“
-/// (wiederholbar, 400 ms). Layout PC und Tablet, hell und dunkel.
+/// (wiederholbar, 400 ms). Weisung P12-89: Name des Orts (Gegenprobe doppelt, Rueckgaengig). Layout PC und Tablet, hell und dunkel.
 /// </summary>
 public static partial class StadtbauMessung
 {
@@ -140,5 +140,31 @@ public static partial class StadtbauMessung
             Fund("Aussehen: Altes Aussehen zurueck bringt den Bahnhof nicht oder das Bahnsteig-Stueck bleibt");
         }
         await BildAsync(a);
+
+        // Weisung P12-89: Name des Orts; Gegenprobe doppelter Name geht nicht
+        a.Karte.Waehlen(OrtStelle("talheim_nord"));
+        if (a.OrtUmbenennen("talheim_nord", "Bahnhof Talheim") is null)
+        {
+            Fund("Ortsname: doppelter Name wurde angenommen (Gegenprobe)");
+        }
+        if (a.OrtUmbenennen("talheim_nord", "Stellwerk Talheim-Nord") is { } nicht3 || p.OrtName("talheim_nord") != "Stellwerk Talheim-Nord")
+        {
+            Fund("Ortsname: Umbenennen ging nicht");
+        }
+        await a.AussenGeprueft;
+        if (a.AussenFunde.Any(x => x.Rot && x.Text != Laterne20Fund))
+        {
+            Fund("Ortsname: nach dem Umbenennen rote Funde");
+        }
+        a.Karte.Waehlen(OrtStelle("talheim_nord"));
+        await BildAsync(a);
+        await AlleGroessenAsync(a, f, "Ortsname");
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        a.Rueckgaengig();
+        await a.AussenGeprueft;
+        if (p.OrtName("talheim_nord") != "Talheim-Nord")
+        {
+            Fund("Ortsname: Rueckgaengig bringt den alten Namen nicht");
+        }
     }
 }

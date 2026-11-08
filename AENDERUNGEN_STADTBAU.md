@@ -13,6 +13,7 @@ Ein Ort kann jetzt ein anderes Aussehen bekommen.
 - Hatte das alte Haus einen Bahnsteig, bleibt er als eigenes Stück am Gleis stehen. Du kannst ihn verschieben oder löschen; ein Ort ohne Bahnsteig ist erlaubt und erscheint nur gelb. Ein Bahnsteig auf dem Gleis ist rot.
 - „Altes Aussehen zurück“ bringt das Haus aus der Ausgangsstadt wieder, mit seinem Bahnsteig.
 - Das Zuhause lässt sich noch nicht tauschen.
+- Neu unter „Ausgewähltes Stück“: das Feld „Name des Orts“. Neuen Namen eingeben und „Namen übernehmen“ antippen; das ist ein Schritt, Rückgängig geht. Ein leerer, doppelter oder zu langer Name (mehr als 28 Zeichen) geht nicht. Das Spiel zeigt den neuen Namen auf dem Schild und in der Ortsliste; Aufgaben, Kunde und Innenraum bleiben.
 - Die Prüfung erkennt gedrehte Häuser jetzt richtig und lässt keine Stadt-Datei mehr durch, die das Spiel nicht laden könnte.
 
 ## S 0.20.0
