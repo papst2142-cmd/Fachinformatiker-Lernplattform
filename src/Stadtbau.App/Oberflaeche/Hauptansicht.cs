@@ -628,7 +628,8 @@ public sealed partial class Hauptansicht : UserControl
         _modellWahl.Items.Clear();
         foreach (var m in AussenBearbeitung.HausModelle(projekt.AussenStand))
         {
-            _modellWahl.Items.Add(new ComboBoxItem { Content = m, Tag = m });
+            // S 0.24.0 (Weisung P12-100, Nico 4a): deutscher Name, Kennung im Tipp
+            _modellWahl.Items.Add(new ComboBoxItem { Content = ModellNamen.Anzeige(projekt.AussenStand, m), Tag = m }.Mit(Texte.ModellTipp(m)));
         }
         _modellWahl.SelectedIndex = _modellWahl.Items.Count > 0 ? 0 : -1;
         TitelSetzen();
@@ -1022,7 +1023,7 @@ public sealed partial class Hauptansicht : UserControl
         _setzenName = art switch
         {
             AussenArt.Teich when modell == "rund" => Texte.TeichRund,
-            AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + modell + ")",
+            AussenArt.Gebaeude => Texte.HausOhneOrt + " (" + (modell is null || _projekt is null ? modell : ModellNamen.Anzeige(_projekt.AussenStand, modell)) + ")",
             AussenArt.Katalog => KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + modell),
             AussenArt.Kurve when Strassenkurve.Lesen(modell) is { } k => Strassenkurve.Name(k.Form, k.Winkel, k.Radius),
             AussenArt.Kreisverkehr when AussenBearbeitung.KreisverkehrRadius(modell) is { } kr => Texte.KreisverkehrName(kr),
@@ -1415,6 +1416,11 @@ public sealed partial class Hauptansicht : UserControl
             var oeffnen = Schrift.Knopf(oeffnenText!);
             oeffnen.Click += (_, _) => OrtOeffnen(innenort);
             _aussenAuswahl.Children.Add(oeffnen);
+        }
+        // Welle S 0.24.0 (Weisung P12-100, Nico 1b): Tuer an einem Gebaeude ohne Innenraum nur auf Wunsch, ein Schritt
+        if (innenort is null && GebaeudeTuer.KnopfZeigen(a, s))
+        {
+            _aussenAuswahl.Children.Add(TuerKnopf(s));
         }
         // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
         AussehenTeil(s);

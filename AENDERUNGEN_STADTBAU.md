@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.24.0
+
+Vorgegebene Gebäude bekommen auf Wunsch eine Tür, und die Bahnhöfe stehen wieder in der Liste.
+
+- Unter „Ausgewähltes Stück“ steht bei jedem Gebäude ohne Innenraum der Knopf „Tür dazu“. Er setzt eine Tür mitten auf die Vorderseite und legt einen Fußweg zur nächsten Straße, wenn nötig um das Haus herum. Steht das Haus nah vor einer Straße, rückt es an den Gehweg wie die Läden. Ein Knopfdruck ist ein Schritt, „Rückgängig“ nimmt ihn zurück.
+- „Tür entfernen“ nimmt Tür und Fußweg wieder weg. Das geht auch in Projekten, die schon vorher angelegt wurden.
+- Findet der Weg keine Straße, kommt die Tür trotzdem, mit einem gelben Hinweis.
+- Steht dasselbe Gebäude zweimal in der Stadt, bekommt das zweite eine eigene Kopie („Wohnung 2“), damit jedes seine Tür hat. Wird das Haus gelöscht, verschwindet die Kopie mit.
+- „Bahnhof Talheim“ und „Talheim-Nord“ stehen wieder in der Liste „Modell“. Mit Tür bleibt der Bahnsteig als eigenes Stück stehen. Steht ein Bahnhof weiter als 1,5 vom Gleis, kommt ein gelber Hinweis.
+- Die Liste „Modell“ zeigt deutsche Namen wie im Spiel; die Kennung steht im Tipp.
+- Rot ist eine Tür, die direkt auf ein anderes Haus oder ins Wasser zeigt.
+
 ## S 0.23.1
 
 Ein Fußweg lässt sich jetzt bis an die Eingangstür eines Hauses ziehen.

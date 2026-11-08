@@ -320,7 +320,7 @@ public static class OrtAussehen
     }
 
     /// <summary>Bahnsteig-Flaechen des alten Hauses als eigenes Gebaeude ohne Ort (Modell in <c>karte.modelle</c>, wie das Stellwerk).</summary>
-    private static void BahnsteigStehenLassen(PyObjekt aussen, string ort, object? altTeile, double x, double y, int dreh)
+    internal static void BahnsteigStehenLassen(PyObjekt aussen, string ort, object? altTeile, double x, double y, int dreh)
     {
         var name = Bahnsteig.ModellName(ort);
         var land = Aussen.Landschaft(aussen);
