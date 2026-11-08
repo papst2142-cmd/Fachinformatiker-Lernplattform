@@ -10,7 +10,7 @@ namespace Stadtbau.Core;
 /// <summary>
 /// Welle E (S 0.13.0, Weisungen P12-63, P12-67 Fragen 1 = a und 2 = a): Drehen.
 /// <list type="bullet">
-/// <item>Linien (Strasse, Kurve, Kreisverkehr, Fluss, Teich) drehen in Schritten von <see cref="FeinGrad"/> Grad (Taste R,
+/// <item>Linien (Strasse, Kurve, Kreisverkehr, Fluss, Teich, Bahn) drehen in Schritten von <see cref="FeinGrad"/> Grad (Taste R,
 /// Umschalt+R rueckwaerts) und ueber das Feld „Winkel“ auf 1 Grad genau (<see cref="WinkelSetzen"/>). Das Spiel zeichnet
 /// Linien in jedem Winkel.</item>
 /// <item>Haeuser (mit Ort, ohne Ort, Blueprints) drehen in 90-Grad-Schritten (<see cref="Hausdrehung"/>): Tuer, Fussweg
@@ -25,14 +25,14 @@ public static partial class AussenBearbeitung
     public const int FeinGrad = 15;
 
     /// <summary>Lassen sich Stuecke dieser Art fein (nicht nur in Vierteln) drehen?</summary>
-    public static bool FeinDrehbar(AussenArt art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Kreisverkehr or AussenArt.Fluss or AussenArt.Teich;
+    public static bool FeinDrehbar(AussenArt art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Kreisverkehr or AussenArt.Fluss or AussenArt.Teich or AussenArt.Bahn;
 
     /// <summary>Schritt in Grad fuer die Taste R und den Drehgriff: Linien 15, alles andere 90.</summary>
     public static int DrehSchritt(AussenArt art) => FeinDrehbar(art) ? FeinGrad : 90;
 
-    /// <summary>Hat das Stueck ein Feld „Winkel“ (Strasse, Kurve, Fluss; nicht der Ring eines Kreisverkehrs)?</summary>
+    /// <summary>Hat das Stueck ein Feld „Winkel“ (Strasse, Kurve, Fluss, Bahn; nicht der Ring eines Kreisverkehrs)?</summary>
     public static bool MitWinkel(PyObjekt aussen, AussenStelle s) =>
-        s.Art == AussenArt.Fluss || (s.Art == AussenArt.Strasse && !Kreisverkehr.IstRing(Objekt(Aussen.Landschaft(aussen)[s.Nummer])));
+        IstLinienzug(s.Art) || (s.Art == AussenArt.Strasse && !Kreisverkehr.IstRing(Objekt(Aussen.Landschaft(aussen)[s.Nummer])));
 
     /// <summary>
     /// Winkel einer Linie in Grad (0 bis 359, ganz): Richtung vom ersten zum letzten Punkt, 0 = nach rechts (Osten), 90 = nach
@@ -44,7 +44,7 @@ public static partial class AussenBearbeitung
         {
             return null;
         }
-        var linie = s.Art == AussenArt.Fluss ? Linie(Eckpunkte(aussen, Ganz(s))) : Linie(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["punkte"]);
+        var linie = IstLinienzug(s.Art) ? Linie(Eckpunkte(aussen, Ganz(s))) : Linie(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["punkte"]);
         if (linie.Count < 2 || Vector2.Distance(linie[0], linie[^1]) < 1e-4f)
         {
             return 0;
@@ -102,7 +102,7 @@ public static partial class AussenBearbeitung
             var d = p - m;
             return new Vector2((float)(m.X + (d.X * cos) - (d.Y * sin)), (float)(m.Y + (d.X * sin) + (d.Y * cos)));
         }
-        if (IstWasser(s.Art))
+        if (IstWasserOderBahn(s.Art))
         {
             var punkte = Eckpunkte(aussen, Ganz(s));
             var linie = Linie(punkte);

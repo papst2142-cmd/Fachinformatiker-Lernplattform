@@ -18,7 +18,7 @@ namespace Stadtbau.Core;
 /// und Schild gehen mit, der Fussweg laeuft gerade zur Strasse.</item>
 /// <item>Katalog-Stueck: steht mit der Rueckseite an der aeusseren Gehwegkante, die Vorderseite zur Strasse (nur Strassen
 /// mit Gehweg; nicht an Hauswaende). Effekte rasten nicht ein.</item>
-/// <item>Fluss: ein Ende rastet bis <see cref="EndeFangweite"/> an das freie Ende eines anderen Flusses (Lage und Richtung,
+/// <item>Fluss (seit Welle K2 ebenso die Bahn, Ende an Ende einer anderen Bahn): ein Ende rastet bis <see cref="EndeFangweite"/> an das freie Ende eines anderen Flusses (Lage und Richtung,
 /// bis <see cref="GeradeDrehtBis"/> Grad), sonst an den Kartenrand (letztes Stueck rechtwinklig zum Rand). Ein gezogener
 /// Eckpunkt legt ein Stueck, das eine gerade Strasse fast quer kreuzt (bis <see cref="BrueckeFangGrad"/> Grad), genau quer:
 /// die Bruecke ist dann so kurz wie moeglich.</item>
@@ -150,11 +150,12 @@ public static partial class AussenBearbeitung
 
     // ---- Fluss --------------------------------------------------------------------------------------
 
-    /// <summary>Freie Enden anderer Fluesse mit Richtung hinaus.</summary>
+    /// <summary>Freie Enden anderer Linienzuege derselben Art (Fluss an Fluss, Bahn an Bahn) mit Richtung hinaus.</summary>
     private static List<(Vector2 Ende, Vector2 Hinaus)> FreieFlussEnden(PyObjekt aussen, PyObjekt eigener)
     {
         var enden = new List<(Vector2, Vector2)>();
-        foreach (var t in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => !ReferenceEquals(t, eigener) && Py.Gleich(t["typ"], "fluss")))
+        var typ = eigener["typ"];
+        foreach (var t in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => !ReferenceEquals(t, eigener) && Py.Gleich(t["typ"], typ)))
         {
             var l = Linie(t["punkte"]);
             if (l.Count >= 2)
@@ -167,12 +168,13 @@ public static partial class AussenBearbeitung
     }
 
     /// <summary>
-    /// Fluss einrasten (nach Setzen oder Verschieben des ganzen Flusses oder eines Endpunkts): Ende an Ende eines anderen
-    /// Flusses (Lage und Richtung), sonst Ende an den Kartenrand (rechtwinklig). true = etwas geaendert.
+    /// Fluss oder Bahn (Welle K2) einrasten (nach Setzen oder Verschieben des ganzen Stuecks oder eines Endpunkts): Ende an
+    /// Ende eines anderen Flusses bzw. einer anderen Bahn (Lage und Richtung), sonst Ende an den Kartenrand (rechtwinklig).
+    /// true = etwas geaendert.
     /// </summary>
     public static bool FlussEinrasten(PyObjekt aussen, AussenStelle s)
     {
-        if (s.Art != AussenArt.Fluss)
+        if (!IstLinienzug(s.Art))
         {
             return false;
         }
@@ -256,11 +258,12 @@ public static partial class AussenBearbeitung
 
     /// <summary>
     /// Nach dem Ziehen eines Eckpunkts: kreuzt ein Nachbarstueck eine gerade Strasse fast quer (bis <see cref="BrueckeFangGrad"/>),
-    /// legt sich der Eckpunkt so, dass es genau quer kreuzt (Laenge bleibt). true = geaendert.
+    /// legt sich der Eckpunkt so, dass es genau quer kreuzt (Laenge bleibt). true = geaendert. Gilt fuer die Bruecke am Fluss
+    /// und (Welle K2) den Bahnuebergang an der Bahn.
     /// </summary>
     public static bool BrueckeQuer(PyObjekt aussen, AussenStelle s)
     {
-        if (s.Art != AussenArt.Fluss || s.Punkt < 0)
+        if (!IstLinienzug(s.Art) || s.Punkt < 0)
         {
             return false;
         }

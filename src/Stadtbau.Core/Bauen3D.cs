@@ -202,11 +202,11 @@ public static class Bauen3D
             }
             case AussenArt.Teich when s.Punkt < 0:
                 return Wasser.Punkte(Aussen.Teiche(aussen)[s.Nummer]) is { Count: >= 3 } eck ? [[.. new Teich(eck).MitUfer]] : [];
-            case AussenArt.Fluss when s.Punkt < 0:
+            case AussenArt.Fluss or AussenArt.Bahn when s.Punkt < 0:
             {
-                // S 0.8.0: Fluss samt Ufer je Stueck des geglaetteten Bogens (wie die Strasse)
-                var glatt = AussenBearbeitung.FlussGlatt(aussen, s);
-                var halb = (StadtSzene.FlussBreite + 0.3f) / 2;
+                // S 0.8.0: Fluss samt Ufer je Stueck des geglaetteten Bogens (wie die Strasse); Welle K2: Bahn samt Gleisbett
+                var glatt = AussenBearbeitung.LinienzugGlatt(aussen, s);
+                var halb = AussenBearbeitung.LinienHalb(s.Art);
                 var teile = new List<Vector2[]>();
                 for (var i = 0; i + 1 < glatt.Count; i++)
                 {
@@ -220,7 +220,7 @@ public static class Bauen3D
                 }
                 return teile;
             }
-            case AussenArt.Teich or AussenArt.Fluss:
+            case AussenArt.Teich or AussenArt.Fluss or AussenArt.Bahn:
             {
                 // Eckpunkt: der Umriss des ganzen Stuecks und ein Kreis am Griff
                 var p = AussenBearbeitung.EckpunkteWerte(aussen, s)[s.Punkt];

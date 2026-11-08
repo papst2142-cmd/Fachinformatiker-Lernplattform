@@ -319,7 +319,7 @@ public static partial class AussenBearbeitung
         return alle.Where(a => a.Stelle.Art == AussenArt.Strasse)
             .Select(a => (a.Stelle, D: Kurve.Abstand(p, Linie(Objekt(land[a.Stelle.Nummer])["punkte"])), Halb: (StadtSzene.StrassenBreite / 2) + Gehweg(aussen, a.Stelle)))
             .Where(a => a.D <= a.Halb + 0.05).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault()
-            ?? WasserBei(aussen, p, AussenArt.Fluss);
+            ?? WasserBei(aussen, p, AussenArt.Bahn) ?? WasserBei(aussen, p, AussenArt.Fluss);
     }
 
     // ---- Setzen ---------------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ public static partial class AussenBearbeitung
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);
                 break;
-            case AussenArt.Fluss:
+            case AussenArt.Fluss or AussenArt.Bahn:
                 FlussEinrasten(aussen, s);
                 break;
             case AussenArt.Strasse when gedreht && Objekt(Aussen.Landschaft(aussen)[s.Nummer]) is var l && !Strassenkurve.IstKurve(l) && !Kreisverkehr.IstRing(l):
@@ -379,7 +379,7 @@ public static partial class AussenBearbeitung
         {
             return null;
         }
-        if (IstWasser(art))
+        if (IstWasserOderBahn(art))
         {
             return WasserSetzen(aussen, art, x, y, raster, modell);
         }
@@ -517,7 +517,7 @@ public static partial class AussenBearbeitung
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);
                 break;
-            case AussenArt.Fluss:
+            case AussenArt.Fluss or AussenArt.Bahn:
                 if (!FlussEinrasten(aussen, s))
                 {
                     BrueckeQuer(aussen, s);
@@ -529,7 +529,7 @@ public static partial class AussenBearbeitung
     /// <summary>Stueck genau um (dx, dy) verschieben (ohne Raster); Strassen rasten nur mit <paramref name="einrasten"/> ein.</summary>
     private static void VerschiebenGenau(PyObjekt aussen, AussenStelle s, double dx, double dy, bool einrasten = false)
     {
-        if (IstWasser(s.Art))
+        if (IstWasserOderBahn(s.Art))
         {
             WasserVerschieben(aussen, s, dx, dy);
             return;
@@ -760,7 +760,7 @@ public static partial class AussenBearbeitung
             case AussenArt.Haus:
                 var o = Ort(aussen, s.Ort)!;
                 return (Py.F(o["x"]), Py.F(o["y"]));
-            case AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg:
+            case AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn:
                 return WasserLage(aussen, s);
             default:
                 var a = Alle(aussen).First(x => x.Stelle == s);
@@ -773,7 +773,7 @@ public static partial class AussenBearbeitung
     /// <summary>Warum sich das Stueck nicht drehen laesst (null = es geht).</summary>
     public static string? DrehenNicht(AussenStelle s) => s.Art switch
     {
-        AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => null,
+        AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn => null,
         AussenArt.Haus or AussenArt.Gebaeude => null,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         AussenArt.Fussweg => Texte.FusswegDrehenNicht,
@@ -787,7 +787,7 @@ public static partial class AussenBearbeitung
         {
             return false;
         }
-        if (IstWasser(s.Art))
+        if (IstWasserOderBahn(s.Art))
         {
             return WasserDrehen(aussen, s);
         }
@@ -849,7 +849,7 @@ public static partial class AussenBearbeitung
     /// <summary>Kopie daneben (versetzt um einen Rasterschritt bzw. die eigene Breite); Haeuser mit Ort und Paketplatz nicht.</summary>
     public static AussenStelle? Kopieren(PyObjekt aussen, AussenStelle s)
     {
-        if (IstWasser(s.Art))
+        if (IstWasserOderBahn(s.Art))
         {
             return WasserKopieren(aussen, s);
         }
@@ -935,7 +935,7 @@ public static partial class AussenBearbeitung
         {
             return false;
         }
-        if (IstWasser(s.Art))
+        if (IstWasserOderBahn(s.Art))
         {
             WasserLoeschen(aussen, s);
             return true;
@@ -1070,7 +1070,7 @@ public static partial class AussenBearbeitung
             AussenArt.Baum => Texte.Baum + lage,
             AussenArt.Park => Texte.Park + lage,
             AussenArt.Katalog => KatalogBeschreibung(KatalogId(aussen, s)) + lage,
-            AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg => WasserBeschreibung(aussen, s, lage),
+            AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn => WasserBeschreibung(aussen, s, lage),
             AussenArt.Fussweg => FusswegBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };

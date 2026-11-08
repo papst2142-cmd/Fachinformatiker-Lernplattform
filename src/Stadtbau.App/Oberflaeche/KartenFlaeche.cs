@@ -119,7 +119,7 @@ public sealed class KartenFlaeche : Control
     }
 
     /// <summary>Kann das Spiel dieses Stueck gedreht zeigen (Strasse, Park, Katalog-Stueck)?</summary>
-    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss
+    public static bool DrehbarBeimSetzen(AussenArt? art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Bahn
         or AussenArt.Teich or AussenArt.Steg or AussenArt.Gebaeude or AussenArt.Blueprint;
 
     /// <summary>Beim Setzen um 90 Grad weiterdrehen (Knopf und Taste R).</summary>
@@ -345,9 +345,15 @@ public sealed class KartenFlaeche : Control
                 ctx.DrawEllipse(Pinsel("#3F7D3A", 0.85), new Pen(Pinsel("#2A5527"), 1), P(m.X, m.Y), Kreisverkehr.BaumRadius * _zoom, Kreisverkehr.BaumRadius * _zoom);
             }
         }
-        foreach (var l in land.OfType<PyObjekt>().Where(l => Py.Gleich(l["typ"], "bahn")))
+        // Welle K2: Bahn als glattes Gleis wie im Spiel (Schotterbett, Schwellen gestrichelt), beim Ziehen mit dem Finger mit
+        for (var i = 0; i < land.Count; i++)
         {
-            Linie(ctx, l["punkte"], new Pen(Pinsel("#5A4632"), 0.25 * _zoom, new DashStyle([2, 1], 0)), 0, 0);
+            if (land[i] is PyObjekt l && Py.Gleich(l["typ"], "bahn"))
+            {
+                var glatt = Kurve.Glatt(WasserPunkte(a, new AussenStelle(AussenArt.Bahn, i, -1)), StadtSzene.Radien(l));
+                Linie(ctx, glatt, new Pen(Pinsel(GleisbettFarbe), StadtSzene.GleisBreite * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
+                Linie(ctx, glatt, new Pen(Pinsel("#5A4632"), 0.25 * _zoom, new DashStyle([0.4, 0.4], 0), lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
+            }
         }
 
         // Haeuser mit Fussweg und Tuer
@@ -475,7 +481,7 @@ public sealed class KartenFlaeche : Control
                         ctx.DrawRectangle(null, stift, new Rect(P(x1 + dx, z1 + dy), P(x2 + dx, z2 + dy)).Inflate(3));
                     }
                     break;
-                case AussenArt.Teich or AussenArt.Fluss:
+                case AussenArt.Teich or AussenArt.Fluss or AussenArt.Bahn:
                 {
                     // S 0.8.0: Rand und Griffe an den Eckpunkten (Weisung P12-47: am Tablet mit einem Finger ziehen)
                     var ganz = AussenBearbeitung.Ganz(aw);
@@ -519,6 +525,9 @@ public sealed class KartenFlaeche : Control
     private const string WasserFarbe = "#5B9BD5";
 
     private const string UferFarbe = "#C9B98A";
+
+    /// <summary>Welle K2: Schotterbett der Bahn in der Draufsicht.</summary>
+    private const string GleisbettFarbe = "#9C8E7C";
 
     /// <summary>Halbmesser der Griffe an den Eckpunkten in Bildpunkten (gut mit dem Finger zu treffen).</summary>
     public const double GriffRadius = 7;
@@ -709,6 +718,7 @@ public sealed class KartenFlaeche : Control
         if (!plan.Gefunden)
         {
             ZiehGrund = plan.Grund;
+            ZiehenGeaendert?.Invoke();
             Gemeldet?.Invoke(plan.Grund!);
             InvalidateVisual();
             return null;
@@ -852,6 +862,7 @@ public sealed class KartenFlaeche : Control
         AussenArt.Katalog => Texte.VollerKatalog,
         AussenArt.Blueprint => Texte.BlueprintSetzen,
         AussenArt.Fluss => Texte.Fluss,
+        AussenArt.Bahn => Texte.Bahn,
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
         _ => Texte.Paketplatz,

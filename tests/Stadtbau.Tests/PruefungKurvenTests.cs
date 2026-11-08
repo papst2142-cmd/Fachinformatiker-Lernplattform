@@ -166,7 +166,7 @@ public class PruefungKurvenTests
         var a = Aussen.Aus(Aussen.Leer(D.Fassung, "neu_kurven", 24, 16));
         Linie(a, "bahn", 0, 4, 12, 4, 24, 12);
         Py.Setzen(Letzte(a), "radien", new List<object?> { 3.0, 2.0, 3.0 });
-        Rot(a, "Die Bahn hat an Eckpunkt 2 den Radius 2, kleiner als 3");
+        Rot(a, "Bahn Nr. 1 hat an Eckpunkt 2 den Radius 2, kleiner als 3");
         Py.Setzen(Letzte(a), "radien", new List<object?> { 3.0, 4.5, 3.0 });
         Gruen(a);
     }

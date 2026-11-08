@@ -170,11 +170,11 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>Start-Test: die Knoepfe Kurve 90°, Kurve 45°, S-Kurve.</summary>
     internal List<Button> KurvenKnoepfe { get; } = [];
 
-    /// <summary>Welle Z: die Knoepfe „Straße ziehen“, „Fußweg ziehen“, „Fluss ziehen“ (Start-Test).</summary>
+    /// <summary>Welle Z: die Knoepfe „Straße ziehen“, „Fußweg ziehen“, „Fluss ziehen“, seit K2 „Bahn ziehen“ (Start-Test).</summary>
     internal List<Button> ZiehKnoepfe { get; } = [];
 
     /// <summary>
-    /// Welle Z (Weisung P12-71): Baustein mit den drei Knoepfen zum Ziehen von Punkt zu Punkt. Ein eigener kleiner Baustein,
+    /// Welle Z (Weisung P12-71): Baustein mit den Knoepfen (seit K2 vier) zum Ziehen von Punkt zu Punkt. Ein eigener kleiner Baustein,
     /// damit Welle Q ihn ohne Umbau an eine andere Stelle setzen kann.
     /// </summary>
     private WrapPanel ZiehenBaustein()
@@ -193,9 +193,19 @@ public sealed partial class Hauptansicht : UserControl
                 ZiehKnopf(Texte.StrasseZiehen, Texte.StrasseZiehenTipp, ZiehArt.Strasse),
                 ZiehKnopf(Texte.FusswegZiehen, Texte.FusswegZiehenTipp, ZiehArt.Fussweg),
                 ZiehKnopf(Texte.FlussZiehen, Texte.FlussZiehenTipp, ZiehArt.Fluss),
+                ZiehKnopf(Texte.BahnZiehen, Texte.BahnZiehenTipp, ZiehArt.Bahn),
             },
         };
     }
+
+    /// <summary>Text des Hinweises links (Start-Test, Sammelliste 236).</summary>
+    internal string AussenHinweisText => _aussenHinweis.Text ?? "";
+
+    /// <summary>Gegenprobe Sammelliste 236: der Hinweis links zeigt den Grund einer roten Vorschau nicht (Verhalten bis S 0.14.0).</summary>
+    internal static bool GrundErstNachTippFuerTests { get; set; }
+
+    /// <summary>Welle K2: der Knopf „Bahn“ zum Setzen eines geraden Gleises (Start-Test).</summary>
+    internal Button? BahnKnopf { get; private set; }
 
     /// <summary>Welle K3: die Knoepfe „Kreisverkehr klein/groß“ (Start-Test).</summary>
     internal List<Button> KreisKnoepfe { get; } = [];
@@ -797,6 +807,9 @@ public sealed partial class Hauptansicht : UserControl
                 WasserKnopf(Texte.TeichRund, Texte.TeichRundTipp, AussenArt.Teich, "rund"), WasserKnopf(Texte.Steg, Texte.StegTipp, AussenArt.Steg),
             },
         };
+        // Welle K2 (Weisung P12-72): Bahn setzen (eigener kleiner Baustein, Welle Q kann ihn verschieben)
+        var bahn = new WrapPanel { Children = { WasserKnopf(Texte.Bahn, Texte.BahnTipp, AussenArt.Bahn) } };
+        BahnKnopf = (Button)bahn.Children[0];
         var modellTitel = Schrift.Text(Texte.Modell, "Klein").Fuer(_modellWahl);
         var haus = KatalogKnopf(Texte.HausSetzen, AussenArt.Gebaeude, () => _modellWahl.SelectedItem is ComboBoxItem { Tag: string m } ? m : null);
         var links = new StackPanel
@@ -806,6 +819,7 @@ public sealed partial class Hauptansicht : UserControl
             {
                 Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, ZiehenBaustein(), kurven, radiusTitel, _kurvenRadius, kreise, VollerKatalogKnopf(false),
                 Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
+                Gruppe(Schrift.Text(Texte.BahnGruppe, gewicht: FontWeight.Bold), Texte.TippBahn), bahn,
                 Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
                 Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
             },
@@ -991,6 +1005,7 @@ public sealed partial class Hauptansicht : UserControl
             {
                 ZiehArt.Fussweg => Texte.FusswegZiehen,
                 ZiehArt.Fluss => Texte.FlussZiehen,
+                ZiehArt.Bahn => Texte.BahnZiehen,
                 _ => Texte.StrasseZiehen,
             },
             _ => KatalogName(art),
@@ -1102,14 +1117,20 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
         AussenArt.Fussweg => Texte.Fussweg,
+        AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
         _ => Texte.HausOhneOrt,
     };
 
-    /// <summary>Hinweis links: beim Ziehen „Anfang antippen“ bzw. „Ende antippen“ (Welle Z), sonst wie bisher.</summary>
+    /// <summary>
+    /// Hinweis links: beim Ziehen „Anfang antippen“ bzw. „Ende antippen“ (Welle Z), sonst wie bisher. Sammelliste 236 (Weisung
+    /// P12-72 Punkt 3): solange die Vorschau rot ist, steht ihr Grund hier (wie in 3D im Schatten-Text), nicht erst nach dem Tipp.
+    /// </summary>
     private string SetzenHinweis() => Karte.SetzenArt switch
     {
         null => Texte.DraufsichtHinweis,
+        AussenArt.Ziehen when Karte.ZiehAnfang is not null && Karte.ZiehGrund is { } grund && !GrundErstNachTippFuerTests =>
+            (_setzenName ?? KatalogName(AussenArt.Ziehen)) + ": " + grund + " " + Texte.ZiehenEnde,
         AussenArt.Ziehen => (_setzenName ?? KatalogName(AussenArt.Ziehen)) + ": " + (Karte.ZiehAnfang is null ? Texte.ZiehenAnfang : Texte.ZiehenEnde),
         { } art => (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv,
     };
@@ -1312,13 +1333,14 @@ public sealed partial class Hauptansicht : UserControl
         _aussenAuswahl.Children.Add(reiheKnoepfe);
         if (AussenBearbeitung.RadiusWaehlbar(a, s))
         {
-            // Welle K1: Radius am gewaehlten Eckpunkt des Flusses (2, 3 oder 5)
+            // Welle K1: Radius am gewaehlten Eckpunkt des Flusses (2, 3 oder 5); Welle K2: der Bahn (3 oder 4,5)
             var jetzt = AussenBearbeitung.FlussRadius(a, s);
             var radien = new WrapPanel();
-            foreach (var r in Strassenkurve.FlussRadien)
+            foreach (var r in AussenBearbeitung.Radien(s.Art))
             {
                 var text = r.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
-                var k = Schrift.Knopf(text, betont: Math.Abs(r - jetzt) < 1e-9).Vorlese(Texte.RadiusHier + " " + text).Mit(Texte.RadiusHierTipp);
+                var k = Schrift.Knopf(text, betont: Math.Abs(r - jetzt) < 1e-9).Vorlese(Texte.RadiusHier + " " + text)
+                    .Mit(s.Art == AussenArt.Bahn ? Texte.BahnRadiusTipp : Texte.RadiusHierTipp);
                 var wert = r;
                 k.Click += (_, _) =>
                 {

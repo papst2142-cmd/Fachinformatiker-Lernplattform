@@ -14,6 +14,9 @@ public enum ZiehArt
     Strasse,
     Fussweg,
     Fluss,
+
+    /// <summary>Welle K2 (Weisung P12-72): Bahn mit Eckpunkten und Radius 4,5 oder 3 je Ecke.</summary>
+    Bahn,
 }
 
 /// <summary>
@@ -35,6 +38,8 @@ public sealed record Ziehpunkt(Vector2 Lage, Vector2? Weg, int? Nummer = null, b
 /// Aussenkante von Gehweg bzw. Strasse (quer). Am Ende eines Fusswegs wird dieser verlaengert.</item>
 /// <item>Fluss: Eckpunkte mit Radius je Ecke (5, 3, 2); faengt an Flussenden und am Kartenrand (rechtwinklig). Am Ende
 /// eines Flusses wird dieser verlaengert.</item>
+/// <item>Bahn (Welle K2): wie der Fluss mit Radius 4,5 oder 3 je Ecke; faengt an Gleisenden und am Kartenrand; die Bahn
+/// behaelt das Feld <c>radien</c> immer.</item>
 /// </list>
 /// </summary>
 public static partial class AussenBearbeitung
@@ -42,12 +47,14 @@ public static partial class AussenBearbeitung
     public const string ZiehKennungStrasse = "strasse";
     public const string ZiehKennungFussweg = "fussweg";
     public const string ZiehKennungFluss = "fluss";
+    public const string ZiehKennungBahn = "bahn";
 
     /// <summary>Kennung fuer das Setzen (Modell der Art <see cref="AussenArt.Ziehen"/>).</summary>
     public static string ZiehKennung(ZiehArt art) => art switch
     {
         ZiehArt.Fussweg => ZiehKennungFussweg,
         ZiehArt.Fluss => ZiehKennungFluss,
+        ZiehArt.Bahn => ZiehKennungBahn,
         _ => ZiehKennungStrasse,
     };
 
@@ -57,6 +64,7 @@ public static partial class AussenBearbeitung
         ZiehKennungStrasse => ZiehArt.Strasse,
         ZiehKennungFussweg => ZiehArt.Fussweg,
         ZiehKennungFluss => ZiehArt.Fluss,
+        ZiehKennungBahn => ZiehArt.Bahn,
         _ => null,
     };
 
@@ -64,6 +72,7 @@ public static partial class AussenBearbeitung
     public static IReadOnlyList<double> ZiehRadien(ZiehArt art) => art switch
     {
         ZiehArt.Fluss => [.. Strassenkurve.FlussRadien.OrderByDescending(r => r)],
+        ZiehArt.Bahn => [.. Strassenkurve.BahnRadien.OrderByDescending(r => r)],
         ZiehArt.Fussweg => [.. Fusswege.Radien.OrderByDescending(r => r)],
         _ => [.. Strassenkurve.ZugRadien.OrderByDescending(r => r)],
     };
@@ -73,6 +82,7 @@ public static partial class AussenBearbeitung
     {
         ZiehArt.Fussweg => Texte.Fussweg,
         ZiehArt.Fluss => Texte.Fluss,
+        ZiehArt.Bahn => Texte.Bahn,
         _ => Texte.Strasse,
     };
 
@@ -80,7 +90,8 @@ public static partial class AussenBearbeitung
     public static float ZiehHalb(ZiehArt art) => art switch
     {
         ZiehArt.Fussweg => Fusswege.Breite / 2,
-        ZiehArt.Fluss => (StadtSzene.FlussBreite + 0.3f) / 2,
+        ZiehArt.Fluss => LinienHalb(AussenArt.Fluss),
+        ZiehArt.Bahn => LinienHalb(AussenArt.Bahn),
         _ => (StadtSzene.StrassenBreite / 2) + (float)NeuerGehweg,
     };
 
@@ -133,7 +144,7 @@ public static partial class AussenBearbeitung
             yield break;
         }
         var land = Aussen.Landschaft(aussen);
-        var typ = art == ZiehArt.Fluss ? "fluss" : "strasse";
+        var typ = art switch { ZiehArt.Fluss => "fluss", ZiehArt.Bahn => "bahn", _ => "strasse" };
         var strassen = art == ZiehArt.Strasse
             ? land.OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Linie(t["punkte"])).ToList()
             : [];
@@ -296,7 +307,7 @@ public static partial class AussenBearbeitung
         {
             ZiehArt.Strasse => StrasseZiehen(aussen, a, b, plan),
             ZiehArt.Fussweg => LinieZiehen(aussen, a, b, plan, fussweg: true),
-            _ => LinieZiehen(aussen, a, b, plan, fussweg: false),
+            _ => LinieZiehen(aussen, a, b, plan, fussweg: false, bahn: art == ZiehArt.Bahn),
         };
     }
 
@@ -361,8 +372,8 @@ public static partial class AussenBearbeitung
         return letzte!;
     }
 
-    /// <summary>Fussweg oder Fluss: Eckpunkte mit Radius je Ecke; am Ende eines gleichen Stuecks wird dieses verlaengert.</summary>
-    private static AussenStelle LinieZiehen(PyObjekt aussen, Ziehpunkt a, Ziehpunkt b, Verbindung.Plan plan, bool fussweg)
+    /// <summary>Fussweg, Fluss oder Bahn: Eckpunkte mit Radius je Ecke; am Ende eines gleichen Stuecks wird dieses verlaengert.</summary>
+    private static AussenStelle LinieZiehen(PyObjekt aussen, Ziehpunkt a, Ziehpunkt b, Verbindung.Plan plan, bool fussweg, bool bahn = false)
     {
         var liste = fussweg ? Aussen.FusswegeAnlegen(aussen) : Aussen.Landschaft(aussen);
         var ende = fussweg ? Fusswege.Radius : Kurve.Radius;
@@ -415,12 +426,13 @@ public static partial class AussenBearbeitung
         var neu = new PyObjekt();
         if (!fussweg)
         {
-            neu.Add("typ", "fluss");
+            neu.Add("typ", bahn ? "bahn" : "fluss");
         }
         neu.Add("punkte", new List<object?>(punkte.Select(q => (object?)KurvenPunkt(q))));
         neu.Add(Strassenkurve.RadienFeld, new List<object?>(radien.Select(Bearbeitung.Zahl)));
-        if (!fussweg)
+        if (!fussweg && !bahn)
         {
+            // der Fluss ohne eigene Radien wie bisher ohne Feld; die Bahn behaelt es immer
             RadienAufraeumen(neu);
         }
         // andere Felder des verlaengerten Stuecks bleiben (gleiche Stelle in der Liste)
@@ -443,7 +455,7 @@ public static partial class AussenBearbeitung
             liste.RemoveAt(weg);
             z -= weg < z ? 1 : 0;
         }
-        return new AussenStelle(fussweg ? AussenArt.Fussweg : AussenArt.Fluss, z, fussweg ? 0 : -1);
+        return new AussenStelle(fussweg ? AussenArt.Fussweg : bahn ? AussenArt.Bahn : AussenArt.Fluss, z, fussweg ? 0 : -1);
     }
 
     /// <summary>Die gezeichnete Mittellinie der Verbindung (Vorschau): Strasse aus den Stuecken, Fussweg und Fluss mit runden

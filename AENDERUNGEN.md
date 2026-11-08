@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.49.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Gleise aus dem Stadtbau-Werkzeug vor.
+
+- Eine neue Stadt kann eigene Gleise mit Bögen haben (Radius 3 oder 4,5). Das Spiel zeichnet sie wie das Gleis in Talheim, mit Bahnübergängen an den Straßen und dem Zug am Bahnsteig.
+- Die Prüfung für neue Städte meldet rot, wenn sich zwei Gleise kreuzen oder zu nah beieinander liegen (Weichen gibt es nicht), wenn ein Bogen zu eng gezeichnet ist, wenn ein Gleis durch Wasser führt, wenn eine Straße es zu flach quert oder wenn es über den Rand der Karte reicht.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.48.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Fußwege und neue Straßenbögen aus dem Stadtbau-Werkzeug vor.
 

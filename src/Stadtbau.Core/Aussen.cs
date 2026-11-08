@@ -51,13 +51,19 @@ public enum AussenArt
 
     /// <summary>
     /// Welle Z (S 0.14.0, Weisung P12-71): nur zum Ziehen von Punkt zu Punkt (Kennung <see cref="AussenBearbeitung.ZiehKennung"/>
-    /// als Modell: Strasse, Fussweg, Fluss); das Gezogene ist danach eine <see cref="Strasse"/>, ein <see cref="Fussweg"/> oder
-    /// ein <see cref="Fluss"/>.
+    /// als Modell: Strasse, Fussweg, Fluss, seit K2 Bahn); das Gezogene ist danach eine <see cref="Strasse"/>, ein
+    /// <see cref="Fussweg"/>, ein <see cref="Fluss"/> oder eine <see cref="Bahn"/>.
     /// </summary>
     Ziehen,
 
     /// <summary>Welle Z: Fussweg in <c>stadtdaten.fusswege</c> (Linienzug mit runden Ecken, nur zum Gehen).</summary>
     Fussweg,
+
+    /// <summary>
+    /// Welle K2 (S 0.15.0, Weisung P12-72, Plan P12-36): Bahn in <c>karte.welt.landschaft</c> (Typ <c>bahn</c>, Eckpunkte wie
+    /// der Fluss, Feld <c>radien</c> 3 oder 4,5 je Eckpunkt); <see cref="AussenStelle.Punkt"/> = Eckpunkt (-1 = ganze Bahn).
+    /// </summary>
+    Bahn,
 }
 
 /// <summary>

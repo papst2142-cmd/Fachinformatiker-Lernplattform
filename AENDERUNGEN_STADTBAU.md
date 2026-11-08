@@ -3,6 +3,20 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.15.0
+
+Die Bahn lässt sich jetzt selbst bauen: setzen, ziehen und mit Bögen versehen.
+
+- Links gibt es die neue Gruppe „Bahn“ mit dem Knopf „Bahn“: er setzt ein gerades Gleis mit drei Eckpunkten. Ziehe den mittleren Punkt zur Seite, dann biegt das Gleis in einem Bogen. Mit „Eckpunkt dazu“ und „Eckpunkt weg“ formst du es weiter.
+- Neben „Fluss ziehen“ steht „Bahn ziehen“: Anfang antippen, Ende antippen, und das Werkzeug legt das Gleis mit Geraden und Bögen (Radius 4,5, wenn es passt, sonst 3). Die Vorschau ist grün oder rot mit dem Grund.
+- Tippst du einen Eckpunkt der Bahn an, wählst du rechts den Radius: 3 oder 4,5. Enger geht es nicht, sonst ragten die Wagen über die Schienen.
+- Ein Gleisende rastet am Ende eines anderen Gleises ein (gleiche Richtung) oder rechtwinklig am Kartenrand. Ziehst du einen Eckpunkt so, dass das Gleis eine gerade Straße fast quer kreuzt, legt es sich genau quer: der Bahnübergang wird gerade.
+- Gleise drehen wie Flüsse in Schritten von 15 Grad, lassen sich kopieren und löschen; das Gleis von Talheim kannst du jetzt auch wählen und bearbeiten.
+- Die Prüfung meldet rot: Gleise kreuzen sich oder liegen zu nah (Weichen gibt es nicht), ein Bogen ist zu eng gezeichnet, ein Gleis führt durch Wasser, eine Straße quert es flacher als 45 Grad oder in einem Bogen.
+- In der Draufsicht sieht das Gleis jetzt aus wie im Spiel: ein glattes Schotterbett mit Schwellen statt einer gestrichelten Linie.
+- Beim Ziehen steht der Grund einer roten Vorschau jetzt sofort im Hinweis links, nicht erst nach dem zweiten Tipp.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.14.0
 
 Straßen, Fußwege und Flüsse lassen sich jetzt von Punkt zu Punkt ziehen: Anfang antippen, Ende antippen, fertig.

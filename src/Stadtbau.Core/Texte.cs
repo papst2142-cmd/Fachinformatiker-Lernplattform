@@ -162,7 +162,7 @@ public static class Texte
     public const string EckpunktDazu = "Eckpunkt dazu";
     public const string EckpunktWeg = "Eckpunkt weg";
     public const string EckpunktWaehlen = "Tippe zuerst einen Eckpunkt an (die runden Griffe am Rand).";
-    public const string EckpunktWenigstens = "Ein Teich braucht mindestens drei Eckpunkte, ein Fluss zwei.";
+    public const string EckpunktWenigstens = "Ein Teich braucht mindestens drei Eckpunkte, ein Fluss und eine Bahn zwei.";
     public const string EisImWinter = "Eis im Winter (Fluss und Teiche frieren zu)";
     public const string WasserGruppe = "Wasser";
     // ---- Welle K1 (S 0.10.0, Weisung P12-55): Kurven und Radien -------------------------------------------
@@ -604,6 +604,15 @@ public static class Texte
 
     public static string ZiehenRichtung(double grad) => string.Create(CultureInfo.GetCultureInfo("de-DE"),
         $"Die beiden Enden passen nicht zu Bögen in Schritten von 7,5 Grad (es fehlen {grad:0.#} Grad). Ein Ende auf ein Vielfaches von 7,5 Grad drehen.");
+
+    // Welle K2 (Weisung P12-72): Bahn setzen und ziehen
+    public const string Bahn = "Bahn";
+    public const string BahnGruppe = "Bahn";
+    public const string BahnTipp = "Setzt ein gerades Gleis (drei Eckpunkte). Ziehe den mittleren Punkt zur Seite für einen Bogen; wo eine Straße es quert, baut das Spiel einen Bahnübergang.";
+    public const string TippBahn = "Gleise für den Zug. Bögen mit Radius 3 oder 4,5; Weichen gibt es nicht, zwei Gleise dürfen sich nicht kreuzen. Ein Bahnübergang geht nur, wo eine gerade Straße ein gerades Stück quert.";
+    public const string BahnZiehen = "Bahn ziehen";
+    public const string BahnZiehenTipp = "Anfang antippen, dann das Ende: das Gleis biegt mit Radius 4,5 oder 3 und rastet an Gleisenden und am Kartenrand ein.";
+    public const string BahnRadiusTipp = "So eng biegt das Gleis an diesem Eckpunkt: 3 ist das engste, 4,5 ist weit.";
 
     public static string ZiehenGesetzt(string art, int stuecke) => stuecke <= 1 ? art + " gezogen" : $"{art} gezogen ({stuecke} Stücke)";
 }

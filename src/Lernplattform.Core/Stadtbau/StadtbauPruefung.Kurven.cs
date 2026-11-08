@@ -46,6 +46,7 @@ public static partial class StadtbauPruefung
         var heil = true;
         var nr = 0;
         var flussNr = 0;
+        var bahnNr = 0;
         foreach (var l in ListeOderLeer(welt, "landschaft").OfType<PyObjekt>())
         {
             var typ = l["typ"] as string;
@@ -64,7 +65,8 @@ public static partial class StadtbauPruefung
                 continue;
             }
             flussNr += typ == "fluss" ? 1 : 0;
-            var name = typ == "fluss" ? $"Der Fluss Nr. {flussNr}" : "Die Bahn";
+            bahnNr += typ == "bahn" ? 1 : 0;
+            var name = typ == "fluss" ? $"Der Fluss Nr. {flussNr}" : $"Bahn Nr. {bahnNr}";
             if (!Py.Hat(l, Strassenkurve.RadienFeld))
             {
                 continue;
@@ -82,7 +84,7 @@ public static partial class StadtbauPruefung
                 var r = Py.F(radien[i]);
                 if (typ == "bahn" && r < Strassenkurve.BahnMindestens)
                 {
-                    funde.Add(new StadtbauFund($"Die Bahn hat an Eckpunkt {i + 1} den Radius {Zf(r)}, kleiner als {Zf(Strassenkurve.BahnMindestens)}: die Wagen ragen dort über die Schienen.",
+                    funde.Add(new StadtbauFund($"Bahn Nr. {bahnNr} hat an Eckpunkt {i + 1} den Radius {Zf(r)}, kleiner als {Zf(Strassenkurve.BahnMindestens)}: die Wagen ragen dort über die Schienen.",
                         "Radius 3 oder 4,5 wählen.", true, punkte[i].X, punkte[i].Y));
                 }
                 else if (!erlaubt.Any(e => Math.Abs(e - r) < 1e-9))

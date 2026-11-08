@@ -2,6 +2,7 @@ using System.Numerics;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
@@ -30,13 +31,29 @@ public static partial class AussenBearbeitung
     /// <summary>Wenigstens so viele Eckpunkte hat ein Teich (Eckpunkt weg geht darunter nicht).</summary>
     public const int TeichMindestPunkte = 3;
 
-    /// <summary>Greifradius eines Eckpunkts (Teich, Fluss).</summary>
+    /// <summary>Laenge einer neuen Bahn (drei Punkte wie der Fluss, Welle K2).</summary>
+    public const double NeueBahn = 8;
+
+    /// <summary>Greifradius eines Eckpunkts (Teich, Fluss, Bahn).</summary>
     public const double EckGreifen = 0.3;
 
-    private static bool IstWasser(AussenArt art) => art is AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg;
+    /// <summary>
+    /// Wasser-Stuecke und (seit Welle K2) die Bahn: sie laufen ueber dieselben Wege zum Setzen, Schieben, Drehen, Kopieren
+    /// und Loeschen (Fluss und Bahn sind beide Linienzuege mit Eckpunkten in <c>karte.welt.landschaft</c>).
+    /// </summary>
+    private static bool IstWasserOderBahn(AussenArt art) => art is AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn;
 
-    /// <summary>Hat das Stueck Eckpunkte zum Ziehen (Teich, Fluss)?</summary>
-    public static bool MitEckpunkten(AussenArt art) => art is AussenArt.Teich or AussenArt.Fluss;
+    /// <summary>Linienzug mit Eckpunkten in <c>karte.welt.landschaft</c> (Fluss, Bahn)?</summary>
+    public static bool IstLinienzug(AussenArt art) => art is AussenArt.Fluss or AussenArt.Bahn;
+
+    /// <summary>Typ in <c>karte.welt.landschaft</c> eines Linienzugs.</summary>
+    public static string LinienTyp(AussenArt art) => art == AussenArt.Bahn ? "bahn" : "fluss";
+
+    /// <summary>Halbe Breite eines Linienzugs zum Greifen und fuer den Schatten (Fluss samt Ufer, Bahn samt Gleisbett).</summary>
+    public static float LinienHalb(AussenArt art) => art == AussenArt.Bahn ? (StadtSzene.GleisBreite / 2) + 0.1f : (StadtSzene.FlussBreite + 0.3f) / 2;
+
+    /// <summary>Hat das Stueck Eckpunkte zum Ziehen (Teich, Fluss, Bahn)?</summary>
+    public static bool MitEckpunkten(AussenArt art) => art is AussenArt.Teich or AussenArt.Fluss or AussenArt.Bahn;
 
     /// <summary>Das ganze Stueck zu einer Eckpunkt-Stelle (Punkt -1).</summary>
     public static AussenStelle Ganz(AussenStelle s) => MitEckpunkten(s.Art) ? s with { Punkt = -1 } : s;
@@ -54,10 +71,10 @@ public static partial class AussenBearbeitung
         var land = Aussen.Landschaft(aussen);
         for (var i = 0; i < land.Count; i++)
         {
-            if (land[i] is PyObjekt l && Py.Gleich(l["typ"], "fluss") && Linie(l["punkte"]) is { Count: > 0 } linie)
+            if (land[i] is PyObjekt l && (Py.Gleich(l["typ"], "fluss") || Py.Gleich(l["typ"], "bahn")) && Linie(l["punkte"]) is { Count: > 0 } linie)
             {
                 var m = linie[linie.Count / 2];
-                yield return (new AussenStelle(AussenArt.Fluss, i, -1), m.X, m.Y);
+                yield return (new AussenStelle(Py.Gleich(l["typ"], "bahn") ? AussenArt.Bahn : AussenArt.Fluss, i, -1), m.X, m.Y);
             }
         }
         var teiche = Aussen.Teiche(aussen);
@@ -103,7 +120,7 @@ public static partial class AussenBearbeitung
         return best;
     }
 
-    /// <summary>Steg, Teich (samt Ufer) oder Fluss (samt Ufer) beim Punkt; Reihenfolge Steg, Teich, Fluss.</summary>
+    /// <summary>Steg, Teich (samt Ufer), Fluss (samt Ufer) oder Bahn (samt Gleisbett) beim Punkt, je nach <paramref name="welche"/>.</summary>
     private static AussenStelle? WasserBei(PyObjekt aussen, Vector2 p, AussenArt welche)
     {
         var alle = AlleWasser(aussen).ToList();
@@ -133,9 +150,9 @@ public static partial class AussenBearbeitung
             }
             return null;
         }
-        return alle.Where(a => a.Stelle.Art == AussenArt.Fluss)
-            .Select(a => (a.Stelle, D: Kurve.Abstand(p, FlussGlatt(aussen, a.Stelle))))
-            .Where(a => a.D <= ((StadtSzene.FlussBreite + 0.3f) / 2) + 0.05f).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
+        return alle.Where(a => a.Stelle.Art == welche)
+            .Select(a => (a.Stelle, D: Kurve.Abstand(p, LinienzugGlatt(aussen, a.Stelle))))
+            .Where(a => a.D <= LinienHalb(welche) + 0.05f).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
     }
 
     /// <summary>Neues Wasser-Stueck mit der Mitte bei (x, y); <paramref name="form"/> = "rund" fuer einen runden Teich (Hilfe), sonst eckig.</summary>
@@ -168,13 +185,21 @@ public static partial class AussenBearbeitung
             }
             default:
             {
+                // Fluss und (Welle K2) Bahn: drei Punkte waagrecht, der mittlere zum Ziehen eines Bogens
                 var mx = Bearbeitung.AufRaster(x, Bearbeitung.Raster);
                 var my = Bearbeitung.AufRaster(y, Bearbeitung.Raster);
                 var land = Aussen.Landschaft(aussen);
-                var a = Math.Max(0, mx - (NeuerFluss / 2));
-                var b = Math.Min(breite, mx + (NeuerFluss / 2));
-                land.Add(new PyObjekt { { "typ", "fluss" }, { "punkte", new List<object?> { Punkt(a, my), Punkt((a + b) / 2, my), Punkt(b, my) } } });
-                return new AussenStelle(AussenArt.Fluss, land.Count - 1, -1);
+                var lang = art == AussenArt.Bahn ? NeueBahn : NeuerFluss;
+                var a = Math.Max(0, mx - (lang / 2));
+                var b = Math.Min(breite, mx + (lang / 2));
+                var neu = new PyObjekt { { "typ", LinienTyp(art) }, { "punkte", new List<object?> { Punkt(a, my), Punkt((a + b) / 2, my), Punkt(b, my) } } };
+                if (art == AussenArt.Bahn)
+                {
+                    // eine Bahn aus dem Werkzeug hat immer das Feld radien (daran erkennt die Pruefung die strengen Bahn-Regeln)
+                    neu.Add(Strassenkurve.RadienFeld, new List<object?> { Bearbeitung.Zahl(Kurve.Radius), Bearbeitung.Zahl(Kurve.Radius), Bearbeitung.Zahl(Kurve.Radius) });
+                }
+                land.Add(neu);
+                return new AussenStelle(art, land.Count - 1, -1);
             }
         }
     }
@@ -280,7 +305,7 @@ public static partial class AussenBearbeitung
                     q[1] = Bearbeitung.Zahl(Py.F(q[1]) + 1.5);
                 }
                 land.Add(kopie);
-                return new AussenStelle(AussenArt.Fluss, land.Count - 1, -1);
+                return new AussenStelle(s.Art, land.Count - 1, -1);
             }
         }
     }
@@ -337,7 +362,7 @@ public static partial class AussenBearbeitung
         : Eckpunkte(aussen, s).Count <= (s.Art == AussenArt.Teich ? TeichMindestPunkte : 2) ? Texte.EckpunktWenigstens
         : null;
 
-    /// <summary>Gewaehlten Eckpunkt entfernen (Teich bleibt mit mindestens drei, Fluss mit zwei Punkten).</summary>
+    /// <summary>Gewaehlten Eckpunkt entfernen (Teich bleibt mit mindestens drei, Fluss und Bahn mit zwei Punkten).</summary>
     public static bool EckpunktWeg(PyObjekt aussen, AussenStelle s)
     {
         if (EckpunktWegNicht(aussen, s) is not null)
@@ -386,7 +411,7 @@ public static partial class AussenBearbeitung
         return s.Art switch
         {
             AussenArt.Steg => string.Create(de, $"{Texte.Steg}, {StegGroesse(aussen, s).W:0.##} lang, {StegGroesse(aussen, s).T:0.##} breit") + lage,
-            _ => (s.Art == AussenArt.Teich ? Texte.Teich : Texte.Fluss)
+            _ => (s.Art == AussenArt.Teich ? Texte.Teich : s.Art == AussenArt.Bahn ? Texte.Bahn : Texte.Fluss)
                 + (s.Punkt >= 0 ? ", " + Texte.Eckpunkt + " " + (s.Punkt + 1).ToString(de) + " von " + Eckpunkte(aussen, s).Count.ToString(de)
                     : ", " + Eckpunkte(aussen, s).Count.ToString(de) + " " + Texte.Eckpunkte) + lage,
         };
