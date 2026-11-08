@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.21.0
+
+Ein Ort kann jetzt ein anderes Aussehen bekommen.
+
+- Wähle in der Draufsicht einen Ort und tippe rechts auf „Aussehen tauschen“. Die Liste zeigt deine Blueprints mit Tür und die Gebäude der Stadt mit Tür, zum Beispiel das Stellwerk. Tippst du eine Vorlage an, erscheint das neue Haus als Schatten: grün, wenn es passt, rot mit dem Grund, wenn nicht. „Übernehmen“ tauscht das Haus in einem Schritt; Rückgängig geht.
+- Name, Aufgaben, Kunde, Innenraum und Spielstände des Orts bleiben. Die Mitte des Hauses bleibt, die Tür zeigt zur selben Seite wie vorher, der Fußweg folgt dem alten Weg.
+- Steht das gewählte Gebäude noch als eigenes Haus in der Stadt (z. B. das Stellwerk), sagt das Werkzeug, dass du es zuerst löschen musst. Danach ist es weiter in der Liste.
+- Hatte das alte Haus einen Bahnsteig, bleibt er als eigenes Stück am Gleis stehen. Du kannst ihn verschieben oder löschen; ein Ort ohne Bahnsteig ist erlaubt und erscheint nur gelb. Ein Bahnsteig auf dem Gleis ist rot.
+- „Altes Aussehen zurück“ bringt das Haus aus der Ausgangsstadt wieder, mit seinem Bahnsteig.
+- Das Zuhause lässt sich noch nicht tauschen.
+- Die Prüfung erkennt gedrehte Häuser jetzt richtig und lässt keine Stadt-Datei mehr durch, die das Spiel nicht laden könnte.
+
 ## S 0.20.0
 
 Die Autos in der 3D-Ansicht fahren abwechslungsreicher.

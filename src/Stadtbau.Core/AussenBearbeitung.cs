@@ -86,7 +86,15 @@ public static partial class AussenBearbeitung
         var bloecke = teile.OfType<PyObjekt>().Where(t => Py.Gleich(t["art"], "block")).ToList();
         if (bloecke.Count == 0)
         {
-            return (0, 0, 1, 1);
+            // S 0.21.0: ein Modell nur aus Flaechen (Bahnsteig-Stueck, Lernplattform.Core.Stadtbau.Bahnsteig) nimmt ihre Flaeche
+            var flaechen = teile.OfType<PyObjekt>().Where(t => Py.Gleich(t["art"], "flaeche")).ToList();
+            if (flaechen.Count == 0)
+            {
+                return (0, 0, 1, 1);
+            }
+            var fx1 = flaechen.Min(b => Py.F(b["x"]));
+            var fy1 = flaechen.Min(b => Py.F(b["y"]));
+            return (fx1, fy1, flaechen.Max(b => Py.F(b["x"]) + Py.F(b["w"])) - fx1, flaechen.Max(b => Py.F(b["y"]) + Py.F(b["h"])) - fy1);
         }
         var x1 = bloecke.Min(b => Py.F(b["x"]));
         var y1 = bloecke.Min(b => Py.F(b["y"]));

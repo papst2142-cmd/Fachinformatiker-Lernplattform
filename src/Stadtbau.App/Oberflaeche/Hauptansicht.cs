@@ -1198,6 +1198,10 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))
         {
+            if (_aussehenOrt is not null)
+            {
+                AussehenZu(neuZeigen: false);
+            }
             _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehltDraussen, "Klein", farbe: "Pinsel.muted"));
             return;
         }
@@ -1401,6 +1405,8 @@ public sealed partial class Hauptansicht : UserControl
             oeffnen.Click += (_, _) => OrtOeffnen(innenort);
             _aussenAuswahl.Children.Add(oeffnen);
         }
+        // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
+        AussehenTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
         {
             // Phase 13 Welle 4c (Weisung P12-32): das Gebaeude als Vorlage unter eigenem Namen
