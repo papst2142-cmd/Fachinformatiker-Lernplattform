@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.50.1
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version verbessert die Prüfung für neue Städte aus dem Stadtbau-Werkzeug.
+
+- Die Prüfung sieht jetzt auch Gebäude, die im Spiel erst später erscheinen, zum Beispiel das Rechenzentrum im Lokschuppen. Sie prüft dort Tür, Weg und Überschneidungen genauso wie bei allen anderen Häusern.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.50.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Häuser mit mehreren Stockwerken aus dem Stadtbau-Werkzeug vor.
 

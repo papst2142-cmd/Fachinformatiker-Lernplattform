@@ -1,0 +1,17 @@
+{
+ "format": "fisblueprint",
+ "formatversion": 2,
+ "werkzeug": "Fachinformatiker Stadtbau S 0.18.0",
+ "name": "Probehaus aus S0180",
+ "herkunft": {"stadt": "neu_probe", "ort": "", "projekt": "Probe-Projekt"},
+ "modell": "bau:probehaus_aus_s0180",
+ "teile": [{"art": "block", "x": -5.9604645e-08, "y": -5.9604645e-08, "w": 3.0, "t": 2.15, "h": 1.46245, "fenster": false}],
+ "tuer": [1.5, 2.15],
+ "weg": [[1.5, 2.15], [1.5, 2.75]],
+ "schild": null,
+ "innenraum": {"breite": 8.0, "hoehe": 12.0, "fenster": [], "flur": {"y": 4.0, "h": 4.0, "name": "Eingang", "boden": "fliesen", "eingang": {"von": 5.3, "bis": 6.7}, "spieler": [1.0, 6.0], "deko": []}, "raeume": [{"id": "raum", "name": "Raum", "x": 0.0, "y": 0.0, "w": 8.0, "h": 4.0, "tuer": {"von": 3.25, "bis": 4.75}, "boden": "parkett", "deko": []}, {"id": "raum2", "name": "Raum 2", "x": 0.0, "y": 8.0, "w": 8.0, "h": 4.0, "tuer": {"von": 3.25, "bis": 4.75}, "boden": "parkett", "deko": []}]},
+ "personen": [],
+ "bauteile": [{"teil": "cc0:modular/building-corner-window", "x": 0, "y": 1, "stockwerk": 0, "dreh": 1}, {"teil": "cc0:modular/building-door-window", "x": 1, "y": 1, "stockwerk": 0, "dreh": 0}, {"teil": "cc0:modular/building-corner-window", "x": 2, "y": 1, "stockwerk": 0, "dreh": 0}, {"teil": "cc0:modular/building-corner-window", "x": 0, "y": 0, "stockwerk": 0, "dreh": 2}, {"teil": "cc0:modular/building-window", "x": 1, "y": 0, "stockwerk": 0, "dreh": 2}, {"teil": "cc0:modular/building-corner-window", "x": 2, "y": 0, "stockwerk": 0, "dreh": 3}, {"teil": "cc0:modular/building-corner-window", "x": 0, "y": 1, "stockwerk": 1, "dreh": 1}, {"teil": "cc0:modular/building-window-balcony", "x": 1, "y": 1, "stockwerk": 1, "dreh": 0}, {"teil": "cc0:modular/building-corner-window", "x": 2, "y": 1, "stockwerk": 1, "dreh": 0}, {"teil": "cc0:modular/building-corner-window", "x": 0, "y": 0, "stockwerk": 1, "dreh": 2}, {"teil": "cc0:modular/building-window", "x": 1, "y": 0, "stockwerk": 1, "dreh": 2}, {"teil": "cc0:modular/building-corner-window", "x": 2, "y": 0, "stockwerk": 1, "dreh": 3}, {"teil": "cc0:modular/roof-flat-center", "x": 0, "y": 0, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/roof-flat-center", "x": 0, "y": 1, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/roof-flat-center", "x": 1, "y": 0, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/roof-flat-center", "x": 1, "y": 1, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/roof-flat-center", "x": 2, "y": 0, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/roof-flat-center", "x": 2, "y": 1, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/detail-ac-a", "x": 0, "y": 0, "stockwerk": 2, "dreh": 0}, {"teil": "cc0:modular/detail-ac-a", "x": 2, "y": 0, "stockwerk": 2, "dreh": 1}],
+ "eingang": [{"x": 1, "y": 1, "seite": "sued"}],
+ "pruefsumme": "sha256:c65bab38963be751ba742e9c5840a4fc0252da0539d45317865a3c3bcfe4fd9f"
+}

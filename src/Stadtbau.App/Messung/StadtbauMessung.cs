@@ -335,6 +335,7 @@ public static partial class StadtbauMessung
         await ZiehenAsync(a, f);
         await BahnAsync(a, f);
         await EtagenAsync(a, f);
+        await ObergeschosseAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

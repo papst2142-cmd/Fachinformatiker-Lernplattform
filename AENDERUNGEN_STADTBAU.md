@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.19.0
+
+Selbst entworfene Gebäude haben jetzt begehbare Obergeschosse.
+
+- Speicherst du im Editor „Gebäude entwerfen“ ein Gebäude mit mehreren Stockwerken als Blueprint, bekommt sein Innenraum für jedes Obergeschoss mit Wänden eine Etage. Jede Etage ist so groß wie die Grundfläche ihres Stockwerks, ein Raum über die ganze Fläche. Das Dach wird keine Etage.
+- Ein Treppenhaus kommt gleich mit: Treppen an derselben Stelle auf jeder Etage, im Erdgeschoss hinten im Flur. Damit ist jede Etage sofort begehbar. Du kannst die Treppen danach wie gewohnt verschieben, löschen oder durch einen Fahrstuhl ersetzen.
+- Änderst du später den Entwurf, bleiben eingerichtete Etagen, wie sie sind. Passt eine Etage nicht mehr zu ihrem Stockwerk, erscheint ein gelber Hinweis mit dem Knopf „Vorschlag neu“; er legt die Obergeschosse und das Treppenhaus neu an, das Erdgeschoss bleibt. Rückgängig holt die alten Etagen zurück.
+- Eine Etage darf nie über die Grundfläche ihres Stockwerks hinausragen; das zeigt die Prüfung rot.
+- Die 3D-Ansicht zeigt jetzt jeden Ort, den die Draufsicht zeigt. Bisher fehlte das „Rechenzentrum Lokschuppen“, weil die Serverfarm in der Vorschau nicht freigeschaltet war; die Prüfung prüft es jetzt auch.
+- Blueprints und Projekte aus älteren Versionen bleiben lesbar. Ein Gebäude ohne Etagen bekommt sie beim nächsten Speichern oder mit „Vorschlag neu“.
+
 ## S 0.18.0
 
 Der volle Katalog spricht jetzt Deutsch.

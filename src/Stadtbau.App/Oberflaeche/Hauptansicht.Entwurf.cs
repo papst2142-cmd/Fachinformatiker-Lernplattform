@@ -148,9 +148,10 @@ public sealed partial class Hauptansicht
         }
         var e = a.Entwurf;
         bool grundrissNeu;
+        int etagenNeu;
         try
         {
-            var b = e.AlsBlueprint(name, Katalog.Bauteil, _projekt?.Name ?? "", _projekt?.Basis.StadtId ?? "", out grundrissNeu);
+            var b = e.AlsBlueprint(name, Katalog.Bauteil, _projekt?.Name ?? "", _projekt?.Basis.StadtId ?? "", out grundrissNeu, out etagenNeu);
             // Weiterbauen unter demselben Namen ersetzt die Datei (Sicherung vorher), sonst ein neuer Blueprint
             if (e.Datei is { } datei && File.Exists(datei) && string.Equals(e.Name, name, StringComparison.CurrentCultureIgnoreCase))
             {
@@ -170,7 +171,8 @@ public sealed partial class Hauptansicht
             return x.Message;
         }
         a.Gespeichert(name);
-        Melden(Texte.EntwurfGespeichert + ": „" + name + "“" + (grundrissNeu ? " " + Texte.EntwurfGrundrissNeu : ""));
+        Melden(Texte.EntwurfGespeichert + ": „" + name + "“" + (grundrissNeu ? " " + Texte.EntwurfGrundrissNeu : "")
+            + (etagenNeu > 0 ? " " + Texte.EntwurfEtagenAngelegt(etagenNeu) : ""));
         return null;
     }
 

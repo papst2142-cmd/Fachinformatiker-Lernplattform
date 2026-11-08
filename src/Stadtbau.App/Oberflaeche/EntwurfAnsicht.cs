@@ -429,6 +429,7 @@ public sealed class EntwurfAnsicht : Grid
     private void PruefungZeigen()
     {
         _pruefungen.Children.Clear();
+        VorschlagNeuKnopf = null;
         if (Funde.Count == 0)
         {
             _pruefungen.Children.Add(Schrift.Text("✓ " + Texte.EntwurfAllesGut, "Klein", farbe: "Pinsel.green"));
@@ -446,6 +447,24 @@ public sealed class EntwurfAnsicht : Grid
                 },
             });
         }
+        // S 0.19.0 (Nico 3a): Etagen passen nicht mehr zum Entwurf: Knopf „Vorschlag neu“
+        if (Entwurf.EtagenHinweise().Count > 0)
+        {
+            var neu = Schrift.Knopf(Texte.EtagenVorschlagNeu).Vorlese(Texte.EtagenVorschlagNeu).Mit(Texte.EntwurfVorschlagNeuTipp);
+            neu.Click += (_, _) => VorschlagNeu();
+            VorschlagNeuKnopf = neu;
+            _pruefungen.Children.Add(neu);
+        }
+    }
+
+    /// <summary>Knopf „Vorschlag neu“ beim letzten Zeigen (null = keiner, Start-Test).</summary>
+    internal Button? VorschlagNeuKnopf { get; private set; }
+
+    /// <summary>„Vorschlag neu“: beim Speichern kommen die Etagen neu aus dem Entwurf (Hinweis verschwindet).</summary>
+    internal void VorschlagNeu()
+    {
+        Entwurf.EtagenNeu = true;
+        Neu();
     }
 
     private Ansicht3D.Einstellung Einstellung => _nacht.IsChecked == true ? new Ansicht3D.Einstellung(true, Lernplattform.Core.Spiel.Jahreszeit.Sommer, null) : Ansicht3D.Einstellung.Standard;

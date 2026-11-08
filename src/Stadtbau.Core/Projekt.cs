@@ -692,7 +692,35 @@ public sealed class Projekt
             // der Grundriss jeder Etage ist oben schon geprueft (mit Katalog-Stuecken); hier nur die Regeln zwischen den Etagen
             funde.AddRange(StadtbauPruefung.Etagen(basis, eg, Daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
         }
+        // S 0.19.0 (Nico 3a, 5a): Etagen eines selbst gebauten Gebaeudes gegen die Ebenen seines Entwurfs
+        funde.AddRange(EtagenEntwurfFunde(basis).Where(f => f.Etage == etage).Select(f => f.Fund));
         return (funde, grenzen);
+    }
+
+    /// <summary>
+    /// S 0.19.0: Funde zwischen dem Entwurf (Teile in <c>stadtdaten.bauteile</c>) und den Etagen eines Gebaeudes ohne Ort
+    /// (<see cref="EtagenAusEntwurf.Pruefen"/>); leer fuer Orte und Gebaeude ohne Entwurf.
+    /// </summary>
+    public List<EtagenFund> EtagenEntwurfFunde(string basis) =>
+        IstBau(basis) && Bau(basis) is not null && EtagenAusEntwurf.AusStadt(AussenStand, basis[BauPraefix.Length..]) is { } e
+            ? EtagenAusEntwurf.Pruefen(Grundriss(basis), e.Teile, e.Eingaenge)
+            : [];
+
+    /// <summary>Hat das Gebaeude <paramref name="basis"/> einen Entwurf (dann gibt es „Vorschlag neu“)?</summary>
+    public bool HatEntwurf(string basis) => IstBau(basis) && Bau(basis) is not null && EtagenAusEntwurf.AusStadt(AussenStand, basis[BauPraefix.Length..]) is not null;
+
+    /// <summary>
+    /// „Vorschlag neu“ (Nico 3a): Etagen und Treppenhaus neu aus dem Entwurf, das Erdgeschoss bleibt. Ein Schritt im Verlauf.
+    /// Rueckgabe: Zahl der Etagen (-1 = kein Entwurf).
+    /// </summary>
+    public int EtagenVorschlagNeu(string basis, string was)
+    {
+        if (!HatEntwurf(basis))
+        {
+            return -1;
+        }
+        var e = EtagenAusEntwurf.AusStadt(AussenStand, basis[BauPraefix.Length..])!.Value;
+        return EtagenAendern(basis, was, (eg, _) => EtagenAusEntwurf.Neu(eg, e.Teile, e.Eingaenge));
     }
 
     /// <summary>Schluessel aller Etagen eines Orts (Erdgeschoss zuerst).</summary>
