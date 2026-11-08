@@ -90,9 +90,16 @@ public static partial class AussenBearbeitung
         return alle;
     }
 
-    /// <summary>Haus-Modelle zum Setzen (ohne Bahnhoefe, die zum Gleis gehoeren).</summary>
+    /// <summary>
+    /// Haus-Modelle zum Setzen, nach dem deutschen Namen. Seit S 0.24.0 (Weisung P12-100, Nico 3a) auch die Bahnhoefe; ohne die
+    /// Kopien, die „Tür dazu“ fuer ein zweites Haus anlegt (<see cref="GebaeudeTuer.IstKopie"/>).
+    /// </summary>
     public static List<string> HausModelle(PyObjekt aussen) =>
-        [.. Modelle(aussen).Select(p => p.Key).Where(k => !k.StartsWith("bahnhof", StringComparison.Ordinal)).Order(StringComparer.Ordinal)];
+        [.. Modelle(aussen).Select(p => p.Key).Where(k => BahnhoefeAltFuerTests.Value ? !k.StartsWith("bahnhof", StringComparison.Ordinal) : !GebaeudeTuer.IstKopie(aussen, k))
+            .OrderBy(k => ModellNamen.Anzeige(aussen, k), StringComparer.Ordinal)];
+
+    /// <summary>Gegenprobe S 0.24.0: Liste ohne Bahnhoefe wie bis S 0.23.1 (nur Tests, je Ablauf).</summary>
+    internal static readonly AsyncLocal<bool> BahnhoefeAltFuerTests = new();
 
     /// <summary>
     /// Grundflaeche eines Modells (alle Bloecke, relativ zu x, y des Hauses; ohne Block 1 × 1). Nur fuer die Draufsicht;
@@ -1008,6 +1015,8 @@ public static partial class AussenBearbeitung
                 {
                     zw.RemoveAll(z => z is PyObjekt o && Py.Gleich(o["modell"], modell));
                 }
+                // S 0.24.0: eine Kopie aus „Tür dazu“, die niemand mehr nutzt, faellt weg (Nico 2a)
+                GebaeudeTuer.KopieAufraeumen(aussen, modell);
                 // Welle 4c: der Innenraum eines gesetzten Blueprints geht mit dem letzten Gebaeude seines Modells (Rueckgaengig holt beides)
                 if (!land.OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell)) && Get(aussen, "bauten") is PyObjekt bauten)
                 {
