@@ -145,6 +145,43 @@ public class GebaeudeTuerTests
     }
 
     [Fact]
+    public void WegEndeMeidetLaternen_Gegenprobe()
+    {
+        Vector2 Ende(bool egal)
+        {
+            var p = Leer();
+            var s = Haus(p, "kaufhaus", 20, 20);
+            var f = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
+            var y = Math.Round(f.Y - 1.5, 2);
+            Strasse(p, y);
+            var mitteX = Math.Round(f.X + (f.W / 2), 2);
+            // Laterne genau dort, wo der kuerzeste Weg ankaeme (ueber der Hausmitte, Weg um die Ecke links oder rechts)
+            p.AussenAendern("Laternen", a =>
+            {
+                Aussen.Laternen(a).Add(new List<object?> { Math.Round(f.X - 0.5, 2), y + 0.5, false });
+                Aussen.Laternen(a).Add(new List<object?> { Math.Round(f.X + f.W + 0.5, 2), y + 0.5, false });
+            });
+            GebaeudeTuer.LaternenEgalFuerTests.Value = egal;
+            try
+            {
+                Assert.Null(p.AussenAendern("Tuer", a => GebaeudeTuer.Dazu(a, s, einrasten: true)));
+            }
+            finally
+            {
+                GebaeudeTuer.LaternenEgalFuerTests.Value = false;
+            }
+            var w = (List<object?>)Blueprint.ZierwegVon(p.AussenStand, s)!["weg"]!;
+            var e = (List<object?>)w[^1]!;
+            var ende = new Vector2((float)Py.F(e[0]), (float)Py.F(e[1]));
+            var lat = Aussen.Laternen(p.AussenStand).OfType<List<object?>>().Select(l => new Vector2((float)Py.F(l[0]), (float)Py.F(l[1])));
+            Assert.Equal(egal, lat.Any(l => Vector2.Distance(l, ende) <= GebaeudeTuer.LaterneFrei));
+            return ende;
+        }
+        Ende(egal: false);
+        Ende(egal: true); // Gegenprobe: ohne die Regel endet der Weg an einer Laterne
+    }
+
+    [Fact]
     public void StrasseHinterDemHaus_Gegenprobe_NurGeradeaus_ErreichtSieNicht()
     {
         var p = Leer();

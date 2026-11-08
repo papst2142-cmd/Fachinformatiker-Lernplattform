@@ -26,8 +26,9 @@ public static partial class GebaeudeTuer
     /// Weg <paramref name="weg"/> (Tuer, Punkt davor) bis zur naechsten Strasse fuehren, ohne das Haus (x, y, w, h) zu
     /// schneiden. true = Strasse erreicht.
     /// </summary>
-    internal static bool WegZurStrasse(List<object?> weg, (double X, double Y, double W, double H) haus, IReadOnlyList<List<Vector2>> strassen)
+    internal static bool WegZurStrasse(List<object?> weg, (double X, double Y, double W, double H) haus, IReadOnlyList<List<Vector2>> strassen, IReadOnlyList<Vector2>? laternen = null)
     {
+        laternen ??= [];
         if (NurGeradeausFuerTests.Value || weg.Count < 2 || strassen.All(s => s.Count < 2))
         {
             return false;
@@ -41,7 +42,7 @@ public static partial class GebaeudeTuer
         var besteLaenge = float.MaxValue;
         void Versuch(List<Vector2> zug)
         {
-            var ziel = Naechster(zug[^1], strassen);
+            var ziel = Naechster(zug[^1], strassen, laternen);
             var ganz = new List<Vector2>(zug) { ziel };
             for (var i = 0; i + 1 < ganz.Count; i++)
             {
@@ -82,22 +83,49 @@ public static partial class GebaeudeTuer
 
     private static Vector2 Lesen(object? punkt) => punkt is List<object?> l ? new Vector2((float)Py.F(l[0]), (float)Py.F(l[1])) : Vector2.Zero;
 
-    /// <summary>Naechster Punkt auf der Mitte aller Strassen.</summary>
-    private static Vector2 Naechster(Vector2 p, IReadOnlyList<List<Vector2>> strassen)
+    /// <summary>
+    /// Freiraum um den Wunschplatz einer Laterne, den das Wegende meidet (wie das Kleingruen, Fund Teststadt: der Weg der
+    /// Bitweiche endete an der Laterne am Kreisverkehr, die dann nicht mehr frei stand).
+    /// </summary>
+    public const float LaterneFrei = 0.8f;
+
+    /// <summary>Gegenprobe: Wegende ohne Ruecksicht auf Laternen.</summary>
+    internal static readonly AsyncLocal<bool> LaternenEgalFuerTests = new();
+
+    /// <summary>Naechster Punkt auf der Mitte aller Strassen, nicht naeher als <see cref="LaterneFrei"/> an einer Laterne.</summary>
+    private static Vector2 Naechster(Vector2 p, IReadOnlyList<List<Vector2>> strassen, IReadOnlyList<Vector2> laternen)
     {
         var best = p;
         var abstand = float.MaxValue;
+        bool Frei(Vector2 q) => LaternenEgalFuerTests.Value || laternen.All(l => Vector2.Distance(l, q) > LaterneFrei);
         foreach (var s in strassen)
         {
             for (var i = 0; i + 1 < s.Count; i++)
             {
                 var ab = s[i + 1] - s[i];
-                var t = ab.LengthSquared() < 1e-12f ? 0 : Math.Clamp(Vector2.Dot(p - s[i], ab) / ab.LengthSquared(), 0, 1);
-                var q = s[i] + (ab * t);
-                var d = Vector2.Distance(p, q);
-                if (d < abstand)
+                var laenge = ab.Length();
+                if (laenge < 1e-6f)
                 {
-                    (best, abstand) = (q, d);
+                    continue;
+                }
+                var t = Math.Clamp(Vector2.Dot(p - s[i], ab) / (laenge * laenge), 0, 1);
+                // der Fusspunkt, sonst Punkte daneben auf der Strecke in Schritten von 0,25
+                for (var k = 0; k <= 40; k++)
+                {
+                    foreach (var vz in k == 0 ? new[] { 0f } : new[] { 1f, -1f })
+                    {
+                        var tt = t + (vz * k * 0.25f / laenge);
+                        if (tt < 0 || tt > 1)
+                        {
+                            continue;
+                        }
+                        var q = s[i] + (ab * tt);
+                        var d = Vector2.Distance(p, q);
+                        if (d < abstand && Frei(q))
+                        {
+                            (best, abstand) = (q, d);
+                        }
+                    }
                 }
             }
         }

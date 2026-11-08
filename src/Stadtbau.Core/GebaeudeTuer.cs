@@ -102,7 +102,7 @@ public static partial class GebaeudeTuer
         var z = Blueprint.Zierweg(aussen, modell)!;
         var zw = (List<object?>)z["weg"]!;
         var strassen = AussenBearbeitung.Strassen(aussen);
-        return AussenBearbeitung.WegAnschliessen(zw, strassen) || WegZurStrasse(zw, AussenBearbeitung.HausFlaeche(aussen, s), strassen) ? null : Texte.TuerWegOhneStrasse;
+        return AussenBearbeitung.WegAnschliessen(zw, strassen) || WegZurStrasse(zw, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
     }
 
     /// <summary>Tuer und Fussweg des Gebaeudes wegnehmen (die Kopie des Modells bleibt am Haus). false = es hatte keine.</summary>
@@ -203,6 +203,9 @@ public static partial class GebaeudeTuer
         }
         return zw;
     }
+
+    private static List<Vector2> LaternenPunkte(PyObjekt aussen) =>
+        [.. Aussen.Laternen(aussen).OfType<List<object?>>().Select(l => new Vector2((float)Py.F(l[0]), (float)Py.F(l[1])))];
 
     private static List<object?> Punkt(Vector2 p) => [Bearbeitung.Zahl(Math.Round(p.X, 2)), Bearbeitung.Zahl(Math.Round(p.Y, 2))];
 
