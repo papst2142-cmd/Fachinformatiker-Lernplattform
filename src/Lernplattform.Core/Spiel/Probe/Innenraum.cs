@@ -429,7 +429,8 @@ public sealed class Innenraum
                 // Phase 13 Welle 5 (Weisung P12-73): ein Obergeschoss steht so im Grundriss des Erdgeschosses, wie das
                 // Werkzeug es gebaut hat (ohne Zusaetze, ohne Personen); fehlt es, gibt es keinen Innenraum
                 var eg = Objekt(laden["gebaeude"]);
-                return Stadtbau.Etagen.Gibt(eg, etage) ? new Eingaben(ansicht!, ort, Stadtbau.Etagen.Gebaeude(eg, etage), [], null, geschaefte) : null;
+                // Weisung P12-74: eine Treppe nur nach unten traegt in der Kopie fuer die Darstellung "richtung": "unten"
+                return Stadtbau.Etagen.Gibt(eg, etage) ? new Eingaben(ansicht!, ort, Stadtbau.Etagen.FuerDarstellung(eg, ort, etage), [], null, geschaefte) : null;
             }
             var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
@@ -733,7 +734,10 @@ public sealed class Innenraum
                 return (Py.Str(m["name"]), zeilen, knoepfe);
             }
         }
-        return (PyFormat.Prozent("Du bist im %s.", name), "Tippe auf eine Ware oder sprich mit dem Verkauf.", [sortiment]);
+        // Weisung P12-74: auf einer Etage ohne Verkaufsperson nur der Teil zu den Waren (Erdgeschoss unveraendert)
+        var hinweis = Personen.Count == 0 && Stadtbau.Etagen.Teilen(Ansicht).Etage > 0 ? Texte.SpielProbeTexte.EtageOhneVerkauf
+            : "Tippe auf eine Ware oder sprich mit dem Verkauf.";
+        return (PyFormat.Prozent("Du bist im %s.", name), hinweis, [sortiment]);
     }
 
     /// <summary>W7b: Aktion "am Schalter" (Bank: Kredite, Amt: Gruendung oder Steuern).</summary>
@@ -780,6 +784,8 @@ public sealed class Innenraum
         public static readonly Vector3 HolzDunkel = Netz.Farbe("#6E4A2F");
         public static readonly Vector3 Metall = Netz.Farbe("#8E8AA3");
         public static readonly Vector3 MetallDunkel = Netz.Farbe("#4B4566");
+        /// <summary>Weisung P12-74: Schacht unter einer Treppe nach unten (fast schwarz).</summary>
+        public static readonly Vector3 Schacht = Netz.Farbe("#211E2A");
         public static readonly Vector3 Geraet = Netz.Farbe("#1E1A30");
         public static readonly Vector3 GeraetHell = Netz.Farbe("#2E2848");
         public static readonly Vector3 Bildschirm = Netz.Farbe("#22D3EE");
@@ -1071,6 +1077,83 @@ public sealed class Innenraum
         Modell(name, x, z, w, t, hoehe, r.Dreh + mehr, unten, ersatz);
     }
 
+    /// <summary>Gegenprobe (Weisung P12-74): Treppe wie in Welle W5 zuerst gebaut (Pfosten in der Stufe, oben wie unten).</summary>
+    internal static readonly AsyncLocal<bool> TreppeAltFuerTests = new();
+
+    /// <summary>Abstand von Gelaender und Pfosten zum Rand der Treppe; die Stufen beginnen <see cref="TreppeSeite"/> innen.</summary>
+    internal const float TreppeSeite = 0.1f;
+
+    /// <summary>Hoehe des Handlaufs ueber dem Boden einer Treppe nach unten (0,9 m).</summary>
+    internal const float GelaenderHoehe = 0.9f * Meter;
+
+    /// <summary>
+    /// Treppe nach oben (Phase 13 Welle 5): Stufen von vorn (unten) nach hinten (oben). Weisung P12-74: Pfosten und
+    /// Gelaender stehen neben den Stufen (seitlich <see cref="TreppeSeite"/>), der Handlauf oben liegt auf den Pfosten.
+    /// </summary>
+    private void TreppeNachOben(Rahmen r, float b, float tt)
+    {
+        const int stufen = 8;
+        var oben = WandHoehe * 0.95f;
+        var tiefe = tt / stufen;
+        if (TreppeAltFuerTests.Value)
+        {
+            for (var i = 0; i < stufen; i++)
+            {
+                Kasten(r, 0, tt - ((i + 1) * tiefe), b, tiefe, 0, (i + 1) * oben / stufen, i % 2 == 0 ? Farben.Holz : Farben.HolzDunkel);
+            }
+            foreach (var seite in new[] { 0f, b - 0.08f })
+            {
+                Kasten(r, seite, tt - 0.1f, 0.08f, 0.08f, 0, 0.9f * Meter, Farben.Metall);
+                Kasten(r, seite, 0, 0.08f, tt, oben, oben + 0.08f, Farben.Metall);
+            }
+            return;
+        }
+        for (var i = 0; i < stufen; i++)
+        {
+            Kasten(r, TreppeSeite, tt - ((i + 1) * tiefe), b - (2 * TreppeSeite), tiefe, 0, (i + 1) * oben / stufen, i % 2 == 0 ? Farben.Holz : Farben.HolzDunkel);
+        }
+        foreach (var seite in new[] { 0.01f, b - 0.09f })
+        {
+            // Pfosten vorn und hinten bis unter den Handlauf, daneben (nie in) den Stufen
+            Kasten(r, seite, tt - 0.09f, 0.08f, 0.08f, 0, oben, Farben.Metall);
+            Kasten(r, seite, 0.01f, 0.08f, 0.08f, 0, oben, Farben.Metall);
+            Kasten(r, seite, 0, 0.08f, tt, oben, oben + 0.08f, Farben.Metall);
+        }
+    }
+
+    /// <summary>
+    /// Weisung P12-74: Treppe, die nur nach unten fuehrt (oberster Stock): Treppenloch im Boden mit Einfassung, darin
+    /// Stufen, die von vorn (Zugang auf der Seite der Ankunft) nach hinten immer dunkler in die Tiefe fuehren; Gelaender
+    /// an den drei Seiten ohne Zugang. Die Flaeche bleibt im Laufraster gesperrt wie jedes Moebel.
+    /// </summary>
+    private void TreppeNachUnten(Rahmen r, float b, float tt)
+    {
+        const int stufen = 8;
+        const float rand = 0.045f;
+        const float einfassung = 0.06f;
+        // Einfassung (Rand des Lochs) und dunkler Schacht
+        Kasten(r, 0, 0, b, tt, 0, rand + 0.01f, Farben.Schacht);
+        var innen = tt - TreppeSeite;
+        var tiefe = innen / stufen;
+        for (var i = 0; i < stufen; i++)
+        {
+            // Stufe i (0 = vorn am Zugang) wird nach hinten dunkler: so sieht man, dass es hinunter geht
+            var farbe = Vector3.Lerp(i % 2 == 0 ? Farben.Holz : Farben.HolzDunkel, Vector3.Zero, 0.15f + (0.8f * i / (stufen - 1)));
+            Kasten(r, TreppeSeite, tt - ((i + 1) * tiefe), b - (2 * TreppeSeite), tiefe, rand + 0.01f, rand + einfassung - (0.004f * i), farbe);
+        }
+        var boden = rand + 0.01f;
+        foreach (var seite in new[] { 0.01f, b - 0.09f })
+        {
+            Kasten(r, seite, tt - 0.09f, 0.08f, 0.08f, boden, GelaenderHoehe, Farben.Metall);
+            Kasten(r, seite, 0.01f, 0.08f, 0.08f, boden, GelaenderHoehe, Farben.Metall);
+            Kasten(r, seite, 0.01f, 0.08f, tt - 0.02f, GelaenderHoehe, GelaenderHoehe + 0.08f, Farben.Metall);
+            Kasten(r, seite, 0.01f, 0.08f, tt - 0.02f, GelaenderHoehe * 0.5f, (GelaenderHoehe * 0.5f) + 0.05f, Farben.Metall);
+        }
+        // hinten quer (gegenueber dem Zugang)
+        Kasten(r, 0.09f, 0.01f, b - 0.18f, 0.08f, GelaenderHoehe, GelaenderHoehe + 0.08f, Farben.Metall);
+        Kasten(r, 0.09f, 0.01f, b - 0.18f, 0.08f, GelaenderHoehe * 0.5f, (GelaenderHoehe * 0.5f) + 0.05f, Farben.Metall);
+    }
+
     private void Kasten(Rahmen r, float lx, float lz, float lw, float lt, float unten, float oben, Vector3 farbe)
     {
         var (x, z, w, t) = r.Rechteck(lx, lz, lw, lt);
@@ -1171,22 +1254,12 @@ public sealed class Innenraum
                 }
                 break;
             }
-            case "treppe":
-            {
-                // Phase 13 Welle 5 (Weisung P12-73): Stufen von vorn (unten) nach hinten (oben), seitlich ein Gelaender
-                const int stufen = 8;
-                for (var i = 0; i < stufen; i++)
-                {
-                    var tiefe = tt / stufen;
-                    Kasten(r, 0, tt - ((i + 1) * tiefe), b, tiefe, 0, (i + 1) * WandHoehe * 0.95f / stufen, i % 2 == 0 ? Farben.Holz : Farben.HolzDunkel);
-                }
-                foreach (var seite in new[] { 0f, b - 0.08f })
-                {
-                    Kasten(r, seite, tt - 0.1f, 0.08f, 0.08f, 0, 0.9f * M, Farben.Metall);
-                    Kasten(r, seite, 0, 0.08f, tt, WandHoehe * 0.95f, (WandHoehe * 0.95f) + 0.08f, Farben.Metall);
-                }
+            case "treppe" when Py.Gleich(Get(d, Stadtbau.Etagen.FeldRichtung), Stadtbau.Etagen.NachUnten) && !TreppeAltFuerTests.Value:
+                TreppeNachUnten(r, b, tt);
                 break;
-            }
+            case "treppe":
+                TreppeNachOben(r, b, tt);
+                break;
             case "fahrstuhl":
             {
                 // Phase 13 Welle 5: Kabine mit Rueckwand, Seitenwaenden, zwei Tueren vorn und Anzeige darueber

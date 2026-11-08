@@ -298,4 +298,140 @@ public class SpielEtagenTests
         Assert.Equal(stadt.Stand(spiel.Stand), stadt.Stand(stand));
         Assert.Equal(PythonJson.Text(SpielFingerabdruckTests.Werte(spiel.Stand)), PythonJson.Text(SpielFingerabdruckTests.Werte(stand)));
     }
+
+    // ---- Nachbesserung Treppe (Weisung P12-74) ----------------------------------------------------------------------
+
+    /// <summary>Teile im Rechteck der Treppe (x 8–11, y 12,2–13,8): Stufen (Holz) und Gelaender (Metall) getrennt.</summary>
+    private static (List<Teil> Stufen, List<Teil> Gelaender) TreppenTeile(Innenraum raum)
+    {
+        var drin = raum.Teile.Where(t => t.Art == TeilArt.Quader && t.X1 >= 8 - 1e-4 && t.X2 <= 11 + 1e-4 && t.Z1 >= 12.2 - 1e-4 && t.Z2 <= 13.8 + 1e-4).ToList();
+        var metall = Netz.Farbe("#8E8AA3");
+        var schacht = Netz.Farbe("#211E2A");
+        return ([.. drin.Where(t => t.Farbe != metall && t.Farbe != schacht)], [.. drin.Where(t => t.Farbe == metall)]);
+    }
+
+    /// <summary>Groesste Durchdringung zweier Quader (alle drei Achsen ueberlappen; 0 = beruehren oder getrennt).</summary>
+    private static float Durchdringung(Teil a, Teil b) =>
+        Math.Max(0, new[] { Math.Min(a.X2, b.X2) - Math.Max(a.X1, b.X1), Math.Min(a.Y2, b.Y2) - Math.Max(a.Y1, b.Y1), Math.Min(a.Z2, b.Z2) - Math.Max(a.Z1, b.Z1) }.Min());
+
+    private static float GroessteDurchdringung(Innenraum raum)
+    {
+        var (stufen, gelaender) = TreppenTeile(raum);
+        Assert.NotEmpty(stufen);
+        Assert.NotEmpty(gelaender);
+        return stufen.SelectMany(s => gelaender.Select(g => Durchdringung(s, g))).Max();
+    }
+
+    private static Innenraum Raum(PyObjekt innen, int etage) =>
+        Innenraum.Bauen("geschaeft:moebelhaus" + (etage > 0 ? "@" + etage : ""), NeuerAblauf().Stand, innen, null, SpielGeschaefteTests.Daten.Value)!;
+
+    /// <summary>
+    /// P12-74 a: oben (Treppe nur nach unten) liegt die Treppe als Loch im Boden: keine Stufe ueber 0,2, Gelaender an drei
+    /// Seiten, die Seite der Ankunft (vorn = +x) offen; unten (Erdgeschoss) und im Mittelstock die Treppe nach oben.
+    /// Gegenprobe: die alte Darstellung baut oben die Stufen nach oben.
+    /// </summary>
+    [Fact]
+    public void Treppe_Oben_FuehrtSichtbarNachUnten()
+    {
+        var innen = MitEtagen();
+        var (stufenOben, gelaenderOben) = TreppenTeile(Raum(innen, 1));
+        Assert.True(stufenOben.Max(t => t.Y2) < 0.2f, "oben ragen Stufen auf: " + stufenOben.Max(t => t.Y2));
+        // Zugang vorn (+x): kein Gelaender quer an der Vorderkante x 11
+        Assert.DoesNotContain(gelaenderOben, g => g.X2 > 10.9f && g.Z2 - g.Z1 > 0.5f);
+        // hinten quer (x 8) und an beiden Seiten laengs
+        Assert.Contains(gelaenderOben, g => g.X1 < 8.1f && g.Z2 - g.Z1 > 1.0f);
+        Assert.Contains(gelaenderOben, g => g.Z1 < 12.3f && g.X2 - g.X1 > 2.0f);
+        Assert.Contains(gelaenderOben, g => g.Z2 > 13.7f && g.X2 - g.X1 > 2.0f);
+        var (stufenUnten, _) = TreppenTeile(Raum(innen, 0));
+        Assert.True(stufenUnten.Max(t => t.Y2) > Innenraum.WandHoehe * 0.9f);
+        // Gegenprobe: alte Darstellung
+        Innenraum.TreppeAltFuerTests.Value = true;
+        try
+        {
+            Assert.True(TreppenTeile(Raum(innen, 1)).Stufen.Max(t => t.Y2) > Innenraum.WandHoehe * 0.9f);
+        }
+        finally
+        {
+            Innenraum.TreppeAltFuerTests.Value = false;
+        }
+    }
+
+    /// <summary>Mittelstock (Treppe EG–1 und 1–2): im 1. OG fuehrt die Treppe 1–2 nach oben, nur im 2. OG nach unten.</summary>
+    [Fact]
+    public void Treppe_Mittelstock_NachObenWieHeute()
+    {
+        var innen = MitEtagen(2, danach: eg =>
+        {
+            var halte = new List<object?>();
+            foreach (var k in new[] { 1, 2 })
+            {
+                var d = Stueck(Etagen.Treppe, "u2", 3, 12.2);
+                Liste(Objekt(Etagen.Gebaeude(eg, k)["flur"])["deko"]).Add(d);
+                var (ax, ay, blick) = Etagen.Vor(d);
+                halte.Add(new PyObjekt { { "etage", (long)k }, { "ankunft", new List<object?> { ax, ay, blick } } });
+            }
+            Liste(eg[Etagen.FeldUebergaenge]).Add(new PyObjekt { { "id", "u2" }, { "art", Etagen.Treppe }, { "halte", halte } });
+        });
+        var eg = Objekt(Objekt(innen["moebelhaus"])["gebaeude"]);
+        bool Unten(int etage, string id) => Etagen.Einrichtung(Etagen.FuerDarstellung(eg, "moebelhaus", etage))
+            .Any(d => Py.Gleich(Get(d, Etagen.FeldLink), id) && Py.Gleich(Get(d, Etagen.FeldRichtung), Etagen.NachUnten));
+        Assert.False(Unten(0, "u1"));
+        Assert.True(Unten(1, "u1"));
+        Assert.False(Unten(1, "u2"));
+        Assert.True(Unten(2, "u2"));
+        // die gespeicherten Daten bleiben ohne das Feld (nur die Kopie fuer die Darstellung)
+        Assert.DoesNotContain(Etagen.Einrichtung(Etagen.Gebaeude(eg, 1)), d => Py.Hat(d, Etagen.FeldRichtung));
+    }
+
+    /// <summary>
+    /// P12-74 b: Pfosten und Gelaender stehen neben den Stufen, Durchdringung 0 (Grenze 0,02 wie SpielSitzenTests), unten
+    /// und oben. Gegenprobe: die alte Lage (Pfosten in der ersten Stufe) ist rot.
+    /// </summary>
+    [Fact]
+    public void Treppe_PfostenNebenDenStufen()
+    {
+        var innen = MitEtagen();
+        Assert.True(GroessteDurchdringung(Raum(innen, 0)) <= 0.02f);
+        Assert.True(GroessteDurchdringung(Raum(innen, 1)) <= 0.02f);
+        Innenraum.TreppeAltFuerTests.Value = true;
+        try
+        {
+            Assert.True(GroessteDurchdringung(Raum(innen, 0)) > 0.02f);
+        }
+        finally
+        {
+            Innenraum.TreppeAltFuerTests.Value = false;
+        }
+    }
+
+    /// <summary>P12-74 a: die Figur geht nicht ueber das Treppenloch (Flaeche im Laufraster gesperrt), der Knopf bleibt.</summary>
+    [Fact]
+    public void Treppe_Oben_LochNichtBegehbar()
+    {
+        var spiel = ImMoebelhaus(NeuerAblauf(), MitEtagen());
+        VorDieTreppe(spiel);
+        Assert.True(spiel.Knopf(spiel.Knoepfe.Single(k => k.Aktion.StartsWith(Etagen.AktionEtage, StringComparison.Ordinal)).Aktion));
+        Assert.Equal(1, spiel.Etage);
+        spiel.GeheZu(9.5, 13.0);
+        spiel.SofortAnkommen();
+        Assert.False(spiel.FigurX is > 8f and < 11f && spiel.FigurZ is > 12.2f and < 13.8f, $"Figur im Treppenloch: {spiel.FigurX} {spiel.FigurZ}");
+        Assert.Contains(spiel.Knoepfe, k => k.Name == "Treppe runter zum Erdgeschoss");
+    }
+
+    /// <summary>
+    /// P12-74 c: oben ohne Verkaufsperson nur der Satz zu den Waren; im Erdgeschoss unveraendert (mit Verkauf). Gegenprobe:
+    /// eine Person oben bringt den alten Satz zurueck.
+    /// </summary>
+    [Fact]
+    public void Hinweis_Oben_OhneVerkauf()
+    {
+        var stand = NeuerAblauf().Stand;
+        var innen = MitEtagen();
+        Assert.Equal("Tippe auf eine Ware oder sprich mit dem Verkauf.", Raum(innen, 0).Nachricht(11.6, 13.0, stand).Text);
+        Assert.Equal(Lernplattform.Core.Texte.SpielProbeTexte.EtageOhneVerkauf, Raum(innen, 1).Nachricht(11.6, 13.0, stand).Text);
+        var og = Etagen.Gebaeude(Objekt(Objekt(innen["moebelhaus"])["gebaeude"]), 1);
+        var mitPerson = Innenraum.AusGrundrissMitPersonen("geschaeft:moebelhaus@1", og,
+            [new PyObjekt { { "id", "p" }, { "name", "Ines" }, { "rolle", "Verkauf" }, { "text", "Hallo" }, { "platz", new List<object?> { 20.0, 4.0 } } }], null);
+        Assert.Equal("Tippe auf eine Ware oder sprich mit dem Verkauf.", mitPerson.Nachricht(11.6, 13.0, stand).Text);
+    }
 }

@@ -142,6 +142,38 @@ public static class Etagen
         };
     }
 
+    /// <summary>
+    /// Feld nur in der Darstellung des Spiels (Weisung P12-74): eine Treppe, die von ihrer Etage nur nach unten fuehrt,
+    /// traegt <c>"richtung": "unten"</c> und wird als Treppenloch mit Stufen nach unten gezeichnet. Nie gespeichert.
+    /// </summary>
+    public const string FeldRichtung = "richtung";
+
+    /// <summary>Wert von <see cref="FeldRichtung"/> fuer eine Treppe nur nach unten.</summary>
+    public const string NachUnten = "unten";
+
+    /// <summary>
+    /// Grundriss der Etage fuer die Darstellung im Spiel (Weisung P12-74): Kopie, in der jede Treppe, deren Ziele alle
+    /// unter <paramref name="etage"/> liegen, <see cref="FeldRichtung"/> = <see cref="NachUnten"/> traegt. Ohne solche
+    /// Treppe der Grundriss selbst (keine Kopie).
+    /// </summary>
+    public static PyObjekt FuerDarstellung(PyObjekt eg, string ort, int etage)
+    {
+        var g = Gebaeude(eg, etage);
+        var unten = Uebergaenge(eg, ort)
+            .Where(u => u.Art == Treppe && u.Ziele(etage) is { Count: > 0 } z && z.All(e => e < etage))
+            .Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
+        if (unten.Count == 0)
+        {
+            return g;
+        }
+        var kopie = (PyObjekt)Py.Kopie(g)!;
+        foreach (var d in Einrichtung(kopie).Where(d => Py.Gleich(Get(d, "typ"), Treppe) && Get(d, FeldLink) is string id && unten.Contains(id)))
+        {
+            Py.Setzen(d, FeldRichtung, NachUnten);
+        }
+        return kopie;
+    }
+
     /// <summary>Ist der Typ das Stueck eines Uebergangs (Treppe, Fahrstuhl)?</summary>
     public static bool IstStueck(string typ) => Arten.Contains(typ);
 

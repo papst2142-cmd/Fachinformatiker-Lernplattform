@@ -42,6 +42,12 @@ public static class SpielProbeTexte
     public const string DanachZu = "Danach geht es weiter zu {0}.";
     public const string DanachDorthin = "Danach geht es dorthin weiter.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
+    /// <summary>
+    /// Weisung P12-74: Hinweis in einem Geschaeft auf einer Etage ohne Verkaufsperson (Obergeschoss); im Erdgeschoss bleibt
+    /// „Tippe auf eine Ware oder sprich mit dem Verkauf.“
+    /// </summary>
+    public const string EtageOhneVerkauf = "Tippe auf eine Ware, um sie anzusehen.";
+
     public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
     // Phase 8 W10 (Sammelliste 148, Nico 1b): Klappknopf des Hinweisfelds (Bildschirmleser)
     public const string HinweisEinklappen = "Hinweis einklappen";
