@@ -13,7 +13,7 @@ namespace Stadtbau.Messung;
 /// Messpunkt „Strecken anlegen“ (wiederholbar, 400 ms): Netz, Rundwege und Verkehr aus den Strassen der Stadt, wie die
 /// 3D-Ansicht sie nach einer Aenderung im Hintergrund baut. Geprueft: Autos da, im Ring gegen den Uhrzeigersinn (Insel
 /// links), kein roter Fund; die 3D-Ansicht zeigt dieselben Autos und sie fahren; Gegenprobe: eine Sackgasse, zu kurz zum
-/// Wenden, gibt rot.
+/// Wenden, gibt rot. S 0.20.0: zufaellige Wege von Tag 1 (Gegenprobe Tag 2 andere Wege), die 3D-Ansicht faehrt dieselben.
 /// </summary>
 public static partial class StadtbauMessung
 {
@@ -47,6 +47,16 @@ public static partial class StadtbauMessung
         {
             Fund("Strecken: keine automatischen Autos auf den Strassen");
             return;
+        }
+        // S 0.20.0 (Weisung P12-84): zufaellige Wege von Tag 1; Gegenprobe Tag 2 gibt andere Wege
+        var tag2 = Autostrecken.Anlegen(szene.Strassen, tag: 2);
+        if (verkehr.FuerTag != Autostrecken.WerkzeugTag || szene.Spieltag != Autostrecken.WerkzeugTag)
+        {
+            Fund(string.Create(Inv, $"Strecken: Werkzeug zeigt Tag {verkehr.FuerTag} statt {Autostrecken.WerkzeugTag}"));
+        }
+        if (tag2.Strecken.Count == verkehr.Autos.Count && tag2.Strecken.Zip(verkehr.Autos).All(z => z.First.Spur.SequenceEqual(z.Second.Strecke)))
+        {
+            Fund("Strecken: Tag 2 faehrt dieselben Wege wie Tag 1 (kein Zufall)");
         }
         var (m, r) = verkehr.Ringe.Count == 1 ? verkehr.Ringe[0] : (Vector2.Zero, 0f);
         var falsch = 0;
@@ -90,6 +100,10 @@ public static partial class StadtbauMessung
             if (v3 is null || v3.Autos.Count != verkehr.Autos.Count || !v3.Rundweg)
             {
                 Fund(string.Create(Inv, $"Strecken 3D: {v3?.Autos.Count ?? 0} Autos statt {verkehr.Autos.Count}"));
+            }
+            else if (!v3.Autos.Zip(verkehr.Autos).All(z => z.First.Strecke.SequenceEqual(z.Second.Strecke)))
+            {
+                Fund("Strecken 3D: die Autos fahren nicht die Wege von Tag 1");
             }
             else if (v3.Autos.Zip(vorher).All(z => z.First.Weg == z.Second))
             {

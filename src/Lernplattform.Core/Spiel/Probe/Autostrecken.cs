@@ -18,8 +18,16 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// Ring eines Kreisverkehrs nur in eine Richtung (gegen den Uhrzeigersinn: die Insel liegt links vom Auto). Am Ende einer
 /// Sackgasse (auch am Kartenrand) wendet das Auto (E1: so kommt jedes Auto ueberall wieder heraus, kein Sprung, keine
 /// Sackgasse ohne Wendeweg); ist das Stueck dafuer zu kurz (<see cref="WendeMindest"/>), bekommt das Auto keine Strecke
-/// und die Pruefung des Werkzeugs meldet rot. Jedes Auto faehrt einen festen Rundweg: an jeder Abzweigung waehlt es
-/// reihum rechts, geradeaus, links (je Auto um eins versetzt), bis sich sein Weg wiederholt.
+/// und die Pruefung des Werkzeugs meldet rot.
+/// </para>
+/// <para>
+/// Welle A 0.51.0 / S 0.20.0 (Weisung P12-84, Nico 1a 2a, Sammelliste 237): jedes Auto faehrt einen Rundweg mit
+/// zufaelligen Abzweigungen (<see cref="RundwegZufall"/>): an jeder Abzweigung eine der erlaubten Richtungen, gewuerfelt
+/// mit einem eigenen kleinen Rechenweg (<see cref="Zufall"/>, nicht <c>Wuerfel.cs</c>, kein Geraetezufall) aus Auto-Nummer
+/// und Spieltag (<see cref="StadtSzene.Spieltag"/>, im Werkzeug <see cref="WerkzeugTag"/>). Nach mindestens
+/// <see cref="ZufallAbzweigungen"/> Abzweigungen faehrt es den kuerzesten erlaubten Weg zurueck auf seine Startstrecke, die
+/// Schleife beginnt von vorn. Gleicher Tag = gleiche Wege (Fotos und Tests wiederholbar), jeder Spieltag neue Wege.
+/// Wenden nur in der Sackgasse. Gilt nur fuer automatische Strecken; die festen Strecken von Stadt 1 bleiben.
 /// </para>
 /// </summary>
 public static class Autostrecken
@@ -50,6 +58,41 @@ public static class Autostrecken
 
     /// <summary>Hoechstens so viele Autos (wie Stadt 1).</summary>
     public const int HoechstensAutos = 6;
+
+    /// <summary>Welle A 0.51.0: so viele Abzweigungen waehlt ein Auto mindestens zufaellig, bevor es zur Startstrecke zurueckfaehrt.</summary>
+    public const int ZufallAbzweigungen = 8;
+
+    private static readonly AsyncLocal<bool> Reihum = new();
+
+    /// <summary>Nur fuer Gegenproben: <see cref="Anlegen"/> nimmt den alten Rundweg reihum (vor A 0.51.0, gleich an jedem Tag).</summary>
+    public static bool ReihumFuerTests { get => Reihum.Value; set => Reihum.Value = value; }
+
+    /// <summary>Welle A 0.51.0 (Nico 2a): im Werkzeug fahren die Autos die Wege dieses Spieltags.</summary>
+    public const long WerkzeugTag = 1;
+
+    /// <summary>
+    /// Welle A 0.51.0: eigener kleiner Zufall (SplitMix64) aus Auto-Nummer und Spieltag. Fest: gleicher Startwert = gleiche
+    /// Zahlenfolge auf jedem Geraet; nur Darstellung (nicht <c>Wuerfel.cs</c>, kein Spielstand).
+    /// </summary>
+    public sealed class Zufall(int auto, long tag)
+    {
+        private ulong _z = unchecked(((ulong)tag * 0x9E3779B97F4A7C15UL) ^ (((ulong)auto + 1) * 0xD1B54A32D192ED03UL));
+
+        /// <summary>Naechste Zahl der Folge.</summary>
+        public ulong Weiter()
+        {
+            unchecked
+            {
+                var z = _z += 0x9E3779B97F4A7C15UL;
+                z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+                z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
+                return z ^ (z >> 31);
+            }
+        }
+
+        /// <summary>Zahl von 0 bis <paramref name="anzahl"/> - 1.</summary>
+        public int Bis(int anzahl) => (int)(Weiter() % (ulong)anzahl);
+    }
 
     /// <summary>Gerichtete Kante: von Knoten, nach Knoten, Mittellinie in Fahrtrichtung, Teil = Stelle der ungerichteten Kante, Strasse = Stelle in der Strassenliste.</summary>
     public sealed record Kante(int Von, int Nach, List<Vector2> Linie, int Teil, bool Vorwaerts, bool Ring, int Strasse)
@@ -270,8 +313,115 @@ public static class Autostrecken
     }
 
     /// <summary>
-    /// Der Rundweg von Auto <paramref name="auto"/> ab Kante <paramref name="start"/>: an jeder Abzweigung reihum
-    /// rechts, geradeaus, links (Beginn je Auto versetzt), an einer Sackgasse wenden. Ergebnis: Kanten des Kreises mit
+    /// Welle A 0.51.0: was nach Kante <paramref name="kante"/> folgen kann: die Wege an einer Abzweigung, sonst der eine
+    /// Weg; im Ring ohne Zufahrt dieselbe Kante, in der Sackgasse die Gegenrichtung (Wende). Leer = kein Weg.
+    /// </summary>
+    public static (List<int> Wege, bool Wende) Folgen(Netz netz, int kante)
+    {
+        var weiter = Weiter(netz, kante);
+        if (weiter.Count > 0)
+        {
+            return (weiter, false);
+        }
+        if (netz.Kanten[kante].Ring)
+        {
+            return ([kante], false);
+        }
+        var gegen = Gegen(netz, kante);
+        return gegen < 0 ? ([], false) : ([gegen], true);
+    }
+
+    /// <summary>
+    /// Welle A 0.51.0 (Weisung P12-84): Rundweg von Auto <paramref name="auto"/> am Spieltag <paramref name="tag"/> ab Kante
+    /// <paramref name="start"/>. An jeder Abzweigung eine zufaellige erlaubte Richtung (<see cref="Zufall"/>), Wenden nur in
+    /// der Sackgasse; nach <see cref="ZufallAbzweigungen"/> Abzweigungen der kuerzeste erlaubte Weg zurueck auf
+    /// <paramref name="start"/> (Kante, die als naechste <paramref name="start"/> erreicht). Gibt es keinen Weg zurueck,
+    /// gilt der Rundweg reihum (<see cref="Rundweg"/>). Ergebnis: Kanten des Kreises (beginnt mit <paramref name="start"/>)
+    /// mit der Angabe, ob danach gewendet wird.
+    /// </summary>
+    public static List<(int Kante, bool Wende)> RundwegZufall(Netz netz, int start, int auto, long tag)
+    {
+        var zufall = new Zufall(auto, tag);
+        var weg = new List<(int Kante, bool Wende)>();
+        var kante = start;
+        var abzweigungen = 0;
+        // ohne Abzweigung auf dem ganzen Weg: zurueck an der Startkante ist die Schleife fertig
+        for (var schritt = 0; schritt < (ZufallAbzweigungen + 2) * (netz.Kanten.Count + 1); schritt++)
+        {
+            var (wege, wende) = Folgen(netz, kante);
+            if (wege.Count == 0)
+            {
+                return [];
+            }
+            var naechste = wege.Count == 1 ? wege[0] : wege[zufall.Bis(wege.Count)];
+            if (wege.Count > 1)
+            {
+                abzweigungen++;
+            }
+            weg.Add((kante, wende));
+            kante = naechste;
+            if (kante == start && (abzweigungen >= ZufallAbzweigungen || abzweigungen == 0))
+            {
+                return weg;
+            }
+            if (abzweigungen >= ZufallAbzweigungen)
+            {
+                if (ZurueckZu(netz, kante, start) is not { } zurueck)
+                {
+                    break;
+                }
+                weg.AddRange(zurueck);
+                return weg;
+            }
+        }
+        return Rundweg(netz, start, auto);
+    }
+
+    /// <summary>
+    /// Kuerzester erlaubter Weg (nach Laenge) ab Kante <paramref name="von"/> bis vor <paramref name="ziel"/>: die Kanten ab
+    /// <paramref name="von"/>, deren letzte als naechste <paramref name="ziel"/> erreicht; null = kein Weg.
+    /// </summary>
+    private static List<(int Kante, bool Wende)>? ZurueckZu(Netz netz, int von, int ziel)
+    {
+        var abstand = new Dictionary<int, float> { [von] = netz.Kanten[von].Laenge };
+        var vorher = new Dictionary<int, int>();
+        var offen = new PriorityQueue<int, (float, int)>();
+        offen.Enqueue(von, (abstand[von], von));
+        while (offen.TryDequeue(out var k, out var prio))
+        {
+            if (prio.Item1 > abstand[k])
+            {
+                continue;
+            }
+            var (wege, _) = Folgen(netz, k);
+            if (wege.Contains(ziel))
+            {
+                var kette = new List<int> { k };
+                while (vorher.TryGetValue(kette[^1], out var v))
+                {
+                    kette.Add(v);
+                }
+                kette.Reverse();
+                return [.. kette.Select(c => (c, Folgen(netz, c).Wende))];
+            }
+            foreach (var n in wege)
+            {
+                var d = abstand[k] + netz.Kanten[n].Laenge;
+                if (!abstand.TryGetValue(n, out var alt) || d < alt)
+                {
+                    abstand[n] = d;
+                    vorher[n] = k;
+                    offen.Enqueue(n, (d, n));
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Welle K3b: der Rundweg reihum von Auto <paramref name="auto"/> ab Kante <paramref name="start"/>: an jeder Abzweigung
+    /// reihum rechts, geradeaus, links (Beginn je Auto versetzt), an einer Sackgasse wenden. Seit A 0.51.0 nur noch der
+    /// Rueckfall von <see cref="RundwegZufall"/>, wenn es keinen Weg zurueck zur Startkante gibt. Ergebnis: Kanten des Kreises mit
     /// der Angabe, ob danach gewendet wird.
     /// </summary>
     public static List<(int Kante, bool Wende)> Rundweg(Netz netz, int start, int auto)
@@ -319,8 +469,11 @@ public static class Autostrecken
         return weg.Skip(gesehen[(kante, z)]).ToList();
     }
 
-    /// <summary>Alle Strecken der Strassen (Regel siehe Klasse), <paramref name="bogen"/> = Halbmesser der Boegen an Knicken.</summary>
-    public static Ergebnis Anlegen(IReadOnlyList<IReadOnlyList<Vector2>> strassen, float bogen = 0.6f)
+    /// <summary>
+    /// Alle Strecken der Strassen (Regel siehe Klasse), <paramref name="bogen"/> = Halbmesser der Boegen an Knicken,
+    /// <paramref name="tag"/> = Spieltag der zufaelligen Wege.
+    /// </summary>
+    public static Ergebnis Anlegen(IReadOnlyList<IReadOnlyList<Vector2>> strassen, float bogen = 0.6f, long tag = WerkzeugTag)
     {
         var netz = NetzAus(strassen);
         var kreuzungen = Enumerable.Range(0, netz.Knoten.Count).Where(k => netz.Grad[k] >= 3).Select(k => netz.Knoten[k]).ToList();
@@ -342,7 +495,7 @@ public static class Autostrecken
         var reihe = Enumerable.Range(0, netz.Kanten.Count).OrderByDescending(k => netz.Kanten[k].Laenge).ThenBy(k => k).ToList();
         for (var nr = 0; nr < autos; nr++)
         {
-            var weg = Rundweg(netz, reihe[nr * reihe.Count / autos], nr);
+            var weg = Reihum.Value ? Rundweg(netz, reihe[nr * reihe.Count / autos], nr) : RundwegZufall(netz, reihe[nr * reihe.Count / autos], nr, tag);
             if (weg.Count == 0 || Spur(netz, weg, bogen, zuKurz) is not { } spur)
             {
                 continue;

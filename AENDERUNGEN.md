@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.51.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf abwechslungsreicheren Verkehr in neuen Städten aus dem Stadtbau-Werkzeug vor.
+
+- In einer neuen Stadt mit Kurven oder einem Kreisverkehr biegen die Autos an jeder Kreuzung zufällig ab, statt immer dieselbe Runde zu drehen. Nach einigen Abzweigungen fahren sie auf dem kürzesten Weg zurück und beginnen von vorn.
+- Jeden Spieltag fahren die Autos andere Wege. Am selben Tag sind die Wege immer gleich, auch auf PC und Handy.
+- Gewendet wird weiter nur am Ende einer Sackgasse; am Kreisverkehr haben Autos im Kreis weiter Vorfahrt.
+- Die heutige Stadt behält ihre festen Autorouten. Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.50.1
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version verbessert die Prüfung für neue Städte aus dem Stadtbau-Werkzeug.
 

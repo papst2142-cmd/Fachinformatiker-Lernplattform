@@ -186,6 +186,12 @@ public sealed class Stadt
     /// </summary>
     public Stadtbau.StadtFassung? Fassung { get; init; }
 
+    /// <summary>
+    /// Welle A 0.51.0 (Weisung P12-84 Frage 2 = a): fester Spieltag fuer die Wege der automatischen Autostrecken (das
+    /// Werkzeug setzt 1, Nico: „im Werkzeug Tag 1“); null = Tag des Spielstands. Nur Darstellung.
+    /// </summary>
+    public long? VerkehrTag { get; set; }
+
     /// <summary>Kantenlaenge einer Zelle in Karteneinheiten.</summary>
     public double Zelle { get; }
 

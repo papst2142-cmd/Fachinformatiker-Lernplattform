@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.20.0
+
+Die Autos in der 3D-Ansicht fahren abwechslungsreicher.
+
+- In einer Stadt mit Kurven oder einem Kreisverkehr biegen die Autos an jeder Kreuzung zufällig ab, statt alle dieselbe feste Runde zu drehen. Nach mindestens acht Abzweigungen fahren sie auf dem kürzesten Weg zurück zu ihrem Start und beginnen von vorn.
+- Im Spiel wechseln die Wege jeden Spieltag. Das Werkzeug zeigt immer die Wege des ersten Spieltags, damit du nach jeder Änderung dasselbe Bild siehst.
+- Die Prüfung „Hier bleibt ein Auto stecken“ prüft die Wege des ersten Spieltags wie bisher.
+
 ## S 0.19.0
 
 Selbst entworfene Gebäude haben jetzt begehbare Obergeschosse.
