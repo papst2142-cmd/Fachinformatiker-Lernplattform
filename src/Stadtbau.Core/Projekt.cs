@@ -474,7 +474,13 @@ public sealed class Projekt
     /// Projektdatei schreiben (automatisch nach jeder Aenderung, von Hand ueber "Speichern"). Von Hand, beim ersten
     /// Speichern und alle 5 Minuten beim automatischen Speichern kommt eine Sicherung dazu.
     /// </summary>
-    public void Speichern(bool vonHand)
+    public void Speichern(bool vonHand) => Speichern(vonHand, ohneSicherung: false);
+
+    /// <summary>
+    /// Wie <see cref="Speichern(bool)"/>; <paramref name="ohneSicherung"/> schreibt nur die Projektdatei (S 0.23.0: vor dem
+    /// Loeschen, damit keine der 20 Sicherungen ersetzt wird).
+    /// </summary>
+    public void Speichern(bool vonHand, bool ohneSicherung)
     {
         if (NurLesen)
         {
@@ -485,7 +491,7 @@ public sealed class Projekt
         Werkzeugordner.SicherSchreiben(Datei, daten);
         _gespeichert = stand;
         var jetzt = Uhr();
-        if (vonHand || jetzt - _letzteSicherung >= SicherungAlle)
+        if (!ohneSicherung && (vonHand || jetzt - _letzteSicherung >= SicherungAlle))
         {
             new Sicherungen(Werkzeugordner, Name).Anlegen(daten, jetzt);
             _letzteSicherung = jetzt;
@@ -656,6 +662,44 @@ public sealed class Projekt
         Directory.Exists(ablage.Projekte)
             ? [.. new DirectoryInfo(ablage.Projekte).GetFiles("*" + Endung).OrderByDescending(f => f.LastWriteTimeUtc).Select(f => f.FullName)]
             : [];
+
+    /// <summary>Name der Kopie, die vor dem Loeschen in die Sicherungen des Projekts kommt (eigener Name, kein Platz der 20).</summary>
+    public static string LoeschKopieName(DateTime zeit) =>
+        "geloescht_" + zeit.ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture) + Endung;
+
+    /// <summary>
+    /// Welle S 0.23.0 (Weisung P12-96, Sammelliste 242, Nico: angefangene Projekte loeschen): die Projektdatei
+    /// <paramref name="datei"/> loeschen. Vorher kommt sie unveraendert als <see cref="LoeschKopieName"/> in den
+    /// Sicherungsordner des Projekts (<c>sicherungen/&lt;Name&gt;/</c>, gleicher Ordner wie die 20 Sicherungen, die bleiben
+    /// unangetastet; gibt es den Namen schon, folgt _2, _3, ...). Die Kopie wird zurueckgelesen; scheitert sie oder weicht
+    /// sie ab, bleibt die Datei (IOException). Die Datei wird roh gelesen: kaputte und neuere Projekte lassen sich auch
+    /// loeschen. Nichts ausserhalb von projekte/ und sicherungen/&lt;Name&gt;/ wird beruehrt (Blueprints, Exporte bleiben).
+    /// Rueckgabe: Pfad der Kopie.
+    /// </summary>
+    public static string Loeschen(Werkzeugordner ablage, string datei, DateTime zeit)
+    {
+        var voll = Path.GetFullPath(datei);
+        if (!string.Equals(Path.GetDirectoryName(voll), Path.GetFullPath(ablage.Projekte), StringComparison.Ordinal)
+            || !voll.EndsWith(Endung, StringComparison.Ordinal))
+        {
+            throw new IOException("Nur Projektdateien im Ordner „projekte“ lassen sich löschen.");
+        }
+        var daten = File.ReadAllBytes(voll);
+        var ordner = new Sicherungen(ablage, AnzeigeName(voll)).Ordner;
+        Directory.CreateDirectory(ordner);
+        var kopie = Path.Combine(ordner, LoeschKopieName(zeit));
+        for (var n = 2; File.Exists(kopie); n++)
+        {
+            kopie = Path.Combine(ordner, Path.GetFileNameWithoutExtension(LoeschKopieName(zeit)) + "_" + n.ToString(CultureInfo.InvariantCulture) + Endung);
+        }
+        Werkzeugordner.SicherSchreiben(kopie, daten);
+        if (!File.ReadAllBytes(kopie).AsSpan().SequenceEqual(daten))
+        {
+            throw new IOException("Die Kopie in den Sicherungen weicht ab, das Projekt bleibt.");
+        }
+        File.Delete(voll);
+        return kopie;
+    }
 
     // ---- Pruefung, Grenzen, Export -----------------------------------------------------------------
 

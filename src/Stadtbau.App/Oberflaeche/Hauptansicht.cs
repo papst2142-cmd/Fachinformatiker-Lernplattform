@@ -2719,30 +2719,20 @@ public sealed partial class Hauptansicht : UserControl
         Melden("Projekt „" + name + "“ angelegt");
     }
 
-    private async Task OeffnenAsync()
+    internal async Task OeffnenAsync()
     {
         if (_daten is null)
         {
             return;
         }
-        var liste = new StackPanel { Spacing = 4 };
+        var liste = new StackPanel { Spacing = 6 };
         var gewaehlt = (string?)null;
-        var projekte = Projekt.Liste(_ordner);
-        if (projekte.Count == 0)
+        // S 0.23.0 (Weisung P12-96): je Projekt ein Kasten mit „Löschen“ (Hauptansicht.Projekte.cs)
+        ProjektListeFuellen(liste, datei =>
         {
-            liste.Children.Add(Schrift.Text(Texte.KeineProjekte, farbe: "Pinsel.muted"));
-        }
-        foreach (var datei in projekte)
-        {
-            var k = Schrift.Knopf(Projekt.AnzeigeName(datei) + " (" + File.GetLastWriteTime(datei).ToString("dd.MM.yyyy HH:mm", De) + ")");
-            k.HorizontalAlignment = HorizontalAlignment.Stretch;
-            k.Click += (_, _) =>
-            {
-                gewaehlt = datei;
-                Dialog.AlleSchliessen();
-            };
-            liste.Children.Add(k);
-        }
+            gewaehlt = datei;
+            Dialog.AlleSchliessen();
+        });
         var wahl = await Dialog.Zeigen(Texte.OeffnenTitel, new ScrollViewer { Content = liste, MaxHeight = 420 }, Texte.OeffnenDatei, Texte.Abbrechen);
         if (gewaehlt is not null)
         {

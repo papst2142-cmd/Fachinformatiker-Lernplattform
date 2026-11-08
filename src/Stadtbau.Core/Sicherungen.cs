@@ -5,7 +5,8 @@ namespace Stadtbau.Core;
 /// <summary>
 /// Phase 13 Welle 2 (Plan Abschnitte 3 und 9): Sicherungen je Projekt im Ordner <c>sicherungen/&lt;Name&gt;/</c>, die letzten
 /// <see cref="Hoechstens"/> bleiben. Es gibt 20 feste Plaetze (<c>sicherung_01</c> bis <c>sicherung_20</c>), die der Reihe
-/// nach belegt werden; die 21. Sicherung kommt auf den Platz der aeltesten. Projekte und Exporte loescht das Werkzeug nie.
+/// nach belegt werden; die 21. Sicherung kommt auf den Platz der aeltesten. Exporte loescht das Werkzeug nie; ein Projekt nur
+/// auf Wunsch (S 0.23.0, <see cref="Projekt.Loeschen"/>), vorher kommt es als eigene Kopie in diesen Ordner.
 /// Seit Welle 4c (Weisung P12-32) auch fuer Blueprints: Ordner <c>sicherungen/(Blueprints)/&lt;Name&gt;/</c>, Endung
 /// <see cref="Blueprint.Endung"/> (<see cref="Blueprint.SicherungenFuer"/>).
 /// </summary>

@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.23.0
+
+Angefangene Projekte lassen sich jetzt löschen.
+
+- Im Fenster „Projekt öffnen“ steht jedes Projekt in einem eigenen Kasten. Den Namen antippen öffnet das Projekt wie bisher, darunter steht „Löschen“.
+- Vor dem Löschen fragt das Werkzeug nach; „Abbrechen“ ist vorgewählt. Das Projekt verschwindet erst nach „Löschen“.
+- Zur Sicherheit legt das Werkzeug vorher eine Kopie der Projektdatei in den Ordner „sicherungen“ des Projekts (Name beginnt mit „geloescht_“). Klappt die Kopie nicht, bleibt das Projekt und das Werkzeug sagt, warum. Alle anderen Projekte, Sicherungen, Blueprints und gespeicherten Stadt-Dateien bleiben unberührt.
+- Ist das Projekt gerade offen, wartet das Werkzeug laufende Arbeit ab. Gibt es eine nicht gespeicherte Änderung, fragt es, ob vorher gespeichert werden soll. Danach zeigt es die Startseite.
+- Auch eine beschädigte Projektdatei lässt sich so löschen. Mit der Tastatur löscht die Taste Entf das Projekt, dessen Kasten gerade gewählt ist.
+
 ## S 0.22.1
 
 Selbst entworfene Gebäude hindern das Speichern und Senden der Stadt nicht mehr.
