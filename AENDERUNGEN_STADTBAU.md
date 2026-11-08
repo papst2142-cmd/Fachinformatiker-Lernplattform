@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.23.1
+
+Ein Fußweg lässt sich jetzt bis an die Eingangstür eines Hauses ziehen.
+
+- Mit „Fußweg ziehen“ rastet der Anfang oder das Ende an der Tür jedes Hauses ein, auch bei gedrehten Häusern, beim Stellwerk und bei eigenen Gebäuden. Der Weg geht dann gerade von der Tür weg. Das gilt in beide Richtungen (von der Tür zum Gehweg und vom Gehweg zur Tür), in der Draufsicht und in der 3D-Ansicht, mit Maus und Finger.
+- Bisher landete ein Tipp an der Tür im Raster mitten im Haus, und die Vorschau war rot („führt durch das Haus“).
+- Liegen Tür und Gehwegkante nahe beieinander, rastet der Punkt an der näheren von beiden ein. Mit „Einrasten“ aus bleibt der Punkt frei wie bisher.
+- Ein Weg durch die Wand neben der Tür oder quer durch das Haus bleibt rot.
+
 ## S 0.23.0
 
 Angefangene Projekte lassen sich jetzt löschen.

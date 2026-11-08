@@ -8,6 +8,13 @@ Mehr Lernstoff für die Fachrichtung Systemintegration: Sie hat jetzt genauso vi
 - Mit Systemintegration siehst du jetzt 2 584 Karteikarten und 3 735 Prüfungsfragen, genauso viele wie die anderen Fachrichtungen.
 - Bisherige Karten, Fragen und dein Lernstand bleiben unverändert. Die anderen Fachrichtungen sehen die neuen Inhalte nicht.
 
+## A 0.52.1
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Fußwege bis an die Haustür in neuen Städten aus dem Stadtbau-Werkzeug vor.
+
+- Die Prüfung für neue Städte lässt einen Fußweg zu, der genau an einer Haustür endet. Bisher meldete sie ihn fälschlich rot („führt durch das Haus“), weil die Tür etwas in der Hauswand sitzt.
+- Ein Fußweg durch die Wand neben der Tür oder quer durch ein Haus bleibt rot.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.52.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel darauf vor, dass ein Ort in einer neuen Stadt aus dem Stadtbau-Werkzeug ein anderes Haus bekommt.
 
