@@ -489,6 +489,7 @@ public sealed partial class Hauptansicht : UserControl
         _kopf[Texte.Draufsicht].IsEnabled = mit;
         _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Innenorte.Count > 0;
         _kopf[Texte.Ansicht3D].IsEnabled = mit;
+        _kopf[Texte.Spielgeschichte].IsEnabled = mit;
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
         _kopf[Texte.Speichern].IsEnabled = schreiben;
@@ -500,7 +501,7 @@ public sealed partial class Hauptansicht : UserControl
         if (_entwurf is { } entwurf)
         {
             // S 0.9.0: im Editor gelten nur Rueckgaengig/Wiederholen des Entwurfs; Projekt-Knoepfe erst nach "Zurück zur Stadt"
-            foreach (var name in new[] { Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden })
+            foreach (var name in new[] { Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden })
             {
                 _kopf[name].IsEnabled = false;
             }
@@ -510,7 +511,7 @@ public sealed partial class Hauptansicht : UserControl
         foreach (var name in Reiter)
         {
             var k = _kopf[name];
-            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei) || (name == Texte.Ansicht3D && _drei));
+            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei && !_geschichteOffen) || (name == Texte.Ansicht3D && _drei) || (name == Texte.Spielgeschichte && _geschichteOffen));
             // Welle Q (Punkt 1): der gewaehlte Reiter farbig, die anderen auf dem Grund der Leiste
             if (aktiv)
             {
@@ -631,6 +632,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         _modellWahl.SelectedIndex = _modellWahl.Items.Count > 0 ? 0 : -1;
         TitelSetzen();
+        GeschichteNeu();
         ReiterZeigen(innen && projekt.Innenorte.Count > 0);
         AussenPruefenStarten();
         if (projekt.NurLesen)
@@ -678,6 +680,7 @@ public sealed partial class Hauptansicht : UserControl
             KnoepfeFreigeben();
         }
         _aussenStand++;
+        GeschichteNeu();
         _dreiAenderung = Stopwatch.GetTimestamp();
         _bedienung3D?.StandGeaendert();
         Karte.InvalidateVisual();
@@ -717,6 +720,7 @@ public sealed partial class Hauptansicht : UserControl
         innen = innen && _projekt.Innenorte.Count > 0;
         _innen = innen;
         _drei = false;
+        _geschichteOffen = false;
         if (innen)
         {
             _innenAnsicht ??= InnenBauen();
@@ -862,6 +866,8 @@ public sealed partial class Hauptansicht : UserControl
         // Welle Q (Punkt 7): rechts „Ausgewähltes Stück“ immer oben, „Prüfen – n rot“ mit der Zahl, „Innenräume öffnen“ zu
         var rechts = _aussenRechts;
         rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _aussenAuswahl } }));
+        // S 0.22.0 (Bild 1): „Spielgeschichte an diesem Ort“ unter der Auswahl, nur bei einem Ort mit Spielgeschichte
+        rechts.Children.Add(GeschichteOrtKarteBauen());
         _pruefenAussen = new Klappgruppe("pruefen", Texte.Pruefen, null, true, _aussenPruefungen);
         rechts.Children.Add(_pruefenAussen);
         _innenraeumeGruppe = new Klappgruppe("innenraeume", Texte.InnenraeumeOeffnen, null, false, _ortListe);
@@ -1157,6 +1163,7 @@ public sealed partial class Hauptansicht : UserControl
     private void AussenAuswahlZeigen()
     {
         _aussenAuswahl.Children.Clear();
+        GeschichteTeil(null);
         _eisSetzen = true;
         _eisImWinter.IsChecked = _projekt is not null && Aussen.Eis(_projekt.AussenStand);
         _eisImWinter.IsEnabled = _projekt is not null && !_projekt.NurLesen;
@@ -1209,6 +1216,8 @@ public sealed partial class Hauptansicht : UserControl
         _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _projekt.OrtName), "Klein"));
         // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
         OrtNameTeil(s);
+        // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)
+        GeschichteTeil(s);
         var (lx, ly) = AussenBearbeitung.Lage(a, s);
         var x = Feld(lx);
         var y = Feld(ly);
@@ -1877,6 +1886,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         _drei = true;
         _innen = false;
+        _geschichteOffen = false;
         _kartenAnsicht ??= KarteBauen();
         _dreiAnsicht ??= DreiBauen();
         _inhalt.Content = _kartenAnsicht;
@@ -2176,6 +2186,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             _innen = true;
             _drei = false;
+            _geschichteOffen = false;
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
         }
@@ -2976,6 +2987,10 @@ public sealed partial class Hauptansicht : UserControl
         {
             SpeichernVonHand();
             e.Handled = true;
+        }
+        else if (_geschichteOffen)
+        {
+            // S 0.22.0: im Reiter „Spielgeschichte“ wird nur gelesen, die Tasten der Draufsicht wirken dort nicht
         }
         else if (e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
         {

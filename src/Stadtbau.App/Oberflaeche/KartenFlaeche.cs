@@ -277,6 +277,24 @@ public sealed class KartenFlaeche : Control
     /// <summary>Formen beim letzten Zeichnen: Laterne (Effekt false) und je Effekt seine Form (Start-Test, Weisung P12-25).</summary>
     public IReadOnlyList<(string Form, bool Effekt)> Formen { get; private set; } = [];
 
+    /// <summary>
+    /// Welle S 0.22.0 (Weisung P12-91, Frage 3 = a): Zahl der Aufgaben der Spielgeschichte je Ort (null = keine Zahlen).
+    /// </summary>
+    public IReadOnlyDictionary<string, int>? GeschichteZahlen
+    {
+        get => _geschichteZahlen;
+        set
+        {
+            _geschichteZahlen = value;
+            InvalidateVisual();
+        }
+    }
+
+    private IReadOnlyDictionary<string, int>? _geschichteZahlen;
+
+    /// <summary>Zahlen am Haus beim letzten Zeichnen mit Ort und Rechteck (Start-Test: in der Karte, nicht verdeckt).</summary>
+    public IReadOnlyList<(string Ort, int Zahl, Rect Flaeche, Rect Haus)> ZahlenAmHaus { get; private set; } = [];
+
     private Point WeltPunkt(Point bild) => new((bild.X - _versatz.X) / _zoom, (bild.Y - _versatz.Y) / _zoom);
 
     /// <summary>Start-Test: Bildpunkt eines Punkts der Karte (Umkehrung von <see cref="WeltPunkt"/>).</summary>
@@ -284,6 +302,9 @@ public sealed class KartenFlaeche : Control
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
     public Point Bildpunkt(double x, double y) => P(x, y);
+
+    /// <summary>Schriftgroesse der Zahl am Haus.</summary>
+    public const double ZahlGroesse = 12;
 
     private string OrtName(string id) => _projekt?.OrtName(id) ?? id;
 
@@ -398,6 +419,7 @@ public sealed class KartenFlaeche : Control
         }
 
         // Haeuser mit Fussweg und Tuer
+        var zahlen = new List<(string, int, Rect, Rect)>();
         var bearbeitbar = new HashSet<string>(_projekt!.Orte, StringComparer.Ordinal);
         foreach (var (s, _, _) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).ToList())
         {
@@ -419,6 +441,10 @@ public sealed class KartenFlaeche : Control
             if (r.Width > 30)
             {
                 Text(ctx, schrift, name, r.TopLeft + new Point(3, 2), 11, Brushes.Black, r.Width - 6);
+            }
+            if (s.Art == AussenArt.Haus && _geschichteZahlen is { } gz && gz.TryGetValue(s.Ort, out var zahl) && zahl > 0)
+            {
+                zahlen.Add((s.Ort, zahl, default, r));
             }
         }
 
@@ -490,6 +516,23 @@ public sealed class KartenFlaeche : Control
         }
         Beschriftungen = beschriftungen;
         Formen = formen;
+
+        // Welle S 0.22.0: Zahl der Aufgaben der Spielgeschichte als Schild oben rechts auf der Kante des Hauses (ragt
+        // nach oben hinaus, damit es den Namen im Haus nicht verdeckt), ganz in der Karte wie die Beschriftungen
+        var gezeichnet = new List<(string, int, Rect, Rect)>();
+        foreach (var (ort, zahl, _, r) in zahlen)
+        {
+            var ft = new FormattedText(zahl.ToString(CultureInfo.InvariantCulture), CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight,
+                new Typeface(schrift.FontFamily, FontStyle.Normal, FontWeight.Bold), ZahlGroesse, Farbe("on_accent"));
+            var hoehe = ft.Height + 4;
+            var breite = Math.Max(hoehe, ft.Width + 14);
+            var (zx, zy, _) = Beschriftung.InKarte(r.Right - breite - 4, r.Top - hoehe + 1, breite, hoehe, rand.Left, rand.Top, rand.Right, rand.Bottom);
+            var schild = new Rect(zx, zy, breite, hoehe);
+            ctx.DrawRectangle(Farbe("accent"), new Pen(Farbe("on_accent"), 1.5), schild, hoehe / 2, hoehe / 2);
+            ctx.DrawText(ft, new Point(zx + ((breite - ft.Width) / 2), zy + 2));
+            gezeichnet.Add((ort, zahl, schild, r));
+        }
+        ZahlenAmHaus = gezeichnet;
 
         // Auswahl
         if (Auswahl is { } aw && AussenBearbeitung.Gueltig(a, aw))

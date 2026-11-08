@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.22.0
+
+Du siehst jetzt, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen. Das Werkzeug zeigt das nur an; an der Spielgeschichte ändert sich nichts.
+
+- In der Draufsicht steht an jedem Haus mit Aufgaben eine Zahl: so viele Aufgaben der Spielgeschichte spielen dort. Wiederkehrende Aufträge und Zwischenfälle zählen nicht mit.
+- Wählst du einen solchen Ort, zeigt eine gelbe Zeile, wie viele Aufgaben dort spielen. Verschieben und „Aussehen tauschen“ ändern daran nichts. Rechts steht die Karte „Spielgeschichte an diesem Ort“ mit allen Aufgaben, wiederkehrenden Aufträgen und Zwischenfällen und dem Tag, ab dem sie kommen.
+- Neuer Reiter „Spielgeschichte“: Er zeigt die „Zusammenhänge“, je Ort einen Kasten, von links nach rechts nach dem Tag, an dem der Ort ins Spiel kommt. Die Linien zeigen, welche Aufgabe erst nach welcher kommt; sie kreuzen sich nie. „Alle zeigen“ klappt die Aufgaben eines Orts auf, „Alle aufklappen“ alle Orte. Einen Kasten antippen zeigt rechts seine Spielgeschichte. Zoomen und Schieben gehen wie in der Draufsicht, „Alles zeigen“ passt alles ins Fenster.
+- „Aufgabe → Ort“ zeigt alle Aufgaben als Liste mit Tag, Ort, Auftraggeber und Vorgänger, mit Suche und Filtern nach Ort, Tag und Person. „Alle in der Spielgeschichte“ auf der Karte eines Orts öffnet die Liste ab dem Tag, an dem der Ort ins Spiel kommt, und hebt seine Aufgaben hervor.
+
 ## S 0.21.0
 
 Ein Ort kann jetzt ein anderes Aussehen bekommen.

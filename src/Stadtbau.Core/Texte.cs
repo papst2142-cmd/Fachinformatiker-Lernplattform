@@ -441,6 +441,7 @@ public static class Texte
         [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
         [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
+        [Spielgeschichte] = TippSpielgeschichte,
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
         [MenueProjekt] = TippMenueProjekt,
         [MenueEinstellungen] = TippMenueEinstellungen,
@@ -768,4 +769,91 @@ public static class Texte
         ("F11", "Vollbild", ["F11"]),
         ("F1 / ?", "Diese Übersicht", ["F1"]),
     ];
+
+    // ---- Spielgeschichte ansehen (Welle S 0.22.0, Weisung P12-91, Kurzplan Meldung P12-59) ----
+    /// <summary>Reiter und Ueberschrift.</summary>
+    public const string Spielgeschichte = "Spielgeschichte";
+    public const string TippSpielgeschichte = "Zeigt nur zum Ansehen, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen und ab welchem Tag.";
+    public const string GeschichteAnOrt = "Spielgeschichte an diesem Ort";
+
+    /// <summary>Unterzeile der Karte rechts: Name des Orts und ab wann er im Spiel da ist.</summary>
+    public static string GeschichteUnterzeile(string name, long? freiAb) => "„" + name + "“ · " + freiAb switch
+    {
+        null => "kommt erst im Lauf des Spiels dazu",
+        1 => "im Spiel von Anfang an",
+        _ => "im Spiel ab Tag " + freiAb,
+    };
+
+    public static string GeschichteAufgaben(int n) => "Aufgaben (" + n + ")";
+    public static string GeschichteAuftraege(int n) => "Wiederkehrende Aufträge (" + n + ")";
+    public static string GeschichteZwischenfaelle(int n) => "Zwischenfälle (" + n + ")";
+    public static string GeschichteTag(long tag) => "Tag " + tag;
+    public static string GeschichteAbTag(long tag) => "ab Tag " + tag;
+    public const string GeschichteAlle = "Alle in der Spielgeschichte";
+    public const string GeschichteAlleTipp = "Öffnet den Reiter „Spielgeschichte“ mit der Liste ab dem Tag, an dem dieser Ort ins Spiel kommt; seine Aufgaben sind hervorgehoben.";
+
+    /// <summary>Antwort 4a: gelbe Zeile beim gewaehlten Ort mit Aufgaben (kein Fenster).</summary>
+    public static string GeschichteGelb(int n) => "An diesem Ort spielen " + n + (n == 1 ? " Aufgabe" : " Aufgaben")
+        + " der Spielgeschichte. Verschieben und „Aussehen tauschen“ ändern daran nichts, die Aufgaben bleiben bei diesem Ort.";
+
+    /// <summary>Liste „Aufgabe → Ort“ (Bild 2).</summary>
+    public const string GeschichteListe = "Aufgabe → Ort";
+    public static string GeschichteListeZeile(int aufgaben, int auftraege, int faelle) =>
+        aufgaben + " Aufgaben, " + auftraege + " wiederkehrende Aufträge, " + faelle + " Zwischenfälle · nur ansehen · Suche und Filter nach Ort, Tag, Person";
+    public const string GeschichteSpalteAb = "Ab";
+    public const string GeschichteSpalteAufgabe = "Aufgabe";
+    public const string GeschichteSpalteOrt = "Ort";
+    public const string GeschichteSpalteAuftraggeber = "Auftraggeber";
+    public const string GeschichteSpalteNach = "Erst nach";
+    public const string GeschichteAlleOrte = "Alle Orte";
+    public const string GeschichteAlleTage = "Alle Tage";
+    public const string GeschichteAllePersonen = "Alle Personen";
+    public const string GeschichteFilterOrt = "Filter Ort";
+    public const string GeschichteFilterTag = "Filter Tag";
+    public const string GeschichteFilterPerson = "Filter Person";
+    public const string GeschichteFilterTipp = "Zeigt nur die Aufgaben, die dazu passen; die Zahl am Haus zählt immer alle Aufgaben des Orts.";
+    public const string GeschichteSuchen = "Aufgabe suchen";
+    public const string GeschichteSuchenPlatzhalter = "Suchen …";
+    public const string GeschichteSuchenTipp = "Sucht im Titel der Aufgabe, im Namen des Orts und der Person, zum Beispiel „USV“.";
+    public const string GeschichteKeineTreffer = "Keine Aufgabe passt zu den Filtern.";
+    public const string GeschichteOhneOrt = "–";
+    public const string GeschichteKeineStadt = "Diese Stadt hat noch keinen Ort der Spielgeschichte. Die Aufgaben spielen in Stadt 1.";
+    public const string GeschichteAlleZeigen = "Alle zeigen";
+    public const string GeschichteWenigerZeigen = "Weniger zeigen";
+    public static string GeschichteAlleZeigenName(string ort) => "Alle Aufgaben von „" + ort + "“ zeigen";
+    public static string GeschichteWenigerZeigenName(string ort) => "Aufgaben von „" + ort + "“ zuklappen";
+    public const string GeschichteAlleZeigenTipp = "Klappt die Aufgaben dieses Orts als einzelne Kästen mit Tag und Titel auf; die Linien führen dann bis zur einzelnen Aufgabe.";
+    public const string GeschichteAlleAuf = "Alle aufklappen";
+    public const string GeschichteAlleZu = "Alle zuklappen";
+    public const string GeschichteAlleAufTipp = "Klappt die Aufgaben aller Orte auf oder wieder zu.";
+    public const string GeschichteZusammenhaenge = "Zusammenhänge der Spielgeschichte";
+    public const string GeschichteZusammenhaengeKurz = "Zusammenhänge";
+    public const string GeschichteZusammenhaengeZeile = "Je Ort ein Kasten, von links nach rechts nach dem Tag, an dem der Ort ins Spiel kommt. Linie = „erst nach“ (zugeklappt eine Linie je Paar von Orten). Kasten antippen = Spielgeschichte des Orts rechts.";
+    public const string GeschichteZurListe = "Aufgabe → Ort";
+    public const string GeschichteZurListeTipp = "Zeigt alle Aufgaben als Liste mit Tag, Ort, Auftraggeber und Vorgänger, mit Suche und Filtern.";
+    public const string GeschichteZuZusammenhaengen = "Zusammenhänge";
+    public const string GeschichteZuZusammenhaengenTipp = "Zeigt je Ort einen Kasten und als Linien, welche Aufgabe erst nach welcher kommt.";
+    public const string GeschichteAllesZeigen = "Alles zeigen";
+    public const string GeschichteAllesZeigenTipp = "Passt die ganze Ansicht ins Fenster.";
+    public const string GeschichteKastenTipp = "Zeigt rechts die Spielgeschichte dieses Orts.";
+    public const string GeschichteRechtsZu = "Schließen";
+    public static string GeschichteKastenName(string ort, int zahl, long? freiAb) => ort + ", " + (zahl == 1 ? "1 Aufgabe" : zahl + " Aufgaben")
+        + (freiAb is { } t ? ", frei ab Tag " + t : "");
+
+    /// <summary>Art der Aufgabe (Feld typ) fuer Tipp und Screenreader.</summary>
+    public static string AufgabenArt(string typ) => typ switch
+    {
+        "auswahl" => "Auswahl",
+        "terminal" => "Terminal",
+        "zuordnung" => "Zuordnung",
+        "formular" => "Formular",
+        "diagnose" => "Diagnose",
+        "wartung" => "Wartung",
+        "bestellung" => "Bestellung",
+        "bauteile" => "Bauteile",
+        "rack" => "Rack",
+        _ => typ,
+    };
+
+    public static string GeschichteTreffer(int n) => n == 1 ? "1 Aufgabe" : n + " Aufgaben";
 }
