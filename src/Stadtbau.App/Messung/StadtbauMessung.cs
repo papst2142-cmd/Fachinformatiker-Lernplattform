@@ -36,7 +36,10 @@ public static partial class StadtbauMessung
         var ordner = Environment.GetEnvironmentVariable(Werkzeugordner.Umgebung) is { Length: > 0 } s ? s
             : Environment.GetEnvironmentVariable("LERNPLATTFORM_DATEN") is { Length: > 0 } l ? Path.Combine(l, "stadtbau")
             : Path.Combine(Path.GetTempPath(), "stadtbau_starttest_" + Environment.ProcessId.ToString(Inv));
-        StadtbauApp.Ordner = new Werkzeugordner(ordner);
+        // Patch S 0.23.1 (selbst gefunden, Lauf 688): voller Pfad. In der Windows-CI kommt der Datenordner gemischt an
+        // ("D:\a\_temp/daten_werkzeug1"); die Liste der Projekte nennt volle Pfade (nur "\"), die Vergleiche der Probe
+        // "Projekte loeschen" fanden deshalb keinen Kasten. Die App selbst vergleicht schon mit Path.GetFullPath.
+        StadtbauApp.Ordner = new Werkzeugordner(Path.GetFullPath(ordner));
         Hauptansicht.Automatisch = true;
         Hauptansicht.HandyRegelImmer = true;
         // Nachbesserung S 0.5.1 (Weisung P12-42): Testquelle fuer "Nach Updates suchen" (beim Start still, weil aktuell)
