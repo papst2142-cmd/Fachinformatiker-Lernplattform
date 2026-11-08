@@ -87,6 +87,29 @@ public sealed partial class Hauptansicht : UserControl
     private Control? _karteMitte;
     private Control? _dreiMitte;
     private readonly StackPanel _aussenRechts = new() { Spacing = 12 };
+    private WrapPanel _kamera2D = new();
+    private readonly WrapPanel _kamera3D = new();
+    private Border _kameraAussen = new();
+    private Border _kameraInnen = new();
+    private Klappgruppe? _pruefenAussen;
+    private Klappgruppe? _pruefenInnen;
+    private Klappgruppe? _innenraeumeGruppe;
+    private Klappgruppe? _vorschau;
+
+    /// <summary>Welle Q: Kamera-Karte draussen (2D und 3D) und im Grundriss (Start-Test).</summary>
+    internal Border KameraDraussen => _kameraAussen;
+
+    internal Border KameraGrundriss => _kameraInnen;
+
+    /// <summary>Welle Q: die Gruppen rechts (Start-Test).</summary>
+    internal Klappgruppe? PruefenDraussen => _pruefenAussen;
+
+    internal Klappgruppe? InnenraeumeGruppe => _innenraeumeGruppe;
+
+    internal Klappgruppe? VorschauGruppe => _vorschau;
+
+    /// <summary>Welle Q: Knopf „?“ der 3D-Ansicht (Start-Test).</summary>
+    internal Button? Hilfe3DKnopf { get; private set; }
     private readonly List<Control> _dreiKarten = [];
     private readonly CheckBox _figurLaufen = new() { Content = Schrift.Text(Texte.FigurLaufen, "Klein") };
     private readonly ComboBox _ortWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -303,27 +326,19 @@ public sealed partial class Hauptansicht : UserControl
         Dialog.Ebene(_ebene);
         _handy = HandyHinweis();
         _raster.RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        // Patch S 0.5.1 (Weisung P12-35 Punkt 1): "Werkzeug beenden" ganz rechts in der Titelzeile der Kopfleiste
-        var titelZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        _titel.VerticalAlignment = VerticalAlignment.Center;
-        titelZeile.Children.Add(_titel);
+        // Patch S 0.5.1 (Weisung P12-35 Punkt 1): "Werkzeug beenden" ganz rechts; Welle Q: Kopf neu geordnet (Hauptansicht.Ordnung.cs)
         _beenden = Schrift.Knopf(Texte.WerkzeugBeenden).Mit(Texte.KopfTipps[Texte.WerkzeugBeenden]);
+        _beenden.MinHeight = EintragHoehe;
         _beenden.Click += (_, _) => BeendenKnopf();
-        _beenden.Margin = new Thickness(12, 0, 0, 0);
-        Grid.SetColumn(_beenden, 1);
-        titelZeile.Children.Add(_beenden);
-        var kopf = new StackPanel { Spacing = 8, Children = { titelZeile, _knoepfe } };
-        var kopfRahmen = new Border { Padding = new Thickness(16, 12, 16, 4), Child = kopf }.Farbe(Border.BackgroundProperty, "Pinsel.card");
-        _raster.Children.Add(kopfRahmen);
+        _raster.Children.Add(KopfBauen());
         Grid.SetRow(_inhalt, 1);
         _raster.Children.Add(_inhalt);
         var statusRahmen = new Border { Padding = new Thickness(16, 4), Child = _status }.Farbe(Border.BackgroundProperty, "Pinsel.card");
         Grid.SetRow(statusRahmen, 2);
         _raster.Children.Add(statusRahmen);
-        KopfBauen();
         Content = new Panel
         {
-            Children = { new Border { Child = _raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _handy, _ebene, Ansage.Ziel() },
+            Children = { new Border { Child = _raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _handy, _menueEbene, _ebene, Ansage.Ziel() },
         };
         Flaeche.AuswahlGeaendert += AuswahlZeigen;
         Flaeche.Gemeldet += Melden;
@@ -443,33 +458,6 @@ public sealed partial class Hauptansicht : UserControl
         return m.ToArray();
     }
 
-    private void KopfBauen()
-    {
-        void Knopf(string text, Action aktion, bool betont = false)
-        {
-            // Tipp vor dem Klick-Handler (ein langer Druck am Tablet zeigt nur den Tipp, siehe Tipp.Mit)
-            var k = Schrift.Knopf(text, betont).Mit(Texte.KopfTipps[text]);
-            k.Click += (_, _) => aktion();
-            _kopf[text] = k;
-            _knoepfe.Children.Add(k);
-        }
-        Knopf(Texte.Draufsicht, () => ReiterZeigen(innen: false));
-        Knopf(Texte.Innenraeume, () => ReiterZeigen(innen: true));
-        Knopf(Texte.Ansicht3D, DreiZeigen);
-        Knopf(Texte.GebaeudeEntwerfen, () => _ = EntwerfenAsync());
-        Knopf(Texte.Neu, () => _ = NeuAsync());
-        Knopf(Texte.Oeffnen, () => _ = OeffnenAsync());
-        Knopf(Texte.Speichern, SpeichernVonHand);
-        Knopf(Texte.Rueckgaengig, Rueckgaengig);
-        Knopf(Texte.Wiederholen, Wiederholen);
-        Knopf(Texte.DateiSpeichern, () => _ = DateiSpeichernAsync());
-        Knopf(Texte.AnCcSenden, () => _ = SendenAsync());
-        Knopf(Texte.Vollbild, VollbildUmschalten);
-        Knopf(Texte.Dunkel, FarbeWechseln);
-        WerkzeugVollbild.Geaendert += VollbildText;
-        VollbildText();
-    }
-
     /// <summary>Patch S 0.5.1 (Weisung P12-37 Punkt 2): Knopf "Vollbild" und F11; gemerkt in einstellungen.json.</summary>
     public void VollbildUmschalten()
     {
@@ -493,9 +481,6 @@ public sealed partial class Hauptansicht : UserControl
             t.Text = WerkzeugVollbild.An ? Texte.VollbildBeenden : Texte.Vollbild;
         }
     }
-
-    private void TitelSetzen() =>
-        _titel.Text = Werkzeug.Kennzeile + (_projekt is null ? "" : " – " + _projekt.Name + (_projekt.NurLesen ? " (nur ansehen)" : ""));
 
     private void KnoepfeFreigeben()
     {
@@ -522,15 +507,30 @@ public sealed partial class Hauptansicht : UserControl
             _kopf[Texte.Rueckgaengig].IsEnabled = entwurf.Entwurf.KannZurueck;
             _kopf[Texte.Wiederholen].IsEnabled = entwurf.Entwurf.KannWiederholen;
         }
-        foreach (var (name, k) in _kopf)
+        foreach (var name in Reiter)
         {
+            var k = _kopf[name];
             var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei) || (name == Texte.Ansicht3D && _drei));
-            k.Farbe(Button.BackgroundProperty, aktiv ? "VerlaufW.primary" : "Pinsel.card_alt");
+            // Welle Q (Punkt 1): der gewaehlte Reiter farbig, die anderen auf dem Grund der Leiste
+            if (aktiv)
+            {
+                k.Farbe(Button.BackgroundProperty, "VerlaufW.primary");
+            }
+            else
+            {
+                k.Background = Brushes.Transparent;
+            }
             if (k.Content is TextBlock t)
             {
                 t.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.on_accent" : "Pinsel.text");
             }
+            AutomationProperties.SetName(k, aktiv ? name + ", " + Texte.SetzenGewaehlt : name);
         }
+        foreach (var name in new[] { Texte.Rueckgaengig, Texte.Wiederholen })
+        {
+            _kopf[name].Opacity = _kopf[name].IsEnabled ? 1 : 0.4;
+        }
+        SpeicherStandZeigen();
     }
 
     /// <summary>Start-Test: das Startbild zeigen (Knopf "Nach Updates suchen").</summary>
@@ -744,13 +744,10 @@ public sealed partial class Hauptansicht : UserControl
             k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(art, modell?.Invoke()));
             return k;
         }
-        var reihe = new WrapPanel
+        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse) } };
+        var natur = new WrapPanel
         {
-            Children =
-            {
-                KatalogKnopf(Texte.Strasse, AussenArt.Strasse), KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park),
-                KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne),
-            },
+            Children = { KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park), KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne) },
         };
         // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
         Button KurvenKnopf(string text, string tipp, Func<string> kennung)
@@ -800,11 +797,15 @@ public sealed partial class Hauptansicht : UserControl
             k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(art, form));
             return k;
         }
+        // Welle Q (Weisung P12-76 Punkt 6): „Fluss ziehen“ in der Gruppe Wasser, die anderen drei in „Straßen und Wege“
+        var ziehen = ZiehenBaustein();
+        var flussZiehen = ziehen.Children[2];
+        ziehen.Children.Remove(flussZiehen);
         var wasser = new WrapPanel
         {
             Children =
             {
-                WasserKnopf(Texte.Fluss, Texte.FlussTipp, AussenArt.Fluss), WasserKnopf(Texte.Teich, Texte.TeichTipp, AussenArt.Teich),
+                WasserKnopf(Texte.Fluss, Texte.FlussTipp, AussenArt.Fluss), flussZiehen, WasserKnopf(Texte.Teich, Texte.TeichTipp, AussenArt.Teich),
                 WasserKnopf(Texte.TeichRund, Texte.TeichRundTipp, AussenArt.Teich, "rund"), WasserKnopf(Texte.Steg, Texte.StegTipp, AussenArt.Steg),
             },
         };
@@ -813,19 +814,30 @@ public sealed partial class Hauptansicht : UserControl
         BahnKnopf = (Button)bahn.Children[0];
         var modellTitel = Schrift.Text(Texte.Modell, "Klein").Fuer(_modellWahl);
         var haus = KatalogKnopf(Texte.HausSetzen, AussenArt.Gebaeude, () => _modellWahl.SelectedItem is ComboBoxItem { Tag: string m } ? m : null);
-        var links = new StackPanel
-        {
-            Spacing = 8,
-            Children =
-            {
-                Gruppe(Schrift.Text(Texte.AussenKatalog, "Mittel", FontWeight.Bold), Texte.TippAussenKatalog), _aussenHinweis, _setzenBeendenLinks, reihe, ZiehenBaustein(), kurven, radiusTitel, _kurvenRadius, kreise, VollerKatalogKnopf(false),
-                Gruppe(Schrift.Text(Texte.WasserGruppe, gewicht: FontWeight.Bold), Texte.TippWasser), wasser, _eisImWinter,
-                Gruppe(Schrift.Text(Texte.BahnGruppe, gewicht: FontWeight.Bold), Texte.TippBahn), bahn,
-                Gruppe(Schrift.Text(Texte.HausOhneOrt, gewicht: FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, haus,
-                Gruppe(Schrift.Text(Texte.MeineBlueprints, gewicht: FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe, _aussenRasterAus,
-            },
-        };
-        var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
+        // Welle Q (Weisung P12-76 Punkt 6, Nico Frage 2 = a): vier klappbare Gruppen, nur eine offen. Die Bahn steht in
+        // „Straßen und Wege“ (E1: Nico hat vier Gruppen gewaehlt, Bahn und Strasse werden gleich gezogen und gesetzt)
+        var strassen = new Klappgruppe("strassen", Texte.GruppeStrassen, Texte.TippGruppeStrassen, false,
+            reihe, ziehen, kurven, radiusTitel, _kurvenRadius, kreise, Gruppe(Schrift.Text(Texte.BahnGruppe, "Klein", FontWeight.Bold), Texte.TippBahn), bahn);
+        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur);
+        var wasserGruppe = new Klappgruppe("wasser", Texte.WasserGruppe, Texte.TippWasser, false, wasser, _eisImWinter);
+        var gebaeude = new Klappgruppe("gebaeude", Texte.GruppeGebaeude, Texte.TippGruppeGebaeude, false,
+            Gruppe(Schrift.Text(Texte.HausOhneOrt, "Klein", FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, new WrapPanel { Children = { haus } },
+            Gruppe(Schrift.Text(Texte.MeineBlueprints, "Klein", FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe);
+        _gruppenLinks.AddRange([strassen, naturGruppe, wasserGruppe, gebaeude]);
+        GruppenEinrichten();
+        var links = new StackPanel { Spacing = 8, Children = { _keinTreffer, _aussenHinweis, _setzenBeendenLinks, strassen, naturGruppe, wasserGruppe, gebaeude } };
+        // Suche oben, „Voller Katalog“ immer sichtbar unten
+        var vollerKatalog = VollerKatalogKnopf(false);
+        vollerKatalog.Margin = new Thickness(0, 8, 0, 0);
+        var linksRaster = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(12, 12, 0, 12) };
+        _suche.Margin = new Thickness(0, 0, 0, 8);
+        linksRaster.Children.Add(_suche);
+        var linksRollen0 = new ScrollViewer { Content = new Border { Child = links, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) } };
+        Grid.SetRow(linksRollen0, 1);
+        linksRaster.Children.Add(linksRollen0);
+        Grid.SetRow(vollerKatalog, 2);
+        linksRaster.Children.Add(vollerKatalog);
+        var linksRollen = linksRaster;
 
         Karte.Vorlese(Texte.Draufsicht);
         Button Klein(string text, string name, Action a)
@@ -835,24 +847,30 @@ public sealed partial class Hauptansicht : UserControl
             return k;
         }
         var zoom = new WrapPanel { Children = { Klein("+", Texte.Vergroessern, Karte.Vergroessern).Mit(Texte.ZoomTipp), Klein("−", Texte.Verkleinern, Karte.Verkleinern).Mit(Texte.ZoomTipp), Klein(Texte.GanzeStadtZeigen, Texte.GanzeStadtZeigen, Karte.Einpassen).Mit(Texte.GanzeStadtZeigenTipp) } };
-        var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
-        mitte.Children.Add(new Border { Child = Karte, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }.Farbe(Border.BorderBrushProperty, "Pinsel.border"));
-        Grid.SetRow(zoom, 1);
-        zoom.Margin = new Thickness(0, 8, 0, 0);
-        mitte.Children.Add(zoom);
+        // Welle Q (Weisung P12-76 Punkt 8): Kamera-Karte unten rechts in der Ansicht, mit „Einrasten“; die 3D-Ansicht
+        // bringt ihre Knoepfe in dieselbe Karte (DreiBauen)
+        _kamera2D = zoom;
+        _kameraAussen = Kamerakarte.Bauen(_kamera2D, _kamera3D, _aussenRasterAus);
+        _kameraAussen.MaxWidth = 640;
+        _kamera3D.IsVisible = false;
+        _karteMitte = new Border { Child = Karte, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }.Farbe(Border.BorderBrushProperty, "Pinsel.border");
         // S 0.7.0: die Mitte zeigt die Draufsicht oder die 3D-Ansicht; links und rechts bleiben dieselben
-        _karteMitte = mitte;
-        _aussenMitte.Content = mitte;
+        _aussenMitte.Content = _karteMitte;
+        var mitte = Kamerakarte.Ueber(_aussenMitte, _kameraAussen, h => Karte.UntenFrei = h);
+        mitte.Margin = new Thickness(12);
 
+        // Welle Q (Punkt 7): rechts „Ausgewähltes Stück“ immer oben, „Prüfen – n rot“ mit der Zahl, „Innenräume öffnen“ zu
         var rechts = _aussenRechts;
         rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _aussenAuswahl } }));
-        rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.PruefungenDraussen, "Mittel", FontWeight.Bold), _aussenPruefungen } }));
-        rechts.Children.Add(Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Innenraeume, "Mittel", FontWeight.Bold), _ortListe } }));
+        _pruefenAussen = new Klappgruppe("pruefen", Texte.Pruefen, null, true, _aussenPruefungen);
+        rechts.Children.Add(_pruefenAussen);
+        _innenraeumeGruppe = new Klappgruppe("innenraeume", Texte.InnenraeumeOeffnen, null, false, _ortListe);
+        rechts.Children.Add(_innenraeumeGruppe);
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
         var g = _aussenRaster;
         g.Children.Add(linksRollen);
-        Grid.SetColumn(_aussenMitte, 1);
-        g.Children.Add(_aussenMitte);
+        Grid.SetColumn(mitte, 1);
+        g.Children.Add(mitte);
         Grid.SetColumn(rechtsRollen, 2);
         g.Children.Add(rechtsRollen);
         return g;
@@ -1484,6 +1502,11 @@ public sealed partial class Hauptansicht : UserControl
             }
             BlueprintKaesten.Add((kasten, knoepfe));
         }
+        if (SucheAktiv)
+        {
+            // Welle Q: eine laufende Suche gilt auch fuer die neue Liste
+            SucheAnwenden();
+        }
 
         static Button Klein(Button k)
         {
@@ -1708,6 +1731,7 @@ public sealed partial class Hauptansicht : UserControl
             return;
         }
         _aussenPruefungen.Children.Clear();
+        PruefTitel(_pruefenAussen, AussenFunde);
         if (AussenFunde.Count == 0)
         {
             _aussenPruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
@@ -1778,27 +1802,17 @@ public sealed partial class Hauptansicht : UserControl
             Bedienung3D.SchattenWeg();
         };
         _figurLaufen.Vorlese(Texte.FigurLaufen);
-        // S 0.7.0 (Plan P12-26b Abschnitt 9): rechts dieselbe Spalte wie in der Draufsicht, die Karten der 3D-Ansicht
-        // kommen dazu (oben die 3D-Karte, unter „Ausgewähltes Stück“ Tag/Nacht, Jahreszeit, Fest, Probe und Grenzen)
-        Control[] oben = [Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Ansicht3D, "Mittel", FontWeight.Bold), Schrift.Text(Texte.Ansicht3DHinweis, "Klein", farbe: "Pinsel.muted"), _dreiStatus } })];
-        Control[] unter =
-        [
-            Schrift.Karte(new StackPanel
-            {
-                Spacing = 6,
-                Children = { Zeilen((Texte.Tag + " / " + Texte.Nacht, licht), (Texte.Jahreszeit, jahr), (Texte.Fest, fest)) },
-            }),
-            Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.ProbeLaufen, "Mittel", FontWeight.Bold), Schrift.Text(Texte.ProbeLaufenHinweis, "Klein", farbe: "Pinsel.muted"), _figurLaufen } }),
-            Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.GrenzenGesamt, "Mittel", FontWeight.Bold), _dreiGrenzBalken, _dreiGrenzText, messen } }),
-        ];
+        // Welle Q (Weisung P12-76 Punkt 7): rechts unter „Ausgewähltes Stück“ die Gruppe „Vorschau“ (Tag/Nacht, Jahreszeit,
+        // Fest, Figur laufen lassen); die Grenzen stehen in „Prüfen“; die Erklaerung der 3D-Ansicht hinter „?“
+        _vorschau = new Klappgruppe("vorschau", Texte.Vorschau, null, true,
+            Zeilen((Texte.Tag + " / " + Texte.Nacht, licht), (Texte.Jahreszeit, jahr), (Texte.Fest, fest)),
+            _figurLaufen, Schrift.Text(Texte.ProbeLaufenHinweis, "Klein", farbe: "Pinsel.muted"), _dreiStatus);
+        var grenzen = new StackPanel { Spacing = 6, Margin = new Thickness(0, 6, 0, 0), Children = { Schrift.Text(Texte.GrenzenGesamt, "Klein", FontWeight.Bold), _dreiGrenzBalken, _dreiGrenzText, messen } };
         _kartenAnsicht ??= KarteBauen();
-        _aussenRechts.Children.Insert(0, oben[0]);
-        for (var i = 0; i < unter.Length; i++)
-        {
-            _aussenRechts.Children.Insert(2 + i, unter[i]);
-        }
-        _dreiKarten.AddRange(oben);
-        _dreiKarten.AddRange(unter);
+        _aussenRechts.Children.Insert(1, _vorschau);
+        _pruefenAussen!.Inhalt.Children.Add(grenzen);
+        _dreiKarten.Add(_vorschau);
+        _dreiKarten.Add(grenzen);
 
         Button Klein(string text, string name, string tipp, Action a)
         {
@@ -1806,31 +1820,29 @@ public sealed partial class Hauptansicht : UserControl
             k.Click += (_, _) => a();
             return k;
         }
-        var knoepfe = new WrapPanel
+        var hilfe = Klein("?", Texte.Hilfe3DKnopf, Texte.Hilfe3DTipp, () => _ = Dialog.Zeigen(Texte.Hilfe3D, Texte.Ansicht3DHinweis, Texte.Ok));
+        Hilfe3DKnopf = hilfe;
+        foreach (var k in new[]
         {
-            Margin = new Thickness(0, 8, 0, 0),
-            Children =
-            {
-                Klein("+", Texte.Vergroessern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(1.25f)),
-                Klein("−", Texte.Verkleinern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(0.8f)),
-                Klein(Texte.GanzeStadtZeigen, Texte.GanzeStadtZeigen, Texte.GanzeStadt3DTipp, Bedienung3D.GanzeStadt),
-                Klein(Texte.Steiler, Texte.Steiler, Texte.KippenTipp, () => Bedienung3D.Kippen(8)),
-                Klein(Texte.Flacher, Texte.Flacher, Texte.KippenTipp, () => Bedienung3D.Kippen(-8)),
-            },
-        };
+            Klein("+", Texte.Vergroessern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(1.25f)),
+            Klein("−", Texte.Verkleinern, Texte.ZoomTipp, () => Bedienung3D.Zoomen(0.8f)),
+            Klein(Texte.GanzeStadtZeigen, Texte.GanzeStadtZeigen, Texte.GanzeStadt3DTipp, Bedienung3D.GanzeStadt),
+            Klein(Texte.Steiler, Texte.Steiler, Texte.KippenTipp, () => Bedienung3D.Kippen(8)),
+            Klein(Texte.Flacher, Texte.Flacher, Texte.KippenTipp, () => Bedienung3D.Kippen(-8)),
+            hilfe,
+        })
+        {
+            _kamera3D.Children.Add(k);
+        }
         var ebene = new Grid();
         ebene.Children.Add(Drei);
         // ohne Tipp: ein Tipp ueber der ganzen Ansicht laege beim Bauen ueber der Stadt (Foto S 0.7.0)
         ebene.Children.Add(Bedienung3D.Vorlese(Texte.Ansicht3D));
         var flaeche = new Border { Child = ebene, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
             .Farbe(Border.BorderBrushProperty, "Pinsel.border");
-        var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
-        mitte.Children.Add(flaeche);
-        Grid.SetRow(knoepfe, 1);
-        mitte.Children.Add(knoepfe);
-        _dreiMitte = mitte;
+        _dreiMitte = flaeche;
         DreiTeileZeigen(_drei);
-        return mitte;
+        return flaeche;
     }
 
     /// <summary>S 0.7.0: Mitte (Draufsicht oder 3D) und die Karten der 3D-Ansicht rechts umschalten.</summary>
@@ -1841,6 +1853,8 @@ public sealed partial class Hauptansicht : UserControl
         {
             k.IsVisible = drei;
         }
+        _kamera2D.IsVisible = !drei;
+        _kamera3D.IsVisible = drei;
         if (!drei)
         {
             _bedienung3D?.SchattenWeg();
@@ -2065,8 +2079,8 @@ public sealed partial class Hauptansicht : UserControl
             _ortWahl.Items.Add(new ComboBoxItem { Content = _projekt?.OrtName(o) ?? _daten!.OrtName(o), Tag = o });
         }
         var ortTitel = Gruppe(Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl), Texte.TippOrt);
-        // Welle W5: Etagenliste links ueber dem Katalog (Plan P12-23b Abschnitt 1)
-        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, EtagenBaustein(), Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
+        // Welle Q (Weisung P12-76): die Etagen stehen rechts unter „Ausgewähltes Stück“
+        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();
@@ -2102,27 +2116,28 @@ public sealed partial class Hauptansicht : UserControl
                 Klein("+", Texte.Vergroessern, Flaeche.Vergroessern).Mit(Texte.ZoomTipp),
                 Klein("−", Texte.Verkleinern, Flaeche.Verkleinern).Mit(Texte.ZoomTipp),
                 Klein(Texte.GanzenRaumZeigen, Texte.GanzenRaumZeigen, Flaeche.Einpassen).Mit(Texte.GanzenRaumZeigenTipp),
-                _rasterAus,
             },
         };
-        _rasterAus.VerticalAlignment = VerticalAlignment.Center;
-        var mitte = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Margin = new Thickness(12) };
+        // Welle Q (Weisung P12-76 Punkt 8): Kamera-Karte mit „Einrasten“ unten rechts im Grundriss
+        _kameraInnen = Kamerakarte.Bauen(zoom, _rasterAus);
+        _kameraInnen.MaxWidth = 440;
         var flaechenRahmen = new Border { Child = Flaeche, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
             .Farbe(Border.BorderBrushProperty, "Pinsel.border");
-        mitte.Children.Add(flaechenRahmen);
-        Grid.SetRow(zoom, 1);
-        zoom.Margin = new Thickness(0, 8, 0, 0);
-        mitte.Children.Add(zoom);
+        var mitte = Kamerakarte.Ueber(flaechenRahmen, _kameraInnen, h => Flaeche.UntenFrei = h);
+        mitte.Margin = new Thickness(12);
 
         _grenzBalken.Farbe(ProgressBar.ForegroundProperty, "Pinsel.green");
+        // Welle Q (Punkt 7): „Ausgewähltes Stück“ oben, dann Etagen, „Prüfen – n rot“ mit Grenzen und Funden, Raum
+        _pruefenInnen = new Klappgruppe("pruefen_innen", Texte.Pruefen, null, true,
+            Schrift.Text(Texte.Grenzen, "Klein", FontWeight.Bold), _grenzBalken, _grenzText, _pruefungen);
         var rechts = new StackPanel
         {
             Spacing = 12,
             Children =
             {
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _auswahl } }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Grenzen, "Mittel", FontWeight.Bold), _grenzBalken, _grenzText } }),
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Pruefungen, "Mittel", FontWeight.Bold), _pruefungen } }),
+                Schrift.Karte(EtagenBaustein()),
+                _pruefenInnen,
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Raum, "Mittel", FontWeight.Bold), _raum } }),
             },
         };
@@ -2423,6 +2438,13 @@ public sealed partial class Hauptansicht : UserControl
         }), TaskScheduler.Default);
     }
 
+    /// <summary>Welle Q (Weisung P12-76 Punkt 7): Kopf „Prüfen – n rot“ in Rot, ohne Rot „Prüfen – alles in Ordnung“.</summary>
+    private static void PruefTitel(Klappgruppe? gruppe, IEnumerable<StadtbauFund> funde)
+    {
+        var rot = funde.Count(f => f.Rot);
+        gruppe?.TitelSetzen(rot > 0 ? Texte.PruefenRot(rot) : Texte.PruefenGruen, rot > 0 ? "Pinsel.red" : "Pinsel.text");
+    }
+
     private void PruefungZeigen()
     {
         Flaeche.Funde = Funde;
@@ -2434,6 +2456,7 @@ public sealed partial class Hauptansicht : UserControl
         _grenzText.Text = Texte.Grenzzeile(dreiecke, aufrufe, StadtbauGrenzen.Dreiecke, StadtbauGrenzen.Aufrufe);
         AutomationProperties.SetName(_grenzBalken, Texte.Grenzen + ": " + _grenzText.Text);
         _pruefungen.Children.Clear();
+        PruefTitel(_pruefenInnen, Funde);
         if (Funde.Count == 0)
         {
             _pruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
@@ -2855,6 +2878,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             top.AddHandler(KeyDownEvent, TasteGedrueckt, RoutingStrategies.Tunnel);
             top.AddHandler(KeyUpEvent, TasteLos, RoutingStrategies.Tunnel);
+            top.AddHandler(TextInputEvent, ZeichenEingabe, RoutingStrategies.Tunnel);
             // Tablet: Wunsch "Systemleisten aus" an Avalonia geben (am PC gibt es keinen InsetsManager)
             WerkzeugVollbild.Leisten = top.InsetsManager;
             WerkzeugVollbild.LeistenMerken();
@@ -2876,6 +2900,17 @@ public sealed partial class Hauptansicht : UserControl
         }
     }
 
+    /// <summary>Welle Q (Punkt 9): „?“ zeigt die Tastenkuerzel (nicht in einem Textfeld, nicht ueber einem Fenster).</summary>
+    private void ZeichenEingabe(object? sender, TextInputEventArgs e)
+    {
+        if (e.Text == "?" && Dialog.Offen is null && e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
+        {
+            MenueZu();
+            _ = TastenZeigenAsync();
+            e.Handled = true;
+        }
+    }
+
     private static void TasteLos(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -2889,6 +2924,20 @@ public sealed partial class Hauptansicht : UserControl
         if (e.Key == Key.F11 && e.KeyModifiers == KeyModifiers.None)
         {
             VollbildUmschalten();
+            e.Handled = true;
+            return;
+        }
+        // Welle Q: ein offenes Menue schliesst Escape; F1 zeigt die Tastenkuerzel
+        if (_menueEbene.IsVisible && e.Key == Key.Escape)
+        {
+            MenueZu();
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None && Dialog.Offen is null)
+        {
+            MenueZu();
+            _ = TastenZeigenAsync();
             e.Handled = true;
             return;
         }

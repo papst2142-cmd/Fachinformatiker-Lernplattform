@@ -35,7 +35,7 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         var p = a.Projekt!;
         var k = a.Karte;
-        if (a.KreisKnoepfe.Count != 2 || a.KreisKnoepfe.Any(b => !b.IsEffectivelyVisible))
+        if (a.KreisKnoepfe.Count != 2 || a.KreisKnoepfe.Any(b => a.KlicksBis(b) is not (0 or 1)))
         {
             Fund("Kreisverkehr: die Knoepfe „Kreisverkehr klein“ und „Kreisverkehr groß“ fehlen links");
             return;

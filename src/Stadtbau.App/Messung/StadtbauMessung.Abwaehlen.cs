@@ -195,5 +195,14 @@ public static partial class StadtbauMessung
     }
 
     /// <summary>Der sichtbare Setzen-Knopf links mit genau diesem Text (Katalog draussen, Wasser, Blueprints).</summary>
-    private static Button? Knopf(Hauptansicht a, string text) => a.KnoepfeMit(text).FirstOrDefault(k => k.IsEffectivelyVisible && k.IsEffectivelyEnabled);
+    private static Button? Knopf(Hauptansicht a, string text)
+    {
+        // Welle Q: die Knoepfe stehen in klappbaren Gruppen; erreichbar mit hoechstens einem Tippen, dann Gruppe auf
+        var k = a.KnoepfeMit(text).FirstOrDefault(k => a.KlicksBis(k) is 0 or 1 && k.IsEffectivelyEnabled);
+        if (k is not null)
+        {
+            a.GruppeOeffnenFuer(k);
+        }
+        return k;
+    }
 }

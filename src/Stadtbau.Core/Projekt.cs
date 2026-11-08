@@ -723,7 +723,8 @@ public sealed class Projekt
         {
             Py.Setzen(aussen, "bauten", Py.Kopie(bauten));
         }
-        return [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => KatalogPruefung.Umbenannt(Katalog.Aktiv, f)), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen), .. Blueprint.Pruefen(aussen)];
+        // Welle Q (Sammelliste 229): Gebaeude ohne Ort mit dem Namen des Blueprints statt „bau:…“
+        return [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen)];
     }
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>

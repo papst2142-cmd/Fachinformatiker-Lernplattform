@@ -48,7 +48,7 @@ public static partial class StadtbauMessung
         k.SetzenAn(6, 8);
         await a.AussenGeprueft;
         await BildAsync(a);
-        if (a.KurvenKnoepfe.Count != 3 || a.KurvenKnoepfe.Any(b => !b.IsEffectivelyVisible))
+        if (a.KurvenKnoepfe.Count != 3 || a.KurvenKnoepfe.Any(b => a.KlicksBis(b) is not (0 or 1)))
         {
             Fund("Kurven: die drei Knoepfe Kurve 90°, Kurve 45°, S-Kurve fehlen links");
             return;

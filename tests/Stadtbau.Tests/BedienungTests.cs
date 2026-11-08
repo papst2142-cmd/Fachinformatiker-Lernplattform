@@ -68,11 +68,15 @@ public class BedienungTests
         Assert.False(q.Ungespeichert);
     }
 
-    /// <summary>Beschriftungen der Kopfleiste (Reihenfolge wie im Werkzeug).</summary>
+    /// <summary>
+    /// Beschriftungen der Kopfleiste mit ihren Menues (Welle Q: Reiter, Pfeile, Menue Projekt, Menue Einstellungen,
+    /// „Werkzeug beenden“).
+    /// </summary>
     private static readonly string[] Kopf =
     [
-        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.GebaeudeEntwerfen, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.Rueckgaengig,
-        Texte.Wiederholen, Texte.DateiSpeichern, Texte.AnCcSenden, Texte.Vollbild, Texte.Dunkel, Texte.WerkzeugBeenden,
+        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
+        Texte.MenueProjekt, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden,
+        Texte.MenueEinstellungen, Texte.Dunkel, Texte.Vollbild, Texte.UpdateSuchen, Texte.Tastenkuerzel, Texte.WerkzeugBeenden,
     ];
 
     /// <summary>Woerter, die allein nicht sagen, womit ein Knopf arbeitet (Nico: "Neu" kann auch ein Gebaeude meinen).</summary>
@@ -97,7 +101,7 @@ public class BedienungTests
         {
             Assert.True(EinSatz(tipp), knopf + ": " + tipp);
         }
-        foreach (var tipp in new[] { Texte.TippAussenKatalog, Texte.TippVollerKatalog, Texte.TippHausOhneOrt, Texte.TippMeineBlueprints, Texte.TippOrt, Texte.TippKatalog, Texte.TippGruppe("Regale") })
+        foreach (var tipp in new[] { Texte.TippGruppeStrassen, Texte.TippGruppeNatur, Texte.TippGruppeGebaeude, Texte.StueckSuchenTipp, Texte.Hilfe3DTipp, Texte.TippVollerKatalog, Texte.TippHausOhneOrt, Texte.TippMeineBlueprints, Texte.TippOrt, Texte.TippKatalog, Texte.TippGruppe("Regale") })
         {
             Assert.True(EinSatz(tipp), tipp);
         }
@@ -115,5 +119,64 @@ public class BedienungTests
     {
         Assert.Contains("Ein Projekt ist", Texte.WasIstEinProjektText, StringComparison.Ordinal);
         Assert.Contains("Stadt von oben umbauen", Texte.WasIstEinProjektText, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Welle Q (Weisung P12-76 Punkt 9): das Fenster „Tastenkürzel“ nennt jede Taste, die das Werkzeug abfragt (jede
+    /// Stelle <c>Key.&lt;Name&gt;</c> in der Oberflaeche). Gegenprobe: eine Taste, die fehlt, faellt auf.
+    /// </summary>
+    [Fact]
+    public void Tastenkuerzel_NennenJedeTasteDerOberflaeche()
+    {
+        var genannt = Texte.TastenListe.SelectMany(t => t.Tasten).ToHashSet(StringComparer.Ordinal);
+        var abgefragt = AbgefragteTasten();
+        Assert.True(abgefragt.Count >= 15, "nur " + abgefragt.Count + " Tasten gefunden");
+        Assert.Empty(abgefragt.Where(t => !genannt.Contains(t)).Order(StringComparer.Ordinal));
+        // jede genannte Taste fragt das Werkzeug auch ab (keine Zeile ohne Wirkung)
+        Assert.Empty(genannt.Where(t => !abgefragt.Contains(t)).Order(StringComparer.Ordinal));
+        // Gegenprobe: ohne die Zeile „M“ fehlt eine Taste
+        var ohneM = Texte.TastenListe.Where(t => t.Taste != "M").SelectMany(t => t.Tasten).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("M", abgefragt.Where(t => !ohneM.Contains(t)));
+    }
+
+    /// <summary>Tasten aus der Oberflaeche des Werkzeugs; die Kamera-Tasten der 3D-Ansicht kommen aus der Tastenbelegung des Spiels.</summary>
+    private static HashSet<string> AbgefragteTasten()
+    {
+        var ordner = Path.Combine(Daten.Wurzel, "src", "Stadtbau.App", "Oberflaeche");
+        var tasten = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var datei in Directory.GetFiles(ordner, "*.cs"))
+        {
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(datei), @"\bKey\.([A-Z][A-Za-z0-9]*)\b"))
+            {
+                tasten.Add(m.Groups[1].Value);
+            }
+        }
+        // 3D-Ansicht: Drei.Taste nutzt die Tastenbelegung des Spiels (Q dreht, + und - zoomen, Pfeile schieben); E ist im
+        // Werkzeug „Einrasten“ und Eingabe (hineingehen) gibt es im Werkzeug nicht
+        foreach (var t in new[] { "Q", "OemPlus", "Add", "OemMinus", "Subtract" })
+        {
+            tasten.Add(t);
+        }
+        return tasten;
+    }
+
+    /// <summary>Welle Q (Punkt 6): die offene Gruppe links bleibt gemerkt; unbekannte oder kaputte Werte geben die Vorgabe.</summary>
+    [Fact]
+    public void OffeneGruppe_WirdGemerkt()
+    {
+        var o = Daten.NeueAblage();
+        string[] bekannt = ["strassen", "natur", "wasser", "gebaeude"];
+        Assert.Equal("strassen", WerkzeugEinstellungen.OffeneGruppe(o, bekannt, "strassen"));
+        WerkzeugEinstellungen.OffeneGruppeSetzen(o, "wasser");
+        WerkzeugEinstellungen.VollbildSetzen(o, true);
+        Assert.Equal("wasser", WerkzeugEinstellungen.OffeneGruppe(o, bekannt, "strassen"));
+        Assert.True(WerkzeugEinstellungen.Vollbild(o));
+        WerkzeugEinstellungen.OffeneGruppeSetzen(o, "");
+        Assert.Equal("", WerkzeugEinstellungen.OffeneGruppe(o, bekannt, "strassen"));
+        // Gegenprobe: eine Gruppe, die es nicht (mehr) gibt, und kein Text
+        WerkzeugEinstellungen.OffeneGruppeSetzen(o, "bahn");
+        Assert.Equal("strassen", WerkzeugEinstellungen.OffeneGruppe(o, bekannt, "strassen"));
+        File.WriteAllText(WerkzeugEinstellungen.Datei(o), "{\"gruppe_links\": 3}");
+        Assert.Equal("strassen", WerkzeugEinstellungen.OffeneGruppe(o, bekannt, "strassen"));
     }
 }

@@ -58,7 +58,7 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         var p = a.Projekt!;
         var k = a.Karte;
-        if (a.ZiehKnoepfe.Count != 4 || a.ZiehKnoepfe.Any(b => !b.IsEffectivelyVisible))
+        if (a.ZiehKnoepfe.Count != 4 || a.ZiehKnoepfe.Any(b => a.KlicksBis(b) is not (0 or 1)))
         {
             Fund("Ziehen: die Knoepfe „Straße ziehen“, „Fußweg ziehen“, „Fluss ziehen“, „Bahn ziehen“ fehlen links");
             return;

@@ -95,6 +95,30 @@ public sealed class GrundrissFlaeche : Control
 
     // ---- Ansicht ---------------------------------------------------------------------------------
 
+    /// <summary>Welle Q: Platz unten fuer die Kamera-Karte (Bildpunkte). Aendert er sich, passt ein eingepasster Grundriss neu ein.</summary>
+    public double UntenFrei
+    {
+        get => _untenFrei;
+        set
+        {
+            if (Math.Abs(_untenFrei - value) < 0.5)
+            {
+                return;
+            }
+            _untenFrei = value;
+            // nur neu einpassen, solange die Ansicht noch genau so steht wie nach dem letzten Einpassen (sonst bliebe ein
+            // eigener Zoom beim Wechsel zwischen Draufsicht und 3D nicht stehen)
+            if (_eingepasst && _zoom == _einpassZoom && _versatz == _einpassVersatz)
+            {
+                Einpassen();
+            }
+        }
+    }
+
+    private double _untenFrei;
+    private double _einpassZoom = double.NaN;
+    private Point _einpassVersatz;
+
     public void Einpassen()
     {
         if (Gebaeude is not { } g || Bounds.Width < 10 || Bounds.Height < 10)
@@ -103,9 +127,13 @@ public sealed class GrundrissFlaeche : Control
         }
         double b = Py.F(g["breite"]), h = Py.F(g["hoehe"]);
         const double rand = 24;
-        _zoom = Math.Max(4, Math.Min((Bounds.Width - (2 * rand)) / b, (Bounds.Height - (2 * rand)) / h));
-        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (Bounds.Height - (h * _zoom)) / 2);
+        // Welle Q: unten bleibt der Platz der Kamera-Karte frei
+        var hoehe = Math.Max(2 * rand + 24, Bounds.Height - UntenFrei);
+        _zoom = Math.Max(4, Math.Min((Bounds.Width - (2 * rand)) / b, (hoehe - (2 * rand)) / h));
+        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (hoehe - (h * _zoom)) / 2);
         _eingepasst = true;
+        _einpassZoom = _zoom;
+        _einpassVersatz = _versatz;
         InvalidateVisual();
     }
 

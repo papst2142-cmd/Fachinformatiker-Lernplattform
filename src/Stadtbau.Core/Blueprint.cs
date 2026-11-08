@@ -305,6 +305,38 @@ public sealed class Blueprint
         return liste;
     }
 
+    /// <summary>
+    /// Welle Q (Sammelliste 229): ein Fund draussen nennt ein Gebaeude ohne Ort mit dem Modellnamen („bau:…“, so heisst es im
+    /// gemeinsamen Teil). Das Werkzeug setzt dafuer den Namen ein, den der Blueprint traegt; ohne Namen bleibt der Text.
+    /// Gegenprobe: <see cref="ModellnamenAltFuerTests"/>.
+    /// </summary>
+    public static StadtbauFund MitNamen(PyObjekt aussen, StadtbauFund f)
+    {
+        var such = "„" + Lernplattform.Core.Stadtbau.Bauteile.ModellPraefix;
+        if (ModellnamenAltFuerTests || !f.Text.Contains(such, StringComparison.Ordinal))
+        {
+            return f;
+        }
+        var text = f.Text;
+        var start = 0;
+        while ((start = text.IndexOf(such, start, StringComparison.Ordinal)) >= 0)
+        {
+            var ende = text.IndexOf('“', start);
+            if (ende < 0)
+            {
+                break;
+            }
+            var modell = text[(start + 1)..ende];
+            var neu = Zierweg(aussen, modell)?["name"] as string is { Length: > 0 } name ? name : modell;
+            text = text[..(start + 1)] + neu + text[ende..];
+            start += neu.Length + 2;
+        }
+        return f with { Text = text };
+    }
+
+    /// <summary>Gegenprobe Sammelliste 229: Funde nennen den Modellnamen wie bis S 0.16.0.</summary>
+    public static bool ModellnamenAltFuerTests { get; set; }
+
     public static List<StadtbauFund> Pruefen(PyObjekt aussen)
     {
         var funde = new List<StadtbauFund>();
