@@ -97,8 +97,8 @@ public static partial class StadtbauMessung
             Fund("Tuer: zweite Wohnung heisst nicht „Wohnung 2“ oder hat keine Tuer");
         }
 
-        // Gegenprobe: fern der Strasse = gelber Hinweis
-        var s3 = p.AussenAendern("Wohnung fern", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 10, 6, raster: true, modell: "wohnung")!);
+        // Gegenprobe: fern der Strasse (Weg laenger als GebaeudeTuer.WegHoechstens) = gelber Hinweis
+        var s3 = p.AussenAendern("Wohnung fern", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 20, 2, raster: true, modell: "wohnung")!);
         if (a.TuerUmschalten(s3) != Texte.TuerWegOhneStrasse)
         {
             Fund("Tuer: Wohnung fern der Strasse meldet nicht „" + Texte.TuerWegOhneStrasse + "“ (Gegenprobe)");
