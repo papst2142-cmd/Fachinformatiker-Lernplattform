@@ -356,7 +356,7 @@ public class LerninhalteTests
         Assert.Equal(60, Fachfragen(alle, "ae"));
         // SI, DPA und DV sehen nichts davon; SI zaehlt wie vor der Welle (DPA siehe Phase 10 W3, DV Phase 10 W4)
         var si = alle.Fuer("si");
-        Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
+        Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "ae");
         Assert.DoesNotContain(alle.Fuer("dv").Karteikarten, e => e.Zugehoerigkeit == "ae");
         Assert.DoesNotContain(alle.Fuer("dv").Testprojekte, e => e.Zugehoerigkeit == "ae");
@@ -389,7 +389,7 @@ public class LerninhalteTests
         Assert.Equal(60, Fachfragen(alle, "dpa"));
         // SI, AE und DV sehen nichts davon; SI und AE zaehlen wie vor der Welle (DV siehe Phase 10 W4)
         var si = alle.Fuer("si");
-        Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
+        Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dpa");
         var ae = alle.Fuer("ae");
         Assert.Equal((2584, 3735, 50, 60), (ae.Karteikarten.Count, ae.Quizfragen.Count, ae.Testprojekte.Count, Fachfragen(alle, "ae")));
@@ -458,7 +458,7 @@ public class LerninhalteTests
         Assert.Equal(60, Fachfragen(alle, "dv"));
         // SI, AE und DPA sehen nichts davon und zaehlen wie vor der Welle
         var si = alle.Fuer("si");
-        Assert.Equal((1565, 2174, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
+        Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dv");
         foreach (var fr in new[] { "ae", "dpa" })
         {
@@ -470,6 +470,92 @@ public class LerninhalteTests
         }
     }
 
+    // -- SI auffuellen (Weisung P12-97, Nico 08.11.2026 20:54 MEZ, Sammelliste 243) -------------
+
+    /// <summary>
+    /// Weisung P12-97: Systemintegration bekommt so viele Karteikarten und Pruefungsfragen wie AE, DPA und DV. Die neuen
+    /// SI-Eintraege haengen hinter DV an (4 500 Karten, 6 361 Fragen in der Datei) und gehoeren alle zu si; in der Sicht SI
+    /// ist danach jede Art genau so gross wie bei AE, DPA und DV. AE, DPA und DV sehen nichts davon und bleiben gleich.
+    /// </summary>
+    [Fact]
+    public void SiAuffuellen_ZahlenJeArt_AndereBleibenGleich()
+    {
+        var alle = Echt();
+        Assert.Equal(1019, NeueSi(alle.Karteikarten, alle.Bisher.Karteikarten.Count).Count());
+        Assert.Equal(1019, alle.Karteikarten.Skip(alle.Bisher.Karteikarten.Count + 4500).Count());
+        Assert.All(alle.Karteikarten.Skip(alle.Bisher.Karteikarten.Count + 4500), e => Assert.Equal("si", e.Zugehoerigkeit));
+        Assert.Equal(1561, QuizDatei(alle, 6361, 1561).Count() + Ausgeschlossen(alle, 6361, 1561));
+        Assert.Equal(1561, NeueSi(alle.Quizfragen, alle.Bisher.Quizfragen.Count).Count());
+        Assert.All(QuizDatei(alle, 6361, 1561), e => Assert.Equal("si", e.Zugehoerigkeit));
+        // Sicht SI: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 60 Fachgespraech-Fragen, wie jede andere Fachrichtung
+        var si = alle.Fuer("si");
+        Assert.Equal((2584, 3735, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
+        Assert.True(JedeArtGleichGross(alle), Groessen(alle));
+        foreach (var fr in new[] { "ae", "dpa", "dv" })
+        {
+            var sicht = alle.Fuer(fr);
+            Assert.Equal((2584, 3735, 50, 60), (sicht.Karteikarten.Count, sicht.Quizfragen.Count, sicht.Testprojekte.Count, Fachfragen(alle, fr)));
+            Assert.DoesNotContain(sicht.Karteikarten, e => e.Zugehoerigkeit == "si");
+            Assert.DoesNotContain(sicht.Quizfragen, e => e.Zugehoerigkeit == "si");
+        }
+        // die neuen SI-Eintraege nutzen nur bisherige Themen der Sicht SI (keine neuen Themen noetig)
+        Assert.All(NeueSi(alle.Karteikarten, alle.Bisher.Karteikarten.Count).Concat(NeueSi(alle.Quizfragen, alle.Bisher.Quizfragen.Count)),
+            e => Assert.Contains(si.Themen[e.Fachbereich!], t => t.Id == e.Thema));
+    }
+
+    /// <summary>Gegenprobe zu <see cref="SiAuffuellen_ZahlenJeArt_AndereBleibenGleich"/>: fehlt der Sicht SI ein Eintrag, ist sie nicht mehr gleich gross.</summary>
+    [Theory]
+    [InlineData("karteikarten")]
+    [InlineData("quizfragen")]
+    public void SiAuffuellen_EinEintragWeniger_NichtGleichGross(string datei)
+    {
+        var lernen = Ordner(Lernen);
+        byte[]? OhneLetzten(string name)
+        {
+            var inhalt = lernen(name);
+            if (name != datei || inhalt is null)
+            {
+                return inhalt;
+            }
+            var liste = JsonNode.Parse(inhalt)!.AsArray();
+            Assert.Equal("si", (string?)liste[^1]!["fachrichtung"]);
+            liste.RemoveAt(liste.Count - 1);
+            return Encoding.UTF8.GetBytes(liste.ToJsonString());
+        }
+        var weniger = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), OhneLetzten);
+        Assert.False(JedeArtGleichGross(weniger), Groessen(weniger));
+        Assert.True(JedeArtGleichGross(Echt()));
+    }
+
+    /// <summary>Weisung P12-97: hat die Sicht SI bei jeder Art genau so viele Inhalte wie AE, DPA und DV?</summary>
+    private static bool JedeArtGleichGross(Lerninhalte alle) =>
+        Fachrichtungen.Werte.Select(fr => Groesse(alle, fr)).Distinct().Count() == 1;
+
+    private static (int Karten, int Fragen, int Ap2, int Ap1, int Projekte, int Fachfragen) Groesse(Lerninhalte alle, string fr)
+    {
+        var s = alle.Fuer(fr);
+        return (s.Karteikarten.Count, s.Quizfragen.Count, s.Ap2Szenarien.Count, s.Ap1Szenarien.Count, s.Testprojekte.Count, Fachfragen(alle, fr));
+    }
+
+    private static string Groessen(Lerninhalte alle) =>
+        string.Join("; ", Fachrichtungen.Werte.Select(fr => fr + " " + Groesse(alle, fr)));
+
+    /// <summary>Weisung P12-97: die neuen SI-Eintraege aus inhalte_csharp/lernen (hinter den bisherigen Inhalten).</summary>
+    private static IEnumerable<Lerninhalt> NeueSi(IEnumerable<Lerninhalt> liste, int bisher) =>
+        liste.Where(e => e.Zugehoerigkeit == "si" && e.Nummer > bisher);
+
+    /// <summary>
+    /// Sicht SI ohne die Eintraege aus Weisung P12-97 (Karten, Fragen, Testprojekte, Fachgespraech): so zaehlten die
+    /// Wellen davor, die SI unveraendert lassen mussten.
+    /// </summary>
+    private static (int, int, int, int) SiOhneAuffuellen(Lerninhalte alle)
+    {
+        var si = alle.Fuer("si");
+        return (si.Karteikarten.Count - NeueSi(si.Karteikarten, alle.Bisher.Karteikarten.Count).Count(),
+            si.Quizfragen.Count - NeueSi(si.Quizfragen, alle.Bisher.Quizfragen.Count).Count(),
+            si.Testprojekte.Count, Fachfragen(alle, "si"));
+    }
+
     /// <summary>
     /// Phase 11 FW5b (Sammelliste 181): Quizfragen aus inhalte_csharp/lernen/quizfragen.json an den Stellen von
     /// <paramref name="von"/> bis vor von + anzahl (ab 0, ueber die Nummer). Ein ausgeschlossener Eintrag fehlt (siehe
@@ -477,7 +563,8 @@ public class LerninhalteTests
     /// </summary>
     private static IEnumerable<Lerninhalt> QuizDatei(Lerninhalte alle, int von, int anzahl)
     {
-        var basis = alle.Quizfragen.Count(e => e.Zugehoerigkeit is not ("ae" or "dpa" or "dv"));
+        // Weisung P12-97: seit SI aus inhalte_csharp/lernen angehaengt wird, zaehlt die Basis nur die bisherigen Fragen
+        var basis = alle.Bisher.Quizfragen.Count;
         return alle.Quizfragen.Where(e => e.Nummer - 1 - basis >= von && e.Nummer - 1 - basis - von < anzahl);
     }
 
