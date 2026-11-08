@@ -12,6 +12,7 @@
   <!-- Phase 13 Welle 3b (Weisungen P12-19, P12-23 1a): voller CC0-Katalog (werkzeuge/stadtbau/wandle_katalog.py), nur im Werkzeug -->
   <ItemGroup>
     <EmbeddedResource Include="..\..\inhalte_stadtbau\grafik\*" LogicalName="inhalte_stadtbau/grafik/%(Filename)%(Extension)" Visible="false" />
+    <EmbeddedResource Include="..\..\inhalte_stadtbau\namen_de.json" LogicalName="inhalte_stadtbau/namen_de.json" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lernplattform.Core\Lernplattform.Core.csproj" />

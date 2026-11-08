@@ -203,6 +203,31 @@ public sealed class KatalogAnsicht : Border
         }
     }
 
+    /// <summary>Kleinster Anteil der Schriftgroesse, auf den ein Kachel-Name mit langem Wort verkleinert wird.</summary>
+    public const double MinAnteil = 0.8;
+
+    /// <summary>Platz fuer den Namen in einer Kachel (ein Bildpunkt Reserve fuer die Rundung des Layouts).</summary>
+    public const double NamenPlatz = Kachel - 12 - 1;
+
+    /// <summary>
+    /// Sammelliste 222 (Weisung P12-78): Schriftgroesse eines Kachel-Namens. Passt das laengste Wort bei
+    /// <paramref name="soll"/> in <see cref="NamenPlatz"/>, bleibt sie; sonst so klein, dass es passt (auf 0,25 abgerundet),
+    /// hoechstens bis <see cref="MinAnteil"/> × soll. <c>Passt</c> = das laengste Wort passt bei der Groesse.
+    /// </summary>
+    public static (double Groesse, bool Passt) NamensGroesse(string text, double soll)
+    {
+        var familie = Application.Current?.TryGetResource("ContentControlThemeFontFamily", null, out var f) == true && f is FontFamily ff
+            ? ff : FontFamily.Default;
+        var schrift = new Typeface(familie, FontStyle.Normal, FontWeight.Normal);
+        var breite = LernText.LaengstesWort(text, schrift, soll);
+        if (breite <= NamenPlatz)
+        {
+            return (soll, true);
+        }
+        var g = Math.Max(soll * MinAnteil, Math.Floor(soll * NamenPlatz / breite * 4) / 4);
+        return (g, LernText.LaengstesWort(text, schrift, g) <= NamenPlatz);
+    }
+
     /// <summary>Gegenprobe des Start-Tests: Kacheln wie vor der Nachbesserung (Hoehe nach Namen, "Effekt" als eigene Zeile).</summary>
     public static bool UngleichFuerTests { get; set; }
 
@@ -215,6 +240,12 @@ public sealed class KatalogAnsicht : Border
     {
         var bild = KatalogBilder.Bild(e);
         var name = Schrift.Text(e.Anzeige, "Klein");
+        if (NamensGroesse(e.Anzeige, Schrift.Grundgroessen["Klein"] * Schrift.Faktor) is var (groesse, _) && groesse < Schrift.Grundgroessen["Klein"] * Schrift.Faktor)
+        {
+            // Sammelliste 222: ein langes deutsches Wort ("Christbaumständer") passt sonst nicht in die Kachel und wuerde
+            // mitten im Wort getrennt; dann wird nur dieser Name kleiner, hoechstens bis MinAnteil
+            name = new TextBlock { Text = e.Anzeige, FontSize = groesse }.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+        }
         name.TextWrapping = TextWrapping.Wrap;
         name.TextAlignment = TextAlignment.Center;
         name.MaxLines = 2;
@@ -264,7 +295,7 @@ public sealed class KatalogAnsicht : Border
             HorizontalContentAlignment = HorizontalAlignment.Center,
             Tag = e,
         }.Vorlese(e.Anzeige + " setzen");
-        ToolTip.SetTip(k, e.Anzeige + " (" + e.Name + "), " + art);
+        ToolTip.SetTip(k, Texte.KatalogTipp(e.Anzeige, e.Englisch, art));
         k.Click += (_, _) => Gewaehlt?.Invoke(e);
         return k;
     }

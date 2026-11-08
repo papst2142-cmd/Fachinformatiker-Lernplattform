@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.18.0
+
+Der volle Katalog spricht jetzt Deutsch.
+
+- Alle 1 521 Stücke im Katalog haben einen deutschen Namen, zum Beispiel „Einbaukühlschrank“ statt „Kitchen fridge built in“. Die Namen stehen auf den Kacheln, bei „Ausgewähltes Stück“ und in den Prüf-Funden.
+- Die Suche findet ein Stück weiter mit dem deutschen und mit dem englischen Namen. Der englische Name steht im Tipp der Kachel.
+- Ist ein Wort zu lang für die Kachel (zum Beispiel „Badezimmerschrank“), steht dieser Name etwas kleiner da, damit kein Wort mitten drin getrennt wird.
+- Deine Projekte, Blueprints und Stadt-Dateien bleiben, wie sie sind; nur die Anzeige ist neu.
+
 ## S 0.17.0
 
 Die Knöpfe sind neu geordnet: weniger auf einmal, das Wichtige immer zur Hand.

@@ -683,6 +683,21 @@ public static partial class StadtbauMessung
                 Fund("Katalog Suche: \"" + wort + "\" findet nichts");
             }
         }
+        // Sammelliste 222: jeder deutsche Name passt in seine Kachel, ohne ein Wort zu trennen (alle 1 521, nicht nur die
+        // gezeigten); Gegenprobe: ein zu langes Wort passt auch verkleinert nicht
+        var soll = Lernplattform.Design.Schrift.Grundgroessen["Klein"] * Lernplattform.Design.Schrift.Faktor;
+        var zuLang = kat.Eintraege.Where(e => !KatalogAnsicht.NamensGroesse(e.Anzeige, soll).Passt).Select(e => e.Anzeige).ToList();
+        var kleiner = kat.Eintraege.Count(e => KatalogAnsicht.NamensGroesse(e.Anzeige, soll).Groesse < soll);
+        Messwerte.Notiere("Katalog-Namen: " + kat.Eintraege.Count.ToString(Inv) + " geprueft, " + kleiner.ToString(Inv) + " verkleinert, " + zuLang.Count.ToString(Inv) + " passen nicht");
+        foreach (var n in zuLang)
+        {
+            Fund("Katalog-Name passt nicht in die Kachel: " + n);
+        }
+        if (KatalogAnsicht.NamensGroesse("Hochgeschwindigkeitszugwagen", soll).Passt)
+        {
+            Fund("Katalog-Namen Gegenprobe: zu langes Wort passt (Probe taugt nicht)");
+        }
+
         // Raster (Weisung P12-25): Gegenprobe mit den alten Kacheln, dann jede Gruppe in PC- und Tablet-Groesse
         var mitNamen = kat.Gruppen.First(g => kat.InGruppe(g).Any(e => e.Art == KatalogArt.Modell));
         KatalogAnsicht.UngleichFuerTests = true;
