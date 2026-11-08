@@ -1,7 +1,7 @@
 # Sollwerte Stand C# A 0.41.1 (main 71de14c), Welle Sammelliste 217 (Weisung P12-14)
 # Aendern nur mit Nicos Freigabe: neuer Abschnitt in AENDERUNGEN_SOLLWERTE.md, dann
 # python3 -I werkzeuge/vergleich/sollwerte.py schreiben <n> (nie von Hand)
-# Aenderung: 13
+# Aenderung: 14
 403c51cbd4e86c41f86456f4f0a74ecf54b7a39ebd46db9b245326eaafdc075e  inhalte/fachgespraech.json
 f26e665baf88f4c2d7c4bb834cf90ffaf6d7ff4fd6f9188c8a38d3fdd5735645  inhalte/karteikarten.json
 446598838cc3acdd956ef284fa11bdd210e64cf5868d97a00a3d7871423d5658  inhalte/projektarbeiten.json
@@ -49,7 +49,7 @@ d52daedc27f17e5124cb905a06a7e0df521b5a493bcad2290470e4377cf1899c  tests/Vergleic
 1eda8da20ccecbff2426ec1877334c77a797c2152a14a68a876282302f037815  tests/Vergleich/inhalte.json
 d208f5d091e27ccb9df832fd957c4e23021c21f9432a33b45064d921e73716d0  tests/Vergleich/inhalte_pruefung.json
 9028792e76163c0c792ac81b6984b85afc75eafbbabb3a1fb29ae8a1c45a160b  tests/Vergleich/leistungsmessung.json
-c523f9d30a0729fc780a72dc05b41c2fa840d23ebd490bbd5426c57aa8453cb6  tests/Vergleich/lerninhalte_pruefung.json
+3bf498ac7e5af6c011927681633ae496c84cfb7972a447d9f13e010f225768be  tests/Vergleich/lerninhalte_pruefung.json
 295c9cff607252c5b014886429b5caefaa5f25afe26f8cbba072d2efb5835f1f  tests/Vergleich/lerntexte.json
 e6c18e0c29604ef280f009b8fa81aa3466c4e24be80d82007e29115c229d604f  tests/Vergleich/loeschen.json
 912c1dfb1cbaa71b98a726e281746812c19bc81219384d0f079724ae245aa3be  tests/Vergleich/notizblock.json
