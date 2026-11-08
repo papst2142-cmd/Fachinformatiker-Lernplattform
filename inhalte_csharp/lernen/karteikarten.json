@@ -85749,7 +85749,7 @@
   ],
   "q": "Wo legt man den zentralen Speicher (Central Store) für ADMX-Vorlagen an?",
   "a": "Im SYSVOL unter Policies\\PolicyDefinitions",
-  "a_full": "Der zentrale Speicher liegt unter \\\\firma.local\\SYSVOL\\firma.local\\Policies\\PolicyDefinitions und wird mit SYSVOL auf alle DCs repliziert. Existiert er, nutzt der Gruppenrichtlinien-Editor auf jedem Admin-PC diese Vorlagen statt der lokalen. So sehen alle Admins dieselben Einstellungen.",
+  "a_full": "Der zentrale Speicher ist der Ordner PolicyDefinitions im Ordner Policies des SYSVOL der Domäne (zum Beispiel firma.local) und wird mit SYSVOL auf alle DCs repliziert. Existiert er, nutzt der Gruppenrichtlinien-Editor auf jedem Admin-PC diese Vorlagen statt der lokalen. So sehen alle Admins dieselben Einstellungen.",
   "options": [
    "Auf jedem DC unter C:\\Windows\\PolicyDefinitions",
    "Im SYSVOL unter Policies\\PolicyDefinitions",
