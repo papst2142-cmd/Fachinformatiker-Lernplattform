@@ -1175,6 +1175,7 @@ public sealed partial class StadtSzene
             FestTeileVon = festTeileVon,
             FestStueckeVon = festStueckeVon,
             Jahreszeit = jahreszeit,
+            Spieltag = stadt.VerkehrTag ?? stand?.Tag ?? 1,
             GruenKlein = gruen,
             Strassen = strassen,
             LaternenSkizze = laternenSkizze,
@@ -1875,6 +1876,13 @@ public sealed partial class StadtSzene
 
     /// <summary>Phase 8 W9: Jahreszeit der Farben (nur Darstellung, Sommer = Farben wie vorher).</summary>
     public Jahreszeit Jahreszeit { get; private init; } = Jahreszeit.Sommer;
+
+    /// <summary>
+    /// Welle A 0.51.0 (Weisung P12-84, Sammelliste 237): Spieltag fuer die Wege der automatischen Autostrecken
+    /// (<see cref="Autostrecken.Anlegen"/>): <see cref="Stadt.VerkehrTag"/> (Werkzeug: 1), sonst der Tag des Spielstands,
+    /// ohne Spielstand 1. Nur Darstellung.
+    /// </summary>
+    public long Spieltag { get; private init; } = 1;
 
     /// <summary>Phase 8 W9: ab diesem Teil und diesem Modell steht die Fest-Deko (behaelt ihre Farben).</summary>
     public int FestTeileVon { get; private init; } = int.MaxValue;

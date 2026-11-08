@@ -30,6 +30,8 @@ public static class Ansicht3D
     public static StadtSpiel Bauen(StadtFassung stand, Spieldaten daten, Einstellung einstellung, StadtSzene.Vorrat? vorrat = null)
     {
         var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt));
+        // S 0.20.0 (Weisung P12-84): die Autos fahren im Werkzeug die Wege von Tag 1 (der Probe-Spielstand steht auf Tag 201)
+        stadt.VerkehrTag = Autostrecken.WerkzeugTag;
         var ablauf = StadtbauPruefung.Probestand(stadt.Inhalt);
         // Phase 13 Welle 4a: Stuecke aus dem Katalog zeichnet die 3D-Ansicht wie das Spiel nach dem Einbau
         var grafik = Katalog.Aktiv?.MitStuecken(daten.Grafik, stand) ?? daten.Grafik;

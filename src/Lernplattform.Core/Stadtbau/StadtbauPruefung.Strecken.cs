@@ -22,7 +22,7 @@ public static partial class StadtbauPruefung
         {
             return;
         }
-        var ergebnis = Autostrecken.Anlegen(szene.Strassen);
+        var ergebnis = Autostrecken.Anlegen(szene.Strassen, tag: Autostrecken.WerkzeugTag);
         foreach (var p in ergebnis.ZuKurz)
         {
             funde.Add(new StadtbauFund("Diese Sackgasse ist zu kurz: ein Auto kann darauf nicht wenden.",

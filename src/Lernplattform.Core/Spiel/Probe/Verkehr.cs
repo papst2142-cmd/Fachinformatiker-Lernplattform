@@ -117,8 +117,15 @@ public sealed class Verkehr
     /// Welle K3b: passt der Verkehr zu den Strassen der Szene? Nur dann behalten die Autos beim Neubau der Szene ihre
     /// Lage (im Spiel aendern sich die Strassen einer Stadt nie; im Werkzeug nach jeder Aenderung).
     /// </summary>
-    public bool Passt(StadtSzene szene) => FuerStrassen is not { } eigene
-        || (eigene.Count == szene.Strassen.Count && eigene.Zip(szene.Strassen).All(p => p.First.SequenceEqual(p.Second)));
+    public bool Passt(StadtSzene szene) => (FuerStrassen is not { } eigene
+        || (eigene.Count == szene.Strassen.Count && eigene.Zip(szene.Strassen).All(p => p.First.SequenceEqual(p.Second))))
+        && (FuerTag is not { } tag || tag == szene.Spieltag);
+
+    /// <summary>
+    /// Welle A 0.51.0: Spieltag, fuer den die automatischen Strecken gelten (null = feste Strecken, gleich an jedem Tag).
+    /// Ein anderer Tag der Szene baut den Verkehr neu (<see cref="Passt"/>).
+    /// </summary>
+    public long? FuerTag { get; set; }
 
     /// <summary>Welle K3b: so weit vor einem Feld am Ring hat ein Auto im Ring Vorfahrt vor einem, das einfahren will.</summary>
     public const float VorfahrtWeite = 1.2f;
@@ -164,7 +171,9 @@ public sealed class Verkehr
         // Strecken aus dem Strassennetz; Fassung 0 (Stadt 1) faehrt wie bisher
         if (Autostrecken.Automatisch(szene))
         {
-            return Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen), tempo, abstand, szene.Strassen);
+            var v0 = Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen, szene.Spieltag), tempo, abstand, szene.Strassen);
+            v0.FuerTag = szene.Spieltag;
+            return v0;
         }
         var v = new Verkehr { AbstandVorne = abstand, FuerStrassen = szene.Strassen };
         v.Kreuzungen.AddRange(KreuzungenAus(szene.Strassen));
