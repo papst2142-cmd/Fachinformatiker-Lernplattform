@@ -28,8 +28,8 @@ public sealed partial class Hauptansicht
     /// <summary>Hoehe eines Menue-Eintrags (Tablet: mindestens 44 Bildpunkte, Weisung P12-76 Punkt 10).</summary>
     public const double EintragHoehe = 44;
 
-    /// <summary>Die vier Reiter in der Reihenfolge der Leiste.</summary>
-    public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.GebaeudeEntwerfen];
+    /// <summary>Die Reiter in der Reihenfolge der Leiste (S 0.22.0: dazu „Spielgeschichte“, Weisung P12-91).</summary>
+    public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.GebaeudeEntwerfen];
 
     private readonly TextBlock _speicherStand = Schrift.Text("", "Klein");
     private readonly Panel _menueEbene = new() { IsVisible = false };
@@ -257,6 +257,10 @@ public sealed partial class Hauptansicht
         else if (name == Texte.Ansicht3D)
         {
             DreiZeigen();
+        }
+        else if (name == Texte.Spielgeschichte)
+        {
+            GeschichteZeigen();
         }
         else
         {
