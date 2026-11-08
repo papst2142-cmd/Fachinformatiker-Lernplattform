@@ -773,7 +773,7 @@ public static class Texte
     // ---- Spielgeschichte ansehen (Welle S 0.22.0, Weisung P12-91, Kurzplan Meldung P12-59) ----
     /// <summary>Reiter und Ueberschrift.</summary>
     public const string Spielgeschichte = "Spielgeschichte";
-    public const string TippSpielgeschichte = "Zeigt, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen und ab welchem Tag. Nur ansehen, hier ändert sich nichts.";
+    public const string TippSpielgeschichte = "Zeigt nur zum Ansehen, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen und ab welchem Tag.";
     public const string GeschichteAnOrt = "Spielgeschichte an diesem Ort";
 
     /// <summary>Unterzeile der Karte rechts: Name des Orts und ab wann er im Spiel da ist.</summary>

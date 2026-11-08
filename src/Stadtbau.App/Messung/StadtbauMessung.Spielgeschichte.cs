@@ -44,6 +44,11 @@ public static partial class StadtbauMessung
         {
             Fund("Spielgeschichte: Zahl am Haus " + zz.Ort + " ragt aus der Karte");
         }
+        foreach (var zz in zahlen.Where(x => x.Flaeche.Bottom > x.Haus.Top + 2))
+        {
+            // der Name steht ab 2 Bildpunkte unter der Oberkante im Haus
+            Fund("Spielgeschichte: Zahl am Haus " + zz.Ort + " liegt auf dem Namen im Haus");
+        }
 
         // Bild 4 (4a): gelbe Zeile und Karte rechts; Gegenprobe Ort ohne Spielgeschichte
         a.Karte.Waehlen(OrtStelle("talheim_nord"));

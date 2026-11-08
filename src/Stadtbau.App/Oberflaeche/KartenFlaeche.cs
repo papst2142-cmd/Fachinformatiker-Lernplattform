@@ -517,8 +517,8 @@ public sealed class KartenFlaeche : Control
         Beschriftungen = beschriftungen;
         Formen = formen;
 
-        // Welle S 0.22.0: Zahl der Aufgaben der Spielgeschichte als Schild oben rechts am Haus (ueber den Namen,
-        // ganz in der Karte wie die Beschriftungen)
+        // Welle S 0.22.0: Zahl der Aufgaben der Spielgeschichte als Schild oben rechts auf der Kante des Hauses (ragt
+        // nach oben hinaus, damit es den Namen im Haus nicht verdeckt), ganz in der Karte wie die Beschriftungen
         var gezeichnet = new List<(string, int, Rect, Rect)>();
         foreach (var (ort, zahl, _, r) in zahlen)
         {
@@ -526,7 +526,7 @@ public sealed class KartenFlaeche : Control
                 new Typeface(schrift.FontFamily, FontStyle.Normal, FontWeight.Bold), ZahlGroesse, Farbe("on_accent"));
             var hoehe = ft.Height + 4;
             var breite = Math.Max(hoehe, ft.Width + 14);
-            var (zx, zy, _) = Beschriftung.InKarte(r.Right - breite - 4, r.Top + 3, breite, hoehe, rand.Left, rand.Top, rand.Right, rand.Bottom);
+            var (zx, zy, _) = Beschriftung.InKarte(r.Right - breite - 4, r.Top - hoehe + 1, breite, hoehe, rand.Left, rand.Top, rand.Right, rand.Bottom);
             var schild = new Rect(zx, zy, breite, hoehe);
             ctx.DrawRectangle(Farbe("accent"), new Pen(Farbe("on_accent"), 1.5), schild, hoehe / 2, hoehe / 2);
             ctx.DrawText(ft, new Point(zx + ((breite - ft.Width) / 2), zy + 2));
