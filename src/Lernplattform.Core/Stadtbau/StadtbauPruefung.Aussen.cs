@@ -160,6 +160,8 @@ public static partial class StadtbauPruefung
         KreisverkehrRegeln(szene, fassung, funde);
         StreckenRegeln(szene, funde);
         FusswegRegeln(szene, fassung, funde);
+        AussehenRegeln(fassung, inhalt, szene, funde);
+        OrtsnamenRegeln(fassung, funde);
         return funde;
     }
 
@@ -401,6 +403,21 @@ public static partial class StadtbauPruefung
                     .Where(t => Py.Gleich(t.Teil["art"], "block") && StadtSzene.Darstellung(modell, t.Nr) is not null)
                     .Select(t => (X: ox + (float)Py.F(t.Teil["x"]) + StadtSzene.Darstellung(modell, t.Nr)!.Value, Z: oz + (float)Py.F(t.Teil["y"]), W: (float)Py.F(t.Teil["w"]), T: (float)Py.F(t.Teil["t"])))
                     .ToList();
+                // S 0.21.0 (selbst gefunden): ein gedrehter Ort (darstellung.hausdreh, Welle E) hat gedrehte Bloecke, wie die
+                // Szene sie zeichnet (Mitte aller Bloecke des Modells, Hausdrehung.Mitte); vorher galt die Tuer eines gedrehten
+                // Hauses als neben der Wand
+                if (Hausdrehung.VonOrt(stadt.Daten, tuer.Ort) is var dreh and > 0)
+                {
+                    var mitte = new Vector2(ox, oz) + Hausdrehung.Mitte(Get(modelle, modell));
+                    bloecke = [.. bloecke.Select(b =>
+                    {
+                        var a = Hausdrehung.Drehen(new Vector2(b.X, b.Z), mitte, dreh);
+                        var e = Hausdrehung.Drehen(new Vector2(b.X + b.W, b.Z + b.T), mitte, dreh);
+                        var min = Vector2.Min(a, e);
+                        var max = Vector2.Max(a, e);
+                        return (X: min.X, Z: min.Y, W: max.X - min.X, T: max.Y - min.Y);
+                    })];
+                }
                 var grenze = szene.Grafik is null ? 0.02f : WandAbstandModell;
                 if (bloecke.Count > 0 && bloecke.Min(b => AufWand(b.X, b.Z, b.W, b.T, tuer.Mitte)) > grenze)
                 {

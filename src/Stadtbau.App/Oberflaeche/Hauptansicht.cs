@@ -1198,11 +1198,17 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))
         {
+            if (_aussehenOrt is not null)
+            {
+                AussehenZu(neuZeigen: false);
+            }
             _aussenAuswahl.Children.Add(Schrift.Text(Texte.NichtsGewaehltDraussen, "Klein", farbe: "Pinsel.muted"));
             return;
         }
         var a = _projekt.AussenStand;
-        _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _daten!.OrtName), "Klein"));
+        _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _projekt.OrtName), "Klein"));
+        // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
+        OrtNameTeil(s);
         var (lx, ly) = AussenBearbeitung.Lage(a, s);
         var x = Feld(lx);
         var y = Feld(ly);
@@ -1401,6 +1407,8 @@ public sealed partial class Hauptansicht : UserControl
             oeffnen.Click += (_, _) => OrtOeffnen(innenort);
             _aussenAuswahl.Children.Add(oeffnen);
         }
+        // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
+        AussehenTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
         {
             // Phase 13 Welle 4c (Weisung P12-32): das Gebaeude als Vorlage unter eigenem Namen
@@ -1544,7 +1552,7 @@ public sealed partial class Hauptansicht : UserControl
     private string BlueprintVorschlag(AussenStelle s)
     {
         var a = _projekt!.AussenStand;
-        var v = s.Art == AussenArt.Haus ? _daten!.OrtName(s.Ort)
+        var v = s.Art == AussenArt.Haus ? _projekt.OrtName(s.Ort)
             : Aussen.Landschaft(a).ElementAtOrDefault(s.Nummer) is PyObjekt g && Blueprint.Zierweg(a, Py.Str(g["modell"]))?["name"] is string n ? n : "";
         return Blueprint.NameGueltig(v) ? v : "";
     }

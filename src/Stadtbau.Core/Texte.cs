@@ -709,6 +709,46 @@ public static class Texte
     /// Welle Q: alle Tastenkuerzel des Werkzeugs (Fenster „Tastenkürzel“). Spalte 3 nennt die Tasten des Programms
     /// (Avalonia-Namen), damit ein Test pruefen kann, dass jede abgefragte Taste hier steht.
     /// </summary>
+    // ---- Aussehen eines Orts tauschen (Welle S 0.21.0, Weisungen P12-87/P12-88, Kurzplan Meldung P12-56) ----
+    /// <summary>Weisung P12-89: Feld „Name des Orts“ bei einem gewaehlten Ort.</summary>
+    public const string OrtNameFeld = "Name des Orts";
+
+    public const string OrtNameUebernehmen = "Namen übernehmen";
+
+    public const string OrtNameTipp = "Neuen Namen eingeben und „Namen übernehmen“ antippen. Die Kennung, der Kunde, die Aufgaben und der Innenraum bleiben gleich; Rückgängig geht.";
+
+    public const string OrtUmbenannt = "Ort umbenannt";
+
+    public const string OrtNichtGefunden = "Diesen Ort gibt es in der Stadt nicht.";
+
+    public const string AussehenTauschen = "Aussehen tauschen";
+    public const string AussehenTauschenTipp = "Dem Ort ein anderes Haus geben. Name, Aufgaben, Innenraum und Spielstände bleiben.";
+    public const string AussehenHinweis = "Vorlage antippen: das neue Haus erscheint als Schatten an der Stelle des Orts. „Übernehmen“ tauscht es (ein Schritt, Rückgängig geht).";
+    public const string AussehenUebernehmen = "Übernehmen";
+    public const string AussehenSchliessen = "Liste schließen";
+    public const string AussehenGetauscht = "Aussehen getauscht";
+    public const string AussehenAltZurueck = "Altes Aussehen zurück";
+    public const string AussehenAltZurueckTipp = "Das Haus aus der Ausgangsstadt kommt wieder, mit seinem Bahnsteig.";
+    public const string AussehenKeineVorlage = "Keine Vorlage mit Tür. Speichere ein Haus mit „Als Blueprint speichern“ oder baue eines unter „Gebäude entwerfen“.";
+    public const string AussehenAusDerStadt = "aus der Stadt";
+    public const string AussehenZuhauseNicht = "Das Zuhause lässt sich noch nicht tauschen: jede Wohnungsart braucht ein eigenes Haus.";
+    public const string AussehenOhneTuer = "Diese Vorlage hat keine Tür. Ein Ort braucht eine Tür.";
+    public const string AussehenKeinOrt = "Das ist kein Ort mit Rolle.";
+    public const string AussehenPasst = "Passt.";
+    public const string AussehenInnenBleibt = "Der Innenraum des Orts bleibt. Innenraum und Etagen der Vorlage werden hier nicht benutzt.";
+    public const string AussehenBahnsteigBleibt = "Der Bahnsteig bleibt als eigenes Stück am Gleis stehen. Du kannst ihn löschen.";
+    public const string AussehenZustandWeg = "Das alte Haus hatte Teile, die im Spiel wechseln (z. B. Gerüst oder Licht). Das neue sieht immer gleich aus.";
+
+    public static string AussehenSchonDa(string name) =>
+        "„" + name + "“ steht noch als eigenes Gebäude in der Stadt. Lösche es zuerst, dann geht das Tauschen.";
+
+    public const string AussehenPruefungLaeuft = "Prüfung läuft …";
+    public const string AussehenVorlagen = "Vorlagen";
+
+    public static string AussehenNeuRot(string fund) => "Danach rot: " + fund;
+
+    public static string AussehenVorlageName(string name, bool ausDerStadt) => ausDerStadt ? name + " (" + AussehenAusDerStadt + ")" : name;
+
     public static readonly IReadOnlyList<(string Taste, string Wirkung, string[] Tasten)> TastenListe =
     [
         ("Strg+Z / Strg+Y", "Rückgängig / Wiederholen", ["Z", "Y"]),

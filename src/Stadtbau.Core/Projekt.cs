@@ -771,6 +771,7 @@ public sealed class Projekt
         ? OrtName(basis) + ", " + Etagen.Name(Grundriss(basis), k)
         : ort == StadtOrt ? "Stadt draußen"
         : IstBau(ort) ? Texte.BauName(Bau(ort)?["name"] as string ?? ort[BauPraefix.Length..])
+        : AussenBearbeitung.Ort(AussenStand, ort)?["name"] is string n && n.Length > 0 ? n
         : Daten.OrtName(ort);
 
     /// <summary>

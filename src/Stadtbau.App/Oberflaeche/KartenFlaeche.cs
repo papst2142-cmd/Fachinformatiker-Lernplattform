@@ -285,7 +285,7 @@ public sealed class KartenFlaeche : Control
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
     public Point Bildpunkt(double x, double y) => P(x, y);
 
-    private string OrtName(string id) => _projekt?.Daten.OrtName(id) ?? id;
+    private string OrtName(string id) => _projekt?.OrtName(id) ?? id;
 
     // ---- Zeichnen --------------------------------------------------------------------------------
 
@@ -559,6 +559,7 @@ public sealed class KartenFlaeche : Control
             }
         }
         ZiehVorschauZeichnen(ctx);
+        AussehenVorschauZeichnen(ctx);
         GriffZeichnen(ctx);
     }
 
@@ -773,6 +774,55 @@ public sealed class KartenFlaeche : Control
         Gemeldet?.Invoke(Texte.ZiehenGesetzt(AussenBearbeitung.ZiehName(art), stuecke));
         Waehlen(neu);
         return neu;
+    }
+
+    // ---- Aussehen tauschen (Welle S 0.21.0, Weisungen P12-87/P12-88) ---------------------------------
+
+    private (PyObjekt Stand, string Ort, bool Gut)? _aussehenVorschau;
+
+    /// <summary>
+    /// Vorschau „Aussehen tauschen“: die Stadt nach dem Tausch (eine Kopie, nie der Stand des Projekts), der Ort und ob es
+    /// passt (gruen) oder nicht (rot). Gezeichnet werden das neue Haus als Schatten, Tuer, Fussweg und ein stehen
+    /// gebliebener Bahnsteig. null = keine Vorschau.
+    /// </summary>
+    public (PyObjekt Stand, string Ort, bool Gut)? AussehenVorschau
+    {
+        get => _aussehenVorschau;
+        set
+        {
+            _aussehenVorschau = value;
+            InvalidateVisual();
+        }
+    }
+
+    private void AussehenVorschauZeichnen(DrawingContext ctx)
+    {
+        if (_aussehenVorschau is not { } v)
+        {
+            return;
+        }
+        var farbe = v.Gut ? "#34D399" : "#F87171";
+        var s = new AussenStelle(AussenArt.Haus, -1, 0, v.Ort);
+        if (AussenBearbeitung.Gueltig(v.Stand, s))
+        {
+            var (x, y, w, h) = AussenBearbeitung.HausFlaeche(v.Stand, s);
+            var r = new Rect(P(x, y), P(x + w, y + h));
+            ctx.FillRectangle(Pinsel(farbe, 0.55), r);
+            ctx.DrawRectangle(new Pen(Pinsel("#111827"), 1.5, new DashStyle([4, 3], 0)), r);
+        }
+        if (AussenBearbeitung.Zugang(v.Stand, v.Ort) is { } z)
+        {
+            Linie(ctx, z["weg"], new Pen(Pinsel(farbe), Math.Max(2, StadtSzene.WegBreite * _zoom), lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), 0, 0);
+            var t = (List<object?>)z["tuer"]!;
+            ctx.DrawEllipse(Brushes.White, new Pen(Pinsel("#111827"), 2), P(Py.F(t[0]), Py.F(t[1])), 5, 5);
+        }
+        var land = Aussen.Landschaft(v.Stand);
+        var nr = land.FindIndex(t => t is PyObjekt g && Py.Gleich(g["modell"], Bahnsteig.ModellName(v.Ort)));
+        if (nr >= 0)
+        {
+            var (bx, by, bw, bh) = AussenBearbeitung.HausFlaeche(v.Stand, new AussenStelle(AussenArt.Gebaeude, nr));
+            ctx.DrawRectangle(Pinsel(farbe, 0.3), new Pen(Pinsel("#111827"), 1, new DashStyle([2, 2], 0)), new Rect(P(bx, by), P(bx + bw, by + bh)));
+        }
     }
 
     private void ZiehVorschauZeichnen(DrawingContext ctx)

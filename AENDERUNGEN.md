@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.52.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel darauf vor, dass ein Ort in einer neuen Stadt aus dem Stadtbau-Werkzeug ein anderes Haus bekommt.
+
+- Ein Ort kann ein anderes Aussehen haben, zum Beispiel ein kleines Stellwerk statt eines Bahnhofs. Name, Aufgaben, Kunde, Innenraum und Spielstand bleiben gleich.
+- Ein Ort kann in einer neuen Stadt einen anderen Namen bekommen, zum Beispiel „Stellwerk Talheim-Nord“. Aufgaben, Kunde, Innenraum und Spielstand bleiben gleich. Die Prüfung meldet rot, wenn ein Name leer ist, doppelt vorkommt oder länger als 28 Zeichen ist.
+- Die Prüfung für neue Städte meldet rot, wenn ein Haus nur aus Flächen besteht, wenn das Namensschild außerhalb der Karte liegt oder wenn ein Bahnsteig auf dem Gleis liegt.
+- Die Prüfung erkennt jetzt auch gedrehte Häuser richtig: ihre Tür galt bisher manchmal fälschlich als neben der Wand.
+- Die Prüfung lässt keine Stadt mehr durch, die das Spiel beim Start nicht laden könnte.
+- Am Spiel, an deinem Spielstand und an deinem Lernstand ändert sich nichts.
+
 ## A 0.51.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf abwechslungsreicheren Verkehr in neuen Städten aus dem Stadtbau-Werkzeug vor.
 

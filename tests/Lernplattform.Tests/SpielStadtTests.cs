@@ -241,10 +241,10 @@ public class SpielStadtTests
 
     // -- Tagesuhr und Oeffnungszeiten --------------------------------------------
 
-    private static Spielablauf NeuesSpiel()
+    private static Spielablauf NeuesSpiel(PyObjekt? inhalt = null)
     {
         var zaehler = 0;
-        var spiel = new Spielablauf(Inhalt, new SpielSpeicher(() =>
+        var spiel = new Spielablauf(inhalt ?? Inhalt, new SpielSpeicher(() =>
         {
             zaehler += 7;
             return new DateTime(2026, 10, 3).AddSeconds(zaehler).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
@@ -440,10 +440,11 @@ public class SpielStadtTests
     /// Zweites Szenario (nur C#): sechs Arbeitstage mit Wegen zur Arbeit, zu den Geschaeften (mit Warten)
     /// und heim; Tickets werden richtig geloest oder verschoben, abends Feierabend.
     /// </summary>
-    internal static (Spielablauf Spiel, List<object?> Stadtstaende) StadtSzenario(PyObjekt? daten = null, ISpielSpeicher? speicher = null)
+    internal static (Spielablauf Spiel, List<object?> Stadtstaende) StadtSzenario(PyObjekt? daten = null, ISpielSpeicher? speicher = null, PyObjekt? inhalt = null)
     {
-        var stadt = NeueStadt(daten);
-        var spiel = speicher is null ? NeuesSpiel() : new Spielablauf(Inhalt, speicher);
+        // Weisung P12-89: mit anderen Spielinhalten (z. B. Karte einer Fassung mit umbenanntem Ort)
+        var stadt = inhalt is null ? NeueStadt(daten) : new Stadt(inhalt, daten ?? Daten.Value);
+        var spiel = speicher is null ? NeuesSpiel(inhalt) : new Spielablauf(inhalt ?? Inhalt, speicher);
         spiel.Profil("Nico", Aussehen(), Ereignisse.Normal);
         var staende = new List<object?>();
         void Merken(StadtErgebnis e)
@@ -463,7 +464,7 @@ public class SpielStadtTests
                 }
                 var auftrag = offen[0];
                 var vorbereitet = spiel.Stand.Vorbereitet(auftrag) ?? auftrag;
-                var antwort = Bewertung.Loesung(vorbereitet, spiel.Stand.VerfuegbareTeile(vorbereitet), Inhalt) ?? new PyObjekt();
+                var antwort = Bewertung.Loesung(vorbereitet, spiel.Stand.VerfuegbareTeile(vorbereitet), inhalt ?? Inhalt) ?? new PyObjekt();
                 try
                 {
                     spiel.Loesen(auftrag["id"], antwort, tag % 3 == 0);
