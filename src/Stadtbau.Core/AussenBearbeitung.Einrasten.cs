@@ -164,7 +164,7 @@ public static partial class AussenBearbeitung
         var seite = MathF.Sign(Winkel(linie[1] - linie[0], linie[2] - linie[1]));
         foreach (var gespiegelt in new[] { false, true })
         {
-            var m = Strassenkurve.Mittellinie(f, (int)Py.F(k["winkel"]), Py.F(k["radius"]), gespiegelt);
+            var m = Strassenkurve.Mittellinie(f, Py.F(k["winkel"]), Py.F(k["radius"]), gespiegelt);
             if (m.Count == linie.Count && MathF.Sign(Winkel(m[1] - m[0], m[2] - m[1])) == seite)
             {
                 return m;

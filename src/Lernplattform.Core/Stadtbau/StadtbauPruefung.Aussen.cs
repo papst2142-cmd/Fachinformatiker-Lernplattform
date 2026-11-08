@@ -74,7 +74,9 @@ public static partial class StadtbauPruefung
             var (breite, hoehe) = (Py.F(welt["breite"]), Py.F(welt["hoehe"]));
             // Welle K1: Radien und Kurven auf den Daten (kaputtes Feld "radien" = Szene nicht bauen)
             var kurvenHeil = KurvenDaten(welt, funde);
-            if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil)
+            // Welle Z: falsch gespeicherte Fusswege = Szene nicht bauen
+            var fusswegeHeil = FusswegDaten(fassung, breite, hoehe, funde);
+            if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil || !fusswegeHeil)
             {
                 // ohne Fussweg baut das Spiel die Stadt nicht: erst diese Funde loesen
                 return funde;
@@ -138,6 +140,7 @@ public static partial class StadtbauPruefung
         KurvenRegeln(szene, fassung, funde);
         KreisverkehrRegeln(szene, fassung, funde);
         StreckenRegeln(szene, funde);
+        FusswegRegeln(szene, fassung, funde);
         return funde;
     }
 

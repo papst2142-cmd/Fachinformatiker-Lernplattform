@@ -331,6 +331,7 @@ public static partial class StadtbauMessung
         await StreckenAsync(a, f);
         await EinrastenAsync(a, f);
         await DrehenAsync(a, f);
+        await ZiehenAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

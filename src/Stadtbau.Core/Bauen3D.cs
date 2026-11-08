@@ -226,6 +226,8 @@ public static class Bauen3D
                 var p = AussenBearbeitung.EckpunkteWerte(aussen, s)[s.Punkt];
                 return [.. Umriss(aussen, AussenBearbeitung.Ganz(s)), Kreis(p.X, p.Y, 0.2)];
             }
+            case AussenArt.Fussweg:
+                return [.. Band(AussenBearbeitung.FusswegGlatt(aussen, s), Fusswege.Breite / 2)];
             case AussenArt.Steg:
             {
                 if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)
@@ -273,6 +275,37 @@ public static class Bauen3D
             ? blueprint?.SetzenUndDrehen(kopie, x, y, raster, dreh, out grund)
             : AussenBearbeitung.SetzenUndDrehen(kopie, art, x, y, raster, modell, dreh);
         return new Vorschau(kopie, s, s is null ? [] : Umriss(kopie, s), s is null ? grund ?? Texte.Bauen3DGehtNicht : null);
+    }
+
+    /// <summary>
+    /// Welle Z: Ziehen von Punkt zu Punkt wie <c>KartenFlaeche.ZiehenBis</c>, nur auf einer Kopie. Der Umriss ist das Band der
+    /// Verbindung (auch ohne passende Verbindung die gerade Linie, dann mit Grund und rot).
+    /// </summary>
+    public static Vorschau Ziehen(PyObjekt aussen, ZiehArt art, double ax, double ay, double bx, double by, bool raster)
+    {
+        var kopie = (PyObjekt)Py.Kopie(aussen)!;
+        var (_, _, plan) = AussenBearbeitung.ZiehPlan(aussen, art, ax, ay, bx, by, raster);
+        var s = AussenBearbeitung.Ziehen(kopie, art, ax, ay, bx, by, raster, out var grund);
+        return new Vorschau(kopie, s, Band(AussenBearbeitung.ZiehLinie(art, plan), AussenBearbeitung.ZiehHalb(art)), s is null ? grund ?? Texte.Bauen3DGehtNicht : null);
+    }
+
+    /// <summary>Band um einen Linienzug (mehr als zwei Punkte: ein Vieleck mit Gehrung, sonst ein Rechteck).</summary>
+    public static List<Vector2[]> Band(IReadOnlyList<Vector2> linie, float halb)
+    {
+        var ohneDoppelte = linie.Where((p, i) => i == 0 || Vector2.DistanceSquared(p, linie[i - 1]) >= 1e-8f).ToList();
+        if (ohneDoppelte.Count > 2)
+        {
+            var links = Kurve.Versetzt(ohneDoppelte, halb);
+            var rechts = Kurve.Versetzt(ohneDoppelte, -halb);
+            return [[.. links, .. Enumerable.Reverse(rechts)]];
+        }
+        if (ohneDoppelte.Count < 2)
+        {
+            return [];
+        }
+        var (a, b) = (ohneDoppelte[0], ohneDoppelte[1]);
+        var q = new Vector2(-(b - a).Y, (b - a).X) / Vector2.Distance(a, b) * halb;
+        return [[a + q, b + q, b - q, a - q]];
     }
 
     /// <summary>Verschieben wie <c>KartenFlaeche.Verschieben</c>, nur auf einer Kopie.</summary>

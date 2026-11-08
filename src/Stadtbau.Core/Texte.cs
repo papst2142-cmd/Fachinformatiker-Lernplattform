@@ -583,4 +583,27 @@ public static class Texte
     public const string EigenesGebaeudeTipp = "Das Spiel zeichnet selbst gebaute Gebäude erst mit dem Einbau; bis dahin lässt sich die Stadt mit ihnen nicht als Datei speichern. Nichts geht verloren.";
 
     public static string EigenesGebaeudeNochNicht(string name) => $"Selbst gebautes Gebäude „{name}“: kommt mit dem Einbau ins Spiel.";
+
+    // Welle Z (Weisung P12-71): Ziehen von Punkt zu Punkt und Fusswege
+    public const string StrasseZiehen = "Straße ziehen";
+    public const string StrasseZiehenTipp = "Anfang antippen, dann das Ende: das Werkzeug verbindet beide mit Geraden und Bögen und rastet an Straßenenden ein.";
+    public const string FusswegZiehen = "Fußweg ziehen";
+    public const string FusswegZiehenTipp = "Ein Weg nur zum Gehen (ohne Autos): Anfang antippen, dann das Ende; er rastet an Gehwegkanten und anderen Fußwegen ein.";
+    public const string FlussZiehen = "Fluss ziehen";
+    public const string FlussZiehenTipp = "Anfang antippen, dann das Ende: der Fluss biegt mit runden Ecken und rastet an Flussenden und am Kartenrand ein.";
+    public const string Fussweg = "Fußweg";
+    public const string Gezogen = "gezogen";
+    public const string ZiehenAnfang = "Anfang antippen (oder mit dem Finger vom Anfang zum Ende ziehen). Abbrechen: Escape, Rechtsklick oder „Setzen beenden“.";
+    public const string ZiehenEnde = "Ende antippen. Abbrechen: Escape, Rechtsklick oder „Setzen beenden“.";
+    public const string ZiehenAbgebrochen = "Anfang verworfen, neuen Anfang antippen.";
+    public const string ZiehenZuKurz = "Anfang und Ende liegen zu nah beieinander.";
+    public const string ZiehenHinten = "Das Ende liegt hinter dem Anfang: so eng kann der Bogen nicht drehen.";
+    public const string ZiehenZuEng = "Keine Verbindung mit den erlaubten Radien: zu eng. Das Ende weiter weg oder anders ansetzen.";
+    public const string ZiehenAusserhalb = "Die Verbindung läge nicht ganz auf der Karte.";
+    public const string FusswegDrehenNicht = "Einen Fußweg zieht man neu, statt ihn zu drehen.";
+
+    public static string ZiehenRichtung(double grad) => string.Create(CultureInfo.GetCultureInfo("de-DE"),
+        $"Die beiden Enden passen nicht zu Bögen in Schritten von 7,5 Grad (es fehlen {grad:0.#} Grad). Ein Ende auf ein Vielfaches von 7,5 Grad drehen.");
+
+    public static string ZiehenGesetzt(string art, int stuecke) => stuecke <= 1 ? art + " gezogen" : $"{art} gezogen ({stuecke} Stücke)";
 }

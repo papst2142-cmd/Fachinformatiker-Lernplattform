@@ -96,6 +96,32 @@ public class PruefungKurvenTests
     }
 
     [Fact]
+    public void Regel1_GezogeneBoegen_In7_5GradMitRadius1Bis3()
+    {
+        // Welle Z (Weisung P12-71): gezogene Boegen von 15 bis 90 Grad in Schritten von 7,5 Grad, Radius 1, 2 oder 3
+        var a = Aussen.Aus(Aussen.Leer(D.Fassung, "neu_kurven", 24, 16));
+        Strasse(a, 2, 8, 8, 8);
+        var k = Kurve(a, "bogen", 90, 2, new Vector2(8, 8));
+        Py.Setzen(Objekt(k["kurve"]), "winkel", 22.5);
+        Py.Setzen(Objekt(k["kurve"]), "radius", 1.0);
+        Assert.DoesNotContain(Pruefen(a), f => f.Text.StartsWith("Die Kurve (Straße Nr. 2) hat eine Form", StringComparison.Ordinal));
+        Py.Setzen(Objekt(k["kurve"]), "winkel", 20.0);
+        Rot(a, "Die Kurve (Straße Nr. 2) hat eine Form oder einen Radius, die es nicht gibt.");
+        Py.Setzen(Objekt(k["kurve"]), "winkel", 7.5);
+        Rot(a, "Die Kurve (Straße Nr. 2) hat eine Form oder einen Radius, die es nicht gibt.");
+        Py.Setzen(Objekt(k["kurve"]), "winkel", 22.5);
+        Py.Setzen(Objekt(k["kurve"]), "radius", 4.0);
+        Rot(a, "Die Kurve (Straße Nr. 2) hat eine Form oder einen Radius, die es nicht gibt.");
+        // ein gezogener Bogen mit echten Punkten hat keinen Fund
+        var b = Aussen.Aus(Aussen.Leer(D.Fassung, "neu_kurven", 24, 16));
+        AussenBearbeitung.Ziehen(b, ZiehArt.Strasse, 2, 8, 8, 8, true, out _);
+        AussenBearbeitung.Ziehen(b, ZiehArt.Strasse, 8, 8, 14, 10, true, out var grund);
+        Assert.Null(grund);
+        Assert.Contains(Aussen.Landschaft(b).OfType<PyObjekt>(), l => Strassenkurve.IstKurve(l) && Py.F(Objekt(l["kurve"])["winkel"]) is > 0 and < 90);
+        Gruen(b);
+    }
+
+    [Fact]
     public void Regel2_KreuzungOderEinmuendungInDerKurve()
     {
         // eine Strasse muendet in den Bogen (Ende auf der Mittellinie mitten im Bogen)
