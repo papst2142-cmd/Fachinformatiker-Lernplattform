@@ -38,6 +38,12 @@ public sealed class Entwurf
     /// <summary>Innenraum des Blueprints, aus dem weitergebaut wird (bleibt, solange Grundflaeche und Eingang gleich sind).</summary>
     public PyObjekt? Innenraum { get; init; }
 
+    /// <summary>
+    /// S 0.19.0 (Nico 3a): „Vorschlag neu“ im Editor gedrueckt: beim Speichern werden die Etagen des behaltenen Innenraums
+    /// neu aus dem Entwurf angelegt (das Erdgeschoss bleibt).
+    /// </summary>
+    public bool EtagenNeu { get; set; }
+
     private readonly List<string> _zurueck = [];
     private readonly List<string> _vor = [];
 
@@ -330,7 +336,16 @@ public sealed class Entwurf
     /// Eingang, Innenraum (vorhandener, wenn Grundflaeche und Eingang gleich blieben, sonst der Vorschlag), Feld
     /// <c>bauteile</c>. Nur bei roten Funden ist das nicht moeglich (<see cref="StadtbauFehler"/>).
     /// </summary>
-    public Blueprint AlsBlueprint(string name, Func<string, GrafikModell?> modell, string projekt, string stadt, out bool grundrissNeu)
+    public Blueprint AlsBlueprint(string name, Func<string, GrafikModell?> modell, string projekt, string stadt, out bool grundrissNeu) =>
+        AlsBlueprint(name, modell, projekt, stadt, out grundrissNeu, out _);
+
+    /// <summary>
+    /// Wie oben; S 0.19.0 (Weisung P12-80, Nico 1a 2a 3a): die Ebenen ueber dem Erdgeschoss werden Etagen mit Treppenhaus
+    /// (<see cref="EtagenAusEntwurf.Neu"/>). Ein vorhandener Innenraum mit Etagen bleibt, wie er ist (3a: der Hinweis
+    /// „Vorschlag neu“ kommt aus der Pruefung); ein vorhandener ohne Etagen bekommt sie dazu.
+    /// <paramref name="etagenNeu"/> = Zahl der neu angelegten Etagen.
+    /// </summary>
+    public Blueprint AlsBlueprint(string name, Func<string, GrafikModell?> modell, string projekt, string stadt, out bool grundrissNeu, out int etagenNeu)
     {
         var rot = Pruefen(modell).Where(f => f.Rot).Select(f => f.Text).ToList();
         if (rot.Count > 0)
@@ -354,6 +369,13 @@ public sealed class Entwurf
         var vorschlag = GrundrissVorschlag()!;
         var alt = Innenraum is not null && Innenraum["breite"] is not null && Gleich(Innenraum, vorschlag);
         grundrissNeu = !alt;
+        var innen = alt ? Innenraum! : vorschlag;
+        etagenNeu = 0;
+        if ((alt && EtagenNeu) || (!Etagen.Hat(innen) && EtagenAusEntwurf.Anzahl(Teile, Eingaenge) > 0))
+        {
+            innen = (PyObjekt)Py.Kopie(innen)!;
+            etagenNeu = EtagenAusEntwurf.Neu(innen, Teile, Eingaenge);
+        }
         return new Blueprint
         {
             Name = name,
@@ -363,7 +385,7 @@ public sealed class Entwurf
             Tuer = [Z(tx), Z(ty)],
             Weg = [new List<object?> { Z(tx), Z(ty) }, new List<object?> { Z(tx + (dx * WegVorDerTuer)), Z(ty + (dy * WegVorDerTuer)) }],
             Schild = null,
-            Innenraum = alt ? Innenraum : vorschlag,
+            Innenraum = innen,
             Personen = [],
             Bauteile = Bauteile.TeileDaten(Teile),
             Eingang = Bauteile.EingaengeDaten(Eingaenge),
@@ -498,18 +520,39 @@ public sealed class Entwurf
                 }
             }
         }
+        funde.AddRange(EtagenHinweise());
         return funde;
+    }
+
+    /// <summary>
+    /// S 0.19.0 (Nico 3a): behaelt das Speichern den Innenraum mit Etagen und passen sie nicht mehr zu den Ebenen, ein gelber
+    /// Hinweis je Abweichung (im Editor auch die Regel 5a nur gelb: Speichern bleibt moeglich, nichts geht verloren; rot ist sie
+    /// im Innenraum des gesetzten Gebaeudes). Nach „Vorschlag neu“ (<see cref="EtagenNeu"/>) keiner.
+    /// </summary>
+    public List<StadtbauFund> EtagenHinweise()
+    {
+        if (EtagenNeu || Innenraum is null || !Etagen.Hat(Innenraum) || Innenraum["breite"] is null || GrundrissVorschlag() is not { } v || !Gleich(Innenraum, v))
+        {
+            return [];
+        }
+        return [.. EtagenAusEntwurf.Pruefen(Innenraum, Teile, Eingaenge).Select(f => f.Fund with { Rot = false })];
     }
 
     /// <summary>
     /// Probehaus fuer Start-Test und Fotos: 3 × 2 Felder, Erdgeschoss und 1. OG mit Fensterwaenden und Fensterecken, Tuer vorne
     /// in der Mitte, Flachdach mit zwei Klimageraeten (20 Teile, 2 Stockwerke und Dach).
     /// </summary>
-    public static Entwurf Probehaus()
+    public static Entwurf Probehaus() => Probehaus(2);
+
+    /// <summary>
+    /// Probehaus mit <paramref name="stockwerke"/> Stockwerken (1 bis 5; S 0.19.0: 3 = EG und zwei Obergeschosse fuer Fotos und
+    /// Start-Test der Etagen), Flachdach darueber.
+    /// </summary>
+    public static Entwurf Probehaus(int stockwerke)
     {
         var e = new Entwurf();
         const string p = Bauteile.Praefix;
-        for (var stock = 0; stock < 2; stock++)
+        for (var stock = 0; stock < stockwerke; stock++)
         {
             // vorne (Sued): Ecken links und rechts, Mitte Tuer bzw. Fenster
             e.Setzen(p + "building-corner-window", 0, 1, stock, 1);
@@ -524,11 +567,11 @@ public sealed class Entwurf
         {
             for (var y = 0; y < 2; y++)
             {
-                e.Setzen(p + "roof-flat-center", x, y, 2, 0);
+                e.Setzen(p + "roof-flat-center", x, y, stockwerke, 0);
             }
         }
-        e.Setzen(p + "detail-ac-a", 0, 0, 2, 0);
-        e.Setzen(p + "detail-ac-a", 2, 0, 2, 1);
+        e.Setzen(p + "detail-ac-a", 0, 0, stockwerke, 0);
+        e.Setzen(p + "detail-ac-a", 2, 0, stockwerke, 1);
         e.EingangFestlegen(e.Teile.FindIndex(t => t.Name == "building-door-window"));
         return e;
     }

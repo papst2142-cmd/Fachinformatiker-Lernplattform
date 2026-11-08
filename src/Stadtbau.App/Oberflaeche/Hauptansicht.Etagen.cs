@@ -89,6 +89,18 @@ public sealed partial class Hauptansicht
             reihe.Children.Add(weg);
         }
         _etagenTafel.Children.Add(reihe);
+        // S 0.19.0 (Nico 3a): passt der Innenraum nicht mehr zum Entwurf, gelber Hinweis mit „Vorschlag neu“
+        VorschlagNeuKnopf = null;
+        if (_projekt.HatEntwurf(basis) && _projekt.EtagenEntwurfFunde(basis) is { Count: > 0 } abweichung)
+        {
+            var hinweis = Schrift.Text(string.Join(" ", abweichung.Select(f => f.Fund.Text)), "Klein", farbe: abweichung.Any(f => f.Fund.Rot) ? "Pinsel.red" : "Pinsel.orange");
+            hinweis.TextWrapping = TextWrapping.Wrap;
+            var neu = Schrift.Knopf(Texte.EtagenVorschlagNeu).Vorlese(Texte.EtagenVorschlagNeu).Mit(Texte.EtagenVorschlagNeuKnopfTipp);
+            neu.Click += async (_, _) => await EtagenVorschlagNeuAsync();
+            VorschlagNeuKnopf = neu;
+            _etagenTafel.Children.Add(hinweis);
+            _etagenTafel.Children.Add(neu);
+        }
         if (etage > 0)
         {
             var feld = new TextBox { Text = Etagen.Name(eg, etage), HorizontalAlignment = HorizontalAlignment.Stretch, MaxLength = 40 };
@@ -110,6 +122,34 @@ public sealed partial class Hauptansicht
             k.IsEnabled = !_projekt.NurLesen;
         }
     }
+
+    /// <summary>Knopf „Vorschlag neu“ beim letzten Zeigen (null = keiner, Start-Test).</summary>
+    internal Button? VorschlagNeuKnopf { get; private set; }
+
+    /// <summary>„Vorschlag neu“ (Nico 3a): mit Rueckfrage, dann Etagen und Treppenhaus neu aus dem Entwurf (ein Schritt).</summary>
+    private async Task EtagenVorschlagNeuAsync(bool ohneFrage = false)
+    {
+        if (_projekt is null || _ort is null || _projekt.NurLesen)
+        {
+            return;
+        }
+        if (!ohneFrage && await Dialog.Zeigen(Texte.EtagenVorschlagNeuTitel, Texte.EtagenVorschlagNeuFrage, Texte.Abbrechen, Texte.EtagenVorschlagNeu) != 1)
+        {
+            return;
+        }
+        var basis = Etagen.Teilen(_ort).Ort;
+        // erst ins Erdgeschoss (die gezeigte Etage gibt es danach vielleicht nicht mehr)
+        OrtOeffnen(basis);
+        var n = _projekt.EtagenVorschlagNeu(basis, Texte.EtagenVorschlagNeu);
+        if (n >= 0)
+        {
+            OrtOeffnen(basis);
+            Melden(Texte.EtagenVorschlagGemacht(n));
+        }
+    }
+
+    /// <summary>Start-Test: „Vorschlag neu“ ohne Rueckfrage.</summary>
+    internal Task EtagenVorschlagNeuFuerTests() => EtagenVorschlagNeuAsync(ohneFrage: true);
 
     /// <summary>„Etage hinzufügen“: neue Etage oben (hoechstens 4, sonst Hinweis in einfachen Worten, Nico 4a), dann zeigen.</summary>
     private void EtageHinzufuegen()

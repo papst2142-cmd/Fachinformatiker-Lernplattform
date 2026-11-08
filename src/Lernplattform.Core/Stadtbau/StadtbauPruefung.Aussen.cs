@@ -52,8 +52,13 @@ public static partial class StadtbauPruefung
 
     /// <summary>
     /// Spielstand fuer Pruefung, 3D-Ansicht und Probe: ein neuer Stand ohne Speicher, in dem alle Orte zu sehen sind
-    /// (200 fertige Tage, eigene Firma auf der hoechsten Stufe, Zweigstelle), wie die Tests des Spiels.
+    /// (200 fertige Tage, eigene Firma auf der hoechsten Stufe, Zweigstelle, Serverfarm frei), wie die Tests des Spiels.
+    /// Nur Werkzeug und Tests rufen ihn; das Spiel nutzt immer den echten Spielstand.
     /// </summary>
+    /// <remarks>
+    /// Sammelliste 238 (Weisungen P12-81/P12-83): bis S 0.18.0 fehlte die Serverfarm, darum fehlte das Rechenzentrum
+    /// Lokschuppen in der 3D-Ansicht des Werkzeugs und die Pruefung draussen pruefte es nicht (falsches Gruen).
+    /// </remarks>
     public static Spielablauf Probestand(PyObjekt inhalt)
     {
         var ablauf = new Spielablauf(inhalt);
@@ -61,8 +66,21 @@ public static partial class StadtbauPruefung
         ablauf.Stand.TageFertig = 200;
         ablauf.Stand.Firma = new PyObjekt { { "stufe", 5L }, { "name", "Probe" }, { "tag", 1L } };
         ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L }, { "tag", 1L } };
+        if (!ProbestandOhneFarmFuerTests)
+        {
+            ablauf.Stand.FarmFrei = 1L;
+        }
         return ablauf;
     }
+
+    /// <summary>Gegenprobe Sammelliste 238: Probestand wie bis S 0.18.0 (ohne Serverfarm).</summary>
+    public static bool ProbestandOhneFarmFuerTests
+    {
+        get => OhneFarm.Value;
+        set => OhneFarm.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> OhneFarm = new();
 
     /// <summary>Alle Regeln aussen fuer eine Fassung (Spielinhalte wie bei <see cref="Inhalt"/>); leer = in Ordnung.</summary>
     public static List<StadtbauFund> Aussen(StadtFassung fassung, PyObjekt inhalt, GrafikBibliothek? grafik, PyObjekt? feste = null)

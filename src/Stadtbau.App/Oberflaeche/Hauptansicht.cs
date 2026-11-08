@@ -2402,6 +2402,8 @@ public sealed partial class Hauptansicht : UserControl
         // Welle W5: eine Etage „ort@k“ prueft mit dem Ort und der Etage, dazu die Regeln zwischen den Etagen (wie Projekt.PruefenMitGrenzen)
         var (basis, etage) = Etagen.Teilen(ort);
         var eg = Etagen.Hat(_projekt.Grundriss(basis)) ? (PyObjekt)Py.Kopie(_projekt.Grundriss(basis))! : null;
+        // S 0.19.0 (Nico 3a, 5a): Etagen eines selbst gebauten Gebaeudes gegen die Ebenen seines Entwurfs (schnell, ohne Grafik)
+        var entwurfFunde = _projekt.EtagenEntwurfFunde(basis).Where(f => f.Etage == etage).Select(f => f.Fund).ToList();
         if (_geprueft.Task.IsCompleted)
         {
             _geprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -2415,6 +2417,7 @@ public sealed partial class Hauptansicht : UserControl
             {
                 funde.AddRange(StadtbauPruefung.Etagen(basis, eg, daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
             }
+            funde.AddRange(entwurfFunde);
             return (funde, grenzen);
         })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {

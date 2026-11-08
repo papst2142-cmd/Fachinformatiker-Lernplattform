@@ -99,7 +99,7 @@ public static class EtagenBearbeitung
     private static PyObjekt? UebergangDaten(PyObjekt eg, string id) =>
         (Get(eg, Etagen.FeldUebergaenge) as List<object?> ?? []).OfType<PyObjekt>().FirstOrDefault(u => Get(u, "id") as string == id);
 
-    private static PyObjekt HaltDaten(PyObjekt d, int etage)
+    internal static PyObjekt HaltDaten(PyObjekt d, int etage)
     {
         var (x, y, blick) = Etagen.Vor(d);
         return new PyObjekt

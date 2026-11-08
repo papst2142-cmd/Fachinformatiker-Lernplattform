@@ -648,6 +648,20 @@ public static class Texte
     public const string FahrstuhlZieleTipp = "Haken setzen: auf dieser Etage hält der Fahrstuhl (das Werkzeug setzt dort einen Fahrstuhl an dieselbe Stelle).";
     public const string BlickDrehen = "Blick drehen";
     public const string BlickDrehenTipp = "Dreht die Blickrichtung der Figur bei der Ankunft um eine Vierteldrehung.";
+
+    // S 0.19.0 (Weisung P12-80, Plan P12-51): Etagen aus dem Entwurf
+    public static string EtageFehltImInnenraum(string ebene) => $"Die Ebene {ebene} hat im Entwurf Wände, aber keine Etage: noch nicht begehbar.";
+    public static string EtageRagtHinaus(string etage, string ebene) => $"Das {etage} ragt über die Grundfläche der Ebene {ebene} im Entwurf hinaus.";
+    public const string EtageRagtHinausTipp = "Eine Etage liegt ganz in den Wänden ihrer Ebene. „Vorschlag neu“ passt die Etagen an den Entwurf an, oder Breite und Tiefe verkleinern.";
+    public static string EtagePasstNichtMehr(string etage, string ebene) => $"Das {etage} passt nicht mehr zur Ebene {ebene} im Entwurf (kleiner als ihre Grundfläche).";
+    public const string EtagenVorschlagNeuTipp = "„Vorschlag neu“ legt die Etagen mit Treppenhaus neu aus dem Entwurf an. Die Einrichtung der Obergeschosse geht dabei verloren, das Erdgeschoss bleibt.";
+    public const string EtagenVorschlagNeu = "Vorschlag neu";
+    public const string EntwurfVorschlagNeuTipp = "Beim Speichern werden die Obergeschosse und das Treppenhaus neu aus dem Entwurf angelegt. Ihre Einrichtung geht dabei verloren, das Erdgeschoss bleibt.";
+    public const string EtagenVorschlagNeuKnopfTipp = "Legt die Obergeschosse und das Treppenhaus neu aus dem Entwurf an. Rückgängig holt die alten Etagen zurück.";
+    public const string EtagenVorschlagNeuTitel = "Etagen neu vorschlagen";
+    public const string EtagenVorschlagNeuFrage = "Die Obergeschosse mit ihrer Einrichtung und das Treppenhaus werden neu aus dem Entwurf angelegt. Das Erdgeschoss bleibt. Weiter?";
+    public static string EtagenVorschlagGemacht(int anzahl) => anzahl == 0 ? "Keine Etagen: der Entwurf hat keine Wände über dem Erdgeschoss." : anzahl == 1 ? "1 Etage mit Treppe neu vorgeschlagen" : $"{anzahl} Etagen mit Treppenhaus neu vorgeschlagen";
+    public static string EntwurfEtagenAngelegt(int anzahl) => anzahl == 1 ? "Das 1. Obergeschoss wurde mit einer Treppe angelegt." : $"{anzahl} Obergeschosse wurden mit Treppenhaus angelegt.";
     public const string AnkunftHinweis = "Der Pfeil vor dem Stück ist die Ankunft: dort steht die Figur nach dem Wechsel und schaut in Pfeilrichtung. Ziehe ihn, um ihn zu verschieben.";
     public const string AnkunftVerschoben = "Ankunft verschoben";
     public const string ZielGesetzt = "Ziel gesetzt";
