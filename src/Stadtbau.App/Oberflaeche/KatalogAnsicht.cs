@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Lernplattform.Design;
 using Lernplattform.Views;
@@ -210,22 +211,90 @@ public sealed class KatalogAnsicht : Border
     public const double NamenPlatz = Kachel - 12 - 1;
 
     /// <summary>
-    /// Sammelliste 222 (Weisung P12-78): Schriftgroesse eines Kachel-Namens. Passt das laengste Wort bei
-    /// <paramref name="soll"/> in <see cref="NamenPlatz"/>, bleibt sie; sonst so klein, dass es passt (auf 0,25 abgerundet),
-    /// hoechstens bis <see cref="MinAnteil"/> × soll. <c>Passt</c> = das laengste Wort passt bei der Groesse.
+    /// Sammelliste 222 (Weisungen P12-78, P12-79): Schriftgroesse eines Kachel-Namens. Ein Name passt, wenn sein laengstes
+    /// Wort in <see cref="NamenPlatz"/> passt (kein Wort mitten getrennt) UND der ganze Name dort in hoechstens
+    /// <see cref="NamenZeilen"/> Zeilen steht (nie "…"). Passt er bei <paramref name="soll"/>, bleibt sie; sonst wird er in
+    /// Schritten von 0,25 kleiner, hoechstens bis <see cref="MinAnteil"/> × soll. <c>Passt</c> = er passt bei der Groesse.
     /// </summary>
     public static (double Groesse, bool Passt) NamensGroesse(string text, double soll)
     {
         var familie = Application.Current?.TryGetResource("ContentControlThemeFontFamily", null, out var f) == true && f is FontFamily ff
             ? ff : FontFamily.Default;
         var schrift = new Typeface(familie, FontStyle.Normal, FontWeight.Normal);
-        var breite = LernText.LaengstesWort(text, schrift, soll);
-        if (breite <= NamenPlatz)
+        var g = soll;
+        while (true)
         {
-            return (soll, true);
+            if (NamePasst(text, schrift, g))
+            {
+                return (g, true);
+            }
+            var kleiner = Math.Floor((g - 0.25) * 4) / 4;
+            if (kleiner < soll * MinAnteil)
+            {
+                return (g, false);
+            }
+            g = kleiner;
         }
-        var g = Math.Max(soll * MinAnteil, Math.Floor(soll * NamenPlatz / breite * 4) / 4);
-        return (g, LernText.LaengstesWort(text, schrift, g) <= NamenPlatz);
+    }
+
+    /// <summary>Hoechstzahl der Zeilen eines Kachel-Namens.</summary>
+    public const int NamenZeilen = 2;
+
+    /// <summary>Zeilen des Namens bei der Groesse, umbrochen wie in der Kachel (ohne Begrenzung der Zeilen).</summary>
+    public static int Zeilen(string text, Typeface schrift, double groesse)
+    {
+        using var layout = new Avalonia.Media.TextFormatting.TextLayout(text, schrift, groesse, null, TextAlignment.Center,
+            TextWrapping.Wrap, maxWidth: NamenPlatz);
+        return layout.TextLines.Count;
+    }
+
+    private static bool NamePasst(string text, Typeface schrift, double groesse) =>
+        LernText.LaengstesWort(text, schrift, groesse) <= NamenPlatz && Zeilen(text, schrift, groesse) <= NamenZeilen;
+
+    /// <summary>
+    /// Der Name einer Kachel. Sammelliste 222: ein langes deutsches Wort ("Christbaumständer") oder ein Name, der drei
+    /// Zeilen braucht, passt sonst nicht in die Kachel; dann wird nur dieser Name kleiner, hoechstens bis MinAnteil.
+    /// </summary>
+    public static TextBlock NamensText(string anzeige)
+    {
+        var name = Schrift.Text(anzeige, "Klein");
+        if (NamensGroesse(anzeige, Schrift.Grundgroessen["Klein"] * Schrift.Faktor) is var (groesse, _) && groesse < Schrift.Grundgroessen["Klein"] * Schrift.Faktor)
+        {
+            name = new TextBlock { Text = anzeige, FontSize = groesse }.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+        }
+        name.TextWrapping = TextWrapping.Wrap;
+        name.TextAlignment = TextAlignment.Center;
+        name.MaxLines = NamenZeilen;
+        name.TextTrimming = TextTrimming.CharacterEllipsis;
+        name.Tag = "name";
+        return name;
+    }
+
+    /// <summary>Der Name-Text einer Kachel (Start-Test).</summary>
+    public static TextBlock? KachelName(Button kachel) =>
+        (kachel.Content as StackPanel)?.GetLogicalDescendants().OfType<TextBlock>().FirstOrDefault(t => Equals(t.Tag, "name"));
+
+    /// <summary>
+    /// Weisung P12-79: true, wenn der gezeichnete Name gekuerzt ("…") ist oder ein Wort mitten getrennt wurde (Start-Test
+    /// prueft jede gezeigte Kachel in jeder Groesse).
+    /// </summary>
+    public static bool NameGekuerzt(TextBlock name)
+    {
+        var zeilen = name.TextLayout.TextLines;
+        if (zeilen.Any(z => z.HasCollapsed))
+        {
+            return true;
+        }
+        var text = name.Text ?? "";
+        foreach (var z in zeilen.Take(zeilen.Count - 1))
+        {
+            var ende = z.FirstTextSourceIndex + z.Length;
+            if (ende > 0 && ende < text.Length && !char.IsWhiteSpace(text[ende - 1]) && text[ende - 1] != '-' && !char.IsWhiteSpace(text[ende]))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>Gegenprobe des Start-Tests: Kacheln wie vor der Nachbesserung (Hoehe nach Namen, "Effekt" als eigene Zeile).</summary>
@@ -233,23 +302,13 @@ public sealed class KatalogAnsicht : Border
 
     /// <summary>
     /// Eine Kachel (Weisung P12-25 Abschnitt 3 Punkt 1): alle gleich breit und gleich hoch, oben buendig, das Bild an
-    /// derselben Stelle. Der Name hat immer Platz fuer genau 2 Zeilen (laenger: mit "…" gekuerzt, voll im Tipp); ein
+    /// derselben Stelle. Der Name hat immer Platz fuer genau 2 Zeilen (jeder Name passt hinein, der Start-Test prueft alle; "…" nur als Sicherung); ein
     /// Effekt ist ein Schild auf dem Bild, keine eigene Zeile.
     /// </summary>
     private Button KachelBauen(KatalogEintrag e)
     {
         var bild = KatalogBilder.Bild(e);
-        var name = Schrift.Text(e.Anzeige, "Klein");
-        if (NamensGroesse(e.Anzeige, Schrift.Grundgroessen["Klein"] * Schrift.Faktor) is var (groesse, _) && groesse < Schrift.Grundgroessen["Klein"] * Schrift.Faktor)
-        {
-            // Sammelliste 222: ein langes deutsches Wort ("Christbaumständer") passt sonst nicht in die Kachel und wuerde
-            // mitten im Wort getrennt; dann wird nur dieser Name kleiner, hoechstens bis MinAnteil
-            name = new TextBlock { Text = e.Anzeige, FontSize = groesse }.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
-        }
-        name.TextWrapping = TextWrapping.Wrap;
-        name.TextAlignment = TextAlignment.Center;
-        name.MaxLines = 2;
-        name.TextTrimming = TextTrimming.CharacterEllipsis;
+        var name = NamensText(e.Anzeige);
         // Platz fuer genau 2 Zeilen: ein unsichtbarer Platzhalter mit 2 Zeilen in derselben Zelle (gleiche Schrift und
         // Stufe, waechst also mit der Schriftgroesse mit), darueber der Name
         Control namensFeld = name;
