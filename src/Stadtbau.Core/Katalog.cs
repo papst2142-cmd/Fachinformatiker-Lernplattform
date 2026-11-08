@@ -16,11 +16,12 @@ public enum KatalogArt
 }
 
 /// <summary>
-/// Ein Eintrag des vollen CC0-Katalogs (Weisung P12-19): Kennung "paket/name", Anzeige, Gruppe, Dreiecke (echte Zahl des
+/// Ein Eintrag des vollen CC0-Katalogs (Weisung P12-19): Kennung "paket/name", Anzeige (deutsch seit S 0.18.0, Weisung
+/// P12-78, aus <c>inhalte_stadtbau/namen_de.json</c>), englischer Name des Pakets, Gruppe, Dreiecke (echte Zahl des
 /// Modells; ein Effekt zaehlt als leuchtendes Zeichen mit 2 Dreiecken), Kasten des Modells, Vorgabegroesse innen und
 /// draussen (Breite, Tiefe, Hoehe), Feld im Vorschaubild des Pakets, Hauptfarbe (Effekt) und Suchtext.
 /// </summary>
-public sealed record KatalogEintrag(string Id, string Name, string Anzeige, string Paket, string Gruppe, KatalogArt Art, int Feld,
+public sealed record KatalogEintrag(string Id, string Name, string Anzeige, string Englisch, string Paket, string Gruppe, KatalogArt Art, int Feld,
     int Dreiecke, double[] Innen, double[] Aussen, string? Farbe, string Suche)
 {
     /// <summary>Typ eines Stuecks im Innenraum bzw. Kennung draussen: "cc0:paket/name".</summary>
@@ -39,6 +40,13 @@ public sealed class Katalog
     public const string Praefix = "cc0:";
 
     public const string Ordner = "inhalte_stadtbau/grafik/";
+
+    /// <summary>
+    /// Sammelliste 222 (Weisung P12-78): deutsche Namen je Kennung ({"format": 1, "namen": {"paket/name": "Name"}}).
+    /// Jeder Eintrag braucht genau einen Namen, alle verschieden, kein Name ohne Eintrag; sonst Fehler (nie still englisch).
+    /// Die Kennung bleibt, Projekte und Fassungen aendern sich nicht.
+    /// </summary>
+    public const string NamenDatei = "inhalte_stadtbau/namen_de.json";
 
     private readonly Func<string, byte[]?> _lesen;
     private readonly Dictionary<string, KatalogEintrag> _nachId;
@@ -126,18 +134,52 @@ public sealed class Katalog
             titel[p.Name] = p.Value.GetProperty("titel").GetString()!;
             summen[p.Name] = p.Value.GetProperty("dateien").EnumerateObject().ToDictionary(d => d.Name, d => d.Value.GetString()!, StringComparer.Ordinal);
         }
+        var namen = NamenLesen(lesen);
         var liste = new List<KatalogEintrag>();
         foreach (var m in w.GetProperty("modelle").EnumerateArray())
         {
             static double[] Zahlen(JsonElement e) => [.. e.EnumerateArray().Select(z => z.GetDouble())];
+            var id = m.GetProperty("id").GetString()!;
+            var deutsch = namen.Remove(id, out var n) ? n : throw new InvalidDataException(NamenDatei + ": kein deutscher Name fuer " + id);
             liste.Add(new KatalogEintrag(
-                m.GetProperty("id").GetString()!, m.GetProperty("name").GetString()!, m.GetProperty("anzeige").GetString()!,
+                id, m.GetProperty("name").GetString()!, deutsch, m.GetProperty("anzeige").GetString()!,
                 m.GetProperty("paket").GetString()!, m.GetProperty("gruppe").GetString()!,
                 m.GetProperty("art").GetString() == "effekt" ? KatalogArt.Effekt : KatalogArt.Modell, m.GetProperty("feld").GetInt32(),
                 m.GetProperty("dreiecke").GetInt32(), Zahlen(m.GetProperty("innen")), Zahlen(m.GetProperty("aussen")),
-                m.TryGetProperty("farbe", out var f) ? f.GetString() : null, Normal(m.GetProperty("suche").GetString()!)));
+                m.TryGetProperty("farbe", out var f) ? f.GetString() : null, Normal(m.GetProperty("suche").GetString()! + " " + deutsch)));
+        }
+        if (namen.Count > 0)
+        {
+            throw new InvalidDataException(NamenDatei + ": Name ohne Katalog-Eintrag: " + string.Join(", ", namen.Keys.Order(StringComparer.Ordinal)));
         }
         return new Katalog(lesen, liste, gruppen, titel, summen, w.GetProperty("feld").GetInt32(), w.GetProperty("spalten").GetInt32());
+    }
+
+    /// <summary>Die deutschen Namen (geprueft: Format 1, kein Name leer, keine zwei gleich).</summary>
+    private static Dictionary<string, string> NamenLesen(Func<string, byte[]?> lesen)
+    {
+        var json = lesen(NamenDatei) ?? throw new FileNotFoundException("Katalog: " + NamenDatei + " fehlt");
+        using var doc = JsonDocument.Parse(json);
+        if (doc.RootElement.GetProperty("format").GetInt32() != 1)
+        {
+            throw new InvalidDataException(NamenDatei + ": unbekanntes Format");
+        }
+        var namen = new Dictionary<string, string>(StringComparer.Ordinal);
+        var vergeben = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var p in doc.RootElement.GetProperty("namen").EnumerateObject())
+        {
+            var name = p.Value.GetString();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new InvalidDataException(NamenDatei + ": leerer Name fuer " + p.Name);
+            }
+            if (!vergeben.Add(name))
+            {
+                throw new InvalidDataException(NamenDatei + ": Name doppelt: " + name);
+            }
+            namen[p.Name] = name;
+        }
+        return namen;
     }
 
     /// <summary>Ist <paramref name="typ"/> ein Katalog-Typ ("cc0:...")?</summary>

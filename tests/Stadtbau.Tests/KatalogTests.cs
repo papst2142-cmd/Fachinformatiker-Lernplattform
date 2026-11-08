@@ -59,7 +59,7 @@ public class KatalogTests
             gelesen.Add(p);
             return Daten.Lesen(p);
         });
-        Assert.Equal([Katalog.Ordner + "katalog.json"], gelesen);
+        Assert.Equal([Katalog.Ordner + "katalog.json", Katalog.NamenDatei], gelesen);
         Assert.Empty(k.GeleseneModellPakete);
         Assert.Empty(k.GeleseneVorschauPakete);
         _ = k.Vorschaubild("furniture");
@@ -67,7 +67,7 @@ public class KatalogTests
         Assert.Empty(k.GeleseneModellPakete);
         _ = k.Modell(k.Eintrag("furniture/chair")!);
         Assert.Equal(["furniture"], k.GeleseneModellPakete);
-        Assert.Equal(3, gelesen.Count);
+        Assert.Equal(4, gelesen.Count);
     }
 
     [Fact]
@@ -175,7 +175,8 @@ public class KatalogTests
         var (stelle, _) = Bearbeitung.Alle(g).First(s => ReferenceEquals(s.Deko, regal));
         Liste(Bearbeitung.Bereich(g, stelle.Bereich)["deko"]).Add(Stueck("cc0:furniture/chair", Py.F(regal["x"]), Py.F(regal["y"]), 0.7, 0.7));
         var funde = Innen(K, "moebelhaus", g).Funde;
-        Assert.True(funde.Any(f => f.Rot && f.Text.Contains("überschneiden", StringComparison.Ordinal) && f.Text.Contains("Chair", StringComparison.Ordinal)),
+        Assert.True(funde.Any(f => f.Rot && f.Text.Contains("überschneiden", StringComparison.Ordinal) && f.Text.Contains("„" + K.Eintrag("furniture/chair")!.Anzeige + "“", StringComparison.Ordinal)
+            && !f.Text.Contains("Chair", StringComparison.Ordinal)),
             string.Join(" | ", funde.Select(f => f.Text)));
     }
 
@@ -207,7 +208,9 @@ public class KatalogTests
         var d = Bearbeitung.Alle(g).First(x => x.Stelle == s).Deko;
         Assert.Equal(stuhl.Typ, Py.Str(d["typ"]));
         Assert.Equal(Math.Round(stuhl.Innen[0], 2), Py.F(d["w"]), 2);
-        Assert.Equal("Chair", Bearbeitung.TeilName(stuhl.Typ));
+        // Sammelliste 222: der deutsche Name, nicht der englische
+        Assert.Equal(stuhl.Anzeige, Bearbeitung.TeilName(stuhl.Typ));
+        Assert.NotEqual(stuhl.Englisch, stuhl.Anzeige);
     }
 
     // ---- draussen ----------------------------------------------------------------------------------

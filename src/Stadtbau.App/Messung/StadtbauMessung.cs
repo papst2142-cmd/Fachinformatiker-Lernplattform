@@ -554,6 +554,35 @@ public static partial class StadtbauMessung
     /// Weisung P12-25 Abschnitt 3 Punkt 1: alle Kacheln des Katalogs gleich breit und gleich hoch, die Kacheln einer Reihe
     /// mit gleicher Ober- und Unterkante, das Bild in jeder Kachel an derselben Stelle. Gibt die Zahl der Funde zurueck.
     /// </summary>
+    private const string DreiZeilenProbe = "Vorderrad, Kleinwagen, Polizei, Feuerwehr, Taxi";
+
+    private static void NamenPruefen(Katalog kat, string wo)
+    {
+        var soll = Lernplattform.Design.Schrift.Grundgroessen["Klein"] * Lernplattform.Design.Schrift.Faktor;
+        var zuLang = kat.Eintraege.Where(e => !KatalogAnsicht.NamensGroesse(e.Anzeige, soll).Passt).Select(e => e.Anzeige).ToList();
+        var kleiner = kat.Eintraege.Count(e => KatalogAnsicht.NamensGroesse(e.Anzeige, soll).Groesse < soll);
+        Messwerte.Notiere("Katalog-Namen " + wo + ": " + kat.Eintraege.Count.ToString(Inv) + " geprueft, " + kleiner.ToString(Inv) + " verkleinert, " + zuLang.Count.ToString(Inv) + " passen nicht");
+        foreach (var n in zuLang)
+        {
+            Fund("Katalog-Name passt nicht in die Kachel (" + wo + "): " + n);
+        }
+        if (KatalogAnsicht.NamensGroesse("Hochgeschwindigkeitszugwagen", soll).Passt)
+        {
+            Fund("Katalog-Namen Gegenprobe (" + wo + "): zu langes Wort passt (Probe taugt nicht)");
+        }
+        if (KatalogAnsicht.NamensGroesse(DreiZeilenProbe, soll).Passt)
+        {
+            Fund("Katalog-Namen Gegenprobe (" + wo + "): Name mit drei Zeilen passt (Probe taugt nicht)");
+        }
+        var probe = KatalogAnsicht.NamensText(DreiZeilenProbe);
+        probe.Measure(new Size(KatalogAnsicht.NamenPlatz + 1, double.PositiveInfinity));
+        probe.Arrange(new Rect(probe.DesiredSize));
+        if (!KatalogAnsicht.NameGekuerzt(probe))
+        {
+            Fund("Katalog-Namen Gegenprobe (" + wo + "): Kachel zeigt einen Namen mit drei Zeilen nicht als gekuerzt (Probe taugt nicht)");
+        }
+    }
+
     private static int RasterPruefen(KatalogAnsicht ansicht, string wo, bool melden = true)
     {
         var funde = new List<string>();
@@ -588,6 +617,11 @@ public static partial class StadtbauMessung
                 if (groesse != mass)
                 {
                     funde.Add(string.Create(Inv, $"Kachel \"{((KatalogEintrag)k.Tag!).Anzeige}\" {groesse.Width:F1}x{groesse.Height:F1} statt {mass.Value.Width:F1}x{mass.Value.Height:F1}"));
+                }
+                // Weisung P12-79: der gezeichnete Name steht ganz da (kein "…", kein Wort mitten getrennt)
+                if (KatalogAnsicht.KachelName(k) is { } nameText && KatalogAnsicht.NameGekuerzt(nameText))
+                {
+                    funde.Add("Kachel \"" + ((KatalogEintrag)k.Tag!).Anzeige + "\": Name gekuerzt oder Wort getrennt");
                 }
                 if (KatalogAnsicht.KachelBild(k)?.TranslatePoint(default, k) is { } lage)
                 {
@@ -683,6 +717,16 @@ public static partial class StadtbauMessung
                 Fund("Katalog Suche: \"" + wort + "\" findet nichts");
             }
         }
+        // Sammelliste 222, Weisung P12-79: jeder deutsche Name passt ganz in seine Kachel (hoechstens 2 Zeilen, kein "…",
+        // kein Wort getrennt), alle 1 521 in jeder geprueften Groesse; Gegenproben: ein zu langes Wort und ein Name mit drei
+        // Zeilen passen auch verkleinert nicht, und die Kachel zeigt ihn gekuerzt
+        foreach (var (_, b, h) in Groessen)
+        {
+            await GroesseAsync(a, f, b, h);
+            NamenPruefen(kat, string.Create(Inv, $"{b}x{h}"));
+        }
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+
         // Raster (Weisung P12-25): Gegenprobe mit den alten Kacheln, dann jede Gruppe in PC- und Tablet-Groesse
         var mitNamen = kat.Gruppen.First(g => kat.InGruppe(g).Any(e => e.Art == KatalogArt.Modell));
         KatalogAnsicht.UngleichFuerTests = true;

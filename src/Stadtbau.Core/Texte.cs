@@ -84,6 +84,9 @@ public static class Texte
     public const string NichtsGewaehlt = "Tippe ein Stück im Grundriss an, um es zu bearbeiten.";
 
     /// <summary>Draufsicht draussen ohne Auswahl (Weisung P12-25: draussen heisst es "auf der Karte").</summary>
+    /// <summary>Tipp einer Katalog-Kachel (Sammelliste 222): deutscher Name, englischer Name des Pakets (fuer die Suche), Art.</summary>
+    public static string KatalogTipp(string deutsch, string englisch, string art) => deutsch + " (englisch: " + englisch + "), " + art;
+
     public const string NichtsGewaehltDraussen = "Tippe ein Stück auf der Karte an, um es zu bearbeiten.";
     public const string Drehen = "Drehen";
 
