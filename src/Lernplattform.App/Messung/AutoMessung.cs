@@ -170,6 +170,7 @@ public static partial class AutoMessung
             funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 22 Laternen
             funde += await P8W12SpielAsync(ansicht);           // Phase 8 W12: Vorladen, Fest im Haus, alle Orte
             funde += await P10P1SpielAsync(ansicht);           // Patch A 0.29.1: Festverkehr wechselt mit der Uhr
+            funde += await P13W5EtagenAsync(ansicht);          // Phase 13 W5: Etage wechseln (Treppe im Moebelhaus)
         }
         if (MitLernen)
         {
@@ -528,6 +529,16 @@ public static partial class AutoMessung
                 // Phase 12, Welle 2: PC zu Hause (Online-Shop, Kredite, Gezahltes), Uebersicht, Paket vor der Haustuer
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P12W2Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Phase 13 W5: Etagen (Knopf vor der Treppe, 1. Obergeschoss)
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? P13W5Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {

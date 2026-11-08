@@ -37,11 +37,15 @@ public static partial class StadtbauPruefung
     /// Lage von Raeumen, Tueren und Einrichtung, bekannte Teile, Ueberschneidung, Erreichbarkeit jeder Ware und jeder
     /// Person, hinter dem Tresen abgesperrt, Sortiment (nur Geschaefte, mit <paramref name="geschaefte"/>) und Grenzen.
     /// </summary>
+    /// <remarks>
+    /// Phase 13 Welle 5 (Weisung P12-73): <paramref name="etage"/> &gt; 0 prueft ein Obergeschoss: ohne Eingangstuer, Raeume
+    /// nicht noetig, keine Personen; Wege, Sortiment und die Regeln zwischen den Etagen prueft <see cref="Etagen"/>.
+    /// </remarks>
     public static List<StadtbauFund> Innen(string ort, PyObjekt gebaeude, IReadOnlyList<PyObjekt> personen, GrafikBibliothek? grafik,
-        Geschaefte? geschaefte = null, PyObjekt? innenraeume = null)
+        Geschaefte? geschaefte = null, PyObjekt? innenraeume = null, int etage = 0)
     {
         var funde = new List<StadtbauFund>();
-        Grundriss(gebaeude, funde, grafik);
+        Grundriss(gebaeude, funde, grafik, etage);
         if (funde.Any(f => f.Rot))
         {
             // ohne gueltigen Grundriss lassen sich Wege und Grenzen nicht rechnen
@@ -50,7 +54,7 @@ public static partial class StadtbauPruefung
         Innenraum innen;
         try
         {
-            innen = Innenraum.AusGrundrissMitPersonen(Ansicht(ort), gebaeude, personen, grafik, Geschaefte.Laeden.Contains(ort) ? geschaefte?.Daten : null);
+            innen = Innenraum.AusGrundrissMitPersonen(Ansicht(ort, etage), gebaeude, personen, grafik, Geschaefte.Laeden.Contains(ort) ? geschaefte?.Daten : null);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or KeyNotFoundException or InvalidCastException or FormatException or NullReferenceException or ArgumentException)
         {
@@ -59,6 +63,12 @@ public static partial class StadtbauPruefung
             return funde;
         }
         Ueberschneidung(innen, funde);
+        if (etage > 0)
+        {
+            var (d, a) = StadtbauGrenzen.Innen(innen);
+            Grenzen(d, a, funde);
+            return funde;
+        }
         Erreichbarkeit(innen, ort, geschaefte, funde);
         HinterDemTresen(innen, funde);
         if (geschaefte is not null && innenraeume is not null && Geschaefte.Laeden.Contains(ort))
@@ -72,6 +82,9 @@ public static partial class StadtbauPruefung
 
     /// <summary>Ansicht des Spiels zu einem Ort (Geschaeft oder Schalter).</summary>
     public static string Ansicht(string ort) => Schalter.Orte.Contains(ort) ? "schalter:" + ort : "geschaeft:" + ort;
+
+    /// <summary>Ansicht des Spiels zu einer Etage (0 = Erdgeschoss wie <see cref="Ansicht(string)"/>).</summary>
+    public static string Ansicht(string ort, int etage) => Ansicht(Stadtbau.Etagen.Schluessel(ort, etage));
 
     /// <summary>Grenzen eines Innenraums: rot darueber, gelb ab 80 % (Dreiecke 160 000, Aufrufe 40 wie die Gesamtansicht).</summary>
     public static void Grenzen(long dreiecke, int aufrufe, List<StadtbauFund> funde)
@@ -88,7 +101,7 @@ public static partial class StadtbauPruefung
         }
     }
 
-    private static void Grundriss(PyObjekt g, List<StadtbauFund> funde, GrafikBibliothek? grafik = null)
+    private static void Grundriss(PyObjekt g, List<StadtbauFund> funde, GrafikBibliothek? grafik = null, int etage = 0)
     {
         double breite = Py.F(g["breite"]), hoehe = Py.F(g["hoehe"]);
         if (breite < 4 || hoehe < 4)
@@ -102,15 +115,26 @@ public static partial class StadtbauPruefung
         {
             funde.Add(new StadtbauFund("Der Flur liegt nicht im Haus.", "Flur verschieben oder kleiner machen.", true, 1, fy));
         }
-        var eingang = Objekt(flur["eingang"]);
-        double ev = Py.F(eingang["von"]), eb = Py.F(eingang["bis"]);
-        if (!(fy <= ev && ev < eb && eb <= fy + fh) || eb - ev < 1)
+        if (etage > 0)
         {
-            funde.Add(new StadtbauFund("Die Eingangstür liegt nicht an der Außenwand des Flurs (mindestens 1 breit).",
-                "Eingang im Flur nach oben oder unten schieben.", true, 0.3, (ev + eb) / 2));
+            // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
+            if (Py.Hat(flur, "eingang"))
+            {
+                funde.Add(new StadtbauFund("Auf einer Etage gibt es keine Eingangstür.", "Hinaus geht es nur im Erdgeschoss; die Tür hier entfernen.", true, 0.3, fy + (fh / 2)));
+            }
+        }
+        else
+        {
+            var eingang = Objekt(flur["eingang"]);
+            double ev = Py.F(eingang["von"]), eb = Py.F(eingang["bis"]);
+            if (!(fy <= ev && ev < eb && eb <= fy + fh) || eb - ev < 1)
+            {
+                funde.Add(new StadtbauFund("Die Eingangstür liegt nicht an der Außenwand des Flurs (mindestens 1 breit).",
+                    "Eingang im Flur nach oben oder unten schieben.", true, 0.3, (ev + eb) / 2));
+            }
         }
         var raeume = Liste(g["raeume"]).OfType<PyObjekt>().ToList();
-        if (raeume.Count == 0)
+        if (raeume.Count == 0 && etage == 0)
         {
             funde.Add(new StadtbauFund("Das Haus hat keinen Raum.", "Einen Raum anlegen.", true));
         }
@@ -231,10 +255,14 @@ public static partial class StadtbauPruefung
         ((float)Py.F(d["x"]), (float)Py.F(d["y"]), (float)(Py.F(d["x"]) + Py.F(d["w"])), (float)(Py.F(d["y"]) + Py.F(d["h"])));
 
     /// <summary>Endpunkt des Wegs vom Eingang wie beim Antippen im Spiel (Ziel Mitte, Reichweite).</summary>
-    private static (double X, double Z) WegEnde(Innenraum innen, double zx, double zz, double reichweite)
+    private static (double X, double Z) WegEnde(Innenraum innen, double zx, double zz, double reichweite) =>
+        WegEnde(innen, innen.StartX, innen.StartZ, zx, zz, reichweite);
+
+    /// <summary>Endpunkt des Wegs von (sx, sz) zum Ziel (Phase 13 Welle 5: Start an der Ankunftsstelle einer Etage).</summary>
+    private static (double X, double Z) WegEnde(Innenraum innen, double sx, double sz, double zx, double zz, double reichweite)
     {
-        var weg = innen.Weg(innen.StartX, innen.StartZ, zx, zz, reichweite);
-        return weg.Count == 0 ? (innen.StartX, innen.StartZ) : weg[^1];
+        var weg = innen.Weg((float)sx, (float)sz, zx, zz, reichweite);
+        return weg.Count == 0 ? (sx, sz) : weg[^1];
     }
 
     /// <summary>

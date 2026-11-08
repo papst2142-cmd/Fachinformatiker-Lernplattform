@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.16.0
+
+Häuser bekommen Etagen: Obergeschosse mit Treppe oder Fahrstuhl.
+
+- Im Reiter „Innenräume“ steht links die Etagenliste: Erdgeschoss, dann die Obergeschosse. Ein Knopf zeigt die Etage, „Etage hinzufügen“ legt eine neue oben an (bis zum 4. Obergeschoss). Eine neue Etage bekommt die Außenwände des Erdgeschosses als Vorschlag.
+- Etagen lassen sich umbenennen und löschen, aber nicht das Erdgeschoss und keine Etage, zu der eine Treppe oder ein Fahrstuhl führt.
+- Im Katalog gibt es die Gruppe „Treppe und Fahrstuhl“. Wählst du eine gesetzte Treppe, stellst du rechts bei „Ziel“ die Etage darüber oder darunter ein; das Werkzeug setzt das Gegenstück an dieselbe Stelle der anderen Etage. Beim Fahrstuhl hakst du alle Etagen an, auf denen er hält.
+- Ein blauer Pfeil zeigt, wo die Figur nach dem Wechsel ankommt und wohin sie schaut. Den Pfeil kannst du ziehen; „Blick drehen“ dreht ihn. Verschiebst du die Treppe, wandert der Pfeil mit.
+- Die Prüfung meldet rot: Etage größer als das Erdgeschoss, mehr als vier Obergeschosse, Etage nicht erreichbar, Treppe ohne Ziel, Ankunft nicht frei, oben ist eine Ware zu Fuß nicht erreichbar, eine Etage hat eine Eingangstür.
+- Der Export nimmt die Etagen mit; ein Blueprint eines Hauses mit Etagen auch.
+- Deine Projekte und Blueprints bleiben, wie sie sind.
+
 ## S 0.15.0
 
 Die Bahn lässt sich jetzt selbst bauen: setzen, ziehen und mit Bögen versehen.

@@ -219,6 +219,13 @@ public sealed class GrundrissFlaeche : Control
             }
         }
 
+        // Welle W5: Ankunft von Treppe und Fahrstuhl als Pfeil (Stelle und Blick der Figur nach dem Wechsel)
+        foreach (var (id, _, ax, ay, blick) in Ankuenfte())
+        {
+            var (px, py) = _ankunft is { } z && z.Id == id ? (z.X, z.Y) : (ax, ay);
+            AnkunftZeichnen(ctx, px, py, blick);
+        }
+
         // Namen der Raeume ueber der oberen Wand auf einem Schild, zuletzt gezeichnet: kein Stueck verdeckt sie
         foreach (var (bereich, name) in bereiche.Where(b => b.Name.Length > 0))
         {
@@ -352,6 +359,15 @@ public sealed class GrundrissFlaeche : Control
             e.Handled = true;
             return;
         }
+        if (!_geste.Aktiv && SetzenTyp is null && !_projekt.NurLesen && AnkunftBei(w.X, w.Y) is { } ankunft)
+        {
+            // Welle W5: den Pfeil der Ankunft ziehen (ein Finger oder die Maus)
+            _ankunft = (ankunft, e.Pointer.Id, w.X, w.Y);
+            e.Pointer.Capture(this);
+            e.Handled = true;
+            InvalidateVisual();
+            return;
+        }
         var treffer = SetzenTyp is null ? Bearbeitung.StueckBei(g, w.X, w.Y) : null;
         var erster = !_geste.Aktiv;
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, treffer is not null));
@@ -368,12 +384,32 @@ public sealed class GrundrissFlaeche : Control
     {
         base.OnPointerMoved(e);
         var p = e.GetPosition(this);
+        if (_ankunft is { } z)
+        {
+            if (z.Zeiger == e.Pointer.Id)
+            {
+                var w = Welt(p);
+                _ankunft = z with { X = w.X, Y = w.Y };
+                InvalidateVisual();
+            }
+            return;
+        }
         Anwenden(_geste.Bewegen(e.Pointer.Id, p.X, p.Y));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (_ankunft is { } z)
+        {
+            if (z.Zeiger == e.Pointer.Id)
+            {
+                _ankunft = null;
+                e.Pointer.Capture(null);
+                AnkunftAblegen(z.Id, z.X, z.Y);
+            }
+            return;
+        }
         // zuerst auswerten, dann die Erfassung freigeben: Capture(null) loest sofort PointerCaptureLost aus, und
         // "Verloren" haette den Finger schon vergessen (Tippen setzte nichts, Ziehen schob nichts)
         Anwenden(_geste.Loslassen(e.Pointer.Id));
@@ -387,6 +423,11 @@ public sealed class GrundrissFlaeche : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (_ankunft is { } z && z.Zeiger == e.Pointer.Id)
+        {
+            _ankunft = null;
+            InvalidateVisual();
+        }
         Anwenden(_geste.Verloren(e.Pointer.Id));
     }
 
@@ -528,4 +569,68 @@ public sealed class GrundrissFlaeche : Control
 
     /// <summary>Fuer Tests und Start-Test: Stueck an einer Weltstelle antippen wie mit dem Finger.</summary>
     public Point BildPunkt(double x, double y) => new(_versatz.X + (x * _zoom), _versatz.Y + (y * _zoom));
+
+    // ---- Welle W5: Ankunft von Treppe und Fahrstuhl ---------------------------------------------------
+
+    /// <summary>Pfeil der Ankunft, der gerade gezogen wird (Kennung des Uebergangs, Zeiger, Weltstelle).</summary>
+    private (string Id, long Zeiger, double X, double Y)? _ankunft;
+
+    /// <summary>So nah (Weltmass) muss ein Druck am Pfeil liegen, um ihn zu greifen.</summary>
+    public const double AnkunftGreifen = 0.4;
+
+    /// <summary>Ankunftsstellen der gezeigten Etage (leer ohne Etagen).</summary>
+    public List<(string Id, string Art, double X, double Y, long Blick)> Ankuenfte()
+    {
+        if (_projekt is null || _ort is null)
+        {
+            return [];
+        }
+        var (basis, etage) = Etagen.Teilen(_ort);
+        var eg = _projekt.Grundriss(basis);
+        return Etagen.Hat(eg) ? EtagenBearbeitung.Ankuenfte(eg, etage) : [];
+    }
+
+    private string? AnkunftBei(double x, double y) =>
+        Ankuenfte().Where(a => Math.Sqrt(((a.X - x) * (a.X - x)) + ((a.Y - y) * (a.Y - y))) <= AnkunftGreifen)
+            .OrderBy(a => ((a.X - x) * (a.X - x)) + ((a.Y - y) * (a.Y - y))).Select(a => a.Id).FirstOrDefault();
+
+    private void AnkunftAblegen(string id, double x, double y)
+    {
+        if (_projekt is null || _ort is null || _projekt.NurLesen)
+        {
+            InvalidateVisual();
+            return;
+        }
+        var r = Raster ? Bearbeitung.RasterFein : 0.01;
+        var (nx, ny) = (Bearbeitung.AufRaster(x, r), Bearbeitung.AufRaster(y, r));
+        _projekt.EtagenAendern(_ort, Texte.AnkunftVerschoben, (g, k) => EtagenBearbeitung.AnkunftSetzen(g, id, k, nx, ny));
+        InvalidateVisual();
+        Gemeldet?.Invoke(Texte.AnkunftVerschoben);
+    }
+
+    /// <summary>Start-Test und Tests: Pfeil der Ankunft an eine Weltstelle ziehen wie mit dem Finger.</summary>
+    public void AnkunftZiehenFuerTests(string id, double x, double y) => AnkunftAblegen(id, x, y);
+
+    /// <summary>Pfeil: Kreis an der Stelle, Spitze in Blickrichtung (Blick 0 = nach +y, im Plan nach unten).</summary>
+    private void AnkunftZeichnen(DrawingContext ctx, double x, double y, long blick)
+    {
+        var m = BildPunkt(x, y);
+        var (rx, ry) = Etagen.Richtung(blick);
+        var r = Math.Max(7, 0.22 * _zoom);
+        var farbe = new SolidColorBrush(Color.Parse("#1E88E5"));
+        ctx.DrawEllipse(farbe, new Pen(Brushes.White, 2), m, r, r);
+        var laenge = r * 2.2;
+        var spitze = m + new Vector(rx * laenge, ry * laenge);
+        var quer = new Vector(-ry, rx) * (r * 0.8);
+        var basis = m + new Vector(rx * r * 0.9, ry * r * 0.9);
+        var geo = new StreamGeometry();
+        using (var g = geo.Open())
+        {
+            g.BeginFigure(spitze, true);
+            g.LineTo(basis + quer);
+            g.LineTo(basis - quer);
+            g.EndFigure(true);
+        }
+        ctx.DrawGeometry(farbe, new Pen(Brushes.White, 1.5), geo);
+    }
 }

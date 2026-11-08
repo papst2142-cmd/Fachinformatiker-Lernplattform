@@ -117,7 +117,20 @@ public sealed class Projekt
 
     public static bool IstBau(string ort) => ort.StartsWith(BauPraefix, StringComparison.Ordinal);
 
-    private PyObjekt? Bau(string ort) => IstBau(ort) ? Aussen.Bauten(AussenStand)[ort[BauPraefix.Length..]] as PyObjekt : null;
+    private PyObjekt? Bau(string ort)
+    {
+        ort = Etagen.Teilen(ort).Ort;
+        return IstBau(ort) ? Aussen.Bauten(AussenStand)[ort[BauPraefix.Length..]] as PyObjekt : null;
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 5: gibt es den Innenraum (auch eine Etage „ort@k“ eines Orts aus <see cref="Innenorte"/>)?
+    /// </summary>
+    public bool GibtInnenort(string schluessel)
+    {
+        var (ort, etage) = Etagen.Teilen(schluessel);
+        return Innenorte.Contains(ort) && (etage == 0 || Etagen.Gibt(Grundriss(ort), etage));
+    }
 
     public string Name { get; }
 
@@ -203,6 +216,12 @@ public sealed class Projekt
     /// <summary>Der aktuelle Grundriss eines Orts (bearbeitet oder die Basis). Nur ueber <see cref="Aendern"/> veraendern.</summary>
     public PyObjekt Grundriss(string ort)
     {
+        var (basis, etage) = Etagen.Teilen(ort);
+        if (etage > 0)
+        {
+            // Phase 13 Welle 5: eine Etage steht im Grundriss des Erdgeschosses (Aenderungen gehen dorthin)
+            return Etagen.Gebaeude(Grundriss(basis), etage);
+        }
         if (IstBau(ort))
         {
             return Bau(ort)?["grundriss"] as PyObjekt ?? throw new KeyNotFoundException(ort);
@@ -215,7 +234,7 @@ public sealed class Projekt
         return g;
     }
 
-    public List<PyObjekt> Personen(string ort) => IstBau(ort)
+    public List<PyObjekt> Personen(string ort) => Etagen.Teilen(ort).Etage > 0 ? [] : IstBau(ort)
         ? [.. (Bau(ort)?["personen"] as List<object?> ?? []).OfType<PyObjekt>()]
         : InnenGrundriss.Personen(Basis.Innenraeume, ort);
 
@@ -305,18 +324,36 @@ public sealed class Projekt
     /// </summary>
     public T Aendern<T>(string ort, string was, Func<PyObjekt, T> aenderung)
     {
+        var etage = Etagen.Teilen(ort).Etage;
+        return EtagenAendern(ort, was, (eg, _) => aenderung(Etagen.Gebaeude(eg, etage)));
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 5: Aenderung am ganzen Haus des Innenraums <paramref name="ort"/> (auch „ort@k“): die Aenderung bekommt
+    /// den Grundriss des Erdgeschosses und die Etage; danach gleicht <see cref="EtagenBearbeitung.Aufraeumen"/> Treppen und
+    /// Fahrstuehle ab. Ein Schritt im Verlauf mit dem Schluessel der Etage (Rueckgaengig zeigt sie wieder).
+    /// </summary>
+    public T EtagenAendern<T>(string ort, string was, Func<PyObjekt, int, T> aenderung)
+    {
         if (NurLesen)
         {
             throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
         }
-        if (IstBau(ort))
+        var (basis, etage) = Etagen.Teilen(ort);
+        T Mit(PyObjekt eg)
+        {
+            var e = aenderung(eg, etage);
+            EtagenBearbeitung.Aufraeumen(eg);
+            return e;
+        }
+        if (IstBau(basis))
         {
             // Innenraum eines neuen Gebaeudes: liegt in der Stadt draussen (Teil "bauten"), der Schritt merkt sich den Innenraum
-            return AussenAendern(ort, was, a => aenderung(Grundriss(ort)));
+            return AussenAendern(ort, was, a => Mit(Grundriss(basis)));
         }
-        var g = Grundriss(ort);
+        var g = Grundriss(basis);
         var vorher = PythonJson.Standard(g);
-        var ergebnis = aenderung(g);
+        var ergebnis = Mit(g);
         var nachher = PythonJson.Standard(g);
         if (vorher != nachher)
         {
@@ -327,6 +364,12 @@ public sealed class Projekt
         }
         return ergebnis;
     }
+
+    public void EtagenAendern(string ort, string was, Action<PyObjekt, int> aenderung) => EtagenAendern(ort, was, (eg, k) =>
+    {
+        aenderung(eg, k);
+        return 0;
+    });
 
     public void Aendern(string ort, string was, Action<PyObjekt> aenderung) => Aendern(ort, was, g =>
     {
@@ -366,16 +409,18 @@ public sealed class Projekt
             if (IstBau(s.Ort))
             {
                 // Schritt in einem neuen Gebaeude: dorthin wechseln (gibt es das Gebaeude danach nicht mehr: nach draussen)
-                LetzterSchrittDraussen = !Bauten.Contains(s.Ort);
+                LetzterSchrittDraussen = !Bauten.Contains(Etagen.Teilen(s.Ort).Ort);
                 if (!LetzterSchrittDraussen)
                 {
-                    Ort = s.Ort;
+                    Ort = GibtInnenort(s.Ort) ? s.Ort : Etagen.Teilen(s.Ort).Ort;
                 }
             }
             return;
         }
-        _grundrisse[s.Ort] = Lesen(text);
-        Ort = s.Ort;
+        var basis = Etagen.Teilen(s.Ort).Ort;
+        _grundrisse[basis] = Lesen(text);
+        // Phase 13 Welle 5: Schritt auf einer Etage zeigt die Etage (gibt es sie danach nicht mehr: das Erdgeschoss)
+        Ort = GibtInnenort(s.Ort) ? s.Ort : basis;
     }
 
     private static PyObjekt Lesen(string text) => (PyObjekt)Py.Lesen(Encoding.UTF8.GetBytes(text))!;
@@ -625,15 +670,37 @@ public sealed class Projekt
         return innen;
     }
 
-    public Innenraum Innenraum(string ort) => Lernplattform.Core.Spiel.Probe.Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort),
-        Personen(ort), Daten.Grafik, Geschaefte.Laeden.Contains(ort) ? Daten.Geschaefte.Daten : null);
+    public Innenraum Innenraum(string ort) => Lernplattform.Core.Spiel.Probe.Innenraum.AusGrundrissMitPersonen(
+        StadtbauPruefung.Ansicht(Etagen.Teilen(ort).Ort, Etagen.Teilen(ort).Etage), Grundriss(ort),
+        Personen(ort), Daten.Grafik, Geschaefte.Laeden.Contains(Etagen.Teilen(ort).Ort) ? Daten.Geschaefte.Daten : null);
 
     /// <summary>Funde eines Innenraums (Regeln des gemeinsamen Teils plus Katalog-Stuecke, <see cref="KatalogPruefung"/>).</summary>
     public List<StadtbauFund> Pruefen(string ort) => PruefenMitGrenzen(ort).Funde;
 
     /// <summary>Funde und Grenzen eines Innenraums (Grenzen mit den echten Dreiecken der Katalog-Stuecke).</summary>
-    public (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) PruefenMitGrenzen(string ort) =>
-        KatalogPruefung.Innen(Katalog.Aktiv, ort, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume);
+    /// <remarks>
+    /// Phase 13 Welle 5: <paramref name="ort"/> darf eine Etage „ort@k“ sein; dazu kommen die Funde der Etagen-Pruefung
+    /// (<see cref="StadtbauPruefung.Etagen"/>) fuer diese Etage (Funde am ganzen Haus stehen beim Erdgeschoss).
+    /// </remarks>
+    public (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) PruefenMitGrenzen(string ort)
+    {
+        var (basis, etage) = Etagen.Teilen(ort);
+        var eg = Grundriss(basis);
+        var (funde, grenzen) = KatalogPruefung.Innen(Katalog.Aktiv, basis, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume, etage);
+        if (Etagen.Hat(eg))
+        {
+            // der Grundriss jeder Etage ist oben schon geprueft (mit Katalog-Stuecken); hier nur die Regeln zwischen den Etagen
+            funde.AddRange(StadtbauPruefung.Etagen(basis, eg, Daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
+        }
+        return (funde, grenzen);
+    }
+
+    /// <summary>Schluessel aller Etagen eines Orts (Erdgeschoss zuerst).</summary>
+    public List<string> EtagenVon(string ort)
+    {
+        var eg = Grundriss(ort);
+        return [.. Enumerable.Range(0, Etagen.Anzahl(eg) + 1).Where(k => Etagen.Gibt(eg, k)).Select(k => Etagen.Schluessel(ort, k))];
+    }
 
     public (long Dreiecke, int Aufrufe) Grenzen(string ort) => PruefenMitGrenzen(ort).Grenzen;
 
@@ -662,7 +729,7 @@ public sealed class Projekt
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
     public List<(string Ort, StadtbauFund Fund)> RoteFunde()
     {
-        var rot = GeaenderteOrte.Concat(Bauten).SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
+        var rot = GeaenderteOrte.Concat(Bauten).SelectMany(EtagenVon).SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
         if (AussenGeaendert || Leer is not null)
         {
             rot.AddRange(PruefenAussen().Where(f => f.Rot).Select(f => (StadtOrt, f)));
@@ -671,7 +738,9 @@ public sealed class Projekt
     }
 
     /// <summary>Name eines Orts fuer die Anzeige (Stadt draussen: "Stadt draußen").</summary>
-    public string OrtName(string ort) => ort == StadtOrt ? "Stadt draußen"
+    public string OrtName(string ort) => Etagen.Teilen(ort) is (var basis, > 0 and var k) && GibtInnenort(ort)
+        ? OrtName(basis) + ", " + Etagen.Name(Grundriss(basis), k)
+        : ort == StadtOrt ? "Stadt draußen"
         : IstBau(ort) ? Texte.BauName(Bau(ort)?["name"] as string ?? ort[BauPraefix.Length..])
         : Daten.OrtName(ort);
 

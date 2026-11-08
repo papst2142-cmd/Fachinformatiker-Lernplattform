@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.50.0
+Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf Häuser mit mehreren Stockwerken aus dem Stadtbau-Werkzeug vor.
+
+- Ein Haus in einer neuen Stadt kann bis zu vier Etagen über dem Erdgeschoss haben, verbunden durch eine Treppe oder einen Fahrstuhl.
+- Im obersten Stock sieht man die Treppe als Öffnung im Boden mit Stufen nach unten und einem Geländer; darüber läuft man nicht.
+- Stehst du vor einer Treppe, erscheint ein Knopf wie „Treppe hoch zum 1. Obergeschoss“. Am Fahrstuhl öffnet der Knopf ein Fenster, in dem du die Etage wählst. Ohne 3D-Ansicht stehen dieselben Knöpfe unter der Ortsliste.
+- Das Haus verlässt du nur im Erdgeschoss durch die Eingangstür; oben sagt dir das Spiel, dass du zuerst nach unten musst.
+- Das Spiel merkt sich, auf welcher Etage du bist. Beendest du das Programm oben, stehst du beim nächsten Start wieder dort. Gibt es die Etage in einer neuen Stadt nicht mehr, stehst du vor dem Haus.
+- Die Prüfung für neue Städte meldet rot, wenn eine Etage größer ist als das Erdgeschoss, wenn eine Etage nicht erreichbar ist, wenn eine Treppe nirgends hinführt oder wenn man oben nicht von der Treppe zu jeder Ware gehen kann.
+- An deinem Spielstand und an deinem Lernstand ändert sich nichts; der Abgleich zwischen PC und Handy nimmt die Etage mit.
+
 ## A 0.49.0
 Die Stadt im Spiel sieht genauso aus wie bisher. Diese Version bereitet das Spiel auf eigene Gleise aus dem Stadtbau-Werkzeug vor.
 

@@ -442,6 +442,35 @@ public class SpielAbgleichTests
     /// Historie auf und rechnet sonst nichts damit. Ein Teil aus dem Elektromarkt kostet in Python also kein Geld;
     /// C# zieht es ab. Alles andere rechnet C# gleich.
     /// </summary>
+    /// <summary>
+    /// Phase 13 W5 (Weisung P12-73, Nico 2b): die neue Ereignisart „aufenthalt“ (Etage) geht beim Abgleich wie jede
+    /// Spielzeile vom PC aufs Handy; das Handy liest daraus dieselbe Etage. Gegenprobe: vor dem Abgleich hat das Handy sie nicht.
+    /// </summary>
+    [Fact]
+    public void Aufenthalt_GehtUeberDenAbgleichAufsHandy()
+    {
+        using var a = new Aufbau();
+        var pc = a.Verwaltung["PC"].ZumSchreiben();
+        var lauf = a.Verwaltung["PC"].Lauf;
+        var daten = Lernplattform.Core.Stadtbau.Etagen.AufenthaltDaten(pc.Stand.Tag, "stadt1", "moebelhaus", 1, "u1");
+        pc.Log(Lernplattform.Core.Stadtbau.Etagen.Aufenthalt, daten);
+        a.Schlange.Leeren();
+        Assert.DoesNotContain(LaufEreignisse(a.Lernstaende["Handy"], lauf), e => e.Art == Lernplattform.Core.Stadtbau.Etagen.Aufenthalt);
+        a.Abgleichen("PC");
+        a.Abgleichen("Handy");
+        var handy = LaufEreignisse(a.Lernstaende["Handy"], lauf).Where(e => e.Art == Lernplattform.Core.Stadtbau.Etagen.Aufenthalt).ToList();
+        Assert.Single(handy);
+        Assert.Equal(PythonJson.Standard(daten), PythonJson.Standard(handy[0].Daten));
+        // das Handy rechnet daraus denselben Stand (die Zeile steht im Verlauf, Geld und Tag unveraendert)
+        var alle = LaufEreignisse(a.Lernstaende["Handy"], lauf);
+        var stand = new Spielstand(alle, Inhalt);
+        var ohne = new Spielstand(alle.Where(e => e.Art != Lernplattform.Core.Stadtbau.Etagen.Aufenthalt).ToList(), Inhalt);
+        Assert.Contains(stand.Verlauf, e => e.Art == Lernplattform.Core.Stadtbau.Etagen.Aufenthalt);
+        Assert.Equal(Py.Int(ohne.Felder()["money"]), Py.Int(stand.Felder()["money"]));
+        Assert.Equal(ohne.Tag, stand.Tag);
+        Assert.Equal(ohne.Verlauf.Count + 1, stand.Verlauf.Count);
+    }
+
     [Fact]
     public void UnbekannteArtenInPython()
     {

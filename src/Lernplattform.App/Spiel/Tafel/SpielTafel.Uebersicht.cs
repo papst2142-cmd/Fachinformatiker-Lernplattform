@@ -279,6 +279,12 @@ public sealed partial class SpielTafel
     /// <summary>run_action: Knoepfe unter den Orten (Auftrag, Personal, Feierabend, Lernen, Schlafen).</summary>
     public void AktionAusfuehren(string aktion)
     {
+        if (aktion.StartsWith(Core.Stadtbau.Etagen.AktionFahrstuhl, StringComparison.Ordinal) || aktion.StartsWith(Core.Stadtbau.Etagen.AktionEtage, StringComparison.Ordinal))
+        {
+            // Phase 13 Welle 5: Treppe (ohne 3D unter der Ortsliste) und Fahrstuhl mit der Liste der Etagen
+            _ = EtageAsync(aktion);
+            return;
+        }
         if (SpielweltAktion(aktion))
         {
             // Phase 12 Welle 2: PC zu Hause, Meine Reise am Regal, Firma am Schreibtisch im Buero, Paket mitnehmen
@@ -367,5 +373,31 @@ public sealed partial class SpielTafel
         _s.Spiel.Neubeginn();
         Fortschritt();
         return true;
+    }
+
+    /// <summary>
+    /// Phase 13 Welle 5 (Plan P12-23b Abschnitt 5): Fahrstuhl = kleines Fenster mit der Liste der Etagen (Knopf je Ziel,
+    /// zuletzt „Abbrechen“); Treppe wechselt sofort.
+    /// </summary>
+    private async Task EtageAsync(string aktion)
+    {
+        var spiel = _s.Spiel;
+        if (!aktion.StartsWith(Core.Stadtbau.Etagen.AktionFahrstuhl, StringComparison.Ordinal))
+        {
+            spiel.EtagenAktion(aktion);
+            return;
+        }
+        var id = aktion[Core.Stadtbau.Etagen.AktionFahrstuhl.Length..];
+        var ziele = spiel.FahrstuhlZiele(id);
+        if (ziele.Count == 0)
+        {
+            return;
+        }
+        var wahl = await Dialog.Zeigen(Core.Stadtbau.Etagen.FahrstuhlTitel, Core.Stadtbau.Etagen.FahrstuhlFrage,
+            [.. ziele.Select(z => z.Name), Core.Stadtbau.Etagen.Abbrechen]);
+        if (wahl >= 0 && wahl < ziele.Count)
+        {
+            spiel.EtageWechseln(id, ziele[wahl].Etage);
+        }
     }
 }

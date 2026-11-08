@@ -92,10 +92,16 @@ public static class InnenKatalog
         new("whiteboard", "Whiteboard", 0.22, 2.4, "Wand"),
         new("wimpel", "Wimpelkette", 3.0, 0.1, "Wand"),
         new("zug", "Zug", 6.0, 1.2, "Sonstiges"),
+        // Phase 13 Welle 5 (Weisung P12-73, Plan P12-23b Abschnitt 2): Stuecke der Uebergaenge zwischen Etagen
+        new(Etagen.Treppe, "Treppe", 1.6, 3.0, GruppeEtagen),
+        new(Etagen.Fahrstuhl, "Fahrstuhl", 2.2, 2.2, GruppeEtagen),
     ];
 
+    /// <summary>Gruppe der Uebergaenge (Plan P12-23b Abschnitt 2).</summary>
+    public const string GruppeEtagen = "Treppe und Fahrstuhl";
+
     /// <summary>Gruppen der Leiste in fester Reihenfolge.</summary>
-    public static readonly IReadOnlyList<string> Gruppen = ["Regale", "Tische", "Sitzen", "Geräte", "Wohnen", "Deko", "Wand", "Boden", "Sonstiges"];
+    public static readonly IReadOnlyList<string> Gruppen = ["Regale", "Tische", "Sitzen", "Geräte", "Wohnen", "Deko", "Wand", "Boden", "Sonstiges", GruppeEtagen];
 
     private static readonly Dictionary<string, KatalogTeil> NachTyp = Teile.ToDictionary(t => t.Typ, StringComparer.Ordinal);
 
