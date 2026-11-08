@@ -73,6 +73,20 @@ public static class Texte
     // ---- Oeffnen ----
     public const string OeffnenTitel = "Projekt öffnen";
     public const string OeffnenDatei = "Projekt-Datei von woanders holen";
+
+    // Welle S 0.23.0 (Weisung P12-96, Sammelliste 242): Projekte loeschen
+    public const string ProjektLoeschenTitel = "Projekt löschen?";
+    public const string ProjektLoeschenTipp = "Löscht dieses Projekt. Eine Kopie bleibt in den Sicherungen des Werkzeugs.";
+
+    public static string ProjektLoeschenFrage(string name) =>
+        $"Soll das Projekt „{name}“ gelöscht werden? Eine Kopie bleibt in den Sicherungen des Werkzeugs. Deine Blueprints und gespeicherten Stadt-Dateien bleiben.";
+
+    public const string ProjektLoeschenUngespeichert = "Die letzte Änderung an diesem Projekt ist noch nicht gespeichert. Soll sie vor dem Löschen gespeichert werden? Sie kommt dann mit in die Kopie.";
+    public const string SpeichernUndLoeschen = "Speichern und löschen";
+    public const string OhneSpeichernLoeschen = "Ohne Speichern löschen";
+    public const string ProjektLoeschenFehler = "Das Projekt wurde nicht gelöscht: ";
+
+    public static string ProjektGeloescht(string name) => $"Projekt „{name}“ gelöscht, eine Kopie liegt in den Sicherungen";
     public const string NurLesen = "Diese Datei kommt von einer neueren Version des Werkzeugs. Du kannst sie ansehen, aber nicht ändern. Bitte aktualisiere das Werkzeug.";
 
     // ---- Innenraeume ----
@@ -755,7 +769,7 @@ public static class Texte
         ("Strg+Z / Strg+Y", "Rückgängig / Wiederholen", ["Z", "Y"]),
         ("Strg+S", "Projekt speichern", ["S"]),
         ("Strg+D", "Ausgewähltes Stück kopieren", ["D"]),
-        ("Entf / Rücktaste", "Ausgewähltes Stück löschen", ["Delete", "Back"]),
+        ("Entf / Rücktaste", "Ausgewähltes Stück löschen (im Fenster „Projekt öffnen“ mit Entf: das Projekt mit dem Fokus)", ["Delete", "Back"]),
         ("R / Umschalt+R", "Drehen (auch beim Setzen), Umschalt dreht andersherum", ["R"]),
         ("M", "Kurve spiegeln", ["M"]),
         ("E", "Einrasten an oder aus", ["E"]),
