@@ -215,7 +215,8 @@ public class Phase11FW5bTests
         var datei = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "quizfragen.json")))!.AsArray();
         // die Datei bleibt nur angehaengt: die alte Fassung steht weiter an Stelle 231, die neue am Ende (6360)
         Assert.Equal(Alt231, datei[231]!["q"]!.GetValue<string>());
-        Assert.Equal(6361, datei.Count);
+        // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 SI-Fragen an: 6 361 + 1 561
+        Assert.Equal(6361 + 1561, datei.Count);
         var neu = datei[6360]!.AsObject();
         Assert.Equal(("ae", "ae_oop", "Fabrikmethode"), (neu["fachrichtung"]!.GetValue<string>(), neu["thema"]!.GetValue<string>(), neu["a"]!.GetValue<string>()));
         Assert.Contains("überschriebenen Methode erzeugeLeser()", neu["q"]!.GetValue<string>(), StringComparison.Ordinal);

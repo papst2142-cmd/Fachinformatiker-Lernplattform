@@ -204,10 +204,10 @@ public class LerninhalteTests
         Assert.DoesNotContain("\r", text);
     }
 
-    // -- SI unveraendert -----------------------------------------------------------------------
+    // -- SI: bisherige Inhalte unveraendert, neue nur angehaengt (seit A 0.53.0, Weisung P12-97) ---------------------
 
     [Fact]
-    public void SiUnveraendert_ListenThemenRahmenplanGleichBisher()
+    public void SiBisherigeUnveraendert_NeueSiInhalteNurAngehaengt()
     {
         var alle = Echt();
         var vorher = Lerninhalte.Laden(Pfade.Inhalte);
@@ -215,25 +215,29 @@ public class LerninhalteTests
         {
             var si = alle.Fuer(fr);
             Assert.Equal("si", si.Sicht);
-            Assert.Equal(Schluessel(vorher.Karteikarten), Schluessel(si.Karteikarten));
-            Assert.Equal(Schluessel(vorher.Quizfragen), Schluessel(si.Quizfragen));
+            // Karten und Fragen: die bisherigen genau gleich und vorn, dahinter nur Eintraege mit fachrichtung "si"
+            foreach (var (alt, neu, zahl) in new[] { (vorher.Karteikarten, si.Karteikarten, 1019), (vorher.Quizfragen, si.Quizfragen, 1561) })
+            {
+                Assert.Equal(Schluessel(alt), Schluessel(neu.Take(alt.Count)));
+                Assert.Equal(alt.Count + zahl, neu.Count);
+                Assert.All(neu.Skip(alt.Count), e => Assert.Equal("si", e.Daten["fachrichtung"]!.GetValue<string>()));
+            }
             Assert.Equal(Schluessel(vorher.Ap1Szenarien), Schluessel(si.Ap1Szenarien));
             Assert.Equal(Schluessel(vorher.Ap2Szenarien), Schluessel(si.Ap2Szenarien));
             Assert.Equal(Schluessel(vorher.Testprojekte), Schluessel(si.Testprojekte));
-            Assert.Equal(vorher.AnzahlQuizfragenDatei, si.AnzahlQuizfragenDatei);
-            Assert.Equal(vorher.ThemenReihenfolge, si.ThemenReihenfolge);
+            Assert.Equal(vorher.ThemenReihenfolge, si.ThemenReihenfolge.Take(vorher.ThemenReihenfolge.Count));
             Assert.True(JsonNode.DeepEquals(vorher.Rahmenplan, si.Rahmenplan));
-            Assert.Equal(vorher.InhalteJeFachbereich(), si.InhalteJeFachbereich());
             Assert.Equal(vorher.Ap2SzenarienJeBlock(), si.Ap2SzenarienJeBlock());
-            Assert.Equal(FachrichtungTexte.Zaehlteil(vorher, "si").Split('\n')[2..], FachrichtungTexte.Zaehlteil(si, "si").Split('\n')[2..]);
         }
-        // die Probe-Inhalte (AE, DPA, DV) aendern an SI nichts
+        // Gegenprobe: die Probe-Inhalte (AE, DPA, DV ohne neue SI-Eintraege) aendern an SI nichts
         var probeSi = MitProbe().Fuer("si");
         Assert.Equal(Schluessel(vorher.Karteikarten), Schluessel(probeSi.Karteikarten));
         Assert.Equal(Schluessel(vorher.Quizfragen), Schluessel(probeSi.Quizfragen));
         Assert.Equal(Schluessel(vorher.Ap2Szenarien), Schluessel(probeSi.Ap2Szenarien));
         Assert.Equal(Schluessel(vorher.Testprojekte), Schluessel(probeSi.Testprojekte));
         Assert.Equal(vorher.ThemenReihenfolge, probeSi.ThemenReihenfolge);
+        Assert.Equal(vorher.InhalteJeFachbereich(), probeSi.InhalteJeFachbereich());
+        Assert.Equal(FachrichtungTexte.Zaehlteil(vorher, "si").Split('\n')[2..], FachrichtungTexte.Zaehlteil(probeSi, "si").Split('\n')[2..]);
     }
 
     private static List<string> Schluessel(IEnumerable<Lerninhalt> liste) =>
@@ -250,7 +254,11 @@ public class LerninhalteTests
         string Lies(Lerninhalte inhalte) => JsonSerializer.Serialize(
             DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(inhalte), ziel, null, Path.Combine(ordner.Pfad, "fehler.log")));
         var alle = Echt();
-        Assert.Equal(Lies(Lerninhalte.Laden(Pfade.Inhalte)), Lies(alle.Fuer("si")));
+        // SI wie Python mit den bisherigen Inhalten (die Probe-Inhalte haben keine neuen SI-Eintraege); seit A 0.53.0
+        // (Weisung P12-97) zaehlt die echte SI-Sicht die angehaengten SI-Inhalte mit (Gegenprobe: mehr Inhalte)
+        Assert.Equal(Lies(Lerninhalte.Laden(Pfade.Inhalte)), Lies(MitProbe().Fuer("si")));
+        long Gesamt(Lerninhalte inhalte) => DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(inhalte), ziel, null, Path.Combine(ordner.Pfad, "fehler.log")).InhalteGesamt;
+        Assert.Equal(Gesamt(Lerninhalte.Laden(Pfade.Inhalte)) + 1019 + 1561, Gesamt(alle.Fuer("si")));
         var ae = alle.Fuer("ae");
         var aeInhalte = new DashboardInhalte(ae);
         var werte = DashboardWerte.Lesen(pfad, heute, aeInhalte, ziel, null, Path.Combine(ordner.Pfad, "fehler.log"));
