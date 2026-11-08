@@ -174,6 +174,7 @@ public class ZiehenTests
     [InlineData(ZiehArt.Strasse)]
     [InlineData(ZiehArt.Fussweg)]
     [InlineData(ZiehArt.Fluss)]
+    [InlineData(ZiehArt.Bahn)]
     public void EinSchrittImVerlauf_UndVorschauGleichErgebnis(ZiehArt art)
     {
         var p = Projekt.Neu("Ziehen " + art, D, Daten.NeueAblage(), leer: (32, 24));

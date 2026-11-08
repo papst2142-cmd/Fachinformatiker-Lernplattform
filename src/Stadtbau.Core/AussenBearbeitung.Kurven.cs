@@ -93,23 +93,29 @@ public static partial class AussenBearbeitung
         return true;
     }
 
-    // ---- Radius je Eckpunkt am Fluss -------------------------------------------------------------------
+    // ---- Radius je Eckpunkt an Fluss und Bahn -------------------------------------------------------------
 
-    /// <summary>Laesst sich am gewaehlten Eckpunkt ein Radius waehlen (Eckpunkt eines Flusses, nicht Anfang oder Ende)?</summary>
+    /// <summary>Laesst sich am gewaehlten Eckpunkt ein Radius waehlen (Eckpunkt eines Flusses oder einer Bahn, nicht Anfang oder Ende)?</summary>
     public static bool RadiusWaehlbar(PyObjekt aussen, AussenStelle s) =>
-        s.Art == AussenArt.Fluss && s.Punkt > 0 && s.Punkt < Eckpunkte(aussen, s).Count - 1;
+        IstLinienzug(s.Art) && s.Punkt > 0 && s.Punkt < Eckpunkte(aussen, s).Count - 1;
 
-    /// <summary>Wunschradius am gewaehlten Eckpunkt des Flusses (ohne Feld <c>radien</c>: 3).</summary>
+    /// <summary>Erlaubte Radien je Art: Fluss 2, 3, 5; Bahn (Welle K2) 3 und 4,5.</summary>
+    public static IReadOnlyList<double> Radien(AussenArt art) => art == AussenArt.Bahn ? Strassenkurve.BahnRadien : Strassenkurve.FlussRadien;
+
+    /// <summary>Wunschradius am gewaehlten Eckpunkt des Flusses oder der Bahn (ohne Feld <c>radien</c>: 3).</summary>
     public static double FlussRadius(PyObjekt aussen, AussenStelle s)
     {
         var l = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         return l[Strassenkurve.RadienFeld] is List<object?> r && s.Punkt >= 0 && s.Punkt < r.Count ? Py.F(r[s.Punkt]) : Kurve.Radius;
     }
 
-    /// <summary>Radius am gewaehlten Eckpunkt setzen (2, 3 oder 5); sind danach alle 3, faellt das Feld weg (wie ohne).</summary>
+    /// <summary>
+    /// Radius am gewaehlten Eckpunkt setzen (Fluss 2, 3 oder 5, Bahn 3 oder 4,5); sind am Fluss danach alle 3, faellt das Feld
+    /// weg (wie ohne). Die Bahn behaelt das Feld immer (daran erkennt die Pruefung eine Bahn aus dem Werkzeug).
+    /// </summary>
     public static bool FlussRadiusSetzen(PyObjekt aussen, AussenStelle s, double radius)
     {
-        if (!RadiusWaehlbar(aussen, s) || !Strassenkurve.FlussRadien.Any(r => Math.Abs(r - radius) < 1e-9))
+        if (!RadiusWaehlbar(aussen, s) || !Radien(s.Art).Any(r => Math.Abs(r - radius) < 1e-9))
         {
             return false;
         }
@@ -117,7 +123,10 @@ public static partial class AussenBearbeitung
         var n = Eckpunkte(aussen, s).Count;
         var radien = RadienListe(l, n);
         radien[s.Punkt] = Bearbeitung.Zahl(radius);
-        RadienAufraeumen(l);
+        if (s.Art == AussenArt.Fluss)
+        {
+            RadienAufraeumen(l);
+        }
         return true;
     }
 
@@ -154,7 +163,7 @@ public static partial class AussenBearbeitung
     /// <summary>Nach Eckpunkt dazu/weg: das Feld <c>radien</c> passt sich an (neuer Punkt mit Radius 3).</summary>
     private static void RadienNachEinfuegen(PyObjekt aussen, AussenStelle s, int neu)
     {
-        if (s.Art == AussenArt.Fluss && Objekt(Aussen.Landschaft(aussen)[s.Nummer])[Strassenkurve.RadienFeld] is List<object?> r)
+        if (IstLinienzug(s.Art) && Objekt(Aussen.Landschaft(aussen)[s.Nummer])[Strassenkurve.RadienFeld] is List<object?> r)
         {
             r.Insert(Math.Min(neu, r.Count), Bearbeitung.Zahl(Kurve.Radius));
         }
@@ -162,7 +171,7 @@ public static partial class AussenBearbeitung
 
     private static void RadienNachEntfernen(PyObjekt aussen, AussenStelle s, int weg)
     {
-        if (s.Art != AussenArt.Fluss)
+        if (!IstLinienzug(s.Art))
         {
             return;
         }
@@ -170,11 +179,14 @@ public static partial class AussenBearbeitung
         if (l[Strassenkurve.RadienFeld] is List<object?> r && weg < r.Count)
         {
             r.RemoveAt(weg);
-            RadienAufraeumen(l);
+            if (s.Art == AussenArt.Fluss)
+            {
+                RadienAufraeumen(l);
+            }
         }
     }
 
-    /// <summary>Geglaetteter Linienzug eines Flusses wie im Spiel (mit Radius je Eckpunkt).</summary>
-    public static List<Vector2> FlussGlatt(PyObjekt aussen, AussenStelle s) =>
+    /// <summary>Geglaetteter Linienzug eines Flusses oder einer Bahn wie im Spiel (mit Radius je Eckpunkt).</summary>
+    public static List<Vector2> LinienzugGlatt(PyObjekt aussen, AussenStelle s) =>
         Kurve.Glatt(EckpunkteWerte(aussen, s), StadtSzene.Radien(Objekt(Aussen.Landschaft(aussen)[s.Nummer])));
 }

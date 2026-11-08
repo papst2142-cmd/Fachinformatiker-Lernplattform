@@ -138,6 +138,7 @@ public static partial class StadtbauPruefung
         Paketplatz(stadt, szene, funde);
         WasserRegeln(stadt, stand, szene, fassung, funde);
         KurvenRegeln(szene, fassung, funde);
+        BahnRegeln(szene, fassung, funde);
         KreisverkehrRegeln(szene, fassung, funde);
         StreckenRegeln(szene, funde);
         FusswegRegeln(szene, fassung, funde);
@@ -163,10 +164,15 @@ public static partial class StadtbauPruefung
             }
         }
         var nr = 0;
+        var bahnNr = 0;
         foreach (var l in ListeOderLeer(welt, "landschaft").OfType<PyObjekt>())
         {
             switch (l["typ"] as string)
             {
+                case "bahn":
+                    // Welle K2: Punkte der Bahn (StadtbauPruefung.Bahn.cs, Regel 1)
+                    BahnDaten(l, ++bahnNr, breite, hoehe, funde);
+                    break;
                 case "strasse":
                     nr++;
                     var punkte = ListeOderLeer(l, "punkte").OfType<List<object?>>().ToList();
