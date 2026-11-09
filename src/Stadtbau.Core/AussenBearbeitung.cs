@@ -262,6 +262,10 @@ public static partial class AussenBearbeitung
         {
             yield return f;
         }
+        foreach (var z in AlleZebras(aussen))
+        {
+            yield return z;
+        }
     }
 
     /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
@@ -298,6 +302,9 @@ public static partial class AussenBearbeitung
     /// Oberstes Stueck an einem Punkt: zuerst kleine (Laterne, Paketplatz, Beet, Baum), dann Haeuser, dann Parks, dann
     /// Strassen (Abstand zur Mittellinie bis zur halben Breite samt Gehweg). <paramref name="greifen"/> = Greifradius.
     /// </summary>
+    /// <summary>S 0.26.0: so nah greift eine Laterne, wenn auf die Fahrbahn getippt wird.</summary>
+    public const double LaterneAufFahrbahnGreifen = 0.2;
+
     public static AussenStelle? StueckBei(PyObjekt aussen, double x, double y, double greifen = 0.3)
     {
         var p = new Vector2((float)x, (float)y);
@@ -307,14 +314,23 @@ public static partial class AussenBearbeitung
         {
             return ecke;
         }
+        // S 0.26.0: an jeder Strasse stehen jetzt Laternen (0,5 neben der Mitte). Wer auf die Fahrbahn tippt, meint die
+        // Strasse: dort greift eine Laterne nur ganz nah (sonst liesse sich die Strasse in 3D kaum noch greifen)
+        var aufFahrbahn = Aussen.Landschaft(aussen).OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "strasse") && Kurve.Abstand(p, Linie(t["punkte"])) <= StadtSzene.StrassenBreite / 2);
         foreach (var art in new[] { AussenArt.Laterne, AussenArt.Paketplatz, AussenArt.Beet, AussenArt.Baum })
         {
+            var weit = art == AussenArt.Laterne && aufFahrbahn ? Math.Min(greifen, LaterneAufFahrbahnGreifen) : greifen;
             var naechstes = alle.Where(a => a.Stelle.Art == art).Select(a => (a.Stelle, D: Vector2.Distance(p, new Vector2((float)a.X, (float)a.Y))))
-                .Where(a => a.D <= greifen).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
+                .Where(a => a.D <= weit).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault();
             if (naechstes is not null)
             {
                 return naechstes;
             }
+        }
+        // S 0.26.0: ein Zebrastreifen liegt auf der Strasse und vor ihr
+        if (ZebraBei(aussen, p, greifen) is { } zebra)
+        {
+            return zebra;
         }
         // Katalog-Stuecke (zuletzt gesetztes oben) vor den Haeusern: sie stehen oft auf oder an ihnen
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Katalog).Reverse())
@@ -414,6 +430,10 @@ public static partial class AussenBearbeitung
         if (x < 0 || y < 0 || x > breite || y > hoehe)
         {
             return null;
+        }
+        if (art == AussenArt.Zebrastreifen)
+        {
+            return ZebraSetzen(aussen, x, y);
         }
         if (IstWasserOderBahn(art))
         {
@@ -575,6 +595,13 @@ public static partial class AussenBearbeitung
             FusswegVerschieben(aussen, s, dx, dy);
             return;
         }
+        if (s.Art == AussenArt.Zebrastreifen)
+        {
+            ZebraVerschieben(aussen, s, dx, dy);
+            return;
+        }
+        // S 0.26.0: Zebrastreifen einer geraden Strasse wandern mit (vorher bestimmen, solange sie darauf liegen)
+        var zebras = s.Art == AussenArt.Strasse ? ZebrasAuf(aussen, s) : [];
         var land = Aussen.Landschaft(aussen);
         void Schieben(object? punkt)
         {
@@ -672,6 +699,11 @@ public static partial class AussenBearbeitung
                     PaketSetzen(aussen, lage.Mitte.X + dx, lage.Mitte.Y + dy);
                 }
                 break;
+        }
+        if (zebras.Count > 0)
+        {
+            ZebrasMitnehmen(aussen, zebras, dx, dy);
+            ZebrasNachlegen(aussen, zebras);
         }
     }
 
@@ -813,6 +845,7 @@ public static partial class AussenBearbeitung
         AussenArt.Haus or AussenArt.Gebaeude => null,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         AussenArt.Fussweg => Texte.FusswegDrehenNicht,
+        AussenArt.Zebrastreifen => Texte.ZebraDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
     };
 
@@ -892,6 +925,10 @@ public static partial class AussenBearbeitung
         if (s.Art == AussenArt.Fussweg)
         {
             return FusswegKopieren(aussen, s);
+        }
+        if (s.Art == AussenArt.Zebrastreifen)
+        {
+            return ZebraKopieren(aussen, s);
         }
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
@@ -1005,6 +1042,17 @@ public static partial class AussenBearbeitung
             case AussenArt.Katalog:
                 Aussen.KatalogStuecke(aussen).RemoveAt(s.Nummer);
                 break;
+            case AussenArt.Zebrastreifen:
+                ZebraLoeschen(aussen, s.Nummer);
+                break;
+            case AussenArt.Strasse:
+            {
+                // S 0.26.0: die Zebrastreifen der Strasse gehen mit (Rueckgaengig holt beides)
+                var zebras = ZebrasAuf(aussen, s);
+                land.RemoveAt(s.Nummer);
+                ZebrasEntfernen(aussen, zebras);
+                break;
+            }
             case AussenArt.Gebaeude:
             {
                 var modell = Py.Str(Objekt(land[s.Nummer])["modell"]);
@@ -1103,13 +1151,15 @@ public static partial class AussenBearbeitung
             AussenArt.Haus => Texte.Haus + " „" + ortName(s.Ort) + "“" + lage,
             AussenArt.Gebaeude => (BauName(aussen, s) is { } bau ? Texte.NeuesGebaeude + " „" + bau + "“" : Texte.HausOhneOrt)
                 + " (" + Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]) + ")" + lage,
-            AussenArt.Laterne => (Liste(Aussen.Laternen(aussen)[s.Nummer])[2] is true ? Texte.LaterneDoppelt : Texte.Laterne) + " Nr. " + (s.Nummer + 1).ToString(De) + lage,
+            AussenArt.Laterne => (Liste(Aussen.Laternen(aussen)[s.Nummer])[2] is true ? Texte.LaterneDoppelt : Texte.Laterne) + " Nr. " + (s.Nummer + 1).ToString(De)
+                + (LaternenAutomatik.IstAutomatisch(aussen, s.Nummer) ? " " + Texte.LaterneAutomatischZusatz : "") + lage,
             AussenArt.Beet => Texte.Beet + lage,
             AussenArt.Baum => Texte.Baum + lage,
             AussenArt.Park => Texte.Park + lage,
             AussenArt.Katalog => KatalogBeschreibung(KatalogId(aussen, s)) + lage,
             AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn => WasserBeschreibung(aussen, s, lage),
             AussenArt.Fussweg => FusswegBeschreibung(aussen, s, lage),
+            AussenArt.Zebrastreifen => ZebraBeschreibung(s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

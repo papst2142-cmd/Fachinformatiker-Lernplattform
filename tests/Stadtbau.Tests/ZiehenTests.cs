@@ -176,6 +176,29 @@ public class ZiehenTests
     [InlineData(ZiehArt.Fluss)]
     [InlineData(ZiehArt.Bahn)]
     public void EinSchrittImVerlauf_UndVorschauGleichErgebnis(ZiehArt art)
+        => VorschauGleichErgebnis(art);
+
+    /// <summary>Kopie von <paramref name="stand"/> ohne die automatischen Laternen, die <paramref name="vorher"/> noch nicht hatte.</summary>
+    private static PyObjekt OhneAutoLaternen(PyObjekt stand, PyObjekt vorher)
+    {
+        var k = (PyObjekt)Py.Kopie(stand)!;
+        var alt = LaternenAutomatik.Gesetzt(vorher);
+        var neu = LaternenAutomatik.Gesetzt(k).Where(g => !alt.Any(x => Vector2.Distance(x, g) < 0.001f)).ToList();
+        Aussen.Laternen(k).RemoveAll(l => l is List<object?> q && neu.Any(g => Vector2.Distance(g, new Vector2((float)Py.F(q[0]), (float)Py.F(q[1]))) < 0.001f));
+        if (Get(vorher, LaternenAutomatik.Teil) is PyObjekt teil)
+        {
+            Py.Setzen(k, LaternenAutomatik.Teil, Py.Kopie(teil));
+        }
+        else
+        {
+            var rest = k.Where(e => e.Key != LaternenAutomatik.Teil).ToList();
+            k.Clear();
+            k.AddRange(rest);
+        }
+        return k;
+    }
+
+    private void VorschauGleichErgebnis(ZiehArt art)
     {
         var p = Projekt.Neu("Ziehen " + art, D, Daten.NeueAblage(), leer: (32, 24));
         p.AussenAendern("Straße", a => AussenBearbeitung.Ziehen(a, ZiehArt.Strasse, 4, 4, 12, 4, true, out _));
@@ -191,7 +214,10 @@ public class ZiehenTests
         var schritte = p.SchritteZurueck;
         p.AussenAendern(AussenBearbeitung.ZiehName(art) + " " + Texte.Gezogen, a => AussenBearbeitung.Ziehen(a, art, ax, ay, bx, by, true, out _));
         Assert.Equal(schritte + 1, p.SchritteZurueck);
-        Assert.Equal(PythonJson.Standard(vorschau.Stand), PythonJson.Standard(p.AussenStand));
+        // S 0.26.0 (Weisung P12-115): der Schritt stellt an einer neuen Strasse automatische Laternen auf (die Vorschau zeigt
+        // nur das Gezogene); sonst ist der Stand genau die Vorschau
+        Assert.Equal(PythonJson.Standard(vorschau.Stand), PythonJson.Standard(OhneAutoLaternen(p.AussenStand, vorschau.Stand)));
+        Assert.Equal(art == ZiehArt.Strasse, LaternenAutomatik.Gesetzt(p.AussenStand).Count > LaternenAutomatik.Gesetzt(vorschau.Stand).Count);
         // ein Schritt zurueck nimmt alles mit (auch zusammengefasste Stuecke)
         p.Rueckgaengig();
         Assert.Equal(schritte, p.SchritteZurueck);

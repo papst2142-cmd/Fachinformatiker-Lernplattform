@@ -394,6 +394,15 @@ public sealed class KartenFlaeche : Control
             var glatt = AussenBearbeitung.FusswegGlatt(a, fs).Select(q => q + new System.Numerics.Vector2((float)Dx(fs), (float)Dy(fs))).ToList();
             Linie(ctx, glatt, new Pen(Pinsel("#EFEBE2"), Fusswege.Breite * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
         }
+        // S 0.26.0 (Weisung P12-115): Zebrastreifen als weisse Balken quer ueber die Fahrbahn wie im Spiel; beim Ziehen nur
+        // laengs der Strasse
+        foreach (var (s, z) in Zebras(a, dx, dy))
+        {
+            foreach (var (z1, z2) in Lernplattform.Core.Spiel.Probe.Zebrastreifen.BalkenVon(z))
+            {
+                Linie(ctx, [z1, z2], new Pen(Brushes.White, Lernplattform.Core.Spiel.Probe.Zebrastreifen.BalkenBreite * _zoom, lineCap: PenLineCap.Flat));
+            }
+        }
         // Welle K3: Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum) wie im Spiel
         for (var i = 0; i < land.Count; i++)
         {
@@ -546,6 +555,9 @@ public sealed class KartenFlaeche : Control
                 case AussenArt.Fussweg:
                     Linie(ctx, AussenBearbeitung.FusswegGlatt(a, aw).Select(q => q + new System.Numerics.Vector2((float)dx, (float)dy)).ToList(), stift);
                     break;
+                case AussenArt.Zebrastreifen when Zebras(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Zebra is { } zw:
+                    Flaeche(ctx, ZebraUmriss(zw), null, stift);
+                    break;
                 case AussenArt.Haus or AussenArt.Gebaeude:
                     var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, aw);
                     ctx.DrawRectangle(null, stift, new Rect(P(hx + dx, hy + dy), P(hx + hw + dx, hy + hh + dy)).Inflate(3));
@@ -633,6 +645,33 @@ public sealed class KartenFlaeche : Control
             }
         }
         return punkte;
+    }
+
+    /// <summary>Alle Zebrastreifen mit Lage; der ausgewaehlte waehrend des Ziehens um den Anteil laengs der Strasse verschoben.</summary>
+    private List<(AussenStelle Stelle, Lernplattform.Core.Spiel.Probe.Zebra Zebra)> Zebras(PyObjekt a, double dx, double dy)
+    {
+        var liste = new List<(AussenStelle, Lernplattform.Core.Spiel.Probe.Zebra)>();
+        for (var i = 0; i < AussenBearbeitung.ZebraListe(a).Count; i++)
+        {
+            var s = new AussenStelle(AussenArt.Zebrastreifen, i);
+            if (AussenBearbeitung.ZebraVon(a, s) is { } z)
+            {
+                if (s == Auswahl && (dx != 0 || dy != 0))
+                {
+                    z = z with { Mitte = z.Mitte + (z.Richtung * System.Numerics.Vector2.Dot(new System.Numerics.Vector2((float)dx, (float)dy), z.Richtung)) };
+                }
+                liste.Add((s, z));
+            }
+        }
+        return liste;
+    }
+
+    /// <summary>Umriss eines Zebrastreifens (ueber die ganze Fahrbahn, Breite laengs der Strasse).</summary>
+    internal static List<System.Numerics.Vector2> ZebraUmriss(Lernplattform.Core.Spiel.Probe.Zebra z)
+    {
+        var l = z.Richtung * (Lernplattform.Core.Spiel.Probe.Zebrastreifen.Breite / 2);
+        var q = z.Quer * (StadtSzene.StrassenBreite / 2);
+        return [z.Mitte - l - q, z.Mitte + l - q, z.Mitte + l + q, z.Mitte - l + q];
     }
 
     private void Flaeche(DrawingContext ctx, IReadOnlyList<System.Numerics.Vector2> punkte, IBrush? fuellung, Pen? stift = null)
@@ -960,6 +999,10 @@ public sealed class KartenFlaeche : Control
                 : art == AussenArt.Kurve && Strassenkurve.Lesen(modell) is { } k ? Strassenkurve.Name(k.Form, k.Winkel, k.Radius)
                 : art == AussenArt.Kreisverkehr && AussenBearbeitung.KreisverkehrRadius(modell) is { } kr ? Texte.KreisverkehrName(kr) : ArtName(art)) + " gesetzt");
         }
+        else if (art == AussenArt.Zebrastreifen)
+        {
+            Gemeldet?.Invoke(Texte.ZebraKeineStrasse);
+        }
         Waehlen(neu);
         return neu;
     }
@@ -999,6 +1042,7 @@ public sealed class KartenFlaeche : Control
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
+        AussenArt.Zebrastreifen => Texte.Zebrastreifen,
         _ => Texte.Paketplatz,
     };
 

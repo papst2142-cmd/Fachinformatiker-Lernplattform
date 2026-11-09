@@ -228,6 +228,17 @@ public static class Bauen3D
             }
             case AussenArt.Fussweg:
                 return [.. Band(AussenBearbeitung.FusswegGlatt(aussen, s), Fusswege.Breite / 2)];
+            case AussenArt.Zebrastreifen:
+            {
+                // S 0.26.0: ueber die ganze Fahrbahn, Breite laengs der Strasse
+                if (AussenBearbeitung.ZebraVon(aussen, s) is not { } z)
+                {
+                    return [];
+                }
+                var l = z.Richtung * (Zebrastreifen.Breite / 2);
+                var q = z.Quer * (StadtSzene.StrassenBreite / 2);
+                return [[z.Mitte - l - q, z.Mitte + l - q, z.Mitte + l + q, z.Mitte - l + q]];
+            }
             case AussenArt.Steg:
             {
                 if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)

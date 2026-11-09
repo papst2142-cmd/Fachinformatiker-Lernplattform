@@ -119,7 +119,28 @@ public sealed class Verkehr
     /// </summary>
     public bool Passt(StadtSzene szene) => (FuerStrassen is not { } eigene
         || (eigene.Count == szene.Strassen.Count && eigene.Zip(szene.Strassen).All(p => p.First.SequenceEqual(p.Second))))
-        && (FuerTag is not { } tag || tag == szene.Spieltag);
+        && (FuerTag is not { } tag || tag == szene.Spieltag)
+        && Zebras.SequenceEqual(szene.Zebras);
+
+    /// <summary>
+    /// Welle A 0.54.0 (Weisung P12-115): Zebrastreifen der Szene; ein Auto haelt davor, solange die Figur darauf steht.
+    /// </summary>
+    public List<Zebra> Zebras { get; } = [];
+
+    /// <summary>
+    /// Welle A 0.54.0 (Sammelliste 254): steht die Figur auf der Fahrbahn (Mitte der Figur naeher als die halbe
+    /// Strassenbreite an der Mitte einer Strasse)? Auf dem Gehweg nicht. Ohne bekannte Strassen gilt die Regel bis A 0.53.2.
+    /// </summary>
+    public bool AufFahrbahn(Vector2 figur) => FuerStrassen is null || FuerStrassen.Any(s => Kurve.Abstand(figur, s) < StadtSzene.StrassenBreite / 2);
+
+    /// <summary>Gegenprobe Welle A 0.54.0: Anhalten wie bis A 0.53.2 (Figur bis 0,45 quer zur Spur, auch auf dem Gehweg).</summary>
+    public static bool AnhaltenAltFuerTests
+    {
+        get => AnhaltenAlt.Value;
+        set => AnhaltenAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> AnhaltenAlt = new();
 
     /// <summary>
     /// Welle A 0.51.0: Spieltag, fuer den die automatischen Strecken gelten (null = feste Strecken, gleich an jedem Tag).
@@ -173,10 +194,12 @@ public sealed class Verkehr
         {
             var v0 = Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen, szene.Spieltag), tempo, abstand, szene.Strassen);
             v0.FuerTag = szene.Spieltag;
+            v0.Zebras.AddRange(szene.Zebras);
             return v0;
         }
         var v = new Verkehr { AbstandVorne = abstand, FuerStrassen = szene.Strassen };
         v.Kreuzungen.AddRange(KreuzungenAus(szene.Strassen));
+        v.Zebras.AddRange(szene.Zebras);
         for (var nr = 0; nr < Strecken.Length; nr++)
         {
             var (modell, punkte, start) = Strecken[nr];
@@ -290,6 +313,11 @@ public sealed class Verkehr
     public void Weiter(double sekunden, float fx, float fz)
     {
         var figurOrt = new Vector2(fx, fz);
+        // Welle A 0.54.0 (Sammelliste 254): nur eine Figur auf der Fahrbahn haelt die Autos an (auf dem Gehweg fahren sie
+        // weiter); steht sie auf einem Zebrastreifen, haelt jedes Auto davor
+        var alt = AnhaltenAltFuerTests;
+        var aufFahrbahn = alt || AufFahrbahn(figurOrt);
+        var zebra = alt ? null : Zebras.FirstOrDefault(z => z.Drauf(figurOrt, 0.05f, 0.1f));
         // belegt: Felder, in denen ein Auto steht (Heck, Mitte oder Front)
         var belegt = new Dictionary<int, Auto>();
         foreach (var a in Autos)
@@ -310,7 +338,15 @@ public sealed class Verkehr
             var zurFigur = figurOrt - ort;
             var voraus = Vector2.Dot(zurFigur, richtung);
             var quer = MathF.Abs((zurFigur.X * richtung.Y) - (zurFigur.Y * richtung.X));
-            var figur = voraus > -0.1f && voraus < FigurVoraus && quer < 0.45f;
+            var figur = aufFahrbahn && voraus > -0.1f && voraus < FigurVoraus && quer < 0.45f;
+            if (zebra is not null && !figur)
+            {
+                var zuZebra = zebra.Mitte - ort;
+                var vz = Vector2.Dot(zuZebra, richtung);
+                var qz = MathF.Abs((zuZebra.X * richtung.Y) - (zuZebra.Y * richtung.X));
+                figur = vz + (Zebrastreifen.Breite / 2) > -0.1f && vz - (Zebrastreifen.Breite / 2) < FigurVoraus && qz < 0.45f
+                    && MathF.Abs(Vector2.Dot(zebra.Richtung, richtung)) > 0.7f;
+            }
             // anderes Auto zu nah voraus (gleiche Richtung)?
             var vorne = Autos.Any(b => b != a && b.Lage() is var (bo, br) && Vector2.Dot(bo - ort, richtung) is var d && d > 0 && d < AbstandVorne
                 && Vector2.Distance(bo, ort) < AbstandVorne + 0.05f && Vector2.Dot(br, richtung) > 0.5f);

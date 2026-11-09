@@ -740,6 +740,26 @@ public sealed partial class Hauptansicht : UserControl
         KnoepfeFreigeben();
     }
 
+    /// <summary>S 0.26.0: Knopf „Zebrastreifen“ (Start-Test).</summary>
+    internal Button? ZebraKnopf { get; private set; }
+
+    /// <summary>S 0.26.0: Knopf „Laternen neu verteilen“ (Start-Test).</summary>
+    internal Button? LaternenVerteilenKnopf { get; private set; }
+
+    /// <summary>Knopf „Laternen neu verteilen“: ein Schritt; Ergebnis als Hinweis (null = kein Projekt).</summary>
+    internal string? LaternenVerteilen()
+    {
+        if (_projekt is null || _projekt.NurLesen)
+        {
+            return null;
+        }
+        var (dazu, weg) = _projekt.LaternenVerteilen();
+        var meldung = Texte.LaternenVerteilt(dazu, weg);
+        Karte.Waehlen(null);
+        Melden(meldung);
+        return meldung;
+    }
+
     private Control KarteBauen()
     {
         // links: Stuecke fuer draussen
@@ -749,10 +769,19 @@ public sealed partial class Hauptansicht : UserControl
             k.Click += (_, _) => SetzenKnopfGedrueckt(k, false, () => AussenSetzenWaehlen(art, modell?.Invoke()));
             return k;
         }
-        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse) } };
+        // S 0.26.0 (Weisung P12-115): Zebrastreifen neben der Strasse, „Laternen neu verteilen“ bei der Laterne
+        var zebra = new Button { Content = Schrift.Text(Texte.Zebrastreifen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.Zebrastreifen + " setzen").Mit(Texte.ZebrastreifenTipp + " " + Texte.SetzenKnopfTipp);
+        zebra.Click += (_, _) => SetzenKnopfGedrueckt(zebra, false, () => AussenSetzenWaehlen(AussenArt.Zebrastreifen, null));
+        ZebraKnopf = zebra;
+        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra } };
+        var verteilen = new Button { Content = Schrift.Text(Texte.LaternenVerteilen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.LaternenVerteilen).Mit(Texte.LaternenVerteilenTipp);
+        verteilen.Click += (_, _) => LaternenVerteilen();
+        LaternenVerteilenKnopf = verteilen;
         var natur = new WrapPanel
         {
-            Children = { KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park), KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne) },
+            Children = { KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park), KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne), verteilen },
         };
         // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
         Button KurvenKnopf(string text, string tipp, Func<string> kennung)
@@ -1142,6 +1171,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Fluss => Texte.Fluss,
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
+        AussenArt.Zebrastreifen => Texte.Zebrastreifen,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,

@@ -647,6 +647,16 @@ public static class Texte
     public const string ZiehenAusserhalb = "Die Verbindung läge nicht ganz auf der Karte.";
     public const string FusswegDrehenNicht = "Einen Fußweg zieht man neu, statt ihn zu drehen.";
 
+    // Welle S 0.26.0 (Weisung P12-115): Zebrastreifen und Laternen automatisch
+    public const string Zebrastreifen = "Zebrastreifen";
+    public const string ZebrastreifenTipp = "Auf eine gerade Straße mit Gehweg antippen: der Zebrastreifen legt sich quer über die Fahrbahn. Nur hier geht die Figur über eine Straße mit Gehweg; Autos halten davor.";
+    public const string ZebraDrehenNicht = "Ein Zebrastreifen liegt immer quer zur Straße; schieben geht nur längs der Straße.";
+    public const string ZebraKeineStrasse = "Hier ist keine gerade Straße: den Zebrastreifen auf ein gerades Stück Straße setzen.";
+    public const string LaternenVerteilen = "Laternen neu verteilen";
+    public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen im Abstand 3,5 auf, abwechselnd links und rechts. Selbst gesetzte Laternen bleiben, gelöschte automatische kommen nicht wieder.";
+    public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} automatische entfernt.";
+    public const string LaterneAutomatischZusatz = "(automatisch)";
+
     public static string ZiehenRichtung(double grad) => string.Create(CultureInfo.GetCultureInfo("de-DE"),
         $"Die beiden Enden passen nicht zu Bögen in Schritten von 7,5 Grad (es fehlen {grad:0.#} Grad). Ein Ende auf ein Vielfaches von 7,5 Grad drehen.");
 

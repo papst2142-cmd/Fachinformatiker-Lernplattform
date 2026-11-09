@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.26.0
+
+Laternen stellen sich jetzt von selbst an die Straßen, und es gibt Zebrastreifen.
+
+- Legst du eine Straße an oder änderst sie, stellt das Werkzeug an ihr Laternen auf: alle 3,5 Längen eine, abwechselnd links und rechts, in Kurven außen. An Kreuzungen, vor Türen und Wegen, am Bahnübergang, auf Zebrastreifen und am Kreisverkehr bleibt Platz. Steht etwas im Weg, rückt die Laterne ein Stück zur Seite oder fällt weg.
+- Selbst gesetzte Laternen bleiben immer stehen; die automatischen halten Abstand zu ihnen. Löschst du eine automatische Laterne, merkt sich das Projekt das, und sie kommt an dieser Stelle nicht wieder. Verschiebst du eine, gilt sie danach als selbst gesetzt. In der Auswahl steht bei einer automatischen Laterne „(automatisch)“.
+- Der Knopf „Laternen neu verteilen“ (Gruppe „Natur und Licht“) stellt alle automatischen Laternen an allen Straßen neu auf. Die heutige Stadt 1 behält ihre Laternen, solange du keine Straße änderst.
+- Neuer Knopf „Zebrastreifen“ (Gruppe „Straßen und Wege“), in der Karte von oben und in der 3D-Ansicht. Der Zebrastreifen legt sich quer genau auf die Mitte einer geraden Straße und lässt sich nur längs der Straße schieben. Schiebst du die Straße, wandert er mit; löschst du sie, fällt er weg.
+- Im Spiel geht die Figur über eine Straße mit Gehweg nur an einem Zebrastreifen. Die Prüfung meldet rot, wenn ein Zebrastreifen in einer Kurve, im Kreisverkehr, auf einer Straße ohne Gehweg, zu nah an Kreuzung, Kreisverkehr, Bahnübergang oder einem anderen Zebrastreifen liegt oder wenn eine Laterne oder ein Stück darauf steht. Kommt die Figur nicht mehr zu einem Ort, schlägt die Prüfung vor, einen Zebrastreifen zu setzen.
+
 ## S 0.25.1
 
 Deine Projekte liegen am PC jetzt an einem sicheren Ort, und das Werkzeug aktualisiert sich am PC wieder selbst.

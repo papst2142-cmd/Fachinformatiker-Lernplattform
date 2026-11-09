@@ -144,13 +144,14 @@ public class KreisverkehrTests
     }
 
     [Fact]
-    public void Spiel_InselNichtBegehbar_RingUndGehwegBegehbar_GegenprobeOhneFeld()
+    public void Spiel_InselNichtBegehbar_GehwegBegehbar_FahrbahnNicht_GegenprobeOhneFeld()
     {
         var (a, s) = Grundlage();
         var szene = Szene(a);
         Assert.False(szene.Laufraster.KannStehen(M.X, M.Y));
         Assert.False(szene.Laufraster.KannStehen(M.X + 1.2, M.Y));
-        Assert.True(szene.Laufraster.KannStehen(M.X + 2, M.Y + 0.3));
+        // S 0.26.0 (Weisung P12-115): die Fahrbahn einer Strasse mit Gehweg ist nur am Zebrastreifen begehbar, auch am Ring
+        Assert.False(szene.Laufraster.KannStehen(M.X + 2, M.Y + 0.3));
         Assert.True(szene.Laufraster.KannStehen(M.X - 2.5, M.Y + 0.6));
         // Gegenprobe: derselbe Ring ohne Feld kreisverkehr (nur eine runde Strasse) hat keine Insel, die Mitte ist Wiese
         var l = Objekt(Land(a)[s.Nummer]);

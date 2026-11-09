@@ -168,6 +168,12 @@ public sealed partial class StadtSzene
     /// <summary>Mitten der Bahnuebergaenge; Strasse = mit Warnkreuzen, sonst Fussweg.</summary>
     public IReadOnlyList<(Vector2 Mitte, bool Strasse)> Uebergaenge { get; private init; } = [];
 
+    /// <summary>Welle A 0.54.0: die Zebrastreifen der Stadt (auf einer geraden Strasse gelegt).</summary>
+    public IReadOnlyList<Zebra> Zebras { get; private init; } = [];
+
+    /// <summary>Welle A 0.54.0: hat die Stadt eine Strasse mit Gehweg (dann ist deren Fahrbahn nur am Zebrastreifen begehbar)?</summary>
+    public bool MitGehweg { get; private init; }
+
     /// <summary>Ausstattung der Bahnuebergaenge an Strassen (P8-49): Andreaskreuz, Lichter, Halbschranke.</summary>
     public IReadOnlyList<Bahnuebergang.Kreuz> Andreaskreuze { get; private init; } = [];
 
@@ -712,6 +718,9 @@ public sealed partial class StadtSzene
         // bisher 0,5 neben der Strassenmitte, also auf dem Gehweg)
         var gehwege = landschaft.Where(t => Py.Gleich(t["typ"], "strasse") && GehwegBreite(t) > 0)
             .Select(t => (Linie: Vektoren(t["punkte"]), Halb: (StrassenBreite / 2) + GehwegBreite(t))).ToList();
+        // Welle A 0.54.0 (Weisung P12-115, Sammelliste 254/255): Zebrastreifen aus stadtdaten.zebrastreifen; die Fahrbahn
+        // einer Strasse mit Gehweg ist nur dort frei zum Gehen (Fassung 0: keine Zebrastreifen, keine Strasse mit Gehweg)
+        var zebras = Zebrastreifen.Alle(stadt.Daten, strassen);
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -864,7 +873,20 @@ public sealed partial class StadtSzene
         // am Anschluss auf beiden Seiten Striche weg (Luecke). Eine Strasse ohne solchen Anschluss (alle in Fassung 0) wie bisher.
         foreach (var (x1, z1, x2, z2) in MittellinienStriche(strassen))
         {
+            // Welle A 0.54.0: kein Strich auf einem Zebrastreifen
+            if (zebras.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f)))
+            {
+                continue;
+            }
             teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
+        }
+        // Welle A 0.54.0: weisse Balken je Zebrastreifen (flach auf der Hoehe der Mittellinie, je Balken 2 Dreiecke)
+        foreach (var z in zebras)
+        {
+            foreach (var (a, b) in Zebrastreifen.BalkenVon(z))
+            {
+                teile.Add(Band(a.X, a.Y, b.X, b.Y, Hoehe.Mittellinie, Zebrastreifen.BalkenBreite, Weiss));
+            }
         }
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
         {
@@ -1157,7 +1179,7 @@ public sealed partial class StadtSzene
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, zebras);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1192,6 +1214,8 @@ public sealed partial class StadtSzene
             Stege = stege,
             Flaechen = flaechen,
             Eis = Wasser.EisAn(stadt.Daten),
+            Zebras = zebras,
+            MitGehweg = gehwege.Count > 0,
         };
     }
 
@@ -1413,7 +1437,8 @@ public sealed partial class StadtSzene
     /// </summary>
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
-        List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null, List<List<Vector2>>? inseln = null)
+        List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null, List<List<Vector2>>? inseln = null,
+        List<Zebra>? zebras = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1553,11 +1578,40 @@ public sealed partial class StadtSzene
                 }
             }
         }
+        // Welle A 0.54.0 (Weisung P12-115, Nico P12-75 Fragen 3 = a, 4 = a): auf einer Strasse mit Gehweg geht die Figur
+        // nur auf dem Gehweg; die Fahrbahn ist gesperrt (auch gegen "immer frei"), ausser auf einem Zebrastreifen (quer bis
+        // an die Gehwege). Strassen ohne Gehweg (Fassung 0, alte Projekte) bleiben begehbar wie bisher.
+        var fahrbahn = new bool[spalten * zeilen];
+        if (FahrbahnFreiAltFuerTests is false)
+        {
+            Linien([.. (gehwege ?? []).Select(g => g.Linie)], StrassenBreite / 2, fahrbahn);
+        }
+        foreach (var zebra in zebras ?? [])
+        {
+            var weite = (StrassenBreite / 2) + 0.2f;
+            var (s0, s1) = Bereich(zebra.Mitte.X - weite, zebra.Mitte.X + weite, spalten);
+            var (r0, r1) = Bereich(zebra.Mitte.Y - weite, zebra.Mitte.Y + weite, zeilen);
+            for (var s = s0; s <= s1; s++)
+            {
+                for (var z = r0; z <= r1; z++)
+                {
+                    if (zebra.Drauf(Mitte(s, z), 0f, 0.2f))
+                    {
+                        fahrbahn[(s * zeilen) + z] = false;
+                        immer[(s * zeilen) + z] = true;
+                    }
+                }
+            }
+        }
         var frei = new List<(int, int)>();
         for (var s = 0; s < spalten; s++)
         {
             for (var z = 0; z < zeilen; z++)
             {
+                if (fahrbahn[(s * zeilen) + z])
+                {
+                    continue;
+                }
                 if (immer[(s * zeilen) + z] || !gesperrt[(s * zeilen) + z])
                 {
                     frei.Add((s, z));
@@ -1566,6 +1620,15 @@ public sealed partial class StadtSzene
         }
         return new Wegsuche(frei, LaufSchritt);
     }
+
+    /// <summary>Gegenprobe Welle A 0.54.0: Laufraster wie bis A 0.53.2 (Fahrbahn jeder Strasse frei zum Gehen).</summary>
+    public static bool FahrbahnFreiAltFuerTests
+    {
+        get => FahrbahnAlt.Value;
+        set => FahrbahnAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> FahrbahnAlt = new();
 
     private static void Linie(List<Teil> teile, List<(float X, float Z)> p, float hoehe, float breite, Vector3 farbe)
     {

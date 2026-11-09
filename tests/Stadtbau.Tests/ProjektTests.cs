@@ -210,8 +210,8 @@ public class ProjektTests
     public void Senden_Name_UndWegVonBerichtSenden()
     {
         var zeit = new DateTimeOffset(2026, 11, 6, 9, 30, 5, TimeSpan.FromHours(1));
-        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.25.1.fistadt", Projekt.SendeName(zeit, "PC", 1));
-        Assert.Equal("stadtbau/2026-11-06_093005_Tablet_S0.25.1_3.fistadt", Projekt.SendeName(zeit, "Tablet", 3));
+        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.26.0.fistadt", Projekt.SendeName(zeit, "PC", 1));
+        Assert.Equal("stadtbau/2026-11-06_093005_Tablet_S0.26.0_3.fistadt", Projekt.SendeName(zeit, "Tablet", 3));
         var p = Projekt.Neu("Senden", D, Daten.NeueAblage(), "moebelhaus");
         p.Aendern("moebelhaus", "Boden", g => Bearbeitung.Boden(g, "flur", "teppich"));
         var datei = p.Exportieren(zeit);
@@ -225,8 +225,8 @@ public class ProjektTests
             return new VersandErgebnis(VersandArt.Gesendet, n(1), 201);
         });
         Assert.Equal(VersandArt.Gesendet, ergebnis.Art);
-        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.25.1.fistadt", name);
-        Assert.Equal("Stadtbau S 0.25.1 PC", nachricht);
+        Assert.Equal("stadtbau/2026-11-06_093005_PC_S0.26.0.fistadt", name);
+        Assert.Equal("Stadtbau S 0.26.0 PC", nachricht);
         // ohne eingebauten Schluessel (Tests, PR-Laeufe): nichts gesendet, kein Netz
         Assert.Equal(VersandArt.NichtVerfuegbar, Projekt.Senden(datei, zeit, "PC", null).Art);
     }
@@ -234,10 +234,10 @@ public class ProjektTests
     [Fact]
     public void Werkzeug_VersionUndStufe()
     {
-        Assert.Equal("0.25.1", Werkzeug.Version);
+        Assert.Equal("0.26.0", Werkzeug.Version);
         Assert.Equal("S", Werkzeug.Stufe);
-        Assert.Equal("vS0.25.1", Werkzeug.Tag);
-        Assert.Equal("Fachinformatiker Stadtbau S 0.25.1", Werkzeug.Kennzeile);
+        Assert.Equal("vS0.26.0", Werkzeug.Tag);
+        Assert.Equal("Fachinformatiker Stadtbau S 0.26.0", Werkzeug.Kennzeile);
         Assert.True(Lernplattform.Core.Update.ReleaseLinie.IstStadtbau(Werkzeug.Tag));
         Assert.False(Lernplattform.Core.Update.ReleaseLinie.IstLernplattform(Werkzeug.Tag));
     }
