@@ -78,7 +78,7 @@ echo "Probe 1: Feed vS $SOLL_S und vA $SOLL_A gefunden"
 
 # 2 aeltere Version 0.0.1 aus dem eben gebauten Stand
 vpk pack -u "$ID" -v 0.0.1 -p "$PUB" -e Stadtbau.exe --packTitle "Fachinformatiker Stadtbau" -c "$KANAL" -o "$ARB/feed"
-"$ARB/feed/$ID-win-Setup.exe" --silent || fehler "Setup.exe Rueckgabe $?"
+"$ARB/feed/$ID-$KANAL-Setup.exe" --silent || fehler "Setup.exe Rueckgabe $?"
 sleep 5
 # Setup startet das Werkzeug nach der Installation; fuer die Probe ohne Fenster beenden
 taskkill //IM Stadtbau.exe //F >/dev/null 2>&1 || true
@@ -118,6 +118,7 @@ echo "Probe 3: Daten kopiert, alter Ordner unveraendert, update.log im neuen Ord
 # 5 Deinstallation: Daten im neuen Ordner bleiben
 "$ALT/Update.exe" --silent uninstall || echo "Update.exe Rueckgabe $?"
 for _ in $(seq 1 30); do [ -e "$ALT/current/Stadtbau.exe" ] || break; sleep 2; done
+[ ! -e "$ALT/current/Stadtbau.exe" ] || fehler "Deinstallation hat $ALT\\current nicht entfernt"
 cmp -s "$NEU/projekte/probe_alt.fisbau" <(printf 'probe-projekt\n') || fehler "Projekt nach der Deinstallation weg"
 echo "Probe 5: nach der Deinstallation liegen die Daten noch in %APPDATA%"
 zeigen
