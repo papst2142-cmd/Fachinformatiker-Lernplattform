@@ -62,8 +62,11 @@ public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string akt
     public ReleaseLinie.Linie Linie => linie;
 
     public Task<UpdateAngebot?> SuchenAsync(CancellationToken abbruch) => linie == ReleaseLinie.Linie.Lernplattform
-        ? GithubSuche.SuchenAsync(http, aktuell, "android", url, abbruch)
-        : GithubSuche.SuchenLinieAsync(http, aktuell, linie, url, abbruch);
+        ? GithubSuche.SuchenAsync(http, aktuell, "android", url, abbruch, Melden)
+        : GithubSuche.SuchenLinieAsync(http, aktuell, linie, url, abbruch, Melden);
+
+    // A 0.53.2 (Sammelliste 256): Wiederholungen bei Stoerungen von GitHub in update.log (Werkzeug: sein Datenordner)
+    private void Melden(string text) => Updateprotokoll.Schreiben(text, datenordner);
 
     public async Task<string> LadenAsync(UpdateAngebot angebot, Action<long, long> fortschritt, CancellationToken abbruch)
     {
@@ -82,26 +85,28 @@ public sealed class HandyQuelle(HttpClient http, IHandyGeraet geraet, string akt
         }
         var ziel = Path.Combine(ordner, Path.GetFileName(angebot.DateiName));
         var teil = ziel + ".part";
-        using (var anfrage = new HttpRequestMessage(HttpMethod.Get, angebot.DateiUrl))
+        // A 0.53.2 (Sammelliste 256): eine Stoerung von GitHub vor oder beim Laden (5xx, keine Antwort) wird bis zu 4 Mal
+        // versucht, jeder Versuch laedt die Datei neu; Abbruch durch den Nutzer und 4xx nie
+        await Stoerung.WiederholenAsync("Laden " + Path.GetFileName(angebot.DateiName), async () =>
         {
+            using var anfrage = new HttpRequestMessage(HttpMethod.Get, angebot.DateiUrl);
             anfrage.Headers.UserAgent.Add(new ProductInfoHeaderValue(GithubSuche.Kennung, null));
             using var antwort = await http.SendAsync(anfrage, HttpCompletionOption.ResponseHeadersRead, abbruch).ConfigureAwait(false);
             antwort.EnsureSuccessStatusCode();
             var gesamt = antwort.Content.Headers.ContentLength ?? angebot.Groesse;
             await using var strom = await antwort.Content.ReadAsStreamAsync(abbruch).ConfigureAwait(false);
-            await using (var datei = new FileStream(teil, FileMode.Create, FileAccess.Write, FileShare.None))
+            await using var datei = new FileStream(teil, FileMode.Create, FileAccess.Write, FileShare.None);
+            var puffer = new byte[81920];
+            long geladen = 0;
+            int n;
+            while ((n = await strom.ReadAsync(puffer, abbruch).ConfigureAwait(false)) > 0)
             {
-                var puffer = new byte[81920];
-                long geladen = 0;
-                int n;
-                while ((n = await strom.ReadAsync(puffer, abbruch).ConfigureAwait(false)) > 0)
-                {
-                    await datei.WriteAsync(puffer.AsMemory(0, n), abbruch).ConfigureAwait(false);
-                    geladen += n;
-                    fortschritt(geladen, gesamt);
-                }
+                await datei.WriteAsync(puffer.AsMemory(0, n), abbruch).ConfigureAwait(false);
+                geladen += n;
+                fortschritt(geladen, gesamt);
             }
-        }
+            return true;
+        }, Melden, abbruch: abbruch).ConfigureAwait(false);
         File.Move(teil, ziel, true);
         // Groesse und Pruefsumme prueft danach UpdateAblauf.Pruefen gegen den digest; hier zusaetzlich gegen die Tabelle
         string ist;

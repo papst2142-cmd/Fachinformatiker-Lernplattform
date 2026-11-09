@@ -7,10 +7,17 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <!-- A 0.53.2 (Sammelliste 256): Update-Quelle am PC mit Testserver (Velopack) -->
+    <PackageReference Include="Velopack" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lernplattform.Core\Lernplattform.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- A 0.53.2 (Sammelliste 256): stoerungsfeste Update-Quelle am PC und die alte Quelle fuer die Gegenprobe -->
+    <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
+    <Compile Include="..\..\src\Lernplattform.Desktop\StoerungsfesteQuelle.cs" Link="StoerungsfesteQuelle.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Vergleichswerte und Lerninhalte neben die Testdateien kopieren -->

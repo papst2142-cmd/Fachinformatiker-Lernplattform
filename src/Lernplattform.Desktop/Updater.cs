@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -58,9 +59,19 @@ internal static class Updater
                 ? new SimpleWebSource(angabe)
                 : new SimpleFileSource(new DirectoryInfo(angabe));
         }
-        // Phase 13 W2 (Weisung P12-17): nur Releases der Lernplattform (vA, vB, v1), nie die des Stadtbau-Werkzeugs (vS)
-        return new LinienQuelle(Repo, Core.Update.ReleaseLinie.Linie.Lernplattform);
+        return Echt();
     }
+
+    /// <summary>
+    /// Phase 13 W2 (Weisung P12-17): nur Releases der Lernplattform (vA, vB, v1), nie die des Stadtbau-Werkzeugs (vS).
+    /// A 0.53.2 (Sammelliste 256): stoerungsfest wie das Werkzeug seit S 0.25.1 (nur der Feed des neuesten Releases,
+    /// jede Abfrage bei Stoerung bis zu 4 Mal, Zeilen WIEDERHOLUNG in update.log). Kanal = der, nach dem Velopack fragt.
+    /// </summary>
+    internal static StoerungsfesteQuelle Echt() =>
+        new(Repo, Core.Update.ReleaseLinie.Linie.Lernplattform, null, text => Updateprotokoll.Schreiben(text), AbrufZeit);
+
+    /// <summary>Zeitgrenze je Abruf von Release-Liste und Feed (GitHub antwortet mit 504 nach rund 11 s); vorher 30 Minuten.</summary>
+    public static readonly TimeSpan AbrufZeit = TimeSpan.FromSeconds(30);
 
     /// <summary>
     /// Ablauf ohne Oberflaeche fuer die CI (LERNPLATTFORM_UPDATE_AUTO):
@@ -75,6 +86,10 @@ internal static class Updater
         var bericht = Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_BERICHT") is { Length: > 0 } b ? b : "update_bericht.txt";
         try
         {
+            if (modus == "feed")
+            {
+                return Feed(bericht);
+            }
             var ordner = Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_ORDNER") ?? Path.GetTempPath();
             var quelle = new VelopackQuelle(new SimpleFileSource(new DirectoryInfo(ordner)), neustart: false);
             var version = quelle.Manager.IsInstalled ? quelle.Manager.CurrentVersion?.ToString() ?? "?" : "nicht installiert";
@@ -120,6 +135,22 @@ internal static class Updater
             return 5;
         }
     }
+
+    /// <summary>
+    /// A 0.53.2 (Sammelliste 256), nur lesend fuer die CI: fragt das ECHTE GitHub ueber dieselbe Quelle wie die Suche im
+    /// Programm (<see cref="Echt"/>) nach dem Feed des Kanals LERNPLATTFORM_UPDATE_KANAL und schreibt
+    /// "feed: neueste &lt;Paketversion&gt;" (die Probe vergleicht mit der hoechsten vA laut GitHub-API); jede Wiederholung
+    /// steht als Zeile "feed: WIEDERHOLUNG ..." im Bericht. Installiert und laedt nichts.
+    /// </summary>
+    private static int Feed(string bericht)
+    {
+        var kanal = Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_KANAL") is { Length: > 0 } k ? k : "win";
+        var quelle = Echt();
+        quelle.Wiederholt += text => File.AppendAllText(bericht, "feed: " + text + Environment.NewLine);
+        var feed = quelle.GetReleaseFeed(Velopack.Logging.NullVelopackLogger.Instance, null, kanal).GetAwaiter().GetResult();
+        File.AppendAllText(bericht, $"feed: neueste {feed.Assets.Select(a => a.Version).Max()?.ToString() ?? "keine"} (Kanal {kanal}){Environment.NewLine}");
+        return 0;
+    }
 }
 
 /// <summary>Velopack als <see cref="IUpdateQuelle"/>; Fehler werden zu deutschen Texten wie in fisi_update.py.</summary>
@@ -127,6 +158,15 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
 {
     /// <summary>Hoechstens so lange ohne Fortschritt (ein Prozent des Pakets), dann DownloadZeit.</summary>
     public static readonly TimeSpan Stillstand = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// A 0.53.2: so lange ohne Ergebnis und ohne Wiederholung, dann gilt die Suche als haengend (KeineVerbindung).
+    /// Ein Abruf dauert hoechstens 2 × <see cref="Updater.AbrufZeit"/> (Velopack fragt bei einem Fehler noch einmal
+    /// klein geschrieben), danach meldet die Quelle die Wiederholung.
+    /// </summary>
+    public static readonly TimeSpan SucheStillstand = 2 * Updater.AbrufZeit + TimeSpan.FromSeconds(10);
+
+    private static readonly TimeSpan LaengstePause = Stoerung.Pausen.Max();
 
     public UpdateManager Manager { get; } = new(quelle);
 
@@ -146,15 +186,26 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
     private static async Task<UpdateAngebot?> SeiteSuchenAsync(CancellationToken abbruch)
     {
         using var http = new HttpClient();
-        return await GithubSuche.SuchenAsync(http, Aktuell.Anzeige, "pc", abbruch: abbruch).ConfigureAwait(false);
+        return await GithubSuche.SuchenAsync(http, Aktuell.Anzeige, "pc", abbruch: abbruch, melden: text => Updateprotokoll.Schreiben(text)).ConfigureAwait(false);
     }
 
     private async Task<UpdateAngebot?> VelopackSuchenAsync(CancellationToken abbruch)
     {
         UpdateInfo? info;
+        // A 0.53.2 (Sammelliste 256): bis A 0.53.1 hoechstens GithubSuche.Wartezeit (10 s) fuer die ganze Suche, darin
+        // passte keine Wiederholung. Jetzt gilt die Suche als haengend, wenn SucheStillstand lang nichts kommt; jede
+        // Wiederholung der Quelle verlaengert um ihre Pause.
+        using var stillstand = CancellationTokenSource.CreateLinkedTokenSource(abbruch);
+        stillstand.CancelAfter(SucheStillstand);
+        void Weiter(string _) => stillstand.CancelAfter(LaengstePause + SucheStillstand);
+        var stoerungsfest = quelle as StoerungsfesteQuelle;
+        if (stoerungsfest is not null)
+        {
+            stoerungsfest.Wiederholt += Weiter;
+        }
         try
         {
-            info = await Manager.CheckForUpdatesAsync().WaitAsync(GithubSuche.Wartezeit, abbruch).ConfigureAwait(false);
+            info = await Manager.CheckForUpdatesAsync().WaitAsync(stillstand.Token).ConfigureAwait(false);
         }
         catch (HttpRequestException e) when (e.StatusCode is { } code)
         {
@@ -167,6 +218,13 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
         catch (JsonException)
         {
             throw new UpdateFehler(UpdateTexte.Unerwartet);
+        }
+        finally
+        {
+            if (stoerungsfest is not null)
+            {
+                stoerungsfest.Wiederholt -= Weiter;
+            }
         }
         if (info is null)
         {
@@ -184,6 +242,13 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
         // wie Python (30 s je Lesevorgang): kommt Stillstand lang kein Fortschritt, gilt der Download als zu langsam
         using var stillstand = CancellationTokenSource.CreateLinkedTokenSource(abbruch);
         stillstand.CancelAfter(Stillstand);
+        // A 0.53.2: eine Wiederholung des Pakets (Stoerung bei GitHub) verlaengert um ihre Pause
+        void Weiter(string _) => stillstand.CancelAfter(LaengstePause + Stillstand);
+        var stoerungsfest = quelle as StoerungsfesteQuelle;
+        if (stoerungsfest is not null)
+        {
+            stoerungsfest.Wiederholt += Weiter;
+        }
         try
         {
             await Manager.DownloadUpdatesAsync(info, prozent =>
@@ -199,6 +264,13 @@ internal sealed class VelopackQuelle(IUpdateSource quelle, bool neustart = true,
         catch (OperationCanceledException) when (!abbruch.IsCancellationRequested)
         {
             throw new UpdateFehler(UpdateTexte.DownloadZeit);
+        }
+        finally
+        {
+            if (stoerungsfest is not null)
+            {
+                stoerungsfest.Wiederholt -= Weiter;
+            }
         }
         return Path.Combine(VelopackLocator.Current.PackagesDir!, info.TargetFullRelease.FileName);
     }

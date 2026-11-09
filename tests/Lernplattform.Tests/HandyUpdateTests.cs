@@ -116,6 +116,41 @@ public class HandyUpdateTests
         Assert.Contains("Installer wird gestartet: Android, Version A 0.39.0, " + Name, Log(temp.Pfad), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// A 0.53.2 (Sammelliste 256): antwortet GitHub beim Laden der APK mit 503, wird bis zu 4 Mal versucht (Zeile
+    /// WIEDERHOLUNG in update.log), danach normal geprueft. Gegenprobe: 404 wird nie wiederholt.
+    /// </summary>
+    [Fact]
+    public async Task Laden_Stoerung503_WirdWiederholt_404Nie()
+    {
+        Stoerung.OhnePausenFuerTests.Value = true;
+        try
+        {
+            using var temp = new TempOrdner();
+            var geraet = new Geraet(temp.Pfad);
+            var anfragen = 0;
+            var quelle = new HandyQuelle(new HttpClient(new Attrappe(_ => ++anfragen <= 2
+                ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                : new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Inhalt) })), geraet, "A 0.38.0", datenordner: temp.Pfad);
+            var datei = await UpdateAblauf.LadenAsync(quelle, Angebot(), ordner: temp.Pfad, abbruch: TestContext.Current.CancellationToken);
+            Assert.Equal(3, anfragen);
+            Assert.Equal(Inhalt, await File.ReadAllBytesAsync(datei, TestContext.Current.CancellationToken));
+            Assert.Equal(2, Log(temp.Pfad).Split('\n').Count(z => z.Contains("| Programm | WIEDERHOLUNG Laden " + Name, StringComparison.Ordinal)));
+
+            using var temp2 = new TempOrdner();
+            var nie = 0;
+            var gegen = new HandyQuelle(new HttpClient(new Attrappe(_ => { nie++; return new HttpResponseMessage(HttpStatusCode.NotFound); })),
+                new Geraet(temp2.Pfad), "A 0.38.0", datenordner: temp2.Pfad);
+            await Assert.ThrowsAnyAsync<Exception>(() => UpdateAblauf.LadenAsync(gegen, Angebot(), ordner: temp2.Pfad,
+                abbruch: TestContext.Current.CancellationToken));
+            Assert.Equal(1, nie);
+        }
+        finally
+        {
+            Stoerung.OhnePausenFuerTests.Value = false;
+        }
+    }
+
     [Fact]
     public async Task OhnePlatzKeinDownload()
     {

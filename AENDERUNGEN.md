@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.53.2
+Die Suche nach Updates hält Störungen bei GitHub jetzt aus. Bisher meldete sie in solchen Zeiten oft „Keine Verbindung zu GitHub“ oder „GitHub hat die Anfrage abgelehnt“, obwohl es eine neue Version gab.
+
+- GitHub, wo die neuen Versionen liegen, antwortet manchmal für kurze Zeit mit einer Fehlermeldung. Die Suche fragt dann bis zu vier Mal nach, mit kurzen Pausen dazwischen (15, 30 und 60 Sekunden). Kommt eine Antwort, geht es normal weiter.
+- Am PC fragt die Suche nur noch nach der neuesten Version und nicht mehr nach jeder älteren. Das geht schneller und ist weniger anfällig.
+- Das gilt für die Suche, für das Herunterladen der neuen Version und am Handy auch für das Laden der neuen App.
+- Bleibt GitHub gestört oder hast du kein Internet, kommt nach den Versuchen dieselbe Meldung wie bisher. Die Suche dauert in diesem Fall länger als bisher (ohne Internet etwa zwei Minuten, wenn GitHub gar nicht antwortet einige Minuten).
+- Jeder neue Versuch steht im Update-Protokoll (Datei update.log im Datenordner), damit man später sieht, was passiert ist.
+- Am Lernen, am Spiel und an deinem Lernstand ändert sich nichts.
+
 ## A 0.53.1
 Bei 127 Karteikarten und Prüfungsfragen der Fachrichtung Systemintegration verriet die Schreibweise einer Antwort die Lösung. Das ist behoben.
 
