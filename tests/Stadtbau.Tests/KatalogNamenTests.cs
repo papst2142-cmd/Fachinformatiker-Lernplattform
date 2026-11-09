@@ -19,7 +19,7 @@ public class KatalogNamenTests
     [Fact]
     public void JederEintrag_GenauEinDeutscherName_AlleVerschieden()
     {
-        Assert.Equal(1521, K.Eintraege.Count);
+        Assert.Equal(2073, K.Eintraege.Count);
         Assert.All(K.Eintraege, e => Assert.False(string.IsNullOrWhiteSpace(e.Anzeige), e.Id));
         Assert.Equal(K.Eintraege.Count, K.Eintraege.Select(e => e.Anzeige).Distinct(StringComparer.Ordinal).Count());
         var namen = JsonNode.Parse(Daten.Lesen(Katalog.NamenDatei)!)!["namen"]!.AsObject();

@@ -67,8 +67,8 @@ internal static class Updater
     /// A 0.53.2 (Sammelliste 256): stoerungsfest wie das Werkzeug seit S 0.25.1 (nur der Feed des neuesten Releases,
     /// jede Abfrage bei Stoerung bis zu 4 Mal, Zeilen WIEDERHOLUNG in update.log). Kanal = der, nach dem Velopack fragt.
     /// </summary>
-    internal static StoerungsfesteQuelle Echt() =>
-        new(Repo, Core.Update.ReleaseLinie.Linie.Lernplattform, null, text => Updateprotokoll.Schreiben(text), AbrufZeit);
+    internal static StoerungsfesteQuelle Echt(string? zugang = null) =>
+        new(Repo, Core.Update.ReleaseLinie.Linie.Lernplattform, null, text => Updateprotokoll.Schreiben(text), AbrufZeit, zugang);
 
     /// <summary>Zeitgrenze je Abruf von Release-Liste und Feed (GitHub antwortet mit 504 nach rund 11 s); vorher 30 Minuten.</summary>
     public static readonly TimeSpan AbrufZeit = TimeSpan.FromSeconds(30);
@@ -145,7 +145,11 @@ internal static class Updater
     private static int Feed(string bericht)
     {
         var kanal = Environment.GetEnvironmentVariable("LERNPLATTFORM_UPDATE_KANAL") is { Length: > 0 } k ? k : "win";
-        var quelle = Echt();
+        // Sammelliste 269 (Weisung P12-132, Lauf 751: 403 rate limit am Mac): nur diese Probe fragt GitHub angemeldet, wenn
+        // die CI GITHUB_TOKEN setzt; die Suche im Programm (Echt() ohne Zugang) fragt weiter ohne Anmeldung
+        var zugang = Environment.GetEnvironmentVariable("GITHUB_TOKEN") is { Length: > 0 } t ? t : null;
+        File.AppendAllText(bericht, "feed: ANGEMELDET " + (zugang is null ? "nein" : "ja") + Environment.NewLine);
+        var quelle = Echt(zugang);
         quelle.Wiederholt += text => File.AppendAllText(bericht, "feed: " + text + Environment.NewLine);
         var feed = quelle.GetReleaseFeed(Velopack.Logging.NullVelopackLogger.Instance, null, kanal).GetAwaiter().GetResult();
         File.AppendAllText(bericht, $"feed: neueste {feed.Assets.Select(a => a.Version).Max()?.ToString() ?? "keine"} (Kanal {kanal}){Environment.NewLine}");

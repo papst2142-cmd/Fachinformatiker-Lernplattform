@@ -8,7 +8,7 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 namespace Stadtbau.Tests;
 
 /// <summary>
-/// Phase 13 Welle 3b (Weisung P12-19 Abschnitt 2, Antworten P12-23 1a 2a 3a): voller CC0-Katalog. Alle 23 Pakete mit
+/// Phase 13 Welle 3b (Weisung P12-19 Abschnitt 2, Antworten P12-23 1a 2a 3a): voller CC0-Katalog. Alle Pakete (seit S 0.29.0 26 mit Factory, Nature, Survival Kit) mit
 /// allen Modellen, je Paket eine Datei im Repo, Vorschaubilder, Partikel als Effekt; der Katalog laedt nur, was gezeigt
 /// wird, prueft jede Datei mit ihrer Pruefsumme, die Modelle sind genau wie die Spielgrafik gewandelt; Pruefung und
 /// Grenzen kennen die Katalog-Stuecke (Effekte versperren nichts, echte Dreiecke zaehlen).
@@ -26,8 +26,8 @@ public class KatalogTests
     [Fact]
     public void AllePakete_AlleGruppen_JedesPaketEineDatei()
     {
-        Assert.Equal(23, K.PaketTitel.Count);
-        Assert.Equal(1521, K.Eintraege.Count);
+        Assert.Equal(26, K.PaketTitel.Count);
+        Assert.Equal(2073, K.Eintraege.Count);
         Assert.Equal(11, K.Gruppen.Count);
         Assert.Equal(K.Eintraege.Count, K.Gruppen.Sum(K.AnzahlIn));
         foreach (var paket in K.PaketTitel.Keys)
