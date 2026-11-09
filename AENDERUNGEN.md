@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.53.1
+Bei 127 Karteikarten und Prüfungsfragen der Fachrichtung Systemintegration verriet die Schreibweise einer Antwort die Lösung. Das ist behoben.
+
+- In diesen Antworten stand ein Wort wie „NICHT“, „KEIN“ oder „NUR“ in Großbuchstaben. Die Großschrift fiel auf und half beim Raten, ohne dass man die Antwort wissen musste.
+- Die Wörter stehen jetzt klein geschrieben. Zwei Antworten sind zusätzlich etwas umformuliert, damit sie nicht mehr auffallen. Die richtige Antwort und der Inhalt bleiben gleich.
+- In der Frage selbst darf ein Wort weiter groß stehen, wenn es betont werden soll.
+- Fachbegriffe der Logik wie „NICHT-Gatter“ oder „NICHT (A UND B)“ bleiben in Großschrift.
+- Die Zahl der Karteikarten und Prüfungsfragen bleibt gleich.
+- Die 127 Karten und Fragen kommen als neue Fassung. Hast du sie schon geübt, zählen sie wieder als offen. Alles andere in deinem Lernstand bleibt unverändert.
+
 ## A 0.53.0
 Mehr Lernstoff für die Fachrichtung Systemintegration: Sie hat jetzt genauso viele Karteikarten und Prüfungsfragen wie Anwendungsentwicklung, Daten- und Prozessanalyse und Digitale Vernetzung.
 
