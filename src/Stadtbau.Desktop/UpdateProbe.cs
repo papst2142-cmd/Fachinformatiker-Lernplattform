@@ -27,19 +27,22 @@ internal static class UpdateProbe
     {
         var bericht = Environment.GetEnvironmentVariable(BerichtUmgebung) is { Length: > 0 } b ? b : "update_probe.txt";
         void Zeile(string text) => File.AppendAllText(bericht, text + Environment.NewLine);
+        // Sammelliste 258 (Lauf 745: 403 rate limit): die Probe fragt GitHub angemeldet, wenn die CI GITHUB_TOKEN setzt
+        var zugang = Environment.GetEnvironmentVariable("GITHUB_TOKEN") is { Length: > 0 } t ? t : null;
+        Zeile("ANGEMELDET " + (zugang is null ? "nein" : "ja"));
         try
         {
             switch (modus)
             {
                 case "feed":
-                    Zeile("FEED werkzeug " + Stoerung.Wiederholen("Feed werkzeug", () => Neueste(Updatequelle.Quelle(Zeile), Updatequelle.Kanal), Zeile));
+                    Zeile("FEED werkzeug " + Stoerung.Wiederholen("Feed werkzeug", () => Neueste(Updatequelle.Quelle(Zeile, zugang), Updatequelle.Kanal), Zeile));
                     // Linie vA ueber dieselbe stoerungsfeste Abfrage (die LinienQuelle der Lernplattform laedt alle Feeds
                     // und scheitert bei den heutigen 504 fast immer, Sammelliste 256)
                     Zeile("FEED lernplattform " + Stoerung.Wiederholen("Feed lernplattform",
-                        () => Neueste(new StoerungsfesteQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform, "win", Zeile), "win"), Zeile));
+                        () => Neueste(new StoerungsfesteQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform, "win", Zeile, zugang: zugang), "win"), Zeile));
                     return 0;
                 case "update":
-                    var mgr = Updatequelle.Manager(Zeile);
+                    var mgr = Updatequelle.Manager(Zeile, zugang);
                     Zeile("INSTALLIERT " + (mgr.IsInstalled ? mgr.CurrentVersion?.ToString() : "nein"));
                     if (!mgr.IsInstalled)
                     {

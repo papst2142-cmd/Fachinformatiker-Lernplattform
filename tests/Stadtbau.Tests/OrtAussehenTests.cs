@@ -80,6 +80,8 @@ public class OrtAussehenTests
     [Fact]
     public void TalheimNord_WirdStellwerk_ErstNachDemLoeschen_MitteTuerseiteWegBleiben()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var p = Stadt1();
         var basis = Aussen.Aus(p.Basis);
         var altMitte = Mitte(p.AussenStand, "talheim_nord");
@@ -143,6 +145,8 @@ public class OrtAussehenTests
     [Fact]
     public void Bahnsteig_Geloescht_Gelb_ExportGeht_Gegenprobe_AufDemGleis_Rot()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var p = Stadt1();
         p.AussenAendern("Stellwerk weg", a => AussenBearbeitung.Loeschen(a, Gebaeude(a, "stellwerk")));
         Tauschen(p, "talheim_nord", Vorlage(p, "talheim_nord", "stellwerk").Blueprint);
@@ -203,6 +207,8 @@ public class OrtAussehenTests
     [InlineData("gewerbehof", "moebelhaus")]
     public void AndereOrte_Tauschen_ExportLaedt_InnenraeumeGleich(string ort, string vorlageVon)
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var p = Stadt1();
         var bp = Blueprint.Aus(p, new AussenStelle(AussenArt.Haus, -1, 0, vorlageVon), "Vorlage")!;
         var r = Tauschen(p, ort, bp);
@@ -292,6 +298,8 @@ public class OrtAussehenTests
     [Fact]
     public void Gegenprobe_ModellFehltInDerKarte_ExportGesperrt()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var p = Stadt1();
         p.AussenAendern("Stellwerk weg", a => AussenBearbeitung.Loeschen(a, Gebaeude(a, "stellwerk")));
         Tauschen(p, "talheim_nord", Vorlage(p, "talheim_nord", "stellwerk").Blueprint);

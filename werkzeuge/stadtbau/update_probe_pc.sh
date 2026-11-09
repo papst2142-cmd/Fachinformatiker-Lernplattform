@@ -75,6 +75,8 @@ if [ -z "$SOLL_S" ] || [ -z "$SOLL_A" ]; then fehler "keine veroeffentlichte Ver
 # 1 lesend (eigener Datenordner, nichts installiert)
 STADTBAU_DATEN="$(cygpath -w "$ARB/daten_feed")" STADTBAU_UPDATE_PROBE=feed "$PUB/Stadtbau.exe" || fehler "Feed-Probe Rueckgabe $?"
 tr -d '\r' < "$BERICHT" | grep "^WIEDERHOLUNG" || true
+# Sammelliste 258 (Lauf 745: 403 rate limit in der Feed-Probe): mit GITHUB_TOKEN muss die Probe angemeldet fragen
+[ -z "${GITHUB_TOKEN:-}" ] || grep -qx "ANGEMELDET ja" <(tr -d '\r' < "$BERICHT") || fehler "Feed-Probe fragt nicht angemeldet"
 grep -qx "FEED werkzeug $SOLL_S" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Linie vS nennt nicht $SOLL_S"
 grep -qx "FEED lernplattform 1.0.0-a.$SOLL_A" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Lernplattform nennt nicht 1.0.0-a.$SOLL_A (Paketversion von vA$SOLL_A)"
 echo "Probe 1: Feed vS $SOLL_S und vA $SOLL_A gefunden"

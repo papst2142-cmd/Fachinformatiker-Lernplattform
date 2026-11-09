@@ -332,14 +332,17 @@ public sealed class Projekt
         };
     }
 
-    public StadtSzene? SzeneOhneLaternen(PyObjekt aussen)
+    public StadtSzene? SzeneOhneLaternen(PyObjekt aussen) => SzeneOhneLaternen(aussen, false);
+
+    /// <summary>Wie <see cref="SzeneOhneLaternen(PyObjekt)"/>; <paramref name="mitGebaeuden"/>: mit den eigenen Gebaeuden (Fund 262, Tuer einrasten).</summary>
+    public StadtSzene? SzeneOhneLaternen(PyObjekt aussen, bool mitGebaeuden)
     {
         try
         {
             var fassung = Aussen.Fassung(aussen, Basis, Innenraeume(), 1, null, Werkzeug.Kennzeile, "", "");
             var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt));
             var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
-            return StadtSzene.Bauen(stadt, stand, Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
+            return StadtSzene.Bauen(stadt, stand, mitGebaeuden ? Ansicht3D.MitGebaeuden(Daten.Grafik, fassung) : Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException
             or OverflowException or SpielFehler or ArgumentException or InvalidOperationException or IndexOutOfRangeException)
@@ -931,7 +934,9 @@ public sealed class Projekt
             Py.Setzen(aussen, "bauten", Py.Kopie(bauten));
         }
         // Welle Q (Sammelliste 229): Gebaeude ohne Ort mit dem Namen des Blueprints statt „bau:…“
-        return [.. StadtbauPruefung.Aussen(stand, daten.Inhalt, daten.Grafik).Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen)];
+        // Fund 262: Szene mit den eigenen Gebaeuden (wie die 3D-Ansicht), dazu die Regel „Tuer buendig“ (nur Werkzeug)
+        var funde = StadtbauPruefung.Aussen(stand, daten.Inhalt, Ansicht3D.MitGebaeuden(daten.Grafik, stand), null, sz => TuerBuendig.Pruefen(sz, stand, daten));
+        return [.. funde.Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen)];
     }
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>

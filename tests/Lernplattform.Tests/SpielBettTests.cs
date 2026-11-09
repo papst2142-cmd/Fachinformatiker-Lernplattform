@@ -198,6 +198,84 @@ public class SpielBettTests
         Assert.Contains("Spielschritt nicht gespeichert", Fehlerprotokoll.Anzeigen(Path.Combine(ordner.Pfad, Fehlerprotokoll.DateiName)));
     }
 
+    /// <summary>
+    /// Sammelliste 266 (Lauf 741, Intel-Mac: drei Mal "verschoben" und Feierabend statt nur einem "verschoben"): der Schreiber
+    /// scheitert genau zwischen dem Anhaengen einer Zeile und dem Weiterrechnen. Dann ist die angenommene Zeile mit
+    /// verworfen, der Stand kommt neu aus der Datenbank, und der Schritt galt bis A 0.54.0 trotzdem als gespeichert: das
+    /// Bett verschob die wieder offenen Tickets ein zweites Mal und machte Feierabend. Hier trifft der Test das Zeitfenster
+    /// jedes Mal (Haken nach dem Anhaengen der zweiten Zeile "verschoben": Schreiber laufen lassen und auf seinen Fehler
+    /// warten). Jetzt ist der Schritt nicht gespeichert und das Bett hoert auf. Gegenprobe <c>alt</c>: mit dem Verhalten bis
+    /// A 0.54.0 entsteht genau der Fund aus Lauf 741 (mehrmals "verschoben" und Feierabend).
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SchreibfehlerZwischenAnhaengenUndWeiterrechnen_BettHoertAuf(bool alt)
+    {
+        Spielablauf.StoerungAlt.Value = alt;
+        using var ordner = new TempOrdner();
+        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+        var schlange = new Spielschlange();
+        var zaehlen = false;
+        var verschoben = 0;
+        using var tor = new ManualResetEventSlim(true);
+        schlange.VorZeile = art =>
+        {
+            tor.Wait(TimeSpan.FromMinutes(2));
+            return !zaehlen || art != Ereignisse.Verschoben || ++verschoben != 2;
+        };
+        using var gescheitert = new ManualResetEventSlim(false);
+        schlange.Fehler += _ => gescheitert.Set();
+        using var sperre = new SemaphoreSlim(1, 1);
+        var spiel = new Spielablauf(Inhalt, new SpielDatenbank(Schreiber(lernstand), "PC", "lbett00000000003",
+            () => sperre.Wait(0) ? new Freigabe(sperre) : null, schlange));
+        spiel.Profil("Nico", new PyObjekt());
+        schlange.Leeren();
+        var tag = spiel.Stand.Tag;
+        var vorher = Ereignisarten(lernstand);
+        Assert.True(spiel.Stand.OffeneTickets().Count > 2);
+        var angehaengt = 0;
+        spiel.NachAnhaengenFuerTests = art =>
+        {
+            if (zaehlen && art == Ereignisse.Verschoben && ++angehaengt == 2)
+            {
+                // Zeitfenster: Zeile 2 ist angenommen, der Schreiber scheitert jetzt an ihr, bevor weitergerechnet wird
+                tor.Set();
+                Assert.True(gescheitert.Wait(TimeSpan.FromMinutes(2)));
+            }
+        };
+        zaehlen = true;
+        tor.Reset();
+        try
+        {
+            if (alt)
+            {
+                // Gegenprobe (Lauf 741): das Bett verschiebt die wieder offenen Tickets noch einmal und macht Feierabend
+                spiel.SchlafenGehen();
+            }
+            else
+            {
+                Assert.Equal(Core.Texte.SpielProbeTexte.SchrittNichtGespeichert, Assert.Throws<SpielFehler>(() => spiel.SchlafenGehen()).Message);
+            }
+        }
+        finally
+        {
+            tor.Set();
+            Spielablauf.StoerungAlt.Value = false;
+        }
+        schlange.Leeren();
+        if (alt)
+        {
+            Assert.Contains(Ereignisse.Feierabend, Ereignisarten(lernstand).Skip(vorher.Count));
+            Assert.True(Ereignisarten(lernstand).Skip(vorher.Count).Count(a => a == Ereignisse.Verschoben) > 1);
+            return;
+        }
+        Assert.Equal([.. vorher, Ereignisse.Verschoben], Ereignisarten(lernstand));
+        var ausDatenbank = new Spielstand(spiel.Speicher.Ereignisse(), Inhalt);
+        Assert.Equal(tag, ausDatenbank.Tag);
+        Assert.False(ausDatenbank.FeierabendMoeglich());
+    }
+
     /// <summary>Sperre belegt (anderer Vorgang): nichts verschoben, kein Feierabend, nichts geschrieben.</summary>
     [Fact]
     public void BelegtVerschiebtNichts()

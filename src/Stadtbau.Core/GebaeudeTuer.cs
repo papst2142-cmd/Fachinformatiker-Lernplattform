@@ -36,6 +36,9 @@ public static partial class GebaeudeTuer
     /// <summary>Gegenprobe: Tuer ohne Kopie des Modells (zweites Haus gleichen Modells bekaeme keine eigene Tuer). Nur Tests.</summary>
     internal static readonly AsyncLocal<bool> OhneKopieFuerTests = new();
 
+    /// <summary>Gegenprobe S 0.28.0: „Tür dazu“ wie bis S 0.27.0 immer auf die Vorderseite (Sued bei Drehung 0). Nur Tests.</summary>
+    internal static readonly AsyncLocal<bool> SuedAltFuerTests = new();
+
     [GeneratedRegex("^(.+)_([0-9]+)$")]
     private static partial Regex KopieMuster();
 
@@ -57,7 +60,10 @@ public static partial class GebaeudeTuer
     /// Tuer und Fussweg an das Gebaeude <paramref name="s"/>. Rueckgabe: gelber Hinweis (Weg erreicht keine Strasse) oder null.
     /// Wirft nichts; geht es nicht (<see cref="DazuNicht"/>), bleibt alles, Rueckgabe der Grund.
     /// </summary>
-    public static string? Dazu(PyObjekt aussen, AussenStelle s, bool einrasten)
+    /// <param name="punkt">S 0.28.0 (Weisung P12-121): Tuer an die Wand bei diesem Punkt (<see cref="TuerSetzen"/>); ohne Punkt
+    /// an die Wand, die der naechsten Strasse zugewandt ist (<see cref="TuerSetzen.WandZurStrasse"/>), nicht mehr immer vorne.</param>
+    /// <param name="modellTueren">Tueren des CC0-Modells zum Einrasten (nur mit <paramref name="punkt"/>).</param>
+    public static string? Dazu(PyObjekt aussen, AussenStelle s, bool einrasten, Vector2? punkt = null, IReadOnlyList<Vector2>? modellTueren = null)
     {
         if (DazuNicht(aussen, s) is { } nicht)
         {
@@ -83,10 +89,18 @@ public static partial class GebaeudeTuer
             Py.Setzen(g, "modell", modell);
         }
         var (x, y, w, h) = AussenBearbeitung.HausFlaeche(aussen, s);
-        var n = AussenBearbeitung.HausFront(aussen, s);
-        var mitte = new Vector2((float)(x + (w / 2)), (float)(y + (h / 2)));
-        var tief = n.X != 0 ? w / 2 : h / 2;
-        var tuer = mitte + (n * (float)tief);
+        Vector2 tuer, n;
+        if (punkt is { } p)
+        {
+            (tuer, n) = TuerSetzen.AufWand((x, y, w, h), p, modellTueren);
+        }
+        else
+        {
+            n = SuedAltFuerTests.Value ? AussenBearbeitung.HausFront(aussen, s) : TuerSetzen.WandZurStrasse(aussen, s);
+            var mitte = new Vector2((float)(x + (w / 2)), (float)(y + (h / 2)));
+            var tief = n.X != 0 ? w / 2 : h / 2;
+            tuer = mitte + (n * (float)tief);
+        }
         var weg = new List<object?> { Punkt(tuer), Punkt(tuer + (n * WegStart)) };
         Zierwege(aussen, anlegen: true)!.Add(new PyObjekt
         {

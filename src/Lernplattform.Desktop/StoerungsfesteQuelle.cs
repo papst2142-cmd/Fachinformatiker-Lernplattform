@@ -32,13 +32,15 @@ public sealed class StoerungsfesteQuelle : GithubSource
     /// <param name="kanal">Velopack-Kanal; null = der Kanal, nach dem Velopack fragt (Lernplattform: win, linux, osx, osx-x64).</param>
     /// <param name="melden">bekommt jede Zeile <see cref="Stoerung.Zeile"/> (update.log).</param>
     /// <param name="abrufZeit">Zeitgrenze je Abruf von Liste und Feed (null = Velopack, 30 Minuten); nie fuer das Paket.</param>
-    public StoerungsfesteQuelle(string repo, ReleaseLinie.Linie linie, string? kanal, Action<string> melden, TimeSpan? abrufZeit = null)
-        : this(repo, linie, kanal, new Melder(melden), abrufZeit)
+    /// <param name="zugang">Nur fuer die Proben in der CI (GITHUB_TOKEN, Sammelliste 258): angemeldet abfragen, sonst teilen
+    /// sich alle Rechner einer Adresse rund 60 Abfragen je Stunde (Lauf 745: 403 rate limit). Die Programme fragen ohne.</param>
+    public StoerungsfesteQuelle(string repo, ReleaseLinie.Linie linie, string? kanal, Action<string> melden, TimeSpan? abrufZeit = null, string? zugang = null)
+        : this(repo, linie, kanal, new Melder(melden), abrufZeit, zugang)
     {
     }
 
-    private StoerungsfesteQuelle(string repo, ReleaseLinie.Linie linie, string? kanal, Melder melder, TimeSpan? abrufZeit)
-        : base(repo, null, false, new StoerungsfestLaden(melder.Melden, abrufZeit))
+    private StoerungsfesteQuelle(string repo, ReleaseLinie.Linie linie, string? kanal, Melder melder, TimeSpan? abrufZeit, string? zugang)
+        : base(repo, zugang, false, new StoerungsfestLaden(melder.Melden, abrufZeit))
     {
         _linie = linie;
         _kanal = kanal;

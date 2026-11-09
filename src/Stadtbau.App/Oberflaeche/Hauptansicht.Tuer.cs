@@ -46,6 +46,35 @@ public sealed partial class Hauptansicht
         return meldung;
     }
 
+    /// <summary>Knopf „Tür setzen“ (S 0.28.0): schaltet das Tuer-Setzen fuer das Haus ein und aus.</summary>
+    private Button TuerSetzenKnopf(AussenStelle s)
+    {
+        var an = Karte.TuerFuer == s;
+        var k = Schrift.Knopf(an ? Texte.TuerSetzenBeenden : Texte.TuerSetzenKnopf).Mit(Texte.TuerSetzenTipp);
+        k.Click += (_, _) => TuerSetzenUmschalten(s);
+        if (an)
+        {
+            // gewaehlt wie ein Setzen-Knopf links (S 0.9.1)
+            k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
+            (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+        }
+        return k;
+    }
+
+    /// <summary>Tuer-Setzen fuer das Haus <paramref name="s"/> ein oder aus (kein Schritt).</summary>
+    public void TuerSetzenUmschalten(AussenStelle s)
+    {
+        if (Karte.TuerFuer == s)
+        {
+            Karte.TuerSetzenBeenden();
+            Melden(Texte.TuerSetzenBeenden);
+        }
+        else
+        {
+            Karte.TuerSetzenStarten(s);
+        }
+    }
+
     private string ModellVon(AussenStelle s) =>
         Aussen.Landschaft(_projekt!.AussenStand).ElementAtOrDefault(s.Nummer) is Lernplattform.Core.Daten.PyObjekt g ? Lernplattform.Core.Spiel.Py.Str(g["modell"]) : "";
 }

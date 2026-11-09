@@ -355,7 +355,29 @@ public static class Texte
     public const string BlueprintNurHaus = "Als Blueprint lassen sich Häuser und Gebäude speichern.";
     // Welle S 0.24.0 (Weisung P12-100, Sammelliste 245): Tuer an Gebaeuden ohne Innenraum auf Wunsch
     public const string TuerDazu = "Tür dazu";
-    public const string TuerDazuTipp = "Legt eine Tür in der Mitte der Vorderseite und einen Fußweg bis zur nächsten Straße an. Mit „Einrasten“ rückt das Haus mit der Tür an den Gehweg.";
+    public const string TuerDazuTipp = "Legt eine Tür in der Mitte der Wand an, die zur nächsten Straße zeigt, und einen Fußweg bis zur Straße. Mit „Tür setzen“ lässt sie sich an jede Wand stellen. Mit „Einrasten“ rückt das Haus mit der Tür an den Gehweg.";
+    // Welle S 0.28.0 (Weisung P12-121, Nico 2a 3a, Sammelliste 260): Tuer selbst setzen
+    public const string TuerSetzenKnopf = "Tür setzen";
+    public const string TuerSetzenTipp = "Danach eine Wand des Hauses antippen: Die Tür kommt an diese Stelle, der Fußweg führt zur nächsten Straße. Die Tür lässt sich an der Wand entlang ziehen, auch um die Ecke. Escape oder der Knopf beendet es.";
+    public const string TuerSetzenBeenden = "Tür setzen beenden";
+    public const string TuerSetzenSchritt = "Tür setzen";
+    public static string TuerSetzenHinweis(string name) => "Eine Wand von „" + name + "“ antippen oder die Tür an der Wand entlang ziehen.";
+    public static string TuerSetzenDaneben(string name) => "Bitte eine Wand von „" + name + "“ antippen.";
+    public static string TuerGesetzt(string name) => "Tür von „" + name + "“ gesetzt";
+
+    /// <summary>Fund 262: roter Fund, wenn eine gezeichnete Tuer nicht sauber in der Wand sitzt (Gruende aus StadtTueren.NichtBuendig).</summary>
+    public static string TuerNichtBuendig(string name, IEnumerable<string> gruende) =>
+        "Die Tür von „" + name + "“ sitzt nicht sauber in der Wand: " + string.Join("; ", gruende.Select(g => g switch
+        {
+            "vorne" => "ein Teil der Wand steht vor der Tür, der Rahmen steckt in der Fassade",
+            "hinten" => "hinter der Tür liegt eine Nische oder ein Fenster",
+            "fehlt" => "die Tür ragt seitlich über die Wand hinaus",
+            "tuer" => "sie liegt über einer Tür des Gebäudes",
+            _ => g,
+        })) + ".";
+
+    /// <summary>Tipp zum Fund „Tür nicht sauber in der Wand“.</summary>
+    public const string TuerNichtBuendigTipp = "Mit „Tür setzen“ auf eine glatte Wand legen oder mit „Einrasten“ auf die eigene Tür des Gebäudes ziehen.";
     public const string TuerEntfernen = "Tür entfernen";
     public const string TuerEntfernenTipp = "Nimmt die Tür und ihren Fußweg wieder weg. Das Gebäude bleibt stehen.";
     public const string TuerNurGebaeude = "Eine Tür lässt sich nur an ein Gebäude ohne Innenraum setzen.";

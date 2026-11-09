@@ -347,6 +347,7 @@ public static partial class StadtbauMessung
         await StadtDateiAsync(a, f);
         await TuerAsync(a, f);
         await TuerFreiAsync(a, f);
+        await TuerSetzenAsync(a, f);
         await ZebrastreifenAsync(a, f);
         await WerkzeugKleinAsync(a, f);
         await LeereStadtOeffnenAsync(a);

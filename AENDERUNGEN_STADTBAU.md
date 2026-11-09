@@ -3,6 +3,19 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.28.0
+
+Türen selbst setzen, und die leeren Schilder an den Häusern sind weg.
+
+- Unter „Ausgewähltes Stück“ gibt es bei Häusern und Gebäuden den Knopf „Tür setzen“. Danach tippst du eine Wand an, in der Karte von oben oder in der 3D-Ansicht. Die Tür kommt an diese Stelle, mindestens 0,3 Längen von einer Ecke entfernt. Der Weg führt von der Tür gerade hinaus und dann zur nächsten Straße.
+- Die Tür lässt sich an der Wand entlang ziehen, auch um die Ecke auf eine andere Wand. Ist das Haus ausgewählt, kannst du die Tür in der Karte von oben auch direkt greifen und ziehen.
+- Liegt eine Tür des Hausmodells in der Nähe, rastet die Tür auf ihre Mitte ein (nur mit „Einrasten“ an).
+- Setzen und Ziehen sind je ein Schritt und lassen sich rückgängig machen. „Tür setzen beenden“, Escape oder ein Rechtsklick beenden das Setzen.
+- Das geht auch bei Orten mit Innenraum, nach „Aussehen tauschen“ und beim Zuhause. Im Spiel kommt die Figur dann durch die neue Tür ins Haus.
+- „Tür dazu“ setzt eine neue Tür jetzt auf die Wand, die zur nächsten Straße zeigt (bisher immer auf die Vorderseite).
+- Türen sitzen jetzt sauber in der Wand: Rastet eine Tür auf die Tür eines Bauteils oder Hausmodells ein, wird keine zweite Tür mehr davor gezeichnet. Die Prüfung meldet rot, wenn eine Tür nicht sauber in der Wand sitzt, zum Beispiel auf einem Fenster oder an einem Vorbau. Dann die Tür auf eine glatte Wand oder auf die Tür des Modells setzen.
+- Die farbigen Platten ohne Schrift an acht Häusern werden nicht mehr gezeichnet, wie im Spiel.
+
 ## S 0.27.0
 
 Drei kleine Werkzeuge für die Karte von oben: ein Maßband, Ebenen zum Ein- und Ausblenden und Notizen.

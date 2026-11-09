@@ -25,6 +25,12 @@ public interface ISpielSpeicher
     /// </summary>
     SpielGeraete? Geraete => null;
 
+    /// <summary>
+    /// Sammelliste 266: wie oft ein Schreiber im Hintergrund schon an einer Zeile gescheitert ist (zaehlt nur hoch; ohne
+    /// Hintergrund-Schreiber immer 0).
+    /// </summary>
+    int Stoerungen => 0;
+
     /// <summary>log_record: eine Zeile der Bestenliste (daten ist JSON-Text).</summary>
     bool BestenSchreiben(string lauf, string art, string schluessel, object? wert, string daten);
 
@@ -274,6 +280,7 @@ public sealed class Spielablauf
         var text = PythonJson.Standard(daten);
         Sichern();
         var vorher = AktuellerStempel();
+        var stoerungen = Speicher.Stoerungen;
         if (Speicher.Schreiben(art, text) is null)
         {
             // Nicht gespeichert (Python: log_game_event gibt False, danach voll neu gerechnet)
@@ -285,11 +292,24 @@ public sealed class Spielablauf
             }
             return;
         }
+        NachAnhaengenFuerTests?.Invoke(art);
         if (!Nachtragen(vorher, art, text))
         {
             // Protokoll sonst geaendert (Abgleich, Uebernahme, Uhr zurueck) oder nicht (ganz) angewendet:
             // neu rechnen (wirft wie Python, falls das Ereignis selbst den Fehler ausloest)
             Neuaufbau();
+            if (Speicher.Stoerungen != stoerungen && !StoerungAlt.Value)
+            {
+                // Sammelliste 266: der Schreiber ist inzwischen an einer Zeile gescheitert und hat die angenommene Zeile
+                // dieses Schritts mit verworfen; der Stand kommt neu aus der Datenbank. Der Schritt ist nicht gespeichert
+                // (vorher galt er als gespeichert und das Bett verschob die Tickets ein zweites Mal, Lauf 741)
+                NichtGespeichert += 1;
+                if (art != Ereignisse.Erfolg)
+                {
+                    ErfolgePruefen(feierabend: art == Ereignisse.Feierabend);
+                }
+                return;
+            }
         }
         else if (art == Ereignisse.Feierabend)
         {
@@ -310,6 +330,12 @@ public sealed class Spielablauf
             ErfolgePruefen(feierabend: art == Ereignisse.Feierabend);
         }
     }
+
+    /// <summary>Gegenprobe Sammelliste 266: Verhalten bis A 0.54.0 (Schritt gilt trotz Stoerung als gespeichert), nur Tests, je Ablauf.</summary>
+    internal static readonly AsyncLocal<bool> StoerungAlt = new();
+
+    /// <summary>Nur Tests (Sammelliste 266): nach dem Anhaengen einer Zeile, vor dem Weiterrechnen (Art der Zeile).</summary>
+    internal Action<string>? NachAnhaengenFuerTests { get; set; }
 
     /// <summary>Phase 8 W8: nach jedem gespeicherten Ereignis (Art, Daten), nur fuer die Darstellung (Toene).</summary>
     public Action<string, PyObjekt>? NachEreignis { get; set; }

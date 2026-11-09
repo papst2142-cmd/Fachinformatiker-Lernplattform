@@ -118,6 +118,15 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
         }
     }
 
+    private int stoerungen;
+
+    /// <summary>
+    /// Sammelliste 266: wie oft der Schreiber schon eine Zeile nicht schreiben konnte (zaehlt nur hoch). Eine Aktion, in
+    /// deren Lauf die Zahl steigt, ist nicht gespeichert, auch wenn ihre eigene Zeile schon angenommen war (die Schlange
+    /// verwirft sie mit dem Rest).
+    /// </summary>
+    public int Stoerungen => Volatile.Read(ref stoerungen);
+
     /// <summary>FW8 (Sammelliste 187): eine Zeile ist nicht geschrieben und der Stand noch nicht neu gelesen; nur unter der Sperre der Schlange.</summary>
     internal bool IstGestoert => gestoert;
 
@@ -129,6 +138,7 @@ public sealed class SpielDatenbank(LernstandSchreiber schreiber, string geraet, 
     internal void Gestoert()
     {
         gestoert = true;
+        Interlocked.Increment(ref stoerungen);
         zwischen = null;   // Stempel und neue Zeilen wieder aus der Datenbank: die naechste Aktion rechnet voll neu
     }
 
