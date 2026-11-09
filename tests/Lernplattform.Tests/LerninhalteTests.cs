@@ -535,6 +535,204 @@ public class LerninhalteTests
         Assert.True(JedeArtGleichGross(Echt()));
     }
 
+    // -- Sammelliste 248: Verneinung in Grossschrift in Antworten (Weisung P12-106, Nico 09.11.2026 05:22 MEZ) ----
+
+    /// <summary>
+    /// Sammelliste 248: Wort einer Verneinung in Grossschrift in einer Antwort-Option ("NICHT", "KEIN", "NUR" ...). Die
+    /// Grossschrift hebt die Option hervor und verraet beim Lernen die Loesung. In der Frage bleibt Grossschrift erlaubt.
+    /// Gleiche Regel wie pruefe_modul.py (Werkzeug der Inhalte-Wellen).
+    /// </summary>
+    private static readonly System.Text.RegularExpressions.Regex Verneinung =
+        new(@"\b(NICHT|KEINEN|KEINEM|KEINER|KEINES|KEINE|KEIN|NIE|NIEMALS|NUR|OHNE)\b");
+
+    /// <summary>
+    /// Feste Ausnahmen: Boolesche Logik, dort ist die Grossschrift der Fachbegriff (Gatter, De Morgan, Pseudocode mit
+    /// UND/ODER). Je Eintrag Quelle ("inhalte/..." = bisherige Inhalte, "lernen/..." = inhalte_csharp/lernen), Stelle in
+    /// der Datei (ab 0) und genau der Text der Option. Nur mit Weisung erweitern.
+    /// </summary>
+    private static readonly (string Quelle, int Stelle, string Option)[] VerneinungLogik =
+    [
+        ("inhalte/quizfragen", 1415, "wenn NICHT stammkunde UND bestellwert > 500"),
+        ("lernen/quizfragen", 3205, "NICHT-Gatter"),
+        ("lernen/quizfragen", 4893, "NICHT"),
+        ("lernen/quizfragen", 4910, "NICHT"),
+        ("lernen/karteikarten", 3508, "NICHT (A UND B) = NICHT A ODER NICHT B"),
+        ("lernen/karteikarten", 3508, "NICHT (A UND B) = NICHT A UND B ODER A UND NICHT B"),
+        ("lernen/karteikarten", 3508, "NICHT (A UND B) = A ODER B"),
+        ("lernen/karteikarten", 3508, "NICHT (A UND B) = NICHT A ODER B"),
+    ];
+
+    /// <summary>Quelle und Stelle eines Eintrags (siehe <see cref="VerneinungLogik"/>).</summary>
+    private static (string Quelle, int Stelle) QuelleUndStelle(string art, int nummer, int basis) =>
+        nummer <= basis ? ("inhalte/" + art, nummer - 1) : ("lernen/" + art, nummer - 1 - basis);
+
+    /// <summary>Optionen mit Verneinung in Grossschrift: (Quelle, Stelle, Option), ohne die festen Ausnahmen.</summary>
+    private static List<(string Quelle, int Stelle, string Option)> GrossschriftVerneinungen(Lerninhalte sicht, Lerninhalte alle)
+    {
+        var funde = new List<(string, int, string)>();
+        foreach (var (art, liste, basis) in new[] { ("karteikarten", sicht.Karteikarten, alle.Bisher.Karteikarten.Count),
+                     ("quizfragen", sicht.Quizfragen, alle.Bisher.Quizfragen.Count) })
+        {
+            foreach (var e in liste)
+            {
+                var (quelle, stelle) = QuelleUndStelle(art, e.Nummer, basis);
+                foreach (var o in e.Optionen.Where(o => Verneinung.IsMatch(o)))
+                {
+                    if (!VerneinungLogik.Contains((quelle, stelle, o)))
+                    {
+                        funde.Add((quelle, stelle, o));
+                    }
+                }
+            }
+        }
+        return funde;
+    }
+
+    /// <summary>
+    /// Sammelliste 248: keine Antwort-Option einer Fachrichtung (bisherige Inhalte und inhalte_csharp/lernen, ohne die
+    /// ausgeschlossenen alten Fassungen) traegt eine Verneinung in Grossschrift; ausgenommen nur die 8 festen
+    /// Logik-Optionen (DPA, DV und eine Pseudocode-Option der bisherigen Inhalte), und die stehen wirklich so da.
+    /// </summary>
+    [Fact]
+    public void Optionen_OhneGrossschriftVerneinung()
+    {
+        var alle = Echt();
+        var funde = GrossschriftVerneinungen(alle, alle);
+        Assert.True(funde.Count == 0, string.Join("\n", funde.Take(20)));
+        foreach (var fr in Fachrichtungen.Werte)
+        {
+            var sicht = alle.Fuer(fr);
+            Assert.Empty(GrossschriftVerneinungen(sicht, alle));
+        }
+        // jede Ausnahme steht genau so an ihrer Stelle und ist Logik (Gatter, De Morgan, Pseudocode mit UND/ODER)
+        foreach (var (quelle, stelle, option) in VerneinungLogik)
+        {
+            var (art, basis) = quelle.EndsWith("karteikarten", StringComparison.Ordinal)
+                ? (alle.Karteikarten, alle.Bisher.Karteikarten.Count) : (alle.Quizfragen, alle.Bisher.Quizfragen.Count);
+            var name = quelle.EndsWith("karteikarten", StringComparison.Ordinal) ? "karteikarten" : "quizfragen";
+            var e = Assert.Single(art, x => QuelleUndStelle(name, x.Nummer, basis) == (quelle, stelle));
+            Assert.Contains(option, e.Optionen);
+            Assert.True(option == "NICHT" || option.EndsWith("-Gatter", StringComparison.Ordinal) || option.Contains(" UND ", StringComparison.Ordinal)
+                || option.Contains(" ODER ", StringComparison.Ordinal), option);
+            Assert.True(quelle.StartsWith("inhalte/", StringComparison.Ordinal) || e.Zugehoerigkeit is "dpa" or "dv", option);
+        }
+    }
+
+    /// <summary>
+    /// Gegenprobe zu <see cref="Optionen_OhneGrossschriftVerneinung"/>: ohne die Ausschluesse aus Sammelliste 248 zieht das
+    /// Programm die alten Fassungen und die Regel findet genau die 157 Optionen; eine neue Option "... NICHT ..." ist rot,
+    /// ohne die feste Liste sind auch die 8 Logik-Optionen rot.
+    /// </summary>
+    [Fact]
+    public void Optionen_OhneGrossschriftVerneinung_Gegenprobe()
+    {
+        var ohne248 = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), OhneAusschluss248());
+        var funde = GrossschriftVerneinungen(ohne248, ohne248);
+        Assert.Equal(157, funde.Count);
+        Assert.All(funde, f => Assert.StartsWith("lernen/", f.Quelle));
+        // ohne die feste Liste waeren auch die 8 Logik-Optionen ein Fund
+        var alle = Echt();
+        Assert.Equal(VerneinungLogik.Length, alle.Karteikarten.Concat(alle.Quizfragen).SelectMany(e => e.Optionen).Count(o => Verneinung.IsMatch(o)));
+        Assert.Matches(Verneinung, "Der Router ist NICHT erreichbar");
+        Assert.Matches(Verneinung, "KEINE Route zurueck");
+        Assert.DoesNotMatch(Verneinung, "Der Router ist nicht erreichbar");
+        Assert.DoesNotMatch(Verneinung, "Nichtig, Keinesfalls, Nurse");
+    }
+
+    /// <summary>inhalte_csharp/lernen ohne die Ausschluesse aus Sammelliste 248 (alte Fassungen wieder gezogen).</summary>
+    private static Func<string, byte[]?> OhneAusschluss248()
+    {
+        var lernen = Ordner(Lernen);
+        return name =>
+        {
+            var inhalt = lernen(name);
+            if (name != Lerninhalte.AusschlussDatei || inhalt is null)
+            {
+                return inhalt;
+            }
+            var wurzel = JsonNode.Parse(inhalt)!.AsObject();
+            var eintraege = wurzel["eintraege"]!.AsArray();
+            foreach (var e in eintraege.Where(e => ((string)e!["grund"]!).StartsWith("Sammelliste 248", StringComparison.Ordinal)).ToList())
+            {
+                eintraege.Remove(e);
+            }
+            return Encoding.UTF8.GetBytes(wurzel.ToJsonString());
+        };
+    }
+
+    /// <summary>
+    /// Weisung P12-106: Optionen, die die Gegenpruefung umformuliert hat, weil sie auch klein geschrieben die Loesung
+    /// verrieten (Datei, Stelle der neuen Fassung ab 0, Nummer der Option ab 0). Alle anderen gleichen der alten Fassung
+    /// bis auf die Gross-/Kleinschreibung.
+    /// </summary>
+    private static readonly (string Datei, int Stelle, int Option)[] Umformuliert248 = [("quizfragen", 7963, 3), ("quizfragen", 7976, 2)];
+
+    /// <summary>
+    /// Weisung P12-106 (Sammelliste 248): 127 SI-Eintraege (47 Karten, 80 Fragen) haben eine neue Fassung am Ende der
+    /// Datei, die alte steht in ausschluss.json. Die neue Fassung gleicht der alten bis auf die Gross-/Kleinschreibung
+    /// der Optionen (und damit von "a") und die zwei Optionen in <see cref="Umformuliert248"/>; die Zahlen je
+    /// Fachrichtung bleiben gleich (+127 angehaengt, -127 ausgeschlossen).
+    /// </summary>
+    [Fact]
+    public void Grossschrift248_NeueFassungAngehaengt_AlteAusgeschlossen_ZahlenGleich()
+    {
+        var alle = Echt();
+        // Eintrag 0 ist Sammelliste 181 (quizfragen 231), danach folgen die 127 aus Sammelliste 248
+        Assert.Equal(("quizfragen", 231), (alle.Ausschluss[0].Datei, alle.Ausschluss[0].Stelle));
+        var aus = alle.Ausschluss.Skip(1).ToList();
+        Assert.Equal(127, aus.Count);
+        foreach (var (datei, anzahl, bisher, offen) in new[]
+                 {
+                     ("karteikarten", 47, alle.Bisher.Karteikarten.Count, alle.Karteikarten),
+                     ("quizfragen", 80, alle.Bisher.Quizfragen.Count, alle.Quizfragen),
+                 })
+        {
+            var roh = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, datei + ".json")))!.AsArray();
+            var alte = aus.Where(a => a.Datei == datei).Select(a => a.Stelle).Order().ToList();
+            Assert.Equal(anzahl, alte.Count);
+            for (var i = 0; i < anzahl; i++)
+            {
+                var alt = roh[alte[i]]!.AsObject();
+                var neu = roh[roh.Count - anzahl + i]!.AsObject();
+                Assert.Equal("si", (string?)alt["fachrichtung"]);
+                Assert.Equal(alt.Select(p => p.Key), neu.Select(p => p.Key));
+                foreach (var (feld, wert) in alt.Where(p => p.Key is not ("options" or "a")))
+                {
+                    Assert.True(JsonNode.DeepEquals(wert, neu[feld]), datei + " " + alte[i] + " " + feld);
+                }
+                var ao = alt["options"]!.AsArray().Select(o => (string)o!).ToList();
+                var no = neu["options"]!.AsArray().Select(o => (string)o!).ToList();
+                Assert.Equal(ao.Count, no.Count);
+                var stelleNeu = roh.Count - anzahl + i;
+                Assert.True(ao.Zip(no).Select((p, k) => (p, k)).All(x => Umformuliert248.Contains((datei, stelleNeu, x.k))
+                    ? !string.Equals(x.p.First, x.p.Second, StringComparison.OrdinalIgnoreCase)
+                    : string.Equals(x.p.First, x.p.Second, StringComparison.OrdinalIgnoreCase)), datei + " " + alte[i]);
+                Assert.Contains(ao, o => Verneinung.IsMatch(o));
+                Assert.DoesNotContain(no, o => Verneinung.IsMatch(o));
+                Assert.Equal(ao.Count(o => Verneinung.IsMatch(o)), ao.Zip(no).Count(p => p.First != p.Second && Verneinung.IsMatch(p.First)));
+                Assert.Equal(ao.IndexOf((string)alt["a"]!), no.IndexOf((string)neu["a"]!));
+                // gezogen wird nur die neue Fassung
+                Assert.DoesNotContain(offen, e => e.Nummer - 1 - bisher == alte[i]);
+                Assert.Contains(offen, e => e.Nummer - 1 - bisher == roh.Count - anzahl + i);
+            }
+        }
+        Assert.True(JedeArtGleichGross(alle), Groessen(alle));
+        Assert.Equal((2584, 3735), (alle.Fuer("si").Karteikarten.Count, alle.Fuer("si").Quizfragen.Count));
+    }
+
+    /// <summary>
+    /// Gegenprobe zu <see cref="Grossschrift248_NeueFassungAngehaengt_AlteAusgeschlossen_ZahlenGleich"/>: ohne die
+    /// Ausschluesse zaehlt SI 127 Eintraege mehr (alte und neue Fassung) und ist nicht mehr gleich gross wie AE, DPA und DV.
+    /// </summary>
+    [Fact]
+    public void Grossschrift248_OhneAusschluss_SiZuGross()
+    {
+        var ohne = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), OhneAusschluss248());
+        Assert.Equal((2584 + 47, 3735 + 80), (ohne.Fuer("si").Karteikarten.Count, ohne.Fuer("si").Quizfragen.Count));
+        Assert.False(JedeArtGleichGross(ohne), Groessen(ohne));
+        Assert.Equal((2584, 3735), (ohne.Fuer("ae").Karteikarten.Count, ohne.Fuer("ae").Quizfragen.Count));
+    }
+
     /// <summary>Weisung P12-97: hat die Sicht SI bei jeder Art genau so viele Inhalte wie AE, DPA und DV?</summary>
     private static bool JedeArtGleichGross(Lerninhalte alle) =>
         Fachrichtungen.Werte.Select(fr => Groesse(alle, fr)).Distinct().Count() == 1;
@@ -1585,7 +1783,15 @@ public class LerninhalteTests
             "eb274c07ef6d11b9", "18cac576c0bce081", "f854c74900d2abca", "541851200862504e", "ec32d2ccdb12ad0b", "b7dfa4a06fc74d06",
             "87c78efe0d8d17f3", "5db97815e362b9c7", "4dafad8c607600a4", "4fdc12b57d682b86", "e742b665b769730d", "3b6b61773aee7088",
             "2820f93c782eff39", "81a07535240aad4f", "d8e3394c470a9eb4", "3e773aaff7e4a947", "20e3a4ac9f1d923c", "50d98a461101c863",
-            "b058056e8be006cd", "87e6c575a6890929", "083d84f75f3ef545", "d823d9b7aa8fe600", "a1b7ca3f4db61c6b",
+            "b058056e8be006cd", "87e6c575a6890929", "083d84f75f3ef545", "d823d9b7aa8fe600", "a1b7ca3f4db61c6b", "af388b69d931624f",
+            "4aaf8633c3871785", "6f28f7c073ee0959", "de306c2a301b3d52", "51affa28ca17a6b3", "be4b96f1156f553e", "7366ccc8bc3cf5be",
+            "3f82a9bac89bcec8", "1469d9eb2b42460c", "df56cb2322bff71e", "8060634d5c284a68", "9a64d79b9134e7e3", "6bebcdcd7d16d6d6",
+            "3140065da7c63d94", "2fb61ce3eef4dec2", "73cc43342b6e1d83", "e91a6ac7fb467667", "ca39532b3377ebf9", "ab2bf52750e26227",
+            "e109ad2f4f5d59eb", "25740d493f6ecde8", "826b43b5be7d3f2f", "4dcd1627103e7bac", "83263cec0a2b3ccc", "d322fa9de1513eeb",
+            "efbe77ca546ac4b5", "646648c93c61739a", "2f0d29ca125af8a7", "64a1fec0c98d0633", "0702c783335485f5", "004d697bde452da3",
+            "a3038ffbb89f9af0", "57045b8f10c0e4dd", "d1b21deead2629ce", "512b598c6a989db6", "8d867811ed6e7d64", "b72e8dc64505a71c",
+            "b73ac77fdbf0cc5f", "0d887ce17d680fb6", "b020ffe9c27434d7", "17fb083a104865b0", "d66ae810228fde9f", "15ad0b2ad187b9c4",
+            "2ebc66ef33f11124", "40dc21ff7f2b023f", "f14d2616b4dabcf4", "14e28c9b2b2983e2",
         ],
         ["quizfragen"] =
         [
@@ -2909,7 +3115,20 @@ public class LerninhalteTests
             "ce61d7985183c249", "b37cededd66db3e2", "3138c413c4299126", "3bc7efd17296c989", "875d5fcf1aca3fbd", "4c2818896af56cb3",
             "741fb6310899aa2e", "ff7a0228579cfb80", "20091fbf1a2e4db8", "2fcd74a74feaf61a", "c38842ddd53236b0", "1dadd924c6007810",
             "f1dae9762422f1f3", "b8249f875e4dd19d", "bb90fb0707174626", "ebc5026e5fae6cb4", "87546edb6c8410ee", "79b165966158ecde",
-            "9ff82380e6d89f9e", "76bc56d2726312bc",
+            "9ff82380e6d89f9e", "76bc56d2726312bc", "88339a0f7cbc16c5", "8c47642eb73d23b1", "50159cf1863c02d8", "dbdc854c9fd2e91d",
+            "8a0bb014c80eff33", "50bee79c108cb3c3", "0c65efdffea8c59d", "38a3242918b94045", "cfb4272db6b8a6ba", "367466f18e1b99f4",
+            "2b4257776f00f925", "802328e513eb334a", "845a26d60712380c", "080ba23643360351", "4833e2def220d0e4", "9e793d9d51817b11",
+            "60a7f1cb8ac764e4", "5899b7cb66e545df", "c95480b4634b630a", "e7db80f539489bdf", "ac2ca31df684c3f6", "30efe9fa59421372",
+            "3fbba51af36badeb", "c44cffb5421f3f7d", "cd06b2b245120ce9", "bd5843e53fe29fb9", "7f50d26d57855b9d", "e4b6ba08941cfed5",
+            "d118c9c3ad2a674b", "660befc8aa4fe85a", "afe5ef8d65a1a0eb", "6fdb245c69ca9838", "0c57969893e85c42", "d3500f1db8c07633",
+            "0c4067d1659de94e", "df6e44784031102c", "770967f0631739ae", "8e7865ec2a603a6c", "b7b6e1cf59e98e82", "7d267e6388e0062a",
+            "5127e47a73f91c47", "74f3bbecf630d699", "7b82cf0f160d77e5", "fc8644a397583143", "0eb9928a17a55511", "69775f27fd0cf86d",
+            "2350ed7e6d198863", "20823308cfa0d963", "2018c0ac08d5cae4", "60954c6923dfc991", "e9a68df4b6154c73", "69296213967eb7c8",
+            "ef1a12180b5942ce", "fa18c47c11069f3a", "318496dd6f364a97", "2260f52283b6307d", "ae9af989999c35ad", "9ecabd921bf2daf9",
+            "f5fcb5edaa7ece1e", "0771a11f749a209e", "ed05fbdd0e264151", "6860b1ebc3c0e357", "857dbd5d38703934", "21bcf78ea6c10d75",
+            "f6f83ae2daa76fc1", "f5e010a3b6cdd82d", "c9aa6f226d67e99e", "2c0a0381ff98b102", "dd0033ab383f6bb1", "81ba8a581941adfe",
+            "8e5d3202c3d110ff", "872c1dbcd36a670f", "815121eeb282e354", "e1c59749c3195e1d", "c98d8b38d7362013", "714a641b8e22c65c",
+            "030751fec62f8ddb", "99bbe651fe8aecd5", "c184fe080d5547b5", "ba4fe29fe7284694",
         ],
         ["szenarien_ap2"] =
         [

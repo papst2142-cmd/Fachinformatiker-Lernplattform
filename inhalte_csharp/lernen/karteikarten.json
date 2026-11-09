@@ -95345,5 +95345,842 @@
    "Offene Störungen, laufende Changes und Auffälligkeiten",
    "Die Krankmeldungen der Schicht"
   ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8a"
+  ],
+  "q": "Warum plant man IPv6-Präfixe möglichst an Nibble-Grenzen (/48, /52, /56, /60, /64)?",
+  "a": "Jede Stufe endet an einer Hexziffer und ist direkt ablesbar",
+  "a_full": "Ein Nibble sind 4 Bit, also genau eine Hexziffer. Liegen Standort, Gebäude und VLAN jeweils an solchen Grenzen, sieht man die Zuordnung sofort an der Adresse, und Reverse-DNS-Zonen lassen sich sauber abgrenzen. Technisch sind auch andere Längen wie /62 erlaubt, sie sind nur schwerer zu lesen.",
+  "options": [
+   "Jede Stufe endet an einer Hexziffer und ist direkt ablesbar",
+   "Router übernehmen nur Nibble-Präfixe in ihre Routingtabelle",
+   "Andere Präfixlängen sind in IPv6 nicht erlaubt",
+   "Nibble-Präfixe sparen Bits im IPv6-Header"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a"
+  ],
+  "q": "Was bewirkt eine Router Lifetime von 0 in einem Router Advertisement?",
+  "a": "Der Router wird nicht als Standardgateway genutzt",
+  "a_full": "Die Router Lifetime sagt, wie lange Hosts den Absender als Default Router verwenden dürfen. Der Wert 0 heißt: Dieser Router ist kein Default Router, seine Präfix-Informationen können aber trotzdem gelten. So kann z. B. ein Router ein ULA-Präfix verteilen, ohne Standardweg ins Internet zu sein.",
+  "options": [
+   "Der Router wird nicht als Standardgateway genutzt",
+   "Der Router gilt ab sofort dauerhaft als Standardgateway",
+   "Die Präfixe im RA werden sofort ungültig",
+   "Der Router sendet ab sofort keine RAs mehr"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A6c"
+  ],
+  "q": "Warum ist ein Ping-Sweep (alle Adressen durchprobieren) in einem IPv6-/64 kaum machbar?",
+  "a": "2^64 Adressen sind viel zu viele zum Durchprobieren",
+  "a_full": "Ein /64 hat rund 1,8 · 10^19 Adressen. Selbst bei einer Million Versuchen pro Sekunde dauert das Durchprobieren über 500.000 Jahre. Angreifer suchen deshalb gezielt nach leicht ratbaren Adressen wie ::1, nach EUI-64-Mustern oder lesen Adressen aus dem DNS aus.",
+  "options": [
+   "IPv6-Hosts antworten grundsätzlich nicht auf ping",
+   "Router verwerfen alle ICMPv6-Echo-Pakete im lokalen Netz",
+   "Ein /64 enthält nur 256 nutzbare Hostadressen",
+   "2^64 Adressen sind viel zu viele zum Durchprobieren"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "C2a"
+  ],
+  "q": "Was ist DTP bei Cisco-Switches und warum schaltet man es an Access-Ports ab?",
+  "a": "Trunk-Aushandlung; sonst baut ein Angreifer Trunks",
+  "a_full": "Das Dynamic Trunking Protocol handelt aus, ob ein Port Trunk oder Access wird. Ein Angreifer kann sich damit als Switch ausgeben und alle VLANs erreichen (Switch Spoofing). Deshalb setzt man Endgeräte-Ports fest in den Access-Modus und schaltet die Aushandlung ab.",
+  "options": [
+   "Zeitabgleich; sonst stimmen die Zeiten im Log nicht",
+   "VLAN-Verteilung; sonst gehen neue VLANs verloren",
+   "Nachbarerkennung; sonst werden IP-Telefone nicht erkannt",
+   "Trunk-Aushandlung; sonst baut ein Angreifer Trunks"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A6b"
+  ],
+  "q": "Warum legt man das Management der Switches in ein eigenes VLAN statt in VLAN 1?",
+  "a": "Benutzer erreichen die Verwaltung dann nicht direkt",
+  "a_full": "VLAN 1 ist ab Werk auf allen Ports aktiv, Benutzergeräte landen dort oft ungewollt. Ein eigenes Management-VLAN, das nur über eine Firewall oder ACL aus dem Admin-Netz erreichbar ist, schützt die Verwaltungszugänge. Außerdem stört Benutzerverkehr dann nicht die Verwaltung.",
+  "options": [
+   "VLAN 1 lässt keine IP-Adressen zu",
+   "Nur in einem eigenen VLAN lässt sich SSH überhaupt nutzen",
+   "VLAN 1 ist für Sprachverkehr reserviert",
+   "Benutzer erreichen die Verwaltung dann nicht direkt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8a",
+   "C1a"
+  ],
+  "q": "Warum ist ein asymmetrischer Anschluss für eine Zentrale mit vielen Homeoffice-VPN-Nutzern oft ungeeignet?",
+  "a": "Daten zu den Nutzern belasten den kleinen Upload der Zentrale",
+  "a_full": "Holen Homeoffice-Nutzer Dateien vom Server der Zentrale, sendet die Zentrale diese Daten ins Internet. Das läuft über den Upload, der bei VDSL oder Kabel oft nur ein Bruchteil des Downloads ist. Für solche Standorte ist ein symmetrischer Anschluss sinnvoll.",
+  "options": [
+   "VPN-Tunnel funktionieren nur bei gleichen Raten in beide Richtungen",
+   "Asymmetrische Anschlüsse haben grundsätzlich keine öffentliche IP",
+   "Daten zu den Nutzern belasten den kleinen Upload der Zentrale",
+   "Der Download der Zentrale wird von VPN-Paketen vollständig belegt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8a",
+   "C1b"
+  ],
+  "q": "Was bedeutet die Routerfreiheit in Deutschland für einen Firmenkunden?",
+  "a": "Er darf am Anschluss einen Router seiner Wahl statt des Providergeräts nutzen",
+  "a_full": "Seit 2016 endet das Netz des Providers an der Anschlussdose, das Endgerät wählt der Kunde. Der Provider muss dafür die Zugangsdaten herausgeben. So kann eine Firma etwa eine eigene Firewall direkt am Anschluss betreiben.",
+  "options": [
+   "Er muss keine Miete für das Providergerät zahlen, wenn er es nutzt",
+   "Er darf seinen Anschluss ohne Kündigungsfrist zu einem anderen Provider umziehen",
+   "Er darf am Anschluss einen Router seiner Wahl statt des Providergeräts nutzen",
+   "Er darf den Router des Providers ohne Erlaubnis öffnen und umbauen"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8b",
+   "C2b"
+  ],
+  "q": "Warum begrenzt man am WAN-Router den ausgehenden Verkehr per Shaping knapp unter die Upload-Rate des Anschlusses?",
+  "a": "Damit sich die Warteschlange im eigenen Router bildet und QoS dort wirkt",
+  "a_full": "Sendet der Router mit voller Portrate, staut sich der Verkehr erst im Modem des Providers, das keine Prioritäten kennt. Begrenzt der Router selbst knapp unter die Anschlussrate, entsteht der Stau bei ihm. Dann kann er Sprache vor großen Uploads senden.",
+  "options": [
+   "Damit sich die Warteschlange im eigenen Router bildet und QoS dort wirkt",
+   "Damit die Pakete kleiner werden und unterwegs keine Fragmentierung entsteht",
+   "Damit der Download schneller wird, weil weniger Upload läuft",
+   "Damit der Provider den Anschluss nicht wegen Überlast sperrt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "C2c"
+  ],
+  "q": "Warum lässt sich IPsec mit AH (Authentication Header) NICHT durch NAT betreiben?",
+  "a": "AH sichert auch die äußeren IP-Adressen, die NAT verändert",
+  "a_full": "AH berechnet seine Prüfsumme auch über unveränderliche Felder des IP-Headers, darunter die Adressen. Ändert ein NAT-Router die Absenderadresse, stimmt die Prüfsumme beim Empfänger nicht mehr und das Paket wird verworfen. ESP schützt den äußeren Header nicht und funktioniert mit NAT-Traversal.",
+  "options": [
+   "AH ist nur für IPv6 definiert und kennt kein IPv4",
+   "AH verschlüsselt die Ports, sodass NAT sie nicht lesen kann",
+   "AH nutzt TCP, das NAT-Router grundsätzlich blockieren",
+   "AH sichert auch die äußeren IP-Adressen, die NAT verändert"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8b"
+  ],
+  "q": "Warum sollte ein VPN möglichst über UDP und nicht über TCP laufen?",
+  "a": "TCP im TCP-Tunnel wiederholt Verluste doppelt und bremst sich selbst aus",
+  "a_full": "Läuft eine TCP-Verbindung durch einen Tunnel, der selbst TCP nutzt, reagieren beide Ebenen auf Paketverlust mit Wiederholungen und Bremsen. Die Wartezeiten schaukeln sich auf, man spricht vom TCP-Meltdown. Über UDP kümmert sich nur die innere Verbindung um Wiederholungen.",
+  "options": [
+   "TCP im TCP-Tunnel wiederholt Verluste doppelt und bremst sich selbst aus",
+   "UDP verschlüsselt die Nutzdaten stärker als TCP und ist deshalb für VPN sicherer",
+   "TCP-Pakete passen nicht in einen VPN-Tunnel",
+   "UDP braucht keine Firewall-Freigabe am Gateway"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A6b"
+  ],
+  "q": "Warum gilt ein VPN mit PPTP heute als unsicher?",
+  "a": "Die Anmeldung mit MS-CHAPv2 ist knackbar, damit auch die Verschlüsselung",
+  "a_full": "PPTP leitet die Schlüssel seiner Verschlüsselung (MPPE) aus der Anmeldung mit MS-CHAPv2 ab. Ein mitgeschnittener Anmeldevorgang lässt sich mit überschaubarem Aufwand knacken. Dann kann ein Angreifer auch den gesamten Verkehr entschlüsseln.",
+  "options": [
+   "PPTP kann über DSL-Anschlüsse mit PPPoE grundsätzlich keine Verbindung aufbauen",
+   "Die Anmeldung mit MS-CHAPv2 ist knackbar, damit auch die Verschlüsselung",
+   "PPTP überträgt alle Daten über HTTP ohne jeden Schutz",
+   "PPTP funktioniert nur mit Windows XP und älter"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Warum fragt man bei einer neuen Störung früh: „Was wurde zuletzt geändert?“",
+  "a": "Weil Störungen oft direkt auf Änderungen folgen",
+  "a_full": "Updates, neue Regeln, Umzüge oder getauschte Geräte sind häufige Auslöser. Passt der Beginn der Störung zeitlich zu einer Änderung, ist sie der erste Verdacht. Das Änderungsprotokoll (Change-Log) hilft dabei.",
+  "options": [
+   "Weil ohne diese Angabe kein Ticket angelegt werden darf",
+   "Weil der Anwender sonst die Kosten der Störung tragen muss",
+   "Weil Änderungen grundsätzlich nur nachts vorgenommen werden dürfen",
+   "Weil Störungen oft direkt auf Änderungen folgen"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Warum sichert man vor einer Änderung bei der Fehlersuche die aktuelle Konfiguration?",
+  "a": "Um sicher zum Ausgangszustand zurückzukehren",
+  "a_full": "Nicht jede Änderung behebt den Fehler, manche machen alles schlimmer. Mit einer Sicherung kann man sie sauber zurücknehmen. Außerdem lässt sich später vergleichen, was genau geändert wurde.",
+  "options": [
+   "Damit die Änderung automatisch an alle Geräte verteilt wird",
+   "Um sicher zum Ausgangszustand zurückzukehren",
+   "Weil das Gerät die Änderung sonst nicht übernimmt",
+   "Weil die Lizenz des Geräts sonst ungültig werden kann"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Was ist das Ziel einer Ursachenanalyse (Root Cause Analysis) nach einer Störung?",
+  "a": "Die Ursache finden, damit die Störung nicht wiederkommt",
+  "a_full": "Ein Workaround stellt den Betrieb wieder her, beseitigt aber nicht den Auslöser. Die Ursachenanalyse sucht den Grund, etwa einen Konfigurationsfehler oder fehlende Wartung. Daraus werden Maßnahmen abgeleitet, die eine Wiederholung verhindern.",
+  "options": [
+   "Die Störung möglichst schnell mit einem Neustart beheben",
+   "Die Ursache finden, damit die Störung nicht wiederkommt",
+   "Die verantwortliche Person für die Störung ermitteln",
+   "Die Kosten der Störung auf die Abteilungen verteilen"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Was bedeutet das Flag NO-CARRIER in der Ausgabe von ip link?",
+  "a": "Kein Signal, die Schnittstelle hat keinen Link",
+  "a_full": "NO-CARRIER heißt, dass auf Schicht 1 keine Verbindung zum Gegenüber besteht. Ursachen sind ein fehlendes oder defektes Kabel, eine tote Dose oder ein abgeschalteter Switchport. Eine mit ip link set eth0 down abgeschaltete Schnittstelle zeigt dagegen gar kein UP in den Flags.",
+  "options": [
+   "Die Schnittstelle hat keine IP-Adresse bekommen",
+   "Kein Signal, die Schnittstelle hat keinen Link",
+   "Die Schnittstelle wurde von root abgeschaltet",
+   "Die Schnittstelle hat keinen Eintrag für das Gateway"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Was bedeutet der Zustand FAILED in der Ausgabe von ip neigh?",
+  "a": "Die ARP-Auflösung der Adresse ist gescheitert",
+  "a_full": "ip neigh zeigt die Nachbartabelle mit ARP- und NDP-Einträgen. FAILED oder INCOMPLETE heißt, dass auf die ARP-Anfrage keine Antwort kam. STALE bedeutet dagegen nur, dass ein gültiger Eintrag länger nicht bestätigt wurde.",
+  "options": [
+   "Die Adresse ist doppelt im Netz vergeben",
+   "Der Eintrag wurde von Hand fest eingetragen",
+   "Die ARP-Auflösung der Adresse ist gescheitert",
+   "Der Eintrag ist gültig, aber länger nicht genutzt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Warum kommt traceroute -T -p 443 manchmal weiter als traceroute ohne Optionen?",
+  "a": "Firewalls lassen TCP-SYN an Port 443 meist durch, UDP oft nicht",
+  "a_full": "Ohne Option sendet traceroute unter Linux UDP an hohe Ports, die viele Firewalls verwerfen. Mit -T nutzt es TCP-SYN, mit -p den Zielport 443, der für Webverkehr meist offen ist. Die TTL-Technik bleibt gleich; dafür sind Root-Rechte nötig.",
+  "options": [
+   "Firewalls lassen TCP-SYN an Port 443 meist durch, UDP oft nicht",
+   "Mit -T werden die Pakete verschlüsselt und deshalb nicht gefiltert",
+   "Port 443 hat im Netz immer Vorrang vor anderen Ports",
+   "Mit -T wird die TTL von Routern nicht mehr verringert"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A6a",
+   "A4c"
+  ],
+  "q": "Was müssen Sie bei Mitschnitten im Firmennetz wegen des Datenschutzes beachten?",
+  "a": "Nur mit Auftrag, zweckgebunden und so knapp wie möglich, danach löschen",
+  "a_full": "Mitschnitte enthalten Adressen, Namen und oft Inhalte, also personenbezogene Daten. Sie sind nur für einen festgelegten Zweck und mit Freigabe erlaubt. Man filtert eng, speichert geschützt und löscht nach der Analyse.",
+  "options": [
+   "Mitschnitte ohne Inhalte sind frei, der Datenschutz gilt dort nicht",
+   "Mitschnitte müssen fünf Jahre aufbewahrt werden",
+   "Mitschnitte dürfen nur an Wochenenden gemacht werden",
+   "Nur mit Auftrag, zweckgebunden und so knapp wie möglich, danach löschen"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Was ist ein Split Pair in der Twisted-Pair-Verkabelung?",
+  "a": "Adern zweier Paare sind vertauscht, der Durchgang stimmt trotzdem",
+  "a_full": "Bei einem Split Pair liegen zum Beispiel die Adern für Pin 3 und Pin 6 auf zwei verschiedenen verdrillten Paaren statt gemeinsam auf einem. Jede Ader hat Durchgang, aber die Verdrillung passt nicht mehr, es kommt zu Übersprechen. Ein einfacher Durchgangstester erkennt das nicht, ein Zertifizierer schon.",
+  "options": [
+   "Ein Paar ist an einem Ende gar nicht aufgelegt",
+   "Ein Paar ist länger als die übrigen drei Paare",
+   "Adern zweier Paare sind vertauscht, der Durchgang stimmt trotzdem",
+   "Zwei Adern eines Paars haben Kontakt miteinander"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2b"
+  ],
+  "q": "Warum entsteht zwischen einem Singlemode- und einem Multimode-SFP KEIN zuverlässiger Link?",
+  "a": "Fasertyp und Wellenlänge passen nicht zusammen",
+  "a_full": "Singlemode-Module arbeiten typischerweise mit 1310 oder 1550 nm auf dünnem Kern, Multimode-Module mit 850 nm auf dickem Kern. Beide Seiten einer Strecke brauchen denselben Typ und die passende Faser. Sonst ist der Empfangspegel falsch oder es entsteht gar kein Link.",
+  "options": [
+   "Beide Module haben dieselbe MAC-Adresse",
+   "Multimode-Module übertragen kein Ethernet",
+   "Fasertyp und Wellenlänge passen nicht zusammen",
+   "Singlemode-Module beherrschen grundsätzlich nur Halbduplex"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Woran erkennt man typischerweise eine Layer-2-Schleife?",
+  "a": "Broadcast-Sturm: alle Port-LEDs blinken heftig, das Netz ist fast unbenutzbar",
+  "a_full": "Ohne Spanning Tree kreisen Broadcasts endlos zwischen den Switches und vervielfachen sich. Die Last steigt bis an die Grenze, Switches melden hohe CPU-Last und MAC-Flapping. Man trennt die doppelte Verbindung und aktiviert STP und BPDU Guard.",
+  "options": [
+   "Nur ein einzelner PC erhält eine APIPA-Adresse",
+   "Nur große Pakete werden still verworfen",
+   "Broadcast-Sturm: alle Port-LEDs blinken heftig, das Netz ist fast unbenutzbar",
+   "Alle Ports zeigen dauerhaft keinen Link mehr"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Was ist ein Rogue-DHCP-Server?",
+  "a": "Ein nicht genehmigter DHCP-Server, der Clients falsche Einstellungen gibt",
+  "a_full": "Oft ist es ein mitgebrachter Router, der im Firmennetz Adressen aus seinem eigenen Bereich verteilt. Clients bekommen dann ein falsches Gateway oder einen falschen DNS-Server. DHCP Snooping am Switch lässt Antworten nur von vertrauenswürdigen Ports zu.",
+  "options": [
+   "Ein zweiter DHCP-Server im geplanten Failover",
+   "Ein DHCP-Server, dessen Adressbereich voll ist",
+   "Ein nicht genehmigter DHCP-Server, der Clients falsche Einstellungen gibt",
+   "Ein DHCP-Server, der nur IPv6-Adressen vergibt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Was passiert, wenn der Adressbereich eines DHCP-Servers erschöpft ist?",
+  "a": "Neue Clients erhalten keine Adresse und nutzen APIPA",
+  "a_full": "Ein Windows-Client ohne Antwort setzt sich eine Adresse aus 169.254.0.0/16. Clients mit gültiger Lease arbeiten weiter, nur neue Geräte sind betroffen. Abhilfe sind ein größerer Bereich, eine kürzere Leasedauer oder das Aufräumen alter Leases.",
+  "options": [
+   "Neue Clients erhalten keine Adresse und nutzen APIPA",
+   "Die Clients übernehmen die Adresse des Gateways",
+   "Der Server vergibt Adressen doppelt an mehrere Clients",
+   "Der Server verkleinert automatisch die Leasedauer aller Clients"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Was bedeutet die DNS-Antwort SERVFAIL?",
+  "a": "Der Server konnte die Anfrage nicht auflösen, etwa wegen DNSSEC",
+  "a_full": "SERVFAIL heißt, dass beim Auflösen ein Fehler aufgetreten ist, zum Beispiel ein gescheiterter DNSSEC-Check oder nicht erreichbare zuständige Server. NXDOMAIN bedeutet dagegen, dass es den Namen nicht gibt. Verweigerte Anfragen meldet der Server mit REFUSED.",
+  "options": [
+   "Der Server konnte die Anfrage nicht auflösen, etwa wegen DNSSEC",
+   "Der Server verweigert Anfragen aus diesem Netz",
+   "Der Name existiert, hat aber keinen Eintrag des angefragten Typs",
+   "Der gesuchte Name existiert in der Zone nicht"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Was unterscheidet die DNS-Antwort NXDOMAIN von NOERROR ohne Antwortdaten?",
+  "a": "NXDOMAIN: der Name fehlt; leeres NOERROR: der Name hat diesen Typ nicht",
+  "a_full": "Fragt man nach dem AAAA-Eintrag eines Namens, der nur einen A-Eintrag hat, kommt NOERROR ohne Antwort (NODATA). Gibt es den Namen gar nicht, kommt NXDOMAIN. Die Unterscheidung zeigt, ob ein Tippfehler oder ein fehlender Eintragstyp vorliegt.",
+  "options": [
+   "NXDOMAIN: der Name fehlt; leeres NOERROR: der Name hat diesen Typ nicht",
+   "NXDOMAIN: nur bei IPv6; leeres NOERROR: nur bei IPv4",
+   "NXDOMAIN: Zeitüberschreitung; leeres NOERROR: Rechte fehlen",
+   "NXDOMAIN: der Server ist ausgefallen; leeres NOERROR: die Zone ist leer"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Was ist asymmetrisches Routing und warum stört es eine zustandsbehaftete Firewall?",
+  "a": "Hin- und Rückweg laufen über verschiedene Geräte, die Firewall sieht nur eine Richtung",
+  "a_full": "Eine Stateful Firewall erwartet zu einer Antwort einen bekannten Verbindungszustand, also das vorherige SYN. Kommt die Anfrage über ein anderes Gerät, verwirft sie die Antwort als ungültig. Abhilfe sind symmetrische Wege oder synchronisierte Firewalls.",
+  "options": [
+   "Pakete werden auf dem Hinweg verschlüsselt und auf dem Rückweg nicht",
+   "Hin- und Rückweg laufen über verschiedene Geräte, die Firewall sieht nur eine Richtung",
+   "Die Firewall verwirft alle Pakete ohne gesetztes ACK-Flag",
+   "Ein Router verteilt die Last ungleich auf zwei Leitungen"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Ein Dienst lauscht laut ss auf 127.0.0.1:8080. Was bedeutet das für andere Rechner?",
+  "a": "Sie erreichen ihn nicht, er lauscht nur lokal",
+  "a_full": "127.0.0.1 ist die Loopback-Adresse, sie ist nur auf dem Rechner selbst erreichbar. Soll der Dienst im Netz verfügbar sein, muss er auf der Netzwerkadresse oder auf 0.0.0.0 (alle Adressen) lauschen. Das stellt man in der Konfiguration des Dienstes ein.",
+  "options": [
+   "Sie erreichen ihn nicht, er lauscht nur lokal",
+   "Sie erreichen ihn, wenn sie zuerst Port 80 öffnen",
+   "Sie erreichen ihn nur über IPv6 auf Port 8080",
+   "Sie erreichen ihn über Port 8080 der Netzwerkadresse"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Was bedeutet die Meldung „Address already in use“ beim Start eines Dienstes?",
+  "a": "Ein anderer Prozess belegt den Port bereits",
+  "a_full": "Ein Port kann auf einer Adresse nur von einem Prozess belegt werden. Mit ss -ltnp oder netstat -ano findet man den Prozess, der ihn hält. Oft läuft eine alte Instanz noch oder zwei Dienste nutzen denselben Port.",
+  "options": [
+   "Ein anderer Prozess belegt den Port bereits",
+   "Die IP-Adresse ist doppelt im Netz vergeben",
+   "Der Dienst hat keine Rechte für die Logdatei",
+   "Die Firewall blockiert den Port für den Dienst"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3h",
+   "A8f"
+  ],
+  "q": "Warum ist eine zentrale Logsammlung bei der Fehlersuche hilfreich?",
+  "a": "Logs vieler Geräte sind an einer Stelle durchsuchbar, auch wenn ein Gerät ausfällt",
+  "a_full": "Bei einer Störung muss man Ereignisse von Switch, Firewall und Server zusammen ansehen. Ein zentraler Server erlaubt gemeinsame Suche und zeitliche Zuordnung. Fällt ein Gerät aus oder wird es neu gestartet, sind seine Meldungen dort noch vorhanden.",
+  "options": [
+   "Logs vieler Geräte sind an einer Stelle durchsuchbar, auch wenn ein Gerät ausfällt",
+   "Die Geräte brauchen dann keine eigenen Logs mehr",
+   "Die Geräte starten dadurch deutlich schneller",
+   "Zentral gespeicherte Logs dürfen nie gelöscht werden"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8f",
+   "C3i"
+  ],
+  "q": "Warum dokumentiert man im Ticket auch Prüfschritte, die nichts gefunden haben?",
+  "a": "Damit andere sie nicht wiederholen und der Weg nachvollziehbar bleibt",
+  "a_full": "Übernimmt ein Kollege oder der 2nd Level, sieht er sofort, was schon ausgeschlossen ist. Das spart Zeit und verhindert doppelte Arbeit. Außerdem hilft die Doku später, ähnliche Störungen schneller zu lösen.",
+  "options": [
+   "Damit der Hersteller die Prüfschritte freischalten kann",
+   "Damit der Anwender die Arbeitszeit sicher bezahlt",
+   "Damit das Ticket danach automatisch geschlossen wird",
+   "Damit andere sie nicht wiederholen und der Weg nachvollziehbar bleibt"
+  ]
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C3i"
+  ],
+  "q": "Wann legt man zu mehreren gleichartigen Störungen ein Problem-Ticket an?",
+  "a": "Wenn die Störung wiederholt auftritt und die Ursache dauerhaft beseitigt werden soll",
+  "a_full": "Das Incident-Management stellt den Betrieb schnell wieder her. Das Problem-Management sucht bei wiederkehrenden Störungen die gemeinsame Ursache. Die einzelnen Tickets werden mit dem Problem verknüpft.",
+  "options": [
+   "Wenn die Störung wiederholt auftritt und die Ursache dauerhaft beseitigt werden soll",
+   "Wenn eine Störung außerhalb der Geschäftszeit auftritt",
+   "Sobald ein einzelnes Ticket länger als eine Stunde offen ist",
+   "Wenn der Anwender mit der Lösung nicht zufrieden ist"
+  ]
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3e"
+  ],
+  "q": "Eine Vollsicherung von 2,4 TB läuft mit 200 MB/s (1 TB = 1.000.000 MB). Das Sicherungsfenster reicht von 22 bis 6 Uhr. Passt sie hinein?",
+  "a": "Ja, sie dauert 3 Stunden 20 Minuten, das Fenster hat 8 Stunden",
+  "a_full": "2,4 TB sind 2.400.000 MB, geteilt durch 200 MB/s sind das 12.000 Sekunden. 12.000 Sekunden entsprechen 200 Minuten, also 3 Stunden 20 Minuten. Das Fenster von 22 bis 6 Uhr umfasst 8 Stunden, es bleibt also Reserve.",
+  "options": [
+   "Ja, sie dauert 1 Stunde 12 Minuten, das Fenster hat 8 Stunden",
+   "Nein, sie dauert 12 Stunden und passt nicht ins Fenster",
+   "Ja, sie dauert 3 Stunden 20 Minuten, das Fenster hat 8 Stunden",
+   "Nein, sie dauert 33 Stunden 20 Minuten und passt nicht ins Fenster"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1b"
+  ],
+  "q": "Was versteht man beim RAID 5 unter dem Write Hole?",
+  "a": "Daten und Parität passen nach einem Stromausfall beim Schreiben nicht mehr zusammen",
+  "a_full": "Beim RAID 5 werden Datenblock und Paritätsblock nacheinander geschrieben. Fällt der Strom genau dazwischen aus, passt die Parität nicht mehr zu den Daten, und ein späterer Rebuild rekonstruiert falsche Daten. Schutz bieten ein Controller-Cache mit Batterie- oder Flash-Schutz, eine USV oder Copy-on-Write-Dateisysteme wie ZFS.",
+  "options": [
+   "Kleine Schreibvorgänge brechen ein, weil der Controller keinen Cache besitzt",
+   "Am Ende der größeren Platten bleibt bei ungleichen Größen ein ungenutzter Bereich frei",
+   "Daten und Parität passen nach einem Stromausfall beim Schreiben nicht mehr zusammen",
+   "Ein Stripe bleibt leer, weil die Hot-Spare-Platte fehlt und der Ersatz ausbleibt"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A8c"
+  ],
+  "q": "Warum gilt RAID 5 bei sehr großen Festplatten (z. B. 20 TB) als riskant?",
+  "a": "Der lange Rebuild ohne Redundanz kann an einem Lesefehler scheitern",
+  "a_full": "Während des Rebuilds muss jeder Sektor aller verbliebenen Platten fehlerfrei gelesen werden, und bei 20-TB-Platten dauert das oft mehr als einen Tag. Ein einziger nicht lesbarer Sektor (URE, Unrecoverable Read Error) oder ein zweiter Ausfall in dieser Zeit führt zu Datenverlust. Bei großen Platten wählt man deshalb RAID 6 oder RAID 10.",
+  "options": [
+   "Die Parität großer Platten passt nicht mehr in den Controller-Cache",
+   "Der lange Rebuild ohne Redundanz kann an einem Lesefehler scheitern",
+   "Controller können bei RAID 5 nur Platten bis 16 TB sicher adressieren",
+   "Große Platten unterstützen keine verteilte Parität über alle Platten"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A8e"
+  ],
+  "q": "Was bedeutet der Zustand „degraded“ bei einem RAID-Verbund?",
+  "a": "Er läuft weiter, aber mit verringerter oder ohne Redundanz",
+  "a_full": "Degraded heißt, dass eine oder mehrere Platten fehlen, die Daten über die verbleibende Redundanz aber noch erreichbar sind. Ein RAID 5 im Zustand degraded hat keinen Schutz mehr, ein weiterer Ausfall bedeutet Datenverlust. Deshalb muss die defekte Platte schnell ersetzt und der Rebuild gestartet werden.",
+  "options": [
+   "Er läuft weiter, aber mit verringerter oder ohne Redundanz",
+   "Er ist ausgefallen, die Daten sind nicht mehr lesbar",
+   "Er läuft nur noch lesend, weil alle Platten voll sind",
+   "Er wird gerade neu initialisiert und enthält noch keine Daten"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1b"
+  ],
+  "q": "Was bedeutet beim Schreibcache eines RAID-Controllers Write-Back im Gegensatz zu Write-Through?",
+  "a": "Das Schreiben gilt als fertig, sobald die Daten im Cache liegen",
+  "a_full": "Bei Write-Back bestätigt der Controller den Schreibvorgang, sobald die Daten im schnellen Cache liegen, und schreibt sie später auf die Platten. Das ist deutlich schneller, ohne Batterie- oder Flash-Schutz gehen bei einem Stromausfall aber Daten verloren. Write-Through bestätigt erst nach dem Schreiben auf die Platten und ist sicherer, aber langsamer.",
+  "options": [
+   "Das Schreiben gilt als fertig, sobald die Daten im Cache liegen",
+   "Der Cache dient nur dem Lesen und nicht dem Schreiben",
+   "Die Daten werden erst gesammelt und nur einmal pro Stunde geschrieben",
+   "Die Daten werden erst gelesen und danach zurückgeschrieben"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A3a"
+  ],
+  "q": "Was versteht man bei SSDs unter Over-Provisioning?",
+  "a": "Reservierter Flash, der nicht als Nutzkapazität sichtbar ist",
+  "a_full": "Ein Teil des Flash-Speichers bleibt für den Controller reserviert und dient für Wear Leveling, Garbage Collection und als Ersatz für verschlissene Zellen. Mehr Over-Provisioning erhöht Haltbarkeit und gleichmäßige Schreibleistung. Deshalb haben Mixed-Use-SSDs bei gleichem Flash oft weniger nutzbare Kapazität als leselastige Modelle.",
+  "options": [
+   "Reservierter Flash, der nicht als Nutzkapazität sichtbar ist",
+   "Mehr Kapazität zuweisen, als physisch vorhanden ist",
+   "Spiegelung des SSD-Controllers auf ein zweites Laufwerk im Server",
+   "Höhere Spannung für schnellere Schreibvorgänge"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A8c"
+  ],
+  "q": "Welchen Vorteil haben NVMe-SSDs im Format U.2 oder E3.S in Servern gegenüber M.2-Karten?",
+  "a": "Sie lassen sich von vorne im laufenden Betrieb tauschen",
+  "a_full": "U.2 und die neueren EDSFF-Formate wie E3.S stecken in Laufwerksschächten an der Vorderseite und unterstützen bei passender Backplane den Tausch im Betrieb (Hot-Plug). Fällt eine SSD aus, tauscht man sie, ohne den Server zu öffnen. M.2-Karten sitzen meist auf dem Mainboard und dienen eher als Bootlaufwerk.",
+  "options": [
+   "Sie arbeiten ohne PCIe direkt am SATA-Controller des Servers",
+   "Sie lassen sich von vorne im laufenden Betrieb tauschen",
+   "Sie brauchen im Servergehäuse keine Kühlung",
+   "Sie bieten grundsätzlich die doppelte Kapazität"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C1b",
+   "C1d"
+  ],
+  "q": "Warum kann man SATA-Platten an einem SAS-Controller betreiben, aber NICHT SAS-Platten an einem SATA-Controller?",
+  "a": "SAS-Controller sprechen auch SATA, SATA-Controller verstehen kein SAS",
+  "a_full": "SAS ist abwärtskompatibel: Ein SAS-Controller kann SATA-Laufwerke über das SATA Tunneling Protocol ansprechen. Ein SATA-Controller versteht das SAS-Protokoll dagegen nicht. Die Stecker sind so geformt, dass eine SAS-Platte gar nicht an einen SATA-Anschluss passt.",
+  "options": [
+   "SAS-Platten brauchen 24 Volt, ein SATA-Anschluss liefert aber nur 12 Volt",
+   "SATA-Controller erlauben grundsätzlich nur eine Platte pro Kabel",
+   "SATA-Platten haben mehr Kontakte, als ein SAS-Anschluss bietet",
+   "SAS-Controller sprechen auch SATA, SATA-Controller verstehen kein SAS"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "A9b"
+  ],
+  "q": "Was ist beim Einsatz von Jumbo Frames im iSCSI-Netz unbedingt zu beachten?",
+  "a": "Jedes Gerät auf dem Weg muss mindestens diese große MTU eingestellt haben",
+  "a_full": "Jumbo Frames vergrößern die MTU meist auf 9000 Byte, damit für dieselbe Datenmenge weniger Pakete und weniger CPU-Last anfallen. Switches stellt man dafür oft noch etwas größer ein, etwa auf 9216 Byte. Ist auf einem Switch oder Adapter im Pfad eine kleinere MTU eingestellt, werden große Pakete verworfen, und es kommt zu schwer erkennbaren Hängern. Prüfen lässt sich das mit ping, gesetztem Don't-Fragment-Bit und großer Paketgröße.",
+  "options": [
+   "Die MTU am Target muss kleiner sein als die MTU am Initiator",
+   "Jumbo Frames brauchen je Netzwerkkarte eine eigene IP-Adresse im Storage-Netz",
+   "Jedes Gerät auf dem Weg muss mindestens diese große MTU eingestellt haben",
+   "Jumbo Frames laufen nur über Glasfaser und nicht über Kupfer"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3c",
+   "A9a"
+  ],
+  "q": "Was bewirkt die NFS-Exportoption root_squash?",
+  "a": "Zugriffe von root auf dem Client laufen als rechtloser Benutzer",
+  "a_full": "Ohne root_squash hätte root auf jedem Client automatisch volle Rechte auf alle Dateien der Freigabe. Mit root_squash, der Voreinstellung, wird root auf den Benutzer nobody abgebildet. no_root_squash setzt man nur gezielt, etwa für einen bestimmten Backup-Server.",
+  "options": [
+   "Zugriffe von root auf dem Client laufen als rechtloser Benutzer",
+   "Der Export ist nur für den Benutzer root freigegeben",
+   "root darf Dateien auf dem Server lesen, aber nicht löschen",
+   "Alle Benutzer arbeiten auf dem Server mit den vollen Rechten von root"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A9b"
+  ],
+  "q": "Welchen Vorteil bietet NFSv4 gegenüber NFSv3 bei Firewall-Regeln?",
+  "a": "Es kommt mit TCP-Port 2049 aus statt mit mehreren dynamischen Ports",
+  "a_full": "NFSv3 benötigt zusätzlich rpcbind auf Port 111 und Dienste wie mountd, die oft wechselnde Ports nutzen. NFSv4 bündelt alles über TCP 2049, was Firewall-Regeln stark vereinfacht. Außerdem bietet NFSv4 mit Kerberos (sec=krb5p) eine echte Anmeldung und optional Verschlüsselung.",
+  "options": [
+   "Es tunnelt automatisch über HTTPS auf dem Port 443",
+   "Es kommt mit TCP-Port 2049 aus statt mit mehreren dynamischen Ports",
+   "Es verschlüsselt immer und läuft deshalb über Port 22",
+   "Es nutzt nur UDP und braucht deshalb auf der Firewall keine Regeln mehr"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C1b",
+   "C3g"
+  ],
+  "q": "Was bewirkt die Mount-Option noatime unter Linux?",
+  "a": "Beim Lesen wird die Zugriffszeit nicht jedes Mal neu geschrieben",
+  "a_full": "Ohne Option merkt sich das Dateisystem den letzten Lesezugriff (atime) und muss dafür auch beim reinen Lesen Metadaten schreiben. noatime schaltet das ab und spart Schreibzugriffe, was bei vielen kleinen Dateien Leistung bringt. Die heutige Voreinstellung relatime schreibt die Zugriffszeit nur noch selten.",
+  "options": [
+   "Dateien werden beim Lesen nicht mehr im Cache gehalten",
+   "Zeitstempel werden beim Kopieren auf null gesetzt",
+   "Das Dateisystem wird beim Start nicht auf Fehler geprüft",
+   "Beim Lesen wird die Zugriffszeit nicht jedes Mal neu geschrieben"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1d"
+  ],
+  "q": "Welche Einschränkung hat exFAT im Vergleich zu NTFS?",
+  "a": "Keine Dateiberechtigungen und kein Journal",
+  "a_full": "exFAT wurde für Wechselspeicher entworfen und hebt die 4-GB-Grenze von FAT32 für einzelne Dateien auf. Es kennt aber keine Zugriffsrechte wie NTFS und kein Journal, deshalb wird ein ohne Auswerfen abgezogener Datenträger leichter beschädigt. macOS und aktuelle Linux-Systeme lesen und schreiben exFAT ohne Zusatzsoftware.",
+  "options": [
+   "Keine Dateiberechtigungen und kein Journal",
+   "Dateien dürfen höchstens 4 GB groß sein",
+   "Nur Windows kann es lesen und beschreiben",
+   "Partitionen dürfen höchstens 32 GB groß sein"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C3g"
+  ],
+  "q": "Warum komprimiert man Daten vor der Verschlüsselung und NICHT danach?",
+  "a": "Verschlüsselte Daten wirken zufällig und lassen sich kaum verkleinern",
+  "a_full": "Kompression nutzt Wiederholungen und Muster in den Daten. Gute Verschlüsselung erzeugt dagegen Daten, die von Zufall nicht zu unterscheiden sind, darin findet ein Kompressionsverfahren nichts mehr. Backup-Programme komprimieren deshalb zuerst und verschlüsseln danach.",
+  "options": [
+   "Kompression nach der Verschlüsselung macht den Schlüssel ungültig",
+   "Verschlüsselte Daten sind schreibgeschützt und dürfen nicht geändert werden",
+   "Verschlüsselte Daten wirken zufällig und lassen sich kaum verkleinern",
+   "Verschlüsselung verdoppelt die Datenmenge, die Kompression gleicht das aus"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3e",
+   "C1d"
+  ],
+  "q": "Kassetten welcher älteren Generation kann ein LTO-9-Laufwerk lesen und beschreiben?",
+  "a": "Nur LTO-8",
+  "a_full": "Früher lasen LTO-Laufwerke zwei Generationen zurück und schrieben eine zurück. Ab LTO-8 gilt nur noch eine Generation: Ein LTO-9-Laufwerk liest und schreibt LTO-8, aber keine LTO-7-Kassetten. Vor einem Laufwerkswechsel muss man deshalb klären, wie alte Bänder lesbar bleiben.",
+  "options": [
+   "LTO-6 bis LTO-8",
+   "Nur LTO-8",
+   "LTO-7 und LTO-8",
+   "Keine ältere Generation"
+  ]
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3e",
+   "A6a"
+  ],
+  "q": "Was sind WORM-Kassetten bei LTO?",
+  "a": "Bänder, die nach dem Beschreiben nicht mehr geändert werden können",
+  "a_full": "WORM steht für Write Once, Read Many. Die Kassette erlaubt nur Anhängen; vorhandene Daten lassen sich weder überschreiben noch löschen, was das Laufwerk über einen Chip in der Kassette sicherstellt. Das nutzt man für revisionssichere Archive und als Schutz vor Manipulation.",
+  "options": [
+   "Bänder, die ihren Inhalt selbsttätig auf Fehler prüfen",
+   "Bänder, die nur in einer Bandbibliothek lesbar sind",
+   "Bänder mit doppelter Kapazität für Langzeitarchive",
+   "Bänder, die nach dem Beschreiben nicht mehr geändert werden können"
+  ]
  }
 ]

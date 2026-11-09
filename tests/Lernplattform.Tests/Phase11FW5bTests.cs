@@ -215,15 +215,19 @@ public class Phase11FW5bTests
         var datei = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "quizfragen.json")))!.AsArray();
         // die Datei bleibt nur angehaengt: die alte Fassung steht weiter an Stelle 231, die neue am Ende (6360)
         Assert.Equal(Alt231, datei[231]!["q"]!.GetValue<string>());
-        // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 SI-Fragen an: 6 361 + 1 561
-        Assert.Equal(6361 + 1561, datei.Count);
+        // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 SI-Fragen an: 6 361 + 1 561; seit A 0.53.1 (Weisung P12-106,
+        // Sammelliste 248) dazu 80 neue Fassungen von SI-Fragen
+        Assert.Equal(6361 + 1561 + 80, datei.Count);
         var neu = datei[6360]!.AsObject();
         Assert.Equal(("ae", "ae_oop", "Fabrikmethode"), (neu["fachrichtung"]!.GetValue<string>(), neu["thema"]!.GetValue<string>(), neu["a"]!.GetValue<string>()));
         Assert.Contains("überschriebenen Methode erzeugeLeser()", neu["q"]!.GetValue<string>(), StringComparison.Ordinal);
 
         var alle = Echt();
-        // fester Ausschluss: genau dieser eine Eintrag, Text gleich der Datei
-        Assert.Equal([("quizfragen", 231, Alt231)], alle.Ausschluss);
+        // fester Ausschluss: dieser Eintrag zuerst, Text gleich der Datei; danach nur die 127 aus Sammelliste 248
+        // (47 Karten, 80 Fragen, alle hinter Stelle 6360, siehe LerninhalteTests.Grossschrift248_...)
+        Assert.Equal(("quizfragen", 231, Alt231), alle.Ausschluss[0]);
+        Assert.Equal(128, alle.Ausschluss.Count);
+        Assert.All(alle.Ausschluss.Skip(1), a => Assert.True(a.Stelle > 6360 || a.Datei == "karteikarten", a.ToString()));
         Assert.All(alle.Ausschluss, a => Assert.Equal(a.Frage, JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, a.Datei + ".json")))![a.Stelle]!["q"]!.GetValue<string>()));
         Assert.DoesNotContain(alle.Quizfragen, q => q.Frage == Alt231);
         Assert.Single(alle.Quizfragen, q => q.Frage == neu["q"]!.GetValue<string>());
@@ -242,7 +246,7 @@ public class Phase11FW5bTests
         var ohne = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte),
             name => name != Lerninhalte.AusschlussDatei && Path.Combine(Lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null);
         Assert.Single(ohne.Quizfragen, q => q.Frage == Alt231);
-        Assert.Equal(alle.Quizfragen.Count + 1, ohne.Quizfragen.Count);
+        Assert.Equal(alle.Quizfragen.Count + 1 + 80, ohne.Quizfragen.Count);
         // steht an der Stelle ein anderer Text, wirkt der Ausschluss nicht
         var anders = new JsonObject { ["q"] = Alt231 + " " };
         Assert.False(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 231, anders));

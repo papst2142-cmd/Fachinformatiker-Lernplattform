@@ -137406,5 +137406,1432 @@
   ],
   "a": "Wissen dokumentieren, Vertretung einarbeiten",
   "exp": "Wissen, das nur eine Person hat, ist ein Risiko wie ein Single Point of Failure. In der verbleibenden Zeit werden Konfiguration, Abläufe und Zugänge dokumentiert und eine Vertretung eingearbeitet. Die Zugänge werden erst mit dem Austritt entzogen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8a"
+  ],
+  "q": "Ein Provider delegiert ein /60. Der Kunde braucht 20 Netze /64. Was stimmt?",
+  "options": [
+   "Es reicht, ein /60 hat 60 Netze /64",
+   "Es reicht nicht, ein /60 hat nur 16 Netze /64",
+   "Es reicht, ein /60 hat 256 Netze /64",
+   "Es reicht knapp, ein /60 hat genau 24 Netze /64"
+  ],
+  "a": "Es reicht nicht, ein /60 hat nur 16 Netze /64",
+  "exp": "Von /60 bis /64 bleiben 4 Bit, also 2^4 = 16 Netze. Für 20 Netze braucht der Kunde mindestens 5 Bit (/59), an einer Nibble-Grenze also ein /56 mit 256 Netzen. Er sollte beim Provider ein größeres Präfix anfragen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8a"
+  ],
+  "q": "Zwei Standorte nutzen 2001:db8:a:100::/56 und 2001:db8:a:200::/56. Lassen sie sich mit 2001:db8:a:100::/55 genau zusammenfassen?",
+  "options": [
+   "Nein, erst 2001:db8:a::/54 umfasst beide, mit fremden Netzen",
+   "Ja, das /55 umfasst genau diese beiden /56",
+   "Ja, aber nur als 2001:db8:a:100::/57",
+   "Nein, IPv6-Routen lassen sich grundsätzlich nicht zusammenfassen"
+  ],
+  "a": "Nein, erst 2001:db8:a::/54 umfasst beide, mit fremden Netzen",
+  "exp": "Ein /55 fasst zwei /56 zusammen, deren erstes einen geraden Wert hat: 000 und 100 oder 200 und 300. 100 und 200 unterscheiden sich schon im Bit davor, gemeinsam passen sie erst in 2001:db8:a::/54 (000 bis 3ff). Dieses /54 schließt aber auch 000 bis 0ff und 300 bis 3ff ein, die anderen gehören könnten."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a"
+  ],
+  "q": "Was macht ein Router mit einem Paket, dessen Zieladresse link-lokal ist (fe80::/10)?",
+  "options": [
+   "Er leitet es an sein Standardgateway weiter",
+   "Er übersetzt es per NAT in eine GUA",
+   "Er sendet es als Multicast an alle Netze",
+   "Er leitet es nicht in andere Netze weiter"
+  ],
+  "a": "Er leitet es nicht in andere Netze weiter",
+  "exp": "Link-lokale Adressen gelten nur im eigenen Segment. Router dürfen Pakete mit link-lokaler Quelle oder link-lokalem Ziel nicht in ein anderes Segment weiterleiten. Deshalb funktionieren z. B. NDP und Router Advertisements nur lokal."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a"
+  ],
+  "q": "Woran erkennt man eine Anycast-Adresse bei IPv6 an ihrem Aussehen?",
+  "options": [
+   "Am Präfix ff0e::/16, das für weltweite Dienste reserviert ist",
+   "Am Präfix fe80::/10 wie bei Routern",
+   "An der Endung ::ffff am Ende der Adresse",
+   "Gar nicht, sie stammt aus dem normalen Unicast-Bereich"
+  ],
+  "a": "Gar nicht, sie stammt aus dem normalen Unicast-Bereich",
+  "exp": "Anycast-Adressen haben kein eigenes Präfix, sie sehen aus wie normale Unicast-Adressen. Zur Anycast-Adresse wird eine Adresse erst dadurch, dass mehrere Systeme sie tragen und das Routing zum nächsten führt. ff0e::/16 wäre globaler Multicast."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a"
+  ],
+  "q": "Ein Router Advertisement enthält ein Präfix mit gesetztem L-Flag, aber ohne A-Flag. Was bedeutet das?",
+  "options": [
+   "Hosts bilden eine Adresse, senden aber jedes Paket über den Standardrouter",
+   "Das Präfix ist gesperrt und darf nicht genutzt werden",
+   "Das Präfix ist direkt erreichbar, SLAAC-Adressen entstehen aber nicht",
+   "Hosts holen sich das Präfix per DHCPv6-PD ab"
+  ],
+  "a": "Das Präfix ist direkt erreichbar, SLAAC-Adressen entstehen aber nicht",
+  "exp": "Das L-Flag (On-Link) sagt, dass Ziele im Präfix direkt im Segment erreichbar sind. Ohne A-Flag bildet der Host daraus keine eigene Adresse; die Adresse kann dann z. B. per DHCPv6 kommen. Beide Flags werden unabhängig voneinander gesetzt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A6b"
+  ],
+  "q": "Ein Client prüft DNSSEC selbst und steht hinter DNS64. Warum schlagen Abfragen für reine IPv4-Ziele fehl?",
+  "options": [
+   "Synthetische AAAA-Einträge haben keine gültige Signatur",
+   "DNS64 verschlüsselt alle Antworten neu",
+   "DNSSEC funktioniert grundsätzlich nur über IPv4-Server im Internet",
+   "Der Client erhält dann nur PTR-Einträge"
+  ],
+  "a": "Synthetische AAAA-Einträge haben keine gültige Signatur",
+  "exp": "DNS64 erzeugt AAAA-Einträge, die es in der signierten Zone nicht gibt; dazu passt keine DNSSEC-Signatur. Ein selbst validierender Client verwirft sie deshalb. Abhilfe ist, die Synthese auf dem Client vorzunehmen oder dem Resolver zu vertrauen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A6c"
+  ],
+  "q": "Ein Scan zeigt, dass alle Server-Adressen auf ::1, ::2, ::3 enden. Warum ist das ein Risiko?",
+  "options": [
+   "Einfache Interface-IDs sind trotz großem /64 schnell erraten",
+   "Solche kurzen Adressen werden im Internet grundsätzlich nicht geroutet",
+   "Diese IDs kollidieren mit der Loopback-Adresse",
+   "Diese IDs schalten die DAD auf dem Server ab"
+  ],
+  "a": "Einfache Interface-IDs sind trotz großem /64 schnell erraten",
+  "exp": "Ein /64 ist zu groß zum Durchprobieren, aber Angreifer testen gezielt kleine Zahlen und typische Muster. Server mit ::1 bis ::ff sind so in Sekunden gefunden. Das ist kein Grund für zufällige Serveradressen, aber für saubere Firewall-Regeln statt Verstecken."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A6a"
+  ],
+  "q": "Ein Kollege behauptet, IPv6 sei automatisch verschlüsselt, weil IPsec zu IPv6 gehört. Was stimmt?",
+  "options": [
+   "IPsec ist möglich, wirkt aber nur, wenn es eingerichtet ist",
+   "Stimmt, jedes IPv6-Paket wird per ESP verschlüsselt",
+   "Stimmt, aber nur innerhalb desselben /64",
+   "IPsec gibt es nur für IPv4, nicht für IPv6"
+  ],
+  "a": "IPsec ist möglich, wirkt aber nur, wenn es eingerichtet ist",
+  "exp": "IPsec wurde zusammen mit IPv6 entworfen und musste anfangs unterstützt werden, heute ist es nur noch empfohlen. Verschlüsselt wird aber erst, wenn Richtlinien und Schlüssel eingerichtet sind. Ohne Konfiguration ist IPv6-Verkehr genauso offen wie IPv4."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "ipv6",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8b"
+  ],
+  "q": "ss -tln zeigt einen Dienst auf [::]:22. Ist er unter Linux auch per IPv4 erreichbar?",
+  "options": [
+   "Nein, [::] gilt grundsätzlich nur für IPv6",
+   "Ja, aber nur von link-lokalen IPv4-Adressen aus 169.254.0.0/16",
+   "Nein, dafür fehlt ein Eintrag in /etc/hosts",
+   "Ja, bei bindv6only = 0 nimmt der Socket auch IPv4 an"
+  ],
+  "a": "Ja, bei bindv6only = 0 nimmt der Socket auch IPv4 an",
+  "exp": "Ein IPv6-Socket auf [::] nimmt unter Linux standardmäßig auch IPv4-Verbindungen an, die als ::ffff:-Adressen erscheinen (net.ipv6.bindv6only = 0). Setzt das Programm die Socket-Option IPV6_V6ONLY, gilt er nur für IPv6. Viele Dienste öffnen deshalb zusätzlich einen eigenen Socket auf 0.0.0.0."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "A8e"
+  ],
+  "q": "Ein Etagenswitch ist nur per Trunk mit dem Core verbunden. Seine Management-IP liegt in VLAN 100, das auf dem Trunk aber NICHT erlaubt ist. Was passiert?",
+  "options": [
+   "Er leitet überhaupt keinen Verkehr mehr weiter",
+   "Er wechselt mit seiner Verwaltung in VLAN 1",
+   "Er leitet weiter, ist aber per Netz nicht verwaltbar",
+   "Alle VLANs fallen auf diesem Trunk sofort aus"
+  ],
+  "a": "Er leitet weiter, ist aber per Netz nicht verwaltbar",
+  "exp": "Die Weiterleitung der anderen VLANs hängt nicht vom Management-VLAN ab. Ohne VLAN 100 auf dem Trunk erreicht aber kein Paket die Management-Adresse. Man prüft solche Änderungen vorher und hält einen Konsolenzugang bereit."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A6b",
+   "C2c"
+  ],
+  "q": "Ein Kollege trennt Abteilungen mit VLANs und meint, Schadsoftware könne nun nicht mehr zwischen ihnen wandern. Der Layer-3-Core routet ungefiltert zwischen allen VLANs. Was antworten Sie?",
+  "options": [
+   "VLANs verschlüsseln den Verkehr, das reicht schon aus",
+   "Ohne Filter durch ACL oder Firewall bleibt alles erreichbar",
+   "Routing zwischen VLANs ist technisch gar nicht möglich",
+   "Schadsoftware kann VLAN-Tags grundsätzlich nicht lesen"
+  ],
+  "a": "Ohne Filter durch ACL oder Firewall bleibt alles erreichbar",
+  "exp": "VLANs trennen Broadcastdomänen, aber ein Router oder Layer-3-Switch verbindet sie wieder. Erst Regeln an dieser Stelle, also ACLs oder eine Firewall, begrenzen den Verkehr. Ein Segmentierungskonzept legt fest, welche Verbindungen zwischen den Zonen nötig sind."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "C2c"
+  ],
+  "q": "Welche Aussage über VLAN 1 auf vielen Switches ist richtig?",
+  "options": [
+   "Es wird nie über einen Trunk übertragen",
+   "Es ist fest für Sprachverkehr reserviert",
+   "Es ist überall aktiv und nicht löschbar",
+   "Es ist ab Werk auf allen Ports abgeschaltet"
+  ],
+  "a": "Es ist überall aktiv und nicht löschbar",
+  "exp": "VLAN 1 ist Standard-VLAN und oft auch natives VLAN der Trunks. Einige Steuerprotokolle laufen darüber, deshalb kann man es nicht löschen. Man nutzt es deshalb nicht für Benutzer oder Management."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8e"
+  ],
+  "q": "Zwei Switches sind über einen alten Hub verbunden. RSTP konvergiert auf dieser Verbindung so langsam wie altes STP. Warum?",
+  "options": [
+   "Der Hub wird automatisch zur Root Bridge",
+   "RSTP funktioniert nur über Glasfaser schnell",
+   "Halbduplex gilt nicht als Punkt-zu-Punkt-Link",
+   "Hubs leiten grundsätzlich keine BPDUs weiter"
+  ],
+  "a": "Halbduplex gilt nicht als Punkt-zu-Punkt-Link",
+  "exp": "Den schnellen Handschlag nutzt RSTP nur auf Punkt-zu-Punkt-Links, die es am Vollduplex erkennt. An einem geteilten Halbduplex-Segment mit Hub fällt es auf die Timer zurück. Der Hub sollte deshalb ersetzt werden."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "A8e"
+  ],
+  "q": "Ein Bündel ist als Trunk mit VLAN 10 und 20 eingerichtet. Auf einem Mitgliedsport ist abweichend zusätzlich VLAN 30 erlaubt. Was ist typischerweise die Folge?",
+  "options": [
+   "Der Port leitet VLAN 30 außerhalb des Bündels weiter",
+   "Der Port wird suspended und nicht gebündelt",
+   "Das Bündel übernimmt VLAN 30 auf alle seine Ports",
+   "Das ganze Bündel geht sofort in err-disabled"
+  ],
+  "a": "Der Port wird suspended und nicht gebündelt",
+  "exp": "Alle Mitglieder eines Bündels müssen gleich konfiguriert sein. Weicht ein Port ab, nimmt der Switch ihn aus dem Bündel und zeigt ihn als suspended an. Man ändert die Konfiguration deshalb am Port-Channel, der sie an alle Mitglieder weitergibt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "A8e"
+  ],
+  "q": "Ein Wi-Fi-7-Access-Point läuft an einem PoE+-Port, meldet aber eingeschränkten Betrieb und schaltet ein Funkmodul ab. Was ist die Ursache?",
+  "options": [
+   "Der Port arbeitet nur mit 100 Mbit/s",
+   "Das Kabel ist für PoE+ zu kurz",
+   "Er braucht mehr, als PoE+ garantiert",
+   "Das Funkmodul ist für 2,4 GHz nicht zugelassen"
+  ],
+  "a": "Er braucht mehr, als PoE+ garantiert",
+  "exp": "Viele Access Points der neuesten Generation brauchen für alle Funkmodule mehr als die 25,5 W von PoE+. Bekommen sie weniger, schalten sie Funktionen ab, statt auszufallen. Abhilfe bringt ein Port nach 802.3bt oder ein passender Injektor."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A9a"
+  ],
+  "q": "Warum bindet man die Anmeldung von Administratoren an Switches über TACACS+ oder RADIUS an einen zentralen Dienst an?",
+  "options": [
+   "Die Switches starten dadurch schneller",
+   "Spanning Tree wird dann zentral berechnet",
+   "Ein lokales Notfallkonto ist dann nicht mehr nötig",
+   "Konten und Rechte zentral, Sperren wirken überall"
+  ],
+  "a": "Konten und Rechte zentral, Sperren wirken überall",
+  "exp": "Mit zentraler Anmeldung muss man ein Konto nur an einer Stelle sperren, wenn jemand die Firma verlässt. TACACS+ kann zusätzlich jeden Befehl einzeln erlauben und protokollieren. Ein lokales Notfallkonto braucht man trotzdem, falls der zentrale Dienst nicht erreichbar ist."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "switching",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "C1d"
+  ],
+  "q": "Auf der einen Seite steckt ein 10GBASE-LR-Modul, auf der anderen ein 10GBASE-SR-Modul, verbunden über Singlemode-Faser. Was passiert?",
+  "options": [
+   "Die Module handeln automatisch 1 Gbit/s aus",
+   "Der Link läuft stabil, aber mit halber Geschwindigkeit",
+   "Kein stabiler Link, die Optiken passen nicht",
+   "Der Link läuft stabil, nur die Reichweite sinkt"
+  ],
+  "a": "Kein stabiler Link, die Optiken passen nicht",
+  "exp": "SR sendet mit 850 nm für Multimode, LR mit 1.310 nm für Singlemode. Beide Seiten einer Strecke brauchen den gleichen Standard und den passenden Fasertyp. Man prüft deshalb vor dem Patchen Module, Faser und Stecker."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C2c"
+  ],
+  "q": "Beim Aufbau der Child SA meldet IKEv2 TS_UNACCEPTABLE. Was ist die Ursache?",
+  "options": [
+   "Die lokalen und entfernten Netze (Traffic Selectors) passen nicht zusammen",
+   "Das Zertifikat der Gegenstelle ist abgelaufen",
+   "Der Pre-Shared Key ist auf den beiden Gateways verschieden eingetragen worden",
+   "Die Gegenstelle antwortet nicht mehr auf DPD-Anfragen"
+  ],
+  "a": "Die lokalen und entfernten Netze (Traffic Selectors) passen nicht zusammen",
+  "exp": "TS_UNACCEPTABLE heißt, dass die Gegenstelle die angebotenen Traffic Selectors nicht akzeptiert. Meist ist auf einer Seite ein Netz anders eingetragen, etwa 10.20.0.0/24 statt 10.20.0.0/16. Die Authentifizierung hat in diesem Moment schon geklappt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8b"
+  ],
+  "q": "Warum ist bei IPv6 durch einen VPN-Tunnel eine funktionierende Path-MTU-Discovery besonders wichtig?",
+  "options": [
+   "IPv6 hat feste Pakete mit genau 1.280 Byte Größe",
+   "IPv6 nutzt NAT, das zu große Pakete verwirft",
+   "Router fragmentieren IPv6 nicht, nur der Absender verkleinert nach Packet Too Big",
+   "IPv6-Pakete sind immer größer als 9.000 Byte"
+  ],
+  "a": "Router fragmentieren IPv6 nicht, nur der Absender verkleinert nach Packet Too Big",
+  "exp": "Bei IPv6 dürfen Router unterwegs keine Pakete teilen. Ist ein Paket zu groß, verwerfen sie es und senden ICMPv6 Packet Too Big an den Absender. Filtert eine Firewall diese Meldung, hängen größere Übertragungen durch den Tunnel."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "A4c"
+  ],
+  "q": "Warum zeigt tracert durch einen IPsec-Tunnel von der Zentrale zur Filiale nur zwei Hops, obwohl dazwischen viele Router im Internet liegen?",
+  "options": [
+   "Die Router im Internet beantworten tracert-Anfragen grundsätzlich nicht",
+   "IPsec verkürzt den Weg durch eine direkte Leitung",
+   "tracert funktioniert im Tunnel nur mit IPv6",
+   "Für das innere Paket zählt der ganze Tunnel wie ein einziger Hop"
+  ],
+  "a": "Für das innere Paket zählt der ganze Tunnel wie ein einziger Hop",
+  "exp": "Die Router im Internet sehen nur das äußere Paket zwischen den beiden Gateways. Die TTL des inneren Pakets sinkt nur an den Gateways, nicht unterwegs. Deshalb erscheint der Tunnel im tracert wie eine einzige Verbindung."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C2c"
+  ],
+  "q": "Beim WireGuard-Peer der Filiale steht als Endpoint ein DynDNS-Name der Zentrale. Nach einem Adresswechsel der Zentrale kommt der Tunnel nicht wieder, bis man ihn neu startet. Warum?",
+  "options": [
+   "WireGuard löst den Namen nur beim Start auf und nutzt danach die alte Adresse",
+   "Der DynDNS-Name verweist auf die private Adresse der Zentrale",
+   "WireGuard kann grundsätzlich keine DNS-Namen als Endpoint nutzen",
+   "PersistentKeepalive verhindert, dass neue Adressen genutzt werden"
+  ],
+  "a": "WireGuard löst den Namen nur beim Start auf und nutzt danach die alte Adresse",
+  "exp": "WireGuard selbst kennt nur IP-Adressen, wg-quick löst den Namen einmal beim Start auf. Ändert sich danach die Adresse, schickt der Peer weiter an die alte. Abhilfe ist ein regelmäßiges Neuauflösen per Skript oder Zeitplan."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8c",
+   "A8d"
+  ],
+  "q": "Bei einem Stromausfall laufen die Server dank USV weiter, die Filialen verlieren aber sofort die Verbindung zur Zentrale. Was ist die wahrscheinliche Ursache?",
+  "options": [
+   "Modem, Router oder Firewall der Zentrale hängen nicht an der USV",
+   "Die Server wechseln bei Batteriebetrieb ihre IP-Adressen",
+   "Die USV schaltet bei Stromausfall alle Netzwerkports ab",
+   "Die Filialen erkennen den Stromausfall der Zentrale und trennen den Tunnel selbst"
+  ],
+  "a": "Modem, Router oder Firewall der Zentrale hängen nicht an der USV",
+  "exp": "Eine USV schützt nur die Geräte, die an ihr hängen. Fehlen Modem oder ONT, Firewall und Switches in der Kette, ist die Zentrale trotz laufender Server vom WAN getrennt. Bei der Planung gehört der ganze Weg bis zur Leitung an die USV."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2a",
+   "A8a"
+  ],
+  "q": "Warum braucht ein IPsec-Tunnel zwischen zwei Gateways über reines IPv6 meist kein NAT-Traversal?",
+  "options": [
+   "NAT-Traversal ist für IPv6 verboten",
+   "IPv6 verschlüsselt selbst und braucht kein ESP",
+   "IPv6 nutzt für IPsec immer TCP statt UDP",
+   "Beide Gateways haben globale Adressen, NAT liegt nicht dazwischen"
+  ],
+  "a": "Beide Gateways haben globale Adressen, NAT liegt nicht dazwischen",
+  "exp": "Bei IPv6 hat jedes Gateway eine weltweit eindeutige Adresse, eine Adressübersetzung ist nicht nötig. ESP kann dann direkt als IP-Protokoll 50 laufen. NAT-Traversal mit UDP 4500 braucht man nur, wenn unterwegs NAT erkannt wird."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C2c"
+  ],
+  "q": "Ein neu eingerichtetes VPN-Gateway lehnt ein gestern ausgestelltes, korrektes Zertifikat als noch nicht gültig ab. Was ist die wahrscheinliche Ursache?",
+  "options": [
+   "Das Zertifikat ist schon abgelaufen",
+   "Die Uhrzeit des Gateways geht nach, weil keine Zeitsynchronisation läuft",
+   "Der Pre-Shared Key ist falsch",
+   "Die MTU des Tunnels ist zu klein"
+  ],
+  "a": "Die Uhrzeit des Gateways geht nach, weil keine Zeitsynchronisation läuft",
+  "exp": "Zertifikate gelten erst ab einem Zeitpunkt (not before). Steht die Uhr des Gateways noch vor diesem Zeitpunkt, hält es das Zertifikat für noch nicht gültig. Eine Zeitsynchronisation per NTP behebt das."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C2c"
+  ],
+  "q": "Ein Außendienstler wird im Hotel-WLAN alle paar Minuten vom IPsec-VPN getrennt, im Mobilfunk nie. Der Tunnel läuft über UDP 4500. Was ist eine wahrscheinliche Ursache?",
+  "options": [
+   "Das Hotel vergibt IPv6-Adressen, die kein NAT-Traversal zulassen",
+   "Das NAT des Hotels löscht ruhige UDP-Einträge sehr schnell",
+   "Der Laptop wechselt im WLAN ständig den Pre-Shared Key des Tunnels",
+   "Das Hotel-WLAN nutzt WPA3, das IPsec grundsätzlich nicht unterstützt"
+  ],
+  "a": "Das NAT des Hotels löscht ruhige UDP-Einträge sehr schnell",
+  "exp": "Hinter NAT hängt der Tunnel an einem Eintrag für UDP 4500 im NAT-Router. Manche Router löschen solche Einträge schon nach kurzer Stille, dann kommen Pakete der Zentrale nicht mehr an. Kürzere NAT-Keepalives oder Dead Peer Detection halten den Eintrag offen bzw. stellen ihn schnell wieder her."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2c",
+   "A8e"
+  ],
+  "q": "In der Zentrale ist als Lebensdauer der Child SA 3.600 s eingestellt, in der Filiale 28.800 s. Beide nutzen IKEv2. Was passiert?",
+  "options": [
+   "Der Tunnel läuft, die Seite mit der kürzeren Lebensdauer erneuert die Schlüssel",
+   "Beide Seiten einigen sich auf den Mittelwert von 16.200 s",
+   "Der Tunnel kommt nicht zustande, weil die Werte gleich sein müssen",
+   "Der Tunnel bricht nach 3.600 s ab und bleibt bis zum Neustart getrennt"
+  ],
+  "a": "Der Tunnel läuft, die Seite mit der kürzeren Lebensdauer erneuert die Schlüssel",
+  "exp": "Bei IKEv2 werden Lebensdauern nicht ausgehandelt, jede Seite achtet auf ihren eigenen Wert. Die Zentrale startet nach rund einer Stunde ein Rekeying über CREATE_CHILD_SA, die Filiale macht mit. Einheitliche Werte sind trotzdem übersichtlicher für die Fehlersuche."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "wan_vpn",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C2b",
+   "A8b"
+  ],
+  "q": "Der Router einer Filiale soll Internetverkehr direkt über den eigenen Anschluss schicken, Verkehr zu den Servern der Zentrale aber durch den Tunnel. Wie richten Sie das ein?",
+  "options": [
+   "Standardroute in den Tunnel, Firmennetze direkt über den Internetanschluss",
+   "Gar keine Route, der Router entscheidet über die DNS-Antworten",
+   "Standardroute zum Internetanschluss, nur die Firmennetze in den Tunnel",
+   "Beide Ziele über den Tunnel, die Zentrale leitet das Internet zurück"
+  ],
+  "a": "Standardroute zum Internetanschluss, nur die Firmennetze in den Tunnel",
+  "exp": "Die Standardroute zeigt auf den Internetanschluss der Filiale, so geht Internetverkehr direkt hinaus (Local Breakout). Nur die Netze der Zentrale werden in den Tunnel geleitet, bei policy-basiertem VPN über die Tunnel-Policy. Für den direkten Internetverkehr braucht die Filiale dann eigene Schutzfunktionen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C3h"
+  ],
+  "q": "Eine Störung tritt nur gelegentlich auf. Wenn Sie vor Ort prüfen, ist alles normal. Was ist sinnvoll?",
+  "options": [
+   "Den Anwender bitten, die Störung künftig zu ignorieren",
+   "Das Ticket schließen, weil der Fehler nicht nachweisbar ist",
+   "Dauerhaft messen und aufzeichnen, bis sie wieder auftritt",
+   "Vorsorglich alle Geräte im Netz neu starten lassen"
+  ],
+  "a": "Dauerhaft messen und aufzeichnen, bis sie wieder auftritt",
+  "exp": "Sporadische Fehler zeigen sich nur in dem Moment, in dem sie auftreten. Monitoring, Logs mit genauer Uhrzeit oder ein Mitschnitt mit Ringpuffer halten diesen Moment fest. Der Anwender notiert zusätzlich Zeitpunkt und Tätigkeit."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Test-NetConnection fs01 -Port 445 liefert PingSucceeded: True und TcpTestSucceeded: False. Was ist die wahrscheinlichste Ursache?",
+  "options": [
+   "Der Name fs01 wird falsch aufgelöst",
+   "Das Standardgateway des Clients ist falsch eingetragen",
+   "Port 445 wird gefiltert oder der Dienst lauscht nicht",
+   "Das Netzwerkkabel des Clients ist defekt"
+  ],
+  "a": "Port 445 wird gefiltert oder der Dienst lauscht nicht",
+  "exp": "Der erfolgreiche ping zeigt, dass Name, Kabel und Routing funktionieren. Nur die TCP-Verbindung zu Port 445 (SMB) scheitert, also blockiert eine Firewall oder der Freigabedienst läuft nicht. Das prüft man auf dem Server mit netstat oder in der Firewall."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "netstat -an auf einem Client zeigt viele Verbindungen zu 203.0.113.50:443 im Zustand SYN_SENT. Die Seite lädt NICHT. Was bedeutet das?",
+  "options": [
+   "Der Server hat die Verbindungen ordnungsgemäß beendet",
+   "Die Verbindungen sind aufgebaut und übertragen gerade Daten",
+   "Der Client sendet SYN, erhält aber keine Antwort vom Server",
+   "Der Client hat die Verbindungen selbst abgelehnt"
+  ],
+  "a": "Der Client sendet SYN, erhält aber keine Antwort vom Server",
+  "exp": "SYN_SENT ist der Zustand nach dem ersten Schritt des Drei-Wege-Handshakes. Bleibt er bestehen, kommt kein SYN/ACK zurück, etwa weil eine Firewall verwirft oder der Server nicht erreichbar ist. Ein abgelehnter Port würde sofort mit RST enden."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C3h"
+  ],
+  "q": "Auf einem Anwendungsserver zeigt netstat Hunderte Verbindungen im Zustand CLOSE_WAIT, die NICHT verschwinden. Was ist die wahrscheinlichste Ursache?",
+  "options": [
+   "Die Firewall hält die Verbindungen absichtlich offen",
+   "Die eigene Anwendung schließt ihre Seite nicht",
+   "Die Gegenseite ist abgestürzt und hat nicht geschlossen",
+   "Das Netzwerk verliert die letzten Pakete jeder Verbindung"
+  ],
+  "a": "Die eigene Anwendung schließt ihre Seite nicht",
+  "exp": "CLOSE_WAIT bedeutet, dass das FIN der Gegenseite angekommen ist und das Betriebssystem auf das Schließen durch das Programm wartet. Bleiben viele solche Einträge, gibt die Anwendung ihre Verbindungen nicht frei. Das ist ein Fehler im Programm, nicht im Netz."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Nach einem Lasttest zeigt netstat auf dem Testclient Tausende Verbindungen im Zustand TIME_WAIT. Wie bewerten Sie das?",
+  "options": [
+   "Ein Zeichen, dass der Server die Antworten nicht sendet",
+   "Ein Angriff, die Verbindungen müssen sofort blockiert werden",
+   "Normal nach dem aktiven Schließen, verschwindet von selbst",
+   "Ein Fehler der Netzwerkkarte, sie sollte getauscht werden"
+  ],
+  "a": "Normal nach dem aktiven Schließen, verschwindet von selbst",
+  "exp": "Die Seite, die eine TCP-Verbindung zuerst schließt, hält sie noch eine Weile in TIME_WAIT. So werden verspätete Pakete nicht einer neuen Verbindung zugeordnet. Bei vielen kurzen Verbindungen entstehen dadurch viele Einträge, die von selbst verschwinden."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "route print zeigt zwei Standardrouten 0.0.0.0: über das LAN mit Metrik 25 und über das WLAN mit Metrik 35. Welchen Weg nutzt der Rechner ins Internet?",
+  "options": [
+   "Gar keinen, weil zwei Standardrouten sich sperren",
+   "Über das WLAN, weil die größere Metrik bevorzugt wird",
+   "Abwechselnd über beide Wege für jedes Paket",
+   "Über das LAN, weil die kleinere Metrik bevorzugt wird"
+  ],
+  "a": "Über das LAN, weil die kleinere Metrik bevorzugt wird",
+  "exp": "Bei gleich langen Präfixen entscheidet die Metrik, der kleinere Wert gewinnt. Windows vergibt kabelgebundenen Verbindungen meist eine kleinere Metrik. Fällt das LAN aus, übernimmt die Route über das WLAN."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2a"
+  ],
+  "q": "Ein PC hat 10.1.1.10 mit Maske 255.255.0.0. Der Server 10.1.2.20 liegt in einem anderen VLAN hinter dem Router 10.1.1.1 (/24-Netze). Kollegen erreichen ihn, dieser PC NICHT. Ursache?",
+  "options": [
+   "Der Server hat keine Route zurück in das Netz 10.1.1.0/24",
+   "Die zu große Maske: der PC sucht den Server im eigenen Netz",
+   "Der DNS-Server liefert für den Server eine falsche Adresse",
+   "Der Router 10.1.1.1 filtert die Adresse des PCs"
+  ],
+  "a": "Die zu große Maske: der PC sucht den Server im eigenen Netz",
+  "exp": "Mit /16 hält der PC 10.1.2.20 für ein Ziel im eigenen Netz und sendet eine ARP-Anfrage statt über das Gateway. Da der Server in einem anderen VLAN liegt, antwortet niemand. Weil die Kollegen den Server erreichen, sind Router und Server in Ordnung."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "ipconfig zeigt die Adresse 192.168.21.15 mit Maske 255.255.255.0 und das Standardgateway 192.168.20.1. Was ist das Problem?",
+  "options": [
+   "Die Maske ist für private Adressen zu klein gewählt",
+   "Die Adresse liegt außerhalb des privaten Bereichs",
+   "Das Gateway muss immer auf .254 enden",
+   "Das Gateway liegt nicht im eigenen Subnetz"
+  ],
+  "a": "Das Gateway liegt nicht im eigenen Subnetz",
+  "exp": "Mit /24 umfasst das eigene Netz 192.168.21.0 bis 192.168.21.255. Das Gateway 192.168.20.1 liegt außerhalb und kann nicht direkt per ARP erreicht werden. Entweder ist das Gateway oder die Adresse falsch eingetragen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Ein neuer Windows-Server ist per RDP und über Freigaben erreichbar, ping auf ihn scheitert aber. Was ist die wahrscheinlichste Ursache?",
+  "options": [
+   "Der DNS-Server kennt den Namen des neuen Servers noch nicht",
+   "Der Server hat kein Standardgateway eingetragen",
+   "Die Netzwerkkarte läuft im Halbduplex-Modus",
+   "Die Windows-Firewall blockt eingehende Echoanfragen"
+  ],
+  "a": "Die Windows-Firewall blockt eingehende Echoanfragen",
+  "exp": "RDP und SMB funktionieren, also sind Name, Weg und Verbindung in Ordnung. Die Windows-Firewall blockiert eingehende Echo-Anfragen je nach Profil standardmäßig. Ein gescheiterter ping beweist deshalb noch keine Störung."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Ein Linux-Server erreicht nichts außerhalb seines Subnetzes. ip neigh zeigt für das Gateway 192.168.5.1 den Zustand INCOMPLETE. Was folgt daraus?",
+  "options": [
+   "Das Gateway ist erreichbar, aber die Route ist falsch",
+   "Das Gateway antwortet nicht auf ARP (Schicht 1 oder 2)",
+   "Das Gateway filtert nur ICMP, sonst ist alles in Ordnung",
+   "Der DNS-Server löst den Namen des Gateways nicht auf"
+  ],
+  "a": "Das Gateway antwortet nicht auf ARP (Schicht 1 oder 2)",
+  "exp": "INCOMPLETE heißt, dass eine ARP-Anfrage gestellt wurde, aber keine Antwort kam. Mögliche Ursachen sind ein falsches VLAN, ein Kabelproblem oder ein ausgefallenes Gateway. Eine Firewall auf dem Gateway filtert ARP normalerweise nicht."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "dig www.example.de liefert status: SERVFAIL. dig +cd www.example.de mit abgeschalteter Prüfung liefert dagegen eine Adresse. Was ist die Ursache?",
+  "options": [
+   "Die DNSSEC-Validierung der Antwort schlägt fehl",
+   "Der Name www.example.de existiert nicht",
+   "Der Client hat noch einen alten Eintrag im DNS-Cache",
+   "Der eigene DNS-Server ist nicht erreichbar"
+  ],
+  "a": "Die DNSSEC-Validierung der Antwort schlägt fehl",
+  "exp": "+cd setzt das Flag Checking Disabled, der Resolver prüft die DNSSEC-Signaturen dann nicht. Kommt nur so eine Antwort, sind die Signaturen der Zone fehlerhaft oder abgelaufen. Bei einem nicht existierenden Namen käme NXDOMAIN, bei einem unerreichbaren Server gar keine Antwort."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2a"
+  ],
+  "q": "Im Homeoffice ohne VPN liefert dig intranet.firma.local NXDOMAIN, im Büro die richtige Adresse. Wie erklären Sie das?",
+  "options": [
+   "Der Name ist nur auf dem internen DNS-Server bekannt",
+   "Der Router im Homeoffice blockiert Port 53",
+   "Die Zone firma.local ist abgelaufen und wurde gelöscht",
+   "Das Notebook hat im Homeoffice keine IPv4-Adresse"
+  ],
+  "a": "Der Name ist nur auf dem internen DNS-Server bekannt",
+  "exp": "Interne Namen stehen nur im internen DNS. Zu Hause fragt das Notebook den DNS-Server des Heimrouters, der den Namen nicht kennt und NXDOMAIN meldet. Erst mit VPN werden Anfragen für firma.local an den internen Server gelenkt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "In /etc/resolv.conf steht nur nameserver 127.0.0.53. Ein Azubi meint, der DNS-Server sei falsch eingetragen. Was stimmt?",
+  "options": [
+   "Das ist der lokale Stub von systemd-resolved",
+   "Der Server nutzt dadurch gar keine Namensauflösung",
+   "Der Eintrag zeigt auf den DNS-Server des Providers",
+   "Der Eintrag ist falsch, 127.0.0.53 ist eine ungültige Adresse"
+  ],
+  "a": "Das ist der lokale Stub von systemd-resolved",
+  "exp": "systemd-resolved nimmt Anfragen lokal auf 127.0.0.53 an und leitet sie an die eigentlichen DNS-Server weiter. Welche das sind, steht je Schnittstelle in resolvectl status. Der Eintrag ist also gewollt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "nc -zv 10.0.0.20 22 meldet sofort „Connection refused“, nc -zv 10.0.0.20 80 läuft in eine Zeitüberschreitung. Welche Aussage passt?",
+  "options": [
+   "Der Host ist ausgeschaltet, beide Meldungen sind zufällig",
+   "Port 22: Firewall verwirft; Port 80: kein Dienst aktiv",
+   "Port 22: kein Dienst; Port 80: Paketfilter verwirft",
+   "Beide Ports sind offen, der Server ist nur langsam"
+  ],
+  "a": "Port 22: kein Dienst; Port 80: Paketfilter verwirft",
+  "exp": "Connection refused heißt, der Host antwortet mit RST, er ist erreichbar, aber niemand lauscht auf Port 22. Eine Zeitüberschreitung heißt, es kommt gar keine Antwort, typischerweise weil eine Firewall das SYN verwirft. So unterscheidet man geschlossene und gefilterte Ports."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Ein Mitschnitt am Client zeigt auf ein DHCP Discover zwei Offers von verschiedenen Servern, eines davon mit dem Gateway 192.168.0.1 statt 10.20.0.1. Was liegt vor?",
+  "options": [
+   "Ein erschöpfter Adressbereich des DHCP-Servers",
+   "Ein fehlender DHCP-Relay-Agent im VLAN",
+   "Ein korrekt eingerichteter DHCP-Failover",
+   "Ein nicht genehmigter DHCP-Server im Netz"
+  ],
+  "a": "Ein nicht genehmigter DHCP-Server im Netz",
+  "exp": "Ein zweiter Server mit fremdem Adressbereich ist typisch für einen mitgebrachten Router. Clients nehmen das erste Angebot an und landen eventuell im falschen Netz. Den Server findet man über seine MAC-Adresse am Switch, DHCP Snooping verhindert das künftig."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A6a",
+   "A4c"
+  ],
+  "q": "Ein Mitschnitt soll für eine Fehleranalyse an einen externen Dienstleister gehen. Was beachten Sie?",
+  "options": [
+   "Den Mitschnitt vorher in ein Textdokument abschreiben",
+   "Nur nötige Daten, gekürzt und mit Vertrag weitergeben",
+   "Den vollständigen Mitschnitt unverschlüsselt per E-Mail senden",
+   "Nichts, Mitschnitte enthalten keine personenbezogenen Daten"
+  ],
+  "a": "Nur nötige Daten, gekürzt und mit Vertrag weitergeben",
+  "exp": "Mitschnitte enthalten Adressen, Namen und oft Inhalte. Man filtert auf die betroffene Verbindung, kürzt Nutzdaten wo möglich und überträgt verschlüsselt. Der Dienstleister braucht eine vertragliche Grundlage wie einen Auftragsverarbeitungsvertrag."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Ein altes Messgerät verbindet sich NICHT mehr mit einem Server, seit dort nur noch TLS 1.2 und 1.3 erlaubt sind. Der Mitschnitt zeigt ein ClientHello mit TLS 1.0 und sofort einen Alert. Was ist die Ursache?",
+  "options": [
+   "Der Server ist unter Port 443 gar nicht mehr erreichbar",
+   "Das Gerät beherrscht keine der erlaubten TLS-Versionen",
+   "Das Zertifikat des Servers ist abgelaufen",
+   "Die Uhr des Geräts geht um Minuten falsch"
+  ],
+  "a": "Das Gerät beherrscht keine der erlaubten TLS-Versionen",
+  "exp": "Der Server bricht den Handshake ab, weil das Gerät nur TLS 1.0 anbietet. Ein Zertifikatsproblem würde erst nach der Antwort des Servers geprüft. Lösungen sind ein Firmware-Update des Geräts oder ein abgeschotteter Zwischenweg, nicht das Zurückdrehen der Sicherheit am Server."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C3h"
+  ],
+  "q": "Telefonate im Büro stocken nur, wenn abends große Sicherungen über das Netz laufen. Was ist die wahrscheinlichste Ursache?",
+  "options": [
+   "Die Telefone haben in dieser Zeit keine Adresse",
+   "Sprache wird nicht bevorzugt und leidet unter der Last",
+   "Die Kabel der Telefone sind nur in den Abendstunden gestört",
+   "Der DNS-Server ist während der Sicherung aus"
+  ],
+  "a": "Sprache wird nicht bevorzugt und leidet unter der Last",
+  "exp": "Große Sicherungen füllen Leitungen und Puffer, Sprachpakete müssen warten oder werden verworfen. Ohne QoS werden sie nicht vorgezogen. Abhilfe sind QoS mit Vorrang für Sprache oder eine Begrenzung der Sicherungsbandbreite."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2a"
+  ],
+  "q": "Kleine Webseiten laden über das Standort-VPN, große Downloads hängen. ping -f -l 1472 ziel meldet, das Paket müsste fragmentiert werden, das DF-Flag sei aber gesetzt. ping -f -l 1372 klappt. Ursache?",
+  "options": [
+   "Die Leitung ist für große Downloads zu langsam",
+   "Die MTU im Tunnel ist kleiner als 1500, große Pakete passen nicht durch",
+   "Der DNS-Server liefert für große Dateien andere, falsche Adressen",
+   "Der Server ist bei großen Dateien überlastet"
+  ],
+  "a": "Die MTU im Tunnel ist kleiner als 1500, große Pakete passen nicht durch",
+  "exp": "Das DF-Bit verbietet das Zerlegen, deshalb meldet der Weg, dass 1472 Byte Nutzlast zu viel sind. Mit 1372 Byte passt es, die Tunnel-MTU liegt also zwischen 1400 und 1499 Byte. Wird die ICMP-Rückmeldung für TCP gefiltert, bleiben große Übertragungen hängen; MSS-Clamping hilft."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2a"
+  ],
+  "q": "ping fs01 erreicht den alten Server fs01.alt.local, ping fs01.firma.local den neuen. Die Suchliste der DNS-Suffixe lautet alt.local, firma.local. Was ist die Ursache?",
+  "options": [
+   "Der DNS-Server von firma.local ist gerade nicht erreichbar",
+   "Der Name fs01 ist zu kurz für eine DNS-Abfrage",
+   "Der neue Server hat keinen Eintrag im DNS",
+   "Das Suffix alt.local wird vor firma.local probiert und liefert zuerst einen Treffer"
+  ],
+  "a": "Das Suffix alt.local wird vor firma.local probiert und liefert zuerst einen Treffer",
+  "exp": "Bei einem Namen ohne Punkt hängt der Client die Suffixe der Reihe nach an und nimmt die erste erfolgreiche Antwort. Weil alt.local zuerst steht und dort fs01 noch existiert, landet der kurze Name beim alten Server. Abhilfe ist die Reihenfolge der Suchliste zu ändern oder den alten Eintrag zu entfernen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Ein Notebook öffnet zu Hause ohne VPN KEINE Webseiten, im Büro schon. Im Browser ist fest der Firmenproxy proxy.firma.local:3128 eingetragen. Was ist die Ursache?",
+  "options": [
+   "Der Firmenproxy ist von zu Hause nicht erreichbar",
+   "Das Notebook hat zu Hause keine IPv4-Adresse",
+   "Der Heimrouter hat gerade keine Verbindung ins Internet",
+   "Die Webseiten sperren Zugriffe aus Heimnetzen"
+  ],
+  "a": "Der Firmenproxy ist von zu Hause nicht erreichbar",
+  "exp": "Der Browser schickt alle Anfragen an den Proxy, dessen Name nur im Firmennetz auflösbar und erreichbar ist. Zu Hause scheitert so jede Seite. Eine automatische Proxy-Konfiguration (PAC) oder ein Zugriff nur über VPN löst das."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Ein Webserver ist intern über https://192.0.2.10 nur mit Zertifikatswarnung erreichbar, über https://portal.example.com ohne Warnung. Warum?",
+  "options": [
+   "Über die IP-Adresse wird grundsätzlich keine Verschlüsselung genutzt",
+   "Das Zertifikat enthält nur den Namen, nicht die IP-Adresse",
+   "Das Zertifikat ist bei Aufruf über die IP abgelaufen",
+   "Die IP-Adresse gehört zu einem anderen Server"
+  ],
+  "a": "Das Zertifikat enthält nur den Namen, nicht die IP-Adresse",
+  "exp": "Der Browser prüft, ob der aufgerufene Name im Zertifikat steht (Subject Alternative Name). Wird die IP-Adresse aufgerufen, passt sie nicht zum eingetragenen Namen. Die Verschlüsselung ist trotzdem aktiv, nur die Identität ist nicht bestätigt."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2c"
+  ],
+  "q": "Neue Freigabe-Regel für TCP 8443 an der Firewall wirkt NICHT. Sie steht ganz unten, darüber steht die Regel „LAN nach DMZ: alles verwerfen“. Was ist die Ursache?",
+  "options": [
+   "Die erste passende Regel gilt, die Sperre greift vorher",
+   "Port 8443 lässt sich grundsätzlich nicht freigeben",
+   "Die Firewall braucht für jede Regel einen Neustart",
+   "Die Firewall wertet ihre Regeln immer von unten nach oben aus"
+  ],
+  "a": "Die erste passende Regel gilt, die Sperre greift vorher",
+  "exp": "Die meisten Firewalls arbeiten Regeln von oben nach unten ab und hören beim ersten Treffer auf. Die allgemeine Sperre passt auf den Verkehr, bevor die spezielle Freigabe erreicht wird. Die Freigabe muss über der Sperrregel stehen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2a"
+  ],
+  "q": "Ein Dienst ist per IPv4 erreichbar, viele Clients verbinden sich aber erst nach langer Wartezeit. dig zeigt neben dem A-Eintrag einen AAAA-Eintrag auf eine NICHT mehr genutzte Adresse. Was ist die Ursache?",
+  "options": [
+   "Der DNS-Server ist über IPv4 gerade nicht erreichbar",
+   "Der Server beantwortet nur IPv6-Anfragen",
+   "Der A-Eintrag hat eine zu lange TTL",
+   "Die Clients versuchen zuerst die tote IPv6-Adresse"
+  ],
+  "a": "Die Clients versuchen zuerst die tote IPv6-Adresse",
+  "exp": "Betriebssysteme bevorzugen bei Dual Stack meist IPv6. Zeigt der AAAA-Eintrag ins Leere, warten Programme ohne Happy Eyeballs (schnelles Umschalten auf IPv4) bis zur Zeitüberschreitung, bevor sie IPv4 versuchen. Der veraltete AAAA-Eintrag muss korrigiert oder gelöscht werden."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C3h"
+  ],
+  "q": "Ein Router schickt Syslog an UDP 514 eines Logservers. tcpdump auf dem Server zeigt die eingehenden Pakete, rsyslog lauscht laut ss -lun auf UDP 0.0.0.0:514, im Log erscheint aber nichts. Was ist wahrscheinlich?",
+  "options": [
+   "Die lokale Firewall des Logservers verwirft die Pakete",
+   "rsyslog lauscht nur auf TCP, nicht auf UDP",
+   "Der Router sendet die Meldungen an eine falsche Adresse",
+   "Das Kabel zum Logserver ist defekt"
+  ],
+  "a": "Die lokale Firewall des Logservers verwirft die Pakete",
+  "exp": "tcpdump sieht Pakete, bevor die lokale Firewall sie prüft. Kommen sie an und lauscht der Dienst auf UDP 514, bleibt als Ursache vor allem eine Firewallregel auf dem Server. Bei einem falschen Ziel oder einem Kabelproblem würde tcpdump gar keine Pakete zeigen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8f"
+  ],
+  "q": "Nach Behebung einer Störung durch eine geänderte Firewall-Regel fragt Ihr Ausbilder, was noch fehlt. Was antworten Sie?",
+  "options": [
+   "Die Firewall vorsichtshalber neu installieren",
+   "Die alte Regel aus Sicherheitsgründen geheim halten",
+   "Änderung dokumentieren, Netzdoku aktualisieren",
+   "Nichts, eine funktionierende Lösung braucht keine Doku"
+  ],
+  "a": "Änderung dokumentieren, Netzdoku aktualisieren",
+  "exp": "Jede Änderung muss nachvollziehbar sein, sonst wundert sich der nächste Bearbeiter über die Regel. Dazu gehören Grund, Zeitpunkt, Ticketnummer und der neue Stand in der Dokumentation. So hilft die Lösung auch bei künftigen Störungen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "A8e"
+  ],
+  "q": "Ein PC zeigt Medienstatus verbunden, aber am Switchport ist die MAC-Adresse des PCs in KEINEM VLAN der MAC-Tabelle zu sehen. Was ist naheliegend?",
+  "options": [
+   "Der DNS-Server hat den PC noch nicht registriert",
+   "Der DHCP-Server hat den PC gesperrt",
+   "Der PC hängt an einem anderen Port als gedacht",
+   "Die Firewall blockiert die MAC-Adresse"
+  ],
+  "a": "Der PC hängt an einem anderen Port als gedacht",
+  "exp": "Hat der PC Link, lernt der Switch seine MAC-Adresse spätestens beim ersten gesendeten Frame. Steht sie an diesem Port nicht, ist die Dose wohl auf einen anderen Port gepatcht. Man sucht die MAC-Adresse in der ganzen Tabelle und korrigiert die Doku."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Ein Kollege leert bei jeder Störung zuerst den DNS-Cache, startet den PC neu und tauscht das Kabel, ohne vorher etwas zu prüfen. Was ist das Hauptproblem?",
+  "options": [
+   "Die Maßnahmen sind verboten und müssen gemeldet werden",
+   "Die Ursache bleibt unbekannt, Befunde gehen verloren",
+   "Häufige Neustarts beschädigen das Betriebssystem des PCs",
+   "Kabeltausch schadet grundsätzlich jedem Netzwerkport"
+  ],
+  "a": "Die Ursache bleibt unbekannt, Befunde gehen verloren",
+  "exp": "Ohne vorherige Prüfung weiß man nicht, welcher Schritt geholfen hat oder ob der Fehler nur zufällig verschwunden ist. Ein Neustart löscht zudem flüchtige Hinweise wie Caches, Verbindungen und Fehlermeldungen. Kommt der Fehler wieder, fängt man von vorn an."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C3h"
+  ],
+  "q": "Das Monitoring fragt alle 5 Minuten den 32-Bit-Zähler ifInOctets eines voll ausgelasteten 1-Gbit/s-Ports ab, die Grafiken sind unbrauchbar. Warum?",
+  "options": [
+   "Der Zähler läuft nach etwa 34 Sekunden über, 64-Bit-Zähler sind nötig",
+   "Das Monitoring rechnet Bit und Byte grundsätzlich falsch um",
+   "Der Port meldet bei Volllast keine Werte mehr an SNMP",
+   "Der Zähler läuft nach etwa 34 Minuten über, 16-Bit-Zähler wären nötig"
+  ],
+  "a": "Der Zähler läuft nach etwa 34 Sekunden über, 64-Bit-Zähler sind nötig",
+  "exp": "Ein 32-Bit-Zähler reicht bis 2 hoch 32 = 4.294.967.296 Byte, das sind bei 1 Gbit/s rund 34,4 s. Bei 5 Minuten Abstand läuft er mehrfach über, die Differenz ist dann wertlos. Für schnelle Ports nutzt man die 64-Bit-Zähler ifHCInOctets."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "Anwender melden: Der erste Aufruf jeder Webseite dauert etwa 5 Sekunden, danach ist sie schnell. Was ist eine typische Ursache?",
+  "options": [
+   "Die Internetleitung ist für Webseiten zu langsam",
+   "Der erste DNS-Server antwortet nicht, erst der zweite",
+   "Der Browser lädt jedes Mal ein neues Zertifikat",
+   "Die Webserver sind beim ersten Aufruf jeder Seite überlastet"
+  ],
+  "a": "Der erste DNS-Server antwortet nicht, erst der zweite",
+  "exp": "Der Client fragt zuerst den bevorzugten DNS-Server und wartet auf eine Zeitüberschreitung, bevor er den zweiten fragt. Danach liegt die Antwort im Cache, deshalb sind weitere Aufrufe schnell. Mit nslookup gegen jeden Server einzeln findet man den ausgefallenen."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c",
+   "C2b"
+  ],
+  "q": "Der Internetrouter wurde gegen ein neues Gerät mit derselben IP-Adresse 192.168.1.1 getauscht. Manche Clients erreichen das Internet erst nach einigen Minuten wieder. Was ist die Ursache?",
+  "options": [
+   "Die Clients haben noch die alte IP-Adresse des Gateways zwischengespeichert",
+   "Der neue Router muss erst alle Webseiten neu laden",
+   "Die Clients haben noch die alte MAC-Adresse des Gateways im ARP-Cache",
+   "Der DNS-Server kennt den neuen Router noch nicht"
+  ],
+  "a": "Die Clients haben noch die alte MAC-Adresse des Gateways im ARP-Cache",
+  "exp": "Clients merken sich zur Gateway-Adresse die MAC-Adresse für eine gewisse Zeit. Bis der Eintrag abläuft, senden sie an die alte, nicht mehr vorhandene Hardware. Ein Gratuitous ARP des neuen Routers oder das Leeren des ARP-Caches beschleunigt den Wechsel."
+ },
+ {
+  "cat": "netzwerk",
+  "thema": "fehlersuche",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A4c"
+  ],
+  "q": "iperf3 -c 10.0.0.30 meldet sofort „unable to connect to server: Connection refused“. ping auf 10.0.0.30 klappt. Was ist die wahrscheinlichste Ursache?",
+  "options": [
+   "Die Leitung zu 10.0.0.30 ist für den iperf3-Test zu langsam",
+   "Der Client hat eine doppelte IP-Adresse im Netz",
+   "10.0.0.30 hat keine Route zurück zum Client",
+   "Auf 10.0.0.30 läuft gerade kein iperf3 im Servermodus"
+  ],
+  "a": "Auf 10.0.0.30 läuft gerade kein iperf3 im Servermodus",
+  "exp": "Connection refused heißt, dass der Zielrechner antwortet, aber niemand auf Port 5201 lauscht. Auf der Gegenseite muss zuerst iperf3 -s gestartet werden. Eine fehlende Route oder eine zu langsame Leitung würde eine Zeitüberschreitung statt einer sofortigen Ablehnung bewirken."
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3e",
+   "A6a"
+  ],
+  "q": "Was bedeutet eine Löschsperre wegen eines Rechtsstreits (Legal Hold)?",
+  "options": [
+   "Betroffene Daten werden trotz Fristablauf bis zur Aufhebung nicht gelöscht",
+   "Daten dürfen nur noch vom Anwalt der Firma geändert werden",
+   "Daten werden für die Dauer des Rechtsstreits verschlüsselt ins Ausland verlagert",
+   "Daten werden sofort gelöscht, sobald ein Gericht sie anfordert"
+  ],
+  "a": "Betroffene Daten werden trotz Fristablauf bis zur Aufhebung nicht gelöscht",
+  "exp": "Läuft ein Rechtsstreit oder eine Ermittlung, müssen relevante Daten erhalten bleiben. Die Sperre setzt automatische Löschregeln für diese Daten außer Kraft. Nach dem Ende wird sie aufgehoben, und die normalen Fristen gelten wieder."
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3e",
+   "C3h"
+  ],
+  "q": "Der Sicherungsauftrag des Dateiservers endet seit Wochen mit „Erfolgreich mit Warnungen“. Niemand hat die Warnungen gelesen. Was tun Sie zuerst?",
+  "options": [
+   "Nichts, solange der Auftrag als erfolgreich gilt",
+   "Die Warnungen auswerten, denn oft wurden geöffnete oder gesperrte Dateien nicht gesichert",
+   "Die Warnungen in der Backup-Software abschalten, damit der tägliche Bericht wieder sauber ist",
+   "Den Auftrag löschen und mit denselben Einstellungen neu anlegen"
+  ],
+  "a": "Die Warnungen auswerten, denn oft wurden geöffnete oder gesperrte Dateien nicht gesichert",
+  "exp": "Warnungen bedeuten häufig, dass einzelne Dateien übersprungen wurden, etwa weil sie geöffnet waren. Dann fehlen sie in der Sicherung, obwohl der Auftrag grün aussieht. Mit VSS oder angepassten Zeiten lässt sich das meist beheben."
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A6c",
+   "C3f"
+  ],
+  "q": "Angreifer haben Daten verschlüsselt und drohen zusätzlich, gestohlene Kundendaten zu veröffentlichen. Die Firma hat gute, saubere Sicherungen. Welche Aussage stimmt?",
+  "options": [
+   "Die Veröffentlichung ist nur strafbar, wenn die Firma keine Sicherungen hat",
+   "Die Sicherungen holen die Daten zurück, schützen aber nicht vor der Veröffentlichung",
+   "Mit den Sicherungen ist der Vorfall erledigt, weitere Schritte wie Meldungen sind unnötig",
+   "Die Sicherungen löschen beim Zurückspielen auch die gestohlenen Kopien"
+  ],
+  "a": "Die Sicherungen holen die Daten zurück, schützen aber nicht vor der Veröffentlichung",
+  "exp": "Bei der doppelten Erpressung haben die Angreifer die Daten bereits kopiert. Backups helfen beim Wiederanlauf, nicht gegen den Abfluss. Die Firma muss den Datenabfluss als Datenpanne behandeln, melden und Betroffene gegebenenfalls informieren."
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8c",
+   "A8e"
+  ],
+  "q": "Der zentrale Datenbankserver fällt aus, die Wiederherstellung wird nach Schätzung länger dauern als die festgelegte Ausfallgrenze. Wann wird aus der Störung ein Notfall?",
+  "options": [
+   "Erst wenn die Presse über den Ausfall berichtet",
+   "Erst wenn die Ausfallgrenze tatsächlich überschritten ist",
+   "Sobald absehbar ist, dass die Grenze nicht einzuhalten ist",
+   "Sobald irgendein Server im Netz länger als 15 Minuten nicht erreichbar ist"
+  ],
+  "a": "Sobald absehbar ist, dass die Grenze nicht einzuhalten ist",
+  "exp": "Ein Notfall liegt vor, wenn die Störung mit den normalen Abläufen nicht in der erlaubten Zeit behebbar ist. Wartet man bis zum Überschreiten der Grenze, verliert man wertvolle Zeit für Notbetrieb und Stab. Deshalb gibt es Kriterien, nach denen früh eskaliert wird."
+ },
+ {
+  "cat": "sicherheit",
+  "thema": "notfall",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "A8c"
+  ],
+  "q": "Nach einem Wasserrohrbruch ist ein Server nass geworden, er ist durch die Sicherung abgeschaltet. Was ist richtig?",
+  "options": [
+   "Den Server nicht wieder einschalten, sondern trocknen lassen und von Fachleuten prüfen",
+   "Den Server sofort einschalten, damit die Wärme ihn schneller trocknet",
+   "Den Server einschalten und die Daten schnell auf eine andere Platte kopieren",
+   "Den Server mit einem Föhn trocknen und danach direkt wieder in Betrieb nehmen und testen"
+  ],
+  "a": "Den Server nicht wieder einschalten, sondern trocknen lassen und von Fachleuten prüfen",
+  "exp": "Feuchtigkeit kann beim Einschalten Kurzschlüsse verursachen und den Schaden erst richtig groß machen. Fachleute trocknen und reinigen das Gerät oder retten die Daten. Den Betrieb übernimmt währenddessen die Wiederherstellung aus der Sicherung."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A8c"
+  ],
+  "q": "Warum sollten Platten in einem RAID-Verbund eine begrenzte Fehlerkorrekturzeit (TLER bzw. ERC) haben?",
+  "options": [
+   "Damit der Controller eine hängende Platte nicht als ausgefallen entfernt",
+   "Damit Lesefehler der Platte nicht mehr an den RAID-Controller gemeldet werden",
+   "Damit der Rebuild höchstens eine Stunde dauern kann",
+   "Damit die Platte nach einem Fehler schneller neu startet"
+  ],
+  "a": "Damit der Controller eine hängende Platte nicht als ausgefallen entfernt",
+  "exp": "Desktop-Platten versuchen bei einem Lesefehler oft minutenlang, den Sektor doch noch zu lesen. Ein RAID-Controller hält die Platte dann für ausgefallen und wirft sie aus dem Verbund. Mit TLER/ERC bricht die Platte nach wenigen Sekunden ab, und der Controller rekonstruiert den Block aus der Redundanz."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "A8d"
+  ],
+  "q": "smartctl zeigt für eine Festplatte: Current_Pending_Sector = 12. Was bedeutet dieser Wert?",
+  "options": [
+   "12 Sektoren wurden bereits erfolgreich in den Reservebereich verlagert",
+   "12 Sektoren sind für künftige Fehler noch als Reserve frei",
+   "12 Schreibvorgänge stehen noch im Cache der Platte aus",
+   "12 Sektoren konnten nicht gelesen werden und warten auf Neuzuordnung"
+  ],
+  "a": "12 Sektoren konnten nicht gelesen werden und warten auf Neuzuordnung",
+  "exp": "Pending Sectors sind Sektoren, die beim Lesen Fehler zeigten und erst beim nächsten Schreiben auf einen Reservesektor umgelegt oder als in Ordnung bestätigt werden. Ein Wert über null bedeutet, dass Daten in diesen Sektoren gerade nicht lesbar sind. Die Platte sollte beobachtet und in einem Server zügig getauscht werden."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C2b"
+  ],
+  "q": "Bei MPIO stehen die Richtlinien „Nur Failover“ und „Round Robin“ zur Auswahl. Was unterscheidet sie?",
+  "options": [
+   "Round Robin nutzt nur einen Pfad, Failover verteilt die Last auf alle Pfade",
+   "Round Robin schaltet bei Fehlern nicht um, Failover verteilt zusätzlich die Last",
+   "Round Robin gilt nur für Fibre Channel, Failover nur für iSCSI-Verbindungen",
+   "Round Robin nutzt alle Pfade reihum, Failover nur einen mit Reserve"
+  ],
+  "a": "Round Robin nutzt alle Pfade reihum, Failover nur einen mit Reserve",
+  "exp": "Bei Round Robin werden die Anfragen reihum über alle aktiven Pfade geschickt, was Durchsatz und Auslastung verbessert. Bei „Nur Failover“ ist ein Pfad aktiv, die anderen springen erst bei dessen Ausfall ein. Beide bieten Ausfallschutz, nur Round Robin nutzt die Bandbreite aller Pfade."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C2c"
+  ],
+  "q": "Ein neuer Server im Fibre-Channel-SAN sieht die für ihn angelegte LUN NICHT. Im Switch ist er zusammen mit dem Storage in einer Zone. Was fehlt wahrscheinlich?",
+  "options": [
+   "Ein zweiter Switch, weil eine Fabric allein nicht erlaubt ist",
+   "Eine IP-Adresse für den HBA im gleichen Subnetz wie die Controller des Storage",
+   "Die Freigabe der LUN für die WWPNs des Servers im Storage (LUN Masking)",
+   "Die Formatierung der LUN mit NTFS auf dem Speichersystem"
+  ],
+  "a": "Die Freigabe der LUN für die WWPNs des Servers im Storage (LUN Masking)",
+  "exp": "Zoning erlaubt nur, dass Server und Storage sich im SAN sehen. Welche LUN ein Host tatsächlich zu sehen bekommt, legt das Storage per LUN Masking anhand der WWPNs (Host-Gruppe) fest. Fibre Channel nutzt keine IP-Adressen, und formatiert wird die LUN erst vom Server."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C3e"
+  ],
+  "q": "Ein Kunde will seine zwei Standorte mit DFS-Replikation synchron halten und darüber auch die Dateien einer laufenden Access-Datenbank verteilen. Was geben Sie zu bedenken?",
+  "options": [
+   "DFS-Replikation überträgt nur Dateien unter 4 GB Größe",
+   "DFS-Replikation eignet sich nicht für gleichzeitig geöffnete Datenbankdateien",
+   "DFS-Replikation funktioniert nur innerhalb eines Standorts",
+   "DFS-Replikation braucht für jede Datei eine eigene Lizenz"
+  ],
+  "a": "DFS-Replikation eignet sich nicht für gleichzeitig geöffnete Datenbankdateien",
+  "exp": "DFS-R repliziert Dateien erst nach dem Schließen und kennt keine Sperren über Standorte hinweg. Bearbeiten zwei Personen dieselbe Datei an beiden Standorten, entstehen Konflikte, und geöffnete Datenbankdateien werden gar nicht oder inkonsistent übertragen. Für solche Anwendungen braucht es eine zentrale Datenbank oder eine Lösung mit Dateisperren."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C3g"
+  ],
+  "q": "df -h meldet für /var eine volle Partition, du -sh /var zählt aber nur halb so viel. Gestern wurde eine große Logdatei gelöscht, der Dienst läuft weiter. Was ist die Ursache?",
+  "options": [
+   "Der Papierkorb von /var muss erst geleert werden",
+   "Das Dateisystem hat keine freien Inodes mehr, deshalb zählt df den Platz falsch",
+   "du rechnet in Gibibyte, df dagegen in Gigabyte",
+   "Ein Prozess hält die gelöschte Datei noch offen, der Platz ist nicht frei"
+  ],
+  "a": "Ein Prozess hält die gelöschte Datei noch offen, der Platz ist nicht frei",
+  "exp": "Wird eine Datei gelöscht, die ein Prozess noch geöffnet hat, verschwindet nur der Name; die Blöcke bleiben belegt, bis der Prozess die Datei schließt. du sieht die Datei nicht mehr, df zählt den Platz aber weiter. Mit lsof +L1 findet man solche Dateien, ein Neustart des Dienstes gibt den Platz frei."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C3g"
+  ],
+  "q": "Ein Admin aktiviert auf einem ZFS-Pool mit 40 TB die Deduplizierung, der Server hat nur 16 GB RAM. Danach werden Schreibvorgänge extrem langsam. Was ist die Ursache?",
+  "options": [
+   "ZFS schaltet bei aktiver Deduplizierung den Schreibcache ab",
+   "Die Deduplizierung verschlüsselt jeden Block zusätzlich",
+   "Der Pool muss nach dem Einschalten erst komplett neu geschrieben werden",
+   "Die Tabelle der Deduplizierung passt nicht in den RAM und wird ständig von Platte gelesen"
+  ],
+  "a": "Die Tabelle der Deduplizierung passt nicht in den RAM und wird ständig von Platte gelesen",
+  "exp": "ZFS führt für die Deduplizierung eine Tabelle mit den Prüfsummen aller Blöcke (Dedup Table). Bei großen Pools braucht sie viele Gigabyte RAM; passt sie nicht hinein, muss für jeden Schreibvorgang erst von den Platten gelesen werden. Deduplizierung auf ZFS lohnt nur bei viel RAM und stark doppelten Daten, sonst ist Kompression die bessere Wahl."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1b"
+  ],
+  "q": "Ein Admin legt auf einer Platte mit 4K-Sektoren (512e) eine Partition an, die bei Sektor 63 beginnt. Was ist die Folge?",
+  "options": [
+   "Die Partition kann nicht mit NTFS formatiert werden",
+   "Die Partition ist falsch ausgerichtet, Schreibzugriffe werden langsamer",
+   "Die Platte meldet nach außen danach nur noch 512-Byte-Sektoren an das System",
+   "Die Partition kann höchstens 2 TiB groß werden"
+  ],
+  "a": "Die Partition ist falsch ausgerichtet, Schreibzugriffe werden langsamer",
+  "exp": "Bei Sektor 63 beginnt die Partition nicht an einer 4-KiB-Grenze; jeder Block des Dateisystems liegt dann über zwei physischen Sektoren, und die Platte muss für jeden Schreibvorgang lesen und neu schreiben. Aktuelle Werkzeuge beginnen Partitionen deshalb bei 1 MiB (Sektor 2048). Die 2-TiB-Grenze betrifft MBR, nicht die Ausrichtung."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1b"
+  ],
+  "q": "Für ein Volume, auf dem nur große Sicherungsdateien einer Backup-Software liegen, empfiehlt deren Hersteller ReFS mit 64 KiB Clustergröße. Warum gerade diese Clustergröße?",
+  "options": [
+   "Mit 64 KiB passen mehr kleine Dateien auf das Volume",
+   "Kleinere Cluster sind bei ReFS grundsätzlich nicht erlaubt",
+   "Große Dateien werden mit weniger Verwaltungsaufwand und weniger Zerstückelung gespeichert",
+   "Die Clustergröße bestimmt die Zahl der möglichen Sicherungen"
+  ],
+  "a": "Große Dateien werden mit weniger Verwaltungsaufwand und weniger Zerstückelung gespeichert",
+  "exp": "Bei wenigen, sehr großen Dateien spielt der Verschnitt kleiner Dateien keine Rolle. Größere Cluster bedeuten weniger Einträge in den Verwaltungsstrukturen und weniger Zerstückelung beim Wachsen der Dateien. Für Volumes mit vielen kleinen Dateien bleibt 4 KiB die bessere Wahl."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A8e",
+   "C1b"
+  ],
+  "q": "Ein Windows-Admin will C: auf einer VM vergrößern, die Option „Volume erweitern“ ist aber ausgegraut, obwohl die virtuelle Festplatte vergrößert wurde. Direkt hinter C: liegt die Wiederherstellungspartition. Was ist die Ursache?",
+  "options": [
+   "Der freie Platz liegt nicht direkt hinter C:, sondern hinter der Wiederherstellungspartition",
+   "NTFS-Volumes lassen sich nur mit diskpart verkleinern, nie erweitern",
+   "Windows erlaubt das Erweitern von C: nur im abgesicherten Modus",
+   "Die virtuelle Festplatte muss erst in eine dynamische umgewandelt werden"
+  ],
+  "a": "Der freie Platz liegt nicht direkt hinter C:, sondern hinter der Wiederherstellungspartition",
+  "exp": "Ein Volume lässt sich in der Datenträgerverwaltung nur in direkt angrenzenden freien Platz erweitern. Liegt die Wiederherstellungspartition dazwischen, muss man sie verschieben oder neu anlegen, zum Beispiel mit reagentc und diskpart. Danach kann C: über den gesamten freien Bereich erweitert werden."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C3e"
+  ],
+  "q": "Ein Admin hält einen Snapshot im Storage für ein ausreichendes Backup der Datenbank. Was entgegnen Sie?",
+  "options": [
+   "Snapshots liegen im selben System und gehen mit ihm verloren",
+   "Snapshots enthalten grundsätzlich keine Datenbankdateien",
+   "Snapshots sind erst nach 24 Stunden vollständig",
+   "Snapshots lassen sich nur in ein anderes Storage zurückspielen"
+  ],
+  "a": "Snapshots liegen im selben System und gehen mit ihm verloren",
+  "exp": "Ein Snapshot ist eine Momentaufnahme, die auf die Blöcke des Originals verweist. Fällt das Storage aus, wird es verschlüsselt oder gelöscht, sind Original und Snapshots gemeinsam weg. Snapshots sind gut für schnelle Wiederherstellung, ein Backup gehört aber auf ein getrenntes System."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1c"
+  ],
+  "q": "Ein Entwickler will eine Datenbank direkt auf einem Objektspeicher betreiben, den er über ein Hilfsprogramm als Laufwerk eingebunden hat. Was raten Sie?",
+  "options": [
+   "Abraten, weil Datenbanken schnellen blockweisen Zugriff mit wenig Latenz brauchen",
+   "Abraten, weil Objektspeicher keine Dateien über 100 MB speichern kann",
+   "Zuraten, sofern der Bucket in derselben Region wie der Server liegt",
+   "Zuraten, weil Objektspeicher grundsätzlich schneller ist als jeder lokale Blockspeicher"
+  ],
+  "a": "Abraten, weil Datenbanken schnellen blockweisen Zugriff mit wenig Latenz brauchen",
+  "exp": "Hilfsprogramme, die einen Bucket als Laufwerk zeigen, übersetzen jede kleine Änderung in das Hochladen ganzer Objekte. Das ist langsam, und Sperren und Konsistenz entsprechen nicht einem echten Dateisystem. Datenbanken gehören auf Blockspeicher, Objektspeicher eignet sich für Backups und Exporte."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "C3g",
+   "A8e"
+  ],
+  "q": "Benutzer klagen über einen langsamen Linux-Server. iostat -x zeigt für die einzige Festplatte %util 99 und w_await 180 ms, die CPU ist kaum ausgelastet. Was ist der Engpass?",
+  "options": [
+   "Die Festplatte kann die Schreibzugriffe nicht schnell genug bearbeiten",
+   "Die CPU ist überlastet und hält die Festplatte auf",
+   "Der Arbeitsspeicher ist voll und der Server lagert aus",
+   "Das Netzwerk ist überlastet und verzögert die Zugriffe"
+  ],
+  "a": "Die Festplatte kann die Schreibzugriffe nicht schnell genug bearbeiten",
+  "exp": "%util nahe 100 und Wartezeiten von 180 ms beim Schreiben zeigen, dass die Platte dauernd beschäftigt ist und Anfragen sich stauen. Eine kaum ausgelastete CPU spricht gegen einen Rechenengpass. Abhilfe sind schnellere Laufwerke wie SSDs, ein RAID mit mehr Platten oder weniger Schreiblast."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "A3a"
+  ],
+  "q": "Für einen kleinen Server mit gespiegelten Bootlaufwerken bietet das Mainboard ein Onboard-RAID über die Firmware an. Welcher Nachteil ist zu beachten?",
+  "options": [
+   "Es ist ein Firmware-RAID, das stark vom Treiber und Mainboard abhängt",
+   "Es verschlüsselt die Platten und braucht deshalb einen Lizenzschlüssel",
+   "Es unterstützt grundsätzlich nur RAID 0 und kein RAID 1",
+   "Es funktioniert nur mit SAS-Platten und nicht mit SATA"
+  ],
+  "a": "Es ist ein Firmware-RAID, das stark vom Treiber und Mainboard abhängt",
+  "exp": "Onboard-RAID (Fake-RAID) rechnet mit der CPU des Servers und braucht einen passenden Treiber; ein Wechsel des Mainboards oder Betriebssystems kann den Verbund unlesbar machen. Ein echter Hardware-Controller oder ein Software-RAID des Betriebssystems ist besser zu verwalten. Für Bootlaufwerke bieten viele Server auch spezielle gespiegelte M.2-Module."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A6b",
+   "A9a"
+  ],
+  "q": "Ein Admin hat auf einem NAS für alle Freigaben dieselbe Gruppe „Jeder“ mit Vollzugriff eingetragen, um Ärger zu vermeiden. Welches Risiko ist am größten?",
+  "options": [
+   "Das NAS wird langsamer, weil es zu viele Rechte prüfen muss",
+   "Die Snapshots des NAS werden automatisch gelöscht",
+   "Ransomware auf einem einzigen PC kann alle Freigaben verschlüsseln",
+   "Die Freigaben erscheinen danach im Explorer der Benutzer nicht mehr vollständig"
+  ],
+  "a": "Ransomware auf einem einzigen PC kann alle Freigaben verschlüsseln",
+  "exp": "Mit Vollzugriff für alle kann jedes Konto, auch ein kompromittiertes, sämtliche Dateien ändern und löschen. Ein einziger infizierter PC verschlüsselt dann alle Freigaben. Nach dem Prinzip der geringsten Rechte bekommt jede Gruppe nur die Freigaben und Rechte, die sie wirklich braucht."
+ },
+ {
+  "cat": "systeme",
+  "thema": "storage",
+  "fachrichtung": "si",
+  "rahmenplan": [
+   "A9b",
+   "C1b"
+  ],
+  "q": "Ein Mini-PC mit nur einer NVMe-SSD soll als kleiner Linux-Fileserver dienen. Die Daten liegen außerdem täglich auf einem NAS. Was fehlt diesem Aufbau am ehesten?",
+  "options": [
+   "Ein Backup, weil das NAS als Sicherungsziel nicht zählt",
+   "Ausreichend IOPS, weil NVMe-SSDs langsamer als Festplatten sind",
+   "Redundanz des Datenträgers, ein SSD-Ausfall führt zum Stillstand",
+   "Ein Dateisystem, weil Linux auf NVMe nur ohne Dateisystem arbeitet"
+  ],
+  "a": "Redundanz des Datenträgers, ein SSD-Ausfall führt zum Stillstand",
+  "exp": "Mit nur einer SSD gibt es keine Redundanz: Fällt sie aus, steht der Server still, bis die Daten aus dem Backup wiederhergestellt sind. Das tägliche Backup schützt vor Datenverlust, aber nicht vor der Ausfallzeit. Für mehr Verfügbarkeit braucht es eine zweite SSD im Spiegel."
  }
 ]

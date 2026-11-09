@@ -9,6 +9,768 @@
    "stelle": 231,
    "q": "Ein Importprogramm soll je nach Dateiendung (.csv, .json, .xml) das passende Leseobjekt liefern. Der restliche Code soll nur das Interface ILeser kennen. Welches Muster passt?",
    "grund": "Sammelliste 181: nennt eine einfache Fabrik (Auswahl ueber die Dateiendung) eine Fabrikmethode; richtige Fassung als Stelle 6360"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4513,
+   "q": "Warum plant man IPv6-Präfixe möglichst an Nibble-Grenzen (/48, /52, /56, /60, /64)?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4549,
+   "q": "Was bewirkt eine Router Lifetime von 0 in einem Router Advertisement?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4570,
+   "q": "Warum ist ein Ping-Sweep (alle Adressen durchprobieren) in einem IPv6-/64 kaum machbar?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4684,
+   "q": "Was ist DTP bei Cisco-Switches und warum schaltet man es an Access-Ports ab?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4690,
+   "q": "Warum legt man das Management der Switches in ein eigenes VLAN statt in VLAN 1?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4759,
+   "q": "Warum ist ein asymmetrischer Anschluss für eine Zentrale mit vielen Homeoffice-VPN-Nutzern oft ungeeignet?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4764,
+   "q": "Was bedeutet die Routerfreiheit in Deutschland für einen Firmenkunden?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4777,
+   "q": "Warum begrenzt man am WAN-Router den ausgehenden Verkehr per Shaping knapp unter die Upload-Rate des Anschlusses?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4781,
+   "q": "Warum lässt sich IPsec mit AH (Authentication Header) NICHT durch NAT betreiben?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4801,
+   "q": "Warum sollte ein VPN möglichst über UDP und nicht über TCP laufen?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 4803,
+   "q": "Warum gilt ein VPN mit PPTP heute als unsicher?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5014,
+   "q": "Warum fragt man bei einer neuen Störung früh: „Was wurde zuletzt geändert?“",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5016,
+   "q": "Warum sichert man vor einer Änderung bei der Fehlersuche die aktuelle Konfiguration?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5019,
+   "q": "Was ist das Ziel einer Ursachenanalyse (Root Cause Analysis) nach einer Störung?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5035,
+   "q": "Was bedeutet das Flag NO-CARRIER in der Ausgabe von ip link?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5037,
+   "q": "Was bedeutet der Zustand FAILED in der Ausgabe von ip neigh?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5049,
+   "q": "Warum kommt traceroute -T -p 443 manchmal weiter als traceroute ohne Optionen?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5061,
+   "q": "Was müssen Sie bei Mitschnitten im Firmennetz wegen des Datenschutzes beachten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5065,
+   "q": "Was ist ein Split Pair in der Twisted-Pair-Verkabelung?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5069,
+   "q": "Warum entsteht zwischen einem Singlemode- und einem Multimode-SFP KEIN zuverlässiger Link?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5073,
+   "q": "Woran erkennt man typischerweise eine Layer-2-Schleife?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5074,
+   "q": "Was ist ein Rogue-DHCP-Server?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5075,
+   "q": "Was passiert, wenn der Adressbereich eines DHCP-Servers erschöpft ist?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5076,
+   "q": "Was bedeutet die DNS-Antwort SERVFAIL?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5077,
+   "q": "Was unterscheidet die DNS-Antwort NXDOMAIN von NOERROR ohne Antwortdaten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5078,
+   "q": "Was ist asymmetrisches Routing und warum stört es eine zustandsbehaftete Firewall?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5079,
+   "q": "Ein Dienst lauscht laut ss auf 127.0.0.1:8080. Was bedeutet das für andere Rechner?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5080,
+   "q": "Was bedeutet die Meldung „Address already in use“ beim Start eines Dienstes?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5085,
+   "q": "Warum ist eine zentrale Logsammlung bei der Fehlersuche hilfreich?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5088,
+   "q": "Warum dokumentiert man im Ticket auch Prüfschritte, die nichts gefunden haben?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5089,
+   "q": "Wann legt man zu mehreren gleichartigen Störungen ein Problem-Ticket an?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5205,
+   "q": "Eine Vollsicherung von 2,4 TB läuft mit 200 MB/s (1 TB = 1.000.000 MB). Das Sicherungsfenster reicht von 22 bis 6 Uhr. Passt sie hinein?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5265,
+   "q": "Was versteht man beim RAID 5 unter dem Write Hole?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5267,
+   "q": "Warum gilt RAID 5 bei sehr großen Festplatten (z. B. 20 TB) als riskant?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5272,
+   "q": "Was bedeutet der Zustand „degraded“ bei einem RAID-Verbund?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5275,
+   "q": "Was bedeutet beim Schreibcache eines RAID-Controllers Write-Back im Gegensatz zu Write-Through?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5280,
+   "q": "Was versteht man bei SSDs unter Over-Provisioning?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5282,
+   "q": "Welchen Vorteil haben NVMe-SSDs im Format U.2 oder E3.S in Servern gegenüber M.2-Karten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5284,
+   "q": "Warum kann man SATA-Platten an einem SAS-Controller betreiben, aber NICHT SAS-Platten an einem SATA-Controller?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5291,
+   "q": "Was ist beim Einsatz von Jumbo Frames im iSCSI-Netz unbedingt zu beachten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5299,
+   "q": "Was bewirkt die NFS-Exportoption root_squash?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5301,
+   "q": "Welchen Vorteil bietet NFSv4 gegenüber NFSv3 bei Firewall-Regeln?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5309,
+   "q": "Was bewirkt die Mount-Option noatime unter Linux?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5314,
+   "q": "Welche Einschränkung hat exFAT im Vergleich zu NTFS?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5320,
+   "q": "Warum komprimiert man Daten vor der Verschlüsselung und NICHT danach?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5333,
+   "q": "Kassetten welcher älteren Generation kann ein LTO-9-Laufwerk lesen und beschreiben?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "karteikarten",
+   "stelle": 5335,
+   "q": "Was sind WORM-Kassetten bei LTO?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6394,
+   "q": "Ein Provider delegiert ein /60. Der Kunde braucht 20 Netze /64. Was stimmt?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6395,
+   "q": "Zwei Standorte nutzen 2001:db8:a:100::/56 und 2001:db8:a:200::/56. Lassen sie sich mit 2001:db8:a:100::/55 genau zusammenfassen?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6400,
+   "q": "Was macht ein Router mit einem Paket, dessen Zieladresse link-lokal ist (fe80::/10)?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6404,
+   "q": "Woran erkennt man eine Anycast-Adresse bei IPv6 an ihrem Aussehen?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6449,
+   "q": "Ein Router Advertisement enthält ein Präfix mit gesetztem L-Flag, aber ohne A-Flag. Was bedeutet das?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6455,
+   "q": "Ein Client prüft DNSSEC selbst und steht hinter DNS64. Warum schlagen Abfragen für reine IPv4-Ziele fehl?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6467,
+   "q": "Ein Scan zeigt, dass alle Server-Adressen auf ::1, ::2, ::3 enden. Warum ist das ein Risiko?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6471,
+   "q": "Ein Kollege behauptet, IPv6 sei automatisch verschlüsselt, weil IPsec zu IPv6 gehört. Was stimmt?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6488,
+   "q": "ss -tln zeigt einen Dienst auf [::]:22. Ist er unter Linux auch per IPv4 erreichbar?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6642,
+   "q": "Ein Etagenswitch ist nur per Trunk mit dem Core verbunden. Seine Management-IP liegt in VLAN 100, das auf dem Trunk aber NICHT erlaubt ist. Was passiert?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6651,
+   "q": "Ein Kollege trennt Abteilungen mit VLANs und meint, Schadsoftware könne nun nicht mehr zwischen ihnen wandern. Der Layer-3-Core routet ungefiltert zwischen allen VLANs. Was antworten Sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6655,
+   "q": "Welche Aussage über VLAN 1 auf vielen Switches ist richtig?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6664,
+   "q": "Zwei Switches sind über einen alten Hub verbunden. RSTP konvergiert auf dieser Verbindung so langsam wie altes STP. Warum?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6680,
+   "q": "Ein Bündel ist als Trunk mit VLAN 10 und 20 eingerichtet. Auf einem Mitgliedsport ist abweichend zusätzlich VLAN 30 erlaubt. Was ist typischerweise die Folge?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6688,
+   "q": "Ein Wi-Fi-7-Access-Point läuft an einem PoE+-Port, meldet aber eingeschränkten Betrieb und schaltet ein Funkmodul ab. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6708,
+   "q": "Warum bindet man die Anmeldung von Administratoren an Switches über TACACS+ oder RADIUS an einen zentralen Dienst an?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6747,
+   "q": "Auf der einen Seite steckt ein 10GBASE-LR-Modul, auf der anderen ein 10GBASE-SR-Modul, verbunden über Singlemode-Faser. Was passiert?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6783,
+   "q": "Beim Aufbau der Child SA meldet IKEv2 TS_UNACCEPTABLE. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6824,
+   "q": "Warum ist bei IPv6 durch einen VPN-Tunnel eine funktionierende Path-MTU-Discovery besonders wichtig?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6838,
+   "q": "Warum zeigt tracert durch einen IPsec-Tunnel von der Zentrale zur Filiale nur zwei Hops, obwohl dazwischen viele Router im Internet liegen?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6849,
+   "q": "Beim WireGuard-Peer der Filiale steht als Endpoint ein DynDNS-Name der Zentrale. Nach einem Adresswechsel der Zentrale kommt der Tunnel nicht wieder, bis man ihn neu startet. Warum?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6853,
+   "q": "Bei einem Stromausfall laufen die Server dank USV weiter, die Filialen verlieren aber sofort die Verbindung zur Zentrale. Was ist die wahrscheinliche Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6858,
+   "q": "Warum braucht ein IPsec-Tunnel zwischen zwei Gateways über reines IPv6 meist kein NAT-Traversal?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6868,
+   "q": "Ein neu eingerichtetes VPN-Gateway lehnt ein gestern ausgestelltes, korrektes Zertifikat als noch nicht gültig ab. Was ist die wahrscheinliche Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6874,
+   "q": "Ein Außendienstler wird im Hotel-WLAN alle paar Minuten vom IPsec-VPN getrennt, im Mobilfunk nie. Der Tunnel läuft über UDP 4500. Was ist eine wahrscheinliche Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6876,
+   "q": "In der Zentrale ist als Lebensdauer der Child SA 3.600 s eingestellt, in der Filiale 28.800 s. Beide nutzen IKEv2. Was passiert?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 6877,
+   "q": "Der Router einer Filiale soll Internetverkehr direkt über den eigenen Anschluss schicken, Verkehr zu den Servern der Zentrale aber durch den Tunnel. Wie richten Sie das ein?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7145,
+   "q": "Eine Störung tritt nur gelegentlich auf. Wenn Sie vor Ort prüfen, ist alles normal. Was ist sinnvoll?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7153,
+   "q": "Test-NetConnection fs01 -Port 445 liefert PingSucceeded: True und TcpTestSucceeded: False. Was ist die wahrscheinlichste Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7156,
+   "q": "netstat -an auf einem Client zeigt viele Verbindungen zu 203.0.113.50:443 im Zustand SYN_SENT. Die Seite lädt NICHT. Was bedeutet das?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7157,
+   "q": "Auf einem Anwendungsserver zeigt netstat Hunderte Verbindungen im Zustand CLOSE_WAIT, die NICHT verschwinden. Was ist die wahrscheinlichste Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7158,
+   "q": "Nach einem Lasttest zeigt netstat auf dem Testclient Tausende Verbindungen im Zustand TIME_WAIT. Wie bewerten Sie das?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7159,
+   "q": "route print zeigt zwei Standardrouten 0.0.0.0: über das LAN mit Metrik 25 und über das WLAN mit Metrik 35. Welchen Weg nutzt der Rechner ins Internet?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7165,
+   "q": "Ein PC hat 10.1.1.10 mit Maske 255.255.0.0. Der Server 10.1.2.20 liegt in einem anderen VLAN hinter dem Router 10.1.1.1 (/24-Netze). Kollegen erreichen ihn, dieser PC NICHT. Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7166,
+   "q": "ipconfig zeigt die Adresse 192.168.21.15 mit Maske 255.255.255.0 und das Standardgateway 192.168.20.1. Was ist das Problem?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7169,
+   "q": "Ein neuer Windows-Server ist per RDP und über Freigaben erreichbar, ping auf ihn scheitert aber. Was ist die wahrscheinlichste Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7172,
+   "q": "Ein Linux-Server erreicht nichts außerhalb seines Subnetzes. ip neigh zeigt für das Gateway 192.168.5.1 den Zustand INCOMPLETE. Was folgt daraus?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7173,
+   "q": "dig www.example.de liefert status: SERVFAIL. dig +cd www.example.de mit abgeschalteter Prüfung liefert dagegen eine Adresse. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7174,
+   "q": "Im Homeoffice ohne VPN liefert dig intranet.firma.local NXDOMAIN, im Büro die richtige Adresse. Wie erklären Sie das?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7184,
+   "q": "In /etc/resolv.conf steht nur nameserver 127.0.0.53. Ein Azubi meint, der DNS-Server sei falsch eingetragen. Was stimmt?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7185,
+   "q": "nc -zv 10.0.0.20 22 meldet sofort „Connection refused“, nc -zv 10.0.0.20 80 läuft in eine Zeitüberschreitung. Welche Aussage passt?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7193,
+   "q": "Ein Mitschnitt am Client zeigt auf ein DHCP Discover zwei Offers von verschiedenen Servern, eines davon mit dem Gateway 192.168.0.1 statt 10.20.0.1. Was liegt vor?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7198,
+   "q": "Ein Mitschnitt soll für eine Fehleranalyse an einen externen Dienstleister gehen. Was beachten Sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7200,
+   "q": "Ein altes Messgerät verbindet sich NICHT mehr mit einem Server, seit dort nur noch TLS 1.2 und 1.3 erlaubt sind. Der Mitschnitt zeigt ein ClientHello mit TLS 1.0 und sofort einen Alert. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7209,
+   "q": "Telefonate im Büro stocken nur, wenn abends große Sicherungen über das Netz laufen. Was ist die wahrscheinlichste Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7213,
+   "q": "Kleine Webseiten laden über das Standort-VPN, große Downloads hängen. ping -f -l 1472 ziel meldet, das Paket müsste fragmentiert werden, das DF-Flag sei aber gesetzt. ping -f -l 1372 klappt. Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7215,
+   "q": "ping fs01 erreicht den alten Server fs01.alt.local, ping fs01.firma.local den neuen. Die Suchliste der DNS-Suffixe lautet alt.local, firma.local. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7217,
+   "q": "Ein Notebook öffnet zu Hause ohne VPN KEINE Webseiten, im Büro schon. Im Browser ist fest der Firmenproxy proxy.firma.local:3128 eingetragen. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7218,
+   "q": "Ein Webserver ist intern über https://192.0.2.10 nur mit Zertifikatswarnung erreichbar, über https://portal.example.com ohne Warnung. Warum?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7219,
+   "q": "Neue Freigabe-Regel für TCP 8443 an der Firewall wirkt NICHT. Sie steht ganz unten, darüber steht die Regel „LAN nach DMZ: alles verwerfen“. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7221,
+   "q": "Ein Dienst ist per IPv4 erreichbar, viele Clients verbinden sich aber erst nach langer Wartezeit. dig zeigt neben dem A-Eintrag einen AAAA-Eintrag auf eine NICHT mehr genutzte Adresse. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7222,
+   "q": "Ein Router schickt Syslog an UDP 514 eines Logservers. tcpdump auf dem Server zeigt die eingehenden Pakete, rsyslog lauscht laut ss -lun auf UDP 0.0.0.0:514, im Log erscheint aber nichts. Was ist wahrscheinlich?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7234,
+   "q": "Nach Behebung einer Störung durch eine geänderte Firewall-Regel fragt Ihr Ausbilder, was noch fehlt. Was antworten Sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7252,
+   "q": "Ein PC zeigt Medienstatus verbunden, aber am Switchport ist die MAC-Adresse des PCs in KEINEM VLAN der MAC-Tabelle zu sehen. Was ist naheliegend?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7256,
+   "q": "Ein Kollege leert bei jeder Störung zuerst den DNS-Cache, startet den PC neu und tauscht das Kabel, ohne vorher etwas zu prüfen. Was ist das Hauptproblem?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7265,
+   "q": "Das Monitoring fragt alle 5 Minuten den 32-Bit-Zähler ifInOctets eines voll ausgelasteten 1-Gbit/s-Ports ab, die Grafiken sind unbrauchbar. Warum?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7267,
+   "q": "Anwender melden: Der erste Aufruf jeder Webseite dauert etwa 5 Sekunden, danach ist sie schnell. Was ist eine typische Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7268,
+   "q": "Der Internetrouter wurde gegen ein neues Gerät mit derselben IP-Adresse 192.168.1.1 getauscht. Manche Clients erreichen das Internet erst nach einigen Minuten wieder. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7270,
+   "q": "iperf3 -c 10.0.0.30 meldet sofort „unable to connect to server: Connection refused“. ping auf 10.0.0.30 klappt. Was ist die wahrscheinlichste Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7449,
+   "q": "Was bedeutet eine Löschsperre wegen eines Rechtsstreits (Legal Hold)?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7463,
+   "q": "Der Sicherungsauftrag des Dateiservers endet seit Wochen mit „Erfolgreich mit Warnungen“. Niemand hat die Warnungen gelesen. Was tun Sie zuerst?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7492,
+   "q": "Angreifer haben Daten verschlüsselt und drohen zusätzlich, gestohlene Kundendaten zu veröffentlichen. Die Firma hat gute, saubere Sicherungen. Welche Aussage stimmt?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7495,
+   "q": "Der zentrale Datenbankserver fällt aus, die Wiederherstellung wird nach Schätzung länger dauern als die festgelegte Ausfallgrenze. Wann wird aus der Störung ein Notfall?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7508,
+   "q": "Nach einem Wasserrohrbruch ist ein Server nass geworden, er ist durch die Sicherung abgeschaltet. Was ist richtig?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7569,
+   "q": "Warum sollten Platten in einem RAID-Verbund eine begrenzte Fehlerkorrekturzeit (TLER bzw. ERC) haben?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7573,
+   "q": "smartctl zeigt für eine Festplatte: Current_Pending_Sector = 12. Was bedeutet dieser Wert?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7578,
+   "q": "Bei MPIO stehen die Richtlinien „Nur Failover“ und „Round Robin“ zur Auswahl. Was unterscheidet sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7580,
+   "q": "Ein neuer Server im Fibre-Channel-SAN sieht die für ihn angelegte LUN NICHT. Im Switch ist er zusammen mit dem Storage in einer Zone. Was fehlt wahrscheinlich?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7592,
+   "q": "Ein Kunde will seine zwei Standorte mit DFS-Replikation synchron halten und darüber auch die Dateien einer laufenden Access-Datenbank verteilen. Was geben Sie zu bedenken?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7599,
+   "q": "df -h meldet für /var eine volle Partition, du -sh /var zählt aber nur halb so viel. Gestern wurde eine große Logdatei gelöscht, der Dienst läuft weiter. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7601,
+   "q": "Ein Admin aktiviert auf einem ZFS-Pool mit 40 TB die Deduplizierung, der Server hat nur 16 GB RAM. Danach werden Schreibvorgänge extrem langsam. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7603,
+   "q": "Ein Admin legt auf einer Platte mit 4K-Sektoren (512e) eine Partition an, die bei Sektor 63 beginnt. Was ist die Folge?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7605,
+   "q": "Für ein Volume, auf dem nur große Sicherungsdateien einer Backup-Software liegen, empfiehlt deren Hersteller ReFS mit 64 KiB Clustergröße. Warum gerade diese Clustergröße?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7606,
+   "q": "Ein Windows-Admin will C: auf einer VM vergrößern, die Option „Volume erweitern“ ist aber ausgegraut, obwohl die virtuelle Festplatte vergrößert wurde. Direkt hinter C: liegt die Wiederherstellungspartition. Was ist die Ursache?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7615,
+   "q": "Ein Admin hält einen Snapshot im Storage für ein ausreichendes Backup der Datenbank. Was entgegnen Sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7620,
+   "q": "Ein Entwickler will eine Datenbank direkt auf einem Objektspeicher betreiben, den er über ein Hilfsprogramm als Laufwerk eingebunden hat. Was raten Sie?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7634,
+   "q": "Benutzer klagen über einen langsamen Linux-Server. iostat -x zeigt für die einzige Festplatte %util 99 und w_await 180 ms, die CPU ist kaum ausgelastet. Was ist der Engpass?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7643,
+   "q": "Für einen kleinen Server mit gespiegelten Bootlaufwerken bietet das Mainboard ein Onboard-RAID über die Firmware an. Welcher Nachteil ist zu beachten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7645,
+   "q": "Ein Admin hat auf einem NAS für alle Freigaben dieselbe Gruppe „Jeder“ mit Vollzugriff eingetragen, um Ärger zu vermeiden. Welches Risiko ist am größten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "quizfragen",
+   "stelle": 7647,
+   "q": "Ein Mini-PC mit nur einer NVMe-SSD soll als kleiner Linux-Fileserver dienen. Die Daten liegen außerdem täglich auf einem NAS. Was fehlt diesem Aufbau am ehesten?",
+   "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
   }
  ]
 }
