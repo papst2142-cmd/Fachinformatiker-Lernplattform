@@ -39,9 +39,12 @@ fehler() { echo "FEHLER: $1"; zeigen; exit 1; }
 
 # hoechste veroeffentlichte Version je Linie laut GitHub-API (ohne Entwurf und Vorab)
 "$PY" -I - "$ARB/soll.txt" <<'PY'
-import json, re, sys, time, urllib.error, urllib.request
+import json, os, re, sys, time, urllib.error, urllib.request
 r = urllib.request.Request("https://api.github.com/repos/papst2142-cmd/Fachinformatiker-Lernplattform/releases?per_page=100",
                            headers={"Accept": "application/vnd.github+json", "User-Agent": "stadtbau-update-probe"})
+# Sammelliste 258: mit GITHUB_TOKEN (setzt die CI) angemeldet, sonst teilen sich alle Rechner einer Adresse ~60 Abfragen je Stunde
+if os.environ.get("GITHUB_TOKEN"):
+    r.add_header("Authorization", "Bearer " + os.environ["GITHUB_TOKEN"])
 # Stoerung bei GitHub (5xx wie 504, keine Antwort): bis zu 4 Versuche wie Updatequelle.Wiederholen, 4xx sofort rot
 for versuch, pause in enumerate([15, 30, 60, None], 1):
     try:

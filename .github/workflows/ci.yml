@@ -443,6 +443,8 @@ jobs:
         shell: bash
         env:
           PYTHON: python
+          # Sammelliste 258: Live-Probe fragt die GitHub-API angemeldet (sonst HTTP 403 rate limit)
+          GITHUB_TOKEN: ${{ github.token }}
         run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
@@ -525,6 +527,8 @@ jobs:
         shell: bash
         env:
           PYTHON: python
+          # Sammelliste 258: Live-Probe fragt die GitHub-API angemeldet (sonst HTTP 403 rate limit)
+          GITHUB_TOKEN: ${{ github.token }}
         run: bash werkzeuge/stadtbau/baue_stadtbau.sh win-x64 stadtbau
       - uses: actions/upload-artifact@v7
         with:

@@ -3,9 +3,10 @@
 Aufruf: python3 -I werkzeuge/pakete/github_neueste.py <praefix>   (z. B. vA, vS); Ausgabe "0.53.1".
 Nur lesend. Stoerung bei GitHub (5xx wie 504, keine Antwort): bis zu 4 Versuche mit Pausen 15/30/60 s wie
 Stoerung.WiederholenAsync im Programm, je Wiederholung eine Zeile auf stderr; 4xx sofort Fehler. Gleiche Regel wie
-der Abschnitt in werkzeuge/stadtbau/update_probe_pc.sh.
+der Abschnitt in werkzeuge/stadtbau/update_probe_pc.sh. Mit GITHUB_TOKEN angemeldet (Sammelliste 258).
 """
 import json
+import os
 import re
 import sys
 import time
@@ -15,9 +16,19 @@ import urllib.request
 URL = "https://api.github.com/repos/papst2142-cmd/Fachinformatiker-Lernplattform/releases?per_page=100"
 
 
+def kopf():
+    """Kopfzeilen der Abfrage. Sammelliste 258: mit GITHUB_TOKEN (setzt die CI) angemeldet, sonst teilen sich alle
+    Rechner einer Adresse etwa 60 Abfragen je Stunde (Lauf 723: HTTP 403 rate limit am Mac). Der Schluessel steht nie
+    in einer Ausgabe."""
+    k = {"Accept": "application/vnd.github+json", "User-Agent": "lernplattform-update-probe"}
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if token:
+        k["Authorization"] = "Bearer " + token
+    return k
+
+
 def laden():
-    anfrage = urllib.request.Request(URL, headers={"Accept": "application/vnd.github+json",
-                                                   "User-Agent": "lernplattform-update-probe"})
+    anfrage = urllib.request.Request(URL, headers=kopf())
     for versuch, pause in enumerate([15, 30, 60, None], 1):
         try:
             return json.load(urllib.request.urlopen(anfrage, timeout=60))
