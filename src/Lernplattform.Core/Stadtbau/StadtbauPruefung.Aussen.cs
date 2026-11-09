@@ -83,7 +83,8 @@ public static partial class StadtbauPruefung
     private static readonly AsyncLocal<bool> OhneFarm = new();
 
     /// <summary>Alle Regeln aussen fuer eine Fassung (Spielinhalte wie bei <see cref="Inhalt"/>); leer = in Ordnung.</summary>
-    public static List<StadtbauFund> Aussen(StadtFassung fassung, PyObjekt inhalt, GrafikBibliothek? grafik, PyObjekt? feste = null)
+    public static List<StadtbauFund> Aussen(StadtFassung fassung, PyObjekt inhalt, GrafikBibliothek? grafik, PyObjekt? feste = null,
+        Func<StadtSzene, IEnumerable<StadtbauFund>>? zusatz = null)
     {
         var funde = new List<StadtbauFund>();
         try
@@ -165,6 +166,11 @@ public static partial class StadtbauPruefung
         ZebraRegeln(szene, fassung, funde);
         AussehenRegeln(fassung, inhalt, szene, funde);
         OrtsnamenRegeln(fassung, funde);
+        // Fund 262 (Weisung P12-122): Regeln nur des Werkzeugs auf derselben Szene (Tueren buendig), das Spiel ruft ohne
+        if (zusatz is not null)
+        {
+            funde.AddRange(zusatz(szene));
+        }
         return funde;
     }
 

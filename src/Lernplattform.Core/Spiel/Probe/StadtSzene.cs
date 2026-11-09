@@ -962,6 +962,21 @@ public sealed partial class StadtSzene
         StadtTuer TuerSetzen(string ort, Vector2 wand, Vector2 aussen, Vector2 anfang, float hoehe, bool modellTuer, bool gehweg,
             int stueckeVon, int stueckeBis, List<(int Teil, Vector3 Wand)> fenster, Vector3 hausMin, Vector3 hausMax)
         {
+            // Fund 262 (Weisung P12-122): hat das Modell an dieser Stelle selbst eine Tuer (Stadt-Modell: genau dort, Gebaeude
+            // aus dem Editor: jede Glastuer, die die gezeichnete Tuer ueberdecken wuerde), ist sie die Tuer; keine zweite darueber
+            if (!modellTuer && grafik is not null && stueckeBis > stueckeVon
+                && StadtTueren.EigeneTuer(stuecke, stueckeVon, stueckeBis, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), wand, aussen,
+                    Enumerable.Range(stueckeVon, stueckeBis - stueckeVon).Any(i => StadtTueren.MitGlasTuer(stuecke[i].Name))) is { } eigene)
+            {
+                var querE = new Vector2(-aussen.Y, aussen.X);
+                // liegt der Tuerpunkt auf der Tuer, bleibt er (Weg gerade auf die Tuer), sonst an ihren naechsten Rand
+                var mitteE = wand + (querE * Math.Clamp(0f, eigene.A1, eigene.A2)) - (aussen * eigene.Tiefe);
+                if (gehweg && Vector2.Distance(mitteE, anfang) > 0.02f && Vector2.Dot(anfang - mitteE, aussen) > 0)
+                {
+                    Linie(teile, [(anfang.X, anfang.Y), (mitteE.X, mitteE.Y)], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+                }
+                return new StadtTuer(ort, mitteE, aussen, anfang, true, hoehe, 0f);
+            }
             var (tiefe, hinten) = grafik is not null && stueckeBis > stueckeVon
                 ? StadtTueren.Wandtiefe(stuecke.GetRange(stueckeVon, stueckeBis - stueckeVon), grafik, wand, aussen, hoehe) ?? (0f, 0f)
                 : (0f, 0f);

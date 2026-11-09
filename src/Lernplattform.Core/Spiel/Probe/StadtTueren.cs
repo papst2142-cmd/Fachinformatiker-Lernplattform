@@ -233,7 +233,7 @@ public static class StadtTueren
     /// <paramref name="hell"/> zaehlt jede Farbe und die Breite bis 5,5 (Rolltor der Werkstatt).
     /// </summary>
     public static List<ModellTuer> ModellTueren(IReadOnlyList<ModellStueck> stuecke, int von, int bis, Func<int, GrafikModell?> modell,
-        Vector2 mitte, Vector2 aussen, bool hell = false, float weite = NebenTuerWeite, float tief = 0.5f)
+        Vector2 mitte, Vector2 aussen, bool hell = false, float weite = NebenTuerWeite, float tief = 0.5f, bool glas = false)
     {
         var quer = new Vector2(-aussen.Y, aussen.X);
         var ergebnis = new List<ModellTuer>();
@@ -248,7 +248,9 @@ public static class StadtTueren
             for (var d = 0; d < gm.Dreiecke; d++)
             {
                 var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
-                if (IstGlas(f) || (!hell && Helligkeit(f) >= 0.45f))
+                // Fund 262: mit glas zaehlt auch eine Glastuer am Boden (Tuer-Teile des Gebaeude-Editors, Kenney Modular Buildings)
+                var istGlas = IstGlas(f);
+                if ((istGlas && !glas) || (!hell && !istGlas && Helligkeit(f) >= 0.45f))
                 {
                     continue;
                 }
@@ -263,7 +265,8 @@ public static class StadtTueren
                 }
                 var y1 = MathF.Min(a.Y, MathF.Min(b.Y, c.Y));
                 var y2 = MathF.Max(a.Y, MathF.Max(b.Y, c.Y));
-                if (dmax - dmin > 0.02f || dmin < -0.4f || dmax > tief || qmax < -weite - 0.3f || qmin > weite + 0.3f || y1 > 0.7f || qmax - qmin < 0.005f)
+                // Fund 262: Glas zaehlt nur, wenn es bis zum Boden reicht (Fenster daneben gehoeren nicht zur Tuer)
+                if ((glas && istGlas && y1 > 0.05f) || dmax - dmin > 0.02f || dmin < -0.4f || dmax > tief || qmax < -weite - 0.3f || qmin > weite + 0.3f || y1 > 0.7f || qmax - qmin < 0.005f)
                 {
                     continue;
                 }
@@ -288,7 +291,7 @@ public static class StadtTueren
                         return;
                     }
                     float a1 = gruppe.Min(g => g.A1), a2 = gruppe.Max(g => g.A2), y1 = gruppe.Min(g => g.Y1), y2 = gruppe.Max(g => g.Y2);
-                    if (y1 <= 0.05f && y2 >= 0.25f && a2 - a1 >= 0.15f && a2 - a1 <= (hell ? 5.5f : 0.55f))
+                    if (y1 <= 0.05f && y2 >= 0.25f && a2 - a1 >= 0.15f && a2 - a1 <= (hell ? 5.5f : glas ? GlasTuerBreit : 0.55f))
                     {
                         ergebnis.Add(new ModellTuer(i, [.. gruppe.Select(g => g.D)], a1, a2, k / 100f, y2));
                     }
@@ -308,6 +311,117 @@ public static class StadtTueren
         }
         return ergebnis;
     }
+
+    /// <summary>Breiteste Glastuer eines Editor-Teils (Kenney "building-door": 0,75).</summary>
+    public const float GlasTuerBreit = 0.8f;
+
+    /// <summary>
+    /// Fund 262 (Weisung P12-122): so nah muss ein Tuerpunkt an der Mitte einer CC0-Tuer eines Stadt-Modells liegen, damit
+    /// sie die Tuer ist (Einrasten im Werkzeug setzt den Punkt genau auf die Mitte, auf 0,01 gerundet).
+    /// </summary>
+    public const float EigeneTuerFang = 0.02f;
+
+    /// <summary>Fund 262: so weit (zur Wand hin) darf die Wand unter einer gezeichneten Tuer von ihrer Flaeche abweichen.</summary>
+    public const float BuendigGrenze = 0.01f;
+
+    /// <summary>Halbe Breite der gezeichneten Tuer samt Rahmen (<see cref="Tuer"/>).</summary>
+    public static float HalbRahmen => (StadtSzene.TuerBreite / 2) + 0.05f;
+
+    /// <summary>Hat das Modell eigene Glastueren am Boden (Gebaeude aus dem Gebaeude-Editor, Modellname "bau:…")?</summary>
+    public static bool MitGlasTuer(string modell) => modell.StartsWith(Lernplattform.Core.Stadtbau.Bauteile.ModellPraefix, StringComparison.Ordinal);
+
+    /// <summary>Gegenprobe Fund 262: Tuer wie bis A 0.54.0 (immer eine gezeichnete Tuer, nur in Tests, je Ablauf).</summary>
+    public static bool EigeneTuerAltFuerTests { get => EigeneAlt.Value; set => EigeneAlt.Value = value; }
+    private static readonly AsyncLocal<bool> EigeneAlt = new();
+
+    /// <summary>
+    /// Fund 262 (Weisung P12-122, Nico: Tueren glitchen in der Fassade): die eigene Tuer des Modells an der Tuerstelle
+    /// (Wandpunkt <paramref name="wand"/>, Richtung <paramref name="aussen"/>), falls es eine gibt. Stadt-Modelle: eine
+    /// dunkle CC0-Tuer genau an der Stelle (bis <see cref="EigeneTuerFang"/>). Gebaeude aus dem Editor (<paramref name="glas"/>):
+    /// jede Glastuer am Boden, die eine gezeichnete Tuer samt Rahmen ueberdecken wuerde (die naechste). Dann zeichnet das
+    /// Spiel keine zweite Tuer darueber.
+    /// </summary>
+    public static ModellTuer? EigeneTuer(IReadOnlyList<ModellStueck> stuecke, int von, int bis, Func<int, GrafikModell?> modell, Vector2 wand, Vector2 aussen, bool glas)
+    {
+        if (EigeneAlt.Value)
+        {
+            return null;
+        }
+        var fang = glas ? HalbRahmen : EigeneTuerFang;
+        return ModellTueren(stuecke, von, bis, modell, wand, aussen, weite: fang + GlasTuerBreit, glas: glas)
+            .Where(t => glas ? t.A1 < fang && t.A2 > -fang : MathF.Abs(t.Mitte) <= fang)
+            .OrderBy(t => MathF.Abs(t.Mitte)).ThenBy(t => t.Tiefe).FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Fund 262: Gruende, warum eine gezeichnete Tuer (nicht die eigene des Modells) nicht sauber sitzt, leer = bündig.
+    /// Strahlen von aussen auf die ganze Flaeche samt Rahmen (9 Spalten, 3 Hoehen ueber dem Sockel): jede Stelle der Wand liegt hoechstens
+    /// <see cref="BuendigGrenze"/> vor oder hinter der Tuer (sonst steckt der Rahmen in der Wand oder steht vor einer Nische),
+    /// die Wand fehlt an keiner Stelle, und keine noch sichtbare Tuer des Modells (auch Glastuer) liegt unter ihr.
+    /// </summary>
+    public static List<string> NichtBuendig(StadtSzene szene, StadtTuer tuer)
+    {
+        var gruende = new List<string>();
+        // Haus aus Kaesten (ohne CC0-Stuecke): die Tuer sitzt genau auf der Kastenwand
+        if (tuer.Modell || szene.Grafik is null || HausVon(szene, tuer) is not { } haus || haus.StueckeBis == haus.StueckeVon)
+        {
+            return gruende;
+        }
+        var stuecke = Enumerable.Range(haus.StueckeVon, haus.StueckeBis - haus.StueckeVon)
+            .Select(i => szene.Stuecke[i]).ToList();
+        var quer = new Vector2(-tuer.Aussen.Y, tuer.Aussen.X);
+        var halb = HalbRahmen;
+        float vorne = 0f, hinten = 0f;
+        var fehlt = false;
+        for (var i = -4; i <= 4; i++)
+        {
+            // j = 1 (Hoehe 0,09) liegt im Sockel, den fast jedes CC0-Modell hat (0,035 bis 0,07 vor der Wand); davor steht
+            // die Stufe der Tuer (E1: zaehlt nicht, sonst liesse sich an kaum einem Haus eine Tuer setzen)
+            for (var j = 2; j <= 4; j++)
+            {
+                var p = tuer.Mitte + (quer * (i * halb / 4)) + (tuer.Aussen * 0.5f);
+                if (Treffer(stuecke, szene.Grafik, new Vector3(p.X, tuer.Hoehe * j / 5f, p.Y), new Vector3(-tuer.Aussen.X, 0, -tuer.Aussen.Y), 1.4f) is { } t)
+                {
+                    var d = t.T - 0.5f;
+                    (vorne, hinten) = (MathF.Min(vorne, d), MathF.Max(hinten, d));
+                }
+                else
+                {
+                    fehlt = true;
+                }
+            }
+        }
+        if (vorne < -BuendigGrenze)
+        {
+            gruende.Add("vorne");
+        }
+        if (hinten > BuendigGrenze)
+        {
+            gruende.Add("hinten");
+        }
+        if (fehlt)
+        {
+            gruende.Add("fehlt");
+        }
+        if (ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen, weite: halb + GlasTuerBreit, glas: true)
+            .Any(t => t.A1 < halb && t.A2 > -halb && !InWandfarbeSichtbar(szene, t, tuer)))
+        {
+            gruende.Add("tuer");
+        }
+        return gruende;
+    }
+
+    /// <summary>
+    /// Haus einer Tuer: der Ort selbst (Haus-Kennung = Ort), sonst das Haus ohne Ort dieses Modells ("modell#n"), dessen
+    /// Kasten die Tuer beruehrt (bis 0,05).
+    /// </summary>
+    public static StadtHaus? HausVon(StadtSzene szene, StadtTuer tuer) =>
+        szene.Haeuser.FirstOrDefault(h => h.Id == tuer.Ort)
+        ?? szene.Haeuser.FirstOrDefault(h => h.Id.StartsWith(tuer.Ort + "#", StringComparison.Ordinal)
+            && h.Min.X - 0.05f <= tuer.Mitte.X && tuer.Mitte.X <= h.Max.X + 0.05f && h.Min.Z - 0.05f <= tuer.Mitte.Y && tuer.Mitte.Y <= h.Max.Z + 0.05f);
+
+    private static bool InWandfarbeSichtbar(StadtSzene szene, ModellTuer t, StadtTuer tuer) =>
+        InWandfarbe(szene.ModellAn(t.Stueck)!, szene.Stuecke[t.Stueck].Lage, t, tuer.Mitte, tuer.Aussen);
 
     /// <summary>
     /// Weisung P8-30 (Nico: "bei einigen Tueren sind dann versetzt noch die Hintergrundtuer zu sehen"): Tueren der

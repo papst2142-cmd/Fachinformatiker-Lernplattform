@@ -13,6 +13,7 @@ Türen selbst setzen, und die leeren Schilder an den Häusern sind weg.
 - Setzen und Ziehen sind je ein Schritt und lassen sich rückgängig machen. „Tür setzen beenden“, Escape oder ein Rechtsklick beenden das Setzen.
 - Das geht auch bei Orten mit Innenraum, nach „Aussehen tauschen“ und beim Zuhause. Im Spiel kommt die Figur dann durch die neue Tür ins Haus.
 - „Tür dazu“ setzt eine neue Tür jetzt auf die Wand, die zur nächsten Straße zeigt (bisher immer auf die Vorderseite).
+- Türen sitzen jetzt sauber in der Wand: Rastet eine Tür auf die Tür eines Bauteils oder Hausmodells ein, wird keine zweite Tür mehr davor gezeichnet. Die Prüfung meldet rot, wenn eine Tür nicht sauber in der Wand sitzt, zum Beispiel auf einem Fenster oder an einem Vorbau. Dann die Tür auf eine glatte Wand oder auf die Tür des Modells setzen.
 - Die farbigen Platten ohne Schrift an acht Häusern werden nicht mehr gezeichnet, wie im Spiel.
 
 ## S 0.27.0

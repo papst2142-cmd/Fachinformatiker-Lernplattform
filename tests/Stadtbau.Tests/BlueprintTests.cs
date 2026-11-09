@@ -64,7 +64,11 @@ public class BlueprintTests
         var z = AussenBearbeitung.Zugang(a, "moebelhaus")!;
         Assert.Equal("moebelhaus", b.Modell);
         Assert.Equal(Json(Get(AussenBearbeitung.Modelle(a), "moebelhaus")), Json(b.Teile));
-        Assert.Equal(Py.F(Liste(z["tuer"])[0]) - Py.F(ort["x"]), Py.F(b.Tuer![0]), 6);
+        // Fund 262: die Tuer rueckt um den Tuerversatz des Orts zurueck (Modell im Blueprint ohne Versatz, Tuer auf seiner Tuer)
+        var versatz = Blueprint.TuerVersatz(a, "moebelhaus");
+        Assert.NotNull(versatz);
+        // der Blueprint speichert Lagen auf 0,01 gerundet
+        Assert.Equal(Py.F(Liste(z["tuer"])[0]) - versatz!.Value - Py.F(ort["x"]), Py.F(b.Tuer![0]), 0.0051);
         Assert.Equal(Py.F(Liste(z["tuer"])[1]) - Py.F(ort["y"]), Py.F(b.Tuer![1]), 6);
         Assert.Equal(Liste(z["weg"]).Count, b.Weg.Count);
         Assert.NotNull(b.Schild);
@@ -121,6 +125,8 @@ public class BlueprintTests
     [Fact]
     public void Setzen_InLeereStadt_GleichesGebaeudeNurAndereLage_OhneRotenFund()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var ablage = Daten.NeueAblage();
         var (_, b) = MoebelhausMitAenderung(ablage);
         var p = LeereStadt(ablage);
@@ -313,6 +319,8 @@ public class BlueprintTests
     [Fact]
     public void Bau_InnenraumKommtMitInsProjekt_Bearbeiten_Rueckgaengig_Oeffnen_NichtImExport()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var ablage = Daten.NeueAblage();
         var b = MoebelhausUnveraendert(ablage);
         var p = LeereStadt(ablage);
@@ -380,6 +388,8 @@ public class BlueprintTests
     [Fact]
     public void Bau_RoterFundImInnenraum_SperrtDenExport_Gegenprobe()
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var ablage = Daten.NeueAblage();
         var b = MoebelhausUnveraendert(ablage);
         var p = LeereStadt(ablage);

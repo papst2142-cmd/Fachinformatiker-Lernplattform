@@ -83,6 +83,8 @@ public class TuerSetzenTests
     [MemberData(nameof(SeitenUndDrehungen))]
     public void Setzen_TuerAufDerGewaehltenWand_WegZurStrasse_SpielZeichnetSie(int seite, int dreh)
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         var p = Leer();
         Strasse(p, 2, 24, 38, 24);
         var s = Haus(p, "wohnung", 18, 18, dreh);
@@ -101,7 +103,7 @@ public class TuerSetzenTests
         // laengs der Wand an der getippten Stelle (0,4 neben der Mitte)
         Assert.True(Vector2.Distance(tuer, mitte + (n * (float)((n.X != 0 ? r.W : r.H) / 2)) + (new Vector2(-n.Y, n.X) * 0.4f)) <= 0.02f, $"Tuer {tuer}");
         Assert.True(AmEndeStrasse(p, s), "Weg erreicht die Strasse nicht");
-        // kein neuer roter Fund durch die Tuer; einzige bekannte Ausnahme (Sammelliste 262): der Baum des Modells „wohnung“
+        // kein neuer roter Fund durch die Tuer; einzige bekannte Ausnahme (Sammelliste 265): der Baum des Modells „wohnung“
         // weicht im Spiel dem neuen Fussweg aus und landet im Haus (BaumPlaner), die Pruefung zeigt das rot
         var neuRot = p.PruefenAussen().Where(f => f.Rot).Select(f => f.Text).Except(rotVorher).ToList();
         Assert.True(neuRot.Count == 0 || (seite, dreh) == (2, 3) && neuRot.SequenceEqual(["Ein Baum steht im Haus „wohnung“."]), string.Join("; ", neuRot));

@@ -364,6 +364,20 @@ public static class Texte
     public static string TuerSetzenHinweis(string name) => "Eine Wand von „" + name + "“ antippen oder die Tür an der Wand entlang ziehen.";
     public static string TuerSetzenDaneben(string name) => "Bitte eine Wand von „" + name + "“ antippen.";
     public static string TuerGesetzt(string name) => "Tür von „" + name + "“ gesetzt";
+
+    /// <summary>Fund 262: roter Fund, wenn eine gezeichnete Tuer nicht sauber in der Wand sitzt (Gruende aus StadtTueren.NichtBuendig).</summary>
+    public static string TuerNichtBuendig(string name, IEnumerable<string> gruende) =>
+        "Die Tür von „" + name + "“ sitzt nicht sauber in der Wand: " + string.Join("; ", gruende.Select(g => g switch
+        {
+            "vorne" => "ein Teil der Wand steht vor der Tür, der Rahmen steckt in der Fassade",
+            "hinten" => "hinter der Tür liegt eine Nische oder ein Fenster",
+            "fehlt" => "die Tür ragt seitlich über die Wand hinaus",
+            "tuer" => "sie liegt über einer Tür des Gebäudes",
+            _ => g,
+        })) + ".";
+
+    /// <summary>Tipp zum Fund „Tür nicht sauber in der Wand“.</summary>
+    public const string TuerNichtBuendigTipp = "Mit „Tür setzen“ auf eine glatte Wand legen oder mit „Einrasten“ auf die eigene Tür des Gebäudes ziehen.";
     public const string TuerEntfernen = "Tür entfernen";
     public const string TuerEntfernenTipp = "Nimmt die Tür und ihren Fußweg wieder weg. Das Gebäude bleibt stehen.";
     public const string TuerNurGebaeude = "Eine Tür lässt sich nur an ein Gebäude ohne Innenraum setzen.";

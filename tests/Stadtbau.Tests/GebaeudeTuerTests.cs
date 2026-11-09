@@ -128,6 +128,8 @@ public class GebaeudeTuerTests
     [InlineData(3)]
     public void StrasseHinterOderNebenDemHaus_WegFuehrtUmDasHaus(int dreh)
     {
+        // Fund 262: Regel „Tuer buendig“ hier aus (Tueren an CC0-Modellen ueber Fenstern/Nischen), sie pruefen TuerBuendigTests
+        using var ohne262 = TuerBuendig.AusFuerTests();
         // Fund Teststadt Nico: die Haeuser stehen mit Rueckseite/Seite zur Strasse; der Weg geht um das Haus herum
         var p = Leer();
         var s = Haus(p, "kaufhaus", 20, 20, dreh);

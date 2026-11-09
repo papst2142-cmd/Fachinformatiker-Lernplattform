@@ -81,6 +81,18 @@ public sealed class Blueprint
     /// Blueprint aus einem Haus (Ort) oder Gebaeude ohne Ort der Stadt draussen. Der Innenraum kommt mit, wenn das Projekt
     /// einen bearbeitbaren Innenraum fuer den Ort hat (heute die Laeden und Schalter). Andere Stuecke: null.
     /// </summary>
+    /// <summary>Tuerversatz eines Orts ohne Drehung (<c>darstellung.modell_tuer</c>), sonst null.</summary>
+    internal static double? TuerVersatz(PyObjekt aussen, string ort)
+    {
+        var sd = Aussen.Stadtdaten(aussen);
+        return Lernplattform.Core.Spiel.Probe.Hausdrehung.VonOrt(sd, ort) == 0
+            && Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt && Get(mt, ort) is { } v
+            ? Py.F(v) : null;
+    }
+
+    private static List<object?> Verschoben(List<object?> p, double dx) =>
+        [Math.Round(Py.F(p[0]) + dx, 4), .. p.Skip(1)];
+
     public static Blueprint? Aus(Projekt projekt, AussenStelle s, string name)
     {
         if (!NameGueltig(name))
@@ -101,6 +113,17 @@ public sealed class Blueprint
             if (AussenBearbeitung.Zugang(a, s.Ort) is { } z)
             {
                 (tuer, weg) = (Liste(z["tuer"]), Liste(z["weg"]));
+                // Fund 262: ein Ort mit Tuerversatz (darstellung.modell_tuer) zeichnet sein Modell seitlich verschoben, damit
+                // dessen Tuer unter der Tuer des Zugangs liegt; der Blueprint setzt das Modell ohne Versatz, also rueckt die
+                // Tuer mit (nur ohne Drehung, sonst bleibt sie und die Pruefung meldet sie, wenn sie nicht passt)
+                if (TuerVersatz(a, s.Ort) is { } v && tuer is not null)
+                {
+                    tuer = Verschoben(tuer, -v);
+                    if (weg.Count > 0 && weg[0] is List<object?> w0)
+                    {
+                        weg = [Verschoben(w0, -v), .. weg.Skip(1)];
+                    }
+                }
             }
             schild = o["schild"] as List<object?>;
             if (projekt.Orte.Contains(s.Ort))

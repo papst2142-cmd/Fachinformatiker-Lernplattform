@@ -2,6 +2,8 @@ Im Spiel sind die leeren Schilder an den Häusern weg.
 
 - Acht Häuser der Stadt (unter anderem Amt, Bank, Kaufhaus, Möbelhaus und Elektromarkt) hatten auf der Vorderseite eine farbige Platte ohne Schrift. Diese Platten werden nicht mehr gezeichnet. Die Häuser selbst, ihre Türen und die Wege bleiben genau gleich.
 - Neue Städte aus dem Stadtbau-Werkzeug können Türen an einer anderen Wand haben. Die Figur geht dann durch diese Tür ins Haus. Die heutige Stadt ändert sich dadurch nicht.
+- Steht eine Tür eines Hauses aus dem Stadtbau-Werkzeug genau auf der Tür des Hausmodells, zeigt das Spiel diese Tür. Vorher stand davor eine zweite Tür, die in die Hauswand ragte und flackerte.
+- Fehler behoben: Ging beim Schlafengehen ein Speichern genau im falschen Moment schief, konnte der Tag trotzdem enden. Jetzt hört das Spiel in diesem Fall auf und nichts geht verloren.
 - Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
 
 ### Herunterladen

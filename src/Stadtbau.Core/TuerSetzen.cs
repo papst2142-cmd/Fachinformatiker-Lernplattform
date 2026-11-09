@@ -123,7 +123,10 @@ public static class TuerSetzen
         {
             var sd = Aussen.Stadtdaten(aussen);
             Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, new PyObjekt { { "tuer", Punkt(tuer) }, { "weg", weg } });
-            if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
+            // Fund 262: eingerastet auf eine Tuer des Modells (Punkt genau auf ihrer Mitte), bleibt der Versatz des Modells
+            // (darstellung.modell_tuer): sonst rueckte das Modell um ihn zur Seite und die Tuer laege neben der CC0-Tuer
+            var eingerastet = modellTueren?.Any(m => Vector2.Distance(m, tuer) <= StadtTueren.EigeneTuerFang) == true;
+            if (!eingerastet && Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
             {
                 // das Modell sitzt nicht mehr mit seiner eigenen Tuer auf dem Weg
                 mt.RemoveAll(e => e.Key == s.Ort);
@@ -190,13 +193,16 @@ public static class TuerSetzen
         }
         var ergebnis = new List<Vector2>();
         var c = new Vector2((haus.Min.X + haus.Max.X) / 2, (haus.Min.Z + haus.Max.Z) / 2);
+        // Fund 262: Gebaeude aus dem Editor haben Glastueren (Tuer-Teile), die Grafik der Szene kennt ihr Modell
+        var g = szene.Grafik ?? grafik;
+        var glas = Enumerable.Range(haus.StueckeVon, haus.StueckeBis - haus.StueckeVon).Any(i => StadtTueren.MitGlasTuer(szene.Stuecke[i].Name));
         foreach (var aussen in new Vector2[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
         {
             var tief = MathF.Abs(aussen.X) > 0.5f ? (haus.Max.X - haus.Min.X) / 2 : (haus.Max.Z - haus.Min.Z) / 2;
             var lang = MathF.Abs(aussen.X) > 0.5f ? (haus.Max.Z - haus.Min.Z) / 2 : (haus.Max.X - haus.Min.X) / 2;
             var wand = c + (aussen * tief);
             var quer = new Vector2(-aussen.Y, aussen.X);
-            foreach (var t in StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, i => grafik.Modell(szene.Stuecke[i].Name), wand, aussen, weite: lang))
+            foreach (var t in StadtTueren.ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, i => g.Modell(szene.Stuecke[i].Name), wand, aussen, weite: lang, glas: glas))
             {
                 ergebnis.Add(wand + (quer * t.Mitte));
             }

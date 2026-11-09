@@ -87,7 +87,7 @@ public sealed partial class KartenFlaeche
         var flaeche = AussenBearbeitung.HausFlaeche(stand, s);
         _ = Task.Run(() =>
         {
-            var szene = p.SzeneOhneLaternen(stand);
+            var szene = p.SzeneOhneLaternen(stand, mitGebaeuden: true);
             var tueren = szene is null ? [] : TuerSetzen.ModellTuerMitten(szene, p.Daten.Grafik, flaeche);
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
