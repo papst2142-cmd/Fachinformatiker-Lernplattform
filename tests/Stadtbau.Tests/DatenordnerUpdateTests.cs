@@ -163,7 +163,7 @@ public class DatenordnerUpdateTests
     {
         Assert.Equal("https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform", Updatequelle.RepositoryUrl);
         var quelle = Updatequelle.Quelle();
-        Assert.IsType<Lernplattform.Desktop.LinienQuelle>(quelle);
+        Assert.IsType<Updatequelle.StoerungsfesteQuelle>(quelle);
         Assert.Equal("stadtbau-win", Updatequelle.Kanal);
     }
 

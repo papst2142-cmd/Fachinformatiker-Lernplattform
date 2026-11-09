@@ -32,12 +32,14 @@ internal static class UpdateProbe
             switch (modus)
             {
                 case "feed":
-                    Zeile("FEED werkzeug " + Updatequelle.Wiederholen("Feed werkzeug", () => Neueste(Updatequelle.Quelle(), Updatequelle.Kanal), Zeile));
+                    Zeile("FEED werkzeug " + Updatequelle.Wiederholen("Feed werkzeug", () => Neueste(Updatequelle.Quelle(Zeile), Updatequelle.Kanal), Zeile));
+                    // Linie vA ueber dieselbe stoerungsfeste Abfrage (die LinienQuelle der Lernplattform laedt alle Feeds
+                    // und scheitert bei den heutigen 504 fast immer, Sammelliste 256)
                     Zeile("FEED lernplattform " + Updatequelle.Wiederholen("Feed lernplattform",
-                        () => Neueste(new LinienQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform), "win"), Zeile));
+                        () => Neueste(new Updatequelle.StoerungsfesteQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform, "win", Zeile), "win"), Zeile));
                     return 0;
                 case "update":
-                    var mgr = Updatequelle.Manager();
+                    var mgr = Updatequelle.Manager(Zeile);
                     Zeile("INSTALLIERT " + (mgr.IsInstalled ? mgr.CurrentVersion?.ToString() : "nein"));
                     if (!mgr.IsInstalled)
                     {

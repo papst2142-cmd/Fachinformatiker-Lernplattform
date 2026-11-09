@@ -67,7 +67,7 @@ internal static class Program
     internal static async Task<UpdateErgebnis> Pruefen()
     {
         var log = StadtbauApp.Ordner.Wurzel;
-        var mgr = Updatequelle.Manager();
+        var mgr = Updatequelle.Manager(t => Updateprotokoll.Schreiben(t, log));
         if (!mgr.IsInstalled)
         {
             return new UpdateErgebnis(UpdateArt.NichtInstalliert);

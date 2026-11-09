@@ -73,7 +73,7 @@ if [ -z "$SOLL_S" ] || [ -z "$SOLL_A" ]; then fehler "keine veroeffentlichte Ver
 STADTBAU_DATEN="$(cygpath -w "$ARB/daten_feed")" STADTBAU_UPDATE_PROBE=feed "$PUB/Stadtbau.exe" || fehler "Feed-Probe Rueckgabe $?"
 tr -d '\r' < "$BERICHT" | grep "^WIEDERHOLUNG" || true
 grep -qx "FEED werkzeug $SOLL_S" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Linie vS nennt nicht $SOLL_S"
-grep -qx "FEED lernplattform $SOLL_A" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Lernplattform nennt nicht $SOLL_A (Suche von vA0.52.1 aus)"
+grep -qx "FEED lernplattform 1.0.0-a.$SOLL_A" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Lernplattform nennt nicht 1.0.0-a.$SOLL_A (Paketversion von vA$SOLL_A)"
 echo "Probe 1: Feed vS $SOLL_S und vA $SOLL_A gefunden"
 
 # 2 aeltere Version 0.0.1 aus dem eben gebauten Stand
