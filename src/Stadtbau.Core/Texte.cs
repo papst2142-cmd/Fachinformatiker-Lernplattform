@@ -368,6 +368,10 @@ public static class Texte
     public static string TuerAnHaus(string name) => "Die Tür von „" + name + "“ führt direkt in ein anderes Gebäude.";
     public static string TuerImWasser(string name) => "Die Tür von „" + name + "“ führt ins Wasser.";
     public static string BahnhofNichtAmGleis(string name) => "„" + name + "“ steht nicht an einem Gleis.";
+    // Welle S 0.25.0 (Sammelliste 246, Weisung P12-104): Katalog-Stueck vor einer Tuer
+    public const string Bahnsteig = "Bahnsteig";
+    public const string TuerVerstelltTipp = "Das Stück zur Seite schieben, damit Tür und Weg davor frei sind.";
+    public static string TuerVerstellt(string stueck, string haus) => "„" + stueck + "“ steht vor der Tür von „" + haus + "“: die Figur kommt nicht hinein.";
     public static string ModellTipp(string kennung) => "Kennung: " + kennung;
     public static string TuerDazuGemacht(string name) => "Tür an „" + name + "“ gesetzt";
 

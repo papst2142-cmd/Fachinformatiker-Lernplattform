@@ -1,4 +1,7 @@
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Stadtbau;
+using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
 
@@ -40,5 +43,26 @@ public static class ModellNamen
         var (grund, nummer) = GebaeudeTuer.Teile(aussen, modell);
         var name = Namen.TryGetValue(grund, out var n) ? n : grund;
         return nummer is { } k ? name + " " + k.ToString(System.Globalization.CultureInfo.InvariantCulture) : name;
+    }
+
+    /// <summary>Gegenprobe: Beschriftung bis S 0.24.0 (Kennung des Modells), nur in Tests, je Ablauf.</summary>
+    internal static readonly AsyncLocal<bool> BeschriftungAltFuerTests = new();
+
+    /// <summary>
+    /// Welle S 0.25.0 (Sammelliste 247, Weisung P12-104): Beschriftung eines Gebaeudes ohne Ort in der Draufsicht wie in der
+    /// Liste „Modell“: eigenes Gebaeude mit seinem Namen, Bahnsteig als „Bahnsteig“, sonst <see cref="Anzeige"/>.
+    /// </summary>
+    public static string Beschriftung(PyObjekt aussen, AussenStelle s)
+    {
+        if (AussenBearbeitung.BauName(aussen, s) is { } bau)
+        {
+            return bau;
+        }
+        var modell = Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
+        if (BeschriftungAltFuerTests.Value)
+        {
+            return modell;
+        }
+        return modell.StartsWith(Bahnsteig.ModellPraefix, StringComparison.Ordinal) ? Texte.Bahnsteig : Anzeige(aussen, modell);
     }
 }

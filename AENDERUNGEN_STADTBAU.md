@@ -3,6 +3,13 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.25.0
+
+Die Prüfung erkennt jetzt, wenn ein Stück den Eingang eines Hauses versperrt, und die Karte von oben zeigt deutsche Namen.
+
+- Steht ein Stück aus dem Katalog direkt vor einer Tür (auf der Tür oder auf dem ersten Stück des Fußwegs), meldet die Prüfung das rot: im Spiel käme die Figur nicht ins Haus. Das gilt für die Türen aller Orte und Gebäude. Effekte wie der Stern versperren nichts und bleiben erlaubt.
+- Gebäude ohne Ort tragen in der Karte von oben ihren deutschen Namen wie in der Liste „Modell“ (zum Beispiel „Stellwerk“ statt „stellwerk“), ein Bahnsteig heißt „Bahnsteig“.
+
 ## S 0.24.0
 
 Vorgegebene Gebäude bekommen auf Wunsch eine Tür, und die Bahnhöfe stehen wieder in der Liste.

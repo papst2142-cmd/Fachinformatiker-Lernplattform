@@ -437,7 +437,7 @@ public sealed class KartenFlaeche : Control
                 }
             }
             ctx.DrawRectangle(Pinsel(s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C"), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
-            var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : AussenBearbeitung.BauName(a, s) ?? Py.Str(Objekt(land[s.Nummer])["modell"]);
+            var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Beschriftung(a, s);
             if (r.Width > 30)
             {
                 Text(ctx, schrift, name, r.TopLeft + new Point(3, 2), 11, Brushes.Black, r.Width - 6);
