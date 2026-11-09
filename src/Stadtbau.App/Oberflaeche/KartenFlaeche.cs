@@ -21,7 +21,7 @@ namespace Stadtbau.Oberflaeche;
 /// Esc hebt die Auswahl auf. Ein Doppeltipp auf ein Haus mit Innenraum oeffnet den Innenraum. Rote und gelbe Ringe
 /// zeigen die Funde der Pruefung. Jede Aenderung laeuft ueber <see cref="Projekt.AussenAendern{T}"/> (Verlauf).
 /// </summary>
-public sealed class KartenFlaeche : Control
+public sealed partial class KartenFlaeche : Control
 {
     private Projekt? _projekt;
     private double _zoom = 20;
@@ -42,7 +42,7 @@ public sealed class KartenFlaeche : Control
 
     /// <summary>Liegt an dieser Stelle des Bilds ein Stueck, das ein Finger ziehen wuerde? (Start-Test)</summary>
     public bool StueckAnFuerTests(Point bild) =>
-        Stand is { } a && AussenBearbeitung.StueckBei(a, WeltPunkt(bild).X, WeltPunkt(bild).Y, Math.Max(0.3, 10 / _zoom)) is not null;
+        Stand is { } a && StueckAn(a, bild, Math.Max(0.3, 10 / _zoom)) is not null;
 
     public KartenFlaeche()
     {
@@ -70,6 +70,11 @@ public sealed class KartenFlaeche : Control
                 return;
             }
             _setzenArt = value;
+            if (value is not null)
+            {
+                // S 0.27.0: Setzen beendet das Massband
+                MassbandAn = false;
+            }
             ZiehZuruecksetzen();
             SetzenGeaendert?.Invoke();
         }
@@ -202,12 +207,34 @@ public sealed class KartenFlaeche : Control
                 return;
             }
             _untenFrei = value;
-            // nur neu einpassen, solange die Ansicht noch genau so steht wie nach dem letzten Einpassen (sonst bliebe ein
-            // eigener Zoom beim Wechsel zwischen Draufsicht und 3D nicht stehen)
-            if (_eingepasst && _zoom == _einpassZoom && _versatz == _einpassVersatz)
+            NeuEinpassenWennEingepasst();
+        }
+    }
+
+    /// <summary>S 0.27.0: Platz oben fuer die Werkzeugleiste (Waehlen, Massband, Ebenen, Notiz), wie <see cref="UntenFrei"/>.</summary>
+    public double ObenFrei
+    {
+        get => _obenFrei;
+        set
+        {
+            if (Math.Abs(_obenFrei - value) < 0.5)
             {
-                Einpassen();
+                return;
             }
+            _obenFrei = value;
+            NeuEinpassenWennEingepasst();
+        }
+    }
+
+    private double _obenFrei;
+
+    private void NeuEinpassenWennEingepasst()
+    {
+        // nur neu einpassen, solange die Ansicht noch genau so steht wie nach dem letzten Einpassen (sonst bliebe ein
+        // eigener Zoom beim Wechsel zwischen Draufsicht und 3D nicht stehen)
+        if (_eingepasst && _zoom == _einpassZoom && _versatz == _einpassVersatz)
+        {
+            Einpassen();
         }
     }
 
@@ -236,9 +263,11 @@ public sealed class KartenFlaeche : Control
         }
         var (b, h) = Welt();
         // Welle Q (Weisung P12-76 Punkt 8): unten bleibt der Platz der Kamera-Karte frei, sie verdeckt nie einen Hausnamen
-        var hoehe = Math.Max(48, Bounds.Height - (UntenFreiAltFuerTests ? 0 : UntenFrei));
+        // S 0.27.0: oben bleibt der Platz der Werkzeugleiste frei
+        var oben = UntenFreiAltFuerTests ? 0 : ObenFrei;
+        var hoehe = Math.Max(48, Bounds.Height - (UntenFreiAltFuerTests ? 0 : UntenFrei) - oben);
         _zoom = Math.Max(4, Math.Min((Bounds.Width - 24) / b, (hoehe - 24) / h));
-        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, (hoehe - (h * _zoom)) / 2);
+        _versatz = new Point((Bounds.Width - (b * _zoom)) / 2, oben + ((hoehe - (h * _zoom)) / 2));
         _eingepasst = true;
         _einpassZoom = _zoom;
         _einpassVersatz = _versatz;
@@ -336,13 +365,13 @@ public sealed class KartenFlaeche : Control
             }
             switch (l["typ"] as string)
             {
-                case "park":
+                case "park" when Zeigt(Ebene.Gruen):
                 {
                     var s = new AussenStelle(AussenArt.Park, i);
                     ctx.FillRectangle(Pinsel("#8DBA6A"), new Rect(P(Py.F(l["x"]) + Dx(s), Py.F(l["y"]) + Dy(s)), P(Py.F(l["x"]) + Py.F(l["w"]) + Dx(s), Py.F(l["y"]) + Py.F(l["h"]) + Dy(s))));
                     break;
                 }
-                case "fluss":
+                case "fluss" when Zeigt(Ebene.Wasser):
                 {
                     // S 0.8.0: glatter Bogen mit Ufer wie im Spiel (vorher eine Linie durch die Punkte)
                     var glatt = Kurve.Glatt(WasserPunkte(a, new AussenStelle(AussenArt.Fluss, i, -1)), StadtSzene.Radien(l));
@@ -353,7 +382,7 @@ public sealed class KartenFlaeche : Control
             }
         }
         // S 0.8.0: Teiche (Ufer, Wasser mit gerundeten Ecken) und Stege
-        var teiche = Aussen.Teiche(a);
+        var teiche = Zeigt(Ebene.Wasser) ? Aussen.Teiche(a) : [];
         for (var i = 0; i < teiche.Count; i++)
         {
             var punkte = WasserPunkte(a, new AussenStelle(AussenArt.Teich, i, -1));
@@ -364,7 +393,7 @@ public sealed class KartenFlaeche : Control
                 Flaeche(ctx, t.Rund, Pinsel(WasserFarbe));
             }
         }
-        var stege = Aussen.Stege(a);
+        var stege = Zeigt(Ebene.Wasser) ? Aussen.Stege(a) : [];
         for (var i = 0; i < stege.Count; i++)
         {
             if (Wasser.Steg(stege[i]) is { } steg)
@@ -388,7 +417,7 @@ public sealed class KartenFlaeche : Control
             }
         }
         // Welle Z: Fusswege (hell wie die Wege zu den Tueren, runde Ecken wie im Spiel)
-        for (var i = 0; i < Aussen.Fusswege(a).Count; i++)
+        for (var i = 0; Zeigt(Ebene.Wege) && i < Aussen.Fusswege(a).Count; i++)
         {
             var fs = new AussenStelle(AussenArt.Fussweg, i);
             var glatt = AussenBearbeitung.FusswegGlatt(a, fs).Select(q => q + new System.Numerics.Vector2((float)Dx(fs), (float)Dy(fs))).ToList();
@@ -439,7 +468,10 @@ public sealed class KartenFlaeche : Control
             // Spiel zum ersten Gebaeude dieses Modells; Sammelliste 225, Weisung P12-33)
             if ((s.Art == AussenArt.Haus ? AussenBearbeitung.Zugang(a, s.Ort) : Blueprint.ZierwegVon(a, s)) is { } z)
             {
-                Linie(ctx, z["weg"], new Pen(Pinsel("#EFEBE2"), StadtSzene.WegBreite * _zoom, lineCap: PenLineCap.Flat), Dx(s), Dy(s));
+                if (Zeigt(Ebene.Wege))
+                {
+                    Linie(ctx, z["weg"], new Pen(Pinsel("#EFEBE2"), StadtSzene.WegBreite * _zoom, lineCap: PenLineCap.Flat), Dx(s), Dy(s));
+                }
                 if (z["tuer"] is List<object?> t && t.Count >= 2)
                 {
                     ctx.DrawEllipse(Pinsel("#7B4B24"), null, P(Py.F(t[0]) + Dx(s), Py.F(t[1]) + Dy(s)), 0.14 * _zoom, 0.14 * _zoom);
@@ -447,18 +479,19 @@ public sealed class KartenFlaeche : Control
             }
             ctx.DrawRectangle(Pinsel(s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C"), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
             var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Beschriftung(a, s);
-            if (r.Width > 30)
+            if (r.Width > 30 && Zeigt(Ebene.Beschriftungen))
             {
                 Text(ctx, schrift, name, r.TopLeft + new Point(3, 2), 11, Brushes.Black, r.Width - 6);
             }
-            if (s.Art == AussenArt.Haus && _geschichteZahlen is { } gz && gz.TryGetValue(s.Ort, out var zahl) && zahl > 0)
+            if (s.Art == AussenArt.Haus && Zeigt(Ebene.Aufgaben) && _geschichteZahlen is { } gz && gz.TryGetValue(s.Ort, out var zahl) && zahl > 0)
             {
                 zahlen.Add((s.Ort, zahl, default, r));
             }
         }
 
         // Gruen, Laternen, Paketplatz
-        foreach (var (s, x, y) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art is AussenArt.Baum or AussenArt.Beet or AussenArt.Laterne or AussenArt.Paketplatz).ToList())
+        var aus = AusArten;
+        foreach (var (s, x, y) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art is AussenArt.Baum or AussenArt.Beet or AussenArt.Laterne or AussenArt.Paketplatz && !aus.Contains(x.Stelle.Art)).ToList())
         {
             var m = P(x + Dx(s), y + Dy(s));
             switch (s.Art)
@@ -485,11 +518,11 @@ public sealed class KartenFlaeche : Control
         }
         // Katalog-Stuecke (Phase 13 Welle 3b): Rechteck mit Vorschaubild, Effekt als leuchtendes Zeichen
         var formen = new List<(string Form, bool Effekt)>();
-        if (AussenBearbeitung.Alle(a).Any(x => x.Stelle.Art == AussenArt.Laterne))
+        if (Zeigt(Ebene.Laternen) && AussenBearbeitung.Alle(a).Any(x => x.Stelle.Art == AussenArt.Laterne))
         {
             formen.Add((EffektZeichen.Punkt, false));
         }
-        foreach (var (s, _, _) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art == AussenArt.Katalog).ToList())
+        foreach (var (s, _, _) in AussenBearbeitung.Alle(a).Where(x => x.Stelle.Art == AussenArt.Katalog && Zeigt(Ebene.Katalog)).ToList())
         {
             var (kx, ky, kw, kh) = AussenBearbeitung.KatalogFlaeche(a, s);
             var r = new Rect(P(kx + Dx(s), ky + Dy(s)), P(kx + kw + Dx(s), ky + kh + Dy(s)));
@@ -514,7 +547,7 @@ public sealed class KartenFlaeche : Control
         var rand = new Rect(P(0, 0), P(b, h));
         KartenRand = rand;
         var beschriftungen = new List<(string, Rect)>();
-        foreach (var l in land.OfType<PyObjekt>().Where(l => l["typ"] as string is "ortsname" or "beschriftung"))
+        foreach (var l in land.OfType<PyObjekt>().Where(l => l["typ"] as string is "ortsname" or "beschriftung" && Zeigt(Ebene.Beschriftungen)))
         {
             var text = l["text"] as string ?? "";
             var ft = new FormattedText(text, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, schrift, 12, Brushes.Black);
@@ -543,6 +576,12 @@ public sealed class KartenFlaeche : Control
         }
         ZahlenAmHaus = gezeichnet;
 
+        // S 0.27.0: Notizen oben auf allem
+        if (Zeigt(Ebene.Notizen))
+        {
+            NotizenZeichnen(ctx, a, schrift, dx, dy);
+        }
+
         // Auswahl
         if (Auswahl is { } aw && AussenBearbeitung.Gueltig(a, aw))
         {
@@ -569,6 +608,9 @@ public sealed class KartenFlaeche : Control
                 case AussenArt.Park:
                     var l = Objekt(land[aw.Nummer]);
                     ctx.DrawRectangle(null, stift, new Rect(P(Py.F(l["x"]) + dx, Py.F(l["y"]) + dy), P(Py.F(l["x"]) + Py.F(l["w"]) + dx, Py.F(l["y"]) + Py.F(l["h"]) + dy)).Inflate(3));
+                    break;
+                case AussenArt.Notiz:
+                    ctx.DrawRectangle(null, stift, NotizRechteck(a, aw, dx, dy).Inflate(3));
                     break;
                 case AussenArt.Steg:
                     if (Wasser.Steg(Aussen.Stege(a)[aw.Nummer]) is { } sg)
@@ -605,7 +647,7 @@ public sealed class KartenFlaeche : Control
         }
 
         // Funde mit Stelle
-        foreach (var f in Funde)
+        foreach (var f in Zeigt(Ebene.Funde) ? Funde : [])
         {
             if (f.X is { } fx && f.Y is { } fy)
             {
@@ -615,6 +657,7 @@ public sealed class KartenFlaeche : Control
         }
         ZiehVorschauZeichnen(ctx);
         AussehenVorschauZeichnen(ctx);
+        MassbandZeichnen(ctx);
         GriffZeichnen(ctx);
     }
 
@@ -1043,6 +1086,7 @@ public sealed class KartenFlaeche : Control
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
         AussenArt.Zebrastreifen => Texte.Zebrastreifen,
+        AussenArt.Notiz => Texte.Notiz,
         _ => Texte.Paketplatz,
     };
 
@@ -1223,6 +1267,19 @@ public sealed class KartenFlaeche : Control
         {
             case Key.Escape when ZiehAbbrechen():
                 return true;
+            case Key.Escape when MassbandAn:
+                // S 0.27.0: erst die Messung leeren, dann das Massband beenden
+                if (Massband.Anfang is not null)
+                {
+                    Massband.Leeren();
+                    MassbandMelden();
+                    InvalidateVisual();
+                }
+                else
+                {
+                    MassbandAn = false;
+                }
+                return true;
             case Key.Escape:
                 SetzenBeenden();
                 Waehlen(null);
@@ -1301,12 +1358,12 @@ public sealed class KartenFlaeche : Control
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
             return;
         }
-        var s = SetzenArt is null ? AussenBearbeitung.StueckBei(a, w.X, w.Y, Math.Max(0.3, 10 / _zoom)) : null;
+        var s = SetzenArt is null && !MassbandAn ? StueckAn(a, p, Math.Max(0.3, 10 / _zoom)) : null;
         // Welle Z: beim Ziehen zieht ein Finger vom Anfang zum Ende (wie ein Stueck), zwei Finger bleiben bei der Ansicht
         var zieht = ZiehArtAktiv is not null && _projekt?.NurLesen == false;
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, zieht || (s is not null && _projekt?.NurLesen == false)));
-        // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie)
-        if (!erster || SetzenArt is not null)
+        // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie); das Massband waehlt nie
+        if (!erster || SetzenArt is not null || MassbandAn)
         {
             return;
         }
@@ -1336,6 +1393,13 @@ public sealed class KartenFlaeche : Control
             return;
         }
         TippZeigen(p);
+        if (!_geste.Aktiv && MassbandAn && e.Pointer.Type == PointerType.Mouse && Stand is { } ma)
+        {
+            // S 0.27.0: Maus schwebt, das Ende des Massbands folgt
+            var mw = WeltPunkt(p);
+            Massband.Schweben(ma, mw.X, mw.Y, Massband.FangBildpunkte / _zoom, Raster, AusArten);
+            InvalidateVisual();
+        }
         if (!_geste.Aktiv && ZiehArtAktiv is not null && e.Pointer.Type == PointerType.Mouse)
         {
             // Maus schwebt: die Vorschau folgt
@@ -1413,6 +1477,16 @@ public sealed class KartenFlaeche : Control
         }
         switch (s.Art)
         {
+            case Fingergeste.Art.Tippen when MassbandAn && !_nurSchieben:
+            {
+                var mw = WeltPunkt(new Point(s.X, s.Y));
+                MassbandTippen(mw.X, mw.Y);
+                break;
+            }
+            case Fingergeste.Art.Tippen when MassbandAn && _rechtsDruck:
+                // Rechtsklick ohne Bewegung beendet die Messung wie Escape
+                Taste(Key.Escape, KeyModifiers.None);
+                break;
             case Fingergeste.Art.Tippen when SetzenArt is not null && !_nurSchieben:
                 var w = WeltPunkt(new Point(s.X, s.Y));
                 SetzenAn(w.X, w.Y);
@@ -1506,7 +1580,7 @@ public sealed class KartenFlaeche : Control
         if (Stand is { } a && _projekt is not null)
         {
             var w = WeltPunkt(bild);
-            if (AussenBearbeitung.StueckBei(a, w.X, w.Y, 6 / _zoom) is { } s && s.Art is AussenArt.Haus or AussenArt.Gebaeude or AussenArt.Katalog)
+            if (StueckAn(a, bild, 6 / _zoom) is { } s && s.Art is AussenArt.Haus or AussenArt.Gebaeude or AussenArt.Katalog or AussenArt.Notiz)
             {
                 text = AussenBearbeitung.Beschreibung(a, s, OrtName);
             }

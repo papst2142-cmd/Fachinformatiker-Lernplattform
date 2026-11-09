@@ -904,6 +904,8 @@ public sealed partial class Hauptansicht : UserControl
         _aussenMitte.Content = _karteMitte;
         var mitte = Kamerakarte.Ueber(_aussenMitte, _kameraAussen, h => Karte.UntenFrei = h);
         mitte.Margin = new Thickness(12);
+        // S 0.27.0 (Weisung P12-118): Werkzeugleiste oben links (Waehlen, Massband, Ebenen, Notiz)
+        WerkzeugLeisteBauen(mitte);
 
         // Welle Q (Punkt 7): rechts „Ausgewähltes Stück“ immer oben, „Prüfen – n rot“ mit der Zahl, „Innenräume öffnen“ zu
         var rechts = _aussenRechts;
@@ -1059,6 +1061,8 @@ public sealed partial class Hauptansicht : UserControl
         // ein anderes Stueck (auch aus dem vollen Katalog): die alte Markierung links geht weg
         KnopfMarkieren(false);
         _setzenKnopf = null;
+        // S 0.27.0: wer ein Stueck einer ausgeblendeten Ebene setzt, sieht sie wieder
+        EbeneFuerSetzenAn(art);
         Karte.SetzenArt = art;
         Karte.SetzenModell = modell;
         _setzenName = art switch
@@ -1216,6 +1220,12 @@ public sealed partial class Hauptansicht : UserControl
         {
             _setzenName = null;
         }
+        NotizFeld = null;
+        // S 0.27.0: beim Massband rechts die Erklaerung und die gemessene Laenge
+        if (MassbandTeil())
+        {
+            return;
+        }
         if (Karte.SetzenArt is not null && _projekt is not null && !_projekt.NurLesen)
         {
             // S 0.9.1 (Weisung P12-53 Teil A): auch rechts bei der Auswahl, gut erreichbar am Tablet
@@ -1259,6 +1269,8 @@ public sealed partial class Hauptansicht : UserControl
         _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _projekt.OrtName), "Klein"));
         // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
         OrtNameTeil(s);
+        // S 0.27.0: Text der Notiz
+        NotizTeil(s);
         // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)
         GeschichteTeil(s);
         var (lx, ly) = AussenBearbeitung.Lage(a, s);
@@ -1924,6 +1936,16 @@ public sealed partial class Hauptansicht : UserControl
         {
             _bedienung3D?.SchattenWeg();
         }
+        // S 0.27.0: Notizen gibt es nur in der Draufsicht
+        if (drei && Karte.SetzenArt == AussenArt.Notiz)
+        {
+            Karte.SetzenBeenden();
+        }
+        if (drei && Karte.Auswahl is { Art: AussenArt.Notiz })
+        {
+            Karte.Waehlen(null);
+        }
+        ChipsZeigen();
     }
 
     public void DreiZeigen()
@@ -3050,6 +3072,27 @@ public sealed partial class Hauptansicht : UserControl
             {
                 // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 2): Leertaste halten und mit der Maus ziehen schiebt die Ansicht
                 KartenFlaeche.LeertasteGehalten = true;
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && e.Key == Key.L && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.27.0: Massband an/aus
+                MassbandUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && e.Key == Key.N && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.27.0: Notiz setzen
+                NotizSetzenWaehlen();
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.Escape && _ebenenKarte.IsVisible)
+            {
+                _ebenenKarte.IsVisible = false;
+                ChipsZeigen();
                 e.Handled = true;
                 return;
             }

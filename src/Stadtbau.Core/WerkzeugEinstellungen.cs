@@ -5,7 +5,7 @@ namespace Stadtbau.Core;
 
 /// <summary>
 /// Patch S 0.5.1 (Weisung P12-37 Punkt 2): Einstellungen des Werkzeugs in <c>einstellungen.json</c> im Werkzeugordner
-/// ("vollbild", seit S 0.9.1 "raster_zeigen" im Gebaeude-Editor, Weisung P12-52, seit S 0.17.0 "gruppe_links", seit S 0.25.1 "vollbild_bildschirm"). Unbekannte Schluessel bleiben beim Schreiben erhalten. Fehlt die Datei oder ist sie kaputt,
+/// ("vollbild", seit S 0.9.1 "raster_zeigen" im Gebaeude-Editor, Weisung P12-52, seit S 0.17.0 "gruppe_links", seit S 0.25.1 "vollbild_bildschirm", seit S 0.27.0 "ebenen_aus"). Unbekannte Schluessel bleiben beim Schreiben erhalten. Fehlt die Datei oder ist sie kaputt,
 /// gilt die Vorgabe (kein Vollbild); eine kaputte Datei wird nie still ueberschrieben.
 /// </summary>
 public static class WerkzeugEinstellungen
@@ -67,6 +67,33 @@ public static class WerkzeugEinstellungen
     /// <summary>Bildschirm fuer das Vollbild merken (null = Schluessel weg; Fehler wie <see cref="VollbildSetzen"/>).</summary>
     public static void VollbildBildschirmSetzen(Werkzeugordner o, Lernplattform.Core.Spiel.Ton.Bildschirm? b) =>
         Aendern(o, obj => Lernplattform.Core.Spiel.Ton.VollbildBildschirm.Wert(obj, b));
+
+    /// <summary>
+    /// S 0.27.0 (Weisung P12-118): ausgeblendete Ebenen der Draufsicht (Schluessel <see cref="Ebenen.Schluessel"/>, Liste der
+    /// Kennungen). Fehlt der Wert oder ist er keine Liste: keine (alles zu sehen); unbekannte Kennungen zaehlen nicht.
+    /// </summary>
+    public static IReadOnlySet<Ebene> EbenenAus(Werkzeugordner o)
+    {
+        var aus = new HashSet<Ebene>();
+        if (Lesen(o, out _) is { } obj && obj[Ebenen.Schluessel] is JsonArray liste)
+        {
+            foreach (var w in liste)
+            {
+                if (w is JsonValue v && v.TryGetValue<string>(out var k) && Ebenen.Aus(k) is { } e)
+                {
+                    aus.Add(e);
+                }
+            }
+        }
+        return aus;
+    }
+
+    /// <summary>Ausgeblendete Ebenen merken (Reihenfolge der Liste; Fehler wie <see cref="VollbildSetzen"/>).</summary>
+    public static void EbenenAusSetzen(Werkzeugordner o, IEnumerable<Ebene> aus)
+    {
+        var menge = aus.ToHashSet();
+        Aendern(o, obj => obj[Ebenen.Schluessel] = new JsonArray([.. Ebenen.Alle.Where(menge.Contains).Select(e => (JsonNode?)JsonValue.Create(Ebenen.Kennung(e)))]));
+    }
 
     private static void Setzen(Werkzeugordner o, string schluessel, bool an) => Setzen(o, schluessel, JsonValue.Create(an));
 

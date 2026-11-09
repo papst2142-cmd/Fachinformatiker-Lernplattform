@@ -90,6 +90,8 @@ public sealed class DreiBedienung : Control
             }
             InvalidateVisual();
         };
+        // S 0.27.0: Massband (gleiche Messung wie in der Draufsicht)
+        _karte.MassbandGeaendert += InvalidateVisual;
         // S 0.9.1 (Weisung P12-53 Teil A): Setzen abgewaehlt, dann verschwindet der Schatten sofort
         _karte.SetzenGeaendert += () =>
         {
@@ -247,7 +249,7 @@ public sealed class DreiBedienung : Control
         }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
         AussenStelle? s = null;
-        if (!FigurLaufen && _karte.SetzenArt is null && erster)
+        if (!FigurLaufen && _karte.SetzenArt is null && !_karte.MassbandAn && erster)
         {
             s = TrefferAn(p);
         }
@@ -269,7 +271,7 @@ public sealed class DreiBedienung : Control
         {
             return;
         }
-        if (Projekt is not null)
+        if (Projekt is not null && !_karte.MassbandAn)
         {
             _karte.WaehlenMitMeldung(s);
         }
@@ -311,6 +313,12 @@ public sealed class DreiBedienung : Control
                 if (e.Pointer.Type == PointerType.Mouse && _karte.SetzenArt is not null && !FigurLaufen && Projekt is { NurLesen: false })
                 {
                     SchattenAn(p);
+                }
+                // S 0.27.0: Massband, das Ende folgt der Maus
+                if (e.Pointer.Type == PointerType.Mouse && _karte.MassbandAn && !FigurLaufen && Kamera is { } mk && BodenAn(p) is { } mb)
+                {
+                    _karte.MassbandSchweben3D(mb.X, mb.Y, Bauen3D.Greifen(mk.Abstand));
+                    InvalidateVisual();
                 }
                 return;
         }
@@ -393,6 +401,9 @@ public sealed class DreiBedienung : Control
             case Fingergeste.Art.Tippen when FigurLaufen:
                 _drei.Tippen(new Point(s.X, s.Y));
                 break;
+            case Fingergeste.Art.Tippen when _karte.MassbandAn && !FigurLaufen:
+                MassbandTippen(new Point(s.X, s.Y));
+                break;
             case Fingergeste.Art.Tippen when Zieht && BodenAn(new Point(s.X, s.Y)) is { } b:
                 ZiehenTippen(b);
                 break;
@@ -462,6 +473,32 @@ public sealed class DreiBedienung : Control
                 break;
             }
         }
+    }
+
+    /// <summary>S 0.27.0: ein Tipp mit dem Massband am Boden (auch fuer den Start-Test).</summary>
+    public void MassbandTippen(Point p)
+    {
+        if (Kamera is { } k && BodenAn(p) is { } b)
+        {
+            _karte.MassbandTippen(b.X, b.Y, Bauen3D.Greifen(k.Abstand), dreiD: true);
+        }
+    }
+
+    /// <summary>Bildlage der Laengen-Beschriftung in 3D beim letzten Zeichnen (Start-Test).</summary>
+    public Rect MassbandSchild { get; private set; }
+
+    private void MassbandZeichnen(DrawingContext ctx, Kamera k)
+    {
+        MassbandSchild = default;
+        var m = _karte.Massband;
+        if (!_karte.MassbandAn || m.Anfang is not { } a
+            || k.Bildpunkt(new Vector3(a.X, Bauen3D.SchattenHoehe, a.Y), (float)Bounds.Width, (float)Bounds.Height) is not { } pa)
+        {
+            return;
+        }
+        Point? ende = (m.Ende ?? m.Schwebe) is { } e && k.Bildpunkt(new Vector3(e.X, Bauen3D.SchattenHoehe, e.Y), (float)Bounds.Width, (float)Bounds.Height) is { } pe
+            ? new Point(pe.X, pe.Y) : null;
+        MassbandSchild = KartenFlaeche.MassbandLinie(ctx, new Point(pa.X, pa.Y), ende, m.Laenge, Bounds);
     }
 
     private bool Zieht => _karte.ZiehArtAktiv is not null && !FigurLaufen && Projekt is { NurLesen: false };
@@ -782,6 +819,7 @@ public sealed class DreiBedienung : Control
             // Welle Z: der Anfang als Punkt am Boden
             ctx.DrawEllipse(Brushes.White, RandDunkel, new Point(zb.X, zb.Y), 7, 7);
         }
+        MassbandZeichnen(ctx, k);
         GriffZeichnen(ctx);
     }
 

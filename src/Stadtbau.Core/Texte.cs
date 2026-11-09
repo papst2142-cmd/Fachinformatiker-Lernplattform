@@ -655,6 +655,53 @@ public static class Texte
     public const string LaternenVerteilen = "Laternen neu verteilen";
     public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen im Abstand 3,5 auf, abwechselnd links und rechts. Selbst gesetzte Laternen bleiben, gelöschte automatische kommen nicht wieder.";
     public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} automatische entfernt.";
+
+    // Welle S 0.27.0 (Weisung P12-118): Massband, Ebenen ein/aus, Notizen (nur Werkzeug)
+    public const string Massband = "Maßband";
+    public const string MassbandTipp = "Länge messen: auf den Anfang tippen, dann auf das Ende. Rastet an Ecken und Mitten der Stücke ein (sonst am Raster). Nur zum Ansehen, ändert nichts. Taste L.";
+    public const string MassbandAnfang = "Maßband: auf den Anfang tippen.";
+    public const string MassbandEnde = "Maßband: auf das Ende tippen.";
+    public const string MassbandAus = "Maßband aus.";
+    public static string MassbandLaenge(string zahl) => zahl + " Felder";
+    public static string MassbandErgebnis(string laenge) => "Gemessen: " + laenge + ". Nächster Tipp misst neu.";
+    public const string MassbandName = "Maßband, gemessene Länge";
+    public const string MassbandErklaerung = "Tipp Anfang, Tipp Ende. Rastet an Ecken und Mitten ein. Bleibt stehen bis Esc oder „Maßband wegnehmen“. Gleich in der 3D-Ansicht. Nur Anzeige, kein Schritt.";
+    public const string MassbandWeg = "Maßband wegnehmen";
+    public const string MassbandWegTipp = "Beendet das Messen; Tippen wählt wieder Stücke.";
+    public const string Waehlen = "Wählen";
+    public const string WaehlenTipp = "Stücke antippen und bearbeiten (beendet Maßband und Setzen).";
+
+    public const string EbenenKnopf = "Ebenen ▾";
+    public const string EbenenTipp = "Teile der Draufsicht aus- und einblenden (nur hier, die 3D-Ansicht und das Spiel bleiben gleich). Ausgeblendetes lässt sich nicht anwählen.";
+    public const string EbenenTitel = "Ebenen der Draufsicht";
+    public static string EbenenAusHinweis(int n) => n == 1 ? "1 Ebene aus" : n + " Ebenen aus";
+    public const string EbenenAlleAn = "Alle einblenden";
+    public const string EbenenAlleAnTipp = "Blendet alle Ebenen wieder ein.";
+    public const string EbeneGruen = "Bäume und Grün";
+    public const string EbeneLaternen = "Laternen";
+    public const string EbeneKatalog = "Katalog-Stücke";
+    public const string EbeneBeschriftungen = "Beschriftungen";
+    public const string EbeneWasser = "Wasser";
+    public const string EbeneWege = "Wege";
+    public const string EbeneNotizen = "Notizen";
+    public const string EbeneFunde = "Funde";
+    public const string EbeneAufgaben = "Zahl der Aufgaben";
+    public static string EbeneTipp(string name) => "„" + name + "“ in der Draufsicht zeigen oder ausblenden.";
+    public static string EbeneWiederAn(string name) => "Ebene „" + name + "“ wieder eingeblendet.";
+    public const string EbenenSpeichernFehler = "Die Ebenen konnten nicht gemerkt werden (einstellungen.json ist nicht lesbar). Sie gelten bis zum Beenden.";
+
+    public const string Notiz = "Notiz";
+    public const string NotizSetzen = "Notiz setzen";
+    public const string NotizTipp = "Eine Notiz auf die Karte kleben, nur zum Planen. Sie steht nur im Projekt, nie in der Stadt-Datei und nie im Spiel. Taste N.";
+    public const string NotizNeu = "Neue Notiz";
+    public const string NotizFeld = "Text der Notiz";
+    public const string NotizUebernehmen = "Text übernehmen";
+    public const string NotizUebernehmenTipp = "Übernimmt den Text der Notiz (ein Schritt, Rückgängig geht).";
+    public const string NotizGeaendert = "Notiz geändert";
+    public const string NotizLeer = "Die Notiz braucht einen Text.";
+    public static readonly string NotizZuLang = "Die Notiz ist zu lang (höchstens " + AussenBearbeitung.NotizHoechstens + " Zeichen).";
+    public const string NotizNurDraufsicht = "Notizen gibt es nur in „Stadt von oben“.";
+    public const string NotizNurImProjekt = "Nur im Projekt: nie in der Stadt-Datei, nie im Spiel.";
     public const string LaterneAutomatischZusatz = "(automatisch)";
 
     public static string ZiehenRichtung(double grad) => string.Create(CultureInfo.GetCultureInfo("de-DE"),
@@ -805,8 +852,10 @@ public static class Texte
         ("Entf / Rücktaste", "Ausgewähltes Stück löschen (im Fenster „Projekt öffnen“ mit Entf: das Projekt mit dem Fokus)", ["Delete", "Back"]),
         ("R / Umschalt+R", "Drehen (auch beim Setzen), Umschalt dreht andersherum", ["R"]),
         ("M", "Kurve spiegeln", ["M"]),
+        ("L", "Maßband an oder aus (Länge messen)", ["L"]),
+        ("N", "Notiz setzen (Stadt von oben)", ["N"]),
         ("E", "Einrasten an oder aus", ["E"]),
-        ("Esc", "Setzen beenden, Auswahl aufheben", ["Escape"]),
+        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen", ["Escape"]),
         ("Pfeiltasten", "Ausgewähltes Stück verschieben (3D ohne Auswahl: Ansicht schieben)", ["Left", "Right", "Up", "Down"]),
         ("Leertaste + ziehen", "Ansicht schieben", ["Space"]),
         ("Bild hoch / runter", "3D-Ansicht steiler / flacher", ["PageUp", "PageDown"]),

@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.27.0
+
+Drei kleine Werkzeuge für die Karte von oben: ein Maßband, Ebenen zum Ein- und Ausblenden und Notizen.
+
+- Oben links über der Karte stehen jetzt die Knöpfe „Wählen“, „Maßband“, „Ebenen ▾“ und „Notiz“.
+- Maßband (Taste L): erstes Antippen setzt den Anfang, zweites das Ende, ein drittes beginnt eine neue Messung. Die Länge steht in Feldern mit einer Nachkommastelle (z. B. „3,5 Felder“) über der Linie und rechts in der Spalte. Die Punkte rasten an Ecken und Mitten von Häusern, Straßen und anderen Stücken ein. Das Maßband geht auch in der 3D-Ansicht am Boden. Es ist nur zum Ansehen: Es ändert nichts an der Stadt und ist kein Schritt zum Rückgängigmachen. Escape oder „Maßband wegnehmen“ löscht die Messung.
+- Ebenen: In der Liste „Ebenen ▾“ blendest du Bäume und Grün, Laternen, Katalog-Stücke, Beschriftungen, Wasser, Wege, Notizen, Funde und die Zahl der Aufgaben in der Karte von oben aus und wieder ein. Ausgeblendete Stücke lassen sich nicht anwählen. Neben dem Knopf steht, wie viele Ebenen aus sind. Die Wahl bleibt auch nach einem Neustart. Setzt du ein Stück einer ausgeblendeten Ebene, wird sie wieder eingeblendet. Die 3D-Ansicht zeigt immer alles.
+- Notizen (Taste N): kleine gelbe Zettel in der Karte von oben, zum Beispiel „hier kommt der Bahnhof hin“. Setzen, Text ändern, verschieben, kopieren und löschen ist je ein Schritt und lässt sich rückgängig machen. Notizen stehen nur in deinem Projekt, nie in der Stadt-Datei und nie im Spiel.
+
 ## S 0.26.0
 
 Laternen stellen sich jetzt von selbst an die Straßen, und es gibt Zebrastreifen.

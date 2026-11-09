@@ -16,7 +16,7 @@ namespace Stadtbau.Messung;
 /// versteckter Knopf faellt auf); (b) beide Menues in jeder Groesse hell und dunkel (Eintraege mindestens 44 Bildpunkte
 /// hoch, mit Namen, ganz im Bild, Layoutpruefung), Escape und ein Eintrag schliessen das Menue; (c) Fenster „Tastenkürzel“
 /// ueber F1, ? und das Menue (Gegenprobe: ? im Suchfeld oeffnet nichts); (d) Suche und Gruppen links (nur eine offen,
-/// gemerkt); (e) die Kamera-Karte verdeckt nach dem Einpassen keinen Hausnamen und nichts von der Stadt (Gegenprobe:
+/// gemerkt); (e) die Kamera-Karte (seit S 0.27.0 auch die Werkzeugleiste oben) verdeckt nach dem Einpassen keinen Hausnamen und nichts von der Stadt (Gegenprobe:
 /// Einpassen wie bis S 0.16.0); (f) „Prüfen – n rot“ zaehlt die roten Funde; (g) „?“ der 3D-Ansicht.
 /// </summary>
 public static partial class StadtbauMessung
@@ -304,26 +304,29 @@ public static partial class StadtbauMessung
             await GroesseAsync(a, f, b, h);
             a.Karte.Einpassen();
             await BildAsync(a);
-            var karte = a.KameraDraussen;
-            if (karte.TranslatePoint(new Point(0, 0), a.Karte) is not { } p)
+            // S 0.27.0: ebenso die Werkzeugleiste oben links (Waehlen, Massband, Ebenen, Notiz)
+            foreach (var (wer, karte) in new (string, Control)[] { ("Kamera-Karte", a.KameraDraussen), ("Werkzeugleiste", a.WerkzeugLeiste) })
             {
-                continue;
-            }
-            var r = new Rect(p, karte.Bounds.Size);
-            foreach (var (text, flaeche) in a.Karte.Beschriftungen.Where(x => x.Flaeche.Intersects(r)))
-            {
-                verdeckt++;
-                if (melden)
+                if (karte.TranslatePoint(new Point(0, 0), a.Karte) is not { } p)
                 {
-                    Fund("Kamera-Karte " + name + ": verdeckt den Namen \"" + text + "\"");
+                    continue;
                 }
-            }
-            if (a.Karte.WeltFlaeche.Intersects(r))
-            {
-                verdeckt++;
-                if (melden)
+                var r = new Rect(p, karte.Bounds.Size);
+                foreach (var (text, flaeche) in a.Karte.Beschriftungen.Where(x => x.Flaeche.Intersects(r)))
                 {
-                    Fund("Kamera-Karte " + name + ": liegt ueber der Stadt");
+                    verdeckt++;
+                    if (melden)
+                    {
+                        Fund(wer + " " + name + ": verdeckt den Namen \"" + text + "\"");
+                    }
+                }
+                if (a.Karte.WeltFlaeche.Intersects(r))
+                {
+                    verdeckt++;
+                    if (melden)
+                    {
+                        Fund(wer + " " + name + ": liegt ueber der Stadt");
+                    }
                 }
             }
         }

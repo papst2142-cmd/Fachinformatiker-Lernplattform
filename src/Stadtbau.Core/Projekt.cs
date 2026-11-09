@@ -261,7 +261,8 @@ public sealed class Projekt
         }
     }
 
-    public bool AussenGeaendert => GeaenderteTeile.Count > 0;
+    /// <summary>Ist die Stadt draussen geaendert? Notizen zaehlen nicht (S 0.27.0, Plan P12-79: nur Planung, nie in der Stadt-Datei).</summary>
+    public bool AussenGeaendert => GeaenderteTeile.Any(t => t != AussenBearbeitung.NotizTeil);
 
     /// <summary>
     /// Eine Aenderung an der Stadt draussen: die geaenderten Teile vorher und nachher kommen in den Verlauf (Ort
@@ -309,7 +310,7 @@ public sealed class Projekt
         }
         LaternenAutomatik.Abgleichen(a);
         var zwischen = Aussen.TeileText(a);
-        var sonst = zwischen.Keys.Union(vorher.Keys).Any(k => k is not ("laternen" or "bauten") && k != LaternenAutomatik.Teil
+        var sonst = zwischen.Keys.Union(vorher.Keys).Any(k => k is not ("laternen" or "bauten" or AussenBearbeitung.NotizTeil) && k != LaternenAutomatik.Teil
             && (!vorher.TryGetValue(k, out var v) || !zwischen.TryGetValue(k, out var z) || v != z));
         LaternenAutomatik.NachAenderung(a, strassenVorher, SzeneOhneLaternen, sonst);
     }
