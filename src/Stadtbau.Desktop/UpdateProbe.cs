@@ -14,6 +14,8 @@ namespace Stadtbau.Desktop;
 ///   feed    = lesend: neueste Version im Feed der Linie vS (Kanal stadtbau-win) und der Lernplattform (vA, Kanal win)
 ///   update  = das installierte Werkzeug sucht wie der Knopf "Nach Updates suchen", laedt und spielt ein (ohne Neustart,
 ///             Velopack ersetzt nach dem Ende des Prozesses), Zeilen ANGEBOT, GELADEN, EINSPIELEN.
+/// Jeder Netz-Schritt wird bei einer Stoerung von GitHub (5xx wie 504, Zeitueberschreitung) bis zu 4 Mal versucht
+/// (<see cref="Updatequelle.Wiederholen{T}"/>), jede Wiederholung steht als Zeile WIEDERHOLUNG im Bericht.
 /// Rueckgabe 0 = ok, 1 = Fehler (Zeile FEHLER mit Art und Text).
 /// </summary>
 internal static class UpdateProbe
@@ -30,8 +32,9 @@ internal static class UpdateProbe
             switch (modus)
             {
                 case "feed":
-                    Zeile("FEED werkzeug " + Neueste(Updatequelle.Quelle(), Updatequelle.Kanal));
-                    Zeile("FEED lernplattform " + Neueste(new LinienQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform), "win"));
+                    Zeile("FEED werkzeug " + Updatequelle.Wiederholen("Feed werkzeug", () => Neueste(Updatequelle.Quelle(), Updatequelle.Kanal), Zeile));
+                    Zeile("FEED lernplattform " + Updatequelle.Wiederholen("Feed lernplattform",
+                        () => Neueste(new LinienQuelle("https://github.com/" + GithubSuche.Repository, ReleaseLinie.Linie.Lernplattform), "win"), Zeile));
                     return 0;
                 case "update":
                     var mgr = Updatequelle.Manager();
@@ -40,14 +43,14 @@ internal static class UpdateProbe
                     {
                         return 1;
                     }
-                    var neu = mgr.CheckForUpdatesAsync().GetAwaiter().GetResult();
+                    var neu = Updatequelle.Wiederholen("Suche", () => mgr.CheckForUpdatesAsync().GetAwaiter().GetResult(), Zeile);
                     if (neu is null)
                     {
                         Zeile("KEIN ANGEBOT");
                         return 1;
                     }
                     Zeile("ANGEBOT " + neu.TargetFullRelease.Version);
-                    mgr.DownloadUpdatesAsync(neu).GetAwaiter().GetResult();
+                    Updatequelle.Wiederholen("Laden", () => { mgr.DownloadUpdatesAsync(neu).GetAwaiter().GetResult(); return true; }, Zeile);
                     Zeile("GELADEN " + neu.TargetFullRelease.FileName);
                     Updateprotokoll.Schreiben("Probe: Version " + neu.TargetFullRelease.Version + " geladen, wird nach dem Ende eingespielt.", StadtbauApp.Ordner.Wurzel);
                     mgr.WaitExitThenApplyUpdates(neu, silent: true, restart: false);

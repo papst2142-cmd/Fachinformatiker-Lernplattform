@@ -39,10 +39,24 @@ fehler() { echo "FEHLER: $1"; zeigen; exit 1; }
 
 # hoechste veroeffentlichte Version je Linie laut GitHub-API (ohne Entwurf und Vorab)
 "$PY" -I - "$ARB/soll.txt" <<'PY'
-import json, re, sys, urllib.request
+import json, re, sys, time, urllib.error, urllib.request
 r = urllib.request.Request("https://api.github.com/repos/papst2142-cmd/Fachinformatiker-Lernplattform/releases?per_page=100",
                            headers={"Accept": "application/vnd.github+json", "User-Agent": "stadtbau-update-probe"})
-daten = json.load(urllib.request.urlopen(r, timeout=60))
+# Stoerung bei GitHub (5xx wie 504, keine Antwort): bis zu 4 Versuche wie Updatequelle.Wiederholen, 4xx sofort rot
+for versuch, pause in enumerate([15, 30, 60, None], 1):
+    try:
+        daten = json.load(urllib.request.urlopen(r, timeout=60))
+        break
+    except urllib.error.HTTPError as x:
+        if x.code < 500 or pause is None:
+            raise
+        grund = "HTTP %d" % x.code
+    except (urllib.error.URLError, TimeoutError) as x:
+        if pause is None:
+            raise
+        grund = str(x)
+    print("WIEDERHOLUNG GitHub-API Versuch %d nach %d s (%s)" % (versuch + 1, pause, grund), flush=True)
+    time.sleep(pause)
 def hoechste(praefix):
     v = [tuple(int(x) for x in m.groups()) for d in daten if not d.get("draft") and not d.get("prerelease")
          for m in [re.fullmatch(praefix + r"(\d+)\.(\d+)\.(\d+)", d.get("tag_name", ""))] if m]
@@ -57,6 +71,7 @@ if [ -z "$SOLL_S" ] || [ -z "$SOLL_A" ]; then fehler "keine veroeffentlichte Ver
 
 # 1 lesend (eigener Datenordner, nichts installiert)
 STADTBAU_DATEN="$(cygpath -w "$ARB/daten_feed")" STADTBAU_UPDATE_PROBE=feed "$PUB/Stadtbau.exe" || fehler "Feed-Probe Rueckgabe $?"
+tr -d '\r' < "$BERICHT" | grep "^WIEDERHOLUNG" || true
 grep -qx "FEED werkzeug $SOLL_S" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Linie vS nennt nicht $SOLL_S"
 grep -qx "FEED lernplattform $SOLL_A" <(tr -d '\r' < "$BERICHT") || fehler "Feed der Lernplattform nennt nicht $SOLL_A (Suche von vA0.52.1 aus)"
 echo "Probe 1: Feed vS $SOLL_S und vA $SOLL_A gefunden"

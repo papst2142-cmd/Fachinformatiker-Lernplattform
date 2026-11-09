@@ -31,6 +31,55 @@ internal static class Updatequelle
     /// <summary>UpdateManager fuer das Werkzeug (Kanal stadtbau-win).</summary>
     public static UpdateManager Manager() => new(Quelle(), new UpdateOptions { ExplicitChannel = Kanal });
 
+    /// <summary>Wartezeiten zwischen den Versuchen bei Stoerungen von GitHub (insgesamt 4 Versuche).</summary>
+    public static readonly TimeSpan[] Pausen = [TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60)];
+
+    /// <summary>
+    /// Stoerung bei GitHub statt Fehler im Programm (Nico 09.11.2026, viele 504 bei GitHub): Antwort 5xx (z. B. 504
+    /// Gateway Time-out), keine Antwort (Netz, ohne Statuscode) oder Zeitueberschreitung, auch als innere Ausnahme.
+    /// 4xx (z. B. 404, 403) und alle anderen Fehler sind keine Stoerung und werden nie wiederholt.
+    /// </summary>
+    public static bool Voruebergehend(Exception? x)
+    {
+        for (; x is not null; x = x.InnerException)
+        {
+            switch (x)
+            {
+                case HttpRequestException h when h.StatusCode is null || (int)h.StatusCode >= 500:
+                case TaskCanceledException:
+                case TimeoutException:
+                    return true;
+                case HttpRequestException:
+                    return false;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Fuehrt einen Netz-Schritt aus und wiederholt ihn bei einer Stoerung von GitHub nach <see cref="Pausen"/>; jede
+    /// Wiederholung meldet <paramref name="melden"/>. Nach dem letzten Versuch oder bei einem anderen Fehler geht die
+    /// Ausnahme unveraendert weiter.
+    /// </summary>
+    public static T Wiederholen<T>(string schritt, Func<T> tun, Action<string> melden, Action<TimeSpan>? warten = null)
+    {
+        warten ??= Thread.Sleep;
+        for (var versuch = 1; ; versuch++)
+        {
+            try
+            {
+                return tun();
+            }
+            catch (Exception x) when (versuch <= Pausen.Length && Voruebergehend(x))
+            {
+                var pause = Pausen[versuch - 1];
+                melden("WIEDERHOLUNG " + schritt + " Versuch " + (versuch + 1) + " nach " + (int)pause.TotalSeconds
+                    + " s (" + x.GetType().Name + ": " + x.Message + ")");
+                warten(pause);
+            }
+        }
+    }
+
     /// <summary>
     /// Velopack-Protokoll in update.log des Datenordners (Info und hoeher, Ausnahmen mit Art und Text). Velopacks
     /// eigene Datei lag bis S 0.25.0 im Installationsordner und ging mit jeder Neuinstallation verloren.

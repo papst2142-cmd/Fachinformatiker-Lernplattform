@@ -181,6 +181,62 @@ public class DatenordnerUpdateTests
         }
     }
 
+    [Fact]
+    public void Stoerung_504_WirdWiederholt_DannErfolg()
+    {
+        var versuche = 0;
+        var zeilen = new List<string>();
+        var pausen = new List<TimeSpan>();
+        var ergebnis = Updatequelle.Wiederholen("Feed werkzeug", () =>
+        {
+            if (++versuche < 3)
+            {
+                throw new HttpRequestException("Response status code does not indicate success: 504 (Gateway Time-out).", null, System.Net.HttpStatusCode.GatewayTimeout);
+            }
+            return "0.25.0";
+        }, zeilen.Add, pausen.Add);
+        Assert.Equal("0.25.0", ergebnis);
+        Assert.Equal(3, versuche);
+        Assert.Equal([TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30)], pausen);
+        Assert.Equal(2, zeilen.Count);
+        Assert.StartsWith("WIEDERHOLUNG Feed werkzeug Versuch 2 nach 15 s (HttpRequestException", zeilen[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Stoerung_HoechstensVierVersuche_DannFehlerUnveraendert()
+    {
+        var versuche = 0;
+        var x = Assert.Throws<HttpRequestException>(() => Updatequelle.Wiederholen<int>("Suche",
+            () => { versuche++; throw new HttpRequestException("504", null, System.Net.HttpStatusCode.GatewayTimeout); }, _ => { }, _ => { }));
+        Assert.Equal(4, versuche);
+        Assert.Equal(System.Net.HttpStatusCode.GatewayTimeout, x.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(System.Net.HttpStatusCode.NotFound)]
+    [InlineData(System.Net.HttpStatusCode.Forbidden)]
+    public void Gegenprobe_4xx_UndProgrammfehler_NieWiederholt(System.Net.HttpStatusCode code)
+    {
+        var versuche = 0;
+        Assert.Throws<HttpRequestException>(() => Updatequelle.Wiederholen<int>("Suche",
+            () => { versuche++; throw new HttpRequestException("x", null, code); }, _ => { }, _ => { }));
+        Assert.Equal(1, versuche);
+        versuche = 0;
+        Assert.Throws<UriFormatException>(() => Updatequelle.Wiederholen<int>("Suche",
+            () => { versuche++; throw new UriFormatException(); }, _ => { }, _ => { }));
+        Assert.Equal(1, versuche);
+    }
+
+    [Fact]
+    public void Voruebergehend_AuchAlsInnereAusnahme_UndOhneAntwort()
+    {
+        Assert.True(Updatequelle.Voruebergehend(new InvalidOperationException("x", new HttpRequestException("y", null, System.Net.HttpStatusCode.BadGateway))));
+        Assert.True(Updatequelle.Voruebergehend(new HttpRequestException("kein Netz")));
+        Assert.True(Updatequelle.Voruebergehend(new TaskCanceledException()));
+        Assert.False(Updatequelle.Voruebergehend(new InvalidOperationException("x")));
+        Assert.False(Updatequelle.Voruebergehend(null));
+    }
+
     private static void Schreiben(string wurzel, string rel, string text)
     {
         var pfad = Path.Combine(wurzel, rel);
