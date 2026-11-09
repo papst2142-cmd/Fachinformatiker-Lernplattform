@@ -93,6 +93,17 @@ PAKETE = {
                    "gruppe": "Figuren und Verkleidung", "fbx": "Model/characterMedium.fbx", "arme": 72},
     "particles": {"zip": "kenney_particle-pack.zip", "titel": "Kenney Particle Pack", "m": 1.0, "gruppe": "Effekte",
                   "bilder": "PNG (Transparent)/"},
+    # Welle S 0.29.0 (Weisungen P12-124, P12-125, P12-130 Punkt 4a): drei weitere Pakete am Ende, die vorhandenen bleiben
+    # bytegleich (gleiche Reihenfolge, gleiche Feldnummern)
+    "factory": {"zip": "kenney_factory-kit_3.0.zip", "titel": "Kenney Factory Kit", "m": 1.25, "gruppe": "Technik und Freizeit",
+                "regeln": [(r"^(structure|door|floor|top|catwalk)", "Häuser und Bauteile"),
+                           (r"^(cone|warning|indicator|arrow)", "Straßen und Schienen")]},
+    "nature": {"zip": "kenney_nature-kit_2.1.zip", "titel": "Kenney Nature Kit", "m": 3.5, "gruppe": "Bäume und Natur",
+               "regeln": [(r"^(bridge|path_|ground_path)", "Straßen und Schienen"), (r"^(fence|statue)", "Häuser und Bauteile"),
+                          (r"^(bed|tent|campfire|canoe|sign$|pot_)", "Technik und Freizeit")]},
+    "survival": {"zip": "kenney_survival-kit_2.0.zip", "titel": "Kenney Survival Kit", "m": 3.0, "gruppe": "Technik und Freizeit",
+                 "regeln": [(r"^(tree|rock|grass|patch)", "Bäume und Natur"), (r"^fish", "Tiere"),
+                            (r"^(structure|fence|floor|metal-panel)", "Häuser und Bauteile"), (r"^signpost", "Straßen und Schienen")]},
 }
 
 # englische Wortteile der Namen -> deutsche Suchwoerter (Suche nach Namen, Weisung P12-19 2)
@@ -133,6 +144,15 @@ DEUTSCH = {
     "trash": "Muell Muelleimer", "bin": "Eimer", "character": "Figur Person", "employee": "Mitarbeiter", "gamer": "Spieler",
     "coat": "Mantel Garderobe", "rack": "Staender Garderobe", "fan": "Ventilator", "mirror": "Spiegel", "picture": "Bild",
     "pictureframe": "Bild Rahmen", "clock": "Uhr", "trophy": "Pokal", "hay": "Heu", "altar": "Altar", "cross": "Kreuz",
+    # Welle S 0.29.0: Woerter der Pakete Factory, Nature, Survival
+    "cog": "Zahnrad", "crane": "Kran", "hopper": "Trichter", "pipe": "Rohr Leitung", "piston": "Kolben", "catwalk": "Laufsteg",
+    "lever": "Hebel", "button": "Knopf Taster", "cliff": "Klippe Fels", "crop": "Feld Ernte", "crops": "Feld Acker", "tent": "Zelt",
+    "canoe": "Kanu Boot", "campfire": "Lagerfeuer", "barrel": "Fass Tonne", "bucket": "Eimer", "tool": "Werkzeug",
+    "hammer": "Hammer", "shovel": "Schaufel", "pickaxe": "Spitzhacke", "hoe": "Hacke", "workbench": "Werkbank", "anvil": "Amboss",
+    "signpost": "Wegweiser", "chest": "Truhe", "bottle": "Flasche", "statue": "Statue Denkmal", "moss": "Moos", "lily": "Seerose",
+    "palm": "Palme", "wheat": "Weizen Getreide", "corn": "Mais", "bamboo": "Bambus", "river": "Fluss Bach", "waterfall": "Wasserfall",
+    "cave": "Hoehle", "ground": "Boden Gelaende", "platform": "Plattform", "bedroll": "Schlafsack", "planks": "Bretter",
+    "resource": "Vorrat", "melon": "Melone", "turnip": "Ruebe", "oak": "Eiche", "stack": "Stapel", "magnet": "Magnet",
 }
 
 

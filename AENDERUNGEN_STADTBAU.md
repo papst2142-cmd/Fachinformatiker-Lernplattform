@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.29.0
+
+Drei neue Pakete im Katalog: eine Fabrik, viel Natur und ein Lagerplatz. Der Katalog hat jetzt 2 073 Stücke aus 26 Paketen.
+
+- Fabrik (143 Stücke, Kenney Factory Kit): Hallenwände, Hallentore, Laufstege mit Treppen, Fließbänder, Rohre aus Stahl und Glas, Maschinen, Kran, Greifarme, Trichter, Kolben, Zahnräder, Schaltpulte, Bodenmarkierungen und Warnleuchten.
+- Natur (329 Stücke, Kenney Nature Kit): viele Bäume (auch im Herbst und dunkel), Fichten, Palmen, Sträucher, Blumen, Pilze, Felsen und Steine, Klippen, Wasserfälle, Brücken aus Holz und Stein, Wegplatten, Weidezäune, Äcker mit Mais und Weizen, Zelte, Lagerfeuer und ein Kanu.
+- Lagerplatz (80 Stücke, Kenney Survival Kit): Fässer, Kisten, Truhe, Holzzäune mit Tor, Blechplatten, Gerüste aus Holz und Metall, Werkbänke, Werkzeug, Baumstämme, Holz- und Steinhaufen und Wegweiser.
+- Alle neuen Stücke haben deutsche Namen und sind über die Suche zu finden, auf Deutsch und auf Englisch.
+- Die neuen Stücke stehen in den bekannten Gruppen, zum Beispiel Bäume in „Bäume und Natur“, Hallenwände in „Häuser und Bauteile“ und Maschinen in „Technik und Freizeit“.
+
 ## S 0.28.0
 
 Türen selbst setzen, und die leeren Schilder an den Häusern sind weg.

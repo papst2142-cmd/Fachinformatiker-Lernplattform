@@ -734,7 +734,7 @@ public static partial class StadtbauMessung
             }
         }
         // Sammelliste 222, Weisung P12-79: jeder deutsche Name passt ganz in seine Kachel (hoechstens 2 Zeilen, kein "…",
-        // kein Wort getrennt), alle 1 521 in jeder geprueften Groesse; Gegenproben: ein zu langes Wort und ein Name mit drei
+        // kein Wort getrennt), alle 2 073 (seit S 0.29.0) in jeder geprueften Groesse; Gegenproben: ein zu langes Wort und ein Name mit drei
         // Zeilen passen auch verkleinert nicht, und die Kachel zeigt ihn gekuerzt
         foreach (var (_, b, h) in Groessen)
         {

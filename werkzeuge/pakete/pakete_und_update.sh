@@ -266,6 +266,11 @@ if [ "${CI:-}" = "true" ]; then
   starte feed "$AUS"
   unset LERNPLATTFORM_UPDATE_KANAL
   tr -d '\r' < "$LERNPLATTFORM_UPDATE_BERICHT" | grep "^feed: WIEDERHOLUNG" || true
+  # Sammelliste 269 (Weisung P12-132, Lauf 751: 403 rate limit am Mac): mit GITHUB_TOKEN (setzt die CI) muss die
+  # Feed-Probe angemeldet fragen
+  if [ -n "${GITHUB_TOKEN:-}" ] && ! tr -d '\r' < "$LERNPLATTFORM_UPDATE_BERICHT" | grep -qx "feed: ANGEMELDET ja"; then
+    echo "FEHLER: Feed-Probe fragt GitHub nicht angemeldet (Sammelliste 269)"; tail -n 5 "$LERNPLATTFORM_UPDATE_BERICHT"; exit 1
+  fi
   if ! tr -d '\r' < "$LERNPLATTFORM_UPDATE_BERICHT" | grep -qx "feed: neueste 1.0.0-a.$SOLL_A (Kanal $KANAL)"; then
     echo "FEHLER: Feed (Kanal $KANAL) nennt nicht 1.0.0-a.$SOLL_A (vA$SOLL_A laut GitHub-API)"; tail -n 5 "$LERNPLATTFORM_UPDATE_BERICHT"; exit 1
   fi
