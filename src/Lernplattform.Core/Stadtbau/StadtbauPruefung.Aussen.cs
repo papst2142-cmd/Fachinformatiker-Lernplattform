@@ -94,6 +94,8 @@ public static partial class StadtbauPruefung
             var kurvenHeil = KurvenDaten(welt, funde);
             // Welle Z: falsch gespeicherte Fusswege = Szene nicht bauen
             var fusswegeHeil = FusswegDaten(fassung, breite, hoehe, funde);
+            // Welle A 0.54.0: falsch gespeicherte Zebrastreifen (die Szene laesst sie weg, Rot sperrt den Export)
+            ZebraDaten(fassung, breite, hoehe, funde);
             if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil || !fusswegeHeil)
             {
                 // ohne Fussweg baut das Spiel die Stadt nicht: erst diese Funde loesen
@@ -160,6 +162,7 @@ public static partial class StadtbauPruefung
         KreisverkehrRegeln(szene, fassung, funde);
         StreckenRegeln(szene, funde);
         FusswegRegeln(szene, fassung, funde);
+        ZebraRegeln(szene, fassung, funde);
         AussehenRegeln(fassung, inhalt, szene, funde);
         OrtsnamenRegeln(fassung, funde);
         return funde;

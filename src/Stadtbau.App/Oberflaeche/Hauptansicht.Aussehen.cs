@@ -209,7 +209,8 @@ public sealed partial class Hauptansicht
         var innen = _projekt.Innenraeume();
         var daten = _projekt.Daten;
         var fertig = _aussehenFertig;
-        _ = Hintergrund(Task.Run(() => Bauen3D.NeuRot(Bauen3D.Pruefen(vorherStand, fassung, innen, daten), Bauen3D.Pruefen(kopie, fassung, innen, daten))))
+        var laternen = _projekt.LaternenFuerVorschau();
+        _ = Hintergrund(Task.Run(() => Bauen3D.NeuRot(Bauen3D.Pruefen(vorherStand, fassung, innen, daten), Bauen3D.Pruefen(laternen(kopie), fassung, innen, daten))))
             .ContinueWith(t => Dispatcher.UIThread.Post(() =>
             {
                 if (nr != _aussehenNr)

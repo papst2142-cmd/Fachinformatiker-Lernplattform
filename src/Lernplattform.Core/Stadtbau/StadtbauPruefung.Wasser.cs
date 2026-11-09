@@ -263,7 +263,9 @@ public static partial class StadtbauPruefung
                 && szene.Laufraster.NaechsteFreie(start.StehX, start.StehZ) != szene.Laufraster.NaechsteFreie(o.StehX, o.StehZ))
             {
                 funde.Add(new StadtbauFund($"„{o.Name}“ ist zu Fuß nicht erreichbar (von „{startOrt.Name}“ aus).",
-                    "Einen Weg frei machen: Wasser, Gleis oder Häuser versperren ihn (über Wasser führen nur Brücken und Stege).", true, o.TuerX, o.TuerZ));
+                    szene.MitGehweg
+                        ? "Einen Weg frei machen: Wasser, Gleis oder Häuser versperren ihn (über Wasser führen nur Brücken und Stege). Über eine Straße mit Gehweg führt nur ein Zebrastreifen: Zebrastreifen setzen."
+                        : "Einen Weg frei machen: Wasser, Gleis oder Häuser versperren ihn (über Wasser führen nur Brücken und Stege).", true, o.TuerX, o.TuerZ));
             }
         }
     }

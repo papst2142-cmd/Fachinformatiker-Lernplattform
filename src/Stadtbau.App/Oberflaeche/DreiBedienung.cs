@@ -617,10 +617,12 @@ public sealed class DreiBedienung : Control
         var innen = proj.Innenraeume();
         var daten = proj.Daten;
         var nachher = v.Stand;
+        // S 0.26.0: mit den automatischen Laternen des echten Schritts (gleiche Funde wie danach in der Liste)
+        var laternen = proj.LaternenFuerVorschau();
         _ = Task.Run(() =>
         {
             var vorher = basis ?? Bauen3D.Pruefen(vorherStand!, fassung, innen, daten);
-            return (vorher, neu: Bauen3D.NeuRot(vorher, Bauen3D.Pruefen(nachher, fassung, innen, daten)));
+            return (vorher, neu: Bauen3D.NeuRot(vorher, Bauen3D.Pruefen(laternen(nachher), fassung, innen, daten)));
         }).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             _laeuft = false;

@@ -347,6 +347,8 @@ public static partial class StadtbauMessung
         await StadtDateiAsync(a, f);
         await TuerAsync(a, f);
         await TuerFreiAsync(a, f);
+        await ZebrastreifenAsync(a, f);
+        await LeereStadtOeffnenAsync(a);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {
             return Ende();

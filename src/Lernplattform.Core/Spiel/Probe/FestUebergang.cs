@@ -51,10 +51,12 @@ public sealed class FestUebergang
         NeuVerkehr = neuVerkehr;
         Verkehr = new Verkehr { AbstandVorne = MathF.Max(altVerkehr.AbstandVorne, neuVerkehr.AbstandVorne), FuerStrassen = neuVerkehr.FuerStrassen };
         Verkehr.Kreuzungen.AddRange(neuVerkehr.Kreuzungen);
+        Verkehr.Zebras.AddRange(neuVerkehr.Zebras);
         Verkehr.Autos.AddRange(altVerkehr.Autos.OrderBy(a => a.Nummer));
         Verkehr.Bedient(altVerkehr.FahrenBis - Verkehr.Nachlauf);
         _altOffen = [.. Verkehr.Autos];
-        _schatten = new Verkehr { AbstandVorne = neuVerkehr.AbstandVorne };
+        _schatten = new Verkehr { AbstandVorne = neuVerkehr.AbstandVorne, FuerStrassen = neuVerkehr.FuerStrassen };
+        _schatten.Zebras.AddRange(neuVerkehr.Zebras);
         _schatten.Kreuzungen.AddRange(neuVerkehr.Kreuzungen);
         _schatten.Autos.AddRange(neuVerkehr.Autos);
     }

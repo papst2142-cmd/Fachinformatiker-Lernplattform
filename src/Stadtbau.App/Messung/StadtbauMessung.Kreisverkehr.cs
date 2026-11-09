@@ -59,9 +59,9 @@ public static partial class StadtbauMessung
         var ring = k.SetzenAn(10, 10);
         await a.AussenGeprueft;
         if (ring is null || Aussen.Landschaft(p.AussenStand).Count != anzahl + 5 || !AussenBearbeitung.IstKreisverkehr(p.AussenStand, ring)
-            || Aussen.Laternen(p.AussenStand).Count != 4)
+            || Aussen.Laternen(p.AussenStand).Count != 4 + LaternenAutomatik.Gesetzt(p.AussenStand).Count)
         {
-            Fund(string.Create(Inv, $"Kreisverkehr: nach dem Setzen kein Ring mit vier Zufahrten und vier Laternen (Stuecke {Aussen.Landschaft(p.AussenStand).Count} statt {anzahl + 5})"));
+            Fund(string.Create(Inv, $"Kreisverkehr: nach dem Setzen kein Ring mit vier Zufahrten und vier Laternen am Ring (S 0.26.0: dazu die automatischen an den Zufahrten) (Stuecke {Aussen.Landschaft(p.AussenStand).Count} statt {anzahl + 5})"));
             return;
         }
         if (a.AussenFunde.Count > 0)

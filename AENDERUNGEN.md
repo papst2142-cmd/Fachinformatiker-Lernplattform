@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.54.0
+Im Spiel gibt es Zebrastreifen, und Straßen mit Gehweg werden wie im echten Leben überquert.
+
+- Eine Stadt kann jetzt Zebrastreifen haben: weiße Streifen quer über die Fahrbahn. Die heutige Stadt hat keine, sie kommen mit den neuen Städten aus dem Stadtbau-Werkzeug.
+- Hat eine Straße einen Gehweg, läuft die Figur auf dem Gehweg. Über die Fahrbahn einer solchen Straße geht sie nur an einem Zebrastreifen. Straßen ohne Gehweg (wie alle Straßen der heutigen Stadt) kann man weiter überall überqueren.
+- Autos halten nur noch, wenn die Figur wirklich auf der Fahrbahn vor ihnen steht. Steht sie am Rand auf dem Gehweg, fahren sie weiter. Steht die Figur auf einem Zebrastreifen, hält jedes Auto davor, bis sie drüben ist.
+- Die heutige Stadt sieht genauso aus wie bisher. Am Lernen und an deinem Lernstand ändert sich nichts.
+
 ## A 0.53.2
 Die Suche nach Updates hält Störungen bei GitHub jetzt aus. Bisher meldete sie in solchen Zeiten oft „Keine Verbindung zu GitHub“ oder „GitHub hat die Anfrage abgelehnt“, obwohl es eine neue Version gab.
 

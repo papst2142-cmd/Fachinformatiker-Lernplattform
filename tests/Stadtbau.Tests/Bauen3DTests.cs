@@ -152,7 +152,8 @@ public class Bauen3DTests
         // eine zweite Strasse fast genau auf der ersten: rot (gleiche Regel wie die Liste rechts)
         var rot = Bauen3D.Setzen(p.AussenStand, AussenArt.Strasse, 12, 8.3, false, null, 0);
         Assert.NotNull(rot.Stelle);
-        var fund = Bauen3D.NeuRot(vorher, Bauen3D.Pruefen(rot.Stand, p.Basis, innen, p.Daten));
+        // S 0.26.0: die Pruefung der Vorschau rechnet die automatischen Laternen des Schritts mit (wie DreiBedienung)
+        var fund = Bauen3D.NeuRot(vorher, Bauen3D.Pruefen(p.LaternenFuerVorschau()(rot.Stand), p.Basis, innen, p.Daten));
         Assert.NotNull(fund);
         // derselbe Schritt wirklich gemacht: die Liste zeigt denselben Fund
         p.AussenAendern("Setzen", a => AussenBearbeitung.Setzen(a, AussenArt.Strasse, 12, 8.3, false, null));

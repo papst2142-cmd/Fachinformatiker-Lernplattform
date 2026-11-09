@@ -71,8 +71,9 @@ public sealed class SpielVerkehrTests
         v.Weiter(0.1, vorne.X, vorne.Y);
         Assert.True(taxi.Haelt);
         Assert.Equal(8f, taxi.Weg);
-        // auf der Gegenspur genauso (ganze Strassenbreite)
-        var gegen = vorne + (new Vector2(-richtung.Y, richtung.X) * 0.34f);
+        // auf der Gegenspur genauso (ganze Strassenbreite; die Spur liegt rechts der Fahrtrichtung, die Gegenspur links)
+        var links = new Vector2(richtung.Y, -richtung.X);
+        var gegen = vorne + (links * 0.34f);
         v.Weiter(0.1, gegen.X, gegen.Y);
         Assert.True(taxi.Haelt);
         // Figur weit weg: es faehrt Tempo mal Zeit
@@ -80,6 +81,22 @@ public sealed class SpielVerkehrTests
         Assert.False(taxi.Haelt);
         Assert.Equal(8f + (Verkehr.Tempo * 0.1f), taxi.Weg, 4);
         Assert.Contains(v.Autos.Skip(1), a => !andere.Contains(a.Weg));
+        taxi.Weg = 8f;
+        // A 0.54.0 (Weisung P12-115): neben der Fahrbahn (0,51 von der Strassenmitte) haelt es nicht mehr ...
+        var neben = vorne - (links * 0.34f);
+        v.Weiter(0.1, neben.X, neben.Y);
+        Assert.False(taxi.Haelt);
+        // ... Gegenprobe: nach der Regel bis A 0.53.2 hielt es dort auch
+        Verkehr.AnhaltenAltFuerTests = true;
+        try
+        {
+            v.Weiter(0.1, neben.X, neben.Y);
+            Assert.True(taxi.Haelt);
+        }
+        finally
+        {
+            Verkehr.AnhaltenAltFuerTests = false;
+        }
     }
 
     /// <summary>

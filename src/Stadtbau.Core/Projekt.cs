@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Globalization;
 using System.Text;
 using Lernplattform.Core.Daten;
@@ -276,7 +277,11 @@ public sealed class Projekt
         }
         var a = AussenStand;
         var vorher = Aussen.TeileText(a);
+        var strassenVorher = LaternenAutomatik.Strassen(a);
         var ergebnis = aenderung(a);
+        // S 0.26.0 (Weisung P12-115, Nico 2a): automatische Laternen im selben Schritt (geloeschte merken, an geaenderten
+        // Strassen neu verteilen)
+        LaternenNachziehen(a, vorher, strassenVorher);
         var nachher = Aussen.TeileText(a);
         var pfade = vorher.Keys.Union(nachher.Keys).Where(k => !vorher.TryGetValue(k, out var v) || !nachher.TryGetValue(k, out var n) || v != n).Order(StringComparer.Ordinal).ToList();
         if (pfade.Count > 0)
@@ -288,6 +293,62 @@ public sealed class Projekt
         }
         return ergebnis;
     }
+
+    /// <summary>
+    /// S 0.26.0: die Stadt draussen <paramref name="aussen"/> (ohne Laternen) als Szene des Spiels mit dem Probestand, fuer
+    /// die Regeln der automatischen Laternen (null = laesst sich nicht bauen, dann keine automatischen).
+    /// </summary>
+    private readonly StadtSzene.Vorrat _laternenVorrat = new();
+
+    /// <summary>Automatische Laternen nach einer Aenderung von <paramref name="a"/> (vorher: Teile als Text und Strassen).</summary>
+    private void LaternenNachziehen(PyObjekt a, Dictionary<string, string> vorher, List<List<Vector2>> strassenVorher)
+    {
+        if (LaternenAutomatik.AusFuerTests)
+        {
+            return;
+        }
+        LaternenAutomatik.Abgleichen(a);
+        var zwischen = Aussen.TeileText(a);
+        var sonst = zwischen.Keys.Union(vorher.Keys).Any(k => k is not ("laternen" or "bauten") && k != LaternenAutomatik.Teil
+            && (!vorher.TryGetValue(k, out var v) || !zwischen.TryGetValue(k, out var z) || v != z));
+        LaternenAutomatik.NachAenderung(a, strassenVorher, SzeneOhneLaternen, sonst);
+    }
+
+    /// <summary>
+    /// Fuer die Vorschau (3D-Schatten, Aussehen): merkt sich den Stand jetzt und gibt eine Kopie eines geaenderten Stands mit
+    /// denselben automatischen Laternen, die der echte Schritt aufstellen wuerde (darf im Hintergrund laufen).
+    /// </summary>
+    public Func<PyObjekt, PyObjekt> LaternenFuerVorschau()
+    {
+        var a = AussenStand;
+        var vorher = Aussen.TeileText(a);
+        var strassen = LaternenAutomatik.Strassen(a);
+        return nachher =>
+        {
+            var k = (PyObjekt)Py.Kopie(nachher)!;
+            LaternenNachziehen(k, vorher, strassen);
+            return k;
+        };
+    }
+
+    public StadtSzene? SzeneOhneLaternen(PyObjekt aussen)
+    {
+        try
+        {
+            var fassung = Aussen.Fassung(aussen, Basis, Innenraeume(), 1, null, Werkzeug.Kennzeile, "", "");
+            var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt));
+            var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
+            return StadtSzene.Bauen(stadt, stand, Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
+        }
+        catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException
+            or OverflowException or SpielFehler or ArgumentException or InvalidOperationException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Knopf „Laternen neu verteilen“ (ein Schritt): Ergebnis aufgestellt, entfernt.</summary>
+    public (int Dazu, int Weg) LaternenVerteilen() => AussenAendern(Texte.LaternenVerteilen, a => LaternenAutomatik.Verteilen(a, SzeneOhneLaternen));
 
     public void AussenAendern(string was, Action<PyObjekt> aenderung) => AussenAendern(was, a =>
     {

@@ -353,9 +353,14 @@ public class KurvenTests
     {
         var (a, kurve) = MitKurve(2);
         var szene = Szene(a);
-        foreach (var q in kurve)
+        // S 0.26.0 (Weisung P12-115): die Figur geht auf dem Gehweg durch die Kurve, die Fahrbahn ist gesperrt
+        foreach (var q in Kurve.Versetzt(kurve, (StadtSzene.StrassenBreite / 2) + 0.17f))
         {
-            Assert.True(szene.Laufraster.KannStehen(q.X, q.Y), $"nicht begehbar bei {q}");
+            Assert.True(szene.Laufraster.KannStehen(q.X, q.Y), $"Gehweg nicht begehbar bei {q}");
+        }
+        foreach (var q in kurve.Skip(1).SkipLast(1))
+        {
+            Assert.False(szene.Laufraster.KannStehen(q.X, q.Y), $"Fahrbahn begehbar bei {q}");
         }
         // Gegenprobe: 1,5 neben dem Bogen (Wiese ohne Weg) ist nicht immer frei? Die Wiese ist frei, darum: der Bogen
         // selbst liegt auf der Strasse (Mittellinie gezeichnet), Striche entlang des Bogens

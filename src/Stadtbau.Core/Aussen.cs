@@ -64,6 +64,12 @@ public enum AussenArt
     /// der Fluss, Feld <c>radien</c> 3 oder 4,5 je Eckpunkt); <see cref="AussenStelle.Punkt"/> = Eckpunkt (-1 = ganze Bahn).
     /// </summary>
     Bahn,
+
+    /// <summary>
+    /// Welle S 0.26.0 (Weisung P12-115): Zebrastreifen in <c>stadtdaten.zebrastreifen</c> (Mitte auf einer geraden Strasse,
+    /// Richtung aus der Strasse, <see cref="Lernplattform.Core.Spiel.Probe.Zebrastreifen"/>).
+    /// </summary>
+    Zebrastreifen,
 }
 
 /// <summary>
@@ -232,6 +238,8 @@ public static class Aussen
         yield return ("laternen", aussen["laternen"]);
         yield return ("beete", aussen["beete"]);
         yield return ("bauten", Get(aussen, "bauten") ?? new PyObjekt());
+        // S 0.26.0: automatische Laternen (nur Werkzeug, nie in der Stadt-Datei)
+        yield return (LaternenAutomatik.Teil, Get(aussen, LaternenAutomatik.Teil) ?? new PyObjekt());
     }
 
     /// <summary>Teile als Text (json.dumps), fuer den Vergleich vorher/nachher.</summary>
