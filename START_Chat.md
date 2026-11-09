@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.53.0** / **S 0.24.0** (SI-Welle PR #140, main ba88c4b: SI hat jetzt so viele Karteikarten und Prüfungsfragen wie AE, DPA und DV; davor Tür-Welle S 0.24.0 PR #139). Veröffentlicht zuletzt vA0.52.1 und vS0.23.1. Releases macht Chat; CC startet `release.yml` und `stadtbau_release.yml` nie |
+| Version | Auf `main` **A 0.53.0** / **S 0.25.0** (Werkzeug Tür frei PR #141, main d672dc0; SI-Welle PR #140, main ba88c4b: SI hat jetzt so viele Karteikarten und Prüfungsfragen wie AE, DPA und DV; davor Tür-Welle S 0.24.0 PR #139). Veröffentlicht zuletzt vA0.52.1 und vS0.23.1. Releases macht Chat; CC startet `release.yml` und `stadtbau_release.yml` nie |
 | Phase | 0–12 abgenommen (Phase 12: Nico 05.11.2026 18:37 MEZ, Welle 1 Kleiderschrank A 0.40.0, Welle 2 Menüs in der Spielwelt A 0.41.0; Phase 11: Nico 05.11.2026 08:41 MEZ). **Phase 11**: W1, FW1–FW10, W2, W3, Mac-Welle, Fehlerberichte, Patch-Welle, Seitenleiste, CI schneller und Handy-Update gemergt (A 0.32.0 bis 0.39.0, PR #84 bis #103); Gerätetest auf allen 5 Geräten (04.11.2026), NVDA und TalkBack in Ordnung; 0 offene F |
-| Jetzt | SI-Welle A 0.53.0 gemergt (Meldung P12-68); Release vA0.53.0 und vS0.24.0 durch Chat. Warten auf die nächste Weisung. Danach laut Plan: Nico baut Stadt 1 → W4b Einbau → Bericht Phase 13 |
+| Jetzt | S 0.25.0 gemergt (Meldung P12-70). 248 (Großschrift in SI-Optionen, A 0.53.1) wartet auf Nicos Antwort zu Frage 1 aus P12-69. Nicos Stadt 1 hat Vorrang (P12-95) → W4b Einbau → Bericht Phase 13 |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-68** (SI-Welle) / nächste P12-69 |
-| Sammelliste | nächste freie Nummer **248** (247 Beschriftung der Draufsicht deutsch, 246 Katalog-Stück vor einer Tür, beide später; Einzelheiten älterer Nummern in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`); 214 (Ladezeit S24 und Tab A9+) unter „Offen bis 1.0“, 122/123 K |
+| Letzte/nächste Meldung | **P12-70** (Werkzeug S 0.25.0) / nächste P12-71 |
+| Sammelliste | nächste freie Nummer **249** (248 Großschrift in SI-Optionen wartet auf Nico; 246/247 erledigt mit S 0.25.0; Einzelheiten älterer Nummern in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`); 214 (Ladezeit S24 und Tab A9+) unter „Offen bis 1.0“, 122/123 K |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
