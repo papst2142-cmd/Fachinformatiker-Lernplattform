@@ -616,7 +616,10 @@ public sealed partial class Hauptansicht : UserControl
         }
         _projekt = projekt;
         _projekt.Geaendert += ProjektGeaendert;
-        _ort = ort ?? (projekt.Ort.Length > 0 ? projekt.Ort : null);
+        // Sammelliste 257 (Weisung P12-116): eine leere Stadt hat keinen Ort (Projekt.Ort = ""); ein leerer Name ist kein
+        // offener Innenraum (vorher: nach „Projekt öffnen“ suchte jede Aenderung draussen den Grundriss von "" -> fehler.log)
+        var gewaehlt = OrtLeerAltFuerTests || !string.IsNullOrEmpty(ort) ? ort : null;
+        _ort = gewaehlt ?? (projekt.Ort.Length > 0 ? projekt.Ort : null);
         _aussenStand++;
         _dreiGebaut = -1;
         GrenzenDraussen = null;
@@ -641,6 +644,15 @@ public sealed partial class Hauptansicht : UserControl
             _ = Dialog.Zeigen(Texte.OeffnenTitel, Texte.NurLesen, Texte.Ok);
         }
     }
+
+    /// <summary>Gegenprobe Sammelliste 257: ein leerer Ort gilt wieder als offener Innenraum (Verhalten vor S 0.26.0).</summary>
+    internal static bool OrtLeerAltFuerTests { get; set; }
+
+    /// <summary>Der offene Innenraum (null = keiner), fuer den Start-Test.</summary>
+    internal string? OffenerOrt => _ort;
+
+    /// <summary>Wie „Projekt öffnen“ mit einer Datei (Start-Test).</summary>
+    internal void ProjektLadenFuerTests(string datei) => ProjektLaden(datei);
 
     private void ProjektLaden(string datei)
     {

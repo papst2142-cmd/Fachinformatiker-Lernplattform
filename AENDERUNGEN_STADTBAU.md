@@ -12,6 +12,7 @@ Laternen stellen sich jetzt von selbst an die Straßen, und es gibt Zebrastreife
 - Der Knopf „Laternen neu verteilen“ (Gruppe „Natur und Licht“) stellt alle automatischen Laternen an allen Straßen neu auf. Die heutige Stadt 1 behält ihre Laternen, solange du keine Straße änderst.
 - Neuer Knopf „Zebrastreifen“ (Gruppe „Straßen und Wege“), in der Karte von oben und in der 3D-Ansicht. Der Zebrastreifen legt sich quer genau auf die Mitte einer geraden Straße und lässt sich nur längs der Straße schieben. Schiebst du die Straße, wandert er mit; löschst du sie, fällt er weg.
 - Im Spiel geht die Figur über eine Straße mit Gehweg nur an einem Zebrastreifen. Die Prüfung meldet rot, wenn ein Zebrastreifen in einer Kurve, im Kreisverkehr, auf einer Straße ohne Gehweg, zu nah an Kreuzung, Kreisverkehr, Bahnübergang oder einem anderen Zebrastreifen liegt oder wenn eine Laterne oder ein Stück darauf steht. Kommt die Figur nicht mehr zu einem Ort, schlägt die Prüfung vor, einen Zebrastreifen zu setzen.
+- Öffnest du eine leere Stadt über „Projekt öffnen“, schrieb danach jede Änderung draußen eine Fehlerzeile in `fehler.log`, und die Prüfung im Innenraum lief nicht neu. Das ist behoben; es ging dabei nichts verloren.
 
 ## S 0.25.1
 
