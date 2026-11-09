@@ -21,7 +21,15 @@
 #   Dateien (src/Stadtbau.*, tests/Stadtbau.Tests, werkzeuge/stadtbau, AENDERUNGEN_STADTBAU.md, Zeile StadtbauVersion,
 #   .md) macht ihn sofort rot ("voller Lauf noetig: <Datei>"). Merge-Tor eines reinen Werkzeug-PRs = werkzeug 5/5,
 #   sonst voll 17/17; release.yml der Lernplattform verlangt immer 17/17.
-# Ein Label ausser "voll" und "werkzeug" startet nichts und bricht nichts ab (alle Teile uebersprungen).
+# - ohne-mac (Welle CI schneller 2, Meldung P12-84 Punkt 4, Nico Frage 2 = a, Weisung P12-131): der volle Lauf ohne die
+#   sieben Mac-Jobs (10 Jobs), nur fuer Staende, die keine Datei der Liste in werkzeuge/ci/ohne_mac.py aendern (App,
+#   Desktop, Spiel/Probe, Ton, Update, Diagnose, Projektdateien, Start-Test, Pakete, Release, Lizenzen, Workflows,
+#   Directory.*, global.json, Mac-/Update-/Release-Tests). Ueber workflow_dispatch (stufe: ohne-mac) oder das Label
+#   "ohne-mac" (ohne "voll"). Erster Schritt jedes Jobs ist der Waechter ohne_mac.py ("Mac-Teile noetig: <Datei>").
+#   Merge-Tor eines solchen PRs = ohne-mac 10/10; release.yml verlangt vor jedem Release immer den vollen Lauf 17/17.
+# Am Ende jedes Laufs sagt der Hinweis-Job "urteil (GitHub oder echt)" (immer gruen, zaehlt nicht mit), ob ein Rot nur
+#   von GitHub kommt; dann nur die roten Jobs neu starten (werkzeuge/starttest/urteil_github.py).
+# Ein Label ausser "voll", "ohne-mac" und "werkzeug" startet nichts und bricht nichts ab (alle Teile uebersprungen).
 name: CI
 
 on:
@@ -34,9 +42,9 @@ on:
   workflow_dispatch:
     inputs:
       stufe:
-        description: "Stufe: voll (alle 17 Jobs), schnell oder werkzeug (nur Werkzeug, 5 Jobs)"
+        description: "Stufe: voll (alle 17 Jobs), ohne-mac (10 Jobs, Waechter ohne_mac.py), schnell oder werkzeug (nur Werkzeug, 5 Jobs)"
         type: choice
-        options: [voll, schnell, werkzeug]
+        options: [voll, ohne-mac, schnell, werkzeug]
         default: voll
 
 permissions:
@@ -45,7 +53,7 @@ permissions:
 # B3: je Pull Request eine Gruppe, ein neuer Push bricht den alten Lauf ab. Laeufe auf main,
 # ueber workflow_dispatch und Label ausser "voll" bekommen eine eigene Gruppe (nie abgebrochen).
 concurrency:
-  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll' && github.event.label.name != 'werkzeug')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
+  group: ${{ (github.event_name != 'pull_request' || (github.event.action == 'labeled' && github.event.label.name != 'voll' && github.event.label.name != 'werkzeug' && github.event.label.name != 'ohne-mac')) && format('ci-{0}', github.run_id) || format('ci-pr-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -55,13 +63,13 @@ env:
   # Phase 8 W8 (Teilplan P8-15 4): Pruefstand stumm, der stille Tondienst zaehlt nur die Anlaesse
   LERNPLATTFORM_TON: "aus"
   # Weisung P12-20: Stufe dieses Laufs fuer Schritte (voll, werkzeug oder schnell; Jobs pruefen sie in ihrem if selbst)
-  CI_STUFE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && 'voll' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && 'werkzeug' || 'schnell') }}
+  CI_STUFE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && 'voll' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && 'ohne-mac' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && 'werkzeug' || 'schnell')) }}
 
 jobs:
   tests:
     name: tests (${{ matrix.os }}${{ matrix.teil != '' && format(', {0}', matrix.teil) || '' }})
     # schnell nur ubuntu-latest, voll alle drei Systeme
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug')
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac')
     # Welle CI schneller (Weisung P11-38, Sammelliste 209): die langen Teile laufen als eigene Jobs nebeneinander
     # (gleiche Pruefungen, gleiche Grenzen, Wachhund und Neustart-Regel je Teil wie vorher). Jeder Eintrag sagt, welche
     # Teile er prueft: einzel = Unit-Tests und Python-Pruefungen, lernen/spiel = Start-Test, metal = Messung macOS nur
@@ -72,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]')) }}
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]'))) }}
     runs-on: ${{ matrix.os }}
     # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Teil>-<Versuch>. runner.os ist auf
     # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
@@ -88,7 +96,7 @@ jobs:
       # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
       #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
       - uses: actions/setup-python@v7
-        if: env.CI_STUFE == 'werkzeug'
+        if: env.CI_STUFE == 'werkzeug' || env.CI_STUFE == 'ohne-mac'
         with:
           python-version: "3.12"
       - name: Waechter nur Werkzeug (nur_werkzeug.py)
@@ -98,9 +106,25 @@ jobs:
           git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
           python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
           python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
+      # Welle CI schneller 2 (Weisung P12-131, Nico Frage 2 = a): Waechter der Stufe ohne-mac; eine Datei, die die
+      #   Mac-Teile noetig macht (Liste in werkzeuge/ci/ohne_mac.py), macht ihn rot ("Mac-Teile noetig: <Datei>")
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
+      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
+      - uses: actions/cache@v6
+        id: nuget
+        with:
+          path: ~/.nuget/packages
+          key: nuget-tests-${{ matrix.kurz }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - name: Tests
         if: matrix.einzel
         run: dotnet test --project tests/Lernplattform.Tests -c Release
@@ -130,6 +154,12 @@ jobs:
       - name: Waechter Stufe werkzeug (nur_werkzeug.py selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+      # Welle CI schneller 2 (Weisung P12-131): Waechter ohne-mac und NuGet-Pruefung mit festen Faellen und Gegenproben
+      - name: Waechter Stufe ohne-mac und NuGet-Pruefung (Selbsttests)
+        if: runner.os == 'Linux' && matrix.einzel
+        run: |
+          python3 -I werkzeuge/ci/ohne_mac.py selbsttest
+          python3 -I werkzeuge/ci/nuget_pruefen.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/release/release.py selbsttest
@@ -403,22 +433,23 @@ jobs:
         run: |
           echo "Rueckgabe des 1. Laufs der Spielansichten unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.spiel1.outputs.rc }}')"
           exit 1
+      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
+      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
+        if: steps.nuget.outputs.cache-hit == 'true'
+        shell: bash
+        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
     # Update-Probe A 0.55.0 -> A 0.55.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
-    # nur Stufe voll
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && ((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    # Stufe voll (4 Pakete) und ohne-mac (Welle CI schneller 2: nur win-x64 und linux-x64, Listen voll, ohne-mac)
+    # Phase 11 FW10 (Weisung P11-18): Intel-Mac osx-x64 mit eigenem Velopack-Kanal
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { os: windows-latest, rid: win-x64 }
-          - { os: ubuntu-latest, rid: linux-x64 }
-          - { os: macos-15, rid: osx-arm64 }
-          # Phase 11 FW10 (Weisung P11-18): Intel-Mac, eigener Velopack-Kanal osx-x64
-          - { os: macos-15-intel, rid: osx-x64 }
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"},{"os":"macos-15","rid":"osx-arm64"},{"os":"macos-15-intel","rid":"osx-x64"}]' || '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"}]') }}
     runs-on: ${{ matrix.os }}
     # Phase 6 W1: 30 -> 45 Minuten, weil der Release-Bau (zweites publish und pack) dazukommt
     timeout-minutes: 45
@@ -428,12 +459,27 @@ jobs:
       FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      # Welle CI schneller 2: Waechter der Stufe ohne-mac (wie in tests)
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
+      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
+      - uses: actions/cache@v6
+        id: nuget
+        with:
+          path: ~/.nuget/packages
+          key: nuget-pakete-${{ matrix.rid }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - name: Werkzeuge
         shell: bash
         run: |
@@ -487,13 +533,18 @@ jobs:
           if [ "$rc" != "$soll" ]; then echo "FEHLER: Bericht-Probe Rueckgabe $rc, erwartet $soll"; cat "$DATEN"/fehler.log 2>/dev/null; exit 1; fi
           if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
           echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
+      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
+      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
+        if: steps.nuget.outputs.cache-hit == 'true'
+        shell: bash
+        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   pakete-stadtbau:
     # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
     # stadtbau-win, Kennung Fachinformatiker-Stadtbau), jede Datei in der Lizenzliste; nichts hochgeladen.
     name: pakete (stadtbau win-x64)
     # nur Stufe voll
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && (((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))))
     runs-on: windows-latest
     timeout-minutes: 30
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30): Schluessel fuer "An CC senden" nur im Dispatch-Lauf, nie in PR-Laeufen
@@ -504,7 +555,7 @@ jobs:
       # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
       #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
       - uses: actions/setup-python@v7
-        if: env.CI_STUFE == 'werkzeug'
+        if: env.CI_STUFE == 'werkzeug' || env.CI_STUFE == 'ohne-mac'
         with:
           python-version: "3.12"
       - name: Waechter nur Werkzeug (nur_werkzeug.py)
@@ -514,9 +565,25 @@ jobs:
           git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
           python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
           python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
+      # Welle CI schneller 2 (Weisung P12-131, Nico Frage 2 = a): Waechter der Stufe ohne-mac; eine Datei, die die
+      #   Mac-Teile noetig macht (Liste in werkzeuge/ci/ohne_mac.py), macht ihn rot ("Mac-Teile noetig: <Datei>")
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
+      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
+      - uses: actions/cache@v6
+        id: nuget
+        with:
+          path: ~/.nuget/packages
+          key: nuget-stadtbau-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -535,6 +602,11 @@ jobs:
           name: stadtbau-win-x64
           path: stadtbau/stadtbau-win-x64/
           if-no-files-found: error
+      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
+      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
+        if: steps.nuget.outputs.cache-hit == 'true'
+        shell: bash
+        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   sollwerte:
     # Welle Sammelliste 217 (Weisung P12-14, Nico 1a 2a 3a 4a 5a): die Vergleichswerte G1-G52 (tests/Vergleich),
@@ -544,14 +616,14 @@ jobs:
     # tests/Vergleich/AENDERUNGEN_SOLLWERTE.md (gleiche Regeln prueft SollwerteTests auf allen Systemen).
     # Stufe schnell und voll.
     name: sollwerte (Pruefsummen)
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug')
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
       #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
       - uses: actions/setup-python@v7
-        if: env.CI_STUFE == 'werkzeug'
+        if: env.CI_STUFE == 'werkzeug' || env.CI_STUFE == 'ohne-mac'
         with:
           python-version: "3.12"
       - name: Waechter nur Werkzeug (nur_werkzeug.py)
@@ -561,6 +633,15 @@ jobs:
           git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
           python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
           python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
+      # Welle CI schneller 2 (Weisung P12-131, Nico Frage 2 = a): Waechter der Stufe ohne-mac; eine Datei, die die
+      #   Mac-Teile noetig macht (Liste in werkzeuge/ci/ohne_mac.py), macht ihn rot ("Mac-Teile noetig: <Datei>")
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -590,7 +671,7 @@ jobs:
     # baut und prueft es auch bei rotem pakete-Teil (!cancelled), nur das Zusammenstellen braucht pakete gruen.
     # Phase 13 Welle 2: wartet auch auf das Werkzeug-Paket, um den Werkzeug-Release zusammenzustellen
     needs: [pakete, pakete-stadtbau]
-    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug') && (((github.event_name == 'workflow_dispatch' && inputs.stufe != 'schnell' && inputs.stufe != 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll'))))"
+    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))))"
     runs-on: ubuntu-latest
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
     # (Stufe voll), nie in PR-Laeufen; der Bau maskiert ihn (Lernplattform.Core.csproj), keine Ausgabe nennt ihn.
@@ -601,7 +682,7 @@ jobs:
       # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
       #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
       - uses: actions/setup-python@v7
-        if: env.CI_STUFE == 'werkzeug'
+        if: env.CI_STUFE == 'werkzeug' || env.CI_STUFE == 'ohne-mac'
         with:
           python-version: "3.12"
       - name: Waechter nur Werkzeug (nur_werkzeug.py)
@@ -611,9 +692,25 @@ jobs:
           git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
           python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
           python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
+      # Welle CI schneller 2 (Weisung P12-131, Nico Frage 2 = a): Waechter der Stufe ohne-mac; eine Datei, die die
+      #   Mac-Teile noetig macht (Liste in werkzeuge/ci/ohne_mac.py), macht ihn rot ("Mac-Teile noetig: <Datei>")
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
+      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
+      - uses: actions/cache@v6
+        id: nuget
+        with:
+          path: ~/.nuget/packages
+          key: nuget-android-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -713,13 +810,15 @@ jobs:
             unzip -l "$a" > release_inhalt.txt
             grep -q "lib/arm64-v8a/libminiaudio.so" release_inhalt.txt || { echo "FEHLER: $a ohne libminiaudio.so (Toene)"; exit 1; }
           done
+      # Welle CI schneller 2: der Release-Entwurf braucht alle vier Pakete, darum nur in der Stufe voll (ohne-mac hat keine
+      #   Mac-Pakete; release.yml verlangt vor jedem Release ohnehin den vollen Lauf 17/17)
       - uses: actions/download-artifact@v8
-        if: needs.pakete.result == 'success'
+        if: needs.pakete.result == 'success' && env.CI_STUFE == 'voll'
         with:
           pattern: release-*-*
           path: release
       - name: Release zusammenstellen und pruefen (T2, Lizenzliste)
-        if: env.CI_STUFE != 'werkzeug'
+        if: env.CI_STUFE == 'voll'
         run: |
           if [ "${{ needs.pakete.result }}" != "success" ]; then
             echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
@@ -731,7 +830,7 @@ jobs:
           if [ -f release/release.md ]; then echo "===== ANFANG release.md ====="; cat release/release.md; echo "===== ENDE release.md ====="; fi
           exit "$rc"
       - uses: actions/upload-artifact@v7
-        if: always() && env.CI_STUFE != 'werkzeug'
+        if: always() && env.CI_STUFE == 'voll'
         with:
           name: release-entwurf
           path: |
@@ -838,4 +937,40 @@ jobs:
         with:
           name: emulator-probe-stadtbau
           path: emulator_probe_stadtbau.txt
+          if-no-files-found: warn
+      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
+      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
+        if: steps.nuget.outputs.cache-hit == 'true'
+        shell: bash
+        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
+  urteil:
+    # Welle CI schneller 2 (Meldung P12-84 Punkt 2, Nico Frage 1 = a, Weisung P12-131): liest am Ende des Laufs die Jobs und
+    # die Protokolle der roten Jobs (nur Lesen) und sagt, ob ein Rot nur von GitHub kommt (kein Rechner, Abfragebremse,
+    # 5xx, Netzfehler beim Hochladen, Jobs fehlen; Beleg im Protokoll des roten Schritts) oder echt ist. Bei "nur GitHub"
+    # startet CC nur die roten Jobs neu (gleicher Lauf, gleicher Kopf, zaehlt nicht als Versuch); echte Rote bekommen den
+    # ganzen Neustart, hoechstens 3 Versuche. Der Job ist immer gruen und nur ein Hinweis: release.yml und
+    # stadtbau_release.yml zaehlen ihn nicht mit (Merge-Tor bleibt 17/17 bzw. die Liste der Stufe), urteil.py selbsttest
+    # prueft das. Regeln und feste Faelle mit Gegenproben: werkzeuge/starttest/urteil_github.py.
+    name: urteil (GitHub oder echt)
+    needs: [tests, pakete, pakete-stadtbau, sollwerte, android]
+    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Urteil GitHub oder echt (urteil.py github)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -I werkzeuge/starttest/urteil.py github
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: urteil-github-${{ github.run_attempt }}
+          path: urteil_github.txt
           if-no-files-found: warn

@@ -100,7 +100,8 @@ jobs:
           soll_werkzeug="$(echo "$soll_werkzeug" | sed 's/^ *//' | sort)"
           gefunden=0
           for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do
-            ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success") | .name' | sort)"
+            # Welle CI schneller 2: der Hinweis-Job "urteil (GitHub oder echt)" zaehlt nicht mit (urteil.py selbsttest prueft das)
+            ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success" and .name != "urteil (GitHub oder echt)") | .name' | sort)"
             if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 17/17 gruen"; gefunden=1; break; fi
             if [ "$ist" = "$soll_werkzeug" ]; then echo "Lauf werkzeug $id: 5/5 gruen"; gefunden=1; break; fi
             echo "Lauf $id ist weder 17/17 noch werkzeug 5/5 gruen:"; echo "$ist"

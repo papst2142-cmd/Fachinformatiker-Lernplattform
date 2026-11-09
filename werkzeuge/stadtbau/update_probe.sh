@@ -130,6 +130,20 @@ grep -q "UPDATEPROBE: LOG .*Installer läuft" "$LOG" || { zeile "FEHLER: update.
 if [ $rc -ne 0 ]; then
   echo "===== Absturz-Puffer (logcat -b crash) ====="
   adb logcat -d -b crash | tail -n 80 || true
+  # Welle CI schneller 2 (Meldung P12-84 Punkt 1, Sammelliste 270/696): Zustand der App ins Artefakt, damit die Ursache
+  # von "meldet sich nicht" belegbar wird (laufende Prozesse, Activity im Vordergrund, installierte Version, Protokoll)
+  {
+    echo "===== Zustand bei Rot (Sammelliste 270) ====="
+    echo "installiert: $(installiert)"
+    echo "--- Prozesse der App"
+    adb shell ps -A 2>/dev/null | grep -i "stadtbau\|PID" || echo "(kein Prozess der App)"
+    echo "--- Activity im Vordergrund"
+    adb shell dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity|topResumedActivity|mFocusedApp" | head -n 5 || true
+    echo "--- Paketinstaller (Sitzungen)"
+    adb shell dumpsys package installer 2>/dev/null | grep -iE "stadtbau|sessionId" | head -n 10 || true
+    echo "--- logcat der letzten 400 Zeilen (alle Puffer ausser crash)"
+    adb logcat -d -t 400 2>/dev/null || true
+  } >> "$ERGEBNIS" 2>&1
 fi
 if [ $rc -eq 0 ]; then zeile "ERGEBNIS: gruen (Werkzeug n -> n+1, Lernplattform-Release nie angeboten, update.log da)"; else zeile "ERGEBNIS: rot"; fi
 exit $rc
