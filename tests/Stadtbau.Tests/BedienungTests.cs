@@ -76,7 +76,7 @@ public class BedienungTests
     [
         Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
         Texte.MenueProjekt, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden,
-        Texte.MenueEinstellungen, Texte.Dunkel, Texte.Vollbild, Texte.UpdateSuchen, Texte.Tastenkuerzel, Texte.WerkzeugBeenden,
+        Texte.MenueEinstellungen, Texte.Dunkel, Texte.Vollbild, Texte.VollbildBildschirm, Texte.UpdateSuchen, Texte.Tastenkuerzel, Texte.WerkzeugBeenden,
     ];
 
     /// <summary>Woerter, die allein nicht sagen, womit ein Knopf arbeitet (Nico: "Neu" kann auch ein Gebaeude meinen).</summary>

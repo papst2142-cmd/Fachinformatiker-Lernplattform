@@ -5,7 +5,7 @@ namespace Stadtbau.Core;
 
 /// <summary>
 /// Patch S 0.5.1 (Weisung P12-37 Punkt 2): Einstellungen des Werkzeugs in <c>einstellungen.json</c> im Werkzeugordner
-/// ("vollbild", seit S 0.9.1 "raster_zeigen" im Gebaeude-Editor, Weisung P12-52, seit S 0.17.0 "gruppe_links"). Unbekannte Schluessel bleiben beim Schreiben erhalten. Fehlt die Datei oder ist sie kaputt,
+/// ("vollbild", seit S 0.9.1 "raster_zeigen" im Gebaeude-Editor, Weisung P12-52, seit S 0.17.0 "gruppe_links", seit S 0.25.1 "vollbild_bildschirm"). Unbekannte Schluessel bleiben beim Schreiben erhalten. Fehlt die Datei oder ist sie kaputt,
 /// gilt die Vorgabe (kein Vollbild); eine kaputte Datei wird nie still ueberschrieben.
 /// </summary>
 public static class WerkzeugEinstellungen
@@ -60,9 +60,19 @@ public static class WerkzeugEinstellungen
     /// <summary>Offene Gruppe merken (Fehler wie <see cref="VollbildSetzen"/>).</summary>
     public static void OffeneGruppeSetzen(Werkzeugordner o, string gruppe) => Setzen(o, GruppeSchluessel, JsonValue.Create(gruppe));
 
+    /// <summary>S 0.25.1 (Sammelliste 252): gemerkter Bildschirm fuer das Vollbild (null = Bildschirm des Fensters).</summary>
+    public static Lernplattform.Core.Spiel.Ton.Bildschirm? VollbildBildschirm(Werkzeugordner o) =>
+        Lesen(o, out _) is { } obj ? Lernplattform.Core.Spiel.Ton.VollbildBildschirm.Lesen(obj) : null;
+
+    /// <summary>Bildschirm fuer das Vollbild merken (null = Schluessel weg; Fehler wie <see cref="VollbildSetzen"/>).</summary>
+    public static void VollbildBildschirmSetzen(Werkzeugordner o, Lernplattform.Core.Spiel.Ton.Bildschirm? b) =>
+        Aendern(o, obj => Lernplattform.Core.Spiel.Ton.VollbildBildschirm.Wert(obj, b));
+
     private static void Setzen(Werkzeugordner o, string schluessel, bool an) => Setzen(o, schluessel, JsonValue.Create(an));
 
-    private static void Setzen(Werkzeugordner o, string schluessel, JsonNode wert)
+    private static void Setzen(Werkzeugordner o, string schluessel, JsonNode wert) => Aendern(o, obj => obj[schluessel] = wert);
+
+    private static void Aendern(Werkzeugordner o, Action<JsonObject> aendern)
     {
         var obj = Lesen(o, out var kaputt);
         if (kaputt)
@@ -70,7 +80,7 @@ public static class WerkzeugEinstellungen
             throw new IOException("einstellungen.json ist nicht lesbar");
         }
         obj ??= [];
-        obj[schluessel] = wert;
+        aendern(obj);
         Werkzeugordner.SicherSchreiben(Datei(o), Encoding.UTF8.GetBytes(obj.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n"));
     }
 }

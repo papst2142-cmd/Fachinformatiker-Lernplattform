@@ -65,6 +65,12 @@ PY
   cp "$setup" "$ZIEL/$ID-win-Setup.exe"
   cp "$nupkg" "$json" "$pub/THIRD_PARTY_LICENSES.txt" "$pub/THIRD_PARTY_NOTICES.txt" "$ZIEL/"
   "${LIZENZEN[@]}" sammeln desktop win-x64 "$pub" "$ZIEL/lizenzen-stadtbau-win-x64.json" "$ZIEL/$ID-win-Setup.exe" "$ZIEL/$(basename "$nupkg")"
+  # S 0.25.1 (Sammelliste 249/250): Update-Probe gegen das echte GitHub, nur im Workflow CI (nicht beim Release-Bau)
+  if [ "${CI:-}" = "true" ] && [ "${GITHUB_WORKFLOW:-}" = "CI" ]; then
+    bash "$WURZEL/werkzeuge/stadtbau/update_probe_pc.sh" "$pub" "$ARBEIT/update-probe"
+  else
+    echo "Update-Probe PC: nur im Workflow CI (hier ${GITHUB_WORKFLOW:-lokal})"
+  fi
 }
 
 android() {

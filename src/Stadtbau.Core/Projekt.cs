@@ -633,6 +633,79 @@ public sealed class Projekt
         return p;
     }
 
+    /// <summary>
+    /// S 0.25.1 (Weisung P12-108 Punkt 2, Sammelliste 251): eine Stadt-Datei (.fistadt, Export oder „An CC senden“) als NEUES
+    /// Projekt oeffnen. Stadt draussen = die Datei; Innenraeume, die sich gegenueber der Basis unterscheiden, kommen als
+    /// geaenderte Grundrisse dazu. Leere Stadt (Kennung „neu_…“, ohne Basis): leeres Projekt mit der Groesse der Karte
+    /// (frei, wenn die Datei kein Kleingruen hat). Nie ueberschrieben: gibt es den Namen schon, ist das ein Fehler
+    /// (<see cref="NameAusStadtDatei"/> sucht einen freien). Innenraeume neuer Gebaeude stehen nicht in der Datei.
+    /// </summary>
+    /// <summary>Nur Gegenprobe: Stadt-Datei ohne die Innenraeume oeffnen (die Aenderung im Innenraum fehlt dann).</summary>
+    internal static readonly AsyncLocal<bool> StadtDateiOhneInnenFuerTests = new();
+
+    public static Projekt AusStadtDatei(byte[] datei, Spieldaten daten, Werkzeugordner ablage, string name)
+    {
+        if (!NameGueltig(name))
+        {
+            throw new ArgumentException("Projektname ungültig", nameof(name));
+        }
+        var f = StadtFassung.Lesen(datei);
+        (double, double)? leer = null;
+        var frei = false;
+        if (f.StadtId.StartsWith("neu_", StringComparison.Ordinal) && f.Basis is null)
+        {
+            if ((Py.Hat(f.Karte, "welt") ? f.Karte["welt"] : null) is not PyObjekt welt || welt["breite"] is not (long or double) || welt["hoehe"] is not (long or double)
+                || !Aussen.GroesseGueltig(Py.F(welt["breite"]), Py.F(welt["hoehe"])))
+            {
+                throw new StadtbauFehler([Texte.StadtDateiGroesse]);
+            }
+            leer = (Py.F(welt["breite"]), Py.F(welt["hoehe"]));
+            frei = (Py.Hat(f.Stadtdaten, "darstellung") ? f.Stadtdaten["darstellung"] : null) is PyObjekt dar && Py.Hat(dar, "kleingruen") && dar["kleingruen"] is false;
+        }
+        else if (f.StadtId != daten.Fassung.StadtId || f.Basis != daten.Fassung.Nummer)
+        {
+            throw new StadtbauFehler([Texte.StadtDateiFremd(f.StadtId, f.Basis, daten.Fassung.StadtId, daten.Fassung.Nummer)]);
+        }
+        var p = new Projekt(name, daten, ablage.Anlegen(), leer, frei);
+        if (File.Exists(p.Datei))
+        {
+            throw new IOException("Ein Projekt mit diesem Namen gibt es schon.");
+        }
+        p._aussen = Aussen.Aus(f);
+        foreach (var ort in StadtDateiOhneInnenFuerTests.Value ? [] : p.Orte)
+        {
+            var g = InnenGrundriss.Grundriss(f.Innenraeume, ort);
+            if (PythonJson.Standard(g) != PythonJson.Standard(p.Original(ort)))
+            {
+                p._grundrisse[ort] = g;
+            }
+        }
+        p.Nachricht = f.Nachricht;
+        p.Speichern(vonHand: true);
+        return p;
+    }
+
+    /// <summary>
+    /// Freier Projektname fuer eine Stadt-Datei: aus dem Dateinamen eines Exports „&lt;stadt&gt;_&lt;Projekt&gt;_&lt;Datum&gt;“
+    /// der Projektteil (_ als Leerzeichen), sonst „Stadt aus Datei“; gibt es ihn schon: „… 2“, „… 3“ ...
+    /// </summary>
+    public static string NameAusStadtDatei(string dateiname, string stadtId, Werkzeugordner ablage)
+    {
+        var stamm = Path.GetFileNameWithoutExtension(dateiname);
+        var m = System.Text.RegularExpressions.Regex.Match(stamm, @"^" + System.Text.RegularExpressions.Regex.Escape(stadtId) + @"_(.+)_\d{4}-\d{2}-\d{2}_\d{4}(_\d+)?$");
+        var name = m.Success ? m.Groups[1].Value.Replace('_', ' ').Trim() : "";
+        if (!NameGueltig(name) || name.Length > 36)
+        {
+            name = Texte.StadtDateiName;
+        }
+        var kandidat = name;
+        for (var n = 2; File.Exists(Path.Combine(ablage.Projekte, DateiName(kandidat) + Endung)); n++)
+        {
+            kandidat = name + " " + n.ToString(CultureInfo.InvariantCulture);
+        }
+        return kandidat;
+    }
+
     /// <summary>Ein Teil der Stadt draussen, den es in der Basis nicht gibt, aber geben darf (neuer Schluessel in Karte oder Stadtdaten).</summary>
     private static bool GueltigerTeil(string pfad) =>
         pfad.Split('/', 2) is [var a, var k] && a is "karte" or "stadtdaten" && k.Length > 0;

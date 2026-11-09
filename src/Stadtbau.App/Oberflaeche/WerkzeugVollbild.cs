@@ -1,5 +1,6 @@
 using Avalonia.Controls.Platform;
 using Avalonia.Threading;
+using Stadtbau.Core;
 
 namespace Stadtbau.Oberflaeche;
 
@@ -13,6 +14,18 @@ namespace Stadtbau.Oberflaeche;
 public static class WerkzeugVollbild
 {
     public static Action<bool>? Fenster { get; set; }
+
+    /// <summary>S 0.25.1 (Sammelliste 252): Bildschirme des PCs (setzt StadtbauApp; am Tablet null).</summary>
+    public static Func<IReadOnlyList<Lernplattform.Core.Spiel.Ton.Bildschirm>>? Bildschirme { get; set; }
+
+    /// <summary>Nur Start-Test: diese Bildschirme statt der echten (ein Rechner der CI hat nur einen).</summary>
+    public static IReadOnlyList<Lernplattform.Core.Spiel.Ton.Bildschirm>? BildschirmeFuerTests { get; set; }
+
+    /// <summary>Bildschirme fuer die Wahl (Testliste vor den echten).</summary>
+    public static IReadOnlyList<Lernplattform.Core.Spiel.Ton.Bildschirm> Liste() => BildschirmeFuerTests ?? Bildschirme?.Invoke() ?? [];
+
+    /// <summary>Steht „Bildschirm für Vollbild“ im Menue? Nur am PC ab zwei Bildschirmen.</summary>
+    public static bool WahlZeigen => VollbildZielWahl.Zeigen(Bildschirme is not null || BildschirmeFuerTests is not null, Liste().Count);
 
     public static Action<bool>? Geraet { get; set; }
 

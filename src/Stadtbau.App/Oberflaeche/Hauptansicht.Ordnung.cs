@@ -85,6 +85,9 @@ public sealed partial class Hauptansicht
         Eintrag(_projektMenue, Texte.MenueProjekt, Texte.AnCcSenden, () => _ = SendenAsync());
         Eintrag(_einstellungenMenue, Texte.MenueEinstellungen, Texte.Dunkel, FarbeWechseln);
         Eintrag(_einstellungenMenue, Texte.MenueEinstellungen, Texte.Vollbild, VollbildUmschalten, "F11");
+        // S 0.25.1 (Sammelliste 252): nur am PC ab zwei Bildschirmen (beim Oeffnen des Menues neu bestimmt)
+        BildschirmEintrag = Eintrag(_einstellungenMenue, Texte.MenueEinstellungen, Texte.VollbildBildschirm, () => _ = BildschirmWaehlenAsync());
+        BildschirmEintrag.IsVisible = WerkzeugVollbild.WahlZeigen;
         var update = Eintrag(_einstellungenMenue, Texte.MenueEinstellungen, Texte.UpdateSuchen, () => _ = Aktualisierung.VonHandAsync(_ordner.Fehler));
         // nur wo es ein Update gibt (PC aus der Installation, Tablet, Start-Test), wie der Knopf auf der Startseite
         update.IsVisible = Aktualisierung.Pruefen is not null;
@@ -272,6 +275,10 @@ public sealed partial class Hauptansicht
     {
         _menueAnker = anker;
         _menueKarte.Child = menue;
+        if (BildschirmEintrag is { } bildschirm)
+        {
+            bildschirm.IsVisible = WerkzeugVollbild.WahlZeigen;
+        }
         var unten = anker.TranslatePoint(new Point(anker.Bounds.Width, anker.Bounds.Height), this) ?? new Point(Bounds.Width - 16, 60);
         _menueKarte.Margin = new Thickness(0, unten.Y + 4, Math.Max(8, Bounds.Width - unten.X), 0);
         _menueEbene.IsVisible = true;

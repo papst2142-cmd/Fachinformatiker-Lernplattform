@@ -15,6 +15,8 @@
   <ItemGroup>
     <!-- Update-Quelle beider Programme (Filter nach Release-Linie) -->
     <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
+    <!-- S 0.25.1 (Sammelliste 249): Update-Quelle des Werkzeugs am PC, Test mit Gegenprobe -->
+    <Compile Include="..\..\src\Stadtbau.Desktop\Updatequelle.cs" Link="Updatequelle.cs" />
     <Compile Include="..\Lernplattform.Tests\StadtSzeneHash.cs" Link="StadtSzeneHash.cs" />
   </ItemGroup>
   <ItemGroup>

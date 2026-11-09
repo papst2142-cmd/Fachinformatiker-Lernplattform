@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.25.1
+
+Deine Projekte liegen am PC jetzt an einem sicheren Ort, und das Werkzeug aktualisiert sich am PC wieder selbst.
+
+- Am Windows-PC lagen Projekte, Blueprints, Sicherungen und Exporte bisher im selben Ordner wie das Programm. Eine neue Installation (Setup) oder das Deinstallieren hat diesen Ordner geleert, die Projekte waren dann weg. Jetzt liegen alle Daten im Ordner `AppData\Roaming\Fachinformatiker-Stadtbau` (wie bei der Lernplattform). Beim ersten Start werden Projekte, Blueprints, Sicherungen, Exporte und Einstellungen aus dem alten Ordner dorthin kopiert. Dabei wird nichts gelöscht und nichts überschrieben.
+- „Nach Updates suchen“ fand am PC nie eine neue Version: die Adresse von GitHub war unvollständig. Das ist behoben. Jeder Schritt des Updates steht jetzt in der Datei `update.log` im Datenordner, damit ein Fehler später nachzulesen ist. Ein Fehler bei der Suche zeigt jetzt immer ein Fenster.
+- Im Fenster „Projekt öffnen“ gibt es den Knopf „Stadt-Datei als neues Projekt öffnen“. Er macht aus einer Stadt-Datei (die mit „Stadt-Datei speichern“ oder „An CC senden“ entstand) ein neues Projekt. Ein vorhandenes Projekt wird nie überschrieben; gibt es den Namen schon, bekommt das neue Projekt eine Nummer dazu.
+- Mit zwei oder mehr Bildschirmen am PC steht im Menü „Einstellungen“ der Eintrag „Bildschirm für Vollbild“. Dort wählst du, auf welchem Bildschirm das Vollbild erscheint; die Wahl gilt auch beim nächsten Start.
+
 ## S 0.25.0
 
 Die Prüfung erkennt jetzt, wenn ein Stück den Eingang eines Hauses versperrt, und die Karte von oben zeigt deutsche Namen.

@@ -77,6 +77,90 @@ public sealed partial class Hauptansicht
         }
     }
 
+    /// <summary>S 0.25.1: Knopf „Stadt-Datei als neues Projekt öffnen“ im offenen Fenster „Projekt öffnen“ (sonst null; Start-Test).</summary>
+    public Button? StadtDateiKnopf { get; private set; }
+
+    /// <summary>Nur Start-Test: statt der Dateiauswahl diese Datei (Name, Inhalt) nehmen.</summary>
+    internal static Func<(string Name, byte[] Daten)?>? StadtDateiWahlFuerTests { get; set; }
+
+    private static Button StadtDateiKnopfBauen(Action gedrueckt)
+    {
+        var k = Schrift.Knopf(Texte.StadtDateiOeffnen).Vorlese(Texte.StadtDateiOeffnen).Mit(Texte.StadtDateiOeffnenTipp);
+        k.HorizontalAlignment = HorizontalAlignment.Stretch;
+        k.Margin = new Thickness(0);
+        k.Click += (_, _) => gedrueckt();
+        return k;
+    }
+
+    /// <summary>Stadt-Datei waehlen (PC: Dateiauswahl, Tablet: Auswahl von Android) und als neues Projekt oeffnen.</summary>
+    private async Task StadtDateiWaehlenAsync()
+    {
+        if (StadtDateiWahlFuerTests is { } test)
+        {
+            if (test() is { } t)
+            {
+                await StadtDateiOeffnenAsync(t.Name, t.Daten);
+            }
+            return;
+        }
+        if (TopLevel.GetTopLevel(this)?.StorageProvider is not { CanOpen: true } sp)
+        {
+            return;
+        }
+        var dateien = await sp.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = Texte.StadtDateiOeffnen,
+            AllowMultiple = false,
+            FileTypeFilter = [new Avalonia.Platform.Storage.FilePickerFileType("Stadt-Datei") { Patterns = ["*" + Lernplattform.Core.Stadtbau.StadtFassung.Endung] }],
+        });
+        if (dateien.Count != 1)
+        {
+            return;
+        }
+        byte[] daten;
+        try
+        {
+            await using var lesen = await dateien[0].OpenReadAsync();
+            using var m = new MemoryStream();
+            await lesen.CopyToAsync(m);
+            daten = m.ToArray();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _ordner.Fehler("Stadt-Datei lesen: " + e.GetType().Name + ": " + e.Message);
+            await Dialog.Zeigen(Texte.StadtDateiOeffnen, "Die Datei lässt sich nicht lesen: " + e.Message, Texte.Ok);
+            return;
+        }
+        await StadtDateiOeffnenAsync(dateien[0].Name, daten);
+    }
+
+    /// <summary>
+    /// Inhalt einer Stadt-Datei als neues Projekt anlegen (freier Name, nie ueberschrieben) und zeigen. Rueckgabe: true = geoeffnet.
+    /// </summary>
+    internal async Task<bool> StadtDateiOeffnenAsync(string dateiname, byte[] daten)
+    {
+        if (_daten is null)
+        {
+            return false;
+        }
+        try
+        {
+            var stadt = Lernplattform.Core.Stadtbau.StadtFassung.Lesen(daten).StadtId;
+            var name = Projekt.NameAusStadtDatei(dateiname, stadt, _ordner);
+            var p = Projekt.AusStadtDatei(daten, _daten, _ordner, name);
+            ProjektSetzen(p, p.Orte.FirstOrDefault(), innen: false);
+            Melden(Texte.StadtDateiGeoeffnet(name));
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            var text = e is Lernplattform.Core.Stadtbau.StadtbauFehler f ? string.Join(" ", f.Funde) : e.Message;
+            _ordner.Fehler("Stadt-Datei öffnen: " + e.GetType().Name + ": " + text);
+            await Dialog.Zeigen(Texte.StadtDateiOeffnen, "Die Datei lässt sich nicht als Projekt öffnen: " + text, Texte.Ok);
+            return false;
+        }
+    }
+
     private static Button KleinKnopf(Button k)
     {
         k.Padding = new Thickness(10, 4);
