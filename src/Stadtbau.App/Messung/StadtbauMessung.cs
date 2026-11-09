@@ -326,6 +326,7 @@ public static partial class StadtbauMessung
         await WasserAsync(a, f);
         await EntwurfAsync(a, f);
         await VollbildAsync(a, f);
+        await BildschirmWahlAsync(a, f);
         await RueckgaengigKnopfAsync(a, f);
         await BewegenAsync(a, f);
         await UpdateKnopfAsync(a, f);
@@ -343,6 +344,7 @@ public static partial class StadtbauMessung
         await AussehenAsync(a, f);
         await SpielgeschichteAsync(a, f);
         await ProjekteLoeschenAsync(a, f);
+        await StadtDateiAsync(a, f);
         await TuerAsync(a, f);
         await TuerFreiAsync(a, f);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))

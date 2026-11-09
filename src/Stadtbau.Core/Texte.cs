@@ -476,6 +476,7 @@ public static class Texte
         [AnCcSenden] = "Prüft die Stadt und schickt die Datei für das Spiel direkt an CC.",
         [Dunkel] = "Schaltet zwischen hellen und dunklen Farben um.",
         [Vollbild] = "Zeigt das Werkzeug über den ganzen Bildschirm, am PC auch mit der Taste F11.",
+        [VollbildBildschirm] = "Wählt, auf welchem Bildschirm das Vollbild erscheint (nur mit zwei oder mehr Bildschirmen, gilt auch beim nächsten Start).",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
         [Spielgeschichte] = TippSpielgeschichte,
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
@@ -892,4 +893,27 @@ public static class Texte
     };
 
     public static string GeschichteTreffer(int n) => n == 1 ? "1 Aufgabe" : n + " Aufgaben";
+
+    // S 0.25.1 (Sammelliste 250): Umzug des Datenordners unter Windows
+    public static string UmzugProtokoll(int kopiert, int schonDa, int fehler) =>
+        "Datenordner neu (außerhalb der Installation): " + kopiert + " Dateien aus dem alten Ordner kopiert"
+        + (schonDa > 0 ? ", " + schonDa + " lagen schon da und blieben unverändert" : "")
+        + (fehler > 0 ? ", " + fehler + " ließen sich nicht kopieren (neuer Versuch beim nächsten Start)" : "")
+        + ". Der alte Ordner bleibt unverändert.";
+
+    // S 0.25.1 (Sammelliste 251): Stadt-Datei als neues Projekt oeffnen
+    public const string StadtDateiOeffnen = "Stadt-Datei als neues Projekt öffnen";
+    public const string StadtDateiOeffnenTipp = "Öffnet eine Stadt-Datei (.fistadt, die mit „Stadt-Datei speichern“ oder „An CC senden“ entstand) als neues Projekt. Kein vorhandenes Projekt wird überschrieben; Innenräume neuer Gebäude stehen nicht in der Datei.";
+    public const string StadtDateiName = "Stadt aus Datei";
+    public const string StadtDateiGroesse = "Die Größe der leeren Stadt in der Datei passt nicht.";
+    public static string StadtDateiFremd(string stadt, long? basis, string kennt, long nummer) =>
+        "Die Datei baut auf " + stadt + (basis is { } b ? " Fassung " + b.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")
+        + " auf; dieses Werkzeug kennt " + kennt + " Fassung " + nummer.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".";
+    public static string StadtDateiGeoeffnet(string name) => "Stadt-Datei als neues Projekt „" + name + "“ geöffnet";
+
+    // S 0.25.1 (Sammelliste 252): Bildschirm fuer das Vollbild (Eintraege der Liste wie in der Lernplattform)
+    public const string VollbildBildschirm = "Bildschirm für Vollbild";
+    public const string VollbildBildschirmText = "Auf diesem Bildschirm erscheint das Vollbild. Die Wahl gilt auch beim nächsten Start.";
+    public const string VollbildBildschirmFehler = "Die Wahl des Bildschirms konnte nicht gespeichert werden; es gilt weiter die alte.";
+    public static string Gewaehlt(string eintrag) => eintrag + ", gewählt";
 }

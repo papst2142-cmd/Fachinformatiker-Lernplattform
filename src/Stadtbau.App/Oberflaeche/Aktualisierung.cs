@@ -25,7 +25,7 @@ public static class Aktualisierung
         {
             return;
         }
-        var e = await Task.Run(() => UpdateSuche.SuchenAsync(pruefen));
+        var e = await SuchenAsync(pruefen, fehler);
         if (e.Art == UpdateArt.Fehler)
         {
             fehler("Update: " + e.Grund);
@@ -46,7 +46,7 @@ public static class Aktualisierung
         UpdateErgebnis e;
         using (Dialog.Warten(Texte.UpdateSucht))
         {
-            e = await Task.Run(() => UpdateSuche.SuchenAsync(pruefen));
+            e = await SuchenAsync(pruefen, fehler);
         }
         if (e.Art == UpdateArt.Fehler)
         {
@@ -59,6 +59,24 @@ public static class Aktualisierung
         }
         var (titel, text) = UpdateSuche.Antwort(e);
         await Dialog.Zeigen(titel, text, Texte.Ok);
+    }
+
+    /// <summary>
+    /// S 0.25.1 (Sammelliste 249): ein Programmfehler der Suche (bis S 0.25.0 eine UriFormatException der Update-Quelle)
+    /// laesst UpdateSuche bewusst durch; hier landet er in fehler.log und wird zur Antwort „Fehler“, statt beim Start still
+    /// zu verschwinden.
+    /// </summary>
+    private static async Task<UpdateErgebnis> SuchenAsync(Func<Task<UpdateErgebnis>> pruefen, Action<string> fehler)
+    {
+        try
+        {
+            return await Task.Run(() => UpdateSuche.SuchenAsync(pruefen));
+        }
+        catch (Exception x) when (x is not OutOfMemoryException)
+        {
+            fehler("Update: Programmfehler " + x.GetType().Name + ": " + x.Message);
+            return new UpdateErgebnis(UpdateArt.Fehler, Grund: x.GetType().Name + ": " + x.Message);
+        }
     }
 
     private static async Task AnbietenAsync(UpdateErgebnis e, Action<string> fehler)
@@ -81,7 +99,7 @@ public static class Aktualisierung
                 await e.Einspielen();
             }
         }
-        catch (Exception x) when (x is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
+        catch (Exception x) when (x is not OutOfMemoryException)
         {
             fehler("Update: " + x.GetType().Name + ": " + x.Message);
             await Dialog.Zeigen(Texte.UpdateSuchen, Texte.UpdateFehler, Texte.Ok);

@@ -2739,10 +2739,24 @@ public sealed partial class Hauptansicht : UserControl
             gewaehlt = datei;
             Dialog.AlleSchliessen();
         });
-        var wahl = await Dialog.Zeigen(Texte.OeffnenTitel, new ScrollViewer { Content = liste, MaxHeight = 420 }, Texte.OeffnenDatei, Texte.Abbrechen);
+        // S 0.25.1 (Sammelliste 251): Stadt-Datei als neues Projekt oeffnen (Hauptansicht.Projekte.cs)
+        var stadtDatei = false;
+        StadtDateiKnopf = StadtDateiKnopfBauen(() =>
+        {
+            stadtDatei = true;
+            Dialog.AlleSchliessen();
+        });
+        var inhalt = new StackPanel { Spacing = 10, Children = { StadtDateiKnopf, new ScrollViewer { Content = liste, MaxHeight = 420 } } };
+        var wahl = await Dialog.Zeigen(Texte.OeffnenTitel, inhalt, Texte.OeffnenDatei, Texte.Abbrechen);
+        StadtDateiKnopf = null;
         if (gewaehlt is not null)
         {
             ProjektLaden(gewaehlt);
+            return;
+        }
+        if (stadtDatei)
+        {
+            await StadtDateiWaehlenAsync();
             return;
         }
         if (wahl == 0 && TopLevel.GetTopLevel(this)?.StorageProvider is { CanOpen: true } sp)

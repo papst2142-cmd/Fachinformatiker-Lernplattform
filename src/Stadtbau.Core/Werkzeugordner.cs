@@ -1,7 +1,9 @@
 namespace Stadtbau.Core;
 
 /// <summary>
-/// Datenordner des Werkzeugs (getrennt von der Lernplattform): Windows %LOCALAPPDATA%\Fachinformatiker-Stadtbau, Linux
+/// Datenordner des Werkzeugs (getrennt von der Lernplattform): Windows %APPDATA%\Fachinformatiker-Stadtbau (seit S 0.25.1,
+/// Sammelliste 250; vorher %LOCALAPPDATA%\Fachinformatiker-Stadtbau = Installationsordner von Velopack, siehe
+/// <see cref="Datenumzug"/>), Linux
 /// ~/.local/share/fachinformatiker-stadtbau, macOS ~/Library/Application Support/Fachinformatiker-Stadtbau, Android der
 /// Ordner der App. STADTBAU_DATEN setzt ihn fuer Tests und den Start-Test. Darin: projekte/, sicherungen/, exporte/ und seit Welle 4c blueprints/.
 /// </summary>
@@ -22,28 +24,60 @@ public sealed class Werkzeugordner(string wurzel)
 
     public string FehlerLog => Path.Combine(Wurzel, "fehler.log");
 
-    public static Werkzeugordner Standard()
+    /// <summary>
+    /// Nur fuer die Gegenprobe (Sammelliste 250): Windows wieder mit dem alten Ordner %LOCALAPPDATA%\Fachinformatiker-Stadtbau,
+    /// in den Velopack das Werkzeug installiert (Setup und Deinstallation leeren ihn).
+    /// </summary>
+    internal static readonly AsyncLocal<bool> StandardAltFuerTests = new();
+
+    public static Werkzeugordner Standard() => new(StandardPfad(Aktuell(), Environment.GetFolderPath, Environment.GetEnvironmentVariable));
+
+    /// <summary>Betriebssystem fuer <see cref="StandardPfad"/> (Tests geben es vor).</summary>
+    internal enum Betriebssystem
     {
-        if (Environment.GetEnvironmentVariable(Umgebung) is { Length: > 0 } eigen)
+        Windows,
+        Mac,
+        Android,
+        Linux,
+    }
+
+    internal static Betriebssystem Aktuell() =>
+        OperatingSystem.IsWindows() ? Betriebssystem.Windows
+        : OperatingSystem.IsMacOS() ? Betriebssystem.Mac
+        : OperatingSystem.IsAndroid() ? Betriebssystem.Android
+        : Betriebssystem.Linux;
+
+    /// <summary>Installationsordner von Velopack unter Windows (%LOCALAPPDATA%\Kennung) = Datenordner bis S 0.25.0.</summary>
+    internal static string InstallationWindows(Func<Environment.SpecialFolder, string> ordner) =>
+        Path.Combine(ordner(Environment.SpecialFolder.LocalApplicationData), Werkzeug.Kennung);
+
+    /// <summary>Datenordner je System ohne Zugriff auf die Platte (testbar).</summary>
+    internal static string StandardPfad(Betriebssystem system, Func<Environment.SpecialFolder, string> ordner, Func<string, string?> umgebung)
+    {
+        if (umgebung(Umgebung) is { Length: > 0 } eigen)
         {
-            return new Werkzeugordner(eigen);
+            return eigen;
         }
-        if (OperatingSystem.IsWindows())
+        switch (system)
         {
-            return new Werkzeugordner(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Werkzeug.Kennung));
+            case Betriebssystem.Windows:
+                // Velopack installiert nach %LOCALAPPDATA%\<Kennung> und leert diesen Ordner bei Setup und Deinstallation;
+                // die Daten liegen deshalb wie bei der Lernplattform unter %APPDATA% (Sammelliste 250).
+                return StandardAltFuerTests.Value
+                    ? InstallationWindows(ordner)
+                    : Path.Combine(ordner(Environment.SpecialFolder.ApplicationData), Werkzeug.Kennung);
+            case Betriebssystem.Mac:
+                // das Programm liegt als Bundle in ~/Applications oder /Applications, nie hier
+                return Path.Combine(ordner(Environment.SpecialFolder.UserProfile), "Library", "Application Support", Werkzeug.Kennung);
+            case Betriebssystem.Android:
+                // privater Ordner der App; ein Update ueber eine neue APK laesst ihn stehen
+                return Path.Combine(ordner(Environment.SpecialFolder.LocalApplicationData), Werkzeug.Kennung);
+            default:
+                var daten = umgebung("XDG_DATA_HOME") is { Length: > 0 } x
+                    ? x
+                    : Path.Combine(ordner(Environment.SpecialFolder.UserProfile), ".local", "share");
+                return Path.Combine(daten, Werkzeug.Kennung.ToLowerInvariant());
         }
-        if (OperatingSystem.IsMacOS())
-        {
-            return new Werkzeugordner(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", Werkzeug.Kennung));
-        }
-        if (OperatingSystem.IsAndroid())
-        {
-            return new Werkzeugordner(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Werkzeug.Kennung));
-        }
-        var daten = Environment.GetEnvironmentVariable("XDG_DATA_HOME") is { Length: > 0 } x
-            ? x
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
-        return new Werkzeugordner(Path.Combine(daten, Werkzeug.Kennung.ToLowerInvariant()));
     }
 
     /// <summary>Ordner anlegen (alle vier).</summary>

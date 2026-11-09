@@ -87,7 +87,16 @@ public partial class StadtbauApp : Application
             };
             ansicht.Schliessen = fenster.Close;
             // Patch S 0.5.1 (Weisung P12-37 Punkt 2): Vollbild vor dem ersten Zeigen, wenn es beim letzten Mal an war
-            WerkzeugVollbild.Fenster = an => fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            // S 0.25.1 (Sammelliste 252): vorher auf den gewaehlten Bildschirm (beim Start: Fenster noch nicht gezeigt)
+            WerkzeugVollbild.Bildschirme = () => Lernplattform.Spiel.VollbildZiel.Liste(fenster);
+            WerkzeugVollbild.Fenster = an =>
+            {
+                if (an)
+                {
+                    VollbildBildschirmWahl.Setzen(fenster, Ordner, beimStart: !fenster.IsVisible);
+                }
+                fenster.WindowState = an ? WindowState.FullScreen : WindowState.Normal;
+            };
             VollbildBeimStart();
             NachStart?.Invoke(ansicht, fenster);
         }
