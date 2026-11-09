@@ -31,7 +31,7 @@ namespace Stadtbau.Oberflaeche;
 /// schiebt, Mausrad zoomt. Finger: ein Finger wie die linke Maustaste, zwei Finger zoomen (auseinander), kippen
 /// (gemeinsam hoch/runter) und drehen (Drehung der Finger). Mit „Figur laufen lassen“ laeuft die Figur dorthin.
 /// </summary>
-public sealed class DreiBedienung : Control
+public sealed partial class DreiBedienung : Control
 {
     private readonly StadtFlaeche _drei;
     private readonly KartenFlaeche _karte;
@@ -92,6 +92,15 @@ public sealed class DreiBedienung : Control
         };
         // S 0.27.0: Massband (gleiche Messung wie in der Draufsicht)
         _karte.MassbandGeaendert += InvalidateVisual;
+        // S 0.28.0: Tuer setzen (Vorschau, Modus); die Tueren des Modells aus der schon gebauten 3D-Szene
+        _karte.TuerModusGeaendert += () =>
+        {
+            if (_karte.TuerFuer is not null && _drei.Spiel?.Szene is { } sz)
+            {
+                _karte.TuerModellTuerenAus(sz);
+            }
+            InvalidateVisual();
+        };
         // S 0.9.1 (Weisung P12-53 Teil A): Setzen abgewaehlt, dann verschwindet der Schatten sofort
         _karte.SetzenGeaendert += () =>
         {
@@ -248,6 +257,16 @@ public sealed class DreiBedienung : Control
             _anfangInDieserGeste = false;
         }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
+        if (_karte.TuerFuer is not null && !FigurLaufen)
+        {
+            // S 0.28.0: ein Finger setzt und zieht die Tuer, zwei Finger bewegen die Kamera
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, bauen), p);
+            if (erster && bauen && TuerPunktAn(p) is { } tp)
+            {
+                _karte.TuerVorschauAn(tp.X, tp.Y);
+            }
+            return;
+        }
         AussenStelle? s = null;
         if (!FigurLaufen && _karte.SetzenArt is null && !_karte.MassbandAn && erster)
         {
@@ -396,6 +415,10 @@ public sealed class DreiBedienung : Control
 
     private void Anwenden(Fingergeste.Schritt s, Point p)
     {
+        if (_karte.TuerFuer is not null && !FigurLaufen && TuerAnwenden(s))
+        {
+            return;
+        }
         switch (s.Art)
         {
             case Fingergeste.Art.Tippen when FigurLaufen:
@@ -820,6 +843,7 @@ public sealed class DreiBedienung : Control
             ctx.DrawEllipse(Brushes.White, RandDunkel, new Point(zb.X, zb.Y), 7, 7);
         }
         MassbandZeichnen(ctx, k);
+        TuerZeichnen(ctx, k);
         GriffZeichnen(ctx);
     }
 

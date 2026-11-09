@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.55.0
+Im Spiel sind die leeren Schilder an den Häusern weg.
+
+- Acht Häuser der Stadt (unter anderem Amt, Bank, Kaufhaus, Möbelhaus und Elektromarkt) hatten auf der Vorderseite eine farbige Platte ohne Schrift. Diese Platten werden nicht mehr gezeichnet. Die Häuser selbst, ihre Türen und die Wege bleiben genau gleich.
+- Neue Städte aus dem Stadtbau-Werkzeug können Türen an einer anderen Wand haben. Die Figur geht dann durch diese Tür ins Haus. Die heutige Stadt ändert sich dadurch nicht.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.54.0
 Im Spiel gibt es Zebrastreifen, und Straßen mit Gehweg werden wie im echten Leben überquert.
 

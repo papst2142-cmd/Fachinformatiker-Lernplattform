@@ -72,8 +72,9 @@ public sealed partial class KartenFlaeche : Control
             _setzenArt = value;
             if (value is not null)
             {
-                // S 0.27.0: Setzen beendet das Massband
+                // S 0.27.0: Setzen beendet das Massband; S 0.28.0 auch das Tuer-Setzen
                 MassbandAn = false;
+                TuerSetzenBeenden();
             }
             ZiehZuruecksetzen();
             SetzenGeaendert?.Invoke();
@@ -658,6 +659,7 @@ public sealed partial class KartenFlaeche : Control
         ZiehVorschauZeichnen(ctx);
         AussehenVorschauZeichnen(ctx);
         MassbandZeichnen(ctx);
+        TuerZeichnen(ctx);
         GriffZeichnen(ctx);
     }
 
@@ -993,6 +995,11 @@ public sealed partial class KartenFlaeche : Control
 
     public void Waehlen(AussenStelle? s)
     {
+        if (s != TuerFuer)
+        {
+            // S 0.28.0: ein anderes Stueck gewaehlt = Tuer-Setzen endet
+            TuerSetzenBeenden();
+        }
         Auswahl = s;
         AuswahlGeaendert?.Invoke();
         InvalidateVisual();
@@ -1188,7 +1195,7 @@ public sealed partial class KartenFlaeche : Control
     {
         get
         {
-            if (Stand is not { } a || _projekt is null || _projekt.NurLesen || SetzenArt is not null || Auswahl is not { } s
+            if (Stand is not { } a || _projekt is null || _projekt.NurLesen || SetzenArt is not null || TuerFuer is not null || Auswahl is not { } s
                 || !AussenBearbeitung.Gueltig(a, s) || AussenBearbeitung.DrehenNicht(s) is not null || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
             {
                 return null;
@@ -1266,6 +1273,10 @@ public sealed partial class KartenFlaeche : Control
         switch (taste)
         {
             case Key.Escape when ZiehAbbrechen():
+                return true;
+            case Key.Escape when TuerFuer is not null:
+                TuerSetzenBeenden();
+                Gemeldet?.Invoke(Texte.TuerSetzenBeenden);
                 return true;
             case Key.Escape when MassbandAn:
                 // S 0.27.0: erst die Messung leeren, dann das Massband beenden
@@ -1356,6 +1367,16 @@ public sealed partial class KartenFlaeche : Control
             // die Ansicht auch ueber Stuecken, waehlt nichts und setzt nichts
             _nurSchieben = true;
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            return;
+        }
+        // S 0.28.0: Tuer setzen (Knopf) oder die Tuer des gewaehlten Hauses direkt greifen; ein Finger zieht sie an der Wand
+        if (TuerFuer is not null || (erster && TuerDirektGreifen(p)))
+        {
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, _projekt?.NurLesen == false));
+            if (erster && TuerFuer is not null)
+            {
+                TuerVorschauAn(w.X, w.Y);
+            }
             return;
         }
         var s = SetzenArt is null && !MassbandAn ? StueckAn(a, p, Math.Max(0.3, 10 / _zoom)) : null;
@@ -1471,6 +1492,10 @@ public sealed partial class KartenFlaeche : Control
     /// Flaeche schiebt die Ansicht, zwei Finger zoomen und schieben.</summary>
     private void Anwenden(Fingergeste.Schritt s)
     {
+        if (TuerFuer is not null && TuerAnwenden(s))
+        {
+            return;
+        }
         if (ZiehArtAktiv is not null && ZiehenAnwenden(s))
         {
             return;

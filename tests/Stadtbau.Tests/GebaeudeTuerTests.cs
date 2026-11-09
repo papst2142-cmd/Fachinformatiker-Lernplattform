@@ -162,6 +162,9 @@ public class GebaeudeTuerTests
                 Aussen.Laternen(a).Add(new List<object?> { Math.Round(f.X + f.W + 0.5, 2), y + 0.5, false });
             });
             GebaeudeTuer.LaternenEgalFuerTests.Value = egal;
+            // S 0.28.0: „Tür dazu“ beginnt jetzt an der Wand zur Strasse; der Weg um das Haus (Tuer auf der Rueckseite,
+            // wie mit „Tür setzen“) wird mit der alten Startwand geprueft
+            GebaeudeTuer.SuedAltFuerTests.Value = true;
             try
             {
                 Assert.Null(p.AussenAendern("Tuer", a => GebaeudeTuer.Dazu(a, s, einrasten: true)));
@@ -169,6 +172,7 @@ public class GebaeudeTuerTests
             finally
             {
                 GebaeudeTuer.LaternenEgalFuerTests.Value = false;
+                GebaeudeTuer.SuedAltFuerTests.Value = false;
             }
             var w = (List<object?>)Blueprint.ZierwegVon(p.AussenStand, s)!["weg"]!;
             var e = (List<object?>)w[^1]!;
@@ -189,6 +193,7 @@ public class GebaeudeTuerTests
         var f = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
         Strasse(p, Math.Round(f.Y - 1.5, 2));
         GebaeudeTuer.NurGeradeausFuerTests.Value = true;
+        GebaeudeTuer.SuedAltFuerTests.Value = true;
         try
         {
             Assert.Equal(Texte.TuerWegOhneStrasse, p.AussenAendern("Tuer", a => GebaeudeTuer.Dazu(a, s, einrasten: true)));
@@ -196,6 +201,7 @@ public class GebaeudeTuerTests
         finally
         {
             GebaeudeTuer.NurGeradeausFuerTests.Value = false;
+            GebaeudeTuer.SuedAltFuerTests.Value = false;
         }
     }
 

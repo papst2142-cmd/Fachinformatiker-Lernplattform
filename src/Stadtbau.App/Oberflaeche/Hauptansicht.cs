@@ -346,6 +346,15 @@ public sealed partial class Hauptansicht : UserControl
         Karte.AuswahlGeaendert += AussenAuswahlZeigen;
         Karte.Gemeldet += Melden;
         Karte.SetzenGeaendert += SetzenZustandZeigen;
+        // S 0.28.0: Knopf „Tür setzen“ zeigt, ob das Tuer-Setzen laeuft
+        Karte.TuerModusGeaendert += () =>
+        {
+            if (_tuerModusGezeigt != Karte.TuerFuer)
+            {
+                _tuerModusGezeigt = Karte.TuerFuer;
+                AussenAuswahlZeigen();
+            }
+        };
         Karte.ZiehenGeaendert += () => _aussenHinweis.Text = SetzenHinweis();
         _setzenBeendenLinks.IsVisible = false;
         _setzenBeendenLinks.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -1163,6 +1172,8 @@ public sealed partial class Hauptansicht : UserControl
     }
 
     /// <summary>Das Setzen hat begonnen oder geendet (auch durch Setzen eines Stuecks oder Escape).</summary>
+    private AussenStelle? _tuerModusGezeigt;
+
     private void SetzenZustandZeigen()
     {
         var setzen = Karte.SetzenArt is not null;
@@ -1475,6 +1486,11 @@ public sealed partial class Hauptansicht : UserControl
         if (innenort is null && GebaeudeTuer.KnopfZeigen(a, s))
         {
             _aussenAuswahl.Children.Add(TuerKnopf(s));
+        }
+        // Welle S 0.28.0 (Weisung P12-121, Nico 2a 3a): Tuer selbst setzen, auch an Orten mit Innenraum
+        if (s.Art is AussenArt.Haus or AussenArt.Gebaeude && TuerSetzen.Nicht(a, s) is null)
+        {
+            _aussenAuswahl.Children.Add(TuerSetzenKnopf(s));
         }
         // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
         AussehenTeil(s);

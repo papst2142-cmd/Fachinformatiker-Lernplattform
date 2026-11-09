@@ -36,17 +36,19 @@ public sealed class StadtbauFassungTests
     /// Szene-Pruefsummen vor Welle 1 (main 42bbee7, Szene aus den Dateien und Nachtlicht.Skizze/Beete), Stand null; seit
     /// A 0.43.6 (Weisung P12-50) gelten sie fuer die Grafik je Dreieck (<see cref="GrafikBibliothek.JeDreieck"/>, so zeichnete
     /// das Spiel bis A 0.43.5), die vierte Spalte ist der Wert mit Farbverlauf je Ecke (Stand A 0.43.6, gleicher Rechner).
+    /// Seit A 0.55.0 (Weisung P12-121, Nico 1b) gelten die dritte und vierte Spalte mit dem alten Schild
+    /// (<see cref="StadtSzene.SchildAltFuerTests"/>, Gegenprobe); die fuenfte Spalte ist der Wert ohne Schild (Stand A 0.55.0).
     /// </summary>
-    public static TheoryData<string?, Jahreszeit, string, string> StadtVorher => new()
+    public static TheoryData<string?, Jahreszeit, string, string, string> StadtVorher => new()
     {
-        { null, Jahreszeit.Fruehling, "472ec15a44777c5b53824c0e2e86e4c2223e9507a61641fddba7f051b460f370", "c1d39aee89bbb9f400767308f0befc4eb427a4fda4b6f895325105c850ed231b" },
-        { null, Jahreszeit.Sommer, "05cc6125e56d9eb6724a0afbec0659b543830734063d487f33d30ae28605093c", "466943b29ce8de3dda64cae93f6a6033b789bafebca7cd3cdd6764a0b8bcd4fd" },
-        { null, Jahreszeit.Herbst, "7e787448537b1b55bf19ab4d011055daf9853276a4c8ccc5adefab5be77168b0", "2da33b72ad64afc66d8a44f37452fdded89769ec62946283ac950955ac6fdc27" },
-        { null, Jahreszeit.Winter, "33e96c79814a78d970631676c36ebb483e04726068da81ae90abd410eeb45426", "77fea78aff9f9e6e42ccabc1191239b6f59bc8670af6b48ef893c961c3faaf34" },
-        { Festzeit.Ostern, Jahreszeit.Fruehling, "56d8c6f1d275a6fef20ddd13cbc4ae1eda494b470462401cad4e82051f513200", "98dfed7a47c8c626ce9b1d582f5fd01b353a069fa447cfda859851461a3a1ab8" },
-        { Festzeit.Halloween, Jahreszeit.Herbst, "f235c68e6e254cf193d29c248f7207542b7c2be7057b011788d622178fbead6a", "1397eead9dded60c3c9eae60a602650c8de381076bd612a8ac686d8dc707f089" },
-        { Festzeit.Weihnachten, Jahreszeit.Winter, "25e7cc2364ccfeb00eba0405eed7232afa3b6a3e9f1305b6b94752ef66578574", "91a9a7299b2dd6fe360e5008e255b97987d9a09cd48f0bf6d124dc7368a77d73" },
-        { Festzeit.Silvester, Jahreszeit.Winter, "13bd51e246bfcdfc4a0529cf490b4c192f1b5af188dc2e60299235612d82313b", "6acf713991c9cdd9cf59602491ef52db32da529e0c3e6290606d3db9885785df" },
+        { null, Jahreszeit.Fruehling, "472ec15a44777c5b53824c0e2e86e4c2223e9507a61641fddba7f051b460f370", "c1d39aee89bbb9f400767308f0befc4eb427a4fda4b6f895325105c850ed231b", "e465e633452227d94611e27c90bbfbf11cc7dabcd3b431241638a7e03ad4d877" },
+        { null, Jahreszeit.Sommer, "05cc6125e56d9eb6724a0afbec0659b543830734063d487f33d30ae28605093c", "466943b29ce8de3dda64cae93f6a6033b789bafebca7cd3cdd6764a0b8bcd4fd", "b60d5c227dd2303380ae99aa05ec717ed3992cb86e391527e19af0af070ca9ff" },
+        { null, Jahreszeit.Herbst, "7e787448537b1b55bf19ab4d011055daf9853276a4c8ccc5adefab5be77168b0", "2da33b72ad64afc66d8a44f37452fdded89769ec62946283ac950955ac6fdc27", "5f605c4becfc76c703f9e080f23c8164661725558f7a769ab20ead2988699eed" },
+        { null, Jahreszeit.Winter, "33e96c79814a78d970631676c36ebb483e04726068da81ae90abd410eeb45426", "77fea78aff9f9e6e42ccabc1191239b6f59bc8670af6b48ef893c961c3faaf34", "1d350dc3e1be48a16e784d1ee9f329eed339a5e4310852a86c13248ad106c835" },
+        { Festzeit.Ostern, Jahreszeit.Fruehling, "56d8c6f1d275a6fef20ddd13cbc4ae1eda494b470462401cad4e82051f513200", "98dfed7a47c8c626ce9b1d582f5fd01b353a069fa447cfda859851461a3a1ab8", "e7cf6758a0bd99f83dec49175bdaaec2277ab4c030a0264e29620f661d47aed2" },
+        { Festzeit.Halloween, Jahreszeit.Herbst, "f235c68e6e254cf193d29c248f7207542b7c2be7057b011788d622178fbead6a", "1397eead9dded60c3c9eae60a602650c8de381076bd612a8ac686d8dc707f089", "beb0f69f97711ea36f73e27c79f02575da840b19860dfa2b7219c46b999e3bbd" },
+        { Festzeit.Weihnachten, Jahreszeit.Winter, "25e7cc2364ccfeb00eba0405eed7232afa3b6a3e9f1305b6b94752ef66578574", "91a9a7299b2dd6fe360e5008e255b97987d9a09cd48f0bf6d124dc7368a77d73", "9463c5120c2f1920842e8fcebc4e8e453e0e275f07425fe426e9c4746744b707" },
+        { Festzeit.Silvester, Jahreszeit.Winter, "13bd51e246bfcdfc4a0529cf490b4c192f1b5af188dc2e60299235612d82313b", "6acf713991c9cdd9cf59602491ef52db32da529e0c3e6290606d3db9885785df", "db847d2e9a1947cacb1ce745858cc390e1b25b5e12bac855e63b116126ea3cc1" },
     };
 
     /// <summary>Innenraeume vor Welle 1 (neuer Stand; "-gespielt" = Stand aus SpielFingerabdruckTests.Gespielt); Spalten wie <see cref="StadtVorher"/>.</summary>
@@ -82,7 +84,22 @@ public sealed class StadtbauFassungTests
     /// </summary>
     private static readonly Lazy<bool> GleitkommaWieAufnahme = new(() =>
         OperatingSystem.IsLinux() && RuntimeInformation.OSArchitecture == Architecture.X64
-        && StadtSzeneHash.Stadt(SzeneAusDateien(null, Jahreszeit.Sommer, grafik: JeDreieck.Value)) == "05cc6125e56d9eb6724a0afbec0659b543830734063d487f33d30ae28605093c");
+        && MitSchild(() => StadtSzeneHash.Stadt(SzeneAusDateien(null, Jahreszeit.Sommer, grafik: JeDreieck.Value))) == "05cc6125e56d9eb6724a0afbec0659b543830734063d487f33d30ae28605093c");
+
+    /// <summary>A 0.55.0: <paramref name="f"/> mit dem alten Schild rechnen (Sollwerte bis A 0.54.0, Gegenprobe).</summary>
+    internal static T MitSchild<T>(Func<T> f)
+    {
+        var vorher = StadtSzene.SchildAltFuerTests;
+        StadtSzene.SchildAltFuerTests = true;
+        try
+        {
+            return f();
+        }
+        finally
+        {
+            StadtSzene.SchildAltFuerTests = vorher;
+        }
+    }
 
     private static bool SollwertSystem => GleitkommaWieAufnahme.Value;
 
@@ -151,14 +168,16 @@ public sealed class StadtbauFassungTests
 
     [Theory]
     [MemberData(nameof(StadtVorher))]
-    public void SzeneAusFassungGleichAusDateien(string? fest, Jahreszeit j, string vorher, string jetzt)
+    public void SzeneAusFassungGleichAusDateien(string? fest, Jahreszeit j, string vorher, string jetzt, string ohneSchild)
     {
         var ausFassung = StadtSzeneHash.Stadt(SzeneAusFassung(fest, j));
         Assert.Equal(StadtSzeneHash.Stadt(SzeneAusDateien(fest, j)), ausFassung);
         if (SollwertSystem)
         {
-            Assert.Equal(vorher, StadtSzeneHash.Stadt(SzeneAusFassung(fest, j, grafik: JeDreieck.Value)));
-            Assert.True(jetzt == ausFassung, "Stand A 0.43.6: " + ausFassung);
+            Assert.Equal(vorher, MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(fest, j, grafik: JeDreieck.Value))));
+            var mitSchild = MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(fest, j)));
+            Assert.True(jetzt == mitSchild, "Stand A 0.43.6: " + mitSchild);
+            Assert.True(ohneSchild == ausFassung, "Stand A 0.55.0: " + ausFassung);
         }
     }
 
@@ -172,15 +191,21 @@ public sealed class StadtbauFassungTests
     {
         // Stand A 0.43.6 (Farbverlauf je Ecke): Geometrie und Ganzzahliges gleich (gleicher Hash), die Farbsummen neu;
         // gezeichnet je Dreieck (Gegenprobe) gelten die alten Summen weiter.
-        RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummen);
-        RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer, grafik: JeDreieck.Value), RechnerfestSummenJeDreieck);
+        // A 0.55.0 (Weisung P12-121): mit dem alten Schild gelten die bisherigen Werte (Gegenprobe), ohne Schild die neuen
+        MitSchild(() =>
+        {
+            RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummen, RechnerfestHash);
+            RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer, grafik: JeDreieck.Value), RechnerfestSummenJeDreieck, RechnerfestHash);
+            return 0;
+        });
+        RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummenOhneSchild, RechnerfestHashOhneSchild);
     }
 
-    private static void RechnerfestPruefen(StadtSzene szene, (string Netz, int Werte, double Summe, double Betraege)[] soll)
+    private static void RechnerfestPruefen(StadtSzene szene, (string Netz, int Werte, double Summe, double Betraege)[] soll, string sollHash)
     {
         var (hash, summen) = StadtSzeneHash.StadtRechnerfest(szene);
-        var text = string.Join("\n", summen.Select(s => string.Create(CultureInfo.InvariantCulture, $"{s.Netz} {s.Werte} {s.Summe:R} {s.Betraege:R}")));
-        Assert.True(RechnerfestHash == hash, "Hash " + hash + "\n" + text);
+        var text = string.Join("\n", summen.Select(s => string.Create(CultureInfo.InvariantCulture, $"(\"{s.Netz}\", {s.Werte}, {s.Summe:R}, {s.Betraege:R}),")));
+        Assert.True(sollHash == hash, "Hash " + hash + "\n" + text);
         Assert.True(soll.Length == summen.Count, text);
         for (var i = 0; i < summen.Count; i++)
         {
@@ -191,6 +216,26 @@ public sealed class StadtbauFassungTests
                 string.Create(CultureInfo.InvariantCulture, $"{netz}: Summe {summen[i].Summe:R} (Soll {summe:R}), Betraege {summen[i].Betraege:R} (Soll {betraege:R})"));
         }
     }
+
+    /// <summary>Stand A 0.55.0 (ohne Schild), Sommer, Farbverlauf je Ecke.</summary>
+    private const string RechnerfestHashOhneSchild = "617286252aed87fdf219f3b30aa2ab5532d7e621b83eaa425b98737c2a12509a";
+
+    private static readonly (string Netz, int Werte, double Summe, double Betraege)[] RechnerfestSummenOhneSchild =
+    [
+        ("stadt", 414612, 1372703.6164868153, 1427932.7092000921),
+        ("haus:stellwerk#0", 8424, 30548.10409075847, 31880.311249242914),
+        ("haus:zuhause", 122670, 672225.3644995703, 687474.079643785),
+        ("haus:bitweiche", 171054, 678789.3083778784, 698513.5095457599),
+        ("haus:talheim", 23742, 87682.90385822974, 90516.58266314254),
+        ("haus:moebelhaus", 79686, 356870.552874337, 366605.3409091089),
+        ("haus:elektromarkt", 279270, 1530092.074953526, 1562042.5535769162),
+        ("haus:amt", 4446, 13133.225035086274, 13622.551111355424),
+        ("haus:bank", 6264, 22379.477186098695, 23075.477186098695),
+        ("haus:kaufhaus", 68832, 410625.3228750229, 420484.74333429337),
+        ("gruen", 573912, 1767258.1505225452, 1853367.3578681687),
+        ("paket-nah", 696384, 2397940.07526864, 2493014.076098815),
+        ("paket-fern", 27000, 81547.90074151754, 84668.8502959609),
+    ];
 
     private const string RechnerfestHash = "4cc4f16cff0f3ab7932ff13b19eee0095501695051706f7714ea62bbd5d098bc";
 
@@ -236,8 +281,10 @@ public sealed class StadtbauFassungTests
         Assert.Equal(StadtSzeneHash.Stadt(SzeneAusDateien(null, Jahreszeit.Sommer, gespielt)), ausFassung);
         if (SollwertSystem)
         {
-            Assert.Equal("dcc4874347278bfdfc4782957fda4f8d063ec4ad1cd6d2c0017022e6b337f8bd", StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt, JeDreieck.Value)));
-            Assert.True("a49d46342512a6e616cc36b494caf150f891a4e897bff8a50c201848c5d7b0d7" == ausFassung, "Stand A 0.43.6: " + ausFassung);   // mit Farbverlauf
+            Assert.Equal("dcc4874347278bfdfc4782957fda4f8d063ec4ad1cd6d2c0017022e6b337f8bd", MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt, JeDreieck.Value))));
+            var mitSchild = MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt)));
+            Assert.True("a49d46342512a6e616cc36b494caf150f891a4e897bff8a50c201848c5d7b0d7" == mitSchild, "Stand A 0.43.6: " + mitSchild);   // mit Farbverlauf
+            Assert.True("b94c1977dbc0f28a5a4cbe46a9d2922a4d18daa9e7a281a4178e096aaad7f801" == ausFassung, "Stand A 0.55.0: " + ausFassung);   // ohne Schild
         }
     }
 

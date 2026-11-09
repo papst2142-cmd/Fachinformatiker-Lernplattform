@@ -1630,6 +1630,15 @@ public sealed partial class StadtSzene
 
     private static readonly AsyncLocal<bool> FahrbahnAlt = new();
 
+    /// <summary>Gegenprobe Welle A 0.55.0: Teil „schild“ wie bis A 0.54.0 zeichnen (Platte in der Farbe der Rolle).</summary>
+    public static bool SchildAltFuerTests
+    {
+        get => SchildAlt.Value;
+        set => SchildAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> SchildAlt = new();
+
     private static void Linie(List<Teil> teile, List<(float X, float Z)> p, float hoehe, float breite, Vector3 farbe)
     {
         for (var i = 0; i + 1 < p.Count; i++)
@@ -2259,6 +2268,12 @@ public sealed partial class StadtSzene
                 }
                 case "schild":
                 {
+                    // Welle A 0.55.0 (Weisung P12-121, Nico 1b, Sammelliste 261): das Schild (Platte ohne Schrift auf der
+                    // Suedwand, oft grau auf der Rueckseite des Modells) wird nicht mehr gezeichnet; die Daten bleiben.
+                    if (!SchildAltFuerTests)
+                    {
+                        break;
+                    }
                     var w = Zahl(teil, "w");
                     var (front, hoehe, _) = Fassade(x, x + w, y + 0.28f);
                     var oben = Math.Max(0.28f, front - y);
