@@ -29,14 +29,15 @@ internal static class Updatequelle
     /// (<see cref="StoerungsfesteQuelle"/>, seit A 0.53.2 gemeinsam mit der Lernplattform in Lernplattform.Desktop,
     /// fuer das Werkzeug unveraendert). Die Gegenprobe (<see cref="AltFuerTests"/>) baut die Quelle bis S 0.25.0.
     /// </summary>
-    public static IUpdateSource Quelle(Action<string>? melden = null) =>
+    /// <param name="zugang">nur die Update-Probe der CI (GITHUB_TOKEN), sonst null.</param>
+    public static IUpdateSource Quelle(Action<string>? melden = null, string? zugang = null) =>
         AltFuerTests.Value
             ? new LinienQuelle(Werkzeug.Repository, ReleaseLinie.Linie.Stadtbau)
-            : new StoerungsfesteQuelle(RepositoryUrl, ReleaseLinie.Linie.Stadtbau, Kanal, melden ?? (_ => { }));
+            : new StoerungsfesteQuelle(RepositoryUrl, ReleaseLinie.Linie.Stadtbau, Kanal, melden ?? (_ => { }), zugang: zugang);
 
     /// <summary>UpdateManager fuer das Werkzeug (Kanal stadtbau-win); Wiederholungen meldet <paramref name="melden"/>.</summary>
-    public static UpdateManager Manager(Action<string>? melden = null) =>
-        new(Quelle(melden), new UpdateOptions { ExplicitChannel = Kanal });
+    public static UpdateManager Manager(Action<string>? melden = null, string? zugang = null) =>
+        new(Quelle(melden, zugang), new UpdateOptions { ExplicitChannel = Kanal });
 
     /// <summary>
     /// Velopack-Protokoll in update.log des Datenordners (Info und hoeher, Ausnahmen mit Art und Text). Velopacks
