@@ -70,6 +70,12 @@ public enum AussenArt
     /// Richtung aus der Strasse, <see cref="Lernplattform.Core.Spiel.Probe.Zebrastreifen"/>).
     /// </summary>
     Zebrastreifen,
+
+    /// <summary>
+    /// Welle S 0.27.0 (Weisung P12-118, Nico-Wunsch 5): Notiz in <c>notizen</c> der Stadt draussen (<c>[{x, y, text}]</c>),
+    /// nur im Werkzeug: nur in der Projektdatei, nie in der Stadt-Datei, nie im Spiel; nur in der Draufsicht zu sehen.
+    /// </summary>
+    Notiz,
 }
 
 /// <summary>
@@ -240,6 +246,8 @@ public static class Aussen
         yield return ("bauten", Get(aussen, "bauten") ?? new PyObjekt());
         // S 0.26.0: automatische Laternen (nur Werkzeug, nie in der Stadt-Datei)
         yield return (LaternenAutomatik.Teil, Get(aussen, LaternenAutomatik.Teil) ?? new PyObjekt());
+        // S 0.27.0: Notizen (nur Werkzeug, nie in der Stadt-Datei)
+        yield return (AussenBearbeitung.NotizTeil, Get(aussen, AussenBearbeitung.NotizTeil) ?? new List<object?>());
     }
 
     /// <summary>Teile als Text (json.dumps), fuer den Vergleich vorher/nachher.</summary>

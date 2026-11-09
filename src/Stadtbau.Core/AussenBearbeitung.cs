@@ -146,7 +146,7 @@ public static partial class AussenBearbeitung
     public static List<List<Vector2>> Strassen(PyObjekt aussen) =>
         [.. Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Linie(t["punkte"]))];
 
-    private static List<Vector2> Linie(object? punkte) =>
+    internal static List<Vector2> Linie(object? punkte) =>
         [.. ListeOderLeerWert(punkte).OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1])))];
 
     private static List<object?> ListeOderLeerWert(object? w) => w as List<object?> ?? [];
@@ -266,6 +266,10 @@ public static partial class AussenBearbeitung
         {
             yield return z;
         }
+        foreach (var n in AlleNotizen(aussen))
+        {
+            yield return n;
+        }
     }
 
     /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
@@ -305,19 +309,26 @@ public static partial class AussenBearbeitung
     /// <summary>S 0.26.0: so nah greift eine Laterne, wenn auf die Fahrbahn getippt wird.</summary>
     public const double LaterneAufFahrbahnGreifen = 0.2;
 
-    public static AussenStelle? StueckBei(PyObjekt aussen, double x, double y, double greifen = 0.3)
+    public static AussenStelle? StueckBei(PyObjekt aussen, double x, double y, double greifen = 0.3, IReadOnlySet<AussenArt>? aus = null)
     {
+        // S 0.27.0 (Weisung P12-118, E1): ausgeblendete Ebenen (aus) sind nicht anwaehlbar; was darunter liegt, schon
+        bool An(AussenArt art) => aus is null || !aus.Contains(art);
         var p = new Vector2((float)x, (float)y);
         var alle = Alle(aussen).ToList();
+        // S 0.27.0: eine Notiz liegt in der Draufsicht oben auf allem
+        if (An(AussenArt.Notiz) && NotizBei(aussen, p, greifen) is { } notiz)
+        {
+            return notiz;
+        }
         // S 0.8.0: Eckpunkte von Teich und Fluss zuerst (sonst liesse sich eine Ecke neben einem Baum nicht greifen)
-        if (EckpunktBei(aussen, x, y, greifen) is { } ecke)
+        if (EckpunktBei(aussen, x, y, greifen) is { } ecke && An(ecke.Art))
         {
             return ecke;
         }
         // S 0.26.0: an jeder Strasse stehen jetzt Laternen (0,5 neben der Mitte). Wer auf die Fahrbahn tippt, meint die
         // Strasse: dort greift eine Laterne nur ganz nah (sonst liesse sich die Strasse in 3D kaum noch greifen)
         var aufFahrbahn = Aussen.Landschaft(aussen).OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "strasse") && Kurve.Abstand(p, Linie(t["punkte"])) <= StadtSzene.StrassenBreite / 2);
-        foreach (var art in new[] { AussenArt.Laterne, AussenArt.Paketplatz, AussenArt.Beet, AussenArt.Baum })
+        foreach (var art in new[] { AussenArt.Laterne, AussenArt.Paketplatz, AussenArt.Beet, AussenArt.Baum }.Where(An))
         {
             var weit = art == AussenArt.Laterne && aufFahrbahn ? Math.Min(greifen, LaterneAufFahrbahnGreifen) : greifen;
             var naechstes = alle.Where(a => a.Stelle.Art == art).Select(a => (a.Stelle, D: Vector2.Distance(p, new Vector2((float)a.X, (float)a.Y))))
@@ -333,7 +344,7 @@ public static partial class AussenBearbeitung
             return zebra;
         }
         // Katalog-Stuecke (zuletzt gesetztes oben) vor den Haeusern: sie stehen oft auf oder an ihnen
-        foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Katalog).Reverse())
+        foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Katalog && An(AussenArt.Katalog)).Reverse())
         {
             var (kx, ky, kw, kh) = KatalogFlaeche(aussen, s);
             if (x >= kx - 0.05 && x <= kx + kw + 0.05 && y >= ky - 0.05 && y <= ky + kh + 0.05)
@@ -350,17 +361,17 @@ public static partial class AussenBearbeitung
             }
         }
         // S 0.8.0: Steg und Teich vor dem Park (ein Steg liegt auf dem Wasser)
-        if ((WasserBei(aussen, p, AussenArt.Steg) ?? WasserBei(aussen, p, AussenArt.Teich)) is { } wasser)
+        if (An(AussenArt.Teich) && (WasserBei(aussen, p, AussenArt.Steg) ?? WasserBei(aussen, p, AussenArt.Teich)) is { } wasser)
         {
             return wasser;
         }
         // Welle Z: ein Fussweg vor dem Park (er fuehrt oft hindurch)
-        if (FusswegBei(aussen, p, greifen) is { } fussweg)
+        if (An(AussenArt.Fussweg) && FusswegBei(aussen, p, greifen) is { } fussweg)
         {
             return fussweg;
         }
         var land = Aussen.Landschaft(aussen);
-        foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Park).Reverse())
+        foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Park && An(AussenArt.Park)).Reverse())
         {
             var l = Objekt(land[s.Nummer]);
             if (x >= Py.F(l["x"]) && x <= Py.F(l["x"]) + Py.F(l["w"]) && y >= Py.F(l["y"]) && y <= Py.F(l["y"]) + Py.F(l["h"]))
@@ -371,7 +382,7 @@ public static partial class AussenBearbeitung
         return alle.Where(a => a.Stelle.Art == AussenArt.Strasse)
             .Select(a => (a.Stelle, D: Kurve.Abstand(p, Linie(Objekt(land[a.Stelle.Nummer])["punkte"])), Halb: (StadtSzene.StrassenBreite / 2) + Gehweg(aussen, a.Stelle)))
             .Where(a => a.D <= a.Halb + 0.05).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault()
-            ?? WasserBei(aussen, p, AussenArt.Bahn) ?? WasserBei(aussen, p, AussenArt.Fluss);
+            ?? WasserBei(aussen, p, AussenArt.Bahn) ?? (An(AussenArt.Fluss) ? WasserBei(aussen, p, AussenArt.Fluss) : null);
     }
 
     // ---- Setzen ---------------------------------------------------------------------------------------
@@ -434,6 +445,10 @@ public static partial class AussenBearbeitung
         if (art == AussenArt.Zebrastreifen)
         {
             return ZebraSetzen(aussen, x, y);
+        }
+        if (art == AussenArt.Notiz)
+        {
+            return NotizSetzen(aussen, x, y, raster);
         }
         if (IstWasserOderBahn(art))
         {
@@ -598,6 +613,11 @@ public static partial class AussenBearbeitung
         if (s.Art == AussenArt.Zebrastreifen)
         {
             ZebraVerschieben(aussen, s, dx, dy);
+            return;
+        }
+        if (s.Art == AussenArt.Notiz)
+        {
+            NotizVerschieben(aussen, s, dx, dy);
             return;
         }
         // S 0.26.0: Zebrastreifen einer geraden Strasse wandern mit (vorher bestimmen, solange sie darauf liegen)
@@ -930,6 +950,10 @@ public static partial class AussenBearbeitung
         {
             return ZebraKopieren(aussen, s);
         }
+        if (s.Art == AussenArt.Notiz)
+        {
+            return NotizKopieren(aussen, s);
+        }
         var land = Aussen.Landschaft(aussen);
         switch (s.Art)
         {
@@ -1044,6 +1068,9 @@ public static partial class AussenBearbeitung
                 break;
             case AussenArt.Zebrastreifen:
                 ZebraLoeschen(aussen, s.Nummer);
+                break;
+            case AussenArt.Notiz:
+                NotizLoeschen(aussen, s.Nummer);
                 break;
             case AussenArt.Strasse:
             {
@@ -1160,6 +1187,7 @@ public static partial class AussenBearbeitung
             AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn => WasserBeschreibung(aussen, s, lage),
             AussenArt.Fussweg => FusswegBeschreibung(aussen, s, lage),
             AussenArt.Zebrastreifen => ZebraBeschreibung(s, lage),
+            AussenArt.Notiz => NotizBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

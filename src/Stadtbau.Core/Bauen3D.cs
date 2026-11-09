@@ -139,7 +139,7 @@ public static class Bauen3D
         if (vorne is not null && tVorne <= tBoden + 1e-4f)
         {
             // ein kleines Stueck (Laterne, Baum, Beet, Katalog) direkt am Bodenpunkt vor dem Haus geht vor
-            if (boden is { } b && AussenBearbeitung.StueckBei(aussen, b.X, b.Y, greifen) is { } klein
+            if (boden is { } b && AussenBearbeitung.StueckBei(aussen, b.X, b.Y, greifen, AussenBearbeitung.NurDraufsicht) is { } klein
                 && klein.Art is not (AussenArt.Haus or AussenArt.Gebaeude or AussenArt.Park or AussenArt.Strasse)
                 && tBoden - tVorne < 0.5f)
             {
@@ -147,7 +147,8 @@ public static class Bauen3D
             }
             return vorne.Stelle;
         }
-        return boden is { } p ? AussenBearbeitung.StueckBei(aussen, p.X, p.Y, greifen) : null;
+        // S 0.27.0: Notizen sind in 3D nicht zu sehen und darum nicht anwaehlbar
+        return boden is { } p ? AussenBearbeitung.StueckBei(aussen, p.X, p.Y, greifen, AussenBearbeitung.NurDraufsicht) : null;
     }
 
     // ---- Umrisse (Schatten am Boden) --------------------------------------------------------------
@@ -239,6 +240,9 @@ public static class Bauen3D
                 var q = z.Quer * (StadtSzene.StrassenBreite / 2);
                 return [[z.Mitte - l - q, z.Mitte + l - q, z.Mitte + l + q, z.Mitte - l + q]];
             }
+            case AussenArt.Notiz:
+                // S 0.27.0: nur in der Draufsicht
+                return [];
             case AussenArt.Steg:
             {
                 if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)
