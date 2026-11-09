@@ -22,43 +22,56 @@ public static class GithubSuche
     public static readonly TimeSpan Wartezeit = TimeSpan.FromSeconds(10);
 
     /// <summary>Neueres Release oder null; UpdateFehler bei Netzproblemen oder unerwarteter Antwort. url nur fuer Tests.</summary>
+    /// <remarks>A 0.53.2 (Sammelliste 256): bei einer Stoerung von GitHub (5xx, keine Antwort, Zeitueberschreitung) bis zu
+    /// 4 Versuche (<see cref="Stoerung"/>), jede Wiederholung an <paramref name="melden"/> (update.log). Das Ergebnis
+    /// bleibt wie in Python (bleibt die Stoerung, derselbe Text wie nach einem Versuch).</remarks>
     public static async Task<UpdateAngebot?> SuchenAsync(HttpClient http, string aktuell, string art = "android", string url = NeuesteUrl,
-        CancellationToken abbruch = default) =>
-        Auswerten(await AbrufenAsync(http, url, abbruch).ConfigureAwait(false), aktuell, art);
+        CancellationToken abbruch = default, Action<string>? melden = null) =>
+        Auswerten(await AbrufenAsync(http, url, abbruch, melden).ConfigureAwait(false), aktuell, art);
 
     /// <summary>
     /// S 0.6.0 (Weisung P12-42 Punkt 2): Suche einer Linie ohne "latest" (das Stadtbau-Werkzeug wird nie "latest").
     /// Fragt die Liste der Releases ab (<see cref="ListeUrl"/>) und nimmt nur Releases der Linie (<see cref="AuswertenLinie"/>).
     /// </summary>
     public static async Task<UpdateAngebot?> SuchenLinieAsync(HttpClient http, string aktuell, ReleaseLinie.Linie linie, string url = ListeUrl,
-        CancellationToken abbruch = default) =>
-        AuswertenLinie(await AbrufenAsync(http, url, abbruch).ConfigureAwait(false), aktuell, linie, "android");
+        CancellationToken abbruch = default, Action<string>? melden = null) =>
+        AuswertenLinie(await AbrufenAsync(http, url, abbruch, melden).ConfigureAwait(false), aktuell, linie, "android");
 
     /// <summary>Liste der Releases (neueste zuerst, 30 je Seite wie die Velopack-Quelle LinienQuelle am PC).</summary>
     public const string ListeUrl = "https://api.github.com/repos/" + Repository + "/releases?per_page=30";
 
-    private static async Task<string> AbrufenAsync(HttpClient http, string url, CancellationToken abbruch)
+    private static async Task<string> AbrufenAsync(HttpClient http, string url, CancellationToken abbruch, Action<string>? melden)
     {
-        string text;
         try
         {
-            using var zeit = CancellationTokenSource.CreateLinkedTokenSource(abbruch);
-            zeit.CancelAfter(Wartezeit);
-            using var anfrage = new HttpRequestMessage(HttpMethod.Get, url);
-            anfrage.Headers.UserAgent.Add(new ProductInfoHeaderValue(Kennung, null));
-            anfrage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-            using var antwort = await http.SendAsync(anfrage, zeit.Token).ConfigureAwait(false);
-            if (!antwort.IsSuccessStatusCode)
-            {
-                throw new UpdateFehler(UpdateTexte.Abgelehnt.Replace("%d", ((int)antwort.StatusCode).ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal));
-            }
-            text = new UTF8Encoding(false, true).GetString(await antwort.Content.ReadAsByteArrayAsync(zeit.Token).ConfigureAwait(false));
+            // A 0.53.2: jeder Versuch mit eigener Wartezeit; 4xx, Programmfehler und Abbruch durch den Nutzer nie wiederholt
+            return await Stoerung.WiederholenAsync("Suche " + url[(url.LastIndexOf('/') + 1)..], () => EinmalAbrufenAsync(http, url, abbruch),
+                melden ?? (_ => { }), abbruch: abbruch).ConfigureAwait(false);
+        }
+        catch (HttpRequestException e) when (e.StatusCode is { } code)
+        {
+            throw new UpdateFehler(UpdateTexte.Abgelehnt.Replace("%d", ((int)code).ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal));
         }
         catch (Exception e) when (e is HttpRequestException or IOException or OperationCanceledException or DecoderFallbackException)
         {
             throw new UpdateFehler(UpdateTexte.KeineVerbindung);
         }
-        return text;
+    }
+
+    // ein Versuch; eine Antwort ausserhalb 2xx wird HttpRequestException mit Statuscode (oben zu "Abgelehnt")
+    private static async Task<string> EinmalAbrufenAsync(HttpClient http, string url, CancellationToken abbruch)
+    {
+        using var zeit = CancellationTokenSource.CreateLinkedTokenSource(abbruch);
+        zeit.CancelAfter(Wartezeit);
+        using var anfrage = new HttpRequestMessage(HttpMethod.Get, url);
+        anfrage.Headers.UserAgent.Add(new ProductInfoHeaderValue(Kennung, null));
+        anfrage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        using var antwort = await http.SendAsync(anfrage, zeit.Token).ConfigureAwait(false);
+        if (!antwort.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException("HTTP " + (int)antwort.StatusCode, null, antwort.StatusCode);
+        }
+        return new UTF8Encoding(false, true).GetString(await antwort.Content.ReadAsByteArrayAsync(zeit.Token).ConfigureAwait(false));
     }
 
     /// <summary>Auswertung der Antwort (ohne Netz, fuer Tests und G41).</summary>

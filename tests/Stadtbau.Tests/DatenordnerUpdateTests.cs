@@ -1,3 +1,5 @@
+using Lernplattform.Core.Update;
+using Lernplattform.Desktop;
 using Stadtbau.Core;
 using Stadtbau.Desktop;
 using BS = Stadtbau.Core.Werkzeugordner.Betriebssystem;
@@ -163,7 +165,7 @@ public class DatenordnerUpdateTests
     {
         Assert.Equal("https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform", Updatequelle.RepositoryUrl);
         var quelle = Updatequelle.Quelle();
-        Assert.IsType<Updatequelle.StoerungsfesteQuelle>(quelle);
+        Assert.IsType<StoerungsfesteQuelle>(quelle);
         Assert.Equal("stadtbau-win", Updatequelle.Kanal);
     }
 
@@ -187,7 +189,7 @@ public class DatenordnerUpdateTests
         var versuche = 0;
         var zeilen = new List<string>();
         var pausen = new List<TimeSpan>();
-        var ergebnis = Updatequelle.Wiederholen("Feed werkzeug", () =>
+        var ergebnis = Stoerung.Wiederholen("Feed werkzeug", () =>
         {
             if (++versuche < 3)
             {
@@ -206,7 +208,7 @@ public class DatenordnerUpdateTests
     public void Stoerung_HoechstensVierVersuche_DannFehlerUnveraendert()
     {
         var versuche = 0;
-        var x = Assert.Throws<HttpRequestException>(() => Updatequelle.Wiederholen<int>("Suche",
+        var x = Assert.Throws<HttpRequestException>(() => Stoerung.Wiederholen<int>("Suche",
             () => { versuche++; throw new HttpRequestException("504", null, System.Net.HttpStatusCode.GatewayTimeout); }, _ => { }, _ => { }));
         Assert.Equal(4, versuche);
         Assert.Equal(System.Net.HttpStatusCode.GatewayTimeout, x.StatusCode);
@@ -218,11 +220,11 @@ public class DatenordnerUpdateTests
     public void Gegenprobe_4xx_UndProgrammfehler_NieWiederholt(System.Net.HttpStatusCode code)
     {
         var versuche = 0;
-        Assert.Throws<HttpRequestException>(() => Updatequelle.Wiederholen<int>("Suche",
+        Assert.Throws<HttpRequestException>(() => Stoerung.Wiederholen<int>("Suche",
             () => { versuche++; throw new HttpRequestException("x", null, code); }, _ => { }, _ => { }));
         Assert.Equal(1, versuche);
         versuche = 0;
-        Assert.Throws<UriFormatException>(() => Updatequelle.Wiederholen<int>("Suche",
+        Assert.Throws<UriFormatException>(() => Stoerung.Wiederholen<int>("Suche",
             () => { versuche++; throw new UriFormatException(); }, _ => { }, _ => { }));
         Assert.Equal(1, versuche);
     }
@@ -230,11 +232,11 @@ public class DatenordnerUpdateTests
     [Fact]
     public void Voruebergehend_AuchAlsInnereAusnahme_UndOhneAntwort()
     {
-        Assert.True(Updatequelle.Voruebergehend(new InvalidOperationException("x", new HttpRequestException("y", null, System.Net.HttpStatusCode.BadGateway))));
-        Assert.True(Updatequelle.Voruebergehend(new HttpRequestException("kein Netz")));
-        Assert.True(Updatequelle.Voruebergehend(new TaskCanceledException()));
-        Assert.False(Updatequelle.Voruebergehend(new InvalidOperationException("x")));
-        Assert.False(Updatequelle.Voruebergehend(null));
+        Assert.True(Stoerung.Voruebergehend(new InvalidOperationException("x", new HttpRequestException("y", null, System.Net.HttpStatusCode.BadGateway))));
+        Assert.True(Stoerung.Voruebergehend(new HttpRequestException("kein Netz")));
+        Assert.True(Stoerung.Voruebergehend(new TaskCanceledException()));
+        Assert.False(Stoerung.Voruebergehend(new InvalidOperationException("x")));
+        Assert.False(Stoerung.Voruebergehend(null));
     }
 
     private static void Schreiben(string wurzel, string rel, string text)

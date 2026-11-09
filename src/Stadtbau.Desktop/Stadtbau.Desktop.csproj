@@ -17,6 +17,8 @@
   <ItemGroup>
     <!-- Update-Quelle mit Filter nach Release-Linie (nur Tags vS...), dieselbe Datei wie in der Lernplattform -->
     <Compile Include="..\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
+    <!-- A 0.53.2 (Sammelliste 256): stoerungsfeste Update-Quelle, gemeinsam mit der Lernplattform -->
+    <Compile Include="..\Lernplattform.Desktop\StoerungsfesteQuelle.cs" Link="StoerungsfesteQuelle.cs" />
   </ItemGroup>
 
   <ItemGroup>

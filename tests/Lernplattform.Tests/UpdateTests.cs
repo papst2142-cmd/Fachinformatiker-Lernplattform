@@ -129,7 +129,16 @@ public class UpdateTests
             }
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Encoding.UTF8.GetBytes(antwort)) };
         }));
-        return await GithubSuche.SuchenAsync(client, aktuell, "android", "http://127.0.0.1:9/releases/latest", TestContext.Current.CancellationToken);
+        // A 0.53.2: 500 und "netz" werden jetzt bis zu 4 Mal versucht; das Ergebnis bleibt das von Python (ohne Pausen im Test)
+        Stoerung.OhnePausenFuerTests.Value = true;
+        try
+        {
+            return await GithubSuche.SuchenAsync(client, aktuell, "android", "http://127.0.0.1:9/releases/latest", TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            Stoerung.OhnePausenFuerTests.Value = false;
+        }
     }
 
     [Fact]
