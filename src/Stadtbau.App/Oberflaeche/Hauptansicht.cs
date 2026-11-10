@@ -1456,7 +1456,7 @@ public sealed partial class Hauptansicht : UserControl
         drehen.IsEnabled = drehenNicht is null;
         var kopie = Schrift.Knopf(Texte.Kopie);
         kopie.Click += (_, _) => Karte.Kopieren();
-        kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz);
+        kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz or AussenArt.Ampel);   // S 0.35.0: eine Ampel gehoert zu genau einer Kreuzung
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Karte.Loeschen();
         weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;
