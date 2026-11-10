@@ -62,7 +62,8 @@ internal static class StadtSzeneHash
     /// (double) ein, die der Test mit einer Toleranz von 1e-6 je Ecke vergleicht. So gilt der feste Wert auch auf Rechnern,
     /// deren Vektor-Befehle im letzten Bit abweichen (GitHub), und jede echte Aenderung an Geometrie oder Ablauf faellt auf.
     /// </summary>
-    internal static (string Hash, List<(string Netz, int Werte, double Summe, double Betraege)> Summen) StadtRechnerfest(StadtSzene szene)
+    /// <remarks>Welle D1: <paramref name="fern"/> = statt der Netze von nah die Fernformen (Stadt und je Haus), Rest gleich.</remarks>
+    internal static (string Hash, List<(string Netz, int Werte, double Summe, double Betraege)> Summen) StadtRechnerfest(StadtSzene szene, bool fern = false)
     {
         using var h = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         var summen = new List<(string, int, double, double)>();
@@ -88,14 +89,25 @@ internal static class StadtSzeneHash
             summen.Add((name, netz.EckenFeld.Length, summe, betraege));
         }
         var f = szene.Vorbereiten();
-        NetzFest("stadt", f.Stadt);
-        foreach (var haus in szene.Haeuser)
+        if (fern)
         {
-            NetzFest("haus:" + haus.Id, f.Haeuser[haus]);
+            NetzFest("stadt-fern", f.StadtFern);
+            foreach (var haus in szene.Haeuser)
+            {
+                NetzFest("haus-fern:" + haus.Id, f.HaeuserFern![haus]);
+            }
         }
-        NetzFest("gruen", f.Gruen);
-        NetzFest("paket-nah", f.PaketNah);
-        NetzFest("paket-fern", f.PaketFern);
+        else
+        {
+            NetzFest("stadt", f.Stadt);
+            foreach (var haus in szene.Haeuser)
+            {
+                NetzFest("haus:" + haus.Id, f.Haeuser[haus]);
+            }
+            NetzFest("gruen", f.Gruen);
+            NetzFest("paket-nah", f.PaketNah);
+            NetzFest("paket-fern", f.PaketFern);
+        }
         foreach (var t in szene.Tueren)
         {
             Text(h, "tuer:" + t.Ort + ":" + t.Modell);

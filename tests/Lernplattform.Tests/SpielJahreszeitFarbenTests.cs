@@ -43,7 +43,7 @@ public sealed class SpielJahreszeitFarbenTests
     }
 
     private static IEnumerable<Netz> AlleNetze(StadtSzene s) =>
-        new[] { s.NetzBauen(), s.GruenNetzBauen()! }.Concat(s.Haeuser.Select(s.HausNetz));
+        new[] { s.NetzBauen(), s.GruenNetzBauen()! }.Concat(s.Haeuser.Select(h => s.HausNetz(h)));
 
     /// <summary>Sommer = genau die Netze wie vor W9 (ohne Jahreszeit gebaut, Vorgabe), auch mit Festzeit und ohne Grafik.</summary>
     [Fact]
@@ -136,6 +136,8 @@ public sealed class SpielJahreszeitFarbenTests
     private static Netz Deko(StadtSzene s, bool paket = false)
     {
         var n = paket ? new Netz() : Netz.Aus(s.Teile.Skip(s.FestTeileVon));
+        // Welle D1: im Netz der Stadt fehlen die Unterseiten am Boden, hier also auch (das Paket-Netz behaelt sie)
+        n.UnterseiteBis = paket ? null : StadtSzene.UnterseiteBis;
         foreach (var st in s.Stuecke.Skip(s.FestStueckeVon))
         {
             if (StadtSzene.ImPaket(st.Name) == paket && Grafik.Modell(st.Name) is { } m)

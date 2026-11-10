@@ -51,7 +51,7 @@ public class AlsGebaeudeTests
     {
         var (min, max, n) = (new Vector3(float.MaxValue), new Vector3(float.MinValue), 0);
         var netze = new List<Netz> { sz.NetzBauen(), sz.PaketNetzBauen(false) };
-        netze.AddRange(sz.Haeuser.Select(sz.HausNetz));
+        netze.AddRange(sz.Haeuser.Select(h => sz.HausNetz(h)));
         foreach (var netz in netze)
         {
             var e = netz.Ecken;

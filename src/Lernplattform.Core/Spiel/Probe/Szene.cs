@@ -57,6 +57,20 @@ public sealed class Netz
     /// </summary>
     public Func<Vector3, float, float, Vector3>? Faerbung { get; set; }
 
+    /// <summary>
+    /// Welle D1 (Weisung P12-143, Teil D): Unterseiten am Boden weglassen. Ist ein Wert gesetzt, kommt ein Dreieck eines
+    /// CC0-Modells nicht ins Netz, wenn es nach unten zeigt (Normale nach unten steiler als <see cref="UnterseiteNeigung"/>)
+    /// und alle drei Ecken hoechstens auf dieser Hoehe liegen. Die Kamera ist nie so tief (kleinster Abstand 2, flachste
+    /// Neigung 25 Grad: Auge ueber 0,8), also sieht man diese Flaechen nie. null = alle Dreiecke (bitgleich wie vorher).
+    /// </summary>
+    public float? UnterseiteBis { get; set; }
+
+    /// <summary>Welle D1: ab diesem Anteil der Normale nach unten zaehlt ein Dreieck als Unterseite.</summary>
+    public const float UnterseiteNeigung = 0.9f;
+
+    /// <summary>Welle D1: so viele Unterseiten am Boden wurden in dieses Netz nicht aufgenommen (Tests, Messung).</summary>
+    public int UnterseitenWeg { get; private set; }
+
     public static Vector3 Farbe(string hex)
     {
         var h = hex.TrimStart('#');
@@ -124,6 +138,12 @@ public sealed class Netz
             var kreuz = Vector3.Cross(b - a, c - a);
             if (kreuz.LengthSquared() < 1e-14f)
             {
+                continue;
+            }
+            if (UnterseiteBis is { } bis && MathF.Max(a.Y, MathF.Max(b.Y, c.Y)) <= bis
+                && kreuz.Y < -UnterseiteNeigung * MathF.Sqrt(kreuz.LengthSquared()))
+            {
+                UnterseitenWeg++;
                 continue;
             }
             var grund = modell.Farbe(d);
@@ -352,6 +372,27 @@ public sealed class Netz
     public Vector3 Ort(int e) => new(_ecken[e * Zahlen], _ecken[(e * Zahlen) + 1], _ecken[(e * Zahlen) + 2]);
 
     /// <summary>Normale der Ecke Nummer <paramref name="e"/>.</summary>
+    /// <summary>
+    /// Welle D1 (Teil A Sichtkegel): Kugel um alle Ecken (Mitte des umschliessenden Kastens, halbe Diagonale); leeres Netz =
+    /// Halbmesser -1 (nie im Bild).
+    /// </summary>
+    public (Vector3 Mitte, float Halb) Kugel()
+    {
+        if (AnzahlEcken == 0)
+        {
+            return (Vector3.Zero, -1f);
+        }
+        var min = new Vector3(float.MaxValue);
+        var max = new Vector3(float.MinValue);
+        for (var e = 0; e < AnzahlEcken; e++)
+        {
+            var p = new Vector3(_ecken[e * Zahlen], _ecken[(e * Zahlen) + 1], _ecken[(e * Zahlen) + 2]);
+            min = Vector3.Min(min, p);
+            max = Vector3.Max(max, p);
+        }
+        return ((min + max) / 2, (max - min).Length() / 2);
+    }
+
     public Vector3 Normale(int e) => new(_ecken[(e * Zahlen) + 3], _ecken[(e * Zahlen) + 4], _ecken[(e * Zahlen) + 5]);
 
     /// <summary>Farbe der Ecke Nummer <paramref name="e"/> (mit Marken).</summary>

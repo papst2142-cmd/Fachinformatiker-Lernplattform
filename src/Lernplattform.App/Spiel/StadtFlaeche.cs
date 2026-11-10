@@ -44,6 +44,19 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private bool _szeneNeu;
     private readonly Dictionary<string, GlNetz> _flaechen = [];
     private readonly Dictionary<StadtHaus, GlNetz> _haeuser = [];
+
+    // Welle D1 (Weisung P12-143): Fernform je Haus (Teil B) und Kugel je Haus fuer den Sichtkegel (Teil A)
+    private readonly Dictionary<StadtHaus, GlNetz> _haeuserFern = [];
+    private readonly Dictionary<StadtHaus, (System.Numerics.Vector3 Mitte, float Halb)> _hausKugel = [];
+
+    /// <summary>Welle D1: Schluessel der Fernform des Stadtnetzes (Fest-Deko vereinfacht, Teil C) in den Flaechen.</summary>
+    private const string StadtFern = ProbeWelt.Stadt + "|fern";
+
+    /// <summary>
+    /// Welle D1 (Teil A): nur fuer die Gegenprobe der Tests und Messungen: Haeuser ausserhalb des Bilds werden wieder
+    /// gezeichnet und die Fernformen nie genommen (Verhalten vor D1, ohne die Unterseiten am Boden).
+    /// </summary>
+    public static bool OhneSparenFuerTests { get; set; }
     private readonly Dictionary<string, GlNetz> _figuren = [];
     private GlNetz? _innen;
     private Dictionary<InnenWand, GlNetz> _innenWaende = [];
@@ -476,6 +489,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         GlBereit = false;
         _flaechen.Clear();
         _haeuser.Clear();
+        _haeuserFern.Clear();
+        _hausKugel.Clear();
         _figuren.Clear();
         _figurZuletzt.Clear();
         _innen = null;
@@ -505,7 +520,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
-        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
+        foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
             .Append(_markierung).Append(_marke).Append(_ausruf).Append(_lieferpaket).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values))
         {
             netz?.Freigeben(gl);
@@ -526,6 +541,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         _flaechen.Clear();
         _haeuser.Clear();
+        _haeuserFern.Clear();
+        _hausKugel.Clear();
         _figuren.Clear();
         _figurZuletzt.Clear();
         _innen = null;
@@ -691,19 +708,30 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             // Stadt in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern;
             // jedes Haus fuer sich (es kann durchsichtig werden)
-            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values))
+            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values))
             {
                 alt.Freigeben(gl);
             }
             _flaechen.Clear();
             _haeuser.Clear();
+            _haeuserFern.Clear();
+            _hausKugel.Clear();
             // Weisung P8-55 (W12): die Netze baut die Szene einmal (bei einem Fest- oder Jahreszeitwechsel schon im
             // Haus im Hintergrund), hier wird nur noch hochgeladen
             var fertig = spiel.Szene.Vorbereiten();
             _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, fertig.Stadt);
+            if (fertig.StadtFern is { } stadtFern)
+            {
+                _flaechen[StadtFern] = GlNetz.Laden(gl, stadtFern);
+            }
             foreach (var haus in spiel.Szene.Haeuser)
             {
                 _haeuser[haus] = GlNetz.Laden(gl, fertig.Haeuser[haus]);
+                _hausKugel[haus] = fertig.Haeuser[haus].Kugel();
+                if (fertig.HaeuserFern?.GetValueOrDefault(haus) is { } hausFern)
+                {
+                    _haeuserFern[haus] = GlNetz.Laden(gl, hausFern);
+                }
             }
             _gruen?.Freigeben(gl);
             _gruen = fertig.Gruen is { } gn ? GlNetz.Laden(gl, gn) : null;
@@ -809,7 +837,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.DepthFunc(GlLequal);
         gl.DepthMask(1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        var flaeche = _spiel is null ? null : _spiel.ImInnenraum ? _innen : _flaechen.GetValueOrDefault(ProbeWelt.Stadt);
+        // Welle D1 (Teil C): ab dem Abstand der Fernformen (wie Autos und Laternen) die Stadt mit vereinfachter Fest-Deko
+        var fernBild = kamera is not null && kamera.Abstand > AutoFern && !OhneSparenFuerTests;
+        var flaeche = _spiel is null ? null : _spiel.ImInnenraum ? _innen
+            : (fernBild ? _flaechen.GetValueOrDefault(StadtFern) : null) ?? _flaechen.GetValueOrDefault(ProbeWelt.Stadt);
         if (GlBereit && _spiel is not null && kamera is not null && flaeche is not null)
         {
             gl.UseProgram(_programm);
@@ -831,9 +862,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             if (mal > 0)
             {
-                foreach (var netz in _haeuser.Values)
+                foreach (var haus in _haeuser.Keys)
                 {
-                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                    if (HausNetzImBild(haus, fernBild, sichtProj) is { } netz)
+                    {
+                        Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                    }
                 }
             }
             }
@@ -924,8 +958,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 var v0 = _uhr.Elapsed.TotalSeconds;
                 _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe, _verdeckt);
                 verdecktSek += _uhr.Elapsed.TotalSeconds - v0;
-                foreach (var (haus, netz) in _haeuser)
+                foreach (var haus in _haeuser.Keys)
                 {
+                    // Welle D1 (Teile A und B): Haeuser ausserhalb des Bilds nicht zeichnen, fern die Fernform
+                    if (HausNetzImBild(haus, fernBild, sichtProj) is not { } netz)
+                    {
+                        continue;
+                    }
                     var durch = _verdeckt.Contains(haus);
                     gl.Uniform1f(_ortDurch, durch ? 1f : 0f);
                     Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
@@ -1180,19 +1219,35 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var schritte = new Queue<Action<GlInterface>>();
         schritte.Enqueue(gl =>
         {
-            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values).Concat(_paket.Values).Append(_gruen))
+            foreach (var alt in _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values).Concat(_paket.Values).Append(_gruen))
             {
                 alt?.Freigeben(gl);
             }
             _flaechen.Clear();
             _haeuser.Clear();
+            _haeuserFern.Clear();
+            _hausKugel.Clear();
             _paket.Clear();
             _gruen = null;
             _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, paket.Netze.Stadt);
         });
+        if (paket.Netze.StadtFern is { } stadtFern)
+        {
+            schritte.Enqueue(gl => _flaechen[StadtFern] = GlNetz.Laden(gl, stadtFern));
+        }
         foreach (var (haus, netz) in paket.Netze.Haeuser)
         {
-            schritte.Enqueue(gl => _haeuser[haus] = GlNetz.Laden(gl, netz));
+            var kugel = netz.Kugel();
+            var hausFern = paket.Netze.HaeuserFern?.GetValueOrDefault(haus);
+            schritte.Enqueue(gl =>
+            {
+                _haeuser[haus] = GlNetz.Laden(gl, netz);
+                _hausKugel[haus] = kugel;
+                if (hausFern is not null)
+                {
+                    _haeuserFern[haus] = GlNetz.Laden(gl, hausFern);
+                }
+            });
         }
         if (paket.Netze.Gruen is { } gruen)
         {
@@ -1248,7 +1303,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.UseProgram(_programm);
         gl.Uniform1f(_ortHell, 1f);
         LichtSetzen(gl, _lichtOrte, Tageslicht.Tag, default);
-        var netze = _flaechen.Values.Concat(_haeuser.Values).Concat(_paket.Values).Concat(_figuren.Values)
+        var netze = _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values).Concat(_paket.Values).Concat(_figuren.Values)
             .Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Prepend(e.Netz))).Append(_gruen).Append(_marke).Append(_ausruf).Append(_ring);
         var durch = 0f;
         foreach (var netz in netze)
@@ -1752,6 +1807,21 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _aufrufe++;
         _dreiecke += netz.Anzahl / 3;
         gl.UseProgram(_programm);
+    }
+
+    /// <summary>
+    /// Welle D1 (Weisung P12-143, Teile A und B): das Netz eines Hauses fuer dieses Bild: null, wenn die Kugel um das Haus
+    /// ganz ausserhalb des Sichtkegels liegt (<see cref="FestUebergang.ImSichtkegel"/>, kein neuer Zeichenaufruf, nur
+    /// weniger); <paramref name="fern"/> = die Fernform (falls hochgeladen), sonst das Original.
+    /// </summary>
+    private GlNetz? HausNetzImBild(StadtHaus haus, bool fern, Matrix4x4 sichtProj)
+    {
+        if (!OhneSparenFuerTests && _hausKugel.TryGetValue(haus, out var kugel)
+            && (kugel.Halb < 0 || !FestUebergang.ImSichtkegel(sichtProj, kugel.Mitte, kugel.Halb)))
+        {
+            return null;
+        }
+        return fern && _haeuserFern.TryGetValue(haus, out var hausFern) ? hausFern : _haeuser.GetValueOrDefault(haus);
     }
 
     private unsafe void Zeichnen(GlInterface gl, GlNetz netz, Matrix4x4 modell, Matrix4x4 sichtProj)

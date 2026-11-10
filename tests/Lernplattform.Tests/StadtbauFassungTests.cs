@@ -86,8 +86,11 @@ public sealed class StadtbauFassungTests
         OperatingSystem.IsLinux() && RuntimeInformation.OSArchitecture == Architecture.X64
         && MitSchild(() => StadtSzeneHash.Stadt(SzeneAusDateien(null, Jahreszeit.Sommer, grafik: JeDreieck.Value))) == "05cc6125e56d9eb6724a0afbec0659b543830734063d487f33d30ae28605093c");
 
-    /// <summary>A 0.55.0: <paramref name="f"/> mit dem alten Schild rechnen (Sollwerte bis A 0.54.0, Gegenprobe).</summary>
-    internal static T MitSchild<T>(Func<T> f)
+    /// <summary>
+    /// A 0.55.0: <paramref name="f"/> mit dem alten Schild rechnen (Sollwerte bis A 0.54.0, Gegenprobe); seit Welle D1 auch
+    /// mit den Unterseiten am Boden wie bis A 0.56.0.
+    /// </summary>
+    internal static T MitSchild<T>(Func<T> f) => MitUnterseiten(() =>
     {
         var vorher = StadtSzene.SchildAltFuerTests;
         StadtSzene.SchildAltFuerTests = true;
@@ -98,6 +101,21 @@ public sealed class StadtbauFassungTests
         finally
         {
             StadtSzene.SchildAltFuerTests = vorher;
+        }
+    });
+
+    /// <summary>Welle D1 (A 0.57.0): <paramref name="f"/> mit den Unterseiten am Boden rechnen (Sollwerte A 0.55.0 bis A 0.56.0, Gegenprobe).</summary>
+    internal static T MitUnterseiten<T>(Func<T> f)
+    {
+        var vorher = StadtSzene.UnterseitenAltFuerTests;
+        StadtSzene.UnterseitenAltFuerTests = true;
+        try
+        {
+            return f();
+        }
+        finally
+        {
+            StadtSzene.UnterseitenAltFuerTests = vorher;
         }
     }
 
@@ -177,9 +195,24 @@ public sealed class StadtbauFassungTests
             Assert.Equal(vorher, MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(fest, j, grafik: JeDreieck.Value))));
             var mitSchild = MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(fest, j)));
             Assert.True(jetzt == mitSchild, "Stand A 0.43.6: " + mitSchild);
-            Assert.True(ohneSchild == ausFassung, "Stand A 0.55.0: " + ausFassung);
+            var mitUnterseiten = MitUnterseiten(() => StadtSzeneHash.Stadt(SzeneAusFassung(fest, j)));
+            Assert.True(ohneSchild == mitUnterseiten, "Stand A 0.55.0: " + mitUnterseiten);
+            Assert.True(StadtD1.GetValueOrDefault((fest, j)) == ausFassung, "Stand A 0.57.0: " + ausFassung);
         }
     }
+
+    /// <summary>Welle D1 (A 0.57.0): Szene ohne Unterseiten am Boden, sonst wie Stand A 0.55.0 (Spalten von <see cref="StadtVorher"/>).</summary>
+    private static readonly Dictionary<(string?, Jahreszeit), string> StadtD1 = new()
+    {
+        [(null, Jahreszeit.Fruehling)] = "c55e672b571c8d2a84b6081c0a574ee3f8fa1808c105256d1c5d575f557f5d52",
+        [(null, Jahreszeit.Sommer)] = "0142347fd4f18cfbc081a74126e1c7588e2f84ab6c832ef16ea913a1c78f6102",
+        [(null, Jahreszeit.Herbst)] = "03719098ae3e405c7cd793b28a75d92c78aff662bed36bdb8b0b43882378337c",
+        [(null, Jahreszeit.Winter)] = "ba8615e438b80ac715b7c6910c299bf4bc147c55752bd4a31193329993d815bd",
+        [(Festzeit.Ostern, Jahreszeit.Fruehling)] = "02e119fa22c02e2187b47d9c440ecbe1a5a0929ebd816a45bdefa1fa84cafa9a",
+        [(Festzeit.Halloween, Jahreszeit.Herbst)] = "550e411b93c025f15dbcb49b6e2770a5e965fd193c7fe4cdd1d950c9e7814b2e",
+        [(Festzeit.Weihnachten, Jahreszeit.Winter)] = "39f23c1e451a7749d485db9ef04d2eeca4e0b37be460f6c12fd3c3bc5f00b58d",
+        [(Festzeit.Silvester, Jahreszeit.Winter)] = "0cb5aecb9193c92c5f2883e161982585ef6eab0c01d53136508128384463eefa",
+    };
 
     /// <summary>
     /// Phase 13 Welle 2 (Zusatz Chat zu Weisung P12-17): fester Wert der Stadt aus Fassung 0, der auf jedem Rechner gilt
@@ -198,12 +231,69 @@ public sealed class StadtbauFassungTests
             RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer, grafik: JeDreieck.Value), RechnerfestSummenJeDreieck, RechnerfestHash);
             return 0;
         });
-        RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummenOhneSchild, RechnerfestHashOhneSchild);
+        MitUnterseiten(() =>
+        {
+            RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummenOhneSchild, RechnerfestHashOhneSchild);
+            return 0;
+        });
+        // Welle D1 (A 0.57.0): ohne Unterseiten am Boden
+        RechnerfestPruefen(SzeneAusFassung(null, Jahreszeit.Sommer), RechnerfestSummenD1, RechnerfestHashD1);
     }
 
-    private static void RechnerfestPruefen(StadtSzene szene, (string Netz, int Werte, double Summe, double Betraege)[] soll, string sollHash)
+    /// <summary>
+    /// Welle D1 (A 0.57.0): fester Wert der Fernformen (Stadt mit vereinfachter Fest-Deko, je Haus), rechnerunabhaengig wie
+    /// <see cref="SzeneRechnerunabhaengig_FesterWert"/>; Weihnachten im Winter (dort hat die Fest-Deko die meisten Modelle).
+    /// </summary>
+    [Fact]
+    public void SzeneFern_RechnerunabhaengigFesterWert()
     {
-        var (hash, summen) = StadtSzeneHash.StadtRechnerfest(szene);
+        var (hash, summen) = StadtSzeneHash.StadtRechnerfest(SzeneAusFassung(Festzeit.Weihnachten, Jahreszeit.Winter), fern: true);
+        var (hashSommer, _) = StadtSzeneHash.StadtRechnerfest(SzeneAusFassung(null, Jahreszeit.Sommer), fern: true);
+        Assert.NotEqual(hash, hashSommer);
+        RechnerfestPruefen(SzeneAusFassung(Festzeit.Weihnachten, Jahreszeit.Winter), RechnerfestSummenFern, RechnerfestHashFern, fern: true);
+        Assert.NotEmpty(summen);
+    }
+
+    /// <summary>Welle D1 (A 0.57.0): Sommer ohne Festzeit, ohne Unterseiten am Boden.</summary>
+    private const string RechnerfestHashD1 = "bcad0d104b8f95f4b2d2b817d0a1e0b189ae36c8bda24cd1a015b8edbc1a16f7";
+
+    private static readonly (string Netz, int Werte, double Summe, double Betraege)[] RechnerfestSummenD1 =
+    [
+        ("stadt", 411048, 1361839.927423892, 1416198.2239175555),
+        ("haus:stellwerk#0", 8046, 29237.26280064216, 30485.469959126603),
+        ("haus:zuhause", 120996, 663576.2158552683, 678443.5058938442),
+        ("haus:bitweiche", 168678, 670096.6437696681, 689292.8449375496),
+        ("haus:talheim", 23364, 86430.24408631049, 89179.9228912233),
+        ("haus:moebelhaus", 77796, 348833.7063036664, 358148.4943384383),
+        ("haus:elektromarkt", 274896, 1507218.0360474733, 1538196.5146708635),
+        ("haus:amt", 4446, 13133.225035086274, 13622.551111355424),
+        ("haus:bank", 6264, 22379.477186098695, 23075.477186098695),
+        ("haus:kaufhaus", 66456, 396906.24357795715, 406237.66403722763),
+        ("gruen", 573912, 1767258.1505225452, 1853367.3578681687),
+        ("paket-nah", 696384, 2397940.07526864, 2493014.076098815),
+        ("paket-fern", 27000, 81547.90074151754, 84668.8502959609),
+    ];
+
+    /// <summary>Welle D1 (A 0.57.0): Fernformen, Weihnachten im Winter.</summary>
+    private const string RechnerfestHashFern = "9a22f55451213798d9b818dbeb67a8fa3dddcf5fc569bad03ba266637cd53829";
+
+    private static readonly (string Netz, int Werte, double Summe, double Betraege)[] RechnerfestSummenFern =
+    [
+        ("stadt-fern", 974808, 3452401.9741354706, 3589919.2417269778),
+        ("haus-fern:stellwerk#0", 6021, 22171.420527684957, 23270.78395123757),
+        ("haus-fern:zuhause", 52011, 304808.67050107114, 312002.7794427464),
+        ("haus-fern:bitweiche", 40509, 172716.35782929734, 177889.9264522917),
+        ("haus-fern:talheim", 19665, 78151.20794950197, 80498.79137781147),
+        ("haus-fern:moebelhaus", 20799, 97551.52439749915, 100386.15064891796),
+        ("haus-fern:elektromarkt", 70803, 407211.1556845682, 416288.81094132655),
+        ("haus-fern:amt", 4446, 13764.696200981736, 14254.022277250886),
+        ("haus-fern:bank", 6264, 23493.961907044053, 24189.961907044053),
+        ("haus-fern:kaufhaus", 23715, 148063.72463231147, 151390.4786570006),
+    ];
+
+    private static void RechnerfestPruefen(StadtSzene szene, (string Netz, int Werte, double Summe, double Betraege)[] soll, string sollHash, bool fern = false)
+    {
+        var (hash, summen) = StadtSzeneHash.StadtRechnerfest(szene, fern);
         var text = string.Join("\n", summen.Select(s => string.Create(CultureInfo.InvariantCulture, $"(\"{s.Netz}\", {s.Werte}, {s.Summe:R}, {s.Betraege:R}),")));
         Assert.True(sollHash == hash, "Hash " + hash + "\n" + text);
         Assert.True(soll.Length == summen.Count, text);
@@ -284,7 +374,9 @@ public sealed class StadtbauFassungTests
             Assert.Equal("dcc4874347278bfdfc4782957fda4f8d063ec4ad1cd6d2c0017022e6b337f8bd", MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt, JeDreieck.Value))));
             var mitSchild = MitSchild(() => StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt)));
             Assert.True("a49d46342512a6e616cc36b494caf150f891a4e897bff8a50c201848c5d7b0d7" == mitSchild, "Stand A 0.43.6: " + mitSchild);   // mit Farbverlauf
-            Assert.True("b94c1977dbc0f28a5a4cbe46a9d2922a4d18daa9e7a281a4178e096aaad7f801" == ausFassung, "Stand A 0.55.0: " + ausFassung);   // ohne Schild
+            var mitUnterseiten = MitUnterseiten(() => StadtSzeneHash.Stadt(SzeneAusFassung(null, Jahreszeit.Sommer, gespielt)));
+            Assert.True("b94c1977dbc0f28a5a4cbe46a9d2922a4d18daa9e7a281a4178e096aaad7f801" == mitUnterseiten, "Stand A 0.55.0: " + mitUnterseiten);   // ohne Schild
+            Assert.True("9df02d7e7fdfd71ec7f895600ccdb7cd43ac4b24c12a4d6d554863d8ede2fbad" == ausFassung, "Stand A 0.57.0: " + ausFassung);   // ohne Unterseiten am Boden (Welle D1)
         }
     }
 

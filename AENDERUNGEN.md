@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.57.0
+Das Spiel zeichnet die Stadt sparsamer. So bleibt es auch auf schwächeren Geräten flüssig, und es ist Platz für neue Dinge wie Ampeln und Haltestellen. Von nah sieht die Stadt genauso aus wie bisher.
+
+- Häuser, die gerade nicht im Bild sind, werden nicht mehr gezeichnet.
+- Zoomst du weit heraus, zeigen die Häuser und der Festschmuck (zum Beispiel Weihnachtsbaum und Geschenke) eine vereinfachte Form mit weniger Ecken. Aus dieser Entfernung sieht man kaum einen Unterschied.
+- Die Unterseiten von Häusern und Dingen, die auf dem Boden stehen, werden nicht mehr gezeichnet. Man sieht sie ohnehin nie.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.56.0
 Das Spiel kann Häuser aus dem Stadtbau-Werkzeug jetzt in eigenen Farben, mit richtigen Türen und als Fabrikhallen zeigen. Die heutige Stadt sieht genauso aus wie bisher.
 

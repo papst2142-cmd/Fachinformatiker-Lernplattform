@@ -201,7 +201,27 @@ public sealed partial class StadtSzene
     private Fertig? _fertig;
 
     /// <summary>Weisung P8-55 (W12): die fertigen Netze der Szene (Stadt, je Haus, Kleingruen, Paket nah und fern).</summary>
-    public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern);
+    /// <remarks>Welle D1 (Weisung P12-143): dazu die Fernformen der Stadt (Fest-Deko vereinfacht, <see cref="Fernform"/>) und je Haus.</remarks>
+    public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern,
+        Netz? StadtFern = null, IReadOnlyDictionary<StadtHaus, Netz>? HaeuserFern = null);
+
+    /// <summary>
+    /// Welle D1 (Teil D): Dreiecke der CC0-Modelle, die bis zu dieser Hoehe nach unten zeigen, kommen nicht ins Netz der
+    /// Stadt oder eines Hauses (<see cref="Netz.UnterseiteBis"/>); der Boden, die Wege und Strassen liegen darunter.
+    /// </summary>
+    public const float UnterseiteBis = 0.1f;
+
+    /// <summary>Gegenprobe Welle D1: Unterseiten wie bis A 0.56.0 zeichnen (Sollwerte von vorher gelten damit weiter).</summary>
+    public static bool UnterseitenAltFuerTests
+    {
+        get => UnterseitenAlt.Value;
+        set => UnterseitenAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> UnterseitenAlt = new();
+
+    /// <summary>Welle D1: die Grenze fuer <see cref="Netz.UnterseiteBis"/> in den Netzen der Stadt und der Haeuser.</summary>
+    private static float? Unterseiten => UnterseitenAltFuerTests ? null : UnterseiteBis;
 
     /// <summary>
     /// Weisung P8-55 (W12): alle Netze der Szene einmal bauen und behalten (auch ausserhalb des Oberflaechen-Threads,
@@ -219,15 +239,17 @@ public sealed partial class StadtSzene
         lock (vorrat?.Sperre ?? new object())
         {
             var haeuser = new Dictionary<StadtHaus, Netz>();
-            var neu = new Dictionary<string, (HausEingang, Netz)>();
+            var haeuserFern = new Dictionary<StadtHaus, Netz>();
+            var neu = new Dictionary<string, (HausEingang, Netz, Netz)>();
             foreach (var haus in Haeuser)
             {
-                haeuser[haus] = HausNetzMitVorrat(haus, neu);
+                (haeuser[haus], haeuserFern[haus]) = HausNetzMitVorrat(haus, neu);
             }
             var stadtNetz = NetzBauen();
+            var stadtFern = NetzBauen(fern: true);
             var gruenNetz = GruenNetzBauen();
             var (nah, fern) = PaketMitVorrat();
-            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern);
+            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern, stadtFern, haeuserFern);
             if (vorrat is not null)
             {
                 vorrat.Haeuser = neu;
@@ -237,8 +259,11 @@ public sealed partial class StadtSzene
         return fertig;
     }
 
-    /// <summary>Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle.</summary>
-    public Netz NetzBauen()
+    /// <summary>
+    /// Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle. Welle D1: ohne Unterseiten am Boden;
+    /// <paramref name="fern"/> = die Fest-Deko in ihrer <see cref="Fernform"/> (Teil C), alles andere gleich.
+    /// </summary>
+    public Netz NetzBauen(bool fern = false)
     {
         var teileHaus = new bool[Teile.Count];
         var stueckeHaus = new bool[Stuecke.Count];
@@ -272,11 +297,13 @@ public sealed partial class StadtSzene
             {
                 netz.Hinzu(flaeche);
             }
+            netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
-                if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
+                if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
                 {
                     var von = netz.AnzahlEcken;
+                    var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
                     netz.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? null : FestLicht(modell));
                     if (Katalogstueck.IstEffekt(modell.Name))
                     {
@@ -325,10 +352,12 @@ public sealed partial class StadtSzene
             gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
         }
         gefaerbt.Faerbung = null;
+        gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
+            if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
             {
+                var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
                 if (Katalogstueck.IstEffekt(modell.Name))
                 {
                     // Phase 13 Welle 4a: ein Effekt behaelt seine Farbe (kein Schnee) und leuchtet nachts
@@ -357,20 +386,24 @@ public sealed partial class StadtSzene
     private static Modellfaerbung? FestLicht(GrafikModell modell) =>
         modell.Name.Contains("lantern", StringComparison.Ordinal) ? (d, grund, _, _) => FestVerkehr.Glut(modell, d, grund) : null;
 
-    /// <summary>Das Netz eines Hauses (eigene Teile und CC0-Modelle).</summary>
-    public Netz HausNetz(StadtHaus haus)
+    /// <summary>
+    /// Das Netz eines Hauses (eigene Teile und CC0-Modelle). Welle D1: ohne Unterseiten am Boden; <paramref name="fern"/> =
+    /// die CC0-Modelle in ihrer <see cref="Fernform"/> (Teil B), die eigenen Teile bleiben.
+    /// </summary>
+    public Netz HausNetz(StadtHaus haus, bool fern = false)
     {
         if (Jahreszeit == Jahreszeit.Sommer)
         {
-            var netz = new Netz();
+            var netz = new Netz { UnterseiteBis = Unterseiten };
             for (var i = haus.TeileVon; i < haus.TeileBis; i++)
             {
                 TeilHinzu(netz, i);
             }
             for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
             {
-                if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
+                if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
                 {
+                    var modell = fern ? Fernform.Von(original) : original;
                     var von = netz.Indizes.Count;
                     var flaechen = new List<Vector3>();
                     netz.Hinzu(modell, Stuecke[i].Lage, null, flaechen);
@@ -380,7 +413,7 @@ public sealed partial class StadtSzene
             return netz;
         }
         // Phase 8 W9: am Haus Schnee nur auf dem Dach; Baeume am Haus (Modellname mit "tree") wie die Baeume der Stadt
-        var gefaerbt = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Haus) };
+        var gefaerbt = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Haus), UnterseiteBis = Unterseiten };
         for (var i = haus.TeileVon; i < haus.TeileBis; i++)
         {
             TeilHinzu(gefaerbt, i);
@@ -388,8 +421,9 @@ public sealed partial class StadtSzene
         gefaerbt.Faerbung = null;
         for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
         {
-            if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } modell)
+            if (!ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
             {
+                var modell = fern ? Fernform.Von(original) : original;
                 var art = Stuecke[i].Name.Contains("tree", StringComparison.Ordinal) ? Faerbeart.Stadt : Faerbeart.Haus;
                 var von = gefaerbt.Indizes.Count;
                 var flaechen = new List<Vector3>();

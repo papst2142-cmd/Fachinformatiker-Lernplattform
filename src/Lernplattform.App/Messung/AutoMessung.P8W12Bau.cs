@@ -174,6 +174,9 @@ public static partial class AutoMessung
                 string.Create(inv, $"{alle.Szene.Orte.Count} von {regeln} ({string.Join(", ", alle.Szene.Orte.Select(o => o.Id))})"));
             Messwerte.Notiere("Spiel: Gesamtansicht mit allen Orten (Weihnachten, Winter, nachts)");
             funde += await GesamtansichtAsync(seite);
+            // Welle D1 (Weisung P12-143, Sammelliste 259): dazu die Nahansicht mit derselben Grenze
+            Messwerte.Notiere("Spiel: Nahansicht mit allen Orten (Weihnachten, Winter, nachts)");
+            funde += await NahansichtAsync(seite);
         }
         finally
         {

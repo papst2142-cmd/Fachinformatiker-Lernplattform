@@ -180,8 +180,10 @@ public static partial class AutoMessung
             dreiecke += n.Indizes.Count / 3;
         }
         var t = Stopwatch.StartNew();
-        var stadtNetze = new List<Netz> { spiel.Szene.NetzBauen() };
-        stadtNetze.AddRange(spiel.Szene.Haeuser.Select(spiel.Szene.HausNetz));
+        // Welle D1: dazu die Fernformen der Stadt und je Haus (wie Vorbereiten)
+        var stadtNetze = new List<Netz> { spiel.Szene.NetzBauen(), spiel.Szene.NetzBauen(fern: true) };
+        stadtNetze.AddRange(spiel.Szene.Haeuser.Select(h => spiel.Szene.HausNetz(h)));
+        stadtNetze.AddRange(spiel.Szene.Haeuser.Select(h => spiel.Szene.HausNetz(h, fern: true)));
         if (spiel.Szene.GruenNetzBauen() is { } gn)
         {
             stadtNetze.Add(gn);
@@ -192,7 +194,7 @@ public static partial class AutoMessung
             stadtNetze.Add(spiel.Szene.PaketNetzBauen(true));
         }
         stadtNetze.ForEach(Zaehle);
-        Zeile(string.Create(inv, $"CPU Stadtnetze (Flaeche, {spiel.Szene.Haeuser.Count} Haeuser, Gruen, Paket nah/fern): {t.Elapsed.TotalMilliseconds:F1} ms"));
+        Zeile(string.Create(inv, $"CPU Stadtnetze (Flaeche nah/fern, {spiel.Szene.Haeuser.Count} Haeuser nah/fern, Gruen, Paket nah/fern): {t.Elapsed.TotalMilliseconds:F1} ms"));
         var raeume = new List<Innenraum>();
         foreach (var ort in spiel.Szene.Orte.Where(o => Innenraum.OrtFuer(o.Ansicht) is not null))
         {
