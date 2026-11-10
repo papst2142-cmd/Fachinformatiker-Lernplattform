@@ -827,7 +827,8 @@ public static class FestVerkehr
     /// <summary>Netz eines Autos im eigenen Raum: das Modell oder (fern) zwei Kaesten in seiner Hauptfarbe; leer ohne Modell.</summary>
     public static Netz AutoNetz(GrafikBibliothek grafik, string modell, bool fern)
     {
-        if (grafik.Modell(modell) is not { } am)
+        // A 0.62.0 (Weisung P12-174): gezeichnet wird die gesparte Fassung des Autos (eine Tabelle: Fahrzeugmodelle)
+        if (grafik.Modell(Fahrzeugmodelle.Zeichnen(modell)) is not { } am)
         {
             return new Netz();
         }

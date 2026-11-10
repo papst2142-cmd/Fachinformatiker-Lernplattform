@@ -154,12 +154,14 @@ public class HaltestellenTests
         var h = szene.Haltestellen[0];
         Assert.False(szene.Laufraster.KannStehen(h.Haeuschen.X, h.Haeuschen.Y), "im Haeuschen kann die Figur stehen");
         // der volle Parkplatz (Nico P12-170: 12 Plaetze, alle belegt) steht als 12 Autos in der Stadt und zaehlt in den Grenzen
-        var autos = szene.Stuecke.Count(s => Parkplaetze.Modelle.Contains(s.Name)) - ohne.Stuecke.Count(s => Parkplaetze.Modelle.Contains(s.Name));
+        // A 0.62.0: gezeichnet wird die gesparte Fassung der Autos (Fahrzeugmodelle)
+        var geparkt = Parkplaetze.Modelle.Select(Fahrzeugmodelle.Zeichnen).ToHashSet();
+        var autos = szene.Stuecke.Count(s => geparkt.Contains(s.Name)) - ohne.Stuecke.Count(s => geparkt.Contains(s.Name));
         Assert.Equal(12, autos);
         var mit = GrenzenLive.Fuer(Fassung(a), D).Gesamt;
         AussenBearbeitung.Loeschen(a, Pp(0));
         var vorher = GrenzenLive.Fuer(Fassung(a), D).Gesamt;
-        var autoDreiecke = szene.Parkplaetze[0].Stellplaetze().Select((_, i) => Parkplaetze.Belegung(1, i, 1, true)!).Sum(m => (long)D.Grafik!.Modell(m)!.Dreiecke);
+        var autoDreiecke = szene.Parkplaetze[0].Stellplaetze().Select((_, i) => Parkplaetze.Belegung(1, i, 1, true)!).Sum(m => (long)D.Grafik!.Modell(Fahrzeugmodelle.Zeichnen(m))!.Dreiecke);
         // die Unterseiten der Autos fallen wie jede Unterseite weg (D1), alles andere zaehlt
         Assert.True(mit.Dreiecke - vorher.Dreiecke >= autoDreiecke * 0.9, $"Grenzen zaehlen den vollen Parkplatz nicht: {mit.Dreiecke} - {vorher.Dreiecke} < {autoDreiecke}");
     }

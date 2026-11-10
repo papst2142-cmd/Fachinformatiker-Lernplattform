@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.62.0
+Die Autos im Spiel werden sparsamer gezeichnet. Sie sehen aus wie bisher.
+
+- Taxi, Lieferwagen, Limousine, Polizei, Krankenwagen und Müllwagen bestehen jetzt aus rund einem Viertel bis einem Drittel weniger Dreiecken. Die Räder haben 12 statt 24 Ecken im Umfang, und Flächen unter dem Wagenboden, die man nie sieht, fallen weg.
+- Das hilft vor allem dort, wo viele Autos stehen, zum Beispiel auf einem vollen Parkplatz. Form, Farben und Größe der Autos bleiben gleich.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.61.0
 Das Spiel kennt jetzt Bushaltestellen, einen Linienbus und Parkplätze für neue Städte. Die heutige Stadt hat nichts davon und sieht genauso aus wie bisher.
 

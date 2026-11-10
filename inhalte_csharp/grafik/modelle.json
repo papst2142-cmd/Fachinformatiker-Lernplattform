@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "13ed8a8b3396fee087d234a770f4a6256346cee163b0224bda552bfb6effef8f",
- "bytes": 9553333,
+ "sha256": "26dad00a25cdd12707b58fdd85dc4d811b20184c65b413289e2eb49ddf8d9d29",
+ "bytes": 10062895,
  "modelle": [
   {
    "name": "building-e",
@@ -2580,6 +2580,108 @@
     0.72,
     1.68,
     2.86
+   ]
+  },
+  {
+   "name": "car-taxi-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/taxi.obj",
+   "atlas": null,
+   "dreiecke": 1346,
+   "min": [
+    -0.75,
+    0.0,
+    -1.4
+   ],
+   "max": [
+    0.75,
+    1.5,
+    1.35
+   ]
+  },
+  {
+   "name": "car-van-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj",
+   "atlas": null,
+   "dreiecke": 1383,
+   "min": [
+    -0.75,
+    0.0,
+    -1.4
+   ],
+   "max": [
+    0.75,
+    1.35,
+    1.35
+   ]
+  },
+  {
+   "name": "car-sedan-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/sedan.obj",
+   "atlas": null,
+   "dreiecke": 1333,
+   "min": [
+    -0.75,
+    0.0,
+    -1.3
+   ],
+   "max": [
+    0.75,
+    1.3,
+    1.25
+   ]
+  },
+  {
+   "name": "car-police-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/police.obj",
+   "atlas": null,
+   "dreiecke": 1590,
+   "min": [
+    -0.75,
+    -0.0,
+    -1.55
+   ],
+   "max": [
+    0.75,
+    1.3,
+    1.55
+   ]
+  },
+  {
+   "name": "car-ambulance-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/ambulance.obj",
+   "atlas": null,
+   "dreiecke": 1915,
+   "min": [
+    -0.75,
+    -0.0,
+    -1.65
+   ],
+   "max": [
+    0.75,
+    1.8,
+    1.6
+   ]
+  },
+  {
+   "name": "car-garbage-truck-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/garbage-truck.obj",
+   "atlas": null,
+   "dreiecke": 2230,
+   "min": [
+    -0.8,
+    0.0,
+    -1.7
+   ],
+   "max": [
+    0.8,
+    1.6,
+    1.75
    ]
   }
  ]

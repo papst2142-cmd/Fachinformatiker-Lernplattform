@@ -28,6 +28,14 @@ PolygonVertexIndex, UV), die Farbe je Dreieck aus der Haut-PNG ("haut") an der U
 der T-Haltung ("arme": Winkel in Grad) ueber die Gewichte der Knochen (Cluster) um das Schultergelenk
 (TransformLink des Arm-Knochens). Danach Y nach oben, Vorderseite +Z wie die anderen Modelle. Bewegungen spaeter.
 
+Gesparte Autos (A 0.62.0, Weisung P12-174, Sammelliste 285): ein Eintrag mit "sparen": "raeder12" in auswahl.json
+liest dieselbe Original-Datei wie das alte Auto und legt es als NEUES Modell (Name mit Zusatz "-12") hinten an;
+die alten Autos bleiben bytegleich. Regel (sparen_raeder12): (1) jede Ecke einer Gruppe "wheel..." liegt auf jeder
+zweiten Stelle ihres 15-Grad-Rasters um die Radmitte (Rad mit 12 statt 24 Ecken im Umfang, gleicher Halbmesser,
+gleiche Ringe, gleiche Farben), (2) Flaechen nach unten (Normale y < -0,9) ganz unter UNTEN_SPAREN (unter dem
+Wagenboden) fallen weg, (3) Dreiecke ohne Flaeche (zwei gleiche Ecken oder Kreuzprodukt unter 2e-7, mit Abstand ueber der Grenze 1e-7,
+unter der das Spiel beim Zeichnen ein Dreieck ohnehin weglaesst, Netz.Hinzu) fallen weg.
+
 Aufruf: python3 -I werkzeuge/grafik/wandle_modelle.py <ordner mit den ZIPs> [<ausgabeordner>]
 """
 
@@ -586,6 +594,81 @@ def bewegung_bilder(z, eintrag):
     return erg
 
 
+UNTEN_SPAREN = 0.16  # Hoehe im Modell, bis zu der Flaechen nach unten wegfallen (Wagenboden der Autos 0,15 bis 0,2)
+RAD_RASTER = 15.0    # Grad zwischen den Ecken der Raeder im Car Kit (24 Ecken)
+
+
+class _ZipMitErsatz:
+    """Liest aus dem ZIP, nur die Datei pfad mit dem Inhalt text (fuer sparen_raeder12)."""
+
+    def __init__(self, z, pfad, text):
+        self.z, self.pfad, self.text = z, pfad, text
+
+    def read(self, name):
+        return self.text.encode("utf-8") if name == self.pfad else self.z.read(name)
+
+
+def _raeder_auf_12(text):
+    """Ecken der Gruppen "wheel..." auf jede zweite Stelle des 15-Grad-Rasters um ihre Radmitte (Y/Z-Ebene)."""
+    zeilen = text.splitlines()
+    ecken, gruppe, rad = [], None, {}
+    for zeile in zeilen:
+        teile = zeile.split()
+        if not teile:
+            continue
+        if teile[0] == "v":
+            ecken.append([float(w) for w in teile[1:4]])
+        elif teile[0] in ("g", "o"):
+            gruppe = " ".join(teile[1:])
+        elif teile[0] == "f" and gruppe and gruppe.startswith("wheel"):
+            rad.setdefault(gruppe, set()).update(int(e.split("/")[0]) - 1 for e in teile[1:])
+    neu = [list(e) for e in ecken]
+    for name in sorted(rad):
+        nummern = sorted(rad[name])
+        ys = [ecken[i][1] for i in nummern]
+        zs = [ecken[i][2] for i in nummern]
+        my, mz = (max(ys) + min(ys)) / 2, (max(zs) + min(zs)) / 2
+        for i in nummern:
+            y, z = ecken[i][1] - my, ecken[i][2] - mz
+            r = math.hypot(y, z)
+            if r < 1e-6:
+                continue
+            k = math.floor(math.degrees(math.atan2(y, z)) / RAD_RASTER + 0.5 + 1e-9)
+            if k % 2:
+                k -= 1
+            w = math.radians(k * RAD_RASTER)
+            neu[i][1], neu[i][2] = my + r * math.sin(w), mz + r * math.cos(w)
+    aus, nr = [], 0
+    for zeile in zeilen:
+        teile = zeile.split()
+        if teile and teile[0] == "v":
+            aus.append("v %.6f %.6f %.6f" % tuple(neu[nr]))
+            nr += 1
+        else:
+            aus.append(zeile)
+    return "\n".join(aus)
+
+
+def sparen_raeder12(z, pfad):
+    """Gespartes Auto (Regel oben im Kopf): Raeder mit 12 Ecken, keine Flaechen nach unten unter dem Boden, keine
+    Dreiecke ohne Flaeche."""
+    dreiecke = obj_wandeln(_ZipMitErsatz(z, pfad, _raeder_auf_12(z.read(pfad).decode("utf-8", "replace"))), pfad)
+    aus = []
+    for d in dreiecke:
+        # mit den Werten, die in modelle.bin stehen (float32)
+        a, b, c = (struct.unpack("<3f", struct.pack("<3f", *p)) for p in d[0])
+        u = [b[i] - a[i] for i in range(3)]
+        w = [c[i] - a[i] for i in range(3)]
+        n = (u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0])
+        laenge = math.sqrt(sum(x * x for x in n))
+        if len({tuple(round(k, 6) for k in p) for p in d[0]}) < 3 or laenge < 2e-7:
+            continue
+        if n[1] / laenge < -0.9 and max(p[1] for p in d[0]) <= UNTEN_SPAREN:
+            continue
+        aus.append(d)
+    return aus
+
+
 def gedreht(dreiecke, grad):
     """Um die Hochachse drehen (nur 180: x und z spiegeln, Umlaufsinn bleibt)."""
     if grad % 360 == 0:
@@ -631,6 +714,8 @@ def main():
             for nr, dreiecke in enumerate(bewegung_bilder(z, eintrag)):
                 ausgabe.append((eintrag, "%s%02d" % (eintrag["name"], nr), dreiecke))
             continue
+        elif eintrag.get("sparen") == "raeder12":
+            dreiecke = sparen_raeder12(z, eintrag["datei"])
         elif eintrag["datei"].endswith(".fbx"):
             dreiecke = fbx_figur(z, eintrag["datei"], eintrag["haut"], eintrag.get("arme", 0))
         else:

@@ -42,8 +42,10 @@ public class SpielGrafikTests
             // Stellen, der an der Rundungsgrenze faelschlich rot war: hw-skull_candle 0,0575 gegen 0,057455)
             Assert.True(Math.Abs(eintrag.GetProperty("min")[1].GetDouble() - m.Min.Y) <= 0.00005 + 1e-6, eintrag.GetProperty("name").GetString());
         }
-        // Groessenziel Plan Abschnitt 6: alle Spielgrafiken hoechstens 10 MB
-        Assert.True(new FileInfo(Path.Combine(Ordner, "modelle.bin")).Length < 10_000_000);
+        // Groessenziel Plan Abschnitt 6 war 10 MB; seit der Dauerregel P8-25 (Nico 28.10.2026: Groesse bis etwa 250 MB kein
+        // Problem, nicht dafuer optimieren) nur noch eine Plausibilitaet. A 0.62.0 (Weisung P12-174): rund 10,1 MB mit den
+        // gesparten Autos (angehaengt, die alten bleiben)
+        Assert.True(new FileInfo(Path.Combine(Ordner, "modelle.bin")).Length < 20_000_000);
     }
 
     /// <summary>
@@ -161,6 +163,8 @@ public class SpielGrafikTests
             .Append(Figur.BildName(Figur.Sitzen, 0))
             // seit A 0.61.0 (Weisung P12-171) der Linienbus
             .Append(Buslinie.Modell)
+            // seit A 0.62.0 (Weisung P12-174) die gesparten Autos (die alten bleiben in der Datei, Namen der Strecken)
+            .Concat(Fahrzeugmodelle.Gespart.Select(Fahrzeugmodelle.Zeichnen))
             .Concat(["hw-lantern_standing", "hw-pumpkin", "hw-pumpkin_orange_jackolantern", "os-animal-bunny", "os-animal-chick", "xm-present_A_red", "xm-present_A_yellow", "xm-present_B_green"])
             .ToList();
         foreach (var m in bib.Modelle)

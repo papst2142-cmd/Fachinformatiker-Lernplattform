@@ -3,6 +3,13 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.37.0
+
+Sparsamere Autos.
+
+- Die Autos in der 3D-Ansicht und auf den Parkplätzen bestehen aus rund einem Viertel bis einem Drittel weniger Dreiecken (Räder mit 12 statt 24 Ecken, unsichtbare Flächen unter dem Wagenboden weg). Sie sehen aus wie bisher.
+- „Grenzen live“ zählt dadurch weniger: ein voller Parkplatz mit 12 Plätzen kostet rund 7 700 Dreiecke weniger.
+
 ## S 0.36.0
 
 Bushaltestellen, Linienbus und Parkplätze.
