@@ -235,6 +235,11 @@ public sealed partial class StadtSzene
         {
             kreuze.Append(Bits(k.Fuss)).Append(';').Append(Bits(k.Blick)).Append(';').Append(Bits(k.ZurStrasse)).Append('|');
         }
+        // Welle A 0.60.0: die Masten der Ampeln stehen im Paket-Netz
+        foreach (var (fuss, blick, _) in Ampeln.SelectMany(a => a.Masten))
+        {
+            kreuze.Append("A").Append(Bits(fuss)).Append(';').Append(Bits(blick)).Append('|');
+        }
         var laternen = new StringBuilder();
         foreach (var l in Laternen)
         {

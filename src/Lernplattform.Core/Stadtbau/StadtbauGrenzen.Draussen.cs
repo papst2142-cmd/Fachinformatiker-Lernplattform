@@ -9,7 +9,7 @@ namespace Lernplattform.Core.Stadtbau;
 /// Welle D2 (Weisung P12-157, Kurzplan P12-97 Punkt c): Dreiecke und Aufrufe eines Bilds draussen OHNE Grafikkarte, mit
 /// denselben Regeln wie das Zeichnen in <c>StadtFlaeche</c>: Netz der Stadt (fern ab <see cref="StadtSzene.FernAb"/> die
 /// Fernform), Kleingruen bis <see cref="StadtSzene.GruenBis"/>, Paket-Netz nah/fern, je Satz des Instancing die Stuecke im
-/// Sichtkegel (ein Aufruf je Satz mit Stuecken im Bild), je Haus im Sichtkegel ein Aufruf (fern die Fernform). Das ist
+/// Sichtkegel (ein Aufruf je Satz mit Stuecken im Bild), die Lampen der Ampeln (ein Aufruf, seit A 0.60.0), je Haus im Sichtkegel ein Aufruf (fern die Fernform). Das ist
 /// der feste Teil (<see cref="Bild"/>); dazu kommt, was sich bewegt (<see cref="Bewegt"/>: Autos oder Festgestalten,
 /// Figur zweimal, Kreis, Zielmarke, Pakete vor der Tuer). Der Start-Test vergleicht beides mit dem gezeichneten Bild.
 /// </summary>
@@ -25,6 +25,7 @@ public static partial class StadtbauGrenzen
         private readonly long? _paketFern;
         private readonly List<(Vector3 Mitte, float Halb, long Nah, long Fern)> _haeuser = [];
         private readonly IReadOnlyList<InstanzSatz> _saetze;
+        private readonly long? _ampelLichter;
 
         public Draussen(StadtSzene szene, StadtSzene.Fertig f)
         {
@@ -43,6 +44,8 @@ public static partial class StadtbauGrenzen
                 _haeuser.Add((mitte, halb, nah.Indizes.Count / 3, fern.Indizes.Count / 3));
             }
             _saetze = f.Instanzen?.Saetze ?? [];
+            // Welle A 0.60.0: die Lampen der Ampeln (ein Aufruf, alle Gruppen, auch die gerade dunklen)
+            _ampelLichter = f.AmpelLichter?.Sum(n => (long)n.Indizes.Count / 3);
         }
 
         /// <summary>
@@ -62,6 +65,11 @@ public static partial class StadtbauGrenzen
             if (_paketNah is { } pn && _paketFern is { } pf)
             {
                 dreiecke += abstand > StadtSzene.FernAb ? pf : pn;
+                aufrufe++;
+            }
+            if (_ampelLichter is { } al)
+            {
+                dreiecke += al;
                 aufrufe++;
             }
             foreach (var s in _saetze)

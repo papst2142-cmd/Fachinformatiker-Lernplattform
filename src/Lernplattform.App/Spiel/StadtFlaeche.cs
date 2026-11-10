@@ -84,6 +84,10 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private Verkehr? _verkehr;
     private readonly Dictionary<bool, GlNetz> _autoNetze = [];   // alle Autos in einem Netz (Weisung P8-14b), nah und fern
     private readonly Matrix4x4[] _autoLagen = new Matrix4x4[AutosHoechstens];
+    // Welle A 0.60.0 (Weisung P12-166): die leuchtenden Lampen der Ampeln, ein Aufruf mit dem Programm der Autos; je Gruppe
+    // (Achse und Farbe) die Lage Eins (leuchtet) oder Null (aus, alle Ecken auf einem Punkt)
+    private GlNetz? _ampelLichter;
+    private readonly Matrix4x4[] _ampelLagen = new Matrix4x4[Ampeln.Gruppen];
     // Phase 8 W11: Festzeiten-Verkehr (Gestalten statt Autos) und das eigene Netz der Laternen, Tannen und Kuerbisse
     private FestVerkehr.Satz _satz = FestVerkehr.Satz.Autos;
     private List<FestVerkehr.Gestalt>? _gestalten;
@@ -515,16 +519,18 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _autoNetze.Clear();
         _neuNetze.Clear();
         _paket.Clear();
+        _ampelLichter = null;
         base.OnOpenGlLost();
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         foreach (var netz in _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values).Concat(_figuren.Values).Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Append(e.Netz)))
-            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_lieferpaket).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values))
+            .Append(_markierung).Append(_marke).Append(_ausruf).Append(_lieferpaket).Append(_ring).Append(_gruen).Concat(_autoNetze.Values).Concat(_neuNetze.Values).Concat(_paket.Values).Append(_ampelLichter))
         {
             netz?.Freigeben(gl);
         }
+        _ampelLichter = null;
         _innenGl.Clear();
         _hochladen = null;
         _vorladeAufgabe = null;
@@ -658,7 +664,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 vec3 normal = farbe * (0.48 + 0.52 * d) * hell * ton;
                 // P8-49: die Lichter am Bahnuebergang (Bahnuebergang.Licht, dunkelrot) leuchten nachts rot, alles andere im Lampenlicht
                 vec3 leuchten = distance(farbe, vec3(0.55, 0.07, 0.06)) < 0.02 ? vec3(1.0, 0.12, 0.08) : vec3(0.99, 0.86, 0.55);
-                fFarbe = vec4(mix(normal, leuchten, glut * uNacht), 1.0);
+                // Welle A 0.60.0: Lampen der Ampeln (Ampeln.LichtRot, LichtGelb, LichtGruen) leuchten in ihrer Farbe, auch am Tag
+                float nacht = uNacht;
+                if (distance(farbe, vec3(0.92, 0.10, 0.08)) < 0.02) { leuchten = vec3(1.0, 0.16, 0.10); nacht = max(uNacht, 0.6); }
+                else if (distance(farbe, vec3(0.95, 0.66, 0.08)) < 0.02) { leuchten = vec3(1.0, 0.78, 0.18); nacht = max(uNacht, 0.6); }
+                else if (distance(farbe, vec3(0.12, 0.80, 0.32)) < 0.02) { leuchten = vec3(0.30, 1.0, 0.50); nacht = max(uNacht, 0.6); }
+                fFarbe = vec4(mix(normal, leuchten, glut * nacht), 1.0);
             }
             """;
         var vs = gl.CreateShader(GL_VERTEX_SHADER);
@@ -762,6 +773,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 _paket[false] = GlNetz.Laden(gl, nah);
                 _paket[true] = GlNetz.Laden(gl, fernNetz);
             }
+            _ampelLichter?.Freigeben(gl);
+            _ampelLichter = fertig.AmpelLichter is { } lichter ? GlNetz.LadenMitNummern(gl, lichter) : null;
             // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar); eine Szene mit
             // anderer Festzeit (neuer Tag) oder ein neues Spiel bekommt sofort seinen eigenen Satz; aendert sich draussen
             // in derselben Stadt nur die Uhr, wechselt der Satz nach und nach (Patch A 0.29.1)
@@ -877,6 +890,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
             {
                 ZeichnenFest(gl, paket, sichtProj);
+            }
+            if (!_spiel.ImInnenraum && _ampelLichter is { } ampelLichter)
+            {
+                // Welle A 0.60.0: Lampen der Ampeln nach dem Takt des Verkehrs (ohne Verkehr: Zeit 0)
+                AmpelLichterZeichnen(gl, ampelLichter, _verkehr?.Zeit ?? 0, sichtProj);
             }
             if (!_spiel.ImInnenraum)
             {
@@ -1284,6 +1302,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             schritte.Enqueue(gl => _paket[false] = GlNetz.Laden(gl, nah));
             schritte.Enqueue(gl => _paket[true] = GlNetz.Laden(gl, fern));
         }
+        var ampelLichter = paket.Netze.AmpelLichter;
+        schritte.Enqueue(gl =>
+        {
+            _ampelLichter?.Freigeben(gl);
+            _ampelLichter = ampelLichter is not null ? GlNetz.LadenMitNummern(gl, ampelLichter) : null;
+        });
         schritte.Enqueue(gl =>
         {
             // eine Szene, die sich waehrend des Vorladens geaendert hat, laedt das naechste Bild wie bisher
@@ -1796,11 +1820,27 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _satzVorrat = new SatzVorrat(szene, satz, Task.Run(() => SatzPaketBauen(szene, grafik, satz)));
     }
 
-    private unsafe void ZeichnenAutos(GlInterface gl, GlNetz netz, int anzahl, Matrix4x4 sichtProj)
+    /// <summary>
+    /// Welle A 0.60.0 (Weisung P12-166): alle Lampen der Ampeln in einem Aufruf; eine Gruppe, die zur Fahrzeit
+    /// <paramref name="zeit"/> nicht leuchtet, bekommt die Lage Null (ihre Dreiecke fallen auf einen Punkt). Zaehlt zum
+    /// festen Teil des Bilds (<c>StadtbauGrenzen.Draussen</c>).
+    /// </summary>
+    private void AmpelLichterZeichnen(GlInterface gl, GlNetz netz, double zeit, Matrix4x4 sichtProj)
+    {
+        for (var g = 0; g < Ampeln.Gruppen; g++)
+        {
+            _ampelLagen[g] = Ampeln.GruppeAn(g, zeit) ? Matrix4x4.Identity : default;
+        }
+        ZeichnenAutos(gl, netz, Ampeln.Gruppen, sichtProj, _ampelLagen);
+        _festAufrufe++;
+        _festDreiecke += netz.Anzahl / 3;
+    }
+
+    private unsafe void ZeichnenAutos(GlInterface gl, GlNetz netz, int anzahl, Matrix4x4 sichtProj, Matrix4x4[]? lagenFeld = null)
     {
         gl.UseProgram(_autoProgramm);
         gl.UniformMatrix4fv(_autoOrtSichtProj, 1, false, &sichtProj);
-        fixed (Matrix4x4* lagen = _autoLagen)
+        fixed (Matrix4x4* lagen = lagenFeld ?? _autoLagen)
         {
             gl.UniformMatrix4fv(_autoOrtLagen, anzahl, false, lagen);
         }

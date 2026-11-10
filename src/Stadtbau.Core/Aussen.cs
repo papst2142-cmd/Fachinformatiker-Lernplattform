@@ -72,6 +72,12 @@ public enum AussenArt
     Zebrastreifen,
 
     /// <summary>
+    /// Welle S 0.35.0 (Weisung P12-166): Ampel in <c>stadtdaten.ampeln</c> (Mitte auf einer Kreuzung oder Einmuendung, Arme aus
+    /// den Strassen, <see cref="Lernplattform.Core.Spiel.Probe.Ampeln"/>).
+    /// </summary>
+    Ampel,
+
+    /// <summary>
     /// Welle S 0.27.0 (Weisung P12-118, Nico-Wunsch 5): Notiz in <c>notizen</c> der Stadt draussen (<c>[{x, y, text}]</c>),
     /// nur im Werkzeug: nur in der Projektdatei, nie in der Stadt-Datei, nie im Spiel; nur in der Draufsicht zu sehen.
     /// </summary>

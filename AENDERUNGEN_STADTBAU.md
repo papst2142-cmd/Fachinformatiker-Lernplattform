@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.35.0
+
+Ampeln an Kreuzungen.
+
+- Neu in der Gruppe „Straßen und Wege“: der Knopf „Ampel“. Tippe in die Nähe einer Kreuzung oder Einmündung, die Ampel springt genau auf ihre Mitte. Masten, Haltelinien und Furten kommen von allein an jede Straße der Kreuzung. An einem Kreisverkehr gibt es keine Ampel, und an jeder Kreuzung höchstens eine.
+- Schiebst du eine Straße der Kreuzung, rückt die Ampel mit. Löschst du sie und es bleibt keine Kreuzung, fällt die Ampel weg. Eine Ampel selbst lässt sich nur an eine andere freie Kreuzung schieben; kopieren und drehen gibt es nicht, sie richtet sich selbst aus.
+- Neue Prüfregeln (alle rot): Ampel nicht an einer Kreuzung, am Kreisverkehr, zwei an derselben Kreuzung, eine Straße der Kreuzung zu kurz zum Halten, zu nah an einem Bahnübergang oder Zebrastreifen, Laterne, Baum, Stück oder Haus auf dem Platz eines Masts. Die automatischen Laternen halten Abstand zu den Masten.
+- In der 3D-Ansicht schalten die Ampeln wie im Spiel, und die Autos halten bei Rot.
+- Der gelbe Hinweis „Selbst gebautes Gebäude …“ an einem Gebäude aus „Als Gebäude übernehmen“ nennt jetzt seinen Namen statt der Kennung „bau:…“.
+
 ## S 0.34.1
 
 Türen und Wege genauer, Tippen ohne Warten.

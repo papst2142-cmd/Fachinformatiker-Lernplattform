@@ -52,11 +52,16 @@ public sealed class FestUebergang
         Verkehr = new Verkehr { AbstandVorne = MathF.Max(altVerkehr.AbstandVorne, neuVerkehr.AbstandVorne), FuerStrassen = neuVerkehr.FuerStrassen };
         Verkehr.Kreuzungen.AddRange(neuVerkehr.Kreuzungen);
         Verkehr.Zebras.AddRange(neuVerkehr.Zebras);
+        // Welle A 0.60.0: Ampeln und ihr Takt laufen ueber den Uebergang weiter
+        Verkehr.Ampeln.AddRange(neuVerkehr.Ampeln);
+        Verkehr.ZeitSetzen(altVerkehr.Zeit);
         Verkehr.Autos.AddRange(altVerkehr.Autos.OrderBy(a => a.Nummer));
         Verkehr.Bedient(altVerkehr.FahrenBis - Verkehr.Nachlauf);
         _altOffen = [.. Verkehr.Autos];
         _schatten = new Verkehr { AbstandVorne = neuVerkehr.AbstandVorne, FuerStrassen = neuVerkehr.FuerStrassen };
         _schatten.Zebras.AddRange(neuVerkehr.Zebras);
+        _schatten.Ampeln.AddRange(neuVerkehr.Ampeln);
+        _schatten.ZeitSetzen(altVerkehr.Zeit);
         _schatten.Kreuzungen.AddRange(neuVerkehr.Kreuzungen);
         _schatten.Autos.AddRange(neuVerkehr.Autos);
     }

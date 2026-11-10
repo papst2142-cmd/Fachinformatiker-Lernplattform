@@ -88,6 +88,10 @@ public static partial class AussenBearbeitung
             {
                 mit.Add(new AussenStelle(AussenArt.Zebrastreifen, z));
             }
+            foreach (var (z, _) in AmpelnAuf(aussen, s))
+            {
+                mit.Add(new AussenStelle(AussenArt.Ampel, z));   // S 0.35.0: Ampeln gehen mit ihrer Strasse
+            }
             if (IstKreisverkehr(aussen, s))
             {
                 var (zufahrten, laternen) = KreisverkehrTeile(aussen, s);
@@ -166,8 +170,12 @@ public static partial class AussenBearbeitung
             ? new Vector2(mitte.X + (p - mitte).Y, mitte.Y - (p - mitte).X)
             : new Vector2(mitte.X - (p - mitte).Y, mitte.Y + (p - mitte).X);
         var zebraZiele = zebras.Select(z => (z, Ziel: MitteVon(aussen, z) is { } m ? Dreh(m) : (Vector2?)null)).ToList();
+        // S 0.35.0: Ampeln gewaehlter Strassen ebenso (danach an die Kreuzung an der gedrehten Stelle)
+        var ampeln = drehen.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => AmpelnAuf(aussen, s)).Select(a => new AussenStelle(AussenArt.Ampel, a.Nummer))
+            .Concat(drehen.Where(s => s.Art == AussenArt.Ampel)).Distinct().ToList();
+        var ampelZiele = ampeln.Select(a => (a, Ziel: MitteVon(aussen, a) is { } m ? Dreh(m) : (Vector2?)null)).ToList();
         var anzahl = 0;
-        foreach (var s in Reihenfolge(drehen.Where(s => s.Art != AussenArt.Zebrastreifen)))
+        foreach (var s in Reihenfolge(drehen.Where(s => s.Art is not (AussenArt.Zebrastreifen or AussenArt.Ampel))))
         {
             anzahl++;
             switch (s.Art)
@@ -224,6 +232,15 @@ public static partial class AussenBearbeitung
             }
             anzahl += drehen.Contains(z) ? 1 : 0;
         }
+        foreach (var (am, ziel) in ampelZiele)
+        {
+            if (ziel is { } p && am.Nummer < AmpelListe(aussen).Count && Ampeln.Legen(0, p, AmpelStrassen(aussen)) is { } neu
+                && (AmpelAn(aussen, neu.Mitte) is not { } da || da == am.Nummer))
+            {
+                AmpelListe(aussen)[am.Nummer] = AmpelObjekt(neu.Mitte);
+            }
+            anzahl += drehen.Contains(am) ? 1 : 0;
+        }
         return new MehrfachErgebnis([.. alle.Where(s => Gueltig(aussen, s))], anzahl, 0);
     }
 
@@ -253,6 +270,7 @@ public static partial class AussenBearbeitung
         var versatz = Math.Ceiling((breite + Bearbeitung.Raster) / Bearbeitung.Raster) * Bearbeitung.Raster;
         var strassenMitZebra = kopieren.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => ZebrasAuf(aussen, s)).Distinct()
             .Select(z => MitteVon(aussen, new AussenStelle(AussenArt.Zebrastreifen, z))).OfType<Vector2>().ToList();
+        var strassenMitAmpel = kopieren.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => AmpelnAuf(aussen, s)).Select(a => a.Mitte).Distinct().ToList();
         var neu = new List<AussenStelle>();
         var uebersprungen = 0;
         foreach (var s in Reihenfolge(kopieren))
@@ -278,6 +296,13 @@ public static partial class AussenBearbeitung
             if (ZebraSetzen(aussen, p.X + versatz, p.Y) is { } z)
             {
                 neu.Add(z);
+            }
+        }
+        foreach (var p in strassenMitAmpel)
+        {
+            if (AmpelSetzen(aussen, p.X + versatz, p.Y) is { } am)
+            {
+                neu.Add(am);
             }
         }
         foreach (var z in kopieren.Where(s => s.Art == AussenArt.Zebrastreifen))
@@ -312,6 +337,7 @@ public static partial class AussenBearbeitung
             AussenArt.Steg => Aussen.Stege(aussen)[s.Nummer],
             AussenArt.Fussweg => Aussen.Fusswege(aussen)[s.Nummer],
             AussenArt.Zebrastreifen => ZebraListe(aussen)[s.Nummer],
+            AussenArt.Ampel => AmpelListe(aussen)[s.Nummer],
             AussenArt.Notiz => NotizListe(aussen)[s.Nummer],
             _ => land[s.Nummer],
         };
