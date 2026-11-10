@@ -249,6 +249,9 @@ public static class Bauen3D
                 }
                 return [Kreis(amp.Mitte.X, amp.Mitte.Y, Ampeln.FurtMitte + (Zebrastreifen.Breite / 2)), .. amp.Masten.Select(m => Kreis(m.Fuss.X, m.Fuss.Y, 0.1))];
             }
+            case AussenArt.Haltestelle or AussenArt.Parkplatz:
+                // S 0.36.0: Haltestelle bis zur Fahrspur mit Haeuschen, Parkplatz mit Einfahrt
+                return AussenBearbeitung.HaltUmriss(aussen, s) is { } u ? [u] : [];
             case AussenArt.Notiz:
                 // S 0.27.0: nur in der Draufsicht
                 return [];

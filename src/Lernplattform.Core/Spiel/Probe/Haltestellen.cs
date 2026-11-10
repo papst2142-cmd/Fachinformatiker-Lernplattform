@@ -128,6 +128,11 @@ public static class Haltestellen
         return beste;
     }
 
+    /// <summary>Die geraden und gebogenen Strassen mit Gehweg einer Landschaft (Linie, halbe Fahrbahn plus Gehweg) wie in <see cref="StadtSzene"/>.</summary>
+    public static List<(List<Vector2> Linie, float Halb)> Gehwege(IEnumerable<PyObjekt> landschaft) =>
+        [.. landschaft.Where(t => Py.Gleich(t["typ"], "strasse") && StadtSzene.GehwegBreite(t) > 0)
+            .Select(t => (Linie: StadtSzene.Vektoren(t["punkte"]), Halb: (StadtSzene.StrassenBreite / 2) + StadtSzene.GehwegBreite(t)))];
+
     /// <summary>Alle Haltestellen der Stadtdaten, die an einer geraden Strasse mit Gehweg liegen (Reihenfolge der Daten).</summary>
     public static List<Haltestelle> Alle(PyObjekt? stadtDaten, IReadOnlyList<(List<Vector2> Linie, float Halb)> gehwege)
     {

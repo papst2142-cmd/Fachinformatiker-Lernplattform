@@ -756,6 +756,19 @@ public static class Texte
     public const string AmpelTipp = "Auf eine Kreuzung oder Einmündung antippen: die Ampel stellt an jeder Straße einen Mast auf, mit Haltelinie und Furt. Autos halten bei Rot, die Figur geht über die Furt. Am Kreisverkehr gibt es keine Ampel.";
     public const string AmpelDrehenNicht = "Eine Ampel richtet sich selbst nach den Straßen der Kreuzung aus; schieben setzt sie an eine andere Kreuzung.";
     public const string AmpelKeineKreuzung = "Hier ist keine freie Kreuzung: die Ampel auf eine Kreuzung oder Einmündung setzen (nicht am Kreisverkehr, höchstens eine Ampel je Kreuzung).";
+
+    // Welle S 0.36.0 (Weisung P12-171): Bushaltestellen und Parkplaetze
+    public const string Haltestelle = "Haltestelle";
+    public const string HaltestelleTipp = "Neben eine gerade Straße mit Gehweg antippen, auf der Seite der Haltestelle: Wartehäuschen, Schild und gelbe Linie stellen sich selbst auf. Der Bus fährt von allein alle Haltestellen an, mit der Haltestelle rechts.";
+    public const string Parkplatz = "Parkplatz";
+    public const string ParkplatzTipp = "Neben eine gerade Straße mit Gehweg antippen, auf der Seite des Parkplatzes: die Fläche liegt hinter dem Gehweg, die Einfahrt führt über den Gehweg. Plätze und Reihen rechts unter „Ausgewähltes Stück“.";
+    public const string HaltDrehenNicht = "Haltestelle und Parkplatz richten sich selbst nach der Straße aus; schieben geht nur längs der Straße.";
+    public const string HaltKeineStrasse = "Hier ist keine gerade Straße mit Gehweg: Haltestelle und Parkplatz neben ein gerades Stück Straße mit Gehweg setzen.";
+    public const string ParkplatzPlaetze = "Plätze";
+    public const string ParkplatzReihen = "Reihen";
+    public const string ParkplatzEineReihe = "Eine Reihe (längs der Straße)";
+    public const string ParkplatzZweiReihen = "Zwei Reihen (quer, mit Gasse in der Mitte)";
+    public static string ParkplatzPlaetzeText(int plaetze, int reihen) => plaetze + " Plätze, " + (reihen == 1 ? "eine Reihe" : reihen + " Reihen");
     public const string LaternenVerteilen = "Laternen neu verteilen";
     public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen im Abstand 3,5 auf, abwechselnd links und rechts. Selbst gesetzte Laternen bleiben, gelöschte automatische kommen nicht wieder.";
     public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} automatische entfernt.";

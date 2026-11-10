@@ -1664,7 +1664,7 @@ public sealed partial class StadtSzene
 
     private static List<Vector2> Ausgerichtet(List<Vector2> p, bool umgedreht) => umgedreht ? [.. Enumerable.Reverse(p)] : p;
 
-    private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
+    internal static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 
     /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
     private static (float X, float Z) Stehplatz(Stadt stadt, string id, float tx, float tz)
