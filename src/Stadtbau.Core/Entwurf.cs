@@ -657,10 +657,10 @@ public sealed class Entwurf
     {
         var e = new Entwurf { HalleWunsch = true };
         const string p = Bauteile.PraefixHalle;
-        e.Setzen(p + "structure-corner-outer", 8, 5, 0, 0);
-        e.Setzen(p + "structure-corner-outer", 0, 5, 0, 1);
-        e.Setzen(p + "structure-corner-outer", 0, 0, 0, 2);
-        e.Setzen(p + "structure-corner-outer", 8, 0, 0, 3);
+        e.Setzen(p + "structure-corner-inner", 8, 5, 0, 0);
+        e.Setzen(p + "structure-corner-inner", 0, 5, 0, 1);
+        e.Setzen(p + "structure-corner-inner", 0, 0, 0, 2);
+        e.Setzen(p + "structure-corner-inner", 8, 0, 0, 3);
         for (var x = 1; x <= 7; x++)
         {
             e.Setzen(p + (x == 4 ? "structure-doorway" : x % 2 == 0 ? "structure-window" : "structure-wall"), x, 5, 0, 0);

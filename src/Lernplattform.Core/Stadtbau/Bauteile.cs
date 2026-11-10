@@ -278,8 +278,9 @@ public static class Bauteile
         ["structure-wall"] = new(Art.Wand, Seiten.Sued, false, false, "Hallenwand"),
         ["structure-window"] = new(Art.Wand, Seiten.Sued, true, false, "Hallenwand mit Fenster"),
         ["structure-doorway"] = new(Art.Tuer, Seiten.Sued, false, true, "Hallenwand mit Tür"),
-        ["structure-corner-outer"] = new(Art.Ecke, Seiten.Sued | Seiten.Ost, false, false, "Hallenecke"),
-        ["structure-corner-inner"] = new(Art.Block, Seiten.Keine, false, false, "Hallen-Innenecke"),
+        // „corner-inner“ ist die Ecke der Halle (Waende auf der Sued- und Ostkante des eigenen Felds, von innen gesehen eine
+        // Innenecke); „corner-outer“ legt seine Waende auf die Kanten der Nachbarfelder (Ecke einer L-foermigen Halle)
+        ["structure-corner-inner"] = new(Art.Ecke, Seiten.Sued | Seiten.Ost, false, false, "Hallenecke"),
         ["floor"] = new(Art.Block, Seiten.Keine, false, false, "Hallenboden"),
         ["top"] = new(Art.Dach, Seiten.Keine, false, false, "Hallendach"),
     };
@@ -314,6 +315,7 @@ public static class Bauteile
     {
         _ when TabelleHalle.ContainsKey(name) => null,
         "door" => "kommt als Türblatt mit dem Türteil",
+        "structure-corner-outer" => "Ecke einer L-förmigen Halle, Wände auf den Nachbarfeldern",
         _ when name.EndsWith("-wide", StringComparison.Ordinal) || name.StartsWith("door-wide", StringComparison.Ordinal)
             || name is "floor-large" or "top-large" or "top-large-checkerboard" => "zwei Felder breit (ein Teil je Feld)",
         _ when name.StartsWith("structure-", StringComparison.Ordinal) => "Stütze, steht frei (Katalog)",

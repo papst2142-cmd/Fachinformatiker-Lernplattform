@@ -41,7 +41,7 @@ public partial class TuerBuendigTests
     public void Halle_Wand_ImDrittelRaster_NurZurFassadeHinaus()
     {
         const float f = Bauteile.HalleMassstab;
-        foreach (var name in new[] { "structure-wall", "structure-window", "structure-doorway", "structure-corner-outer" })
+        foreach (var name in new[] { "structure-wall", "structure-window", "structure-doorway", "structure-corner-inner" })
         {
             for (var dreh = 0; dreh < 4; dreh++)
             {
@@ -68,6 +68,82 @@ public partial class TuerBuendigTests
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Die Huelle der Probehalle ist geschlossen: von der Mitte jedes Felds aus trifft ein waagrechter Strahl (Hoehe 0,5) in
+    /// jede Richtung eine Wand, spaetestens in der Mauerkrone (eine Feldbreite hinter der Kante der Grundflaeche; die Wand
+    /// steht 0,1 Feld hinter der Kante, das Tuerblatt im Vorbau) (Fotos P12-93: mit dem falschen Eckteil
+    /// „corner-outer“ standen die Ecken offen und die Waende ragten schraeg hinaus; Gegenprobe mit diesem Teil).
+    /// </summary>
+    [Fact]
+    public void Halle_Probehalle_HuelleGeschlossen_GegenprobeFalscheEcke()
+    {
+        var o = OffeneStellen(Entwurf.Probehalle());
+        Assert.True(o.Count == 0, string.Join("; ", o));
+        var falsch = new Entwurf { HalleWunsch = true };
+        foreach (var t in Entwurf.Probehalle().Teile)
+        {
+            falsch.Setzen(t.Id.Replace("structure-corner-inner", "structure-corner-outer", StringComparison.Ordinal), t.X, t.Y, t.Stockwerk, t.Dreh);
+        }
+        Assert.NotEmpty(OffeneStellen(falsch));
+    }
+
+    private static List<string> OffeneStellen(Entwurf e)
+    {
+        var gm = Bauteile.Zusammensetzen("x", e.Teile, Katalog.Bauteil);
+        const float f = Bauteile.HalleMassstab;
+        var g = e.Teile.Where(t => t.Stockwerk == 0).ToList();
+        var (x0, x1, y0, y1) = (g.Min(t => t.X), g.Max(t => t.X), g.Min(t => t.Y), g.Max(t => t.Y));
+        var offen = new List<string>();
+        for (var x = x0; x <= x1; x++)
+        {
+            for (var y = y0; y <= y1; y++)
+            {
+                var start = new Vector3((x + 0.5f) * f, 0.5f, (y + 0.5f) * f);
+                foreach (var (r, bis) in new (Vector3, float)[]
+                {
+                    (Vector3.UnitX, ((x1 + 1) * f) - start.X), (-Vector3.UnitX, start.X - (x0 * f)),
+                    (Vector3.UnitZ, ((y1 + 1) * f) - start.Z), (-Vector3.UnitZ, start.Z - (y0 * f)),
+                })
+                {
+                    if (Treffer(gm, start, r) is not { } d || d > bis + f)
+                    {
+                        offen.Add($"{x},{y} {r}");
+                    }
+                }
+            }
+        }
+        return offen;
+    }
+
+    private static float? Treffer(GrafikModell m, Vector3 o, Vector3 r)
+    {
+        float? best = null;
+        for (var i = 0; i + 8 < m.Ecken.Length; i += 9)
+        {
+            var a = new Vector3(m.Ecken[i], m.Ecken[i + 1], m.Ecken[i + 2]);
+            var b = new Vector3(m.Ecken[i + 3], m.Ecken[i + 4], m.Ecken[i + 5]);
+            var c = new Vector3(m.Ecken[i + 6], m.Ecken[i + 7], m.Ecken[i + 8]);
+            var e1 = b - a;
+            var e2 = c - a;
+            var p = Vector3.Cross(r, e2);
+            var det = Vector3.Dot(e1, p);
+            if (MathF.Abs(det) < 1e-9f)
+            {
+                continue;
+            }
+            var tv = o - a;
+            var u = Vector3.Dot(tv, p) / det;
+            var q = Vector3.Cross(tv, e1);
+            var v = Vector3.Dot(r, q) / det;
+            var d = Vector3.Dot(e2, q) / det;
+            if (u >= 0 && v >= 0 && u + v <= 1 && d > 0.001f && (best is null || d < best))
+            {
+                best = d;
+            }
+        }
+        return best;
     }
 
     [Fact]
