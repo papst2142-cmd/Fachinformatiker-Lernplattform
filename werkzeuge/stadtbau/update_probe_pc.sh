@@ -37,7 +37,8 @@ zeigen() {
 }
 fehler() { echo "FEHLER: $1"; zeigen; exit 1; }
 
-# hoechste veroeffentlichte Version je Linie laut GitHub-API (ohne Entwurf und Vorab)
+# hoechste veroeffentlichte Version je Linie laut GitHub-API (ohne Entwurf und Vorab); zweimal gelesen, siehe vor Schritt 4
+soll_lesen() {
 "$PY" -I - "$ARB/soll.txt" <<'PY'
 import json, os, re, sys, time, urllib.error, urllib.request
 r = urllib.request.Request("https://api.github.com/repos/papst2142-cmd/Fachinformatiker-Lernplattform/releases?per_page=100",
@@ -69,6 +70,8 @@ with open(sys.argv[1], "w") as f:
 PY
 SOLL_S="$(sed -n 's/^werkzeug //p' "$ARB/soll.txt")"
 SOLL_A="$(sed -n 's/^lernplattform //p' "$ARB/soll.txt")"
+}
+soll_lesen
 echo "GitHub: neueste vS $SOLL_S, neueste vA $SOLL_A"
 if [ -z "$SOLL_S" ] || [ -z "$SOLL_A" ]; then fehler "keine veroeffentlichte Version vS oder vA gefunden"; fi
 
@@ -97,6 +100,13 @@ printf 'probe-projekt\n' > "$ALT/projekte/probe_alt.fisbau"
 printf 'probe-blueprint\n' > "$ALT/blueprints/probe_alt.fisblueprint"
 
 # 4 Update gegen das echte GitHub
+# Lauf 759 (Welle CI schneller 2): vS0.29.0 erschien zwischen dem Lesen oben (23:04:03 UTC) und dem Update (23:05:40), das
+# Angebot 0.29.0 war richtig, die Probe erwartete 0.28.0. Darum hier frisch lesen: das Angebot muss die neueste vS JETZT sein
+# (nicht lockerer, nur ohne Zeitluecke von Minuten).
+alt_s="$SOLL_S"
+soll_lesen
+[ -n "$SOLL_S" ] || fehler "keine veroeffentlichte Version vS gefunden (zweites Lesen)"
+[ "$alt_s" = "$SOLL_S" ] || echo "Hinweis: neueste vS waehrend der Probe veroeffentlicht ($alt_s -> $SOLL_S), Update-Probe erwartet $SOLL_S"
 : > "$BERICHT"
 env -u STADTBAU_DATEN STADTBAU_UPDATE_PROBE=update "$ALT/current/Stadtbau.exe" || fehler "Update-Probe Rueckgabe $?"
 tr -d '\r' < "$BERICHT"

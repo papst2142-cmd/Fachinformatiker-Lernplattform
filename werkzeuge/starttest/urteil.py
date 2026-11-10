@@ -21,6 +21,9 @@ Aufruf:
       Rueckgabe 0 = gruen, 3 = derselbe Punkt in beiden Laeufen rot, 1 = Absturz im 2. Lauf.
   python -I werkzeuge/starttest/urteil.py selbsttest
       feste Faelle der Neustart-Regel und der Ausnahme Intel-Mac (Rueckgabe 0 = alle richtig).
+  python -I werkzeuge/starttest/urteil.py github
+      Welle CI schneller 2 (Weisung P12-131, Nico 1a): Urteil "GitHub oder echt" fuer den laufenden CI-Lauf
+      (urteil_github.py; Job "urteil (GitHub oder echt)", immer Rueckgabe 0, nur Hinweis).
 
 Feste, benannte Ausnahme Intel-Mac (Weisung P11-19, Nico 03.11.2026, Antwort 1a): nur wenn
 LERNPLATTFORM_ZEITEN_NUR_INFO genau "macos-15-intel" ist (setzt ci.yml nur fuer tests (macos-15-intel)),
@@ -40,6 +43,9 @@ import os
 import tempfile
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import urteil_github  # noqa: E402  (Welle CI schneller 2)
 
 AUSNAHME = "URTEIL: rot (Ausnahme"
 LAYOUT_KOPF = "Layoutpruefung ("
@@ -236,13 +242,14 @@ def wachhund_unter_zeitlimit(pfad=".github/workflows/ci.yml"):
 
 
 def matrix_listen(ci):
-    """Weisung P12-20: die Listen der tests-Matrix in ci.yml in der Reihenfolge voll, werkzeug, schnell."""
+    """Weisung P12-20: die Listen der tests-Matrix in ci.yml in der Reihenfolge voll, ohne-mac, werkzeug, schnell
+    (Welle CI schneller 2: Stufe ohne-mac dazu)."""
     import json
     with open(ci, encoding="utf-8") as f:
         text = f.read()
     zeile = re.search(r"include: \$\{\{ fromJSON\((.*)\) \}\}", text)
     listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
-    if len(listen) != 3:
+    if len(listen) != 4:
         return None
     return [sorted("tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "") for e in json.loads(l)) for l in listen]
 
@@ -262,7 +269,7 @@ def tests_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
         return 0
     listen = matrix_listen(ci)
     if not listen:
-        print("FEHLER: Selbsttest Jobs: Matrix der tests-Jobs (voll, werkzeug, schnell) in " + ci + " nicht gefunden")
+        print("FEHLER: Selbsttest Jobs: Matrix der tests-Jobs (voll, ohne-mac, werkzeug, schnell) in " + ci + " nicht gefunden")
         return 1
     voll = listen[0]
     soll = sorted(z for z in (soll_liste(release) or []) if z.startswith("tests ("))
@@ -281,12 +288,12 @@ def jobs_werkzeug(ci):
         return None
     with open(ci, encoding="utf-8") as f:
         text = f.read()
-    jobs = list(listen[1])
+    jobs = list(listen[2])
     teile = re.split(r"^  [a-z][a-z0-9_-]*:\n", text.split("\njobs:\n", 1)[1], flags=re.M)[1:]
     for teil in teile:
         name = re.search(r"^    name: (.+)$", teil, re.M)
         bedingung = re.search(r"^    if: (.+)$", teil, re.M)
-        if not name or "${{" in name.group(1):
+        if not name or "${{" in name.group(1) or name.group(1).strip() == urteil_github.HILFSJOB:
             continue
         b = bedingung.group(1) if bedingung else ""
         if "inputs.stufe == 'werkzeug'" in b or "inputs.stufe" not in b:
@@ -366,7 +373,8 @@ def feste_jobs_gleich_release(ci=".github/workflows/ci.yml", release=".github/wo
     if not (os.path.exists(ci) and os.path.exists(release)):
         return 0
     with open(ci, encoding="utf-8") as f:
-        fest = sorted(set(m.strip() for m in re.findall(r"^    name: (.+)$", f.read(), re.M) if "${{" not in m))
+        fest = sorted(set(m.strip() for m in re.findall(r"^    name: (.+)$", f.read(), re.M)
+                          if "${{" not in m and m.strip() != urteil_github.HILFSJOB))
     liste = soll_liste(release)
     if liste is None:
         print("FEHLER: Selbsttest feste Jobs: Liste soll='...' in " + release + " nicht gefunden")
@@ -406,6 +414,114 @@ def selbsttest_feste_jobs_gegenprobe():
         print("FEHLER: Selbsttest feste Jobs: Gegenprobe mit altem Job nicht rot")
         return 1
     print("Selbsttest feste Jobs: Gegenprobe mit altem Job rot")
+    return 0
+
+
+def job_bloecke(text):
+    """(Name, Text) je Job in ci.yml (Name aus "    name:", sonst die Kennung)."""
+    rumpf = text.split("\njobs:\n", 1)[1]
+    teile = re.split(r"^  ([a-z][a-z0-9_-]*):\n", rumpf, flags=re.M)[1:]
+    bloecke = []
+    for kennung, block in zip(teile[0::2], teile[1::2]):
+        name = re.search(r"^    name: (.+)$", block, re.M)
+        bloecke.append((name.group(1).strip() if name else kennung, block))
+    return bloecke
+
+
+def pakete_listen(text):
+    """Welle CI schneller 2: Listen der pakete-Matrix (voll, ohne-mac) als Jobnamen."""
+    import json
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*'\[\{\"os\":\"windows-latest\",\"rid\".*)\) \}\}", text)
+    listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
+    return [sorted("pakete (%s)" % e["rid"] for e in json.loads(l)) for l in listen]
+
+
+def ohne_mac_stufe(ci=".github/workflows/ci.yml", release=".github/workflows/release.yml", text=None, still=False):
+    """Welle CI schneller 2 (Weisung P12-131, Nico 2a): die Stufe ohne-mac ist genau der volle Lauf ohne die sieben
+    Mac-Jobs (tests-Matrix ohne macos, pakete ohne osx), also 10 Jobs; jeder Job ausser dem Hinweis-Job hat den Waechter
+    ohne_mac.py. text = ci.yml als Text (nur fuer Gegenproben)."""
+    if text is None:
+        if not (os.path.exists(ci) and os.path.exists(release)):
+            return 0
+        with open(ci, encoding="utf-8") as f:
+            text = f.read()
+    funde = []
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*)\) \}\}", text)
+    import json
+    listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
+    if len(listen) != 4:
+        funde.append("tests-Matrix ohne vier Listen (voll, ohne-mac, werkzeug, schnell)")
+    else:
+        voll, ohne = json.loads(listen[0]), json.loads(listen[1])
+        if ohne != [e for e in voll if not e["os"].startswith("macos")]:
+            funde.append("tests-Matrix ohne-mac ist nicht die volle Liste ohne macos: %s" % [e["os"] + " " + e["teil"] for e in ohne])
+    pak = pakete_listen(text)
+    if len(pak) != 2 or pak[1] != [n for n in pak[0] if "osx" not in n] or len(pak[0]) != 4:
+        funde.append("pakete-Matrix voll/ohne-mac falsch: %s" % pak)
+    erwartet = urteil_github.erwartete_jobs("ohne-mac", soll_liste, release)
+    if len(erwartet) != 10:
+        funde.append("Stufe ohne-mac hat %d statt 10 Jobs: %s" % (len(erwartet), erwartet))
+    for name, block in job_bloecke(text):
+        if name != urteil_github.HILFSJOB and "ohne_mac.py pruefen" not in block:
+            funde.append("Job %s ohne Waechter ohne_mac.py" % name)
+    if not still:
+        for z in funde:
+            print("FEHLER: Selbsttest Stufe ohne-mac: " + z)
+        if not funde:
+            print("Selbsttest Stufe ohne-mac: %d Jobs (voller Lauf ohne die 7 Mac-Jobs), jeder Job mit Waechter" % len(erwartet))
+    return 1 if funde else 0
+
+
+def ohne_mac_gegenprobe(ci=".github/workflows/ci.yml"):
+    """Gegenproben: ohne-mac-Liste mit einem Mac-Job, pakete ohne-mac mit osx-arm64, ein Job ohne Waechter = rot."""
+    if not os.path.exists(ci):
+        return 0
+    with open(ci, encoding="utf-8") as f:
+        text = f.read()
+    rot = 0
+    gegen = [
+        ("Mac-Job in ohne-mac", text.replace("&& '[{\"os\":\"ubuntu-latest\",\"teil\":\"\",\"kurz\":\"alle\",\"einzel\":true,\"lernen\":true,\"spiel\":true},{\"os\":\"windows-latest\"",
+                                              "&& '[{\"os\":\"macos-15\",\"teil\":\"X\",\"kurz\":\"x\"},{\"os\":\"ubuntu-latest\",\"teil\":\"\",\"kurz\":\"alle\",\"einzel\":true,\"lernen\":true,\"spiel\":true},{\"os\":\"windows-latest\"", 2)),
+        ("osx in pakete ohne-mac", text.replace("|| '[{\"os\":\"windows-latest\",\"rid\":\"win-x64\"}", "|| '[{\"os\":\"macos-15\",\"rid\":\"osx-arm64\"},{\"os\":\"windows-latest\",\"rid\":\"win-x64\"}", 1)),
+        ("Job ohne Waechter", text.replace("python -I werkzeuge/ci/ohne_mac.py pruefen", "true", 1)),
+    ]
+    for name, geaendert in gegen:
+        if geaendert == text or ohne_mac_stufe(text=geaendert, still=True) != 1:
+            print("FEHLER: Selbsttest Stufe ohne-mac: Gegenprobe '%s' nicht rot" % name)
+            rot = 1
+    if not rot:
+        print("Selbsttest Stufe ohne-mac: %d Gegenproben rot" % len(gegen))
+    return rot
+
+
+FILTER_HILFSJOB = 'and .name != "%s")' % urteil_github.HILFSJOB
+
+
+def hilfsjob_zaehlt_nicht(release, text=None):
+    """Welle CI schneller 2: release.yml und stadtbau_release.yml zaehlen den Hinweis-Job nicht (sonst faende kein Lauf
+    mehr seine Liste)."""
+    if text is None:
+        if not os.path.exists(release):
+            return 0
+        with open(release, encoding="utf-8") as f:
+            text = f.read()
+    if FILTER_HILFSJOB not in text:
+        print("FEHLER: Selbsttest Hinweis-Job: %s zaehlt \"%s\" mit" % (os.path.basename(release), urteil_github.HILFSJOB))
+        return 1
+    return 0
+
+
+def hilfsjob_gegenprobe(release=".github/workflows/release.yml"):
+    if not os.path.exists(release):
+        return 0
+    with open(release, encoding="utf-8") as f:
+        text = f.read()
+    with contextlib.redirect_stdout(io.StringIO()):
+        rc = hilfsjob_zaehlt_nicht(release, text.replace(FILTER_HILFSJOB, ")"))
+    if rc != 1:
+        print("FEHLER: Selbsttest Hinweis-Job: Gegenprobe ohne Filter nicht rot")
+        return 1
+    print("Selbsttest Hinweis-Job: release.yml und stadtbau_release.yml ohne Hinweis-Job, Gegenprobe rot")
     return 0
 
 
@@ -490,6 +606,13 @@ def selbsttest():
     # Weisung P12-20: Stufe werkzeug, Liste soll_werkzeug in stadtbau_release.yml gleich den Jobs der Stufe, mit Gegenprobe
     rot |= werkzeug_jobs_gleich_release()
     rot |= selbsttest_werkzeug_gegenprobe()
+    # Welle CI schneller 2 (Weisung P12-131): Stufe ohne-mac, Hinweis-Job urteil, Urteil GitHub oder echt (je mit Gegenproben)
+    rot |= ohne_mac_stufe()
+    rot |= ohne_mac_gegenprobe()
+    rot |= hilfsjob_zaehlt_nicht(".github/workflows/release.yml")
+    rot |= hilfsjob_zaehlt_nicht(".github/workflows/stadtbau_release.yml")
+    rot |= hilfsjob_gegenprobe()
+    rot |= urteil_github.selbsttest()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:
@@ -505,6 +628,8 @@ def main():
         return lauf1(int(sys.argv[2]), sys.argv[3])
     if len(sys.argv) == 2 and sys.argv[1] == "selbsttest":
         return selbsttest()
+    if len(sys.argv) == 2 and sys.argv[1] == "github":
+        return urteil_github.aus_github(soll_liste)
     if len(sys.argv) == 5 and sys.argv[1] == "lauf2":
         return lauf2(int(sys.argv[2]), sys.argv[3], sys.argv[4])
     print(__doc__)

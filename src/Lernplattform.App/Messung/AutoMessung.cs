@@ -110,6 +110,18 @@ public static partial class AutoMessung
     /// <summary>A 0.38.0: offene Gruppen der Seitenleiste gleich nach dem Programmstart (erwartet: keine).</summary>
     private static IReadOnlyList<string> GruppenBeimStart = [];
 
+    /// <summary>Welle CI schneller 2 (Meldung P12-84 Punkt 1, Sammelliste 268/227): je Abschnitt des Start-Tests eine Zeile
+    /// "ZEITPLAN &lt;s&gt; s: &lt;Abschnitt&gt;" sofort auf stderr (das CI-Protokoll stempelt sie mit der Uhrzeit, auch wenn der
+    /// Wachhund den Lauf beendet) und in die Messdatei (Artefakt). Nur Angabe, kein Urteil, keine Grenze.</summary>
+    private static readonly Stopwatch ZeitplanUhr = Stopwatch.StartNew();
+
+    private static void Zeitplan(string abschnitt)
+    {
+        var zeile = string.Create(CultureInfo.InvariantCulture, $"ZEITPLAN {ZeitplanUhr.Elapsed.TotalSeconds:F1} s: {abschnitt}");
+        Console.Error.WriteLine(zeile);
+        Messwerte.Notiere(zeile);
+    }
+
     public static async Task<int> LaufAsync(MainView ansicht)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -154,35 +166,55 @@ public static partial class AutoMessung
         var reihenRot = new List<string>();
         if (MitLernen)
         {
+            Zeitplan("LernteilMessenAsync");
             funde += await LernteilMessenAsync(ansicht, inhalte, reihenRot);
         }
         if (MitSpiel)
         {
+            Zeitplan("P8W5SpielVorStichprobeAsync");
             funde += await P8W5SpielVorStichprobeAsync(ansicht); // Sammelliste 112: Spielseite zuerst schmal
+            Zeitplan("P7W1MesspunkteAsync");
             funde += await P7W1MesspunkteAsync(ansicht);       // Phase 7 W1: 3D-Stichprobe (GL-Pflicht)
+            Zeitplan("P8W3MesspunkteAsync");
             funde += await P8W3MesspunkteAsync(ansicht);       // Phase 8 W3: Spielseite nach Abgleich auffrischen
+            Zeitplan("P8W5MesspunkteAsync");
             funde += await P8W5MesspunkteAsync(ansicht);       // Phase 8 W5: Rueckfrage am Bett
+            Zeitplan("P8W6FestzeitenAsync");
             funde += await P8W6FestzeitenAsync(ansicht);       // Phase 8 W6: Stadt, Park und Kaufhaus je Festzeit
+            Zeitplan("P8W7MesspunkteAsync");
             funde += await P8W7MesspunkteAsync(ansicht);       // Phase 8 W7: Schritte, Autos, Gruen
+            Zeitplan("P8W8TonAsync");
             funde += await P8W8TonAsync(ansicht);              // Phase 8 W8: Toene, Maus, Tasten, eigene Lieder
+            Zeitplan("P8W9JahreszeitenAsync");
             funde += await P8W9JahreszeitenAsync(ansicht);     // Phase 8 W9: Stadt je Jahreszeit, Winter mit Weihnachten
+            Zeitplan("P8W10SpielAsync");
             funde += await P8W10SpielAsync(ansicht);           // Phase 8 W10: Hinweisfeld, Tag und Nacht, Laternen
+            Zeitplan("P8W11SpielAsync");
             funde += await P8W11SpielAsync(ansicht);           // Phase 8 W11: Festzeiten-Verkehr, 22 Laternen
+            Zeitplan("P8W12SpielAsync");
             funde += await P8W12SpielAsync(ansicht);           // Phase 8 W12: Vorladen, Fest im Haus, alle Orte
+            Zeitplan("P10P1SpielAsync");
             funde += await P10P1SpielAsync(ansicht);           // Patch A 0.29.1: Festverkehr wechselt mit der Uhr
+            Zeitplan("P13W5EtagenAsync");
             funde += await P13W5EtagenAsync(ansicht);          // Phase 13 W5: Etage wechseln (Treppe im Moebelhaus)
         }
         if (MitLernen)
         {
+            Zeitplan("WechselReihenAsync");
             await WechselReihenAsync(ansicht, reihenRot);
+            Zeitplan("P8W5ScrollleistenAsync");
             funde += await P8W5ScrollleistenAsync(ansicht);    // Weisung P8-10: Scrollleisten schmal und rund
         }
+        Zeitplan("LayoutAsync");
         funde += await LayoutAsync(ansicht, inhalte);
         if (MitLernen)
         {
+            Zeitplan("OptionenZweimalAsync");
             funde += await OptionenZweimalAsync(ansicht);
         }
+        Zeitplan("P11W3MesspunkteAsync");
         funde += await P11W3MesspunkteAsync(ansicht);         // Phase 11 W3: Messpunkte fuer "Problem melden"
+        Zeitplan("Ende");
         funde += AbschlussAuswerten(reihenRot);
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
@@ -222,10 +254,15 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             Messwerte.Notiere(string.Create(inv, $"Dashboard mit Werten fertig: {Messwerte.SeitStart.Elapsed.TotalMilliseconds:F0} ms nach Start"));
         }
+        Zeitplan("P8W2bMesspunkteAsync");
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
+        Zeitplan("P11SeitenleisteAsync");
         funde += await P11SeitenleisteAsync(ansicht, GruppenBeimStart);   // A 0.38.0: Seitenleiste wie Handy, Gruppen zu, nur eine offen
+        Zeitplan("P8W8OptionenAsync");
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
+        Zeitplan("P8W9HoerprobeAsync");
         funde += await P8W9HoerprobeAsync(ansicht);     // Phase 8 W9: Hoerprobe an jedem Ton-Regler
+        Zeitplan("P8W10DashboardAsync");
         funde += await P8W10DashboardAsync(ansicht);    // Phase 8 W10: Dashboard breit, Kacheln auf einer Hoehe
 
         // Phase 2: Karteikarten und Pruefungstrainer lesen Lernstand und Reihenfolge im Hintergrund;
@@ -242,20 +279,33 @@ public static partial class AutoMessung
             }
         }
 
+        Zeitplan("W3MesspunkteAsync");
         funde += await W3MesspunkteAsync(ansicht, inhalte);
+        Zeitplan("FarbreglerAsync");
         funde += await FarbreglerAsync(ansicht);
         funde += Festbreitenschrift();
+        Zeitplan("P11Fw6TabellenAsync");
         funde += await P11Fw6TabellenAsync(ansicht);   // FW6: breite Tabellen am Handy wischbar (Sammelliste 177 Teil 2)
+        Zeitplan("RechnerMesspunkteAsync");
         funde += await RechnerMesspunkteAsync(ansicht);
+        Zeitplan("P11Fw7RechnerTexteAsync");
         funde += await P11Fw7RechnerTexteAsync(ansicht);   // FW7: Zahl und Einheit, lange Zahlen, Rechenweg am Handy (Sammelliste 40, 41, 43)
+        Zeitplan("P11W2TastaturAsync");
         funde += await P11W2TastaturAsync(ansicht);   // Phase 11 W2: Gegenprobe Namen, Fenster haelt Tab, Tab erreicht alles
+        Zeitplan("W1MesspunkteAsync");
         funde += await W1MesspunkteAsync(ansicht, inhalte);
+        Zeitplan("KlausurMesspunkteAsync");
         funde += await KlausurMesspunkteAsync(ansicht);
+        Zeitplan("ProjektMesspunkteAsync");
         funde += await ProjektMesspunkteAsync(ansicht);
+        Zeitplan("W4MesspunkteAsync");
         funde += await W4MesspunkteAsync(ansicht, reihenRot);
+        Zeitplan("KalenderMesspunkteAsync");
         funde += await KalenderMesspunkteAsync(ansicht);   // A 0.12.2: Kalender blaettern
+        Zeitplan("LizenzenMesspunkteAsync");
         funde += await LizenzenMesspunkteAsync(ansicht);   // Phase 8 W2: Knopf "Lizenzen"
         funde += RingVerlaufPruefen();   // Phase 8 W2 Nachtrag (P8-3b): Farbverlauf der Fortschrittsringe
+        Zeitplan("P9W2MesspunkteAsync");
         funde += await P9W2MesspunkteAsync(ansicht);   // Phase 9 W2: Inhalte laden, Fachrichtung wechseln, Klausurauswahl AE
         return funde;
     }
