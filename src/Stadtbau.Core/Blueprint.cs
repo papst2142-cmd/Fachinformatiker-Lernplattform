@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
@@ -21,12 +22,16 @@ public sealed class Blueprint
     public const string Format = "fisblueprint";
 
     /// <summary>S 0.9.0 (Weisung P12-48): Format 2 mit den Feldern <c>bauteile</c> und <c>eingang</c> (Gebaeude aus dem
-    /// Editor); Format 1 (bis S 0.8.0) bleibt lesbar.</summary>
-    public const long FormatVersion = 2;
+    /// Editor); Format 1 (bis S 0.8.0) bleibt lesbar. S 0.31.0 (Sammelliste 264): Format 3 mit dem Feld <c>farben</c>
+    /// (Fassade, Dach, Rahmen wie <c>stadtdaten.farben</c>, null = wie das Modell); Format 1 und 2 bleiben lesbar.</summary>
+    public const long FormatVersion = 3;
 
     public const string Endung = ".fisblueprint";
 
-    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "bauteile", "eingang", "pruefsumme"];
+    public static readonly string[] Felder = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "bauteile", "eingang", "farben", "pruefsumme"];
+
+    /// <summary>Felder von Format 2 (S 0.9.0 bis S 0.30.0).</summary>
+    public static readonly string[] Felder2 = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "bauteile", "eingang", "pruefsumme"];
 
     /// <summary>Felder von Format 1 (bis S 0.8.0).</summary>
     public static readonly string[] Felder1 = ["format", "formatversion", "werkzeug", "name", "herkunft", "modell", "teile", "tuer", "weg", "schild", "innenraum", "personen", "pruefsumme"];
@@ -66,6 +71,9 @@ public sealed class Blueprint
 
     /// <summary>S 0.9.0: Eingang des selbst gebauten Gebaeudes (<c>[{x, y, seite}]</c>), null ohne <see cref="Bauteile"/>.</summary>
     public List<object?>? Eingang { get; init; }
+
+    /// <summary>S 0.31.0 (Sammelliste 264): Farben des Gebaeudes <c>{fassade, dach, rahmen}</c>, null = wie das Modell.</summary>
+    public PyObjekt? Farben { get; init; }
 
     /// <summary>Datei, aus der er gelesen wurde (null = noch nicht gespeichert).</summary>
     public string? Datei { get; private set; }
@@ -171,6 +179,7 @@ public sealed class Blueprint
             Personen = personen,
             Bauteile = gebaut is null ? null : (List<object?>)Py.Kopie(gebaut["teile"])!,
             Eingang = gebaut is null ? null : (List<object?>)Py.Kopie(gebaut["eingang"])!,
+            Farben = Get(Get(Aussen.Stadtdaten(a), Gebaeudefarben.Schluessel) as PyObjekt ?? [], s.Art == AussenArt.Haus ? ort : modell) is PyObjekt fb ? (PyObjekt)Py.Kopie(fb)! : null,
         };
     }
 
@@ -241,6 +250,14 @@ public sealed class Blueprint
                 Py.Setzen(sd, "bauteile", alle);
             }
             Py.Setzen(alle, Modell, BauteileEintrag());
+        }
+        // S 0.31.0 (Sammelliste 264): die Farben des Blueprints gelten fuer alle Gebaeude dieses Modells
+        if (Farben is { Count: > 0 })
+        {
+            foreach (var (teil, wert) in Farben)
+            {
+                AussenBearbeitung.FarbeSetzen(aussen, Modell, teil, wert as string);
+            }
         }
         // S 0.22.1 (Weisung P12-94, selbst gefunden): ein Gebaeude der Landschaft sucht die Ladepruefung des Spiels
         // (SpielPruefung.Welt) nur in karte.modelle. Bis S 0.22.0 kam ein fehlendes Modell nach stadtdaten.neue_modelle;
@@ -441,6 +458,7 @@ public sealed class Blueprint
         { "personen", Personen },
         { "bauteile", Bauteile },
         { "eingang", Eingang },
+        { "farben", Farben },
     };
 
     /// <summary>Inhalt der Datei: je Feld eine Zeile (json.dumps), Pruefsumme sha256 wie bei der Fassung.</summary>
@@ -488,7 +506,7 @@ public sealed class Blueprint
         {
             throw new StadtbauFehler([Texte.BlueprintKaputt]);
         }
-        var felder = Py.Int(d["formatversion"]) == 1 ? Felder1 : Felder;
+        var felder = Py.Int(d["formatversion"]) switch { 1 => Felder1, 2 => Felder2, _ => Felder };
         var funde = new List<string>();
         funde.AddRange(felder.Where(f => !Py.Hat(d, f)).Select(f => $"Feld „{f}“ fehlt."));
         funde.AddRange(d.Select(p => p.Key).Where(k => !felder.Contains(k)).Select(k => $"Feld „{k}“ ist unbekannt."));
@@ -513,6 +531,11 @@ public sealed class Blueprint
         var bauteile = Get(d, "bauteile");
         var eingang = Get(d, "eingang");
         if ((bauteile is null) != (eingang is null))
+        {
+            throw new StadtbauFehler([Texte.BlueprintKaputt]);
+        }
+        var farben = Get(d, "farben");
+        if (farben is not null and not PyObjekt || (farben is PyObjekt fo && fo.Any(f => !Gebaeudefarben.WertGueltig(f.Key, f.Value))))
         {
             throw new StadtbauFehler([Texte.BlueprintKaputt]);
         }
@@ -541,13 +564,14 @@ public sealed class Blueprint
             Personen = personen,
             Bauteile = bauteile as List<object?>,
             Eingang = eingang as List<object?>,
+            Farben = farben as PyObjekt,
         };
     }
 
     /// <summary>Gleiches Gebaeude (alles ausser Name, Herkunft und Datei)?</summary>
     public bool GleichesGebaeude(Blueprint b) =>
-        Modell == b.Modell && PythonJson.Standard(new List<object?> { Teile, Tuer, Weg, Schild, Innenraum, Personen, Bauteile, Eingang })
-            == PythonJson.Standard(new List<object?> { b.Teile, b.Tuer, b.Weg, b.Schild, b.Innenraum, b.Personen, b.Bauteile, b.Eingang });
+        Modell == b.Modell && PythonJson.Standard(new List<object?> { Teile, Tuer, Weg, Schild, Innenraum, Personen, Bauteile, Eingang, Farben })
+            == PythonJson.Standard(new List<object?> { b.Teile, b.Tuer, b.Weg, b.Schild, b.Innenraum, b.Personen, b.Bauteile, b.Eingang, b.Farben });
 
     /// <summary>Mitte der Grundflaeche relativ zur Ecke (fuer Tests und Anzeige).</summary>
     public Vector2 Mitte()
@@ -654,6 +678,7 @@ public sealed class Blueprint
             Personen = alt.Personen,
             Bauteile = alt.Bauteile,
             Eingang = alt.Eingang,
+            Farben = alt.Farben,
         };
         var ziel = Path.Combine(ablage.Blueprints, DateiName(neuerName));
         // nur Gross-/Kleinschreibung anders: unter Windows dieselbe Datei, unter Linux und Android eine andere

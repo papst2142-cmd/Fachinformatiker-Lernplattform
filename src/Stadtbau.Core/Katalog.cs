@@ -275,11 +275,22 @@ public sealed class Katalog
     }
 
     /// <summary>
-    /// S 0.9.0: ein Teil fuer den Gebaeude-Editor ("cc0:modular/&lt;name&gt;") aus dem aktiven Katalog, sonst null (gleiche
-    /// Dreiecke wie das Paket).
+    /// S 0.9.0: ein Teil fuer den Gebaeude-Editor ("cc0:modular/&lt;name&gt;"; seit S 0.31.0 auch Halle "cc0:factory/…" und
+    /// Dachaufsatz "cc0:industrial/…") aus dem aktiven Katalog, sonst null (gleiche Dreiecke wie das Paket).
     /// </summary>
     public static GrafikModell? Bauteil(string id) =>
-        id.StartsWith(Bauteile.Praefix, StringComparison.Ordinal) ? Aktiv?.Modelle(Bauteile.Paket).GetValueOrDefault(id[Bauteile.Praefix.Length..]) : null;
+        id.StartsWith(Bauteile.Praefix, StringComparison.Ordinal) ? Aktiv?.Modelle(Bauteile.Paket).GetValueOrDefault(id[Bauteile.Praefix.Length..])
+        : Bauteile.IstHalle(id) ? Aktiv?.Modelle(Bauteile.PaketHalle).GetValueOrDefault(id[Bauteile.PraefixHalle.Length..])
+        : Bauteile.IstAufsatz(id) ? Aktiv?.Modelle(Bauteile.PaketAufsatz).GetValueOrDefault(id[Bauteile.PraefixAufsatz.Length..])
+        : Bauteile.GanzLesen(id) is { } ganz ? GanzModell(ganz.Typ)
+        : null;
+
+    /// <summary>S 0.31.0: Modell eines Katalog-Stuecks "paket/name" (fuer ein uebernommenes ganzes Gebaeude), null ohne.</summary>
+    private static GrafikModell? GanzModell(string typ)
+    {
+        var i = typ.IndexOf('/', StringComparison.Ordinal);
+        return i <= 0 || Aktiv?.Eintrag(typ) is null ? null : Aktiv.Modelle(typ[..i]).GetValueOrDefault(typ[(i + 1)..]);
+    }
 
     /// <summary>Pakete, deren Modelle schon gelesen sind (Test: der Katalog laedt nur, was gezeigt wird).</summary>
     public IReadOnlyCollection<string> GeleseneModellPakete => [.. _modelle.Where(p => p.Value.IsValueCreated).Select(p => p.Key)];

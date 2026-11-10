@@ -975,6 +975,12 @@ public sealed partial class StadtSzene
                 {
                     Linie(teile, [(anfang.X, anfang.Y), (mitteE.X, mitteE.Y)], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
                 }
+                // Sammelliste 267: die Glastuer eines Gebaeudes aus dem Editor wird als Tuer erkennbar (Tuerblatt und Klinke)
+                if (StadtTueren.MitGlasTuer(stuecke[eigene.Stueck].Name))
+                {
+                    StadtTueren.TuerblattSetzen(teile, stuecke, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), umgefaerbt, eigene, wand, aussen,
+                        Gebaeudefarben.Tuer(stadt.Daten, ort));
+                }
                 return new StadtTuer(ort, mitteE, aussen, anfang, true, hoehe, 0f);
             }
             var (tiefe, hinten) = grafik is not null && stueckeBis > stueckeVon
@@ -991,7 +997,8 @@ public sealed partial class StadtSzene
             }
             var vordach = grafik is null || stueckeBis == stueckeVon
                 || !StadtTueren.Ueberdacht(stuecke.GetRange(stueckeVon, stueckeBis - stueckeVon), grafik, mitte, aussen, hoehe);
-            StadtTueren.Tuer(teile, mitte.X + (aussen.X * 0.005f), mitte.Y + (aussen.Y * 0.005f), aussen, hoehe, hinten, vordach);
+            StadtTueren.Tuer(teile, mitte.X + (aussen.X * 0.005f), mitte.Y + (aussen.Y * 0.005f), aussen, hoehe, hinten, vordach,
+                Gebaeudefarben.Tuer(stadt.Daten, ort));
             if (grafik is not null)
             {
                 StadtTueren.FensterWeg(stuecke, stueckeVon, stueckeBis, grafik, umgefaerbt, mitte, aussen, hoehe, hinten);
@@ -1193,6 +1200,11 @@ public sealed partial class StadtSzene
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
+        }
+        // Sammelliste 264 (Weisung P12-130 Frage 3 = c): Gebaeude faerben (stadtdaten.farben, ohne Feld nichts)
+        if (grafik is not null)
+        {
+            FarbenAnwenden(stadt.Daten, grafik, stuecke, haeuser, umgefaerbt);
         }
         var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, zebras);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
@@ -1951,6 +1963,47 @@ public sealed partial class StadtSzene
 
     /// <summary>P8-28: Stuecke, deren Fenster an einer Tuer die Wandfarbe bekommen haben (Nummer in <see cref="Stuecke"/>).</summary>
     public IReadOnlyDictionary<int, GrafikModell> Umgefaerbt { get; private init; } = new Dictionary<int, GrafikModell>();
+
+    /// <summary>
+    /// Sammelliste 264: Haeuser mit Eintrag in <c>stadtdaten.farben</c> (Kennung = Ort oder Modellname eines Gebaeudes ohne
+    /// Ort) bekommen ihre Farben; nur die Eckfarben aendern sich (<see cref="Gebaeudefarben"/>).
+    /// </summary>
+    internal static void FarbenAnwenden(PyObjekt? stadtDaten, GrafikBibliothek grafik, List<ModellStueck> stuecke, List<StadtHaus> haeuser,
+        Dictionary<int, GrafikModell> umgefaerbt)
+    {
+        var farben = Gebaeudefarben.Lesen(stadtDaten);
+        if (farben.Count == 0)
+        {
+            return;
+        }
+        foreach (var haus in haeuser)
+        {
+            var kennung = haus.Id.Contains('#', StringComparison.Ordinal) ? haus.Id[..haus.Id.LastIndexOf('#')] : haus.Id;
+            if (!farben.TryGetValue(kennung, out var ziele))
+            {
+                continue;
+            }
+            var liste = new List<(int I, GrafikModell M, float Faktor, float Unten)>();
+            for (var i = haus.StueckeVon; i < haus.StueckeBis; i++)
+            {
+                if (!ImPaket(stuecke[i].Name) && (umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name)) is { } m)
+                {
+                    var l = stuecke[i].Lage;
+                    liste.Add((i, m, new Vector3(l.M11, l.M12, l.M13).Length(), l.M42));
+                }
+            }
+            var toene = Gebaeudefarben.Bestimmen([.. liste.Select(x => (x.M, x.Faktor, x.Unten))]);
+            var oben = liste.Count == 0 ? 0 : liste.Max(x => (x.M.Max.Y * x.Faktor) + x.Unten);
+            foreach (var (i, m, faktor, unten) in liste)
+            {
+                var neu = Gebaeudefarben.Umfaerben(m, toene, ziele, faktor, unten, oben);
+                if (!ReferenceEquals(neu, m))
+                {
+                    umgefaerbt[i] = neu;
+                }
+            }
+        }
+    }
 
     /// <summary>Modell des Stuecks Nummer i (umgefaerbt oder aus der Bibliothek).</summary>
     public GrafikModell? ModellAn(int i) => Umgefaerbt.GetValueOrDefault(i) ?? Grafik?.Modell(Stuecke[i].Name);

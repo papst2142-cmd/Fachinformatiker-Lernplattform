@@ -116,7 +116,16 @@ public sealed class EntwurfBedienung : Control
 
     /// <summary>Feld der gewaehlten Ebene unter dem Bildpunkt (oder null).</summary>
     public (int X, int Y)? FeldAn(Point p) =>
-        StrahlAn(p) is { } s ? EntwurfAnsicht3D.Feld(s.Start, s.Richtung, _ansicht.Ebene) : null;
+        StrahlAn(p) is { } s ? EntwurfAnsicht3D.Feld(s.Start, s.Richtung, _ansicht.Ebene, RasterHalle) : null;
+
+    /// <summary>
+    /// S 0.31.0: Raster einer Halle (1/3 Feld, Ebene 1,0)? Ja bei einer Halle, ohne Teil einer Gebaeudeart auch, wenn ein
+    /// Hallen-Teil zum Setzen gewaehlt ist.
+    /// </summary>
+    public bool RasterHalle =>
+        _ansicht.SetzenTeil is { } id && !_ansicht.Entwurf.Teile.Any(t => !Bauteile.IstAufsatz(t.Id)) && !Bauteile.IstAufsatz(id)
+            ? Bauteile.IstHalle(id)
+            : _ansicht.Entwurf.Halle;
 
     /// <summary>Teil unter dem Bildpunkt (Ebenen bis zur gewaehlten) oder -1.</summary>
     public int TeilAn(Point p) =>
@@ -325,7 +334,7 @@ public sealed class EntwurfBedienung : Control
         _feld = (x, y);
         // dieselbe Pruefung wie die Liste rechts, mit dem Teil auf einer Kopie: rot nur bei einem neuen roten Fund
         var vorher = _ansicht.Funde;
-        var kopie = new Entwurf();
+        var kopie = new Entwurf { HalleWunsch = _ansicht.Entwurf.HalleWunsch };
         kopie.Teile.AddRange(_ansicht.Entwurf.Teile);
         kopie.Eingaenge.AddRange(_ansicht.Entwurf.Eingaenge);
         if (kopie.Setzen(id, x, y, _ansicht.Ebene, _ansicht.SetzenDreh) < 0)
@@ -385,7 +394,7 @@ public sealed class EntwurfBedienung : Control
         }
         if (_ansicht.Auswahl is var a and >= 0 && a < _ansicht.Entwurf.Teile.Count)
         {
-            var (min, max) = EntwurfAnsicht3D.Kasten(_ansicht.Entwurf.Teile[a]);
+            var (min, max) = EntwurfAnsicht3D.Kasten(_ansicht.Entwurf.Teile[a], _ansicht.Entwurf.Halle);
             if (Kanten(k, min, max) is { } g)
             {
                 ctx.DrawGeometry(null, RandHell, g);
@@ -393,7 +402,7 @@ public sealed class EntwurfBedienung : Control
             }
         }
         SchattenRahmen = default;
-        if (_feld is { } f && Vieleck(k, EntwurfAnsicht3D.FeldEcken(f.X, f.Y, _ansicht.Ebene, 0.03f)) is { } schatten)
+        if (_feld is { } f && Vieleck(k, EntwurfAnsicht3D.FeldEcken(f.X, f.Y, _ansicht.Ebene, 0.03f, RasterHalle)) is { } schatten)
         {
             ctx.DrawGeometry(_passt == false ? Rot : Gruen, RandDunkel, schatten);
             SchattenRahmen = schatten.Bounds;
@@ -411,13 +420,16 @@ public sealed class EntwurfBedienung : Control
 
     private void RasterZeichnen(DrawingContext ctx, Kamera k)
     {
-        var h = (_ansicht.Ebene * Bauteile.Stockwerk) + 0.02f;
+        var halle = RasterHalle;
+        var h = (_ansicht.Ebene * Bauteile.EbeneHoehe(halle)) + 0.02f;
+        var f = Bauteile.Feld(halle);
+        var felder = Entwurf.RasterVon(halle);
         float r = EntwurfAnsicht3D.Rand, n = Entwurf.Raster;
-        for (var i = 0; i <= Entwurf.Raster; i++)
+        for (var i = 0; i <= felder; i++)
         {
-            var stift = i == 0 || i == Entwurf.Raster ? RasterRand : RasterStift;
-            Linie(ctx, k, stift, new Vector3(r + i, h, r), new Vector3(r + i, h, r + n));
-            Linie(ctx, k, stift, new Vector3(r, h, r + i), new Vector3(r + n, h, r + i));
+            var stift = i == 0 || i == felder ? RasterRand : RasterStift;
+            Linie(ctx, k, stift, new Vector3(r + (i * f), h, r), new Vector3(r + (i * f), h, r + n));
+            Linie(ctx, k, stift, new Vector3(r, h, r + (i * f)), new Vector3(r + n, h, r + (i * f)));
         }
     }
 

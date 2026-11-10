@@ -1504,8 +1504,15 @@ public sealed partial class Hauptansicht : UserControl
         {
             _aussenAuswahl.Children.Add(TuerSetzenKnopf(s));
         }
+        // S 0.31.0 (Weisung P12-130 Frage 2 = a): ein Katalog-Stueck wird ein Gebaeude mit Tuer und Innenraum
+        if (s.Art == AussenArt.Katalog && AussenBearbeitung.AlsGebaeudeNicht(a, s) is null)
+        {
+            _aussenAuswahl.Children.Add(AlsGebaeudeKnopf(s));
+        }
         // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
         AussehenTeil(s);
+        // S 0.31.0 (Sammelliste 264): Farbe von Fassade, Dach, Rahmen und Tuer
+        FarbeTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
         {
             // Phase 13 Welle 4c (Weisung P12-32): das Gebaeude als Vorlage unter eigenem Namen

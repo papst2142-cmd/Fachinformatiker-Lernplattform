@@ -215,6 +215,12 @@ public static class Nachtlicht
             var (x, z, doppelt) = skizze[nr];
             var ziel = new Vector2(x, z);
             var (strasse, laenge0, seite) = StrasseVon(szene.Strassen, ziel);
+            if (strasse.Count < 2 && !OhneStrasseAltFuerTests)
+            {
+                // Sammelliste 271: ohne jede Strasse hat die Laterne keinen Platz; die Pruefung meldet das rot
+                // ("Es gibt Laternen, aber keine Straße."), der Bau laesst sie aus statt abzubrechen
+                continue;
+            }
             var gesamt = Laenge(strasse);
             Laterne? gefunden = null;
             for (var k = 0; gefunden is null && k * 0.05f <= gesamt; k++)
@@ -276,6 +282,15 @@ public static class Nachtlicht
         return (beste.Strasse, beste.Laenge, beste.Seite);
     }
 
+    /// <summary>Gegenprobe Sammelliste 271: Laternen ohne Strasse wie bis A 0.55.0 (der Bau bricht ab).</summary>
+    public static bool OhneStrasseAltFuerTests
+    {
+        get => OhneStrasseAlt.Value;
+        set => OhneStrasseAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> OhneStrasseAlt = new();
+
     /// <summary>Halbe Laenge des Streifens laengs der Strasse, den das Kleingruen um jeden Wunschplatz frei laesst.</summary>
     public const float WunschStreifen = 0.8f;
 
@@ -293,6 +308,10 @@ public static class Nachtlicht
         foreach (var (x, z, _) in skizze)
         {
             var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
+            if (strasse.Count < 2 && !OhneStrasseAltFuerTests)
+            {
+                continue;   // Sammelliste 271: Laterne ohne Strasse (siehe Plaetze)
+            }
             var (p, d) = Punkt(strasse, laenge);
             var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
             // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)

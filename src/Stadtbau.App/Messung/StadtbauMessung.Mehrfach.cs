@@ -200,6 +200,18 @@ public static partial class StadtbauMessung
         a.Rueckgaengig();
         a.AussenSetzenWaehlenFuerTests(AussenArt.Katalog, ReiheBusch);
         a.ReiheSchalter!.IsChecked = true;
+        // Weisung P12-139 Frage 1 = b: die Zahl neben − und + folgt jeder Aenderung des Abstands, auch von aussen gesetzt
+        // (z. B. Vorgabe beim Wechsel des Stuecks); Gegenprobe: der alte Weg laesst die Zahl stehen
+        AbstandZahlPruefen(a, k, alt: false);
+        Hauptansicht.ReiheZahlAltFuerTests = true;
+        try
+        {
+            AbstandZahlPruefen(a, k, alt: true);
+        }
+        finally
+        {
+            Hauptansicht.ReiheZahlAltFuerTests = false;
+        }
         schritte = p.SchritteZurueck;
         var gesetzt = 0;
         await MessenAsync("Reihe setzen (bis zum Bild)", a, () =>
@@ -300,5 +312,24 @@ public static partial class StadtbauMessung
         a.SetzenBeenden();
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
+    }
+
+    /// <summary>P12-139: Abstand von aussen setzen, die Zahl neben − und + muss ihn zeigen (Gegenprobe alt: sie zeigt ihn nicht).</summary>
+    private static void AbstandZahlPruefen(Hauptansicht a, KartenFlaeche k, bool alt)
+    {
+        var vorher = k.ReiheWahl;
+        var ziel = Math.Abs(vorher.Abstand - 2.5) < 0.01 ? 3.5 : 2.5;
+        k.ReiheWahl = vorher with { Abstand = ziel };
+        var soll = Texte.ReiheAbstandText(k.ReiheWahl.Abstand);
+        var gleich = a.ReiheAbstandZahl?.Text == soll;
+        if (!alt && !gleich)
+        {
+            Fund("Reihe: Abstand von aussen gesetzt, Zahl zeigt \"" + a.ReiheAbstandZahl?.Text + "\" statt \"" + soll + "\"");
+        }
+        if (alt && gleich)
+        {
+            Fund("Reihe Gegenprobe: alter Weg zeigt den von aussen gesetzten Abstand (Probe prueft nichts)");
+        }
+        k.ReiheWahl = vorher;
     }
 }

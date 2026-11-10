@@ -34,6 +34,13 @@ public static class TuerSetzen
         {
             return AussenBearbeitung.Ort(aussen, s.Ort) is null ? Texte.TuerNurGebaeude : null;
         }
+        // S 0.31.0 (Weisung P12-130 Frage 2 = a): auch ein Gebaeude ohne Ort mit Innenraum (Blueprint, uebernommenes
+        // Katalog-Stueck), das schon eine Tuer hat, bekommt „Tür setzen“ (wie ein Ort mit Innenraum seit S 0.28.0)
+        if (s.Art == AussenArt.Gebaeude && Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is PyObjekt g
+            && Aussen.Bauten(aussen)[Py.Str(g["modell"])] is PyObjekt && GebaeudeTuer.HatTuer(aussen, s))
+        {
+            return null;
+        }
         var grund = GebaeudeTuer.DazuNicht(aussen, s);
         return grund is null || grund == Texte.TuerSchonDa ? null : grund;
     }

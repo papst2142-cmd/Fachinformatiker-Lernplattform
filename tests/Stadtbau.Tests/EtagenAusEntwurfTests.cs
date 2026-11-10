@@ -365,7 +365,7 @@ public class EtagenAusEntwurfTests
         Assert.False(grundrissNeu);
         Assert.Equal(1, etagen);
         Assert.Empty(Rot(neu.Innenraum!));
-        // das Format bleibt 2: die Etagen stehen im Innenraum
-        Assert.Contains("\"formatversion\": 2", System.Text.Encoding.UTF8.GetString(neu.Schreiben()), StringComparison.Ordinal);
+        // die Etagen stehen im Innenraum (kein eigenes Feld); seit S 0.31.0 schreibt das Werkzeug Format 3 (Feld farben)
+        Assert.Contains("\"formatversion\": 3", System.Text.Encoding.UTF8.GetString(neu.Schreiben()), StringComparison.Ordinal);
     }
 }
