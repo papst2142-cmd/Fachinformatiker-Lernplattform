@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.36.0
+
+Bushaltestellen, Linienbus und Parkplätze.
+
+- Neu in der Gruppe „Straßen und Wege“: die Knöpfe „Haltestelle“ und „Parkplatz“. Tippe neben eine gerade Straße mit Gehweg, auf die Seite, auf der sie stehen sollen. Häuschen, Schild und gelbe Linie bzw. Parkfläche mit Einfahrt legen sich von allein an die Straße.
+- Beide lassen sich nur längs der Straße schieben und wandern mit der Straße mit. Wird die Straße gelöscht, fallen sie weg. Kopieren legt eine Kopie längs daneben.
+- Beim gewählten Parkplatz stellst du rechts die Zahl der Plätze (2 bis 12) und eine oder zwei Reihen ein. Im Werkzeug sind immer alle Plätze belegt, damit die Grenzen den vollen Parkplatz zählen.
+- Der Bus fährt in der 3D-Ansicht von allein alle Haltestellen an, mit der Haltestelle rechts, und hält dort etwa vier Sekunden. Ab sieben Haltestellen fahren zwei Busse.
+- Neue Prüfregeln (alle rot): nicht an einer geraden Straße mit Gehweg, zu nah an Kreuzung, Kreisverkehr, Zebrastreifen, Ampel oder Bahnübergang, zwei Haltestellen zu nah auf derselben Seite, mehr als acht Haltestellen, Platz des Häuschens oder des Parkplatzes nicht frei, Einfahrt zu nah an Kreuzung oder Haltestelle, der Bus erreicht eine Haltestelle nicht oder bleibt stecken. Die automatischen Laternen halten Abstand zu Schild und Einfahrt.
+
 ## S 0.35.0
 
 Ampeln an Kreuzungen.
