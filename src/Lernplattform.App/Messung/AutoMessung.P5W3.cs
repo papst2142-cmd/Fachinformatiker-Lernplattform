@@ -73,6 +73,21 @@ public static partial class AutoMessung
             Dialog.AlleSchliessen();
             await ansicht.BildFertigAsync();
         }
+        // A 0.61.0 (Sammelliste 284): Layoutpruefung (12) kein Nur-Lese-Feld ausser der festen Liste; Gegenprobe: ein
+        // Fenster mit einem Nur-Lese-Feld (wie das Update-Fenster bis A 0.60.0) muss genau diesen Fund geben
+        var probe = new TextBox { Text = "Neuerungen wie bis A 0.60.0", IsReadOnly = true, Width = 300 };
+        Avalonia.Automation.AutomationProperties.SetName(probe, UpdateTexte.Neuerungen);
+        _ = Dialog.Zeigen(UpdateTexte.Neuerungen, probe, Dialog.Ok);
+        await ansicht.BildFertigAsync();
+        var nurLesen = Layoutpruefung.Pruefe(ansicht).Count(f => f.StartsWith(Layoutpruefung.NurLesenKennung, StringComparison.Ordinal));
+        Messwerte.Notiere($"  Nur-Lese-Felder Gegenprobe (Update-Fenster wie A 0.60.0): {nurLesen} Fund(e)");
+        if (nurLesen != 1)
+        {
+            Messwerte.Notiere("  FEHLER: Gegenprobe Nur-Lese-Feld nicht gefunden (Layoutpruefung (12))");
+            _w3Fehlt++;
+        }
+        Dialog.AlleSchliessen();
+        await ansicht.BildFertigAsync();
         // fester langer Windows-Pfad statt des Datenordners: beide Laeufe und alle Systeme pruefen denselben Text
         const string ordner = @"C:\Users\Auszubildender\AppData\Roaming\Fachinformatiker-Lernplattform";
         _ = Dialog.Zeigen(UpdateTexte.FehlschlagTitel,

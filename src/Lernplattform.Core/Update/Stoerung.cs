@@ -29,6 +29,10 @@ public static class Stoerung
             switch (x)
             {
                 case HttpRequestException h when h.StatusCode is null || (int)h.StatusCode >= 500:
+                // A 0.61.0 (Sammelliste 283): Abriss beim Lesen der Antwort (HttpIOException ist eine IOException, darum
+                // galt er bis A 0.60.0 nicht als Stoerung) und Netzfehler als innere Ausnahme
+                case System.Net.Http.HttpIOException:
+                case System.Net.Sockets.SocketException:
                 case TaskCanceledException:
                 case TimeoutException:
                     return true;
@@ -37,6 +41,29 @@ public static class Stoerung
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// A 0.61.0 (Sammelliste 283): Beschreibung einer Ausnahme fuer update.log: Typ, bei Netzfehlern die Art
+    /// (<see cref="HttpRequestError"/>) und die innere Ausnahme (Typ und Text), damit ein Abriss nie wie ein Speicherfehler aussieht.
+    /// </summary>
+    public static string Beschreibung(Exception e)
+    {
+        var text = e.GetType().Name;
+        switch (e)
+        {
+            case System.Net.Http.HttpIOException io:
+                text += " (" + io.HttpRequestError + ")";
+                break;
+            case HttpRequestException h:
+                text += " (" + h.HttpRequestError + (h.StatusCode is { } c ? ", " + (int)c : "") + ")";
+                break;
+        }
+        if (e.InnerException is { } innen)
+        {
+            text += ", innen " + innen.GetType().Name + ": " + innen.Message;
+        }
+        return text;
     }
 
     /// <summary>
@@ -70,7 +97,7 @@ public static class Stoerung
             {
                 var pause = Pausen[versuch - 1];
                 melden(Zeile + schritt + " Versuch " + (versuch + 1) + " nach " + (int)pause.TotalSeconds
-                    + " s (" + x.GetType().Name + ": " + x.Message + ")");
+                    + " s (" + Beschreibung(x) + ": " + x.Message + ")");
                 await warten(pause).ConfigureAwait(false);
             }
         }

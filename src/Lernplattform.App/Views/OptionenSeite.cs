@@ -1426,15 +1426,15 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         var text = UeberTexte.Programmname + " Version " + Update.Anzeige + "\n" + UeberTexte.Copyright + "\n\n"
             + UeberTexte.Beschreibung + "\n\n" + UeberTexte.Hinweis + "\n\n" + UeberTexte.ClaudeHinweis;
         var panel = new StackPanel { Spacing = 10, Children = { Schrift.Pt(text, 13, FontWeight.Normal, "Pinsel.text_dim") } };
-        var anzeige = new TextBox
+        // A 0.61.0 (Sammelliste 284): Lizenztext als Text im Bildlauf, kein Nur-Lese-Feld (nicht markierbar)
+        var anzeigeText = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(10, 8) }
+            .Farbe(TextBlock.ForegroundProperty, "Pinsel.text").Vorlese(VorleseTexte.Lizenztext);
+        var anzeige = new Border
         {
-            IsReadOnly = true,
-            TextWrapping = TextWrapping.Wrap,
-            AcceptsReturn = true,
-            MaxHeight = 360,
+            CornerRadius = new CornerRadius(4),
             IsVisible = false,
-        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt")
-            .Vorlese(VorleseTexte.Lizenztext);
+            Child = new ScrollViewer { MaxHeight = 360, Content = anzeigeText },
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt");
         // Phase 8 W2 (Sammelliste 74, Nico 5a): volle Lizenztexte, erst beim ersten Klick aufgebaut
         var lizenzen = new StackPanel { Spacing = 10, IsVisible = false };
         // A 0.12.2: Knoepfe volle Breite als Rahmenknoepfe (GradientButton kind="ghost", expand)
@@ -1446,7 +1446,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
             knopf.HorizontalAlignment = HorizontalAlignment.Stretch;
             knopf.Click += (_, _) =>
             {
-                anzeige.Text = Eingebettet(datei);
+                anzeigeText.Text = Eingebettet(datei);
                 anzeige.IsVisible = true;
                 lizenzen.IsVisible = false;
             };
@@ -1474,7 +1474,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
     /// "Lizenzen": je Bestandteil eine Klappkarte wie in der Hilfe (Titel aus THIRD_PARTY_LICENSES.txt);
     /// der Text entsteht erst beim Aufklappen und zeichnet nur die sichtbaren Bloecke (die Datei ist ueber 1 MB).
     /// </summary>
-    private static void LizenzenZeigen(StackPanel lizenzen, TextBox anzeige)
+    private static void LizenzenZeigen(StackPanel lizenzen, Control anzeige)
     {
         anzeige.IsVisible = false;
         lizenzen.IsVisible = true;
