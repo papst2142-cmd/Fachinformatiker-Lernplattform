@@ -56,6 +56,8 @@ public static partial class StadtbauMessung
         var nord = new Vector2((float)(hx + (hw / 2)), (float)hy);
         var ost = new Vector2((float)(hx + hw), (float)(hy + (hh / 2)));
 
+        // Sammelliste 277: ein Tipp vor fertiger Fassade wird erst gesetzt, wenn sie da ist; der Messpunkt misst den Schritt
+        await k.FassadeBereit;
         // Messpunkt: Finger tippt die Westwand, bis zum Bild
         await MessenAsync("Tuer setzen (bis zum Bild)", a, () =>
         {

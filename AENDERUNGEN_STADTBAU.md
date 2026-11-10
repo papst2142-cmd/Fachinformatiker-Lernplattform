@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.34.1
+
+Türen und Wege genauer, Tippen ohne Warten.
+
+- Tippst du mit „Tür setzen“ an ein Haus, kommt die Tür sofort. Rechnet das Werkzeug die Fassade noch, steht kurz „Fassade wird berechnet …“ und die Tür kommt danach an die getippte Stelle. Vorher konnte das Werkzeug dabei einen Moment hängen.
+- Liegt dein Finger auf einer Tür des Hausmodells, landen Tür und Marke immer auf ihrer Mitte, auch wenn du etwas links oder rechts daneben tippst. Vorher rutschte die Tür bei manchen Häusern auf den Rahmen neben der Glastür.
+- Der Weg von der Tür zur Straße läuft jetzt gerade aus der Tür, wenn nötig um die Ecke des Hauses, und trifft die Straße zum Schluss quer. Er hat runde Ecken wie ein Fußweg.
+- Ein Fund an einer Tür nennt den Namen des Hauses („Kaufhaus“) statt der Kennung („kaufhaus“).
+- Ist die Stadt zu teuer, steht dieser Fund in der Prüfliste ganz oben.
+
 ## S 0.34.0
 
 Die Grenzen der Stadt live sehen.

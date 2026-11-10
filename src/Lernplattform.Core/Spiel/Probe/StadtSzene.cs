@@ -1016,6 +1016,12 @@ public sealed partial class StadtSzene
         }
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
         {
+            // Sammelliste 280 (A 0.59.1): ein Weg mit Feld radien als ein Band mit runden Ecken (ohne Feld wie bisher)
+            if (StadtTuerweg.Gezeichnet(zugang, WegBreite) is { } rund)
+            {
+                streifen.Add(new Streifen(rund, WegBreite, Hoehe.Weg, Hoehe.Weg, Mischen(Farben.Strasse, Weiss, 0.45f)));
+                continue;
+            }
             Linie(teile, Punkte(Objekt(zugang)["weg"]), Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
         }
         // Welle Z: eigene Fusswege als ein Band mit Gehrung (gleiche Hoehe und Farbe wie die Wege zu den Tueren)
@@ -1145,7 +1151,14 @@ public sealed partial class StadtSzene
         foreach (var zier in StadtTueren.Zierwege(stadt))
         {
             var weg = Vektoren(zier["weg"]);
-            Linie(teile, [.. weg.Select(v => (v.X, v.Y))], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+            if (StadtTuerweg.Gezeichnet(zier, WegBreite) is { } rund)
+            {
+                streifen.Add(new Streifen(rund, WegBreite, Hoehe.Weg, Hoehe.Weg, Mischen(Farben.Strasse, Weiss, 0.45f)));
+            }
+            else
+            {
+                Linie(teile, [.. weg.Select(v => (v.X, v.Y))], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+            }
             if (haeuser.FirstOrDefault(h => h.Id.StartsWith(Py.Str(zier["modell"]) + "#", StringComparison.Ordinal)) is not { } haus)
             {
                 continue;

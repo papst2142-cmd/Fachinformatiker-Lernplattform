@@ -174,6 +174,17 @@ public sealed record GrenzenLive(
         return felder;
     }
 
+    /// <summary>Gegenprobe Sammelliste 279: „Stadt zu teuer“ am Ende der Liste wie bis S 0.34.0 (nur Tests, je Ablauf).</summary>
+    public static bool ZuletztAltFuerTests { get => ZuletztAlt.Value; set => ZuletztAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ZuletztAlt = new();
+
+    /// <summary>
+    /// Sammelliste 279 (Weisung P12-161/P12-164): die Funde der Pruefung mit „Stadt zu teuer“ <paramref name="teuer"/> ZUERST
+    /// (er sperrt Speichern und Senden und betrifft die ganze Stadt, Nico soll ihn ohne Blaettern sehen).
+    /// </summary>
+    public static List<T> Zuerst<T>(IEnumerable<T> funde, T? teuer) where T : class =>
+        teuer is null ? [.. funde] : ZuletztAlt.Value ? [.. funde, teuer] : [teuer, .. funde];
+
     /// <summary>
     /// Nico 3a: roter Fund „Stadt zu teuer“ mit der Stelle (teuerste Nahansicht, sonst die Mitte), solange ein Bild ueber
     /// der Grenze liegt; Stadt-Datei speichern und „An CC senden“ sind dann gesperrt wie bei jedem roten Fund.

@@ -127,10 +127,12 @@ public static class TuerSetzen
         }
         var (tuer, n) = AufWand(AussenBearbeitung.HausFlaeche(aussen, s), p, modellTueren);
         var weg = new List<object?> { Punkt(tuer), Punkt(tuer + (n * GebaeudeTuer.WegStart)) };
+        PyObjekt zugang;
         if (s.Art == AussenArt.Haus)
         {
             var sd = Aussen.Stadtdaten(aussen);
-            Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, new PyObjekt { { "tuer", Punkt(tuer) }, { "weg", weg } });
+            zugang = new PyObjekt { { "tuer", Punkt(tuer) }, { "weg", weg } };
+            Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, zugang);
             // Fund 262: eingerastet auf eine Tuer des Modells (Punkt genau auf ihrer Mitte), bleibt der Versatz des Modells
             // (darstellung.modell_tuer): sonst rueckte das Modell um ihn zur Seite und die Tuer laege neben der CC0-Tuer
             var eingerastet = modellTueren?.Any(m => Vector2.Distance(m, tuer) <= StadtTueren.EigeneTuerFang) == true;
@@ -142,11 +144,11 @@ public static class TuerSetzen
         }
         else
         {
-            var z = Blueprint.ZierwegVon(aussen, s)!;
-            Py.Setzen(z, "tuer", Punkt(tuer));
-            Py.Setzen(z, "weg", weg);
+            zugang = Blueprint.ZierwegVon(aussen, s)!;
+            Py.Setzen(zugang, "tuer", Punkt(tuer));
+            Py.Setzen(zugang, "weg", weg);
         }
-        return WegZurStrasse(aussen, s, weg) ? null : Texte.TuerWegOhneStrasse;
+        return WegZurStrasse(aussen, s, zugang) ? null : Texte.TuerWegOhneStrasse;
     }
 
     /// <summary>
@@ -173,10 +175,12 @@ public static class TuerSetzen
         var tuer = platz.Punkt;
         var weg = new List<object?> { Punkt3(tuer), Punkt3(tuer + (platz.Aussen * GebaeudeTuer.WegStart)) };
         string? modell;
+        PyObjekt zugang;
         if (s.Art == AussenArt.Haus)
         {
             var sd = Aussen.Stadtdaten(aussen);
-            Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, new PyObjekt { { "tuer", Punkt3(tuer) }, { "weg", weg } });
+            zugang = new PyObjekt { { "tuer", Punkt3(tuer) }, { "weg", weg } };
+            Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, zugang);
             if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
             {
                 mt.RemoveAll(e => e.Key == s.Ort);
@@ -185,16 +189,16 @@ public static class TuerSetzen
         }
         else
         {
-            var z = Blueprint.ZierwegVon(aussen, s)!;
-            Py.Setzen(z, "tuer", Punkt3(tuer));
-            Py.Setzen(z, "weg", weg);
+            zugang = Blueprint.ZierwegVon(aussen, s)!;
+            Py.Setzen(zugang, "tuer", Punkt3(tuer));
+            Py.Setzen(zugang, "weg", weg);
             modell = Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
         }
         if (platz.Fensterteil is { } teil)
         {
             FensterZurTuer(aussen, modell, teil);
         }
-        var strasse = WegZurStrasse(aussen, s, weg);
+        var strasse = WegZurStrasse(aussen, s, zugang);
         return !strasse ? Texte.TuerWegOhneStrasse
             : platz.OhneGlatte ? Texte.TuerKeineGlatteStelle
             : platz.Verschoben ? Texte.TuerEingerastetGlatt
@@ -235,12 +239,15 @@ public static class TuerSetzen
         }
     }
 
-    /// <summary>Weg gerade hinaus bis zur Strasse, sonst um das Haus herum zur naechsten (wie „Tür dazu“).</summary>
-    internal static bool WegZurStrasse(PyObjekt aussen, AussenStelle s, List<object?> weg)
+    /// <summary>
+    /// Weg des Zugangs <paramref name="zugang"/> zur Strasse (wie „Tür dazu“): S 0.34.1 rechtwinklig mit runden Ecken
+    /// (<see cref="GebaeudeTuer.WegRechtwinklig"/>, Sammelliste 278/280).
+    /// </summary>
+    internal static bool WegZurStrasse(PyObjekt aussen, AussenStelle s, PyObjekt zugang)
     {
         var strassen = AussenBearbeitung.Strassen(aussen);
         var laternen = Aussen.Laternen(aussen).OfType<List<object?>>().Select(l => new Vector2((float)Py.F(l[0]), (float)Py.F(l[1]))).ToList();
-        return AussenBearbeitung.WegAnschliessen(weg, strassen) || GebaeudeTuer.WegZurStrasse(weg, AussenBearbeitung.HausFlaeche(aussen, s), strassen, laternen);
+        return GebaeudeTuer.WegRechtwinklig(zugang, AussenBearbeitung.HausFlaeche(aussen, s), strassen, laternen);
     }
 
     /// <summary>

@@ -170,7 +170,7 @@ public sealed partial class Hauptansicht
 
     /// <summary>Funde der Pruefung plus „Stadt zu teuer“.</summary>
     private void AussenFundeZusammen() =>
-        AussenFunde = _grenzFund is { } f ? [.. _aussenPruefFunde, f] : _aussenPruefFunde;
+        AussenFunde = _grenzFund is { } f ? GrenzenLive.Zuerst(_aussenPruefFunde, f) : _aussenPruefFunde;
 
     private void GrenzLeisteZeigen()
     {

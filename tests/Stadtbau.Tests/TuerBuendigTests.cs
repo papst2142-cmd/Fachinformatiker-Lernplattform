@@ -256,7 +256,8 @@ public partial class TuerBuendigTests
         try
         {
             var streng = p.PruefenAussen().Where(f => f.Rot && f.Text.Contains("sitzt nicht sauber", StringComparison.Ordinal)).Select(f => f.Text).ToList();
-            Assert.Equal("Bahnhof Talheim|Gewerbehof Am Stellwerk|Kaufhaus|stellwerk", string.Join("|", streng.Select(t => t[(t.IndexOf('„') + 1)..t.IndexOf('“')]).Order(StringComparer.Ordinal)));
+            // Sammelliste 274 Rest (S 0.34.1): das Stellwerk (Gebaeude ohne Ort) heisst mit seinem Namen, nicht mit der Kennung
+            Assert.Equal("Bahnhof Talheim|Gewerbehof Am Stellwerk|Kaufhaus|Stellwerk", string.Join("|", streng.Select(t => t[(t.IndexOf('„') + 1)..t.IndexOf('“')]).Order(StringComparer.Ordinal)));
         }
         finally
         {

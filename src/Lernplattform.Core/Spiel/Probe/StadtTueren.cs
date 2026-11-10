@@ -349,15 +349,76 @@ public static class StadtTueren
             return null;
         }
         var fang = glas ? HalbRahmen : EigeneTuerFang;
-        return ModellTueren(stuecke, von, bis, modell, wand, aussen, weite: fang + GlasTuerBreit, glas: glas)
+        var gefunden = ModellTueren(stuecke, von, bis, modell, wand, aussen, weite: fang + GlasTuerBreit, glas: glas)
             .Where(t => glas ? t.A1 < fang && t.A2 > -fang : MathF.Abs(t.Mitte) <= fang)
             // S 0.31.0: Mitte auf 0,01 gerundet, sonst gewinnt bei einem Tuerblatt mit Vorder- und Rueckseite (Halle) die Seite,
             // deren Mitte im Rechnen zufaellig naeher an 0 liegt; gleich weit = die vordere Flaeche
             .OrderBy(t => glas && !GlasOderBlatt(t) ? 1 : 0).ThenBy(t => MathF.Round(MathF.Abs(t.Mitte) * 100)).ThenBy(t => t.Tiefe).FirstOrDefault();
+        if (gefunden is not null || glas || GlastuerAlt.Value)
+        {
+            return gefunden;
+        }
+        // Sammelliste 276 (A 0.59.1): Stadt-Modell mit Glastuer im Rahmen (Kenney Commercial): liegt der Tuerpunkt genau auf der
+        // Mitte der Glastuer (bis EigeneTuerFang), ist sie die Tuer. Nur zusaetzlich: wo vorher eine dunkle Tuer gefunden wurde,
+        // bleibt sie; ohne Treffer bleibt null (Fassung 0 unveraendert)
+        return Tuergruppen(stuecke, von, bis, modell, wand, aussen, weite: EigeneTuerFang + GlasTuerBreit, glas: false)
+            .Where(t => t.Glas && MathF.Abs(t.Tuer.Mitte) <= EigeneTuerFang).Select(t => t.Tuer).FirstOrDefault();
 
         // S 0.31.0: mit glas zuerst eine Tuer aus Glas oder Tuerblatt (Halle: der dunkle Rahmen des Tuerteils davor zaehlt nicht)
         bool GlasOderBlatt(ModellTuer t) => modell(t.Stueck) is { } m && t.Dreiecke.Count > 0
             && (IstGlas(m.Farbe(t.Dreiecke[0])) || IstTuerblatt(m.Farbe(t.Dreiecke[0])));
+    }
+
+    /// <summary>Gegenprobe Sammelliste 276: keine Glastuer an Stadt-Modellen als eigene Tuer (wie bis A 0.59.0, nur in Tests).</summary>
+    public static bool GlastuerAltFuerTests { get => GlastuerAlt.Value; set => GlastuerAlt.Value = value; }
+    private static readonly AsyncLocal<bool> GlastuerAlt = new();
+
+    /// <summary>Wie weit (seitlich) ein dunkler Rahmen bzw. eine Laibung von der Glastuer liegen darf, um zu ihr zu gehoeren.</summary>
+    public const float RahmenAbstand = 0.1f;
+
+    /// <summary>
+    /// Sammelliste 276 (Weisung P12-164): die Tueren eines Modells an einer Fassade, je Tuer genau EINE Gruppe (Glastuer bzw.
+    /// Tuerblatt bis zum Boden oder dunkle Tuer), ohne Laibungen, Rahmen und Schaufenster. Grundlage sind die Gruppen von
+    /// <see cref="ModellTueren"/> (mit Glas):
+    /// <list type="bullet">
+    /// <item>Glas oder Tuerblatt bis zum Boden ist eine Tuer, bei Stadt-Modellen (ohne <paramref name="glas"/>) nur mit einem
+    /// dunklen Rahmen bzw. einer Laibung daneben (bis <see cref="RahmenAbstand"/>, nicht tiefer als das Glas); Glas ohne Rahmen
+    /// (Schaufenster bis zum Boden, Kaufhaus-Galerie) ist keine Tuer.</item>
+    /// <item>Eine dunkle Gruppe ist Rahmen oder Laibung einer Glastuer (keine eigene Tuer), wenn eine Glastuer bis
+    /// <see cref="RahmenAbstand"/> daneben liegt und nicht weiter vorne; sonst ist sie selbst eine Tuer.</item>
+    /// <item>Gruppen gleicher Spanne in mehreren Ebenen (Vorder- und Rueckseite eines Tuerblatts) zaehlen einmal (die vordere).</item>
+    /// </list>
+    /// Glas = die Gruppe ist Glas oder Tuerblatt.
+    /// </summary>
+    public static List<(ModellTuer Tuer, bool Glas)> Tuergruppen(IReadOnlyList<ModellStueck> stuecke, int von, int bis, Func<int, GrafikModell?> modell,
+        Vector2 mitte, Vector2 aussen, float weite, bool glas, float tief = 0.6f)
+    {
+        bool IstGlasGruppe(ModellTuer t) => modell(t.Stueck) is { } m && t.Dreiecke.Count > 0
+            && (IstGlas(m.Farbe(t.Dreiecke[0])) || IstTuerblatt(m.Farbe(t.Dreiecke[0])));
+        var alle = ModellTueren(stuecke, von, bis, modell, mitte, aussen, weite: weite, tief: tief, glas: true)
+            .Select(t => (Tuer: t, Glas: IstGlasGruppe(t))).ToList();
+        static float Luecke(ModellTuer a, ModellTuer b) => MathF.Max(a.A1 - b.A2, b.A1 - a.A2);
+        var dunkel = alle.Where(t => !t.Glas).Select(t => t.Tuer).ToList();
+        var glasTueren = alle.Where(t => t.Glas && t.Tuer.A2 - t.Tuer.A1 <= GlasTuerBreit
+            && (glas || dunkel.Any(d => Luecke(d, t.Tuer) <= RahmenAbstand && d.Tiefe <= t.Tuer.Tiefe + 0.01f))).Select(t => t.Tuer).ToList();
+        var ergebnis = new List<(ModellTuer, bool)>();
+        foreach (var t in glasTueren.OrderBy(t => t.Tiefe))
+        {
+            if (!ergebnis.Any(e => MathF.Abs(e.Item1.A1 - t.A1) <= 0.02f && MathF.Abs(e.Item1.A2 - t.A2) <= 0.02f))
+            {
+                ergebnis.Add((t, true));
+            }
+        }
+        foreach (var d in dunkel.OrderBy(t => t.Tiefe))
+        {
+            if (d.A2 - d.A1 > 0.55f || glasTueren.Any(g => Luecke(d, g) <= RahmenAbstand && d.Tiefe <= g.Tiefe + 0.01f)
+                || ergebnis.Any(e => Luecke(e.Item1, d) < -0.02f))
+            {
+                continue;
+            }
+            ergebnis.Add((d, false));
+        }
+        return [.. ergebnis.OrderBy(e => e.Item1.Mitte)];
     }
 
     /// <summary>Sammelliste 267: Farbe des Tuerblatts an der Glastuer eines Gebaeudes aus dem Editor (dunkles Holz).</summary>

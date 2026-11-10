@@ -363,6 +363,9 @@ public static class Texte
     public const string TuerSetzenSchritt = "Tür setzen";
     public static string TuerSetzenHinweis(string name) => "Eine Wand von „" + name + "“ antippen oder die Tür an der Wand entlang ziehen.";
     public static string TuerSetzenDaneben(string name) => "Bitte eine Wand von „" + name + "“ antippen.";
+
+    /// <summary>Sammelliste 277: Tipp, bevor die Fassade fertig gerechnet ist (die Tuer kommt danach von selbst).</summary>
+    public const string TuerFassadeRechnet = "Fassade wird berechnet … Die Tür kommt gleich an die getippte Stelle.";
     public static string TuerGesetzt(string name) => "Tür von „" + name + "“ gesetzt";
 
     /// <summary>Fund 262: roter Fund, wenn eine gezeichnete Tuer nicht sauber in der Wand sitzt (Gruende aus StadtTueren.NichtBuendig).</summary>

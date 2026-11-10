@@ -114,9 +114,9 @@ public static partial class GebaeudeTuer
             AussenBearbeitung.HausAnGehweg(aussen, s);
         }
         var z = Blueprint.Zierweg(aussen, modell)!;
-        var zw = (List<object?>)z["weg"]!;
         var strassen = AussenBearbeitung.Strassen(aussen);
-        return AussenBearbeitung.WegAnschliessen(zw, strassen) || WegZurStrasse(zw, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
+        // S 0.34.1 (Sammelliste 278/280): rechtwinklig mit runden Ecken
+        return WegRechtwinklig(z, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
     }
 
     /// <summary>Tuer und Fussweg des Gebaeudes wegnehmen (die Kopie des Modells bleibt am Haus). false = es hatte keine.</summary>

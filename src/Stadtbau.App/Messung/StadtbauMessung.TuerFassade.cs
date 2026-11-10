@@ -36,7 +36,8 @@ public static partial class StadtbauMessung
         k.Raster = true;
         k.Waehlen(kaufhaus);
         k.TuerSetzenStarten(kaufhaus, still: true);
-        if (k.FassadeJetzt() is null)
+        await k.FassadeBereit;
+        if (k.Fassade is null)
         {
             Fund("Tuer frei setzen: keine Fassade fuer das Kaufhaus");
         }
