@@ -1744,8 +1744,20 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             ZeichnenAutos(gl, netz, FestVerkehr.Lagen(gestalten, vorlage, fern, _autoLagen, zeigen), sichtProj);
             return;
         }
-        var anzahl = Math.Min(vorlage.Autos.Count, AutosHoechstens);
-        for (var i = 0; i < anzahl; i++)
+        // Welle A 0.61.0: nach den Fahrzeugen die wartenden Figuren der Haltestellen (gleiche Reihenfolge wie die Netze)
+        var anzahl = Math.Min(vorlage.Autos.Count + vorlage.Wartende.Count, AutosHoechstens);
+        for (var i = vorlage.Autos.Count; i < anzahl; i++)
+        {
+            var w = vorlage.Wartende[i - vorlage.Autos.Count];
+            if (!vorlage.Sichtbar(w) || (zeigen is not null && _uebergang is not null) || grafik.Modell(FestVerkehr.WartendModell) is not { } fm)
+            {
+                _autoLagen[i] = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
+                continue;
+            }
+            var fa = new Vector3((fm.Min.X + fm.Max.X) / 2, fm.Min.Y, (fm.Min.Z + fm.Max.Z) / 2);
+            _autoLagen[i] = StadtSzene.Lage(fm, fa, new Vector3(FestVerkehr.Massstab(fm)), new Vector3(w.Ort.X, StadtSzene.Hoehe.Gehweg + 0.012f, w.Ort.Y), w.Blick);
+        }
+        for (var i = 0; i < Math.Min(vorlage.Autos.Count, anzahl); i++)
         {
             var auto = vorlage.Autos[i];
             if (zeigen is not null && !zeigen(auto))

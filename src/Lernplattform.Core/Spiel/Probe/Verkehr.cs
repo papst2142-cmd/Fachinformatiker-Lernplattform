@@ -34,7 +34,34 @@ public sealed class Verkehr
     public const double Nachlauf = 10;
 
     /// <summary>Abstand von der Mitte des Autos zu Front und Heck.</summary>
-    private const float Front = 0.3f;
+    public const float Front = 0.3f;
+
+    /// <summary>
+    /// Welle A 0.61.0 (Weisung P12-171, Nico 5b): nach dem Einsteigen ist die wartende Figur so lange (Fahrzeit) weg, dann
+    /// steht wieder eine da.
+    /// </summary>
+    public const double WiederkommenSekunden = 25;
+
+    /// <summary>
+    /// Welle A 0.61.0 (Nico 5b): eine wartende Figur an einer Haltestelle (im Haeuschen, Blick zur Strasse). Sie steigt ein
+    /// (verschwindet), wenn ein Bus dort haelt, und steht nach <see cref="WiederkommenSekunden"/> wieder da. Nur Darstellung,
+    /// gezeichnet im Aufruf der Autos nach den Fahrzeugen.
+    /// </summary>
+    public sealed class Wartend(int haltestelle, Vector2 ort, Vector2 blick)
+    {
+        public int Haltestelle { get; } = haltestelle;
+        public Vector2 Ort { get; } = ort;
+        public Vector2 Blick { get; } = blick;
+
+        /// <summary>Fahrzeit, ab der die Figur wieder dasteht (0 = von Anfang an).</summary>
+        public double WegBis { get; set; }
+    }
+
+    /// <summary>Welle A 0.61.0: die wartenden Figuren (je Haltestelle eine).</summary>
+    public List<Wartend> Wartende { get; } = [];
+
+    /// <summary>Steht die wartende Figur gerade da (nicht eingestiegen)?</summary>
+    public bool Sichtbar(Wartend w) => Zeit >= w.WegBis;
 
     public sealed class Auto(string modell, List<Vector2> strecke, float start)
     {
@@ -49,6 +76,18 @@ public sealed class Verkehr
 
         /// <summary>Phase 8 W11: Nummer der Strecke in <see cref="Strecken"/>.</summary>
         public int Nummer { get; init; }
+
+        /// <summary>Welle A 0.61.0: Abstand von der Mitte zu Front und Heck (Autos 0,3, Bus <see cref="Buslinie.Halb"/>).</summary>
+        public float Halb { get; init; } = Front;
+
+        /// <summary>Welle A 0.61.0: Haltestellen auf der Strecke (Weg der Front, Nummer der Haltestelle); nur der Bus hat welche.</summary>
+        public IReadOnlyList<(float Front, int Haltestelle)> Halte { get; init; } = [];
+
+        /// <summary>Welle A 0.61.0: so lange (Fahrzeit) steht der Bus noch an der Haltestelle <see cref="HaeltAn"/>.</summary>
+        public double HaltRest { get; set; }
+
+        /// <summary>Welle A 0.61.0: Nummer der Haltestelle, an der der Bus gerade haelt (sonst null).</summary>
+        public int? HaeltAn { get; set; }
 
         /// <summary>Welle K3b: Lage ueber die Summe der Stuecklaengen suchen (lange automatische Strecken); die festen Strecken rechnen wie bisher.</summary>
         public bool Schnell { get; init; }
@@ -219,6 +258,7 @@ public sealed class Verkehr
             v0.FuerTag = szene.Spieltag;
             v0.Zebras.AddRange(szene.Zebras);
             v0.Ampeln.AddRange(szene.Ampeln);
+            BusDazu(v0, szene, tempo, bogen);
             return v0;
         }
         var v = new Verkehr { AbstandVorne = abstand, FuerStrassen = szene.Strassen };
@@ -235,7 +275,29 @@ public sealed class Verkehr
             }
             v.Autos.Add(new Auto(modell, Kurve.Versetzt(Kurve.Glatt(mitte, bogen), Spur), start) { Nummer = nr, Tempo = tempo?[nr] ?? Tempo });
         }
+        BusDazu(v, szene, tempo, bogen);
         return v;
+    }
+
+    /// <summary>
+    /// Welle A 0.61.0 (Weisung P12-171): gibt es Haltestellen, faehrt der Bus (<see cref="Buslinie"/>) hinter den Autos, und je
+    /// Haltestelle wartet eine Figur. Nicht im Verkehr der Festzeiten (<paramref name="tempo"/> gesetzt: Gestalten statt Autos).
+    /// Ohne Haltestelle (Fassung 0) aendert sich nichts.
+    /// </summary>
+    private static void BusDazu(Verkehr v, StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float bogen)
+    {
+        if (tempo is not null || szene.Haltestellen.Count == 0)
+        {
+            return;
+        }
+        if (Buslinie.Anlegen(szene.Strassen, szene.Haltestellen, bogen) is { } linie)
+        {
+            v.Autos.AddRange(Buslinie.Busse(linie, szene.Haltestellen.Count));
+        }
+        foreach (var h in szene.Haltestellen)
+        {
+            v.Wartende.Add(new Wartend(h.Nr, h.Wartend, -h.Aussen));
+        }
     }
 
     /// <summary>Liegt jeder Abschnitt der Strecke (innerhalb der Karte) auf einer Strasse der Szene?</summary>
@@ -349,7 +411,7 @@ public sealed class Verkehr
         var belegt = new Dictionary<int, Auto>();
         foreach (var a in Autos)
         {
-            foreach (var p in (Vector2[])[a.Lage(a.Weg - Front).Ort, a.Lage().Ort, a.Lage(a.Weg + Front).Ort])
+            foreach (var p in (Vector2[])[a.Lage(a.Weg - a.Halb).Ort, a.Lage().Ort, a.Lage(a.Weg + a.Halb).Ort])
             {
                 if (Feld(p) is var f and >= 0)
                 {
@@ -360,7 +422,19 @@ public sealed class Verkehr
         foreach (var a in Autos)
         {
             var schritt = (float)(sekunden * a.Tempo);
-            var (ort, richtung) = a.Lage(a.Weg + Front);
+            // Welle A 0.61.0: der Bus steht an der Haltestelle (die Zeit laeuft auch, wenn er sonst warten muesste)
+            if (a.HaltRest > 0)
+            {
+                a.HaltRest -= sekunden;
+                a.Haelt = true;
+                if (a.HaltRest <= 0)
+                {
+                    a.HaltRest = 0;
+                    a.HaeltAn = null;
+                }
+                continue;
+            }
+            var (ort, richtung) = a.Lage(a.Weg + a.Halb);
             // Figur auf der Fahrbahn vor dem Auto (bis FigurVoraus, quer bis 0,45 = ganze Strasse)?
             var zurFigur = figurOrt - ort;
             var voraus = Vector2.Dot(zurFigur, richtung);
@@ -375,17 +449,18 @@ public sealed class Verkehr
                     && MathF.Abs(Vector2.Dot(zebra.Richtung, richtung)) > 0.7f;
             }
             // anderes Auto zu nah voraus (gleiche Richtung)?
-            var vorne = Autos.Any(b => b != a && b.Lage() is var (bo, br) && Vector2.Dot(bo - ort, richtung) is var d && d > 0 && d < AbstandVorne
-                && Vector2.Distance(bo, ort) < AbstandVorne + 0.05f && Vector2.Dot(br, richtung) > 0.5f);
+            // (Welle A 0.61.0: vor einem Bus mit seiner halben Laenge; Autos untereinander unveraendert, b.Halb - Front = 0)
+            var vorne = Autos.Any(b => b != a && b.Lage() is var (bo, br) && Vector2.Dot(bo - ort, richtung) is var d && d > 0 && d < AbstandVorne + (b.Halb - Front)
+                && Vector2.Distance(bo, ort) < AbstandVorne + (b.Halb - Front) + 0.05f && Vector2.Dot(br, richtung) > 0.5f);
             // Kreuzung: das Feld kurz voraus ist von einem anderen Auto belegt (und das Auto steht noch nicht darin)
             var feldJetzt = Feld(ort);
-            var feldVoraus = Feld(a.Lage(a.Weg + Front + FeldVorlauf).Ort);
+            var feldVoraus = Feld(a.Lage(a.Weg + a.Halb + FeldVorlauf).Ort);
             var kreuzung = feldVoraus >= 0 && feldVoraus != feldJetzt && belegt.TryGetValue(feldVoraus, out var anderes) && anderes != a;
             // Rundlauf: am Ende der Strecke wieder an den Anfang nur, wenn dort kein anderes Auto steht. Patch A 0.29.2
             // (Sammelliste 182): ein Fahrzeug, das selbst am Ende seiner Strecke steht und dort hinausfaehrt (Gegenrichtung
             // zum Anfang), zaehlt nicht; sonst warten zwei am Kartenrand fuer immer aufeinander (Ende der einen Strecke
             // = Anfang der anderen).
-            var anfang = !Rundweg && AmEnde(a, sekunden) && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front)
+            var anfang = !Rundweg && a.Nummer < Buslinie.ErsteNummer && AmEnde(a, sekunden) && Autos.Any(b => b != a && Vector2.Distance(b.Lage().Ort, a.Lage(0).Ort) < AbstandVorne + (2 * Front)
                 && !(AmEnde(b, sekunden) && Vector2.Dot(b.Lage().Richtung, a.Lage(0).Richtung) < 0.5f));
             // Welle K3b: vor einem Feld am Ring wartet, wer noch nicht im Ring ist, solange ein Auto im Ring darauf zufaehrt
             var vorfahrt = Ringe.Count > 0 && !kreuzung && feldVoraus >= 0 && feldVoraus != feldJetzt && AmRing(Kreuzungen[feldVoraus]) && !ImRing(ort)
@@ -398,14 +473,27 @@ public sealed class Verkehr
             {
                 continue;
             }
+            if (a.Halte.Count > 0 && HaltVoraus(a, schritt) is var (haltWeg, nr))
+            {
+                // Welle A 0.61.0: die Front erreicht das Schild einer Haltestelle: dort stehen bleiben, die Wartenden steigen ein
+                a.Weg = haltWeg;
+                a.HaltRest = Buslinie.HaltSekunden;
+                a.HaeltAn = nr;
+                a.Haelt = true;
+                foreach (var w in Wartende.Where(w => w.Haltestelle == nr && Sichtbar(w)))
+                {
+                    w.WegBis = Zeit + WiederkommenSekunden;
+                }
+                continue;
+            }
             a.Weg = (a.Weg + schritt) % a.Laenge;
-            if (Feld(a.Lage(a.Weg + Front).Ort) is var neu and >= 0)
+            if (Feld(a.Lage(a.Weg + a.Halb).Ort) is var neu and >= 0)
             {
                 belegt.TryAdd(neu, a);
             }
             // Patch A 0.29.2: wer auf ein Feld zufaehrt, belegt es schon fuer die folgenden (sonst fahren zwei, die im
             // selben Schritt frei sehen, gleichzeitig hinein)
-            if (Feld(a.Lage(a.Weg + Front + FeldVorlauf).Ort) is var feldNeu and >= 0)
+            if (Feld(a.Lage(a.Weg + a.Halb + FeldVorlauf).Ort) is var feldNeu and >= 0)
             {
                 belegt.TryAdd(feldNeu, a);
             }
@@ -446,7 +534,26 @@ public sealed class Verkehr
     private bool AmRing(Vector2 feld) => Ringe.Any(r => MathF.Abs(Vector2.Distance(feld, r.Mitte) - r.Radius) < 0.1f);
 
     /// <summary>Faehrt das Auto im naechsten Schritt (<paramref name="sekunden"/>) ueber das Ende seiner Strecke?</summary>
-    private static bool AmEnde(Auto a, double sekunden) => a.Weg + (float)(sekunden * a.Tempo) + Front >= a.Laenge;
+    private static bool AmEnde(Auto a, double sekunden) => a.Weg + (float)(sekunden * a.Tempo) + a.Halb >= a.Laenge;
+
+    /// <summary>
+    /// Welle A 0.61.0: erreicht die Front des Busses in diesem Schritt (<paramref name="schritt"/>) das Schild einer Haltestelle?
+    /// Dann der Weg der Mitte beim Halt und die Nummer der Haltestelle.
+    /// </summary>
+    private static (float Weg, int Nr)? HaltVoraus(Auto a, float schritt)
+    {
+        var front = a.Weg + a.Halb;
+        foreach (var (h, nr) in a.Halte)
+        {
+            // h im halboffenen Stueck (front, front + schritt], auch ueber das Ende der Runde hinweg
+            var vor = ((h - front) % a.Laenge + a.Laenge) % a.Laenge;
+            if (vor > 0 && vor <= schritt)
+            {
+                return ((((h - a.Halb) % a.Laenge) + a.Laenge) % a.Laenge, nr);
+            }
+        }
+        return null;
+    }
 
     /// <summary>Start-Test und Tests: fester Stand nach <paramref name="sekunden"/> Fahrzeit in Schritten von 1/60 s.</summary>
     public void Probe(double sekunden, float fx, float fz)
