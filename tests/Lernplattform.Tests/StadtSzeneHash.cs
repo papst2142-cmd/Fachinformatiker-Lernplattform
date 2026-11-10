@@ -88,7 +88,23 @@ internal static class StadtSzeneHash
             }
             summen.Add((name, netz.EckenFeld.Length, summe, betraege));
         }
-        var f = szene.Vorbereiten();
+        // Welle D2: die Sollwerte gelten fuer die vollen Netze (ohne Instancing); dass Netze ohne Saetze plus Saetze das
+        // volle Netz ergeben, beweist SpielInstanzenTests
+        var war = Instanzen.AusFuerTests;
+        Instanzen.AusFuerTests = true;
+        StadtSzene.Fertig f;
+        try
+        {
+            f = szene.Vorbereiten();
+        }
+        finally
+        {
+            Instanzen.AusFuerTests = war;
+        }
+        if (f.Instanzen is not null)
+        {
+            throw new InvalidOperationException("Szene war schon mit Instancing vorbereitet");
+        }
         if (fern)
         {
             NetzFest("stadt-fern", f.StadtFern);

@@ -10,7 +10,7 @@ namespace Lernplattform.Core.Stadtbau;
 /// Person; Dreiecke = Indizes / 3 je Netz. <see cref="Innen"/> zaehlt genau diese Netze (die eigene Figur in der
 /// Grundform ohne Kleidung); der Start-Test des Spiels vergleicht die Zaehlung mit dem gezeichneten Bild.
 /// </summary>
-public static class StadtbauGrenzen
+public static partial class StadtbauGrenzen
 {
     public const long Dreiecke = 160_000;
 

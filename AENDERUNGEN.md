@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.59.0
+Das Spiel zeichnet die Stadt noch sparsamer, und du kannst dir anzeigen lassen, wie viel es zeichnet. Von nah sieht die Stadt aus wie bisher.
+
+- Dinge, die in der Stadt oft vorkommen (zum Beispiel Büsche, Steine, Blumen und die Geschenke zu Weihnachten), zeichnet die Grafikkarte jetzt in einem Zug statt jedes einzeln mitzuschleppen. Was gerade nicht im Bild ist, wird dabei gar nicht gezeichnet. Das spart viele Dreiecke, vor allem aus der Nähe.
+- Neu in den Optionen unter „Diagnose und Werkzeuge“, Abschnitt Leistungsmessung: der Schalter „Leistungsanzeige im Spiel“. Ist er an, steht im Spiel oben links eine kleine Zeile mit Bildern je Sekunde, Dreiecken und Zeichenaufrufen. Vorgabe ist aus.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.58.0
 Vorbereitung für Türen an neuen Städten. Im Spiel sieht alles aus wie bisher.
 

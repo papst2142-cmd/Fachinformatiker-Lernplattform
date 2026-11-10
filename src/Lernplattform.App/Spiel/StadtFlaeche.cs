@@ -31,7 +31,7 @@ namespace Lernplattform.Spiel;
 /// "!" bei einem Auftrag, Vorschau beim Einrichten; steht die Figur hinter einem Haus, wird es halb
 /// durchsichtig gezeichnet (Rasterung im Pixel-Shader, ohne Mischen: Sammelliste 102).
 /// </summary>
-public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
+public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 {
     private const int Lagen = Netz.Zahlen * sizeof(float);
     // in GlConsts nicht enthalten (Werte aus der OpenGL-Spezifikation)
@@ -123,10 +123,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public const int AutosHoechstens = 16;
 
     /// <summary>Kleingruen nur bis zu diesem Kameraabstand (in der Gesamtansicht waere es nur wenige Pixel gross).</summary>
-    public const float GruenWeite = 18f;
+    public const float GruenWeite = StadtSzene.GruenBis;
 
     /// <summary>Ab diesem Kameraabstand zeigen Autos eine einfache Fernform (zwei Kaesten in der Lackfarbe).</summary>
-    public const float AutoFern = 25f;
+    public const float AutoFern = StadtSzene.FernAb;
 
     /// <summary>Start-Test: feste Fahrzeit je Bild fuer die Autos (gleiche Bilder), 0 = echte Bildzeit.</summary>
     public static double AutoSchritt { get; set; }
@@ -137,27 +137,6 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Die Autos der Stadt (null ohne Grafik oder vor dem ersten Bild).</summary>
     public Verkehr? Verkehr => _verkehr;
 
-    /// <summary>Haeufigste kraeftige Farbe des Modells (Lack), sonst Grau.</summary>
-    private static Vector3 Hauptfarbe(GrafikModell m)
-    {
-        var zaehl = new Dictionary<int, int>();
-        for (var d = 0; d < m.Dreiecke; d++)
-        {
-            int r = m.Farben[d * 3], g = m.Farben[(d * 3) + 1], b = m.Farben[(d * 3) + 2];
-            if (Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b)) < 40)
-            {
-                continue;
-            }
-            var k = (r << 16) | (g << 8) | b;
-            zaehl[k] = zaehl.GetValueOrDefault(k) + 1;
-        }
-        if (zaehl.Count == 0)
-        {
-            return new Vector3(0.6f);
-        }
-        var best = zaehl.MaxBy(p => p.Value).Key;
-        return new Vector3(((best >> 16) & 255) / 255f, ((best >> 8) & 255) / 255f, (best & 255) / 255f);
-    }
     private string _ringSchluessel = "";
     private int _programm;
     private int _ortMvp;
@@ -396,6 +375,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Dreiecke im letzten Bild (Messung, Wunsch 4).</summary>
     public long LetzteDreiecke { get; private set; }
 
+    /// <summary>
+    /// Welle D2 (Weisung P12-157): Teil des letzten Bilds, den die Zaehlung ohne Grafikkarte rechnet (Stadt, Kleingruen,
+    /// Paket-Netz, Saetze, Haeuser; ohne Autos, Figur, Kreis, Marke, Pakete): Aufrufe und Dreiecke.
+    /// </summary>
+    public int LetzteStadtAufrufe { get; private set; }
+
+    /// <inheritdoc cref="LetzteStadtAufrufe"/>
+    public long LetzteStadtDreiecke { get; private set; }
+
+    /// <summary>Welle D2: Sicht mal Projektion und Kameraabstand des letzten Bilds (Vergleich mit der Zaehlung).</summary>
+    public Matrix4x4 LetzteSichtProj { get; private set; }
+
+    /// <inheritdoc cref="LetzteSichtProj"/>
+    public float LetzterAbstand { get; private set; }
+
+    private int _festAufrufe;
+    private long _festDreiecke;
+
     /// <summary>Rechenzeit des Programms fuer das letzte Bild in ms (ohne Warten auf die Grafikkarte).</summary>
     public double LetzteZeichenzeitMs { get; private set; }
 
@@ -460,6 +457,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _autoOrtHell = gl.GetUniformLocationString(_autoProgramm, "uHell");
             _autoOrtDurch = gl.GetUniformLocationString(_autoProgramm, "uDurch");
             _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
+            InstanzenEinrichten(gl, es, v);
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
@@ -511,6 +509,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _innenNeu = true;
         _programm = 0;
         _autoProgramm = 0;
+        _instanzProgramm = 0;
+        _instanzen.Clear();
         _gruen = null;
         _autoNetze.Clear();
         _neuNetze.Clear();
@@ -538,6 +538,12 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             gl.DeleteProgram(_autoProgramm);
             _autoProgramm = 0;
+        }
+        InstanzenFrei(gl);
+        if (_instanzProgramm != 0)
+        {
+            gl.DeleteProgram(_instanzProgramm);
+            _instanzProgramm = 0;
         }
         _flaechen.Clear();
         _haeuser.Clear();
@@ -589,10 +595,10 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         """;
 
-    private static int Programm(GlInterface gl, bool es, GlVersion v, bool autos = false)
+    private static int Programm(GlInterface gl, bool es, GlVersion v, bool autos = false, bool instanzen = false)
     {
         var kopf = Kopf(es, v);
-        var ecke = autos ? AutoEcke : """
+        var ecke = autos ? AutoEcke : instanzen ? InstanzEcke : """
             in vec3 aOrt;
             in vec3 aNormale;
             in vec3 aFarbe;
@@ -677,6 +683,13 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             gl.BindAttribLocationString(p, 3, "aNummer");
         }
+        if (instanzen)
+        {
+            for (var k = 0; k < 4; k++)
+            {
+                gl.BindAttribLocationString(p, 4 + k, "aLage" + k);
+            }
+        }
         fehler = gl.LinkProgramAndGetError(p);
         gl.DeleteShader(vs);
         gl.DeleteShader(fs);
@@ -698,6 +711,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
         _aufrufe = 0;
         _dreiecke = 0;
+        _festAufrufe = 0;
+        _festDreiecke = 0;
         _letztesBild = jetzt;
         if (_laedtVor && GlBereit)
         {
@@ -735,6 +750,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _gruen?.Freigeben(gl);
             _gruen = fertig.Gruen is { } gn ? GlNetz.Laden(gl, gn) : null;
+            InstanzenLaden(gl, fertig.Instanzen);
             foreach (var alt in _paket.Values)
             {
                 alt.Freigeben(gl);
@@ -848,17 +864,24 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
+            LetzteSichtProj = sichtProj;
+            LetzterAbstand = kamera.Abstand;
             // Weisung P8-52 (nur Leistungsprobe der Probe-APK): die Stadt mehrfach an derselben Stelle (sonst einmal)
             for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
             {
-            Zeichnen(gl, flaeche, Matrix4x4.Identity, sichtProj);
+            ZeichnenFest(gl, flaeche, sichtProj);
             if (!_spiel.ImInnenraum && _gruen is not null && kamera.Abstand <= GruenWeite)
             {
-                Zeichnen(gl, _gruen, Matrix4x4.Identity, sichtProj);
+                ZeichnenFest(gl, _gruen, sichtProj);
             }
             if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
             {
-                Zeichnen(gl, paket, Matrix4x4.Identity, sichtProj);
+                ZeichnenFest(gl, paket, sichtProj);
+            }
+            if (!_spiel.ImInnenraum)
+            {
+                // Welle D2 (Weisung P12-157): oft gleiche Modelle, je Satz ein Aufruf, nur Stuecke im Bild
+                InstanzenZeichnen(gl, sichtProj, fernBild, kamera.Abstand, licht, kamera.Auge);
             }
             if (mal > 0)
             {
@@ -866,7 +889,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 {
                     if (HausNetzImBild(haus, fernBild, sichtProj) is { } netz)
                     {
-                        Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                        ZeichnenFest(gl, netz, sichtProj);
                     }
                 }
             }
@@ -967,7 +990,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     }
                     var durch = _verdeckt.Contains(haus);
                     gl.Uniform1f(_ortDurch, durch ? 1f : 0f);
-                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                    ZeichnenFest(gl, netz, sichtProj);
                 }
                 gl.Uniform1f(_ortDurch, 0f);
                 VerdecktZahl = _verdeckt.Count;
@@ -992,6 +1015,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.Disable(GL_DEPTH_TEST);
         LetzteZeichenaufrufe = _aufrufe;
         LetzteDreiecke = _dreiecke;
+        LetzteStadtAufrufe = _festAufrufe;
+        LetzteStadtDreiecke = _festDreiecke;
         LetzteZeichenzeitMs = (_uhr.Elapsed.TotalSeconds - jetzt) * 1000;
         BilderGesamt++;
         _bilder.Enqueue(jetzt);
@@ -1253,6 +1278,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             schritte.Enqueue(gl => _gruen = GlNetz.Laden(gl, gruen));
         }
+        schritte.Enqueue(gl => InstanzenLaden(gl, paket.Netze.Instanzen));
         if (paket.Netze.PaketNah is { } nah && paket.Netze.PaketFern is { } fern)
         {
             schritte.Enqueue(gl => _paket[false] = GlNetz.Laden(gl, nah));
@@ -1304,7 +1330,8 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.Uniform1f(_ortHell, 1f);
         LichtSetzen(gl, _lichtOrte, Tageslicht.Tag, default);
         var netze = _flaechen.Values.Concat(_haeuser.Values).Concat(_haeuserFern.Values).Concat(_paket.Values).Concat(_figuren.Values)
-            .Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Prepend(e.Netz))).Append(_gruen).Append(_marke).Append(_ausruf).Append(_ring);
+            .Concat(_innenGl.Values.SelectMany(e => e.Waende.Values.Prepend(e.Netz))).Append(_gruen).Append(_marke).Append(_ausruf).Append(_ring)
+            .Concat(_instanzen.SelectMany(i => new[] { i.Nah, i.Fern }));
         var durch = 0f;
         foreach (var netz in netze)
         {
@@ -1534,27 +1561,6 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return _markierung;
     }
 
-    /// <summary>Netz eines Autos im eigenen Raum: das Modell oder (fern) zwei Kaesten in seiner Hauptfarbe; leer ohne Modell.</summary>
-    private static Netz AutoNetz(GrafikBibliothek grafik, string modell, bool fern)
-    {
-        if (grafik.Modell(modell) is not { } am)
-        {
-            return new Netz();
-        }
-        if (!fern)
-        {
-            var nz = new Netz();
-            nz.Hinzu(am, Matrix4x4.Identity);
-            return nz;
-        }
-        var farbe = Hauptfarbe(am);
-        float h = am.Max.Y - am.Min.Y;
-        return Netz.Aus(
-        [
-            new Teil(TeilArt.Quader, am.Min.X, am.Min.Y + (h * 0.12f), am.Min.Z, am.Max.X, am.Min.Y + (h * 0.55f), am.Max.Z, farbe),
-            new Teil(TeilArt.Quader, am.Min.X * 0.85f, am.Min.Y + (h * 0.55f), am.Min.Z * 0.5f, am.Max.X * 0.85f, am.Max.Y, am.Max.Z * 0.45f, farbe * 0.8f),
-        ]);
-    }
 
     /// <summary>Alle Autos in einem Zeichenaufruf (eigenes Programm), danach wieder das Programm der Szene.</summary>
     /// <summary>
@@ -1576,7 +1582,7 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     /// <summary>Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern).</summary>
     private static List<Netz> AutoNetze(Verkehr verkehr, List<FestVerkehr.Gestalt>? gestalten, GrafikBibliothek grafik, bool fern) =>
-        gestalten is not null ? FestVerkehr.Netze(gestalten, fern) : [.. verkehr.Autos.Take(AutosHoechstens).Select(a => AutoNetz(grafik, a.Modell, fern))];
+        FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, AutosHoechstens);
 
     /// <summary>Satz einsetzen: alte Netze frei, neuer Verkehr (oder der alte bei <paramref name="verkehrBleibt"/>), beide Netze hochladen.</summary>
     private void SatzEinsetzen(GlInterface gl, SatzPaket paket, double jetzt, bool verkehrBleibt = false)
@@ -1822,6 +1828,14 @@ public sealed class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             return null;
         }
         return fern && _haeuserFern.TryGetValue(haus, out var hausFern) ? hausFern : _haeuser.GetValueOrDefault(haus);
+    }
+
+    /// <summary>Welle D2: ein Netz der Stadt (Teil der Zaehlung ohne Grafikkarte, <see cref="LetzteStadtDreiecke"/>).</summary>
+    private void ZeichnenFest(GlInterface gl, GlNetz netz, Matrix4x4 sichtProj)
+    {
+        Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+        _festAufrufe++;
+        _festDreiecke += netz.Anzahl / 3;
     }
 
     private unsafe void Zeichnen(GlInterface gl, GlNetz netz, Matrix4x4 modell, Matrix4x4 sichtProj)

@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.34.0
+
+Die Grenzen der Stadt live sehen.
+
+- Unten links steht die Leiste „Grenzen live“. Sie zeigt nach jeder Änderung, wie nah die Stadt an den Grenzen des Spiels liegt (Dreiecke und Zeichenaufrufe), für die Gesamtansicht und für die teuerste Stelle aus der Nähe. Die Zahl vorne sagt, welcher Wert den Balken füllt, in Klammern steht der andere. Der Balken ist grün, ab drei Vierteln gelb und über der Grenze rot.
+- Liegt die Stadt über der Grenze, zeigt die Prüfliste den roten Fund „Stadt zu teuer“ mit der Stelle. Solange er da ist, sind „Stadt-Datei speichern“ und „An CC senden“ gesperrt.
+- Neu: die Wärmekarte (Knopf oben über der Karte oder Taste W). Sie färbt die Stadt von oben je Feld nach der Zahl der Dreiecke, von Blau bis Rot. Nur zum Ansehen, sie ändert nichts.
+- Die 3D-Ansicht zeichnet oft vorkommende Dinge (Büsche, Steine, Geschenke) wie das Spiel in einem Zug.
+
 ## S 0.33.0
 
 Türen frei setzen und Funde in der Prüfliste antippen.

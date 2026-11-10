@@ -596,6 +596,16 @@ public static partial class AutoMessung
                     }
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Welle D2: Leistungsanzeige im Spiel (Schalter an)
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? LeistungsanzeigeAnsichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W8b: neue Tueren (Bahnhof, Moebelhaus), Stellwerk mit Schild, Bahnhof innen als Wartehalle
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>())
