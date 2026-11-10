@@ -770,6 +770,42 @@
    "paket": "car_kit",
    "datei": "Models/OBJ format/van.obj (nur Raeder) + werkzeuge/grafik/bus_modell.py",
    "erzeugt": "bus"
+  },
+  {
+   "name": "car-taxi-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/taxi.obj",
+   "sparen": "raeder12"
+  },
+  {
+   "name": "car-van-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj",
+   "sparen": "raeder12"
+  },
+  {
+   "name": "car-sedan-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/sedan.obj",
+   "sparen": "raeder12"
+  },
+  {
+   "name": "car-police-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/police.obj",
+   "sparen": "raeder12"
+  },
+  {
+   "name": "car-ambulance-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/ambulance.obj",
+   "sparen": "raeder12"
+  },
+  {
+   "name": "car-garbage-truck-12",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/garbage-truck.obj",
+   "sparen": "raeder12"
   }
  ]
 }

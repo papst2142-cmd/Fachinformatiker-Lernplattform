@@ -1,8 +1,8 @@
 <Project>
   <!-- Gemeinsame Einstellungen aller Projekte. Version nur hier aendern. -->
   <PropertyGroup>
-    <!-- Interne Zahlenversion; Anzeige "A 0.61.0" (A = Alphaphase), Tag vA0.61.0 -->
-    <Version>0.61.0</Version>
+    <!-- Interne Zahlenversion; Anzeige "A 0.62.0" (A = Alphaphase), Tag vA0.62.0 -->
+    <Version>0.62.0</Version>
     <Stufe>A</Stufe>
     <Product>Fachinformatiker Lernplattform</Product>
     <Company>Nico H</Company>
@@ -19,7 +19,7 @@
        Fachinformatiker-Stadtbau), Android-Versionscode 1000000 + Haupt*10000 + Neben*100 + Fix (S 0.1.0 = 1000100,
        eigene Kennung io.github.papst2142cmd.stadtbau). Version des Werkzeugs nur hier aendern (StadtbauVersion). -->
   <PropertyGroup>
-    <StadtbauVersion>0.36.0</StadtbauVersion>
+    <StadtbauVersion>0.37.0</StadtbauVersion>
     <IstStadtbau>false</IstStadtbau>
     <IstStadtbau Condition="$(MSBuildProjectName.StartsWith('Stadtbau'))">true</IstStadtbau>
   </PropertyGroup>

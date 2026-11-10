@@ -1384,7 +1384,8 @@ public sealed partial class StadtSzene
                 var t = blick * (Probe.Parkplaetze.PlatzTief / 2);
                 var q = quer * (Probe.Parkplaetze.PlatzBreit / 2);
                 hindernisse.Add(Rechteck([mitte - t - q, mitte + t - q, mitte + t + q, mitte - t + q]));
-                if (Probe.Parkplaetze.Belegung(pp.Nr, nr++, parkTag, stadt.ParkplaetzeVoll) is { } am && grafik?.Modell(am) is { } pm)
+                if (Probe.Parkplaetze.Belegung(pp.Nr, nr++, parkTag, stadt.ParkplaetzeVoll) is { } auto
+                    && Fahrzeugmodelle.Zeichnen(auto) is var am && grafik?.Modell(am) is { } pm)
                 {
                     var anker = new Vector3((pm.Min.X + pm.Max.X) / 2, pm.Min.Y, (pm.Min.Z + pm.Max.Z) / 2);
                     stuecke.Add(new ModellStueck(am, Lage(pm, anker, new Vector3(Meter * 1.1f), new Vector3(mitte.X, Probe.Parkplaetze.LinieHoehe, mitte.Y), blick)));

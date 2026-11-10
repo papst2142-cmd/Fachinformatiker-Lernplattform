@@ -1764,7 +1764,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 _autoLagen[i] = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
             }
-            else if (grafik.Modell(auto.Modell) is { } am)
+            else if (grafik.Modell(Fahrzeugmodelle.Zeichnen(auto.Modell)) is { } am)
             {
                 var (ort, richtung) = auto.Lage(auto.Weg);
                 var anker = new Vector3((am.Min.X + am.Max.X) / 2, am.Min.Y, (am.Min.Z + am.Max.Z) / 2);
