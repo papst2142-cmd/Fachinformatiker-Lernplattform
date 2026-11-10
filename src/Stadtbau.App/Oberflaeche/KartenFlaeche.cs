@@ -686,6 +686,8 @@ public sealed partial class KartenFlaeche : Control
             }
         }
 
+        // Welle D2: Waermekarte ueber der Stadt, unter Funden und Auswahl-Hilfen
+        WaermeZeichnen(ctx);
         // Funde mit Stelle
         foreach (var f in Zeigt(Ebene.Funde) ? Funde : [])
         {

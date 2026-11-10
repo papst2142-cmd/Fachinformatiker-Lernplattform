@@ -233,14 +233,17 @@ public sealed class SpielVorbereitenTests
         var szene = StadtSzene.Bauen(spiel.Stadt, spiel.Ablauf.Stand, SpielGrafikTests.Bibliothek.Value, Festzeit.Weihnachten, FestDekoTests.Daten.Value, Jahreszeit.Winter);
         var fertig = szene.Vorbereiten();
         Assert.Same(fertig, szene.Vorbereiten());
-        Assert.True(szene.NetzBauen().EckenFeld.SequenceEqual(fertig.Stadt.EckenFeld));
-        Assert.True(szene.NetzBauen().IndizesFeld.SequenceEqual(fertig.Stadt.IndizesFeld));
+        // Welle D2: die Stadt ohne die Stuecke mit Instancing (SpielInstanzenTests: ohne plus Saetze = volles Netz)
+        Assert.NotNull(fertig.Instanzen);
+        Assert.True(szene.NetzBauen(false, fertig.Instanzen).EckenFeld.SequenceEqual(fertig.Stadt.EckenFeld));
+        Assert.True(szene.NetzBauen(false, fertig.Instanzen).IndizesFeld.SequenceEqual(fertig.Stadt.IndizesFeld));
+        Assert.True(szene.NetzBauen(true, fertig.Instanzen).EckenFeld.SequenceEqual(fertig.StadtFern!.EckenFeld));
         Assert.Equal(szene.Haeuser.Count, fertig.Haeuser.Count);
         foreach (var haus in szene.Haeuser)
         {
             Assert.True(szene.HausNetz(haus).EckenFeld.SequenceEqual(fertig.Haeuser[haus].EckenFeld));
         }
-        Assert.True(szene.GruenNetzBauen()!.EckenFeld.SequenceEqual(fertig.Gruen!.EckenFeld));
+        Assert.True(szene.GruenNetzBauen(fertig.Instanzen)!.EckenFeld.SequenceEqual(fertig.Gruen!.EckenFeld));
         Assert.True(szene.PaketNetzBauen(false).EckenFeld.SequenceEqual(fertig.PaketNah!.EckenFeld));
         Assert.True(szene.PaketNetzBauen(true).EckenFeld.SequenceEqual(fertig.PaketFern!.EckenFeld));
     }

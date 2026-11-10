@@ -432,6 +432,49 @@ public static class Texte
     public static string BlueprintLoeschenFrage(string name) =>
         $"Soll der Blueprint „{name}“ gelöscht werden? Die Datei kommt vorher in die Sicherungen.";
 
+    // ---- Welle D2: Grenzen live, Waermekarte (Weisung P12-157, Kurzplan P12-97, Hinweise P12-156) ----
+    private static readonly System.Globalization.CultureInfo De = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+
+    public const string GrenzenLive = "Grenzen live";
+    public const string GrenzenLiveRechnet = "Grenzen werden gerechnet …";
+    public const string GrenzenLiveTipp = "Wie teuer die Stadt im Spiel ist: das teuerste Bild aus der Gesamtansicht und aus vielen Nahansichten über die ganze Stadt (Nacht, Winter, Weihnachten). Der Balken zeigt den größeren Anteil an der Grenze. Grün bis 75 %, gelb bis 100 %, rot darüber.";
+
+    /// <summary>Hinweis P12-156 Punkt 2: welcher Wert den Balken fuellt steht vorn, der andere in Klammern.</summary>
+    public static string GrenzenLiveKopf(long dreiecke, int aufrufe, long grenzeDreiecke, int grenzeAufrufe)
+    {
+        var d = (int)Math.Round(100.0 * dreiecke / grenzeDreiecke);
+        var a = (int)Math.Round(100.0 * aufrufe / grenzeAufrufe);
+        return (double)aufrufe / grenzeAufrufe > (double)dreiecke / grenzeDreiecke
+            ? $"Aufrufe {a} % (Dreiecke {d} %)"
+            : $"Dreiecke {d} % (Aufrufe {a} %)";
+    }
+
+    public static string GrenzenLiveGesamt(long dreiecke, int aufrufe) =>
+        string.Create(De, $"Gesamtansicht: {dreiecke:N0} Dreiecke · {aufrufe} Aufrufe");
+
+    public static string GrenzenLiveNah(long dreiecke, int aufrufe) =>
+        string.Create(De, $"Teuerste Nahansicht: {dreiecke:N0} Dreiecke · {aufrufe} Aufrufe");
+
+    public static string GrenzenLiveName(string kopf) =>
+        string.Create(De, $"Grenzen live: {kopf}, Grenzen {StadtbauGrenzenWerte}");
+
+    private static string StadtbauGrenzenWerte => string.Create(De,
+        $"{Lernplattform.Core.Stadtbau.StadtbauGrenzen.Dreiecke:N0} Dreiecke und {Lernplattform.Core.Stadtbau.StadtbauGrenzen.Aufrufe} Aufrufe");
+
+    public static string StadtZuTeuer(bool nah, long dreiecke, int aufrufe) => string.Create(De,
+        $"Stadt zu teuer: {(nah ? "in der Nahansicht hier" : "in der Gesamtansicht")} {dreiecke:N0} Dreiecke und {aufrufe} Zeichenaufrufe, erlaubt sind {StadtbauGrenzenWerte}.");
+
+    public const string StadtZuTeuerTipp = "Hier stehen zu viele Stücke dicht beieinander. Weniger oder einfachere Stücke setzen (die Wärmekarte zeigt, wo die meisten Dreiecke liegen). Solange die Stadt zu teuer ist, ruckelt das Spiel auf dem Tablet; darum sind Speichern als Stadt-Datei und Senden an CC gesperrt.";
+
+    public const string Waermekarte = "Wärmekarte";
+    public const string WaermekarteTipp = "Färbt die Stadt von oben je Feld nach der Zahl der Dreiecke (W). Nur zum Ansehen, ändert nichts.";
+    public const string WaermekarteLegende = "Dreiecke je Feld";
+
+    public static string WaermekarteStufe(long von, long? bis) =>
+        bis is { } b ? string.Create(De, $"{von:N0}–{b:N0}") : string.Create(De, $"ab {von:N0}");
+
+    public static string WaermekarteFeld(int x, int y, long dreiecke) => string.Create(De, $"Feld {x}/{y}: {dreiecke:N0} Dreiecke");
+
     public static string Grenzzeile(long dreiecke, int aufrufe, long grenzeDreiecke, int grenzeAufrufe) =>
         string.Create(System.Globalization.CultureInfo.GetCultureInfo("de-DE"),
             $"{dreiecke:N0} von {grenzeDreiecke:N0} Dreiecken, {aufrufe} von {grenzeAufrufe} Zeichenaufrufen");
@@ -917,6 +960,7 @@ public static class Texte
         ("Q", "3D-Ansicht drehen", ["Q"]),
         ("+ / −", "3D-Ansicht näher / weiter weg", ["OemPlus", "Add", "OemMinus", "Subtract"]),
         ("G", "Raster zeigen (Gebäude entwerfen)", ["G"]),
+        ("W", "Wärmekarte an oder aus (Stadt von oben: wo die meisten Dreiecke liegen)", ["W"]),
         ("F11", "Vollbild", ["F11"]),
         ("F1 / ?", "Diese Übersicht", ["F1"]),
     ];

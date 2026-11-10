@@ -37,6 +37,10 @@ public sealed class SpielSeite : Grid
     private readonly Action _verlassen;
     private readonly TextBlock _kopfzeile;
     private readonly TextBlock _probeZeile;
+    private readonly TextBlock _leistungZeile;
+
+    /// <summary>Welle D2: Zeile der Leistungsanzeige (Start-Test).</summary>
+    internal TextBlock LeistungZeile => _leistungZeile;
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
     private readonly Button _klapp;
@@ -126,7 +130,10 @@ public sealed class SpielSeite : Grid
 
         _kopfzeile = Schrift.Text(SpielProbeTexte.GrafikStartet, "Normal", FontWeight.Bold);
         _probeZeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
-        var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile } });
+        // Welle D2 (Weisung P12-157 Frage 5 = a): Leistungsanzeige nur mit dem Schalter in den Optionen
+        _leistungZeile = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
+        _leistungZeile.IsVisible = false;
+        var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile, _leistungZeile } });
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
         _kopf = kopf;
@@ -936,6 +943,12 @@ public sealed class SpielSeite : Grid
         }
         _probeZeile.Text = string.Join(" · ", teile);
         _probeZeile.IsVisible = teile.Count > 0;
+        var leistung = Flaeche.GlBereit && !_ersatzErzwungen && Core.Spiel.Probe.Leistungsanzeige.Lesen(Programm.Zustand.Werte);
+        _leistungZeile.IsVisible = leistung;
+        if (leistung)
+        {
+            _leistungZeile.Text = Core.Spiel.Probe.Leistungsanzeige.Zeile(Flaeche.BilderJeSekunde, Flaeche.LetzteDreiecke, Flaeche.LetzteZeichenaufrufe);
+        }
         if (Spiel is not { } spiel)
         {
             _betreten.IsVisible = _zurStadt.IsVisible = _warten.IsVisible = false;

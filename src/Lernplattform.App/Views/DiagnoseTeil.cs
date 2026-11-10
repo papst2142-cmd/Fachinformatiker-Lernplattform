@@ -104,6 +104,11 @@ public sealed class DiagnoseTeil
                     loeschen.Margin = new Thickness(0, 0, 10, 6);
                     loeschen.Click += (_, _) => MessdateiLoeschen();
                     panel.Children.Add(new WrapPanel { Children = { zeigen, loeschen } });
+                    // Welle D2 (Weisung P12-157 Frage 5 = a): nur C#, PC und Handy gleich, Vorgabe aus
+                    var anzeigeHilfe = Hilfe(Core.Spiel.Probe.Leistungsanzeige.Hilfe);
+                    anzeigeHilfe.Margin = new Thickness(0, 10, 0, 0);
+                    panel.Children.Add(anzeigeHilfe);
+                    panel.Children.Add(AnzeigeSchalter = AnzeigeSchalterBauen());
                     break;
                 case Optionen.AbschnittHaenger:
                     panel.Children.Add(Hilfe(HaengerTexte.Hilfe));
@@ -362,6 +367,37 @@ public sealed class DiagnoseTeil
     }
 
     // -- Leistungsmessung -------------------------------------------------------
+
+    /// <summary>Welle D2: Schalter „Leistungsanzeige im Spiel“ (Start-Test).</summary>
+    internal ToggleSwitch? AnzeigeSchalter { get; private set; }
+
+    private ToggleSwitch AnzeigeSchalterBauen()
+    {
+        var schalter = new ToggleSwitch
+        {
+            Content = Schrift.Text(Core.Spiel.Probe.Leistungsanzeige.Schalter),
+            IsChecked = Core.Spiel.Probe.Leistungsanzeige.Lesen(Zustand.Werte),
+            OnContent = null,
+            OffContent = null,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(schalter, Core.Spiel.Probe.Leistungsanzeige.Schalter);
+        var setzen = false;
+        schalter.IsCheckedChanged += (_, _) =>
+        {
+            if (setzen)
+            {
+                return;
+            }
+            var an = schalter.IsChecked == true;
+            if (!_ergebnis(Zustand.Aendere(w => Core.Spiel.Probe.Leistungsanzeige.Wert(w, an))))
+            {
+                setzen = true;
+                schalter.IsChecked = Core.Spiel.Probe.Leistungsanzeige.Lesen(Zustand.Werte);
+                setzen = false;
+            }
+        };
+        return schalter;
+    }
 
     /// <summary>_toggle_perf: Schalter erst speichern (nur einstellungen.json, gemeinsame Sperre), dann schalten.</summary>
     private void MessungSchalten()

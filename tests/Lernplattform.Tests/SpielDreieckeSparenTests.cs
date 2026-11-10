@@ -89,6 +89,8 @@ public sealed class SpielDreieckeSparenTests
     [Fact]
     public void Stadt1_FernSpart_NahBleibtBisAufUnterseiten()
     {
+        // Welle D2: die vollen Netze wie in D1 (das Instancing nimmt sonst Stuecke heraus, SpielInstanzenTests)
+        Instanzen.AusFuerTests = true;
         var szene = Weihnachten();
         var f = szene.Vorbereiten();
         Assert.NotNull(f.StadtFern);

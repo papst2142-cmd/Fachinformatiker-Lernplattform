@@ -202,8 +202,15 @@ public sealed partial class StadtSzene
 
     /// <summary>Weisung P8-55 (W12): die fertigen Netze der Szene (Stadt, je Haus, Kleingruen, Paket nah und fern).</summary>
     /// <remarks>Welle D1 (Weisung P12-143): dazu die Fernformen der Stadt (Fest-Deko vereinfacht, <see cref="Fernform"/>) und je Haus.</remarks>
+    /// <remarks>Welle D2 (Weisung P12-157): <paramref name="Instanzen"/> = die Stuecke mit Instancing; Stadt, StadtFern und Gruen enthalten sie dann nicht.</remarks>
     public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern,
-        Netz? StadtFern = null, IReadOnlyDictionary<StadtHaus, Netz>? HaeuserFern = null);
+        Netz? StadtFern = null, IReadOnlyDictionary<StadtHaus, Netz>? HaeuserFern = null, Instanzplan? Instanzen = null);
+
+    /// <summary>Welle D1/D2: ab diesem Kameraabstand zeichnet das Spiel die Fernformen (wie Autos und Laternen).</summary>
+    public const float FernAb = 25f;
+
+    /// <summary>Phase 8: das Kleingruen wird nur bis zu diesem Kameraabstand gezeichnet.</summary>
+    public const float GruenBis = 18f;
 
     /// <summary>
     /// Welle D1 (Teil D): Dreiecke der CC0-Modelle, die bis zu dieser Hoehe nach unten zeigen, kommen nicht ins Netz der
@@ -245,11 +252,13 @@ public sealed partial class StadtSzene
             {
                 (haeuser[haus], haeuserFern[haus]) = HausNetzMitVorrat(haus, neu);
             }
-            var stadtNetz = NetzBauen();
-            var stadtFern = NetzBauen(fern: true);
-            var gruenNetz = GruenNetzBauen();
+            // Welle D2 (Weisung P12-157): oft gleiche Modelle mit Instancing, die Netze der Stadt ohne sie
+            var plan = Instanzen.AusFuerTests ? null : InstanzplanBauen();
+            var stadtNetz = NetzBauen(false, plan);
+            var stadtFern = NetzBauen(true, plan);
+            var gruenNetz = GruenNetzBauen(plan);
             var (nah, fern) = PaketMitVorrat();
-            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern, stadtFern, haeuserFern);
+            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern, stadtFern, haeuserFern, plan);
             if (vorrat is not null)
             {
                 vorrat.Haeuser = neu;
@@ -263,8 +272,13 @@ public sealed partial class StadtSzene
     /// Das Dreiecksnetz der Stadt ohne die Haeuser: eigene Teile und CC0-Modelle. Welle D1: ohne Unterseiten am Boden;
     /// <paramref name="fern"/> = die Fest-Deko in ihrer <see cref="Fernform"/> (Teil C), alles andere gleich.
     /// </summary>
-    public Netz NetzBauen(bool fern = false)
+    public Netz NetzBauen(bool fern = false) => NetzBauen(fern, null);
+
+    /// <summary>Welle D2: wie <see cref="NetzBauen(bool)"/>, ohne die Stuecke und Baeume aus <paramref name="plan"/> (die zeichnet das Instancing).</summary>
+    public Netz NetzBauen(bool fern, Instanzplan? plan)
     {
+        var ohneStueck = plan?.Stuecke ?? Instanzplan.Leer.Stuecke;
+        var ohneBaum = plan?.Baeume ?? Instanzplan.Leer.Baeume;
         var teileHaus = new bool[Teile.Count];
         var stueckeHaus = new bool[Stuecke.Count];
         foreach (var h in Haeuser)
@@ -300,7 +314,7 @@ public sealed partial class StadtSzene
             netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
-                if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+                if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
                 {
                     var von = netz.AnzahlEcken;
                     var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
@@ -312,9 +326,11 @@ public sealed partial class StadtSzene
                     }
                 }
             }
+            var nb = -1;
             foreach (var baum in GruenKlein?.Baeume ?? [])
             {
-                if (Grafik?.Modell(baum.Name) is { } modell)
+                nb++;
+                if (!ohneBaum.Contains(nb) && Grafik?.Modell(baum.Name) is { } modell)
                 {
                     netz.Hinzu(modell, baum.Lage);
                 }
@@ -355,7 +371,7 @@ public sealed partial class StadtSzene
         gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!stueckeHaus[i] && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+            if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
             {
                 var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
                 if (Katalogstueck.IstEffekt(modell.Name))
@@ -369,14 +385,90 @@ public sealed partial class StadtSzene
                 gefaerbt.Hinzu(modell, Stuecke[i].Lage, i < FestStueckeVon ? ModellFaerbung(modell, Stuecke[i].Lage, Faerbeart.Stadt) : FestLicht(modell));
             }
         }
+        var nbf = -1;
         foreach (var baum in GruenKlein?.Baeume ?? [])
         {
-            if (Grafik?.Modell(baum.Name) is { } modell)
+            nbf++;
+            if (!ohneBaum.Contains(nbf) && Grafik?.Modell(baum.Name) is { } modell)
             {
                 gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
         }
         return gefaerbt;
+    }
+
+    /// <summary>
+    /// Welle D2 (Weisung P12-157, Nico 1a): welche CC0-Stuecke draussen (nicht am Haus, nicht im Paket-Netz, kein Effekt)
+    /// mit Instancing gezeichnet werden. Jedes Stueck wird genau wie in <see cref="NetzBauen(bool, Instanzplan?)"/> bzw.
+    /// <see cref="GruenNetzBauen(Instanzplan?)"/> entschieden und gefaerbt (Jahreszeit nach seiner Lage), nur im Raum des
+    /// Modells; gleiche Netze bilden einen Satz (<see cref="Instanzen.Planen"/>). Fern zeigt jedes Stueck seine
+    /// <see cref="Fernform"/> (Nico 1a: Fernform je Stueck), das Kleingruen wird fern nicht gezeichnet.
+    /// </summary>
+    public Instanzplan InstanzplanBauen()
+    {
+        if (Grafik is null)
+        {
+            return Instanzplan.Leer;
+        }
+        var stueckeHaus = new bool[Stuecke.Count];
+        foreach (var h in Haeuser)
+        {
+            Array.Fill(stueckeHaus, true, h.StueckeVon, h.StueckeBis - h.StueckeVon);
+        }
+        var kandidaten = new List<Instanzen.Kandidat>();
+        Netz Lokal(GrafikModell m, Matrix4x4 lage, Modellfaerbung? f, float? unterseite)
+        {
+            var n = new Netz { UnterseiteBis = unterseite };
+            n.HinzuLokal(m, lage, f);
+            return n;
+        }
+        for (var i = 0; i < Stuecke.Count; i++)
+        {
+            if (stueckeHaus[i] || ImPaket(Stuecke[i].Name) || ModellAn(i) is not { } original || Katalogstueck.IstEffekt(original.Name)
+                || !Instanzen.Geeignet(Stuecke[i].Lage))
+            {
+                continue;
+            }
+            var lage = Stuecke[i].Lage;
+            var fernModell = Fernform.Von(original);
+            var nah = Lokal(original, lage, i < FestStueckeVon ? ModellFaerbung(original, lage, Faerbeart.Stadt) : FestLicht(original), Unterseiten);
+            var fern = Lokal(fernModell, lage, i < FestStueckeVon ? ModellFaerbung(fernModell, lage, Faerbeart.Stadt) : FestLicht(fernModell), Unterseiten);
+            if (nah.AnzahlEcken > 0)
+            {
+                kandidaten.Add(new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern));
+            }
+        }
+        var b = -1;
+        foreach (var baum in GruenKlein?.Baeume ?? [])
+        {
+            b++;
+            if (Grafik.Modell(baum.Name) is not { } modell || !Instanzen.Geeignet(baum.Lage))
+            {
+                continue;
+            }
+            var fernModell = Fernform.Von(modell);
+            var nah = Lokal(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt), Unterseiten);
+            var fern = Lokal(fernModell, baum.Lage, ModellFaerbung(fernModell, baum.Lage, Faerbeart.Stadt), Unterseiten);
+            if (nah.AnzahlEcken > 0)
+            {
+                kandidaten.Add(new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern));
+            }
+        }
+        var g = -1;
+        foreach (var st in GruenKlein?.Stuecke ?? [])
+        {
+            g++;
+            if (Grafik.Modell(st.Name) is not { } m || !Instanzen.Geeignet(st.Lage))
+            {
+                continue;
+            }
+            var nah = Lokal(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein), null);
+            if (nah.AnzahlEcken > 0)
+            {
+                kandidaten.Add(new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null));
+            }
+        }
+        return Instanzen.Planen(kandidaten);
     }
 
     /// <summary>
@@ -2076,7 +2168,10 @@ public sealed partial class StadtSzene
     public int FestStueckeVon { get; private init; } = int.MaxValue;
 
     /// <summary>Netz des Kleingruens (nur in der Naehe gezeichnet), null = keins.</summary>
-    public Netz? GruenNetzBauen()
+    public Netz? GruenNetzBauen() => GruenNetzBauen(null);
+
+    /// <summary>Welle D2: wie <see cref="GruenNetzBauen()"/>, ohne die Stuecke aus <paramref name="plan"/>.</summary>
+    public Netz? GruenNetzBauen(Instanzplan? plan)
     {
         if (GruenKlein is not { } g || Grafik is null)
         {
@@ -2089,9 +2184,12 @@ public sealed partial class StadtSzene
             netz.Hinzu(t);
         }
         netz.Faerbung = null;
+        var ohne = plan?.Gruen ?? Instanzplan.Leer.Gruen;
+        var nr = -1;
         foreach (var st in g.Stuecke)
         {
-            if (Grafik.Modell(st.Name) is { } m)
+            nr++;
+            if (!ohne.Contains(nr) && Grafik.Modell(st.Name) is { } m)
             {
                 netz.Hinzu(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein));
             }

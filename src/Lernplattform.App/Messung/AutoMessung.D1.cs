@@ -29,6 +29,10 @@ public static partial class AutoMessung
         var funde = 0;
         var (abstand, drehung, zx, zz) = (kamera.Abstand, kamera.Drehung, kamera.ZielX, kamera.ZielZ);
         var szene = spiel.Szene;
+        // Welle D2 (Weisung P12-157): die Zaehlung ohne Grafikkarte muss jedes gezeichnete Bild genau treffen
+        var zaehlung = new Core.Stadtbau.StadtbauGrenzen.Draussen(szene, szene.Vorbereiten());
+        var abweichungen = new List<string>();
+        var verglichen = 0;
         async Task<(long Dreiecke, int Aufrufe)> BildAsync(float ab, float dreh, float x, float z)
         {
             kamera.Drehung = dreh;
@@ -36,6 +40,17 @@ public static partial class AutoMessung
             kamera.Setzen(x, z);
             await flaeche.NaechstesBildAsync();
             await flaeche.NaechstesBildAsync();
+            if (flaeche.InstancingDa && ReferenceEquals(spiel.Szene, szene))
+            {
+                var fest = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, StadtFlaeche.OhneSparenFuerTests);
+                var bewegt = Core.Stadtbau.StadtbauGrenzen.Bewegt(spiel, flaeche.LetzterAbstand > StadtFlaeche.AutoFern, StadtFlaeche.AutosHoechstens);
+                verglichen++;
+                if (fest != (flaeche.LetzteStadtDreiecke, flaeche.LetzteStadtAufrufe)
+                    || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe))
+                {
+                    abweichungen.Add(string.Create(inv, $"Abstand {ab:F0}, Drehung {dreh:F0}, bei {x:F1}/{z:F1}: gezeichnet {flaeche.LetzteStadtDreiecke}/{flaeche.LetzteStadtAufrufe} (ganz {flaeche.LetzteDreiecke}/{flaeche.LetzteZeichenaufrufe}), gezaehlt {fest.Dreiecke}/{fest.Aufrufe} (ganz {fest.Dreiecke + bewegt.Dreiecke}/{fest.Aufrufe + bewegt.Aufrufe})"));
+                }
+            }
             return (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe);
         }
         var werte = new List<string>();
@@ -85,6 +100,29 @@ public static partial class AutoMessung
             var (fernOhne, _) = await BildAsync(Kamera.AbstandMax, 0f, szene.Breite / 2, szene.Tiefe / 2);
             StadtFlaeche.OhneSparenFuerTests = false;
             var text = string.Create(inv, $"Nahansicht {nahMit} mit Sparen, {nahOhne} ohne; Gesamtansicht {fernMit} mit Sparen, {fernOhne} ohne");
+            if (!flaeche.InstancingDa)
+            {
+                Messwerte.Notiere("Spiel: Zaehlung ohne Grafikkarte nicht verglichen: Treiber ohne Instancing (" + flaeche.GlKurz + ")");
+            }
+            else
+            {
+                // Gegenprobe der Zaehlung: ohne Sichtkegel gezaehlt trifft sie das teuerste Nahbild nicht
+                var (nahWieder, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);
+                var gegen = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, ohneSparen: true);
+                var gezaehlt = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand);
+                Messwerte.Notiere(string.Create(inv,
+                    $"Spiel: Zaehlung ohne Grafikkarte: {verglichen} Bilder verglichen, {abweichungen.Count} Abweichungen; Gegenprobe ohne Sichtkegel gezaehlt {gegen.Dreiecke} statt {gezaehlt.Dreiecke} (gezeichnet {flaeche.LetzteStadtDreiecke})"));
+                foreach (var a in abweichungen.Take(10))
+                {
+                    Messwerte.Notiere("  FEHLER: Spiel Zaehlung ohne Grafikkarte weicht ab: " + a);
+                }
+                funde += abweichungen.Count > 0 ? 1 : 0;
+                if (gegen.Dreiecke == flaeche.LetzteStadtDreiecke || nahWieder <= 0)
+                {
+                    Messwerte.Notiere("  FEHLER: Spiel Zaehlung ohne Grafikkarte: Gegenprobe ohne Sichtkegel trifft das Bild auch");
+                    funde++;
+                }
+            }
             Messwerte.Notiere("Spiel: Nahansicht Gegenprobe ohne Sichtkegel und Fernformen: " + text);
             if (!(nahMit < nahOhne && fernMit < fernOhne))
             {

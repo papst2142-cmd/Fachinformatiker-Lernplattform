@@ -948,6 +948,11 @@ public sealed class Projekt
         if (AussenGeaendert || Leer is not null)
         {
             rot.AddRange(PruefenAussen().Where(f => f.Rot).Select(f => (StadtOrt, f)));
+            // Welle D2 (Weisung P12-157, Nico 3a): ueber der Grenze ist die Stadt zu teuer
+            if (GrenzenLive.Fuer(Stand(), Daten).Fund() is { } teuer)
+            {
+                rot.Add((StadtOrt, teuer));
+            }
         }
         return rot;
     }

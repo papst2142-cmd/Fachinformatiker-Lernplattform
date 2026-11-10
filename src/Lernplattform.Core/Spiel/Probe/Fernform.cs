@@ -33,7 +33,13 @@ public static class Fernform
     public static GrafikModell Von(GrafikModell modell) => Vorrat.GetValue(modell, Bauen);
 
     /// <summary>Die Fernform neu bauen (ohne Vorrat; Tests).</summary>
-    public static GrafikModell Bauen(GrafikModell m)
+    public static GrafikModell Bauen(GrafikModell m) => Bauen(m, Teile);
+
+    /// <summary>
+    /// Fernform mit einem anderen Gitter (<paramref name="teile"/> Zellen je groesster Seite). Welle D2 (Weisung P12-157
+    /// Frage 4 = a): nur zum Messen einer groeberen Baum-Fernform, das Spiel nimmt immer <see cref="Teile"/>.
+    /// </summary>
+    public static GrafikModell Bauen(GrafikModell m, int teile)
     {
         var n = m.Dreiecke;
         var groesse = MathF.Max(m.Max.X - m.Min.X, MathF.Max(m.Max.Y - m.Min.Y, m.Max.Z - m.Min.Z));
@@ -41,7 +47,7 @@ public static class Fernform
         {
             return m;
         }
-        var zelle = groesse / Teile;
+        var zelle = groesse / teile;
         var e = m.Ecken;
         var zellen = new int[n * 3];
         var summe = new Dictionary<int, (Vector3 Summe, int Zahl, int Rand)>();

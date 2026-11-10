@@ -921,10 +921,12 @@ public sealed partial class Hauptansicht : UserControl
         _karteMitte = new Border { Child = Karte, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }.Farbe(Border.BorderBrushProperty, "Pinsel.border");
         // S 0.7.0: die Mitte zeigt die Draufsicht oder die 3D-Ansicht; links und rechts bleiben dieselben
         _aussenMitte.Content = _karteMitte;
-        var mitte = Kamerakarte.Ueber(_aussenMitte, _kameraAussen, h => Karte.UntenFrei = h);
+        var mitte = Kamerakarte.Ueber(_aussenMitte, _kameraAussen, _ => GrenzLeisteLegen());
         mitte.Margin = new Thickness(12);
         // S 0.27.0 (Weisung P12-118): Werkzeugleiste oben links (Waehlen, Massband, Ebenen, Notiz)
         WerkzeugLeisteBauen(mitte);
+        // S 0.34.0 (Weisung P12-157): Leiste „Grenzen live“ unten links, Knopf „Wärmekarte“ in der Werkzeugleiste
+        GrenzLeisteBauen(mitte);
 
         // Welle Q (Punkt 7): rechts „Ausgewähltes Stück“ immer oben, „Prüfen – n rot“ mit der Zahl, „Innenräume öffnen“ zu
         var rechts = _aussenRechts;
@@ -1816,6 +1818,7 @@ public sealed partial class Hauptansicht : UserControl
         var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
         var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
         AussenPruefungLaeuft();
+        GrenzenLiveStarten(fassung, daten);
         var uhr = Stopwatch.StartNew();
         _ = Hintergrund(Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
@@ -1826,12 +1829,13 @@ public sealed partial class Hauptansicht : UserControl
             if (t.IsFaulted)
             {
                 _ordner.Fehler("Prüfung draußen: " + t.Exception?.InnerException);
-                AussenFunde = [new StadtbauFund("Die Prüfung ist abgebrochen: " + t.Exception?.InnerException?.Message, "Bitte CC Bescheid geben.", true)];
+                _aussenPruefFunde = [new StadtbauFund("Die Prüfung ist abgebrochen: " + t.Exception?.InnerException?.Message, "Bitte CC Bescheid geben.", true)];
             }
             else
             {
-                AussenFunde = t.Result;
+                _aussenPruefFunde = t.Result;
             }
+            AussenFundeZusammen();
             Messwerte.Reihe("Prüfen draußen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             AussenPruefungZeigen(fertig: true);
             _aussenGeprueft.TrySetResult();
@@ -3114,6 +3118,13 @@ public sealed partial class Hauptansicht : UserControl
             {
                 // S 0.27.0: Massband an/aus
                 MassbandUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && e.Key == Key.W && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.34.0 (Weisung P12-157): Waermekarte an/aus
+                WaermeUmschalten();
                 e.Handled = true;
                 return;
             }

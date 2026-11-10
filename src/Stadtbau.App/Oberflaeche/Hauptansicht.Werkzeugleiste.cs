@@ -100,7 +100,7 @@ public sealed partial class Hauptansicht
         mitte.Children.Add(_ebenenKarte);
         // Weisung P12-137: Anzeigen der Draufsicht und der 3D-Ansicht liegen nie unter der Kamera-Karte, der Werkzeugleiste
         // oder der Liste der Ebenen
-        Karte.Verdecker = v => Anzeigen.Rahmen(v, _kameraAussen, _werkzeugLeiste, _ebenenKarte);
+        Karte.Verdecker = v => Anzeigen.Rahmen(v, _kameraAussen, _werkzeugLeiste, _ebenenKarte, _grenzLeiste);
         _werkzeugLeiste.SizeChanged += (_, _) =>
         {
             _ebenenKarte.Margin = new Thickness(Kamerakarte.Rand + 150, _werkzeugLeiste.Bounds.Bottom, 0, 0);
@@ -181,6 +181,11 @@ public sealed partial class Hauptansicht
         ChipMarkieren(_ebenenChip, _ebenenKarte.IsVisible);
         _ebenenChip.IsVisible = !_drei;
         _notizChip.IsVisible = !_drei;
+        if (_waermeChip is not null)
+        {
+            _waermeChip.IsVisible = !_drei;
+            _waermeLegende.IsVisible = Karte.WaermeAn && !_drei;
+        }
         _ebenenKarte.IsVisible &= !_drei;
         var aus = Karte.EbenenAus.Count;
         _ebenenHinweis.Text = Texte.EbenenAusHinweis(aus);

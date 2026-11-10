@@ -127,7 +127,18 @@ public sealed class Netz
     /// <paramref name="dreiecksfarben"/> (wenn angegeben) bekommt je eingefuegtem Dreieck die Farbe des Dreiecks nach der
     /// Faerbung (zum Erkennen von Glas wie vor dem Farbverlauf, <see cref="Nachtlicht.GlasMarkieren"/>).
     /// </summary>
-    public void Hinzu(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben = null)
+    public void Hinzu(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben = null) =>
+        HinzuMit(modell, lage, faerbung, dreiecksfarben, lokal: false);
+
+    /// <summary>
+    /// Welle D2 (Weisung P12-157, Instancing): wie <see cref="Hinzu(GrafikModell, Matrix4x4, Modellfaerbung?, List{Vector3}?)"/>
+    /// mit genau denselben Entscheidungen an der Lage (Dreieck zu klein, Unterseite am Boden, Faerbung je Ecke), aber das Netz
+    /// bekommt die Ecken im Raum des Modells (ohne die Lage); die Grafikkarte setzt das Stueck an seine Lage.
+    /// </summary>
+    public void HinzuLokal(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung) =>
+        HinzuMit(modell, lage, faerbung, null, lokal: true);
+
+    private void HinzuMit(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben, bool lokal)
     {
         var e = modell.Ecken;
         for (var d = 0; d < modell.Dreiecke; d++)
@@ -155,6 +166,12 @@ public sealed class Netz
             }
             Vector3 Farbe(Vector3 f) => faerbung is null ? f : faerbung(d, f, oben, hoehe);
             dreiecksfarben?.Add(Farbe(grund));
+            if (lokal)
+            {
+                a = new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]);
+                b = new Vector3(e[(d * 9) + 3], e[(d * 9) + 4], e[(d * 9) + 5]);
+                c = new Vector3(e[(d * 9) + 6], e[(d * 9) + 7], e[(d * 9) + 8]);
+            }
             if (modell.EckFarben is null)
             {
                 Dreieck(a, b, c, Farbe(grund));

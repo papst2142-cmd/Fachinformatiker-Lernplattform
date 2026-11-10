@@ -801,4 +801,55 @@ public static class FestVerkehr
         leucht.In(n, leuchten: true);
         return n;
     }
+
+    /// <summary>
+    /// Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern), hoechstens <paramref name="hoechstens"/>
+    /// Autos. Welle D2: aus <c>StadtFlaeche</c> hierher, damit die Zaehlung ohne Grafikkarte dieselben Netze kennt.
+    /// </summary>
+    public static List<Netz> FahrzeugNetze(Verkehr verkehr, List<Gestalt>? gestalten, GrafikBibliothek grafik, bool fern, int hoechstens) =>
+        gestalten is not null ? Netze(gestalten, fern) : [.. verkehr.Autos.Take(hoechstens).Select(a => AutoNetz(grafik, a.Modell, fern))];
+
+    /// <summary>Netz eines Autos im eigenen Raum: das Modell oder (fern) zwei Kaesten in seiner Hauptfarbe; leer ohne Modell.</summary>
+    public static Netz AutoNetz(GrafikBibliothek grafik, string modell, bool fern)
+    {
+        if (grafik.Modell(modell) is not { } am)
+        {
+            return new Netz();
+        }
+        if (!fern)
+        {
+            var nz = new Netz();
+            nz.Hinzu(am, Matrix4x4.Identity);
+            return nz;
+        }
+        var farbe = Hauptfarbe(am);
+        float h = am.Max.Y - am.Min.Y;
+        return Netz.Aus(
+        [
+            new Teil(TeilArt.Quader, am.Min.X, am.Min.Y + (h * 0.12f), am.Min.Z, am.Max.X, am.Min.Y + (h * 0.55f), am.Max.Z, farbe),
+            new Teil(TeilArt.Quader, am.Min.X * 0.85f, am.Min.Y + (h * 0.55f), am.Min.Z * 0.5f, am.Max.X * 0.85f, am.Max.Y, am.Max.Z * 0.45f, farbe * 0.8f),
+        ]);
+    }
+
+    /// <summary>Haeufigste kraeftige Farbe des Modells (Lack), sonst Grau.</summary>
+    private static Vector3 Hauptfarbe(GrafikModell m)
+    {
+        var zaehl = new Dictionary<int, int>();
+        for (var d = 0; d < m.Dreiecke; d++)
+        {
+            int r = m.Farben[d * 3], g = m.Farben[(d * 3) + 1], b = m.Farben[(d * 3) + 2];
+            if (Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b)) < 40)
+            {
+                continue;
+            }
+            var k = (r << 16) | (g << 8) | b;
+            zaehl[k] = zaehl.GetValueOrDefault(k) + 1;
+        }
+        if (zaehl.Count == 0)
+        {
+            return new Vector3(0.6f);
+        }
+        var best = zaehl.MaxBy(p => p.Value).Key;
+        return new Vector3(((best >> 16) & 255) / 255f, ((best >> 8) & 255) / 255f, (best & 255) / 255f);
+    }
 }
