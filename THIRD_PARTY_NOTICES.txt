@@ -68,15 +68,15 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.Data.Sqlite (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
 - Microsoft.NET.ILLink.Tasks (10.0.15) | MIT | https://github.com/dotnet/dotnet | android-arm64
-- Microsoft.NETCore.App.Host.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
-- Microsoft.NETCore.App.Host.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
-- Microsoft.NETCore.App.Host.osx-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-x64
-- Microsoft.NETCore.App.Host.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
-- Microsoft.NETCore.App.Runtime.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
+- Microsoft.NETCore.App.Host.linux-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | linux-x64
+- Microsoft.NETCore.App.Host.osx-arm64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Host.osx-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-x64
+- Microsoft.NETCore.App.Host.win-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | win-x64
+- Microsoft.NETCore.App.Runtime.linux-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | linux-x64
 - Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
-- Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
-- Microsoft.NETCore.App.Runtime.osx-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-x64
-- Microsoft.NETCore.App.Runtime.win-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | win-x64
+- Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-arm64
+- Microsoft.NETCore.App.Runtime.osx-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-x64
+- Microsoft.NETCore.App.Runtime.win-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | win-x64
 - miniaudio (0.11.24 (in SoundFlow 1.4.1)) | MIT-0 oder Unlicense (Public Domain) | https://github.com/mackron/miniaudio (David Reid), gebaut von SoundFlow (https://github.com/LSXPrime/SoundFlow) | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
   Tonausgabe auf allen Systemen, enthalten in libminiaudio (miniaudio.dll, libminiaudio.so, libminiaudio.dylib) aus dem Paket SoundFlow
 - NVorbis (0.10.5) | Datei LICENSE im Paket | https://github.com/NVorbis/NVorbis | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
