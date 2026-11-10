@@ -78,6 +78,18 @@ public enum AussenArt
     Ampel,
 
     /// <summary>
+    /// Welle S 0.36.0 (Weisung P12-171): Bushaltestelle in <c>stadtdaten.haltestellen</c> (Punkt auf der Seite, an einer geraden
+    /// Strasse mit Gehweg, <see cref="Lernplattform.Core.Spiel.Probe.Haltestellen"/>).
+    /// </summary>
+    Haltestelle,
+
+    /// <summary>
+    /// Welle S 0.36.0 (Weisung P12-171): Parkplatz in <c>stadtdaten.parkplaetze</c> (Punkt auf der Seite, Plaetze, Reihen,
+    /// <see cref="Lernplattform.Core.Spiel.Probe.Parkplaetze"/>).
+    /// </summary>
+    Parkplatz,
+
+    /// <summary>
     /// Welle S 0.27.0 (Weisung P12-118, Nico-Wunsch 5): Notiz in <c>notizen</c> der Stadt draussen (<c>[{x, y, text}]</c>),
     /// nur im Werkzeug: nur in der Projektdatei, nie in der Stadt-Datei, nie im Spiel; nur in der Draufsicht zu sehen.
     /// </summary>

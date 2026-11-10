@@ -36,21 +36,30 @@ public sealed class UpdateFenster
 
     public Control Inhalt { get; }
 
+    /// <summary>Text der Neuerungen (fuer den Start-Test).</summary>
+    internal TextBlock Neuerungen { get; private set; } = null!;
+
     /// <param name="pc">nur fuer den Start ohne Bedienung (Ansicht des Handys am PC); sonst das Geraet.</param>
     public UpdateFenster(UpdateAngebot angebot, bool installierbar, bool? pc = null)
     {
         Pc = pc ?? UpdateDienst.Pc;
         _angebot = angebot;
         _installierbar = installierbar;
-        var neuerungen = new TextBox
+        // A 0.61.0 (Sammelliste 284): Neuerungen als Text im Bildlauf, kein Nur-Lese-Feld (am Handy markierte ein Tipp
+        // Woerter und zeigte Kopieren/Einfuegen)
+        var neuerungenText = new TextBlock
         {
             Text = UpdateNotizen.Lesbar(angebot.Notizen) is { Length: > 0 } text ? text : UpdateTexte.KeineBeschreibung,
-            IsReadOnly = true,
             TextWrapping = TextWrapping.Wrap,
-            AcceptsReturn = true,
-            MaxHeight = 180,
-        }.Farbe(TextBox.ForegroundProperty, "Pinsel.text_dim").Farbe(TextBox.BackgroundProperty, "Pinsel.card_alt");
-        Avalonia.Automation.AutomationProperties.SetName(neuerungen, UpdateTexte.Neuerungen);
+            Margin = new Thickness(10, 8),
+        }.Farbe(TextBlock.ForegroundProperty, "Pinsel.text_dim");
+        Avalonia.Automation.AutomationProperties.SetName(neuerungenText, UpdateTexte.Neuerungen);
+        var neuerungen = new Border
+        {
+            CornerRadius = new CornerRadius(4),
+            Child = new ScrollViewer { MaxHeight = 180, Content = neuerungenText },
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt");
+        Neuerungen = neuerungenText;
         var farbe = Pc ? "Pinsel.text_dim" : "Pinsel.accent";
         // A 0.39.0: Hinweis am Handy nennt die Groesse (etwa %s MB)
         _zustand = Schrift.Text(Geraetetexte.UpdateHinweis(installierbar, angebot.DateiUrl is not null, Pc)

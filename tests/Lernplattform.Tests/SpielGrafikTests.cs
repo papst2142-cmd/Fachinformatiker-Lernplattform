@@ -159,6 +159,8 @@ public class SpielGrafikTests
             .Concat(FestDeko.Modelle(FestDekoTests.Daten.Value).Select(FestDeko.Kuerbis))
             // seit Phase 9 W1 (Weisung P9-3) das Sitzbild der Figur (Personen am Schreibtisch)
             .Append(Figur.BildName(Figur.Sitzen, 0))
+            // seit A 0.61.0 (Weisung P12-171) der Linienbus
+            .Append(Buslinie.Modell)
             .Concat(["hw-lantern_standing", "hw-pumpkin", "hw-pumpkin_orange_jackolantern", "os-animal-bunny", "os-animal-chick", "xm-present_A_red", "xm-present_A_yellow", "xm-present_B_green"])
             .ToList();
         foreach (var m in bib.Modelle)

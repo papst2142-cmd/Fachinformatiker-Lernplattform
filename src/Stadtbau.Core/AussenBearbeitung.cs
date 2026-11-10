@@ -270,6 +270,10 @@ public static partial class AussenBearbeitung
         {
             yield return a;
         }
+        foreach (var h in AlleHalte(aussen))
+        {
+            yield return h;   // S 0.36.0: Haltestellen und Parkplaetze
+        }
         foreach (var n in AlleNotizen(aussen))
         {
             yield return n;
@@ -351,6 +355,11 @@ public static partial class AussenBearbeitung
         if (An(AussenArt.Ampel) && AmpelBei(aussen, p, greifen) is { } ampel)
         {
             return ampel;
+        }
+        // S 0.36.0: Haltestelle (Haeuschen bis zur Fahrspur) und Parkplatz (Flaeche mit Einfahrt) vor der Strasse darunter
+        if (HaltBei(aussen, p, greifen, An) is { } halt)
+        {
+            return halt;
         }
         // Katalog-Stuecke (zuletzt gesetztes oben) vor den Haeusern: sie stehen oft auf oder an ihnen
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art == AussenArt.Katalog && An(AussenArt.Katalog)).Reverse())
@@ -458,6 +467,10 @@ public static partial class AussenBearbeitung
         if (art == AussenArt.Ampel)
         {
             return AmpelSetzen(aussen, x, y);
+        }
+        if (art is AussenArt.Haltestelle or AussenArt.Parkplatz)
+        {
+            return HaltSetzen(aussen, art, x, y);
         }
         if (art == AussenArt.Notiz)
         {
@@ -633,6 +646,11 @@ public static partial class AussenBearbeitung
             AmpelVerschieben(aussen, s, dx, dy);
             return;
         }
+        if (s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)
+        {
+            HaltVerschieben(aussen, s, dx, dy);
+            return;
+        }
         if (s.Art == AussenArt.Notiz)
         {
             NotizVerschieben(aussen, s, dx, dy);
@@ -642,6 +660,8 @@ public static partial class AussenBearbeitung
         var zebras = s.Art == AussenArt.Strasse ? ZebrasAuf(aussen, s) : [];
         // S 0.35.0: Ampeln an der Strasse ruecken an die mitgeschobene Kreuzung
         var ampeln = s.Art == AussenArt.Strasse ? AmpelnAuf(aussen, s) : [];
+        // S 0.36.0: Haltestellen und Parkplaetze an der Strasse wandern mit
+        var halte = s.Art == AussenArt.Strasse ? HalteAuf(aussen, s) : [];
         var land = Aussen.Landschaft(aussen);
         void Schieben(object? punkt)
         {
@@ -748,6 +768,10 @@ public static partial class AussenBearbeitung
         if (ampeln.Count > 0)
         {
             AmpelnNachlegen(aussen, ampeln, dx, dy);
+        }
+        if (halte.Count > 0)
+        {
+            HalteMitnehmen(aussen, halte, dx, dy);
         }
     }
 
@@ -891,6 +915,7 @@ public static partial class AussenBearbeitung
         AussenArt.Fussweg => Texte.FusswegDrehenNicht,
         AussenArt.Zebrastreifen => Texte.ZebraDrehenNicht,
         AussenArt.Ampel => Texte.AmpelDrehenNicht,
+        AussenArt.Haltestelle or AussenArt.Parkplatz => Texte.HaltDrehenNicht,
         _ => Texte.DrehenNichtNoetig,
     };
 
@@ -979,6 +1004,10 @@ public static partial class AussenBearbeitung
         {
             // eine Ampel gehoert zu genau einer Kreuzung: an einer anderen Kreuzung neu setzen
             return null;
+        }
+        if (s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)
+        {
+            return HaltKopieren(aussen, s);
         }
         if (s.Art == AussenArt.Notiz)
         {
@@ -1102,6 +1131,9 @@ public static partial class AussenBearbeitung
             case AussenArt.Ampel:
                 AmpelLoeschen(aussen, s.Nummer);
                 break;
+            case AussenArt.Haltestelle or AussenArt.Parkplatz:
+                HaltLoeschen(aussen, s);
+                break;
             case AussenArt.Notiz:
                 NotizLoeschen(aussen, s.Nummer);
                 break;
@@ -1110,10 +1142,13 @@ public static partial class AussenBearbeitung
                 // S 0.26.0: die Zebrastreifen der Strasse gehen mit (Rueckgaengig holt beides)
                 var zebras = ZebrasAuf(aussen, s);
                 var ampeln = AmpelnAuf(aussen, s);
+                var halte = HalteAuf(aussen, s);
                 land.RemoveAt(s.Nummer);
                 ZebrasEntfernen(aussen, zebras);
                 // S 0.35.0: Ampeln, an deren Stelle keine Kreuzung mehr ist, gehen mit
                 AmpelnOhneKreuzungEntfernen(aussen, ampeln);
+                // S 0.36.0: Haltestellen und Parkplaetze ohne Strasse mit Gehweg gehen mit
+                HalteOhneStrasseEntfernen(aussen, halte);
                 break;
             }
             case AussenArt.Gebaeude:
@@ -1224,6 +1259,7 @@ public static partial class AussenBearbeitung
             AussenArt.Fussweg => FusswegBeschreibung(aussen, s, lage),
             AussenArt.Zebrastreifen => ZebraBeschreibung(s, lage),
             AussenArt.Ampel => AmpelBeschreibung(s, lage),
+            AussenArt.Haltestelle or AussenArt.Parkplatz => HaltBeschreibung(aussen, s, lage),
             AussenArt.Notiz => NotizBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };

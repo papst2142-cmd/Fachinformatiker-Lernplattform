@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "9e224728f3a9c650f6a0f569968d75c28b0923c54fd1886d7a460873b9fe70d9",
- "bytes": 9500284,
+ "sha256": "13ed8a8b3396fee087d234a770f4a6256346cee163b0224bda552bfb6effef8f",
+ "bytes": 9553333,
  "modelle": [
   {
    "name": "building-e",
@@ -2563,6 +2563,23 @@
     1.364,
     7.7,
     1.364
+   ]
+  },
+  {
+   "name": "bus",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj (nur Raeder) + werkzeuge/grafik/bus_modell.py",
+   "atlas": null,
+   "dreiecke": 1020,
+   "min": [
+    -0.72,
+    0.0,
+    -2.86
+   ],
+   "max": [
+    0.72,
+    1.68,
+    2.86
    ]
   }
  ]

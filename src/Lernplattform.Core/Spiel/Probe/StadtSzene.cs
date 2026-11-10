@@ -174,6 +174,28 @@ public sealed partial class StadtSzene
     /// <summary>Welle A 0.60.0 (Weisung P12-166): die Ampeln der Stadt (auf einer Kreuzung oder Einmuendung gelegt).</summary>
     public IReadOnlyList<Ampel> Ampeln { get; private init; } = [];
 
+    /// <summary>Welle A 0.61.0 (Weisung P12-171): die Bushaltestellen der Stadt (an einer geraden Strasse mit Gehweg gelegt).</summary>
+    public IReadOnlyList<Haltestelle> Haltestellen { get; private init; } = [];
+
+    /// <summary>
+    /// Welle A 0.61.0: Vieleck gegen den Uhrzeigersinn in (x, y) (so verlangt es <see cref="Wasser.Dreiecke"/>; im
+    /// Uhrzeigersinn findet es kein Ohr und die Flaeche fehlt). Ein Parkplatz auf der einen Strassenseite liegt so, auf der
+    /// anderen andersherum (Fund in den Fotos P12-103: Flaeche fehlte auf einer Seite).
+    /// </summary>
+    public static Vector2[] GegenUhr(Vector2[] p)
+    {
+        var flaeche = 0f;
+        for (var i = 0; i < p.Length; i++)
+        {
+            var (a, b) = (p[i], p[(i + 1) % p.Length]);
+            flaeche += (a.X * b.Y) - (b.X * a.Y);
+        }
+        return flaeche >= 0 ? p : [.. p.Reverse()];
+    }
+
+    /// <summary>Welle A 0.61.0 (Weisung P12-171): die Parkplaetze der Stadt (an einer geraden Strasse mit Gehweg gelegt).</summary>
+    public IReadOnlyList<Parkplatz> Parkplaetze { get; private init; } = [];
+
     /// <summary>Welle A 0.54.0: hat die Stadt eine Strasse mit Gehweg (dann ist deren Fahrbahn nur am Zebrastreifen begehbar)?</summary>
     public bool MitGehweg { get; private init; }
 
@@ -575,6 +597,8 @@ public sealed partial class StadtSzene
         Bahnuebergang.Hinzu(netz, Andreaskreuze);
         // Welle A 0.60.0: Masten der Ampeln wie die Bahnuebergaenge (nah und fern ganz, klein); die Lampen leuchten im eigenen Aufruf
         Probe.Ampeln.Hinzu(netz, Ampeln);
+        // Welle A 0.61.0: Haeuschen und Mast der Haltestellen wie die Masten der Ampeln (nah und fern ganz, klein)
+        Probe.Haltestellen.Hinzu(netz, Haltestellen);
         if (Grafik is null)
         {
             return netz;
@@ -758,6 +782,13 @@ public sealed partial class StadtSzene
     private static Teil Quader(float x1, float y1, float z1, float x2, float y2, float z2, Vector3 farbe) =>
         new(TeilArt.Quader, x1, y1, z1, x2, y2, z2, farbe);
 
+    /// <summary>Welle A 0.61.0: Gelb der Zickzack-Linie an Haltestellen.</summary>
+    private static readonly Vector3 ZickzackGelb = Netz.Farbe("#F2C21B");
+
+    /// <summary>Welle A 0.61.0: achsparalleles Rechteck um die Punkte (fuer das Laufraster).</summary>
+    private static (double, double, double, double) Rechteck(Vector2[] p) =>
+        (p.Min(q => q.X), p.Min(q => q.Y), p.Max(q => q.X), p.Max(q => q.Y));
+
     private static Teil Band(float x1, float z1, float x2, float z2, float hoehe, float breite, Vector3 farbe) =>
         new(TeilArt.Band, x1, hoehe, z1, x2, breite, z2, farbe);
 
@@ -857,6 +888,10 @@ public sealed partial class StadtSzene
         // Zebrastreifen (Fassung 0: keine Ampeln)
         var ampeln = Probe.Ampeln.Alle(stadt.Daten, strassen);
         var furten = ampeln.SelectMany(a => a.Furten).ToList();
+        // Welle A 0.61.0 (Weisung P12-171): Haltestellen und Parkplaetze an geraden Strassen mit Gehweg (Fassung 0: keine)
+        var gehwegLinien = gehwege.Select(g => (g.Linie, g.Halb)).ToList();
+        var haltestellen = Probe.Haltestellen.Alle(stadt.Daten, gehwegLinien);
+        var parkplaetze = Probe.Parkplaetze.Alle(stadt.Daten, gehwegLinien);
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -1039,6 +1074,25 @@ public sealed partial class StadtSzene
                 {
                     teile.Add(Band(a.X, a.Y, b.X, b.Y, Hoehe.Mittellinie, Probe.Ampeln.FurtStrichBreite, Weiss));
                 }
+            }
+        }
+        // Welle A 0.61.0: gelbe Zickzack-Linie je Haltestelle; Parkplatz als Flaeche mit weissen Linien, Einfahrt ueber den Gehweg
+        foreach (var h in haltestellen)
+        {
+            foreach (var (a, b) in Probe.Haltestellen.Zickzack(h))
+            {
+                teile.Add(Band(a.X, a.Y, b.X, b.Y, Hoehe.Mittellinie, Probe.Haltestellen.ZickzackBreite, ZickzackGelb));
+            }
+            hindernisse.Add(Rechteck(h.HaeuschenEcken()));
+        }
+        foreach (var pp in parkplaetze)
+        {
+            flaechen.Add(new Bodenflaeche(GegenUhr(pp.Ecken()), Probe.Parkplaetze.FlaecheHoehe + 0.002f, Probe.Parkplaetze.Flaeche));
+            var (e1, e2) = pp.Einfahrt;
+            teile.Add(Band(e1.X, e1.Y, e2.X, e2.Y, Probe.Parkplaetze.FlaecheHoehe + 0.002f, Probe.Parkplaetze.Gasse, Probe.Parkplaetze.Flaeche));
+            foreach (var (a, b) in pp.Linien())
+            {
+                teile.Add(Band(a.X, a.Y, b.X, b.Y, Probe.Parkplaetze.LinieHoehe, 0.025f, Weiss));
             }
         }
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
@@ -1318,6 +1372,25 @@ public sealed partial class StadtSzene
                 hindernisse.Add((x1, z1, x2, z2));
             }
         }
+        // Welle A 0.61.0 (Nico 3a): geparkte Autos (je Spieltag gezogen, im Werkzeug alle Plaetze belegt) als Stuecke der Stadt;
+        // jeder Stellplatz versperrt den Weg (die Fahrgasse bleibt frei)
+        var parkTag = stadt.VerkehrTag ?? stand?.Tag ?? 1;
+        foreach (var pp in parkplaetze)
+        {
+            var nr = 0;
+            foreach (var (mitte, blick) in pp.Stellplaetze())
+            {
+                var quer = Bahnuebergang.Rechts(blick);
+                var t = blick * (Probe.Parkplaetze.PlatzTief / 2);
+                var q = quer * (Probe.Parkplaetze.PlatzBreit / 2);
+                hindernisse.Add(Rechteck([mitte - t - q, mitte + t - q, mitte + t + q, mitte - t + q]));
+                if (Probe.Parkplaetze.Belegung(pp.Nr, nr++, parkTag, stadt.ParkplaetzeVoll) is { } am && grafik?.Modell(am) is { } pm)
+                {
+                    var anker = new Vector3((pm.Min.X + pm.Max.X) / 2, pm.Min.Y, (pm.Min.Z + pm.Max.Z) / 2);
+                    stuecke.Add(new ModellStueck(am, Lage(pm, anker, new Vector3(Meter * 1.1f), new Vector3(mitte.X, Probe.Parkplaetze.LinieHoehe, mitte.Y), blick)));
+                }
+            }
+        }
         // Hindernisse vor der Fest-Deko: das Gruen haengt so nicht an der heutigen Festzeit
         var hindernisseVorFest = hindernisse.ToList();
         var festTeileVon = teile.Count;
@@ -1414,6 +1487,8 @@ public sealed partial class StadtSzene
             Eis = Wasser.EisAn(stadt.Daten),
             Zebras = zebras,
             Ampeln = ampeln,
+            Haltestellen = haltestellen,
+            Parkplaetze = parkplaetze,
             MitGehweg = gehwege.Count > 0,
         };
     }
@@ -1605,7 +1680,7 @@ public sealed partial class StadtSzene
 
     private static List<Vector2> Ausgerichtet(List<Vector2> p, bool umgedreht) => umgedreht ? [.. Enumerable.Reverse(p)] : p;
 
-    private static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
+    internal static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 
     /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
     private static (float X, float Z) Stehplatz(Stadt stadt, string id, float tx, float tz)

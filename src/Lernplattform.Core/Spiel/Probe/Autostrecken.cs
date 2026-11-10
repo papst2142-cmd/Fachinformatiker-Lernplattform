@@ -506,7 +506,7 @@ public static class Autostrecken
     }
 
     /// <summary>Die Spur (rechte Fahrspur, geglaettet, geschlossen) eines Rundwegs; null, wenn ein Stueck zum Wenden zu kurz ist.</summary>
-    private static List<Vector2>? Spur(Netz netz, List<(int Kante, bool Wende)> weg, float bogen, List<Vector2> zuKurz)
+    internal static List<Vector2>? Spur(Netz netz, List<(int Kante, bool Wende)> weg, float bogen, List<Vector2> zuKurz)
     {
         if (weg.Any(w => w.Wende))
         {
@@ -716,7 +716,7 @@ public static class Autostrecken
     }
 
     /// <summary>Punkte, die auf dem vorigen liegen, fallen weg (kein Stueck der Laenge 0); Anfang und Ende bleiben gleich.</summary>
-    private static List<Vector2> OhneDoppelte(List<Vector2> p)
+    internal static List<Vector2> OhneDoppelte(List<Vector2> p)
     {
         var liste = new List<Vector2> { p[0] };
         for (var i = 1; i < p.Count; i++)

@@ -608,6 +608,13 @@ def main():
     ausgabe = []
     zips = {}
     for eintrag in auswahl["modelle"]:
+        if eintrag.get("erzeugt") == "bus":
+            # A 0.61.0 (Weisung P12-171): Bus aus Kaesten und den Raedern des Lieferwagens (bus_modell.py)
+            sys.path.insert(0, HIER)
+            import bus_modell
+            van = next(d for e, n, d in ausgabe if n == "car-van")
+            ausgabe.append((eintrag, eintrag["name"], bus_modell.bus(van)))
+            continue
         paket = auswahl["pakete"][eintrag["paket"]]
         if paket["zip"] not in zips:
             zips[paket["zip"]] = zipfile.ZipFile(os.path.join(quelle, paket["zip"]))

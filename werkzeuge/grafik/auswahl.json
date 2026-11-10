@@ -764,6 +764,12 @@
    "paket": "furniture",
    "datei": "Models/coatRackStanding.obj",
    "drehen": 180
+  },
+  {
+   "name": "bus",
+   "paket": "car_kit",
+   "datei": "Models/OBJ format/van.obj (nur Raeder) + werkzeuge/grafik/bus_modell.py",
+   "erzeugt": "bus"
   }
  ]
 }

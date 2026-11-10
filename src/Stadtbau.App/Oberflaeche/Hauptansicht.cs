@@ -786,6 +786,11 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>S 0.35.0: Knopf „Ampel“ (Start-Test).</summary>
     internal Button? AmpelKnopf { get; private set; }
 
+    /// <summary>S 0.36.0: Knoepfe „Haltestelle“ und „Parkplatz“ (Start-Test).</summary>
+    internal Button? HaltestelleKnopf { get; private set; }
+
+    internal Button? ParkplatzKnopf { get; private set; }
+
     /// <summary>S 0.26.0: Knopf „Laternen neu verteilen“ (Start-Test).</summary>
     internal Button? LaternenVerteilenKnopf { get; private set; }
 
@@ -822,7 +827,16 @@ public sealed partial class Hauptansicht : UserControl
             .Vorlese(Texte.Ampel + " setzen").Mit(Texte.AmpelTipp + " " + Texte.SetzenKnopfTipp);
         ampel.Click += (_, _) => SetzenKnopfGedrueckt(ampel, false, () => AussenSetzenWaehlen(AussenArt.Ampel, null));
         AmpelKnopf = ampel;
-        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra, ampel } };
+        // A 0.61.0 / S 0.36.0 (Weisung P12-171): Haltestelle und Parkplatz neben der Ampel
+        var haltestelle = new Button { Content = Schrift.Text(Texte.Haltestelle, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.Haltestelle + " setzen").Mit(Texte.HaltestelleTipp + " " + Texte.SetzenKnopfTipp);
+        haltestelle.Click += (_, _) => SetzenKnopfGedrueckt(haltestelle, false, () => AussenSetzenWaehlen(AussenArt.Haltestelle, null));
+        HaltestelleKnopf = haltestelle;
+        var parkplatz = new Button { Content = Schrift.Text(Texte.Parkplatz, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.Parkplatz + " setzen").Mit(Texte.ParkplatzTipp + " " + Texte.SetzenKnopfTipp);
+        parkplatz.Click += (_, _) => SetzenKnopfGedrueckt(parkplatz, false, () => AussenSetzenWaehlen(AussenArt.Parkplatz, null));
+        ParkplatzKnopf = parkplatz;
+        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra, ampel, haltestelle, parkplatz } };
         var verteilen = new Button { Content = Schrift.Text(Texte.LaternenVerteilen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
             .Vorlese(Texte.LaternenVerteilen).Mit(Texte.LaternenVerteilenTipp);
         verteilen.Click += (_, _) => LaternenVerteilen();
@@ -1230,6 +1244,8 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Steg => Texte.Steg,
         AussenArt.Zebrastreifen => Texte.Zebrastreifen,
         AussenArt.Ampel => Texte.Ampel,
+        AussenArt.Haltestelle => Texte.Haltestelle,
+        AussenArt.Parkplatz => Texte.Parkplatz,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
@@ -1319,6 +1335,7 @@ public sealed partial class Hauptansicht : UserControl
         _aussenAuswahl.Children.Add(Schrift.Text(AussenBearbeitung.Beschreibung(a, s, _projekt.OrtName), "Klein"));
         // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
         OrtNameTeil(s);
+        ParkplatzTeil(s);
         // S 0.27.0: Text der Notiz
         NotizTeil(s);
         // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)

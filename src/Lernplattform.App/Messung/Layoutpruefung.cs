@@ -48,6 +48,7 @@ public static class Layoutpruefung
                     break;
                 case TextBox feld:
                     PruefeFeld(feld, funde);
+                    PruefeNurLesen(feld, funde);
                     break;
                 case ScrollBar leiste:
                     PruefeLeiste(leiste, funde);
@@ -72,6 +73,33 @@ public static class Layoutpruefung
             funde.Add($"Fenster beginnt nicht oben: {Name(fenster)} (gerollt um {rollen.Offset.Y:F0})");
         }
         return funde;
+    }
+
+    /// <summary>
+    /// A 0.61.0 (Sammelliste 284): (12) ein Text, den man nur lesen soll, ist kein Eingabefeld (sonst markiert ein
+    /// Tipp am Handy Woerter und zeigt Kopieren/Einfuegen). Nur-Lese-Felder gibt es nur fuer Texte, die man
+    /// kopieren koennen soll: feste Liste <see cref="NurLesenErlaubt"/> (Datenbank-Pfad, Diagnose-Bericht, Ergebnis
+    /// der Sicherung) und gesperrte Eingaben (<see cref="GesperrteEingabe"/>).
+    /// </summary>
+    public static readonly string[] NurLesenErlaubt =
+        [Core.Texte.LoeschenTexte.DatenbankTitel, Core.Texte.DiagnoseTexte.Titel, Core.Texte.VorleseTexte.SicherungErgebnis];
+
+    /// <summary>Klasse einer Eingabe, die nach dem Antworten gesperrt ist (bleibt ein Eingabefeld).</summary>
+    public const string GesperrteEingabe = "gesperrte_eingabe";
+
+    public const string NurLesenKennung = "Nur-Lese-Feld statt Text: ";
+
+    private static void PruefeNurLesen(TextBox feld, List<string> funde)
+    {
+        if (!feld.IsReadOnly || feld.Classes.Contains(GesperrteEingabe))
+        {
+            return;
+        }
+        var name = Avalonia.Automation.AutomationProperties.GetName(feld);
+        if (name is null || !NurLesenErlaubt.Contains(name))
+        {
+            funde.Add(NurLesenKennung + Name(feld) + " (" + (name ?? "ohne Namen") + ")");
+        }
     }
 
     /// <summary>FW6 (Sammelliste 61): Text, Knopf, Feld oder Form unter einer sichtbaren senkrechten Scrollleiste.</summary>

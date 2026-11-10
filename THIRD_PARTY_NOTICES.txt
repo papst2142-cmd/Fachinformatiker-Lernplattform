@@ -73,7 +73,7 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.NETCore.App.Host.osx-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-x64
 - Microsoft.NETCore.App.Host.win-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | win-x64
 - Microsoft.NETCore.App.Runtime.linux-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | linux-x64
-- Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
+- Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Runtime.osx-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | osx-x64
 - Microsoft.NETCore.App.Runtime.win-x64 (10.0.15) | MIT | https://github.com/dotnet/dotnet | win-x64

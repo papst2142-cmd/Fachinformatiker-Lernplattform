@@ -240,6 +240,11 @@ public sealed partial class StadtSzene
         {
             kreuze.Append("A").Append(Bits(fuss)).Append(';').Append(Bits(blick)).Append('|');
         }
+        // Welle A 0.61.0: Haeuschen und Mast der Haltestellen stehen im Paket-Netz
+        foreach (var h in Haltestellen)
+        {
+            kreuze.Append("H").Append(Bits(h.Haeuschen)).Append(';').Append(Bits(h.Schild)).Append(';').Append(Bits(h.Fahrt)).Append('|');
+        }
         var laternen = new StringBuilder();
         foreach (var l in Laternen)
         {

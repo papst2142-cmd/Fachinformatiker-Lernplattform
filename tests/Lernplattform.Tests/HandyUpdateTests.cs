@@ -151,6 +151,121 @@ public class HandyUpdateTests
         }
     }
 
+    /// <summary>
+    /// A 0.61.0 (Sammelliste 283): ein echter Testserver bricht den Strom mitten in der Datei ab (Content-Length groesser
+    /// als das Gesendete). Bis A 0.60.0 kam das als HttpIOException (eine IOException) an, wurde nie wiederholt und als
+    /// "Datei konnte nicht gespeichert werden" gemeldet. Jetzt: Stoerung, Wiederholung, danach geladen; bricht der Strom
+    /// jedes Mal ab: "unvollstaendig" mit Art und innerer Ausnahme in update.log. Gegenprobe: ein echter Schreibfehler
+    /// (IOException ohne Netz) bleibt "Speichern" und wird nie wiederholt.
+    /// </summary>
+    [Fact]
+    public async Task Laden_StromBrichtAb_WirdWiederholt_KeinSpeicherfehler()
+    {
+        Stoerung.OhnePausenFuerTests.Value = true;
+        try
+        {
+            using var temp = new TempOrdner();
+            using (var server = new AbrissServer(abrisse: 1))
+            {
+                var quelle = new HandyQuelle(new HttpClient(), new Geraet(temp.Pfad), "A 0.38.0", datenordner: temp.Pfad);
+                var datei = await UpdateAblauf.LadenAsync(quelle, Angebot() with { DateiUrl = server.Adresse }, ordner: temp.Pfad,
+                    abbruch: TestContext.Current.CancellationToken);
+                Assert.Equal(2, server.Abrufe);
+                Assert.Equal(Inhalt, await File.ReadAllBytesAsync(datei, TestContext.Current.CancellationToken));
+                // Linux/Mac: HttpIOException (ResponseEnded); Windows (Lauf 803): der Abriss kommt dort als Netzfehler der
+                // Gegenstelle an. Beides ist ein Netzfehler, nie ein Speicherfehler.
+                var log = Log(temp.Pfad);
+                Assert.Contains("| Programm | WIEDERHOLUNG Laden " + Name + " Versuch 2 nach 15 s (", log, StringComparison.Ordinal);
+                Assert.True(NetzBeschreibung(log), log);
+            }
+
+            using var temp2 = new TempOrdner();
+            using (var server = new AbrissServer(abrisse: 99))
+            {
+                var quelle = new HandyQuelle(new HttpClient(), new Geraet(temp2.Pfad), "A 0.38.0", datenordner: temp2.Pfad);
+                var e = await Assert.ThrowsAsync<UpdateFehler>(() => UpdateAblauf.LadenAsync(quelle, Angebot() with { DateiUrl = server.Adresse },
+                    ordner: temp2.Pfad, abbruch: TestContext.Current.CancellationToken));
+                Assert.Contains(e.Message, new[] { UpdateTexte.DownloadUnvollstaendig, UpdateTexte.DownloadOffline });
+                Assert.Equal(4, server.Abrufe);
+                var log2 = Log(temp2.Pfad);
+                Assert.Contains("Download fehlgeschlagen: ", log2, StringComparison.Ordinal);
+                Assert.True(NetzBeschreibung(log2), log2);
+            }
+
+            // Gegenprobe: echter Schreibfehler bleibt "Speichern", keine Stoerung
+            var schreib = new IOException("Datentraeger voll");
+            Assert.False(Stoerung.Voruebergehend(schreib));
+            Assert.Equal(UpdateTexte.DownloadSpeichern, UpdateAblauf.DownloadText(schreib));
+            Assert.Equal(UpdateTexte.DownloadSpeichern, UpdateAblauf.DownloadText(new UnauthorizedAccessException()));
+            // Netzfehler als innere Ausnahme einer IOException: Verbindung
+            var netz = new IOException("Abriss", new System.Net.Sockets.SocketException(10054));
+            Assert.True(Stoerung.Voruebergehend(netz));
+            Assert.Equal(UpdateTexte.DownloadOffline, UpdateAblauf.DownloadText(netz));
+            Assert.Equal(UpdateTexte.DownloadOffline, UpdateAblauf.DownloadText(new HttpIOException(HttpRequestError.ConnectionError)));
+            Assert.Contains("innen SocketException", Stoerung.Beschreibung(netz), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Stoerung.OhnePausenFuerTests.Value = false;
+        }
+    }
+
+    /// <summary>Beschreibt update.log den Abriss als Netzfehler (HttpIOException oder innere SocketException), nie als Speicherfehler?</summary>
+    private static bool NetzBeschreibung(string log) =>
+        (log.Contains("HttpIOException (", StringComparison.Ordinal) || log.Contains("innen SocketException", StringComparison.Ordinal)
+            || log.Contains("HttpRequestException (", StringComparison.Ordinal))
+        && !log.Contains(UpdateTexte.DownloadSpeichern, StringComparison.Ordinal);
+
+    /// <summary>Testserver, der die ersten <c>abrisse</c> Abrufe nach der halben Datei abbricht.</summary>
+    private sealed class AbrissServer : IDisposable
+    {
+        private readonly HttpListener _hoerer = new();
+        private int _abrufe;
+        public string Adresse { get; }
+        public int Abrufe => Volatile.Read(ref _abrufe);
+
+        public AbrissServer(int abrisse)
+        {
+            var frei = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            frei.Start();
+            var port = ((IPEndPoint)frei.LocalEndpoint).Port;
+            frei.Stop();
+            Adresse = "http://127.0.0.1:" + port + "/app.apk";
+            _hoerer.Prefixes.Add("http://127.0.0.1:" + port + "/");
+            _hoerer.Start();
+            _ = Task.Run(async () =>
+            {
+                while (_hoerer.IsListening)
+                {
+                    HttpListenerContext k;
+                    try
+                    {
+                        k = await _hoerer.GetContextAsync();
+                    }
+                    catch (Exception)
+                    {
+                        return;
+                    }
+                    var nr = Interlocked.Increment(ref _abrufe);
+                    k.Response.ContentLength64 = Inhalt.Length;
+                    if (nr <= abrisse)
+                    {
+                        await k.Response.OutputStream.WriteAsync(Inhalt.AsMemory(0, Inhalt.Length / 2));
+                        await k.Response.OutputStream.FlushAsync();
+                        k.Response.Abort();
+                    }
+                    else
+                    {
+                        await k.Response.OutputStream.WriteAsync(Inhalt);
+                        k.Response.Close();
+                    }
+                }
+            });
+        }
+
+        public void Dispose() => _hoerer.Close();
+    }
+
     [Fact]
     public async Task OhnePlatzKeinDownload()
     {

@@ -806,8 +806,23 @@ public static class FestVerkehr
     /// Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern), hoechstens <paramref name="hoechstens"/>
     /// Autos. Welle D2: aus <c>StadtFlaeche</c> hierher, damit die Zaehlung ohne Grafikkarte dieselben Netze kennt.
     /// </summary>
+    /// <remarks>
+    /// Welle A 0.61.0 (Weisung P12-171, Nico 5b): nach den Fahrzeugen (auch dem Bus) die wartenden Figuren der Haltestellen im
+    /// selben Aufruf (<see cref="WartendNetz"/>), zusammen hoechstens <paramref name="hoechstens"/>; kein neuer Zeichenaufruf.
+    /// </remarks>
     public static List<Netz> FahrzeugNetze(Verkehr verkehr, List<Gestalt>? gestalten, GrafikBibliothek grafik, bool fern, int hoechstens) =>
-        gestalten is not null ? Netze(gestalten, fern) : [.. verkehr.Autos.Take(hoechstens).Select(a => AutoNetz(grafik, a.Modell, fern))];
+        gestalten is not null ? Netze(gestalten, fern)
+            : [.. verkehr.Autos.Select(a => AutoNetz(grafik, a.Modell, fern)).Concat(verkehr.Wartende.Select(_ => WartendNetz(grafik, fern))).Take(hoechstens)];
+
+    /// <summary>Welle A 0.61.0: Modell der wartenden Figur (stehend, Grundaussehen).</summary>
+    public const string WartendModell = "figur";
+
+    /// <summary>Welle A 0.61.0: Netz einer wartenden Figur (nah das Modell, fern zwei Kaesten wie ein Auto).</summary>
+    public static Netz WartendNetz(GrafikBibliothek grafik, bool fern) => AutoNetz(grafik, WartendModell, fern);
+
+    /// <summary>Welle A 0.61.0: Massstab eines Modells im Aufruf der Autos (Fahrzeuge Meter × 1,1, die Figur so hoch wie die Spielfigur).</summary>
+    public static float Massstab(GrafikModell m) =>
+        m.Name == WartendModell ? Figur.StadtHoehe / (m.Max.Y - m.Min.Y) : StadtSzene.Meter * 1.1f;
 
     /// <summary>Netz eines Autos im eigenen Raum: das Modell oder (fern) zwei Kaesten in seiner Hauptfarbe; leer ohne Modell.</summary>
     public static Netz AutoNetz(GrafikBibliothek grafik, string modell, bool fern)
@@ -819,8 +834,19 @@ public static class FestVerkehr
         if (!fern)
         {
             var nz = new Netz();
-            nz.Hinzu(am, Matrix4x4.Identity);
+            // Welle A 0.61.0: am Bus leuchten nachts Scheinwerfer und Linienanzeige (Lichtfarbe wie Glas und Kerze)
+            nz.Hinzu(am, Matrix4x4.Identity, modell == Buslinie.Modell ? (d, grund, _, _) => Glut(am, d, grund) : null);
             return nz;
+        }
+        if (modell == Buslinie.Modell)
+        {
+            // Welle A 0.61.0: fern ein Kasten ueber die ganze Laenge (der Aufbau eines Autos laege nur in der Mitte)
+            var fb = Hauptfarbe(am);
+            return Netz.Aus(
+            [
+                new Teil(TeilArt.Quader, am.Min.X, am.Min.Y + ((am.Max.Y - am.Min.Y) * 0.08f), am.Min.Z, am.Max.X, am.Max.Y * 0.9f, am.Max.Z, fb),
+                new Teil(TeilArt.Quader, am.Min.X, am.Max.Y * 0.9f, am.Min.Z, am.Max.X, am.Max.Y, am.Max.Z, new Vector3(0.92f, 0.91f, 0.88f)),
+            ]);
         }
         var farbe = Hauptfarbe(am);
         float h = am.Max.Y - am.Min.Y;

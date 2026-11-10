@@ -92,6 +92,10 @@ public static partial class AussenBearbeitung
             {
                 mit.Add(new AussenStelle(AussenArt.Ampel, z));   // S 0.35.0: Ampeln gehen mit ihrer Strasse
             }
+            foreach (var h in HalteAuf(aussen, s))
+            {
+                mit.Add(h);   // S 0.36.0: Haltestellen und Parkplaetze gehen mit ihrer Strasse
+            }
             if (IstKreisverkehr(aussen, s))
             {
                 var (zufahrten, laternen) = KreisverkehrTeile(aussen, s);
@@ -174,8 +178,12 @@ public static partial class AussenBearbeitung
         var ampeln = drehen.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => AmpelnAuf(aussen, s)).Select(a => new AussenStelle(AussenArt.Ampel, a.Nummer))
             .Concat(drehen.Where(s => s.Art == AussenArt.Ampel)).Distinct().ToList();
         var ampelZiele = ampeln.Select(a => (a, Ziel: MitteVon(aussen, a) is { } m ? Dreh(m) : (Vector2?)null)).ToList();
+        // S 0.36.0: Haltestellen und Parkplaetze: der gespeicherte Punkt neben der Strasse dreht mit
+        var halte = drehen.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => HalteAuf(aussen, s))
+            .Concat(drehen.Where(s => s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)).Distinct().ToList();
+        var haltZiele = halte.Select(h => (h, Ziel: HaltPunkt(aussen, h) is { } m ? Dreh(m) : (Vector2?)null)).ToList();
         var anzahl = 0;
-        foreach (var s in Reihenfolge(drehen.Where(s => s.Art is not (AussenArt.Zebrastreifen or AussenArt.Ampel))))
+        foreach (var s in Reihenfolge(drehen.Where(s => s.Art is not (AussenArt.Zebrastreifen or AussenArt.Ampel or AussenArt.Haltestelle or AussenArt.Parkplatz))))
         {
             anzahl++;
             switch (s.Art)
@@ -241,6 +249,14 @@ public static partial class AussenBearbeitung
             }
             anzahl += drehen.Contains(am) ? 1 : 0;
         }
+        foreach (var (h, ziel) in haltZiele)
+        {
+            if (ziel is { } p)
+            {
+                HaltPunktSetzen(aussen, h, p);
+            }
+            anzahl += drehen.Contains(h) ? 1 : 0;
+        }
         return new MehrfachErgebnis([.. alle.Where(s => Gueltig(aussen, s))], anzahl, 0);
     }
 
@@ -271,6 +287,9 @@ public static partial class AussenBearbeitung
         var strassenMitZebra = kopieren.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => ZebrasAuf(aussen, s)).Distinct()
             .Select(z => MitteVon(aussen, new AussenStelle(AussenArt.Zebrastreifen, z))).OfType<Vector2>().ToList();
         var strassenMitAmpel = kopieren.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => AmpelnAuf(aussen, s)).Select(a => a.Mitte).Distinct().ToList();
+        // S 0.36.0: Haltestellen und Parkplaetze einer mitkopierten Strasse kommen mit auf die Kopie
+        var strassenMitHalt = kopieren.Where(s => s.Art == AussenArt.Strasse).SelectMany(s => HalteAuf(aussen, s)).Distinct()
+            .Select(h => (h.Art, Eintrag: Py.Kopie(HaltListe(aussen, h.Art)[h.Nummer]))).ToList();
         var neu = new List<AussenStelle>();
         var uebersprungen = 0;
         foreach (var s in Reihenfolge(kopieren))
@@ -303,6 +322,16 @@ public static partial class AussenBearbeitung
             if (AmpelSetzen(aussen, p.X + versatz, p.Y) is { } am)
             {
                 neu.Add(am);
+            }
+        }
+        foreach (var (art, eintrag) in strassenMitHalt)
+        {
+            if (eintrag is PyObjekt o && Zebrastreifen.Lesen(o) is { } p)
+            {
+                Py.Setzen(o, "x", Bearbeitung.Zahl(Math.Round(p.X + versatz, 4)));
+                var liste = HaltListeAnlegen(aussen, art);
+                liste.Add(o);
+                neu.Add(new AussenStelle(art, liste.Count - 1));
             }
         }
         foreach (var z in kopieren.Where(s => s.Art == AussenArt.Zebrastreifen))
@@ -338,6 +367,7 @@ public static partial class AussenBearbeitung
             AussenArt.Fussweg => Aussen.Fusswege(aussen)[s.Nummer],
             AussenArt.Zebrastreifen => ZebraListe(aussen)[s.Nummer],
             AussenArt.Ampel => AmpelListe(aussen)[s.Nummer],
+            AussenArt.Haltestelle or AussenArt.Parkplatz => HaltListe(aussen, s.Art)[s.Nummer],
             AussenArt.Notiz => NotizListe(aussen)[s.Nummer],
             _ => land[s.Nummer],
         };

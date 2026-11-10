@@ -99,6 +99,8 @@ public static partial class StadtbauPruefung
             ZebraDaten(fassung, breite, hoehe, funde);
             // Welle A 0.60.0: falsch gespeicherte Ampeln (die Szene laesst sie weg, Rot sperrt den Export)
             AmpelDaten(fassung, breite, hoehe, funde);
+            // Welle A 0.61.0: falsch gespeicherte Haltestellen und Parkplaetze
+            HaltDaten(fassung, breite, hoehe, funde);
             // Sammelliste 264: Farben der Gebaeude (die Szene laesst ungueltige Werte weg, Rot sperrt den Export)
             FarbenDaten(fassung, welt, funde);
             if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil || !fusswegeHeil)
@@ -169,6 +171,7 @@ public static partial class StadtbauPruefung
         FusswegRegeln(szene, fassung, funde);
         ZebraRegeln(szene, fassung, funde);
         AmpelRegeln(szene, fassung, funde);
+        HaltRegeln(szene, fassung, funde);
         AussehenRegeln(fassung, inhalt, szene, funde);
         OrtsnamenRegeln(fassung, funde);
         // Fund 262 (Weisung P12-122): Regeln nur des Werkzeugs auf derselben Szene (Tueren buendig), das Spiel ruft ohne

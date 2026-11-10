@@ -32,6 +32,8 @@ public static class Ansicht3D
         var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt));
         // S 0.20.0 (Weisung P12-84): die Autos fahren im Werkzeug die Wege von Tag 1 (der Probe-Spielstand steht auf Tag 201)
         stadt.VerkehrTag = Autostrecken.WerkzeugTag;
+        // S 0.36.0 (Weisung P12-170 Hinweis 4): im Werkzeug sind alle Stellplaetze belegt (Grenzen zaehlen den vollen Parkplatz)
+        stadt.ParkplaetzeVoll = true;
         var ablauf = StadtbauPruefung.Probestand(stadt.Inhalt);
         // Phase 13 Welle 4a: Stuecke aus dem Katalog zeichnet die 3D-Ansicht wie das Spiel nach dem Einbau
         var grafik = Katalog.Aktiv?.MitStuecken(daten.Grafik, stand) ?? daten.Grafik;

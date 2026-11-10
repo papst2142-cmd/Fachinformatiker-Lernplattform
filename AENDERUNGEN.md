@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.61.0
+Das Spiel kennt jetzt Bushaltestellen, einen Linienbus und Parkplätze für neue Städte. Die heutige Stadt hat nichts davon und sieht genauso aus wie bisher.
+
+- Eine Bushaltestelle steht an einer geraden Straße mit Gehweg: Wartehäuschen mit Bank, Schild mit „H“ und eine gelbe Zickzack-Linie auf der Fahrbahn. Im Häuschen wartet eine Figur.
+- Gibt es Haltestellen, fährt ein gelber Linienbus von allein alle Haltestellen so an, dass sie rechts liegen. Er hält an jeder Haltestelle etwa vier Sekunden; Autos dahinter warten. Die wartende Figur steigt ein und ist nach einer Weile wieder da. Ab sieben Haltestellen fahren zwei Busse.
+- Ein Parkplatz liegt hinter dem Gehweg, mit Einfahrt über den Gehweg und weißen Linien. Dort parken Autos, jeden Spieltag anders, auf allen Geräten gleich.
+- Bricht beim Laden eines Updates die Verbindung mitten in der Datei ab, versucht das Programm es wie bei einer Störung von GitHub noch einmal. Vorher meldete es in diesem Fall fälschlich einen Fehler beim Speichern.
+- Die Neuerungen im Update-Fenster und der Lizenztext stehen jetzt als normaler Text da und nicht mehr in einem Eingabefeld.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.60.0
 Das Spiel kennt jetzt Ampeln für neue Städte. Die heutige Stadt hat keine Ampel und sieht genauso aus wie bisher.
 

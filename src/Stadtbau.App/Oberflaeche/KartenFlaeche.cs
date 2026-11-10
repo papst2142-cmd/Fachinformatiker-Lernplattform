@@ -490,6 +490,38 @@ public sealed partial class KartenFlaeche : Control
                 ctx.DrawEllipse(Pinsel("#2B2B2B"), new Pen(Pinsel("#F2C230"), Math.Max(1, r / 3)), P(fuss.X, fuss.Y), r, r);
             }
         }
+        // A 0.61.0 / S 0.36.0 (Weisung P12-171): Haltestellen (gelbe Zickzack-Linie, Haeuschen, Schild) und Parkplaetze
+        // (Flaeche, Einfahrt, weisse Linien, im Werkzeug alle Plaetze belegt) wie im Spiel; beim Ziehen nur laengs der Strasse
+        foreach (var (_, halt, park) in AussenBearbeitung.HalteZumZeichnen(a, Auswahl, dx, dy))
+        {
+            if (park is { } pp)
+            {
+                var (e1, e2) = pp.Einfahrt;
+                Linie(ctx, [e1, e2], new Pen(Pinsel("#6B6E75"), Lernplattform.Core.Spiel.Probe.Parkplaetze.Gasse * _zoom, lineCap: PenLineCap.Flat));
+                Flaeche(ctx, pp.Ecken(), Pinsel("#6B6E75"));
+                foreach (var (l1, l2) in pp.Linien())
+                {
+                    Linie(ctx, [l1, l2], new Pen(Brushes.White, Math.Max(1, 0.025 * _zoom), lineCap: PenLineCap.Flat));
+                }
+                foreach (var (mitte, blick) in pp.Stellplaetze())
+                {
+                    var quer = new System.Numerics.Vector2(-blick.Y, blick.X);
+                    var t = blick * 0.26f;
+                    var q = quer * 0.13f;
+                    Flaeche(ctx, [mitte - t - q, mitte + t - q, mitte + t + q, mitte - t + q], Pinsel("#C9CED6"), new Pen(Pinsel("#3A3D42"), 1));
+                }
+            }
+            if (halt is { } hs)
+            {
+                foreach (var (z1, z2) in Lernplattform.Core.Spiel.Probe.Haltestellen.Zickzack(hs))
+                {
+                    Linie(ctx, [z1, z2], new Pen(Pinsel("#F2C21B"), Math.Max(1, Lernplattform.Core.Spiel.Probe.Haltestellen.ZickzackBreite * _zoom), lineCap: PenLineCap.Flat));
+                }
+                Flaeche(ctx, hs.HaeuschenEcken(), Pinsel("#9CC3D5"), new Pen(Pinsel("#2E3338"), Math.Max(1, 0.03 * _zoom)));
+                var r = Math.Max(4, 0.1 * _zoom);
+                ctx.DrawEllipse(Pinsel("#F2C21B"), new Pen(Pinsel("#1E7A4C"), Math.Max(1, r / 3)), P(hs.Schild.X, hs.Schild.Y), r, r);
+            }
+        }
         // Welle K3: Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum) wie im Spiel
         for (var i = 0; i < land.Count; i++)
         {
@@ -659,6 +691,20 @@ public sealed partial class KartenFlaeche : Control
                     break;
                 case AussenArt.Zebrastreifen when Zebras(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Zebra is { } zw:
                     Flaeche(ctx, ZebraUmriss(zw), null, stift);
+                    break;
+                case AussenArt.Haltestelle or AussenArt.Parkplatz when AussenBearbeitung.HalteZumZeichnen(a, aw, dx, dy).FirstOrDefault(e => e.Stelle == aw) is var (_, haltW, parkW):
+                    if (haltW is { } hz)
+                    {
+                        var l2 = hz.Fahrt * (Lernplattform.Core.Spiel.Probe.Haltestellen.ZickzackLang / 2);
+                        var c = hz.Mitte + (hz.Fahrt * (Lernplattform.Core.Spiel.Probe.Haltestellen.SchildVor - (Lernplattform.Core.Spiel.Probe.Haltestellen.ZickzackLang / 2)));
+                        var innen = c + (hz.Aussen * 0.02f);
+                        var aussenK = c + (hz.Aussen * (hz.Halb + Lernplattform.Core.Spiel.Probe.Haltestellen.HaeuschenAbstand + Lernplattform.Core.Spiel.Probe.Haltestellen.HaeuschenTief));
+                        Flaeche(ctx, [innen - l2, innen + l2, aussenK + l2, aussenK - l2], null, stift);
+                    }
+                    else if (parkW is { } pz)
+                    {
+                        Flaeche(ctx, pz.Ecken(), null, stift);
+                    }
                     break;
                 case AussenArt.Ampel when Ampeln(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Ampel is { } am:
                     ctx.DrawEllipse(null, stift, P(am.Mitte.X, am.Mitte.Y), AussenBearbeitung.AmpelGreifen * _zoom, AussenBearbeitung.AmpelGreifen * _zoom);
@@ -1151,6 +1197,10 @@ public sealed partial class KartenFlaeche : Control
         {
             Gemeldet?.Invoke(Texte.AmpelKeineKreuzung);
         }
+        else if (art is AussenArt.Haltestelle or AussenArt.Parkplatz)
+        {
+            Gemeldet?.Invoke(Texte.HaltKeineStrasse);
+        }
         Waehlen(neu);
         return neu;
     }
@@ -1193,6 +1243,8 @@ public sealed partial class KartenFlaeche : Control
         AussenArt.Zebrastreifen => Texte.Zebrastreifen,
         AussenArt.Notiz => Texte.Notiz,
         AussenArt.Ampel => Texte.Ampel,
+        AussenArt.Haltestelle => Texte.Haltestelle,
+        AussenArt.Parkplatz => Texte.Parkplatz,
         _ => Texte.Paketplatz,
     };
 

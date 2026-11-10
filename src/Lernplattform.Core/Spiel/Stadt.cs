@@ -192,6 +192,12 @@ public sealed class Stadt
     /// </summary>
     public long? VerkehrTag { get; set; }
 
+    /// <summary>
+    /// Welle A 0.61.0 (Weisung P12-170 Hinweis 4): alle Stellplaetze der Parkplaetze belegt (Werkzeug: Grenzen, Live-Leiste und
+    /// „Stadt zu teuer“ zaehlen den vollen Parkplatz); das Spiel zieht die Belegung je Spieltag.
+    /// </summary>
+    public bool ParkplaetzeVoll { get; set; }
+
     /// <summary>Kantenlaenge einer Zelle in Karteneinheiten.</summary>
     public double Zelle { get; }
 

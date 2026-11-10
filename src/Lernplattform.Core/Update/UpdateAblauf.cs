@@ -95,7 +95,7 @@ public static class UpdateAblauf
         }
         catch (Exception e)
         {
-            Updateprotokoll.Schreiben("Download fehlgeschlagen: " + e.GetType().Name, ordner);
+            Updateprotokoll.Schreiben("Download fehlgeschlagen: " + Stoerung.Beschreibung(e), ordner);
             throw new UpdateFehler(DownloadText(e));
         }
         return Pruefen(datei, angebot, ordner);
@@ -108,6 +108,11 @@ public static class UpdateAblauf
         TaskCanceledException or TimeoutException => UpdateTexte.DownloadZeit,
         HttpRequestException { HttpRequestError: HttpRequestError.ResponseEnded or HttpRequestError.InvalidResponse } => UpdateTexte.DownloadUnvollstaendig,
         HttpRequestException or WebException => UpdateTexte.DownloadOffline,
+        // A 0.61.0 (Sammelliste 283): Abriss beim Lesen ist eine IOException (HttpIOException), aber kein Speicherfehler;
+        // "Speichern" nur fuer echte Schreibfehler
+        HttpIOException { HttpRequestError: HttpRequestError.ResponseEnded or HttpRequestError.InvalidResponse } => UpdateTexte.DownloadUnvollstaendig,
+        HttpIOException => UpdateTexte.DownloadOffline,
+        IOException { InnerException: System.Net.Sockets.SocketException } => UpdateTexte.DownloadOffline,
         IOException or UnauthorizedAccessException => UpdateTexte.DownloadSpeichern,
         _ => Unerwartet(e),
     };
@@ -128,7 +133,7 @@ public static class UpdateAblauf
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            Updateprotokoll.Schreiben("Download fehlgeschlagen: " + e.GetType().Name, ordner);
+            Updateprotokoll.Schreiben("Download fehlgeschlagen: " + Stoerung.Beschreibung(e), ordner);
             throw new UpdateFehler(UpdateTexte.DownloadSpeichern);
         }
         if (angebot.Groesse > 0 && groesse != angebot.Groesse)

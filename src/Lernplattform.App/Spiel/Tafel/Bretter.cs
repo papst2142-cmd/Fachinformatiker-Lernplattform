@@ -825,6 +825,8 @@ public sealed class FormularBrett : Brett
                 eingabe.Farbe(TextBox.BorderBrushProperty, Ton(farbe));
                 eingabe.BorderThickness = new Thickness(2);
                 eingabe.IsReadOnly = true;
+                // A 0.61.0 (Sammelliste 284): gesperrte Eingabe, kein Nur-Lese-Text (Layoutpruefung (12))
+                eingabe.Classes.Add(Messung.Layoutpruefung.GesperrteEingabe);
             }
             if (_pillen.ContainsKey(feld.Id))
             {
