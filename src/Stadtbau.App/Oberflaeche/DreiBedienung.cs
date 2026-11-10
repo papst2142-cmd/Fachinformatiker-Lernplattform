@@ -178,6 +178,16 @@ public sealed partial class DreiBedienung : Control
         }
     }
 
+    /// <summary>Welle S 0.33.0 (Sammelliste 273): Kamera faehrt zur Weltstelle (x, y der Karte); Neigung, Drehung und Abstand bleiben.</summary>
+    public void Hinfahren(double x, double y)
+    {
+        if (Kamera is { } k)
+        {
+            k.Setzen((float)x, (float)y);
+            _drei.AnfordernBild();
+        }
+    }
+
     public void Zoomen(float faktor)
     {
         if (Kamera is { } k)

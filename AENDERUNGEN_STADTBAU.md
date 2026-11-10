@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.33.0
+
+Türen frei setzen und Funde in der Prüfliste antippen.
+
+- „Tür setzen“ legt die Tür jetzt auf die Wand, die du siehst, auch wenn das Haus vorne Schaufenster, Nischen oder Vorsprünge hat. Tippst du vor ein Schaufenster und „Einrasten“ ist an, rückt die Tür auf die nächste glatte Stelle derselben Wand oder auf eine Tür des Hausmodells; ein gelber Hinweis sagt, dass sie gerückt ist. Gibt es an der Wand keine glatte Stelle, sagt das der Hinweis, und du wählst eine andere Wand.
+- Die Tür steht immer ganz auf einer Wand, mindestens 0,3 Felder von der Ecke. Ziehst du sie über das Ende der Wand hinaus, bleibt sie an dieser Wand, bis dein Finger wirklich vor der Nachbarwand steht.
+- An selbst gebauten Häusern wird beim Tippen auf ein Fenster im Erdgeschoss das Fenster zur Tür (die alte Tür wird zum Fenster). Das ist ein Schritt, „Rückgängig“ stellt beides wieder her.
+- Jeder Fund in der Prüfliste mit einer Stelle zeigt rechts einen Pfeil. Antippen springt hin: in der Draufsicht steht die Stelle mittig und das Stück dort ist gewählt, in der 3D-Ansicht fährt die Kamera hin (die Neigung bleibt), im Innenraum steht die Stelle mittig, im Gebäude-Editor wird die Ebene des Teils gezeigt und das Teil gewählt. Funde ohne Stelle haben keinen Pfeil und lassen sich nicht antippen.
+- Fehler behoben: Ein Fund an einer Tür nannte statt des Orts manchmal den Namen der Firma aus dem Probestand („Probe“). Jetzt steht dort der Name des Orts aus der Karte.
+
 ## S 0.32.0
 
 Die 3D-Ansicht zeichnet die Stadt so sparsam wie das Spiel.

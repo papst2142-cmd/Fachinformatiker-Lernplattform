@@ -242,8 +242,8 @@ public partial class TuerBuendigTests
 
     /// <summary>
     /// Fassung 0 ohne neuen Fund: ihre gezeichneten Tueren bleiben ohne Fund, solange sie wie in der Ausgangsstadt liegen (E1).
-    /// Gegenprobe: alle Tueren streng geprueft = genau diese 4 (Bahnhof Talheim und Gewerbehof (im Probestand „Probe“) mit
-    /// Vorsprung am Rand, Kaufhaus mit Nische, Stellwerk mit Kante; gemeldet in P12-82).
+    /// Gegenprobe: alle Tueren streng geprueft = genau diese 4 (Bahnhof Talheim und Gewerbehof (seit S 0.33.0 mit dem
+    /// Namen der Karte statt „Probe“, Sammelliste 274) mit Vorsprung am Rand, Kaufhaus mit Nische, Stellwerk mit Kante; gemeldet in P12-82).
     /// </summary>
     [Fact]
     public void Fassung0_OhneNeuenFund_GegenprobeStrengVier()
@@ -256,7 +256,7 @@ public partial class TuerBuendigTests
         try
         {
             var streng = p.PruefenAussen().Where(f => f.Rot && f.Text.Contains("sitzt nicht sauber", StringComparison.Ordinal)).Select(f => f.Text).ToList();
-            Assert.Equal("Bahnhof Talheim|Kaufhaus|Probe|stellwerk", string.Join("|", streng.Select(t => t[(t.IndexOf('„') + 1)..t.IndexOf('“')]).Order(StringComparer.Ordinal)));
+            Assert.Equal("Bahnhof Talheim|Gewerbehof Am Stellwerk|Kaufhaus|stellwerk", string.Join("|", streng.Select(t => t[(t.IndexOf('„') + 1)..t.IndexOf('“')]).Order(StringComparer.Ordinal)));
         }
         finally
         {

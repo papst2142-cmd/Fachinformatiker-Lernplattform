@@ -453,7 +453,26 @@ public static class StadtTueren
         }
         var stuecke = Enumerable.Range(haus.StueckeVon, haus.StueckeBis - haus.StueckeVon)
             .Select(i => szene.Stuecke[i]).ToList();
-        var quer = new Vector2(-tuer.Aussen.Y, tuer.Aussen.X);
+        gruende.AddRange(Flaeche(stuecke, szene.Grafik, tuer.Mitte, tuer.Aussen, tuer.Hoehe));
+        var halb = HalbRahmen;
+        if (ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen, weite: halb + GlasTuerBreit, glas: true)
+            .Any(t => t.A1 < halb && t.A2 > -halb && !InWandfarbeSichtbar(szene, t, tuer)))
+        {
+            gruende.Add("tuer");
+        }
+        return gruende;
+    }
+
+    /// <summary>
+    /// Fund 262, Welle A 0.58.0 (Weisung P12-148 Frage 4 = a): die Flaeche einer gezeichneten Tuer (Mitte, Richtung, Hoehe) vor den
+    /// Stuecken eines Hauses: Strahlen von aussen (9 Spalten ueber Tuer und Rahmen, 3 Hoehen ueber dem Sockel). Gruende "vorne"
+    /// (die Wand steht irgendwo mehr als <see cref="BuendigGrenze"/> vor der Tuer), "hinten" (Nische dahinter), "fehlt" (Loch);
+    /// leer = glatt. <see cref="NichtBuendig"/> nutzt dieselbe Rechnung, das Werkzeug sucht damit glatte Stellen.
+    /// </summary>
+    public static List<string> Flaeche(IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek grafik, Vector2 mitte, Vector2 aussen, float hoehe)
+    {
+        var gruende = new List<string>();
+        var quer = new Vector2(-aussen.Y, aussen.X);
         var halb = HalbRahmen;
         float vorne = 0f, hinten = 0f;
         var fehlt = false;
@@ -463,8 +482,8 @@ public static class StadtTueren
             // die Stufe der Tuer (E1: zaehlt nicht, sonst liesse sich an kaum einem Haus eine Tuer setzen)
             for (var j = 2; j <= 4; j++)
             {
-                var p = tuer.Mitte + (quer * (i * halb / 4)) + (tuer.Aussen * 0.5f);
-                if (Treffer(stuecke, szene.Grafik, new Vector3(p.X, tuer.Hoehe * j / 5f, p.Y), new Vector3(-tuer.Aussen.X, 0, -tuer.Aussen.Y), 1.4f) is { } t)
+                var p = mitte + (quer * (i * halb / 4)) + (aussen * 0.5f);
+                if (Treffer(stuecke, grafik, new Vector3(p.X, hoehe * j / 5f, p.Y), new Vector3(-aussen.X, 0, -aussen.Y), 1.4f) is { } t)
                 {
                     var d = t.T - 0.5f;
                     (vorne, hinten) = (MathF.Min(vorne, d), MathF.Max(hinten, d));
@@ -486,11 +505,6 @@ public static class StadtTueren
         if (fehlt)
         {
             gruende.Add("fehlt");
-        }
-        if (ModellTueren(szene.Stuecke, haus.StueckeVon, haus.StueckeBis, szene.ModellAn, tuer.Mitte, tuer.Aussen, weite: halb + GlasTuerBreit, glas: true)
-            .Any(t => t.A1 < halb && t.A2 > -halb && !InWandfarbeSichtbar(szene, t, tuer)))
-        {
-            gruende.Add("tuer");
         }
         return gruende;
     }

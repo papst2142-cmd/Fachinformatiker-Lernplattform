@@ -291,6 +291,23 @@ public sealed partial class KartenFlaeche : Control
         InvalidateVisual();
     }
 
+    /// <summary>
+    /// Welle S 0.33.0 (Sammelliste 273): Ansicht mittig auf die Weltstelle (x, y) (zwischen Werkzeugleiste und Kamera-Karte),
+    /// mindestens Zoom 30, damit die Stelle gut zu sehen ist.
+    /// </summary>
+    public void Hinfahren(double x, double y)
+    {
+        if (Bounds.Width < 10)
+        {
+            return;
+        }
+        _zoom = Math.Max(_zoom, 30);
+        var oben = ObenFrei;
+        var hoehe = Math.Max(48, Bounds.Height - UntenFrei - oben);
+        _versatz = new Point((Bounds.Width / 2) - (x * _zoom), oben + (hoehe / 2) - (y * _zoom));
+        InvalidateVisual();
+    }
+
     public void Vergroessern() => ZoomUm(new Point(Bounds.Width / 2, Bounds.Height / 2), 1.25);
 
     public void Verkleinern() => ZoomUm(new Point(Bounds.Width / 2, Bounds.Height / 2), 0.8);
