@@ -89,8 +89,17 @@ public static class Parkplaetze
 {
     public const string Abschnitt = "parkplaetze";
 
-    /// <summary>Breite und Tiefe eines Stellplatzes, Breite der Fahrgasse.</summary>
-    public const float PlatzBreit = 0.36f, PlatzTief = 0.72f, Gasse = 0.6f;
+    /// <summary>
+    /// Breite und Tiefe eines Stellplatzes, Breite der Fahrgasse. Ein Auto ist 0,33 breit; 0,44 laesst wie auf einem echten
+    /// Parkplatz (2,5 m Platz fuer 1,8 m Auto) Luft zwischen den Autos (mit 0,36 standen sie dicht an dicht, Fotos P12-103).
+    /// </summary>
+    public const float PlatzBreit = 0.44f, PlatzTief = 0.72f, Gasse = 0.6f;
+
+    /// <summary>
+    /// Die Modelle, die parken: nur Autos, die in einen Stellplatz passen (hoechstens 0,7 lang); Krankenwagen und
+    /// Muellwagen parken nicht (zu lang, und auf einem Parkplatz sieht man sie nicht).
+    /// </summary>
+    public static readonly string[] Modelle = ["car-sedan", "car-taxi", "car-van", "car-police"];
 
     /// <summary>Kleinste und groesste Zahl der Plaetze.</summary>
     public const int Mindestens = 2, Hoechstens = 12;
@@ -162,7 +171,7 @@ public static class Parkplaetze
     {
         var zufall = new Autostrecken.Zufall(1000 + (nr * 16) + platz, tag);
         var belegt = zufall.Bis(3) < BelegtVonDrei;
-        var modell = Verkehr.Strecken[zufall.Bis(Verkehr.Strecken.Length)].Modell;
+        var modell = Modelle[zufall.Bis(Modelle.Length)];
         return voll || belegt ? modell : null;
     }
 }

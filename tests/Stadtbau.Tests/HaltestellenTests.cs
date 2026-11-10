@@ -154,7 +154,7 @@ public class HaltestellenTests
         var h = szene.Haltestellen[0];
         Assert.False(szene.Laufraster.KannStehen(h.Haeuschen.X, h.Haeuschen.Y), "im Haeuschen kann die Figur stehen");
         // der volle Parkplatz (Nico P12-170: 12 Plaetze, alle belegt) steht als 12 Autos in der Stadt und zaehlt in den Grenzen
-        var autos = szene.Stuecke.Count(s => Verkehr.Strecken.Any(st => st.Modell == s.Name)) - ohne.Stuecke.Count(s => Verkehr.Strecken.Any(st => st.Modell == s.Name));
+        var autos = szene.Stuecke.Count(s => Parkplaetze.Modelle.Contains(s.Name)) - ohne.Stuecke.Count(s => Parkplaetze.Modelle.Contains(s.Name));
         Assert.Equal(12, autos);
         var mit = GrenzenLive.Fuer(Fassung(a), D).Gesamt;
         AussenBearbeitung.Loeschen(a, Pp(0));
@@ -162,6 +162,44 @@ public class HaltestellenTests
         var autoDreiecke = szene.Parkplaetze[0].Stellplaetze().Select((_, i) => Parkplaetze.Belegung(1, i, 1, true)!).Sum(m => (long)D.Grafik!.Modell(m)!.Dreiecke);
         // die Unterseiten der Autos fallen wie jede Unterseite weg (D1), alles andere zaehlt
         Assert.True(mit.Dreiecke - vorher.Dreiecke >= autoDreiecke * 0.9, $"Grenzen zaehlen den vollen Parkplatz nicht: {mit.Dreiecke} - {vorher.Dreiecke} < {autoDreiecke}");
+    }
+
+    [Fact]
+    public void Szene_ParkplatzFlaeche_AufBeidenSeiten_Gegenprobe()
+    {
+        // Fund in den Fotos P12-103: die Flaeche fehlte auf einer Strassenseite (Ecken im Uhrzeigersinn, kein Ohr)
+        var a = Grundlage();
+        AussenBearbeitung.Setzen(a, AussenArt.Parkplatz, 8, 4.9);
+        AussenBearbeitung.Setzen(a, AussenArt.Parkplatz, 16, 3.1);
+        var szene = Szene(a);
+        Assert.Equal(2, szene.Parkplaetze.Count);
+        var flaechen = szene.Flaechen.Where(f => f.Farbe == Parkplaetze.Flaeche && f.Punkte.Count == 4).ToList();
+        Assert.Equal(2, flaechen.Count);
+        Assert.All(flaechen, f => Assert.Equal(2, Wasser.Dreiecke(f.Punkte).Count));
+        // Gegenprobe: ohne Ausrichtung bekommt eine der beiden Seiten keine Dreiecke
+        Assert.Contains(szene.Parkplaetze, pp => Wasser.Dreiecke(pp.Ecken()).Count == 0);
+    }
+
+    [Fact]
+    public void Parkplatz_NurAutosDiePassen()
+    {
+        // Krankenwagen und Muellwagen parken nicht; jedes parkende Auto ist schmaler als ein Stellplatz und kuerzer als seine Tiefe
+        Assert.DoesNotContain("car-ambulance", Parkplaetze.Modelle);
+        Assert.DoesNotContain("car-garbage-truck", Parkplaetze.Modelle);
+        foreach (var m in Parkplaetze.Modelle)
+        {
+            var e = D.Grafik!.Modell(m)!.Ecken;
+            float Spanne(int k) => Enumerable.Range(0, e.Length / 3).Max(i => e[(i * 3) + k]) - Enumerable.Range(0, e.Length / 3).Min(i => e[(i * 3) + k]);
+            Assert.True(Spanne(0) * StadtSzene.Meter * 1.1f < Parkplaetze.PlatzBreit - 0.08f, m + " zu breit");
+            Assert.True(Spanne(2) * StadtSzene.Meter * 1.1f < Parkplaetze.PlatzTief, m + " zu lang");
+        }
+        for (var tag = 1; tag < 50; tag++)
+        {
+            for (var platz = 0; platz < 12; platz++)
+            {
+                Assert.Contains(Parkplaetze.Belegung(1, platz, tag, true), Parkplaetze.Modelle);
+            }
+        }
     }
 
     private static (StadtSzene Szene, Verkehr Verkehr) MitBus(int haltestellen = 2)

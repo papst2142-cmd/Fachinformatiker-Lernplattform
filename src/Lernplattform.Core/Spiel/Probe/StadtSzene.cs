@@ -177,6 +177,22 @@ public sealed partial class StadtSzene
     /// <summary>Welle A 0.61.0 (Weisung P12-171): die Bushaltestellen der Stadt (an einer geraden Strasse mit Gehweg gelegt).</summary>
     public IReadOnlyList<Haltestelle> Haltestellen { get; private init; } = [];
 
+    /// <summary>
+    /// Welle A 0.61.0: Vieleck gegen den Uhrzeigersinn in (x, y) (so verlangt es <see cref="Wasser.Dreiecke"/>; im
+    /// Uhrzeigersinn findet es kein Ohr und die Flaeche fehlt). Ein Parkplatz auf der einen Strassenseite liegt so, auf der
+    /// anderen andersherum (Fund in den Fotos P12-103: Flaeche fehlte auf einer Seite).
+    /// </summary>
+    public static Vector2[] GegenUhr(Vector2[] p)
+    {
+        var flaeche = 0f;
+        for (var i = 0; i < p.Length; i++)
+        {
+            var (a, b) = (p[i], p[(i + 1) % p.Length]);
+            flaeche += (a.X * b.Y) - (b.X * a.Y);
+        }
+        return flaeche >= 0 ? p : [.. p.Reverse()];
+    }
+
     /// <summary>Welle A 0.61.0 (Weisung P12-171): die Parkplaetze der Stadt (an einer geraden Strasse mit Gehweg gelegt).</summary>
     public IReadOnlyList<Parkplatz> Parkplaetze { get; private init; } = [];
 
@@ -1071,7 +1087,7 @@ public sealed partial class StadtSzene
         }
         foreach (var pp in parkplaetze)
         {
-            flaechen.Add(new Bodenflaeche(pp.Ecken(), Probe.Parkplaetze.FlaecheHoehe + 0.002f, Probe.Parkplaetze.Flaeche));
+            flaechen.Add(new Bodenflaeche(GegenUhr(pp.Ecken()), Probe.Parkplaetze.FlaecheHoehe + 0.002f, Probe.Parkplaetze.Flaeche));
             var (e1, e2) = pp.Einfahrt;
             teile.Add(Band(e1.X, e1.Y, e2.X, e2.Y, Probe.Parkplaetze.FlaecheHoehe + 0.002f, Probe.Parkplaetze.Gasse, Probe.Parkplaetze.Flaeche));
             foreach (var (a, b) in pp.Linien())
