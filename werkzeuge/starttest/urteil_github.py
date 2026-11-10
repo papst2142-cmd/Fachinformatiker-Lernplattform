@@ -189,20 +189,48 @@ def gh(pfad):
                           errors="replace").stdout
 
 
+def protokoll(repo, job_id, hinweise):
+    """Protokoll eines Jobs. Erst gh api; scheitert das (Lauf 759: beide roten Jobs "nicht lesbar"), direkt ueber die API
+    mit dem Token und der Weiterleitung zum Speicher OHNE Anmeldung (dorthin gehoert kein Token). None = nicht lesbar,
+    der Grund steht in hinweise."""
+    pfad = "repos/%s/actions/jobs/%s/logs" % (repo, job_id)
+    try:
+        return gh(pfad)
+    except subprocess.CalledProcessError as e:
+        hinweise.append("HINWEIS Protokoll %s: gh api Rueckgabe %d %s" % (job_id, e.returncode, (e.stderr or "").strip()[:200]))
+    import urllib.error
+    import urllib.request
+
+    class OhneAnmeldung(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            neu = super().redirect_request(req, fp, code, msg, headers, newurl)
+            if neu is not None:
+                neu.remove_header("Authorization")
+            return neu
+
+    anfrage = urllib.request.Request("https://api.github.com/" + pfad, headers={
+        "Accept": "application/vnd.github+json", "User-Agent": "urteil-github",
+        "Authorization": "Bearer " + os.environ.get("GH_TOKEN", "")})
+    try:
+        with urllib.request.build_opener(OhneAnmeldung).open(anfrage, timeout=60) as antwort:
+            return antwort.read().decode("utf-8", errors="replace")
+    except (urllib.error.URLError, OSError) as e:
+        hinweise.append("HINWEIS Protokoll %s: direkt %s" % (job_id, e))
+        return None
+
+
 def aus_github(soll_liste):
     """Liest Jobs und Protokolle des laufenden Laufs ueber gh (GH_TOKEN), schreibt das Urteil in urteil_github.txt und
     in die Zusammenfassung. Nie rot: jeder Fehler ergibt "unklar" (= wie echt rot behandeln)."""
     repo, lauf, stufe = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_RUN_ID"), os.environ.get("CI_STUFE", "schnell")
     try:
         jobs = json.loads(gh("repos/%s/actions/runs/%s/jobs?filter=latest&per_page=100" % (repo, lauf)))["jobs"]
-        logs = {}
+        logs, hinweise = {}, []
         for j in jobs:
             if j.get("name") != HILFSJOB and j.get("conclusion") not in ("success", "skipped"):
-                try:
-                    logs[j["id"]] = gh("repos/%s/actions/jobs/%s/logs" % (repo, j["id"]))
-                except subprocess.CalledProcessError:
-                    logs[j["id"]] = None
+                logs[j["id"]] = protokoll(repo, j["id"], hinweise)
         ergebnis, zeilen = urteilen(jobs, logs, erwartete_jobs(stufe, soll_liste))
+        zeilen += hinweise
     except Exception as e:  # nie rot, aber sichtbar
         zeilen = ["URTEIL GITHUB: unklar (%s: %s), wie echt rot behandeln" % (type(e).__name__, e)]
     zeilen.insert(1 if len(zeilen) > 1 else len(zeilen), "STUFE: %s, Lauf %s, Versuch %s" % (stufe, lauf, os.environ.get("GITHUB_RUN_ATTEMPT")))
