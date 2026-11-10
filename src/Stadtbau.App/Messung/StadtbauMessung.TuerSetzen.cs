@@ -159,6 +159,17 @@ public static partial class StadtbauMessung
             return false;
         }
         var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
+        // erwartete Seite aus der Wand des Daten-Rechtecks
+        var aussen = Math.Abs(wand.X - hx) < 1e-3 ? new Vector2(-1, 0) : Math.Abs(wand.X - (hx + hw)) < 1e-3 ? new Vector2(1, 0)
+            : Math.Abs(wand.Y - hy) < 1e-3 ? new Vector2(0, -1) : new Vector2(0, 1);
+        // S 0.33.0 (Weisung P12-148, Nico 1a): die Tuer liegt auf der GEZEICHNETEN Wand dieser Seite (sie kann gegenueber dem
+        // Rechteck der Daten eingerueckt sein), also auf einer Wand der Fassade mit dieser Richtung hinaus
+        if (!TuerFassade.AltFuerTests && TuerFassade.Rechnen(p, p.AussenStand, s) is { } f)
+        {
+            var w = f.Waende[f.WandFuer(t, null)];
+            var quer = Vector2.Dot(t - w.A, w.Aussen);
+            return Vector2.Distance(w.Aussen, aussen) < 1e-3 && Math.Abs(quer) <= 0.05;
+        }
         var waagrecht = Math.Abs(wand.Y - hy) < 1e-3 || Math.Abs(wand.Y - (hy + hh)) < 1e-3;
         return waagrecht ? Math.Abs(t.Y - wand.Y) <= 0.05 : Math.Abs(t.X - wand.X) <= 0.05;
     }

@@ -379,6 +379,7 @@ public static partial class StadtbauMessung
         await TuerAsync(a, f);
         await TuerFreiAsync(a, f);
         await TuerSetzenAsync(a, f);
+        await TuerFassadeAsync(a, f);
         await ZebrastreifenAsync(a, f);
         await WerkzeugKleinAsync(a, f);
         await MehrfachAsync(a, f);

@@ -22,6 +22,17 @@ public sealed partial class DreiBedienung
         }
         var szene = _drei.Spiel?.Szene.Haeuser.Select(h => (h.Min, h.Max)).ToList();
         var haus = Bauen3D.Haeuser(proj.AussenStand, szene is null ? null : f => Bauen3D.HoeheAus(szene, f)).FirstOrDefault(h => h.Stelle == s);
+        // S 0.33.0 (Weisung P12-148 Frage 1 = a): Treffer auf die gezeichneten Bloecke des Hauses (dort sitzt die Tuer)
+        if (haus is not null && _karte.Fassade is { } f)
+        {
+            var naechster = f.Bloecke.Select(b => Bauen3D.Schnitt(strahl.Start, strahl.Richtung, new System.Numerics.Vector3(b.X1, 0, b.Z1), new System.Numerics.Vector3(b.X2, haus.Max.Y, b.Z2)))
+                .Where(t => t is not null).Min();
+            if (naechster is { } tb)
+            {
+                var q = strahl.Start + (strahl.Richtung * tb);
+                return new Vector2(q.X, q.Z);
+            }
+        }
         if (haus is not null && Bauen3D.Schnitt(strahl.Start, strahl.Richtung, haus.Min, haus.Max) is { } t)
         {
             var q = strahl.Start + (strahl.Richtung * t);

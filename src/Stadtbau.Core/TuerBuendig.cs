@@ -60,6 +60,26 @@ public static class TuerBuendig
             return Tueren(StadtSzene.Bauen(stadt, stand, daten.Grafik));
         });
 
+    /// <summary>
+    /// Welle S 0.33.0 (Sammelliste 272): Stellen, an denen eine Tuer an diesem Haus genau so steht wie in der Ausgangsstadt
+    /// (gezeichnete Mitte relativ zur Ecke des Hauses, Richtung); dort ist sie ohne Fund (Ziel beim Einrasten).
+    /// </summary>
+    internal static List<(Vector2 Lage, Vector2 Aussen)> AusgangFuer(StadtSzene szene, StadtHaus h, Spieldaten daten)
+    {
+        if (AuchAusgangFuerTests.Value || AusFuerTestsWert.Value)
+        {
+            return [];
+        }
+        var modell = Modell(szene, h);
+        return [.. AusgangVon(daten.Fassung, daten).Where(a => a.Modell == modell).Select(a => (a.Lage, a.Aussen))];
+    }
+
+    /// <summary>Name eines Orts aus der Karte der Fassung (auch neue Orte), sonst null (Gebaeude ohne Ort).</summary>
+    internal static string? OrtName(StadtFassung stand, string id) =>
+        (Lernplattform.Core.Spiel.SpielDaten.Get(stand.Karte, "orte") as List<object?> ?? [])
+            .Concat(Lernplattform.Core.Spiel.SpielDaten.Get(stand.Stadtdaten, "neue_orte") as List<object?> ?? [])
+            .OfType<Lernplattform.Core.Daten.PyObjekt>().FirstOrDefault(o => Py.Gleich(o["id"], id))?["name"] as string;
+
     /// <summary>Rote Funde der Tueren in <paramref name="szene"/> (Szene der Pruefung draussen, Grafik mit eigenen Gebaeuden).</summary>
     public static IEnumerable<StadtbauFund> Pruefen(StadtSzene szene, StadtFassung stand, Spieldaten daten)
     {
@@ -85,7 +105,8 @@ public static class TuerBuendig
             var gruende = StadtTueren.NichtBuendig(szene, t);
             if (gruende.Count > 0)
             {
-                var name = szene.Ort(t.Ort)?.Name ?? t.Ort;
+                // Sammelliste 274: der Name aus der Karte (im Probestand der Pruefung heisst ein Ort der Firma wie die Firma)
+                var name = OrtName(stand, t.Ort) ?? szene.Ort(t.Ort)?.Name ?? t.Ort;
                 yield return new StadtbauFund(Texte.TuerNichtBuendig(name, gruende), Texte.TuerNichtBuendigTipp, true, t.Mitte.X, t.Mitte.Y);
             }
         }

@@ -137,6 +137,19 @@ public sealed class GrundrissFlaeche : Control
         InvalidateVisual();
     }
 
+    /// <summary>Welle S 0.33.0 (Sammelliste 273): Ansicht mittig auf die Stelle (x, y) des Raums, mindestens Zoom 40.</summary>
+    public void Hinfahren(double x, double y)
+    {
+        if (Bounds.Width < 10)
+        {
+            return;
+        }
+        _zoom = Math.Max(_zoom, 40);
+        var hoehe = Math.Max(48, Bounds.Height - UntenFrei);
+        _versatz = new Point((Bounds.Width / 2) - (x * _zoom), (hoehe / 2) - (y * _zoom));
+        InvalidateVisual();
+    }
+
     public void Vergroessern() => ZoomUm(new Point(Bounds.Width / 2, Bounds.Height / 2), 1.25);
 
     public void Verkleinern() => ZoomUm(new Point(Bounds.Width / 2, Bounds.Height / 2), 0.8);

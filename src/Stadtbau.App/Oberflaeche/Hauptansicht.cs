@@ -148,6 +148,12 @@ public sealed partial class Hauptansicht : UserControl
 
     public List<string> AussenAuswahlKnoepfe => [.. _aussenAuswahl.GetLogicalDescendants().OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "")];
     private readonly StackPanel _aussenPruefungen = new() { Spacing = 6 };
+
+    /// <summary>S 0.33.0 (Start-Test, Sammelliste 273): Eintraege der Pruefliste draussen.</summary>
+    internal IReadOnlyList<Control> AussenFundEintraege => _aussenPruefungen.Children;
+
+    /// <summary>S 0.33.0 (Start-Test, Sammelliste 273): Eintraege der Pruefliste im Innenraum.</summary>
+    internal IReadOnlyList<Control> InnenFundEintraege => _pruefungen.Children;
     private readonly StackPanel _ortListe = new() { Spacing = 6 };
     private readonly StackPanel _blueprintListe = new() { Spacing = 10 };
     private readonly TextBlock _aussenHinweis = Schrift.Text(Texte.DraufsichtHinweis, "Klein", farbe: "Pinsel.muted");
@@ -296,6 +302,7 @@ public sealed partial class Hauptansicht : UserControl
     public string AussenPruefungText => string.Join(" | ", _aussenPruefungen.Children.Select(c => c switch
     {
         TextBlock t => t.Text,
+        Control { Tag: StadtbauFund f } => (f.Rot ? "Rot: " : "Gelb: ") + f.Text + " " + f.Tipp,
         Button { Content: StackPanel sp } => string.Join(" ", sp.Children.OfType<TextBlock>().Select(t => t.Text)),
         _ => "",
     }));
@@ -1851,26 +1858,8 @@ public sealed partial class Hauptansicht : UserControl
         }
         foreach (var f in AussenFunde.OrderByDescending(f => f.Rot))
         {
-            var zeile = new StackPanel
-            {
-                Spacing = 2,
-                Children =
-                {
-                    Schrift.Text((f.Rot ? "Rot: " : "Gelb: ") + f.Text, "Klein", FontWeight.Bold, f.Rot ? "Pinsel.red" : "Pinsel.orange"),
-                    Schrift.Text(f.Tipp, "Klein", farbe: "Pinsel.muted"),
-                },
-            };
-            var k = new Button { Content = zeile, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) }
-                .Vorlese((f.Rot ? "Rot: " : "Gelb: ") + f.Text + ". " + f.Tipp);
-            k.Click += (_, _) =>
-            {
-                if (_projekt is not null && f.X is { } fx && f.Y is { } fy)
-                {
-                    Karte.Waehlen(AussenBearbeitung.StueckBei(_projekt.AussenStand, fx, fy, 0.6));
-                    Karte.Focus();
-                }
-            };
-            _aussenPruefungen.Children.Add(k);
+            // S 0.33.0 (Sammelliste 273): Antippen springt an die Stelle
+            _aussenPruefungen.Children.Add(FundListe.Eintrag(f, f.X is not null && f.Y is not null ? () => ZuAussenFund(f) : null));
         }
     }
 
@@ -2591,24 +2580,34 @@ public sealed partial class Hauptansicht : UserControl
         }
         foreach (var f in Funde.OrderByDescending(f => f.Rot))
         {
-            var zeile = new StackPanel
-            {
-                Spacing = 2,
-                Children =
-                {
-                    Schrift.Text((f.Rot ? "Rot: " : "Gelb: ") + f.Text, "Klein", FontWeight.Bold, f.Rot ? "Pinsel.red" : "Pinsel.orange"),
-                    Schrift.Text(f.Tipp, "Klein", farbe: "Pinsel.muted"),
-                },
-            };
-            var k = new Button { Content = zeile, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) }
-                .Vorlese((f.Rot ? "Rot: " : "Gelb: ") + f.Text + ". " + f.Tipp);
-            k.Click += (_, _) => ZuFund(f);
-            _pruefungen.Children.Add(k);
+            _pruefungen.Children.Add(FundListe.Eintrag(f, f.X is not null && f.Y is not null ? () => ZuFund(f) : null));
         }
     }
 
-    /// <summary>Antippen eines Funds springt an seine Stelle (Stueck dort waehlen).</summary>
-    private void ZuFund(StadtbauFund f)
+    /// <summary>
+    /// S 0.33.0 (Sammelliste 273): Fund draussen antippen. Draufsicht: Ansicht mittig auf die Stelle, Stueck dort waehlen; 3D:
+    /// die Kamera faehrt hin (Neigung bleibt), Stueck waehlen.
+    /// </summary>
+    internal void ZuAussenFund(StadtbauFund f)
+    {
+        if (_projekt is null || f.X is not { } fx || f.Y is not { } fy)
+        {
+            return;
+        }
+        Karte.Waehlen(AussenBearbeitung.StueckBei(_projekt.AussenStand, fx, fy, 0.6));
+        if (_drei)
+        {
+            Bedienung3D.Hinfahren(fx, fy);
+        }
+        else
+        {
+            Karte.Hinfahren(fx, fy);
+            Karte.Focus();
+        }
+    }
+
+    /// <summary>Antippen eines Funds springt an seine Stelle (Ansicht mittig darauf, Stueck dort waehlen).</summary>
+    internal void ZuFund(StadtbauFund f)
     {
         if (_projekt is null || _ort is null || f.X is not { } x || f.Y is not { } y)
         {
@@ -2618,6 +2617,7 @@ public sealed partial class Hauptansicht : UserControl
         Flaeche.Waehlen(Bearbeitung.StueckBei(g, x, y) ?? Bearbeitung.Alle(g)
             .OrderBy(s => Math.Abs(Py.F(s.Deko["x"]) + (Py.F(s.Deko["w"]) / 2) - x) + Math.Abs(Py.F(s.Deko["y"]) + (Py.F(s.Deko["h"]) / 2) - y))
             .Select(s => (Stelle?)s.Stelle).FirstOrDefault());
+        Flaeche.Hinfahren(x, y);
         Flaeche.Focus();
     }
 

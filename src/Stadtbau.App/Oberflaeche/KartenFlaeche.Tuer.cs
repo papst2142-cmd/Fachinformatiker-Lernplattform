@@ -27,6 +27,54 @@ public sealed partial class KartenFlaeche
     /// <summary>Tueren des CC0-Modells am Haus (zum Einrasten), im Hintergrund aus der Szene gerechnet; null = noch nicht da.</summary>
     public IReadOnlyList<Vector2>? TuerModellTueren { get; private set; }
 
+    /// <summary>
+    /// S 0.33.0 (Weisung P12-148, Sammelliste 272): die gezeichnete Fassade des Hauses (Waende, glatte Stellen, Tueren des
+    /// Modells, Fensterteile), im Hintergrund gerechnet; null = noch nicht da (dann rechnet das Setzen sie selbst).
+    /// </summary>
+    public TuerFassade? Fassade
+    {
+        get
+        {
+            // Haus inzwischen verschoben, gedreht, umgebaut oder Rueckgaengig: alte Fassade gilt nicht mehr, neu rechnen
+            if (_fassade is not null && TuerFuer is { } s && _projekt is { } p && FassadeSchluessel(p.AussenStand, s) != _fassadeSchluessel)
+            {
+                _fassade = null;
+                FassadeRechnen(p, s);
+            }
+            return _fassade;
+        }
+        private set => _fassade = value;
+    }
+
+    private TuerFassade? _fassade;
+
+    /// <summary>Stand des Hauses, fuer den <see cref="Fassade"/> gerechnet ist.</summary>
+    private string? _fassadeSchluessel;
+
+    /// <summary>
+    /// Alles, wovon die Fassade abhaengt: Flaeche des Hauses, sein Eintrag (Ort bzw. Gebaeude ohne Ort, mit Modell und Drehung),
+    /// Drehung des Orts, Modelle und Bauteile eigener Gebaeude. Die Tuer selbst zaehlt nicht.
+    /// </summary>
+    private static string FassadeSchluessel(Lernplattform.Core.Daten.PyObjekt stand, AussenStelle s)
+    {
+        var flaeche = AussenBearbeitung.HausFlaeche(stand, s);
+        var daten = Aussen.Stadtdaten(stand);
+        object? eintrag = s.Art == AussenArt.Haus ? AussenBearbeitung.Ort(stand, s.Ort!)
+            : s.Nummer >= 0 && s.Nummer < Aussen.Landschaft(stand).Count ? Aussen.Landschaft(stand)[s.Nummer] : null;
+        var dreh = Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.SpielDaten.Get(daten, "darstellung"), "hausdreh"), s.Ort ?? "");
+        return string.Join("|", flaeche.ToString(), Lernplattform.Core.Daten.PythonJson.Text(eintrag), Lernplattform.Core.Daten.PythonJson.Text(dreh),
+            Lernplattform.Core.Daten.PythonJson.Text(Lernplattform.Core.Spiel.SpielDaten.Get(daten, "bauteile")));
+    }
+
+    /// <summary>Platz der Vorschau (gleich dem Schritt beim Loslassen).</summary>
+    public TuerFassade.Platz? TuerPlatz { get; private set; }
+
+    /// <summary>Wand des letzten Zugschritts (Frage 3 = a: hinter dem Wandende bleibt die Tuer an ihr).</summary>
+    private int? _tuerWand;
+
+    /// <summary>Nummer der Rechnung (eine spaetere ersetzt eine fruehere).</summary>
+    private int _fassadeNr;
+
     /// <summary>Nur fuer diesen einen Zug (Tuer direkt gegriffen): danach endet das Tuer-Setzen wieder.</summary>
     private bool _tuerNurZiehen;
 
@@ -48,7 +96,11 @@ public sealed partial class KartenFlaeche
         }
         TuerFuer = s;
         TuerVorschau = null;
+        TuerPlatz = null;
         TuerModellTueren = null;
+        _tuerWand = null;
+        Fassade = null;
+        FassadeRechnen(p, s);
         ModellTuerenRechnen(p, s);
         TuerModusGeaendert?.Invoke();
         if (!still)
@@ -67,6 +119,9 @@ public sealed partial class KartenFlaeche
         }
         TuerFuer = null;
         TuerVorschau = null;
+        TuerPlatz = null;
+        Fassade = null;
+        _tuerWand = null;
         _tuerNurZiehen = false;
         TuerModusGeaendert?.Invoke();
         InvalidateVisual();
@@ -81,8 +136,54 @@ public sealed partial class KartenFlaeche
         }
     }
 
+    /// <summary>Fassade im Hintergrund rechnen (nach jedem Setzen neu: ein getauschtes Fensterteil aendert die Wand).</summary>
+    private void FassadeRechnen(Projekt p, AussenStelle s)
+    {
+        if (TuerFassade.AltFuerTests)
+        {
+            return;
+        }
+        var nr = ++_fassadeNr;
+        var stand = (Lernplattform.Core.Daten.PyObjekt)Lernplattform.Core.Spiel.Py.Kopie(p.AussenStand)!;
+        var schluessel = FassadeSchluessel(stand, s);
+        _ = Task.Run(() =>
+        {
+            var f = TuerFassade.Rechnen(p, stand, s);
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (TuerFuer == s && nr == _fassadeNr)
+                {
+                    _fassadeSchluessel = schluessel;
+                    Fassade = f;
+                    TuerModusGeaendert?.Invoke();
+                    InvalidateVisual();
+                }
+            });
+        });
+    }
+
+    /// <summary>Fassade jetzt (wartet nicht auf den Hintergrund; im Start-Test und beim Setzen vor dem ersten Ergebnis).</summary>
+    public TuerFassade? FassadeJetzt()
+    {
+        if (Fassade is null && !TuerFassade.AltFuerTests && TuerFuer is { } s && _projekt is { } p)
+        {
+            _fassadeNr++;
+            _fassadeSchluessel = FassadeSchluessel(p.AussenStand, s);
+            Fassade = TuerFassade.Rechnen(p, p.AussenStand, s);
+        }
+        return Fassade;
+    }
+
+    /// <summary>Bisherige Wand: die des letzten Zugschritts, sonst die der gespeicherten Tuer.</summary>
+    private int? BisherWand(TuerFassade f) =>
+        _tuerWand ?? (TuerFuer is { } s && _projekt is { } p ? f.WandVon(TuerSetzen.Tuer(p.AussenStand, s)) : null);
+
     private void ModellTuerenRechnen(Projekt p, AussenStelle s)
     {
+        if (!TuerFassade.AltFuerTests)
+        {
+            return;
+        }
         var stand = (Lernplattform.Core.Daten.PyObjekt)Lernplattform.Core.Spiel.Py.Kopie(p.AussenStand)!;
         var flaeche = AussenBearbeitung.HausFlaeche(stand, s);
         _ = Task.Run(() =>
@@ -110,9 +211,16 @@ public sealed partial class KartenFlaeche
             return false;
         }
         var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
-        var dx = Math.Max(Math.Max(hx - x, 0), x - (hx + hw));
-        var dy = Math.Max(Math.Max(hy - y, 0), y - (hy + hh));
-        return Math.Sqrt((dx * dx) + (dy * dy)) <= (weite ?? Math.Max(1.5, 30 / _zoom));
+        var grenze = weite ?? Math.Max(1.5, 30 / _zoom);
+        static double Abstand(double x, double y, double x1, double y1, double x2, double y2)
+        {
+            var dx = Math.Max(Math.Max(x1 - x, 0), x - x2);
+            var dy = Math.Max(Math.Max(y1 - y, 0), y - y2);
+            return Math.Sqrt((dx * dx) + (dy * dy));
+        }
+        // S 0.33.0: auch an den gezeichneten Bloecken (Vorbau, Bahnsteig, Vordach ragen ueber das Rechteck der Daten)
+        return Abstand(x, y, hx, hy, hx + hw, hy + hh) <= grenze
+            || Fassade?.Bloecke.Any(b => Abstand(x, y, b.X1, b.Z1, b.X2, b.Z2) <= grenze) == true;
     }
 
     /// <summary>Vorschau der Tuer an die Weltstelle (x, y): gleiche Rechnung wie der Schritt.</summary>
@@ -120,6 +228,16 @@ public sealed partial class KartenFlaeche
     {
         if (TuerFuer is { } s && _projekt is { } p)
         {
+            if (Fassade is { } f)
+            {
+                var platz = f.Finden(new Vector2((float)x, (float)y), BisherWand(f), Raster);
+                _tuerWand = platz.Wand;
+                TuerPlatz = platz;
+                TuerVorschau = (platz.Gezeichnet, platz.Aussen);
+                TuerModusGeaendert?.Invoke();
+                InvalidateVisual();
+                return;
+            }
             TuerVorschau = TuerSetzen.AufWand(AussenBearbeitung.HausFlaeche(p.AussenStand, s), new Vector2((float)x, (float)y), Raster ? TuerModellTueren : null);
             TuerModusGeaendert?.Invoke();
             InvalidateVisual();
@@ -130,6 +248,8 @@ public sealed partial class KartenFlaeche
     public void TuerVorschauWeg()
     {
         TuerVorschau = null;
+        TuerPlatz = null;
+        _tuerWand = null;
         if (_tuerNurZiehen)
         {
             TuerSetzenBeenden();
@@ -155,8 +275,25 @@ public sealed partial class KartenFlaeche
         else
         {
             string? hinweis = null;
-            var tueren = Raster ? TuerModellTueren : null;
-            p.AussenAendern(Texte.TuerSetzenSchritt, a => hinweis = TuerSetzen.Setzen(a, s, new Vector2((float)x, (float)y), tueren));
+            var punkt = new Vector2((float)x, (float)y);
+            if (FassadeJetzt() is { } f)
+            {
+                var platz = f.Finden(punkt, BisherWand(f), Raster);
+                p.AussenAendern(Texte.TuerSetzenSchritt, a => hinweis = TuerSetzen.SetzenAn(a, s, platz));
+                _tuerWand = platz.Wand;
+                if (platz.Fensterteil is not null)
+                {
+                    // das getauschte Teil aendert die Fassade: neu rechnen
+                    Fassade = null;
+                    FassadeRechnen(p, s);
+                }
+            }
+            else
+            {
+                var tueren = Raster ? TuerModellTueren : null;
+                p.AussenAendern(Texte.TuerSetzenSchritt, a => hinweis = TuerSetzen.Setzen(a, s, punkt, tueren));
+            }
+            TuerPlatz = null;
             meldung = hinweis ?? Texte.TuerGesetzt(name);
             Waehlen(AussenBearbeitung.Gueltig(p.AussenStand, s) ? s : null);
         }
@@ -228,8 +365,20 @@ public sealed partial class KartenFlaeche
         {
             return;
         }
-        var (x, y, w, h) = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
-        ctx.DrawRectangle(null, new Pen(TuerFarbe, 3, new DashStyle([2, 2], 0)), new Rect(P(x, y), P(x + w, y + h)));
+        var stift = new Pen(TuerFarbe, 3, new DashStyle([2, 2], 0));
+        if (Fassade is { } f)
+        {
+            // S 0.33.0: die gezeichneten Waende (Bloecke des Hauses), an die die Tuer kommt
+            foreach (var b in f.Bloecke)
+            {
+                ctx.DrawRectangle(null, stift, new Rect(P(b.X1, b.Z1), P(b.X2, b.Z2)));
+            }
+        }
+        else
+        {
+            var (x, y, w, h) = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
+            ctx.DrawRectangle(null, stift, new Rect(P(x, y), P(x + w, y + h)));
+        }
         if (TuerVorschau is { } v)
         {
             TuerMarke(ctx, v.Punkt, v.Aussen);

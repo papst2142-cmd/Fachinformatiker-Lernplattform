@@ -31,6 +31,9 @@ public sealed class EntwurfAnsicht : Grid
     private readonly StadtSzene.Vorrat _vorrat = new();
     private readonly StackPanel _auswahl = new() { Spacing = 6 };
     private readonly StackPanel _pruefungen = new() { Spacing = 6 };
+
+    /// <summary>S 0.33.0 (Start-Test, Sammelliste 273): Eintraege der Pruefliste des Editors.</summary>
+    internal IReadOnlyList<Control> FundEintraege => _pruefungen.Children;
     private readonly TextBlock _grenzText = Schrift.Text("", "Klein");
     private readonly ProgressBar _grenzBalken = new() { Minimum = 0, Maximum = 100, Height = 10, MinHeight = 10 };
     private readonly WrapPanel _ebenen = new() { Orientation = Orientation.Horizontal };
@@ -453,15 +456,9 @@ public sealed class EntwurfAnsicht : Grid
         }
         foreach (var f in Funde.OrderByDescending(f => f.Rot))
         {
-            _pruefungen.Children.Add(new StackPanel
-            {
-                Spacing = 2,
-                Children =
-                {
-                    Schrift.Text((f.Rot ? "Rot: " : "Gelb: ") + f.Text, "Klein", FontWeight.Bold, f.Rot ? "Pinsel.red" : "Pinsel.orange"),
-                    Schrift.Text(f.Tipp, "Klein", farbe: "Pinsel.muted"),
-                },
-            });
+            // S 0.33.0 (Sammelliste 273): Antippen zeigt die Ebene des Teils und waehlt es
+            var teil = TeilVon(f);
+            _pruefungen.Children.Add(FundListe.Eintrag(f, teil >= 0 ? () => ZuFund(f) : null));
         }
         // S 0.19.0 (Nico 3a): Etagen passen nicht mehr zum Entwurf: Knopf „Vorschlag neu“
         if (Entwurf.EtagenHinweise().Count > 0)
@@ -471,6 +468,39 @@ public sealed class EntwurfAnsicht : Grid
             VorschlagNeuKnopf = neu;
             _pruefungen.Children.Add(neu);
         }
+    }
+
+    /// <summary>Teil eines Funds: Feld aus der Stelle und Ebene aus dem Anfang des Texts (Texte.EntwurfStelle), sonst -1.</summary>
+    internal int TeilVon(StadtbauFund f)
+    {
+        if (f.X is not { } x || f.Y is not { } y)
+        {
+            return -1;
+        }
+        var teile = Entwurf.Teile;
+        for (var i = 0; i < teile.Count; i++)
+        {
+            var t = teile[i];
+            var feld = Bauteile.Feld(Bauteile.IstHalle(teile));
+            if (Math.Abs(((t.X + 0.5) * feld) - x) < 1e-6 && Math.Abs(((t.Y + 0.5) * feld) - y) < 1e-6
+                && f.Text.StartsWith(Texte.EntwurfStelle(t.Stockwerk, t.X, t.Y), StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>Fund im Editor antippen: Ebene des Teils zeigen und das Teil waehlen.</summary>
+    internal void ZuFund(StadtbauFund f)
+    {
+        var i = TeilVon(f);
+        if (i < 0)
+        {
+            return;
+        }
+        EbeneSetzen(Entwurf.Teile[i].Stockwerk);
+        Waehlen(i);
     }
 
     /// <summary>Knopf „Vorschlag neu“ beim letzten Zeigen (null = keiner, Start-Test).</summary>

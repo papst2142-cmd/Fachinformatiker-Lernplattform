@@ -1085,6 +1085,8 @@ public sealed partial class StadtSzene
         // Phase 13 W3 (Weisung P12-21): mit Vorrat (nur Werkzeug) kommt ein Ort mit genau gleichen Eingaben aus dem letzten Bau
         var sperrenText = vorrat is null ? "" : SperrenText(baeume.Sperren);
         var orteNeu = new Dictionary<string, OrtBau>();
+        // Welle A 0.58.0 (Weisung P12-148 Frage 1 = a): Bloecke je Ort, auf deren Wand das Spiel die Tuer setzt (nur lesend fuer das Werkzeug)
+        var ortBloecke = new Dictionary<string, IReadOnlyList<(double X1, double Z1, double X2, double Z2)>>();
         foreach (var ort in stadt.Orte(stand))
         {
             var id = Py.Str(ort["id"]);
@@ -1099,6 +1101,7 @@ public sealed partial class StadtSzene
                 {
                     OrtEinsetzen(alt, teile, stuecke, hindernisse, baeume, alleFenster, umgefaerbt, tueren, haeuser, orte, signatur);
                     orteNeu[id] = alt;
+                    ortBloecke[id] = [.. hindernisse.Skip(ortHv)];
                     vorrat.Uebernommen++;
                     continue;
                 }
@@ -1147,6 +1150,7 @@ public sealed partial class StadtSzene
             {
                 haeuser.Add(new StadtHaus(id, teileVorher, teile.Count, vorher, stuecke.Count, min, max));
             }
+            ortBloecke[id] = [.. hindernisse.Skip(hindernisVorher)];
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
             var (sx, sz) = Stehplatz(stadt, id, tx, tz);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
@@ -1268,6 +1272,7 @@ public sealed partial class StadtSzene
                 .Concat(Enumerable.Range(0, teile.Count).Where(i => teile[i].Farbe == UhrBlatt)).ToHashSet(),
             Zierhaeuser = zierhaeuser,
             Tueren = tueren,
+            OrtBloecke = ortBloecke,
             Umgefaerbt = umgefaerbt,
             Parks = parkFlaechen,
             Fluesse = [.. wasser],
@@ -2044,6 +2049,13 @@ public sealed partial class StadtSzene
 
     /// <summary>W8b: Tueren der Orte mit Fussweg (eigene aus Kaesten oder die des CC0-Modells).</summary>
     public IReadOnlyList<StadtTuer> Tueren { get; private init; } = [];
+
+    /// <summary>
+    /// Welle A 0.58.0 (Weisung P12-148 Frage 1 = a): Bloecke (Grundflaechen x1, z1, x2, z2) je Ort, wie sie das Spiel fuer die
+    /// Tuer nimmt (naechster Block zum Anfang des Fusswegs). Nur Auskunft fuer das Werkzeug, aendert nichts an der Stadt.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<(double X1, double Z1, double X2, double Z2)>> OrtBloecke { get; private init; } =
+        new Dictionary<string, IReadOnlyList<(double X1, double Z1, double X2, double Z2)>>();
 
     /// <summary>W8b: Haeuser ohne Ort mit Gehweg, Tuer und Namensschild (nicht betretbar).</summary>
     public IReadOnlyList<StadtZierhaus> Zierhaeuser { get; private init; } = [];

@@ -383,6 +383,18 @@ public static class Texte
     public const string TuerNurGebaeude = "Eine Tür lässt sich nur an ein Gebäude ohne Innenraum setzen.";
     public const string TuerSchonDa = "Dieses Gebäude hat schon eine Tür.";
     public const string TuerWegOhneStrasse = "Der Fußweg von der Tür erreicht keine Straße";
+
+    /// <summary>Welle S 0.33.0 (Weisung P12-148 Frage 4 = a): die Tuer ist auf die naechste glatte Stelle der Wand gerueckt.</summary>
+    public const string TuerEingerastetGlatt = "Die Tür ist auf die nächste glatte Stelle der Wand gerückt (dort war ein Fenster oder eine Nische).";
+
+    /// <summary>Welle S 0.33.0: an dieser Wand gibt es keine Stelle, an der die Tuer buendig sitzt.</summary>
+    /// <summary>Welle S 0.33.0 (Sammelliste 273): Vorlese-Zusatz eines Funds mit Stelle.</summary>
+    public const string FundAntippen = "Antippen zeigt die Stelle";
+
+    /// <summary>Welle S 0.33.0 (Sammelliste 273): Vorlese-Zusatz eines Funds ohne Stelle.</summary>
+    public const string FundOhneStelle = "Dieser Fund hat keine Stelle zum Zeigen";
+
+    public const string TuerKeineGlatteStelle = "An dieser Wand gibt es keine glatte Stelle für die Tür. Eine andere Wand wählen.";
     public const string TuerWegOhneStrasseTipp = "Eine Straße vor die Tür legen oder das Gebäude näher an eine Straße schieben.";
     public const string TuerAnHausTipp = "Das Gebäude drehen oder schieben, damit vor der Tür Platz ist.";
     public const string TuerImWasserTipp = "Das Gebäude drehen oder vom Wasser wegschieben.";

@@ -2,6 +2,7 @@ using System.Numerics;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
@@ -148,6 +149,92 @@ public static class TuerSetzen
         return WegZurStrasse(aussen, s, weg) ? null : Texte.TuerWegOhneStrasse;
     }
 
+    /// <summary>
+    /// Welle S 0.33.0 (Weisung P12-148, Sammelliste 272): die Tuer an den Platz <paramref name="platz"/> der gezeichneten Fassade
+    /// setzen (<see cref="TuerFassade.Finden"/>). Der Versatz <c>darstellung.modell_tuer</c> des Orts faellt immer weg (die
+    /// Fassade ist ohne ihn gerechnet). Ein Fensterteil eines eigenen Gebaeudes wird dabei zum Tuerteil, das bisherige Tuerteil
+    /// zu diesem Fensterteil (Frage 2 = a), alles ein Schritt. Rueckgabe: Hinweis (verschoben, keine glatte Stelle, Weg ohne
+    /// Strasse), Grund oder null.
+    /// </summary>
+    public static string? SetzenAn(PyObjekt aussen, AussenStelle s, TuerFassade.Platz platz)
+    {
+        if (Nicht(aussen, s) is { } nicht)
+        {
+            return nicht;
+        }
+        if (s.Art == AussenArt.Gebaeude && !GebaeudeTuer.HatTuer(aussen, s))
+        {
+            // ohne Tuer: wie „Tür dazu“ (Kopie des Modells, Zierweg), dann an den Platz
+            if (GebaeudeTuer.Dazu(aussen, s, einrasten: false, punkt: platz.Punkt) is { } grund && grund != Texte.TuerWegOhneStrasse)
+            {
+                return grund;
+            }
+        }
+        var tuer = platz.Punkt;
+        var weg = new List<object?> { Punkt3(tuer), Punkt3(tuer + (platz.Aussen * GebaeudeTuer.WegStart)) };
+        string? modell;
+        if (s.Art == AussenArt.Haus)
+        {
+            var sd = Aussen.Stadtdaten(aussen);
+            Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, new PyObjekt { { "tuer", Punkt3(tuer) }, { "weg", weg } });
+            if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
+            {
+                mt.RemoveAll(e => e.Key == s.Ort);
+            }
+            modell = Py.Str(AussenBearbeitung.Ort(aussen, s.Ort)!["modell"]);
+        }
+        else
+        {
+            var z = Blueprint.ZierwegVon(aussen, s)!;
+            Py.Setzen(z, "tuer", Punkt3(tuer));
+            Py.Setzen(z, "weg", weg);
+            modell = Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
+        }
+        if (platz.Fensterteil is { } teil)
+        {
+            FensterZurTuer(aussen, modell, teil);
+        }
+        var strasse = WegZurStrasse(aussen, s, weg);
+        return !strasse ? Texte.TuerWegOhneStrasse
+            : platz.OhneGlatte ? Texte.TuerKeineGlatteStelle
+            : platz.Verschoben ? Texte.TuerEingerastetGlatt
+            : null;
+    }
+
+    /// <summary>
+    /// Frage 2 = a: das Fensterteil Nummer <paramref name="teil"/> im Erdgeschoss des eigenen Gebaeudes wird zum Tuerteil (Art des
+    /// bisherigen Tuerteils, sonst „Tür“), das bisherige Tuerteil im Erdgeschoss zu diesem Fensterteil; Eingang und Block
+    /// (<c>karte.modelle</c>) folgen. Jedes Teil behaelt Feld und Drehung.
+    /// </summary>
+    internal static void FensterZurTuer(PyObjekt aussen, string modell, int teil)
+    {
+        var sd = Aussen.Stadtdaten(aussen);
+        if (Get(Bauteile.Gebaeude(sd), modell) is not PyObjekt e)
+        {
+            return;
+        }
+        var teile = Bauteile.TeileLesen(Get(e, "teile"));
+        if (teil < 0 || teil >= teile.Count)
+        {
+            return;
+        }
+        var fenster = teile[teil];
+        var alteTuer = teile.FindIndex(t => t.Stockwerk == 0 && t.Art is { Tuer: true } && Bauteile.IstWohnbau(t.Id));
+        var tuerId = alteTuer >= 0 ? teile[alteTuer].Id : Bauteile.Praefix + "building-door";
+        if (alteTuer >= 0)
+        {
+            teile[alteTuer] = teile[alteTuer] with { Id = fenster.Id };
+        }
+        teile[teil] = fenster with { Id = tuerId };
+        Py.Setzen(e, "teile", Bauteile.TeileDaten(teile));
+        Py.Setzen(e, "eingang", Bauteile.EingaengeDaten([new Bauteile.Eingang(fenster.X, fenster.Y, fenster.Fassade)]));
+        var gm = Bauteile.Zusammensetzen(modell, teile, Katalog.Bauteil);
+        if (Get(Aussen.Karte(aussen), "modelle") is PyObjekt kartenModelle)
+        {
+            Py.Setzen(kartenModelle, modell, Bauteile.Block(gm));
+        }
+    }
+
     /// <summary>Weg gerade hinaus bis zur Strasse, sonst um das Haus herum zur naechsten (wie „Tür dazu“).</summary>
     internal static bool WegZurStrasse(PyObjekt aussen, AussenStelle s, List<object?> weg)
     {
@@ -216,6 +303,9 @@ public static class TuerSetzen
         }
         return ergebnis;
     }
+
+    /// <summary>S 0.33.0: auf 0,001 (eine Tuer genau wie in der Ausgangsstadt muss bis 0,005 gleich liegen).</summary>
+    private static List<object?> Punkt3(Vector2 p) => [Bearbeitung.Zahl(Math.Round(p.X, 3)), Bearbeitung.Zahl(Math.Round(p.Y, 3))];
 
     private static List<object?> Punkt(Vector2 p) => [Bearbeitung.Zahl(Math.Round(p.X, 2)), Bearbeitung.Zahl(Math.Round(p.Y, 2))];
 

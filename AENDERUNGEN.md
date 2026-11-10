@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.58.0
+Vorbereitung für Türen an neuen Städten. Im Spiel sieht alles aus wie bisher.
+
+- Das Stadtbau-Werkzeug kann jetzt genau ausrechnen, wo an einer Hauswand eine Tür sauber in die Fassade passt. Dafür liest es die Wände eines Hauses so, wie das Spiel sie zeichnet. Das Spiel selbst rechnet und zeichnet dabei unverändert.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.57.0
 Das Spiel zeichnet die Stadt sparsamer. So bleibt es auch auf schwächeren Geräten flüssig, und es ist Platz für neue Dinge wie Ampeln und Haltestellen. Von nah sieht die Stadt genauso aus wie bisher.
 
