@@ -36,7 +36,7 @@ public static class StadtTueren
     /// Tuer aus Kaesten: Mitte (x, z) auf der Wand, Richtung n zeigt nach aussen. Rahmen, zwei Glasfluegel
     /// mit hellem Oberlicht, Stufe davor, Vordach darueber.
     /// </summary>
-    public static void Tuer(List<Teil> teile, float x, float z, Vector2 n, float hoehe, float hinten = 0f, bool vordach = true)
+    public static void Tuer(List<Teil> teile, float x, float z, Vector2 n, float hoehe, float hinten = 0f, bool vordach = true, Vector3? rahmen = null)
     {
         var b = StadtSzene.TuerBreite;
         var quer = new Vector2(-n.Y, n.X);
@@ -49,7 +49,7 @@ public static class StadtTueren
         }
         var h = hoehe;
         // P8-28: der Rahmen reicht nach hinten bis an die tiefste Stelle der Wand dahinter (kein Spalt)
-        Q(-(b / 2) - 0.05f, (b / 2) + 0.05f, 0f, h + 0.05f, -0.02f - hinten, 0.03f, Rahmen);
+        Q(-(b / 2) - 0.05f, (b / 2) + 0.05f, 0f, h + 0.05f, -0.02f - hinten, 0.03f, rahmen ?? Rahmen);
         Q(-(b / 2) + 0.03f, -0.015f, 0.02f, h - 0.03f, 0.03f, 0.045f, Glas);
         Q(0.015f, (b / 2) - 0.03f, 0.02f, h - 0.03f, 0.03f, 0.045f, Glas);
         Q(-(b / 2) + 0.06f, -0.04f, h * 0.55f, h - 0.06f, 0.045f, 0.05f, GlasHell);
@@ -249,7 +249,8 @@ public static class StadtTueren
             {
                 var f = new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f;
                 // Fund 262: mit glas zaehlt auch eine Glastuer am Boden (Tuer-Teile des Gebaeude-Editors, Kenney Modular Buildings)
-                var istGlas = IstGlas(f);
+                // Sammelliste 267: das Tuerblatt an der Stelle der Glastuer zaehlt wie die Glastuer (gleiche Erkennung wie vorher)
+                var istGlas = IstGlas(f) || IstTuerblatt(f);
                 if ((istGlas && !glas) || (!hell && !istGlas && Helligkeit(f) >= 0.45f))
                 {
                     continue;
@@ -350,7 +351,90 @@ public static class StadtTueren
         var fang = glas ? HalbRahmen : EigeneTuerFang;
         return ModellTueren(stuecke, von, bis, modell, wand, aussen, weite: fang + GlasTuerBreit, glas: glas)
             .Where(t => glas ? t.A1 < fang && t.A2 > -fang : MathF.Abs(t.Mitte) <= fang)
-            .OrderBy(t => MathF.Abs(t.Mitte)).ThenBy(t => t.Tiefe).FirstOrDefault();
+            // S 0.31.0: Mitte auf 0,01 gerundet, sonst gewinnt bei einem Tuerblatt mit Vorder- und Rueckseite (Halle) die Seite,
+            // deren Mitte im Rechnen zufaellig naeher an 0 liegt; gleich weit = die vordere Flaeche
+            .OrderBy(t => glas && !GlasOderBlatt(t) ? 1 : 0).ThenBy(t => MathF.Round(MathF.Abs(t.Mitte) * 100)).ThenBy(t => t.Tiefe).FirstOrDefault();
+
+        // S 0.31.0: mit glas zuerst eine Tuer aus Glas oder Tuerblatt (Halle: der dunkle Rahmen des Tuerteils davor zaehlt nicht)
+        bool GlasOderBlatt(ModellTuer t) => modell(t.Stueck) is { } m && t.Dreiecke.Count > 0
+            && (IstGlas(m.Farbe(t.Dreiecke[0])) || IstTuerblatt(m.Farbe(t.Dreiecke[0])));
+    }
+
+    /// <summary>Sammelliste 267: Farbe des Tuerblatts an der Glastuer eines Gebaeudes aus dem Editor (dunkles Holz).</summary>
+    public static readonly Vector3 Tuerblatt = Netz.Farbe("#4A3426");
+
+    /// <summary>Das Tuerblatt als Farbe je Dreieck (R, G, B), z. B. fuer das Tuerblatt im Tuerteil einer Halle.</summary>
+    public static byte[] TuerblattBytes => [0x4A, 0x34, 0x26];
+
+    /// <summary>Hat ein Dreieck genau die Farbe des Tuerblatts (auf ein Byte genau)?</summary>
+    public static bool IstTuerblatt(Vector3 f) => TuerblattFarben.Any(t => Vector3.Distance(f, t) < 0.5f / 255f);
+
+    /// <summary>Alle Farben, die ein Tuerblatt haben kann (Tuer-Varianten, Nico 10.11.2026).</summary>
+    private static readonly Vector3[] TuerblattFarben = [.. Gebaeudefarben.TuerVarianten.Select(v => Netz.Farbe(v.Wert))];
+
+    /// <summary>Sammelliste 267: Farbe der Klinke (Messing).</summary>
+    public static readonly Vector3 Klinke = Netz.Farbe("#D8B85A");
+
+    /// <summary>Groesse der Klinke (quer, hoch) und wie weit sie vor dem Tuerblatt steht.</summary>
+    public const float KlinkeBreit = 0.05f;
+    public const float KlinkeHoch = 0.025f;
+    public const float KlinkeVor = 0.025f;
+
+    /// <summary>Gegenprobe Sammelliste 267: Glastuer wie in A 0.55.0 (bleibt Glas, keine Klinke).</summary>
+    public static bool TuerblattAltFuerTests { get => TuerblattAlt.Value; set => TuerblattAlt.Value = value; }
+    private static readonly AsyncLocal<bool> TuerblattAlt = new();
+
+    /// <summary>
+    /// Sammelliste 267 (Weisung P12-129, Nico: die Glastuer der Editor-Tuerteile sieht aus der Naehe wie ein Fenster aus):
+    /// die eigene Glastuer <paramref name="tuer"/> wird zum dunklen <see cref="Tuerblatt"/> (nur ihre Dreiecke, Rahmen
+    /// und Fenster daneben bleiben), dazu eine Klinke auf der Seite zur naeheren Kante (rechts, wenn die Tuer mittig sitzt).
+    /// Das Tuerblatt bleibt genau in der Ebene der Glastuer (0,1 hinter der Fassade, Regel 262 unveraendert), die Klinke
+    /// steht <see cref="KlinkeVor"/> davor und damit noch in der Laibung. Kein neuer Zeichenaufruf (Kasten im Stadtnetz).
+    /// </summary>
+    public static void TuerblattSetzen(List<Teil> teile, IReadOnlyList<ModellStueck> stuecke, Func<int, GrafikModell?> modell,
+        Dictionary<int, GrafikModell> umgefaerbt, ModellTuer tuer, Vector2 wand, Vector2 aussen, Vector3? farbe = null)
+    {
+        var blatt = farbe ?? Tuerblatt;
+        if (TuerblattAlt.Value || modell(tuer.Stueck) is not { } gm)
+        {
+            return;
+        }
+        var farben = (byte[])gm.Farben.Clone();
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        var alle = new HashSet<int>(tuer.Dreiecke);
+        // S 0.31.0 (Halle): das Tuerblatt im Tuerteil der Halle hat schon die Farbe des Tuerblatts und liegt in mehreren Ebenen
+        // (Rahmen vorn, Fuellung etwas tiefer, Rueckseite); alle diese Dreiecke auf der Tuer bekommen die gewaehlte Farbe.
+        // Glastueren der Wohnhaeuser haben vorher keine solchen Dreiecke (nichts aendert sich).
+        for (var d = 0; d < gm.Dreiecke; d++)
+        {
+            if (alle.Contains(d) || !IstTuerblatt(new Vector3(gm.Farben[d * 3], gm.Farben[(d * 3) + 1], gm.Farben[(d * 3) + 2]) / 255f))
+            {
+                continue;
+            }
+            var (a, b, c) = Ecken(gm, d, stuecke[tuer.Stueck].Lage);
+            var m = (a + b + c) / 3;
+            var r = new Vector2(m.X, m.Z) - wand;
+            var q = Vector2.Dot(r, quer);
+            var t = -Vector2.Dot(r, aussen);
+            if (q >= tuer.A1 - 0.05f && q <= tuer.A2 + 0.05f && t >= tuer.Tiefe - 0.05f && t <= tuer.Tiefe + 0.15f && m.Y <= tuer.Oben + 0.1f)
+            {
+                alle.Add(d);
+            }
+        }
+        foreach (var d in alle)
+        {
+            farben[d * 3] = (byte)MathF.Round(blatt.X * 255);
+            farben[(d * 3) + 1] = (byte)MathF.Round(blatt.Y * 255);
+            farben[(d * 3) + 2] = (byte)MathF.Round(blatt.Z * 255);
+        }
+        umgefaerbt[tuer.Stueck] = gm.MitFarben(farben);
+        // Klinke 0,06 vor der Kante, auf der Seite, auf der weniger Tuer liegt (Kenney-Tueren sind mittig: Seite +quer)
+        var seite = tuer.A2 - 0.06f - (KlinkeBreit / 2);
+        var mitte = wand + (quer * seite) - (aussen * tuer.Tiefe);
+        var y = MathF.Min(tuer.Oben * 0.45f, 0.3f);
+        var p1 = mitte - (quer * (KlinkeBreit / 2));
+        var p2 = mitte + (quer * (KlinkeBreit / 2)) + (aussen * KlinkeVor);
+        teile.Add(new Teil(TeilArt.Quader, MathF.Min(p1.X, p2.X), y, MathF.Min(p1.Y, p2.Y), MathF.Max(p1.X, p2.X), y + KlinkeHoch, MathF.Max(p1.Y, p2.Y), Klinke));
     }
 
     /// <summary>

@@ -147,6 +147,8 @@ public sealed partial class StadtSzene
         sb.Append('|').Append(modellTuer is { } v ? Bits(v) : "-").Append('|').Append(sichtbarerWeg).Append('|').Append(sperren);
         // Welle E: die Drehung steht nicht am Ort, sondern in stadtdaten.darstellung.hausdreh
         sb.Append("|dreh").Append(Hausdrehung.VonOrt(stadt.Daten, id).ToString(CultureInfo.InvariantCulture));
+        // S 0.31.0: Farbe der Tuer (die Farben von Fassade, Dach, Rahmen kommen erst nach dem Teilbau dazu)
+        sb.Append("|tuer").Append(Gebaeudefarben.Tuer(stadt.Daten, id)?.ToString() ?? "-");
         return sb.ToString();
     }
 

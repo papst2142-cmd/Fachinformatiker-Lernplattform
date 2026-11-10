@@ -17,7 +17,7 @@ namespace Stadtbau.Tests;
 /// eine gezeichnete Tuer, die nicht buendig liegt, ist im Werkzeug rot (<see cref="TuerBuendig"/>). Gegenprobe je Art:
 /// Verhalten bis A 0.54.0 (<see cref="StadtTueren.EigeneTuerAltFuerTests"/>) ist rot.
 /// </summary>
-public class TuerBuendigTests
+public partial class TuerBuendigTests
 {
     private static Spieldaten D => Daten.Spiel;
 

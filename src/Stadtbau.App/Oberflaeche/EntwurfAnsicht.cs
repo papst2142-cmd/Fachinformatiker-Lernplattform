@@ -191,12 +191,15 @@ public sealed class EntwurfAnsicht : Grid
     private Control Links()
     {
         var gruppen = new StackPanel { Spacing = 8 };
-        foreach (var (name, tipp, passt) in Gruppen)
+        var alle = Gruppen.Select(g => (g.Name, g.Tipp, Teile: Bauteile.Tabelle.Where(p => g.Passt(p.Value)).Select(p => (Bauteile.Praefix + p.Key, p.Value))))
+            .Append((Texte.EntwurfGruppeIndustrie, Texte.TippEntwurfIndustrie, Teile: Bauteile.TabelleHalle.Select(p => (Bauteile.PraefixHalle + p.Key, p.Value))))
+            .Append((Texte.EntwurfGruppeAufsaetze, Texte.TippEntwurfAufsaetze, Teile: Bauteile.TabelleAufsatz.Select(p => (Bauteile.PraefixAufsatz + p.Key, p.Value))));
+        foreach (var (name, tipp, teile) in alle)
         {
             var liste = new StackPanel { Spacing = 4 };
-            foreach (var (teil, a) in Bauteile.Tabelle.Where(p => passt(p.Value)).OrderBy(p => p.Value.Anzeige, StringComparer.CurrentCulture))
+            foreach (var (id, a) in teile.OrderBy(p => p.Value.Anzeige, StringComparer.CurrentCulture))
             {
-                liste.Children.Add(TeilKnopf(Bauteile.Praefix + teil, a));
+                liste.Children.Add(TeilKnopf(id, a));
             }
             var kopf = Schrift.Text(name, gewicht: FontWeight.Bold);
             var exp = new Expander { Header = kopf, Content = liste, IsExpanded = name == Texte.EntwurfGruppeWaende, HorizontalAlignment = HorizontalAlignment.Stretch }.Vorlese(name).Mit(tipp);
@@ -230,6 +233,11 @@ public sealed class EntwurfAnsicht : Grid
     public void TeilWaehlen(string? id)
     {
         SetzenTeil = id;
+        // S 0.31.0: die Gruppe „Industrie“ macht ein leeres Gebaeude zur Halle, die anderen zum Wohnbau (Aufsaetze passen zu beiden)
+        if (id is not null && !Bauteile.IstAufsatz(id))
+        {
+            Entwurf.HalleWunsch = Bauteile.IstHalle(id);
+        }
         SetzenDreh = 0;
         foreach (var (k, b) in _teilKnoepfe)
         {
@@ -326,8 +334,14 @@ public sealed class EntwurfAnsicht : Grid
         var grenzen = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.EntwurfGrenzen, "Mittel", FontWeight.Bold), _grenzBalken, _grenzText } });
         var pruefung = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.EntwurfPruefungen, "Mittel", FontWeight.Bold), _pruefungen } });
         var licht = Schrift.Karte(new StackPanel { Spacing = 6, Children = { _nacht, _raster } });
-        return new StackPanel { Spacing = 12, Children = { Schrift.Karte(_auswahl), grenzen, pruefung, licht } };
+        // S 0.31.0 (Sammelliste 264, Weisung P12-130 Frage 3 = c): Farbe des ganzen Gebaeudes, ein Schritt im Verlauf des Editors
+        Farbwahl = new FarbWahl(teil => Lernplattform.Core.Spiel.SpielDaten.Get(Entwurf.Farben, teil) as string, (teil, wert) => Entwurf.FarbeSetzen(teil, wert));
+        var farbe = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.FarbeKnopf, "Mittel", FontWeight.Bold), Farbwahl.Ansicht } });
+        return new StackPanel { Spacing = 12, Children = { Schrift.Karte(_auswahl), farbe, grenzen, pruefung, licht } };
     }
+
+    /// <summary>Start-Test: Farbwahl des Gebaeudes.</summary>
+    internal FarbWahl? Farbwahl { get; private set; }
 
     // ---- Auswahl ----------------------------------------------------------------------------------
 
@@ -411,6 +425,7 @@ public sealed class EntwurfAnsicht : Grid
         GrenzenZeigen();
         PruefungZeigen();
         AuswahlZeigen();
+        Farbwahl?.TeilWaehlen(FarbWahl.Teil);
         Bedienung.StandGeaendert();
         if (_fertig.Task.IsCompleted)
         {

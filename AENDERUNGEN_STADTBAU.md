@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.31.0
+
+Häuser färben, richtige Türen, Fabrikhallen bauen und große Katalog-Stücke als Gebäude übernehmen.
+
+- Neuer Knopf „Farbe“ unter „Ausgewähltes Stück“ an jedem Haus: Fassade, Dach und Fensterrahmen bekommen eine von 12 festen Farben oder eine eigene Farbe (drei Regler mit Vorschau). Die Tür gibt es in Braun, Schwarz, Weiß und Cremefarben. „Wie vorher“ nimmt die Farbe wieder weg. Jede Wahl ist ein Schritt, die Ansicht in 2D und 3D folgt sofort. Auch im Gebäude-Editor gibt es die Farbwahl; ein Blueprint nimmt seine Farben mit.
+- Die Tür eines selbst gebauten Hauses sieht wie eine Tür aus: farbiges Türblatt mit Klinke, bündig in der Wand.
+- Im Gebäude-Editor gibt es die Gruppe „Industrie (Halle)“: Hallenwände, Fenster, Tor, Ecken, Boden und Dach der Fabrik auf einem feineren Raster (ein Drittel Feld). Ein Gebäude ist entweder ein Wohnhaus oder eine Halle; beides gemischt ist rot. Neue Gruppe „Dachaufsätze“: Schornsteine, Tanks und Solarplatten für beide Arten. Die Grenze von 8 000 Dreiecken bleibt.
+- Neuer Knopf „Als Gebäude übernehmen“ an einem Stück aus dem Katalog: das Stück wird ein Gebäude mit Tür, Weg zur Straße und Innenraum. Danach gehen „Tür setzen“, der Innenraum und „Als Blueprint speichern“ wie bei jedem eigenen Gebäude. Ein Effekt kann kein Gebäude werden.
+- „Tür setzen“ geht jetzt auch an eigenen Gebäuden mit Innenraum.
+- Beim Setzen einer Reihe zeigt die Zahl neben − und + immer den gewählten Abstand.
+- Fehler behoben: Stand eine Laterne ohne Straße in der Nähe, blieb die 3D-Ansicht leer.
+
 ## S 0.30.0
 
 Mehrere Stücke auf einmal bearbeiten und Stücke als Reihe setzen.

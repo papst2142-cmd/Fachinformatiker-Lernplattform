@@ -97,6 +97,8 @@ public static partial class StadtbauPruefung
             var fusswegeHeil = FusswegDaten(fassung, breite, hoehe, funde);
             // Welle A 0.54.0: falsch gespeicherte Zebrastreifen (die Szene laesst sie weg, Rot sperrt den Export)
             ZebraDaten(fassung, breite, hoehe, funde);
+            // Sammelliste 264: Farben der Gebaeude (die Szene laesst ungueltige Werte weg, Rot sperrt den Export)
+            FarbenDaten(fassung, welt, funde);
             if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil || !fusswegeHeil)
             {
                 // ohne Fussweg baut das Spiel die Stadt nicht: erst diese Funde loesen

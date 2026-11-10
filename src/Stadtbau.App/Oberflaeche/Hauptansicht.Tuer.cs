@@ -75,6 +75,41 @@ public sealed partial class Hauptansicht
         }
     }
 
+    /// <summary>Knopf „Als Gebäude übernehmen“ an einem Katalog-Stueck (S 0.31.0, Weisung P12-130 Frage 2 = a).</summary>
+    private Button AlsGebaeudeKnopf(AussenStelle s)
+    {
+        var k = Schrift.Knopf(Texte.AlsGebaeude).Mit(Texte.AlsGebaeudeTipp);
+        k.Click += (_, _) => AlsGebaeudeUebernehmen(s);
+        return k;
+    }
+
+    /// <summary>
+    /// Das Katalog-Stueck <paramref name="s"/> als Gebaeude uebernehmen (ein Schritt) und das neue Gebaeude waehlen.
+    /// Rueckgabe: Meldung (auch fuer den Start-Test).
+    /// </summary>
+    public string? AlsGebaeudeUebernehmen(AussenStelle s)
+    {
+        if (_projekt is null || _projekt.NurLesen)
+        {
+            return null;
+        }
+        if (AussenBearbeitung.AlsGebaeudeNicht(_projekt.AussenStand, s) is { } nicht)
+        {
+            Melden(nicht);
+            return nicht;
+        }
+        string? hinweis = null;
+        var neu = _projekt.AussenAendern(Texte.AlsGebaeude, aa => AussenBearbeitung.AlsGebaeude(aa, s, out _, out hinweis));
+        if (neu is null)
+        {
+            return null;
+        }
+        var meldung = hinweis ?? Texte.AlsGebaeudeGemacht(ModellNamen.Anzeige(_projekt.AussenStand, ModellVon(neu)));
+        Karte.Waehlen(neu);
+        Melden(meldung);
+        return meldung;
+    }
+
     private string ModellVon(AussenStelle s) =>
         Aussen.Landschaft(_projekt!.AussenStand).ElementAtOrDefault(s.Nummer) is Lernplattform.Core.Daten.PyObjekt g ? Lernplattform.Core.Spiel.Py.Str(g["modell"]) : "";
 }

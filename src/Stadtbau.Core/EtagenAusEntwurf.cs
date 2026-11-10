@@ -78,7 +78,8 @@ public static class EtagenAusEntwurf
             return null;
         }
         var lagen = felder.Select(t => ImPlan(t.X, t.Y, g, eingaenge[0].Seite)).ToList();
-        var k = Bauteile.InnenJeFeld;
+        // S 0.31.0: in einer Halle ist ein Feld 1/3 breit
+        var k = Bauteile.InnenJeFeld * Bauteile.Feld(Bauteile.IstHalle(teile));
         return new Rechteck(lagen.Min(l => l.D) * k, lagen.Min(l => l.S) * k, (lagen.Max(l => l.D) + 1) * k, (lagen.Max(l => l.S) + 1) * k);
     }
 

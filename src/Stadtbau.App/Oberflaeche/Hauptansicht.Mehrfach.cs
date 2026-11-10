@@ -29,6 +29,12 @@ public sealed partial class Hauptansicht
 
     internal CheckBox? ReiheSchalter { get; private set; }
 
+    /// <summary>Zahl neben − und + der Reihe (Weisung P12-139 Frage 1 = b: folgt jeder Aenderung des Abstands).</summary>
+    internal TextBlock? ReiheAbstandZahl { get; private set; }
+
+    /// <summary>Gegenprobe P12-139: die Zahl folgt wie in S 0.30.0 nur den Knoepfen − und +.</summary>
+    internal static bool ReiheZahlAltFuerTests { get; set; }
+
     /// <summary>Einmal: Infozeile und Hinweis folgen der Vorschau (ohne die ganze Karte neu zu bauen).</summary>
     private void ReiheVerbinden()
     {
@@ -46,6 +52,10 @@ public sealed partial class Hauptansicht
             ? Texte.ReiheInfo(plan.Frei, plan.Ausgelassen, plan.Dreiecke)
             : Karte.ReiheAnfang is null ? Texte.ReiheAnfang : Texte.ReiheEnde;
         _reiheInfo.Vorlese(_reiheInfo.Text);
+        if (ReiheAbstandZahl is { } zahl && !ReiheZahlAltFuerTests)
+        {
+            zahl.Text = Texte.ReiheAbstandText(Karte.ReiheWahl.Abstand);
+        }
         _aussenHinweis.Text = SetzenHinweis();
     }
 
@@ -81,6 +91,7 @@ public sealed partial class Hauptansicht
     private void ReiheTeil()
     {
         ReiheSchalter = null;
+        ReiheAbstandZahl = null;
         if (!AussenBearbeitung.ReiheMoeglich(Karte.SetzenArt) || _projekt is null || _projekt.NurLesen)
         {
             return;
@@ -103,6 +114,7 @@ public sealed partial class Hauptansicht
         var abstand = Schrift.Text(Texte.ReiheAbstandText(wahl.Abstand), "Normal");
         abstand.VerticalAlignment = VerticalAlignment.Center;
         abstand.Margin = new Thickness(8, 0);
+        ReiheAbstandZahl = abstand;
         var enger = Schrift.Knopf("−").Vorlese(Texte.ReiheEnger).Mit(Texte.ReiheEnger);
         var weiter = Schrift.Knopf("+").Vorlese(Texte.ReiheWeiter).Mit(Texte.ReiheWeiter);
         enger.Click += (_, _) => AbstandUm(-AussenBearbeitung.ReiheAbstandSchritt * (Karte.ReiheWahl.Abstand > 2 ? 5 : 1));

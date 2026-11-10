@@ -64,7 +64,8 @@ public class BlueprintEntwurfTests
         Assert.Equal("bau:mein_haus", b.Modell);
         var pfad = b.Speichern(ablage, Zeit);
         var text = File.ReadAllText(pfad);
-        Assert.Contains("\"formatversion\": 2", text, StringComparison.Ordinal);
+        // S 0.31.0: Format 3 (Feld farben), Format 2 bleibt lesbar
+        Assert.Contains("\"formatversion\": 3", text, StringComparison.Ordinal);
         var gelesen = Blueprint.Lesen(File.ReadAllBytes(pfad));
         Assert.Equal(Json(b.Bauteile), Json(gelesen.Bauteile));
         Assert.Equal(Json(b.Eingang), Json(gelesen.Eingang));

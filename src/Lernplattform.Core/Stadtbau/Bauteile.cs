@@ -197,6 +197,131 @@ public static class Bauteile
         ["window-white"] = new(Art.Detail, Seiten.Sued, true, false, "Fensterrahmen weiß"),
     };
 
+    // ---- Halle und Dachaufsaetze (S 0.31.0, Weisung P12-130 Frage 1 = a) ---------------------------
+
+    /// <summary>Paket der Hallen-Teile (Kenney Factory Kit, CC0).</summary>
+    public const string PaketHalle = "factory";
+
+    public const string PraefixHalle = Katalogstueck.Praefix + PaketHalle + "/";
+
+    /// <summary>Paket der Dachaufsaetze (Kenney City Kit Industrial: Schornstein, Tank, Solar) fuer beide Gebaeudearten.</summary>
+    public const string PaketAufsatz = "industrial";
+
+    public const string PraefixAufsatz = Katalogstueck.Praefix + PaketAufsatz + "/";
+
+    /// <summary>
+    /// Massstab der Hallen-Teile: ein Factory-Teil ist 1 breit und 3 hoch, die Tuer 0,8 x 1,6. Mit 1/3 passt die Tuer zu den
+    /// Tueren der Wohnhaeuser und zur Figur; ein Feld der Halle ist 1/3 Feld, eine Ebene 1,0 hoch.
+    /// </summary>
+    public const float HalleMassstab = 1f / 3;
+
+    /// <summary>Hoehe einer Ebene der Halle (3 x 1/3).</summary>
+    public const float HalleEbene = 1f;
+
+    /// <summary>
+    /// S 0.31.0 (Weisung P12-130 Frage 2 = a): ein ganzes Katalog-Stueck als Gebaeude ("Als Gebaeude uebernehmen"). Kennung
+    /// "ganz:&lt;w&gt;:&lt;t&gt;:&lt;paket/name&gt;" mit der Grundflaeche des Stuecks (schon gedreht, wie <c>stadtdaten.katalog</c>);
+    /// das Modell steht so gross und so gedreht wie das Stueck draussen (<see cref="Katalogstueck.Lage"/>), Mitte = Ecke des
+    /// Rasters des Teils.
+    /// </summary>
+    public const string PraefixGanz = "ganz:";
+
+    /// <summary>Art eines ganzen Katalog-Stuecks (ein Block ohne Fassade).</summary>
+    public static readonly Ausrichtung GanzArt = new(Art.Block, Seiten.Keine, false, false, "Ganzes Gebäude aus dem Katalog");
+
+    public static bool IstGanz(string id) => id.StartsWith(PraefixGanz, StringComparison.Ordinal);
+
+    /// <summary>Kennung eines ganzen Katalog-Stuecks (Grundflaeche <paramref name="w"/> x <paramref name="t"/>).</summary>
+    public static string GanzId(string typ, double w, double t) =>
+        PraefixGanz + w.ToString("R", CultureInfo.InvariantCulture) + ":" + t.ToString("R", CultureInfo.InvariantCulture) + ":" + typ;
+
+    /// <summary>Grundflaeche und Katalog-Kennung "paket/name" aus <see cref="GanzId"/> (null, wenn die Kennung falsch ist).</summary>
+    public static (float W, float T, string Typ)? GanzLesen(string id)
+    {
+        if (!IstGanz(id))
+        {
+            return null;
+        }
+        var teile = id[PraefixGanz.Length..].Split(':', 3);
+        return teile.Length == 3
+            && float.TryParse(teile[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var w) && w > 0
+            && float.TryParse(teile[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var t) && t > 0
+            && teile[2].Contains('/', StringComparison.Ordinal)
+            ? (w, t, teile[2]) : null;
+    }
+
+    /// <summary>Breite eines Felds (Wohnbau 1, Halle 1/3).</summary>
+    public static float Feld(bool halle) => halle ? HalleMassstab : 1f;
+
+    /// <summary>Hoehe einer Ebene (Wohnbau <see cref="Stockwerk"/>, Halle <see cref="HalleEbene"/>).</summary>
+    public static float EbeneHoehe(bool halle) => halle ? HalleEbene : Stockwerk;
+
+    /// <summary>Teil der Halle (Factory Kit)?</summary>
+    public static bool IstHalle(string id) => id.StartsWith(PraefixHalle, StringComparison.Ordinal);
+
+    /// <summary>Dachaufsatz (gehoert zu keiner Gebaeudeart)?</summary>
+    public static bool IstAufsatz(string id) => id.StartsWith(PraefixAufsatz, StringComparison.Ordinal);
+
+    /// <summary>Teil eines Wohnbaus (Modular Buildings)?</summary>
+    public static bool IstWohnbau(string id) => id.StartsWith(Praefix, StringComparison.Ordinal);
+
+    /// <summary>Ist das Gebaeude eine Halle (mindestens ein Factory-Teil)?</summary>
+    public static bool IstHalle(IEnumerable<Teil> teile) => teile.Any(t => IstHalle(t.Id));
+
+    /// <summary>
+    /// Hallen-Teile (Factory Kit). Wie bei den Waenden des Pakets steht die Wand auf der Kante des Felds nach Sueden (+z), das
+    /// Feld selbst hat den Hallenboden; die Mauerkrone ragt eine Feldbreite nach aussen. Das Tuerteil hat eine Oeffnung, in
+    /// die beim Zusammensetzen das Tuerblatt (<see cref="HallenTuer"/>) buendig mit der Aussenseite kommt.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, Ausrichtung> TabelleHalle = new Dictionary<string, Ausrichtung>(StringComparer.Ordinal)
+    {
+        ["structure-wall"] = new(Art.Wand, Seiten.Sued, false, false, "Hallenwand"),
+        ["structure-window"] = new(Art.Wand, Seiten.Sued, true, false, "Hallenwand mit Fenster"),
+        ["structure-doorway"] = new(Art.Tuer, Seiten.Sued, false, true, "Hallenwand mit Tür"),
+        // „corner-inner“ ist die Ecke der Halle (Waende auf der Sued- und Ostkante des eigenen Felds, von innen gesehen eine
+        // Innenecke); „corner-outer“ legt seine Waende auf die Kanten der Nachbarfelder (Ecke einer L-foermigen Halle)
+        ["structure-corner-inner"] = new(Art.Ecke, Seiten.Sued | Seiten.Ost, false, false, "Hallenecke"),
+        ["floor"] = new(Art.Block, Seiten.Keine, false, false, "Hallenboden"),
+        ["top"] = new(Art.Dach, Seiten.Keine, false, false, "Hallendach"),
+    };
+
+    /// <summary>Teil des Factory Kit, das als Tuerblatt in das Tuerteil kommt.</summary>
+    public const string HallenTuer = PraefixHalle + "door";
+
+    /// <summary>Lage des Tuerblatts im Tuerteil (Drehung 0, Masse des Pakets): Vorderseite buendig mit der Aussenseite z = 1,5.</summary>
+    public const float HallenTuerZ = 1.35f;
+
+    /// <summary>Dachaufsaetze (fuer Wohnbau und Halle): liegen auf dem Dach, belegen kein Feld, Massstab 1 wie im Katalog.</summary>
+    public static readonly IReadOnlyDictionary<string, Ausrichtung> TabelleAufsatz = new Dictionary<string, Ausrichtung>(StringComparer.Ordinal)
+    {
+        ["chimney-basic"] = new(Art.DachDetail, Seiten.Keine, false, false, "Schornstein schmal"),
+        ["chimney-small"] = new(Art.DachDetail, Seiten.Keine, false, false, "Schornstein klein"),
+        ["chimney-medium"] = new(Art.DachDetail, Seiten.Keine, false, false, "Schornstein mittel"),
+        ["chimney-large"] = new(Art.DachDetail, Seiten.Keine, false, false, "Schornstein groß"),
+        ["detail-tank"] = new(Art.DachDetail, Seiten.Keine, false, false, "Tank"),
+        ["detail-tank-large"] = new(Art.DachDetail, Seiten.Keine, false, false, "Tank groß"),
+        ["solar-panel-flat"] = new(Art.DachDetail, Seiten.Keine, false, false, "Solarplatte flach"),
+        ["solar-panel-portrait"] = new(Art.DachDetail, Seiten.Keine, false, false, "Solarplatte hoch"),
+        ["solar-panel-landscape"] = new(Art.DachDetail, Seiten.Keine, false, false, "Solarplatte quer"),
+        ["solar-panel-portrait-group"] = new(Art.DachDetail, Seiten.Keine, false, false, "Solarplatten hoch, Gruppe"),
+        ["solar-panel-landscape-group"] = new(Art.DachDetail, Seiten.Keine, false, false, "Solarplatten quer, Gruppe"),
+    };
+
+    /// <summary>
+    /// Warum ein Teil des Factory Kit nicht im Editor steht (Test: jedes Modell des Pakets steht in
+    /// <see cref="TabelleHalle"/>, ist <see cref="HallenTuer"/> oder hat hier einen Grund).
+    /// </summary>
+    public static string? NichtInHalle(string name) => name switch
+    {
+        _ when TabelleHalle.ContainsKey(name) => null,
+        "door" => "kommt als Türblatt mit dem Türteil",
+        "structure-corner-outer" => "Ecke einer L-förmigen Halle, Wände auf den Nachbarfeldern",
+        _ when name.EndsWith("-wide", StringComparison.Ordinal) || name.StartsWith("door-wide", StringComparison.Ordinal)
+            || name is "floor-large" or "top-large" or "top-large-checkerboard" => "zwei Felder breit (ein Teil je Feld)",
+        _ when name.StartsWith("structure-", StringComparison.Ordinal) => "Stütze, steht frei (Katalog)",
+        _ => "Einrichtung oder Maschine, kein Teil der Hülle (Katalog)",
+    };
+
     /// <summary>Teile des Pakets, die der Editor nicht anbietet, mit Grund (Test: jedes Teil steht genau in einer Liste).</summary>
     public static readonly IReadOnlyDictionary<string, string> NichtImEditor = new Dictionary<string, string>(StringComparer.Ordinal)
     {
@@ -261,7 +386,12 @@ public static class Bauteile
     {
         public string Name => Id.StartsWith(Praefix, StringComparison.Ordinal) ? Id[Praefix.Length..] : Id;
 
-        public Ausrichtung? Art => Tabelle.GetValueOrDefault(Name);
+        public Ausrichtung? Art =>
+            IstWohnbau(Id) ? Tabelle.GetValueOrDefault(Name)
+            : IstHalle(Id) ? TabelleHalle.GetValueOrDefault(Id[PraefixHalle.Length..])
+            : IstAufsatz(Id) ? TabelleAufsatz.GetValueOrDefault(Id[PraefixAufsatz.Length..])
+            : GanzLesen(Id) is not null ? GanzArt
+            : null;
 
         /// <summary>Seiten der Fassade nach der Drehung.</summary>
         public Seiten Fassade => Art is { } a ? Drehen(a.Fassade, Dreh) : Seiten.Keine;
@@ -329,11 +459,28 @@ public static class Bauteile
     /// Mitte des Felds; Fassaden-Teil: an der Aussenseite der Fassade, Fenster mittig in der Hoehe, Tuer am Boden;
     /// Dach-Teil: auf dem Flachdach des Felds.
     /// </summary>
-    public static Matrix4x4 Lage(Teil t, GrafikModell m)
+    public static Matrix4x4 Lage(Teil t, GrafikModell m) => Lage(t, m, IstHalle(t.Id));
+
+    /// <summary>
+    /// Wie oben; S 0.31.0: in einer Halle (<paramref name="halle"/>) ist ein Feld 1/3 breit und eine Ebene 1,0 hoch; die
+    /// Factory-Teile werden auf 1/3 verkleinert, Dachaufsaetze bleiben im Massstab 1 und stehen auf dem Hallendach (Hoehe 0
+    /// der Ebene).
+    /// </summary>
+    public static Matrix4x4 Lage(Teil t, GrafikModell m, bool halle)
     {
         var a = t.Art ?? throw new InvalidDataException("Teil unbekannt: " + t.Id);
         var drehung = Matrix4x4.CreateRotationY(-MathF.PI / 2 * t.Dreh);
-        var feld = Matrix4x4.CreateTranslation(t.X + 0.5f, t.Stockwerk * Stockwerk, t.Y + 0.5f);
+        var f = Feld(halle);
+        var feld = Matrix4x4.CreateTranslation((t.X + 0.5f) * f, t.Stockwerk * EbeneHoehe(halle), (t.Y + 0.5f) * f);
+        if (GanzLesen(t.Id) is { } ganz)
+        {
+            // so gross und gedreht wie das Stueck draussen, Mitte auf der Ecke des Felds
+            return Katalogstueck.Lage(m, 0, 0, ganz.W, ganz.T, t.Dreh, 0, false) * Matrix4x4.CreateTranslation(t.X * f, t.Stockwerk * EbeneHoehe(halle), t.Y * f);
+        }
+        if (IstHalle(t.Id))
+        {
+            return Matrix4x4.CreateScale(HalleMassstab) * drehung * feld;
+        }
         switch (a.Art)
         {
             case Art.Detail:
@@ -345,7 +492,7 @@ public static class Bauteile
             }
             case Art.DachDetail:
             {
-                var auf = Matrix4x4.CreateTranslation(-(m.Min.X + m.Max.X) / 2, DachDetailHoehe - m.Min.Y, -(m.Min.Z + m.Max.Z) / 2);
+                var auf = Matrix4x4.CreateTranslation(-(m.Min.X + m.Max.X) / 2, (halle ? 0f : DachDetailHoehe) - m.Min.Y, -(m.Min.Z + m.Max.Z) / 2);
                 return auf * drehung * feld;
             }
             default:
@@ -382,20 +529,29 @@ public static class Bauteile
         var ecken = new List<float>();
         var farben = new List<byte>();
         var eckFarben = new List<byte>();
-        foreach (var t in teile)
+        var halle = IstHalle(teile);
+        void Hinzu(GrafikModell m, Matrix4x4 lage, bool tuerblatt)
         {
-            if (t.Art is null)
-            {
-                throw new InvalidDataException("Teil unbekannt: " + t.Id);
-            }
-            var m = modell(t.Id) ?? throw new InvalidDataException("Teil fehlt: " + t.Id);
-            var lage = Lage(t, m);
             for (var i = 0; i + 2 < m.Ecken.Length; i += 3)
             {
                 var p = Vector3.Transform(new Vector3(m.Ecken[i], m.Ecken[i + 1], m.Ecken[i + 2]), lage);
                 ecken.Add(p.X);
                 ecken.Add(p.Y);
                 ecken.Add(p.Z);
+            }
+            if (tuerblatt)
+            {
+                // S 0.31.0: das Tuerblatt der Halle hat die Farbe des Tuerblatts (Sammelliste 267), so erkennt die Stadt
+                // es als eigene Tuer des Gebaeudes und faerbt es in der gewaehlten Tuer-Farbe (keine zweite Tuer davor)
+                var b = StadtTueren.TuerblattBytes;
+                for (var d = 0; d < m.Dreiecke; d++)
+                {
+                    farben.AddRange(b);
+                    eckFarben.AddRange(b);
+                    eckFarben.AddRange(b);
+                    eckFarben.AddRange(b);
+                }
+                return;
             }
             farben.AddRange(m.Farben);
             if (m.EckFarben is { } eck)
@@ -413,12 +569,27 @@ public static class Bauteile
                 }
             }
         }
+        foreach (var t in teile)
+        {
+            if (t.Art is null)
+            {
+                throw new InvalidDataException("Teil unbekannt: " + t.Id);
+            }
+            var m = modell(t.Id) ?? throw new InvalidDataException("Teil fehlt: " + t.Id);
+            var lage = Lage(t, m, halle);
+            Hinzu(m, lage, false);
+            if (IstHalle(t.Id) && t.Art.Tuer)
+            {
+                var tuer = modell(HallenTuer) ?? throw new InvalidDataException("Teil fehlt: " + HallenTuer);
+                Hinzu(tuer, Matrix4x4.CreateTranslation(0, 0, HallenTuerZ) * lage, true);
+            }
+        }
         return new GrafikModell(name, [.. ecken], [.. farben], [.. eckFarben]);
     }
 
     /// <summary>Dreiecke aller Teile (unbekannte oder fehlende zaehlen 0).</summary>
     public static int Dreiecke(IEnumerable<Teil> teile, Func<string, GrafikModell?> modell) =>
-        teile.Sum(t => t.Art is null ? 0 : modell(t.Id)?.Dreiecke ?? 0);
+        teile.Sum(t => t.Art is null ? 0 : (modell(t.Id)?.Dreiecke ?? 0) + (IstHalle(t.Id) && t.Art.Tuer ? modell(HallenTuer)?.Dreiecke ?? 0 : 0));
 
     /// <summary>
     /// Das Modell der Stadt (<c>karte.modelle</c>): ein Block genau ueber dem Kasten des zusammengesetzten Gebaeudes. Das

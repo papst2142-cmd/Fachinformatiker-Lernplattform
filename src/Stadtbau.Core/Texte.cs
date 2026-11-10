@@ -396,6 +396,12 @@ public static class Texte
     public static string TuerVerstellt(string stueck, string haus) => "„" + stueck + "“ steht vor der Tür von „" + haus + "“: die Figur kommt nicht hinein.";
     public static string ModellTipp(string kennung) => "Kennung: " + kennung;
     public static string TuerDazuGemacht(string name) => "Tür an „" + name + "“ gesetzt";
+    // S 0.31.0 (Weisung P12-130 Frage 2 = a): Katalog-Stueck als Gebaeude uebernehmen
+    public const string AlsGebaeude = "Als Gebäude übernehmen";
+    public const string AlsGebaeudeTipp = "Macht aus dem Stück ein Gebäude: es bekommt eine Tür, einen Weg zur Straße und einen Innenraum. Danach gehen „Tür setzen“, Innenraum und „Als Blueprint speichern“.";
+    public const string AlsGebaeudeEffekt = "Ein Effekt kann kein Gebäude werden.";
+    public const string AlsGebaeudeOhneModell = "Zu diesem Stück fehlt das Modell im Katalog.";
+    public static string AlsGebaeudeGemacht(string name) => "„" + name + "“ ist jetzt ein Gebäude mit Tür und Innenraum";
 
     public const string BlueprintSchonDa = "Dieses Gebäude steht schon in der Stadt.";
     public const string BlueprintSchonDaTipp = "Das Spiel zeichnet die Tür nur am ersten Gebäude dieses Modells. Eines der beiden löschen.";
@@ -537,6 +543,10 @@ public static class Texte
     public const string EntwurfGruppeTueren = "Türen";
     public const string EntwurfGruppeDaecher = "Dächer";
     public const string EntwurfGruppeDetails = "Fenster, Türen und Kleines";
+
+    public const string EntwurfGruppeIndustrie = "Industrie (Halle)";
+
+    public const string EntwurfGruppeAufsaetze = "Dachaufsätze";
     public const string EntwurfAuswahl = "Ausgewähltes Teil";
     public const string EntwurfNichtsGewaehlt = "Kein Teil gewählt. Tippe auf ein Teil im Gebäude.";
     public static string EntwurfGewaehlt(string name) => "Gewählt: " + name;
@@ -572,6 +582,10 @@ public static class Texte
     public const string TippEntwurfTueren = "Wände mit Tür. Eine Tür im Erdgeschoss wird mit „Als Eingang festlegen“ der Eingang.";
     public const string TippEntwurfDaecher = "Dächer kommen auf die Ebene über den Wänden.";
     public const string TippEntwurfDetails = "Fensterrahmen, Haustüren und Klimageräte an eine Wand oder auf ein Flachdach setzen.";
+
+    public const string TippEntwurfIndustrie = "Teile für eine Halle: feineres Raster (ein Drittel Feld), eine Ebene ist 1 hoch. Die Wand steht an der Kante zur Fassade, der Boden ist dabei. Ein Gebäude ist entweder Wohnhaus oder Halle.";
+
+    public const string TippEntwurfAufsaetze = "Schornstein, Tank und Solarplatten auf ein Dach setzen, bei Wohnhaus und Halle.";
     public const string TippEntwurfEbene = "Wählt die Ebene, auf der du baust; die Ebenen darüber sind ausgeblendet.";
     public const string TippEntwurfDrehen = "Dreht das Teil um 90 Grad im Uhrzeigersinn (Taste R).";
     public const string TippEntwurfKopieren = "Legt eine Kopie ins nächste freie Feld daneben.";
@@ -614,6 +628,10 @@ public static class Texte
 
     // Pruefungen im Editor (Plan Abschnitt 4)
     public const string EntwurfLeer = "Im Erdgeschoss steht noch kein Teil.";
+
+    public const string EntwurfGemischt = "Wohnhaus-Teile und Hallen-Teile sind gemischt.";
+
+    public const string EntwurfGemischtTipp = "Ein Gebäude ist entweder ein Wohnhaus oder eine Halle. Nimm die Teile der anderen Art wieder weg (Dachaufsätze passen zu beiden).";
     public const string EntwurfLeerTipp = "Eine Wand im Erdgeschoss setzen.";
     public const string EntwurfDoppelt = "Hier stehen zwei Teile im selben Feld.";
     public const string EntwurfDoppeltTipp = "Eines der beiden Teile löschen oder verschieben.";
@@ -1055,4 +1073,27 @@ public static class Texte
     public const string ReiheAufFussweg = "Liegt auf einem Fußweg.";
     public const string ReiheAufBaum = "Liegt auf einem Baum.";
     public const string ReiheAnLaterne = "Liegt an einer Laterne.";
+
+    // ---- S 0.31.0: Gebaeude faerben (Sammelliste 264, Weisung P12-130 Frage 3 = c; Tuer-Farben Nico 10.11.2026) ----
+
+    public const string FarbeKnopf = "Farbe";
+    public const string FarbeKnopfTipp = "Fassade, Dach, Rahmen und Tür des Gebäudes einfärben. Jede Wahl ist ein Schritt, Rückgängig geht.";
+    public const string FarbeZu = "Farbe schließen";
+    public const string FarbeWieVorher = "Wie vorher";
+    public const string FarbeWieVorherTipp = "Dieser Teil bekommt wieder die Farbe des Modells.";
+    public const string FarbeEigene = "Eigene Farbe";
+    public const string FarbeEigeneTipp = "Farbton, Sättigung und Helligkeit mit den Reglern wählen, das Feld daneben zeigt die Farbe. Erst „Übernehmen“ färbt das Gebäude.";
+    public const string FarbeUebernehmen = "Übernehmen";
+    public const string FarbeTon = "Farbton";
+    public const string FarbeSaettigung = "Sättigung";
+    public const string FarbeHell = "Helligkeit";
+    public const string FarbeTuerHinweis = "Die Tür bekommt eine von vier Farben. Türen, die zum Stadt-Modell gehören, bleiben, wie sie sind.";
+    public const string FarbeFamilieHinweis = "Alle Töne eines Teils werden umgefärbt, jeder behält seine Helligkeit. Glas, Licht, Pflanzen und Schnee bleiben.";
+    public const string FarbeKeinGebaeude = "Nur Gebäude lassen sich einfärben.";
+
+    /// <summary>Name des Schritts im Verlauf.</summary>
+    public static string FarbeSchritt(string teil) => "Farbe " + teil;
+
+    /// <summary>Aktuelle Wahl eines Teils.</summary>
+    public static string FarbeJetzt(string teil, string? name) => teil + ": " + (name ?? "wie vorher");
 }

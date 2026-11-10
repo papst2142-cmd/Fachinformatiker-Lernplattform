@@ -492,10 +492,15 @@ public sealed partial class KartenFlaeche : Control
                 }
                 if (z["tuer"] is List<object?> t && t.Count >= 2)
                 {
-                    ctx.DrawEllipse(Pinsel("#7B4B24"), null, P(Py.F(t[0]) + Dx(s), Py.F(t[1]) + Dy(s)), 0.14 * _zoom, 0.14 * _zoom);
+                    var tuerId = AussenBearbeitung.FarbKennung(a, s) is { } kt ? AussenBearbeitung.FarbeVon(a, kt, Gebaeudefarben.TuerSchluessel) : null;
+                    var tuerFarbe = Gebaeudefarben.TuerVarianten.FirstOrDefault(v => v.Id == tuerId).Wert ?? "#7B4B24";
+                    ctx.DrawEllipse(Pinsel(tuerFarbe), new Pen(Pinsel("#5C554B"), 1), P(Py.F(t[0]) + Dx(s), Py.F(t[1]) + Dy(s)), 0.14 * _zoom, 0.14 * _zoom);
                 }
             }
-            ctx.DrawRectangle(Pinsel(s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C"), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
+            // S 0.31.0 (Sammelliste 264): eigene Fassadenfarbe auch in der Draufsicht
+            var kennung = AussenBearbeitung.FarbKennung(a, s);
+            var fassade = kennung is null ? null : AussenBearbeitung.FarbeVon(a, kennung, "fassade");
+            ctx.DrawRectangle(Pinsel(fassade ?? (s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C")), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
             var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Beschriftung(a, s);
             if (r.Width > 30 && Zeigt(Ebene.Beschriftungen))
             {

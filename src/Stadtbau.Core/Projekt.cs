@@ -283,6 +283,8 @@ public sealed class Projekt
         // S 0.26.0 (Weisung P12-115, Nico 2a): automatische Laternen im selben Schritt (geloeschte merken, an geaenderten
         // Strassen neu verteilen)
         LaternenNachziehen(a, vorher, strassenVorher);
+        // S 0.31.0 (Sammelliste 264): Farben eines geloeschten Gebaeudes fallen im selben Schritt weg
+        AussenBearbeitung.FarbenAufraeumen(a);
         var nachher = Aussen.TeileText(a);
         var pfade = vorher.Keys.Union(nachher.Keys).Where(k => !vorher.TryGetValue(k, out var v) || !nachher.TryGetValue(k, out var n) || v != n).Order(StringComparer.Ordinal).ToList();
         if (pfade.Count > 0)

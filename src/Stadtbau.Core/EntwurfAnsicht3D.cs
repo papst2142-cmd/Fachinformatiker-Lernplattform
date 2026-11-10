@@ -47,6 +47,11 @@ public static class EntwurfAnsicht3D
             {
                 { ModellName, new PyObjekt { { "teile", Bauteile.TeileDaten(teile) }, { "eingang", Bauteile.EingaengeDaten(e.Eingaenge) } } },
             });
+            // S 0.31.0 (Sammelliste 264): Farben des Entwurfs gleich in der Vorschau
+            foreach (var (teil, wert) in e.Farben)
+            {
+                AussenBearbeitung.FarbeSetzen(aussen, ModellName, teil, wert as string);
+            }
         }
         return Aussen.Fassung(aussen, leer, new PyObjekt(), 0, null, Werkzeug.Kennzeile, "", "");
     }
@@ -56,9 +61,9 @@ public static class EntwurfAnsicht3D
         Ansicht3D.Bauen(Stadt(e, bisEbene, daten), daten, einstellung, vorrat);
 
     /// <summary>Feld im Raster unter dem Strahl auf der Hoehe der Ebene, sonst null (ausserhalb oder Blick in den Himmel).</summary>
-    public static (int X, int Y)? Feld(Vector3 start, Vector3 richtung, int ebene)
+    public static (int X, int Y)? Feld(Vector3 start, Vector3 richtung, int ebene, bool halle = false)
     {
-        var hoehe = ebene * Bauteile.Stockwerk;
+        var hoehe = ebene * Bauteile.EbeneHoehe(halle);
         if (MathF.Abs(richtung.Y) < 1e-9f)
         {
             return null;
@@ -69,8 +74,9 @@ public static class EntwurfAnsicht3D
             return null;
         }
         var p = start + (richtung * t);
-        var (x, y) = ((int)MathF.Floor(p.X - Rand), (int)MathF.Floor(p.Z - Rand));
-        return Entwurf.ImRaster(x, y) ? (x, y) : null;
+        var f = Bauteile.Feld(halle);
+        var (x, y) = ((int)MathF.Floor((p.X - Rand) / f), (int)MathF.Floor((p.Z - Rand) / f));
+        return Entwurf.ImRaster(x, y, halle) ? (x, y) : null;
     }
 
     /// <summary>
@@ -88,7 +94,7 @@ public static class EntwurfAnsicht3D
             {
                 continue;
             }
-            var (min, max) = Kasten(t);
+            var (min, max) = Kasten(t, e.Halle);
             if (Bauen3D.Schnitt(start, richtung, min, max) is { } d && (d < bestT - 1e-4f || (MathF.Abs(d - bestT) <= 1e-4f && !t.Art.BelegtFeld)))
             {
                 (beste, bestT) = (i, d);
@@ -98,19 +104,20 @@ public static class EntwurfAnsicht3D
     }
 
     /// <summary>Kasten eines Teils in der Vorschau-Stadt (Feld und Ebene; Fassaden-Teil als Scheibe an der Seite).</summary>
-    public static (Vector3 Min, Vector3 Max) Kasten(Bauteile.Teil t)
+    public static (Vector3 Min, Vector3 Max) Kasten(Bauteile.Teil t, bool halle = false)
     {
-        float x0 = t.X + Rand, z0 = t.Y + Rand, y0 = t.Stockwerk * Bauteile.Stockwerk;
+        var f = Bauteile.Feld(halle);
+        float x0 = (t.X * f) + Rand, z0 = (t.Y * f) + Rand, y0 = t.Stockwerk * Bauteile.EbeneHoehe(halle);
         var min = new Vector3(x0, y0, z0);
-        var max = new Vector3(x0 + 1, y0 + Bauteile.Stockwerk, z0 + 1);
+        var max = new Vector3(x0 + f, y0 + Bauteile.EbeneHoehe(halle), z0 + f);
         if (t.Art?.Art == Bauteile.Art.Detail)
         {
             const float d = 0.12f;
             (min, max) = t.Fassade switch
             {
-                Bauteile.Seiten.Sued => (min with { Z = z0 + 1 - d }, max with { Z = z0 + 1 + d }),
+                Bauteile.Seiten.Sued => (min with { Z = z0 + f - d }, max with { Z = z0 + f + d }),
                 Bauteile.Seiten.Nord => (min with { Z = z0 - d }, max with { Z = z0 + d }),
-                Bauteile.Seiten.Ost => (min with { X = x0 + 1 - d }, max with { X = x0 + 1 + d }),
+                Bauteile.Seiten.Ost => (min with { X = x0 + f - d }, max with { X = x0 + f + d }),
                 _ => (min with { X = x0 - d }, max with { X = x0 + d }),
             };
         }
@@ -122,10 +129,11 @@ public static class EntwurfAnsicht3D
     }
 
     /// <summary>Ecken eines Felds der Ebene als Vieleck in der Vorschau-Stadt (Schatten, Raster).</summary>
-    public static Vector3[] FeldEcken(int x, int y, int ebene, float ueber = 0.02f)
+    public static Vector3[] FeldEcken(int x, int y, int ebene, float ueber = 0.02f, bool halle = false)
     {
-        float x0 = x + Rand, z0 = y + Rand, h = (ebene * Bauteile.Stockwerk) + ueber;
-        return [new(x0, h, z0), new(x0 + 1, h, z0), new(x0 + 1, h, z0 + 1), new(x0, h, z0 + 1)];
+        var f = Bauteile.Feld(halle);
+        float x0 = (x * f) + Rand, z0 = (y * f) + Rand, h = (ebene * Bauteile.EbeneHoehe(halle)) + ueber;
+        return [new(x0, h, z0), new(x0 + f, h, z0), new(x0 + f, h, z0 + f), new(x0, h, z0 + f)];
     }
 
     /// <summary>Mitte des Bauraster und ein Abstand, bei dem das Gebaeude (oder das leere Raster) ganz ins Bild passt.</summary>
@@ -135,8 +143,9 @@ public static class EntwurfAnsicht3D
         {
             return (Rand + (Entwurf.Raster / 2f), Rand + (Entwurf.Raster / 2f), Math.Clamp(Entwurf.Raster * 1.1f, Kamera.AbstandMin, Kamera.AbstandMax));
         }
-        float x0 = e.Teile.Min(t => t.X), x1 = e.Teile.Max(t => t.X) + 1, y0 = e.Teile.Min(t => t.Y), y1 = e.Teile.Max(t => t.Y) + 1;
-        var hoch = (e.Teile.Max(t => t.Stockwerk) + 1) * Bauteile.Stockwerk;
+        var f = e.Feld;
+        float x0 = e.Teile.Min(t => t.X) * f, x1 = (e.Teile.Max(t => t.X) + 1) * f, y0 = e.Teile.Min(t => t.Y) * f, y1 = (e.Teile.Max(t => t.Y) + 1) * f;
+        var hoch = (e.Teile.Max(t => t.Stockwerk) + 1) * Bauteile.EbeneHoehe(e.Halle);
         var gross = MathF.Max(MathF.Max(x1 - x0, y1 - y0), hoch) + 3;
         return (Rand + ((x0 + x1) / 2), Rand + ((y0 + y1) / 2), Math.Clamp(gross * 1.6f, Kamera.AbstandMin, Kamera.AbstandMax));
     }

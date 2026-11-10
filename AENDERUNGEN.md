@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.56.0
+Das Spiel kann Häuser aus dem Stadtbau-Werkzeug jetzt in eigenen Farben, mit richtigen Türen und als Fabrikhallen zeigen. Die heutige Stadt sieht genauso aus wie bisher.
+
+- Häuser aus neuen Städten können eine eigene Farbe für Fassade, Dach und Fensterrahmen haben. Die Tür gibt es in Braun, Schwarz, Weiß und Cremefarben.
+- Türen an selbst gebauten Häusern sehen jetzt wie Türen aus: ein farbiges Türblatt mit Klinke, bündig in der Wand. Vorher sahen sie aus wie ein Fenster.
+- Neue Städte können Fabrikhallen enthalten, mit Schornsteinen, Tanks und Solarplatten auf dem Dach. Auch ein großes Gebäude aus dem Katalog kann ein Haus mit Tür und Innenraum werden.
+- Fehler behoben: Stand in einer neuen Stadt eine Laterne ohne Straße in der Nähe, blieb die 3D-Ansicht leer. Jetzt wird die Stadt gezeichnet.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.55.0
 Im Spiel sind die leeren Schilder an den Häusern weg.
 

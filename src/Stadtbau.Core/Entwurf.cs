@@ -24,6 +24,26 @@ public sealed class Entwurf
 
     public List<Teil> Teile { get; } = [];
 
+    /// <summary>
+    /// S 0.31.0 (Weisung P12-130 Frage 1 = a): Wunsch „Halle“, solange noch kein Teil die Gebaeudeart festlegt (die Oberflaeche
+    /// setzt ihn mit der Gruppe „Industrie“). Kein Schritt im Verlauf.
+    /// </summary>
+    public bool HalleWunsch { get; set; }
+
+    /// <summary>
+    /// Ist das Gebaeude eine Halle? Ja, sobald ein Teil der Halle steht; ohne Teil einer Gebaeudeart gilt der Wunsch. Ein
+    /// Gebaeude ist entweder Wohnbau oder Halle (gemischt = roter Fund).
+    /// </summary>
+    public bool Halle => Bauteile.IstHalle(Teile) || (HalleWunsch && !Teile.Any(t => Bauteile.IstWohnbau(t.Id)));
+
+    /// <summary>Breite eines Felds dieses Gebaeudes (Wohnbau 1, Halle 1/3).</summary>
+    public float Feld => Bauteile.Feld(Halle);
+
+    /// <summary>Felder je Seite des Bauraster (Halle dreimal so viele, gleiche Flaeche).</summary>
+    public static int RasterVon(bool halle) => halle ? Raster * 3 : Raster;
+
+    public int RasterFelder => RasterVon(Halle);
+
     public List<Eingang> Eingaenge { get; } = [];
 
     /// <summary>Name des Blueprints, aus dem weitergebaut wird (null = neues Gebaeude).</summary>
@@ -44,6 +64,28 @@ public sealed class Entwurf
     /// </summary>
     public bool EtagenNeu { get; set; }
 
+    /// <summary>S 0.31.0 (Sammelliste 264): Farben des Gebaeudes <c>{fassade, dach, rahmen}</c> (leer = wie die Teile).</summary>
+    public PyObjekt Farben { get; } = [];
+
+    /// <summary>Farbe eines Teils setzen (null = wie vorher), ein Schritt im Verlauf; ungueltiger Wert = nichts.</summary>
+    public bool FarbeSetzen(string teil, string? wert) => Schritt(() =>
+    {
+        if (!Gebaeudefarben.AlleSchluessel.Contains(teil) || (wert is not null && !Gebaeudefarben.WertGueltig(teil, wert)))
+        {
+            return false;
+        }
+        Farben.RemoveAll(f => f.Key == teil);
+        if (wert is not null)
+        {
+            // feste Reihenfolge fassade, dach, rahmen
+            Farben.Add(new(teil, teil == Gebaeudefarben.TuerSchluessel ? wert : wert.ToUpperInvariant()));
+            var sortiert = Farben.OrderBy(f => Array.IndexOf(Gebaeudefarben.AlleSchluessel, f.Key)).ToList();
+            Farben.Clear();
+            Farben.AddRange(sortiert);
+        }
+        return true;
+    });
+
     private readonly List<string> _zurueck = [];
     private readonly List<string> _vor = [];
 
@@ -56,11 +98,14 @@ public sealed class Entwurf
 
     // ---- Verlauf ----------------------------------------------------------------------------------
 
-    private string Stand() => PythonJson.Standard(Daten());
+    private string Stand() => PythonJson.Standard(new List<object?> { Daten(), Farben });
 
     private void StandSetzen(string json)
     {
-        var d = Objekt(Py.Lesen(json));
+        var beide = (List<object?>)Py.Lesen(json)!;
+        var d = Objekt(beide[0]);
+        Farben.Clear();
+        Farben.AddRange(Objekt(beide[1]));
         Teile.Clear();
         Teile.AddRange(Bauteile.TeileLesen(d["teile"]));
         Eingaenge.Clear();
@@ -106,13 +151,16 @@ public sealed class Entwurf
 
     // ---- Schritte ---------------------------------------------------------------------------------
 
-    public static bool ImRaster(int x, int y) => x is >= 0 and < Raster && y is >= 0 and < Raster;
+    public static bool ImRaster(int x, int y) => ImRaster(x, y, false);
+
+    public static bool ImRaster(int x, int y, bool halle) => x >= 0 && x < RasterVon(halle) && y >= 0 && y < RasterVon(halle);
 
     /// <summary>Teil setzen; ausserhalb des Raster, unbekanntes Teil oder falsche Ebene: -1 (nichts geschieht).</summary>
     public int Setzen(string id, int x, int y, int stockwerk, int dreh) => Schritt(() =>
     {
         var t = new Teil(id, x, y, stockwerk, ((dreh % 4) + 4) % 4);
-        if (!ImRaster(x, y) || t.Art is null || stockwerk is < 0 or >= Bauteile.Ebenen)
+        var halle = Bauteile.IstHalle(id) || (!Bauteile.IstWohnbau(id) && Halle);
+        if (!ImRaster(x, y, halle) || t.Art is null || stockwerk is < 0 or >= Bauteile.Ebenen)
         {
             return -1;
         }
@@ -148,7 +196,7 @@ public sealed class Entwurf
         foreach (var (dx, dy) in new[] { (1, 0), (0, 1), (-1, 0), (0, -1) })
         {
             var neu = t with { X = t.X + dx, Y = t.Y + dy };
-            if (ImRaster(neu.X, neu.Y) && !Belegt(neu))
+            if (ImRaster(neu.X, neu.Y, Halle) && !Belegt(neu))
             {
                 Teile.Add(neu);
                 return Teile.Count - 1;
@@ -162,7 +210,7 @@ public sealed class Entwurf
     {
         var t = Teile[i];
         var neu = t with { X = t.X + dx, Y = t.Y + dy };
-        if (!ImRaster(neu.X, neu.Y))
+        if (!ImRaster(neu.X, neu.Y, Halle))
         {
             return false;
         }
@@ -246,6 +294,10 @@ public sealed class Entwurf
         var e = new Entwurf { Name = b.Name, Datei = b.Datei, Modell = b.Modell, Innenraum = b.Innenraum };
         e.Teile.AddRange(Bauteile.TeileLesen(b.Bauteile));
         e.Eingaenge.AddRange(Bauteile.EingaengeLesen(b.Eingang ?? []));
+        if (b.Farben is not null)
+        {
+            e.Farben.AddRange((PyObjekt)Py.Kopie(b.Farben)!);
+        }
         return e;
     }
 
@@ -278,7 +330,7 @@ public sealed class Entwurf
             return null;
         }
         var e = Eingaenge[0];
-        var k = Bauteile.InnenJeFeld;
+        var k = Bauteile.InnenJeFeld * Feld;
         var (w, t) = (g.X1 - g.X0 + 1, g.Y1 - g.Y0 + 1);
         // von draussen auf die Fassade gesehen: links -> rechts
         var (fassadeFelder, tiefeFelder, stelle) = e.Seite switch
@@ -288,9 +340,18 @@ public sealed class Entwurf
             Seiten.Ost => (t, w, g.Y1 - e.Y),
             _ => (t, w, e.Y - g.Y0),
         };
-        double breite = tiefeFelder * k, hoehe = fassadeFelder * k;
+        return GrundrissAus(fassadeFelder * k, tiefeFelder * k, (stelle * k) + (k / 2), k);
+    }
+
+    /// <summary>
+    /// Grundriss wie <see cref="GrundrissVorschlag"/> aus den Massen: <paramref name="hoehe"/> = Breite der Fassade mit dem
+    /// Eingang, <paramref name="breite"/> = Tiefe des Hauses, <paramref name="mitte"/> = Stelle der Tuer auf der Fassade (von
+    /// draussen gesehen von links), <paramref name="k"/> = Einheiten je Feld. S 0.31.0 auch fuer ein uebernommenes
+    /// Katalog-Stueck (<see cref="AussenBearbeitung.AlsGebaeude"/>).
+    /// </summary>
+    public static PyObjekt GrundrissAus(double hoehe, double breite, double mitte, double k)
+    {
         var flurH = hoehe >= 2 * k ? 4.0 : hoehe / 2;
-        var mitte = (stelle * k) + (k / 2);
         var flurY = hoehe >= 2 * k ? Math.Clamp(mitte - (flurH / 2), 0, hoehe - flurH) : 0;
         var tuer = Math.Clamp(mitte, flurY + 0.7, flurY + flurH - 0.7);
         var flur = new PyObjekt
@@ -320,12 +381,15 @@ public sealed class Entwurf
     private static object Z(double d) => Bearbeitung.Zahl(d);
 
     /// <summary>Lage der Tuer zum Eingang (Mitte der Aussenkante des Felds) relativ zur Ecke des Rasters.</summary>
-    public static (double X, double Y) TuerPunkt(Eingang e) => e.Seite switch
+    public static (double X, double Y) TuerPunkt(Eingang e) => TuerPunkt(e, 1);
+
+    /// <summary>Wie oben mit der Breite eines Felds (Halle 1/3).</summary>
+    public static (double X, double Y) TuerPunkt(Eingang e, double feld) => e.Seite switch
     {
-        Seiten.Sued => (e.X + 0.5, e.Y + 1.0),
-        Seiten.Nord => (e.X + 0.5, e.Y),
-        Seiten.Ost => (e.X + 1.0, e.Y + 0.5),
-        _ => (e.X, e.Y + 0.5),
+        Seiten.Sued => ((e.X + 0.5) * feld, (e.Y + 1.0) * feld),
+        Seiten.Nord => ((e.X + 0.5) * feld, e.Y * feld),
+        Seiten.Ost => ((e.X + 1.0) * feld, (e.Y + 0.5) * feld),
+        _ => (e.X * feld, (e.Y + 0.5) * feld),
     };
 
     /// <summary>Laenge des Fusswegs vor der Tuer im Blueprint (beim Setzen wird er bis zur Strasse verlaengert).</summary>
@@ -357,7 +421,7 @@ public sealed class Entwurf
         var e = Eingaenge[0];
         // die Tuer liegt auf der Aussenkante des Blocks (das Spiel setzt sie auf die Wand des Blocks; Simse, Balkone und
         // Dachueberstand machen ihn etwas groesser als die Felder)
-        var (tx, ty) = TuerPunkt(e);
+        var (tx, ty) = TuerPunkt(e, Feld);
         (tx, ty) = e.Seite switch
         {
             Seiten.Sued => (tx, (double)gm.Max.Z),
@@ -389,6 +453,7 @@ public sealed class Entwurf
             Personen = [],
             Bauteile = Bauteile.TeileDaten(Teile),
             Eingang = Bauteile.EingaengeDaten(Eingaenge),
+            Farben = Farben.Count == 0 ? null : (PyObjekt)Py.Kopie(Farben)!,
         };
     }
 
@@ -408,8 +473,15 @@ public sealed class Entwurf
     public List<StadtbauFund> Pruefen(Func<string, GrafikModell?> modell)
     {
         var funde = new List<StadtbauFund>();
-        void Rot(string text, string tipp, Teil? t) => funde.Add(new StadtbauFund(t is null ? text : Texte.EntwurfStelle(t.Stockwerk, t.X, t.Y) + text, tipp, true, t is null ? null : t.X + 0.5, t is null ? null : t.Y + 0.5));
-        void Gelb(string text, string tipp, Teil t) => funde.Add(new StadtbauFund(Texte.EntwurfStelle(t.Stockwerk, t.X, t.Y) + text, tipp, false, t.X + 0.5, t.Y + 0.5));
+        var f = (double)Bauteile.Feld(Halle);
+        void Rot(string text, string tipp, Teil? t) => funde.Add(new StadtbauFund(t is null ? text : Texte.EntwurfStelle(t.Stockwerk, t.X, t.Y) + text, tipp, true, t is null ? null : (t.X + 0.5) * f, t is null ? null : (t.Y + 0.5) * f));
+        void Gelb(string text, string tipp, Teil t) => funde.Add(new StadtbauFund(Texte.EntwurfStelle(t.Stockwerk, t.X, t.Y) + text, tipp, false, (t.X + 0.5) * f, (t.Y + 0.5) * f));
+
+        // S 0.31.0: entweder Wohnbau oder Halle
+        if (Teile.Any(t => Bauteile.IstHalle(t.Id)) && Teile.FirstOrDefault(t => Bauteile.IstWohnbau(t.Id)) is { } gemischt)
+        {
+            Rot(Texte.EntwurfGemischt, Texte.EntwurfGemischtTipp, gemischt);
+        }
 
         foreach (var t in Teile.Where(t => t.Art is null))
         {
@@ -573,6 +645,45 @@ public sealed class Entwurf
         e.Setzen(p + "detail-ac-a", 0, 0, stockwerke, 0);
         e.Setzen(p + "detail-ac-a", 2, 0, stockwerke, 1);
         e.EingangFestlegen(e.Teile.FindIndex(t => t.Name == "building-door-window"));
+        return e;
+    }
+
+    /// <summary>
+    /// S 0.31.0: Probehalle fuer Tests, Start-Test und Fotos: 9 x 6 Hallenfelder (3 x 2 Felder), Waende ringsum mit vier Ecken,
+    /// vorne drei Fenster und das Tuerteil in der Mitte (Eingang), hinten drei Fenster, innen Hallenboden, darueber das
+    /// Hallendach und ein Schornstein.
+    /// </summary>
+    public static Entwurf Probehalle()
+    {
+        var e = new Entwurf { HalleWunsch = true };
+        const string p = Bauteile.PraefixHalle;
+        e.Setzen(p + "structure-corner-inner", 8, 5, 0, 0);
+        e.Setzen(p + "structure-corner-inner", 0, 5, 0, 1);
+        e.Setzen(p + "structure-corner-inner", 0, 0, 0, 2);
+        e.Setzen(p + "structure-corner-inner", 8, 0, 0, 3);
+        for (var x = 1; x <= 7; x++)
+        {
+            e.Setzen(p + (x == 4 ? "structure-doorway" : x % 2 == 0 ? "structure-window" : "structure-wall"), x, 5, 0, 0);
+            e.Setzen(p + (x % 2 == 0 ? "structure-window" : "structure-wall"), x, 0, 0, 2);
+        }
+        for (var y = 1; y <= 4; y++)
+        {
+            e.Setzen(p + "structure-wall", 0, y, 0, 1);
+            e.Setzen(p + "structure-wall", 8, y, 0, 3);
+            for (var x = 1; x <= 7; x++)
+            {
+                e.Setzen(p + "floor", x, y, 0, 0);
+            }
+        }
+        for (var x = 0; x <= 8; x++)
+        {
+            for (var y = 0; y <= 5; y++)
+            {
+                e.Setzen(p + "top", x, y, 1, 0);
+            }
+        }
+        e.Setzen(Bauteile.PraefixAufsatz + "chimney-medium", 6, 2, 1, 0);
+        e.EingangFestlegen(e.Teile.FindIndex(t => t.Name.EndsWith("structure-doorway", StringComparison.Ordinal)));
         return e;
     }
 
