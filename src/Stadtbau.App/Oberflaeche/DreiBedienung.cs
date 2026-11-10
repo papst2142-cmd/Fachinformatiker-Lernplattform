@@ -255,6 +255,8 @@ public sealed partial class DreiBedienung : Control
         if (erster)
         {
             _anfangInDieserGeste = false;
+            _reiheAnfangHier = false;
+            _mehr = null;
         }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
         if (_karte.TuerFuer is not null && !FigurLaufen)
@@ -271,6 +273,12 @@ public sealed partial class DreiBedienung : Control
         if (!FigurLaufen && _karte.SetzenArt is null && !_karte.MassbandAn && erster)
         {
             s = TrefferAn(p);
+            if (MehrDrucken(e, s, p))
+            {
+                // S 0.30.0: Umschalt, „Mehrere wählen“ oder ein Stueck der Gruppe: ein Finger zieht Gruppe oder Rahmen
+                Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, true), p);
+                return;
+            }
         }
         // beim Setzen zieht der Finger den Schatten mit (am Tablet gibt es kein Schweben)
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, bauen && (s is not null || _karte.SetzenArt is not null)), p);
@@ -280,7 +288,7 @@ public sealed partial class DreiBedienung : Control
         }
         if (_karte.SetzenArt is not null)
         {
-            if (bauen)
+            if (bauen && !_karte.ReiheAktiv)
             {
                 SchattenAn(p);
             }
@@ -331,7 +339,18 @@ public sealed partial class DreiBedienung : Control
                 // Maus schwebt: beim Setzen folgt der Schatten
                 if (e.Pointer.Type == PointerType.Mouse && _karte.SetzenArt is not null && !FigurLaufen && Projekt is { NurLesen: false })
                 {
-                    SchattenAn(p);
+                    if (_karte.ReiheAktiv)
+                    {
+                        // S 0.30.0: Reihe, die Vorschau folgt der Maus ab dem Anfang
+                        if (_karte.ReiheAnfang is not null && BodenAn(p) is { } rb)
+                        {
+                            _karte.ReiheZielSetzen(rb.X, rb.Y);
+                        }
+                    }
+                    else
+                    {
+                        SchattenAn(p);
+                    }
                 }
                 // S 0.27.0: Massband, das Ende folgt der Maus
                 if (e.Pointer.Type == PointerType.Mouse && _karte.MassbandAn && !FigurLaufen && Kamera is { } mk && BodenAn(p) is { } mb)
@@ -365,6 +384,10 @@ public sealed partial class DreiBedienung : Control
         {
             // Welle Z: Rechtsklick ohne Bewegung bricht das Ziehen ab (erst den Anfang, dann das Ziehen selbst)
             if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.ZiehArtAktiv is not null && !_karte.ZiehAbbrechen())
+            {
+                _karte.SetzenBeenden();
+            }
+            else if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.ReiheAktiv && !_karte.ReiheAbbrechen())
             {
                 _karte.SetzenBeenden();
             }
@@ -416,6 +439,14 @@ public sealed partial class DreiBedienung : Control
     private void Anwenden(Fingergeste.Schritt s, Point p)
     {
         if (_karte.TuerFuer is not null && !FigurLaufen && TuerAnwenden(s))
+        {
+            return;
+        }
+        if (Reiht && ReiheAnwenden(s))
+        {
+            return;
+        }
+        if (_mehr is not null && MehrAnwenden(s))
         {
             return;
         }
@@ -521,7 +552,7 @@ public sealed partial class DreiBedienung : Control
         }
         Point? ende = (m.Ende ?? m.Schwebe) is { } e && k.Bildpunkt(new Vector3(e.X, Bauen3D.SchattenHoehe, e.Y), (float)Bounds.Width, (float)Bounds.Height) is { } pe
             ? new Point(pe.X, pe.Y) : null;
-        MassbandSchild = KartenFlaeche.MassbandLinie(ctx, new Point(pa.X, pa.Y), ende, m.Laenge, Bounds);
+        MassbandSchild = KartenFlaeche.MassbandLinie(ctx, new Point(pa.X, pa.Y), ende, m.Laenge, Bounds, Verdeckt, _anzeigen);
     }
 
     private bool Zieht => _karte.ZiehArtAktiv is not null && !FigurLaufen && Projekt is { NurLesen: false };
@@ -773,10 +804,9 @@ public sealed partial class DreiBedienung : Control
             var grad = Drehgriff.Grad(m.X, m.Y, _drehPunkt.X, _drehPunkt.Y, AussenBearbeitung.DrehSchritt(s.Art));
             var w = (-90 + grad) * Math.PI / 180;
             ctx.DrawLine(new Pen(akzent, 3), m, new Point(m.X + (Drehgriff.Abstand * Math.Cos(w)), m.Y + (Drehgriff.Abstand * Math.Sin(w))));
-            var ft = new FormattedText((grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°", CultureInfo.GetCultureInfo("de-DE"),
-                FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 13, Brushes.White);
-            ctx.DrawRectangle(new SolidColorBrush(Color.Parse("#111827"), 0.8), null, new Rect(gx + 14, gy - 10, ft.Width + 8, ft.Height + 4), 4, 4);
-            ctx.DrawText(ft, new Point(gx + 18, gy - 8));
+            var gt = (grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°";
+            var ft = new FormattedText(gt, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 13, Brushes.White);
+            Anzeigen.Zeichnen(ctx, ft, gt, new Point(gx + 14, gy - 10), new Size(4, 2), new SolidColorBrush(Color.Parse("#111827"), 0.8), null, 4, Verdeckt, Bounds.Size, _anzeigen);
         }
     }
 
@@ -791,14 +821,24 @@ public sealed partial class DreiBedienung : Control
     /// <summary>Umriss beim letzten Zeichnen in Bildpunkten (Start-Test: der Schatten liegt unter dem Zeiger).</summary>
     public Rect SchattenRahmen { get; private set; }
 
+    /// <summary>Weisung P12-137: wohin die Ebene ihre Anzeigen zuletzt gezeichnet hat (Text, Rahmen).</summary>
+    public IReadOnlyList<(string Text, Rect Rahmen)> AnzeigenGezeichnet => _anzeigen;
+
+    private readonly List<(string Text, Rect Rahmen)> _anzeigen = [];
+
+    private IReadOnlyList<Rect> Verdeckt => _karte.VerdecktFuer(this);
+
     public override void Render(DrawingContext ctx)
     {
         // durchsichtig, aber trifft (sonst gehen Maus und Finger an die Spiel-Flaeche)
         ctx.FillRectangle(Brushes.Transparent, new Rect(Bounds.Size));
+        _anzeigen.Clear();
         if (Kamera is not { } k || Projekt is not { } proj)
         {
             return;
         }
+        MehrZeichnen(ctx, k, proj.AussenStand);
+        ReiheZeichnen(ctx, k);
         if (_karte.Auswahl is { } s && !_ziehen)
         {
             foreach (var vieleck in Bauen3D.Umriss(proj.AussenStand, s))
@@ -830,10 +870,8 @@ public sealed partial class DreiBedienung : Control
                 {
                     MaxTextWidth = Math.Max(40, Bounds.Width - 40),
                 };
-                var ort = new Point(16, Bounds.Height - ft.Height - 22);
-                ctx.DrawRectangle(_passt == false ? new SolidColorBrush(Color.Parse("#7F1D1D"), 0.9) : new SolidColorBrush(Color.Parse("#111827"), 0.8), null,
-                    new Rect(ort.X - 8, ort.Y - 5, ft.Width + 16, ft.Height + 10), 6, 6);
-                ctx.DrawText(ft, ort);
+                Anzeigen.Zeichnen(ctx, ft, text, new Point(8, Bounds.Height - ft.Height - 27), new Size(8, 5),
+                    _passt == false ? new SolidColorBrush(Color.Parse("#7F1D1D"), 0.9) : new SolidColorBrush(Color.Parse("#111827"), 0.8), null, 6, Verdeckt, Bounds.Size, _anzeigen);
             }
         }
         if (_karte.ZiehAnfang is { } za

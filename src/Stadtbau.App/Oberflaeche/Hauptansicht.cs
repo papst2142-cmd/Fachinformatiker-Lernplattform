@@ -83,6 +83,9 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>S 0.7.0: Bauen in der 3D-Ansicht (Ebene ueber der Spiel-Flaeche).</summary>
     public DreiBedienung Bedienung3D => _bedienung3D ??= new DreiBedienung(Drei, Karte);
 
+    /// <summary>Die Ebene ueber der 3D-Ansicht, nur wenn schon gebaut (fuer Pruefungen, baut nichts).</summary>
+    internal DreiBedienung? Bedienung3DGebaut => _bedienung3D;
+
     private readonly ContentControl _aussenMitte = new();
     private Control? _karteMitte;
     private Control? _dreiMitte;
@@ -1074,6 +1077,7 @@ public sealed partial class Hauptansicht : UserControl
         EbeneFuerSetzenAn(art);
         Karte.SetzenArt = art;
         Karte.SetzenModell = modell;
+        ReiheVorgabeSetzen(art, modell);
         _setzenName = art switch
         {
             AussenArt.Teich when modell == "rund" => Texte.TeichRund,
@@ -1215,6 +1219,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Ziehen when Karte.ZiehAnfang is not null && Karte.ZiehGrund is { } grund && !GrundErstNachTippFuerTests =>
             (_setzenName ?? KatalogName(AussenArt.Ziehen)) + ": " + grund + " " + Texte.ZiehenEnde,
         AussenArt.Ziehen => (_setzenName ?? KatalogName(AussenArt.Ziehen)) + ": " + (Karte.ZiehAnfang is null ? Texte.ZiehenAnfang : Texte.ZiehenEnde),
+        _ when Karte.ReiheAktiv => (_setzenName ?? KatalogName(Karte.SetzenArt!.Value)) + ": " + (Karte.ReiheAnfang is null ? Texte.ReiheAnfang : Texte.ReiheEnde),
         { } art => (_setzenName ?? KatalogName(art)) + ": " + Texte.AussenSetzenAktiv,
     };
 
@@ -1243,6 +1248,8 @@ public sealed partial class Hauptansicht : UserControl
             var beenden = Schrift.Knopf(Texte.SetzenBeenden).Vorlese(Texte.SetzenBeenden).Mit(Texte.SetzenBeendenTipp);
             beenden.Click += (_, _) => SetzenBeenden();
             _aussenAuswahl.Children.Add(beenden);
+            // S 0.30.0: Baum oder Katalog-Stueck auch als Reihe
+            ReiheTeil();
         }
         if (_projekt is not null && !_projekt.NurLesen && KartenFlaeche.DrehbarBeimSetzen(Karte.SetzenArt))
         {
@@ -1265,6 +1272,11 @@ public sealed partial class Hauptansicht : UserControl
                 return;
             }
             _aussenAuswahl.Children.Add(setzenDrehen);
+            return;
+        }
+        if (Karte.SetzenArt is null && GruppeTeil())
+        {
+            // S 0.30.0: mehrere Stuecke gewaehlt
             return;
         }
         if (_projekt is null || Karte.Auswahl is not { } s || !AussenBearbeitung.Gueltig(_projekt.AussenStand, s))

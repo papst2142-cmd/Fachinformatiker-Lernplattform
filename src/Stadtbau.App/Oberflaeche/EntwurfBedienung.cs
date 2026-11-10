@@ -362,10 +362,19 @@ public sealed class EntwurfBedienung : Control
     /// <summary>Umriss des Schattens beim letzten Zeichnen in Bildpunkten (Start-Test).</summary>
     public Rect SchattenRahmen { get; private set; }
 
+    /// <summary>Weisung P12-137: Rahmen der Elemente ueber der Flaeche (Kamera-Karte), bezogen auf die uebergebene Flaeche.</summary>
+    public Func<Visual, IReadOnlyList<Rect>>? Verdecker { get; set; }
+
+    /// <summary>Weisung P12-137: wohin die Ebene ihre Anzeigen zuletzt gezeichnet hat (Text, Rahmen).</summary>
+    public IReadOnlyList<(string Text, Rect Rahmen)> AnzeigenGezeichnet => _anzeigen;
+
+    private readonly List<(string Text, Rect Rahmen)> _anzeigen = [];
+
     public override void Render(DrawingContext ctx)
     {
         // durchsichtig, aber trifft (sonst gehen Maus und Finger an die Spiel-Flaeche)
         ctx.FillRectangle(Brushes.Transparent, new Rect(Bounds.Size));
+        _anzeigen.Clear();
         if (Kamera is not { } k)
         {
             return;
@@ -394,10 +403,8 @@ public sealed class EntwurfBedienung : Control
                 {
                     MaxTextWidth = Math.Max(40, Bounds.Width - 40),
                 };
-                var ort = new Point(16, Bounds.Height - ft.Height - 22);
-                ctx.DrawRectangle(_passt == false ? new SolidColorBrush(Color.Parse("#7F1D1D"), 0.9) : new SolidColorBrush(Color.Parse("#111827"), 0.8), null,
-                    new Rect(ort.X - 8, ort.Y - 5, ft.Width + 16, ft.Height + 10), 6, 6);
-                ctx.DrawText(ft, ort);
+                Anzeigen.Zeichnen(ctx, ft, text, new Point(8, Bounds.Height - ft.Height - 27), new Size(8, 5),
+                    _passt == false ? new SolidColorBrush(Color.Parse("#7F1D1D"), 0.9) : new SolidColorBrush(Color.Parse("#111827"), 0.8), null, 6, Verdecker?.Invoke(this) ?? [], Bounds.Size, _anzeigen);
             }
         }
     }

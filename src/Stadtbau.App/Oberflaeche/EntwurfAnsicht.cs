@@ -107,6 +107,7 @@ public sealed class EntwurfAnsicht : Grid
         _ordner = ordner;
         _raster.IsChecked = ordner is null || WerkzeugEinstellungen.RasterZeigen(ordner);
         Bedienung = new EntwurfBedienung(this);
+        Bedienung.Verdecker = v => Anzeigen.Rahmen(v, KameraKarte);
         ColumnDefinitions = new ColumnDefinitions("260,*,340");
         Entwurf.Geaendert += () =>
         {
