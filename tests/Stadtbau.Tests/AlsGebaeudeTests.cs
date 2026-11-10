@@ -195,4 +195,31 @@ public class AlsGebaeudeTests
         Assert.Null(Bauteile.GanzLesen("cc0:modular/building-block"));
         Assert.Same(Bauteile.GanzArt, new Bauteile.Teil(id, 0, 0, 0, 0).Art);
     }
+
+    /// <summary>
+    /// S 0.35.0 (Sammelliste 282): der gelbe Hinweis an einem Gebaeude aus „Als Gebäude übernehmen“ nennt den deutschen
+    /// Namen des Stuecks, nicht die Kennung „bau:…“. Gegenprobe: mit dem Namen wie bis S 0.34.1 steht die Kennung darin.
+    /// </summary>
+    [Fact]
+    public void Hinweis_AmUebernommenenGebaeude_NenntDenNamen_Gegenprobe()
+    {
+        var p = Leer();
+        Strasse(p, 25);
+        var e = Haus;
+        var s = Stueck(p, e, 20, 21);
+        Assert.NotNull(p.AussenAendern("Als Gebaeude", a => AussenBearbeitung.AlsGebaeude(a, s, out _, out _)));
+        var hinweise = p.PruefenAussen().Where(f => !f.Rot && f.Text.StartsWith("Selbst gebautes Gebäude", StringComparison.Ordinal)).Select(f => f.Text).ToList();
+        Assert.Contains(hinweise, t => t.Contains("„" + e.Anzeige + "“", StringComparison.Ordinal));
+        Assert.DoesNotContain(hinweise, t => t.Contains(Bauteile.ModellPraefix, StringComparison.Ordinal));
+        Blueprint.NameAltFuerTests = true;
+        try
+        {
+            Assert.Contains(p.PruefenAussen(), f => !f.Rot && f.Text.StartsWith("Selbst gebautes Gebäude", StringComparison.Ordinal)
+                && f.Text.Contains("„" + Bauteile.ModellPraefix, StringComparison.Ordinal));
+        }
+        finally
+        {
+            Blueprint.NameAltFuerTests = false;
+        }
+    }
 }

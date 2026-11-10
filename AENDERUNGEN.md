@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.60.0
+Das Spiel kennt jetzt Ampeln für neue Städte. Die heutige Stadt hat keine Ampel und sieht genauso aus wie bisher.
+
+- Eine Ampel steht an einer Kreuzung oder Einmündung. An jeder Straße stehen ein Mast mit roter, gelber und grüner Lampe, eine weiße Haltelinie und eine Fußgängerfurt mit weißen Streifen. Die Lampen leuchten, nachts besonders hell.
+- Die Ampeln schalten im festen Takt: erst hat die eine Straße Grün, dann die andere. Autos halten bei Rot und Gelb vor der Haltelinie und fahren bei Grün weiter.
+- Deine Figur geht über die Furten wie über einen Zebrastreifen. Sie muss nicht warten; steht sie auf der Fahrbahn, halten die Autos wie bisher.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.59.1
 Vorbereitung für Wege an neuen Städten. Die heutige Stadt sieht genauso aus wie bisher.
 

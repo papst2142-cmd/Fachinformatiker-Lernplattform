@@ -1,4 +1,5 @@
 using System.Numerics;
+using AmpelRegeln = Lernplattform.Core.Spiel.Probe.Ampeln;
 
 namespace Lernplattform.Core.Spiel.Probe;
 
@@ -120,7 +121,29 @@ public sealed class Verkehr
     public bool Passt(StadtSzene szene) => (FuerStrassen is not { } eigene
         || (eigene.Count == szene.Strassen.Count && eigene.Zip(szene.Strassen).All(p => p.First.SequenceEqual(p.Second))))
         && (FuerTag is not { } tag || tag == szene.Spieltag)
-        && Zebras.SequenceEqual(szene.Zebras);
+        && Zebras.SequenceEqual(szene.Zebras)
+        && Ampeln.Count == szene.Ampeln.Count && Ampeln.Zip(szene.Ampeln).All(p => p.First.Mitte == p.Second.Mitte && p.First.Arme.SequenceEqual(p.Second.Arme));
+
+    /// <summary>
+    /// Welle A 0.60.0 (Weisung P12-166): Ampeln der Szene; ein Auto haelt vor der Haltelinie, solange seine Achse nicht Gruen
+    /// zeigt (<see cref="AmpelRegeln.Zustand"/> mit <see cref="Zeit"/>).
+    /// </summary>
+    public List<Ampel> Ampeln { get; } = [];
+
+    /// <summary>
+    /// Welle A 0.60.0: Summe der Fahrzeit aller Schritte <see cref="Weiter"/> (Takt der Ampeln; steht, solange die Autos
+    /// stehen, keine Uhr). Bleibt beim Neubau der Szene mit dem Verkehr erhalten.
+    /// </summary>
+    public double Zeit { get; private set; }
+
+    /// <summary>Gegenprobe Welle A 0.60.0: Autos fahren ueber jede Ampel wie bis A 0.59.1.</summary>
+    public static bool AmpelnAusFuerTests
+    {
+        get => AmpelnAus.Value;
+        set => AmpelnAus.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> AmpelnAus = new();
 
     /// <summary>
     /// Welle A 0.54.0 (Weisung P12-115): Zebrastreifen der Szene; ein Auto haelt davor, solange die Figur darauf steht.
@@ -195,11 +218,13 @@ public sealed class Verkehr
             var v0 = Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen, szene.Spieltag), tempo, abstand, szene.Strassen);
             v0.FuerTag = szene.Spieltag;
             v0.Zebras.AddRange(szene.Zebras);
+            v0.Ampeln.AddRange(szene.Ampeln);
             return v0;
         }
         var v = new Verkehr { AbstandVorne = abstand, FuerStrassen = szene.Strassen };
         v.Kreuzungen.AddRange(KreuzungenAus(szene.Strassen));
         v.Zebras.AddRange(szene.Zebras);
+        v.Ampeln.AddRange(szene.Ampeln);
         for (var nr = 0; nr < Strecken.Length; nr++)
         {
             var (modell, punkte, start) = Strecken[nr];
@@ -313,6 +338,8 @@ public sealed class Verkehr
     public void Weiter(double sekunden, float fx, float fz)
     {
         var figurOrt = new Vector2(fx, fz);
+        Zeit += sekunden;
+        var ampelnAn = Ampeln.Count > 0 && !AmpelnAusFuerTests;
         // Welle A 0.54.0 (Sammelliste 254): nur eine Figur auf der Fahrbahn haelt die Autos an (auf dem Gehweg fahren sie
         // weiter); steht sie auf einem Zebrastreifen, haelt jedes Auto davor
         var alt = AnhaltenAltFuerTests;
@@ -364,7 +391,9 @@ public sealed class Verkehr
             var vorfahrt = Ringe.Count > 0 && !kreuzung && feldVoraus >= 0 && feldVoraus != feldJetzt && AmRing(Kreuzungen[feldVoraus]) && !ImRing(ort)
                 && Autos.Any(b => b != a && b.Lage() is var (bo, br) && ImRing(bo) && Vector2.Distance(bo, Kreuzungen[feldVoraus]) < FeldRadius + VorfahrtWeite
                     && Vector2.Dot(br, Kreuzungen[feldVoraus] - bo) > 0);
-            a.Haelt = figur || vorne || kreuzung || anfang || vorfahrt;
+            // Welle A 0.60.0: vor der Haltelinie einer Ampel, die fuer diese Fahrtrichtung nicht Gruen zeigt
+            var rot = ampelnAn && VorRot(ort, richtung);
+            a.Haelt = figur || vorne || kreuzung || anfang || vorfahrt || rot;
             if (a.Haelt)
             {
                 continue;
@@ -382,6 +411,33 @@ public sealed class Verkehr
             }
         }
     }
+
+    /// <summary>
+    /// Welle A 0.60.0: steht die Front <paramref name="ort"/> (Fahrtrichtung <paramref name="richtung"/>) vor der Haltelinie
+    /// einer Ampel (zwischen <see cref="AmpelRegeln.HalteVon"/> und <see cref="AmpelRegeln.HalteBis"/> vor ihrer Mitte, auf
+    /// ihrer Strasse), die fuer diese Richtung nicht Gruen zeigt?
+    /// </summary>
+    private bool VorRot(Vector2 ort, Vector2 richtung)
+    {
+        foreach (var amp in Ampeln)
+        {
+            var zur = amp.Mitte - ort;
+            var voraus = Vector2.Dot(zur, richtung);
+            if (voraus < AmpelRegeln.HalteVon || voraus > AmpelRegeln.HalteBis)
+            {
+                continue;
+            }
+            var quer = MathF.Abs((zur.X * richtung.Y) - (zur.Y * richtung.X));
+            if (quer < 0.45f && AmpelRegeln.Zustand(Zeit, amp.AchseFuer(richtung)) != AmpelZustand.Gruen)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>Welle A 0.60.0: Zeit des Takts setzen (Start-Test, Fotos, Tests).</summary>
+    public void ZeitSetzen(double zeit) => Zeit = zeit;
 
     /// <summary>Welle K3b: liegt der Punkt auf der Fahrbahn eines Rings?</summary>
     private bool ImRing(Vector2 p) => Ringe.Any(r => MathF.Abs(Vector2.Distance(p, r.Mitte) - r.Radius) < StadtSzene.StrassenBreite / 2);

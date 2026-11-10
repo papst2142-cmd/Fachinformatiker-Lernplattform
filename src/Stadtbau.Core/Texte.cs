@@ -750,6 +750,12 @@ public static class Texte
     public const string ZebrastreifenTipp = "Auf eine gerade Straße mit Gehweg antippen: der Zebrastreifen legt sich quer über die Fahrbahn. Nur hier geht die Figur über eine Straße mit Gehweg; Autos halten davor.";
     public const string ZebraDrehenNicht = "Ein Zebrastreifen liegt immer quer zur Straße; schieben geht nur längs der Straße.";
     public const string ZebraKeineStrasse = "Hier ist keine gerade Straße: den Zebrastreifen auf ein gerades Stück Straße setzen.";
+
+    // Welle S 0.35.0 (Weisung P12-166): Ampeln
+    public const string Ampel = "Ampel";
+    public const string AmpelTipp = "Auf eine Kreuzung oder Einmündung antippen: die Ampel stellt an jeder Straße einen Mast auf, mit Haltelinie und Furt. Autos halten bei Rot, die Figur geht über die Furt. Am Kreisverkehr gibt es keine Ampel.";
+    public const string AmpelDrehenNicht = "Eine Ampel richtet sich selbst nach den Straßen der Kreuzung aus; schieben setzt sie an eine andere Kreuzung.";
+    public const string AmpelKeineKreuzung = "Hier ist keine freie Kreuzung: die Ampel auf eine Kreuzung oder Einmündung setzen (nicht am Kreisverkehr, höchstens eine Ampel je Kreuzung).";
     public const string LaternenVerteilen = "Laternen neu verteilen";
     public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen im Abstand 3,5 auf, abwechselnd links und rechts. Selbst gesetzte Laternen bleiben, gelöschte automatische kommen nicht wieder.";
     public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} automatische entfernt.";

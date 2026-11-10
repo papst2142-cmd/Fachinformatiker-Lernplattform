@@ -240,6 +240,15 @@ public static class Bauen3D
                 var q = z.Quer * (StadtSzene.StrassenBreite / 2);
                 return [[z.Mitte - l - q, z.Mitte + l - q, z.Mitte + l + q, z.Mitte - l + q]];
             }
+            case AussenArt.Ampel:
+            {
+                // S 0.35.0: die Kreuzung bis zu den Furten und je Mast ein kleiner Kreis
+                if (AussenBearbeitung.AmpelVon(aussen, s) is not { } amp)
+                {
+                    return [];
+                }
+                return [Kreis(amp.Mitte.X, amp.Mitte.Y, Ampeln.FurtMitte + (Zebrastreifen.Breite / 2)), .. amp.Masten.Select(m => Kreis(m.Fuss.X, m.Fuss.Y, 0.1))];
+            }
             case AussenArt.Notiz:
                 // S 0.27.0: nur in der Draufsicht
                 return [];

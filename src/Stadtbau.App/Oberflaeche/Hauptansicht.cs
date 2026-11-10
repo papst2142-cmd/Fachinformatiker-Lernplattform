@@ -783,6 +783,9 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>S 0.26.0: Knopf „Zebrastreifen“ (Start-Test).</summary>
     internal Button? ZebraKnopf { get; private set; }
 
+    /// <summary>S 0.35.0: Knopf „Ampel“ (Start-Test).</summary>
+    internal Button? AmpelKnopf { get; private set; }
+
     /// <summary>S 0.26.0: Knopf „Laternen neu verteilen“ (Start-Test).</summary>
     internal Button? LaternenVerteilenKnopf { get; private set; }
 
@@ -814,7 +817,12 @@ public sealed partial class Hauptansicht : UserControl
             .Vorlese(Texte.Zebrastreifen + " setzen").Mit(Texte.ZebrastreifenTipp + " " + Texte.SetzenKnopfTipp);
         zebra.Click += (_, _) => SetzenKnopfGedrueckt(zebra, false, () => AussenSetzenWaehlen(AussenArt.Zebrastreifen, null));
         ZebraKnopf = zebra;
-        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra } };
+        // A 0.60.0 / S 0.35.0 (Weisung P12-166): Ampel neben dem Zebrastreifen
+        var ampel = new Button { Content = Schrift.Text(Texte.Ampel, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.Ampel + " setzen").Mit(Texte.AmpelTipp + " " + Texte.SetzenKnopfTipp);
+        ampel.Click += (_, _) => SetzenKnopfGedrueckt(ampel, false, () => AussenSetzenWaehlen(AussenArt.Ampel, null));
+        AmpelKnopf = ampel;
+        var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra, ampel } };
         var verteilen = new Button { Content = Schrift.Text(Texte.LaternenVerteilen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
             .Vorlese(Texte.LaternenVerteilen).Mit(Texte.LaternenVerteilenTipp);
         verteilen.Click += (_, _) => LaternenVerteilen();
@@ -1221,6 +1229,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Teich => Texte.Teich,
         AussenArt.Steg => Texte.Steg,
         AussenArt.Zebrastreifen => Texte.Zebrastreifen,
+        AussenArt.Ampel => Texte.Ampel,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
@@ -1447,7 +1456,7 @@ public sealed partial class Hauptansicht : UserControl
         drehen.IsEnabled = drehenNicht is null;
         var kopie = Schrift.Knopf(Texte.Kopie);
         kopie.Click += (_, _) => Karte.Kopieren();
-        kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz);
+        kopie.IsEnabled = s.Art is not (AussenArt.Haus or AussenArt.Paketplatz or AussenArt.Ampel);   // S 0.35.0: eine Ampel gehoert zu genau einer Kreuzung
         var weg = Schrift.Gefahrknopf(Texte.Loeschen);
         weg.Click += (_, _) => Karte.Loeschen();
         weg.IsEnabled = AussenBearbeitung.LoeschenNicht(s) is null;

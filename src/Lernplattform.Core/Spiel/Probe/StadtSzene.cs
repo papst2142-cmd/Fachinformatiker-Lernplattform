@@ -171,6 +171,9 @@ public sealed partial class StadtSzene
     /// <summary>Welle A 0.54.0: die Zebrastreifen der Stadt (auf einer geraden Strasse gelegt).</summary>
     public IReadOnlyList<Zebra> Zebras { get; private init; } = [];
 
+    /// <summary>Welle A 0.60.0 (Weisung P12-166): die Ampeln der Stadt (auf einer Kreuzung oder Einmuendung gelegt).</summary>
+    public IReadOnlyList<Ampel> Ampeln { get; private init; } = [];
+
     /// <summary>Welle A 0.54.0: hat die Stadt eine Strasse mit Gehweg (dann ist deren Fahrbahn nur am Zebrastreifen begehbar)?</summary>
     public bool MitGehweg { get; private init; }
 
@@ -203,8 +206,9 @@ public sealed partial class StadtSzene
     /// <summary>Weisung P8-55 (W12): die fertigen Netze der Szene (Stadt, je Haus, Kleingruen, Paket nah und fern).</summary>
     /// <remarks>Welle D1 (Weisung P12-143): dazu die Fernformen der Stadt (Fest-Deko vereinfacht, <see cref="Fernform"/>) und je Haus.</remarks>
     /// <remarks>Welle D2 (Weisung P12-157): <paramref name="Instanzen"/> = die Stuecke mit Instancing; Stadt, StadtFern und Gruen enthalten sie dann nicht.</remarks>
+    /// <remarks>Welle A 0.60.0 (Weisung P12-166): <paramref name="AmpelLichter"/> = die leuchtenden Lampen je Gruppe (<see cref="Probe.Ampeln.LichtNetze"/>), ohne Ampel null.</remarks>
     public sealed record Fertig(Netz Stadt, IReadOnlyDictionary<StadtHaus, Netz> Haeuser, Netz? Gruen, Netz? PaketNah, Netz? PaketFern,
-        Netz? StadtFern = null, IReadOnlyDictionary<StadtHaus, Netz>? HaeuserFern = null, Instanzplan? Instanzen = null);
+        Netz? StadtFern = null, IReadOnlyDictionary<StadtHaus, Netz>? HaeuserFern = null, Instanzplan? Instanzen = null, IReadOnlyList<Netz>? AmpelLichter = null);
 
     /// <summary>Welle D1/D2: ab diesem Kameraabstand zeichnet das Spiel die Fernformen (wie Autos und Laternen).</summary>
     public const float FernAb = 25f;
@@ -258,7 +262,7 @@ public sealed partial class StadtSzene
             var stadtFern = NetzBauen(true, plan);
             var gruenNetz = GruenNetzBauen(plan);
             var (nah, fern) = PaketMitVorrat();
-            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern, stadtFern, haeuserFern, plan);
+            fertig = new Fertig(stadtNetz, haeuser, gruenNetz, nah, fern, stadtFern, haeuserFern, plan, Probe.Ampeln.LichtNetze(Ampeln));
             if (vorrat is not null)
             {
                 vorrat.Haeuser = neu;
@@ -569,6 +573,8 @@ public sealed partial class StadtSzene
         var netz = new Netz();
         // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
         Bahnuebergang.Hinzu(netz, Andreaskreuze);
+        // Welle A 0.60.0: Masten der Ampeln wie die Bahnuebergaenge (nah und fern ganz, klein); die Lampen leuchten im eigenen Aufruf
+        Probe.Ampeln.Hinzu(netz, Ampeln);
         if (Grafik is null)
         {
             return netz;
@@ -847,6 +853,10 @@ public sealed partial class StadtSzene
         // Welle A 0.54.0 (Weisung P12-115, Sammelliste 254/255): Zebrastreifen aus stadtdaten.zebrastreifen; die Fahrbahn
         // einer Strasse mit Gehweg ist nur dort frei zum Gehen (Fassung 0: keine Zebrastreifen, keine Strasse mit Gehweg)
         var zebras = Zebrastreifen.Alle(stadt.Daten, strassen);
+        // Welle A 0.60.0 (Weisung P12-166): Ampeln aus stadtdaten.ampeln; ihre Furten sind fuer die Figur frei wie ein
+        // Zebrastreifen (Fassung 0: keine Ampeln)
+        var ampeln = Probe.Ampeln.Alle(stadt.Daten, strassen);
+        var furten = ampeln.SelectMany(a => a.Furten).ToList();
         var zugangswege = stadt.Zugaenge.Select(z => Vektoren(Objekt(z.Value)["weg"])).ToList();
         // W8b: Gehwege an Haeusern ohne Ort (Stellwerk) halten Baeume fern und sind frei zum Gehen
         zugangswege.AddRange(StadtTueren.Zierwege(stadt).Select(z => Vektoren(z["weg"])));
@@ -1000,7 +1010,8 @@ public sealed partial class StadtSzene
         foreach (var (x1, z1, x2, z2) in MittellinienStriche(strassen))
         {
             // Welle A 0.54.0: kein Strich auf einem Zebrastreifen
-            if (zebras.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f)))
+            if (zebras.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f))
+                || furten.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f)))
             {
                 continue;
             }
@@ -1012,6 +1023,22 @@ public sealed partial class StadtSzene
             foreach (var (a, b) in Zebrastreifen.BalkenVon(z))
             {
                 teile.Add(Band(a.X, a.Y, b.X, b.Y, Hoehe.Mittellinie, Zebrastreifen.BalkenBreite, Weiss));
+            }
+        }
+        // Welle A 0.60.0: je Arm einer Ampel die Furt (zwei gestrichelte Linien) und die Haltelinie
+        foreach (var amp in ampeln)
+        {
+            foreach (var arm in amp.Arme)
+            {
+                var (h1, h2) = Probe.Ampeln.Haltelinie(amp, arm);
+                teile.Add(Band(h1.X, h1.Y, h2.X, h2.Y, Hoehe.Mittellinie, Probe.Ampeln.HalteBreite, Weiss));
+            }
+            foreach (var furt in amp.Furten)
+            {
+                foreach (var (a, b) in Probe.Ampeln.FurtStriche(furt))
+                {
+                    teile.Add(Band(a.X, a.Y, b.X, b.Y, Hoehe.Mittellinie, Probe.Ampeln.FurtStrichBreite, Weiss));
+                }
             }
         }
         foreach (var (_, zugang) in stadt.Zugaenge.Where(z => sichtbareOrte.Contains(z.Key)))
@@ -1349,7 +1376,7 @@ public sealed partial class StadtSzene
         {
             FarbenAnwenden(stadt.Daten, grafik, stuecke, haeuser, umgefaerbt);
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, zebras);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten]);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1386,6 +1413,7 @@ public sealed partial class StadtSzene
             Flaechen = flaechen,
             Eis = Wasser.EisAn(stadt.Daten),
             Zebras = zebras,
+            Ampeln = ampeln,
             MitGehweg = gehwege.Count > 0,
         };
     }

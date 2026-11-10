@@ -235,6 +235,7 @@ public static class LaternenAutomatik
                 || _ringe.Any(r => Vector2.Distance(q, r.Mitte) < r.Rand + ZuKreuzung)
                 || _szene.Gleise.Any(g => Kurve.Abstand(q, g) < Bahnuebergang.LichtraumHalb + Nachtlicht.AbstandModell + 0.05f)
                 || _szene.Zebras.Any(z => z.Drauf(q, StadtbauPruefung.ZebraFreiLaengs + 0.05f, StadtbauPruefung.ZebraFreiQuer + 0.05f))
+                || _szene.Ampeln.Any(a => a.Masten.Any(m => Vector2.Distance(q, m.Fuss) < Ampeln.MastGrundriss + 0.05f))
                 || _hand.Any(h => Vector2.Distance(q, h) < ZuHand)
                 || _auto.Any(a => Vector2.Distance(q, a) < Nachtlicht.Zwischen))
             {

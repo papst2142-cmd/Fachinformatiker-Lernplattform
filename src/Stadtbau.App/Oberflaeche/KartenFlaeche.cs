@@ -467,6 +467,29 @@ public sealed partial class KartenFlaeche : Control
                 Linie(ctx, [z1, z2], new Pen(Brushes.White, Lernplattform.Core.Spiel.Probe.Zebrastreifen.BalkenBreite * _zoom, lineCap: PenLineCap.Flat));
             }
         }
+        // A 0.60.0 / S 0.35.0 (Weisung P12-166): Ampeln wie im Spiel: Furten mit Strichen, Haltelinien und die Masten als
+        // dunkle Punkte mit drei Lichtern; beim Ziehen die Ampel an der Kreuzung, an die sie springen wuerde
+        foreach (var (_, amp) in Ampeln(a, dx, dy))
+        {
+            var weiss = new Pen(Brushes.White, Lernplattform.Core.Spiel.Probe.Ampeln.FurtStrichBreite * _zoom, lineCap: PenLineCap.Flat);
+            foreach (var furt in amp.Furten)
+            {
+                foreach (var (f1, f2) in Lernplattform.Core.Spiel.Probe.Ampeln.FurtStriche(furt))
+                {
+                    Linie(ctx, [f1, f2], weiss);
+                }
+            }
+            foreach (var arm in amp.Arme)
+            {
+                var (h1, h2) = Lernplattform.Core.Spiel.Probe.Ampeln.Haltelinie(amp, arm);
+                Linie(ctx, [h1, h2], new Pen(Brushes.White, Lernplattform.Core.Spiel.Probe.Ampeln.HalteBreite * _zoom, lineCap: PenLineCap.Flat));
+            }
+            foreach (var (fuss, _, _) in amp.Masten)
+            {
+                var r = Math.Max(3, 0.09 * _zoom);
+                ctx.DrawEllipse(Pinsel("#2B2B2B"), new Pen(Pinsel("#F2C230"), Math.Max(1, r / 3)), P(fuss.X, fuss.Y), r, r);
+            }
+        }
         // Welle K3: Mittelinsel jedes Kreisverkehrs (heller Rand, Rasen, Baum) wie im Spiel
         for (var i = 0; i < land.Count; i++)
         {
@@ -637,6 +660,9 @@ public sealed partial class KartenFlaeche : Control
                 case AussenArt.Zebrastreifen when Zebras(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Zebra is { } zw:
                     Flaeche(ctx, ZebraUmriss(zw), null, stift);
                     break;
+                case AussenArt.Ampel when Ampeln(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Ampel is { } am:
+                    ctx.DrawEllipse(null, stift, P(am.Mitte.X, am.Mitte.Y), AussenBearbeitung.AmpelGreifen * _zoom, AussenBearbeitung.AmpelGreifen * _zoom);
+                    break;
                 case AussenArt.Haus or AussenArt.Gebaeude:
                     var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, aw);
                     ctx.DrawRectangle(null, stift, new Rect(P(hx + dx, hy + dy), P(hx + hw + dx, hy + hh + dy)).Inflate(3));
@@ -753,6 +779,28 @@ public sealed partial class KartenFlaeche : Control
         }
         return liste;
     }
+
+    /// <summary>Alle Ampeln mit Armen; die ausgewaehlte waehrend des Ziehens an der Kreuzung, an die sie springen wuerde.</summary>
+    private static List<(AussenStelle Stelle, Lernplattform.Core.Spiel.Probe.Ampel Ampel)> AmpelnRoh(PyObjekt a, AussenStelle? auswahl, double dx, double dy)
+    {
+        var liste = new List<(AussenStelle, Lernplattform.Core.Spiel.Probe.Ampel)>();
+        for (var i = 0; i < AussenBearbeitung.AmpelListe(a).Count; i++)
+        {
+            var s = new AussenStelle(AussenArt.Ampel, i);
+            if (AussenBearbeitung.AmpelVon(a, s) is not { } amp)
+            {
+                continue;
+            }
+            if (s == auswahl && (dx != 0 || dy != 0) && AussenBearbeitung.AmpelVorschau(a, amp.Mitte.X + dx, amp.Mitte.Y + dy) is { } neu)
+            {
+                amp = neu with { Nr = amp.Nr };
+            }
+            liste.Add((s, amp));
+        }
+        return liste;
+    }
+
+    private List<(AussenStelle Stelle, Lernplattform.Core.Spiel.Probe.Ampel Ampel)> Ampeln(PyObjekt a, double dx, double dy) => AmpelnRoh(a, Auswahl, dx, dy);
 
     /// <summary>Umriss eines Zebrastreifens (ueber die ganze Fahrbahn, Breite laengs der Strasse).</summary>
     internal static List<System.Numerics.Vector2> ZebraUmriss(Lernplattform.Core.Spiel.Probe.Zebra z)
@@ -1099,6 +1147,10 @@ public sealed partial class KartenFlaeche : Control
         {
             Gemeldet?.Invoke(Texte.ZebraKeineStrasse);
         }
+        else if (art == AussenArt.Ampel)
+        {
+            Gemeldet?.Invoke(Texte.AmpelKeineKreuzung);
+        }
         Waehlen(neu);
         return neu;
     }
@@ -1140,6 +1192,7 @@ public sealed partial class KartenFlaeche : Control
         AussenArt.Steg => Texte.Steg,
         AussenArt.Zebrastreifen => Texte.Zebrastreifen,
         AussenArt.Notiz => Texte.Notiz,
+        AussenArt.Ampel => Texte.Ampel,
         _ => Texte.Paketplatz,
     };
 

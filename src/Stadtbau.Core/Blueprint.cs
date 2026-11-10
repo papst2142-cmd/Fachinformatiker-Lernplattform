@@ -357,7 +357,7 @@ public sealed class Blueprint
             {
                 continue;
             }
-            liste.Add((modell, Zierweg(aussen, modell)?["name"] as string ?? modell, g));
+            liste.Add((modell, NameVon(aussen, modell), g));
         }
         return liste;
     }
@@ -395,12 +395,36 @@ public sealed class Blueprint
                 break;
             }
             var modell = text[(start + 1)..ende];
-            var neu = Zierweg(aussen, modell)?["name"] as string is { Length: > 0 } name ? name : modell;
+            var neu = NameVon(aussen, modell);
             text = text[..(start + 1)] + neu + text[ende..];
             start += neu.Length + 2;
         }
         return f with { Text = text };
     }
+
+    /// <summary>
+    /// S 0.35.0 (Sammelliste 282): Name eines Gebaeudes ohne Ort fuer Hinweise und Funde: der Name am Weg zur Tuer, wenn er
+    /// nicht nur die Kennung ist; sonst der Name seines Innenraums (<see cref="Aussen.Bauten"/>, so traegt ihn ein Gebaeude aus
+    /// „Als Gebäude übernehmen“); sonst die Kennung. Gegenprobe: <see cref="NameAltFuerTests"/> (Weg-Name oder Kennung wie bis S 0.34.1).
+    /// </summary>
+    public static string NameVon(PyObjekt aussen, string modell)
+    {
+        var weg = Zierweg(aussen, modell)?["name"] as string;
+        if (NameAltFuerTests)
+        {
+            return weg is { Length: > 0 } alt ? alt : modell;
+        }
+        if (weg is { Length: > 0 } && weg != modell)
+        {
+            return weg;
+        }
+        return Get(Aussen.Bauten(aussen), modell) is PyObjekt bau && bau["name"] as string is { Length: > 0 } n ? n : modell;
+    }
+
+    /// <summary>Gegenprobe Sammelliste 282: Name wie bis S 0.34.1 (ohne den Namen des Innenraums).</summary>
+    public static bool NameAltFuerTests { get => NameAlt.Value; set => NameAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> NameAlt = new();
 
     /// <summary>Gegenprobe Sammelliste 229: Funde nennen den Modellnamen wie bis S 0.16.0.</summary>
     public static bool ModellnamenAltFuerTests { get; set; }
@@ -425,7 +449,7 @@ public sealed class Blueprint
             foreach (var g in gruppe.Skip(1))
             {
                 var (mx, my) = GebaeudeMitte(aussen, g);
-                funde.Add(new StadtbauFund(Texte.BlueprintSchonDa + " („" + (Zierweg(aussen, gruppe.Key)?["name"] as string ?? gruppe.Key) + "“)", Texte.BlueprintSchonDaTipp, true, mx, my));
+                funde.Add(new StadtbauFund(Texte.BlueprintSchonDa + " („" + NameVon(aussen, gruppe.Key) + "“)", Texte.BlueprintSchonDaTipp, true, mx, my));
             }
         }
         // gelb: der Innenraum eines gesetzten Blueprints kommt noch nicht ins Spiel (nichts geht verloren: Projekt und Blueprint)
