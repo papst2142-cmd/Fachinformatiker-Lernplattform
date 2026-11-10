@@ -239,6 +239,11 @@ public static partial class StadtbauMessung
             Fund("Reihe: Vorschau ueber die Strasse ohne rote Stellen oder ohne \"+n Dreiecke\" (\"" + a.ReiheInfoText + "\")");
         }
         await AlleGroessenAsync(a, f, "Reihe Vorschau");
+        // Lauf 773 (Windows): beim Aendern der Fenstergroesse meldet Windows den stehenden Mauszeiger als Bewegung, die
+        // Vorschau folgt ihm (richtig fuer den Nutzer). Das Ziel darum nach den Groessen wieder auf (20, 12) setzen,
+        // sonst vergleicht die Probe die Vorschau zu einem anderen Ende mit dem Schritt bis (20, 12).
+        ZielNotieren("Reihe Vorschau", k.ReiheZiel);
+        k.ReiheZielSetzen(20, 12);
         schritte = p.SchritteZurueck;
         var vorschau = k.ReiheVorschau!;
         k.ReiheBis(20, 12);
@@ -285,6 +290,10 @@ public static partial class StadtbauMessung
                 Fund("Reihe 3D: keine Vorschau am Boden");
             }
             await AlleGroessenAsync(a, f, "Reihe 3D");
+            // wie oben: nach den Groessen das Ende wieder auf (20, 12) (Windows meldet den Mauszeiger als Bewegung)
+            ZielNotieren("Reihe 3D", k.ReiheZiel);
+            b3.ReiheSchwebenFuerTests(Bild(a, 20, 12));
+            await BildAsync(b3);
             // Weisung P12-137: die Infozeile liegt nicht unter der Kamera-Karte; Gegenprobe alte Lage (unten links) = Fund
             if (b3.AnzeigenGezeichnet.Count == 0)
             {
@@ -312,6 +321,13 @@ public static partial class StadtbauMessung
         a.SetzenBeenden();
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
+    }
+
+    /// <summary>Haelt fest, ob die Vorschau waehrend der Groessenwechsel einem Zeiger gefolgt ist (nur Angabe, Lauf 773).</summary>
+    private static void ZielNotieren(string wo, Point? ziel)
+    {
+        var text = ziel is { } z ? string.Create(Inv, $"({z.X:F2}, {z.Y:F2})") : "keins";
+        Messwerte.Notiere(wo + ": Ende der Vorschau nach den Groessen " + text + ", wieder auf (20, 12) gesetzt");
     }
 
     /// <summary>P12-139: Abstand von aussen setzen, die Zahl neben − und + muss ihn zeigen (Gegenprobe alt: sie zeigt ihn nicht).</summary>
