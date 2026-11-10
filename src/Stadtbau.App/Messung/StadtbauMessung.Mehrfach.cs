@@ -273,6 +273,27 @@ public static partial class StadtbauMessung
                 Fund("Reihe 3D: keine Vorschau am Boden");
             }
             await AlleGroessenAsync(a, f, "Reihe 3D");
+            // Weisung P12-137: die Infozeile liegt nicht unter der Kamera-Karte; Gegenprobe alte Lage (unten links) = Fund
+            if (b3.AnzeigenGezeichnet.Count == 0)
+            {
+                Fund("Reihe 3D: keine Infozeile gezeichnet");
+            }
+            Anzeigen.AltFuerTests = true;
+            try
+            {
+                b3.InvalidateVisual();
+                await BildAsync(b3);
+                if (AnzeigenPruefen(a, "Gegenprobe Reihe 3D alte Lage", melden: false) == 0)
+                {
+                    Fund("Gegenprobe Reihe 3D: Infozeile an der alten Stelle unter der Kamera-Karte nicht erkannt");
+                }
+            }
+            finally
+            {
+                Anzeigen.AltFuerTests = false;
+                b3.InvalidateVisual();
+                await BildAsync(b3);
+            }
             k.ReiheAbbrechen();
         }
         k.ReiheAn = false;

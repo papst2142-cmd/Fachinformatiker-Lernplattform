@@ -83,6 +83,9 @@ public sealed partial class Hauptansicht : UserControl
     /// <summary>S 0.7.0: Bauen in der 3D-Ansicht (Ebene ueber der Spiel-Flaeche).</summary>
     public DreiBedienung Bedienung3D => _bedienung3D ??= new DreiBedienung(Drei, Karte);
 
+    /// <summary>Die Ebene ueber der 3D-Ansicht, nur wenn schon gebaut (fuer Pruefungen, baut nichts).</summary>
+    internal DreiBedienung? Bedienung3DGebaut => _bedienung3D;
+
     private readonly ContentControl _aussenMitte = new();
     private Control? _karteMitte;
     private Control? _dreiMitte;

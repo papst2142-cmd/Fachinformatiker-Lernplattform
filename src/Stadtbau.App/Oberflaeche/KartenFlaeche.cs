@@ -218,6 +218,16 @@ public sealed partial class KartenFlaeche : Control
         }
     }
 
+    /// <summary>Weisung P12-137: Rahmen der Elemente ueber der Flaeche (Kamera-Karte, Werkzeugleiste), bezogen auf die uebergebene Flaeche.</summary>
+    public Func<Visual, IReadOnlyList<Rect>>? Verdecker { get; set; }
+
+    /// <summary>Weisung P12-137: wohin die Flaeche ihre Anzeigen zuletzt gezeichnet hat (Text, Rahmen).</summary>
+    public IReadOnlyList<(string Text, Rect Rahmen)> AnzeigenGezeichnet => _anzeigen;
+
+    private readonly List<(string Text, Rect Rahmen)> _anzeigen = [];
+
+    internal IReadOnlyList<Rect> VerdecktFuer(Visual v) => Verdecker?.Invoke(v) ?? [];
+
     /// <summary>S 0.27.0: Platz oben fuer die Werkzeugleiste (Waehlen, Massband, Ebenen, Notiz), wie <see cref="UntenFrei"/>.</summary>
     public double ObenFrei
     {
@@ -353,6 +363,7 @@ public sealed partial class KartenFlaeche : Control
     public override void Render(DrawingContext ctx)
     {
         ctx.FillRectangle(Farbe("bg"), new Rect(Bounds.Size));
+        _anzeigen.Clear();
         if (Stand is not { } a)
         {
             return;
@@ -1253,7 +1264,9 @@ public sealed partial class KartenFlaeche : Control
             var w = (-90 + grad) * Math.PI / 180;
             var lang = Drehgriff.Abstand;
             ctx.DrawLine(new Pen(Farbe("accent"), 3), m, new Point(m.X + (lang * Math.Cos(w)), m.Y + (lang * Math.Sin(w))));
-            Text(ctx, new Typeface(FontFamily.Default), (grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°", new Point(gx + 16, gy - 8), 12, Farbe("text"), null);
+            var gt = (grad > 0 ? "+" : "") + grad.ToString(CultureInfo.InvariantCulture) + "°";
+            var ft = new FormattedText(gt, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 12, Farbe("text"));
+            Anzeigen.Zeichnen(ctx, ft, gt, new Point(gx + 16, gy - 8), default, null, null, 0, VerdecktFuer(this), Bounds.Size, _anzeigen);
         }
     }
 

@@ -243,8 +243,7 @@ public sealed partial class DreiBedienung
                 var ft = new FormattedText(Texte.GruppeGewaehlt(_karte.Gruppe.Count), CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight,
                     new Typeface(FontFamily.Default), 13, Brushes.White);
                 var ort = new Point(Math.Clamp(r.X, 4, Math.Max(4, Bounds.Width - ft.Width - 12)), Math.Max(4, r.Y - ft.Height - 10));
-                ctx.DrawRectangle(akzent, null, new Rect(ort.X, ort.Y, ft.Width + 10, ft.Height + 4), 4, 4);
-                ctx.DrawText(ft, new Point(ort.X + 5, ort.Y + 2));
+                Anzeigen.Zeichnen(ctx, ft, Texte.GruppeGewaehlt(_karte.Gruppe.Count), ort, new Size(5, 2), akzent, null, 4, Verdeckt, Bounds.Size, _anzeigen);
             }
         }
         if (_mehr is { Stueck: null } md && _mehrRahmenEnde is { } ende)
@@ -295,8 +294,7 @@ public sealed partial class DreiBedienung
         {
             MaxTextWidth = Math.Max(40, Bounds.Width - 40),
         };
-        var ort = new Point(16, Bounds.Height - ft.Height - 22);
-        ctx.DrawRectangle(new SolidColorBrush(Color.Parse("#111827"), 0.8), null, new Rect(ort.X - 8, ort.Y - 5, ft.Width + 16, ft.Height + 10), 6, 6);
-        ctx.DrawText(ft, ort);
+        Anzeigen.Zeichnen(ctx, ft, text, new Point(8, Bounds.Height - ft.Height - 27), new Size(8, 5), new SolidColorBrush(Color.Parse("#111827"), 0.8), null, 6,
+            Verdeckt, Bounds.Size, _anzeigen);
     }
 }

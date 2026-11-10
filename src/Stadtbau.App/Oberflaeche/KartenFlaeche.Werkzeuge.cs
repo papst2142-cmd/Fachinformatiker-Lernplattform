@@ -119,14 +119,15 @@ public sealed partial class KartenFlaeche
         {
             return;
         }
-        MassbandSchild = MassbandLinie(ctx, P(a.X, a.Y), (Massband.Ende ?? Massband.Schwebe) is { } e ? P(e.X, e.Y) : null, Massband.Laenge, Bounds);
+        MassbandSchild = MassbandLinie(ctx, P(a.X, a.Y), (Massband.Ende ?? Massband.Schwebe) is { } e ? P(e.X, e.Y) : null, Massband.Laenge, Bounds, VerdecktFuer(this), _anzeigen);
     }
 
     /// <summary>
     /// Massband zeichnen (Draufsicht und 3D): orange Linie mit weissem Rand und Querstrichen an den Enden, Schild mit der
     /// Laenge ueber der Mitte. Nur ein Anfang: ein Querstrich. Rueckgabe: Lage des Schilds (leer ohne Ende).
     /// </summary>
-    internal static Rect MassbandLinie(DrawingContext ctx, Point anfang, Point? ende, double? laenge, Rect flaeche)
+    internal static Rect MassbandLinie(DrawingContext ctx, Point anfang, Point? ende, double? laenge, Rect flaeche,
+        IReadOnlyList<Rect> verdeckt, List<(string Text, Rect Rahmen)> merken)
     {
         var rand = new Pen(Brushes.White, 6, lineCap: PenLineCap.Round);
         var linie = new Pen(MassbandFarbe, 3, lineCap: PenLineCap.Round);
@@ -149,21 +150,19 @@ public sealed partial class KartenFlaeche
         Quer(anfang);
         Quer(en);
         ctx.DrawLine(linie, anfang, en);
-        return MassbandSchildZeichnen(ctx, new Point((anfang.X + en.X) / 2, (anfang.Y + en.Y) / 2), Massband.Text(laenge ?? 0), flaeche);
+        return MassbandSchildZeichnen(ctx, new Point((anfang.X + en.X) / 2, (anfang.Y + en.Y) / 2), Massband.Text(laenge ?? 0), flaeche, verdeckt, merken);
     }
 
     /// <summary>Schild mit der Laenge, ganz in der Flaeche.</summary>
-    private static Rect MassbandSchildZeichnen(DrawingContext ctx, Point mitte, string text, Rect flaeche)
+    private static Rect MassbandSchildZeichnen(DrawingContext ctx, Point mitte, string text, Rect flaeche,
+        IReadOnlyList<Rect> verdeckt, List<(string Text, Rect Rahmen)> merken)
     {
         var ft = new FormattedText(text, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight,
             new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.Bold), 15, MassbandSchrift);
         var (b, h) = (ft.Width + 18, ft.Height + 8);
         var x = Math.Clamp(mitte.X - (b / 2), 4, Math.Max(4, flaeche.Width - b - 4));
         var y = Math.Clamp(mitte.Y - h - 10, 4, Math.Max(4, flaeche.Height - h - 4));
-        var r = new Rect(x, y, b, h);
-        ctx.DrawRectangle(MassbandGrund, new Pen(MassbandFarbe, 1.5), r, 7, 7);
-        ctx.DrawText(ft, new Point(x + 9, y + 4));
-        return r;
+        return Anzeigen.Zeichnen(ctx, ft, text, new Point(x, y), new Size(9, 4), MassbandGrund, new Pen(MassbandFarbe, 1.5), 7, verdeckt, flaeche.Size, merken);
     }
 
     // ---- Notizen ---------------------------------------------------------------------------------

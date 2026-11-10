@@ -98,6 +98,9 @@ public sealed partial class Hauptansicht
 
         mitte.Children.Add(_werkzeugLeiste);
         mitte.Children.Add(_ebenenKarte);
+        // Weisung P12-137: Anzeigen der Draufsicht und der 3D-Ansicht liegen nie unter der Kamera-Karte, der Werkzeugleiste
+        // oder der Liste der Ebenen
+        Karte.Verdecker = v => Anzeigen.Rahmen(v, _kameraAussen, _werkzeugLeiste, _ebenenKarte);
         _werkzeugLeiste.SizeChanged += (_, _) =>
         {
             _ebenenKarte.Margin = new Thickness(Kamerakarte.Rand + 150, _werkzeugLeiste.Bounds.Bottom, 0, 0);

@@ -126,6 +126,37 @@ public static partial class StadtbauMessung
             Fund("Layout " + wo + ": " + z);
         }
         Messwerte.Notiere("Layoutpruefung " + wo + ": " + funde.Count.ToString(Inv) + " Funde");
+        AnzeigenPruefen(a, wo);
+    }
+
+    /// <summary>
+    /// Weisung P12-137 (Fund Chat: Infozeile der Reihe in 3D unter der Kamera-Karte): keine Anzeige, die die Draufsicht,
+    /// die 3D-Ansicht oder der Gebaeude-Editor selbst zeichnet, liegt unter der Kamera-Karte, der Werkzeugleiste oder der
+    /// Liste der Ebenen. Gilt fuer jede sichtbare Flaeche bei jeder Layoutpruefung.
+    /// </summary>
+    private static int AnzeigenPruefen(Hauptansicht a, string wo, bool melden = true)
+    {
+        var funde = new List<string>();
+        if (a.Karte.IsEffectivelyVisible)
+        {
+            funde.AddRange(Anzeigen.Verdeckt(a.Karte.AnzeigenGezeichnet, a.Karte.VerdecktFuer(a.Karte)));
+        }
+        if (a.Bedienung3DGebaut is { IsEffectivelyVisible: true } b3)
+        {
+            funde.AddRange(Anzeigen.Verdeckt(b3.AnzeigenGezeichnet, a.Karte.VerdecktFuer(b3)));
+        }
+        if (a.Entwurf?.Bedienung is { IsEffectivelyVisible: true } eb)
+        {
+            funde.AddRange(Anzeigen.Verdeckt(eb.AnzeigenGezeichnet, eb.Verdecker?.Invoke(eb) ?? []));
+        }
+        if (melden)
+        {
+            foreach (var z in funde)
+            {
+                Fund("Layout " + wo + ": " + z);
+            }
+        }
+        return funde.Count;
     }
 
     private static async Task AlleGroessenAsync(Hauptansicht a, Window? f, string seite)

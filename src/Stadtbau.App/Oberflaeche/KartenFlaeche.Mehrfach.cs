@@ -312,8 +312,7 @@ public sealed partial class KartenFlaeche
                 var ft = new FormattedText(Texte.GruppeGewaehlt(Gewaehlt.Count), CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight,
                     new Typeface(FontFamily.Default), 13, Brushes.White);
                 var ort = new Point(Math.Clamp(rahmen.X, 4, Math.Max(4, Bounds.Width - ft.Width - 12)), Math.Max(ObenFrei + 2, rahmen.Y - ft.Height - 8));
-                ctx.DrawRectangle(akzent, null, new Rect(ort.X, ort.Y, ft.Width + 10, ft.Height + 4), 4, 4);
-                ctx.DrawText(ft, new Point(ort.X + 5, ort.Y + 2));
+                Anzeigen.Zeichnen(ctx, ft, Texte.GruppeGewaehlt(Gewaehlt.Count), ort, new Size(5, 2), akzent, null, 4, VerdecktFuer(this), Bounds.Size, _anzeigen);
             }
         }
         if (_mehrfachDruck is { Stueck: null } md && _rahmenEnde is { } ende)
