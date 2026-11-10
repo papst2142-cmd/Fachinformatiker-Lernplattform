@@ -29,6 +29,8 @@
 #   Merge-Tor eines solchen PRs = ohne-mac 10/10; release.yml verlangt vor jedem Release immer den vollen Lauf 17/17.
 # Am Ende jedes Laufs sagt der Hinweis-Job "urteil (GitHub oder echt)" (immer gruen, zaehlt nicht mit), ob ein Rot nur
 #   von GitHub kommt; dann nur die roten Jobs neu starten (werkzeuge/starttest/urteil_github.py).
+# NuGet-Zwischenspeicher (actions/cache fuer ~/.nuget/packages) gemessen in Meldung P12-87: kein Gewinn (Laden so langsam
+#   wie nuget.org, am Mac bis 33 s Verlust, fast 10 GB Speicher). Nicht wieder einbauen ohne neue Messung (Weisung P12-135).
 # Ein Label ausser "voll", "ohne-mac" und "werkzeug" startet nichts und bricht nichts ab (alle Teile uebersprungen).
 name: CI
 
@@ -118,13 +120,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
-      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
-      - uses: actions/cache@v6
-        id: nuget
-        with:
-          path: ~/.nuget/packages
-          key: nuget-tests-${{ matrix.kurz }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - name: Tests
         if: matrix.einzel
         run: dotnet test --project tests/Lernplattform.Tests -c Release
@@ -154,12 +149,10 @@ jobs:
       - name: Waechter Stufe werkzeug (nur_werkzeug.py selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
-      # Welle CI schneller 2 (Weisung P12-131): Waechter ohne-mac und NuGet-Pruefung mit festen Faellen und Gegenproben
-      - name: Waechter Stufe ohne-mac und NuGet-Pruefung (Selbsttests)
+      # Welle CI schneller 2 (Weisung P12-131): Waechter ohne-mac mit festen Faellen und Gegenproben
+      - name: Waechter Stufe ohne-mac (Selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
-        run: |
-          python3 -I werkzeuge/ci/ohne_mac.py selbsttest
-          python3 -I werkzeuge/ci/nuget_pruefen.py selbsttest
+        run: python3 -I werkzeuge/ci/ohne_mac.py selbsttest
       - name: Tag-Regel (release.py selbsttest)
         if: runner.os == 'Linux' && matrix.einzel
         run: python3 -I werkzeuge/release/release.py selbsttest
@@ -433,11 +426,6 @@ jobs:
         run: |
           echo "Rueckgabe des 1. Laufs der Spielansichten unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.spiel1.outputs.rc }}')"
           exit 1
-      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
-      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
-        if: steps.nuget.outputs.cache-hit == 'true'
-        shell: bash
-        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
@@ -473,13 +461,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
-      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
-      - uses: actions/cache@v6
-        id: nuget
-        with:
-          path: ~/.nuget/packages
-          key: nuget-pakete-${{ matrix.rid }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - name: Werkzeuge
         shell: bash
         run: |
@@ -533,11 +514,6 @@ jobs:
           if [ "$rc" != "$soll" ]; then echo "FEHLER: Bericht-Probe Rueckgabe $rc, erwartet $soll"; cat "$DATEN"/fehler.log 2>/dev/null; exit 1; fi
           if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
           echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
-      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
-      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
-        if: steps.nuget.outputs.cache-hit == 'true'
-        shell: bash
-        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   pakete-stadtbau:
     # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
@@ -577,13 +553,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
-      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
-      - uses: actions/cache@v6
-        id: nuget
-        with:
-          path: ~/.nuget/packages
-          key: nuget-stadtbau-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -602,11 +571,6 @@ jobs:
           name: stadtbau-win-x64
           path: stadtbau/stadtbau-win-x64/
           if-no-files-found: error
-      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
-      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
-        if: steps.nuget.outputs.cache-hit == 'true'
-        shell: bash
-        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
 
   sollwerte:
     # Welle Sammelliste 217 (Weisung P12-14, Nico 1a 2a 3a 4a 5a): die Vergleichswerte G1-G52 (tests/Vergleich),
@@ -704,13 +668,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # Welle CI schneller 2 (Weisung P12-131, Nico 3b): NuGet-Zwischenspeicher, nur genauer Treffer (keine restore-keys),
-      #   Schluessel aus allen Dateien, die die Wiederherstellung bestimmen; nach dem Bauen prueft nuget_pruefen.py jedes Paket
-      - uses: actions/cache@v6
-        id: nuget
-        with:
-          path: ~/.nuget/packages
-          key: nuget-android-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', 'Directory.Build.targets', '**/*.csproj', '**/packages.lock.json', '**/nuget.config') }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -938,11 +895,7 @@ jobs:
           name: emulator-probe-stadtbau
           path: emulator_probe_stadtbau.txt
           if-no-files-found: warn
-      # Welle CI schneller 2: nie ein veralteter oder kaputter Zwischenspeicher gruen (jedes Paket mit Version und Pruefsumme)
-      - name: NuGet-Zwischenspeicher pruefen (nuget_pruefen.py)
-        if: steps.nuget.outputs.cache-hit == 'true'
-        shell: bash
-        run: python -I werkzeuge/ci/nuget_pruefen.py inhalt
+
   urteil:
     # Welle CI schneller 2 (Meldung P12-84 Punkt 2, Nico Frage 1 = a, Weisung P12-131): liest am Ende des Laufs die Jobs und
     # die Protokolle der roten Jobs (nur Lesen) und sagt, ob ein Rot nur von GitHub kommt (kein Rechner, Abfragebremse,
