@@ -67,7 +67,7 @@ Bestandteil (Version) | Lizenz | Quelle | Plattformen
 - Microsoft.Android.Sdk.Linux (36.1.118) | Datei LICENSE.TXT im Paket | https://github.com/dotnet/android | android-arm64
 - Microsoft.Data.Sqlite (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.Data.Sqlite.Core (10.0.13) | MIT | https://github.com/dotnet/dotnet | android-arm64, linux-x64, osx-arm64, osx-x64, win-x64
-- Microsoft.NET.ILLink.Tasks (10.0.14) | MIT | https://github.com/dotnet/dotnet | android-arm64
+- Microsoft.NET.ILLink.Tasks (10.0.15) | MIT | https://github.com/dotnet/dotnet | android-arm64
 - Microsoft.NETCore.App.Host.linux-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | linux-x64
 - Microsoft.NETCore.App.Host.osx-arm64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-arm64
 - Microsoft.NETCore.App.Host.osx-x64 (10.0.14) | MIT | https://github.com/dotnet/dotnet | osx-x64

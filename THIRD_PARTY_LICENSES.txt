@@ -6483,10 +6483,10 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 [DotNet_MIT.txt: gleicher Text wie bei Microsoft.Data.Sqlite, DotNet_MIT.txt]
 
 ##############################################################################
-Microsoft.NET.ILLink.Tasks (10.0.14), Lizenz MIT
+Microsoft.NET.ILLink.Tasks (10.0.15), Lizenz MIT
 Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
---- Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT ---
+--- Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT ---
 .NET Runtime uses third-party libraries or other resources that may be
 distributed under licenses different than the .NET Runtime software.
 
@@ -7931,7 +7931,7 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
 [Paket Microsoft.NETCore.App.Runtime.linux-x64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
-[Paket Microsoft.NETCore.App.Runtime.linux-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+[Paket Microsoft.NETCore.App.Runtime.linux-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 Microsoft.NETCore.App.Runtime.Mono.android-arm64 (10.0.14), Lizenz MIT
@@ -7939,7 +7939,7 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
 [Paket Microsoft.NETCore.App.Runtime.Mono.android-arm64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
-[Paket Microsoft.NETCore.App.Runtime.Mono.android-arm64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+[Paket Microsoft.NETCore.App.Runtime.Mono.android-arm64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 Microsoft.NETCore.App.Runtime.osx-arm64 (10.0.14), Lizenz MIT
@@ -7947,7 +7947,7 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
 [Paket Microsoft.NETCore.App.Runtime.osx-arm64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
-[Paket Microsoft.NETCore.App.Runtime.osx-arm64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+[Paket Microsoft.NETCore.App.Runtime.osx-arm64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 Microsoft.NETCore.App.Runtime.osx-x64 (10.0.14), Lizenz MIT
@@ -7955,7 +7955,7 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
 [Paket Microsoft.NETCore.App.Runtime.osx-x64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
-[Paket Microsoft.NETCore.App.Runtime.osx-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+[Paket Microsoft.NETCore.App.Runtime.osx-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 Microsoft.NETCore.App.Runtime.win-x64 (10.0.14), Lizenz MIT
@@ -7963,7 +7963,7 @@ Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 
 [Paket Microsoft.NETCore.App.Runtime.win-x64 10.0.14: LICENSE.TXT: gleicher Text wie bei Microsoft.Android.Runtime.36.android, Paket Microsoft.Android.Runtime.36.android 36.1.118: LICENSE.TXT]
 
-[Paket Microsoft.NETCore.App.Runtime.win-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.14: THIRD-PARTY-NOTICES.TXT]
+[Paket Microsoft.NETCore.App.Runtime.win-x64 10.0.14: THIRD-PARTY-NOTICES.TXT: gleicher Text wie bei Microsoft.NET.ILLink.Tasks, Paket Microsoft.NET.ILLink.Tasks 10.0.15: THIRD-PARTY-NOTICES.TXT]
 
 ##############################################################################
 miniaudio (0.11.24 (in SoundFlow 1.4.1)), Lizenz MIT-0 oder Unlicense (Public Domain)
