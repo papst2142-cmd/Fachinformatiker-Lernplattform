@@ -21,7 +21,7 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
 | Letzte/nächste Meldung | **P12-100** (Patch A 0.59.1 / S 0.34.1; P12-99 Kurzplan, P12-98 D2) / nächste P12-101 |
-| Sammelliste | nächste freie Nummer **281** (274 Rest und 276–280 erledigt mit A 0.59.1 / S 0.34.1; 275 Bus gehört zur Welle Haltestelle; 265 Baumplaner, feste Ausnahme; 268/270 beobachten; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
+| Sammelliste | nächste freie Nummer **283** (274 Rest und 276–281 erledigt mit A 0.59.1 / S 0.34.1; 282 Name statt Kennung im gelben Hinweis offen; 275 Bus gehört zur Welle Haltestelle; 265 Baumplaner, feste Ausnahme; 268/270 beobachten; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
