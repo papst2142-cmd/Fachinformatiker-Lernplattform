@@ -99,6 +99,7 @@ public sealed partial class KartenFlaeche
         TuerPlatz = null;
         TuerModellTueren = null;
         _tuerWand = null;
+        _tuerWartend = null;
         Fassade = null;
         FassadeRechnen(p, s);
         ModellTuerenRechnen(p, s);
@@ -122,6 +123,7 @@ public sealed partial class KartenFlaeche
         TuerPlatz = null;
         Fassade = null;
         _tuerWand = null;
+        _tuerWartend = null;
         _tuerNurZiehen = false;
         TuerModusGeaendert?.Invoke();
         InvalidateVisual();
@@ -136,6 +138,55 @@ public sealed partial class KartenFlaeche
         }
     }
 
+    /// <summary>
+    /// Sammelliste 277 (Weisung P12-164): Fassaden-Rechnung im Hintergrund fuer das Haus <paramref name="s"/> zum Stand
+    /// <paramref name="schluessel"/>; laeuft schon, sobald ein Haus gewaehlt ist (<see cref="FassadeVorrechnen"/>), das Tuer-Setzen
+    /// nimmt sie dann nur noch ab. Nie auf dem Bedienfaden.
+    /// </summary>
+    private (Projekt P, AussenStelle S, string Schluessel, Task<TuerFassade?> Rechnung)? _fassadeVorrat;
+
+    /// <summary>Tipp, der kam, bevor die Fassade fertig war: wird gesetzt, sobald sie da ist (ein Schritt).</summary>
+    private (double X, double Y, double? Weite)? _tuerWartend;
+
+    /// <summary>Die Rechnung fuer das aktuelle Tuer-Setzen ist fertig (auch mit null = kein Haus in der Szene).</summary>
+    private bool _fassadeGerechnet;
+
+    private TaskCompletionSource _fassadeBereit = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>Start-Test: fertig, sobald die Fassade des laufenden Tuer-Setzens da ist (und ein wartender Tipp gesetzt).</summary>
+    public Task FassadeBereit => _fassadeBereit.Task;
+
+    /// <summary>Wie oft die Fassade auf dem Bedienfaden gerechnet wurde (nur der alte Weg; Start-Test: muss 0 bleiben).</summary>
+    public int FassadeAufBedienfaden { get; private set; }
+
+    /// <summary>Gegenprobe Sammelliste 277: Tipp vor fertiger Fassade rechnet sie auf dem Bedienfaden (wie bis S 0.34.0).</summary>
+    public static bool TippSofortAltFuerTests { get; set; }
+
+    /// <summary>Sammelliste 277: beim Waehlen eines Hauses die Fassade schon im Hintergrund rechnen.</summary>
+    private void FassadeVorrechnen(AussenStelle? s)
+    {
+        if (s is not { } st || st.Art is not (AussenArt.Haus or AussenArt.Gebaeude) || _projekt is not { NurLesen: false } p
+            || TuerFassade.AltFuerTests || !AussenBearbeitung.Gueltig(p.AussenStand, st) || TuerSetzen.Nicht(p.AussenStand, st) is not null)
+        {
+            return;
+        }
+        _ = FassadeRechnung(p, st);
+    }
+
+    /// <summary>Rechnung aus dem Vorrat (gleiches Haus, gleicher Stand), sonst neu im Hintergrund.</summary>
+    private Task<TuerFassade?> FassadeRechnung(Projekt p, AussenStelle s)
+    {
+        var stand = (Lernplattform.Core.Daten.PyObjekt)Lernplattform.Core.Spiel.Py.Kopie(p.AussenStand)!;
+        var schluessel = FassadeSchluessel(stand, s);
+        if (_fassadeVorrat is { } v && ReferenceEquals(v.P, p) && v.S == s && v.Schluessel == schluessel && !v.Rechnung.IsFaulted)
+        {
+            return v.Rechnung;
+        }
+        var rechnung = Task.Run(() => TuerFassade.Rechnen(p, stand, s));
+        _fassadeVorrat = (p, s, schluessel, rechnung);
+        return rechnung;
+    }
+
     /// <summary>Fassade im Hintergrund rechnen (nach jedem Setzen neu: ein getauschtes Fensterteil aendert die Wand).</summary>
     private void FassadeRechnen(Projekt p, AussenStelle s)
     {
@@ -144,32 +195,55 @@ public sealed partial class KartenFlaeche
             return;
         }
         var nr = ++_fassadeNr;
-        var stand = (Lernplattform.Core.Daten.PyObjekt)Lernplattform.Core.Spiel.Py.Kopie(p.AussenStand)!;
-        var schluessel = FassadeSchluessel(stand, s);
-        _ = Task.Run(() =>
+        _fassadeGerechnet = false;
+        if (_fassadeBereit.Task.IsCompleted)
         {
-            var f = TuerFassade.Rechnen(p, stand, s);
+            _fassadeBereit = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        var schluessel = FassadeSchluessel(p.AussenStand, s);
+        var rechnung = FassadeRechnung(p, s);
+        if (rechnung.IsCompletedSuccessfully && !TippSofortAltFuerTests)
+        {
+            // schon fertig (beim Waehlen vorgerechnet): sofort uebernehmen, nichts rechnen
+            _fassadeSchluessel = schluessel;
+            Fassade = rechnung.Result;
+            _fassadeGerechnet = true;
+            _fassadeBereit.TrySetResult();
+            return;
+        }
+        _ = rechnung.ContinueWith(t =>
+        {
+            var f = t.IsCompletedSuccessfully ? t.Result : null;
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 if (TuerFuer == s && nr == _fassadeNr)
                 {
                     _fassadeSchluessel = schluessel;
                     Fassade = f;
+                    _fassadeGerechnet = true;
+                    if (_tuerWartend is { } w)
+                    {
+                        _tuerWartend = null;
+                        TuerSetzenAn(w.X, w.Y, w.Weite);
+                    }
                     TuerModusGeaendert?.Invoke();
                     InvalidateVisual();
+                    _fassadeBereit.TrySetResult();
                 }
             });
-        });
+        }, TaskScheduler.Default);
     }
 
-    /// <summary>Fassade jetzt (wartet nicht auf den Hintergrund; im Start-Test und beim Setzen vor dem ersten Ergebnis).</summary>
-    public TuerFassade? FassadeJetzt()
+    /// <summary>Alter Weg (nur Gegenprobe 277): Fassade jetzt auf dem Bedienfaden rechnen.</summary>
+    private TuerFassade? FassadeJetzt()
     {
         if (Fassade is null && !TuerFassade.AltFuerTests && TuerFuer is { } s && _projekt is { } p)
         {
             _fassadeNr++;
             _fassadeSchluessel = FassadeSchluessel(p.AussenStand, s);
+            FassadeAufBedienfaden++;
             Fassade = TuerFassade.Rechnen(p, p.AussenStand, s);
+            _fassadeGerechnet = true;
         }
         return Fassade;
     }
@@ -201,7 +275,7 @@ public sealed partial class KartenFlaeche
     }
 
     private string TuerName(Projekt p, AussenStelle s) =>
-        s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Anzeige(p.AussenStand, Lernplattform.Core.Spiel.Py.Str(Lernplattform.Core.Spiel.SpielDaten.Objekt(Aussen.Landschaft(p.AussenStand)[s.Nummer])["modell"]));
+        s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Beschriftung(p.AussenStand, s);
 
     /// <summary>Liegt die Weltstelle nah genug am Haus, dass ein Tipp seine Wand meint? (bis 1,5 oder 30 Bildpunkte)</summary>
     public bool AmHaus(double x, double y, double? weite = null)
@@ -272,11 +346,20 @@ public sealed partial class KartenFlaeche
         {
             meldung = Texte.TuerSetzenDaneben(name);
         }
+        else if (!TippSofortAltFuerTests && !TuerFassade.AltFuerTests && Fassade is null && !_fassadeGerechnet)
+        {
+            // Sammelliste 277: die Fassade ist noch nicht fertig. Nicht hier rechnen (das hielt die Oberflaeche am Tablet bis
+            // 6,6 s an), sondern den Tipp merken; er wird gesetzt, sobald die Rechnung im Hintergrund fertig ist
+            _tuerWartend = (x, y, weite);
+            Gemeldet?.Invoke(Texte.TuerFassadeRechnet);
+            InvalidateVisual();
+            return Texte.TuerFassadeRechnet;
+        }
         else
         {
             string? hinweis = null;
             var punkt = new Vector2((float)x, (float)y);
-            if (FassadeJetzt() is { } f)
+            if ((TippSofortAltFuerTests ? FassadeJetzt() : Fassade) is { } f)
             {
                 var platz = f.Finden(punkt, BisherWand(f), Raster);
                 p.AussenAendern(Texte.TuerSetzenSchritt, a => hinweis = TuerSetzen.SetzenAn(a, s, platz));

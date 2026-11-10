@@ -627,6 +627,9 @@ public sealed partial class Hauptansicht : UserControl
 
     // ---- Projekt ----------------------------------------------------------------------------------
 
+    /// <summary>Gegenprobe Sammelliste 281: Auswahl im Grundriss bleibt beim Projektwechsel stehen (wie bis S 0.34.0), nur Start-Test.</summary>
+    public static bool GrundrissAuswahlAltFuerTests { get; set; }
+
     public void ProjektSetzen(Projekt projekt, string? ort, bool innen)
     {
         if (_projekt is not null)
@@ -645,6 +648,12 @@ public sealed partial class Hauptansicht : UserControl
         _dreiGrenzText.Text = Texte.GrenzenNochNicht;
         _dreiGrenzBalken.Value = 0;
         Karte.Waehlen(null);
+        // Sammelliste 281 (S 0.34.1): auch die Auswahl im Grundriss gehoert zum alten Projekt (z. B. nach „Fund antippen“ im
+        // Innenraum); blieb sie stehen, suchte die naechste Aenderung im neuen Projekt dieses Stueck und warf eine Ausnahme
+        if (!GrundrissAuswahlAltFuerTests)
+        {
+            Flaeche.Waehlen(null);
+        }
         OrtListeZeigen();
         BlueprintsZeigen();
         _modellWahl.Items.Clear();

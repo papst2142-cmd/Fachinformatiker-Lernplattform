@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.59.1
+Vorbereitung für Wege an neuen Städten. Die heutige Stadt sieht genauso aus wie bisher.
+
+- Ein Weg von einer Haustür zur Straße aus einer neuen Stadt des Stadtbau-Werkzeugs kann jetzt runde Ecken haben, wie die Fußwege. Vorher lagen an jedem Knick zwei Wegstücke übereinander.
+- Hat ein Haus aus dem Werkzeug eine Glastür in einem dunklen Rahmen, zeigt das Spiel genau diese Tür, wenn die Tür des Hauses dort liegt.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.59.0
 Das Spiel zeichnet die Stadt noch sparsamer, und du kannst dir anzeigen lassen, wie viel es zeichnet. Von nah sieht die Stadt aus wie bisher.
 

@@ -947,12 +947,9 @@ public sealed class Projekt
         var rot = GeaenderteOrte.Concat(Bauten).SelectMany(EtagenVon).SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
         if (AussenGeaendert || Leer is not null)
         {
-            rot.AddRange(PruefenAussen().Where(f => f.Rot).Select(f => (StadtOrt, f)));
-            // Welle D2 (Weisung P12-157, Nico 3a): ueber der Grenze ist die Stadt zu teuer
-            if (GrenzenLive.Fuer(Stand(), Daten).Fund() is { } teuer)
-            {
-                rot.Add((StadtOrt, teuer));
-            }
+            // Welle D2 (Weisung P12-157, Nico 3a): ueber der Grenze ist die Stadt zu teuer; Sammelliste 279: dieser Fund zuerst
+            var teuer = GrenzenLive.Fuer(Stand(), Daten).Fund();
+            rot.AddRange(GrenzenLive.Zuerst(PruefenAussen().Where(f => f.Rot), teuer).Select(f => (StadtOrt, f)));
         }
         return rot;
     }

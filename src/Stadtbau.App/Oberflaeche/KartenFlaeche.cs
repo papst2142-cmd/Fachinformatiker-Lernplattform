@@ -1046,6 +1046,8 @@ public sealed partial class KartenFlaeche : Control
         Auswahl = s;
         _gruppe = [];
         AuswahlGeaendert?.Invoke();
+        // Sammelliste 277: die Fassade fuer „Tür setzen“ schon jetzt im Hintergrund rechnen
+        FassadeVorrechnen(s);
         InvalidateVisual();
     }
 

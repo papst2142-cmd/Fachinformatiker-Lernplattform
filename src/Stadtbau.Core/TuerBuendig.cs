@@ -80,6 +80,32 @@ public static class TuerBuendig
             .Concat(Lernplattform.Core.Spiel.SpielDaten.Get(stand.Stadtdaten, "neue_orte") as List<object?> ?? [])
             .OfType<Lernplattform.Core.Daten.PyObjekt>().FirstOrDefault(o => Py.Gleich(o["id"], id))?["name"] as string;
 
+    /// <summary>Gegenprobe Sammelliste 274 (Rest): Name wie bis S 0.34.0 (Gebaeude ohne Ort mit der Kennung), nur Tests.</summary>
+    public static bool NameAltFuerTests { get => NameAlt.Value; set => NameAlt.Value = value; }
+    private static readonly AsyncLocal<bool> NameAlt = new();
+
+    /// <summary>
+    /// Sammelliste 274 (Rest, Weisung P12-164, Nicos Bild 1 „Die Tür von „kaufhaus““): Name einer Tuer im Fund. Ort der Karte:
+    /// sein Name; Gebaeude ohne Ort (Tuer am Zierweg, <paramref name="ort"/> = Modell): Name des Zierwegs, sonst der feste
+    /// Name der Kennung (<see cref="ModellNamen.Namen"/>); nie die Kennung, wenn es einen Namen gibt.
+    /// </summary>
+    internal static string Name(StadtFassung stand, StadtSzene szene, string ort)
+    {
+        if ((OrtName(stand, ort) ?? szene.Ort(ort)?.Name) is { } n)
+        {
+            return n;
+        }
+        if (NameAlt.Value)
+        {
+            return ort;
+        }
+        var zier = (Lernplattform.Core.Spiel.SpielDaten.Get(Lernplattform.Core.Spiel.SpielDaten.Get(stand.Stadtdaten, "darstellung") as Lernplattform.Core.Daten.PyObjekt ?? [], "zierwege") as List<object?> ?? [])
+            .OfType<Lernplattform.Core.Daten.PyObjekt>().FirstOrDefault(z => Py.Gleich(z["modell"], ort));
+        return zier?["name"] is string zn && zn.Length > 0 && zn != ort ? zn
+            : ModellNamen.Namen.TryGetValue(ort, out var fest) ? fest
+            : ort;
+    }
+
     /// <summary>Rote Funde der Tueren in <paramref name="szene"/> (Szene der Pruefung draussen, Grafik mit eigenen Gebaeuden).</summary>
     public static IEnumerable<StadtbauFund> Pruefen(StadtSzene szene, StadtFassung stand, Spieldaten daten)
     {
@@ -106,7 +132,7 @@ public static class TuerBuendig
             if (gruende.Count > 0)
             {
                 // Sammelliste 274: der Name aus der Karte (im Probestand der Pruefung heisst ein Ort der Firma wie die Firma)
-                var name = OrtName(stand, t.Ort) ?? szene.Ort(t.Ort)?.Name ?? t.Ort;
+                var name = Name(stand, szene, t.Ort);
                 yield return new StadtbauFund(Texte.TuerNichtBuendig(name, gruende), Texte.TuerNichtBuendigTipp, true, t.Mitte.X, t.Mitte.Y);
             }
         }

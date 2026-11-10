@@ -66,6 +66,10 @@ public sealed class TuerFassade
     public static bool AltFuerTests { get => Alt.Value; set => Alt.Value = value; }
     private static readonly AsyncLocal<bool> Alt = new();
 
+    /// <summary>Gegenprobe Sammelliste 276: Tuerziele wie bis S 0.34.0 (jede dunkle Gruppe, Stelle unter dem Finger), nur Tests.</summary>
+    public static bool GruppenAltFuerTests { get => GruppenAlt.Value; set => GruppenAlt.Value = value; }
+    private static readonly AsyncLocal<bool> GruppenAlt = new();
+
     public IReadOnlyList<Wand> Waende => _waende;
 
     /// <summary>Gezeichnete Bloecke des Hauses (x1, z1, x2, z2).</summary>
@@ -159,15 +163,38 @@ public sealed class TuerFassade
             var l = wand.Laenge;
             var quer = new Vector2(-wand.Aussen.Y, wand.Aussen.X);
             var mitte = wand.Bei(l / 2);
-            if (!glas)
+            if (GruppenAlt.Value)
             {
-                // Tueren des Modells auf dieser Wand (dunkle CC0-Tuer, wie das Spiel sie als eigene Tuer erkennt)
-                foreach (var mt in StadtTueren.ModellTueren(stuecke, 0, stuecke.Count, an, mitte, wand.Aussen, weite: l / 2))
+                if (!glas)
+                {
+                    // bis S 0.34.0: jede dunkle Gruppe (auch Laibung und Rahmen einer Glastuer) war eine Tuer, Glastueren nie
+                    foreach (var mt in StadtTueren.ModellTueren(stuecke, 0, stuecke.Count, an, mitte, wand.Aussen, weite: l / 2))
+                    {
+                        var tm = (l / 2) + (Vector2.Dot(quer, wand.Richtung) * mt.Mitte);
+                        if (tm >= TuerSetzen.EckAbstand - 0.001f && tm <= l - TuerSetzen.EckAbstand + 0.001f && !Innen(f._bloecke, b: wand.Block, wand.Bei(tm) + (wand.Aussen * 0.05f)))
+                        {
+                            mtueren.Add((tm, wand.Bei(tm) - (wand.Aussen * mt.Tiefe)));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Sammelliste 276: je Tuer des Modells genau ein Ziel, ihre Mitte (StadtTueren.Tuergruppen: ohne Laibung, Rahmen
+                // und Schaufenster). Nur wenn das Spiel an dieser Stelle genau diese Tuer zeichnet (Vorhersage = Spiel)
+                foreach (var (mt, _) in StadtTueren.Tuergruppen(stuecke, 0, stuecke.Count, an, mitte, wand.Aussen, weite: l / 2, glas: glas))
                 {
                     var tm = (l / 2) + (Vector2.Dot(quer, wand.Richtung) * mt.Mitte);
-                    if (tm >= TuerSetzen.EckAbstand - 0.001f && tm <= l - TuerSetzen.EckAbstand + 0.001f && !Innen(f._bloecke, b: wand.Block, wand.Bei(tm) + (wand.Aussen * 0.05f)))
+                    var w0 = wand.Bei(tm);
+                    if (tm < TuerSetzen.EckAbstand - 0.001f || tm > l - TuerSetzen.EckAbstand + 0.001f || Innen(f._bloecke, b: wand.Block, w0 + (wand.Aussen * 0.05f)))
                     {
-                        mtueren.Add((tm, wand.Bei(tm) - (wand.Aussen * mt.Tiefe)));
+                        continue;
+                    }
+                    var probe = Pruefen(tm, stuecke, an, bib, w0, wand.Aussen, hoehe, glas);
+                    var soll = w0 - (wand.Aussen * mt.Tiefe);
+                    if (probe.Art == Stelle.Modelltuer && Vector2.Distance(probe.Gezeichnet, soll) <= 0.03f)
+                    {
+                        mtueren.Add((tm, probe.Gezeichnet));
                     }
                 }
             }
@@ -359,12 +386,23 @@ public sealed class TuerFassade
             return Ergebnis(w, fe.Item1, Stelle.Fenster, false, false, fe.Item2, fe.Item3);
         }
         var hier = ProbeBei(w, t);
+        var tuerNah = _modellTueren[w].Where(m => MathF.Abs(m.T - t) <= TuerSetzen.FangWeite).OrderBy(m => MathF.Abs(m.T - t)).Select(m => ((float, Vector2)?)m).FirstOrDefault();
+        if (!GruppenAlt.Value && hier.Art == Stelle.Modelltuer)
+        {
+            // Sammelliste 276: auf einer Tuer des Modells liegt die Tuer immer auf ihrer Mitte (ein Ziel je Tuer, auch ohne
+            // Einrasten); eine Stelle, die nur eine Laibung oder einen Rahmen trifft, ist keine Tuer
+            if (tuerNah is { } mt0)
+            {
+                return Ergebnis(w, mt0.Item1, Stelle.Modelltuer, false, false, null, mt0.Item2);
+            }
+            hier = hier with { Art = Stelle.Nicht };
+        }
         if (!einrasten)
         {
             return Ergebnis(w, t, hier.Art, false, false, null, hier.Gezeichnet);
         }
         // auf eine Tuer des Modells bis FangWeite (wie bisher), sonst an die naechste glatte Stelle
-        if (_modellTueren[w].Where(m => MathF.Abs(m.T - t) <= TuerSetzen.FangWeite).OrderBy(m => MathF.Abs(m.T - t)).Select(m => ((float, Vector2)?)m).FirstOrDefault() is { } mt)
+        if (tuerNah is { } mt)
         {
             return Ergebnis(w, mt.Item1, Stelle.Modelltuer, false, false, null, mt.Item2);
         }
@@ -372,7 +410,7 @@ public sealed class TuerFassade
         {
             return Ergebnis(w, t, hier.Art, false, false, null, hier.Gezeichnet);
         }
-        var ziele = _proben[w].Where(q => q.Art is Stelle.Glatt or Stelle.Modelltuer).Select(q => (q.T, q.Art, q.Gezeichnet, Teil: (int?)null))
+        var ziele = _proben[w].Where(q => q.Art is Stelle.Glatt || (GruppenAlt.Value && q.Art is Stelle.Modelltuer)).Select(q => (q.T, q.Art, q.Gezeichnet, Teil: (int?)null))
             .Concat(_modellTueren[w].Select(m => (m.T, Art: Stelle.Modelltuer, m.Gezeichnet, Teil: (int?)null)))
             .Concat(_fenster[w].Select(f => (f.T, Art: Stelle.Fenster, f.Gezeichnet, Teil: (int?)f.Teil)))
             .OrderBy(z => MathF.Abs(z.T - t)).ThenBy(z => z.T).ToList();
@@ -437,6 +475,9 @@ public sealed class TuerFassade
 
     /// <summary>Wand und Stelle der Tuer, die gerade gespeichert ist (oder null), fuer die bisherige Wand beim Ziehen.</summary>
     public int? WandVon(Vector2? tuer) => tuer is { } t ? WandFuer(t, null) : null;
+
+    /// <summary>Sammelliste 276: Ziele der Tueren des Modells an einer Wand (Stelle laengs der Wand, gezeichnete Mitte).</summary>
+    public IReadOnlyList<(float T, Vector2 Gezeichnet)> TuerZiele(int wand) => _modellTueren[wand];
 
     /// <summary>Art jeder Probe einer Wand (nur Tests und Bilder): Stelle laengs der Wand und Art.</summary>
     public IReadOnlyList<(float T, Stelle Art)> ProbenVon(int wand) => [.. _proben[wand].Select(q => (q.T, q.Art))];
