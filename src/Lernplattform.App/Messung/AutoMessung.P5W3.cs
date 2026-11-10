@@ -75,7 +75,7 @@ public static partial class AutoMessung
         }
         // A 0.61.0 (Sammelliste 284): Layoutpruefung (12) kein Nur-Lese-Feld ausser der festen Liste; Gegenprobe: ein
         // Fenster mit einem Nur-Lese-Feld (wie das Update-Fenster bis A 0.60.0) muss genau diesen Fund geben
-        var probe = new TextBox { Text = "Neuerungen wie bis A 0.60.0", IsReadOnly = true, Width = 300 };
+        var probe = new Avalonia.Controls.TextBox { Text = "Neuerungen wie bis A 0.60.0", IsReadOnly = true, Width = 300 };
         Avalonia.Automation.AutomationProperties.SetName(probe, UpdateTexte.Neuerungen);
         _ = Dialog.Zeigen(UpdateTexte.Neuerungen, probe, Dialog.Ok);
         await ansicht.BildFertigAsync();
