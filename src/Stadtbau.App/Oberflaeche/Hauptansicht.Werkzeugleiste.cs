@@ -21,6 +21,7 @@ public sealed partial class Hauptansicht
     private Button _massbandChip = null!;
     private Button _ebenenChip = null!;
     private Button _notizChip = null!;
+    private Button _mehrereChip = null!;
     private readonly TextBlock _ebenenHinweis = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
     private readonly Border _ebenenKarte = new()
     {
@@ -37,6 +38,7 @@ public sealed partial class Hauptansicht
     /// <summary>Start-Test: Knoepfe der Leiste und die Liste.</summary>
     internal Button MassbandKnopf => _massbandChip;
     internal Button NotizKnopf => _notizChip;
+    internal Button MehrereKnopf => _mehrereChip;
     internal Button EbenenKnopf => _ebenenChip;
     internal Border EbenenListe => _ebenenKarte;
     internal WrapPanel WerkzeugLeiste => _werkzeugLeiste;
@@ -49,10 +51,12 @@ public sealed partial class Hauptansicht
         _waehlenChip = Chip(Texte.Waehlen, Texte.WaehlenTipp, () =>
         {
             Karte.MassbandAn = false;
+            Karte.MehrereWaehlen = false;
             SetzenBeenden();
             _ebenenKarte.IsVisible = false;
             ChipsZeigen();
         });
+        _mehrereChip = Chip(Texte.MehrereWaehlen, Texte.MehrereWaehlenTipp, MehrereUmschalten);
         _massbandChip = Chip(Texte.Massband, Texte.MassbandTipp, MassbandUmschalten);
         _ebenenChip = Chip(Texte.EbenenKnopf, Texte.EbenenTipp, () =>
         {
@@ -67,7 +71,7 @@ public sealed partial class Hauptansicht
         _notizChip.Click += (_, _) => SetzenKnopfGedrueckt(_notizChip, true, () => AussenSetzenWaehlen(AussenArt.Notiz, null));
         _ebenenHinweis.VerticalAlignment = VerticalAlignment.Center;
         _ebenenHinweis.Margin = new Thickness(4, 0, 8, 8);
-        foreach (var k in (Control[])[_waehlenChip, _massbandChip, _ebenenChip, _notizChip, _ebenenHinweis])
+        foreach (var k in (Control[])[_waehlenChip, _mehrereChip, _massbandChip, _ebenenChip, _notizChip, _ebenenHinweis])
         {
             _werkzeugLeiste.Children.Add(k);
         }
@@ -108,6 +112,14 @@ public sealed partial class Hauptansicht
             AussenAuswahlZeigen();
         };
         Karte.SetzenGeaendert += ChipsZeigen;
+        Karte.MehrereGeaendert += () =>
+        {
+            ChipsZeigen();
+            if (Karte.MehrereWaehlen)
+            {
+                Melden(Texte.MehrereWaehlenTipp);
+            }
+        };
         ChipsZeigen();
     }
 
@@ -126,6 +138,17 @@ public sealed partial class Hauptansicht
             return;
         }
         Karte.MassbandAn = !Karte.MassbandAn;
+        AussenAuswahlZeigen();
+    }
+
+    /// <summary>S 0.30.0: „Mehrere wählen“ an oder aus (Knopf und Taste U, Stadt von oben und 3D).</summary>
+    internal void MehrereUmschalten()
+    {
+        if (_projekt is null || _innen || _geschichteOffen)
+        {
+            return;
+        }
+        Karte.MehrereWaehlen = !Karte.MehrereWaehlen;
         AussenAuswahlZeigen();
     }
 
@@ -148,7 +171,9 @@ public sealed partial class Hauptansicht
             return;
         }
         var massband = Karte.MassbandAn;
-        ChipMarkieren(_waehlenChip, !massband && Karte.SetzenArt is null);
+        ChipMarkieren(_waehlenChip, !massband && Karte.SetzenArt is null && !Karte.MehrereWaehlen);
+        ChipMarkieren(_mehrereChip, Karte.MehrereWaehlen);
+        Avalonia.Automation.AutomationProperties.SetName(_mehrereChip, Karte.MehrereWaehlen ? Texte.Gewaehlt(Texte.MehrereWaehlen) : Texte.MehrereWaehlen);
         ChipMarkieren(_massbandChip, massband);
         ChipMarkieren(_ebenenChip, _ebenenKarte.IsVisible);
         _ebenenChip.IsVisible = !_drei;

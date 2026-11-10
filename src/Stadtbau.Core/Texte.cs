@@ -870,14 +870,17 @@ public static class Texte
     [
         ("Strg+Z / Strg+Y", "Rückgängig / Wiederholen", ["Z", "Y"]),
         ("Strg+S", "Projekt speichern", ["S"]),
-        ("Strg+D", "Ausgewähltes Stück kopieren", ["D"]),
-        ("Entf / Rücktaste", "Ausgewähltes Stück löschen (im Fenster „Projekt öffnen“ mit Entf: das Projekt mit dem Fokus)", ["Delete", "Back"]),
+        ("Strg+D", "Ausgewähltes Stück oder alle gewählten kopieren", ["D"]),
+        ("Entf / Rücktaste", "Ausgewähltes Stück oder alle gewählten löschen (im Fenster „Projekt öffnen“ mit Entf: das Projekt mit dem Fokus)", ["Delete", "Back"]),
         ("R / Umschalt+R", "Drehen (auch beim Setzen), Umschalt dreht andersherum", ["R"]),
         ("M", "Kurve spiegeln", ["M"]),
         ("L", "Maßband an oder aus (Länge messen)", ["L"]),
         ("N", "Notiz setzen (Stadt von oben)", ["N"]),
         ("E", "Einrasten an oder aus", ["E"]),
-        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen", ["Escape"]),
+        ("U", "Mehrere wählen an oder aus (Stadt von oben und 3D)", ["U"]),
+        ("Strg+A", "Alle Stücke der Stadt wählen", ["A"]),
+        ("Umschalt+Klick", "Stück zur Auswahl dazunehmen oder herausnehmen", []),
+        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen, Reihe abbrechen", ["Escape"]),
         ("Pfeiltasten", "Ausgewähltes Stück verschieben (3D ohne Auswahl: Ansicht schieben)", ["Left", "Right", "Up", "Down"]),
         ("Leertaste + ziehen", "Ansicht schieben", ["Space"]),
         ("Bild hoch / runter", "3D-Ansicht steiler / flacher", ["PageUp", "PageDown"]),
@@ -997,4 +1000,59 @@ public static class Texte
     public const string VollbildBildschirmText = "Auf diesem Bildschirm erscheint das Vollbild. Die Wahl gilt auch beim nächsten Start.";
     public const string VollbildBildschirmFehler = "Die Wahl des Bildschirms konnte nicht gespeichert werden; es gilt weiter die alte.";
     public static string Gewaehlt(string eintrag) => eintrag + ", gewählt";
+
+    // ---- Welle S 0.30.0 (Weisung P12-136, Kurzplan P12-79 Wuensche 1 und 2): Mehrfachauswahl und Reihe ----
+    public const string MehrereWaehlen = "Mehrere wählen";
+    public const string MehrereWaehlenTipp = "Antippen nimmt ein Stück zur Auswahl dazu oder wieder heraus; ein Rahmen über freie Fläche wählt alles darin. Mit der Maus geht das auch ohne diesen Knopf: Umschalt+Klick nimmt dazu, Umschalt+Ziehen über freie Fläche zieht einen Rahmen. Taste U.";
+    public const string GruppeHeraus = "Herausgenommen.";
+    public static string GruppeGewaehlt(int n) => n == 0 ? "Nichts gewählt" : n == 1 ? "1 Stück gewählt" : n + " Stücke gewählt";
+    public const string GruppeVerschoben = "Mehrere Stücke verschieben";
+    public const string GruppeGedreht = "Mehrere Stücke drehen";
+    public const string GruppeKopiert = "Mehrere Stücke kopieren";
+    public const string GruppeGeloescht = "Mehrere Stücke löschen";
+    public static string GruppeVerschobenMeldung(int n) => n == 1 ? "1 Stück verschoben" : n + " Stücke verschoben";
+    public static string GruppeGedrehtMeldung(int n) => n == 1 ? "1 Stück gedreht" : n + " Stücke gedreht";
+    public static string GruppeKopiertMeldung(int n, int ueb) => (n == 1 ? "1 Stück kopiert" : n + " Stücke kopiert")
+        + (ueb > 0 ? ", " + ueb + " ließen sich nicht kopieren (Haus mit Ort, Paketplatz)" : "");
+    public static string GruppeGeloeschtMeldung(int n, int ueb) => (n == 1 ? "1 Stück gelöscht" : n + " Stücke gelöscht")
+        + (ueb > 0 ? ", " + ueb + " bleiben stehen (Haus mit Ort, Paketplatz)" : "");
+    public const string GruppeTitel = "Mehrere Stücke";
+    public const string GruppeText = "Alles Gewählte bewegt sich zusammen: ziehen an einem der Stücke schiebt alle (ohne Einrasten). Drehen dreht um die gemeinsame Mitte; mit einem Haus nur in Vierteln.";
+    public const string GruppeDrehen = "Alle drehen";
+    public const string GruppeKopieren = "Alle kopieren";
+    public const string GruppeLoeschen = "Alle löschen";
+    public const string AuswahlAufheben = "Auswahl aufheben";
+    public const string GruppeDrehenTipp = "Dreht alle gewählten Stücke um ihre gemeinsame Mitte um ein Viertel (R, Umschalt+R andersherum).";
+    public const string GruppeKopierenTipp = "Legt eine Kopie aller gewählten Stücke rechts daneben; danach sind die Kopien gewählt (Strg+D).";
+    public const string GruppeLoeschenTipp = "Löscht alle gewählten Stücke in einem Schritt (Entf). Häuser mit Ort und der Paketplatz bleiben stehen.";
+
+    public const string ReiheSetzen = "Als Reihe setzen";
+    public const string ReiheSetzenTipp = "Statt einzeln: Anfang antippen, Ende antippen (oder in einem Zug ziehen). Die Stücke stehen im gewählten Abstand auf der Linie; rote Stellen werden ausgelassen.";
+    public const string ReiheAbstand = "Abstand";
+    public static string ReiheAbstandText(double abstand) => abstand.ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Felder";
+    public const string ReiheWeiter = "Abstand größer";
+    public const string ReiheEnger = "Abstand kleiner";
+    public const string ReiheBeideSeiten = "Beide Seiten";
+    public const string ReiheBeideSeitenTipp = "Setzt zwei Reihen, links und rechts der Linie (zum Beispiel Bäume an beiden Seiten eines Wegs).";
+    public const string ReiheZufaellig = "Zufällig drehen";
+    public const string ReiheZufaelligTipp = "Jedes Stück der Reihe bekommt eine zufällige Vierteldrehung.";
+    public const string ReiheAnfang = "Reihe: Anfang antippen.";
+    public const string ReiheEnde = "Reihe: Ende antippen.";
+    public const string ReiheSchritt = "Reihe setzen";
+    public static string ReiheInfo(int frei, int rot, long dreiecke) =>
+        (frei == 1 ? "1 Stück" : frei + " Stücke") + " · +" + Tsd((int)Math.Min(int.MaxValue, dreiecke)) + " Dreiecke"
+        + (rot > 0 ? " · " + rot + " rot, werden ausgelassen" : "");
+    public static string ReiheGesetzt(int n, int ausgelassen) => (n == 1 ? "1 Stück gesetzt" : n + " Stücke gesetzt")
+        + (ausgelassen > 0 ? ", " + ausgelassen + " rote Stellen ausgelassen" : "");
+    public const string ReiheNichtsFrei = "An keiner Stelle der Reihe ist Platz; nichts gesetzt.";
+    public const string ReiheDoppelt = "Liegt auf einem anderen Stück derselben Reihe.";
+    public const string ReiheAusserhalb = "Liegt außerhalb der Karte.";
+    public const string ReiheImHaus = "Liegt in einem Haus.";
+    public const string ReiheAufFahrbahn = "Liegt auf der Fahrbahn.";
+    public const string ReiheAufInsel = "Liegt auf der Insel eines Kreisverkehrs.";
+    public const string ReiheAufGleis = "Liegt auf dem Gleis.";
+    public const string ReiheImWasser = "Liegt im Wasser oder auf dem Ufer.";
+    public const string ReiheAufFussweg = "Liegt auf einem Fußweg.";
+    public const string ReiheAufBaum = "Liegt auf einem Baum.";
+    public const string ReiheAnLaterne = "Liegt an einer Laterne.";
 }

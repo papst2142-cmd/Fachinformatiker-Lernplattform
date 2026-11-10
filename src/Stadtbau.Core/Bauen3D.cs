@@ -332,6 +332,15 @@ public static class Bauen3D
         return new Vorschau(kopie, gueltig ? s : null, gueltig ? Umriss(kopie, s) : [], gueltig ? null : Texte.Bauen3DGehtNicht);
     }
 
+    /// <summary>S 0.30.0: mehrere Stuecke zusammen verschieben wie <c>KartenFlaeche.GruppeVerschieben</c>, nur auf einer Kopie.</summary>
+    public static Vorschau GruppeVerschieben(PyObjekt aussen, IReadOnlyList<AussenStelle> gruppe, double dx, double dy, bool raster)
+    {
+        var kopie = (PyObjekt)Py.Kopie(aussen)!;
+        var e = AussenBearbeitung.Verschieben(kopie, gruppe, dx, dy, raster);
+        var umriss = e.Auswahl.Where(s => AussenBearbeitung.Gueltig(kopie, s)).SelectMany(s => Umriss(kopie, s)).ToList();
+        return new Vorschau(kopie, e.Auswahl.FirstOrDefault(), umriss, e.Auswahl.Count == 0 ? Texte.Bauen3DGehtNicht : null);
+    }
+
     /// <summary>
     /// Der erste rote Fund, den es nachher gibt und vorher nicht (gleiche Pruefung wie die Liste „Prüfungen draußen“), oder
     /// null (gruen). Gleiche Texte zaehlen einzeln (zwei gleiche Funde vorher, drei nachher = einer neu).

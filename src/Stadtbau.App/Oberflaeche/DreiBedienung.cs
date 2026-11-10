@@ -255,6 +255,8 @@ public sealed partial class DreiBedienung : Control
         if (erster)
         {
             _anfangInDieserGeste = false;
+            _reiheAnfangHier = false;
+            _mehr = null;
         }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
         if (_karte.TuerFuer is not null && !FigurLaufen)
@@ -271,6 +273,12 @@ public sealed partial class DreiBedienung : Control
         if (!FigurLaufen && _karte.SetzenArt is null && !_karte.MassbandAn && erster)
         {
             s = TrefferAn(p);
+            if (MehrDrucken(e, s, p))
+            {
+                // S 0.30.0: Umschalt, „Mehrere wählen“ oder ein Stueck der Gruppe: ein Finger zieht Gruppe oder Rahmen
+                Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, true), p);
+                return;
+            }
         }
         // beim Setzen zieht der Finger den Schatten mit (am Tablet gibt es kein Schweben)
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, bauen && (s is not null || _karte.SetzenArt is not null)), p);
@@ -280,7 +288,7 @@ public sealed partial class DreiBedienung : Control
         }
         if (_karte.SetzenArt is not null)
         {
-            if (bauen)
+            if (bauen && !_karte.ReiheAktiv)
             {
                 SchattenAn(p);
             }
@@ -331,7 +339,18 @@ public sealed partial class DreiBedienung : Control
                 // Maus schwebt: beim Setzen folgt der Schatten
                 if (e.Pointer.Type == PointerType.Mouse && _karte.SetzenArt is not null && !FigurLaufen && Projekt is { NurLesen: false })
                 {
-                    SchattenAn(p);
+                    if (_karte.ReiheAktiv)
+                    {
+                        // S 0.30.0: Reihe, die Vorschau folgt der Maus ab dem Anfang
+                        if (_karte.ReiheAnfang is not null && BodenAn(p) is { } rb)
+                        {
+                            _karte.ReiheZielSetzen(rb.X, rb.Y);
+                        }
+                    }
+                    else
+                    {
+                        SchattenAn(p);
+                    }
                 }
                 // S 0.27.0: Massband, das Ende folgt der Maus
                 if (e.Pointer.Type == PointerType.Mouse && _karte.MassbandAn && !FigurLaufen && Kamera is { } mk && BodenAn(p) is { } mb)
@@ -365,6 +384,10 @@ public sealed partial class DreiBedienung : Control
         {
             // Welle Z: Rechtsklick ohne Bewegung bricht das Ziehen ab (erst den Anfang, dann das Ziehen selbst)
             if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.ZiehArtAktiv is not null && !_karte.ZiehAbbrechen())
+            {
+                _karte.SetzenBeenden();
+            }
+            else if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.ReiheAktiv && !_karte.ReiheAbbrechen())
             {
                 _karte.SetzenBeenden();
             }
@@ -416,6 +439,14 @@ public sealed partial class DreiBedienung : Control
     private void Anwenden(Fingergeste.Schritt s, Point p)
     {
         if (_karte.TuerFuer is not null && !FigurLaufen && TuerAnwenden(s))
+        {
+            return;
+        }
+        if (Reiht && ReiheAnwenden(s))
+        {
+            return;
+        }
+        if (_mehr is not null && MehrAnwenden(s))
         {
             return;
         }
@@ -799,6 +830,8 @@ public sealed partial class DreiBedienung : Control
         {
             return;
         }
+        MehrZeichnen(ctx, k, proj.AussenStand);
+        ReiheZeichnen(ctx, k);
         if (_karte.Auswahl is { } s && !_ziehen)
         {
             foreach (var vieleck in Bauen3D.Umriss(proj.AussenStand, s))

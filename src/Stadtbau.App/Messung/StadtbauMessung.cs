@@ -350,6 +350,7 @@ public static partial class StadtbauMessung
         await TuerSetzenAsync(a, f);
         await ZebrastreifenAsync(a, f);
         await WerkzeugKleinAsync(a, f);
+        await MehrfachAsync(a, f);
         await LeereStadtOeffnenAsync(a);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {

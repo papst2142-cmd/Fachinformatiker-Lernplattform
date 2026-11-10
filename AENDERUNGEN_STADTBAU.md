@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.30.0
+
+Mehrere Stücke auf einmal bearbeiten und Stücke als Reihe setzen.
+
+- Neuer Knopf „Mehrere wählen“ oben links (Taste U), in der Karte von oben und in der 3D-Ansicht. Danach nimmt jedes Antippen ein Stück zur Auswahl dazu oder wieder heraus. Ein Finger über freie Fläche zieht einen Rahmen und wählt alles darin.
+- Mit der Maus geht das auch ohne den Knopf: Umschalt+Klick nimmt ein Stück dazu, Umschalt+Ziehen über freie Fläche zieht einen Rahmen. Strg+A wählt alle Stücke der Stadt.
+- Die gewählten Stücke sind farbig umrandet, ein Schild zeigt, wie viele es sind. Wer eins davon zieht, schiebt alle zusammen (ohne Einrasten). Rechts gibt es „Alle drehen“, „Alle kopieren“, „Alle löschen“ und „Auswahl aufheben“; die Tasten R, Strg+D, Entf und die Pfeiltasten wirken auf alle.
+- Jede dieser Aktionen ist ein einziger Schritt: einmal „Rückgängig“ stellt alles wieder her.
+- Beim Drehen drehen sich alle Stücke um ihre gemeinsame Mitte um ein Viertel. Ein Kreisverkehr nimmt seine Zufahrten und Laternen mit, Zebrastreifen bleiben auf ihrer Straße. Häuser mit Ort und der Paketplatz lassen sich wie bisher nicht löschen; sie bleiben dann gewählt.
+- Bäume und Stücke aus dem Katalog lassen sich als Reihe setzen: beim Setzen den Schalter „Als Reihe setzen“ einschalten, dann Anfang antippen und Ende antippen (oder mit dem Finger in einem Zug ziehen). Abstand mit − und + wählbar, dazu „Beide Seiten“ und „Zufällig drehen“.
+- Die Vorschau zeigt jedes Stück der Reihe grün oder rot und rechts die Zahl der Stücke und „+n Dreiecke“. Rote Stellen (auf der Fahrbahn, im Haus, im Wasser, auf dem Gleis, auf einem Fußweg, an einem Baum oder einer Laterne) werden ausgelassen und gezählt. Die ganze Reihe ist ein Schritt; danach sind ihre Stücke gewählt.
+
 ## S 0.29.0
 
 Drei neue Pakete im Katalog: eine Fabrik, viel Natur und ein Lagerplatz. Der Katalog hat jetzt 2 073 Stücke aus 26 Paketen.

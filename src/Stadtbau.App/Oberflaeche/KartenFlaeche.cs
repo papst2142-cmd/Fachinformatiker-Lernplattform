@@ -77,6 +77,12 @@ public sealed partial class KartenFlaeche : Control
                 TuerSetzenBeenden();
             }
             ZiehZuruecksetzen();
+            ReiheZuruecksetzen();
+            if (value is not null)
+            {
+                // S 0.30.0: Setzen beendet „Mehrere wählen“
+                MehrereWaehlen = false;
+            }
             SetzenGeaendert?.Invoke();
         }
     }
@@ -656,6 +662,8 @@ public sealed partial class KartenFlaeche : Control
                 ctx.DrawEllipse(null, stift, P(fx, fy), Math.Max(10, 0.45 * _zoom), Math.Max(10, 0.45 * _zoom));
             }
         }
+        MehrfachZeichnen(ctx, a);
+        ReiheZeichnen(ctx);
         ZiehVorschauZeichnen(ctx);
         AussehenVorschauZeichnen(ctx);
         MassbandZeichnen(ctx);
@@ -1001,6 +1009,7 @@ public sealed partial class KartenFlaeche : Control
             TuerSetzenBeenden();
         }
         Auswahl = s;
+        _gruppe = [];
         AuswahlGeaendert?.Invoke();
         InvalidateVisual();
     }
@@ -1100,6 +1109,11 @@ public sealed partial class KartenFlaeche : Control
     /// <summary>Ausgewaehltes Stueck um (dx, dy) verschieben (Verlauf, automatisch gespeichert).</summary>
     public void Verschieben(double dx, double dy)
     {
+        if (GruppeAktiv)
+        {
+            GruppeVerschieben(dx, dy);
+            return;
+        }
         if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s)
         {
             return;
@@ -1141,6 +1155,11 @@ public sealed partial class KartenFlaeche : Control
     /// <summary>Welle E: ein Drehschritt (Linien 15 Grad, sonst 90; Knopf „Drehen“, Taste R, Umschalt+R rueckwaerts).</summary>
     public void Drehen(bool rueckwaerts = false)
     {
+        if (GruppeAktiv)
+        {
+            GruppeDrehen(rueckwaerts);
+            return;
+        }
         if (Auswahl is { } s)
         {
             DrehenUm((rueckwaerts ? -1 : 1) * AussenBearbeitung.DrehSchritt(s.Art));
@@ -1240,6 +1259,11 @@ public sealed partial class KartenFlaeche : Control
 
     public void Kopieren()
     {
+        if (GruppeAktiv)
+        {
+            GruppeKopieren();
+            return;
+        }
         if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s)
         {
             return;
@@ -1251,6 +1275,11 @@ public sealed partial class KartenFlaeche : Control
 
     public void Loeschen()
     {
+        if (GruppeAktiv)
+        {
+            GruppeLoeschen();
+            return;
+        }
         if (_projekt is null || _projekt.NurLesen || Auswahl is not { } s)
         {
             return;
@@ -1274,6 +1303,8 @@ public sealed partial class KartenFlaeche : Control
         {
             case Key.Escape when ZiehAbbrechen():
                 return true;
+            case Key.Escape when ReiheAbbrechen():
+                return true;
             case Key.Escape when TuerFuer is not null:
                 TuerSetzenBeenden();
                 Gemeldet?.Invoke(Texte.TuerSetzenBeenden);
@@ -1292,19 +1323,30 @@ public sealed partial class KartenFlaeche : Control
                 }
                 return true;
             case Key.Escape:
+                if (SetzenArt is null && Gewaehlt.Count == 0)
+                {
+                    // S 0.30.0: nichts mehr gewaehlt, dann endet „Mehrere wählen“
+                    MehrereWaehlen = false;
+                }
                 SetzenBeenden();
                 Waehlen(null);
                 return true;
-            case Key.Delete or Key.Back when Auswahl is not null:
+            case Key.U when !strg:
+                MehrereWaehlen = !MehrereWaehlen;
+                return true;
+            case Key.A when strg:
+                AlleWaehlen();
+                return true;
+            case Key.Delete or Key.Back when Gewaehlt.Count > 0:
                 Loeschen();
                 return true;
             case Key.R when !strg && DrehbarBeimSetzen(SetzenArt):
                 SetzenDrehen(mod.HasFlag(KeyModifiers.Shift));
                 return true;
-            case Key.R when !strg && Auswahl is not null:
+            case Key.R when !strg && Gewaehlt.Count > 0:
                 Drehen(mod.HasFlag(KeyModifiers.Shift));
                 return true;
-            case Key.D when strg && Auswahl is not null:
+            case Key.D when strg && Gewaehlt.Count > 0:
                 Kopieren();
                 return true;
             case Key.M when !strg && SetzenArt == AussenArt.Kurve:
@@ -1313,16 +1355,16 @@ public sealed partial class KartenFlaeche : Control
             case Key.M when !strg && Auswahl is { } kurve && _projekt is not null && AussenBearbeitung.IstKurve(_projekt.AussenStand, kurve):
                 Spiegeln();
                 return true;
-            case Key.Left when Auswahl is not null:
+            case Key.Left when Gewaehlt.Count > 0:
                 Verschieben(-schritt, 0);
                 return true;
-            case Key.Right when Auswahl is not null:
+            case Key.Right when Gewaehlt.Count > 0:
                 Verschieben(schritt, 0);
                 return true;
-            case Key.Up when Auswahl is not null:
+            case Key.Up when Gewaehlt.Count > 0:
                 Verschieben(0, -schritt);
                 return true;
-            case Key.Down when Auswahl is not null:
+            case Key.Down when Gewaehlt.Count > 0:
                 Verschieben(0, schritt);
                 return true;
             default:
@@ -1359,6 +1401,8 @@ public sealed partial class KartenFlaeche : Control
         if (erster)
         {
             _anfangInDieserGeste = false;
+            _reiheAnfangInDieserGeste = false;
+            _mehrfachDruck = null;
             _rechtsDruck = e.Pointer.Type == PointerType.Mouse && e.GetCurrentPoint(this).Properties.IsRightButtonPressed;
         }
         if (erster && NurSchiebenDruck(e, this))
@@ -1380,8 +1424,15 @@ public sealed partial class KartenFlaeche : Control
             return;
         }
         var s = SetzenArt is null && !MassbandAn ? StueckAn(a, p, Math.Max(0.3, 10 / _zoom)) : null;
-        // Welle Z: beim Ziehen zieht ein Finger vom Anfang zum Ende (wie ein Stueck), zwei Finger bleiben bei der Ansicht
-        var zieht = ZiehArtAktiv is not null && _projekt?.NurLesen == false;
+        if (erster && SetzenArt is null && !MassbandAn && MehrfachDrucken(e, s, p))
+        {
+            // S 0.30.0: Umschalt, „Mehrere wählen“ oder ein Stueck der Gruppe; ein Finger zieht Gruppe oder Rahmen
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, true));
+            return;
+        }
+        // Welle Z: beim Ziehen zieht ein Finger vom Anfang zum Ende (wie ein Stueck), zwei Finger bleiben bei der Ansicht;
+        // S 0.30.0: eine Reihe ebenso
+        var zieht = (ZiehArtAktiv is not null || ReiheAktiv) && _projekt?.NurLesen == false;
         Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, zieht || (s is not null && _projekt?.NurLesen == false)));
         // nur der erste Finger waehlt (S 0.5.1: ein zweiter Finger aendert die Auswahl nie); das Massband waehlt nie
         if (!erster || SetzenArt is not null || MassbandAn)
@@ -1420,6 +1471,11 @@ public sealed partial class KartenFlaeche : Control
             var mw = WeltPunkt(p);
             Massband.Schweben(ma, mw.X, mw.Y, Massband.FangBildpunkte / _zoom, Raster, AusArten);
             InvalidateVisual();
+        }
+        if (!_geste.Aktiv && ReiheAktiv && ReiheAnfang is not null && e.Pointer.Type == PointerType.Mouse)
+        {
+            var rw = WeltPunkt(p);
+            ReiheZielSetzen(rw.X, rw.Y);
         }
         if (!_geste.Aktiv && ZiehArtAktiv is not null && e.Pointer.Type == PointerType.Mouse)
         {
@@ -1497,6 +1553,14 @@ public sealed partial class KartenFlaeche : Control
             return;
         }
         if (ZiehArtAktiv is not null && ZiehenAnwenden(s))
+        {
+            return;
+        }
+        if (ReiheAktiv && ReiheAnwenden(s))
+        {
+            return;
+        }
+        if (_mehrfachDruck is not null && MehrfachAnwenden(s))
         {
             return;
         }
