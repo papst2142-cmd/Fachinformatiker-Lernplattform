@@ -172,7 +172,11 @@ public class HandyUpdateTests
                     abbruch: TestContext.Current.CancellationToken);
                 Assert.Equal(2, server.Abrufe);
                 Assert.Equal(Inhalt, await File.ReadAllBytesAsync(datei, TestContext.Current.CancellationToken));
-                Assert.Contains("| Programm | WIEDERHOLUNG Laden " + Name + " Versuch 2 nach 15 s (HttpIOException (ResponseEnded)", Log(temp.Pfad), StringComparison.Ordinal);
+                // Linux/Mac: HttpIOException (ResponseEnded); Windows (Lauf 803): der Abriss kommt dort als Netzfehler der
+                // Gegenstelle an. Beides ist ein Netzfehler, nie ein Speicherfehler.
+                var log = Log(temp.Pfad);
+                Assert.Contains("| Programm | WIEDERHOLUNG Laden " + Name + " Versuch 2 nach 15 s (", log, StringComparison.Ordinal);
+                Assert.True(NetzBeschreibung(log), log);
             }
 
             using var temp2 = new TempOrdner();
@@ -181,9 +185,11 @@ public class HandyUpdateTests
                 var quelle = new HandyQuelle(new HttpClient(), new Geraet(temp2.Pfad), "A 0.38.0", datenordner: temp2.Pfad);
                 var e = await Assert.ThrowsAsync<UpdateFehler>(() => UpdateAblauf.LadenAsync(quelle, Angebot() with { DateiUrl = server.Adresse },
                     ordner: temp2.Pfad, abbruch: TestContext.Current.CancellationToken));
-                Assert.Equal(UpdateTexte.DownloadUnvollstaendig, e.Message);
+                Assert.Contains(e.Message, new[] { UpdateTexte.DownloadUnvollstaendig, UpdateTexte.DownloadOffline });
                 Assert.Equal(4, server.Abrufe);
-                Assert.Contains("Download fehlgeschlagen: HttpIOException (ResponseEnded)", Log(temp2.Pfad), StringComparison.Ordinal);
+                var log2 = Log(temp2.Pfad);
+                Assert.Contains("Download fehlgeschlagen: ", log2, StringComparison.Ordinal);
+                Assert.True(NetzBeschreibung(log2), log2);
             }
 
             // Gegenprobe: echter Schreibfehler bleibt "Speichern", keine Stoerung
@@ -203,6 +209,12 @@ public class HandyUpdateTests
             Stoerung.OhnePausenFuerTests.Value = false;
         }
     }
+
+    /// <summary>Beschreibt update.log den Abriss als Netzfehler (HttpIOException oder innere SocketException), nie als Speicherfehler?</summary>
+    private static bool NetzBeschreibung(string log) =>
+        (log.Contains("HttpIOException (", StringComparison.Ordinal) || log.Contains("innen SocketException", StringComparison.Ordinal)
+            || log.Contains("HttpRequestException (", StringComparison.Ordinal))
+        && !log.Contains(UpdateTexte.DownloadSpeichern, StringComparison.Ordinal);
 
     /// <summary>Testserver, der die ersten <c>abrisse</c> Abrufe nach der halben Datei abbricht.</summary>
     private sealed class AbrissServer : IDisposable
