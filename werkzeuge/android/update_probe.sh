@@ -62,9 +62,25 @@ PY
 installiert() { adb shell dumpsys package "$PAKET" | grep -m 1 -oE "versionCode=[0-9]+" | cut -d= -f2; }
 
 starten() {
+  # Sammelliste 270 (Weisung P12-144): direkt nach einem Update kann der Start ueber monkey ins Leere gehen (Paket noch
+  # nicht fertig eingerichtet), ohne dass etwas im Protokoll steht. Darum: Start pruefen (Prozess da?), bis zu 6 Versuche
+  # im Abstand von 5 s, jeden Versuch mit der Antwort von monkey festhalten. Die Wartezeiten danach bleiben gleich.
   adb logcat -c
   adb shell am force-stop "$PAKET" > /dev/null 2>&1 || true
-  adb shell monkey -p "$PAKET" -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1
+  local v aus pid
+  for v in 1 2 3 4 5 6; do
+    aus=$(adb shell monkey -p "$PAKET" -c android.intent.category.LAUNCHER 1 2>&1 | tr -d '\r')
+    sleep 2
+    pid=$(adb shell pidof "$PAKET" 2>/dev/null | tr -d '\r')
+    if [ -n "$pid" ]; then
+      zeile "Start: Versuch $v, Prozess $pid"
+      return 0
+    fi
+    zeile "Start: Versuch $v ohne Prozess (monkey: $(echo "$aus" | grep -iE 'abort|error|no activities|injected|exception' | head -n 3 | tr '\n' ' '))"
+    sleep 3
+  done
+  zeile "FEHLER: App startet nicht (6 Versuche)"
+  return 1
 }
 
 tippen() {   # Knopf im Fenster von Android ("Update", "Aktualisieren", "Installieren")

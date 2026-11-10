@@ -26,7 +26,7 @@ public sealed partial class StadtSzene
 
         internal Dictionary<string, OrtBau> Orte = [];
 
-        internal Dictionary<string, (HausEingang Ein, Netz Netz)> Haeuser = [];
+        internal Dictionary<string, (HausEingang Ein, Netz Netz, Netz Fern)> Haeuser = [];
 
         internal (PaketEingang Ein, Netz Nah, Netz Fern)? Paket;
 
@@ -206,26 +206,26 @@ public sealed partial class StadtSzene
     }
 
     /// <summary>Hausnetz aus dem Vorrat, wenn alle Eingaben gleich sind, sonst neu gebaut und gemerkt.</summary>
-    private Netz HausNetzMitVorrat(StadtHaus haus, Dictionary<string, (HausEingang, Netz)> neu)
+    private (Netz Nah, Netz Fern) HausNetzMitVorrat(StadtHaus haus, Dictionary<string, (HausEingang, Netz, Netz)> neu)
     {
         if (_vorrat is not { } v)
         {
-            return HausNetz(haus);
+            return (HausNetz(haus), HausNetz(haus, fern: true));
         }
         var ein = HausEingangFuer(haus);
-        Netz netz;
+        Netz netz, fern;
         if (v.Haeuser.TryGetValue(haus.Id, out var alt) && alt.Ein.GleichWie(ein))
         {
-            netz = alt.Netz;
+            (netz, fern) = (alt.Netz, alt.Fern);
             v.Uebernommen++;
         }
         else
         {
-            netz = HausNetz(haus);
+            (netz, fern) = (HausNetz(haus), HausNetz(haus, fern: true));
             v.NeuGebaut++;
         }
-        neu[haus.Id] = (ein, netz);
-        return netz;
+        neu[haus.Id] = (ein, netz, fern);
+        return (netz, fern);
     }
 
     private PaketEingang PaketEingangFuer()

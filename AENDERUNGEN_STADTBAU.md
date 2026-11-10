@@ -3,6 +3,13 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.32.0
+
+Die 3D-Ansicht zeichnet die Stadt so sparsam wie das Spiel.
+
+- Häuser außerhalb des Bilds werden nicht gezeichnet. Weit herausgezoomt zeigen Häuser und Festschmuck eine vereinfachte Form, von nah bleibt alles wie bisher.
+- „Grenzen messen“ zeigt dadurch kleinere Zahlen: die heutige Stadt braucht in der Gesamtansicht (Nacht, Winter, Weihnachten) rund 40 Prozent weniger Dreiecke.
+
 ## S 0.31.0
 
 Häuser färben, richtige Türen, Fabrikhallen bauen und große Katalog-Stücke als Gebäude übernehmen.

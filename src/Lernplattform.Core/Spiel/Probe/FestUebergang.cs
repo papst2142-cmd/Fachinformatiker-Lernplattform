@@ -204,7 +204,8 @@ public sealed class FestUebergang
         var m = sichtProj;
         Vector4 s0 = new(m.M11, m.M21, m.M31, m.M41), s1 = new(m.M12, m.M22, m.M32, m.M42),
             s2 = new(m.M13, m.M23, m.M33, m.M43), s3 = new(m.M14, m.M24, m.M34, m.M44);
-        foreach (var e in (Vector4[])[s3 + s0, s3 - s0, s3 + s1, s3 - s1, s2])
+        // Welle D1: ohne neues Feld je Aufruf (wird je Bild fuer jedes Haus gerufen)
+        foreach (var e in (ReadOnlySpan<Vector4>)[s3 + s0, s3 - s0, s3 + s1, s3 - s1, s2])
         {
             var n = new Vector3(e.X, e.Y, e.Z);
             var laenge = n.Length();
