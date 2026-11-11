@@ -157,6 +157,10 @@ public static partial class AussenBearbeitung
             (float)Bearbeitung.AufRaster((punkte.Min(p => p.Y) + punkte.Max(p => p.Y)) / 2, Bearbeitung.Raster));
     }
 
+    /// <summary>Gegenprobe Fund 304: der laengliche Huegel dreht in der Gruppe nur seine Mitte (Stand S 0.42.0).</summary>
+    public static bool GruppeHuegelAltFuerTests { get => GruppeHuegelAlt.Value; set => GruppeHuegelAlt.Value = value; }
+    private static readonly AsyncLocal<bool> GruppeHuegelAlt = new();
+
     /// <summary>Vierteldrehung der ganzen Gruppe um ihre Mitte (im Uhrzeigersinn, <paramref name="rueckwaerts"/> dagegen), ein Schritt.</summary>
     public static MehrfachErgebnis Drehen(PyObjekt aussen, IReadOnlyList<AussenStelle> gruppe, bool rueckwaerts = false)
     {
@@ -223,6 +227,11 @@ public static partial class AussenBearbeitung
                         {
                             Drehen(aussen, s);
                         }
+                    }
+                    else if (s.Art == AussenArt.Huegel && !GruppeHuegelAlt.Value)
+                    {
+                        // Fund 304 (P12-199): ein laenglicher Huegel dreht mit der Gruppe auch seine Richtung (vorher nur die Mitte)
+                        HuegelDrehen(aussen, s, rueckwaerts ? 270 : 90);
                     }
                     if (MitteVon(aussen, s) is { } nachher)
                     {

@@ -26,6 +26,10 @@ public static class Ansicht3D
         public int Uhr => Nacht ? 22 * 60 : 12 * 60;
     }
 
+    /// <summary>Gegenprobe Fund 305: Laterne ohne freien Platz bricht den Bau ab (Stand S 0.42.0).</summary>
+    public static bool LaterneAltFuerTests { get => LaterneAlt.Value; set => LaterneAlt.Value = value; }
+    private static readonly AsyncLocal<bool> LaterneAlt = new();
+
     /// <summary>Spiel fuer die 3D-Ansicht bauen (blockiert: im Hintergrund rufen). Netze sind danach fertig.</summary>
     public static StadtSpiel Bauen(StadtFassung stand, Spieldaten daten, Einstellung einstellung, StadtSzene.Vorrat? vorrat = null)
     {
@@ -39,10 +43,21 @@ public static class Ansicht3D
         var grafik = Katalog.Aktiv?.MitStuecken(daten.Grafik, stand) ?? daten.Grafik;
         // S 0.9.0: selbst gebaute Gebaeude (stadtdaten.bauteile) mit demselben Code wie das Spiel nach dem Einbau
         grafik = MitGebaeuden(grafik, stand);
-        var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
-            () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
-        spiel.Szene.Vorbereiten();
-        return spiel;
+        // Fund 305 (P12-199): eine Laterne ohne freien Platz laesst nur die Ansicht aus (vorher brach der ganze Bau ab, die
+        // 3D-Ansicht blieb beim alten Bild mit „Fehler“); die Pruefung meldet sie weiter rot. Gegenprobe LaterneAltFuerTests
+        var vorher = Nachtlicht.OhnePlatzAuslassen;
+        Nachtlicht.OhnePlatzAuslassen = !LaterneAltFuerTests;
+        try
+        {
+            var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
+                () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
+            spiel.Szene.Vorbereiten();
+            return spiel;
+        }
+        finally
+        {
+            Nachtlicht.OhnePlatzAuslassen = vorher;
+        }
     }
 
     /// <summary>

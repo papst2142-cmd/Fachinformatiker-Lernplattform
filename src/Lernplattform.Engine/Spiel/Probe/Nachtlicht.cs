@@ -207,6 +207,7 @@ public static class Nachtlicht
     /// </summary>
     public static List<Laterne> Plaetze(StadtSzene szene)
     {
+        var auslassen = szene.LaternenOhnePlatzAuslassen;
         var regeln = new Regeln(szene);
         var liste = new List<Laterne>();
         var skizze = szene.LaternenSkizze;
@@ -241,6 +242,12 @@ public static class Nachtlicht
                     gefunden = new Laterne(nr + 1, q, doppelt, doppelt ? d : -quer, ziel);
                     break;
                 }
+            }
+            if (gefunden is null && auslassen)
+            {
+                // Fund 305 (P12-199): nur die 3D-Ansicht des Werkzeugs laesst die Laterne aus, statt den ganzen Bau abzubrechen;
+                // seine Pruefung baut ohne diesen Schalter und meldet sie rot
+                continue;
             }
             liste.Add(gefunden ?? throw new InvalidOperationException($"Laterne {nr + 1}: kein freier Platz an ihrer Strasse"));
         }
@@ -290,6 +297,18 @@ public static class Nachtlicht
     }
 
     private static readonly AsyncLocal<bool> OhneStrasseAlt = new();
+
+    /// <summary>
+    /// Fund 305 (P12-199): solange gesetzt, merken sich neu gebaute Szenen (<see cref="StadtSzene.LaternenOhnePlatzAuslassen"/>),
+    /// dass eine Laterne ohne freien Platz ausgelassen wird. Setzt nur die 3D-Ansicht des Werkzeugs; Spiel und Pruefung nie.
+    /// </summary>
+    public static bool OhnePlatzAuslassen
+    {
+        get => OhnePlatzAuslassenWert.Value;
+        set => OhnePlatzAuslassenWert.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> OhnePlatzAuslassenWert = new();
 
     /// <summary>Halbe Laenge des Streifens laengs der Strasse, den das Kleingruen um jeden Wunschplatz frei laesst.</summary>
     public const float WunschStreifen = 0.8f;

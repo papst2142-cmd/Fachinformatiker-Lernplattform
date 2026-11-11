@@ -1499,7 +1499,7 @@ public sealed partial class Hauptansicht : UserControl
         };
         // Nachbesserung S 0.5.1 (Weisung P12-40 Punkt 4): "Drehen" vorn und hervorgehoben; was das Spiel nicht drehen kann,
         // ist grau, der Grund steht als Tipp am Knopf (auch grau sichtbar) und klein darunter
-        var drehenNicht = AussenBearbeitung.DrehenNicht(s);
+        var drehenNicht = AussenBearbeitung.DrehenNicht(_projekt.AussenStand, s);
         var drehen = Schrift.Knopf(Texte.Drehen, betont: drehenNicht is null).Mit(drehenNicht ?? Texte.DrehenTipp);
         ToolTip.SetShowOnDisabled(drehen, true);
         drehen.Click += (_, _) => Karte.Drehen();
@@ -1555,11 +1555,11 @@ public sealed partial class Hauptansicht : UserControl
             _aussenAuswahl.Children.Add(new WrapPanel { Children = { dazu, eckWeg } });
         }
         // warum etwas nicht geht, steht klein darunter
-        if (AussenBearbeitung.DrehenNicht(s) is null && !_projekt.NurLesen)
+        if (AussenBearbeitung.DrehenNicht(_projekt.AussenStand, s) is null && !_projekt.NurLesen)
         {
             _aussenAuswahl.Children.Add(Schrift.Text(Texte.DrehgriffHinweis, "Klein", farbe: "Pinsel.muted"));
         }
-        foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
+        foreach (var grund in new[] { AussenBearbeitung.DrehenNicht(_projekt.AussenStand, s), AussenBearbeitung.LoeschenNicht(s) }.OfType<string>().Distinct())
         {
             _aussenAuswahl.Children.Add(Schrift.Text(grund, "Klein", farbe: "Pinsel.muted"));
         }

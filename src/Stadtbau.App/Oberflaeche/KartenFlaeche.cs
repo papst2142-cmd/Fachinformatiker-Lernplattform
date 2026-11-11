@@ -1332,7 +1332,7 @@ public sealed partial class KartenFlaeche : Control
         {
             return;
         }
-        if (AussenBearbeitung.DrehenNicht(s) is { } grund)
+        if (Stand is { } stand && AussenBearbeitung.DrehenNicht(stand, s) is { } grund)
         {
             Gemeldet?.Invoke(grund);
             return;
@@ -1374,7 +1374,7 @@ public sealed partial class KartenFlaeche : Control
         get
         {
             if (Stand is not { } a || _projekt is null || _projekt.NurLesen || SetzenArt is not null || TuerFuer is not null || Auswahl is not { } s
-                || !AussenBearbeitung.Gueltig(a, s) || AussenBearbeitung.DrehenNicht(s) is not null || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
+                || !AussenBearbeitung.Gueltig(a, s) || AussenBearbeitung.DrehenNicht(a, s) is not null || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
             {
                 return null;
             }
