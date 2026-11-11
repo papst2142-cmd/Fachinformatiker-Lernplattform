@@ -772,8 +772,14 @@ public static partial class Texte
     public const string ParkplatzZweiReihen = "Zwei Reihen (quer, mit Gasse in der Mitte)";
     public static string ParkplatzPlaetzeText(int plaetze, int reihen) => plaetze + " Plätze, " + (reihen == 1 ? "eine Reihe" : reihen + " Reihen");
     public const string LaternenVerteilen = "Laternen neu verteilen";
-    public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen im Abstand 3,5 auf, abwechselnd links und rechts. Selbst gesetzte Laternen bleiben, gelöschte automatische kommen nicht wieder.";
-    public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} automatische entfernt.";
+    public const string LaternenVerteilenTipp = "Stellt an allen Straßen Laternen neu auf, im Abstand 3,5, abwechselnd links und rechts. Alle Laternen an Straßen werden dabei ersetzt, auch selbst gesetzte; Laternen fern jeder Straße (etwa im Park) bleiben stehen.";
+    public const string LaternenVerteilenTitel = "Laternen neu verteilen?";
+
+    /// <summary>Sammelliste 296: Rueckfrage vor „Laternen neu verteilen“ (Vorgabe Abbrechen).</summary>
+    public static string LaternenVerteilenFrage(int verschwinden, int neu) =>
+        $"Alle Laternen an Straßen werden neu verteilt, auch selbst gesetzte. Dabei verschwinden {verschwinden} Laternen von ihrer Stelle und {neu} kommen neu dazu. Laternen fern jeder Straße bleiben stehen. Du kannst es mit „Rückgängig“ zurücknehmen.";
+    public const string LaternenVerteilenJa = "Neu verteilen";
+    public static string LaternenVerteilt(int dazu, int weg) => $"Laternen neu verteilt: {dazu} aufgestellt, {weg} an Straßen entfernt.";
 
     // Welle S 0.27.0 (Weisung P12-118): Massband, Ebenen ein/aus, Notizen (nur Werkzeug)
     public const string Massband = "Maßband";

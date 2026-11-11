@@ -438,7 +438,11 @@ public static partial class AussenBearbeitung
         switch (s.Art)
         {
             case AussenArt.Haus or AussenArt.Gebaeude:
-                HausAnGehweg(aussen, s);
+                // Sammelliste 295: ein Bahnhof rastet zuerst ans Gleis, sonst an den Gehweg
+                if (!BahnhofAnGleis(aussen, s))
+                {
+                    HausAnGehweg(aussen, s);
+                }
                 break;
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);
@@ -609,7 +613,11 @@ public static partial class AussenBearbeitung
         switch (s.Art)
         {
             case AussenArt.Haus or AussenArt.Gebaeude:
-                HausAnGehweg(aussen, s);
+                // Sammelliste 295: ein Bahnhof rastet zuerst ans Gleis, sonst an den Gehweg
+                if (!BahnhofAnGleis(aussen, s))
+                {
+                    HausAnGehweg(aussen, s);
+                }
                 break;
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);

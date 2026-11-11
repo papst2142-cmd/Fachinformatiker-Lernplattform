@@ -421,6 +421,28 @@ public static class StadtTueren
         return [.. ergebnis.OrderBy(e => e.Item1.Mitte)];
     }
 
+    /// <summary>
+    /// Sammelliste 292 (Weisung P12-196, Nico 4a): eine gewaehlte Tuer-Farbe faerbt die Tuer eines Stadt-Modells: nur die
+    /// Dreiecke der Tuer (Tuerblatt bzw. Glas der Glastuer), Rahmen und Fenster daneben bleiben. Ohne gewaehlte Farbe wird diese
+    /// Funktion nie gerufen (die Tuer bleibt wie im Modell).
+    /// </summary>
+    public static void ModellTuerFaerben(IReadOnlyList<ModellStueck> stuecke, Func<int, GrafikModell?> modell, Dictionary<int, GrafikModell> umgefaerbt,
+        ModellTuer tuer, Vector3 farbe)
+    {
+        if (modell(tuer.Stueck) is not { } gm)
+        {
+            return;
+        }
+        var farben = (byte[])gm.Farben.Clone();
+        foreach (var d in tuer.Dreiecke)
+        {
+            farben[d * 3] = (byte)MathF.Round(farbe.X * 255);
+            farben[(d * 3) + 1] = (byte)MathF.Round(farbe.Y * 255);
+            farben[(d * 3) + 2] = (byte)MathF.Round(farbe.Z * 255);
+        }
+        umgefaerbt[tuer.Stueck] = gm.MitFarben(farben);
+    }
+
     /// <summary>Sammelliste 267: Farbe des Tuerblatts an der Glastuer eines Gebaeudes aus dem Editor (dunkles Holz).</summary>
     public static readonly Vector3 Tuerblatt = Netz.Farbe("#4A3426");
 

@@ -342,6 +342,34 @@ public sealed class SpielQuestTests
         Assert.Contains(spiel.Knoepfe, k => k.Aktion == "auftrag:" + NeuQuest);
     }
 
+    /// <summary>Sammelliste 298: steht die Figur beim Start schon am Ort eines Questgebers draussen, spricht er sie gleich an (Gegenprobe A 0.65.0).</summary>
+    [Fact]
+    public void QuestgeberDraussen_SprichtBeimStartAmOrtAn_Gegenprobe()
+    {
+        var inhalt = Angewendet.Value;
+        var stadt = new Stadt(inhalt, Stadtdaten()) { Fassung = Fassung0 };
+        var ablauf = AllesErledigt(inhalt);
+        var erstes = new StadtSpiel(stadt, ablauf, null, SpielInnenraumTests.Innenraeume.Value);
+        Assert.Equal(StadtGrund.Ok, erstes.GeheZu("talheim"));
+        erstes.SofortAnkommen();
+        // neu oeffnen (wie nach dem Feierabend): die Figur steht vor Talheim
+        var spiel = new StadtSpiel(stadt, ablauf, null, SpielInnenraumTests.Innenraeume.Value);
+        Assert.Equal("talheim", spiel.Jetzt.Ort);
+        Assert.Contains(spiel.Knoepfe, k => k.Aktion == "auftrag:" + NeuQuest);
+        Assert.Contains("Greta", spiel.Zeile);
+        try
+        {
+            StadtSpiel.StartOhneQuestgeberFuerTests(true);
+            var alt = new StadtSpiel(stadt, ablauf, null, SpielInnenraumTests.Innenraeume.Value);
+            Assert.DoesNotContain(alt.Knoepfe, k => k.Aktion == "auftrag:" + NeuQuest);
+            Assert.DoesNotContain("Greta", alt.Zeile);
+        }
+        finally
+        {
+            StadtSpiel.StartOhneQuestgeberFuerTests(false);
+        }
+    }
+
     [Fact]
     public void QuestgeberImLaden_StehtMitAusrufezeichen()
     {

@@ -158,6 +158,55 @@ public static class LaternenAutomatik
         return (Platz.Fuer(aussen, szene)?.Aufstellen([.. Strassen(aussen).Where(l => l.Count >= 2)]) ?? 0, entfernt);
     }
 
+    /// <summary>Eine Laterne steht „an einer Strasse“, wenn ihr Fuss hoechstens so weit von der Mitte einer Strasse liegt (Rand 0,5 + Gehweg + Spiel).</summary>
+    public const float AnStrasse = 1.0f;
+
+    /// <summary>Gegenprobe Sammelliste 296: Knopf wie bis S 0.41.0 (nur die automatischen neu, nur Tests, je Ablauf).</summary>
+    public static bool NurAutomatischeAltFuerTests { get => NurAutomatischeAlt.Value; set => NurAutomatischeAlt.Value = value; }
+    private static readonly AsyncLocal<bool> NurAutomatischeAlt = new();
+
+    /// <summary>
+    /// Sammelliste 296 (Weisung P12-196, Nico 1b): Knopf „Laternen neu verteilen“. ALLE Laternen an Strassen (bis
+    /// <see cref="AnStrasse"/> von einer Strassenmitte, ohne Ring eines Kreisverkehrs) fallen weg, auch selbst gesetzte und solche aus
+    /// einer Stadt-Datei (dort weiss das Werkzeug nicht, welche automatisch waren); geloeschte Stellen werden vergessen; dann an
+    /// allen Strassen neu. Laternen fern jeder Strasse (Park, Platz) bleiben. Ergebnis: aufgestellt, entfernt.
+    /// </summary>
+    public static (int Dazu, int Weg) AlleVerteilen(PyObjekt aussen, Func<PyObjekt, StadtSzene?> szene)
+    {
+        if (NurAutomatischeAlt.Value)
+        {
+            return Verteilen(aussen, szene);
+        }
+        var strassen = Strassen(aussen).Where(l => l.Count >= 2).ToList();
+        var laternen = Aussen.Laternen(aussen);
+        var weg = 0;
+        for (var i = laternen.Count - 1; i >= 0; i--)
+        {
+            if (laternen[i] is List<object?> q && strassen.Any(l => Kurve.Abstand(new Vector2((float)Py.F(q[0]), (float)Py.F(q[1])), l) <= AnStrasse))
+            {
+                laternen.RemoveAt(i);
+                weg++;
+            }
+        }
+        var d = Daten(aussen);
+        Py.Setzen(d, "gesetzt", new List<object?>());
+        Py.Setzen(d, "weg", new List<object?>());
+        return (Platz.Fuer(aussen, szene)?.Aufstellen(strassen) ?? 0, weg);
+    }
+
+    /// <summary>
+    /// Fuer die Rueckfrage vor <see cref="AlleVerteilen"/> (rechnet auf einer Kopie): wie viele Laternen danach nicht mehr an ihrer
+    /// Stelle stehen (verschwinden) und wie viele neu dazukommen.
+    /// </summary>
+    public static (int Verschwinden, int Neu) VorherSagen(PyObjekt aussen, Func<PyObjekt, StadtSzene?> szene)
+    {
+        var k = (PyObjekt)Py.Kopie(aussen)!;
+        var vorher = Aussen.LaternenWerte(k).Select(l => new Vector2(l.X, l.Z)).ToList();
+        AlleVerteilen(k, szene);
+        var nachher = Aussen.LaternenWerte(k).Select(l => new Vector2(l.X, l.Z)).ToList();
+        return (vorher.Count(v => !nachher.Any(n => Vector2.Distance(v, n) < Gleich)), nachher.Count(n => !vorher.Any(v => Vector2.Distance(v, n) < Gleich)));
+    }
+
     private static List<Vector2> Naechste(List<List<Vector2>> strassen, Vector2 p) =>
         strassen.OrderBy(s => s.Count >= 2 ? Kurve.Abstand(p, s) : float.MaxValue).First();
 

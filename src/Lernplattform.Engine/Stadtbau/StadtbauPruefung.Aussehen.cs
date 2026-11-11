@@ -130,24 +130,33 @@ public static partial class StadtbauPruefung
         {
             return;
         }
-        foreach (var g in landschaft)
+        // Sammelliste 295 (Weisung P12-196 Frage 2 = a): auch die Bahnsteige im Modell eines Gebaeudes oder Orts (Bahnhof), nicht nur
+        // einzelne Bahnsteig-Stuecke; Gegenprobe BahnsteigNurAltFuerTests
+        var pruefen = landschaft.Select(g => (Teile: Get(modelle, Py.Str(g["modell"])), X: Py.F(g["x"]), Y: Py.F(g["y"]), Dreh: Hausdrehung.Von(g),
+                Name: Bahnsteig.Nur(Get(modelle, Py.Str(g["modell"]))) ? $"Der Bahnsteig („{Py.Str(g["modell"])}“)" : $"Der Bahnsteig von „{Py.Str(g["modell"])}“"))
+            .Concat(orte.Select(o => (Teile: Get(modelle, Py.Str(o["modell"])), X: Py.F(o["x"]), Y: Py.F(o["y"]), Dreh: Hausdrehung.VonOrt(fassung.Stadtdaten, Py.Str(o["id"])),
+                Name: $"Der Bahnsteig von „{Get(o, "name") as string ?? Py.Str(o["id"])}“")));
+        foreach (var (teile, x, y, dreh, name) in pruefen)
         {
-            var teile = Get(modelle, Py.Str(g["modell"]));
-            if (!Bahnsteig.Nur(teile))
+            if (BahnsteigNurAlt.Value ? !Bahnsteig.Nur(teile) : !Bahnsteig.Hat(teile))
             {
                 continue;
             }
-            foreach (var (min, max) in Bahnsteig.Rechtecke(teile, Py.F(g["x"]), Py.F(g["y"]), Hausdrehung.Von(g)))
+            foreach (var (min, max) in Bahnsteig.Rechtecke(teile, x, y, dreh))
             {
                 if (BahnsteigAufGleis(min, max, szene) is { } p)
                 {
-                    funde.Add(new StadtbauFund($"Der Bahnsteig („{Py.Str(g["modell"])}“) liegt auf dem Gleis.",
-                        "Bahnsteig weiter weg vom Gleis schieben.", true, p.X, p.Y));
+                    funde.Add(new StadtbauFund(name + " liegt auf dem Gleis.",
+                        "Bahnsteig weiter weg vom Gleis schieben (mit „Einrasten“ rastet ein Bahnhof selbst ans Gleis).", true, p.X, p.Y));
                     break;
                 }
             }
         }
     }
+
+    /// <summary>Gegenprobe Sammelliste 295: nur einzelne Bahnsteig-Stuecke pruefen (wie bis A 0.65.0, nur Tests, je Ablauf).</summary>
+    public static bool BahnsteigNurAltFuerTests { get => BahnsteigNurAlt.Value; set => BahnsteigNurAlt.Value = value; }
+    private static readonly AsyncLocal<bool> BahnsteigNurAlt = new();
 
     /// <summary>Erster Punkt des Rechtecks (abgetastet im Raster <see cref="BahnsteigRaster"/>, mit Rand) auf dem Gleis, sonst null.</summary>
     private static Vector2? BahnsteigAufGleis(Vector2 min, Vector2 max, StadtSzene szene)

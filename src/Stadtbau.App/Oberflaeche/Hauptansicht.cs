@@ -805,6 +805,27 @@ public sealed partial class Hauptansicht : UserControl
             return null;
         }
         var (dazu, weg) = _projekt.LaternenVerteilen();
+        return LaternenVerteiltMelden(dazu, weg);
+    }
+
+    /// <summary>Sammelliste 296: Knopf mit Rueckfrage (Zahlen im Hintergrund gerechnet, Vorgabe „Abbrechen“), dann ein Schritt.</summary>
+    internal async Task<string?> LaternenVerteilenMitFrageAsync()
+    {
+        if (_projekt is not { NurLesen: false } projekt)
+        {
+            return null;
+        }
+        var (verschwinden, neu) = await Task.Run(projekt.LaternenVorherSagen);
+        if (verschwinden > 0 && await Dialog.Rueckfrage(Texte.LaternenVerteilenTitel, Texte.LaternenVerteilenFrage(verschwinden, neu), 1,
+            Texte.LaternenVerteilenJa, Texte.Abbrechen) != 0)
+        {
+            return null;
+        }
+        return ReferenceEquals(projekt, _projekt) ? LaternenVerteilen() : null;
+    }
+
+    private string LaternenVerteiltMelden(int dazu, int weg)
+    {
         var meldung = Texte.LaternenVerteilt(dazu, weg);
         Karte.Waehlen(null);
         Melden(meldung);
@@ -842,7 +863,7 @@ public sealed partial class Hauptansicht : UserControl
         var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra, ampel, haltestelle, parkplatz } };
         var verteilen = new Button { Content = Schrift.Text(Texte.LaternenVerteilen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
             .Vorlese(Texte.LaternenVerteilen).Mit(Texte.LaternenVerteilenTipp);
-        verteilen.Click += (_, _) => LaternenVerteilen();
+        verteilen.Click += async (_, _) => await LaternenVerteilenMitFrageAsync();
         LaternenVerteilenKnopf = verteilen;
         var natur = new WrapPanel
         {

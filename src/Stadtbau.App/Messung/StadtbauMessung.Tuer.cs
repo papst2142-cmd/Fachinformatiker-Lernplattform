@@ -87,7 +87,7 @@ public static partial class StadtbauMessung
 
         // zweite Wohnung mit Tuer = Kopie „Wohnung 2“ (Nico 2a)
         var s2 = p.AussenAendern("Wohnung 2", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 30, vorher.Y + (vorher.H / 2), raster: true, modell: "wohnung")!);
-        if (a.TuerUmschalten(s2) is null)
+        if (await a.TuerUmschaltenAsync(s2) is null)
         {
             Fund("Tuer: zweite Wohnung ohne Meldung");
         }
@@ -99,7 +99,7 @@ public static partial class StadtbauMessung
 
         // Gegenprobe: fern der Strasse (Weg laenger als GebaeudeTuer.WegHoechstens) = gelber Hinweis
         var s3 = p.AussenAendern("Wohnung fern", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 20, 2, raster: true, modell: "wohnung")!);
-        if (a.TuerUmschalten(s3) != Texte.TuerWegOhneStrasse)
+        if (await a.TuerUmschaltenAsync(s3) != Texte.TuerWegOhneStrasse)
         {
             Fund("Tuer: Wohnung fern der Strasse meldet nicht „" + Texte.TuerWegOhneStrasse + "“ (Gegenprobe)");
         }
@@ -110,7 +110,7 @@ public static partial class StadtbauMessung
         }
 
         // „Tür entfernen“ und Rueckgaengig
-        a.TuerUmschalten(s);
+        await a.TuerUmschaltenAsync(s);
         if (GebaeudeTuer.HatTuer(p.AussenStand, s))
         {
             Fund("Tuer: „" + Texte.TuerEntfernen + "“ laesst die Tuer stehen");

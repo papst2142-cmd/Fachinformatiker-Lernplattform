@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Lernplattform.Core.Daten;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Design;
 using Stadtbau.Core;
 using Texte = Stadtbau.Core.Texte;
@@ -16,12 +18,12 @@ public sealed partial class Hauptansicht
     {
         var hat = _projekt is not null && GebaeudeTuer.HatTuer(_projekt.AussenStand, s);
         var k = Schrift.Knopf(hat ? Texte.TuerEntfernen : Texte.TuerDazu).Mit(hat ? Texte.TuerEntfernenTipp : Texte.TuerDazuTipp);
-        k.Click += (_, _) => TuerUmschalten(s);
+        k.Click += async (_, _) => await TuerUmschaltenAsync(s);
         return k;
     }
 
     /// <summary>Tuer dazu oder weg am Gebaeude <paramref name="s"/> (ein Schritt). Rueckgabe: Meldung (auch fuer den Start-Test).</summary>
-    public string? TuerUmschalten(AussenStelle s)
+    public async Task<string?> TuerUmschaltenAsync(AussenStelle s)
     {
         if (_projekt is null || _projekt.NurLesen || s.Art != AussenArt.Gebaeude)
         {
@@ -37,7 +39,15 @@ public sealed partial class Hauptansicht
         {
             var raster = Karte.Raster;
             string? hinweis = null;
-            _projekt.AussenAendern(Texte.TuerDazu, aa => hinweis = GebaeudeTuer.Dazu(aa, s, raster));
+            // Sammelliste 293: Platz auf der gezeichneten Fassade im Hintergrund rechnen (Szene bauen), dann ein Schritt
+            var projekt = _projekt;
+            var stand = (PyObjekt)Py.Kopie(projekt.AussenStand)!;
+            var platz = await Task.Run(() => GebaeudeTuer.DazuPlatz(projekt, stand, s, raster));
+            if (!ReferenceEquals(projekt, _projekt))
+            {
+                return null;
+            }
+            _projekt.AussenAendern(Texte.TuerDazu, aa => hinweis = GebaeudeTuer.DazuAn(aa, s, raster, platz));
             var name = ModellNamen.Anzeige(_projekt.AussenStand, ModellVon(s));
             meldung = hinweis ?? Texte.TuerDazuGemacht(name);
         }

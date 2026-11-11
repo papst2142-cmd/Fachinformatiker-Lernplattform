@@ -500,6 +500,37 @@ public class QuestTests
         Assert.False(p.QuestgeberLoeschen("ulla"));
     }
 
+    /// <summary>Sammelliste 297: das Spiel nennt Personen mit dem ersten Wort (KurzName); ist es eine Anrede oder nur ein Titel, gelber Hinweis (Gegenprobe ohne Hinweis).</summary>
+    [Theory]
+    [InlineData("Frau Berger", "Frau")]
+    [InlineData("herr Maier", "herr")]
+    [InlineData("Dr. Berger", "Dr.")]
+    public void EigenerQuestgeber_NameMitAnrede_Gelb_Gegenprobe(string name, string kurz)
+    {
+        var p = Stadt1();
+        var qg = p.QuestgeberNeu();
+        p.QuestgeberPlatz(qg, InnenPlatz(p));
+        p.QuestgeberFeld(qg, "name", name);
+        Assert.Empty(Rot(p));
+        Assert.Contains(Gelb(p), t => t == Texte.QgNameAnrede(name, kurz));
+        // gruen: Vorname zuerst, und ein Titel mit Vor- und Nachname (das Spiel nennt dann „Dr. Berger“)
+        foreach (var gut in new[] { "Anna Berger", "Dr. Anna Berger", "Frauke Lindner" })
+        {
+            p.QuestgeberFeld(qg, "name", gut);
+            Assert.DoesNotContain(Gelb(p), t => t.Contains("nennt die Person nur", StringComparison.Ordinal));
+        }
+        p.QuestgeberFeld(qg, "name", name);
+        try
+        {
+            QuestPruefung.AnredeAltFuerTests(true);
+            Assert.DoesNotContain(Gelb(p), t => t.Contains("nennt die Person nur", StringComparison.Ordinal));
+        }
+        finally
+        {
+            QuestPruefung.AnredeAltFuerTests(false);
+        }
+    }
+
     [Fact]
     public void Questgeber_Innen_AufStueck_AusserhalbDesRaums_OrtFehlt_Rot()
     {
