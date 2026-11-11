@@ -409,6 +409,34 @@ public class QuestTests
         var z = Zusammenhaenge.Bauen(je, je.QuestgeberName, new HashSet<string>(), ZusammenhaengeTests.Masse);
         Assert.Equal(je.Zahlen().Count, z.Kaesten.Count);
         Assert.Contains(z.Kaesten, k => k.Name == Texte.VerkettungOhne);
+
+        // Weisung P12-187: je Questgeber hoechstens 4 Kaesten je Spalte, alle Kaesten bleiben; Gegenprobe ohne Grenze = eine
+        // Spalte mit mehr als 4 (fast alle Personen ab Tag 1)
+        var jeSpalte = Zusammenhaenge.Bauen(je, je.QuestgeberName, new HashSet<string>(), ZusammenhaengeTests.Masse,
+            jeSpalte: Zusammenhaenge.QuestgeberJeSpalte, breiteZu: Zusammenhaenge.QuestgeberBreiteZu);
+        Assert.Equal(je.Zahlen().Count, jeSpalte.Kaesten.Count);
+        Assert.All(jeSpalte.Kaesten, k => Assert.Equal(Zusammenhaenge.QuestgeberBreiteZu, k.Koerper.B));
+        Assert.All(jeSpalte.Kaesten.GroupBy(k => k.Spalte), s => Assert.True(s.Count() <= Zusammenhaenge.QuestgeberJeSpalte));
+        Assert.Empty(jeSpalte.DurchKaesten());
+        Assert.Contains(z.Kaesten.GroupBy(k => k.Spalte), s => s.Count() > Zusammenhaenge.QuestgeberJeSpalte);
+        Assert.True(jeSpalte.Hoehe < z.Hoehe);
+        // je Ort bleibt wie bisher (ohne Grenze)
+        Assert.Equal(Zusammenhaenge.Spalten(g, p.OrtName), Zusammenhaenge.Spalten(g, p.OrtName, null));
+    }
+
+    /// <summary>Weisung P12-187 Punkt 4: Texte zu Personen sind neutral (keine Frau „an seinem Platz“); Gegenprobe alter Text.</summary>
+    [Fact]
+    public void Texte_PersonenNeutral()
+    {
+        static bool Maennlich(string t) => System.Text.RegularExpressions.Regex.IsMatch(t, @"\b(sein|seine|seinem|seinen|seiner|seines)\b");
+        var texte = typeof(Texte).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(f => f.IsLiteral && f.FieldType == typeof(string) && (f.Name.StartsWith("Qg", StringComparison.Ordinal)
+                || f.Name.StartsWith("Quest", StringComparison.Ordinal) || f.Name.StartsWith("Verkettung", StringComparison.Ordinal)))
+            .Select(f => (f.Name, Text: (string)f.GetRawConstantValue()!)).ToList();
+        Assert.NotEmpty(texte);
+        Assert.DoesNotContain(texte, t => Maennlich(t.Text));
+        Assert.Equal("am Platz im Spiel", Texte.QgAmAltenPlatz);
+        Assert.True(Maennlich("an seinem Platz im Spiel"));
     }
 
     // ---- Questgeber ------------------------------------------------------------------------------------

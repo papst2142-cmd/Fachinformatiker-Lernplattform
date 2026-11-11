@@ -33,6 +33,32 @@ internal sealed class ZusammenhangAnsicht : Grid
     private Point _versatz;
     private bool _eingepasst = true;
     private bool _gefangen;
+    private bool _lesbar;
+    private readonly TextBlock _erklaerung;
+
+    /// <summary>
+    /// Nachbesserung Q1 (Weisung P12-187): Untergrenze der kleinsten gezeichneten Schrift (Bildpunkte) der Startansicht „je
+    /// Questgeber“ und nach „Alle aufklappen“ (der Start-Test verlangt zusaetzlich mindestens so viel wie „je Ort“ bei „Alles
+    /// zeigen“ im gleichen Zustand). Die Kaesten stehen in so vielen Spalten, wie bei Zoom 1 nebeneinander ins Fenster passen
+    /// (<see cref="QgPlan"/>); die Startansicht passt die Breite ein (hoechstens 1:1), was unten nicht mehr passt, erreicht
+    /// man durch Verschieben. „Alles zeigen“ zeigt weiter alles.
+    /// </summary>
+    public const double SchriftMindestPx = 10;
+
+    /// <summary>
+    /// Untergrenze nach „Alle aufklappen“ „je Questgeber“ (Bildpunkte): alle 17 Personen mit allen Quests passen in der Breite
+    /// nur verkleinert ins Fenster; „je Ort“ zeigt im gleichen Zustand bei „Alles zeigen“ 1,6.
+    /// </summary>
+    public const double AufgeklapptMindestPx = 8;
+
+    /// <summary>Gegenprobe des Start-Tests: „je Questgeber“ wie vorher (eine lange Spalte, Start = alles einpassen).</summary>
+    public static bool QuestgeberAltFuerTests { get; set; }
+
+    /// <summary>Kleinste gezeichnete Schrift der Kaesten in Bildpunkten (Schriftgroesse mal Zoom; Start-Test).</summary>
+    public double KleinsteSchriftPx => KastenTexte.Count == 0 ? 0 : KastenTexte.Min(t => t.FontSize) * _zoom;
+
+    /// <summary>Erklaerung oben (Start-Test: eigener Text je Ansicht).</summary>
+    public string Erklaerung => _erklaerung.Text ?? "";
 
     /// <summary>Ein Kasten wurde angetippt (Ort): rechts dessen Spielgeschichte.</summary>
     public event Action<string>? OrtGewaehlt;
@@ -102,7 +128,7 @@ internal sealed class ZusammenhangAnsicht : Grid
             Children =
             {
                 Schrift.Text(Texte.GeschichteZusammenhaenge, "Gross", FontWeight.Bold),
-                Schrift.Text(Texte.GeschichteZusammenhaengeZeile, "Klein", farbe: "Pinsel.muted"),
+                (_erklaerung = Schrift.Text(Texte.GeschichteZusammenhaengeZeile, "Klein", farbe: "Pinsel.muted")),
             },
         };
         var kopf = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
@@ -146,9 +172,14 @@ internal sealed class ZusammenhangAnsicht : Grid
         };
         _sicht.SizeChanged += (_, _) =>
         {
-            if (_eingepasst)
+            if (JeQuestgeber && !QuestgeberAltFuerTests && _geschichte is not null)
             {
-                Einpassen();
+                // die Zahl der Spalten haengt an der Breite des Fensters
+                Neu();
+            }
+            else if (_eingepasst)
+            {
+                Passen();
             }
         };
         Button Klein(string text, string name, string tipp, Action a)
@@ -163,7 +194,7 @@ internal sealed class ZusammenhangAnsicht : Grid
             {
                 Klein("+", Texte.Vergroessern, Texte.ZoomTipp, () => Zoomen(1.25, null)),
                 Klein("−", Texte.Verkleinern, Texte.ZoomTipp, () => Zoomen(1 / 1.25, null)),
-                Klein(Texte.GeschichteAllesZeigen, Texte.GeschichteAllesZeigen, Texte.GeschichteAllesZeigenTipp, Einpassen),
+                Klein(Texte.GeschichteAllesZeigen, Texte.GeschichteAllesZeigen, Texte.GeschichteAllesZeigenTipp, () => Einpassen()),
             },
         });
         Kamerakarte = kamera;
@@ -189,6 +220,8 @@ internal sealed class ZusammenhangAnsicht : Grid
         JeQuestgeber = jeQuestgeber;
         _offen.Clear();
         _eingepasst = true;
+        _lesbar = jeQuestgeber && !QuestgeberAltFuerTests;
+        _erklaerung.Text = jeQuestgeber ? Texte.VerkettungZeileJeQuestgeber : Texte.GeschichteZusammenhaengeZeile;
         UmschaltungFarben();
         AnsichtGewechselt?.Invoke(jeQuestgeber);
     }
@@ -245,6 +278,12 @@ internal sealed class ZusammenhangAnsicht : Grid
         {
             _offen.UnionWith(_geschichte.Zahlen().Keys);
         }
+        if (JeQuestgeber && !QuestgeberAltFuerTests)
+        {
+            // Nachbesserung Q1: nach „Alle aufklappen/zuklappen“ wieder die lesbare Startansicht
+            _eingepasst = true;
+            _lesbar = true;
+        }
         Neu();
     }
 
@@ -298,7 +337,7 @@ internal sealed class ZusammenhangAnsicht : Grid
         {
             return;
         }
-        var plan = Zusammenhaenge.Bauen(g, _name, _offen, Masse, AltFuerTests);
+        var plan = JeQuestgeber && !QuestgeberAltFuerTests ? QgPlan(g) : Zusammenhaenge.Bauen(g, _name, _offen, Masse, AltFuerTests);
         Plan = plan;
         _flaeche.Children.Clear();
         _flaeche.Children.Add(_linien);
@@ -406,13 +445,56 @@ internal sealed class ZusammenhangAnsicht : Grid
         }
         if (_eingepasst)
         {
-            Einpassen();
+            Passen();
         }
         else
         {
             Anwenden();
         }
         _linien.InvalidateVisual();
+    }
+
+    /// <summary>
+    /// Nachbesserung Q1 (Weisung P12-187): „je Questgeber“ mit so vielen Spalten (je Spalte mindestens
+    /// <see cref="Zusammenhaenge.QuestgeberJeSpalte"/> Kaesten), wie bei Zoom 1 nebeneinander ins Fenster passen. Versucht
+    /// wird je Zahl der Spalten (aus <see cref="Zusammenhaenge.Spalten"/>, ohne Aufbau) von der geschaetzten an abwaerts;
+    /// passt keine, die schmalste.
+    /// </summary>
+    private Zusammenhaenge QgPlan(Spielgeschichte g)
+    {
+        var anzahl = Math.Max(1, g.Zahlen().Count);
+        var breite = _sicht.Bounds.Width;
+        if (breite <= 0)
+        {
+            return Zusammenhaenge.Bauen(g, _name, _offen, Masse, AltFuerTests, Zusammenhaenge.QuestgeberJeSpalte, Zusammenhaenge.QuestgeberBreiteZu);
+        }
+        // kleinste Zahl je Spalte fuer jede moegliche Zahl der Spalten
+        var jeAnzahl = new SortedDictionary<int, int>(Comparer<int>.Create((x, y) => y.CompareTo(x)));
+        for (var n = Zusammenhaenge.QuestgeberJeSpalte; n <= Math.Max(Zusammenhaenge.QuestgeberJeSpalte, anzahl); n++)
+        {
+            var c = Zusammenhaenge.Spalten(g, _name, n).Select(x => x.Spalte).DefaultIfEmpty(0).Max() + 1;
+            jeAnzahl.TryAdd(c, n);
+        }
+        var kasten = (_offen.Count > 0 ? Zusammenhaenge.BreiteOffen : Zusammenhaenge.QuestgeberBreiteZu) + Zusammenhaenge.GasseMindest;
+        var schaetzung = Math.Max(1, (int)Math.Floor((breite - Zusammenhaenge.Rand) / kasten));
+        Zusammenhaenge? schmalste = null;
+        foreach (var (spalten, n) in jeAnzahl)
+        {
+            if (spalten > schaetzung && spalten != jeAnzahl.Keys.Last())
+            {
+                continue;
+            }
+            var plan = Zusammenhaenge.Bauen(g, _name, _offen, Masse, AltFuerTests, n, Zusammenhaenge.QuestgeberBreiteZu);
+            if (plan.Breite <= breite)
+            {
+                return plan;
+            }
+            if (schmalste is null || plan.Breite < schmalste.Breite)
+            {
+                schmalste = plan;
+            }
+        }
+        return schmalste!;
     }
 
     // ---- Kamera --------------------------------------------------------------------------------------
@@ -436,6 +518,16 @@ internal sealed class ZusammenhangAnsicht : Grid
     /// <summary>„Alles zeigen“: die ganze Ansicht ins Fenster (unten Platz fuer die Kamera-Karte), hoechstens 1:1.</summary>
     public void Einpassen()
     {
+        _lesbar = false;
+        Passen();
+    }
+
+    /// <summary>
+    /// Einpassen nach dem Zustand: alles zeigen, oder (Startansicht „je Questgeber“) mindestens so gross, dass die kleinste
+    /// Schrift <see cref="SchriftMindestPx"/> hat; ist es dann groesser als das Fenster, beginnt es oben links.
+    /// </summary>
+    private void Passen()
+    {
         if (Plan is not { } p || _sicht.Bounds.Width <= 0 || _sicht.Bounds.Height <= 0)
         {
             _eingepasst = true;
@@ -443,7 +535,11 @@ internal sealed class ZusammenhangAnsicht : Grid
         }
         var unten = Oberflaeche.Kamerakarte.Hoehe(Kamerakarte);
         var hoehe = Math.Max(40, _sicht.Bounds.Height - unten);
-        _zoom = Math.Clamp(Math.Min(_sicht.Bounds.Width / p.Breite, hoehe / p.Hoehe), 0.1, 1);
+        var alles = Math.Min(_sicht.Bounds.Width / p.Breite, hoehe / p.Hoehe);
+        var kleinste = KastenTexte.Count == 0 ? 0 : KastenTexte.Min(t => t.FontSize);
+        // lesbar: Breite einpassen (hoechstens 1:1), die Hoehe darf ueberstehen
+        var zoom = _lesbar && kleinste > 0 ? Math.Max(alles, _sicht.Bounds.Width / p.Breite) : alles;
+        _zoom = Math.Clamp(zoom, 0.1, 1);
         _versatz = new Point(Math.Max(0, (_sicht.Bounds.Width - (p.Breite * _zoom)) / 2), Math.Max(0, (hoehe - (p.Hoehe * _zoom)) / 2));
         _eingepasst = true;
         Anwenden();

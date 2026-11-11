@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Messung;
@@ -108,6 +109,23 @@ public static partial class StadtbauMessung
             Fund("Quests: fertige Quest noch rot: " + x.Inhalt.Text);
         }
         await AlleGroessenAsync(a, f, "Quests Auswahl");
+        // Weisung P12-187 Punkt 3: nichts liegt ueber einem Eingabefeld (kein Tipp-Schild am Feld, kein Text auf dem Feld);
+        // Gegenprobe: Hinweise wie vorher als Tipp am Feld
+        FelderFrei(a.QuestEditor, "Quests Auswahl");
+        Hauptansicht.FeldTippAltFuerTests = true;
+        a.QuestOeffnen(neu);
+        await BildAsync(a);
+        if (FelderFreiFunde(a.QuestEditor).Count == 0)
+        {
+            Fund("Quests: Gegenprobe Hinweis als Schild am Eingabefeld greift nicht");
+        }
+        Hauptansicht.FeldTippAltFuerTests = false;
+        a.QuestOeffnen(neu);
+        await BildAsync(a);
+        if (!a.QuestEditor.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == Texte.QuestZeilenTipp))
+        {
+            Fund("Quests: Hinweis „" + Texte.QuestZeilenTipp + "“ fehlt unter der Beschriftung");
+        }
         a.QuestNeuAnlegen("zuordnung");
         await BildAsync(a);
         await AlleGroessenAsync(a, f, "Quests Zuordnung");
@@ -160,6 +178,7 @@ public static partial class StadtbauMessung
         a.QgOeffnen(person);
         await BildAsync(a);
         await AlleGroessenAsync(a, f, "Questgeber eigen");
+        FelderFrei(a.QgEditor, "Questgeber eigen");
 
         // Platz draussen per Tipp in die Karte (Messpunkt, zuruecksetzen = Rueckgaengig)
         var draussen = QuestDraussenPlatz(p);
@@ -246,6 +265,8 @@ public static partial class StadtbauMessung
             z.AnsichtSetzen(false);
             return Task.CompletedTask;
         });
+        await BildAsync(a);
+        await LesbarJeQuestgeberAsync(a, f, z);
         if (!z.JeQuestgeber || z.Plan is not { } plan || !plan.Kaesten.Any(k => k.Ort == Spielgeschichte.QgGruppe + person))
         {
             Fund("Verkettungen: je Questgeber zeigt die Person nicht");
@@ -301,6 +322,116 @@ public static partial class StadtbauMessung
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
         Messwerte.Notiere("Quests: " + p.Quests().Count.ToString(Inv) + " Quests, " + p.Questgeber().Count.ToString(Inv) + " Questgeber geprueft");
+    }
+
+    /// <summary>
+    /// Weisung P12-187 Punkte 1 und 2: „je Questgeber“ ist beim Oeffnen und nach „Alle aufklappen“ lesbar: kleinste gezeichnete
+    /// Schrift mindestens <see cref="ZusammenhangAnsicht.SchriftMindestPx"/> und mindestens so gross wie „je Ort“ bei „Alles
+    /// zeigen“ (je Groesse); eigene Erklaerung je Ansicht. Gegenprobe: heutiger Aufbau (eine Spalte, alles einpassen) ist zu klein.
+    /// </summary>
+    private static async Task LesbarJeQuestgeberAsync(Hauptansicht a, Window? f, ZusammenhangAnsicht z)
+    {
+        foreach (var (name, b, h) in Groessen)
+        {
+            await GroesseAsync(a, f, b, h);
+            z.AnsichtSetzen(false);
+            await BildAsync(a);
+            if (z.Erklaerung != Texte.GeschichteZusammenhaengeZeile)
+            {
+                Fund("Verkettungen je Ort: Erklaerung oben passt nicht zur Ansicht");
+            }
+            z.Einpassen();
+            await BildAsync(a);
+            var jeOrt = z.KleinsteSchriftPx;
+            z.AlleUmschalten();
+            z.Einpassen();
+            await BildAsync(a);
+            var jeOrtAuf = z.KleinsteSchriftPx;
+            z.AlleUmschalten();
+            z.AnsichtSetzen(true);
+            await BildAsync(a);
+            var start = z.KleinsteSchriftPx;
+            if (z.Erklaerung != Texte.VerkettungZeileJeQuestgeber)
+            {
+                Fund("Verkettungen je Questgeber: Erklaerung oben sagt noch „je Ort“");
+            }
+            z.AlleUmschalten();
+            await BildAsync(a);
+            var auf = z.KleinsteSchriftPx;
+            z.AlleUmschalten();
+            await BildAsync(a);
+            Messwerte.Notiere("Verkettungen kleinste Schrift " + name + " (Angabe, Grenze " + ZusammenhangAnsicht.SchriftMindestPx.ToString("0.0", Inv)
+                + " / aufgeklappt " + ZusammenhangAnsicht.AufgeklapptMindestPx.ToString("0.0", Inv) + " px): je Ort alles " + jeOrt.ToString("0.0", Inv) + " (alle aufgeklappt " + jeOrtAuf.ToString("0.0", Inv)
+                + "), je Questgeber Start " + start.ToString("0.0", Inv) + ", alle aufgeklappt " + auf.ToString("0.0", Inv));
+            foreach (var (was, px, ort, fest) in new[] { ("beim Oeffnen", start, jeOrt, ZusammenhangAnsicht.SchriftMindestPx),
+                ("nach „Alle aufklappen“", auf, jeOrtAuf, ZusammenhangAnsicht.AufgeklapptMindestPx) })
+            {
+                var grenze = Math.Max(fest, ort);
+                if (px < grenze - 0.01)
+                {
+                    Fund("Verkettungen je Questgeber " + name + " " + was + ": kleinste Schrift " + px.ToString("0.0", Inv) + " px, Grenze "
+                        + grenze.ToString("0.0", Inv) + " px");
+                }
+            }
+            if (z.Plan is { } qp && qp.Breite * z.Kamera.Zoom > z.Sicht.Bounds.Width + 0.5)
+            {
+                Fund("Verkettungen je Questgeber " + name + ": Startansicht breiter als das Fenster");
+            }
+        }
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        // Gegenprobe: so wie vorher (eine lange Spalte, Start = alles einpassen) ist die Schrift zu klein
+        ZusammenhangAnsicht.QuestgeberAltFuerTests = true;
+        z.AnsichtSetzen(false);
+        z.AnsichtSetzen(true);
+        await BildAsync(a);
+        var alt = z.KleinsteSchriftPx;
+        ZusammenhangAnsicht.QuestgeberAltFuerTests = false;
+        Messwerte.Notiere("Verkettungen je Questgeber Gegenprobe alter Aufbau (Angabe): " + alt.ToString("0.0", Inv) + " px");
+        if (alt >= ZusammenhangAnsicht.SchriftMindestPx)
+        {
+            Fund("Verkettungen: Gegenprobe alter Aufbau je Questgeber ist nicht zu klein");
+        }
+        z.AnsichtSetzen(false);
+        z.AnsichtSetzen(true);
+        await BildAsync(a);
+    }
+
+    /// <summary>Weisung P12-187 Punkt 3: Funde „etwas liegt ueber einem Eingabefeld“ im Editor.</summary>
+    private static List<string> FelderFreiFunde(Control wurzel)
+    {
+        var funde = new List<string>();
+        var felder = wurzel.GetVisualDescendants().OfType<TextBox>().Where(t => t.IsEffectivelyVisible && t.Bounds.Width > 0).ToList();
+        var texte = wurzel.GetVisualDescendants().OfType<TextBlock>()
+            .Where(t => t.IsEffectivelyVisible && t.Bounds.Width > 0 && !t.GetVisualAncestors().OfType<TextBox>().Any()).ToList();
+        foreach (var feld in felder)
+        {
+            var name = AutomationProperties.GetName(feld) ?? "?";
+            if (ToolTip.GetTip(feld) is not null)
+            {
+                funde.Add("Schild (Tipp) am Eingabefeld „" + name + "“");
+            }
+            if (feld.TransformToVisual(wurzel) is not { } mf)
+            {
+                continue;
+            }
+            var rf = new Rect(feld.Bounds.Size).TransformToAABB(mf);
+            foreach (var t in texte)
+            {
+                if (t.TransformToVisual(wurzel) is { } mt && new Rect(t.Bounds.Size).TransformToAABB(mt).Intersect(rf) is { Width: > 0.5, Height: > 0.5 })
+                {
+                    funde.Add("Text „" + t.Text + "“ liegt auf dem Eingabefeld „" + name + "“");
+                }
+            }
+        }
+        return funde;
+    }
+
+    private static void FelderFrei(Control wurzel, string seite)
+    {
+        foreach (var x in FelderFreiFunde(wurzel).Distinct())
+        {
+            Fund(seite + ": " + x);
+        }
     }
 
     private static async Task QuestPruefungAbwartenAsync(Hauptansicht a)

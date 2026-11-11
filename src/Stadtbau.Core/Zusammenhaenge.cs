@@ -83,21 +83,41 @@ public sealed class Zusammenhaenge
         Hoehe = unten + Rand;
     }
 
-    /// <summary>Spalte je Ort nach der Regel oben (Reihenfolge nach Tag, dann Name).</summary>
-    public static List<(string Ort, int Spalte)> Spalten(Spielgeschichte g, Func<string, string> name)
+    /// <summary>
+    /// Nachbesserung Q1 (Weisung P12-187): Kaesten je Spalte in der Ansicht „je Questgeber“ mindestens (die Ansicht nimmt
+    /// mehr, wenn die Spalten sonst nicht ins Fenster passen). Fast alle Personen sind ab Tag 1 da und standen vorher in EINER
+    /// langen Spalte, die „Alles zeigen“ unlesbar klein machte.
+    /// </summary>
+    public const int QuestgeberJeSpalte = 4;
+
+    /// <summary>
+    /// Nachbesserung Q1 (Weisung P12-187): Breite eines zugeklappten Kastens „je Questgeber“ (Namen der Personen sind kurz;
+    /// mit 280 war die Ansicht bei Zoom 1 breiter als das Fenster).
+    /// </summary>
+    public const double QuestgeberBreiteZu = 220;
+
+    /// <summary>
+    /// Spalte je Ort nach der Regel oben (Reihenfolge nach Tag, dann Name). <paramref name="hoechstens"/> (nur „je
+    /// Questgeber“): eine Spalte nimmt hoechstens so viele Kaesten, dann beginnt eine neue (gleicher Tag).
+    /// </summary>
+    public static List<(string Ort, int Spalte)> Spalten(Spielgeschichte g, Func<string, string> name, int? hoechstens = null)
     {
         var orte = g.Zahlen().Keys.OrderBy(o => g.FreiAbTag(o) ?? long.MaxValue).ThenByDescending(g.Zahl).ThenBy(name, StringComparer.Ordinal).ToList();
         var liste = new List<(string, int)>();
         var spalte = -1;
         long? erster = null;
+        var inSpalte = 0;
         foreach (var o in orte)
         {
             var tag = g.FreiAbTag(o) ?? long.MaxValue;
-            if (spalte < 0 || (erster == 1 && tag > 1) || (erster != 1 && tag > (erster ?? 0) + SpaltenTage))
+            if (spalte < 0 || (erster == 1 && tag > 1) || (erster != 1 && tag > (erster ?? 0) + SpaltenTage)
+                || (hoechstens is { } h && inSpalte >= h))
             {
                 spalte++;
                 erster = tag;
+                inSpalte = 0;
             }
+            inSpalte++;
             liste.Add((o, spalte));
         }
         return liste;
@@ -133,20 +153,22 @@ public sealed class Zusammenhaenge
     /// Ansicht bauen. <paramref name="offen"/> = aufgeklappte Orte. <paramref name="altFuerTests"/> = Gegenprobe: Linien
     /// gerade durch die Spalten wie ein einfacher Plan ohne Gassen (der Start-Test muss dort Kreuzungen finden).
     /// </summary>
-    public static Zusammenhaenge Bauen(Spielgeschichte g, Func<string, string> name, IReadOnlySet<string> offen, Masse m, bool altFuerTests = false)
+    public static Zusammenhaenge Bauen(Spielgeschichte g, Func<string, string> name, IReadOnlySet<string> offen, Masse m, bool altFuerTests = false,
+        int? jeSpalte = null, double breiteZu = BreiteZu)
     {
-        var mit = Versuch(g, name, offen, m, true, altFuerTests);
+        var mit = Versuch(g, name, offen, m, true, altFuerTests, jeSpalte, breiteZu);
         if (altFuerTests || (mit.Kreuzungen().Count == 0 && mit.DurchKaesten().Count == 0) || !offen.Any())
         {
             return mit;
         }
-        var ohne = Versuch(g, name, offen, m, false, false);
+        var ohne = Versuch(g, name, offen, m, false, false, jeSpalte, breiteZu);
         return ohne.Kreuzungen().Count + ohne.DurchKaesten().Count < mit.Kreuzungen().Count + mit.DurchKaesten().Count ? ohne : mit;
     }
 
-    private static Zusammenhaenge Versuch(Spielgeschichte g, Func<string, string> name, IReadOnlySet<string> offen, Masse m, bool anAufgaben, bool alt)
+    private static Zusammenhaenge Versuch(Spielgeschichte g, Func<string, string> name, IReadOnlySet<string> offen, Masse m, bool anAufgaben, bool alt,
+        int? jeSpalte, double breiteZu)
     {
-        var spalten = Spalten(g, name);
+        var spalten = Spalten(g, name, jeSpalte);
         var orte = spalten.Select(s => s.Ort).ToHashSet(StringComparer.Ordinal);
         var spalteVon = spalten.ToDictionary(s => s.Ort, s => s.Spalte, StringComparer.Ordinal);
         var jeId = g.Alle.GroupBy(e => e.Id).ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
@@ -169,7 +191,7 @@ public sealed class Zusammenhaenge
             {
                 Ort = ort, Name = name(ort), Spalte = spalte, Offen = offen.Contains(ort), Zahl = g.Zahl(ort), FreiAb = g.FreiAbTag(ort),
             };
-            b.B = b.Offen ? BreiteOffen : BreiteZu;
+            b.B = b.Offen ? BreiteOffen : breiteZu;
             var reiterText = m.Breite(b.Name, Schrift.Reiter);
             b.ReiterB = Math.Min(b.B, reiterText + 32);
             b.ReiterH = Math.Max(30, m.Hoehe(b.Name, b.ReiterB - 32, Schrift.Reiter) + 12);

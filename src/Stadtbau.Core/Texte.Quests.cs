@@ -115,7 +115,7 @@ public static partial class Texte
     public const string QgOrt = "Ort";
     public const string QgEtage = "Etage";
     public const string QgOhnePlatzKurz = "noch kein Platz";
-    public const string QgAmAltenPlatz = "an seinem Platz im Spiel";
+    public const string QgAmAltenPlatz = "am Platz im Spiel";
     public const string QgQuests = "Quests dieser Person";
     public const string QgKeineQuests = "Diese Person vergibt noch keine Quest.";
     public const string QgDraussenZahl = "Draußen: {0} von 12";
@@ -131,6 +131,7 @@ public static partial class Texte
     public const string VerkettungTipp = "Zeigt die Zusammenhänge je Ort oder je Person, die die Quests vergibt.";
     public const string VerkettungZiehenTipp = "Pfeil von einer Quest auf eine andere ziehen = „erst nach“ setzen (nur bei neuen Quests).";
     public const string VerkettungOhne = "ohne Questgeber";
+    public const string VerkettungZeileJeQuestgeber = "Je Person ein Kasten mit ihren Quests, so viele Spalten, wie ins Fenster passen (weitere darunter: Ansicht verschieben), von links nach rechts nach dem Tag, ab dem die Person im Spiel ist. Linie = „erst nach“. Eine Quest auf eine andere ziehen = „erst nach“ setzen (nur bei neuen Quests). Kasten antippen = Questgeber öffnen.";
 
     // ---- Pruefregeln Quests ----
     public static string QuestDatenKaputt(string abschnitt) => $"Der Abschnitt „{abschnitt}“ ist beschädigt.";

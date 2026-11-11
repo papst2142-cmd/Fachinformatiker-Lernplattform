@@ -202,8 +202,29 @@ public sealed partial class Hauptansicht
     {
         var titel = Schrift.Text(name, "Klein", FontWeight.Bold);
         titel.TextWrapping = TextWrapping.Wrap;
-        return new StackPanel { Spacing = 4, Children = { titel, feld } };
+        var stapel = new StackPanel { Spacing = 4, Children = { titel } };
+        if (feld is TextBox { AcceptsReturn: true } && !FeldTippAltFuerTests)
+        {
+            // Nachbesserung Q1 (Weisung P12-187): Hinweis unter der Beschriftung, nie als Schild ueber dem Feld
+            stapel.Children.Add(Hinweis(Texte.QuestZeilenTipp));
+        }
+        stapel.Children.Add(feld);
+        return stapel;
     }
+
+    /// <summary>Kleiner grauer Hinweis (Zeile ueber den Feldern bzw. unter einer Beschriftung).</summary>
+    private static TextBlock Hinweis(string text)
+    {
+        var t = Schrift.Text(text, "Klein", farbe: "Pinsel.muted");
+        t.TextWrapping = TextWrapping.Wrap;
+        return t;
+    }
+
+    /// <summary>
+    /// Gegenprobe des Start-Tests (Weisung P12-187 Punkt 3): Hinweise wie vorher als Tipp am Eingabefeld (das Schild
+    /// erschien mitten im Feld „Frage“).
+    /// </summary>
+    internal static bool FeldTippAltFuerTests { get; set; }
 
     /// <summary>Textfeld, das beim Verlassen (und einzeilig mit Enter) uebernimmt; <paramref name="setzen"/> laeuft nur bei einer Aenderung.</summary>
     private TextBox Feld(string name, string wert, Action<string> setzen, bool mehrzeilig = false, string? tipp = null)
@@ -215,7 +236,11 @@ public sealed partial class Hauptansicht
             TextWrapping = mehrzeilig ? TextWrapping.Wrap : TextWrapping.NoWrap,
             MinHeight = mehrzeilig ? 72 : 0,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-        }.Vorlese(name).Mit(tipp ?? (mehrzeilig ? Texte.QuestZeilenTipp : Texte.QuestFeldTipp));
+        }.Vorlese(name);
+        if (FeldTippAltFuerTests)
+        {
+            t.Mit(tipp ?? (mehrzeilig ? Texte.QuestZeilenTipp : Texte.QuestFeldTipp));
+        }
         var letzter = wert;
         void Uebernehmen()
         {
@@ -597,6 +622,10 @@ public sealed partial class Hauptansicht
         PyObjekt? Live() => QuestDaten.NeueQuest(_projekt.AussenStand, id);
         var felder = new StackPanel { Spacing = 10, IsEnabled = schreiben };
         _questEditor.Children.Add(felder);
+        if (!FeldTippAltFuerTests)
+        {
+            felder.Children.Add(Hinweis(Texte.QuestFeldTipp));
+        }
         felder.Children.Add(Beschriftet(Texte.QuestFeldTyp, Wahl(Texte.QuestFeldTyp, Texte.QuestTypTipp,
             QuestDaten.Typen.Select(t => (Texte.QuestTypName(t), (object?)t)), q.Typ, t => _projekt.QuestFeld(id, "typ", t))));
         felder.Children.Add(Beschriftet(Texte.QuestFeldQuestgeber, umhaengen));
@@ -957,6 +986,10 @@ public sealed partial class Hauptansicht
         }
         else
         {
+            if (!FeldTippAltFuerTests)
+            {
+                felder.Children.Add(Hinweis(Texte.QuestFeldTipp));
+            }
             felder.Children.Add(Beschriftet(Texte.QgName, Feld(Texte.QgName, q.Name, w => _projekt.QuestgeberFeld(id, "name", w))));
             felder.Children.Add(Beschriftet(Texte.QgRolle, Feld(Texte.QgRolle, q.Rolle, w => _projekt.QuestgeberFeld(id, "rolle", w))));
             var aussehen = new WrapPanel { ItemSpacing = 8, LineSpacing = 8 };
