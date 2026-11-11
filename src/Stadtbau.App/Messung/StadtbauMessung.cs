@@ -387,6 +387,7 @@ public static partial class StadtbauMessung
         await ZebrastreifenAsync(a, f);
         await AmpelnAsync(a, f);
         await HaltestellenAsync(a, f);
+        await GelaendeAsync(a, f);
         await WerkzeugKleinAsync(a, f);
         await MehrfachAsync(a, f);
         await FarbeAsync(a, f);

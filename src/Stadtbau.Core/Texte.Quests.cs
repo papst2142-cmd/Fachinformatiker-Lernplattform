@@ -192,6 +192,8 @@ public static partial class Texte
     public static string QgNameLang(string n) => $"Questgeber „{n}“: der Name ist länger als {QuestgeberDaten.NameHoechstens} Zeichen.";
     public static string QgNameDoppelt(string n) => $"Den Namen „{n}“ gibt es zweimal.";
     public const string QgNameTipp = "Einen eigenen, kurzen Namen eintragen.";
+    public static string QgNameAnrede(string n, string kurz) => $"Questgeber „{n}“: das Spiel nennt die Person nur „{kurz}“ (erstes Wort des Namens).";
+    public const string QgNameAnredeTipp = "Den Vornamen zuerst schreiben, zum Beispiel „Anna Berger“ statt „Frau Berger“.";
     public static string QgAussehenUnbekannt(string n) => $"Questgeber „{n}“ hat ein Aussehen, das es nicht gibt.";
     public const string QgAussehenTipp = "Unter „Aussehen“ neu wählen.";
     public static string QgOhnePlatz(string n) => $"Questgeber „{n}“ hat noch keinen Platz.";

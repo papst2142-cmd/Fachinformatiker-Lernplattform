@@ -25,7 +25,7 @@ public static partial class AussenBearbeitung
     public const int FeinGrad = 15;
 
     /// <summary>Lassen sich Stuecke dieser Art fein (nicht nur in Vierteln) drehen?</summary>
-    public static bool FeinDrehbar(AussenArt art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Kreisverkehr or AussenArt.Fluss or AussenArt.Teich or AussenArt.Bahn;
+    public static bool FeinDrehbar(AussenArt art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Kreisverkehr or AussenArt.Fluss or AussenArt.Teich or AussenArt.Bahn or AussenArt.Huegel;
 
     /// <summary>Schritt in Grad fuer die Taste R und den Drehgriff: Linien 15, alles andere 90.</summary>
     public static int DrehSchritt(AussenArt art) => FeinDrehbar(art) ? FeinGrad : 90;
@@ -94,6 +94,11 @@ public static partial class AussenBearbeitung
         if (!FeinDrehbar(s.Art))
         {
             return false;
+        }
+        if (s.Art == AussenArt.Huegel)
+        {
+            // S 0.42.0: ein laenglicher Huegel dreht in 15-Grad-Schritten um seine Mitte
+            return HuegelDrehen(aussen, s, grad);
         }
         var w = grad * Math.PI / 180;
         var (sin, cos) = Math.SinCos(w);

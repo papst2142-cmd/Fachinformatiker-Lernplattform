@@ -396,6 +396,9 @@ public sealed partial class KartenFlaeche : Control
         ctx.FillRectangle(Pinsel("#B9D29A"), new Rect(P(0, 0), P(b, h)));
         var land = Aussen.Landschaft(a);
         var (dx, dy) = _gezogen && Auswahl is not null ? (_ziehWelt.X, _ziehWelt.Y) : (0, 0);
+        // S 0.42.0: Huegel unter allem anderen, Hoehenlinien darueber
+        GelaendeFlaechenZeichnen(ctx, a, dx, dy);
+        HoehenlinienZeichnen(ctx, a);
         double Dx(AussenStelle s) => s == Auswahl ? dx : 0;
         double Dy(AussenStelle s) => s == Auswahl ? dy : 0;
         for (var i = 0; i < land.Count; i++)
@@ -786,6 +789,7 @@ public sealed partial class KartenFlaeche : Control
         ZiehVorschauZeichnen(ctx);
         AussehenVorschauZeichnen(ctx);
         MassbandZeichnen(ctx);
+        PinselZeichnen(ctx);
         TuerZeichnen(ctx);
         GriffZeichnen(ctx);
     }
@@ -1257,6 +1261,7 @@ public sealed partial class KartenFlaeche : Control
         AussenArt.Ampel => Texte.Ampel,
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
+        AussenArt.Huegel => Texte.Huegel,
         _ => Texte.Paketplatz,
     };
 
@@ -1465,6 +1470,17 @@ public sealed partial class KartenFlaeche : Control
                 TuerSetzenBeenden();
                 Gemeldet?.Invoke(Texte.TuerSetzenBeenden);
                 return true;
+            case Key.Escape when GelaendePinsel is not null:
+                if (_pinselZug.Count > 0)
+                {
+                    _pinselZug.Clear();
+                    InvalidateVisual();
+                }
+                else
+                {
+                    GelaendePinsel = null;
+                }
+                return true;
             case Key.Escape when MassbandAn:
                 // S 0.27.0: erst die Messung leeren, dann das Massband beenden
                 if (Massband.Anfang is not null)
@@ -1567,6 +1583,17 @@ public sealed partial class KartenFlaeche : Control
             // die Ansicht auch ueber Stuecken, waehlt nichts und setzt nichts
             _nurSchieben = true;
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            return;
+        }
+        if (GelaendePinsel is not null)
+        {
+            // S 0.42.0: ein Finger malt einen Zug (wie ein Stueck ziehen), zwei Finger bleiben bei der Ansicht
+            var malt = _projekt?.NurLesen == false;
+            if (erster && malt)
+            {
+                PinselDruecken(p);
+            }
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, malt));
             return;
         }
         if (QuestgeberSetzen is not null)
@@ -1711,6 +1738,10 @@ public sealed partial class KartenFlaeche : Control
     private void Anwenden(Fingergeste.Schritt s)
     {
         if (TuerFuer is not null && TuerAnwenden(s))
+        {
+            return;
+        }
+        if (GelaendePinsel is not null && PinselAnwenden(s))
         {
             return;
         }

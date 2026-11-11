@@ -19,6 +19,11 @@ public sealed partial class StadtSpiel
     /// <summary>So weit vor einem Questgeber bleibt die Figur stehen, wenn er angetippt wurde.</summary>
     public const double VorDemQuestgeber = 0.55;
 
+    private static readonly AsyncLocal<bool> StartOhneQuestgeber = new();
+
+    /// <summary>Nur Gegenprobe (Sammelliste 298): beim Start keine Ansprache wie A 0.65.0.</summary>
+    public static void StartOhneQuestgeberFuerTests(bool an) => StartOhneQuestgeber.Value = an;
+
     /// <summary>Die Questgeber draussen (aus der Szene, Fassung 0: keine).</summary>
     public IReadOnlyList<Questebene.Draussen> QuestgeberDraussen => Szene.Questgeber;
 

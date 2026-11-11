@@ -94,6 +94,12 @@ public enum AussenArt
     /// nur im Werkzeug: nur in der Projektdatei, nie in der Stadt-Datei, nie im Spiel; nur in der Draufsicht zu sehen.
     /// </summary>
     Notiz,
+
+    /// <summary>
+    /// Welle S 0.42.0 (Weisung P12-192): Huegel in <c>stadtdaten.gelaende.huegel</c> (Mitte, Radius, Hoehe, rund oder
+    /// laenglich, <see cref="Lernplattform.Core.Spiel.Probe.Gelaende"/>).
+    /// </summary>
+    Huegel,
 }
 
 /// <summary>

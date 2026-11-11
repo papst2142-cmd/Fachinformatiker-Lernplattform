@@ -63,6 +63,7 @@ public sealed partial class KartenFlaeche
             Massband.Leeren();
             if (value)
             {
+                GelaendePinsel = null;
                 SetzenBeenden();
                 Waehlen(null);
             }

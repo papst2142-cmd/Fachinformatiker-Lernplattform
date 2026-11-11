@@ -354,7 +354,10 @@ public sealed partial class Projekt
     }
 
     /// <summary>Knopf „Laternen neu verteilen“ (ein Schritt): Ergebnis aufgestellt, entfernt.</summary>
-    public (int Dazu, int Weg) LaternenVerteilen() => AussenAendern(Texte.LaternenVerteilen, a => LaternenAutomatik.Verteilen(a, SzeneOhneLaternen));
+    public (int Dazu, int Weg) LaternenVerteilen() => AussenAendern(Texte.LaternenVerteilen, a => LaternenAutomatik.AlleVerteilen(a, SzeneOhneLaternen));
+
+    /// <summary>Sammelliste 296: Zahlen fuer die Rueckfrage vor „Laternen neu verteilen“ (aendert nichts).</summary>
+    public (int Verschwinden, int Neu) LaternenVorherSagen() => LaternenAutomatik.VorherSagen(AussenStand, SzeneOhneLaternen);
 
     public void AussenAendern(string was, Action<PyObjekt> aenderung) => AussenAendern(was, a =>
     {

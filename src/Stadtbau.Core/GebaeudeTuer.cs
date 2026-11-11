@@ -119,6 +119,70 @@ public static partial class GebaeudeTuer
         return WegRechtwinklig(z, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
     }
 
+    /// <summary>Gegenprobe Sammelliste 293: „Tür dazu“ wie bis S 0.41.0 in der Wandmitte ohne Fassade (nur Tests, je Ablauf).</summary>
+    public static bool MitteAltFuerTests { get => MitteAlt.Value; set => MitteAlt.Value = value; }
+    private static readonly AsyncLocal<bool> MitteAlt = new();
+
+    /// <summary>
+    /// Sammelliste 293 (Weisung P12-196): Platz fuer „Tür dazu“ auf der gezeichneten Fassade (rechnet auf einer Kopie, darf im
+    /// Hintergrund laufen). Wand zur naechsten Strasse wie bisher; dort zuerst eine Tuer des Modells (die naechste zur Wandmitte),
+    /// sonst die glatte Stelle, die der Wandmitte am naechsten liegt (<see cref="TuerFassade.Finden"/> mit Einrasten); hat diese
+    /// Wand keine glatte Stelle, die naechste Wand mit einer (nach Abstand der Wandmitte zur Strasse). null = alte Mitte
+    /// (Gegenprobe, kein Haus, „Tür dazu“ geht nicht).
+    /// </summary>
+    public static TuerFassade.Platz? DazuPlatz(Projekt p, PyObjekt aussen, AussenStelle s, bool einrasten)
+    {
+        if (MitteAlt.Value || DazuNicht(aussen, s) is not null)
+        {
+            return null;
+        }
+        var k = (PyObjekt)Py.Kopie(aussen)!;
+        var grund = Dazu(k, s, einrasten);
+        if (grund is not null && grund != Texte.TuerWegOhneStrasse || Blueprint.ZierwegVon(k, s) is not { } z
+            || TuerFassade.Rechnen(p, k, s) is not { } f || f.Waende.Count == 0)
+        {
+            return null;
+        }
+        var t = Vektor(z["tuer"]);
+        var strassen = AussenBearbeitung.Strassen(k).Where(l => l.Count >= 2).ToList();
+        var start = f.WandFuer(t, null);
+        float ZurStrasse(int w)
+        {
+            var m = f.Waende[w].Bei(f.Waende[w].Laenge / 2) + f.Waende[w].Aussen;
+            return strassen.Count == 0 ? 0 : strassen.Min(l => Kurve.Abstand(m, l));
+        }
+        foreach (var w in new[] { start }.Concat(Enumerable.Range(0, f.Waende.Count).Where(i => i != start).OrderBy(ZurStrasse).ThenBy(i => i)))
+        {
+            var wand = f.Waende[w];
+            var mitte = wand.Bei(wand.Laenge / 2);
+            var ziel = f.TuerZiele(w).OrderBy(m => MathF.Abs(m.T - (wand.Laenge / 2))).Select(m => (Vector2?)wand.Bei(m.T)).FirstOrDefault() ?? mitte;
+            var platz = f.Finden(ziel + (wand.Aussen * 0.01f), w, einrasten: true);
+            if (!platz.OhneGlatte && platz.Wand == w)
+            {
+                return platz;
+            }
+        }
+        return f.Finden(t, start, einrasten: true);
+    }
+
+    /// <summary>
+    /// „Tür dazu“ als ein Schritt: wie <see cref="Dazu"/>, danach die Tuer an den Platz aus <see cref="DazuPlatz"/> (gerechnet
+    /// auf demselben Stand). Ohne Platz bleibt die Tuer in der Wandmitte (wie bis S 0.41.0).
+    /// </summary>
+    public static string? DazuAn(PyObjekt aussen, AussenStelle s, bool einrasten, TuerFassade.Platz? platz)
+    {
+        var grund = Dazu(aussen, s, einrasten);
+        if (platz is null || (grund is not null && grund != Texte.TuerWegOhneStrasse))
+        {
+            return grund;
+        }
+        // die verschobene Stelle ist hier gewollt (Mitte war nur der Anfang), darum kein Hinweis „eingerastet“
+        var h = TuerSetzen.SetzenAn(aussen, s, platz);
+        return h == Texte.TuerEingerastetGlatt ? null : h;
+    }
+
+    private static Vector2 Vektor(object? o) => o is List<object?> l ? new Vector2((float)Py.F(l[0]), (float)Py.F(l[1])) : default;
+
     /// <summary>Tuer und Fussweg des Gebaeudes wegnehmen (die Kopie des Modells bleibt am Haus). false = es hatte keine.</summary>
     public static bool Entfernen(PyObjekt aussen, AussenStelle s)
     {

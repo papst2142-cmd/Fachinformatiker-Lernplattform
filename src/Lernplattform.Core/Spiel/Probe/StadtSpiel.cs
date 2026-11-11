@@ -55,6 +55,11 @@ public sealed partial class StadtSpiel
         // Beim Oeffnen erklaert die Zeile die Bedienung (Weisung P7-9 Punkt 1); ab dem ersten Schritt Ort und Uhr.
         Zeile = SpielProbeTexte.HinweisFuer(Tastenbelegung.Aktuell);
         Vorbereiten(Jetzt.Ort);
+        // Sammelliste 298: steht die Figur beim Start schon an einem Ort, sprechen seine Questgeber draussen wie beim Ankommen
+        if (!StartOhneQuestgeber.Value)
+        {
+            QuestgeberAmOrt(Jetzt.Ort);
+        }
         // Phase 8 W8: Toene erst nach dem geschriebenen Ereignis (Kasse, Melodien), nur Darstellung
         ablauf.NachEreignis = (art, daten) =>
         {
@@ -287,6 +292,11 @@ public sealed partial class StadtSpiel
             reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(ware["w"]), Py.F(ware["h"])) / 2);
         }
         var weg = MitWeg(() => innen.Weg(FigurX, FigurZ, zx, zz, reichweite));
+        if (person is not null && weg.Count == 0 && AbstandsPunkt(innen, person) is { } abstand)
+        {
+            // Weisung P12-197: steht die Figur schon zu nah an der Person, tritt sie bis auf AnsprechAbstand zurueck
+            weg = MitWeg(() => innen.Weg(FigurX, FigurZ, abstand.X, abstand.Z));
+        }
         _weg.Clear();
         _weg.AddRange(weg);
         if (weg.Count == 0)
@@ -304,6 +314,42 @@ public sealed partial class StadtSpiel
         }
         Geaendert?.Invoke();
         return weg.Count > 0;
+    }
+
+    /// <summary>
+    /// Weisung P12-197: so weit (Mitte zu Mitte) steht die Figur beim Ansprechen mindestens von einer Person weg. Zwei stehende
+    /// Figuren reichen je <see cref="FigurHalbmesser"/> von ihrer Mitte (Arme), dazu 0,02 Spielraum wie bei den Sitzenden.
+    /// </summary>
+    public const double AnsprechAbstand = (2 * FigurHalbmesser) + 0.02 + 0.03;
+
+    /// <summary>Groesster waagrechter Abstand einer Ecke der stehenden Figur von ihrer Mitte im Innenraum (gemessen 0,515, Test).</summary>
+    public const double FigurHalbmesser = 0.52;
+
+    private static readonly AsyncLocal<bool> AnsprechenAlt = new();
+
+    /// <summary>Nur Gegenprobe: ohne Zuruecktreten (Stand A 0.65.0).</summary>
+    public static void AnsprechenAltFuerTests(bool an) => AnsprechenAlt.Value = an;
+
+    /// <summary>Stelle mit <see cref="AnsprechAbstand"/> zur Person, wenn die Figur naeher steht (zuerst auf der Seite der Figur, dann gedreht), sonst null.</summary>
+    private (double X, double Z)? AbstandsPunkt(Innenraum innen, InnenPerson person)
+    {
+        var (dx, dz) = (FigurX - person.X, FigurZ - person.Z);
+        var a = Math.Sqrt((dx * dx) + (dz * dz));
+        if (AnsprechenAlt.Value || a >= AnsprechAbstand)
+        {
+            return null;
+        }
+        var grund = a > 1e-6 ? Math.Atan2(dz, dx) : Math.PI / 2;
+        foreach (var schritt in new[] { 0, 1, -1, 2, -2, 3, -3, 4 })
+        {
+            var w = grund + (schritt * Math.PI / 4);
+            var (x, z) = (person.X + (Math.Cos(w) * AnsprechAbstand), person.Z + (Math.Sin(w) * AnsprechAbstand));
+            if (Wege.KannStehen(x, z, innen.Lauf))
+            {
+                return (x, z);
+            }
+        }
+        return null;
     }
 
     /// <summary>Python site des Innenraums (buero, zuhause, filiale, Kundenort, serverfarm), null in der Stadt.</summary>

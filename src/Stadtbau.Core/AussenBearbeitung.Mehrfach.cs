@@ -369,6 +369,7 @@ public static partial class AussenBearbeitung
             AussenArt.Ampel => AmpelListe(aussen)[s.Nummer],
             AussenArt.Haltestelle or AussenArt.Parkplatz => HaltListe(aussen, s.Art)[s.Nummer],
             AussenArt.Notiz => NotizListe(aussen)[s.Nummer],
+            AussenArt.Huegel => HuegelListe(aussen)[s.Nummer],
             _ => land[s.Nummer],
         };
     }

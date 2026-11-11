@@ -144,6 +144,33 @@ public sealed partial class StadtSzene
     /// <summary>S 0.8.0: Stege aus <c>stadtdaten.wasser</c>.</summary>
     public IReadOnlyList<Steg> Stege { get; private init; } = [];
 
+    /// <summary>Welle A 0.66.0 (Weisung P12-192): das Gelaende der Stadt (null ohne Abschnitt <c>gelaende</c>, Fassung 0).</summary>
+    public Gelaende? Gelaende { get; private init; }
+
+    /// <summary>Hoehe, auf der an (x, z) Figur und Stuecke stehen (ohne Gelaende 0).</summary>
+    public float BodenHoehe(float x, float z) => Gelaende?.Boden(x, z) ?? 0f;
+
+    /// <summary>Hebt die Stuecke von <paramref name="von"/> bis vor <paramref name="bis"/> auf die Hoehe des Gelaendes an ihrer Mitte.</summary>
+    private static void Anheben(Gelaende gelaende, List<ModellStueck> stuecke, int von, int bis)
+    {
+        for (var i = von; i < bis; i++)
+        {
+            var lage = stuecke[i].Lage;
+            var h = gelaende.Boden(lage.M41, lage.M43);
+            if (h > 0f)
+            {
+                lage.M42 += h;
+                stuecke[i] = stuecke[i] with { Lage = lage };
+            }
+        }
+    }
+
+    private static Teil Anheben(Gelaende gelaende, Teil t)
+    {
+        var h = gelaende.Boden((t.X1 + t.X2) / 2, (t.Z1 + t.Z2) / 2);
+        return h > 0f ? t with { Y1 = t.Y1 + h, Y2 = t.Y2 + h } : t;
+    }
+
     /// <summary>S 0.8.0: Flaechen am Boden (Ufer und Wasser der Teiche) im Netz der Stadt.</summary>
     public IReadOnlyList<Bodenflaeche> Flaechen { get; private init; } = [];
 
@@ -394,6 +421,8 @@ public sealed partial class StadtSzene
             {
                 netz.Hinzu(flaeche);
             }
+            // Welle A 0.66.0: das Gelaende im selben Netz (kein neuer Zeichenaufruf; aus der Ferne Raster 1,0)
+            Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
             netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
@@ -450,6 +479,7 @@ public sealed partial class StadtSzene
         {
             gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
         }
+        Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
         gefaerbt.Faerbung = null;
         gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
@@ -968,6 +998,8 @@ public sealed partial class StadtSzene
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
         var breite = (float)Py.F(welt["breite"]);
         var tiefe = (float)Py.F(welt["hoehe"]);
+        // Welle A 0.66.0 (Weisung P12-192): Gelaende (ohne Abschnitt null, dann aendert sich nichts)
+        var gelaende = Gelaende.Aus(stadt.Daten);
         var teile = new List<Teil>
         {
             // Boden weit ueber den Rand, damit die geneigte Kamera keinen leeren Himmel zeigt
@@ -1259,7 +1291,7 @@ public sealed partial class StadtSzene
             var (tv, sv) = (teile.Count, stuecke.Count);
             var fenster = new List<(int, Vector3)>();
             var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume, fenster: fenster,
-                dreh: Hausdrehung.Von(item), drehMitte: Hausdrehung.Mitte(Get(modelle, modell)));
+                dreh: Hausdrehung.Von(item), drehMitte: Hausdrehung.Mitte(Get(modelle, modell)), grundVon: KopieGrund(modelle, modell));
             alleFenster.AddRange(fenster);
             if (hmin.X <= hmax.X)
             {
@@ -1300,6 +1332,11 @@ public sealed partial class StadtSzene
                     StadtTueren.TuerblattSetzen(teile, stuecke, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), umgefaerbt, eigene, wand, aussen,
                         Gebaeudefarben.Tuer(stadt.Daten, ort));
                 }
+                // Sammelliste 292 (Nico 4a): eine gewaehlte Tuer-Farbe faerbt auch die Tuer eines Stadt-Modells (nur das Tuerblatt)
+                else if (Gebaeudefarben.Tuer(stadt.Daten, ort) is { } tuerFarbe)
+                {
+                    StadtTueren.ModellTuerFaerben(stuecke, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), umgefaerbt, eigene, tuerFarbe);
+                }
                 return new StadtTuer(ort, mitteE, aussen, anfang, true, hoehe, 0f);
             }
             var (tiefe, hinten) = grafik is not null && stueckeBis > stueckeVon
@@ -1312,6 +1349,13 @@ public sealed partial class StadtSzene
             }
             if (modellTuer)
             {
+                // Sammelliste 292 (Nico 4a): gewaehlte Tuer-Farbe auch auf der Tuer des Modells (Ort mit modell_tuer)
+                if (grafik is not null && stueckeBis > stueckeVon && Gebaeudefarben.Tuer(stadt.Daten, ort) is { } farbeM
+                    && StadtTueren.ModellTueren(stuecke, stueckeVon, stueckeBis, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), wand, aussen,
+                        weite: StadtTueren.EigeneTuerFang + StadtTueren.GlasTuerBreit).Where(t => MathF.Abs(t.Mitte) <= StadtTueren.HalbRahmen).MinBy(t => MathF.Abs(t.Mitte)) is { } mtF)
+                {
+                    StadtTueren.ModellTuerFaerben(stuecke, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), umgefaerbt, mtF, farbeM);
+                }
                 return new StadtTuer(ort, mitte, aussen, anfang, true, hoehe, 0f);
             }
             var vordach = grafik is null || stueckeBis == stueckeVon
@@ -1362,12 +1406,15 @@ public sealed partial class StadtSzene
                 var lang = MathF.Abs(aussen.X) > 0.5f ? (haus.Max.Z - haus.Min.Z) / 2 : (haus.Max.X - haus.Min.X) / 2;
                 var rm = c - (aussen * tief);
                 var querR = new Vector2(aussen.Y, -aussen.X);
-                var gefunden = StadtTueren.ModellTueren(stuecke, haus.StueckeVon, haus.StueckeBis, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), rm, -aussen, weite: lang, tief: 2 * tief);
+                // Sammelliste 292 (Weisung P12-196): nur bis zur Hausmitte suchen (vorher 2 * tief = bis zur Vorderwand, das malte
+                // die benutzte Modelltuer und die Fenster daneben zu); Gegenprobe RueckseiteAltFuerTests
+                var suchTief = RueckseiteAlt.Value ? 2 * tief : tief;
+                var gefunden = StadtTueren.ModellTueren(stuecke, haus.StueckeVon, haus.StueckeBis, i => umgefaerbt.GetValueOrDefault(i) ?? grafik.Modell(stuecke[i].Name), rm, -aussen, weite: lang, tief: suchTief);
                 foreach (var mt in gefunden)
                 {
                     StadtTueren.FensterWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm + (querR * mt.Mitte), -aussen, mt.Oben, mt.Tiefe + 0.1f);
                 }
-                StadtTueren.TuerenWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm, -aussen, lang, 2 * tief);
+                StadtTueren.TuerenWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm, -aussen, lang, suchTief);
             }
             var ende = weg[^1];
             zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((haus.Min.X + haus.Max.X) / 2, haus.Max.Y + 0.55f, (haus.Min.Z + haus.Max.Z) / 2),
@@ -1407,7 +1454,7 @@ public sealed partial class StadtSzene
             var modellTuer = StadtTueren.ModellVersatz(stadt, id);
             var fenster = new List<(int, Vector3)>();
             var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f, fenster,
-                Hausdrehung.VonOrt(stadt.Daten, id), Hausdrehung.Mitte(Get(modelle, modell)));
+                Hausdrehung.VonOrt(stadt.Daten, id), Hausdrehung.Mitte(Get(modelle, modell)), KopieGrund(modelle, modell));
             alleFenster.AddRange(fenster);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
@@ -1543,20 +1590,48 @@ public sealed partial class StadtSzene
                 && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
                 && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f)
                 && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f)
-                && teiche.All(t => !Wasser.Drin(t.MitUfer, new Vector2(x, z)) && Wasser.RandAbstand(t.MitUfer, new Vector2(x, z)) >= r + 0.02f);
+                && teiche.All(t => !Wasser.Drin(t.MitUfer, new Vector2(x, z)) && Wasser.RandAbstand(t.MitUfer, new Vector2(x, z)) >= r + 0.02f)
+                // Welle A 0.66.0: Kleingruen nur, wo sein Fuss rundum hoechstens 0,02 von der Hoehe der Mitte abweicht
+                && (gelaende is null || gelaende.Flach(x, z, r));
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest, KleingruenAn(stadt.Daten));
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
+            if (gelaende is not null)
+            {
+                Anheben(gelaende, gruen.Stuecke, 0, gruen.Stuecke.Count);
+                Anheben(gelaende, gruen.Baeume, 0, gruen.Baeume.Count);
+                for (var i = 0; i < gruen.Teile.Count; i++)
+                {
+                    gruen.Teile[i] = Anheben(gelaende, gruen.Teile[i]);
+                }
+            }
+        }
+        // Welle A 0.66.0 (Weisung P12-192): jedes Stueck ausserhalb der Haeuser (Baum, Katalog-Stueck, Effekt) steht auf der
+        // Hoehe des Gelaendes an seiner Mitte und kippt nicht; ohne Gelaende nichts
+        if (gelaende is not null)
+        {
+            var imHaus = new bool[stuecke.Count];
+            foreach (var h in haeuser)
+            {
+                Array.Fill(imHaus, true, h.StueckeVon, Math.Min(h.StueckeBis, stuecke.Count) - h.StueckeVon);
+            }
+            for (var i = 0; i < stuecke.Count; i++)
+            {
+                if (!imHaus[i])
+                {
+                    Anheben(gelaende, stuecke, i, i + 1);
+                }
+            }
         }
         // Sammelliste 264 (Weisung P12-130 Frage 3 = c): Gebaeude faerben (stadtdaten.farben, ohne Feld nichts)
         if (grafik is not null)
         {
             FarbenAnwenden(stadt.Daten, grafik, stuecke, haeuser, umgefaerbt);
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten]);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten], gelaende);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1598,6 +1673,7 @@ public sealed partial class StadtSzene
             Questgeber = Stadtbau.Questebene.DraussenListe(inhalt),
             Parkplaetze = parkplaetze,
             MitGehweg = gehwege.Count > 0,
+            Gelaende = gelaende,
         };
     }
 
@@ -1820,7 +1896,7 @@ public sealed partial class StadtSzene
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
         List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null, List<List<Vector2>>? inseln = null,
-        List<Zebra>? zebras = null)
+        List<Zebra>? zebras = null, Gelaende? gelaende = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1960,6 +2036,20 @@ public sealed partial class StadtSzene
                 }
             }
         }
+        // Welle A 0.66.0 (Weisung P12-192, E1): ein Hang steiler als 45 Grad ist gesperrt (auch gegen "immer frei"); ohne
+        // Gelaende nichts
+        if (gelaende is not null)
+        {
+            foreach (var (gs, gz) in gelaende.Zellen((float)LaufSchritt, spalten, zeilen))
+            {
+                var m = Mitte(gs, gz);
+                if (gelaende.ZuSteil(m.X, m.Y))
+                {
+                    immer[(gs * zeilen) + gz] = false;
+                    gesperrt[(gs * zeilen) + gz] = true;
+                }
+            }
+        }
         // Welle A 0.54.0 (Weisung P12-115, Nico P12-75 Fragen 3 = a, 4 = a): auf einer Strasse mit Gehweg geht die Figur
         // nur auf dem Gehweg; die Fahrbahn ist gesperrt (auch gegen "immer frei"), ausser auf einem Zebrastreifen (quer bis
         // an die Gehwege). Strassen ohne Gehweg (Fassung 0, alte Projekte) bleiben begehbar wie bisher.
@@ -2020,6 +2110,10 @@ public sealed partial class StadtSzene
     }
 
     private static readonly AsyncLocal<bool> SchildAlt = new();
+
+    /// <summary>Gegenprobe Sammelliste 292: Rueckseite eines Gebaeudes ohne Ort bis zur Vorderwand absuchen (wie bis A 0.65.0, nur Tests, je Ablauf).</summary>
+    public static bool RueckseiteAltFuerTests { get => RueckseiteAlt.Value; set => RueckseiteAlt.Value = value; }
+    private static readonly AsyncLocal<bool> RueckseiteAlt = new();
 
     private static void Linie(List<Teil> teile, List<(float X, float Z)> p, float hoehe, float breite, Vector3 farbe)
     {
@@ -2473,6 +2567,45 @@ public sealed partial class StadtSzene
 
     private sealed record Block(float X1, float Z1, float X2, float Z2, float H);
 
+    /// <summary>Gegenprobe Sammelliste 294: Kopien zeichnen sich nur ueber ihren eigenen Namen (wie bis A 0.65.0, nur Tests, je Ablauf).</summary>
+    public static bool KopieAltFuerTests { get => KopieAlt.Value; set => KopieAlt.Value = value; }
+    private static readonly AsyncLocal<bool> KopieAlt = new();
+
+    /// <summary>
+    /// Sammelliste 294 (Weisung P12-196): Grundmodell einer Kopie. Das Werkzeug legt fuer ein zweites Haus gleichen Modells mit
+    /// Tuer (bzw. einen Bahnhof ohne Bahnsteig) eine Kopie <c>modell_n</c> an, deren Teile genau Teile des Grundmodells sind.
+    /// Grafik je Teil (<see cref="GrafikBibliothek.Bloecke"/>, Schluessel „modell:teilnr“) und Sonderregeln (Turm, Uhr, Altbau)
+    /// gelten fuer den Namen des Grundmodells; darum die Nummer jedes Teils der Kopie im Grundmodell (gleiche Daten, der Reihe
+    /// nach). null = keine Kopie (Name ohne „_n“, Grundmodell fehlt oder ein Teil passt nicht). Fassung 0 hat keine Kopie.
+    /// </summary>
+    public static (string Name, Dictionary<int, int> Nr)? KopieGrund(PyObjekt modelle, string name)
+    {
+        if (KopieAlt.Value)
+        {
+            return null;
+        }
+        var m = System.Text.RegularExpressions.Regex.Match(name, "^(.+)_([0-9]+)$");
+        if (!m.Success || Get(modelle, name) is not List<object?> kopie || Get(modelle, m.Groups[1].Value) is not List<object?> grund)
+        {
+            return null;
+        }
+        var texte = grund.Select(PythonJson.Standard).ToList();
+        var frei = Enumerable.Range(0, grund.Count).ToList();
+        var nr = new Dictionary<int, int>();
+        for (var i = 0; i < kopie.Count; i++)
+        {
+            var t = PythonJson.Standard(kopie[i]);
+            var j = frei.FirstOrDefault(f => texte[f] == t, -1);
+            if (j < 0)
+            {
+                return null;
+            }
+            frei.Remove(j);
+            nr[i] = j;
+        }
+        return (m.Groups[1].Value, nr);
+    }
+
     /// <summary>
     /// Phase 8 W11 (Sammelliste 155, Teilplan S1): Darstellung einzelner Teile aus orte.json (die Datei bleibt wie in
     /// Python): null = nicht zeichnen, sonst Versatz in x. Der Turm des Bahnhofs entfaellt (er steckte 0,6 tief im
@@ -2548,8 +2681,15 @@ public sealed partial class StadtSzene
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
         List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
-        BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null, int dreh = 0, Vector2 drehMitte = default)
+        BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null, int dreh = 0, Vector2 drehMitte = default,
+        (string Name, Dictionary<int, int> Nr)? grundVon = null)
     {
+        // Sammelliste 294: eine Kopie (modell_n) zeichnet sich wie ihr Grundmodell (Grafik je Teil, Sonderregeln wie Turm und Uhr)
+        if (grundVon is { } gv)
+        {
+            modellName = gv.Name;
+            sichtbar = [.. sichtbar.Select(t => (gv.Nr.GetValueOrDefault(t.Nr, -1), t.Teil))];
+        }
         // Welle E (Weisung P12-67 Frage 1 = a): gedrehtes Haus = ungedreht bauen, dann alle neuen Teile, Modelle und
         // Hindernisse um die Mitte drehen; Baeume des Modells erst danach an der gedrehten Stelle setzen. dreh 0 = wie vorher.
         var (drehTv, drehSv, drehHv) = (teile.Count, stuecke.Count, hindernisse.Count);

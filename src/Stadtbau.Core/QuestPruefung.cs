@@ -328,6 +328,22 @@ public static class QuestPruefung
         }
     }
 
+    /// <summary>Anreden, die als Kurzname im Spiel nicht taugen (Sammelliste 297).</summary>
+    public static readonly IReadOnlyList<string> Anreden = ["herr", "herrn", "frau", "fräulein", "frl."];
+
+    private static readonly AsyncLocal<bool> AnredeAlt = new();
+
+    /// <summary>Nur Gegenprobe: ohne den Hinweis zur Anrede wie S 0.41.0.</summary>
+    public static void AnredeAltFuerTests(bool an) => AnredeAlt.Value = an;
+
+    /// <summary>Kurzname, mit dem das Spiel die Person nennt (<see cref="Lernplattform.Core.Spiel.Betrieb.KurzName"/>), wenn er nur eine Anrede oder ein Titel ist; sonst null.</summary>
+    public static string? AnredeKurzname(string name)
+    {
+        var kurz = Lernplattform.Core.Spiel.Betrieb.KurzName(name);
+        var klein = Lernplattform.Core.Suche.PythonKlein.Klein(kurz);
+        return Anreden.Contains(klein) || (kurz.EndsWith('.') && !kurz.Contains(' ')) ? kurz : null;
+    }
+
     /// <summary>Regeln je Questgeber (Abschnitt 4): Name, Aussehen, Platz frei und erreichbar, hoechstens 12 draussen.</summary>
     private static void Questgeber(Umgebung u, List<QuestgeberDaten.Questgeber> questgeber, List<Fund> funde)
     {
@@ -354,6 +370,10 @@ public static class QuestPruefung
                 if (namen.Contains(Katalog.Normal(q.Name.Trim())))
                 {
                     R(Texte.QgNameDoppelt(n), Texte.QgNameTipp);
+                }
+                if (q.Name.Trim().Length > 0 && !AnredeAlt.Value && AnredeKurzname(q.Name.Trim()) is { } kurz)
+                {
+                    funde.Add(new Fund(Gelb(Texte.QgNameAnrede(n, kurz), Texte.QgNameAnredeTipp), null, q.Id, q.Platz is { Draussen: true }));
                 }
                 foreach (var teil in QuestgeberDaten.AussehenTeile)
                 {

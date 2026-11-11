@@ -805,6 +805,27 @@ public sealed partial class Hauptansicht : UserControl
             return null;
         }
         var (dazu, weg) = _projekt.LaternenVerteilen();
+        return LaternenVerteiltMelden(dazu, weg);
+    }
+
+    /// <summary>Sammelliste 296: Knopf mit Rueckfrage (Zahlen im Hintergrund gerechnet, Vorgabe „Abbrechen“), dann ein Schritt.</summary>
+    internal async Task<string?> LaternenVerteilenMitFrageAsync()
+    {
+        if (_projekt is not { NurLesen: false } projekt)
+        {
+            return null;
+        }
+        var (verschwinden, neu) = await Task.Run(projekt.LaternenVorherSagen);
+        if (verschwinden > 0 && await Dialog.Rueckfrage(Texte.LaternenVerteilenTitel, Texte.LaternenVerteilenFrage(verschwinden, neu), 1,
+            Texte.LaternenVerteilenJa, Texte.Abbrechen) != 0)
+        {
+            return null;
+        }
+        return ReferenceEquals(projekt, _projekt) ? LaternenVerteilen() : null;
+    }
+
+    private string LaternenVerteiltMelden(int dazu, int weg)
+    {
         var meldung = Texte.LaternenVerteilt(dazu, weg);
         Karte.Waehlen(null);
         Melden(meldung);
@@ -842,12 +863,18 @@ public sealed partial class Hauptansicht : UserControl
         var reihe = new WrapPanel { Children = { KatalogKnopf(Texte.Strasse, AussenArt.Strasse), zebra, ampel, haltestelle, parkplatz } };
         var verteilen = new Button { Content = Schrift.Text(Texte.LaternenVerteilen, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
             .Vorlese(Texte.LaternenVerteilen).Mit(Texte.LaternenVerteilenTipp);
-        verteilen.Click += (_, _) => LaternenVerteilen();
+        verteilen.Click += async (_, _) => await LaternenVerteilenMitFrageAsync();
         LaternenVerteilenKnopf = verteilen;
         var natur = new WrapPanel
         {
             Children = { KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park), KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne), verteilen },
         };
+        // Gelaende (S 0.42.0, Weisung P12-192): Huegel setzen und Pinsel in „Natur und Licht“
+        var huegel = new Button { Content = Schrift.Text(Texte.Huegel, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.HuegelSetzen).Mit(Texte.HuegelTipp + " " + Texte.SetzenKnopfTipp);
+        huegel.Click += (_, _) => SetzenKnopfGedrueckt(huegel, false, () => AussenSetzenWaehlen(AussenArt.Huegel, null));
+        HuegelKnopf = huegel;
+        natur.Children.Add(huegel);
         // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
         Button KurvenKnopf(string text, string tipp, Func<string> kennung)
         {
@@ -917,7 +944,7 @@ public sealed partial class Hauptansicht : UserControl
         // „Straßen und Wege“ (E1: Nico hat vier Gruppen gewaehlt, Bahn und Strasse werden gleich gezogen und gesetzt)
         var strassen = new Klappgruppe("strassen", Texte.GruppeStrassen, Texte.TippGruppeStrassen, false,
             reihe, ziehen, kurven, radiusTitel, _kurvenRadius, kreise, Gruppe(Schrift.Text(Texte.BahnGruppe, "Klein", FontWeight.Bold), Texte.TippBahn), bahn);
-        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur);
+        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur, PinselBaustein());
         var wasserGruppe = new Klappgruppe("wasser", Texte.WasserGruppe, Texte.TippWasser, false, wasser, _eisImWinter);
         var gebaeude = new Klappgruppe("gebaeude", Texte.GruppeGebaeude, Texte.TippGruppeGebaeude, false,
             Gruppe(Schrift.Text(Texte.HausOhneOrt, "Klein", FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, new WrapPanel { Children = { haus } },
@@ -1113,6 +1140,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        Karte.GelaendePinsel = null;
         // ein anderes Stueck (auch aus dem vollen Katalog): die alte Markierung links geht weg
         KnopfMarkieren(false);
         _setzenKnopf = null;
@@ -1249,6 +1277,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Ampel => Texte.Ampel,
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
+        AussenArt.Huegel => Texte.Huegel,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
@@ -1339,6 +1368,7 @@ public sealed partial class Hauptansicht : UserControl
         // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
         OrtNameTeil(s);
         ParkplatzTeil(s);
+        HuegelTeil(s);
         // S 0.27.0: Text der Notiz
         NotizTeil(s);
         // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)

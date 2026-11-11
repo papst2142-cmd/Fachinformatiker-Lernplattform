@@ -278,6 +278,10 @@ public static partial class AussenBearbeitung
         {
             yield return n;
         }
+        foreach (var h in AlleHuegel(aussen))
+        {
+            yield return h;   // S 0.42.0: Huegel
+        }
     }
 
     /// <summary>Rechteck eines Katalog-Stuecks draussen (x, y = Ecke oben links).</summary>
@@ -397,10 +401,12 @@ public static partial class AussenBearbeitung
                 return s;
             }
         }
-        return alle.Where(a => a.Stelle.Art == AussenArt.Strasse)
+        var strasse = alle.Where(a => a.Stelle.Art == AussenArt.Strasse)
             .Select(a => (a.Stelle, D: Kurve.Abstand(p, Linie(Objekt(land[a.Stelle.Nummer])["punkte"])), Halb: (StadtSzene.StrassenBreite / 2) + Gehweg(aussen, a.Stelle)))
             .Where(a => a.D <= a.Halb + 0.05).OrderBy(a => a.D).Select(a => a.Stelle).FirstOrDefault()
             ?? WasserBei(aussen, p, AussenArt.Bahn) ?? (An(AussenArt.Fluss) ? WasserBei(aussen, p, AussenArt.Fluss) : null);
+        // S 0.42.0: ein Huegel liegt unter allem (um ihn bleibt ein Saum frei)
+        return strasse ?? (An(AussenArt.Huegel) ? HuegelBei(aussen, p, greifen) : null);
     }
 
     // ---- Setzen ---------------------------------------------------------------------------------------
@@ -438,7 +444,11 @@ public static partial class AussenBearbeitung
         switch (s.Art)
         {
             case AussenArt.Haus or AussenArt.Gebaeude:
-                HausAnGehweg(aussen, s);
+                // Sammelliste 295: ein Bahnhof rastet zuerst ans Gleis, sonst an den Gehweg
+                if (!BahnhofAnGleis(aussen, s))
+                {
+                    HausAnGehweg(aussen, s);
+                }
                 break;
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);
@@ -471,6 +481,10 @@ public static partial class AussenBearbeitung
         if (art is AussenArt.Haltestelle or AussenArt.Parkplatz)
         {
             return HaltSetzen(aussen, art, x, y);
+        }
+        if (art == AussenArt.Huegel)
+        {
+            return HuegelSetzen(aussen, x, y, raster);
         }
         if (art == AussenArt.Notiz)
         {
@@ -609,7 +623,11 @@ public static partial class AussenBearbeitung
         switch (s.Art)
         {
             case AussenArt.Haus or AussenArt.Gebaeude:
-                HausAnGehweg(aussen, s);
+                // Sammelliste 295: ein Bahnhof rastet zuerst ans Gleis, sonst an den Gehweg
+                if (!BahnhofAnGleis(aussen, s))
+                {
+                    HausAnGehweg(aussen, s);
+                }
                 break;
             case AussenArt.Katalog:
                 KatalogAnGehweg(aussen, s);
@@ -649,6 +667,11 @@ public static partial class AussenBearbeitung
         if (s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)
         {
             HaltVerschieben(aussen, s, dx, dy);
+            return;
+        }
+        if (s.Art == AussenArt.Huegel)
+        {
+            HuegelVerschieben(aussen, s, dx, dy);
             return;
         }
         if (s.Art == AussenArt.Notiz)
@@ -911,6 +934,7 @@ public static partial class AussenBearbeitung
     {
         AussenArt.Strasse or AussenArt.Park or AussenArt.Katalog or AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn => null,
         AussenArt.Haus or AussenArt.Gebaeude => null,
+        AussenArt.Huegel => null,
         AussenArt.Laterne => Texte.LaterneDrehenNicht,
         AussenArt.Fussweg => Texte.FusswegDrehenNicht,
         AussenArt.Zebrastreifen => Texte.ZebraDrehenNicht,
@@ -929,6 +953,10 @@ public static partial class AussenBearbeitung
         if (IstWasserOderBahn(s.Art))
         {
             return WasserDrehen(aussen, s);
+        }
+        if (s.Art == AussenArt.Huegel)
+        {
+            return HuegelDrehen(aussen, s, 90);
         }
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
         {
@@ -1008,6 +1036,10 @@ public static partial class AussenBearbeitung
         if (s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)
         {
             return HaltKopieren(aussen, s);
+        }
+        if (s.Art == AussenArt.Huegel)
+        {
+            return HuegelKopieren(aussen, s);
         }
         if (s.Art == AussenArt.Notiz)
         {
@@ -1137,6 +1169,9 @@ public static partial class AussenBearbeitung
             case AussenArt.Notiz:
                 NotizLoeschen(aussen, s.Nummer);
                 break;
+            case AussenArt.Huegel:
+                HuegelLoeschen(aussen, s.Nummer);
+                break;
             case AussenArt.Strasse:
             {
                 // S 0.26.0: die Zebrastreifen der Strasse gehen mit (Rueckgaengig holt beides)
@@ -1261,6 +1296,7 @@ public static partial class AussenBearbeitung
             AussenArt.Ampel => AmpelBeschreibung(s, lage),
             AussenArt.Haltestelle or AussenArt.Parkplatz => HaltBeschreibung(aussen, s, lage),
             AussenArt.Notiz => NotizBeschreibung(aussen, s, lage),
+            AussenArt.Huegel => HuegelBeschreibung(aussen, s, lage),
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }

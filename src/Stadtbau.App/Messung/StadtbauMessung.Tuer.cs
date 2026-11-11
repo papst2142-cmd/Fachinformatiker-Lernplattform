@@ -47,16 +47,17 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
 
         // Messpunkt: echter Knopfdruck bis zum Bild
-        await MessenAsync("Tuer dazu (bis zum Bild)", a, () =>
+        // Sammelliste 293: der Knopf rechnet den Platz auf der Fassade im Hintergrund; gemessen wird bis der Schritt da ist
+        // (derselbe Weg wie der Knopf, TuerUmschaltenAsync)
+        await MessenAsync("Tuer dazu (bis zum Bild)", a, async () =>
         {
             a.Karte.Waehlen(s);
-            if (TuerKnopfSuchen(a, Texte.TuerDazu) is not { } k)
+            if (TuerKnopfSuchen(a, Texte.TuerDazu) is null)
             {
                 Fund("Tuer: Knopf „" + Texte.TuerDazu + "“ fehlt beim Messen");
-                return Task.CompletedTask;
+                return;
             }
-            k.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            return Task.CompletedTask;
+            await a.TuerUmschaltenAsync(s);
         }, () =>
         {
             a.Rueckgaengig();
@@ -87,7 +88,7 @@ public static partial class StadtbauMessung
 
         // zweite Wohnung mit Tuer = Kopie „Wohnung 2“ (Nico 2a)
         var s2 = p.AussenAendern("Wohnung 2", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 30, vorher.Y + (vorher.H / 2), raster: true, modell: "wohnung")!);
-        if (a.TuerUmschalten(s2) is null)
+        if (await a.TuerUmschaltenAsync(s2) is null)
         {
             Fund("Tuer: zweite Wohnung ohne Meldung");
         }
@@ -99,7 +100,7 @@ public static partial class StadtbauMessung
 
         // Gegenprobe: fern der Strasse (Weg laenger als GebaeudeTuer.WegHoechstens) = gelber Hinweis
         var s3 = p.AussenAendern("Wohnung fern", aa => AussenBearbeitung.Setzen(aa, AussenArt.Gebaeude, 20, 2, raster: true, modell: "wohnung")!);
-        if (a.TuerUmschalten(s3) != Texte.TuerWegOhneStrasse)
+        if (await a.TuerUmschaltenAsync(s3) != Texte.TuerWegOhneStrasse)
         {
             Fund("Tuer: Wohnung fern der Strasse meldet nicht „" + Texte.TuerWegOhneStrasse + "“ (Gegenprobe)");
         }
@@ -110,7 +111,7 @@ public static partial class StadtbauMessung
         }
 
         // „Tür entfernen“ und Rueckgaengig
-        a.TuerUmschalten(s);
+        await a.TuerUmschaltenAsync(s);
         if (GebaeudeTuer.HatTuer(p.AussenStand, s))
         {
             Fund("Tuer: „" + Texte.TuerEntfernen + "“ laesst die Tuer stehen");

@@ -10,6 +10,7 @@ public enum Ebene
     Wasser,
     Wege,
     Notizen,
+    Gelaende,
     Funde,
     Aufgaben,
 }
@@ -38,6 +39,7 @@ public static class Ebenen
         Ebene.Wasser => "wasser",
         Ebene.Wege => "wege",
         Ebene.Notizen => "notizen",
+        Ebene.Gelaende => "gelaende",
         Ebene.Funde => "funde",
         _ => "aufgaben",
     };
@@ -55,6 +57,7 @@ public static class Ebenen
         Ebene.Wasser => Texte.EbeneWasser,
         Ebene.Wege => Texte.EbeneWege,
         Ebene.Notizen => Texte.EbeneNotizen,
+        Ebene.Gelaende => Texte.EbeneGelaende,
         Ebene.Funde => Texte.EbeneFunde,
         _ => Texte.EbeneAufgaben,
     };
@@ -68,6 +71,7 @@ public static class Ebenen
         Ebene.Wasser => [AussenArt.Fluss, AussenArt.Teich, AussenArt.Steg],
         Ebene.Wege => [AussenArt.Fussweg],
         Ebene.Notizen => [AussenArt.Notiz],
+        Ebene.Gelaende => [AussenArt.Huegel],
         _ => [],
     };
 

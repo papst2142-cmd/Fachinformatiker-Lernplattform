@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 0.66.0
+Die Spielstadt kann jetzt Hügel haben, und Auftraggeber draußen sprechen dich auch beim Start an.
+
+- Eine Stadt aus dem Stadtbau-Werkzeug kann Hügel mitbringen: runde oder längliche Hügel bis 1,5 hoch und frei gemalte Höhen. Sie liegen auf der Wiese, im Winter mit Schnee, und brauchen keinen zusätzlichen Zeichenschritt.
+- Deine Figur geht über Hügel und steht dabei auf dem Boden; die Kamera geht weich mit nach oben und unten. Hänge steiler als 45 Grad kann die Figur nicht hinaufgehen.
+- Bäume, Gras und Büsche stehen auf dem Hang und schweben oder versinken nicht; Gras und Büsche wachsen nur dort, wo der Boden eben genug ist.
+- Häuser, Straßen, Wege, Laternen, Autos und Auftraggeber stehen nie auf einem Hügel; Wege, Türen und alle Orte bleiben gleich erreichbar.
+- Steht deine Figur beim Start des Spiels schon an einem Ort mit einem Auftraggeber draußen, spricht er dich gleich an (vorher erst nach dem ersten Schritt).
+- Im Laden bleibt deine Figur beim Ansprechen so weit vor einer Person stehen, dass sich beide nicht berühren.
+- Eine fehlerhafte Stadt-Datei lädt das Spiel nicht und sagt, was nicht stimmt.
+- Die mitgelieferte Stadt hat keine Hügel und ist unverändert. Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.65.0
 Neue Aufträge und Auftraggeber aus dem Stadtbau-Werkzeug kommen ins Spiel.
 

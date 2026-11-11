@@ -255,6 +255,9 @@ public static class Bauen3D
             case AussenArt.Notiz:
                 // S 0.27.0: nur in der Draufsicht
                 return [];
+            case AussenArt.Huegel:
+                // S 0.42.0: Umriss des Huegels am Boden
+                return AussenBearbeitung.HuegelVon(aussen, s) is { } h ? [[.. h.Umriss()]] : [];
             case AussenArt.Steg:
             {
                 if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)
