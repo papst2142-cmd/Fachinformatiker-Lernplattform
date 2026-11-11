@@ -128,6 +128,7 @@ public sealed class GrafikBibliothek
     public static GrafikBibliothek Laden(byte[] bin, string indexJson, string zuordnungJson)
     {
         using var index = JsonDocument.Parse(indexJson);
+        KatalogFormat(index.RootElement);
         var soll = index.RootElement.GetProperty("sha256").GetString();
         var ist = Convert.ToHexStringLower(SHA256.HashData(bin));
         if (ist != soll)
@@ -202,9 +203,42 @@ public sealed class GrafikBibliothek
     /// wie modelle.bin, Erzeuger <c>werkzeuge/stadtbau/verbaut.py</c>) mit der SHA-256 aus <c>katalog_verbaut.json</c>; jeder
     /// Name beginnt mit "cc0:" und steht genau so in der Liste "modelle" der json-Datei.
     /// </summary>
+    /// <summary>
+    /// Engine Stufe 2 Teil 1 (Weisung P12-176, Sammelliste 286): Formatnummer von <c>katalog_verbaut.json</c> (Feld „format“,
+    /// geschrieben von <c>werkzeuge/stadtbau/verbaut.py</c>). Fehlt das Feld, gilt Format 1 (Dateien bis A 0.62.0); eine
+    /// groessere Nummer ist ein klarer Fehler, nie ein stilles Lesen.
+    /// </summary>
+    public const int KatalogVerbautFormat = 1;
+
+    private static readonly AsyncLocal<bool> KatalogFormatAlt = new();
+
+    /// <summary>Gegenprobe Sammelliste 286: das Feld „format“ wird wie bis A 0.62.0 nicht gelesen (nur in Tests).</summary>
+    public static bool KatalogFormatAltFuerTests
+    {
+        get => KatalogFormatAlt.Value;
+        set => KatalogFormatAlt.Value = value;
+    }
+
+    /// <summary>Formatnummer der Liste katalog_verbaut.json (fehlt: 1); falscher Wert oder neuer als bekannt: Fehler.</summary>
+    public static int KatalogFormat(JsonElement index)
+    {
+        if (KatalogFormatAlt.Value || !index.TryGetProperty("format", out var f))
+        {
+            return 1;
+        }
+        if (f.ValueKind != JsonValueKind.Number || !f.TryGetInt32(out var nummer) || nummer < 1 || !f.GetRawText().All(char.IsAsciiDigit))
+        {
+            throw new InvalidDataException("katalog_verbaut.json: die Formatnummer ist keine ganze Zahl ab 1");
+        }
+        return nummer <= KatalogVerbautFormat ? nummer
+            : throw new InvalidDataException("katalog_verbaut.json hat Format " + nummer + ", dieses Programm kennt nur Format " + KatalogVerbautFormat
+                + ". Bitte das Programm aktualisieren.");
+    }
+
     public static List<GrafikModell> KatalogLaden(byte[] bin, string indexJson)
     {
         using var index = JsonDocument.Parse(indexJson);
+        KatalogFormat(index.RootElement);
         var soll = index.RootElement.GetProperty("sha256").GetString();
         var ist = Convert.ToHexStringLower(SHA256.HashData(bin));
         if (ist != soll)

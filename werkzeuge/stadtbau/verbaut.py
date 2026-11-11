@@ -6,7 +6,7 @@ Spielgrafik:
 
   inhalte_csharp/grafik/katalog_verbaut.bin   Aufbau wie modelle.bin ("FLGM", Version 2), je Modell der Name
                                               "cc0:paket/name", die Dreiecke Byte fuer Byte aus <paket>.bin
-  inhalte_csharp/grafik/katalog_verbaut.json  SHA-256 der .bin, Liste der Modelle (sortiert), Quelle je Paket
+  inhalte_csharp/grafik/katalog_verbaut.json  Formatnummer, SHA-256 der .bin, Liste der Modelle (sortiert), Quelle je Paket
 
 Verweise: innen jede Einrichtung mit "typ" = "cc0:paket/name" (in allen Abschnitten der Innenraeume, auch Zusaetze),
 draussen jeder Eintrag von stadtdaten.katalog ("id" = "paket/name"). Ein Effekt (Paket "particles") ist ein Stern aus zwei
@@ -35,6 +35,7 @@ STERN = [
     (0.5, 0.0, 0.0, 0.0669873, 0.0, 0.75, 0.9330127, 0.0, 0.75),
     (0.5, 0.0, 1.0, 0.9330127, 0.0, 0.25, 0.0669873, 0.0, 0.25),
 ]
+FORMAT = 1  # Formatnummer von katalog_verbaut.json (Weisung P12-176, Sammelliste 286), gleich GrafikBibliothek.KatalogVerbautFormat
 VERSION = 2  # Aufbau der FLGM-Dateien (2 = mit Eckfarben, Weisung P12-50), gleich wandle_modelle.VERSION
 
 
@@ -127,6 +128,7 @@ def erzeugen(repo, fassungen=FASSUNGEN):
     index = {
         "_hinweis": ["Phase 13 Welle 4a (Weisung P12-28): nur die Stuecke aus dem Katalog des Stadtbau-Werkzeugs, auf die eine "
                      "Fassung in inhalte_csharp/spiel/stadtbau/ verweist; erzeugt mit werkzeuge/stadtbau/verbaut.py, nie von Hand."],
+        "format": FORMAT,
         "sha256": hashlib.sha256(daten).hexdigest(),
         "modelle": [PRAEFIX + n for n in namen],
         "pakete": dict(sorted(quellen.items())),

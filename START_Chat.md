@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.62.0** / **S 0.37.0** (Welle Autos sparen, PR #161, main 3c51759; Release durch Chat). Dieser Zweig ändert keine Version (Engine festigen Stufe 1: nur Doku und Tests). Releases macht Chat; CC startet nie `release.yml`, setzt keinen Tag, merged nie. |
+| Version | Auf `main` **A 0.62.0** / **S 0.37.0** (PR #161, Release durch Chat; PR #162 Engine Stufe 1 ohne Version, main a808a3a). Dieser Zweig: **A 0.62.1** / **S 0.37.1** (Engine Stufe 2 Teil 1: Fund 286 Formatnummer, Messpunkte „Stadt bauen“/„Netzdaten“). |
 | Phase | 0–12 abgenommen (Phase 12: Nico 05.11.2026 18:37 MEZ, Welle 1 Kleiderschrank A 0.40.0, Welle 2 Menüs in der Spielwelt A 0.41.0; Phase 11: Nico 05.11.2026 08:41 MEZ). **Phase 11**: W1, FW1–FW10, W2, W3, Mac-Welle, Fehlerberichte, Patch-Welle, Seitenleiste, CI schneller und Handy-Update gemergt (A 0.32.0 bis 0.39.0, PR #84 bis #103); Gerätetest auf allen 5 Geräten (04.11.2026), NVDA und TalkBack in Ordnung; 0 offene F |
-| Jetzt | Meldung P12-106 (Engine festigen Stufe 1: `docs/ENGINE.md`, Trennlinie und Formate als Tests, Fund 286, Kurzplan Stufe 2 mit Frage Streaming) bei Chat/Nico. Zug-Räder: Antwort Nico offen. Danach Stadt 1 von Nico, W4b. |
+| Jetzt | Meldung P12-107 (Engine Stufe 2 Teil 1, Sollwert-Änderung Nr. 15 `aktiv.json`, Grenzvorschlag 1 000 ms / 48 MB) bei Chat/Nico; Merge erst nach Nicos OK. Offen bei Nico: Streaming (P12-106 Frage 1), Umfang (Frage 3), Zug-Räder (P12-105 Frage 2). Danach Stadt 1, W4b. |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-106** (Engine festigen Stufe 1; P12-105 Autos sparen, gemergt PR #161) / nächste P12-107 |
-| Sammelliste | nächste freie Nummer **287** (286 aktiv.json/katalog_verbaut.json ohne Formatnummer; 285 Autos erledigt, Zug-Probe bei Nico; 265 Baumplaner, feste Ausnahme; 268/270 beobachten; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
+| Letzte/nächste Meldung | **P12-107** (Engine Stufe 2 Teil 1; P12-106 Engine Stufe 1, gemergt PR #162) / nächste P12-108 |
+| Sammelliste | nächste freie Nummer **287** (286 Formatnummer, erledigt mit A 0.62.1; 285 Autos erledigt, Zug-Probe bei Nico; 265 Baumplaner, feste Ausnahme; 268/270 beobachten; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat

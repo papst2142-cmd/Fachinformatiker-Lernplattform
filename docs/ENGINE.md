@@ -1,6 +1,6 @@
 # Die eigene Engine (Spiel und Stadtbau-Werkzeug)
 
-Stand A 0.62.0 / S 0.37.0 (Weisung P12-175, „Engine festigen“ Stufe 1). Dieses Blatt erklärt, woraus die 3D-Stadt besteht,
+Stand A 0.62.1 / S 0.37.1 (Weisung P12-175 „Engine festigen“ Stufe 1, Weisung P12-176 Stufe 2 Teil 1). Dieses Blatt erklärt, woraus die 3D-Stadt besteht,
 wie Daten vom Werkzeug ins Spiel kommen und welche Regeln für jede Änderung gelten. Einzelheiten stehen im Code
 (Kommentare am Anfang jeder Datei) und in `CLAUDE.md`; hier stehen nur Überblick und Verweise.
 
@@ -64,11 +64,11 @@ nur diesen gemeinsamen Teil.
 | Format | Nummer heute | ältere, noch lesbar (echte Testdatei) | schreibt | liest |
 |---|---|---|---|---|
 | Stadt-Datei `.fistadt` | 1 | – | Werkzeug (Export), `StadtFassung` | `StadtFassung.Lesen`, `StadtbauPruefung.Format` |
-| `aktiv.json` | keine (Fund 286) | – | CC von Hand | `AktiveFassung` |
+| `aktiv.json` | 1 (Feld `format`, seit A 0.62.1) | ohne Feld = 1 (`aktiv_A0.62.0.json`) | CC von Hand | `AktiveFassung.FormatVon`, `Laden` |
 | Projekt `.fisbau` | 3 | 1 (`projekt_S0.1.0.fisbau`), 2 (`projekt_S0.4.0.fisbau`) | Werkzeug | `Projekt.Oeffnen` (neuer = nur ansehen) |
 | Blueprint `.fisblueprint` | 3 | 1 (`blueprint_S0.8.0`), 2 (`blueprint_S0.18.0`) | Werkzeug | `Blueprint.Lesen`, `Blueprint.Alle` |
 | Grafik FLGM (`modelle.bin`, `katalog_verbaut.bin`, Katalog-Pakete) | 2 | 1 (`katalog_verbaut_S0.4.0.bin`) | `wandle_modelle.py`, `wandle_katalog.py`, `verbaut.py` | `GrafikBibliothek.Lesen` |
-| `katalog_verbaut.json` | keine (Fund 286) | – | `verbaut.py` | `GrafikBibliothek.KatalogLaden` |
+| `katalog_verbaut.json` | 1 (Feld `format`, seit A 0.62.1) | ohne Feld = 1 (`katalog_verbaut_S0.4.0.json`) | `verbaut.py` | `GrafikBibliothek.KatalogFormat`, `KatalogLaden` |
 | `katalog.json`, `namen_de.json` (nur Werkzeug) | 1 | – | `wandle_katalog.py`, von Hand | `Katalog.Laden` |
 
 Echte Testdateien liegen in `tests/Stadtbau.Tests/Testdaten/`. Für jedes Format prüft `tests/Stadtbau.Tests/EngineFormateTests.cs`:
@@ -98,3 +98,31 @@ eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis
 - `StadtSzeneHash` und die Rechnerfest-Werte in `tests/Lernplattform.Tests/StadtbauFassungTests.cs` (je Stand eine Spalte).
 - Fassung 0 (`stadt1_fassung0.fistadt`) und `aktiv.json` sind Sollwerte in `tests/Vergleich/SOLLWERTE.sha256` (eine neue Fassung braucht eine freigegebene Sollwert-Änderung).
 - `modelle.bin`: alte Modelle bytegleich (`ModelleNurAngehaengt`).
+
+## 7. Messpunkte der Stadt (seit A 0.62.1)
+
+`Core/Stadtbau/StadtLast.cs` misst, was eine Stadt beim Bauen kostet: „Stadt bauen“ = `StadtSzene.Bauen` plus `Vorbereiten`
+(alle Stücke, alle Netze) und „Netzdaten“ = Byte aller Netze, die in die Grafikkarte kommen (9 float je Ecke, ein uint je
+Index; Stadt, Häuser, Kleingrün, Paket-Netz, Fernformen, Sätze des Instancing, Ampel-Lichter, jedes Netz einmal). Der
+Start-Test des Spiels (`AutoMessung.Engine.cs`, alle Orte, Winter, Weihnachten) und des Werkzeugs
+(`StadtbauMessung.StadtLast.cs`, Stadt 1, Nacht, Winter, Weihnachten) bauen die Szene dafür frisch. „Stadt bauen“ ist
+einmalig und streng (`StadtLast.BauenGrenzeMs`), „Netzdaten“ hat die Grenze `StadtLast.NetzdatenGrenzeMb`. Beide Grenzen sind
+Vorschläge bis zu Nicos Antwort (Meldung P12-107); Grenzen nie lockern.
+
+## 8. Plan: eigenes Projekt `Lernplattform.Engine` (nur Plan, Bau erst nach Stadt 1)
+
+Heute liegt die Engine in `Lernplattform.Core` (Namensräume `Spiel.Probe`, `Stadtbau`) und in `App/Spiel/StadtFlaeche*.cs`.
+Ein eigenes Projekt ginge nicht ohne Umbau, weil 39 von 71 Engine-Dateien den Spiel-Kern lesen (`Stadt`, `Spielstand`,
+`Spielablauf`, `Py`, `PyObjekt`, `Festzeit`, `Jahreszeit`). Schritte, jeder für sich prüfbar:
+
+1. **Gemeinsame Grundlagen herauslösen**: `Py`, `PyObjekt`, `PythonJson` und die Zeit-Typen (`Festzeit`, `Jahreszeit`) in ein
+   kleines Projekt `Lernplattform.Grundlagen`, das Core und Engine beide nutzen. Keine Änderung am Verhalten.
+2. **Schmale Schnittstelle zum Spiel-Kern**: was die Engine vom Spielstand braucht (sichtbare Orte, eigene Firma, Zuhause,
+   Uhr), als Schnittstelle `ISpielSicht` im Engine-Projekt; der Spiel-Kern liefert sie. Die Engine liest nie mehr direkt
+   `Spielstand`.
+3. **Projekt `Lernplattform.Engine`** mit `Spiel/Probe` und `Stadtbau`; die Trennlinie (`EngineGrenzenTests`) prüft dann den
+   Verweis auf Projektebene (die Engine kennt `Lernplattform.Core` nicht mehr).
+4. **Zeichnen** (`StadtFlaeche*.cs`) bleibt in der App, nutzt nur die Engine.
+
+Prüfung je Schritt: alle Tests, Fingerabdrücke, `StadtSzeneHash`, Fassung 0 bitgleich, Start-Test. Risiko: großer Diff ohne
+sichtbaren Gewinn für Nico; darum erst nach Stadt 1 und nur mit eigener Weisung.

@@ -1,7 +1,7 @@
 # Sollwerte Stand C# A 0.41.1 (main 71de14c), Welle Sammelliste 217 (Weisung P12-14)
 # Aendern nur mit Nicos Freigabe: neuer Abschnitt in AENDERUNGEN_SOLLWERTE.md, dann
 # python3 -I werkzeuge/vergleich/sollwerte.py schreiben <n> (nie von Hand)
-# Aenderung: 14
+# Aenderung: 15
 403c51cbd4e86c41f86456f4f0a74ecf54b7a39ebd46db9b245326eaafdc075e  inhalte/fachgespraech.json
 f26e665baf88f4c2d7c4bb834cf90ffaf6d7ff4fd6f9188c8a38d3fdd5735645  inhalte/karteikarten.json
 446598838cc3acdd956ef284fa11bdd210e64cf5868d97a00a3d7871423d5658  inhalte/projektarbeiten.json
@@ -27,7 +27,7 @@ e569b465e253e19508289431594f7804132275c197a9e8c1a39f2ddccb1ab564  inhalte/spiel/
 d57db651f81bb655c482cf3de036e752e18d202a51c7be1d2b69411a564871f1  inhalte/themen.json
 16a2beccae1e4cba2efb81d8d34a7e3e5032cbeef3beacb27f21c4b449a6e983  inhalte/umbenennungen.json
 017550c8b2fbc422857b4931999e9fd22d461243bffbafba38756bd096a51c08  inhalte_csharp/lernen/einteilung_bisher.json
-8ff22814852e819cffd0a9c3abbbb42fbbf9e451bfe7326878ba71e47955bcd6  inhalte_csharp/spiel/stadtbau/aktiv.json
+65427d80e9a605365eca32172ed611ed3e1e2d1e3726074c34d686283fd48a59  inhalte_csharp/spiel/stadtbau/aktiv.json
 9535eba44542bf5dfcc3cd0893d9f2440b37a3b372836495691673a95f204a06  inhalte_csharp/spiel/stadtbau/stadt1_fassung0.fistadt
 38083022ccdcb33542b917c2cd3223afa2910246f1eae5702788416804d1aec0  src/Lernplattform.Core/Projekt/PdfZeichen.Tabelle.cs
 9311d9188ba07bd7e5f59d7bb25512a12cd5ec79cf181c5887d4895bdf1e2967  src/Lernplattform.Core/Rechner/PythonZeichen.Tabelle.cs
