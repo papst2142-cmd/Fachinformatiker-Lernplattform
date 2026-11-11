@@ -370,7 +370,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _anforderungStempel = Stopwatch.GetTimestamp();
         }
-        RequestNextFrameRendering();
+        // Welle Grafik G1: auch Anlaesse von aussen halten die Bildbremse ein (ohne Bremse sofort wie vorher)
+        GebremstAnfordern();
     }
 
     /// <summary>Zeichenaufrufe im letzten Bild (Messung, Wunsch 4).</summary>

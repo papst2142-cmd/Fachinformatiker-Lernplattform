@@ -81,6 +81,9 @@ public sealed partial class StadtFlaeche
 
     private int _bremseWartet;
 
+    /// <summary>Beginn des letzten gezeichneten Bilds (Sekunden auf <c>_uhr</c>) fuer die Bildbremse.</summary>
+    private double _bremseBildBeginn = double.NegativeInfinity;
+
     private unsafe void GrafikEinrichten(GlInterface gl, bool es, GlVersion v)
     {
         GlRenderer = gl.Renderer ?? "";
@@ -289,9 +292,20 @@ public sealed partial class StadtFlaeche
 
     /// <summary>
     /// Naechstes Bild anfordern; mit Bildbremse (Bilder je Sekunde hoechstens) erst, wenn seit dem Beginn dieses Bilds
-    /// 1 / Bilder Sekunden vergangen sind. Ohne Bremse wie vor G1 sofort.
+    /// volle 1 / Bilder Sekunden vergangen sind (nie frueher, auch nicht um wenige Millisekunden: sonst kamen bei 30
+    /// rund 32 bis 33 Bilder in einer Sekunde, PR-Lauf 829). Ohne Bremse wie vor G1 sofort.
     /// </summary>
     private void NaechstesBildAnfordern(double bildBeginn)
+    {
+        _bremseBildBeginn = bildBeginn;
+        GebremstAnfordern();
+    }
+
+    /// <summary>
+    /// Jede Anforderung eines Bilds bei Bildbremse (auch aus <see cref="Anfordern"/>): vor Ablauf von 1 / Bilder Sekunden
+    /// seit dem Beginn des letzten Bilds wird gewartet, eine wartende Anforderung genuegt. Ohne Bremse sofort.
+    /// </summary>
+    private void GebremstAnfordern()
     {
         var bilder = _gw.BilderHoechstens;
         if (bilder <= 0)
@@ -299,8 +313,8 @@ public sealed partial class StadtFlaeche
             RequestNextFrameRendering();
             return;
         }
-        var warten = bildBeginn + (1.0 / bilder) - _uhr.Elapsed.TotalSeconds - 0.002;
-        if (warten <= 0.004)
+        var warten = _bremseBildBeginn + (1.0 / bilder) - _uhr.Elapsed.TotalSeconds;
+        if (warten <= 0)
         {
             RequestNextFrameRendering();
             return;
@@ -312,7 +326,7 @@ public sealed partial class StadtFlaeche
         _ = Task.Delay(TimeSpan.FromSeconds(warten)).ContinueWith(_ => Dispatcher.UIThread.Post(() =>
         {
             Interlocked.Exchange(ref _bremseWartet, 0);
-            RequestNextFrameRendering();
+            GebremstAnfordern();
         }), TaskScheduler.Default);
     }
 

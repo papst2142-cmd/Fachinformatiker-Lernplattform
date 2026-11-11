@@ -82,11 +82,22 @@ public static partial class AutoMessung
                     {
                         Messwerte.Notiere("Spiel: Grafik Niedrig: 75 % Aufloesung nicht moeglich (Treiber ohne eigenen Bildspeicher), gezeichnet mit 100 %");
                     }
-                    // Bildbremse: die Flaeche zweieinhalb Sekunden von selbst zeichnen lassen (NaechstesBildAsync fordert
-                    // selbst Bilder an und ginge an der Bremse vorbei)
-                    await Task.Delay(2500);
-                    Pruefe("Niedrig hoechstens 30 Bilder je Sekunde", flaeche.BilderJeSekunde <= Grafikstufen.BilderNiedrig + 1,
-                        string.Create(inv, $"{flaeche.BilderJeSekunde} Bilder in der letzten Sekunde"));
+                    // Bildbremse: die Flaeche im Dauerlauf von selbst zeichnen lassen (NaechstesBildAsync fordert selbst Bilder
+                    // an und ginge an der Bremse vorbei), eine Sekunde einschwingen, dann zwei Sekunden zaehlen. Ohne Dauerlauf
+                    // ruht die Flaeche, wenn sich nichts bewegt, und die Zahl der letzten Sekunde stammte noch aus der
+                    // Nahansicht (Windows, voller Lauf 828: 48)
+                    flaeche.Dauerlauf = true;
+                    flaeche.AnfordernBild();
+                    await Task.Delay(1000);
+                    var bremseUhr = System.Diagnostics.Stopwatch.StartNew();
+                    var bremseVorher = flaeche.BilderGesamt;
+                    await Task.Delay(2000);
+                    var bremseBilder = flaeche.BilderGesamt - bremseVorher;
+                    var bremseSek = bremseUhr.Elapsed.TotalSeconds;
+                    flaeche.Dauerlauf = false;
+                    Pruefe("Niedrig hoechstens 30 Bilder je Sekunde",
+                        bremseBilder > 0 && bremseBilder <= (int)Math.Floor(bremseSek * Grafikstufen.BilderNiedrig) + 1,
+                        string.Create(inv, $"{bremseBilder} Bilder in {bremseSek:0.00} s im Dauerlauf, {flaeche.BilderJeSekunde} in der letzten Sekunde"));
                 }
                 if (stufe == Grafikstufe.Mittel)
                 {
