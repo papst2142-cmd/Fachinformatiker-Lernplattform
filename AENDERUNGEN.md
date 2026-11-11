@@ -1,5 +1,10 @@
 # Änderungen
 
+## A 0.66.1
+Kleine Verbesserung im Teil, den Spiel und Stadtbau-Werkzeug gemeinsam nutzen.
+
+- Das Stadtbau-Werkzeug zeigt seine 3D-Ansicht jetzt auch dann, wenn eine Straßenlaterne an ihrer Straße keinen freien Platz findet. Im Spiel selbst ändert sich nichts; eine solche Stadt wird vom Werkzeug weiterhin nicht freigegeben.
+
 ## A 0.66.0
 Die Spielstadt kann jetzt Hügel haben, und Auftraggeber draußen sprechen dich auch beim Start an.
 
