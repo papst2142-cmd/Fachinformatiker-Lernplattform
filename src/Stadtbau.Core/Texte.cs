@@ -809,11 +809,38 @@ public static partial class Texte
     public const string EbeneWasser = "Wasser";
     public const string EbeneWege = "Wege";
     public const string EbeneNotizen = "Notizen";
+    public const string EbeneGelaende = "Gelände (Höhenlinien)";
     public const string EbeneFunde = "Funde";
     public const string EbeneAufgaben = "Zahl der Aufgaben";
     public static string EbeneTipp(string name) => "„" + name + "“ in der Draufsicht zeigen oder ausblenden.";
     public static string EbeneWiederAn(string name) => "Ebene „" + name + "“ wieder eingeblendet.";
     public const string EbenenSpeichernFehler = "Die Ebenen konnten nicht gemerkt werden (einstellungen.json ist nicht lesbar). Sie gelten bis zum Beenden.";
+
+    // ---- Gelaende (S 0.42.0, Weisung P12-192) ----
+    public const string Huegel = "Hügel";
+    public const string HuegelSetzen = "Hügel setzen";
+    public const string HuegelTipp = "Einen Hügel auf die Wiese setzen (rund oder länglich, bis 1,5 hoch). Um jeden Hügel bleibt ein Rand von 1,5 frei: nicht an Häuser, Straßen, Wege, Gleis, Wasser oder Plätze.";
+    public const string HuegelRund = "rund";
+    public const string HuegelLaenglich = "länglich";
+    public const string HuegelRadius = "Radius";
+    public const string HuegelHoehe = "Höhe";
+    public const string HuegelLaenge = "Länge";
+    public const string HuegelForm = "Form";
+    public const string HuegelGeaendert = "Hügel geändert";
+    public const string HuegelWerteTipp = "Jede Änderung ist ein Schritt (Rückgängig geht). Radius 1 bis 3, Höhe 0,2 bis 1,5, länglich bis 6 lang.";
+    public const string HuegelDrehenRund = "Ein runder Hügel sieht von allen Seiten gleich aus.";
+    public const string Pinsel = "Gelände malen";
+    public const string PinselTipp = "Mit dem Pinsel Gelände heben, senken oder glätten (Raster 0,5, bis 1,5 hoch). Jeder Zug ist ein Schritt. Nur in „Stadt von oben“.";
+    public const string PinselHeben = "Heben";
+    public const string PinselSenken = "Senken";
+    public const string PinselGlaetten = "Glätten";
+    public const string PinselGroesse = "Größe";
+    public const string PinselZug = "Gelände gemalt";
+    public const string PinselHinweis = "Über die Wiese ziehen: jeder Zug ist ein Schritt. Escape oder Rechtsklick beendet den Pinsel.";
+    public const string PinselAus = "Pinsel beendet.";
+    public const string PinselNichts = "Der Zug hat nichts geändert (schon ganz oben, ganz unten oder flach; Häuser, Straßen und Wasser bleiben frei).";
+    public const string PinselNurDraufsicht = "Der Pinsel malt nur in „Stadt von oben“.";
+    public static string HoehenlinieText(double hoehe) => hoehe.ToString("0.##", De);
 
     public const string Notiz = "Notiz";
     public const string NotizSetzen = "Notiz setzen";

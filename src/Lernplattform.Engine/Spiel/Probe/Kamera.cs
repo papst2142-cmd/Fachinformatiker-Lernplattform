@@ -41,7 +41,13 @@ public sealed class Kamera
     /// <summary>Grenzen fuer das Ziel (Welt), damit man die Stadt nicht verliert.</summary>
     public (float X1, float Z1, float X2, float Z2) Grenzen { get; init; } = (-100, -100, 100, 100);
 
-    public Vector3 Ziel => new(ZielX, 0, ZielZ);
+    /// <summary>
+    /// Welle A 0.66.0 (Gelaende): Hoehe des Ziels (die Kamera schaut auf die Figur auf dem Huegel); ohne Gelaende 0, dann
+    /// ist alles wie vorher.
+    /// </summary>
+    public float ZielY { get; set; }
+
+    public Vector3 Ziel => new(ZielX, ZielY, ZielZ);
 
     public Vector3 Auge
     {
@@ -163,5 +169,34 @@ public sealed class Kamera
         }
         var p = a + ((b - a) * t);
         return new Vector2(p.X, p.Z);
+    }
+
+    /// <summary>
+    /// Welle A 0.66.0: Punkt auf dem Gelaende unter dem Bildpunkt; <paramref name="hoeheAn"/> = Hoehe des Bodens an (x, z).
+    /// Der Strahl wird mit der Ebene in der Hoehe des letzten Treffers geschnitten, bis sich der Punkt kaum noch bewegt
+    /// (hoechstens 12 Mal). Ohne Gelaende (null) wie <see cref="Boden(float, float, float, float)"/>.
+    /// </summary>
+    public Vector2? Boden(float x, float y, float breite, float hoehe, Func<float, float, float>? hoeheAn)
+    {
+        if (Boden(x, y, breite, hoehe) is not { } p0 || hoeheAn is null || Strahl(x, y, breite, hoehe) is not { } s || MathF.Abs(s.Richtung.Y) < 1e-4f)
+        {
+            return Boden(x, y, breite, hoehe);
+        }
+        var p = p0;
+        for (var i = 0; i < 12; i++)
+        {
+            var h = hoeheAn(p.X, p.Y);
+            var t = (h - s.Start.Y) / s.Richtung.Y;
+            var q = s.Start + (s.Richtung * t);
+            var neu = new Vector2(q.X, q.Z);
+            // halber Schritt gegen Pendeln an steilen Haengen
+            neu = i < 2 ? neu : Vector2.Lerp(p, neu, 0.5f);
+            if (Vector2.Distance(neu, p) < 0.002f)
+            {
+                return neu;
+            }
+            p = neu;
+        }
+        return p;
     }
 }

@@ -70,6 +70,8 @@ public static partial class StadtbauPruefung
             AmpelDaten(fassung, breite, hoehe, funde);
             // Welle A 0.61.0: falsch gespeicherte Haltestellen und Parkplaetze
             HaltDaten(fassung, breite, hoehe, funde);
+            // Welle A 0.66.0: Gelaende (falsch gespeicherte Huegel zeichnet die Szene nicht, Rot sperrt den Export)
+            GelaendeDaten(fassung, breite, hoehe, funde);
             // Sammelliste 264: Farben der Gebaeude (die Szene laesst ungueltige Werte weg, Rot sperrt den Export)
             FarbenDaten(fassung, welt, funde);
             if (!DatenPruefen(fassung, welt, breite, hoehe, funde) || !kurvenHeil || !fusswegeHeil)
@@ -142,6 +144,18 @@ public static partial class StadtbauPruefung
         ZebraRegeln(szene, fassung, funde);
         AmpelRegeln(szene, fassung, funde);
         HaltRegeln(szene, fassung, funde);
+        GelaendeRegeln(stadt, stand, szene, fassung, funde, () =>
+        {
+            Gelaende.Weglassen = true;
+            try
+            {
+                return StadtSzene.Bauen(stadt, stand, grafik, null, feste);
+            }
+            finally
+            {
+                Gelaende.Weglassen = false;
+            }
+        });
         AussehenRegeln(fassung, inhalt, szene, funde);
         OrtsnamenRegeln(fassung, funde);
         // Fund 262 (Weisung P12-122): Regeln nur des Werkzeugs auf derselben Szene (Tueren buendig), das Spiel ruft ohne

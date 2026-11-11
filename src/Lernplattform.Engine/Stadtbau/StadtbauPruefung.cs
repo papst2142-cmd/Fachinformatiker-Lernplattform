@@ -269,6 +269,13 @@ public static partial class StadtbauPruefung
         }
         // Phase 13 Welle 5 (Weisung P12-73): Etagen und Uebergaenge der Innenraeume (ohne Etagen kein Fund, Fassung 0 unveraendert)
         funde.AddRange(EtagenAlle(fassung.Innenraeume, grafik));
+        // Welle A 0.66.0 (Weisung P12-192): Gelaende lesbar (ohne Abschnitt kein Fund, Fassung 0 unveraendert); nie still weglassen
+        if (fassung.Stadtdaten is PyObjekt sd && Py.Hat(sd, Spiel.Probe.Gelaende.Abschnitt))
+        {
+            var fehler = new List<(string Text, System.Numerics.Vector2? Stelle)>();
+            Spiel.Probe.Gelaende.Lesen(sd, fehler);
+            funde.AddRange(fehler.Select(f => "Gelände: " + f.Text));
+        }
         return funde;
     }
 

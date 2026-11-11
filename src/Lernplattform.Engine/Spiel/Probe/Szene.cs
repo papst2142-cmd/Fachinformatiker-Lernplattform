@@ -243,6 +243,24 @@ public sealed class Netz
         }
     }
 
+    /// <summary>
+    /// Welle A 0.66.0 (Gelaende): ein Gitter mit gemeinsamen Ecken (Punkte, Normalen, Dreiecke als Indizes in die Punkte),
+    /// eine Farbe; die Faerbung des Netzes wirkt je Ecke (Betrag der Normale nach oben, Hoehe), wie bei den Flaechen.
+    /// </summary>
+    public void HinzuGitter(IReadOnlyList<Vector3> punkte, IReadOnlyList<Vector3> normalen, Vector3 farbe, IReadOnlyList<uint> indizes)
+    {
+        var basis = (uint)AnzahlEcken;
+        for (var i = 0; i < punkte.Count; i++)
+        {
+            var n = normalen[i];
+            Ecke(punkte[i], n, Faerbung is { } f ? f(farbe, MathF.Abs(n.Y), punkte[i].Y) : farbe);
+        }
+        foreach (var i in indizes)
+        {
+            _indizes.Add(basis + i);
+        }
+    }
+
     /// <summary>Viereck mit fester Normale (oben) oder aus den Ecken; ohne Flaeche (entartet) nichts.</summary>
     private void Flaeche(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 farbe, Vector3? normale)
     {

@@ -851,6 +851,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             // niemand selbst verschiebt
             var k = (float)Math.Min(1, dt * 2.5);
             kamera.Setzen(kamera.ZielX + ((_spiel!.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
+            // Welle A 0.66.0 (Gelaende): die Hoehe folgt genauso weich (kein Ruckeln am Hang); ohne Gelaende bleibt sie 0
+            if (!_spiel.ImInnenraum && _spiel.Szene.Gelaende is not null)
+            {
+                kamera.ZielY += (KameraZielHoehe(_spiel) - kamera.ZielY) * k;
+            }
         }
         if (_spiel is { } tonSpiel && kamera is not null && TonDienst.Aktiv)
         {
@@ -949,7 +954,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             if (_spiel.Ziel is { } ziel && _marke is not null)
             {
-                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation((float)ziel.X, _spiel.ImInnenraum ? 0.03f : StadtSzene.Hoehe.Uebergang + 0.012f, (float)ziel.Y), sichtProj);
+                Zeichnen(gl, _marke, Matrix4x4.CreateTranslation((float)ziel.X, _spiel.ImInnenraum ? 0.03f
+                    : MathF.Max(StadtSzene.Hoehe.Uebergang + 0.012f, _spiel.Szene.BodenHoehe((float)ziel.X, (float)ziel.Y) + 0.012f), (float)ziel.Y), sichtProj);
             }
             var innen = _spiel.Innen;
             var groesse = innen is null ? Figur.StadtHoehe : Innenraum.FigurHoehe;
@@ -958,7 +964,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var bild = ProbeBild >= 0 ? ProbeBild : _spiel.SchrittBild;
             var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
             var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
-                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? StadtSzene.Hoehe.Figur : 0f, _spiel.FigurZ);
+                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
             Zeichnen(gl, spieler, figurLage, sichtProj);
             if (innen is not null)
             {
@@ -1025,7 +1031,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 // Nachtrag 1 zu P7-13 (Wunsch 2): Kreis um die Figur in ihrer Kreisfarbe, ohne Tiefenpruefung
                 // (kein Haus, Baum oder Schild verdeckt ihn), danach die Figur noch einmal ganz vorn
                 gl.Disable(GL_DEPTH_TEST);
-                Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, StadtSzene.Hoehe.Figur + 0.01f, _spiel.FigurZ), sichtProj);
+                Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, FigurHoehe(_spiel) + 0.01f, _spiel.FigurZ), sichtProj);
                 gl.Enable(GL_DEPTH_TEST);
                 gl.Clear(GL_DEPTH_BUFFER_BIT);
                 Zeichnen(gl, spieler, figurLage, sichtProj);
@@ -2253,12 +2259,19 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return p.Length < 2 ? 0 : Math.Atan2(p[1].Y - p[0].Y, p[1].X - p[0].X) * 180 / Math.PI;
     }
 
+    /// <summary>Welle A 0.66.0: Hoehe der Figur draussen (auf Weg und Strasse wie bisher, auf einem Huegel auf dem Gelaende).</summary>
+    internal static float FigurHoehe(StadtSpiel spiel) => MathF.Max(StadtSzene.Hoehe.Figur, spiel.Szene.BodenHoehe(spiel.FigurX, spiel.FigurZ));
+
+    /// <summary>Welle A 0.66.0: Hoehe, auf die die Kamera schaut (Gelaende unter der Figur, ohne Gelaende 0).</summary>
+    internal static float KameraZielHoehe(StadtSpiel spiel) => spiel.Szene.BodenHoehe(spiel.FigurX, spiel.FigurZ);
+
     /// <summary>Kamera sofort auf die Figur stellen (nach einem Sprung ohne Gehen, z. B. im Start-Test).</summary>
     public void KameraAufFigur()
     {
         if (AktuelleKamera is { } kamera && _spiel is { } spiel)
         {
             kamera.Setzen(spiel.FigurX, spiel.FigurZ);
+            kamera.ZielY = spiel.ImInnenraum ? 0f : KameraZielHoehe(spiel);
             AnfordernBild();
         }
     }
@@ -2283,7 +2296,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             spiel.GeheZu(ort.Id);
         }
-        else if (kamera.Boden((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height) is { } boden)
+        else if (kamera.Boden((float)p.X, (float)p.Y, (float)Bounds.Width, (float)Bounds.Height, spiel.Szene.Gelaende is null ? null : spiel.Szene.BodenHoehe) is { } boden)
         {
             // kein Haus getroffen: frei dorthin gehen (P7-10 Nachtrag 1, Wunsch 3)
             spiel.GeheZu(boden.X, boden.Y);

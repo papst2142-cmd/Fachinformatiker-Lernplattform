@@ -869,6 +869,12 @@ public sealed partial class Hauptansicht : UserControl
         {
             Children = { KatalogKnopf(Texte.Baum, AussenArt.Baum), KatalogKnopf(Texte.Park, AussenArt.Park), KatalogKnopf(Texte.Beet, AussenArt.Beet), KatalogKnopf(Texte.Laterne, AussenArt.Laterne), verteilen },
         };
+        // Gelaende (S 0.42.0, Weisung P12-192): Huegel setzen und Pinsel in „Natur und Licht“
+        var huegel = new Button { Content = Schrift.Text(Texte.Huegel, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+            .Vorlese(Texte.HuegelSetzen).Mit(Texte.HuegelTipp + " " + Texte.SetzenKnopfTipp);
+        huegel.Click += (_, _) => SetzenKnopfGedrueckt(huegel, false, () => AussenSetzenWaehlen(AussenArt.Huegel, null));
+        HuegelKnopf = huegel;
+        natur.Children.Add(huegel);
         // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
         Button KurvenKnopf(string text, string tipp, Func<string> kennung)
         {
@@ -938,7 +944,7 @@ public sealed partial class Hauptansicht : UserControl
         // „Straßen und Wege“ (E1: Nico hat vier Gruppen gewaehlt, Bahn und Strasse werden gleich gezogen und gesetzt)
         var strassen = new Klappgruppe("strassen", Texte.GruppeStrassen, Texte.TippGruppeStrassen, false,
             reihe, ziehen, kurven, radiusTitel, _kurvenRadius, kreise, Gruppe(Schrift.Text(Texte.BahnGruppe, "Klein", FontWeight.Bold), Texte.TippBahn), bahn);
-        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur);
+        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur, PinselBaustein());
         var wasserGruppe = new Klappgruppe("wasser", Texte.WasserGruppe, Texte.TippWasser, false, wasser, _eisImWinter);
         var gebaeude = new Klappgruppe("gebaeude", Texte.GruppeGebaeude, Texte.TippGruppeGebaeude, false,
             Gruppe(Schrift.Text(Texte.HausOhneOrt, "Klein", FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, new WrapPanel { Children = { haus } },
@@ -1134,6 +1140,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        Karte.GelaendePinsel = null;
         // ein anderes Stueck (auch aus dem vollen Katalog): die alte Markierung links geht weg
         KnopfMarkieren(false);
         _setzenKnopf = null;
@@ -1270,6 +1277,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Ampel => Texte.Ampel,
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
+        AussenArt.Huegel => Texte.Huegel,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
@@ -1360,6 +1368,7 @@ public sealed partial class Hauptansicht : UserControl
         // Weisung P12-89: Name des Orts unter dem ausgewaehlten Stueck
         OrtNameTeil(s);
         ParkplatzTeil(s);
+        HuegelTeil(s);
         // S 0.27.0: Text der Notiz
         NotizTeil(s);
         // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)

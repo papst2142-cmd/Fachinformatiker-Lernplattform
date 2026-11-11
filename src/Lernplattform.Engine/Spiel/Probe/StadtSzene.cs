@@ -144,6 +144,33 @@ public sealed partial class StadtSzene
     /// <summary>S 0.8.0: Stege aus <c>stadtdaten.wasser</c>.</summary>
     public IReadOnlyList<Steg> Stege { get; private init; } = [];
 
+    /// <summary>Welle A 0.66.0 (Weisung P12-192): das Gelaende der Stadt (null ohne Abschnitt <c>gelaende</c>, Fassung 0).</summary>
+    public Gelaende? Gelaende { get; private init; }
+
+    /// <summary>Hoehe, auf der an (x, z) Figur und Stuecke stehen (ohne Gelaende 0).</summary>
+    public float BodenHoehe(float x, float z) => Gelaende?.Boden(x, z) ?? 0f;
+
+    /// <summary>Hebt die Stuecke von <paramref name="von"/> bis vor <paramref name="bis"/> auf die Hoehe des Gelaendes an ihrer Mitte.</summary>
+    private static void Anheben(Gelaende gelaende, List<ModellStueck> stuecke, int von, int bis)
+    {
+        for (var i = von; i < bis; i++)
+        {
+            var lage = stuecke[i].Lage;
+            var h = gelaende.Boden(lage.M41, lage.M43);
+            if (h > 0f)
+            {
+                lage.M42 += h;
+                stuecke[i] = stuecke[i] with { Lage = lage };
+            }
+        }
+    }
+
+    private static Teil Anheben(Gelaende gelaende, Teil t)
+    {
+        var h = gelaende.Boden((t.X1 + t.X2) / 2, (t.Z1 + t.Z2) / 2);
+        return h > 0f ? t with { Y1 = t.Y1 + h, Y2 = t.Y2 + h } : t;
+    }
+
     /// <summary>S 0.8.0: Flaechen am Boden (Ufer und Wasser der Teiche) im Netz der Stadt.</summary>
     public IReadOnlyList<Bodenflaeche> Flaechen { get; private init; } = [];
 
@@ -394,6 +421,8 @@ public sealed partial class StadtSzene
             {
                 netz.Hinzu(flaeche);
             }
+            // Welle A 0.66.0: das Gelaende im selben Netz (kein neuer Zeichenaufruf; aus der Ferne Raster 1,0)
+            Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
             netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
@@ -450,6 +479,7 @@ public sealed partial class StadtSzene
         {
             gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
         }
+        Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
         gefaerbt.Faerbung = null;
         gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
@@ -968,6 +998,8 @@ public sealed partial class StadtSzene
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
         var breite = (float)Py.F(welt["breite"]);
         var tiefe = (float)Py.F(welt["hoehe"]);
+        // Welle A 0.66.0 (Weisung P12-192): Gelaende (ohne Abschnitt null, dann aendert sich nichts)
+        var gelaende = Gelaende.Aus(stadt.Daten);
         var teile = new List<Teil>
         {
             // Boden weit ueber den Rand, damit die geneigte Kamera keinen leeren Himmel zeigt
@@ -1558,20 +1590,48 @@ public sealed partial class StadtSzene
                 && festPlaetze.All(fp => Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f)
                 && laternenPlaetze.All(lp => Kurve.Abstand(new Vector2(x, z), [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f)
                 && andreaskreuze.All(k => Vector2.Distance(k.Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f)
-                && teiche.All(t => !Wasser.Drin(t.MitUfer, new Vector2(x, z)) && Wasser.RandAbstand(t.MitUfer, new Vector2(x, z)) >= r + 0.02f);
+                && teiche.All(t => !Wasser.Drin(t.MitUfer, new Vector2(x, z)) && Wasser.RandAbstand(t.MitUfer, new Vector2(x, z)) >= r + 0.02f)
+                // Welle A 0.66.0: Kleingruen nur, wo sein Fuss rundum hoechstens 0,02 von der Hoehe der Mitte abweicht
+                && (gelaende is null || gelaende.Flach(x, z, r));
             var parks = landschaft.Where(t => Py.Gleich(t["typ"], "park")).Select(t => (Zahl(t, "x"), Zahl(t, "y"), Zahl(t, "w"), Zahl(t, "h")));
             // die Parkbaeume stehen nicht in den Stuecken (die bleiben wie in W6), sie kommen in NetzBauen dazu
             gruen = Gruen.Verteilen(grafik, breite, tiefe, parks, strassen, Frei, baeume.Gesetzt, beeteFest, KleingruenAn(stadt.Daten));
             // Bueschel, Steine, Beete und Parkbaeume sind Hindernisse des freien Gehens (wie die Fest-Deko, E2 P8-14);
             // ueber Gras geht die Figur
             hindernisse.AddRange(gruen.Hindernisse.Select(h => ((double)(h.X - h.R), (double)(h.Z - h.R), (double)(h.X + h.R), (double)(h.Z + h.R))));
+            if (gelaende is not null)
+            {
+                Anheben(gelaende, gruen.Stuecke, 0, gruen.Stuecke.Count);
+                Anheben(gelaende, gruen.Baeume, 0, gruen.Baeume.Count);
+                for (var i = 0; i < gruen.Teile.Count; i++)
+                {
+                    gruen.Teile[i] = Anheben(gelaende, gruen.Teile[i]);
+                }
+            }
+        }
+        // Welle A 0.66.0 (Weisung P12-192): jedes Stueck ausserhalb der Haeuser (Baum, Katalog-Stueck, Effekt) steht auf der
+        // Hoehe des Gelaendes an seiner Mitte und kippt nicht; ohne Gelaende nichts
+        if (gelaende is not null)
+        {
+            var imHaus = new bool[stuecke.Count];
+            foreach (var h in haeuser)
+            {
+                Array.Fill(imHaus, true, h.StueckeVon, Math.Min(h.StueckeBis, stuecke.Count) - h.StueckeVon);
+            }
+            for (var i = 0; i < stuecke.Count; i++)
+            {
+                if (!imHaus[i])
+                {
+                    Anheben(gelaende, stuecke, i, i + 1);
+                }
+            }
         }
         // Sammelliste 264 (Weisung P12-130 Frage 3 = c): Gebaeude faerben (stadtdaten.farben, ohne Feld nichts)
         if (grafik is not null)
         {
             FarbenAnwenden(stadt.Daten, grafik, stuecke, haeuser, umgefaerbt);
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten]);
+        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten], gelaende);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -1613,6 +1673,7 @@ public sealed partial class StadtSzene
             Questgeber = Stadtbau.Questebene.DraussenListe(inhalt),
             Parkplaetze = parkplaetze,
             MitGehweg = gehwege.Count > 0,
+            Gelaende = gelaende,
         };
     }
 
@@ -1835,7 +1896,7 @@ public sealed partial class StadtSzene
     private static Wegsuche LaufrasterBauen(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
         List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
         List<(List<Vector2> Linie, float Halb)>? gehwege = null, List<Teich>? teiche = null, List<Steg>? stege = null, List<List<Vector2>>? inseln = null,
-        List<Zebra>? zebras = null)
+        List<Zebra>? zebras = null, Gelaende? gelaende = null)
     {
         var spalten = (int)(breite / LaufSchritt);
         var zeilen = (int)(tiefe / LaufSchritt);
@@ -1972,6 +2033,20 @@ public sealed partial class StadtSzene
                         immer[(s * zeilen) + z] = false;
                         gesperrt[(s * zeilen) + z] = true;
                     }
+                }
+            }
+        }
+        // Welle A 0.66.0 (Weisung P12-192, E1): ein Hang steiler als 45 Grad ist gesperrt (auch gegen "immer frei"); ohne
+        // Gelaende nichts
+        if (gelaende is not null)
+        {
+            foreach (var (gs, gz) in gelaende.Zellen((float)LaufSchritt, spalten, zeilen))
+            {
+                var m = Mitte(gs, gz);
+                if (gelaende.ZuSteil(m.X, m.Y))
+                {
+                    immer[(gs * zeilen) + gz] = false;
+                    gesperrt[(gs * zeilen) + gz] = true;
                 }
             }
         }
