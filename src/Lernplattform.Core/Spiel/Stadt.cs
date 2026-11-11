@@ -51,7 +51,7 @@ public sealed record StadtWeg(IReadOnlyList<(long X, long Y)> Zellen)
 /// bis die Figur zu Hause schlafen geht. Betreten geht nur, solange der Ort offen ist; vor einem Ort, der heute
 /// noch (bis zum <see cref="Abend"/>) oeffnet, kann man bis zur Oeffnung warten.
 /// </summary>
-public sealed class Stadt
+public sealed class Stadt : Probe.IStadtSicht
 {
     /// <summary>Ereignis: ein Weg in der Stadt {"tag", "von", "nach", "schritte", "minuten"}.</summary>
     public const string Gegangen = "stadt_gegangen";
@@ -364,6 +364,12 @@ public sealed class Stadt
 
     /// <summary>Die sichtbaren Orte der Stadt (orte.json und die neuen).</summary>
     public List<PyObjekt> Orte(Spielstand? stand) => Orte(stand, Inhalt, Regeln);
+
+    /// <summary>Weisung P12-179: die Sicht der Engine; nur ein Spielstand liefert eine <see cref="ISpielSicht"/>.</summary>
+    List<PyObjekt> Probe.IStadtSicht.Orte(ISpielSicht? stand) => Orte((Spielstand?)stand);
+
+    /// <summary>Weisung P12-179: Ort eines neuen Spielstands (wie vorher in der Pruefung gerechnet).</summary>
+    string Probe.IStadtSicht.StartOrt => Stand(new Spielablauf(Inhalt).Stand).Ort;
 
     // -- Raster und Wege -----------------------------------------------------
 

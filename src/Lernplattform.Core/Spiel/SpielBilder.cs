@@ -47,10 +47,7 @@ public static class SpielBilder
     };
 
     /// <summary>RING_COLORS: Kreis um die Spielfigur.</summary>
-    public static readonly IReadOnlyDictionary<string, string> KreisFarben = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["pink"] = "#F472B6", ["cyan"] = "#22D3EE", ["gruen"] = "#34D399", ["violett"] = "#A78BFA", ["orange"] = "#FB923C", ["gelb"] = "#FBBF24",
-    };
+    public static readonly IReadOnlyDictionary<string, string> KreisFarben = Probe.Figur.KreisFarben;
 
     /// <summary>APPEARANCE_LABELS: Teil und Beschriftung im Figuren-Editor.</summary>
     public static readonly IReadOnlyList<(string Teil, string Name)> AussehenNamen =

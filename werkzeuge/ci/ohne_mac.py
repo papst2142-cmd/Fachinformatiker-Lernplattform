@@ -8,8 +8,9 @@ Mac-Teile noetig macht. Vor jedem Release der Lernplattform verlangt release.yml
 Mac noetig (Liste aus Meldung P12-84 Punkt 4, dazu strenger, selbst gefunden: Ton, Diagnose, Projektdateien,
 alle Workflows, Lizenzliste, Unit-Tests zu Mac, Haenger, Update, Paketen, Release, Vollbild, Ton):
   src/Lernplattform.App/**, src/Lernplattform.Desktop/**, src/Lernplattform.Core/Spiel/Probe/**,
+  src/Lernplattform.Engine/Spiel/Probe/** (eigene Engine seit Weisung P12-179, Zeichnen der Stadt),
   src/Lernplattform.Core/Spiel/Ton/**, src/Lernplattform.Core/Update/**, src/Lernplattform.Core/Diagnose/**,
-  src/Lernplattform.*/*.csproj, werkzeuge/starttest/**, werkzeuge/pakete/**, werkzeuge/release/**,
+  src/Lernplattform.*/*.csproj und *.props (Projektaufbau, auch Grundlagen.props), werkzeuge/starttest/**, werkzeuge/pakete/**, werkzeuge/release/**,
   werkzeuge/lizenzen/**, werkzeuge/ci/**, .github/**, Directory.*, global.json, nuget.config,
   tests/Lernplattform.Tests/** mit Mac, Haenger, Update, Paket, Release, Vollbild oder Ton im Dateinamen.
 Jede solche Datei macht die Stufe sofort rot mit der Zeile "Mac-Teile noetig: <Datei>".
@@ -30,10 +31,11 @@ MAC_NOETIG = (
     re.compile(r"^src/Lernplattform\.App/"),
     re.compile(r"^src/Lernplattform\.Desktop/"),
     re.compile(r"^src/Lernplattform\.Core/Spiel/Probe/"),
+    re.compile(r"^src/Lernplattform\.Engine/Spiel/Probe/"),
     re.compile(r"^src/Lernplattform\.Core/Spiel/Ton/"),
     re.compile(r"^src/Lernplattform\.Core/Update/"),
     re.compile(r"^src/Lernplattform\.Core/Diagnose/"),
-    re.compile(r"^src/Lernplattform\.[^/]+/[^/]+\.csproj$"),
+    re.compile(r"^src/Lernplattform\.[^/]+/[^/]+\.(csproj|props)$"),
     re.compile(r"^werkzeuge/(starttest|pakete|release|lizenzen|ci)/"),
     re.compile(r"^\.github/"),
     re.compile(r"^Directory\.[^/]+$"),
@@ -82,7 +84,7 @@ def pruefen(basis=None, ordner=None):
 FAELLE = [
     # (Name, Dateien, erwartet rot)
     ("Lerninhalte und Kern ohne Mac", ["inhalte_csharp/lernen/quizfragen.json", "src/Lernplattform.Core/Lernen/Karte.cs",
-                                        "src/Lernplattform.Core/Stadtbau/StadtbauPruefung.cs",
+                                        "src/Lernplattform.Engine/Stadtbau/StadtbauPruefung.cs",
                                         "tests/Lernplattform.Tests/LerninhalteTests.cs", "tests/Vergleich/lerninhalte_pruefung.json",
                                         "AENDERUNGEN.md", "CLAUDE.md"], False),
     ("nur Werkzeug", ["src/Stadtbau.App/Oberflaeche/Hauptansicht.cs", "tests/Stadtbau.Tests/X.cs",
@@ -91,7 +93,11 @@ FAELLE = [
                                      "tests/Lernplattform.Tests/SpielTests.cs"], False),
     ("Gegenprobe App", ["src/Lernplattform.App/Views/Dialog.cs"], True),
     ("Gegenprobe Desktop", ["src/Lernplattform.Desktop/Program.cs"], True),
-    ("Gegenprobe Spiel/Probe", ["src/Lernplattform.Core/Spiel/Probe/StadtSzene.cs"], True),
+    ("Gegenprobe Spiel/Probe", ["src/Lernplattform.Core/Spiel/Probe/StadtSpiel.cs"], True),
+    ("Gegenprobe Engine Spiel/Probe", ["src/Lernplattform.Engine/Spiel/Probe/StadtSzene.cs"], True),
+    ("Gegenprobe Projektdatei Engine", ["src/Lernplattform.Engine/Lernplattform.Engine.csproj"], True),
+    ("Gegenprobe Projektdatei Grundlagen", ["src/Lernplattform.Grundlagen/Lernplattform.Grundlagen.csproj"], True),
+    ("Gegenprobe Liste der Grundlagen", ["src/Lernplattform.Core/Grundlagen.props"], True),
     ("Gegenprobe Ton", ["src/Lernplattform.Core/Spiel/Ton/VollbildBildschirm.cs"], True),
     ("Gegenprobe Update", ["src/Lernplattform.Core/Update/MacBundle.cs"], True),
     ("Gegenprobe Diagnose", ["src/Lernplattform.Core/Diagnose/Haenger.cs"], True),

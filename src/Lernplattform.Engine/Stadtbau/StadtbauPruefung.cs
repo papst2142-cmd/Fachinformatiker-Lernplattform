@@ -170,10 +170,10 @@ public static partial class StadtbauPruefung
     public static List<string> Inhalt(StadtFassung fassung, PyObjekt inhalt)
     {
         var funde = new List<string>();
-        Stadt stadt;
+        IStadtSicht stadt;
         try
         {
-            stadt = fassung.StadtFuer(fassung.MitKarte(inhalt));
+            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt));
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException or OverflowException or SpielFehler)
         {
@@ -184,7 +184,7 @@ public static partial class StadtbauPruefung
         // Vorher kam z. B. ein Ort, dessen Modell nur in stadtdaten.neue_modelle lag, gruen durch den Export, und das Spiel
         // haette die Stadt nicht geladen („unbekanntes Modell“). Nur fuer Stadt 1: nur sie laedt das Spiel ueber diese Pruefung
         // (eine neue leere Stadt hat die Kundenorte der Stadt 1 nicht und kommt erst mit Beta 1 ins Spiel).
-        foreach (var f in fassung.StadtId == AktiveFassung.Stadt1 ? SpielPruefung.Welt(fassung.MitKarte(inhalt)) : [])
+        foreach (var f in fassung.StadtId == AktiveFassung.Stadt1 ? SpielKern.Regeln.WeltPruefen(fassung.MitKarte(inhalt)) : [])
         {
             funde.Add("Das Spiel lädt die Karte nicht: " + f);
         }

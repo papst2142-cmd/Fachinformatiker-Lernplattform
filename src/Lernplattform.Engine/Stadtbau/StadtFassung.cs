@@ -82,9 +82,6 @@ public sealed class StadtFassung
         return neu;
     }
 
-    /// <summary>Die Stadt dieser Fassung zu Spielinhalten, deren Abschnitt "orte" schon die <see cref="Karte"/> ist.</summary>
-    public Stadt StadtFuer(PyObjekt inhalt) => new(inhalt, Stadtdaten) { Fassung = this };
-
     /// <summary>Die Fassung als Objekt ohne Pruefsumme (Reihenfolge der Felder fest).</summary>
     private PyObjekt OhnePruefsumme() => new()
     {

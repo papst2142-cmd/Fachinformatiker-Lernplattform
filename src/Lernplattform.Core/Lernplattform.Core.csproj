@@ -9,6 +9,14 @@
     <!-- Phase 8 W8: Toene (OGG) lesen, nur verwalteter Code -->
     <PackageReference Include="NVorbis" />
   </ItemGroup>
+  <!-- Weisung P12-179: Grundlagen und eigene Engine als eigene Projekte; die Dateien der Grundlagen liegen weiter hier
+       (Grundlagen.props), gebaut werden sie nur dort. -->
+  <Import Project="Grundlagen.props" />
+  <ItemGroup>
+    <Compile Remove="@(GrundlagenDatei)" />
+    <ProjectReference Include="..\Lernplattform.Grundlagen\Lernplattform.Grundlagen.csproj" />
+    <ProjectReference Include="..\Lernplattform.Engine\Lernplattform.Engine.csproj" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lernplattform.Tests" />
     <InternalsVisibleTo Include="Stadtbau.Tests" />

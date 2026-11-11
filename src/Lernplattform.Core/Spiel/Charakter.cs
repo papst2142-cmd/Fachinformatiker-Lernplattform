@@ -22,7 +22,7 @@ public static class Charakter
     public const string HinweisTitel = "Einmalig";
 
     /// <summary>Typ des Moebels (wohnungen.json und geschaefte.json moebel_neu).</summary>
-    public const string SchrankTyp = "kleiderschrank";
+    public const string SchrankTyp = Probe.SpielKern.SchrankTyp;
 
     /// <summary>Der alte Kleiderschrank aus den Python-Inhalten (340 EUR): nicht mehr im Laden, zaehlt wie der mittlere (Nico 4a).</summary>
     public const string AlterSchrank = "kleiderschrank";
@@ -85,7 +85,7 @@ public static class Charakter
     /// <summary>Kleidung, die man schon hat (statt Kleidung.SchonGekauft, das auf die alte Tafel „Figur“ zeigt).</summary>
     public const string SchonGekauft = "Das hast du schon. Anziehen kannst du es an deinem Kleiderschrank.";
 
-    public const string ImMoebelhaus = "Damit kannst du dein Aussehen ändern.";
+    public const string ImMoebelhaus = Probe.SpielKern.ImMoebelhaus;
 
     public const string KeinSchrankAufgestellt = "Dafür musst du einen Kleiderschrank in deiner Wohnung aufstellen.";
 

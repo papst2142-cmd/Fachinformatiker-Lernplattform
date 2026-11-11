@@ -21,7 +21,17 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class EngineGrenzenTests
 {
-    /// <summary>Namensraeume der Engine in Lernplattform.Core.</summary>
+    /// <summary>Weisung P12-179 Teil B: die Projekte Lernplattform.Engine, Lernplattform.Grundlagen und Lernplattform.Core.</summary>
+    internal static Assembly EngineDll => typeof(StadtSzene).Assembly;
+
+    internal static Assembly GrundlagenDll => typeof(Lernplattform.Core.Spiel.Py).Assembly;
+
+    internal static Assembly CoreDll => typeof(Lernplattform.Core.Spiel.Spielstand).Assembly;
+
+    /// <summary>Alle Typen der drei Projekte (in ihnen liegen Engine, Grundlagen, Spiel-Kern und Lernteil).</summary>
+    internal static IEnumerable<Type> AlleTypen => new[] { EngineDll, GrundlagenDll, CoreDll }.Distinct().SelectMany(a => a.GetTypes());
+
+    /// <summary>Namensraeume der Engine.</summary>
     internal static readonly string[] EngineNamensraeume = ["Lernplattform.Core.Spiel.Probe", "Lernplattform.Core.Stadtbau"];
 
     /// <summary>Namensraeume des Lernteils (Lernen, Pruefen, Auswerten); die Engine darf keinen davon nutzen.</summary>
@@ -40,10 +50,109 @@ public class EngineGrenzenTests
     /// </summary>
     internal static readonly (string Engine, string Genutzt, string Grund)[] Ausnahmen = [];
 
+    /// <summary>
+    /// Weisung P12-179 Schritt 1: die Grundlagen, die Engine und Spiel-Kern beide nutzen (Python-Nachbau, Datenhelfer,
+    /// Zeit-Typen, Laufraster). Sie nutzen nur sich selbst (Test <see cref="Grundlagen_NutzenNurSichSelbst"/>); ab Teil B
+    /// liegen sie in einem eigenen Projekt. Neue Eintraege nur, wenn der Typ geschlossen bleibt.
+    /// </summary>
+    internal static readonly string[] Grundlagen =
+    [
+        "Lernplattform.Core.Spiel.Py", "Lernplattform.Core.Spiel.PyDict", "Lernplattform.Core.Spiel.PyFormat",
+        "Lernplattform.Core.Spiel.PyMenge", "Lernplattform.Core.Spiel.PySet", "Lernplattform.Core.Spiel.PyTupel",
+        "Lernplattform.Core.Spiel.PyVergleich", "Lernplattform.Core.Daten.PyObjekt", "Lernplattform.Core.Daten.PythonJson",
+        "Lernplattform.Core.Mathe.PythonRunden", "Lernplattform.Core.Mathe.PythonRundenStellen", "Lernplattform.Core.Mathe.PythonPow",
+        "Lernplattform.Core.Dashboard.PyText", "Lernplattform.Core.Rechner.PythonZeichen", "Lernplattform.Core.Suche.PythonKlein",
+        "Lernplattform.Core.Spiel.Jahreszeit", "Lernplattform.Core.Spiel.Festzeit", "Lernplattform.Core.Spiel.SpielDaten",
+        "Lernplattform.Core.Spiel.SpielInhalt", "Lernplattform.Core.Spiel.Wege", "Lernplattform.Core.Spiel.LaufOrt",
+        "Lernplattform.Core.Spiel.FreiFeld", "Lernplattform.Core.Spiel.Wegsuche", "Lernplattform.Core.Spiel.ModellKontext",
+        "Lernplattform.Core.Spiel.Aussehen", "Lernplattform.Core.Spiel.StadtModelle", "Lernplattform.Core.Spiel.ISpielSicht",
+        "Lernplattform.Core.Spiel.SpielFehler", "Lernplattform.Core.Spiel.PyAusgabe", "Lernplattform.Core.Spiel.Jahreszeiten",
+    ];
+
+    /// <summary>
+    /// Weisung P12-179 (E1): Typen mit dem Namensraum der Engine, die das Spiel selbst fuehren und darum beim Spiel-Kern
+    /// bleiben (Spielanbindung): die laufende Stadt (Schritte, Ton, Kassenbuch) und die Merker der Tastatur und Hinweise.
+    /// Ab Teil B liegen sie in <c>Lernplattform.Core</c>, nicht im Engine-Projekt.
+    /// </summary>
+    internal static readonly string[] Spielanbindung =
+    [
+        "Lernplattform.Core.Spiel.Probe.StadtSpiel", "Lernplattform.Core.Spiel.Probe.HinweisWahl",
+        "Lernplattform.Core.Spiel.Probe.Tastenbelegung", "Lernplattform.Core.Stadtbau.StadtbauSpiel",
+    ];
+
     private static bool IstEngine(Type t)
     {
         var ns = (Aussen(t).Namespace) ?? "";
         return EngineNamensraeume.Any(e => ns == e || ns.StartsWith(e + ".", StringComparison.Ordinal));
+    }
+
+    /// <summary>Engine ohne Spielanbindung (Weisung P12-179).</summary>
+    internal static bool IstEngineOhneAnbindung(Type t) => IstEngine(t) && !Spielanbindung.Contains(Aussen(t).FullName);
+
+    /// <summary>
+    /// Weisung P12-179 Schritt 1 und 2: die Engine kennt den Spiel-Kern nicht. Jeder Typ aus <c>Lernplattform.*</c>, den ein
+    /// Engine-Typ nutzt (Signaturen, Felder, IL), ist selbst Engine oder Grundlage; was die Engine vom Spiel braucht, kommt
+    /// ueber die Schnittstellen <see cref="IStadtSicht"/>, <see cref="ISpielSicht"/> und <see cref="ISpielRegeln"/>.
+    /// </summary>
+    [Fact]
+    public void Engine_KenntDenSpielKernNicht_NurGrundlagen()
+    {
+        var engine = AlleTypen.Where(IstEngineOhneAnbindung).ToList();
+        Assert.True(engine.Count > 100, $"nur {engine.Count} Engine-Typen gefunden");
+        var funde = FremdeTypen(engine, t => IstEngineOhneAnbindung(t) || Grundlagen.Contains(Aussen(t).FullName)).ToList();
+        Assert.True(funde.Count == 0, "Engine nutzt den Spiel-Kern:\n" + string.Join("\n", funde.Select(f => $"{f.Engine} -> {f.Genutzt}")));
+    }
+
+    /// <summary>Die Grundlagen nutzen nur sich selbst (sonst zoegen sie den Spiel-Kern oder den Lernteil mit).</summary>
+    [Fact]
+    public void Grundlagen_NutzenNurSichSelbst()
+    {
+        var typen = AlleTypen.Where(t => Grundlagen.Contains(Aussen(t).FullName)).ToList();
+        Assert.Equal(Grundlagen.Length, typen.Select(t => Aussen(t).FullName).Distinct().Count());
+        var funde = FremdeTypen(typen, t => Grundlagen.Contains(Aussen(t).FullName)).ToList();
+        Assert.True(funde.Count == 0, "Grundlage nutzt mehr:\n" + string.Join("\n", funde.Select(f => $"{f.Engine} -> {f.Genutzt}")));
+    }
+
+    /// <summary>Gegenprobe: ein Typ, der den Spiel-Kern (Spielstand, Stadt) nutzt, wird gefunden; Grundlagen nicht.</summary>
+    [Fact]
+    public void Gegenprobe_SpielKern_WirdGefunden()
+    {
+        var funde = FremdeTypen([typeof(KenntSpielKern)], t => Grundlagen.Contains(Aussen(t).FullName)).Select(f => f.Genutzt).ToList();
+        Assert.Contains(typeof(Lernplattform.Core.Spiel.Spielstand).FullName!, funde);
+        Assert.Contains(typeof(Lernplattform.Core.Spiel.Stadt).FullName!, funde);
+        Assert.DoesNotContain(typeof(Lernplattform.Core.Spiel.Py).FullName!, funde);
+        Assert.DoesNotContain(funde, f => f.StartsWith("System.", StringComparison.Ordinal));
+    }
+
+    private sealed class KenntSpielKern
+    {
+#pragma warning disable CS0649, CS0169
+        private Lernplattform.Core.Spiel.Spielstand? _stand;
+#pragma warning restore CS0649, CS0169
+        public static int Zahl(Lernplattform.Core.Spiel.Stadt s) => Lernplattform.Core.Spiel.Py.Int(1L) > 0 ? s.GetHashCode() : 0;
+    }
+
+    /// <summary>Genutzte Typen aus Lernplattform.Core, die <paramref name="erlaubt"/> nicht zulaesst (ohne eigene Typen des Compilers).</summary>
+    internal static IEnumerable<(string Engine, string Genutzt)> FremdeTypen(IEnumerable<Type> typen, Func<Type, bool> erlaubt)
+    {
+        var eigene = new[] { EngineDll, GrundlagenDll, CoreDll };
+        var gesehen = new HashSet<(string, string)>();
+        foreach (var t in typen)
+        {
+            foreach (var g in Genutzt(t).OfType<Type>().SelectMany(Zerlegen))
+            {
+                var a = Aussen(g);
+                if (!eigene.Contains(a.Assembly) || a.FullName is null || a.FullName.Contains('<') || a.Namespace is null
+                    || a.Namespace.StartsWith("System.", StringComparison.Ordinal) || Aussen(t) == a || erlaubt(g))
+                {
+                    continue;
+                }
+                if (gesehen.Add((Aussen(t).FullName!, a.FullName)))
+                {
+                    yield return (Aussen(t).FullName!, a.FullName);
+                }
+            }
+        }
     }
 
     private static Type Aussen(Type t)
@@ -61,8 +170,7 @@ public class EngineGrenzenTests
     [Fact]
     public void Engine_NutztKeinenLernteil_UndNichtsVomWerkzeug()
     {
-        var core = typeof(StadtSzene).Assembly;
-        var engine = core.GetTypes().Where(IstEngine).ToList();
+        var engine = AlleTypen.Where(IstEngine).ToList();
         // Gegenprobe der Auswahl: die Engine ist da und die Zuordnung trifft Typen beider Ordner
         Assert.Contains(typeof(StadtSzene), engine);
         Assert.Contains(typeof(Lernplattform.Core.Stadtbau.StadtFassung), engine);
@@ -343,15 +451,17 @@ public class EngineGrenzenTests
     [Fact]
     public void Lernplattform_EnthaeltVomWerkzeugNurDenGemeinsamenTeil()
     {
-        var core = typeof(StadtSzene).Assembly;
-        Assert.DoesNotContain(core.GetReferencedAssemblies(), a => a.Name!.StartsWith("Stadtbau", StringComparison.Ordinal));
-        var fremd = core.GetTypes().Where(t => t.Namespace is { } ns && !ns.StartsWith("Lernplattform.", StringComparison.Ordinal)
+        foreach (var dll in new[] { EngineDll, GrundlagenDll, CoreDll })
+        {
+            Assert.DoesNotContain(dll.GetReferencedAssemblies(), a => a.Name!.StartsWith("Stadtbau", StringComparison.Ordinal));
+        }
+        var fremd = AlleTypen.Where(t => t.Namespace is { } ns && !ns.StartsWith("Lernplattform.", StringComparison.Ordinal)
             && !ns.StartsWith("Microsoft.", StringComparison.Ordinal) && !ns.StartsWith("System.", StringComparison.Ordinal)).Select(t => t.FullName).ToList();
         Assert.Empty(fremd);
 
         var wurzel = Pfade.Wurzel;
         var projekte = Directory.GetDirectories(Path.Combine(wurzel, "src"), "Lernplattform.*");
-        Assert.Equal(4, projekte.Length);
+        Assert.Equal(6, projekte.Length);
         var funde = projekte.SelectMany(p => Directory.GetFiles(p, "*.csproj")).SelectMany(d => CsprojFunde(File.ReadAllText(d))
             .Select(f => $"{Path.GetFileName(d)}: {f}")).ToList();
         Assert.True(funde.Count == 0, string.Join("\n", funde));
@@ -365,6 +475,58 @@ public class EngineGrenzenTests
         Assert.Single(CsprojFunde("<Compile Include=\"../Stadtbau.Desktop/Updatequelle.cs\" Link=\"x.cs\" />"));
         Assert.Single(CsprojFunde("<EmbeddedResource Include=\"..\\..\\inhalte_stadtbau\\katalog.json\" />"));
     }
+
+    /// <summary>
+    /// Weisung P12-179 Schritt 3: die Trennlinie auch auf Projektebene. Die Engine verweist nur auf die Grundlagen, die
+    /// Grundlagen auf kein eigenes Projekt; Lernplattform.Core und Stadtbau.Core verweisen auf die Engine. Geprueft in den
+    /// Projektdateien (ProjectReference) und in den gebauten Dateien (Verweise der DLL). Jeder Typ mit dem Namensraum der
+    /// Engine liegt in der Engine (ausser der Spielanbindung, die in Lernplattform.Core liegt), jede Grundlage in den Grundlagen.
+    /// </summary>
+    [Fact]
+    public void Projekte_EngineKenntNurDieGrundlagen()
+    {
+        var wurzel = Pfade.Wurzel;
+        string Text(string projekt) => File.ReadAllText(Path.Combine(wurzel, "src", projekt, projekt + ".csproj"));
+        Assert.Empty(ProjektVerweisFunde(Text("Lernplattform.Engine"), ["Lernplattform.Grundlagen"]));
+        Assert.Empty(ProjektVerweisFunde(Text("Lernplattform.Grundlagen"), []));
+        Assert.Equal(["Lernplattform.Engine", "Lernplattform.Grundlagen"], ProjektVerweise(Text("Lernplattform.Core")).Order(StringComparer.Ordinal));
+        Assert.Contains("Lernplattform.Engine", ProjektVerweise(Text("Stadtbau.Core")));
+
+        static List<string> Eigene(Assembly a) => [.. a.GetReferencedAssemblies().Select(n => n.Name!)
+            .Where(n => n.StartsWith("Lernplattform", StringComparison.Ordinal) || n.StartsWith("Stadtbau", StringComparison.Ordinal)).Order(StringComparer.Ordinal)];
+        Assert.Equal(["Lernplattform.Grundlagen"], Eigene(EngineDll));
+        Assert.Empty(Eigene(GrundlagenDll));
+        Assert.Equal(["Lernplattform.Engine", "Lernplattform.Grundlagen"], Eigene(CoreDll));
+        Assert.Equal("Lernplattform.Engine", EngineDll.GetName().Name);
+        Assert.Equal("Lernplattform.Grundlagen", GrundlagenDll.GetName().Name);
+
+        var falsch = AlleTypen.Where(t => t.FullName is { } n && !n.Contains('<') && t.DeclaringType is null).Where(t =>
+            (IstEngineOhneAnbindung(t) && t.Assembly != EngineDll)
+            || (Spielanbindung.Contains(t.FullName) && t.Assembly != CoreDll)
+            || (Grundlagen.Contains(t.FullName) != (t.Assembly == GrundlagenDll))
+            || (t.Assembly == EngineDll && !IstEngineOhneAnbindung(t))).Select(t => $"{t.FullName} in {t.Assembly.GetName().Name}").ToList();
+        Assert.True(falsch.Count == 0, "Typ im falschen Projekt:\n" + string.Join("\n", falsch));
+    }
+
+    /// <summary>Gegenprobe: ein Verweis der Engine auf Lernplattform.Core (oder das Werkzeug) wird gefunden.</summary>
+    [Fact]
+    public void Gegenprobe_EngineVerweistAufCore_WirdGefunden()
+    {
+        var mitCore = "<ItemGroup>\n<ProjectReference Include=\"..\\Lernplattform.Grundlagen\\Lernplattform.Grundlagen.csproj\" />\n"
+            + "<ProjectReference Include=\"..\\Lernplattform.Core\\Lernplattform.Core.csproj\" />\n</ItemGroup>";
+        Assert.Equal(["Lernplattform.Core"], ProjektVerweisFunde(mitCore, ["Lernplattform.Grundlagen"]));
+        Assert.Equal(["Stadtbau.Core"], ProjektVerweisFunde("<ProjectReference Include=\"../Stadtbau.Core/Stadtbau.Core.csproj\"/>", ["Lernplattform.Grundlagen"]));
+        Assert.Empty(ProjektVerweisFunde(File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.Engine", "Lernplattform.Engine.csproj")),
+            ["Lernplattform.Grundlagen"]));
+    }
+
+    /// <summary>Namen der Projekte, auf die eine Projektdatei verweist (ProjectReference).</summary>
+    internal static List<string> ProjektVerweise(string csproj) =>
+        [.. Regex.Matches(csproj, @"<ProjectReference\s+Include=""([^""]*)""").Select(m => Path.GetFileNameWithoutExtension(m.Groups[1].Value.Replace('\\', '/')))];
+
+    /// <summary>Verweise einer Projektdatei, die nicht in <paramref name="erlaubt"/> stehen.</summary>
+    internal static List<string> ProjektVerweisFunde(string csproj, IReadOnlyCollection<string> erlaubt) =>
+        [.. ProjektVerweise(csproj).Where(v => !erlaubt.Contains(v))];
 
     internal static List<string> CsprojFunde(string csproj)
     {

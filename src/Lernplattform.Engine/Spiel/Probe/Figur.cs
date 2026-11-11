@@ -13,6 +13,12 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// </summary>
 public static class Figur
 {
+    /// <summary>RING_COLORS: Kreis um die Spielfigur (<c>SpielBilder.KreisFarben</c> verweist hierher, Weisung P12-179).</summary>
+    public static readonly IReadOnlyDictionary<string, string> KreisFarben = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["pink"] = "#F472B6", ["cyan"] = "#22D3EE", ["gruen"] = "#34D399", ["violett"] = "#A78BFA", ["orange"] = "#FB923C", ["gelb"] = "#FBBF24",
+    };
+
     /// <summary>Name des Modells in modelle.bin.</summary>
     public const string Modell = "figur";
 
@@ -261,7 +267,7 @@ public static class Figur
     public static Netz Ring(PyObjekt? aussehen, float radius, float breite)
     {
         var name = Aussehen.Normalisieren(aussehen)["kreis"] as string ?? "pink";
-        var farbe = Probe.Netz.Farbe(SpielBilder.KreisFarben.GetValueOrDefault(name, "#F472B6"));
+        var farbe = Probe.Netz.Farbe(KreisFarben.GetValueOrDefault(name, "#F472B6"));
         const int Stuecke = 24;
         var teile = new List<Teil>();
         for (var i = 0; i < Stuecke; i++)

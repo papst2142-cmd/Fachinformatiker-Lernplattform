@@ -42,7 +42,7 @@ public static partial class StadtbauPruefung
     /// nicht noetig, keine Personen; Wege, Sortiment und die Regeln zwischen den Etagen prueft <see cref="Etagen"/>.
     /// </remarks>
     public static List<StadtbauFund> Innen(string ort, PyObjekt gebaeude, IReadOnlyList<PyObjekt> personen, GrafikBibliothek? grafik,
-        Geschaefte? geschaefte = null, PyObjekt? innenraeume = null, int etage = 0)
+        ISortiment? geschaefte = null, PyObjekt? innenraeume = null, int etage = 0)
     {
         var funde = new List<StadtbauFund>();
         Grundriss(gebaeude, funde, grafik, etage);
@@ -54,7 +54,7 @@ public static partial class StadtbauPruefung
         Innenraum innen;
         try
         {
-            innen = Innenraum.AusGrundrissMitPersonen(Ansicht(ort, etage), gebaeude, personen, grafik, Geschaefte.Laeden.Contains(ort) ? geschaefte?.Daten : null);
+            innen = Innenraum.AusGrundrissMitPersonen(Ansicht(ort, etage), gebaeude, personen, grafik, SpielKern.Laeden.Contains(ort) ? geschaefte?.Daten : null);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or KeyNotFoundException or InvalidCastException or FormatException or NullReferenceException or ArgumentException)
         {
@@ -71,7 +71,7 @@ public static partial class StadtbauPruefung
         }
         Erreichbarkeit(innen, ort, geschaefte, funde);
         HinterDemTresen(innen, funde);
-        if (geschaefte is not null && innenraeume is not null && Geschaefte.Laeden.Contains(ort))
+        if (geschaefte is not null && innenraeume is not null && SpielKern.Laeden.Contains(ort))
         {
             Sortiment(ort, gebaeude, geschaefte, innenraeume, funde);
         }
@@ -81,7 +81,7 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>Ansicht des Spiels zu einem Ort (Geschaeft oder Schalter).</summary>
-    public static string Ansicht(string ort) => Schalter.Orte.Contains(ort) ? "schalter:" + ort : "geschaeft:" + ort;
+    public static string Ansicht(string ort) => SpielKern.SchalterOrte.Contains(ort) ? "schalter:" + ort : "geschaeft:" + ort;
 
     /// <summary>Ansicht des Spiels zu einer Etage (0 = Erdgeschoss wie <see cref="Ansicht(string)"/>).</summary>
     public static string Ansicht(string ort, int etage) => Ansicht(Stadtbau.Etagen.Schluessel(ort, etage));
@@ -269,15 +269,15 @@ public static partial class StadtbauPruefung
     /// Jede Ware ist zu Fuss erreichbar (Rechnung wie <c>SpielAuslageTests.JedeWareErreichbar</c>: Weg vom Eingang bis
     /// Reichweite 0,9 + halbe kleinere Seite, Ende in 0,9 + 0,3 vom Rand); jede Person ebenso (bis zu ihr hin, Reichweite des Spiels).
     /// </summary>
-    private static void Erreichbarkeit(Innenraum innen, string ort, Geschaefte? geschaefte, List<StadtbauFund> funde)
+    private static void Erreichbarkeit(Innenraum innen, string ort, ISortiment? geschaefte, List<StadtbauFund> funde)
     {
-        foreach (var d in Geschaefte.Auslage(new PyObjekt { { "gebaeude", innen.Gebaeude } }))
+        foreach (var d in SpielKern.Auslage(new PyObjekt { { "gebaeude", innen.Gebaeude } }))
         {
             double x = Py.F(d["x"]), z = Py.F(d["y"]), w = Py.F(d["w"]), t = Py.F(d["h"]);
-            var (ex, ez) = WegEnde(innen, x + (w / 2), z + (t / 2), Wohnung.MoebelReichweite + (Math.Min(w, t) / 2));
+            var (ex, ez) = WegEnde(innen, x + (w / 2), z + (t / 2), SpielKern.MoebelReichweite + (Math.Min(w, t) / 2));
             var dx = Math.Max(Math.Max(x - ex, 0), ex - x - w);
             var dz = Math.Max(Math.Max(z - ez, 0), ez - z - t);
-            if (Math.Sqrt((dx * dx) + (dz * dz)) > Wohnung.MoebelReichweite + 0.3)
+            if (Math.Sqrt((dx * dx) + (dz * dz)) > SpielKern.MoebelReichweite + 0.3)
             {
                 var kennung = Py.Str(d["ware"]);
                 var name = geschaefte is null ? kennung : Warennamen.Name(geschaefte, ort, kennung);
@@ -311,7 +311,7 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>Ware im Sortiment (Ladepruefung des Spiels <see cref="Geschaefte.Pruefen"/>), in einfachen Worten.</summary>
-    private static void Sortiment(string ort, PyObjekt gebaeude, Geschaefte geschaefte, PyObjekt innenraeume, List<StadtbauFund> funde)
+    private static void Sortiment(string ort, PyObjekt gebaeude, ISortiment geschaefte, PyObjekt innenraeume, List<StadtbauFund> funde)
     {
         var mit = InnenGrundriss.MitGrundriss(innenraeume, ort, gebaeude);
         foreach (var fehler in geschaefte.Pruefen(mit).Where(f => f.StartsWith(ort + ": ", StringComparison.Ordinal)))
@@ -333,7 +333,7 @@ public static partial class StadtbauPruefung
                 _ when rest.StartsWith("Teile-Typ ohne Regal: ", StringComparison.Ordinal) =>
                     ($"Für „{Ware(22, "teile:")}“ gibt es kein Regal.", "Ein Regal mit dieser Ware setzen." + Kennung(22, "teile:")),
                 _ when rest.StartsWith("Kleidung ohne Auslage: ", StringComparison.Ordinal) =>
-                    ($"Für „{Ware(23, Kleidung.Art + ":")}“ gibt es keine Auslage.", "Eine Auslage mit dieser Ware setzen." + Kennung(23, Kleidung.Art + ":")),
+                    ($"Für „{Ware(23, SpielKern.KleidungArt + ":")}“ gibt es keine Auslage.", "Eine Auslage mit dieser Ware setzen." + Kennung(23, SpielKern.KleidungArt + ":")),
                 _ => (rest, "Letzten Schritt rückgängig machen."),
             };
             funde.Add(new StadtbauFund(text, tipp, true));

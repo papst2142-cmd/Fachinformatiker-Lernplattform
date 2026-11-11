@@ -37,7 +37,7 @@ public static partial class StadtbauPruefung
 
     private const float FlussWasserHalb = StadtSzene.FlussBreite / 2;
 
-    private static void WasserRegeln(Stadt stadt, Spielstand stand, StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
+    private static void WasserRegeln(IStadtSicht stadt, ISpielSicht stand, StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
     {
         WasserDaten(fassung, funde);
         var teiche = szene.Teiche;
@@ -248,13 +248,13 @@ public static partial class StadtbauPruefung
     /// Jeder sichtbare Ort ist vom Startpunkt eines neuen Spielstands aus zu Fuss erreichbar (gleiche Wegsuche wie die
     /// Figur im Spiel, <see cref="StadtSpiel.GeheZu"/>).
     /// </summary>
-    private static void Erreichbar(Stadt stadt, Spielstand stand, StadtSzene szene, List<StadtbauFund> funde)
+    private static void Erreichbar(IStadtSicht stadt, ISpielSicht stand, StadtSzene szene, List<StadtbauFund> funde)
     {
         if (szene.Orte.Count < 2)
         {
             return;
         }
-        var startOrt = szene.Ort(stadt.Stand(new Spielablauf(stadt.Inhalt).Stand).Ort) ?? szene.Orte[0];
+        var startOrt = szene.Ort(stadt.StartOrt) ?? szene.Orte[0];
         var start = (startOrt.StehX, startOrt.StehZ);
         foreach (var o in szene.Orte.Where(o => o.Id != startOrt.Id))
         {

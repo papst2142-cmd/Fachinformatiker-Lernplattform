@@ -230,7 +230,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     private void AufenthaltDraussen()
     {
-        if (Innen is not { } innen || EtagenGrundriss(innen.Ort) is null || Etagen.Zuletzt(Stadt, Ablauf.Stand, StadtKennung) is null)
+        if (Innen is not { } innen || EtagenGrundriss(innen.Ort) is null || EtageZuletzt(Ablauf.Stand, StadtKennung) is null)
         {
             return;
         }
@@ -251,7 +251,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     private void EtageNachNeustart()
     {
-        if (Etagen.Zuletzt(Stadt, Ablauf.Stand, StadtKennung) is not { } zuletzt || zuletzt.Ort != Jetzt.Ort
+        if (EtageZuletzt(Ablauf.Stand, StadtKennung) is not { } zuletzt || zuletzt.Ort != Jetzt.Ort
             || Szene.Ort(Jetzt.Ort)?.Ansicht is not { } ansicht || Probe.Innenraum.OrtFuer(ansicht) is not { } ort)
         {
             return;
@@ -300,5 +300,33 @@ public sealed partial class StadtSpiel
         FigurRichtung = halt.Blick;
         InnenText();
         EtagenVorbereiten();
+    }
+
+    /// <summary>
+    /// Wo stand die Figur zuletzt (Nico 2b)? Der letzte Eintrag des heutigen Tags unter den Stadt-Schritten und
+    /// <see cref="Etagen.Aufenthalt"/> zaehlt: ist er ein Aufenthalt mit Etage in dieser Stadt am Ort, an dem die Stadt-Uhr die Figur
+    /// sieht, steht sie dort; sonst (alte Spielstaende, nach dem Verlassen, nach einem Weg, an einem neuen Tag) wie bisher
+    /// vor dem Haus (null). Weisung P12-179: aus <c>Etagen</c> hierher (liest den Verlauf des Spielstands, Spielanbindung).
+    /// </summary>
+    internal static (string Ort, int Etage, string? Uebergang)? EtageZuletzt(Spielstand stand, string stadtId)
+    {
+        SpielEreignis? letzter = null;
+        foreach (var e in stand.Verlauf)
+        {
+            if (e.Art is not (Etagen.Aufenthalt or Stadt.Gegangen or Stadt.Gelaufen or Stadt.Gewartet))
+            {
+                continue;
+            }
+            if (Py.IstNurInt(SpielDaten.Get(e.Daten, "tag")) && Py.Int(e.Daten["tag"]) == stand.Tag)
+            {
+                letzter = e;
+            }
+        }
+        if (letzter is not { Art: Etagen.Aufenthalt } a || SpielDaten.Get(a.Daten, "stadt") as string != stadtId || SpielDaten.Get(a.Daten, "ort") is not string ort
+            || !Py.IstNurInt(SpielDaten.Get(a.Daten, "etage")) || Py.Int(a.Daten["etage"]) < 0 || Py.Int(a.Daten["etage"]) > Etagen.Hoechstens)
+        {
+            return null;
+        }
+        return (ort, (int)Py.Int(a.Daten["etage"]), SpielDaten.Get(a.Daten, "uebergang") as string);
     }
 }

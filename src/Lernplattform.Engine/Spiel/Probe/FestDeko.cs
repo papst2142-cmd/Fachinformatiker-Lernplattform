@@ -612,7 +612,7 @@ public static class FestDeko
         double flurY = Py.F(flur["y"]), flurH = Py.F(flur["h"]);
         var (sx, sy) = Wege.StartPlatz(gebaeude);
         var personenPlaetze = personen.Select(Wege.Platz).OfType<(double, double)>().ToList();
-        var zonen = Wohnung.TuerFlaechen(gebaeude);
+        var zonen = SpielKern.Regeln.TuerFlaechen(gebaeude);
         var hindernisse = Wege.Hindernisse(gebaeude);
 
         var frei = new HashSet<(long, long)>(new LaufOrt(gebaeude, personen).Frei);
@@ -647,7 +647,7 @@ public static class FestDeko
                     .FirstOrDefault(r => Py.F(r["x"]) <= 0 && Math.Abs(Py.F(r["y"]) + Py.F(r["h"]) - flurY) < 1e-6);
                 if (raum is not null && Get(raum, "tuer") is PyObjekt tuer && tuer.Count > 0)
                 {
-                    kandidaten.Add((Py.F(tuer["bis"]) + Wohnung.TuerFrei + Rand - minX, Py.F(raum["y"]) + Py.F(raum["h"]) - Rand - maxZ));
+                    kandidaten.Add((Py.F(tuer["bis"]) + SpielKern.TuerFrei + Rand - minX, Py.F(raum["y"]) + Py.F(raum["h"]) - Rand - maxZ));
                 }
             }
             else if (feste is not null && Get(feste, platz) is List<object?> p)

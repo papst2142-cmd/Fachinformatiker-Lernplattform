@@ -226,7 +226,7 @@ public class PruefungAussenTests
         var d = Daten.Spiel;
         var stadt = d.Fassung.StadtFuer(d.Fassung.MitKarte(d.Inhalt));
         var neu = StadtSzene.Bauen(stadt, null, d.Grafik).Laternen[19];
-        var spaet = StadtSzene.Bauen(stadt, StadtbauPruefung.Probestand(stadt.Inhalt).Stand, d.Grafik).Laternen[19];
+        var spaet = StadtSzene.Bauen(stadt, StadtbauSpiel.Probestand(stadt.Inhalt).Stand, d.Grafik).Laternen[19];
         Assert.True(neu.Verschoben <= 0.2f);
         Assert.True(spaet.Verschoben > 0.2f);
     }

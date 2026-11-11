@@ -133,7 +133,7 @@ public sealed partial class StadtSzene
     }
 
     /// <summary>Alle Eingaben eines Orts als Text (Inhalt des Orts, sichtbare Teile seines Modells, Fussweg, Tuer, Sperren).</summary>
-    private static string OrtSchluessel(Stadt stadt, PyObjekt ort, string id, List<(int Nr, PyObjekt Teil)> sichtbar, float? modellTuer, bool sichtbarerWeg, string sperren)
+    private static string OrtSchluessel(IStadtSicht stadt, PyObjekt ort, string id, List<(int Nr, PyObjekt Teil)> sichtbar, float? modellTuer, bool sichtbarerWeg, string sperren)
     {
         var sb = new StringBuilder();
         sb.Append(PythonJson.Standard(ort)).Append('\n');

@@ -109,7 +109,8 @@ public class FestzeitTests
         };
         var muster = new Regex(@"\b(DateTime|DateTimeOffset|DateOnly)\s*\.\s*(Now|Today|UtcNow)\b|TimeProvider\.System", RegexOptions.CultureInvariant);
         var gefunden = new Dictionary<string, int>();
-        foreach (var ordner in new[] { "src/Lernplattform.Core/Spiel", "src/Lernplattform.App/Spiel" })
+        // Weisung P12-179: die eigene Engine (Spiel/Probe, Stadtbau) liegt jetzt in src/Lernplattform.Engine
+        foreach (var ordner in new[] { "src/Lernplattform.Core/Spiel", "src/Lernplattform.Engine", "src/Lernplattform.App/Spiel" })
         {
             foreach (var datei in Directory.EnumerateFiles(Path.Combine(Pfade.Wurzel, ordner), "*.cs", SearchOption.AllDirectories))
             {

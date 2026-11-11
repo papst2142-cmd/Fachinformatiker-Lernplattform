@@ -26,13 +26,13 @@ public static class Kleidung
     public const string BuchKleidung = "Kleidung";
 
     /// <summary>Art der Ware im Geschaeft (<see cref="Ware.Typ"/> ist der Slot).</summary>
-    public const string Art = "kleidung";
+    public const string Art = Probe.SpielKern.KleidungArt;
 
     /// <summary>Das Geschaeft mit Kleidung (Id wie in stadt.json neue_orte).</summary>
-    public const string Laden = "kaufhaus";
+    public const string Laden = Probe.SpielKern.KleidungLaden;
 
     public const string Ueberschrift = "Kleidung";
-    public const string FuerDieFigur = "Kleidung für deine Figur.";
+    public const string FuerDieFigur = Probe.SpielKern.KleidungFuerDieFigur;
     public const string KnopfAnziehen = "Anziehen";
     public const string KnopfAblegen = "Ablegen";
     public const string Nichts = "nichts";

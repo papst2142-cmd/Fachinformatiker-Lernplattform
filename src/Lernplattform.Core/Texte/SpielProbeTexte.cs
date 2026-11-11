@@ -46,7 +46,7 @@ public static class SpielProbeTexte
     /// Weisung P12-74: Hinweis in einem Geschaeft auf einer Etage ohne Verkaufsperson (Obergeschoss); im Erdgeschoss bleibt
     /// „Tippe auf eine Ware oder sprich mit dem Verkauf.“
     /// </summary>
-    public const string EtageOhneVerkauf = "Tippe auf eine Ware, um sie anzusehen.";
+    public const string EtageOhneVerkauf = Spiel.Probe.Innenraum.EtageOhneVerkauf;
 
     public const string ImFreien = "Tippe auf ein Haus, einen Namen oder einen freien Platz, um hinzugehen.";
     // Phase 8 W10 (Sammelliste 148, Nico 1b): Klappknopf des Hinweisfelds (Bildschirmleser)

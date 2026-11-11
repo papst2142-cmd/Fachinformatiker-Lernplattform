@@ -1,4 +1,4 @@
-using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 
 namespace Lernplattform.Core.Stadtbau;
 
@@ -9,18 +9,18 @@ namespace Lernplattform.Core.Stadtbau;
 /// </summary>
 public static class Warennamen
 {
-    public static string Name(Geschaefte geschaefte, string ort, string kennung)
+    public static string Name(ISortiment geschaefte, string ort, string kennung)
     {
         if (kennung.StartsWith("teile:", StringComparison.Ordinal))
         {
-            return Geschaefte.TypName(kennung["teile:".Length..], geschaefte.Inhalt);
+            return SpielKern.Regeln.TeilName(kennung["teile:".Length..], geschaefte.Inhalt);
         }
-        if (kennung.StartsWith(Kleidung.Art + ":", StringComparison.Ordinal))
+        if (kennung.StartsWith(SpielKern.KleidungArt + ":", StringComparison.Ordinal))
         {
-            return Kleidung.Abteilung(geschaefte.Daten, kennung[(Kleidung.Art.Length + 1)..]);
+            return SpielKern.Regeln.Abteilung(geschaefte.Daten, kennung[(SpielKern.KleidungArt.Length + 1)..]);
         }
-        return geschaefte.Finden(ort, Geschaefte.ArtMoebel, kennung)?.Name
-            ?? Geschaefte.Laeden.Select(l => geschaefte.Finden(l, Geschaefte.ArtMoebel, kennung)?.Name).FirstOrDefault(n => n is not null)
+        return geschaefte.MoebelName(ort, kennung)
+            ?? SpielKern.Laeden.Select(l => geschaefte.MoebelName(l, kennung)).FirstOrDefault(n => n is not null)
             ?? kennung;
     }
 

@@ -43,7 +43,7 @@ public static partial class AutoMessung
             if (flaeche.InstancingDa && ReferenceEquals(spiel.Szene, szene))
             {
                 var fest = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, StadtFlaeche.OhneSparenFuerTests);
-                var bewegt = Core.Stadtbau.StadtbauGrenzen.Bewegt(spiel, flaeche.LetzterAbstand > StadtFlaeche.AutoFern, StadtFlaeche.AutosHoechstens);
+                var bewegt = Core.Stadtbau.StadtbauSpiel.Bewegt(spiel, flaeche.LetzterAbstand > StadtFlaeche.AutoFern, StadtFlaeche.AutosHoechstens);
                 verglichen++;
                 if (fest != (flaeche.LetzteStadtDreiecke, flaeche.LetzteStadtAufrufe)
                     || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe))

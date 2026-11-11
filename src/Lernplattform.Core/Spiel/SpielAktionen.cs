@@ -6,9 +6,6 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Lernplattform.Core.Spiel;
 
-/// <summary>Fehler einer Spielaktion mit dem Text fuer die Anzeige (ValueError in Python).</summary>
-public sealed class SpielFehler(string text) : Exception(text);
-
 /// <summary>
 /// Phase 7, W2: die Aktionen der Klasse <c>Game</c> aus <c>fisi_game.py</c> (Python 0.63.2) ohne Firma,
 /// als reine Funktionen: Jede Aktion prueft den Spielstand und liefert die Ereignisse, die Python

@@ -204,15 +204,15 @@ public static partial class StadtbauPruefung
             }
             // Start: im Erdgeschoss der Eingang, oben die erste Ankunft
             (double X, double Y) start = k == 0 ? (innen.StartX, innen.StartZ) : halte.Count > 0 ? (halte[0].h.X, halte[0].h.Y) : (innen.StartX, innen.StartZ);
-            var ziele = (k == 0 ? [] : Geschaefte.Auslage(new PyObjekt { { "gebaeude", g } }).Select(d => (d, ware: true)))
+            var ziele = (k == 0 ? [] : SpielKern.Auslage(new PyObjekt { { "gebaeude", g } }).Select(d => (d, ware: true)))
                 .Concat(halte.SelectMany(p => Stadtbau.Etagen.Stuecke(g, p.u.Id)).Select(d => (d, ware: false)));
             foreach (var (d, ware) in ziele)
             {
                 double x = Py.F(d["x"]), z = Py.F(d["y"]), w = Py.F(d["w"]), t = Py.F(d["h"]);
-                var (ex, ez) = WegEnde(innen, start.X, start.Y, x + (w / 2), z + (t / 2), Wohnung.MoebelReichweite + (Math.Min(w, t) / 2));
+                var (ex, ez) = WegEnde(innen, start.X, start.Y, x + (w / 2), z + (t / 2), SpielKern.MoebelReichweite + (Math.Min(w, t) / 2));
                 var dx = Math.Max(Math.Max(x - ex, 0), ex - x - w);
                 var dz = Math.Max(Math.Max(z - ez, 0), ez - z - t);
-                if (Math.Sqrt((dx * dx) + (dz * dz)) > Wohnung.MoebelReichweite + 0.3)
+                if (Math.Sqrt((dx * dx) + (dz * dz)) > SpielKern.MoebelReichweite + 0.3)
                 {
                     Rot(k, ware
                         ? $"Die Ware „{Py.Str(d["ware"])}“ ({InnenKatalog.Name(Py.Str(d["typ"]))}) im {Name(k)} ist zu Fuß nicht erreichbar."

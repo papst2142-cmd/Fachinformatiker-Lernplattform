@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Phase 13 Welle 2 (Weisung P12-17): Logik des Stadtbau-Werkzeugs ohne Oberflaeche (Projekt, Verlauf, Sicherungen,
-       Bearbeitung, Export, Senden). Format und Pruefung liegen im gemeinsamen Teil Lernplattform.Core/Stadtbau. -->
+       Bearbeitung, Export, Senden). Format und Pruefung liegen in der eigenen Engine (Lernplattform.Engine, Weisung P12-179). -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Stadtbau.Core</RootNamespace>
@@ -15,6 +15,8 @@
     <EmbeddedResource Include="..\..\inhalte_stadtbau\namen_de.json" LogicalName="inhalte_stadtbau/namen_de.json" Visible="false" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Weisung P12-179: die eigene Engine (Szene, Format, Pruefung) und der Spiel-Kern (Stadt, Probestand) -->
+    <ProjectReference Include="..\Lernplattform.Engine\Lernplattform.Engine.csproj" />
     <ProjectReference Include="..\Lernplattform.Core\Lernplattform.Core.csproj" />
   </ItemGroup>
 </Project>

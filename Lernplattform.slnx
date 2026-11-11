@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Lernplattform.Grundlagen/Lernplattform.Grundlagen.csproj" />
+    <Project Path="src/Lernplattform.Engine/Lernplattform.Engine.csproj" />
     <Project Path="src/Lernplattform.Core/Lernplattform.Core.csproj" />
     <Project Path="src/Lernplattform.App/Lernplattform.App.csproj" />
     <Project Path="src/Lernplattform.Desktop/Lernplattform.Desktop.csproj" />

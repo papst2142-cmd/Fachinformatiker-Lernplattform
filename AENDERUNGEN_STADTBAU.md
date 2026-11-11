@@ -3,6 +3,12 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.38.0
+
+Umbau im Inneren, an der Bedienung ändert sich nichts.
+
+- Der gemeinsame Teil mit dem Spiel (Stadt bauen, prüfen, zeichnen) ist jetzt ein eigener Baustein, die „Engine“. Das Werkzeug ist ihr Editor. Städte, Prüfungen und die 3D-Ansicht bleiben genau wie bisher.
+
 ## S 0.37.1
 
 Kleine Absicherung im gemeinsamen Teil mit dem Spiel.

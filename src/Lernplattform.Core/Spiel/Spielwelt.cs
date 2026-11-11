@@ -138,12 +138,7 @@ public static class Spielwelt
     }
 
     /// <summary>Abstand eines Punkts zum Rechteck (x, y, w, h), 0 innen.</summary>
-    public static double Abstand(double rx, double ry, double rw, double rh, double x, double y)
-    {
-        var dx = Math.Max(Math.Max(rx - x, 0), x - rx - rw);
-        var dy = Math.Max(Math.Max(ry - y, 0), y - ry - rh);
-        return double.Hypot(dx, dy);
-    }
+    public static double Abstand(double rx, double ry, double rw, double rh, double x, double y) => Probe.SpielKern.Abstand(rx, ry, rw, rh, x, y);
 
     /// <summary>Das Sortiment des Online-Shops: (Laden, Ware) aller Moebel aus <see cref="ShopLaeden"/>.</summary>
     public static List<(string Laden, Ware Ware)> Sortiment(Geschaefte geschaefte) =>

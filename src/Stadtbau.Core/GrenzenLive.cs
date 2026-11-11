@@ -15,7 +15,7 @@ namespace Stadtbau.Core;
 /// Blick nach Norden und Sueden (wie der Start-Test des Spiels); gewertet wird das teuerste Bild.</item>
 /// <item>Waermekarte: je Feld 1 × 1 der Karte die Dreiecke der nahen Netze (Mitte jedes Dreiecks), nur auf der Karte.</item>
 /// </list>
-/// Zu jedem Bild kommt, was sich bewegt (Autos oder Festgestalten, Figur, Kreis; <see cref="StadtbauGrenzen.Bewegt"/>).
+/// Zu jedem Bild kommt, was sich bewegt (Autos oder Festgestalten, Figur, Kreis; <see cref="StadtbauSpiel.Bewegt"/>).
 /// Bildformat 16:9 (<see cref="BildBreite"/> × <see cref="BildHoehe"/>, PC; das Tablet zeigt mit 16:10 etwas weniger).
 /// </summary>
 public sealed record GrenzenLive(
@@ -79,8 +79,8 @@ public sealed record GrenzenLive(
         var zaehlung = new StadtbauGrenzen.Draussen(szene, fertig);
         var ohne = OhneSparenFuerTests;
         var bilder = 0;
-        var bewegtNah = StadtbauGrenzen.Bewegt(spiel, false, uhr: uhr);
-        var bewegtFern = StadtbauGrenzen.Bewegt(spiel, true, uhr: uhr);
+        var bewegtNah = StadtbauSpiel.Bewegt(spiel, false, uhr: uhr);
+        var bewegtFern = StadtbauSpiel.Bewegt(spiel, true, uhr: uhr);
         (long, int) Bild(float x, float z, float abstand, float drehung)
         {
             var k = new Kamera(x, z, abstand) { Neigung = Bauen3D.NeigungSpiel, Drehung = drehung };

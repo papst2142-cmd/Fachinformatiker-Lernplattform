@@ -19,7 +19,7 @@ public sealed record ModellKontext(object? Stufe, bool Gegruendet, object? Filia
 public static class StadtModelle
 {
     /// <summary>_map_context: ohne Spielstand Stufe 0, keine Firma, Startwohnung.</summary>
-    public static ModellKontext Kontext(Spielstand? stand, PyObjekt inhalt)
+    public static ModellKontext Kontext(ISpielSicht? stand, PyObjekt inhalt)
     {
         if (stand is null)
         {

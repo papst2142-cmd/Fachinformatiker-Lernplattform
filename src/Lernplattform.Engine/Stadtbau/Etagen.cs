@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lernplattform.Core.Daten;
+using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Spiel;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
@@ -259,8 +260,8 @@ public static class Etagen
         return Einrichtung(Gebaeude(eg, etage))
             .Where(d => Get(d, FeldLink) is string && IstStueck(Py.Str(d["typ"])))
             .Select(d => (d, u: uebergaenge.FirstOrDefault(u => u.Id == Py.Str(d[FeldLink]) && u.Auf(etage) is not null && Arten.Contains(u.Art)),
-                a: Spielwelt.Abstand(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]), x, y)))
-            .Where(p => p.u is not null && p.a <= Wohnung.MoebelReichweite)
+                a: SpielKern.Abstand(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]), x, y)))
+            .Where(p => p.u is not null && p.a <= SpielKern.MoebelReichweite)
             .OrderBy(p => p.a).Select(p => ((Uebergang, PyObjekt)?)(p.u!, p.d)).FirstOrDefault();
     }
 
@@ -290,34 +291,6 @@ public static class Etagen
     public const string AktionEtage = "etage:";
 
     public const string AktionFahrstuhl = "fahrstuhl:";
-
-    /// <summary>
-    /// Wo stand die Figur zuletzt (Nico 2b)? Der letzte Eintrag des heutigen Tags unter den Stadt-Schritten und
-    /// <see cref="Aufenthalt"/> zaehlt: ist er ein Aufenthalt mit Etage in dieser Stadt am Ort, an dem die Stadt-Uhr die Figur
-    /// sieht, steht sie dort; sonst (alte Spielstaende, nach dem Verlassen, nach einem Weg, an einem neuen Tag) wie bisher
-    /// vor dem Haus (null).
-    /// </summary>
-    public static (string Ort, int Etage, string? Uebergang)? Zuletzt(Stadt stadt, Spielstand stand, string stadtId)
-    {
-        SpielEreignis? letzter = null;
-        foreach (var e in stand.Verlauf)
-        {
-            if (e.Art is not (Aufenthalt or Stadt.Gegangen or Stadt.Gelaufen or Stadt.Gewartet))
-            {
-                continue;
-            }
-            if (Py.IstNurInt(Get(e.Daten, "tag")) && Py.Int(e.Daten["tag"]) == stand.Tag)
-            {
-                letzter = e;
-            }
-        }
-        if (letzter is not { Art: Aufenthalt } a || Get(a.Daten, "stadt") as string != stadtId || Get(a.Daten, "ort") is not string ort
-            || !Py.IstNurInt(Get(a.Daten, "etage")) || Py.Int(a.Daten["etage"]) < 0 || Py.Int(a.Daten["etage"]) > Hoechstens)
-        {
-            return null;
-        }
-        return (ort, (int)Py.Int(a.Daten["etage"]), Get(a.Daten, "uebergang") as string);
-    }
 
     /// <summary>Daten eines Aufenthalts (Etage null = draussen).</summary>
     public static PyObjekt AufenthaltDaten(long tag, string stadtId, string ort, int? etage, string? uebergang) => new()

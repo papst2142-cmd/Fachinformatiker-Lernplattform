@@ -50,37 +50,6 @@ public static partial class StadtbauPruefung
 
     private static string Zf(double wert) => wert.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"));
 
-    /// <summary>
-    /// Spielstand fuer Pruefung, 3D-Ansicht und Probe: ein neuer Stand ohne Speicher, in dem alle Orte zu sehen sind
-    /// (200 fertige Tage, eigene Firma auf der hoechsten Stufe, Zweigstelle, Serverfarm frei), wie die Tests des Spiels.
-    /// Nur Werkzeug und Tests rufen ihn; das Spiel nutzt immer den echten Spielstand.
-    /// </summary>
-    /// <remarks>
-    /// Sammelliste 238 (Weisungen P12-81/P12-83): bis S 0.18.0 fehlte die Serverfarm, darum fehlte das Rechenzentrum
-    /// Lokschuppen in der 3D-Ansicht des Werkzeugs und die Pruefung draussen pruefte es nicht (falsches Gruen).
-    /// </remarks>
-    public static Spielablauf Probestand(PyObjekt inhalt)
-    {
-        var ablauf = new Spielablauf(inhalt);
-        ablauf.Profil("Probe", new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
-        ablauf.Stand.TageFertig = 200;
-        ablauf.Stand.Firma = new PyObjekt { { "stufe", 5L }, { "name", "Probe" }, { "tag", 1L } };
-        ablauf.Stand.Zweigstelle = new PyObjekt { { "stufe", 1L }, { "tag", 1L } };
-        if (!ProbestandOhneFarmFuerTests)
-        {
-            ablauf.Stand.FarmFrei = 1L;
-        }
-        return ablauf;
-    }
-
-    /// <summary>Gegenprobe Sammelliste 238: Probestand wie bis S 0.18.0 (ohne Serverfarm).</summary>
-    public static bool ProbestandOhneFarmFuerTests
-    {
-        get => OhneFarm.Value;
-        set => OhneFarm.Value = value;
-    }
-
-    private static readonly AsyncLocal<bool> OhneFarm = new();
 
     /// <summary>Alle Regeln aussen fuer eine Fassung (Spielinhalte wie bei <see cref="Inhalt"/>); leer = in Ordnung.</summary>
     public static List<StadtbauFund> Aussen(StadtFassung fassung, PyObjekt inhalt, GrafikBibliothek? grafik, PyObjekt? feste = null,
@@ -114,12 +83,12 @@ public static partial class StadtbauPruefung
             funde.Add(new StadtbauFund("Die Stadt lässt sich nicht laden (" + fehler.GetType().Name + ").", "Letzte Änderung rückgängig machen.", true));
             return funde;
         }
-        Stadt stadt;
-        Spielstand stand;
+        IStadtSicht stadt;
+        ISpielSicht stand;
         try
         {
-            stadt = fassung.StadtFuer(fassung.MitKarte(inhalt));
-            stand = Probestand(stadt.Inhalt).Stand;
+            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt));
+            stand = SpielKern.Regeln.Probestand(stadt.Inhalt);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException or OverflowException or SpielFehler or ArgumentException)
         {
@@ -357,7 +326,7 @@ public static partial class StadtbauPruefung
         [.. (liste as List<object?> ?? []).OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1])))];
 
     /// <summary>Jeder Fussweg (Orte und Zierhaeuser) endet auf einer Strasse.</summary>
-    private static void Fusswege(Stadt stadt, StadtSzene szene, List<StadtbauFund> funde)
+    private static void Fusswege(IStadtSicht stadt, StadtSzene szene, List<StadtbauFund> funde)
     {
         var strassen = szene.Strassen;
         void Pruefen(string name, object? zugang)
@@ -395,7 +364,7 @@ public static partial class StadtbauPruefung
     /// Gehwegmitte = Tuermitte, der Gehweg beginnt nicht im Haus, die Tuer sitzt auf einer Wand eines Blocks ihres Hauses
     /// (mit CC0-Modellen bis <see cref="WandAbstandModell"/> dahinter; Rechnung wie <c>StadtTuerenTests</c>).
     /// </summary>
-    private static void Tueren(Stadt stadt, Spielstand stand, StadtSzene szene, List<StadtbauFund> funde)
+    private static void Tueren(IStadtSicht stadt, ISpielSicht stand, StadtSzene szene, List<StadtbauFund> funde)
     {
         var modelle = StadtModelle.Modelle(stadt.Inhalt, stadt.Daten);
         var kontext = StadtModelle.Kontext(stand, stadt.Inhalt);
@@ -510,7 +479,7 @@ public static partial class StadtbauPruefung
     /// Bahnuebergaenge (wie <c>StadtDarstellungTests</c>), Stamm eines Baums und Beete bleiben draussen; kein Haus steht auf
     /// dem Gleis (Bahnhoefe stehen dicht daneben, das ist erlaubt).
     /// </summary>
-    private static void Lichtraum(Stadt stadt, Spielstand stand, StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
+    private static void Lichtraum(IStadtSicht stadt, ISpielSicht stand, StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
     {
         if (szene.Gleise.Count == 0)
         {
@@ -829,7 +798,7 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>Paketplatz vor der Wohnung: ausserhalb der Haeuser, neben dem Fussweg, frei von Fest-Deko und Baeumen.</summary>
-    private static void Paketplatz(Stadt stadt, StadtSzene szene, List<StadtbauFund> funde)
+    private static void Paketplatz(IStadtSicht stadt, StadtSzene szene, List<StadtbauFund> funde)
     {
         if (Lieferpaket.WohnOrt(szene) is not { } wohnort)
         {
