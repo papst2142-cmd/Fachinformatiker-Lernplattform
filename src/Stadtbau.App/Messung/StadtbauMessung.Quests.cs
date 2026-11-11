@@ -144,6 +144,18 @@ public static partial class StadtbauMessung
             return Task.CompletedTask;
         }, einmalig: true);
         await QuestPruefungAbwartenAsync(a);
+        // Stelle im Spiel mit ihrem Namen, nie der Kennung (buero = Buero-Ort der Karte); Gegenprobe alte Anzeige
+        var stellen = p.Questgeber().Where(q => q.Bestand && q.Stelle is not null).Select(q => q.Stelle!).Distinct().ToList();
+        foreach (var s in stellen.Where(s => a.StelleName(s) == s))
+        {
+            Fund("Questgeber: Stelle im Spiel zeigt die Kennung „" + s + "“ statt des Namens");
+        }
+        Hauptansicht.StelleAltFuerTests = true;
+        if (!stellen.Any(s => a.StelleName(s) == s))
+        {
+            Fund("Questgeber: Gegenprobe Kennung statt Name greift nicht");
+        }
+        Hauptansicht.StelleAltFuerTests = false;
         var person = p.QuestgeberNeu();
         a.QgOeffnen(person);
         await BildAsync(a);

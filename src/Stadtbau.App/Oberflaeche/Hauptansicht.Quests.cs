@@ -864,9 +864,29 @@ public sealed partial class Hauptansicht
     {
         { Draussen: true } p => Texte.QgPlatzDraussenText(p.X, p.Y),
         { } p => Texte.QgPlatzText(_projekt?.OrtName(p.InnenSchluessel) ?? p.Ort),
-        null when q.Bestand => Texte.QgAmAltenPlatz + (q.Stelle is { } s ? " (" + (_projekt?.OrtName(s) ?? s) + ")" : ""),
+        null when q.Bestand => Texte.QgAmAltenPlatz + (q.Stelle is { } s ? " (" + StelleName(s) + ")" : ""),
         _ => Texte.QgOhnePlatzKurz,
     };
+
+    /// <summary>
+    /// Name der Stelle im Spiel (buero = Bueroort der Karte, Kunden-Ort) ueber den Ort der Karte, nie die Kennung
+    /// (Regel 274/282: Name statt Kennung). Gegenprobe <see cref="StelleAltFuerTests"/>: wie vorher die Kennung.
+    /// </summary>
+    internal string StelleName(string stelle)
+    {
+        if (_projekt is null || StelleAltFuerTests)
+        {
+            return _projekt?.OrtName(stelle) ?? stelle;
+        }
+        if (_daten is not null)
+        {
+            _geschichte ??= Spielgeschichte.Aus(_daten.Inhalt, _projekt.AussenStand);
+        }
+        return _geschichte is not null && _geschichte.OrtJeStelle.TryGetValue(stelle, out var ort) ? _projekt.OrtName(ort) : _projekt.OrtName(stelle);
+    }
+
+    /// <summary>Gegenprobe des Start-Tests: Stelle mit ihrer Kennung wie in der ersten Fassung von Q1.</summary>
+    internal static bool StelleAltFuerTests { get; set; }
 
     private void QgListeZeigen()
     {
