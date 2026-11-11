@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.41.0
+
+Quests und Questgeber kommen ins Spiel.
+
+- Die Lernplattform liest jetzt die Quests und Questgeber aus der Stadt-Datei. Der gelbe Hinweis „erscheint erst mit dem Einbau“ fällt darum weg.
+- Die Prüfung nutzt zusätzlich die Ladeprüfung des Spiels: was das Spiel so nicht laden würde, steht rot in der Liste und sperrt Speichern und Senden.
+- Personen draußen zeichnet die 3D-Ansicht jetzt selbst wie das Spiel; „Grenzen live“ zählt sie dort genau einmal mit.
+
 ## S 0.40.0
 
 Quests und Questgeber im Werkzeug.

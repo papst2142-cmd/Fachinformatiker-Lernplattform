@@ -319,7 +319,15 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return true;
         }
+        // Welle Q2: auf einen Questgeber draussen getippt: bis vor ihn
+        (x, z) = ZielBeimQuestgeber(x, z);
         var weg = MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (x, z)));
+        if (weg.Count == 0 && QuestgeberImFreien())
+        {
+            // schon beim Questgeber
+            Geaendert?.Invoke();
+            return false;
+        }
         if (weg.Count == 0)
         {
             Zeile = SpielProbeTexte.NichtErreichbar;
@@ -550,7 +558,7 @@ public sealed partial class StadtSpiel
                 Betreten();
             }
         }
-        else if (ImFreien)
+        else if (ImFreien && !QuestgeberImFreien())
         {
             Zeile = MitUhrHinweis(SpielProbeTexte.ImFreien);
         }
@@ -878,6 +886,8 @@ public sealed partial class StadtSpiel
             Zeile = Zeile + "\n" + Spielwelt.PaketText(pakete);
             Knoepfe = [(Spielwelt.AktionPaket, Spielwelt.KnopfPaket)];
         }
+        // Welle Q2: Questgeber draussen, die zu diesem Ort gehoeren
+        QuestgeberAmOrt(ort);
     }
 
     /// <summary>
@@ -920,6 +930,7 @@ public sealed partial class StadtSpiel
         NeueSzene();
         InnenNeu();
         InnenText();
+        DraussenText();
         Geaendert?.Invoke();
     }
 

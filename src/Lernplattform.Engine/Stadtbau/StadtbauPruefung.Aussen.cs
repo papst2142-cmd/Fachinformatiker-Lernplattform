@@ -87,7 +87,8 @@ public static partial class StadtbauPruefung
         ISpielSicht stand;
         try
         {
-            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt));
+            // Welle Q2: die Quest-Ebene prueft StadtbauPruefung.Inhalt bzw. die Quest-Pruefung des Werkzeugs
+            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt), nachsichtig: true);
             stand = SpielKern.Regeln.Probestand(stadt.Inhalt);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException or OverflowException or SpielFehler or ArgumentException)

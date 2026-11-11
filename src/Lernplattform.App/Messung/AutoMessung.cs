@@ -205,6 +205,8 @@ public static partial class AutoMessung
             funde += await P10P1SpielAsync(ansicht);           // Patch A 0.29.1: Festverkehr wechselt mit der Uhr
             Zeitplan("P13W5EtagenAsync");
             funde += await P13W5EtagenAsync(ansicht);          // Phase 13 W5: Etage wechseln (Treppe im Moebelhaus)
+            Zeitplan("Q2QuestgeberAsync");
+            funde += await Q2QuestgeberAsync(ansicht);         // Welle Q2: Questgeber draussen und im Laden, Nahansicht mit 12 draussen
         }
         if (MitLernen)
         {
@@ -597,6 +599,16 @@ public static partial class AutoMessung
                 // Phase 13 W5: Etagen (Knopf vor der Treppe, 1. Obergeschoss)
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? P13W5Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Welle Q2: Questgeber draussen und im Laden
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? Q2Ansichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {

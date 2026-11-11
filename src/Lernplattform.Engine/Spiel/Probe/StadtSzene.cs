@@ -178,6 +178,63 @@ public sealed partial class StadtSzene
     public IReadOnlyList<Haltestelle> Haltestellen { get; private init; } = [];
 
     /// <summary>
+    /// Welle Q2 (Weisung P12-190): Questgeber, die draussen stehen (Quest-Ebene der Fassung, hoechstens 12). Nur Darstellung
+    /// im Netz des Hauses ihres Orts (<see cref="QuestgeberJeHaus"/>, kein neuer Zeichenaufruf); sie versperren keinen Weg (Laufraster unveraendert). Fassung 0: keine.
+    /// </summary>
+    public IReadOnlyList<Stadtbau.Questebene.Draussen> Questgeber { get; private init; } = [];
+
+    /// <summary>
+    /// Welle Q2: Ort, zu dem ein Questgeber draussen gehoert: der mit dem naechsten Standplatz (gleich weit: erster der
+    /// Karte). Das Spiel spricht ihn an diesem Ort an, und er steht im Netz des Hauses dieses Orts (<see cref="HausNetz"/>).
+    /// </summary>
+    public string? QuestgeberOrt(Stadtbau.Questebene.Draussen q) =>
+        Orte.OrderBy(o => ((o.StehX - q.X) * (o.StehX - q.X)) + ((o.StehZ - q.Z) * (o.StehZ - q.Z))).FirstOrDefault()?.Id;
+
+    /// <summary>
+    /// Welle Q2: die Questgeber draussen je Haus. Ein Questgeber steht im Netz des Hauses seines Orts: so gelten fuer ihn
+    /// Sichtkegel und Fernform des Hauses (Welle D1) ohne neuen Zeichenaufruf. Hat sein Ort kein Haus, steht er im Paket-Netz.
+    /// Gegenprobe <see cref="QuestgeberImPaketFuerTests"/>: alle im Paket-Netz (Stand vor dieser Regel).
+    /// </summary>
+    public IReadOnlyDictionary<string, List<Stadtbau.Questebene.Draussen>> QuestgeberJeHaus => _questgeberJeHaus ??= QuestgeberJeHausBauen();
+
+    private Dictionary<string, List<Stadtbau.Questebene.Draussen>>? _questgeberJeHaus;
+
+    /// <summary>Nur Tests und Start-Test (Gegenprobe): Questgeber draussen alle im Paket-Netz wie vor der Regel je Haus.</summary>
+    public static bool QuestgeberImPaketFuerTests
+    {
+        get => _questgeberImPaket.Value;
+        set => _questgeberImPaket.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> _questgeberImPaket = new();
+
+    private Dictionary<string, List<Stadtbau.Questebene.Draussen>> QuestgeberJeHausBauen()
+    {
+        var ergebnis = new Dictionary<string, List<Stadtbau.Questebene.Draussen>>();
+        if (Questgeber.Count == 0 || QuestgeberImPaketFuerTests)
+        {
+            return ergebnis;
+        }
+        var haeuser = Haeuser.Select(h => h.Id).ToHashSet();
+        foreach (var q in Questgeber)
+        {
+            if (QuestgeberOrt(q) is { } ort && haeuser.Contains(ort))
+            {
+                if (!ergebnis.TryGetValue(ort, out var liste))
+                {
+                    ergebnis[ort] = liste = [];
+                }
+                liste.Add(q);
+            }
+        }
+        return ergebnis;
+    }
+
+    /// <summary>Welle Q2: Questgeber draussen, die im Paket-Netz stehen (ihr Ort hat kein Haus).</summary>
+    private IEnumerable<Stadtbau.Questebene.Draussen> QuestgeberImPaket =>
+        Questgeber.Where(q => !QuestgeberJeHaus.Values.Any(l => l.Contains(q)));
+
+    /// <summary>
     /// Welle A 0.61.0: Vieleck gegen den Uhrzeigersinn in (x, y) (so verlangt es <see cref="Wasser.Dreiecke"/>; im
     /// Uhrzeigersinn findet es kein Ohr und die Flaeche fehlt). Ein Parkplatz auf der einen Strassenseite liegt so, auf der
     /// anderen andersherum (Fund in den Fotos P12-103: Flaeche fehlte auf einer Seite).
@@ -528,6 +585,7 @@ public sealed partial class StadtSzene
                     Nachtlicht.GlasMarkieren(netz, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture), flaechen);
                 }
             }
+            QuestgeberAmHaus(netz, haus, fern);
             return netz;
         }
         // Phase 8 W9: am Haus Schnee nur auf dem Dach; Baeume am Haus (Modellname mit "tree") wie die Baeume der Stadt
@@ -549,7 +607,17 @@ public sealed partial class StadtSzene
                 Nachtlicht.GlasMarkieren(gefaerbt, von, haus.Id + "|" + i.ToString(CultureInfo.InvariantCulture), flaechen);
             }
         }
+        QuestgeberAmHaus(gefaerbt, haus, fern);
         return gefaerbt;
+    }
+
+    /// <summary>Welle Q2: die Questgeber draussen, die zu diesem Haus gehoeren, nah als Figur, fern als Kaesten.</summary>
+    private void QuestgeberAmHaus(Netz netz, StadtHaus haus, bool fern)
+    {
+        if (QuestgeberJeHaus.TryGetValue(haus.Id, out var liste))
+        {
+            QuestgeberHinzu(netz, fern, liste);
+        }
     }
 
     /// <summary>
@@ -599,6 +667,8 @@ public sealed partial class StadtSzene
         Probe.Ampeln.Hinzu(netz, Ampeln);
         // Welle A 0.61.0: Haeuschen und Mast der Haltestellen wie die Masten der Ampeln (nah und fern ganz, klein)
         Probe.Haltestellen.Hinzu(netz, Haltestellen);
+        // Welle Q2: Questgeber draussen (nah die Figur mit ihrem Aussehen, fern zwei Kaesten wie die wartenden Figuren)
+        QuestgeberHinzu(netz, fern);
         if (Grafik is null)
         {
             return netz;
@@ -625,6 +695,42 @@ public sealed partial class StadtSzene
             Nachtlicht.Hinzu(netz, Grafik, l, fern);
         }
         return netz;
+    }
+
+    /// <summary>
+    /// Welle Q2: Questgeber draussen in ein Netz (Paket-Netz oder Netz ihres Hauses); Fuesse auf dem Boden an ihrem Platz, Blick wie im Werkzeug
+    /// (0 = +y, 90 = +x). Ohne Grafik (Tests) die einfache Probefigur.
+    /// </summary>
+    private void QuestgeberHinzu(Netz netz, bool fern) => QuestgeberHinzu(netz, fern, QuestgeberImPaket);
+
+    private void QuestgeberHinzu(Netz netz, bool fern, IEnumerable<Stadtbau.Questebene.Draussen> questgeber)
+    {
+        foreach (var q in questgeber)
+        {
+            var (bx, by) = Stadtbau.Etagen.Richtung(q.Blick);
+            var lage = Matrix4x4.CreateRotationY(MathF.Atan2((float)bx, (float)by)) * Matrix4x4.CreateTranslation((float)q.X, 0f, (float)q.Z);
+            netz.Hinzu(QuestgeberNetz(Grafik, q.Aussehen, fern), lage);
+        }
+    }
+
+    /// <summary>Welle Q2: Netz eines Questgebers draussen (nah die Figur in Stadthoehe, fern Beine und Oberteil als Kaesten).</summary>
+    public static Netz QuestgeberNetz(GrafikBibliothek? grafik, PyObjekt? aussehen, bool fern)
+    {
+        if (!fern)
+        {
+            return Figur.Netz(grafik, aussehen, Figur.StadtHoehe);
+        }
+        var a = Lernplattform.Core.Spiel.Aussehen.Normalisieren(aussehen);
+        var h = Figur.StadtHoehe;
+        var b = h * 0.14f;
+        var oben = Netz.Farbe(Figur.Oberteil.GetValueOrDefault(Py.Str(a["oberteil"]), "#22D3EE"));
+        var haut = Netz.Farbe(Figur.Haut.GetValueOrDefault(Py.Str(a["haut"]), "#F1C27D"));
+        return Netz.Aus(
+        [
+            new Teil(TeilArt.Quader, -b * 0.8f, 0, -b * 0.5f, b * 0.8f, h * 0.45f, b * 0.5f, Netz.Farbe("#334155")),
+            new Teil(TeilArt.Quader, -b, h * 0.45f, -b * 0.6f, b, h * 0.82f, b * 0.6f, oben),
+            new Teil(TeilArt.Quader, -b * 0.55f, h * 0.82f, -b * 0.55f, b * 0.55f, h, b * 0.55f, haut),
+        ]);
     }
 
     /// <summary>Ferne-Form eines Modells: untere und obere Haelfte als Kasten in der mittleren Farbe der Haelfte (oben schmaler).</summary>
@@ -1489,6 +1595,7 @@ public sealed partial class StadtSzene
             Zebras = zebras,
             Ampeln = ampeln,
             Haltestellen = haltestellen,
+            Questgeber = Stadtbau.Questebene.DraussenListe(inhalt),
             Parkplaetze = parkplaetze,
             MitGehweg = gehwege.Count > 0,
         };

@@ -230,7 +230,13 @@ public sealed partial class SpielTafel
         var person = Person(auftrag["auftraggeber"], I);
         var (text, farbe) = StatusText[status];
         var wo = Py.Str(SpielAnsicht.Raum(auftrag["raum"], I)?["name"]);
-        if (Py.Str(AuftragOrt(auftrag, I)) != OrtBuero)
+        var ort = AuftragOrt(auftrag, I);
+        if (Core.Stadtbau.Questebene.Wo(ort) is { } questWo)
+        {
+            // Welle Q2: Quest bei einem Questgeber im Geschaeft, am Schalter oder draussen
+            wo = questWo;
+        }
+        else if (Py.Str(ort) != OrtBuero)
         {
             wo = "beim Kunden · " + wo;
         }

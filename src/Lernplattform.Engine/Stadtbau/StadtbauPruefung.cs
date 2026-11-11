@@ -169,11 +169,12 @@ public static partial class StadtbauPruefung
     /// </summary>
     public static List<string> Inhalt(StadtFassung fassung, PyObjekt inhalt)
     {
-        var funde = new List<string>();
+        // Welle Q2 (Weisung P12-190): die Quest-Ebene mit denselben Regeln wie beim Laden des Spiels
+        var funde = Questebene.Pruefen(fassung.MitKarte(inhalt), fassung.Stadtdaten, fassung.Innenraeume);
         IStadtSicht stadt;
         try
         {
-            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt));
+            stadt = SpielKern.Regeln.Stadt(fassung, fassung.MitKarte(inhalt), nachsichtig: true);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException or OverflowException or SpielFehler)
         {

@@ -66,6 +66,14 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
    Fassung 0 und die Dateien davor bleiben unverändert.
 4. Das **Spiel** (`SpielStart`) liest die geltende Fassung (`AktiveFassung.Laden`), prüft sie (`StadtFassung.Lesen`,
    Ladeprüfung) und baut daraus Stadt und Innenräume.
+5. **Quests und Questgeber** (seit A 0.65.0, Welle Q2): `stadtdaten.quests` und `stadtdaten.questgeber` legt
+   `Stadtbau/Questebene.cs` beim Bau der Stadt (`StadtbauSpiel.StadtFuer`) über den Spielinhalt: bewegte Personen an
+   derselben Stelle der Liste, neue Personen und neue Quests hinten angehängt (Reihenfolge der alten bleibt, Spielstände
+   rechnen gleich), umgehängte Quests nur mit neuem Auftraggeber/Ort. Ohne die Abschnitte bleibt der Inhalt dasselbe Objekt.
+   Ein roter Fund wirft `StadtbauFehler` (nie still weg); nur Werkzeug-Ansichten bauen `nachsichtig`. Questgeber draußen
+   zeichnet `StadtSzene` im Netz des Hauses ihres Orts (`QuestgeberJeHaus`: Ort mit dem nächsten Standplatz; Sichtkegel
+   und Fernform wie das Haus, kein neuer Aufruf; ohne Haus im Paket-Netz), drinnen stehen sie in `Innenraum` neben den
+   Verkäufern.
 
 ## 4. Formate
 

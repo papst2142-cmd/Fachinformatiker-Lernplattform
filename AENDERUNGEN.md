@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.65.0
+Neue Aufträge und Auftraggeber aus dem Stadtbau-Werkzeug kommen ins Spiel.
+
+- Eine Stadt aus dem Stadtbau-Werkzeug kann eigene Auftraggeber mitbringen: Personen mit Namen und Aussehen, die in einem Geschäft, an einem Schalter oder draußen in der Stadt stehen (draußen höchstens 12). Auch Personen aus dem Spiel können dort an einem neuen Platz stehen.
+- Diese Personen sprechen dich an: drinnen wie die Verkäufer, mit einem Ausrufezeichen, wenn sie heute einen Auftrag haben; draußen, wenn du nah herangehst oder vor dem Ort in ihrer Nähe ankommst (auch ohne 3D über die Ortsliste). Der Knopf „Auftrag annehmen“ öffnet das Ticket wie im Büro.
+- Neue Aufträge sind Fragen mit Auswahl oder Zuordnung. Sie kommen wie alle Aufträge an ihrem Tag in den heutigen Ablauf, nach den bisherigen, und bringen Geld und Ruf.
+- Bisherige Aufträge können in einer solchen Stadt eine andere Person als Auftraggeber haben; ihre Texte und ihre Belohnung bleiben gleich.
+- Eine fehlerhafte Stadt-Datei lädt das Spiel nicht und sagt, was nicht stimmt. Nichts wird still weggelassen.
+- Die mitgelieferte Stadt ist unverändert. Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.64.0
 Neue Einstellung „Grafik“: du kannst wählen, wie aufwendig die Spielstadt gezeichnet wird, und siehst, wie stark dein Gerät dabei arbeitet.
 

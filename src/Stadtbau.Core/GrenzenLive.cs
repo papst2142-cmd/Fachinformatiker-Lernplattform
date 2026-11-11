@@ -160,9 +160,22 @@ public sealed record GrenzenLive(
     }
 
     /// <summary>Stand eines Projekts bauen (Szene der Grenzen, mit <paramref name="vorrat"/> nur Geaendertes neu) und rechnen.</summary>
+    /// <remarks>
+    /// Welle Q2 (S 0.41.0): die Questgeber draussen zeichnet die Szene selbst (im Netz des Hauses ihres Orts), sie zaehlen dort mit wie im Spiel;
+    /// die Zugabe aus Q1 (<see cref="QuestgeberDreieckeDraussen"/>) faellt darum weg (sonst doppelt gezaehlt).
+    /// </remarks>
     public static GrenzenLive Fuer(Lernplattform.Core.Stadtbau.StadtFassung stand, Spieldaten daten, StadtSzene.Vorrat? vorrat = null) =>
         Rechnen(Ansicht3D.Bauen(stand, daten, Ansicht3D.Einstellung.Grenzen, vorrat), Ansicht3D.Einstellung.Grenzen.Uhr,
-            QuestgeberDreieckeDraussen(stand, daten));
+            QuestgeberZugabeAltFuerTests ? QuestgeberDreieckeDraussen(stand, daten) : 0);
+
+    /// <summary>Gegenprobe Welle Q2: Questgeber draussen wie in Q1 zusaetzlich zaehlen (dann doppelt).</summary>
+    public static bool QuestgeberZugabeAltFuerTests
+    {
+        get => ZugabeAlt.Value;
+        set => ZugabeAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> ZugabeAlt = new();
 
     /// <summary>Welle Q1: Dreiecke aller Questgeber draussen (Figur mit ihrem Aussehen, wie eine Person im Spiel).</summary>
     public static long QuestgeberDreieckeDraussen(Lernplattform.Core.Stadtbau.StadtFassung stand, Spieldaten daten)
