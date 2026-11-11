@@ -85,7 +85,8 @@ public sealed partial class Hauptansicht
     {
         _geschichte = _projekt is null || _daten is null ? null : Spielgeschichte.Aus(_daten.Inhalt, _projekt.AussenStand);
         Karte.GeschichteZahlen = _geschichte?.Zahlen();
-        if (_geschichteOffen)
+        QuestSeitenNeu();
+        if (_geschichteOffen && _seite is null)
         {
             GeschichteFilterFuellen();
             GeschichteListeZeigen();
@@ -216,6 +217,7 @@ public sealed partial class Hauptansicht
         }
         Karte.SetzenBeenden();
         _geschichteOffen = true;
+        _seite = null;
         _innen = false;
         _drei = false;
         _geschichteListe = ort is not null;
@@ -256,16 +258,45 @@ public sealed partial class Hauptansicht
         else
         {
             _geschichteMitte.Content = _zusammenhang;
+            _zusammenhang.PfeilErlaubt = _projekt is { NurLesen: false };
             if (_geschichte is { } g && _projekt is not null)
             {
-                _zusammenhang.Zeigen(g, _projekt.OrtName);
+                // Welle Q1: Umschaltung „je Ort | je Questgeber“
+                if (_zusammenhang.JeQuestgeber)
+                {
+                    _zusammenhang.Zeigen(g.JeQuestgeber(), g.QuestgeberName);
+                }
+                else
+                {
+                    _zusammenhang.Zeigen(g, _projekt.OrtName);
+                }
             }
         }
     }
 
     private Control GeschichteBauen()
     {
-        _zusammenhang.OrtGewaehlt += GeschichteSeiteOrtZeigen;
+        _zusammenhang.OrtGewaehlt += o =>
+        {
+            if (o.StartsWith(Spielgeschichte.QgGruppe, StringComparison.Ordinal))
+            {
+                // je Questgeber: Kasten antippen oeffnet die Person (ohne Questgeber: nichts)
+                if (o.Length > Spielgeschichte.QgGruppe.Length)
+                {
+                    QgOeffnen(o[Spielgeschichte.QgGruppe.Length..]);
+                }
+            }
+            else
+            {
+                GeschichteSeiteOrtZeigen(o);
+            }
+        };
+        _zusammenhang.AnsichtGewechselt += _ =>
+        {
+            GeschichteSeiteOrtZeigen(null);
+            GeschichteMitteZeigen();
+        };
+        _zusammenhang.PfeilGezogen += PfeilGezogen;
         _zusammenhang.ZurListe += () => GeschichteListeUmschalten(true);
         var zuZusammenhaengen = Schrift.Knopf(Texte.GeschichteZuZusammenhaengen).Mit(Texte.GeschichteZuZusammenhaengenTipp);
         zuZusammenhaengen.Click += (_, _) => GeschichteListeUmschalten(false);

@@ -376,6 +376,7 @@ public static partial class StadtbauMessung
         await ObergeschosseAsync(a, f);
         await AussehenAsync(a, f);
         await SpielgeschichteAsync(a, f);
+        await QuestsAsync(a, f);
         await ProjekteLoeschenAsync(a, f);
         await StadtDateiAsync(a, f);
         await TuerAsync(a, f);

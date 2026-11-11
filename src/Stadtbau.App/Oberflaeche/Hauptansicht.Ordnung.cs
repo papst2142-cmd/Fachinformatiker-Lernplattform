@@ -29,7 +29,8 @@ public sealed partial class Hauptansicht
     public const double EintragHoehe = 44;
 
     /// <summary>Die Reiter in der Reihenfolge der Leiste (S 0.22.0: dazu „Spielgeschichte“, Weisung P12-91).</summary>
-    public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.GebaeudeEntwerfen];
+    public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber,
+        Texte.GebaeudeEntwerfen];
 
     private readonly TextBlock _speicherStand = Schrift.Text("", "Klein");
 
@@ -262,7 +263,12 @@ public sealed partial class Hauptansicht
 
     private void ReiterGedrueckt(string name)
     {
-        if (name == Texte.Draufsicht)
+        QgSetzenBeenden();
+        if (name == Texte.Quests || name == Texte.Questgeber)
+        {
+            QuestSeiteZeigen(name);
+        }
+        else if (name == Texte.Draufsicht)
         {
             ReiterZeigen(innen: false);
         }

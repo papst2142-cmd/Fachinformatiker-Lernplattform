@@ -24,7 +24,7 @@ public sealed record Schritt(string Ort, string Was, string Vorher, string Nachh
 /// Schritte bleiben auch nach dem Schliessen. Sicherungen: <see cref="Sicherungen.Hoechstens"/> je Projekt. Eine Datei
 /// aus einer neueren Werkzeug-Version wird nur gelesen und nie ueberschrieben (<see cref="NurLesen"/>).
 /// </summary>
-public sealed class Projekt
+public sealed partial class Projekt
 {
     public const string Format = "fisbau";
 
@@ -312,7 +312,7 @@ public sealed class Projekt
         }
         LaternenAutomatik.Abgleichen(a);
         var zwischen = Aussen.TeileText(a);
-        var sonst = zwischen.Keys.Union(vorher.Keys).Any(k => k is not ("laternen" or "bauten" or AussenBearbeitung.NotizTeil) && k != LaternenAutomatik.Teil
+        var sonst = zwischen.Keys.Union(vorher.Keys).Any(k => k is not ("laternen" or "bauten" or AussenBearbeitung.NotizTeil or QuestTeil or QuestgeberTeil) && k != LaternenAutomatik.Teil
             && (!vorher.TryGetValue(k, out var v) || !zwischen.TryGetValue(k, out var z) || v != z));
         LaternenAutomatik.NachAenderung(a, strassenVorher, SzeneOhneLaternen, sonst);
     }
@@ -922,7 +922,8 @@ public sealed class Projekt
             Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht);
 
     /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
-    public List<StadtbauFund> PruefenAussen() => PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand));
+    /// <remarks>Welle Q1 (S 0.40.0): dazu die Funde der Quests und Questgeber (<see cref="QuestFunde"/>).</remarks>
+    public List<StadtbauFund> PruefenAussen() => [.. PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand)), .. QuestFunde().Select(f => f.FuerStadt)];
 
     /// <summary>
     /// Pruefung draussen zu einem Stand. <paramref name="bauten"/>: Innenraeume neuer Gebaeude (Teil "bauten", steht nicht in

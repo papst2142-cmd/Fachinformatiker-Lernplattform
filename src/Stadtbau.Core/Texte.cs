@@ -5,7 +5,7 @@ namespace Stadtbau.Core;
 /// Phase 13 Welle 2: alle sichtbaren Texte des Stadtbau-Werkzeugs an einer Stelle (Deutsch, einfache Worte fuer Nico).
 /// Die Oberflaeche nimmt Texte nur von hier, die Tests pruefen Wortlaut und Namen fuer den Screenreader.
 /// </summary>
-public static class Texte
+public static partial class Texte
 {
     // ---- Kopfleiste ----
     // Patch S 0.5.1 (Weisung P12-35, Nico: "Die Beschreibungen sind zu ungenau"): jeder Knopf sagt, womit er arbeitet
@@ -565,6 +565,8 @@ public static class Texte
         [VollbildBildschirm] = "Wählt, auf welchem Bildschirm das Vollbild erscheint (nur mit zwei oder mehr Bildschirmen, gilt auch beim nächsten Start).",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
         [Spielgeschichte] = TippSpielgeschichte,
+        [Quests] = TippQuests,
+        [Questgeber] = TippQuestgeber,
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
         [MenueProjekt] = TippMenueProjekt,
         [MenueEinstellungen] = TippMenueEinstellungen,
@@ -981,7 +983,8 @@ public static class Texte
         ("U", "Mehrere wählen an oder aus (Stadt von oben und 3D)", ["U"]),
         ("Strg+A", "Alle Stücke der Stadt wählen", ["A"]),
         ("Umschalt+Klick", "Stück zur Auswahl dazunehmen oder herausnehmen", []),
-        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen, Reihe abbrechen", ["Escape"]),
+        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen, Reihe abbrechen, „Platz wählen“ eines Questgebers abbrechen", ["Escape"]),
+        ("Enter", "Textfeld im Quest- oder Questgeber-Editor übernehmen (wie das Feld verlassen)", ["Enter"]),
         ("Pfeiltasten", "Ausgewähltes Stück verschieben (3D ohne Auswahl: Ansicht schieben)", ["Left", "Right", "Up", "Down"]),
         ("Leertaste + ziehen", "Ansicht schieben", ["Space"]),
         ("Bild hoch / runter", "3D-Ansicht steiler / flacher", ["PageUp", "PageDown"]),

@@ -260,6 +260,12 @@ public sealed class GrundrissFlaeche : Control
             }
         }
 
+        // Welle Q1: Questgeber in diesem Raum (gruen, Pfeil = Blick)
+        foreach (var q in QuestgeberMarken)
+        {
+            q.Zeichnen(ctx, BildPunkt(q.X, q.Y), Math.Max(7, 0.22 * _zoom), schrift, Brushes.Black);
+        }
+
         // Welle W5: Ankunft von Treppe und Fahrstuhl als Pfeil (Stelle und Blick der Figur nach dem Wechsel)
         foreach (var (id, _, ax, ay, blick) in Ankuenfte())
         {
@@ -400,6 +406,14 @@ public sealed class GrundrissFlaeche : Control
             e.Handled = true;
             return;
         }
+        if (!_geste.Aktiv && QuestgeberSetzen is not null)
+        {
+            // Welle Q1: Platz eines Questgebers waehlen; ein Finger tippt (beim Loslassen), Ziehen schiebt die Ansicht
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            e.Pointer.Capture(this);
+            e.Handled = true;
+            return;
+        }
         if (!_geste.Aktiv && SetzenTyp is null && !_projekt.NurLesen && AnkunftBei(w.X, w.Y) is { } ankunft)
         {
             // Welle W5: den Pfeil der Ankunft ziehen (ein Finger oder die Maus)
@@ -477,6 +491,10 @@ public sealed class GrundrissFlaeche : Control
     {
         switch (s.Art)
         {
+            case Fingergeste.Art.Tippen when QuestgeberSetzen is { } qs && !_nurSchieben:
+                var qw = Welt(new Point(s.X, s.Y));
+                qs(Math.Round(qw.X, 2), Math.Round(qw.Y, 2));
+                break;
             case Fingergeste.Art.Tippen when SetzenTyp is not null && !_nurSchieben:
                 var w = Welt(new Point(s.X, s.Y));
                 SetzenAn(w.X, w.Y);
@@ -653,6 +671,12 @@ public sealed class GrundrissFlaeche : Control
     public void AnkunftZiehenFuerTests(string id, double x, double y) => AnkunftAblegen(id, x, y);
 
     /// <summary>Pfeil: Kreis an der Stelle, Spitze in Blickrichtung (Blick 0 = nach +y, im Plan nach unten).</summary>
+    /// <summary>Welle Q1: Questgeber dieses Raums (setzt die Hauptansicht).</summary>
+    internal IReadOnlyList<QuestgeberMarke> QuestgeberMarken { get; set; } = [];
+
+    /// <summary>Welle Q1: Platz eines Questgebers waehlen (gesetzt = ein Tipp ruft dies mit dem Punkt im Grundriss).</summary>
+    internal Action<double, double>? QuestgeberSetzen { get; set; }
+
     private void AnkunftZeichnen(DrawingContext ctx, double x, double y, long blick)
     {
         var m = BildPunkt(x, y);
