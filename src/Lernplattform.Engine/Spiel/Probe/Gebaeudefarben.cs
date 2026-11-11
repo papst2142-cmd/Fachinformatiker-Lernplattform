@@ -33,7 +33,8 @@ public static class Gebaeudefarben
     /// <summary>
     /// Nico 10.11.2026 (zu Meldung P12-92): die Tuer in vier Farben passend zum Haus. Wert in <c>farben[Kennung].tuer</c> =
     /// Kennung der Variante; ohne Wert Braun. Gilt fuer das Tuerblatt der Gebaeude aus dem Editor und den Rahmen der
-    /// gezeichneten Tuer (Kastentuer); die Tueren in den Stadt-Modellen selbst bleiben.
+    /// gezeichneten Tuer (Kastentuer). Sammelliste 292 (Weisung P12-196 Frage 4 = a): ist eine Farbe gewaehlt, faerbt sie auch das
+    /// Tuerblatt der benutzten Tuer eines Stadt-Modells (Rahmen und Fenster bleiben); ohne Wahl bleibt diese Tuer wie im Modell.
     /// </summary>
     public const string TuerSchluessel = "tuer";
 

@@ -178,20 +178,22 @@ public static class LaternenAutomatik
             return Verteilen(aussen, szene);
         }
         var strassen = Strassen(aussen).Where(l => l.Count >= 2).ToList();
+        var vorher = Aussen.LaternenWerte(aussen).Select(l => new Vector2(l.X, l.Z)).ToList();
         var laternen = Aussen.Laternen(aussen);
-        var weg = 0;
         for (var i = laternen.Count - 1; i >= 0; i--)
         {
             if (laternen[i] is List<object?> q && strassen.Any(l => Kurve.Abstand(new Vector2((float)Py.F(q[0]), (float)Py.F(q[1])), l) <= AnStrasse))
             {
                 laternen.RemoveAt(i);
-                weg++;
             }
         }
         var d = Daten(aussen);
         Py.Setzen(d, "gesetzt", new List<object?>());
         Py.Setzen(d, "weg", new List<object?>());
-        return (Platz.Fuer(aussen, szene)?.Aufstellen(strassen) ?? 0, weg);
+        Platz.Fuer(aussen, szene)?.Aufstellen(strassen);
+        // gezaehlt wird, was sich wirklich aendert: eine Laterne an derselben Stelle zaehlt weder als weg noch als dazu
+        var nachher = Aussen.LaternenWerte(aussen).Select(l => new Vector2(l.X, l.Z)).ToList();
+        return (nachher.Count(n => !vorher.Any(v => Vector2.Distance(v, n) < Gleich)), vorher.Count(v => !nachher.Any(n => Vector2.Distance(v, n) < Gleich)));
     }
 
     /// <summary>
@@ -200,11 +202,8 @@ public static class LaternenAutomatik
     /// </summary>
     public static (int Verschwinden, int Neu) VorherSagen(PyObjekt aussen, Func<PyObjekt, StadtSzene?> szene)
     {
-        var k = (PyObjekt)Py.Kopie(aussen)!;
-        var vorher = Aussen.LaternenWerte(k).Select(l => new Vector2(l.X, l.Z)).ToList();
-        AlleVerteilen(k, szene);
-        var nachher = Aussen.LaternenWerte(k).Select(l => new Vector2(l.X, l.Z)).ToList();
-        return (vorher.Count(v => !nachher.Any(n => Vector2.Distance(v, n) < Gleich)), nachher.Count(n => !vorher.Any(v => Vector2.Distance(v, n) < Gleich)));
+        var (dazu, weg) = AlleVerteilen((PyObjekt)Py.Kopie(aussen)!, szene);
+        return (weg, dazu);
     }
 
     private static List<Vector2> Naechste(List<List<Vector2>> strassen, Vector2 p) =>

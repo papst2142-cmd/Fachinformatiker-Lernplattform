@@ -91,11 +91,23 @@ public class LaternenAutomatikTests
         p.AussenAendern("Länger", a => Py.Setzen(Objekt(Aussen.Landschaft(a)[^1]), "punkte",
             new List<object?> { new List<object?> { 2.0, 8.0 }, new List<object?> { 31.0, 8.0 } }));
         Assert.DoesNotContain(Laternen(p), q => Math.Abs(q.X - 10.75f) < LaternenAutomatik.Abstand / 2);
-        // Knopf „Laternen neu verteilen“: alle automatischen neu, die geloeschte bleibt weg
-        var (dazu, weg) = p.LaternenVerteilen();
-        Assert.Equal(weg, dazu);
-        Assert.DoesNotContain(Laternen(p), q => Math.Abs(q.X - 10.75f) < LaternenAutomatik.Abstand / 2);
-        Assert.Equal(7, Laternen(p).Count);
+        // Knopf „Laternen neu verteilen“ nach der Regel bis S 0.41.0 (nur die automatischen neu): die geloeschte bleibt weg
+        LaternenAutomatik.NurAutomatischeAltFuerTests = true;
+        try
+        {
+            var (dazu, weg) = p.LaternenVerteilen();
+            Assert.Equal(weg, dazu);
+            Assert.DoesNotContain(Laternen(p), q => Math.Abs(q.X - 10.75f) < LaternenAutomatik.Abstand / 2);
+            Assert.Equal(7, Laternen(p).Count);
+        }
+        finally
+        {
+            LaternenAutomatik.NurAutomatischeAltFuerTests = false;
+        }
+        // seit Sammelliste 296 (Nico 1b) verteilt der Knopf ALLE Laternen an Strassen neu: die geloeschte Stelle ist vergessen
+        p.LaternenVerteilen();
+        Assert.Contains(Laternen(p), q => Math.Abs(q.X - 10.75f) < 0.01f);
+        Assert.Empty(LaternenAutomatik.Weg(p.AussenStand));
         // Gegenprobe: in einem neuen Projekt ohne Loeschen steht dort eine
         Assert.Contains(Laternen(MitStrasse()), q => Math.Abs(q.X - 10.75f) < 0.01f);
     }
@@ -107,6 +119,26 @@ public class LaternenAutomatikTests
         p.AussenAendern("Straße", a => Aussen.Landschaft(a).Add(Strasse(2, 8, 30, 8)));
         // eine Laterne von Hand dazu, dann neu verteilen
         p.AussenAendern("Laterne", a => Aussen.Laternen(a).Add(new List<object?> { 12.0, 8.5, false }));
+        // Regel bis S 0.41.0 (nur die automatischen neu); seit Sammelliste 296 (Nico 1b) siehe unten
+        LaternenAutomatik.NurAutomatischeAltFuerTests = true;
+        try
+        {
+            SelbstGesetzteBleibenAlt(p);
+        }
+        finally
+        {
+            LaternenAutomatik.NurAutomatischeAltFuerTests = false;
+        }
+        // neu: der Knopf ersetzt auch die selbst gesetzte Laterne an der Strasse, die Abstaende bleiben gueltig
+        p.LaternenVerteilen();
+        Assert.DoesNotContain(Laternen(p), q => q == new Vector2(12, 8.5f));
+        Assert.DoesNotContain(Laternen(p), q => Math.Abs(q.X - 4.25f) < 0.01f);
+        Assert.Contains(Laternen(p), q => Math.Abs(q.X - 3.75f) < 0.01f);
+        Assert.Empty(Rot(p));
+    }
+
+    private void SelbstGesetzteBleibenAlt(Projekt p)
+    {
         var (_, _) = p.LaternenVerteilen();
         var l = Laternen(p);
         Assert.Contains(l, q => q == new Vector2(12, 8.5f));

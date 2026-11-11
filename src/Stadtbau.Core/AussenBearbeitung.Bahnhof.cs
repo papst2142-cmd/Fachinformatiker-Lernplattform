@@ -69,11 +69,14 @@ public static partial class AussenBearbeitung
         }
         var (x, y) = (Py.F(o["x"]), Py.F(o["y"]));
         var jetzt = HausDreh(aussen, s);
+        var linien = Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "bahn")).Select(t => Linie(t["punkte"])).ToList();
         (int Mal, float Delta, bool Waagrecht)? bester = null;
-        foreach (var mal in new[] { 0, 1 })
+        // zuerst ohne Drehen, dann eine Vierteldrehung in jede Richtung, zuletzt halb herum; das Haus selbst darf nicht aufs Gleis
+        foreach (var mal in new[] { 0, 1, 3, 2 })
         {
             var r = Bahnsteig.Rechtecke(teile, x, y, (jetzt + mal) % 4);
             var waagrecht = r.Sum(q => q.Max.X - q.Min.X) >= r.Sum(q => q.Max.Y - q.Min.Y);
+            (float Delta, float Betrag)? hier = null;
             foreach (var (a, b) in gleise)
             {
                 if ((MathF.Abs(a.Y - b.Y) < 1e-3f) != waagrecht)
@@ -106,13 +109,16 @@ public static partial class AussenBearbeitung
                     kandidaten.Add(seite > 0 ? c + BahnsteigKante - Q(nah.Min) : c - BahnsteigKante - Q(nah.Max));
                 }
                 var delta = kandidaten.MinBy(MathF.Abs);
-                if (MathF.Abs(delta) <= BahnhofFang + 1e-4f && (bester is null || (mal, MathF.Abs(delta)).CompareTo((bester.Value.Mal, MathF.Abs(bester.Value.Delta))) < 0))
+                var (nx, ny) = waagrecht ? (x, y + delta) : (x + delta, y);
+                if (MathF.Abs(delta) <= BahnhofFang + 1e-4f && (hier is null || MathF.Abs(delta) < hier.Value.Betrag)
+                    && KoerperFrei(teile, nx, ny, (jetzt + mal) % 4, linien))
                 {
-                    bester = (mal, delta, waagrecht);
+                    hier = (delta, MathF.Abs(delta));
                 }
             }
-            if (bester is not null)
+            if (hier is { } h)
             {
+                bester = (mal, h.Delta, waagrecht);
                 break;
             }
         }
@@ -124,11 +130,40 @@ public static partial class AussenBearbeitung
         {
             HausDrehen(aussen, s, wahl.Mal);
         }
-        var d = MathF.Round(wahl.Delta, 3);
-        if (MathF.Abs(d) >= 0.0005f)
+        // Lagen stehen auf 0,01 (wie VerschiebenGenau): eine kleinere Abweichung bleibt
+        var d = MathF.Abs(wahl.Delta) <= 0.0055f ? 0 : MathF.Round(wahl.Delta, 2);
+        if (d != 0)
         {
             VerschiebenGenau(aussen, s, wahl.Waagrecht ? 0 : d, wahl.Waagrecht ? d : 0);
         }
-        return wahl.Mal > 0 || MathF.Abs(d) >= 0.0005f;
+        return wahl.Mal > 0 || d != 0;
+    }
+
+    /// <summary>Liegt kein Block des Hauses (ausser den Bahnsteigen) naeher als das halbe Gleisbett an einer Bahn?</summary>
+    private static bool KoerperFrei(object? teile, double x, double y, int dreh, List<List<Vector2>> linien)
+    {
+        var mitte = new Vector2((float)x, (float)y) + Hausdrehung.Mitte(teile);
+        foreach (var t in (teile as List<object?> ?? []).OfType<PyObjekt>().Where(t => !Bahnsteig.IstFlaeche(t) && Get(t, "w") is not null && Get(t, "h") is not null))
+        {
+            var a = Hausdrehung.Drehen(new Vector2((float)(x + Py.F(t["x"])), (float)(y + Py.F(t["y"]))), mitte, dreh);
+            var b = Hausdrehung.Drehen(new Vector2((float)(x + Py.F(t["x"]) + Py.F(t["w"])), (float)(y + Py.F(t["y"]) + Py.F(t["h"]))), mitte, dreh);
+            var (min, max) = (Vector2.Min(a, b) - new Vector2(StadtbauPruefung.BahnsteigAbstand), Vector2.Max(a, b) + new Vector2(StadtbauPruefung.BahnsteigAbstand));
+            foreach (var l in linien)
+            {
+                for (var i = 0; i + 1 < l.Count; i++)
+                {
+                    var n = (int)MathF.Ceiling(Vector2.Distance(l[i], l[i + 1]) / 0.05f);
+                    for (var k = 0; k <= n; k++)
+                    {
+                        var p = Vector2.Lerp(l[i], l[i + 1], n == 0 ? 0 : k / (float)n);
+                        if (p.X > min.X && p.X < max.X && p.Y > min.Y && p.Y < max.Y)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 }
