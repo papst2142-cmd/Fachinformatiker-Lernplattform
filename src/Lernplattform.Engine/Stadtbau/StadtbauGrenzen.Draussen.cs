@@ -51,38 +51,63 @@ public static partial class StadtbauGrenzen
         /// <summary>
         /// Fester Teil eines Bilds mit Kamera <paramref name="sichtProj"/> im Abstand <paramref name="abstand"/>;
         /// <paramref name="ohneSparen"/> = wie <c>StadtFlaeche.OhneSparenFuerTests</c> (kein Sichtkegel, keine Fernform).
+        /// Welle Grafik G1: <paramref name="werte"/> = Werte der Grafikstufe (null = Mittel, der Stand vor G1).
         /// </summary>
-        public (long Dreiecke, int Aufrufe) Bild(Matrix4x4 sichtProj, float abstand, bool ohneSparen = false)
+        public (long Dreiecke, int Aufrufe) Bild(Matrix4x4 sichtProj, float abstand, bool ohneSparen = false, Grafikwerte? werte = null) =>
+            BildJe(sichtProj, abstand, [werte ?? Grafikstufen.Mittel], ohneSparen)[0];
+
+        /// <summary>
+        /// Welle Grafik G1: dasselbe Bild fuer mehrere Grafikstufen auf einmal (der Sichtkegel je Haus und Satz wird nur
+        /// einmal gerechnet; das Werkzeug zeigt Niedrig und Hoch neben Mittel).
+        /// </summary>
+        public (long Dreiecke, int Aufrufe)[] BildJe(Matrix4x4 sichtProj, float abstand, IReadOnlyList<Grafikwerte> werte, bool ohneSparen = false)
         {
-            var fern = abstand > StadtSzene.FernAb && !ohneSparen;
-            var dreiecke = fern ? _stadtFern : _stadt;
-            var aufrufe = 1;
-            if (_gruen is { } g && abstand <= StadtSzene.GruenBis)
+            var n = werte.Count;
+            var dreiecke = new long[n];
+            var aufrufe = new int[n];
+            var fern = new bool[n];
+            var gruen = new bool[n];
+            for (var i = 0; i < n; i++)
             {
-                dreiecke += g;
-                aufrufe++;
-            }
-            if (_paketNah is { } pn && _paketFern is { } pf)
-            {
-                dreiecke += abstand > StadtSzene.FernAb ? pf : pn;
-                aufrufe++;
-            }
-            if (_ampelLichter is { } al)
-            {
-                dreiecke += al;
-                aufrufe++;
+                fern[i] = werte[i].Fern(abstand) && !ohneSparen;
+                gruen[i] = werte[i].Gruen(abstand);
+                dreiecke[i] = fern[i] ? _stadtFern : _stadt;
+                aufrufe[i] = 1;
+                if (_gruen is { } g && gruen[i])
+                {
+                    dreiecke[i] += g;
+                    aufrufe[i]++;
+                }
+                if (_paketNah is { } pn && _paketFern is { } pf)
+                {
+                    dreiecke[i] += werte[i].Fern(abstand) ? pf : pn;
+                    aufrufe[i]++;
+                }
+                if (_ampelLichter is { } al)
+                {
+                    dreiecke[i] += al;
+                    aufrufe[i]++;
+                }
             }
             foreach (var s in _saetze)
             {
-                if (s.Ziel == Instanzen.Gruen && abstand > StadtSzene.GruenBis)
+                if (s.Ziel == Instanzen.Gruen && !gruen.Any(x => x))
                 {
                     continue;
                 }
                 var zahl = s.ImBild(sichtProj, null, alle: ohneSparen);
-                if (zahl > 0)
+                if (zahl <= 0)
                 {
-                    dreiecke += (long)zahl * (fern && s.Fern is not null ? s.DreieckeFern : s.DreieckeNah);
-                    aufrufe++;
+                    continue;
+                }
+                for (var i = 0; i < n; i++)
+                {
+                    if (s.Ziel == Instanzen.Gruen && !gruen[i])
+                    {
+                        continue;
+                    }
+                    dreiecke[i] += (long)zahl * (fern[i] && s.Fern is not null ? s.DreieckeFern : s.DreieckeNah);
+                    aufrufe[i]++;
                 }
             }
             foreach (var (mitte, halb, nah, hausFern) in _haeuser)
@@ -91,10 +116,18 @@ public static partial class StadtbauGrenzen
                 {
                     continue;
                 }
-                dreiecke += fern ? hausFern : nah;
-                aufrufe++;
+                for (var i = 0; i < n; i++)
+                {
+                    dreiecke[i] += fern[i] ? hausFern : nah;
+                    aufrufe[i]++;
+                }
             }
-            return (dreiecke, aufrufe);
+            var ergebnis = new (long, int)[n];
+            for (var i = 0; i < n; i++)
+            {
+                ergebnis[i] = (dreiecke[i], aufrufe[i]);
+            }
+            return ergebnis;
         }
     }
 }

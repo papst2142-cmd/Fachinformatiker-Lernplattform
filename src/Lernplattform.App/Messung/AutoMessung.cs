@@ -132,6 +132,14 @@ public static partial class AutoMessung
         ansicht.BeendenObenFuerTests(true);
         // A 0.38.0 (Sammelliste 207): Gruppen der Seitenleiste gleich nach dem Programmstart (alle zu)
         GruppenBeimStart = ansicht.Leisten.OffeneGruppen;
+        // Welle Grafik G1 (Weisung P12-182): alle Messungen des Spiels gelten der Stufe Mittel (bitgleich zu vorher); ohne
+        // Merker waehlte der erste Start nach dem Geraet (CI unter Linux mit llvmpipe: Niedrig). Die automatische Wahl prueft
+        // GrafikStufenAsync mit eigenem Ablauf und Gegenprobe.
+        GrafikMerkerVorStart = Core.Spiel.Probe.Grafikstufen.Lesen(Zustand.Werte);
+        if (GrafikMerkerVorStart is null)
+        {
+            Zustand.Aendere(w => Core.Spiel.Probe.Grafikstufen.Wert(w, Core.Spiel.Probe.Grafikstufe.Mittel));
+        }
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
         {

@@ -297,6 +297,8 @@ public sealed class SpielSeite : Grid
         {
             if (Flaeche.GlBereit)
             {
+                // Welle Grafik G1 (Nico 4 = b): beim ersten Start einmal die Stufe nach dem Geraet waehlen
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => GrafikErsterStart());
                 _glEntschieden.TrySetResult(true);
                 if (_ersatz!.IsVisible && !_ersatzErzwungen)
                 {
@@ -928,6 +930,29 @@ public sealed class SpielSeite : Grid
         }
     }
 
+    /// <summary>Welle Grafik G1 (Weisung P12-182): Werte der gemerkten Grafikstufe an die Stadt geben (ohne Merker Mittel).</summary>
+    internal void GrafikAnwenden() => Flaeche.GrafikWerte = Core.Spiel.Probe.Grafikstufen.Aktuell(Programm.Zustand.Werte);
+
+    /// <summary>
+    /// Welle Grafik G1 (Nico 4 = b): fehlt der Merker <c>grafik_stufe</c> (erster Start, auch nach dem Update), einmal die
+    /// Stufe nach dem Geraet waehlen (<see cref="Core.Spiel.Probe.Grafikstufen.Automatisch"/>) und merken; danach nie von
+    /// allein aendern. Rueckgabe: die Wahl (null = Merker war schon da oder Grafik noch nicht gestartet).
+    /// </summary>
+    internal Core.Spiel.Probe.Grafikstufen.Wahl? GrafikErsterStart()
+    {
+        if (Core.Spiel.Probe.Grafikstufen.Lesen(Programm.Zustand.Werte) is not null || !Flaeche.GlBereit)
+        {
+            return null;
+        }
+        var wahl = Core.Spiel.Probe.Grafikstufen.Automatisch(Core.Spiel.Probe.Grafikstufen.DiesesGeraet(!OperatingSystem.IsAndroid(), Flaeche.GlRenderer));
+        if (!Programm.Zustand.Einstellungen.NurAnzeige)
+        {
+            Programm.Zustand.Aendere(w => Core.Spiel.Probe.Grafikstufen.Wert(w, wahl.Stufe));
+        }
+        GrafikAnwenden();
+        return wahl;
+    }
+
     private void Beschriften()
     {
         var inv = CultureInfo.InvariantCulture;
@@ -943,11 +968,14 @@ public sealed class SpielSeite : Grid
         }
         _probeZeile.Text = string.Join(" · ", teile);
         _probeZeile.IsVisible = teile.Count > 0;
+        GrafikAnwenden();
         var leistung = Flaeche.GlBereit && !_ersatzErzwungen && Core.Spiel.Probe.Leistungsanzeige.Lesen(Programm.Zustand.Werte);
         _leistungZeile.IsVisible = leistung;
         if (leistung)
         {
-            _leistungZeile.Text = Core.Spiel.Probe.Leistungsanzeige.Zeile(Flaeche.BilderJeSekunde, Flaeche.LetzteDreiecke, Flaeche.LetzteZeichenaufrufe);
+            // Welle Grafik G1: dazu die Belastung (RAM, CPU, GPU), sobald eine Sekunde gemessen ist
+            var zeile = Core.Spiel.Probe.Leistungsanzeige.Zeile(Flaeche.BilderJeSekunde, Flaeche.LetzteDreiecke, Flaeche.LetzteZeichenaufrufe);
+            _leistungZeile.Text = Flaeche.Belastung.Aktuell is { } last ? zeile + "\n" + Core.Spiel.Probe.GrafikTexte.Kurzzeile(last) : zeile;
         }
         if (Spiel is not { } spiel)
         {

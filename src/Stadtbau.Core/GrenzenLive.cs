@@ -28,6 +28,15 @@ public sealed record GrenzenLive(
 {
     public const float RasterSchritt = 2f;
 
+    /// <summary>Welle Grafik G1: Anteil des teuersten Bilds an der Grenze der Stufe Niedrig (nur Info, geprueft wird gegen Mittel).</summary>
+    public double AnteilNiedrig { get; init; }
+
+    /// <summary>Welle Grafik G1: Anteil des teuersten Bilds an der Grenze der Stufe Hoch (nur Info).</summary>
+    public double AnteilHoch { get; init; }
+
+    /// <summary>Info-Zeile unter dem Balken, z. B. „Niedrig 81 % · Hoch 70 % (geprüft wird gegen Mittel)“.</summary>
+    public string StufenInfo => GrafikTexte.WerkzeugInfo(AnteilNiedrig, AnteilHoch);
+
     public const int BildBreite = 1600;
 
     public const int BildHoehe = 900;
@@ -79,15 +88,32 @@ public sealed record GrenzenLive(
         var zaehlung = new StadtbauGrenzen.Draussen(szene, fertig);
         var ohne = OhneSparenFuerTests;
         var bilder = 0;
-        var bewegtNah = StadtbauSpiel.Bewegt(spiel, false, uhr: uhr);
-        var bewegtFern = StadtbauSpiel.Bewegt(spiel, true, uhr: uhr);
+        // Welle Grafik G1 (Weisung P12-182): gepruefte Grenze bleibt Mittel; Niedrig und Hoch nur als Info-Zeile, im selben
+        // Durchgang gezaehlt (Sichtkegel je Haus einmal, Fernform/Gruen/Autos je Stufe)
+        var stufen = new[] { Grafikstufen.Mittel, Grafikstufen.Niedrig, Grafikstufen.Hoch };
+        var bewegt = new Dictionary<(bool Fern, bool Halb), (long Dreiecke, int Aufrufe)>();
+        (long Dreiecke, int Aufrufe) Bewegt(bool fern, bool halb)
+        {
+            if (!bewegt.TryGetValue((fern, halb), out var b))
+            {
+                bewegt[(fern, halb)] = b = StadtbauSpiel.Bewegt(spiel, fern, uhr: uhr, halb: halb);
+            }
+            return b;
+        }
+        var hoechst = new (long Dreiecke, int Aufrufe)[stufen.Length];
         (long, int) Bild(float x, float z, float abstand, float drehung)
         {
             var k = new Kamera(x, z, abstand) { Neigung = Bauen3D.NeigungSpiel, Drehung = drehung };
-            var fest = zaehlung.Bild(k.Sicht * k.Projektion(BildBreite, BildHoehe), abstand, ohne);
-            var bewegt = abstand > StadtSzene.FernAb ? bewegtFern : bewegtNah;
+            var je = zaehlung.BildJe(k.Sicht * k.Projektion(BildBreite, BildHoehe), abstand, stufen, ohne);
             bilder++;
-            return (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe);
+            for (var i = 0; i < stufen.Length; i++)
+            {
+                var b = Bewegt(stufen[i].Fern(abstand), stufen[i].AutosHalb);
+                var summe = (je[i].Dreiecke + b.Dreiecke, je[i].Aufrufe + b.Aufrufe);
+                hoechst[i] = (Math.Max(hoechst[i].Dreiecke, summe.Item1), Math.Max(hoechst[i].Aufrufe, summe.Item2));
+                je[i] = summe;
+            }
+            return je[0];
         }
         var gesamt = Bild(szene.Breite / 2, szene.Tiefe / 2, Kamera.AbstandMax, 0);
         (long Dreiecke, int Aufrufe) nah = (-1, 0);
@@ -113,7 +139,16 @@ public sealed record GrenzenLive(
         }
         nah.Aufrufe = Math.Max(nah.Aufrufe, aufrufeMax);
         var (breite, tiefe) = ((int)MathF.Ceiling(szene.Breite), (int)MathF.Ceiling(szene.Tiefe));
-        return new GrenzenLive(gesamt, nah, nx, nz, na, nd, breite, tiefe, Waerme(szene, fertig, breite, tiefe), bilder);
+        double AnteilVon(int i, Grafikstufe stufe)
+        {
+            var g = Grafikstufen.Grenze(stufe);
+            return Math.Max((double)hoechst[i].Dreiecke / g.Dreiecke, (double)hoechst[i].Aufrufe / g.Aufrufe);
+        }
+        return new GrenzenLive(gesamt, nah, nx, nz, na, nd, breite, tiefe, Waerme(szene, fertig, breite, tiefe), bilder)
+        {
+            AnteilNiedrig = AnteilVon(1, Grafikstufe.Niedrig),
+            AnteilHoch = AnteilVon(2, Grafikstufe.Hoch),
+        };
     }
 
     /// <summary>Stand eines Projekts bauen (Szene der Grenzen, mit <paramref name="vorrat"/> nur Geaendertes neu) und rechnen.</summary>

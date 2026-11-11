@@ -1,5 +1,18 @@
 # Änderungen
 
+## A 0.64.0
+Neue Einstellung „Grafik“: du kannst wählen, wie aufwendig die Spielstadt gezeichnet wird, und siehst, wie stark dein Gerät dabei arbeitet.
+
+- In den Optionen gibt es in der Gruppe „Aussehen“ die Karte „Grafik“ mit vier Stufen: Niedrig, Mittel, Hoch und Eigene. Jede Stufe hat einen kurzen Satz, was sie tut.
+- Niedrig spart am meisten: Häuser in der Ferne werden schon früher einfach gezeichnet, kein Gras und keine Büsche, halb so viele Autos und Gestalten, die Stadt in 75 % Auflösung und höchstens 30 Bilder je Sekunde. Gut für ältere Handys und Tablets und für einen kühleren Akku.
+- Mittel ist die Vorgabe und sieht genau so aus wie bisher.
+- Hoch ist für starke Geräte: volle Formen bis in die Ferne und Gras weiter sichtbar.
+- Bei „Eigene“ wählst du jeden dieser Werte selbst.
+- Beim ersten Start nach dem Update wählt das Programm einmal selbst eine Stufe passend zum Gerät (zum Beispiel Hoch an einem PC mit starker Grafikkarte, Niedrig ohne Grafikkarte). Danach ändert es die Stufe nie mehr von allein; du kannst sie jederzeit umstellen.
+- Unter der Stufe steht die Belastung des Geräts vom letzten Besuch in der Stadt: Bilder je Sekunde, Rechenzeit je Bild, Arbeitsspeicher und Prozessor des Programms und, wo das Gerät es meldet, die Grafikkarte. Was ein Gerät nicht meldet, steht als „nicht verfügbar“ da.
+- Der Schalter für die Leistungsanzeige im Spiel steht jetzt auch in dieser Karte. Ist er an, zeigt die Zeile oben links im Spiel zusätzlich Arbeitsspeicher, Prozessor und Grafikkarte. Es wird nichts aufgezeichnet.
+- Die Stufe ändert nur, wie die Stadt gezeichnet wird. Spielstand, Häuser, Türen, Wege und deine Figur bleiben in jeder Stufe gleich. Am Lernen und an deinem Lernstand ändert sich nichts.
+
 ## A 0.63.0
 Umbau im Inneren für die Spielstadt. Das Spiel sieht genauso aus und verhält sich wie bisher.
 

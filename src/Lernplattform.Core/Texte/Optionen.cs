@@ -136,7 +136,7 @@ public static class Optionen
 
     /// <summary>Bereich zur Kennung (KeyNotFoundException, wenn es ihn nicht gibt).</summary>
     public static OptionenBereich Bereich(string id) =>
-        Bereiche.Append(AusbildungBereich).Append(TonBereich).Append(VollbildBereich).Append(TastenBereich).Append(BeendenBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
+        Bereiche.Append(AusbildungBereich).Append(TonBereich).Append(VollbildBereich).Append(GrafikBereich).Append(TastenBereich).Append(BeendenBereich).FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException(id);
 
     // -- Phase 4, W2: Bereich "Ausbildung" (nur C#, Wortliste W2 Abschnitt 7) -----------------
 
@@ -155,6 +155,11 @@ public static class Optionen
         false, false, false, [], ["Musik", "Geräusche", "Ton", "Lautstärke", "stumm"], []);
     public static readonly OptionenBereich VollbildBereich = new(Vollbild, "Vollbild", null, null,
         false, false, false, [], ["Vollbild", "Fenster", "F11"], []);
+
+    /// <summary>Welle Grafik G1 (Weisung P12-182): Karte "Grafik" (Stufe, Belastung, Leistungsanzeige), PC und Handy gleich.</summary>
+    public const string Grafik = "grafik";
+    public static readonly OptionenBereich GrafikBereich = new(Grafik, Lernplattform.Core.Spiel.Probe.GrafikTexte.Titel, null, null,
+        false, false, false, [], Lernplattform.Core.Spiel.Probe.GrafikTexte.Stichwoerter, []);
 
     /// <summary>
     /// Patch A 0.37.0 (Sammelliste 206, Weisung P11-34 Antwort 4a): Karte "Programm beenden" nur am Handy und Tablet
@@ -176,6 +181,7 @@ public static class Optionen
         liste.Insert(liste.FindIndex(b => b.Id == Spiel) + 1, TonBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Ton) + 1, TastenBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Optik) + 1, VollbildBereich);
+        liste.Insert(liste.FindIndex(b => b.Id == Vollbild) + 1, GrafikBereich);
         if (!pc)
         {
             liste.Add(BeendenBereich);
@@ -195,7 +201,7 @@ public static class Optionen
     public static readonly IReadOnlyList<(string Titel, IReadOnlyList<string> Ids)> Gruppen =
     [
         (GruppeLernen, [Ausbildung, Tagesziel, Lerninhalte]),
-        (GruppeAussehen, [Optik, Vollbild]),
+        (GruppeAussehen, [Optik, Vollbild, Grafik]),
         (GruppeSpiel, [Spiel, Ton, Tasten]),
         (GruppeDaten, [Abgleich, Sicherung, Datenbank, Loeschen]),
         (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber, Beenden]),
@@ -240,6 +246,7 @@ public static class Optionen
         Ton => TonKurz,
         Tasten => TastenKurz,
         Vollbild => VollbildKurz,
+        Grafik => Lernplattform.Core.Spiel.Probe.GrafikTexte.Kurz,
         Ueber => UeberKurz,
         Beenden => Navigation.BeendenKurz,
         _ => throw new KeyNotFoundException(bereich.Id),

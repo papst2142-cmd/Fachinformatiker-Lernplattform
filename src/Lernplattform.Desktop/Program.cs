@@ -46,6 +46,11 @@ sealed class Program
             // Patch A 0.37.0 (Sammelliste 204): verdeckt (App Nap) nur in haenger.log, sichtbar wie bisher
             Haenger.Sichtbarkeit(MacSichtbarkeit.Abfragen);
         }
+        if (OperatingSystem.IsWindows())
+        {
+            // Welle Grafik G1: GPU-Auslastung nur, wo das System sie liefert (sonst „nicht verfügbar“)
+            Lernplattform.Core.Spiel.Probe.Belastung.GpuProzentQuelle = WindowsGpu.Abfragen;
+        }
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

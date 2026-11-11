@@ -5,7 +5,7 @@ namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>
 /// Welle D2 (Weisung P12-157 Frage 5 = a): Leistungsanzeige im Spiel, nur C#, PC und Handy gleich, Vorgabe aus.
-/// Schalter in den Optionen (Diagnose, Abschnitt Leistungsmessung), Merker <see cref="Schluessel"/> in
+/// Schalter in der Optionen-Karte „Grafik“ (seit G1; Diagnose verweist dorthin), Merker <see cref="Schluessel"/> in
 /// einstellungen.json (nur ueber <c>Einstellungen.Aendern</c>). Ist er an, steht oben links in der Kopfkarte der Stadt
 /// eine kleine Zeile mit Bildern je Sekunde, Dreiecken und Aufrufen des letzten Bilds. Nur Anzeige: kein Spielstand,
 /// kein Ereignis.

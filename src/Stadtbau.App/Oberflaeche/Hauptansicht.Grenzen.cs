@@ -39,6 +39,12 @@ public sealed partial class Hauptansicht
     private readonly ProgressBar _grenzLiveBalken = new() { Minimum = 0, Maximum = 100, Height = 10, MinHeight = 10 };
     private readonly TextBlock _grenzGesamt = Schrift.Text("", "Klein");
     private readonly TextBlock _grenzNah = Schrift.Text("", "Klein");
+
+    /// <summary>Welle Grafik G1: Info-Zeile Niedrig/Hoch (geprueft wird gegen Mittel).</summary>
+    private readonly TextBlock _grenzStufen = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
+
+    /// <summary>Start-Test: Text der Info-Zeile Niedrig/Hoch.</summary>
+    internal string GrenzStufenText => _grenzStufen.Text ?? "";
     private readonly WrapPanel _waermeLegende = new() { IsVisible = false };
     private Button _waermeChip = null!;
     private readonly StadtSzene.Vorrat _grenzVorrat = new();
@@ -80,7 +86,7 @@ public sealed partial class Hauptansicht
                 },
             });
         }
-        _grenzLeiste.Child = new StackPanel { Spacing = 4, Children = { _grenzKopf, _grenzLiveBalken, _grenzGesamt, _grenzNah, _waermeLegende } };
+        _grenzLeiste.Child = new StackPanel { Spacing = 4, Children = { _grenzKopf, _grenzLiveBalken, _grenzGesamt, _grenzNah, _grenzStufen, _waermeLegende } };
         _grenzLeiste.Farbe(Border.BackgroundProperty, "Pinsel.card").Farbe(Border.BorderBrushProperty, "Pinsel.border");
         _grenzLeiste.Vorlese(Texte.GrenzenLive).Mit(Texte.GrenzenLiveTipp);
         mitte.Children.Add(_grenzLeiste);
@@ -187,6 +193,7 @@ public sealed partial class Hauptansicht
         _grenzLiveBalken.Farbe(ProgressBar.ForegroundProperty, anteil > 1 ? "Pinsel.red" : anteil >= GrenzenLive.GelbAb ? "Pinsel.yellow" : "Pinsel.green");
         _grenzGesamt.Text = Texte.GrenzenLiveGesamt(g.Gesamt.Dreiecke, g.Gesamt.Aufrufe);
         _grenzNah.Text = Texte.GrenzenLiveNah(g.Nah.Dreiecke, g.Nah.Aufrufe);
+        _grenzStufen.Text = g.StufenInfo;
         AutomationProperties.SetName(_grenzLeiste, Texte.GrenzenLiveName(kopf));
         AutomationProperties.SetName(_grenzLiveBalken, Texte.GrenzenLive + ": " + kopf);
     }

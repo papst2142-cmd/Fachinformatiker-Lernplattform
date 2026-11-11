@@ -810,9 +810,20 @@ public static class FestVerkehr
     /// Welle A 0.61.0 (Weisung P12-171, Nico 5b): nach den Fahrzeugen (auch dem Bus) die wartenden Figuren der Haltestellen im
     /// selben Aufruf (<see cref="WartendNetz"/>), zusammen hoechstens <paramref name="hoechstens"/>; kein neuer Zeichenaufruf.
     /// </remarks>
-    public static List<Netz> FahrzeugNetze(Verkehr verkehr, List<Gestalt>? gestalten, GrafikBibliothek grafik, bool fern, int hoechstens) =>
-        gestalten is not null ? Netze(gestalten, fern)
-            : [.. verkehr.Autos.Select(a => AutoNetz(grafik, a.Modell, fern)).Concat(verkehr.Wartende.Select(_ => WartendNetz(grafik, fern))).Take(hoechstens)];
+    public static List<Netz> FahrzeugNetze(Verkehr verkehr, List<Gestalt>? gestalten, GrafikBibliothek grafik, bool fern, int hoechstens, bool halb = false) =>
+        gestalten is not null ? Netze(Gezeigt(gestalten, halb), fern)
+            : [.. Gezeigt(verkehr, halb).Select(a => AutoNetz(grafik, a.Modell, fern)).Concat(verkehr.Wartende.Select(_ => WartendNetz(grafik, fern))).Take(hoechstens)];
+
+    /// <summary>
+    /// Welle Grafik G1 (Weisung P12-182, Stufe Niedrig): die gezeichneten Fahrzeuge; <paramref name="halb"/> = nur jedes
+    /// zweite Auto (Stelle 0, 2, 4, ...), Busse immer. Der Verkehr selbst rechnet unveraendert (nur Darstellung).
+    /// </summary>
+    public static IReadOnlyList<Verkehr.Auto> Gezeigt(Verkehr verkehr, bool halb) =>
+        halb ? [.. verkehr.Autos.Where((a, i) => i % 2 == 0 || a.Nummer >= Buslinie.ErsteNummer)] : verkehr.Autos;
+
+    /// <summary>Welle Grafik G1: die gezeichneten Festgestalten; <paramref name="halb"/> = nur jede zweite.</summary>
+    public static List<Gestalt> Gezeigt(List<Gestalt> gestalten, bool halb) =>
+        halb ? [.. gestalten.Where((_, i) => i % 2 == 0)] : gestalten;
 
     /// <summary>Welle A 0.61.0: Modell der wartenden Figur (stehend, Grundaussehen).</summary>
     public const string WartendModell = "figur";
