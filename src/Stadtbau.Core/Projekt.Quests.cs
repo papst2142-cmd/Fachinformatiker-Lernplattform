@@ -51,6 +51,12 @@ public sealed partial class Projekt
             Szene = () => QuestSzene(aussen, basis, innenraeume, daten),
             GeschichteBauen = () => Spielgeschichte.Aus(daten.Inhalt, aussen),
             OrtName = o => namen.TryGetValue(o, out var n) ? n : o,
+            Spiel = () =>
+            {
+                var mitKarte = Py.Flach(daten.Inhalt);
+                Py.Setzen(mitKarte, "orte", Aussen.Karte(aussen));
+                return Questebene.Pruefen(mitKarte, Aussen.Stadtdaten(aussen), innenraeume);
+            },
         };
     }
 
@@ -60,7 +66,7 @@ public sealed partial class Projekt
         try
         {
             var fassung = Aussen.Fassung(aussen, basis, innenraeume, 1, null, Werkzeug.Kennzeile, "", "");
-            var stadt = fassung.StadtFuer(fassung.MitKarte(daten.Inhalt));
+            var stadt = fassung.StadtFuer(fassung.MitKarte(daten.Inhalt), nachsichtig: true);
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             var szene = StadtSzene.Bauen(stadt, stand, Ansicht3D.MitGebaeuden(daten.Grafik, fassung), null, daten.Feste);
             return (szene, ((IStadtSicht)stadt).StartOrt);

@@ -93,7 +93,7 @@ public interface ISpielRegeln
     ISpielSicht Probestand(PyObjekt inhalt);
 
     /// <summary>Die Stadt einer Fassung zu Spielinhalten mit deren Karte (<c>StadtbauSpiel.StadtFuer</c>).</summary>
-    IStadtSicht Stadt(StadtFassung fassung, PyObjekt inhalt);
+    IStadtSicht Stadt(StadtFassung fassung, PyObjekt inhalt, bool nachsichtig = false);
 
     /// <summary>Ladepruefung der Welt des Spiels (<c>SpielPruefung.Welt</c>).</summary>
     List<string> WeltPruefen(PyObjekt inhalt);

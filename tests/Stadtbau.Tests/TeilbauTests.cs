@@ -89,6 +89,31 @@ public class TeilbauTests
     }
 
     [Fact]
+    public void QuestgeberDraussen_TeilbauGleichVollbau_NurSeinHausNeu()
+    {
+        // Welle Q2: ein Questgeber draussen steht im Netz des Hauses seines Orts; setzen und schieben bauen dieses Haus neu
+        var p = QuestTests.Stadt1();
+        var vorrat = new StadtSzene.Vorrat();
+        var e = Ansicht3D.Einstellung.Standard;
+        Pruefen(p, e, vorrat);
+        var qg = p.QuestgeberNeu();
+        p.QuestgeberPlatz(qg, QuestTests.DraussenPlatz(p));
+        Pruefen(p, e, vorrat);
+        var szene = Ansicht3D.Bauen(p.Stand(), D, e).Szene;
+        Assert.Single(szene.QuestgeberJeHaus.Values.SelectMany(l => l));
+        Pruefen(p, e, vorrat);
+        p.QuestgeberPlatz(qg, QuestTests.DraussenPlatz(p, 0.5));
+        var neu = vorrat.NeuGebaut;
+        Pruefen(p, e, vorrat);
+        // nur das Haus seines Orts (und das Stellwerk, siehe oben) kommt neu
+        Assert.True(vorrat.NeuGebaut <= 2, $"neu gebaut {vorrat.NeuGebaut} (vorher {neu})");
+        while (p.Rueckgaengig())
+        {
+            Pruefen(p, e, vorrat);
+        }
+    }
+
+    [Fact]
     public void Baum_Schieben_BautNurWenigNeu()
     {
         var p = Projekt.Neu("Teilbau Baum", D, Daten.NeueAblage());

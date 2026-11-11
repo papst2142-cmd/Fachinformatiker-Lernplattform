@@ -29,7 +29,7 @@ public static class Ansicht3D
     /// <summary>Spiel fuer die 3D-Ansicht bauen (blockiert: im Hintergrund rufen). Netze sind danach fertig.</summary>
     public static StadtSpiel Bauen(StadtFassung stand, Spieldaten daten, Einstellung einstellung, StadtSzene.Vorrat? vorrat = null)
     {
-        var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt));
+        var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt), nachsichtig: true);
         // S 0.20.0 (Weisung P12-84): die Autos fahren im Werkzeug die Wege von Tag 1 (der Probe-Spielstand steht auf Tag 201)
         stadt.VerkehrTag = Autostrecken.WerkzeugTag;
         // S 0.36.0 (Weisung P12-170 Hinweis 4): im Werkzeug sind alle Stellplaetze belegt (Grenzen zaehlen den vollen Parkplatz)

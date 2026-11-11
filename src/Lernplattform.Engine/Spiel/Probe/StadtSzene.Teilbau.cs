@@ -58,9 +58,9 @@ public sealed partial class StadtSzene
         StadtHaus? Haus, StadtOrt Ort, string Signatur);
 
     /// <summary>Eingaben eines Hausnetzes (siehe <see cref="HausNetz"/>).</summary>
-    internal sealed record HausEingang(string Id, int StueckeVon, Jahreszeit Jahreszeit, Teil[] Teile, bool[] Licht, ModellStueck[] Stuecke, GrafikModell?[] Modelle)
+    internal sealed record HausEingang(string Id, int StueckeVon, Jahreszeit Jahreszeit, Teil[] Teile, bool[] Licht, ModellStueck[] Stuecke, GrafikModell?[] Modelle, string Questgeber)
     {
-        public bool GleichWie(HausEingang b) => Id == b.Id && StueckeVon == b.StueckeVon && Jahreszeit == b.Jahreszeit
+        public bool GleichWie(HausEingang b) => Id == b.Id && StueckeVon == b.StueckeVon && Jahreszeit == b.Jahreszeit && Questgeber == b.Questgeber
             && TeileGleich(Teile, b.Teile) && Licht.AsSpan().SequenceEqual(b.Licht) && StueckeGleich(Stuecke, b.Stuecke) && ModelleGleich(Modelle, b.Modelle);
     }
 
@@ -202,7 +202,20 @@ public sealed partial class StadtSzene
         return new HausEingang(haus.Id, haus.StueckeVon, Jahreszeit,
             [.. Teile.Skip(haus.TeileVon).Take(haus.TeileBis - haus.TeileVon)],
             [.. Enumerable.Range(haus.TeileVon, haus.TeileBis - haus.TeileVon).Select(LichtTeile.Contains)],
-            [.. Stuecke.Skip(haus.StueckeVon).Take(n)], modelle);
+            [.. Stuecke.Skip(haus.StueckeVon).Take(n)], modelle,
+            QuestgeberJeHaus.TryGetValue(haus.Id, out var qs) ? QuestgeberSchluessel(qs) : "");
+    }
+
+    /// <summary>Welle Q2: Eingabe der Questgeber draussen (Kennung, Aussehen, Platz, Blick) fuer den Vergleich im Vorrat.</summary>
+    private static string QuestgeberSchluessel(IEnumerable<Stadtbau.Questebene.Draussen> questgeber)
+    {
+        var text = new StringBuilder();
+        foreach (var q in questgeber)
+        {
+            text.Append("Q").Append(q.Id).Append(';').Append(PythonJson.Standard(q.Aussehen)).Append(';')
+                .Append(Bits((float)q.X)).Append(';').Append(Bits((float)q.Z)).Append(';').Append(q.Blick.ToString(CultureInfo.InvariantCulture)).Append('|');
+        }
+        return text.ToString();
     }
 
     /// <summary>Hausnetz aus dem Vorrat, wenn alle Eingaben gleich sind, sonst neu gebaut und gemerkt.</summary>
@@ -245,6 +258,8 @@ public sealed partial class StadtSzene
         {
             kreuze.Append("H").Append(Bits(h.Haeuschen)).Append(';').Append(Bits(h.Schild)).Append(';').Append(Bits(h.Fahrt)).Append('|');
         }
+        // Welle Q2: Questgeber draussen, deren Ort kein Haus hat, stehen im Paket-Netz
+        kreuze.Append(QuestgeberSchluessel(QuestgeberImPaket));
         var laternen = new StringBuilder();
         foreach (var l in Laternen)
         {

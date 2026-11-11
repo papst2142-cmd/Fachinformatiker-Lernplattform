@@ -31,7 +31,7 @@ public sealed class SpielKernRegeln : ISpielRegeln
     public ISpielSicht Probestand(PyObjekt inhalt) => StadtbauSpiel.Probestand(inhalt).Stand;
 
     /// <inheritdoc/>
-    public IStadtSicht Stadt(StadtFassung fassung, PyObjekt inhalt) => fassung.StadtFuer(inhalt);
+    public IStadtSicht Stadt(StadtFassung fassung, PyObjekt inhalt, bool nachsichtig = false) => fassung.StadtFuer(inhalt, nachsichtig);
 
     /// <inheritdoc/>
     public List<string> WeltPruefen(PyObjekt inhalt) => SpielPruefung.Welt(inhalt);

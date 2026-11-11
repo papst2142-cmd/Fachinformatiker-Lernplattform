@@ -9,7 +9,7 @@ namespace Stadtbau.Core;
 
 /// <summary>
 /// Welle Q1 (S 0.40.0, Weisung P12-186, Kurzplan Meldung P12-111 Abschnitte 3–5): Pruefregeln fuer Quests, Questgeber und
-/// Verkettungen, nur im Werkzeug (das Spiel liest die Abschnitte erst mit Q2). Rote Funde sperren Speichern und Senden der
+/// Verkettungen im Werkzeug; seit Q2 (S 0.41.0) zusaetzlich die Ladepruefung des Spiels (<see cref="Questebene"/>). Rote Funde sperren Speichern und Senden der
 /// Stadt-Datei wie jeder rote Fund draussen; gelbe sind Hinweise. Jede Regel hat in <c>QuestTests</c> einen roten und einen
 /// gruenen Fall.
 /// <para>E1 (Widerspruch im Kurzplan: Abschnitt 3 nennt „ohne Questgeber“ gelb, Abschnitte 4/5 und die Bilder 2/3 rot):
@@ -55,6 +55,9 @@ public static class QuestPruefung
         public Spielgeschichte Geschichte => _geschichte ??= GeschichteBauen();
 
         public Func<string, string> OrtName { get; init; } = o => o;
+
+        /// <summary>Welle Q2: rote Funde der Ladepruefung des Spiels (<see cref="Questebene.Pruefen"/>), null = nicht pruefen.</summary>
+        public Func<List<string>>? Spiel { get; init; }
     }
 
     /// <summary>Alle Funde (rot zuerst nicht sortiert: Reihenfolge Quests, Verkettungen, Questgeber, Hinweis).</summary>
@@ -71,7 +74,12 @@ public static class QuestPruefung
         Quests(u, questgeber, funde);
         Verkettungen(u, questgeber, funde);
         Questgeber(u, questgeber, funde);
-        funde.Add(new Fund(new StadtbauFund(Texte.QuestEinbauHinweis, Texte.QuestEinbauTipp, false)));
+        // Welle Q2 (Weisung P12-190): die Ladepruefung des Spiels (Questebene); ihre Funde nur, wenn die Regeln oben nichts
+        // Rotes fanden (sonst stuende derselbe Fehler zweimal da), damit nie etwas Rotes ungemeldet ins Spiel kommt
+        if (!funde.Any(f => f.Rot) && u.Spiel is { } spiel)
+        {
+            funde.AddRange(spiel().Select(t => new Fund(Rot(t, Texte.QuestSpielTipp))));
+        }
         return funde;
     }
 

@@ -83,4 +83,32 @@ public class GrenzenLiveTests
         Assert.Equal("Aufrufe 55 % (Dreiecke 41 %)", Texte.GrenzenLiveKopf(65600, 22, 160000, 40));
         Assert.Equal("Dreiecke 75 % (Aufrufe 50 %)", Texte.GrenzenLiveKopf(120000, 20, 160000, 40));
     }
+
+    /// <summary>
+    /// Welle Q2: die Questgeber draussen zeichnet die 3D-Szene selbst (Paket-Netz wie im Spiel), Grenzen live zaehlen sie
+    /// darum genau einmal (in dieser Klasse, weil <see cref="GrenzenLive.OhneSparenFuerTests"/> fuer den ganzen Prozess gilt). Gegenprobe: die Zugabe aus Q1 dazu zaehlt sie doppelt.
+    /// </summary>
+    [Fact]
+    public void Grenzen_QuestgeberDraussen_InDerSzeneGezaehlt_NieDoppelt()
+    {
+        var p = QuestTests.Stadt1();
+        var ohne = GrenzenLive.Fuer(p.Stand(), p.Daten);
+        var qg = p.QuestgeberNeu();
+        p.QuestgeberPlatz(qg, QuestTests.DraussenPlatz(p));
+        var je = GrenzenLive.QuestgeberDreieckeDraussen(p.Stand(), p.Daten);
+        var mit = GrenzenLive.Fuer(p.Stand(), p.Daten);
+        Assert.Equal(0, mit.QuestgeberDreiecke);
+        Assert.True(mit.Gesamt.Dreiecke > ohne.Gesamt.Dreiecke, "Questgeber draussen fehlt in der Szene");
+        Assert.True(mit.Gesamt.Dreiecke - ohne.Gesamt.Dreiecke <= je, "mehr als eine Figur gezaehlt");
+        GrenzenLive.QuestgeberZugabeAltFuerTests = true;
+        try
+        {
+            var alt = GrenzenLive.Fuer(p.Stand(), p.Daten);
+            Assert.True(alt.Gesamt.Dreiecke - ohne.Gesamt.Dreiecke > je, "Gegenprobe: Q1-Zugabe zaehlt doppelt");
+        }
+        finally
+        {
+            GrenzenLive.QuestgeberZugabeAltFuerTests = false;
+        }
+    }
 }

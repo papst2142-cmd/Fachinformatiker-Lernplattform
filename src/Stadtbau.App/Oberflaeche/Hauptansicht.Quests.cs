@@ -334,20 +334,6 @@ public sealed partial class Hauptansicht
         return k;
     }
 
-    private static Border GelbHinweis()
-    {
-        var t = Schrift.Text(Texte.QuestEinbauHinweis, "Klein", FontWeight.Bold, "Pinsel.orange");
-        t.TextWrapping = TextWrapping.Wrap;
-        ToolTip.SetTip(t, Texte.QuestEinbauTipp);
-        return new Border
-        {
-            Child = t,
-            Padding = new Thickness(10, 8),
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1),
-        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.yellow");
-    }
-
     /// <summary>Drei Spalten: links (Liste), Mitte (Editor), rechts (Pruefung), je mit Bildlauf.</summary>
     private static Grid DreiSpalten(Control links, Control mitte, Control rechts)
     {
@@ -440,7 +426,7 @@ public sealed partial class Hauptansicht
                 _questListe,
             },
         };
-        var rechts = new StackPanel { Spacing = 8, Children = { GelbHinweis(), _questFundeTitel, _questFundeListe } };
+        var rechts = new StackPanel { Spacing = 8, Children = { _questFundeTitel, _questFundeListe } };
         return DreiSpalten(links, _questEditor, rechts);
     }
 
@@ -885,7 +871,7 @@ public sealed partial class Hauptansicht
             Spacing = 8,
             Children = { Schrift.Text(Texte.QgListeTitel, "Mittel", FontWeight.Bold), neu, _qgDraussen, _qgListe },
         };
-        var rechts = new StackPanel { Spacing = 8, Children = { GelbHinweis(), _qgFundeTitel, _qgFundeListe } };
+        var rechts = new StackPanel { Spacing = 8, Children = { _qgFundeTitel, _qgFundeListe } };
         return DreiSpalten(links, _qgEditor, rechts);
     }
 

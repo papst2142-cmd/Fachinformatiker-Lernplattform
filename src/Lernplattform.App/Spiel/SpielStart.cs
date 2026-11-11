@@ -70,7 +70,7 @@ public static class SpielStart
         try
         {
             Spielschlange.AlleLeeren();
-            _optionenInhalt ??= InhaltLaden().Inhalt;
+            _optionenInhalt ??= OptionenInhalt();
             var geraet = Pc ? "PC" : "Handy";
             return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt);
         }
@@ -90,7 +90,7 @@ public static class SpielStart
         try
         {
             Spielschlange.AlleLeeren();
-            _optionenInhalt ??= InhaltLaden().Inhalt;
+            _optionenInhalt ??= OptionenInhalt();
             var geraet = Pc ? "PC" : "Handy";
             return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).AktivAnzeige();
         }
@@ -131,6 +131,12 @@ public static class SpielStart
     /// Phase 13 Welle 1: der Abschnitt "orte" (Karte) kommt aus der geltenden Stadt-Fassung und durchlaeuft dieselbe
     /// Ladepruefung wie vorher orte.json.
     /// </summary>
+    /// <summary>
+    /// Welle Q2 (Weisung P12-190): Spielinhalte fuer Optionen (Spielstaende, Loeschen) mit der Quest-Ebene der geltenden
+    /// Fassung, genau wie im Spiel (sonst kennten sie die neuen Quests eines Spielstands nicht).
+    /// </summary>
+    private static PyObjekt OptionenInhalt() => Fassung().StadtFuer(InhaltLaden().Inhalt).Inhalt;
+
     private static (PyObjekt Inhalt, Core.Inhalte.Lerninhalte? Lernen) InhaltLaden()
     {
         var karte = PythonJson.Utf8(PythonJson.Standard(Fassung().Karte));
@@ -154,7 +160,7 @@ public static class SpielStart
         try
         {
             Spielschlange.AlleLeeren();
-            _optionenInhalt ??= InhaltLaden().Inhalt;
+            _optionenInhalt ??= OptionenInhalt();
             var geraet = Pc ? "PC" : "Handy";
             return new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).OptionenZeile();
         }

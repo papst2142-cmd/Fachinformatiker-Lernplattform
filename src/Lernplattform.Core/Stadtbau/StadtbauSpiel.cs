@@ -12,8 +12,14 @@ namespace Lernplattform.Core.Stadtbau;
 /// </summary>
 public static class StadtbauSpiel
 {
-    /// <summary>Die Stadt dieser Fassung zu Spielinhalten, deren Abschnitt "orte" schon die <see cref="StadtFassung.Karte"/> ist.</summary>
-    public static Stadt StadtFuer(this StadtFassung fassung, PyObjekt inhalt) => new(inhalt, fassung.Stadtdaten) { Fassung = fassung };
+    /// <summary>
+    /// Die Stadt dieser Fassung zu Spielinhalten, deren Abschnitt "orte" schon die <see cref="StadtFassung.Karte"/> ist.
+    /// Welle Q2 (Weisung P12-190): mit der Quest-Ebene der Fassung (<see cref="Questebene.Anwenden"/>); ohne Abschnitte bleiben
+    /// die Spielinhalte dasselbe Objekt (Fassung 0 bitgleich), ein Fehler haelt das Laden an (<see cref="StadtbauFehler"/>).
+    /// <paramref name="nachsichtig"/> nur im Werkzeug (Ansicht einer halb fertigen Ebene, seine Pruefung meldet die Fehler).
+    /// </summary>
+    public static Stadt StadtFuer(this StadtFassung fassung, PyObjekt inhalt, bool nachsichtig = false) =>
+        new(Questebene.Anwenden(inhalt, fassung.Stadtdaten, fassung.Innenraeume, nachsichtig), fassung.Stadtdaten) { Fassung = fassung };
 
     /// <summary>
     /// Spielstand fuer Pruefung, 3D-Ansicht und Probe: ein neuer Stand ohne Speicher, in dem alle Orte zu sehen sind

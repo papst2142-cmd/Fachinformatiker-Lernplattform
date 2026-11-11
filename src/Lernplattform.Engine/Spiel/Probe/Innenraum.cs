@@ -430,9 +430,9 @@ public sealed class Innenraum
                 // Werkzeug es gebaut hat (ohne Zusaetze, ohne Personen); fehlt es, gibt es keinen Innenraum
                 var eg = Objekt(laden["gebaeude"]);
                 // Weisung P12-74: eine Treppe nur nach unten traegt in der Kopie fuer die Darstellung "richtung": "unten"
-                return Stadtbau.Etagen.Gibt(eg, etage) ? new Eingaben(ansicht!, ort, Stadtbau.Etagen.FuerDarstellung(eg, ort, etage), [], null, geschaefte) : null;
+                return Stadtbau.Etagen.Gibt(eg, etage) ? new Eingaben(ansicht!, ort, Stadtbau.Etagen.FuerDarstellung(eg, ort, etage), Questgeber(ort, etage, stand), null, geschaefte) : null;
             }
-            var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).ToList();
+            var verkauf = ListeOderLeer(laden, "personen").Select(p => Person(Objekt(p), false)).Concat(Questgeber(ort, 0, stand)).ToList();
             var zusatz = Get(innenraeume!, "zusatz") is PyObjekt z ? Get(z, ort) as PyObjekt : null;
             // Weisung P8-56: zweiter angehaengter Zusatz (Fahne, Sessel, Puppen, Kassen), wirkt nach dem ersten
             var nachtrag = Get(innenraeume!, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
@@ -468,6 +468,22 @@ public sealed class Innenraum
     /// fuer Raeume, die der Grundriss hat (das Buero ist erst das Haus der Bitweiche, spaeter die eigene Firma). "plaetze" in
     /// einem Raum setzt den Platz einer Person nur fuer die Darstellung (Kopie ihrer Daten; der Spielstand bleibt unveraendert).
     /// </summary>
+    /// <summary>
+    /// Welle Q2 (Weisung P12-190): Questgeber der Quest-Ebene in einem Geschaeft oder an einem Schalter (Erdgeschoss oder
+    /// Etage), mit gruenem „!“, wenn sie heute einen Auftrag haben. Ohne Quest-Ebene leer (Fassung 0 unveraendert).
+    /// </summary>
+    private static List<InnenPerson> Questgeber(string ort, int etage, ISpielSicht stand)
+    {
+        if (stand.Inhalt["kollegen"] is not List<object?> kollegen || !kollegen.OfType<PyObjekt>().Any(Stadtbau.Questebene.IstQuestgeber))
+        {
+            return [];
+        }
+        var auftraege = stand.Auftraege(ort);
+        return [.. SpielKern.Regeln.OrtPersonen(ort, stand)
+            .Where(p => Stadtbau.Questebene.IstQuestgeber(p) && Stadtbau.Questebene.Etage(p) == etage)
+            .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 }))];
+    }
+
     private static Eingaben MitMoebeln(PyObjekt? innenraeume, Eingaben e)
     {
         var (gebaeude, plaetze) = MoebelZusatz(innenraeume, e.Ort, e.Gebaeude);
@@ -646,6 +662,11 @@ public sealed class Innenraum
     /// <summary>Text unter der Ansicht (Ueberschrift, Text, Knoepfe) wie place_message/home_message.</summary>
     public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double z, ISpielSicht stand)
     {
+        if (PersonNahe(x, z) is { } questgeber && Stadtbau.Questebene.IstQuestgeber(questgeber.Daten))
+        {
+            // Welle Q2: ein Questgeber im Geschaeft oder am Schalter spricht wie eine Person im Buero („Auftrag annehmen“)
+            return SpielKern.Regeln.OrtNachricht(Ort, x, z, questgeber.Daten, stand, Gebaeude);
+        }
         if (SpielKern.Laeden.Contains(Ort))
         {
             return LadenNachricht(x, z, stand);

@@ -15,7 +15,7 @@ namespace Stadtbau.Tests;
 /// </summary>
 public class QuestTests
 {
-    private static Projekt Stadt1()
+    internal static Projekt Stadt1()
     {
         var p = Projekt.Neu("Quests", Daten.Spiel, Daten.NeueAblage());
         p.AussenAendern("Laterne 20", Daten.Laterne20Frei);
@@ -77,7 +77,7 @@ public class QuestTests
     }
 
     [Fact]
-    public void NeueQuest_Gruen_NurGelberEinbauHinweis_EinSchrittJeAenderung()
+    public void NeueQuest_Gruen_OhneGelb_EinSchrittJeAenderung()
     {
         var p = Stadt1();
         var vorher = p.Verlauf.Count;
@@ -85,7 +85,7 @@ public class QuestTests
         Assert.Equal("neu-1", id);
         Assert.Equal(vorher + 8, p.Verlauf.Count);
         Assert.Empty(Rot(p));
-        Assert.Equal([Texte.QuestEinbauHinweis], Gelb(p));
+        Assert.Empty(Gelb(p));   // Welle Q2: das Spiel liest die Quests, kein Einbau-Hinweis mehr
         // gleicher Wert = kein Schritt
         p.QuestFeld(id, "frage", "Was prüfst du zuerst?");
         Assert.Equal(vorher + 8, p.Verlauf.Count);

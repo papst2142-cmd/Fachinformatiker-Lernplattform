@@ -14,9 +14,8 @@ public static partial class Texte
     public const string TippQuests = "Vorhandene Quests ansehen, umhängen oder kopieren und neue Quests (Auswahl oder Zuordnung) schreiben.";
     public const string TippQuestgeber = "Personen, die Quests vergeben: drinnen oder draußen hinstellen, eigene anlegen, Aussehen wählen.";
 
-    /// <summary>Gelber Hinweis (Nico 5a): Q1 wirkt im Spiel noch nicht.</summary>
-    public const string QuestEinbauHinweis = "Quests und Questgeber kommen mit dem Einbau ins Spiel.";
-    public const string QuestEinbauTipp = "Die Stadt-Datei enthält sie schon; das Spiel zeigt sie erst nach dem Einbau (Welle Q2).";
+    /// <summary>Welle Q2: Regel der Ladepruefung des Spiels (Questebene), die die Pruefung des Werkzeugs nicht schon meldet.</summary>
+    public const string QuestSpielTipp = "So lädt das Spiel die Stadt nicht. Die Quest oder den Questgeber ändern.";
 
     // ---- Quest-Editor ----
     public const string QuestNeuTitel = "Neue Quest";
