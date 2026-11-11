@@ -45,6 +45,13 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   `Haltestellen.cs`, `Parkplaetze.cs`): nur Darstellung, kein Spielstand. Feste Strecken (Fassung 0) oder automatische
   Strecken aus dem Straßennetz; Zufall je Spieltag aus Stadt, Tag und Auto, auf allen Geräten gleich.
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
+- **Gelände** (`Gelaende.cs`, seit A 0.66.0): `stadtdaten.gelaende` mit Hügeln (`huegel`: Mitte, Radius 1–3, Höhe 0,2–1,5,
+  rund oder länglich bis 6, Drehung in 15 Grad) und gemalten Höhen (`gemalt`: `[i, j, Hundertstel]` im Raster 0,5). Höhe =
+  größter Wert aus Kuppen und Gemaltem, höchstens 1,5. Ein Gitter im Stadtnetz (Fernform Raster 1,0 ab `FernAb`), kein eigener
+  Aufruf. Stücke außerhalb der Häuser stehen auf der Höhe ihrer Mitte und kippen nicht, Kleingrün nur, wo der Fuß bis 0,02 eben
+  ist; Figur und Kamera folgen der Höhe (`StadtSzene.BodenHoehe`). Laufraster gleich, nur Hänge steiler als 45 Grad gesperrt.
+  Ohne Abschnitt (Fassung 0) bitgleich. Regeln `StadtbauPruefung.Gelaende.cs` (Rand `Gelaende.Saum` 1,5, höchstens 16 Hügel
+  und 6 000 Dreiecke).
 - **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Engine/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
 - **Licht und Zeit** (`Tageslicht.cs`, `Nachtlicht.cs`, `Jahreszeitfarben.cs`, `FestDeko.cs`): Tag/Nacht, 22 Laternen,
   Festzeiten.

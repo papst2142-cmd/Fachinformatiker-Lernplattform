@@ -187,7 +187,7 @@ public class WerkzeugKleinTests
     [Fact]
     public void Ebenen_JedeArtGehoertZuHoechstensEinerEbene_NamenUndKennungenEindeutig()
     {
-        Assert.Equal(9, Ebenen.Alle.Count);
+        Assert.Equal(10, Ebenen.Alle.Count); // seit S 0.42.0 mit Ebene „Gelände“
         Assert.Equal(Ebenen.Alle.Count, Ebenen.Alle.Select(Ebenen.Kennung).Distinct().Count());
         Assert.Equal(Ebenen.Alle.Count, Ebenen.Alle.Select(Ebenen.Name).Distinct().Count());
         var arten = Ebenen.Alle.SelectMany(Ebenen.ArtenVon).ToList();
@@ -197,6 +197,7 @@ public class WerkzeugKleinTests
         Assert.Null(Ebenen.Von(AussenArt.Strasse));
         Assert.Null(Ebenen.Von(AussenArt.Haus));
         Assert.Equal(Ebene.Wasser, Ebenen.Von(AussenArt.Steg));
+        Assert.Equal(Ebene.Gelaende, Ebenen.Von(AussenArt.Huegel));
     }
 
     [Fact]

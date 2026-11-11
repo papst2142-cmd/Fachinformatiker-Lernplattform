@@ -47,16 +47,17 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
 
         // Messpunkt: echter Knopfdruck bis zum Bild
-        await MessenAsync("Tuer dazu (bis zum Bild)", a, () =>
+        // Sammelliste 293: der Knopf rechnet den Platz auf der Fassade im Hintergrund; gemessen wird bis der Schritt da ist
+        // (derselbe Weg wie der Knopf, TuerUmschaltenAsync)
+        await MessenAsync("Tuer dazu (bis zum Bild)", a, async () =>
         {
             a.Karte.Waehlen(s);
-            if (TuerKnopfSuchen(a, Texte.TuerDazu) is not { } k)
+            if (TuerKnopfSuchen(a, Texte.TuerDazu) is null)
             {
                 Fund("Tuer: Knopf „" + Texte.TuerDazu + "“ fehlt beim Messen");
-                return Task.CompletedTask;
+                return;
             }
-            k.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            return Task.CompletedTask;
+            await a.TuerUmschaltenAsync(s);
         }, () =>
         {
             a.Rueckgaengig();

@@ -3,6 +3,19 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.42.0
+
+Gelände: Hügel setzen und Gelände malen, dazu Verbesserungen aus der Teststadt.
+
+- In „Natur und Licht“ gibt es den Knopf „Hügel“: ein runder Hügel wird auf die Wiese gesetzt. Unter „Ausgewähltes Stück“ lassen sich Radius (1 bis 3), Höhe (0,2 bis 1,5) und Form (rund oder länglich bis 6 lang) einstellen; ein länglicher Hügel dreht in 15-Grad-Schritten. Jede Änderung ist ein Schritt und lässt sich rückgängig machen.
+- „Gelände malen“ mit drei Pinseln: Heben, Senken und Glätten, in vier Größen. Jeder Zug mit dem Finger oder der Maus ist ein Schritt.
+- Die Ansicht von oben zeigt Hügel mit Höhenlinien und Höhenzahlen; die Ebene „Gelände“ blendet sie aus. Die 3D-Ansicht zeigt das Gelände wie das Spiel.
+- Neue Prüfungen (rot): um jeden Hügel bleibt ein Rand von 1,5 frei zu Häusern, Straßen, Wegen, Gleis, Wasser und Plätzen; keine Laterne und kein Questgeber auf einem Hügel; Bäume und Stücke nicht zu schief am Hang; kein Ort, kein Questgeber und keine Haltestelle darf wegen eines zu steilen Hangs unerreichbar sein; höchstens 16 Hügel und 6 000 Dreiecke für das Gelände.
+- Die Rückseite eines Gebäudes mit Weg malt die benutzte Tür des Modells nicht mehr zu. „Tür dazu“ setzt die Tür auf eine passende Stelle der Fassade.
+- Kopien von Bahnhof und Wohnung behalten ihre Grafik. Ein Bahnhof mit Bahnsteig rastet am Gleis ein; ein Bahnsteig im Modell, der zu nah am Gleis liegt, ist rot.
+- „Laternen neu verteilen“ verteilt auch nach dem Öffnen einer Stadt-Datei alle automatischen Laternen neu und zählt nur, was sich wirklich ändert.
+- Ein gelber Hinweis erscheint, wenn der Name eines Questgebers mit einer Anrede beginnt (zum Beispiel „Frau“).
+
 ## S 0.41.0
 
 Quests und Questgeber kommen ins Spiel.

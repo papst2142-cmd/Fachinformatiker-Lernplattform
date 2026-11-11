@@ -207,6 +207,8 @@ public static partial class AutoMessung
             funde += await P13W5EtagenAsync(ansicht);          // Phase 13 W5: Etage wechseln (Treppe im Moebelhaus)
             Zeitplan("Q2QuestgeberAsync");
             funde += await Q2QuestgeberAsync(ansicht);         // Welle Q2: Questgeber draussen und im Laden, Nahansicht mit 12 draussen
+            Zeitplan("GelaendeSpielAsync");
+            funde += await GelaendeSpielAsync(ansicht);        // Welle A 0.66.0: Figur auf Huegel, Kamera folgt, Nahansicht mit 16 Huegeln
         }
         if (MitLernen)
         {
@@ -609,6 +611,16 @@ public static partial class AutoMessung
                 // Welle Q2: Questgeber draussen und im Laden
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? Q2Ansichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Welle A 0.66.0: Figur auf dem Huegel
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? GelaendeAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
