@@ -15,8 +15,8 @@ namespace Lernplattform.Core.Spiel;
 public static partial class Wohnung
 {
     public const double Raster = 0.25;           // GRID
-    public const double TuerFrei = 1.0;          // DOOR_CLEARANCE
-    public const double MoebelReichweite = 0.9;  // FURNITURE_REACH
+    public const double TuerFrei = Probe.SpielKern.TuerFrei;                 // DOOR_CLEARANCE
+    public const double MoebelReichweite = Probe.SpielKern.MoebelReichweite; // FURNITURE_REACH
     public const double EingangReichweite = 1.4; // ENTRANCE_REACH
 
     /// <summary>WALK_FREE: darueber laeuft man (oder es haengt an der Wand).</summary>

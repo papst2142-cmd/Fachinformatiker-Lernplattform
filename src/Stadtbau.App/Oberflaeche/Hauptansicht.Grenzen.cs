@@ -233,7 +233,7 @@ public sealed partial class Hauptansicht
                 await Drei.NaechstesBildAsync();
                 await Drei.NaechstesBildAsync();
                 var fest = zaehlung.Bild(Drei.LetzteSichtProj, Drei.LetzterAbstand);
-                var bewegt = StadtbauGrenzen.Bewegt(spiel, Drei.LetzterAbstand > StadtSzene.FernAb, Lernplattform.Spiel.StadtFlaeche.AutosHoechstens, uhr);
+                var bewegt = StadtbauSpiel.Bewegt(spiel, Drei.LetzterAbstand > StadtSzene.FernAb, Lernplattform.Spiel.StadtFlaeche.AutosHoechstens, uhr);
                 bilder++;
                 if (fest != (Drei.LetzteStadtDreiecke, Drei.LetzteStadtAufrufe)
                     || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe))

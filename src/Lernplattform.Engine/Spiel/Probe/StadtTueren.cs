@@ -22,14 +22,14 @@ public static class StadtTueren
     public static readonly Vector3 Vordach = Netz.Farbe("#F4B942");
 
     /// <summary>Abschnitt <c>darstellung</c> aus stadt.json (leer, wenn er fehlt).</summary>
-    public static PyObjekt Darstellung(Stadt stadt) => Get(stadt.Daten, "darstellung") as PyObjekt ?? [];
+    public static PyObjekt Darstellung(IStadtSicht stadt) => Get(stadt.Daten, "darstellung") as PyObjekt ?? [];
 
     /// <summary>Versatz des Modells in x, wenn es seine eigene Tuer zum Weg hat; sonst null.</summary>
-    public static float? ModellVersatz(Stadt stadt, string ort) =>
+    public static float? ModellVersatz(IStadtSicht stadt, string ort) =>
         Get(Get(Darstellung(stadt), "modell_tuer") as PyObjekt ?? [], ort) is { } v ? (float)Py.F(v) : null;
 
     /// <summary>Gehwege mit Tuer an Haeusern ohne Ort (zierwege).</summary>
-    public static IEnumerable<PyObjekt> Zierwege(Stadt stadt) =>
+    public static IEnumerable<PyObjekt> Zierwege(IStadtSicht stadt) =>
         (Get(Darstellung(stadt), "zierwege") as List<object?> ?? []).Select(Objekt);
 
     /// <summary>

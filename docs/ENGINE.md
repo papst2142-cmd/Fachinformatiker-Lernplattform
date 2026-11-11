@@ -6,18 +6,26 @@ wie Daten vom Werkzeug ins Spiel kommen und welche Regeln für jede Änderung ge
 
 ## 1. Was zur Engine gehört
 
-Die Engine ist der Teil, den **Spiel und Werkzeug gemeinsam** nutzen. Das Werkzeug ist ihr Editor.
+Die Engine ist der Teil, den **Spiel und Werkzeug gemeinsam** nutzen. Das Werkzeug ist ihr Editor. Seit A 0.63.0 /
+S 0.38.0 ist sie ein eigenes Projekt (Abschnitt 8).
 
 | Ort | Inhalt |
 |---|---|
-| `src/Lernplattform.Core/Spiel/Probe/` | Szene, Netze, Modelle, Stadt, Innenräume, Verkehr, Licht (Namensraum `Lernplattform.Core.Spiel.Probe`) |
-| `src/Lernplattform.Core/Stadtbau/` | Stadt-Datei und Fassungen, Prüfregeln, Grenzen, Bauteile, Etagen (Namensraum `Lernplattform.Core.Stadtbau`) |
+| `src/Lernplattform.Engine/Spiel/Probe/` | Szene, Netze, Modelle, Stadt, Innenräume, Verkehr, Licht (Namensraum `Lernplattform.Core.Spiel.Probe`) |
+| `src/Lernplattform.Engine/Stadtbau/` | Stadt-Datei und Fassungen, Prüfregeln, Grenzen, Bauteile, Etagen (Namensraum `Lernplattform.Core.Stadtbau`) |
 | `src/Lernplattform.App/Spiel/StadtFlaeche*.cs` | Zeichnen mit OpenGL (Hochladen, Sichtkegel, Aufrufe) |
+| `src/Lernplattform.Grundlagen` | `Py`, `PyObjekt`, `PythonJson`, Python-Rechenregeln, Zeit-Typen, `ISpielSicht`; Engine und Spiel-Kern nutzen sie |
 
-Nicht zur Engine gehören der Spiel-Kern (`Core/Spiel/*.cs`: Regeln, Spielstand, Ereignisse; die Engine liest ihn nur), der
-Lernteil und das Werkzeug selbst (`src/Stadtbau.*`). Die Trennlinie prüft `tests/Lernplattform.Tests/EngineGrenzenTests.cs`:
-die Engine nutzt keinen Namensraum des Lernteils und nichts aus `Stadtbau.*`, und die Lernplattform enthält vom Werkzeug
-nur diesen gemeinsamen Teil.
+Die Namensräume blieben beim Umzug gleich (E1): so musste keine Datei außerhalb der Engine geändert werden, und die
+Sollwerte, Fingerabdrücke und Formate bleiben unberührt.
+
+Nicht zur Engine gehören der Spiel-Kern (`Core/Spiel/*.cs`: Regeln, Spielstand, Ereignisse), der Lernteil und das
+Werkzeug selbst (`src/Stadtbau.*`). Die Engine kennt den Spiel-Kern nicht: was sie von ihm braucht, holt sie über
+`SpielKern.Regeln` (Schnittstelle `ISpielRegeln`), die Sichten `ISpielSicht` (Spielstand) und `IStadtSicht` (Stadt) und
+`ISortiment` (Geschäfte). Der Spiel-Kern meldet seine Regeln beim Laden von `Lernplattform.Core` an
+(`SpielKernRegeln.Anmelden`, Modul-Start; `Stadtbau.Core` ruft sie beim eigenen Modul-Start ebenfalls). Die Trennlinie
+prüft `tests/Lernplattform.Tests/EngineGrenzenTests.cs` auf Projektebene (Verweise der `.csproj`, Verweise der DLL, jeder
+Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensraum des Lernteils, nichts aus `Stadtbau.*`).
 
 ## 2. Bestandteile
 
@@ -37,14 +45,14 @@ nur diesen gemeinsamen Teil.
   `Haltestellen.cs`, `Parkplaetze.cs`): nur Darstellung, kein Spielstand. Feste Strecken (Fassung 0) oder automatische
   Strecken aus dem Straßennetz; Zufall je Spieltag aus Stadt, Tag und Auto, auf allen Geräten gleich.
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
-- **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Core/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
+- **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Engine/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
 - **Licht und Zeit** (`Tageslicht.cs`, `Nachtlicht.cs`, `Jahreszeitfarben.cs`, `FestDeko.cs`): Tag/Nacht, 22 Laternen,
   Festzeiten.
 - **Modelle** (`Grafik.cs`: `GrafikBibliothek`, `GrafikModell`): alle Grafik im Format FLGM (Abschnitt 4), nur CC0.
 - **Katalog** (`Katalogstueck.cs`; Katalog selbst nur im Werkzeug `src/Stadtbau.Core/Katalog.cs`): Stücke `cc0:paket/name`;
   ins Spiel kommen nur verbaute Stücke (`katalog_verbaut.bin`).
-- **Eigene Gebäude** (`Core/Stadtbau/Bauteile.cs`): Teile aus dem Gebäude-Editor werden zu einem Modell zusammengesetzt.
-- **Prüfregeln** (`Core/Stadtbau/StadtbauPruefung*.cs`): jede Regel ein klarer roter (oder gelber) Fund in einfachen Worten.
+- **Eigene Gebäude** (`Engine/Stadtbau/Bauteile.cs`): Teile aus dem Gebäude-Editor werden zu einem Modell zusammengesetzt.
+- **Prüfregeln** (`Engine/Stadtbau/StadtbauPruefung*.cs`): jede Regel ein klarer roter (oder gelber) Fund in einfachen Worten.
   Das Werkzeug zeigt sie während des Bauens, das Spiel prüft beim Laden (`StadtbauPruefung.Verbaut`, `SpielPruefung`).
 
 ## 3. Datenfluss Werkzeug → Spiel
@@ -82,7 +90,7 @@ eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis
   ergeben (Sollwerte unten). Ist das nicht möglich, braucht es eine freigegebene Sollwert-Änderung.
 - **Grafik nur angehängt** an `modelle.bin`; eine gesparte Fassung ist ein neues Modell mit Zusatz im Namen, gewählt über eine
   Tabelle (`Fahrzeugmodelle`).
-- **Prüfregel je Merkmal**: im gemeinsamen Teil `Core/Stadtbau/StadtbauPruefung.<Thema>.cs`, je Regel ein roter und ein
+- **Prüfregel je Merkmal**: im gemeinsamen Teil `Engine/Stadtbau/StadtbauPruefung.<Thema>.cs`, je Regel ein roter und ein
   grüner Test; Regeln nur für das Werkzeug liegen in `src/Stadtbau.Core`.
 - **Gegenprobe**: jeder Fix und jede neue Regel hat einen Test, der mit dem alten Verhalten rot wird (Schalter
   `…AltFuerTests`, `AsyncLocal`).
@@ -101,7 +109,7 @@ eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis
 
 ## 7. Messpunkte der Stadt (seit A 0.62.1)
 
-`Core/Stadtbau/StadtLast.cs` misst, was eine Stadt beim Bauen kostet: „Stadt bauen“ = `StadtSzene.Bauen` plus `Vorbereiten`
+`Engine/Stadtbau/StadtLast.cs` misst, was eine Stadt beim Bauen kostet: „Stadt bauen“ = `StadtSzene.Bauen` plus `Vorbereiten`
 (alle Stücke, alle Netze) und „Netzdaten“ = Byte aller Netze, die in die Grafikkarte kommen (9 float je Ecke, ein uint je
 Index; Stadt, Häuser, Kleingrün, Paket-Netz, Fernformen, Sätze des Instancing, Ampel-Lichter, jedes Netz einmal). Der
 Start-Test des Spiels (`AutoMessung.Engine.cs`, alle Orte, Winter, Weihnachten) und des Werkzeugs
@@ -109,20 +117,31 @@ Start-Test des Spiels (`AutoMessung.Engine.cs`, alle Orte, Winter, Weihnachten) 
 einmalig und streng (`StadtLast.BauenGrenzeMs`), „Netzdaten“ hat die Grenze `StadtLast.NetzdatenGrenzeMb`. Beide Grenzen sind
 Vorschläge bis zu Nicos Antwort (Meldung P12-107); Grenzen nie lockern.
 
-## 8. Plan: eigenes Projekt `Lernplattform.Engine` (nur Plan, Bau erst nach Stadt 1)
+## 8. Eigenes Projekt `Lernplattform.Engine` (gebaut mit A 0.63.0 / S 0.38.0)
 
-Heute liegt die Engine in `Lernplattform.Core` (Namensräume `Spiel.Probe`, `Stadtbau`) und in `App/Spiel/StadtFlaeche*.cs`.
-Ein eigenes Projekt ginge nicht ohne Umbau, weil 39 von 71 Engine-Dateien den Spiel-Kern lesen (`Stadt`, `Spielstand`,
-`Spielablauf`, `Py`, `PyObjekt`, `Festzeit`, `Jahreszeit`). Schritte, jeder für sich prüfbar:
+Aufbau der Verweise (keiner rückwärts):
 
-1. **Gemeinsame Grundlagen herauslösen**: `Py`, `PyObjekt`, `PythonJson` und die Zeit-Typen (`Festzeit`, `Jahreszeit`) in ein
-   kleines Projekt `Lernplattform.Grundlagen`, das Core und Engine beide nutzen. Keine Änderung am Verhalten.
-2. **Schmale Schnittstelle zum Spiel-Kern**: was die Engine vom Spielstand braucht (sichtbare Orte, eigene Firma, Zuhause,
-   Uhr), als Schnittstelle `ISpielSicht` im Engine-Projekt; der Spiel-Kern liefert sie. Die Engine liest nie mehr direkt
-   `Spielstand`.
-3. **Projekt `Lernplattform.Engine`** mit `Spiel/Probe` und `Stadtbau`; die Trennlinie (`EngineGrenzenTests`) prüft dann den
-   Verweis auf Projektebene (die Engine kennt `Lernplattform.Core` nicht mehr).
-4. **Zeichnen** (`StadtFlaeche*.cs`) bleibt in der App, nutzt nur die Engine.
+```
+Lernplattform.Grundlagen  ←  Lernplattform.Engine  ←  Lernplattform.Core  ←  Lernplattform.App / Stadtbau.Core
+```
 
-Prüfung je Schritt: alle Tests, Fingerabdrücke, `StadtSzeneHash`, Fassung 0 bitgleich, Start-Test. Risiko: großer Diff ohne
-sichtbaren Gewinn für Nico; darum erst nach Stadt 1 und nur mit eigener Weisung.
+1. **Grundlagen**: die Dateien bleiben an ihrem Ort in `src/Lernplattform.Core/` (Stoppgrenzen und Sollwert-Pfade bleiben
+   gleich); `src/Lernplattform.Core/Grundlagen.props` nennt sie, `Lernplattform.Grundlagen.csproj` übersetzt sie,
+   `Lernplattform.Core.csproj` nimmt sie heraus. Eine neue Grundlage nur dort eintragen und in `EngineGrenzenTests.Grundlagen`.
+2. **Schnittstelle**: `ISpielRegeln` (in `SpielKern.cs`) mit den Regeln, die die Engine vom Spiel-Kern braucht; Feste Namen
+   und Zahlen (Läden, Schalter, Möbel-Art, Reichweiten) stehen in `SpielKern`, der Spiel-Kern leitet seine gleichnamigen
+   Werte dorthin weiter (gleiche Werte). Eine neue Regel = neues Mitglied in `ISpielRegeln`, Umsetzung in
+   `Core/Spiel/SpielKernRegeln.cs` (nur weiterreichen).
+3. **Projekt** `src/Lernplattform.Engine` (`Spiel/Probe`, `Stadtbau`). Was die Engine an das Spiel bindet, blieb im
+   Spiel-Kern: `StadtSpiel`, `HinweisWahl`, `Tastenbelegung`, `Stadtbau/StadtbauSpiel.cs` (Probestand, Stadt aus Fassung,
+   bewegte Teile der Grenzen).
+4. **Zeichnen** (`StadtFlaeche*.cs`) bleibt in der App.
+
+Nachweis: Fingerabdrücke, `StadtSzeneHash` und Rechnerfest-Werte, `SOLLWERTE.sha256`, Fassung 0 und Testdateien bitgleich,
+Spiel- und Werkzeug-Fotos pixelgleich vorher/nachher.
+
+## 9. Entscheidung: kein Streaming (Nico 11.11.2026 06:35 MEZ)
+
+Die Stadt wird ganz geladen, nicht in Zellen nachgeladen. Gemessen (A 0.62.1): Netzdaten rund **19 MB** (Grenze 48 MB),
+„Stadt bauen“ im Spiel rund 0,15 s, im Werkzeug bis rund **0,8 s** (Windows; Grenze 2 s). Beides liegt weit unter den
+Grenzen. **Erst bei einer großen durchgehenden Welt (mehrere Städte ohne Zug dazwischen) neu fragen.**

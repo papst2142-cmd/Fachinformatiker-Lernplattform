@@ -320,7 +320,7 @@ public class KatalogTests
             .Where(d => endungen.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase))
             .Where(d => !d.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(t => t is "bin" or "obj"));
         var projekte = Directory.GetDirectories(Path.Combine(wurzel, "src"), "Lernplattform.*");
-        Assert.Equal(4, projekte.Length);
+        Assert.Equal(6, projekte.Length); // seit A 0.63.0 mit Grundlagen und Engine
         var funde = projekte.SelectMany(Dateien).Where(Nennt).Select(d => Path.GetRelativePath(wurzel, d)).ToList();
         foreach (var gemeinsam in new[] { "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })
         {

@@ -56,7 +56,7 @@ public static class TuerBuendig
         Ausgang.GetValue(basis, b =>
         {
             var stadt = b.StadtFuer(b.MitKarte(daten.Inhalt));
-            var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
+            var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             return Tueren(StadtSzene.Bauen(stadt, stand, daten.Grafik));
         });
 

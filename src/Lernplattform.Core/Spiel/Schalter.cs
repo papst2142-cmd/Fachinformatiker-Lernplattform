@@ -13,11 +13,11 @@ namespace Lernplattform.Core.Spiel;
 /// </summary>
 public static class Schalter
 {
-    public const string Bank = "bank";
-    public const string Amt = "amt";
+    public const string Bank = Probe.SpielKern.Bank;
+    public const string Amt = Probe.SpielKern.Amt;
 
     /// <summary>Die Orte mit Schalter (Ids wie in stadt.json neue_orte).</summary>
-    public static readonly IReadOnlyList<string> Orte = [Bank, Amt];
+    public static readonly IReadOnlyList<string> Orte = Probe.SpielKern.SchalterOrte;
 
     public const string NurInBank = "Das geht nur in der geöffneten Bank.";
     public const string NurAufAmt = "Das geht nur auf dem geöffneten Amt.";

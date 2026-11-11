@@ -803,7 +803,7 @@ public sealed partial class StadtSzene
     /// Stadt neu, nur um die Signatur zu vergleichen). Gleich <c>Bauen(stadt, stand).Signatur</c>.
     /// </summary>
     /// <remarks>Phase 8 W6: mit Festzeit steht "fest:&lt;festzeit&gt;" angehaengt am Ende.</remarks>
-    public static string SignaturFuer(Stadt stadt, Spielstand? stand, string? fest = null)
+    public static string SignaturFuer(IStadtSicht stadt, ISpielSicht? stand, string? fest = null)
     {
         var inhalt = stadt.Inhalt;
         var welt = Objekt(Objekt(inhalt["orte"])["welt"]);
@@ -837,7 +837,7 @@ public sealed partial class StadtSzene
     /// Phase 8 W9: <paramref name="jahreszeit"/> faerbt nur die Netze (<see cref="Jahreszeitfarben"/>), die Szene
     /// selbst (Teile, Modelle, Laufraster, Signatur) bleibt gleich.
     /// </remarks>
-    public static StadtSzene Bauen(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null,
+    public static StadtSzene Bauen(IStadtSicht stadt, ISpielSicht? stand, GrafikBibliothek? grafik = null, string? fest = null, PyObjekt? feste = null,
         Jahreszeit jahreszeit = Jahreszeit.Sommer, Vorrat? vorrat = null)
     {
         if (vorrat is null)
@@ -851,7 +851,7 @@ public sealed partial class StadtSzene
         }
     }
 
-    private static StadtSzene BauenOhneSperre(Stadt stadt, Spielstand? stand, GrafikBibliothek? grafik, string? fest, PyObjekt? feste,
+    private static StadtSzene BauenOhneSperre(IStadtSicht stadt, ISpielSicht? stand, GrafikBibliothek? grafik, string? fest, PyObjekt? feste,
         Jahreszeit jahreszeit, Vorrat? vorrat)
     {
         var stuecke = new List<ModellStueck>();
@@ -1684,7 +1684,7 @@ public sealed partial class StadtSzene
     internal static List<Vector2> Vektoren(object? punkte) => [.. Punkte(punkte).Select(p => new Vector2(p.X, p.Z))];
 
     /// <summary>Stehplatz vor der Tuer: 0,3 den Fussweg (Zugang aus stadt.json) entlang, hoechstens bis zu seinem ersten Knick.</summary>
-    private static (float X, float Z) Stehplatz(Stadt stadt, string id, float tx, float tz)
+    private static (float X, float Z) Stehplatz(IStadtSicht stadt, string id, float tx, float tz)
     {
         if (Get(stadt.Zugaenge, id) is not PyObjekt zugang)
         {

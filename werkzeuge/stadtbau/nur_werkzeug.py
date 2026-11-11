@@ -6,7 +6,8 @@ ausschliesslich das Stadtbau-Werkzeug aendert. Dieser Waechter vergleicht den Ko
   src/Stadtbau.*/**, tests/Stadtbau.Tests/**, werkzeuge/stadtbau/**, inhalte_stadtbau/** (Katalog, Weisung P12-25
   Frage 1 = a; nur genau dieser Ordner, inhalte/ und inhalte_csharp/ bleiben rot), AENDERUNGEN_STADTBAU.md,
   in Directory.Build.props nur Zeilen mit <StadtbauVersion>, und .md-Dateien.
-Jede andere Datei (besonders src/Lernplattform.* mit Core/Stadtbau/ und Spiel/Probe, inhalte*/, tests/Lernplattform.Tests,
+Jede andere Datei (besonders src/Lernplattform.* mit der eigenen Engine src/Lernplattform.Engine (Spiel/Probe, Stadtbau)
+und den Grundlagen src/Lernplattform.Grundlagen, Weisung P12-179, inhalte*/, tests/Lernplattform.Tests,
 Directory.Packages.props, die Workflows) macht die Stufe sofort rot mit der Zeile "voller Lauf noetig: <Datei>".
 Strenger als die Liste der Weisung (selbst gefunden): AENDERUNGEN.md ist der Release-Text der Lernplattform (ReleaseTests,
 release.py) und braucht den vollen Lauf; .md-Dateien unter verbotenen Ordnern (inhalte*/, src/Lernplattform.*, ...) auch.
@@ -118,6 +119,9 @@ FAELLE = [
     ("Gegenprobe Symbol der Lernplattform", ["src/Lernplattform.App/Assets/icon.png"], [], True),
     ("Gegenprobe Lernplattform-Kern", ["src/Stadtbau.App/A.cs", "src/Lernplattform.Core/Stadtbau/StadtbauPruefung.cs"], [], True),
     ("Gegenprobe Spiel/Probe", ["src/Lernplattform.Core/Spiel/Probe/StadtSzene.cs"], [], True),
+    ("Gegenprobe Engine Stadtbau (Weisung P12-179)", ["src/Stadtbau.App/A.cs", "src/Lernplattform.Engine/Stadtbau/StadtbauPruefung.cs"], [], True),
+    ("Gegenprobe Engine Spiel/Probe", ["src/Lernplattform.Engine/Spiel/Probe/StadtSzene.cs"], [], True),
+    ("Gegenprobe Grundlagen", ["src/Lernplattform.Grundlagen/Lernplattform.Grundlagen.csproj"], [], True),
     ("Gegenprobe App", ["src/Lernplattform.App/Views/Dialog.cs"], [], True),
     ("Gegenprobe Inhalte", ["inhalte/quizfragen.json"], [], True),
     ("Gegenprobe Inhalte C#", ["inhalte_csharp/spiel/stadt.json"], [], True),

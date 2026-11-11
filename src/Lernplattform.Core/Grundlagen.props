@@ -1,0 +1,30 @@
+<Project>
+  <!-- Weisung P12-179: die Dateien der Grundlagen (Projekt Lernplattform.Grundlagen). Sie liegen hier in Lernplattform.Core,
+       gebaut werden sie nur in Lernplattform.Grundlagen (Lernplattform.Core.csproj nimmt genau diese Liste heraus).
+       Neue Datei der Grundlagen nur hier eintragen. -->
+  <ItemGroup>
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Py.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/PyWerte.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/PyFormat.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/PyMenge.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/SpielDaten.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/SpielInhalt.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/SpielFehler.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Jahreszeit.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Festzeit.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Wege.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Wegsuche.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/StadtModelle.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/Aussehen.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Spiel/ISpielSicht.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Daten/PythonJson.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Mathe/PythonRunden.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Mathe/PythonRundenStellen.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Mathe/PythonPow.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Dashboard/PyText.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Rechner/PythonZeichen.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Rechner/PythonZeichen.Tabelle.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Suche/PythonKlein.cs" />
+    <GrundlagenDatei Include="$(MSBuildThisFileDirectory)Suche/PythonKlein.Tabelle.cs" />
+  </ItemGroup>
+</Project>

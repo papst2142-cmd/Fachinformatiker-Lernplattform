@@ -102,6 +102,15 @@ internal sealed class FreiFeld
 /// </summary>
 public static class Wege
 {
+    /// <summary>
+    /// Vorsilbe der Effekte aus dem Katalog (Paket "particles", <c>Probe.Katalogstueck.EffektPraefix</c> verweist hierher):
+    /// ein Effekt ist nur Aussehen und versperrt nichts. Weisung P12-179: hier, weil die Wege zu den Grundlagen gehoeren.
+    /// </summary>
+    public const string EffektPraefix = "cc0:particles/";
+
+    /// <summary>Ein Typ aus dem Katalog, der ein Effekt ist (<c>Probe.Katalogstueck.IstEffekt</c>).</summary>
+    public static bool IstEffekt(string? typ) => typ is not null && typ.StartsWith(EffektPraefix, StringComparison.Ordinal);
+
     public const double Schritt = 0.25;       // WALK_STEP
     public const double Koerper = 0.3;        // BODY_RADIUS
     public const double PersonRadius = 0.5;   // PERSON_RADIUS
@@ -189,7 +198,7 @@ public static class Wege
         foreach (var d in deko)
         {
             // Phase 13 Welle 4a: ein Effekt aus dem Katalog des Stadtbau-Werkzeugs (nur Aussehen) versperrt nichts
-            if (Begehbar.Contains((string)d["typ"]!) || Probe.Katalogstueck.IstEffekt((string)d["typ"]!))
+            if (Begehbar.Contains((string)d["typ"]!) || IstEffekt((string)d["typ"]!))
             {
                 continue;
             }

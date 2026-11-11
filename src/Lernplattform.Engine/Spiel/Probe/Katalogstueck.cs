@@ -18,14 +18,14 @@ public static class Katalogstueck
     public const string Praefix = "cc0:";
 
     /// <summary>Vorsilbe der Effekte: genau die Stuecke des Pakets "particles" sind Effekte (Test im Werkzeug).</summary>
-    public const string EffektPraefix = Praefix + "particles/";
+    public const string EffektPraefix = Wege.EffektPraefix;
 
     /// <summary>Dreiecke eines Effekts (Stern aus zwei Dreiecken, gleich <c>KatalogPruefung.EffektDreiecke</c>).</summary>
     public const int EffektDreiecke = 2;
 
     public static bool IstTyp(string? typ) => typ is not null && typ.StartsWith(Praefix, StringComparison.Ordinal);
 
-    public static bool IstEffekt(string? typ) => typ is not null && typ.StartsWith(EffektPraefix, StringComparison.Ordinal);
+    public static bool IstEffekt(string? typ) => Wege.IstEffekt(typ);
 
     /// <summary>
     /// Modell eines Effekts: ein Stern aus zwei gleichseitigen Dreiecken (eins mit der Spitze nach Norden, eins nach Sueden)

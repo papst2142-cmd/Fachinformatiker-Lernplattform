@@ -30,7 +30,7 @@ public static class Lieferpaket
     public static readonly Vector3 Ersatzfarbe = Probe.Netz.Farbe("#C79A62");
 
     /// <summary>Werte aus <c>darstellung.paket_platz</c> (fehlt er: vor 0,5, seitlich 0,42).</summary>
-    public static (float Vor, float Seitlich) Platz(Stadt stadt)
+    public static (float Vor, float Seitlich) Platz(IStadtSicht stadt)
     {
         var p = Get(StadtTueren.Darstellung(stadt), Abschnitt) as PyObjekt ?? [];
         return ((float)Py.F(Get(p, "vor", 0.5)), (float)Py.F(Get(p, "seitlich", 0.42)));
@@ -40,7 +40,7 @@ public static class Lieferpaket
     public static string? WohnOrt(StadtSzene szene) => szene.Orte.FirstOrDefault(o => o.Ansicht == SpielDaten.OrtZuhause)?.Id;
 
     /// <summary>Mitte des Stapels am Boden und die Richtung nach aussen (null, wenn die Wohnung keine Tuer hat).</summary>
-    public static (Vector2 Mitte, Vector2 Aussen)? Lage(StadtSzene szene, Stadt stadt)
+    public static (Vector2 Mitte, Vector2 Aussen)? Lage(StadtSzene szene, IStadtSicht stadt)
     {
         if (WohnOrt(szene) is not { } ort || szene.Tueren.FirstOrDefault(t => t.Ort == ort) is not { } tuer)
         {

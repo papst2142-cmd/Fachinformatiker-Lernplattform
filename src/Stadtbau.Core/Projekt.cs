@@ -343,7 +343,7 @@ public sealed class Projekt
         {
             var fassung = Aussen.Fassung(aussen, Basis, Innenraeume(), 1, null, Werkzeug.Kennzeile, "", "");
             var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt));
-            var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
+            var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             return StadtSzene.Bauen(stadt, stand, mitGebaeuden ? Ansicht3D.MitGebaeuden(Daten.Grafik, fassung) : Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException

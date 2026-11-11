@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Weisung P12-179 (Engine-Projekt, Nico 10.11.2026 P12-142 Punkt 4): die eigene Engine, gemeinsam fuer Spiel und
+       Stadtbau-Werkzeug: Szene, Netze, Grafik, Kamera, Innenraeume, Verkehr (Spiel/Probe/) und Format, Pruefung und Grenzen
+       der Staedte (Stadtbau/). Sie kennt nur die Grundlagen; was sie vom Spiel braucht, kommt ueber IStadtSicht,
+       ISpielSicht, ISpielRegeln und ISortiment (der Spiel-Kern in Lernplattform.Core liefert sie). Lernplattform.Core und
+       Stadtbau.Core verweisen auf die Engine, die Engine auf keins von beiden (Test EngineGrenzenTests). Namensraeume
+       unveraendert (Lernplattform.Core.Spiel.Probe, Lernplattform.Core.Stadtbau). Zeichnen (StadtFlaeche) bleibt in
+       Lernplattform.App. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Lernplattform.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lernplattform.Grundlagen\Lernplattform.Grundlagen.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lernplattform.Core" />
+    <InternalsVisibleTo Include="Lernplattform.Tests" />
+    <InternalsVisibleTo Include="Stadtbau.Tests" />
+  </ItemGroup>
+</Project>

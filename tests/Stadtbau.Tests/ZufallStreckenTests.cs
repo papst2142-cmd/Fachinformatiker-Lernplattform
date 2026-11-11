@@ -212,7 +212,7 @@ public class ZufallStreckenTests
         Assert.Equal(Autostrecken.WerkzeugTag, werkzeug.Spieltag);
         // im Spiel: Tag des Spielstands (der Probe-Spielstand steht auf einem spaeten Tag)
         var stadt = fassung.StadtFuer(fassung.MitKarte(D.Inhalt));
-        var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
+        var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
         var spiel = StadtSzene.Bauen(stadt, stand, D.Grafik);
         Assert.Equal(stand.Tag, spiel.Spieltag);
         Assert.NotEqual(Autostrecken.WerkzeugTag, spiel.Spieltag);
@@ -237,7 +237,7 @@ public class ZufallStreckenTests
         var v = Verkehr.Fuer(stadt1);
         Assert.Null(v.FuerTag);
         var stadt = D.Fassung.StadtFuer(D.Fassung.MitKarte(D.Inhalt));
-        var spaet = StadtSzene.Bauen(stadt, StadtbauPruefung.Probestand(stadt.Inhalt).Stand, D.Grafik);
+        var spaet = StadtSzene.Bauen(stadt, StadtbauSpiel.Probestand(stadt.Inhalt).Stand, D.Grafik);
         Assert.NotEqual(stadt1.Spieltag, spaet.Spieltag);
         Assert.True(v.Passt(spaet));
         Assert.Equal(v.Autos.Select(x => x.Strecke), Verkehr.Fuer(spaet).Autos.Select(x => x.Strecke));

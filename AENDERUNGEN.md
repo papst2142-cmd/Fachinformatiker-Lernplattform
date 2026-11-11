@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.63.0
+Umbau im Inneren für die Spielstadt. Das Spiel sieht genauso aus und verhält sich wie bisher.
+
+- Der Teil, der die Stadt und die Innenräume baut und zeichnet (die eigene „Engine“ von Spiel und Stadtbau-Werkzeug), ist jetzt ein eigener Baustein des Programms. Er kennt die Spielregeln nicht mehr selbst, sondern fragt sie über eine schmale, feste Schnittstelle ab.
+- Dazu kommt ein zweiter kleiner Baustein mit den gemeinsamen Grundlagen (Rechnen und Lesen wie im Original, Jahres- und Festzeiten, Wege in Räumen).
+- Das macht spätere Städte und Erweiterungen sicherer, weil ein Fehler an einer Stelle nicht mehr unbemerkt in einen anderen Teil wirken kann.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.62.1
 Kleine Absicherung für spätere Städte. Das Spiel sieht genauso aus und verhält sich wie bisher.
 

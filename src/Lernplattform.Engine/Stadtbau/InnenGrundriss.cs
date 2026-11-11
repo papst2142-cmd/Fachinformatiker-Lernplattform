@@ -21,7 +21,7 @@ public static class InnenGrundriss
 
     /// <summary>Orte, deren Innenraum das Werkzeug bearbeitet, in der Reihenfolge der Datei.</summary>
     public static List<string> Orte(PyObjekt innenraeume) =>
-        [.. innenraeume.Where(p => (Geschaefte.Laeden.Contains(p.Key) || Schalter.Orte.Contains(p.Key)) && p.Value is PyObjekt o && o["gebaeude"] is PyObjekt)
+        [.. innenraeume.Where(p => (SpielKern.Laeden.Contains(p.Key) || SpielKern.SchalterOrte.Contains(p.Key)) && p.Value is PyObjekt o && o["gebaeude"] is PyObjekt)
             .Select(p => p.Key)];
 
     /// <summary>Der fertige Grundriss eines Orts mit allen Zusaetzen (eine Kopie, wie das Spiel ihn beim Betreten baut).</summary>

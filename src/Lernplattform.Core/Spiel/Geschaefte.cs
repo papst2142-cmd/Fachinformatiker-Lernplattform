@@ -19,20 +19,20 @@ public sealed record Ware(string Art, string Id, string Name, long Preis, string
 /// angehaengte Ereignis <see cref="TeilGekauft"/>, die Ware liegt sofort im Lager. Eingekauft wird nur
 /// im geoeffneten Geschaeft, in dem die Figur steht (Tagesuhr der Stadt).
 /// </summary>
-public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
+public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten) : Probe.ISortiment
 {
     /// <summary>Neues Ereignis (nur C#): Teil im Elektromarkt gekauft {teil, menge, geld, tag, laden}.</summary>
     public const string TeilGekauft = "teil_gekauft";
 
-    public const string ArtMoebel = "moebel";
+    public const string ArtMoebel = Probe.SpielKern.ArtMoebel;
     public const string ArtTeil = "teil";
 
     /// <summary>Die Geschaefte (Ids wie in stadt.json neue_orte).</summary>
-    public static readonly IReadOnlyList<string> Laeden = ["moebelhaus", "elektromarkt", Kleidung.Laden];   // Kaufhaus: Phase 8 W5
+    public static readonly IReadOnlyList<string> Laeden = Probe.SpielKern.Laeden;   // Kaufhaus: Phase 8 W5; Weisung P12-179: Wert in der Engine
 
     public const string NurImLaden = "Einkaufen geht nur in einem geöffneten Geschäft.";
     public const string GibtEsNicht = "Das gibt es hier nicht.";
-    public const string NurMitFirma = "Teile für die Firma gibt es erst mit eigener Firma.";
+    public const string NurMitFirma = Probe.SpielKern.NurMitFirma;
 
     /// <summary>
     /// Phase 12 Welle 1 (Weisung P12-5): Abschnitt "moebel_neu" in geschaefte.json, nur angehaengt. "moebel" sind Moebel
@@ -127,6 +127,9 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
     }
 
     public Ware? Finden(string laden, string art, string id) => Waren(laden).FirstOrDefault(w => w.Art == art && w.Id == id);
+
+    /// <summary>Weisung P12-179: Name eines Moebels fuer die Engine (<see cref="Probe.ISortiment"/>).</summary>
+    string? Probe.ISortiment.MoebelName(string laden, string kennung) => Finden(laden, ArtMoebel, kennung)?.Name;
 
     /// <summary>Name eines Teile-Typs (hardware.json typen oder ersatz_typen).</summary>
     public static string TypName(string typ, PyObjekt inhalt) => Py.Str(Get(SpielAnsicht.ErsatzTypen(inhalt), typ, typ));
@@ -385,14 +388,5 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten)
         Auslage(new PyObjekt { { "gebaeude", gebaeude } }).Concat(Enumerable.Range(1, Stadtbau.Etagen.Anzahl(gebaeude))
             .Where(k => Stadtbau.Etagen.Gibt(gebaeude, k)).SelectMany(k => Auslage(new PyObjekt { { "gebaeude", Stadtbau.Etagen.Gebaeude(gebaeude, k) } })));
 
-    public static IEnumerable<PyObjekt> Auslage(PyObjekt laden)
-    {
-        var gebaeude = Objekt(laden["gebaeude"]);
-        var deko = Liste(gebaeude["raeume"]).Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko"));
-        if (Get(gebaeude, "flur") is PyObjekt flur)
-        {
-            deko = deko.Concat(ListeOderLeer(flur, "deko"));
-        }
-        return deko.Select(Objekt).Where(d => Py.Hat(d, "ware"));
-    }
+    public static IEnumerable<PyObjekt> Auslage(PyObjekt laden) => Probe.SpielKern.Auslage(laden);
 }

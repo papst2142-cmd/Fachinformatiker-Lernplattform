@@ -49,30 +49,30 @@ public class OrteIn3DTests
     [Fact]
     public void Gegenprobe_ProbestandOhneServerfarm_LokschuppenFehlt()
     {
-        StadtbauPruefung.ProbestandOhneFarmFuerTests = true;
+        StadtbauSpiel.ProbestandOhneFarmFuerTests = true;
         try
         {
             Assert.Equal(["lokschuppen"], Fehlend(Gezeichnet()));
         }
         finally
         {
-            StadtbauPruefung.ProbestandOhneFarmFuerTests = false;
+            StadtbauSpiel.ProbestandOhneFarmFuerTests = false;
         }
     }
 
     [Fact]
     public void Probestand_SchaltetServerfarmFrei_SpielstandSonstGleich()
     {
-        var mit = StadtbauPruefung.Probestand(D.Inhalt).Stand;
+        var mit = StadtbauSpiel.Probestand(D.Inhalt).Stand;
         Assert.NotNull(mit.FarmFrei);
-        StadtbauPruefung.ProbestandOhneFarmFuerTests = true;
+        StadtbauSpiel.ProbestandOhneFarmFuerTests = true;
         try
         {
-            Assert.Null(StadtbauPruefung.Probestand(D.Inhalt).Stand.FarmFrei);
+            Assert.Null(StadtbauSpiel.Probestand(D.Inhalt).Stand.FarmFrei);
         }
         finally
         {
-            StadtbauPruefung.ProbestandOhneFarmFuerTests = false;
+            StadtbauSpiel.ProbestandOhneFarmFuerTests = false;
         }
         Assert.Equal(200, mit.TageFertig);
     }

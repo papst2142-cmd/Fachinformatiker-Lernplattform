@@ -211,7 +211,7 @@ public class TestdateiTests
         Assert.Contains(werkzeug.Stuecke, m => m.Name == "cc0:car_kit/sedan");
         Assert.Contains(werkzeug.Stuecke, m => m.Name == Katalogstueck.Praefix + Effekt);
         var stadt = f.StadtFuer(f.MitKarte(D.Inhalt));
-        var stand = StadtbauPruefung.Probestand(stadt.Inhalt).Stand;
+        var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
         var spiel = StadtSzene.Bauen(stadt, stand, D.Grafik!.Mit(GrafikBibliothek.KatalogLaden(Daten.Lesen(Ordner + "katalog_verbaut.bin")!,
             System.Text.Encoding.UTF8.GetString(Daten.Lesen(Ordner + "katalog_verbaut.json")!))), e.Fest, D.Feste, e.Jahreszeit);
         Assert.Equal(StadtSzeneHash.Stadt(spiel), StadtSzeneHash.Stadt(werkzeug));

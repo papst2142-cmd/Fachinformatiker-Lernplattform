@@ -78,10 +78,10 @@ public sealed class Innenraum
         var muster = FestDeko.Muster(feste, fest);
         if (muster is not null)
         {
-            var ziele = Geschaefte.Laeden.Contains(ort)
-                ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", gebaeude } })
+            var ziele = SpielKern.Laeden.Contains(ort)
+                ? SpielKern.Auslage(new PyObjekt { { "gebaeude", gebaeude } })
                     .Select(d => (Py.F(d["x"]) + (Py.F(d["w"]) / 2), Py.F(d["y"]) + (Py.F(d["h"]) / 2),
-                        Wohnung.MoebelReichweite + 0.3 + (Math.Max(Py.F(d["w"]), Py.F(d["h"])) / 2))).ToList()
+                        SpielKern.MoebelReichweite + 0.3 + (Math.Max(Py.F(d["w"]), Py.F(d["h"])) / 2))).ToList()
                 : [];
             _festPlan = FestDeko.InnenPlanen(ort, gebaeude, leute, grafik, feste, muster, ort == OrtZuhause, ziele);
             _festMuster = muster;
@@ -320,8 +320,8 @@ public sealed class Innenraum
         "filiale" => OrtFiliale,
         Serverfarm => Serverfarm,
         not null when ansicht.StartsWith("kunde:", StringComparison.Ordinal) => ansicht["kunde:".Length..],
-        not null when ansicht.StartsWith("geschaeft:", StringComparison.Ordinal) && Geschaefte.Laeden.Contains(ansicht["geschaeft:".Length..]) => ansicht["geschaeft:".Length..],
-        not null when ansicht.StartsWith("schalter:", StringComparison.Ordinal) && Schalter.Orte.Contains(ansicht["schalter:".Length..]) => ansicht["schalter:".Length..],
+        not null when ansicht.StartsWith("geschaeft:", StringComparison.Ordinal) && SpielKern.Laeden.Contains(ansicht["geschaeft:".Length..]) => ansicht["geschaeft:".Length..],
+        not null when ansicht.StartsWith("schalter:", StringComparison.Ordinal) && SpielKern.SchalterOrte.Contains(ansicht["schalter:".Length..]) => ansicht["schalter:".Length..],
         _ => null,
     };
 
@@ -331,7 +331,7 @@ public sealed class Innenraum
     /// Inhalt von innenraeume.json; <paramref name="geschaefte"/>: Inhalt von geschaefte.json (Kleidung im Kaufhaus).
     /// </summary>
     /// <remarks>Phase 8 W9: <paramref name="jahreszeit"/> faerbt die Wiese um das Haus (Sommer = wie vorher).</remarks>
-    public static Innenraum? Bauen(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null,
+    public static Innenraum? Bauen(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte = null,
         string? fest = null, PyObjekt? feste = null, Jahreszeit jahreszeit = Jahreszeit.Sommer)
     {
         var raum = BauenOhneJahreszeit(ansicht, stand, innenraeume, grafik, geschaefte, fest, feste);
@@ -355,7 +355,7 @@ public sealed class Innenraum
         _teile[_wiese] = _teile[_wiese] with { Farbe = Jahreszeitfarben.IstSchnee(neu) ? Jahreszeitfarben.Schnee(0.9f) : Mischen(neu, Vector3.Zero, 0.1f) };
     }
 
-    private static Innenraum? BauenOhneJahreszeit(string? ansicht, Spielstand stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
+    private static Innenraum? BauenOhneJahreszeit(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
         string? fest, PyObjekt? feste) =>
         EingabenFuer(ansicht, stand, innenraeume, geschaefte) is { } e
             ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste)
@@ -370,7 +370,7 @@ public sealed class Innenraum
     /// das Spiel einen vorgeladenen Innenraum wieder, auch wenn ein Ereignis den Spielstand ersetzt hat (vorher galt nur
     /// derselbe Spielstand). null = kein Innenraum (oder nicht als Text darstellbar, dann wird immer neu gebaut).
     /// </summary>
-    public static string? InhaltSignatur(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
+    public static string? InhaltSignatur(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
     {
         if (EingabenFuer(ansicht, stand, innenraeume, geschaefte) is not { } e)
         {
@@ -390,7 +390,7 @@ public sealed class Innenraum
         }
     }
 
-    private static Eingaben? EingabenFuer(string? ansicht, Spielstand stand, PyObjekt? innenraeume, PyObjekt? geschaefte)
+    private static Eingaben? EingabenFuer(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, PyObjekt? geschaefte)
     {
         if (OrtFuer(ansicht) is not { } ort)
         {
@@ -404,7 +404,7 @@ public sealed class Innenraum
             }
             var plaetze = Get(farm, "plaetze") as PyObjekt ?? [];
             var personen = new List<InnenPerson>();
-            foreach (var p in ListeOderLeer(Betrieb.FarmInhalt(stand.Inhalt), "personen").Select(Objekt))
+            foreach (var p in ListeOderLeer(SpielKern.Regeln.FarmInhalt(stand.Inhalt), "personen").Select(Objekt))
             {
                 if (Get(plaetze, Py.Str(p["id"])) is List<object?> platz)
                 {
@@ -415,7 +415,7 @@ public sealed class Innenraum
             }
             return new Eingaben(ansicht!, ort, Objekt(farm["gebaeude"]), personen, null, null);
         }
-        if (Geschaefte.Laeden.Contains(ort) || Schalter.Orte.Contains(ort))
+        if (SpielKern.Laeden.Contains(ort) || SpielKern.SchalterOrte.Contains(ort))
         {
             // W7: Moebelhaus und Elektromarkt (Grundriss, Auslage und Verkaeufer aus innenraeume.json),
             // W7b: Bank und Amt (Grundriss, Schalter und Person ebenso)
@@ -438,11 +438,11 @@ public sealed class Innenraum
             var nachtrag = Get(innenraeume!, "zusatz_nachtrag") is PyObjekt zn ? Get(zn, ort) as PyObjekt : null;
             return MitMoebeln(innenraeume, new Eingaben(ansicht!, ort, MitZusatz(MitZusatz(Objekt(laden["gebaeude"]), zusatz), nachtrag), verkauf, null, geschaefte));
         }
-        if (ort == OrtZuhause && Wohnung.Bleibe(stand.Wohnung, stand.Inhalt) is null)
+        if (ort == OrtZuhause && SpielKern.Regeln.Bleibe(stand.Wohnung, stand.Inhalt) is null)
         {
             return null;
         }
-        if (ort == OrtFiliale && Betrieb.FilialGebaeude(stand) is null)
+        if (ort == OrtFiliale && SpielKern.Regeln.FilialGebaeude(stand) is null)
         {
             return null;
         }
@@ -450,16 +450,16 @@ public sealed class Innenraum
         {
             return null;
         }
-        var gebaeude = SpielOrte.Gebaeude(ort, stand);
+        var gebaeude = SpielKern.Regeln.OrtGebaeude(ort, stand);
         // W8b (Nico 2a): Zusatz fuer Kundenorte (Bahnhof Talheim innen als Wartehalle), angehaengt in innenraeume.json
         if (innenraeume is not null && Get(innenraeume, "zusatz_kunden") is PyObjekt zk && Get(zk, ort) is PyObjekt zo)
         {
             gebaeude = MitZusatz(gebaeude, zo);
         }
         var auftraege = ort == OrtZuhause ? new PyDict() : stand.Auftraege(ort);
-        var leute = ort == OrtZuhause ? [] : SpielOrte.Personen(ort, stand)
+        var leute = ort == OrtZuhause ? [] : SpielKern.Regeln.OrtPersonen(ort, stand)
             .Select(p => Person(p, auftraege.Get(p["id"]) is List<object?> { Count: > 0 })).ToList();
-        var boeden = ort == OrtZuhause ? Objekt(Wohnung.Einrichtung(stand)["boeden"]) : null;
+        var boeden = ort == OrtZuhause ? Objekt(SpielKern.Regeln.Einrichtung(stand)["boeden"]) : null;
         return MitMoebeln(innenraeume, new Eingaben(ansicht!, ort, gebaeude, leute, boeden, null));
     }
 
@@ -636,21 +636,21 @@ public sealed class Innenraum
         var alle = ListeOderLeer(Gebaeude, "raeume").Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko").Select(Objekt))
             .Concat(Gebaeude["flur"] is PyObjekt flur ? ListeOderLeer(flur, "deko").Select(Objekt) : []);
         return alle.Where(d => Py.Gleich(d["typ"], typ))
-            .Select(d => (d, a: Spielwelt.Abstand(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]), x, z)))
-            .Where(p => p.a <= Wohnung.MoebelReichweite).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault();
+            .Select(d => (d, a: SpielKern.Abstand(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]), x, z)))
+            .Where(p => p.a <= SpielKern.MoebelReichweite).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault();
     }
 
     public InnenPerson? PersonNahe(double x, double z) =>
         Wege.PersonNahe(x, z, Lauf) is { } p ? Personen.FirstOrDefault(q => ReferenceEquals(q.Daten, p)) : null;
 
     /// <summary>Text unter der Ansicht (Ueberschrift, Text, Knoepfe) wie place_message/home_message.</summary>
-    public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double z, Spielstand stand)
+    public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double z, ISpielSicht stand)
     {
-        if (Geschaefte.Laeden.Contains(Ort))
+        if (SpielKern.Laeden.Contains(Ort))
         {
             return LadenNachricht(x, z, stand);
         }
-        if (Schalter.Orte.Contains(Ort))
+        if (SpielKern.SchalterOrte.Contains(Ort))
         {
             return SchalterNachricht(x, z, stand);
         }
@@ -662,10 +662,13 @@ public sealed class Innenraum
             }
             var raum = Wege.RaumBei(x, z, Gebaeude);
             var wo = raum is not null ? PyFormat.Prozent("Du bist im Raum %s.", raum["name"]) : "Du bist im Flur.";
-            return (wo, Betrieb.FarmOrtText(stand, stand.Inhalt), []);
+            return (wo, SpielKern.Regeln.FarmOrtText(stand, stand.Inhalt), []);
         }
-        return SpielOrte.Nachricht(Ort, x, z, PersonNahe(x, z)?.Daten, stand, Gebaeude);
+        return SpielKern.Regeln.OrtNachricht(Ort, x, z, PersonNahe(x, z)?.Daten, stand, Gebaeude);
     }
+
+    /// <summary>Weisung P12-74: Hinweis auf einer Etage ohne Verkaufsperson (<c>SpielProbeTexte.EtageOhneVerkauf</c> verweist hierher).</summary>
+    public const string EtageOhneVerkauf = "Tippe auf eine Ware, um sie anzusehen.";
 
     /// <summary>W7: Aktion "Sortiment" (alle Waren des Geschaefts) und "Sortiment" eines Teile-Typs.</summary>
     public const string AktionSortiment = "sortiment";
@@ -675,15 +678,15 @@ public sealed class Innenraum
 
     /// <summary>W7: Ware der Auslage an der Stelle (Tippen), etwas grosszuegiger als ihr Umriss.</summary>
     public PyObjekt? WareBei(double x, double z) =>
-        Geschaefte.Laeden.Contains(Ort)
-            ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", Gebaeude } }).FirstOrDefault(d => Abstand(d, x, z) <= 0.2)
+        SpielKern.Laeden.Contains(Ort)
+            ? SpielKern.Auslage(new PyObjekt { { "gebaeude", Gebaeude } }).FirstOrDefault(d => Abstand(d, x, z) <= 0.2)
             : null;
 
     /// <summary>W7: naechste Ware der Auslage in Reichweite der Figur (wie furniture_near, 0,9 vom Rand).</summary>
     public PyObjekt? WareNahe(double x, double z) =>
-        Geschaefte.Laeden.Contains(Ort)
-            ? Geschaefte.Auslage(new PyObjekt { { "gebaeude", Gebaeude } })
-                .Select(d => (d, a: Abstand(d, x, z))).Where(p => p.a <= Wohnung.MoebelReichweite + 0.3).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault()
+        SpielKern.Laeden.Contains(Ort)
+            ? SpielKern.Auslage(new PyObjekt { { "gebaeude", Gebaeude } })
+                .Select(d => (d, a: Abstand(d, x, z))).Where(p => p.a <= SpielKern.MoebelReichweite + 0.3).OrderBy(p => p.a).Select(p => p.d).FirstOrDefault()
             : null;
 
     private static double Abstand(PyObjekt d, double x, double z)
@@ -694,7 +697,7 @@ public sealed class Innenraum
         return Math.Sqrt((dx * dx) + (dz * dz));
     }
 
-    private (string, string, List<(string, string)>) LadenNachricht(double x, double z, Spielstand stand)
+    private (string, string, List<(string, string)>) LadenNachricht(double x, double z, ISpielSicht stand)
     {
         var name = Ort switch { "moebelhaus" => "Möbelhaus", "kaufhaus" => "Kaufhaus", _ => "Elektromarkt" };
         var sortiment = (AktionSortiment, "Sortiment");
@@ -707,23 +710,23 @@ public sealed class Innenraum
             var ware = Py.Str(d["ware"]);
             if (ware.StartsWith("kleidung:", StringComparison.Ordinal))
             {
-                return (Kleidung.Abteilung(Kleiderdaten, ware["kleidung:".Length..]), Kleidung.FuerDieFigur, [(AktionSortiment + ":" + ware["kleidung:".Length..], "Ansehen")]);
+                return (SpielKern.Regeln.Abteilung(Kleiderdaten, ware["kleidung:".Length..]), SpielKern.KleidungFuerDieFigur, [(AktionSortiment + ":" + ware["kleidung:".Length..], "Ansehen")]);
             }
             if (ware.StartsWith("teile:", StringComparison.Ordinal))
             {
                 var typ = ware["teile:".Length..];
-                return (Geschaefte.TypName(typ, stand.Inhalt), Py.Wahr(stand.Firma) ? "Teile für die Firma, sofort im Lager." : Geschaefte.NurMitFirma,
+                return (SpielKern.Regeln.TeilName(typ, stand.Inhalt), Py.Wahr(stand.Firma) ? "Teile für die Firma, sofort im Lager." : SpielKern.NurMitFirma,
                     [(AktionSortiment + ":" + typ, "Ansehen")]);
             }
-            if (Wohnung.MoebelStueck(ware, stand.Inhalt) is { } m)
+            if (SpielKern.Regeln.MoebelStueck(ware, stand.Inhalt) is { } m)
             {
                 var texte = ListeOderLeer(m, "texte");
-                var zeilen = PyFormat.Prozent("Preis: %s", Wohnung.GanzeEuro(m["preis"]))
+                var zeilen = PyFormat.Prozent("Preis: %s", SpielKern.Regeln.GanzeEuro(m["preis"]))
                     + (texte.Count > 0 ? "\n" + Py.Str(texte[0]) : "");
-                if (Py.Gleich(Get(m, "typ"), Charakter.SchrankTyp))
+                if (Py.Gleich(Get(m, "typ"), SpielKern.SchrankTyp))
                 {
                     // Phase 12 Welle 1: Plaetze fuer Kleidung und wozu der Schrank da ist
-                    zeilen += "\n" + Charakter.PlaetzeText(Charakter.Plaetze(m)) + ". " + Charakter.ImMoebelhaus;
+                    zeilen += "\n" + SpielKern.Regeln.SchrankPlaetzeText(m) + ". " + SpielKern.ImMoebelhaus;
                 }
                 var knoepfe = new List<(string, string)>();
                 if (stand.Geld >= Py.Int(m["preis"]))
@@ -735,7 +738,7 @@ public sealed class Innenraum
             }
         }
         // Weisung P12-74: auf einer Etage ohne Verkaufsperson nur der Teil zu den Waren (Erdgeschoss unveraendert)
-        var hinweis = Personen.Count == 0 && Stadtbau.Etagen.Teilen(Ansicht).Etage > 0 ? Texte.SpielProbeTexte.EtageOhneVerkauf
+        var hinweis = Personen.Count == 0 && Stadtbau.Etagen.Teilen(Ansicht).Etage > 0 ? EtageOhneVerkauf
             : "Tippe auf eine Ware oder sprich mit dem Verkauf.";
         return (PyFormat.Prozent("Du bist im %s.", name), hinweis, [sortiment]);
     }
@@ -743,16 +746,16 @@ public sealed class Innenraum
     /// <summary>W7b: Aktion "am Schalter" (Bank: Kredite, Amt: Gruendung oder Steuern).</summary>
     public const string AktionSchalter = "schalter";
 
-    private (string, string, List<(string, string)>) SchalterNachricht(double x, double z, Spielstand stand)
+    private (string, string, List<(string, string)>) SchalterNachricht(double x, double z, ISpielSicht stand)
     {
         var firma = Py.Wahr(stand.Firma);
-        var knopf = (AktionSchalter, Ort == Schalter.Bank ? "Kredite" : firma ? "Steuern" : "Gründung");
+        var knopf = (AktionSchalter, Ort == SpielKern.Bank ? "Kredite" : firma ? "Steuern" : "Gründung");
         if (PersonNahe(x, z) is { } p)
         {
             return (PyFormat.Prozent("%s · %s", p.Name, Get(p.Daten, "rolle", "")), Py.Str(Get(p.Daten, "text", "")), [knopf]);
         }
         var person = Personen.Count > 0 ? Personen[0].Name : "";
-        return Ort == Schalter.Bank
+        return Ort == SpielKern.Bank
             ? ("Du bist in der Bank.", PyFormat.Prozent("Am Schalter hilft dir %s mit Krediten für deine Firma.", person), [knopf])
             : ("Du bist auf dem Amt.", PyFormat.Prozent("Am Schalter hilft dir %s mit der Gründung und der Umsatzsteuer.", person), [knopf]);
     }
@@ -857,7 +860,7 @@ public sealed class Innenraum
         Aussenwaende(Get(flur, "eingang") as PyObjekt);
         var deko = Liste(Gebaeude["raeume"]).Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko"))
             .Concat(ListeOderLeer(flur, "deko")).Select(Objekt);
-        if (Fest is not null && Ort == Kleidung.Laden)
+        if (Fest is not null && Ort == SpielKern.KleidungLaden)
         {
             // Phase 8 W6: die ersten Puppen im Flur tragen die Festkleidung
             _festPuppen = [.. ListeOderLeer(flur, "deko").Select(Objekt).Where(d => Py.Gleich(d["typ"], "puppe")).Take(FestDeko.Puppen(_festDaten))];
@@ -1495,7 +1498,7 @@ public sealed class Innenraum
         if (ware is not null && ware.StartsWith("kleidung:", StringComparison.Ordinal))
         {
             // Kaufhaus: Kappen und Muetzen in den Farben des Sortiments
-            var farben = Kleidung.Farben(Kleiderdaten, ware);
+            var farben = SpielKern.Regeln.KleidungFarben(Kleiderdaten, ware);
             var n = Math.Max(1, (int)((b - 0.2f) / 0.32f));
             for (var i = 0; i < n; i++)
             {
@@ -1581,7 +1584,7 @@ public sealed class Innenraum
         Kasten(r, 0, (t / 2) - 0.2f, 0.1f, 0.4f, 0, 0.04f, Farben.Metall);
         Kasten(r, b - 0.1f, (t / 2) - 0.2f, 0.1f, 0.4f, 0, 0.04f, Farben.Metall);
         Kasten(r, 0, (t / 2) - 0.02f, b, 0.04f, stange - 0.04f, stange, Farben.Metall);
-        var farben = Kleidung.Farben(Kleiderdaten, ware);
+        var farben = SpielKern.Regeln.KleidungFarben(Kleiderdaten, ware);
         var anzahl = Math.Max(1, (int)((b - 0.3f) / 0.12f));
         for (var i = 0; i < anzahl; i++)
         {
@@ -1594,7 +1597,7 @@ public sealed class Innenraum
     /// <summary>Kaufhaus (Phase 8 W5): gefaltete Stapel (Hosen) oder Schuhkartons und Schuhe in drei Boeden.</summary>
     private void Kleiderfaecher(Rahmen r, float b, float t, string? ware)
     {
-        var farben = Kleidung.Farben(Kleiderdaten, ware);
+        var farben = SpielKern.Regeln.KleidungFarben(Kleiderdaten, ware);
         var schuhe = ware == "kleidung:schuhe";
         var (breite, hoehe) = schuhe ? (0.28f, 0.12f) : (0.36f, 0.16f);
         var tief = Math.Min(0.4f, t * 0.7f);
@@ -1644,14 +1647,16 @@ public sealed class Innenraum
         {
             return kleidung;
         }
-        var fest = Kleidung.Alle(Kleiderdaten).Where(k => k.Festzeit == Fest && k.Slot is ("oberteil" or "kopf")).ToList();
-        return [.. fest.Select(k => k.Id), .. kleidung.Where(id => Kleidung.Finden(Kleiderdaten, id) is { } k && !fest.Any(f => f.Slot == k.Slot))];
+        var alle = SpielKern.Regeln.KleidungAlle(Kleiderdaten);
+        var fest = alle.Where(k => k.Festzeit == Fest && k.Slot is ("oberteil" or "kopf")).ToList();
+        // Kleidung.Finden = erstes Stueck mit dieser Kennung
+        return [.. fest.Select(k => k.Id), .. kleidung.Where(id => alle.FindIndex(k => k.Id == id) is var i and >= 0 && !fest.Any(f => f.Slot == alle[i].Slot))];
     }
 
     /// <summary>Kaufhaus (Phase 8 W5): Schaufensterpuppe (die Figur ohne Gesichtsfarbe) mit Kleidung aus dem Sortiment.</summary>
     private void Puppe(float x, float z, float w, float t, int dreh, List<string> kleidung)
     {
-        var stuecke = kleidung.Select(id => Kleidung.FigurStueck(Kleiderdaten, id)).OfType<Figur.Stueck>().ToList();
+        var stuecke = kleidung.Select(id => SpielKern.Regeln.FigurStueck(Kleiderdaten, id)).OfType<Figur.Stueck>().ToList();
         var aussehen = new PyObjekt { { "haut", "hell" }, { "frisur", "glatze" }, { "haarfarbe", "grau" }, { "oberteil", "cyan" } };
         var netz = Figur.Netz(Grafik, aussehen, FigurHoehe * 0.98f, stuecke);
         var lage = Matrix4x4.CreateRotationY(-MathF.PI / 2 * dreh) * Matrix4x4.CreateTranslation(x + (w / 2), 0.1f, z + (t / 2));

@@ -97,44 +97,4 @@ public static partial class StadtbauGrenzen
             return (dreiecke, aufrufe);
         }
     }
-
-    /// <summary>
-    /// Was sich draussen bewegt und jedes Bild gezeichnet wird: Autos bzw. Festgestalten (ein Aufruf, alle Netze), die
-    /// Figur (zweimal: im Bild und ganz vorn), der Kreis um sie, die Zielmarke (wenn ein Ziel da ist) und die Pakete vor
-    /// der Tuer (wenn welche da sind). Ohne Grafik zeichnet das Spiel keine Autos.
-    /// </summary>
-    public static (long Dreiecke, int Aufrufe) Bewegt(StadtSpiel spiel, bool fern, int autosHoechstens = 16, long? uhr = null)
-    {
-        long dreiecke = 0;
-        var aufrufe = 0;
-        var szene = spiel.Szene;
-        if (spiel.Grafik is { } grafik)
-        {
-            var satz = FestVerkehr.Fuer(szene.Fest, uhr ?? Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
-            var gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(grafik, satz);
-            var verkehr = FestVerkehr.VerkehrFuer(szene, satz);
-            dreiecke += FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, autosHoechstens).Sum(n => (long)n.Indizes.Count / 3);
-            aufrufe++;
-        }
-        var aussehen = spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
-        var bild = spiel.SchrittBild;
-        var figur = bild >= 0 ? Figur.Netz(spiel.Grafik, aussehen, 1f, spiel.Kleidung, spiel.Bewegung, bild)
-            : spiel.Kleidung is { Count: > 0 } k ? Figur.Netz(spiel.Grafik, aussehen, 1f, k) : Figur.Netz(spiel.Grafik, aussehen, 1f);
-        dreiecke += 2L * (figur.Indizes.Count / 3);
-        aufrufe += 2;
-        dreiecke += Figur.Ring(aussehen, 0.22f, 0.06f).Indizes.Count / 3;
-        aufrufe++;
-        if (spiel.Ziel is not null)
-        {
-            dreiecke += ProbeWelt.Zielmarke().Indizes.Count / 3;
-            aufrufe++;
-        }
-        var pakete = spiel.PaketeVorDerTuer;
-        if (pakete > 0 && Lieferpaket.Lage(szene, spiel.Stadt) is not null)
-        {
-            dreiecke += Lieferpaket.Bauen(spiel.Grafik, pakete).Indizes.Count / 3;
-            aufrufe++;
-        }
-        return (dreiecke, aufrufe);
-    }
 }
