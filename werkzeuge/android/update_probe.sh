@@ -127,6 +127,11 @@ adb install -r "$APK0" > /dev/null || { zeile "FEHLER: Installation von n per ad
 adb shell appops set "$PAKET" REQUEST_INSTALL_PACKAGES allow
 anbieten "$APK1"
 schritt 1 "$C1" || { zeile "FEHLER: Update n -> n+1 nicht angekommen"; rc=1; }
+# Lauf 846 Versuch 2: Android (ab 12) laesst dieselbe App von demselben Installer nur einmal in 30 s ohne Rueckfrage
+# aktualisieren (Drossel fuer stille Updates). Schritt 2 begann dort 27 s nach Schritt 1, Android fragte nach (Status -1).
+# Echte Updates liegen Tage auseinander; die Probe wartet darum 35 s, damit Schritt 2 dieselbe Lage prueft wie am Geraet.
+zeile "Pause 35 s (Drossel stiller Updates von Android)"
+sleep 35
 anbieten "$APK2"
 schritt 2 "$C2" || { zeile "FEHLER: Update n+1 -> n+2 nicht angekommen"; rc=1; }
 # Schritt 3: n+2 starten, update.log und Kopien lesen (kein neueres Angebot mehr)
