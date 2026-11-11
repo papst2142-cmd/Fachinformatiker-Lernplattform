@@ -154,7 +154,7 @@ public sealed partial class StadtFlaeche
         var mitProgramm = false;
         foreach (var s in _instanzen)
         {
-            if (s.Satz.Ziel == Instanzen.Gruen && abstand > GruenWeite)
+            if (s.Satz.Ziel == Instanzen.Gruen && !_gw.Gruen(abstand))
             {
                 continue;
             }

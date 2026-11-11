@@ -32,6 +32,15 @@ public sealed partial class Hauptansicht
     public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.GebaeudeEntwerfen];
 
     private readonly TextBlock _speicherStand = Schrift.Text("", "Klein");
+
+    /// <summary>Welle G1 (Weisung P12-183, Sammelliste 288): Version immer sichtbar, rechts in der Titelzeile vor den Menues.</summary>
+    private readonly TextBlock _versionKopf = Schrift.Text(Texte.VersionKopf, "Klein", farbe: "Pinsel.muted");
+
+    /// <summary>Start-Test: die Versionsanzeige der Titelzeile.</summary>
+    internal TextBlock VersionKopf => _versionKopf;
+
+    /// <summary>Gegenprobe (nur Tests): ohne Versionsanzeige wie bis S 0.38.0.</summary>
+    internal static bool VersionAltFuerTests { get; set; }
     private readonly Panel _menueEbene = new() { IsVisible = false };
     private readonly Border _menueKarte = new()
     {
@@ -71,9 +80,13 @@ public sealed partial class Hauptansicht
         var einstellungen = MenueKnopf(Texte.MenueEinstellungen, "⚙ " + Texte.MenueEinstellungen + " ▾", _einstellungenMenue);
         _beenden.Margin = new Thickness(0);
         var rechts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { projekt, einstellungen, _beenden } };
-        var titelZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+        _versionKopf.VerticalAlignment = VerticalAlignment.Center;
+        AutomationProperties.SetName(_versionKopf, Texte.VersionKopfName);
+        var titelZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto"), ColumnSpacing = 12 };
         titelZeile.Children.Add(titelLinks);
-        Grid.SetColumn(rechts, 1);
+        Grid.SetColumn(_versionKopf, 1);
+        titelZeile.Children.Add(_versionKopf);
+        Grid.SetColumn(rechts, 2);
         titelZeile.Children.Add(rechts);
 
         // Menue Projekt (Punkt 3) und Menue Einstellungen (Punkt 5)
@@ -300,8 +313,9 @@ public sealed partial class Hauptansicht
     }
 
     /// <summary>Titel und Speicherstand (Punkt 2): „Projekt „Name“ · gespeichert ✓“.</summary>
-    private void TitelSetzen()
+    internal void TitelSetzen()
     {
+        _versionKopf.IsVisible = !VersionAltFuerTests;
         _titel.Text = _projekt is null ? Werkzeug.Name : Texte.ProjektTitel(_projekt.Name) + (_projekt.NurLesen ? " (nur ansehen)" : "");
         SpeicherStandZeigen();
     }

@@ -303,6 +303,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         Optionen.Spiel => SpielKarte(),
         Optionen.Ton => Ton(),
         Optionen.Vollbild => VollbildKarte(),
+        Optionen.Grafik => GrafikKarte(),
         Optionen.Tasten => Tasten(),
         Optionen.Beenden => BeendenKarte(),
         _ => Platzhalterzeile(),

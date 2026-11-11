@@ -3,6 +3,13 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.39.0
+
+Versionsanzeige und Hinweis auf die neuen Grafikstufen der Lernplattform.
+
+- Die Version des Werkzeugs (zum Beispiel „S 0.39.0“) steht jetzt immer klein rechts oben in der Titelzeile, auf der Startseite und beim Bauen. Vorher stand sie nur im Menü „Einstellungen“.
+- Die Leiste „Grenzen live“ prüft die Stadt weiter gegen die Grenzen der Stufe Mittel (Vorgabe im Spiel). Neu steht darunter eine Zeile, wie viel die Stadt von den Grenzen der Stufen Niedrig und Hoch ausschöpft, zum Beispiel „Niedrig 81 % · Hoch 70 %“. Ein roter Fund „Stadt zu teuer“ entsteht wie bisher nur über der Grenze von Mittel.
+
 ## S 0.38.0
 
 Umbau im Inneren, an der Bedienung ändert sich nichts.

@@ -172,6 +172,7 @@ public static partial class StadtbauMessung
                 await GroesseAsync(a, f, b, h);
                 Layout(a, seite + " " + name + " " + (dunkel ? "dunkel" : "hell"));
                 BeschriftungPruefen(a, seite + " " + name + " " + (dunkel ? "dunkel" : "hell"));
+                VersionPruefen(a, seite + " " + name + " " + (dunkel ? "dunkel" : "hell"));
             }
         }
         if (a.Dunkel)
@@ -217,6 +218,7 @@ public static partial class StadtbauMessung
         }
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         await AlleGroessenAsync(a, f, "Start");
+        await VersionGegenprobeAsync(a);
 
         // 1. Elektromarkt: Fund 216 rot, Export gesperrt
         await MessenAsync("Projekt anlegen (Elektromarkt)", a, () =>

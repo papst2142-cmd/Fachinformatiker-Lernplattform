@@ -370,7 +370,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _anforderungStempel = Stopwatch.GetTimestamp();
         }
-        RequestNextFrameRendering();
+        // Welle Grafik G1: auch Anlaesse von aussen halten die Bildbremse ein (ohne Bremse sofort wie vorher)
+        GebremstAnfordern();
     }
 
     /// <summary>Zeichenaufrufe im letzten Bild (Messung, Wunsch 4).</summary>
@@ -462,6 +463,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _autoOrtDurch = gl.GetUniformLocationString(_autoProgramm, "uDurch");
             _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
             InstanzenEinrichten(gl, es, v);
+            GrafikEinrichten(gl, es, v);
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
@@ -520,6 +522,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _neuNetze.Clear();
         _paket.Clear();
         _ampelLichter = null;
+        GrafikFrei(null);
         base.OnOpenGlLost();
     }
 
@@ -531,6 +534,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             netz?.Freigeben(gl);
         }
         _ampelLichter = null;
+        GrafikFrei(gl);
         _innenGl.Clear();
         _hochladen = null;
         _vorladeAufgabe = null;
@@ -725,6 +729,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _festAufrufe = 0;
         _festDreiecke = 0;
         _letztesBild = jetzt;
+        _zielFb = fb;
+        GrafikWerteUebernehmen(gl);
         if (_laedtVor && GlBereit)
         {
             VorladenBild(gl, jetzt, abstandMs, bytesBeginn, ruhte, startStempel);
@@ -855,7 +861,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
         var hoehe = (int)Math.Max(1, Bounds.Height * skalierung);
-        gl.Viewport(0, 0, breite, hoehe);
+        // Welle Grafik G1: bei Aufloesung unter 100 % in den eigenen Bildspeicher (Mittel: wie vorher)
+        var (zeichenBreite, zeichenHoehe) = GrafikBildBeginnen(gl, breite, hoehe);
+        gl.Viewport(0, 0, zeichenBreite, zeichenHoehe);
         var himmel = Himmel();
         var licht = AktuellesLicht();
         var tagAnteil = (licht.Hell - 0.42f) / 0.58f;
@@ -866,8 +874,10 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         gl.DepthFunc(GlLequal);
         gl.DepthMask(1);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ZeitabfrageBeginnen();
         // Welle D1 (Teil C): ab dem Abstand der Fernformen (wie Autos und Laternen) die Stadt mit vereinfachter Fest-Deko
-        var fernBild = kamera is not null && kamera.Abstand > AutoFern && !OhneSparenFuerTests;
+        // Welle Grafik G1: Abstand der Fernformen und des Kleingruens aus der Grafikstufe (Mittel = 25 und 18 wie vorher)
+        var fernBild = kamera is not null && _gw.Fern(kamera.Abstand) && !OhneSparenFuerTests;
         var flaeche = _spiel is null ? null : _spiel.ImInnenraum ? _innen
             : (fernBild ? _flaechen.GetValueOrDefault(StadtFern) : null) ?? _flaechen.GetValueOrDefault(ProbeWelt.Stadt);
         if (GlBereit && _spiel is not null && kamera is not null && flaeche is not null)
@@ -883,11 +893,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
             {
             ZeichnenFest(gl, flaeche, sichtProj);
-            if (!_spiel.ImInnenraum && _gruen is not null && kamera.Abstand <= GruenWeite)
+            if (!_spiel.ImInnenraum && _gruen is not null && _gw.Gruen(kamera.Abstand))
             {
                 ZeichnenFest(gl, _gruen, sichtProj);
             }
-            if (!_spiel.ImInnenraum && _paket.TryGetValue(kamera.Abstand > AutoFern, out var paket))
+            if (!_spiel.ImInnenraum && _paket.TryGetValue(_gw.Fern(kamera.Abstand), out var paket))
             {
                 ZeichnenFest(gl, paket, sichtProj);
             }
@@ -929,7 +939,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     _verkehr.Weiter(schritt, _spiel.FigurX, _spiel.FigurZ);
                 }
                 // ab AutoFern Abstand eine einfache Fernform (zwei Kaesten in der Hauptfarbe des Autos)
-                var fern = kamera.Abstand > AutoFern;
+                var fern = _gw.Fern(kamera.Abstand);
                 Func<Verkehr.Auto, bool>? zeigen = _uebergang is { } u2 ? u2.Aktiv : null;
                 SatzZeichnen(gl, _autoNetze, _gestalten, _uebergang?.AltVerkehr ?? _verkehr, zeigen, fern, grafikA, sichtProj);
                 if (_uebergang is { } u3)
@@ -1030,6 +1040,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 gl.BindVertexArray(0);
             }
         }
+        ZeitabfrageEnde();
+        GrafikBildEnde(breite, hoehe);
         gl.Disable(GL_DEPTH_TEST);
         LetzteZeichenaufrufe = _aufrufe;
         LetzteDreiecke = _dreiecke;
@@ -1045,9 +1057,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var nachZeichnen = _uhr.Elapsed.TotalSeconds;
         BildGezeichnet?.Invoke();
         Messen(jetzt, abstandMs, nachLaden, nachLogik, verdecktSek, nachZeichnen, bytesBeginn, ruhte, startStempel);
+        if (_spiel is not null && GlBereit)
+        {
+            Belastung.Bild(jetzt, LetzteZeichenzeitMs);
+        }
         if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Faehrt(jetzt)))
         {
-            RequestNextFrameRendering();
+            // Welle Grafik G1: mit Bildbremse (Niedrig) erst nach 1 / Bilder Sekunden, sonst sofort wie vorher
+            NaechstesBildAnfordern(jetzt);
         }
         else
         {
@@ -1145,6 +1162,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var kleidung = spiel.Kleidung;
         var innenFertig = spiel.AlleVorbereiten();
         var figurenCpu = _figurenCpu;
+        var halb = _gw.AutosHalb;
         _vorladenBeginn = Stopwatch.GetTimestamp();
         _hochladenErledigt = 0;
         _hochladenGesamt = 0;
@@ -1155,8 +1173,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             if (grafik is not null)
             {
                 satzPaket = verkehrAlt is not null
-                    ? new SatzPaket(szene, satz, gestaltenAlt, verkehrAlt, AutoNetze(verkehrAlt, gestaltenAlt, grafik, false), AutoNetze(verkehrAlt, gestaltenAlt, grafik, true))
-                    : SatzPaketBauen(szene, grafik, satz);
+                    ? new SatzPaket(szene, satz, gestaltenAlt, verkehrAlt, AutoNetze(verkehrAlt, gestaltenAlt, grafik, false, halb), AutoNetze(verkehrAlt, gestaltenAlt, grafik, true, halb), halb)
+                    : SatzPaketBauen(szene, grafik, satz, halb);
             }
             var figuren = new List<string>();
             void Figur1(string schluessel, Func<Netz> bauen)
@@ -1592,21 +1610,22 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// Netze der Autos bzw. Gestalten werden neu geladen).
     /// </summary>
     private void SatzSetzen(GlInterface gl, StadtSpiel spiel, FestVerkehr.Satz satz, double jetzt) =>
-        SatzEinsetzen(gl, SatzVorbereitetNehmen(spiel.Szene, satz) ?? SatzPaketBauen(spiel.Szene, spiel.Grafik!, satz), jetzt);
+        SatzEinsetzen(gl, SatzVorbereitetNehmen(spiel.Szene, satz) ?? SatzPaketBauen(spiel.Szene, spiel.Grafik!, satz, _gw.AutosHalb), jetzt);
 
     /// <summary>Weisung P8-55 (W12): Gestalten, Verkehr und beide Netze (nah, fern) eines Satzes, auf dem Prozessor gebaut.</summary>
-    private sealed record SatzPaket(StadtSzene Szene, FestVerkehr.Satz Satz, List<FestVerkehr.Gestalt>? Gestalten, Verkehr Verkehr, List<Netz> Nah, List<Netz> Fern);
+    /// <remarks>Welle Grafik G1: <paramref name="Halb"/> = Netze mit jedem zweiten Auto gebaut (Stufe Niedrig).</remarks>
+    private sealed record SatzPaket(StadtSzene Szene, FestVerkehr.Satz Satz, List<FestVerkehr.Gestalt>? Gestalten, Verkehr Verkehr, List<Netz> Nah, List<Netz> Fern, bool Halb);
 
-    private static SatzPaket SatzPaketBauen(StadtSzene szene, GrafikBibliothek grafik, FestVerkehr.Satz satz)
+    private static SatzPaket SatzPaketBauen(StadtSzene szene, GrafikBibliothek grafik, FestVerkehr.Satz satz, bool halb)
     {
         var gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(grafik, satz);
         var verkehr = FestVerkehr.VerkehrFuer(szene, satz);
-        return new SatzPaket(szene, satz, gestalten, verkehr, AutoNetze(verkehr, gestalten, grafik, false), AutoNetze(verkehr, gestalten, grafik, true));
+        return new SatzPaket(szene, satz, gestalten, verkehr, AutoNetze(verkehr, gestalten, grafik, false, halb), AutoNetze(verkehr, gestalten, grafik, true, halb), halb);
     }
 
-    /// <summary>Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern).</summary>
-    private static List<Netz> AutoNetze(Verkehr verkehr, List<FestVerkehr.Gestalt>? gestalten, GrafikBibliothek grafik, bool fern) =>
-        FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, AutosHoechstens);
+    /// <summary>Netze fuer den einen Zeichenaufruf der Autos bzw. Festgestalten (nah oder fern); Welle Grafik G1: <paramref name="halb"/> = jedes zweite.</summary>
+    private static List<Netz> AutoNetze(Verkehr verkehr, List<FestVerkehr.Gestalt>? gestalten, GrafikBibliothek grafik, bool fern, bool halb) =>
+        FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, AutosHoechstens, halb);
 
     /// <summary>Satz einsetzen: alte Netze frei, neuer Verkehr (oder der alte bei <paramref name="verkehrBleibt"/>), beide Netze hochladen.</summary>
     private void SatzEinsetzen(GlInterface gl, SatzPaket paket, double jetzt, bool verkehrBleibt = false)
@@ -1628,8 +1647,16 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _verkehr = paket.Verkehr;
             _verkehr.Bedient(jetzt);
         }
-        _autoNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
-        _autoNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+        if (paket.Halb == _gw.AutosHalb)
+        {
+            _autoNetze[false] = GlNetz.LadenMitNummern(gl, paket.Nah);
+            _autoNetze[true] = GlNetz.LadenMitNummern(gl, paket.Fern);
+        }
+        else
+        {
+            // Welle Grafik G1: im Hintergrund mit der vorigen Stufe gebaut, Netze mit der jetzigen neu
+            AutoNetzeNeu(gl);
+        }
     }
 
     /// <summary>
@@ -1659,6 +1686,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 {
                     // Welle K3b: Rundwege haben kein Ende am Kartenrand, an dem die Fahrzeuge tauschen koennten; der
                     // Satz wechselt sofort
+                    SatzEinsetzen(gl, paket, jetzt);
+                }
+                else if (paket.Halb != _gw.AutosHalb)
+                {
+                    // Welle Grafik G1: mit der vorigen Stufe gebaut, sofort einsetzen (Netze mit der jetzigen Stufe)
                     SatzEinsetzen(gl, paket, jetzt);
                 }
                 else
@@ -1699,7 +1731,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             return;
         }
         var szene = spiel.Szene;
-        _uebergangBau = new SatzVorrat(szene, ziel, Task.Run(() => SatzPaketBauen(szene, grafik, ziel)));
+        var halbU = _gw.AutosHalb;
+        _uebergangBau = new SatzVorrat(szene, ziel, Task.Run(() => SatzPaketBauen(szene, grafik, ziel, halbU)));
     }
 
     /// <summary>Patch A 0.29.1: Uebergang fertig, der neue Satz ist ganz da (Netze, Gestalten, Verkehr).</summary>
@@ -1735,20 +1768,22 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         if (!netze.TryGetValue(fern, out var netz))
         {
-            netz = GlNetz.LadenMitNummern(gl, AutoNetze(vorlage, gestalten, grafik, fern));
+            netz = GlNetz.LadenMitNummern(gl, AutoNetze(vorlage, gestalten, grafik, fern, _gw.AutosHalb));
             netze[fern] = netz;
         }
         if (gestalten is not null)
         {
             // W11: Festgestalten im selben Zeichenaufruf wie die Autos (nah alle Schrittbilder, das gezeigte je Gestalt)
-            ZeichnenAutos(gl, netz, FestVerkehr.Lagen(gestalten, vorlage, fern, _autoLagen, zeigen), sichtProj);
+            ZeichnenAutos(gl, netz, FestVerkehr.Lagen(FestVerkehr.Gezeigt(gestalten, _gw.AutosHalb), vorlage, fern, _autoLagen, zeigen), sichtProj);
             return;
         }
+        // Welle Grafik G1: bei „halb“ nur jedes zweite Auto (gleiche Auswahl wie die Netze)
+        var autos = FestVerkehr.Gezeigt(vorlage, _gw.AutosHalb);
         // Welle A 0.61.0: nach den Fahrzeugen die wartenden Figuren der Haltestellen (gleiche Reihenfolge wie die Netze)
-        var anzahl = Math.Min(vorlage.Autos.Count + vorlage.Wartende.Count, AutosHoechstens);
-        for (var i = vorlage.Autos.Count; i < anzahl; i++)
+        var anzahl = Math.Min(autos.Count + vorlage.Wartende.Count, AutosHoechstens);
+        for (var i = autos.Count; i < anzahl; i++)
         {
-            var w = vorlage.Wartende[i - vorlage.Autos.Count];
+            var w = vorlage.Wartende[i - autos.Count];
             if (!vorlage.Sichtbar(w) || (zeigen is not null && _uebergang is not null) || grafik.Modell(FestVerkehr.WartendModell) is not { } fm)
             {
                 _autoLagen[i] = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
@@ -1757,9 +1792,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var fa = new Vector3((fm.Min.X + fm.Max.X) / 2, fm.Min.Y, (fm.Min.Z + fm.Max.Z) / 2);
             _autoLagen[i] = StadtSzene.Lage(fm, fa, new Vector3(FestVerkehr.Massstab(fm)), new Vector3(w.Ort.X, StadtSzene.Hoehe.Gehweg + 0.012f, w.Ort.Y), w.Blick);
         }
-        for (var i = 0; i < Math.Min(vorlage.Autos.Count, anzahl); i++)
+        for (var i = 0; i < Math.Min(autos.Count, anzahl); i++)
         {
-            var auto = vorlage.Autos[i];
+            var auto = autos[i];
             if (zeigen is not null && !zeigen(auto))
             {
                 _autoLagen[i] = Matrix4x4.CreateScale(0) * Matrix4x4.CreateTranslation(0, -1000, 0);
@@ -1829,7 +1864,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             return;
         }
-        _satzVorrat = new SatzVorrat(szene, satz, Task.Run(() => SatzPaketBauen(szene, grafik, satz)));
+        var halbV = _gw.AutosHalb;
+        _satzVorrat = new SatzVorrat(szene, satz, Task.Run(() => SatzPaketBauen(szene, grafik, satz, halbV)));
     }
 
     /// <summary>

@@ -14,12 +14,22 @@ namespace Lernplattform.Messung;
 /// </summary>
 public static partial class AutoMessung
 {
+    /// <summary>Welle Grafik G1: teuerstes Nahbild je gemessener Stufe (Dreiecke, Aufrufe) fuer den Vergleich der Stufen.</summary>
+    private static readonly Dictionary<Grafikstufe, (long Dreiecke, int Aufrufe)> NahTeuerstes = [];
+
     /// <summary>Kameraabstaende der Nahansicht (normale Spielkamera, Plan P12-79 Teil D).</summary>
     public static readonly float[] NahAbstaende = [4f, 6f, 10f, 16f];
 
-    private static async Task<int> NahansichtAsync(SpielSeite seite)
+    /// <remarks>
+    /// Welle Grafik G1 (Weisung P12-182): <paramref name="stufe"/> = gemessene Grafikstufe mit ihrer Grenze (Niedrig
+    /// 125 000 / 32, Mittel 160 000 / 40, Hoch 200 000 / 48); die Gegenprobe ohne Sparen nur bei Mittel.
+    /// </remarks>
+    private static async Task<int> NahansichtAsync(SpielSeite seite, Grafikstufe stufe = Grafikstufe.Mittel)
     {
         var inv = CultureInfo.InvariantCulture;
+        var werteStufe = Grafikstufen.Werte(stufe);
+        var (grenzeDreiecke, grenzeAufrufe) = Grafikstufen.Grenze(stufe);
+        var name = stufe == Grafikstufe.Mittel ? "Spiel: Nahansicht" : "Spiel: Nahansicht " + GrafikTexte.Name(stufe);
         var flaeche = seite.Flaeche;
         if (flaeche.AktuelleKamera is not { } kamera || seite.Spiel is not { } spiel)
         {
@@ -42,8 +52,8 @@ public static partial class AutoMessung
             await flaeche.NaechstesBildAsync();
             if (flaeche.InstancingDa && ReferenceEquals(spiel.Szene, szene))
             {
-                var fest = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, StadtFlaeche.OhneSparenFuerTests);
-                var bewegt = Core.Stadtbau.StadtbauSpiel.Bewegt(spiel, flaeche.LetzterAbstand > StadtFlaeche.AutoFern, StadtFlaeche.AutosHoechstens);
+                var fest = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, StadtFlaeche.OhneSparenFuerTests, werteStufe);
+                var bewegt = Core.Stadtbau.StadtbauSpiel.Bewegt(spiel, werteStufe.Fern(flaeche.LetzterAbstand), StadtFlaeche.AutosHoechstens, halb: werteStufe.AutosHalb);
                 verglichen++;
                 if (fest != (flaeche.LetzteStadtDreiecke, flaeche.LetzteStadtAufrufe)
                     || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe))
@@ -82,15 +92,25 @@ public static partial class AutoMessung
             }
             foreach (var w in werte)
             {
-                Messwerte.Notiere("Spiel: Nahansicht Einzelwerte (Dreiecke/Aufrufe): " + w);
+                Messwerte.Notiere(name + " Einzelwerte (Dreiecke/Aufrufe): " + w);
             }
             Messwerte.Notiere(string.Create(inv,
-                $"Spiel: Nahansicht teuerstes Bild (Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1}): {teuerstes.Dreiecke} Dreiecke, hoechstens {aufrufeMax} Zeichenaufrufe (Grenzen {GesamtDreieckeGrenze} Dreiecke, {GesamtAufrufeGrenze} Aufrufe)"));
-            if (teuerstes.Dreiecke > GesamtDreieckeGrenze || aufrufeMax > GesamtAufrufeGrenze || teuerstes.Dreiecke <= 0)
+                $"{name} teuerstes Bild (Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1}): {teuerstes.Dreiecke} Dreiecke, hoechstens {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke} Dreiecke, {grenzeAufrufe} Aufrufe)"));
+            if (teuerstes.Dreiecke > grenzeDreiecke || aufrufeMax > grenzeAufrufe || teuerstes.Dreiecke <= 0)
             {
                 Messwerte.Notiere(string.Create(inv,
-                    $"  FEHLER: Spiel Nahansicht: {teuerstes.Dreiecke} Dreiecke, {aufrufeMax} Zeichenaufrufe (Grenzen {GesamtDreieckeGrenze}, {GesamtAufrufeGrenze}; Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1})"));
+                    $"  FEHLER: {name}: {teuerstes.Dreiecke} Dreiecke, {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke}, {grenzeAufrufe}; Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1})"));
                 funde++;
+            }
+            NahTeuerstes[stufe] = (teuerstes.Dreiecke, aufrufeMax);
+            if (stufe != Grafikstufe.Mittel)
+            {
+                Messwerte.Notiere(string.Create(inv, $"{name}: Zaehlung ohne Grafikkarte: {verglichen} Bilder verglichen, {abweichungen.Count} Abweichungen"));
+                foreach (var a in abweichungen.Take(10))
+                {
+                    Messwerte.Notiere("  FEHLER: " + name + " Zaehlung ohne Grafikkarte weicht ab: " + a);
+                }
+                return funde + (abweichungen.Count > 0 ? 1 : 0);
             }
             // Gegenprobe: dasselbe Bild ohne Sparen (alle Haeuser, keine Fernform) und die Gesamtansicht ohne Fernformen
             var (nahMit, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);

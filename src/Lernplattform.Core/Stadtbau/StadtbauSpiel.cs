@@ -52,7 +52,7 @@ public static class StadtbauSpiel
     /// Figur (zweimal: im Bild und ganz vorn), der Kreis um sie, die Zielmarke (wenn ein Ziel da ist) und die Pakete vor
     /// der Tuer (wenn welche da sind). Ohne Grafik zeichnet das Spiel keine Autos.
     /// </summary>
-    public static (long Dreiecke, int Aufrufe) Bewegt(StadtSpiel spiel, bool fern, int autosHoechstens = 16, long? uhr = null)
+    public static (long Dreiecke, int Aufrufe) Bewegt(StadtSpiel spiel, bool fern, int autosHoechstens = 16, long? uhr = null, bool halb = false)
     {
         long dreiecke = 0;
         var aufrufe = 0;
@@ -62,7 +62,7 @@ public static class StadtbauSpiel
             var satz = FestVerkehr.Fuer(szene.Fest, uhr ?? Tageslicht.FesteUhr ?? spiel.Jetzt.Uhr, szene.Jahreszeit);
             var gestalten = satz == FestVerkehr.Satz.Autos ? null : FestVerkehr.Gestalten(grafik, satz);
             var verkehr = FestVerkehr.VerkehrFuer(szene, satz);
-            dreiecke += FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, autosHoechstens).Sum(n => (long)n.Indizes.Count / 3);
+            dreiecke += FestVerkehr.FahrzeugNetze(verkehr, gestalten, grafik, fern, autosHoechstens, halb).Sum(n => (long)n.Indizes.Count / 3);
             aufrufe++;
         }
         var aussehen = spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
