@@ -1,0 +1,16 @@
+{
+ "_hinweis": [
+  "Phase 13 Welle 4a (Weisung P12-28): nur die Stuecke aus dem Katalog des Stadtbau-Werkzeugs, auf die eine Fassung in inhalte_csharp/spiel/stadtbau/ verweist; erzeugt mit werkzeuge/stadtbau/verbaut.py, nie von Hand."
+ ],
+ "sha256": "d33d980919207016e12fcfcf7d66d4dc000d97ee314fe0252153e64d7cf8c6ac",
+ "modelle": [
+  "cc0:car_kit/sedan",
+  "cc0:furniture/chair",
+  "cc0:particles/star_01"
+ ],
+ "pakete": {
+  "car_kit": "Kenney Car Kit",
+  "furniture": "Kenney Furniture Kit",
+  "particles": "Kenney Particle Pack"
+ }
+}
