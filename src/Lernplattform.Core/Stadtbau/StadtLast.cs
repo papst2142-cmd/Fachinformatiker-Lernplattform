@@ -15,9 +15,10 @@ public static class StadtLast
 {
     /// <summary>
     /// Grenze fuer „Stadt bauen“ in ms (einmaliger Messpunkt, streng). Vorschlag aus den Messwerten von Stadt 1 (Meldung
-    /// P12-107: rund 140 + 125 ms im Container) mit deutlichem Abstand; Grenzwerte entscheidet Nico.
+    /// P12-107, voller Lauf 819: Spiel 130 ms, Werkzeug bis 809 ms unter Windows, waehrend im Hintergrund Pruefung und Grenzen
+    /// laufen) mit deutlichem Abstand; Grenzwerte entscheidet Nico.
     /// </summary>
-    public const double BauenGrenzeMs = 1000;
+    public const double BauenGrenzeMs = 2000;
 
     /// <summary>Grenze fuer „Netzdaten“ in MB (Vorschlag aus Stadt 1: rund 16 MB, dreifacher Abstand; Grenzwerte = Nico).</summary>
     public const double NetzdatenGrenzeMb = 48;
