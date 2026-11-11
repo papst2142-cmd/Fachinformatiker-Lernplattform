@@ -200,8 +200,9 @@ public class SucheTests
     private static bool IstAusbildung(SuchTreffer t) => t.Art == Optionen.SucheArt && t.Titel == PruefungTexte.AusbildungReiter;
 
     /// <summary>Phase 8 W8: "Musik und Geräusche", "Vollbild" und "Tastenbelegung" gibt es nur in C# (wie "Ausbildung").
-    /// Patch A 0.37.0 (Sammelliste 206): "Programm beenden" (nur Handy) gibt es ebenfalls nur in C#.</summary>
-    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.TastenBereich, Optionen.BeendenBereich];
+    /// Patch A 0.37.0 (Sammelliste 206): "Programm beenden" (nur Handy) gibt es ebenfalls nur in C#.
+    /// Welle Grafik G1 (A 0.64.0): "Grafik" gibt es nur in C#.</summary>
+    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.GrafikBereich, Optionen.TastenBereich, Optionen.BeendenBereich];
 
     private static bool IstW8(SuchTreffer t) => t.Art == Optionen.SucheArt && W8Bereiche.Any(b => b.Titel == t.Titel);
 
@@ -210,7 +211,7 @@ public class SucheTests
     public void W8BereicheNurWoSiePassen()
     {
         var anfragen = G19.GetProperty("suche").EnumerateArray().Select(f => f.GetProperty("begriff").GetString()!)
-            .Concat(["Musik", "Ton", "stumm", "Vollbild", "F11", "Tastatur", "Tasten", "Geräusche", "Beenden", "schließen"]);
+            .Concat(["Musik", "Ton", "stumm", "Vollbild", "F11", "Tastatur", "Tasten", "Geräusche", "Beenden", "schließen", "Grafik", "Belastung", "RAM"]);
         var gesehen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var begriff in anfragen)
         {

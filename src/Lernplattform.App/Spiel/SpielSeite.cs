@@ -944,7 +944,7 @@ public sealed class SpielSeite : Grid
         {
             return null;
         }
-        var wahl = Core.Spiel.Probe.Grafikstufen.Automatisch(Core.Spiel.Probe.Grafikstufen.DiesesGeraet(!OperatingSystem.IsAndroid(), Flaeche.GlRenderer));
+        var wahl = Core.Spiel.Probe.Grafikstufen.Automatisch(Core.Spiel.Probe.Grafikstufen.DiesesGeraet(Flaeche.GlRenderer));
         if (!Programm.Zustand.Einstellungen.NurAnzeige)
         {
             Programm.Zustand.Aendere(w => Core.Spiel.Probe.Grafikstufen.Wert(w, wahl.Stufe));

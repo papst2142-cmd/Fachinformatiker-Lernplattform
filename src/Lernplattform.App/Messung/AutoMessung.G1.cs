@@ -39,7 +39,7 @@ public static partial class AutoMessung
         }
 
         // automatische Wahl dieses Rechners (nur Angabe; der Start-Test misst mit gesetztem Merker)
-        var geraet = Grafikstufen.DiesesGeraet(!OperatingSystem.IsAndroid(), flaeche.GlRenderer);
+        var geraet = Grafikstufen.DiesesGeraet(flaeche.GlRenderer);
         var wahl = Grafikstufen.Automatisch(geraet);
         Messwerte.Notiere(string.Create(inv,
             $"Spiel: Grafik automatische Wahl dieses Rechners: {GrafikTexte.Name(wahl.Stufe)} (Regel: {wahl.Regel}; Renderer \"{flaeche.GlRenderer}\", RAM {(geraet.RamBytes is { } r ? (r / (1024.0 * 1024 * 1024)).ToString("F1", inv) + " GB" : "unbekannt")}, Kerne {geraet.Kerne}); Merker vor dem Start-Test: {(GrafikMerkerVorStart is { } m ? Grafikstufen.Name(m) : "fehlte")}"));
@@ -82,12 +82,9 @@ public static partial class AutoMessung
                     {
                         Messwerte.Notiere("Spiel: Grafik Niedrig: 75 % Aufloesung nicht moeglich (Treiber ohne eigenen Bildspeicher), gezeichnet mit 100 %");
                     }
-                    // Bildbremse: zwei Sekunden laufen lassen
-                    var bis = DateTime.UtcNow.AddSeconds(2.5);
-                    while (DateTime.UtcNow < bis)
-                    {
-                        await flaeche.NaechstesBildAsync();
-                    }
+                    // Bildbremse: die Flaeche zweieinhalb Sekunden von selbst zeichnen lassen (NaechstesBildAsync fordert
+                    // selbst Bilder an und ginge an der Bremse vorbei)
+                    await Task.Delay(2500);
                     Pruefe("Niedrig hoechstens 30 Bilder je Sekunde", flaeche.BilderJeSekunde <= Grafikstufen.BilderNiedrig + 1,
                         string.Create(inv, $"{flaeche.BilderJeSekunde} Bilder in der letzten Sekunde"));
                 }

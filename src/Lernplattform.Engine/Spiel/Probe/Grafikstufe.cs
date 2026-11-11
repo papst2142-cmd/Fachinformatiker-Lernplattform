@@ -237,6 +237,9 @@ public static class Grafikstufen
         return r.Contains("IMMORTALIS", StringComparison.Ordinal) || r.Contains("XCLIPSE", StringComparison.Ordinal);
     }
 
+    /// <summary>Geraetewerte dieses Geraets (PC = nicht Android); den Renderer kennt erst die Grafik.</summary>
+    public static Geraet DiesesGeraet(string? renderer) => DiesesGeraet(!OperatingSystem.IsAndroid(), renderer);
+
     /// <summary>Geraetewerte dieses Rechners (Arbeitsspeicher laut .NET, Kerne); den Renderer kennt erst die Grafik.</summary>
     public static Geraet DiesesGeraet(bool pc, string? renderer)
     {

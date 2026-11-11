@@ -912,6 +912,12 @@ public static class Texte
     public const string TastenTablet = "Am Tablet gibt es keine Tasten: Dort zeigt ein langer Druck auf einen Knopf, was er tut, und zwei Finger bewegen die Ansicht.";
     public const string Version = "Version";
 
+    /// <summary>Welle G1 (Weisung P12-183, Sammelliste 288): Version immer sichtbar in der Titelzeile, z. B. „S 0.39.0“.</summary>
+    public static string VersionKopf => Werkzeug.Anzeige;
+
+    /// <summary>Vorlesename der Versionsanzeige, z. B. „Version S 0.39.0“.</summary>
+    public static string VersionKopfName => Version + " " + Werkzeug.Anzeige;
+
     /// <summary>Tipps der Kopfleiste fuer die Knoepfe, die Welle Q dazubringt (die anderen stehen in <see cref="KopfTipps"/>).</summary>
     public const string TippMenueProjekt = "Neues Projekt, Projekt öffnen und speichern, die Stadt-Datei für das Spiel speichern oder an CC senden.";
     public const string TippMenueEinstellungen = "Helle oder dunkle Farben, Vollbild, nach Updates suchen, Tastenkürzel und die Version.";

@@ -5,8 +5,9 @@ Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft u
 
 ## S 0.39.0
 
-Hinweis auf die neuen Grafikstufen der Lernplattform.
+Versionsanzeige und Hinweis auf die neuen Grafikstufen der Lernplattform.
 
+- Die Version des Werkzeugs (zum Beispiel „S 0.39.0“) steht jetzt immer klein rechts oben in der Titelzeile, auf der Startseite und beim Bauen. Vorher stand sie nur im Menü „Einstellungen“.
 - Die Leiste „Grenzen live“ prüft die Stadt weiter gegen die Grenzen der Stufe Mittel (Vorgabe im Spiel). Neu steht darunter eine Zeile, wie viel die Stadt von den Grenzen der Stufen Niedrig und Hoch ausschöpft, zum Beispiel „Niedrig 81 % · Hoch 70 %“. Ein roter Fund „Stadt zu teuer“ entsteht wie bisher nur über der Grenze von Mittel.
 
 ## S 0.38.0
