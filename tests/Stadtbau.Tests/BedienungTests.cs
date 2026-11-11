@@ -74,7 +74,7 @@ public class BedienungTests
     /// </summary>
     private static readonly string[] Kopf =
     [
-        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
+        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
         Texte.MenueProjekt, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden,
         Texte.MenueEinstellungen, Texte.Dunkel, Texte.Vollbild, Texte.VollbildBildschirm, Texte.UpdateSuchen, Texte.Tastenkuerzel, Texte.WerkzeugBeenden,
     ];

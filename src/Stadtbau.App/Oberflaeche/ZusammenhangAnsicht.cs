@@ -23,6 +23,7 @@ internal sealed class ZusammenhangAnsicht : Grid
     // oben links verankert: groesser als die Sicht wuerde das Panel sie sonst mittig setzen (Versatz ausserhalb der Kamera)
     private readonly Canvas _flaeche = new() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
     private readonly LinienFlaeche _linien = new();
+    private readonly LinienFlaeche _pfeilEbene = new();
     private readonly HashSet<string> _offen = new(StringComparer.Ordinal);
     private readonly Button _alleAuf;
     private readonly Fingergeste _geste = new();
@@ -38,6 +39,31 @@ internal sealed class ZusammenhangAnsicht : Grid
 
     /// <summary>Knopf „Aufgabe → Ort“.</summary>
     public event Action? ZurListe;
+
+    /// <summary>
+    /// Welle Q1 (Weisung P12-186): Pfeil von einer Aufgabe (erste Kennung) auf eine andere gezogen (zweite Kennung):
+    /// die zweite kommt „erst nach“ der ersten.
+    /// </summary>
+    public event Action<string, string>? PfeilGezogen;
+
+    /// <summary>Welle Q1: Umschaltung „je Ort | je Questgeber“ geaendert (true = je Questgeber).</summary>
+    public event Action<bool>? AnsichtGewechselt;
+
+    /// <summary>Welle Q1: zeigt die Ansicht die Gruppen je Questgeber?</summary>
+    public bool JeQuestgeber { get; private set; }
+
+    /// <summary>Welle Q1: duerfen Pfeile gezogen werden (Projekt nicht nur zum Lesen)?</summary>
+    public bool PfeilErlaubt { get; set; } = true;
+
+    /// <summary>Knoepfe der Umschaltung (Start-Test).</summary>
+    public (Button JeOrt, Button JeQuestgeber) Umschaltung { get; }
+
+    /// <summary>Die Zeilen (Aufgabe, Flaeche in der Anordnung) beim letzten Zeigen (Start-Test: Pfeil ziehen).</summary>
+    public IReadOnlyList<(string Id, Zusammenhaenge.Flaeche Ort)> ZeilenOrte => _zeilen;
+
+    private readonly List<(string Id, Zusammenhaenge.Flaeche Ort)> _zeilen = [];
+    private string? _pfeilVon;
+    private Point _pfeilStart;
 
     /// <summary>Die Anordnung beim letzten Zeigen (Start-Test: Kreuzungen, Kaesten).</summary>
     public Zusammenhaenge? Plan { get; private set; }
@@ -81,7 +107,14 @@ internal sealed class ZusammenhangAnsicht : Grid
         };
         var kopf = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
         kopf.Children.Add(titel);
-        var knoepfe = new WrapPanel { Children = { _alleAuf, liste }, VerticalAlignment = VerticalAlignment.Top };
+        // Welle Q1: Umschaltung „je Ort | je Questgeber“ (zwei Knoepfe, der gewaehlte betont)
+        var jeOrt = Schrift.Knopf(Texte.VerkettungJeOrt).Mit(Texte.VerkettungTipp);
+        var jeQg = Schrift.Knopf(Texte.VerkettungJeQuestgeber).Mit(Texte.VerkettungTipp);
+        jeOrt.Click += (_, _) => AnsichtSetzen(false);
+        jeQg.Click += (_, _) => AnsichtSetzen(true);
+        Umschaltung = (jeOrt, jeQg);
+        UmschaltungFarben();
+        var knoepfe = new WrapPanel { Children = { jeOrt, jeQg, _alleAuf, liste }, VerticalAlignment = VerticalAlignment.Top, ItemSpacing = 6, LineSpacing = 6 };
         Grid.SetColumn(knoepfe, 1);
         kopf.Children.Add(knoepfe);
         var kopfRahmen = new Border { Child = kopf, Padding = new Thickness(16, 12, 16 + Dialog.RandFuerLeiste, 4), BorderThickness = new Thickness(0, 0, 0, 1) }
@@ -95,7 +128,16 @@ internal sealed class ZusammenhangAnsicht : Grid
         _sicht.AddHandler(PointerPressedEvent, Gedrueckt, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         _sicht.AddHandler(PointerMovedEvent, Bewegt, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         _sicht.AddHandler(PointerReleasedEvent, Losgelassen, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
-        _sicht.AddHandler(PointerCaptureLostEvent, (_, e) => _geste.Verloren(e.Pointer.Id), Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
+        _sicht.AddHandler(PointerCaptureLostEvent, (_, e) =>
+        {
+            _geste.Verloren(e.Pointer.Id);
+            if (_pfeilVon is not null)
+            {
+                _pfeilVon = null;
+                _pfeilEbene.Pfeil = null;
+                _pfeilEbene.InvalidateVisual();
+            }
+        }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
         _sicht.PointerWheelChanged += (_, e) =>
         {
             var p = e.GetPosition(_sicht);
@@ -136,6 +178,35 @@ internal sealed class ZusammenhangAnsicht : Grid
             }
         };
     }
+
+    /// <summary>Welle Q1: zwischen „je Ort“ und „je Questgeber“ wechseln.</summary>
+    public void AnsichtSetzen(bool jeQuestgeber)
+    {
+        if (JeQuestgeber == jeQuestgeber)
+        {
+            return;
+        }
+        JeQuestgeber = jeQuestgeber;
+        _offen.Clear();
+        _eingepasst = true;
+        UmschaltungFarben();
+        AnsichtGewechselt?.Invoke(jeQuestgeber);
+    }
+
+    private void UmschaltungFarben()
+    {
+        foreach (var (k, an) in new[] { (Umschaltung.JeOrt, !JeQuestgeber), (Umschaltung.JeQuestgeber, JeQuestgeber) })
+        {
+            k.Farbe(Button.BackgroundProperty, an ? "VerlaufW.primary" : "Pinsel.card_alt");
+            if (k.Content is TextBlock t)
+            {
+                t.Farbe(TextBlock.ForegroundProperty, an ? "Pinsel.on_accent" : "Pinsel.text");
+            }
+            k.Vorlese(an ? Texte.VerkettungGewaehlt(Py_Text(k)) : Py_Text(k));
+        }
+    }
+
+    private static string Py_Text(Button k) => k.Content is TextBlock t ? t.Text ?? "" : k.Content as string ?? "";
 
     /// <summary>Die Kamera-Karte (Start-Test: verdeckt keinen Kasten beim Einpassen).</summary>
     public Border Kamerakarte { get; }
@@ -233,12 +304,15 @@ internal sealed class ZusammenhangAnsicht : Grid
         _flaeche.Children.Add(_linien);
         ZeigenKnoepfe.Clear();
         Koepfe.Clear();
+        _zeilen.Clear();
         KastenTexte.Clear();
         _flaeche.Width = plan.Breite;
         _flaeche.Height = plan.Hoehe;
         _linien.Width = plan.Breite;
         _linien.Height = plan.Hoehe;
         _linien.Plan = plan;
+        _pfeilEbene.Width = plan.Breite;
+        _pfeilEbene.Height = plan.Hoehe;
         void Setzen(Control c, Zusammenhaenge.Flaeche f)
         {
             c.Width = f.B;
@@ -307,8 +381,9 @@ internal sealed class ZusammenhangAnsicht : Grid
                 KastenTexte.Add(tag);
                 var rahmen = new Border { Child = r, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1) }
                     .Farbe(Border.BackgroundProperty, "Pinsel.card").Farbe(Border.BorderBrushProperty, "Pinsel.border");
-                ToolTip.SetTip(rahmen, Texte.AufgabenArt(z.Aufgabe.Typ) + ": " + z.Aufgabe.Titel);
+                ToolTip.SetTip(rahmen, Texte.AufgabenArt(z.Aufgabe.Typ) + ": " + z.Aufgabe.Titel + "\n" + Texte.VerkettungZiehenTipp);
                 Setzen(rahmen, z.Ort);
+                _zeilen.Add((z.Aufgabe.Id, z.Ort));
             }
             // „Alle zeigen“ / „Weniger zeigen“ wie ein Verweis
             var zeigen = new Button
@@ -324,6 +399,7 @@ internal sealed class ZusammenhangAnsicht : Grid
             ZeigenKnoepfe[ort] = zeigen;
             Setzen(zeigen, k.Knopf);
         }
+        _flaeche.Children.Add(_pfeilEbene);
         if (_alleAuf.Content is TextBlock at)
         {
             at.Text = _offen.Count == g.Zahlen().Count && _offen.Count > 0 ? Texte.GeschichteAlleZu : Texte.GeschichteAlleAuf;
@@ -389,15 +465,50 @@ internal sealed class ZusammenhangAnsicht : Grid
         _flaeche.RenderTransform = new MatrixTransform(Matrix.CreateScale(_zoom, _zoom) * Matrix.CreateTranslation(_versatz.X, _versatz.Y));
     }
 
+    /// <summary>Punkt der Sicht in der Anordnung (ohne Zoom und Versatz).</summary>
+    public Point InAnordnung(Point p) => new((p.X - _versatz.X) / _zoom, (p.Y - _versatz.Y) / _zoom);
+
+    /// <summary>Punkt der Anordnung in der Sicht (Start-Test).</summary>
+    public Point InSicht(Point p) => new((p.X * _zoom) + _versatz.X, (p.Y * _zoom) + _versatz.Y);
+
+    /// <summary>Die Sicht (Start-Test: Zeiger dorthin schicken).</summary>
+    public Control Sicht => _sicht;
+
+    /// <summary>Aufgabe unter einem Punkt der Anordnung (null = keine).</summary>
+    public string? ZeileBei(Point a) =>
+        _zeilen.FirstOrDefault(z => a.X >= z.Ort.X && a.X <= z.Ort.Rechts && a.Y >= z.Ort.Y && a.Y <= z.Ort.Unten).Id;
+
+    /// <summary>Wird gerade ein Pfeil gezogen (Start-Test)?</summary>
+    public bool PfeilLaeuft => _pfeilVon is not null;
+
     private void Gedrueckt(object? sender, PointerPressedEventArgs e)
     {
         var p = e.GetPosition(_sicht);
+        var punkt = e.GetCurrentPoint(_sicht);
+        // Welle Q1: ein Druck (Maus links, Finger, Stift) auf eine Aufgabe beginnt einen Pfeil, solange kein anderer Finger liegt
+        if (PfeilErlaubt && !_geste.Aktiv && (e.Pointer.Type != PointerType.Mouse || punkt.Properties.IsLeftButtonPressed)
+            && ZeileBei(InAnordnung(p)) is { } von)
+        {
+            _pfeilVon = von;
+            _pfeilStart = InAnordnung(p);
+            _pfeilEbene.Pfeil = (_pfeilStart, _pfeilStart);
+            e.Pointer.Capture(_sicht);
+            e.Handled = true;
+            return;
+        }
         _geste.Druecken(e.Pointer.Id, p.X, p.Y, false);
         _gefangen = false;
     }
 
     private void Bewegt(object? sender, PointerEventArgs e)
     {
+        if (_pfeilVon is not null)
+        {
+            _pfeilEbene.Pfeil = (_pfeilStart, InAnordnung(e.GetPosition(_sicht)));
+            _pfeilEbene.InvalidateVisual();
+            e.Handled = true;
+            return;
+        }
         if (!_geste.Aktiv)
         {
             return;
@@ -428,6 +539,20 @@ internal sealed class ZusammenhangAnsicht : Grid
 
     private void Losgelassen(object? sender, PointerReleasedEventArgs e)
     {
+        if (_pfeilVon is { } von)
+        {
+            var ende = InAnordnung(e.GetPosition(_sicht));
+            _pfeilVon = null;
+            _pfeilEbene.Pfeil = null;
+            _pfeilEbene.InvalidateVisual();
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            if (ZeileBei(ende) is { } auf && auf != von)
+            {
+                PfeilGezogen?.Invoke(von, auf);
+            }
+            return;
+        }
         // erst auswerten, dann loslassen (Lehre S 0.5.1: sonst kommt PointerCaptureLost zuerst)
         _geste.Loslassen(e.Pointer.Id);
         if (_gefangen && !_geste.Aktiv)
@@ -442,14 +567,40 @@ internal sealed class ZusammenhangAnsicht : Grid
     {
         public Zusammenhaenge? Plan { get; set; }
 
+        /// <summary>Welle Q1: Pfeil, der gerade gezogen wird (Anfang, Ende in der Anordnung).</summary>
+        public (Point A, Point B)? Pfeil { get; set; }
+
         public LinienFlaeche() => IsHitTestVisible = false;
+
+        private void PfeilZeichnen(DrawingContext ctx)
+        {
+            if (Pfeil is not { } pf)
+            {
+                return;
+            }
+            var farbe = new SolidColorBrush(Color.Parse(FarbenAnwenden.Aktuell.Farben["accent"]));
+            var stift = new Pen(farbe, 3, lineCap: PenLineCap.Round);
+            ctx.DrawLine(stift, pf.A, pf.B);
+            var d = pf.B - pf.A;
+            var l = Laenge(pf.A, pf.B);
+            if (l < 4)
+            {
+                return;
+            }
+            var r = d / l;
+            var n = new Point(-r.Y, r.X);
+            ctx.DrawLine(stift, pf.B, pf.B - (r * 12) + (n * 7));
+            ctx.DrawLine(stift, pf.B, pf.B - (r * 12) - (n * 7));
+        }
 
         public override void Render(DrawingContext ctx)
         {
+            PfeilZeichnen(ctx);
             if (Plan is not { } p)
             {
                 return;
             }
+
             var farben = FarbenAnwenden.Aktuell.Farben;
             var grau = new SolidColorBrush(Color.Parse(farben["muted"]));
             var stift = new Pen(grau, 1.6, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);

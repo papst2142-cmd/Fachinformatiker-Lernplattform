@@ -258,6 +258,7 @@ public sealed partial class Hauptansicht
         _drei = false;
         _innen = false;
         _geschichteOffen = false;
+        QgSetzenBeenden();
         _projekt.Geaendert -= ProjektGeaendert;
         _projekt = null;
         _ort = null;

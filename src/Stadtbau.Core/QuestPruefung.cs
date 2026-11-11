@@ -18,10 +18,13 @@ namespace Stadtbau.Core;
 public static class QuestPruefung
 {
     /// <summary>Ein Fund mit der Quest oder dem Questgeber, zu dem er gehoert (zum Antippen in den Reitern).</summary>
-    public sealed record Fund(StadtbauFund Inhalt, string? Quest = null, string? Questgeber = null)
+    public sealed record Fund(StadtbauFund Inhalt, string? Quest = null, string? Questgeber = null, bool Draussen = false)
     {
         public bool Rot => Inhalt.Rot;
         public string Text => Inhalt.Text;
+
+        /// <summary>Fuer die Liste der Stadt draussen: Stelle nur bei einem Questgeber draussen (drinnen gilt sie im Grundriss).</summary>
+        public StadtbauFund FuerStadt => Draussen ? Inhalt : Inhalt with { X = null, Y = null };
     }
 
     /// <summary>Verneinung in Grossschrift in einer Antwort (Regel 248, gleiche Woerter wie <c>LerninhalteTests</c>).</summary>
@@ -44,7 +47,12 @@ public static class QuestPruefung
         public required Func<(StadtSzene Szene, string StartOrt)?> Szene { get; init; }
 
         /// <summary>Ab welchem Spieltag ein Ort der Karte da ist (null = haengt vom Spiel ab), Ort der Karte je Stelle.</summary>
-        public required Spielgeschichte Geschichte { get; init; }
+        public required Func<Spielgeschichte> GeschichteBauen { get; init; }
+
+        private Spielgeschichte? _geschichte;
+
+        /// <summary>Erst beim ersten Lesen gebaut (im Hintergrund).</summary>
+        public Spielgeschichte Geschichte => _geschichte ??= GeschichteBauen();
 
         public Func<string, string> OrtName { get; init; } = o => o;
     }
@@ -322,7 +330,8 @@ public static class QuestPruefung
         var draussen = 0;
         foreach (var q in questgeber)
         {
-            void R(string text, string tipp, double? x = null, double? y = null) => funde.Add(new Fund(Rot(text, tipp, x, y), null, q.Id));
+            void R(string text, string tipp, double? x = null, double? y = null) =>
+                funde.Add(new Fund(Rot(text, tipp, x, y), null, q.Id, q.Platz is { Draussen: true }));
             var n = q.Name.Trim().Length > 0 ? q.Name.Trim() : q.Id;
             if (!q.Bestand)
             {

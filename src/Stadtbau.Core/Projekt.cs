@@ -923,7 +923,7 @@ public sealed partial class Projekt
 
     /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
     /// <remarks>Welle Q1 (S 0.40.0): dazu die Funde der Quests und Questgeber (<see cref="QuestFunde"/>).</remarks>
-    public List<StadtbauFund> PruefenAussen() => [.. PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand)), .. QuestFunde().Select(f => f.Inhalt)];
+    public List<StadtbauFund> PruefenAussen() => [.. PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand)), .. QuestFunde().Select(f => f.FuerStadt)];
 
     /// <summary>
     /// Pruefung draussen zu einem Stand. <paramref name="bauten"/>: Innenraeume neuer Gebaeude (Teil "bauten", steht nicht in

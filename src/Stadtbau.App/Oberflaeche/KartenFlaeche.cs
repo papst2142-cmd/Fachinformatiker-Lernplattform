@@ -361,6 +361,12 @@ public sealed partial class KartenFlaeche : Control
     private Point WeltPunkt(Point bild) => new((bild.X - _versatz.X) / _zoom, (bild.Y - _versatz.Y) / _zoom);
 
     /// <summary>Start-Test: Bildpunkt eines Punkts der Karte (Umkehrung von <see cref="WeltPunkt"/>).</summary>
+    /// <summary>Welle Q1: Questgeber draussen (setzt die Hauptansicht).</summary>
+    internal IReadOnlyList<QuestgeberMarke> QuestgeberMarken { get; set; } = [];
+
+    /// <summary>Welle Q1: Platz eines Questgebers draussen waehlen (gesetzt = ein Tipp ruft dies mit dem Punkt der Karte).</summary>
+    internal Action<double, double>? QuestgeberSetzen { get; set; }
+
     internal Point BildPunktFuerTests(double x, double y) => new((x * _zoom) + _versatz.X, (y * _zoom) + _versatz.Y);
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
@@ -670,6 +676,12 @@ public sealed partial class KartenFlaeche : Control
             gezeichnet.Add((ort, zahl, schild, r));
         }
         ZahlenAmHaus = gezeichnet;
+
+        // Welle Q1: Questgeber draussen (gruen, Pfeil = Blick)
+        foreach (var q in QuestgeberMarken)
+        {
+            q.Zeichnen(ctx, new Point((q.X * _zoom) + _versatz.X, (q.Y * _zoom) + _versatz.Y), Math.Max(6, 0.2 * _zoom), schrift, Farbe("text"));
+        }
 
         // S 0.27.0: Notizen oben auf allem
         if (Zeigt(Ebene.Notizen))
@@ -1557,6 +1569,12 @@ public sealed partial class KartenFlaeche : Control
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
             return;
         }
+        if (QuestgeberSetzen is not null)
+        {
+            // Welle Q1: Platz eines Questgebers draussen waehlen; Tippen setzt (beim Loslassen), Ziehen schiebt die Ansicht
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
+            return;
+        }
         // S 0.28.0: Tuer setzen (Knopf) oder die Tuer des gewaehlten Hauses direkt greifen; ein Finger zieht sie an der Wand
         if (TuerFuer is not null || (erster && TuerDirektGreifen(p)))
         {
@@ -1710,6 +1728,12 @@ public sealed partial class KartenFlaeche : Control
         }
         switch (s.Art)
         {
+            case Fingergeste.Art.Tippen when QuestgeberSetzen is { } qs && !_nurSchieben:
+            {
+                var qw = WeltPunkt(new Point(s.X, s.Y));
+                qs(Math.Round(qw.X, 2), Math.Round(qw.Y, 2));
+                break;
+            }
             case Fingergeste.Art.Tippen when MassbandAn && !_nurSchieben:
             {
                 var mw = WeltPunkt(new Point(s.X, s.Y));

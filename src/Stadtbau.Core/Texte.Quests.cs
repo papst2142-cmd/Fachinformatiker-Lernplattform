@@ -210,4 +210,58 @@ public static partial class Texte
     public const string QgOrtFehltTipp = "„Platz wählen“ und die Person in einen vorhandenen Ort stellen.";
     public static string QgInnenAussen(string n) => $"Questgeber „{n}“ steht außerhalb des Grundrisses.";
     public static string QgInnenNichtFrei(string n) => $"Questgeber „{n}“ steht auf einem Möbelstück oder in der Wand.";
+
+    // ---- Oberflaeche (Welle Q1) ----
+    public static string VerkettungGewaehlt(string name) => name + ", gewählt";
+    public const string VerkettungNurNeu = "„Erst nach“ lässt sich nur bei neuen Quests setzen; vorhandene bleiben wie im Spiel.";
+    public static string VerkettungGesetzt(string nach, string vor) => $"„{nach}“ kommt jetzt erst nach „{vor}“.";
+    public const string QuestNeuAuswahl = "Neue Quest: Auswahl";
+    public const string QuestNeuZuordnung = "Neue Quest: Zuordnung";
+    public const string QuestNeuAuswahlTipp = "Legt eine neue Quest an, bei der eine von mehreren Antworten richtig ist.";
+    public const string QuestNeuZuordnungTipp = "Legt eine neue Quest an, bei der Begriffe einander zugeordnet werden.";
+    public const string QuestListeTitel = "Alle Quests";
+    public static string QuestTreffer(int n, int alle) => $"{n} von {alle} Quests";
+    public const string QuestBestandMarke = "vorhanden";
+    public const string QuestNeuMarke = "neu";
+    public const string QuestUmgehaengtMarke = "umgehängt";
+    public const string QuestFunde = "Prüfen";
+    public static string QuestFundeTitel(int rot) => rot == 0 ? "Prüfen – alles grün" : $"Prüfen – {rot} rot";
+    public const string QuestFundeLaeuft = "Wird geprüft …";
+    public const string QuestFeldTipp = "Änderungen gelten, sobald du das Feld verlässt oder Enter drückst.";
+    public const string QuestZeilenTipp = "Eine Zeile je Absatz.";
+    public const string QuestOptionWegTipp = "Nimmt diese Antwort heraus (mindestens zwei bleiben).";
+    public const string QuestPaarWegTipp = "Nimmt dieses Paar heraus (mindestens zwei bleiben).";
+    public const string QuestRichtigTipp = "Diese Antwort ist die richtige.";
+    public const string QuestUmhaengenTipp = "Wählt die Person, die die Quest im Spiel vergibt.";
+    public const string QuestNachTipp = "Die Quest erscheint erst, wenn die gewählte Quest erledigt ist.";
+    public const string QuestTypTipp = "Beim Wechsel fallen die Antworten bzw. Paare des anderen Typs weg.";
+    public const string QuestZahlFalsch = "Bitte eine ganze Zahl eintragen.";
+    public static string QuestOptionName(int i) => $"Antwort {i}";
+    public static string QuestPaarName(int i, bool rechts) => rechts ? $"Paar {i}, passt zu" : $"Paar {i}, Begriff";
+    public static string QuestRichtigName(int i) => $"Antwort {i} ist richtig";
+    public const string QgListeTitel = "Alle Questgeber";
+    public const string QgNichtsGewaehlt = "Wähle links eine Person oder lege eine neue an.";
+    public const string QgOrtWahlTipp = "Wo die Person stehen soll: draußen oder in einem Innenraum.";
+    public const string QgBlickTipp2 = "Richtung, in die die Person schaut.";
+    public const string QgAussehenWahlTipp = "Teil des Aussehens der Person.";
+    public static string QgPlatzText(string ort) => $"steht in „{ort}“";
+    public static string QgPlatzDraussenText(double x, double y) =>
+        string.Format(CultureInfo.InvariantCulture, "steht draußen bei {0:0.##} / {1:0.##}", x, y);
+    public static readonly string QgZuVieleDraussen = $"Draußen stehen schon {QuestgeberDaten.DraussenHoechstens} Questgeber; diese Person bitte in ein Haus stellen.";
+    public static string QgEtageName(string ort, int etage) => etage == 0 ? ort : $"{ort} – {etage}. Etage";
+    public const string QgQuestOeffnenTipp = "Öffnet die Quest im Reiter „Quests“.";
+    public static string QgGesetzt(string n) => $"„{n}“ steht jetzt am neuen Platz.";
+    public static string QgDreiecke(long d) => string.Format(CultureInfo.GetCultureInfo("de-DE"), "Dreiecke draußen: {0:N0}", d);
+    public const string VerkettungNurQuests = "Pfeile gehen nur von einer Quest zu einer Quest.";
+    public const string QuestPruefFehler = "Prüfen ist gescheitert: ";
+    public static string AussehenTeilName(string teil) => teil switch
+    {
+        "haut" => "Hautton",
+        "frisur" => "Frisur",
+        "haarfarbe" => "Haarfarbe",
+        "oberteil" => "Oberteil",
+        _ => teil,
+    };
+    public static string ListeWeitere(int n) => $"Weitere zeigen ({n} mehr)";
+    public const string ListeWeitereTipp = "Zeigt die nächsten Einträge; mit Suche und Filter findest du eine Quest schneller.";
 }

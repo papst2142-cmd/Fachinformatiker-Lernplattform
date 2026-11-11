@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.40.0
+
+Quests und Questgeber im Werkzeug.
+
+- Neuer Reiter „Quests“: alle Quests des Spiels in einer Liste mit Suche und Filtern (Typ, Questgeber, Ort). Vorhandene Quests lassen sich ansehen, einer anderen Person geben („umhängen“) und als neue Quest kopieren; ihre Texte bleiben unverändert. Neue Quests sind vom Typ „Auswahl“ (eine von mehreren Antworten ist richtig) oder „Zuordnung“ (Begriffe einander zuordnen) und haben Titel, Ticket, Frage, Antworten bzw. Paare, Hilfe, Erklärung, Thema, Geld, Ruf, „Frei ab Tag“ und „Erst nach“.
+- Neuer Reiter „Questgeber“: die Personen, die Quests vergeben. Eigene Personen mit Name, Rolle und Aussehen anlegen; jede Person drinnen in einen Innenraum oder draußen auf die Karte stellen (höchstens 12 draußen). Die Personen aus dem Spiel lassen sich nur verschieben und wieder an ihren alten Platz stellen.
+- In der Spielgeschichte zeigen die Zusammenhänge die Aufgaben wahlweise „je Ort“ oder „je Questgeber“. Einen Pfeil von einer Quest auf eine neue Quest ziehen setzt „Erst nach“.
+- Eine Prüfung zeigt rot, was so nicht ins Spiel kann (zum Beispiel Quest ohne Questgeber, leere Antwort, Kreis bei „Erst nach“, Person auf einem Haus oder nicht erreichbar). Personen draußen zählen in „Grenzen live“ mit.
+- Quests und Questgeber stehen schon in der Stadt-Datei. Im Spiel erscheinen sie erst mit dem Einbau; ein gelber Hinweis sagt das.
+
 ## S 0.39.0
 
 Versionsanzeige und Hinweis auf die neuen Grafikstufen der Lernplattform.

@@ -509,6 +509,8 @@ public sealed partial class Hauptansicht : UserControl
         _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Innenorte.Count > 0;
         _kopf[Texte.Ansicht3D].IsEnabled = mit;
         _kopf[Texte.Spielgeschichte].IsEnabled = mit;
+        _kopf[Texte.Quests].IsEnabled = mit;
+        _kopf[Texte.Questgeber].IsEnabled = mit;
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
         _kopf[Texte.Speichern].IsEnabled = schreiben;
@@ -520,7 +522,7 @@ public sealed partial class Hauptansicht : UserControl
         if (_entwurf is { } entwurf)
         {
             // S 0.9.0: im Editor gelten nur Rueckgaengig/Wiederholen des Entwurfs; Projekt-Knoepfe erst nach "Zurück zur Stadt"
-            foreach (var name in new[] { Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden })
+            foreach (var name in new[] { Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden })
             {
                 _kopf[name].IsEnabled = false;
             }
@@ -530,7 +532,8 @@ public sealed partial class Hauptansicht : UserControl
         foreach (var name in Reiter)
         {
             var k = _kopf[name];
-            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei && !_geschichteOffen) || (name == Texte.Ansicht3D && _drei) || (name == Texte.Spielgeschichte && _geschichteOffen));
+            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei && !_geschichteOffen) || (name == Texte.Ansicht3D && _drei) || (name == Texte.Spielgeschichte && _geschichteOffen && _seite is null)
+                || (name == Texte.Quests && _geschichteOffen && _seite == Texte.Quests) || (name == Texte.Questgeber && _geschichteOffen && _seite == Texte.Questgeber));
             // Welle Q (Punkt 1): der gewaehlte Reiter farbig, die anderen auf dem Grund der Leiste
             if (aktiv)
             {
@@ -1852,10 +1855,12 @@ public sealed partial class Hauptansicht : UserControl
         // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
         var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
         var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
+        // Welle Q1: dazu die Funde der Quests und Questgeber (Umgebung hier kopiert, gerechnet im Hintergrund)
+        var quests = _projekt.QuestUmgebung();
         AussenPruefungLaeuft();
         GrenzenLiveStarten(fassung, daten);
         var uhr = Stopwatch.StartNew();
-        _ = Hintergrund(Task.Run(() => Projekt.PruefenAussen(fassung, daten, bauten))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Hintergrund(Task.Run(() => (List<StadtbauFund>)[.. Projekt.PruefenAussen(fassung, daten, bauten), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)])).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -2315,6 +2320,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         _ort = ort;
         _projekt.Ort = ort;
+        QuestgeberMarkenNeu();
         if (!_innen)
         {
             _innen = true;
@@ -3118,6 +3124,12 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (Dialog.Offen is not null || _projekt is null)
         {
+            return;
+        }
+        if (e.Key == Key.Escape && QgSetzenAbbrechen())
+        {
+            // Welle Q1: Escape bricht „Platz wählen“ ab
+            e.Handled = true;
             return;
         }
         var strg = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);

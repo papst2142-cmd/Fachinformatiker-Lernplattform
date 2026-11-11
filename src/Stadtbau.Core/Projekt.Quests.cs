@@ -49,7 +49,7 @@ public sealed partial class Projekt
                 return KatalogPruefung.Innen(Katalog.Aktiv, b, innen[k].Grundriss, personen, daten.Grafik, daten.Geschaefte, basisInnen, e).Funde;
             },
             Szene = () => QuestSzene(aussen, basis, innenraeume, daten),
-            Geschichte = Spielgeschichte.Aus(daten.Inhalt, aussen),
+            GeschichteBauen = () => Spielgeschichte.Aus(daten.Inhalt, aussen),
             OrtName = o => namen.TryGetValue(o, out var n) ? n : o,
         };
     }
@@ -90,6 +90,17 @@ public sealed partial class Projekt
         AussenAendern(Texte.QuestFeldQuestgeber, a => QuestDaten.Umhaengen(Daten.Inhalt, a, id, questgeber));
 
     /// <summary>„Erst nach“ einer neuen Quest (auch Pfeil ziehen in den Zusammenhängen). false = vorhandene Quest.</summary>
+    /// <summary>Mehrere Felder einer neuen Quest in einem Schritt aendern (Antwort und Optionen zusammen). false = keine neue Quest.</summary>
+    public bool QuestAendern(string id, string was, Action<PyObjekt> aenderung) => AussenAendern(was, a =>
+    {
+        if (QuestDaten.NeueQuest(a, id) is not { } q)
+        {
+            return false;
+        }
+        aenderung(q);
+        return true;
+    });
+
     public bool QuestNach(string id, string? nach) => AussenAendern(Texte.QuestFeldNach, a => QuestDaten.NachSetzen(a, id, nach));
 
     /// <summary>Neue Quest loeschen; Quests, die nach ihr kamen, verlieren die Bedingung (im selben Schritt).</summary>
