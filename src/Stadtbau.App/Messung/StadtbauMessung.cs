@@ -554,6 +554,8 @@ public static partial class StadtbauMessung
                 Fund("Grenzen Gesamtansicht: keine Messung");
             }
         }
+        // Engine Stufe 2 Teil 1 (Weisung P12-176): Zeit und Netzdaten fuer den Bau von Stadt 1
+        await StadtLastAsync(p);
         await AlleGroessenAsync(a, f, "3D-Ansicht");
         a.ReiterZeigen(innen: false);
     }

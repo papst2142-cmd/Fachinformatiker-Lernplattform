@@ -14,8 +14,9 @@ namespace Stadtbau.Tests;
 /// Uebersicht in <c>docs/ENGINE.md</c> Abschnitt „Formate“. Echte Testdateien in <see cref="TestdateiTests.Ordner"/>:
 /// <c>projekt_S0.1.0.fisbau</c> (Format 1, mit dem Code von S 0.1.0, main 51d41b6, geschrieben), <c>projekt_S0.4.0.fisbau</c>
 /// (Format 2), <c>blueprint_S0.8.0.fisblueprint</c> (1), <c>blueprint_S0.18.0.fisblueprint</c> (2),
-/// <c>katalog_verbaut_S0.4.0.bin/.json</c> (FLGM 1, Testdatei aus S 0.4.0, main 365533e), <c>stadt1_fassung1.fistadt</c> und
-/// die Fassung 0 im Repo (fistadt 1).
+/// <c>katalog_verbaut_S0.4.0.bin/.json</c> (FLGM 1 und Liste ohne Formatnummer, Testdatei aus S 0.4.0, main 365533e),
+/// <c>aktiv_A0.62.0.json</c> (ohne Formatnummer, aus main a808a3a), <c>stadt1_fassung1.fistadt</c> und die Fassung 0 im Repo
+/// (fistadt 1).
 /// </summary>
 public class EngineFormateTests
 {
@@ -145,36 +146,87 @@ public class EngineFormateTests
     }
 
     /// <summary>
-    /// <c>katalog_verbaut.json</c>: hat keine eigene Formatnummer (Fund Sammelliste 286). Geschuetzt ist es heute durch
-    /// die Pruefsumme der bin-Datei, die FLGM-Version darin und die Liste der Modelle; jede Abweichung ist ein klarer Fehler.
+    /// <c>katalog_verbaut.json</c>: seit A 0.62.1 Format 1 im Feld „format“ (Weisung P12-176, Sammelliste 286). Eine
+    /// neuere Nummer und ein falscher Wert sind klare Fehler; die echte Datei aus S 0.4.0 (ohne Feld) liest sich als Format 1.
+    /// Dazu wie bisher: Pruefsumme der bin-Datei und Liste der Modelle. Gegenprobe: mit dem alten Leser
+    /// (<see cref="GrafikBibliothek.KatalogFormatAltFuerTests"/>) ginge Format 2 still durch.
     /// </summary>
     [Fact]
-    public void KatalogVerbaut_PruefsummeUndListe_KlarerFehler()
+    public void KatalogVerbaut_NeuereNummerFehler_EchteDateiOhneNummerLesbar()
     {
         var bin = Testdatei("katalog_verbaut_S0.4.0.bin");
         var json = Encoding.UTF8.GetString(Testdatei("katalog_verbaut_S0.4.0.json"));
+        Assert.DoesNotContain("\"format\"", json, StringComparison.Ordinal);
+        Assert.Equal(3, GrafikBibliothek.KatalogLaden(bin, json).Count);
         Assert.Throws<InvalidDataException>(() => GrafikBibliothek.KatalogLaden(bin, Ersetzt(json, "\"sha256\": \"d", "\"sha256\": \"e")));
         Assert.Throws<InvalidDataException>(() => GrafikBibliothek.KatalogLaden(bin, Ersetzt(json, "  \"cc0:furniture/chair\",\n", "")));
-        // heute ohne Formatnummer: das Feld wuerde still uebergangen (darum Fund 286)
-        Assert.DoesNotContain("format", json, StringComparison.Ordinal);
+        string Mit(string wert) => Ersetzt(json, "\"sha256\":", "\"format\": " + wert + ",\n \"sha256\":");
+        Assert.Equal(3, GrafikBibliothek.KatalogLaden(bin, Mit("1")).Count);
+        var neuer = Assert.Throws<InvalidDataException>(() => GrafikBibliothek.KatalogLaden(bin, Mit("2")));
+        Assert.Contains("Format 2", neuer.Message, StringComparison.Ordinal);
+        Assert.Contains("aktualisieren", neuer.Message, StringComparison.Ordinal);
+        foreach (var falsch in new[] { "0", "1.0", "\"1\"", "null", "-1" })
+        {
+            Assert.Throws<InvalidDataException>(() => GrafikBibliothek.KatalogLaden(bin, Mit(falsch)));
+        }
+        // die Dateien im Repo und die Testdatei des Werkzeugs tragen die Nummer (verbaut.py schreibt sie)
+        foreach (var datei in new[] { "inhalte_csharp/grafik/katalog_verbaut.json", TestdateiTests.Ordner + "katalog_verbaut.json" })
+        {
+            Assert.Contains("\"format\": 1,", Encoding.UTF8.GetString(Daten.Lesen(datei)!), StringComparison.Ordinal);
+        }
+        // Gegenprobe: der alte Leser uebergeht das Feld still
+        GrafikBibliothek.KatalogFormatAltFuerTests = true;
+        try
+        {
+            Assert.Equal(3, GrafikBibliothek.KatalogLaden(bin, Mit("2")).Count);
+        }
+        finally
+        {
+            GrafikBibliothek.KatalogFormatAltFuerTests = false;
+        }
     }
 
     /// <summary>
-    /// <c>aktiv.json</c>: hat keine eigene Formatnummer (Fund Sammelliste 286). Jeder Wert, der keine ganze Zahl ist, ist ein
-    /// klarer Fehler; eine fehlende Fassung auch.
+    /// <c>aktiv.json</c>: seit A 0.62.1 Format 1 im Feld „format“ (Weisung P12-176, Sammelliste 286, Sollwert-Aenderung
+    /// Nr. 15). Eine neuere Nummer und ein falscher Wert sind klare Fehler; die echte Datei bis A 0.62.0
+    /// (<c>aktiv_A0.62.0.json</c>, ohne Feld) liest sich als Format 1. Jeder Wert einer Stadt, der keine ganze Zahl ist, und
+    /// eine fehlende Fassung sind ebenfalls Fehler. Gegenprobe: mit dem alten Leser ginge Format 2 still durch.
     /// </summary>
     [Fact]
-    public void AktivJson_UnbekannterWert_KlarerFehler()
+    public void AktivJson_NeuereNummerFehler_EchteDateiOhneNummerLesbar()
     {
         var aktiv = (PyObjekt)Py.Lesen(Daten.Lesen(AktiveFassung.Ordner + AktiveFassung.Datei)!)!;
+        Assert.Equal(1, AktiveFassung.FormatVon(aktiv));
         Assert.Equal(0, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
+        var alt = Testdatei("aktiv_A0.62.0.json");
+        Assert.DoesNotContain("\"format\"", Encoding.UTF8.GetString(alt), StringComparison.Ordinal);
+        Assert.Equal(1, AktiveFassung.FormatVon((PyObjekt)Py.Lesen(alt)!));
+        Func<string, byte[]?> Mit(byte[] inhalt) => p => p.EndsWith(AktiveFassung.Datei, StringComparison.Ordinal) ? inhalt : Daten.Lesen(p);
+        Assert.Equal(0, AktiveFassung.Laden(Mit(alt)).Nummer);
+        var zwei = Encoding.UTF8.GetBytes("{\"format\": 2, \"stadt1\": 0}");
+        var neuer = Assert.Throws<StadtbauFehler>(() => AktiveFassung.Laden(Mit(zwei)));
+        Assert.Contains(neuer.Funde, t => t.Contains("Format 2", StringComparison.Ordinal) && t.Contains("aktualisieren", StringComparison.Ordinal));
+        foreach (var wert in new[] { "0", "1.0", "\"1\"", "null", "-1" })
+        {
+            Assert.Throws<StadtbauFehler>(() => AktiveFassung.Laden(Mit(Encoding.UTF8.GetBytes("{\"format\": " + wert + ", \"stadt1\": 0}"))));
+        }
+        Assert.Throws<StadtbauFehler>(() => AktiveFassung.Nummer(aktiv, AktiveFassung.FormatFeld));
         foreach (var falsch in new[] { "{\"stadt1\": {\"nummer\": 0}}", "{\"stadt1\": \"0\"}", "{\"stadt1\": 0.0}", "{}" })
         {
             Assert.Throws<StadtbauFehler>(() => AktiveFassung.Nummer((PyObjekt)Py.Lesen(falsch)!, AktiveFassung.Stadt1));
         }
-        var fehlt = Assert.Throws<StadtbauFehler>(() => AktiveFassung.Laden(p => p.EndsWith(AktiveFassung.Datei, StringComparison.Ordinal)
-            ? Encoding.UTF8.GetBytes("{\"stadt1\": 7}") : Daten.Lesen(p)));
+        var fehlt = Assert.Throws<StadtbauFehler>(() => AktiveFassung.Laden(Mit(Encoding.UTF8.GetBytes("{\"stadt1\": 7}"))));
         Assert.Contains(fehlt.Funde, t => t.Contains("stadt1_fassung7.fistadt", StringComparison.Ordinal));
+        // Gegenprobe: der alte Leser uebergeht das Feld still
+        AktiveFassung.FormatAltFuerTests = true;
+        try
+        {
+            Assert.Equal(0, AktiveFassung.Laden(Mit(zwei)).Nummer);
+        }
+        finally
+        {
+            AktiveFassung.FormatAltFuerTests = false;
+        }
     }
 
     /// <summary>

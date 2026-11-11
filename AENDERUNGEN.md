@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.62.1
+Kleine Absicherung für spätere Städte. Das Spiel sieht genauso aus und verhält sich wie bisher.
+
+- Zwei kleine Dateien der Spielstadt (welche Fassung einer Stadt gilt, und welche Stücke aus dem Baukasten mitgeliefert werden) tragen jetzt eine Nummer für ihren Aufbau. Bekommt die Lernplattform später einmal eine Datei mit neuerem Aufbau, sagt sie klar „Bitte das Programm aktualisieren“, statt sie falsch zu lesen. Ältere Dateien ohne Nummer lesen sich weiter.
+- Am Lernen, am Spielverlauf und an deinem Lernstand ändert sich nichts.
+
 ## A 0.62.0
 Die Autos im Spiel werden sparsamer gezeichnet. Sie sehen aus wie bisher.
 

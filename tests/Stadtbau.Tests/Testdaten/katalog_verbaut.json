@@ -2,6 +2,7 @@
  "_hinweis": [
   "Phase 13 Welle 4a (Weisung P12-28): nur die Stuecke aus dem Katalog des Stadtbau-Werkzeugs, auf die eine Fassung in inhalte_csharp/spiel/stadtbau/ verweist; erzeugt mit werkzeuge/stadtbau/verbaut.py, nie von Hand."
  ],
+ "format": 1,
  "sha256": "9349c9dd3b26d24284aa1979c73768a4ff6d9d0a00ed9f6d13e0d841edebf13f",
  "modelle": [
   "cc0:car_kit/sedan",

@@ -177,6 +177,8 @@ public static partial class AutoMessung
             // Welle D1 (Weisung P12-143, Sammelliste 259): dazu die Nahansicht mit derselben Grenze
             Messwerte.Notiere("Spiel: Nahansicht mit allen Orten (Weihnachten, Winter, nachts)");
             funde += await NahansichtAsync(seite);
+            // Engine Stufe 2 Teil 1 (Weisung P12-176): Zeit und Netzdaten fuer den Bau dieser Stadt
+            funde += StadtLastMessen(alle);
         }
         finally
         {

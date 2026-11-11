@@ -171,7 +171,7 @@ public sealed class StadtbauFassungTests
     {
         var aktiv = (PyObjekt)Py.Lesen(Quelle("inhalte_csharp", "spiel", "stadtbau", AktiveFassung.Datei))!;
         Assert.Equal(0, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
-        Assert.Equal(["_hinweis", "stadt1"], aktiv.Select(p => p.Key));
+        Assert.Equal(["_hinweis", AktiveFassung.FormatFeld, "stadt1"], aktiv.Select(p => p.Key));   // Format seit A 0.62.1 (Sollwert-Aenderung Nr. 15)
         var dateien = Directory.GetFiles(Ordner).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToList();
         Assert.Equal(["aktiv.json", "stadt1_fassung0.fistadt"], dateien);
     }
