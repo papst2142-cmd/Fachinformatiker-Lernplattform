@@ -31,6 +31,9 @@ public sealed record GrenzenLive(
     /// <summary>Welle Grafik G1: Anteil des teuersten Bilds an der Grenze der Stufe Niedrig (nur Info, geprueft wird gegen Mittel).</summary>
     public double AnteilNiedrig { get; init; }
 
+    /// <summary>Welle Q1: Dreiecke der Questgeber draussen, in jedem Bild mitgezaehlt (0 = keine).</summary>
+    public long QuestgeberDreiecke { get; init; }
+
     /// <summary>Welle Grafik G1: Anteil des teuersten Bilds an der Grenze der Stufe Hoch (nur Info).</summary>
     public double AnteilHoch { get; init; }
 
@@ -81,7 +84,11 @@ public sealed record GrenzenLive(
     public static bool OhneSparenFuerTests { get; set; }
 
     /// <summary>Rechnen (blockiert, im Hintergrund rufen). <paramref name="spiel"/> = gebaut mit <see cref="Ansicht3D.Einstellung.Grenzen"/>.</summary>
-    public static GrenzenLive Rechnen(StadtSpiel spiel, long uhr)
+    /// <remarks>
+    /// Welle Q1 (Kurzplan P12-111 Abschnitt 4): <paramref name="questgeber"/> = Dreiecke aller Questgeber draussen; sie
+    /// zaehlen in jedem Bild mit (im Spiel erst ab Q2 gezeichnet, im Aufruf der Autos, kein neuer Aufruf).
+    /// </remarks>
+    public static GrenzenLive Rechnen(StadtSpiel spiel, long uhr, long questgeber = 0)
     {
         var szene = spiel.Szene;
         var fertig = szene.Vorbereiten();
@@ -109,7 +116,7 @@ public sealed record GrenzenLive(
             for (var i = 0; i < stufen.Length; i++)
             {
                 var b = Bewegt(stufen[i].Fern(abstand), stufen[i].AutosHalb);
-                var summe = (je[i].Dreiecke + b.Dreiecke, je[i].Aufrufe + b.Aufrufe);
+                var summe = (je[i].Dreiecke + b.Dreiecke + questgeber, je[i].Aufrufe + b.Aufrufe);
                 hoechst[i] = (Math.Max(hoechst[i].Dreiecke, summe.Item1), Math.Max(hoechst[i].Aufrufe, summe.Item2));
                 je[i] = summe;
             }
@@ -148,12 +155,25 @@ public sealed record GrenzenLive(
         {
             AnteilNiedrig = AnteilVon(1, Grafikstufe.Niedrig),
             AnteilHoch = AnteilVon(2, Grafikstufe.Hoch),
+            QuestgeberDreiecke = questgeber,
         };
     }
 
     /// <summary>Stand eines Projekts bauen (Szene der Grenzen, mit <paramref name="vorrat"/> nur Geaendertes neu) und rechnen.</summary>
     public static GrenzenLive Fuer(Lernplattform.Core.Stadtbau.StadtFassung stand, Spieldaten daten, StadtSzene.Vorrat? vorrat = null) =>
-        Rechnen(Ansicht3D.Bauen(stand, daten, Ansicht3D.Einstellung.Grenzen, vorrat), Ansicht3D.Einstellung.Grenzen.Uhr);
+        Rechnen(Ansicht3D.Bauen(stand, daten, Ansicht3D.Einstellung.Grenzen, vorrat), Ansicht3D.Einstellung.Grenzen.Uhr,
+            QuestgeberDreieckeDraussen(stand, daten));
+
+    /// <summary>Welle Q1: Dreiecke aller Questgeber draussen (Figur mit ihrem Aussehen, wie eine Person im Spiel).</summary>
+    public static long QuestgeberDreieckeDraussen(Lernplattform.Core.Stadtbau.StadtFassung stand, Spieldaten daten)
+    {
+        if (Lernplattform.Core.Spiel.SpielDaten.Get(stand.Stadtdaten, QuestgeberDaten.Abschnitt) is null)
+        {
+            return 0;
+        }
+        return QuestgeberDaten.Alle(daten.Inhalt, Aussen.Aus(stand)).Where(q => q.Platz is { Draussen: true })
+            .Sum(q => (long)(Figur.Netz(daten.Grafik, q.Aussehen, 1f).Indizes.Count / 3));
+    }
 
     /// <summary>Kameraabstaende der Nahansicht (wie <c>AutoMessung.NahAbstaende</c> des Spiels).</summary>
     public static readonly float[] NahAbstaende = [4f, 6f, 10f, 16f];

@@ -5,7 +5,7 @@ namespace Stadtbau.Core;
 /// Phase 13 Welle 2: alle sichtbaren Texte des Stadtbau-Werkzeugs an einer Stelle (Deutsch, einfache Worte fuer Nico).
 /// Die Oberflaeche nimmt Texte nur von hier, die Tests pruefen Wortlaut und Namen fuer den Screenreader.
 /// </summary>
-public static class Texte
+public static partial class Texte
 {
     // ---- Kopfleiste ----
     // Patch S 0.5.1 (Weisung P12-35, Nico: "Die Beschreibungen sind zu ungenau"): jeder Knopf sagt, womit er arbeitet
@@ -565,6 +565,8 @@ public static class Texte
         [VollbildBildschirm] = "Wählt, auf welchem Bildschirm das Vollbild erscheint (nur mit zwei oder mehr Bildschirmen, gilt auch beim nächsten Start).",
         [WerkzeugBeenden] = "Schließt das Werkzeug, deine Arbeit ist dabei gespeichert.",
         [Spielgeschichte] = TippSpielgeschichte,
+        [Quests] = TippQuests,
+        [Questgeber] = TippQuestgeber,
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
         [MenueProjekt] = TippMenueProjekt,
         [MenueEinstellungen] = TippMenueEinstellungen,
