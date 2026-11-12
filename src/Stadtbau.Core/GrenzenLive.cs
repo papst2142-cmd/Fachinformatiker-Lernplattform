@@ -81,7 +81,15 @@ public sealed record GrenzenLive(
     }
 
     /// <summary>Gegenprobe: ohne Instancing und Sichtkegel rechnen (Start-Test).</summary>
-    public static bool OhneSparenFuerTests { get; set; }
+    /// <remarks>
+    /// Sammelliste 307 (Weisung P12-202): bis S 0.42.1 ein Schalter fuer den ganzen Prozess. Setzte die Gegenprobe in
+    /// <c>GrenzenLiveTests</c> ihn, rechneten Tests anderer Klassen, die gerade nebenher liefen, ohne Sichtkegel und meldeten
+    /// „Stadt zu teuer“ (Stadt 1 dann rund 160 500 Dreiecke und 31 Aufrufe statt rund 147 600 und 30). Jetzt gilt er nur im
+    /// eigenen Ablauf (AsyncLocal, fliesst wie im Start-Test in ein danach gestartetes <c>Task.Run</c>).
+    /// </remarks>
+    public static bool OhneSparenFuerTests { get => OhneSparen.Value; set => OhneSparen.Value = value; }
+
+    private static readonly AsyncLocal<bool> OhneSparen = new();
 
     /// <summary>Rechnen (blockiert, im Hintergrund rufen). <paramref name="spiel"/> = gebaut mit <see cref="Ansicht3D.Einstellung.Grenzen"/>.</summary>
     /// <remarks>

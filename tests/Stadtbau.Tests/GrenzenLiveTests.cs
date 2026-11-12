@@ -43,6 +43,53 @@ public class GrenzenLiveTests
         Assert.True(ohne.Gesamt.Dreiecke > Stadt1.Value.Gesamt.Dreiecke, ohne + " gegen " + Stadt1.Value);
     }
 
+    /// <summary>
+    /// Sammelliste 307 (Weisung P12-202, Laeufe 855 und 856 unter Windows): die Gegenprobe oben schaltete den Sichtkegel fuer den
+    /// ganzen Prozess ab; ein Test einer anderen Klasse, der gerade nebenher Grenzen live rechnete (QuestTests, OrtVerlegenTests),
+    /// bekam „Stadt zu teuer“. Hier setzt ein Ablauf die Schalter, ein zweiter rechnet zur selben Zeit: er muss wie ohne Schalter
+    /// rechnen. Gegenprobe: mit den Schaltern von S 0.42.1 (statisch fuer den Prozess) ist dieser Test rot.
+    /// </summary>
+    [Fact]
+    public async Task Schalter_GeltenNurImEigenenAblauf_NebenherRechnetNormal()
+    {
+        using var gesetzt = new ManualResetEventSlim();
+        using var fertig = new ManualResetEventSlim();
+        var setzer = Task.Run(() =>
+        {
+            GrenzenLive.OhneSparenFuerTests = true;
+            Blueprint.ModellnamenAltFuerTests = true;
+            try
+            {
+                gesetzt.Set();
+                Assert.True(fertig.Wait(TimeSpan.FromMinutes(2)), "zweiter Ablauf nicht fertig");
+            }
+            finally
+            {
+                GrenzenLive.OhneSparenFuerTests = false;
+                Blueprint.ModellnamenAltFuerTests = false;
+            }
+        }, TestContext.Current.CancellationToken);
+        var rechner = Task.Run(() =>
+        {
+            try
+            {
+                Assert.True(gesetzt.Wait(TimeSpan.FromMinutes(2)), "erster Ablauf hat nicht gesetzt");
+                Assert.False(GrenzenLive.OhneSparenFuerTests);
+                Assert.False(Blueprint.ModellnamenAltFuerTests);
+                return GrenzenLive.Fuer(D.Fassung, D);
+            }
+            finally
+            {
+                fertig.Set();
+            }
+        }, TestContext.Current.CancellationToken);
+        var nebenher = await rechner;
+        await setzer;
+        Assert.Equal(Stadt1.Value.Nah, nebenher.Nah);
+        Assert.Equal(Stadt1.Value.Gesamt, nebenher.Gesamt);
+        Assert.Null(nebenher.Fund());
+    }
+
     [Fact]
     public void Waermekarte_NurFelderAufDerKarte()
     {
