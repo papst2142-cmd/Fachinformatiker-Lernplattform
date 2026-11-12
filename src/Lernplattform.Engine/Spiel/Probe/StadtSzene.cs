@@ -1660,7 +1660,9 @@ public sealed partial class StadtSzene
         }
         if (grafik is not null)
         {
-            Zug(stuecke, grafik, gleise);
+            // Welle A 0.70.0 (Weisung P12-220): ist ein Bahnsteig mit einem Bahnhof verknuepft, haelt der Zug an ihm (ohne
+            // Verknuepfung wie bisher, Fassung 0 bitgleich)
+            Zug(stuecke, grafik, gleise, ZugHaltAlt.Value ? null : VerknuepfterBahnsteig(landschaft, modelle));
         }
         // Phase 13 Welle 4a (Weisung P12-28): Stuecke aus dem Katalog des Stadtbau-Werkzeugs (stadtdaten.katalog) mit den
         // mitgelieferten Modellen; ein Modell versperrt den Weg mit seinem Rechteck, ein Effekt (Stern) nichts. Fehlt ein
@@ -3389,7 +3391,7 @@ public sealed partial class StadtSzene
     /// Ein stehender Zug (Train Kit, drei Wagen) auf dem laengsten geraden Gleisabschnitt, zur Zierde
     /// am Bahnhof; faehrt nicht und verbindet nichts (Zug zwischen Spielwelten plant Nico spaeter).
     /// </summary>
-    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<Vector2>> bahnen)
+    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<Vector2>> bahnen, Vector2? halt = null)
     {
         var wagen = new[] { "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" }.Select(grafik.Modell).ToList();
         if (wagen.Any(w => w is null))
@@ -3406,17 +3408,29 @@ public sealed partial class StadtSzene
                 best = stueck;
             }
         }
-        var l = (best.B - best.A).Length();
-        if (l < 1)
-        {
-            return;
-        }
-        var e = (best.B - best.A) / l;
         var skala = ZugBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X);
         var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
-        // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
-        // W8b (Nico 2a): der Zug haelt am Ostende des Bahnsteigs, der Fussweg zum Bahnhof quert das Gleis im Westen
-        var pos = e.X > 0 ? l - 0.1f : gesamt + 0.1f;
+        float pos;
+        Vector2 e;
+        if (halt is { } h && NaechstesGleisStueck(bahnen, h) is { } gs)
+        {
+            // Weisung P12-220: Mitte des Zugs auf der Hoehe des verknuepften Bahnsteigs, in Richtung des naechsten Gleisstuecks
+            e = gs.Richtung;
+            best = (gs.Punkt - (e * (gesamt / 2)), gs.Punkt + (e * (gesamt / 2)));
+            pos = gesamt;
+        }
+        else
+        {
+            var l = (best.B - best.A).Length();
+            if (l < 1)
+            {
+                return;
+            }
+            e = (best.B - best.A) / l;
+            // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
+            // W8b (Nico 2a): der Zug haelt am Ostende des Bahnsteigs, der Fussweg zum Bahnhof quert das Gleis im Westen
+            pos = e.X > 0 ? l - 0.1f : gesamt + 0.1f;
+        }
         foreach (var w in wagen)
         {
             var lang = (w!.Max.Z - w.Min.Z) * skala;
@@ -3426,6 +3440,55 @@ public sealed partial class StadtSzene
             pos -= lang;
         }
     }
+
+    /// <summary>
+    /// Weisung P12-220: Mitte des ersten Bahnsteigs (Gebaeude ohne Ort nur aus Bahnsteig-Flaechen) mit Feld
+    /// <see cref="Stadtbau.Bahnsteig.BahnhofFeld"/> in der Reihenfolge der Landschaft, sonst null.
+    /// </summary>
+    public static Vector2? VerknuepfterBahnsteig(IEnumerable<PyObjekt> landschaft, PyObjekt modelle)
+    {
+        foreach (var g in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude") && Stadtbau.Bahnsteig.BahnhofVon(t) is not null))
+        {
+            var teile = Get(modelle, Py.Str(g["modell"]));
+            if (Stadtbau.Bahnsteig.Nur(teile) && Stadtbau.Bahnsteig.MitteVon(g, teile) is { } m)
+            {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Naechster Punkt auf einem Gleis (Lot auf das naechste Stueck) und die Richtung dieses Stuecks.</summary>
+    public static (Vector2 Punkt, Vector2 Richtung)? NaechstesGleisStueck(IEnumerable<IReadOnlyList<Vector2>> bahnen, Vector2 p)
+    {
+        (Vector2, Vector2)? best = null;
+        var abstand = float.MaxValue;
+        foreach (var b in bahnen)
+        {
+            for (var i = 0; i + 1 < b.Count; i++)
+            {
+                var d = b[i + 1] - b[i];
+                var l2 = d.LengthSquared();
+                if (l2 < 1e-8f)
+                {
+                    continue;
+                }
+                var t = Math.Clamp(Vector2.Dot(p - b[i], d) / l2, 0, 1);
+                var q = b[i] + (d * t);
+                var a = Vector2.Distance(p, q);
+                if (a < abstand)
+                {
+                    abstand = a;
+                    best = (q, d / MathF.Sqrt(l2));
+                }
+            }
+        }
+        return best;
+    }
+
+    /// <summary>Gegenprobe Weisung P12-220: der Zug steht wie bisher auf dem laengsten geraden Stueck (nur Tests, je Ablauf).</summary>
+    public static bool ZugHaltAltFuerTests { get => ZugHaltAlt.Value; set => ZugHaltAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ZugHaltAlt = new();
 
     /// <summary>_part_fill: benannte Farben der Modellteile, sonst Hex-Wert.</summary>
     private static Vector3 Teilfarbe(string name, Vector3 ton) => name switch

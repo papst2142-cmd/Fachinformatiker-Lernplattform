@@ -17,6 +17,10 @@ Gebäude in Schritten von 15 Grad drehen, Bahnhof am schrägen Gleis.
 - Abstellgleise mit Weiche: „Bahn ziehen“ fängt jetzt mitten auf einem geraden Gleis eine Weiche und die Mitte jedes Tors (Lokschuppen, Betriebswerkstatt). Erst auf das Hauptgleis tippen, dann auf das Tor: das Gleis zweigt ab, biegt zum Tor und endet genau in seiner Mitte. Die Prüfung lässt Gleise an einer Weiche nah beieinander, bis sie auseinander sind. Ein Gleis, das auf einem anderen beginnt und daneben bleibt, ist weiter rot.
 - Ein Gleis, das frei endet (nicht am Kartenrand, nicht an einem anderen Gleis, nicht an einem Gebäude), bekommt einen rot-weißen Prellbock. Züge fahren nicht auf Abstellgleise.
 - Fenster an schräg gedrehten Häusern leuchten nachts wieder.
+- Bahnsteig mit Bahnhof verknüpfen: unter „Ausgewähltes Stück“ steht am Bahnsteig und am Bahnhof der Knopf „Mit Bahnhof verknüpfen“. Danach den Bahnhof (bzw. den Bahnsteig) auf der Karte antippen. Das ist ein Schritt, Rückgängig geht; „Verknüpfung lösen“ ebenso. Ein Bahnsteig gehört zu höchstens einem Bahnhof, ein Bahnhof kann mehrere Bahnsteige haben. Mit Verknüpfung verschwindet der gelbe Hinweis „hat keinen Bahnsteig mehr“, und im Spiel hält der Zug an diesem Bahnsteig. Rot, wenn der verknüpfte Bahnsteig nicht am Gleis liegt oder vom Bahnhof zu Fuß nicht erreichbar ist. Liegt ein Bahnsteig ohne Verknüpfung direkt neben einem Bahnhof, nennt der gelbe Hinweis den Knopf.
+- Das Stellwerk Talheim-Nord ist kein Bahnhof: dort kommen keine Hinweise „hat keinen Bahnsteig mehr“ und keine „wechselnden Teile“ mehr nur wegen des Gerüsts.
+- Karte „Laufzeiten“: je Weg die Zeit zu Fuß und, wo es schneller ist, mit dem Bus, genau wie die Ortsliste im Spiel (Abfahrt um 7:00 Uhr; hin und zurück können verschieden sein, weil der Bus im Kreis fährt). Sortiert und orange nach der Zeit, die zählt. Der gelbe Hinweis zählt nur Wege, die auch mit dem Bus 60 Minuten oder länger dauern, und nennt beim längsten beide Zeiten.
+- Selbst angelegte Fußwege verkürzen jetzt die Laufzeit im Spiel (vorher lief die Figur sie, die Uhr rechnete aber den Umweg über die Straßen).
 
 ## S 0.45.0
 

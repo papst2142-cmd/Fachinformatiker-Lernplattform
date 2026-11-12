@@ -955,9 +955,10 @@ public sealed partial class Projekt
 
     /// <summary>
     /// Pruefung draussen zu einem Stand. <paramref name="bauten"/>: Innenraeume neuer Gebaeude (Teil "bauten", steht nicht in
-    /// der Fassung; fuer den gelben Hinweis, dass sie noch nicht ins Spiel kommen).
+    /// der Fassung; fuer den gelben Hinweis, dass sie noch nicht ins Spiel kommen). <paramref name="wege"/>: schon gerechnete
+    /// Laufzeiten (P12-221: die Oberflaeche rechnet sie einmal fuer Karte und Hinweis).
     /// </summary>
-    public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten, PyObjekt? bauten = null)
+    public static List<StadtbauFund> PruefenAussen(StadtFassung stand, Spieldaten daten, PyObjekt? bauten = null, List<Laufzeiten.Weg>? wege = null)
     {
         var aussen = Aussen.Aus(stand);
         if (bauten is not null)
@@ -968,7 +969,7 @@ public sealed partial class Projekt
         // Fund 262: Szene mit den eigenen Gebaeuden (wie die 3D-Ansicht), dazu die Regel „Tuer buendig“ (nur Werkzeug)
         var funde = StadtbauPruefung.Aussen(stand, daten.Inhalt, Ansicht3D.MitGebaeuden(daten.Grafik, stand), null, sz => TuerBuendig.Pruefen(sz, stand, daten));
         return [.. funde.Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen),
-            .. (stand.StadtId == daten.Fassung.StadtId ? [] : Spielort.Pruefen(aussen, daten.Fassung)), .. Laufzeiten.Pruefen(stand, daten.Inhalt, aussen)];
+            .. (stand.StadtId == daten.Fassung.StadtId ? [] : Spielort.Pruefen(aussen, daten.Fassung)), .. Laufzeiten.Pruefen(wege ?? Laufzeiten.Rechnen(stand, daten.Inhalt, daten.Grafik), aussen)];
     }
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>

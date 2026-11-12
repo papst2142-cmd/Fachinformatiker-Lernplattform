@@ -87,12 +87,38 @@ public sealed partial class StadtSpiel
     /// <summary>Zeiten fuer die Ortsliste: zu Fuss und mit dem Bus, nur wenn der Bus weniger Minuten braucht, sonst null.</summary>
     public (long ZuFuss, long Bus)? BusLohnt(string ziel)
     {
+        if (!(ImFreien && !ImInnenraum))
+        {
+            // an einem Ort (vor der Tuer oder drinnen): dieselbe Rechnung, die das Werkzeug fuer jeden Weg nutzt
+            return BusLohntVon(Jetzt.Ort, ziel, Jetzt.Uhr);
+        }
         if (Linie is null || MinutenZuFuss(ziel) is not { } fuss || BusPlan(ziel) is not { } plan || plan.Minuten >= fuss)
         {
             return null;
         }
         return (fuss, plan.Minuten);
     }
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-221): Zeiten von Ort <paramref name="von"/> (Tuer) nach Ort <paramref name="ziel"/> um
+    /// <paramref name="uhr"/>: zu Fuss (<see cref="Stadt.Weg"/>) und mit dem Bus (<see cref="Busfahrt.Planen"/> ab dem Stehplatz
+    /// vor <paramref name="von"/>); Bus nur, wenn er weniger Minuten braucht, sonst null. Die Ortsliste rechnet genau so
+    /// (<see cref="BusLohnt"/>, Figur an einem Ort), die Karte „Laufzeiten“ des Werkzeugs auch.
+    /// </summary>
+    public (long ZuFuss, long Bus)? BusLohntVon(string von, string ziel, long uhr)
+    {
+        if (Linie is not { } linie || MinutenVon(von, ziel) is not { } fuss || Szene.Ort(von) is not { } a || Szene.Ort(ziel) is not { } b
+            || Busfahrt.Planen(linie, Szene.Haltestellen, Szene.Laufraster, (a.StehX, a.StehZ), (b.StehX, b.StehZ), Stadt.Zelle,
+                Stadt.MinutenJeSchritt, uhr, Stadt.Beginn) is not { } plan || plan.Minuten >= fuss)
+        {
+            return null;
+        }
+        return (fuss, plan.Minuten);
+    }
+
+    /// <summary>Minuten zu Fuss von Tuer zu Tuer (<see cref="Stadt.Weg"/>), null = kein Weg oder derselbe Ort.</summary>
+    public long? MinutenVon(string von, string ziel) =>
+        von != ziel && Stadt.Weg(von, ziel) is { } w ? w.Schritte * Stadt.MinutenJeSchritt : null;
 
     /// <summary>Mit dem Bus zum Ort: Ereignis schreiben (Uhr springt), dann zur Haltestelle, fahren, zum Ziel gehen.</summary>
     public StadtGrund MitBusZu(string ziel) => Gemessen(() => MitBusZuOrt(ziel));

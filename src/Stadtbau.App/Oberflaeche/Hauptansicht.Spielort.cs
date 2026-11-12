@@ -142,8 +142,9 @@ public sealed partial class Hauptansicht
         }
         foreach (var w in _laufzeitenAlle ? wege : wege.Take(LaufzeitenZuerst))
         {
-            var gelb = w.Minuten is null || w.Minuten >= Laufzeiten.GelbAb;
-            _laufzeitenInhalt.Children.Add(Schrift.Text((gelb ? "⚠ " : "") + Texte.Laufzeit(w.VonName, w.NachName, w.Minuten), "Klein", farbe: gelb ? "Pinsel.orange" : "Pinsel.text"));
+            // P12-221: orange nach der kuerzeren Zeit (mit dem Bus, wenn er schneller ist)
+            var gelb = w.Kuerzer is null || w.Kuerzer >= Laufzeiten.GelbAb;
+            _laufzeitenInhalt.Children.Add(Schrift.Text((gelb ? "⚠ " : "") + Texte.Laufzeit(w.VonName, w.NachName, w.Minuten, w.BusHin, w.BusZurueck), "Klein", farbe: gelb ? "Pinsel.orange" : "Pinsel.text"));
         }
         if (wege.Count > LaufzeitenZuerst)
         {

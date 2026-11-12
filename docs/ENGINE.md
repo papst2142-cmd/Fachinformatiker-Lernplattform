@@ -71,6 +71,19 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   `PrellbockRot`) an jedem freien Ende eines Gleises aus dem Werkzeug (mit `radien`), nicht am Kartenrand, an einem anderen
   Gleis oder an einem Haus (Tor); Gegenprobe `PrellbockAltFuerTests`. Die Talbahn der Fassung 0 (ohne `radien`) bleibt
   bitgleich. Kein Zug fährt auf Abstellgleise.
+- **Bahnsteig mit Bahnhof verknüpft seit A 0.70.0** (Weisung P12-220): Feld `bahnhof` (`Bahnsteig.BahnhofFeld`, Kennung eines
+  Orts) an einem Gebäude ohne Ort in `karte.welt.landschaft`, das nur aus Bahnsteig-Flächen besteht; keine neue Formatnummer,
+  eine Kopie verliert das Feld. Der stehende Zug hält mittig am nächsten Gleisstück zur Mitte des ersten verknüpften
+  Bahnsteigs (`StadtSzene.VerknuepfterBahnsteig`, `NaechstesGleisStueck`; ohne Feld wie bisher, Gegenprobe
+  `ZugHaltAltFuerTests`). Prüfung (`StadtbauPruefung.Aussehen.cs`, rot): unbekannter Bahnhof, Gebäude ist kein Bahnsteig,
+  Ort ohne Bahnhof-Rolle (`Bahnsteig.OhneBahnsteig` = Talheim-Nord), Kante weiter als `Bahnsteig.AmGleis` 0,6 von der
+  Gleismitte, vom Stehplatz des Bahnhofs zu Fuß nicht erreichbar; gelber Hinweis nennt den Knopf, wenn ein unverknüpfter
+  Bahnsteig bis `Bahnsteig.Nahe` 3 am Haus liegt. Ladeprüfung `Verbaut`: Wert kein Text oder unbekannter Ort.
+- **Weg-Raster der Uhr** (`Stadt.Weg`, Spiel-Kern): Breitensuche mit 4 Nachbarn auf Zellen 0,5, begehbar bis 0,4 von
+  Straßen, Zugangswegen und seit A 0.70.0 den Fußwegen (`stadtdaten.fusswege`, Weisung P12-221; Fassung 0 hat keine,
+  Gegenprobe `Stadt.FusswegeAltFuerTests`), 2 Minuten je Schritt (`uhr.minuten_je_schritt`). Von einem Ort aus geht die
+  Figur genau diese Zellen. Bus: `StadtSpiel.BusLohntVon(von, ziel, uhr)` ist die eine Rechnung für Ortsliste und Werkzeug
+  (`Laufzeiten`), zu Fuß zur Haltestelle über das Laufraster (quert eine Straße mit Gehweg nur am Zebrastreifen).
 - **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Engine/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
 - **Licht und Zeit** (`Tageslicht.cs`, `Nachtlicht.cs`, `Jahreszeitfarben.cs`, `FestDeko.cs`): Tag/Nacht, 22 Laternen,
   Festzeiten.

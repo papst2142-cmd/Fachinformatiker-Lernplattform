@@ -367,6 +367,9 @@ public sealed partial class KartenFlaeche : Control
     /// <summary>Welle Q1: Platz eines Questgebers draussen waehlen (gesetzt = ein Tipp ruft dies mit dem Punkt der Karte).</summary>
     internal Action<double, double>? QuestgeberSetzen { get; set; }
 
+    /// <summary>Welle S 0.46.0 (Weisung P12-220): der naechste Tipp waehlt ein Stueck (Gegenstueck einer Bahnsteig-Verknuepfung).</summary>
+    internal Action<double, double>? TippWahl { get; set; }
+
     internal Point BildPunktFuerTests(double x, double y) => new((x * _zoom) + _versatz.X, (y * _zoom) + _versatz.Y);
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
@@ -1612,7 +1615,7 @@ public sealed partial class KartenFlaeche : Control
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, malt));
             return;
         }
-        if (QuestgeberSetzen is not null)
+        if (QuestgeberSetzen is not null || TippWahl is not null)
         {
             // Welle Q1: Platz eines Questgebers draussen waehlen; Tippen setzt (beim Loslassen), Ziehen schiebt die Ansicht
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
@@ -1775,7 +1778,7 @@ public sealed partial class KartenFlaeche : Control
         }
         switch (s.Art)
         {
-            case Fingergeste.Art.Tippen when QuestgeberSetzen is { } qs && !_nurSchieben:
+            case Fingergeste.Art.Tippen when (QuestgeberSetzen ?? TippWahl) is { } qs && !_nurSchieben:
             {
                 var qw = WeltPunkt(new Point(s.X, s.Y));
                 qs(Math.Round(qw.X, 2), Math.Round(qw.Y, 2));

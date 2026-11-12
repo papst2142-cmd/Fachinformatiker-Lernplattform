@@ -1137,6 +1137,8 @@ public static partial class AussenBearbeitung
             case AussenArt.Gebaeude:
             {
                 var kopie = (PyObjekt)Py.Kopie(land[s.Nummer])!;
+                // Weisung P12-220: ein Bahnsteig gehoert hoechstens zu einem Bahnhof, die Kopie ist nicht verknuepft
+                kopie.RemoveAll(p => p.Key == Bahnsteig.BahnhofFeld);
                 land.Add(kopie);
                 var neu = new AussenStelle(s.Art, land.Count - 1);
                 var versatz = s.Art switch

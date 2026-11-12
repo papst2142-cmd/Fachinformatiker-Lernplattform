@@ -1594,6 +1594,7 @@ public sealed partial class Hauptansicht : UserControl
         AussehenTeil(s);
         // S 0.45.0 (Weisung P12-212 Punkt 4): Gebaeude der leeren Stadt wird ein Ort der Stadt 1
         SpielortTeil(s);
+        BahnsteigTeil(s);
         // S 0.31.0 (Sammelliste 264): Farbe von Fassade, Dach, Rahmen und Tuer
         FarbeTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
@@ -1896,8 +1897,15 @@ public sealed partial class Hauptansicht : UserControl
         AussenPruefungLaeuft();
         GrenzenLiveStarten(fassung, daten);
         var uhr = Stopwatch.StartNew();
-        _ = Hintergrund(Task.Run(() => ((List<StadtbauFund>)[.. Projekt.PruefenAussen(fassung, daten, bauten), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)],
-            Laufzeiten.Rechnen(fassung, daten.Inhalt)))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Hintergrund(Task.Run(async () =>
+        {
+            // P12-221: Laufzeiten (mit Bus, bei vielen Haltestellen einige Sekunden) einmal rechnen, fuer die Karte und den gelben
+            // Hinweis, neben der Pruefung (eigener Faden: die Pruefung wartet nicht auf die Busrechnung)
+            var wegeRechnen = Task.Run(() => Laufzeiten.Rechnen(fassung, daten.Inhalt, daten.Grafik));
+            var funde = Projekt.PruefenAussen(fassung, daten, bauten, wege: []);
+            var wege = await wegeRechnen.ConfigureAwait(false);
+            return ((List<StadtbauFund>)[.. funde, .. Laufzeiten.Pruefen(wege, Aussen.Aus(fassung)), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)], wege);
+        })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -3163,6 +3171,12 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (Dialog.Offen is not null || _projekt is null)
         {
+            return;
+        }
+        if (e.Key == Key.Escape && BahnsteigWahlAbbrechen())
+        {
+            // Weisung P12-220: Escape bricht das Antippen des Gegenstuecks ab
+            e.Handled = true;
             return;
         }
         if (e.Key == Key.Escape && QgSetzenAbbrechen())
