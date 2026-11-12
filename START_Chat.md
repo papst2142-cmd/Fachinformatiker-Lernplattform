@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.63.0** / **S 0.38.0** (PR #164, Engine-Projekt). Dieser Zweig: **A 0.64.0** / **S 0.39.0** (Welle Grafik G1: Grafikstufen Niedrig/Mittel/Hoch/Eigene, Belastung, Karte „Grafik“). |
+| Version | Auf `main` **A 0.66.1** / **S 0.42.1** (PR #169, Gesamtprüfung). Dieser Zweig: keine Version (nur Tests, Belastungsproben). |
 | Phase | 0–12 abgenommen (Phase 12: Nico 05.11.2026 18:37 MEZ, Welle 1 Kleiderschrank A 0.40.0, Welle 2 Menüs in der Spielwelt A 0.41.0; Phase 11: Nico 05.11.2026 08:41 MEZ). **Phase 11**: W1, FW1–FW10, W2, W3, Mac-Welle, Fehlerberichte, Patch-Welle, Seitenleiste, CI schneller und Handy-Update gemergt (A 0.32.0 bis 0.39.0, PR #84 bis #103); Gerätetest auf allen 5 Geräten (04.11.2026), NVDA und TalkBack in Ordnung; 0 offene F |
-| Jetzt | Meldung P12-110 (Welle Grafik G1 A 0.64.0 / S 0.39.0 mit Versionsanzeige im Werkzeug, Weisungen P12-182/P12-183) und P12-111 (Kurzplan Quest-Editor, Questgeber, Verkettungen; kein Bau vor Freigabe) bei Chat/Nico. Entschieden: kein Streaming (Nico 11.11.2026 06:35 MEZ). Danach Stadt 1 (hat Vorrang, sobald Nico sie schickt), W4b. |
+| Jetzt | Meldung P12-120 (Belastungsproben als feste Tests, Weisung P12-201) bei Chat. Bei Nico offen: Kurzplan P12-118 (Fragen 1–5), P12-119 Fragen 2/3. Danach Stadt 1 (hat Vorrang, sobald Nico sie schickt), W4b. Kein Streaming (Nico 11.11.2026 06:35 MEZ). |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-111** (Kurzplan Quest-Editor; P12-110 Welle Grafik G1; P12-109 Kurzplan Grafik, P12-108 Engine-Projekt gemergt PR #164) / nächste P12-112, nächste Weisung P12-184 |
-| Sammelliste | nächste freie Nummer **292** (289–291 Quest-Editor/Questgeber/Verkettungen, Kurzplan P12-111; 288 Versionsanzeige Werkzeug, gebaut mit S 0.39.0; 287 Grafik-Einstellungen, gebaut mit A 0.64.0; 286 Formatnummer, erledigt mit A 0.62.1; 285 Autos erledigt, Zug-Probe bei Nico; 265 Baumplaner, feste Ausnahme; 268/270 beobachten; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
+| Letzte/nächste Meldung | **P12-120** (Belastungsproben; P12-119 Patch A 0.66.1 / S 0.42.1 gemergt main aad847f) / nächste P12-121, nächste Weisung P12-202 |
+| Sammelliste | nächste freie Nummer **308** (307 Nachladen dritte Fachrichtung, gemeldet P12-120; 306 offen = Vorschlag E7; 299–302 Kurzplan P12-118 bei Nico; Einzelheiten in `CLAUDE.md` und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
