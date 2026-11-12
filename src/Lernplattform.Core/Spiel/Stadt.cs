@@ -549,6 +549,41 @@ public sealed class Stadt : Probe.IStadtSicht
         }, herkunft));
     }
 
+    /// <summary>Zusatz in den Daten eines Wegs mit dem Bus (Welle A 0.67.0, Weisung P12-204): <c>"mit": "bus"</c>.</summary>
+    public const string Mit = "mit";
+
+    /// <summary>Wert von <see cref="Mit"/> fuer eine Busfahrt.</summary>
+    public const string MitBus = "bus";
+
+    /// <summary>
+    /// Welle A 0.67.0 (Weisung P12-204, Sammelliste 302, Nico 4a): Kann die Figur mit dem Bus zu <paramref name="ziel"/>
+    /// fahren? Die Fahrt ist das vorhandene Ereignis <see cref="Gegangen"/> mit dem Zusatz <c>"mit": "bus"</c> und den
+    /// Minuten der Fahrt (zu Fuss zur Haltestelle, warten, fahren, zu Fuss zum Ziel; rechnet <c>Busfahrt</c>); kostenlos,
+    /// keine neue Ereignisart, die Uhr laeuft wie bei jedem Weg ueber die Minuten (ab <see cref="UhrSteht"/> gekappt).
+    /// <paramref name="schritte"/> = die Schritte zu Fuss (Haltestelle hin und vom Bus zum Ziel).
+    /// </summary>
+    public StadtErgebnis BusPruefen(Spielstand stand, string ziel, long schritte, long minuten)
+    {
+        var gehen = GehenPruefen(stand, ziel, schritte);
+        if (!gehen.Ok)
+        {
+            return gehen;
+        }
+        if (minuten <= 0 || minuten > TagMinuten)
+        {
+            return new(StadtGrund.KeinWeg);
+        }
+        var daten = gehen.Daten!;
+        var uhr = Stand(stand).Uhr;
+        Py.Setzen(daten, "minuten", Gekappt(uhr, minuten));
+        Py.Setzen(daten, Mit, MitBus);
+        return gehen;
+    }
+
+    /// <summary>Mit dem Bus fahren und das Ereignis schreiben (nur wenn es geht).</summary>
+    public StadtErgebnis Bus(Spielablauf spiel, string ziel, long schritte, long minuten) =>
+        Ausfuehren(spiel, BusPruefen(spiel.Stand, ziel, schritte, minuten));
+
     /// <summary>
     /// Kann die Figur <paramref name="schritte"/> frei durch die Stadt gehen (nicht zu einem Ort)? Wie
     /// ein Weg kostet jeder Schritt <see cref="MinutenJeSchritt"/>, ab <see cref="UhrSteht"/> nichts mehr.

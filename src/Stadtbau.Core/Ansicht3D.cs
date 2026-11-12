@@ -33,7 +33,12 @@ public static class Ansicht3D
     /// <summary>Spiel fuer die 3D-Ansicht bauen (blockiert: im Hintergrund rufen). Netze sind danach fertig.</summary>
     public static StadtSpiel Bauen(StadtFassung stand, Spieldaten daten, Einstellung einstellung, StadtSzene.Vorrat? vorrat = null)
     {
-        var stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt), nachsichtig: true);
+        Stadt stadt;
+        // E2 (Weisung P12-204): ein Schalter „nachsichtig“ fuer alle Ansichten des Werkzeugs
+        using (Nachsicht.Werkzeugansicht())
+        {
+            stadt = stand.StadtFuer(stand.MitKarte(daten.Inhalt));
+        }
         // S 0.20.0 (Weisung P12-84): die Autos fahren im Werkzeug die Wege von Tag 1 (der Probe-Spielstand steht auf Tag 201)
         stadt.VerkehrTag = Autostrecken.WerkzeugTag;
         // S 0.36.0 (Weisung P12-170 Hinweis 4): im Werkzeug sind alle Stellplaetze belegt (Grenzen zaehlen den vollen Parkplatz)
@@ -45,18 +50,13 @@ public static class Ansicht3D
         grafik = MitGebaeuden(grafik, stand);
         // Fund 305 (P12-199): eine Laterne ohne freien Platz laesst nur die Ansicht aus (vorher brach der ganze Bau ab, die
         // 3D-Ansicht blieb beim alten Bild mit „Fehler“); die Pruefung meldet sie weiter rot. Gegenprobe LaterneAltFuerTests
-        var vorher = Nachtlicht.OhnePlatzAuslassen;
-        Nachtlicht.OhnePlatzAuslassen = !LaterneAltFuerTests;
-        try
+        // (seit E2 ueber denselben Schalter <see cref="Nachsicht"/>)
+        using (LaterneAltFuerTests ? null : Nachsicht.Werkzeugansicht())
         {
             var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
                 () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
             spiel.Szene.Vorbereiten();
             return spiel;
-        }
-        finally
-        {
-            Nachtlicht.OhnePlatzAuslassen = vorher;
         }
     }
 

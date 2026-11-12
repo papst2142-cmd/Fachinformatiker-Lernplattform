@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.67.0
+Neu im Spiel: ein Handy mit deinen Aufträgen und Busfahrten in Städten mit Haltestellen.
+
+- Unten links in der Spielstadt ist jetzt ein Handy-Knopf mit der Zahl deiner offenen Aufträge. Er öffnet deine Auftragsliste im Aussehen eines Handys, am PC auch mit der Taste L (in den Optionen unter „Tastenbelegung“ änderbar). Der Pfeil zum Ein- und Ausklappen des Hinweisfelds steht jetzt am rechten Rand derselben Karte.
+- Die Auftragsliste hat zwei Reiter: „Offen“ und „Erledigt“. Zu jedem Auftrag stehen Titel, Auftraggeber, Ort (mit Etage und Öffnungszeit) und der erste Satz des Tickets da, bei neuen Aufträgen „neu heute“. Gehört ein Auftrag zu einer Reihe, steht dabei, der wievielte er ist, mit ✓ für erledigt, ● für jetzt und 🔒 für erst danach.
+- Mit „Hingehen“ geht deine Figur zum Ort des Auftrags, wie über die Ortsliste. Die Liste zeigt nur an und ändert nichts an deinem Spielstand.
+- In einer Stadt mit Bushaltestellen kannst du mit dem Bus fahren. Ist der Bus schneller als zu Fuß, steht in der Ortsliste bei dem Ort „Zu Fuß … Min., mit dem Bus … Min.“ und der Knopf „Mit dem Bus“. Die Fahrt ist kostenlos und kostet nur Spielzeit (Weg zur Haltestelle, Warten auf den Bus, Fahrt).
+- Deine Figur geht zur Haltestelle, fährt im Bus im Zeitraffer (höchstens 8 Sekunden) und geht von der Ausstiegs-Haltestelle zum Ziel. Antippen während der Fahrt überspringt sie.
+- Die mitgelieferte Stadt hat keine Haltestellen; dort gibt es keinen Bus und alles bleibt wie bisher. Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.66.1
 Kleine Verbesserung im Teil, den Spiel und Stadtbau-Werkzeug gemeinsam nutzen.
 

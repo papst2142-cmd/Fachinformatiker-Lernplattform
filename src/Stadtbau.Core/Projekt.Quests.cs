@@ -65,8 +65,9 @@ public sealed partial class Projekt
     {
         try
         {
+            using var nachsicht = Nachsicht.Werkzeugansicht();
             var fassung = Aussen.Fassung(aussen, basis, innenraeume, 1, null, Werkzeug.Kennzeile, "", "");
-            var stadt = fassung.StadtFuer(fassung.MitKarte(daten.Inhalt), nachsichtig: true);
+            var stadt = fassung.StadtFuer(fassung.MitKarte(daten.Inhalt));
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             var szene = StadtSzene.Bauen(stadt, stand, Ansicht3D.MitGebaeuden(daten.Grafik, fassung), null, daten.Feste);
             return (szene, ((IStadtSicht)stadt).StartOrt);

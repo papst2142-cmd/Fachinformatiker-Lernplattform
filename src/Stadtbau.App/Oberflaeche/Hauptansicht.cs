@@ -2147,7 +2147,7 @@ public sealed partial class Hauptansicht : UserControl
             Messwerte.Reihe("3D bauen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             if (t.IsFaulted)
             {
-                _ordner.Fehler("3D-Ansicht: " + t.Exception?.InnerException);
+                _ordner.FehlerEinmal("3D-Ansicht", t.Exception);
                 _dreiStatus.Text = Texte.Ansicht3DFehler;
                 _dreiGebaut = stand;
                 _dreiEinstellung = einstellung;

@@ -341,8 +341,9 @@ public sealed partial class Projekt
     {
         try
         {
+            using var nachsicht = Nachsicht.Werkzeugansicht();
             var fassung = Aussen.Fassung(aussen, Basis, Innenraeume(), 1, null, Werkzeug.Kennzeile, "", "");
-            var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt), nachsichtig: true);
+            var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt));
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             return StadtSzene.Bauen(stadt, stand, mitGebaeuden ? Ansicht3D.MitGebaeuden(Daten.Grafik, fassung) : Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
         }

@@ -153,7 +153,7 @@ public sealed partial class Hauptansicht
             }
             if (t.IsFaulted)
             {
-                _ordner.Fehler("Grenzen live: " + t.Exception?.InnerException);
+                _ordner.FehlerEinmal("Grenzen live", t.Exception);
                 GrenzenLiveStand = null;
                 _grenzFund = new StadtbauFund("Die Rechnung der Grenzen ist abgebrochen: " + t.Exception?.InnerException?.Message, "Bitte CC Bescheid geben.", true);
             }

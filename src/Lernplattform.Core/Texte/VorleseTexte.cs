@@ -27,4 +27,10 @@ public static class VorleseTexte
 
     /// <summary>Patch A 0.37.0 (Weisung P11-35): X oben rechts in der Kopfleiste am Handy, beendet das Programm.</summary>
     public const string ProgrammBeenden = Navigation.ProgrammBeenden;
+
+    /// <summary>Welle A 0.67.0 (Sammelliste 301): Handy-Knopf unten links mit der Zahl der offenen Auftraege.</summary>
+    public const string Auftraege = "Aufträge, {0} offen";
+
+    /// <summary>Hingehen-Knopf eines Auftrags im Questlog: {0} Titel, {1} Ort.</summary>
+    public const string AuftragHingehen = "Hingehen zu {1} für den Auftrag {0}";
 }

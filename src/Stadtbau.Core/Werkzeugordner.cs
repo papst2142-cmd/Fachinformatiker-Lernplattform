@@ -114,4 +114,35 @@ public sealed class Werkzeugordner(string wurzel)
         {
         }
     }
+
+    private readonly HashSet<string> _ursachen = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Welle A 0.67.0 (Weisung P12-204, E3): einen Fehler der 3D-Ansicht nur einmal je Ursache in fehler.log schreiben (vorher
+    /// stand bei jeder Aenderung der Stadt die ganze Meldung erneut darin). Ursache = Bereich, Art, Text und erste Zeile des
+    /// Aufrufs; gleiche Ursache spaeter = nichts geschrieben (false). Gegenprobe <see cref="JedesMalAltFuerTests"/>.
+    /// </summary>
+    public bool FehlerEinmal(string bereich, Exception? fehler)
+    {
+        var innen = fehler is AggregateException { InnerException: { } i } ? i : fehler;
+        var ursache = Ursache(bereich, innen);
+        lock (_ursachen)
+        {
+            if (!_ursachen.Add(ursache) && !JedesMalAltFuerTests)
+            {
+                return false;
+            }
+        }
+        Fehler(bereich + ": " + innen + Environment.NewLine + "(gleiche Ursache wird in dieser Sitzung nicht noch einmal eingetragen)");
+        return true;
+    }
+
+    /// <summary>Kennzeichen einer Ursache: Bereich, Art, Text und erste Zeile des Aufrufs.</summary>
+    public static string Ursache(string bereich, Exception? fehler) => string.Join("|", bereich, fehler?.GetType().FullName ?? "",
+        fehler?.Message ?? "", fehler?.StackTrace?.Split('\n', 2)[0].Trim() ?? "");
+
+    /// <summary>Gegenprobe E3: jeder Fehler wird geschrieben (Stand A 0.66.1).</summary>
+    public static bool JedesMalAltFuerTests { get => JedesMalAlt.Value; set => JedesMalAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> JedesMalAlt = new();
 }

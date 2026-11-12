@@ -25,7 +25,7 @@ namespace Lernplattform.Spiel;
 /// Hintergrund (Seite oeffnet sofort). Bis W6 ist der Spielstand nur im Arbeitsspeicher (eigene
 /// Probe-Spielfigur), nichts wird gespeichert.
 /// </summary>
-public sealed class SpielSeite : Grid
+public sealed partial class SpielSeite : Grid
 {
     /// <summary>So lange wartet die Seite auf OpenGL, dann gilt "ohne Grafik".</summary>
     public static readonly TimeSpan GlWarten = TimeSpan.FromSeconds(4);
@@ -194,7 +194,12 @@ public sealed class SpielSeite : Grid
         _kurz.VerticalAlignment = VerticalAlignment.Center;
         _kurz.Margin = new Thickness(4, 0, 8, 6);
         _kurz.IsVisible = false;
-        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        // Welle A 0.67.0 (Sammelliste 301): links der Handy-Knopf (Questlog), der Klapp-Pfeil rueckt an den rechten Rand
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto") };
+        _klappZeile = klappZeile;
+        klappZeile.SizeChanged += (_, _) => QuestZeileSetzen();
+        klappZeile.Children.Add(QuestKnopfBauen());
+        Grid.SetColumn(_klapp, 2);
         klappZeile.Children.Add(_klapp);
         Grid.SetColumn(_kurz, 1);
         klappZeile.Children.Add(_kurz);
@@ -733,6 +738,7 @@ public sealed class SpielSeite : Grid
     public void OrtslisteZeigen(bool sichtbar)
     {
         _ortsliste.IsVisible = sichtbar || _ersatz.IsVisible;
+        BusZeitenSetzen();
     }
 
     /// <summary>Ohne OpenGL: Hinweis und Ortsliste statt der 3D-Flaeche (Plan D3).</summary>
@@ -765,6 +771,13 @@ public sealed class SpielSeite : Grid
         {
             Zurueck(this, e);
         }
+        else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None
+            && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Auftraege
+            && Spiel is { Einrichten: false })
+        {
+            e.Handled = true;
+            _ = QuestlogZeigenAsync();
+        }
     }
 
     private void Zurueck(object? sender, RoutedEventArgs e)
@@ -785,6 +798,48 @@ public sealed class SpielSeite : Grid
         else
         {
             _verlassen();
+        }
+    }
+
+    /// <summary>Welle A 0.67.0: Bus-Zeilen der Ortsliste je Ort (Teil, Zeiten, Knopf).</summary>
+    private readonly Dictionary<string, (StackPanel Teil, TextBlock Zeit, Button Knopf)> _busZeilen = new(StringComparer.Ordinal);
+
+    private string _busSchluessel = "";
+
+    /// <summary>Start-Test: Zeiten beim naechsten Zeigen neu rechnen (Messpunkt wiederholbar).</summary>
+    public void BusZeitenVergessen() => _busSchluessel = "";
+
+    /// <summary>Start-Test: steht beim Ort der Knopf „Mit dem Bus“?</summary>
+    public bool BusKnopfSichtbar(string ort) => _ortsliste.IsVisible && _busZeilen.TryGetValue(ort, out var z) && z.Teil.IsVisible && z.Knopf.IsEnabled;
+
+    /// <summary>
+    /// Zeiten „zu Fuss / mit dem Bus“ der sichtbaren Ortsliste neu rechnen, wenn sich Tag, Uhr, Ort oder Stelle geaendert haben
+    /// (ohne Haltestelle nichts; die Wege zu Fuss rechnet das Laufraster, darum nur bei Bedarf).
+    /// </summary>
+    private void BusZeitenSetzen()
+    {
+        if (Spiel is not { } spiel || !_ortsliste.IsVisible)
+        {
+            return;
+        }
+        var jetzt = spiel.Jetzt;
+        var schluessel = spiel.Linie is null ? "-" : string.Join("|", jetzt.Tag, jetzt.Uhr, jetzt.Ort, spiel.ImFreien, spiel.Geht,
+            spiel.ImFreien ? spiel.FigurX.ToString(CultureInfo.InvariantCulture) + "," + spiel.FigurZ.ToString(CultureInfo.InvariantCulture) : "");
+        if (schluessel == _busSchluessel)
+        {
+            return;
+        }
+        _busSchluessel = schluessel;
+        foreach (var (id, (teil, zeit, knopf)) in _busZeilen)
+        {
+            var lohnt = spiel.Linie is null || spiel.Geht ? null : spiel.BusLohnt(id);
+            teil.IsVisible = lohnt is not null;
+            if (lohnt is { } l)
+            {
+                zeit.Text = string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.BusZeiten, l.ZuFuss, l.Bus);
+                Avalonia.Automation.AutomationProperties.SetName(knopf,
+                    string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.MitDemBusName, spiel.Name(id), l.Bus));
+            }
         }
     }
 
@@ -809,8 +864,25 @@ public sealed class SpielSeite : Grid
                 }
                 Flaeche.AnfordernBild();
             };
-            _liste.Children.Add(new StackPanel { Spacing = 4, Children = { Schrift.Text(ort.Name, "Normal", FontWeight.SemiBold), knopf } });
+            // Welle A 0.67.0 (Sammelliste 302, Nico 5a): Zeiten und Knopf „Mit dem Bus“, nur wenn der Bus schneller ist
+            var busZeit = Schrift.Text("", "Klein");
+            busZeit.TextWrapping = TextWrapping.Wrap;
+            var bus = Schrift.Knopf(SpielProbeTexte.MitDemBus);
+            bus.Click += (_, _) =>
+            {
+                spiel.MitBusZu(id);
+                if (_ersatz.IsVisible)
+                {
+                    spiel.SofortAnkommen();
+                }
+                Flaeche.AnfordernBild();
+            };
+            var busTeil = new StackPanel { Spacing = 4, IsVisible = false, Children = { busZeit, bus } };
+            _busZeilen[id] = (busTeil, busZeit, bus);
+            _liste.Children.Add(new StackPanel { Spacing = 4, Children = { Schrift.Text(ort.Name, "Normal", FontWeight.SemiBold), knopf, busTeil } });
         }
+        _busSchluessel = "";
+        BusZeitenSetzen();
         foreach (var alt in _schildKnoepfe.Values)
         {
             _schilder.Children.Remove(alt);
@@ -1000,6 +1072,9 @@ public sealed class SpielSeite : Grid
             _einrichten.Content = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
         }
         TafelBauen(spiel);
+        BusZeitenSetzen();
+        QuestKnopfSetzen(spiel);
+        QuestZeileSetzen();
     }
 
     /// <summary>Hinweisfeld zugeklappt (beim Einrichten immer offen, sonst fehlen Auswahl und Karton).</summary>
@@ -1036,6 +1111,7 @@ public sealed class SpielSeite : Grid
         _knoepfe.IsVisible = !zu;
         _kurz.Text = meldung;
         _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
+        QuestZeileSetzen();
         _klappSymbol.RenderTransform = new RotateTransform(zu ? 180 : 0);
         Avalonia.Automation.AutomationProperties.SetName(_klapp, zu ? SpielProbeTexte.HinweisAusklappen : SpielProbeTexte.HinweisEinklappen);
         _klapp.IsVisible = !spiel.Einrichten;
