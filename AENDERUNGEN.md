@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.67.1
+Schnellerer Wechsel der Fachrichtung und ein vollständigerer Satz in der Auftragsliste.
+
+- Wechselst du nacheinander zu mehreren Fachrichtungen, lädt das Programm jetzt nur die Inhalte der neuen Fachrichtung nach. Die schon geladenen Fachrichtungen werden nicht noch einmal aufbereitet, darum geht der Wechsel zur dritten oder vierten Fachrichtung schneller.
+- Die Inhalte selbst, ihre Reihenfolge und dein Lernstand bleiben genau gleich.
+- In der Auftragsliste im Handy endete der Kurztext eines Auftrags manchmal mit einem Doppelpunkt, und das Wichtigste fehlte (zum Beispiel „… der Talbahn an:“). Jetzt steht der folgende Satz mit dabei.
+
 ## A 0.67.0
 Neu im Spiel: ein Handy mit deinen Aufträgen und Busfahrten in Städten mit Haltestellen.
 

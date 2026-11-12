@@ -98,13 +98,35 @@ public static class Questlog
     /// <summary>Erster Satz des Tickets (beim Laden sind die Zeilen schon zu einem Text verbunden).</summary>
     public static string ErsterSatz(object? ticket)
     {
-        var text = ticket switch
+        var zeilen = ticket switch
         {
-            List<object?> { Count: > 0 } zeilen => Py.Str(zeilen[0]),
-            string t => t,
-            _ => "",
+            List<object?> liste => liste.Select(Py.Str).ToList(),
+            string t => t.Split('\n').ToList(),
+            _ => [],
         };
-        text = text.Split('\n', 2)[0].Trim();
+        var satz = SatzAus(zeilen.Count > 0 ? zeilen[0] : "");
+        // Sammelliste 310 (Weisung P12-205): endet die erste Zeile mit einem Doppelpunkt („… der Talbahn an:“), gehoert
+        // der erste Satz der naechsten Zeile dazu, sonst fehlt, worum es geht
+        if (satz.EndsWith(':') && !DoppelpunktAltFuerTests && zeilen.Skip(1).Select(SatzAus).FirstOrDefault(z => z.Length > 0) is { } weiter)
+        {
+            satz += " " + weiter;
+        }
+        return satz;
+    }
+
+    /// <summary>Sammelliste 310: nur fuer die Gegenprobe; an = erster Satz endet beim Doppelpunkt wie in A 0.67.0.</summary>
+    internal static bool DoppelpunktAltFuerTests
+    {
+        get => DoppelpunktAlt.Value;
+        set => DoppelpunktAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> DoppelpunktAlt = new();
+
+    /// <summary>Erster Satz einer Zeile: bis zum ersten „.“, „!“ oder „?“, auf das ein Leerzeichen und ein Grossbuchstabe folgen.</summary>
+    private static string SatzAus(string zeile)
+    {
+        var text = zeile.Split('\n', 2)[0].Trim();
         for (var i = 0; i < text.Length - 1; i++)
         {
             if (text[i] is '.' or '!' or '?' && text[i + 1] == ' ' && i + 2 < text.Length && char.IsUpper(text[i + 2]))

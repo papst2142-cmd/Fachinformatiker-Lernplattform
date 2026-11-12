@@ -90,6 +90,52 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         }
     }
 
+    private static List<string> AlleSchluessel(Lerninhalte l) =>
+    [
+        .. Schluessel(l.Karteikarten), .. Schluessel(l.Quizfragen), .. Schluessel(l.Ap2Szenarien), .. Schluessel(l.Testprojekte),
+        .. l.NeueFachfragen.Select(f => f.Nummer.ToString(CultureInfo.InvariantCulture) + "|" + f.Zugehoerigkeit + "|" + f.Daten.ToJsonString()),
+    ];
+
+    private static IEnumerable<object> NeueObjekte(Lerninhalte l, string fr) =>
+        l.Neue.Values.SelectMany(v => v).Where(e => e.Zugehoerigkeit == fr).Cast<object>()
+            .Concat(l.NeueFachfragen.Where(f => f.Zugehoerigkeit == fr));
+
+    /// <summary>
+    /// Sammelliste 309 (Weisung P12-204, Nico a): das Nachladen wandelt nur die neue Fachrichtung um, die schon
+    /// umgewandelten Eintraege werden wiederverwendet; das Ergebnis ist bitgleich zum Laden derselben Fachrichtungen
+    /// auf einmal und zum alten Weg. Gegenprobe: der alte Weg (alles neu umwandeln) nutzt die Eintraege nicht wieder.
+    /// </summary>
+    [Fact]
+    public void Nachladen_WandeltNurDieNeueUm_ErgebnisBitgleich()
+    {
+        var soll = AlleSchluessel(Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), Ordner(Lernen), ["si", "ae", "dpa", "dv"]));
+        foreach (var alt in new[] { false, true })
+        {
+            Lerninhalte.NachladenAltFuerTests = alt;
+            try
+            {
+                var start = Start(Lernen, "ae");
+                var mitDpa = start.MitFachrichtung("dpa");
+                var mitDv = mitDpa.MitFachrichtung("dv");
+                Assert.Equal(soll, AlleSchluessel(mitDv));
+                foreach (var (vorher, nachher, fr) in new[] { (start, mitDpa, "ae"), (mitDpa, mitDv, "ae"), (mitDpa, mitDv, "dpa") })
+                {
+                    var a = NeueObjekte(vorher, fr).ToList();
+                    var b = NeueObjekte(nachher, fr).ToList();
+                    Assert.NotEmpty(a);
+                    Assert.Equal(a.Count, b.Count);
+                    // neu: dieselben Objekte (nicht neu umgewandelt); alter Weg: alle neu
+                    Assert.Equal(!alt, a.Zip(b).All(p => ReferenceEquals(p.First, p.Second)));
+                    Assert.Equal(alt, a.Zip(b).All(p => !ReferenceEquals(p.First, p.Second)));
+                }
+            }
+            finally
+            {
+                Lerninhalte.NachladenAltFuerTests = false;
+            }
+        }
+    }
+
     [Fact]
     public void Nachladen_GleicheFachrichtungZweimal_DieselbenInhalte()
     {

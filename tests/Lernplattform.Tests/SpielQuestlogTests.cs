@@ -119,4 +119,30 @@ public sealed class SpielQuestlogTests
         Assert.Equal("●", Questlog.Zeichen(Questlog.Stufe.Jetzt));
         Assert.Equal("🔒", Questlog.Zeichen(Questlog.Stufe.Gesperrt));
     }
+
+    /// <summary>
+    /// Sammelliste 310 (Weisung P12-205): endet die erste Zeile des Tickets mit „:“ (Petra Lindner, „… der Talbahn an:“),
+    /// kommt der erste Satz der naechsten Zeile dazu. Gegenprobe: der Weg aus A 0.67.0 endet beim Doppelpunkt.
+    /// </summary>
+    [Fact]
+    public void ErsterSatz_NachDoppelpunkt_NimmtDenNaechstenSatzMit()
+    {
+        var inhalt = SpielQuestTests.Angewendet.Value;
+        var aufgabe = ((List<object?>)inhalt["aufgaben"]!).Cast<PyObjekt>()
+            .First(a => Py.Str(a["ticket"]).StartsWith("Petra Lindner ruft", StringComparison.Ordinal));
+        const string Soll = "Petra Lindner ruft aus dem Fahrkarten-Service-Center der Talbahn an: „Eine Kollegin hat eine Mail bekommen: "
+            + "‚Ihr Kassensystem wird gesperrt, bitte sofort hier anmelden.‘ Der Absender sieht fast aus wie unserer.";
+        Assert.Equal(Soll, Questlog.ErsterSatz(aufgabe["ticket"]));
+        Assert.Equal("Vorne: Zweite Zeile.", Questlog.ErsterSatz(new List<object?> { "Vorne:", "", "Zweite Zeile. Rest." }));
+        Assert.Equal("Nur Doppelpunkt:", Questlog.ErsterSatz("Nur Doppelpunkt:"));
+        Questlog.DoppelpunktAltFuerTests = true;
+        try
+        {
+            Assert.Equal("Petra Lindner ruft aus dem Fahrkarten-Service-Center der Talbahn an:", Questlog.ErsterSatz(aufgabe["ticket"]));
+        }
+        finally
+        {
+            Questlog.DoppelpunktAltFuerTests = false;
+        }
+    }
 }
