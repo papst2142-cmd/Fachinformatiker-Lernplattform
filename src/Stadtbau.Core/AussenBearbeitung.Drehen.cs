@@ -77,7 +77,7 @@ public static partial class AussenBearbeitung
     public static bool Drehen(PyObjekt aussen, AussenStelle s, int grad)
     {
         grad %= 360;
-        if (grad == 0 || DrehenNicht(s) is not null)
+        if (grad == 0 || DrehenNicht(aussen, s) is not null)
         {
             return false;
         }

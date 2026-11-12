@@ -95,9 +95,67 @@ public class GelaendeTests
         // Gegenprobe: ein runder Huegel dreht nicht, ein laenglicher in 15-Grad-Schritten
         Assert.False(AussenBearbeitung.Drehen(a, H(0), 15));
         AussenBearbeitung.HuegelWerteSetzen(a, H(0), 2, 1, true, 5);
-                Assert.True(AussenBearbeitung.Drehen(a, H(0), 15));
+        Assert.True(AussenBearbeitung.Drehen(a, H(0), 15));
         Assert.Equal(15, AussenBearbeitung.HuegelWerte(a, H(0)).Dreh);
         Assert.Equal(5.0, AussenBearbeitung.HuegelWerte(a, H(0)).Laenge);
+    }
+
+    /// <summary>
+    /// Sammelliste 303 (P12-199): am runden Huegel nennt <see cref="AussenBearbeitung.DrehenNicht(PyObjekt, AussenStelle)"/>
+    /// einen Grund (Knopf „Drehen“ grau, kein Drehgriff), am laenglichen nicht. Gegenprobe: mit der alten Regel (S 0.42.0)
+    /// galt auch der runde Huegel als drehbar.
+    /// </summary>
+    [Fact]
+    public void RunderHuegel_HatKeinDrehen_LaenglicherSchon()
+    {
+        var a = Grundlage();
+        Assert.Equal(Texte.HuegelRundDrehenNicht, AussenBearbeitung.DrehenNicht(a, H(0)));
+        Assert.False(AussenBearbeitung.Drehen(a, H(0)));
+        AussenBearbeitung.RunderHuegelAltFuerTests = true;
+        try
+        {
+            Assert.Null(AussenBearbeitung.DrehenNicht(a, H(0)));
+        }
+        finally
+        {
+            AussenBearbeitung.RunderHuegelAltFuerTests = false;
+        }
+        AussenBearbeitung.HuegelWerteSetzen(a, H(0), 2, 1, true, 5);
+        Assert.Null(AussenBearbeitung.DrehenNicht(a, H(0)));
+        Assert.True(AussenBearbeitung.Drehen(a, H(0)));
+    }
+
+    /// <summary>
+    /// Fund 304 (P12-199): in der Mehrfachauswahl dreht ein laenglicher Huegel mit der Gruppe auch seine Richtung, so wie ein
+    /// Park oder Katalog-Stueck; rueckwaerts um 270 Grad. Gegenprobe: mit der alten Regel bleibt die Richtung stehen.
+    /// </summary>
+    [Fact]
+    public void Gruppe_DrehtLaenglichenHuegelMit()
+    {
+        (PyObjekt A, List<AussenStelle> Gruppe) Mit()
+        {
+            var a = Grundlage();
+            AussenBearbeitung.HuegelWerteSetzen(a, H(0), 1, 1, true, 4);
+            var baum = AussenBearbeitung.Setzen(a, AussenArt.Baum, 20, 13);
+            Assert.NotNull(baum);
+            return (a, [H(0), baum!]);
+        }
+        var (a, gruppe) = Mit();
+        AussenBearbeitung.Drehen(a, gruppe);
+        Assert.Equal(90, AussenBearbeitung.HuegelWerte(a, H(0)).Dreh);
+        AussenBearbeitung.Drehen(a, gruppe, rueckwaerts: true);
+        Assert.Equal(0, AussenBearbeitung.HuegelWerte(a, H(0)).Dreh);
+        var (b, gruppeB) = Mit();
+        AussenBearbeitung.GruppeHuegelAltFuerTests = true;
+        try
+        {
+            AussenBearbeitung.Drehen(b, gruppeB);
+            Assert.Equal(0, AussenBearbeitung.HuegelWerte(b, H(0)).Dreh);
+        }
+        finally
+        {
+            AussenBearbeitung.GruppeHuegelAltFuerTests = false;
+        }
     }
 
     [Fact]

@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.42.1
+
+Fehler aus der Gesamtprüfung behoben.
+
+- Ein runder Hügel sieht von allen Seiten gleich aus: der Knopf „Drehen“ ist bei ihm jetzt grau (mit Grund als Tipp), und der Drehgriff erscheint nicht mehr. Ein länglicher Hügel dreht wie bisher.
+- Werden mehrere Stücke zusammen gedreht, dreht ein länglicher Hügel jetzt auch seine Richtung mit (vorher wanderte nur seine Mitte).
+- Findet eine Straßenlaterne an ihrer Straße keinen freien Platz, zeigt die 3D-Ansicht die Stadt trotzdem (ohne diese Laterne) statt beim alten Bild mit „Fehler“ stehen zu bleiben. Die Prüfung meldet die Laterne weiter rot.
+
 ## S 0.42.0
 
 Gelände: Hügel setzen und Gelände malen, dazu Verbesserungen aus der Teststadt.

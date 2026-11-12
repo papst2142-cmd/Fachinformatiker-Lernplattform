@@ -943,10 +943,28 @@ public static partial class AussenBearbeitung
         _ => Texte.DrehenNichtNoetig,
     };
 
+    /// <summary>
+    /// Wie <see cref="DrehenNicht(AussenStelle)"/>, aber mit den Daten: ein runder Huegel sieht von allen Seiten gleich aus
+    /// (Sammelliste 303, vorher zeigte er Knopf „Drehen“ und Drehgriff, die nichts taten). Gegenprobe
+    /// <see cref="RunderHuegelAltFuerTests"/>.
+    /// </summary>
+    public static string? DrehenNicht(PyObjekt aussen, AussenStelle s)
+    {
+        if (s.Art == AussenArt.Huegel && !RunderHuegelAlt.Value && Gueltig(aussen, s) && !HuegelWerte(aussen, s).Laenglich)
+        {
+            return Texte.HuegelRundDrehenNicht;
+        }
+        return DrehenNicht(s);
+    }
+
+    /// <summary>Gegenprobe Sammelliste 303: runder Huegel gilt wieder als drehbar (Stand S 0.42.0).</summary>
+    public static bool RunderHuegelAltFuerTests { get => RunderHuegelAlt.Value; set => RunderHuegelAlt.Value = value; }
+    private static readonly AsyncLocal<bool> RunderHuegelAlt = new();
+
     /// <summary>Vierteldrehung im Uhrzeigersinn um die Mitte (Strasse: Mitte auf das Raster 0,5; Park: Breite und Tiefe tauschen).</summary>
     public static bool Drehen(PyObjekt aussen, AussenStelle s)
     {
-        if (DrehenNicht(s) is not null)
+        if (DrehenNicht(aussen, s) is not null)
         {
             return false;
         }

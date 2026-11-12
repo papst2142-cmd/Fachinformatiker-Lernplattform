@@ -1674,6 +1674,7 @@ public sealed partial class StadtSzene
             Parkplaetze = parkplaetze,
             MitGehweg = gehwege.Count > 0,
             Gelaende = gelaende,
+            LaternenOhnePlatzAuslassen = Nachtlicht.OhnePlatzAuslassen,
         };
     }
 
@@ -2400,6 +2401,9 @@ public sealed partial class StadtSzene
     public IReadOnlyList<Nachtlicht.Laterne> Laternen => _laternen ??= Nachtlicht.Plaetze(this);
 
     private List<Nachtlicht.Laterne>? _laternen;
+
+    /// <summary>Fund 305: Laterne ohne freien Platz auslassen statt abbrechen (nur 3D-Ansicht des Werkzeugs, <see cref="Nachtlicht.OhnePlatzAuslassen"/>).</summary>
+    public bool LaternenOhnePlatzAuslassen { get; private init; }
 
     /// <summary>Phase 13 Welle 1: Wunschplaetze der Laternen (x, z, doppelt) aus der Stadt-Fassung, Reihenfolge = Nummer.</summary>
     public IReadOnlyList<(float X, float Z, bool Doppelt)> LaternenSkizze { get; private init; } = Nachtlicht.Skizze;

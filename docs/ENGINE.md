@@ -111,6 +111,7 @@ eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis
   `…AltFuerTests`, `AsyncLocal`).
 - **Kein neuer Zeichenaufruf** ohne Grund; neue Stücke kommen in vorhandene Netze. Jeder neue Aufruf muss in
   `StadtbauGrenzen.Draussen` mitgezählt werden.
+- **Werkzeug-Ansichten brechen nicht ab** (A 0.66.1, Fund 305): eine Laterne ohne freien Platz lässt nur `Ansicht3D.Bauen` aus (`Nachtlicht.OhnePlatzAuslassen`, gemerkt in `StadtSzene.LaternenOhnePlatzAuslassen`); Spiel und Prüfung bauen streng, die Prüfung meldet sie rot.
 - **Darstellung ≠ Spielstand**: Autos, Gestalten, Laternen, Ampeln, Tag/Nacht ändern nie einen Spielstand oder Fingerabdruck.
 
 ## 6. Grenzen und feste Sollwerte

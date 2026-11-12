@@ -764,7 +764,7 @@ public sealed partial class DreiBedienung : Control
         get
         {
             if (Kamera is not { } k || Projekt is not { NurLesen: false } proj || _karte.SetzenArt is not null || _ziehen || _karte.Auswahl is not { } s
-                || !AussenBearbeitung.Gueltig(proj.AussenStand, s) || AussenBearbeitung.DrehenNicht(s) is not null
+                || !AussenBearbeitung.Gueltig(proj.AussenStand, s) || AussenBearbeitung.DrehenNicht(proj.AussenStand, s) is not null
                 || (AussenBearbeitung.MitEckpunkten(s.Art) && s.Punkt >= 0))
             {
                 return null;

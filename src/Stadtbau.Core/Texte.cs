@@ -826,6 +826,7 @@ public static partial class Texte
     public const string HuegelHoehe = "Höhe";
     public const string HuegelLaenge = "Länge";
     public const string HuegelForm = "Form";
+    public const string HuegelRundDrehenNicht = "Ein runder Hügel sieht von allen Seiten gleich aus. Drehen geht nur bei einem länglichen Hügel.";
     public const string HuegelGeaendert = "Hügel geändert";
     public const string HuegelWerteTipp = "Jede Änderung ist ein Schritt (Rückgängig geht). Radius 1 bis 3, Höhe 0,2 bis 1,5, länglich bis 6 lang.";
     public const string HuegelDrehenRund = "Ein runder Hügel sieht von allen Seiten gleich aus.";

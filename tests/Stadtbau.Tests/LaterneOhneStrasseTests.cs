@@ -54,4 +54,30 @@ public class LaterneOhneStrasseTests
         var szene = Ansicht3D.Bauen(D.Fassung, D, Ansicht3D.Einstellung.Standard).Szene;
         Assert.Equal(22, szene.Laternen.Count);
     }
+
+    /// <summary>
+    /// Fund 305 (P12-199): in Nicos Teststadt Laterne Nr. 11 um (1; 0,5) schieben. Danach findet eine Laterne an ihrer Strasse
+    /// keinen freien Platz. Die Pruefung meldet das rot, die 3D-Ansicht baut trotzdem (ohne diese Laterne). Gegenprobe: mit dem
+    /// alten Weg (S 0.42.0) brach der ganze Bau ab, die Ansicht blieb beim alten Bild mit „Fehler“.
+    /// </summary>
+    [Fact]
+    public void LaterneOhneFreienPlatz_PruefungRot_3DBautTrotzdem()
+    {
+        var datei = File.ReadAllBytes(Path.Combine(Daten.Wurzel, "tests", "Stadtbau.Tests", "Testdaten", "nico", "teststadt_S0.40.0.fistadt"));
+        var p = Projekt.AusStadtDatei(datei, D, Daten.NeueAblage(), "Fund 305");
+        p.AussenAendern("Schieben", a => AussenBearbeitung.Verschieben(a, new AussenStelle(AussenArt.Laterne, 10), 1, 0.5));
+        var stand = p.Stand();
+        Assert.Contains(Projekt.PruefenAussen(stand, D), f => f.Rot && f.Text.Contains("findet an ihrer Straße keinen freien Platz", StringComparison.Ordinal));
+        var spiel = Ansicht3D.Bauen(stand, D, Ansicht3D.Einstellung.Standard);
+        Assert.Equal(stand.Laternen.Count - 1, spiel.Szene.Laternen.Count);
+        Ansicht3D.LaterneAltFuerTests = true;
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => Ansicht3D.Bauen(stand, D, Ansicht3D.Einstellung.Standard).Szene.Laternen.Count);
+        }
+        finally
+        {
+            Ansicht3D.LaterneAltFuerTests = false;
+        }
+    }
 }
