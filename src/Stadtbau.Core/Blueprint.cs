@@ -427,7 +427,11 @@ public sealed class Blueprint
     private static readonly AsyncLocal<bool> NameAlt = new();
 
     /// <summary>Gegenprobe Sammelliste 229: Funde nennen den Modellnamen wie bis S 0.16.0.</summary>
-    public static bool ModellnamenAltFuerTests { get; set; }
+    /// <remarks>Sammelliste 307 (Weisung P12-202): nur im eigenen Ablauf (AsyncLocal), sonst aendert die Gegenprobe die Funde
+    /// anderer Tests, die gerade nebenher laufen.</remarks>
+    public static bool ModellnamenAltFuerTests { get => ModellnamenAlt.Value; set => ModellnamenAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> ModellnamenAlt = new();
 
     public static List<StadtbauFund> Pruefen(PyObjekt aussen)
     {
