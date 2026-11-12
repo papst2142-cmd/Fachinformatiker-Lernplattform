@@ -56,6 +56,70 @@ public sealed partial class Hauptansicht
         return meldung;
     }
 
+    private Button EingangKnopf(AussenStelle s)
+    {
+        var k = Schrift.Knopf(Texte.EingangAutomatisch).Mit(Texte.EingangAutomatischTipp);
+        k.Click += async (_, _) => await EingangAsync(s);
+        return k;
+    }
+
+    /// <summary>
+    /// Patch S 0.46.1 (Weisung P12-225 b): Eingang eines Orts automatisch (Platz im Hintergrund rechnen, dann ein Schritt).
+    /// Rueckgabe: Meldung (auch fuer den Start-Test).
+    /// </summary>
+    public async Task<string?> EingangAsync(AussenStelle s)
+    {
+        if (_projekt is null || _projekt.NurLesen || s.Art != AussenArt.Haus)
+        {
+            return null;
+        }
+        var projekt = _projekt;
+        var stand = (PyObjekt)Py.Kopie(projekt.AussenStand)!;
+        var platz = await Task.Run(() => GebaeudeTuer.EingangPlatz(projekt, stand, s));
+        if (!ReferenceEquals(projekt, _projekt))
+        {
+            return null;
+        }
+        string? hinweis = null;
+        _projekt.AussenAendern(Texte.EingangAutomatisch, aa => hinweis = GebaeudeTuer.EingangAn(aa, s, platz));
+        var meldung = hinweis ?? Texte.EingangGemacht(_projekt.OrtName(s.Ort));
+        Karte.Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
+        Melden(meldung);
+        return meldung;
+    }
+
+    private Button HaltepunktKnopf(AussenStelle s)
+    {
+        var k = Schrift.Knopf(Texte.HaltepunktNeu).Mit(Texte.HaltepunktNeuTipp);
+        k.Click += async (_, _) => await HaltepunktAsync(s);
+        return k;
+    }
+
+    /// <summary>
+    /// Patch S 0.46.1 (Weisung P12-225 a): alter Haltepunkt bekommt das neue Aussehen (Platz der Tuer im Hintergrund, dann ein
+    /// Schritt). Rueckgabe: Meldung (auch fuer den Start-Test).
+    /// </summary>
+    public async Task<string?> HaltepunktAsync(AussenStelle s)
+    {
+        if (_projekt is null || _projekt.NurLesen || s.Art != AussenArt.Haus)
+        {
+            return null;
+        }
+        var projekt = _projekt;
+        var stand = (PyObjekt)Py.Kopie(projekt.AussenStand)!;
+        var platz = await Task.Run(() => HaltepunktTausch.Platz(projekt, stand, s.Ort));
+        if (!ReferenceEquals(projekt, _projekt))
+        {
+            return null;
+        }
+        string? hinweis = null;
+        _projekt.AussenAendern(Texte.HaltepunktNeu, aa => hinweis = HaltepunktTausch.Tauschen(aa, s.Ort, platz));
+        var meldung = hinweis ?? Texte.HaltepunktGemacht(_projekt.OrtName(s.Ort));
+        Karte.Waehlen(AussenBearbeitung.Gueltig(_projekt.AussenStand, s) ? s : null);
+        Melden(meldung);
+        return meldung;
+    }
+
     /// <summary>Knopf „Tür setzen“ (S 0.28.0): schaltet das Tuer-Setzen fuer das Haus ein und aus.</summary>
     private Button TuerSetzenKnopf(AussenStelle s)
     {

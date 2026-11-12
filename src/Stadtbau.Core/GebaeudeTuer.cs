@@ -160,18 +160,76 @@ public static partial class GebaeudeTuer
         }
         var k = (PyObjekt)Py.Kopie(aussen)!;
         var grund = Dazu(k, s, einrasten);
-        if (grund is not null && grund != Texte.TuerWegOhneStrasse || Blueprint.ZierwegVon(k, s) is not { } z
-            || TuerFassade.Rechnen(p, k, s) is not { } f || f.Waende.Count == 0)
+        if (grund is not null && grund != Texte.TuerWegOhneStrasse || Blueprint.ZierwegVon(k, s) is not { } z)
         {
             return null;
         }
-        var t = Vektor(z["tuer"]);
+        return Waehlen(p, k, s, Vektor(z["tuer"]));
+    }
+
+    /// <summary>
+    /// Patch S 0.46.1 (Weisung P12-225 b): „Eingang automatisch setzen“ an einem Ort (Haus mit Innenraum, z. B. die
+    /// Betriebswerkstatt nach „Als Spielort festlegen“): derselbe Platz wie „Tür dazu“ an einem Gebaeude ohne Ort (Wand zur
+    /// Strasse, an Gebaeuden mit Toren zuerst eine Wand ohne Tor, sonst der kleine Vorbau (Windfang)). null = geht nicht
+    /// (kein Ort, schraeg gedreht, keine Fassade). Innenraum und Spielgeschichte bleiben, nur Tuer und Weg aendern sich.
+    /// </summary>
+    public static TuerFassade.Platz? EingangPlatz(Projekt p, PyObjekt aussen, AussenStelle s, Func<Vector2, Vector2>? endlage = null)
+    {
+        if (EingangNicht(aussen, s) is not null)
+        {
+            return null;
+        }
+        var k = (PyObjekt)Py.Kopie(aussen)!;
+        var t = TuerSetzen.Tuer(k, s) ?? AussenBearbeitung.HausMitte(k, s);
+        return Waehlen(p, k, s, t, endlage);
+    }
+
+    /// <summary>Warum „Eingang automatisch setzen“ hier nicht geht (null = geht): nur an einem Ort, nicht schraeg gedreht.</summary>
+    public static string? EingangNicht(PyObjekt aussen, AussenStelle s) =>
+        s.Art != AussenArt.Haus || AussenBearbeitung.Ort(aussen, s.Ort) is null ? Texte.TuerNurGebaeude : TuerSetzen.Nicht(aussen, s);
+
+    /// <summary>
+    /// „Eingang automatisch setzen“ als ein Schritt: die Tuer des Orts an den Platz aus <see cref="EingangPlatz"/> (gerechnet auf
+    /// demselben Stand), Weg zur Strasse wie „Tür setzen“. Rueckgabe: Hinweis (Tuer im Tor, Weg ohne Strasse) oder Grund.
+    /// </summary>
+    public static string? EingangAn(PyObjekt aussen, AussenStelle s, TuerFassade.Platz? platz)
+    {
+        if (EingangNicht(aussen, s) is { } nicht)
+        {
+            return nicht;
+        }
+        if (platz is null)
+        {
+            return Texte.EingangKeinPlatz;
+        }
+        var h = TuerSetzen.SetzenAn(aussen, s, platz);
+        if (platz.Eigene && !TorAlt.Value)
+        {
+            return Texte.TuerImTorKeineSeite;
+        }
+        return h == Texte.TuerEingerastetGlatt ? null : h;
+    }
+
+    /// <summary>Platz fuer die Tuer auf der Fassade (gemeinsam fuer „Tür dazu“ und „Eingang automatisch setzen“).</summary>
+    /// <param name="endlage">Patch S 0.46.1: wird das Haus danach noch gedreht oder geschoben (Haltepunkt ans Gleis), bildet sie
+    /// einen Punkt von jetzt auf die spaetere Lage ab; die Wand zur Strasse zaehlt dann in der spaeteren Lage.</param>
+    private static TuerFassade.Platz? Waehlen(Projekt p, PyObjekt k, AussenStelle s, Vector2 t, Func<Vector2, Vector2>? endlage = null)
+    {
+        if (TuerFassade.Rechnen(p, k, s) is not { } f || f.Waende.Count == 0)
+        {
+            return null;
+        }
         var strassen = AussenBearbeitung.Strassen(k).Where(l => l.Count >= 2).ToList();
         var start = f.WandFuer(t, null);
         float ZurStrasse(int w)
         {
             var m = f.Waende[w].Bei(f.Waende[w].Laenge / 2) + f.Waende[w].Aussen;
+            m = endlage?.Invoke(m) ?? m;
             return strassen.Count == 0 ? 0 : strassen.Min(l => Kurve.Abstand(m, l));
+        }
+        if (endlage is not null)
+        {
+            start = Enumerable.Range(0, f.Waende.Count).OrderBy(ZurStrasse).ThenBy(i => i).First();
         }
         var reihe = new[] { start }.Concat(Enumerable.Range(0, f.Waende.Count).Where(i => i != start).OrderBy(ZurStrasse).ThenBy(i => i)).ToList();
         // Welle S 0.45.0 (Weisung P12-212 Punkt 1, Nico): an einem Gebaeude mit Toren (Betriebswerkstatt, Lokschuppen, Hallen)

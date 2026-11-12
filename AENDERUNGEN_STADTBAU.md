@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.46.1
+
+Zwei neue Knöpfe für Orte, mit denen deine Stadt 1 korrigiert wurde.
+
+- Neuer Knopf „Neues Aussehen: Haltepunkt mit freiem Bahnsteig“ unter „Ausgewähltes Stück“ an einem Ort mit dem alten Haltepunkt (zum Beispiel Birkenhain). Der Ort bekommt den Haltepunkt mit freiem Bahnsteig und blauer Zuganzeige, legt sich ans Gleis wie ein Bahnhof (Bahnsteigkante parallel zum Gleis, auch am schrägen Gleis), die Tür kommt an das Häuschen und der Fußweg führt zur Straße. Name, Aufgaben und Innenraum des Orts bleiben. Ein Schritt, Rückgängig geht.
+- Neuer Knopf „Eingang automatisch setzen“ unter „Ausgewähltes Stück“ an jedem Ort: die Tür kommt wie bei „Tür dazu“ auf eine glatte Wand ohne Tor. Hat keine Wand ohne Tor eine glatte Stelle (Betriebswerkstatt), bekommt die Tür einen kleinen Vorbau mit Vordach statt im Rolltor zu sitzen. Innenraum und Aufgaben bleiben. Ein Schritt, Rückgängig geht.
+- Ein Ort, dessen Haus nur aus einem Block ohne fertige Grafik besteht (zum Beispiel ein Haltepunkt), hat jetzt eine Fassade: „Tür setzen“ findet dort eine glatte Stelle.
+
 ## S 0.46.0
 
 Gebäude in Schritten von 15 Grad drehen, Bahnhof am schrägen Gleis.
