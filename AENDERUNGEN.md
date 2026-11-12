@@ -1,5 +1,18 @@
 # Änderungen
 
+## A 0.70.0
+Vorbereitung für die neue Spielstadt: Gebäude können schräg stehen.
+
+- Häuser in der Spielstadt können jetzt in Schritten von 15 Grad gedreht stehen, zum Beispiel ein Bahnhof neben einem schrägen Gleis. Tür, Fußweg, Laternen und alle Wege der Figur richten sich danach.
+- Ein Haltepunkt (kleiner Bahnhof) kann jetzt einen freien Bahnsteig haben: das Wartehäuschen steht hinter dem Bahnsteig, daneben eine blaue Zuganzeige mit leuchtender Schrift, wie an einem echten Bahnsteig.
+- Ein Gebäude mit Toren, dessen Seitenwände keinen Platz für eine Tür haben, bekommt seinen Eingang an einem kleinen Vorbau mit Tür und Vordach.
+- Abstellgleise können mit einer Weiche vom Hauptgleis abzweigen und bis in das Tor eines Lokschuppens führen. Ein Gleis, das frei endet, hat am Ende einen rot-weißen Prellbock.
+- Fenster an schräg gedrehten Häusern leuchten nachts wie an allen anderen Häusern.
+- Ein Bahnsteig kann einem Bahnhof zugeordnet sein. Der stehende Zug hält dann genau an diesem Bahnsteig.
+- Selbst angelegte Fußwege in einer neuen Stadt zählen jetzt auch für die Spielzeit eines Wegs: wer über einen Fußweg abkürzt, braucht weniger Spielminuten.
+- In der heutigen Stadt steht kein Haus schräg und es gibt dort keine dieser neuen Teile, darum sieht dort alles aus wie vorher.
+- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.69.0
 Vorbereitung für die neue Spielstadt.
 

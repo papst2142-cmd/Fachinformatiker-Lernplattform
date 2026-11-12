@@ -106,7 +106,7 @@ public static partial class StadtbauMessung
             Fund("Spielort: in Stadt 1 zeigt das Stellwerk den Knopf (Gegenprobe)");
         }
         var uhr = Stopwatch.StartNew();
-        var wege = Laufzeiten.Rechnen(q.Stand(), daten.Inhalt);
+        var wege = Laufzeiten.Rechnen(q.Stand(), daten.Inhalt, daten.Grafik);
         Messwerte.Reihe("Laufzeiten rechnen Stadt 1 (Angabe)", uhr.Elapsed.TotalMilliseconds);
         if (a.LaufzeitenListe is not { } liste || liste.Count != wege.Count || wege.Count == 0)
         {
@@ -133,6 +133,6 @@ public static partial class StadtbauMessung
         await AlleGroessenAsync(a, f, "Laufzeiten");
         gruppe.Offen = false;
         Messwerte.Notiere("Spielort und Laufzeiten: Nicos Teststadt, Moebelhaus festgelegt und zurueck, Gegenproben Bahnsteig, Stadt 1 ohne Knopf; "
-            + wege.Count + " Wege, " + wege.Count(w => w.Minuten >= Laufzeiten.GelbAb) + " ab 60 Minuten");
+            + wege.Count + " Wege, " + wege.Count(w => w.Kuerzer >= Laufzeiten.GelbAb) + " ab 60 Minuten");
     }
 }

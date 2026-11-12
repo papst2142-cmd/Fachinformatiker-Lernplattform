@@ -65,11 +65,12 @@ public class TorEingangTests
 
     /// <summary>
     /// Die Betriebswerkstatt (CC0 low-detail-building-wide-a) hat an JEDER Wand in Tuerhoehe ein Band (0,3 bis 0,66 hoch,
-    /// 0,24 vor dem Sockel): keine Wand ohne Tor hat eine glatte Stelle. Dann bleibt die Tuer im Rolltor (kein roter Fund) und
-    /// „Tür dazu“ sagt es (Frage an Nico in Meldung P12-126).
+    /// 0,24 vor dem Sockel): keine Wand ohne Tor hat eine glatte Stelle. Seit A 0.70.0 (Weisung P12-218 Punkt 1 = a, Nico) kommt
+    /// die Tuer dann an einer Seitenwand ohne Tor an einen kleinen Vorbau (Windfang) bis an die Wand, ohne Fund. Gegenprobe:
+    /// wie bis S 0.45.0 bleibt sie im Rolltor mit Hinweis.
     /// </summary>
     [Fact]
-    public void TuerDazu_Werkstatt_OhneGlatteSeitenwand_BleibtImTor_MitHinweis()
+    public void TuerDazu_Werkstatt_OhneGlatteSeitenwand_BekommtWindfang_OhneFund_GegenprobeImTor()
     {
         var p = Nico();
         var s = Gebaeude(p, "werkstatt");
@@ -80,8 +81,67 @@ public class TorEingangTests
         {
             Assert.DoesNotContain(f.ProbenVon(w), q => q.Art == TuerFassade.Stelle.Glatt);
         }
-        Assert.Equal(Texte.TuerImTorKeineSeite, TuerDazu(p, s));
-        Assert.Contains(Lage(p, s).Wand, tore);
+        Assert.Null(TuerDazu(p, s));
+        Assert.DoesNotContain(Lage(p, s).Wand, tore);
+        var z = Blueprint.ZierwegVon(p.AussenStand, s)!;
+        Assert.True(Py.Wahr(Get(z, "windfang")));
+        Assert.False(Py.Wahr(Get(z, "modell_tuer")));
+        Assert.Empty(RoteFunde(p));
+        // im Spiel: Tuer vorn am Vorbau, vor allem, was an dieser Stelle aus der Fassade ragt (Band), mit dem Vorbau als Teilen
+        var sz = p.SzeneOhneLaternen(p.AussenStand, true)!;
+        var t = sz.Tueren.Single(x => x.Ort == "werkstatt");
+        Assert.True(t.Windfang);
+        Assert.False(t.Modell);
+        Assert.Empty(StadtTueren.NichtBuendig(sz, t));
+        var haus = sz.Haeuser.First(h => h.Id.StartsWith("werkstatt#", StringComparison.Ordinal));
+        Assert.True(haus.Abstand(t.Mitte) >= StadtTueren.WindfangVor - 0.001f, t.Mitte.ToString());
+        Assert.True(haus.Abstand(t.Mitte) <= 0.4f, t.Mitte.ToString());
+        Assert.Contains(sz.Teile, x => x.Farbe == StadtTueren.WindfangWand);
+        // Gegenprobe Engine: ohne Vorbau saesse eine Kastentuer hinter dem Band (Regel 262 waere rot)
+        StadtSzene.WindfangAltFuerTests = true;
+        try
+        {
+            var alt = p.SzeneOhneLaternen((PyObjekt)Py.Kopie(p.AussenStand)!, true)!;
+            Assert.NotEmpty(StadtTueren.NichtBuendig(alt, alt.Tueren.Single(x => x.Ort == "werkstatt")));
+        }
+        finally
+        {
+            StadtSzene.WindfangAltFuerTests = false;
+        }
+        // Gegenprobe Werkzeug: wie bis S 0.45.0 im Rolltor mit Hinweis
+        GebaeudeTuer.WindfangAltFuerTests = true;
+        try
+        {
+            var q = Nico("Alt");
+            Assert.Equal(Texte.TuerImTorKeineSeite, TuerDazu(q, s));
+            Assert.Contains(Lage(q, s).Wand, tore);
+        }
+        finally
+        {
+            GebaeudeTuer.WindfangAltFuerTests = false;
+        }
+    }
+
+    [Fact]
+    public void Windfang_GehtBeimSpielortMit_UndFaelltBeimTuerSetzenWeg()
+    {
+        var p = Nico();
+        var s = Gebaeude(p, "werkstatt");
+        Assert.Null(TuerDazu(p, s));
+        // von Hand an eine andere Stelle: der Vorbau faellt weg
+        var k = (PyObjekt)Py.Kopie(p.AussenStand)!;
+        var f = TuerFassade.Rechnen(p, k, s)!;
+        var tor = GebaeudeTuer.TorWaende(k, s, f).First();
+        var w = f.Waende[tor];
+        var platz = f.Finden(w.Bei(w.Laenge / 2) + (w.Aussen * 0.05f), tor, einrasten: true);
+        Assert.False(platz.Windfang);
+        TuerSetzen.SetzenAn(k, s, platz);
+        Assert.False(Py.Wahr(Get(Blueprint.ZierwegVon(k, s)!, "windfang")));
+        // „Als Spielort festlegen“: der Vorbau geht als darstellung.windfang an den Ort, das Spiel zeichnet ihn dort
+        Assert.Null(SpielortTests.Festlegen(p, "werkstatt", "betriebswerkstatt"));
+        Assert.True(Py.Wahr(Get((PyObjekt)Get((PyObjekt)Get(Aussen.Stadtdaten(p.AussenStand), "darstellung")!, "windfang")!, "betriebswerkstatt")));
+        var sz = p.SzeneOhneLaternen(p.AussenStand, true)!;
+        Assert.True(sz.Tueren.Single(x => x.Ort == "betriebswerkstatt").Windfang);
         Assert.DoesNotContain(RoteFunde(p), x => x.Contains("Tür", StringComparison.Ordinal));
     }
 

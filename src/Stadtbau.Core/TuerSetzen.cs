@@ -31,6 +31,11 @@ public static class TuerSetzen
     /// <summary>Kann an diesem Stueck eine Tuer gesetzt werden? null = ja, sonst der Grund.</summary>
     public static string? Nicht(PyObjekt aussen, AussenStelle s)
     {
+        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Haus setzt das Werkzeug die Tuer noch nicht
+        if (AussenBearbeitung.IstHaus(s.Art) && AussenBearbeitung.Gueltig(aussen, s) && AussenBearbeitung.HausGrad(aussen, s) != 0)
+        {
+            return Texte.TuerSchraegNicht;
+        }
         if (s.Art == AussenArt.Haus)
         {
             return AussenBearbeitung.Ort(aussen, s.Ort) is null ? Texte.TuerNurGebaeude : null;
@@ -190,6 +195,19 @@ public static class TuerSetzen
             {
                 mt.RemoveAll(e => e.Key == s.Ort);
             }
+            // Welle A 0.70.0 (Weisung P12-218 Punkt 1): Vorbau nur, solange die Tuer dort bleibt, wo „Tür dazu“ ihn gewaehlt hat
+            if (platz.Windfang)
+            {
+                Py.Setzen(Abschnitt(Abschnitt(sd, "darstellung"), "windfang"), s.Ort, true);
+            }
+            else if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "windfang") is PyObjekt wf)
+            {
+                wf.RemoveAll(e => e.Key == s.Ort);
+                if (wf.Count == 0)
+                {
+                    Objekt(Get(sd, "darstellung")!).RemoveAll(e => e.Key == "windfang");
+                }
+            }
             modell = Py.Str(AussenBearbeitung.Ort(aussen, s.Ort)!["modell"]);
         }
         else
@@ -205,6 +223,14 @@ public static class TuerSetzen
             else
             {
                 zugang.RemoveAll(e => e.Key == "modell_tuer");
+            }
+            if (platz.Windfang)
+            {
+                Py.Setzen(zugang, "windfang", true);
+            }
+            else
+            {
+                zugang.RemoveAll(e => e.Key == "windfang");
             }
             modell = Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
         }

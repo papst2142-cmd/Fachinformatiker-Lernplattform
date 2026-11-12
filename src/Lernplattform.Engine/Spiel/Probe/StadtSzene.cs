@@ -33,9 +33,46 @@ public sealed record StadtOrt(string Id, string Name, string Kurz, string Rolle,
 /// W8b: Tuer eines Orts auf der Wand (Mitte), Richtung nach aussen, Anfang des Fusswegs; Modell = Tuer des CC0-Modells.
 /// P8-28: Mitte liegt auf der echten Wand des Modells; Hoehe der Tuer, Hinten = wie weit ihr Rahmen nach hinten reicht.
 /// </summary>
-public sealed record StadtTuer(string Ort, Vector2 Mitte, Vector2 Aussen, Vector2 WegAnfang, bool Modell, float Hoehe = 0f, float Hinten = 0f);
+public sealed record StadtTuer(string Ort, Vector2 Mitte, Vector2 Aussen, Vector2 WegAnfang, bool Modell, float Hoehe = 0f, float Hinten = 0f)
+{
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): die Tuer sitzt vorn an einem kleinen Vorbau (Windfang) bis an die Wand;
+    /// Mitte = Vorderseite des Vorbaus. Die Regel „Tür bündig“ prueft so eine Tuer nicht (der Vorbau ist buendig gebaut).
+    /// </summary>
+    public bool Windfang { get; init; }
 
-public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int StueckeVon, int StueckeBis, Vector3 Min, Vector3 Max);
+    /// <summary>Mit <see cref="Windfang"/>: Punkt auf der Hauswand hinter dem Vorbau (dort beginnt der Weg, dort prueft die Stadt die Tuer).</summary>
+    public Vector2 AnWand { get; init; }
+}
+
+public sealed record StadtHaus(string Id, int TeileVon, int TeileBis, int StueckeVon, int StueckeBis, Vector3 Min, Vector3 Max)
+{
+    /// <summary>
+    /// Welle A 0.70.0 (Sammelliste 314): feine Drehung des Hauses (15 bis 75 Grad nach den Vierteln). Ist sie gesetzt, sind
+    /// <see cref="Min"/>/<see cref="Max"/> der achsenparallele Kasten um das gedrehte Haus, <see cref="LokalMin"/>/<see cref="LokalMax"/>
+    /// der genaue Kasten im Rahmen des Hauses (<see cref="Hausdrehung.Feinlage.Zurueck"/>).
+    /// </summary>
+    public Hausdrehung.Feinlage Fein { get; init; }
+
+    /// <summary>Kasten im Rahmen des Hauses (ohne feine Drehung gleich <see cref="Min"/>).</summary>
+    public Vector3 LokalMin { get; init; } = Min;
+
+    /// <summary>Kasten im Rahmen des Hauses (ohne feine Drehung gleich <see cref="Max"/>).</summary>
+    public Vector3 LokalMax { get; init; } = Max;
+
+    /// <summary>Liegt der Kartenpunkt (mit Rand) in der Grundflaeche des Hauses (genau, auch fein gedreht)?</summary>
+    public bool Drin(Vector2 p, float rand = 0f) => Fein.Drin(LokalMin, LokalMax, p, rand);
+
+    /// <summary>Ecken der Grundflaeche in der Welt (im Umlauf).</summary>
+    public Vector2[] Grundflaeche => Fein.Ecken(LokalMin.X, LokalMin.Z, LokalMax.X, LokalMax.Z);
+
+    /// <summary>Abstand eines Kartenpunkts zur Grundflaeche (0 = darin; genau, auch fein gedreht).</summary>
+    public float Abstand(Vector2 p)
+    {
+        var l = Fein.Zurueck(p);
+        return Vector2.Distance(l, new Vector2(Math.Clamp(l.X, LokalMin.X, LokalMax.X), Math.Clamp(l.Y, LokalMin.Z, LokalMax.Z)));
+    }
+}
 
 /// <summary>
 /// Phase 7, W4 (Weisung P7-9 Punkt 3c): die ganze Stadt aus <c>orte.json</c> und <c>stadt.json</c>
@@ -668,6 +705,12 @@ public sealed partial class StadtSzene
         // das Zifferblatt der Bahnhofsuhr steht quer zur Suedwand: es leuchtet nach Osten und Westen (aus Streifen, die flacher als dick sind)
         var duenn = t.Farbe == UhrBlatt ? Vector3.UnitX
             : mass.X <= mass.Y && mass.X <= mass.Z ? Vector3.UnitX : mass.Y <= mass.Z ? Vector3.UnitY : Vector3.UnitZ;
+        if (t.Dreh.Z != 0f && !LichtDrehAlt.Value)
+        {
+            // Welle A 0.70.0: das Netz hat den Teil gedreht, die duenne Seite dreht mit (sonst leuchtet ein schraeges Fenster nie)
+            var (sin, cos) = MathF.SinCos(t.Dreh.Z * MathF.PI / 180);
+            duenn = new Vector3((duenn.X * cos) - (duenn.Z * sin), duenn.Y, (duenn.X * sin) + (duenn.Z * cos));
+        }
         for (var e = von; e < netz.AnzahlEcken; e++)
         {
             if (MathF.Abs(Vector3.Dot(netz.Normale(e), duenn)) > 0.9f)
@@ -676,6 +719,10 @@ public sealed partial class StadtSzene
             }
         }
     }
+
+    /// <summary>Gegenprobe A 0.70.0: duenne Seite eines gedrehten Teils ungedreht wie im ersten Entwurf (nur Tests, je Ablauf).</summary>
+    public static bool LichtDrehAltFuerTests { get => LichtDrehAlt.Value; set => LichtDrehAlt.Value = value; }
+    private static readonly AsyncLocal<bool> LichtDrehAlt = new();
 
     /// <summary>
     /// Phase 8 W11 (Nico 5a, P8-42): Modelle aus dem Graveyard Kit (Tannen, Kuerbisse) stehen nicht im Netz der Stadt
@@ -1011,6 +1058,7 @@ public sealed partial class StadtSzene
         var wasser = new List<List<Vector2>>();
         var parkFlaechen = new List<(float X1, float Z1, float X2, float Z2)>();
         var gleise = new List<List<Vector2>>();
+        var gleisWerkzeug = new List<bool>();
         var andreaskreuze = new List<Bahnuebergang.Kreuz>();
         var landschaft = ListeOderLeer(welt, "landschaft").Select(Objekt).ToList();
         var strassen = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
@@ -1160,6 +1208,7 @@ public sealed partial class StadtSzene
                         var glatt = Linienzug(item);
                         uebergaenge.AddRange(Gleis(teile, streifen, andreaskreuze, glatt, strassen, sichtbareWege));
                         gleise.Add(glatt);
+                        gleisWerkzeug.Add(Radien(item) is not null);
                         break;
                     }
                 }
@@ -1286,6 +1335,10 @@ public sealed partial class StadtSzene
         var haeuser = new List<StadtHaus>();
         var fensterJeHaus = new Dictionary<string, List<(int, Vector3)>>();
         var alleFenster = new List<(int Teil, Vector3 Wand)>();
+        // Welle A 0.70.0 (Sammelliste 314): fein gedrehte Gebaeude ohne Ort werden im Rahmen des Hauses gebaut und erst nach ihrer
+        // Tuer (Zierweg unten) als Ganzes gedreht
+        var feinOffen = new List<FeinBau>();
+        var hausBloecke = new Dictionary<string, List<(double, double, double, double)>>();
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude")))
         {
             var modell = Py.Str(item["modell"]);
@@ -1293,14 +1346,29 @@ public sealed partial class StadtSzene
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
             var (tv, sv) = (teile.Count, stuecke.Count);
             var fenster = new List<(int, Vector3)>();
-            var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, hindernisse, baeume, fenster: fenster,
-                dreh: Hausdrehung.Von(item), drehMitte: Hausdrehung.Mitte(Get(modelle, modell)), grundVon: KopieGrund(modelle, modell));
+            var fein = new Hausdrehung.Feinlage(new Vector2(Zahl(item, "x"), Zahl(item, "y")) + Hausdrehung.Mitte(Get(modelle, modell)), Hausdrehung.GradVon(item));
+            var feinBau = fein.Aktiv ? new FeinBau(fein, tv, sv) : null;
+            var hListe = feinBau?.Hindernisse ?? hindernisse;
+            var hVorher = hListe.Count;
+            var (hmin, hmax) = Modell(teile, stuecke, grafik, modell, sichtbar, Zahl(item, "x"), Zahl(item, "y"), farbe, modell, feinBau?.Hindernisse ?? hindernisse, baeume, fenster: fenster,
+                dreh: Hausdrehung.Von(item), drehMitte: Hausdrehung.Mitte(Get(modelle, modell)), grundVon: KopieGrund(modelle, modell), baeumeSpaeter: feinBau?.Baeume);
             alleFenster.AddRange(fenster);
+            if (feinBau is not null)
+            {
+                feinBau.TeileBis = teile.Count;
+                feinBau.StueckeBis = stuecke.Count;
+                feinOffen.Add(feinBau);
+            }
             if (hmin.X <= hmax.X)
             {
                 var hausId = modell + "#" + haeuser.Count.ToString(CultureInfo.InvariantCulture);
+                if (feinBau is not null)
+                {
+                    feinBau.Haus = haeuser.Count;
+                }
                 haeuser.Add(new StadtHaus(hausId, tv, teile.Count, sv, stuecke.Count, hmin, hmax));
                 fensterJeHaus[hausId] = fenster;
+                hausBloecke[hausId] = [.. hListe.Skip(hVorher)];
             }
             signatur.Add(modell + ":" + string.Join(",", sichtbar.Select(t => t.Nr)));
         }
@@ -1314,8 +1382,23 @@ public sealed partial class StadtSzene
         // Modelle daneben und an den Seitenwaenden samt Rahmen in Wandfarbe (nur eine Tuer je Haus), kein eigenes
         // Vordach unter einem Dach des Modells
         StadtTuer TuerSetzen(string ort, Vector2 wand, Vector2 aussen, Vector2 anfang, float hoehe, bool modellTuer, bool gehweg,
-            int stueckeVon, int stueckeBis, List<(int Teil, Vector3 Wand)> fenster, Vector3 hausMin, Vector3 hausMax)
+            int stueckeVon, int stueckeBis, List<(int Teil, Vector3 Wand)> fenster, Vector3 hausMin, Vector3 hausMax, bool windfang = false)
         {
+            if (windfang && !WindfangAlt.Value)
+            {
+                // Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): kleiner Vorbau mit Tuer vorn, von der tiefsten Stelle der Wand bis vor
+                // alles, was an dieser Stelle aus der Fassade ragt (Band der Betriebswerkstatt); die Tuer liegt buendig auf ihm
+                var (vor, tief) = grafik is not null && stueckeBis > stueckeVon
+                    ? StadtTueren.Ausdehnung(stuecke.GetRange(stueckeVon, stueckeBis - stueckeVon), grafik, wand, aussen, hoehe)
+                    : (0f, 0f);
+                var vorn = wand + (aussen * (MathF.Max(0f, -vor) + StadtTueren.WindfangVor));
+                StadtTueren.Windfang(teile, wand - (aussen * (tief + 0.02f)), vorn, aussen, hoehe, Gebaeudefarben.Tuer(stadt.Daten, ort));
+                if (gehweg && Vector2.Distance(vorn, anfang) > 0.02f && Vector2.Dot(anfang - vorn, aussen) > 0)
+                {
+                    Linie(teile, [(anfang.X, anfang.Y), (vorn.X, vorn.Y)], Hoehe.Weg, WegBreite, Mischen(Farben.Strasse, Weiss, 0.45f));
+                }
+                return new StadtTuer(ort, vorn, aussen, anfang, false, hoehe, 0f) { Windfang = true, AnWand = wand };
+            }
             // Fund 262 (Weisung P12-122): hat das Modell an dieser Stelle selbst eine Tuer (Stadt-Modell: genau dort, Gebaeude
             // aus dem Editor: jede Glastuer, die die gezeichnete Tuer ueberdecken wuerde), ist sie die Tuer; keine zweite darueber
             if (!modellTuer && grafik is not null && stueckeBis > stueckeVon
@@ -1397,12 +1480,28 @@ public sealed partial class StadtSzene
             {
                 continue;
             }
-            var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, Vektoren(new List<object?> { zier["tuer"] })[0]);
+            // Welle A 0.70.0: Tuer eines fein gedrehten Gebaeudes im Rahmen des Hauses (Tuer und Wegpunkt zurueckgedreht)
+            var zierFein = feinOffen.FirstOrDefault(f => f.Haus == haeuser.IndexOf(haus));
+            var zierLage = zierFein?.Lage ?? default;
+            var (zierTeile, zierTueren) = (teile.Count, tueren.Count);
+            var zierAnfang = zierLage.Zurueck(weg[0]);
+            var zierTuer = zierLage.Zurueck(Vektoren(new List<object?> { zier["tuer"] })[0]);
+            var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, zierTuer);
+            // Welle A 0.70.0 (Haltepunkt mit freiem Bahnsteig): liegt die Tuer innen im Kasten des Hauses (ein Bahnsteig gehoert
+            // fest zum Modell), sitzt sie auf der naechsten Wand der Bloecke wie bei einem Ort; Tueren auf dem Kasten wie bisher
+            // (Fassung 0 bitgleich), Gegenprobe ZierKastenAltFuerTests
+            if (!ZierKastenAlt.Value && ImKastenInnen(haus.Min, haus.Max, zierTuer)
+                && hausBloecke.GetValueOrDefault(haus.Id) is { Count: > 0 } zb)
+            {
+                var block = zb.MinBy(bk => Kurve.Abstand(zierTuer, [new((float)bk.Item1, (float)bk.Item2), new((float)bk.Item3, (float)bk.Item2),
+                    new((float)bk.Item3, (float)bk.Item4), new((float)bk.Item1, (float)bk.Item4), new((float)bk.Item1, (float)bk.Item2)]));
+                (wand, aussen) = StadtTueren.Wand(new Vector3((float)block.Item1, 0, (float)block.Item2), new Vector3((float)block.Item3, haus.Max.Y, (float)block.Item4), zierTuer);
+            }
             // Sammelliste 312 (Weisung P12-207): ein Zierweg mit „modell_tuer“: true fuehrt auf die eigene Tuer des Modells (wie ein Ort
             // mit darstellung.modell_tuer, z. B. das helle Rolltor der Betriebswerkstatt); ohne das Feld wie bisher (Fassung 0 bitgleich)
             var zierModellTuer = !ZierModellTuerAlt.Value && Py.Wahr(zier["modell_tuer"]) && haus.StueckeBis > haus.StueckeVon;
-            tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, weg[0], MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), zierModellTuer, true,
-                haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? [], haus.Min, haus.Max));
+            tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, zierAnfang, MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), zierModellTuer, true,
+                haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? [], haus.Min, haus.Max, Py.Wahr(zier["windfang"])));
             if (grafik is not null)
             {
                 // Phase 8 W11 (Sammelliste 156): die Tuer des Modells auf der Rueckseite (ohne Gehweg) samt Glas und
@@ -1423,8 +1522,29 @@ public sealed partial class StadtSzene
                 StadtTueren.TuerenWeg(stuecke, haus.StueckeVon, haus.StueckeBis, grafik, umgefaerbt, rm, -aussen, lang, suchTief);
             }
             var ende = weg[^1];
-            zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((haus.Min.X + haus.Max.X) / 2, haus.Max.Y + 0.55f, (haus.Min.Z + haus.Max.Z) / 2),
-                haus.Min, haus.Max, ende.X, ende.Y));
+            var (zMin, zMax) = zierFein is null ? (haus.Min, haus.Max) : zierLage.Kasten(haus.Min, haus.Max);
+            zierhaeuser.Add(new StadtZierhaus(Py.Str(zier["name"]), new Vector3((zMin.X + zMax.X) / 2, zMax.Y + 0.55f, (zMin.Z + zMax.Z) / 2),
+                zMin, zMax, ende.X, ende.Y));
+            if (zierFein is not null)
+            {
+                zierFein.Weitere.Add((zierTeile, teile.Count));
+                zierFein.Tueren.AddRange(Enumerable.Range(zierTueren, tueren.Count - zierTueren));
+            }
+        }
+        foreach (var f in feinOffen)
+        {
+            FeinDrehen(f, teile, stuecke, hindernisse, tueren);
+            foreach (var (bx, bz, br) in f.Baeume)
+            {
+                var p = f.Lage.Punkt(new Vector2(bx, bz));
+                Baum(teile, stuecke, grafik, baeume, p.X, p.Y, br);
+            }
+            if (f.Haus >= 0)
+            {
+                var h = haeuser[f.Haus];
+                var (wMin, wMax) = f.Lage.Kasten(h.Min, h.Max);
+                haeuser[f.Haus] = h with { Min = wMin, Max = wMax, Fein = f.Lage, LokalMin = h.Min, LokalMax = h.Max };
+            }
         }
         var orte = new List<StadtOrt>();
         // Phase 13 W3 (Weisung P12-21): mit Vorrat (nur Werkzeug) kommt ein Ort mit genau gleichen Eingaben aus dem letzten Bau
@@ -1439,7 +1559,11 @@ public sealed partial class StadtSzene
             var sichtbar = StadtModelle.Teile(modelle, modell, k);
             string? ortSchluessel = null;
             var (ortTv, ortSv, ortHv, ortBv, ortFv, ortTuer, ortHaus) = (teile.Count, stuecke.Count, hindernisse.Count, baeume.Gesetzt.Count, alleFenster.Count, tueren.Count, haeuser.Count);
-            if (vorrat is not null)
+            // Welle A 0.70.0 (Sammelliste 314): ein fein gedrehter Ort wird im Rahmen des Hauses gebaut (mit Tuer) und danach gedreht;
+            // er kommt nie aus dem Vorrat des Werkzeugs (seine Bloecke liegen im Rahmen des Hauses, der Vorrat kennt nur die Welt)
+            var ortFein = new Hausdrehung.Feinlage(new Vector2((float)Py.F(ort["x"]), (float)Py.F(ort["y"])) + Hausdrehung.Mitte(Get(modelle, modell)),
+                Hausdrehung.GradVonOrt(stadt.Daten, id));
+            if (vorrat is not null && !ortFein.Aktiv)
             {
                 ortSchluessel = OrtSchluessel(stadt, ort, id, sichtbar, StadtTueren.ModellVersatz(stadt, id), sichtbareOrte.Contains(id), sperrenText);
                 if (vorrat.Orte.TryGetValue(id, out var alt) && (alt.Schluessel == ortSchluessel || (vorrat.FalschUebernehmenFuerTests && orteNeu.Count == 0)))
@@ -1456,11 +1580,13 @@ public sealed partial class StadtSzene
             var rolle = ort["rolle"] as string ?? "";
             var vorher = stuecke.Count;
             var teileVorher = teile.Count;
-            var hindernisVorher = hindernisse.Count;
+            var feinBau = ortFein.Aktiv ? new FeinBau(ortFein, teileVorher, vorher) : null;
+            var ortHindernisse = feinBau?.Hindernisse ?? hindernisse;
+            var hindernisVorher = ortHindernisse.Count;
             var modellTuer = StadtTueren.ModellVersatz(stadt, id);
             var fenster = new List<(int, Vector3)>();
-            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, hindernisse, baeume, modellTuer ?? 0f, fenster,
-                Hausdrehung.VonOrt(stadt.Daten, id), Hausdrehung.Mitte(Get(modelle, modell)), KopieGrund(modelle, modell));
+            var (min, max) = Modell(teile, stuecke, grafik, modell, sichtbar, ox, oz, RollenFarbe(rolle), id, ortHindernisse, baeume, modellTuer ?? 0f, fenster,
+                Hausdrehung.VonOrt(stadt.Daten, id), Hausdrehung.Mitte(Get(modelle, modell)), KopieGrund(modelle, modell), feinBau?.Baeume);
             alleFenster.AddRange(fenster);
             var mitGrafik = stuecke.Count > vorher;
             var (tx, tz) = stadt.Tuer(id) is { } zelle
@@ -1472,7 +1598,8 @@ public sealed partial class StadtSzene
                 // (Bloecke dieses Orts); bleibt eine Luecke, laeuft der Gehweg bis an die Wand
                 var anfang = Vektoren(zugang["weg"])[0];
                 (tx, tz) = (anfang.X, anfang.Y);
-                var bloecke = hindernisse.Skip(hindernisVorher).ToList();
+                anfang = ortFein.Zurueck(anfang);
+                var bloecke = ortHindernisse.Skip(hindernisVorher).ToList();
                 if (bloecke.Count > 0)
                 {
                     var block = bloecke.MinBy(bk => Kurve.Abstand(anfang, [new((float)bk.Item1, (float)bk.Item2), new((float)bk.Item3, (float)bk.Item2),
@@ -1481,21 +1608,41 @@ public sealed partial class StadtSzene
                     // niedrige Haeuser (Kiosk, Bahnhof) bekommen eine niedrigere Tuer
                     var hBlock = sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")).Select(t => Zahl(t.Teil, "h")).DefaultIfEmpty(1f).Max();
                     tueren.Add(TuerSetzen(id, wand, aussen, anfang, MathF.Min(TuerHoehe, hBlock * 0.7f), modellTuer is not null && mitGrafik,
-                        sichtbareOrte.Contains(id), vorher, stuecke.Count, fenster, min, max));
+                        sichtbareOrte.Contains(id), vorher, stuecke.Count, fenster, min, max, StadtTueren.MitWindfang(stadt, id)));
                 }
             }
             else if (!mitGrafik)
             {
                 // ohne Fussweg: kleines Rechteck vorne oder hinten an der Front
-                var vorne = tz >= (min.Z + max.Z) / 2;
+                var lt = ortFein.Zurueck(new Vector2(tx, tz));
+                var vorne = lt.Y >= (min.Z + max.Z) / 2;
                 var seite = vorne ? max.Z : min.Z;
-                teile.Add(Quader(tx - (TuerBreite / 2), 0f, vorne ? seite - 0.02f : seite - 0.03f, tx + (TuerBreite / 2), TuerHoehe, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+                teile.Add(Quader(lt.X - (TuerBreite / 2), 0f, vorne ? seite - 0.02f : seite - 0.03f, lt.X + (TuerBreite / 2), TuerHoehe, vorne ? seite + 0.03f : seite + 0.02f, Farben.Tuer));
+            }
+            var (lokalMin, lokalMax) = (min, max);
+            if (feinBau is not null)
+            {
+                feinBau.TeileBis = teile.Count;
+                feinBau.StueckeBis = stuecke.Count;
+                feinBau.Tueren.AddRange(Enumerable.Range(ortTuer, tueren.Count - ortTuer));
+                FeinDrehen(feinBau, teile, stuecke, hindernisse, tueren);
+                foreach (var (bx, bz, br) in feinBau.Baeume)
+                {
+                    var p = ortFein.Punkt(new Vector2(bx, bz));
+                    Baum(teile, stuecke, grafik, baeume, p.X, p.Y, br);
+                }
+                if (min.X <= max.X)
+                {
+                    (min, max) = ortFein.Kasten(min, max);
+                }
             }
             if (min.X <= max.X)
             {
-                haeuser.Add(new StadtHaus(id, teileVorher, teile.Count, vorher, stuecke.Count, min, max));
+                haeuser.Add(feinBau is null
+                    ? new StadtHaus(id, teileVorher, teile.Count, vorher, stuecke.Count, min, max)
+                    : new StadtHaus(id, teileVorher, teile.Count, vorher, stuecke.Count, min, max) { Fein = ortFein, LokalMin = lokalMin, LokalMax = lokalMax });
             }
-            ortBloecke[id] = [.. hindernisse.Skip(hindernisVorher)];
+            ortBloecke[id] = [.. ortHindernisse.Skip(hindernisVorher)];
             var schild = new Vector3((min.X + max.X) / 2, max.Y + 0.55f, (min.Z + max.Z) / 2);
             var (sx, sz) = Stehplatz(stadt, id, tx, tz);
             orte.Add(new StadtOrt(id, ort["name"] as string ?? id, ort["kurz"] as string ?? ort["name"] as string ?? id, rolle,
@@ -1513,7 +1660,9 @@ public sealed partial class StadtSzene
         }
         if (grafik is not null)
         {
-            Zug(stuecke, grafik, gleise);
+            // Welle A 0.70.0 (Weisung P12-220): ist ein Bahnsteig mit einem Bahnhof verknuepft, haelt der Zug an ihm (ohne
+            // Verknuepfung wie bisher, Fassung 0 bitgleich)
+            Zug(stuecke, grafik, gleise, ZugHaltAlt.Value ? null : VerknuepfterBahnsteig(landschaft, modelle));
         }
         // Phase 13 Welle 4a (Weisung P12-28): Stuecke aus dem Katalog des Stadtbau-Werkzeugs (stadtdaten.katalog) mit den
         // mitgelieferten Modellen; ein Modell versperrt den Weg mit seinem Rechteck, ein Effekt (Stern) nichts. Fehlt ein
@@ -1548,6 +1697,37 @@ public sealed partial class StadtSzene
                 {
                     var anker = new Vector3((pm.Min.X + pm.Max.X) / 2, pm.Min.Y, (pm.Min.Z + pm.Max.Z) / 2);
                     stuecke.Add(new ModellStueck(am, Lage(pm, anker, new Vector3(Meter * 1.1f), new Vector3(mitte.X, Probe.Parkplaetze.LinieHoehe, mitte.Y), blick)));
+                }
+            }
+        }
+        // Welle A 0.70.0 (Weisung P12-218 Punkt 3, Nico b, „Prellbock wie im Entwurf“): ein frei endendes Gleis aus dem Werkzeug
+        // (Feld radien) bekommt einen Prellbock; nicht am Kartenrand, nicht an einem anderen Gleis (Stoss, Weiche), nicht an
+        // einem Haus (Abstellgleis im Schuppen). Das Gleis der Stadt 1 (Fassung 0) hat kein Feld radien: dort bleibt alles gleich.
+        if (!PrellbockAlt.Value)
+        {
+            for (var g = 0; g < gleise.Count; g++)
+            {
+                if (!gleisWerkzeug[g] || gleise[g].Count < 2)
+                {
+                    continue;
+                }
+                foreach (var (ende, hinaus) in GleisEnden(gleise[g]))
+                {
+                    if (ende.X <= PrellbockRand || ende.Y <= PrellbockRand || ende.X >= breite - PrellbockRand || ende.Y >= tiefe - PrellbockRand
+                        || gleise.Where((_, i) => i != g).Any(o => Kurve.Abstand(ende, o) <= PrellbockRand)
+                        || Vector2.Distance(ende, Vector2.Distance(gleise[g][0], ende) < 1e-4f ? gleise[g][^1] : gleise[g][0]) <= PrellbockRand
+                        || haeuser.Any(h => h.Abstand(ende) <= PrellbockHaus))
+                    {
+                        continue;
+                    }
+                    foreach (var t in Prellbock(ende, hinaus))
+                    {
+                        teile.Add(gelaende is null ? t : Anheben(gelaende, t) with { Dreh = t.Dreh });
+                    }
+                    var quer = new Vector2(-hinaus.Y, hinaus.X) * 0.25f;
+                    var vorn = ende - (hinaus * 0.1f);
+                    var hinten = ende + (hinaus * 0.16f);
+                    hindernisse.Add(Rechteck([vorn - quer, hinten - quer, hinten + quer, vorn + quer]));
                 }
             }
         }
@@ -1662,7 +1842,7 @@ public sealed partial class StadtSzene
             // W10 (Nico 3b): Fenster mit Licht (nicht die dunklen und nicht die an der Tuer in Wandfarbe)
             // W11: dazu das Zifferblatt der Bahnhofsuhr
             LichtTeile = alleFenster.Where(f => teile[f.Teil].Farbe != Farben.Fenster && teile[f.Teil].Farbe != f.Wand).Select(f => f.Teil)
-                .Concat(Enumerable.Range(0, teile.Count).Where(i => teile[i].Farbe == UhrBlatt)).ToHashSet(),
+                .Concat(Enumerable.Range(0, teile.Count).Where(i => teile[i].Farbe == UhrBlatt || teile[i].Farbe == AnzeigeSchrift)).ToHashSet(),
             Zierhaeuser = zierhaeuser,
             Tueren = tueren,
             OrtBloecke = ortBloecke,
@@ -2122,6 +2302,21 @@ public sealed partial class StadtSzene
     public static bool KreisAltFuerTests { get => KreisAlt.Value; set => KreisAlt.Value = value; }
     private static readonly AsyncLocal<bool> KreisAlt = new();
 
+    /// <summary>Gegenprobe Weisung P12-218 Punkt 1: Feld „windfang“ nicht beachten (wie bis A 0.69.0, nur Tests, je Ablauf).</summary>
+    public static bool WindfangAltFuerTests { get => WindfangAlt.Value; set => WindfangAlt.Value = value; }
+    private static readonly AsyncLocal<bool> WindfangAlt = new();
+
+    /// <summary>Gegenprobe Welle A 0.70.0: Tuer eines Zierwegs immer auf dem Kasten des Hauses (wie bis A 0.69.0, nur Tests, je Ablauf).</summary>
+    public static bool ZierKastenAltFuerTests { get => ZierKastenAlt.Value; set => ZierKastenAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ZierKastenAlt = new();
+
+    /// <summary>Punkt liegt mehr als <see cref="ZierInnen"/> innerhalb aller vier Waende des Kastens.</summary>
+    private static bool ImKastenInnen(Vector3 min, Vector3 max, Vector2 p) =>
+        p.X > min.X + ZierInnen && p.X < max.X - ZierInnen && p.Y > min.Z + ZierInnen && p.Y < max.Z - ZierInnen;
+
+    /// <summary>Abstand zur Wand des Kastens, ab dem eine Zierweg-Tuer als „innen“ gilt.</summary>
+    public const float ZierInnen = 0.05f;
+
     /// <summary>Gegenprobe Sammelliste 312: Feld <c>modell_tuer</c> eines Zierwegs nicht beachten (wie bis A 0.68.0, nur Tests, je Ablauf).</summary>
     public static bool ZierModellTuerAltFuerTests { get => ZierModellTuerAlt.Value; set => ZierModellTuerAlt.Value = value; }
     private static readonly AsyncLocal<bool> ZierModellTuerAlt = new();
@@ -2177,6 +2372,55 @@ public sealed partial class StadtSzene
 
     /// <summary>Breite des Gleises in der Welt; die Schienen des Train Kit (1 breit, 4 lang) werden darauf skaliert.</summary>
     public const float GleisBreite = 0.42f;
+
+    /// <summary>Welle A 0.70.0: ein Gleisende so nah am Kartenrand oder an einem anderen Gleis bekommt keinen Prellbock.</summary>
+    public const float PrellbockRand = 0.05f;
+
+    /// <summary>Welle A 0.70.0: ein Gleisende so nah an einem Haus (Abstellgleis bis ins Tor) bekommt keinen Prellbock.</summary>
+    public const float PrellbockHaus = 0.1f;
+
+    /// <summary>Welle A 0.70.0: Rot des Prellbocks (Pufferbohle).</summary>
+    public static readonly Vector3 PrellbockRot = Netz.Farbe("#B3261E");
+
+    /// <summary>Gegenprobe Weisung P12-218 Punkt 3: kein Prellbock (wie bis A 0.69.0, nur Tests, je Ablauf).</summary>
+    public static bool PrellbockAltFuerTests { get => PrellbockAlt.Value; set => PrellbockAlt.Value = value; }
+    private static readonly AsyncLocal<bool> PrellbockAlt = new();
+
+    /// <summary>Beide Enden eines Gleises mit der Richtung aus dem Gleis hinaus.</summary>
+    private static IEnumerable<(Vector2 Ende, Vector2 Hinaus)> GleisEnden(List<Vector2> p)
+    {
+        var a = p.FindIndex(q => Vector2.DistanceSquared(q, p[0]) > 1e-8f);
+        var b = p.FindLastIndex(q => Vector2.DistanceSquared(q, p[^1]) > 1e-8f);
+        if (a < 0 || b < 0)
+        {
+            yield break;
+        }
+        yield return (p[0], Vector2.Normalize(p[0] - p[a]));
+        yield return (p[^1], Vector2.Normalize(p[^1] - p[b]));
+    }
+
+    /// <summary>
+    /// Welle A 0.70.0: Prellbock am Gleisende (Pufferbohle rot-weiss quer ueber beiden Schienen, dahinter zwei Stuetzen aus
+    /// Stahl); im Rahmen x = quer, z = laengs hinaus, gedreht um das Ende (<see cref="Teil.Dreh"/>).
+    /// </summary>
+    public static IEnumerable<Teil> Prellbock(Vector2 ende, Vector2 hinaus)
+    {
+        var grad = (float)(Math.Atan2(-hinaus.X, hinaus.Y) * 180 / Math.PI);
+        var dreh = new Vector3(ende.X, ende.Y, grad);
+        Teil T(float x1, float y1, float z1, float x2, float y2, float z2, Vector3 farbe) =>
+            new(TeilArt.Quader, ende.X + x1, y1, ende.Y + z1, ende.X + x2, y2, ende.Y + z2, farbe) { Dreh = dreh };
+        var unten = Hoehe.Schiene;
+        // Pufferbohle: aussen rot, in der Mitte weiss
+        yield return T(-0.24f, unten + 0.08f, -0.06f, -0.08f, unten + 0.17f, 0f, PrellbockRot);
+        yield return T(-0.08f, unten + 0.08f, -0.06f, 0.08f, unten + 0.17f, 0f, Weiss);
+        yield return T(0.08f, unten + 0.08f, -0.06f, 0.24f, unten + 0.17f, 0f, PrellbockRot);
+        // Stuetzen ueber den Schienen, schraeg nach hinten als Stufe angedeutet
+        foreach (var x in (float[])[-SpurHalb, SpurHalb])
+        {
+            yield return T(x - 0.025f, Hoehe.Gleisbett, 0f, x + 0.025f, unten + 0.17f, 0.05f, Farben.Stahl);
+            yield return T(x - 0.025f, Hoehe.Gleisbett, 0.05f, x + 0.025f, unten + 0.1f, 0.12f, Farben.Stahl);
+        }
+    }
 
     /// <summary>
     /// Lage eines Modells: Kasten des Modells (min) auf <paramref name="ort"/>, skaliert mit
@@ -2657,6 +2901,50 @@ public sealed partial class StadtSzene
     /// <summary>Versatz des Altbau-Anbaus nach Osten: von x 2,3 an die Ostwand des Hauptgebaeudes (x 3,2).</summary>
     public const float AltbauAnbau = 0.9f;
 
+    /// <summary>Welle A 0.70.0: Farben des Zugzielanzeigers (Kasten blau wie bei der Bahn, Rahmen hell, Schrift hell; die Schrift leuchtet nachts).</summary>
+    public static readonly Vector3 AnzeigeBlau = Netz.Farbe("#1E3A8A");
+
+    public static readonly Vector3 AnzeigeRahmen = Netz.Farbe("#CBD5E1");
+
+    public static readonly Vector3 AnzeigeSchrift = new(0.96f, 0.97f, 0.99f);
+
+    /// <summary>Hoehe des Kastens eines Zugzielanzeigers (oben = Hoehe des Masts).</summary>
+    public const float AnzeigeHoehe = 0.22f;
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218, Nico: „wie eine Bahn-Anzeige blau und rechteckig“): quer liegender Zugzielanzeiger mit
+    /// Mitte <paramref name="x"/>, <paramref name="y"/> (Karte), Breite <paramref name="w"/> und Oberkante <paramref name="h"/>:
+    /// zwei Pfosten, heller Rahmen, auf beiden Seiten eine blaue Flaeche mit drei hellen Zeilen (Uhrzeit, Ziel, Hinweis).
+    /// Die Zeilen leuchten nachts (Farbe <see cref="AnzeigeSchrift"/> in <see cref="LichtTeile"/>), die blaue Flaeche nicht.
+    /// </summary>
+    public static List<Teil> Zugzielanzeiger(float x, float y, float w, float h)
+    {
+        var teile = new List<Teil>();
+        float l = x - (w / 2), r = x + (w / 2), unten = h - AnzeigeHoehe;
+        const float Tief = 0.03f, Rand = 0.018f;
+        foreach (var px in new[] { l + 0.06f, r - 0.06f })
+        {
+            teile.Add(Quader(px - 0.02f, 0, y - 0.02f, px + 0.02f, unten + 0.02f, y + 0.02f, Farben.Metall));
+        }
+        teile.Add(Quader(l, unten, y - Tief, r, h, y + Tief, AnzeigeRahmen));
+        foreach (var seite in new[] { -1f, 1f })
+        {
+            var z1 = y + (seite * Tief);
+            var z2 = z1 + (seite * 0.004f);
+            teile.Add(Quader(l + Rand, unten + Rand, Math.Min(z1, z2), r - Rand, h - Rand, Math.Max(z1, z2), AnzeigeBlau));
+            var z3 = z2 + (seite * 0.003f);
+            var innenL = l + Rand + 0.025f;
+            var breite = w - (2 * Rand) - 0.05f;
+            // Zeilen: oben kurz (Uhrzeit) und lang (Ziel), darunter eine mittlere Zeile
+            foreach (var (von, bis, hoch) in new[] { (0f, 0.22f, 0.15f), (0.3f, 1f, 0.15f), (0f, 0.7f, 0.07f) })
+            {
+                var yz = unten + Rand + 0.02f + (hoch * (AnzeigeHoehe - (2 * Rand) - 0.04f) / 0.15f);
+                teile.Add(Quader(innenL + (von * breite), yz - 0.012f, Math.Min(z2, z3), innenL + (bis * breite), yz + 0.012f, Math.Max(z2, z3), AnzeigeSchrift));
+            }
+        }
+        return teile;
+    }
+
     /// <summary>Lage der Bahnhofsuhr (Uhr c2) relativ zum Bahnhof: Mitte x, Hoehe, Wand (Suedwand des Hauptgebaeudes), Halbmesser, Arm.</summary>
     /// <summary>Farbe des Zifferblatts der Bahnhofsuhr; nachts leuchten nur seine beiden Seiten (wie die Scheibe eines Fensters).</summary>
     public static readonly Vector3 UhrBlatt = new(0.97f, 0.97f, 0.95f);
@@ -2714,11 +3002,70 @@ public sealed partial class StadtSzene
         return teile;
     }
 
+    /// <summary>
+    /// Welle A 0.70.0 (Sammelliste 314): ein fein gedrehtes Haus waehrend des Baus. Teile, Stuecke und Tueren entstehen im Rahmen des
+    /// Hauses; <see cref="FeinDrehen"/> dreht sie danach in die Welt. Die Bloecke bleiben bis dahin in <see cref="Hindernisse"/>
+    /// (Rahmen des Hauses) und sperren danach als schmale Streifen (<see cref="Hausdrehung.Streifen"/>) das freie Gehen.
+    /// </summary>
+    private sealed class FeinBau(Hausdrehung.Feinlage lage, int teileVon, int stueckeVon)
+    {
+        public Hausdrehung.Feinlage Lage { get; } = lage;
+
+        public int TeileVon { get; } = teileVon;
+
+        public int TeileBis { get; set; } = teileVon;
+
+        public int StueckeVon { get; } = stueckeVon;
+
+        public int StueckeBis { get; set; } = stueckeVon;
+
+        /// <summary>Weitere Teile des Hauses (Tuer am Zierweg), je von bis.</summary>
+        public List<(int Von, int Bis)> Weitere { get; } = [];
+
+        /// <summary>Tueren dieses Hauses (Stellen in der Liste der Tueren).</summary>
+        public List<int> Tueren { get; } = [];
+
+        /// <summary>Bloecke im Rahmen des Hauses.</summary>
+        public List<(double, double, double, double)> Hindernisse { get; } = [];
+
+        /// <summary>Baeume des Modells (Rahmen des Hauses), gesetzt erst nach dem Drehen.</summary>
+        public List<(float X, float Z, float R)> Baeume { get; } = [];
+
+        /// <summary>Stelle in der Liste der Haeuser (-1 = ohne Kasten).</summary>
+        public int Haus { get; set; } = -1;
+    }
+
+    /// <summary>Welle A 0.70.0: ein fein gedrehtes Haus in die Welt drehen (Teile, Stuecke, Tueren, Bloecke als Streifen).</summary>
+    private static void FeinDrehen(FeinBau f, List<Teil> teile, List<ModellStueck> stuecke, List<(double, double, double, double)> hindernisse, List<StadtTuer> tueren)
+    {
+        foreach (var (von, bis) in f.Weitere.Prepend((f.TeileVon, f.TeileBis)))
+        {
+            for (var i = von; i < bis; i++)
+            {
+                teile[i] = f.Lage.Teil(teile[i]);
+            }
+        }
+        var lage = f.Lage.Matrix;
+        for (var i = f.StueckeVon; i < f.StueckeBis; i++)
+        {
+            stuecke[i] = stuecke[i] with { Lage = stuecke[i].Lage * lage };
+        }
+        foreach (var i in f.Tueren)
+        {
+            var t = tueren[i];
+            tueren[i] = t with { Mitte = f.Lage.Punkt(t.Mitte), Aussen = f.Lage.Richtung(t.Aussen), WegAnfang = f.Lage.Punkt(t.WegAnfang), AnWand = t.Windfang ? f.Lage.Punkt(t.AnWand) : t.AnWand };
+        }
+        foreach (var (x1, z1, x2, z2) in f.Hindernisse)
+        {
+            hindernisse.AddRange(Hausdrehung.Streifen(f.Lage.Ecken(x1, z1, x2, z2)));
+        }
+    }
+
     /// <summary>Ein Modell an (ox, oz) bauen; Rueckgabe: Kasten (ohne Baeume) fuer Tippen und Schild.</summary>
     private static (Vector3 Min, Vector3 Max) Modell(List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? grafik, string modellName,
         List<(int Nr, PyObjekt Teil)> sichtbar, float ox, float oz, Vector3 ton, string seed, List<(double, double, double, double)> hindernisse,
         BaumPlaner baeume, float versatz = 0f, List<(int, Vector3)>? fenster = null, int dreh = 0, Vector2 drehMitte = default,
-        (string Name, Dictionary<int, int> Nr)? grundVon = null)
+        (string Name, Dictionary<int, int> Nr)? grundVon = null, List<(float X, float Z, float R)>? baeumeSpaeter = null)
     {
         // Sammelliste 294: eine Kopie (modell_n) zeichnet sich wie ihr Grundmodell (Grafik je Teil, Sonderregeln wie Turm und Uhr)
         if (grundVon is { } gv)
@@ -2729,7 +3076,8 @@ public sealed partial class StadtSzene
         // Welle E (Weisung P12-67 Frage 1 = a): gedrehtes Haus = ungedreht bauen, dann alle neuen Teile, Modelle und
         // Hindernisse um die Mitte drehen; Baeume des Modells erst danach an der gedrehten Stelle setzen. dreh 0 = wie vorher.
         var (drehTv, drehSv, drehHv) = (teile.Count, stuecke.Count, hindernisse.Count);
-        var spaeteBaeume = dreh != 0 ? new List<(float X, float Z, float R)>() : null;
+        // Welle A 0.70.0: bei feiner Drehung setzt der Aufrufer die Baeume erst nach dem Drehen (baeumeSpaeter)
+        var spaeteBaeume = dreh != 0 || baeumeSpaeter is not null ? new List<(float X, float Z, float R)>() : null;
         var bloecke = new List<Block>();
         foreach (var (blockNr, teil) in sichtbar.Where(t => Py.Gleich(t.Teil["art"], "block")))
         {
@@ -2927,6 +3275,15 @@ public sealed partial class StadtSzene
                     }
                     break;
                 }
+                case "mast" when Py.Hat(teil, "w"):
+                {
+                    // Welle A 0.70.0 (Weisung P12-218, Nico): Mast mit Breite = Zugzielanzeiger (blauer Kasten mit hellem Rahmen
+                    // auf zwei Pfosten, beidseitig lesbar, die Schrift leuchtet nachts). Ohne Breite wie bisher (Fassung 0).
+                    float w = Zahl(teil, "w"), h = Zahl(teil, "h");
+                    teile.AddRange(Zugzielanzeiger(x, y, w, h));
+                    Kasten(x - (w / 2), 0, y - 0.06f, x + (w / 2), h + 0.02f, y + 0.06f);
+                    break;
+                }
                 case "mast":
                 {
                     var h = Zahl(teil, "h");
@@ -2967,7 +3324,11 @@ public sealed partial class StadtSzene
             min = new Vector3(ox, 0, oz);
             max = new Vector3(ox + 1, 1, oz + 1);
         }
-        if (spaeteBaeume is not null)
+        if (spaeteBaeume is not null && dreh == 0)
+        {
+            baeumeSpaeter!.AddRange(spaeteBaeume);
+        }
+        else if (spaeteBaeume is not null)
         {
             var m = new Vector2(ox, oz) + drehMitte;
             for (var i = drehTv; i < teile.Count; i++)
@@ -2989,6 +3350,11 @@ public sealed partial class StadtSzene
             foreach (var (bx, bz, br) in spaeteBaeume)
             {
                 var p = Hausdrehung.Drehen(new Vector2(bx, bz), m, dreh);
+                if (baeumeSpaeter is not null)
+                {
+                    baeumeSpaeter.Add((p.X, p.Y, br));
+                    continue;
+                }
                 Baum(teile, stuecke, grafik, baeume, p.X, p.Y, br);
             }
         }
@@ -3025,7 +3391,7 @@ public sealed partial class StadtSzene
     /// Ein stehender Zug (Train Kit, drei Wagen) auf dem laengsten geraden Gleisabschnitt, zur Zierde
     /// am Bahnhof; faehrt nicht und verbindet nichts (Zug zwischen Spielwelten plant Nico spaeter).
     /// </summary>
-    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<Vector2>> bahnen)
+    private static void Zug(List<ModellStueck> stuecke, GrafikBibliothek grafik, IEnumerable<List<Vector2>> bahnen, Vector2? halt = null)
     {
         var wagen = new[] { "train-electric-city-a", "train-electric-city-b", "train-electric-city-c" }.Select(grafik.Modell).ToList();
         if (wagen.Any(w => w is null))
@@ -3042,17 +3408,29 @@ public sealed partial class StadtSzene
                 best = stueck;
             }
         }
-        var l = (best.B - best.A).Length();
-        if (l < 1)
-        {
-            return;
-        }
-        var e = (best.B - best.A) / l;
         var skala = ZugBreite / (wagen[0]!.Max.X - wagen[0]!.Min.X);
         var gesamt = wagen.Sum(w => (w!.Max.Z - w.Min.Z) * skala);
-        // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
-        // W8b (Nico 2a): der Zug haelt am Ostende des Bahnsteigs, der Fussweg zum Bahnhof quert das Gleis im Westen
-        var pos = e.X > 0 ? l - 0.1f : gesamt + 0.1f;
+        float pos;
+        Vector2 e;
+        if (halt is { } h && NaechstesGleisStueck(bahnen, h) is { } gs)
+        {
+            // Weisung P12-220: Mitte des Zugs auf der Hoehe des verknuepften Bahnsteigs, in Richtung des naechsten Gleisstuecks
+            e = gs.Richtung;
+            best = (gs.Punkt - (e * (gesamt / 2)), gs.Punkt + (e * (gesamt / 2)));
+            pos = gesamt;
+        }
+        else
+        {
+            var l = (best.B - best.A).Length();
+            if (l < 1)
+            {
+                return;
+            }
+            e = (best.B - best.A) / l;
+            // Wagen hintereinander, mittig auf dem Abschnitt, Fahrtrichtung e (Kopf a vorne)
+            // W8b (Nico 2a): der Zug haelt am Ostende des Bahnsteigs, der Fussweg zum Bahnhof quert das Gleis im Westen
+            pos = e.X > 0 ? l - 0.1f : gesamt + 0.1f;
+        }
         foreach (var w in wagen)
         {
             var lang = (w!.Max.Z - w.Min.Z) * skala;
@@ -3062,6 +3440,55 @@ public sealed partial class StadtSzene
             pos -= lang;
         }
     }
+
+    /// <summary>
+    /// Weisung P12-220: Mitte des ersten Bahnsteigs (Gebaeude ohne Ort nur aus Bahnsteig-Flaechen) mit Feld
+    /// <see cref="Stadtbau.Bahnsteig.BahnhofFeld"/> in der Reihenfolge der Landschaft, sonst null.
+    /// </summary>
+    public static Vector2? VerknuepfterBahnsteig(IEnumerable<PyObjekt> landschaft, PyObjekt modelle)
+    {
+        foreach (var g in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude") && Stadtbau.Bahnsteig.BahnhofVon(t) is not null))
+        {
+            var teile = Get(modelle, Py.Str(g["modell"]));
+            if (Stadtbau.Bahnsteig.Nur(teile) && Stadtbau.Bahnsteig.MitteVon(g, teile) is { } m)
+            {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Naechster Punkt auf einem Gleis (Lot auf das naechste Stueck) und die Richtung dieses Stuecks.</summary>
+    public static (Vector2 Punkt, Vector2 Richtung)? NaechstesGleisStueck(IEnumerable<IReadOnlyList<Vector2>> bahnen, Vector2 p)
+    {
+        (Vector2, Vector2)? best = null;
+        var abstand = float.MaxValue;
+        foreach (var b in bahnen)
+        {
+            for (var i = 0; i + 1 < b.Count; i++)
+            {
+                var d = b[i + 1] - b[i];
+                var l2 = d.LengthSquared();
+                if (l2 < 1e-8f)
+                {
+                    continue;
+                }
+                var t = Math.Clamp(Vector2.Dot(p - b[i], d) / l2, 0, 1);
+                var q = b[i] + (d * t);
+                var a = Vector2.Distance(p, q);
+                if (a < abstand)
+                {
+                    abstand = a;
+                    best = (q, d / MathF.Sqrt(l2));
+                }
+            }
+        }
+        return best;
+    }
+
+    /// <summary>Gegenprobe Weisung P12-220: der Zug steht wie bisher auf dem laengsten geraden Stueck (nur Tests, je Ablauf).</summary>
+    public static bool ZugHaltAltFuerTests { get => ZugHaltAlt.Value; set => ZugHaltAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ZugHaltAlt = new();
 
     /// <summary>_part_fill: benannte Farben der Modellteile, sonst Hex-Wert.</summary>
     private static Vector3 Teilfarbe(string name, Vector3 ton) => name switch

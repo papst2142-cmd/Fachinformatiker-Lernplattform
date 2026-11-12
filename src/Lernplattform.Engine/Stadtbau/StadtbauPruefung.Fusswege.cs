@@ -98,7 +98,7 @@ public static partial class StadtbauPruefung
             // 3: durch ein Haus (P12-98: ausser auf dem Weg vor einer Tuer bis an die Wand)
             foreach (var h in szene.Haeuser)
             {
-                if (proben.FirstOrDefault(p => p.X > h.Min.X + Toleranz && p.X < h.Max.X - Toleranz && p.Y > h.Min.Z + Toleranz && p.Y < h.Max.Z - Toleranz
+                if (proben.FirstOrDefault(p => (h.Fein.Aktiv ? h.Drin(p, -Toleranz) : p.X > h.Min.X + Toleranz && p.X < h.Max.X - Toleranz && p.Y > h.Min.Z + Toleranz && p.Y < h.Max.Z - Toleranz)
                         && !AnDerTuer(szene, p)) is var p
                     && p != default)
                 {

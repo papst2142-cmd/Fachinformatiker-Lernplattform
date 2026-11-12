@@ -114,6 +114,19 @@ public sealed class Stadt : Probe.IStadtSicht
             var (x, y) = Punkt(z["tuer"]);
             tueren[id] = ZelleBei(x, y);
         }
+        // Welle A 0.70.0 (Weisung P12-221 Punkt 4, Fund): die Fusswege aus dem Werkzeug (stadtdaten.fusswege, seit A 0.48.0)
+        // gehoeren zum Weg-Raster wie die Zugangswege; vorher lief die Figur sie im 3D-Bild, die Uhr rechnete aber den Umweg
+        // ueber die Strassen. Fassung 0 hat keine Fusswege, darum gleich. Gegenprobe FusswegeAltFuerTests.
+        if (!FusswegeAlt.Value)
+        {
+            foreach (var f in Probe.Fusswege.Alle(stadt))
+            {
+                for (var i = 0; i + 1 < f.Punkte.Count; i++)
+                {
+                    strecken.Add(((f.Punkte[i].X, f.Punkte[i].Y), (f.Punkte[i + 1].X, f.Punkte[i + 1].Y)));
+                }
+            }
+        }
         for (long i = 0; i < Breite; i = checked(i + 1))
         {
             for (long j = 0; j < Hoehe; j = checked(j + 1))
@@ -131,6 +144,10 @@ public sealed class Stadt : Probe.IStadtSicht
             zeiten[id] = (Py.Int(paar[0]), Py.Int(paar[1]));
         }
     }
+
+    /// <summary>Gegenprobe P12-221: Weg-Raster ohne die Fusswege (Stand vor A 0.70.0).</summary>
+    public static bool FusswegeAltFuerTests { get => FusswegeAlt.Value; set => FusswegeAlt.Value = value; }
+    private static readonly AsyncLocal<bool> FusswegeAlt = new();
 
     /// <summary>
     /// Die Zugaenge je Ort (Tuer und Fussweg zur Strasse): "zugaenge" aus stadt.json, darin ersetzt durch

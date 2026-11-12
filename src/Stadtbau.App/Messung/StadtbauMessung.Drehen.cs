@@ -113,7 +113,8 @@ public static partial class StadtbauMessung
         a.Rueckgaengig();
         await a.AussenGeprueft;
 
-        // 2: Haus mit dem Griff eine Vierteldrehung im Uhrzeigersinn; 30 Grad bleiben ohne Wirkung
+        // 2: Haus mit dem Griff: seit Welle A 0.70.0 (Sammelliste 314) 30 Grad (ein Schritt, 15-Grad-Raster), dann eine
+        // Vierteldrehung im Uhrzeigersinn; Gegenprobe wie bis S 0.45.0: 30 Grad bleiben ohne Wirkung
         a.Karte.Waehlen(hs);
         await BildAsync(a);
         if (a.Karte.GriffMitte is { } hm && a.Karte.Griff is { } hg)
@@ -121,9 +122,27 @@ public static partial class StadtbauMessung
             var hvor = p.SchritteZurueck;
             GriffZug(a.Karte, hm, hg, 30);
             await a.AussenGeprueft;
-            if (AussenBearbeitung.HausDreh(p.AussenStand, hs) != 0 || p.SchritteZurueck != hvor)
+            if (AussenBearbeitung.Winkel(p.AussenStand, hs) != 30 || p.SchritteZurueck != hvor + 1)
             {
-                Fund("Drehgriff 2D: Haus dreht schon bei 30 Grad");
+                Fund($"Drehgriff 2D: Haus dreht bei 30 Grad nicht auf 30 Grad (Winkel {AussenBearbeitung.Winkel(p.AussenStand, hs)})");
+            }
+            a.Rueckgaengig();
+            await a.AussenGeprueft;
+            AussenBearbeitung.HausViertelAltFuerTests = true;
+            try
+            {
+                a.Karte.Waehlen(hs);
+                await BildAsync(a);
+                GriffZug(a.Karte, hm, hg, 30);
+                await a.AussenGeprueft;
+                if (AussenBearbeitung.HausDreh(p.AussenStand, hs) != 0 || p.SchritteZurueck != hvor)
+                {
+                    Fund("Drehgriff 2D Gegenprobe: Haus nur in Vierteln dreht schon bei 30 Grad");
+                }
+            }
+            finally
+            {
+                AussenBearbeitung.HausViertelAltFuerTests = false;
             }
             a.Karte.Waehlen(hs);
             await BildAsync(a);
@@ -138,6 +157,26 @@ public static partial class StadtbauMessung
         {
             Fund("Drehgriff 2D: kein Griff am gewaehlten Haus");
         }
+
+        // Welle A 0.70.0 (Sammelliste 314): Haus um 15 Grad drehen, bis die Pruefung fertig ist (wiederholbar, 400 ms)
+        a.Karte.Waehlen(hs);
+        await BildAsync(a);
+        await MessenAsync("Haus 15 Grad drehen (bis zum Bild)", a, async () =>
+        {
+            a.Karte.DrehenUm(15);
+            await a.AussenGeprueft;
+        }, async () =>
+        {
+            a.Rueckgaengig();
+            await a.AussenGeprueft;
+            a.Karte.Waehlen(hs);
+        });
+        if (AussenBearbeitung.HausGrad(p.AussenStand, hs) != 15)
+        {
+            Fund($"Haus 15 Grad drehen: feine Drehung {AussenBearbeitung.HausGrad(p.AussenStand, hs)} statt 15");
+        }
+        a.Rueckgaengig();
+        await a.AussenGeprueft;
 
         // 3: Schalter Einrasten (Taste E) und Layout mit dem Feld „Winkel“
         var schalter = a.EinrastenSchalter;

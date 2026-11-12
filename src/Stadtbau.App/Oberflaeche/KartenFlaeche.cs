@@ -367,6 +367,9 @@ public sealed partial class KartenFlaeche : Control
     /// <summary>Welle Q1: Platz eines Questgebers draussen waehlen (gesetzt = ein Tipp ruft dies mit dem Punkt der Karte).</summary>
     internal Action<double, double>? QuestgeberSetzen { get; set; }
 
+    /// <summary>Welle S 0.46.0 (Weisung P12-220): der naechste Tipp waehlt ein Stueck (Gegenstueck einer Bahnsteig-Verknuepfung).</summary>
+    internal Action<double, double>? TippWahl { get; set; }
+
     internal Point BildPunktFuerTests(double x, double y) => new((x * _zoom) + _versatz.X, (y * _zoom) + _versatz.Y);
 
     /// <summary>Bildpunkt eines Weltpunkts (Start-Test).</summary>
@@ -581,7 +584,18 @@ public sealed partial class KartenFlaeche : Control
             // S 0.31.0 (Sammelliste 264): eigene Fassadenfarbe auch in der Draufsicht
             var kennung = AussenBearbeitung.FarbKennung(a, s);
             var fassade = kennung is null ? null : AussenBearbeitung.FarbeVon(a, kennung, "fassade");
-            ctx.DrawRectangle(Pinsel(fassade ?? (s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C")), new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1), r);
+            var hausPinsel = Pinsel(fassade ?? (s.Art == AussenArt.Haus ? "#C9B79C" : "#A8A49C"));
+            var hausStift = new Pen(mitInnen ? Farbe("accent") : Pinsel("#5C554B"), mitInnen ? 3 : 1);
+            if (AussenBearbeitung.HausGrad(a, s) != 0)
+            {
+                // Welle A 0.70.0 (Sammelliste 314): ein fein gedrehtes Haus als gedrehtes Rechteck
+                var versatz = new System.Numerics.Vector2((float)Dx(s), (float)Dy(s));
+                Flaeche(ctx, [.. AussenBearbeitung.HausEcken(a, s).Select(e => e + versatz)], hausPinsel, hausStift);
+            }
+            else
+            {
+                ctx.DrawRectangle(hausPinsel, hausStift, r);
+            }
             var name = s.Art == AussenArt.Haus ? OrtName(s.Ort) : ModellNamen.Beschriftung(a, s);
             if (r.Width > 30 && Zeigt(Ebene.Beschriftungen))
             {
@@ -723,6 +737,14 @@ public sealed partial class KartenFlaeche : Control
                     break;
                 case AussenArt.Ampel when Ampeln(a, dx, dy).FirstOrDefault(e => e.Stelle == aw).Ampel is { } am:
                     ctx.DrawEllipse(null, stift, P(am.Mitte.X, am.Mitte.Y), AussenBearbeitung.AmpelGreifen * _zoom, AussenBearbeitung.AmpelGreifen * _zoom);
+                    break;
+                case AussenArt.Haus or AussenArt.Gebaeude when AussenBearbeitung.HausGrad(a, aw) != 0:
+                    // Welle A 0.70.0: Rahmen um das fein gedrehte Haus (3 Bildpunkte Abstand wie beim Rechteck)
+                    var hl = AussenBearbeitung.HausLage(a, aw);
+                    var (vx, vy, vw, vh) = AussenBearbeitung.HausViertel(a, aw);
+                    var hrand = 3 / Math.Max(_zoom, 1e-6);
+                    var hv = new System.Numerics.Vector2((float)dx, (float)dy);
+                    Flaeche(ctx, [.. hl.Ecken(vx - hrand, vy - hrand, vx + vw + hrand, vy + vh + hrand).Select(e => e + hv)], null, stift);
                     break;
                 case AussenArt.Haus or AussenArt.Gebaeude:
                     var (hx, hy, hw, hh) = AussenBearbeitung.HausFlaeche(a, aw);
@@ -1085,10 +1107,7 @@ public sealed partial class KartenFlaeche : Control
         var s = new AussenStelle(AussenArt.Haus, -1, 0, v.Ort);
         if (AussenBearbeitung.Gueltig(v.Stand, s))
         {
-            var (x, y, w, h) = AussenBearbeitung.HausFlaeche(v.Stand, s);
-            var r = new Rect(P(x, y), P(x + w, y + h));
-            ctx.FillRectangle(Pinsel(farbe, 0.55), r);
-            ctx.DrawRectangle(new Pen(Pinsel("#111827"), 1.5, new DashStyle([4, 3], 0)), r);
+            Flaeche(ctx, AussenBearbeitung.HausEcken(v.Stand, s), Pinsel(farbe, 0.55), new Pen(Pinsel("#111827"), 1.5, new DashStyle([4, 3], 0)));
         }
         if (AussenBearbeitung.Zugang(v.Stand, v.Ort) is { } z)
         {
@@ -1596,7 +1615,7 @@ public sealed partial class KartenFlaeche : Control
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, malt));
             return;
         }
-        if (QuestgeberSetzen is not null)
+        if (QuestgeberSetzen is not null || TippWahl is not null)
         {
             // Welle Q1: Platz eines Questgebers draussen waehlen; Tippen setzt (beim Loslassen), Ziehen schiebt die Ansicht
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
@@ -1759,7 +1778,7 @@ public sealed partial class KartenFlaeche : Control
         }
         switch (s.Art)
         {
-            case Fingergeste.Art.Tippen when QuestgeberSetzen is { } qs && !_nurSchieben:
+            case Fingergeste.Art.Tippen when (QuestgeberSetzen ?? TippWahl) is { } qs && !_nurSchieben:
             {
                 var qw = WeltPunkt(new Point(s.X, s.Y));
                 qs(Math.Round(qw.X, 2), Math.Round(qw.Y, 2));

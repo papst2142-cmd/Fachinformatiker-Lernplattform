@@ -67,7 +67,13 @@ public static partial class StadtbauPruefung
         foreach (var h in szene.Haeuser)
         {
             var r = (h.Min.X + Toleranz, h.Min.Z + Toleranz, h.Max.X - Toleranz, h.Max.Z - Toleranz);
-            if (teiche.Any(t => RechteckImVieleck(r, t.MitUfer)) || fluesse.Any(f => RechteckLinie(r, f) < FlussUferHalb))
+            // Welle A 0.70.0: ein fein gedrehtes Haus prueft im eigenen Rahmen (Wasser dorthin zurueckgedreht)
+            if (h.Fein.Aktiv)
+            {
+                r = (h.LokalMin.X + Toleranz, h.LokalMin.Z + Toleranz, h.LokalMax.X - Toleranz, h.LokalMax.Z - Toleranz);
+            }
+            IReadOnlyList<Vector2> Lokal(IReadOnlyList<Vector2> l) => h.Fein.Aktiv ? [.. l.Select(h.Fein.Zurueck)] : l;
+            if (teiche.Any(t => RechteckImVieleck(r, Lokal(t.MitUfer))) || fluesse.Any(f => RechteckLinie(r, Lokal(f)) < FlussUferHalb))
             {
                 funde.Add(new StadtbauFund($"„{HausName(h)}“ steht im Wasser oder auf dem Ufer.", "Haus neben das Wasser schieben.", true,
                     (h.Min.X + h.Max.X) / 2, (h.Min.Z + h.Max.Z) / 2));

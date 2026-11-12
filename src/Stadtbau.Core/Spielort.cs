@@ -158,9 +158,19 @@ public static class Spielort
         {
             Py.Setzen(Abschnitt(darstellung, "modell_tuer"), id, 0L);
         }
+        // Welle A 0.70.0 (Weisung P12-218 Punkt 1): der Vorbau an der Tuer geht mit
+        if (Py.Wahr(Get(zier, "windfang")))
+        {
+            Py.Setzen(Abschnitt(darstellung, "windfang"), id, true);
+        }
         if (dreh != 0)
         {
             Py.Setzen(Abschnitt(darstellung, Hausdrehung.Abschnitt), id, (long)dreh);
+        }
+        // Welle A 0.70.0 (Sammelliste 314): die feine Drehung geht mit
+        if (Hausdrehung.GradVon(g) is var grad and not 0)
+        {
+            Py.Setzen(Abschnitt(darstellung, Hausdrehung.GradAbschnitt), id, (long)grad);
         }
         if (Get(Objekt(Get(stadt1.Stadtdaten, "oeffnungszeiten") ?? new PyObjekt()), id) is { } zeit)
         {

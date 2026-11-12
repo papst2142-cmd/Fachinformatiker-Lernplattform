@@ -138,7 +138,7 @@ public static partial class StadtbauPruefung
                         funde.Add(new StadtbauFund($"„{k.Typ}“ steht auf dem Platz eines Masts von Ampel Nr. {nr}.", "Stück ein Stück weiter schieben.", true, fuss.X, fuss.Y));
                     }
                 }
-                if (szene.Haeuser.Any(h => fuss.X > h.Min.X + 0.05f && fuss.X < h.Max.X - 0.05f && fuss.Y > h.Min.Z + 0.05f && fuss.Y < h.Max.Z - 0.05f))
+                if (szene.Haeuser.Any(h => h.Fein.Aktiv ? h.Drin(fuss, -0.05f) : fuss.X > h.Min.X + 0.05f && fuss.X < h.Max.X - 0.05f && fuss.Y > h.Min.Z + 0.05f && fuss.Y < h.Max.Z - 0.05f))
                 {
                     funde.Add(new StadtbauFund($"Ein Mast von Ampel Nr. {nr} steht in einem Haus.", "Haus von der Kreuzung weg schieben.", true, fuss.X, fuss.Y));
                 }

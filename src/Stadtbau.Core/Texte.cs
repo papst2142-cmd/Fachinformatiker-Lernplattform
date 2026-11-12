@@ -128,6 +128,15 @@ public static partial class Texte
     /// <summary>Welle E: Feld "Winkel" (Grad) an Strassen, Kurven und Fluessen.</summary>
     public const string Winkel = "Winkel (Grad)";
 
+    /// <summary>Welle A 0.70.0 (Sammelliste 314): Tipp am Feld „Winkel“ eines Hauses.</summary>
+    public const string WinkelHausTipp = "Drehung des Hauses im Uhrzeigersinn in Grad: 0 = Vorderseite nach unten. Schritte von 15 Grad, andere Werte werden gerundet. Dann „Übernehmen“.";
+
+    /// <summary>Welle A 0.70.0: Tuer an einem schraeg gedrehten Haus.</summary>
+    public const string TuerSchraegNicht = "An einem schräg gedrehten Haus kann die Tür noch nicht gesetzt werden. Haus auf 0, 90, 180 oder 270 Grad drehen, Tür setzen, dann wieder schräg drehen: die Tür dreht mit.";
+
+    /// <summary>Welle A 0.70.0: Aussehen eines schraeg gedrehten Hauses.</summary>
+    public const string AussehenSchraegNicht = "Ein schräg gedrehtes Haus kann sein Aussehen noch nicht tauschen. Erst auf 0, 90, 180 oder 270 Grad drehen.";
+
     public const string WinkelTipp = "Richtung vom Anfang zum Ende in Grad: 0 = nach rechts, 90 = nach unten. Ganze Grad, dann „Übernehmen“.";
 
     public const string DrehgriffHinweis = "Am Kreis über dem Stück ziehen dreht es (Straßen, Kurven, Flüsse und Teiche in 15-Grad-Schritten, alles andere in 90-Grad-Schritten).";
@@ -748,6 +757,9 @@ public static partial class Texte
     public const string ZiehenHinten = "Das Ende liegt hinter dem Anfang: so eng kann der Bogen nicht drehen.";
     public const string ZiehenZuEng = "Keine Verbindung mit den erlaubten Radien: zu eng. Das Ende weiter weg oder anders ansetzen.";
     public const string ZiehenAusserhalb = "Die Verbindung läge nicht ganz auf der Karte.";
+
+    /// <summary>Welle A 0.70.0 (Weisung P12-218 Punkt 3): eine Weiche geht nur am geraden Gleis.</summary>
+    public const string WeicheNurGerade = "Eine Weiche geht nur an einem geraden Stück des Gleises.";
     public const string FusswegDrehenNicht = "Einen Fußweg zieht man neu, statt ihn zu drehen.";
 
     // Welle S 0.26.0 (Weisung P12-115): Zebrastreifen und Laternen automatisch
@@ -1223,6 +1235,50 @@ public static partial class Texte
 
     // ---- S 0.45.0: Als Spielort festlegen (Weisung P12-212 Punkt 4, Sammelliste 318 = a) ----
 
+    // ---- Welle S 0.46.0 (Weisung P12-220): Bahnsteig mit Bahnhof verknuepfen ----
+
+    /// <summary>Knopf am Bahnsteig und am Bahnhof.</summary>
+    public const string BahnsteigVerknuepfenKnopf = "Mit Bahnhof verknüpfen";
+
+    /// <summary>Tipp am Knopf.</summary>
+    public const string BahnsteigVerknuepfenTipp = "Danach den Bahnhof (am Bahnsteig) bzw. den Bahnsteig (am Bahnhof) auf der Karte antippen. Der Zug hält dann an diesem Bahnsteig.";
+
+    /// <summary>Knopf „Verknuepfung loesen“.</summary>
+    public const string BahnsteigLoesenKnopf = "Verknüpfung lösen";
+
+    /// <summary>Tipp am Knopf „Verknuepfung loesen“.</summary>
+    public const string BahnsteigLoesenTipp = "Der Bahnsteig gehört danach zu keinem Bahnhof mehr.";
+
+    /// <summary>Hinweis beim Antippen des Gegenstuecks (am Bahnsteig gestartet).</summary>
+    public const string BahnsteigTippBahnhof = "Jetzt den Bahnhof auf der Karte antippen (Escape bricht ab).";
+
+    /// <summary>Hinweis beim Antippen des Gegenstuecks (am Bahnhof gestartet).</summary>
+    public const string BahnsteigTippBahnsteig = "Jetzt den Bahnsteig auf der Karte antippen (Escape bricht ab).";
+
+    /// <summary>Getippt, aber kein passendes Stueck getroffen.</summary>
+    public const string BahnsteigTippDaneben = "Dort ist kein passendes Stück. Bitte genau auf das Stück tippen (Escape bricht ab).";
+
+    /// <summary>Grund: das Stueck ist kein Bahnsteig.</summary>
+    public const string BahnsteigNurBahnsteig = "Nur ein Bahnsteig (ein Stück nur aus Bahnsteig-Flächen) kann mit einem Bahnhof verknüpft werden.";
+
+    /// <summary>Grund: der Ort ist kein Bahnhof.</summary>
+    public static string BahnsteigKeinBahnhof(string name) => $"„{name}“ ist kein Bahnhof und bekommt keinen Bahnsteig.";
+
+    /// <summary>Zeile unter „Ausgewähltes Stück“: verknuepft mit.</summary>
+    public static string BahnsteigGehoertZu(string name) => $"Gehört zum Bahnhof „{name}“.";
+
+    /// <summary>Zeile am Bahnhof: Zahl der verknuepften Bahnsteige.</summary>
+    public static string BahnsteigeAmBahnhof(int n) => n == 1 ? "1 Bahnsteig ist mit diesem Bahnhof verknüpft." : $"{n} Bahnsteige sind mit diesem Bahnhof verknüpft.";
+
+    /// <summary>Name des Schritts im Verlauf.</summary>
+    public static string BahnsteigSchritt(string name) => $"Bahnsteig mit „{name}“ verknüpfen";
+
+    /// <summary>Name des Schritts „Verknuepfung loesen“.</summary>
+    public const string BahnsteigLoesenSchritt = "Bahnsteig-Verknüpfung lösen";
+
+    /// <summary>Meldung nach dem Verknuepfen.</summary>
+    public static string BahnsteigVerknuepft(string name) => $"Bahnsteig mit „{name}“ verknüpft.";
+
     public const string SpielortKnopf = "Als Spielort festlegen";
     public const string SpielortKnopfTipp = "Dieses Gebäude wird ein Ort des Spiels. Name, Aufgaben, Öffnungszeiten und Innenraum kommen aus Stadt 1, das Aussehen bleibt dein Gebäude. Ein Schritt, Rückgängig geht.";
     public const string SpielortHinweis = "Welcher Ort aus Stadt 1 soll dieses Gebäude sein? Es fehlen noch:";
@@ -1250,21 +1306,26 @@ public static partial class Texte
 
     // ---- S 0.45.0: Laufzeiten (Weisung P12-212 Punkt 5) ----
 
-    public const string LaufzeitenTitel = "Laufzeiten zu Fuß";
-    public const string LaufzeitenHinweis = "So lange braucht die Figur im Spiel von Tür zu Tür (2 Spielminuten je Schritt). Gelb ab 60 Minuten.";
+    public const string LaufzeitenTitel = "Laufzeiten";
+    public const string LaufzeitenHinweis = "So lange braucht die Figur im Spiel von Tür zu Tür: zu Fuß (2 Spielminuten je Schritt) und mit dem Bus, wenn er schneller ist (wie die Ortsliste im Spiel, Abfahrt um 7:00 Uhr). Gelb ab 60 Minuten nach der kürzeren Zeit.";
     public const string LaufzeitenKeine = "Erst ab zwei Orten gibt es Wege.";
     public const string LaufzeitenRechnet = "Laufzeiten werden gerechnet …";
     public const string LaufzeitenAlle = "Alle Wege zeigen";
     public const string LaufzeitenWeniger = "Weniger zeigen";
     public const string LaufzeitLangTipp = "Ein langer Weg kostet im Spiel viel vom Arbeitstag. Orte näher zusammenrücken, einen kürzeren Fußweg legen oder eine Bushaltestelle setzen.";
 
-    /// <summary>Zeile der Liste.</summary>
-    public static string Laufzeit(string von, string nach, long? minuten) =>
-        von + " – " + nach + ": " + (minuten is { } m ? m + " Min." : "kein Weg");
+    /// <summary>Zeile der Liste (P12-221: mit dem Bus nur, wenn er schneller ist; hin und zurueck, wenn sie sich unterscheiden).</summary>
+    public static string Laufzeit(string von, string nach, long? minuten, long? busHin = null, long? busZurueck = null) =>
+        von + " – " + nach + ": " + (minuten is not { } m ? "kein Weg" : "zu Fuß " + m + " Min." + BusTeil(busHin, busZurueck, " Min."));
 
-    /// <summary>Gelber Hinweis: Weg ab 60 Minuten.</summary>
-    public static string LaufzeitLang(int zahl, string von, string nach, long minuten) =>
-        (zahl == 1 ? "Ein Weg zu Fuß dauert" : zahl + " Wege zu Fuß dauern") + " " + Laufzeiten.GelbAb + " Spielminuten oder länger, der längste von „" + von + "“ nach „"
-        + nach + "“ " + minuten + " Minuten.";
+    /// <summary>Gelber Hinweis: Wege, die auch mit dem Bus (wo er schneller ist) 60 Minuten oder laenger dauern; der laengste mit beiden Zeiten.</summary>
+    public static string LaufzeitLang(int zahl, string von, string nach, long minuten, long? busHin = null, long? busZurueck = null) =>
+        (zahl == 1 ? "Ein Weg dauert" : zahl + " Wege dauern") + " " + Laufzeiten.GelbAb + " Spielminuten oder länger (auch mit dem Bus, wo er schneller ist), der längste von „" + von + "“ nach „"
+        + nach + "“: zu Fuß " + minuten + " Minuten" + BusTeil(busHin, busZurueck, " Minuten") + ".";
+
+    private static string BusTeil(long? hin, long? zurueck, string einheit) =>
+        hin is null && zurueck is null ? ""
+            : hin == zurueck ? ", mit dem Bus " + hin + einheit
+            : ", mit dem Bus hin " + (hin is { } h ? h + einheit : "nicht schneller") + ", zurück " + (zurueck is { } z ? z + einheit : "nicht schneller");
 }
 

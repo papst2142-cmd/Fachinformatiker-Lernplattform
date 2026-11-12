@@ -51,6 +51,48 @@ public static class Bahnsteig
         }
         return liste;
     }
+
+    /// <summary>Welle A 0.70.0: feine Drehung des Hauses; die <see cref="Rechtecke"/> liegen in ihrem Rahmen (nur viertelgedreht).</summary>
+    public static Hausdrehung.Feinlage Fein(object? teile, double x, double y, int grad) =>
+        new(new Vector2((float)x, (float)y) + Hausdrehung.Mitte(teile), grad);
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-220, Sammelliste 324): Feld eines Gebaeudes ohne Ort (nur Bahnsteig-Flaechen) in
+    /// <c>karte.welt.landschaft</c>: Kennung des Orts (Bahnhof), zu dem der Bahnsteig gehoert. Ein Bahnsteig gehoert hoechstens
+    /// zu einem Bahnhof (ein Feld), ein Bahnhof kann mehrere haben. Ohne Feld wie bisher (Fassung 0 hat keins).
+    /// </summary>
+    public const string BahnhofFeld = "bahnhof";
+
+    /// <summary>Kennung des verknuepften Bahnhofs eines Gebaeudes ohne Ort, sonst null (auch bei falschem Wert).</summary>
+    public static string? BahnhofVon(PyObjekt gebaeude) => Get(gebaeude, BahnhofFeld) as string;
+
+    /// <summary>
+    /// Orte, die in ihrer neuen Rolle kein Bahnhof sind (Weisung P12-214/P12-220: Talheim-Nord wird das Stellwerk ohne
+    /// Bahnsteig). Gleich den Orten mit neuer Rolle im Werkzeug (<c>Spielort.Neu</c>, Test im Werkzeug). Dort gibt es keinen
+    /// Hinweis „hat keinen Bahnsteig mehr“, und die Baustelle des alten Bahnhofs (Teile „offen“/„erledigt“: Geruest, Rohbau,
+    /// fertiger Aufbau) zaehlt nicht als fehlender wechselnder Teil.
+    /// </summary>
+    public static readonly IReadOnlySet<string> OhneBahnsteig = new HashSet<string>(StringComparer.Ordinal) { "talheim_nord" };
+
+    /// <summary>So weit darf die Kante eines verknuepften Bahnsteigs hoechstens von der Gleismitte liegen (halber Zug 0,29 plus Spalt).</summary>
+    public const float AmGleis = 0.6f;
+
+    /// <summary>Bis zu diesem Abstand vom Haus gilt ein Bahnsteig ohne Verknuepfung als „direkt daneben“ (Hinweis nennt den Knopf).</summary>
+    public const float Nahe = 3f;
+
+    /// <summary>Mitte eines Gebaeudes ohne Ort mit Bahnsteig-Flaechen in der Welt (Mitte aller Bahnsteig-Rechtecke, fein gedreht).</summary>
+    public static Vector2? MitteVon(PyObjekt gebaeude, object? teile)
+    {
+        var r = Rechtecke(teile, Py.F(gebaeude["x"]), Py.F(gebaeude["y"]), Hausdrehung.Von(gebaeude));
+        if (r.Count == 0)
+        {
+            return null;
+        }
+        var fein = Fein(teile, Py.F(gebaeude["x"]), Py.F(gebaeude["y"]), Hausdrehung.GradVon(gebaeude));
+        var a = r.Aggregate(new Vector2(float.MaxValue), (m, q) => Vector2.Min(m, q.Min));
+        var b = r.Aggregate(new Vector2(float.MinValue), (m, q) => Vector2.Max(m, q.Max));
+        return fein.Punkt((a + b) / 2);
+    }
 }
 
 public static partial class StadtbauPruefung
@@ -115,16 +157,31 @@ public static partial class StadtbauPruefung
             {
                 continue;
             }
-            if (altTeile.OfType<PyObjekt>().Any(t => t.Any(p => p.Key is "erledigt" or "offen" or "serverfarm_fertig" or "wohnung" or "gegruendet")))
+            // Weisung P12-220 Punkt 4: am Stellwerk Talheim-Nord ist die Baustelle des alten Bahnhofs (offen/erledigt) Nicos
+            // Wunsch, kein fehlender Teil; Gegenprobe BahnsteigVerknuepfungAltFuerTests
+            var ohneBahnsteig = !VerknuepfungAlt.Value && Bahnsteig.OhneBahnsteig.Contains(id);
+            if (altTeile.OfType<PyObjekt>().Any(t => t.Any(p => p.Key is "serverfarm_fertig" or "wohnung" or "gegruendet" || (!ohneBahnsteig && p.Key is "erledigt" or "offen"))))
             {
                 funde.Add(new StadtbauFund($"Das neue Aussehen von „{name}“ hat die wechselnden Teile des alten Hauses nicht (z. B. Gerüst oder Licht).",
                     "Das neue Haus sieht im Spiel immer gleich aus.", false, ox, oy));
             }
-            if (Bahnsteig.Hat(altTeile) && !Bahnsteig.Hat(teile) && !landschaft.Any(g => Py.Gleich(g["modell"], Bahnsteig.ModellName(id))))
+            var verknuepft = !VerknuepfungAlt.Value && landschaft.Any(g => Bahnsteig.BahnhofVon(g) == id);
+            if (Bahnsteig.Hat(altTeile) && !Bahnsteig.Hat(teile) && !ohneBahnsteig && !verknuepft
+                && !landschaft.Any(g => Py.Gleich(g["modell"], Bahnsteig.ModellName(id))))
             {
+                // Weisung P12-220 Punkt 2: liegt ein Bahnsteig ohne Verknuepfung direkt daneben, nennt der Hinweis den Knopf
+                var daneben = !VerknuepfungAlt.Value && szene.Ort(id) is { } so && landschaft.Any(g => Bahnsteig.BahnhofVon(g) is null
+                    && Bahnsteig.Nur(Get(modelle, Py.Str(g["modell"]))) && Bahnsteig.MitteVon(g, Get(modelle, Py.Str(g["modell"]))) is { } m
+                    && AbstandZumKasten(m, so.KastenMin, so.KastenMax) <= Bahnsteig.Nahe);
                 funde.Add(new StadtbauFund($"„{name}“ hat keinen Bahnsteig mehr.",
-                    "Das ist erlaubt, der Zug hält weiter. Für einen Bahnsteig „Altes Aussehen zurück“ wählen.", false, ox, oy));
+                    daneben
+                        ? "Den Bahnsteig daneben antippen und „Mit Bahnhof verknüpfen“ wählen."
+                        : "Das ist erlaubt, der Zug hält weiter. Für einen Bahnsteig „Altes Aussehen zurück“ wählen.", false, ox, oy));
             }
+        }
+        if (!VerknuepfungAlt.Value)
+        {
+            BahnsteigVerknuepfungen(fassung, modelle, szene, landschaft, orte, funde);
         }
         if (szene.Gleise.Count == 0)
         {
@@ -132,11 +189,11 @@ public static partial class StadtbauPruefung
         }
         // Sammelliste 295 (Weisung P12-196 Frage 2 = a): auch die Bahnsteige im Modell eines Gebaeudes oder Orts (Bahnhof), nicht nur
         // einzelne Bahnsteig-Stuecke; Gegenprobe BahnsteigNurAltFuerTests
-        var pruefen = landschaft.Select(g => (Teile: Get(modelle, Py.Str(g["modell"])), X: Py.F(g["x"]), Y: Py.F(g["y"]), Dreh: Hausdrehung.Von(g),
+        var pruefen = landschaft.Select(g => (Teile: Get(modelle, Py.Str(g["modell"])), X: Py.F(g["x"]), Y: Py.F(g["y"]), Dreh: Hausdrehung.Von(g), Grad: Hausdrehung.GradVon(g),
                 Name: Bahnsteig.Nur(Get(modelle, Py.Str(g["modell"]))) ? $"Der Bahnsteig („{Py.Str(g["modell"])}“)" : $"Der Bahnsteig von „{Py.Str(g["modell"])}“"))
             .Concat(orte.Select(o => (Teile: Get(modelle, Py.Str(o["modell"])), X: Py.F(o["x"]), Y: Py.F(o["y"]), Dreh: Hausdrehung.VonOrt(fassung.Stadtdaten, Py.Str(o["id"])),
-                Name: $"Der Bahnsteig von „{Get(o, "name") as string ?? Py.Str(o["id"])}“")));
-        foreach (var (teile, x, y, dreh, name) in pruefen)
+                Grad: Hausdrehung.GradVonOrt(fassung.Stadtdaten, Py.Str(o["id"])), Name: $"Der Bahnsteig von „{Get(o, "name") as string ?? Py.Str(o["id"])}“")));
+        foreach (var (teile, x, y, dreh, grad, name) in pruefen)
         {
             if (BahnsteigNurAlt.Value ? !Bahnsteig.Nur(teile) : !Bahnsteig.Hat(teile))
             {
@@ -144,7 +201,7 @@ public static partial class StadtbauPruefung
             }
             foreach (var (min, max) in Bahnsteig.Rechtecke(teile, x, y, dreh))
             {
-                if (BahnsteigAufGleis(min, max, szene) is { } p)
+                if (BahnsteigAufGleis(min, max, szene, Bahnsteig.Fein(teile, x, y, grad)) is { } p)
                 {
                     funde.Add(new StadtbauFund(name + " liegt auf dem Gleis.",
                         "Bahnsteig weiter weg vom Gleis schieben (mit „Einrasten“ rastet ein Bahnhof selbst ans Gleis).", true, p.X, p.Y));
@@ -154,12 +211,91 @@ public static partial class StadtbauPruefung
         }
     }
 
+    /// <summary>
+    /// Weisung P12-220 Punkt 2: Regeln der Verknuepfung Bahnsteig → Bahnhof (Feld <see cref="Bahnsteig.BahnhofFeld"/>), alle rot:
+    /// falscher Wert, Ort unbekannt, Gebaeude ist kein Bahnsteig (nicht nur Bahnsteig-Flaechen), Ort ohne Bahnhof-Rolle
+    /// (<see cref="Bahnsteig.OhneBahnsteig"/>), Bahnsteig nicht am Gleis (Kante weiter als <see cref="Bahnsteig.AmGleis"/> von
+    /// der Gleismitte), Bahnsteig vom Bahnhof zu Fuss nicht erreichbar (gleiche Wegsuche wie die Figur).
+    /// </summary>
+    private static void BahnsteigVerknuepfungen(StadtFassung fassung, PyObjekt modelle, StadtSzene szene, List<PyObjekt> landschaft,
+        IEnumerable<PyObjekt> orte, List<StadtbauFund> funde)
+    {
+        var ortNamen = orte.ToDictionary(o => Py.Str(o["id"]), o => Get(o, "name") as string ?? Py.Str(o["id"]), StringComparer.Ordinal);
+        foreach (var g in landschaft.Where(g => Py.Hat(g, Bahnsteig.BahnhofFeld)))
+        {
+            var teile = Get(modelle, Py.Str(g["modell"]));
+            var (gx, gy) = (Py.F(g["x"]), Py.F(g["y"]));
+            if (g[Bahnsteig.BahnhofFeld] is not string id || !ortNamen.TryGetValue(id, out var name))
+            {
+                funde.Add(new StadtbauFund("Ein Bahnsteig ist mit einem unbekannten Bahnhof verknüpft.", "Verknüpfung lösen und neu verknüpfen.", true, gx, gy));
+                continue;
+            }
+            if (!Bahnsteig.Nur(teile) || Bahnsteig.MitteVon(g, teile) is not { } mitte)
+            {
+                funde.Add(new StadtbauFund($"„{Py.Str(g["modell"])}“ ist kein Bahnsteig und kann nicht mit „{name}“ verknüpft sein.", "Verknüpfung lösen.", true, gx, gy));
+                continue;
+            }
+            if (Bahnsteig.OhneBahnsteig.Contains(id))
+            {
+                funde.Add(new StadtbauFund($"„{name}“ ist kein Bahnhof und hat keinen Bahnsteig.", "Verknüpfung lösen.", true, mitte.X, mitte.Y));
+                continue;
+            }
+            var fein = Bahnsteig.Fein(teile, gx, gy, Hausdrehung.GradVon(g));
+            var amGleis = Bahnsteig.Rechtecke(teile, gx, gy, Hausdrehung.Von(g)).Any(r => BahnsteigAbstandZumGleis(r.Min, r.Max, szene, fein) <= Bahnsteig.AmGleis);
+            if (!amGleis)
+            {
+                funde.Add(new StadtbauFund($"Der Bahnsteig von „{name}“ liegt nicht am Gleis.",
+                    "Bahnsteig direkt neben das Gleis schieben, dort hält der Zug.", true, mitte.X, mitte.Y));
+            }
+            if (szene.Ort(id) is { } o)
+            {
+                var start = (o.StehX, o.StehZ);
+                var erreicht = szene.Laufraster.Weg(start, (mitte.X, mitte.Y)).Count > 0
+                    || szene.Laufraster.NaechsteFreie(o.StehX, o.StehZ) == szene.Laufraster.NaechsteFreie(mitte.X, mitte.Y);
+                if (!erreicht)
+                {
+                    funde.Add(new StadtbauFund($"Der Bahnsteig von „{name}“ ist vom Bahnhof zu Fuß nicht erreichbar.",
+                        "Einen Weg frei machen (Gleis, Wasser oder Häuser versperren ihn) oder den Bahnsteig näher an den Bahnhof legen.", true, mitte.X, mitte.Y));
+                }
+            }
+        }
+    }
+
+    /// <summary>Kleinster Abstand eines Bahnsteig-Rechtecks (abgetastet wie <see cref="BahnsteigAufGleis"/>) zur Gleismitte.</summary>
+    private static float BahnsteigAbstandZumGleis(Vector2 min, Vector2 max, StadtSzene szene, Hausdrehung.Feinlage fein)
+    {
+        if (szene.Gleise.Count == 0)
+        {
+            return float.MaxValue;
+        }
+        var nx = Math.Max(1, (int)MathF.Ceiling((max.X - min.X) / BahnsteigRaster));
+        var ny = Math.Max(1, (int)MathF.Ceiling((max.Y - min.Y) / BahnsteigRaster));
+        var best = float.MaxValue;
+        for (var i = 0; i <= nx; i++)
+        {
+            for (var j = 0; j <= ny; j++)
+            {
+                var p = fein.Punkt(new Vector2(min.X + ((max.X - min.X) * i / nx), min.Y + ((max.Y - min.Y) * j / ny)));
+                best = Math.Min(best, szene.Gleise.Min(g => Kurve.Abstand(p, g)));
+            }
+        }
+        return best;
+    }
+
+    /// <summary>Abstand eines Punkts zum Kasten eines Hauses (Grundriss), 0 im Kasten.</summary>
+    private static float AbstandZumKasten(Vector2 p, Vector3 min, Vector3 max) =>
+        Vector2.Distance(p, Vector2.Clamp(p, new Vector2(min.X, min.Z), new Vector2(max.X, max.Z)));
+
+    /// <summary>Gegenprobe Weisung P12-220: Hinweise und Regeln wie vor der Verknuepfung (nur Tests, je Ablauf).</summary>
+    public static bool BahnsteigVerknuepfungAltFuerTests { get => VerknuepfungAlt.Value; set => VerknuepfungAlt.Value = value; }
+    private static readonly AsyncLocal<bool> VerknuepfungAlt = new();
+
     /// <summary>Gegenprobe Sammelliste 295: nur einzelne Bahnsteig-Stuecke pruefen (wie bis A 0.65.0, nur Tests, je Ablauf).</summary>
     public static bool BahnsteigNurAltFuerTests { get => BahnsteigNurAlt.Value; set => BahnsteigNurAlt.Value = value; }
     private static readonly AsyncLocal<bool> BahnsteigNurAlt = new();
 
     /// <summary>Erster Punkt des Rechtecks (abgetastet im Raster <see cref="BahnsteigRaster"/>, mit Rand) auf dem Gleis, sonst null.</summary>
-    private static Vector2? BahnsteigAufGleis(Vector2 min, Vector2 max, StadtSzene szene)
+    private static Vector2? BahnsteigAufGleis(Vector2 min, Vector2 max, StadtSzene szene, Hausdrehung.Feinlage fein = default)
     {
         var nx = Math.Max(1, (int)MathF.Ceiling((max.X - min.X) / BahnsteigRaster));
         var ny = Math.Max(1, (int)MathF.Ceiling((max.Y - min.Y) / BahnsteigRaster));
@@ -167,7 +303,7 @@ public static partial class StadtbauPruefung
         {
             for (var j = 0; j <= ny; j++)
             {
-                var p = new Vector2(min.X + ((max.X - min.X) * i / nx), min.Y + ((max.Y - min.Y) * j / ny));
+                var p = fein.Punkt(new Vector2(min.X + ((max.X - min.X) * i / nx), min.Y + ((max.Y - min.Y) * j / ny)));
                 if (szene.Gleise.Any(g => Kurve.Abstand(p, g) < BahnsteigAbstand))
                 {
                     return p;

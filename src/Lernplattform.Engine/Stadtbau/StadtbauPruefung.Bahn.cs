@@ -15,7 +15,9 @@ namespace Lernplattform.Core.Stadtbau;
 /// <item>Daten: weniger als zwei Punkte, ein Punkt nicht auf der Karte.</item>
 /// <item>Zwei Gleise (oder ein Gleis mit sich selbst) kreuzen sich oder liegen naeher als der doppelte Lichtraum
 /// (<see cref="GleisAbstand"/>): Weichen gibt es nicht. Erlaubt ist nur Ende an Ende in gleicher Richtung (bis
-/// <see cref="StadtSzene.AnschlussGrad"/> Grad Knick), auch ein geschlossener Ring.</item>
+/// <see cref="StadtSzene.AnschlussGrad"/> Grad Knick), auch ein geschlossener Ring, und seit A 0.70.0 (Weisung P12-218
+/// Punkt 3, Nico b) eine Weiche (<see cref="Weichen"/>): ein Gleis beginnt auf einem anderen in dessen Richtung und
+/// laeuft von ihm weg; bis es den Abstand erreicht hat, gilt die Naehe dort nicht als Fund.</item>
 /// <item>Ein Bogen ist enger gezeichnet als <see cref="Strassenkurve.BahnMindestens"/> (die Stuecke an der Ecke sind zu kurz
 /// fuer den gewuenschten Radius; die Wagen ragten ueber die Schienen).</item>
 /// <item>Die Bahn fuehrt durch Wasser (Fluss oder Teich samt Ufer): eine Bruecke fuer die Bahn gibt es nicht.</item>
@@ -34,6 +36,89 @@ public static partial class StadtbauPruefung
 
     /// <summary>Gleisenden, die naeher als dies beieinander liegen, gelten als verbunden.</summary>
     private const float GleisStoss = 0.05f;
+
+    /// <summary>So nah liegt das Ende eines Abstellgleises hoechstens auf dem anderen Gleis (Weiche).</summary>
+    public const float WeicheFang = 0.02f;
+
+    /// <summary>Um so viel reicht der Bereich einer Weiche ueber die Stelle hinaus, an der die Gleise auseinander sind.</summary>
+    private const float WeicheZugabe = 0.25f;
+
+    /// <summary>Gegenprobe Weisung P12-218 Punkt 3: Weichen gelten wie bis A 0.69.0 als zu nah (nur Tests, je Ablauf).</summary>
+    public static bool WeicheAltFuerTests { get => WeicheAlt.Value; set => WeicheAlt.Value = value; }
+    private static readonly AsyncLocal<bool> WeicheAlt = new();
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 3, Nico b: „Abstellgleise mit Weiche setzt Nico selbst“): die Weichen der Stadt.
+    /// Eine Weiche ist ein Ende eines Gleises B, das bis <see cref="WeicheFang"/> auf der Linie eines anderen Gleises A liegt
+    /// (nicht an dessen Ende), in der Richtung von A (bis <see cref="StadtSzene.AnschlussGrad"/> Grad, beide Richtungen),
+    /// und von dem aus B sich von A entfernt, bis es <see cref="GleisAbstand"/> erreicht. Rueckgabe: Lage und Halbmesser
+    /// des Bereichs (Weg bis zu dieser Stelle plus <see cref="WeicheZugabe"/>), in dem Gleise einander nahe sein duerfen.
+    /// Ein Gleis, das auf A beginnt und neben ihm bleibt, ist keine Weiche (bleibt rot).
+    /// </summary>
+    public static List<(Vector2 Lage, float Halb)> Weichen(IReadOnlyList<(List<Vector2> Ecken, List<Vector2> Glatt)> gleise)
+    {
+        var weichen = new List<(Vector2, float)>();
+        if (WeicheAlt.Value)
+        {
+            return weichen;
+        }
+        for (var bi = 0; bi < gleise.Count; bi++)
+        {
+            var b = gleise[bi];
+            foreach (var amAnfang in new[] { true, false })
+            {
+                var zug = amAnfang ? b.Glatt : Enumerable.Reverse(b.Glatt).ToList();
+                if (zug.Count < 2)
+                {
+                    continue;
+                }
+                var e = zug[0];
+                var hinein = zug.Skip(1).FirstOrDefault(q => Vector2.DistanceSquared(q, e) > 1e-8f);
+                if (hinein == default)
+                {
+                    continue;
+                }
+                var richtung = Vector2.Normalize(hinein - e);
+                for (var ai = 0; ai < gleise.Count; ai++)
+                {
+                    var a = gleise[ai].Glatt;
+                    if (ai == bi || a.Count < 2 || Kurve.Abstand(e, a) > WeicheFang
+                        || Vector2.Distance(e, a[0]) <= GleisStoss || Vector2.Distance(e, a[^1]) <= GleisStoss)
+                    {
+                        continue;
+                    }
+                    // Richtung von A an dieser Stelle
+                    var (bestD, tangente) = (float.MaxValue, Vector2.Zero);
+                    for (var i = 0; i + 1 < a.Count; i++)
+                    {
+                        var d = a[i + 1] - a[i];
+                        if (d.LengthSquared() < 1e-10f)
+                        {
+                            continue;
+                        }
+                        var t = Math.Clamp(Vector2.Dot(e - a[i], d) / d.LengthSquared(), 0f, 1f);
+                        var abst = Vector2.Distance(e, a[i] + (d * t));
+                        if (abst < bestD)
+                        {
+                            (bestD, tangente) = (abst, Vector2.Normalize(d));
+                        }
+                    }
+                    var grad = MathF.Acos(Math.Clamp(MathF.Abs(Vector2.Dot(richtung, tangente)), 0f, 1f)) * 180 / MathF.PI;
+                    if (grad > StadtSzene.AnschlussGrad)
+                    {
+                        continue;
+                    }
+                    // laengs B bis zum vollen Abstand von A
+                    var frei = Abgetastet(zug).FirstOrDefault(p => Kurve.Abstand(p, a) >= GleisAbstand - Toleranz);
+                    if (frei != default)
+                    {
+                        weichen.Add((e, Vector2.Distance(e, frei) + WeicheZugabe));
+                    }
+                }
+            }
+        }
+        return weichen;
+    }
 
     /// <summary>Regel 1 (in <see cref="DatenPruefen"/>): Punkte einer Bahn.</summary>
     private static void BahnDaten(PyObjekt l, int nr, double breite, double hoehe, List<StadtbauFund> funde)
@@ -67,7 +152,9 @@ public static partial class StadtbauPruefung
             return;
         }
 
-        // 2: Gleise kreuzen sich oder liegen zu nah (andere Bahn)
+        // 2: Gleise kreuzen sich oder liegen zu nah (andere Bahn); im Bereich einer Weiche erlaubt
+        var weichen = Weichen([.. bahnen.Select(b => (b.Ecken, b.Glatt))]);
+        bool AnWeiche(Vector2 p) => weichen.Any(w => Vector2.Distance(p, w.Lage) <= w.Halb);
         for (var i = 0; i < bahnen.Count; i++)
         {
             for (var j = i + 1; j < bahnen.Count; j++)
@@ -91,7 +178,7 @@ public static partial class StadtbauPruefung
                         }
                     }
                 }
-                var zuNah = Abgetastet(a.Glatt).FirstOrDefault(p => stoesse.All(s => Vector2.Distance(p, s) > 2 * GleisAbstand) && Kurve.Abstand(p, b.Glatt) < GleisAbstand - Toleranz);
+                var zuNah = Abgetastet(a.Glatt).FirstOrDefault(p => stoesse.All(s => Vector2.Distance(p, s) > 2 * GleisAbstand) && !AnWeiche(p) && Kurve.Abstand(p, b.Glatt) < GleisAbstand - Toleranz);
                 if (zuNah != default)
                 {
                     funde.Add(new StadtbauFund($"Bahn Nr. {a.Nr} und Bahn Nr. {b.Nr} kreuzen sich oder liegen zu nah beieinander (weniger als {Zf(GleisAbstand)}). Weichen gibt es nicht.",

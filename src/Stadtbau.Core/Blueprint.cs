@@ -166,6 +166,19 @@ public sealed class Blueprint
         // S 0.9.0: ein selbst gebautes Gebaeude bringt seine Teile mit (stadtdaten.bauteile)
         var gebaut = s.Art == AussenArt.Gebaeude ? Get(Lernplattform.Core.Stadtbau.Bauteile.Gebaeude(Aussen.Stadtdaten(a)), modell) as PyObjekt : null;
         double hx = Py.F(haus["x"]), hy = Py.F(haus["y"]);
+        // Welle A 0.70.0 (Sammelliste 314): ein fein gedrehtes Haus gibt Tuer, Weg und Schild im Rahmen vor der feinen Drehung
+        // (der Blueprint setzt das Modell ohne feine Drehung)
+        if (AussenBearbeitung.HausLage(a, s) is { Aktiv: true } lage)
+        {
+            List<object?> Zurueck(List<object?> p)
+            {
+                var q = lage.Zurueck(new System.Numerics.Vector2((float)Py.F(p[0]), (float)Py.F(p[1])));
+                return [Bearbeitung.Zahl(q.X), Bearbeitung.Zahl(q.Y)];
+            }
+            tuer = tuer is null ? null : Zurueck(tuer);
+            weg = [.. weg.Select(p => (object?)Zurueck(Liste(p)))];
+            schild = schild is null ? null : Zurueck(schild);
+        }
         return new Blueprint
         {
             Name = name,

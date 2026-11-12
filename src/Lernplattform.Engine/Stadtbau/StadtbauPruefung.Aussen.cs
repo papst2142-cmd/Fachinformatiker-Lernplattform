@@ -233,6 +233,12 @@ public static partial class StadtbauPruefung
                         funde.Add(new StadtbauFund($"Das Haus „{gm}“ hat die Drehung " + PythonJson.Text(l[Hausdrehung.Feld]) + " statt 0, 1, 2 oder 3 Vierteln.",
                             "Haus auswählen und mit „Drehen“ neu drehen.", true, Py.F(l["x"]), Py.F(l["y"])));
                     }
+                    // Welle A 0.70.0 (Sammelliste 314): feine Drehung nur 15, 30, 45, 60 oder 75 Grad
+                    if (Py.Hat(l, Hausdrehung.GradFeld) && !Hausdrehung.GradErlaubt(l[Hausdrehung.GradFeld]))
+                    {
+                        funde.Add(new StadtbauFund($"Das Haus „{gm}“ hat die feine Drehung " + PythonJson.Text(l[Hausdrehung.GradFeld]) + " statt 15, 30, 45, 60 oder 75 Grad.",
+                            "Haus auswählen und mit „Drehen“ neu drehen.", true, Py.F(l["x"]), Py.F(l["y"])));
+                    }
                     break;
                 case "baum":
                     foreach (var p in ListeOderLeer(l, "punkte").OfType<List<object?>>())
@@ -317,6 +323,29 @@ public static partial class StadtbauPruefung
                 }
             }
         }
+        // Welle A 0.70.0 (Sammelliste 314): feine Drehung je Ort (darstellung.hausgrad) nur fuer vorhandene Orte, 15 bis 75 Grad
+        if (darstellung is not null && Py.Hat(darstellung, Hausdrehung.GradAbschnitt))
+        {
+            if (darstellung[Hausdrehung.GradAbschnitt] is not PyObjekt hg)
+            {
+                funde.Add(new StadtbauFund("Der Abschnitt „" + Hausdrehung.GradAbschnitt + "“ ist keine Liste von Orten.", "Bitte CC Bescheid geben.", true));
+            }
+            else
+            {
+                foreach (var (id, wert) in hg)
+                {
+                    if (!namen.ContainsKey(id))
+                    {
+                        funde.Add(new StadtbauFund($"Die feine Drehung gilt für den Ort „{id}“, den es in der Stadt nicht gibt.", "Bitte CC Bescheid geben.", true));
+                    }
+                    else if (!Hausdrehung.GradErlaubt(wert))
+                    {
+                        funde.Add(new StadtbauFund($"„{namen[id]}“ hat die feine Drehung " + PythonJson.Text(wert) + " statt 15, 30, 45, 60 oder 75 Grad.",
+                            "Haus auswählen und mit „Drehen“ neu drehen.", true));
+                    }
+                }
+            }
+        }
         var zugaenge = new[] { "zugaenge", "zugaenge_neu" }.Select(k => Get(fassung.Stadtdaten, k) as PyObjekt ?? []).SelectMany(z => z)
             .Select(z => (Name: namen.GetValueOrDefault(z.Key, z.Key), Zugang: z.Value))
             .Concat((darstellung is null ? [] : ListeOderLeer(darstellung, "zierwege")).OfType<PyObjekt>().Select(z => (Name: z["name"] as string ?? Py.Str(z["modell"]), Zugang: (object?)z)));
@@ -383,8 +412,10 @@ public static partial class StadtbauPruefung
     {
         var modelle = StadtModelle.Modelle(stadt.Inhalt, stadt.Daten);
         var kontext = StadtModelle.Kontext(stand, stadt.Inhalt);
-        foreach (var tuer in szene.Tueren)
+        foreach (var gezeichnet in szene.Tueren)
         {
+            // Welle A 0.70.0 (Weisung P12-218 Punkt 1): eine Tuer am Vorbau gilt an der Wand dahinter (dort beginnt der Weg)
+            var tuer = gezeichnet.Windfang ? gezeichnet with { Mitte = gezeichnet.AnWand } : gezeichnet;
             var name = szene.Ort(tuer.Ort)?.Name ?? tuer.Ort;
             var versatz = TuerVersatz(tuer);
             if (versatz > MittigGrenze)
@@ -420,7 +451,10 @@ public static partial class StadtbauPruefung
                     })];
                 }
                 var grenze = szene.Grafik is null ? 0.02f : WandAbstandModell;
-                if (bloecke.Count > 0 && bloecke.Min(b => AufWand(b.X, b.Z, b.W, b.T, tuer.Mitte)) > grenze)
+                // Welle A 0.70.0: ein fein gedrehter Ort prueft die Tuer im Rahmen des Hauses (Bloecke nur viertelgedreht)
+                var tuerLokal = new Hausdrehung.Feinlage(new Vector2(ox, oz) + Hausdrehung.Mitte(Get(modelle, modell)), Hausdrehung.GradVonOrt(stadt.Daten, tuer.Ort))
+                    .Zurueck(tuer.Mitte);
+                if (bloecke.Count > 0 && bloecke.Min(b => AufWand(b.X, b.Z, b.W, b.T, tuerLokal)) > grenze)
                 {
                     funde.Add(new StadtbauFund($"Die Tür von „{name}“ liegt nicht auf der Wand des Hauses.", "Weg und Tür an die Hauswand legen.", true, tuer.Mitte.X, tuer.Mitte.Y));
                 }
@@ -527,12 +561,15 @@ public static partial class StadtbauPruefung
         var kontext = StadtModelle.Kontext(stand, stadt.Inhalt);
         var gleis = szene.Gleise.SelectMany(Abgetastet).ToList();
         var haeuser = stadt.Regeln.Where(r => szene.Ort(Py.Str(r["id"])) is not null).Select(r => (Name: szene.Ort(Py.Str(r["id"]))!.Name, Modell: Py.Str(r["modell"]), X: Py.F(r["x"]), Y: Py.F(r["y"]),
-                Dreh: Hausdrehung.VonOrt(stadt.Daten, Py.Str(r["id"]))))
+                Dreh: Hausdrehung.VonOrt(stadt.Daten, Py.Str(r["id"])), Grad: Hausdrehung.GradVonOrt(stadt.Daten, Py.Str(r["id"]))))
             .Concat(ListeOderLeer(Objekt(Objekt(stadt.Inhalt["orte"])["welt"]), "landschaft").OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "gebaeude"))
-                .Select(t => (Name: Py.Str(t["modell"]), Modell: Py.Str(t["modell"]), X: Py.F(t["x"]), Y: Py.F(t["y"]), Dreh: Hausdrehung.Von(t))));
-        foreach (var (name, modell, ox, oz, dreh) in haeuser)
+                .Select(t => (Name: Py.Str(t["modell"]), Modell: Py.Str(t["modell"]), X: Py.F(t["x"]), Y: Py.F(t["y"]), Dreh: Hausdrehung.Von(t), Grad: Hausdrehung.GradVon(t))));
+        foreach (var (name, modell, ox, oz, dreh, grad) in haeuser)
         {
             var mitte = new Vector2((float)ox, (float)oz) + Hausdrehung.Mitte(Get(modelle, modell));
+            // Welle A 0.70.0: fein gedrehtes Haus: Gleispunkte in den Rahmen des Hauses
+            var fein = new Hausdrehung.Feinlage(mitte, grad);
+            var gleisHier = fein.Aktiv ? [.. gleis.Select(fein.Zurueck)] : gleis;
             foreach (var t in StadtModelle.Teile(modelle, modell, kontext).Where(t => Py.Gleich(t.Teil["art"], "block") && StadtSzene.Darstellung(modell, t.Nr) is not null))
             {
                 var x = (float)(ox + Py.F(t.Teil["x"]) + StadtSzene.Darstellung(modell, t.Nr)!.Value);
@@ -544,8 +581,9 @@ public static partial class StadtbauPruefung
                     var (a, b) = (Hausdrehung.Drehen(new Vector2(x, z), mitte, dreh), Hausdrehung.Drehen(new Vector2(x + w, z + tief), mitte, dreh));
                     (x, z, w, tief) = (MathF.Min(a.X, b.X), MathF.Min(a.Y, b.Y), MathF.Abs(a.X - b.X), MathF.Abs(a.Y - b.Y));
                 }
-                if (gleis.FirstOrDefault(p => p.X > x + 0.05f && p.X < x + w - 0.05f && p.Y > z + 0.05f && p.Y < z + tief - 0.05f) is var treffer && treffer != default)
+                if (gleisHier.FirstOrDefault(p => p.X > x + 0.05f && p.X < x + w - 0.05f && p.Y > z + 0.05f && p.Y < z + tief - 0.05f) is var treffer && treffer != default)
                 {
+                    treffer = fein.Punkt(treffer);
                     funde.Add(new StadtbauFund($"„{name}“ steht auf dem Gleis.", "Haus vom Gleis weg schieben.", true, treffer.X, treffer.Y));
                     break;
                 }
@@ -625,7 +663,10 @@ public static partial class StadtbauPruefung
         foreach (var k in stuecke)
         {
             var r = k.Rechteck;
-            if (szene.Haeuser.FirstOrDefault(h => MathF.Min(r.X2, h.Max.X) - MathF.Max(r.X1, h.Min.X) > Toleranz
+            // Welle A 0.70.0: ein fein gedrehtes Haus mit seiner genauen Grundflaeche
+            if (szene.Haeuser.FirstOrDefault(h => h.Fein.Aktiv
+                    ? Hausdrehung.Ueberlappung(h.Grundflaeche, Hausdrehung.Rechteck(r.X1, r.Z1, r.X2, r.Z2)) > Toleranz
+                    : MathF.Min(r.X2, h.Max.X) - MathF.Max(r.X1, h.Min.X) > Toleranz
                     && MathF.Min(r.Z2, h.Max.Z) - MathF.Max(r.Z1, h.Min.Z) > Toleranz) is { } haus)
             {
                 funde.Add(new StadtbauFund($"„{k.Typ}“ steht im Haus „{HausName(haus)}“.", "Stück neben das Haus schieben.", true, k.X, k.Z));
@@ -730,8 +771,16 @@ public static partial class StadtbauPruefung
     private static void Ueberschneidung(StadtSzene szene, StadtFassung fassung, List<StadtbauFund> funde)
     {
         string Name(StadtHaus h) => szene.Ort(h.Id)?.Name ?? h.Id.Split('#')[0];
-        static bool Drin(Vector2 p, StadtHaus h, float rand = 0f) =>
-            p.X > h.Min.X - rand && p.X < h.Max.X + rand && p.Y > h.Min.Z - rand && p.Y < h.Max.Z + rand;
+        static bool Drin(Vector2 p, StadtHaus h, float rand = 0f)
+        {
+            if (h.Fein.Aktiv)
+            {
+                // Welle A 0.70.0: im Rahmen des fein gedrehten Hauses (offene Grenzen wie bisher)
+                var l = h.Fein.Zurueck(p);
+                return l.X > h.LokalMin.X - rand && l.X < h.LokalMax.X + rand && l.Y > h.LokalMin.Z - rand && l.Y < h.LokalMax.Z + rand;
+            }
+            return p.X > h.Min.X - rand && p.X < h.Max.X + rand && p.Y > h.Min.Z - rand && p.Y < h.Max.Z + rand;
+        }
         var haeuser = szene.Haeuser;
         for (var i = 0; i < haeuser.Count; i++)
         {
@@ -740,7 +789,8 @@ public static partial class StadtbauPruefung
                 var (a, b) = (haeuser[i], haeuser[j]);
                 var bx = MathF.Min(a.Max.X, b.Max.X) - MathF.Max(a.Min.X, b.Min.X);
                 var bz = MathF.Min(a.Max.Z, b.Max.Z) - MathF.Max(a.Min.Z, b.Min.Z);
-                if (bx > 0.02f && bz > 0.02f)
+                // Welle A 0.70.0: mit einem fein gedrehten Haus die genauen Grundflaechen
+                if (a.Fein.Aktiv || b.Fein.Aktiv ? bx > 0.02f && bz > 0.02f && Hausdrehung.Ueberlappung(a.Grundflaeche, b.Grundflaeche) > 0.02f : bx > 0.02f && bz > 0.02f)
                 {
                     funde.Add(new StadtbauFund($"„{Name(a)}“ und „{Name(b)}“ stehen ineinander.", "Eines der Häuser verschieben.", true,
                         (MathF.Max(a.Min.X, b.Min.X) + MathF.Min(a.Max.X, b.Max.X)) / 2, (MathF.Max(a.Min.Z, b.Min.Z) + MathF.Min(a.Max.Z, b.Max.Z)) / 2));
@@ -800,10 +850,8 @@ public static partial class StadtbauPruefung
             for (var k = 0; k <= schritte; k++)
             {
                 var p = Vector2.Lerp(a, b, k / (float)schritte);
-                // naechster Punkt des Hauses zur Mittellinie
-                var nx = Math.Clamp(p.X, h.Min.X, h.Max.X);
-                var nz = Math.Clamp(p.Y, h.Min.Z, h.Max.Z);
-                if (Vector2.Distance(p, new Vector2(nx, nz)) < halb)
+                // naechster Punkt des Hauses zur Mittellinie (Welle A 0.70.0: fein gedreht im Rahmen des Hauses, StadtHaus.Abstand)
+                if (h.Fein.Aktiv ? h.Abstand(p) < halb : Vector2.Distance(p, new Vector2(Math.Clamp(p.X, h.Min.X, h.Max.X), Math.Clamp(p.Y, h.Min.Z, h.Max.Z))) < halb)
                 {
                     return p;
                 }
@@ -828,7 +876,9 @@ public static partial class StadtbauPruefung
         var halb = Lieferpaket.Breite * 1.6f;
         foreach (var haus in szene.Haeuser)
         {
-            if (mitte.X + halb > haus.Min.X && mitte.X - halb < haus.Max.X && mitte.Y + halb > haus.Min.Z && mitte.Y - halb < haus.Max.Z)
+            if (haus.Fein.Aktiv
+                ? Hausdrehung.Ueberlappung(haus.Grundflaeche, Hausdrehung.Rechteck(mitte.X - halb, mitte.Y - halb, mitte.X + halb, mitte.Y + halb)) > 0
+                : mitte.X + halb > haus.Min.X && mitte.X - halb < haus.Max.X && mitte.Y + halb > haus.Min.Z && mitte.Y - halb < haus.Max.Z)
             {
                 funde.Add(new StadtbauFund($"Der Paketplatz liegt im Haus „{szene.Ort(haus.Id)?.Name ?? haus.Id}“.", "Paketplatz weiter vor die Tür schieben.", true, mitte.X, mitte.Y));
             }

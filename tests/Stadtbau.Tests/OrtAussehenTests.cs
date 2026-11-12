@@ -124,11 +124,21 @@ public class OrtAussehenTests
         Assert.Equal((28.0, 5.2), (Py.F(stueck["x"]), Py.F(stueck["y"])));
         Assert.True(Bahnsteig.Nur(Get(Objekt(Aussen.Karte(a)["modelle"]), Bahnsteig.ModellName("talheim_nord"))));
 
-        // keine roten Funde; gelb nur die wechselnden Teile des alten Bahnhofs
+        // keine roten Funde; seit Weisung P12-220 Punkt 4 ist die Baustelle des alten Bahnhofs am Stellwerk kein fehlender Teil
+        // (Gegenprobe: vorher gelb „wechselnde Teile“)
         var funde = p.PruefenAussen();
         Assert.Equal([], funde.Where(f => f.Rot).Select(f => f.Text));
-        Assert.Contains(funde, f => !f.Rot && f.Text.Contains("wechselnden Teile", StringComparison.Ordinal));
+        Assert.DoesNotContain(funde, f => f.Text.Contains("wechselnden Teile", StringComparison.Ordinal));
         Assert.DoesNotContain(funde, f => f.Text.Contains("keinen Bahnsteig", StringComparison.Ordinal));
+        StadtbauPruefung.BahnsteigVerknuepfungAltFuerTests = true;
+        try
+        {
+            Assert.Contains(p.PruefenAussen(), f => !f.Rot && f.Text.Contains("wechselnden Teile", StringComparison.Ordinal));
+        }
+        finally
+        {
+            StadtbauPruefung.BahnsteigVerknuepfungAltFuerTests = false;
+        }
 
         // Spiel: Tuer am Stellwerk von Talheim-Nord, Fest-Deko dort, Innenraum und alles andere gleich
         var szene = Szene(p, Festzeit.Weihnachten);
@@ -166,7 +176,17 @@ public class OrtAussehenTests
         Assert.Equal(-1, GebaeudeNummer(p.AussenStand, name));
         var funde = p.PruefenAussen();
         Assert.Equal([], funde.Where(f => f.Rot).Select(f => f.Text));
-        Assert.Contains(funde, f => !f.Rot && f.Text == "„Talheim-Nord“ hat keinen Bahnsteig mehr.");
+        // Weisung P12-220 Punkt 4: Talheim-Nord ist das Stellwerk ohne Bahnsteig, kein Hinweis (Gegenprobe: vorher gelb)
+        Assert.DoesNotContain(funde, f => f.Text.Contains("keinen Bahnsteig", StringComparison.Ordinal));
+        StadtbauPruefung.BahnsteigVerknuepfungAltFuerTests = true;
+        try
+        {
+            Assert.Contains(p.PruefenAussen(), f => !f.Rot && f.Text == "„Talheim-Nord“ hat keinen Bahnsteig mehr.");
+        }
+        finally
+        {
+            StadtbauPruefung.BahnsteigVerknuepfungAltFuerTests = false;
+        }
         Export(p);
     }
 

@@ -59,8 +59,13 @@ public sealed class TuerFassade
 
     /// <summary>Ergebnis fuer einen Tipp: Tuerpunkt (auf der Wand, gespeichert), gezeichnete Mitte, Art und ob verschoben.</summary>
     /// <remarks><c>Eigene</c> (Sammelliste 312): die Tuer liegt auf der eigenen Tuer des Modells wie in der Ausgangsstadt, die das
-    /// Spiel selbst nicht als Tuer erkennt (helles Rolltor der Betriebswerkstatt); das Setzen schreibt <c>modell_tuer</c>.</remarks>
-    public sealed record Platz(Vector2 Punkt, Vector2 Aussen, int Wand, Stelle Art, bool Verschoben, bool OhneGlatte, int? Fensterteil, Vector2 Gezeichnet, bool Eigene = false);
+    /// Spiel selbst nicht als Tuer erkennt (helles Rolltor der Betriebswerkstatt); das Setzen schreibt <c>modell_tuer</c>.
+    /// <c>Windfang</c>: die Tuer kommt an einen kleinen Vorbau (Feld „windfang“).</remarks>
+    public sealed record Platz(Vector2 Punkt, Vector2 Aussen, int Wand, Stelle Art, bool Verschoben, bool OhneGlatte, int? Fensterteil, Vector2 Gezeichnet, bool Eigene = false)
+    {
+        /// <summary>Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): Tuer an einem kleinen Vorbau (Windfang), nur von „Tür dazu“ gewaehlt.</summary>
+        public bool Windfang { get; init; }
+    }
 
     private sealed record Probe(float T, Stelle Art, Vector2 Gezeichnet, int? Teil);
 

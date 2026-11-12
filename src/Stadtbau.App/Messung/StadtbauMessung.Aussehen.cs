@@ -106,16 +106,16 @@ public static partial class StadtbauMessung
         a.Rueckgaengig();
         await a.AussenGeprueft;
 
-        // Bahnsteig geloescht: gelb, kein neues Rot
+        // Bahnsteig geloescht: kein neues Rot; seit Weisung P12-220 ist Talheim-Nord das Stellwerk ohne Bahnsteig, also auch kein gelber Hinweis
         a.Karte.Waehlen(GebaeudeStelle(p.AussenStand, name));
         await BildAsync(a);
         await AlleGroessenAsync(a, f, "Aussehen Bahnsteig gewaehlt");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         p.AussenAendern("Bahnsteig weg", aa => AussenBearbeitung.Loeschen(aa, GebaeudeStelle(aa, name)));
         await a.AussenGeprueft;
-        if (!a.AussenFunde.Any(x => !x.Rot && x.Text == "„Talheim-Nord“ hat keinen Bahnsteig mehr.") || a.AussenFunde.Any(x => x.Rot && x.Text != Laterne20Fund))
+        if (a.AussenFunde.Any(x => x.Text.Contains("keinen Bahnsteig", StringComparison.Ordinal)) || a.AussenFunde.Any(x => x.Rot && x.Text != Laterne20Fund))
         {
-            Fund("Aussehen: ohne Bahnsteig nicht gelb oder rote Funde: " + string.Join(" | ", a.AussenFunde.Select(x => x.Text)));
+            Fund("Aussehen: Stellwerk ohne Bahnsteig mit Hinweis oder rote Funde: " + string.Join(" | ", a.AussenFunde.Select(x => x.Text)));
         }
         a.Rueckgaengig();
         await a.AussenGeprueft;

@@ -269,6 +269,16 @@ public static partial class StadtbauPruefung
         }
         // Phase 13 Welle 5 (Weisung P12-73): Etagen und Uebergaenge der Innenraeume (ohne Etagen kein Fund, Fassung 0 unveraendert)
         funde.AddRange(EtagenAlle(fassung.Innenraeume, grafik));
+        // Welle A 0.70.0 (Weisung P12-220): Verknuepfung Bahnsteig → Bahnhof lesbar (ohne Feld kein Fund, Fassung 0 unveraendert)
+        var ortIds = SpielDaten.ListeOderLeer(fassung.Karte, "orte").Concat(SpielDaten.ListeOderLeer(fassung.Stadtdaten, "neue_orte")).OfType<PyObjekt>()
+            .Select(o => Py.Str(o["id"])).ToHashSet(StringComparer.Ordinal);
+        foreach (var g in SpielDaten.ListeOderLeer(SpielDaten.Objekt(fassung.Karte["welt"]), "landschaft").OfType<PyObjekt>().Where(g => Py.Hat(g, Bahnsteig.BahnhofFeld)))
+        {
+            if (g[Bahnsteig.BahnhofFeld] is not string b || !ortIds.Contains(b))
+            {
+                funde.Add($"Bahnsteig „{Py.Str(g["modell"])}“: verknüpft mit einem unbekannten Bahnhof.");
+            }
+        }
         // Welle A 0.66.0 (Weisung P12-192): Gelaende lesbar (ohne Abschnitt kein Fund, Fassung 0 unveraendert); nie still weglassen
         if (fassung.Stadtdaten is PyObjekt sd && Py.Hat(sd, Spiel.Probe.Gelaende.Abschnitt))
         {

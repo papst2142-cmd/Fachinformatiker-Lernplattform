@@ -55,6 +55,35 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   ist; Figur und Kamera folgen der Höhe (`StadtSzene.BodenHoehe`). Laufraster gleich, nur Hänge steiler als 45 Grad gesperrt.
   Ohne Abschnitt (Fassung 0) bitgleich. Regeln `StadtbauPruefung.Gelaende.cs` (Rand `Gelaende.Saum` 1,5, höchstens 16 Hügel
   und 6 000 Dreiecke).
+- **Hausdrehung** (`Hausdrehung.cs`): Vierteldrehungen (`dreh` am Gebäude ohne Ort, `darstellung.hausdreh` je Ort) und seit
+  A 0.70.0 die feine Drehung in 15-Grad-Schritten (`grad` 15–75 bzw. `darstellung.hausgrad`, Sammelliste 314), beide im
+  Uhrzeigersinn um die Mitte der Blöcke. Das Haus wird im viertelgedrehten Rahmen gebaut (Tür, Fenster, Kasten wie bisher)
+  und danach als Ganzes gedreht (`Hausdrehung.Feinlage`: Quader/Satteldach behalten ihre Ecken und tragen `Teil.Dreh`,
+  Stücke mal `Feinlage.Matrix`, Türen in die Welt). Laufraster und Hindernisse sperren die gedrehte Grundfläche mit
+  achsparallelen Streifen (`Hausdrehung.Streifen`, Breite 0,05); `StadtHaus.Min/Max` ist der Kasten um das gedrehte Haus, genau
+  rechnen `StadtHaus.Drin`, `Abstand`, `Grundflaeche` und `Hausdrehung.Ueberlappung`. Ein fein gedrehter Ort kommt nie aus dem
+  Teilbau-Vorrat. Ohne Feld (Fassung 0) bitgleich.
+- **Bahn seit A 0.70.0** (`StadtSzene.cs`, `StadtbauPruefung.Bahn.cs`): Haltepunkt mit freiem Bahnsteig (Modell aus
+  `Stadtbau.Core/Zusatzmodelle.cs`) mit blauer, rechteckiger Zugzielanzeige neben dem Häuschen; Windfang (Vorbau) vor einer
+  Tür im Tor eines Gebäudes. Weiche: endet ein Gleis bis `WeicheFang` 0,02 auf einem anderen Gleis (nicht an dessen Ende),
+  parallel und läuft es danach weg, gilt der Bereich bis dort plus `WeicheZugabe` 0,25 nicht als „zu nah“
+  (`StadtbauPruefung.Weichen`, Gegenprobe `WeicheAltFuerTests`). Prellbock (`StadtSzene.Prellbock`, rote Pufferbohle, Farbe
+  `PrellbockRot`) an jedem freien Ende eines Gleises aus dem Werkzeug (mit `radien`), nicht am Kartenrand, an einem anderen
+  Gleis oder an einem Haus (Tor); Gegenprobe `PrellbockAltFuerTests`. Die Talbahn der Fassung 0 (ohne `radien`) bleibt
+  bitgleich. Kein Zug fährt auf Abstellgleise.
+- **Bahnsteig mit Bahnhof verknüpft seit A 0.70.0** (Weisung P12-220): Feld `bahnhof` (`Bahnsteig.BahnhofFeld`, Kennung eines
+  Orts) an einem Gebäude ohne Ort in `karte.welt.landschaft`, das nur aus Bahnsteig-Flächen besteht; keine neue Formatnummer,
+  eine Kopie verliert das Feld. Der stehende Zug hält mittig am nächsten Gleisstück zur Mitte des ersten verknüpften
+  Bahnsteigs (`StadtSzene.VerknuepfterBahnsteig`, `NaechstesGleisStueck`; ohne Feld wie bisher, Gegenprobe
+  `ZugHaltAltFuerTests`). Prüfung (`StadtbauPruefung.Aussehen.cs`, rot): unbekannter Bahnhof, Gebäude ist kein Bahnsteig,
+  Ort ohne Bahnhof-Rolle (`Bahnsteig.OhneBahnsteig` = Talheim-Nord), Kante weiter als `Bahnsteig.AmGleis` 0,6 von der
+  Gleismitte, vom Stehplatz des Bahnhofs zu Fuß nicht erreichbar; gelber Hinweis nennt den Knopf, wenn ein unverknüpfter
+  Bahnsteig bis `Bahnsteig.Nahe` 3 am Haus liegt. Ladeprüfung `Verbaut`: Wert kein Text oder unbekannter Ort.
+- **Weg-Raster der Uhr** (`Stadt.Weg`, Spiel-Kern): Breitensuche mit 4 Nachbarn auf Zellen 0,5, begehbar bis 0,4 von
+  Straßen, Zugangswegen und seit A 0.70.0 den Fußwegen (`stadtdaten.fusswege`, Weisung P12-221; Fassung 0 hat keine,
+  Gegenprobe `Stadt.FusswegeAltFuerTests`), 2 Minuten je Schritt (`uhr.minuten_je_schritt`). Von einem Ort aus geht die
+  Figur genau diese Zellen. Bus: `StadtSpiel.BusLohntVon(von, ziel, uhr)` ist die eine Rechnung für Ortsliste und Werkzeug
+  (`Laufzeiten`), zu Fuß zur Haltestelle über das Laufraster (quert eine Straße mit Gehweg nur am Zebrastreifen).
 - **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Engine/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
 - **Licht und Zeit** (`Tageslicht.cs`, `Nachtlicht.cs`, `Jahreszeitfarben.cs`, `FestDeko.cs`): Tag/Nacht, 22 Laternen,
   Festzeiten.

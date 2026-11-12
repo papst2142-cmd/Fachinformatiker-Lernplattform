@@ -51,6 +51,8 @@ public static partial class GebaeudeTuer
         // ein Bahnsteig-Stueck (nur Flaechen) und ein Gebaeude mit Innenraum (Blueprint, Tuer kommt mit dem Innenraum) nicht
         : Bahnsteig.Nur(Get(AussenBearbeitung.Modelle(aussen), Py.Str(g["modell"]))) || Aussen.Bauten(aussen)[Py.Str(g["modell"])] is PyObjekt ? Texte.TuerNurGebaeude
         : HatTuer(aussen, s) ? Texte.TuerSchonDa
+        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Gebaeude noch nicht
+        : AussenBearbeitung.HausGrad(aussen, s) != 0 ? Texte.TuerSchraegNicht
         : null;
 
     /// <summary>Zeigt die Auswahl den Knopf „Tür dazu“ bzw. „Tür entfernen“? (nur Gebaeude ohne Innenraum, kein Bahnsteig)</summary>
@@ -72,7 +74,7 @@ public static partial class GebaeudeTuer
         var g = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         var modell = Py.Str(g["modell"]);
         var teile = Get(AussenBearbeitung.Modelle(aussen), modell);
-        if (Bahnsteig.Hat(teile) && (BahnsteigTeilenAlt.Value || !BlockAufBahnsteig(teile)))
+        if (Bahnsteig.Hat(teile) && (BahnsteigTeilenAlt.Value || !(BlockAufBahnsteig(teile) || Zusatzmodelle.BahnsteigFest(modell))))
         {
             // Bahnhof (Nico 3a): das Spiel setzt die Tuer auf den Kasten des ganzen Modells, der die Bahnsteige einschliesst.
             // Darum bekommt der Bahnhof eine Kopie ohne Bahnsteig-Flaechen, der Bahnsteig bleibt als eigenes Stueck an seiner
@@ -189,6 +191,14 @@ public static partial class GebaeudeTuer
                     return platz;
                 }
             }
+            // Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): keine Wand ohne Tor hat eine glatte Stelle (Betriebswerkstatt): die
+            // Tuer kommt in die Mitte der ersten Wand ohne Tor an einen kleinen Vorbau (Windfang) statt ins Tor
+            if (!WindfangAlt.Value && reihe.Where(i => !tore.Contains(i)).Select(i => (int?)i).FirstOrDefault() is { } wf)
+            {
+                var wand = f.Waende[wf];
+                var mitte = wand.Bei(wand.Laenge / 2);
+                return new TuerFassade.Platz(mitte, wand.Aussen, wf, TuerFassade.Stelle.Glatt, false, false, null, mitte) { Windfang = true };
+            }
         }
         foreach (var w in reihe)
         {
@@ -203,6 +213,10 @@ public static partial class GebaeudeTuer
         }
         return f.Finden(t, start, einrasten: true);
     }
+
+    /// <summary>Gegenprobe Weisung P12-218 Punkt 1: kein Vorbau, die Tuer bleibt im Tor (wie bis S 0.45.0, nur Tests, je Ablauf).</summary>
+    public static bool WindfangAltFuerTests { get => WindfangAlt.Value; set => WindfangAlt.Value = value; }
+    private static readonly AsyncLocal<bool> WindfangAlt = new();
 
     /// <summary>Gegenprobe Weisung P12-212 Punkt 1: „Tür dazu“ darf wie bis S 0.44.1 ein Tor nehmen (nur Tests, je Ablauf).</summary>
     public static bool TorAltFuerTests { get => TorAlt.Value; set => TorAlt.Value = value; }
