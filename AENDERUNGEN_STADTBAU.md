@@ -11,6 +11,9 @@ Spielorte in einer eigenen Stadt, Laufzeiten zu Fuß, Türen nicht mehr in Toren
 - Sobald die Stadt Spielorte hat, meldet die Prüfung rot, welche Orte aus Stadt 1 noch fehlen. Dazu gelten dann die Regeln des Spiels, zum Beispiel dass jeder Ort zu Fuß erreichbar ist.
 - Neue Karte „Laufzeiten zu Fuß“ rechts: so lange braucht die Figur im Spiel von Tür zu Tür (2 Spielminuten je Schritt), längste Wege zuerst. Wege ab 60 Minuten sind gelb, dazu ein gelber Hinweis in der Prüfung (nie rot).
 - „Tür dazu“ legt die Tür an Gebäuden mit Toren (Lokschuppen, Hallen) auf eine glatte Wand ohne Tor. Hat keine Wand ohne Tor eine glatte Stelle (die Betriebswerkstatt hat an allen Seiten ein Band in Türhöhe), bleibt die Tür im Tor und das Werkzeug sagt es. Mit „Tür setzen“ ist die Tür weiter frei.
+- Brücken über den Fluss sind bei Straßen mit Gehweg so breit wie Straße und Gehweg zusammen: das Geländer steht außen am Gehweg, die Figur geht auf dem Gehweg über die Brücke. Laternen kommen nicht auf die Brücke.
+- Talheim-Nord wird das Stellwerk: wählst du ein Stellwerk und „Als Spielort festlegen“, steht „Stellwerk Talheim-Nord (passt zu diesem Gebäude)“ oben in der Liste. Der Ort heißt dann „Stellwerk Talheim-Nord“ und braucht kein Gleis.
+- Das alte Modell von Talheim-Nord meldet nicht mehr gelb „steht nicht an einem Gleis“, und ein Gebäude ohne Ort zeigt nie mehr ein Baugerüst.
 
 ## S 0.44.1
 

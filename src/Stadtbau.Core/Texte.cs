@@ -1241,6 +1241,9 @@ public static partial class Texte
     /// <summary>Meldung nach dem Festlegen.</summary>
     public static string SpielortFestgelegt(string name) => "Spielort festgelegt: „" + name + "“";
 
+    /// <summary>Knopf in der Liste fuer den Ort, der genau dieses Aussehen bekommen soll (Weisung P12-214).</summary>
+    public static string SpielortVorschlag(string name) => name + " (passt zu diesem Gebäude)";
+
     /// <summary>Roter Fund: welche Orte noch fehlen.</summary>
     public static string SpielortFehlt(IReadOnlyList<string> namen) =>
         (namen.Count == 1 ? "Ein Spielort fehlt noch: " : namen.Count + " Spielorte fehlen noch: ") + string.Join(", ", namen) + ".";

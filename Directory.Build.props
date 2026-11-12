@@ -2,7 +2,7 @@
   <!-- Gemeinsame Einstellungen aller Projekte. Version nur hier aendern. -->
   <PropertyGroup>
     <!-- Interne Zahlenversion; Anzeige "A 0.66.0" (A = Alphaphase), Tag vA0.66.0 -->
-    <Version>0.68.1</Version>
+    <Version>0.69.0</Version>
     <Stufe>A</Stufe>
     <Product>Fachinformatiker Lernplattform</Product>
     <Company>Nico H</Company>

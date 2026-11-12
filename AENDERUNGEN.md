@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.69.0
+Vorbereitung für die neue Spielstadt.
+
+- Brücken über den Fluss werden breiter, wenn die Straße einen Gehweg hat: das Geländer steht dann außen am Gehweg, und du gehst auf der Brücke über den Fluss. In der heutigen Stadt haben die Straßen keinen Gehweg, dort sieht alles aus wie vorher.
+- Ein Gebäude ohne eigenen Ort zeigt kein Baugerüst mehr.
+- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.68.1
 Kleine Korrektur in der Spielstadt.
 

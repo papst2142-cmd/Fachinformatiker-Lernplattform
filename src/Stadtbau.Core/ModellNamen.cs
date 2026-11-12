@@ -35,7 +35,13 @@ public static class ModellNamen
     };
 
     /// <summary>Bahnhoefe (gelber Hinweis fern vom Gleis).</summary>
-    public static bool IstBahnhof(string modell) => modell is "bahnhof" or "bahnhof_neu" or "haltepunkt";
+    /// <remarks>Weisung P12-214: das Modell von Talheim-Nord (<c>bahnhof_neu</c>) zaehlt nicht mehr als Bahnhof; Talheim-Nord wird das
+    /// Stellwerk und braucht kein Gleis (vorher gelber Fund „steht nicht an einem Gleis“, Gegenprobe <see cref="TalheimAltFuerTests"/>).</remarks>
+    public static bool IstBahnhof(string modell) => modell is "bahnhof" or "haltepunkt" || (TalheimAlt.Value && modell == "bahnhof_neu");
+
+    /// <summary>Gegenprobe P12-214: Talheim-Nord-Modell zaehlt als Bahnhof (wie bis S 0.44.1, nur Tests, je Ablauf).</summary>
+    public static bool TalheimAltFuerTests { get => TalheimAlt.Value; set => TalheimAlt.Value = value; }
+    private static readonly AsyncLocal<bool> TalheimAlt = new();
 
     /// <summary>Anzeigename eines Modells der Stadt (Kopie mit Nummer).</summary>
     public static string Anzeige(PyObjekt aussen, string modell)

@@ -30,12 +30,41 @@ public static class Spielort
         [.. ListeOderLeer(stadt1.Karte, "orte").OfType<PyObjekt>().Select(o => (o, false))
             .Concat(ListeOderLeer(stadt1.Stadtdaten, "neue_orte").OfType<PyObjekt>().Select(o => (o, true)))];
 
+    /// <summary>
+    /// Weisung P12-214 (Nico: „Es sollte ja das Stellwerk werden und Stellwerk Talheim Nord heissen“): Orte der Stadt 1 mit
+    /// neuem Namen und dem Modell, dessen Aussehen sie bekommen sollen. Die Kennung bleibt (Aufgaben, Kunden, Spielstand).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, (string Name, string Modell)> Neu = new Dictionary<string, (string, string)>(StringComparer.Ordinal)
+    {
+        ["talheim_nord"] = ("Stellwerk Talheim-Nord", "stellwerk"),
+    };
+
     /// <summary>Orte der Stadt 1, die in dieser Stadt noch fehlen (Reihenfolge der Stadt 1).</summary>
     public static List<PyObjekt> Fehlende(PyObjekt aussen, StadtFassung stadt1)
     {
         var da = AussenBearbeitung.Orte(aussen).Select(o => Py.Str(o["id"])).ToHashSet(StringComparer.Ordinal);
         return [.. Stadt1Orte(stadt1).Select(x => x.Ort).Where(o => !da.Contains(Py.Str(o["id"])))];
     }
+
+    /// <summary>
+    /// Fehlende Orte fuer die Liste an Gebaeude <paramref name="s"/>: ein Ort, der dieses Aussehen bekommen soll (<see cref="Neu"/>,
+    /// z. B. Stellwerk = Talheim-Nord), steht zuerst; sonst Reihenfolge der Stadt 1.
+    /// </summary>
+    public static List<PyObjekt> FehlendeFuer(PyObjekt aussen, AussenStelle s, StadtFassung stadt1)
+    {
+        var alle = Fehlende(aussen, stadt1);
+        if (Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is not PyObjekt g || !Py.Gleich(g["typ"], "gebaeude"))
+        {
+            return alle;
+        }
+        var grund = GebaeudeTuer.Teile(aussen, Py.Str(g["modell"])).Grund;
+        return [.. alle.OrderBy(o => Neu.TryGetValue(Py.Str(o["id"]), out var n) && n.Modell == grund ? 0 : 1)];
+    }
+
+    /// <summary>Wird Ort <paramref name="ort"/> fuer Gebaeude <paramref name="s"/> vorgeschlagen (gleiches Aussehen wie gewuenscht)?</summary>
+    public static bool Vorschlag(PyObjekt aussen, AussenStelle s, PyObjekt ort) =>
+        Neu.TryGetValue(Py.Str(ort["id"]), out var n) && Aussen.Landschaft(aussen).ElementAtOrDefault(s.Nummer) is PyObjekt g
+        && Py.Gleich(g["typ"], "gebaeude") && GebaeudeTuer.Teile(aussen, Py.Str(g["modell"])).Grund == n.Modell;
 
     /// <summary>Hat die Stadt schon Spielorte (dann gilt die Pruefung „Spielort fehlt“)?</summary>
     public static bool HatSpielorte(PyObjekt aussen) => AussenBearbeitung.Orte(aussen).Any();
@@ -103,6 +132,10 @@ public static class Spielort
 
         // Ort: Daten der Stadt 1 ueber die Kennung, Aussehen von Nicos Gebaeude
         var ort = (PyObjekt)Py.Kopie(vorlage.Ort)!;
+        if (Neu.TryGetValue(id, out var neu))
+        {
+            Py.Setzen(ort, "name", neu.Name);
+        }
         Py.Setzen(ort, "x", Py.Kopie(g["x"]));
         Py.Setzen(ort, "y", Py.Kopie(g["y"]));
         Py.Setzen(ort, "modell", modell);
@@ -150,7 +183,7 @@ public static class Spielort
     }
 
     /// <summary>Name eines Orts der Stadt 1 (fuer die Liste und die Pruefung).</summary>
-    public static string Name(PyObjekt ort) => Py.Str(Get(ort, "name") ?? ort["id"]);
+    public static string Name(PyObjekt ort) => Neu.TryGetValue(Py.Str(ort["id"]), out var neu) ? neu.Name : Py.Str(Get(ort, "name") ?? ort["id"]);
 
     /// <summary>
     /// Pruefung: in einer leeren Stadt mit Spielorten (Nicos erste Stadt) fehlt noch ein Ort der Stadt 1 = rot, ein Fund mit der

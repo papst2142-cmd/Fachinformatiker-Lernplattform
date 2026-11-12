@@ -67,10 +67,11 @@ public sealed partial class Hauptansicht
         var kasten = new StackPanel { Spacing = 6 };
         kasten.Children.Add(Schrift.Text(Texte.SpielortKnopf, gewicht: FontWeight.Bold));
         kasten.Children.Add(Schrift.Text(Texte.SpielortHinweis, "Klein", farbe: "Pinsel.muted"));
-        foreach (var ort in Spielort.Fehlende(a, _daten.Fassung))
+        foreach (var ort in Spielort.FehlendeFuer(a, s, _daten.Fassung))
         {
             var id = Py.Str(ort["id"]);
-            var k = Schrift.Knopf(Spielort.Name(ort)).Mit(Texte.SpielortKnopfTipp);
+            var name = Spielort.Name(ort);
+            var k = Schrift.Knopf(Spielort.Vorschlag(a, s, ort) ? Texte.SpielortVorschlag(name) : name).Mit(Texte.SpielortKnopfTipp);
             k.Click += (_, _) => SpielortFestlegen(s, id);
             kasten.Children.Add(k);
         }

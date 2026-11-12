@@ -949,7 +949,7 @@ public sealed partial class StadtSzene
         foreach (var item in ListeOderLeer(welt, "landschaft").Select(Objekt).Where(t => Py.Gleich(t["typ"], "gebaeude")))
         {
             var modell = Py.Str(item["modell"]);
-            signatur.Add(modell + ":" + string.Join(",", StadtModelle.Teile(modelle, modell, k).Select(t => t.Nr)));
+            signatur.Add(modell + ":" + string.Join(",", OhneGeruest(StadtModelle.Teile(modelle, modell, k)).Select(t => t.Nr)));
         }
         foreach (var ort in stadt.Orte(stand))
         {
@@ -1062,13 +1062,16 @@ public sealed partial class StadtSzene
                     case "fluss":
                     {
                         // Bruecken (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt
-                        foreach (var strasse in strassen)
+                        // Weisung P12-214 (Nico): die Bruecke umrahmt auch den Gehweg; Strassen ohne Gehweg wie bisher (gw = 0)
+                        var strassenGehweg = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(GehwegBreite).ToList();
+                        for (var si = 0; si < strassen.Count; si++)
                         {
-                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Linienzug(item), strasse))
+                            var gw = BrueckeSchmalAlt.Value ? 0f : strassenGehweg[si];
+                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Linienzug(item), strassen[si]))
                             {
-                                Bruecke(teile, streifen, mitte, richtung, sinus);
+                                Bruecke(teile, streifen, mitte, richtung, sinus, gw);
                                 bruecken.Add(mitte);
-                                brueckenKaesten.Add((mitte, richtung, BrueckeHalb(sinus) + 0.07f, (StrassenBreite / 2) + 0.1f));
+                                brueckenKaesten.Add((mitte, richtung, BrueckeHalb(sinus) + 0.07f, (StrassenBreite / 2) + gw + 0.1f));
                             }
                         }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2); Welle K1: Radius je Eckpunkt
@@ -1286,7 +1289,7 @@ public sealed partial class StadtSzene
         foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], "gebaeude")))
         {
             var modell = Py.Str(item["modell"]);
-            var sichtbar = StadtModelle.Teile(modelle, modell, k);
+            var sichtbar = OhneGeruest(StadtModelle.Teile(modelle, modell, k));
             var farbe = Py.Hat(item, "farbe") ? Netz.Farbe(Py.Str(item["farbe"])) : RollenFarbe(null);
             var (tv, sv) = (teile.Count, stuecke.Count);
             var fenster = new List<(int, Vector3)>();
@@ -2304,18 +2307,36 @@ public sealed partial class StadtSzene
     /// </summary>
     private static float BrueckeHalb(float sinus) => (((FlussBreite + 0.3f) / 2) + 0.18f) / sinus;
 
-    private static void Bruecke(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus)
+    /// <summary>
+    /// Weisung P12-214 (Nico: „das komische Geruest sollte bei dem alten Modell entfernt werden“): ein Gebaeude ohne Ort
+    /// zeichnet keine Teile „geruest“ (Baugeruest des Orts Talheim-Nord, solange seine Abnahme offen ist). Sonst bleibt das
+    /// Aussehen gleich (die fertige Form mit Glasfront wurde bewusst nicht gewaehlt, E1). Fassung 0 hat nur das Stellwerk
+    /// ohne Geruest, darum bitgleich; der Ort Talheim-Nord selbst bleibt wie bisher.
+    /// </summary>
+    internal static List<(int Nr, PyObjekt Teil)> OhneGeruest(List<(int Nr, PyObjekt Teil)> teile) =>
+        GeruestAltFuerTests ? teile : [.. teile.Where(t => !Py.Gleich(t.Teil["art"], "geruest"))];
+
+    /// <summary>Gegenprobe P12-214: Gebaeude ohne Ort zeigen das Geruest wie bis A 0.68.1 (nur Tests, je Ablauf).</summary>
+    public static bool GeruestAltFuerTests { get => GeruestAlt.Value; set => GeruestAlt.Value = value; }
+    private static readonly AsyncLocal<bool> GeruestAlt = new();
+
+    /// <summary>Gegenprobe Weisung P12-214: Bruecke nur so breit wie die Fahrbahn (wie bis A 0.68.1, Gehweg lief aussen am Gelaender vorbei; nur Tests, je Ablauf).</summary>
+    public static bool BrueckeSchmalAltFuerTests { get => BrueckeSchmalAlt.Value; set => BrueckeSchmalAlt.Value = value; }
+    private static readonly AsyncLocal<bool> BrueckeSchmalAlt = new();
+
+    private static void Bruecke(List<Teil> teile, List<Streifen> streifen, Vector2 mitte, Vector2 richtung, float sinus, float gehweg)
     {
         var halb = BrueckeHalb(sinus);
         var a = mitte - (richtung * halb);
         var b = mitte + (richtung * halb);
         var stein = Netz.Farbe("#9A94A8");
-        // Steinbett breiter als die Fahrbahn: sein Rand zeigt die Bruecke, die Fahrbahn liegt darauf
-        streifen.Add(new Streifen([a, b], StrassenBreite + 0.2f, 0f, Hoehe.Strasse - 0.012f, stein));
+        // Steinbett breiter als Fahrbahn und Gehweg: sein Rand zeigt die Bruecke, Fahrbahn und Gehweg liegen darauf
+        streifen.Add(new Streifen([a, b], StrassenBreite + (2 * gehweg) + 0.2f, 0f, Hoehe.Strasse - 0.012f, stein));
         var quer = new Vector2(-richtung.Y, richtung.X);
         foreach (var seite in (float[])[-1f, 1f])
         {
-            var versatz = quer * seite * ((StrassenBreite / 2) + 0.06f);
+            // Bruestung aussen an der Gehwegkante (P12-214), ohne Gehweg an der Fahrbahnkante
+            var versatz = quer * seite * ((StrassenBreite / 2) + gehweg + 0.06f);
             streifen.Add(new Streifen([a + versatz, b + versatz], 0.07f, Hoehe.Strasse - 0.012f, Hoehe.Strasse + 0.16f, stein * 0.92f));
             foreach (var ende in (Vector2[])[a + versatz, b + versatz])
             {

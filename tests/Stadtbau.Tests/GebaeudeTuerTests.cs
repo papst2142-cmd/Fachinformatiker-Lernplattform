@@ -306,7 +306,7 @@ public class GebaeudeTuerTests
     }
 
     [Fact]
-    public void Pruefung_BahnhofFernVomGleis_Gelb_AmGleisNicht()
+    public void Pruefung_BahnhofFernVomGleis_Gelb_AmGleisNicht_TalheimNordNie()
     {
         var p = Leer();
         p.AussenAendern("Bahn", a => Aussen.Landschaft(a).Add(new PyObjekt
@@ -315,10 +315,22 @@ public class GebaeudeTuerTests
         }));
         var nah = Haus(p, "bahnhof", 20, 27.5);
         Assert.DoesNotContain(p.PruefenAussen(), f => f.Text == Texte.BahnhofNichtAmGleis("Bahnhof Talheim"));
-        Haus(p, "bahnhof_neu", 20, 10);
-        var fund = Assert.Single(p.PruefenAussen(), f => f.Text == Texte.BahnhofNichtAmGleis("Talheim-Nord"));
+        Haus(p, "haltepunkt", 30, 10);
+        var fund = Assert.Single(p.PruefenAussen(), f => f.Text == Texte.BahnhofNichtAmGleis("Haltepunkt Birkenhain"));
         Assert.False(fund.Rot);
         Assert.NotNull(nah);
+        // Weisung P12-214: Talheim-Nord wird das Stellwerk, das Modell bahnhof_neu braucht kein Gleis mehr (Gegenprobe bis S 0.44.1)
+        Haus(p, "bahnhof_neu", 10, 10);
+        Assert.DoesNotContain(p.PruefenAussen(), f => f.Text == Texte.BahnhofNichtAmGleis("Talheim-Nord"));
+        ModellNamen.TalheimAltFuerTests = true;
+        try
+        {
+            Assert.Single(p.PruefenAussen(), f => f.Text == Texte.BahnhofNichtAmGleis("Talheim-Nord"));
+        }
+        finally
+        {
+            ModellNamen.TalheimAltFuerTests = false;
+        }
     }
 
     [Fact]
