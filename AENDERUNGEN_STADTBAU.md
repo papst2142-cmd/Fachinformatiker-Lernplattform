@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.44.1
+
+Türen an Werkstatt, Lokschuppen und Haltepunkt, Haltepunkt am Gleis.
+
+- Betriebswerkstatt: „Tür dazu“ legt die Tür jetzt auf das helle Rolltor, wie in der Ausgangsstadt. Die Prüfung meldet dort nichts mehr rot. Mit „Tür setzen“ rastet die Tür ebenfalls auf das Tor, auch ohne „Einrasten“.
+- Gebäude, die nur aus einfachen Blöcken bestehen (zum Beispiel der Lokschuppen): die Tür kommt nur noch auf eine glatte Wand ohne Tor und Fenster, beim Lokschuppen mitten auf den kleinen Anbau. Vorher hing sie halb neben dem Anbau in der Luft.
+- Am Lokschuppen schweben keine grauen Platten mehr über dem Gebäude.
+- Haltepunkt mit Bahnsteig: „Tür dazu“ trennt den Bahnsteig nicht mehr ab, wenn das Wartehaus auf ihm steht. So stehen keine zwei Gebäude mehr ineinander, und die Tür kommt auf die Wand des Wartehauses.
+- Ein Bahnhof rastet beim Einrasten jetzt richtig ans Gleis, wenn ein flacher, tiefer Teil des Gebäudes zum Gleis zeigt: er dreht sich dann so, dass das Gebäude hinter dem Bahnsteig steht.
+
 ## S 0.44.0
 
 Neuer begehbarer Kleiderschrank und neue Kleidung im gemeinsamen Teil.

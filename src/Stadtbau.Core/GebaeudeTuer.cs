@@ -72,7 +72,7 @@ public static partial class GebaeudeTuer
         var g = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         var modell = Py.Str(g["modell"]);
         var teile = Get(AussenBearbeitung.Modelle(aussen), modell);
-        if (Bahnsteig.Hat(teile))
+        if (Bahnsteig.Hat(teile) && (BahnsteigTeilenAlt.Value || !BlockAufBahnsteig(teile)))
         {
             // Bahnhof (Nico 3a): das Spiel setzt die Tuer auf den Kasten des ganzen Modells, der die Bahnsteige einschliesst.
             // Darum bekommt der Bahnhof eine Kopie ohne Bahnsteig-Flaechen, der Bahnsteig bleibt als eigenes Stueck an seiner
@@ -117,6 +117,26 @@ public static partial class GebaeudeTuer
         var strassen = AussenBearbeitung.Strassen(aussen);
         // S 0.34.1 (Sammelliste 278/280): rechtwinklig mit runden Ecken
         return WegRechtwinklig(z, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
+    }
+
+    /// <summary>Gegenprobe Sammelliste 313: Bahnsteig auch abtrennen, wenn das Haus darauf steht (wie bis S 0.44.0, nur Tests, je Ablauf).</summary>
+    public static bool BahnsteigTeilenAltFuerTests { get => BahnsteigTeilenAlt.Value; set => BahnsteigTeilenAlt.Value = value; }
+    private static readonly AsyncLocal<bool> BahnsteigTeilenAlt = new();
+
+    /// <summary>
+    /// Sammelliste 313 (Weisung P12-207): steht ein Block des Modells auf einer Bahnsteig-Flaeche (Haltepunkt: Wartehaus auf dem
+    /// Bahnsteig), gehoeren Haus und Bahnsteig zusammen. Abgetrennt stuenden sie ineinander (roter Fund); die Tuer kommt dann auf
+    /// die Wand des Blocks (<see cref="TuerFassade"/>), nicht auf die Kante des Bahnsteigs.
+    /// </summary>
+    public static bool BlockAufBahnsteig(object? teile)
+    {
+        var liste = (teile as List<object?> ?? []).OfType<PyObjekt>().ToList();
+        // Tiefe: Block „t“, Flaeche „h“ (wie Bahnsteig.Rechtecke)
+        static (double X1, double Y1, double X2, double Y2) R(PyObjekt t, string tiefe) =>
+            (Py.F(Get(t, "x") ?? 0L), Py.F(Get(t, "y") ?? 0L), Py.F(Get(t, "x") ?? 0L) + Py.F(Get(t, "w") ?? 0L), Py.F(Get(t, "y") ?? 0L) + Py.F(Get(t, tiefe) ?? 0L));
+        var flaechen = liste.Where(Bahnsteig.IstFlaeche).Select(t => R(t, "h")).ToList();
+        return liste.Where(t => Py.Gleich(Get(t, "art"), "block")).Select(t => R(t, "t"))
+            .Any(b => flaechen.Any(f => b.X1 < f.X2 - 1e-6 && f.X1 < b.X2 - 1e-6 && b.Y1 < f.Y2 - 1e-6 && f.Y1 < b.Y2 - 1e-6));
     }
 
     /// <summary>Gegenprobe Sammelliste 293: „Tür dazu“ wie bis S 0.41.0 in der Wandmitte ohne Fassade (nur Tests, je Ablauf).</summary>
