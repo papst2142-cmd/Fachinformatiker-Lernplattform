@@ -202,6 +202,56 @@ public class Stadt1KorrekturTests
         }
     }
 
+    /// <summary>Kreuzt ein Stueck des Wegs (ohne das letzte, das auf der Strassenmitte endet) die Mitte einer Strasse?</summary>
+    private static bool WegUeberStrasse(Projekt p, string ort)
+    {
+        var w = Weg(Zugang(p, ort));
+        static float K(Vector2 a, Vector2 b) => (a.X * b.Y) - (a.Y * b.X);
+        foreach (var l in AussenBearbeitung.Strassen(p.AussenStand))
+        {
+            for (var i = 0; i + 1 < w.Count; i++)
+            {
+                for (var j = 0; j + 1 < l.Count; j++)
+                {
+                    var (r, e) = (w[i + 1] - w[i], l[j + 1] - l[j]);
+                    var n = K(r, e);
+                    if (MathF.Abs(n) < 1e-9f)
+                    {
+                        continue;
+                    }
+                    var t = K(l[j] - w[i], e) / n;
+                    var u = K(l[j] - w[i], r) / n;
+                    if (t > 0.01f && t < 0.99f && u >= 0 && u <= 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>Selbst gefunden: an der schraegen Strasse vor der Werkstatt lief das gerade Stueck ueber die Strassenmitte hinaus.</summary>
+    [Fact]
+    public void Werkstatt_WegGehtNichtUeberDieStrasse_GegenprobeAlt()
+    {
+        var p = Nico();
+        Assert.Null(Eingang(p));
+        Assert.False(WegUeberStrasse(p, "betriebswerkstatt"));
+        Assert.Empty(RoteFunde(p));
+        GebaeudeTuer.UeberStrasseAltFuerTests = true;
+        try
+        {
+            var q = Nico();
+            Eingang(q);
+            Assert.True(WegUeberStrasse(q, "betriebswerkstatt"));
+        }
+        finally
+        {
+            GebaeudeTuer.UeberStrasseAltFuerTests = false;
+        }
+    }
+
     [Fact]
     public void Beides_DatenAendernNurBirkenhainUndWerkstatt()
     {
