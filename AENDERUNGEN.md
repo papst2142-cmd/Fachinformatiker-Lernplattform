@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.68.0
+Neue Kleidung, Brillen, Taschen und Bärte im Spiel, Frisuren an der 3D-Figur und ein neuer begehbarer Kleiderschrank.
+
+- Im Kaufhaus gibt es 46 neue Stücke: T-Shirts mit kurzen Ärmeln, lange Hemden und Blusen, kurze Hosen, Kleider und Röcke, Jacken und Mäntel, Brillen und Handtaschen. Dafür hat das Kaufhaus vier neue Abteilungen („Kleider und Röcke“, „Jacken und Mäntel“, „Brillen“, „Handtaschen“). Die neuen Stücke liegen bei den Oberteilen bzw. bei den Kappen und Mützen aus.
+- Du kannst jetzt zusätzlich ein Kleid oder einen Rock, eine Jacke oder einen Mantel, eine Brille und eine Tasche tragen. Ein Kleid deckt Oberteil und Hose, eine Jacke liegt über dem Oberteil. Alle Stücke siehst du an deiner Figur in der Stadt und in den Räumen.
+- Die Frisur (lang, Zopf, Locken, Glatze) ist jetzt auch an der 3D-Figur zu sehen, bei dir und bei den Personen im Spiel.
+- Beim Anlegen eines neuen Spielstands kannst du einen Bart wählen (keiner, Vollbart, Schnurrbart). Wie Hautton, Frisur und Haarfarbe lässt er sich danach am Kleiderschrank nicht mehr ändern. Vorhandene Spielstände bleiben ohne Bart.
+- Der begehbare Kleiderschrank sieht neu aus: eine Schrankwand mit zwei Schränken, einem Spiegel, einer Kommode in der Mitte, einer Kleiderstange und gefalteten Stapeln. Er ist genauso groß wie vorher und steht an derselben Stelle.
+- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.67.1
 Schnellerer Wechsel der Fachrichtung und ein vollständigerer Satz in der Auftragsliste.
 

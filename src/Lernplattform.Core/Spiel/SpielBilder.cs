@@ -93,6 +93,17 @@ public static class SpielBilder
             s.Add(("oval", (24, 22, 38, 38), haar));
             s.Add(("oval", (62, 22, 76, 38), haar));
         }
+        // Phase 12 Welle 2 (Weisung P12-206): Bart nur der C#-Linie, ohne Bart wie Python
+        switch (Aussehen.Wert(look, "bart"))
+        {
+            case "vollbart":
+                s.Add(("oval", (32, 44, 68, 68), haar));
+                s.Add(("oval", (38, 36, 62, 52), haut));
+                break;
+            case "schnurrbart":
+                s.Add(("rect", (41, 49, 59, 53), haar));
+                break;
+        }
         s.Add(("oval", (40, 40, 45, 45), ExtraFarbe));
         s.Add(("oval", (55, 40, 60, 45), ExtraFarbe));
         s.Add(("line", (45, 53, 55, 53), ExtraFarbe));

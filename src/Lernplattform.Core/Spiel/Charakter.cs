@@ -45,6 +45,9 @@ public static class Charakter
 
     public const string GesperrtZusatz = " · gesperrt";
 
+    /// <summary>Phase 12 Welle 2: Beschriftung des Barts beim Anlegen und im Kleiderschrank.</summary>
+    public const string BartName = "Bart";
+
     /// <summary>Satz unter dem Namen in der Uebersicht (Nico 3b, Bild 8 der Entwurfsbilder).</summary>
     public const string HinweisUebersicht = "Name und Aussehen änderst du am Kleiderschrank in deiner Wohnung (zu kaufen im Möbelhaus).";
 
@@ -89,12 +92,15 @@ public static class Charakter
 
     public const string KeinSchrankAufgestellt = "Dafür musst du einen Kleiderschrank in deiner Wohnung aufstellen.";
 
-    public const string NurBeimFriseur = "Hautton, Frisur und Haarfarbe lassen sich hier nicht ändern.";
+    public const string NurBeimFriseur = "Hautton, Frisur, Haarfarbe und Bart lassen sich hier nicht ändern.";
 
     public const string KeinProfil = "Bitte gib deiner Spielfigur einen Namen.";
 
-    /// <summary>Teile von <see cref="Aussehen.Teile"/>, die am Kleiderschrank gesperrt sind (Nico 3a).</summary>
-    public static readonly IReadOnlyList<string> GesperrteTeile = ["haut", "frisur", "haarfarbe"];
+    /// <summary>
+    /// Teile von <see cref="Aussehen.Teile"/>, die am Kleiderschrank gesperrt sind (Nico 3a); Phase 12 Welle 2 (Weisung P12-206):
+    /// dazu der Bart (<see cref="Aussehen.ZusatzTeile"/>), neue Baerte nur beim Anlegen, fuer alte Staende der Friseur in Beta 1.
+    /// </summary>
+    public static readonly IReadOnlyList<string> GesperrteTeile = ["haut", "frisur", "haarfarbe", "bart"];
 
     /// <summary>Ist <paramref name="wert"/> ein gueltiger Wert fuer "plaetze" (ganze Zahl &gt; 0 oder "unbegrenzt")?</summary>
     public static bool PlaetzeGueltig(object? wert) => wert is Unbegrenzt || (Py.IstNurInt(wert) && Py.Int(wert) > 0);

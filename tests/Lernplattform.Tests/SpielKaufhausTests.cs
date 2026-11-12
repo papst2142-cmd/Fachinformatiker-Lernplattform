@@ -57,13 +57,14 @@ public class SpielKaufhausTests
     public void SortimentWieTeilplan()
     {
         Assert.Empty(Neu().Pruefen(SpielInnenraumTests.Innenraeume.Value));
+        // Phase 12 Welle 2 Kleidung (Weisung P12-206): vier Stellen und 46 Stuecke angehaengt, die alten vorne unveraendert
         Assert.Equal(["oberteil:Oberteil:Oberteile", "hose:Hose:Hosen", "schuhe:Schuhe:Schuhe", "kopf:Kopf:Kappen und Mützen"],
-            Kleidung.Stellen(Daten).Select(s => s.Id + ":" + s.Name + ":" + s.Abteilung));
+            Kleidung.Stellen(Daten).Take(4).Select(s => s.Id + ":" + s.Name + ":" + s.Abteilung));
         var sortiment = Kleidung.Sortiment(Daten);
-        Assert.Equal(20, sortiment.Count);
-        Assert.Equal([7, 4, 4, 5], Kleidung.Stellen(Daten).Select(s => sortiment.Count(k => k.Slot == s.Id)));
-        Assert.Equal(12, sortiment.Min(k => k.Preis));
-        Assert.Equal(90, sortiment.Max(k => k.Preis));
+        Assert.Equal(20 + 46, sortiment.Count);
+        Assert.Equal([7, 4, 4, 5], Kleidung.Stellen(Daten).Take(4).Select(s => sortiment.Take(20).Count(k => k.Slot == s.Id)));
+        Assert.Equal(12, sortiment.Take(20).Min(k => k.Preis));
+        Assert.Equal(90, sortiment.Take(20).Max(k => k.Preis));
         Assert.Equal(sortiment.Select(k => k.Id), Neu().Waren(Kleidung.Laden).Select(w => w.Id));
         Assert.All(Neu().Waren(Kleidung.Laden), w => Assert.Equal(Kleidung.Art, w.Art));
         // das Kaufhaus ist ein Geschaeft der Stadt mit Sortiment Kleidung, offen 09:30 bis 20:00
@@ -80,7 +81,7 @@ public class SpielKaufhausTests
     public void SortimentJeFestzeit()
     {
         var basis = Kleidung.Sortiment(Daten);
-        Assert.Equal(28, Kleidung.Alle(Daten).Count);
+        Assert.Equal(28 + 46, Kleidung.Alle(Daten).Count);
         Assert.Equal(basis, Kleidung.Sortiment(Daten, null));
         Assert.All(basis, k => Assert.Null(k.Festzeit));
         var erwartet = new Dictionary<string, string[]>

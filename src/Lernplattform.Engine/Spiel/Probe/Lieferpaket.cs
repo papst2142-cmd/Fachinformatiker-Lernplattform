@@ -108,7 +108,10 @@ public static class Begehbar
     /// <summary>Id des Moebels in geschaefte.json moebel_neu.</summary>
     public const string Id = "kleiderschrank_begehbar";
 
-    /// <summary>Garderobenstaender aus dem Kenney Furniture Kit (CC0), angehaengt in modelle.bin (Phase 12 Welle 2).</summary>
+    /// <summary>
+    /// Garderobenstaender aus dem Kenney Furniture Kit (CC0), angehaengt in modelle.bin (Phase 12 Welle 2). Seit Welle 2 Kleidung
+    /// (Entwurf B, Weisung P12-206) zeichnet der begehbare Schrank ihn nicht mehr; das Modell bleibt (modelle.bin nur angehaengt).
+    /// </summary>
     public const string Modell = "coatRackStanding";
 
     /// <summary>Farben der Kleidung im Schrank.</summary>

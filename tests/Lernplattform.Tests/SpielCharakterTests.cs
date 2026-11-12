@@ -114,7 +114,7 @@ public class SpielCharakterTests
         Assert.Equal("Dein Kleiderschrank ist voll. Im Möbelhaus gibt es größere Schränke. Was du schon hast, bleibt dir.", Charakter.Voll);
         Assert.Equal("Für neue Kleidung brauchst du zuerst einen Kleiderschrank aus dem Möbelhaus.", Charakter.OhneSchrankKaufen);
         Assert.Equal("Name und Aussehen änderst du am Kleiderschrank in deiner Wohnung (zu kaufen im Möbelhaus).", Charakter.HinweisUebersicht);
-        Assert.Equal(["haut", "frisur", "haarfarbe"], Charakter.GesperrteTeile);
+        Assert.Equal(["haut", "frisur", "haarfarbe", "bart"], Charakter.GesperrteTeile);
     }
 
     // -- Inhalt und Ladepruefung ------------------------------------------------------
@@ -292,8 +292,8 @@ public class SpielCharakterTests
         Assert.Equal(Charakter.KeinSchrankAufgestellt, Assert.Throws<SpielFehler>(() => spiel.AmSchrank("Nico", neu)).Message);
         Aufstellen(spiel, stueck);
         Assert.True(Charakter.SchrankAufgestellt(spiel.Stand));
-        // gesperrt: Hautton, Frisur, Haarfarbe (Gegenprobe: SpielAktionen.Profil nimmt sie an)
-        foreach (var (teil, wert) in new[] { ("haut", "dunkel"), ("frisur", "kurz"), ("haarfarbe", "blond") })
+        // gesperrt: Hautton, Frisur, Haarfarbe, seit Welle 2 Kleidung der Bart (Gegenprobe: SpielAktionen.Profil nimmt sie an)
+        foreach (var (teil, wert) in new[] { ("haut", "dunkel"), ("frisur", "kurz"), ("haarfarbe", "blond"), ("bart", "vollbart") })
         {
             var falsch = (PyObjekt)Py.Kopie(neu)!;
             Py.Setzen(falsch, teil, wert);
