@@ -165,6 +165,8 @@ public class SpielGrafikTests
             .Append(Buslinie.Modell)
             // seit A 0.62.0 (Weisung P12-174) die gesparten Autos (die alten bleiben in der Datei, Namen der Strecken)
             .Concat(Fahrzeugmodelle.Gespart.Select(Fahrzeugmodelle.Zeichnen))
+            // seit A 0.68.0 (Weisung P12-206) zeichnet der begehbare Schrank Entwurf B ohne Kleiderstaender; das Modell bleibt angehaengt
+            .Append(Begehbar.Modell)
             .Concat(["hw-lantern_standing", "hw-pumpkin", "hw-pumpkin_orange_jackolantern", "os-animal-bunny", "os-animal-chick", "xm-present_A_red", "xm-present_A_yellow", "xm-present_B_green"])
             .ToList();
         foreach (var m in bib.Modelle)

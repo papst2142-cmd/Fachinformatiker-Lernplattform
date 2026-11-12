@@ -1,20 +1,23 @@
-Schnellerer Wechsel der Fachrichtung und ein vollständigerer Satz in der Auftragsliste.
+Neue Kleidung, Brillen, Taschen und Bärte im Spiel, Frisuren an der 3D-Figur und ein neuer begehbarer Kleiderschrank.
 
-- Wechselst du nacheinander zu mehreren Fachrichtungen, lädt das Programm jetzt nur die Inhalte der neuen Fachrichtung nach. Die schon geladenen Fachrichtungen werden nicht noch einmal aufbereitet, darum geht der Wechsel zur dritten oder vierten Fachrichtung schneller.
-- Die Inhalte selbst, ihre Reihenfolge und dein Lernstand bleiben genau gleich.
-- In der Auftragsliste im Handy endete der Kurztext eines Auftrags manchmal mit einem Doppelpunkt, und das Wichtigste fehlte (zum Beispiel „… der Talbahn an:“). Jetzt steht der folgende Satz mit dabei.
+- Im Kaufhaus gibt es 46 neue Stücke: T-Shirts mit kurzen Ärmeln, lange Hemden und Blusen, kurze Hosen, Kleider und Röcke, Jacken und Mäntel, Brillen und Handtaschen. Dafür hat das Kaufhaus vier neue Abteilungen („Kleider und Röcke“, „Jacken und Mäntel“, „Brillen“, „Handtaschen“). Die neuen Stücke liegen bei den Oberteilen bzw. bei den Kappen und Mützen aus.
+- Du kannst jetzt zusätzlich ein Kleid oder einen Rock, eine Jacke oder einen Mantel, eine Brille und eine Tasche tragen. Ein Kleid deckt Oberteil und Hose, eine Jacke liegt über dem Oberteil. Alle Stücke siehst du an deiner Figur in der Stadt und in den Räumen.
+- Die Frisur (lang, Zopf, Locken, Glatze) ist jetzt auch an der 3D-Figur zu sehen, bei dir und bei den Personen im Spiel.
+- Beim Anlegen eines neuen Spielstands kannst du einen Bart wählen (keiner, Vollbart, Schnurrbart). Wie Hautton, Frisur und Haarfarbe lässt er sich danach am Kleiderschrank nicht mehr ändern. Vorhandene Spielstände bleiben ohne Bart.
+- Der begehbare Kleiderschrank sieht neu aus: eine Schrankwand mit zwei Schränken, einem Spiegel, einer Kommode in der Mitte, einer Kleiderstange und gefalteten Stapeln. Er ist genauso groß wie vorher und steht an derselben Stelle.
+- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.67.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.68.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.67.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.67.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.67.1-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.67.1-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.68.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.68.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.68.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.68.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

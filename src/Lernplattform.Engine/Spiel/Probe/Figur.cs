@@ -129,7 +129,15 @@ public static class Figur
         var hose = kleidung?.FirstOrDefault(k => k.Slot == "hose");
         var schuhe = kleidung?.FirstOrDefault(k => k.Slot == "schuhe");
         var kopfStueck = kleidung?.FirstOrDefault(k => k.Slot == "kopf");
-        var hemd = Probe.Netz.Farbe(oben?.Farbe ?? Oberteil[Py.Str(a["oberteil"])]);
+        // Phase 12 Welle 2 (Weisung P12-206): Kleid oder Rock, Jacke oder Mantel ueber dem Oberteil, Frisur und Bart an der 3D-Figur
+        var kleid = kleidung?.FirstOrDefault(k => k.Slot == "kleid");
+        var jacke = kleidung?.FirstOrDefault(k => k.Slot == "jacke");
+        var frisur = Py.Str(a["frisur"]);
+        var unter = Probe.Netz.Farbe(oben?.Farbe ?? Oberteil[Py.Str(a["oberteil"])]);
+        var hemd = jacke is not null ? Probe.Netz.Farbe(jacke.Farbe) : kleid is { Form: "kleid" } ? Probe.Netz.Farbe(kleid.Farbe) : unter;
+        var kurzarm = jacke is null && (kleid is { Form: "kleid" } || oben is { Form: "tshirt" });
+        var beine = kleid is not null ? Probe.Netz.Farbe(kleid.Farbe) : (Vector3?)null;
+        var kurzeBeine = kleid is not null || hose is { Form: "kurz" };
         var haut = Probe.Netz.Farbe(Haut[Py.Str(a["haut"])]);
         var haar = Probe.Netz.Farbe(Haare[Py.Str(a["haarfarbe"])]);
         var groesse = gm.Max.Y - gm.Min.Y;
@@ -142,16 +150,24 @@ public static class Figur
             var y = (gm.Ecken[(d * 9) + 1] + gm.Ecken[(d * 9) + 4] + gm.Ecken[(d * 9) + 7]) / 3;
             byte r = farben[d * 3], g = farben[(d * 3) + 1], b = farben[(d * 3) + 2];
             var bereich = Erkennen(r, g, b, (y - gm.Min.Y) / groesse);
-            if (bereich == Bereich.Sonst && (hose is not null || schuhe is not null))
+            if (bereich == Bereich.Sonst && (hose is not null || schuhe is not null || kleid is not null))
             {
                 bereich = Kleidung(r, g, b, (y - gm.Min.Y) / groesse);
             }
+            var anteil = (y - gm.Min.Y) / groesse;
+            var seitlich = MathF.Abs(((gm.Ecken[d * 9] + gm.Ecken[(d * 9) + 3] + gm.Ecken[(d * 9) + 6]) / 3) - mitte.X) / groesse;
             var (ziel, bezug) = bereich switch
             {
+                // kurze Aermel (T-Shirt kurzarm, Kleid): Arm unter der Schulter in Hautfarbe
+                Bereich.Hemd when kurzarm && seitlich > ArmAb && anteil < KurzarmBis => (haut, 212f),
                 Bereich.Hemd => (hemd, 212f),
                 Bereich.Haut => (haut, 230f),
-                Bereich.Haare when kopfStueck is not null && Bedeckt(kopfStueck.Form, (y - gm.Min.Y) / groesse) => (Probe.Netz.Farbe(kopfStueck.Farbe), 60f),
+                Bereich.Haare when kopfStueck is not null && Bedeckt(kopfStueck.Form, anteil) => (Probe.Netz.Farbe(kopfStueck.Farbe), 60f),
+                Bereich.Haare when frisur == "glatze" => (haut, 60f),
                 Bereich.Haare => (haar, 60f),
+                // Kleid, Rock und kurze Hose: Beine unten in Hautfarbe; Kleid und Rock oben in ihrer Farbe
+                Bereich.Hose when kurzeBeine && anteil < (kleid is not null ? BeinFreiKleid : BeinFreiKurz) => (haut, 115f),
+                Bereich.Hose when beine is { } bf => (bf, 115f),
                 Bereich.Hose when hose is not null => (Probe.Netz.Farbe(hose.Farbe), 115f),
                 Bereich.Schuhe when schuhe is not null => (Probe.Netz.Farbe(schuhe.Farbe), 215f),
                 _ => (Vector3.Zero, 0f),
@@ -176,10 +192,17 @@ public static class Figur
             {
                 teile.AddRange(Kopfbedeckung(kopf.Min, kopf.Max, gm.Max.Y, kopfStueck));
             }
-            if (oben is { Form: "kapuze" })
+            if (oben is { Form: "kapuze" } && kleid is not { Form: "kleid" })
             {
-                teile.AddRange(Kapuze(kopf.Min, kopf.Max, hemd));
+                teile.AddRange(Kapuze(kopf.Min, kopf.Max, unter));
             }
+            teile.AddRange(Frisur(kopf.Min, kopf.Max, frisur, haar, kopfStueck));
+            teile.AddRange(Bart(kopf.Min, kopf.Max, Aussehen.Wert(a, "bart"), haar));
+            if (kleidung?.FirstOrDefault(k => k.Slot == "brille") is { } brille)
+            {
+                teile.AddRange(Brille(kopf.Min, kopf.Max, Probe.Netz.Farbe(brille.Farbe)));
+            }
+            teile.AddRange(Koerper(gm, oben, kleid, jacke, kleidung?.FirstOrDefault(k => k.Slot == "tasche"), unter, hemd));
             foreach (var teil in teile)
             {
                 netz.Hinzu(teil with
@@ -395,5 +418,190 @@ public static class Figur
         [
             new Teil(TeilArt.Quader, min.X + (b * 0.05f), min.Y - (h * 0.25f), min.Z - (b * 0.18f), max.X - (b * 0.05f), min.Y + (h * 0.25f), min.Z + (b * 0.12f), farbe * 0.9f),
         ];
+    }
+
+    /// <summary>Phase 12 Welle 2: Arm = seitlich weiter als dieser Anteil der Hoehe von der Mitte (Rumpf liegt innen).</summary>
+    public const float ArmAb = 0.125f;
+
+    /// <summary>Phase 12 Welle 2: kurze Aermel enden bei diesem Anteil der Hoehe (darunter Haut).</summary>
+    public const float KurzarmBis = 0.53f;
+
+    /// <summary>Phase 12 Welle 2: Beine frei unter diesem Anteil bei kurzer Hose bzw. bei Kleid und Rock.</summary>
+    public const float BeinFreiKurz = 0.25f;
+
+    /// <inheritdoc cref="BeinFreiKurz"/>
+    public const float BeinFreiKleid = 0.30f;
+
+    /// <summary>
+    /// Phase 12 Welle 2 (Weisung P12-206, Nico 3a): die Frisur aus dem Aussehen auch an der 3D-Figur. „kurz“ ist das Haar der
+    /// Vorlage, „glatze“ faerbt es in die Haut (im Farbdurchlauf); lang (Haar bis zur Schulter), Zopf (hinten) und Locken (Buckel
+    /// oben) sind angesetzte Quader in der Haarfarbe. Locken unter einer Kopfbedeckung fallen weg (sie wuerden durchstechen).
+    /// </summary>
+    public static List<Teil> Frisur(Vector3 min, Vector3 max, string frisur, Vector3 haar, Stueck? kopfStueck)
+    {
+        float kb = max.X - min.X, kh = max.Y - min.Y, kt = max.Z - min.Z, kx = (min.X + max.X) / 2, kz = (min.Z + max.Z) / 2;
+        var teile = new List<Teil>();
+        switch (frisur)
+        {
+            case "lang":
+                // hinten schmaler als der Kopf, seitlich nicht ganz bis hinten: die Figur bleibt im Halbmesser (SpielAnsprechenTests)
+                teile.Add(new Teil(TeilArt.Quader, kx - (kb * 0.42f), min.Y - (kh * 0.55f), min.Z - (kt * 0.03f), kx + (kb * 0.42f), max.Y + (kh * 0.04f), kz - (kt * 0.05f), haar));
+                foreach (var s in (float[])[-1f, 1f])
+                {
+                    teile.Add(new Teil(TeilArt.Quader, s < 0 ? min.X - (kb * 0.04f) : max.X - (kb * 0.02f), min.Y - (kh * 0.35f), min.Z + (kt * 0.1f),
+                        s < 0 ? min.X + (kb * 0.02f) : max.X + (kb * 0.04f), max.Y, kz + (kt * 0.3f), haar));
+                }
+                break;
+            case "zopf":
+                teile.Add(new Teil(TeilArt.Quader, kx - (kb * 0.12f), min.Y + (kh * 0.45f), min.Z - (kt * 0.12f), kx + (kb * 0.12f), min.Y + (kh * 0.75f), min.Z + (kt * 0.02f), haar * 0.95f));
+                teile.Add(new Teil(TeilArt.Quader, kx - (kb * 0.08f), min.Y - (kh * 0.45f), min.Z - (kt * 0.11f), kx + (kb * 0.08f), min.Y + (kh * 0.5f), min.Z + (kt * 0.02f), haar));
+                break;
+            case "locken" when kopfStueck is null || kopfStueck.Form is "partyhut" or "hasenohren":
+                for (var i = 0; i < 5; i++)
+                {
+                    for (var j = 0; j < 3; j++)
+                    {
+                        var x = min.X + (kb * (0.1f + (0.2f * i)));
+                        var z = min.Z + (kt * (0.15f + (0.35f * j)));
+                        teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.09f), max.Y - (kh * 0.02f), z - (kt * 0.1f), x + (kb * 0.09f),
+                            max.Y + (kh * (0.12f + (0.04f * ((i + j) % 2)))), z + (kt * 0.1f), haar * (0.9f + (0.1f * ((i + j) % 2)))));
+                    }
+                }
+                break;
+        }
+        return teile;
+    }
+
+    /// <summary>Phase 12 Welle 2: Vollbart (Kinn und Wangen mit Oberlippe) oder Schnurrbart, in der Haarfarbe, vorn am Kopf.</summary>
+    public static List<Teil> Bart(Vector3 min, Vector3 max, string bart, Vector3 haar)
+    {
+        float kb = max.X - min.X, kh = max.Y - min.Y, kt = max.Z - min.Z, kx = (min.X + max.X) / 2, kz = (min.Z + max.Z) / 2;
+        var farbe = haar * 0.95f;
+        var oberlippe = new Teil(TeilArt.Quader, kx - (kb * 0.2f), min.Y + (kh * 0.36f), max.Z, kx + (kb * 0.2f), min.Y + (kh * 0.42f), max.Z + (kt * 0.06f), farbe);
+        return bart switch
+        {
+            // Wangen bis zur Vorderseite des Kopfs (unter dem Kinn sichtbar), vorn schmaler: im Halbmesser der Figur
+            "vollbart" =>
+            [
+                new Teil(TeilArt.Quader, min.X + (kb * 0.08f), min.Y - (kh * 0.08f), kz, max.X - (kb * 0.08f), min.Y + (kh * 0.27f), max.Z - (kt * 0.01f), farbe),
+                new Teil(TeilArt.Quader, kx - (kb * 0.3f), min.Y - (kh * 0.06f), kz, kx + (kb * 0.3f), min.Y + (kh * 0.25f), max.Z + (kt * 0.05f), farbe),
+                oberlippe,
+            ],
+            "schnurrbart" => [oberlippe],
+            _ => [],
+        };
+    }
+
+    /// <summary>Phase 12 Welle 2: Brille, zwei Rahmen vor den Augen, Steg und Buegel bis zu den Ohren.</summary>
+    public static List<Teil> Brille(Vector3 min, Vector3 max, Vector3 f)
+    {
+        float kb = max.X - min.X, kh = max.Y - min.Y, kt = max.Z - min.Z, kx = (min.X + max.X) / 2, kz = (min.Z + max.Z) / 2;
+        var y = min.Y + (kh * 0.5f);
+        var v = max.Z + (kt * 0.04f);
+        var teile = new List<Teil>();
+        foreach (var s in (float[])[-1f, 1f])
+        {
+            var x = kx + (s * kb * 0.2f);
+            teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.14f), y, v, x + (kb * 0.14f), y + (kh * 0.035f), v + (kt * 0.02f), f));
+            teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.14f), y + (kh * 0.22f), v, x + (kb * 0.14f), y + (kh * 0.255f), v + (kt * 0.02f), f));
+            teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.14f), y, v, x - (kb * 0.11f), y + (kh * 0.255f), v + (kt * 0.02f), f));
+            teile.Add(new Teil(TeilArt.Quader, x + (kb * 0.11f), y, v, x + (kb * 0.14f), y + (kh * 0.255f), v + (kt * 0.02f), f));
+            // Buegel: vom Rahmen zur Kopfseite, dann an der Seite nach hinten (im Halbmesser der Figur)
+            teile.Add(new Teil(TeilArt.Quader, s < 0 ? kx - (kb * 0.36f) : kx + (kb * 0.3f), y + (kh * 0.2f), max.Z,
+                s < 0 ? kx - (kb * 0.3f) : kx + (kb * 0.36f), y + (kh * 0.24f), v, f));
+            teile.Add(new Teil(TeilArt.Quader, s < 0 ? kx - (kb * 0.47f) : kx + (kb * 0.3f), y + (kh * 0.2f), max.Z - (kt * 0.1f),
+                s < 0 ? kx - (kb * 0.3f) : kx + (kb * 0.47f), y + (kh * 0.24f), max.Z, f));
+            teile.Add(new Teil(TeilArt.Quader, s < 0 ? min.X - (kb * 0.01f) : max.X - (kb * 0.01f), y + (kh * 0.2f), kz,
+                s < 0 ? min.X + (kb * 0.01f) : max.X + (kb * 0.01f), y + (kh * 0.24f), max.Z - (kt * 0.1f), f));
+        }
+        teile.Add(new Teil(TeilArt.Quader, kx - (kb * 0.06f), y + (kh * 0.2f), v, kx + (kb * 0.06f), y + (kh * 0.24f), v + (kt * 0.02f), f));
+        return teile;
+    }
+
+    /// <summary>
+    /// Phase 12 Welle 2: Teile am Koerper der stehenden Figur (Masse aus Huefte und Rumpf der Vorlage): Rock und Kleid als
+    /// Glocke aus drei Stufen, Mantel bis zum Knie mit Knopfleiste und Kragen, offene Jacke mit dem Oberteil darunter als
+    /// Streifen vorn und Saum, langes Hemd mit Knopfleiste und Kragen, Handtasche am Arm. Sie bewegen sich beim Gehen nicht
+    /// mit (wie Hut und Kappe, Kurzplan P12-118).
+    /// </summary>
+    public static List<Teil> Koerper(GrafikModell gm, Stueck? oben, Stueck? kleid, Stueck? jacke, Stueck? tasche, Vector3 unter, Vector3 hemd)
+    {
+        var teile = new List<Teil>();
+        if (oben is null && kleid is null && jacke is null && tasche is null)
+        {
+            return teile;
+        }
+        float g = gm.Max.Y - gm.Min.Y, cx = (gm.Min.X + gm.Max.X) / 2;
+        float Y(float a) => gm.Min.Y + (a * g);
+        Vector3 hMin = new(float.MaxValue), hMax = new(float.MinValue), rMin = new(float.MaxValue), rMax = new(float.MinValue);
+        for (var d = 0; d < gm.Dreiecke; d++)
+        {
+            byte r = gm.Farben[d * 3], gg = gm.Farben[(d * 3) + 1], b = gm.Farben[(d * 3) + 2];
+            for (var e = 0; e < 3; e++)
+            {
+                var p = new Vector3(gm.Ecken[(d * 9) + (e * 3)], gm.Ecken[(d * 9) + (e * 3) + 1], gm.Ecken[(d * 9) + (e * 3) + 2]);
+                var a = (p.Y - gm.Min.Y) / g;
+                if (Kleidung(r, gg, b, a) == Bereich.Hose && a > BeinFreiKurz)
+                {
+                    hMin = Vector3.Min(hMin, p);
+                    hMax = Vector3.Max(hMax, p);
+                }
+                if (Erkennen(r, gg, b, a) == Bereich.Hemd && MathF.Abs(p.X - cx) / g < ArmAb - 0.02f)
+                {
+                    rMin = Vector3.Min(rMin, p);
+                    rMax = Vector3.Max(rMax, p);
+                }
+            }
+        }
+        if (hMin.X > hMax.X || rMin.X > rMax.X)
+        {
+            return teile;
+        }
+        float hz = (hMin.Z + hMax.Z) / 2, hw = (hMax.X - hMin.X) / 2, ht = (hMax.Z - hMin.Z) / 2;
+        void Glocke(float von, float bis, float weit, Vector3 f)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                float a1 = von - ((von - bis) * i / 3f), a2 = von - ((von - bis) * (i + 1) / 3f);
+                var w = hw * (1.03f + (weit * (i + 1) / 3f));
+                var t = ht * (1.08f + (weit * (i + 1) / 3f));
+                teile.Add(new Teil(TeilArt.Quader, cx - w, Y(a2), hz - t, cx + w, Y(a1), hz + t, f * (1f - (0.05f * i))));
+            }
+        }
+        switch (kleid?.Form)
+        {
+            case "rock":
+                Glocke(0.37f, 0.22f, 0.22f, Probe.Netz.Farbe(kleid.Farbe));
+                break;
+            case "kleid":
+                Glocke(0.37f, 0.20f, 0.28f, Probe.Netz.Farbe(kleid.Farbe));
+                break;
+        }
+        switch (jacke?.Form)
+        {
+            case "mantel":
+                Glocke(0.40f, 0.16f, 0.12f, hemd);
+                teile.Add(new Teil(TeilArt.Quader, cx - (hw * 0.12f), Y(0.17f), rMax.Z, cx + (hw * 0.12f), Y(0.66f), rMax.Z + (g * 0.012f), hemd * 0.7f));
+                teile.Add(new Teil(TeilArt.Quader, rMin.X - (g * 0.01f), Y(0.645f), rMin.Z - (g * 0.01f), rMax.X + (g * 0.01f), Y(0.68f), rMax.Z + (g * 0.01f), hemd * 0.8f));
+                break;
+            case "jacke":
+                teile.Add(new Teil(TeilArt.Quader, cx - (hw * 0.25f), Y(0.36f), rMax.Z - (g * 0.002f), cx + (hw * 0.25f), Y(0.655f), rMax.Z + (g * 0.01f), unter));
+                teile.Add(new Teil(TeilArt.Quader, rMin.X - (g * 0.008f), Y(0.355f), rMin.Z - (g * 0.008f), rMax.X + (g * 0.008f), Y(0.385f), rMax.Z + (g * 0.008f), hemd * 0.75f));
+                break;
+            case null when oben is { Form: "hemd_lang" } && kleid is not { Form: "kleid" }:
+                teile.Add(new Teil(TeilArt.Quader, cx - (hw * 0.05f), Y(0.40f), rMax.Z, cx + (hw * 0.05f), Y(0.66f), rMax.Z + (g * 0.006f), hemd * 0.8f));
+                teile.Add(new Teil(TeilArt.Quader, rMin.X + ((rMax.X - rMin.X) * 0.15f), Y(0.655f), rMin.Z + ((rMax.Z - rMin.Z) * 0.2f),
+                    rMax.X - ((rMax.X - rMin.X) * 0.15f), Y(0.69f), rMax.Z + (g * 0.012f), hemd * 1.08f));
+                break;
+        }
+        if (tasche is not null)
+        {
+            var f = Probe.Netz.Farbe(tasche.Farbe);
+            // unter der Hand, innerhalb des Halbmessers der Figur (SpielAnsprechenTests)
+            var x = cx + (g * 0.145f);
+            teile.Add(new Teil(TeilArt.Quader, x - (g * 0.015f), Y(0.24f), hz - (g * 0.045f), x + (g * 0.015f), Y(0.31f), hz + (g * 0.045f), f));
+            teile.Add(new Teil(TeilArt.Quader, x + (g * 0.01f), Y(0.31f), hz - (g * 0.006f), x + (g * 0.017f), Y(0.36f), hz + (g * 0.006f), f * 0.7f));
+        }
+        return teile;
     }
 }

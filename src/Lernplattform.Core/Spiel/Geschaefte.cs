@@ -266,7 +266,9 @@ public sealed class Geschaefte(PyObjekt inhalt, PyObjekt daten) : Probe.ISortime
             {
                 fehler.Add(laden + ": Teile-Typ ohne Regal: " + typ);
             }
-            foreach (var stelle in stellen.Where(t => !ausgestellt.Contains(Kleidung.Art + ":" + t)))
+            // Phase 12 Welle 2: eine angehaengte Stelle liegt bei der Auslage ihrer Stelle "auslage"
+            foreach (var stelle in stellen.Where(t => !ausgestellt.Contains(Kleidung.Art + ":" + t)
+                && !ausgestellt.Contains(Kleidung.Art + ":" + Kleidung.AuslageVon(Daten, t))))
             {
                 fehler.Add(laden + ": Kleidung ohne Auslage: " + stelle);
             }

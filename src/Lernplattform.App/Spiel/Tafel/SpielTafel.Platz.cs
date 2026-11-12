@@ -207,14 +207,17 @@ public sealed partial class SpielTafel
         {
             teile.Add(T(Charakter.Belegt(Charakter.Plaetze(stand)), 13, "accent", true));
         }
-        foreach (var (teil, beschriftung) in SpielBilder.AussehenNamen)
+        // Phase 12 Welle 2 (Weisung P12-206): der Bart (nur C#) nach der Haarfarbe, wie die Haare nur beim Anlegen waehlbar
+        var namen = SpielBilder.AussehenNamen.ToList();
+        namen.Insert(namen.FindIndex(n => n.Teil == "haarfarbe") + 1, ("bart", Charakter.BartName));
+        foreach (var (teil, beschriftung) in namen)
         {
-            var wahl = Aussehen.Teile.First(t => t.Teil == teil).Wahl;
+            var wahl = Aussehen.WahlFuer(teil);
             if (schrank && Charakter.GesperrteTeile.Contains(teil))
             {
                 // gesperrt: nur der heutige Wert als Text (nicht bedienbar), unter der Haarfarbe der Satz zum Friseur
                 teile.Add(Label(beschriftung + Charakter.GesperrtZusatz));
-                teile.Add(T(wahl.FirstOrDefault(w => w.Kennung == Py.Str(aussehen[teil])).Name ?? Py.Str(aussehen[teil]), 14, "text", true));
+                teile.Add(T(wahl.FirstOrDefault(w => w.Kennung == Aussehen.Wert(aussehen, teil)).Name ?? Aussehen.Wert(aussehen, teil), 14, "text", true));
                 if (teil == Charakter.GesperrteTeile[^1])
                 {
                     teile.Add(T(Charakter.Gesperrt, 12, "muted"));
@@ -222,7 +225,7 @@ public sealed partial class SpielTafel
                 continue;
             }
             teile.Add(Label(beschriftung));
-            teile.Add(Pillen(wahl.Select(w => (w.Kennung, w.Name)), Py.Str(aussehen[teil]), wert =>
+            teile.Add(Pillen(wahl.Select(w => (w.Kennung, w.Name)), Aussehen.Wert(aussehen, teil), wert =>
             {
                 Py.Setzen(aussehen, teil, wert);
                 vorschau.Content = new Avatar(aussehen, 120);

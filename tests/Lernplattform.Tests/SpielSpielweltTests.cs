@@ -406,7 +406,10 @@ public class SpielSpielweltTests
         Assert.NotNull(SpielGrafikTests.Bibliothek.Value.Modell(Lieferpaket.Modell));
     }
 
-    /// <summary>Nico 2b: der begehbare Kleiderschrank hat ein eigenes Bild mit dem neuen Modell, die anderen bleiben beim alten.</summary>
+    /// <summary>
+    /// Nico 2b: der begehbare Kleiderschrank hat ein eigenes Bild, die anderen bleiben beim alten. Seit Welle 2 Kleidung (Weisung
+    /// P12-206, Entwurf B „Schrankwand mit Spiegel“): zwei geschlossene Schraenke, Spiegel, Kommode, kein Garderobenstaender mehr.
+    /// </summary>
     [Fact]
     public void BegehbarerSchrankEigenesModell()
     {
@@ -417,13 +420,15 @@ public class SpielSpielweltTests
         Assert.NotNull(grafik.Modell(Begehbar.Modell));
         var innen = Innenraum.Bauen("zuhause", spiel.Stand, SpielInnenraumTests.Innenraeume.Value, grafik, Daten, null, null, Jahreszeit.Sommer);
         Assert.NotNull(innen);
-        Assert.Equal(2, innen.Stuecke.Count(s => s.Name == Begehbar.Modell));
-        // Gegenprobe: der grosse Schrank hat das alte Bild ohne Garderobenstaender
+        Assert.DoesNotContain(innen.Stuecke, s => s.Name == Begehbar.Modell);
+        Assert.Equal(2, innen.Stuecke.Count(s => s.Name == "bookcaseClosedDoors"));
+        Assert.Single(innen.Stuecke, s => s.Name == "sideTableDrawers");
+        // Gegenprobe: der grosse Schrank hat das alte Bild, ein Schrank ohne Kommode
         var zwei = NeuesSpiel();
         Aufstellen(zwei, Kaufen(zwei, "kleiderschrank_gross"));
         var innen2 = Innenraum.Bauen("zuhause", zwei.Stand, SpielInnenraumTests.Innenraeume.Value, grafik, Daten, null, null, Jahreszeit.Sommer);
-        Assert.DoesNotContain(innen2!.Stuecke, s => s.Name == Begehbar.Modell);
-        Assert.Contains(innen2.Stuecke, s => s.Name == "bookcaseClosedDoors");
+        Assert.DoesNotContain(innen2!.Stuecke, s => s.Name == "sideTableDrawers");
+        Assert.Single(innen2.Stuecke, s => s.Name == "bookcaseClosedDoors");
     }
 
     private static StadtSpiel StadtSpielMit(Spielablauf spiel)

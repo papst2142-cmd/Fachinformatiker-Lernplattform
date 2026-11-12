@@ -45,14 +45,23 @@ public static class Kleidung
     /// </summary>
     public sealed record Stueck(string Id, string Name, string Slot, long Preis, string Form, string Farbe, string? Festzeit = null);
 
-    /// <summary>Eine Stelle an der Figur mit Namen und Abteilung im Kaufhaus.</summary>
-    public sealed record Stelle(string Id, string Name, string Abteilung);
+    /// <summary>
+    /// Eine Stelle an der Figur mit Namen und Abteilung im Kaufhaus. Phase 12 Welle 2 (Weisung P12-206): <see cref="Auslage"/>
+    /// (Feld "auslage") = angehaengte Stelle, deren Ware bei der Auslage einer anderen Stelle liegt (der Grundriss des Kaufhauses
+    /// gehoert zur geschuetzten Fassung 0 und bleibt). Eine solche Stelle steht in <see cref="Getragen"/> nur, wenn dort etwas
+    /// getragen wird oder sie schon in der letzten Zeile stand: so bleibt die Zeile alter Spielstaende wie vorher (Fingerabdruck).
+    /// </summary>
+    public sealed record Stelle(string Id, string Name, string Abteilung, string? Auslage = null);
 
     /// <summary>Die Slots in der Reihenfolge der Datei (leer ohne Kaufhaus).</summary>
     public static List<Stelle> Stellen(PyObjekt daten) =>
         Get(daten, Laden) is PyObjekt laden
-            ? [.. ListeOderLeer(laden, "slots").OfType<PyObjekt>().Select(s => new Stelle(Py.Str(s["id"]), Py.Str(s["name"]), Py.Str(s["abteilung"])))]
+            ? [.. ListeOderLeer(laden, "slots").OfType<PyObjekt>().Select(s => new Stelle(Py.Str(s["id"]), Py.Str(s["name"]), Py.Str(s["abteilung"]),
+                Get(s, "auslage") as string))]
             : [];
+
+    /// <summary>Die Stelle, deren Auslage die Ware von <paramref name="slot"/> zeigt (die Stelle selbst ohne Feld "auslage").</summary>
+    public static string AuslageVon(PyObjekt daten, string slot) => Stellen(daten).FirstOrDefault(s => s.Id == slot)?.Auslage ?? slot;
 
     /// <summary>Alle Stuecke der Datei (auch Festkleidung) in ihrer Reihenfolge: kennen, tragen, darstellen.</summary>
     public static List<Stueck> Alle(PyObjekt daten) =>
@@ -63,10 +72,14 @@ public static class Kleidung
 
     /// <summary>
     /// Das Sortiment in der Reihenfolge der Datei: alle Stuecke ohne Festzeit, dazu die Festkleidung der Festzeit
-    /// <paramref name="festzeit"/> (Phase 8 W6; null = keine Festzeit, das Sortiment wie in W5).
+    /// <paramref name="festzeit"/> (Phase 8 W6; null = keine Festzeit, das Sortiment wie in W5). Phase 12 Welle 2: die
+    /// Festkleidung steht immer am Ende, auch wenn in der Datei danach neue Stuecke angehaengt sind (fuer die alte Datei gleich).
     /// </summary>
-    public static List<Stueck> Sortiment(PyObjekt daten, string? festzeit = null) =>
-        [.. Alle(daten).Where(k => k.Festzeit is null || k.Festzeit == festzeit)];
+    public static List<Stueck> Sortiment(PyObjekt daten, string? festzeit = null)
+    {
+        var alle = Alle(daten);
+        return [.. alle.Where(k => k.Festzeit is null), .. alle.Where(k => k.Festzeit is not null && k.Festzeit == festzeit)];
+    }
 
     /// <summary>Ein Stueck nach Id (auch Festkleidung ausserhalb der Festzeit: gekauft bleibt gekauft).</summary>
     public static Stueck? Finden(PyObjekt daten, string id) => Alle(daten).FirstOrDefault(k => k.Id == id);
@@ -96,7 +109,13 @@ public static class Kleidung
         var getragen = new PyObjekt();
         foreach (var stelle in Stellen(daten))
         {
-            getragen.Add(stelle.Id, stelle.Id == slot ? stueck : angezogen.TryGetValue(stelle.Id, out var s) ? s.Id : null);
+            var wert = stelle.Id == slot ? stueck : angezogen.TryGetValue(stelle.Id, out var s) ? s.Id : null;
+            // Phase 12 Welle 2: angehaengte Stellen nur, wenn belegt oder schon gespeichert (alte Zeilen bleiben gleich)
+            if (stelle.Auslage is not null && wert is null && (stand.Getragen is not { } vorher || !Py.Hat(vorher, stelle.Id)))
+            {
+                continue;
+            }
+            getragen.Add(stelle.Id, wert);
         }
         return (Getragen, new PyObjekt { { "getragen", getragen } });
     }
@@ -163,10 +182,16 @@ public static class Kleidung
         foreach (var s in ListeOderLeer(eintrag, "slots"))
         {
             if (s is not PyObjekt stelle || Get(stelle, "id") is not string { Length: > 0 } id || Get(stelle, "name") is not string { Length: > 0 }
-                || Get(stelle, "abteilung") is not string { Length: > 0 } || stelle.Count != 3)
+                || Get(stelle, "abteilung") is not string { Length: > 0 } || stelle.Count != (Py.Hat(stelle, "auslage") ? 4 : 3))
             {
                 fehler.Add("kaufhaus: Slot ungueltig: " + Py.Str(s));
                 continue;
+            }
+            // Phase 12 Welle 2: "auslage" zeigt auf eine fruehere Stelle mit eigener Auslage
+            if (Py.Hat(stelle, "auslage") && (Get(stelle, "auslage") is not string ziel || !stellen.Contains(ziel)
+                || ListeOderLeer(eintrag, "slots").OfType<PyObjekt>().Any(x => Py.Gleich(Get(x, "id"), ziel) && Py.Hat(x, "auslage"))))
+            {
+                fehler.Add("kaufhaus: " + id + ": Auslage ungueltig");
             }
             if (!stellen.Add(id))
             {

@@ -199,7 +199,8 @@ public class PruefungTests
     {
         var soll = new Dictionary<string, (long, int)>
         {
-            ["moebelhaus"] = (10160, 12),
+            // A 0.68.0 (Weisung P12-206): der begehbare Schrank in der Auslage ist jetzt Entwurf B (vorher 10160)
+            ["moebelhaus"] = (10184, 12),
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
             ["amt"] = (9259, 12),

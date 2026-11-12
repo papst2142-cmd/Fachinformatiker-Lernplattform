@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.44.0
+
+Neuer begehbarer Kleiderschrank und neue Kleidung im gemeinsamen Teil.
+
+- Der begehbare Kleiderschrank sieht in der 3D-Ansicht und im Grundriss eines Innenraums jetzt so aus wie im Spiel: eine Schrankwand mit Spiegel und Kommode. Er ist genauso groß wie vorher; Prüfung und Wege ändern sich nicht.
+- Personen in Innenräumen zeigen ihre Frisur jetzt auch in 3D.
+- Im Werkzeug ändert sich sonst nichts an der Bedienung.
+
 ## S 0.43.0
 
 Ansichten robuster, sauberes Fehlerprotokoll und Busfahrten im gemeinsamen Teil.

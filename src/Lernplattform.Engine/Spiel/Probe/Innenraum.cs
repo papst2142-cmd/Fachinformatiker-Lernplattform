@@ -51,7 +51,7 @@ public sealed class Innenraum
     public const string Serverfarm = "serverfarm";
 
     /// <summary>Alle CC0-Modelle, die Innenraeume nutzen (Pruefung: jedes Modell in modelle.bin wird gebraucht).</summary>
-    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB", Begehbar.Modell];
+    public static readonly IReadOnlyList<string> Modelle = ["bathroomSink", "bathtub", "bedDouble", "bedSingle", "bench", "bookcaseClosedDoors", "bookcaseClosedWide", "bookcaseOpen", "cabinetTelevision", "cardboardBoxClosed", "chair", "chairDesk", "computerScreen", "desk", "kitchenBar", "kitchenCabinet", "kitchenCoffeeMachine", "kitchenFridge", "lampRoundFloor", "loungeChair", "loungeChairRelax", "loungeSofa", "loungeSofaOttoman", "pottedPlant", "rugRectangle", "shower", "sideTableDrawers", "table", "tableCoffee", "televisionModern", "toilet", "train-electric-city-a", "washer", "kkArmchair", "kkChairA", "kkPictureframeLargeB"];
 
     private readonly List<Teil> _teile = [];
     private readonly List<ModellStueck> _stuecke = [];
@@ -1555,46 +1555,48 @@ public sealed class Innenraum
     }
 
     /// <summary>
-    /// Phase 12 Welle 2 (Nico 2b): begehbarer Kleiderschrank als offenes Ankleide-Regal. Links und rechts je ein offenes
-    /// Regal (Kenney „bookcaseOpen“) mit gefalteten Stapeln und Schuhen, dazwischen eine Kleiderstange auf zwei
-    /// Garderobenstaendern (Kenney „coatRackStanding“, CC0, nur angehaengt in modelle.bin) mit haengenden Oberteilen und
-    /// Hosen. Gleiche Grundflaeche wie im Laden (w × h aus geschaefte.json), Rueckseite an der Wand.
+    /// Begehbarer Kleiderschrank, seit Phase 12 Welle 2 Kleidung (Weisung P12-206, Nico 2b zu P12-118) Entwurf B „Schrankwand mit
+    /// Spiegel“: links und rechts je ein Schrank mit geschlossenen Tueren (Kenney „bookcaseClosedDoors“), auf der rechten Tuer ein
+    /// Spiegel; in der Mitte offen mit Rueckwand, Deckboden, Kleiderstange mit haengender Kleidung und einer Kommode
+    /// („sideTableDrawers“) mit gefalteten Stapeln. Gleiche Grundflaeche wie vorher (w × h aus geschaefte.json, 4,4 × 1,2), damit
+    /// aufgestellte Schraenke alter Spielstaende passen; Rueckseite an der Wand.
     /// </summary>
     private void BegehbarerSchrank(Rahmen r, float b, float t)
     {
         const float M = Meter;
-        var seite = MathF.Min(1.1f, b * 0.26f);
-        Modell(r, "bookcaseOpen", 0, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
-        Modell(r, "bookcaseOpen", b - seite, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
-        var boden = 2.1f * M;
-        var stapel = Begehbar.Farben;
-        var nr = 0;
-        foreach (var anteil in (ReadOnlySpan<float>)[0.04f, 0.37f, 0.7f])
-        {
-            var unten = boden * anteil;
-            for (var i = 0; i < 2; i++)
-            {
-                // links gefaltete Stapel, rechts Schuhe
-                Kasten(r, 0.1f + (i * ((seite - 0.2f) / 2)), t * 0.35f, (seite - 0.3f) / 2, t * 0.5f, unten, unten + 0.16f, stapel[nr++ % stapel.Count]);
-                Kasten(r, b - seite + 0.1f + (i * ((seite - 0.2f) / 2)), t * 0.4f, (seite - 0.3f) / 2, t * 0.45f, unten, unten + 0.1f,
-                    stapel[(nr + 3) % stapel.Count] * 0.8f);
-            }
-        }
-        // Kleiderstange zwischen zwei Garderobenstaendern
-        var links = seite + 0.25f;
-        var rechts = b - seite - 0.25f;
-        var stange = 1.75f * M;
-        Modell(r, Begehbar.Modell, links - 0.22f, (t / 2) - 0.22f, 0.44f, 0.44f, 1.9f * M, 0, Farben.HolzDunkel);
-        Modell(r, Begehbar.Modell, rechts - 0.22f, (t / 2) - 0.22f, 0.44f, 0.44f, 1.9f * M, 0, Farben.HolzDunkel);
+        var seite = MathF.Min(SchrankSeite, b * 0.3f);
+        Modell(r, "bookcaseClosedDoors", 0, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
+        Modell(r, "bookcaseClosedDoors", b - seite, 0, seite, t, 2.1f * M, 0, Farben.HolzDunkel);
+        // Spiegel vorn auf der rechten Tuer
+        Kasten(r, b - seite + 0.12f, t - 0.02f, seite - 0.24f, 0.03f, 0.25f * M, 1.95f * M, SpiegelFarbe);
+        // Mitte: Rueckwand und Deckboden
+        Kasten(r, seite, 0, b - (2 * seite), 0.06f, 0, 2.1f * M, Farben.Holz);
+        Kasten(r, seite, 0, b - (2 * seite), t, 2.05f * M, 2.1f * M, Farben.HolzDunkel);
+        Modell(r, "sideTableDrawers", seite + 0.1f, 0.15f, b - (2 * seite) - 0.2f, t - 0.25f, 0.6f * M, 0, Farben.Holz);
+        // Kleiderstange mit haengender Kleidung
+        var links = seite + 0.08f;
+        var rechts = b - seite - 0.08f;
+        var stange = 1.8f * M;
         Kasten(r, links, (t / 2) - 0.02f, rechts - links, 0.04f, stange - 0.04f, stange, Farben.Metall);
-        var anzahl = Math.Max(1, (int)((rechts - links - 0.2f) / 0.14f));
+        var anzahl = Math.Max(1, (int)((rechts - links - 0.16f) / 0.13f));
         for (var i = 0; i < anzahl; i++)
         {
-            var lx = links + 0.1f + (i * (rechts - links - 0.2f) / anzahl);
-            var lang = i % 3 == 2 ? 0.95f : 0.7f;
-            Kasten(r, lx, (t / 2) - 0.22f, 0.06f, 0.44f, stange - (lang * M), stange - 0.06f, stapel[i % stapel.Count]);
+            var lx = links + 0.08f + (i * (rechts - links - 0.16f) / anzahl);
+            Kasten(r, lx, (t / 2) - 0.2f, 0.07f, 0.4f, stange - (0.7f * M), stange - 0.05f, Begehbar.Farben[(i + 3) % Begehbar.Farben.Count]);
+            Kasten(r, lx + 0.025f, (t / 2) - 0.01f, 0.02f, 0.02f, stange - 0.05f, stange + 0.03f, Farben.Metall);
+        }
+        // gefaltete Stapel auf der Kommode
+        for (var i = 0; i < 4; i++)
+        {
+            Kasten(r, seite + 0.15f + (i * 0.5f), (t / 2) - 0.2f, 0.36f, 0.4f, 0.6f * M, (0.6f * M) + 0.12f + (0.06f * (i % 2)), Begehbar.Farben[(i + 1) % Begehbar.Farben.Count]);
         }
     }
+
+    /// <summary>Phase 12 Welle 2: Breite der beiden geschlossenen Schraenke des begehbaren Schranks (Entwurf B).</summary>
+    public const float SchrankSeite = 1.15f;
+
+    /// <summary>Phase 12 Welle 2: Farbe des Spiegels auf der rechten Schranktuer (hell, kuehl).</summary>
+    public static readonly Vector3 SpiegelFarbe = Netz.Farbe("#CBD5E1");
 
     /// <summary>Kaufhaus (Phase 8 W5): Kleiderstange auf zwei Fuessen, Oberteile (Hosen) haengend in den Farben des Sortiments.</summary>
     private void Kleiderstaender(Rahmen r, float b, float t, string? ware)
