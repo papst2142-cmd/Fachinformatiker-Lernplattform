@@ -10,8 +10,8 @@ namespace Stadtbau.Core;
 /// <summary>
 /// Sammelliste 295 (Weisung P12-196, Nico 2a): ein Haus mit Bahnsteig (Bahnhof) rastet mit „Einrasten“ beim Setzen und
 /// Schieben ans gerade Gleis: zwei Bahnsteige nebeneinander = Gleis genau mittig dazwischen, ein Bahnsteig = Kante
-/// <see cref="BahnsteigKante"/> vor der Gleismitte. Der Bahnhof dreht dazu in Vierteln, bis die Bahnsteige parallel zum Gleis
-/// liegen. Nur wenn ein gerades, achsparalleles Gleisstueck neben dem Bahnsteig liegt und die Verschiebung hoechstens
+/// <see cref="BahnsteigKante"/> vor der Gleismitte. Der Bahnhof dreht dazu (seit Welle A 0.70.0 in Schritten von 15 Grad),
+/// bis die Bahnsteige parallel zum Gleis liegen. Nur wenn ein gerades Gleisstueck neben dem Bahnsteig liegt und die Verschiebung hoechstens
 /// <see cref="BahnhofFang"/> ist. Nur Werkzeug.
 /// </summary>
 public static partial class AussenBearbeitung
@@ -26,26 +26,57 @@ public static partial class AussenBearbeitung
     public static bool BahnhofAltFuerTests { get => BahnhofAlt.Value; set => BahnhofAlt.Value = value; }
     private static readonly AsyncLocal<bool> BahnhofAlt = new();
 
-    /// <summary>Gerade, achsparallele Gleisstuecke (Anfang, Ende) aller Bahnen.</summary>
-    private static List<(Vector2 A, Vector2 B)> GeradeGleise(PyObjekt aussen)
+    /// <summary>
+    /// Gegenprobe Sammelliste 314: nur achsparallele Gleisstuecke und Drehung in Vierteln (wie bis S 0.45.0, nur Tests, je Ablauf).
+    /// </summary>
+    public static bool BahnhofSchraegAltFuerTests { get => BahnhofSchraegAlt.Value; set => BahnhofSchraegAlt.Value = value; }
+    private static readonly AsyncLocal<bool> BahnhofSchraegAlt = new();
+
+    /// <summary>So weit (Grad) darf ein Gleisstueck von einer 15-Grad-Richtung abweichen, damit ein Bahnhof daran einrastet.</summary>
+    public const float GleisRichtungFang = 1f;
+
+    /// <summary>
+    /// Gerade Gleisstuecke (Anfang, Ende) aller Bahnen mit der Feindrehung (0 bis 75 Grad), die ein Haus braucht, damit seine
+    /// Bahnsteige parallel liegen. Seit Welle A 0.70.0 (Sammelliste 314) auch schraeg in einer Richtung von 15-Grad-Schritten
+    /// (bis <see cref="GleisRichtungFang"/>); vorher nur achsparallel.
+    /// </summary>
+    private static List<(Vector2 A, Vector2 B, int Fein)> GeradeGleise(PyObjekt aussen)
     {
-        var liste = new List<(Vector2, Vector2)>();
+        var liste = new List<(Vector2, Vector2, int)>();
         foreach (var t in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "bahn")))
         {
             var l = Linie(t["punkte"]);
             for (var i = 0; i + 1 < l.Count; i++)
             {
                 var d = l[i + 1] - l[i];
-                if (d.Length() > 0.5f && (MathF.Abs(d.X) < 1e-3f || MathF.Abs(d.Y) < 1e-3f))
+                if (d.Length() <= 0.5f)
                 {
-                    liste.Add((l[i], l[i + 1]));
+                    continue;
+                }
+                if (BahnhofSchraegAlt.Value || HausViertelAlt.Value)
+                {
+                    if (MathF.Abs(d.X) < 1e-3f || MathF.Abs(d.Y) < 1e-3f)
+                    {
+                        liste.Add((l[i], l[i + 1], 0));
+                    }
+                    continue;
+                }
+                var grad = Math.Atan2(d.Y, d.X) * 180 / Math.PI;
+                var stufe = Math.Round(grad / Hausdrehung.GradSchritt, MidpointRounding.AwayFromZero) * Hausdrehung.GradSchritt;
+                if (Math.Abs(grad - stufe) <= GleisRichtungFang)
+                {
+                    liste.Add((l[i], l[i + 1], (int)((((long)stufe % 90) + 90) % 90)));
                 }
             }
         }
         return liste;
     }
 
-    /// <summary>Bahnhof ans Gleis legen (Drehung in Vierteln, dann quer verschieben); true = gedreht oder verschoben.</summary>
+    /// <summary>
+    /// Bahnhof ans Gleis legen (Drehung so, dass die Bahnsteige parallel zum Gleis liegen, dann quer verschieben); true = gedreht
+    /// oder verschoben. Seit Welle A 0.70.0 auch an einem schraegen geraden Gleis: das Haus dreht dann in Schritten von 15 Grad
+    /// (Feld „grad“ bzw. „hausgrad“), gerechnet wird im Rahmen des Hauses.
+    /// </summary>
     public static bool BahnhofAnGleis(PyObjekt aussen, AussenStelle s)
     {
         if (BahnhofAlt.Value || s.Art is not (AussenArt.Haus or AussenArt.Gebaeude))
@@ -68,18 +99,36 @@ public static partial class AussenBearbeitung
             return false;
         }
         var (x, y) = (Py.F(o["x"]), Py.F(o["y"]));
-        var jetzt = HausDreh(aussen, s);
+        var mitte = new Vector2((float)x, (float)y) + Hausdrehung.Mitte(teile);
+        var jetzt = Hausdrehung.Winkel(HausDreh(aussen, s), HausGrad(aussen, s));
         var linien = Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(t => Py.Gleich(t["typ"], "bahn")).Select(t => Linie(t["punkte"])).ToList();
-        (int Mal, float Delta, bool Waagrecht)? bester = null;
-        // zuerst ohne Drehen, dann eine Vierteldrehung in jede Richtung, zuletzt halb herum; das Haus selbst darf nicht aufs Gleis
-        foreach (var mal in new[] { 0, 1, 3, 2 })
+        // Ziel-Winkel: je Feindrehung der Gleise die vier Lagen; zuerst ohne Drehen, dann die kleinste Drehung (rechts vor links),
+        // zuletzt halb herum
+        static int Abstand(int von, int nach)
         {
-            var r = Bahnsteig.Rechtecke(teile, x, y, (jetzt + mal) % 4);
+            var d = ((((nach - von) % 360) + 540) % 360) - 180;
+            return (Math.Abs(d) * 2) + (d < 0 ? 1 : 0);
+        }
+        var ziele = gleise.Select(g => g.Fein).Distinct()
+            .SelectMany(f => Enumerable.Range(0, 4).Select(k => f + (90 * k)))
+            .OrderBy(w => Abstand(jetzt, w)).ToList();
+        (int Winkel, Vector2 Schub)? bester = null;
+        foreach (var ziel in ziele)
+        {
+            var (dreh, fein) = Hausdrehung.Zerlegen(ziel);
+            var lage = new Hausdrehung.Feinlage(mitte, fein);
+            // Bahnsteige im Rahmen des Hauses (nur Viertel), Gleise dorthin zurueckgedreht: dann liegen sie achsparallel
+            var r = Bahnsteig.Rechtecke(teile, x, y, dreh);
             var waagrecht = r.Sum(q => q.Max.X - q.Min.X) >= r.Sum(q => q.Max.Y - q.Min.Y);
             (float Delta, float Betrag)? hier = null;
-            foreach (var (a, b) in gleise)
+            foreach (var (ga, gb, gf) in gleise)
             {
-                if ((MathF.Abs(a.Y - b.Y) < 1e-3f) != waagrecht)
+                if (gf != fein)
+                {
+                    continue;
+                }
+                var (a, b) = (lage.Zurueck(ga), lage.Zurueck(gb));
+                if ((MathF.Abs(a.Y - b.Y) < MathF.Abs(a.X - b.X)) != waagrecht)
                 {
                     continue;
                 }
@@ -92,7 +141,9 @@ public static partial class AussenBearbeitung
                 {
                     continue;
                 }
-                var c = Q(a);
+                // Gleismitte quer an der Mitte der Bahnsteige (ein Gleis in 15-Grad-Richtung liegt bis 1 Grad schief)
+                var lm = neben.Average(q => (L(q.Min) + L(q.Max)) / 2);
+                var c = MathF.Abs(L(b) - L(a)) < 1e-6f ? Q(a) : Q(a) + ((Q(b) - Q(a)) * ((lm - L(a)) / (L(b) - L(a))));
                 var kandidaten = new List<float>();
                 for (var i = 0; i + 1 < neben.Count; i++)
                 {
@@ -109,16 +160,17 @@ public static partial class AussenBearbeitung
                     kandidaten.Add(seite > 0 ? c + BahnsteigKante - Q(nah.Min) : c - BahnsteigKante - Q(nah.Max));
                 }
                 var delta = kandidaten.MinBy(MathF.Abs);
-                var (nx, ny) = waagrecht ? (x, y + delta) : (x + delta, y);
+                var (lx, ly) = waagrecht ? (0f, delta) : (delta, 0f);
                 if (MathF.Abs(delta) <= BahnhofFang + 1e-4f && (hier is null || MathF.Abs(delta) < hier.Value.Betrag)
-                    && KoerperFrei(teile, nx, ny, (jetzt + mal) % 4, linien))
+                    && KoerperFrei(teile, x + lx, y + ly, dreh, [.. linien.Select(l => l.Select(lage.Zurueck).ToList())]))
                 {
                     hier = (delta, MathF.Abs(delta));
                 }
             }
             if (hier is { } h)
             {
-                bester = (mal, h.Delta, waagrecht);
+                var schub = lage.Richtung(waagrecht ? new Vector2(0, h.Delta) : new Vector2(h.Delta, 0));
+                bester = (ziel, schub);
                 break;
             }
         }
@@ -126,17 +178,27 @@ public static partial class AussenBearbeitung
         {
             return false;
         }
-        if (wahl.Mal > 0)
+        var dreht = Abstand(jetzt, wahl.Winkel) != 0;
+        if (dreht)
         {
-            HausDrehen(aussen, s, wahl.Mal);
+            var um = ((((wahl.Winkel - jetzt) % 360) + 360) % 360);
+            if (um % 90 == 0)
+            {
+                HausDrehen(aussen, s, um / 90);
+            }
+            else
+            {
+                HausFeinDrehen(aussen, s, um);
+            }
         }
         // Lagen stehen auf 0,01 (wie VerschiebenGenau): eine kleinere Abweichung bleibt
-        var d = MathF.Abs(wahl.Delta) <= 0.0055f ? 0 : MathF.Round(wahl.Delta, 2);
-        if (d != 0)
+        float Runden(float v) => MathF.Abs(v) <= 0.0055f ? 0 : MathF.Round(v, 2);
+        var (dx, dy) = (Runden(wahl.Schub.X), Runden(wahl.Schub.Y));
+        if (dx != 0 || dy != 0)
         {
-            VerschiebenGenau(aussen, s, wahl.Waagrecht ? 0 : d, wahl.Waagrecht ? d : 0);
+            VerschiebenGenau(aussen, s, dx, dy);
         }
-        return wahl.Mal > 0 || d != 0;
+        return dreht || dx != 0 || dy != 0;
     }
 
     /// <summary>Gegenprobe Sammelliste 313: Tiefe eines Blocks aus der Hoehe „h“ (wie bis S 0.44.0, nur Tests, je Ablauf).</summary>

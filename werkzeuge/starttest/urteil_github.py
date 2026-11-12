@@ -14,7 +14,8 @@ Ein roter Job zaehlt nur dann als GitHub-Ursache, wenn ein fester Beleg im Proto
   - Rechner verloren ("lost communication with the server", "runner has received a shutdown signal").
 Jeder rote Schritt eines Jobs braucht so einen Beleg. Echt rot bleibt der Job, sobald im roten Schritt
   - eine FEHLER-Zeile ohne Beleg steht, die nicht in der festen Liste der Folgezeilen steht
-    (FOLGE: "Feed ... nennt nicht", "... laut GitHub-API", "pakete ... nicht gruen" = Job, von dem android abhaengt),
+    (FOLGE: "Feed ... nennt nicht", "... laut GitHub-API", "pakete ... nicht gruen" / "android nicht gruen" = Job, von
+    dem der Job release-entwurf abhaengt, seit A 0.70.0; vorher hing android von pakete ab),
   - ein Testfehler ([FAIL], Test Run Failed, error CS/MSB/NU/NETSDK, Unhandled exception, URTEIL: rot, Absturz,
     Wachhund) oder eine ##[error]-Zeile ohne Beleg (ausser "Process completed with exit code n") steht,
   - kein Protokoll lesbar ist oder der Job ohne roten Schritt rot ist (z. B. Zeitgrenze).
@@ -23,7 +24,7 @@ Schriftzeilen des Schritts (zwischen ##[group]Run und ##[endgroup]: Skripttext, 
 
 Ergebnis: "nur GitHub" (dann nur die roten Jobs neu starten, gleicher Lauf, gleicher Kopf; fehlen Jobs: ganzer
 Neustart, zaehlt nicht als Versuch), "echt rot" (ganzer Neustart nach Regel, hoechstens 3 Versuche) oder "gruen".
-Das Merge-Tor bleibt der volle Lauf 17/17 (bzw. die Stufe) auf demselben Kopf. Dieses Urteil aendert kein Ergebnis
+Das Merge-Tor bleibt der volle Lauf 18/18 (bis A 0.69.0 17/17) (bzw. die Stufe) auf demselben Kopf. Dieses Urteil aendert kein Ergebnis
 eines Jobs; der Job "urteil (GitHub oder echt)" ist immer gruen und nur ein Hinweis.
 """
 import datetime
@@ -42,7 +43,7 @@ BELEG = re.compile(
     r"ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up|"
     r"lost communication with the server|runner has received a shutdown signal", re.I)
 FOLGE = re.compile(r"FEHLER: (Feed \(Kanal [^)]*\) nennt nicht |.*laut GitHub-API)")
-FOLGE_PAKETE = re.compile(r"FEHLER: (pakete( \(stadtbau win-x64\))?) nicht gruen")
+FOLGE_PAKETE = re.compile(r"FEHLER: (pakete( \(stadtbau win-x64\))?|android) nicht gruen")
 TESTFEHLER = re.compile(r"\[FAIL\]|Test Run Failed|\berror (CS|MSB|NU|NETSDK)\d+|Unhandled exception|URTEIL: rot|"
                         r"Absturz|Wachhund|failed!", re.I)
 FEHLERZEILE = re.compile(r"FEHLER|##\[error\]")
@@ -148,7 +149,8 @@ def urteilen(jobs, logs, erwartet):
     for name, (art, grund) in list(urteile.items()):
         if art.startswith("folge:"):
             quellen = art[6:].split(",")
-            rote = [n for n in urteile if any(n == q or (q == "pakete" and re.fullmatch(r"pakete \([a-z0-9-]+\)", n)) for q in quellen)]
+            rote = [n for n in urteile if any(n == q or (q == "pakete" and re.fullmatch(r"pakete \([a-z0-9-]+\)", n))
+                                              or (q == "android" and n.startswith("android (")) for q in quellen)]
             if rote and all(urteile[n][0] == "github" for n in rote):
                 urteile[name] = ("github", grund + " (alle GitHub)")
             else:
@@ -273,6 +275,8 @@ UPLOAD = [(T3, "##[group]Run actions/upload-artifact@v7"), (T3, "##[endgroup]"),
 EMU = [(T3, "FEHLER: Werkzeug n+1 meldet sich nicht (120 s)"), (T3, "##[error]Process completed with exit code 1.")]
 FOLGE_LOG = [(T3, "FEHLER: pakete nicht gruen (failure), kein Release-Entwurf"), (T3, "##[error]Process completed with exit code 1.")]
 ANDROID = "android (APK, nur arm64-v8a, Testsignatur)"
+RELEASE = "release (Entwuerfe zusammenstellen)"
+FOLGE_ANDROID = [(T3, "FEHLER: android nicht gruen (failure), kein Release-Entwurf"), (T3, "##[error]Process completed with exit code 1.")]
 ZWEI = ["pakete (osx-arm64)", "tests (ubuntu-latest)"]
 
 FAELLE = [
@@ -285,9 +289,15 @@ FAELLE = [
                                             [OK, ("Run actions/upload-artifact@v7", "failure", T3, T3)])],
      {4: _log(*UPLOAD)}, ["tests (macos-15-intel, Einzeltests und Spiel)"], "nur GitHub"),
     ("weniger Jobs als die Liste (Lauf 744)", [_job(5, "tests (ubuntu-latest)", [OK], "success")], {}, ZWEI, "nur GitHub"),
-    ("Folgefehler android von pakete GitHub (Lauf 751)", [_job(6, "pakete (osx-arm64)", [OK, PAKET]),
-                                                          _job(7, ANDROID, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
-     {6: _log(*RATE), 7: _log(*FOLGE_LOG)}, ["pakete (osx-arm64)", ANDROID], "nur GitHub"),
+    ("Folgefehler release von pakete GitHub (Lauf 751)", [_job(6, "pakete (osx-arm64)", [OK, PAKET]),
+                                                          _job(7, RELEASE, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
+     {6: _log(*RATE), 7: _log(*FOLGE_LOG)}, ["pakete (osx-arm64)", RELEASE], "nur GitHub"),
+    ("Folgefehler release von android GitHub (A 0.70.0)", [_job(24, ANDROID, [OK, ("Run actions/upload-artifact@v7", "failure", T3, T3)]),
+                                                           _job(25, RELEASE, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
+     {24: _log(*UPLOAD), 25: _log(*FOLGE_ANDROID)}, [ANDROID, RELEASE], "nur GitHub"),
+    ("Gegenprobe Folgefehler von echt rotem android", [_job(26, ANDROID, [OK, ("Emulator-Probe Update", "failure", T1, T3)]),
+                                                       _job(27, RELEASE, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
+     {26: _log(*EMU), 27: _log(*FOLGE_ANDROID)}, [ANDROID, RELEASE], "echt rot"),
     ("alles gruen", [_job(8, "tests (ubuntu-latest)", [OK], "success"), _job(9, HILFSJOB, [], None)], {}, ["tests (ubuntu-latest)"], "gruen"),
     ("Gegenprobe Emulator meldet sich nicht (Lauf 753)", [_job(10, ANDROID, [OK, ("Emulator-Probe Update", "failure", T1, T3)])],
      {10: _log(*EMU)}, [ANDROID], "echt rot"),
@@ -305,11 +315,11 @@ FAELLE = [
     ("Gegenprobe Beleg und fremde FEHLER-Zeile", [_job(15, "pakete (osx-arm64)", [OK, PAKET])],
      {15: _log(*(RATE + [(T3, "FEHLER: Paket ohne Signatur")]))}, ["pakete (osx-arm64)"], "echt rot"),
     ("Gegenprobe Folgefehler von echt rotem pakete", [_job(16, "pakete (win-x64)", [OK, PAKET]),
-                                                      _job(17, ANDROID, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
+                                                      _job(17, RELEASE, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
      {16: _log((T3, "FEHLER: Setup-Datei falsch"), (T3, "##[error]Process completed with exit code 1.")), 17: _log(*FOLGE_LOG)},
-     ["pakete (win-x64)", ANDROID], "echt rot"),
-    ("Gegenprobe Folgefehler ohne roten pakete-Job", [_job(18, ANDROID, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
-     {18: _log(*FOLGE_LOG)}, [ANDROID], "echt rot"),
+     ["pakete (win-x64)", RELEASE], "echt rot"),
+    ("Gegenprobe Folgefehler ohne roten pakete-Job", [_job(18, RELEASE, [OK, ("Release zusammenstellen und pruefen (T2, Lizenzliste)", "failure", T3, T3)])],
+     {18: _log(*FOLGE_LOG)}, [RELEASE], "echt rot"),
     ("Gegenprobe Protokoll nicht lesbar", [_job(19, "pakete (osx-arm64)", [OK, PAKET])], {19: None}, ["pakete (osx-arm64)"], "echt rot"),
     ("Gegenprobe Wachhund", [_job(20, "tests (macos-15, Einzeltests und Lernteil)", [OK, ("Start ohne Bedienung (1. Lauf)", "failure", T1, T3)])],
      {20: _log((T3, "Wachhund: Start-Test nach 14 Minuten nicht fertig, Rueckgabe 4"), (T3, "##[error]Process completed with exit code 4."))},

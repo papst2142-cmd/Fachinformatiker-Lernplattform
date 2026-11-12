@@ -27,12 +27,26 @@ public static partial class AussenBearbeitung
     /// <summary>Lassen sich Stuecke dieser Art fein (nicht nur in Vierteln) drehen?</summary>
     public static bool FeinDrehbar(AussenArt art) => art is AussenArt.Strasse or AussenArt.Kurve or AussenArt.Kreisverkehr or AussenArt.Fluss or AussenArt.Teich or AussenArt.Bahn or AussenArt.Huegel;
 
-    /// <summary>Schritt in Grad fuer die Taste R und den Drehgriff: Linien 15, alles andere 90.</summary>
-    public static int DrehSchritt(AussenArt art) => FeinDrehbar(art) ? FeinGrad : 90;
+    /// <summary>Ist das Stueck ein Haus (mit Ort) oder ein Gebaeude ohne Ort?</summary>
+    public static bool IstHaus(AussenArt art) => art is AussenArt.Haus or AussenArt.Gebaeude;
 
-    /// <summary>Hat das Stueck ein Feld „Winkel“ (Strasse, Kurve, Fluss, Bahn; nicht der Ring eines Kreisverkehrs)?</summary>
+    /// <summary>
+    /// Schritt in Grad fuer die Taste R und den Drehgriff: Linien und (seit Welle A 0.70.0, Sammelliste 314) Haeuser 15,
+    /// alles andere 90. Gegenprobe <see cref="HausViertelAltFuerTests"/>: Haeuser wieder 90.
+    /// </summary>
+    public static int DrehSchritt(AussenArt art) => FeinDrehbar(art) || (IstHaus(art) && !HausViertelAlt.Value) ? FeinGrad : 90;
+
+    /// <summary>Gegenprobe Sammelliste 314: Haeuser drehen nur in Vierteln (wie bis S 0.45.0, nur Tests, je Ablauf).</summary>
+    public static bool HausViertelAltFuerTests { get => HausViertelAlt.Value; set => HausViertelAlt.Value = value; }
+    private static readonly AsyncLocal<bool> HausViertelAlt = new();
+
+    /// <summary>
+    /// Hat das Stueck ein Feld „Winkel“ (Strasse, Kurve, Fluss, Bahn; nicht der Ring eines Kreisverkehrs; seit Welle A 0.70.0
+    /// auch Haeuser, dort in Schritten von 15 Grad)?
+    /// </summary>
     public static bool MitWinkel(PyObjekt aussen, AussenStelle s) =>
-        IstLinienzug(s.Art) || (s.Art == AussenArt.Strasse && !Kreisverkehr.IstRing(Objekt(Aussen.Landschaft(aussen)[s.Nummer])));
+        IstLinienzug(s.Art) || (s.Art == AussenArt.Strasse && !Kreisverkehr.IstRing(Objekt(Aussen.Landschaft(aussen)[s.Nummer])))
+        || (IstHaus(s.Art) && !HausViertelAlt.Value);
 
     /// <summary>
     /// Winkel einer Linie in Grad (0 bis 359, ganz): Richtung vom ersten zum letzten Punkt, 0 = nach rechts (Osten), 90 = nach
@@ -43,6 +57,11 @@ public static partial class AussenBearbeitung
         if (!MitWinkel(aussen, s))
         {
             return null;
+        }
+        if (IstHaus(s.Art))
+        {
+            // Welle A 0.70.0: Drehung des Hauses im Uhrzeigersinn, 0 = Vorderseite nach Sueden
+            return Hausdrehung.Winkel(HausDreh(aussen, s), HausGrad(aussen, s));
         }
         var linie = IstLinienzug(s.Art) ? Linie(Eckpunkte(aussen, Ganz(s))) : Linie(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["punkte"]);
         if (linie.Count < 2 || Vector2.Distance(linie[0], linie[^1]) < 1e-4f)
@@ -60,6 +79,12 @@ public static partial class AussenBearbeitung
         if (Winkel(aussen, s) is not { } jetzt)
         {
             return false;
+        }
+        if (IstHaus(s.Art))
+        {
+            // ein Haus dreht in Schritten von 15 Grad: der Wert wird auf 15 gerundet
+            var (d, g) = Hausdrehung.Zerlegen(grad);
+            grad = Hausdrehung.Winkel(d, g);
         }
         var delta = ((((grad - jetzt) % 360) + 540) % 360) - 180;
         return delta != 0 && Drehen(aussen, s, delta);
@@ -90,6 +115,11 @@ public static partial class AussenBearbeitung
                 ok |= Drehen(aussen, s);
             }
             return ok;
+        }
+        if (IstHaus(s.Art) && !HausViertelAlt.Value)
+        {
+            // Welle A 0.70.0 (Sammelliste 314): Haeuser in Schritten von 15 Grad
+            return grad % Hausdrehung.GradSchritt == 0 && HausFeinDrehen(aussen, s, grad);
         }
         if (!FeinDrehbar(s.Art))
         {
@@ -155,8 +185,110 @@ public static partial class AussenBearbeitung
         return new Vector2((float)Py.F(o["x"]), (float)Py.F(o["y"])) + Hausdrehung.Mitte(Get(Modelle(aussen), Py.Str(o["modell"])));
     }
 
-    /// <summary>Richtung, in die die Vorderseite eines Hauses zeigt (ungedreht nach Sueden).</summary>
-    public static Vector2 HausFront(PyObjekt aussen, AussenStelle s) => Hausdrehung.Drehen(new Vector2(0, 1), Vector2.Zero, HausDreh(aussen, s));
+    /// <summary>Richtung, in die die Vorderseite eines Hauses zeigt (ungedreht nach Sueden; auch fein gedreht).</summary>
+    public static Vector2 HausFront(PyObjekt aussen, AussenStelle s) =>
+        HausLage(aussen, s).Richtung(Hausdrehung.Drehen(new Vector2(0, 1), Vector2.Zero, HausDreh(aussen, s)));
+
+    /// <summary>
+    /// Welle A 0.70.0 (Sammelliste 314): Haus um <paramref name="grad"/> Grad (Vielfaches von 15) im Uhrzeigersinn um seine
+    /// Mitte drehen. Tuer, Fussweg und Schild drehen mit; Vierteldrehungen bleiben im Feld „dreh“ bzw. „hausdreh“, der Rest
+    /// steht in „grad“ bzw. „hausgrad“ (0 = Feld weg). Ganze Vierteldrehungen rechnen genau wie <see cref="HausDrehen"/>.
+    /// </summary>
+    private static bool HausFeinDrehen(PyObjekt aussen, AussenStelle s, int grad)
+    {
+        grad = ((grad % 360) + 360) % 360;
+        if (grad == 0)
+        {
+            return false;
+        }
+        var alt = Hausdrehung.Winkel(HausDreh(aussen, s), HausGrad(aussen, s));
+        var (dreh, fein) = Hausdrehung.Zerlegen(alt + grad);
+        if (grad % 90 == 0)
+        {
+            return HausDrehen(aussen, s, grad / 90);
+        }
+        var m = HausMitte(aussen, s);
+        var (sin, cos) = Math.SinCos(grad * Math.PI / 180);
+        void Punkt2(object? punkt)
+        {
+            var p = Liste(punkt);
+            double dx = Py.F(p[0]) - m.X, dy = Py.F(p[1]) - m.Y;
+            p[0] = Bearbeitung.Zahl(m.X + (dx * cos) - (dy * sin));
+            p[1] = Bearbeitung.Zahl(m.Y + (dx * sin) + (dy * cos));
+        }
+        HausDrehungSetzen(aussen, s, dreh, fein);
+        foreach (var zugang in HausZugaenge(aussen, s))
+        {
+            Punkt2(zugang["tuer"]);
+            var weg = Liste(zugang["weg"]);
+            foreach (var p in weg)
+            {
+                Punkt2(p);
+            }
+            WegAnschliessen(weg, Strassen(aussen));
+        }
+        if (s.Art == AussenArt.Haus && Ort(aussen, s.Ort)!["schild"] is List<object?> schild)
+        {
+            Punkt2(schild);
+        }
+        return true;
+    }
+
+    /// <summary>Zugaenge eines Hauses: Zugang des Orts bzw. die Zierwege eines Gebaeudes ohne Ort.</summary>
+    private static List<PyObjekt> HausZugaenge(PyObjekt aussen, AussenStelle s) => s.Art == AussenArt.Gebaeude
+        ? [.. Zierwege(aussen, Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]))]
+        : Zugang(aussen, s.Ort) is { } z ? [z] : [];
+
+    /// <summary>Felder der Drehung eines Hauses setzen (Viertel und feine Drehung; 0 = Feld weg, leerer Abschnitt weg).</summary>
+    private static void HausDrehungSetzen(PyObjekt aussen, AussenStelle s, int dreh, int fein)
+    {
+        if (s.Art == AussenArt.Gebaeude)
+        {
+            var g = Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
+            foreach (var (feld, wert) in new[] { (Hausdrehung.Feld, dreh), (Hausdrehung.GradFeld, fein) })
+            {
+                if (wert == 0)
+                {
+                    g.RemoveAll(p => p.Key == feld);
+                }
+                else
+                {
+                    Py.Setzen(g, feld, (long)wert);
+                }
+            }
+            return;
+        }
+        var sd = Aussen.Stadtdaten(aussen);
+        if (Get(sd, "darstellung") is not PyObjekt d)
+        {
+            d = [];
+            Py.Setzen(sd, "darstellung", d);
+        }
+        foreach (var (abschnitt, wert) in new[] { (Hausdrehung.Abschnitt, dreh), (Hausdrehung.GradAbschnitt, fein) })
+        {
+            if (Get(d, abschnitt) is not PyObjekt h)
+            {
+                if (wert == 0)
+                {
+                    continue;
+                }
+                h = [];
+                Py.Setzen(d, abschnitt, h);
+            }
+            if (wert == 0)
+            {
+                h.RemoveAll(p => p.Key == s.Ort);
+                if (h.Count == 0)
+                {
+                    d.RemoveAll(p => p.Key == abschnitt);
+                }
+            }
+            else
+            {
+                Py.Setzen(h, s.Ort, (long)wert);
+            }
+        }
+    }
 
     /// <summary>Haus um <paramref name="mal"/> Vierteldrehungen im Uhrzeigersinn drehen (mit Tuer, Fussweg, Schild).</summary>
     private static bool HausDrehen(PyObjekt aussen, AussenStelle s, int mal)

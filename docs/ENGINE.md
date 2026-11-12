@@ -55,6 +55,22 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   ist; Figur und Kamera folgen der Höhe (`StadtSzene.BodenHoehe`). Laufraster gleich, nur Hänge steiler als 45 Grad gesperrt.
   Ohne Abschnitt (Fassung 0) bitgleich. Regeln `StadtbauPruefung.Gelaende.cs` (Rand `Gelaende.Saum` 1,5, höchstens 16 Hügel
   und 6 000 Dreiecke).
+- **Hausdrehung** (`Hausdrehung.cs`): Vierteldrehungen (`dreh` am Gebäude ohne Ort, `darstellung.hausdreh` je Ort) und seit
+  A 0.70.0 die feine Drehung in 15-Grad-Schritten (`grad` 15–75 bzw. `darstellung.hausgrad`, Sammelliste 314), beide im
+  Uhrzeigersinn um die Mitte der Blöcke. Das Haus wird im viertelgedrehten Rahmen gebaut (Tür, Fenster, Kasten wie bisher)
+  und danach als Ganzes gedreht (`Hausdrehung.Feinlage`: Quader/Satteldach behalten ihre Ecken und tragen `Teil.Dreh`,
+  Stücke mal `Feinlage.Matrix`, Türen in die Welt). Laufraster und Hindernisse sperren die gedrehte Grundfläche mit
+  achsparallelen Streifen (`Hausdrehung.Streifen`, Breite 0,05); `StadtHaus.Min/Max` ist der Kasten um das gedrehte Haus, genau
+  rechnen `StadtHaus.Drin`, `Abstand`, `Grundflaeche` und `Hausdrehung.Ueberlappung`. Ein fein gedrehter Ort kommt nie aus dem
+  Teilbau-Vorrat. Ohne Feld (Fassung 0) bitgleich.
+- **Bahn seit A 0.70.0** (`StadtSzene.cs`, `StadtbauPruefung.Bahn.cs`): Haltepunkt mit freiem Bahnsteig (Modell aus
+  `Stadtbau.Core/Zusatzmodelle.cs`) mit blauer, rechteckiger Zugzielanzeige neben dem Häuschen; Windfang (Vorbau) vor einer
+  Tür im Tor eines Gebäudes. Weiche: endet ein Gleis bis `WeicheFang` 0,02 auf einem anderen Gleis (nicht an dessen Ende),
+  parallel und läuft es danach weg, gilt der Bereich bis dort plus `WeicheZugabe` 0,25 nicht als „zu nah“
+  (`StadtbauPruefung.Weichen`, Gegenprobe `WeicheAltFuerTests`). Prellbock (`StadtSzene.Prellbock`, rote Pufferbohle, Farbe
+  `PrellbockRot`) an jedem freien Ende eines Gleises aus dem Werkzeug (mit `radien`), nicht am Kartenrand, an einem anderen
+  Gleis oder an einem Haus (Tor); Gegenprobe `PrellbockAltFuerTests`. Die Talbahn der Fassung 0 (ohne `radien`) bleibt
+  bitgleich. Kein Zug fährt auf Abstellgleise.
 - **Innenräume und Etagen** (`Innenraum.cs`, `StadtSpiel.Etagen.cs`, `Engine/Stadtbau/Etagen.cs`, `InnenGrundriss.cs`).
 - **Licht und Zeit** (`Tageslicht.cs`, `Nachtlicht.cs`, `Jahreszeitfarben.cs`, `FestDeko.cs`): Tag/Nacht, 22 Laternen,
   Festzeiten.

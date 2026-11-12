@@ -128,6 +128,15 @@ public static partial class Texte
     /// <summary>Welle E: Feld "Winkel" (Grad) an Strassen, Kurven und Fluessen.</summary>
     public const string Winkel = "Winkel (Grad)";
 
+    /// <summary>Welle A 0.70.0 (Sammelliste 314): Tipp am Feld „Winkel“ eines Hauses.</summary>
+    public const string WinkelHausTipp = "Drehung des Hauses im Uhrzeigersinn in Grad: 0 = Vorderseite nach unten. Schritte von 15 Grad, andere Werte werden gerundet. Dann „Übernehmen“.";
+
+    /// <summary>Welle A 0.70.0: Tuer an einem schraeg gedrehten Haus.</summary>
+    public const string TuerSchraegNicht = "An einem schräg gedrehten Haus kann die Tür noch nicht gesetzt werden. Haus auf 0, 90, 180 oder 270 Grad drehen, Tür setzen, dann wieder schräg drehen: die Tür dreht mit.";
+
+    /// <summary>Welle A 0.70.0: Aussehen eines schraeg gedrehten Hauses.</summary>
+    public const string AussehenSchraegNicht = "Ein schräg gedrehtes Haus kann sein Aussehen noch nicht tauschen. Erst auf 0, 90, 180 oder 270 Grad drehen.";
+
     public const string WinkelTipp = "Richtung vom Anfang zum Ende in Grad: 0 = nach rechts, 90 = nach unten. Ganze Grad, dann „Übernehmen“.";
 
     public const string DrehgriffHinweis = "Am Kreis über dem Stück ziehen dreht es (Straßen, Kurven, Flüsse und Teiche in 15-Grad-Schritten, alles andere in 90-Grad-Schritten).";
@@ -748,6 +757,9 @@ public static partial class Texte
     public const string ZiehenHinten = "Das Ende liegt hinter dem Anfang: so eng kann der Bogen nicht drehen.";
     public const string ZiehenZuEng = "Keine Verbindung mit den erlaubten Radien: zu eng. Das Ende weiter weg oder anders ansetzen.";
     public const string ZiehenAusserhalb = "Die Verbindung läge nicht ganz auf der Karte.";
+
+    /// <summary>Welle A 0.70.0 (Weisung P12-218 Punkt 3): eine Weiche geht nur am geraden Gleis.</summary>
+    public const string WeicheNurGerade = "Eine Weiche geht nur an einem geraden Stück des Gleises.";
     public const string FusswegDrehenNicht = "Einen Fußweg zieht man neu, statt ihn zu drehen.";
 
     // Welle S 0.26.0 (Weisung P12-115): Zebrastreifen und Laternen automatisch

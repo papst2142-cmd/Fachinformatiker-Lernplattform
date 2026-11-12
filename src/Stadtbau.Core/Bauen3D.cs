@@ -36,7 +36,21 @@ public static class Bauen3D
     public static double Greifen(float abstand) => Math.Max(0.3, abstand * 0.03);
 
     /// <summary>Haus als Quader (Grundflaeche aus der Karte, Hoehe aus der Szene).</summary>
-    public sealed record Kasten(AussenStelle Stelle, Vector3 Min, Vector3 Max);
+    /// <remarks>Welle A 0.70.0: ein fein gedrehtes Haus liegt mit Min/Max im Rahmen des Hauses, <paramref name="Lage"/> dreht es in die Welt.</remarks>
+    public sealed record Kasten(AussenStelle Stelle, Vector3 Min, Vector3 Max, Hausdrehung.Feinlage Lage = default)
+    {
+        /// <summary>Abstand entlang des Strahls bis zum (auch fein gedrehten) Quader oder null.</summary>
+        public float? Schnitt(Vector3 start, Vector3 richtung)
+        {
+            if (!Lage.Aktiv)
+            {
+                return Bauen3D.Schnitt(start, richtung, Min, Max);
+            }
+            var s2 = Lage.Zurueck(new Vector2(start.X, start.Z));
+            var r2 = Lage.RichtungZurueck(new Vector2(richtung.X, richtung.Z));
+            return Bauen3D.Schnitt(new Vector3(s2.X, start.Y, s2.Y), new Vector3(r2.X, richtung.Y, r2.Y), Min, Max);
+        }
+    }
 
     /// <summary>
     /// Alle Haeuser (mit und ohne Ort) als Quader. <paramref name="hoehe"/> liefert zur Grundflaeche (x, y, w, h) die Hoehe
@@ -46,9 +60,10 @@ public static class Bauen3D
     [
         .. AussenBearbeitung.Alle(aussen).Where(a => a.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).Select(a =>
         {
-            var f = AussenBearbeitung.HausFlaeche(aussen, a.Stelle);
+            var lage = AussenBearbeitung.HausLage(aussen, a.Stelle);
+            var f = lage.Aktiv ? AussenBearbeitung.HausViertel(aussen, a.Stelle) : AussenBearbeitung.HausFlaeche(aussen, a.Stelle);
             var h = hoehe?.Invoke(f) ?? HausHoeheVorgabe;
-            return new Kasten(a.Stelle, new Vector3((float)f.X, 0, (float)f.Y), new Vector3((float)(f.X + f.W), Math.Max(0.2f, h), (float)(f.Y + f.H)));
+            return new Kasten(a.Stelle, new Vector3((float)f.X, 0, (float)f.Y), new Vector3((float)(f.X + f.W), Math.Max(0.2f, h), (float)(f.Y + f.H)), lage);
         }),
     ];
 
@@ -130,7 +145,7 @@ public static class Bauen3D
         var tVorne = float.MaxValue;
         foreach (var k in haeuser)
         {
-            if (Schnitt(start, richtung, k.Min, k.Max) is { } t && t < tVorne)
+            if (k.Schnitt(start, richtung) is { } t && t < tVorne)
             {
                 vorne = k;
                 tVorne = t;
@@ -168,7 +183,7 @@ public static class Bauen3D
         switch (s.Art)
         {
             case AussenArt.Haus or AussenArt.Gebaeude:
-                return [Rechteck(AussenBearbeitung.HausFlaeche(aussen, s))];
+                return [AussenBearbeitung.HausEcken(aussen, s)];
             case AussenArt.Katalog:
                 return [Rechteck(AussenBearbeitung.KatalogFlaeche(aussen, s))];
             case AussenArt.Park:

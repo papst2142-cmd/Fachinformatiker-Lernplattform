@@ -417,7 +417,16 @@ public static class Nachtlicht
                     return (false, halb >= (StadtSzene.StrassenBreite / 2) - 0.01f ? "Fahrbahn oder Gleis" : "Fussweg", d);
                 }
             }
-            foreach (var h in sz.Haeuser.Select(h => (h.Min, h.Max)).Concat(sz.Orte.Select(o => (Min: o.KastenMin, Max: o.KastenMax))))
+            // Welle A 0.70.0: ein fein gedrehtes Haus mit seiner genauen Grundflaeche (sein Ort-Kasten ist nur der Kasten darum)
+            foreach (var fh in sz.Haeuser.Where(h => h.Fein.Aktiv))
+            {
+                if (fh.Abstand(q) is var fd && fd < AbstandModell)
+                {
+                    return (false, "Haus", fd);
+                }
+            }
+            foreach (var h in sz.Haeuser.Where(h => !h.Fein.Aktiv).Select(h => (h.Min, h.Max))
+                .Concat(sz.Orte.Where(o => sz.Haeuser.All(h => !h.Fein.Aktiv || h.Id != o.Id)).Select(o => (Min: o.KastenMin, Max: o.KastenMax))))
             {
                 var dx = MathF.Max(MathF.Max(h.Min.X - q.X, 0), q.X - h.Max.X);
                 var dz = MathF.Max(MathF.Max(h.Min.Z - q.Y, 0), q.Y - h.Max.Z);

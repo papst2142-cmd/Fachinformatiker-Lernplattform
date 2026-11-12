@@ -51,6 +51,10 @@ public static class Bahnsteig
         }
         return liste;
     }
+
+    /// <summary>Welle A 0.70.0: feine Drehung des Hauses; die <see cref="Rechtecke"/> liegen in ihrem Rahmen (nur viertelgedreht).</summary>
+    public static Hausdrehung.Feinlage Fein(object? teile, double x, double y, int grad) =>
+        new(new Vector2((float)x, (float)y) + Hausdrehung.Mitte(teile), grad);
 }
 
 public static partial class StadtbauPruefung
@@ -132,11 +136,11 @@ public static partial class StadtbauPruefung
         }
         // Sammelliste 295 (Weisung P12-196 Frage 2 = a): auch die Bahnsteige im Modell eines Gebaeudes oder Orts (Bahnhof), nicht nur
         // einzelne Bahnsteig-Stuecke; Gegenprobe BahnsteigNurAltFuerTests
-        var pruefen = landschaft.Select(g => (Teile: Get(modelle, Py.Str(g["modell"])), X: Py.F(g["x"]), Y: Py.F(g["y"]), Dreh: Hausdrehung.Von(g),
+        var pruefen = landschaft.Select(g => (Teile: Get(modelle, Py.Str(g["modell"])), X: Py.F(g["x"]), Y: Py.F(g["y"]), Dreh: Hausdrehung.Von(g), Grad: Hausdrehung.GradVon(g),
                 Name: Bahnsteig.Nur(Get(modelle, Py.Str(g["modell"]))) ? $"Der Bahnsteig („{Py.Str(g["modell"])}“)" : $"Der Bahnsteig von „{Py.Str(g["modell"])}“"))
             .Concat(orte.Select(o => (Teile: Get(modelle, Py.Str(o["modell"])), X: Py.F(o["x"]), Y: Py.F(o["y"]), Dreh: Hausdrehung.VonOrt(fassung.Stadtdaten, Py.Str(o["id"])),
-                Name: $"Der Bahnsteig von „{Get(o, "name") as string ?? Py.Str(o["id"])}“")));
-        foreach (var (teile, x, y, dreh, name) in pruefen)
+                Grad: Hausdrehung.GradVonOrt(fassung.Stadtdaten, Py.Str(o["id"])), Name: $"Der Bahnsteig von „{Get(o, "name") as string ?? Py.Str(o["id"])}“")));
+        foreach (var (teile, x, y, dreh, grad, name) in pruefen)
         {
             if (BahnsteigNurAlt.Value ? !Bahnsteig.Nur(teile) : !Bahnsteig.Hat(teile))
             {
@@ -144,7 +148,7 @@ public static partial class StadtbauPruefung
             }
             foreach (var (min, max) in Bahnsteig.Rechtecke(teile, x, y, dreh))
             {
-                if (BahnsteigAufGleis(min, max, szene) is { } p)
+                if (BahnsteigAufGleis(min, max, szene, Bahnsteig.Fein(teile, x, y, grad)) is { } p)
                 {
                     funde.Add(new StadtbauFund(name + " liegt auf dem Gleis.",
                         "Bahnsteig weiter weg vom Gleis schieben (mit „Einrasten“ rastet ein Bahnhof selbst ans Gleis).", true, p.X, p.Y));
@@ -159,7 +163,7 @@ public static partial class StadtbauPruefung
     private static readonly AsyncLocal<bool> BahnsteigNurAlt = new();
 
     /// <summary>Erster Punkt des Rechtecks (abgetastet im Raster <see cref="BahnsteigRaster"/>, mit Rand) auf dem Gleis, sonst null.</summary>
-    private static Vector2? BahnsteigAufGleis(Vector2 min, Vector2 max, StadtSzene szene)
+    private static Vector2? BahnsteigAufGleis(Vector2 min, Vector2 max, StadtSzene szene, Hausdrehung.Feinlage fein = default)
     {
         var nx = Math.Max(1, (int)MathF.Ceiling((max.X - min.X) / BahnsteigRaster));
         var ny = Math.Max(1, (int)MathF.Ceiling((max.Y - min.Y) / BahnsteigRaster));
@@ -167,7 +171,7 @@ public static partial class StadtbauPruefung
         {
             for (var j = 0; j <= ny; j++)
             {
-                var p = new Vector2(min.X + ((max.X - min.X) * i / nx), min.Y + ((max.Y - min.Y) * j / ny));
+                var p = fein.Punkt(new Vector2(min.X + ((max.X - min.X) * i / nx), min.Y + ((max.Y - min.Y) * j / ny)));
                 if (szene.Gleise.Any(g => Kurve.Abstand(p, g) < BahnsteigAbstand))
                 {
                     return p;

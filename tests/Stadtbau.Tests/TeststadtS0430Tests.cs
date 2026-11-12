@@ -45,8 +45,18 @@ public class TeststadtS0430Tests
         var p = Nico();
         var s = Gebaeude(p, "werkstatt");
         Assert.Empty(RoteFunde(p));
-        // P12-212 Punkt 1: im Tor nur, weil keine Wand ohne Tor eine glatte Stelle hat (TorEingangTests), mit Hinweis
-        Assert.Equal(Texte.TuerImTorKeineSeite, TuerDazu(p, s));
+        // P12-212 Punkt 1: im Tor nur, weil keine Wand ohne Tor eine glatte Stelle hat (TorEingangTests), mit Hinweis; seit
+        // A 0.70.0 (P12-218 Punkt 1 = a) bekommt die Werkstatt dort einen Vorbau, ins Tor kommt die Tuer nur noch von Hand
+        // oder wie bis S 0.45.0 (Gegenprobe GebaeudeTuer.WindfangAltFuerTests)
+        GebaeudeTuer.WindfangAltFuerTests = true;
+        try
+        {
+            Assert.Equal(Texte.TuerImTorKeineSeite, TuerDazu(p, s));
+        }
+        finally
+        {
+            GebaeudeTuer.WindfangAltFuerTests = false;
+        }
         Assert.Empty(RoteFunde(p));
         var z = Blueprint.ZierwegVon(p.AussenStand, s)!;
         Assert.True(Py.Wahr(z["modell_tuer"]));
@@ -91,12 +101,14 @@ public class TeststadtS0430Tests
         try
         {
             var p = Nico("Alt");
+            GebaeudeTuer.WindfangAltFuerTests = true;
             TuerDazu(p, Gebaeude(p, "werkstatt"));
             Assert.Contains(RoteFunde(p), x => x.Contains("sitzt nicht sauber", StringComparison.Ordinal));
         }
         finally
         {
             TuerBuendig.ModellTuerAltFuerTests = false;
+            GebaeudeTuer.WindfangAltFuerTests = false;
         }
     }
 
@@ -104,7 +116,16 @@ public class TeststadtS0430Tests
     public void Fund312_Gegenprobe_SpielOhneFeldModellTuer_ZeichnetZweiteTuer_Rot()
     {
         var p = Nico();
-        TuerDazu(p, Gebaeude(p, "werkstatt"));
+        // die Tuer im Rolltor (wie bis S 0.45.0; seit A 0.70.0 waehlt „Tür dazu“ hier den Vorbau)
+        GebaeudeTuer.WindfangAltFuerTests = true;
+        try
+        {
+            TuerDazu(p, Gebaeude(p, "werkstatt"));
+        }
+        finally
+        {
+            GebaeudeTuer.WindfangAltFuerTests = false;
+        }
         StadtSzene.ZierModellTuerAltFuerTests = true;
         try
         {
@@ -291,7 +312,8 @@ public class TeststadtS0430Tests
     [Fact]
     public void Fund313_Haltepunkt_AmSchraegenGleis_RastetNicht()
     {
-        // wie bei Nico: neben dem schraegen Stueck gibt es kein gerades Gleis in Nord-Süd- oder Ost-West-Richtung (Kurzplan 314)
+        // wie bei Nico: das schraege Stueck (-30 Grad) liegt rund 1,8 von der Mitte des Haltepunkts, weiter als BahnhofFang; seit
+        // Welle A 0.70.0 rastet ein Bahnhof naeher daneben auch dort ein (HausFeinDrehenTests)
         var p = Nico();
         var a = (PyObjekt)Py.Kopie(p.AussenStand)!;
         Assert.False(AussenBearbeitung.BahnhofAnGleis(a, Gebaeude(p, "haltepunkt")));

@@ -73,8 +73,25 @@ public static partial class AussenBearbeitung
         return null;
     }
 
-    /// <summary>Alle Haus-Modelle (Karte und neue Modelle), nach Namen.</summary>
+    /// <summary>
+    /// Alle Haus-Modelle (Karte und neue Modelle), nach Namen. Seit S 0.46.0 dazu die Modelle des Werkzeugs
+    /// (<see cref="Zusatzmodelle"/>), solange die Stadt keines gleichen Namens hat; beim Setzen kommen sie in die Stadt.
+    /// </summary>
     public static PyObjekt Modelle(PyObjekt aussen)
+    {
+        var alle = ZusatzAltFuerTests.Value ? new PyObjekt() : Zusatzmodelle.Alle();
+        foreach (var (k, v) in ModelleDerStadt(aussen))
+        {
+            Py.Setzen(alle, k, v);
+        }
+        return alle;
+    }
+
+    /// <summary>Gegenprobe S 0.46.0: ohne die Modelle des Werkzeugs (wie bis S 0.45.0, nur Tests, je Ablauf).</summary>
+    internal static readonly AsyncLocal<bool> ZusatzAltFuerTests = new();
+
+    /// <summary>Nur die Haus-Modelle in den Daten der Stadt (Karte und neue Modelle).</summary>
+    public static PyObjekt ModelleDerStadt(PyObjekt aussen)
     {
         var alle = new PyObjekt();
         foreach (var quelle in new[] { Get(Aussen.Karte(aussen), "modelle"), Get(Aussen.Stadtdaten(aussen), "neue_modelle") })
@@ -153,8 +170,55 @@ public static partial class AussenBearbeitung
 
     // ---- Lage und Treffer -----------------------------------------------------------------------------
 
-    /// <summary>Lage eines Hauses (Ort oder Gebaeude): x, y der Grundflaeche in der Stadt.</summary>
+    /// <summary>
+    /// Lage eines Hauses (Ort oder Gebaeude): x, y der Grundflaeche in der Stadt. Ein fein gedrehtes Haus (Welle A 0.70.0)
+    /// gibt den achsenparallelen Kasten um seine gedrehte Grundflaeche (<see cref="HausEcken"/>); genau ist <see cref="HausDrin"/>.
+    /// </summary>
     public static (double X, double Y, double W, double H) HausFlaeche(PyObjekt aussen, AussenStelle s)
+    {
+        var lage = HausLage(aussen, s);
+        if (!lage.Aktiv)
+        {
+            return HausViertel(aussen, s);
+        }
+        var e = HausEcken(aussen, s);
+        double x1 = e.Min(p => p.X), y1 = e.Min(p => p.Y);
+        return (x1, y1, e.Max(p => p.X) - x1, e.Max(p => p.Y) - y1);
+    }
+
+    /// <summary>Welle A 0.70.0: feine Drehung eines Hauses (Grad nach den Vierteln, 0 = keine).</summary>
+    public static int HausGrad(PyObjekt aussen, AussenStelle s) => s.Art switch
+    {
+        AussenArt.Gebaeude => Hausdrehung.GradVon(Objekt(Aussen.Landschaft(aussen)[s.Nummer])),
+        AussenArt.Haus => Hausdrehung.GradVonOrt(Aussen.Stadtdaten(aussen), s.Ort),
+        _ => 0,
+    };
+
+    /// <summary>Welle A 0.70.0: feine Drehung eines Hauses um seine Mitte (wie das Spiel sie zeichnet).</summary>
+    public static Hausdrehung.Feinlage HausLage(PyObjekt aussen, AussenStelle s)
+    {
+        var grad = HausGrad(aussen, s);
+        return grad == 0 ? default : new Hausdrehung.Feinlage(HausMitte(aussen, s), grad);
+    }
+
+    /// <summary>Welle A 0.70.0: die vier Ecken der Grundflaeche eines Hauses in der Stadt (auch fein gedreht), im Umlauf.</summary>
+    public static Vector2[] HausEcken(PyObjekt aussen, AussenStelle s)
+    {
+        var (x, y, w, h) = HausViertel(aussen, s);
+        var lage = HausLage(aussen, s);
+        return lage.Aktiv ? lage.Ecken(x, y, x + w, y + h) : Hausdrehung.Rechteck((float)x, (float)y, (float)(x + w), (float)(y + h));
+    }
+
+    /// <summary>Welle A 0.70.0: liegt der Punkt (mit Rand) auf der Grundflaeche des Hauses (genau, auch fein gedreht)?</summary>
+    public static bool HausDrin(PyObjekt aussen, AussenStelle s, Vector2 p, double rand = 0)
+    {
+        var (x, y, w, h) = HausViertel(aussen, s);
+        var q = HausLage(aussen, s).Zurueck(p);
+        return q.X >= x - rand && q.X <= x + w + rand && q.Y >= y - rand && q.Y <= y + h + rand;
+    }
+
+    /// <summary>Grundflaeche eines Hauses nur mit den Vierteldrehungen (Rahmen des Hauses vor der feinen Drehung).</summary>
+    public static (double X, double Y, double W, double H) HausViertel(PyObjekt aussen, AussenStelle s)
     {
         var o = s.Art == AussenArt.Haus ? Ort(aussen, s.Ort)! : Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
         var (gx, gy, gw, gh) = Grundflaeche(aussen, Py.Str(o["modell"]));
@@ -376,8 +440,7 @@ public static partial class AussenBearbeitung
         }
         foreach (var (s, _, _) in alle.Where(a => a.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).Reverse())
         {
-            var (hx, hy, hw, hh) = HausFlaeche(aussen, s);
-            if (x >= hx && x <= hx + hw && y >= hy && y <= hy + hh)
+            if (HausDrin(aussen, s, new Vector2((float)x, (float)y)))
             {
                 return s;
             }
@@ -527,6 +590,7 @@ public static partial class AussenBearbeitung
                 var (gx, gy, gw, gh) = Grundflaeche(aussen, modell);
                 var hx = Bearbeitung.AufRaster(x - (gw / 2) - gx, r);
                 var hy = Bearbeitung.AufRaster(y - (gh / 2) - gy, r);
+                Zusatzmodelle.Uebernehmen(aussen, modell);
                 land.Add(new PyObjekt { { "typ", "gebaeude" }, { "modell", modell }, { "x", Bearbeitung.Zahl(hx) }, { "y", Bearbeitung.Zahl(hy) } });
                 return new AussenStelle(AussenArt.Gebaeude, land.Count - 1);
             }

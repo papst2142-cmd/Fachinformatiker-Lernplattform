@@ -3,6 +3,21 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.46.0
+
+Gebäude in Schritten von 15 Grad drehen, Bahnhof am schrägen Gleis.
+
+- Häuser und Gebäude drehen jetzt in Schritten von 15 Grad: Taste R (Umschalt+R rückwärts), der Drehgriff und das Feld „Winkel (Grad)“ unter „Ausgewähltes Stück“. Andere Werte im Feld werden auf 15 Grad gerundet. Tür, Fußweg und Schild drehen mit.
+- Ein schräg gedrehtes Haus siehst du in der Draufsicht schräg, in der 3D-Ansicht und im Spiel genauso. Die Prüfung rechnet mit der schrägen Grundfläche (zum Beispiel „stehen ineinander“ nur, wenn sich die Häuser wirklich berühren).
+- Ein Bahnhof mit Bahnsteig rastet beim Einrasten auch an einem schrägen geraden Gleis ein, wenn das Gleis in einer Richtung von 15-Grad-Schritten liegt. Die Bahnsteigkante liegt dann parallel zum Gleis.
+- Mit „Einrasten“ legt sich ein schräg gedrehtes Haus mit der Türseite an eine Straße, die in derselben Richtung liegt.
+- An einem schräg gedrehten Haus gehen „Tür setzen“, „Tür dazu“ und „Aussehen tauschen“ noch nicht. Das Werkzeug sagt es am Knopf: Haus erst auf 0, 90, 180 oder 270 Grad drehen, dann wieder schräg.
+- Neues Gebäude „Haltepunkt mit freiem Bahnsteig“ (Gruppe Gebäude): der Bahnsteig vorne bleibt ganz frei, das Wartehäuschen steht dahinter, rechts daneben eine blaue querliegende Zuganzeige. „Tür dazu“ legt die Tür an das Häuschen, der Bahnsteig bleibt am Haltepunkt. In Stadt 1 bleibt alles, wie es ist.
+- Gebäude mit Toren, deren Seitenwände keine glatte Stelle für eine Tür haben (Betriebswerkstatt): „Tür dazu“ setzt die Tür an einer Seitenwand ohne Tor an einen kleinen Vorbau mit Rahmen bis an die Wand und Vordach, ohne Fund. Wird der Ort ein Spielort, kommt der Vorbau mit.
+- Abstellgleise mit Weiche: „Bahn ziehen“ fängt jetzt mitten auf einem geraden Gleis eine Weiche und die Mitte jedes Tors (Lokschuppen, Betriebswerkstatt). Erst auf das Hauptgleis tippen, dann auf das Tor: das Gleis zweigt ab, biegt zum Tor und endet genau in seiner Mitte. Die Prüfung lässt Gleise an einer Weiche nah beieinander, bis sie auseinander sind. Ein Gleis, das auf einem anderen beginnt und daneben bleibt, ist weiter rot.
+- Ein Gleis, das frei endet (nicht am Kartenrand, nicht an einem anderen Gleis, nicht an einem Gebäude), bekommt einen rot-weißen Prellbock. Züge fahren nicht auf Abstellgleise.
+- Fenster an schräg gedrehten Häusern leuchten nachts wieder.
+
 ## S 0.45.0
 
 Spielorte in einer eigenen Stadt, Laufzeiten zu Fuß, Türen nicht mehr in Toren.

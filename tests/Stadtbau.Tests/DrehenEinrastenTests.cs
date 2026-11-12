@@ -198,19 +198,32 @@ public class DrehenEinrastenTests
     }
 
     [Fact]
-    public void Viertel_BleibenFuerHausKatalogStegPark()
+    public void Viertel_BleibenFuerKatalogStegPark_HaeuserSeitA0700In15Grad()
     {
         Assert.Equal(15, AussenBearbeitung.DrehSchritt(AussenArt.Strasse));
         Assert.Equal(15, AussenBearbeitung.DrehSchritt(AussenArt.Fluss));
-        foreach (var art in new[] { AussenArt.Haus, AussenArt.Gebaeude, AussenArt.Katalog, AussenArt.Steg, AussenArt.Park })
+        foreach (var art in new[] { AussenArt.Katalog, AussenArt.Steg, AussenArt.Park })
         {
             Assert.Equal(90, AussenBearbeitung.DrehSchritt(art));
         }
+        // Welle A 0.70.0 (Sammelliste 314): Haeuser drehen in Schritten von 15 Grad (HausFeinDrehenTests)
+        Assert.Equal(15, AussenBearbeitung.DrehSchritt(AussenArt.Haus));
+        Assert.Equal(15, AussenBearbeitung.DrehSchritt(AussenArt.Gebaeude));
         var a = Stadt1();
-        Assert.False(AussenBearbeitung.Drehen(a, Zuhause, 15));
-        Assert.Equal(0, AussenBearbeitung.HausDreh(a, Zuhause));
         Assert.True(AussenBearbeitung.Drehen(a, Zuhause, -90));
         Assert.Equal(3, AussenBearbeitung.HausDreh(a, Zuhause));
+        // Gegenprobe: wie bis S 0.45.0 nur Viertel
+        AussenBearbeitung.HausViertelAltFuerTests = true;
+        try
+        {
+            Assert.Equal(90, AussenBearbeitung.DrehSchritt(AussenArt.Haus));
+            Assert.False(AussenBearbeitung.Drehen(a, Zuhause, 15));
+            Assert.Equal((3, 0), (AussenBearbeitung.HausDreh(a, Zuhause), AussenBearbeitung.HausGrad(a, Zuhause)));
+        }
+        finally
+        {
+            AussenBearbeitung.HausViertelAltFuerTests = false;
+        }
     }
 
     // ---- Drehgriff ------------------------------------------------------------------------------------

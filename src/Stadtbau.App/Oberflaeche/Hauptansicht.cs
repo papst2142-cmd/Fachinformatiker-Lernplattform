@@ -1416,7 +1416,7 @@ public sealed partial class Hauptansicht : UserControl
         {
             // Welle E (Weisung P12-67 Frage 2 = a): Winkel auf 1 Grad genau
             winkel = Feld(grad);
-            winkel.Mit(Texte.WinkelTipp);
+            winkel.Mit(AussenBearbeitung.IstHaus(s.Art) ? Texte.WinkelHausTipp : Texte.WinkelTipp);
             zeilen.Add((Texte.Winkel, winkel));
         }
         if (s.Art == AussenArt.Paketplatz)

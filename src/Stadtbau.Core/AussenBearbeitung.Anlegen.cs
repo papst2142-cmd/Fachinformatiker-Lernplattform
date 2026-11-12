@@ -91,14 +91,16 @@ public static partial class AussenBearbeitung
         {
             return HausFront(aussen, s);
         }
-        var (x, y, w, h) = HausFlaeche(aussen, s);
-        var p = new Vector2((float)Py.F(t[0]), (float)Py.F(t[1]));
+        // Welle A 0.70.0: im Rahmen des Hauses (vor der feinen Drehung) rechnen, die Seite danach in die Welt drehen
+        var (x, y, w, h) = HausViertel(aussen, s);
+        var lage = HausLage(aussen, s);
+        var p = lage.Zurueck(new Vector2((float)Py.F(t[0]), (float)Py.F(t[1])));
         var seiten = new (float D, Vector2 N)[]
         {
             (MathF.Abs(p.Y - (float)(y + h)), new(0, 1)), (MathF.Abs(p.Y - (float)y), new(0, -1)),
             (MathF.Abs(p.X - (float)(x + w)), new(1, 0)), (MathF.Abs(p.X - (float)x), new(-1, 0)),
         };
-        return seiten.MinBy(k => k.D).N;
+        return lage.Richtung(seiten.MinBy(k => k.D).N);
     }
 
     /// <summary>Haus mit der Tuerseite an die Gehwegkante legen; true = verschoben.</summary>
@@ -108,11 +110,15 @@ public static partial class AussenBearbeitung
         {
             return false;
         }
-        var (x, y, w, h) = HausFlaeche(aussen, s);
+        // Welle A 0.70.0: Tiefe und Breite im Rahmen des Hauses; ein fein gedrehtes Haus legt sich an eine Strasse gleicher Richtung
+        var (x, y, w, h) = HausViertel(aussen, s);
+        var lage = HausLage(aussen, s);
         var n = HausTuerSeite(aussen, s);
-        var mitte = new Vector2((float)(x + (w / 2)), (float)(y + (h / 2)));
-        var tief = n.X != 0 ? w / 2 : h / 2;
-        var halb = n.X != 0 ? h / 2 : w / 2;
+        var nLokal = lage.RichtungZurueck(n);
+        var mitte = lage.Punkt(new Vector2((float)(x + (w / 2)), (float)(y + (h / 2))));
+        var quer = MathF.Abs(nLokal.X) > MathF.Abs(nLokal.Y);
+        var tief = quer ? w / 2 : h / 2;
+        var halb = quer ? h / 2 : w / 2;
         if (Anlegen(aussen, mitte + (n * (float)tief), halb, n, g => g > 0 ? Kante(g) : HausAbstandOhneGehweg) is not { } weg || Math.Abs(weg) < 0.005)
         {
             return false;

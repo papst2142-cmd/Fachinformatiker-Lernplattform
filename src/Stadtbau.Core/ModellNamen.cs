@@ -25,6 +25,7 @@ public static class ModellNamen
         ["filiale"] = "Filiale",
         ["gewerbehof"] = "Gewerbehof",
         ["haltepunkt"] = "Haltepunkt Birkenhain",
+        [Zusatzmodelle.HaltepunktFrei] = "Haltepunkt mit freiem Bahnsteig",
         ["kaufhaus"] = "Kaufhaus",
         ["lokschuppen"] = "Lokschuppen",
         ["moebelhaus"] = "Möbelhaus",
@@ -37,7 +38,7 @@ public static class ModellNamen
     /// <summary>Bahnhoefe (gelber Hinweis fern vom Gleis).</summary>
     /// <remarks>Weisung P12-214: das Modell von Talheim-Nord (<c>bahnhof_neu</c>) zaehlt nicht mehr als Bahnhof; Talheim-Nord wird das
     /// Stellwerk und braucht kein Gleis (vorher gelber Fund „steht nicht an einem Gleis“, Gegenprobe <see cref="TalheimAltFuerTests"/>).</remarks>
-    public static bool IstBahnhof(string modell) => modell is "bahnhof" or "haltepunkt" || (TalheimAlt.Value && modell == "bahnhof_neu");
+    public static bool IstBahnhof(string modell) => modell is "bahnhof" or "haltepunkt" or Zusatzmodelle.HaltepunktFrei || (TalheimAlt.Value && modell == "bahnhof_neu");
 
     /// <summary>Gegenprobe P12-214: Talheim-Nord-Modell zaehlt als Bahnhof (wie bis S 0.44.1, nur Tests, je Ablauf).</summary>
     public static bool TalheimAltFuerTests { get => TalheimAlt.Value; set => TalheimAlt.Value = value; }

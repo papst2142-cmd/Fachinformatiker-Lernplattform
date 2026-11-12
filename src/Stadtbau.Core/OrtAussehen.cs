@@ -38,6 +38,8 @@ public static class OrtAussehen
     public static string? TauschenNicht(PyObjekt aussen, string ort) =>
         AussenBearbeitung.Ort(aussen, ort) is not { } o ? Texte.AussehenKeinOrt
         : Py.Gleich(Get(o, "ansicht"), "zuhause") ? Texte.AussehenZuhauseNicht
+        // Welle A 0.70.0 (Sammelliste 314, E1): ein schraeg gedrehtes Haus erst gerade drehen
+        : AussenBearbeitung.HausGrad(aussen, new AussenStelle(AussenArt.Haus, -1, 0, ort)) != 0 ? Texte.AussehenSchraegNicht
         : null;
 
     /// <summary>

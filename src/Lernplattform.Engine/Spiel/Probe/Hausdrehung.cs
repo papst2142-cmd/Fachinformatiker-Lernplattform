@@ -85,6 +85,196 @@ public static class Hausdrehung
         return Matrix4x4.CreateTranslation(-mitte.X, 0, -mitte.Y) * r * Matrix4x4.CreateTranslation(mitte.X, 0, mitte.Y);
     }
 
+    // ---- Welle A 0.70.0 (Sammelliste 314, Weisung P12-212 Punkt 2 = a): feine Drehung in 15-Grad-Schritten --------------
+
+    /// <summary>Feld der feinen Drehung an einem Gebaeude der Landschaft (Grad nach den Vierteln, 15 bis 75).</summary>
+    public const string GradFeld = "grad";
+
+    /// <summary>Abschnitt in stadtdaten.darstellung mit der feinen Drehung je Ort (Grad nach den Vierteln, 15 bis 75).</summary>
+    public const string GradAbschnitt = "hausgrad";
+
+    /// <summary>Schritt der feinen Drehung eines Hauses in Grad.</summary>
+    public const int GradSchritt = 15;
+
+    /// <summary>Ist der Wert eine erlaubte feine Drehung (ganze Zahl 15, 30, 45, 60 oder 75)?</summary>
+    public static bool GradErlaubt(object? wert) => wert is long l && l is > 0 and < 90 && l % GradSchritt == 0;
+
+    private static int GradGueltig(object? wert) => GradErlaubt(wert) ? (int)(long)wert! : 0;
+
+    /// <summary>Feine Drehung eines Gebaeudes der Landschaft (0 = keine; ein ungueltiger Wert zaehlt 0, die Pruefung meldet ihn).</summary>
+    public static int GradVon(PyObjekt gebaeude) => GradGueltig(Get(gebaeude, GradFeld));
+
+    /// <summary>Feine Drehung eines Orts aus stadtdaten.darstellung.hausgrad (0 = keine).</summary>
+    public static int GradVonOrt(PyObjekt? stadtdaten, string id) =>
+        stadtdaten is not null && Get(stadtdaten, "darstellung") is PyObjekt d && Get(d, GradAbschnitt) is PyObjekt h ? GradGueltig(Get(h, id)) : 0;
+
+    /// <summary>Ganzer Winkel in Grad (0 bis 345) aus Vierteln und feiner Drehung.</summary>
+    public static int Winkel(int dreh, int grad) => ((((dreh * 90) + grad) % 360) + 360) % 360;
+
+    /// <summary>Winkel (Grad, beliebig) in Viertel und feine Drehung zerlegen (auf 15 Grad gerundet).</summary>
+    public static (int Dreh, int Grad) Zerlegen(int winkel)
+    {
+        var w = (((int)Math.Round(winkel / (double)GradSchritt, MidpointRounding.AwayFromZero) * GradSchritt % 360) + 360) % 360;
+        return (w / 90, w % 90);
+    }
+
+    /// <summary>
+    /// Feine Drehung eines Hauses um die Hochachse durch <see cref="Mitte"/> (nach den Vierteln). Das Haus wird im
+    /// viertelgedrehten Rahmen gebaut (Tuer, Fenster, Kasten wie bisher) und danach als Ganzes mit dieser Lage gedreht.
+    /// </summary>
+    public readonly record struct Feinlage(Vector2 Mitte, int Grad)
+    {
+        /// <summary>Ist das Haus fein gedreht?</summary>
+        public bool Aktiv => Grad != 0;
+
+        private (double Sin, double Cos) SinCos => Math.SinCos(Grad * Math.PI / 180);
+
+        /// <summary>Punkt aus dem Rahmen des Hauses in die Welt.</summary>
+        public Vector2 Punkt(Vector2 p)
+        {
+            if (!Aktiv)
+            {
+                return p;
+            }
+            var (sin, cos) = SinCos;
+            double dx = p.X - Mitte.X, dy = p.Y - Mitte.Y;
+            return new Vector2((float)(Mitte.X + (dx * cos) - (dy * sin)), (float)(Mitte.Y + (dx * sin) + (dy * cos)));
+        }
+
+        /// <summary>Punkt aus der Welt in den Rahmen des Hauses.</summary>
+        public Vector2 Zurueck(Vector2 p) => Aktiv ? (this with { Grad = -Grad }).Punkt(p) : p;
+
+        /// <summary>Richtung aus dem Rahmen des Hauses in die Welt.</summary>
+        public Vector2 Richtung(Vector2 v) => Punkt(Mitte + v) - Mitte;
+
+        /// <summary>Richtung aus der Welt in den Rahmen des Hauses.</summary>
+        public Vector2 RichtungZurueck(Vector2 v) => Zurueck(Mitte + v) - Mitte;
+
+        /// <summary>Lage (Modell im Rahmen des Hauses → Welt) als Matrix (Zeilenvektor wie <see cref="Hausdrehung.Matrix"/>).</summary>
+        public Matrix4x4 Matrix
+        {
+            get
+            {
+                var (sin, cos) = SinCos;
+                var (c, s) = ((float)cos, (float)sin);
+                var r = new Matrix4x4(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
+                return Matrix4x4.CreateTranslation(-Mitte.X, 0, -Mitte.Y) * r * Matrix4x4.CreateTranslation(Mitte.X, 0, Mitte.Y);
+            }
+        }
+
+        /// <summary>Teil der Szene in die Welt: Band an beiden Enden gedreht, Quader und Satteldach behalten ihre Ecken und zeichnen sich gedreht (<see cref="Teil.Dreh"/>).</summary>
+        public Teil Teil(Teil t)
+        {
+            if (!Aktiv)
+            {
+                return t;
+            }
+            if (t.Art == TeilArt.Band)
+            {
+                var (a, b) = (Punkt(new Vector2(t.X1, t.Z1)), Punkt(new Vector2(t.X2, t.Z2)));
+                return t with { X1 = a.X, Z1 = a.Y, X2 = b.X, Z2 = b.Y };
+            }
+            return t with { Dreh = new Vector3(Mitte.X, Mitte.Y, Grad) };
+        }
+
+        /// <summary>Die vier Ecken eines Rechtecks (im Rahmen des Hauses) in der Welt, im Umlauf.</summary>
+        public Vector2[] Ecken(double x1, double z1, double x2, double z2) =>
+            [Punkt(new((float)x1, (float)z1)), Punkt(new((float)x2, (float)z1)), Punkt(new((float)x2, (float)z2)), Punkt(new((float)x1, (float)z2))];
+
+        /// <summary>Achsenparalleler Kasten um einen gedrehten Kasten (Hoehe bleibt).</summary>
+        public (Vector3 Min, Vector3 Max) Kasten(Vector3 min, Vector3 max)
+        {
+            var e = Ecken(min.X, min.Z, max.X, max.Z);
+            return (new Vector3(e.Min(p => p.X), min.Y, e.Min(p => p.Y)), new Vector3(e.Max(p => p.X), max.Y, e.Max(p => p.Y)));
+        }
+
+        /// <summary>Liegt der Weltpunkt (mit Rand) im Kasten, der im Rahmen des Hauses von min bis max reicht?</summary>
+        public bool Drin(Vector3 min, Vector3 max, Vector2 welt, float rand = 0f)
+        {
+            var p = Zurueck(welt);
+            return p.X >= min.X - rand && p.X <= max.X + rand && p.Y >= min.Z - rand && p.Y <= max.Z + rand;
+        }
+    }
+
+    /// <summary>
+    /// Welle A 0.70.0: wie tief zwei konvexe Vielecke (Grundflaechen) ineinander liegen: die kleinste Ueberdeckung entlang aller
+    /// Kantenrichtungen (Trennachsen). 0 oder weniger = sie beruehren sich hoechstens. Fuer zwei achsenparallele Rechtecke ist das
+    /// das Kleinere der Ueberdeckungen in x und in z.
+    /// </summary>
+    public static float Ueberlappung(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b)
+    {
+        var tief = float.MaxValue;
+        foreach (var vieleck in (IReadOnlyList<Vector2>[])[a, b])
+        {
+            for (var i = 0; i < vieleck.Count; i++)
+            {
+                var kante = vieleck[(i + 1) % vieleck.Count] - vieleck[i];
+                if (kante.LengthSquared() < 1e-12f)
+                {
+                    continue;
+                }
+                var achse = Vector2.Normalize(new Vector2(-kante.Y, kante.X));
+                float aMin = a.Min(p => Vector2.Dot(p, achse)), aMax = a.Max(p => Vector2.Dot(p, achse));
+                float bMin = b.Min(p => Vector2.Dot(p, achse)), bMax = b.Max(p => Vector2.Dot(p, achse));
+                tief = MathF.Min(tief, MathF.Min(aMax, bMax) - MathF.Max(aMin, bMin));
+            }
+        }
+        return tief;
+    }
+
+    /// <summary>Ecken eines achsenparallelen Rechtecks im Umlauf.</summary>
+    public static Vector2[] Rechteck(float x1, float z1, float x2, float z2) => [new(x1, z1), new(x2, z1), new(x2, z2), new(x1, z2)];
+
+    /// <summary>Breite der achsenparallelen Streifen, mit denen ein gedrehtes Rechteck das freie Gehen sperrt.</summary>
+    public const float StreifenBreite = 0.05f;
+
+    /// <summary>
+    /// Welle A 0.70.0: ein gedrehtes Rechteck (vier Ecken, konvex) als schmale achsenparallele Streifen fuer Laufraster und
+    /// Hindernisse. Jeder Streifen deckt das Vieleck in seinem Abschnitt ganz ab und ragt hoechstens um eine Streifenbreite
+    /// darueber hinaus (Abschnitte quer zur x-Achse).
+    /// </summary>
+    public static List<(double, double, double, double)> Streifen(IReadOnlyList<Vector2> ecken, float breite = StreifenBreite)
+    {
+        var p = ecken;
+        var (a0, a1) = (p.Min(v => v.X), p.Max(v => v.X));
+        var anzahl = Math.Max(1, (int)MathF.Ceiling((a1 - a0) / breite));
+        var schritt = (a1 - a0) / anzahl;
+        var ergebnis = new List<(double, double, double, double)>(anzahl);
+        for (var i = 0; i < anzahl; i++)
+        {
+            var (s0, s1) = (a0 + (i * schritt), i == anzahl - 1 ? a1 : a0 + ((i + 1) * schritt));
+            float lo = float.MaxValue, hi = float.MinValue;
+            for (var k = 0; k < p.Count; k++)
+            {
+                var (u, v) = (p[k], p[(k + 1) % p.Count]);
+                // Kante auf den Abschnitt [s0, s1] zuschneiden
+                var (ux, vx) = (u.X, v.X);
+                var (kmin, kmax) = (MathF.Min(ux, vx), MathF.Max(ux, vx));
+                if (kmax < s0 || kmin > s1)
+                {
+                    continue;
+                }
+                if (vx - ux is > -1e-9f and < 1e-9f)
+                {
+                    // senkrechte Kante im Abschnitt: ganz
+                    (lo, hi) = (MathF.Min(lo, MathF.Min(u.Y, v.Y)), MathF.Max(hi, MathF.Max(u.Y, v.Y)));
+                    continue;
+                }
+                foreach (var x in (float[])[MathF.Max(kmin, s0), MathF.Min(kmax, s1)])
+                {
+                    var y = u.Y + ((v.Y - u.Y) * (x - ux) / (vx - ux));
+                    (lo, hi) = (MathF.Min(lo, y), MathF.Max(hi, y));
+                }
+            }
+            if (lo > hi)
+            {
+                continue;
+            }
+            ergebnis.Add((s0, lo, s1, hi));
+        }
+        return ergebnis;
+    }
+
     /// <summary>Teil der Szene drehen: Quader und Satteldach als neuer achsenparalleler Kasten, Band an beiden Enden.</summary>
     public static Teil Drehen(Teil t, Vector2 mitte, int dreh)
     {

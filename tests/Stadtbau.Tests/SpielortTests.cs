@@ -66,7 +66,7 @@ public class SpielortTests
         // mit Spielorten gelten die Regeln des Spiels: Nicos Teststadt hat Wege ohne Zebrastreifen und einen Paketplatz im Haus
         // (Funde seiner Stadt, Meldung P12-126); vom Festlegen selbst kommt nur „Spielort fehlt“
         var rot = Rote(p).Where(f => !f.Text.Contains("zu Fuß nicht erreichbar", StringComparison.Ordinal) && !f.Text.StartsWith("Der Paketplatz", StringComparison.Ordinal)).ToList();
-        Assert.Single(rot);
+        Assert.True(rot.Count == 1, string.Join(" | ", rot.Select(f => f.Text)));
         Assert.Contains("Talheim-Nord", rot[0].Text, StringComparison.Ordinal);
         // Innenraeume der Stadt 1 ueber die Kennung (auch der Lokschuppen ueber seine Ansicht „serverfarm“)
         foreach (var o in new[] { "moebelhaus", "elektromarkt", "kaufhaus", "bank", "amt" })

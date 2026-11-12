@@ -26,7 +26,15 @@ public enum TeilArt
 public delegate Vector3 Modellfaerbung(int dreieck, Vector3 grund, float oben, float hoehe);
 
 /// <summary>Ein Teil der Szene in Weltkoordinaten (X nach rechts, Y nach oben, Z zum Betrachter).</summary>
-public readonly record struct Teil(TeilArt Art, float X1, float Y1, float Z1, float X2, float Y2, float Z2, Vector3 Farbe);
+public readonly record struct Teil(TeilArt Art, float X1, float Y1, float Z1, float X2, float Y2, float Z2, Vector3 Farbe)
+{
+    /// <summary>
+    /// Welle A 0.70.0 (Sammelliste 314): Drehung um die Hochachse, mit der das Netz den Teil zeichnet: X, Y = Mitte (Karten-x,
+    /// Karten-y), Z = Winkel in Grad im Uhrzeigersinn von oben (wie <see cref="Hausdrehung"/>). Die Ecken X1 bis Z2 bleiben im
+    /// ungedrehten Rahmen des Hauses. Ohne Wert (0) ist nichts gedreht, das Netz ist bitgleich wie vorher.
+    /// </summary>
+    public Vector3 Dreh { get; init; }
+}
 
 /// <summary>
 /// Dreiecksnetz fuer die Darstellung: je Ecke Ort (3), Normale (3), Farbe (3) = 9 Gleitkommazahlen.
@@ -96,6 +104,14 @@ public sealed class Netz
 
     public void Hinzu(Teil t)
     {
+        if (t.Dreh.Z != 0f)
+        {
+            // Welle A 0.70.0: ungedreht bauen, dann die neuen Ecken (Ort und Normale) um die Hochachse drehen
+            var von = AnzahlEcken;
+            Hinzu(t with { Dreh = default });
+            DrehenAb(von, new Vector2(t.Dreh.X, t.Dreh.Y), t.Dreh.Z);
+            return;
+        }
         if (t.Art == TeilArt.Satteldach)
         {
             Satteldach(t);
@@ -376,6 +392,21 @@ public sealed class Netz
         Ecke(b, n, fb);
         Ecke(c, n, fc);
         _indizes.AddRange([basis, basis + 1, basis + 2]);
+    }
+
+    /// <summary>Welle A 0.70.0: Ecken ab <paramref name="von"/> um die Hochachse durch <paramref name="mitte"/> drehen (Grad, Uhrzeigersinn von oben).</summary>
+    private void DrehenAb(int von, Vector2 mitte, float grad)
+    {
+        var (sin, cos) = Math.SinCos(grad * Math.PI / 180);
+        for (var e = von * Zahlen; e < _ecken.Count; e += Zahlen)
+        {
+            double dx = _ecken[e] - mitte.X, dz = _ecken[e + 2] - mitte.Y;
+            _ecken[e] = (float)(mitte.X + (dx * cos) - (dz * sin));
+            _ecken[e + 2] = (float)(mitte.Y + (dx * sin) + (dz * cos));
+            double nx = _ecken[e + 3], nz = _ecken[e + 5];
+            _ecken[e + 3] = (float)((nx * cos) - (nz * sin));
+            _ecken[e + 5] = (float)((nx * sin) + (nz * cos));
+        }
     }
 
     private void Ecke(Vector3 p, Vector3 n, Vector3 farbe)

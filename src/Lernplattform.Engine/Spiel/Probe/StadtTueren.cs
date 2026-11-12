@@ -32,6 +32,62 @@ public static class StadtTueren
     public static IEnumerable<PyObjekt> Zierwege(IStadtSicht stadt) =>
         (Get(Darstellung(stadt), "zierwege") as List<object?> ?? []).Select(Objekt);
 
+    /// <summary>Welle A 0.70.0 (Weisung P12-218 Punkt 1): Orte mit Windfang (<c>darstellung.windfang</c> {Ort: true}).</summary>
+    public static bool MitWindfang(IStadtSicht stadt, string ort) => Py.Wahr(Get(Get(Darstellung(stadt), "windfang") as PyObjekt ?? [], ort));
+
+    /// <summary>So weit steht der Vorbau vor dem, was an der Tuerstelle am weitesten aus der Fassade ragt.</summary>
+    public const float WindfangVor = 0.06f;
+
+    /// <summary>Wandfarbe des Vorbaus (helles Grau, wie Putz) und Farbe seines flachen Dachs.</summary>
+    public static readonly Vector3 WindfangWand = Netz.Farbe("#D9D4CA");
+    public static readonly Vector3 WindfangDach = Netz.Farbe("#5C6068");
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): vorderste und tiefste Stelle der Fassade auf der Flaeche des Vorbaus
+    /// (9 Spalten ueber Tuer und Rahmen, Hoehen vom Sockel bis zur Tuer). Abstand hinter <paramref name="wand"/>: negativ = ragt
+    /// davor. Ohne Treffer (0, 0).
+    /// </summary>
+    public static (float Vor, float Tief) Ausdehnung(IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek grafik, Vector2 wand, Vector2 aussen, float hoehe)
+    {
+        var quer = new Vector2(-aussen.Y, aussen.X);
+        var halb = HalbeFlaeche + 0.06f;
+        float vor = float.MaxValue, tief = float.MinValue;
+        for (var i = -4; i <= 4; i++)
+        {
+            for (var j = 1; j <= 5; j++)
+            {
+                var p = wand + (quer * (i * halb / 4)) + (aussen * 1f);
+                if (Treffer(stuecke, grafik, new Vector3(p.X, (hoehe + 0.12f) * j / 5.5f, p.Y), new Vector3(-aussen.X, 0, -aussen.Y), 2f) is { } t)
+                {
+                    (vor, tief) = (MathF.Min(vor, t.T - 1f), MathF.Max(tief, t.T - 1f));
+                }
+            }
+        }
+        return vor == float.MaxValue ? (0f, 0f) : (vor, MathF.Max(0f, tief));
+    }
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 1 = a): kleiner Vorbau (Windfang) von <paramref name="hinten"/> (in der Wand) bis
+    /// <paramref name="vorn"/>, Breite der Tuer mit Rahmen und Pfeilern, flaches Dach mit Ueberstand; die Tuer (Rahmen, Glas, Stufe,
+    /// ohne Vordach) sitzt buendig vorn.
+    /// </summary>
+    public static void Windfang(List<Teil> teile, Vector2 hinten, Vector2 vorn, Vector2 n, float hoehe, Vector3? rahmen = null)
+    {
+        var quer = new Vector2(-n.Y, n.X);
+        var tiefe = Vector2.Dot(vorn - hinten, n);
+        void Q(float a1, float a2, float y1, float y2, float d1, float d2, Vector3 f)
+        {
+            // a = entlang der Wand, d = nach aussen ab der Vorderseite
+            var p1 = vorn + (quer * a1) + (n * d1);
+            var p2 = vorn + (quer * a2) + (n * d2);
+            teile.Add(new Teil(TeilArt.Quader, MathF.Min(p1.X, p2.X), y1, MathF.Min(p1.Y, p2.Y), MathF.Max(p1.X, p2.X), y2, MathF.Max(p1.Y, p2.Y), f));
+        }
+        var halb = (StadtSzene.TuerBreite / 2) + 0.12f;
+        Q(-halb, halb, 0f, hoehe + 0.12f, -tiefe, -0.005f, WindfangWand);
+        Q(-halb - 0.04f, halb + 0.04f, hoehe + 0.12f, hoehe + 0.17f, -tiefe, 0.06f, WindfangDach);
+        Tuer(teile, vorn.X, vorn.Y, n, hoehe, 0f, vordach: false, rahmen);
+    }
+
     /// <summary>
     /// Tuer aus Kaesten: Mitte (x, z) auf der Wand, Richtung n zeigt nach aussen. Rahmen, zwei Glasfluegel
     /// mit hellem Oberlicht, Stufe davor, Vordach darueber.
@@ -529,8 +585,8 @@ public static class StadtTueren
     public static List<string> NichtBuendig(StadtSzene szene, StadtTuer tuer)
     {
         var gruende = new List<string>();
-        // Haus aus Kaesten (ohne CC0-Stuecke): die Tuer sitzt genau auf der Kastenwand
-        if (tuer.Modell || szene.Grafik is null || HausVon(szene, tuer) is not { } haus || haus.StueckeBis == haus.StueckeVon)
+        // Haus aus Kaesten (ohne CC0-Stuecke): die Tuer sitzt genau auf der Kastenwand; Windfang: der Vorbau ist buendig gebaut
+        if (tuer.Modell || tuer.Windfang || szene.Grafik is null || HausVon(szene, tuer) is not { } haus || haus.StueckeBis == haus.StueckeVon)
         {
             return gruende;
         }

@@ -247,7 +247,8 @@ def matrix_listen(ci):
     import json
     with open(ci, encoding="utf-8") as f:
         text = f.read()
-    zeile = re.search(r"include: \$\{\{ fromJSON\((.*)\) \}\}", text)
+    # Sammelliste 323: die tests-Matrix (Eintraege mit "teil"); seit A 0.70.0 steht die pakete-Matrix davor
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*\"teil\".*)\) \}\}", text)
     listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
     if len(listen) != 4:
         return None
@@ -438,15 +439,16 @@ def pakete_listen(text):
 
 def ohne_mac_stufe(ci=".github/workflows/ci.yml", release=".github/workflows/release.yml", text=None, still=False):
     """Welle CI schneller 2 (Weisung P12-131, Nico 2a): die Stufe ohne-mac ist genau der volle Lauf ohne die sieben
-    Mac-Jobs (tests-Matrix ohne macos, pakete ohne osx), also 10 Jobs; jeder Job ausser dem Hinweis-Job hat den Waechter
-    ohne_mac.py. text = ci.yml als Text (nur fuer Gegenproben)."""
+    Mac-Jobs (tests-Matrix ohne macos, pakete ohne osx), also 11 Jobs (seit A 0.70.0 mit dem Job release-entwurf,
+    Sammelliste 323); jeder Job ausser dem Hinweis-Job hat den Waechter ohne_mac.py. text = ci.yml als Text (nur fuer Gegenproben)."""
     if text is None:
         if not (os.path.exists(ci) and os.path.exists(release)):
             return 0
         with open(ci, encoding="utf-8") as f:
             text = f.read()
     funde = []
-    zeile = re.search(r"include: \$\{\{ fromJSON\((.*)\) \}\}", text)
+    # Sammelliste 323: die tests-Matrix (Eintraege mit "teil"); seit A 0.70.0 steht die pakete-Matrix davor
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*\"teil\".*)\) \}\}", text)
     import json
     listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
     if len(listen) != 4:
@@ -459,8 +461,8 @@ def ohne_mac_stufe(ci=".github/workflows/ci.yml", release=".github/workflows/rel
     if len(pak) != 2 or pak[1] != [n for n in pak[0] if "osx" not in n] or len(pak[0]) != 4:
         funde.append("pakete-Matrix voll/ohne-mac falsch: %s" % pak)
     erwartet = urteil_github.erwartete_jobs("ohne-mac", soll_liste, release)
-    if len(erwartet) != 10:
-        funde.append("Stufe ohne-mac hat %d statt 10 Jobs: %s" % (len(erwartet), erwartet))
+    if len(erwartet) != 11:
+        funde.append("Stufe ohne-mac hat %d statt 11 Jobs: %s" % (len(erwartet), erwartet))
     for name, block in job_bloecke(text):
         if name != urteil_github.HILFSJOB and "ohne_mac.py pruefen" not in block:
             funde.append("Job %s ohne Waechter ohne_mac.py" % name)
@@ -599,7 +601,7 @@ def selbsttest():
     rot |= wachhund_unter_zeitlimit()
     rot |= tests_jobs_gleich_release()
     rot |= feste_jobs_gleich_release()
-    # Phase 13 Welle 2 (Weisung P12-17): der Werkzeug-Release verlangt denselben vollen Lauf 17/17
+    # Phase 13 Welle 2 (Weisung P12-17): der Werkzeug-Release verlangt denselben vollen Lauf (seit A 0.70.0 18/18)
     rot |= tests_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
     rot |= feste_jobs_gleich_release(release=".github/workflows/stadtbau_release.yml")
     rot |= selbsttest_feste_jobs_gegenprobe()

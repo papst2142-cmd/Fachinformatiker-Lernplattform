@@ -23,7 +23,17 @@ public enum ZiehArt
 /// Ein eingerasteter Punkt beim Ziehen: Lage, Richtung vom Bezug weg in die neue Verbindung hinein (null = frei) und das
 /// Stueck, an dessen Ende er liegt (Nummer in der Landschaft bzw. in <c>stadtdaten.fusswege</c>, welches Ende), oder null.
 /// </summary>
-public sealed record Ziehpunkt(Vector2 Lage, Vector2? Weg, int? Nummer = null, bool AmAnfang = false);
+public sealed record Ziehpunkt(Vector2 Lage, Vector2? Weg, int? Nummer = null, bool AmAnfang = false)
+{
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 3): der Punkt liegt mitten auf einem Gleis (<see cref="Auf"/>); die Verbindung
+    /// zweigt dort als Weiche ab (Richtung laengs des Gleises, beide Richtungen werden versucht).
+    /// </summary>
+    public bool Weiche { get; init; }
+
+    /// <summary>Welle A 0.70.0: das Gleis, auf dem die Weiche liegt (gezeichnete Mittellinie).</summary>
+    public IReadOnlyList<Vector2>? Auf { get; init; }
+}
 
 /// <summary>
 /// Welle Z (S 0.14.0 / A 0.48.0, Weisung P12-71, Kurzplan P12-40 Abschnitt 3, Nico P12-67 Fragen 3 und 4 = a): Strassen,
@@ -40,7 +50,8 @@ public sealed record Ziehpunkt(Vector2 Lage, Vector2? Weg, int? Nummer = null, b
 /// <item>Fluss: Eckpunkte mit Radius je Ecke (5, 3, 2); faengt an Flussenden und am Kartenrand (rechtwinklig). Am Ende
 /// eines Flusses wird dieser verlaengert.</item>
 /// <item>Bahn (Welle K2): wie der Fluss mit Radius 4,5 oder 3 je Ecke; faengt an Gleisenden und am Kartenrand; die Bahn
-/// behaelt das Feld <c>radien</c> immer.</item>
+/// behaelt das Feld <c>radien</c> immer. Seit A 0.70.0 (Weisung P12-218 Punkt 3) faengt sie auch die Mitte eines Tors
+/// (<see cref="Torpunkte"/>) und mitten auf einem Gleis eine Weiche (<see cref="Weichenpunkt"/>).</item>
 /// </list>
 /// </summary>
 public static partial class AussenBearbeitung
@@ -118,12 +129,184 @@ public static partial class AussenBearbeitung
         {
             return ende;
         }
+        if (art == ZiehArt.Bahn && !WeicheTorAlt.Value)
+        {
+            // Welle A 0.70.0 (Weisung P12-218 Punkt 3): zuerst die Mitte eines Tors, dann mitten auf ein Gleis (Weiche)
+            if (Torpunkte(aussen).Select(t => (t, D: Vector2.Distance(t.Lage, p))).Where(t => t.D <= EndeFangweite).OrderBy(t => t.D).Select(t => t.t).FirstOrDefault() is { } tor)
+            {
+                return tor;
+            }
+            if (Weichenpunkt(aussen, p) is { } weiche)
+            {
+                return weiche;
+            }
+        }
         return art switch
         {
             ZiehArt.Strasse => Einmuendung(aussen, p) ?? frei,
             ZiehArt.Fussweg => FusswegFangen(aussen, p) ?? frei,
             _ => Kartenrand(aussen, p) ?? frei,
         };
+    }
+
+    /// <summary>Gegenprobe Weisung P12-218 Punkt 3: die Bahn faengt weder Tore noch Weichen (wie bis S 0.45.0, nur Tests, je Ablauf).</summary>
+    public static bool WeicheTorAltFuerTests { get => WeicheTorAlt.Value; set => WeicheTorAlt.Value = value; }
+    private static readonly AsyncLocal<bool> WeicheTorAlt = new();
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 3, Nico: „mittig jeweils vor das Tor sollte man es setzen koennen“): die Mitte
+    /// jedes Tors (Teil <c>tor</c> des Modells, Lokschuppen, Betriebswerkstatt) auf der Wand, an der es liegt (die Seite des
+    /// Kastens der Bloecke, der es am naechsten ist, wie <see cref="GebaeudeTuer.TorWaende"/>), gedreht mit dem Haus; Richtung
+    /// = aus der Wand hinaus. Ein Gleis endet dort genau an der Wand (kein Prellbock, kein Fund „steht auf dem Gleis“).
+    /// </summary>
+    public static IEnumerable<Ziehpunkt> Torpunkte(PyObjekt aussen)
+    {
+        foreach (var (s, _, _) in Alle(aussen).Where(x => x.Stelle.Art is AussenArt.Haus or AussenArt.Gebaeude).ToList())
+        {
+            var o = s.Art == AussenArt.Haus ? Ort(aussen, s.Ort) : Objekt(Aussen.Landschaft(aussen)[s.Nummer]);
+            if (o is null)
+            {
+                continue;
+            }
+            var teile = (Get(Modelle(aussen), Py.Str(o["modell"])) as List<object?> ?? []).OfType<PyObjekt>().ToList();
+            var bloecke = teile.Where(t => Py.Gleich(Get(t, "art"), "block")).ToList();
+            var tore = teile.Where(t => Py.Gleich(Get(t, "art"), "tor")).ToList();
+            if (bloecke.Count == 0 || tore.Count == 0)
+            {
+                continue;
+            }
+            static float F(PyObjekt t, string k) => (float)Py.F(Get(t, k) ?? 0L);
+            var (x1, y1) = (bloecke.Min(b => F(b, "x")), bloecke.Min(b => F(b, "y")));
+            var (x2, y2) = (bloecke.Max(b => F(b, "x") + F(b, "w")), bloecke.Max(b => F(b, "y") + F(b, "t")));
+            var ursprung = new Vector2((float)Py.F(o["x"]), (float)Py.F(o["y"]));
+            var mitte = HausMitte(aussen, s);
+            var (dreh, lage) = (HausDreh(aussen, s), HausLage(aussen, s));
+            foreach (var tor in tore)
+            {
+                var (tx1, tx2, ty1, tyU) = (F(tor, "x"), F(tor, "x") + F(tor, "w"), F(tor, "y"), F(tor, "y") + F(tor, "h"));
+                var seiten = new (float D, Vector2 Lage, Vector2 N)[]
+                {
+                    (MathF.Abs(y2 - tyU), new((tx1 + tx2) / 2, y2), new(0, 1)),
+                    (MathF.Abs(ty1 - y1), new((tx1 + tx2) / 2, y1), new(0, -1)),
+                    (MathF.Abs(tx1 - x1), new(x1, (ty1 + tyU) / 2), new(-1, 0)),
+                    (MathF.Abs(x2 - tx2), new(x2, (ty1 + tyU) / 2), new(1, 0)),
+                };
+                var seite = seiten.MinBy(x => x.D);
+                var welt = lage.Punkt(Hausdrehung.Drehen(ursprung + seite.Lage, mitte, dreh));
+                var n = Vector2.Normalize(lage.Richtung(Hausdrehung.Drehen(seite.N, Vector2.Zero, dreh)));
+                yield return new Ziehpunkt(Rund(welt), n);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 3): ein Punkt mitten auf einem Gleis (bis <see cref="EndeFangweite"/>, nicht naeher
+    /// als <see cref="WeicheEndAbstand"/> an einem Ende, dort faengt das Ende): Lage auf der gezeichneten Mittellinie,
+    /// Richtung laengs des Gleises.
+    /// </summary>
+    private static Ziehpunkt? Weichenpunkt(PyObjekt aussen, Vector2 p)
+    {
+        Ziehpunkt? best = null;
+        var bestD = (float)EndeFangweite;
+        foreach (var l in Aussen.Landschaft(aussen).OfType<PyObjekt>().Where(l => Py.Gleich(l["typ"], "bahn")))
+        {
+            var glatt = StadtSzene.Linienzug(l);
+            for (var i = 0; i + 1 < glatt.Count; i++)
+            {
+                var d = glatt[i + 1] - glatt[i];
+                if (d.LengthSquared() < 1e-10f)
+                {
+                    continue;
+                }
+                var t = Math.Clamp(Vector2.Dot(p - glatt[i], d) / d.LengthSquared(), 0f, 1f);
+                var fuss = glatt[i] + (d * t);
+                var abstand = Vector2.Distance(p, fuss);
+                if (abstand <= bestD && Vector2.Distance(fuss, glatt[0]) >= WeicheEndAbstand && Vector2.Distance(fuss, glatt[^1]) >= WeicheEndAbstand)
+                {
+                    best = new Ziehpunkt(Rund(fuss), Vector2.Normalize(d)) { Weiche = true, Auf = glatt };
+                    bestD = abstand;
+                }
+            }
+        }
+        return best;
+    }
+
+    /// <summary>Eine Weiche liegt mindestens so weit von einem Gleisende entfernt.</summary>
+    public const float WeicheEndAbstand = 0.5f;
+
+    /// <summary>
+    /// Welle A 0.70.0 (Weisung P12-218 Punkt 3): Verbindung mit Weiche an Anfang und/oder Ende. Beide Richtungen laengs des
+    /// Gleises werden versucht, die kuerzeste gefundene gilt. Die Verbindung beginnt (bzw. endet) so kurz vor ihrem ersten
+    /// Bogen auf dem Gleis, wie das Spiel es fuer den Bogen braucht (<see cref="Tangentenpunkt"/>; vorher lag ein langes
+    /// gerades Stueck doppelt auf dem Gleis); liegt diese Stelle nicht mehr auf dem Gleis (Weiche in einem Bogen), passt die
+    /// Verbindung nicht.
+    /// </summary>
+    private static Verbindung.Plan WeichePlan(Ziehpunkt a, Ziehpunkt b, ZiehArt art)
+    {
+        Verbindung.Plan? best = null;
+        Verbindung.Plan? erster = null;
+        var bestL = float.MaxValue;
+        foreach (var wa in a.Weiche ? new Vector2?[] { a.Weg, -a.Weg } : [a.Weg])
+        {
+            foreach (var wb in b.Weiche ? new Vector2?[] { b.Weg, -b.Weg } : [b.Weg])
+            {
+                var plan = Verbindung.Rechnen(a.Lage, wa, b.Lage, wb, ZiehRadien(art), art == ZiehArt.Strasse);
+                erster ??= plan;
+                if (!plan.Gefunden || plan.Ecken.Count == 0)
+                {
+                    continue;
+                }
+                if (a.Weiche)
+                {
+                    var e = plan.Ecken[0];
+                    var weiter = plan.Ecken.Count > 1 ? plan.Ecken[1].Lage : plan.Ende;
+                    if (Tangentenpunkt(e, plan.Anfang, weiter) is not { } neu || Kurve.Abstand(neu, a.Auf!) > StadtbauPruefung.WeicheFang / 2)
+                    {
+                        erster = plan with { Grund = Texte.WeicheNurGerade };
+                        continue;
+                    }
+                    plan = plan with { Anfang = Rund(neu) };
+                }
+                if (b.Weiche)
+                {
+                    var e = plan.Ecken[^1];
+                    var vorher = plan.Ecken.Count > 1 ? plan.Ecken[^2].Lage : plan.Anfang;
+                    if (Tangentenpunkt(e, plan.Ende, vorher) is not { } neu || Kurve.Abstand(neu, b.Auf!) > StadtbauPruefung.WeicheFang / 2)
+                    {
+                        erster = plan with { Grund = Texte.WeicheNurGerade };
+                        continue;
+                    }
+                    plan = plan with { Ende = Rund(neu) };
+                }
+                var zug = plan.Eckzug;
+                var laenge = Enumerable.Range(0, zug.Count - 1).Sum(i => Vector2.Distance(zug[i], zug[i + 1]));
+                if (laenge < bestL)
+                {
+                    (best, bestL) = (plan, laenge);
+                }
+            }
+        }
+        return best ?? erster!;
+    }
+
+    /// <summary>
+    /// Der Punkt auf dem Stueck von der Ecke <paramref name="e"/> zu <paramref name="aussen"/>, so weit vor dem Bogen, wie er
+    /// selbst lang ist (zweimal Radius mal tan des halben Knicks, dazu 0,01), auch hinter dem Tipp; null ohne Richtung.
+    /// </summary>
+    private static Vector2? Tangentenpunkt(Verbindung.Ecke e, Vector2 aussen, Vector2 anderer)
+    {
+        var hin = e.Lage - aussen;
+        var weg = anderer - e.Lage;
+        if (hin.LengthSquared() < 1e-10f || weg.LengthSquared() < 1e-10f)
+        {
+            return null;
+        }
+        var knick = MathF.Acos(Math.Clamp(Vector2.Dot(Vector2.Normalize(hin), Vector2.Normalize(weg)), -1f, 1f));
+        // das Spiel rundet eine Ecke hoechstens mit dem halben Nachbarstueck (Kurve.Glatt), darum zweimal die Laenge bis zum
+        // Bogenanfang: die erste Haelfte liegt auf dem Gleis (wie die Zunge einer Weiche), dann beginnt der Bogen
+        var t = (2 * (float)(e.Radius * Math.Tan(knick / 2))) + 0.01f;
+        // auch weiter zurueck als der Tipp (der Anfang rueckt dann auf dem Gleis nach hinten)
+        return e.Lage - (Vector2.Normalize(hin) * t);
     }
 
     /// <summary>
@@ -321,7 +504,8 @@ public static partial class AussenBearbeitung
             // dasselbe Ende zweimal: das Ende frei lassen (sonst waere die Verbindung leer)
             b = new Ziehpunkt(new Vector2((float)bx, (float)by), null);
         }
-        var plan = Verbindung.Rechnen(a.Lage, a.Weg, b.Lage, b.Weg, ZiehRadien(art), art == ZiehArt.Strasse);
+        var plan = a.Weiche || b.Weiche ? WeichePlan(a, b, art)
+            : Verbindung.Rechnen(a.Lage, a.Weg, b.Lage, b.Weg, ZiehRadien(art), art == ZiehArt.Strasse);
         if (plan.Gefunden && !AufKarte(aussen, plan))
         {
             plan = plan with { Grund = Texte.ZiehenAusserhalb };

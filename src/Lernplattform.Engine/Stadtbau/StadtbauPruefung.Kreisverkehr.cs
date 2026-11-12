@@ -119,7 +119,7 @@ public static partial class StadtbauPruefung
             {
                 var dx = MathF.Max(MathF.Max(h.Min.X - m.X, 0), m.X - h.Max.X);
                 var dz = MathF.Max(MathF.Max(h.Min.Z - m.Y, 0), m.Y - h.Max.Z);
-                if (MathF.Sqrt((dx * dx) + (dz * dz)) < aussen - 0.02f)
+                if ((h.Fein.Aktiv ? h.Abstand(m) : MathF.Sqrt((dx * dx) + (dz * dz))) < aussen - 0.02f)
                 {
                     funde.Add(new StadtbauFund($"„{szene.Ort(h.Id)?.Name ?? h.Id.Split('#')[0]}“ steht auf dem Kreisverkehr (Straße Nr. {nr}).",
                         "Haus vom Kreisverkehr weg schieben.", true, (h.Min.X + h.Max.X) / 2, (h.Min.Z + h.Max.Z) / 2));

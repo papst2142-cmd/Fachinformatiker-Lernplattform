@@ -2,8 +2,8 @@
 """Waechter der CI-Stufe "ohne-mac" (Welle CI schneller 2, Meldung P12-84 Punkt 4, Nico Frage 2 = a, Weisung P12-131).
 
 Die Stufe ohne-mac ist der volle Lauf ohne die sieben Mac-Jobs (5 x tests auf macos-15/macos-15-intel, pakete
-(osx-arm64), pakete (osx-x64)): 10 Jobs. Sie gilt nur, wenn der Kopf gegen origin/main KEINE Datei aendert, die die
-Mac-Teile noetig macht. Vor jedem Release der Lernplattform verlangt release.yml weiter den vollen Lauf 17/17.
+(osx-arm64), pakete (osx-x64)), seit A 0.70.0 mit dem Job release-entwurf: 11 Jobs. Sie gilt nur, wenn der Kopf gegen origin/main KEINE Datei aendert, die die
+Mac-Teile noetig macht. Vor jedem Release der Lernplattform verlangt release.yml weiter den vollen Lauf (seit A 0.70.0 18/18).
 
 Mac noetig (Liste aus Meldung P12-84 Punkt 4, dazu strenger, selbst gefunden: Ton, Diagnose, Projektdateien,
 alle Workflows, Lizenzliste, Unit-Tests zu Mac, Haenger, Update, Paketen, Release, Vollbild, Ton):

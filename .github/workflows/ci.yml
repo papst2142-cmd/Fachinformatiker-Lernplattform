@@ -68,6 +68,97 @@ env:
   CI_STUFE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && 'voll' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && 'ohne-mac' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && 'werkzeug' || 'schnell')) }}
 
 jobs:
+  # Sammelliste 323 (Weisung P12-219, A 0.70.0): pakete steht als erster Job in der Datei, damit GitHub die beiden
+  # Mac-Pakete vor den fuenf Mac-Testjobs einreiht (hoechstens 5 Mac-Jobs laufen gleichzeitig; in Lauf 887 bekam
+  # osx-arm64 keinen Rechner und wurde nach 28 Minuten abgebrochen). Ein Versprechen von GitHub ist die Reihenfolge nicht.
+  pakete:
+    # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
+    # Update-Probe A 0.70.0 -> A 0.70.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    name: pakete (${{ matrix.rid }})
+    # Stufe voll (4 Pakete) und ohne-mac (Welle CI schneller 2: nur win-x64 und linux-x64, Listen voll, ohne-mac)
+    # Phase 11 FW10 (Weisung P11-18): Intel-Mac osx-x64 mit eigenem Velopack-Kanal
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"},{"os":"macos-15","rid":"osx-arm64"},{"os":"macos-15-intel","rid":"osx-x64"}]' || '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"}]') }}
+    runs-on: ${{ matrix.os }}
+    # Phase 6 W1: 30 -> 45 Minuten, weil der Release-Bau (zweites publish und pack) dazukommt
+    timeout-minutes: 45
+    # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
+    # (Stufe voll), nie in PR-Laeufen; der Bau maskiert ihn (Lernplattform.Core.csproj), keine Ausgabe nennt ihn.
+    env:
+      FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # Welle CI schneller 2: Waechter der Stufe ohne-mac (wie in tests)
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Werkzeuge
+        shell: bash
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get install -y -q squashfs-tools; fi
+      - name: Pakete bauen und Update pruefen
+        shell: bash
+        env:
+          PYTHON: python
+          # Sammelliste 258: Live-Probe fragt die GitHub-API angemeldet (sonst HTTP 403 rate limit)
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paket-${{ matrix.rid }}-A-0.70.0
+          path: pakete/feed-A-0.70.0/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: updateprobe-${{ matrix.rid }}-A-0.70.1
+          path: pakete/feed-A-0.70.1/
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Linux'
+        with:
+          name: appimage-linux-x64-A-0.70.0-tar
+          path: pakete/appimage/
+      # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
+      - name: Release-Dateien bauen (ohne Hochladen)
+        shell: bash
+        env:
+          PYTHON: python
+        run: bash werkzeuge/release/baue_release.sh ${{ matrix.rid }} release
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.rid }}
+          path: release/release-${{ matrix.rid }}/
+          if-no-files-found: error
+      # Phase 11 (Weisung P11-29): "Bericht senden" mit dem eingebauten Schluessel, Datei berichte/_probe_<Lauf>.md in
+      # fi-fehlerberichte; ohne Schluessel (PR-Lauf mit Label voll) muss das Programm "nicht verfuegbar" melden.
+      - name: Fehlerbericht-Probe
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if [ -n "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLERBERICHT_TOKEN vorhanden: ja"; else echo "FEHLERBERICHT_TOKEN vorhanden: nein"; fi
+          dotnet publish src/Lernplattform.Desktop -c Release -r linux-x64 --self-contained -p:DebugType=none -o bericht-probe
+          DATEN=$(mktemp -d)
+          set +e
+          LERNPLATTFORM_DATEN="$DATEN" LERNPLATTFORM_BERICHT_PROBE="${{ github.run_number }}-${{ github.run_attempt }}" ./bericht-probe/Lernplattform
+          rc=$?
+          set -e
+          if [ -n "$FEHLERBERICHT_TOKEN" ]; then soll=0; else soll=2; fi
+          if [ "$rc" != "$soll" ]; then echo "FEHLER: Bericht-Probe Rueckgabe $rc, erwartet $soll"; cat "$DATEN"/fehler.log 2>/dev/null; exit 1; fi
+          if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
+          echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
+
   tests:
     name: tests (${{ matrix.os }}${{ matrix.teil != '' && format(', {0}', matrix.teil) || '' }})
     # schnell nur ubuntu-latest, voll alle drei Systeme
@@ -427,94 +518,6 @@ jobs:
           echo "Rueckgabe des 1. Laufs der Spielansichten unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.spiel1.outputs.rc }}')"
           exit 1
 
-  pakete:
-    # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.69.0 -> A 0.69.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
-    name: pakete (${{ matrix.rid }})
-    # Stufe voll (4 Pakete) und ohne-mac (Welle CI schneller 2: nur win-x64 und linux-x64, Listen voll, ohne-mac)
-    # Phase 11 FW10 (Weisung P11-18): Intel-Mac osx-x64 mit eigenem Velopack-Kanal
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"},{"os":"macos-15","rid":"osx-arm64"},{"os":"macos-15-intel","rid":"osx-x64"}]' || '[{"os":"windows-latest","rid":"win-x64"},{"os":"ubuntu-latest","rid":"linux-x64"}]') }}
-    runs-on: ${{ matrix.os }}
-    # Phase 6 W1: 30 -> 45 Minuten, weil der Release-Bau (zweites publish und pack) dazukommt
-    timeout-minutes: 45
-    # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
-    # (Stufe voll), nie in PR-Laeufen; der Bau maskiert ihn (Lernplattform.Core.csproj), keine Ausgabe nennt ihn.
-    env:
-      FEHLERBERICHT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && secrets.FEHLERBERICHT_TOKEN || '' }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      # Welle CI schneller 2: Waechter der Stufe ohne-mac (wie in tests)
-      - name: Waechter ohne Mac (ohne_mac.py)
-        if: env.CI_STUFE == 'ohne-mac'
-        shell: bash
-        run: |
-          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
-          python -I werkzeuge/ci/ohne_mac.py selbsttest
-          python -I werkzeuge/ci/ohne_mac.py pruefen
-      - uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
-      - name: Werkzeuge
-        shell: bash
-        run: |
-          dotnet tool install -g vpk --version 1.2.161
-          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get install -y -q squashfs-tools; fi
-      - name: Pakete bauen und Update pruefen
-        shell: bash
-        env:
-          PYTHON: python
-          # Sammelliste 258: Live-Probe fragt die GitHub-API angemeldet (sonst HTTP 403 rate limit)
-          GITHUB_TOKEN: ${{ github.token }}
-        run: bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
-      - uses: actions/upload-artifact@v7
-        with:
-          name: paket-${{ matrix.rid }}-A-0.69.0
-          path: pakete/feed-A-0.69.0/
-      - uses: actions/upload-artifact@v7
-        with:
-          name: updateprobe-${{ matrix.rid }}-A-0.69.1
-          path: pakete/feed-A-0.69.1/
-      - uses: actions/upload-artifact@v7
-        if: runner.os == 'Linux'
-        with:
-          name: appimage-linux-x64-A-0.69.0-tar
-          path: pakete/appimage/
-      # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
-      - name: Release-Dateien bauen (ohne Hochladen)
-        shell: bash
-        env:
-          PYTHON: python
-        run: bash werkzeuge/release/baue_release.sh ${{ matrix.rid }} release
-      - uses: actions/upload-artifact@v7
-        with:
-          name: release-${{ matrix.rid }}
-          path: release/release-${{ matrix.rid }}/
-          if-no-files-found: error
-      # Phase 11 (Weisung P11-29): "Bericht senden" mit dem eingebauten Schluessel, Datei berichte/_probe_<Lauf>.md in
-      # fi-fehlerberichte; ohne Schluessel (PR-Lauf mit Label voll) muss das Programm "nicht verfuegbar" melden.
-      - name: Fehlerbericht-Probe
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -n "$FEHLERBERICHT_TOKEN" ]; then echo "FEHLERBERICHT_TOKEN vorhanden: ja"; else echo "FEHLERBERICHT_TOKEN vorhanden: nein"; fi
-          dotnet publish src/Lernplattform.Desktop -c Release -r linux-x64 --self-contained -p:DebugType=none -o bericht-probe
-          DATEN=$(mktemp -d)
-          set +e
-          LERNPLATTFORM_DATEN="$DATEN" LERNPLATTFORM_BERICHT_PROBE="${{ github.run_number }}-${{ github.run_attempt }}" ./bericht-probe/Lernplattform
-          rc=$?
-          set -e
-          if [ -n "$FEHLERBERICHT_TOKEN" ]; then soll=0; else soll=2; fi
-          if [ "$rc" != "$soll" ]; then echo "FEHLER: Bericht-Probe Rueckgabe $rc, erwartet $soll"; cat "$DATEN"/fehler.log 2>/dev/null; exit 1; fi
-          if strings -a bericht-probe/Lernplattform.Core.dll | grep -q github_pat_; then echo "FEHLER: lesbarer Schluessel im Programm"; exit 1; fi
-          echo "Bericht-Probe: Rueckgabe $rc wie erwartet"
-
   pakete-stadtbau:
     # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
     # stadtbau-win, Kennung Fachinformatiker-Stadtbau), jede Datei in der Lizenzliste; nichts hochgeladen.
@@ -631,10 +634,9 @@ jobs:
 
   android:
     name: android (APK, nur arm64-v8a, Testsignatur)
-    # nur Stufe voll; wartet auf pakete, weil es am Ende den Release-Entwurf zusammenstellt. Die APK
-    # baut und prueft es auch bei rotem pakete-Teil (!cancelled), nur das Zusammenstellen braucht pakete gruen.
-    # Phase 13 Welle 2: wartet auch auf das Werkzeug-Paket, um den Werkzeug-Release zusammenzustellen
-    needs: [pakete, pakete-stadtbau]
+    # Sammelliste 323 (Weisung P12-219, A 0.70.0): wartet auf keinen anderen Job mehr und startet sofort. Vorher wartete es
+    # auf alle Pakete (auch die Mac-Pakete), um am Ende den Release-Entwurf zusammenzustellen; bekam ein Mac-Paket keinen
+    # Rechner, wurde android als Folgefehler rot (Lauf 887). Das Zusammenstellen steht jetzt im kleinen Job release-entwurf.
     if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))))"
     runs-on: ubuntu-latest
     # BEFRISTET bis 1.0 (Weisung P11-29/P11-30, Frage 3a): Schluessel fuer "Bericht senden" nur im Dispatch-Lauf
@@ -677,11 +679,11 @@ jobs:
         id: apkbau
         if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.69.1 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.69.0 installierbar.
-      - name: Update-APK A 0.69.1 bauen
+      # Spike D (A4b): zweite APK A 0.70.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.70.0 installierbar.
+      - name: Update-APK A 0.70.1 bauen
         if: env.CI_STUFE != 'werkzeug'
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.69.1 -o apk-update
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.70.1 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -735,19 +737,19 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1006900'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1006901'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1007000'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1007001'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: lernplattform-android-A-0.69.0
+          name: lernplattform-android-A-0.70.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: updateprobe-android-A-0.69.1
+          name: updateprobe-android-A-0.70.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
@@ -767,32 +769,13 @@ jobs:
             unzip -l "$a" > release_inhalt.txt
             grep -q "lib/arm64-v8a/libminiaudio.so" release_inhalt.txt || { echo "FEHLER: $a ohne libminiaudio.so (Toene)"; exit 1; }
           done
-      # Welle CI schneller 2: der Release-Entwurf braucht alle vier Pakete, darum nur in der Stufe voll (ohne-mac hat keine
-      #   Mac-Pakete; release.yml verlangt vor jedem Release ohnehin den vollen Lauf 17/17)
-      - uses: actions/download-artifact@v8
-        if: needs.pakete.result == 'success' && env.CI_STUFE == 'voll'
-        with:
-          pattern: release-*-*
-          path: release
-      - name: Release zusammenstellen und pruefen (T2, Lizenzliste)
-        if: env.CI_STUFE == 'voll'
-        run: |
-          if [ "${{ needs.pakete.result }}" != "success" ]; then
-            echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
-          fi
-          ls -la release
-          rc=0
-          python -I werkzeuge/release/release.py zusammen release release/entwurf || rc=$?
-          # Release-Text ins Protokoll (Entwurf fuer die Meldung, Artefakte sind nicht immer abrufbar)
-          if [ -f release/release.md ]; then echo "===== ANFANG release.md ====="; cat release/release.md; echo "===== ENDE release.md ====="; fi
-          exit "$rc"
+      # Sammelliste 323: das Release-APK geht als Artefakt an den Job release-entwurf (nur Stufe voll)
       - uses: actions/upload-artifact@v7
-        if: always() && env.CI_STUFE == 'voll'
+        if: env.CI_STUFE == 'voll'
         with:
-          name: release-entwurf
-          path: |
-            release/entwurf/
-            release/release.md
+          name: release-android
+          path: release/release-android/
+          if-no-files-found: error
       # Phase 13 Welle 2 (Weisung P12-17): Tablet-APK des Werkzeugs (io.github.papst2142cmd.stadtbau, Testschluessel),
       # dann der Werkzeug-Release aus beiden Teilen (eigene Linie S, nie ein Feed oder Paket der Lernplattform)
       - name: Werkzeug-APK bauen (Testschluessel)
@@ -808,28 +791,6 @@ jobs:
           name: stadtbau-android-S-0.4.0
           path: stadtbau/stadtbau-android/
           if-no-files-found: error
-      - uses: actions/download-artifact@v8
-        if: "!cancelled() && needs.pakete-stadtbau.result == 'success' && steps.werkzeug_apk.outcome == 'success'"
-        with:
-          name: stadtbau-win-x64
-          path: stadtbau/stadtbau-win-x64
-      - name: Werkzeug-Release zusammenstellen und pruefen
-        if: "!cancelled() && steps.werkzeug_apk.outcome == 'success'"
-        run: |
-          if [ "${{ needs.pakete-stadtbau.result }}" != "success" ]; then
-            echo "FEHLER: pakete (stadtbau win-x64) nicht gruen (${{ needs.pakete-stadtbau.result }}), kein Werkzeug-Release"; exit 1
-          fi
-          python -I werkzeuge/stadtbau/stadtbau_release.py selbsttest
-          python -I werkzeuge/stadtbau/stadtbau_release.py zusammen stadtbau stadtbau/entwurf
-          echo "===== ANFANG release.md (Werkzeug) ====="; cat stadtbau/release.md; echo "===== ENDE release.md (Werkzeug) ====="
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: stadtbau-release-entwurf
-          path: |
-            stadtbau/entwurf/
-            stadtbau/release.md
-          if-no-files-found: ignore
       # A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm (Android 14, x86_64). Drei
       # Probe-APKs n, n+1, n+2 (-p:UpdateProbe=true, nur hier, nie ausgeliefert) mit dem Testschluessel dieses Laufs;
       # die App sucht ueber einen Testserver auf dem Runner, laedt, prueft (Pruefsummen, Paket, Zertifikat, Versionscode)
@@ -896,6 +857,100 @@ jobs:
           path: emulator_probe_stadtbau.txt
           if-no-files-found: warn
 
+  release-entwurf:
+    # Sammelliste 323 (Weisung P12-219, A 0.70.0): stellt am Ende die Release-Entwuerfe zusammen (vorher die letzten Schritte
+    # von android): Lernplattform aus den vier Paketen und dem Release-APK (nur Stufe voll), Werkzeug aus dem Windows-Paket
+    # und der Tablet-APK. Nur dieser kleine Job wartet auf die Mac-Pakete; bekommt ein Mac keinen Rechner, ist er der einzige
+    # Folgefehler, und ein Neustart der roten Jobs nimmt nur das Mac-Paket und diesen Job.
+    name: release (Entwuerfe zusammenstellen)
+    needs: [pakete, pakete-stadtbau, android]
+    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))))"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Waechter nur Werkzeug (nur_werkzeug.py)
+        if: env.CI_STUFE == 'werkzeug'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/stadtbau/nur_werkzeug.py selbsttest
+          python -I werkzeuge/stadtbau/nur_werkzeug.py pruefen
+      - name: Waechter ohne Mac (ohne_mac.py)
+        if: env.CI_STUFE == 'ohne-mac'
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=2 origin +refs/heads/main:refs/remotes/origin/main
+          python -I werkzeuge/ci/ohne_mac.py selbsttest
+          python -I werkzeuge/ci/ohne_mac.py pruefen
+      # Lernplattform: der Release-Entwurf braucht alle vier Pakete, darum nur in der Stufe voll (ohne-mac hat keine
+      #   Mac-Pakete; release.yml verlangt vor jedem Release ohnehin den vollen Lauf)
+      - uses: actions/download-artifact@v8
+        if: needs.pakete.result == 'success' && needs.android.result == 'success' && env.CI_STUFE == 'voll'
+        with:
+          pattern: release-*-*
+          path: release
+      - uses: actions/download-artifact@v8
+        if: needs.pakete.result == 'success' && needs.android.result == 'success' && env.CI_STUFE == 'voll'
+        with:
+          name: release-android
+          path: release/release-android
+      - name: Release zusammenstellen und pruefen (T2, Lizenzliste)
+        if: env.CI_STUFE == 'voll'
+        run: |
+          if [ "${{ needs.pakete.result }}" != "success" ]; then
+            echo "FEHLER: pakete nicht gruen (${{ needs.pakete.result }}), kein Release-Entwurf"; exit 1
+          fi
+          if [ "${{ needs.android.result }}" != "success" ]; then
+            echo "FEHLER: android nicht gruen (${{ needs.android.result }}), kein Release-Entwurf"; exit 1
+          fi
+          ls -la release
+          rc=0
+          python -I werkzeuge/release/release.py zusammen release release/entwurf || rc=$?
+          # Release-Text ins Protokoll (Entwurf fuer die Meldung, Artefakte sind nicht immer abrufbar)
+          if [ -f release/release.md ]; then echo "===== ANFANG release.md ====="; cat release/release.md; echo "===== ENDE release.md ====="; fi
+          exit "$rc"
+      - uses: actions/upload-artifact@v7
+        if: always() && env.CI_STUFE == 'voll'
+        with:
+          name: release-entwurf
+          path: |
+            release/entwurf/
+            release/release.md
+      # Werkzeug (Phase 13 Welle 2, Weisung P12-17): eigene Linie S, nie ein Feed oder Paket der Lernplattform
+      - uses: actions/download-artifact@v8
+        if: "!cancelled() && needs.pakete-stadtbau.result == 'success' && needs.android.result == 'success'"
+        with:
+          name: stadtbau-win-x64
+          path: stadtbau/stadtbau-win-x64
+      - uses: actions/download-artifact@v8
+        if: "!cancelled() && needs.pakete-stadtbau.result == 'success' && needs.android.result == 'success'"
+        with:
+          name: stadtbau-android-S-0.4.0
+          path: stadtbau/stadtbau-android
+      - name: Werkzeug-Release zusammenstellen und pruefen
+        if: "!cancelled()"
+        run: |
+          if [ "${{ needs.pakete-stadtbau.result }}" != "success" ]; then
+            echo "FEHLER: pakete (stadtbau win-x64) nicht gruen (${{ needs.pakete-stadtbau.result }}), kein Werkzeug-Release"; exit 1
+          fi
+          if [ "${{ needs.android.result }}" != "success" ]; then
+            echo "FEHLER: android nicht gruen (${{ needs.android.result }}), kein Werkzeug-Release"; exit 1
+          fi
+          python -I werkzeuge/stadtbau/stadtbau_release.py selbsttest
+          python -I werkzeuge/stadtbau/stadtbau_release.py zusammen stadtbau stadtbau/entwurf
+          echo "===== ANFANG release.md (Werkzeug) ====="; cat stadtbau/release.md; echo "===== ENDE release.md (Werkzeug) ====="
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: stadtbau-release-entwurf
+          path: |
+            stadtbau/entwurf/
+            stadtbau/release.md
+          if-no-files-found: ignore
+
   urteil:
     # Welle CI schneller 2 (Meldung P12-84 Punkt 2, Nico Frage 1 = a, Weisung P12-131): liest am Ende des Laufs die Jobs und
     # die Protokolle der roten Jobs (nur Lesen) und sagt, ob ein Rot nur von GitHub kommt (kein Rechner, Abfragebremse,
@@ -905,7 +960,7 @@ jobs:
     # stadtbau_release.yml zaehlen ihn nicht mit (Merge-Tor bleibt 17/17 bzw. die Liste der Stufe), urteil.py selbsttest
     # prueft das. Regeln und feste Faelle mit Gegenproben: werkzeuge/starttest/urteil_github.py.
     name: urteil (GitHub oder echt)
-    needs: [tests, pakete, pakete-stadtbau, sollwerte, android]
+    needs: [tests, pakete, pakete-stadtbau, sollwerte, android, release-entwurf]
     if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac')"
     runs-on: ubuntu-latest
     timeout-minutes: 10

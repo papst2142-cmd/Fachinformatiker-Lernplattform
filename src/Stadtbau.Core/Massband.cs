@@ -98,9 +98,11 @@ public sealed class Massband
             switch (s.Art)
             {
                 case AussenArt.Haus or AussenArt.Gebaeude:
-                    foreach (var q in Rechteck(AussenBearbeitung.HausFlaeche(aussen, s)))
+                    // Welle A 0.70.0: ein fein gedrehtes Haus mit seinen gedrehten Ecken und Kantenmitten
+                    var lage = AussenBearbeitung.HausLage(aussen, s);
+                    foreach (var q in Rechteck(AussenBearbeitung.HausViertel(aussen, s)))
                     {
-                        yield return q;
+                        yield return lage.Punkt(q);
                     }
                     break;
                 case AussenArt.Katalog:
