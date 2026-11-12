@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Lernplattform.Core.Daten;
 
 namespace Lernplattform.Core.Spiel.Probe;
@@ -117,6 +118,13 @@ public static class Figur
     /// Farben, Groesse und Lage kommen immer von der stehenden Figur (sonst wuerde sie je Bild pulsieren), die Ecken
     /// vom Bild der Bewegung (gleiche Dreiecke in gleicher Reihenfolge, Sammelliste 125).
     /// </summary>
+    /// <remarks>
+    /// A 0.68.0: sofort voll uebersetzt (ohne gestufte Uebersetzung und ohne Wechsel mitten in der Schleife, "OSR"). Mit der
+    /// Kleidung am Koerper liess die beim Laufen gewechselte Fassung dieser Methode den Prozess unter Linux und macOS mit
+    /// AccessViolation in <see cref="Probe.Netz.Hinzu(Teil)"/> abstuerzen (Laeufe 869/870; nachgestellt mit vielen Figuren
+    /// nebenher: ohne diesen Schalter rund jeder zweite Prozess, mit DOTNET_TC_OnStackReplacement=0 keiner).
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild)
     {
         var a = Aussehen.Normalisieren(aussehen);
