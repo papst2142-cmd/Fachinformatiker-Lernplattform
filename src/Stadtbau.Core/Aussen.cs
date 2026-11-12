@@ -278,12 +278,29 @@ public static class Aussen
     public static Dictionary<string, string> TeileText(PyObjekt aussen) =>
         Teile(aussen).ToDictionary(t => t.Pfad, t => PythonJson.Standard(t.Wert), StringComparer.Ordinal);
 
+    /// <summary>Gegenprobe Fund 306: Teil setzen wie bis S 0.46.1 (leere Werkzeug-Teile bleiben als {} bzw. [] stehen; nur Tests, je Ablauf).</summary>
+    public static bool LeerAltFuerTests { get => LeerAlt.Value; set => LeerAlt.Value = value; }
+    private static readonly AsyncLocal<bool> LeerAlt = new();
+
+    /// <summary>
+    /// Fund 306 (Weisung P12-226, Vorschlag E7): die Teile nur des Werkzeugs (automatische Laternen, Notizen), die leer sind,
+    /// fallen weg, statt leer stehen zu bleiben. Nach Rueckgaengig bis vor die erste automatische Laterne steht dann kein
+    /// <c>laternen_auto: {}</c> mehr in der Projektdatei, wo vorher keiner war.
+    /// </summary>
+    private static bool LeererWerkzeugTeil(string pfad, object? wert) =>
+        pfad is LaternenAutomatik.Teil or AussenBearbeitung.NotizTeil && wert is PyObjekt { Count: 0 } or List<object?> { Count: 0 } or null;
+
     /// <summary>Teil setzen (fehlt der Wert: Schluessel weg).</summary>
     public static void TeilSetzen(PyObjekt aussen, string pfad, object? wert, bool vorhanden)
     {
         var teile = pfad.Split('/', 2);
         if (teile.Length == 1)
         {
+            if (!LeerAlt.Value && (!vorhanden || LeererWerkzeugTeil(pfad, wert)) && pfad is LaternenAutomatik.Teil or AussenBearbeitung.NotizTeil)
+            {
+                aussen.RemoveAll(e => e.Key == pfad);
+                return;
+            }
             Py.Setzen(aussen, pfad, wert);
             return;
         }

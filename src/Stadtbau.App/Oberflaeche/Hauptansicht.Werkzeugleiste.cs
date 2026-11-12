@@ -69,9 +69,11 @@ public sealed partial class Hauptansicht
         });
         _notizChip = Schrift.Knopf(Texte.Notiz).Vorlese(Texte.NotizSetzen).Mit(Texte.NotizTipp);
         _notizChip.Click += (_, _) => SetzenKnopfGedrueckt(_notizChip, true, () => AussenSetzenWaehlen(AussenArt.Notiz, null));
+        // Welle S 0.47.0 (Weisung P12-226 W1): Einfuegen aus der Zwischenablage (auch aus einem anderen Projekt)
+        _einfuegenChip = Chip(Texte.Einfuegen, Texte.EinfuegenLeer, () => EinfuegenStarten());
         _ebenenHinweis.VerticalAlignment = VerticalAlignment.Center;
         _ebenenHinweis.Margin = new Thickness(4, 0, 8, 8);
-        foreach (var k in (Control[])[_waehlenChip, _mehrereChip, _massbandChip, _ebenenChip, _notizChip, _ebenenHinweis])
+        foreach (var k in (Control[])[_waehlenChip, _mehrereChip, _massbandChip, _ebenenChip, _notizChip, _einfuegenChip, _ebenenHinweis])
         {
             _werkzeugLeiste.Children.Add(k);
         }
@@ -181,6 +183,10 @@ public sealed partial class Hauptansicht
         ChipMarkieren(_ebenenChip, _ebenenKarte.IsVisible);
         _ebenenChip.IsVisible = !_drei;
         _notizChip.IsVisible = !_drei;
+        if (_einfuegenChip is not null)
+        {
+            _einfuegenChip.IsVisible = !_drei;
+        }
         if (_waermeChip is not null)
         {
             _waermeChip.IsVisible = !_drei;

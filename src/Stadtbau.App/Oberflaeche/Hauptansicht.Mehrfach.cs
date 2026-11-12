@@ -76,6 +76,8 @@ public sealed partial class Hauptansicht
             GruppeLoeschenKnopf = Knopf(Texte.GruppeLoeschen, Texte.GruppeLoeschenTipp, Karte.GruppeLoeschen);
             _aussenAuswahl.Children.Add(new WrapPanel { Children = { GruppeDrehenKnopf, GruppeKopierenKnopf, GruppeLoeschenKnopf } });
         }
+        // S 0.47.0 (Weisung P12-226 W1): auch fuer ein Projekt, das nur angesehen wird
+        _aussenAuswahl.Children.Add(KopierenKnopf([.. Karte.Gruppe]));
         _aussenAuswahl.Children.Add(Knopf(Texte.AuswahlAufheben, Texte.AuswahlAufheben, () => Karte.Waehlen(null)));
         return true;
 

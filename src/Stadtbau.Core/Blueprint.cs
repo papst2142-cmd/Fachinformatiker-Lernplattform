@@ -101,13 +101,18 @@ public sealed class Blueprint
     private static List<object?> Verschoben(List<object?> p, double dx) =>
         [Math.Round(Py.F(p[0]) + dx, 4), .. p.Skip(1)];
 
-    public static Blueprint? Aus(Projekt projekt, AussenStelle s, string name)
+    public static Blueprint? Aus(Projekt projekt, AussenStelle s, string name) => Aus(projekt, projekt.AussenStand, s, name);
+
+    /// <summary>
+    /// Welle S 0.47.0 W1: wie <see cref="Aus(Projekt, AussenStelle, string)"/>, aber aus dem Stand <paramref name="a"/> (eine
+    /// Kopie der Stadt draussen von <paramref name="projekt"/>, etwa mit dem Haus auf Drehung 0 zurueckgedreht).
+    /// </summary>
+    internal static Blueprint? Aus(Projekt projekt, PyObjekt a, AussenStelle s, string name)
     {
         if (!NameGueltig(name))
         {
             throw new ArgumentException("Name ungültig", nameof(name));
         }
-        var a = projekt.AussenStand;
         PyObjekt haus;
         List<object?>? tuer = null, schild = null;
         List<object?> weg = [];
@@ -195,6 +200,23 @@ public sealed class Blueprint
             Farben = Get(Get(Aussen.Stadtdaten(a), Gebaeudefarben.Schluessel) as PyObjekt ?? [], s.Art == AussenArt.Haus ? ort : modell) is PyObjekt fb ? (PyObjekt)Py.Kopie(fb)! : null,
         };
     }
+
+    /// <summary>Welle S 0.47.0 W1: dieselbe Vorlage mit anderem Modellnamen und/oder ohne Innenraum (zum Einfuegen).</summary>
+    internal Blueprint Mit(string modell, bool ohneInnenraum) => new()
+    {
+        Name = Name,
+        Herkunft = Herkunft,
+        Modell = modell,
+        Teile = Teile,
+        Tuer = Tuer,
+        Weg = Weg,
+        Schild = Schild,
+        Innenraum = ohneInnenraum ? null : Innenraum,
+        Personen = ohneInnenraum ? [] : Personen,
+        Bauteile = Bauteile,
+        Eingang = Eingang,
+        Farben = Farben,
+    };
 
     /// <summary>Der erste Zierweg (Tuer und Fussweg eines Gebaeudes ohne Ort) zu einem Modell.</summary>
     public static PyObjekt? Zierweg(PyObjekt aussen, string modell) =>
@@ -353,7 +375,7 @@ public sealed class Blueprint
     }
 
     /// <summary>Eintrag in <c>stadtdaten.bauteile</c> ({teile, eingang}), null bei einem Gebaeude der Stadt.</summary>
-    private PyObjekt? BauteileEintrag() => Bauteile is null ? null : new PyObjekt { { "teile", Py.Kopie(Bauteile) }, { "eingang", Py.Kopie(Eingang ?? []) } };
+    internal PyObjekt? BauteileEintrag() => Bauteile is null ? null : new PyObjekt { { "teile", Py.Kopie(Bauteile) }, { "eingang", Py.Kopie(Eingang ?? []) } };
 
     /// <summary>
     /// S 0.9.0 (Weisung P12-48): stehende Gebaeude, deren Modell selbst gebaut ist (<c>stadtdaten.bauteile</c>). Das Spiel

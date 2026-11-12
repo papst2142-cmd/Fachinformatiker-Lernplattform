@@ -968,6 +968,11 @@ public sealed partial class Projekt
         // Welle Q (Sammelliste 229): Gebaeude ohne Ort mit dem Namen des Blueprints statt „bau:…“
         // Fund 262: Szene mit den eigenen Gebaeuden (wie die 3D-Ansicht), dazu die Regel „Tuer buendig“ (nur Werkzeug)
         var funde = StadtbauPruefung.Aussen(stand, daten.Inhalt, Ansicht3D.MitGebaeuden(daten.Grafik, stand), null, sz => TuerBuendig.Pruefen(sz, stand, daten));
+        // Fund 320 (Weisung P12-226): Orte mit dem Namen der Karte statt dem Namen im Probestand („Probe“, „filiale“)
+        if (funde.Count > 0 && ProbeNamen.Ersatz(stand, daten.Inhalt) is { Count: > 0 } ersatz)
+        {
+            funde = [.. funde.Select(f => ProbeNamen.Umbenennen(ersatz, f))];
+        }
         return [.. funde.Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen),
             .. (stand.StadtId == daten.Fassung.StadtId ? [] : Spielort.Pruefen(aussen, daten.Fassung)), .. Laufzeiten.Pruefen(wege ?? Laufzeiten.Rechnen(stand, daten.Inhalt, daten.Grafik), aussen)];
     }

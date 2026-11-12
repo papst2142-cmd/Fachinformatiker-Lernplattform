@@ -40,7 +40,7 @@ public static partial class GebaeudeTuer
     internal static readonly AsyncLocal<bool> SuedAltFuerTests = new();
 
     [GeneratedRegex("^(.+)_([0-9]+)$")]
-    private static partial Regex KopieMuster();
+    internal static partial Regex KopieMuster();
 
     /// <summary>Hat das Gebaeude eine Tuer, die das Spiel zeichnet (Zierweg seines Modells, nur am ersten Gebaeude)?</summary>
     public static bool HatTuer(PyObjekt aussen, AussenStelle s) => Blueprint.ZierwegVon(aussen, s) is not null;
@@ -389,12 +389,12 @@ public static partial class GebaeudeTuer
         Aussen.Landschaft(aussen).OfType<PyObjekt>().Any(t => !ReferenceEquals(t, g) && Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell))
         || AussenBearbeitung.Orte(aussen).Any(o => Py.Gleich(o["modell"], modell));
 
-    private static bool Genutzt(PyObjekt aussen, string modell) =>
+    internal static bool Genutzt(PyObjekt aussen, string modell) =>
         Aussen.Landschaft(aussen).OfType<PyObjekt>().Any(t => Py.Gleich(t["typ"], "gebaeude") && Py.Gleich(t["modell"], modell))
         || AussenBearbeitung.Orte(aussen).Any(o => Py.Gleich(o["modell"], modell));
 
     /// <summary>Kopie <c>modell_2</c>, <c>_3</c> … (naechste freie Nummer) mit denselben Teilen in <c>karte.modelle</c>.</summary>
-    private static List<object?> OhneBahnsteig(object? teile) => [.. (teile as List<object?> ?? []).Where(x => !Bahnsteig.IstFlaeche(x))];
+    internal static List<object?> OhneBahnsteig(object? teile) => [.. (teile as List<object?> ?? []).Where(x => !Bahnsteig.IstFlaeche(x))];
 
     private static string KopieAnlegen(PyObjekt aussen, string modell, bool ohneBahnsteig = false)
     {

@@ -3,6 +3,18 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.47.0
+
+Stücke zwischen Projekten kopieren, Laterne versetzen, frühere Fassungen öffnen.
+
+- Kopieren zwischen Projekten: unter „Ausgewähltes Stück“ (auch bei mehreren gewählten Stücken) steht „Kopieren (für andere Projekte)“, Taste Strg+C. Die Stücke liegen danach in der Zwischenablage des Werkzeugs und bleiben dort auch nach dem Wechsel in ein anderes Projekt oder einem Neustart. In der Werkzeugleiste über der Karte steht „Einfügen“ (Strg+V): die kopierten Stücke folgen als Schatten der Maus (grün = passt, rot = ragt über den Rand), ein Tipp setzt sie. Das ist ein Schritt, Rückgängig geht; Escape bricht ab.
+- Kopieren lassen sich Häuser (mit Innenraum und Etagen), Straßen mit ihren Zebrastreifen, Ampeln und Haltestellen, Kreisverkehre mit Zufahrten, Parks, Bäume, Laternen, Wasser, Bahnen, Katalog-Stücke und alles Weitere außer dem Paketplatz. Fehlende Gebäude-Modelle und eigene Bauteile kommen mit. Gibt es im neuen Projekt schon ein anderes Gebäude mit demselben Namen, kommt ein Grund und nichts wird eingefügt.
+- Ein Spielort steht nie doppelt: gibt es ihn im neuen Projekt schon, kommt das Haus als Gebäude ohne Ort dazu (mit Hinweis). Fehlt er in einer leeren Stadt, wird es dieser Spielort.
+- Laterne versetzen: an einem roten Fund einer Laterne in der Prüfliste steht der Knopf „Laterne versetzen“. Das Werkzeug sucht die nächste freie Stelle (gleiche Regeln wie die automatischen Laternen), prüft sie mit der ganzen Prüfung und zeigt sie auf der Karte grün. „Übernehmen“ setzt die Laterne dorthin: ein Schritt, Rückgängig geht. Gibt es keine freie Stelle, steht der Grund dort.
+- Frühere Fassungen: im Fenster „Projekt öffnen“ hat jedes Projekt den Knopf „Frühere Fassungen“. Er zeigt die Sicherungen (das Werkzeug legt alle 5 Minuten eine an) mit Zeit und Bild der Stadt von oben. „Diese Fassung als neues Projekt öffnen“ legt ein neues Projekt mit Datum im Namen an. Das Projekt selbst und die Sicherung bleiben unverändert, nichts wird gelöscht oder überschrieben.
+- Nach Rückgängig bleibt in der Projektdatei kein leerer Eintrag für die automatischen Laternen mehr stehen.
+- Funde zur Erreichbarkeit nennen die Orte mit ihrem Namen auf der Karte (zum Beispiel „Gewerbehof Am Stellwerk“ statt „Probe“).
+
 ## S 0.46.1
 
 Zwei neue Knöpfe für Orte, mit denen deine Stadt 1 korrigiert wurde.

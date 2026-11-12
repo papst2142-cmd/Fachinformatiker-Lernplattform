@@ -55,20 +55,17 @@ public class BelastungsprobenTests
     }
 
     /// <summary>
-    /// Stand draussen als Text zum Vergleich. Fund 306 (offen, Vorschlag E7): nach Rueckgaengig kann ein leerer Teil
-    /// <c>laternen_auto: {}</c> stehen bleiben, wo vorher keiner war; beide Seiten werden darum gleich behandelt (leerer Teil = kein
-    /// Teil). Jede andere Abweichung bleibt ein Fund.
+    /// Stand draussen als Text zum Vergleich. Seit S 0.47.0 (Fund 306 behoben, Weisung P12-226) streng: ein leerer Teil
+    /// <c>laternen_auto: {}</c> nach Rueckgaengig waere eine Abweichung (Gegenprobe <c>Fund306_RueckgaengigOhneLeerenTeil</c>).
     /// </summary>
-    internal static string Vergleich(PyObjekt aussen)
-    {
-        var k = (PyObjekt)Py.Kopie(aussen)!;
-        k.RemoveAll(e => e.Key == LaternenAutomatik.Teil && e.Value is PyObjekt o && o.Count == 0);
-        return PythonJson.Standard(k);
-    }
+    internal static string Vergleich(PyObjekt aussen) => PythonJson.Standard(aussen);
 
     private static string Kurz(Exception e) => $"{e.GetType().Name} {e.Message} {e.StackTrace?.Split('\n').FirstOrDefault()?.Trim()}";
 
     // ---- 1. Jede Aktion an jedem Stueck draussen ------------------------------------------------------------------------
+
+    /// <summary>Projekt der laufenden Probe (fuer Aktionen, die das Projekt brauchen: Zwischenablage, Szene).</summary>
+    private static readonly AsyncLocal<Projekt?> Aktuell = new();
 
     private static readonly (string Name, Func<PyObjekt, AussenStelle, object?> Tun, Func<PyObjekt, AussenStelle, string?>? Nicht)[] Aktionen =
     [
@@ -78,7 +75,15 @@ public class BelastungsprobenTests
         ("kopieren", (a, s) => AussenBearbeitung.Kopieren(a, s), null),
         ("loeschen", (a, s) => AussenBearbeitung.Loeschen(a, s), null),
         ("spiegeln", (a, s) => AussenBearbeitung.Spiegeln(a, s), (a, s) => AussenBearbeitung.SpiegelnNicht(a, s)),
+        // S 0.47.0 W1: ueber die Zwischenablage (wie aus einem anderen Projekt) daneben einfuegen
+        ("einfuegen", (a, s) => AussenBearbeitung.InZwischenablage(Aktuell.Value!, [s], out _) is { } z
+            ? AussenBearbeitung.Einfuegen(a, z, z.Mitte.X + 1, z.Mitte.Y + 0.5, true, D.Fassung) : null, null),
+        // S 0.47.0 W2: Laterne an die naechste freie Stelle versetzen
+        ("versetzen", (a, s) => s.Art == AussenArt.Laterne
+            && LaternenAutomatik.FreieStellen(a, s.Nummer, Aktuell.Value!.SzeneOhneLaternen).Take(1).ToList() is [var q]
+            && LaterneVersetzen.Anwenden(a, new LaterneVersetzen.Vorschlag(s.Nummer, new Vector2(Aussen.LaternenWerte(a)[s.Nummer].X, Aussen.LaternenWerte(a)[s.Nummer].Z), q)), null),
     ];
+
 
     /// <summary>
     /// Fuehrt jede Aktion an jeder Stelle aus und nimmt sie wieder zurueck. Jede <paramref name="bauJede"/>-te Aktion baut danach
@@ -87,6 +92,7 @@ public class BelastungsprobenTests
     internal static List<string> AktionenProbe(Projekt p, IEnumerable<AussenStelle> stellen, int bauJede, Action<Projekt>? zwischendurch = null)
     {
         var funde = new List<string>();
+        Aktuell.Value = p;
         var start = Vergleich(p.AussenStand);
         var n = 0;
         foreach (var s in stellen)
@@ -339,6 +345,7 @@ public class BelastungsprobenTests
     internal static List<string> GelaendeProbe(Projekt p, int runden, int samen)
     {
         var funde = new List<string>();
+        Aktuell.Value = p;
         var start = Vergleich(p.AussenStand);
         var (breite, hoehe) = Aussen.Groesse(p.AussenStand);
         var rnd = new Random(samen);

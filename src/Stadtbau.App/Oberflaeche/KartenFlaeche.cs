@@ -810,6 +810,8 @@ public sealed partial class KartenFlaeche : Control
         ReiheZeichnen(ctx);
         ZiehVorschauZeichnen(ctx);
         AussehenVorschauZeichnen(ctx);
+        EinfuegenVorschauZeichnen(ctx);
+        LaterneVorschlagZeichnen(ctx);
         MassbandZeichnen(ctx);
         PinselZeichnen(ctx);
         TuerZeichnen(ctx);
@@ -1673,6 +1675,7 @@ public sealed partial class KartenFlaeche : Control
             return;
         }
         TippZeigen(p);
+        EinfuegenSchwebenMaus(e, p);
         if (!_geste.Aktiv && MassbandAn && e.Pointer.Type == PointerType.Mouse && Stand is { } ma)
         {
             // S 0.27.0: Maus schwebt, das Ende des Massbands folgt

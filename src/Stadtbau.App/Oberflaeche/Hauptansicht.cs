@@ -641,6 +641,11 @@ public sealed partial class Hauptansicht : UserControl
         }
         _projekt = projekt;
         _projekt.Geaendert += ProjektGeaendert;
+        // S 0.47.0 (Weisung P12-226): Einfuegen und Laternen-Vorschlag gehoeren zum vorigen Projekt
+        EinfuegenEnde();
+        _laterneSuche?.Cancel();
+        Karte.LaterneVorschlag = null;
+        EinfuegenKnopfZeigen();
         // Sammelliste 257 (Weisung P12-116): eine leere Stadt hat keinen Ort (Projekt.Ort = ""); ein leerer Name ist kein
         // offener Innenraum (vorher: nach „Projekt öffnen“ suchte jede Aenderung draussen den Grundriss von "" -> fehler.log)
         var gewaehlt = OrtLeerAltFuerTests || !string.IsNullOrEmpty(ort) ? ort : null;
@@ -724,6 +729,7 @@ public sealed partial class Hauptansicht : UserControl
             KnoepfeFreigeben();
         }
         _aussenStand++;
+        Karte.LaterneVorschlag = null;
         GeschichteNeu();
         _dreiAenderung = Stopwatch.GetTimestamp();
         _bedienung3D?.StandGeaendert();
@@ -1605,6 +1611,11 @@ public sealed partial class Hauptansicht : UserControl
         // S 0.45.0 (Weisung P12-212 Punkt 4): Gebaeude der leeren Stadt wird ein Ort der Stadt 1
         SpielortTeil(s);
         BahnsteigTeil(s);
+        // S 0.47.0 (Weisung P12-226 W1): in die Zwischenablage fuer andere Projekte
+        if (AussenBearbeitung.Kopierbar(s) && s.Art != AussenArt.Paketplatz)
+        {
+            _aussenAuswahl.Children.Add(KopierenKnopf([s]));
+        }
         // S 0.31.0 (Sammelliste 264): Farbe von Fassade, Dach, Rahmen und Tuer
         FarbeTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
@@ -1960,7 +1971,8 @@ public sealed partial class Hauptansicht : UserControl
         foreach (var f in AussenFunde.OrderByDescending(f => f.Rot))
         {
             // S 0.33.0 (Sammelliste 273): Antippen springt an die Stelle
-            _aussenPruefungen.Children.Add(FundListe.Eintrag(f, f.X is not null && f.Y is not null ? () => ZuAussenFund(f) : null));
+            // S 0.47.0 (Weisung P12-226 W2): am roten Fund einer Laterne zusaetzlich „Laterne versetzen“
+            _aussenPruefungen.Children.Add(AussenFundEintrag(f));
         }
     }
 
@@ -2948,8 +2960,16 @@ public sealed partial class Hauptansicht : UserControl
             Dialog.AlleSchliessen();
         });
         var inhalt = new StackPanel { Spacing = 10, Children = { StadtDateiKnopf, new ScrollViewer { Content = liste, MaxHeight = 420 } } };
+        _fassungenFuer = null;
         var wahl = await Dialog.Zeigen(Texte.OeffnenTitel, inhalt, Texte.OeffnenDatei, Texte.Abbrechen);
         StadtDateiKnopf = null;
+        if (_fassungenFuer is { } fuer)
+        {
+            // S 0.47.0 (Weisung P12-226 W6): „Frühere Fassungen“ eines Projekts
+            _fassungenFuer = null;
+            await FassungenZeigenAsync(fuer);
+            return;
+        }
         if (gewaehlt is not null)
         {
             ProjektLaden(gewaehlt);
@@ -3189,6 +3209,12 @@ public sealed partial class Hauptansicht : UserControl
             e.Handled = true;
             return;
         }
+        if (e.Key == Key.Escape && EinfuegenAbbrechen())
+        {
+            // S 0.47.0 (Weisung P12-226 W1): Escape bricht das Einfuegen ab
+            e.Handled = true;
+            return;
+        }
         if (e.Key == Key.Escape && QgSetzenAbbrechen())
         {
             // Welle Q1: Escape bricht „Platz wählen“ ab
@@ -3209,6 +3235,17 @@ public sealed partial class Hauptansicht : UserControl
         else if (strg && e.Key == Key.S)
         {
             SpeichernVonHand();
+            e.Handled = true;
+        }
+        else if (strg && e.Key == Key.C && !_innen && e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox && Karte.Gewaehlt.Count > 0)
+        {
+            // S 0.47.0 (Weisung P12-226 W1): in die Zwischenablage fuer andere Projekte
+            InZwischenablageLegen(Karte.Gewaehlt);
+            e.Handled = true;
+        }
+        else if (strg && e.Key == Key.V && e.Source is not TextBox && TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
+        {
+            EinfuegenStarten();
             e.Handled = true;
         }
         else if (_geschichteOffen)

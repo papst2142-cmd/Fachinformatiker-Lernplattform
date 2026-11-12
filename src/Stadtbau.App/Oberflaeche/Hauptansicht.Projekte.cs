@@ -56,12 +56,14 @@ public sealed partial class Hauptansicht
             var loeschen = KleinKnopf(Schrift.Gefahrknopf(Texte.Loeschen).Vorlese(Texte.Loeschen + " „" + name + "“").Mit(Texte.ProjektLoeschenTipp));
             loeschen.HorizontalAlignment = HorizontalAlignment.Left;
             loeschen.Click += (_, _) => _ = ProjektLoeschenAsync(datei, name, () => ProjektListeFuellen(liste, oeffnen));
+            var fassungen = FassungenKnopf(name, Dialog.AlleSchliessen);
             var kasten = new Border
             {
                 Padding = new Thickness(10),
                 CornerRadius = new CornerRadius(12),
                 BorderThickness = new Thickness(1),
-                Child = new StackPanel { Spacing = 8, Children = { k, loeschen } },
+                // S 0.47.0 (Weisung P12-226 W6): frühere Fassungen des Projekts mit Bild
+                Child = new StackPanel { Spacing = 8, Children = { k, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { loeschen, fassungen } } } },
             }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
             // Taste Entf, wenn ein Knopf dieses Kastens den Fokus hat (das Fenster haelt die Tasten der Karte fern)
             kasten.KeyDown += (_, e) =>
@@ -73,7 +75,7 @@ public sealed partial class Hauptansicht
                 }
             };
             liste.Children.Add(kasten);
-            ProjektKaesten.Add((kasten, [k, loeschen], datei));
+            ProjektKaesten.Add((kasten, [k, loeschen, fassungen], datei));
         }
     }
 
