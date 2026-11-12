@@ -207,7 +207,7 @@ public class TeststadtS0430Tests
     }
 
     [Fact]
-    public void Fund315_Lokschuppen_KeineSchwebendenPlatten_Stadt1Gleich_Gegenprobe()
+    public void Fund315_Lokschuppen_KeineSchwebendenPlatten_AuchStadt1_Gegenprobe()
     {
         var p = Nico();
         var sz = p.SzeneOhneLaternen(p.AussenStand, true)!;
@@ -220,10 +220,14 @@ public class TeststadtS0430Tests
         StadtSzene.KreisAltFuerTests = true;
         try
         {
-            // Stadt 1: der Lokschuppen als Ort hatte keine schwebenden Platten, er bleibt gleich (Fassung 0 bitgleich)
-            var alt = s1.SzeneOhneLaternen((PyObjekt)Py.Kopie(s1.AussenStand)!, true)!;
+            // Stadt 1: der Lokschuppen (sichtbar ab freigeschalteter Serverfarm) hatte dieselben drei Platten ueber der Traufe;
+            // sie fallen dort mit weg (Frage an Nico in Meldung P12-125). Frisches Projekt, weil der Vorrat des Teilbaus die
+            // Hausnetze der Orte sonst aus dem ersten Bau uebernimmt (erste Fassung dieses Tests war dadurch falsch gruen)
+            var s1Alt = Projekt.Neu("Stadt 1 alt", D, Daten.NeueAblage());
+            var alt = s1Alt.SzeneOhneLaternen(s1Alt.AussenStand, true)!;
             var altHaus = alt.Haeuser.First(h => h.Id == Py.Str(ort["id"]));
-            Assert.Equal(teile1.TeileBis - teile1.TeileVon, altHaus.TeileBis - altHaus.TeileVon);
+            Assert.Equal(3, Schwebend(alt, altHaus));
+            Assert.Equal(teile1.TeileBis - teile1.TeileVon + 3, altHaus.TeileBis - altHaus.TeileVon);
             var altNico = p.SzeneOhneLaternen((PyObjekt)Py.Kopie(p.AussenStand)!, true)!;
             Assert.Equal(3, Schwebend(altNico, altNico.Haeuser.First(h => h.Id.StartsWith("lokschuppen#", StringComparison.Ordinal))));
         }
