@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.68.1
+Kleine Korrektur in der Spielstadt.
+
+- Am Lokschuppen schwebten drei graue Platten neben dem Dach in der Luft. Sie sind weg; sonst sieht die Stadt aus wie vorher.
+- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.68.0
 Neue Kleidung, Brillen, Taschen und Bärte im Spiel, Frisuren an der 3D-Figur und ein neuer begehbarer Kleiderschrank.
 

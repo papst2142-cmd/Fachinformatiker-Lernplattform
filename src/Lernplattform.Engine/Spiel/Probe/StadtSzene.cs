@@ -1395,7 +1395,10 @@ public sealed partial class StadtSzene
                 continue;
             }
             var (wand, aussen) = StadtTueren.Wand(haus.Min, haus.Max, Vektoren(new List<object?> { zier["tuer"] })[0]);
-            tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, weg[0], MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), false, true,
+            // Sammelliste 312 (Weisung P12-207): ein Zierweg mit „modell_tuer“: true fuehrt auf die eigene Tuer des Modells (wie ein Ort
+            // mit darstellung.modell_tuer, z. B. das helle Rolltor der Betriebswerkstatt); ohne das Feld wie bisher (Fassung 0 bitgleich)
+            var zierModellTuer = !ZierModellTuerAlt.Value && Py.Wahr(zier["modell_tuer"]) && haus.StueckeBis > haus.StueckeVon;
+            tueren.Add(TuerSetzen(Py.Str(zier["modell"]), wand, aussen, weg[0], MathF.Min(TuerHoehe, haus.Max.Y * 0.7f), zierModellTuer, true,
                 haus.StueckeVon, haus.StueckeBis, fensterJeHaus.GetValueOrDefault(haus.Id) ?? [], haus.Min, haus.Max));
             if (grafik is not null)
             {
@@ -2111,6 +2114,14 @@ public sealed partial class StadtSzene
     }
 
     private static readonly AsyncLocal<bool> SchildAlt = new();
+
+    /// <summary>Gegenprobe Sammelliste 315: Teil „kreis“ auch ganz ueber dem Block zeichnen (wie bis A 0.68.0, nur Tests, je Ablauf).</summary>
+    public static bool KreisAltFuerTests { get => KreisAlt.Value; set => KreisAlt.Value = value; }
+    private static readonly AsyncLocal<bool> KreisAlt = new();
+
+    /// <summary>Gegenprobe Sammelliste 312: Feld <c>modell_tuer</c> eines Zierwegs nicht beachten (wie bis A 0.68.0, nur Tests, je Ablauf).</summary>
+    public static bool ZierModellTuerAltFuerTests { get => ZierModellTuerAlt.Value; set => ZierModellTuerAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ZierModellTuerAlt = new();
 
     /// <summary>Gegenprobe Sammelliste 292: Rueckseite eines Gebaeudes ohne Ort bis zur Vorderwand absuchen (wie bis A 0.65.0, nur Tests, je Ablauf).</summary>
     public static bool RueckseiteAltFuerTests { get => RueckseiteAlt.Value; set => RueckseiteAlt.Value = value; }
@@ -2880,6 +2891,13 @@ public sealed partial class StadtSzene
                     if (b is not null)
                     {
                         var mitte = Math.Min(front - y, b.H + 0.3f);
+                        // Sammelliste 315 (Weisung P12-207, Nico: „fliegen 3 Schilder über dem Gebäude, bitte entfernen“): eine
+                        // Scheibe, die ganz ueber ihrem Block laege (Lokschuppen: Luefter, die Python oben auf das Dach malte),
+                        // stand in 3D frei in der Luft vor dem Dach; sie wird nicht mehr gezeichnet. Gegenprobe KreisAltFuerTests
+                        if (mitte - r >= b.H && !KreisAlt.Value)
+                        {
+                            break;
+                        }
                         teile.Add(Quader(x - r, mitte - r, front, x + r, mitte + r, front + 0.05f, eigen));
                     }
                     else

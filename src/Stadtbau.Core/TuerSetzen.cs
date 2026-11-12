@@ -181,7 +181,12 @@ public static class TuerSetzen
             var sd = Aussen.Stadtdaten(aussen);
             zugang = new PyObjekt { { "tuer", Punkt3(tuer) }, { "weg", weg } };
             Py.Setzen(Abschnitt(sd, "zugaenge_neu"), s.Ort, zugang);
-            if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
+            if (platz.Eigene)
+            {
+                // Sammelliste 312: die Tuer des Modells ist die Tuer, ohne Versatz (wie die Betriebswerkstatt der Ausgangsstadt)
+                Py.Setzen(Abschnitt(Abschnitt(sd, "darstellung"), "modell_tuer"), s.Ort, 0L);
+            }
+            else if (Get(Objekt(Get(sd, "darstellung") ?? new PyObjekt()), "modell_tuer") is PyObjekt mt)
             {
                 mt.RemoveAll(e => e.Key == s.Ort);
             }
@@ -192,6 +197,15 @@ public static class TuerSetzen
             zugang = Blueprint.ZierwegVon(aussen, s)!;
             Py.Setzen(zugang, "tuer", Punkt3(tuer));
             Py.Setzen(zugang, "weg", weg);
+            // Sammelliste 312: Zierweg auf die eigene Tuer des Modells (das Spiel zeichnet dort keine zweite Tuer)
+            if (platz.Eigene)
+            {
+                Py.Setzen(zugang, "modell_tuer", true);
+            }
+            else
+            {
+                zugang.RemoveAll(e => e.Key == "modell_tuer");
+            }
             modell = Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
         }
         if (platz.Fensterteil is { } teil)

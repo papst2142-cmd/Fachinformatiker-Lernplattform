@@ -39,7 +39,11 @@ public static class TuerBuendig
         public void Dispose() => AusFuerTestsWert.Value = false;
     }
 
-    private static readonly ConditionalWeakTable<StadtFassung, List<(string Ort, string Modell, Vector2 Lage, Vector2 Aussen)>> Ausgang = new();
+    private static readonly ConditionalWeakTable<StadtFassung, List<(string Ort, string Modell, Vector2 Lage, Vector2 Aussen, bool Eigene)>> Ausgang = new();
+
+    /// <summary>Gegenprobe Sammelliste 312: Tueren des Modells der Ausgangsstadt sind kein Ziel (wie bis S 0.44.0, nur Tests, je Ablauf).</summary>
+    public static bool ModellTuerAltFuerTests { get => ModellTuerAlt.Value; set => ModellTuerAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ModellTuerAlt = new();
 
     internal static StadtHaus? HausVon(StadtSzene szene, StadtTuer t) => StadtTueren.HausVon(szene, t);
 
@@ -48,31 +52,37 @@ public static class TuerBuendig
         string.Join(",", Enumerable.Range(h.StueckeVon, h.StueckeBis - h.StueckeVon).Select(i => szene.Stuecke[i].Name))
         + FormattableString.Invariant($"|{h.Max.X - h.Min.X:0.00}x{h.Max.Z - h.Min.Z:0.00}x{h.Max.Y - h.Min.Y:0.00}");
 
-    private static List<(string, string, Vector2, Vector2)> Tueren(StadtSzene szene) =>
-        [.. szene.Tueren.Where(t => !t.Modell).Select(t => (t, h: HausVon(szene, t))).Where(x => x.h is not null)
-            .Select(x => (x.t.Ort, Modell(szene, x.h!), x.t.Mitte - new Vector2(x.h!.Min.X, x.h.Min.Z), x.t.Aussen))];
+    /// <summary>
+    /// Gezeichnete Tueren der Szene mit Lage zum Haus. <c>Eigene</c>: die eigene Tuer des Modells ist die Tuer (Ort mit
+    /// <c>darstellung.modell_tuer</c> ohne Versatz, z. B. das helle Rolltor der Betriebswerkstatt; Sammelliste 312).
+    /// </summary>
+    private static List<(string, string, Vector2, Vector2, bool)> Tueren(StadtSzene szene, IStadtSicht stadt) =>
+        [.. szene.Tueren.Where(t => !t.Modell || StadtTueren.ModellVersatz(stadt, t.Ort) == 0f).Select(t => (t, h: HausVon(szene, t))).Where(x => x.h is not null)
+            .Select(x => (x.t.Ort, Modell(szene, x.h!), x.t.Mitte - new Vector2(x.h!.Min.X, x.h.Min.Z), x.t.Aussen, x.t.Modell))];
 
-    private static List<(string Ort, string Modell, Vector2 Lage, Vector2 Aussen)> AusgangVon(StadtFassung basis, Spieldaten daten) =>
+    private static List<(string Ort, string Modell, Vector2 Lage, Vector2 Aussen, bool Eigene)> AusgangVon(StadtFassung basis, Spieldaten daten) =>
         Ausgang.GetValue(basis, b =>
         {
             using var nachsicht = Nachsicht.Werkzeugansicht();
             var stadt = b.StadtFuer(b.MitKarte(daten.Inhalt));
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
-            return Tueren(StadtSzene.Bauen(stadt, stand, daten.Grafik));
+            return Tueren(StadtSzene.Bauen(stadt, stand, daten.Grafik), stadt);
         });
 
     /// <summary>
     /// Welle S 0.33.0 (Sammelliste 272): Stellen, an denen eine Tuer an diesem Haus genau so steht wie in der Ausgangsstadt
     /// (gezeichnete Mitte relativ zur Ecke des Hauses, Richtung); dort ist sie ohne Fund (Ziel beim Einrasten).
+    /// <c>Eigene</c> (Sammelliste 312): dort zeichnet das Spiel keine Tuer, die Tuer des Modells ist die Tuer
+    /// (<c>modell_tuer</c> beim Setzen).
     /// </summary>
-    internal static List<(Vector2 Lage, Vector2 Aussen)> AusgangFuer(StadtSzene szene, StadtHaus h, Spieldaten daten)
+    internal static List<(Vector2 Lage, Vector2 Aussen, bool Eigene)> AusgangFuer(StadtSzene szene, StadtHaus h, Spieldaten daten)
     {
         if (AuchAusgangFuerTests.Value || AusFuerTestsWert.Value)
         {
             return [];
         }
         var modell = Modell(szene, h);
-        return [.. AusgangVon(daten.Fassung, daten).Where(a => a.Modell == modell).Select(a => (a.Lage, a.Aussen))];
+        return [.. AusgangVon(daten.Fassung, daten).Where(a => a.Modell == modell && (!a.Eigene || !ModellTuerAlt.Value)).Select(a => (a.Lage, a.Aussen, a.Eigene))];
     }
 
     /// <summary>Name eines Orts aus der Karte der Fassung (auch neue Orte), sonst null (Gebaeude ohne Ort).</summary>
@@ -116,7 +126,7 @@ public static class TuerBuendig
         }
         // dasselbe Modell mit der Tuer an derselben Stelle wie in der Ausgangsstadt sieht genau so aus wie dort, auch an
         // einem anderen Ort (Aussehen tauschen) oder in einer anderen Stadt
-        var ausgang = !AuchAusgangFuerTests.Value ? AusgangVon(daten.Fassung, daten) : [];
+        var ausgang = !AuchAusgangFuerTests.Value ? AusgangVon(daten.Fassung, daten).Where(a => !a.Eigene).ToList() : [];
         foreach (var t in szene.Tueren.Where(t => !t.Modell))
         {
             if (HausVon(szene, t) is not { } h)

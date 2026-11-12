@@ -139,14 +139,21 @@ public static partial class AussenBearbeitung
         return wahl.Mal > 0 || d != 0;
     }
 
+    /// <summary>Gegenprobe Sammelliste 313: Tiefe eines Blocks aus der Hoehe „h“ (wie bis S 0.44.0, nur Tests, je Ablauf).</summary>
+    public static bool KoerperHoeheAltFuerTests { get => KoerperHoeheAlt.Value; set => KoerperHoeheAlt.Value = value; }
+    private static readonly AsyncLocal<bool> KoerperHoeheAlt = new();
+
+    private static string KoerperTiefe => KoerperHoeheAlt.Value ? "h" : "t";
+
     /// <summary>Liegt kein Block des Hauses (ausser den Bahnsteigen) naeher als das halbe Gleisbett an einer Bahn?</summary>
     private static bool KoerperFrei(object? teile, double x, double y, int dreh, List<List<Vector2>> linien)
     {
         var mitte = new Vector2((float)x, (float)y) + Hausdrehung.Mitte(teile);
-        foreach (var t in (teile as List<object?> ?? []).OfType<PyObjekt>().Where(t => !Bahnsteig.IstFlaeche(t) && Get(t, "w") is not null && Get(t, "h") is not null))
+        // Sammelliste 313 (selbst gefunden): Tiefe des Blocks ist „t“ (vorher die Hoehe „h“: ein flacher, tiefer Block galt als frei)
+        foreach (var t in (teile as List<object?> ?? []).OfType<PyObjekt>().Where(t => !Bahnsteig.IstFlaeche(t) && Get(t, "w") is not null && Get(t, KoerperTiefe) is not null))
         {
             var a = Hausdrehung.Drehen(new Vector2((float)(x + Py.F(t["x"])), (float)(y + Py.F(t["y"]))), mitte, dreh);
-            var b = Hausdrehung.Drehen(new Vector2((float)(x + Py.F(t["x"]) + Py.F(t["w"])), (float)(y + Py.F(t["y"]) + Py.F(t["h"]))), mitte, dreh);
+            var b = Hausdrehung.Drehen(new Vector2((float)(x + Py.F(t["x"]) + Py.F(t["w"])), (float)(y + Py.F(t["y"]) + Py.F(t[KoerperTiefe]))), mitte, dreh);
             var (min, max) = (Vector2.Min(a, b) - new Vector2(StadtbauPruefung.BahnsteigAbstand), Vector2.Max(a, b) + new Vector2(StadtbauPruefung.BahnsteigAbstand));
             foreach (var l in linien)
             {
