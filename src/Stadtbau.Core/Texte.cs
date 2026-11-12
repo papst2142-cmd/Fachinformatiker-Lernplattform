@@ -423,6 +423,16 @@ public static partial class Texte
     public static string TuerVerstellt(string stueck, string haus) => "„" + stueck + "“ steht vor der Tür von „" + haus + "“: die Figur kommt nicht hinein.";
     public static string ModellTipp(string kennung) => "Kennung: " + kennung;
     public static string TuerDazuGemacht(string name) => "Tür an „" + name + "“ gesetzt";
+
+    // Patch S 0.46.1 (Weisung P12-225): Eingang an einem Ort automatisch, neues Aussehen fuer einen alten Haltepunkt
+    public const string EingangAutomatisch = "Eingang automatisch setzen";
+    public const string EingangAutomatischTipp = "Legt die Tür dieses Orts neu an, wie „Tür dazu“: an die Wand zur nächsten Straße, an Gebäuden mit Toren an eine Wand ohne Tor. Hat keine Wand ohne Tor Platz, bekommt die Tür einen kleinen Vorbau. Innenraum und Aufgaben bleiben gleich.";
+    public const string EingangKeinPlatz = "Für den Eingang wurde kein Platz an der Hauswand gefunden. Mit „Tür setzen“ kannst du ihn von Hand legen.";
+    public static string EingangGemacht(string name) => "Eingang an „" + name + "“ neu gesetzt";
+    public const string HaltepunktNeu = "Neues Aussehen: Haltepunkt mit freiem Bahnsteig";
+    public const string HaltepunktNeuTipp = "Gibt diesem Haltepunkt das neue Aussehen: Bahnsteig frei, Wartehäuschen dahinter, blaue Zuganzeige daneben. Das Haus legt sich ans Gleis, die Tür kommt ans Häuschen. Innenraum und Aufgaben bleiben gleich.";
+    public const string HaltepunktNichtAmGleis = "Der Haltepunkt hat das neue Aussehen, liegt aber an keinem geraden Gleisstück. Schiebe ihn ans Gleis, dann legt er sich an.";
+    public static string HaltepunktGemacht(string name) => "„" + name + "“ hat das neue Aussehen";
     // S 0.31.0 (Weisung P12-130 Frage 2 = a): Katalog-Stueck als Gebaeude uebernehmen
     public const string AlsGebaeude = "Als Gebäude übernehmen";
     public const string AlsGebaeudeTipp = "Macht aus dem Stück ein Gebäude: es bekommt eine Tür, einen Weg zur Straße und einen Innenraum. Danach gehen „Tür setzen“, Innenraum und „Als Blueprint speichern“.";

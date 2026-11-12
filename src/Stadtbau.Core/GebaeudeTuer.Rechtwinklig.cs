@@ -118,6 +118,12 @@ public static partial class GebaeudeTuer
                 {
                     break;
                 }
+                // Patch S 0.46.1 (selbst gefunden an Nicos Werkstatt): das gerade Stueck geht nie ueber die Mitte einer Strasse
+                // hinaus (an einer schraegen Strasse lief es vorher drueber und kam mit dem queren Stueck zurueck)
+                if (a > 0 && !UeberStrasseAlt.Value && UeberStrasse(w, q, strassen))
+                {
+                    break;
+                }
                 foreach (var s in strassen)
                 {
                     for (var i = 0; i + 1 < s.Count; i++)
@@ -172,6 +178,36 @@ public static partial class GebaeudeTuer
             Versuch([tuer, vor, c, hinten]);
         }
         return bester;
+    }
+
+    /// <summary>Gegenprobe Patch S 0.46.1: das gerade Stueck darf ueber die Strassenmitte hinaus (wie bis S 0.46.0, nur Tests, je Ablauf).</summary>
+    public static bool UeberStrasseAltFuerTests { get => UeberStrasseAlt.Value; set => UeberStrasseAlt.Value = value; }
+    private static readonly AsyncLocal<bool> UeberStrasseAlt = new();
+
+    /// <summary>Kreuzt die Strecke p-q die Mitte einer Strasse (echt, nicht nur beruehrt)?</summary>
+    private static bool UeberStrasse(Vector2 p, Vector2 q, IReadOnlyList<List<Vector2>> strassen)
+    {
+        static float Kreuz(Vector2 a, Vector2 b) => (a.X * b.Y) - (a.Y * b.X);
+        var r = q - p;
+        foreach (var s in strassen)
+        {
+            for (var i = 0; i + 1 < s.Count; i++)
+            {
+                var e = s[i + 1] - s[i];
+                var nenner = Kreuz(r, e);
+                if (MathF.Abs(nenner) < 1e-9f)
+                {
+                    continue;
+                }
+                var t = Kreuz(s[i] - p, e) / nenner;
+                var u = Kreuz(s[i] - p, r) / nenner;
+                if (t > 1e-3f && t < 1 - 1e-3f && u >= 0 && u <= 1)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static bool Achsrecht(Vector2 a, Vector2 b) => MathF.Abs(a.X - b.X) < 1e-4f || MathF.Abs(a.Y - b.Y) < 1e-4f;

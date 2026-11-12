@@ -145,7 +145,8 @@ public sealed class TuerFassade
         }
         if (haus.StueckeBis <= haus.StueckeVon)
         {
-            return s.Art == AussenArt.Gebaeude && !ProzeduralAlt.Value ? Prozedural(szene, haus, f, hoehe) : null;
+            // Patch S 0.46.1 (Weisung P12-225): auch ein Ort aus genau einem Block ohne CC0-Grafik (Haltepunkt) hat eine Fassade
+            return (s.Art == AussenArt.Gebaeude || (f._bloecke.Count == 1 && !ProzeduralOrtAlt.Value)) && !ProzeduralAlt.Value ? Prozedural(szene, haus, f, hoehe) : null;
         }
         var glas = Enumerable.Range(haus.StueckeVon, haus.StueckeBis - haus.StueckeVon).Any(i => StadtTueren.MitGlasTuer(szene.Stuecke[i].Name));
         var fensterTeile = glas ? FensterTeile(szene, haus, aussen, modell) : [];
@@ -255,6 +256,10 @@ public sealed class TuerFassade
     /// Kastenwand liegt, die ganze Breite des Rahmens traegt und nichts davor steht (Tor, Anbau). Sonst haengt die Tuer neben einem
     /// schmalen Anbau halb in der Luft oder steckt in einem Tor.
     /// </summary>
+    /// <summary>Gegenprobe Patch S 0.46.1: ein Ort ohne CC0-Grafik hat keine Fassade (wie bis S 0.46.0, nur Tests, je Ablauf).</summary>
+    public static bool ProzeduralOrtAltFuerTests { get => ProzeduralOrtAlt.Value; set => ProzeduralOrtAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ProzeduralOrtAlt = new();
+
     private static TuerFassade Prozedural(StadtSzene szene, StadtHaus haus, TuerFassade f, float hoehe)
     {
         f._prozedural = true;

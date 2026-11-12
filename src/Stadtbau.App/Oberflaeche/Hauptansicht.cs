@@ -1585,6 +1585,16 @@ public sealed partial class Hauptansicht : UserControl
         {
             _aussenAuswahl.Children.Add(TuerSetzenKnopf(s));
         }
+        // Patch S 0.46.1 (Weisung P12-225 b): an einem Ort die Tuer wie „Tür dazu“ (Wand ohne Tor, sonst Vorbau)
+        if (s.Art == AussenArt.Haus && GebaeudeTuer.EingangNicht(a, s) is null)
+        {
+            _aussenAuswahl.Children.Add(EingangKnopf(s));
+        }
+        // Patch S 0.46.1 (Weisung P12-225 a): alter Haltepunkt bekommt das neue Aussehen
+        if (s.Art == AussenArt.Haus && HaltepunktTausch.KnopfZeigen(a, s.Ort))
+        {
+            _aussenAuswahl.Children.Add(HaltepunktKnopf(s));
+        }
         // S 0.31.0 (Weisung P12-130 Frage 2 = a): ein Katalog-Stueck wird ein Gebaeude mit Tuer und Innenraum
         if (s.Art == AussenArt.Katalog && AussenBearbeitung.AlsGebaeudeNicht(a, s) is null)
         {
