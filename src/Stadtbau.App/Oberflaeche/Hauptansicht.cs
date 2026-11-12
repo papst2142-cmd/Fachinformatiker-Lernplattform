@@ -996,6 +996,10 @@ public sealed partial class Hauptansicht : UserControl
         rechts.Children.Add(GeschichteOrtKarteBauen());
         _pruefenAussen = new Klappgruppe("pruefen", Texte.Pruefen, null, true, _aussenPruefungen);
         rechts.Children.Add(_pruefenAussen);
+        // S 0.45.0 (Weisung P12-212 Punkt 5): Laufzeiten zu Fuss, gerechnet mit der Pruefung
+        _laufzeitenGruppe = new Klappgruppe("laufzeiten", Texte.LaufzeitenTitel, null, false, _laufzeitenInhalt);
+        rechts.Children.Add(_laufzeitenGruppe);
+        LaufzeitenZeigen();
         _innenraeumeGruppe = new Klappgruppe("innenraeume", Texte.InnenraeumeOeffnen, null, false, _ortListe);
         rechts.Children.Add(_innenraeumeGruppe);
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
@@ -1588,6 +1592,8 @@ public sealed partial class Hauptansicht : UserControl
         }
         // Welle S 0.21.0 (Weisungen P12-87/P12-88): Aussehen eines Orts tauschen
         AussehenTeil(s);
+        // S 0.45.0 (Weisung P12-212 Punkt 4): Gebaeude der leeren Stadt wird ein Ort der Stadt 1
+        SpielortTeil(s);
         // S 0.31.0 (Sammelliste 264): Farbe von Fassade, Dach, Rahmen und Tuer
         FarbeTeil(s);
         if (s.Art is AussenArt.Haus or AussenArt.Gebaeude)
@@ -1890,7 +1896,8 @@ public sealed partial class Hauptansicht : UserControl
         AussenPruefungLaeuft();
         GrenzenLiveStarten(fassung, daten);
         var uhr = Stopwatch.StartNew();
-        _ = Hintergrund(Task.Run(() => (List<StadtbauFund>)[.. Projekt.PruefenAussen(fassung, daten, bauten), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)])).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        _ = Hintergrund(Task.Run(() => ((List<StadtbauFund>)[.. Projekt.PruefenAussen(fassung, daten, bauten), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)],
+            Laufzeiten.Rechnen(fassung, daten.Inhalt)))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
             {
@@ -1900,11 +1907,13 @@ public sealed partial class Hauptansicht : UserControl
             {
                 _ordner.Fehler("Prüfung draußen: " + t.Exception?.InnerException);
                 _aussenPruefFunde = [new StadtbauFund("Die Prüfung ist abgebrochen: " + t.Exception?.InnerException?.Message, "Bitte CC Bescheid geben.", true)];
+                _laufzeiten = [];
             }
             else
             {
-                _aussenPruefFunde = t.Result;
+                (_aussenPruefFunde, _laufzeiten) = t.Result;
             }
+            LaufzeitenZeigen();
             AussenFundeZusammen();
             Messwerte.Reihe("Prüfen draußen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             AussenPruefungZeigen(fertig: true);

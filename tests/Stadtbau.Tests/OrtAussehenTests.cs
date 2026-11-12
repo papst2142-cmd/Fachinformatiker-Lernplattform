@@ -193,7 +193,7 @@ public class OrtAussehenTests
         Assert.Equal(Json(AussenBearbeitung.Zugang(Aussen.Aus(p.Basis), "talheim_nord")), Json(AussenBearbeitung.Zugang(a, "talheim_nord")));
         Assert.Equal("-0.463", Json(Get(Objekt(Objekt(Aussen.Stadtdaten(a)["darstellung"])["modell_tuer"]), "talheim_nord")));
         Assert.Equal([], Rot(p).Select(f => f.Text));
-        Assert.DoesNotContain(p.PruefenAussen(), f => f.Text.Contains("Talheim-Nord", StringComparison.Ordinal));
+        Assert.DoesNotContain(p.PruefenAussen(), f => f.Text.Contains("Talheim-Nord", StringComparison.Ordinal) && !f.Text.Contains("Spielminuten", StringComparison.Ordinal));
         Export(p);
         // Liste ohne „zurueck“, wenn das Haus wieder das alte ist
         Assert.DoesNotContain(OrtAussehen.Vorlagen(a, Aussen.Aus(p.Basis), "talheim_nord", []), v => v.Zurueck);

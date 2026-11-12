@@ -388,6 +388,9 @@ public static partial class Texte
     public const string TuerWegOhneStrasse = "Der Fußweg von der Tür erreicht keine Straße";
 
     /// <summary>Welle S 0.33.0 (Weisung P12-148 Frage 4 = a): die Tuer ist auf die naechste glatte Stelle der Wand gerueckt.</summary>
+    /// <summary>Weisung P12-212 Punkt 1: „Tür dazu“ an einem Gebäude mit Toren fand keine glatte Wand ohne Tor.</summary>
+    public const string TuerImTorKeineSeite = "Die Tür liegt im Tor: an den Wänden ohne Tor gibt es keine glatte Stelle für eine Tür. Mit „Tür setzen“ kannst du sie von Hand an eine andere Stelle legen.";
+
     public const string TuerEingerastetGlatt = "Die Tür ist auf die nächste glatte Stelle der Wand gerückt (dort war ein Fenster oder eine Nische).";
 
     /// <summary>Welle S 0.33.0: an dieser Wand gibt es keine Stelle, an der die Tuer buendig sitzt.</summary>
@@ -1217,4 +1220,51 @@ public static partial class Texte
 
     /// <summary>Aktuelle Wahl eines Teils.</summary>
     public static string FarbeJetzt(string teil, string? name) => teil + ": " + (name ?? "wie vorher");
+
+    // ---- S 0.45.0: Als Spielort festlegen (Weisung P12-212 Punkt 4, Sammelliste 318 = a) ----
+
+    public const string SpielortKnopf = "Als Spielort festlegen";
+    public const string SpielortKnopfTipp = "Dieses Gebäude wird ein Ort des Spiels. Name, Aufgaben, Öffnungszeiten und Innenraum kommen aus Stadt 1, das Aussehen bleibt dein Gebäude. Ein Schritt, Rückgängig geht.";
+    public const string SpielortHinweis = "Welcher Ort aus Stadt 1 soll dieses Gebäude sein? Es fehlen noch:";
+    public const string SpielortSchliessen = "Schließen";
+    public const string SpielortNurGebaeude = "Nur ein Gebäude ohne Ort kann ein Spielort werden.";
+    public const string SpielortEigenerInnenraum = "Dieses Gebäude hat einen eigenen Innenraum. Ein Spielort bekommt den Innenraum aus Stadt 1.";
+    public const string SpielortAlleDa = "Alle Orte aus Stadt 1 stehen schon in dieser Stadt.";
+    public const string SpielortOhneTuer = "Das Gebäude braucht zuerst eine Tür („Tür dazu“ oder „Tür setzen“).";
+    public const string SpielortUnbekannt = "Diesen Ort gibt es in Stadt 1 nicht.";
+    public const string SpielortSchonDa = "Diesen Ort gibt es in dieser Stadt schon.";
+    public const string SpielortFehltTipp = "Wähle für jeden fehlenden Ort ein Gebäude und tippe „Als Spielort festlegen“. Aufgaben, Kunden und Questgeber des Spiels brauchen jeden Ort; erst dann kann die Stadt ins Spiel.";
+
+    /// <summary>Name des Schritts im Verlauf.</summary>
+    public static string SpielortSchritt(string name) => "Spielort " + name;
+
+    /// <summary>Meldung nach dem Festlegen.</summary>
+    public static string SpielortFestgelegt(string name) => "Spielort festgelegt: „" + name + "“";
+
+    /// <summary>Knopf in der Liste fuer den Ort, der genau dieses Aussehen bekommen soll (Weisung P12-214).</summary>
+    public static string SpielortVorschlag(string name) => name + " (passt zu diesem Gebäude)";
+
+    /// <summary>Roter Fund: welche Orte noch fehlen.</summary>
+    public static string SpielortFehlt(IReadOnlyList<string> namen) =>
+        (namen.Count == 1 ? "Ein Spielort fehlt noch: " : namen.Count + " Spielorte fehlen noch: ") + string.Join(", ", namen) + ".";
+
+    // ---- S 0.45.0: Laufzeiten (Weisung P12-212 Punkt 5) ----
+
+    public const string LaufzeitenTitel = "Laufzeiten zu Fuß";
+    public const string LaufzeitenHinweis = "So lange braucht die Figur im Spiel von Tür zu Tür (2 Spielminuten je Schritt). Gelb ab 60 Minuten.";
+    public const string LaufzeitenKeine = "Erst ab zwei Orten gibt es Wege.";
+    public const string LaufzeitenRechnet = "Laufzeiten werden gerechnet …";
+    public const string LaufzeitenAlle = "Alle Wege zeigen";
+    public const string LaufzeitenWeniger = "Weniger zeigen";
+    public const string LaufzeitLangTipp = "Ein langer Weg kostet im Spiel viel vom Arbeitstag. Orte näher zusammenrücken, einen kürzeren Fußweg legen oder eine Bushaltestelle setzen.";
+
+    /// <summary>Zeile der Liste.</summary>
+    public static string Laufzeit(string von, string nach, long? minuten) =>
+        von + " – " + nach + ": " + (minuten is { } m ? m + " Min." : "kein Weg");
+
+    /// <summary>Gelber Hinweis: Weg ab 60 Minuten.</summary>
+    public static string LaufzeitLang(int zahl, string von, string nach, long minuten) =>
+        (zahl == 1 ? "Ein Weg zu Fuß dauert" : zahl + " Wege zu Fuß dauern") + " " + Laufzeiten.GelbAb + " Spielminuten oder länger, der längste von „" + von + "“ nach „"
+        + nach + "“ " + minuten + " Minuten.";
 }
+

@@ -171,7 +171,26 @@ public static partial class GebaeudeTuer
             var m = f.Waende[w].Bei(f.Waende[w].Laenge / 2) + f.Waende[w].Aussen;
             return strassen.Count == 0 ? 0 : strassen.Min(l => Kurve.Abstand(m, l));
         }
-        foreach (var w in new[] { start }.Concat(Enumerable.Range(0, f.Waende.Count).Where(i => i != start).OrderBy(ZurStrasse).ThenBy(i => i)))
+        var reihe = new[] { start }.Concat(Enumerable.Range(0, f.Waende.Count).Where(i => i != start).OrderBy(ZurStrasse).ThenBy(i => i)).ToList();
+        // Welle S 0.45.0 (Weisung P12-212 Punkt 1, Nico): an einem Gebaeude mit Toren (Betriebswerkstatt, Lokschuppen, Hallen)
+        // kommt der Eingang auf eine glatte Wand OHNE Tor, nie in ein Tor; erst wenn keine solche Wand eine glatte Stelle hat,
+        // gilt die alte Reihe (Tor als letzte Wahl). Von Hand bleibt die Tuer frei (TuerSetzen).
+        var tore = TorAlt.Value ? [] : TorWaende(k, s, f);
+        if (tore.Count > 0)
+        {
+            foreach (var w in reihe.Where(i => !tore.Contains(i)))
+            {
+                var wand = f.Waende[w];
+                var mitte = wand.Bei(wand.Laenge / 2);
+                var ziel = f.TuerZiele(w, ohneTore: true).OrderBy(m => MathF.Abs(m.T - (wand.Laenge / 2))).Select(m => (Vector2?)wand.Bei(m.T)).FirstOrDefault() ?? mitte;
+                var platz = f.Finden(ziel + (wand.Aussen * 0.01f), w, einrasten: true);
+                if (!platz.OhneGlatte && platz.Wand == w && !platz.Eigene && platz.Art != TuerFassade.Stelle.Nicht)
+                {
+                    return platz;
+                }
+            }
+        }
+        foreach (var w in reihe)
         {
             var wand = f.Waende[w];
             var mitte = wand.Bei(wand.Laenge / 2);
@@ -183,6 +202,48 @@ public static partial class GebaeudeTuer
             }
         }
         return f.Finden(t, start, einrasten: true);
+    }
+
+    /// <summary>Gegenprobe Weisung P12-212 Punkt 1: „Tür dazu“ darf wie bis S 0.44.1 ein Tor nehmen (nur Tests, je Ablauf).</summary>
+    public static bool TorAltFuerTests { get => TorAlt.Value; set => TorAlt.Value = value; }
+    private static readonly AsyncLocal<bool> TorAlt = new();
+
+    /// <summary>
+    /// Weisung P12-212 Punkt 1: Waende der Fassade mit einem Tor. Ein Tor ist (a) ein Teil <c>tor</c> des Modells (Lokschuppen,
+    /// Betriebswerkstatt: liegt an der Seite des Kastens, der es am naechsten ist, gedreht mit dem Haus) oder (b) eine eigene
+    /// Tuer des Modells, die das Spiel nicht als Tuer erkennt (helles Rolltor, <see cref="TuerFassade.HatTor"/>).
+    /// </summary>
+    public static HashSet<int> TorWaende(PyObjekt aussen, AussenStelle s, TuerFassade f)
+    {
+        var tore = new HashSet<int>(Enumerable.Range(0, f.Waende.Count).Where(f.HatTor));
+        var modell = s.Art == AussenArt.Haus ? Py.Str(AussenBearbeitung.Ort(aussen, s.Ort)!["modell"]) : Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]);
+        var teile = (Get(AussenBearbeitung.Modelle(aussen), modell) as List<object?> ?? []).OfType<PyObjekt>().ToList();
+        var bloecke = teile.Where(t => Py.Gleich(Get(t, "art"), "block")).ToList();
+        if (bloecke.Count == 0)
+        {
+            return tore;
+        }
+        static double F(PyObjekt t, string k) => Py.F(Get(t, k) ?? 0L);
+        var (x1, y1) = (bloecke.Min(b => F(b, "x")), bloecke.Min(b => F(b, "y")));
+        var (x2, y2) = (bloecke.Max(b => F(b, "x") + F(b, "w")), bloecke.Max(b => F(b, "y") + F(b, "t")));
+        var dreh = AussenBearbeitung.HausDreh(aussen, s);
+        foreach (var tor in teile.Where(t => Py.Gleich(Get(t, "art"), "tor")))
+        {
+            var (tx1, tx2, tyU) = (F(tor, "x"), F(tor, "x") + F(tor, "w"), F(tor, "y") + F(tor, "h"));
+            var seiten = new (double D, Vector2 N)[]
+            {
+                (Math.Abs(y2 - tyU), new(0, 1)), (Math.Abs(F(tor, "y") - y1), new(0, -1)), (Math.Abs(tx1 - x1), new(-1, 0)), (Math.Abs(x2 - tx2), new(1, 0)),
+            };
+            var n = Hausdrehung.Drehen(seiten.MinBy(x => x.D).N, Vector2.Zero, dreh);
+            for (var w = 0; w < f.Waende.Count; w++)
+            {
+                if (Vector2.Distance(f.Waende[w].Aussen, n) < 0.01f)
+                {
+                    tore.Add(w);
+                }
+            }
+        }
+        return tore;
     }
 
     /// <summary>
@@ -198,6 +259,11 @@ public static partial class GebaeudeTuer
         }
         // die verschobene Stelle ist hier gewollt (Mitte war nur der Anfang), darum kein Hinweis „eingerastet“
         var h = TuerSetzen.SetzenAn(aussen, s, platz);
+        if (platz.Eigene && !TorAlt.Value)
+        {
+            // P12-212 Punkt 1: im Tor nur, wenn keine Wand ohne Tor eine glatte Stelle hat (DazuPlatz sucht dort zuerst)
+            return Texte.TuerImTorKeineSeite;
+        }
         return h == Texte.TuerEingerastetGlatt ? null : h;
     }
 

@@ -45,7 +45,8 @@ public class TeststadtS0430Tests
         var p = Nico();
         var s = Gebaeude(p, "werkstatt");
         Assert.Empty(RoteFunde(p));
-        Assert.Null(TuerDazu(p, s));
+        // P12-212 Punkt 1: im Tor nur, weil keine Wand ohne Tor eine glatte Stelle hat (TorEingangTests), mit Hinweis
+        Assert.Equal(Texte.TuerImTorKeineSeite, TuerDazu(p, s));
         Assert.Empty(RoteFunde(p));
         var z = Blueprint.ZierwegVon(p.AussenStand, s)!;
         Assert.True(Py.Wahr(z["modell_tuer"]));
