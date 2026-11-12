@@ -203,9 +203,10 @@ public class PruefungTests
             ["moebelhaus"] = (10184, 12),
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
-            // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (15 Quader, vorher 17796)
+            // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (29 Quader mit den
+            // Locken an Seiten, hinten und vorn nach Weisung P12-209, vorher 17796)
             ["amt"] = (9295, 12),
-            ["kaufhaus"] = (17976, 12),
+            ["kaufhaus"] = (18144, 12),
         };
         foreach (var ort in D.Orte)
         {

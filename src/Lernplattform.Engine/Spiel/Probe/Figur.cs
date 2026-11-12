@@ -153,6 +153,13 @@ public static class Figur
         var mitte = (gm.Min + gm.Max) / 2;
         var lage = Matrix4x4.CreateTranslation(-mitte.X, -gm.Min.Y, -mitte.Z) * Matrix4x4.CreateScale(s);
         var farben = (byte[])gm.Farben.Clone();
+        // A 0.68.0 Nachbesserung (Weisung P12-209): Dreiecke, die ueber einen Saum reichen (kurze Aermel, kurze Hose, Kleid),
+        // werden an der Saumhoehe geteilt; so wird der Saum eine gerade Kante statt Zacken aus Haut und Stoff.
+        List<float>? zusatzEcken = null;
+        List<byte>? zusatzFarben = null;
+        var geteilt = new bool[gm.Dreiecke];
+        // Arm-Dreiecke aus der Gehbewegung (Weisung P12-209): die Innenseite des Arms liegt naeher an der Mitte als ArmAb
+        var arme = SaumAltFuerTests ? null : Arme(grafik, gm);
         for (var d = 0; d < gm.Dreiecke; d++)
         {
             var y = (gm.Ecken[(d * 9) + 1] + gm.Ecken[(d * 9) + 4] + gm.Ecken[(d * 9) + 7]) / 3;
@@ -164,10 +171,29 @@ public static class Figur
             }
             var anteil = (y - gm.Min.Y) / groesse;
             var seitlich = MathF.Abs(((gm.Ecken[d * 9] + gm.Ecken[(d * 9) + 3] + gm.Ecken[(d * 9) + 6]) / 3) - mitte.X) / groesse;
+            // A 0.68.0 Nachbesserung (Weisung P12-210, Nico): Kinn, Unterkiefer und Hals vorn tragen in der Vorlage eine
+            // dunklere Hautfarbe und dunkle Reste der Koteletten; umgefaerbt wirkte das wie ein Bart. Dort jetzt Haut mit der
+            // Helligkeit des Gesichts.
+            var vorn = (((gm.Ecken[(d * 9) + 2] + gm.Ecken[(d * 9) + 5] + gm.Ecken[(d * 9) + 8]) / 3) - mitte.Z) / groesse;
+            if (!KinnAltFuerTests && Nacken(r, g, b, bereich, anteil, vorn))
+            {
+                // Helligkeit wie das Haar am Hinterkopf (die Vorlage ist hier heller, umgefaerbt waere das fast weiss)
+                bereich = Bereich.Haare;
+                r = g = b = NackenGrau;
+            }
+            if (!KinnAltFuerTests && Kinn(r, g, b, bereich, anteil, seitlich, vorn))
+            {
+                var k = Vector3.Clamp(haut * GesichtHell, Vector3.Zero, Vector3.One) * 255f;
+                farben[d * 3] = (byte)k.X;
+                farben[(d * 3) + 1] = (byte)k.Y;
+                farben[(d * 3) + 2] = (byte)k.Z;
+                continue;
+            }
+            var arm = arme is not null ? arme[d] : seitlich > ArmAb;
             var (ziel, bezug) = bereich switch
             {
                 // kurze Aermel (T-Shirt kurzarm, Kleid): Arm unter der Schulter in Hautfarbe
-                Bereich.Hemd when kurzarm && seitlich > ArmAb && anteil < KurzarmBis => (haut, 212f),
+                Bereich.Hemd when kurzarm && arm && anteil < KurzarmBis => (haut, 212f),
                 Bereich.Hemd => (hemd, 212f),
                 Bereich.Haut => (haut, 230f),
                 Bereich.Haare when kopfStueck is not null && Bedeckt(kopfStueck.Form, anteil) => (Probe.Netz.Farbe(kopfStueck.Farbe), 60f),
@@ -180,19 +206,71 @@ public static class Figur
                 Bereich.Schuhe when schuhe is not null => (Probe.Netz.Farbe(schuhe.Farbe), 215f),
                 _ => (Vector3.Zero, 0f),
             };
+            // Saum: Hoehe (Anteil) und Farbe ueber dem Saum; unter dem Saum Haut
+            (float Hoehe, Vector3 Stoff)? saum = SaumAltFuerTests ? null : bereich switch
+            {
+                Bereich.Hemd when kurzarm && arm => (KurzarmBis, hemd),
+                Bereich.Hose when kurzeBeine => (kleid is not null ? BeinFreiKleid : BeinFreiKurz,
+                    beine ?? (hose is not null ? Probe.Netz.Farbe(hose.Farbe) : haut)),
+                _ => null,
+            };
+            if (saum is { } sm && bezug != 0)
+            {
+                var schnitt = gm.Min.Y + (sm.Hoehe * groesse);
+                var y0 = gm.Ecken[(d * 9) + 1];
+                var y1 = gm.Ecken[(d * 9) + 4];
+                var y2 = gm.Ecken[(d * 9) + 7];
+                var ueber = (y0 >= schnitt ? 1 : 0) + (y1 >= schnitt ? 1 : 0) + (y2 >= schnitt ? 1 : 0);
+                if (ueber is 1 or 2)
+                {
+                    zusatzEcken ??= [];
+                    zusatzFarben ??= [];
+                    geteilt[d] = true;
+                    var stoff = Einfaerben(sm.Stoff, r, g, b, bezug);
+                    var nackt = Einfaerben(haut, r, g, b, bezug);
+                    SaumTeilen(gm.Ecken, form.Ecken, d, schnitt, true, stoff, zusatzEcken, zusatzFarben);
+                    SaumTeilen(gm.Ecken, form.Ecken, d, schnitt, false, nackt, zusatzEcken, zusatzFarben);
+                    continue;
+                }
+                (ziel, bezug) = ueber == 3 ? (sm.Stoff, bezug) : (haut, bezug);
+            }
             if (bezug == 0)
             {
                 continue;
             }
             // Helligkeit der Vorlage behalten (Schatten), Farbe aus dem Aussehen
-            var hell = Math.Clamp((r + g + b) / 3f / bezug, 0.55f, 1.25f);
-            var neu = Vector3.Clamp(ziel * hell, Vector3.Zero, Vector3.One) * 255f;
-            farben[d * 3] = (byte)neu.X;
-            farben[(d * 3) + 1] = (byte)neu.Y;
-            farben[(d * 3) + 2] = (byte)neu.Z;
+            var neu = Einfaerben(ziel, r, g, b, bezug);
+            farben[d * 3] = neu.R;
+            farben[(d * 3) + 1] = neu.G;
+            farben[(d * 3) + 2] = neu.B;
         }
         var netz = new Probe.Netz();
-        netz.Hinzu(new GrafikModell(form.Name, form.Ecken, farben), lage);
+        if (zusatzEcken is null)
+        {
+            netz.Hinzu(new GrafikModell(form.Name, form.Ecken, farben), lage);
+        }
+        else
+        {
+            var ecken = new List<float>(form.Ecken.Length + zusatzEcken.Count);
+            var fb = new List<byte>(farben.Length + zusatzFarben!.Count);
+            for (var d = 0; d < gm.Dreiecke; d++)
+            {
+                if (geteilt[d])
+                {
+                    continue;
+                }
+                for (var i = 0; i < 9; i++)
+                {
+                    ecken.Add(form.Ecken[(d * 9) + i]);
+                }
+                fb.Add(farben[d * 3]);
+                fb.Add(farben[(d * 3) + 1]);
+                fb.Add(farben[(d * 3) + 2]);
+            }
+            ecken.AddRange(zusatzEcken);
+            fb.AddRange(zusatzFarben);
+            netz.Hinzu(new GrafikModell(form.Name, [.. ecken], [.. fb]), lage);
+        }
         if (Kopf(gm, form) is { } kopf)
         {
             var teile = Gesicht(kopf.Min, kopf.Max, haut);
@@ -428,8 +506,162 @@ public static class Figur
         ];
     }
 
+    /// <summary>Gegenprobe (Weisung P12-209): Locken wie A 0.68.0 vor der Nachbesserung (nur Buckel oben).</summary>
+    public static bool LockenAltFuerTests
+    {
+        get => LockenAlt.Value;
+        set => LockenAlt.Value = value;
+    }
+
+    private static readonly System.Threading.AsyncLocal<bool> LockenAlt = new();
+
+    /// <summary>Gegenprobe (Weisung P12-209): Saum wie A 0.68.0 vor der Nachbesserung (Farbe je ganzem Dreieck, Zacken).</summary>
+    public static bool SaumAltFuerTests
+    {
+        get => SaumAlt.Value;
+        set => SaumAlt.Value = value;
+    }
+
+    private static readonly System.Threading.AsyncLocal<bool> SaumAlt = new();
+
+    /// <summary>Weisung P12-210: Gegenprobe, Kinn und Hals wie A 0.68.0 vor der Nachbesserung (dunkler Unterkiefer).</summary>
+    internal static bool KinnAltFuerTests { get => KinnAlt.Value; set => KinnAlt.Value = value; }
+
+    private static readonly System.Threading.AsyncLocal<bool> KinnAlt = new();
+
+    /// <summary>Weisung P12-210: Kinn und Hals vorn von dieser Hoehe (Anteil) an ...</summary>
+    public const float KinnAb = 0.66f;
+
+    /// <summary>... bis unter diese Hoehe (unter den Augen; darueber Gesicht und Koteletten wie bisher).</summary>
+    public const float KinnBis = 0.86f;
+
+    /// <summary>Hoechstens so weit seitlich (Anteil der Hoehe) liegt der Kopf; Schultern und Arme liegen weiter aussen.</summary>
+    public const float KinnSeitlich = 0.12f;
+
+    /// <summary>Helligkeit der Haut an Kinn und Hals: wie das Gesicht der Vorlage (Mittel 206 zu Bezug 230, rund 0,9).</summary>
+    public const float GesichtHell = 0.9f;
+
+    /// <summary>
+    /// Weisung P12-210: gehoert das Dreieck zu Kinn, Unterkiefer oder Hals vorn? Haut, Haar-Reste und hautbraune Teile
+    /// (Vorlage ohne Hemd) in der Hoehe <see cref="KinnAb"/> bis <see cref="KinnBis"/>, nah an der Mitte, vor der Mitte.
+    /// </summary>
+    internal static bool Kinn(byte r, byte g, byte b, Bereich bereich, float anteil, float seitlich, float vorn) =>
+        anteil >= KinnAb && anteil < KinnBis
+        && ((bereich == Bereich.Haut && vorn > -KinnHinten)
+            || (seitlich < KinnSeitlich && vorn > 0
+                && (bereich == Bereich.Haare || (bereich == Bereich.Sonst && r - b >= 25 && r >= 90 && g >= 60))));
+
+    /// <summary>
+    /// Weisung P12-210: Haut am Unterkiefer auch seitlich bis knapp hinter das Ohr (Anteil der Hoehe hinter der Mitte); in der
+    /// Seitenansicht war der Unterkiefer sonst grau wie ein Bartschatten.
+    /// </summary>
+    public const float KinnHinten = 0.08f;
+
+    /// <summary>
+    /// Weisung P12-210: dunkle Reste am Hinterkopf unter dem Haaransatz (Anteil 0,66 bis 0,82, hinter der Mitte, Mittel unter
+    /// diesem Wert) sind Haar. Vorher blieben sie in der Farbe der Vorlage (dunkelbraun, bei Glatze ein schwarzer Fleck hinter
+    /// dem Ohr, bei blonden Haaren ein dunkler Nacken).
+    /// </summary>
+    public const int NackenDunkel = 140;
+
+    /// <summary>Weisung P12-210: Helligkeit dieser Dreiecke wie das Haar am Hinterkopf (Mittel der Vorlage dort rund 45).</summary>
+    public const byte NackenGrau = 45;
+
+    /// <summary>Weisung P12-210: gehoert das Dreieck zum Haar am Hinterkopf unter dem Haaransatz?</summary>
+    internal static bool Nacken(byte r, byte g, byte b, Bereich bereich, float anteil, float vorn) =>
+        bereich == Bereich.Sonst && anteil >= KinnAb && vorn < 0 && (r + g + b) / 3 < NackenDunkel;
+
+    /// <summary>Farbe aus dem Aussehen mit der Helligkeit der Vorlage (Schatten).</summary>
+    private static (byte R, byte G, byte B) Einfaerben(Vector3 ziel, byte r, byte g, byte b, float bezug)
+    {
+        var hell = Math.Clamp((r + g + b) / 3f / bezug, 0.55f, 1.25f);
+        var neu = Vector3.Clamp(ziel * hell, Vector3.Zero, Vector3.One) * 255f;
+        return ((byte)neu.X, (byte)neu.Y, (byte)neu.Z);
+    }
+
+    /// <summary>
+    /// Weisung P12-209: Teil des Dreiecks <paramref name="d"/> ueber (<paramref name="oben"/>) bzw. unter der Hoehe
+    /// <paramref name="schnitt"/> der stehenden Figur (<paramref name="ruhe"/>); die Teilpunkte liegen bei demselben Anteil der
+    /// Kante auch im gezeigten Bild (<paramref name="bild"/>), so wandert der Saum mit dem Arm. Reihenfolge der Ecken bleibt
+    /// (gleiche Vorderseite), das Vieleck (3 oder 4 Ecken) wird als Faecher in Dreiecke zerlegt.
+    /// </summary>
+    internal static void SaumTeilen(float[] ruhe, float[] bild, int d, float schnitt, bool oben, (byte R, byte G, byte B) farbe,
+        List<float> ecken, List<byte> farben)
+    {
+        Span<Vector3> punkte = stackalloc Vector3[4];
+        var n = 0;
+        for (var i = 0; i < 3; i++)
+        {
+            var j = (i + 1) % 3;
+            var yi = ruhe[(d * 9) + (i * 3) + 1];
+            var yj = ruhe[(d * 9) + (j * 3) + 1];
+            var innenI = oben ? yi >= schnitt : yi < schnitt;
+            var innenJ = oben ? yj >= schnitt : yj < schnitt;
+            var pi = new Vector3(bild[(d * 9) + (i * 3)], bild[(d * 9) + (i * 3) + 1], bild[(d * 9) + (i * 3) + 2]);
+            var pj = new Vector3(bild[(d * 9) + (j * 3)], bild[(d * 9) + (j * 3) + 1], bild[(d * 9) + (j * 3) + 2]);
+            if (innenI)
+            {
+                punkte[n++] = pi;
+            }
+            if (innenI != innenJ)
+            {
+                punkte[n++] = Vector3.Lerp(pi, pj, (schnitt - yi) / (yj - yi));
+            }
+        }
+        for (var k = 1; k + 1 < n; k++)
+        {
+            foreach (var p in (ReadOnlySpan<Vector3>)[punkte[0], punkte[k], punkte[k + 1]])
+            {
+                ecken.Add(p.X);
+                ecken.Add(p.Y);
+                ecken.Add(p.Z);
+            }
+            farben.Add(farbe.R);
+            farben.Add(farbe.G);
+            farben.Add(farbe.B);
+        }
+    }
+
     /// <summary>Phase 12 Welle 2: Arm = seitlich weiter als dieser Anteil der Hoehe von der Mitte (Rumpf liegt innen).</summary>
     public const float ArmAb = 0.125f;
+
+    /// <summary>
+    /// Weisung P12-209: ein Dreieck gehoert zum Arm, wenn es sich in den Bildern der Gehbewegung um mehr als diesen Anteil der
+    /// Hoehe nach vorn oder hinten bewegt (der Rumpf bewegt sich dort hoechstens 0,006, der Arm ab 0,035).
+    /// </summary>
+    public const float ArmBewegt = 0.02f;
+
+    private static readonly ConditionalWeakTable<GrafikModell, bool[]?> ArmeVorrat = new();
+
+    /// <summary>
+    /// Weisung P12-209: Arm-Dreiecke der stehenden Figur, erkannt an der Gehbewegung (der Arm schwingt, der Rumpf nicht). Die
+    /// Innenseite des Arms liegt naeher an der Mitte als <see cref="ArmAb"/>; mit der Regel nach der Lage blieb sie unter dem
+    /// kurzen Aermel in Stoff (Zacken). Ohne Bilder der Gehbewegung null (dann gilt die Lage).
+    /// </summary>
+    public static bool[]? Arme(GrafikBibliothek grafik, GrafikModell gm) => ArmeVorrat.GetValue(gm, m =>
+    {
+        var bilder = Enumerable.Range(0, Bilder).Select(b => grafik.Modell(BildName(Gehen, b)))
+            .Where(b => b is not null && b.Dreiecke == m.Dreiecke).ToList();
+        if (bilder.Count == 0)
+        {
+            return null;
+        }
+        var groesse = m.Max.Y - m.Min.Y;
+        var arme = new bool[m.Dreiecke];
+        for (var d = 0; d < m.Dreiecke; d++)
+        {
+            var z = (m.Ecken[(d * 9) + 2] + m.Ecken[(d * 9) + 5] + m.Ecken[(d * 9) + 8]) / 3;
+            float von = 0f, bis = 0f;
+            foreach (var b in bilder)
+            {
+                var dz = ((b!.Ecken[(d * 9) + 2] + b.Ecken[(d * 9) + 5] + b.Ecken[(d * 9) + 8]) / 3) - z;
+                von = MathF.Min(von, dz);
+                bis = MathF.Max(bis, dz);
+            }
+            arme[d] = (bis - von) / groesse > ArmBewegt;
+        }
+        return arme;
+    });
 
     /// <summary>Phase 12 Welle 2: kurze Aermel enden bei diesem Anteil der Hoehe (darunter Haut).</summary>
     public const float KurzarmBis = 0.53f;
@@ -474,6 +706,33 @@ public static class Figur
                         teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.09f), max.Y - (kh * 0.02f), z - (kt * 0.1f), x + (kb * 0.09f),
                             max.Y + (kh * (0.12f + (0.04f * ((i + j) % 2)))), z + (kt * 0.1f), haar * (0.9f + (0.1f * ((i + j) % 2)))));
                     }
+                }
+                if (LockenAltFuerTests)
+                {
+                    break;
+                }
+                // Weisung P12-209: Locken auch an den Seiten, hinten und als Stirnlocken, damit sie von vorn und von der Seite
+                // klar anders aussehen als kurzes Haar (abwechselnd hell und dunkel, versetzt in der Hoehe)
+                for (var j = 0; j < 3; j++)
+                {
+                    var z = min.Z + (kt * (0.3f + (0.2f * j)));
+                    var y = max.Y - (kh * (0.3f - (0.08f * (j % 2))));
+                    foreach (var links in new[] { true, false })
+                    {
+                        var x1 = links ? min.X - (kb * 0.04f) : max.X - (kb * 0.06f);
+                        teile.Add(new Teil(TeilArt.Quader, x1, y, z - (kt * 0.11f), x1 + (kb * 0.1f), y + (kh * 0.24f), z + (kt * 0.09f),
+                            haar * (j % 2 == 0 ? 0.85f : 1.05f)));
+                    }
+                }
+                for (var i = 0; i < 4; i++)
+                {
+                    var x = min.X + (kb * (0.2f + (0.2f * i)));
+                    var y = max.Y - (kh * (0.42f - (0.08f * (i % 2))));
+                    teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.11f), y, min.Z - (kt * 0.04f), x + (kb * 0.11f), y + (kh * 0.36f), min.Z + (kt * 0.06f),
+                        haar * (i % 2 == 0 ? 0.85f : 1.05f)));
+                    var yv = max.Y - (kh * (0.14f + (0.04f * (i % 2))));
+                    teile.Add(new Teil(TeilArt.Quader, x - (kb * 0.09f), yv, max.Z - (kt * 0.05f), x + (kb * 0.09f), max.Y + (kh * 0.02f), max.Z + (kt * 0.03f),
+                        haar * (i % 2 == 0 ? 1.05f : 0.85f)));
                 }
                 break;
         }
