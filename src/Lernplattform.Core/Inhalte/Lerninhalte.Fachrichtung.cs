@@ -91,6 +91,11 @@ public sealed partial class Lerninhalte
         }
 
         var ausschluss = vorher?.Ausschluss ?? (lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : []);
+        // Sammelliste 309 (Weisung P12-204, Nico a): beim Nachladen nur die neuen Fachrichtungen umwandeln, die schon
+        // umgewandelten Eintraege von vorher wiederverwenden (gleiche Nummern, Reihenfolge nach Nummer = Dateireihenfolge).
+        var wiederverwenden = vorher?.Geladen is { } vorherGeladen && geladen is not null && !NachladenAltFuerTests
+            && geladen.IsSupersetOf(vorherGeladen) ? vorherGeladen : null;
+        var umwandeln = wiederverwenden is null ? geladen : geladen!.Where(f => !wiederverwenden.Contains(f)).ToHashSet(StringComparer.Ordinal);
         var neue = new Dictionary<InhaltArt, IReadOnlyList<Lerninhalt>>();
         foreach (var (art, name) in LernenListen)
         {
@@ -101,14 +106,16 @@ public sealed partial class Lerninhalte
                 InhaltArt.Ap2Szenario => bisher.Ap2Szenarien.Count,
                 _ => bisher.Testprojekte.Count,
             };
-            List<(int Index, JsonObject Daten)> daten = geladen is null
+            List<(int Index, JsonObject Daten)> daten = umwandeln is null
                 ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
-                : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, geladen) : [];
-            neue[art] = daten.Where(d => !Ausgeschlossen(ausschluss, name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
+                : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, umwandeln) : [];
+            var umgewandelt = daten.Where(d => !Ausgeschlossen(ausschluss, name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
             {
                 Zugehoerigkeit = d.Daten[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
                     && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
-            }).ToList();
+            });
+            neue[art] = wiederverwenden is null ? umgewandelt.ToList()
+                : vorher!.Neue[art].Concat(umgewandelt).OrderBy(e => e.Nummer).ToList();
         }
 
         var (themen, neueThemen) = vorher is not null ? (vorher.Themen.ToDictionary(p => p.Key, p => p.Value), vorher.NeueThemen.ToDictionary(p => p.Key, p => p.Value))
@@ -133,7 +140,8 @@ public sealed partial class Lerninhalte
             NeueThemen = neueThemen,
             Neue = neue,
             Ausschluss = ausschluss,
-            NeueFachfragen = NeueFachfragenLaden(ordner, geladen),
+            NeueFachfragen = wiederverwenden is null ? NeueFachfragenLaden(ordner, geladen)
+                : vorher!.NeueFachfragen.Concat(NeueFachfragenLaden(ordner, umwandeln)).OrderBy(f => f.Nummer).ToList(),
             Geladen = geladen,
             _lernen = ordner,
         };
@@ -205,6 +213,18 @@ public sealed partial class Lerninhalte
         }
         return erg;
     }
+
+    /// <summary>
+    /// Sammelliste 309: nur fuer die Gegenprobe; an = Nachladen wandelt wie vor A 0.67.1 alle geladenen Fachrichtungen
+    /// neu um. Gilt nur im eigenen Ablauf (AsyncLocal).
+    /// </summary>
+    internal static bool NachladenAltFuerTests
+    {
+        get => NachladenAlt.Value;
+        set => NachladenAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> NachladenAlt = new();
 
     /// <summary>Phase 10 W1: die geladenen Fachrichtungen der neuen Inhalte (null = alle).</summary>
     public IReadOnlySet<string>? Geladen { get; private init; }
