@@ -181,6 +181,12 @@ public sealed partial class StadtSpiel
 
     private StadtGrund GeheZuOrt(string ziel)
     {
+        if (ImBus)
+        {
+            // Welle A 0.67.0 (Nico 5a): Antippen ueberspringt die Fahrt im Zeitraffer
+            BusUeberspringen();
+            return StadtGrund.Ok;
+        }
         if (Etage > 0)
         {
             // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss an der Tuer
@@ -225,7 +231,7 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return ergebnis.Grund;
         }
-        _weg.Clear();
+        WegLeeren();
         Knoepfe = [];
         if (frei is not null)
         {
@@ -268,6 +274,11 @@ public sealed partial class StadtSpiel
 
     private bool GeheZuPunkt(double x, double z)
     {
+        if (ImBus)
+        {
+            BusUeberspringen();
+            return true;
+        }
         if (Innen is not { } innen)
         {
             return InDerStadtGehen(x, z);
@@ -297,7 +308,7 @@ public sealed partial class StadtSpiel
             // Weisung P12-197: steht die Figur schon zu nah an der Person, tritt sie bis auf AnsprechAbstand zurueck
             weg = MitWeg(() => innen.Weg(FigurX, FigurZ, abstand.X, abstand.Z));
         }
-        _weg.Clear();
+        WegLeeren();
         _weg.AddRange(weg);
         if (weg.Count == 0)
         {
@@ -392,7 +403,7 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return false;
         }
-        _weg.Clear();
+        WegLeeren();
         _weg.AddRange(weg);
         _zielOrt = null;
         ImFreien = true;
@@ -513,7 +524,7 @@ public sealed partial class StadtSpiel
     public string Bewegung => ImInnenraum ? Figur.Gehen : Figur.Rennen;
 
     /// <summary>Bild der Schrittbewegung (0 bis <see cref="Figur.Bilder"/> - 1) nach dem Weg, -1 = steht.</summary>
-    public int SchrittBild => Geht ? BildNachWeg(Schrittweg, Zyklus) : -1;
+    public int SchrittBild => Geht && !ImBus ? BildNachWeg(Schrittweg, Zyklus) : -1;
 
     /// <summary>Bild der Bewegung nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
     public static int BildNachWeg(double weg, double zyklus) =>
@@ -521,6 +532,10 @@ public sealed partial class StadtSpiel
 
     private bool Weiter(double sekunden)
     {
+        if (ImBus)
+        {
+            return BusWeiter(sekunden);
+        }
         var rest = sekunden * Tempo;
         var halbVorher = Math.Floor(Schrittweg / (Zyklus / 2));
         Schrittweg += rest;
@@ -540,6 +555,11 @@ public sealed partial class StadtSpiel
                 FigurZ = (float)zz;
                 rest -= weite;
                 _weg.RemoveAt(0);
+                if (BusPunktErreicht())
+                {
+                    // Welle A 0.67.0: an der Haltestelle angekommen, ab dem naechsten Bild faehrt der Bus
+                    rest = 0;
+                }
             }
             else
             {
@@ -689,7 +709,7 @@ public sealed partial class StadtSpiel
         {
             return false;
         }
-        _weg.Clear();
+        WegLeeren();
         Innen = innen;
         EinrichtenBeenden();
         FigurX = innen.StartX;
@@ -986,7 +1006,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public void Anhalten(string hinweis)
     {
-        _weg.Clear();
+        WegLeeren();
         _danachZu = null;
         _danach = null;
         _zielOrt = null;
@@ -1009,7 +1029,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public void Neubeginn()
     {
-        _weg.Clear();
+        WegLeeren();
         _danachZu = null;
         _danach = null;
         _zielOrt = null;
@@ -1089,7 +1109,7 @@ public sealed partial class StadtSpiel
             return;
         }
         AufenthaltDraussen();
-        _weg.Clear();
+        WegLeeren();
         Innen = null;
         Ton?.Invoke(new Tonanlass(Anlass.TuerZu));
         EinrichtenBeenden();
@@ -1459,7 +1479,7 @@ public sealed partial class StadtSpiel
         _vorschauPunkt = null;
         if (Innen is { } innen)
         {
-            _weg.Clear();
+            WegLeeren();
             FigurX = innen.StartX;
             FigurZ = innen.StartZ;
             FigurRichtung = 90;

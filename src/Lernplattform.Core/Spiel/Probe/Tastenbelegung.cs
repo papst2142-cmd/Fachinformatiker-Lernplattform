@@ -25,6 +25,9 @@ public sealed class Tastenbelegung
     public const string Hinein = "hinein";
     public const string Vollbild = "vollbild";
 
+    /// <summary>Welle A 0.67.0 (Sammelliste 301): Questlog oeffnen (Q dreht schon, darum L wie „Liste“).</summary>
+    public const string Auftraege = "auftraege";
+
     /// <summary>Alle Aufgaben in der Reihenfolge der Karte, mit Text und Standardtasten (Zoomen auch Ziffernblock).</summary>
     public static readonly IReadOnlyList<(string Id, string Text, string[] Standard)> Aufgaben =
     [
@@ -38,6 +41,7 @@ public sealed class Tastenbelegung
         (Weiter, "Weiter weg", ["OemMinus", "Subtract"]),
         (Hinein, "Hineingehen", ["Enter"]),
         (Vollbild, "Vollbild ein und aus", ["F11"]),
+        (Auftraege, "Aufträge öffnen", ["L"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>

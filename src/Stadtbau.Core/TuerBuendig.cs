@@ -55,7 +55,8 @@ public static class TuerBuendig
     private static List<(string Ort, string Modell, Vector2 Lage, Vector2 Aussen)> AusgangVon(StadtFassung basis, Spieldaten daten) =>
         Ausgang.GetValue(basis, b =>
         {
-            var stadt = b.StadtFuer(b.MitKarte(daten.Inhalt), nachsichtig: true);
+            using var nachsicht = Nachsicht.Werkzeugansicht();
+            var stadt = b.StadtFuer(b.MitKarte(daten.Inhalt));
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
             return Tueren(StadtSzene.Bauen(stadt, stand, daten.Grafik));
         });

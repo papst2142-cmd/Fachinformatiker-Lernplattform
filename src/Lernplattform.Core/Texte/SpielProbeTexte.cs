@@ -28,6 +28,26 @@ public static class SpielProbeTexte
     /// <summary>Weisung P8-52 (Text von Chat angenommen): Knopf der Leistungsprobe, nur in der Probe-APK.</summary>
     public const string Leistungsprobe = "Leistungsprobe";
     public const string Hingehen = "Hingehen";
+
+    // ---- Welle A 0.67.0 (Weisung P12-204, Sammelliste 302): Bus fuer den Spieler ----
+
+    /// <summary>Knopf in der Ortsliste (auch ohne 3D).</summary>
+    public const string MitDemBus = "Mit dem Bus";
+
+    /// <summary>Zeile unter dem Namen eines Orts in der Ortsliste, wenn der Bus sich lohnt: {0} zu Fuss, {1} mit dem Bus (Minuten).</summary>
+    public const string BusZeiten = "Zu Fuß {0} Min., mit dem Bus {1} Min.";
+
+    /// <summary>Unterwegs mit dem Bus: {0} Ort, {1} Minuten zu Fuss, {2} warten, {3} fahren, {4} zusammen.</summary>
+    public const string BusUnterwegs = "Mit dem Bus zu {0}: {1} Min. zu Fuß, {2} Min. warten, {3} Min. Fahrt, zusammen {4} Min. Tippen überspringt die Fahrt.";
+
+    /// <summary>Der Bus lohnt nicht (zu Fuss gleich schnell oder schneller) oder es gibt keine Fahrt.</summary>
+    public const string BusLohntNicht = "Mit dem Bus bist du nicht schneller. Geh lieber zu Fuß.";
+
+    /// <summary>Waehrend die Figur noch geht.</summary>
+    public const string BusErstAnkommen = "Komm erst an, dann kannst du in den Bus steigen.";
+
+    /// <summary>Name des Knopfs fuer den Screenreader: {0} Ort, {1} Minuten mit dem Bus.</summary>
+    public const string MitDemBusName = "Mit dem Bus zu {0}, {1} Minuten";
     public const string Betreten = "Hineingehen";
     public const string ZurStadt = "Zur Stadt";
     public const string Warten = "Eine Stunde warten";

@@ -81,7 +81,8 @@ public static class Questebene
 
     /// <summary>
     /// Spielinhalte mit der Quest-Ebene. Ohne Abschnitte: <paramref name="inhalt"/> selbst. Mit Funden: <see cref="StadtbauFehler"/>
-    /// (nie still weg), ausser <paramref name="nachsichtig"/> (nur Werkzeug: fehlerhafte Eintraege fallen fuer die Ansicht weg).
+    /// (nie still weg), ausser <paramref name="nachsichtig"/> oder <see cref="Nachsicht.An"/> (nur Werkzeug: fehlerhafte Eintraege
+    /// fallen fuer die Ansicht weg; die Pruefung des Werkzeugs meldet sie selbst).
     /// </summary>
     public static PyObjekt Anwenden(PyObjekt inhalt, PyObjekt? stadtdaten, PyObjekt? innenraeume, bool nachsichtig = false)
     {
@@ -90,7 +91,7 @@ public static class Questebene
             return inhalt;
         }
         var gelesen = Lesen(inhalt, stadtdaten, innenraeume);
-        if (gelesen.Funde.Count > 0 && !nachsichtig)
+        if (gelesen.Funde.Count > 0 && !nachsichtig && !Nachsicht.An)
         {
             throw new StadtbauFehler(gelesen.Funde);
         }

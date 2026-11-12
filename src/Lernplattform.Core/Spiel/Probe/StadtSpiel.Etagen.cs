@@ -173,7 +173,7 @@ public sealed partial class StadtSpiel
     /// <summary>Figur auf der neuen Etage an die Ankunftsstelle setzen, Text, Ton, Nachbar-Etagen vorbereiten.</summary>
     private void Ankommen(Innenraum neu, Halt halt)
     {
-        _weg.Clear();
+        WegLeeren();
         Innen = neu;
         FigurX = (float)halt.X;
         FigurZ = (float)halt.Y;
@@ -293,7 +293,7 @@ public sealed partial class StadtSpiel
             return;
         }
         InDenVorrat(neu);
-        _weg.Clear();
+        WegLeeren();
         Innen = neu;
         FigurX = (float)halt.X;
         FigurZ = (float)halt.Y;

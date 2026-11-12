@@ -44,6 +44,9 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
 - **Verkehr** (`Verkehr.cs`, `FestVerkehr.cs`, `Autostrecken.cs`, `Buslinie.cs`, `Ampeln.cs`, `Zebrastreifen.cs`,
   `Haltestellen.cs`, `Parkplaetze.cs`): nur Darstellung, kein Spielstand. Feste Strecken (Fassung 0) oder automatische
   Strecken aus dem Straßennetz; Zufall je Spieltag aus Stadt, Tag und Auto, auf allen Geräten gleich.
+- **Busfahrt** (`Busfahrt.cs`, seit A 0.67.0): beste Fahrt zwischen zwei Haltestellen (zu Fuß zur Haltestelle über das Laufraster,
+  Warten auf den Takt der Linie höchstens 15 Minuten, Fahrt 0,5 Minuten je Feld); das Spiel schreibt sie als EINE Zeile
+  `stadt_gegangen` mit `mit: bus` (`Stadt.Bus`, keine neue Ereignisart), Zeitraffer höchstens 8 s.
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
 - **Gelände** (`Gelaende.cs`, seit A 0.66.0): `stadtdaten.gelaende` mit Hügeln (`huegel`: Mitte, Radius 1–3, Höhe 0,2–1,5,
   rund oder länglich bis 6, Drehung in 15 Grad) und gemalten Höhen (`gemalt`: `[i, j, Hundertstel]` im Raster 0,5). Höhe =
@@ -111,7 +114,7 @@ eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis
   `…AltFuerTests`, `AsyncLocal`).
 - **Kein neuer Zeichenaufruf** ohne Grund; neue Stücke kommen in vorhandene Netze. Jeder neue Aufruf muss in
   `StadtbauGrenzen.Draussen` mitgezählt werden.
-- **Werkzeug-Ansichten brechen nicht ab** (A 0.66.1, Fund 305): eine Laterne ohne freien Platz lässt nur `Ansicht3D.Bauen` aus (`Nachtlicht.OhnePlatzAuslassen`, gemerkt in `StadtSzene.LaternenOhnePlatzAuslassen`); Spiel und Prüfung bauen streng, die Prüfung meldet sie rot.
+- **Werkzeug-Ansichten brechen nicht ab** (A 0.66.1 Fund 305, seit A 0.67.0 E2): EIN Schalter `Nachsicht` (`Stadtbau/Nachsicht.cs`, AsyncLocal, `using (Nachsicht.Werkzeugansicht())`) gilt für alle Ansichten des Werkzeugs (3D-Ansicht und Grenzen live über `Ansicht3D.Bauen`, Quest-Szene, Szene für Laternen und Türen): fehlerhafte Quests/Questgeber fallen nur für die Ansicht weg (`Questebene.Anwenden`), eine Laterne ohne freien Platz wird ausgelassen (`StadtSzene.LaternenOhnePlatzAuslassen`). Spiel und Prüfungen setzen ihn nie (die Prüfung gibt `nachsichtig: true` nur an `Questebene.Anwenden`, die Quests prüft sie selbst). Fehler der 3D-Ansicht stehen nur einmal je Ursache in fehler.log (`Werkzeugordner.FehlerEinmal`, E3).
 - **Darstellung ≠ Spielstand**: Autos, Gestalten, Laternen, Ampeln, Tag/Nacht ändern nie einen Spielstand oder Fingerabdruck.
 
 ## 6. Grenzen und feste Sollwerte

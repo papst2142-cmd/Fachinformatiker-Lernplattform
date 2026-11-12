@@ -82,6 +82,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     // Phase 8 W7: Kleingruen (nur bis GruenWeite gezeichnet) und Autos
     private GlNetz? _gruen;
     private Verkehr? _verkehr;
+    /// <summary>Welle A 0.67.0: in diesem Bild faehrt der Bus der Linie die Figur (dann wird sie selbst nicht gezeichnet).</summary>
+    private bool _busMitFigur;
+
+    /// <summary>Start-Test: im letzten Bild sass die Figur im Bus.</summary>
+    public bool BusMitFigur => _busMitFigur;
+
     private readonly Dictionary<bool, GlNetz> _autoNetze = [];   // alle Autos in einem Netz (Weisung P8-14b), nah und fern
     private readonly Matrix4x4[] _autoLagen = new Matrix4x4[AutosHoechstens];
     // Welle A 0.60.0 (Weisung P12-166): die leuchtenden Lampen der Ampeln, ein Aufruf mit dem Programm der Autos; je Gruppe
@@ -717,6 +723,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     protected override unsafe void OnOpenGlRender(GlInterface gl, int fb)
     {
+        _busMitFigur = false;
         var jetzt = _uhr.Elapsed.TotalSeconds;
         var startStempel = Stopwatch.GetTimestamp();
         var ruhte = _ruht;
@@ -965,7 +972,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
             var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
                 * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
-            Zeichnen(gl, spieler, figurLage, sichtProj);
+            if (!_busMitFigur)
+            {
+                // Welle A 0.67.0 (Sammelliste 302): im Bus sitzt die Figur im Bus der Linie (siehe Autos), sie selbst nicht
+                Zeichnen(gl, spieler, figurLage, sichtProj);
+            }
             if (innen is not null)
             {
                 foreach (var person in innen.Personen)
@@ -1030,11 +1041,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 VerdecktZahl = _verdeckt.Count;
                 // Nachtrag 1 zu P7-13 (Wunsch 2): Kreis um die Figur in ihrer Kreisfarbe, ohne Tiefenpruefung
                 // (kein Haus, Baum oder Schild verdeckt ihn), danach die Figur noch einmal ganz vorn
-                gl.Disable(GL_DEPTH_TEST);
-                Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, FigurHoehe(_spiel) + 0.01f, _spiel.FigurZ), sichtProj);
-                gl.Enable(GL_DEPTH_TEST);
-                gl.Clear(GL_DEPTH_BUFFER_BIT);
-                Zeichnen(gl, spieler, figurLage, sichtProj);
+                if (!_busMitFigur)
+                {
+                    gl.Disable(GL_DEPTH_TEST);
+                    Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, FigurHoehe(_spiel) + 0.01f, _spiel.FigurZ), sichtProj);
+                    gl.Enable(GL_DEPTH_TEST);
+                    gl.Clear(GL_DEPTH_BUFFER_BIT);
+                    Zeichnen(gl, spieler, figurLage, sichtProj);
+                }
             }
             // Weisung P8-52 (nur Leistungsprobe): weitere Zeichenaufrufe bis zur Zahl der Stufe, ein kleines Netz unter dem Boden
             while (_aufrufe < ProbeAufrufe && _marke is not null)
@@ -1808,6 +1822,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             else if (grafik.Modell(Fahrzeugmodelle.Zeichnen(auto.Modell)) is { } am)
             {
                 var (ort, richtung) = auto.Lage(auto.Weg);
+                if (_spiel is { ImBus: true } mitfahrt && auto.Nummer == Buslinie.ErsteNummer)
+                {
+                    _busMitFigur = true;
+                    // Welle A 0.67.0 (Sammelliste 302, Nico 5a): der erste Bus der Linie faehrt die Figur im Zeitraffer
+                    // (kein eigener Zeichenaufruf); danach steht er wieder auf seinem Umlauf
+                    var winkel = mitfahrt.FigurRichtung * MathF.PI / 180f;
+                    (ort, richtung) = (new Vector2(mitfahrt.FigurX, mitfahrt.FigurZ), new Vector2(MathF.Sin(winkel), MathF.Cos(winkel)));
+                }
                 var anker = new Vector3((am.Min.X + am.Max.X) / 2, am.Min.Y, (am.Min.Z + am.Max.Z) / 2);
                 _autoLagen[i] = StadtSzene.Lage(am, anker, new Vector3(StadtSzene.Meter * 1.1f), new Vector3(ort.X, StadtSzene.Hoehe.Strasse, ort.Y), richtung);
             }

@@ -298,18 +298,6 @@ public static class Nachtlicht
 
     private static readonly AsyncLocal<bool> OhneStrasseAlt = new();
 
-    /// <summary>
-    /// Fund 305 (P12-199): solange gesetzt, merken sich neu gebaute Szenen (<see cref="StadtSzene.LaternenOhnePlatzAuslassen"/>),
-    /// dass eine Laterne ohne freien Platz ausgelassen wird. Setzt nur die 3D-Ansicht des Werkzeugs; Spiel und Pruefung nie.
-    /// </summary>
-    public static bool OhnePlatzAuslassen
-    {
-        get => OhnePlatzAuslassenWert.Value;
-        set => OhnePlatzAuslassenWert.Value = value;
-    }
-
-    private static readonly AsyncLocal<bool> OhnePlatzAuslassenWert = new();
-
     /// <summary>Halbe Laenge des Streifens laengs der Strasse, den das Kleingruen um jeden Wunschplatz frei laesst.</summary>
     public const float WunschStreifen = 0.8f;
 

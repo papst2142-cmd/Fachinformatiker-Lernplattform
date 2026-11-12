@@ -209,6 +209,8 @@ public static partial class AutoMessung
             funde += await Q2QuestgeberAsync(ansicht);         // Welle Q2: Questgeber draussen und im Laden, Nahansicht mit 12 draussen
             Zeitplan("GelaendeSpielAsync");
             funde += await GelaendeSpielAsync(ansicht);        // Welle A 0.66.0: Figur auf Huegel, Kamera folgt, Nahansicht mit 16 Huegeln
+            Zeitplan("QuestlogBusAsync");
+            funde += await QuestlogBusAsync(ansicht);          // Welle A 0.67.0: Questlog im Handy, Busfahrt
         }
         if (MitLernen)
         {
@@ -621,6 +623,16 @@ public static partial class AutoMessung
                 // Welle A 0.66.0: Figur auf dem Huegel
                 P7W1AnsichtFehler.Clear();
                 await foreach (var ansichtName in MitSpiel ? GelaendeAnsichten(ansicht) : Keine<string>())
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
+                // Welle A 0.67.0: Questlog im Handy, Ortsliste mit Bus, im Bus
+                P7W1AnsichtFehler.Clear();
+                await foreach (var ansichtName in MitSpiel ? QuestlogBusAnsichten(ansicht) : Keine<string>())
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {

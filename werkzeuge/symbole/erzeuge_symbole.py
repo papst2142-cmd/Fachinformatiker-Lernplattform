@@ -33,6 +33,8 @@ ZEICHEN = {
     "chevron_right": 0xE15F, "chevron_left": 0xE15E, "arrow_right": 0xE09E, "arrow_drop_down": 0xE098,
     # Patch A 0.37.0 (Weisung P11-35): X oben rechts beendet das Programm am Handy
     "close_rounded": 0xF647,
+    # Welle A 0.67.0 (Weisung P12-204, Sammelliste 301): Handy-Knopf oeffnet die Auftraege (Questlog)
+    "smartphone_rounded": 0xF019B,
 }
 
 

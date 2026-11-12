@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.43.0
+
+Ansichten robuster, sauberes Fehlerprotokoll und Busfahrten im gemeinsamen Teil.
+
+- Alle Ansichten des Werkzeugs (3D-Ansicht, Grenzen, Quests, Laternen und Türen) zeigen eine halb fertige Stadt jetzt mit einer gemeinsamen Einstellung „nachsichtig“: ein fehlerhafter Auftrag oder eine Laterne ohne freien Platz lässt nur diese Stelle aus. Die Prüfung meldet beides weiter rot, und das Spiel lädt so eine Stadt nicht.
+- Ein Fehler der 3D-Ansicht steht nur noch einmal je Ursache in der Datei fehler.log (vorher bei jeder Änderung der Stadt erneut). So bleibt die Datei klein und „An CC senden“ zeigt das Wichtige.
+- Der gemeinsame Teil mit dem Spiel kann jetzt Busfahrten berechnen (Weg zur Haltestelle, Warten, Fahrt). Im Werkzeug ändert sich dadurch nichts an der Bedienung.
+
 ## S 0.42.1
 
 Fehler aus der Gesamtprüfung behoben.

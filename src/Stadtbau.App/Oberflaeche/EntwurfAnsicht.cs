@@ -534,6 +534,8 @@ public sealed class EntwurfAnsicht : Grid
             _baut = false;
             if (t.IsFaulted)
             {
+                // E3 (Weisung P12-204): vorher stand der Fehler nirgends; jetzt einmal je Ursache in fehler.log
+                _ordner?.FehlerEinmal("3D-Ansicht Gebaeude entwerfen", t.Exception);
                 _status.Text = Texte.Ansicht3DFehler;
                 _gebaut = stand;
                 _fertig.TrySetResult();
