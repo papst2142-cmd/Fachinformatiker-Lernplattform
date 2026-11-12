@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.45.0
+
+Spielorte in einer eigenen Stadt, Laufzeiten zu Fuß, Türen nicht mehr in Toren.
+
+- Neuer Knopf „Als Spielort festlegen“ unter „Ausgewähltes Stück“ (in einer leeren Stadt): ein Gebäude mit Tür wird ein Ort aus Stadt 1, zum Beispiel das Möbelhaus oder die Betriebswerkstatt. Name, Aufgaben, Öffnungszeiten und Innenraum kommen aus Stadt 1, das Aussehen bleibt dein Gebäude. Ein Schritt, Rückgängig geht.
+- Sobald die Stadt Spielorte hat, meldet die Prüfung rot, welche Orte aus Stadt 1 noch fehlen. Dazu gelten dann die Regeln des Spiels, zum Beispiel dass jeder Ort zu Fuß erreichbar ist.
+- Neue Karte „Laufzeiten zu Fuß“ rechts: so lange braucht die Figur im Spiel von Tür zu Tür (2 Spielminuten je Schritt), längste Wege zuerst. Wege ab 60 Minuten sind gelb, dazu ein gelber Hinweis in der Prüfung (nie rot).
+- „Tür dazu“ legt die Tür an Gebäuden mit Toren (Lokschuppen, Hallen) auf eine glatte Wand ohne Tor. Hat keine Wand ohne Tor eine glatte Stelle (die Betriebswerkstatt hat an allen Seiten ein Band in Türhöhe), bleibt die Tür im Tor und das Werkzeug sagt es. Mit „Tür setzen“ ist die Tür weiter frei.
+
 ## S 0.44.1
 
 Türen an Werkstatt, Lokschuppen und Haltepunkt, Haltepunkt am Gleis.

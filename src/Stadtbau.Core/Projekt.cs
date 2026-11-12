@@ -506,6 +506,7 @@ public sealed partial class Projekt
 
     private void Gespeichert()
     {
+        SpielortInnenAbgleichen();
         _aenderungen++;
         SpeicherFehler = null;
         try
@@ -523,6 +524,27 @@ public sealed partial class Projekt
             Werkzeugordner.Fehler("Automatisch speichern: " + e.GetType().Name + ": " + e.Message);
         }
         Geaendert?.Invoke();
+    }
+
+    /// <summary>
+    /// Welle S 0.45.0 (Weisung P12-212 Punkt 4): eine leere Stadt mit Spielorten bekommt fuer jeden Spielort den Innenraum der
+    /// Stadt 1 ueber die Kennung (<see cref="Spielort.InnenFuer"/>) als Basis; dort laesst er sich bearbeiten wie in Stadt 1.
+    /// Nach jedem Schritt, Rueckgaengig und Oeffnen neu (die Basis einer leeren Stadt gehoert nur diesem Projekt).
+    /// </summary>
+    private void SpielortInnenAbgleichen()
+    {
+        if (Leer is null)
+        {
+            return;
+        }
+        var soll = Spielort.InnenFuer(AussenStand, Daten.Fassung.Innenraeume);
+        var innen = Basis.Innenraeume;
+        if (PythonJson.Standard(innen) == PythonJson.Standard(soll))
+        {
+            return;
+        }
+        innen.Clear();
+        innen.AddRange(soll);
     }
 
     /// <summary>Fehler des letzten automatischen Speicherns (null = gespeichert).</summary>
@@ -697,6 +719,7 @@ public sealed partial class Projekt
         }
         p._zeiger = Py.IstNurInt(d["zeiger"]) ? (int)Math.Clamp(Py.Int(d["zeiger"]), 0, p._verlauf.Count) : p._verlauf.Count;
         p.Nachricht = d["nachricht"] as string ?? "";
+        p.SpielortInnenAbgleichen();
         if (d["ort"] is string o && p.Innenorte.Contains(o))
         {
             p.Ort = o;
@@ -743,6 +766,7 @@ public sealed partial class Projekt
             throw new IOException("Ein Projekt mit diesem Namen gibt es schon.");
         }
         p._aussen = Aussen.Aus(f);
+        p.SpielortInnenAbgleichen();
         foreach (var ort in StadtDateiOhneInnenFuerTests.Value ? [] : p.Orte)
         {
             var g = InnenGrundriss.Grundriss(f.Innenraeume, ort);
@@ -943,7 +967,8 @@ public sealed partial class Projekt
         // Welle Q (Sammelliste 229): Gebaeude ohne Ort mit dem Namen des Blueprints statt „bau:…“
         // Fund 262: Szene mit den eigenen Gebaeuden (wie die 3D-Ansicht), dazu die Regel „Tuer buendig“ (nur Werkzeug)
         var funde = StadtbauPruefung.Aussen(stand, daten.Inhalt, Ansicht3D.MitGebaeuden(daten.Grafik, stand), null, sz => TuerBuendig.Pruefen(sz, stand, daten));
-        return [.. funde.Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen)];
+        return [.. funde.Where(f => !GebaeudeTuer.NurGelb(aussen, f)).Select(f => Blueprint.MitNamen(aussen, KatalogPruefung.Umbenannt(Katalog.Aktiv, f))), .. KatalogPruefung.Aussen(Katalog.Aktiv, aussen).Select(f => Blueprint.MitNamen(aussen, f)), .. Blueprint.Pruefen(aussen), .. GebaeudeTuer.Pruefen(aussen), .. TuerFrei.Pruefen(aussen),
+            .. (stand.StadtId == daten.Fassung.StadtId ? [] : Spielort.Pruefen(aussen, daten.Fassung)), .. Laufzeiten.Pruefen(stand, daten.Inhalt, aussen)];
     }
 
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>

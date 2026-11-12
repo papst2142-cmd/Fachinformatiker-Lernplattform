@@ -572,7 +572,15 @@ public sealed class TuerFassade
     public int? WandVon(Vector2? tuer) => tuer is { } t ? WandFuer(t, null) : null;
 
     /// <summary>Sammelliste 276: Ziele der Tueren des Modells an einer Wand (Stelle laengs der Wand, gezeichnete Mitte).</summary>
-    public IReadOnlyList<(float T, Vector2 Gezeichnet)> TuerZiele(int wand) => [.. _modellTueren[wand].Select(m => (m.T, m.Gezeichnet))];
+    public IReadOnlyList<(float T, Vector2 Gezeichnet)> TuerZiele(int wand, bool ohneTore = false) =>
+        [.. _modellTueren[wand].Where(m => !ohneTore || !m.Eigene).Select(m => (m.T, m.Gezeichnet))];
+
+    /// <summary>
+    /// Weisung P12-212 Punkt 1: hat die Wand ein Tor? Hier: eine eigene Tuer des Modells wie in der Ausgangsstadt, die das Spiel
+    /// nicht als Tuer erkennt (helles Rolltor der Betriebswerkstatt, Sammelliste 312). Tore aus Teilen <c>tor</c> der Karte
+    /// rechnet <see cref="GebaeudeTuer.TorWaende"/> dazu.
+    /// </summary>
+    public bool HatTor(int wand) => _modellTueren[wand].Any(m => m.Eigene);
 
     /// <summary>Art jeder Probe einer Wand (nur Tests und Bilder): Stelle laengs der Wand und Art.</summary>
     public IReadOnlyList<(float T, Stelle Art)> ProbenVon(int wand) => [.. _proben[wand].Select(q => (q.T, q.Art))];
