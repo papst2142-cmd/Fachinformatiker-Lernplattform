@@ -48,6 +48,35 @@ public static class SpielProbeTexte
 
     /// <summary>Name des Knopfs fuer den Screenreader: {0} Ort, {1} Minuten mit dem Bus.</summary>
     public const string MitDemBusName = "Mit dem Bus zu {0}, {1} Minuten";
+
+    // ---- Welle A 0.73.0 (Weisung P12-239, Sammelliste 335): selbst mit dem Bus fahren ----
+
+    /// <summary>Knopf unten, wenn der Bus an der Haltestelle der Figur haelt.</summary>
+    public const string Einsteigen = "Einsteigen";
+
+    /// <summary>Knopf unten waehrend der Fahrt.</summary>
+    public const string Aussteigen = "Aussteigen";
+
+    /// <summary>Knopf unten nach dem Druecken von „Aussteigen“ (Tippen aendert nichts).</summary>
+    public const string HaeltGleich = "Hält an der nächsten Haltestelle";
+
+    /// <summary>Zeile, solange die Figur an einer Haltestelle steht und kein Bus haelt.</summary>
+    public const string AnDerHaltestelle = "Haltestelle: Hier wartest du auf den Bus.";
+
+    /// <summary>Zeile, wenn der Bus an der Haltestelle der Figur haelt.</summary>
+    public const string BusIstDa = "Der Bus ist da. Tippe unten auf „Einsteigen“.";
+
+    /// <summary>Zeile waehrend der Fahrt.</summary>
+    public const string ImBusUnterwegs = "Du fährst mit dem Bus. Mit „Aussteigen“ hält er an der nächsten Haltestelle.";
+
+    /// <summary>Zeile nach „Aussteigen“, bis der Bus haelt.</summary>
+    public const string BusHaeltGleich = "Der Bus hält an der nächsten Haltestelle, dort steigst du aus.";
+
+    /// <summary>Zeile nach dem Aussteigen: {0} Minuten Fahrt.</summary>
+    public const string Ausgestiegen = "Ausgestiegen. Die Fahrt hat {0} Min. gedauert.";
+
+    /// <summary>Waehrend der Fahrt getippt oder einen Ort gewaehlt.</summary>
+    public const string ErstAussteigen = "Du sitzt im Bus. Steig erst aus.";
     public const string Betreten = "Hineingehen";
     public const string ZurStadt = "Zur Stadt";
     public const string Warten = "Eine Stunde warten";

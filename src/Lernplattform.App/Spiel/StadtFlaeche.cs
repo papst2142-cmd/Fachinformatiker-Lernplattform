@@ -849,7 +849,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _satzInnen = _spiel?.ImInnenraum ?? true;
         _satzUhr = Tageslicht.FesteUhr;
         var nachLaden = _uhr.Elapsed.TotalSeconds;
-        var geht = _spiel?.Fortschreiten(dt) ?? false;
+        // Welle A 0.73.0: mit dem Bus unterwegs (selbst gefahren) folgt die Kamera dem Bus wie der gehenden Figur
+        var geht = (_spiel?.Fortschreiten(dt) ?? false) | (_spiel?.MitfahrtAktiv ?? false);
         VorBild?.Invoke();
         var nachLogik = _uhr.Elapsed.TotalSeconds;
         var verdecktSek = 0.0;
@@ -955,7 +956,16 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 else if (schritt > 0)
                 {
-                    _verkehr.Weiter(schritt, _spiel.FigurX, _spiel.FigurZ);
+                    // Welle A 0.73.0: sitzt die Figur im Bus, haelt kein Auto fuer sie (sie ist nicht auf der Fahrbahn)
+                    var (fx, fz) = _spiel.SitztImBus ? (-1000f, -1000f) : (_spiel.FigurX, _spiel.FigurZ);
+                    _verkehr.Weiter(schritt, fx, fz);
+                }
+                // Welle A 0.73.0 (Weisung P12-239): Bus an der Haltestelle der Figur, Ein- und Aussteigen, im Bus mitfahren
+                _spiel.MitfahrtTakt(_uebergang?.Verkehr ?? _verkehr, schritt);
+                if (_spiel.SitztImBus)
+                {
+                    // die Figur sitzt im Bus (sie selbst wird nicht gezeichnet, der Bus faehrt sie)
+                    _busMitFigur = true;
                 }
                 // ab AutoFern Abstand eine einfache Fernform (zwei Kaesten in der Hauptfarbe des Autos)
                 var fern = _gw.Fern(kamera.Abstand);
