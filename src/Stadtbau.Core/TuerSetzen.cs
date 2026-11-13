@@ -31,8 +31,9 @@ public static class TuerSetzen
     /// <summary>Kann an diesem Stueck eine Tuer gesetzt werden? null = ja, sonst der Grund.</summary>
     public static string? Nicht(PyObjekt aussen, AussenStelle s)
     {
-        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Haus setzt das Werkzeug die Tuer noch nicht
-        if (AussenBearbeitung.IstHaus(s.Art) && AussenBearbeitung.Gueltig(aussen, s) && AussenBearbeitung.HausGrad(aussen, s) != 0)
+        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Haus setzte das Werkzeug die Tuer noch nicht; seit
+        // S 0.49.0 (Weisung P12-231 Antwort 4c) geht es (im Rahmen des Hauses gerechnet), die alte Sperre nur noch als Gegenprobe
+        if (TuerFassade.SchraegAltFuerTests && AussenBearbeitung.IstHaus(s.Art) && AussenBearbeitung.Gueltig(aussen, s) && AussenBearbeitung.HausGrad(aussen, s) != 0)
         {
             return Texte.TuerSchraegNicht;
         }
@@ -130,7 +131,10 @@ public static class TuerSetzen
         {
             return GebaeudeTuer.Dazu(aussen, s, einrasten: false, punkt: p, modellTueren: modellTueren);
         }
-        var (tuer, n) = AufWand(AussenBearbeitung.HausFlaeche(aussen, s), p, modellTueren);
+        // S 0.49.0: im Rahmen des Hauses auf die Wand, dann in die Stadt (ohne feine Drehung genau wie bisher)
+        var lage = AussenBearbeitung.HausLage(aussen, s);
+        var (tuer, n) = AufWand(AussenBearbeitung.HausViertel(aussen, s), lage.Zurueck(p), modellTueren?.Select(lage.Zurueck).ToList());
+        (tuer, n) = (lage.Punkt(tuer), lage.Richtung(n));
         var weg = new List<object?> { Punkt(tuer), Punkt(tuer + (n * GebaeudeTuer.WegStart)) };
         PyObjekt zugang;
         if (s.Art == AussenArt.Haus)
@@ -287,29 +291,38 @@ public static class TuerSetzen
     {
         var strassen = AussenBearbeitung.Strassen(aussen);
         var laternen = Aussen.Laternen(aussen).OfType<List<object?>>().Select(l => new Vector2((float)Py.F(l[0]), (float)Py.F(l[1]))).ToList();
-        return GebaeudeTuer.WegRechtwinklig(zugang, AussenBearbeitung.HausFlaeche(aussen, s), strassen, laternen);
+        // S 0.49.0 (Weisung P12-231 Antwort 4c): an einem schraeg gedrehten Haus im Rahmen des Hauses (Knicke parallel und
+        // rechtwinklig zu seinen Waenden); ohne feine Drehung ist der Rahmen die Stadt und alles bleibt wie bisher
+        return GebaeudeTuer.WegRechtwinklig(zugang, AussenBearbeitung.HausViertel(aussen, s), strassen, laternen, AussenBearbeitung.HausLage(aussen, s));
     }
 
     /// <summary>
     /// Wand fuer eine neue Tuer („Tür dazu“): die Wand, deren Mitte (einen Schritt vor der Wand) der naechsten Strasse am
     /// naechsten liegt; ohne Strasse die Vorderseite. Gleich weit: Vorderseite, dann im Uhrzeigersinn.
     /// </summary>
-    public static Vector2 WandZurStrasse(PyObjekt aussen, AussenStelle s)
+    public static Vector2 WandZurStrasse(PyObjekt aussen, AussenStelle s) =>
+        AussenBearbeitung.HausLage(aussen, s).Richtung(WandZurStrasseImHaus(aussen, s));
+
+    /// <summary>Wie <see cref="WandZurStrasse"/>, Richtung im Rahmen des Hauses (genau eine Achse).</summary>
+    internal static Vector2 WandZurStrasseImHaus(PyObjekt aussen, AussenStelle s)
     {
-        var vorne = AussenBearbeitung.HausFront(aussen, s);
+        // S 0.49.0: Waende im Rahmen des Hauses (bei feiner Drehung: Punkt danach in die Stadt)
+        var lage = AussenBearbeitung.HausLage(aussen, s);
+        var v = lage.RichtungZurueck(AussenBearbeitung.HausFront(aussen, s));
+        var vorne = new Vector2(MathF.Round(v.X), MathF.Round(v.Y));
         var strassen = AussenBearbeitung.Strassen(aussen).Where(l => l.Count >= 2).ToList();
         if (strassen.Count == 0)
         {
             return vorne;
         }
-        var (x, y, w, h) = AussenBearbeitung.HausFlaeche(aussen, s);
+        var (x, y, w, h) = AussenBearbeitung.HausViertel(aussen, s);
         var mitte = new Vector2((float)(x + (w / 2)), (float)(y + (h / 2)));
         var best = (N: vorne, D: float.MaxValue);
         var n = vorne;
         for (var i = 0; i < 4; i++)
         {
-            var tief = n.X != 0 ? w / 2 : h / 2;
-            var vor = mitte + (n * (float)(tief + GebaeudeTuer.WegStart));
+            var tief = MathF.Abs(n.X) > 0.5f ? w / 2 : h / 2;
+            var vor = lage.Punkt(mitte + (n * (float)(tief + GebaeudeTuer.WegStart)));
             var d = strassen.Min(l => Kurve.Abstand(vor, l));
             if (d < best.D - 1e-4f)
             {

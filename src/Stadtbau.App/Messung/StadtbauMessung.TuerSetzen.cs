@@ -151,6 +151,79 @@ public static partial class StadtbauMessung
         k.TuerSetzenBeenden();
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
+        await SchraegeTuerAsync(a, f, s);
+    }
+
+    /// <summary>
+    /// S 0.49.0 (Weisung P12-231 Antwort 3b): das Haus um 30 Grad gedreht, Tuer setzen per Tipp vor die gedrehte Westwand:
+    /// die Tuer liegt auf dieser Wand, der Weg geht gerade (senkrecht zur Wand) hinaus. Gegenprobe alte Regel: Knopf grau.
+    /// </summary>
+    private static async Task SchraegeTuerAsync(Hauptansicht a, Window? f, AussenStelle s)
+    {
+        var p = a.Projekt!;
+        var k = a.Karte;
+        p.AussenAendern("Drehen", aa => AussenBearbeitung.Drehen(aa, s, 30));
+        await a.AussenGeprueft;
+        var lage = AussenBearbeitung.HausLage(p.AussenStand, s);
+        if (!lage.Aktiv)
+        {
+            Fund("Tuer schraeg: Haus ist nach dem Drehen um 30 Grad nicht schraeg");
+            return;
+        }
+        k.Waehlen(s);
+        await BildAsync(a);
+        if (TuerSetzen.Nicht(p.AussenStand, s) is { } grund)
+        {
+            Fund("Tuer schraeg: Tuer setzen gesperrt: " + grund);
+            return;
+        }
+        k.TuerSetzenStarten(s, still: true);
+        await k.FassadeBereit;
+        var (vx, vy, _, vh) = AussenBearbeitung.HausViertel(p.AussenStand, s);
+        var westAussen = lage.Richtung(new Vector2(-1, 0));
+        var tipp = lage.Punkt(new Vector2((float)vx - 0.15f, (float)(vy + (vh / 2))));
+        var schritte = p.SchritteZurueck;
+        FingerTipp(k, k.Bildpunkt(tipp.X, tipp.Y));
+        await a.AussenGeprueft;
+        await BildAsync(a);
+        if (p.SchritteZurueck != schritte + 1 || TuerSetzen.Tuer(p.AussenStand, s) is not { } t
+            || TuerFassade.Rechnen(p, p.AussenStand, s) is not { } fa)
+        {
+            Fund("Tuer schraeg: Tipp vor die gedrehte Westwand setzt keine Tuer");
+            return;
+        }
+        var w = fa.Waende[fa.WandFuer(t, null)];
+        if (Vector2.Dot(w.Aussen, westAussen) < 0.999f || Math.Abs(Vector2.Dot(t - w.A, w.Aussen)) > 0.05f)
+        {
+            Fund("Tuer schraeg: Tuer liegt nicht auf der gedrehten Westwand (" + t + ")");
+        }
+        if (Blueprint.ZierwegVon(p.AussenStand, s) is { } z && AussenBearbeitung.Linie(z["weg"]) is { Count: >= 2 } weg
+            && Vector2.Dot(Vector2.Normalize(weg[1] - weg[0]), westAussen) < 0.999f)
+        {
+            Fund("Tuer schraeg: Weg geht nicht gerade (senkrecht zur Wand) aus der Tuer");
+        }
+        if (a.AussenFunde.FirstOrDefault(x => x.Rot) is { } rot)
+        {
+            Fund("Tuer schraeg: roter Fund nach dem Setzen: " + rot.Text);
+        }
+        await AlleGroessenAsync(a, f, "Tuer schraeg");
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        k.TuerSetzenBeenden();
+
+        // Gegenprobe: alte Regel sperrt die Tuer am schraegen Haus
+        TuerFassade.SchraegAltFuerTests = true;
+        try
+        {
+            if (TuerSetzen.Nicht(p.AussenStand, s) != Texte.TuerSchraegNicht)
+            {
+                Fund("Tuer schraeg Gegenprobe: alte Regel sperrt die Tuer nicht (Probe taugt nicht)");
+            }
+        }
+        finally
+        {
+            TuerFassade.SchraegAltFuerTests = false;
+        }
+        await BildAsync(a);
     }
 
     /// <summary>Liegt die Tuer des Hauses auf derselben Wand wie <paramref name="wand"/> (bis 0,05 quer)?</summary>

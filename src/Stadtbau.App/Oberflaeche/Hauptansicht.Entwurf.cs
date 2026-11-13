@@ -94,6 +94,7 @@ public sealed partial class Hauptansicht
         _vorEntwurf = _inhalt.Content;
         _entwurf = ansicht;
         _inhalt.Content = ansicht;
+        FundlistenEntwurfBauen(ansicht);
         KnoepfeFreigeben();
         Melden(Texte.GebaeudeEntwerfen);
         return ansicht;

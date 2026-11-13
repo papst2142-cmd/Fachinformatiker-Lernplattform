@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.49.0
+
+Innenräume in 3D ansehen, Türen an schrägen Häusern, alle roten Funde immer rechts.
+
+- Innenraum in 3D: im Grundriss steht in der Karte unten rechts der Knopf „In 3D ansehen“. Die Mitte zeigt dann den Innenraum so, wie das Spiel ihn zeichnet, mit Möbeln, Waren, Personen und Licht. Unten rechts wählst du „Nacht“ (Abend mit Licht), die Etage und „Figur laufen lassen“ (Tippen lässt die Figur dorthin laufen). Ziehen bewegt die Kamera, mit der rechten Maustaste drehst du sie, das Mausrad zoomt; am Tablet mit zwei Fingern. Jede Änderung im Grundriss siehst du gleich danach in 3D. „Zurück zum Grundriss“ zeigt wieder den Grundriss; wählst du links ein Stück zum Setzen, kommt der Grundriss von selbst zurück. Innenräume selbst gebauter Gebäude zeigt die 3D-Ansicht erst nach ihrem Einbau ins Spiel.
+- Türen an schräg gedrehten Häusern: „Tür setzen“ und „Tür dazu“ gehen jetzt auch an Häusern, die in 15-Grad-Schritten gedreht stehen. Die Tür liegt auf der gedrehten Wand, der Fußweg geht gerade aus der Tür hinaus und biegt dann auf kürzestem Weg zur Straße ab, mit runden Ecken. „Aussehen tauschen“ bleibt an schrägen Häusern gesperrt.
+- Alle roten Funde immer rechts: in jeder Ansicht (Stadt von oben, 3D-Ansicht, Grundriss, Gebäude entwerfen) stehen rechts zwei Listen, „Stadt – n rot“ und „Innenräume – m rot“. Die Liste der Innenräume zählt genau die Funde, die Speichern und Senden sperren, auch von Innenräumen, die gerade nicht offen sind, nach Raum geordnet. Ein Fund mit Stelle lässt sich antippen und öffnet den Grundriss des Raums an dieser Stelle.
+
 ## S 0.48.0
 
 Neue Städte gehen 1 Minute je Schritt, Stadt 1 ist im Spiel eingebaut.

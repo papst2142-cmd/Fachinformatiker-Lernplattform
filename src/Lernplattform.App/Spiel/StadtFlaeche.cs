@@ -2298,10 +2298,16 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
     }
 
+    /// <summary>
+    /// S 0.49.0 / A 0.72.0 (Weisung P12-231 Antwort 1a): nur im Stadtbau-Werkzeug (Innenraum in 3D ansehen) gesetzt, solange
+    /// „Figur laufen lassen“ aus ist: ein Tipp laesst die Figur nicht gehen. Das Spiel setzt ihn nie.
+    /// </summary>
+    public bool OhneGehen { get; set; }
+
     /// <summary>Tippen an (x, y) in Punkten: Stadt -> Haus unter dem Finger, sonst zum Bodenpunkt; Buero -> zum Bodenpunkt.</summary>
     public void Tippen(Point p)
     {
-        if (AktuelleKamera is not { } kamera || _spiel is not { } spiel)
+        if (OhneGehen || AktuelleKamera is not { } kamera || _spiel is not { } spiel)
         {
             return;
         }

@@ -340,8 +340,11 @@ public sealed class EntwurfAnsicht : Grid
         // S 0.31.0 (Sammelliste 264, Weisung P12-130 Frage 3 = c): Farbe des ganzen Gebaeudes, ein Schritt im Verlauf des Editors
         Farbwahl = new FarbWahl(teil => Lernplattform.Core.Spiel.SpielDaten.Get(Entwurf.Farben, teil) as string, (teil, wert) => Entwurf.FarbeSetzen(teil, wert));
         var farbe = Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.FarbeKnopf, "Mittel", FontWeight.Bold), Farbwahl.Ansicht } });
-        return new StackPanel { Spacing = 12, Children = { Schrift.Karte(_auswahl), farbe, grenzen, pruefung, licht } };
+        return new StackPanel { Spacing = 12, Children = { Schrift.Karte(_auswahl), farbe, grenzen, pruefung, Fundlisten, licht } };
     }
+
+    /// <summary>S 0.49.0 (Weisung P12-231 Antwort 2c): Platz fuer „Stadt – n rot“ und „Innenräume – m rot“ (fuellt die Hauptansicht).</summary>
+    public StackPanel Fundlisten { get; } = new() { Spacing = 12 };
 
     /// <summary>Start-Test: Farbwahl des Gebaeudes.</summary>
     internal FarbWahl? Farbwahl { get; private set; }

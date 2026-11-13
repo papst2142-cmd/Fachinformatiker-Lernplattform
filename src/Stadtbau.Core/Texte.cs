@@ -305,6 +305,21 @@ public static partial class Texte
     public const string GrenzenNochNicht = "Noch nicht gemessen. Tippe auf „Grenzen messen“.";
     public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Du baust hier wie in „Stadt von oben“: Stück links wählen und tippen setzt es, ein Stück antippen wählt es, ziehen verschiebt es. Auf freier Fläche ziehen bewegt die Kamera. Mit der rechten Maustaste drehst du sie (links und rechts) und kippst sie (hoch und runter); am Tablet drehst du sie mit zwei Fingern.";
 
+    // S 0.49.0 (Weisung P12-231 Antwort 1a): Innenraum in 3D ansehen
+    public const string Innen3DKnopf = "In 3D ansehen";
+    public const string Innen3DTipp = "Zeigt diesen Innenraum so, wie das Spiel ihn zeichnet, mit Möbeln, Personen und Licht. Hier wird nur angesehen, gebaut wird im Grundriss.";
+    public const string Innen3DZurueck = "Zurück zum Grundriss";
+    public const string Innen3DZurueckTipp = "Zeigt wieder den Grundriss zum Bearbeiten.";
+    public const string Innen3DNachtTipp = "Zeigt den Innenraum am Abend mit eingeschaltetem Licht.";
+    public const string Innen3DEtage = "Etage";
+    public const string Innen3DEtageTipp = "Wählt die Etage, die die 3D-Ansicht zeigt.";
+    public const string Innen3DFigurTipp = "Tippen lässt die Figur dorthin laufen wie im Spiel. Ist der Schalter aus, bewegt Tippen nichts.";
+    public const string Innen3DBaut = "Der Innenraum wird in 3D gebaut …";
+    public const string Innen3DFehler = "Der Innenraum lässt sich gerade nicht in 3D zeigen. Schau bei den Prüfungen nach.";
+    public const string Innen3DFehlt = "Diesen Innenraum gibt es im Spiel nicht.";
+    public const string Innen3DBauNicht = "Innenräume selbst gebauter Gebäude zeigt die 3D-Ansicht erst, wenn das Gebäude ins Spiel eingebaut ist.";
+    public const string Innen3DHinweis = "Ziehen bewegt die Kamera, mit der rechten Maustaste drehst du sie, das Mausrad zoomt; am Tablet drehst und zoomst du mit zwei Fingern. Jede Änderung im Grundriss siehst du hier gleich danach.";
+
     // S 0.7.0 (Weisung P12-45, Plan P12-26b Abschnitt 9): Bauen in der 3D-Ansicht
     public const string Bauen3DGehtNicht = "Hier geht das nicht.";
     public const string Bauen3DPasst = "Passt hier.";
@@ -961,6 +976,19 @@ public static partial class Texte
     public const string Pruefen = "Prüfen";
     public const string PruefenGruen = "Prüfen – alles in Ordnung";
     public static string PruefenRot(int n) => "Prüfen – " + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot";
+
+    // ---- S 0.49.0 (Weisung P12-231 Antwort 2c, Sammelliste 328): zwei Fundlisten in jeder Ansicht ----
+    public const string FundeStadt = "Stadt";
+    public const string FundeInnen = "Innenräume";
+    public static string FundeStadtTitel(int rot) => rot > 0 ? "Stadt – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Stadt – alles in Ordnung";
+    public static string FundeInnenTitel(int rot) => rot > 0 ? "Innenräume – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Innenräume – alles in Ordnung";
+    public const string FundeStadtTipp = "Alle roten Funde der Stadt draußen, der Quests und der Grenzen. Sie sperren Speichern und Senden.";
+    public const string FundeInnenTipp = "Alle roten Funde aller Innenräume und Etagen, auch der Innenräume eigener Gebäude. Sie sperren Speichern und Senden.";
+    public const string FundeStadtKeine = "Draußen ist nichts rot.";
+    public const string FundeInnenKeine = "In keinem Innenraum ist etwas rot.";
+    public const string FundeOffenerRaum = "offen";
+    public const string FundeUnveraendert = "Dieser Raum ist unverändert und sperrt das Senden nicht.";
+    public static string FundeOrtKopf(string name, int rot) => name + " (" + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot)";
     public const string Vorschau = "Vorschau";
     public const string InnenraeumeOeffnen = "Innenräume öffnen";
     public const string Hilfe3D = "So bedienst du die 3D-Ansicht";

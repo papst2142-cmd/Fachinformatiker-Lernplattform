@@ -51,8 +51,9 @@ public static partial class GebaeudeTuer
         // ein Bahnsteig-Stueck (nur Flaechen) und ein Gebaeude mit Innenraum (Blueprint, Tuer kommt mit dem Innenraum) nicht
         : Bahnsteig.Nur(Get(AussenBearbeitung.Modelle(aussen), Py.Str(g["modell"]))) || Aussen.Bauten(aussen)[Py.Str(g["modell"])] is PyObjekt ? Texte.TuerNurGebaeude
         : HatTuer(aussen, s) ? Texte.TuerSchonDa
-        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Gebaeude noch nicht
-        : AussenBearbeitung.HausGrad(aussen, s) != 0 ? Texte.TuerSchraegNicht
+        // Welle A 0.70.0 (Sammelliste 314, E1): an einem schraeg gedrehten Gebaeude noch nicht; seit S 0.49.0 (Weisung P12-231
+        // Antwort 4c) geht es, die alte Sperre nur noch als Gegenprobe
+        : TuerFassade.SchraegAltFuerTests && AussenBearbeitung.HausGrad(aussen, s) != 0 ? Texte.TuerSchraegNicht
         : null;
 
     /// <summary>Zeigt die Auswahl den Knopf „Tür dazu“ bzw. „Tür entfernen“? (nur Gebaeude ohne Innenraum, kein Bahnsteig)</summary>
@@ -90,19 +91,23 @@ public static partial class GebaeudeTuer
             modell = KopieAnlegen(aussen, modell);
             Py.Setzen(g, "modell", modell);
         }
-        var (x, y, w, h) = AussenBearbeitung.HausFlaeche(aussen, s);
+        // S 0.49.0 (Weisung P12-231 Antwort 4c): im Rahmen des Hauses rechnen, dann in die Stadt (ohne feine Drehung wie bisher)
+        var lage = AussenBearbeitung.HausLage(aussen, s);
+        var (x, y, w, h) = AussenBearbeitung.HausViertel(aussen, s);
         Vector2 tuer, n;
         if (punkt is { } p)
         {
-            (tuer, n) = TuerSetzen.AufWand((x, y, w, h), p, modellTueren);
+            (tuer, n) = TuerSetzen.AufWand((x, y, w, h), lage.Zurueck(p), modellTueren?.Select(lage.Zurueck).ToList());
         }
         else
         {
-            n = SuedAltFuerTests.Value ? AussenBearbeitung.HausFront(aussen, s) : TuerSetzen.WandZurStrasse(aussen, s);
+            n = SuedAltFuerTests.Value ? lage.RichtungZurueck(AussenBearbeitung.HausFront(aussen, s)) : TuerSetzen.WandZurStrasseImHaus(aussen, s);
+            n = new Vector2(MathF.Round(n.X), MathF.Round(n.Y));
             var mitte = new Vector2((float)(x + (w / 2)), (float)(y + (h / 2)));
             var tief = n.X != 0 ? w / 2 : h / 2;
             tuer = mitte + (n * (float)tief);
         }
+        (tuer, n) = (lage.Punkt(tuer), lage.Richtung(n));
         var weg = new List<object?> { Punkt(tuer), Punkt(tuer + (n * WegStart)) };
         Zierwege(aussen, anlegen: true)!.Add(new PyObjekt
         {
@@ -118,7 +123,7 @@ public static partial class GebaeudeTuer
         var z = Blueprint.Zierweg(aussen, modell)!;
         var strassen = AussenBearbeitung.Strassen(aussen);
         // S 0.34.1 (Sammelliste 278/280): rechtwinklig mit runden Ecken
-        return WegRechtwinklig(z, AussenBearbeitung.HausFlaeche(aussen, s), strassen, LaternenPunkte(aussen)) ? null : Texte.TuerWegOhneStrasse;
+        return WegRechtwinklig(z, AussenBearbeitung.HausViertel(aussen, s), strassen, LaternenPunkte(aussen), AussenBearbeitung.HausLage(aussen, s)) ? null : Texte.TuerWegOhneStrasse;
     }
 
     /// <summary>Gegenprobe Sammelliste 313: Bahnsteig auch abtrennen, wenn das Haus darauf steht (wie bis S 0.44.0, nur Tests, je Ablauf).</summary>
@@ -306,7 +311,8 @@ public static partial class GebaeudeTuer
             {
                 (Math.Abs(y2 - tyU), new(0, 1)), (Math.Abs(F(tor, "y") - y1), new(0, -1)), (Math.Abs(tx1 - x1), new(-1, 0)), (Math.Abs(x2 - tx2), new(1, 0)),
             };
-            var n = Hausdrehung.Drehen(seiten.MinBy(x => x.D).N, Vector2.Zero, dreh);
+            // S 0.49.0: bei feiner Drehung liegen die Waende der Fassade gedreht in der Stadt
+            var n = AussenBearbeitung.HausLage(aussen, s).Richtung(Hausdrehung.Drehen(seiten.MinBy(x => x.D).N, Vector2.Zero, dreh));
             for (var w = 0; w < f.Waende.Count; w++)
             {
                 if (Vector2.Distance(f.Waende[w].Aussen, n) < 0.01f)

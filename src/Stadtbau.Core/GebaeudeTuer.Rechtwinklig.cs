@@ -21,6 +21,10 @@ public static partial class GebaeudeTuer
     public static bool WegAltFuerTests { get => WegAlt.Value; set => WegAlt.Value = value; }
     private static readonly AsyncLocal<bool> WegAlt = new();
 
+    /// <summary>Gegenprobe S 0.49.0: Weg eines schraeg gedrehten Hauses achsrecht in der Stadt statt im Rahmen des Hauses (nur Tests, je Ablauf).</summary>
+    public static bool SchraegWeltAltFuerTests { get => SchraegWeltAlt.Value; set => SchraegWeltAlt.Value = value; }
+    private static readonly AsyncLocal<bool> SchraegWeltAlt = new();
+
     /// <summary>Schrittweite, in der das letzte gerade Stueck vor dem Abbiegen auf die Strasse verlaengert wird.</summary>
     public const float WegRaster = 0.05f;
 
@@ -31,7 +35,11 @@ public static partial class GebaeudeTuer
     /// Den Weg des Zugangs bzw. Zierwegs <paramref name="zugang"/> (Feld <c>weg</c>: Tuer, Punkt davor) rechtwinklig bis zur
     /// Strasse fuehren und <c>radien</c> setzen. true = Strasse erreicht (sonst bleibt der Weg, wie er war, ohne Radien).
     /// </summary>
-    internal static bool WegRechtwinklig(PyObjekt zugang, (double X, double Y, double W, double H) haus, IReadOnlyList<List<Vector2>> strassen, IReadOnlyList<Vector2>? laternen = null)
+    /// <param name="lage">S 0.49.0 (Weisung P12-231 Antwort 4c): feine Drehung des Hauses; <paramref name="haus"/> ist dann seine
+    /// Flaeche im Rahmen des Hauses, und der Weg wird dort geplant (gerade aus der Tuer, Knicke parallel und rechtwinklig zu den
+    /// Waenden, runde Ecken, kuerzester Weg zur Strasse) und danach in die Stadt gedreht.</param>
+    internal static bool WegRechtwinklig(PyObjekt zugang, (double X, double Y, double W, double H) haus, IReadOnlyList<List<Vector2>> strassen,
+        IReadOnlyList<Vector2>? laternen = null, Hausdrehung.Feinlage lage = default)
     {
         var weg = (List<object?>)zugang["weg"]!;
         if (WegAlt.Value)
@@ -44,11 +52,30 @@ public static partial class GebaeudeTuer
         {
             return false;
         }
-        var tuer = Lesen(weg[0]);
-        var vor = Lesen(weg[1]);
+        if (SchraegWeltAlt.Value && lage.Aktiv)
+        {
+            // Gegenprobe: in der Stadt achsrecht um den Kasten des gedrehten Hauses (Rahmen der Stadt statt des Hauses)
+            var ecken = lage.Ecken(haus.X, haus.Y, haus.X + haus.W, haus.Y + haus.H);
+            var (ex, ey) = (ecken.Min(e => e.X), ecken.Min(e => e.Y));
+            (haus, lage) = ((ex, ey, ecken.Max(e => e.X) - ex, ecken.Max(e => e.Y) - ey), default);
+        }
+        var tuer = lage.Zurueck(Lesen(weg[0]));
+        var vor = lage.Zurueck(Lesen(weg[1]));
         var min = new Vector2((float)haus.X, (float)haus.Y);
         var max = new Vector2((float)(haus.X + haus.W), (float)(haus.Y + haus.H));
+        if (lage.Aktiv)
+        {
+            // Tuer und erster Schritt genau auf die Achse des Hauses (Runden auf 0,001 dreht sie sonst um einen Hauch)
+            var d = vor - tuer;
+            vor = tuer + (MathF.Abs(d.X) >= MathF.Abs(d.Y) ? new Vector2(d.X, 0) : new Vector2(0, d.Y));
+            strassen = [.. strassen.Select(l => l.Select(lage.Zurueck).ToList())];
+            laternen = [.. laternen.Select(lage.Zurueck)];
+        }
         var bester = Planen(tuer, vor, min, max, strassen, laternen);
+        if (bester is not null && lage.Aktiv)
+        {
+            bester = [.. bester.Select(lage.Punkt)];
+        }
         if (bester is null)
         {
             return false;

@@ -266,9 +266,9 @@ public static partial class StadtbauMessung
             Fund("Kamera-Karte Gegenprobe: ohne Platz unten verdeckt sie nichts (Probe taugt nicht)");
         }
 
-        // (f) „Prüfen – n rot“
+        // (f) „Prüfen – n rot“, seit S 0.49.0 (Weisung P12-231 Antwort 2c) „Stadt – n rot“
         var rot = a.AussenFunde.Count(x => x.Rot);
-        var soll = rot > 0 ? Texte.PruefenRot(rot) : Texte.PruefenGruen;
+        var soll = Texte.FundeStadtTitel(rot);
         if (a.PruefenDraussen?.Titel != soll)
         {
             Fund("Pruefen: Kopf \"" + a.PruefenDraussen?.Titel + "\" statt \"" + soll + "\"");

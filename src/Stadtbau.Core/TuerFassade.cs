@@ -85,10 +85,40 @@ public sealed class TuerFassade
     public static bool TiefeAltFuerTests { get => TiefeAlt.Value; set => TiefeAlt.Value = value; }
     private static readonly AsyncLocal<bool> TiefeAlt = new();
 
-    public IReadOnlyList<Wand> Waende => _waende;
+    /// <summary>Waende in der Stadt (bei einem schraeg gedrehten Haus gedreht, <see cref="Fein"/>).</summary>
+    public IReadOnlyList<Wand> Waende => _fein.Aktiv ? _weltWaende ??= [.. _waende.Select(Welt)] : _waende;
 
-    /// <summary>Gezeichnete Bloecke des Hauses (x1, z1, x2, z2).</summary>
+    /// <summary>
+    /// Gezeichnete Bloecke des Hauses (x1, z1, x2, z2) im Rahmen des Hauses. Bei einem schraeg gedrehten Haus liegen sie in der
+    /// Stadt mit <see cref="Fein"/> gedreht (<see cref="Hausdrehung.Feinlage.Ecken"/>), sonst genau so.
+    /// </summary>
     public IReadOnlyList<(float X1, float Z1, float X2, float Z2)> Bloecke => _bloecke;
+
+    /// <summary>
+    /// Welle S 0.49.0 (Weisung P12-231 Antwort 4c, Sammelliste 314): feine Drehung des Hauses. Die Fassade ist im Rahmen des
+    /// Hauses gerechnet (das Haus ohne feine Drehung, wie das Spiel es baut, bevor es dreht); Punkte und Richtungen nach aussen
+    /// (<see cref="Waende"/>, <see cref="Finden"/>, <see cref="TuerZiele"/>) sind in der Stadt.
+    /// </summary>
+    public Hausdrehung.Feinlage Fein => _fein;
+
+    private Hausdrehung.Feinlage _fein;
+    private List<Wand>? _weltWaende;
+
+    private Wand Welt(Wand w) => w with { A = _fein.Punkt(w.A), B = _fein.Punkt(w.B), Aussen = _fein.Richtung(w.Aussen) };
+
+    private Platz Welt(Platz p)
+    {
+        if (!_fein.Aktiv)
+        {
+            return p;
+        }
+        var q = _fein.Punkt(p.Punkt);
+        return p with { Punkt = new Vector2(MathF.Round(q.X, 3), MathF.Round(q.Y, 3)), Aussen = _fein.Richtung(p.Aussen), Gezeichnet = _fein.Punkt(p.Gezeichnet) };
+    }
+
+    /// <summary>Gegenprobe Welle S 0.49.0: an einem schraeg gedrehten Haus keine Fassade (wie bis S 0.48.0 gesperrt, nur Tests, je Ablauf).</summary>
+    public static bool SchraegAltFuerTests { get => SchraegAlt.Value; set => SchraegAlt.Value = value; }
+    private static readonly AsyncLocal<bool> SchraegAlt = new();
 
     private readonly List<Wand> _waende = [];
     private readonly List<(float X1, float Z1, float X2, float Z2)> _bloecke = [];
@@ -111,8 +141,19 @@ public sealed class TuerFassade
     /// <summary>Fassade des Hauses <paramref name="s"/> aus dem Projekt (baut die Szene, darf im Hintergrund laufen); null ohne Haus.</summary>
     public static TuerFassade? Rechnen(Projekt p, PyObjekt aussen, AussenStelle s)
     {
-        var stand = StandOhneVersatz(aussen, s);
-        return p.SzeneOhneLaternen(stand, mitGebaeuden: true) is { } szene ? Aus(szene, stand, s, p.Daten) : null;
+        // S 0.49.0: ein schraeg gedrehtes Haus im Rahmen des Hauses rechnen (ohne feine Drehung, Tuer und Weg zurueckgedreht)
+        var lage = AussenBearbeitung.Gueltig(aussen, s) ? AussenBearbeitung.HausLage(aussen, s) : default;
+        if (lage.Aktiv && SchraegAlt.Value)
+        {
+            return null;
+        }
+        var stand = StandOhneVersatz(lage.Aktiv ? AussenBearbeitung.OhneFeinDrehung(aussen, s) : aussen, s);
+        if (p.SzeneOhneLaternen(stand, mitGebaeuden: true) is not { } szene || Aus(szene, stand, s, p.Daten) is not { } f)
+        {
+            return null;
+        }
+        f._fein = lage;
+        return f;
     }
 
     /// <summary>Fassade des Hauses <paramref name="s"/> in der Szene (gebaut aus <see cref="StandOhneVersatz"/>), null ohne Haus.</summary>
@@ -468,9 +509,12 @@ public sealed class TuerFassade
     /// Platz fuer einen Tipp bei <paramref name="p"/>. <paramref name="bisherWand"/>: Wand der Tuer bisher bzw. des letzten
     /// Zugschritts (Frage 3 = a: hinter dem Wandende bleibt die Tuer an ihr). <paramref name="einrasten"/>: Schalter „Einrasten“.
     /// </summary>
-    public Platz Finden(Vector2 p, int? bisherWand, bool einrasten)
+    public Platz Finden(Vector2 p, int? bisherWand, bool einrasten) => Welt(FindenImHaus(_fein.Zurueck(p), bisherWand, einrasten));
+
+    /// <summary>Wie <see cref="Finden"/>, Punkt und Ergebnis im Rahmen des Hauses.</summary>
+    private Platz FindenImHaus(Vector2 p, int? bisherWand, bool einrasten)
     {
-        var w = WandFuer(p, bisherWand);
+        var w = WandImHaus(p, bisherWand);
         var wand = _waende[w];
         var l = wand.Laenge;
         var e = TuerSetzen.EckAbstand;
@@ -549,7 +593,9 @@ public sealed class TuerFassade
     /// (die naechste). Hinter einem Wandende (keine Spanne, oder nur die Nachbarwand innerhalb von EckAbstand vor der Ecke) bleibt
     /// eine anliegende bisherige Wand; sonst die Wand, ueber deren Ende der Punkt weiter hinaus liegt.
     /// </summary>
-    public int WandFuer(Vector2 p, int? bisherWand)
+    public int WandFuer(Vector2 p, int? bisherWand) => WandImHaus(_fein.Zurueck(p), bisherWand);
+
+    private int WandImHaus(Vector2 p, int? bisherWand)
     {
         var block = Enumerable.Range(0, _bloecke.Count).MinBy(b => AbstandZumRand(_bloecke[b], p));
         var eigene = Enumerable.Range(0, _waende.Count).Where(i => _waende[i].Block == block).ToList();
@@ -591,7 +637,7 @@ public sealed class TuerFassade
 
     /// <summary>Sammelliste 276: Ziele der Tueren des Modells an einer Wand (Stelle laengs der Wand, gezeichnete Mitte).</summary>
     public IReadOnlyList<(float T, Vector2 Gezeichnet)> TuerZiele(int wand, bool ohneTore = false) =>
-        [.. _modellTueren[wand].Where(m => !ohneTore || !m.Eigene).Select(m => (m.T, m.Gezeichnet))];
+        [.. _modellTueren[wand].Where(m => !ohneTore || !m.Eigene).Select(m => (m.T, _fein.Punkt(m.Gezeichnet)))];
 
     /// <summary>
     /// Weisung P12-212 Punkt 1: hat die Wand ein Tor? Hier: eine eigene Tuer des Modells wie in der Ausgangsstadt, die das Spiel
