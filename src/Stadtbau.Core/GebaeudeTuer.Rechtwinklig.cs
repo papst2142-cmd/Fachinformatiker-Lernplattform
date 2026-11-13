@@ -221,6 +221,14 @@ public static partial class GebaeudeTuer
     /// andere Strassenmitte, ist mindestens <see cref="QuerMindestens"/> lang, das Ende liegt nicht naeher als
     /// <see cref="LaterneFrei"/> an einer Laterne, alles hoechstens <see cref="WegHoechstens"/>. Null = keiner.
     /// </summary>
+    /// <summary>Abstand der Wegmitte zum Haus am schraegen Haus: halbe Wegbreite und ein wenig Luft.</summary>
+    public const float KurzAbstand = (StadtSzene.WegBreite / 2) + 0.05f;
+
+    private static readonly AsyncLocal<bool> KurzOhneAbstand = new();
+
+    /// <summary>Nur Gegenprobe: nur die Mittellinie gegen das Haus pruefen (erster Stand von S 0.49.1, das Band streifte die Ecke).</summary>
+    internal static bool KurzOhneAbstandFuerTests { get => KurzOhneAbstand.Value; set => KurzOhneAbstand.Value = value; }
+
     internal static List<Vector2>? PlanenKurz(Vector2 tuer, Vector2 vor, Vector2 min, Vector2 max, IReadOnlyList<List<Vector2>> strassen, IReadOnlyList<Vector2> laternen)
     {
         var e = UmDieEcke;
@@ -272,6 +280,9 @@ public static partial class GebaeudeTuer
             var hinten = MathF.Abs(n.X) < 0.5f ? new Vector2(c.X, n.Y > 0 ? min.Y - e : max.Y + e) : new Vector2(n.X > 0 ? min.X - e : max.X + e, c.Y);
             anfaenge.Add([tuer, vor, c, hinten]);
         }
+        // jedes Stueck ausser dem ersten (aus der Tuer) haelt mit dem ganzen Band Abstand zum Haus: es darf keine Hausecke streifen
+        var band = KurzOhneAbstand.Value ? Vector2.Zero : new Vector2(KurzAbstand);
+        var (aMin, aMax) = (min - band, max + band);
         List<Vector2>? bester = null;
         var besteLaenge = float.MaxValue;
         foreach (var zug in anfaenge)
@@ -279,7 +290,7 @@ public static partial class GebaeudeTuer
             var frei = true;
             for (var i = 0; i + 1 < zug.Count && frei; i++)
             {
-                frei = !SchneidetHaus(zug[i], zug[i + 1], min, max);
+                frei = !SchneidetHaus(zug[i], zug[i + 1], i == 0 ? min : aMin, i == 0 ? max : aMax);
             }
             var laengeBis = Laenge(zug);
             if (!frei || laengeBis >= besteLaenge)
@@ -296,7 +307,7 @@ public static partial class GebaeudeTuer
                     continue;
                 }
                 if ((!LaternenEgalFuerTests.Value && laternen.Any(q => Vector2.Distance(q, ziel) <= LaterneFrei))
-                    || SchneidetHaus(w, ziel, min, max) || UeberStrasse(w, ziel, strassen))
+                    || SchneidetHaus(w, ziel, aMin, aMax) || UeberStrasse(w, ziel, strassen))
                 {
                     continue;
                 }
