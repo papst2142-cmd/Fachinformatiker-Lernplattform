@@ -86,6 +86,9 @@ public static partial class StadtbauMessung
         // S 0.50.0 (Weisung P12-234): Moebel in 3D setzen, schieben, drehen, loeschen
         await InnenBauen3DAsync(a, f);
 
+        // S 0.52.0 (Sammelliste 334): Kamera-Karte einklappen, Figur nicht im Moebel
+        await Innen334Async(a, f);
+
         // Figur laufen lassen: aus = Tippen bewegt nichts (Gegenprobe), an = die Figur geht los
         var mitte = new Point(a.Innen3DFlaeche.Bounds.Width / 2, a.Innen3DFlaeche.Bounds.Height / 2);
         a.Innen3DFigurLaufen = false;

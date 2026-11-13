@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.52.0
+
+Rote Funde mit einem Knopf beheben, gesperrte Knöpfe sichtbar grau, Kamera-Karte einklappen und klarere Hügel.
+
+- Über der Liste „Stadt – n rot“ steht der Knopf „Alle beheben, die sicher gehen“, sobald mindestens ein roter Fund einen sicheren Vorschlag hat. Er behebt drei Arten von Funden: eine Laterne, die falsch steht, wird versetzt; eine Tür, die nicht sauber in der Wand sitzt, kommt auf die nächste glatte Stelle derselben Wand (kein Fenster wird dabei zur Tür); ein Fußweg, der keine Straße erreicht, wird neu bis zur Straße geführt. Jede einzelne Änderung zählt nur, wenn dadurch kein neuer roter Fund entsteht.
+- Die Suche läuft im Hintergrund, die Zeile darunter zeigt „Suche sichere Behebungen …“. Danach ist alles zusammen ein einziger Schritt: einmal „Rückgängig“ nimmt alle Behebungen zurück. Die Zeile meldet „n behoben, m bleiben“; was bleibt, bitte von Hand beheben.
+- Gesperrte Knöpfe und Schalter in den Katalog-Flächen links (zum Beispiel „Hügel“ bei 16 Hügeln) sehen jetzt deutlich blasser aus als freie, hell und dunkel, am PC und am Tablet. Vorher sahen sie genauso aus wie freie Knöpfe.
+- Innenraum in 3D: Die Kamera-Karte hat oben den Knopf „Einklappen“. Eingeklappt bleibt nur der Knopf „Kamera“ stehen, ein Tipp darauf zeigt die Karte wieder ganz.
+- Innenraum in 3D: Steht an der Tür ein Möbel, beginnt die Figur auf der nächsten freien Stelle davor und nicht mehr im Möbel.
+- Hügel: Wer einen Hügel auf Gelände setzt, das dort schon höher gemalt ist (oder in einen größeren Hügel), sieht ihn nicht. Das Werkzeug sagt das jetzt sofort und nennt, was hilft (Gelände senken oder den Hügel höher machen). Vorher stand nur „Hügel gesetzt“.
+
 ## S 0.51.0
 
 Straßen mit Ausstattung in einem Schritt ziehen, eigene Straßen-Vorlagen speichern, Hügel und gemalte Höhen gemeinsam wählen.

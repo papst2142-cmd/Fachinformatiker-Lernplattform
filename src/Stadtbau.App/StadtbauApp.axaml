@@ -75,5 +75,12 @@
 
     <Application.Styles>
         <FluentTheme />
+        <!-- S 0.52.0 (Weisung P12-243 Punkt 2, Sammelliste 337): ein gesperrter Knopf im Katalog (z. B. „Hügel“ bei 16
+             Hügeln) sieht sichtbar blasser aus als die freien. Die Knoepfe setzen Schrift und Flaeche selbst, darum greift
+             das graue Aussehen von Fluent nicht; die Deckkraft macht Schrift und Flaeche zusammen blasser. Klasse
+             „katalog“ an den Katalog-Flaechen (Hauptansicht.KatalogGesperrt.cs), Pruefung im Start-Test mit Gegenprobe. -->
+        <Style Selector=":is(Control).katalog Button:disabled, :is(Control).katalog CheckBox:disabled, Button.katalog:disabled">
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
     </Application.Styles>
 </Application>
