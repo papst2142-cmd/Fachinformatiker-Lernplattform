@@ -170,6 +170,11 @@ public sealed class SpielMitfahrtTests
             {
                 funde.Add($"Tag {tag}, Haltestelle {h.Nr}: steht nicht neben Haltestelle {soll}");
             }
+            // derselbe Bus bietet nach dem Aussteigen nicht gleich wieder „Einsteigen“ an, die Zeile bleibt
+            if (spiel.BusZumEinsteigen is not null || !spiel.Zeile.Contains("Ausgestiegen", StringComparison.Ordinal))
+            {
+                funde.Add($"Tag {tag}, Haltestelle {h.Nr}: nach dem Aussteigen Bus {spiel.BusZumEinsteigen}, Zeile {spiel.Zeile}");
+            }
             Assert.Equal(zeilen + 1, spiel.Ablauf.Stand.Verlauf.Count);
             var e = spiel.Ablauf.Stand.Verlauf[^1];
             Assert.Equal(Stadt.Gelaufen, e.Art);

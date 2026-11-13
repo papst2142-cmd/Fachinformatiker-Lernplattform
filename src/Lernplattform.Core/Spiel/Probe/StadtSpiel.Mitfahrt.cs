@@ -89,6 +89,7 @@ public sealed partial class StadtSpiel
     private (int Bus, int Nr)? _verlaengert;
     private Vector2 _steigZiel;
     private int _ausHalt;
+    private (int Bus, int Nr)? _ausgestiegen;
 
     /// <summary>Wo die Figur an der Haltestelle wartet und nach dem Aussteigen steht (Mitte des Gehwegs neben dem Schild).</summary>
     public static Vector2 Wartplatz(Haltestelle h) =>
@@ -286,6 +287,11 @@ public sealed partial class StadtSpiel
                 if (Gehen(sekunden))
                 {
                     Mitfahrt = Mitfahrt.Keine;
+                    // derselbe Bus bietet an dieser Haltestelle nicht gleich wieder „Einsteigen“ an (und wartet nicht laenger);
+                    // die Zeile „Ausgestiegen …“ bleibt stehen
+                    _ausgestiegen = (_mitBus, _ausHalt);
+                    _verlaengert = (_mitBus, _ausHalt);
+                    WartetAn = _ausHalt;
                     _mitBus = 0;
                     ImFreien = true;
                     HaltestellePruefen(verkehr);
@@ -302,7 +308,8 @@ public sealed partial class StadtSpiel
         if (verkehr is not null && !ImInnenraum && ImFreien && !Geht && Etage == 0 && !MitBusUnterwegs && Szene.Haltestellen.Count > 0)
         {
             an = HaltestelleBei(FigurX, FigurZ);
-            if (an is { } nr && verkehr.Autos.FirstOrDefault(a => a.Nummer >= Buslinie.ErsteNummer && a.HaeltAn == nr && a.HaltRest > 0) is { } b)
+            if (an is { } nr && verkehr.Autos.FirstOrDefault(a => a.Nummer >= Buslinie.ErsteNummer && a.HaeltAn == nr && a.HaltRest > 0
+                && _ausgestiegen != (a.Nummer, nr)) is { } b)
             {
                 bus = b.Nummer;
                 if (_verlaengert != (b.Nummer, nr))
@@ -316,6 +323,10 @@ public sealed partial class StadtSpiel
         if (verkehr?.Autos.Any(a => _verlaengert is { } v && a.Nummer == v.Bus && a.HaeltAn == v.Nr) != true)
         {
             _verlaengert = null;
+        }
+        if (verkehr?.Autos.Any(a => _ausgestiegen is { } v && a.Nummer == v.Bus && a.HaeltAn == v.Nr) != true)
+        {
+            _ausgestiegen = null;
         }
         if (an == WartetAn && bus == BusZumEinsteigen)
         {
