@@ -1418,6 +1418,12 @@ public static partial class Texte
     public const string LaterneKeinPlatz = "In der Nähe ist keine freie Stelle für diese Laterne. Laterne löschen oder Platz schaffen (Baum, Stück oder Weg verschieben).";
     public const string LaterneVersetzenVeraltet = "Die Stadt hat sich inzwischen geändert. Bitte noch einmal „Laterne versetzen“ drücken.";
 
+    // S 0.52.0 Kamera-Karte einklappen (Sammelliste 334)
+    public const string KameraEinklappen = "Einklappen";
+    public const string KameraEinklappenTipp = "Klappt die Kamera-Karte ein, damit sie nichts von der Ansicht verdeckt. Ein Tipp auf „Kamera“ zeigt sie wieder.";
+    public const string KameraAufklappen = "Kamera";
+    public const string KameraAufklappenTipp = "Zeigt die Kamera-Karte wieder mit allen Knöpfen und Schaltern.";
+
     // S 0.52.0 Alle beheben, die sicher gehen (Weisung P12-231 Punkt 5)
     public const string AlleBeheben = "Alle beheben, die sicher gehen";
     public const string AlleBehebenTipp = "Behebt alle roten Funde, für die es einen sicheren Vorschlag gibt: Laterne versetzen, Tür auf die nächste glatte Stelle, Fußweg neu an die Straße. Jede Änderung zählt nur, wenn dadurch kein neuer roter Fund entsteht. Alles zusammen ist ein Schritt und lässt sich mit einem Mal Rückgängig zurücknehmen.";

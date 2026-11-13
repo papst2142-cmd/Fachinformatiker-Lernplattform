@@ -57,12 +57,38 @@ public static class Innen3D
     /// </summary>
     public static Vector3 Start(PyObjekt innenraeume, string ort, int etage, Innenraum innen)
     {
+        Vector3 start;
         if (etage == 0)
         {
-            return new Vector3(innen.StartX, innen.StartZ, 90);
+            start = new Vector3(innen.StartX, innen.StartZ, 90);
         }
-        var eg = innenraeume[ort] is PyObjekt o && o["gebaeude"] is PyObjekt g ? g : null;
-        var halt = eg is null ? null : Etagen.Uebergaenge(eg, ort).Select(u => u.Auf(etage)).FirstOrDefault(h => h is not null);
-        return halt is null ? new Vector3(innen.Breite / 2, innen.Tiefe / 2, 90) : new Vector3((float)halt.X, (float)halt.Y, halt.Blick);
+        else
+        {
+            var eg = innenraeume[ort] is PyObjekt o && o["gebaeude"] is PyObjekt g ? g : null;
+            var halt = eg is null ? null : Etagen.Uebergaenge(eg, ort).Select(u => u.Auf(etage)).FirstOrDefault(h => h is not null);
+            start = halt is null ? new Vector3(innen.Breite / 2, innen.Tiefe / 2, 90) : new Vector3((float)halt.X, (float)halt.Y, halt.Blick);
+        }
+        return FigurFrei(start, innen);
+    }
+
+    /// <summary>Gegenprobe Sammelliste 334 (nur Tests, je Ablauf): die Figur bleibt im Moebel stehen (wie bis S 0.51.0).</summary>
+    public static bool FigurImMoebelAltFuerTests { get => FigurImMoebelAlt.Value; set => FigurImMoebelAlt.Value = value; }
+    private static readonly AsyncLocal<bool> FigurImMoebelAlt = new();
+
+    /// <summary>
+    /// Welle S 0.52.0 (Sammelliste 334, Weisung P12-238 Punkt 7: Loesung nur im Werkzeug): landet beim Bauen ein Moebel auf der
+    /// Stelle der Figur (z. B. der Tresen vor der Tuer), stand sie bis S 0.51.0 im Moebel. Jetzt kommt sie auf die naechste
+    /// Stelle, an der sie im Spiel stehen kann (<see cref="Wege.KannStehen"/>, <see cref="Wege.NaechsteFrei"/>); der Blick bleibt.
+    /// Gibt es keine freie Stelle, bleibt sie, wo sie war. Das Spiel aendert sich dadurch nicht.
+    /// </summary>
+    public static Vector3 FigurFrei(Vector3 start, Innenraum innen)
+    {
+        if (FigurImMoebelAlt.Value || Wege.KannStehen(start.X, start.Y, innen.Lauf)
+            || Wege.NaechsteFrei(start.X, start.Y, innen.Lauf.Frei) is not { } zelle)
+        {
+            return start;
+        }
+        var (x, z) = Wege.Mitte(zelle);
+        return new Vector3((float)x, (float)z, start.Z);
     }
 }
