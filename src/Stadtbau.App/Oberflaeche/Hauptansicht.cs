@@ -963,9 +963,9 @@ public sealed partial class Hauptansicht : UserControl
             Gruppe(Schrift.Text(Texte.MeineBlueprints, "Klein", FontWeight.Bold), Texte.TippMeineBlueprints), Schrift.Text(Texte.BlueprintsHinweis, "Klein", farbe: "Pinsel.muted"), _blueprintListe);
         _gruppenLinks.AddRange([strassen, naturGruppe, wasserGruppe, gebaeude]);
         GruppenEinrichten();
-        var links = new StackPanel { Spacing = 8, Children = { _keinTreffer, _aussenHinweis, _setzenBeendenLinks, strassen, naturGruppe, wasserGruppe, gebaeude } };
+        var links = KatalogFlaeche(new StackPanel { Spacing = 8, Children = { _keinTreffer, _aussenHinweis, _setzenBeendenLinks, strassen, naturGruppe, wasserGruppe, gebaeude } });
         // Suche oben, „Voller Katalog“ immer sichtbar unten
-        var vollerKatalog = VollerKatalogKnopf(false);
+        var vollerKatalog = KatalogFlaeche(VollerKatalogKnopf(false));
         vollerKatalog.Margin = new Thickness(0, 8, 0, 0);
         var linksRaster = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(12, 12, 0, 12) };
         _suche.Margin = new Thickness(0, 0, 0, 8);
@@ -1047,7 +1047,7 @@ public sealed partial class Hauptansicht : UserControl
         var k = innen ? _katalogInnen : _katalogAussen;
         if (k is null)
         {
-            k = new KatalogAnsicht { Margin = new Thickness(12) };
+            k = KatalogFlaeche(new KatalogAnsicht { Margin = new Thickness(12) });
             Grid.SetColumnSpan(k, 2);
             k.Geschlossen += () => KatalogSchliessen(innen);
             k.Gewaehlt += e =>
@@ -2318,7 +2318,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         var ortTitel = Gruppe(Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl), Texte.TippOrt);
         // Welle Q (Weisung P12-76): die Etagen stehen rechts unter „Ausgewähltes Stück“
-        var links = new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } };
+        var links = KatalogFlaeche(new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } });
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();

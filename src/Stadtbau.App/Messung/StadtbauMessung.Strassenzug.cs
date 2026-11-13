@@ -290,6 +290,8 @@ public static partial class StadtbauMessung
         }
         await AlleGroessenAsync(a, f, "Huegel Hoechstzahl");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        // S 0.52.0 (Sammelliste 337): gesperrt sichtbar blasser als frei, mit Gegenprobe
+        await KatalogGesperrtAsync(a, f, hk);
         p.AussenAendern("Hügel", aa => AussenBearbeitung.Loeschen(aa, new AussenStelle(AussenArt.Huegel, 0)));
         await a.AussenGeprueft;
         if (!hk.IsEnabled || a.HuegelGrundZeile?.IsVisible == true)
