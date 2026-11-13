@@ -62,7 +62,10 @@ public sealed partial class KartenFlaeche
         object? eintrag = s.Art == AussenArt.Haus ? AussenBearbeitung.Ort(stand, s.Ort!)
             : s.Nummer >= 0 && s.Nummer < Aussen.Landschaft(stand).Count ? Aussen.Landschaft(stand)[s.Nummer] : null;
         var dreh = Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.SpielDaten.Get(daten, "darstellung"), "hausdreh"), s.Ort ?? "");
+        // S 0.49.0: auch die feine Drehung eines Orts (hausgrad)
+        var grad = Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.Py.Get(Lernplattform.Core.Spiel.SpielDaten.Get(daten, "darstellung"), "hausgrad"), s.Ort ?? "");
         return string.Join("|", flaeche.ToString(), Lernplattform.Core.Daten.PythonJson.Text(eintrag), Lernplattform.Core.Daten.PythonJson.Text(dreh),
+            Lernplattform.Core.Daten.PythonJson.Text(grad),
             Lernplattform.Core.Daten.PythonJson.Text(Lernplattform.Core.Spiel.SpielDaten.Get(daten, "bauteile")));
     }
 
@@ -294,7 +297,7 @@ public sealed partial class KartenFlaeche
         }
         // S 0.33.0: auch an den gezeichneten Bloecken (Vorbau, Bahnsteig, Vordach ragen ueber das Rechteck der Daten)
         return Abstand(x, y, hx, hy, hx + hw, hy + hh) <= grenze
-            || Fassade?.Bloecke.Any(b => Abstand(x, y, b.X1, b.Z1, b.X2, b.Z2) <= grenze) == true;
+            || (Fassade is { } fa && fa.Fein.Zurueck(new Vector2((float)x, (float)y)) is var q && fa.Bloecke.Any(b => Abstand(q.X, q.Y, b.X1, b.Z1, b.X2, b.Z2) <= grenze));
     }
 
     /// <summary>Vorschau der Tuer an die Weltstelle (x, y): gleiche Rechnung wie der Schritt.</summary>
@@ -454,13 +457,28 @@ public sealed partial class KartenFlaeche
             // S 0.33.0: die gezeichneten Waende (Bloecke des Hauses), an die die Tuer kommt
             foreach (var b in f.Bloecke)
             {
-                ctx.DrawRectangle(null, stift, new Rect(P(b.X1, b.Z1), P(b.X2, b.Z2)));
+                if (!f.Fein.Aktiv)
+                {
+                    ctx.DrawRectangle(null, stift, new Rect(P(b.X1, b.Z1), P(b.X2, b.Z2)));
+                    continue;
+                }
+                // S 0.49.0: schraeg gedrehtes Haus, die Bloecke gedreht wie im Spiel
+                var e = f.Fein.Ecken(b.X1, b.Z1, b.X2, b.Z2);
+                for (var i = 0; i < e.Length; i++)
+                {
+                    var (a, c) = (e[i], e[(i + 1) % e.Length]);
+                    ctx.DrawLine(stift, P(a.X, a.Y), P(c.X, c.Y));
+                }
             }
         }
         else
         {
-            var (x, y, w, h) = AussenBearbeitung.HausFlaeche(p.AussenStand, s);
-            ctx.DrawRectangle(null, stift, new Rect(P(x, y), P(x + w, y + h)));
+            var e = AussenBearbeitung.HausEcken(p.AussenStand, s);
+            for (var i = 0; i < e.Length; i++)
+            {
+                var (a, c) = (e[i], e[(i + 1) % e.Length]);
+                ctx.DrawLine(stift, P(a.X, a.Y), P(c.X, c.Y));
+            }
         }
         if (TuerVorschau is { } v)
         {

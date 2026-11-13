@@ -234,6 +234,21 @@ public static partial class AussenBearbeitung
         return true;
     }
 
+    /// <summary>
+    /// Welle S 0.49.0 (Weisung P12-231 Antwort 4c): Kopie des Stands, in der das Haus <paramref name="s"/> ohne feine Drehung steht
+    /// (nur seine Viertel), Tuer, Fussweg und Schild mit zurueckgedreht. So steht es im Rahmen des Hauses, in dem das Spiel es baut,
+    /// bevor es das Ganze dreht. Ohne feine Drehung eine unveraenderte Kopie.
+    /// </summary>
+    internal static PyObjekt OhneFeinDrehung(PyObjekt aussen, AussenStelle s)
+    {
+        var k = (PyObjekt)Py.Kopie(aussen)!;
+        if (HausGrad(k, s) is var grad and not 0)
+        {
+            HausFeinDrehen(k, s, -grad);
+        }
+        return k;
+    }
+
     /// <summary>Zugaenge eines Hauses: Zugang des Orts bzw. die Zierwege eines Gebaeudes ohne Ort.</summary>
     private static List<PyObjekt> HausZugaenge(PyObjekt aussen, AussenStelle s) => s.Art == AussenArt.Gebaeude
         ? [.. Zierwege(aussen, Py.Str(Objekt(Aussen.Landschaft(aussen)[s.Nummer])["modell"]))]

@@ -25,12 +25,17 @@ public sealed partial class DreiBedienung
         // S 0.33.0 (Weisung P12-148 Frage 1 = a): Treffer auf die gezeichneten Bloecke des Hauses (dort sitzt die Tuer)
         if (haus is not null && _karte.Fassade is { } f)
         {
-            var naechster = f.Bloecke.Select(b => Bauen3D.Schnitt(strahl.Start, strahl.Richtung, new System.Numerics.Vector3(b.X1, 0, b.Z1), new System.Numerics.Vector3(b.X2, haus.Max.Y, b.Z2)))
+            // S 0.49.0: die Bloecke eines schraeg gedrehten Hauses liegen im Rahmen des Hauses, der Strahl wird dorthin gedreht
+            var fein = f.Fein;
+            var s0 = fein.Zurueck(new Vector2(strahl.Start.X, strahl.Start.Z));
+            var r0 = fein.RichtungZurueck(new Vector2(strahl.Richtung.X, strahl.Richtung.Z));
+            var (start, richtung) = (new System.Numerics.Vector3(s0.X, strahl.Start.Y, s0.Y), new System.Numerics.Vector3(r0.X, strahl.Richtung.Y, r0.Y));
+            var naechster = f.Bloecke.Select(b => Bauen3D.Schnitt(start, richtung, new System.Numerics.Vector3(b.X1, 0, b.Z1), new System.Numerics.Vector3(b.X2, haus.Max.Y, b.Z2)))
                 .Where(t => t is not null).Min();
             if (naechster is { } tb)
             {
-                var q = strahl.Start + (strahl.Richtung * tb);
-                return new Vector2(q.X, q.Z);
+                var q = start + (richtung * tb);
+                return fein.Punkt(new Vector2(q.X, q.Z));
             }
         }
         if (haus is not null && Bauen3D.Schnitt(strahl.Start, strahl.Richtung, haus.Min, haus.Max) is { } t)
