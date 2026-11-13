@@ -730,6 +730,7 @@ public sealed partial class Hauptansicht : UserControl
             KnoepfeFreigeben();
         }
         _aussenStand++;
+        Innen3DProjektGeaendert();
         Karte.LaterneVorschlag = null;
         GeschichteNeu();
         _dreiAenderung = Stopwatch.GetTimestamp();
@@ -2352,8 +2353,9 @@ public sealed partial class Hauptansicht : UserControl
         _kameraInnen.MaxWidth = 440;
         var flaechenRahmen = new Border { Child = Flaeche, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
             .Farbe(Border.BorderBrushProperty, "Pinsel.border");
-        var mitte = Kamerakarte.Ueber(flaechenRahmen, _kameraInnen, h => Flaeche.UntenFrei = h);
-        mitte.Margin = new Thickness(12);
+        var grundrissMitte = Kamerakarte.Ueber(flaechenRahmen, _kameraInnen, h => Flaeche.UntenFrei = h);
+        // S 0.49.0 (Weisung P12-231 Antwort 1a): die Mitte zeigt den Grundriss oder den Innenraum in 3D
+        var mitte = Innen3DMitteBauen(grundrissMitte, zoom);
 
         _grenzBalken.Farbe(ProgressBar.ForegroundProperty, "Pinsel.green");
         // Welle Q (Punkt 7): „Ausgewähltes Stück“ oben, dann Etagen, „Prüfen – n rot“ mit Grenzen und Funden, Raum
@@ -2418,6 +2420,7 @@ public sealed partial class Hauptansicht : UserControl
         RaumZeigen();
         KnoepfeFreigeben();
         PruefenStarten();
+        Innen3DOrtGeaendert();
         Melden(_projekt.OrtName(ort) + " geöffnet");
     }
 
@@ -2426,6 +2429,11 @@ public sealed partial class Hauptansicht : UserControl
         if (_projekt is null || _projekt.NurLesen)
         {
             return;
+        }
+        if (ZeigtInnen3D)
+        {
+            // S 0.49.0: in 3D wird nur angesehen; setzen geht im Grundriss
+            Innen3DZeigen(false);
         }
         Flaeche.SetzenTyp = typ;
         _katalogHinweis.Text = Bearbeitung.TeilName(typ) + ": " + Texte.SetzenAktiv;

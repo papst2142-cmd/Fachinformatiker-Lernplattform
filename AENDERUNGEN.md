@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.72.0
+Vorbereitung für das Stadtbau-Werkzeug, im Spiel ändert sich nichts.
+
+- Das Stadtbau-Werkzeug kann jetzt einen Innenraum so zeigen, wie das Spiel ihn zeichnet. Dafür hat das Spiel eine kleine Ergänzung bekommen, die nur das Werkzeug benutzt.
+- Spielstand, Geld, Aufgaben, die Stadt, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.71.0
 Die Spielstadt ist neu gebaut.
 
