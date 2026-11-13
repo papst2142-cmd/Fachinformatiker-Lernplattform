@@ -20,7 +20,8 @@ namespace Stadtbau.Oberflaeche;
 /// Kamera-Karte des Grundrisses). Die Mitte wechselt zwischen Grundriss und 3D; links und rechts bleiben. Tag oder Nacht,
 /// Etage, „Figur laufen lassen“ in der Karte unten rechts; Kamera wie im Spiel (ziehen, rechte Maustaste, Mausrad, zwei
 /// Finger). Gebaut wird im Hintergrund (<see cref="Innen3D.Bauen"/>), nach jeder Aenderung neu, der neueste Stand gewinnt.
-/// Hier wird nur angesehen: waehlt man links ein Stueck zum Setzen, kommt der Grundriss zurueck.
+/// S 0.50.0 (Weisung P12-234 mit P12-231 Antwort 1b): hier wird auch gebaut (<see cref="InnenDreiBedienung"/> ueber der Flaeche):
+/// Moebel setzen, waehlen, ziehen; Drehen, Kopieren und Loeschen ueber die Karte rechts und die Tasten wie im Grundriss.
 /// </summary>
 public sealed partial class Hauptansicht
 {
@@ -47,6 +48,11 @@ public sealed partial class Hauptansicht
     private Innen3D.Ergebnis? _innen3DLetzt;
     private long _innen3DAenderung;
     private TaskCompletionSource _innen3DFertig = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private InnenDreiBedienung? _innenBedienung;
+    private Control? _innen3DKarte;
+
+    /// <summary>S 0.50.0: die Ebene zum Bauen ueber der 3D-Flaeche des Innenraums (null, bis die 3D-Ansicht einmal offen war).</summary>
+    internal InnenDreiBedienung? InnenBedienung => _innenBedienung;
 
     /// <summary>Knopf „In 3D ansehen“ in der Kamera-Karte des Grundrisses (Start-Test).</summary>
     internal Button? Innen3DKnopf { get; private set; }
@@ -111,7 +117,14 @@ public sealed partial class Hauptansicht
             Innen3DAktualisieren();
         };
         _innen3DFigur.Vorlese(Texte.FigurLaufen).Mit(Texte.Innen3DFigurTipp);
-        _innen3DFigur.IsCheckedChanged += (_, _) => Innen3DFlaeche.OhneGehen = _innen3DFigur.IsChecked != true;
+        _innen3DFigur.IsCheckedChanged += (_, _) =>
+        {
+            Innen3DFlaeche.OhneGehen = _innen3DFigur.IsChecked != true;
+            if (_innenBedienung is not null)
+            {
+                _innenBedienung.FigurLaufen = _innen3DFigur.IsChecked == true;
+            }
+        };
         _innen3DEtage.Vorlese(Texte.Innen3DEtage).Mit(Texte.Innen3DEtageTipp);
         _innen3DEtage.SelectionChanged += (_, _) =>
         {
@@ -139,7 +152,13 @@ public sealed partial class Hauptansicht
         var karte = Kamerakarte.Bauen(zoom, new WrapPanel { Children = { _innen3DNacht, _innen3DFigur } }, _innen3DEtageZeile,
             Schrift.Text(Texte.Innen3DHinweis, "Klein", farbe: "Pinsel.muted"), _innen3DStatus);
         karte.MaxWidth = 440;
-        var rahmen = new Border { Child = Innen3DFlaeche, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
+        _innen3DKarte = karte;
+        var bedienung = new InnenDreiBedienung(Innen3DFlaeche, Flaeche, () => _innen3DLetzt?.Innen,
+            () => Anzeigen.Rahmen(_innenBedienung!, _innen3DKarte)) { FigurLaufen = _innen3DFigur.IsChecked == true };
+        bedienung.Vorlese(Texte.Innen3DKnopf);
+        _innenBedienung = bedienung;
+        var flaeche = new Panel { Children = { Innen3DFlaeche, bedienung } };
+        var rahmen = new Border { Child = flaeche, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) }
             .Farbe(Border.BorderBrushProperty, "Pinsel.border");
         return Kamerakarte.Ueber(rahmen, karte);
     }
@@ -154,7 +173,6 @@ public sealed partial class Hauptansicht
         _innen3DAn = an;
         if (an)
         {
-            Flaeche.SetzenTyp = null;
             _innen3DMitte ??= Innen3DFlaecheBauen();
             _innenMitte.Content = _innen3DMitte;
             _innen3DAenderung = Stopwatch.GetTimestamp();
@@ -184,6 +202,7 @@ public sealed partial class Hauptansicht
     private void Innen3DProjektGeaendert()
     {
         _innen3DWunsch++;
+        _innenBedienung?.StandGeaendert();
         if (ZeigtInnen3D)
         {
             _innen3DAenderung = Stopwatch.GetTimestamp();

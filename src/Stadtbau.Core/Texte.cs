@@ -306,19 +306,22 @@ public static partial class Texte
     public const string Ansicht3DHinweis = "Die 3D-Ansicht zeigt die Stadt so, wie das Spiel sie baut. Du baust hier wie in „Stadt von oben“: Stück links wählen und tippen setzt es, ein Stück antippen wählt es, ziehen verschiebt es. Auf freier Fläche ziehen bewegt die Kamera. Mit der rechten Maustaste drehst du sie (links und rechts) und kippst sie (hoch und runter); am Tablet drehst du sie mit zwei Fingern.";
 
     // S 0.49.0 (Weisung P12-231 Antwort 1a): Innenraum in 3D ansehen
-    public const string Innen3DKnopf = "In 3D ansehen";
-    public const string Innen3DTipp = "Zeigt diesen Innenraum so, wie das Spiel ihn zeichnet, mit Möbeln, Personen und Licht. Hier wird nur angesehen, gebaut wird im Grundriss.";
+    public const string Innen3DKnopf = "In 3D bauen";
+    public const string Innen3DTipp = "Zeigt diesen Innenraum so, wie das Spiel ihn zeichnet, mit Möbeln, Personen und Licht. Du kannst hier auch bauen: Möbel setzen, verschieben, drehen und löschen wie im Grundriss.";
     public const string Innen3DZurueck = "Zurück zum Grundriss";
     public const string Innen3DZurueckTipp = "Zeigt wieder den Grundriss zum Bearbeiten.";
     public const string Innen3DNachtTipp = "Zeigt den Innenraum am Abend mit eingeschaltetem Licht.";
     public const string Innen3DEtage = "Etage";
     public const string Innen3DEtageTipp = "Wählt die Etage, die die 3D-Ansicht zeigt.";
-    public const string Innen3DFigurTipp = "Tippen lässt die Figur dorthin laufen wie im Spiel. Ist der Schalter aus, bewegt Tippen nichts.";
+    public const string Innen3DFigurTipp = "Tippen lässt die Figur dorthin laufen wie im Spiel. Ist der Schalter aus, wählt und setzt Tippen Möbel.";
     public const string Innen3DBaut = "Der Innenraum wird in 3D gebaut …";
     public const string Innen3DFehler = "Der Innenraum lässt sich gerade nicht in 3D zeigen. Schau bei den Prüfungen nach.";
     public const string Innen3DFehlt = "Diesen Innenraum gibt es im Spiel nicht.";
     public const string Innen3DBauNicht = "Innenräume selbst gebauter Gebäude zeigt die 3D-Ansicht erst, wenn das Gebäude ins Spiel eingebaut ist.";
-    public const string Innen3DHinweis = "Ziehen bewegt die Kamera, mit der rechten Maustaste drehst du sie, das Mausrad zoomt; am Tablet drehst und zoomst du mit zwei Fingern. Jede Änderung im Grundriss siehst du hier gleich danach.";
+    public const string Innen3DHinweis = "Du baust hier wie im Grundriss: Stück links wählen und tippen setzt es, ein Möbel antippen wählt es, ziehen verschiebt es; Drehen und Löschen rechts oder mit R und Entf. Auf freier Fläche ziehen bewegt die Kamera, mit der rechten Maustaste drehst du sie, das Mausrad zoomt; am Tablet drehst und zoomst du mit zwei Fingern.";
+
+    // S 0.50.0 (Weisung P12-234 mit P12-231 Antwort 1b): Innenraum in 3D bauen
+    public const string InnenBauen3DAusserhalb = "Hier ist kein Raum und kein Flur.";
 
     // S 0.7.0 (Weisung P12-45, Plan P12-26b Abschnitt 9): Bauen in der 3D-Ansicht
     public const string Bauen3DGehtNicht = "Hier geht das nicht.";

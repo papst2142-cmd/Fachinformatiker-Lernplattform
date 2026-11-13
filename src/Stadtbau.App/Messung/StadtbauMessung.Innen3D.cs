@@ -15,7 +15,8 @@ namespace Stadtbau.Messung;
 /// S 0.49.0 (Weisung P12-231 Antwort 1a): Innenraum in 3D ansehen. Knopf „In 3D ansehen“ im Grundriss des Elektromarkts
 /// (Messpunkt „Innenraum 3D oeffnen (bis zum Bild)“, einmalig), Aenderung im Grundriss bis zum neuen Bild (Messpunkt
 /// „Innenraum 3D nach Aenderung (bis zum Bild)“, wiederholbar, 400 ms), Nacht, Etage des Moebelhauses an der Ankunft,
-/// „Figur laufen lassen“ mit Gegenprobe (aus: Tippen bewegt nichts), zurueck zum Grundriss. Layout je Groesse hell und dunkel.
+/// Bauen in 3D (S 0.50.0, <see cref="InnenBauen3DAsync"/>), „Figur laufen lassen“ mit Gegenprobe (aus: Tippen bewegt nichts),
+/// zurueck zum Grundriss. Layout je Groesse hell und dunkel.
 /// </summary>
 public static partial class StadtbauMessung
 {
@@ -89,6 +90,9 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         a.Innen3DNacht = false;
         await a.Innen3DFertig;
+
+        // S 0.50.0 (Weisung P12-234): Moebel in 3D setzen, schieben, drehen, loeschen
+        await InnenBauen3DAsync(a, f);
 
         // Figur laufen lassen: aus = Tippen bewegt nichts (Gegenprobe), an = die Figur geht los
         var mitte = new Point(a.Innen3DFlaeche.Bounds.Width / 2, a.Innen3DFlaeche.Bounds.Height / 2);

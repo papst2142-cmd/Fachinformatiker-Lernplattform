@@ -2424,17 +2424,13 @@ public sealed partial class Hauptansicht : UserControl
         Melden(_projekt.OrtName(ort) + " geöffnet");
     }
 
-    private void SetzenWaehlen(string typ)
+    internal void SetzenWaehlen(string typ)
     {
         if (_projekt is null || _projekt.NurLesen)
         {
             return;
         }
-        if (ZeigtInnen3D)
-        {
-            // S 0.49.0: in 3D wird nur angesehen; setzen geht im Grundriss
-            Innen3DZeigen(false);
-        }
+        // S 0.50.0 (Weisung P12-234): in 3D wird auch gesetzt (InnenDreiBedienung), die Mitte bleibt in 3D
         Flaeche.SetzenTyp = typ;
         _katalogHinweis.Text = Bearbeitung.TeilName(typ) + ": " + Texte.SetzenAktiv;
         Melden(_katalogHinweis.Text);
@@ -2637,13 +2633,9 @@ public sealed partial class Hauptansicht : UserControl
         var stand = ++_pruefStand;
         var ort = _ort;
         var g = (PyObjekt)Py.Kopie(_projekt.Grundriss(ort))!;
-        var personen = _projekt.Personen(ort);
-        var daten = _daten;
-        // Welle W5: eine Etage „ort@k“ prueft mit dem Ort und der Etage, dazu die Regeln zwischen den Etagen (wie Projekt.PruefenMitGrenzen)
-        var (basis, etage) = Etagen.Teilen(ort);
-        var eg = Etagen.Hat(_projekt.Grundriss(basis)) ? (PyObjekt)Py.Kopie(_projekt.Grundriss(basis))! : null;
-        // S 0.19.0 (Nico 3a, 5a): Etagen eines selbst gebauten Gebaeudes gegen die Ebenen seines Entwurfs (schnell, ohne Grafik)
-        var entwurfFunde = _projekt.EtagenEntwurfFunde(basis).Where(f => f.Etage == etage).Select(f => f.Fund).ToList();
+        // Welle W5: eine Etage „ort@k“ prueft mit dem Ort und der Etage, dazu die Regeln zwischen den Etagen; S 0.19.0: Funde zum
+        // Entwurf. S 0.50.0: dieselbe Rechnung prueft den Schatten in 3D (InnenBauen3D.Pruefen)
+        var auftrag = InnenBauen3D.Vorbereiten(_projekt, ort);
         if (_geprueft.Task.IsCompleted)
         {
             _geprueft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -2652,13 +2644,7 @@ public sealed partial class Hauptansicht : UserControl
         _ = Hintergrund(Task.Run(() =>
         {
             // Regeln des gemeinsamen Teils plus Katalog-Stuecke; Grenzen mit deren echten Dreiecken
-            var (funde, grenzen) = KatalogPruefung.Innen(Katalog.Aktiv, basis, g, personen, daten.Grafik, daten.Geschaefte, daten.Fassung.Innenraeume, etage);
-            if (eg is not null)
-            {
-                funde.AddRange(StadtbauPruefung.Etagen(basis, eg, daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
-            }
-            funde.AddRange(entwurfFunde);
-            return (funde, grenzen);
+            return InnenBauen3D.Pruefen(auftrag, g);
         })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _pruefStand || ort != _ort)

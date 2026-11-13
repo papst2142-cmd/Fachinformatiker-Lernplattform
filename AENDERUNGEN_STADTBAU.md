@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.50.0
+
+Möbel im Innenraum jetzt auch in 3D setzen, schieben, drehen und löschen.
+
+- Im Grundriss heißt der Knopf in der Karte unten rechts jetzt „In 3D bauen“. In der 3D-Ansicht des Innenraums baust du genau wie im Grundriss: Tippe ein Möbel an, um es zu wählen (es bekommt einen Rahmen); ziehe es mit einem Finger oder der linken Maustaste an eine andere Stelle. Rechts stehen dieselben Knöpfe wie im Grundriss („Drehen“, „Kopie“, „Löschen“), und die Tasten R (drehen), Entf (löschen) und die Pfeiltasten wirken ebenso.
+- Setzen in 3D: wählst du links ein Stück aus dem Katalog, bleibt die 3D-Ansicht offen. Unter dem Zeiger (am Tablet unter dem Finger) liegt ein Schatten am Boden: grün, wenn das Stück dort keinen neuen roten Fund bringt, rot mit dem Grund, wenn doch (zum Beispiel, wenn es auf einem anderen Möbel stünde). Tippen setzt das Stück.
+- Jeder Schritt in 3D ist derselbe Schritt wie im Grundriss: er steht einmal im Verlauf, „Rückgängig“ nimmt ihn zurück, und die Prüfung rechts rechnet genauso. Der Schatten nutzt dieselbe Prüfung.
+- Die Kamera bewegst du wie bisher: rechte Maustaste dreht, mittlere Maustaste oder Leertaste plus Ziehen schiebt, das Mausrad zoomt; am Tablet zoomen und drehen zwei Finger. Mit „Figur laufen lassen“ lässt Tippen wie bisher die Figur laufen statt zu bauen.
+
 ## S 0.49.1
 
 Bus, Fußwege an schrägen Häusern und die Überschrift der Innenraum-Funde verbessert.
