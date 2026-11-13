@@ -125,6 +125,11 @@ public sealed partial class StadtSpiel
 
     private StadtGrund MitBusZuOrt(string ziel)
     {
+        if (ErstAussteigen())
+        {
+            // Welle A 0.73.0: im Bus (selbst gefahren) erst aussteigen
+            return StadtGrund.KeinWeg;
+        }
         if (Etage > 0)
         {
             Zeile = Etagen.NurUnten;

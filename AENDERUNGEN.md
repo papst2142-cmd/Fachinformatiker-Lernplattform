@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.73.0
+Du kannst jetzt selbst mit dem Bus fahren.
+
+- Geh zu einer Bushaltestelle (tippe auf das Wartehäuschen) und warte dort. Hält der Bus, steht unten der Knopf „Einsteigen“. Solange du einsteigst, fährt der Bus nicht ab; steht deine Figur an der Haltestelle, wartet er etwas länger als sonst.
+- Im Bus zeigt die Kamera den Bus von außen und fährt mit. Unten steht der Knopf „Aussteigen“. Drückst du ihn, hält der Bus an der nächsten Haltestelle, und du stehst neben ihr. Drückst du nicht, fährst du weiter, Haltestelle für Haltestelle.
+- Die Fahrt ist kostenlos und kostet Spielzeit nach der gefahrenen Strecke, so wie die Busfahrt aus der Ortsliste.
+- Der Knopf „Mit dem Bus“ in der Ortsliste bleibt und funktioniert wie bisher.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.72.1
 Fehler im Straßenverkehr der Spielstadt behoben.
 

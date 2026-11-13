@@ -181,6 +181,11 @@ public sealed partial class StadtSpiel
 
     private StadtGrund GeheZuOrt(string ziel)
     {
+        if (ErstAussteigen())
+        {
+            // Welle A 0.73.0: im Bus (selbst gefahren) geht nur „Aussteigen“
+            return StadtGrund.KeinWeg;
+        }
         if (ImBus)
         {
             // Welle A 0.67.0 (Nico 5a): Antippen ueberspringt die Fahrt im Zeitraffer
@@ -274,6 +279,11 @@ public sealed partial class StadtSpiel
 
     private bool GeheZuPunkt(double x, double z)
     {
+        if (ErstAussteigen())
+        {
+            // Welle A 0.73.0 (E1): Antippen der Stadt waehrend der Fahrt aendert nichts
+            return false;
+        }
         if (ImBus)
         {
             BusUeberspringen();
@@ -378,6 +388,8 @@ public sealed partial class StadtSpiel
         }
         // Welle Q2: auf einen Questgeber draussen getippt: bis vor ihn
         (x, z) = ZielBeimQuestgeber(x, z);
+        // Welle A 0.73.0: auf eine Haltestelle getippt: bis auf ihren Wartplatz
+        (x, z) = ZielAnHaltestelle(x, z);
         var weg = MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (x, z)));
         if (weg.Count == 0 && QuestgeberImFreien())
         {
@@ -524,7 +536,7 @@ public sealed partial class StadtSpiel
     public string Bewegung => ImInnenraum ? Figur.Gehen : Figur.Rennen;
 
     /// <summary>Bild der Schrittbewegung (0 bis <see cref="Figur.Bilder"/> - 1) nach dem Weg, -1 = steht.</summary>
-    public int SchrittBild => Geht && !ImBus ? BildNachWeg(Schrittweg, Zyklus) : -1;
+    public int SchrittBild => (Geht && !ImBus) || Mitfahrt is MitfahrtStufe.SteigtEin or MitfahrtStufe.SteigtAus ? BildNachWeg(Schrittweg, Zyklus) : -1;
 
     /// <summary>Bild der Bewegung nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
     public static int BildNachWeg(double weg, double zyklus) =>
@@ -1061,6 +1073,11 @@ public sealed partial class StadtSpiel
         if (!Knoepfe.Any(k => k.Aktion == aktion))
         {
             return false;
+        }
+        if (MitfahrtAktion(aktion))
+        {
+            // Welle A 0.73.0: Einsteigen, Aussteigen
+            return true;
         }
         if (EtagenAktion(aktion))
         {

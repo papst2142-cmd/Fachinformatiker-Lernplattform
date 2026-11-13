@@ -624,6 +624,35 @@ public sealed class Stadt : Probe.IStadtSicht
         }, herkunft));
     }
 
+    /// <summary>
+    /// Welle A 0.73.0 (Weisung P12-239, Sammelliste 335): selbst mit dem Bus von Haltestelle <paramref name="ein"/> nach
+    /// <paramref name="aus"/> gefahren. Keine neue Ereignisart: das vorhandene Ereignis <see cref="Gelaufen"/> (frei durch die
+    /// Stadt) mit 0 Schritten, den <paramref name="minuten"/> der Fahrt und dem Zusatz <c>"mit": "bus"</c>; kostenlos, die Uhr
+    /// laeuft wie bei jedem Weg (ab <see cref="UhrSteht"/> gekappt). Der Ort bleibt der zuletzt besuchte (wie beim freien Gehen).
+    /// </summary>
+    public StadtErgebnis MitfahrtPruefen(Spielstand stand, long minuten, int ein, int aus)
+    {
+        if (stand.Profil is null)
+        {
+            return new(StadtGrund.KeinProfil);
+        }
+        if (minuten <= 0 || minuten > TagMinuten)
+        {
+            return new(StadtGrund.KeinWeg);
+        }
+        var herkunft = StandUndHerkunft(stand);
+        var jetzt = herkunft.Stand;
+        return new(StadtGrund.Ok, Gelaufen, MitHerkunft(new PyObjekt
+        {
+            { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", 0L }, { "minuten", Gekappt(jetzt.Uhr, minuten) },
+            { Mit, MitBus }, { "ein", (long)ein }, { "aus", (long)aus },
+        }, herkunft));
+    }
+
+    /// <summary>Welle A 0.73.0: die selbst gefahrene Strecke schreiben (nur wenn es geht).</summary>
+    public StadtErgebnis Mitfahrt(Spielablauf spiel, long minuten, int ein, int aus) =>
+        Ausfuehren(spiel, MitfahrtPruefen(spiel.Stand, minuten, ein, aus));
+
     /// <summary>Kann die Figur vor dem geschlossenen Ort warten, bis er heute oeffnet?</summary>
     public StadtErgebnis WartenPruefen(Spielstand stand)
     {
