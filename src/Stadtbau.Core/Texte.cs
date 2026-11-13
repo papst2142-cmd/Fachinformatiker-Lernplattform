@@ -961,6 +961,19 @@ public static partial class Texte
     public const string Pruefen = "Prüfen";
     public const string PruefenGruen = "Prüfen – alles in Ordnung";
     public static string PruefenRot(int n) => "Prüfen – " + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot";
+
+    // ---- S 0.49.0 (Weisung P12-231 Antwort 2c, Sammelliste 328): zwei Fundlisten in jeder Ansicht ----
+    public const string FundeStadt = "Stadt";
+    public const string FundeInnen = "Innenräume";
+    public static string FundeStadtTitel(int rot) => rot > 0 ? "Stadt – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Stadt – alles in Ordnung";
+    public static string FundeInnenTitel(int rot) => rot > 0 ? "Innenräume – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Innenräume – alles in Ordnung";
+    public const string FundeStadtTipp = "Alle roten Funde der Stadt draußen, der Quests und der Grenzen. Sie sperren Speichern und Senden.";
+    public const string FundeInnenTipp = "Alle roten Funde aller Innenräume und Etagen, auch der Innenräume eigener Gebäude. Sie sperren Speichern und Senden.";
+    public const string FundeStadtKeine = "Draußen ist nichts rot.";
+    public const string FundeInnenKeine = "In keinem Innenraum ist etwas rot.";
+    public const string FundeOffenerRaum = "offen";
+    public const string FundeUnveraendert = "Dieser Raum ist unverändert und sperrt das Senden nicht.";
+    public static string FundeOrtKopf(string name, int rot) => name + " (" + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot)";
     public const string Vorschau = "Vorschau";
     public const string InnenraeumeOeffnen = "Innenräume öffnen";
     public const string Hilfe3D = "So bedienst du die 3D-Ansicht";

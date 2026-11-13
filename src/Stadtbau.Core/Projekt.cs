@@ -898,17 +898,9 @@ public sealed partial class Projekt
     /// </remarks>
     public (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) PruefenMitGrenzen(string ort)
     {
-        var (basis, etage) = Etagen.Teilen(ort);
-        var eg = Grundriss(basis);
-        var (funde, grenzen) = KatalogPruefung.Innen(Katalog.Aktiv, basis, Grundriss(ort), Personen(ort), Daten.Grafik, Daten.Geschaefte, Basis.Innenraeume, etage);
-        if (Etagen.Hat(eg))
-        {
-            // der Grundriss jeder Etage ist oben schon geprueft (mit Katalog-Stuecken); hier nur die Regeln zwischen den Etagen
-            funde.AddRange(StadtbauPruefung.Etagen(basis, eg, Daten.Grafik, (_, _) => []).Where(f => f.Etage == etage).Select(f => f.Fund));
-        }
-        // S 0.19.0 (Nico 3a, 5a): Etagen eines selbst gebauten Gebaeudes gegen die Ebenen seines Entwurfs
-        funde.AddRange(EtagenEntwurfFunde(basis).Where(f => f.Etage == etage).Select(f => f.Fund));
-        return (funde, grenzen);
+        // S 0.49.0 (Sammelliste 328): dieselbe Rechnung wie die Liste aller Innenraeume (InnenFunde)
+        var a = InnenFunde.Vorbereiten(this, [ort]);
+        return InnenFunde.PruefenMitGrenzen(a, a.Raeume[0]);
     }
 
     /// <summary>
@@ -982,7 +974,8 @@ public sealed partial class Projekt
     /// <summary>Rote Funde aller geaenderten Orte und der Stadt draussen (Export gesperrt, solange es welche gibt).</summary>
     public List<(string Ort, StadtbauFund Fund)> RoteFunde()
     {
-        var rot = GeaenderteOrte.Concat(Bauten).SelectMany(EtagenVon).SelectMany(o => Pruefen(o).Where(f => f.Rot).Select(f => (o, f))).ToList();
+        // S 0.49.0 (Sammelliste 328): derselbe Weg wie die Liste „Innenräume – m rot“ rechts in jeder Ansicht
+        var rot = InnenFunde.Rechnen(InnenFunde.Vorbereiten(this)).SelectMany(o => o.Funde.Where(f => f.Rot).Select(f => (o.Schluessel, f))).ToList();
         if (AussenGeaendert || Leer is not null)
         {
             // Welle D2 (Weisung P12-157, Nico 3a): ueber der Grenze ist die Stadt zu teuer; Sammelliste 279: dieser Fund zuerst

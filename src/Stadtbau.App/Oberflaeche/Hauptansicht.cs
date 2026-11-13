@@ -675,6 +675,7 @@ public sealed partial class Hauptansicht : UserControl
         GeschichteNeu();
         ReiterZeigen(innen && projekt.Innenorte.Count > 0);
         AussenPruefenStarten();
+        InnenAllePruefenStarten();
         if (projekt.NurLesen)
         {
             _ = Dialog.Zeigen(Texte.OeffnenTitel, Texte.NurLesen, Texte.Ok);
@@ -735,6 +736,7 @@ public sealed partial class Hauptansicht : UserControl
         _bedienung3D?.StandGeaendert();
         Karte.InvalidateVisual();
         AussenAuswahlZeigen();
+        InnenAllePruefenStarten();
         if (_drei)
         {
             // Bei sichtbarer 3D-Ansicht zuerst die Szene bauen, die Pruefung draussen danach (sonst teilen sich beide den
@@ -1002,6 +1004,8 @@ public sealed partial class Hauptansicht : UserControl
         rechts.Children.Add(GeschichteOrtKarteBauen());
         _pruefenAussen = new Klappgruppe("pruefen", Texte.Pruefen, null, true, _aussenPruefungen);
         rechts.Children.Add(_pruefenAussen);
+        // S 0.49.0 (Weisung P12-231 Antwort 2c): darunter „Innenräume – m rot“
+        FundlistenAussenBauen(rechts);
         // S 0.45.0 (Weisung P12-212 Punkt 5): Laufzeiten zu Fuss, gerechnet mit der Pruefung
         _laufzeitenGruppe = new Klappgruppe("laufzeiten", Texte.LaufzeitenTitel, null, false, _laufzeitenInhalt);
         rechts.Children.Add(_laufzeitenGruppe);
@@ -1962,7 +1966,7 @@ public sealed partial class Hauptansicht : UserControl
             return;
         }
         _aussenPruefungen.Children.Clear();
-        PruefTitel(_pruefenAussen, AussenFunde);
+        FundlistenZeigen();
         if (AussenFunde.Count == 0)
         {
             _aussenPruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
@@ -2354,7 +2358,7 @@ public sealed partial class Hauptansicht : UserControl
         _grenzBalken.Farbe(ProgressBar.ForegroundProperty, "Pinsel.green");
         // Welle Q (Punkt 7): „Ausgewähltes Stück“ oben, dann Etagen, „Prüfen – n rot“ mit Grenzen und Funden, Raum
         _pruefenInnen = new Klappgruppe("pruefen_innen", Texte.Pruefen, null, true,
-            Schrift.Text(Texte.Grenzen, "Klein", FontWeight.Bold), _grenzBalken, _grenzText, _pruefungen);
+            Schrift.Text(Texte.Grenzen, "Klein", FontWeight.Bold), _grenzBalken, _grenzText, _offenerRaumKopf, _pruefungen, _innenAndere);
         var rechts = new StackPanel
         {
             Spacing = 12,
@@ -2362,6 +2366,7 @@ public sealed partial class Hauptansicht : UserControl
             {
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _auswahl } }),
                 Schrift.Karte(EtagenBaustein()),
+                FundlistenInnenBauen(),
                 _pruefenInnen,
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Raum, "Mittel", FontWeight.Bold), _raum } }),
             },
@@ -2686,7 +2691,7 @@ public sealed partial class Hauptansicht : UserControl
         _grenzText.Text = Texte.Grenzzeile(dreiecke, aufrufe, StadtbauGrenzen.Dreiecke, StadtbauGrenzen.Aufrufe);
         AutomationProperties.SetName(_grenzBalken, Texte.Grenzen + ": " + _grenzText.Text);
         _pruefungen.Children.Clear();
-        PruefTitel(_pruefenInnen, Funde);
+        FundlistenZeigen();
         if (Funde.Count == 0)
         {
             _pruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
