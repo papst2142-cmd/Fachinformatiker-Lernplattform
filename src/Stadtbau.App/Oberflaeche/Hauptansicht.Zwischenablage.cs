@@ -175,7 +175,8 @@ public sealed partial class Hauptansicht
         knopf.Tag = nummer;
         knopf.Click += (_, _) => _ = LaterneVersetzenSuchenAsync(nummer, f, unten);
         unten.Children.Add(knopf);
-        return new StackPanel { Children = { eintrag, unten } };
+        // Tag = Fund wie der Eintrag selbst: AussenPruefungText (Start-Test, Vorlesen der Liste) liest ihn daran
+        return new StackPanel { Tag = f, Children = { eintrag, unten } };
     }
 
     /// <summary>Freie Stelle fuer Laterne <paramref name="nummer"/> im Hintergrund suchen und als Vorschau zeigen.</summary>
