@@ -766,6 +766,8 @@ public sealed partial class Projekt
             throw new IOException("Ein Projekt mit diesem Namen gibt es schon.");
         }
         p._aussen = Aussen.Aus(f);
+        // W4b (Weisung P12-228 Punkt 2): eine Stadt-Datei wird als neue Stadt mit 1 Minute je Schritt geoeffnet
+        Aussen.UhrVorgabeSetzen(p._aussen);
         p.SpielortInnenAbgleichen();
         foreach (var ort in StadtDateiOhneInnenFuerTests.Value ? [] : p.Orte)
         {

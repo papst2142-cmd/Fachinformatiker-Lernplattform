@@ -80,7 +80,9 @@ public static partial class AutoMessung
             var uhr = Stopwatch.StartNew();
             var plaetze = Nachtlicht.Plaetze(spiel.Szene);
             var platzMs = uhr.Elapsed.TotalMilliseconds;
-            Pruefe("Laternen", spiel.Szene.Laternen.Count == Nachtlicht.Anzahl && plaetze.Count == Nachtlicht.Anzahl,
+            var laternen = LaternenSoll(spiel);
+            Pruefe("Laternen", spiel.Szene.Laternen.Count == laternen.Anzahl && plaetze.Count == laternen.Anzahl
+                && spiel.Szene.Laternen.Count(l => l.Doppelt) == laternen.Doppelt,
                 string.Create(inv, $"{spiel.Szene.Laternen.Count} Laternen ({spiel.Szene.Laternen.Count(l => l.Doppelt)} doppelt), Plaetze suchen {platzMs:F1} ms"));
             Messwerte.Notiere(string.Create(inv, $"Spiel: Bauzeit der Netze mit Laternen und Lichtmarken (Info): {NetzeBauenMs(spiel.Szene):F1} ms"));
 

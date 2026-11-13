@@ -30,11 +30,15 @@ public static partial class AutoMessung
 
     private static readonly (double X, double Y)[] BusZebras = [(7.5, 17.5), (18.4, 17.5), (29.8, 17.5), (12.0, 20.8), (7.5, 9.0), (12.0, 12.6)];
 
-    /// <summary>Frisches Spiel in der Stadt mit Gehweg an jeder Strasse, Zebrastreifen und Haltestellen (nur im Speicher).</summary>
+    /// <summary>
+    /// Frisches Spiel in der alten Stadt (Fassung 0, W4b) mit Gehweg an jeder Strasse, Zebrastreifen und Haltestellen (nur
+    /// im Speicher); die Haltestellen und Zebrastreifen liegen auf den Strassen dieser Stadt.
+    /// </summary>
     internal static StadtSpiel MitBus(SpielSeite seite)
     {
         var alt = seite.Spiel!;
-        var inhalt = (PyObjekt)Py.Kopie(alt.Stadt.Inhalt)!;
+        var (stadt0, innen0) = SpielStart.AusFassungFuerTests(0);
+        var inhalt = (PyObjekt)Py.Kopie(stadt0.Inhalt)!;
         var karte = SpielDaten.Objekt(inhalt["orte"]);
         foreach (var teil in SpielDaten.Liste(SpielDaten.Objekt(karte["welt"])["landschaft"]).Select(SpielDaten.Objekt))
         {
@@ -43,11 +47,11 @@ public static partial class AutoMessung
                 Py.Setzen(teil, "gehweg", 0.35);
             }
         }
-        var daten = (PyObjekt)Py.Kopie(alt.Stadt.Daten)!;
+        var daten = (PyObjekt)Py.Kopie(stadt0.Daten)!;
         Py.Setzen(daten, Haltestellen.Abschnitt, BusHalte.Select(h => (object?)new PyObjekt { { "x", h.X }, { "y", h.Y } }).ToList());
         Py.Setzen(daten, Zebrastreifen.Abschnitt, BusZebras.Select(h => (object?)new PyObjekt { { "x", h.X }, { "y", h.Y } }).ToList());
-        var stadt = new Stadt(inhalt, daten) { Fassung = alt.Stadt.Fassung };
-        var spiel = SpielStart.Neu(stadt, alt.Grafik, alt.Innenraeume, alt.GeschaefteDaten, alt.Feste, Festzeit.Heute, Jahreszeiten.Heute);
+        var stadt = new Stadt(inhalt, daten) { Fassung = stadt0.Fassung };
+        var spiel = SpielStart.Neu(stadt, alt.Grafik, innen0, alt.GeschaefteDaten, alt.Feste, Festzeit.Heute, Jahreszeiten.Heute);
         seite.SpielSetzen(spiel);
         return spiel;
     }
@@ -191,13 +195,24 @@ public static partial class AutoMessung
                 bus.SofortAnkommen();
                 Messwerte.Notiere("Spiel: Bus Zeitraffer nicht geprueft (ohne 3D)");
             }
-            // Gegenprobe: Stadt ohne Haltestellen (die Stadt von vorher), kein Bus-Knopf
+            // Gegenprobe: Stadt ohne Haltestellen (die alte Stadt, Fassung 0), kein Bus-Knopf
             seite.SpielSetzen(vorher);
-            var ohne = Frisch(seite);
+            var ohne = Fassung0(seite);
             seite.OrtslisteZeigen(true);
             await ansicht.BildFertigAsync();
             Pruefe("Bus Gegenprobe ohne Haltestellen", ohne.Linie is null && !seite.BusKnopfSichtbar("amt"), "kein Knopf");
             seite.OrtslisteZeigen(false);
+            if (FassungVon(vorher) != 0)
+            {
+                // W4b: Nicos Stadt 1 hat eigene Haltestellen; der Bus haelt an jeder (der Rundweg darf an einer zweimal halten)
+                seite.SpielSetzen(vorher);
+                var neu = Frisch(seite);
+                await ansicht.BildFertigAsync();
+                var halte = neu.Szene.Haltestellen.Count;
+                var angefahren = neu.Linie?.Halte.Select(h => h.Haltestelle).Distinct().Count() ?? 0;
+                Pruefe("Bus Linie Stadt 1 neu", halte > 0 && neu.Linie is { NichtErreicht.Count: 0 } && angefahren == halte,
+                    string.Create(inv, $"{halte} Haltestellen, Linie {(neu.Linie is null ? "fehlt" : neu.Linie.Halte.Count + " Halte an " + angefahren + " Haltestellen, nicht erreicht " + neu.Linie.NichtErreicht.Count)}"));
+            }
         }
         finally
         {

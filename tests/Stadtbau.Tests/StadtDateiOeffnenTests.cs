@@ -44,7 +44,18 @@ public class StadtDateiOeffnenTests
         var vorher = Datei(p);
 
         var ablage = Daten.NeueAblage();
-        var q = Projekt.AusStadtDatei(vorher, D, ablage, "Moebel neu");
+        // W4b (Weisung P12-228): eine Stadt-Datei oeffnet mit 1 Minute je Schritt (W4bTests); hier geht es um die
+        // unveraenderte Rueckgabe, darum mit der Uhr wie gesendet
+        Projekt q;
+        Aussen.UhrAltFuerTests = true;
+        try
+        {
+            q = Projekt.AusStadtDatei(vorher, D, ablage, "Moebel neu");
+        }
+        finally
+        {
+            Aussen.UhrAltFuerTests = false;
+        }
 
         Assert.Null(q.Leer);
         Assert.Equal(["moebelhaus"], q.GeaenderteOrte);

@@ -27,7 +27,7 @@ public sealed class StadtbauFassungTests
 
     private static byte[] Quelle(params string[] teile) => File.ReadAllBytes(Path.Combine([Pfade.Wurzel, .. teile]));
 
-    internal static readonly Lazy<StadtFassung> Fassung0 = new(() => AktiveFassung.Laden(Lesen));
+    internal static readonly Lazy<StadtFassung> Fassung0 = new(() => AktiveFassung.LadenNummer(Lesen, 0));
 
     private static StadtFassung Auszug0() =>
         Auszug.Fassung0(Quelle("inhalte", "spiel", "orte.json"), Quelle("inhalte_csharp", "spiel", "stadt.json"), Quelle("inhalte_csharp", "spiel", "innenraeume.json"));
@@ -165,15 +165,20 @@ public sealed class StadtbauFassungTests
         Assert.Empty(StadtbauPruefung.Inhalt(Fassung0.Value, SpielInhaltTests.Inhalt));
     }
 
-    /// <summary>aktiv.json nennt genau Stadt 1, Fassung 0; im Ordner liegen nur aktiv.json und Fassungen.</summary>
+    /// <summary>
+    /// aktiv.json nennt genau Stadt 1, seit W4b (Weisung P12-228, Sollwert-Aenderung Nr. 16) Fassung 1 (Nicos Stadt 1);
+    /// Fassung 0 bleibt daneben liegen. Im Ordner liegen nur aktiv.json und Fassungen.
+    /// </summary>
     [Fact]
-    public void AktivNenntFassung0()
+    public void AktivNenntFassung1_Fassung0BleibtDaneben()
     {
         var aktiv = (PyObjekt)Py.Lesen(Quelle("inhalte_csharp", "spiel", "stadtbau", AktiveFassung.Datei))!;
-        Assert.Equal(0, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
+        Assert.Equal(1, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
+        Assert.Equal(1, AktiveFassung.Laden(Lesen).Nummer);
+        Assert.Equal(0, Fassung0.Value.Nummer);
         Assert.Equal(["_hinweis", AktiveFassung.FormatFeld, "stadt1"], aktiv.Select(p => p.Key));   // Format seit A 0.62.1 (Sollwert-Aenderung Nr. 15)
         var dateien = Directory.GetFiles(Ordner).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToList();
-        Assert.Equal(["aktiv.json", "stadt1_fassung0.fistadt"], dateien);
+        Assert.Equal(["aktiv.json", "stadt1_fassung0.fistadt", "stadt1_fassung1.fistadt"], dateien);
     }
 
     /// <summary>Gelesen und wieder geschrieben ist die Datei bytegleich (kein Wert aendert beim Lesen seine Art oder Stelle).</summary>

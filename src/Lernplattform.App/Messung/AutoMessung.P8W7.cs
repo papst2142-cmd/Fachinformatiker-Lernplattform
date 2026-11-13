@@ -81,7 +81,7 @@ public static partial class AutoMessung
 
             // 3. Autos mit fester Fahrzeit: sechs Autos, sie fahren
             var verkehr = flaeche.Verkehr;
-            Pruefe("Autos in der Stadt", verkehr?.Autos.Count == 6, string.Create(inv, $"{verkehr?.Autos.Count ?? 0} Autos, {verkehr?.Kreuzungen.Count ?? 0} Kreuzungen"));
+            Pruefe("Autos in der Stadt", AutosPassen(spiel, verkehr), string.Create(inv, $"{verkehr?.Autos.Count ?? 0} Autos, {verkehr?.Kreuzungen.Count ?? 0} Kreuzungen"));
             if (verkehr is not null)
             {
                 var wege = verkehr.Autos.Select(a => a.Weg).ToList();
@@ -93,6 +93,17 @@ public static partial class AutoMessung
                 StadtFlaeche.AutoSchritt = 0;
                 var gefahren = verkehr.Autos.Count(a => a.Weg != wege[verkehr.Autos.IndexOf(a)]);
                 Pruefe("Autos fahren (30 Bilder zu 1/60 s)", gefahren > 0, string.Create(inv, $"{gefahren} von {verkehr.Autos.Count} gefahren"));
+            }
+            if (FassungVon(spiel) != 0)
+            {
+                // W4b: die alte Stadt (Fassung 0) behaelt ihre sechs Autos auf festen Strecken
+                var neueStadt = seite.Spiel!;
+                var alt0 = Fassung0(seite);
+                await flaeche.NaechstesBildAsync();
+                await flaeche.NaechstesBildAsync();
+                Pruefe("Autos in der alten Stadt (Fassung 0)", AutosPassen(alt0, flaeche.Verkehr),
+                    string.Create(inv, $"{flaeche.Verkehr?.Autos.Count ?? 0} Autos, {flaeche.Verkehr?.Kreuzungen.Count ?? 0} Kreuzungen"));
+                seite.SpielSetzen(neueStadt);
             }
 
             // 4. Zeichenaufrufe und Dreiecke ohne Festzeit und zu Weihnachten, Gesamtansicht und nah

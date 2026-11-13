@@ -24,6 +24,13 @@ public static partial class AutoMessung
     /// Welle Grafik G1 (Weisung P12-182): <paramref name="stufe"/> = gemessene Grafikstufe mit ihrer Grenze (Niedrig
     /// 125 000 / 32, Mittel 160 000 / 40, Hoch 200 000 / 48); die Gegenprobe ohne Sparen nur bei Mittel.
     /// </remarks>
+    /// <summary>
+    /// Befristete Ausnahme bis Sammelliste 327 (Nico 13.11.2026, Entscheidungskarte zu W4b): nur Stufe Niedrig, nur Stadt 1
+    /// in Fassung 1 (Nicos Stadt). Faellt mit der Welle 327 weg; Gegenprobe: Mittel, Hoch und Fassung 0 sind nie betroffen.
+    /// </summary>
+    internal static bool Ausnahme327(Grafikstufe stufe, StadtSpiel spiel) =>
+        stufe == Grafikstufe.Niedrig && spiel.Stadt.Fassung is { Nummer: 1 } f && f.StadtId == Core.Stadtbau.AktiveFassung.Stadt1;
+
     private static async Task<int> NahansichtAsync(SpielSeite seite, Grafikstufe stufe = Grafikstufe.Mittel)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -96,7 +103,15 @@ public static partial class AutoMessung
             }
             Messwerte.Notiere(string.Create(inv,
                 $"{name} teuerstes Bild (Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1}): {teuerstes.Dreiecke} Dreiecke, hoechstens {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke} Dreiecke, {grenzeAufrufe} Aufrufe)"));
-            if (teuerstes.Dreiecke > grenzeDreiecke || aufrufeMax > grenzeAufrufe || teuerstes.Dreiecke <= 0)
+            if (teuerstes.Dreiecke > grenzeDreiecke && aufrufeMax <= grenzeAufrufe && Ausnahme327(stufe, spiel))
+            {
+                // Befristete Ausnahme (Nico 13.11.2026, Entscheidungskarte zu W4b): Stufe Niedrig in Nicos Stadt 1
+                // (Fassung 1) liegt bis zur Welle Sammelliste 327 ueber ihrer Grenze; nur Angabe, die Grenze selbst und
+                // alle anderen Stufen (auch Niedrig in Fassung 0) bleiben streng, Aufrufe ebenso
+                Messwerte.Notiere(string.Create(inv,
+                    $"Spiel: {name}: INFO befristet bis Sammelliste 327 (Nico 13.11.2026): {teuerstes.Dreiecke} Dreiecke ueber der Grenze {grenzeDreiecke} ({100.0 * teuerstes.Dreiecke / grenzeDreiecke:F1} %), nur Angabe"));
+            }
+            else if (teuerstes.Dreiecke > grenzeDreiecke || aufrufeMax > grenzeAufrufe || teuerstes.Dreiecke <= 0)
             {
                 Messwerte.Notiere(string.Create(inv,
                     $"  FEHLER: {name}: {teuerstes.Dreiecke} Dreiecke, {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke}, {grenzeAufrufe}; Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1})"));

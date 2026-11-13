@@ -1,5 +1,5 @@
 {
   "_hinweis": ["Phase 13 Welle 1 (Weisung P12-16): welche Fassung je Stadt gilt (Stadt-Kennung -> Nummer). Fassungen liegen daneben als <stadt>_fassung<n>.fistadt; eine neue Fassung kommt nur angehaengt als eigene Datei dazu, die alte bleibt unveraendert (Fassung 0 = Stadt 1 bis A 0.41.1, geschuetzter Sollwert). Die geltende Fassung zeichnet das Spiel fuer alle Spielstaende (Nico 3a)."],
   "format": 1,
-  "stadt1": 0
+  "stadt1": 1
 }

@@ -19,7 +19,7 @@ public static partial class AutoMessung
             P7W1AnsichtFehler.Add("spiel/tuer: Spielseite nicht gebaut");
             yield break;
         }
-        foreach (var ort in (string[])["talheim", "moebelhaus"])
+        foreach (var ort in (string[])["talheim", "moebelhaus", "talheim_nord"])
         {
             var spiel = Frisch(seite);
             spiel.GeheZu(ort);
@@ -30,7 +30,10 @@ public static partial class AutoMessung
             yield return "spiel/tuer/" + ort;
         }
         {
-            var spiel = Frisch(seite);
+            // W4b (Weisung P12-228): das Stellwerk als Haus ohne Innenraum gibt es in der alten Stadt (Fassung 0); in Nicos
+            // Stadt 1 ist Talheim-Nord ein Spielort mit Tuer (eigene Ansicht "spiel/tuer/talheim_nord")
+            var neueStadt = seite.Spiel!;
+            var spiel = Fassung0(seite);
             var stellwerk = spiel.Szene.Zierhaeuser.FirstOrDefault(z => z.Name == "Stellwerk");
             if (stellwerk is null || spiel.Szene.Ort("stellwerk") is not null || !seite.HatSchild("Stellwerk"))
             {
@@ -45,6 +48,7 @@ public static partial class AutoMessung
                 P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/tuer/stellwerk"));
                 yield return "spiel/tuer/stellwerk";
             }
+            seite.SpielSetzen(neueStadt);
         }
         {
             var spiel = Frisch(seite);

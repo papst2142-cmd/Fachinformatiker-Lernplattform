@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
@@ -51,7 +52,9 @@ public static partial class AutoMessung
                 var ab = Tageslicht.DaemmerungAb(jz);
                 StadtFlaeche.UhrSanft = false;
                 Tageslicht.FesteUhr = ab - 30;
-                Frisch(seite);
+                // W4b (Weisung P12-228): der Uebergang am Kartenrand gibt es nur mit festen Strecken (Fassung 0); in einer
+                // Stadt mit Rundwegen (Fassung 1) wechselt der Satz sofort (Welle K3b), das prueft "FestRundwegSofort"
+                Fassung0(seite);
                 seite.Flaeche.KameraAufFigur();
                 await flaeche.NaechstesBildAsync();
                 await flaeche.NaechstesBildAsync();
@@ -112,6 +115,34 @@ public static partial class AutoMessung
                         string.Create(inv, $"Satz {flaeche.Satz}, {flaeche.Gestalten?.Count ?? 0} Gestalten, {autos} Fahrzeuge, nach {u.Fahrzeit:F1} s Fahrzeit ({gruende})"));
                     Pruefe(punkt + ": ohne Hoechstzeit", u.Tausche.All(t => t.Grund != FestUebergang.Grund.Hoechstzeit) && u.Fahrzeit <= FestUebergang.Hoechstzeit,
                         string.Create(inv, $"{u.Tausche.Count(t => t.Grund == FestUebergang.Grund.Hoechstzeit)} Strecken nach der Hoechstzeit {FestUebergang.Hoechstzeit:F0} s"));
+                }
+            }
+            if (FassungVon(vorher) != 0)
+            {
+                // W4b: in der Stadt mit Rundwegen (Fassung 1) wechselt der Satz mit der Uhr sofort, ohne Uebergang
+                // (Welle K3b); Gegenprobe ist die alte Stadt oben mit Uebergang am Kartenrand
+                foreach (var (fest, jz, _) in W11Feste)
+                {
+                    Jahreszeiten.Probe(jz);
+                    Festzeit.Probe(fest);
+                    var ab = Tageslicht.DaemmerungAb(jz);
+                    StadtFlaeche.UhrSanft = false;
+                    Tageslicht.FesteUhr = ab - 30;
+                    seite.SpielSetzen(vorher);
+                    Frisch(seite);
+                    await flaeche.NaechstesBildAsync();
+                    await flaeche.NaechstesBildAsync();
+                    StadtFlaeche.UhrSanft = true;
+                    var von = flaeche.Satz;
+                    Tageslicht.FesteUhr = ab;
+                    var soll = FestVerkehr.Fuer(fest, ab, jz);
+                    var u = Stopwatch.StartNew();
+                    for (var i = 0; i < 240 && flaeche.Satz != soll; i++)
+                    {
+                        await flaeche.NaechstesBildAsync();
+                    }
+                    Pruefe(fest + " FestRundwegSofort (Stadt 1 neu)", von == FestVerkehr.Fuer(fest, ab - 30, jz) && flaeche.Satz == soll && flaeche.Uebergang is null,
+                        string.Create(inv, $"{von} -> {flaeche.Satz} (soll {soll}), Uebergang {flaeche.Uebergang is not null}, {u.Elapsed.TotalMilliseconds:F0} ms"));
                 }
             }
         }
