@@ -70,12 +70,18 @@ public static partial class StadtbauMessung
             await TippenAsync(b, auf.Value);
             await ZiehenAsync(b, auf.Value, 0, 60);
         }, "Verschieben");
+        var kamera = a.Innen3DFlaeche.AktuelleKamera!;
+        var (zielX, zielZ) = (kamera.ZielX, kamera.ZielZ);
         await ZiehenAsync(b, frei.Value, 0, 60);
         if (Stand() != stand || p.SchritteZurueck != schritte)
         {
             Fund("Innenraum 3D bauen: Ziehen auf freier Stelle hat ein Moebel verschoben (Gegenprobe)");
             await ZurueckAsync(a, stand);
         }
+        // Ziehen auf freier Flaeche schiebt die Kamera (wie draussen); fuer die naechsten Proben wieder dorthin, wo sie war
+        kamera.Setzen(zielX, zielZ);
+        a.Innen3DFlaeche.AnfordernBild();
+        await BildAsync(a);
 
         // Drehen (R) und Loeschen (Entf) am gewaehlten Moebel, gleiche Tasten und Schritte wie im Grundriss
         await MessenAsync(a, "Innenraum 3D Moebel drehen (bis zum Bild)", stand, schritte, async () =>
@@ -221,11 +227,17 @@ public static partial class StadtbauMessung
         for (var i = 0; i < 3; i++)
         {
             var innen = a.Innen3DFlaeche.Spiel?.Innen;
+            var k = a.Innen3DFlaeche.AktuelleKamera!;
+            var ziel = (k.ZielX, k.ZielZ, k.Abstand, k.Drehung);
             var uhr = System.Diagnostics.Stopwatch.StartNew();
             await tun();
             await a.Innen3DFertig;
             await BildAsync(a);
             werte.Add(uhr.Elapsed.TotalMilliseconds);
+            if ((k.ZielX, k.ZielZ, k.Abstand, k.Drehung) != ziel)
+            {
+                Fund(name + ": die Kamera ist nach dem Schritt woanders (sie soll beim Bauen stehen bleiben)");
+            }
             if (p.SchritteZurueck != schritte + 1 || p.Verlauf[^1].Was != was || PythonJson.Text(p.Grundriss(InnenOrt)) == stand)
             {
                 Fund(name + ": nicht genau ein Schritt „" + was + "“ im Verlauf (" + (p.SchritteZurueck - schritte).ToString(Inv) + " Schritte, letzter „"

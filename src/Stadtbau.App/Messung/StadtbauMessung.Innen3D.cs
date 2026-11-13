@@ -134,6 +134,12 @@ public static partial class StadtbauMessung
         {
             Fund("Innenraum 3D: das 1. OG des Moebelhauses steht nicht mit der Figur an der Ankunft da");
         }
+        // Gegenprobe zu „Kamera bleibt beim Bauen“ (S 0.50.0): ein anderer Raum beginnt mit der Kamera an der Figur
+        if (a.Innen3DFlaeche is { AktuelleKamera: { } kam, Spiel: { } sp }
+            && (Math.Abs(kam.ZielX - sp.FigurX) > 0.01 || Math.Abs(kam.ZielZ - sp.FigurZ) > 0.01))
+        {
+            Fund("Innenraum 3D: nach dem Wechsel der Etage steht die Kamera nicht an der Figur");
+        }
         if (!a.Innen3DEtage.IsEffectivelyVisible || a.Innen3DEtage.ItemCount != 2)
         {
             Fund("Innenraum 3D: die Wahl der Etage fehlt (" + a.Innen3DEtage.ItemCount + " Eintraege)");

@@ -47,6 +47,9 @@ public sealed partial class Hauptansicht
     private bool _innen3DGebautNacht;
     private Innen3D.Ergebnis? _innen3DLetzt;
     private long _innen3DAenderung;
+    /// <summary>Raum, auf dessen Figur die Kamera zuletzt gesetzt wurde (S 0.50.0: bleibt beim Bauen im selben Raum).</summary>
+    private string? _innen3DKameraOrt;
+
     private TaskCompletionSource _innen3DFertig = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private InnenDreiBedienung? _innenBedienung;
     private Control? _innen3DKarte;
@@ -298,7 +301,14 @@ public sealed partial class Hauptansicht
                     Innen3DFlaeche.Spiel = e.Spiel;
                 }
                 e.Spiel.Ansehen(e.Innen, e.Figur.X, e.Figur.Y, e.Figur.Z);
-                Innen3DFlaeche.KameraAufFigur();
+                // S 0.50.0 (Weisung P12-234): nach einem Bauschritt im selben Raum bleibt die Kamera, wo sie war (sonst
+                // sprang sie nach jedem Schritt zur Figur an der Tuer); nur ein anderer Raum oder eine andere Etage
+                // beginnt an der Figur
+                if (_innen3DKameraOrt != ort || Innen3DFlaeche.AktuelleKamera is null)
+                {
+                    Innen3DFlaeche.KameraAufFigur();
+                    _innen3DKameraOrt = ort;
+                }
                 _innen3DStatus.Text = "";
                 _innen3DWartetAufBild = true;
                 DispatcherTimer.RunOnce(Innen3DOhneGrafikPruefen, TimeSpan.FromSeconds(1));
