@@ -199,7 +199,24 @@ public static partial class StadtbauPruefung
         }
         if (linie is not null && linie.NichtErreicht.Count == 0)
         {
-            foreach (var p in BusSteckt(Verkehr.Fuer(szene)))
+            // Patch A 0.72.1 (Sammelliste 329): mehrere Spieltage (die Autos fahren je Tag andere Wege), je Tag mindestens eine
+            // ganze Runde jedes Busses und 20 Sekunden; jede Stelle einmal
+            var stellen = new List<Vector2>();
+            foreach (var tag in BusSteckenTage)
+            {
+                foreach (var p in BusSteckt(BusTageAltFuerTests ? Verkehr.Fuer(szene) : Verkehr.FuerSpieltag(szene, tag), BusTageAltFuerTests ? 90 : null))
+                {
+                    if (stellen.All(q => Vector2.Distance(q, p) > 1))
+                    {
+                        stellen.Add(p);
+                    }
+                }
+                if (BusTageAltFuerTests)
+                {
+                    break;
+                }
+            }
+            foreach (var p in stellen)
             {
                 funde.Add(new StadtbauFund("Hier bleibt der Bus stecken: er wartet länger als 20 Sekunden.",
                     "Kreuzungen weiter auseinander bauen oder Haltestellen anders setzen.", true, p.X, p.Y));
@@ -207,15 +224,38 @@ public static partial class StadtbauPruefung
         }
     }
 
-    /// <summary>Stellen, an denen ein Bus laenger als 20 Sekunden steht (90 Sekunden Fahrt in Schritten von 1/20 s).</summary>
-    internal static List<Vector2> BusSteckt(Verkehr v, double sekunden = 90, double grenze = 20)
+    /// <summary>Patch A 0.72.1 (Sammelliste 329): an diesen Spieltagen faehrt die Pruefung „Bus steckt“.</summary>
+    internal static readonly long[] BusSteckenTage = [1, 2, 3];
+
+    /// <summary>Gegenprobe Patch A 0.72.1: Pruefung „Bus steckt“ wie bis A 0.72.0 (nur der Tag der Szene, 90 Sekunden; nur Tests, je Ablauf).</summary>
+    public static bool BusTageAltFuerTests
     {
+        get => BusTageAlt.Value;
+        set => BusTageAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> BusTageAlt = new();
+
+    /// <summary>
+    /// Fahrzeit der Pruefung „Bus steckt“: die laengste ganze Runde eines Busses (Weg durch Tempo und alle Halte) plus
+    /// <paramref name="grenze"/> plus 20 Sekunden (Patch A 0.72.1; bis A 0.72.0 fest 90 Sekunden).
+    /// </summary>
+    internal static double BusRunde(Verkehr v, double grenze = 20) =>
+        v.Autos.Where(a => a.Nummer >= Buslinie.ErsteNummer).Select(a => (a.Laenge / a.Tempo) + (a.Halte.Count * Buslinie.HaltSekunden)).DefaultIfEmpty(0).Max() + grenze + 20;
+
+    /// <summary>
+    /// Stellen, an denen ein Bus laenger als <paramref name="grenze"/> Sekunden steht (Fahrt in Schritten von 1/20 s; ohne
+    /// <paramref name="sekunden"/> eine ganze Runde <see cref="BusRunde"/>).
+    /// </summary>
+    internal static List<Vector2> BusSteckt(Verkehr v, double? sekunden = null, double grenze = 20)
+    {
+        sekunden ??= BusRunde(v, grenze);
         var busse = v.Autos.Where(a => a.Nummer >= Buslinie.ErsteNummer).ToList();
         var steht = new double[busse.Count];
         var gemeldet = new bool[busse.Count];
         var stellen = new List<Vector2>();
         const double schritt = 1.0 / 20;
-        for (var t = 0; t < (int)Math.Round(sekunden / schritt); t++)
+        for (var t = 0; t < (int)Math.Round(sekunden.Value / schritt); t++)
         {
             v.Weiter(schritt, -1000, -1000);
             for (var i = 0; i < busse.Count; i++)

@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.72.1
+Fehler im Straßenverkehr der Spielstadt behoben.
+
+- Der Bus blieb an einer Haltestelle der neuen Stadt für immer stehen, und die Autos dahinter stauten sich. Jetzt hält er einige Sekunden und fährt dann weiter zur nächsten Haltestelle.
+- Die Autos fuhren nur noch ein paar Sekunden, nachdem du zuletzt etwas getan hattest, und blieben dann mitten auf der Straße stehen. Jetzt fährt der Verkehr draußen immer weiter. Die Autos halten nur, wenn deine Figur auf der Fahrbahn oder auf einem Zebrastreifen steht.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.72.0
 Vorbereitung für das Stadtbau-Werkzeug, im Spiel ändert sich nichts.
 

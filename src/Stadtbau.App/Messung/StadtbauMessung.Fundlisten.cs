@@ -21,6 +21,7 @@ public static partial class StadtbauMessung
     {
         a.NeuAnlegen("Starttest Fundlisten", "elektromarkt");
         a.OrtOeffnen("elektromarkt");
+        await UeberschriftUnveraendertAsync(a, f);
         a.Projekt!.Aendern("elektromarkt", "Boden", g => Bearbeitung.Boden(g, "flur", "teppich"));
         await a.Geprueft;
         await a.InnenAlleGeprueft;
@@ -117,6 +118,42 @@ public static partial class StadtbauMessung
             await BildAsync(a);
         }
         a.ReiterZeigen(innen: false);
+        await BildAsync(a);
+    }
+
+    /// <summary>
+    /// Patch S 0.49.1 (Sammelliste 332): Grundriss des unveraenderten Elektromarkts (8 rote Funde, Fund 216, sperren nicht):
+    /// der Kopf „Innenräume“ nennt sie („8 rot (unverändert, sperren nicht)“) statt „alles in Ordnung“. Gegenprobe: alte Regel.
+    /// </summary>
+    private static async Task UeberschriftUnveraendertAsync(Hauptansicht a, Window? f)
+    {
+        a.ReiterZeigen(innen: true);
+        await a.Geprueft;
+        await a.InnenAlleGeprueft;
+        await BildAsync(a);
+        var innen = a.Fundlisten.Innen;
+        var soll = Texte.FundeInnenTitel(0, 8);
+        Messwerte.Notiere("Fundlisten 332: Grundriss Elektromarkt unveraendert, Kopf \"" + innen?.Titel + "\", rot unveraendert " + a.UnveraendertRot.ToString(Inv));
+        if (a.InnenRot != 0 || a.UnveraendertRot != 8 || innen?.Titel != soll)
+        {
+            Fund("Fundlisten 332: Kopf \"" + innen?.Titel + "\" statt \"" + soll + "\" (rot " + a.InnenRot + ", unveraendert " + a.UnveraendertRot + ")");
+        }
+        await AlleGroessenAsync(a, f, "Fundlisten Grundriss unveraendert");
+        Hauptansicht.UeberschriftAltFuerTests = true;
+        try
+        {
+            a.NeuZeichnenFuerTests();
+            await BildAsync(a);
+            if (a.Fundlisten.Innen?.Titel != Texte.FundeInnenTitel(0))
+            {
+                Fund("Fundlisten 332 Gegenprobe: mit der alten Regel steht nicht \"" + Texte.FundeInnenTitel(0) + "\" (Probe taugt nicht): " + a.Fundlisten.Innen?.Titel);
+            }
+        }
+        finally
+        {
+            Hauptansicht.UeberschriftAltFuerTests = false;
+            a.NeuZeichnenFuerTests();
+        }
         await BildAsync(a);
     }
 
