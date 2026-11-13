@@ -331,11 +331,24 @@ public static class Bauen3D
     /// Welle Z: Ziehen von Punkt zu Punkt wie <c>KartenFlaeche.ZiehenBis</c>, nur auf einer Kopie. Der Umriss ist das Band der
     /// Verbindung (auch ohne passende Verbindung die gerade Linie, dann mit Grund und rot).
     /// </summary>
-    public static Vorschau Ziehen(PyObjekt aussen, ZiehArt art, double ax, double ay, double bx, double by, bool raster)
+    public static Vorschau Ziehen(PyObjekt aussen, ZiehArt art, double ax, double ay, double bx, double by, bool raster,
+        Strassenzug? vorlage = null, StrassenzugPlan? zugPlan = null)
     {
         var kopie = (PyObjekt)Py.Kopie(aussen)!;
         var (_, _, plan) = AussenBearbeitung.ZiehPlan(aussen, art, ax, ay, bx, by, raster);
-        var s = AussenBearbeitung.Ziehen(kopie, art, ax, ay, bx, by, raster, out var grund);
+        AussenStelle? s;
+        string? grund = null;
+        if (art == ZiehArt.Strasse && vorlage is not null)
+        {
+            // S 0.51.0: mit Ausstattung genau wie der Schritt (gleicher Plan wie die Vorschau in der Draufsicht)
+            var zug = AussenBearbeitung.StrassenzugZiehen(kopie, ax, ay, bx, by, raster, vorlage, zugPlan);
+            s = zug.Strasse;
+            grund = zug.Plan.Plan.Grund;
+        }
+        else
+        {
+            s = AussenBearbeitung.Ziehen(kopie, art, ax, ay, bx, by, raster, out grund);
+        }
         return new Vorschau(kopie, s, Band(AussenBearbeitung.ZiehLinie(art, plan), AussenBearbeitung.ZiehHalb(art)), s is null ? grund ?? Texte.Bauen3DGehtNicht : null);
     }
 

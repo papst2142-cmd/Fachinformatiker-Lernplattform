@@ -18,6 +18,47 @@ public sealed partial class Hauptansicht
     /// <summary>Knopf „Hügel“ (Start-Test).</summary>
     internal Button? HuegelKnopf { get; private set; }
 
+    /// <summary>S 0.51.0: Grund neben dem grauen Knopf „Hügel“ (nur sichtbar bei der Hoechstzahl).</summary>
+    internal TextBlock? HuegelGrundZeile { get; private set; }
+
+    private Control HuegelGrundBauen()
+    {
+        var t = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
+        t.TextWrapping = Avalonia.Media.TextWrapping.Wrap;
+        t.IsVisible = false;
+        HuegelGrundZeile = t;
+        return t;
+    }
+
+    /// <summary>
+    /// S 0.51.0 (Weisung P12-241): bei <see cref="Gelaende.HuegelHoechstens"/> Huegeln ist der Knopf grau und nennt den Grund
+    /// (Tipp, Vorlesen und eine Zeile darunter). Ist gerade „Hügel“ zum Setzen gewaehlt, endet das Setzen mit dem Grund.
+    /// </summary>
+    private void HuegelKnopfAktualisieren()
+    {
+        if (HuegelKnopf is not { } knopf)
+        {
+            return;
+        }
+        var voll = _projekt is not null && AussenBearbeitung.HuegelVoll(_projekt.AussenStand);
+        var grund = Texte.HuegelGenug(Gelaende.HuegelHoechstens);
+        knopf.IsEnabled = !voll;
+        var tipp = voll ? grund : Texte.HuegelTipp + " " + Texte.SetzenKnopfTipp;
+        ToolTip.SetTip(knopf, new TextBlock { Text = tipp, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 340 });
+        Avalonia.Automation.AutomationProperties.SetHelpText(knopf, tipp);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, voll ? Texte.HuegelSetzen + ", " + Texte.HuegelGenugKurz : Texte.HuegelSetzen);
+        if (HuegelGrundZeile is { } zeile)
+        {
+            zeile.Text = grund;
+            zeile.IsVisible = voll;
+        }
+        if (voll && Karte.SetzenArt == AussenArt.Huegel)
+        {
+            SetzenBeenden();
+            Melden(grund);
+        }
+    }
+
     /// <summary>Start-Test: Pinsel-Knoepfe Heben, Senken, Glaetten.</summary>
     internal Dictionary<PinselArt, Button> PinselKnoepfe { get; } = [];
 

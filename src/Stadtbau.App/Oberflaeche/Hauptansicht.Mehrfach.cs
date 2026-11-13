@@ -69,6 +69,11 @@ public sealed partial class Hauptansicht
         }
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.GruppeGewaehlt(Karte.Gruppe.Count), "Normal", Avalonia.Media.FontWeight.Bold));
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.GruppeText, "Klein", farbe: "Pinsel.muted"));
+        if (Karte.Gruppe.Count(s => s.Art == AussenArt.Hoehe) is var gemalt and > 0)
+        {
+            // S 0.51.0: wie viele gemalte Hoehenpunkte mitgehen (sie ruecken in Schritten 0,5)
+            _aussenAuswahl.Children.Add(Schrift.Text(Texte.GemaltePunkte(gemalt) + ". " + Texte.GemaltRaster, "Klein", farbe: "Pinsel.muted"));
+        }
         if (!_projekt.NurLesen)
         {
             GruppeDrehenKnopf = Knopf(Texte.GruppeDrehen, Texte.GruppeDrehenTipp, () => Karte.GruppeDrehen(), betont: true);

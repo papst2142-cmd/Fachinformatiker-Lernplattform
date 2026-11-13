@@ -64,6 +64,7 @@ public static partial class Texte
     public const string ZugNurMitGehweg = "Zebrastreifen und Haltestelle gibt es nur an einer Straße mit Gehweg.";
     public const string ZugSpeichern = "Vorlage speichern";
     public static string ZugGespeichert(string name) => $"Vorlage „{name}“ gespeichert";
+    public const string ZugKeinName = "Bitte einen Namen eingeben (Buchstaben, Ziffern, Leerzeichen, - und _).";
     public const string ZugNameFest = "So heißt schon eine feste Vorlage.";
     public const string ZugLoeschen = "Vorlage löschen";
     public const string ZugLoeschenTitel = "Vorlage löschen?";
@@ -83,6 +84,7 @@ public static partial class Texte
 
     // ---- Gelaende in der Mehrfachauswahl ----
     public const string GemalteHoehen = "Gemalte Höhen";
+    public const string GemaltRaster = "Gemalte Höhen rücken immer in Schritten von 0,5.";
     public static string GemaltePunkte(int n) => n == 1 ? "1 gemalter Höhenpunkt" : n + " gemalte Höhenpunkte";
     public static string HuegelGenug(int hoechstens) => $"Die Stadt hat schon {hoechstens} Hügel, mehr sind nicht erlaubt. Erst einen Hügel löschen.";
     public const string HuegelGenugKurz = "Höchstzahl erreicht";

@@ -1003,6 +1003,7 @@ public sealed partial class KartenFlaeche : Control
         ZiehAnfang = null;
         ZiehZiel = null;
         ZiehGrund = null;
+        ZugPlanNeu();
         ZiehenGeaendert?.Invoke();
         InvalidateVisual();
     }
@@ -1020,6 +1021,7 @@ public sealed partial class KartenFlaeche : Control
         ZiehAnfang = new Point(x, y);
         ZiehZiel = null;
         ZiehGrund = null;
+        ZugPlanNeu();
         ZiehenGeaendert?.Invoke();
         InvalidateVisual();
     }
@@ -1032,6 +1034,7 @@ public sealed partial class KartenFlaeche : Control
         {
             ZiehGrund = AussenBearbeitung.ZiehPlan(stand, art, a.X, a.Y, x, y, Raster).Plan.Grund;
         }
+        ZugPlanNeu();
         ZiehenGeaendert?.Invoke();
         InvalidateVisual();
     }
@@ -1058,6 +1061,10 @@ public sealed partial class KartenFlaeche : Control
         if (_projekt is null || _projekt.NurLesen || ZiehArtAktiv is not { } art || ZiehAnfang is not { } a)
         {
             return null;
+        }
+        if (ZugAktiv)
+        {
+            return ZugZiehenBis(a, x, y);
         }
         var raster = Raster;
         var (_, _, plan) = AussenBearbeitung.ZiehPlan(_projekt.AussenStand, art, a.X, a.Y, x, y, raster);
@@ -1140,6 +1147,7 @@ public sealed partial class KartenFlaeche : Control
             var farbe = plan.Gefunden ? "#34D399" : "#F87171";
             Linie(ctx, linie, new Pen(Pinsel(farbe, 0.6), 2 * AussenBearbeitung.ZiehHalb(art) * _zoom, lineCap: PenLineCap.Flat, lineJoin: PenLineJoin.Round));
             Linie(ctx, linie, new Pen(Pinsel("#111827"), 1.5, new DashStyle([4, 3], 0)));
+            ZugZeichnen(ctx);
             Fangpunkt(ctx, pa, akzent);
             Fangpunkt(ctx, pb, akzent);
         }

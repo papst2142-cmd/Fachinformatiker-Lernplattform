@@ -72,6 +72,11 @@ public sealed partial class DreiBedienung
                         _karte.WaehlenMitMeldung(st);
                     }
                 }
+                else if (md.Umschalten && md.Boden is { } boden)
+                {
+                    // S 0.51.0: Umschalt+Klick auf gemalten Boden nimmt den ganzen Bereich dazu oder heraus
+                    _karte.BereichUmschalten(boden.X, boden.Y);
+                }
                 return true;
             case Fingergeste.Art.StueckZiehen when md.Stueck is { } zst:
             {

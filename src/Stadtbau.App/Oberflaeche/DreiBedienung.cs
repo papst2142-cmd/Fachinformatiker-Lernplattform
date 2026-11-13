@@ -90,6 +90,16 @@ public sealed partial class DreiBedienung : Control
             }
             InvalidateVisual();
         };
+        // S 0.51.0: die Nachpruefung der Ausstattung ist fertig: Schatten mit dem geprueften Plan neu bauen (gleich dem Schritt)
+        _karte.ZugGeprueft += () =>
+        {
+            if (Projekt is { } proj && _karte.ZiehArtAktiv is { } art && _karte.ZiehAnfang is { } a && _karte.ZiehZiel is { } z && _vorschau is not null)
+            {
+                _vorschau = Bauen3D.Ziehen(proj.AussenStand, art, a.X, a.Y, z.X, z.Y, _karte.Raster, _karte.ZugAktiv ? _karte.ZugVorlage : null, _karte.ZugVorschau);
+                PruefungAnstossen();
+                InvalidateVisual();
+            }
+        };
         // S 0.27.0: Massband (gleiche Messung wie in der Draufsicht)
         _karte.MassbandGeaendert += InvalidateVisual;
         // S 0.28.0: Tuer setzen (Vorschau, Modus); die Tueren des Modells aus der schon gebauten 3D-Szene
@@ -641,7 +651,7 @@ public sealed partial class DreiBedienung : Control
             _schluessel = schluessel;
             var zuhr = Stopwatch.StartNew();
             _karte.ZiehZielSetzen(x, y);
-            _vorschau = Bauen3D.Ziehen(proj.AussenStand, ziehArt, a.X, a.Y, x, y, _karte.Raster);
+            _vorschau = Bauen3D.Ziehen(proj.AussenStand, ziehArt, a.X, a.Y, x, y, _karte.Raster, _karte.ZugAktiv ? _karte.ZugVorlage : null, _karte.ZugVorschau);
             SchattenMs = zuhr.Elapsed.TotalMilliseconds;
             PruefungAnstossen();
             return;
