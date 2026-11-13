@@ -120,7 +120,7 @@ public static partial class AutoMessung
             var abgefahren = false;
             var imBus = await Bis(() =>
             {
-                abgefahren |= spiel.Mitfahrt == Mitfahrt.SteigtEin && bus.Weg != weg;
+                abgefahren |= spiel.Mitfahrt == StadtSpiel.MitfahrtStufe.SteigtEin && bus.Weg != weg;
                 return spiel.SitztImBus;
             }, 10);
             await ansicht.BildFertigAsync();
@@ -164,7 +164,7 @@ public static partial class AutoMessung
             KnopfMit(seite, SpielProbeTexte.Aussteigen)?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await ansicht.BildFertigAsync();
             Pruefe("Knopf nach dem Druecken", KnopfMit(seite, SpielProbeTexte.HaeltGleich) is not null && spiel.AussteigenGewuenscht, spiel.Zeile);
-            var aus = await Bis(() => spiel.Mitfahrt == Mitfahrt.Keine, runde);
+            var aus = await Bis(() => spiel.Mitfahrt == StadtSpiel.MitfahrtStufe.Keine, runde);
             await ansicht.BildFertigAsync();
             var ziel = spiel.Szene.Haltestellen.FirstOrDefault(x => x.Nr == soll);
             var platz = ziel is null ? default : StadtSpiel.Wartplatz(ziel);

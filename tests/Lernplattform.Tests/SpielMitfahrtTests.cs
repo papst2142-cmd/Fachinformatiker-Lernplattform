@@ -137,16 +137,16 @@ public sealed class SpielMitfahrtTests
             var weg = bus.Weg;
             var soll = Naechste(bus);
             var bilder = 0;
-            while (spiel.Mitfahrt == Mitfahrt.SteigtEin && bilder++ < 600)
+            while (spiel.Mitfahrt == StadtSpiel.MitfahrtStufe.SteigtEin && bilder++ < 600)
             {
                 Bild(spiel, v);
-                if (spiel.Mitfahrt == Mitfahrt.SteigtEin && bus.Weg != weg)
+                if (spiel.Mitfahrt == StadtSpiel.MitfahrtStufe.SteigtEin && bus.Weg != weg)
                 {
                     funde.Add($"Tag {tag}, Haltestelle {h.Nr}: Bus faehrt beim Einsteigen ab");
                     break;
                 }
             }
-            Assert.Equal(Mitfahrt.ImBus, spiel.Mitfahrt);
+            Assert.Equal(StadtSpiel.MitfahrtStufe.ImBus, spiel.Mitfahrt);
             Assert.Contains(spiel.Knoepfe, k => k.Aktion == StadtSpiel.AktionAussteigen && k.Name == SpielProbeTexte.Aussteigen);
             // abfahren lassen, dann „Aussteigen“
             Assert.True(Bis(spiel, v, () => bus.HaeltAn is null, 30), "Bus faehrt nicht ab");
@@ -155,7 +155,7 @@ public sealed class SpielMitfahrtTests
             var zeilen = spiel.Ablauf.Stand.Verlauf.Count;
             Assert.True(spiel.Knopf(StadtSpiel.AktionAussteigen));
             Assert.Contains(spiel.Knoepfe, k => k.Aktion == StadtSpiel.AktionHaeltGleich && k.Name == SpielProbeTexte.HaeltGleich);
-            if (!Bis(spiel, v, () => spiel.Mitfahrt == Mitfahrt.Keine, runde))
+            if (!Bis(spiel, v, () => spiel.Mitfahrt == StadtSpiel.MitfahrtStufe.Keine, runde))
             {
                 funde.Add($"Tag {tag}, Haltestelle {h.Nr}: steigt nicht aus");
                 continue;
@@ -269,7 +269,7 @@ public sealed class SpielMitfahrtTests
             Bild(spiel, v);
             Assert.Null(spiel.WartetAn);
             Assert.Null(spiel.BusZumEinsteigen);
-            Assert.Equal(Mitfahrt.Keine, spiel.Mitfahrt);
+            Assert.Equal(StadtSpiel.MitfahrtStufe.Keine, spiel.Mitfahrt);
         }
         Assert.Null(spiel.HaltestelleBei(spiel.FigurX, spiel.FigurZ));
     }
@@ -302,10 +302,10 @@ public sealed class SpielMitfahrtBelastungTests
             {
                 return "Knopf wirkt nicht";
             }
-            for (var i = 0; i < 600 && s.Mitfahrt == Mitfahrt.SteigtEin; i++)
+            for (var i = 0; i < 600 && s.Mitfahrt == StadtSpiel.MitfahrtStufe.SteigtEin; i++)
             {
                 SpielMitfahrtTests.Bild(s, v);
-                if (s.Mitfahrt == Mitfahrt.SteigtEin && bus.Weg != weg)
+                if (s.Mitfahrt == StadtSpiel.MitfahrtStufe.SteigtEin && bus.Weg != weg)
                 {
                     return "Bus faehrt beim Einsteigen ab";
                 }
@@ -333,7 +333,7 @@ public sealed class SpielMitfahrtBelastungTests
             {
                 return "Bus faehrt nicht ab";
             }
-            if (!s.Knopf(StadtSpiel.AktionAussteigen) || !SpielMitfahrtTests.Bis(s, v, () => s.Mitfahrt == Mitfahrt.Keine, SpielMitfahrtTests.Runde(v)))
+            if (!s.Knopf(StadtSpiel.AktionAussteigen) || !SpielMitfahrtTests.Bis(s, v, () => s.Mitfahrt == StadtSpiel.MitfahrtStufe.Keine, SpielMitfahrtTests.Runde(v)))
             {
                 return "steigt nicht aus";
             }

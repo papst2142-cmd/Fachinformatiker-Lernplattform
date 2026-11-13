@@ -5,22 +5,6 @@ using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Core.Spiel.Probe;
 
-/// <summary>Welle A 0.73.0: Stufe der selbst gefahrenen Busfahrt.</summary>
-public enum Mitfahrt
-{
-    /// <summary>Keine Fahrt (auch: die Figur wartet an einer Haltestelle).</summary>
-    Keine,
-
-    /// <summary>Die Figur geht vom Wartplatz zur Tuer des Busses (der Bus wartet).</summary>
-    SteigtEin,
-
-    /// <summary>Die Figur sitzt im Bus; die Kamera folgt dem Bus.</summary>
-    ImBus,
-
-    /// <summary>Die Figur geht von der Tuer zum Platz neben der Haltestelle (der Bus wartet).</summary>
-    SteigtAus,
-}
-
 /// <summary>
 /// Welle A 0.73.0 (Weisung P12-239, Sammelliste 335, Nico 13.11.2026 15:59 und 16:07 MEZ): selbst mit dem Bus fahren. Die Figur
 /// geht wie zu jedem Punkt der Stadt zu einer Haltestelle und wartet dort. Haelt ein Bus der Linie dort, steht unten der Knopf
@@ -34,6 +18,22 @@ public enum Mitfahrt
 /// </summary>
 public sealed partial class StadtSpiel
 {
+    /// <summary>Welle A 0.73.0: Stufe der selbst gefahrenen Busfahrt.</summary>
+    public enum MitfahrtStufe
+    {
+        /// <summary>Keine Fahrt (auch: die Figur wartet an einer Haltestelle).</summary>
+        Keine,
+
+        /// <summary>Die Figur geht vom Wartplatz zur Tuer des Busses (der Bus wartet).</summary>
+        SteigtEin,
+
+        /// <summary>Die Figur sitzt im Bus; die Kamera folgt dem Bus.</summary>
+        ImBus,
+
+        /// <summary>Die Figur geht von der Tuer zum Platz neben der Haltestelle (der Bus wartet).</summary>
+        SteigtAus,
+    }
+
     /// <summary>Aktion des Knopfs „Einsteigen“.</summary>
     public const string AktionEinsteigen = "bus_einsteigen";
 
@@ -61,7 +61,7 @@ public sealed partial class StadtSpiel
     /// <summary>Tuer: an der Bordsteinkante neben der vorderen Tuer des haltenden Busses.</summary>
     private const float TuerQuer = (StadtSzene.StrassenBreite / 2) + 0.02f;
 
-    public Mitfahrt Mitfahrt { get; private set; }
+    public MitfahrtStufe Mitfahrt { get; private set; }
 
     /// <summary>Haltestelle, an der die Figur gerade wartet (null = an keiner).</summary>
     public int? WartetAn { get; private set; }
@@ -73,10 +73,10 @@ public sealed partial class StadtSpiel
     public bool AussteigenGewuenscht { get; private set; }
 
     /// <summary>Die Figur ist mit dem Bus unterwegs (ein- oder aussteigend oder im Bus).</summary>
-    public bool MitfahrtAktiv => Mitfahrt != Mitfahrt.Keine;
+    public bool MitfahrtAktiv => Mitfahrt != MitfahrtStufe.Keine;
 
     /// <summary>Die Figur sitzt im Bus (sie selbst wird nicht gezeichnet, die Autos halten nicht fuer sie).</summary>
-    public bool SitztImBus => Mitfahrt == Mitfahrt.ImBus;
+    public bool SitztImBus => Mitfahrt == MitfahrtStufe.ImBus;
 
     /// <summary>Zuletzt gefahrene Strecke (Feldmass) und ihre Minuten (Start-Test, Fotos).</summary>
     public (float Strecke, long Minuten, int Ein, int Aus)? LetzteMitfahrt { get; private set; }
@@ -136,9 +136,9 @@ public sealed partial class StadtSpiel
     /// <summary>Knoepfe der Fahrt (Aktion, Name); leer, wenn keine Fahrt und kein Bus zum Einsteigen.</summary>
     private List<(string Aktion, string Name)> MitfahrtKnoepfe() => Mitfahrt switch
     {
-        Mitfahrt.Keine when BusZumEinsteigen is not null => [(AktionEinsteigen, SpielProbeTexte.Einsteigen)],
-        Mitfahrt.ImBus when AussteigenGewuenscht => [(AktionHaeltGleich, SpielProbeTexte.HaeltGleich)],
-        Mitfahrt.ImBus => [(AktionAussteigen, SpielProbeTexte.Aussteigen)],
+        MitfahrtStufe.Keine when BusZumEinsteigen is not null => [(AktionEinsteigen, SpielProbeTexte.Einsteigen)],
+        MitfahrtStufe.ImBus when AussteigenGewuenscht => [(AktionHaeltGleich, SpielProbeTexte.HaeltGleich)],
+        MitfahrtStufe.ImBus => [(AktionAussteigen, SpielProbeTexte.Aussteigen)],
         _ => [],
     };
 
@@ -162,7 +162,7 @@ public sealed partial class StadtSpiel
     /// <summary>Knopf „Einsteigen“: geht nur, solange ein Bus an der Haltestelle der Figur haelt.</summary>
     public bool Einsteigen() => Gemessen(() =>
     {
-        if (Mitfahrt != Mitfahrt.Keine || BusZumEinsteigen is not { } bus || WartetAn is not { } nr
+        if (Mitfahrt != MitfahrtStufe.Keine || BusZumEinsteigen is not { } bus || WartetAn is not { } nr
             || Szene.Haltestellen.FirstOrDefault(h => h.Nr == nr) is not { } h)
         {
             return false;
@@ -175,7 +175,7 @@ public sealed partial class StadtSpiel
         AussteigenGewuenscht = false;
         BusZumEinsteigen = null;
         _steigZiel = Tuer(h);
-        Mitfahrt = Mitfahrt.SteigtEin;
+        Mitfahrt = MitfahrtStufe.SteigtEin;
         Knoepfe = [];
         Geaendert?.Invoke();
         return true;
@@ -184,7 +184,7 @@ public sealed partial class StadtSpiel
     /// <summary>Knopf „Aussteigen“: der Bus haelt an der naechsten Haltestelle (steht er gerade an einer, gleich dort).</summary>
     public bool Aussteigen() => Gemessen(() =>
     {
-        if (Mitfahrt != Mitfahrt.ImBus || AussteigenGewuenscht)
+        if (Mitfahrt != MitfahrtStufe.ImBus || AussteigenGewuenscht)
         {
             return false;
         }
@@ -217,14 +217,14 @@ public sealed partial class StadtSpiel
         var bus = verkehr?.Autos.FirstOrDefault(a => a.Nummer == _mitBus && a.Nummer >= Buslinie.ErsteNummer);
         switch (Mitfahrt)
         {
-            case Mitfahrt.Keine:
+            case MitfahrtStufe.Keine:
                 HaltestellePruefen(verkehr);
                 return;
-            case Mitfahrt.SteigtEin:
+            case MitfahrtStufe.SteigtEin:
                 if (bus is null)
                 {
                     // der Bus ist weg (anderer Verkehr): die Figur bleibt an der Haltestelle
-                    Mitfahrt = Mitfahrt.Keine;
+                    Mitfahrt = MitfahrtStufe.Keine;
                     HaltestellePruefen(verkehr);
                     return;
                 }
@@ -232,7 +232,7 @@ public sealed partial class StadtSpiel
                 bus.Haelt = true;
                 if (Gehen(sekunden))
                 {
-                    Mitfahrt = Mitfahrt.ImBus;
+                    Mitfahrt = MitfahrtStufe.ImBus;
                     WartetAn = null;
                     _letzterWeg = bus.Weg;
                     ImBusFolgen(bus);
@@ -241,14 +241,14 @@ public sealed partial class StadtSpiel
                     Geaendert?.Invoke();
                 }
                 return;
-            case Mitfahrt.ImBus:
+            case MitfahrtStufe.ImBus:
                 if (bus is null)
                 {
                     // der Bus faehrt nicht mehr (z. B. Verkehr der Festzeit): an der naechsten Haltestelle aussteigen
                     var naechste = Szene.Haltestellen.OrderBy(h => Vector2.Distance(h.Mitte, new Vector2(FigurX, FigurZ))).FirstOrDefault();
                     if (naechste is null)
                     {
-                        Mitfahrt = Mitfahrt.Keine;
+                        Mitfahrt = MitfahrtStufe.Keine;
                         return;
                     }
                     AussteigenAn(naechste, null);
@@ -278,7 +278,7 @@ public sealed partial class StadtSpiel
                     _letzterHalt = null;
                 }
                 return;
-            case Mitfahrt.SteigtAus:
+            case MitfahrtStufe.SteigtAus:
                 if (bus is not null)
                 {
                     bus.HaltRest = Math.Max(bus.HaltRest, HaltenBeimSteigen);
@@ -286,7 +286,7 @@ public sealed partial class StadtSpiel
                 }
                 if (Gehen(sekunden))
                 {
-                    Mitfahrt = Mitfahrt.Keine;
+                    Mitfahrt = MitfahrtStufe.Keine;
                     // derselbe Bus bietet an dieser Haltestelle nicht gleich wieder „Einsteigen“ an (und wartet nicht laenger);
                     // die Zeile „Ausgestiegen …“ bleibt stehen
                     _ausgestiegen = (_mitBus, _ausHalt);
@@ -390,7 +390,7 @@ public sealed partial class StadtSpiel
         var tuer = Tuer(h);
         (FigurX, FigurZ) = (tuer.X, tuer.Y);
         _steigZiel = Wartplatz(h);
-        Mitfahrt = bus is null ? Mitfahrt.Keine : Mitfahrt.SteigtAus;
+        Mitfahrt = bus is null ? MitfahrtStufe.Keine : MitfahrtStufe.SteigtAus;
         if (bus is null)
         {
             (FigurX, FigurZ) = (_steigZiel.X, _steigZiel.Y);

@@ -536,7 +536,7 @@ public sealed partial class StadtSpiel
     public string Bewegung => ImInnenraum ? Figur.Gehen : Figur.Rennen;
 
     /// <summary>Bild der Schrittbewegung (0 bis <see cref="Figur.Bilder"/> - 1) nach dem Weg, -1 = steht.</summary>
-    public int SchrittBild => (Geht && !ImBus) || Mitfahrt is Mitfahrt.SteigtEin or Mitfahrt.SteigtAus ? BildNachWeg(Schrittweg, Zyklus) : -1;
+    public int SchrittBild => (Geht && !ImBus) || Mitfahrt is MitfahrtStufe.SteigtEin or MitfahrtStufe.SteigtAus ? BildNachWeg(Schrittweg, Zyklus) : -1;
 
     /// <summary>Bild der Bewegung nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
     public static int BildNachWeg(double weg, double zyklus) =>
