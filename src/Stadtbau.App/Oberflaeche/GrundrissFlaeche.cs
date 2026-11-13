@@ -509,13 +509,11 @@ public sealed class GrundrissFlaeche : Control
                 _ziehen = false;
                 InvalidateVisual();
                 break;
-            case Fingergeste.Art.StueckFertig when Auswahl is { } a && _projekt is not null && _ort is not null && !_projekt.NurLesen:
+            case Fingergeste.Art.StueckFertig when Auswahl is not null && _projekt is not null && _ort is not null && !_projekt.NurLesen:
                 var (dx, dy) = (s.Dx / _zoom, s.Dy / _zoom);
                 _ziehWelt = default;
                 _ziehen = false;
-                var neu = _projekt.Aendern(_ort, "Verschieben", g => Bearbeitung.Verschieben(g, a, dx, dy, Raster));
-                Waehlen(neu);
-                Gemeldet?.Invoke("Verschoben");
+                VerschiebenUm(dx, dy);
                 break;
             case Fingergeste.Art.AnsichtSchieben:
                 _versatz += new Vector(s.Dx, s.Dy);
@@ -579,6 +577,31 @@ public sealed class GrundrissFlaeche : Control
                 return false;
         }
     }
+
+    /// <summary>
+    /// Das gewaehlte Stueck um (dx, dy) verschieben (ganze Rasterschritte) und neu waehlen; ein Schritt im Verlauf. S 0.50.0:
+    /// derselbe Schritt fuer das Ziehen im Grundriss und in 3D (<see cref="InnenDreiBedienung"/>).
+    /// </summary>
+    public Stelle? VerschiebenUm(double dx, double dy)
+    {
+        if (_projekt is null || _ort is null || Auswahl is not { } a || _projekt.NurLesen)
+        {
+            return null;
+        }
+        var neu = _projekt.Aendern(_ort, "Verschieben", g => Bearbeitung.Verschieben(g, a, dx, dy, Raster));
+        Waehlen(neu);
+        Gemeldet?.Invoke("Verschoben");
+        return neu;
+    }
+
+    /// <summary>S 0.50.0: das Projekt dieser Flaeche (die 3D-Bedienung des Innenraums arbeitet auf demselben).</summary>
+    internal Projekt? Projekt => _projekt;
+
+    /// <summary>S 0.50.0: offener Innenraum oder Etage „ort@k“ (null = keiner).</summary>
+    internal string? Ort => _ort;
+
+    /// <summary>S 0.50.0: Grundriss des offenen Innenraums (null = keiner).</summary>
+    internal PyObjekt? GebaeudeJetzt => Gebaeude;
 
     public void Drehen()
     {
