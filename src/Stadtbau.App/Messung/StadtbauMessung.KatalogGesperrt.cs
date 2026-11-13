@@ -15,15 +15,13 @@ namespace Stadtbau.Messung;
 /// freien unterscheiden. Gemessen im gezeichneten Bild: mittlere Farbe der Knopf-Flaeche gesperrt gegen frei (derselbe
 /// Knopf), PC und Tablet, hell und dunkel; Unterschied mindestens <see cref="GesperrtUnterschied"/>. Der Grund darunter hat
 /// mindestens Kontrast <see cref="GrundKontrast"/>. Jeder gesperrte Knopf und Schalter in einer Katalog-Flaeche ist blasser.
-/// Gegenprobe: ohne die Klasse „katalog“ (wie bis S 0.51.0) ist der Unterschied unter <see cref="GleichGrenze"/>.
+/// Gegenprobe: gesperrt mit und ohne die Klasse „katalog“ (wie bis S 0.51.0) unterscheiden sich mindestens um
+/// <see cref="GesperrtUnterschied"/> (die Messung sieht die Klasse).
 /// </summary>
 public static partial class StadtbauMessung
 {
     /// <summary>Mittlerer Farbunterschied (0–255 je Kanal, gemittelt), ab dem gesperrt und frei sichtbar verschieden sind.</summary>
     private const double GesperrtUnterschied = 20;
-
-    /// <summary>Darunter gelten die Bilder als gleich (Gegenprobe).</summary>
-    private const double GleichGrenze = 3;
 
     /// <summary>Mindestkontrast des Grunds unter dem Knopf (WCAG AA fuer Text).</summary>
     private const double GrundKontrast = 4.5;
@@ -156,18 +154,25 @@ public static partial class StadtbauMessung
         }
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
 
-        // Gegenprobe: wie bis S 0.51.0 (ohne die Klasse) sehen gesperrt und frei gleich aus
+        // Gegenprobe: dieselbe Messung sieht, ob die Klasse wirkt. Gesperrt mit Klasse gegen gesperrt ohne Klasse (wie bis
+        // S 0.51.0) muss sich mindestens um GesperrtUnterschied unterscheiden; gesperrt gegen frei ohne Klasse steht nur als
+        // Angabe (je nach Zustand davor, etwa Zeiger ueber dem Knopf, zeigt Fluent einen kleinen Unterschied).
+        a.GruppeOeffnenFuer(hk);
+        hk.BringIntoView();
+        hk.IsEnabled = false;
+        await BildAsync(a);
+        var mitKlasse = Mittel(PixelVon(a, hk));
         a.KatalogGesperrtAltFuerTests(true);
         try
         {
-            a.GruppeOeffnenFuer(hk);
-            hk.BringIntoView();
             await BildAsync(a);
+            var ohneKlasse = Mittel(PixelVon(a, hk));
+            var wirkt = Unterschied(mitKlasse, ohneKlasse);
             var alt = await GesperrtFreiAsync(a, hk);
-            werte.Add("Gegenprobe alt " + alt.ToString("F1", Inv));
-            if (alt > GleichGrenze)
+            werte.Add(string.Create(Inv, $"Gegenprobe gesperrt mit/ohne Klasse {wirkt:F1}, alt gesperrt/frei {alt:F1} (Angabe, Zeiger ueber dem Knopf {hk.IsPointerOver})"));
+            if (wirkt < GesperrtUnterschied)
             {
-                Fund(string.Create(Inv, $"Katalog gesperrt Gegenprobe: ohne Klasse schon {alt:F1} verschieden (erwartet unter {GleichGrenze:F0}), die Messung prueft nichts"));
+                Fund(string.Create(Inv, $"Katalog gesperrt Gegenprobe: mit und ohne Klasse nur {wirkt:F1} verschieden (mindestens {GesperrtUnterschied:F0}), die Messung prueft nichts"));
             }
         }
         finally
