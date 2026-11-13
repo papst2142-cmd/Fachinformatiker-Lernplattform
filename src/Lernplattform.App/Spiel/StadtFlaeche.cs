@@ -353,6 +353,13 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Messung: laeuft, solange gesetzt, ohne Pause weiter (Kameraschwenk).</summary>
     public bool Dauerlauf { get; set; }
 
+    /// <summary>
+    /// Patch A 0.72.1 (Sammelliste 330): im Spiel faehrt der Verkehr draussen immer (die Bildschleife ruht draussen nicht mehr,
+    /// die Bildbremse der Grafikstufe gilt weiter). true = alte Regel (Autos nur <see cref="Verkehr.Nachlauf"/> Sekunden nach dem
+    /// Bedienen); so bleibt es in der 3D-Vorschau des Werkzeugs (E1: keine Dauerlast beim Bauen).
+    /// </summary>
+    public bool VerkehrNurNachBedienen { get; set; }
+
     /// <summary>Start-Test: wird je Bild vor dem Zeichnen gerufen (z. B. Kamera ein Stueck drehen).</summary>
     public Action? VorBild { get; set; }
 
@@ -868,7 +875,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             // Phase 8 W8: Schleifen der Stadt nach der Bildmitte (Fluss, Autos nach Naehe, Voegel)
             TonDienst.Takt(tonSpiel.ImInnenraum, tonSpiel.ImInnenraum ? null
-                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, TonVerkehr(), _verkehr?.Faehrt(jetzt) == true && (_gestalten is null || _uebergang is not null)));
+                : Tonplan.Stadt(tonSpiel.Szene, kamera.ZielX, kamera.ZielZ, TonVerkehr(), _verkehr?.Laeuft(jetzt, VerkehrNurNachBedienen) == true && (_gestalten is null || _uebergang is not null)));
         }
         var skalierung = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         var breite = (int)Math.Max(1, Bounds.Width * skalierung);
@@ -936,7 +943,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             if (!_spiel.ImInnenraum && _verkehr is not null && _spiel.Grafik is { } grafikA)
             {
-                var schritt = AutoSchritt > 0 ? AutoSchritt : _verkehr.Faehrt(jetzt) ? dt : 0;
+                var schritt = AutoSchritt > 0 ? AutoSchritt : _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen) ? dt : 0;
                 if (_uebergang is { } u)
                 {
                     // Patch A 0.29.1: tauschen nur ausserhalb des Sichtkegels, am Rundlauf oder nach der Hoechstzeit
@@ -1081,7 +1088,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             Belastung.Bild(jetzt, LetzteZeichenzeitMs);
         }
-        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Faehrt(jetzt)))
+        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen)))
         {
             // Welle Grafik G1: mit Bildbremse (Niedrig) erst nach 1 / Bilder Sekunden, sonst sofort wie vorher
             NaechstesBildAnfordern(jetzt);

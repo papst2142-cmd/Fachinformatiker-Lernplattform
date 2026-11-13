@@ -982,6 +982,18 @@ public static partial class Texte
     public const string FundeInnen = "Innenräume";
     public static string FundeStadtTitel(int rot) => rot > 0 ? "Stadt – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Stadt – alles in Ordnung";
     public static string FundeInnenTitel(int rot) => rot > 0 ? "Innenräume – " + rot.ToString(System.Globalization.CultureInfo.InvariantCulture) + " rot" : "Innenräume – alles in Ordnung";
+
+    /// <summary>
+    /// Patch S 0.49.1 (Sammelliste 332): Kopf „Innenräume“, wenn darunter auch rote Funde des offenen, unveraenderten Raums
+    /// stehen (<paramref name="unveraendert"/>; sie sperren nicht). Ohne solche Funde wie <see cref="FundeInnenTitel(int)"/>.
+    /// </summary>
+    public static string FundeInnenTitel(int rot, int unveraendert)
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        return unveraendert <= 0 ? FundeInnenTitel(rot)
+            : rot > 0 ? "Innenräume – " + rot.ToString(inv) + " rot, dazu " + unveraendert.ToString(inv) + " rot unverändert"
+            : "Innenräume – " + unveraendert.ToString(inv) + " rot (unverändert, sperren nicht)";
+    }
     public const string FundeStadtTipp = "Alle roten Funde der Stadt draußen, der Quests und der Grenzen. Sie sperren Speichern und Senden.";
     public const string FundeInnenTipp = "Alle roten Funde aller Innenräume und Etagen, auch der Innenräume eigener Gebäude. Sie sperren Speichern und Senden.";
     public const string FundeStadtKeine = "Draußen ist nichts rot.";

@@ -25,7 +25,7 @@ namespace Stadtbau.Oberflaeche;
 public sealed partial class Hauptansicht
 {
     /// <summary>Die 3D-Flaeche des Innenraums (eigene Flaeche, die 3D-Ansicht der Stadt bleibt unberuehrt).</summary>
-    internal StadtFlaeche Innen3DFlaeche { get; } = new() { OhneGehen = true };
+    internal StadtFlaeche Innen3DFlaeche { get; } = new() { OhneGehen = true, VerkehrNurNachBedienen = true };
 
     private readonly ContentControl _innenMitte = new() { Margin = new Thickness(12) };
     private Control? _grundrissMitte;

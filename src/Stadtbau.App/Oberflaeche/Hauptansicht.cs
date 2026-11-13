@@ -133,7 +133,7 @@ public sealed partial class Hauptansicht : UserControl
     private Control? _dreiAnsicht;
 
     // Stadt draussen und 3D
-    public StadtFlaeche Drei { get; } = new();
+    public StadtFlaeche Drei { get; } = new() { VerkehrNurNachBedienen = true };
     private readonly StackPanel _aussenAuswahl = new() { Spacing = 6 };
 
     /// <summary>Texte der Karte "Ausgewaehltes Stueck" draussen (Start-Test, Weisung P12-25).</summary>

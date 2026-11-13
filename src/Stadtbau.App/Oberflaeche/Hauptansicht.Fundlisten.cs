@@ -25,6 +25,12 @@ public sealed partial class Hauptansicht
     /// </summary>
     internal static bool FundlistenAltFuerTests { get; set; }
 
+    /// <summary>Gegenprobe Patch S 0.49.1 (Sammelliste 332): Kopf „Innenräume“ im Grundriss wie in S 0.49.0 (zaehlt rote Funde unveraenderter Raeume nicht; nur Start-Test).</summary>
+    internal static bool UeberschriftAltFuerTests { get; set; }
+
+    /// <summary>Rote Funde des offenen, unveraenderten Raums, die im Grundriss unter „Innenräume“ stehen (Start-Test).</summary>
+    internal int UnveraendertRot => _innen && _entwurf is null && _ort is { } o && !_innenSchluessel.Contains(o) ? Funde.Count(f => f.Rot) : 0;
+
     private List<InnenFunde.Ort> _innenAlle = [];
     private HashSet<string> _innenSchluessel = [];
     private int _innenAlleStand;
@@ -205,7 +211,10 @@ public sealed partial class Hauptansicht
             _stadtListeInnen.TitelSetzen(stadtTitel, stadtFarbe);
             StadtEintraege(_stadtListeInnenInhalt);
         }
-        _pruefenInnen?.TitelSetzen(innenTitel, innenFarbe);
+        // Patch S 0.49.1 (Sammelliste 332): im Grundriss stehen unter „Innenräume“ auch die roten Funde des offenen Raums, wenn er
+        // unveraendert ist (sie sperren nicht); der Kopf nennt sie, sonst stuende dort „alles in Ordnung“ ueber roten Funden
+        var unveraendertRot = _ort is { } o2 && !_innenSchluessel.Contains(o2) && !UeberschriftAltFuerTests ? Funde.Count(f => f.Rot) : 0;
+        _pruefenInnen?.TitelSetzen(Texte.FundeInnenTitel(innenRot, unveraendertRot), innenRot + unveraendertRot > 0 ? "Pinsel.red" : "Pinsel.text");
         if (_ort is { } offen && _projekt is not null)
         {
             _offenerRaumKopf.IsVisible = true;

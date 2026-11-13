@@ -167,4 +167,31 @@ public sealed class SpielVerkehrTests
         Assert.True(v.Faehrt(39.99));
         Assert.Equal(10, Verkehr.Nachlauf);
     }
+
+    [Fact]
+    public void Patch330_DraussenFaehrtDerVerkehrImmer_GegenprobeNachlauf()
+    {
+        // Patch A 0.72.1 (Sammelliste 330): auch lange nach dem letzten Bedienen faehrt der Verkehr (die Figur steht);
+        // die Vorschau des Werkzeugs (nurNachBedienen) und die alte Regel halten nach Verkehr.Nachlauf an
+        var v = Verkehr.Fuer(Szene.Value);
+        v.Bedient(30);
+        Assert.True(v.Laeuft(1000));
+        Assert.True(v.Laeuft(39.99, nurNachBedienen: true));
+        Assert.False(v.Laeuft(1000, nurNachBedienen: true));
+        Verkehr.NachlaufAltFuerTests = true;
+        try
+        {
+            Assert.False(v.Laeuft(1000));
+            Assert.True(v.Laeuft(39.99));
+        }
+        finally
+        {
+            Verkehr.NachlaufAltFuerTests = false;
+        }
+        // die Figur steht still auf dem Gehweg: in 60 s ohne Bedienen fahren alle Autos (keins steht dauerhaft)
+        var w = Verkehr.Fuer(Szene.Value);
+        var start = w.Autos.Select(a => a.Weg).ToList();
+        w.Probe(60, -100, -100);
+        Assert.All(w.Autos, a => Assert.NotEqual(start[w.Autos.IndexOf(a)], a.Weg));
+    }
 }

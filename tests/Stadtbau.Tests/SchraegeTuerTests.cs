@@ -173,6 +173,114 @@ public class SchraegeTuerTests
         Assert.True(l <= 3 + GebaeudeTuer.LaterneFrei + GebaeudeTuer.WegRaster + 0.01f, $"Weg {l} laenger als noetig");
     }
 
+    /// <summary>Patch S 0.49.1 (Sammelliste 331): Strasse achsrecht in der Stadt (y = 15), das Haus um 30 Grad gedreht.</summary>
+    private static List<List<Vector2>> StrasseInDerStadt() => [[new Vector2(0, 15), new Vector2(20, 15)]];
+
+    private static float Laenge(List<Vector2> weg)
+    {
+        var l = 0f;
+        for (var i = 0; i + 1 < weg.Count; i++)
+        {
+            l += Vector2.Distance(weg[i], weg[i + 1]);
+        }
+        return l;
+    }
+
+    [Fact]
+    public void Patch331_SchraegesHaus_NurKurzGeradeAusDerTuer_DannKuerzesterWeg_GegenprobeLang()
+    {
+        var z = Zugang(Lage30);
+        Assert.True(GebaeudeTuer.WegRechtwinklig(z, (9, 9, 2, 2), StrasseInDerStadt(), [], Lage30));
+        var weg = Weg(z);
+        // genau zwei Stuecke: kurz gerade aus der Tuer (WegStart, wie am geraden Haus), dann geradewegs (quer) auf die Strasse
+        Assert.Equal(3, weg.Count);
+        Assert.True(MathF.Abs(Vector2.Distance(weg[0], weg[1]) - GebaeudeTuer.WegStart) < 0.01f, string.Join(" ", weg));
+        Assert.True(Vector2.Dot(Vector2.Normalize(weg[1] - weg[0]), Lage30.Richtung(new Vector2(0, 1))) > 0.9999f, "nicht gerade aus der Tuer");
+        Assert.True(MathF.Abs(weg[2].Y - 15) < 0.01f && MathF.Abs(weg[2].X - weg[1].X) < 0.01f, "Ende nicht senkrecht auf der Strasse: " + weg[2]);
+        var radien = ((List<object?>)z["radien"]!).Select(r => Py.F(r)).ToList();
+        Assert.Equal([0, StadtTuerweg.Radius, 0], radien.Select(r => Math.Round(r, 3)));
+        var kurz = Laenge(weg);
+
+        // Gegenprobe S 0.49.0: lange rechtwinklig zur gedrehten Wand, erst vor der Strasse abbiegen (laenger, erstes Stueck lang)
+        var alt = Zugang(Lage30);
+        GebaeudeTuer.SchraegLangAltFuerTests = true;
+        try
+        {
+            Assert.True(GebaeudeTuer.WegRechtwinklig(alt, (9, 9, 2, 2), StrasseInDerStadt(), [], Lage30));
+        }
+        finally
+        {
+            GebaeudeTuer.SchraegLangAltFuerTests = false;
+        }
+        var wegAlt = Weg(alt);
+        Assert.True(Laenge(wegAlt) > kurz + 0.2f, $"Gegenprobe: alter Weg {Laenge(wegAlt)} nicht laenger als {kurz}");
+        Assert.True(Vector2.Distance(wegAlt[0], wegAlt[1]) > 1f, "Gegenprobe: altes erstes Stueck kurz");
+    }
+
+    [Fact]
+    public void Patch331_SchraegesHaus_TuerAnDerSchmalseite_WegStreiftDasHausNicht_GegenprobeOhneAbstand()
+    {
+        // Nachbau des Fotos P12-233: Tuer in der Mitte der Westwand, Strasse unterhalb; der Weg darf die Hausecke nicht streifen
+        PyObjekt Westtuer()
+        {
+            var tuer = Lage30.Punkt(new Vector2(9, 10));
+            var vor = Lage30.Punkt(new Vector2(9 - GebaeudeTuer.WegStart, 10));
+            return new PyObjekt
+            {
+                { "tuer", new List<object?> { (double)tuer.X, (double)tuer.Y } },
+                { "weg", new List<object?> { new List<object?> { (double)tuer.X, (double)tuer.Y }, new List<object?> { (double)vor.X, (double)vor.Y } } },
+            };
+        }
+        float Abstand(List<Vector2> weg)
+        {
+            // kleinster Abstand der Wegmitte (ohne das erste Stueck aus der Tuer) zur Flaeche des Hauses im Rahmen des Hauses
+            var am = float.MaxValue;
+            for (var i = 1; i + 1 < weg.Count; i++)
+            {
+                var (a, b) = (Lage30.Zurueck(weg[i]), Lage30.Zurueck(weg[i + 1]));
+                for (var k = 0; k <= 400; k++)
+                {
+                    var q = Vector2.Lerp(a, b, k / 400f);
+                    var dx = MathF.Max(MathF.Max(9 - q.X, q.X - 11), 0);
+                    var dy = MathF.Max(MathF.Max(9 - q.Y, q.Y - 11), 0);
+                    am = MathF.Min(am, MathF.Sqrt((dx * dx) + (dy * dy)));
+                }
+            }
+            return am;
+        }
+        var z = Westtuer();
+        Assert.True(GebaeudeTuer.WegRechtwinklig(z, (9, 9, 2, 2), StrasseInDerStadt(), [], Lage30));
+        var weg = Weg(z);
+        Assert.True(Abstand(weg) >= (StadtSzene.WegBreite / 2) - 0.001f, $"Weg streift das Haus: {Abstand(weg)} ({string.Join(" ", weg)})");
+        Assert.True(MathF.Abs(Vector2.Distance(weg[0], weg[1]) - GebaeudeTuer.WegStart) < 0.01f, "erstes Stueck nicht kurz gerade");
+
+        // Gegenprobe: nur die Mittellinie gegen das Haus geprueft (erster Stand dieses Patches) streift die Ecke
+        var ohne = Westtuer();
+        GebaeudeTuer.KurzOhneAbstandFuerTests = true;
+        try
+        {
+            Assert.True(GebaeudeTuer.WegRechtwinklig(ohne, (9, 9, 2, 2), StrasseInDerStadt(), [], Lage30));
+        }
+        finally
+        {
+            GebaeudeTuer.KurzOhneAbstandFuerTests = false;
+        }
+        Assert.True(Abstand(Weg(ohne)) < (StadtSzene.WegBreite / 2) - 0.01f, $"Gegenprobe: Weg ohne Abstand streift nicht ({Abstand(Weg(ohne))})");
+    }
+
+    [Fact]
+    public void Patch331_SchraegesHaus_StrasseHinterDemHaus_UmDieEckeDannGerade()
+    {
+        // Strasse hinter dem Haus (Tuer zeigt weg): an der Wand entlang um die Ecke (parallel zu den Waenden), dann gerade zur Strasse
+        var z = Zugang(Lage30);
+        Assert.True(GebaeudeTuer.WegRechtwinklig(z, (9, 9, 2, 2), [[new Vector2(0, 5), new Vector2(20, 5)]], [], Lage30));
+        var weg = Weg(z);
+        Assert.True(weg.Count >= 4, string.Join(" ", weg));
+        KnickeImRahmen(weg, Lage30);
+        Assert.True(MathF.Abs(weg[^1].Y - 5) < 0.01f);
+        Assert.True(Laenge(weg) <= GebaeudeTuer.WegHoechstens);
+    }
+
     [Fact]
     public void GeradesHaus_Unveraendert_WieBisher()
     {

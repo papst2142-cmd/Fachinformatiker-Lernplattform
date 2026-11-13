@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.49.1
+
+Bus, Fußwege an schrägen Häusern und die Überschrift der Innenraum-Funde verbessert.
+
+- Bus: in manchen Städten blieb der Bus nach dem Halt an einer Haltestelle für immer stehen. Das ist behoben. Die Prüfung „Hier bleibt der Bus stecken“ lässt jetzt jeden Bus eine ganze Runde fahren, an drei verschiedenen Spieltagen; vorher sah sie nur die ersten 90 Sekunden und konnte so einen hängenden Bus übersehen.
+- Fußweg an schräg gedrehten Häusern: der Weg geht nur noch ein kurzes Stück gerade aus der Tür (so lang wie an einem geraden Haus) und dann auf kürzestem Weg zur Straße, mit runder Ecke. Liegt die Straße hinter dem Haus, führt er zuerst an der Wand entlang um die Ecke.
+- Überschrift „Innenräume“: im Grundriss eines Raums, den du nicht geändert hast, stehen dessen rote Funde unter „Innenräume“. Die Überschrift nennt sie jetzt, zum Beispiel „Innenräume – 8 rot (unverändert, sperren nicht)“, statt „alles in Ordnung“.
+- In der 3D-Ansicht des Werkzeugs fahren die Autos wie bisher nur kurz nach jeder Bedienung (im Spiel fahren sie jetzt immer).
+
 ## S 0.49.0
 
 Innenräume in 3D ansehen, Türen an schrägen Häusern, alle roten Funde immer rechts.

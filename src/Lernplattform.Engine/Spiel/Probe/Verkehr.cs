@@ -33,6 +33,30 @@ public sealed class Verkehr
     /// <summary>Die Autos fahren nach dem letzten Bedienen oder Gehen noch so viele Sekunden (Nico 3a).</summary>
     public const double Nachlauf = 10;
 
+    /// <summary>
+    /// Patch A 0.72.1 (Sammelliste 329): so weit muss der Bus nach einem Halt fahren, bis dieselbe Haltestelle wieder zaehlt
+    /// (eine Runde ist viel laenger; zwei Halte derselben Haltestelle auf einer Runde liegen mindestens 0,5 auseinander).
+    /// </summary>
+    public const float HaltWiederAb = 0.25f;
+
+    /// <summary>Gegenprobe Patch A 0.72.1: Haltestellen zaehlen wie bis A 0.72.0 (dieselbe gleich nach dem Halt wieder; nur Tests, je Ablauf).</summary>
+    public static bool HaltAltFuerTests
+    {
+        get => HaltAlt.Value;
+        set => HaltAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> HaltAlt = new();
+
+    /// <summary>Gegenprobe Patch A 0.72.1 (Sammelliste 330): draussen fahren die Autos nur <see cref="Nachlauf"/> Sekunden nach dem Bedienen (wie bis A 0.72.0; nur Tests, je Ablauf).</summary>
+    public static bool NachlaufAltFuerTests
+    {
+        get => NachlaufAlt.Value;
+        set => NachlaufAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> NachlaufAlt = new();
+
     /// <summary>Abstand von der Mitte des Autos zu Front und Heck.</summary>
     public const float Front = 0.3f;
 
@@ -88,6 +112,16 @@ public sealed class Verkehr
 
         /// <summary>Welle A 0.61.0: Nummer der Haltestelle, an der der Bus gerade haelt (sonst null).</summary>
         public int? HaeltAn { get; set; }
+
+        /// <summary>
+        /// Patch A 0.72.1 (Sammelliste 329): Haltestelle, an der der Bus zuletzt gehalten hat, und wie weit er seitdem gefahren
+        /// ist. Sie zaehlt erst wieder, wenn er <see cref="Verkehr.HaltWiederAb"/> weiter ist (sonst sah er nach dem Halt durch
+        /// Rundung dieselbe Haltestelle noch einmal knapp vor sich und hielt fuer immer).
+        /// </summary>
+        public int? ZuletztGehalten { get; set; }
+
+        /// <summary>Patch A 0.72.1: Weg seit dem letzten Halt (siehe <see cref="ZuletztGehalten"/>).</summary>
+        public float SeitHalt { get; set; }
 
         /// <summary>Welle K3b: Lage ueber die Summe der Stuecklaengen suchen (lange automatische Strecken); die festen Strecken rechnen wie bisher.</summary>
         public bool Schnell { get; init; }
@@ -219,8 +253,15 @@ public sealed class Verkehr
     /// <summary>Bedienen oder Gehen zur Zeit <paramref name="jetzt"/>: die Autos fahren noch <see cref="Nachlauf"/> Sekunden.</summary>
     public void Bedient(double jetzt) => FahrenBis = Math.Max(FahrenBis, jetzt + Nachlauf);
 
-    /// <summary>Fahren die Autos zur Zeit <paramref name="jetzt"/>?</summary>
+    /// <summary>Fahren die Autos zur Zeit <paramref name="jetzt"/>? (Regel bis A 0.72.0: nur <see cref="Nachlauf"/> Sekunden nach dem Bedienen.)</summary>
     public bool Faehrt(double jetzt) => jetzt < FahrenBis;
+
+    /// <summary>
+    /// Patch A 0.72.1 (Sammelliste 330, Weisung P12-233): draussen faehrt der Verkehr immer, auch wenn niemand bedient und die
+    /// Figur steht (die Autos halten nur fuer die Figur auf der Fahrbahn oder dem Zebrastreifen, siehe <see cref="Weiter"/>).
+    /// <paramref name="nurNachBedienen"/> = alte Regel <see cref="Faehrt"/> (das Werkzeug: Vorschau ohne Dauerbild).
+    /// </summary>
+    public bool Laeuft(double jetzt, bool nurNachBedienen = false) => (!nurNachBedienen && !NachlaufAltFuerTests) || Faehrt(jetzt);
 
     /// <summary>Strecken der Mitte der Strasse (vor dem Versatz auf die rechte Spur), Modell und Start auf der Strecke.</summary>
     public static readonly (string Modell, (float X, float Z)[] Punkte, float Start)[] Strecken =
@@ -248,14 +289,23 @@ public sealed class Verkehr
     /// bleiben leer; null = alle Strecken im normalen Tempo. <paramref name="abstand"/> = kleinster Abstand zum Vordermann,
     /// <paramref name="bogen"/> = Halbmesser der Kurven an den Knicken.
     /// </summary>
-    public static Verkehr Fuer(StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float abstand, float bogen = 0.6f)
+    public static Verkehr Fuer(StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float abstand, float bogen = 0.6f) =>
+        Fuer(szene, tempo, abstand, bogen, szene.Spieltag);
+
+    /// <summary>
+    /// Patch A 0.72.1 (Sammelliste 329): Verkehr der Szene an einem anderen Spieltag (die Pruefung „Bus steckt“ faehrt mehrere
+    /// Tage; die Szene des Werkzeugs zeigt Tag 1).
+    /// </summary>
+    public static Verkehr FuerSpieltag(StadtSzene szene, long tag) => Fuer(szene, null, Abstand, 0.6f, tag);
+
+    private static Verkehr Fuer(StadtSzene szene, IReadOnlyDictionary<int, float>? tempo, float abstand, float bogen, long spieltag)
     {
         // Welle K3b (Weisung P12-61): Stadt mit Kurve oder Kreisverkehr oder ohne passende feste Strecke = automatische
         // Strecken aus dem Strassennetz; Fassung 0 (Stadt 1) faehrt wie bisher
         if (Autostrecken.Automatisch(szene))
         {
-            var v0 = Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen, szene.Spieltag), tempo, abstand, szene.Strassen);
-            v0.FuerTag = szene.Spieltag;
+            var v0 = Autostrecken.VerkehrAus(Autostrecken.Anlegen(szene.Strassen, bogen, spieltag), tempo, abstand, szene.Strassen);
+            v0.FuerTag = spieltag;
             v0.Zebras.AddRange(szene.Zebras);
             v0.Ampeln.AddRange(szene.Ampeln);
             BusDazu(v0, szene, tempo, bogen);
@@ -479,6 +529,8 @@ public sealed class Verkehr
                 a.Weg = haltWeg;
                 a.HaltRest = Buslinie.HaltSekunden;
                 a.HaeltAn = nr;
+                a.ZuletztGehalten = nr;
+                a.SeitHalt = 0;
                 a.Haelt = true;
                 foreach (var w in Wartende.Where(w => w.Haltestelle == nr && Sichtbar(w)))
                 {
@@ -487,6 +539,10 @@ public sealed class Verkehr
                 continue;
             }
             a.Weg = (a.Weg + schritt) % a.Laenge;
+            if (a.ZuletztGehalten is not null)
+            {
+                a.SeitHalt += schritt;
+            }
             if (Feld(a.Lage(a.Weg + a.Halb).Ort) is var neu and >= 0)
             {
                 belegt.TryAdd(neu, a);
@@ -545,6 +601,11 @@ public sealed class Verkehr
         var front = a.Weg + a.Halb;
         foreach (var (h, nr) in a.Halte)
         {
+            // Patch A 0.72.1 (Sammelliste 329): die eben bediente Haltestelle erst nach dem Weiterfahren wieder zaehlen
+            if (nr == a.ZuletztGehalten && a.SeitHalt < HaltWiederAb && !HaltAlt.Value)
+            {
+                continue;
+            }
             // h im halboffenen Stueck (front, front + schritt], auch ueber das Ende der Runde hinweg
             var vor = ((h - front) % a.Laenge + a.Laenge) % a.Laenge;
             if (vor > 0 && vor <= schritt)

@@ -93,6 +93,36 @@ public static partial class AutoMessung
                 StadtFlaeche.AutoSchritt = 0;
                 var gefahren = verkehr.Autos.Count(a => a.Weg != wege[verkehr.Autos.IndexOf(a)]);
                 Pruefe("Autos fahren (30 Bilder zu 1/60 s)", gefahren > 0, string.Create(inv, $"{gefahren} von {verkehr.Autos.Count} gefahren"));
+
+                // Patch A 0.72.1 (Sammelliste 330): ohne Bedienen fahren die Autos draussen weiter, auch laenger als
+                // Verkehr.Nachlauf nach dem letzten Bedienen; Gegenprobe mit der alten Regel: dann stehen sie
+                await Task.Delay(TimeSpan.FromSeconds(Verkehr.Nachlauf + 1));
+                await flaeche.NaechstesBildAsync();
+                var vorher330 = verkehr.Autos.Select(a => a.Weg).ToList();
+                var bilder330 = flaeche.BilderGesamt;
+                await Task.Delay(1500);
+                await flaeche.NaechstesBildAsync();
+                var weiter = verkehr.Autos.Count(a => a.Weg != vorher330[verkehr.Autos.IndexOf(a)]);
+                Messwerte.Notiere(string.Create(inv, $"Spiel 330: Bilder je Sekunde im Stand (Figur steht, niemand bedient): {(flaeche.BilderGesamt - bilder330) / 1.5:F1}"));
+                Pruefe("Autos fahren ohne Bedienen weiter (330, nach " + (Verkehr.Nachlauf + 1).ToString(inv) + " s Ruhe)", weiter > 0,
+                    string.Create(inv, $"{weiter} von {verkehr.Autos.Count} in 1,5 s gefahren"));
+                flaeche.VerkehrNurNachBedienen = true;
+                try
+                {
+                    await flaeche.NaechstesBildAsync();
+                    var vorherAlt = verkehr.Autos.Select(a => a.Weg).ToList();
+                    var bilderAlt = flaeche.BilderGesamt;
+                    await Task.Delay(1500);
+                    Messwerte.Notiere(string.Create(inv, $"Spiel 330 Gegenprobe: Bilder je Sekunde im Stand mit der alten Regel: {(flaeche.BilderGesamt - bilderAlt) / 1.5:F1}"));
+                    await flaeche.NaechstesBildAsync();
+                    var alt = verkehr.Autos.Count(a => a.Weg != vorherAlt[verkehr.Autos.IndexOf(a)]);
+                    Pruefe("Gegenprobe 330: mit der alten Regel stehen die Autos", alt == 0, string.Create(inv, $"{alt} von {verkehr.Autos.Count} gefahren"));
+                }
+                finally
+                {
+                    flaeche.VerkehrNurNachBedienen = false;
+                    flaeche.AnfordernBild();
+                }
             }
             if (FassungVon(spiel) != 0)
             {

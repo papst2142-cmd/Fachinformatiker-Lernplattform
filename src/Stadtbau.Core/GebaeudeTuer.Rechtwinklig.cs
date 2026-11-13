@@ -71,7 +71,9 @@ public static partial class GebaeudeTuer
             strassen = [.. strassen.Select(l => l.Select(lage.Zurueck).ToList())];
             laternen = [.. laternen.Select(lage.Zurueck)];
         }
-        var bester = Planen(tuer, vor, min, max, strassen, laternen);
+        // Patch S 0.49.1 (Sammelliste 331, Nico 4c „immer kuerzester Weg zur Strasse“): am schraegen Haus nur das kurze Stueck
+        // gerade aus der Tuer (wie am geraden Haus), wenn noetig um die Ecken des Hauses, dann auf kuerzestem Weg zur Strasse
+        var bester = lage.Aktiv && !SchraegLangAlt.Value ? PlanenKurz(tuer, vor, min, max, strassen, laternen) : Planen(tuer, vor, min, max, strassen, laternen);
         if (bester is not null && lage.Aktiv)
         {
             bester = [.. bester.Select(lage.Punkt)];
@@ -205,6 +207,136 @@ public static partial class GebaeudeTuer
             Versuch([tuer, vor, c, hinten]);
         }
         return bester;
+    }
+
+    /// <summary>Gegenprobe Patch S 0.49.1 (Sammelliste 331): Weg am schraegen Haus wie in S 0.49.0 (lange rechtwinklig zur Wand, erst vor der Strasse abbiegen; nur Tests, je Ablauf).</summary>
+    public static bool SchraegLangAltFuerTests { get => SchraegLangAlt.Value; set => SchraegLangAlt.Value = value; }
+    private static readonly AsyncLocal<bool> SchraegLangAlt = new();
+
+    /// <summary>
+    /// Patch S 0.49.1 (Sammelliste 331): Weg eines schraeg gedrehten Hauses im Rahmen des Hauses. Anfang wie bisher: Tuer und das
+    /// kurze Stueck gerade hinaus (<paramref name="vor"/>), wenn noetig an der Wand entlang um eine oder zwei Ecken (diese
+    /// Stuecke parallel zu den Waenden); von dort geradewegs zum naechsten Punkt einer Strassenmitte (in der Stadt meist
+    /// schraeg zum Haus, an der Ecke rund). Gilt der kuerzeste Weg: kein Stueck schneidet das Haus, das letzte kreuzt keine
+    /// andere Strassenmitte, ist mindestens <see cref="QuerMindestens"/> lang, das Ende liegt nicht naeher als
+    /// <see cref="LaterneFrei"/> an einer Laterne, alles hoechstens <see cref="WegHoechstens"/>. Null = keiner.
+    /// </summary>
+    /// <summary>Abstand der Wegmitte zum Haus am schraegen Haus: halbe Wegbreite und ein wenig Luft.</summary>
+    public const float KurzAbstand = (StadtSzene.WegBreite / 2) + 0.05f;
+
+    private static readonly AsyncLocal<bool> KurzOhneAbstand = new();
+
+    /// <summary>Nur Gegenprobe: nur die Mittellinie gegen das Haus pruefen (erster Stand von S 0.49.1, das Band streifte die Ecke).</summary>
+    internal static bool KurzOhneAbstandFuerTests { get => KurzOhneAbstand.Value; set => KurzOhneAbstand.Value = value; }
+
+    internal static List<Vector2>? PlanenKurz(Vector2 tuer, Vector2 vor, Vector2 min, Vector2 max, IReadOnlyList<List<Vector2>> strassen, IReadOnlyList<Vector2> laternen)
+    {
+        var e = UmDieEcke;
+        var n = vor - tuer;
+        n = MathF.Abs(n.X) >= MathF.Abs(n.Y) ? new Vector2(MathF.Sign(n.X), 0) : new Vector2(0, MathF.Sign(n.Y));
+        // wie in Planen: bei Nische oder Hof zaehlt nur der Teil hinter der Tuer als Haus
+        if (n.Y > 0)
+        {
+            max.Y = MathF.Min(max.Y, tuer.Y);
+        }
+        if (n.Y < 0)
+        {
+            min.Y = MathF.Max(min.Y, tuer.Y);
+        }
+        if (n.X > 0)
+        {
+            max.X = MathF.Min(max.X, tuer.X);
+        }
+        if (n.X < 0)
+        {
+            min.X = MathF.Max(min.X, tuer.X);
+        }
+        // Zielpunkte auf den Strassenmitten: alle WegRaster, dazu je Anfang die Fusspunkte (genau quer, Fusspunkte)
+        var ziele = new List<Vector2>();
+        foreach (var s in strassen)
+        {
+            for (var i = 0; i + 1 < s.Count; i++)
+            {
+                var ab = s[i + 1] - s[i];
+                var l = ab.Length();
+                if (l < 1e-6f)
+                {
+                    continue;
+                }
+                for (var k = 0; k * WegRaster <= l; k++)
+                {
+                    ziele.Add(s[i] + (ab * (k * WegRaster / l)));
+                }
+                ziele.Add(s[i + 1]);
+            }
+        }
+        var anfaenge = new List<List<Vector2>> { new() { tuer, vor } };
+        var seiten = MathF.Abs(n.X) < 0.5f
+            ? new[] { new Vector2(min.X - e, vor.Y), new Vector2(max.X + e, vor.Y) }
+            : [new Vector2(vor.X, min.Y - e), new Vector2(vor.X, max.Y + e)];
+        foreach (var c in seiten)
+        {
+            anfaenge.Add([tuer, vor, c]);
+            var hinten = MathF.Abs(n.X) < 0.5f ? new Vector2(c.X, n.Y > 0 ? min.Y - e : max.Y + e) : new Vector2(n.X > 0 ? min.X - e : max.X + e, c.Y);
+            anfaenge.Add([tuer, vor, c, hinten]);
+        }
+        // jedes Stueck ausser dem ersten (aus der Tuer) haelt mit dem ganzen Band Abstand zum Haus: es darf keine Hausecke streifen
+        var band = KurzOhneAbstand.Value ? Vector2.Zero : new Vector2(KurzAbstand);
+        var (aMin, aMax) = (min - band, max + band);
+        List<Vector2>? bester = null;
+        var besteLaenge = float.MaxValue;
+        foreach (var zug in anfaenge)
+        {
+            var frei = true;
+            for (var i = 0; i + 1 < zug.Count && frei; i++)
+            {
+                frei = !SchneidetHaus(zug[i], zug[i + 1], i == 0 ? min : aMin, i == 0 ? max : aMax);
+            }
+            var laengeBis = Laenge(zug);
+            if (!frei || laengeBis >= besteLaenge)
+            {
+                continue;
+            }
+            var w = zug[^1];
+            foreach (var ziel in ziele.Concat(Fusspunkte(w, strassen)))
+            {
+                var quer = Vector2.Distance(w, ziel);
+                var ganz = laengeBis + quer;
+                if (quer < QuerMindestens || ganz > WegHoechstens || ganz >= besteLaenge - 1e-4f)
+                {
+                    continue;
+                }
+                if ((!LaternenEgalFuerTests.Value && laternen.Any(q => Vector2.Distance(q, ziel) <= LaterneFrei))
+                    || SchneidetHaus(w, ziel, aMin, aMax) || UeberStrasse(w, ziel, strassen))
+                {
+                    continue;
+                }
+                (bester, besteLaenge) = (Gerade([.. zug, ziel]), ganz);
+            }
+        }
+        return bester;
+    }
+
+    /// <summary>Fusspunkte von <paramref name="w"/> auf jedem Stueck einer Strassenmitte (nur innerhalb des Stuecks).</summary>
+    private static IEnumerable<Vector2> Fusspunkte(Vector2 w, IReadOnlyList<List<Vector2>> strassen)
+    {
+        foreach (var s in strassen)
+        {
+            for (var i = 0; i + 1 < s.Count; i++)
+            {
+                var ab = s[i + 1] - s[i];
+                var l2 = ab.LengthSquared();
+                if (l2 < 1e-12f)
+                {
+                    continue;
+                }
+                var t = Vector2.Dot(w - s[i], ab) / l2;
+                if (t is >= 0 and <= 1)
+                {
+                    yield return s[i] + (ab * t);
+                }
+            }
+        }
     }
 
     /// <summary>Gegenprobe Patch S 0.46.1: das gerade Stueck darf ueber die Strassenmitte hinaus (wie bis S 0.46.0, nur Tests, je Ablauf).</summary>

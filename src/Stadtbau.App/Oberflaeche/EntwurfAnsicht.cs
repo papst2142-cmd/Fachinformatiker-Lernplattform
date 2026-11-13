@@ -62,7 +62,7 @@ public sealed class EntwurfAnsicht : Grid
 
     public Entwurf Entwurf { get; }
 
-    public StadtFlaeche Drei { get; } = new();
+    public StadtFlaeche Drei { get; } = new() { VerkehrNurNachBedienen = true };
 
     public EntwurfBedienung Bedienung { get; }
 
