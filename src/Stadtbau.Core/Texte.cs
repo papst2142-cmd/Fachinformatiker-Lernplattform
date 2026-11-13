@@ -92,10 +92,10 @@ public static partial class Texte
     // ---- Innenraeume ----
     public const string Ort = "Innenraum";
     public const string Katalog = "Katalog";
-    public const string KatalogHinweis = "Tippe ein Stück an und dann auf die Stelle im Grundriss.";
-    public const string SetzenAktiv = "Tippe auf die Stelle im Grundriss, an die das Stück soll.";
+    public const string KatalogHinweis = "Tippe ein Stück an und dann auf die Stelle im Grundriss oder in 3D.";
+    public const string SetzenAktiv = "Tippe auf die Stelle im Grundriss oder in 3D, an die das Stück soll.";
     public const string Auswahl = "Ausgewähltes Stück";
-    public const string NichtsGewaehlt = "Tippe ein Stück im Grundriss an, um es zu bearbeiten.";
+    public const string NichtsGewaehlt = "Tippe ein Stück im Grundriss oder in 3D an, um es zu bearbeiten.";
 
     /// <summary>Draufsicht draussen ohne Auswahl (Weisung P12-25: draussen heisst es "auf der Karte").</summary>
     /// <summary>Tipp einer Katalog-Kachel (Sammelliste 222): deutscher Name, englischer Name des Pakets (fuer die Suche), Art.</summary>
@@ -620,7 +620,7 @@ public static partial class Texte
     public const string TippHausOhneOrt = "Setzt ein Gebäude ohne Innenraum, zum Beispiel ein Wohnhaus als Kulisse.";
     public const string TippMeineBlueprints = "Deine gespeicherten Gebäude-Vorlagen: antippen und auf die Karte setzen.";
     public const string TippOrt = "Wähle das Haus, dessen Innenraum du einrichten willst.";
-    public const string TippKatalog = "Möbel und Regale für den Innenraum: antippen, dann die Stelle im Grundriss antippen.";
+    public const string TippKatalog = "Möbel und Regale für den Innenraum: antippen, dann die Stelle im Grundriss oder in 3D antippen.";
 
     public static string TippGruppe(string gruppe) => $"Stücke der Gruppe „{gruppe}“ für den Innenraum.";
 
