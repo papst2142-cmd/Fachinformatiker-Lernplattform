@@ -100,6 +100,13 @@ public enum AussenArt
     /// laenglich, <see cref="Lernplattform.Core.Spiel.Probe.Gelaende"/>).
     /// </summary>
     Huegel,
+
+    /// <summary>
+    /// Welle S 0.51.0 (Weisung P12-241, Kurzplan P12-131 Punkt 4): ein gemalter Hoehenpunkt (Eintrag Nummer in
+    /// <c>stadtdaten.gelaende.gemalt</c>, Rasterpunkt [i, j] = Stelle (i · 0,5; j · 0,5)). Nur in der Mehrfachauswahl (Rahmen,
+    /// Umschalt+Klick nimmt den ganzen zusammenhaengenden Bereich); ein Tipp waehlt ihn nicht einzeln.
+    /// </summary>
+    Hoehe,
 }
 
 /// <summary>

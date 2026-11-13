@@ -45,17 +45,17 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 
 ## Aktueller Stand (nur heute, bei jeder Welle ERSETZEN, nicht anhängen)
 - Phasen 0–12 abgenommen. **Phase 13** (Stadtbau-Werkzeug, Plan `Fi-Austausch/anlagen/P12-15_Plan_Phase13.md`) läuft; Stadt 1 von Nico ist seit A 0.71.0 im Spiel (Fassung 1, `aktiv.json` = 1).
-- Auf `main`: **A 0.72.1 / S 0.50.0** (Welle 2 Innenraum in 3D bauen, PR #183, main 4793f45). Releases macht Chat.
-- **In Arbeit:** Welle **A 0.73.0 „Bus selbst fahren“** (Weisung P12-239 und Nachbesserung P12-240 „Figur im Mast“, Sammelliste 335, Nico „früh“: vor W3; S bleibt 0.50.0, keine Werkzeug-Datei) auf Zweig `claude/welle-a0730-bus-fahren`, PR #184, Meldungen P12-138 und P12-139. Kern `Core/Spiel/Probe/StadtSpiel.Mitfahrt.cs` (Haltestelle erkennen, Einsteigen, im Bus der Lage des Busses folgen, Aussteigen an der nächsten Haltestelle; die Oberfläche ruft je Bild `MitfahrtTakt` mit dem gezeichneten Verkehr), Ereignis `Stadt.Mitfahrt` = vorhandene Art `stadt_gelaufen` mit `mit: bus`, 0 Schritten (keine neue Ereignisart). Tests `SpielMitfahrtTests` (+ Belastungsprobe `SpielMitfahrtBelastungTests` mit Liste `Aktionen`), Start-Test `AutoMessung.Mitfahrt.cs`.
-- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 13.11.2026: P12-240 (Figur im Mast), P12-239 (Bus selbst fahren), dazu P12-231 (Wellenplan) und P12-229 (alle Funde rechts).
+- Auf `main`: **A 0.73.0 / S 0.50.0** (Welle „Bus selbst fahren“, PR #184, main 7767562). Releases macht Chat.
+- **In Arbeit:** Welle **S 0.51.0 „Straßenzug-Vorlagen und Gelände-Mehrfachauswahl“** (Weisung P12-241; A bleibt 0.73.0, nur Werkzeug-Dateien, CI-Stufe werkzeug 6/6) auf Zweig `claude/project-thread-fq0lwx`, Meldung P12-140. Kern `Stadtbau.Core/Strassenzug.cs`, `AussenBearbeitung.Strassenzug.cs`, `AussenBearbeitung.GelaendeAuswahl.cs`; Oberfläche `KartenFlaeche.Strassenzug.cs`, `Hauptansicht.Strassenzug.cs`; Tests `StrassenzugTests`, `GelaendeAuswahlTests`; Start-Test `StadtbauMessung.Strassenzug.cs`.
+- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 13.11.2026: P12-241 (Welle 3 S 0.51.0), dazu P12-231 (Wellenplan) und P12-229 (alle Funde rechts).
 - **Wellenplan nach Nicos Antworten (P12-231, Nico 13.11.2026 1a 2c 3b 4c 5c), durch P12-239 um eine Stelle verschoben – genau so, nicht nach einem früheren Kurzplan:**
   1. Welle 1 S 0.49.0: Innenraum in 3D ANSEHEN – gemergt.
   2. Welle 2 S 0.50.0: Innenraum in 3D BAUEN – gemergt (PR #183).
-  3. **Welle A 0.73.0: Bus selbst fahren** (P12-239) – in Arbeit.
-  4. Welle 3 S 0.51.0: Straßenzug-Vorlagen (3 feste + eigene speichern), Gelände-Mehrfachauswahl.
+  3. Welle A 0.73.0: Bus selbst fahren (P12-239) – gemergt (PR #184).
+  4. **Welle 3 S 0.51.0: Straßenzug-Vorlagen (3 feste + eigene speichern), Gelände-Mehrfachauswahl** – in Arbeit.
   5. Welle 4 S 0.52.0: „Alle beheben, die sicher gehen“ (mit Sammelliste 334).
   Danach: Kurzplan 327 (Grafikstufe Niedrig in Stadt 1), Liste „Werkzeug komplett?“, Bericht Phase 13.
-- Nächste Nummern: Meldung **P12-140**, Weisung P12-241, Sammelliste **336** (335 = diese Welle; 334 Kamera-Karte einklappen/Figur beim Bauen, Welle 4).
+- Nächste Nummern: Meldung **P12-141**, Weisung P12-242, Sammelliste **336** (334 Kamera-Karte einklappen/Figur beim Bauen, Welle 4).
 - Offene Sammelliste-Punkte (sonst alles erledigt, Einzelheiten in der Geschichte): 327 Niedrig 118 % in Stadt 1 (Kurzplan, befristete Ausnahme im Start-Test); 326, 319, 308, 268, 270, 232, 227, 221 nur beobachten (nie lockern); 265 feste Ausnahme in `TuerSetzenTests`; 239 Talheim-Nord/Birkenhain (Nico); 215 Möbelhaus größer (Nico mit dem Werkzeug); 224 Artefaktname `stadtbau-android-S-…` fest; 241 Aufgaben an Gebäuden (Kurzplan P12-59); 211, 122/123 K; 214 offen bis 1.0.
 
 ## Nicos Wünsche treu umsetzen (Lehre 13.11.2026)
@@ -80,6 +80,7 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 - Belastungsproben (`BelastungsprobenTests`): neue Arten/Aktionen in die Listen `Arten`/`Aktionen` aufnehmen.
 - Lerninhalte: keine Option mit Verneinung in Großschrift (`Optionen_OhneGrossschriftVerneinung`). Neue Fassung eines Eintrags anhängen, alte über `ausschluss.json`.
 - Werkzeug-Ansichten nachsichtig nur über `Nachsicht.Werkzeugansicht()`; Spiel und Prüfungen nie.
+- Straßenzug (S 0.51.0): Vorschau und Schritt nutzen denselben Plan (`StrassenzugPlanen` mit Nachprüfung, `Projekt.StrassenzugZiehen(…, plan)`); Ausstattung nie ohne Nachprüfung setzen. Vorlagen-Dateien wie Blueprints: neue Formatnummer = neue echte Testdatei, unlesbare stehen mit Grund in der Liste. Gemalte Höhen sind Stücke `AussenArt.Hoehe` (Nummer = Stelle in `gemalt`, nach jeder Änderung neu); Aktionen auf ihnen nur über `HoehenAbbilden`, Raster 0,5. Höchstens 16 Hügel: `HuegelVoll` sperrt Setzen und Kopieren.
 
 ## Lerninhalte (bleibend)
 - Lerninhalte der Fachrichtungen (bleibend): neue Inhalte AE/DPA/DV nur angehängt in `inhalte_csharp/lernen/` (falscher Eintrag: neue Fassung anhängen, alte über `ausschluss.json`; `karteikarten.json`, `quizfragen.json`, `szenarien_ap2.json`, `projektarbeiten.json`, `fachgespraech.json` als Objekt mit `fragen`, Kennung `<fr>01`…), Feld `fachrichtung` Pflicht; Einteilung der bisherigen Inhalte in `einteilung_bisher.json` (`werkzeuge/inhalte/einteilen.py`, kein Eintrag = si). Wahl der Fachrichtung seit Phase 4 (`Core/Pruefung/Ausbildung.cs`, Prüfungsaufbau `Fachrichtung.cs`, Projektzeit SI/DPA/DV höchstens 40 h, AE 80 h). SI bleibt exakt wie heute, `inhalte/` byte-gleich mit Python v0.63.2.
@@ -116,7 +117,7 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 - Neustart-Regel (P4-13/P4-14): Start-Test in den Teilen `lernen` und `spiel`; Rückgabe 3 (Messwert-Rot, Layout- oder Kontrastfund) → 2. Lauf mit frischem Datenordner, rot nur, wenn derselbe Punkt in beiden Läufen rot ist (`werkzeuge/starttest/urteil.py`). Ein Absturz ist sofort rot. Schrittzeit 15 Minuten (Spiel 10, Intel-Mac 25/20); der Wachhund in `lauf.sh` greift 1 Minute vorher (Rückgabe 4, sofort rot, mit Angaben).
 
 ## Version und Release
-- Lernplattform **0.73.0** auf dem Wellen-Zweig, 0.72.1 auf `main` (Anzeige „A 0.73.0“, Paket `1.0.0-a.0.73.0`, Android 1007300, Update-Probe 0.73.1), Werkzeug **S 0.50.0** (eigene Linie „S 0.x“, Tag `vS…`, `AENDERUNGEN_STADTBAU.md`, nie „latest“; Update-Quellen der Lernplattform nur `vA…`/`vB…`/`v1…`). Frühere Versionen: `AENDERUNGEN.md`, `AENDERUNGEN_STADTBAU.md`. Releases macht Chat.
+- Lernplattform **0.73.0** (auf `main`; Anzeige „A 0.73.0“, Paket `1.0.0-a.0.73.0`, Android 1007300, Update-Probe 0.73.1), Werkzeug **S 0.51.0** auf dem Wellen-Zweig (S 0.50.0 auf `main`) (eigene Linie „S 0.x“, Tag `vS…`, `AENDERUNGEN_STADTBAU.md`, nie „latest“; Update-Quellen der Lernplattform nur `vA…`/`vB…`/`v1…`). Frühere Versionen: `AENDERUNGEN.md`, `AENDERUNGEN_STADTBAU.md`. Releases macht Chat.
 - Schema x.y.z (Nico 20.10.2026): x = 0 in Alpha/Beta, y = neue Funktionen, z = Fixes; Reihenfolge A < B < 1.0. Version +1 nur nach Weisung, nur in `Directory.Build.props`; dazu `ci.yml` (Versionscode, Artefaktnamen) und `werkzeuge/pakete/pakete_und_update.sh`; Stellen finden mit `grep -nE "0\.73\.(0|1)|10073(00|01)"` (Testfälle mit festen Versionen bleiben); beim Werkzeug zusätzlich die Versionsanker in `tests/Stadtbau.Tests/ProjektTests.cs` (`Werkzeug_VersionUndStufe`, `Senden_Name_UndWegVonBerichtSenden`) mitziehen. Reine Dokument-PRs erhöhen die Version nicht.
 - Android-Versionscode = Stufe × 1 000 000 + Haupt × 10 000 + Neben × 100 + Fix (A=1, B=2, ab 1.0=3).
 - Jede Version bekommt einen Abschnitt `## <Anzeige>` in `AENDERUNGEN.md` für Leser ohne Vorwissen (keine Weisungs-/Wellenbezüge); er wird Release-Text, Text im Update-Fenster und Notiz im Velopack-Paket. Nach Versionssprung oder Änderung des Abschnitts `python3 -I werkzeuge/release/release.py probe`, sonst sind `release.py selbsttest` und `ReleaseTests` rot.

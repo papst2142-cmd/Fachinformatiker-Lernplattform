@@ -158,6 +158,25 @@ public class BelastungsprobenTests
         Assert.True(funde.Count == 0, string.Join("\n", funde));
     }
 
+    /// <summary>
+    /// S 0.51.0: gemalte Hoehen sind Stuecke (<see cref="AussenArt.Hoehe"/>). Jede Aktion an gemalten Punkten (Anfang, Mitte,
+    /// Ende der Liste) ohne Ausnahme und Rueckgaengig genau.
+    /// </summary>
+    [Fact]
+    public void JedeAktion_GemalteHoehen_RueckgaengigGenau()
+    {
+        var p = Laden("gelaende");
+        if (AussenBearbeitung.GemaltListe(p.AussenStand).Count == 0)
+        {
+            p.AussenAendern("Pinsel", a => AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(10, 10), new(12, 10)], 1));
+        }
+        var n = AussenBearbeitung.GemaltListe(p.AussenStand).Count;
+        Assert.True(n > 4, "zu wenig gemalt: " + n);
+        var stellen = new[] { 0, n / 2, n - 1 }.Select(i => new AussenStelle(AussenArt.Hoehe, i)).ToList();
+        var funde = AktionenProbe(p, stellen, bauJede: 3);
+        Assert.True(funde.Count == 0, string.Join("\n", funde));
+    }
+
     /// <summary>Gegenprobe Fund 305: mit dem alten Bau der 3D-Ansicht (S 0.42.0) bricht der Bau ab, die Probe meldet es.</summary>
     [Fact]
     public void Gegenprobe_Aktionen_LaterneAlt_MeldetAbbruch()

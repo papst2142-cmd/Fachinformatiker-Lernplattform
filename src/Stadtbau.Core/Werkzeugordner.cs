@@ -5,7 +5,7 @@ namespace Stadtbau.Core;
 /// Sammelliste 250; vorher %LOCALAPPDATA%\Fachinformatiker-Stadtbau = Installationsordner von Velopack, siehe
 /// <see cref="Datenumzug"/>), Linux
 /// ~/.local/share/fachinformatiker-stadtbau, macOS ~/Library/Application Support/Fachinformatiker-Stadtbau, Android der
-/// Ordner der App. STADTBAU_DATEN setzt ihn fuer Tests und den Start-Test. Darin: projekte/, sicherungen/, exporte/ und seit Welle 4c blueprints/.
+/// Ordner der App. STADTBAU_DATEN setzt ihn fuer Tests und den Start-Test. Darin: projekte/, sicherungen/, exporte/, seit Welle 4c blueprints/ und seit S 0.51.0 strassenzuege/.
 /// </summary>
 public sealed class Werkzeugordner(string wurzel)
 {
@@ -21,6 +21,9 @@ public sealed class Werkzeugordner(string wurzel)
 
     /// <summary>Phase 13 Welle 4c (Weisung P12-32): je Blueprint eine Datei (<see cref="Blueprint"/>).</summary>
     public string Blueprints => Path.Combine(Wurzel, "blueprints");
+
+    /// <summary>Welle S 0.51.0 (Weisung P12-241): je eigene Strassenzug-Vorlage eine Datei (<see cref="Strassenzug"/>).</summary>
+    public string Strassenzuege => Path.Combine(Wurzel, "strassenzuege");
 
     public string FehlerLog => Path.Combine(Wurzel, "fehler.log");
 
@@ -80,13 +83,14 @@ public sealed class Werkzeugordner(string wurzel)
         }
     }
 
-    /// <summary>Ordner anlegen (alle vier).</summary>
+    /// <summary>Ordner anlegen (alle fuenf).</summary>
     public Werkzeugordner Anlegen()
     {
         Directory.CreateDirectory(Projekte);
         Directory.CreateDirectory(Sicherungen);
         Directory.CreateDirectory(Exporte);
         Directory.CreateDirectory(Blueprints);
+        Directory.CreateDirectory(Strassenzuege);
         return this;
     }
 

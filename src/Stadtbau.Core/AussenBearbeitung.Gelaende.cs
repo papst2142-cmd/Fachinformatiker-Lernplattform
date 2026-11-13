@@ -104,8 +104,12 @@ public static partial class AussenBearbeitung
         return null;
     }
 
-    private static AussenStelle HuegelSetzen(PyObjekt aussen, double x, double y, bool raster)
+    private static AussenStelle? HuegelSetzen(PyObjekt aussen, double x, double y, bool raster)
     {
+        if (HuegelVoll(aussen))
+        {
+            return null;   // S 0.51.0: bei der Hoechstzahl kein weiterer Huegel (der Knopf ist dann grau)
+        }
         var r = raster ? Bearbeitung.Raster : Bearbeitung.RasterFein;
         var liste = HuegelListeAnlegen(aussen);
         liste.Add(Gelaende.HuegelDaten((float)Bearbeitung.AufRaster(x, r), (float)Bearbeitung.AufRaster(y, r), (float)HuegelRadiusNeu, (float)HuegelHoeheNeu, false, 0, 0));
@@ -119,8 +123,12 @@ public static partial class AussenBearbeitung
         Py.Setzen(h, "y", Bearbeitung.Zahl(Py.F(h["y"]) + dy));
     }
 
-    private static AussenStelle HuegelKopieren(PyObjekt aussen, AussenStelle s)
+    private static AussenStelle? HuegelKopieren(PyObjekt aussen, AussenStelle s)
     {
+        if (HuegelVoll(aussen))
+        {
+            return null;
+        }
         var liste = HuegelListe(aussen);
         var kopie = (PyObjekt)Py.Kopie(liste[s.Nummer])!;
         var versatz = (2 * Py.F(kopie["radius"])) + (Py.Hat(kopie, "laenge") ? Py.F(kopie["laenge"]) - (2 * Py.F(kopie["radius"])) : 0) + 0.5;

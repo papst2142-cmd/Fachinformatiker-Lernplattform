@@ -1,0 +1,12 @@
+{
+ "format": "fisstrassenzug",
+ "formatversion": 1,
+ "werkzeug": "Fachinformatiker Stadtbau S 0.51.0",
+ "name": "Allee",
+ "gehweg": true,
+ "baeume": true,
+ "baumabstand": 2.5,
+ "zebrastreifen": true,
+ "haltestelle": false,
+ "pruefsumme": "sha256:89ce523a5118ca28ef999beb793a4316e70f3786ef501a92cd149f3ceb34d777"
+}

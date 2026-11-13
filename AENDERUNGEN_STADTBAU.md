@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.51.0
+
+Straßen mit Ausstattung in einem Schritt ziehen, eigene Straßen-Vorlagen speichern, Hügel und gemalte Höhen gemeinsam wählen.
+
+- Beim Werkzeug „Straße ziehen“ steht rechts die Wahl „Ausstattung der Straße“. „Nur die Straße“ zieht wie bisher nur die Straße. Die drei festen Vorlagen bringen mehr mit: „Wohnstraße“ (Gehweg, Bäume auf beiden Seiten alle 3,5), „Hauptstraße“ (wie die Wohnstraße, dazu ein Zebrastreifen an jeder Einmündung und eine Haltestelle in der Mitte, wenn ein gerades Stück mindestens 6 lang ist) und „Landstraße“ (ohne Gehweg, Bäume auf beiden Seiten). Laternen stellt das Werkzeug wie bisher an jede Straße selbst.
+- Die Vorschau zeigt jedes Stück der Ausstattung: grün kommt dazu, rot wird ausgelassen (zum Beispiel ein Baum, der zu nah an einer Kreuzung stünde). Im Hintergrund prüft das Werkzeug jedes Stück zusätzlich mit der ganzen Prüfung; die Zeile rechts zeigt danach „geprüft“. Was die Vorschau grün zeigt, wird genau so gesetzt.
+- Straße und Ausstattung sind ein einziger Schritt im Verlauf: einmal „Rückgängig“ nimmt beides zurück. Danach meldet die Zeile unten, wie viele Stücke dazukamen und wie viele rote Stellen ausgelassen wurden.
+- Eigene Vorlage: „Eigene Vorlage zusammenstellen“ öffnet rechts die Felder Name, Gehweg, Bäume mit Abstand (− und +), Zebrastreifen und Haltestelle. Ohne Gehweg gibt es keinen Zebrastreifen und keine Haltestelle (die beiden Schalter sind dann grau). „Vorlage speichern“ legt eine Datei im Ordner „strassenzuege“ des Werkzeugs an; sie steht danach in der Wahl. Eine eigene Vorlage lässt sich nach einer Rückfrage löschen; eine Kopie bleibt in den Sicherungen. Eine Datei, die sich nicht lesen lässt, steht mit dem Grund rot in der Liste und verschwindet nie still.
+- Gelände in der Mehrfachauswahl: Rahmen (Umschalt+Ziehen oder „Mehrere wählen“) nimmt jetzt auch gemalte Höhen mit, Hügel wie bisher. Umschalt+Klick auf gemalten Boden nimmt den ganzen zusammenhängenden gemalten Bereich dazu oder wieder heraus. Verschieben, Drehen, Kopieren und Löschen der Gruppe nehmen die gemalten Höhen mit, jede Aktion als ein Schritt. Gemalte Höhen liegen auf einem Raster von 0,5; eine Gruppe mit gemalten Höhen rückt darum immer in Schritten von 0,5. Was dabei über den Rand der Karte fiele, entfällt und wird als übersprungen gemeldet.
+- Höchstens 16 Hügel: hat die Stadt 16 Hügel, ist der Knopf „Hügel“ grau, und darunter steht der Grund. Vorher kam erst nach dem Setzen ein roter Fund. Auch eine Kopie macht dann keinen 17. Hügel.
+
 ## S 0.50.0
 
 Möbel im Innenraum jetzt auch in 3D setzen, schieben, drehen und löschen.

@@ -79,6 +79,27 @@ public sealed partial class KartenFlaeche
         GewaehltMelden(drin ? Texte.GruppeHeraus : null);
     }
 
+    /// <summary>
+    /// S 0.51.0: Umschalt+Klick (oder Tipp mit „Mehrere wählen“) auf gemalten Boden: der ganze zusammenhaengende gemalte
+    /// Bereich kommt dazu, oder heraus, wenn er schon ganz gewaehlt ist. false = dort ist nichts gemalt.
+    /// </summary>
+    public bool BereichUmschalten(double x, double y)
+    {
+        if (Stand is not { } a || AusArten?.Contains(AussenArt.Hoehe) == true)
+        {
+            return false;
+        }
+        var bereich = AussenBearbeitung.HoehenBereichBei(a, x, y);
+        if (bereich.Count == 0)
+        {
+            return false;
+        }
+        var ganz = bereich.All(Gewaehlt.Contains);
+        GruppeSetzen(ganz ? Gewaehlt.Except(bereich) : Gewaehlt.Concat(bereich));
+        GewaehltMelden((ganz ? Texte.GruppeHeraus + " " : "") + Texte.GemaltePunkte(bereich.Count) + ".");
+        return true;
+    }
+
     /// <summary>Alle Stuecke der Karte waehlen, die zu sehen sind (Strg+A; automatische Laternen nicht).</summary>
     public void AlleWaehlen()
     {
@@ -206,6 +227,11 @@ public sealed partial class KartenFlaeche
                         WaehlenMitMeldung(st);
                     }
                 }
+                else if (md.Umschalten)
+                {
+                    var w = WeltPunkt(new Point(s.X, s.Y));
+                    BereichUmschalten(w.X, w.Y);
+                }
                 return true;
             case Fingergeste.Art.StueckZiehen when md.Stueck is { } zst:
                 if (_projekt is null || _projekt.NurLesen)
@@ -292,12 +318,14 @@ public sealed partial class KartenFlaeche
             var stift = new Pen(akzent, 3);
             var fuellung = new SolidColorBrush(Color.Parse(Lernplattform.Design.FarbenAnwenden.Aktuell.Farben["accent"]), _gruppeGezogen ? 0.35 : 0.18);
             var huelle = default(Rect?);
+            var duenn = new Pen(akzent, 1);
             foreach (var s in Gewaehlt.Where(s => AussenBearbeitung.Gueltig(a, s)))
             {
                 foreach (var vieleck in Bauen3D.Umriss(a, s))
                 {
                     var punkte = vieleck.Select(q => new System.Numerics.Vector2((float)(q.X + dx), (float)(q.Y + dy))).ToList();
-                    Flaeche(ctx, punkte, fuellung, stift);
+                    // S 0.51.0: gemalte Hoehen als feines Raster (sonst wird ein grosser Fleck zu einer dicken Linie)
+                    Flaeche(ctx, punkte, fuellung, s.Art == AussenArt.Hoehe ? duenn : stift);
                     foreach (var q in punkte)
                     {
                         var r = new Rect(P(q.X, q.Y), new Size(0, 0));

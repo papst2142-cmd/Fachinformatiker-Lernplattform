@@ -505,6 +505,7 @@ public sealed partial class Hauptansicht : UserControl
     {
         var mit = _projekt is not null;
         var schreiben = mit && !_projekt!.NurLesen;
+        HuegelKnopfAktualisieren();
         _kopf[Texte.Draufsicht].IsEnabled = mit;
         _kopf[Texte.Innenraeume].IsEnabled = mit && _projekt!.Innenorte.Count > 0;
         _kopf[Texte.Ansicht3D].IsEnabled = mit;
@@ -884,6 +885,8 @@ public sealed partial class Hauptansicht : UserControl
         huegel.Click += (_, _) => SetzenKnopfGedrueckt(huegel, false, () => AussenSetzenWaehlen(AussenArt.Huegel, null));
         HuegelKnopf = huegel;
         natur.Children.Add(huegel);
+        // S 0.51.0: bei der Hoechstzahl grau, der Grund steht gleich daneben (nicht erst danach ein roter Fund)
+        ToolTip.SetShowOnDisabled(huegel, true);
         // Welle K1 (Weisung P12-55): Kurven mit Tipp, Radius der Kurve 90° darunter
         Button KurvenKnopf(string text, string tipp, Func<string> kennung)
         {
@@ -953,7 +956,7 @@ public sealed partial class Hauptansicht : UserControl
         // „Straßen und Wege“ (E1: Nico hat vier Gruppen gewaehlt, Bahn und Strasse werden gleich gezogen und gesetzt)
         var strassen = new Klappgruppe("strassen", Texte.GruppeStrassen, Texte.TippGruppeStrassen, false,
             reihe, ziehen, kurven, radiusTitel, _kurvenRadius, kreise, Gruppe(Schrift.Text(Texte.BahnGruppe, "Klein", FontWeight.Bold), Texte.TippBahn), bahn);
-        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur, PinselBaustein());
+        var naturGruppe = new Klappgruppe("natur", Texte.GruppeNatur, Texte.TippGruppeNatur, false, natur, HuegelGrundBauen(), PinselBaustein());
         var wasserGruppe = new Klappgruppe("wasser", Texte.WasserGruppe, Texte.TippWasser, false, wasser, _eisImWinter);
         var gebaeude = new Klappgruppe("gebaeude", Texte.GruppeGebaeude, Texte.TippGruppeGebaeude, false,
             Gruppe(Schrift.Text(Texte.HausOhneOrt, "Klein", FontWeight.Bold), Texte.TippHausOhneOrt), modellTitel, _modellWahl, new WrapPanel { Children = { haus } },
@@ -1293,6 +1296,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
         AussenArt.Huegel => Texte.Huegel,
+        AussenArt.Hoehe => Texte.GemalteHoehen,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,
@@ -1340,6 +1344,8 @@ public sealed partial class Hauptansicht : UserControl
             _aussenAuswahl.Children.Add(beenden);
             // S 0.30.0: Baum oder Katalog-Stueck auch als Reihe
             ReiheTeil();
+            // S 0.51.0: Straße ziehen mit Ausstattung
+            StrassenzugTeil();
         }
         if (_projekt is not null && !_projekt.NurLesen && KartenFlaeche.DrehbarBeimSetzen(Karte.SetzenArt))
         {
