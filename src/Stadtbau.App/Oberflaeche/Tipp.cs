@@ -50,6 +50,14 @@ internal static class Tipp
         return c;
     }
 
+    /// <summary>Text eines schon mit <see cref="Mit{T}"/> versehenen Elements aendern (ohne neue Handler).</summary>
+    public static void Setzen(Control c, string text)
+    {
+        Texte.AddOrUpdate(c, text);
+        ToolTip.SetTip(c, new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, MaxWidth = 340 });
+        AutomationProperties.SetHelpText(c, text);
+    }
+
     /// <summary>Tipp eines Elements (Start-Test: jeder Knopf der Kopfleiste und jede Gruppe links hat einen).</summary>
     public static string? Von(Control c) => Texte.TryGetValue(c, out var t) ? t : null;
 

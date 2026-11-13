@@ -396,6 +396,7 @@ public static partial class StadtbauMessung
         await IndustrieAsync(a, f);
         await AlsGebaeudeAsync(a, f);
         await GrenzenLiveAsync(a, f);
+        await NachtwelleAsync(a, f);
         await LeereStadtOeffnenAsync(a);
         if (Funde.Any(x => x.StartsWith("Draussen: Ausnahme", StringComparison.Ordinal)))
         {

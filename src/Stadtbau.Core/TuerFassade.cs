@@ -77,6 +77,14 @@ public sealed class TuerFassade
     public static bool GruppenAltFuerTests { get => GruppenAlt.Value; set => GruppenAlt.Value = value; }
     private static readonly AsyncLocal<bool> GruppenAlt = new();
 
+    /// <summary>
+    /// Welle S 0.47.0 (selbst gefunden, Fund 320 machte ihn sichtbar): eine Stelle, an der das Spiel die Tuer tiefer als
+    /// <see cref="StadtbauPruefung.WandAbstandModell"/> hinter die Wand zeichnet (Laubengang des Gewerbehofs zum Hof), ist nicht glatt,
+    /// weil die gemeinsame Pruefung dort rot meldet „liegt nicht auf der Wand des Hauses“. Gegenprobe: so wie bis S 0.46.1.
+    /// </summary>
+    public static bool TiefeAltFuerTests { get => TiefeAlt.Value; set => TiefeAlt.Value = value; }
+    private static readonly AsyncLocal<bool> TiefeAlt = new();
+
     public IReadOnlyList<Wand> Waende => _waende;
 
     /// <summary>Gezeichnete Bloecke des Hauses (x1, z1, x2, z2).</summary>
@@ -348,7 +356,7 @@ public sealed class TuerFassade
         }
         var (tiefe, hinten) = StadtTueren.Wandtiefe(stuecke, bib, w, aussen, hoehe) ?? (0f, 0f);
         var mitte = w - (aussen * tiefe);
-        if (StadtTueren.Flaeche(stuecke, bib, mitte, aussen, hoehe).Count > 0)
+        if ((!TiefeAlt.Value && MathF.Abs(tiefe) > StadtbauPruefung.WandAbstandModell) || StadtTueren.Flaeche(stuecke, bib, mitte, aussen, hoehe).Count > 0)
         {
             return new Probe(t, Stelle.Nicht, mitte, null);
         }

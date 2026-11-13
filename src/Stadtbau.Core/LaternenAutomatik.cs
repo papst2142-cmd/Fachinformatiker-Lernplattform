@@ -238,6 +238,39 @@ public static class LaternenAutomatik
         return zahl;
     }
 
+    /// <summary>Weiteste Suche fuer „Laterne versetzen“ (W2) abseits jeder Strasse: Umkreis in Feldern.</summary>
+    public const float VersetzenUmkreis = 3f;
+
+    /// <summary>
+    /// Welle S 0.47.0 W2 (Weisung P12-226): freie Stellen fuer die Laterne Nr. <paramref name="nummer"/> (0-basiert), naechste
+    /// zuerst, nach denselben Regeln wie die automatischen Laternen (<see cref="Nachtlicht.Regeln"/>, Abstaende zu Kreuzung,
+    /// Kreisverkehr, Gleis, Zebrastreifen, Ampel, Haltestelle, Einfahrt und anderen Laternen). Steht sie an einer Strasse
+    /// (bis <see cref="AnStrasse"/>), dann laengs dieser Strasse in Schritten von <see cref="Ruecken"/>, je Abstand erst auf
+    /// ihrer Seite, dann gegenueber, bis zum Ende der Strasse; sonst im Umkreis bis <see cref="VersetzenUmkreis"/>
+    /// (Raster 0,1). Liefert nur Kandidaten; ob eine Stelle wirklich keinen roten Fund ergibt, prueft der Aufrufer mit der
+    /// ganzen Pruefung (<see cref="LaterneVersetzen"/>). Laesst sich die Stadt nicht bauen: keine.
+    /// </summary>
+    public static IEnumerable<Vector2> FreieStellen(PyObjekt aussen, int nummer, Func<PyObjekt, StadtSzene?> szene)
+    {
+        var laternen = Aussen.Laternen(aussen);
+        if (nummer < 0 || nummer >= laternen.Count)
+        {
+            yield break;
+        }
+        var alt = SpielDaten.Liste(laternen[nummer]);
+        var p = new Vector2((float)Py.F(alt[0]), (float)Py.F(alt[1]));
+        var ohne = (PyObjekt)Py.Kopie(aussen)!;
+        Aussen.Laternen(ohne).RemoveAt(nummer);
+        if (Platz.Fuer(ohne, szene) is not { } platz)
+        {
+            yield break;
+        }
+        foreach (var q in platz.Kandidaten(p))
+        {
+            yield return q;
+        }
+    }
+
     /// <summary>Die Regeln fuer den Platz einer automatischen Laterne an der gebauten Stadt ohne Laternen.</summary>
     private sealed class Platz
     {
@@ -321,6 +354,69 @@ public static class LaternenAutomatik
             }
             return null;
         }
+
+        /// <summary>W2: Kandidaten fuer eine Laterne bei <paramref name="p"/> (siehe <see cref="FreieStellen"/>).</summary>
+        public IEnumerable<Vector2> Kandidaten(Vector2 p)
+        {
+            var strassen = Strassen(_aussen).Where(l => l.Count >= 2).ToList();
+            IReadOnlyList<Vector2> strasse = _alleStrassen.Count > 0 ? Nachtlicht.StrasseVon(_alleStrassen, p).Strasse : [];
+            var linie = strassen.FirstOrDefault(l => l.SequenceEqual(strasse));
+            if (linie is not null && Kurve.Abstand(p, linie) <= AnStrasse)
+            {
+                var laenge = Laenge(linie);
+                var (s0, seite) = Lot(linie, p);
+                for (var j = 0; j * Ruecken <= laenge; j++)
+                {
+                    foreach (var s in j == 0 ? (float[])[s0] : [s0 + (j * Ruecken), s0 - (j * Ruecken)])
+                    {
+                        if (s < 0 || s > laenge)
+                        {
+                            continue;
+                        }
+                        var (m, d) = Punkt(linie, s);
+                        var aussenSeite = Aussenseite(linie, s);
+                        foreach (var sd in aussenSeite is { } a ? (float[])[a] : [seite, -seite])
+                        {
+                            var q = m + (new Vector2(-d.Y, d.X) * sd * Nachtlicht.Rand);
+                            q = new Vector2(MathF.Round(q.X, 3), MathF.Round(q.Y, 3));
+                            if (Frei(q, linie))
+                            {
+                                yield return q;
+                            }
+                        }
+                    }
+                }
+                yield break;
+            }
+            // abseits jeder Strasse (Park, Platz): im Umkreis, naechste zuerst, nur die Regeln des Spiels und die Abstaende
+            var punkte = new List<Vector2>();
+            var n = (int)(VersetzenUmkreis / 0.1f);
+            for (var ix = -n; ix <= n; ix++)
+            {
+                for (var iy = -n; iy <= n; iy++)
+                {
+                    var q = new Vector2(MathF.Round(p.X + (ix * 0.1f), 2), MathF.Round(p.Y + (iy * 0.1f), 2));
+                    if (Vector2.Distance(q, p) <= VersetzenUmkreis)
+                    {
+                        punkte.Add(q);
+                    }
+                }
+            }
+            foreach (var q in punkte.OrderBy(q => Vector2.DistanceSquared(q, p)).ThenBy(q => q.X).ThenBy(q => q.Y))
+            {
+                if (FreiAbseits(q))
+                {
+                    yield return q;
+                }
+            }
+        }
+
+        private bool FreiAbseits(Vector2 q) =>
+            _regeln.Pruefen(q).Frei
+            && !_alleStrassen.Any(l => Kurve.Abstand(q, l) <= AnStrasse)
+            && !_szene.Gleise.Any(g => Kurve.Abstand(q, g) < Bahnuebergang.LichtraumHalb + Nachtlicht.AbstandModell + 0.05f)
+            && !_hand.Any(h => Vector2.Distance(q, h) < ZuHand)
+            && !_auto.Any(a => Vector2.Distance(q, a) < Nachtlicht.Zwischen);
 
         private void Hinzu(Vector2 neu)
         {

@@ -1033,6 +1033,7 @@ public static partial class Texte
         ("Strg+Z / Strg+Y", "Rückgängig / Wiederholen", ["Z", "Y"]),
         ("Strg+S", "Projekt speichern", ["S"]),
         ("Strg+D", "Ausgewähltes Stück oder alle gewählten kopieren", ["D"]),
+        ("Strg+C / Strg+V", "In die Zwischenablage für andere Projekte legen / Einfügen (danach auf die Karte tippen)", ["C", "V"]),
         ("Entf / Rücktaste", "Ausgewähltes Stück oder alle gewählten löschen (im Fenster „Projekt öffnen“ mit Entf: das Projekt mit dem Fokus)", ["Delete", "Back"]),
         ("R / Umschalt+R", "Drehen (auch beim Setzen), Umschalt dreht andersherum", ["R"]),
         ("M", "Kurve spiegeln", ["M"]),
@@ -1042,7 +1043,7 @@ public static partial class Texte
         ("U", "Mehrere wählen an oder aus (Stadt von oben und 3D)", ["U"]),
         ("Strg+A", "Alle Stücke der Stadt wählen", ["A"]),
         ("Umschalt+Klick", "Stück zur Auswahl dazunehmen oder herausnehmen", []),
-        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen, Reihe abbrechen, „Platz wählen“ eines Questgebers abbrechen", ["Escape"]),
+        ("Esc", "Setzen beenden, Auswahl aufheben, Maßband wegnehmen, Reihe abbrechen, „Platz wählen“ eines Questgebers abbrechen, Einfügen abbrechen", ["Escape"]),
         ("Enter", "Textfeld im Quest- oder Questgeber-Editor übernehmen (wie das Feld verlassen)", ["Enter"]),
         ("Pfeiltasten", "Ausgewähltes Stück verschieben (3D ohne Auswahl: Ansicht schieben)", ["Left", "Right", "Up", "Down"]),
         ("Leertaste + ziehen", "Ansicht schieben", ["Space"]),
@@ -1337,5 +1338,56 @@ public static partial class Texte
         hin is null && zurueck is null ? ""
             : hin == zurueck ? ", mit dem Bus " + hin + einheit
             : ", mit dem Bus hin " + (hin is { } h ? h + einheit : "nicht schneller") + ", zurück " + (zurueck is { } z ? z + einheit : "nicht schneller");
+
+    // ---- Welle S 0.47.0 (Weisung P12-226) ----------------------------------------------------------
+
+    // W1 Kopieren zwischen Projekten
+    public const string InZwischenablage = "Kopieren (für andere Projekte)";
+    public const string InZwischenablageTipp = "Legt das gewählte Stück (oder alle gewählten) in die Zwischenablage des Werkzeugs (Strg+C). In einem anderen Projekt mit „Einfügen“ (Strg+V) einsetzen. Häuser kommen mit Innenraum und Etagen.";
+    public const string Einfuegen = "Einfügen";
+    public static string EinfuegenTipp(int anzahl, string projekt) =>
+        $"Fügt {anzahl} Stück(e) aus „{projekt}“ ein (Strg+V): danach auf die Karte tippen, dort liegt die Mitte. Ein Schritt, Rückgängig geht.";
+    public const string EinfuegenLeer = "Die Zwischenablage ist leer. Erst ein Stück wählen und „Kopieren (für andere Projekte)“ drücken.";
+    public const string EinfuegenHinweis = "Auf die Karte tippen: dort kommt die Mitte der kopierten Stücke hin. Escape bricht ab.";
+    public const string EinfuegenSchritt = "Einfügen";
+    public static string InZwischenablageGelegt(int anzahl, int uebersprungen) =>
+        $"{anzahl} Stück(e) in der Zwischenablage." + (uebersprungen > 0 ? $" {uebersprungen} lassen sich nicht kopieren (Paketplatz)." : "");
+    public static string Eingefuegt(int anzahl, int uebersprungen) =>
+        $"{anzahl} Stück(e) eingefügt." + (uebersprungen > 0 ? $" {uebersprungen} übersprungen." : "");
+    public const string EinfuegenAusserhalb = "So passen die Stücke nicht auf die Karte: ein Teil ragt über den Rand. Weiter zur Mitte tippen.";
+    public static string EinfuegenOrtSchonDa(string name) =>
+        $"„{name}“ gibt es in dieser Stadt schon als Spielort. Das Haus kam deshalb als Gebäude ohne Ort dazu (ein Spielort steht nie doppelt).";
+    public static string EinfuegenOhneOrt(string name) =>
+        $"„{name}“ kam als Gebäude ohne Ort dazu.";
+    public static string EinfuegenSpielort(string name) =>
+        $"„{name}“ ist jetzt Spielort dieser Stadt. Sein Innenraum ist der aus Stadt 1.";
+    public const string NichtsKopierbar = "Davon lässt sich nichts kopieren (der Paketplatz steht genau einmal in jeder Stadt).";
+
+    // W2 Laterne versetzen
+    public const string LaterneVersetzen = "Laterne versetzen";
+    public const string LaterneVersetzenTipp = "Sucht die nächste freie Stelle für diese Laterne (Regeln wie die automatischen Laternen) und zeigt sie auf der Karte. Ein Tipp auf „Übernehmen“ setzt sie dorthin.";
+    public const string LaterneVersetzenSucht = "Suche freie Stelle …";
+    public static string LaterneVersetzenVorschlag(double weite) =>
+        $"Freie Stelle {weite.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("de-DE"))} Felder entfernt (auf der Karte grün markiert).";
+    public const string LaterneVersetzenUebernehmen = "Übernehmen";
+    public const string LaterneVersetzenSchritt = "Laterne versetzen";
+    public const string LaterneVersetzenWeg = "Diese Laterne gibt es nicht mehr.";
+    public const string LaterneKeinPlatz = "In der Nähe ist keine freie Stelle für diese Laterne. Laterne löschen oder Platz schaffen (Baum, Stück oder Weg verschieben).";
+    public const string LaterneVersetzenVeraltet = "Die Stadt hat sich inzwischen geändert. Bitte noch einmal „Laterne versetzen“ drücken.";
+
+    // W6 Wiederherstellen
+    public const string FruehereFassungen = "Frühere Fassungen";
+    public const string FruehereFassungenTipp = "Zeigt die Sicherungen dieses Projekts (alle 5 Minuten eine, die letzten 20) mit Bild. Eine davon lässt sich als neues Projekt öffnen; das Projekt selbst bleibt unverändert.";
+    public static string FruehereFassungenTitel(string projekt) => $"Frühere Fassungen von „{projekt}“";
+    public const string FruehereFassungenLeer = "Von diesem Projekt gibt es noch keine Sicherung. Das Werkzeug legt alle 5 Minuten eine an, solange du baust.";
+    public const string FassungAlsProjekt = "Diese Fassung als neues Projekt öffnen";
+    public static string FassungAlsProjektTipp(string name) =>
+        $"Legt ein neues Projekt „{name}“ mit dieser Fassung an und öffnet es. Das Projekt, aus dem die Sicherung stammt, und die Sicherung selbst bleiben, wie sie sind.";
+    public const string FassungVorLoeschen = "Kopie vor dem Löschen";
+    public const string FassungNeuer = "Diese Sicherung stammt aus einer neueren Fassung des Werkzeugs. Bitte zuerst das Werkzeug aktualisieren.";
+    public static string FassungZeit(DateTime zeit) =>
+        zeit.ToString("dd.MM.yyyy, HH:mm", System.Globalization.CultureInfo.GetCultureInfo("de-DE")) + " Uhr";
+    public const string FassungKaputt = "Diese Sicherung lässt sich nicht lesen.";
+    public static string FassungGeoeffnet(string name) => $"Fassung als neues Projekt „{name}“ geöffnet.";
 }
 
