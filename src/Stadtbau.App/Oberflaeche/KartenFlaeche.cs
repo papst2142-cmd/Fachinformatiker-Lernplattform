@@ -1283,6 +1283,7 @@ public sealed partial class KartenFlaeche : Control
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
         AussenArt.Huegel => Texte.Huegel,
+        AussenArt.Hoehe => Texte.GemalteHoehen,
         _ => Texte.Paketplatz,
     };
 

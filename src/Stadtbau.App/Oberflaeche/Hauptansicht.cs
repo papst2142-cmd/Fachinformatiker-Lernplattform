@@ -1293,6 +1293,7 @@ public sealed partial class Hauptansicht : UserControl
         AussenArt.Haltestelle => Texte.Haltestelle,
         AussenArt.Parkplatz => Texte.Parkplatz,
         AussenArt.Huegel => Texte.Huegel,
+        AussenArt.Hoehe => Texte.GemalteHoehen,
         AussenArt.Fussweg => Texte.Fussweg,
         AussenArt.Bahn => Texte.Bahn,
         AussenArt.Ziehen => Texte.StrasseZiehen,

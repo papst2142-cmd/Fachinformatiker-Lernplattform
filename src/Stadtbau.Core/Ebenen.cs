@@ -71,7 +71,7 @@ public static class Ebenen
         Ebene.Wasser => [AussenArt.Fluss, AussenArt.Teich, AussenArt.Steg],
         Ebene.Wege => [AussenArt.Fussweg],
         Ebene.Notizen => [AussenArt.Notiz],
-        Ebene.Gelaende => [AussenArt.Huegel],
+        Ebene.Gelaende => [AussenArt.Huegel, AussenArt.Hoehe],
         _ => [],
     };
 

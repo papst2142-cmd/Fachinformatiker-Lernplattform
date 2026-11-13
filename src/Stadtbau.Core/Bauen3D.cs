@@ -273,6 +273,11 @@ public static class Bauen3D
             case AussenArt.Huegel:
                 // S 0.42.0: Umriss des Huegels am Boden
                 return AussenBearbeitung.HuegelVon(aussen, s) is { } h ? [[.. h.Umriss()]] : [];
+            case AussenArt.Hoehe:
+                // S 0.51.0: ein gemalter Hoehenpunkt (Feld des Rasters 0,5 um den Punkt)
+                return AussenBearbeitung.HoehePunkt(aussen, s.Nummer) is { } hp
+                    ? [Rechteck((hp.Lage.X - (Gelaende.Raster / 2), hp.Lage.Y - (Gelaende.Raster / 2), Gelaende.Raster, Gelaende.Raster))]
+                    : [];
             case AussenArt.Steg:
             {
                 if (Wasser.Steg(Aussen.Stege(aussen)[s.Nummer]) is not { } steg)

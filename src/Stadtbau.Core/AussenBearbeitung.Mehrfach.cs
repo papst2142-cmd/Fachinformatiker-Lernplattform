@@ -32,6 +32,10 @@ public static partial class AussenBearbeitung
     /// <summary>Mitte eines Stuecks (wie in <see cref="Alle"/>), null = gibt es nicht.</summary>
     public static Vector2? MitteVon(PyObjekt aussen, AussenStelle s)
     {
+        if (s.Art == AussenArt.Hoehe)
+        {
+            return HoehePunkt(aussen, s.Nummer)?.Lage;
+        }
         s = Ganz(s);
         foreach (var (stelle, x, y) in Alle(aussen))
         {
@@ -48,7 +52,7 @@ public static partial class AussenBearbeitung
     {
         var (ax, bx) = (Math.Min(x1, x2), Math.Max(x1, x2));
         var (ay, by) = (Math.Min(y1, y2), Math.Max(y1, y2));
-        return [.. Alle(aussen).Where(a => a.X >= ax && a.X <= bx && a.Y >= ay && a.Y <= by)
+        return [.. Alle(aussen).Concat(AlleHoehen(aussen)).Where(a => a.X >= ax && a.X <= bx && a.Y >= ay && a.Y <= by)
             .Select(a => a.Stelle)
             .Where(s => aus is null || !aus.Contains(s.Art))
             .Where(s => s.Art != AussenArt.Laterne || !LaternenAutomatik.IstAutomatisch(aussen, s.Nummer))];
@@ -60,7 +64,7 @@ public static partial class AussenBearbeitung
     {
         var (ax, bx) = (Math.Min(x1, x2), Math.Max(x1, x2));
         var (ay, by) = (Math.Min(y1, y2), Math.Max(y1, y2));
-        return [.. Alle(aussen)
+        return [.. Alle(aussen).Concat(AlleHoehen(aussen))
             .Where(a => a.Stelle.Art != AussenArt.Notiz && (aus is null || !aus.Contains(a.Stelle.Art)))
             .Where(a => a.Stelle.Art != AussenArt.Laterne || !LaternenAutomatik.IstAutomatisch(aussen, a.Stelle.Nummer))
             .Where(a => bildpunkt(a.X, a.Y) is { } b && b.X >= ax && b.X <= bx && b.Y >= ay && b.Y <= by)
@@ -126,18 +130,24 @@ public static partial class AussenBearbeitung
     public static MehrfachErgebnis Verschieben(PyObjekt aussen, IReadOnlyList<AussenStelle> gruppe, double dx, double dy, bool raster = true)
     {
         var alle = gruppe.Select(Ganz).Distinct().ToList();
-        (dx, dy) = (Schritt(dx, raster), Schritt(dy, raster));
+        var hoehen = HoehenNummern(alle);
+        // S 0.51.0: gemalte Hoehen bleiben auf dem Raster 0,5, die ganze Gruppe rueckt dann in Schritten 0,5
+        (dx, dy) = (Schritt(dx, raster || hoehen.Count > 0), Schritt(dy, raster || hoehen.Count > 0));
         if (dx == 0 && dy == 0)
         {
             return new MehrfachErgebnis(alle, 0, 0);
         }
-        var bewegen = Reihenfolge(OhneMitgenommene(aussen, alle));
+        var bewegen = Reihenfolge(OhneMitgenommene(aussen, alle).Where(s => s.Art != AussenArt.Hoehe));
         foreach (var s in bewegen)
         {
             VerschiebenGenau(aussen, s, dx, dy);
         }
-        return new MehrfachErgebnis([.. alle.Where(s => Gueltig(aussen, s))], bewegen.Count, 0);
+        var (neuH, wegH) = HoehenAbbilden(aussen, hoehen, p => p + new Vector2((float)dx, (float)dy), false);
+        return new MehrfachErgebnis([.. alle.Where(s => s.Art != AussenArt.Hoehe && Gueltig(aussen, s)), .. neuH], bewegen.Count + neuH.Count, wegH);
     }
+
+    /// <summary>Die Nummern der gemalten Hoehen in einer Gruppe.</summary>
+    private static List<int> HoehenNummern(IEnumerable<AussenStelle> gruppe) => [.. gruppe.Where(s => s.Art == AussenArt.Hoehe).Select(s => s.Nummer).Distinct()];
 
     // ---- Drehen -----------------------------------------------------------------------------------
 
@@ -187,7 +197,7 @@ public static partial class AussenBearbeitung
             .Concat(drehen.Where(s => s.Art is AussenArt.Haltestelle or AussenArt.Parkplatz)).Distinct().ToList();
         var haltZiele = halte.Select(h => (h, Ziel: HaltPunkt(aussen, h) is { } m ? Dreh(m) : (Vector2?)null)).ToList();
         var anzahl = 0;
-        foreach (var s in Reihenfolge(drehen.Where(s => s.Art is not (AussenArt.Zebrastreifen or AussenArt.Ampel or AussenArt.Haltestelle or AussenArt.Parkplatz))))
+        foreach (var s in Reihenfolge(drehen.Where(s => s.Art is not (AussenArt.Zebrastreifen or AussenArt.Ampel or AussenArt.Haltestelle or AussenArt.Parkplatz or AussenArt.Hoehe))))
         {
             anzahl++;
             switch (s.Art)
@@ -266,7 +276,8 @@ public static partial class AussenBearbeitung
             }
             anzahl += drehen.Contains(h) ? 1 : 0;
         }
-        return new MehrfachErgebnis([.. alle.Where(s => Gueltig(aussen, s))], anzahl, 0);
+        var (neuH, wegH) = HoehenAbbilden(aussen, HoehenNummern(drehen), Dreh, false);
+        return new MehrfachErgebnis([.. alle.Where(s => s.Art != AussenArt.Hoehe && Gueltig(aussen, s)), .. neuH], anzahl + neuH.Count, wegH);
     }
 
     /// <summary>Punkte einer Linie abbilden (Kurven auf 0,0001 wie gesetzt, sonst 0,01).</summary>
@@ -303,7 +314,7 @@ public static partial class AussenBearbeitung
         var uebersprungen = 0;
         foreach (var s in Reihenfolge(kopieren))
         {
-            if (s.Art == AussenArt.Zebrastreifen)
+            if (s.Art is AussenArt.Zebrastreifen or AussenArt.Hoehe)
             {
                 continue;
             }
@@ -354,6 +365,9 @@ public static partial class AussenBearbeitung
                 uebersprungen++;
             }
         }
+        var (neuH, wegH) = HoehenAbbilden(aussen, HoehenNummern(kopieren), p => p + new Vector2((float)versatz, 0), true);
+        neu.AddRange(neuH);
+        uebersprungen += wegH;
         return new MehrfachErgebnis([.. neu.Where(s => Gueltig(aussen, s))], neu.Count, uebersprungen);
     }
 
@@ -404,6 +418,8 @@ public static partial class AussenBearbeitung
     public static MehrfachErgebnis Loeschen(PyObjekt aussen, IReadOnlyList<AussenStelle> gruppe)
     {
         var liste = gruppe.Select(Ganz).Distinct().Where(s => Gueltig(aussen, s)).ToList();
+        var hoehen = HoehenNummern(liste);
+        liste = [.. liste.Where(s => s.Art != AussenArt.Hoehe)];
         var bezuege = liste.Select(s => (s.Art, Bezug: Bezug(aussen, s))).ToList();
         var (weg, uebersprungen) = (0, 0);
         foreach (var (art, bezug) in bezuege)
@@ -420,6 +436,8 @@ public static partial class AussenBearbeitung
             Loeschen(aussen, s);
             weg++;
         }
-        return new MehrfachErgebnis([], weg, uebersprungen);
+        // S 0.51.0: gemalte Hoehen zuletzt in einem Zug (ihre Nummern haengen nur an der Liste der gemalten Punkte)
+        HoehenAbbilden(aussen, hoehen, null, false);
+        return new MehrfachErgebnis([], weg + hoehen.Count, uebersprungen);
     }
 }

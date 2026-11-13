@@ -376,7 +376,8 @@ public static partial class AussenBearbeitung
 
     /// <summary>Gibt es dieses Stueck (noch)?</summary>
     public static bool Gueltig(PyObjekt aussen, AussenStelle s) =>
-        MitEckpunkten(s.Art) && s.Punkt >= 0 ? EckpunktGueltig(aussen, s) : Alle(aussen).Any(a => a.Stelle == s);
+        s.Art == AussenArt.Hoehe ? HoehePunkt(aussen, s.Nummer) is not null
+        : MitEckpunkten(s.Art) && s.Punkt >= 0 ? EckpunktGueltig(aussen, s) : Alle(aussen).Any(a => a.Stelle == s);
 
     /// <summary>
     /// Oberstes Stueck an einem Punkt: zuerst kleine (Laterne, Paketplatz, Beet, Baum), dann Haeuser, dann Parks, dann
@@ -708,6 +709,11 @@ public static partial class AussenBearbeitung
     /// <summary>Stueck genau um (dx, dy) verschieben (ohne Raster); Strassen rasten nur mit <paramref name="einrasten"/> ein.</summary>
     private static void VerschiebenGenau(PyObjekt aussen, AussenStelle s, double dx, double dy, bool einrasten = false)
     {
+        if (s.Art == AussenArt.Hoehe)
+        {
+            HoehenAbbilden(aussen, [s.Nummer], p => p + new Vector2((float)dx, (float)dy), false);
+            return;
+        }
         if (IstWasserOderBahn(s.Art))
         {
             WasserVerschieben(aussen, s, dx, dy);
@@ -985,6 +991,9 @@ public static partial class AussenBearbeitung
                 return (Py.F(o["x"]), Py.F(o["y"]));
             case AussenArt.Fluss or AussenArt.Teich or AussenArt.Steg or AussenArt.Bahn:
                 return WasserLage(aussen, s);
+            case AussenArt.Hoehe:
+                var h = HoehePunkt(aussen, s.Nummer)!.Value;
+                return (h.Lage.X, h.Lage.Y);
             default:
                 var a = Alle(aussen).First(x => x.Stelle == s);
                 return (a.X, a.Y);
@@ -1098,6 +1107,11 @@ public static partial class AussenBearbeitung
     /// <summary>Kopie daneben (versetzt um einen Rasterschritt bzw. die eigene Breite); Haeuser mit Ort und Paketplatz nicht.</summary>
     public static AussenStelle? Kopieren(PyObjekt aussen, AussenStelle s)
     {
+        if (s.Art == AussenArt.Hoehe)
+        {
+            var (neu, _) = HoehenAbbilden(aussen, [s.Nummer], p => p + new Vector2(Gelaende.Raster, 0), true);
+            return neu.Count == 1 ? neu[0] : null;
+        }
         if (IstWasserOderBahn(s.Art))
         {
             return WasserKopieren(aussen, s);
@@ -1206,6 +1220,11 @@ public static partial class AussenBearbeitung
         if (LoeschenNicht(s) is not null)
         {
             return false;
+        }
+        if (s.Art == AussenArt.Hoehe)
+        {
+            HoehenAbbilden(aussen, [s.Nummer], null, false);
+            return true;
         }
         if (IstWasserOderBahn(s.Art))
         {
@@ -1381,6 +1400,7 @@ public static partial class AussenBearbeitung
             AussenArt.Haltestelle or AussenArt.Parkplatz => HaltBeschreibung(aussen, s, lage),
             AussenArt.Notiz => NotizBeschreibung(aussen, s, lage),
             AussenArt.Huegel => HuegelBeschreibung(aussen, s, lage),
+            AussenArt.Hoehe => string.Create(De, $"{Texte.GemalteHoehen}, {HoehePunkt(aussen, s.Nummer)!.Value.Hundertstel / 100.0:0.##} hoch") + lage,
             _ => string.Create(De, $"{Texte.Paketplatz}, vor {PaketWerte(aussen).Vor:0.##}, seitlich {PaketWerte(aussen).Seitlich:0.##}"),
         };
     }
