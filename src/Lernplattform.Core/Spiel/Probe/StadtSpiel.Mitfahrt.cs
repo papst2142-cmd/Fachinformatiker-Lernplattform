@@ -55,8 +55,16 @@ public sealed partial class StadtSpiel
     /// <summary>Erst nach so viel Weg ab der Einstiegs-Haltestelle zaehlt sie wieder als Halt zum Aussteigen.</summary>
     private const float WiederAb = 0.5f;
 
-    /// <summary>Wartplatz: Abstand zur Strassenmitte (Mitte des Gehwegs) und laengs zur Mitte der Haltestelle.</summary>
-    private const float PlatzLaengs = 0.1f;
+    /// <summary>
+    /// Wartplatz laengs zur Mitte der Haltestelle (quer: Mitte des Gehwegs). Weisung P12-240: 0,4 hinter der Mitte (0,76 vom Mast),
+    /// neben der mittleren Tuer des haltenden Busses. Der Mast mit dem Schild (0,35 vor der Mitte) steht so deutlich ausserhalb
+    /// des Kreises um die Figur und auch im Blick laengs des Gehwegs nicht hinter ihr (vorher 0,1 vor der Mitte: 0,275 vom Mast,
+    /// der Kreis reicht 0,28 weit, im Bild stand der Mast scheinbar in der Figur; 0,15 hinter der Mitte reichte im Bild nicht).
+    /// </summary>
+    private const float PlatzLaengs = -0.4f;
+
+    /// <summary>Tuer laengs zur Mitte der Haltestelle: neben der vorderen Tuer des haltenden Busses (Front am Schild).</summary>
+    private const float TuerLaengs = 0.1f;
 
     /// <summary>Tuer: an der Bordsteinkante neben der vorderen Tuer des haltenden Busses.</summary>
     private const float TuerQuer = (StadtSzene.StrassenBreite / 2) + 0.02f;
@@ -96,7 +104,7 @@ public sealed partial class StadtSpiel
         h.Mitte + (h.Fahrt * PlatzLaengs) + (h.Aussen * ((StadtSzene.StrassenBreite / 2 + h.Halb) / 2));
 
     /// <summary>Tuer des haltenden Busses (die Figur geht vom Wartplatz hierher und verschwindet im Bus).</summary>
-    public static Vector2 Tuer(Haltestelle h) => h.Mitte + (h.Fahrt * PlatzLaengs) + (h.Aussen * TuerQuer);
+    public static Vector2 Tuer(Haltestelle h) => h.Mitte + (h.Fahrt * TuerLaengs) + (h.Aussen * TuerQuer);
 
     /// <summary>
     /// Steht der Punkt an einer Haltestelle (auf ihrer Seite der Strasse, nicht auf der Fahrbahn, auf Hoehe des Haeuschens
