@@ -69,7 +69,15 @@ public static class AktiveFassung
         var aktiv = Py.Lesen(lesen(Ordner + Datei) ?? throw new StadtbauFehler(["aktiv.json fehlt."])) as PyObjekt
             ?? throw new StadtbauFehler(["aktiv.json ist kein Objekt."]);
         FormatVon(aktiv);
-        var nummer = Nummer(aktiv, stadtId);
+        return LadenNummer(lesen, Nummer(aktiv, stadtId), stadtId);
+    }
+
+    /// <summary>
+    /// W4b (Weisung P12-228): liest genau Fassung <paramref name="nummer"/> einer Stadt (ohne aktiv.json), mit derselben
+    /// Pruefung von Kennung und Nummer; fuer die Grundlage des Werkzeugs (Fassung 0) und Tests, die Fassung 0 pruefen.
+    /// </summary>
+    public static StadtFassung LadenNummer(Func<string, byte[]?> lesen, long nummer, string stadtId = Stadt1)
+    {
         var name = StadtFassung.Dateiname(stadtId, nummer);
         var fassung = StadtFassung.Lesen(lesen(Ordner + name) ?? throw new StadtbauFehler([$"Die Fassung {name} fehlt."]));
         if (fassung.StadtId != stadtId || fassung.Nummer != nummer)

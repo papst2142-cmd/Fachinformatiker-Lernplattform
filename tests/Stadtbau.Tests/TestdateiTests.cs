@@ -111,9 +111,10 @@ public class TestdateiTests
     [Fact]
     public void Einbau_Aktiv1NurImTest_LaedtMitDenMitgeliefertenModellen_OhneRot()
     {
-        // die mitgelieferte aktiv.json bleibt 0 (Weisung P12-28: Fassung 0 sichtbar unveraendert)
-        Assert.Equal(0, AktiveFassung.Laden(Daten.Lesen).Nummer);
-        Assert.Null(Daten.Lesen("inhalte_csharp/spiel/stadtbau/stadt1_fassung1.fistadt"));
+        // seit W4b (Weisung P12-228) nennt die mitgelieferte aktiv.json Nicos Stadt 1 als Fassung 1; die Testdatei hier ist
+        // eine andere Fassung 1 (Probe der Einbau-Technik aus W4a) und liegt nur im Testordner
+        Assert.Equal(1, AktiveFassung.Laden(Daten.Lesen).Nummer);
+        Assert.NotEqual(Daten.Lesen("inhalte_csharp/spiel/stadtbau/stadt1_fassung1.fistadt"), LesenMitFassung1("inhalte_csharp/spiel/stadtbau/stadt1_fassung1.fistadt"));
         var f = AktiveFassung.Laden(LesenMitFassung1);
         Assert.Equal(1, f.Nummer);
         Assert.Empty(StadtbauPruefung.Verbaut(f, Verbaut(Ordner)));

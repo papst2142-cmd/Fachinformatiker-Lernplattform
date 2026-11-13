@@ -323,6 +323,43 @@ public static class Aussen
     /// Patch S 0.5.1 (Weisung P12-39): frei = Schalter darstellung.kleingruen = false (nur der Boden, kein Kleingruen an
     /// Strassen und auf freien Flaechen; Parks, die Nico setzt, behalten Baeume und Bueschel).
     /// </summary>
+    /// <summary>
+    /// W4b (Weisung P12-228 Punkt 2, Nico Frage 2 = a): jede neue Stadt (leere Stadt, Stadt-Datei als neues Projekt) geht
+    /// 1 Spielminute je Schritt (Stadt 1 bis A 0.70.0: 2). Die Laufzeiten im Werkzeug rechnen mit dem Wert der Stadt.
+    /// </summary>
+    public const long MinutenJeSchrittVorgabe = 1;
+
+    private static readonly AsyncLocal<bool> UhrAlt = new();
+
+    /// <summary>Gegenprobe W4b: neue Staedte behalten die Uhr der Vorlage (2 Minuten je Schritt) wie bis S 0.47.0 (nur Tests).</summary>
+    public static bool UhrAltFuerTests
+    {
+        get => UhrAlt.Value;
+        set => UhrAlt.Value = value;
+    }
+
+    /// <summary>Kopie der Uhr einer Stadt mit <see cref="MinutenJeSchrittVorgabe"/>; kein Objekt: unveraendert.</summary>
+    public static object? MitUhrVorgabe(object? uhr)
+    {
+        if (UhrAlt.Value || uhr is not PyObjekt u)
+        {
+            return uhr;
+        }
+        var kopie = (PyObjekt)Py.Kopie(u)!;
+        Py.Setzen(kopie, "minuten_je_schritt", MinutenJeSchrittVorgabe);
+        return kopie;
+    }
+
+    /// <summary>Setzt im Zustand draussen die Uhr auf <see cref="MinutenJeSchrittVorgabe"/> (nur wenn eine Uhr da ist).</summary>
+    public static void UhrVorgabeSetzen(PyObjekt aussen)
+    {
+        var sd = Stadtdaten(aussen);
+        if (Py.Hat(sd, "uhr"))
+        {
+            Py.Setzen(sd, "uhr", MitUhrVorgabe(sd["uhr"]));
+        }
+    }
+
     public static StadtFassung Leer(StadtFassung vorlage, string stadtId, double breite, double hoehe, bool frei = false)
     {
         var sd = (PyObjekt)Py.Kopie(vorlage.Stadtdaten)!;
@@ -337,6 +374,7 @@ public static class Aussen
             {
                 "zugaenge" or "oeffnungszeiten" or "zugaenge_neu" => new PyObjekt(),
                 "neue_orte" => new List<object?>(),
+                "uhr" => MitUhrVorgabe(v),
                 "darstellung" => frei
                     ? new PyObjekt { { "modell_tuer", new PyObjekt() }, { "zierwege", new List<object?>() }, { "paket_platz", Get(Objekt(v), "paket_platz") }, { "kleingruen", false } }
                     : new PyObjekt { { "modell_tuer", new PyObjekt() }, { "zierwege", new List<object?>() }, { "paket_platz", Get(Objekt(v), "paket_platz") } },

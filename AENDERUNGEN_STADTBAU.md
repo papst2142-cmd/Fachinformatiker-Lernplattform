@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.48.0
+
+Neue Städte gehen 1 Minute je Schritt, Stadt 1 ist im Spiel eingebaut.
+
+- Jede neue Stadt (leere Stadt und „Stadt-Datei als neues Projekt öffnen“) rechnet jetzt mit 1 Spielminute je Schritt statt 2. Die Karte „Laufzeiten zu Fuß“ und der gelbe Hinweis zu langen Wegen rechnen mit diesem Wert, die Zeiten werden also halb so lang.
+- Ein Projekt aus einer Stadt-Datei übernimmt beim Öffnen ebenfalls 1 Minute je Schritt; alles andere der Stadt bleibt genau wie in der Datei.
+- Deine Stadt 1 ist jetzt die Stadt im Spiel der Lernplattform. Projekte und Stadt-Dateien aus früheren Fassungen des Werkzeugs bleiben lesbar.
+
 ## S 0.47.0
 
 Stücke zwischen Projekten kopieren, Laterne versetzen, frühere Fassungen öffnen.

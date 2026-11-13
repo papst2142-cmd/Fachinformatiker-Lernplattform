@@ -26,9 +26,16 @@ public sealed class Spieldaten
     /// <summary>Orte mit bearbeitbarem Innenraum (Geschaefte und Schalter).</summary>
     public IReadOnlyList<string> Orte => InnenGrundriss.Orte(Fassung.Innenraeume);
 
+    /// <summary>
+    /// W4b (Weisung P12-228, Plan P12-20 Abschnitt 5): das Werkzeug baut weiter auf Fassung 0 von Stadt 1 auf, auch wenn das
+    /// Spiel schon eine neuere Fassung zeigt (aktiv.json). So bleiben alle Projekte „Stadt 1 überarbeiten“ lesbar (sie merken
+    /// sich ihre Basis-Nummer); ein Wechsel der Basis kommt nur mit einer eigenen Werkzeug-Version.
+    /// </summary>
+    public const long BasisFassung = 0;
+
     public static Spieldaten Laden(Func<string, byte[]?> lesen)
     {
-        var fassung = AktiveFassung.Laden(lesen);
+        var fassung = AktiveFassung.LadenNummer(lesen, BasisFassung);
         var karte = PythonJson.Utf8(PythonJson.Standard(fassung.Karte));
         var daten = Py.Lesen(lesen("inhalte_csharp/spiel/geschaefte.json") ?? throw new FileNotFoundException("geschaefte.json")) as PyObjekt
             ?? throw new InvalidDataException("geschaefte.json ist kein Objekt");

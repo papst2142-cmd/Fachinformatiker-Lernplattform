@@ -110,8 +110,24 @@ public class LaufzeitenTests
     }
 
     /// <summary>Nicos RC-Kandidat fuer Stadt 1 (12.11.2026, S 0.45.0, 6 Haltestellen, 5 Zebrastreifen, 1 Fussweg).</summary>
-    internal static Projekt Rc() => Projekt.AusStadtDatei(
-        File.ReadAllBytes(Path.Combine(Daten.Wurzel, "tests", "Stadtbau.Tests", "Testdaten", "nico", "rc_S0.45.0.fistadt")), D, Daten.NeueAblage(), "RC");
+    /// <remarks>
+    /// W4b (Weisung P12-228): seit S 0.48.0 oeffnet eine Stadt-Datei mit 1 Minute je Schritt; dann lohnt der Bus in dieser
+    /// Stadt nirgends mehr. Fuer den Vergleich Werkzeug = Spiel mit Busfahrten behaelt sie ihre Uhr (2 Minuten, wie gesendet).
+    /// </remarks>
+    internal static Projekt Rc()
+    {
+        var vorher = Aussen.UhrAltFuerTests;
+        Aussen.UhrAltFuerTests = true;
+        try
+        {
+            return Projekt.AusStadtDatei(
+                File.ReadAllBytes(Path.Combine(Daten.Wurzel, "tests", "Stadtbau.Tests", "Testdaten", "nico", "rc_S0.45.0.fistadt")), D, Daten.NeueAblage(), "RC");
+        }
+        finally
+        {
+            Aussen.UhrAltFuerTests = vorher;
+        }
+    }
 
     /// <summary>Das Spiel zu dieser Stadt, gebaut wie im Spiel (Stadt streng, nicht nachsichtig), Figur zu Hause um 7:00 Uhr.</summary>
     private static StadtSpiel SpielZu(StadtFassung st) =>

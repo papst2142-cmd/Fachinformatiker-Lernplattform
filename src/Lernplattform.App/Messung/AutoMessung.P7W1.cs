@@ -72,6 +72,36 @@ public static partial class AutoMessung
         return neu;
     }
 
+    /// <summary>
+    /// W4b (Weisung P12-228): frisches Spiel in Stadt 1 Fassung 0 (die alte Stadt). Pruefungen mit festen Werten dieser
+    /// Stadt (sechs Autos auf festen Strecken, Uebergang der Festgestalten am Kartenrand, Stellwerk ohne Innenraum, Probe
+    /// mit Haltestellen auf ihren Strassen) laufen so weiter streng; die Stadt von Nico (Fassung 1) pruefen eigene Punkte.
+    /// Die naechsten <see cref="Frisch"/> bauen auf dieser Stadt, bis die Pruefung ihr Spiel von vorher zuruecksetzt.
+    /// </summary>
+    internal static StadtSpiel Fassung0(SpielSeite seite)
+    {
+        var alt = seite.Spiel!;
+        var (stadt, innen) = SpielStart.AusFassungFuerTests(0);
+        var neu = SpielStart.Neu(stadt, alt.Grafik, innen, alt.GeschaefteDaten, alt.Feste, Core.Spiel.Festzeit.Heute, Core.Spiel.Jahreszeiten.Heute);
+        seite.SpielSetzen(neu);
+        return neu;
+    }
+
+    /// <summary>W4b: Fassung der Stadt eines Spiels (ohne Fassung, nur in Tests, 0).</summary>
+    internal static long FassungVon(StadtSpiel spiel) => spiel.Stadt.Fassung?.Nummer ?? 0;
+
+    /// <summary>
+    /// W4b: Zahl der Autos im Satz „Autos“: Fassung 0 genau 6 (feste Strecken); in einer Stadt mit automatischen
+    /// Strecken (Fassung 1) wenigstens eins, und es fahren alle im Rundweg.
+    /// </summary>
+    internal static bool AutosPassen(StadtSpiel spiel, Verkehr? verkehr) =>
+        FassungVon(spiel) == 0 ? verkehr?.Autos.Count == 6 : verkehr is { Rundweg: true } v && v.Autos.Count > 0;
+
+    /// <summary>W4b: Laternen der Fassung (Fassung 0 = Nicos Skizze mit 22, davon 5 doppelt).</summary>
+    internal static (int Anzahl, int Doppelt) LaternenSoll(StadtSpiel spiel) => spiel.Stadt.Fassung is { } f
+        ? (f.Laternen.Count, f.Laternen.Count(l => l.Doppelt))
+        : (Nachtlicht.Anzahl, Nachtlicht.Doppelt);
+
     /// <summary>Zur Bitweiche gehen und (falls noetig) bis zur Oeffnung warten; true, wenn man hinein kann.</summary>
     private static bool ZurBitweiche(StadtSpiel spiel)
     {

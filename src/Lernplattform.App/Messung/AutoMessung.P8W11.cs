@@ -64,7 +64,7 @@ public static partial class AutoMessung
                 var anzahl = FestVerkehr.Plaetze(soll).Count;
                 Pruefe(fest + ": Gestalten", flaeche.Satz == soll && soll != FestVerkehr.Satz.Autos && flaeche.Gestalten?.Count == anzahl,
                     string.Create(inv, $"Satz {flaeche.Satz} (soll {soll}), {flaeche.Gestalten?.Count ?? 0} Gestalten (soll {anzahl}), {Stadt.Uhrzeit(uhr)}"));
-                Pruefe(fest + ": Laternen", spiel.Szene.Laternen.Count == Nachtlicht.Anzahl && spiel.Szene.Laternen.Count(l => l.Doppelt) == Nachtlicht.Doppelt,
+                Pruefe(fest + ": Laternen", spiel.Szene.Laternen.Count == LaternenSoll(spiel).Anzahl && spiel.Szene.Laternen.Count(l => l.Doppelt) == LaternenSoll(spiel).Doppelt,
                     string.Create(inv, $"{spiel.Szene.Laternen.Count} Laternen, {spiel.Szene.Laternen.Count(l => l.Doppelt)} doppelt"));
                 if (flaeche.Verkehr is { } verkehr)
                 {
@@ -93,15 +93,16 @@ public static partial class AutoMessung
             Jahreszeiten.Probe(Jahreszeit.Herbst);
             Festzeit.Probe(Festzeit.Halloween);
             Tageslicht.FesteUhr = 720;
-            Frisch(seite);
+            var satzSpiel = Frisch(seite);
             await flaeche.NaechstesBildAsync();
             await flaeche.NaechstesBildAsync();
             var tag = flaeche.Satz;
+            var autosPassen = AutosPassen(satzSpiel, flaeche.Verkehr);
             var autos = flaeche.Verkehr?.Autos.Count ?? 0;
             Tageslicht.FesteUhr = Tageslicht.DaemmerungAb(Jahreszeit.Herbst);
             await flaeche.NaechstesBildAsync();
             await flaeche.NaechstesBildAsync();
-            Pruefe("Satz wechselt mit der Uhr", tag == FestVerkehr.Satz.Autos && autos == 6 && flaeche.Satz == FestVerkehr.Satz.Halloween,
+            Pruefe("Satz wechselt mit der Uhr", tag == FestVerkehr.Satz.Autos && autosPassen && flaeche.Satz == FestVerkehr.Satz.Halloween,
                 string.Create(inv, $"12:00 {tag} ({autos} Autos), {Stadt.Uhrzeit(Tageslicht.DaemmerungAb(Jahreszeit.Herbst))} {flaeche.Satz} ({flaeche.Gestalten?.Count ?? 0} Gestalten)"));
         }
         finally

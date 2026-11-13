@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.71.0
+Die Spielstadt ist neu gebaut.
+
+- Die Stadt, in der du spielst, hat einen neuen Aufbau: alle Orte, die du kennst, stehen an neuen Plätzen, dazu Straßen mit Gehwegen, Zebrastreifen, ein Bus mit Haltestellen, Teiche, Parks und mehrere Bahngleise.
+- Wege in der Stadt kosten jetzt 1 Spielminute je Schritt statt 2. Du kommst also in derselben Spielzeit weiter als vorher.
+- Mit Gehwegen gehst du auf dem Gehweg. Über die Fahrbahn gehst du an einem Zebrastreifen; dort halten die Autos.
+- Wo der Bus schneller ist als zu Fuß, zeigt die Ortsliste beide Zeiten und den Knopf „Mit dem Bus“.
+- Im Elektromarkt erreichst du jetzt jede Ware zu Fuß.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind. Wege, die du früher gegangen bist, behalten ihre Spielzeit.
+
 ## A 0.70.0
 Vorbereitung für die neue Spielstadt: Gebäude können schräg stehen.
 

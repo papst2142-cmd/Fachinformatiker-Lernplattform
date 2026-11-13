@@ -1,26 +1,23 @@
-Vorbereitung für die neue Spielstadt: Gebäude können schräg stehen.
+Die Spielstadt ist neu gebaut.
 
-- Häuser in der Spielstadt können jetzt in Schritten von 15 Grad gedreht stehen, zum Beispiel ein Bahnhof neben einem schrägen Gleis. Tür, Fußweg, Laternen und alle Wege der Figur richten sich danach.
-- Ein Haltepunkt (kleiner Bahnhof) kann jetzt einen freien Bahnsteig haben: das Wartehäuschen steht hinter dem Bahnsteig, daneben eine blaue Zuganzeige mit leuchtender Schrift, wie an einem echten Bahnsteig.
-- Ein Gebäude mit Toren, dessen Seitenwände keinen Platz für eine Tür haben, bekommt seinen Eingang an einem kleinen Vorbau mit Tür und Vordach.
-- Abstellgleise können mit einer Weiche vom Hauptgleis abzweigen und bis in das Tor eines Lokschuppens führen. Ein Gleis, das frei endet, hat am Ende einen rot-weißen Prellbock.
-- Fenster an schräg gedrehten Häusern leuchten nachts wie an allen anderen Häusern.
-- Ein Bahnsteig kann einem Bahnhof zugeordnet sein. Der stehende Zug hält dann genau an diesem Bahnsteig.
-- Selbst angelegte Fußwege in einer neuen Stadt zählen jetzt auch für die Spielzeit eines Wegs: wer über einen Fußweg abkürzt, braucht weniger Spielminuten.
-- In der heutigen Stadt steht kein Haus schräg und es gibt dort keine dieser neuen Teile, darum sieht dort alles aus wie vorher.
-- Dein Spielstand, das Lernen und dein Lernstand bleiben, wie sie sind.
+- Die Stadt, in der du spielst, hat einen neuen Aufbau: alle Orte, die du kennst, stehen an neuen Plätzen, dazu Straßen mit Gehwegen, Zebrastreifen, ein Bus mit Haltestellen, Teiche, Parks und mehrere Bahngleise.
+- Wege in der Stadt kosten jetzt 1 Spielminute je Schritt statt 2. Du kommst also in derselben Spielzeit weiter als vorher.
+- Mit Gehwegen gehst du auf dem Gehweg. Über die Fahrbahn gehst du an einem Zebrastreifen; dort halten die Autos.
+- Wo der Bus schneller ist als zu Fuß, zeigt die Ortsliste beide Zeiten und den Knopf „Mit dem Bus“.
+- Im Elektromarkt erreichst du jetzt jede Ware zu Fuß.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind. Wege, die du früher gegangen bist, behalten ihre Spielzeit.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.70.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.71.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.70.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.70.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.70.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.70.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.71.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.71.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.71.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.71.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

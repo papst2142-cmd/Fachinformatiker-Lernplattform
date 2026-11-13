@@ -127,6 +127,16 @@ public static class SpielStart
     private static StadtFassung? _fassung;
 
     /// <summary>
+    /// W4b (Weisung P12-228): Stadt und Innenraeume aus einer bestimmten Fassung von Stadt 1, nur fuer den Start-Test
+    /// (Pruefungen mit festen Werten der alten Stadt laufen weiter gegen Fassung 0). Das Spiel nimmt immer <see cref="Fassung"/>.
+    /// </summary>
+    internal static (Stadt Stadt, PyObjekt Innenraeume) AusFassungFuerTests(long nummer)
+    {
+        var fassung = MitVerbautPruefen(AktiveFassung.LadenNummer(Lesen, nummer));
+        return (fassung.StadtFuer(InhaltLaden(fassung).Inhalt), fassung.Innenraeume);
+    }
+
+    /// <summary>
     /// Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).
     /// Phase 13 Welle 1: der Abschnitt "orte" (Karte) kommt aus der geltenden Stadt-Fassung und durchlaeuft dieselbe
     /// Ladepruefung wie vorher orte.json.
@@ -137,9 +147,9 @@ public static class SpielStart
     /// </summary>
     private static PyObjekt OptionenInhalt() => Fassung().StadtFuer(InhaltLaden().Inhalt).Inhalt;
 
-    private static (PyObjekt Inhalt, Core.Inhalte.Lerninhalte? Lernen) InhaltLaden()
+    private static (PyObjekt Inhalt, Core.Inhalte.Lerninhalte? Lernen) InhaltLaden(StadtFassung? fassung = null)
     {
-        var karte = PythonJson.Utf8(PythonJson.Standard(Fassung().Karte));
+        var karte = PythonJson.Utf8(PythonJson.Standard((fassung ?? Fassung()).Karte));
         // PROJEKTARBEITEN aus dem Lernteil wie fisi_core.load_content (laeuft im Hintergrund, Warten ist hier erlaubt)
         // Phase 9 W2 (Nico 5c): das Spiel liest nur die bisherigen Inhalte aus inhalte/, gleich in jeder Fachrichtung
         var lernen = Programm.Zustand.Inhalte.GetAwaiter().GetResult()?.Bisher;
