@@ -14,6 +14,7 @@ Stücke zwischen Projekten kopieren, Laterne versetzen, frühere Fassungen öffn
 - Frühere Fassungen: im Fenster „Projekt öffnen“ hat jedes Projekt den Knopf „Frühere Fassungen“. Er zeigt die Sicherungen (das Werkzeug legt alle 5 Minuten eine an) mit Zeit und Bild der Stadt von oben. „Diese Fassung als neues Projekt öffnen“ legt ein neues Projekt mit Datum im Namen an. Das Projekt selbst und die Sicherung bleiben unverändert, nichts wird gelöscht oder überschrieben.
 - Nach Rückgängig bleibt in der Projektdatei kein leerer Eintrag für die automatischen Laternen mehr stehen.
 - Funde zur Erreichbarkeit nennen die Orte mit ihrem Namen auf der Karte (zum Beispiel „Gewerbehof Am Stellwerk“ statt „Probe“).
+- „Tür setzen“ legt eine Tür nicht mehr hinter den Laubengang zum Hof des Gewerbehofs. Dort zeichnet das Spiel die Tür tief hinter der Wand, und die Prüfung meldete sie rot; das Werkzeug wählt jetzt gleich die nächste passende Stelle.
 
 ## S 0.46.1
 

@@ -108,6 +108,32 @@ public class NachtwelleTests
         }
     }
 
+    [Fact]
+    public void Fund320_TuerImLaubengang_Gewerbehof_NichtGlatt_GegenprobeTiefeAlt()
+    {
+        // Welle S 0.47.0 (selbst gefunden): mit Fund 320 nennt der rote Fund den Gewerbehof beim Namen; vorher hiess er „Probe“
+        // und der Test der Tuer-Welle filterte ihn weg (falsches Gruen). Die Stelle hinter dem Laubengang ist jetzt nicht glatt.
+        static List<string> Lauf()
+        {
+            var p = Projekt.Neu("Laubengang", D, Daten.NeueAblage());
+            p.AussenAendern("Laterne 20", Daten.Laterne20Frei);
+            var ort = new AussenStelle(AussenArt.Haus, -1, 0, "gewerbehof");
+            var platz = TuerFassade.Rechnen(p, p.AussenStand, ort)!.Finden(new Vector2(21.4f, 15.1f), null, einrasten: true);
+            p.AussenAendern("Tuer", a => TuerSetzen.SetzenAn(a, ort, platz));
+            return [.. p.PruefenAussen().Where(f => f.Rot && f.Text.Contains("liegt nicht auf der Wand", StringComparison.Ordinal)).Select(f => f.Text)];
+        }
+        Assert.Empty(Lauf());
+        TuerFassade.TiefeAltFuerTests = true;
+        try
+        {
+            Assert.Contains("Die Tür von „Gewerbehof Am Stellwerk“ liegt nicht auf der Wand des Hauses.", Lauf());
+        }
+        finally
+        {
+            TuerFassade.TiefeAltFuerTests = false;
+        }
+    }
+
     // ---- W2 -------------------------------------------------------------------------------------------
 
     private static Projekt MitStrasseUndLaterne(out int nummer, double lx, double ly)
