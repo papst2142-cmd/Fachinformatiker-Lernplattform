@@ -310,7 +310,7 @@ public static partial class Texte
     public const string Innen3DTipp = "Zeigt diesen Innenraum so, wie das Spiel ihn zeichnet, mit Möbeln, Personen und Licht. Du kannst hier auch bauen: Möbel setzen, verschieben, drehen und löschen wie im Grundriss.";
     public const string Innen3DZurueck = "Zurück zum Grundriss";
     public const string Innen3DZurueckTipp = "Zeigt wieder den Grundriss zum Bearbeiten.";
-    public const string Innen3DNachtTipp = "Zeigt den Innenraum am Abend mit eingeschaltetem Licht.";
+    public const string Innen3DImmerHell = "Innenräume sind im Spiel immer hell.";
     public const string Innen3DEtage = "Etage";
     public const string Innen3DEtageTipp = "Wählt die Etage, die die 3D-Ansicht zeigt.";
     public const string Innen3DFigurTipp = "Tippen lässt die Figur dorthin laufen wie im Spiel. Ist der Schalter aus, wählt und setzt Tippen Möbel.";

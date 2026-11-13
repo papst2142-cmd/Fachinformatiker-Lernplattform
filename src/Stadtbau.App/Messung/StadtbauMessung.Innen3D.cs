@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Avalonia.Interactivity;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
@@ -78,18 +80,8 @@ public static partial class StadtbauMessung
         await AlleGroessenAsync(a, f, "Innenraum 3D");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
 
-        // Nacht
-        a.Innen3DNacht = true;
-        await a.Innen3DFertig;
-        await BildAsync(a);
-        if (Tageslicht.FesteUhr != 22 * 60)
-        {
-            Fund("Innenraum 3D: „Nacht“ stellt die Uhr nicht auf den Abend");
-        }
-        await AlleGroessenAsync(a, f, "Innenraum 3D Nacht");
-        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
-        a.Innen3DNacht = false;
-        await a.Innen3DFertig;
+        // S 0.50.0 (Weisung P12-238): kein Schalter „Nacht“ (das Spiel zeichnet Innenraeume immer hell), dafuer der Hinweis
+        await InnenOhneNachtAsync(a);
 
         // S 0.50.0 (Weisung P12-234): Moebel in 3D setzen, schieben, drehen, loeschen
         await InnenBauen3DAsync(a, f);
@@ -157,4 +149,47 @@ public static partial class StadtbauMessung
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
     }
+
+    /// <summary>
+    /// S 0.50.0 (Weisung P12-238): die Kamera-Karte des Innenraums 3D bietet keinen Schalter „Nacht“ an und zeigt den Hinweis
+    /// „immer hell“. Gegenprobe: ein Schalter wie bis Kopf 750c2e0 (CheckBox „Nacht“ neben „Figur laufen lassen“) wird erkannt.
+    /// </summary>
+    private static async Task InnenOhneNachtAsync(Hauptansicht a)
+    {
+        if (a.Innen3DKarte is not { } karte)
+        {
+            Fund("Innenraum 3D: Kamera-Karte fehlt");
+            return;
+        }
+        if (NachtSchalterIn(karte))
+        {
+            Fund("Innenraum 3D: Kamera-Karte bietet einen Schalter „Nacht“ an (Innenraeume sind im Spiel immer hell)");
+        }
+        if (!karte.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == Texte.Innen3DImmerHell && t.IsEffectivelyVisible))
+        {
+            Fund("Innenraum 3D: Hinweis „" + Texte.Innen3DImmerHell + "“ fehlt");
+        }
+        // Gegenprobe: der alte Schalter in der Karte wird erkannt
+        if (karte.GetLogicalDescendants().OfType<WrapPanel>().FirstOrDefault(w => w.Children.OfType<CheckBox>().Any()) is { } reihe)
+        {
+            var alt = new CheckBox { Content = Texte.Nacht };
+            reihe.Children.Insert(0, alt);
+            await BildAsync(a);
+            var erkannt = NachtSchalterIn(karte);
+            reihe.Children.Remove(alt);
+            await BildAsync(a);
+            if (!erkannt)
+            {
+                Fund("Innenraum 3D Gegenprobe: alter Schalter „Nacht“ nicht erkannt");
+            }
+        }
+        else
+        {
+            Fund("Innenraum 3D Gegenprobe: Zeile mit „Figur laufen lassen“ nicht gefunden");
+        }
+    }
+
+    private static bool NachtSchalterIn(Control karte) =>
+        karte.GetLogicalDescendants().OfType<ToggleButton>().Any(t => t.IsEffectivelyVisible
+            && (Equals(t.Content, Texte.Nacht) || (t.Content is TextBlock { } tb && tb.Text == Texte.Nacht)));
 }

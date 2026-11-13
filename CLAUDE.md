@@ -28,7 +28,7 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 
 **Optik (bei jeder sichtbaren Änderung, nicht nur im Spiel)**
 - Vor jeder Meldung selbst aus der Nähe prüfen: Nahaufnahmen vorher und nachher aus 4 Blickwinkeln, Tag und Nacht, wo etwas leuchtet (Nico P8-30).
-- Vor jeder Meldung alle Bilder, die Verschiedenes zeigen sollen, auf Pixelgleichheit vergleichen; gleiche Bilder kommen nicht in die Meldung (Weisung P12-45 Punkt 2d; Lehre S 0.6.0: Park-Bilder 4 und 5 waren gleich, weil das Foto-Werkzeug den Kameraabstand falsch setzte und nicht auf ein neues Bild wartete). Im Foto-Werkzeug den Abstand mit `Kamera.Zoomen(k.Abstand / ziel)` setzen und vor der Aufnahme auf `BildGezeichnet` warten. Foto-Werkzeuge nur lokal unter `/mnt/project-files/phase*_csharp/**/nur_lokal_*` (nie einchecken).
+- Vor jeder Meldung alle Bilder, die Verschiedenes zeigen sollen, auf Pixelgleichheit vergleichen; gleiche Bilder kommen nicht in die Meldung (Weisung P12-45 Punkt 2d; Lehre S 0.6.0: Park-Bilder 4 und 5 waren gleich, weil das Foto-Werkzeug den Kameraabstand falsch setzte und nicht auf ein neues Bild wartete). Im Foto-Werkzeug den Abstand mit `Kamera.Zoomen(k.Abstand / ziel)` setzen und vor der Aufnahme auf `BildGezeichnet` warten. Pixelvergleich nur auf der Bildfläche ohne Bedienelemente (Lehre P12-237: Tag/Nacht innen unterschieden sich nur im Häkchen); wirkt eine Einstellung nicht, kommen keine Bilder in die Meldung, sondern ein Satz mit dem Grund. Foto-Werkzeuge nur lokal unter `/mnt/project-files/phase*_csharp/**/nur_lokal_*` (nie einchecken).
 - Bilder nach `Fi-Austausch/bilder/<Version>_<Thema>/<Nr>_<Ansicht>/<Gerät>_<Größe>_<Modus>.png` mit `LIESMICH.md`; Aufräumen in Fi-Austausch macht Chat.
 - In der Meldung immer Lauf und Artefakt-Nummer von `lernplattform-probe-3d-android` (Probe-APK) nennen.
 
@@ -46,15 +46,15 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 ## Aktueller Stand (nur heute, bei jeder Welle ERSETZEN, nicht anhängen)
 - Phasen 0–12 abgenommen. **Phase 13** (Stadtbau-Werkzeug, Plan `Fi-Austausch/anlagen/P12-15_Plan_Phase13.md`) läuft; Stadt 1 von Nico ist seit A 0.71.0 im Spiel (Fassung 1, `aktiv.json` = 1).
 - Auf `main`: **A 0.72.1 / S 0.49.1** (PR #181, main c4c5cb3), dazu Doku-PR #182 (schlanke CLAUDE.md, main 7d15a10). Releases macht Chat.
-- **In Arbeit:** Welle 2 **S 0.50.0 Innenraum in 3D bauen** (Weisungen P12-234, P12-236; A bleibt 0.72.1, nur Werkzeug-Dateien, Stufe werkzeug) auf Zweig `claude/welle-s0500-innen3d`, Meldung P12-135. Kern `Stadtbau.Core/InnenBauen3D.cs` (Treffer, Vorschau auf Kopie, Pruefung = die des Grundrisses), Oberfläche `Stadtbau.App/Oberflaeche/InnenDreiBedienung.cs`, Start-Test `StadtbauMessung.InnenBauen3D.cs`.
-- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 13.11.2026: P12-236 (Welle 2 bauen), P12-234 mit P12-231 (Wellenplan) und P12-229 (alle Funde rechts).
+- **In Arbeit:** Welle 2 **S 0.50.0 Innenraum in 3D bauen** (Weisungen P12-234, P12-236; A bleibt 0.72.1, nur Werkzeug-Dateien, Stufe werkzeug) auf Zweig `claude/welle-s0500-innen3d`, Meldungen P12-135 bis P12-137 (P12-238: Schalter „Nacht“ im Innenraum 3D weg, Hinweis „immer hell“). Kern `Stadtbau.Core/InnenBauen3D.cs` (Treffer, Vorschau auf Kopie, Pruefung = die des Grundrisses), Oberfläche `Stadtbau.App/Oberflaeche/InnenDreiBedienung.cs`, Start-Test `StadtbauMessung.InnenBauen3D.cs`.
+- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 13.11.2026: P12-238 (Nacht-Schalter weg), P12-236 (Welle 2 bauen), P12-234 mit P12-231 (Wellenplan) und P12-229 (alle Funde rechts).
 - **Wellenplan nach Nicos Antworten (P12-231, Nico 13.11.2026 1a 2c 3b 4c 5c) – genau so, nicht nach einem früheren Kurzplan:**
   1. Welle 1 S 0.49.0: Innenraum in 3D ANSEHEN, Tür schräg, Fundlisten – fertig.
   2. **Welle 2 S 0.50.0: Innenraum in 3D BAUEN** (Möbel setzen/schieben/drehen/löschen in 3D wie draußen; gleiche Schritte, Verlauf, Prüfung wie der Grundriss, Schatten grün/rot) – gebaut, wartet auf Nico.
   3. Welle 3 S 0.51.0: Straßenzug-Vorlagen (3 feste + eigene speichern), Gelände-Mehrfachauswahl.
   4. Welle 4 S 0.52.0: „Alle beheben, die sicher gehen“.
   Danach: Kurzplan 327 (Grafikstufe Niedrig in Stadt 1), Liste „Werkzeug komplett?“, Bericht Phase 13.
-- Nächste Nummern: Meldung **P12-136**, Sammelliste **333**.
+- Nächste Nummern: Meldung **P12-138**, Sammelliste **335** (333 erledigt mit P12-238; 334 Kamera-Karte einklappen/Figur beim Bauen, Welle 4).
 - Offene Sammelliste-Punkte (sonst alles erledigt, Einzelheiten in der Geschichte): 327 Niedrig 118 % in Stadt 1 (Kurzplan, befristete Ausnahme im Start-Test); 326, 319, 308, 268, 270, 232, 227, 221 nur beobachten (nie lockern); 265 feste Ausnahme in `TuerSetzenTests`; 239 Talheim-Nord/Birkenhain (Nico); 215 Möbelhaus größer (Nico mit dem Werkzeug); 224 Artefaktname `stadtbau-android-S-…` fest; 241 Aufgaben an Gebäuden (Kurzplan P12-59); 211, 122/123 K; 214 offen bis 1.0.
 
 ## Nicos Wünsche treu umsetzen (Lehre 13.11.2026)
@@ -152,6 +152,7 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 
 ## Bleibende Regeln: Spiel (Phase 7–8)
 - Spiel-Kern `Core/Spiel/` (Nachbau `fisi_game.py`), Darstellung `Core/Spiel/Probe/` und `App/Spiel/`.
+- Innenräume immer Tageslicht (Nico Phase 8 W10, `StadtFlaeche.AktuellesLicht`); Nacht nur an den Fenstern von außen. Das Werkzeug bietet innen darum keinen Schalter „Nacht“ (S 0.50.0, Weisung P12-238).
 - Fingerabdrücke (müssen bleiben): G43 f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf. Deko, Autos, Grün, Töne, Laternen, Festgestalten, Tag/Nacht sind nur Darstellung.
 - Inhalte des Spiels nur angehängt: `inhalte_csharp/spiel/stadt.json` (`zugaenge_neu` ersetzt je Ort den Zugang beim Laden, alle Leser nutzen `stadt.Zugaenge`; `darstellung` mit `modell_tuer`, `zierwege`), `innenraeume.json` (Abschnitte `zusatz`, `zusatz_kunden`, `zusatz_nachtrag` am Ende: `ohne` nimmt Deko-Typen heraus, `deko` kommt hinzu, wirken in dieser Reihenfolge), `festzeiten.json`. Grafik `modelle.bin` und Töne nur angehängt (Prüfsummen in Tests; einmal neu geschrieben mit A 0.43.6, Weisung P12-50: Format FLGM Version 2 mit Farbe je Ecke, neuer Anker in `ModelleNurAngehaengt`). Gesparte Fassung eines Modells = neues Modell mit Zusatz im Namen hinten angehängt, Wahl nur über eine Tabelle (`Fahrzeugmodelle`, A 0.62.0).
 - Datum: `Festzeit.Datum()` ist die EINZIGE Stelle, die im Spiel das Gerätedatum liest (`Festzeit.Heute()`, `Jahreszeiten.Heute()` nutzen sie). Uhrabweichung einmal je Sitzung (`SpielDatenbank.UhrabweichungGemerkt`). Uhr steht ab 23:00 (`Stadt.UhrSteht`, Minuten gekappt, keine neue Ereignisart).

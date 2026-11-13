@@ -12,6 +12,7 @@ Möbel im Innenraum jetzt auch in 3D setzen, schieben, drehen und löschen.
 - Beim Bauen in 3D bleibt die Kamera stehen, wo du sie hingestellt hast; sie springt nach einem Schritt nicht mehr zur Figur an der Tür. Erst ein anderer Raum oder eine andere Etage beginnt wieder an der Figur.
 - Jeder Schritt in 3D ist derselbe Schritt wie im Grundriss: er steht einmal im Verlauf, „Rückgängig“ nimmt ihn zurück, und die Prüfung rechts rechnet genauso. Der Schatten nutzt dieselbe Prüfung.
 - Die Kamera bewegst du wie bisher: rechte Maustaste dreht, mittlere Maustaste oder Leertaste plus Ziehen schiebt, das Mausrad zoomt; am Tablet zoomen und drehen zwei Finger. Mit „Figur laufen lassen“ lässt Tippen wie bisher die Figur laufen statt zu bauen.
+- Der Schalter „Nacht“ in der 3D-Ansicht des Innenraums ist weg: Das Spiel zeichnet Innenräume immer hell, auch abends, darum zeigte er nichts anderes. Dort steht jetzt der Hinweis „Innenräume sind im Spiel immer hell.“ Nachts anders sind nur die Fenster von außen, zu sehen in der 3D-Ansicht der Stadt.
 
 ## S 0.49.1
 

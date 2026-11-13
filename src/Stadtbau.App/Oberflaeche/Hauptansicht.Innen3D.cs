@@ -17,8 +17,8 @@ namespace Stadtbau.Oberflaeche;
 
 /// <summary>
 /// S 0.49.0 (Weisung P12-231 Antwort 1a): der offene Innenraum in 3D, wie das Spiel ihn zeichnet (Knopf „In 3D ansehen“ in der
-/// Kamera-Karte des Grundrisses). Die Mitte wechselt zwischen Grundriss und 3D; links und rechts bleiben. Tag oder Nacht,
-/// Etage, „Figur laufen lassen“ in der Karte unten rechts; Kamera wie im Spiel (ziehen, rechte Maustaste, Mausrad, zwei
+/// Kamera-Karte des Grundrisses). Die Mitte wechselt zwischen Grundriss und 3D; links und rechts bleiben. Hinweis
+/// „immer hell“ (seit S 0.50.0 kein Schalter „Nacht“, Weisung P12-238), Etage, „Figur laufen lassen“ in der Karte unten rechts; Kamera wie im Spiel (ziehen, rechte Maustaste, Mausrad, zwei
 /// Finger). Gebaut wird im Hintergrund (<see cref="Innen3D.Bauen"/>), nach jeder Aenderung neu, der neueste Stand gewinnt.
 /// S 0.50.0 (Weisung P12-234 mit P12-231 Antwort 1b): hier wird auch gebaut (<see cref="InnenDreiBedienung"/> ueber der Flaeche):
 /// Moebel setzen, waehlen, ziehen; Drehen, Kopieren und Loeschen ueber die Karte rechts und die Tasten wie im Grundriss.
@@ -32,7 +32,9 @@ public sealed partial class Hauptansicht
     private Control? _grundrissMitte;
     private Control? _innen3DMitte;
     private readonly TextBlock _innen3DStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
-    private readonly CheckBox _innen3DNacht = new() { Content = Texte.Nacht };
+    // S 0.50.0 (Weisung P12-238): kein Schalter „Nacht“ mehr; das Spiel zeichnet Innenraeume immer im Tageslicht
+    // (StadtFlaeche.AktuellesLicht, Nico Phase 8 W10), der Schalter haette nichts gezeigt
+    private readonly TextBlock _innen3DImmerHell = Schrift.Text(Texte.Innen3DImmerHell, "Klein", farbe: "Pinsel.muted");
     private readonly CheckBox _innen3DFigur = new() { Content = Texte.FigurLaufen };
     private readonly ComboBox _innen3DEtage = new() { HorizontalAlignment = HorizontalAlignment.Stretch, MinWidth = 160 };
     private StackPanel? _innen3DEtageZeile;
@@ -44,7 +46,6 @@ public sealed partial class Hauptansicht
     private int _innen3DWunsch;
     private int _innen3DGebaut = -1;
     private string? _innen3DGebautOrt;
-    private bool _innen3DGebautNacht;
     private Innen3D.Ergebnis? _innen3DLetzt;
     private long _innen3DAenderung;
     /// <summary>Raum, auf dessen Figur die Kamera zuletzt gesetzt wurde (S 0.50.0: bleibt beim Bauen im selben Raum).</summary>
@@ -78,12 +79,8 @@ public sealed partial class Hauptansicht
     /// <summary>Etagen-Wahl der 3D-Karte (Start-Test).</summary>
     internal ComboBox Innen3DEtage => _innen3DEtage;
 
-    /// <summary>Tag oder Nacht (Start-Test, Fotos).</summary>
-    internal bool Innen3DNacht
-    {
-        get => _innen3DNacht.IsChecked == true;
-        set => _innen3DNacht.IsChecked = value;
-    }
+    /// <summary>Kamera-Karte des Innenraums 3D (Start-Test: kein Schalter „Nacht“).</summary>
+    internal Control? Innen3DKarte => _innen3DKarte;
 
     /// <summary>Schalter „Figur laufen lassen“ (Start-Test).</summary>
     internal bool Innen3DFigurLaufen
@@ -92,7 +89,7 @@ public sealed partial class Hauptansicht
         set => _innen3DFigur.IsChecked = value;
     }
 
-    private bool Innen3DAktuell => _innen3DGebaut == _innen3DWunsch && _innen3DGebautOrt == _ort && _innen3DGebautNacht == Innen3DNacht;
+    private bool Innen3DAktuell => _innen3DGebaut == _innen3DWunsch && _innen3DGebautOrt == _ort;
 
     /// <summary>Knopf fuer die Kamera-Karte des Grundrisses und die Mitte (in <see cref="InnenBauen"/>).</summary>
     private Control Innen3DMitteBauen(Control grundriss, WrapPanel zoom)
@@ -113,12 +110,6 @@ public sealed partial class Hauptansicht
         var zurueck = Schrift.Knopf(Texte.Innen3DZurueck).Vorlese(Texte.Innen3DZurueck).Mit(Texte.Innen3DZurueckTipp);
         zurueck.Click += (_, _) => Innen3DZeigen(false);
         Innen3DZurueckKnopf = zurueck;
-        _innen3DNacht.Vorlese(Texte.Nacht).Mit(Texte.Innen3DNachtTipp);
-        _innen3DNacht.IsCheckedChanged += (_, _) =>
-        {
-            _innen3DAenderung = Stopwatch.GetTimestamp();
-            Innen3DAktualisieren();
-        };
         _innen3DFigur.Vorlese(Texte.FigurLaufen).Mit(Texte.Innen3DFigurTipp);
         _innen3DFigur.IsCheckedChanged += (_, _) =>
         {
@@ -152,7 +143,7 @@ public sealed partial class Hauptansicht
                 zurueck,
             },
         };
-        var karte = Kamerakarte.Bauen(zoom, new WrapPanel { Children = { _innen3DNacht, _innen3DFigur } }, _innen3DEtageZeile,
+        var karte = Kamerakarte.Bauen(zoom, _innen3DImmerHell, new WrapPanel { Children = { _innen3DFigur } }, _innen3DEtageZeile,
             Schrift.Text(Texte.Innen3DHinweis, "Klein", farbe: "Pinsel.muted"), _innen3DStatus);
         karte.MaxWidth = 440;
         _innen3DKarte = karte;
@@ -243,7 +234,7 @@ public sealed partial class Hauptansicht
         {
             return;
         }
-        Tageslicht.FesteUhr = Innen3DNacht ? 22 * 60 : 12 * 60;
+        Tageslicht.FesteUhr = 12 * 60;
         if (Innen3DAktuell)
         {
             Innen3DFlaeche.AnfordernBild();
@@ -259,12 +250,11 @@ public sealed partial class Hauptansicht
             return;
         }
         var wunsch = _innen3DWunsch;
-        var nacht = Innen3DNacht;
         if (Innen3D.Nicht(ort) is { } grund)
         {
             _innen3DStatus.Text = grund;
             Innen3DFlaeche.IsVisible = false;
-            (_innen3DGebaut, _innen3DGebautOrt, _innen3DGebautNacht) = (wunsch, ort, nacht);
+            (_innen3DGebaut, _innen3DGebautOrt) = (wunsch, ort);
             _innen3DFertig.TrySetResult();
             return;
         }
@@ -275,7 +265,7 @@ public sealed partial class Hauptansicht
         _ = Hintergrund(Task.Run(() => Innen3D.Bauen(auftrag, vorher, _innen3DVorrat))).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             _innen3DBaut = false;
-            (_innen3DGebaut, _innen3DGebautOrt, _innen3DGebautNacht) = (wunsch, ort, nacht);
+            (_innen3DGebaut, _innen3DGebautOrt) = (wunsch, ort);
             if (t.IsFaulted)
             {
                 var fehler = t.Exception?.InnerException;
@@ -295,7 +285,7 @@ public sealed partial class Hauptansicht
                 var e = t.Result;
                 _innen3DLetzt = e;
                 Innen3DFlaeche.IsVisible = true;
-                Tageslicht.FesteUhr = Innen3DNacht ? 22 * 60 : 12 * 60;
+                Tageslicht.FesteUhr = 12 * 60;
                 if (!ReferenceEquals(Innen3DFlaeche.Spiel, e.Spiel))
                 {
                     Innen3DFlaeche.Spiel = e.Spiel;
