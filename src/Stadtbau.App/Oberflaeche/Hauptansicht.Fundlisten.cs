@@ -73,12 +73,14 @@ public sealed partial class Hauptansicht
 
     private void FundlistenAussenBauen(StackPanel rechts)
     {
+        _innenListeDraussen?.Inhalt.Children.Remove(_innenListeDraussenInhalt);
         _innenListeDraussen = new Klappgruppe("funde_innen", Texte.FundeInnenTitel(0), Texte.FundeInnenTipp, true, _innenListeDraussenInhalt);
         rechts.Children.Insert(rechts.Children.IndexOf(_pruefenAussen!) + 1, _innenListeDraussen);
     }
 
     private Klappgruppe FundlistenInnenBauen()
     {
+        _stadtListeInnen?.Inhalt.Children.Remove(_stadtListeInnenInhalt);
         _stadtListeInnen = new Klappgruppe("funde_stadt", Texte.FundeStadtTitel(0), Texte.FundeStadtTipp, true, _stadtListeInnenInhalt);
         return _stadtListeInnen;
     }
@@ -87,6 +89,10 @@ public sealed partial class Hauptansicht
     {
         _stadtListeEntwurfInhalt.Children.Clear();
         _innenListeEntwurfInhalt.Children.Clear();
+        // der Editor wird je Oeffnen neu gebaut: die Inhalte erst aus den Gruppen des vorigen Editors loesen (sonst
+        // „already has a visual parent“ beim zweiten Oeffnen)
+        _stadtListeEntwurf?.Inhalt.Children.Remove(_stadtListeEntwurfInhalt);
+        _innenListeEntwurf?.Inhalt.Children.Remove(_innenListeEntwurfInhalt);
         _stadtListeEntwurf = new Klappgruppe("funde_stadt_entwurf", Texte.FundeStadtTitel(0), Texte.FundeStadtTipp, true, _stadtListeEntwurfInhalt);
         _innenListeEntwurf = new Klappgruppe("funde_innen_entwurf", Texte.FundeInnenTitel(0), Texte.FundeInnenTipp, true, _innenListeEntwurfInhalt);
         ansicht.Fundlisten.Children.Clear();
