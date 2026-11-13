@@ -390,6 +390,7 @@ public static partial class StadtbauMessung
         await AmpelnAsync(a, f);
         await HaltestellenAsync(a, f);
         await GelaendeAsync(a, f);
+        await HuegelVerdecktAsync(a, f);
         await StrassenzugAsync(a, f);
         await WerkzeugKleinAsync(a, f);
         await MehrfachAsync(a, f);
@@ -398,6 +399,7 @@ public static partial class StadtbauMessung
         await AlsGebaeudeAsync(a, f);
         await GrenzenLiveAsync(a, f);
         await NachtwelleAsync(a, f);
+        await AlleBehebenAsync(a, f);
         await FundlistenAsync(a, f);
         await Innen3DAsync(a, f);
         await LeereStadtOeffnenAsync(a);

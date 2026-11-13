@@ -1228,7 +1228,12 @@ public sealed partial class KartenFlaeche : Control
         // gedreht setzen und einrasten ist ein einziger Schritt im Verlauf (Welle E: gleicher Weg wie die Vorschau in 3D)
         var neu = _projekt.AussenAendern("Setzen", a => AussenBearbeitung.SetzenUndDrehen(a, art, x, y, raster, modell, dreh));
         SetzenArt = null;
-        if (neu is not null)
+        if (neu is not null && art == AussenArt.Huegel && AussenBearbeitung.HuegelVerdeckt(_projekt.AussenStand, neu))
+        {
+            // S 0.52.0 (Sammelliste 336): der Huegel steht, man sieht ihn aber nicht; das sagt das Werkzeug gleich
+            Gemeldet?.Invoke(Texte.HuegelVerdeckt);
+        }
+        else if (neu is not null)
         {
             Gemeldet?.Invoke((art == AussenArt.Katalog ? KatalogPruefung.Name(Katalog.Aktiv, Katalog.Praefix + SetzenModell)
                 : art == AussenArt.Kurve && Strassenkurve.Lesen(modell) is { } k ? Strassenkurve.Name(k.Form, k.Winkel, k.Radius)
