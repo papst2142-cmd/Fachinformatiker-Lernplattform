@@ -1418,6 +1418,15 @@ public static partial class Texte
     public const string LaterneKeinPlatz = "In der Nähe ist keine freie Stelle für diese Laterne. Laterne löschen oder Platz schaffen (Baum, Stück oder Weg verschieben).";
     public const string LaterneVersetzenVeraltet = "Die Stadt hat sich inzwischen geändert. Bitte noch einmal „Laterne versetzen“ drücken.";
 
+    // S 0.52.0 Alle beheben, die sicher gehen (Weisung P12-231 Punkt 5)
+    public const string AlleBeheben = "Alle beheben, die sicher gehen";
+    public const string AlleBehebenTipp = "Behebt alle roten Funde, für die es einen sicheren Vorschlag gibt: Laterne versetzen, Tür auf die nächste glatte Stelle, Fußweg neu an die Straße. Jede Änderung zählt nur, wenn dadurch kein neuer roter Fund entsteht. Alles zusammen ist ein Schritt und lässt sich mit einem Mal Rückgängig zurücknehmen.";
+    public const string AlleBehebenSchritt = "Alle beheben, die sicher gehen";
+    public const string AlleBehebenSucht = "Suche sichere Behebungen …";
+    public static string AlleBehebenErgebnis(int behoben, int bleiben) =>
+        $"{behoben} behoben, {bleiben} bleiben" + (bleiben > 0 ? " (diese bitte von Hand beheben)." : ".");
+    public const string AlleBehebenVeraltet = "Die Stadt hat sich während der Suche geändert. Bitte noch einmal „Alle beheben, die sicher gehen“ drücken.";
+
     // W6 Wiederherstellen
     public const string FruehereFassungen = "Frühere Fassungen";
     public const string FruehereFassungenTipp = "Zeigt die Sicherungen dieses Projekts (alle 5 Minuten eine, die letzten 20) mit Bild. Eine davon lässt sich als neues Projekt öffnen; das Projekt selbst bleibt unverändert.";

@@ -1974,6 +1974,8 @@ public sealed partial class Hauptansicht : UserControl
         }
         _aussenPruefungen.Children.Clear();
         FundlistenZeigen();
+        // S 0.52.0 (Weisung P12-231 Punkt 5): Knopf „Alle beheben, die sicher gehen“ oben in der Liste
+        AlleBehebenZeigen();
         if (AussenFunde.Count == 0)
         {
             _aussenPruefungen.Children.Add(Schrift.Text("✓ " + Texte.AllesGruen, farbe: "Pinsel.green"));
