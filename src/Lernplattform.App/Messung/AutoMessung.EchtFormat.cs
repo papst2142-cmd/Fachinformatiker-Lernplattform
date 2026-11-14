@@ -164,10 +164,10 @@ public static partial class AutoMessung
             var name = art == PointerType.Mouse ? "Maus" : "Finger";
             k.Probe(ab + 1);
             await ansicht.BildFertigAsync();
-            var texte = e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count() ?? 0;
+            var texte = e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count(x => x.IsEffectivelyVisible) ?? 0;
             if (!await TippenAsync(ansicht, e.ProbeInhalt, EchtTexte.AlsText, art)
                 || e.ProbeInhalt?.GetVisualDescendants().OfType<Button>().Any(b => Avalonia.Automation.AutomationProperties.GetName(b) == EchtTexte.BildZeigen) != true
-                || (e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count() ?? 0) <= texte)
+                || (e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count(x => x.IsEffectivelyVisible) ?? 0) <= texte)
             {
                 Fund(name + ": \"Als Text zeigen\" antippen zeigt die Textfassung nicht");
             }
