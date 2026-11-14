@@ -174,6 +174,22 @@ public static partial class StadtbauPruefung
     }
 
     /// <summary>
+    /// Weisung P12-254 (Nico Frage 2 = a, „nur auf der Wiese malen“): darf der Pinsel den Rasterpunkt <paramref name="p"/>
+    /// aendern? Genau die Regel 4 fuer eine gemalte Hoehe (Kern = Punkt mit Radius <see cref="Gelaende.Raster"/>, Rand
+    /// <see cref="Gelaende.Saum"/> zu Haus, Strasse, Fussweg, Gleis, Wasser, Platz, Parkplatz, Haltestelle, Zebrastreifen,
+    /// Ampel); was der Pinsel malt, meldet die Pruefung darum nie rot. Das Ergebnis haelt die Hindernisse fest (fuer viele Punkte).
+    /// </summary>
+    public static Func<Vector2, bool> GelaendeMalbar(StadtSzene szene, StadtFassung fassung)
+    {
+        var hindernisse = GelaendeHindernisse(szene, fassung);
+        return p =>
+        {
+            var k = new GelaendeKern("Gemaltes Gelände", p, p, Gelaende.Raster);
+            return hindernisse.All(h => KernAbstand(k, h.Abstand) >= Gelaende.Saum - 0.001f);
+        };
+    }
+
+    /// <summary>
     /// Messung fuer die Meldung (Weisung P12-192 Punkt 3c): wie viel freie Wiese bleibt mit dem festen Rand <see cref="Gelaende.Saum"/>
     /// (Flaeche in Feldern, auf der die Mitte eines Huegels mit Radius <see cref="Gelaende.RadiusMin"/> stehen kann; Raster 0,25) und
     /// der groesste moegliche runde Huegel (Radius bis <see cref="Gelaende.RadiusMax"/>, ganz auf der Karte).

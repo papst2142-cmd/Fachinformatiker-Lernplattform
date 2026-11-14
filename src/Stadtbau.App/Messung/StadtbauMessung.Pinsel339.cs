@@ -22,7 +22,8 @@ namespace Stadtbau.Messung;
 /// 400 ms): 1 Schritt, Gelaende hoeher, der Pinselkreis ist waehrend des Zugs zu sehen und liegt unter dem Zeiger, der Zug
 /// trifft die Stelle unter dem Zeiger auch auf schon gehobenem Gelaende (Gegenprobe: der Schnitt mit der flachen Ebene
 /// laege daneben), Rueckgaengig nimmt den Zug ganz zurueck. Ein Finger = 1 Schritt; zwei Finger, rechte und mittlere
-/// Maustaste = kein Schritt (Gegenproben). Ein Zug ueber die Strasse aendert nichts (dieselbe Rechnung wie in der Draufsicht).
+/// Maustaste = kein Schritt (Gegenproben). Weisung P12-254: ein Zug laengs der Strasse aendert nichts (kein Schritt, Meldung),
+/// quer ueber die Strasse nur die Wiese ausserhalb des Rands 1,5, Pruefung ohne Fund; Gegenprobe ohne Sperre rot.
 /// Weisung P12-253 (Fund Bild 26): nach jedem Wechsel der Staerke, auch nach hell/dunkel und in beiden Ansichten, ist genau
 /// ein Staerke-Knopf markiert (Verlauf und Name „…, gewählt“); Gegenprobe: zwei markierte Knoepfe werden erkannt.
 /// </summary>
@@ -249,26 +250,56 @@ public static partial class StadtbauMessung
             await BildAsync(b3);
         }
 
-        // ueber der Strasse: dieselbe Rechnung wie in der Draufsicht (AussenBearbeitung.Pinselzug laesst Strassen nicht aus,
-        // die Pruefung meldet das gemalte Gelaende an der Strasse rot); der Zug in 3D ergibt dieselbe Hoehe wie derselbe Zug
-        // in der Draufsicht (Gegenprobe gegen eine zweite Rechnung)
+        // Weisung P12-254 (Nico Frage 2 = a, „nur auf der Wiese malen“): ein Zug laengs der Strasse aendert nichts, ist kein
+        // Schritt und meldet PinselNichts, in 3D und in der Draufsicht; ein Zug quer ueber die Strasse hebt nur die Wiese
+        // ausserhalb des Rands 1,5 (in 3D dieselbe Hoehe wie in der Draufsicht), die Pruefung meldet kein „Gemaltes Gelände“.
+        // Gegenprobe ohne Sperre: derselbe Zug laengs der Strasse malt dort, die Pruefung meldet rot.
+        bool GemaltRot() => a.AussenFunde.Any(x => x.Rot && x.Text.StartsWith("Gemaltes Gelände", StringComparison.Ordinal));
         var s3 = p.SchritteZurueck;
         await Zug3DAsync(a, b3, 8, 3, 14, 3, "links");
         await a.DreiFertig;
+        var laengs3D = (p.SchritteZurueck - s3, HoeheAn(11, 3), a.StatusText);
+        var laengs2D = k.PinselZugAnwenden([new(8, 3), new(14, 3)]);
+        if (laengs3D.Item1 != 0 || laengs3D.Item2 != 0f || laengs3D.StatusText != Texte.PinselNichts || laengs2D || p.SchritteZurueck != s3)
+        {
+            Fund(string.Create(Inv, $"Pinsel an der Strasse (P12-254): 3D {laengs3D.Item1} Schritte, Hoehe {laengs3D.Item2:0.00}, Meldung „{laengs3D.StatusText}“, Draufsicht geaendert {laengs2D} (erwartet: nichts, kein Schritt, „{Texte.PinselNichts}“)"));
+        }
+        await Zug3DAsync(a, b3, 11, 1, 11, 9, "links");
+        await a.DreiFertig;
         await a.AussenGeprueft;
-        var hoehe3D = HoeheAn(11, 3);
-        var rotStrasse = a.AussenFunde.Any(x => x.Rot && x.Text.Contains("Gemaltes Gelände", StringComparison.Ordinal));
+        var quer3D = (Wiese: HoeheAn(11, 7), Strasse: HoeheAn(11, 3), Rand: HoeheAn(11, 5.5f), Rot: GemaltRot(), Schritte: p.SchritteZurueck - s3);
         a.Rueckgaengig();
         await a.DreiFertig;
-        k.PinselZugAnwenden([new(8, 3), new(14, 3)]);
-        var hoehe2D = HoeheAn(11, 3);
+        k.PinselZugAnwenden([new(11, 1), new(11, 9)]);
+        await a.AussenGeprueft;
+        var quer2D = (Wiese: HoeheAn(11, 7), Strasse: HoeheAn(11, 3), Rand: HoeheAn(11, 5.5f), Rot: GemaltRot());
         a.Rueckgaengig();
         await a.AussenGeprueft;
-        if (p.SchritteZurueck != s3 || Math.Abs(hoehe3D - hoehe2D) > 0.011f || !rotStrasse)
+        if (quer3D.Schritte != 1 || quer3D.Wiese <= 0f || quer3D.Strasse != 0f || quer3D.Rand != 0f || quer3D.Rot || quer2D.Rot
+            || Math.Abs(quer3D.Wiese - quer2D.Wiese) > 0.011f || quer2D.Strasse != 0f || quer2D.Rand != 0f)
         {
-            Fund(string.Create(Inv, $"Pinsel 3D an der Strasse: 3D {hoehe3D:0.00}, Draufsicht {hoehe2D:0.00}, rot gemeldet {rotStrasse} (erwartet gleich und rot)"));
+            Fund(string.Create(Inv, $"Pinsel quer ueber die Strasse (P12-254): 3D Wiese {quer3D.Wiese:0.00}, Strasse {quer3D.Strasse:0.00}, Rand {quer3D.Rand:0.00}, rot {quer3D.Rot}, {quer3D.Schritte} Schritte; Draufsicht Wiese {quer2D.Wiese:0.00}, Strasse {quer2D.Strasse:0.00}, Rand {quer2D.Rand:0.00}, rot {quer2D.Rot}"));
         }
-        Messwerte.Notiere(string.Create(Inv, $"Pinsel an der Strasse (Sammelliste 339): 3D {hoehe3D:0.00}, Draufsicht {hoehe2D:0.00}, Pruefung rot {rotStrasse}"));
+        bool gegenRot;
+        float gegenHoehe;
+        try
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = true;
+            k.PinselZugAnwenden([new(8, 3), new(14, 3)]);
+            await a.AussenGeprueft;
+            (gegenHoehe, gegenRot) = (HoeheAn(11, 3), GemaltRot());
+        }
+        finally
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = false;
+        }
+        a.Rueckgaengig();
+        await a.AussenGeprueft;
+        if (gegenHoehe <= 0f || !gegenRot || p.SchritteZurueck != s3)
+        {
+            Fund(string.Create(Inv, $"Pinsel an der Strasse Gegenprobe ohne Sperre: Hoehe {gegenHoehe:0.00}, rot {gegenRot} (erwartet gemalt und rot)"));
+        }
+        Messwerte.Notiere(string.Create(Inv, $"Pinsel an der Strasse (P12-254): laengs nichts ({laengs3D.Item1} Schritte); quer 3D Wiese {quer3D.Wiese:0.00}, Draufsicht {quer2D.Wiese:0.00}, Strasse und Rand 0, Pruefung rot {quer3D.Rot}/{quer2D.Rot}; Gegenprobe ohne Sperre Hoehe {gegenHoehe:0.00}, rot {gegenRot}"));
         await AlleGroessenAsync(a, f, "Pinsel 3D");
         k.GelaendePinsel = null;
         a.ReiterZeigen(innen: false);

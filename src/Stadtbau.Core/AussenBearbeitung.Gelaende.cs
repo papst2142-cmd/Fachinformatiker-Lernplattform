@@ -38,6 +38,11 @@ public static partial class AussenBearbeitung
     /// </summary>
     public static readonly IReadOnlyList<float> PinselStaerken = [PinselStaerke, 0.25f, 0.5f];
 
+    /// <summary>Nur Gegenprobe (Weisung P12-254): Pinsel ohne die Sperre an Haus, Strasse und Wasser (Stand S 0.53.0 vor P12-254).</summary>
+    public static bool PinselOhneSperreFuerTests { get => PinselOhneSperre.Value; set => PinselOhneSperre.Value = value; }
+
+    private static readonly AsyncLocal<bool> PinselOhneSperre = new();
+
     /// <summary>Pinsel: Groessen (Radius in Feldern).</summary>
     public static readonly IReadOnlyList<float> PinselGroessen = [0.5f, 1f, 1.5f, 2f];
 
@@ -221,7 +226,12 @@ public static partial class AussenBearbeitung
     /// bis <paramref name="groesse"/> heben, senken oder glaetten (am Rand weniger). Hoehen bleiben zwischen 0 und 1,5 auf
     /// 0,01; ausserhalb der Karte nichts. Ergebnis: Zahl der geaenderten Rasterpunkte (0 = nichts geaendert).
     /// </summary>
-    public static int Pinselzug(PyObjekt aussen, PinselArt art, IReadOnlyList<Vector2> zug, float groesse, float staerke = PinselStaerke)
+    /// <remarks>
+    /// Weisung P12-254: <paramref name="malbar"/> (Rasterpunkt i, j) sperrt Punkte nahe Haus, Strasse, Wasser usw.; sie bleiben,
+    /// wie sie sind (auch eine dort schon gemalte Hoehe, nichts wird still geloescht). null = keine Sperre.
+    /// </remarks>
+    public static int Pinselzug(PyObjekt aussen, PinselArt art, IReadOnlyList<Vector2> zug, float groesse, float staerke = PinselStaerke,
+        Func<int, int, bool>? malbar = null)
     {
         if (zug.Count == 0)
         {
@@ -264,7 +274,7 @@ public static partial class AussenBearbeitung
                         continue;
                     }
                     var d = Vector2.Distance(p, new Vector2(i * Gelaende.Raster, j * Gelaende.Raster));
-                    if (d > groesse)
+                    if (d > groesse || (malbar is not null && !malbar(i, j)))
                     {
                         continue;
                     }

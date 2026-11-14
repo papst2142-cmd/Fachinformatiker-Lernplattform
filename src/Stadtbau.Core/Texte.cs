@@ -876,7 +876,7 @@ public static partial class Texte
     public const string HuegelWerteTipp = "Jede Änderung ist ein Schritt (Rückgängig geht). Radius 1 bis 3, Höhe 0,2 bis 1,5, länglich bis 6 lang.";
     public const string HuegelDrehenRund = "Ein runder Hügel sieht von allen Seiten gleich aus.";
     public const string Pinsel = "Gelände malen";
-    public const string PinselTipp = "Mit dem Pinsel Gelände heben, senken oder glätten (Raster 0,5, bis 1,5 hoch). Jeder Zug ist ein Schritt. Geht in „Stadt von oben“ und in 3D (linke Maustaste oder ein Finger malt, rechte Maustaste oder zwei Finger bewegen die Ansicht).";
+    public const string PinselTipp = "Mit dem Pinsel Gelände heben, senken oder glätten (Raster 0,5, bis 1,5 hoch). Gemalt wird nur auf der Wiese, um Häuser, Straßen, Wege und Wasser bleibt ein Rand von 1,5 frei. Jeder Zug ist ein Schritt. Geht in „Stadt von oben“ und in 3D (linke Maustaste oder ein Finger malt, rechte Maustaste oder zwei Finger bewegen die Ansicht).";
     public const string PinselHeben = "Heben";
     public const string PinselSenken = "Senken";
     public const string PinselGlaetten = "Glätten";
@@ -893,7 +893,7 @@ public static partial class Texte
     public const string PinselZug = "Gelände gemalt";
     public const string PinselHinweis = "Über die Wiese ziehen: jeder Zug ist ein Schritt. Escape oder Rechtsklick beendet den Pinsel.";
     public const string PinselAus = "Pinsel beendet.";
-    public const string PinselNichts = "Der Zug hat nichts geändert (schon ganz oben, ganz unten oder flach; Häuser, Straßen und Wasser bleiben frei).";
+    public const string PinselNichts = "Der Zug hat nichts geändert (schon ganz oben, ganz unten oder flach; Häuser, Straßen, Wege, Plätze und Wasser bleiben samt Rand 1,5 frei).";
     public const string PinselNurDraufsicht = "Der Pinsel malt nur in „Stadt von oben“.";
     public static string HoehenlinieText(double hoehe) => hoehe.ToString("0.##", De);
 

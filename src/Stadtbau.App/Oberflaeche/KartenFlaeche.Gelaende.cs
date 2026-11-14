@@ -217,7 +217,8 @@ public sealed partial class KartenFlaeche
         }
         var groesse = PinselGroesse;
         var staerke = PinselStaerke;
-        var geaendert = _projekt.AussenAendern(Texte.PinselZug, a => AussenBearbeitung.Pinselzug(a, art, zug, groesse, staerke) > 0);
+        var malbar = _projekt.PinselMalbar();
+        var geaendert = _projekt.AussenAendern(Texte.PinselZug, a => AussenBearbeitung.Pinselzug(a, art, zug, groesse, staerke, malbar) > 0);
         Gemeldet?.Invoke(geaendert ? Texte.PinselZug : Texte.PinselNichts);
         return geaendert;
     }
