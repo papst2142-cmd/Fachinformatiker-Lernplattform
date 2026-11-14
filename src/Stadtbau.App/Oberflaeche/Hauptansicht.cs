@@ -1241,8 +1241,8 @@ public sealed partial class Hauptansicht : UserControl
         const string marke = ", " + Texte.SetzenGewaehlt;
         if (an)
         {
-            k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-            text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+            k.FarbeNeu(Button.BackgroundProperty, "VerlaufW.primary").FarbeNeu(Button.ForegroundProperty, "Pinsel.on_accent");
+            text?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.on_accent");
             if (!name.EndsWith(marke, StringComparison.Ordinal))
             {
                 k.Vorlese(name + marke);
@@ -1251,14 +1251,14 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (_setzenKnopfRund)
         {
-            k.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+            k.FarbeNeu(Button.BackgroundProperty, "Pinsel.card_alt").FarbeNeu(Button.ForegroundProperty, "Pinsel.text");
         }
         else
         {
-            k.ClearValue(Button.BackgroundProperty);
-            k.ClearValue(Button.ForegroundProperty);
+            Markierung.Loesen(k, Button.BackgroundProperty);
+            Markierung.Loesen(k, Button.ForegroundProperty);
         }
-        text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+        text?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.text");
         if (name.EndsWith(marke, StringComparison.Ordinal))
         {
             k.Vorlese(name[..^marke.Length]);

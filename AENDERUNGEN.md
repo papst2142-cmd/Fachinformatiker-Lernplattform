@@ -7,6 +7,7 @@ Neue Aufgaben können jetzt in einem anderen Gebäude warten.
 - Soll die Person nicht mitkommen, liegt die Aufgabe trotzdem dort bereit: Im Gebäude steht dann „Hier wartet ein Auftrag“, und du kannst ihn an Ort und Stelle annehmen.
 - Das Aufgabenbuch nennt bei solchen Aufgaben das Gebäude, den Raum und die Etage und sagt, wer dort auf dich wartet. „Hingehen“ führt dich direkt dorthin.
 - Ist die Aufgabe erledigt, steht die Person wieder an ihrem gewohnten Platz.
+- Tippst du in einem Gebäude dicht neben eine Person auf den Boden, bleibt deine Figur jetzt mit etwas Abstand vor ihr stehen. Vorher konnten die beiden ineinander stehen.
 - Alle bisherigen Aufgaben bleiben genau wie vorher. Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
 
 ## A 0.74.0

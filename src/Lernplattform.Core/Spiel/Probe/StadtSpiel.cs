@@ -318,6 +318,18 @@ public sealed partial class StadtSpiel
             // Weisung P12-197: steht die Figur schon zu nah an der Person, tritt sie bis auf AnsprechAbstand zurueck
             weg = MitWeg(() => innen.Weg(FigurX, FigurZ, abstand.X, abstand.Z));
         }
+        else if (person is null && !BodenAlt.Value)
+        {
+            // Weisung P12-253 (Bild 11): endet der Weg zu einem Bodenpunkt naeher als AnsprechAbstand an einer Person (Wege
+            // sperrt nur deren Halbmesser 0,5), durchdringen sich beide; die Figur bleibt dann auf AnsprechAbstand stehen
+            var (ex, ez) = weg.Count > 0 ? weg[^1] : (FigurX, FigurZ);
+            if (innen.Personen.Where(p => Math.Sqrt(((p.X - ex) * (p.X - ex)) + ((p.Z - ez) * (p.Z - ez))) < AnsprechAbstand)
+                    .OrderBy(p => ((p.X - ex) * (p.X - ex)) + ((p.Z - ez) * (p.Z - ez))).FirstOrDefault() is { } nah
+                && AbstandsPunkt(innen, nah, ex, ez) is { } zurueck)
+            {
+                weg = MitWeg(() => innen.Weg(FigurX, FigurZ, zurueck.X, zurueck.Z));
+            }
+        }
         WegLeeren();
         _weg.AddRange(weg);
         if (weg.Count == 0)
@@ -351,10 +363,18 @@ public sealed partial class StadtSpiel
     /// <summary>Nur Gegenprobe: ohne Zuruecktreten (Stand A 0.65.0).</summary>
     public static void AnsprechenAltFuerTests(bool an) => AnsprechenAlt.Value = an;
 
+    private static readonly AsyncLocal<bool> BodenAlt = new();
+
+    /// <summary>Nur Gegenprobe: ein Bodenpunkt nah an einer Person ohne Zuruecktreten (Stand A 0.75.0 vor Weisung P12-253).</summary>
+    public static void BodenAltFuerTests(bool an) => BodenAlt.Value = an;
+
     /// <summary>Stelle mit <see cref="AnsprechAbstand"/> zur Person, wenn die Figur naeher steht (zuerst auf der Seite der Figur, dann gedreht), sonst null.</summary>
-    private (double X, double Z)? AbstandsPunkt(Innenraum innen, InnenPerson person)
+    private (double X, double Z)? AbstandsPunkt(Innenraum innen, InnenPerson person) => AbstandsPunkt(innen, person, FigurX, FigurZ);
+
+    /// <summary>Wie oben, von der Stelle (<paramref name="vonX"/>, <paramref name="vonZ"/>) aus statt von der Figur.</summary>
+    private static (double X, double Z)? AbstandsPunkt(Innenraum innen, InnenPerson person, double vonX, double vonZ)
     {
-        var (dx, dz) = (FigurX - person.X, FigurZ - person.Z);
+        var (dx, dz) = (vonX - person.X, vonZ - person.Z);
         var a = Math.Sqrt((dx * dx) + (dz * dz));
         if (AnsprechenAlt.Value || a >= AnsprechAbstand)
         {
@@ -365,7 +385,9 @@ public sealed partial class StadtSpiel
         {
             var w = grund + (schritt * Math.PI / 4);
             var (x, z) = (person.X + (Math.Cos(w) * AnsprechAbstand), person.Z + (Math.Sin(w) * AnsprechAbstand));
-            if (Wege.KannStehen(x, z, innen.Lauf))
+            // Weisung P12-253: auch keiner anderen Person naeher als AnsprechAbstand
+            if (Wege.KannStehen(x, z, innen.Lauf)
+                && innen.Personen.All(q => ReferenceEquals(q, person) || Math.Sqrt(((q.X - x) * (q.X - x)) + ((q.Z - z) * (q.Z - z))) >= AnsprechAbstand - 1e-9))
             {
                 return (x, z);
             }

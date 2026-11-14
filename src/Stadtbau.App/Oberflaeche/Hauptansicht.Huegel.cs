@@ -155,15 +155,15 @@ public sealed partial class Hauptansicht
             var name = Texte.PinselStaerkeTitel + " " + Texte.PinselStaerkeName(i, wert);
             if (Math.Abs(Karte.PinselStaerke - wert) < 1e-4f)
             {
-                k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+                k.FarbeNeu(Button.BackgroundProperty, "VerlaufW.primary").FarbeNeu(Button.ForegroundProperty, "Pinsel.on_accent");
+                (k.Content as TextBlock)?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.on_accent");
                 k.Vorlese(name + ", " + Texte.SetzenGewaehlt);
             }
             else
             {
-                k.ClearValue(Button.BackgroundProperty);
-                k.ClearValue(Button.ForegroundProperty);
-                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+                Markierung.Loesen(k, Button.BackgroundProperty);
+                Markierung.Loesen(k, Button.ForegroundProperty);
+                (k.Content as TextBlock)?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.text");
                 k.Vorlese(name);
             }
         }
@@ -187,15 +187,15 @@ public sealed partial class Hauptansicht
             var name = Texte.Pinsel + " " + PinselName(art);
             if (an)
             {
-                k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+                k.FarbeNeu(Button.BackgroundProperty, "VerlaufW.primary").FarbeNeu(Button.ForegroundProperty, "Pinsel.on_accent");
+                (k.Content as TextBlock)?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.on_accent");
                 k.Vorlese(name + ", " + Texte.SetzenGewaehlt);
             }
             else
             {
-                k.ClearValue(Button.BackgroundProperty);
-                k.ClearValue(Button.ForegroundProperty);
-                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+                Markierung.Loesen(k, Button.BackgroundProperty);
+                Markierung.Loesen(k, Button.ForegroundProperty);
+                (k.Content as TextBlock)?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.text");
                 k.Vorlese(name);
             }
         }

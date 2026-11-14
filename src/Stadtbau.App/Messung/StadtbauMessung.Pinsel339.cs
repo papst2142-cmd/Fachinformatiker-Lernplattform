@@ -1,7 +1,9 @@
 using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Automation;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Messung;
@@ -21,6 +23,8 @@ namespace Stadtbau.Messung;
 /// trifft die Stelle unter dem Zeiger auch auf schon gehobenem Gelaende (Gegenprobe: der Schnitt mit der flachen Ebene
 /// laege daneben), Rueckgaengig nimmt den Zug ganz zurueck. Ein Finger = 1 Schritt; zwei Finger, rechte und mittlere
 /// Maustaste = kein Schritt (Gegenproben). Ein Zug ueber die Strasse aendert nichts (dieselbe Rechnung wie in der Draufsicht).
+/// Weisung P12-253 (Fund Bild 26): nach jedem Wechsel der Staerke, auch nach hell/dunkel und in beiden Ansichten, ist genau
+/// ein Staerke-Knopf markiert (Verlauf und Name „…, gewählt“); Gegenprobe: zwei markierte Knoepfe werden erkannt.
 /// </summary>
 public static partial class StadtbauMessung
 {
@@ -89,6 +93,7 @@ public static partial class StadtbauMessung
         a.SetzenKnopfDrueckenFuerTests(a.PinselStaerkeKnoepfe[1]);
         a.PinselWaehlen(PinselArt.Heben); // aus
         await a.AussenGeprueft;
+        await StaerkeMarkiertAsync(a, "Draufsicht");
 
         // Draufsicht: „Hügel“ mit einem Mausklick
         HuegelWaehlen(a, huegelKnopf);
@@ -114,6 +119,7 @@ public static partial class StadtbauMessung
         }
         b3.GanzeStadt();
         await BildAsync(b3);
+        await StaerkeMarkiertAsync(a, "3D");
 
         // „Hügel“ mit einem Mausklick in 3D
         HuegelWaehlen(a, huegelKnopf);
@@ -316,5 +322,51 @@ public static partial class StadtbauMessung
             }
         }
         await BildAsync(b3);
+    }
+
+    /// <summary>
+    /// Weisung P12-253: nach jedem Wechsel genau ein Staerke-Knopf markiert (Hintergrund = Verlauf der Farbwelt, Name endet
+    /// auf „, gewählt“), auch nach dem Wechsel dunkel und zurueck hell (dort kam vorher die geloeste Markierung wieder).
+    /// Gegenprobe: ein zweiter markierter Knopf wird als zwei erkannt. Am Ende ist wieder „Mittel“ gewaehlt.
+    /// </summary>
+    private static async Task StaerkeMarkiertAsync(Hauptansicht a, string ansicht)
+    {
+        var knoepfe = a.PinselStaerkeKnoepfe;
+        async Task Warten() => await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        (int Verlauf, int Name, int Wer) Zaehlen()
+        {
+            a.TryFindResource("VerlaufW.primary", out var verlauf);
+            var marke = ", " + Texte.SetzenGewaehlt;
+            var v = knoepfe.Where(x => verlauf is not null && ReferenceEquals(x.Background, verlauf)).ToList();
+            var n = knoepfe.Count(x => (AutomationProperties.GetName(x) ?? "").EndsWith(marke, StringComparison.Ordinal));
+            return (v.Count, n, v.Count == 1 ? knoepfe.IndexOf(v[0]) : -1);
+        }
+        async Task Pruefen(string wann, int soll)
+        {
+            await Warten();
+            var (verlauf, name, wer) = Zaehlen();
+            if (verlauf != 1 || name != 1 || wer != soll)
+            {
+                Fund(string.Create(Inv, $"Pinsel Staerke {ansicht} {wann}: {verlauf} Knoepfe mit Verlauf, {name} mit „gewählt“ (erwartet genau einer, Knopf {soll + 1}, markiert: {wer + 1})"));
+            }
+        }
+        for (var i = 0; i < knoepfe.Count; i++)
+        {
+            a.SetzenKnopfDrueckenFuerTests(knoepfe[i]);
+            await Pruefen($"nach Knopf {i + 1}", i);
+            a.FarbeWechseln();
+            await Pruefen($"nach Knopf {i + 1} dunkel", i);
+            a.FarbeWechseln();
+            await Pruefen($"nach Knopf {i + 1} wieder hell", i);
+        }
+        // Gegenprobe: zwei markierte Knoepfe muessen als zwei zaehlen
+        knoepfe[0].FarbeNeu(Button.BackgroundProperty, "VerlaufW.primary");
+        await Warten();
+        if (Zaehlen().Verlauf != 2)
+        {
+            Fund($"Pinsel Staerke {ansicht} Gegenprobe: zwei markierte Knoepfe nicht als zwei erkannt");
+        }
+        a.SetzenKnopfDrueckenFuerTests(knoepfe[1]);
+        await Pruefen("Gegenprobe zurueck auf Mittel", 1);
     }
 }

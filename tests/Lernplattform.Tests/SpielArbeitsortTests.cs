@@ -129,6 +129,43 @@ public sealed class SpielArbeitsortTests
         Assert.True(geprueft >= 17, "geprueft: " + geprueft);
     }
 
+    /// <summary>
+    /// Weisung P12-253 (Bild 11): wartet der Questgeber am Arbeitsort, geht die Figur beim Antippen vom Eingang bis vor ihn und
+    /// durchdringt ihn dort nicht: Mitte zu Mitte mindestens zwei <see cref="StadtSpiel.FigurHalbmesser"/> plus 0,02, und keine
+    /// Ecke der Spielfigur liegt im Questgeber und umgekehrt (0 Ecken, auch 0,02 naeher, vier Blickrichtungen des Questgebers).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Orte))]
+    public void WartetJa_Angesprochen_FigurUndQuestgeberDurchdringenSichNicht(string ort)
+    {
+        var spiel = SpielQuestTests.AllesErledigt(Inhalt(Arbeitsort(ort, true)));
+        var innen = Innenraum.Bauen(Ansicht(ort), spiel.Stand, SpielInnenraumTests.Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
+        var p = Assert.Single(innen.Personen, x => x.Id == "ulla");
+        var weg = innen.Weg(innen.StartX, innen.StartZ, p.X, p.Z, Wege.Reichweite);
+        var (fx, fz) = weg.Count > 0 ? weg[^1] : (innen.StartX, innen.StartZ);
+        var ende = new Vector2((float)fx, (float)fz);
+        var abstand = Vector2.Distance(ende, new Vector2(p.X, p.Z));
+        Assert.True(abstand >= (2 * StadtSpiel.FigurHalbmesser) + 0.02, $"{ort}: Figur nur {abstand:0.00} vor dem Questgeber");
+        var grafik = SpielGrafikTests.Bibliothek.Value;
+        var netzFigur = Figur.Netz(grafik, null, 1f);
+        var netzUlla = Figur.Netz(grafik, p.Aussehen, 1f);
+        var hin = Vector2.Normalize(new Vector2(p.X, p.Z) - ende);
+        foreach (var naeher in new[] { 0f, 0.02f })
+        {
+            var stelle = ende + (hin * naeher);
+            var figur = SpielSitzenTests.Dreiecke(netzFigur, Matrix4x4.CreateScale(Innenraum.FigurHoehe) * Matrix4x4.CreateRotationY(MathF.Atan2(hin.X, hin.Y))
+                * Matrix4x4.CreateTranslation(new Vector3(stelle.X, 0, stelle.Y)));
+            foreach (var blick in new[] { 0f, MathF.PI / 2, MathF.PI, 3 * MathF.PI / 2 })
+            {
+                var ulla = SpielSitzenTests.Dreiecke(netzUlla, Matrix4x4.CreateScale(Innenraum.FigurHoehe) * Matrix4x4.CreateRotationY(blick)
+                    * Matrix4x4.CreateTranslation(new Vector3(p.X, 0, p.Z)));
+                var figurInUlla = figur.SelectMany(d => new[] { d.A, d.B, d.C }).Count(e => SpielSitzenTests.Innen(e, ulla));
+                var ullaInFigur = ulla.SelectMany(d => new[] { d.A, d.B, d.C }).Count(e => SpielSitzenTests.Innen(e, figur));
+                Assert.True(figurInUlla == 0 && ullaInFigur == 0, $"{ort} ({naeher}, Blick {blick:0.00}): {figurInUlla} Ecken der Figur im Questgeber, {ullaInFigur} umgekehrt");
+            }
+        }
+    }
+
     /// <summary>Durchdringung der stehenden Figur mit der Einrichtung: 0 Ecken (auch 0,02 daneben, vier Blickrichtungen).</summary>
     private static void Durchdringung(Innenraum innen, InnenPerson p)
     {

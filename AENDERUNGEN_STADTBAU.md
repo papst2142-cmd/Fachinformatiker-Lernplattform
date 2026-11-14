@@ -18,6 +18,7 @@ Gelände-Pinsel:
 
 - Der Pinsel (Heben, Senken, Glätten, Größe) malt jetzt auch in der 3D-Ansicht der Stadt: linke Maustaste gedrückt halten oder ein Finger, dann über die Wiese ziehen. Er trifft die Stelle unter dem Zeiger, auch auf schon gehobenem Gelände, und zeigt während des Zugs einen lila Kreis am Boden. Jeder Zug ist ein Schritt im Verlauf. Rechte oder mittlere Maustaste und zwei Finger bewegen weiter nur die Kamera; ein Rechtsklick ohne Bewegung beendet den Pinsel.
 - Neu sind drei Stärken unter „Stärke“: Schwach 0,1, Mittel 0,25 und Stark 0,5 (so viel hebt oder senkt ein Zug in der Mitte). Voreingestellt ist Mittel, damit schon ein Zug eine Höhenlinie zeigt. Glätten wirkt immer gleich.
+- Nach dem Wechsel zwischen hell und dunkel sahen gewählte Knöpfe, die man schon wieder abgewählt hatte, wieder gewählt aus (Pinsel, Stärke und die Knöpfe zum Setzen). Jetzt ist immer nur der wirklich gewählte Knopf markiert.
 
 ## S 0.52.0
 

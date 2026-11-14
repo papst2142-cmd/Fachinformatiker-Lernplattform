@@ -108,4 +108,53 @@ public class SpielAnsprechenTests
             StadtSpiel.AnsprechenAltFuerTests(false);
         }
     }
+
+    /// <summary>
+    /// Weisung P12-253 (Bild 11): ein Tipp auf den Boden dicht neben einer stehenden Person (0,8 in vier Richtungen, Wege sperrt
+    /// nur 0,5 um die Person) laesst die Figur mindestens <see cref="Grenze"/> vor der Person stehen. Gegenprobe Stand A 0.75.0:
+    /// ohne Zuruecktreten bleibt sie wenigstens einmal naeher stehen (dort durchdringen sich beide, 0,76: 226 Ecken).
+    /// </summary>
+    [Fact]
+    public void BodenNebenPerson_FigurBleibtAufAbstand_Gegenprobe()
+    {
+        var inhalt = SpielInhaltTests.Inhalt;
+        var stadt = new Stadt(inhalt, SpielStadtTests.Daten.Value);
+
+        List<double> Abstaende()
+        {
+            var liste = new List<double>();
+            foreach (var ((dx, dz), ort) in new[] { (0.0, 0.8), (0.8, 0.0), (-0.8, 0.0), (0.0, -0.8) }.SelectMany(d => new[] { "moebelhaus", "elektromarkt", "bitweiche" }.Select(o => (d, o))))
+            {
+                var spiel = new StadtSpiel(stadt, SpielQuestTests.AllesErledigt(inhalt), SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value,
+                    SpielGeschaefteTests.Daten.Value, null, () => null, () => Jahreszeit.Sommer);
+                Assert.Equal(StadtGrund.Ok, spiel.GeheZu(ort));
+                spiel.SofortAnkommen();
+                if (!spiel.KannBetreten)
+                {
+                    Assert.Equal(StadtGrund.Ok, spiel.Warten());
+                }
+                Assert.True(spiel.Betreten(), ort);
+                foreach (var p in spiel.Innen!.Personen.Where(p => spiel.Innen.Sitz(p) is null))
+                {
+                    spiel.GeheZu(p.X + dx, p.Z + dz);
+                    spiel.SofortAnkommen();
+                    liste.Add(spiel.Innen.Personen.Min(q => Math.Sqrt(Math.Pow(spiel.FigurX - q.X, 2) + Math.Pow(spiel.FigurZ - q.Z, 2))));
+                }
+            }
+            return liste;
+        }
+
+        var neu = Abstaende();
+        Assert.True(neu.Count >= 4, "geprueft: " + neu.Count);
+        Assert.All(neu, a => Assert.True(a >= Grenze, $"nur {a:0.00} vor einer Person"));
+        try
+        {
+            StadtSpiel.BodenAltFuerTests(true);
+            Assert.Contains(Abstaende(), a => a < Grenze);
+        }
+        finally
+        {
+            StadtSpiel.BodenAltFuerTests(false);
+        }
+    }
 }
