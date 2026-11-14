@@ -8,7 +8,8 @@ namespace Lernplattform.Core.Stadtbau;
 /// <summary>
 /// Welle D2 (Weisung P12-157, Kurzplan P12-97 Punkt c): Dreiecke und Aufrufe eines Bilds draussen OHNE Grafikkarte, mit
 /// denselben Regeln wie das Zeichnen in <c>StadtFlaeche</c>: Netz der Stadt (fern ab <see cref="StadtSzene.FernAb"/> die
-/// Fernform), Kleingruen bis <see cref="StadtSzene.GruenBis"/>, Paket-Netz nah/fern, je Satz des Instancing die Stuecke im
+/// Fernform), Kleingruen bis <see cref="StadtSzene.GruenBis"/>, Paket-Netz nah/fern (seit Welle 327 nur die Zellen im
+/// Sichtkegel, aufeinanderfolgende in einem Aufruf: <see cref="Netz.Laeufe"/>), je Satz des Instancing die Stuecke im
 /// Sichtkegel (ein Aufruf je Satz mit Stuecken im Bild), die Lampen der Ampeln (ein Aufruf, seit A 0.60.0), je Haus im Sichtkegel ein Aufruf (fern die Fernform). Das ist
 /// der feste Teil (<see cref="Bild"/>); dazu kommt, was sich bewegt (<see cref="Bewegt"/>: Autos oder Festgestalten,
 /// Figur zweimal, Kreis, Zielmarke, Pakete vor der Tuer). Der Start-Test vergleicht beides mit dem gezeichneten Bild.
@@ -21,8 +22,8 @@ public static partial class StadtbauGrenzen
         private readonly long _stadt;
         private readonly long _stadtFern;
         private readonly long? _gruen;
-        private readonly long? _paketNah;
-        private readonly long? _paketFern;
+        private readonly Netz? _paketNah;
+        private readonly Netz? _paketFern;
         private readonly List<(Vector3 Mitte, float Halb, long Nah, long Fern)> _haeuser = [];
         private readonly IReadOnlyList<InstanzSatz> _saetze;
         private readonly long? _ampelLichter;
@@ -34,7 +35,7 @@ public static partial class StadtbauGrenzen
             _gruen = f.Gruen is { } g ? g.Indizes.Count / 3 : null;
             if (f.PaketNah is { } pn && f.PaketFern is { } pf)
             {
-                (_paketNah, _paketFern) = (pn.Indizes.Count / 3, pf.Indizes.Count / 3);
+                (_paketNah, _paketFern) = (pn, pf);
             }
             foreach (var haus in szene.Haeuser)
             {
@@ -67,6 +68,7 @@ public static partial class StadtbauGrenzen
             var aufrufe = new int[n];
             var fern = new bool[n];
             var gruen = new bool[n];
+            var laeufe = new List<(int Start, int Anzahl)>();
             for (var i = 0; i < n; i++)
             {
                 fern[i] = werte[i].Fern(abstand) && !ohneSparen;
@@ -80,8 +82,13 @@ public static partial class StadtbauGrenzen
                 }
                 if (_paketNah is { } pn && _paketFern is { } pf)
                 {
-                    dreiecke[i] += werte[i].Fern(abstand) ? pf : pn;
-                    aufrufe[i]++;
+                    // Welle 327: nur die Zellen im Bild, aufeinanderfolgende in einem Aufruf (wie StadtFlaeche)
+                    (werte[i].Fern(abstand) ? pf : pn).Laeufe(sichtProj, ohneSparen, laeufe);
+                    foreach (var (_, anzahl) in laeufe)
+                    {
+                        dreiecke[i] += anzahl / 3;
+                        aufrufe[i]++;
+                    }
                 }
                 if (_ampelLichter is { } al)
                 {

@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.74.0
+Die Spielstadt läuft auf schwachen Geräten ruhiger.
+
+- In der Grafikstufe „Niedrig“ war die neue Stadt aus der Nähe zu aufwendig für schwache Geräte. Jetzt zeichnet das Spiel Laternen, Bahnübergänge, Ampel- und Haltestellenmasten nur noch dort, wo du gerade hinschaust. So hat das Gerät deutlich weniger zu tun, in allen Grafikstufen.
+- Die Stadt sieht genau so aus wie vorher, bei Tag und bei Nacht. Die Laternen leuchten nachts wie gewohnt.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.73.0
 Du kannst jetzt selbst mit dem Bus fahren.
 
