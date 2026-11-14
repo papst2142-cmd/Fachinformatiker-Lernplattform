@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.75.1
+Die Spielstadt zeigt auf manchen Handys und Tablets keine Bildfehler mehr.
+
+- Auf Geräten mit einem Grafikchip von Mali (zum Beispiel dem Galaxy Tab A8) ragten in der Stadt lange, spitze Dreiecke aus Straßen, Gehwegen, Kreisverkehren und dem Teich über die Wiese. Straßen sahen stellenweise zerrissen oder dunkel aus.
+- Die Ursache: Das Spiel ließ die Grafik die Lage der Ecken mit zu wenigen Stellen rechnen. Viele Geräte rechnen trotzdem genau, Mali-Chips nicht. Jetzt rechnet das Spiel die Lage überall genau.
+- Auf allen anderen Geräten und am PC sieht die Stadt genau so aus wie vorher.
+- Ein Problembericht nennt jetzt zusätzlich, wie genau die Grafik des Geräts rechnet. So lassen sich solche Fehler künftig schneller finden.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.75.0
 Neue Aufgaben können jetzt in einem anderen Gebäude warten.
 
