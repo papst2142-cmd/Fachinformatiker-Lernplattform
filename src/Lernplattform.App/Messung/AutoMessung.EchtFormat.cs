@@ -197,27 +197,21 @@ public static partial class AutoMessung
     }
 
     /// <summary>
-    /// Wie die Bildflaeche wirklich aussieht: das Bild in seiner Lage im Fenster zeichnen (wie der Bildschirm, mit allen
-    /// Eltern), Bildpunkte im Bereich des Bilds zaehlen, die sich vom Grund der Karte unterscheiden.
+    /// Ist das Bild gezeichnet? Das Bild allein (ganz, auch was erst nach dem Wischen sichtbar ist) in ein Bild zeichnen und
+    /// die Bildpunkte zaehlen, die sich vom Grund (haeufigste Farbe) unterscheiden.
     /// </summary>
     internal static (int Gezeichnet, int Flaeche) BildPixel(Control bild)
     {
-        if (TopLevel.GetTopLevel(bild) is not { } wurzel || bild.TranslatePoint(new Point(0, 0), wurzel) is not { } lage)
+        var groesse = new PixelSize((int)Math.Ceiling(bild.Bounds.Width), (int)Math.Ceiling(bild.Bounds.Height));
+        if (groesse.Width <= 0 || groesse.Height <= 0)
         {
             return (0, 1);
         }
-        var groesse = new PixelSize((int)Math.Ceiling(wurzel.Bounds.Width), (int)Math.Ceiling(wurzel.Bounds.Height));
         using var gemalt = new RenderTargetBitmap(groesse, new Vector(96, 96));
-        gemalt.Render(wurzel);
+        gemalt.Render(bild);
         var pixel = Pixel(gemalt);
-        var sichtbar = new Rect(lage, bild.Bounds.Size).Intersect(new Rect(0, 0, groesse.Width, groesse.Height));
-        var (x0, y0) = ((int)Math.Ceiling(sichtbar.X), (int)Math.Ceiling(sichtbar.Y));
-        var (x1, y1) = ((int)Math.Floor(sichtbar.Right), (int)Math.Floor(sichtbar.Bottom));
-        if (x1 <= x0 || y1 <= y0)
-        {
-            return (0, 1);
-        }
-        // Grund = haeufigste Farbe im Bereich (die Karte hinter dem Bild)
+        var (x0, y0, x1, y1) = (0, 0, groesse.Width, groesse.Height);
+        // Grund = haeufigste Farbe (das Bild hat keinen eigenen Hintergrund: durchsichtig)
         var zaehler = new Dictionary<Avalonia.Media.Color, int>();
         for (var y = y0; y < y1; y++)
         {
@@ -234,7 +228,7 @@ public static partial class AutoMessung
             for (var x = x0; x < x1; x++)
             {
                 var p = pixel[(y * groesse.Width) + x];
-                if (Math.Abs(p.R - grund.R) + Math.Abs(p.G - grund.G) + Math.Abs(p.B - grund.B) > 24)
+                if (Math.Abs(p.A - grund.A) + Math.Abs(p.R - grund.R) + Math.Abs(p.G - grund.G) + Math.Abs(p.B - grund.B) > 24)
                 {
                     anders++;
                 }
