@@ -735,7 +735,28 @@ public sealed partial class StadtSzene
     /// Grenze der Gesamtansicht bleibt): nah die Paket-Modelle, fern (<paramref name="fern"/>) einfache Kaesten.
     /// Tannen nach der Jahreszeit gefaerbt (im Herbst das orange Modell), Kuerbisse und Laternen behalten ihre Farben.
     /// </summary>
-    public Netz PaketNetzBauen(bool fern)
+    /// <remarks>
+    /// Welle 327 (Weisung P12-244, Weg a): das nahe Netz ist nach Zellen von <see cref="PaketZelle"/> geordnet
+    /// (<see cref="Netz.NachZellenOrdnen"/>); gezeichnet und gezaehlt werden nur die Zellen im Bild. Ecken und Aussehen wie vorher.
+    /// </remarks>
+    public Netz PaketNetzBauen(bool fern) => PaketNetzBauen(fern, zellen: true);
+
+    /// <summary>Welle 327: <paramref name="zellen"/> = false: das nahe Netz ungeteilt wie bis A 0.73.0 (Tests: dieselben Dreiecke).</summary>
+    public Netz PaketNetzBauen(bool fern, bool zellen)
+    {
+        var netz = PaketNetzRoh(fern);
+        if (!fern && zellen)
+        {
+            // die Fernform ist klein (alte Stadt 1 500, Stadt 1 5 448 Dreiecke) und meist ganz im Bild: ungeteilt ein Aufruf
+            netz.NachZellenOrdnen(PaketZelle);
+        }
+        return netz;
+    }
+
+    /// <summary>Welle 327: Kantenlaenge der Zellen des Paket-Netzes (Felder).</summary>
+    public const float PaketZelle = 8f;
+
+    private Netz PaketNetzRoh(bool fern)
     {
         var netz = new Netz();
         // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot

@@ -39,6 +39,10 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
 - **Sparen** (Welle D1/D2): Sichtkegel je Haus und je Stück (`FestUebergang.ImSichtkegel`, `Netz.Kugel`), Fernform ab
   Kameraabstand `StadtSzene.FernAb` 25 (`Fernform.cs`, Gitter 1/32), Unterseiten am Boden weg (`StadtSzene.UnterseiteBis`),
   Instancing für Modelle mit mindestens 8 gleichen Lagen (`Instanzen.cs`), gesparte Fahrzeugmodelle (`Fahrzeugmodelle.cs`).
+  Seit A 0.74.0 (Welle 327) ist das nahe Paket-Netz in Zellen von `StadtSzene.PaketZelle` (8 Felder) geordnet
+  (`Netz.Zellen.cs`, nur die Indizes, Ecken unverändert); gezeichnet und gezählt werden nur Zellen im Sichtkegel,
+  aufeinanderfolgende in einem Aufruf (`Netz.Laeufe`, gleiche Rechnung in `StadtFlaeche` und `StadtbauGrenzen.Draussen`).
+  Die Fernform des Paket-Netzes bleibt ungeteilt.
 - **Laufraster** (`StadtSzene.LaufrasterBauen`): wo die Figur gehen darf (Häuser, Wasser, Fahrbahn mit Gehweg gesperrt;
   Zebrastreifen, Furten, Stege, Fußwege frei).
 - **Verkehr** (`Verkehr.cs`, `FestVerkehr.cs`, `Autostrecken.cs`, `Buslinie.cs`, `Ampeln.cs`, `Zebrastreifen.cs`,

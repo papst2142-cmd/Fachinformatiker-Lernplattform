@@ -27,7 +27,7 @@ internal static class StadtSzeneHash
             Netz(h, "haus:" + haus.Id, f.Haeuser[haus]);
         }
         Netz(h, "gruen", f.Gruen);
-        Netz(h, "paket-nah", f.PaketNah);
+        Netz(h, "paket-nah", PaketNahUngeordnet(szene, f.PaketNah));
         Netz(h, "paket-fern", f.PaketFern);
         Text(h, "signatur:" + szene.Signatur);
         foreach (var t in szene.Tueren)
@@ -121,7 +121,7 @@ internal static class StadtSzeneHash
                 NetzFest("haus:" + haus.Id, f.Haeuser[haus]);
             }
             NetzFest("gruen", f.Gruen);
-            NetzFest("paket-nah", f.PaketNah);
+            NetzFest("paket-nah", PaketNahUngeordnet(szene, f.PaketNah));
             NetzFest("paket-fern", f.PaketFern);
         }
         foreach (var t in szene.Tueren)
@@ -183,6 +183,36 @@ internal static class StadtSzeneHash
             BitConverter.TryWriteBytes(pi.AsSpan(i * 4), indizes[i]);
         }
         h.AppendData(pi);
+    }
+
+    /// <summary>
+    /// Welle 327 (A 0.74.0): das nahe Paket-Netz ist nach Zellen geordnet (nur die Reihenfolge der Dreiecke ist neu). Die
+    /// Pruefsummen gelten fuer das ungeordnete Netz wie vor der Welle; dass das gezeichnete Netz genau dieselben Ecken und
+    /// dieselben Dreiecke hat, wird hier jedes Mal geprueft (sonst Ausnahme, der Test ist rot).
+    /// </summary>
+    private static Netz? PaketNahUngeordnet(StadtSzene szene, Netz? geordnet)
+    {
+        if (geordnet is null)
+        {
+            return null;
+        }
+        var roh = szene.PaketNetzBauen(false, zellen: false);
+        static List<(uint, uint, uint)> Dreiecke(Netz n)
+        {
+            var idx = n.Indizes;
+            var liste = new List<(uint, uint, uint)>(idx.Count / 3);
+            for (var i = 0; i + 2 < idx.Count; i += 3)
+            {
+                liste.Add((idx[i], idx[i + 1], idx[i + 2]));
+            }
+            liste.Sort();
+            return liste;
+        }
+        if (!roh.EckenFeld.SequenceEqual(geordnet.EckenFeld) || !Dreiecke(roh).SequenceEqual(Dreiecke(geordnet)))
+        {
+            throw new InvalidOperationException("Paket-Netz nah: geordnetes Netz hat andere Ecken oder Dreiecke als das ungeordnete");
+        }
+        return roh;
     }
 
     private static void Text(IncrementalHash h, string text) => h.AppendData(Encoding.UTF8.GetBytes(text + "\n"));

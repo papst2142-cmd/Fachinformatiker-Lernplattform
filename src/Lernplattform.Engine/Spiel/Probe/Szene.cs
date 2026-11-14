@@ -40,7 +40,7 @@ public readonly record struct Teil(TeilArt Art, float X1, float Y1, float Z1, fl
 /// Dreiecksnetz fuer die Darstellung: je Ecke Ort (3), Normale (3), Farbe (3) = 9 Gleitkommazahlen.
 /// Flache Schattierung (jede Flaeche eigene Ecken), wie bei Low-Poly-Grafik ueblich.
 /// </summary>
-public sealed class Netz
+public sealed partial class Netz
 {
     public const int Zahlen = 9;
 

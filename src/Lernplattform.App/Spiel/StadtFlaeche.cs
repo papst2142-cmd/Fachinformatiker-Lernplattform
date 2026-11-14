@@ -919,7 +919,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             if (!_spiel.ImInnenraum && _paket.TryGetValue(_gw.Fern(kamera.Abstand), out var paket))
             {
-                ZeichnenFest(gl, paket, sichtProj);
+                // Welle 327 (Weisung P12-244, Weg a): nur die Zellen im Bild, aufeinanderfolgende in einem Aufruf
+                ZeichnenFestImBild(gl, paket, sichtProj);
             }
             if (!_spiel.ImInnenraum && _ampelLichter is { } ampelLichter)
             {
@@ -1963,6 +1964,36 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return fern && _haeuserFern.TryGetValue(haus, out var hausFern) ? hausFern : _haeuser.GetValueOrDefault(haus);
     }
 
+    /// <summary>
+    /// Welle 327 (Weisung P12-244, Weg a): ein in Zellen geteiltes Netz der Stadt (Paket-Netz): nur die Zellen im
+    /// Sichtkegel, aufeinanderfolgende in einem Aufruf (<see cref="Netz.Laeufe(IReadOnlyList{Netz.Zelle}, int, Matrix4x4, bool, List{ValueTuple{int, int}})"/>,
+    /// dieselbe Rechnung wie die Zaehlung ohne Grafikkarte); <see cref="OhneSparenFuerTests"/> = alle Zellen.
+    /// </summary>
+    private unsafe void ZeichnenFestImBild(GlInterface gl, GlNetz netz, Matrix4x4 sichtProj)
+    {
+        Netz.Laeufe(netz.Zellen, netz.Anzahl, sichtProj, OhneSparenFuerTests, _laeufe);
+        if (_laeufe.Count == 0)
+        {
+            return;
+        }
+        var modell = Matrix4x4.Identity;
+        var mvp = modell * sichtProj;
+        gl.UniformMatrix4fv(_ortMvp, 1, false, &mvp);
+        gl.UniformMatrix4fv(_ortModell, 1, false, &modell);
+        netz.Binden(gl);
+        foreach (var (start, anzahl) in _laeufe)
+        {
+            gl.DrawElements(GL_TRIANGLES, anzahl, GlUnsignedInt, new IntPtr((long)start * sizeof(uint)));
+            _aufrufe++;
+            _dreiecke += anzahl / 3;
+            _festAufrufe++;
+            _festDreiecke += anzahl / 3;
+        }
+    }
+
+    /// <summary>Welle 327: Laeufe des letzten Bilds (ein Feld fuer alle Bilder, nur im Zeichnen-Faden).</summary>
+    private readonly List<(int Start, int Anzahl)> _laeufe = [];
+
     /// <summary>Welle D2: ein Netz der Stadt (Teil der Zaehlung ohne Grafikkarte, <see cref="LetzteStadtDreiecke"/>).</summary>
     private void ZeichnenFest(GlInterface gl, GlNetz netz, Matrix4x4 sichtProj)
     {
@@ -2410,9 +2441,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             return g;
         }
 
+        /// <summary>Welle 327: Zellen des Netzes (nur das Paket-Netz), null = immer ganz zeichnen.</summary>
+        public IReadOnlyList<Netz.Zelle>? Zellen { get; private init; }
+
         public static unsafe GlNetz Laden(GlInterface gl, Netz netz)
         {
-            var g = new GlNetz { Anzahl = netz.Indizes.Count };
+            var g = new GlNetz { Anzahl = netz.Indizes.Count, Zellen = netz.Zellen };
             if (gl.IsGenVertexArraysAvailable)
             {
                 g._vao = gl.GenVertexArray();
