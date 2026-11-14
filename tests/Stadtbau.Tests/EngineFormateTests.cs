@@ -200,7 +200,7 @@ public class EngineFormateTests
     {
         var aktiv = (PyObjekt)Py.Lesen(Daten.Lesen(AktiveFassung.Ordner + AktiveFassung.Datei)!)!;
         Assert.Equal(1, AktiveFassung.FormatVon(aktiv));
-        Assert.Equal(1, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));   // seit W4b (Sollwert-Aenderung Nr. 16) Nicos Stadt 1
+        Assert.Equal(2, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));   // seit Patch A 0.75.2 (Sollwert-Aenderung Nr. 17) Nicos Stadt 1 Fassung 2
         var alt = Testdatei("aktiv_A0.62.0.json");
         Assert.DoesNotContain("\"format\"", Encoding.UTF8.GetString(alt), StringComparison.Ordinal);
         Assert.Equal(1, AktiveFassung.FormatVon((PyObjekt)Py.Lesen(alt)!));

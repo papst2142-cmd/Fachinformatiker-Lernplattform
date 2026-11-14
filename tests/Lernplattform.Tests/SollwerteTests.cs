@@ -43,8 +43,8 @@ public class SollwerteTests
         Assert.Equal(Geschuetzt(wurzel), zeilen);
         // alle G-Dateien und Testdaten (59) plus quiz_python.json, 24 Dateien unter inhalte/, 6 einzelne,
         // seit Sollwert-Aenderung Nr. 13 die 2 Dateien der Stadt-Fassung 0 (inhalte_csharp/spiel/stadtbau/), seit Nr. 16
-        // (W4b) dazu die Datei der Fassung 1
-        Assert.Equal(93, zeilen.Count);
+        // (W4b) dazu die Datei der Fassung 1, seit Nr. 17 (Patch A 0.75.2) die Datei der Fassung 2
+        Assert.Equal(94, zeilen.Count);
     }
 
     [Fact]

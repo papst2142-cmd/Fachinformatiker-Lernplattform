@@ -28,9 +28,19 @@ public sealed class SpielMitfahrtTests
     /// <summary>Schritt der Bildschleife in den Proben (60 Bilder je Sekunde).</summary>
     internal const double Dt = 1.0 / 60;
 
-    internal static StadtSpiel Stadt1(Spielablauf? ablauf = null)
+    private static readonly Lazy<StadtFassung> Fassung2 = new(() => AktiveFassung.LadenNummer(Lesen, 2));
+
+    internal static StadtSpiel Stadt1(Spielablauf? ablauf = null) => StadtNachFassung(1, ablauf);
+
+    /// <summary>Patch A 0.75.2: Stadt 1 in Fassung 1 oder 2 (Fassung 2 = Nicos Stadt mit 9 Zebrastreifen und Gelaende).</summary>
+    internal static StadtSpiel StadtNachFassung(long fassung, Spielablauf? ablauf = null)
     {
-        var f = Fassung1.Value;
+        var f = fassung switch
+        {
+            1 => Fassung1.Value,
+            2 => Fassung2.Value,
+            _ => throw new ArgumentOutOfRangeException(nameof(fassung)),
+        };
         var inhalt = f.MitKarte(SpielInhaltTests.Inhalt);
         return new StadtSpiel(f.StadtFuer(inhalt), ablauf ?? SpielQuestTests.AllesErledigt(inhalt), null, SpielInnenraumTests.Innenraeume.Value);
     }
