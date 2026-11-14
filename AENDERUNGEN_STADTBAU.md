@@ -3,6 +3,24 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.53.0
+
+Aufgaben an Gebäuden: eine neue Quest kann einen Arbeitsort in einem anderen Haus haben.
+
+- In der Karte einer neuen Quest steht der Abschnitt „Arbeitsort“. Dort wählst du das Haus (Büro, Kundschaft, Laden oder Schalter, nur Häuser mit Innenraum). Das Werkzeug wählt dazu den ersten Raum und darin die erste freie Stelle, an der niemand sonst steht und nichts im Weg ist. Bei Büros und Kundschaft kannst du den Raum wechseln, in Läden und an Schaltern die Etage und die Stelle selbst wählen („Stelle wählen“ öffnet den Grundriss, ein Tipp setzt sie).
+- Der Schalter „Questgeber wartet am Arbeitsort“ ist am Anfang an: dann geht die Person für diese Quest zum Arbeitsort. Ist er aus, bleibt die Person an ihrem Platz, und die Aufgabe liegt im Raum am Arbeitsort bereit.
+- In der Draufsicht zeigt eine lila gestrichelte Linie vom Questgeber zum Arbeitsort, dort steht die Marke „A“. Die Marke lässt sich mit dem Finger oder der Maus auf ein anderes Haus ziehen. Beim Ziehen zeigt eine Zeile, über welchem Haus die Marke gerade ist. Loslassen setzt den Arbeitsort dort (ein Schritt, „Rückgängig“ nimmt ihn zurück), Raum und Stelle stehen danach wieder auf der ersten freien Stelle. Neben einem Haus loslassen ändert nichts und sagt, warum. Escape bricht das Ziehen ab.
+- Vorhandene Quests bekommen keinen Arbeitsort; ihre Karte sagt das.
+- Die Prüfung meldet rot, wenn ein Arbeitsort nicht passt (kein Haus mit Innenraum, Raum oder Stelle fehlt, Stelle zu nah an Wand, Einrichtung oder einer anderen Person, oder die Person steht draußen und soll am Arbeitsort warten). Mit rotem Fund lässt sich die Stadt nicht speichern oder senden.
+- Projekte und Stadt-Dateien mit einem Arbeitsort haben ein neues Format (Projekt 4, Stadt-Datei 2). Ohne Arbeitsort bleibt alles im alten Format, bitgleich. Ältere Programme öffnen ein Projekt mit Arbeitsort nur zum Lesen und lehnen eine Stadt-Datei mit Arbeitsort mit einem klaren Hinweis ab.
+
+Gelände-Pinsel:
+
+- Der Pinsel (Heben, Senken, Glätten, Größe) malt jetzt auch in der 3D-Ansicht der Stadt: linke Maustaste gedrückt halten oder ein Finger, dann über die Wiese ziehen. Er trifft die Stelle unter dem Zeiger, auch auf schon gehobenem Gelände, und zeigt während des Zugs einen lila Kreis am Boden. Jeder Zug ist ein Schritt im Verlauf. Rechte oder mittlere Maustaste und zwei Finger bewegen weiter nur die Kamera; ein Rechtsklick ohne Bewegung beendet den Pinsel.
+- Neu sind drei Stärken unter „Stärke“: Schwach 0,1, Mittel 0,25 und Stark 0,5 (so viel hebt oder senkt ein Zug in der Mitte). Voreingestellt ist Mittel, damit schon ein Zug eine Höhenlinie zeigt. Glätten wirkt immer gleich.
+- Der Pinsel malt nur noch auf der Wiese: Häuser, Straßen, Wege, Plätze und Wasser bleiben samt einem Rand von 1,5 frei, so wie es die Prüfung verlangt. Ein Zug quer über eine Straße hebt die Wiese auf beiden Seiten; die Prüfung bleibt dabei grün. Ein Zug nur über eine Straße oder ein Haus ändert nichts und ist kein Schritt. Schon gemalte Höhen in älteren Projekten bleiben, wie sie sind.
+- Nach dem Wechsel zwischen hell und dunkel sahen gewählte Knöpfe, die man schon wieder abgewählt hatte, wieder gewählt aus (Pinsel, Stärke und die Knöpfe zum Setzen). Jetzt ist immer nur der wirklich gewählte Knopf markiert.
+
 ## S 0.52.0
 
 Rote Funde mit einem Knopf beheben, gesperrte Knöpfe sichtbar grau, Kamera-Karte einklappen und klarere Hügel.

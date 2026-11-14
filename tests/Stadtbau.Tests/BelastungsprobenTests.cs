@@ -1,6 +1,7 @@
 using System.Numerics;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Stadtbau;
 using Stadtbau.Core;
 using Xunit;
@@ -82,6 +83,10 @@ public class BelastungsprobenTests
         ("versetzen", (a, s) => s.Art == AussenArt.Laterne
             && LaternenAutomatik.FreieStellen(a, s.Nummer, Aktuell.Value!.SzeneOhneLaternen).Take(1).ToList() is [var q]
             && LaterneVersetzen.Anwenden(a, new LaterneVersetzen.Vorschlag(s.Nummer, new Vector2(Aussen.LaternenWerte(a)[s.Nummer].X, Aussen.LaternenWerte(a)[s.Nummer].Z), q)), null),
+        // S 0.53.0 E4: neue Quest mit Arbeitsort in diesem Haus (wie Ziehen der Marke „A“ auf das Haus), ein Schritt
+        ("arbeitsort", (a, s) => s.Art == AussenArt.Haus && s.Ort is { } k && AussenBearbeitung.Ort(a, k) is { } o
+            && Innenraum.OrtFuer(Get(o, "ansicht") as string) is { } ort && Aktuell.Value!.Arbeitsorte().Any(w => w.Ort == ort)
+            && QuestDaten.ArbeitsortSetzen(D.Inhalt, a, Aktuell.Value!.Innenraeume(), QuestDaten.Neu(D.Inhalt, a, "auswahl", null), ort), null),
     ];
 
 
@@ -175,6 +180,28 @@ public class BelastungsprobenTests
         var stellen = new[] { 0, n / 2, n - 1 }.Select(i => new AussenStelle(AussenArt.Hoehe, i)).ToList();
         var funde = AktionenProbe(p, stellen, bauJede: 3);
         Assert.True(funde.Count == 0, string.Join("\n", funde));
+    }
+
+    /// <summary>S 0.53.0 E4: die Aktion „arbeitsort“ wirkt an Haeusern mit Innenraum (sonst prueft die Probe nichts) und nur dort.</summary>
+    [Fact]
+    public void Arbeitsort_Aktion_WirktNurAnHaeusernMitInnenraum()
+    {
+        var p = Laden("stadt1");
+        Aktuell.Value = p;
+        var tun = Aktionen.Single(x => x.Name == "arbeitsort").Tun;
+        var gewirkt = 0;
+        foreach (var s in AussenBearbeitung.Alle(p.AussenStand).Select(z => z.Stelle).ToList())
+        {
+            var vorher = p.SchritteZurueck;
+            p.AussenAendern("arbeitsort", a => tun(a, s));
+            if (p.SchritteZurueck > vorher)
+            {
+                Assert.Equal(AussenArt.Haus, s.Art);
+                gewirkt++;
+                p.Rueckgaengig();
+            }
+        }
+        Assert.True(gewirkt >= 5, "nur " + gewirkt + " Haeuser");
     }
 
     /// <summary>Gegenprobe Fund 305: mit dem alten Bau der 3D-Ansicht (S 0.42.0) bricht der Bau ab, die Probe meldet es.</summary>

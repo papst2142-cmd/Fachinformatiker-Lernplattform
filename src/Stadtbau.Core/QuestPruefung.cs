@@ -56,6 +56,9 @@ public static class QuestPruefung
 
         public Func<string, string> OrtName { get; init; } = o => o;
 
+        /// <summary>Welle E4: Innenraeume der Stadt (Geschaefte und Schalter, Zusaetze) fuer die Pruefung des Arbeitsorts.</summary>
+        public PyObjekt? Innenraeume { get; init; }
+
         /// <summary>Welle Q2: rote Funde der Ladepruefung des Spiels (<see cref="Questebene.Pruefen"/>), null = nicht pruefen.</summary>
         public Func<List<string>>? Spiel { get; init; }
     }
@@ -174,6 +177,15 @@ public static class QuestPruefung
             {
                 R(Texte.QuestTypUnbekannt(n), Texte.QuestTypUnbekanntTipp);
                 continue;
+            }
+            if (Py.Hat(d, Questebene.FeldArbeitsort))
+            {
+                // Welle E4: dieselben Regeln wie die Ladepruefung des Spiels (Questebene), hier mit der Quest zum Antippen
+                var draussen = questgeber.FirstOrDefault(x => x.Id == q.Questgeber)?.Platz is { Draussen: true };
+                foreach (var t in Questebene.ArbeitsortFunde(n, d, u.Inhalt, u.Innenraeume, q.AbTag, draussen, Aussen.Stadtdaten(u.Aussen)))
+                {
+                    R(t, Texte.QuestArbeitsortFundTipp);
+                }
             }
             foreach (var (feld, name) in (ReadOnlySpan<(string, string)>)[("titel", Texte.QuestFeldTitel), ("ticket", Texte.QuestFeldTicket),
                 ("frage", Texte.QuestFeldFrage), ("hilfe", Texte.QuestFeldHilfe), ("erklaerung", Texte.QuestFeldErklaerung)])

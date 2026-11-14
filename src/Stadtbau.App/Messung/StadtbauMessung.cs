@@ -379,6 +379,7 @@ public static partial class StadtbauMessung
         await BahnsteigAsync(a, f);
         await SpielgeschichteAsync(a, f);
         await QuestsAsync(a, f);
+        await ArbeitsortAsync(a, f);
         await ProjekteLoeschenAsync(a, f);
         await StadtDateiAsync(a, f);
         await TuerAsync(a, f);
@@ -390,6 +391,7 @@ public static partial class StadtbauMessung
         await AmpelnAsync(a, f);
         await HaltestellenAsync(a, f);
         await GelaendeAsync(a, f);
+        await PinselMausAsync(a, f);
         await HuegelVerdecktAsync(a, f);
         await StrassenzugAsync(a, f);
         await WerkzeugKleinAsync(a, f);

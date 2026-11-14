@@ -92,6 +92,51 @@ public static partial class Texte
         _ => typ,
     };
 
+    // ---- Arbeitsort (Welle E4, S 0.53.0, Weisung P12-247) ----
+    public const string QuestArbeitsortTitel = "Arbeitsort";
+    public const string QuestArbeitsortErklaerung = "Wo die Arbeit stattfindet. Ohne Arbeitsort gilt die Quest am Platz der Person, die sie vergibt.";
+    public const string QuestArbeitsortBestand = "Vorhandene Quests behalten ihren Ort aus dem Spiel; ein Arbeitsort geht nur bei neuen Quests.";
+    public const string QuestArbeitsortKeiner = "kein eigener Arbeitsort";
+    public const string QuestArbeitsort = "Arbeitsort";
+    public const string QuestArbeitsortOrt = "Gebäude";
+    public const string QuestArbeitsortRaum = "Raum am Arbeitsort";
+    public const string QuestArbeitsortEtage = "Etage am Arbeitsort";
+    public const string QuestArbeitsortStelle = "Stelle am Arbeitsort";
+    public const string QuestArbeitsortStelleText = "Stelle: {0}";
+    public const string QuestArbeitsortStelleAuto = "Stelle: die erste freie Stelle im Raum (wird automatisch gesetzt).";
+    public const string QuestArbeitsortStelleWaehlen = "Stelle wählen";
+    public const string QuestArbeitsortStelleWaehlenTipp = "Danach in den Grundriss tippen, wo die Arbeit stattfindet.";
+    public const string QuestArbeitsortStelleHinweis = "Tippe auf die Stelle im Grundriss. Escape bricht ab.";
+    public const string QuestArbeitsortWartet = "Questgeber wartet am Arbeitsort";
+    public const string QuestArbeitsortWartetTipp = "Ja: die Person geht für diese Quest an den Arbeitsort und wartet dort. Nein: die Person bleibt am eigenen Platz, die Aufgabe liegt im Raum am Arbeitsort.";
+    public const string QuestArbeitsortEntfernen = "Arbeitsort entfernen";
+    public const string QuestArbeitsortEntfernenTipp = "Die Quest gilt danach wieder am Platz der Person, die sie vergibt.";
+    public const string QuestArbeitsortZiehenTipp = "In der Draufsicht die Markierung „A“ mit dem Finger oder der Maus auf ein anderes Haus ziehen. Escape bricht ab.";
+    public const string QuestArbeitsortZiehenUngueltig = "Dieses Haus geht nicht als Arbeitsort: nur Häuser mit Ort und Innenraum (Büro, Kunden, Geschäfte, Schalter).";
+    public const string QuestArbeitsortZiehenUeber = "Arbeitsort: {0}";
+    public const string QuestArbeitsortZiehenKeinHaus = "Arbeitsort: hier ist kein Haus";
+    public const string QuestArbeitsortZiehenAbgebrochen = "Ziehen abgebrochen, der Arbeitsort bleibt.";
+    public const string QuestArbeitsortGleich = "Der Arbeitsort bleibt, die Marke liegt schon auf diesem Haus.";
+    public const string QuestArbeitsortGesetzt = "Arbeitsort jetzt: {0}.";
+    public const string QuestArbeitsortZeigen = "In der Draufsicht zeigen";
+    public const string QuestArbeitsortZeigenTipp = "Öffnet die Draufsicht: Linie von der Person zum Arbeitsort, die Marke „A“ lässt sich auf ein anderes Haus ziehen.";
+    public const string QuestArbeitsortKeineStelle = "An diesem Ort gibt es keine freie Stelle, die vom Eingang aus erreichbar ist.";
+    public const string QuestArbeitsortRaumKurz = "Raum";
+    public static string QuestArbeitsortEtageName(int etage) => etage == 0 ? "Erdgeschoss" : string.Create(CultureInfo.InvariantCulture, $"{etage}. Etage");
+    public const string QuestArbeitsortFundTipp = "Den Arbeitsort in der Quest-Karte ändern oder entfernen.";
+    public const string QuestArbeitsortGeschaeft = "im ganzen Geschäft";
+    public static string QuestArbeitsortHier(int n) => string.Create(CultureInfo.InvariantCulture, $"Quests mit Arbeitsort hier ({n})");
+    public static string QuestArbeitsortInnenHier(int n) => string.Create(CultureInfo.InvariantCulture, $"Arbeitsort hier: {n} {(n == 1 ? "Quest" : "Quests")}");
+    public const string QuestArbeitsortHierZeile = "neu · ab Tag {0} · Questgeber {1}";
+    public const string QuestArbeitsortOeffnen = "Quest öffnen";
+    public const string QuestArbeitsortOeffnenTipp = "Öffnet die Quest im Reiter „Quests“.";
+    public const string QuestArbeitsortMarkeWartet = "Die Marke zeigt, wo {0} wartet.";
+    public const string QuestArbeitsortMarkeAuftrag = "Die Marke zeigt, wo die Aufgabe bereitliegt ({0} bleibt am eigenen Platz).";
+    public const string QuestArbeitsortMarkeAuftragName = "Aufgabe";
+    public const string QuestArbeitsortMarkeQuest = "{0} (Quest)";
+    public static string QuestArbeitsortStelleWert(double x, double y) =>
+        string.Format(CultureInfo.InvariantCulture, QuestArbeitsortStelleText, string.Create(CultureInfo.InvariantCulture, $"{x:0.##} / {y:0.##}"));
+
     // ---- Questgeber-Editor ----
     public const string QgNeu = "Neuer Questgeber";
     public const string QgNeuName = "Neue Person";

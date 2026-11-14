@@ -1,20 +1,23 @@
-Die Spielstadt läuft auf schwachen Geräten ruhiger.
+Neue Aufgaben können jetzt in einem anderen Gebäude warten.
 
-- In der Grafikstufe „Niedrig“ war die neue Stadt aus der Nähe zu aufwendig für schwache Geräte. Jetzt zeichnet das Spiel Laternen, Bahnübergänge, Ampel- und Haltestellenmasten nur noch dort, wo du gerade hinschaust. So hat das Gerät deutlich weniger zu tun, in allen Grafikstufen.
-- Die Stadt sieht genau so aus wie vorher, bei Tag und bei Nacht. Die Laternen leuchten nachts wie gewohnt.
-- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+- Eine Aufgabe, die im Stadtbau-Werkzeug neu angelegt wird, kann einen Arbeitsort haben: ein Büro, eine Firma bei einer Kundschaft, einen Laden oder einen Schalter. Wer dir die Aufgabe gibt, wartet dann dort im richtigen Raum auf dich. Gehst du hinein und sprichst die Person an, bekommst du die Aufgabe wie gewohnt.
+- Soll die Person nicht mitkommen, liegt die Aufgabe trotzdem dort bereit: Im Gebäude steht dann „Hier wartet ein Auftrag“, und du kannst ihn an Ort und Stelle annehmen.
+- Das Aufgabenbuch nennt bei solchen Aufgaben das Gebäude, den Raum und die Etage und sagt, wer dort auf dich wartet. „Hingehen“ führt dich direkt dorthin.
+- Ist die Aufgabe erledigt, steht die Person wieder an ihrem gewohnten Platz.
+- Tippst du in einem Gebäude dicht neben eine Person auf den Boden, bleibt deine Figur jetzt mit etwas Abstand vor ihr stehen. Vorher konnten die beiden ineinander stehen.
+- Alle bisherigen Aufgaben bleiben genau wie vorher. Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.74.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.75.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.74.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.74.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.74.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.74.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.75.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.75.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.75.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.75.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

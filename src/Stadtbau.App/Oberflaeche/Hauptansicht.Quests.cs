@@ -120,6 +120,7 @@ public sealed partial class Hauptansicht
     internal void QuestOeffnen(string? id)
     {
         _questGewaehlt = id;
+        ArbeitsortMarkeNeu();
         if (QuestSeite == Texte.Quests)
         {
             QuestListeZeigen();
@@ -600,6 +601,7 @@ public sealed partial class Hauptansicht
             }, betont: true);
             kopieren.IsEnabled = schreiben && QuestDaten.Typen.Contains(q.Typ);
             _questEditor.Children.Add(kopieren);
+            _questEditor.Children.Add(ArbeitsortBauen(q, schreiben));
             return;
         }
 
@@ -658,6 +660,7 @@ public sealed partial class Hauptansicht
         felder.Children.Add(Beschriftet(Texte.QuestFeldNach, Wahl(Texte.QuestFeldNach, Texte.QuestNachTipp,
             [(Texte.QuestNachKeine, ""), .. _projekt.Quests().Where(x => x.Id != id).Select(x => (x.Titel, (object?)x.Id))],
             q.Nach ?? "", t => _projekt.QuestNach(id, t as string is { Length: > 0 } s ? s : null))));
+        _questEditor.Children.Add(ArbeitsortBauen(q, schreiben));
         var loeschen = Knopf(Texte.QuestLoeschen, Texte.QuestLoeschenFrage, async () =>
         {
             if (await Dialog.Rueckfrage(Texte.QuestLoeschen, Texte.QuestLoeschenFrage, 1, Texte.QuestLoeschen, Texte.Abbrechen) == 0)
@@ -1099,6 +1102,7 @@ public sealed partial class Hauptansicht
     /// <summary>Platz waehlen beenden (Escape, anderer Reiter, Projekt zu).</summary>
     private void QgSetzenBeenden()
     {
+        ArbeitsortSetzenBeenden();
         _qgSetzen = null;
         Karte.QuestgeberSetzen = null;
         Flaeche.QuestgeberSetzen = null;
@@ -1123,13 +1127,16 @@ public sealed partial class Hauptansicht
         {
             Karte.QuestgeberMarken = [];
             Flaeche.QuestgeberMarken = [];
+            ArbeitsortInnenNeu();
             return;
         }
         var alle = _projekt.Questgeber();
         QuestgeberMarke Marke(QuestgeberDaten.Questgeber q) =>
             new(q.Id, q.Platz!.X, q.Platz.Y, q.Platz.Blick, q.Name.Trim().Length > 0 ? q.Name : q.Id, q.Id == _qgGewaehlt);
         Karte.QuestgeberMarken = [.. alle.Where(q => q.Platz is { Draussen: true }).Select(Marke)];
+        ArbeitsortMarkeNeu();
         Flaeche.QuestgeberMarken = [.. alle.Where(q => q.Platz is { Draussen: false } p && p.InnenSchluessel == _ort).Select(Marke)];
+        ArbeitsortInnenNeu();
         Karte.InvalidateVisual();
         Flaeche.InvalidateVisual();
     }

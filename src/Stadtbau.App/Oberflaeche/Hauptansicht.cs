@@ -353,6 +353,7 @@ public sealed partial class Hauptansicht : UserControl
         Flaeche.AuswahlGeaendert += AuswahlZeigen;
         Flaeche.Gemeldet += Melden;
         Karte.OrtGewaehlt += o => OrtOeffnen(o);
+        Karte.ArbeitsortGezogen = ArbeitsortGezogen;
         Karte.AuswahlGeaendert += AussenAuswahlZeigen;
         Karte.Gemeldet += Melden;
         Karte.SetzenGeaendert += SetzenZustandZeigen;
@@ -1240,8 +1241,8 @@ public sealed partial class Hauptansicht : UserControl
         const string marke = ", " + Texte.SetzenGewaehlt;
         if (an)
         {
-            k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
-            text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+            k.FarbeNeu(Button.BackgroundProperty, "VerlaufW.primary").FarbeNeu(Button.ForegroundProperty, "Pinsel.on_accent");
+            text?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.on_accent");
             if (!name.EndsWith(marke, StringComparison.Ordinal))
             {
                 k.Vorlese(name + marke);
@@ -1250,14 +1251,14 @@ public sealed partial class Hauptansicht : UserControl
         }
         if (_setzenKnopfRund)
         {
-            k.Farbe(Button.BackgroundProperty, "Pinsel.card_alt").Farbe(Button.ForegroundProperty, "Pinsel.text");
+            k.FarbeNeu(Button.BackgroundProperty, "Pinsel.card_alt").FarbeNeu(Button.ForegroundProperty, "Pinsel.text");
         }
         else
         {
-            k.ClearValue(Button.BackgroundProperty);
-            k.ClearValue(Button.ForegroundProperty);
+            Markierung.Loesen(k, Button.BackgroundProperty);
+            Markierung.Loesen(k, Button.ForegroundProperty);
         }
-        text?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+        text?.FarbeNeu(TextBlock.ForegroundProperty, "Pinsel.text");
         if (name.EndsWith(marke, StringComparison.Ordinal))
         {
             k.Vorlese(name[..^marke.Length]);
@@ -1394,6 +1395,8 @@ public sealed partial class Hauptansicht : UserControl
         NotizTeil(s);
         // S 0.22.0 (Bild 4, 4a): gelbe Zeile beim Ort mit Aufgaben, rechts die Spielgeschichte des Orts (Bild 1)
         GeschichteTeil(s);
+        // S 0.53.0 E4 (Bild 2 aus P12-147): neue Quests, die in diesem Haus arbeiten
+        ArbeitsortTeil(s);
         var (lx, ly) = AussenBearbeitung.Lage(a, s);
         var x = Feld(lx);
         var y = Feld(ly);
@@ -2375,6 +2378,7 @@ public sealed partial class Hauptansicht : UserControl
             Children =
             {
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.Auswahl, "Mittel", FontWeight.Bold), _auswahl } }),
+                ArbeitsortHierKarte(),
                 Schrift.Karte(EtagenBaustein()),
                 FundlistenInnenBauen(),
                 _pruefenInnen,
@@ -3219,6 +3223,12 @@ public sealed partial class Hauptansicht : UserControl
         if (e.Key == Key.Escape && EinfuegenAbbrechen())
         {
             // S 0.47.0 (Weisung P12-226 W1): Escape bricht das Einfuegen ab
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Escape && ArbeitsortAbbrechen())
+        {
+            // Welle E4: Escape bricht „Stelle wählen“ und das Ziehen der Marke „A“ ab
             e.Handled = true;
             return;
         }

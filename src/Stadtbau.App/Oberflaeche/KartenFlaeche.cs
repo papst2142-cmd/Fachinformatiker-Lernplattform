@@ -700,6 +700,9 @@ public sealed partial class KartenFlaeche : Control
             q.Zeichnen(ctx, new Point((q.X * _zoom) + _versatz.X, (q.Y * _zoom) + _versatz.Y), Math.Max(6, 0.2 * _zoom), schrift, Farbe("text"));
         }
 
+        // Welle E4: Arbeitsort der gewaehlten Quest (Linie vom Questgeber, Marke „A“ zum Ziehen)
+        ArbeitsortZeichnen(ctx, schrift);
+
         // S 0.27.0: Notizen oben auf allem
         if (Zeigt(Ebene.Notizen))
         {
@@ -1497,6 +1500,8 @@ public sealed partial class KartenFlaeche : Control
         var schritt = Raster ? Bearbeitung.Raster : Bearbeitung.RasterFein;
         switch (taste)
         {
+            case Key.Escape when ArbeitsortAbbrechen():
+                return true;
             case Key.Escape when ZiehAbbrechen():
                 return true;
             case Key.Escape when ReiheAbbrechen():
@@ -1591,6 +1596,11 @@ public sealed partial class KartenFlaeche : Control
         var w = WeltPunkt(p);
         e.Handled = true;
         e.Pointer.Capture(this);
+        if (_arbeitZiehen || ArbeitsortDruecken(e, p))
+        {
+            // Welle E4: die Marke „A“ des Arbeitsorts zieht ein Finger auf ein anderes Haus
+            return;
+        }
         var erster = !_geste.Aktiv;
         if (erster && !_griffZiehen && GriffMitte is { } gm && Drehgriff.Getroffen(gm.X, gm.Y, p.X, p.Y) && !NurSchiebenDruck(e, this))
         {
@@ -1679,6 +1689,10 @@ public sealed partial class KartenFlaeche : Control
     {
         base.OnPointerMoved(e);
         var p = e.GetPosition(this);
+        if (ArbeitsortBewegen(e, p))
+        {
+            return;
+        }
         if (_griffZiehen)
         {
             if (e.Pointer.Id == _griffZeiger)
@@ -1738,6 +1752,10 @@ public sealed partial class KartenFlaeche : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (ArbeitsortLoslassen(e, e.GetPosition(this)))
+        {
+            return;
+        }
         if (_griffZiehen)
         {
             if (e.Pointer.Id == _griffZeiger)
@@ -1760,6 +1778,10 @@ public sealed partial class KartenFlaeche : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (ArbeitsortVerloren(e))
+        {
+            return;
+        }
         if (_griffZiehen && e.Pointer.Id == _griffZeiger)
         {
             _griffZiehen = false;

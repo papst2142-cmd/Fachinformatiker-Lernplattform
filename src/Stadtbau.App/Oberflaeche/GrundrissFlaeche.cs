@@ -261,7 +261,7 @@ public sealed class GrundrissFlaeche : Control
         }
 
         // Welle Q1: Questgeber in diesem Raum (gruen, Pfeil = Blick)
-        foreach (var q in QuestgeberMarken)
+        foreach (var q in QuestgeberMarken.Concat(ArbeitsortMarken))
         {
             q.Zeichnen(ctx, BildPunkt(q.X, q.Y), Math.Max(7, 0.22 * _zoom), schrift, Brushes.Black);
         }
@@ -696,6 +696,9 @@ public sealed class GrundrissFlaeche : Control
     /// <summary>Pfeil: Kreis an der Stelle, Spitze in Blickrichtung (Blick 0 = nach +y, im Plan nach unten).</summary>
     /// <summary>Welle Q1: Questgeber dieses Raums (setzt die Hauptansicht).</summary>
     internal IReadOnlyList<QuestgeberMarke> QuestgeberMarken { get; set; } = [];
+
+    /// <summary>S 0.53.0 E4: Arbeitsorte neuer Quests in diesem Raum (lila „A“, Bild 3 aus Meldung P12-147).</summary>
+    internal IReadOnlyList<QuestgeberMarke> ArbeitsortMarken { get; set; } = [];
 
     /// <summary>Welle Q1: Platz eines Questgebers waehlen (gesetzt = ein Tipp ruft dies mit dem Punkt im Grundriss).</summary>
     internal Action<double, double>? QuestgeberSetzen { get; set; }

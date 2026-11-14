@@ -102,6 +102,12 @@ public sealed partial class DreiBedienung : Control
         };
         // S 0.27.0: Massband (gleiche Messung wie in der Draufsicht)
         _karte.MassbandGeaendert += InvalidateVisual;
+        // Welle E4 Nachtrag (P12-249): Pinsel an/aus oder anderer Pinsel, ein angefangener Zug faellt weg
+        _karte.PinselGeaendert += () =>
+        {
+            _pinselZug.Clear();
+            InvalidateVisual();
+        };
         // S 0.28.0: Tuer setzen (Vorschau, Modus); die Tueren des Modells aus der schon gebauten 3D-Szene
         _karte.TuerModusGeaendert += () =>
         {
@@ -279,6 +285,16 @@ public sealed partial class DreiBedienung : Control
             _mehr = null;
         }
         var bauen = !FigurLaufen && Projekt is { NurLesen: false };
+        if (Malt)
+        {
+            // Welle E4 Nachtrag (P12-249): der Pinsel malt auch in 3D; ein Finger oder die linke Maustaste zieht den Zug
+            if (erster && bauen)
+            {
+                PinselDruecken(p);
+            }
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, bauen), p);
+            return;
+        }
         if (_karte.TuerFuer is not null && !FigurLaufen)
         {
             // S 0.28.0: ein Finger setzt und zieht die Tuer, zwei Finger bewegen die Kamera
@@ -411,6 +427,11 @@ public sealed partial class DreiBedienung : Control
             {
                 _karte.SetzenBeenden();
             }
+            else if (_griff == Griff.Drehen && _rechtsStart is not null && !_rechtsBewegt && _karte.GelaendePinsel is not null)
+            {
+                // wie in der Draufsicht: Rechtsklick ohne Bewegung beendet den Pinsel
+                _karte.GelaendePinsel = null;
+            }
             _rechtsStart = null;
             _griff = Griff.Keiner;
             e.Pointer.Capture(null);
@@ -458,6 +479,10 @@ public sealed partial class DreiBedienung : Control
 
     private void Anwenden(Fingergeste.Schritt s, Point p)
     {
+        if (Malt && PinselAnwenden(s))
+        {
+            return;
+        }
         if (_karte.TuerFuer is not null && !FigurLaufen && TuerAnwenden(s))
         {
             return;
@@ -901,6 +926,7 @@ public sealed partial class DreiBedienung : Control
             ctx.DrawEllipse(Brushes.White, RandDunkel, new Point(zb.X, zb.Y), 7, 7);
         }
         MassbandZeichnen(ctx, k);
+        PinselZeichnen(ctx, k);
         TuerZeichnen(ctx, k);
         GriffZeichnen(ctx);
     }

@@ -25,7 +25,7 @@ public class QuestTests
     private static PyObjekt Inhalt => Daten.Spiel.Inhalt;
 
     /// <summary>Eine fertige, gruene neue Quest vom Typ Auswahl beim Questgeber <paramref name="qg"/>.</summary>
-    private static string GuteAuswahl(Projekt p, string qg = "petra")
+    internal static string GuteAuswahl(Projekt p, string qg = "petra")
     {
         var id = p.QuestNeu("auswahl", qg);
         p.QuestFeld(id, "titel", "WLAN im Bahnhofscafé");

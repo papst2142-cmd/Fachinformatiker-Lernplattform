@@ -194,6 +194,94 @@ public class GelaendeTests
         Assert.True(AussenBearbeitung.GelaendeVon(c)!.Hoehe(11, 12) <= Gelaende.HoeheMax + 1e-4f);
     }
 
+    /// <summary>Welle E4 Nachtrag (Nico 14.11.2026): drei Staerken; ein Zug hebt die Mitte genau um die Staerke, Senken ebenso.</summary>
+    [Fact]
+    public void Pinsel_DreiStaerken_HebenUndSenkenGenauSoViel()
+    {
+        Assert.Equal([0.1f, 0.25f, 0.5f], AussenBearbeitung.PinselStaerken);
+        foreach (var staerke in AussenBearbeitung.PinselStaerken)
+        {
+            var a = Grundlage(huegel: false);
+            Assert.True(AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(10, 12), new(12, 12)], 1, staerke) > 0);
+            Assert.Equal(staerke, AussenBearbeitung.GelaendeVon(a)!.Hoehe(11, 12), 3);
+            AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(10, 12), new(12, 12)], 1, staerke);
+            AussenBearbeitung.Pinselzug(a, PinselArt.Senken, [new(10, 12), new(12, 12)], 1, staerke);
+            Assert.Equal(staerke, AussenBearbeitung.GelaendeVon(a)!.Hoehe(11, 12), 3);
+        }
+    }
+
+    public static TheoryData<string> PinselSperren => ["strasse", "haus", "wasser"];
+
+    /// <summary>
+    /// Weisung P12-254 (Nico Frage 2 = a, „nur auf der Wiese malen“): ein Zug quer ueber Strasse, Haus oder Wasser hebt die Wiese
+    /// beidseits, auf dem Hindernis und im Rand 1,5 nichts; die Pruefung meldet kein „Gemaltes Gelände“. Ein Zug nur ueber dem
+    /// Hindernis ist kein Schritt. Eine dort schon gemalte Hoehe bleibt, wie sie ist. Gegenprobe ohne Sperre (Stand S 0.53.0
+    /// vor P12-254): derselbe Zug malt auch auf dem Hindernis, die Pruefung meldet rot.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(PinselSperren))]
+    public void Pinsel_LaesstStrasseHausWasserSamtRandFrei_Gegenprobe(string art)
+    {
+        Projekt Neu()
+        {
+            var p = Projekt.Neu("Pinsel " + art, D, Daten.NeueAblage(), null, (30, 20));
+            p.AussenAendern(art, a =>
+            {
+                switch (art)
+                {
+                    case "strasse":
+                        Aussen.Landschaft(a).Add(new PyObjekt { { "typ", "strasse" }, { "punkte", new List<object?> { P(15, 2), P(15, 18) } }, { "gehweg", 0.35 } });
+                        break;
+                    case "haus":
+                        Assert.NotNull(AussenBearbeitung.Setzen(a, AussenArt.Gebaeude, 15, 10, modell: "elektromarkt"));
+                        break;
+                    default:
+                        Liste(Aussen.WasserAnlegen(a)["teiche"]).Add(new PyObjekt { { "punkte", new List<object?> { P(13, 8), P(17, 8), P(17, 12), P(13, 12) } } });
+                        break;
+                }
+            });
+            return p;
+        }
+
+        var p = Neu();
+        string Gemalt(List<StadtbauFund> f) => string.Join(" | ", f.Where(x => x.Text.StartsWith("Gemaltes Gelände", StringComparison.Ordinal)).Select(x => x.Text));
+        Vector2[] quer = [new(3, 10), new(27, 10)];
+
+        var malbar = p.PinselMalbar();
+        Assert.NotNull(malbar);
+        Assert.True(p.AussenAendern("Pinsel", a => AussenBearbeitung.Pinselzug(a, PinselArt.Heben, quer, 1, 0.25f, malbar) > 0));
+        var g = AussenBearbeitung.GelaendeVon(p.AussenStand)!;
+        Assert.True(g.Hoehe(5, 10) > 0 && g.Hoehe(25, 10) > 0, $"{art}: Wiese beidseits nicht gehoben");
+        Assert.Equal(0f, g.Hoehe(15, 10));
+        Assert.Equal(0f, g.Hoehe(17.5f, 10)); // Rasterpunkt im Rand 1,5
+        Assert.Equal("", Gemalt(p.PruefenAussen()));
+
+        // ein Zug nur ueber dem Hindernis: kein Schritt
+        var schritte = p.SchritteZurueck;
+        Assert.False(p.AussenAendern("Pinsel", a => AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(15, 9.5f), new(15, 10.5f)], 0.5f, 0.25f, p.PinselMalbar()) > 0));
+        Assert.Equal(schritte, p.SchritteZurueck);
+
+        // eine dort schon gemalte Hoehe bleibt (nichts still loeschen)
+        p.AussenAendern("alt", a => Liste(Objekt(Aussen.Stadtdaten(a)[Gelaende.Abschnitt])["gemalt"]).Add(new List<object?> { 30L, 20L, 40L }));
+        p.AussenAendern("Pinsel", a => AussenBearbeitung.Pinselzug(a, PinselArt.Senken, quer, 1, 0.5f, p.PinselMalbar()));
+        Assert.Contains(AussenBearbeitung.GemaltListe(p.AussenStand), x => x is List<object?> { Count: 3 } q && Equals(q[0], 30L) && Equals(q[1], 20L) && Equals(q[2], 40L));
+
+        // Gegenprobe ohne Sperre
+        p = Neu();
+        try
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = true;
+            Assert.Null(p.PinselMalbar());
+            Assert.True(p.AussenAendern("Pinsel", a => AussenBearbeitung.Pinselzug(a, PinselArt.Heben, quer, 1, 0.25f, p.PinselMalbar()) > 0));
+            Assert.True(AussenBearbeitung.GelaendeVon(p.AussenStand)!.Hoehe(15, 10) > 0);
+            Assert.NotEqual("", Gemalt(p.PruefenAussen()));
+        }
+        finally
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = false;
+        }
+    }
+
     [Fact]
     public void Projekt_PinselzugIstEinSchritt_Rueckgaengig()
     {

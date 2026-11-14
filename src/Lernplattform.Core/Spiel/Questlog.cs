@@ -19,8 +19,12 @@ public static class Questlog
     public enum Stufe { Erledigt, Jetzt, Gesperrt }
 
     /// <summary>Ein Auftrag im Questlog; <see cref="Ziel"/> = Ort, zu dem „Hingehen“ fuehrt (null = keiner).</summary>
+    /// <remarks>
+    /// Welle E4 (A 0.75.0, Weisung P12-247): <see cref="Wartet"/> = Satz „&lt;Name&gt; wartet dort auf dich.“ (nur bei einem
+    /// Arbeitsort, an dem der Questgeber wartet; bei „wartet nicht“ und bei allen Auftraegen ohne Arbeitsort leer).
+    /// </remarks>
     public sealed record Eintrag(string Id, string Titel, string Questgeber, string OrtText, string Ticket, bool NeuHeute,
-        IReadOnlyList<(string Titel, Stufe Stufe)> Kette, bool Erledigt, string? Ziel);
+        IReadOnlyList<(string Titel, Stufe Stufe)> Kette, bool Erledigt, string? Ziel, string Wartet = "");
 
     /// <summary>Offene Auftraege des Tages in der Reihenfolge des Spiels.</summary>
     public static List<Eintrag> Offen(StadtSpiel spiel)
@@ -68,7 +72,10 @@ public static class Questlog
         var (ziel, ortText) = OrtVon(spiel, auftrag);
         var ticket = ErsterSatz(auftrag["ticket"]);
         var neu = !erledigt && (Py.F(SpielDaten.Get(auftrag, "ab_tag", 1L)) == stand.Tag || id.StartsWith(SpielDaten.Falschlieferung, StringComparison.Ordinal));
-        return new Eintrag(id, titel, questgeber, ortText, ticket, neu, Kette(stand, auftrag, erledigt), erledigt, ziel);
+        var wartet = !erledigt && Py.Wahr(SpielDaten.Get(auftrag, Questebene.Merkmal)) && Py.Wahr(SpielDaten.Get(auftrag, "stelle"))
+            && Py.Hat(auftrag, "etage")
+            ? string.Format(CultureInfo.InvariantCulture, QuestlogTexte.WartetDort, questgeber) : "";
+        return new Eintrag(id, titel, questgeber, ortText, ticket, neu, Kette(stand, auftrag, erledigt), erledigt, ziel, wartet);
     }
 
     /// <summary>Ort eines Auftrags (Ort-Kennung und Text mit Etage und Oeffnungszeit); Questgeber draussen: der Ort ihres Platzes.</summary>
@@ -84,10 +91,22 @@ public static class Questlog
                 : (null, QuestlogTexte.DraussenOhneOrt);
         }
         var (grund, etage) = Etagen.Teilen(ort);
+        // Welle E4: Arbeitsort einer neuen Quest (Etage und Raum stehen am Auftrag, nur bei Auftraegen der Quest-Ebene)
+        var arbeitsort = Py.Wahr(SpielDaten.Get(auftrag, Questebene.Merkmal)) && SpielDaten.Get(auftrag, "etage") is long;
+        if (arbeitsort && SpielDaten.Get(auftrag, "etage") is long e && e > 0)
+        {
+            etage = (int)e;
+        }
         // Ort des Spiels ("buero", Kunde, Laden) zum Ort der Stadt: gleiche Kennung oder Innenraum dieses Orts
         var o = spiel.Szene.Ort(grund) ?? spiel.Szene.Orte.FirstOrDefault(x => Innenraum.OrtFuer(x.Ansicht) == grund);
         var name = o is not null ? o.Name : SpielAnsicht.OrtName(grund, inhalt, spiel.Ablauf.Stand);
         var text = etage > 0 ? string.Format(CultureInfo.InvariantCulture, QuestlogTexte.MitEtage, name, etage) : name;
+        if (arbeitsort && SpielDaten.Get(auftrag, "raum") is string { Length: > 0 } raum
+            && Innenraum.ArbeitsGrundriss(grund, 0, inhalt, null) is { } grundriss
+            && SpielDaten.ListeOderLeer(grundriss, "raeume").Select(SpielDaten.Objekt).FirstOrDefault(r => Py.Gleich(r["id"], raum)) is { } r)
+        {
+            text = string.Format(CultureInfo.InvariantCulture, QuestlogTexte.MitRaum, text, r["name"]);
+        }
         if (spiel.Stadt.Oeffnungszeit(o?.Id ?? grund) is { } zeit)
         {
             text += string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Geoeffnet, Stadt.Uhrzeit(zeit.Auf), Stadt.Uhrzeit(zeit.Zu));

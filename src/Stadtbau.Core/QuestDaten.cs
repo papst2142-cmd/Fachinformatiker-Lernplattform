@@ -1,5 +1,6 @@
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
@@ -16,7 +17,7 @@ namespace Stadtbau.Core;
 /// </list>
 /// Keine neue Formatnummer: Fassung 0 hat den Abschnitt nicht und bleibt bitgleich; das Spiel liest ihn noch nicht.
 /// </summary>
-public static class QuestDaten
+public static partial class QuestDaten
 {
     public const string Abschnitt = "quests";
 
@@ -190,6 +191,11 @@ public static class QuestDaten
             n.Add("nach", nach);
         }
         n.Add("questgeber", q.Questgeber);
+        if (Get(q.Daten, Questebene.FeldArbeitsort) is { } arbeitsort)
+        {
+            // Welle E4: der Arbeitsort kommt mit (nur neue Quests haben einen)
+            n.Add(Questebene.FeldArbeitsort, Py.Kopie(arbeitsort));
+        }
         Anlegen(aussen).Add(n);
         return id;
     }

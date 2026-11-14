@@ -118,6 +118,10 @@ public sealed partial class SpielSeite
                 teil.Children.Add(kopf);
                 teil.Children.Add(Schrift.Text(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Von, e.Questgeber), "Klein"));
                 teil.Children.Add(Schrift.Text(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Wo, e.OrtText), "Klein"));
+                if (e.Wartet.Length > 0)
+                {
+                    teil.Children.Add(Schrift.Text(e.Wartet, "Klein"));
+                }
                 if (e.Ticket.Length > 0)
                 {
                     teil.Children.Add(Schrift.Text(e.Ticket, "Klein", farbe: "Pinsel.muted"));
