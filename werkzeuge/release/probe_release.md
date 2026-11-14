@@ -1,22 +1,24 @@
-Die Spielstadt ist neu gestaltet: mehr Zebrastreifen, mehr Grün und sanfte Hügel.
+Neu im Prüfungstrainer: die Prüfung im echten Format.
 
-- Die Stadt hat vier neue Zebrastreifen, jetzt sind es neun. Die Spielfigur geht weiter nur auf dem Gehweg und quert die Straße auf einem Zebrastreifen, an einer Ampel oder auf einem Bahnübergang. Steht sie auf einem Zebrastreifen, halten die Autos davor.
-- Sechs neue Parks, fünf neue Blumenbeete und 18 neue Bäume machen die Stadt grüner.
-- Am westlichen und am östlichen Stadtrand gibt es jetzt sanfte Hügel. Häuser, Straßen, Wege, Laternen und Haltestellen stehen weiter auf ebenem Boden.
-- Talheim hat einen neuen Zugang mit eigenem Weg zur Straße, und die Bushaltestelle dort steht an einer neuen Stelle. Dadurch lohnt sich der Bus auf mehr Wegen, und manche Fahrten werden ein paar Minuten kürzer.
-- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind. Zu Fuß dauert ein Weg von Ort zu Ort im Spiel so lange wie vorher.
+- Unter „Prüfung“ gibt es jetzt eine zweite Art zu üben. Sie ist aufgebaut wie die IHK-Abschlussprüfung: eine erfundene Firma für alle vier Aufgaben, Teilaufgaben mit Arbeitsanweisung und Punkten, Anlagen wie Tabellen, Konfigurationen und ein englischer Text. Du hast 90 Minuten ohne Pause und kannst 100 Punkte erreichen.
+- Du antwortest in Textfeldern, in einzelnen Angaben, mit Rechenweg und Ergebnis, in Tabellen, in Feldern für IP-Adressen und Masken und durch Ankreuzen.
+- Zahlen, Felder, Tabellen und Kreuze bewertet das Programm selbst und zeigt grün oder rot. Den Rest vergleichst du mit der Musterlösung und hakst ab, was du richtig hattest. Danach bekommst du Punkte, Note und eine Übersicht nach Aufgaben.
+- Die Ergebnisse stehen in einer eigenen Liste auf der Karte „Prüfung im echten Format“. Sie zählen nicht ins Gesamtergebnis, das bleibt genau wie vorher.
+- Zum Start gibt es einen Prüfungssatz für die AP1. Er gilt für alle Fachrichtungen. Für die AP2 folgen Sätze in späteren Versionen.
+- Eine angefangene Prüfung bleibt gespeichert: Schließt du das Programm, geht es beim nächsten Öffnen weiter, die Zeit läuft dabei weiter.
+- Die bisherige Prüfung, dein Lernstand und das Spiel bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.75.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.76.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.75.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.75.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.75.2-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.75.2-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.76.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.76.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.76.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.76.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Pruefung;
+using Lernplattform.Core.Pruefung.Echt;
 using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Programm;
@@ -37,6 +38,7 @@ public sealed class KlausurTeil
     private TextBlock? _summe;
     private StackPanel? _aufgabenTeil;
     private bool _abgeben;
+    private readonly EchtFormatTeil _echt;
 
     public KlausurTeil(Lerninhalte inhalte, Func<string, Task> themaUeben)
     {
@@ -44,6 +46,8 @@ public sealed class KlausurTeil
             new LaufendePruefung(() => Zustand.Einstellungen.Laden(), Zustand.Aendere), () => Zustand.Schreiber,
             () => DateTimeOffset.Now, TimeZoneInfo.Local);
         _themaUeben = themaUeben;
+        // A 0.76.0: Pruefung im echten Format zeichnet in denselben Koerper; nie zwei laufende Pruefungen zugleich
+        _echt = new EchtFormatTeil(_koerper, Leeren, () => AuswahlZeigen(), () => _a.Laeuft);
         _takt.Tick += (_, _) => Ticken();
         _speichern.Tick += (_, _) => Festhalten();
         Zustand.BeimBeenden += Verbergen;      // Antworten beim Beenden festhalten
@@ -62,7 +66,7 @@ public sealed class KlausurTeil
     }
 
     /// <summary>Gespeicherte laufende Pruefung (auch "bewertung")? (fp.load_running() is not None)</summary>
-    public bool Laeuft => _a.Laeuft;
+    public bool Laeuft => _a.Laeuft || _echt.Laeuft;
 
     /// <summary>Bewertung wird gezeigt (grading).</summary>
     public bool Bewertet { get; private set; }
@@ -80,17 +84,27 @@ public sealed class KlausurTeil
         _felder.Clear();
         _uhr = _fortschritt = _summe = null;
         _aufgabenTeil = null;
+        _echt.Geleert();
         _koerper.Children.Clear();
     }
 
     /// <summary>show: laufende Pruefung fortsetzen (abgelaufen: abgeben) oder Auswahl zeigen.</summary>
-    public void Zeigen() => _ = SchrittAsync(_a.Zeigen());
+    public void Zeigen()
+    {
+        // A 0.76.0: eine laufende Pruefung im echten Format geht vor die Auswahl (die heutige kann dann nicht laufen)
+        if (!_a.Laeuft && _echt.Zeigen())
+        {
+            return;
+        }
+        _ = SchrittAsync(_a.Zeigen());
+    }
 
     /// <summary>hide: geplantes Speichern jetzt erledigen, Uhr anhalten.</summary>
     public void Verbergen()
     {
         Festhalten();
         _takt.Stop();
+        _echt.Verbergen();
     }
 
     /// <summary>
@@ -161,6 +175,11 @@ public sealed class KlausurTeil
         }
         _koerper.Children.Add(Karte(PruefungTexte.AuswahlTitel, PruefungTexte.AuswahlUntertitel, intro));
         var verlauf = probe?.Verlauf ?? Gesamtstand.Verlauf(Zustand.Lernstand);
+        // A 0.76.0 (Antwort 2a): Pruefung im echten Format mit eigener Ergebnisliste; die heutigen Karten ohne sie
+        foreach (var karte in _echt.AuswahlKarten(fachrichtung, verlauf))
+        {
+            _koerper.Children.Add(karte);
+        }
         _koerper.Children.Add(VerlaufKarte(verlauf));
         var projekt = probe is { } p ? p.Projekt
             : Gesamtstand.Projektschaetzung(Zustand.Schreiber.ProjektFelder(), Json.Text(Zustand.Werte[Gesamtstand.AktivSchluessel]));
@@ -196,14 +215,15 @@ public sealed class KlausurTeil
         return Zeile(text, "Pinsel.card_alt", new Thickness(14, 10));
     }
 
-    private static Border VerlaufKarte(List<KlausurEintrag> verlauf)
+    private static Border VerlaufKarte(List<KlausurEintrag> alle)
     {
+        var heute = EchtArten.Ohne(alle);     // A 0.76.0: Pruefungen im echten Format stehen in ihrer eigenen Liste
         var inhalt = new StackPanel { Spacing = 2 };
-        if (verlauf.Count == 0)
+        if (heute.Count == 0)
         {
             inhalt.Children.Add(Schrift.Text(PruefungTexte.KeinePruefung, "Klein", FontWeight.Normal, "Pinsel.muted"));
         }
-        foreach (var zeile in Gesamtstand.Letzte(verlauf))
+        foreach (var zeile in Gesamtstand.Letzte(heute))
         {
             var note = Schrift.Text(zeile.Note, "Klein", FontWeight.Bold, LernTeile.Pinsel(Gesamtstand.Notenfarbe(zeile.Wert)));
             inhalt.Children.Add(new WrapPanel
@@ -217,13 +237,13 @@ public sealed class KlausurTeil
                 },
             });
         }
-        return Karte(PruefungTexte.LetztePruefungen, Beschriftungen.Einsetzen(PruefungTexte.Insgesamt, verlauf.Count), inhalt);
+        return Karte(PruefungTexte.LetztePruefungen, Beschriftungen.Einsetzen(PruefungTexte.Insgesamt, heute.Count), inhalt);
     }
 
     /// <summary>overall_card: letzte Pruefung je Bereich plus Projektnote des aktiven Projekts.</summary>
     private static Border GesamtKarte(Fachrichtung fachrichtung, List<KlausurEintrag> verlauf, double? projekt)
     {
-        var kachel = Gesamtstand.Kachel(fachrichtung, verlauf, projekt);
+        var kachel = Gesamtstand.Kachel(fachrichtung, EchtArten.Ohne(verlauf), projekt);     // A 0.76.0: zaehlt nie mit (2a)
         var inhalt = new StackPanel { Spacing = 2 };
         inhalt.Children.Add(Schrift.Text(string.Join("\n", kachel.Zeilen), "Klein", FontWeight.Normal, "Pinsel.text_soft"));
         if (kachel.Hinweis is { } hinweis)
@@ -253,6 +273,11 @@ public sealed class KlausurTeil
     /// </summary>
     private async Task StartenAsync(string art)
     {
+        if (_echt.Laeuft)
+        {
+            await Dialog.Zeigen(KartenTexte.HinweisTitel, EchtTexte.AndereLaeuft, Dialog.Ok);
+            return;
+        }
         if (_a.Laeuft)
         {
             Zeigen();
@@ -260,7 +285,7 @@ public sealed class KlausurTeil
         }
         var bereich = Klausur.Art(art)!;
         var frage = Beschriftungen.Einsetzen(Geraetetexte.PruefungStartFrage(Pc), bereich.Name, bereich.Minuten);
-        if (await Dialog.Zeigen(PruefungTexte.StartTitel, frage, TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        if (await Dialog.Zeigen(PruefungTexte.StartTitel, frage, TrainerTexte.Ja, TrainerTexte.Nein) != 0 || _echt.Laeuft)
         {
             return;
         }
@@ -723,7 +748,11 @@ public sealed class KlausurTeil
     [
         "pruefung/auswahl-si-gesamtergebnis", "pruefung/auswahl-ae-gesperrt", "pruefung/lauf-aufgabe", "pruefung/lauf-wiso",
         "pruefung/bewertung", "pruefung/ergebnis-aufgabe", "pruefung/ergebnis-wiso", "pruefung/wiso-nicht-gespeichert",
+        "pruefung/echt-auswahl-dv-fehler", .. EchtFormatTeil.ProbeNamen,
     ];
+
+    /// <summary>Erste Nummer der Ansichten im echten Format (A 0.76.0) in <see cref="ProbeNamen"/>.</summary>
+    internal const int EchtAb = 8;
 
     /// <summary>
     /// Nur fuer den Start ohne Bedienung: Ansicht <paramref name="art"/> (siehe <see cref="ProbeNamen"/>)
@@ -735,7 +764,24 @@ public sealed class KlausurTeil
         _takt.Stop();
         if (art < 0)
         {
+            _echt.ProbeBestand(null);
             Zeigen();       // wieder wie gespeichert (Probe aus)
+            return;
+        }
+        if (art == EchtAb)
+        {
+            // A 0.76.0: DV mit einer Meldung der Ladepruefung je Bereich (nie still leer, P12-261)
+            _a.ProbeSetzen(null);
+            _echt.ProbeBestand(new EchtBestand(Zustand.EchtBestand.Saetze, [new(EchtSaetze.Datei, ProbeFehler),
+                new("dv_b2_01", "Aufgabe 3 c): 7 Punkte bei 2 Angabe(n) passen nicht zur Regel (Beschreiben/Erläutern: 1 bis 2 Angaben, 2 bis 3 Punkte je Angabe)")]));
+            AuswahlZeigen((Fachrichtung.Nach("dv"), ProbeVerlauf(), null));
+            _echt.ProbeBestand(null);
+            return;
+        }
+        if (art > EchtAb)
+        {
+            _a.ProbeSetzen(null);
+            _echt.Probe(art - EchtAb - 1);
             return;
         }
         _aufgabe = 0;
@@ -802,11 +848,16 @@ public sealed class KlausurTeil
         var werte = new (string Art, double Punkte)[]
         {
             ("wiso", 81.7), ("netzwerke", 55), ("konzeption", 41), ("ap1", 72.5), ("wiso", 100), ("netzwerke", 29), ("konzeption", 92),
-            ("ap1", 0), ("wiso", 49.9),
+            ("ap1", 0), ("wiso", 49.9), ("echt_ap1", 67), ("echt_datenqualitaet", 12), ("echt_ap1", 100),
         };
         return [.. werte.Select((w, i) => new KlausurEintrag(string.Create(System.Globalization.CultureInfo.InvariantCulture,
             $"2026-10-{28 - i:00} 23:{59 - i:00}:05"), w.Art, w.Punkte, Core.Lernen.Trainer.Note(w.Punkte), new JsonObject(), null))];
     }
+
+    private const string ProbeFehler = "Format 2 ist neuer als dieses Programm (kennt Format 1); bitte das Programm aktualisieren";
+
+    /// <summary>Probe des echten Formats (Messpunkte, Bedienprobe).</summary>
+    internal EchtFormatTeil Echt => _echt;
 
     /// <summary>Konzeption mit den vier Aufgaben der laengsten Texte, Antworten = Musterloesung.</summary>
     private JsonObject ProbeAufgaben(bool bewertet)
