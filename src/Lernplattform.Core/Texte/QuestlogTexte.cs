@@ -26,6 +26,12 @@ public static class QuestlogTexte
 
     public const string MitEtage = "{0}, {1}. Etage";
 
+    /// <summary>Welle E4: Raum am Arbeitsort („Büro, Raum Technik“).</summary>
+    public const string MitRaum = "{0}, Raum {1}";
+
+    /// <summary>Welle E4: der Questgeber wartet am Arbeitsort (nur dann; bei „wartet nicht“ fehlt der Satz).</summary>
+    public const string WartetDort = "{0} wartet dort auf dich.";
+
     public const string Geoeffnet = " (geöffnet {0} bis {1} Uhr)";
 
     public const string Draussen = "draußen vor {0}";

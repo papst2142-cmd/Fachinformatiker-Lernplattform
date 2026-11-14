@@ -61,7 +61,9 @@ public class BedienungTests
     {
         var ablage = Daten.NeueAblage();
         var p = Projekt.Neu("Nur lesen", D, ablage, "moebelhaus");
-        var text = File.ReadAllText(p.Datei).Replace("\"formatversion\": " + Projekt.FormatVersion, "\"formatversion\": " + (Projekt.FormatVersion + 1), StringComparison.Ordinal);
+        var alt = File.ReadAllText(p.Datei);
+        Assert.Contains("\"formatversion\": 3,", alt, StringComparison.Ordinal);
+        var text = alt.Replace("\"formatversion\": 3,", "\"formatversion\": " + (Projekt.FormatVersion + 1) + ",", StringComparison.Ordinal);
         File.WriteAllText(p.Datei, text);
         var q = Projekt.Oeffnen(p.Datei, D, ablage);
         Assert.True(q.NurLesen);

@@ -26,8 +26,15 @@ public sealed class StadtFassung
     /// <summary>Wert des Felds "format".</summary>
     public const string Format = "fistadt";
 
-    /// <summary>Hoechste Formatnummer, die dieses Programm liest (eine neuere Datei wird abgelehnt, nie umgeschrieben).</summary>
-    public const long FormatVersion = 1;
+    /// <summary>
+    /// Hoechste Formatnummer, die dieses Programm liest (eine neuere Datei wird abgelehnt, nie umgeschrieben). 2 seit Welle E4
+    /// (A 0.75.0 / S 0.53.0, Weisung P12-247): nur eine Datei mit Arbeitsort einer Quest bekommt 2 (<see cref="FormatFuer"/>),
+    /// jede andere bleibt bitgleich bei 1, damit ein aelteres Programm sie weiter liest.
+    /// </summary>
+    public const long FormatVersion = 2;
+
+    /// <summary>Formatnummer, die eine Datei mit diesen Stadtdaten bekommt: 2 nur mit Arbeitsort, sonst 1.</summary>
+    public static long FormatFuer(PyObjekt? stadtdaten) => Questebene.HatArbeitsort(stadtdaten) ? 2 : 1;
 
     /// <summary>Dateiendung der Fassungen und Exporte.</summary>
     public const string Endung = ".fistadt";
@@ -86,7 +93,7 @@ public sealed class StadtFassung
     private PyObjekt OhnePruefsumme() => new()
     {
         { "format", Format },
-        { "formatversion", FormatVersion },
+        { "formatversion", FormatFuer(Stadtdaten) },
         { "stadt", new PyObjekt { { "id", StadtId }, { "fassung", Nummer }, { "basis", Basis } } },
         { "werkzeug", Werkzeug },
         { "erstellt", Erstellt },

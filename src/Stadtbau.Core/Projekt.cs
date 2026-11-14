@@ -31,9 +31,20 @@ public sealed partial class Projekt
     /// <summary>
     /// 3 seit Welle 4c (Teil "bauten" in "aussen": Innenraeume gesetzter Blueprints, Meldung P12-23 Frage 1 a; ein Werkzeug S 0.4.0
     /// oeffnet die Datei damit nur zum Lesen), 2 seit Welle 3 (Felder "aussen" und "leer"). Dateien mit Formatnummer 1 und 2
-    /// lassen sich weiter oeffnen.
+    /// lassen sich weiter oeffnen. 4 seit Welle E4 (S 0.53.0, Weisung P12-247): nur eine Datei, in der eine Quest einen
+    /// Arbeitsort hat (im Stand oder im Verlauf), bekommt 4 (<see cref="FormatFuer"/>); jede andere bleibt bei 3 und bitgleich.
     /// </summary>
-    public const long FormatVersion = 3;
+    public const long FormatVersion = 4;
+
+    /// <summary>
+    /// Formatnummer beim Schreiben: 4, wenn der Text der Stadt draussen oder des Verlaufs das Feld "arbeitsort" als Schluessel
+    /// enthaelt, sonst 3. Ein Schluessel steht im JSON-Text als <c>"arbeitsort": </c>; derselbe Wortlaut in einem Text (Titel,
+    /// Frage) steht dort maskiert (<c>\"arbeitsort\": </c>) und zaehlt darum nicht.
+    /// </summary>
+    internal static long FormatFuer(string aussenText, string verlaufText) =>
+        aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
+
+    private const string ArbeitsortSchluessel = "\"" + Questebene.FeldArbeitsort + "\": ";
 
     /// <summary>Kennung des Innenraums eines gesetzten Blueprints: "bau:" und der Modellname (Teil "bauten" der Stadt draussen).</summary>
     public const string BauPraefix = "bau:";
@@ -626,12 +637,14 @@ public sealed partial class Projekt
             verlauf.Append(verlauf.Length > 1 ? ", " : "").Append("{\"ort\": ").Append(PythonJson.Standard(s.Ort)).Append(", \"was\": ").Append(PythonJson.Standard(s.Was))
                 .Append(", \"vorher\": ").Append(s.Vorher).Append(", \"nachher\": ").Append(s.Nachher).Append('}');
         }
+        var aussenText = aussen.Append('}').ToString();
+        var verlaufText = verlauf.Append(']').ToString();
         var objekt = new List<(string, string)>
         {
-            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatVersion)), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
+            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatFuer(aussenText, verlaufText))), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
             ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Basis.StadtId)), ("basis", PythonJson.Standard(Leer is null ? Basis.Nummer : null)),
             ("leer", PythonJson.Standard(leer)), ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
-            ("aussen", aussen.Append('}').ToString()), ("verlauf", verlauf.Append(']').ToString()), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
+            ("aussen", aussenText), ("verlauf", verlaufText), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
         };
         var text = new StringBuilder("{\n");
         for (var i = 0; i < objekt.Count; i++)

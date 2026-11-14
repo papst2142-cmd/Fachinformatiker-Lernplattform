@@ -36,7 +36,7 @@ public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObj
 /// Eingang in der Aussenwand, die Einrichtung als CC0-Moebel (Furniture Kit) oder eigene Geometrie.
 /// Nichts davon geht in den Spielstand.
 /// </summary>
-public sealed class Innenraum
+public sealed partial class Innenraum
 {
     /// <summary>Eine Einheit des Grundrisses sind etwa 0,6 m (Tuer 1,4 = 0,84 m, Schreibtisch 2,4 x 1,0).</summary>
     public const float Meter = 1f / 0.6f;
@@ -666,6 +666,11 @@ public sealed class Innenraum
         {
             // Welle Q2: ein Questgeber im Geschaeft oder am Schalter spricht wie eine Person im Buero („Auftrag annehmen“)
             return SpielKern.Regeln.OrtNachricht(Ort, x, z, questgeber.Daten, stand, Gebaeude);
+        }
+        if (PersonNahe(x, z) is null && ArbeitsortNachricht(x, z, stand) is { } arbeit)
+        {
+            // Welle E4: Auftrag am Arbeitsort, der Questgeber wartet nicht dort (Schalter „wartet“ aus)
+            return arbeit;
         }
         if (SpielKern.Laeden.Contains(Ort))
         {

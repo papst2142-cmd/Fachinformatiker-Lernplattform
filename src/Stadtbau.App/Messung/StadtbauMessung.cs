@@ -379,6 +379,7 @@ public static partial class StadtbauMessung
         await BahnsteigAsync(a, f);
         await SpielgeschichteAsync(a, f);
         await QuestsAsync(a, f);
+        await ArbeitsortAsync(a, f);
         await ProjekteLoeschenAsync(a, f);
         await StadtDateiAsync(a, f);
         await TuerAsync(a, f);

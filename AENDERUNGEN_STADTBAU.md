@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.53.0
+
+Aufgaben an Gebäuden: eine neue Quest kann einen Arbeitsort in einem anderen Haus haben.
+
+- In der Karte einer neuen Quest steht der Abschnitt „Arbeitsort“. Dort wählst du das Haus (Büro, Kundschaft, Laden oder Schalter, nur Häuser mit Innenraum). Das Werkzeug wählt dazu den ersten Raum und darin die erste freie Stelle, an der niemand sonst steht und nichts im Weg ist. Bei Büros und Kundschaft kannst du den Raum wechseln, in Läden und an Schaltern die Etage und die Stelle selbst wählen („Stelle wählen“ öffnet den Grundriss, ein Tipp setzt sie).
+- Der Schalter „Questgeber wartet am Arbeitsort“ ist am Anfang an: dann geht die Person für diese Quest zum Arbeitsort. Ist er aus, bleibt die Person an ihrem Platz, und die Aufgabe liegt im Raum am Arbeitsort bereit.
+- In der Draufsicht zeigt eine lila gestrichelte Linie vom Questgeber zum Arbeitsort, dort steht die Marke „A“. Die Marke lässt sich mit dem Finger oder der Maus auf ein anderes Haus ziehen. Beim Ziehen zeigt eine Zeile, über welchem Haus die Marke gerade ist. Loslassen setzt den Arbeitsort dort (ein Schritt, „Rückgängig“ nimmt ihn zurück), Raum und Stelle stehen danach wieder auf der ersten freien Stelle. Neben einem Haus loslassen ändert nichts und sagt, warum. Escape bricht das Ziehen ab.
+- Vorhandene Quests bekommen keinen Arbeitsort; ihre Karte sagt das.
+- Die Prüfung meldet rot, wenn ein Arbeitsort nicht passt (kein Haus mit Innenraum, Raum oder Stelle fehlt, Stelle zu nah an Wand, Einrichtung oder einer anderen Person, oder die Person steht draußen und soll am Arbeitsort warten). Mit rotem Fund lässt sich die Stadt nicht speichern oder senden.
+- Projekte und Stadt-Dateien mit einem Arbeitsort haben ein neues Format (Projekt 4, Stadt-Datei 2). Ohne Arbeitsort bleibt alles im alten Format, bitgleich. Ältere Programme öffnen ein Projekt mit Arbeitsort nur zum Lesen und lehnen eine Stadt-Datei mit Arbeitsort mit einem klaren Hinweis ab.
+
 ## S 0.52.0
 
 Rote Funde mit einem Knopf beheben, gesperrte Knöpfe sichtbar grau, Kamera-Karte einklappen und klarere Hügel.

@@ -122,9 +122,9 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
 
 | Format | Nummer heute | ältere, noch lesbar (echte Testdatei) | schreibt | liest |
 |---|---|---|---|---|
-| Stadt-Datei `.fistadt` | 1 | – | Werkzeug (Export), `StadtFassung` | `StadtFassung.Lesen`, `StadtbauPruefung.Format` |
+| Stadt-Datei `.fistadt` | 2 nur mit Arbeitsort einer Quest, sonst 1 (seit S 0.53.0, `StadtFassung.FormatFuer`) | 1 (`stadt_S0.52.0_quests.fistadt`) | Werkzeug (Export), `StadtFassung` | `StadtFassung.Lesen`, `StadtbauPruefung.Format` (Nummer muss zum Inhalt passen) |
 | `aktiv.json` | 1 (Feld `format`, seit A 0.62.1) | ohne Feld = 1 (`aktiv_A0.62.0.json`) | CC von Hand | `AktiveFassung.FormatVon`, `Laden` |
-| Projekt `.fisbau` | 3 | 1 (`projekt_S0.1.0.fisbau`), 2 (`projekt_S0.4.0.fisbau`) | Werkzeug | `Projekt.Oeffnen` (neuer = nur ansehen) |
+| Projekt `.fisbau` | 4 nur mit Arbeitsort einer Quest, sonst 3 (seit S 0.53.0, `Projekt.FormatFuer`) | 1 (`projekt_S0.1.0.fisbau`), 2 (`projekt_S0.4.0.fisbau`), 3 (`projekt_S0.52.0.fisbau`) | Werkzeug | `Projekt.Oeffnen` (neuer = nur ansehen) |
 | Blueprint `.fisblueprint` | 3 | 1 (`blueprint_S0.8.0`), 2 (`blueprint_S0.18.0`) | Werkzeug | `Blueprint.Lesen`, `Blueprint.Alle` |
 | Grafik FLGM (`modelle.bin`, `katalog_verbaut.bin`, Katalog-Pakete) | 2 | 1 (`katalog_verbaut_S0.4.0.bin`) | `wandle_modelle.py`, `wandle_katalog.py`, `verbaut.py` | `GrafikBibliothek.Lesen` |
 | `katalog_verbaut.json` | 1 (Feld `format`, seit A 0.62.1) | ohne Feld = 1 (`katalog_verbaut_S0.4.0.json`) | `verbaut.py` | `GrafikBibliothek.KatalogFormat`, `KatalogLaden` |
@@ -132,6 +132,8 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
 
 Echte Testdateien liegen in `tests/Stadtbau.Tests/Testdaten/`. Für jedes Format prüft `tests/Stadtbau.Tests/EngineFormateTests.cs`:
 eine neuere Nummer ist ein klarer Fehler (beim Projekt: nur ansehen, mit Hinweis), jede ältere Fassung liest sich.
+Seit S 0.53.0 schreiben Projekt und Stadt-Datei die neue Nummer nur, wenn eine Quest einen Arbeitsort hat; ohne ihn bleibt die
+Datei bitgleich zum alten Format (`ArbeitsortFormatTests`, echte Dateien alt und neu).
 
 ## 5. Wohin gehört ein neues Merkmal (Regeln)
 

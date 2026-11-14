@@ -25,7 +25,7 @@ namespace Lernplattform.Core.Stadtbau;
 /// hat, traegt dessen Ort (<see cref="SpielDaten.AuftragOrt"/>). Tickets, Geld und Ruf laufen ueber den heutigen Ablauf
 /// (Spielstand, Bewertung); keine neue Ereignisart, kein neues Feld im Spielstand.</para>
 /// </summary>
-public static class Questebene
+public static partial class Questebene
 {
     public const string AbschnittQuests = "quests";
 
@@ -149,7 +149,7 @@ public static class Questebene
         }
         var personen = AllePersonen(inhalt).Select(p => Py.Str(p["id"])).ToHashSet(StringComparer.Ordinal);
         QuestgeberLesen(g, inhalt, stadtdaten!, innenraeume, personen);
-        QuestsLesen(g, inhalt, stadtdaten!, personen);
+        QuestsLesen(g, inhalt, stadtdaten!, personen, innenraeume);
         return g;
     }
 
@@ -285,7 +285,7 @@ public static class Questebene
         return new Platz(false, ort, (int)etage, x, y, b);
     }
 
-    private static void QuestsLesen(Gelesen g, PyObjekt inhalt, PyObjekt stadtdaten, HashSet<string> personen)
+    private static void QuestsLesen(Gelesen g, PyObjekt inhalt, PyObjekt stadtdaten, HashSet<string> personen, PyObjekt? innenraeume)
     {
         if (Eintraege(stadtdaten, AbschnittQuests, g.Funde) is not { } eintraege)
         {
@@ -406,6 +406,15 @@ public static class Questebene
                     {
                         R("zwei Paare sind gleich.");
                     }
+                }
+            }
+            // Welle E4 (Weisung P12-247): eigener Arbeitsort einer neuen Quest (1a), gleiche Regeln wie im Werkzeug
+            if (Py.Hat(e, FeldArbeitsort))
+            {
+                var draussen = Get(e, "questgeber") is string q && g.Questgeber.TryGetValue(q, out var qgp) && qgp.Platz.Aussen;
+                foreach (var f in ArbeitsortFunde(n, e, inhalt, innenraeume, Get(e, "ab_tag", 1L) is long t2 ? t2 : 1, draussen, stadtdaten))
+                {
+                    g.Funde.Add(f);
                 }
             }
             var v = Get(e, "nach");
@@ -605,7 +614,12 @@ public static class Questebene
         {
             a.Add("nach", nach);
         }
-        if (ortVon.TryGetValue(qg, out var ort))
+        if (ArbeitsortLesen(e) is { } arbeitsort)
+        {
+            // Welle E4: der Arbeitsort gilt statt des Orts des Questgebers
+            ArbeitsortEinbauen(a, arbeitsort);
+        }
+        else if (ortVon.TryGetValue(qg, out var ort))
         {
             a.Add("ort", ort);
         }

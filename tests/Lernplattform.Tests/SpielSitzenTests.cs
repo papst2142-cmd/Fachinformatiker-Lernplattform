@@ -241,9 +241,9 @@ public class SpielSitzenTests
         };
     }
 
-    private readonly record struct Dreieck(Vector3 A, Vector3 B, Vector3 C);
+    internal readonly record struct Dreieck(Vector3 A, Vector3 B, Vector3 C);
 
-    private static List<Dreieck> Dreiecke(Netz netz, Matrix4x4 lage)
+    internal static List<Dreieck> Dreiecke(Netz netz, Matrix4x4 lage)
     {
         var e = netz.Ecken;
         Vector3 Ecke(uint i) => Vector3.Transform(new Vector3(e[(int)i * Netz.Zahlen], e[((int)i * Netz.Zahlen) + 1], e[((int)i * Netz.Zahlen) + 2]), lage);
@@ -255,14 +255,14 @@ public class SpielSitzenTests
         return liste;
     }
 
-    private static List<Dreieck> Dreiecke(GrafikModell modell, Matrix4x4 lage)
+    internal static List<Dreieck> Dreiecke(GrafikModell modell, Matrix4x4 lage)
     {
         var e = modell.Ecken;
         Vector3 Ecke(int i) => Vector3.Transform(new Vector3(e[i], e[i + 1], e[i + 2]), lage);
         return Enumerable.Range(0, modell.Dreiecke).Select(d => new Dreieck(Ecke(d * 9), Ecke((d * 9) + 3), Ecke((d * 9) + 6))).ToList();
     }
 
-    private static (Vector3 Min, Vector3 Max) Huelle(List<Dreieck> dreiecke)
+    internal static (Vector3 Min, Vector3 Max) Huelle(List<Dreieck> dreiecke)
     {
         var min = new Vector3(float.MaxValue);
         var max = new Vector3(float.MinValue);
@@ -278,7 +278,7 @@ public class SpielSitzenTests
         [Vector3.Normalize(new(0.13f, 1, 0.07f)), Vector3.Normalize(new(0.07f, -1, 0.11f)), Vector3.Normalize(new(1, 0.05f, 0.09f))];
 
     /// <summary>Punkt im Netz: Strahl in drei Richtungen, ungerade Zahl der Treffer in mindestens zwei (Moeller-Trumbore).</summary>
-    private static bool Innen(Vector3 punkt, List<Dreieck> netz)
+    internal static bool Innen(Vector3 punkt, List<Dreieck> netz)
     {
         var stimmen = 0;
         foreach (var r in Strahlen)

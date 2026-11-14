@@ -51,6 +51,7 @@ public sealed partial class Projekt
             Szene = () => QuestSzene(aussen, basis, innenraeume, daten),
             GeschichteBauen = () => Spielgeschichte.Aus(daten.Inhalt, aussen),
             OrtName = o => namen.TryGetValue(o, out var n) ? n : o,
+            Innenraeume = innenraeume,
             Spiel = () =>
             {
                 var mitKarte = Py.Flach(daten.Inhalt);
@@ -119,6 +120,30 @@ public sealed partial class Projekt
         }
         return QuestDaten.Loeschen(a, id);
     });
+
+    // ---- Welle E4 (S 0.53.0, Weisung P12-247): Arbeitsort einer neuen Quest, je Aufruf hoechstens ein Schritt ----
+
+    /// <summary>Arbeitsort auf einen Spiel-Ort setzen oder wechseln (Karte oder Ziehen in der Draufsicht, 4b). false = kein Schritt.</summary>
+    public bool QuestArbeitsort(string id, string ort, int etage = 0) =>
+        AussenAendern(Texte.QuestArbeitsort, a => QuestDaten.ArbeitsortSetzen(Daten.Inhalt, a, Innenraeume(), id, ort, etage));
+
+    public bool QuestArbeitsortRaum(string id, string raum) =>
+        AussenAendern(Texte.QuestArbeitsortRaum, a => QuestDaten.ArbeitsortRaum(Daten.Inhalt, a, Innenraeume(), id, raum));
+
+    public bool QuestArbeitsortStelle(string id, double x, double y) =>
+        AussenAendern(Texte.QuestArbeitsortStelle, a => QuestDaten.ArbeitsortStelle(Daten.Inhalt, a, Innenraeume(), id, x, y));
+
+    public bool QuestArbeitsortWartet(string id, bool wartet) =>
+        AussenAendern(Texte.QuestArbeitsortWartet, a => QuestDaten.ArbeitsortWartet(a, id, wartet));
+
+    public bool QuestArbeitsortEntfernen(string id) =>
+        AussenAendern(Texte.QuestArbeitsortEntfernen, a => QuestDaten.ArbeitsortEntfernen(a, id));
+
+    /// <summary>Grundriss des Arbeitsorts einer Quest wie im Spiel (zum Zeigen und Tippen der Stelle); null = keiner.</summary>
+    public PyObjekt? ArbeitsortGrundriss(string ort, int etage) => Questebene.ArbeitsGrundriss(ort, etage, Daten.Inhalt, Innenraeume());
+
+    /// <summary>Die Orte, die Arbeitsort sein koennen (2a).</summary>
+    public List<Questebene.ArbeitsortWahl> Arbeitsorte() => Questebene.Arbeitsorte(Daten.Inhalt, Innenraeume());
 
     public string QuestgeberNeu() => AussenAendern(Texte.QgNeu, a => QuestgeberDaten.Neu(Daten.Inhalt, a, Texte.QgNeuName));
 

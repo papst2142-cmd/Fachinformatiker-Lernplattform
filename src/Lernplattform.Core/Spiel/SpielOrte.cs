@@ -85,12 +85,12 @@ public static class SpielOrte
         {
             return FirmenPersonen(stand, OrtFiliale);
         }
-        var wartet = new Dictionary<string, (object? Ort, object? Stelle)>();
+        var wartet = new Dictionary<string, (object? Ort, object? Stelle, PyObjekt Auftrag)>();
         foreach (var auftrag in stand.OffeneTickets())
         {
             if (Py.Wahr(Get(auftrag, "stelle")) && !wartet.ContainsKey(Py.Str(auftrag["auftraggeber"])))
             {
-                wartet[Py.Str(auftrag["auftraggeber"])] = (AuftragOrt(auftrag, stand.Inhalt), auftrag["stelle"]);
+                wartet[Py.Str(auftrag["auftraggeber"])] = (AuftragOrt(auftrag, stand.Inhalt), auftrag["stelle"], auftrag);
             }
         }
         var ergebnis = new List<PyObjekt>();
@@ -100,7 +100,7 @@ public static class SpielOrte
             {
                 continue;
             }
-            var (wo, stelle) = wartet.TryGetValue(Py.Str(person["id"]), out var w) ? w : (Get(person, "ort", OrtBuero), Get(person, "platz"));
+            var (wo, stelle, wegen) = wartet.TryGetValue(Py.Str(person["id"]), out var w) ? w : (Get(person, "ort", OrtBuero), Get(person, "platz"), null);
             if (Py.Gleich(wo, ort) && Py.Wahr(stelle))
             {
                 var kopie = new PyObjekt();
@@ -110,6 +110,12 @@ public static class SpielOrte
                 }
                 var s = Liste(stelle);
                 Py.Setzen(kopie, "platz", new List<object?> { Py.F(s[0]), Py.F(s[1]) });
+                if (wegen is not null && Py.Wahr(Get(wegen, Stadtbau.Questebene.Merkmal)) && Get(wegen, "etage") is long etage)
+                {
+                    // Welle E4: Arbeitsort einer neuen Quest auf einer Etage (nur Auftraege der Quest-Ebene mit Arbeitsort
+                    // tragen "etage"; alle anderen bleiben wie bisher)
+                    Py.Setzen(kopie, "etage", etage);
+                }
                 ergebnis.Add(kopie);
             }
         }
@@ -256,12 +262,22 @@ public static class SpielOrte
             return (kopf, Prozent("Gerade nichts für dich. %s", Get(person, "macke", "")));
         }
         var raum = Wege.RaumBei(x, y, gebaeude);
-        var wartend = auftraege.Values.Sum(v => Liste(v).Count);
+        // Welle E4: Auftraege, deren Questgeber nicht am Arbeitsort wartet, zaehlen nicht zu „Wer einen hat, trägt ein grünes !“
+        var ohne = auftraege.Values.SelectMany(Liste).Select(Objekt).Where(a => Py.Wahr(Get(a, Stadtbau.Questebene.FeldOhneQuestgeber))).ToList();
+        var wartend = auftraege.Values.Sum(v => Liste(v).Count) - ohne.Count;
         var wo = raum is not null ? Prozent("Du bist im Raum %s.", raum["name"]) : "Du bist im Flur.";
-        if (wartend != 0)
+        if (wartend != 0 || ohne.Count > 0)
         {
-            var hinweis = wartend == 1 ? Prozent("%d Auftrag wartet.", wartend) : Prozent("%d Aufträge warten.", wartend);
-            return (wo, hinweis + " Wer einen hat, trägt ein grünes „!“.");
+            var hinweis = wartend == 0 ? "" : (wartend == 1 ? Prozent("%d Auftrag wartet.", wartend) : Prozent("%d Aufträge warten.", wartend)) + " Wer einen hat, trägt ein grünes „!“.";
+            foreach (var a in ohne)
+            {
+                var r = Get(a, "raum") is string { Length: > 0 } rid
+                    ? ListeOderLeer(gebaeude, "raeume").Select(Objekt).FirstOrDefault(x => Py.Gleich(x["id"], rid)) : null;
+                hinweis += (hinweis.Length > 0 ? " " : "") + (r is not null
+                    ? Prozent("Der Auftrag „%s“ wartet im Raum %s.", a["titel"], r["name"])
+                    : Prozent("Der Auftrag „%s“ wartet hier im Haus.", a["titel"]));
+            }
+            return (wo, hinweis);
         }
         if (Py.Wahr(stand.Firma))
         {

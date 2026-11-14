@@ -1,6 +1,7 @@
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 using static Lernplattform.Core.Spiel.SpielDaten;
 
 namespace Stadtbau.Core;
@@ -126,7 +127,8 @@ public sealed class Spielgeschichte
         foreach (var q in quests.Where(q => !q.Bestand).GroupBy(q => q.Id).Select(g => g.First()).Where(q => alle.All(e => e.Id != q.Id)))
         {
             var qg = q.Questgeber is null ? null : qgJeId.GetValueOrDefault(q.Questgeber);
-            var stelle = qg is null ? "" : QuestgeberDaten.Stelle(qg) ?? "";
+            // Welle E4: mit Arbeitsort gilt die Quest dort (Zahl am Haus, Spielgeschichte je Ort), sonst am Platz der Person
+            var stelle = Questebene.ArbeitsortLesen(q.Daten) is { } arbeitsort ? arbeitsort.Ort : qg is null ? "" : QuestgeberDaten.Stelle(qg) ?? "";
             alle.Add(new Eintrag(q.Id, Art.Aufgabe, q.Typ, q.Titel, stelle, orte.TryGetValue(stelle, out var ort) ? ort : null, q.AbTag,
                 q.Nach, q.Nach is not null && titel.TryGetValue(q.Nach, out var nt) ? nt : null, qg?.Name ?? "", q.Questgeber, true));
         }
