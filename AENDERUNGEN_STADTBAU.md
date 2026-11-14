@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.53.1
+
+Die 3D-Ansicht zeigt auf Tablets mit einem Grafikchip von Mali keine Bildfehler mehr.
+
+- Auf solchen Tablets konnten in der 3D-Ansicht der Stadt lange, spitze Dreiecke aus Straßen, Wegen, Kreisverkehren und Wasser ragen. Die Grafik rechnete die Lage der Ecken mit zu wenigen Stellen. Jetzt rechnet sie überall genau.
+- Am PC und auf anderen Tablets sieht alles genau so aus wie vorher. Projekte, Stadt-Dateien und alle Funktionen bleiben unverändert.
+- Für Städte aus dem Werkzeug gilt im Spiel eine neue Regel: Die Spielfigur geht nie auf der Fahrbahn oder den Schienen. Sie quert Straßen nur auf Zebrastreifen und an Ampeln, Schienen nur auf Bahnübergängen. Setze darum Zebrastreifen oder Ampeln überall dort, wo man zu Fuß über eine Straße kommen soll.
+
 ## S 0.53.0
 
 Aufgaben an Gebäuden: eine neue Quest kann einen Arbeitsort in einem anderen Haus haben.

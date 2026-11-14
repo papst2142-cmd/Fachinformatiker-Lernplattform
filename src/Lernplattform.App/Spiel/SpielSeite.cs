@@ -735,6 +735,16 @@ public sealed partial class SpielSeite : Grid
     /// <summary>W8b (Start-Test): hat das Haus ohne Ort (Stellwerk) ein Namensschild?</summary>
     public bool HatSchild(string name) => _schildKnoepfe.ContainsKey("zier:" + name);
 
+    /// <summary>
+    /// Gegenprobe Patch A 0.75.1 (Sammelliste 343): die Ortsliste bleibt beim Betreten offen wie bis A 0.75.0. Je Seite (nicht
+    /// statisch, nicht AsyncLocal): die Seite aktualisiert sich auch aus Rueckrufen des Dispatchers, in die ein AsyncLocal nicht
+    /// immer mitkommt (Lehre Start-Test: Gegenprobe am PC einmal nicht erkannt).
+    /// </summary>
+    internal bool OrtslisteAltFuerTests { get; set; }
+
+    /// <summary>Patch A 0.75.1 (Start-Test 343): ist der Knopf „Orte“ zum Oeffnen und Schliessen der Ortsliste zu sehen?</summary>
+    public bool OrteKnopfSichtbar => _orteKnopf.IsVisible;
+
     public void OrtslisteZeigen(bool sichtbar)
     {
         _ortsliste.IsVisible = sichtbar || _ersatz.IsVisible;
@@ -1062,6 +1072,12 @@ public sealed partial class SpielSeite : Grid
         _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten && spiel.Etage == 0;
         _warten.IsVisible = spiel.KannWarten;
         _orteKnopf.IsVisible = !spiel.ImInnenraum;
+        if (spiel.ImInnenraum && _ortsliste.IsVisible && !_ersatz.IsVisible && !OrtslisteAltFuerTests)
+        {
+            // Patch A 0.75.1 (Sammelliste 343): drinnen gibt es den Knopf „Orte“ nicht; eine offene Ortsliste blieb sonst
+            // ohne Knopf zum Schliessen stehen. Sie schliesst sich beim Betreten (ohne 3D bleibt sie, sie ist dort die Bedienung)
+            OrtslisteZeigen(false);
+        }
         _einrichten.IsVisible = spiel.KannEinrichten;
         if (_einrichten.Content is TextBlock einrichtenText)
         {

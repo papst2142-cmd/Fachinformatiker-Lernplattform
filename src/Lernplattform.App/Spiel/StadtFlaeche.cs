@@ -477,6 +477,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
             InstanzenEinrichten(gl, es, v);
             GrafikEinrichten(gl, es, v);
+            _genauigkeitGemeldet = false;
+            GenauigkeitZeilen = "";
             _marke = GlNetz.Laden(gl, ProbeWelt.Zielmarke());
             _ausruf = GlNetz.Laden(gl, Figur.Ausrufezeichen(0.7f));
             _szeneNeu = true;
@@ -591,8 +593,15 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         GlBereit = false;
     }
 
-    private static string Kopf(bool es, GlVersion v) =>
-        es ? "#version 300 es\nprecision mediump float;\n"
+    /// <summary>
+    /// Kopf eines Shaders. Patch A 0.75.1 (Sammelliste 340, Pixelfehler Tab A8 mit Mali-G52): unter OpenGL ES rechnet der
+    /// Ecken-Shader mit <c>highp</c> (32 Bit). Bis A 0.75.0 stand <c>precision mediump float;</c> auch vor dem Ecken-Shader;
+    /// ein Mali-Chip rechnet mediump wirklich mit 16 Bit (10 Bit Mantisse), eine Weltkoordinate um 100 liegt dann bis
+    /// 2^6 x 2^-10 = 0,0625 daneben, lange Flaechen der Stadt (Strassen, Kreisverkehr, Teich) zerfallen in Scherben.
+    /// Der Pixel-Shader bleibt mediump (Farben, nichts an Lagen). Am PC (Desktop-GLSL) aendert sich nichts.
+    /// </summary>
+    internal static string Kopf(bool es, GlVersion v, bool ecke) =>
+        es ? (ecke ? "#version 300 es\nprecision highp float;\n" : "#version 300 es\nprecision mediump float;\n")
         : v.Major > 3 || (v.Major == 3 && v.Minor >= 3) ? "#version 330 core\n" : "#version 150\n";
 
     /// <summary>
@@ -618,9 +627,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         """;
 
-    private static int Programm(GlInterface gl, bool es, GlVersion v, bool autos = false, bool instanzen = false)
+    /// <summary>Patch A 0.75.1: ganze Quelltexte (Kopf plus Rumpf) von Ecken- und Pixel-Shader, wie sie der Treiber bekommt (Tests pruefen den Kopf je Art).</summary>
+    internal static (string Ecke, string Pixel) Quellen(bool es, GlVersion v, bool autos = false, bool instanzen = false)
     {
-        var kopf = Kopf(es, v);
         var ecke = autos ? AutoEcke : instanzen ? InstanzEcke : """
             in vec3 aOrt;
             in vec3 aNormale;
@@ -689,14 +698,20 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 fFarbe = vec4(mix(normal, leuchten, glut * nacht), 1.0);
             }
             """;
+        return (Kopf(es, v, ecke: true) + ecke, Kopf(es, v, ecke: false) + pixel);
+    }
+
+    private static int Programm(GlInterface gl, bool es, GlVersion v, bool autos = false, bool instanzen = false)
+    {
+        var (eckeQuelle, pixelQuelle) = Quellen(es, v, autos, instanzen);
         var vs = gl.CreateShader(GL_VERTEX_SHADER);
-        var fehler = gl.CompileShaderAndGetError(vs, kopf + ecke);
+        var fehler = gl.CompileShaderAndGetError(vs, eckeQuelle);
         if (fehler is not null)
         {
             throw new InvalidOperationException("Ecken-Shader: " + fehler);
         }
         var fs = gl.CreateShader(GL_FRAGMENT_SHADER);
-        fehler = gl.CompileShaderAndGetError(fs, kopf + pixel);
+        fehler = gl.CompileShaderAndGetError(fs, pixelQuelle);
         if (fehler is not null)
         {
             throw new InvalidOperationException("Pixel-Shader: " + fehler);
@@ -745,6 +760,10 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _letztesBild = jetzt;
         _zielFb = fb;
         GrafikWerteUebernehmen(gl);
+        if (GlBereit)
+        {
+            GenauigkeitMelden(gl, fb);
+        }
         if (_laedtVor && GlBereit)
         {
             VorladenBild(gl, jetzt, abstandMs, bytesBeginn, ruhte, startStempel);

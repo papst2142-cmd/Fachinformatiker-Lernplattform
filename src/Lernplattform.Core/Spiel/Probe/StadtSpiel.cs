@@ -217,7 +217,7 @@ public sealed partial class StadtSpiel
         List<(double X, double Y)>? frei = null;
         if (ImFreien && Szene.Ort(ziel) is { } zielOrt)
         {
-            frei = [.. MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ)))];
+            frei = [.. MitWeg(() => Szene.LaufWeg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ)))];
             if (frei.Count == 0 && !(Math.Abs(FigurX - zielOrt.StehX) < 0.01 && Math.Abs(FigurZ - zielOrt.StehZ) < 0.01))
             {
                 Zeile = SpielProbeTexte.NichtErreichbar;
@@ -241,6 +241,14 @@ public sealed partial class StadtSpiel
         if (frei is not null)
         {
             _weg.AddRange(frei);
+        }
+        else if (!StadtSzene.QuerenAltFuerTests && Szene.Ort(ziel) is { } zielOrt2
+            && MitWeg(() => Szene.LaufWeg((FigurX, FigurZ), (zielOrt2.StehX, zielOrt2.StehZ))) is { Count: > 0 } lauf)
+        {
+            // Patch A 0.75.1 (Sammelliste 342): von Ort zu Ort zeichnet die Figur den Weg ueber Gehwege und Uebergaenge
+            // (Laufraster). Bis A 0.75.0 ging sie die Zellen des Stadt-Rasters ab und lief dabei mitten ueber Strassen. Die
+            // Schritte und die Spielzeit rechnet weiter das Stadt-Raster (Regel des Spiels unveraendert), nur der Weg im Bild ist neu.
+            _weg.AddRange(lauf);
         }
         else
         {
@@ -412,7 +420,7 @@ public sealed partial class StadtSpiel
         (x, z) = ZielBeimQuestgeber(x, z);
         // Welle A 0.73.0: auf eine Haltestelle getippt: bis auf ihren Wartplatz
         (x, z) = ZielAnHaltestelle(x, z);
-        var weg = MitWeg(() => Szene.Laufraster.Weg((FigurX, FigurZ), (x, z)));
+        var weg = MitWeg(() => Szene.LaufWeg((FigurX, FigurZ), (x, z)));
         if (weg.Count == 0 && QuestgeberImFreien())
         {
             // schon beim Questgeber
