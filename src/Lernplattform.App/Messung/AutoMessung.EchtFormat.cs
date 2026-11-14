@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Pruefung.Echt;
@@ -136,6 +137,14 @@ public static partial class AutoMessung
                     Fund(KlausurTeil.ProbeNamen[art] + ": Bild " + kasten.Bild.Bounds.Width.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " breiter als der Platz "
                         + platz.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " ohne Hinweis \"wischen\"");
                 }
+                // Das Bild muss gezeichnet sein (nicht leer, z. B. ohne Farben). Grenze: das Weglassen eines ganzen Bilds durch
+                // den Bildschirm-Zusammenbau (Fund A 0.77.0, Text weit ausserhalb) sieht diese Probe nicht, weil sie ohne ihn
+                // zeichnet (Gegenprobe gemacht); davor schuetzt EchtBild.Mitte, belegt mit den Fotos.
+                var (gezeichnet, flaeche) = BildPixel(kasten.Bild);
+                if (gezeichnet * 100 < flaeche)
+                {
+                    Fund(KlausurTeil.ProbeNamen[art] + ": Bild " + kasten.Bild.GetType().Name + " leer (" + gezeichnet + " von " + flaeche + " Bildpunkten gezeichnet)");
+                }
                 if (string.IsNullOrEmpty(Avalonia.Automation.AutomationProperties.GetName(kasten.Bild)))
                 {
                     Fund(KlausurTeil.ProbeNamen[art] + ": Bild ohne Namen fuer den Screenreader");
@@ -185,6 +194,53 @@ public static partial class AutoMessung
                 + vorher + " -> " + e.ProbeFortschritt + ")");
         }
         return funde;
+    }
+
+    /// <summary>
+    /// Wie die Bildflaeche wirklich aussieht: das Bild in seiner Lage im Fenster zeichnen (wie der Bildschirm, mit allen
+    /// Eltern), Bildpunkte im Bereich des Bilds zaehlen, die sich vom Grund der Karte unterscheiden.
+    /// </summary>
+    internal static (int Gezeichnet, int Flaeche) BildPixel(Control bild)
+    {
+        if (TopLevel.GetTopLevel(bild) is not { } wurzel || bild.TranslatePoint(new Point(0, 0), wurzel) is not { } lage)
+        {
+            return (0, 1);
+        }
+        var groesse = new PixelSize((int)Math.Ceiling(wurzel.Bounds.Width), (int)Math.Ceiling(wurzel.Bounds.Height));
+        using var gemalt = new RenderTargetBitmap(groesse, new Vector(96, 96));
+        gemalt.Render(wurzel);
+        var pixel = Pixel(gemalt);
+        var sichtbar = new Rect(lage, bild.Bounds.Size).Intersect(new Rect(0, 0, groesse.Width, groesse.Height));
+        var (x0, y0) = ((int)Math.Ceiling(sichtbar.X), (int)Math.Ceiling(sichtbar.Y));
+        var (x1, y1) = ((int)Math.Floor(sichtbar.Right), (int)Math.Floor(sichtbar.Bottom));
+        if (x1 <= x0 || y1 <= y0)
+        {
+            return (0, 1);
+        }
+        // Grund = haeufigste Farbe im Bereich (die Karte hinter dem Bild)
+        var zaehler = new Dictionary<Avalonia.Media.Color, int>();
+        for (var y = y0; y < y1; y++)
+        {
+            for (var x = x0; x < x1; x++)
+            {
+                var p = pixel[(y * groesse.Width) + x];
+                zaehler[p] = zaehler.GetValueOrDefault(p) + 1;
+            }
+        }
+        var grund = zaehler.MaxBy(z => z.Value).Key;
+        var anders = 0;
+        for (var y = y0; y < y1; y++)
+        {
+            for (var x = x0; x < x1; x++)
+            {
+                var p = pixel[(y * groesse.Width) + x];
+                if (Math.Abs(p.R - grund.R) + Math.Abs(p.G - grund.G) + Math.Abs(p.B - grund.B) > 24)
+                {
+                    anders++;
+                }
+            }
+        }
+        return (anders, (x1 - x0) * (y1 - y0));
     }
 
     /// <summary>Knopf mit dem Namen in einem Bereich antippen (Druck und Loslassen in der Mitte).</summary>

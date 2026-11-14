@@ -60,6 +60,12 @@ public abstract class EchtBild : Control
     /// <summary>Plant das Bild fuer eine Breite; gibt die Groesse zurueck und merkt sich alles fuer <see cref="Render"/>.</summary>
     protected abstract Size Planen(double breite);
 
+    /// <summary>
+    /// Stelle (x), die beim Wischen zuerst in der Mitte stehen soll; null = links anfangen. Der Netzplan beginnt oben
+    /// beim ersten Geraet (sonst saehe man am Handy mit grosser Schrift zuerst nur leere Flaeche).
+    /// </summary>
+    public virtual double? Anfang => null;
+
     /// <summary>Mindestbreite und bequeme Breite des Bilds bei der aktuellen Schrift.</summary>
     protected abstract (double Mindest, double Bequem) Breiten();
 
@@ -86,14 +92,22 @@ public abstract class EchtBild : Control
         {
             ft.MaxTextWidth = breite;
             ft.TextAlignment = TextAlignment.Center;
+            ft.Trimming = TextTrimming.None;    // nie "..." statt Text: die Zelle ist breit genug fuer das laengste Wort
         }
         return ft;
     }
 
-    /// <summary>Text mittig um (x, y) zeichnen.</summary>
+    /// <summary>Breite des laengsten Worts von <paramref name="text"/> (eine Zelle muss mindestens so breit sein).</summary>
+    protected double WortBreite(string text, double faktor = 1, bool fett = false) =>
+        text.Split([' ', '\n'], StringSplitOptions.RemoveEmptyEntries).Select(w => Text(w, Linie, faktor, fett).Width).DefaultIfEmpty(0).Max();
+
+    /// <summary>
+    /// Text mittig um (x, y) zeichnen. Ohne feste Breite ist MaxTextWidth riesig (nicht 0): dann zaehlt die echte Breite,
+    /// sonst laege der Text weit links ausserhalb und Avalonia liesse das ganze Bild weg (Fund A 0.77.0, Netzplan leer).
+    /// </summary>
     protected static void Mitte(DrawingContext dc, FormattedText text, double x, double y)
     {
-        var breite = text.MaxTextWidth > 0 ? text.MaxTextWidth : text.Width;
+        var breite = text.TextAlignment == TextAlignment.Center ? text.MaxTextWidth : text.Width;
         dc.DrawText(text, new Point(x - breite / 2, y - text.Height / 2));
     }
 
@@ -160,9 +174,15 @@ public sealed class NetzplanBild : EchtBild
 
     private double Symbol => 2.6 * F;
 
-    private double Luecke => 2.4 * F;
+    public override double? Anfang => _orte.Count == 0 ? null : _orte.Values.MinBy(o => (o.Symbol.Y, o.Symbol.X)).Symbol.X;
 
-    protected override (double Mindest, double Bequem) Breiten() => (_spalten * 7.5 * F, _spalten * 12 * F);
+    private double Luecke => 4.2 * F;
+
+    /// <summary>Kleinste Zelle: 7,5 Schriftgroessen, aber nie schmaler als das laengste Wort eines Namens oder einer Angabe.</summary>
+    private double ZelleMin => Math.Max(7.5 * F, _plan.Knoten.Max(k => Math.Max(WortBreite(k.Name, 1, fett: true),
+        k.Info.Select(i => WortBreite(i, 0.9)).DefaultIfEmpty(0).Max())) + 0.8 * F);
+
+    protected override (double Mindest, double Bequem) Breiten() => (_spalten * ZelleMin, _spalten * Math.Max(12 * F, ZelleMin));
 
     private (FormattedText Name, FormattedText? Info) Texte(EchtKnoten k)
     {
@@ -174,7 +194,8 @@ public sealed class NetzplanBild : EchtBild
 
     protected override Size Planen(double breite)
     {
-        _zelle = Math.Clamp(breite / _spalten, 7.5 * F, 12 * F);
+        var min = ZelleMin;
+        _zelle = Math.Clamp(breite / _spalten, min, Math.Max(12 * F, min));
         _links = Math.Max(0, (breite - _zelle * _spalten) / 2);
         _zeilenOben.Clear();
         _orte.Clear();
@@ -209,22 +230,40 @@ public sealed class NetzplanBild : EchtBild
             var b = _orte[kante.Nach];
             var (oben, unten) = a.Symbol.Y <= b.Symbol.Y ? (a, b) : (b, a);
             Point p1, p2;
+            Point m;
             if (Math.Abs(a.Symbol.Y - b.Symbol.Y) < 0.5)
             {
                 var (l, r) = a.Symbol.X < b.Symbol.X ? (a, b) : (b, a);
                 p1 = new Point(l.Symbol.X + Symbol / 2, l.Symbol.Y);
                 p2 = new Point(r.Symbol.X - Symbol / 2, r.Symbol.Y);
+                dc.DrawLine(Stift(1.6), p1, p2);
+                m = new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
             }
             else
             {
+                // rechtwinklig wie in einem gezeichneten Netzplan: senkrecht herunter, waagerecht auf halber Hoehe,
+                // senkrecht zum Geraet; die Nummer sitzt auf dem letzten Stueck (gehoert eindeutig zu diesem Geraet)
                 p1 = new Point(oben.Symbol.X, oben.Unten + 0.15 * F);
                 p2 = new Point(unten.Symbol.X, unten.Symbol.Y - Symbol / 2 - 0.1 * F);
+                var knick = p2.Y - (Luecke - 0.3 * F) * 0.62;
+                var linie = new StreamGeometry();
+                using (var c = linie.Open())
+                {
+                    c.BeginFigure(p1, false);
+                    if (Math.Abs(p1.X - p2.X) > 0.5)
+                    {
+                        c.LineTo(new Point(p1.X, knick));
+                        c.LineTo(new Point(p2.X, knick));
+                    }
+                    c.LineTo(p2);
+                    c.EndFigure(false);
+                }
+                dc.DrawGeometry(null, Stift(1.6), linie);
+                m = Math.Abs(p1.X - p2.X) > 0.5 ? new Point(p2.X, (knick + p2.Y) / 2) : new Point(p1.X, (p1.Y + p2.Y) / 2);
             }
-            dc.DrawLine(Stift(1.6), p1, p2);
             if (kante.Text.Length > 0)
             {
                 nummer++;
-                var m = new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
                 var r = 0.75 * F;
                 dc.DrawEllipse(Grund, Stift(1.2, Akzent), m, r, r);
                 Mitte(dc, Text(nummer.ToString(CultureInfo.InvariantCulture), Akzent, 0.85, fett: true), m.X, m.Y);
@@ -470,7 +509,21 @@ public sealed class DiagrammBild : EchtBild
 
     private double Luecke => 2.4 * F;
 
-    protected override (double Mindest, double Bequem) Breiten() => (_spalten * 7.5 * F, _spalten * 11.5 * F);
+    /// <summary>UML beginnt beim Startknoten (der Ablauf laeuft von oben nach unten), ER links.</summary>
+    public override double? Anfang => _d.Art == EchtZeichnung.Uml && _d.Elemente.FirstOrDefault(e => e.Typ == "start") is { } s
+        && _orte.TryGetValue(s.Id, out var o) ? o.Mitte.X : null;
+
+    /// <summary>Kleinste Zelle: 7,5 Schriftgroessen, aber jedes Wort passt in seine Form (Rechnung wie in <see cref="Form"/>).</summary>
+    private double ZelleMin => Math.Max(7.5 * F, _d.Elemente.Max(e => e.Typ switch
+    {
+        "beziehung" => (WortBreite(e.Text, 1, fett: true) + 0.2 * F) / (0.92 * 0.55),
+        "attribut" => (WortBreite(e.Text, 0.95) + 0.2 * F) / (0.9 * 0.74),
+        "aktion" => (WortBreite(e.Text) + 1.2 * F) / 0.86,
+        "entitaet" => (WortBreite(e.Text, 1, fett: true) + 1.2 * F) / 0.8,
+        _ => 0,
+    }));
+
+    protected override (double Mindest, double Bequem) Breiten() => (_spalten * ZelleMin, _spalten * Math.Max(11.5 * F, ZelleMin));
 
     private (Size Form, FormattedText? Text) Form(EchtElement e)
     {
@@ -500,7 +553,8 @@ public sealed class DiagrammBild : EchtBild
 
     protected override Size Planen(double breite)
     {
-        _zelle = Math.Clamp(breite / _spalten, 7.5 * F, 11.5 * F);
+        var min = ZelleMin;
+        _zelle = Math.Clamp(breite / _spalten, min, Math.Max(11.5 * F, min));
         _links = Math.Max(0, (breite - _zelle * _spalten) / 2);
         _orte.Clear();
         var hoehen = new double[_zeilen];
@@ -708,6 +762,40 @@ public sealed class Bildkasten : StackPanel
         _hinweis.Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
         Children.Add(_rollen);
         Children.Add(_hinweis);
+        _rollen.ScrollChanged += (_, _) => ZumAnfang();
+    }
+
+    private (double Bild, double Platz) _angefangenBei = (-1, -1);
+    private bool _anfangOffen;
+
+    protected override Size ArrangeOverride(Size endgroesse)
+    {
+        var groesse = base.ArrangeOverride(endgroesse);
+        // neue Breite des Bilds oder des Platzes (erstes Zeigen, andere Schrift, anderes Fenster): einmal zur
+        // Anfangsstelle des Bilds rollen, sobald der Bildlauf die neue Breite kennt
+        var jetzt = (Bild.Bounds.Width, endgroesse.Width);
+        if (Bild.Anfang is not null && (Math.Abs(jetzt.Item1 - _angefangenBei.Bild) > 0.5 || Math.Abs(jetzt.Item2 - _angefangenBei.Platz) > 0.5))
+        {
+            _angefangenBei = jetzt;
+            _anfangOffen = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(ZumAnfang, Avalonia.Threading.DispatcherPriority.Background);
+        }
+        return groesse;
+    }
+
+    private void ZumAnfang()
+    {
+        if (!_anfangOffen || Bild.Anfang is not { } x || _rollen.Extent.Width < Bild.Bounds.Width - 0.5 || _rollen.Viewport.Width <= 0
+            || Math.Abs(_rollen.Viewport.Width - _rollen.Bounds.Width) > 0.5)
+        {
+            return;
+        }
+        _anfangOffen = false;
+        if (_rollen.Extent.Width > _rollen.Viewport.Width)
+        {
+            var ziel = Math.Clamp(x - (_rollen.Viewport.Width / 2), 0, _rollen.Extent.Width - _rollen.Viewport.Width);
+            _rollen.Offset = new Vector(ziel, _rollen.Offset.Y);
+        }
     }
 
     public EchtBild Bild { get; }
