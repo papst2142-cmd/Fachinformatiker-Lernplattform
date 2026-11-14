@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.77.0
+Die Prüfung im echten Format zeigt jetzt Netzpläne, Monitor-Bilder und Zeichenaufgaben.
+
+- Neu ist der erste Prüfungssatz für die AP2 Systemintegration im Bereich „Konzeption und Administration von IT-Systemen“: ein erfundener Pflegedienst mit vier Aufgaben zu Server, Netz, Datenbank und Datensicherung.
+- Netzpläne und Monitor-Bilder werden als Bild gezeichnet: Geräte mit Symbol und Angaben, Leitungen mit Nummern und einer Legende darunter, Verläufe von Prozessor, Arbeitsspeicher, Datenträger und Netzwerk über die Zeit. Sie sind bei jeder Schriftgröße scharf und lassen sich auf kleinen Bildschirmen seitlich wischen.
+- Unter jedem Bild zeigt der Knopf „Als Text zeigen“ den ganzen Inhalt als Text, zum Beispiel „Router, verbunden mit Switch über …“. So kann auch ein Screenreader alles vorlesen.
+- Zeichenaufgaben wie ein ER-Modell löst du auf Papier. Ein vorgegebener Anfang steht als Bild in der Aufgabe. Nach dem Abgeben siehst du das Musterbild und hakst ab, was in deiner Zeichnung stimmt.
+- Auf einem breiten PC-Bildschirm stehen die Aufgabe und ihre Anlagen nebeneinander. Am Handy und bei großer Schrift wechselst du wie bisher zwischen „Aufgabe“ und „Anlagen“.
+- Die bisherige Prüfung, der Prüfungssatz für die AP1, dein Lernstand und das Spiel bleiben, wie sie sind.
+
 ## A 0.76.0
 Neu im Prüfungstrainer: die Prüfung im echten Format.
 

@@ -1,24 +1,23 @@
-Neu im Prüfungstrainer: die Prüfung im echten Format.
+Die Prüfung im echten Format zeigt jetzt Netzpläne, Monitor-Bilder und Zeichenaufgaben.
 
-- Unter „Prüfung“ gibt es jetzt eine zweite Art zu üben. Sie ist aufgebaut wie die IHK-Abschlussprüfung: eine erfundene Firma für alle vier Aufgaben, Teilaufgaben mit Arbeitsanweisung und Punkten, Anlagen wie Tabellen, Konfigurationen und ein englischer Text. Du hast 90 Minuten ohne Pause und kannst 100 Punkte erreichen.
-- Du antwortest in Textfeldern, in einzelnen Angaben, mit Rechenweg und Ergebnis, in Tabellen, in Feldern für IP-Adressen und Masken und durch Ankreuzen.
-- Zahlen, Felder, Tabellen und Kreuze bewertet das Programm selbst und zeigt grün oder rot. Den Rest vergleichst du mit der Musterlösung und hakst ab, was du richtig hattest. Danach bekommst du Punkte, Note und eine Übersicht nach Aufgaben.
-- Die Ergebnisse stehen in einer eigenen Liste auf der Karte „Prüfung im echten Format“. Sie zählen nicht ins Gesamtergebnis, das bleibt genau wie vorher.
-- Zum Start gibt es einen Prüfungssatz für die AP1. Er gilt für alle Fachrichtungen. Für die AP2 folgen Sätze in späteren Versionen.
-- Eine angefangene Prüfung bleibt gespeichert: Schließt du das Programm, geht es beim nächsten Öffnen weiter, die Zeit läuft dabei weiter.
-- Die bisherige Prüfung, dein Lernstand und das Spiel bleiben, wie sie sind.
+- Neu ist der erste Prüfungssatz für die AP2 Systemintegration im Bereich „Konzeption und Administration von IT-Systemen“: ein erfundener Pflegedienst mit vier Aufgaben zu Server, Netz, Datenbank und Datensicherung.
+- Netzpläne und Monitor-Bilder werden als Bild gezeichnet: Geräte mit Symbol und Angaben, Leitungen mit Nummern und einer Legende darunter, Verläufe von Prozessor, Arbeitsspeicher, Datenträger und Netzwerk über die Zeit. Sie sind bei jeder Schriftgröße scharf und lassen sich auf kleinen Bildschirmen seitlich wischen.
+- Unter jedem Bild zeigt der Knopf „Als Text zeigen“ den ganzen Inhalt als Text, zum Beispiel „Router, verbunden mit Switch über …“. So kann auch ein Screenreader alles vorlesen.
+- Zeichenaufgaben wie ein ER-Modell löst du auf Papier. Ein vorgegebener Anfang steht als Bild in der Aufgabe. Nach dem Abgeben siehst du das Musterbild und hakst ab, was in deiner Zeichnung stimmt.
+- Auf einem breiten PC-Bildschirm stehen die Aufgabe und ihre Anlagen nebeneinander. Am Handy und bei großer Schrift wechselst du wie bisher zwischen „Aufgabe“ und „Anlagen“.
+- Die bisherige Prüfung, der Prüfungssatz für die AP1, dein Lernstand und das Spiel bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.76.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.77.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.76.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.76.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.76.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.76.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.77.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.77.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.77.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.77.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

@@ -55,6 +55,7 @@ public static partial class AutoMessung
         var ab = KlausurTeil.EchtAb + 1;
         async Task Messpunkt(string titel, Action schritt, Action? zurueck = null, bool wiederholbar = false) =>
             funde += Ergebnis(titel, await BildMessenAsync(ansicht, schritt, zurueck, wiederholbar));
+        Task MesspunktW2(string titel, Action schritt, Action? zurueck, bool wiederholbar) => Messpunkt(titel, schritt, zurueck, wiederholbar);
         await Messpunkt("Pruefung im echten Format Auswahl mit Meldungen (bis zum Bild)", () => k.Probe(KlausurTeil.EchtAb), wiederholbar: true);
         await Messpunkt("Pruefung im echten Format Lauf zeigen, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab + 1), wiederholbar: true);
         await Messpunkt("Pruefung im echten Format Aufgabe wechseln (bis zum Bild)", () => e.ProbeReiter("2", false), () => e.ProbeReiter("1", false));
@@ -88,9 +89,101 @@ public static partial class AutoMessung
             }
             Messwerte.Notiere("Pruefung im echten Format Bedienprobe " + name + ": Reiter, Anlagen, Haekchen (" + vorher + " -> " + e.ProbeStand.Summe + ")");
         }
+        funde += await EchtWelle2Async(ansicht, k, e, MesspunktW2);
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);
         await ansicht.BildFertigAsync();
+        return funde;
+    }
+
+    /// <summary>
+    /// A 0.77.0, Welle 2 (Weisung P12-265): Messpunkte der gezeichneten Anlagen und der Zeichenaufgabe, Pruefung der
+    /// Bildkaesten (nie abgeschnitten: breiter als der Platz nur mit "→ wischen"), zwei Spalten am breiten PC und eine
+    /// Bedienprobe mit Maus und Finger: "Als Text zeigen" zeigt die Textfassung, "Auf Papier gezeichnet" zaehlt die
+    /// Teilaufgabe als bearbeitet.
+    /// </summary>
+    private static async Task<int> EchtWelle2Async(MainView ansicht, KlausurTeil k, EchtFormatTeil e,
+        Func<string, Action, Action?, bool, Task> messpunkt)
+    {
+        var funde = 0;
+        void Fund(string text)
+        {
+            Messwerte.Notiere("  FEHLER: Pruefung im echten Format (Welle 2): " + text);
+            funde++;
+        }
+        var ab = KlausurTeil.EchtAb + 1 + EchtFormatTeil.Welle2Ab;
+        await messpunkt("Pruefung im echten Format Netzplan zeigen (bis zum Bild)", () => k.Probe(ab + 1), null, true);
+        await messpunkt("Pruefung im echten Format Monitor-Bild zeigen (bis zum Bild)", () => k.Probe(ab + 2), null, true);
+        await messpunkt("Pruefung im echten Format Zeichenaufgabe mit Vorgabe (bis zum Bild)", () => k.Probe(ab + 3), null, true);
+        await messpunkt("Pruefung im echten Format Musterbild in der Bewertung (bis zum Bild)", () => k.Probe(ab + 4), null, true);
+        await messpunkt("Pruefung im echten Format UML-Musterbild (bis zum Bild)", () => k.Probe(ab + 6), null, true);
+
+        // Bildkaesten: jedes Bild passt in seinen Platz oder ist seitlich wischbar (mit Hinweis); jedes Bild hat einen Namen
+        foreach (var art in new[] { ab + 1, ab + 2, ab + 3, ab + 4, ab + 6 })
+        {
+            k.Probe(art);
+            await ansicht.BildFertigAsync();
+            var kaesten = e.ProbeInhalt?.GetVisualDescendants().OfType<Bildkasten>().ToList() ?? [];
+            if (kaesten.Count == 0)
+            {
+                Fund(KlausurTeil.ProbeNamen[art] + ": kein gezeichnetes Bild");
+            }
+            foreach (var kasten in kaesten)
+            {
+                var platz = kasten.Rollen.Viewport.Width;
+                if (kasten.Bild.Bounds.Width > platz + 1 && !kasten.WischHinweis)
+                {
+                    Fund(KlausurTeil.ProbeNamen[art] + ": Bild " + kasten.Bild.Bounds.Width.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " breiter als der Platz "
+                        + platz.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " ohne Hinweis \"wischen\"");
+                }
+                if (string.IsNullOrEmpty(Avalonia.Automation.AutomationProperties.GetName(kasten.Bild)))
+                {
+                    Fund(KlausurTeil.ProbeNamen[art] + ": Bild ohne Namen fuer den Screenreader");
+                }
+                Messwerte.Notiere("Pruefung im echten Format " + KlausurTeil.ProbeNamen[art] + ": Bild " + kasten.Bild.GetType().Name + " "
+                    + kasten.Bild.Bounds.Width.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " x " + kasten.Bild.Bounds.Height.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + ", Platz "
+                    + platz.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + (kasten.WischHinweis ? ", wischen" : ""));
+            }
+        }
+
+        // zwei Spalten: wo der Platz reicht, stehen Aufgabe und Netzplan nebeneinander und der Umschalter ist weg
+        k.Probe(ab);
+        await ansicht.BildFertigAsync();
+        var (gezeigt, soll) = e.ProbeZweiSpalten;
+        var nebeneinander = e.ProbeInhalt?.Children.OfType<Grid>().Any() == true;
+        if (gezeigt != soll || nebeneinander != soll || e.ProbeUmschalter?.IsVisible == soll)
+        {
+            Fund("zwei Spalten: soll " + soll + ", gezeigt " + gezeigt + ", Raster " + nebeneinander + ", Umschalter sichtbar "
+                + e.ProbeUmschalter?.IsVisible);
+        }
+        Messwerte.Notiere("Pruefung im echten Format zwei Spalten (Aufgabe und Anlagen nebeneinander): " + (soll ? "ja" : "nein, Umschalter"));
+
+        // Bedienprobe mit Maus und Finger
+        foreach (var art in new[] { PointerType.Mouse, PointerType.Touch })
+        {
+            var name = art == PointerType.Mouse ? "Maus" : "Finger";
+            k.Probe(ab + 1);
+            await ansicht.BildFertigAsync();
+            var texte = e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count() ?? 0;
+            if (!await TippenAsync(ansicht, e.ProbeInhalt, EchtTexte.AlsText, art)
+                || e.ProbeInhalt?.GetVisualDescendants().OfType<Button>().Any(b => Avalonia.Automation.AutomationProperties.GetName(b) == EchtTexte.BildZeigen) != true
+                || (e.ProbeInhalt?.GetVisualDescendants().OfType<LernText>().Count() ?? 0) <= texte)
+            {
+                Fund(name + ": \"Als Text zeigen\" antippen zeigt die Textfassung nicht");
+            }
+            k.Probe(ab + 3);
+            await ansicht.BildFertigAsync();
+            var vorher = e.ProbeFortschritt;
+            var papier = e.ProbeInhalt?.GetVisualDescendants().OfType<CheckBox>()
+                .FirstOrDefault(c => Avalonia.Automation.AutomationProperties.GetName(c) == EchtTexte.Gezeichnet);
+            var war = papier?.IsChecked == true;
+            if (papier is null || !await TippenAsync(ansicht, papier, art) || papier.IsChecked == war || e.ProbeFortschritt == vorher)
+            {
+                Fund(name + ": \"Auf Papier gezeichnet\" antippen aendert den Fortschritt nicht (" + vorher + " / " + e.ProbeFortschritt + ")");
+            }
+            Messwerte.Notiere("Pruefung im echten Format Bedienprobe Welle 2 " + name + ": Als Text zeigen, Auf Papier gezeichnet ("
+                + vorher + " -> " + e.ProbeFortschritt + ")");
+        }
         return funde;
     }
 

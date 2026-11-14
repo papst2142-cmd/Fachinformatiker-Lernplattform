@@ -361,7 +361,6 @@ public static class Zustand
         return inhalte.FachgespraechFuer(alle, Sicht);
     });
 
-    /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>
     /// <summary>A 0.76.0: Pruefungssaetze im echten Format, einmal geladen (Hintergrund ab dem ersten Zugriff), nie ein Absturz.</summary>
     private static readonly Lazy<Core.Pruefung.Echt.EchtBestand> _echt = new(() => Core.Pruefung.Echt.EchtSaetze.Laden(
         LernenDatei(Core.Pruefung.Echt.EchtSaetze.DateiName)));
@@ -374,6 +373,7 @@ public static class Zustand
     /// <summary>Nur Start ohne Bedienung: eine eingebaute Datei aus inhalte_csharp/lernen.</summary>
     internal static byte[]? LernenDateiFuerMessung(string name) => LernenDatei(name);
 
+    /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>
     private static byte[]? LernenDatei(string name)
     {
         using var strom = typeof(Zustand).Assembly.GetManifestResourceStream("inhalte_csharp/lernen/" + name + ".json");

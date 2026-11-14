@@ -5,9 +5,16 @@ using System.Text.RegularExpressions;
 
 namespace Lernplattform.Core.Pruefung.Echt;
 
-/// <summary>Eine Anlage eines Pruefungssatzes (Welle 1: Text, Tabelle, Code, englischer Text).</summary>
+/// <summary>
+/// Eine Anlage eines Pruefungssatzes (Welle 1: Text, Tabelle, Code, englischer Text; ab Format 2 gezeichnet:
+/// Netzplan und Monitor-Bild, immer aus Daten, nie als Foto).
+/// </summary>
 public sealed record EchtAnlage(string Nr, string Titel, string Art, IReadOnlyList<string> Zeilen,
-    IReadOnlyList<string> Spalten, IReadOnlyList<IReadOnlyList<string>> Tabelle);
+    IReadOnlyList<string> Spalten, IReadOnlyList<IReadOnlyList<string>> Tabelle)
+{
+    public EchtNetzplan? Netzplan { get; init; }
+    public EchtMonitor? Monitor { get; init; }
+}
 
 /// <summary>Bewertungshinweis zum Selbstbewerten (ein Haekchen mit Punkten).</summary>
 public sealed record EchtHinweis(string Text, int Punkte);
@@ -22,8 +29,8 @@ public sealed record EchtZelle(string? Fest, IReadOnlyList<string> Loesung, int 
 public sealed record EchtFeld(string Name, string Art, IReadOnlyList<string> Loesung, int Punkte);
 
 /// <summary>
-/// Antwortform einer Teilaufgabe. Welle 1: zeilen, angaben, rechnen, tabelle, luecke, auswahl
-/// (Zeichnen kommt mit dem Baukasten in Welle 2 und ist hier noch ein Fehler der Ladepruefung).
+/// Antwortform einer Teilaufgabe. Welle 1: zeilen, angaben, rechnen, tabelle, luecke, auswahl; ab Format 2 (A 0.77.0)
+/// zeichnen: Diagramm auf Papier, Vorgabe (vorgegebener Anfang) und Musterbild mit Haekchen.
 /// </summary>
 public sealed record EchtAntwort(string Form)
 {
@@ -38,6 +45,9 @@ public sealed record EchtAntwort(string Form)
     public IReadOnlyList<EchtFeld> Felder { get; init; } = [];
     public IReadOnlyList<string> Optionen { get; init; } = [];
     public IReadOnlyList<int> Richtig { get; init; } = [];
+    public string Diagramm { get; init; } = "";
+    public EchtDiagramm? Vorgabe { get; init; }
+    public EchtDiagramm? Muster { get; init; }
 }
 
 /// <summary>Eine Teilaufgabe (a, b, ba, bb ...).</summary>
@@ -48,7 +58,7 @@ public sealed record EchtTeil(string Nr, string Operator, IReadOnlyList<string> 
     /// <summary>Punkte, die man selbst mit Haekchen vergibt (der Rest bewertet das Programm).</summary>
     public int SelbstPunkte => Antwort.Form switch
     {
-        EchtSaetze.FormZeilen or EchtSaetze.FormAngaben => Punkte,
+        EchtSaetze.FormZeilen or EchtSaetze.FormAngaben or EchtSaetze.FormZeichnen => Punkte,
         EchtSaetze.FormRechnen => Punkte - Antwort.PunkteErgebnis,
         _ => 0,
     };
@@ -92,7 +102,8 @@ public sealed record EchtBestand(IReadOnlyList<EchtSatz> Saetze, IReadOnlyList<E
 
 /// <summary>
 /// Welle 1 "Pruefung im echten Format" (Weisung P12-262, Plan P12-152 Abschnitt 2): Lader und Ladepruefung
-/// fuer inhalte_csharp/lernen/pruefungssaetze.json (Format 1, nur angehaengt). Jeder Satz, der eine Regel
+/// fuer inhalte_csharp/lernen/pruefungssaetze.json (nur angehaengt). Format 1 = Welle 1; Format 2 (Welle 2, A 0.77.0)
+/// erlaubt dazu gezeichnete Anlagen und Zeichenaufgaben (<see cref="EchtZeichnung"/>); im Format 1 sind diese ein Fehler. Jeder Satz, der eine Regel
 /// verletzt, wird mit klarer Meldung abgewiesen; das Programm stuerzt nie ab und laesst nie still etwas weg.
 /// Regeln nach dem Strukturblatt P12-260 (Abschnitte 1 bis 3).
 /// </summary>
@@ -100,7 +111,8 @@ public static class EchtSaetze
 {
     public const string DateiName = "pruefungssaetze";
     public const string Datei = "pruefungssaetze.json";
-    public const int Format = 1;
+    /// <summary>Hoechstes bekanntes Format: 1 = Welle 1 (A 0.76.0), 2 = gezeichnete Anlagen und Zeichenaufgaben (A 0.77.0).</summary>
+    public const int Format = 2;
     public const string Ap1 = "ap1";
     public const string B1 = "b1";
     public const string B2 = "b2";
@@ -112,15 +124,22 @@ public static class EchtSaetze
     public const string FormTabelle = "tabelle";
     public const string FormLuecke = "luecke";
     public const string FormAuswahl = "auswahl";
+    public const string FormZeichnen = "zeichnen";
 
-    /// <summary>Antwortformen der Welle 1.</summary>
+    /// <summary>Antwortformen der Welle 1 (Format 1).</summary>
     public static readonly IReadOnlyList<string> Formen = [FormZeilen, FormAngaben, FormRechnen, FormTabelle, FormLuecke, FormAuswahl];
+
+    /// <summary>Antwortformen ab Format 2.</summary>
+    public static readonly IReadOnlyList<string> Formen2 = [.. Formen, FormZeichnen];
 
     /// <summary>Arten der Lueckenfelder.</summary>
     public static readonly IReadOnlyList<string> FeldArten = ["ip", "maske", "zahl", "text"];
 
-    /// <summary>Arten der Anlagen in Welle 1 (Netzplan und Monitor-Bild gezeichnet ab Welle 2).</summary>
+    /// <summary>Arten der Anlagen in Welle 1 (Format 1).</summary>
     public static readonly IReadOnlyList<string> AnlagenArten = ["text", "tabelle", "code", "englisch"];
+
+    /// <summary>Arten der Anlagen ab Format 2: dazu Netzplan und Monitor-Bild, gezeichnet aus Daten.</summary>
+    public static readonly IReadOnlyList<string> AnlagenArten2 = [.. AnlagenArten, "netzplan", "monitor"];
 
     /// <summary>
     /// Operatoren mit erlaubten Punkten (Strukturblatt Abschnitt 3): Nennen 1 je Angabe (2 bis 3 Angaben),
@@ -208,7 +227,7 @@ public static class EchtSaetze
                 {
                     throw new EchtLadefehler("Kennung doppelt");
                 }
-                saetze.Add(Satz(kennung, knoten));
+                saetze.Add(Satz(kennung, knoten, format.Value));
             }
             catch (EchtLadefehler f)
             {
@@ -223,7 +242,7 @@ public static class EchtSaetze
         return new(saetze, fehler);
     }
 
-    private static EchtSatz Satz(string kennung, JsonObject s)
+    private static EchtSatz Satz(string kennung, JsonObject s, int format)
     {
         if (BereichAusKennung(kennung) is not { } aus)
         {
@@ -249,13 +268,13 @@ public static class EchtSaetze
         var anlagen = new List<EchtAnlage>();
         foreach (var a in Liste(s["anlagen"], "anlagen"))
         {
-            anlagen.Add(Anlage(a));
+            anlagen.Add(Anlage(a, format));
         }
         if (anlagen.Select(a => a.Nr).Distinct(StringComparer.Ordinal).Count() != anlagen.Count)
         {
             throw new EchtLadefehler("Anlagen-Nummer doppelt");
         }
-        var aufgaben = Liste(s["aufgaben"], "aufgaben").Select((a, n) => Aufgabe(a, n + 1, anlagen)).ToList();
+        var aufgaben = Liste(s["aufgaben"], "aufgaben").Select((a, n) => Aufgabe(a, n + 1, anlagen, format)).ToList();
         if (aufgaben.Count != 4)
         {
             throw new EchtLadefehler(string.Create(CultureInfo.InvariantCulture, $"{aufgaben.Count} Aufgaben statt 4"));
@@ -303,15 +322,24 @@ public static class EchtSaetze
         return new EchtSatz(kennung, fachrichtung, bereich, firma, minuten, ausgang, aufgaben, anlagen, zeitfrage);
     }
 
-    private static EchtAnlage Anlage(JsonObject a)
+    private static EchtAnlage Anlage(JsonObject a, int format)
     {
         var nr = Pflicht(a, "nr");
         var art = Pflicht(a, "art");
-        if (!AnlagenArten.Contains(art))
+        if (!(format >= 2 ? AnlagenArten2 : AnlagenArten).Contains(art))
         {
-            throw new EchtLadefehler("Anlage " + nr + ": unbekannte Art \"" + art + "\"");
+            throw new EchtLadefehler("Anlage " + nr + ": unbekannte Art \"" + art + "\""
+                + (AnlagenArten2.Contains(art) ? " (erst ab Format 2)" : ""));
         }
         var titel = Pflicht(a, "titel");
+        if (art is "netzplan" or "monitor")
+        {
+            // gezeichnet; "zeilen" ist hier ein freiwilliger Text unter dem Bild (z. B. eine Legende)
+            var zusatz = a["zeilen"] is null ? [] : Zeilen(a["zeilen"], "Anlage " + nr + " zeilen");
+            return art == "netzplan"
+                ? new EchtAnlage(nr, titel, art, zusatz, [], []) { Netzplan = EchtZeichnung.Netzplan(a, "Anlage " + nr) }
+                : new EchtAnlage(nr, titel, art, zusatz, [], []) { Monitor = EchtZeichnung.Monitor(a, "Anlage " + nr) };
+        }
         if (art == "tabelle")
         {
             var spalten = Zeilen(a["spalten"], "Anlage " + nr + " spalten");
@@ -326,7 +354,7 @@ public static class EchtSaetze
         return new EchtAnlage(nr, titel, art, Zeilen(a["zeilen"], "Anlage " + nr + " zeilen"), [], []);
     }
 
-    private static EchtAufgabe Aufgabe(JsonObject a, int nummer, List<EchtAnlage> anlagen)
+    private static EchtAufgabe Aufgabe(JsonObject a, int nummer, List<EchtAnlage> anlagen, int format)
     {
         var wo = string.Create(CultureInfo.InvariantCulture, $"Aufgabe {nummer}");
         var titel = Pflicht(a, "titel");
@@ -335,7 +363,7 @@ public static class EchtSaetze
         {
             throw new EchtLadefehler(string.Create(CultureInfo.InvariantCulture, $"{wo}: {punkte} Punkte, erlaubt sind 24 bis 26"));
         }
-        var teile = Liste(a["teile"], wo + " teile").Select(t => Teil(t, nummer, anlagen)).ToList();
+        var teile = Liste(a["teile"], wo + " teile").Select(t => Teil(t, nummer, anlagen, format)).ToList();
         if (teile.Count is < 5 or > 10)
         {
             throw new EchtLadefehler(string.Create(CultureInfo.InvariantCulture, $"{wo}: {teile.Count} Teilaufgaben, erlaubt sind 5 bis 10"));
@@ -352,7 +380,7 @@ public static class EchtSaetze
         return new EchtAufgabe(titel, punkte, a["einleitung"] is null ? [] : Zeilen(a["einleitung"], wo + " einleitung"), teile);
     }
 
-    private static EchtTeil Teil(JsonObject t, int aufgabe, List<EchtAnlage> anlagen)
+    private static EchtTeil Teil(JsonObject t, int aufgabe, List<EchtAnlage> anlagen, int format)
     {
         var nr = Pflicht(t, "nr");
         var wo = Wo(aufgabe, nr);
@@ -373,7 +401,7 @@ public static class EchtSaetze
         }
         var angaben = Ganz(t["angaben"]) ?? 1;
         OperatorPruefen(wo, op, punkte, angaben);
-        var antwort = Antwort(t["antwort"] as JsonObject ?? throw new EchtLadefehler(wo + ": \"antwort\" fehlt"), wo);
+        var antwort = Antwort(t["antwort"] as JsonObject ?? throw new EchtLadefehler(wo + ": \"antwort\" fehlt"), wo, format);
         var verweise = t["anlagen"] is null ? [] : Zeilen(t["anlagen"], wo + " anlagen");
         if (verweise.FirstOrDefault(v => anlagen.All(a => a.Nr != v)) is { } fehlt)
         {
@@ -438,12 +466,12 @@ public static class EchtSaetze
         }
     }
 
-    private static EchtAntwort Antwort(JsonObject a, string wo)
+    private static EchtAntwort Antwort(JsonObject a, string wo, int format)
     {
         var form = Pflicht(a, "form");
-        if (!Formen.Contains(form))
+        if (!(format >= 2 ? Formen2 : Formen).Contains(form))
         {
-            throw new EchtLadefehler(wo + ": unbekannte Antwortform \"" + form + "\"");
+            throw new EchtLadefehler(wo + ": unbekannte Antwortform \"" + form + "\"" + (Formen2.Contains(form) ? " (erst ab Format 2)" : ""));
         }
         switch (form)
         {
@@ -502,6 +530,23 @@ public static class EchtSaetze
                     throw new EchtLadefehler(wo + ": Auswahl braucht mindestens 2 Optionen und gültige richtige Nummern");
                 }
                 return new EchtAntwort(form) { Optionen = optionen, Richtig = richtig };
+            case FormZeichnen:
+                var art = Pflicht(a, "diagramm");
+                if (!EchtZeichnung.Bausteine.ContainsKey(art))
+                {
+                    throw new EchtLadefehler(wo + ": Diagramm muss \"uml\" oder \"er\" sein");
+                }
+                var muster = EchtZeichnung.Diagramm(a["muster"], art, vollstaendig: true, wo + " Musterbild");
+                var vorgabe = a["vorgabe"] is null ? null : EchtZeichnung.Diagramm(a["vorgabe"], art, vollstaendig: false, wo + " Vorgabe");
+                if (vorgabe?.Elemente.FirstOrDefault(v => !muster.Elemente.Contains(v)) is { } fremd)
+                {
+                    throw new EchtLadefehler(wo + ": Baustein " + fremd.Id + " der Vorgabe steht nicht gleich im Musterbild");
+                }
+                if (vorgabe?.Verbindungen.FirstOrDefault(v => !muster.Verbindungen.Any(m => (m.Von == v.Von && m.Nach == v.Nach) || (m.Von == v.Nach && m.Nach == v.Von))) is { } linie)
+                {
+                    throw new EchtLadefehler(wo + ": Verbindung " + linie.Von + "–" + linie.Nach + " der Vorgabe fehlt im Musterbild");
+                }
+                return new EchtAntwort(form) { Diagramm = art, Vorgabe = vorgabe, Muster = muster };
             default:
                 return new EchtAntwort(form);
         }
@@ -531,6 +576,8 @@ public static class EchtSaetze
                 ? null : "Tabelle: die offenen Zellen ergeben nicht die Punkte",
             FormLuecke => a.Felder.Sum(f => f.Punkte) == t.Punkte && t.Hinweise.Count == 0 ? null : "Lücken: die Felder ergeben nicht die Punkte",
             FormAuswahl => t.Hinweise.Count == 0 ? null : "Auswahl hat keine Hinweise",
+            FormZeichnen => t.Operator is not ("zeichnen" or "erstellen") ? "eine Zeichenaufgabe hat den Operator Zeichnen oder Erstellen"
+                : hinweise == t.Punkte ? null : "die Hinweise zum Musterbild ergeben nicht die Punkte der Teilaufgabe",
             _ => "unbekannte Antwortform",
         };
         if (fehler is not null)

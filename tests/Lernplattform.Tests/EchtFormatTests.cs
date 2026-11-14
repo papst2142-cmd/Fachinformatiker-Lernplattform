@@ -25,7 +25,11 @@ public class EchtFormatTests
 
     private static EchtBestand Bestand => EchtSaetze.Laden(Roh);
 
-    private static EchtSatz Probesatz => Assert.Single(Bestand.Saetze);
+    /// <summary>Probesatz AP1 der Welle 1 (seit A 0.77.0 steht dahinter der Probesatz AP2 Konzeption si_b1_01).</summary>
+    private static EchtSatz Probesatz => Bestand.Saetze.Single(s => s.Kennung == "alle_ap1_01");
+
+    /// <summary>Gueltige Saetze der eingebauten Datei, in der Reihenfolge der Datei.</summary>
+    private static readonly string[] Gueltig = ["alle_ap1_01", "si_b1_01"];
 
     private static JsonObject Wurzel() => JsonNode.Parse(Roh)!.AsObject();
 
@@ -40,16 +44,16 @@ public class EchtFormatTests
     {
         var bestand = Bestand;
         Assert.Empty(bestand.Fehler);
-        var satz = Assert.Single(bestand.Saetze);
-        Assert.Equal("alle_ap1_01", satz.Kennung);
+        Assert.Equal(Gueltig, bestand.Saetze.Select(s => s.Kennung));
+        var satz = Probesatz;
         Assert.Equal(100, satz.Aufgaben.Sum(a => a.Punkte));
         Assert.Equal(90, satz.Minuten);
         Assert.Equal(4, satz.Aufgaben.Count);
-        // Antwort 4a: AP1 fuer alle Fachrichtungen, AP2 (b1, b2) bisher ohne Satz
+        // Antwort 4a: AP1 fuer alle Fachrichtungen, AP2 zuerst nur SI (seit A 0.77.0 ein Satz Konzeption, b2 noch ohne)
         foreach (var f in Fachrichtung.Alle)
         {
             Assert.Single(bestand.Fuer(EchtSaetze.Ap1, f.Id));
-            Assert.Empty(bestand.Fuer(EchtSaetze.B1, f.Id));
+            Assert.Equal(f.Id == "si" ? 1 : 0, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
             Assert.Empty(bestand.Fuer(EchtSaetze.B2, f.Id));
         }
         // alle sechs Antwortformen und alle vier Anlagen-Arten der Welle 1 kommen im Probesatz vor
@@ -95,7 +99,7 @@ public class EchtFormatTests
         { "operator-unbekannt", "unbekannter Operator" },
         { "nennen-punkte", "Nennen: 2 bis 3 Angaben" },
         { "begruenden-punkte", "Begründen: 3 Punkte" },
-        { "form-zeichnen", "unbekannte Antwortform \"zeichnen\"" },
+        { "form-zeichnen", "\"diagramm\" fehlt" },
         { "anlage-fehlt", "Anlage 9 gibt es nicht" },
         { "anlage-unbenutzt", "wird von keiner Teilaufgabe benutzt" },
         { "englisch-zwei", "englische Texte statt genau einem" },
@@ -128,7 +132,7 @@ public class EchtFormatTests
         var fehler = Assert.Single(bestand.Fehler);
         Assert.Contains(meldung, fehler.Meldung, StringComparison.Ordinal);
         // der gueltige Satz bleibt, der kaputte fehlt nie still: er steht mit Kennung in den Fehlern
-        Assert.Equal("alle_ap1_01", Assert.Single(bestand.Saetze).Kennung);
+        Assert.Equal(Gueltig, bestand.Saetze.Select(s => s.Kennung));
         Assert.NotEqual(EchtSaetze.Datei, fehler.Kennung);
     }
 
@@ -141,7 +145,7 @@ public class EchtFormatTests
         wurzel["saetze"]!.AsArray().Add(zweiter);
         var bestand = Laden(wurzel);
         Assert.Empty(bestand.Fehler);
-        Assert.Equal(2, bestand.Saetze.Count);
+        Assert.Equal(Gueltig.Length + 1, bestand.Saetze.Count);
     }
 
     private static JsonObject Teil(JsonObject satz, int aufgabe, string nr) =>
@@ -548,7 +552,7 @@ public class EchtFormatTests
         Assert.Equal(3, zeile.Punkte);
         Assert.Equal(1, (int)zeile.Daten!["zeitfrage"]!);
         // naechster Satz: der einzige, auch nach der Bearbeitung
-        Assert.Equal("alle_ap1_01", EchtAblauf.NaechsterSatz(Bestand.Saetze, Art, verlauf)!.Kennung);
+        Assert.Equal("alle_ap1_01", EchtAblauf.NaechsterSatz(Bestand.Fuer(EchtSaetze.Ap1, "si"), Art, verlauf)!.Kennung);
     }
 
     [Fact]
