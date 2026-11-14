@@ -14,6 +14,11 @@ Aufgaben an Gebäuden: eine neue Quest kann einen Arbeitsort in einem anderen Ha
 - Die Prüfung meldet rot, wenn ein Arbeitsort nicht passt (kein Haus mit Innenraum, Raum oder Stelle fehlt, Stelle zu nah an Wand, Einrichtung oder einer anderen Person, oder die Person steht draußen und soll am Arbeitsort warten). Mit rotem Fund lässt sich die Stadt nicht speichern oder senden.
 - Projekte und Stadt-Dateien mit einem Arbeitsort haben ein neues Format (Projekt 4, Stadt-Datei 2). Ohne Arbeitsort bleibt alles im alten Format, bitgleich. Ältere Programme öffnen ein Projekt mit Arbeitsort nur zum Lesen und lehnen eine Stadt-Datei mit Arbeitsort mit einem klaren Hinweis ab.
 
+Gelände-Pinsel:
+
+- Der Pinsel (Heben, Senken, Glätten, Größe) malt jetzt auch in der 3D-Ansicht der Stadt: linke Maustaste gedrückt halten oder ein Finger, dann über die Wiese ziehen. Er trifft die Stelle unter dem Zeiger, auch auf schon gehobenem Gelände, und zeigt während des Zugs einen lila Kreis am Boden. Jeder Zug ist ein Schritt im Verlauf. Rechte oder mittlere Maustaste und zwei Finger bewegen weiter nur die Kamera; ein Rechtsklick ohne Bewegung beendet den Pinsel.
+- Neu sind drei Stärken unter „Stärke“: Schwach 0,1, Mittel 0,25 und Stark 0,5 (so viel hebt oder senkt ein Zug in der Mitte). Voreingestellt ist Mittel, damit schon ein Zug eine Höhenlinie zeigt. Glätten wirkt immer gleich.
+
 ## S 0.52.0
 
 Rote Funde mit einem Knopf beheben, gesperrte Knöpfe sichtbar grau, Kamera-Karte einklappen und klarere Hügel.

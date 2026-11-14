@@ -391,6 +391,7 @@ public static partial class StadtbauMessung
         await AmpelnAsync(a, f);
         await HaltestellenAsync(a, f);
         await GelaendeAsync(a, f);
+        await PinselMausAsync(a, f);
         await HuegelVerdecktAsync(a, f);
         await StrassenzugAsync(a, f);
         await WerkzeugKleinAsync(a, f);

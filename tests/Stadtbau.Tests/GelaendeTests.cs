@@ -194,6 +194,22 @@ public class GelaendeTests
         Assert.True(AussenBearbeitung.GelaendeVon(c)!.Hoehe(11, 12) <= Gelaende.HoeheMax + 1e-4f);
     }
 
+    /// <summary>Welle E4 Nachtrag (Nico 14.11.2026): drei Staerken; ein Zug hebt die Mitte genau um die Staerke, Senken ebenso.</summary>
+    [Fact]
+    public void Pinsel_DreiStaerken_HebenUndSenkenGenauSoViel()
+    {
+        Assert.Equal([0.1f, 0.25f, 0.5f], AussenBearbeitung.PinselStaerken);
+        foreach (var staerke in AussenBearbeitung.PinselStaerken)
+        {
+            var a = Grundlage(huegel: false);
+            Assert.True(AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(10, 12), new(12, 12)], 1, staerke) > 0);
+            Assert.Equal(staerke, AussenBearbeitung.GelaendeVon(a)!.Hoehe(11, 12), 3);
+            AussenBearbeitung.Pinselzug(a, PinselArt.Heben, [new(10, 12), new(12, 12)], 1, staerke);
+            AussenBearbeitung.Pinselzug(a, PinselArt.Senken, [new(10, 12), new(12, 12)], 1, staerke);
+            Assert.Equal(staerke, AussenBearbeitung.GelaendeVon(a)!.Hoehe(11, 12), 3);
+        }
+    }
+
     [Fact]
     public void Projekt_PinselzugIstEinSchritt_Rueckgaengig()
     {

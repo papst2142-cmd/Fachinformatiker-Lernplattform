@@ -156,6 +156,9 @@ public sealed partial class KartenFlaeche
     /// <summary>Groesse des Pinsels (Halbmesser in Feldern, <see cref="AussenBearbeitung.PinselGroessen"/>).</summary>
     public float PinselGroesse { get; set; } = 1f;
 
+    /// <summary>Welle E4 Nachtrag: Staerke eines Zugs (<see cref="AussenBearbeitung.PinselStaerken"/>), voreingestellt „Mittel“.</summary>
+    public float PinselStaerke { get; set; } = AussenBearbeitung.PinselStaerken[1];
+
     /// <summary>Pinsel an/aus oder anderer Pinsel (Knoepfe markieren).</summary>
     public event Action? PinselGeaendert;
 
@@ -213,7 +216,8 @@ public sealed partial class KartenFlaeche
             return false;
         }
         var groesse = PinselGroesse;
-        var geaendert = _projekt.AussenAendern(Texte.PinselZug, a => AussenBearbeitung.Pinselzug(a, art, zug, groesse) > 0);
+        var staerke = PinselStaerke;
+        var geaendert = _projekt.AussenAendern(Texte.PinselZug, a => AussenBearbeitung.Pinselzug(a, art, zug, groesse, staerke) > 0);
         Gemeldet?.Invoke(geaendert ? Texte.PinselZug : Texte.PinselNichts);
         return geaendert;
     }

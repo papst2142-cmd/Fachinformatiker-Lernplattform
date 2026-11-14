@@ -31,6 +31,13 @@ public static partial class AussenBearbeitung
     /// <summary>Pinsel: so viel hebt oder senkt ein Tupfer in der Mitte (am Rand weniger).</summary>
     public const float PinselStaerke = 0.1f;
 
+    /// <summary>
+    /// Welle E4 Nachtrag (Nico 14.11.2026 08:52 MEZ: „Es sollen 3 Stärken des Pinsels voreinstellbar sein“): Stärken je
+    /// Tupfer in der Mitte fuer Heben und Senken (schwach = bisher, mittel = eine Hoehenlinie, stark = zwei). Glaetten
+    /// bleibt, wie es ist.
+    /// </summary>
+    public static readonly IReadOnlyList<float> PinselStaerken = [PinselStaerke, 0.25f, 0.5f];
+
     /// <summary>Pinsel: Groessen (Radius in Feldern).</summary>
     public static readonly IReadOnlyList<float> PinselGroessen = [0.5f, 1f, 1.5f, 2f];
 
@@ -214,7 +221,7 @@ public static partial class AussenBearbeitung
     /// bis <paramref name="groesse"/> heben, senken oder glaetten (am Rand weniger). Hoehen bleiben zwischen 0 und 1,5 auf
     /// 0,01; ausserhalb der Karte nichts. Ergebnis: Zahl der geaenderten Rasterpunkte (0 = nichts geaendert).
     /// </summary>
-    public static int Pinselzug(PyObjekt aussen, PinselArt art, IReadOnlyList<Vector2> zug, float groesse)
+    public static int Pinselzug(PyObjekt aussen, PinselArt art, IReadOnlyList<Vector2> zug, float groesse, float staerke = PinselStaerke)
     {
         if (zug.Count == 0)
         {
@@ -285,7 +292,7 @@ public static partial class AussenBearbeitung
             }
             else
             {
-                neu = alt + (int)MathF.Round((art == PinselArt.Heben ? 1 : -1) * PinselStaerke * 100 * w);
+                neu = alt + (int)MathF.Round((art == PinselArt.Heben ? 1 : -1) * staerke * 100 * w);
             }
             neu = Math.Clamp(neu, 0, max);
             if (neu == 0)

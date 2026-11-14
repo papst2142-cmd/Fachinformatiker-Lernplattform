@@ -64,6 +64,9 @@ public sealed partial class Hauptansicht
 
     private TextBlock? _pinselGroesseText;
 
+    /// <summary>Start-Test: Knoepfe der drei Staerken (schwach, mittel, stark).</summary>
+    internal List<Button> PinselStaerkeKnoepfe { get; } = [];
+
     private static string PinselName(PinselArt art) => art switch
     {
         PinselArt.Heben => Texte.PinselHeben,
@@ -91,6 +94,19 @@ public sealed partial class Hauptansicht
         kleiner.Click += (_, _) => PinselGroesseSchritt(-1);
         groesser.Click += (_, _) => PinselGroesseSchritt(1);
         Karte.PinselGeaendert += PinselMarkieren;
+        var staerken = new WrapPanel();
+        PinselStaerkeKnoepfe.Clear();
+        for (var i = 0; i < AussenBearbeitung.PinselStaerken.Count; i++)
+        {
+            var wert = AussenBearbeitung.PinselStaerken[i];
+            var name = Texte.PinselStaerkeName(i, wert);
+            var k = new Button { Content = Schrift.Text(name, "Klein"), Margin = new Thickness(0, 0, 4, 4), Padding = new Thickness(8, 4) }
+                .Vorlese(Texte.PinselStaerkeTitel + " " + name).Mit(Texte.PinselStaerkeTipp);
+            k.Click += (_, _) => PinselStaerkeWaehlen(wert);
+            PinselStaerkeKnoepfe.Add(k);
+            staerken.Children.Add(k);
+        }
+        StaerkeMarkieren();
         return new StackPanel
         {
             Children =
@@ -99,6 +115,8 @@ public sealed partial class Hauptansicht
                 reihe,
                 Schrift.Text(Texte.PinselGroesse, "Klein"),
                 new WrapPanel { Children = { kleiner, _pinselGroesseText, groesser } },
+                Schrift.Text(Texte.PinselStaerkeTitel, "Klein"),
+                staerken,
             },
         };
     }
@@ -119,6 +137,36 @@ public sealed partial class Hauptansicht
         _setzenKnopf = null;
         EbeneFuerSetzenAn(AussenArt.Huegel);
         Karte.GelaendePinsel = art;
+    }
+
+    /// <summary>Staerke des Pinsels waehlen (auch fuer den Start-Test); der Knopf der gewaehlten Staerke ist markiert.</summary>
+    internal void PinselStaerkeWaehlen(float wert)
+    {
+        Karte.PinselStaerke = wert;
+        StaerkeMarkieren();
+    }
+
+    private void StaerkeMarkieren()
+    {
+        for (var i = 0; i < PinselStaerkeKnoepfe.Count; i++)
+        {
+            var k = PinselStaerkeKnoepfe[i];
+            var wert = AussenBearbeitung.PinselStaerken[i];
+            var name = Texte.PinselStaerkeTitel + " " + Texte.PinselStaerkeName(i, wert);
+            if (Math.Abs(Karte.PinselStaerke - wert) < 1e-4f)
+            {
+                k.Farbe(Button.BackgroundProperty, "VerlaufW.primary").Farbe(Button.ForegroundProperty, "Pinsel.on_accent");
+                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.on_accent");
+                k.Vorlese(name + ", " + Texte.SetzenGewaehlt);
+            }
+            else
+            {
+                k.ClearValue(Button.BackgroundProperty);
+                k.ClearValue(Button.ForegroundProperty);
+                (k.Content as TextBlock)?.Farbe(TextBlock.ForegroundProperty, "Pinsel.text");
+                k.Vorlese(name);
+            }
+        }
     }
 
     private void PinselGroesseSchritt(int richtung)
