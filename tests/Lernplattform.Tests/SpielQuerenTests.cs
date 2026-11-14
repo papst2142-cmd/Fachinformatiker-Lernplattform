@@ -14,6 +14,7 @@ namespace Lernplattform.Tests;
 /// als die halbe Strassenbreite an der Strassenmitte (Spielraum 0,02), ausser er liegt auf einem Uebergang (laengs 0,02 Spielraum);
 /// auf dem Gleis ist ein Punkt naeher als die halbe Gleisbreite, ausser auf einer Strasse (Bahnuebergang). Grenze 0.
 /// Gegenprobe: mit den Wegen bis A 0.75.0 (<see cref="StadtSzene.QuerenAltFuerTests"/>) gibt es Treffer.
+/// Seit Patch A 0.75.2 (Weisung P12-263) laufen die Stadt-1-Proben fuer Fassung 1 und Fassung 2 (9 Zebrastreifen, Gelaende).
 /// </summary>
 [Collection("Haenger")]
 public sealed class SpielQuerenTests
@@ -121,19 +122,21 @@ public sealed class SpielQuerenTests
         return (treffer, wege);
     }
 
-    [Fact]
-    public void Stadt1_VonOrtZuOrt_NieAufFahrbahnOderGleis_Gegenprobe()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Stadt1_VonOrtZuOrt_NieAufFahrbahnOderGleis_Gegenprobe(long fassung)
     {
-        var sz = SpielMitfahrtTests.Stadt1().Szene;
+        var sz = SpielMitfahrtTests.StadtNachFassung(fassung).Szene;
         Assert.True(sz.Zebras.Count > 0 && sz.Gleise.Count > 0, "Stadt 1 hat Zebrastreifen und Gleise");
         Assert.Empty(sz.FusswegeUeberGleis);
-        var (treffer, wege) = OrtZuOrt(() => SpielMitfahrtTests.Stadt1());
+        var (treffer, wege) = OrtZuOrt(() => SpielMitfahrtTests.StadtNachFassung(fassung));
         Assert.True(wege >= sz.Orte.Count * (sz.Orte.Count - 1) / 2, "zu wenige Wege: " + wege);
         Assert.True(treffer.Count == 0, string.Join("\n", treffer.Take(20)));
         StadtSzene.QuerenAltFuerTests = true;
         try
         {
-            var (alt, _) = OrtZuOrt(() => SpielMitfahrtTests.Stadt1());
+            var (alt, _) = OrtZuOrt(() => SpielMitfahrtTests.StadtNachFassung(fassung));
             Assert.True(alt.Count > 0, "Gegenprobe: mit den Wegen bis A 0.75.0 laeuft die Figur ueber die Fahrbahn");
         }
         finally
@@ -142,16 +145,18 @@ public sealed class SpielQuerenTests
         }
     }
 
-    [Fact]
-    public void Stadt1_NachTippen_NieAufFahrbahnOderGleis_Gegenprobe()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Stadt1_NachTippen_NieAufFahrbahnOderGleis_Gegenprobe(long fassung)
     {
-        var (treffer, wege) = Antippen(() => SpielMitfahrtTests.Stadt1());
+        var (treffer, wege) = Antippen(() => SpielMitfahrtTests.StadtNachFassung(fassung));
         Assert.True(wege > 100, "zu wenige Wege: " + wege);
         Assert.True(treffer.Count == 0, string.Join("\n", treffer.Take(20)));
         StadtSzene.QuerenAltFuerTests = true;
         try
         {
-            var (alt, _) = Antippen(() => SpielMitfahrtTests.Stadt1());
+            var (alt, _) = Antippen(() => SpielMitfahrtTests.StadtNachFassung(fassung));
             Assert.True(alt.Count > 0, "Gegenprobe: mit den Wegen bis A 0.75.0 tritt die Figur auf die Fahrbahn");
         }
         finally
@@ -161,10 +166,12 @@ public sealed class SpielQuerenTests
     }
 
     /// <summary>Keine Insel: jeder Ort ist von jedem anderen zu Fuss ueber Gehwege und Uebergaenge erreichbar (sonst Fund).</summary>
-    [Fact]
-    public void Stadt1_JederOrtZuFussErreichbar_KeineInsel()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Stadt1_JederOrtZuFussErreichbar_KeineInsel(long fassung)
     {
-        var sz = SpielMitfahrtTests.Stadt1().Szene;
+        var sz = SpielMitfahrtTests.StadtNachFassung(fassung).Szene;
         var funde = new List<string>();
         foreach (var a in sz.Orte)
         {
@@ -180,10 +187,12 @@ public sealed class SpielQuerenTests
     }
 
     /// <summary>Die Querung geht ueber die Mitte des Zebrastreifens, quer zur Strasse, von Bordstein zu Bordstein.</summary>
-    [Fact]
-    public void Stadt1_QuerungUeberDieMitteDesZebrastreifens()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Stadt1_QuerungUeberDieMitteDesZebrastreifens(long fassung)
     {
-        var sz = SpielMitfahrtTests.Stadt1().Szene;
+        var sz = SpielMitfahrtTests.StadtNachFassung(fassung).Szene;
         var geprueft = 0;
         foreach (var q in sz.Zebras)
         {

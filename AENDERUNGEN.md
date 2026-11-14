@@ -11,6 +11,15 @@ Neu im Prüfungstrainer: die Prüfung im echten Format.
 - Eine angefangene Prüfung bleibt gespeichert: Schließt du das Programm, geht es beim nächsten Öffnen weiter, die Zeit läuft dabei weiter.
 - Die bisherige Prüfung, dein Lernstand und das Spiel bleiben, wie sie sind.
 
+## A 0.75.2
+Die Spielstadt ist neu gestaltet: mehr Zebrastreifen, mehr Grün und sanfte Hügel.
+
+- Die Stadt hat vier neue Zebrastreifen, jetzt sind es neun. Die Spielfigur geht weiter nur auf dem Gehweg und quert die Straße auf einem Zebrastreifen, an einer Ampel oder auf einem Bahnübergang. Steht sie auf einem Zebrastreifen, halten die Autos davor.
+- Sechs neue Parks, fünf neue Blumenbeete und 18 neue Bäume machen die Stadt grüner.
+- Am westlichen und am östlichen Stadtrand gibt es jetzt sanfte Hügel. Häuser, Straßen, Wege, Laternen und Haltestellen stehen weiter auf ebenem Boden.
+- Talheim hat einen neuen Zugang mit eigenem Weg zur Straße, und die Bushaltestelle dort steht an einer neuen Stelle. Dadurch lohnt sich der Bus auf mehr Wegen, und manche Fahrten werden ein paar Minuten kürzer.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind. Zu Fuß dauert ein Weg von Ort zu Ort im Spiel so lange wie vorher.
+
 ## A 0.75.1
 Die Spielstadt zeigt auf manchen Handys und Tablets keine Bildfehler mehr, die Spielfigur geht nicht mehr über die Straße, und die Ortsliste lässt sich immer schließen.
 

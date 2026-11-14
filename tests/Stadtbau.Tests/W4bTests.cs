@@ -21,11 +21,12 @@ public class W4bTests
         Py.Int(((PyObjekt)Aussen.Stadtdaten(p.AussenStand)["uhr"]!)["minuten_je_schritt"]);
 
     [Fact]
-    public void Grundlage_BleibtFassung0_ObwohlDasSpielFassung1Zeigt()
+    public void Grundlage_BleibtFassung0_ObwohlDasSpielFassung2Zeigt()
     {
         Assert.Equal(0, D.Fassung.Nummer);
         Assert.Equal(Spieldaten.BasisFassung, D.Fassung.Nummer);
-        Assert.Equal(1, AktiveFassung.Laden(Daten.Lesen).Nummer);
+        // seit Patch A 0.75.2 zeigt das Spiel Fassung 2 (Weisung P12-263); die Grundlage des Werkzeugs bleibt Fassung 0
+        Assert.Equal(2, AktiveFassung.Laden(Daten.Lesen).Nummer);
         Assert.Equal(2, Py.Int(((PyObjekt)D.Fassung.Stadtdaten["uhr"]!)["minuten_je_schritt"]));
     }
 
