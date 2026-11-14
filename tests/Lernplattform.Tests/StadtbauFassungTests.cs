@@ -170,15 +170,17 @@ public sealed class StadtbauFassungTests
     /// Fassung 0 bleibt daneben liegen. Im Ordner liegen nur aktiv.json und Fassungen.
     /// </summary>
     [Fact]
-    public void AktivNenntFassung1_Fassung0BleibtDaneben()
+    public void AktivNenntFassung2_Fassung0Und1BleibenDaneben()
     {
+        // Patch A 0.75.2 (Weisung P12-263): Stadt 1 Fassung 2 gilt; Fassung 0 und 1 bleiben unveraendert liegen
         var aktiv = (PyObjekt)Py.Lesen(Quelle("inhalte_csharp", "spiel", "stadtbau", AktiveFassung.Datei))!;
-        Assert.Equal(1, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
-        Assert.Equal(1, AktiveFassung.Laden(Lesen).Nummer);
+        Assert.Equal(2, AktiveFassung.Nummer(aktiv, AktiveFassung.Stadt1));
+        Assert.Equal(2, AktiveFassung.Laden(Lesen).Nummer);
         Assert.Equal(0, Fassung0.Value.Nummer);
+        Assert.Equal(1, AktiveFassung.LadenNummer(Lesen, 1).Nummer);
         Assert.Equal(["_hinweis", AktiveFassung.FormatFeld, "stadt1"], aktiv.Select(p => p.Key));   // Format seit A 0.62.1 (Sollwert-Aenderung Nr. 15)
         var dateien = Directory.GetFiles(Ordner).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToList();
-        Assert.Equal(["aktiv.json", "stadt1_fassung0.fistadt", "stadt1_fassung1.fistadt"], dateien);
+        Assert.Equal(["aktiv.json", "stadt1_fassung0.fistadt", "stadt1_fassung1.fistadt", "stadt1_fassung2.fistadt"], dateien);
     }
 
     /// <summary>Gelesen und wieder geschrieben ist die Datei bytegleich (kein Wert aendert beim Lesen seine Art oder Stelle).</summary>

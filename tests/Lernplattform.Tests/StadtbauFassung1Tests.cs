@@ -27,9 +27,10 @@ public sealed class StadtbauFassung1Tests
     private static PyObjekt Roh(string pfad) => (PyObjekt)Py.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, pfad)))!;
 
     [Fact]
-    public void Aktiv_IstFassung1_MitKopfStadt1()
+    public void Fassung1_MitKopfStadt1_FormatOhneFund()
     {
-        var f = AktiveFassung.Laden(Lesen);
+        // seit Patch A 0.75.2 gilt Fassung 2 (StadtbauFassung2Tests); Fassung 1 bleibt unveraendert und lesbar
+        var f = Fassung1.Value;
         Assert.Equal(1, f.Nummer);
         Assert.Equal(AktiveFassung.Stadt1, f.StadtId);
         Assert.Empty(StadtbauPruefung.Format(Py.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, AktiveFassung.Ordner + "stadt1_fassung1.fistadt")))));
