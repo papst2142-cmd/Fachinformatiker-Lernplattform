@@ -58,7 +58,7 @@ public sealed partial class Netz
             long r = reihe[d] - minR, s = spalte[d] - minS;
             schluessel[d] = (r * breite) + (r % 2 == 0 ? s : breite - 1 - s);
         }
-        var folge = Enumerable.Range(0, dreiecke).OrderBy(d => schluessel[d]).ToArray();   // OrderBy ist stabil
+        var folge = StabilNachSchluessel(schluessel);
         var alt = _indizes.ToArray();
         var zellen = new List<Zelle>();
         var start = 0;
@@ -75,6 +75,46 @@ public sealed partial class Netz
             }
         }
         Zellen = zellen;
+    }
+
+    /// <summary>
+    /// Die Dreiecke stabil nach Schluessel (Zaehlsortierung, linear: das Werkzeug baut das Paket-Netz nach jeder Aenderung neu,
+    /// Messpunkt „3D nach Aenderung“ 400 ms). Bei sehr weit gestreuten Schluesseln stabil ueber Schluessel und Stelle.
+    /// </summary>
+    private static int[] StabilNachSchluessel(long[] schluessel)
+    {
+        var n = schluessel.Length;
+        var folge = new int[n];
+        long min = long.MaxValue, max = long.MinValue;
+        foreach (var k in schluessel)
+        {
+            min = Math.Min(min, k);
+            max = Math.Max(max, k);
+        }
+        var spanne = max - min + 1;
+        if (spanne > (4L * n) + 4096)
+        {
+            for (var d = 0; d < n; d++)
+            {
+                folge[d] = d;
+            }
+            Array.Sort(folge, (a, b) => schluessel[a] != schluessel[b] ? schluessel[a].CompareTo(schluessel[b]) : a.CompareTo(b));
+            return folge;
+        }
+        var anfang = new int[spanne + 1];
+        foreach (var k in schluessel)
+        {
+            anfang[k - min + 1]++;
+        }
+        for (var i = 1; i < anfang.Length; i++)
+        {
+            anfang[i] += anfang[i - 1];
+        }
+        for (var d = 0; d < n; d++)
+        {
+            folge[anfang[schluessel[d] - min]++] = d;
+        }
+        return folge;
     }
 
     /// <summary>Zelle aus den Dreiecken <paramref name="von"/> bis vor <paramref name="bis"/> (Kugel wie <see cref="Kugel"/>).</summary>
