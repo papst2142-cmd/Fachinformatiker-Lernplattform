@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.76.0
+Neu im Prüfungstrainer: die Prüfung im echten Format.
+
+- Unter „Prüfung“ gibt es jetzt eine zweite Art zu üben. Sie ist aufgebaut wie die IHK-Abschlussprüfung: eine erfundene Firma für alle vier Aufgaben, Teilaufgaben mit Arbeitsanweisung und Punkten, Anlagen wie Tabellen, Konfigurationen und ein englischer Text. Du hast 90 Minuten ohne Pause und kannst 100 Punkte erreichen.
+- Du antwortest in Textfeldern, in einzelnen Angaben, mit Rechenweg und Ergebnis, in Tabellen, in Feldern für IP-Adressen und Masken und durch Ankreuzen.
+- Zahlen, Felder, Tabellen und Kreuze bewertet das Programm selbst und zeigt grün oder rot. Den Rest vergleichst du mit der Musterlösung und hakst ab, was du richtig hattest. Danach bekommst du Punkte, Note und eine Übersicht nach Aufgaben.
+- Die Ergebnisse stehen in einer eigenen Liste auf der Karte „Prüfung im echten Format“. Sie zählen nicht ins Gesamtergebnis, das bleibt genau wie vorher.
+- Zum Start gibt es einen Prüfungssatz für die AP1. Er gilt für alle Fachrichtungen. Für die AP2 folgen Sätze in späteren Versionen.
+- Eine angefangene Prüfung bleibt gespeichert: Schließt du das Programm, geht es beim nächsten Öffnen weiter, die Zeit läuft dabei weiter.
+- Die bisherige Prüfung, dein Lernstand und das Spiel bleiben, wie sie sind.
+
 ## A 0.75.1
 Die Spielstadt zeigt auf manchen Handys und Tablets keine Bildfehler mehr, die Spielfigur geht nicht mehr über die Straße, und die Ortsliste lässt sich immer schließen.
 

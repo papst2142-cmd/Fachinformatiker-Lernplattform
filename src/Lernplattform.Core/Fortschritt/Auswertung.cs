@@ -253,8 +253,8 @@ public sealed class Auswertung
 
     /// <summary>
     /// Name und Kurzname einer Pruefungsart: die Pruefungen von Python (EXAMS, SI bleibt exakt gleich),
-    /// Phase 11 W1 (Sammelliste 170) dazu die Bereiche b1/b2 von AE, DPA und DV aus <see cref="Pruefung.Fachrichtung"/>;
-    /// unbekannt null (dann zeigt die Zeile wie Python die rohe Kennung).
+    /// Phase 11 W1 (Sammelliste 170) dazu die Bereiche b1/b2 von AE, DPA und DV aus <see cref="Pruefung.Fachrichtung"/>,
+    /// A 0.76.0 die Arten der Pruefung im echten Format; unbekannt null (dann zeigt die Zeile wie Python die rohe Kennung).
     /// </summary>
     public static (string Name, string Kurz)? PruefungName(object? art)
     {
@@ -265,6 +265,10 @@ public sealed class Auswertung
         if (FortschrittTexte.Pruefungen.TryGetValue(a, out var python))
         {
             return python;
+        }
+        if (Lernplattform.Core.Pruefung.Echt.EchtArten.Namen(a) is { } echt)
+        {
+            return echt;    // A 0.76.0 (Weisung P12-262): Pruefung im echten Format ("echt_ap1", "echt_netzwerke" ...)
         }
         return Lernplattform.Core.Pruefung.Fachrichtung.Alle.Where(f => f.Id != Lernplattform.Core.Inhalte.Fachrichtungen.Systemintegration)
             .SelectMany(f => f.Bereiche).Where(b => b.Rolle is "b1" or "b2" && b.Art == a)

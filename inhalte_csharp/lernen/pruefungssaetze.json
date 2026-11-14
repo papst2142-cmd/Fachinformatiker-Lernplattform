@@ -1,0 +1,1126 @@
+{
+ "format": 1,
+ "saetze": [
+  {
+   "kennung": "alle_ap1_01",
+   "fachrichtung": "alle",
+   "bereich": "ap1",
+   "firma": "Velowerk Tannau GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Velowerk Tannau GmbH verleiht Fahrräder und Lastenräder und repariert sie in einer eigenen Werkstatt.",
+    "Sie hat 38 Beschäftigte: den Hauptsitz mit Verwaltung in Tannau, eine Filiale in der Altstadt und die neue Filiale am Ostkai.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker in der kleinen IT-Abteilung und betreuen die Einrichtung der neuen Filiale."
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "titel": "Angebote für die Annahme-PCs",
+     "art": "tabelle",
+     "spalten": [
+      "Merkmal",
+      "Nordlicht IT",
+      "Kesselbach Systemhaus"
+     ],
+     "zeilen": [
+      [
+       "Preis je PC (netto)",
+       "689,00 €",
+       "645,00 €"
+      ],
+      [
+       "Leistungsaufnahme im Betrieb",
+       "38 W",
+       "52 W"
+      ],
+      [
+       "Arbeitsspeicher",
+       "16 GiB",
+       "8 GiB"
+      ],
+      [
+       "Garantie",
+       "36 Monate, Vor-Ort-Service",
+       "24 Monate, Einsenden"
+      ],
+      [
+       "Zahlung",
+       "2 % Skonto innerhalb von 10 Tagen",
+       "30 Tage netto"
+      ]
+     ]
+    },
+    {
+     "nr": "2",
+     "titel": "Netzplan der Filiale Ostkai",
+     "art": "text",
+     "zeilen": [
+      "Router R1: Anschluss ans Internet über den Provider.",
+      "Router R1, Schnittstelle Verwaltung: erste nutzbare Adresse im Netz 10.24.8.0/26.",
+      "Router R1, Schnittstelle Werkstatt: erste nutzbare Adresse im Netz 10.24.8.64/27.",
+      "Switch SW1 (Verwaltung): 3 PCs, 1 Drucker.",
+      "Switch SW2 (Werkstatt): 6 Annahme-PCs, 1 Belegdrucker.",
+      "Die Annahme-PCs bekommen ihre Adresse per DHCP vom Router."
+     ]
+    },
+    {
+     "nr": "3",
+     "titel": "IP-Konfiguration eines Annahme-PCs",
+     "art": "code",
+     "zeilen": [
+      "IP-Adresse . . . . . . : 10.24.8.70",
+      "Subnetzmaske . . . . . : 255.255.255.224",
+      "Standardgateway  . . . : 10.24.8.1",
+      "DNS-Server . . . . . . : 10.24.8.65"
+     ]
+    },
+    {
+     "nr": "4",
+     "titel": "Pseudocode",
+     "art": "code",
+     "zeilen": [
+      "summe ← 0",
+      "FÜR i ← 1 BIS 5",
+      "    WENN i MOD 2 = 0 DANN",
+      "        summe ← summe + i * 10",
+      "    SONST",
+      "        summe ← summe + i",
+      "    ENDE WENN",
+      "ENDE FÜR",
+      "AUSGABE summe"
+     ]
+    },
+    {
+     "nr": "5",
+     "titel": "Auszug aus dem Handbuch des NAS",
+     "art": "englisch",
+     "zeilen": [
+      "The NAS model VX-4 can create snapshots every 15 minutes.",
+      "Snapshots are stored on the same disks as the original data.",
+      "Therefore, a snapshot does not replace an external backup.",
+      "The device sends an e-mail when a disk reports errors.",
+      "Firmware updates must be installed manually by an administrator."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Neue Arbeitsplätze für die Werkstattannahme",
+     "punkte": 25,
+     "einleitung": [
+      "Für die Annahme in der neuen Filiale Ostkai sollen sechs PCs beschafft werden. Zwei Angebote liegen vor (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Merkmale außer dem Preis, auf die Sie beim Vergleich der Angebote achten."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Garantie und Service (vor Ort oder Einsenden)",
+        "Leistungsaufnahme im Betrieb",
+        "Größe des Arbeitsspeichers",
+        "Zahlungsbedingungen"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie den Überweisungsbetrag für sechs PCs von Nordlicht IT bei Zahlung mit Skonto. Auf den Nettopreis kommen 19 % Umsatzsteuer. Runden Sie auf ganze Cent."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 4821.07,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Netto: 6 × 689,00 € = 4 134,00 €",
+        "Brutto: 4 134,00 € × 1,19 = 4 919,46 €",
+        "Skonto 2 %: 4 919,46 € × 0,98 = 4 821,07 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Netto und Umsatzsteuer richtig gerechnet (4 919,46 €)",
+         "punkte": 1
+        },
+        {
+         "text": "Skonto von 2 % richtig abgezogen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "berechnen",
+       "text": [
+        "Die PCs laufen an 250 Arbeitstagen je 8 Stunden, 1 kWh kostet 0,32 €. Berechnen Sie, um wie viel Euro die Stromkosten für sechs PCs im Jahr beim Angebot von Kesselbach höher sind."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 53.76,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 1
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Nordlicht: 6 × 38 W × 2 000 h = 456 kWh, × 0,32 €/kWh = 145,92 €",
+        "Kesselbach: 6 × 52 W × 2 000 h = 624 kWh, × 0,32 €/kWh = 199,68 €",
+        "Unterschied: 199,68 € − 145,92 € = 53,76 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Energie je Angebot richtig (456 kWh und 624 kWh)",
+         "punkte": 1
+        },
+        {
+         "text": "Kosten je Angebot richtig (145,92 € und 199,68 €)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "begruenden",
+       "text": [
+        "Entscheiden Sie sich für eines der beiden Angebote und begründen Sie Ihre Wahl mit zwei Merkmalen aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Zum Beispiel Nordlicht IT: höherer Preis je Gerät, aber geringere Stromkosten, mehr Arbeitsspeicher, Garantie vor Ort über 36 Monate und Skonto.",
+        "Kesselbach ist nur bei den Anschaffungskosten günstiger."
+       ],
+       "hinweise": [
+        {
+         "text": "Entscheidung klar genannt",
+         "punkte": 1
+        },
+        {
+         "text": "erstes Merkmal passend begründet",
+         "punkte": 1
+        },
+        {
+         "text": "zweites Merkmal passend begründet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle mit den umgerechneten Werten."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Angabe",
+         "Umgerechnet"
+        ],
+        "zeilen": [
+         [
+          "1 GiB in MiB",
+          "1024"
+         ],
+         [
+          "16 GiB in MiB",
+          {
+           "loesung": [
+            "16384",
+            "16.384",
+            "16 384"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "2 TB in GB",
+          {
+           "loesung": [
+            "2000",
+            "2.000",
+            "2 000"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "512 MiB in GiB",
+          {
+           "loesung": [
+            "0,5",
+            "0.5"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "4 TiB in GiB",
+          {
+           "loesung": [
+            "4096",
+            "4.096",
+            "4 096"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "16 GiB = 16 384 MiB",
+        "2 TB = 2 000 GB",
+        "512 MiB = 0,5 GiB",
+        "4 TiB = 4 096 GiB"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile einer Garantie mit Vor-Ort-Service gegenüber einer Garantie mit Einsenden."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Kürzere Ausfallzeit: der Techniker kommt, das Gerät muss nicht verschickt werden.",
+        "Kein Aufwand für Verpackung und Versand, keine Gefahr von Transportschäden.",
+        "Daten verlassen das Haus nicht."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Größe gibt die „Leistungsaufnahme im Betrieb“ in Anlage 1 an?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "die elektrische Leistung in Watt",
+         "die Energie in Kilowattstunden",
+         "die Spannung in Volt",
+         "die Stromstärke in Ampere"
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "die elektrische Leistung in Watt"
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Prüfschritte bei der Annahme der gelieferten PCs."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Lieferschein mit der Bestellung vergleichen",
+        "Anzahl und Seriennummern prüfen",
+        "Verpackung und Geräte auf Schäden prüfen",
+        "Funktionstest durchführen"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Netz der Filiale Ostkai",
+     "punkte": 26,
+     "einleitung": [
+      "Sie richten das Netz der neuen Filiale ein. Den Plan finden Sie in Anlage 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für den Belegdrucker der Werkstatt die IP-Adresse (letzte nutzbare Adresse im Netz der Werkstatt), die Subnetzmaske und das Standardgateway."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "IP-Adresse",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.94"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Subnetzmaske",
+          "art": "maske",
+          "loesung": [
+           "255.255.255.224"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Standardgateway",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.65"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "IP-Adresse 10.24.8.94",
+        "Subnetzmaske 255.255.255.224 (/27)",
+        "Standardgateway 10.24.8.65"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie die Anzahl der nutzbaren Adressen im Netz der Verwaltung."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Adressen",
+        "ergebnis": 62,
+        "toleranz": 0,
+        "punkte_ergebnis": 1
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "/26 lässt 6 Bit für Hosts: 2⁶ − 2 = 62 nutzbare Adressen"
+       ],
+       "hinweise": [
+        {
+         "text": "Rechenweg 2⁶ − 2 (Netz- und Broadcastadresse abgezogen)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie einen Grund, warum Verwaltung und Werkstatt in getrennten Netzen liegen."
+       ],
+       "punkte": 2,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Sicherheit: Geräte der Werkstatt erreichen die Verwaltung nur über den Router, dort lässt sich der Verkehr regeln.",
+        "Weniger Broadcast-Verkehr in jedem Netz.",
+        "Fehler in einem Netz stören das andere nicht."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Aufgaben eines Routers."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verbindet verschiedene Netze",
+        "Wählt den Weg der Pakete (Routing)",
+        "Übersetzt private in öffentliche Adressen (NAT)",
+        "Filtert Verkehr zwischen den Netzen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle der beiden Netze."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Netz",
+         "Netzadresse",
+         "Broadcastadresse",
+         "Präfix"
+        ],
+        "zeilen": [
+         [
+          "Verwaltung",
+          "10.24.8.0",
+          {
+           "loesung": [
+            "10.24.8.63"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "/26",
+            "26",
+            "255.255.255.192"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Werkstatt",
+          {
+           "loesung": [
+            "10.24.8.64"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "10.24.8.95"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "/27",
+            "27",
+            "255.255.255.224"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Verwaltung: Broadcast 10.24.8.63, Präfix /26",
+        "Werkstatt: Netzadresse 10.24.8.64, Broadcast 10.24.8.95, Präfix /27"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, wofür ein DHCP-Server im Netz der Werkstatt sorgt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Er vergibt den PCs automatisch eine IP-Konfiguration: Adresse, Subnetzmaske, Standardgateway und DNS-Server."
+       ],
+       "hinweise": [
+        {
+         "text": "automatische Vergabe der IP-Konfiguration erklärt",
+         "punkte": 2
+        },
+        {
+         "text": "mindestens zwei Bestandteile genannt (Maske, Gateway, DNS)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "korrigieren",
+       "text": [
+        "Ein Annahme-PC erreicht das Internet nicht. Ermitteln Sie den falschen Eintrag in Anlage 3 und geben Sie den richtigen Wert an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Falscher Eintrag",
+          "art": "text",
+          "loesung": [
+           "Standardgateway",
+           "Gateway",
+           "Standard-Gateway"
+          ],
+          "punkte": 2
+         },
+         {
+          "name": "Richtiger Wert",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.65"
+          ],
+          "punkte": 2
+         }
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "Das Standardgateway 10.24.8.1 liegt nicht im Netz der Werkstatt (10.24.8.64/27).",
+        "Richtig ist 10.24.8.65."
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie WLAN und Kabel für die Annahme-PCs anhand von zwei Merkmalen und geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Übertragung: Kabel ist stabiler und schneller, WLAN teilt sich die Bandbreite.",
+        "Sicherheit: Kabel nur mit Zugang zur Dose, WLAN auch von außen erreichbar.",
+        "Flexibilität: WLAN ohne Verkabelung.",
+        "Empfehlung: feste Annahme-PCs per Kabel anschließen."
+       ],
+       "hinweise": [
+        {
+         "text": "erstes Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "zweites Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Sicherheit an den Annahme-Arbeitsplätzen",
+     "punkte": 24,
+     "einleitung": [
+      "An den Annahme-PCs werden Kundendaten und Zahlungen erfasst. Sie planen die Sicherheit."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ordnen Sie jedes Merkmal der Art der Authentifizierung zu (Wissen, Besitz oder Biometrie)."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Merkmal",
+         "Art"
+        ],
+        "zeilen": [
+         [
+          "PIN",
+          "Wissen"
+         ],
+         [
+          "Chipkarte",
+          {
+           "loesung": [
+            "Besitz",
+            "Haben"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Fingerabdruck",
+          {
+           "loesung": [
+            "Biometrie",
+            "Sein",
+            "biometrisch"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Passwort",
+          {
+           "loesung": [
+            "Wissen"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Hardware-Token",
+          {
+           "loesung": [
+            "Besitz",
+            "Haben"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Gesichtserkennung",
+          {
+           "loesung": [
+            "Biometrie",
+            "Sein",
+            "biometrisch"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Antwort auf eine Sicherheitsfrage",
+          {
+           "loesung": [
+            "Wissen"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "Chipkarte und Hardware-Token: Besitz",
+        "Fingerabdruck und Gesichtserkennung: Biometrie",
+        "Passwort und Sicherheitsfrage: Wissen"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Anmeldung mit Chipkarte und PIN sicherer ist als ein Passwort allein."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Zwei verschiedene Faktoren (Besitz und Wissen) werden verlangt.",
+        "Wer nur die PIN kennt oder nur die Karte hat, kommt nicht hinein."
+       ],
+       "hinweise": [
+        {
+         "text": "zwei verschiedene Faktoren genannt",
+         "punkte": 2
+        },
+        {
+         "text": "Angreifer braucht beides",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Regeln für eine Passwort-Richtlinie."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Mindestlänge, zum Beispiel 12 Zeichen",
+        "Groß- und Kleinbuchstaben, Ziffern und Sonderzeichen",
+        "keine Namen oder Wörter aus dem Wörterbuch",
+        "nicht für mehrere Dienste verwenden",
+        "nach einem Verdacht sofort ändern"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie zwei Schutzziele der Informationssicherheit am Beispiel der Kundendaten."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Vertraulichkeit: nur Befugte sehen die Kundendaten.",
+        "Integrität: die Daten werden nicht unbemerkt verändert.",
+        "Verfügbarkeit: die Daten sind bei der Annahme abrufbar."
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Maßnahme schützt die Daten eines gestohlenen Notebooks vor dem Auslesen der Festplatte?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Verschlüsselung des ganzen Datenträgers",
+         "ein Bildschirmschoner mit Kennwort",
+         "ein aktueller Virenscanner",
+         "ein Kennwort für das WLAN"
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "loesung": [
+        "Verschlüsselung des ganzen Datenträgers"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, was man unter Phishing versteht."
+       ],
+       "punkte": 3,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Gefälschte Nachrichten oder Webseiten, die wie echte aussehen, sollen Zugangsdaten oder Zahlungsdaten abgreifen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "begruenden",
+       "text": [
+        "Die Werkstatt schützt die UEFI-Einstellungen der PCs mit einem Kennwort. Begründen Sie diese Maßnahme."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Unbefugte können Startreihenfolge und Sicherheitseinstellungen nicht ändern.",
+        "So lässt sich zum Beispiel kein fremdes System vom USB-Stick starten."
+       ],
+       "hinweise": [
+        {
+         "text": "Begründung: Einstellungen nur für Befugte änderbar",
+         "punkte": 2
+        },
+        {
+         "text": "passendes Beispiel (Start vom USB-Stick verhindern)",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datensicherung und ein kleines Programm",
+     "punkte": 25,
+     "einleitung": [
+      "Die Reparaturaufträge der Annahme werden auf einem NAS gespeichert und gesichert."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "An jedem Werktag entstehen 1 800 Dateien mit je 350 KiB. Berechnen Sie den Speicherbedarf für 250 Werktage in GiB. Runden Sie auf zwei Nachkommastellen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "GiB",
+        "ergebnis": 150.2,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "Je Tag: 1 800 × 350 KiB = 630 000 KiB",
+        "Je Jahr: 630 000 KiB × 250 = 157 500 000 KiB",
+        "157 500 000 KiB ÷ 1 024 ÷ 1 024 = 150,20 GiB"
+       ],
+       "hinweise": [
+        {
+         "text": "Tages- oder Jahresbedarf in KiB richtig",
+         "punkte": 1
+        },
+        {
+         "text": "Umrechnung in GiB mit 1 024 × 1 024",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Die Daten aus a) lassen sich um 40 % verkleinern. Auf dem NAS sind 1 200 GiB frei. Berechnen Sie, für wie viele Jahre der Platz reicht. Runden Sie auf eine Nachkommastelle."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Jahre",
+        "ergebnis": 13.3,
+        "toleranz": 0.05,
+        "ersatz_ergebnis": 12.5,
+        "punkte_ergebnis": 1
+       },
+       "ersatzwert": {
+        "bezug": "4a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 160 GiB im Jahr."
+       },
+       "loesung": [
+        "Komprimiert: 150,20 GiB × 0,6 = 90,12 GiB je Jahr",
+        "1 200 GiB ÷ 90,12 GiB = 13,3 Jahre",
+        "Mit dem Ersatzwert: 160 GiB × 0,6 = 96 GiB, 1 200 ÷ 96 = 12,5 Jahre"
+       ],
+       "hinweise": [
+        {
+         "text": "komprimierter Jahresbedarf richtig (90,12 GiB oder 96 GiB)",
+         "punkte": 1
+        },
+        {
+         "text": "freier Platz durch den Jahresbedarf geteilt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie Datensicherung und Archivierung anhand von Zweck und Aufbewahrung."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Zweck: die Sicherung stellt verlorene Daten wieder her, das Archiv bewahrt abgeschlossene Daten unverändert auf.",
+        "Aufbewahrung: Sicherungen werden nach einem Plan überschrieben, Archive bleiben für Fristen erhalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Zweck beider richtig unterschieden",
+         "punkte": 2
+        },
+        {
+         "text": "Aufbewahrung beider richtig unterschieden",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei organisatorische Maßnahmen für eine zuverlässige Datensicherung."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Zuständigkeit und Vertretung festlegen",
+        "Sicherungsplan schriftlich festlegen",
+        "Rücksicherung regelmäßig testen",
+        "eine Kopie außer Haus lagern"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit einem Schreibtischtest, welchen Wert das Programm in Anlage 4 ausgibt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "",
+        "ergebnis": 69,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "i = 1: summe = 1",
+        "i = 2: summe = 21",
+        "i = 3: summe = 24",
+        "i = 4: summe = 64",
+        "i = 5: summe = 69",
+        "Ausgabe: 69"
+       ],
+       "hinweise": [
+        {
+         "text": "Werte je Durchlauf nachvollziehbar notiert",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, was der Ausdruck i MOD 2 in Zeile 3 berechnet."
+       ],
+       "punkte": 2,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Den Rest der ganzzahligen Division von i durch 2: 0 bei geraden, 1 bei ungeraden Zahlen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Funktionen des NAS, die der englische Text in Anlage 5 beschreibt."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Snapshots alle 15 Minuten",
+        "E-Mail, wenn eine Festplatte Fehler zeigt"
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie mit dem Text, warum Snapshots keine externe Sicherung ersetzen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Die Snapshots liegen auf denselben Festplatten wie die Daten.",
+        "Fallen die Platten oder das Gerät aus, sind Daten und Snapshots zugleich verloren."
+       ],
+       "hinweise": [
+        {
+         "text": "Snapshots liegen auf denselben Festplatten",
+         "punkte": 2
+        },
+        {
+         "text": "Folge: ein Ausfall trifft beide",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "i",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Aussage zu den Firmware-Updates steht im Text?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Sie müssen von Hand durch eine Administratorin oder einen Administrator installiert werden.",
+         "Sie werden jede Nacht automatisch installiert.",
+         "Sie kommen als Anhang einer E-Mail.",
+         "Sie ersetzen die Snapshots."
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Sie müssen von Hand durch eine Administratorin oder einen Administrator installiert werden."
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  }
+ ]
+}
