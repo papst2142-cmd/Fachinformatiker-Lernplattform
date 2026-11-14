@@ -108,11 +108,11 @@ public static partial class Texte
     public const string QuestArbeitsortStelleWaehlenTipp = "Danach in den Grundriss tippen, wo die Arbeit stattfindet.";
     public const string QuestArbeitsortStelleHinweis = "Tippe auf die Stelle im Grundriss. Escape bricht ab.";
     public const string QuestArbeitsortWartet = "Questgeber wartet am Arbeitsort";
-    public const string QuestArbeitsortWartetTipp = "Ja: die Person geht für diese Quest an den Arbeitsort und wartet dort. Nein: sie bleibt an ihrem Platz, die Aufgabe liegt im Raum am Arbeitsort.";
+    public const string QuestArbeitsortWartetTipp = "Ja: die Person geht für diese Quest an den Arbeitsort und wartet dort. Nein: die Person bleibt am eigenen Platz, die Aufgabe liegt im Raum am Arbeitsort.";
     public const string QuestArbeitsortEntfernen = "Arbeitsort entfernen";
     public const string QuestArbeitsortEntfernenTipp = "Die Quest gilt danach wieder am Platz der Person, die sie vergibt.";
     public const string QuestArbeitsortZiehenTipp = "In der Draufsicht die Markierung „A“ mit dem Finger oder der Maus auf ein anderes Haus ziehen. Escape bricht ab.";
-    public const string QuestArbeitsortZiehenUngueltig = "Dieses Haus kann kein Arbeitsort sein: nur Häuser mit Ort und Innenraum (Büro, Kunden, Geschäfte, Schalter).";
+    public const string QuestArbeitsortZiehenUngueltig = "Dieses Haus geht nicht als Arbeitsort: nur Häuser mit Ort und Innenraum (Büro, Kunden, Geschäfte, Schalter).";
     public const string QuestArbeitsortZiehenUeber = "Arbeitsort: {0}";
     public const string QuestArbeitsortZiehenKeinHaus = "Arbeitsort: hier ist kein Haus";
     public const string QuestArbeitsortZiehenAbgebrochen = "Ziehen abgebrochen, der Arbeitsort bleibt.";
@@ -131,7 +131,7 @@ public static partial class Texte
     public const string QuestArbeitsortOeffnen = "Quest öffnen";
     public const string QuestArbeitsortOeffnenTipp = "Öffnet die Quest im Reiter „Quests“.";
     public const string QuestArbeitsortMarkeWartet = "Die Marke zeigt, wo {0} wartet.";
-    public const string QuestArbeitsortMarkeAuftrag = "Die Marke zeigt, wo die Aufgabe bereitliegt ({0} bleibt an ihrem Platz).";
+    public const string QuestArbeitsortMarkeAuftrag = "Die Marke zeigt, wo die Aufgabe bereitliegt ({0} bleibt am eigenen Platz).";
     public const string QuestArbeitsortMarkeAuftragName = "Aufgabe";
     public const string QuestArbeitsortMarkeQuest = "{0} (Quest)";
     public static string QuestArbeitsortStelleWert(double x, double y) =>

@@ -445,7 +445,7 @@ public sealed class StadtbauFassungTests
             "unbekannt" => Ersetze("\n \"pruefsumme\"", "\n \"extra\": 1,\n \"pruefsumme\""),
             "fehlt" => Ersetze(" \"beete\": [[6.92, 0.65]],\n", ""),
             "format" => Ersetze("\"format\": \"fistadt\"", "\"format\": \"stadt\""),
-            "neuer" => Ersetze("\"formatversion\": 1", "\"formatversion\": 2"),
+            "neuer" => Ersetze("\"formatversion\": 1", "\"formatversion\": " + (StadtFassung.FormatVersion + 1).ToString(System.Globalization.CultureInfo.InvariantCulture)),
             "id" => Ersetze("\"id\": \"stadt1\"", "\"id\": \"Stadt 1\""),
             "laterne" => Ersetze("\"laternen\": [[8.0, 0.65, false]", "\"laternen\": [[8.0, 0.65]"),
             "zahl" => Ersetze("\"fassung\": 0", "\"fassung\": 0.0"),
