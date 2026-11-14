@@ -318,6 +318,9 @@ public sealed class SpielWegsucheTests
         var stadt = new Stadt(SpielInhaltTests.Inhalt, SpielStadtTests.Daten.Value);
         var szene = StadtSzene.Bauen(stadt, ablauf.Stand, null);
         var neu = szene.Laufraster;
+        // Patch A 0.75.1: verglichen wird die Suche selbst mit der alten Suche; die feine Sperre an Gleis und Fahrbahn (neu, die
+        // alte Suche kennt sie nicht) prueft SpielQuerenTests (Fassung 0: gleich, ausser ein alter Weg lief ueber das Gleis)
+        StadtSzene.QuerenAltFuerTests = true;
         var frei = new HashSet<(int, int)>();
         for (var s = -2; s < (szene.Breite / neu.Schritt) + 2; s++)
         {

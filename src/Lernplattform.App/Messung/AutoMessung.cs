@@ -215,6 +215,8 @@ public static partial class AutoMessung
             funde += await MitfahrtAsync(ansicht);             // Welle A 0.73.0: selbst mit dem Bus fahren (Stadt 1, echtes Tippen)
             Zeitplan("GenauigkeitAsync");
             funde += await GenauigkeitAsync(ansicht);          // Patch A 0.75.1: Ecken-Shader unter ES highp, Zeile Tiefe im Problembericht
+            Zeitplan("OrtslisteInnenAsync");
+            funde += await OrtslisteInnenAsync(ansicht);       // Patch A 0.75.1: offene Ortsliste schliesst beim Betreten (Handy und PC)
         }
         if (MitLernen)
         {

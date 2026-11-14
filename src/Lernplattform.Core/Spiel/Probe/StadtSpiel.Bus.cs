@@ -67,7 +67,7 @@ public sealed partial class StadtSpiel
     {
         if (ImFreien && !ImInnenraum && Szene.Ort(ziel) is { } o)
         {
-            var weg = Szene.Laufraster.Weg((FigurX, FigurZ), (o.StehX, o.StehZ));
+            var weg = Szene.LaufWeg((FigurX, FigurZ), (o.StehX, o.StehZ));
             return weg.Count == 0 ? null : Schritte(weg) * Stadt.MinutenJeSchritt;
         }
         return Jetzt.Ort != ziel && Stadt.Weg(Jetzt.Ort, ziel) is { } w ? w.Schritte * Stadt.MinutenJeSchritt : null;

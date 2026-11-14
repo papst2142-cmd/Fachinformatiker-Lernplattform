@@ -1842,6 +1842,7 @@ public sealed partial class StadtSzene
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
+            GehWege = zugangswege,
             Bruecken = bruecken,
             BrueckenKaesten = brueckenKaesten,
             StrassenEnden = strassenEnden,
@@ -2298,7 +2299,7 @@ public sealed partial class StadtSzene
                 }
             }
         }
-        return new Wegsuche(frei, LaufSchritt);
+        return new Wegsuche(frei, LaufSchritt, FeinSperre(breite, tiefe, gehwege, zebras, gleise, strassen, wege), FeinProbe);
     }
 
     /// <summary>Gegenprobe Welle A 0.54.0: Laufraster wie bis A 0.53.2 (Fahrbahn jeder Strasse frei zum Gehen).</summary>

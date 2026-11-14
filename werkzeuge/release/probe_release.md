@@ -1,10 +1,12 @@
-Die Spielstadt zeigt auf manchen Handys und Tablets keine Bildfehler mehr.
+Die Spielstadt zeigt auf manchen Handys und Tablets keine Bildfehler mehr, die Spielfigur geht nicht mehr über die Straße, und die Ortsliste lässt sich immer schließen.
 
 - Auf Geräten mit einem Grafikchip von Mali (zum Beispiel dem Galaxy Tab A8) ragten in der Stadt lange, spitze Dreiecke aus Straßen, Gehwegen, Kreisverkehren und dem Teich über die Wiese. Straßen sahen stellenweise zerrissen oder dunkel aus.
 - Die Ursache: Das Spiel ließ die Grafik die Lage der Ecken mit zu wenigen Stellen rechnen. Viele Geräte rechnen trotzdem genau, Mali-Chips nicht. Jetzt rechnet das Spiel die Lage überall genau.
 - Auf allen anderen Geräten und am PC sieht die Stadt genau so aus wie vorher.
 - Ein Problembericht nennt jetzt zusätzlich, wie genau die Grafik des Geräts rechnet. So lassen sich solche Fehler künftig schneller finden.
-- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind.
+- Die Spielfigur geht nicht mehr über die Fahrbahn oder über die Schienen. Sie bleibt auf dem Gehweg und quert eine Straße nur auf einem Zebrastreifen oder an einer Ampel, und zwar gerade über die Mitte. Über die Schienen geht sie nur auf einem Bahnübergang. Liegt dein Ziel auf der anderen Straßenseite, führt der Weg über den nächsten Übergang. Das gilt beim Gehen von Ort zu Ort und nach einem Tipp in die Stadt.
+- Die Ortsliste schließt sich jetzt, sobald die Figur einen Laden oder ein anderes Haus betritt. Vorher blieb sie drinnen offen, und es gab keinen Knopf, um sie zu schließen. Draußen öffnet der Knopf „Orte“ sie wie gewohnt.
+- Dein Spielstand, dein Geld, deine Aufgaben, das Lernen und dein Lernstand bleiben, wie sie sind. Ein Weg von Ort zu Ort dauert im Spiel so lange wie vorher.
 
 ### Herunterladen
 

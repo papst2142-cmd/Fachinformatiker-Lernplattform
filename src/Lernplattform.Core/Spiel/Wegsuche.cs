@@ -22,8 +22,21 @@ public sealed class Wegsuche
     private int _runde;
     private readonly object _sperre = new();
 
-    public Wegsuche(IEnumerable<(int Spalte, int Zeile)> frei, double schritt)
+    /// <summary>
+    /// Patch A 0.75.1 (Sammelliste 342): feine Sperre fuer das Glaetten und den Zielpunkt (nur das Laufraster der Stadt, sonst
+    /// null = wie bisher, G48 unveraendert). true = an dieser Stelle darf die Mitte der Figur nicht sein (Fahrbahn neben einem
+    /// Uebergang): eine Zelle gilt als frei, wenn ihre Mitte frei ist, ihr Rand kann aber in die Fahrbahn ragen; gerade Strecken
+    /// des Glaettens und ein Ziel in so einer Zelle pruefen darum zusaetzlich alle <see cref="FeinSchritt"/>.
+    /// </summary>
+    private readonly Func<double, double, bool>? _feinGesperrt;
+
+    /// <summary>Abstand der Proben der feinen Sperre auf einer geraden Strecke.</summary>
+    public double FeinSchritt { get; }
+
+    public Wegsuche(IEnumerable<(int Spalte, int Zeile)> frei, double schritt, Func<double, double, bool>? feinGesperrt = null, double feinSchritt = 0.02)
     {
+        _feinGesperrt = feinGesperrt;
+        FeinSchritt = feinSchritt;
         var liste = frei.ToList();
         Schritt = schritt;
         AnzahlFrei = liste.Distinct().Count();
@@ -113,8 +126,23 @@ public sealed class Wegsuche
                 return false;
             }
         }
+        if (_feinGesperrt is { } fein)
+        {
+            var proben = (int)(Math.Max(Math.Abs(b.X - a.X), Math.Abs(b.Y - a.Y)) / FeinSchritt) + 1;
+            for (var i = 0; i <= proben; i++)
+            {
+                var t = i / (double)proben;
+                if (fein(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t)))
+                {
+                    return false;
+                }
+            }
+        }
         return true;
     }
+
+    /// <summary>Patch A 0.75.1: liegt der Punkt in der feinen Sperre (ohne feine Sperre nie)?</summary>
+    public bool FeinGesperrt(double x, double y) => _feinGesperrt?.Invoke(x, y) == true;
 
     /// <summary>
     /// Weg von <paramref name="start"/> zu <paramref name="ziel"/> als Punkte ohne den Startpunkt.
@@ -190,7 +218,7 @@ public sealed class Wegsuche
             }
             punkte = [.. feld];
         }
-        if (KannStehen(ziel.X, ziel.Y))
+        if (KannStehen(ziel.X, ziel.Y) && !FeinGesperrt(ziel.X, ziel.Y))
         {
             punkte[^1] = ziel;
         }
